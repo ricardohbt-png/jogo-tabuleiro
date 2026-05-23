@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dungeon Quest</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0f0f1a;
+    color: #d4c9a8;
+    font-family: 'Courier New', monospace;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    gap: 8px;
+    overflow: hidden;
+  }
+
+  /* ── HEADER ── */
+  h1 {
+    text-align: center;
+    font-size: 1.1rem;
+    color: #f0c040;
+    letter-spacing: 3px;
+    text-shadow: 0 0 12px #f0c04066;
+    flex-shrink: 0;
+  }
+
+  /* ── SETUP ── */
+  #setup {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  #setup h2 { color: #f0c040; font-size: 1.4rem; }
+  #setup p  { color: #888; font-size: 0.9rem; }
+
+  #setup input {
+    width: 280px;
+    padding: 10px 14px;
+    background: #1e1e30;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #d4c9a8;
+    font-family: inherit;
+    font-size: 1rem;
+    text-align: center;
+  }
+
+  button {
+    background: #8b4500;
+    color: #f0c040;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 22px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: background 0.15s;
+  }
+  button:hover:not(:disabled) { background: #b05800; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── GAME ── */
+  #game {
+    display: none;          /* shown as flex via JS */
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    gap: 6px;
+  }
+
+  /* ── LAYOUT RESPONSIVO ── */
+
+  /* Padrão: portrait / preview — tabuleiro em cima, controles embaixo */
+  .layout {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* ── BOARD ── */
+  #board-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  #board {
+    /* Tamanho: o menor entre largura total disponível e ~60% da altura */
+    width: min(100%, calc(100vh - 260px));
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 2px;
+  }
+
+  .cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    font-size: clamp(0.55rem, 1.6vw, 1.1rem);
+    border: 1px solid #2a2a3a;
+    transition: background 0.2s;
+    overflow: hidden;
+  }
+
+  .cell.empty   { background: #1c1c2e; }
+  .cell.monster { background: #2e1010; }
+  .cell.chest   { background: #2e2a10; }
+  .cell.exit    { background: #102e10; }
+  .cell.hero    { background: #10203e; box-shadow: 0 0 8px #4080ff88; }
+  .cell.visited { background: #141420; }
+
+  .legend {
+    font-size: 0.62rem;
+    color: #555;
+    white-space: nowrap;
+  }
+
+  /* ── PAINEL EMBAIXO (portrait): 3 colunas ── */
+  .panel {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    grid-template-rows: 1fr;
+    gap: 6px;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Stats: coluna 1 */
+  .card.stats-card { grid-column: 1; overflow: hidden; }
+
+  /* Dado: coluna 2 */
+  .card.dice-card  { grid-column: 2; width: 140px; }
+
+  /* Log: coluna 3 */
+  .card.log-card {
+    grid-column: 3;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .card {
+    background: #1a1a2e;
+    border: 1px solid #2a2a40;
+    border-radius: 6px;
+    padding: 8px 10px;
+  }
+
+  /* ── LANDSCAPE: lado a lado ── */
+  @media (min-aspect-ratio: 4/3) {
+    .layout {
+      flex-direction: row;
+    }
+
+    #board-wrap {
+      flex: 1;
+      min-width: 0;
+    }
+
+    #board {
+      width: min(100%, calc(100vh - 80px));
+    }
+
+    .panel {
+      width: 200px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      flex: none;
+    }
+
+    .card.stats-card,
+    .card.dice-card,
+    .card.log-card { grid-column: unset; width: unset; }
+  }
+
+  .card h3 {
+    color: #f0c040;
+    font-size: 0.62rem;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  /* Stats */
+  #hero-title {
+    font-size: 0.72rem;
+    color: #f0c040;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: bold;
+  }
+
+  .stat-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+
+  .stat-label { width: 18px; color: #777; font-size: 0.6rem; }
+
+  .bar-track {
+    flex: 1;
+    height: 7px;
+    background: #0d0d1a;
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid #222;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.35s ease;
+  }
+
+  .bar-hp { background: linear-gradient(90deg, #922b21, #e74c3c); }
+  .bar-xp { background: linear-gradient(90deg, #1a6699, #3498db); }
+
+  .stat-val { font-size: 0.62rem; color: #999; min-width: 44px; text-align: right; }
+
+  .gold-row { color: #f0c040; font-size: 0.78rem; margin-top: 3px; }
+  .inv-list  { font-size: 0.62rem; color: #777; margin-top: 2px; min-height: 13px;
+               white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Dado */
+  #dice-area { text-align: center; margin: 2px 0 6px; }
+
+  #dice {
+    font-size: 1.9rem;
+    display: inline-block;
+    line-height: 1;
+  }
+
+  #dice.spin { animation: spin 0.38s ease-out; }
+
+  @keyframes spin {
+    0%   { transform: rotate(0deg)   scale(1.5); }
+    60%  { transform: rotate(200deg) scale(1.1); }
+    100% { transform: rotate(360deg) scale(1);   }
+  }
+
+  #roll-btn {
+    width: 100%;
+    font-size: 0.78rem;
+    padding: 8px 4px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Log */
+  #log {
+    flex: 1;
+    overflow-y: auto;
+    font-size: 0.67rem;
+    line-height: 1.45;
+    min-height: 0;
+    scrollbar-width: thin;
+    scrollbar-color: #333 transparent;
+  }
+
+  #log::-webkit-scrollbar { width: 4px; }
+  #log::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+  #log p { margin-bottom: 2px; padding: 1px 3px; border-radius: 2px; word-break: break-word; }
+  #log p.ev-combat { color: #e57373; }
+  #log p.ev-chest  { color: #f0c040; }
+  #log p.ev-level  { color: #85c1e9; font-weight: bold; }
+  #log p.ev-move   { color: #555; }
+  #log p.ev-win    { color: #82e0aa; font-weight: bold; }
+  #log p.ev-lose   { color: #e74c3c; font-weight: bold; }
+  #log p.ev-system { color: #888; }
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div id="setup">
+  <h2>⚔ DUNGEON QUEST ⚔</h2>
+  <p>Atravesse a masmorra e chegue à saída vivo.</p>
+  <input id="hero-name" maxlength="20" placeholder="Nome do herói" />
+  <button onclick="startGame()">ENTRAR NA MASMORRA</button>
+</div>
+
+<!-- JOGO -->
+<div id="game">
+  <h1>⚔ DUNGEON QUEST ⚔</h1>
+  <div class="layout">
+
+    <!-- Tabuleiro -->
+    <div id="board-wrap">
+      <div id="board"></div>
+      <div class="legend">🧙 Herói &nbsp;👹 Monstro &nbsp;🎁 Baú &nbsp;🚪 Saída</div>
+    </div>
+
+    <!-- Painel -->
+    <div class="panel">
+
+      <!-- Ficha do herói -->
+      <div class="card stats-card">
+        <div id="hero-title">Herói — Nv.1</div>
+        <div class="stat-row">
+          <span class="stat-label">HP</span>
+          <div class="bar-track"><div class="bar-fill bar-hp" id="hp-bar" style="width:100%"></div></div>
+          <span class="stat-val" id="hp-val">30/30</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">XP</span>
+          <div class="bar-track"><div class="bar-fill bar-xp" id="xp-bar" style="width:0%"></div></div>
+          <span class="stat-val" id="xp-val">0/100</span>
+        </div>
+        <div class="gold-row" id="gold-val">💰 0 PO</div>
+        <div class="inv-list" id="inv-val">Sem itens</div>
+      </div>
+
+      <!-- Dado -->
+      <div class="card dice-card">
+        <h3>DADO</h3>
+        <div id="dice-area"><span id="dice">⚀</span></div>
+        <button id="roll-btn" onclick="rollAndMove()">ROLAR DADO</button>
+      </div>
+
+      <!-- Log -->
+      <div class="card log-card">
+        <h3>LOG</h3>
+        <div id="log"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONSTANTES ──
+const FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+const SIZE  = 10;
+
+const MONSTER_TYPES = [
+  { nome: 'Goblin',    hp: 10, ataque: 3,  xp: 15, ouro_base: 10 },
+  { nome: 'Esqueleto', hp: 15, ataque: 4,  xp: 25, ouro_base: 15 },
+  { nome: 'Orc',       hp: 25, ataque: 6,  xp: 40, ouro_base: 25 },
+  { nome: 'Troll',     hp: 50, ataque: 10, xp: 80, ouro_base: 80 },
+];
+
+const EMOJI = { empty:'', monster:'👹', chest:'🎁', exit:'🚪', hero:'🧙', visited:'' };
+
+// ── UTILITÁRIOS ──
+function roll(n, sides) {
+  let t = 0;
+  for (let i = 0; i < n; i++) t += Math.floor(Math.random() * sides) + 1;
+  return t;
+}
+
+function log(msg, cls = '') {
+  const el = document.getElementById('log');
+  const p  = document.createElement('p');
+  p.className  = cls;
+  p.textContent = msg;
+  el.appendChild(p);
+  el.scrollTop  = el.scrollHeight;
+}
+
+// ── ESTADO ──
+let hero, board, heroPos, gameOver;
+
+// ── INICIALIZAÇÃO ──
+function startGame() {
+  const nome = document.getElementById('hero-name').value.trim() || 'Herói';
+
+  hero = { nome, nivel:1, hp:30, hpMax:30, xp:0, xpProximo:100,
+           ouro:0, ataque:5, inventario:[] };
+
+  board    = Array.from({ length: SIZE }, () => Array(SIZE).fill('empty'));
+  heroPos  = [0, 0];
+  gameOver = false;
+
+  placeCells('monster', 12);
+  placeCells('chest',    8);
+  board[SIZE-1][SIZE-1] = 'exit';
+
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('game').style.display  = 'flex';
+
+  renderBoard();
+  updateStats();
+  log('O herói entra na masmorra...', 'ev-system');
+}
+
+function placeCells(type, count) {
+  let placed = 0;
+  while (placed < count) {
+    const r = Math.floor(Math.random() * SIZE);
+    const c = Math.floor(Math.random() * SIZE);
+    if (board[r][c] === 'empty' && !(r===0 && c===0) && !(r===SIZE-1 && c===SIZE-1)) {
+      board[r][c] = type;
+      placed++;
+    }
+  }
+}
+
+// ── RENDERIZAÇÃO ──
+function renderBoard() {
+  const el = document.getElementById('board');
+  el.innerHTML = '';
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const isHero = r === heroPos[0] && c === heroPos[1];
+      const type   = isHero ? 'hero' : board[r][c];
+      const cell   = document.createElement('div');
+      cell.className   = 'cell ' + type;
+      cell.textContent = EMOJI[type] ?? '';
+      el.appendChild(cell);
+    }
+  }
+}
+
+function updateStats() {
+  const hpPct = Math.max(0, (hero.hp / hero.hpMax) * 100).toFixed(1);
+  const xpPct = Math.min(100, (hero.xp / hero.xpProximo) * 100).toFixed(1);
+
+  document.getElementById('hero-title').textContent = `${hero.nome} — Nv.${hero.nivel}`;
+  document.getElementById('hp-bar').style.width  = hpPct + '%';
+  document.getElementById('xp-bar').style.width  = xpPct + '%';
+  document.getElementById('hp-val').textContent  = `${hero.hp}/${hero.hpMax}`;
+  document.getElementById('xp-val').textContent  = `${hero.xp}/${hero.xpProximo}`;
+  document.getElementById('gold-val').textContent = `💰 ${hero.ouro} PO`;
+  document.getElementById('inv-val').textContent  =
+    hero.inventario.length ? hero.inventario.join(', ') : 'Sem itens';
+}
+
+// ── LEVEL UP (loop para múltiplos níveis de uma vez) ──
+function checkLevelUp() {
+  while (hero.xp >= hero.xpProximo) {
+    hero.nivel++;
+    hero.xpProximo = hero.nivel * 100;
+    const ganho = roll(1, 6) + 2;
+    hero.hpMax += ganho;
+    hero.hp     = Math.min(hero.hp + ganho, hero.hpMax);
+    hero.ataque += 2;
+    log(`★ SUBIU DE NÍVEL ${hero.nivel}! +${ganho} HP máx · +2 ataque`, 'ev-level');
+  }
+}
+
+// ── COMBATE ──
+function spawnMonster() {
+  const t = MONSTER_TYPES[Math.floor(Math.random() * MONSTER_TYPES.length)];
+  return {
+    nome:   t.nome,
+    hp:     t.hp,
+    ataque: t.ataque,
+    xp:     t.xp,
+    ouro:   Math.floor(t.ouro_base * (0.8 + Math.random() * 0.4)),
+  };
+}
+
+function runCombat(monster) {
+  log(`⚔ ${hero.nome} vs ${monster.nome} (${monster.hp} HP)`, 'ev-combat');
+
+  for (let rd = 1; rd <= 50; rd++) {
+    // Herói ataca
+    const dH = roll(1, 6) + hero.nivel + hero.ataque;
+    monster.hp -= dH;
+    log(`  [${rd}] Você: ${dH} dano → ${monster.nome} ${Math.max(0,monster.hp)} HP`, 'ev-combat');
+
+    if (monster.hp <= 0) {
+      hero.xp   += monster.xp;
+      hero.ouro += monster.ouro;
+      log(`  ☠ ${monster.nome} derrotado! +${monster.xp} XP · +${monster.ouro} PO (${hero.ouro} PO total)`, 'ev-combat');
+      checkLevelUp();
+      return true;
+    }
+
+    // Monstro ataca
+    const dM = roll(1, monster.ataque);
+    hero.hp -= dM;
+    log(`  [${rd}] ${monster.nome}: ${dM} dano → você ${Math.max(0,hero.hp)} HP`, 'ev-combat');
+
+    if (hero.hp <= 0) {
+      log(`  💀 ${hero.nome} caiu em combate...`, 'ev-lose');
+      return false;
+    }
+
+    // Poção automática ao HP crítico
+    if (hero.hp < hero.hpMax * 0.3) {
+      const idx = hero.inventario.indexOf('Poção de Cura');
+      if (idx !== -1) {
+        hero.inventario.splice(idx, 1);
+        const cura = roll(2, 6) + 4;
+        hero.hp = Math.min(hero.hp + cura, hero.hpMax);
+        log(`  ⚠ HP crítico! Poção usada! +${cura} HP`, 'ev-combat');
+      }
+    }
+  }
+  return true;
+}
+
+// ── BAÚ ──
+function openChest() {
+  log('🎁 BAÚ ENCONTRADO!', 'ev-chest');
+
+  const ouro = roll(2, 6) * 10;
+  hero.ouro += ouro;
+  log(`  💰 +${ouro} PO (${hero.ouro} PO total)`, 'ev-chest');
+
+  const cura = roll(1, 6) + 2;
+  const curado = Math.min(cura, hero.hpMax - hero.hp);
+  hero.hp += curado;
+  log(`  ❤ +${curado} HP`, 'ev-chest');
+
+  if (Math.random() < 0.4) {
+    const item = Math.random() < 0.5 ? 'Poção de Cura' : 'Elixir de Mana';
+    hero.inventario.push(item);
+    log(`  🧪 Item: ${item}!`, 'ev-chest');
+  }
+}
+
+// ── MOVER ──
+function rollAndMove() {
+  if (gameOver) return;
+
+  const btn    = document.getElementById('roll-btn');
+  const diceEl = document.getElementById('dice');
+  btn.disabled = true;
+
+  diceEl.classList.remove('spin');
+  void diceEl.offsetWidth;           // force reflow para reiniciar animação
+  diceEl.classList.add('spin');
+
+  setTimeout(() => {
+    diceEl.classList.remove('spin');
+
+    const dado = roll(1, 6);
+    diceEl.textContent = FACES[dado - 1];
+    log(`🎲 Dado: ${dado}`, 'ev-move');
+
+    let [row, col] = heroPos;
+    col += dado;
+    if (col >= SIZE) { row += Math.floor(col / SIZE); col = col % SIZE; }
+    row = Math.min(row, SIZE - 1);
+    heroPos = [row, col];
+
+    const cell = board[row][col];
+
+    if (cell === 'monster') {
+      const vivo = runCombat(spawnMonster());
+      board[row][col] = 'visited';
+      renderBoard();
+      updateStats();
+      if (!vivo) { hero.hp = 0; endGame(false); return; }
+
+    } else if (cell === 'chest') {
+      openChest();
+      board[row][col] = 'visited';
+      renderBoard();
+      updateStats();
+
+    } else if (cell === 'exit') {
+      renderBoard();
+      updateStats();
+      endGame(true);
+      return;
+
+    } else {
+      renderBoard();
+      updateStats();
+    }
+
+    btn.disabled = false;
+  }, 400);
+}
+
+// ── FIM DE JOGO ──
+function endGame(vitoria) {
+  gameOver = true;
+  document.getElementById('roll-btn').disabled = true;
+
+  if (vitoria) {
+    log(`🏆 PARABÉNS! ${hero.nome} chegou à saída!`, 'ev-win');
+    log(`   Ouro: ${hero.ouro} PO · XP: ${hero.xp} · Nível: ${hero.nivel}`, 'ev-win');
+  } else {
+    log(`💀 FIM DE JOGO — ${hero.nome} foi derrotado!`, 'ev-lose');
+    log(`   Ouro: ${hero.ouro} PO · XP: ${hero.xp}`, 'ev-lose');
+  }
+
+  const btn = document.getElementById('roll-btn');
+  btn.textContent = 'JOGAR NOVAMENTE';
+  btn.disabled    = false;
+  btn.onclick     = () => location.reload();
+}
+
+// Enter no campo de nome inicia o jogo
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('hero-name').addEventListener('keydown', e => {
+    if (e.key === 'Enter') startGame();
+  });
+});
+</script>
+</body>
+</html>
