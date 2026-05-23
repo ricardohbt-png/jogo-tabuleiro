@@ -285,14 +285,114 @@
   #log p { margin-bottom: 2px; padding: 1px 3px; border-radius: 2px; word-break: break-word; }
   #log p.ev-combat { color: #e57373; }
   #log p.ev-chest  { color: #f0c040; }
+  #log p.ev-shop   { color: #a29bfe; }
   #log p.ev-level  { color: #85c1e9; font-weight: bold; }
   #log p.ev-move   { color: #555; }
   #log p.ev-win    { color: #82e0aa; font-weight: bold; }
   #log p.ev-lose   { color: #e74c3c; font-weight: bold; }
   #log p.ev-system { color: #888; }
+
+  /* Célula de loja no tabuleiro */
+  .cell.shop { background: #1e1040; }
+
+  /* ── LOJA MODAL ── */
+  #shop-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000000cc;
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  #shop-overlay.open { display: flex; }
+
+  #shop-modal {
+    background: #16162a;
+    border: 2px solid #a29bfe;
+    border-radius: 12px;
+    padding: 20px;
+    width: min(400px, 92vw);
+    max-height: 88vh;
+    overflow-y: auto;
+    box-shadow: 0 0 40px #a29bfe44;
+    scrollbar-width: thin;
+    scrollbar-color: #444 transparent;
+  }
+
+  #shop-modal h2 {
+    color: #a29bfe;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+    text-align: center;
+  }
+
+  .shop-gold {
+    text-align: center;
+    color: #f0c040;
+    font-size: 0.85rem;
+    margin-bottom: 14px;
+  }
+
+  .shop-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #1e1e35;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    transition: border-color 0.15s;
+  }
+  .shop-item:hover { border-color: #a29bfe55; }
+
+  .item-emoji { font-size: 1.4rem; flex-shrink: 0; width: 28px; text-align: center; }
+  .item-info  { flex: 1; min-width: 0; }
+  .item-name  { font-size: 0.82rem; color: #d4c9a8; font-weight: bold; margin-bottom: 2px; }
+  .item-desc  { font-size: 0.7rem; color: #888; }
+  .item-price { font-size: 0.8rem; color: #f0c040; white-space: nowrap; margin-right: 6px; }
+  .item-price.broke { color: #e74c3c; }
+
+  .btn-buy {
+    background: #4a34a0;
+    color: #d4c9a8;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-family: inherit;
+    font-size: 0.72rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+    letter-spacing: 0;
+  }
+  .btn-buy:hover:not(:disabled) { background: #6c52d4; }
+  .btn-buy:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  #btn-close-shop {
+    width: 100%;
+    margin-top: 10px;
+    background: #2a2a3a;
+    color: #aaa;
+    padding: 9px;
+    letter-spacing: 1px;
+  }
+  #btn-close-shop:hover { background: #3a3a4a; }
 </style>
 </head>
 <body>
+
+<!-- MODAL LOJA -->
+<div id="shop-overlay">
+  <div id="shop-modal">
+    <h2>🏪 LOJA</h2>
+    <div class="shop-gold" id="shop-gold-display">💰 0 PO disponíveis</div>
+    <div id="shop-items"></div>
+    <button id="btn-close-shop" onclick="closeShop()">SAIR DA LOJA</button>
+  </div>
+</div>
 
 <!-- SETUP -->
 <div id="setup">
@@ -310,7 +410,7 @@
     <!-- Tabuleiro -->
     <div id="board-wrap">
       <div id="board"></div>
-      <div class="legend">🧙 Herói &nbsp;👹 Monstro &nbsp;🎁 Baú &nbsp;🚪 Saída</div>
+      <div class="legend">🧙 Herói &nbsp;👹 Monstro &nbsp;🎁 Baú &nbsp;🏪 Loja &nbsp;🚪 Saída</div>
     </div>
 
     <!-- Painel -->
@@ -355,6 +455,15 @@
 const FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
 const SIZE  = 10;
 
+const SHOP_ITEMS = [
+  { id:'pocao_cura',  emoji:'🧪', nome:'Poção de Cura',   preco:20,  desc:'Restaura 2d6+4 HP imediatamente',   tipo:'consumivel' },
+  { id:'pocao_maior', emoji:'💊', nome:'Cura Total',       preco:50,  desc:'Restaura todo o HP',                tipo:'consumivel' },
+  { id:'espada',      emoji:'⚔',  nome:'Espada de Ferro', preco:60,  desc:'+4 de ataque permanente',           tipo:'permanente', unico: true },
+  { id:'escudo',      emoji:'🛡',  nome:'Escudo de Couro', preco:45,  desc:'Reduz 2 de dano recebido',          tipo:'permanente', unico: true },
+  { id:'amuleto',     emoji:'🔮', nome:'Amuleto Mágico',  preco:80,  desc:'+15 HP máximo permanente',          tipo:'permanente', unico: true },
+  { id:'bota',        emoji:'👢', nome:'Botas Velozes',   preco:35,  desc:'+1 de dado extra por turno (bônus)',tipo:'permanente', unico: true },
+];
+
 const MONSTER_TYPES = [
   { nome: 'Goblin',    hp: 10, ataque: 3,  xp: 15, ouro_base: 10 },
   { nome: 'Esqueleto', hp: 15, ataque: 4,  xp: 25, ouro_base: 15 },
@@ -362,7 +471,7 @@ const MONSTER_TYPES = [
   { nome: 'Troll',     hp: 50, ataque: 10, xp: 80, ouro_base: 80 },
 ];
 
-const EMOJI = { empty:'', monster:'👹', chest:'🎁', exit:'🚪', hero:'🧙', visited:'' };
+const EMOJI = { empty:'', monster:'👹', chest:'🎁', shop:'🏪', exit:'🚪', hero:'🧙', visited:'' };
 
 // ── UTILITÁRIOS ──
 function roll(n, sides) {
@@ -388,7 +497,8 @@ function startGame() {
   const nome = document.getElementById('hero-name').value.trim() || 'Herói';
 
   hero = { nome, nivel:1, hp:30, hpMax:30, xp:0, xpProximo:100,
-           ouro:0, ataque:5, inventario:[] };
+           ouro:0, ataque:5, defesa:0, bonusDado:0,
+           inventario:[], equipamentos:[] };
 
   board    = Array.from({ length: SIZE }, () => Array(SIZE).fill('empty'));
   heroPos  = [0, 0];
@@ -396,6 +506,7 @@ function startGame() {
 
   placeCells('monster', 12);
   placeCells('chest',    8);
+  placeCells('shop',     4);
   board[SIZE-1][SIZE-1] = 'exit';
 
   document.getElementById('setup').style.display = 'none';
@@ -490,8 +601,8 @@ function runCombat(monster) {
       return true;
     }
 
-    // Monstro ataca
-    const dM = roll(1, monster.ataque);
+    // Monstro ataca (defesa reduz o dano)
+    const dM = Math.max(1, roll(1, monster.ataque) - hero.defesa);
     hero.hp -= dM;
     log(`  [${rd}] ${monster.nome}: ${dM} dano → você ${Math.max(0,hero.hp)} HP`, 'ev-combat');
 
@@ -549,9 +660,9 @@ function rollAndMove() {
   setTimeout(() => {
     diceEl.classList.remove('spin');
 
-    const dado = roll(1, 6);
-    diceEl.textContent = FACES[dado - 1];
-    log(`🎲 Dado: ${dado}`, 'ev-move');
+    const dado = roll(1, 6) + hero.bonusDado;
+    diceEl.textContent = FACES[Math.min(dado,6) - 1];
+    log(`🎲 Dado: ${dado}${hero.bonusDado ? ' (+'+hero.bonusDado+' bônus)' : ''}`, 'ev-move');
 
     let [row, col] = heroPos;
     col += dado;
@@ -574,6 +685,12 @@ function rollAndMove() {
       renderBoard();
       updateStats();
 
+    } else if (cell === 'shop') {
+      renderBoard();
+      updateStats();
+      openShop();
+      return; // botão reativado ao fechar a loja
+
     } else if (cell === 'exit') {
       renderBoard();
       updateStats();
@@ -587,6 +704,95 @@ function rollAndMove() {
 
     btn.disabled = false;
   }, 400);
+}
+
+// ── LOJA ──
+function openShop() {
+  log('🏪 LOJA ENCONTRADA! Compre itens com seu ouro.', 'ev-shop');
+  renderShop();
+  document.getElementById('shop-overlay').classList.add('open');
+}
+
+function renderShop() {
+  document.getElementById('shop-gold-display').textContent = `💰 ${hero.ouro} PO disponíveis`;
+
+  const container = document.getElementById('shop-items');
+  container.innerHTML = '';
+
+  SHOP_ITEMS.forEach(item => {
+    const jaEquipado = item.unico && hero.equipamentos.includes(item.id);
+    const semOuro    = hero.ouro < item.preco;
+    const disabled   = jaEquipado || semOuro;
+
+    const div = document.createElement('div');
+    div.className = 'shop-item';
+    div.innerHTML = `
+      <div class="item-emoji">${item.emoji}</div>
+      <div class="item-info">
+        <div class="item-name">${item.nome} ${jaEquipado ? '<span style="color:#85c1e9;font-size:0.65rem">✓ equipado</span>' : ''}</div>
+        <div class="item-desc">${item.desc}</div>
+      </div>
+      <div class="item-price ${semOuro && !jaEquipado ? 'broke' : ''}">${item.preco} PO</div>
+      <button class="btn-buy" ${disabled ? 'disabled' : ''} onclick="buyItem('${item.id}')">
+        ${jaEquipado ? 'EQUIPADO' : 'COMPRAR'}
+      </button>`;
+    container.appendChild(div);
+  });
+}
+
+function buyItem(id) {
+  const item = SHOP_ITEMS.find(i => i.id === id);
+  if (!item || hero.ouro < item.preco) return;
+
+  hero.ouro -= item.preco;
+
+  switch (id) {
+    case 'pocao_cura': {
+      const cura = roll(2,6) + 4;
+      hero.hp = Math.min(hero.hp + cura, hero.hpMax);
+      log(`  🧪 Poção de Cura usada! +${cura} HP (${hero.hp}/${hero.hpMax})`, 'ev-shop');
+      break;
+    }
+    case 'pocao_maior': {
+      const cura = hero.hpMax - hero.hp;
+      hero.hp = hero.hpMax;
+      log(`  💊 Cura Total! +${cura} HP — HP cheio!`, 'ev-shop');
+      break;
+    }
+    case 'espada': {
+      hero.ataque += 4;
+      hero.equipamentos.push(id);
+      log(`  ⚔ Espada de Ferro equipada! Ataque +4`, 'ev-shop');
+      break;
+    }
+    case 'escudo': {
+      hero.defesa += 2;
+      hero.equipamentos.push(id);
+      log(`  🛡 Escudo de Couro equipado! Defesa +2`, 'ev-shop');
+      break;
+    }
+    case 'amuleto': {
+      hero.hpMax += 15;
+      hero.hp = Math.min(hero.hp + 15, hero.hpMax);
+      hero.equipamentos.push(id);
+      log(`  🔮 Amuleto Mágico equipado! HP máx +15`, 'ev-shop');
+      break;
+    }
+    case 'bota': {
+      hero.bonusDado += 1;
+      hero.equipamentos.push(id);
+      log(`  👢 Botas Velozes equipadas! +1 ao dado`, 'ev-shop');
+      break;
+    }
+  }
+
+  updateStats();
+  renderShop(); // atualiza preços e botões
+}
+
+function closeShop() {
+  document.getElementById('shop-overlay').classList.remove('open');
+  document.getElementById('roll-btn').disabled = false;
 }
 
 // ── FIM DE JOGO ──
