@@ -1,0 +1,6 @@
+# Companion visual do brainstorming (superpowers)
+.superpowers/
+
+# Artefatos Python
+__pycache__/
+*.py[cod]
