@@ -2,7 +2,7 @@
 
 **Data:** 2026-06-16
 **Projeto:** Legends for Hire (RPG de tabuleiro multiplayer)
-**Status:** Spec aprovado — pronto para plano de implementação
+**Status:** Em revisão final — aguardando aprovação para o plano de implementação
 
 ---
 
@@ -105,8 +105,9 @@ várias campanhas e progressão entre fases (F4).
   "tiles": [ [0,1,2,/* ... w valores ... */], /* ... h linhas ... */ ],
 
   "rooms": [
+    // exemplo truncado: monstro/prisioneiro abaixo referenciam salas (id 1, 4) omitidas
     { "id": 0, "x": 2, "y": 2, "w": 6, "h": 5,
-      "role": "entrance",        // entrance|monster|chest|trap|boss|empty (informativo)
+      "role": "entrance",        // entrance|monster|chest|trap|boss|empty — inicializa cleared/looted e reveal
       "locked": false,            // entrada normalmente destrancada
       "doors": [ [7,4] ] }        // tiles DOOR no anel da sala (entradas)
   ],
@@ -201,6 +202,8 @@ Novo método de `GameRoom`. A partir do dict validado:
 - `entrance` → `self.stairs_pos`. **Spawn dos heróis:** posicionar até 6 heróis nas
   casas de **CHÃO livres mais próximas** da `entrance` por BFS (não usar os offsets
   fixos, que podem cair em parede numa sala autorada apertada).
+- **Reveal inicial da névoa:** revelar a sala da entrada (a de `role=="entrance"`, ou,
+  na falta, a que contém o ponto `entrance`) via `_reveal_room`, como hoje.
 - `self.dungeon_def = defn` (cru) para as Fases 3/4 lerem `exit`/`prisoner`/
   `objectives`.
 
@@ -218,8 +221,8 @@ Função `validar_dungeon(defn) -> (ok, msg)`. Regras:
 - `len(tiles) == grid.h` e cada linha com `grid.w` colunas; valores ∈ {0,1,2}.
 - Toda `pos`/`entrance`/`exit`/`prisoner.pos` dentro do grid.
 - `entrance` em FLOOR; cada `monster.pos`/`prisoner.pos` em FLOOR ou DOOR.
-- Existem ≥ N casas de CHÃO alcançáveis a partir da `entrance` (N = nº de heróis
-  suportado) — garante que ninguém spawne em parede.
+- Existem ≥ 6 casas de CHÃO alcançáveis a partir da `entrance` (máximo de heróis) —
+  garante que qualquer grupo caiba sem spawnar em parede.
 - `monster.type` ∈ `MONSTER_DEFS`; `monster.room_id`/`prisoner.room_id` existe em
   `rooms`; (recomendado) `monster.pos` está **dentro** da sala `room_id` — senão o
   dormir/despertar fica inconsistente.
@@ -247,8 +250,12 @@ inicia**.
   do CLAUDE.md).
 - UI mínima em `game.js` (tela de lobby): dropdown com "Procedural (aleatória)" +
   cada masmorra de `dungeons/`. Sem editor.
+- Estado na sala: `self.mode` (`"procedural"`/`"authored"`) e `self.selected_dungeon`
+  (file) em `GameRoom.__init__` (default procedural / `None`).
 - A seleção é fixada antes de `enter_dungeon`; ao entrar em modo autorado,
-  `load_authored_dungeon` usa o `defn` do arquivo selecionado.
+  `load_authored_dungeon` usa o `defn` do arquivo selecionado. Uma vez que a masmorra
+  foi gerada/carregada (`dungeon_generated`), trocar a seleção **não** tem efeito até a
+  expedição terminar (evita recarregar o mundo no meio da partida).
 
 ---
 
