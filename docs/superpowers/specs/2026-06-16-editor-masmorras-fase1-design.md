@@ -56,6 +56,9 @@ arquivo JSON, com **tamanho de grid variável**, em vez de chamar `generate_dung
   guardados** (`self.dungeon_def`), porém **inertes em jogo** até a Fase 3.
 - **Sem editor** (Fase 2). Testa-se escrevendo um JSON à mão em `dungeons/`.
 - **Sem regressão:** o modo procedural permanece idêntico.
+- **Sem conclusão por objetivo:** sem objetivos ativos, a masmorra autorada se comporta
+  como uma dungeon normal — os heróis saem pela escada/entrada de volta à cidade
+  (mecânica atual). A conclusão por objetivo chega na Fase 3.
 
 ### Fora de escopo (fases seguintes)
 
@@ -120,11 +123,16 @@ várias campanhas e progressão entre fases (F4).
 
   "chests": [
     { "pos": [12,8], "gold": 30,
-      "items": [ {"id":"health_potion"}, {"id":"espada_longa"} ],
+      // ids resolvidos contra o catálogo do SERVIDOR (CHEST_ITEMS + loja do servidor)
+      "items": [ {"id":"health_potion"}, {"id":"magic_sword"} ],
       "key_objective": false }    // [guardado] baú-chave (F3)
   ],
 
-  "traps": [ { "tipo": "fosso_estacas", "pos": [9,9] } ],   // tipo ∈ ARMADILHAS
+  "traps": [
+    { "tipo": "fosso_estacas", "pos": [9,9] },             // tipo ∈ ARMADILHAS
+    { "tipo": "fosso_envenenado", "pos": [13,9],
+      "veneno_id": "veneno_aranha_sombria" }               // veneno_id obrigatório só p/ fosso_envenenado
+  ],
 
   "prisoner":   { "pos": [22,3], "room_id": 4 },            // [guardado] F3
 
@@ -143,9 +151,9 @@ várias campanhas e progressão entre fases (F4).
 | `schema_version`, `id`, `name`, `grid`, `tiles` | **Ativo** |
 | `rooms` (+ `doors`) | **Ativo** (monta `self.rooms` e `self.door_rooms`) |
 | `entrance` | **Ativo** (spawn dos heróis + `stairs_pos`) |
-| `monsters` (`type`,`pos`,`room_id`,`boss`) | **Ativo** (posição exata) |
-| `chests` (`pos`,`gold`,`items`) | **Ativo** (conteúdo exato) |
-| `traps` (`tipo`,`pos`) | **Ativo** |
+| `monsters` (`type`,`pos`,`room_id`,`boss`) | **Ativo** (posição exata; `room_id` governa dormir/despertar) |
+| `chests` (`pos`,`gold`,`items`) | **Ativo** (conteúdo exato; ids do catálogo do servidor) |
+| `traps` (`tipo`,`pos`,`veneno_id?`) | **Ativo** |
 | `exit`, `prisoner`, `objectives`, `target`, `key_objective` | **Guardado/inerte** (parseado, validado, salvo em `self.dungeon_def`; sem efeito em jogo) |
 
 ### Tipos de objetivo (definidos no esquema; lógica na Fase 3)
@@ -179,10 +187,20 @@ Novo método de `GameRoom`. A partir do dict validado:
   `enter_dungeon`).
 - `self.monsters` = um `make_monster(mdef, room)` por entrada, com `pos`/`room_id`/
   `boss` **sobrescritos** pelos valores autorados (sem `spawn_min/max`, sem
-  distribuição automática).
-- `self.chests` via `_spawn_chest(pos, gold, items)` com os itens exatos.
-- `self.traps` / armadilhas via o construtor de `ARMADILHAS` por `tipo` e `pos`.
-- `entrance` → posição de spawn dos heróis e `self.stairs_pos`.
+  distribuição automática; `make_monster` **não** cria companheiros — cada monstro
+  autorado é exatamente um). `room_id` é o que governa o dormir/despertar
+  (`server.py:11050`: `_room_by_id(m["room_id"]).locked`), portanto deve apontar a
+  sala que contém fisicamente o monstro.
+- `self.chests`: **hidratar** cada `{"id": ...}` no dict completo do item a partir do
+  catálogo do **servidor** (`CHEST_ITEMS` + lista de loja do servidor) e então
+  `_spawn_chest(pos, gold, items_hidratados)`. O `CATALOGO_ITENS` rico do ferreiro é
+  **client-only** e o servidor não o materializa — fora de escopo na Fase 1.
+- `self.traps` / armadilhas via o construtor de `ARMADILHAS` por `tipo` e `pos`, com
+  **defaults** de masmorra autorada: `aliada=false`, oculta (`visivel=false`),
+  `so_luccas=false`; `fosso_envenenado` usa o `veneno_id` autorado.
+- `entrance` → `self.stairs_pos`. **Spawn dos heróis:** posicionar até 6 heróis nas
+  casas de **CHÃO livres mais próximas** da `entrance` por BFS (não usar os offsets
+  fixos, que podem cair em parede numa sala autorada apertada).
 - `self.dungeon_def = defn` (cru) para as Fases 3/4 lerem `exit`/`prisoner`/
   `objectives`.
 
@@ -200,10 +218,15 @@ Função `validar_dungeon(defn) -> (ok, msg)`. Regras:
 - `len(tiles) == grid.h` e cada linha com `grid.w` colunas; valores ∈ {0,1,2}.
 - Toda `pos`/`entrance`/`exit`/`prisoner.pos` dentro do grid.
 - `entrance` em FLOOR; cada `monster.pos`/`prisoner.pos` em FLOOR ou DOOR.
+- Existem ≥ N casas de CHÃO alcançáveis a partir da `entrance` (N = nº de heróis
+  suportado) — garante que ninguém spawne em parede.
 - `monster.type` ∈ `MONSTER_DEFS`; `monster.room_id`/`prisoner.room_id` existe em
-  `rooms`.
-- `chest.items[].id` ∈ (`CHEST_ITEMS` ∪ `CATALOGO_ITENS`); `gold >= 0`.
-- `trap.tipo` ∈ `ARMADILHAS`.
+  `rooms`; (recomendado) `monster.pos` está **dentro** da sala `room_id` — senão o
+  dormir/despertar fica inconsistente.
+- `chest.items[].id` resolve no catálogo do **servidor** (`CHEST_ITEMS` + lista de
+  loja do servidor); `gold >= 0`.
+- `trap.tipo` ∈ `ARMADILHAS`; se `tipo == "fosso_envenenado"`, `veneno_id` presente e
+  ∈ catálogo de venenos.
 - Cada `[x,y]` em `rooms[].doors` é tile DOOR.
 - (Recomendado) mapa conexo a partir da entrada por tiles caminháveis.
 
@@ -279,5 +302,6 @@ para falha de validação.)
 |---|---|
 | Algum caminho de render do cliente com `30` fixo | Auditar `game.js`; a maioria já deriva de `tiles`. Corrigir pontuais. |
 | Esquecer uma checagem `MAP_W/MAP_H` em método de `GameRoom` (bug fora-de-limite) | Grep dirigido; cobrir com a masmorra de teste de grid ≠ 30. |
-| Itens em `CATALOGO_ITENS` (cliente) vs. `CHEST_ITEMS` (servidor) divergirem | Validar contra a união; documentar que baús aceitam ambos. |
+| Equipamento rico do ferreiro (`CATALOGO_ITENS`, client-only) não é materializável pelo servidor em baú | Fase 1 resolve itens só pelo catálogo do servidor (`CHEST_ITEMS` + loja do servidor); equipamento rico em baú fica para quando/se o servidor souber construí-lo (F2/F3). |
+| Heróis spawnando em parede numa sala autorada apertada | Spawn por BFS nas casas de chão livres mais próximas da `entrance`; validação exige ≥ N casas alcançáveis. |
 | Mudança futura do esquema | `schema_version` permite migração/recusa controlada. |
