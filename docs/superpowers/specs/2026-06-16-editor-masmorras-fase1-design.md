@@ -2,7 +2,7 @@
 
 **Data:** 2026-06-16
 **Projeto:** Legends for Hire (RPG de tabuleiro multiplayer)
-**Status:** Em revisão final — aguardando aprovação para o plano de implementação
+**Status:** Aprovado — pronto para plano de implementação
 
 ---
 
