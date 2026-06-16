@@ -1625,6 +1625,114 @@ VENENOS = {
     },
 }
 
+# ─── MASMORRAS AUTORADAS (Fase 1 do editor) ───────────────────────────────────
+import os as _os
+DUNGEONS_DIR = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "dungeons")
+# Catálogo de itens que um baú autorado pode conter (Fase 1: só CHEST_ITEMS).
+_DUNGEON_ITEM_CATALOG = {it["id"]: it for it in CHEST_ITEMS}
+
+def _bfs_chao_alcancavel(tiles, w, h, start, limite):
+    """Conta casas caminháveis (FLOOR/DOOR) alcançáveis a partir de `start`,
+    parando ao atingir `limite` (otimização). Usado p/ garantir spawn dos heróis."""
+    sx, sy = start
+    if not (0 <= sx < w and 0 <= sy < h) or tiles[sy][sx] == WALL:
+        return 0
+    visto = {(sx, sy)}; pilha = [(sx, sy)]; conta = 0
+    while pilha:
+        x, y = pilha.pop()
+        conta += 1
+        if conta >= limite:
+            return conta
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nx, ny = x + dx, y + dy
+            if (0 <= nx < w and 0 <= ny < h and (nx, ny) not in visto
+                    and tiles[ny][nx] != WALL):
+                visto.add((nx, ny)); pilha.append((nx, ny))
+    return conta
+
+def validar_dungeon(defn):
+    """Valida um dict de masmorra autorada. Retorna (ok: bool, msg: str)."""
+    if not isinstance(defn, dict):
+        return False, "Masmorra não é um objeto JSON."
+    if defn.get("schema_version") != 1:
+        return False, f"schema_version não suportado: {defn.get('schema_version')!r} (esperado 1)."
+    grid = defn.get("grid") or {}
+    w, h = grid.get("w"), grid.get("h")
+    if not (isinstance(w, int) and isinstance(h, int) and 1 <= w <= 60 and 1 <= h <= 60):
+        return False, "grid.w/grid.h ausentes ou fora de 1..60."
+    tiles = defn.get("tiles")
+    if not (isinstance(tiles, list) and len(tiles) == h):
+        return False, f"tiles deve ter {h} linhas (grid.h)."
+    for y, row in enumerate(tiles):
+        if not (isinstance(row, list) and len(row) == w):
+            return False, f"linha {y} de tiles deve ter {w} colunas (grid.w)."
+        for x, v in enumerate(row):
+            if v not in (0, 1, 2):
+                return False, f"tile inválido em ({x},{y}): {v!r} (use 0/1/2)."
+
+    def in_grid(p):
+        return (isinstance(p, (list, tuple)) and len(p) == 2
+                and isinstance(p[0], int) and isinstance(p[1], int)
+                and 0 <= p[0] < w and 0 <= p[1] < h)
+
+    def tile_at(p):
+        return tiles[p[1]][p[0]]
+
+    ent = defn.get("entrance")
+    if not (isinstance(ent, dict) and in_grid([ent.get("x"), ent.get("y")])):
+        return False, "entrance ausente ou fora do grid."
+    if tile_at([ent["x"], ent["y"]]) != FLOOR:
+        return False, "entrance precisa estar em FLOOR (1)."
+
+    rooms = defn.get("rooms") or []
+    room_ids = {r.get("id") for r in rooms}
+    for r in rooms:
+        for d in r.get("doors", []):
+            if not in_grid(d) or tile_at(d) != DOOR:
+                return False, f"porta {d} da sala {r.get('id')} não é um tile DOOR (2)."
+
+    tipos_monstro = {m["type"] for m in MONSTER_DEFS}
+    for mo in defn.get("monsters", []):
+        if mo.get("type") not in tipos_monstro:
+            return False, f"monstro tipo desconhecido: {mo.get('type')!r}."
+        if not in_grid(mo.get("pos")) or tile_at(mo["pos"]) == WALL:
+            return False, f"monstro em casa inválida: {mo.get('pos')}."
+        if mo.get("room_id") not in room_ids:
+            return False, f"monstro com room_id inexistente: {mo.get('room_id')!r}."
+
+    for ch in defn.get("chests", []):
+        if not in_grid(ch.get("pos")) or tile_at(ch["pos"]) == WALL:
+            return False, f"baú em casa inválida: {ch.get('pos')}."
+        if int(ch.get("gold", 0)) < 0:
+            return False, "baú com gold negativo."
+        for it in ch.get("items", []):
+            if it.get("id") not in _DUNGEON_ITEM_CATALOG:
+                return False, f"item de baú desconhecido: {it.get('id')!r}."
+
+    for tr in defn.get("traps", []):
+        if tr.get("tipo") not in ARMADILHAS:
+            return False, f"armadilha tipo desconhecido: {tr.get('tipo')!r}."
+        if not in_grid(tr.get("pos")) or tile_at(tr["pos"]) == WALL:
+            return False, f"armadilha em casa inválida: {tr.get('pos')}."
+        if tr["tipo"] == "fosso_envenenado" and tr.get("veneno_id") not in VENENOS:
+            return False, f"fosso_envenenado exige veneno_id válido: {tr.get('veneno_id')!r}."
+
+    pr = defn.get("prisoner")
+    if pr is not None:
+        if not in_grid(pr.get("pos")) or tile_at(pr["pos"]) == WALL:
+            return False, f"prisioneiro em casa inválida: {pr.get('pos')}."
+        if pr.get("room_id") not in room_ids:
+            return False, f"prisioneiro com room_id inexistente: {pr.get('room_id')!r}."
+
+    ex = defn.get("exit")
+    if ex is not None and not in_grid([ex.get("x"), ex.get("y")]):
+        return False, "exit fora do grid."
+
+    if _bfs_chao_alcancavel(tiles, w, h, [ent["x"], ent["y"]], limite=6) < 6:
+        return False, "menos de 6 casas de chão alcançáveis a partir da entrada."
+
+    return True, "ok"
+
 # ─── ARMADILHAS ───────────────────────────────────────────────────────────────
 # Sistema de armadilhas COLOCÁVEIS (distinto das `self.traps` geradas na masmorra).
 # São criadas pelo Luccas (rogue) ou disparadas por quem pisar na casa. Cada
