@@ -1,3 +1,6 @@
+# Config local de tooling
+.claude/
+
 # Companion visual do brainstorming (superpowers)
 .superpowers/
 

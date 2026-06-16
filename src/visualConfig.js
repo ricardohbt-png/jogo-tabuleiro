@@ -22,6 +22,10 @@ window.VC = {
     dirMain:  { color: 0xfffaf0, intensity: 1.80, pos: [ 5.0, 10.0,  5.0] },
     dirFill:  { color: 0xe8f0ff, intensity: 0.60, pos: [-4.0,  6.0, -4.0] },
     rimLight: { color: 0xffe0b0, intensity: 0.22, pos: [ 0.0,  4.0, -7.0] },
+    // Luz SW dedicada às FRENTES dos peões (miniaturas olham para sudoeste,
+    // lado da câmera padrão). Substitui as 2–3 PointLights que cada peão
+    // carregava — contagem de luzes estável = sem recompilação de shaders.
+    dirPawn:  { color: 0xfff0d8, intensity: 0.95, pos: [-5.0,  8.0, -5.0] },
   },
 
   // ── Floor Tiles ────────────────────────────────────────────────────────────
