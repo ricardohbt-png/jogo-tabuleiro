@@ -108,8 +108,26 @@
     return [x, y];
   }
 
-  function doorLink(x, y) {}
-  function doorUnlink(x, y) {}
+  function roomBorderTouches(r, x, y) {
+    // (x,y) é casa de porta válida para a sala r se for adjacente (ortogonal) a
+    // uma casa da borda do retângulo da sala, ou estiver na própria borda.
+    for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const bx = x + dx, by = y + dy;
+      const onEdge = (bx === r.x || bx === r.x + r.w - 1 || by === r.y || by === r.y + r.h - 1);
+      const inside = bx >= r.x && bx < r.x + r.w && by >= r.y && by < r.y + r.h;
+      if (inside && onEdge) return true;
+    }
+    return false;
+  }
+  function doorLink(x, y) {
+    for (const r of S.rooms) {
+      if (roomBorderTouches(r, x, y) && !r.doors.some(d => d[0] === x && d[1] === y))
+        r.doors.push([x, y]);
+    }
+  }
+  function doorUnlink(x, y) {
+    for (const r of S.rooms) r.doors = r.doors.filter(d => !(d[0] === x && d[1] === y));
+  }
 
   function paintTile(x, y) {
     if (S.tool === "wall") S.tiles[y][x] = WALL;
@@ -118,18 +136,40 @@
   }
 
   let painting = false;
+  let roomDrag = null;
   board.addEventListener("mousedown", (ev) => {
     const c = cellFromEvent(ev); if (!c) return;
     if (["wall", "floor", "door"].includes(S.tool)) {
       painting = true; paintTile(c[0], c[1]); render();
+    } else if (S.tool === "room") {
+      roomDrag = { x0: c[0], y0: c[1], x1: c[0], y1: c[1] };
     }
   });
   board.addEventListener("mousemove", (ev) => {
-    if (!painting) return;
     const c = cellFromEvent(ev); if (!c) return;
-    paintTile(c[0], c[1]); render();
+    if (painting) { paintTile(c[0], c[1]); render(); return; }
+    if (roomDrag) {
+      roomDrag.x1 = c[0]; roomDrag.y1 = c[1];
+      render();
+      const x = Math.min(roomDrag.x0, roomDrag.x1), y = Math.min(roomDrag.y0, roomDrag.y1);
+      const w = Math.abs(roomDrag.x1 - roomDrag.x0) + 1, h = Math.abs(roomDrag.y1 - roomDrag.y0) + 1;
+      ctx.strokeStyle = "#ffd86a"; ctx.lineWidth = 1;
+      ctx.strokeRect(x * CELL + 1, y * CELL + 1, w * CELL - 2, h * CELL - 2);
+    }
   });
-  window.addEventListener("mouseup", () => { painting = false; });
+  window.addEventListener("mouseup", () => {
+    painting = false;
+    if (roomDrag) {
+      const x = Math.min(roomDrag.x0, roomDrag.x1), y = Math.min(roomDrag.y0, roomDrag.y1);
+      const w = Math.abs(roomDrag.x1 - roomDrag.x0) + 1, h = Math.abs(roomDrag.y1 - roomDrag.y0) + 1;
+      if (w >= 2 && h >= 2) {
+        for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) S.tiles[j][i] = FLOOR;
+        const role = S.rooms.length === 0 ? "entrance" : "monster";
+        S.rooms.push({ id: S.nextRoomId++, x, y, w, h, role, locked: role !== "entrance", doors: [] });
+      }
+      roomDrag = null; render();
+    }
+  });
 
   // Expor para verificação no console / tasks seguintes.
   window.EDITOR = { S, initGrid, render, buildToolbar, cellFromEvent, paintTile, doorLink, doorUnlink, WALL, FLOOR, DOOR };
