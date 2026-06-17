@@ -133,10 +133,27 @@ async def test_prisioneiro():
     check("status do resgate = failed",
           r2._objetivo_status(r2.objectives["primary"]) == "failed")
 
+async def test_bonus_secundario():
+    print("\n[4] secundário cumprido concede bônus de XP/ouro")
+    r = setup_authored()
+    r.dungeon_def["objectives"] = {"primary": {"type": "kill_all"},
+                                   "secondary": [{"type": "open_key_chest"}]}
+    await r.enter_dungeon("p1")
+    r.end_game = lambda victory=True: asyncio.sleep(0)  # não encerra de verdade
+    p1 = r.players["p1"]
+    xp0, ouro0 = p1["xp"], p1["gold"]
+    # cumpre principal (kill_all) e secundário (open_key_chest)
+    for m in r.monsters.values(): m["hp"] = 0
+    r.key_chest_opened = True
+    await r._check_objectives()
+    check("XP do grupo subiu pelo secundário", p1["xp"] > xp0)
+    check("ouro do grupo subiu pelo secundário", p1["gold"] > ouro0)
+
 async def main():
     await test_instanciar()
     await test_conclusao_simples()
     await test_prisioneiro()
+    await test_bonus_secundario()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

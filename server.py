@@ -28,7 +28,9 @@ FLOOR = 1
 DOOR  = 2
 MAP_W = 30
 MAP_H = 30
-PRIS_HP = 12   # vida do prisioneiro (Fase 3)
+PRIS_HP = 12        # vida do prisioneiro (Fase 3)
+OBJ_BONUS_XP = 50   # XP concedido por objetivo secundário cumprido (Fase 3)
+OBJ_BONUS_OURO = 25 # ouro concedido por objetivo secundário cumprido (Fase 3)
 
 # ─── D20 HELPERS ──────────────────────────────────────────────────────────────
 
@@ -11857,7 +11859,14 @@ class GameRoom:
     # ── Fase 3: avaliação de objetivos ──────────────────────────────────────
 
     async def _conceder_bonus_secundario(self, obj):
-        pass  # stub — Task 4 implementa XP/ouro
+        """Concede XP+ouro ao grupo por um objetivo secundário cumprido."""
+        for p in self.players.values():
+            if p.get("alive"):
+                p["xp"] += OBJ_BONUS_XP
+                p["gold"] += OBJ_BONUS_OURO
+                await self._check_level_up(p)
+        nome = (obj or {}).get("type", "objetivo")
+        await self.gm_say(f"⭐ Objetivo secundário **{nome}** cumprido! +{OBJ_BONUS_XP} XP, +{OBJ_BONUS_OURO} ouro ao grupo.")
 
     def _objetivo_cumprido(self, obj):
         """True se o objetivo `obj` está cumprido no estado atual (só autorado)."""
