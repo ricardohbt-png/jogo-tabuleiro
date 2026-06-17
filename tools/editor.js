@@ -137,14 +137,105 @@
 
   let painting = false;
   let roomDrag = null;
+  function entityAt(x, y) {
+    if (S.entrance && S.entrance.x === x && S.entrance.y === y) return { kind: "entrance", pos: [x, y] };
+    if (S.exit && S.exit.x === x && S.exit.y === y) return { kind: "exit", pos: [x, y] };
+    if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) return { kind: "prisoner", ref: S.prisoner, pos: [x, y] };
+    const find = (arr, kind) => { const r = arr.find(e => e.pos[0] === x && e.pos[1] === y); return r ? { kind, ref: r, pos: [x, y] } : null; };
+    return find(S.monsters, "monster") || find(S.chests, "chest") || find(S.traps, "trap") || null;
+  }
+
+  function roomIdAt(x, y) {
+    const r = S.rooms.find(r => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h);
+    return r ? r.id : null;
+  }
+
+  function placeEntity(x, y) {
+    const rid = roomIdAt(x, y);
+    switch (S.tool) {
+      case "entrance": S.entrance = { x, y }; break;
+      case "exit": S.exit = { x, y }; break;
+      case "prisoner": S.prisoner = { pos: [x, y], room_id: rid }; break;
+      case "monster": S.monsters.push({ type: (CAT.monsters[0] || {}).type || "goblin", pos: [x, y], room_id: rid, boss: false, target: false }); break;
+      case "chest": S.chests.push({ pos: [x, y], gold: 0, items: [], key_objective: false }); break;
+      case "trap": S.traps.push({ tipo: (CAT.traps[0] || {}).tipo || "fosso_estacas", pos: [x, y] }); break;
+    }
+  }
+
+  function eraseAt(x, y) {
+    if (S.tiles[y][x] === DOOR) doorUnlink(x, y);
+    if (S.entrance && S.entrance.x === x && S.entrance.y === y) S.entrance = null;
+    if (S.exit && S.exit.x === x && S.exit.y === y) S.exit = null;
+    if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) S.prisoner = null;
+    S.monsters = S.monsters.filter(e => !(e.pos[0] === x && e.pos[1] === y));
+    S.chests = S.chests.filter(e => !(e.pos[0] === x && e.pos[1] === y));
+    S.traps = S.traps.filter(e => !(e.pos[0] === x && e.pos[1] === y));
+    S.tiles[y][x] = WALL;
+  }
+
+  const panel = document.getElementById("panel");
+  function opt(list, val, fmt) { return list.map(o => `<option value="${o.v}"${o.v === val ? " selected" : ""}>${fmt(o)}</option>`).join(""); }
+
+  function renderPanel() {
+    if (!S.sel) { panel.innerHTML = "<em>Nada selecionado. Escolha uma ferramenta e desenhe.</em>"; return; }
+    const k = S.sel.kind, ref = S.sel.ref;
+    if (k === "monster") {
+      panel.innerHTML = `<b>👹 Monstro</b>
+        <label>tipo</label><select id="p-type">${opt(CAT.monsters.map(m => ({ v: m.type, name: m.name })), ref.type, o => o.v + " — " + o.name)}</select>
+        <label>room_id <input id="p-room" value="${ref.room_id ?? ""}"></label>
+        <label><input type="checkbox" id="p-boss" ${ref.boss ? "checked" : ""}> chefe (boss)</label>
+        <label><input type="checkbox" id="p-target" ${ref.target ? "checked" : ""}> alvo do objetivo</label>`;
+      document.getElementById("p-type").onchange = e => { ref.type = e.target.value; render(); };
+      document.getElementById("p-room").onchange = e => { ref.room_id = e.target.value === "" ? null : Number(e.target.value); };
+      document.getElementById("p-boss").onchange = e => { ref.boss = e.target.checked; };
+      document.getElementById("p-target").onchange = e => { ref.target = e.target.checked; };
+    } else if (k === "chest") {
+      panel.innerHTML = `<b>🧰 Baú</b>
+        <label>ouro <input id="p-gold" type="number" value="${ref.gold}"></label>
+        <label><input type="checkbox" id="p-key" ${ref.key_objective ? "checked" : ""}> baú-chave</label>
+        <label>itens</label>
+        <div id="p-items">${ref.items.map((it, i) => `<div>${it.id} <button data-i="${i}" class="rm-item">×</button></div>`).join("")}</div>
+        <select id="p-add">${opt(CAT.items.map(it => ({ v: it.id, name: it.name })), "", o => o.v + " — " + o.name)}</select>
+        <button id="p-additem">+ item</button>`;
+      document.getElementById("p-gold").onchange = e => { ref.gold = Math.max(0, Number(e.target.value) | 0); };
+      document.getElementById("p-key").onchange = e => { ref.key_objective = e.target.checked; };
+      document.getElementById("p-additem").onclick = () => { const id = document.getElementById("p-add").value; if (id) ref.items.push({ id }); renderPanel(); };
+      panel.querySelectorAll(".rm-item").forEach(b => b.onclick = () => { ref.items.splice(Number(b.dataset.i), 1); renderPanel(); });
+    } else if (k === "trap") {
+      const meta = CAT.traps.find(t => t.tipo === ref.tipo) || {};
+      panel.innerHTML = `<b>⚠️ Armadilha</b>
+        <label>tipo</label><select id="p-tt">${opt(CAT.traps.map(t => ({ v: t.tipo, name: t.nome })), ref.tipo, o => o.v + " — " + o.name)}</select>
+        ${meta.precisa_veneno ? `<label>veneno</label><select id="p-ven">${opt(CAT.venoms.map(v => ({ v: v.id, name: v.name })), ref.veneno_id || "", o => o.v + " — " + o.name)}</select>` : ""}`;
+      document.getElementById("p-tt").onchange = e => { ref.tipo = e.target.value; if (!CAT.traps.find(t => t.tipo === ref.tipo).precisa_veneno) delete ref.veneno_id; renderPanel(); render(); };
+      if (meta.precisa_veneno) document.getElementById("p-ven").onchange = e => { ref.veneno_id = e.target.value; };
+    } else if (k === "room") {
+      panel.innerHTML = `<b>▦ Sala #${ref.id}</b>
+        <label>role</label><select id="p-role">${opt(["entrance", "monster", "chest", "trap", "boss", "empty"].map(r => ({ v: r })), ref.role, o => o.v)}</select>
+        <label><input type="checkbox" id="p-locked" ${ref.locked ? "checked" : ""}> trancada</label>
+        <div style="margin-top:8px;color:#8a7a5a;font-size:11px">portas: ${ref.doors.length}</div>`;
+      document.getElementById("p-role").onchange = e => { ref.role = e.target.value; render(); };
+      document.getElementById("p-locked").onchange = e => { ref.locked = e.target.checked; render(); };
+    } else if (k === "prisoner") {
+      panel.innerHTML = `<b>🧍 Prisioneiro</b><div style="color:#8a7a5a;font-size:11px">sala ${ref.room_id ?? "—"}</div>`;
+    } else {
+      panel.innerHTML = `<b>${k}</b>`;
+    }
+  }
+
   board.addEventListener("mousedown", (ev) => {
     const c = cellFromEvent(ev); if (!c) return;
-    if (["wall", "floor", "door"].includes(S.tool)) {
-      painting = true; paintTile(c[0], c[1]); render();
-    } else if (S.tool === "room") {
-      roomDrag = { x0: c[0], y0: c[1], x1: c[0], y1: c[1] };
-    }
+    const [x, y] = c;
+    if (["wall", "floor", "door"].includes(S.tool)) { painting = true; paintTile(x, y); render(); }
+    else if (S.tool === "room") { roomDrag = { x0: x, y0: y, x1: x, y1: y }; }
+    else if (["entrance", "exit", "prisoner", "monster", "chest", "trap"].includes(S.tool)) { placeEntity(x, y); S.sel = entityAt(x, y); renderPanel(); render(); }
+    else if (S.tool === "erase") { eraseAt(x, y); S.sel = null; renderPanel(); render(); }
+    else if (S.tool === "select") { S.sel = entityAt(x, y) || roomSel(x, y); renderPanel(); render(); }
   });
+
+  function roomSel(x, y) {
+    const r = S.rooms.find(r => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h);
+    return r ? { kind: "room", ref: r } : null;
+  }
   board.addEventListener("mousemove", (ev) => {
     const c = cellFromEvent(ev); if (!c) return;
     if (painting) { paintTile(c[0], c[1]); render(); return; }
@@ -172,9 +263,10 @@
   });
 
   // Expor para verificação no console / tasks seguintes.
-  window.EDITOR = { S, initGrid, render, buildToolbar, cellFromEvent, paintTile, doorLink, doorUnlink, WALL, FLOOR, DOOR };
+  window.EDITOR = { S, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, entityAt, doorLink, doorUnlink, WALL, FLOOR, DOOR };
 
   initGrid(S.grid.w, S.grid.h);
   buildToolbar();
   render();
+  renderPanel();
 })();
