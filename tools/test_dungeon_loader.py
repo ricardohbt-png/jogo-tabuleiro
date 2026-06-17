@@ -8,6 +8,8 @@ except Exception:
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import server
 from server import GameRoom, make_player, WALL, FLOOR, DOOR, validar_dungeon
+from server import (hidratar_itens_bau, make_authored_trap,
+                    listar_dungeons, carregar_dungeon)
 
 PASS = 0; FAIL = 0
 def check(name, cond):
@@ -105,8 +107,24 @@ def test_validacao():
     d = sample_dungeon(); d["rooms"][0]["doors"] = None
     nao_crasha("doors=None tratado como vazio sem crashar", d)
 
+def test_helpers():
+    print("\n[2] helpers (hidratação / trap / arquivos)")
+    itens = hidratar_itens_bau([{"id": "health_potion"}])
+    check("hidratação devolve dict completo", itens and itens[0]["name"] == "Poção de Vida")
+    check("hidratação ignora id inexistente", hidratar_itens_bau([{"id": "x"}]) == [])
+
+    arm = make_authored_trap({"tipo": "fosso_estacas", "pos": [4, 1]})
+    check("trap autorada: tipo certo", arm["tipo"] == "fosso_estacas")
+    check("trap autorada: hostil e oculta",
+          arm["aliada"] is False and arm["visivel"] is False
+          and arm["ativada"] is False and arm["so_luccas"] is False)
+    arm2 = make_authored_trap({"tipo": "fosso_envenenado", "pos": [4, 1],
+                               "veneno_id": "veneno_aranha_sombria"})
+    check("trap envenenada guarda veneno_id", arm2.get("veneno_id") == "veneno_aranha_sombria")
+
 async def main():
     test_validacao()
+    test_helpers()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

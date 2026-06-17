@@ -1766,6 +1766,64 @@ def validar_dungeon(defn):
 
     return True, "ok"
 
+def hidratar_itens_bau(items):
+    """Resolve [{'id': ...}] nos dicts completos de CHEST_ITEMS. Ignora ids
+    desconhecidos (a validação já recusa antes de chegar aqui)."""
+    out = []
+    for it in items or []:
+        base = _DUNGEON_ITEM_CATALOG.get(it.get("id"))
+        if base:
+            out.append(deepcopy(base))
+    return out
+
+def make_authored_trap(tdef):
+    """Cria o dict de uma armadilha de masmorra autorada (hostil, oculta),
+    no formato de self.armadilhas. Espelha _gerar_armadilhas_kobold."""
+    tipo = tdef["tipo"]
+    meta = ARMADILHAS[tipo]
+    arm = {
+        "id":            new_id(),
+        "tipo":          tipo,
+        "pos":           [tdef["pos"][0], tdef["pos"][1]],
+        "icone":         meta["icone"],
+        "nome":          meta["nome"],
+        "visivel":       False,
+        "ativada":       False,
+        "aliada":        False,
+        "so_luccas":     False,
+        "efeitos_ativos": [],
+    }
+    if tipo == "fosso_envenenado":
+        arm["veneno_id"] = tdef.get("veneno_id")
+    return arm
+
+def carregar_dungeon(file):
+    """Lê e parseia um arquivo de DUNGEONS_DIR. Retorna dict ou None."""
+    if not isinstance(file, str) or not file or file != os.path.basename(file):
+        return None  # proteção contra path traversal (sem componente de diretório)
+    caminho = os.path.join(DUNGEONS_DIR, file)
+    try:
+        with open(caminho, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+def listar_dungeons():
+    """Varre DUNGEONS_DIR e devolve [{id, name, file}] das masmorras válidas."""
+    out = []
+    try:
+        arquivos = sorted(f for f in os.listdir(DUNGEONS_DIR) if f.endswith(".json"))
+    except Exception:
+        return out
+    for file in arquivos:
+        defn = carregar_dungeon(file)
+        if not defn:
+            continue
+        ok, _ = validar_dungeon(defn)
+        if ok:
+            out.append({"id": defn.get("id", file), "name": defn.get("name", file), "file": file})
+    return out
+
 # ─── ARMADILHAS ───────────────────────────────────────────────────────────────
 # Sistema de armadilhas COLOCÁVEIS (distinto das `self.traps` geradas na masmorra).
 # São criadas pelo Luccas (rogue) ou disparadas por quem pisar na casa. Cada
