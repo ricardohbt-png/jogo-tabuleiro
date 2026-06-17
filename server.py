@@ -2985,13 +2985,17 @@ class GameRoom:
             return
         if not file:
             self.mode = "procedural"; self.selected_dungeon = None
+            self.dungeon_def = None
         else:
             defn = carregar_dungeon(file)
             ok, msg = (False, "Masmorra não encontrada.") if defn is None else validar_dungeon(defn)
             if not ok:
                 await self.send_to(pid, {"type": "error", "msg": f"Masmorra inválida: {msg}"})
                 return
+            # Guarda o dict já carregado/validado para enter_dungeon usar
+            # (autorada = mode=="authored" and self.dungeon_def is not None).
             self.mode = "authored"; self.selected_dungeon = file
+            self.dungeon_def = defn
         await self.broadcast_lobby()
 
     # ── game start ─────────────────────────────────────────────────────────

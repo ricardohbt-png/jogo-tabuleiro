@@ -224,6 +224,24 @@ async def test_arquivo_disco():
           r.map_w == defn["grid"]["w"] and r.map_h == defn["grid"]["h"])
     check("nenhum monstro em parede (arquivo)", monstros_em_parede(r) == [])
 
+async def test_fluxo_selecao_enter():
+    # Regressão: o fluxo REAL (handle_select_dungeon → enter_dungeon) deve carregar
+    # a masmorra autorada. Bug original: handle_select_dungeon não setava
+    # self.dungeon_def, então enter_dungeon (autorada = ... and dungeon_def is not None)
+    # caía no procedural. NÃO injeta dungeon_def à mão — usa só a seleção.
+    print("\n[7] fluxo lobby→seleção→enter (regressão integração)")
+    r = setup_room(); r.phase = "lobby"
+    await r.handle_select_dungeon("p1", "test_fase1.json")
+    check("seleção marca authored", r.mode == "authored")
+    check("seleção carrega dungeon_def (não fica None)", r.dungeon_def is not None)
+    r.phase = "city"
+    await r.enter_dungeon("p1")
+    check("enter aplica grid autorado 16×12 (não procedural 30×30)",
+          r.map_w == 16 and r.map_h == 12)
+    check("monstros vêm do arquivo (goblin/skeleton)",
+          sorted(m["type"] for m in r.monsters.values()) == ["goblin", "skeleton"])
+    check("nenhum monstro em parede (fluxo real)", monstros_em_parede(r) == [])
+
 async def main():
     test_validacao()
     test_helpers()
@@ -231,6 +249,7 @@ async def main():
     await test_load_authored()
     await test_select_dungeon()
     await test_arquivo_disco()
+    await test_fluxo_selecao_enter()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 
