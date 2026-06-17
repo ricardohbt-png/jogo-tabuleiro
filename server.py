@@ -2859,6 +2859,13 @@ class GameRoom:
         # névoa/armadilhas intactos) em vez de regenerar. Volta a False quando a
         # masmorra é concluída (boss derrotado → end_game), liberando uma nova.
         self.dungeon_generated = False
+        # Tamanho do tabuleiro (procedural = 30×30; masmorra autorada define o seu).
+        self.map_w = MAP_W
+        self.map_h = MAP_H
+        # Seleção de masmorra no lobby (Fase 1 do editor).
+        self.mode = "procedural"          # "procedural" | "authored"
+        self.selected_dungeon = None      # nome do arquivo em dungeons/ (modo authored)
+        self.dungeon_def = None           # dict cru da masmorra autorada carregada
         self.monsters = {}      # id -> monster
         self.corpses = {}       # id -> cadáver (monstro morto, alvo de Animar Mortos)
         self.animados_phase_pid = None  # pid no "turno dos servos" (logo após o mago)
@@ -3495,14 +3502,14 @@ class GameRoom:
             ([x, y]
              for y in range(room["y"], room["y"] + room["h"])
              for x in range(room["x"], room["x"] + room["w"])
-             if 0 <= x < MAP_W and 0 <= y < MAP_H and self.tiles[y][x] == FLOOR),
+             if 0 <= x < self.map_w and 0 <= y < self.map_h and self.tiles[y][x] == FLOOR),
             key=lambda c: max(abs(c[0] - cx), abs(c[1] - cy)))
         ocupadas = set()
         colocados = []
         # Maiores primeiro: os 2x2 precisam de espaço contíguo.
         def _cabe(m, c, f):
             return all(tuple(t) not in ocupadas
-                       and 0 <= t[0] < MAP_W and 0 <= t[1] < MAP_H
+                       and 0 <= t[0] < self.map_w and 0 <= t[1] < self.map_h
                        and self.tiles[t[1]][t[0]] == FLOOR
                        for t in self._monster_tiles_at(m, c[0], c[1], f))
 
@@ -3531,8 +3538,8 @@ class GameRoom:
 
     def _reveal_room(self, room):
         # Reveal room interior + 1-tile border so surrounding walls are visible
-        for ry in range(max(0, room["y"] - 1), min(MAP_H, room["y"] + room["h"] + 1)):
-            for rx in range(max(0, room["x"] - 1), min(MAP_W, room["x"] + room["w"] + 1)):
+        for ry in range(max(0, room["y"] - 1), min(self.map_h, room["y"] + room["h"] + 1)):
+            for rx in range(max(0, room["x"] - 1), min(self.map_w, room["x"] + room["w"] + 1)):
                 self.explored.add((rx, ry))
 
     def _reveal_around(self, px, py, radius=1):
@@ -3561,7 +3568,7 @@ class GameRoom:
         """True se (x,y) é uma porta fechada. Uma porta serve até 2 salas; só
         fica passável quando TODAS estão destrancadas (basta uma trancada para
         a porta seguir fechada)."""
-        if not (0 <= x < MAP_W and 0 <= y < MAP_H):
+        if not (0 <= x < self.map_w and 0 <= y < self.map_h):
             return False
         if self.tiles[y][x] != DOOR:
             return False
@@ -3569,7 +3576,7 @@ class GameRoom:
 
     def _blocks_tile(self, x, y):
         """Tile intransponível: parede ou porta fechada (fora do mapa também)."""
-        if not (0 <= x < MAP_W and 0 <= y < MAP_H):
+        if not (0 <= x < self.map_w and 0 <= y < self.map_h):
             return True
         return self.tiles[y][x] == WALL or self._is_closed_door(x, y)
 
@@ -3617,7 +3624,7 @@ class GameRoom:
             return
 
         nx, ny = p["pos"][0] + dx, p["pos"][1] + dy
-        if not (0 <= nx < MAP_W and 0 <= ny < MAP_H):
+        if not (0 <= nx < self.map_w and 0 <= ny < self.map_h):
             return
         if self.tiles[ny][nx] == WALL:
             await self.send_to(pid, {"type": "error", "msg": "Caminho bloqueado."})
@@ -3704,7 +3711,7 @@ class GameRoom:
         p = self.players.get(pid)
         if not p or not p["alive"]:
             return
-        if not (0 <= tx < MAP_W and 0 <= ty < MAP_H):
+        if not (0 <= tx < self.map_w and 0 <= ty < self.map_h):
             return
         if self.tiles[ty][tx] != DOOR:
             return
@@ -3784,7 +3791,7 @@ class GameRoom:
                 y += sy; iy += 1
             if (x, y) == (x1, y1):
                 break
-            if not (0 <= x < MAP_W and 0 <= y < MAP_H):
+            if not (0 <= x < self.map_w and 0 <= y < self.map_h):
                 return False
             if self.tiles[y][x] == WALL or self._is_closed_door(x, y):
                 return False
@@ -3802,7 +3809,7 @@ class GameRoom:
                 if dx == 0 and dy == 0:
                     continue
                 nx, ny = cx + dx, cy + dy
-                if 0 <= nx < MAP_W and 0 <= ny < MAP_H and \
+                if 0 <= nx < self.map_w and 0 <= ny < self.map_h and \
                    self.tiles[ny][nx] == FLOOR and (nx, ny) not in occupied:
                     cands.append([nx, ny])
         return random.choice(cands) if cands else list(pos)
@@ -4711,7 +4718,7 @@ class GameRoom:
                 pp["animados"] = [a for a in pp["animados"] if a.get("id") != aid]
 
     def _tile_livre_para_animado(self, nx, ny, self_id):
-        if not (0 <= nx < MAP_W and 0 <= ny < MAP_H): return False
+        if not (0 <= nx < self.map_w and 0 <= ny < self.map_h): return False
         if self.tiles[ny][nx] == WALL: return False
         if any(m["hp"] > 0 and [nx, ny] in self._monster_tiles(m) for m in self.monsters.values()): return False
         if any(p["alive"] and p["pos"] == [nx, ny] for p in self.players.values()): return False
@@ -6642,7 +6649,7 @@ class GameRoom:
         reveladas = set()   # tiles que esta conjuração revelou (p/ achar monstros/armadilhas)
 
         def _revelar(x, y):
-            if 0 <= x < MAP_W and 0 <= y < MAP_H:
+            if 0 <= x < self.map_w and 0 <= y < self.map_h:
                 self.explored.add((x, y))
                 self.magic_reveal[(x, y)] = expira   # visibilidade ao vivo (monstros) temporária
                 reveladas.add((x, y))
@@ -6662,8 +6669,8 @@ class GameRoom:
                 continue
             if r.get("locked"):
                 salas_reveladas += 1
-            for ry in range(max(0, r["y"] - 1), min(MAP_H, r["y"] + r["h"] + 1)):
-                for rx in range(max(0, r["x"] - 1), min(MAP_W, r["x"] + r["w"] + 1)):
+            for ry in range(max(0, r["y"] - 1), min(self.map_h, r["y"] + r["h"] + 1)):
+                for rx in range(max(0, r["x"] - 1), min(self.map_w, r["x"] + r["w"] + 1)):
                     _revelar(rx, ry)
 
         # Conta monstros à vista na área revelada (já visíveis via magic_reveal).
@@ -7380,7 +7387,7 @@ class GameRoom:
         sy = (dy > 0) - (dy < 0)
         cx, cy = pos_a[0] + sx, pos_a[1] + sy
         while [cx, cy] != pos_b:
-            if not (0 <= cx < MAP_W and 0 <= cy < MAP_H):
+            if not (0 <= cx < self.map_w and 0 <= cy < self.map_h):
                 return True
             if self.tiles[cy][cx] == WALL:
                 return True
@@ -7407,7 +7414,7 @@ class GameRoom:
             [x, y]
             for y in range(cy - raio, cy + raio + 1)
             for x in range(cx - raio, cx + raio + 1)
-            if 0 <= x < MAP_W and 0 <= y < MAP_H
+            if 0 <= x < self.map_w and 0 <= y < self.map_h
         ]
         await self.broadcast({
             "type": "explosion_area",
@@ -7530,7 +7537,7 @@ class GameRoom:
             hw = max(0, round((k / comp) * (base / 2)))   # meia-largura cresce até a base
             for o in range(-hw, hw + 1):
                 tx, ty = cxk + px * o, cyk + py * o
-                if 0 <= tx < MAP_W and 0 <= ty < MAP_H and self.tiles[ty][tx] != WALL:
+                if 0 <= tx < self.map_w and 0 <= ty < self.map_h and self.tiles[ty][tx] != WALL:
                     tiles.add((tx, ty))
         return tiles
 
@@ -7538,7 +7545,7 @@ class GameRoom:
         """Empurra alvo até `dist` casas em (dx,dy). Retorna True se colidiu (parou cedo)."""
         for _ in range(max(0, dist)):
             nx, ny = alvo["pos"][0] + dx, alvo["pos"][1] + dy
-            if not (0 <= nx < MAP_W and 0 <= ny < MAP_H) or self.tiles[ny][nx] == WALL:
+            if not (0 <= nx < self.map_w and 0 <= ny < self.map_h) or self.tiles[ny][nx] == WALL:
                 return True
             if any(o["hp"] > 0 and o["pos"] == [nx, ny] for o in self.monsters.values() if o is not alvo):
                 return True
@@ -7728,10 +7735,10 @@ class GameRoom:
         seq = []
         for _ in range(alcance):
             nx, ny = x + dx, y + dy
-            if not (0 <= nx < MAP_W and 0 <= ny < MAP_H) or self.tiles[ny][nx] == WALL:
+            if not (0 <= nx < self.map_w and 0 <= ny < self.map_h) or self.tiles[ny][nx] == WALL:
                 dx, dy = -dx, -dy                      # ricochete na parede
                 nx, ny = x + dx, y + dy
-                if not (0 <= nx < MAP_W and 0 <= ny < MAP_H) or self.tiles[ny][nx] == WALL:
+                if not (0 <= nx < self.map_w and 0 <= ny < self.map_h) or self.tiles[ny][nx] == WALL:
                     break                              # preso (ambos os lados bloqueados)
             x, y = nx, ny
             seq.append((x, y))
@@ -8373,7 +8380,7 @@ class GameRoom:
         # Posição: casa atual ou cardinalmente adjacente.
         tx = int(msg.get("tx", p["pos"][0]))
         ty = int(msg.get("ty", p["pos"][1]))
-        if not (0 <= tx < MAP_W and 0 <= ty < MAP_H) or self.tiles[ty][tx] == WALL:
+        if not (0 <= tx < self.map_w and 0 <= ty < self.map_h) or self.tiles[ty][tx] == WALL:
             await self.send_to(pid, {"type": "error", "msg": "Posição inválida para a armadilha."}); return
         if abs(tx - p["pos"][0]) + abs(ty - p["pos"][1]) > 1:
             await self.send_to(pid, {"type": "error", "msg": "Coloque a armadilha na sua casa ou casa adjacente."}); return
@@ -9776,7 +9783,7 @@ class GameRoom:
         for _ in range(n):
             px = cx + random.randint(-2, 2)
             py = cy + random.randint(-2, 2)
-            if not (0 <= px < MAP_W and 0 <= py < MAP_H):
+            if not (0 <= px < self.map_w and 0 <= py < self.map_h):
                 continue
             if self.tiles[py][px] == WALL:
                 continue
@@ -11725,7 +11732,7 @@ class GameRoom:
             for dy in range(-r, r + 1):
                 for dx in range(-r, r + 1):
                     x, y = ax + dx, ay + dy
-                    if not (0 <= x < MAP_W and 0 <= y < MAP_H):
+                    if not (0 <= x < self.map_w and 0 <= y < self.map_h):
                         continue
                     # Mesma regra do herói: não revela o interior de sala trancada.
                     if self._tile_in_locked_room(x, y):

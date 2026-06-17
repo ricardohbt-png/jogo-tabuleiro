@@ -122,9 +122,38 @@ def test_helpers():
                                "veneno_id": "veneno_aranha_sombria"})
     check("trap envenenada guarda veneno_id", arm2.get("veneno_id") == "veneno_aranha_sombria")
 
+def setup_room(cls_list=(("p1", "Victor", "warrior"), ("p2", "Pedro", "mage"))):
+    r = GameRoom("TEST")
+    async def noop(*a, **k): pass
+    r.gm_say = noop; r.broadcast = noop; r.push_state = noop; r.send_to = noop
+    r.broadcast_city_state = noop
+    for pid, nome, cls in cls_list:
+        r.players[pid] = make_player(pid, nome, cls, 0)
+    r.player_order = list(r.players.keys())
+    r.host_pid = "p1"; r.phase = "city"
+    return r
+
+def monstros_em_parede(r):
+    return [m for m in r.monsters.values()
+            if r.tiles[m["pos"][1]][m["pos"][0]] == WALL]
+
+async def test_grid_procedural():
+    print("\n[3] grid dinâmico — regressão procedural")
+    r = setup_room()
+    check("default map_w/map_h = 30",
+          getattr(r, "map_w", None) == 30 and getattr(r, "map_h", None) == 30)
+    check("modo default = procedural", getattr(r, "mode", None) == "procedural")
+    await r.enter_dungeon("p1")
+    check("procedural ainda gera 30×30",
+          len(r.tiles) == 30 and len(r.tiles[0]) == 30)
+    check("map_w/map_h batem com tiles após procedural",
+          r.map_w == len(r.tiles[0]) and r.map_h == len(r.tiles))
+    check("procedural: nenhum monstro em parede", monstros_em_parede(r) == [])
+
 async def main():
     test_validacao()
     test_helpers()
+    await test_grid_procedural()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 
