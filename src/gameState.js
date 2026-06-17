@@ -1074,6 +1074,9 @@ const GS = (() => {
     send(msg);
   }
   function desarmarArmadilha() { send({ type: 'desarmar_armadilha' }); }
+  // ── Editor de masmorras — seleção de dungeon ─────────────────────────────────
+  // file: nome do arquivo da masmorra autoral, ou null para modo procedural.
+  function selectDungeon(file) { send({ type: 'select_dungeon', file: file || null }); }
   // Armadilha colocável na casa do herói local OU cardinalmente adjacente — ou null.
   // Decisor puro p/ o renderer habilitar o botão de desarmar.
   function armadilhaAdjacente() {
@@ -1290,6 +1293,9 @@ const GS = (() => {
       return players.find(p => p.id === myPid) || null;
     },
     get lobbyState()      { return lobbyState; },
+    get lobbyDungeons()   { return (lobbyState && lobbyState.dungeons) || []; },
+    get lobbyMode()       { return (lobbyState && lobbyState.mode) || 'procedural'; },
+    get lobbySelectedDungeon() { return (lobbyState && lobbyState.selected_dungeon) || null; },
     get cityState()       { return cityState; },
     get isMyTurn()        { return isMyTurn; },
     get pendingAction()   { return pendingAction; },
@@ -1368,6 +1374,7 @@ const GS = (() => {
     criarArmadilha,
     desarmarArmadilha,
     armadilhaAdjacente,
+    selectDungeon,
 
     // ── Habilidades armadas do warrior (toggle; custo cobrado na ação) ──
     isWarriorSkillSelected,
