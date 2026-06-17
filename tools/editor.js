@@ -100,8 +100,39 @@
     }
   }
 
+  function cellFromEvent(ev) {
+    const r = board.getBoundingClientRect();
+    const x = Math.floor((ev.clientX - r.left) / (r.width / S.grid.w));
+    const y = Math.floor((ev.clientY - r.top) / (r.height / S.grid.h));
+    if (x < 0 || y < 0 || x >= S.grid.w || y >= S.grid.h) return null;
+    return [x, y];
+  }
+
+  function doorLink(x, y) {}
+  function doorUnlink(x, y) {}
+
+  function paintTile(x, y) {
+    if (S.tool === "wall") S.tiles[y][x] = WALL;
+    else if (S.tool === "floor") S.tiles[y][x] = FLOOR;
+    else if (S.tool === "door") { S.tiles[y][x] = DOOR; doorLink(x, y); }
+  }
+
+  let painting = false;
+  board.addEventListener("mousedown", (ev) => {
+    const c = cellFromEvent(ev); if (!c) return;
+    if (["wall", "floor", "door"].includes(S.tool)) {
+      painting = true; paintTile(c[0], c[1]); render();
+    }
+  });
+  board.addEventListener("mousemove", (ev) => {
+    if (!painting) return;
+    const c = cellFromEvent(ev); if (!c) return;
+    paintTile(c[0], c[1]); render();
+  });
+  window.addEventListener("mouseup", () => { painting = false; });
+
   // Expor para verificação no console / tasks seguintes.
-  window.EDITOR = { S, initGrid, render, buildToolbar, WALL, FLOOR, DOOR };
+  window.EDITOR = { S, initGrid, render, buildToolbar, cellFromEvent, paintTile, doorLink, doorUnlink, WALL, FLOOR, DOOR };
 
   initGrid(S.grid.w, S.grid.h);
   buildToolbar();
