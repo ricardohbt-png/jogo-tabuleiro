@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "test_fase3",
+  "name": "Teste Fase 3 — Objetivos",
+  "grid": { "w": 16, "h": 12 },
+  "tiles": [
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,1,1,1,1,1,0,0,0,0,1,1,1,1,1,0],
+    [0,1,1,1,1,1,0,0,0,0,1,1,1,1,1,0],
+    [0,1,1,1,1,1,2,1,1,2,1,1,1,1,1,0],
+    [0,1,1,1,1,1,0,0,0,0,1,1,1,1,1,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+  ],
+  "rooms": [
+    { "id": 0, "x": 1, "y": 1, "w": 5, "h": 4, "role": "entrance", "locked": false, "doors": [[6,3]] },
+    { "id": 1, "x": 10, "y": 1, "w": 5, "h": 4, "role": "monster", "locked": true, "doors": [[9,3]] }
+  ],
+  "entrance": { "x": 3, "y": 2 },
+  "exit": { "x": 14, "y": 4 },
+  "monsters": [
+    { "type": "goblin", "pos": [12,2], "room_id": 1, "boss": false, "target": true },
+    { "type": "skeleton", "pos": [13,3], "room_id": 1, "boss": false, "target": false }
+  ],
+  "chests": [
+    { "pos": [11,4], "gold": 20, "items": [ {"id":"health_potion"} ], "key_objective": true }
+  ],
+  "traps": [],
+  "prisoner": { "pos": [14,1], "room_id": 1 },
+  "objectives": {
+    "primary": { "type": "rescue_prisoner" },
+    "secondary": [ { "type": "kill_all" }, { "type": "open_key_chest" } ]
+  }
+}

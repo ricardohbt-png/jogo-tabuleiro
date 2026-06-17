@@ -28,6 +28,7 @@ FLOOR = 1
 DOOR  = 2
 MAP_W = 30
 MAP_H = 30
+PRIS_HP = 12   # vida do prisioneiro (Fase 3)
 
 # ─── D20 HELPERS ──────────────────────────────────────────────────────────────
 
@@ -2872,6 +2873,13 @@ class GameRoom:
         self.mode = "procedural"          # "procedural" | "authored"
         self.selected_dungeon = None      # nome do arquivo em dungeons/ (modo authored)
         self.dungeon_def = None           # dict cru da masmorra autorada carregada
+        # Fase 3 — objetivos/prisioneiro/saída (só em masmorra autorada).
+        self.exit_pos = None
+        self.objectives = None
+        self.objective_status = None
+        self.prisoner = None
+        self.rescue_failed = False
+        self._objetivo_concluido = False
         self.monsters = {}      # id -> monster
         self.corpses = {}       # id -> cadáver (monstro morto, alvo de Animar Mortos)
         self.animados_phase_pid = None  # pid no "turno dos servos" (logo após o mago)
@@ -3407,6 +3415,22 @@ class GameRoom:
         ent = defn["entrance"]
         self.stairs_pos = [ent["x"], ent["y"]]
 
+        # Fase 3: instancia o que estava inerte.
+        ex = defn.get("exit")
+        self.exit_pos = [ex["x"], ex["y"]] if ex else None
+        self.objectives = deepcopy(defn.get("objectives") or {"primary": {"type": "kill_all"}, "secondary": []})
+        self.objective_status = None
+        self.rescue_failed = False
+        self._objetivo_concluido = False
+        pr = defn.get("prisoner")
+        self.prisoner = ({"pos": [pr["pos"][0], pr["pos"][1]], "room_id": pr.get("room_id"),
+                          "hp": PRIS_HP, "max_hp": PRIS_HP, "freed": False, "alive": True}
+                         if pr else None)
+        # Marca o baú-chave por posição (o dict de baú vivo não carrega a flag).
+        keyposes = {tuple(c["pos"]) for c in defn.get("chests", []) if c.get("key_objective")}
+        for ch in self.chests.values():
+            ch["key_objective"] = tuple(ch["pos"]) in keyposes
+
     def _spawn_tiles_near(self, start, n):
         """Devolve até `n` casas de CHÃO (FLOOR/DOOR) mais próximas de `start`
         por BFS, na ordem de proximidade. Usado p/ posicionar heróis."""
@@ -3450,6 +3474,9 @@ class GameRoom:
             self.zonas_especiais = []
             self.explored = set()    # névoa volta ao início no mapa novo
             self.magic_reveal = {}
+            self.exit_pos = None; self.objectives = None; self.objective_status = None
+            self.prisoner = None; self.rescue_failed = False; self._objetivo_concluido = False
+            self.key_chest_opened = False
             if autorada:
                 self.load_authored_dungeon(self.dungeon_def)
             else:
