@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editor de Masmorras — Legends for Hire</title>
+<link rel="stylesheet" href="editor.css">
+</head>
+<body>
+  <header id="topbar">
+    <span class="brand">🗺️ Editor de Masmorras</span>
+    <label>id <input id="m-id" value="nova_masmorra" size="14"></label>
+    <label>nome <input id="m-name" value="Nova Masmorra" size="16"></label>
+    <label>grid
+      <input id="g-w" type="number" min="1" max="60" value="16" style="width:48px">×
+      <input id="g-h" type="number" min="1" max="60" value="12" style="width:48px">
+    </label>
+    <button id="btn-resize">Aplicar grid</button>
+    <span class="spacer"></span>
+    <button id="btn-load">Carregar</button>
+    <input id="file-input" type="file" accept="application/json,.json" hidden>
+    <button id="btn-save">Salvar</button>
+  </header>
+
+  <div id="toolbar"></div>
+
+  <main id="workspace">
+    <div id="canvas-wrap">
+      <canvas id="board" width="448" height="336"></canvas>
+    </div>
+    <aside id="panel"><em>Selecione uma ferramenta e desenhe.</em></aside>
+  </main>
+
+  <footer id="statusbar"><span id="status"></span></footer>
+
+  <script src="editor_catalog.js"></script>
+  <script src="editor.js"></script>
+</body>
+</html>
