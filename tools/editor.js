@@ -65,6 +65,7 @@
       ctx.strokeStyle = "#ffd86a"; ctx.lineWidth = 2;
       ctx.strokeRect(S.sel.pos[0] * CELL + 1, S.sel.pos[1] * CELL + 1, CELL - 3, CELL - 3);
     }
+    if (document.getElementById("status")) updateStatus();
   }
 
   const TOOLS = [
@@ -262,8 +263,79 @@
     }
   });
 
+  function buildJSON() {
+    return {
+      schema_version: 1, id: S.meta.id, name: S.meta.name,
+      grid: { w: S.grid.w, h: S.grid.h },
+      tiles: S.tiles.map(row => row.slice()),
+      rooms: S.rooms.map(r => ({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, role: r.role, locked: r.locked, doors: r.doors.map(d => d.slice()) })),
+      entrance: S.entrance ? { x: S.entrance.x, y: S.entrance.y } : null,
+      exit: S.exit ? { x: S.exit.x, y: S.exit.y } : null,
+      monsters: S.monsters.map(m => ({ type: m.type, pos: m.pos.slice(), room_id: m.room_id, boss: !!m.boss, target: !!m.target })),
+      chests: S.chests.map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: c.items.map(i => ({ id: i.id })), key_objective: !!c.key_objective })),
+      traps: S.traps.map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; return o; }),
+      prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id } : null,
+      objectives: S.objectives,
+    };
+  }
+
+  function reachableFloors(limit) {
+    if (!S.entrance) return 0;
+    const { x, y } = S.entrance;
+    if (S.tiles[y][x] === WALL) return 0;
+    const seen = new Set([x + "," + y]); const st = [[x, y]]; let n = 0;
+    while (st.length) {
+      const [cx, cy] = st.pop(); n++; if (n >= limit) return n;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = cx + dx, ny = cy + dy, k = nx + "," + ny;
+        if (nx >= 0 && ny >= 0 && nx < S.grid.w && ny < S.grid.h && !seen.has(k) && S.tiles[ny][nx] !== WALL) { seen.add(k); st.push([nx, ny]); }
+      }
+    }
+    return n;
+  }
+
+  function validarEditor() {
+    const e = [];
+    const types = new Set(CAT.monsters.map(m => m.type));
+    const items = new Set(CAT.items.map(i => i.id));
+    const traps = new Set(CAT.traps.map(t => t.tipo));
+    const venoms = new Set(CAT.venoms.map(v => v.id));
+    const roomIds = new Set(S.rooms.map(r => r.id));
+    const isWall = (p) => !p || S.tiles[p[1]]?.[p[0]] === WALL || S.tiles[p[1]]?.[p[0]] === undefined;
+    if (!S.entrance) e.push("falta a entrada");
+    else if (S.tiles[S.entrance.y][S.entrance.x] !== FLOOR) e.push("entrada precisa estar em chão");
+    if (S.rooms.length === 0) e.push("precisa de ao menos uma sala");
+    if (!S.rooms.some(r => r.role === "entrance")) e.push("nenhuma sala com role 'entrance'");
+    for (const m of S.monsters) {
+      if (!types.has(m.type)) e.push(`monstro tipo inválido: ${m.type}`);
+      if (isWall(m.pos)) e.push(`monstro em parede: ${m.pos}`);
+      if (m.room_id != null && !roomIds.has(m.room_id)) e.push(`monstro room_id inexistente: ${m.room_id}`);
+    }
+    for (const c of S.chests) {
+      if (isWall(c.pos)) e.push(`baú em parede: ${c.pos}`);
+      for (const it of c.items) if (!items.has(it.id)) e.push(`item inválido: ${it.id}`);
+    }
+    for (const t of S.traps) {
+      if (!traps.has(t.tipo)) e.push(`armadilha tipo inválido: ${t.tipo}`);
+      if (isWall(t.pos)) e.push(`armadilha em parede: ${t.pos}`);
+      if (t.tipo === "fosso_envenenado" && !venoms.has(t.veneno_id)) e.push("fosso_envenenado sem veneno válido");
+    }
+    if (S.prisoner && isWall(S.prisoner.pos)) e.push("prisioneiro em parede");
+    for (const r of S.rooms) for (const d of r.doors) if (S.tiles[d[1]]?.[d[0]] !== DOOR) e.push(`porta declarada não é tile DOOR: ${d}`);
+    if (reachableFloors(6) < 6) e.push("menos de 6 casas de chão alcançáveis da entrada");
+    return { ok: e.length === 0, erros: e };
+  }
+
+  function updateStatus() {
+    const v = validarEditor();
+    const el = document.getElementById("status");
+    if (v.ok) { el.className = "status-ok"; el.textContent = "✓ válida — pronta para salvar"; }
+    else { el.className = "status-err"; el.textContent = "✗ " + v.erros.length + " problema(s): " + v.erros.slice(0, 4).join("; ") + (v.erros.length > 4 ? " …" : ""); }
+    return v;
+  }
+
   // Expor para verificação no console / tasks seguintes.
-  window.EDITOR = { S, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, entityAt, doorLink, doorUnlink, WALL, FLOOR, DOOR };
+  window.EDITOR = { S, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, entityAt, doorLink, doorUnlink, validarEditor, buildJSON, updateStatus, WALL, FLOOR, DOOR };
 
   initGrid(S.grid.w, S.grid.h);
   buildToolbar();
