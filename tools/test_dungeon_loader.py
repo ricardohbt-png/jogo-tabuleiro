@@ -79,6 +79,12 @@ def test_validacao():
     d = sample_dungeon(); d["tiles"] = d["tiles"][:-1]   # 5 linhas, grid.h=6
     ok, _ = validar_dungeon(d); check("tiles com nº de linhas errado recusa", ok is False)
 
+    d = sample_dungeon(); d["rooms"] = []
+    ok, _ = validar_dungeon(d); check("masmorra sem salas recusa (evita IndexError no enter)", ok is False)
+
+    d = sample_dungeon(); d["rooms"][0]["role"] = "monster"   # nenhuma entrance
+    ok, _ = validar_dungeon(d); check("masmorra sem sala 'entrance' recusa", ok is False)
+
     # ── Robustez: JSON malformado deve recusar SEM levantar exceção ──
     def recusa_sem_crashar(nome, d):
         try:

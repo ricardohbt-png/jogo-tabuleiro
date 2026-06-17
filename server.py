@@ -1698,6 +1698,12 @@ def validar_dungeon(defn):
     for r in rooms:
         if not isinstance(r, dict):
             return False, "cada sala deve ser um objeto JSON."
+    # Precisa de ≥1 sala e de uma sala de entrada — enter_dungeon usa a sala
+    # role=="entrance" (e cairia em IndexError com rooms vazio).
+    if not rooms:
+        return False, "a masmorra precisa de ao menos uma sala."
+    if not any(r.get("role") == "entrance" for r in rooms):
+        return False, "nenhuma sala com role 'entrance'."
     room_ids = {r.get("id") for r in rooms}
     for r in rooms:
         for d in (r.get("doors") or []):
