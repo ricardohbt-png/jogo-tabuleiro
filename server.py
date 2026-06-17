@@ -1771,6 +1771,8 @@ def hidratar_itens_bau(items):
     desconhecidos (a validação já recusa antes de chegar aqui)."""
     out = []
     for it in items or []:
+        if not isinstance(it, dict):
+            continue
         base = _DUNGEON_ITEM_CATALOG.get(it.get("id"))
         if base:
             out.append(deepcopy(base))
@@ -1778,7 +1780,8 @@ def hidratar_itens_bau(items):
 
 def make_authored_trap(tdef):
     """Cria o dict de uma armadilha de masmorra autorada (hostil, oculta),
-    no formato de self.armadilhas. Espelha _gerar_armadilhas_kobold."""
+    no formato de self.armadilhas. Espelha _gerar_armadilhas_kobold.
+    Pressupõe `tdef` já validado por validar_dungeon (tipo/pos presentes)."""
     tipo = tdef["tipo"]
     meta = ARMADILHAS[tipo]
     arm = {
