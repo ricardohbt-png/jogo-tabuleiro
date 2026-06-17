@@ -205,12 +205,32 @@ async def test_select_dungeon():
     await r.handle_select_dungeon("p2", "amostra.json")
     check("não-host é ignorado", r.mode == "procedural")
 
+async def test_arquivo_disco():
+    print("\n[6] integração via arquivo em dungeons/")
+    listadas = listar_dungeons()
+    check("test_fase1.json aparece em listar_dungeons",
+          any(d["file"] == "test_fase1.json" for d in listadas))
+    defn = carregar_dungeon("test_fase1.json")
+    check("carrega o arquivo", defn is not None)
+    ok, msg = validar_dungeon(defn)
+    check(f"arquivo é válido ({msg})", ok is True)
+    # path traversal é barrado
+    check("path traversal recusado", carregar_dungeon("../server.py") is None)
+
+    r = setup_room(); r.mode = "authored"; r.dungeon_def = defn
+    r.selected_dungeon = "test_fase1.json"
+    await r.enter_dungeon("p1")
+    check("grid do arquivo aplicado",
+          r.map_w == defn["grid"]["w"] and r.map_h == defn["grid"]["h"])
+    check("nenhum monstro em parede (arquivo)", monstros_em_parede(r) == [])
+
 async def main():
     test_validacao()
     test_helpers()
     await test_grid_procedural()
     await test_load_authored()
     await test_select_dungeon()
+    await test_arquivo_disco()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 
