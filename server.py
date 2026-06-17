@@ -1626,12 +1626,11 @@ VENENOS = {
 }
 
 # ─── MASMORRAS AUTORADAS (Fase 1 do editor) ───────────────────────────────────
-import os as _os
-DUNGEONS_DIR = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "dungeons")
+DUNGEONS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeons")
 # Catálogo de itens que um baú autorado pode conter (Fase 1: só CHEST_ITEMS).
 _DUNGEON_ITEM_CATALOG = {it["id"]: it for it in CHEST_ITEMS}
 
-def _bfs_chao_alcancavel(tiles, w, h, start, limite):
+def _contar_chao_alcancavel(tiles, w, h, start, limite):
     """Conta casas caminháveis (FLOOR/DOOR) alcançáveis a partir de `start`,
     parando ao atingir `limite` (otimização). Usado p/ garantir spawn dos heróis."""
     sx, sy = start
@@ -1656,9 +1655,13 @@ def validar_dungeon(defn):
         return False, "Masmorra não é um objeto JSON."
     if defn.get("schema_version") != 1:
         return False, f"schema_version não suportado: {defn.get('schema_version')!r} (esperado 1)."
-    grid = defn.get("grid") or {}
+    grid = defn.get("grid")
+    if not isinstance(grid, dict):
+        return False, "grid ausente ou inválido."
     w, h = grid.get("w"), grid.get("h")
-    if not (isinstance(w, int) and isinstance(h, int) and 1 <= w <= 60 and 1 <= h <= 60):
+    if (isinstance(w, bool) or isinstance(h, bool)
+            or not (isinstance(w, int) and isinstance(h, int)
+                    and 1 <= w <= 60 and 1 <= h <= 60)):
         return False, "grid.w/grid.h ausentes ou fora de 1..60."
     tiles = defn.get("tiles")
     if not (isinstance(tiles, list) and len(tiles) == h):
@@ -1684,15 +1687,30 @@ def validar_dungeon(defn):
     if tile_at([ent["x"], ent["y"]]) != FLOOR:
         return False, "entrance precisa estar em FLOOR (1)."
 
-    rooms = defn.get("rooms") or []
+    def _as_list(key):
+        """defn[key] como lista (ausente/None → []); levanta sentinela se tipo errado."""
+        v = defn.get(key)
+        return [] if v is None else v
+
+    rooms = _as_list("rooms")
+    if not isinstance(rooms, list):
+        return False, "rooms deve ser uma lista."
+    for r in rooms:
+        if not isinstance(r, dict):
+            return False, "cada sala deve ser um objeto JSON."
     room_ids = {r.get("id") for r in rooms}
     for r in rooms:
-        for d in r.get("doors", []):
+        for d in (r.get("doors") or []):
             if not in_grid(d) or tile_at(d) != DOOR:
                 return False, f"porta {d} da sala {r.get('id')} não é um tile DOOR (2)."
 
+    monsters = _as_list("monsters")
+    if not isinstance(monsters, list):
+        return False, "monsters deve ser uma lista."
     tipos_monstro = {m["type"] for m in MONSTER_DEFS}
-    for mo in defn.get("monsters", []):
+    for mo in monsters:
+        if not isinstance(mo, dict):
+            return False, "cada monstro deve ser um objeto JSON."
         if mo.get("type") not in tipos_monstro:
             return False, f"monstro tipo desconhecido: {mo.get('type')!r}."
         if not in_grid(mo.get("pos")) or tile_at(mo["pos"]) == WALL:
@@ -1700,16 +1718,29 @@ def validar_dungeon(defn):
         if mo.get("room_id") not in room_ids:
             return False, f"monstro com room_id inexistente: {mo.get('room_id')!r}."
 
-    for ch in defn.get("chests", []):
+    chests = _as_list("chests")
+    if not isinstance(chests, list):
+        return False, "chests deve ser uma lista."
+    for ch in chests:
+        if not isinstance(ch, dict):
+            return False, "cada baú deve ser um objeto JSON."
         if not in_grid(ch.get("pos")) or tile_at(ch["pos"]) == WALL:
             return False, f"baú em casa inválida: {ch.get('pos')}."
-        if int(ch.get("gold", 0)) < 0:
-            return False, "baú com gold negativo."
-        for it in ch.get("items", []):
+        gold = ch.get("gold", 0)
+        if isinstance(gold, bool) or not isinstance(gold, (int, float)) or gold < 0:
+            return False, "baú com gold inválido ou negativo."
+        for it in (ch.get("items") or []):
+            if not isinstance(it, dict):
+                return False, f"item de baú inválido: {it!r}."
             if it.get("id") not in _DUNGEON_ITEM_CATALOG:
                 return False, f"item de baú desconhecido: {it.get('id')!r}."
 
-    for tr in defn.get("traps", []):
+    traps = _as_list("traps")
+    if not isinstance(traps, list):
+        return False, "traps deve ser uma lista."
+    for tr in traps:
+        if not isinstance(tr, dict):
+            return False, "cada armadilha deve ser um objeto JSON."
         if tr.get("tipo") not in ARMADILHAS:
             return False, f"armadilha tipo desconhecido: {tr.get('tipo')!r}."
         if not in_grid(tr.get("pos")) or tile_at(tr["pos"]) == WALL:
@@ -1719,6 +1750,8 @@ def validar_dungeon(defn):
 
     pr = defn.get("prisoner")
     if pr is not None:
+        if not isinstance(pr, dict):
+            return False, "prisoner deve ser um objeto JSON."
         if not in_grid(pr.get("pos")) or tile_at(pr["pos"]) == WALL:
             return False, f"prisioneiro em casa inválida: {pr.get('pos')}."
         if pr.get("room_id") not in room_ids:
@@ -1728,7 +1761,7 @@ def validar_dungeon(defn):
     if ex is not None and not in_grid([ex.get("x"), ex.get("y")]):
         return False, "exit fora do grid."
 
-    if _bfs_chao_alcancavel(tiles, w, h, [ent["x"], ent["y"]], limite=6) < 6:
+    if _contar_chao_alcancavel(tiles, w, h, [ent["x"], ent["y"]], limite=6) < 6:
         return False, "menos de 6 casas de chão alcançáveis a partir da entrada."
 
     return True, "ok"

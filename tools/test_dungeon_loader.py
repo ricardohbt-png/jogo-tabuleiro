@@ -77,6 +77,34 @@ def test_validacao():
     d = sample_dungeon(); d["tiles"] = d["tiles"][:-1]   # 5 linhas, grid.h=6
     ok, _ = validar_dungeon(d); check("tiles com nº de linhas errado recusa", ok is False)
 
+    # ── Robustez: JSON malformado deve recusar SEM levantar exceção ──
+    def recusa_sem_crashar(nome, d):
+        try:
+            ok, _ = validar_dungeon(d)
+            check(nome, ok is False)
+        except Exception as e:
+            check(f"{nome} (levantou {type(e).__name__})", False)
+
+    def nao_crasha(nome, d):
+        # null onde se espera lista é tratado como vazio (válido) — só não pode crashar
+        try:
+            validar_dungeon(d); check(nome, True)
+        except Exception as e:
+            check(f"{nome} (levantou {type(e).__name__})", False)
+
+    d = sample_dungeon(); d["rooms"] = ["x"]
+    recusa_sem_crashar("sala não-dict recusa sem crashar", d)
+    d = sample_dungeon(); d["monsters"] = ["x"]
+    recusa_sem_crashar("monstro não-dict recusa sem crashar", d)
+    d = sample_dungeon(); d["chests"][0]["gold"] = "abc"
+    recusa_sem_crashar("gold não-numérico recusa sem crashar", d)
+    d = sample_dungeon(); d["prisoner"] = "x"
+    recusa_sem_crashar("prisoner não-dict recusa sem crashar", d)
+    d = sample_dungeon(); d["chests"][0]["items"] = None
+    nao_crasha("items=None tratado como vazio sem crashar", d)
+    d = sample_dungeon(); d["rooms"][0]["doors"] = None
+    nao_crasha("doors=None tratado como vazio sem crashar", d)
+
 async def main():
     test_validacao()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
