@@ -72,6 +72,7 @@ document.body.innerHTML = `
     <span id="cs-room-lbl">SALA</span>
     <div id="cs-room-code" onclick="copyCode()" title="Clique para copiar">----</div>
     <div id="cs-players-row"></div>
+    <div id="cs-dungeon-picker"></div>
     <button id="cs-btn-start" onclick="startGame()" style="display:none">▶ Iniciar Jogo</button>
   </div>
   <div id="cs-confirm-wrap">
@@ -16926,6 +16927,26 @@ function csUpdateLobbyBar(msg){
     const tag  = cls ? ` ${cls.emoji}` : '';   // mostra a classe escolhida de cada um
     return `<span class="cs-player-chip${isMe?' me':''}${rdy?' ready':''}">${p.name}${tag}${p.id===msg.host?' ♛':''}</span>`;
   }).join('');
+
+  // Seletor de masmorra — controlado pelo host; o modo é exibido a todos.
+  const picker = document.getElementById('cs-dungeon-picker');
+  if(picker){
+    const isHost   = (msg.host === GS.myPid);
+    const dungeons = GS.lobbyDungeons;            // getter (sem parênteses)
+    const sel      = GS.lobbySelectedDungeon;     // getter (sem parênteses)
+    const modeTxt  = (GS.lobbyMode === 'authored') ? 'Modo: Campanha' : 'Modo: Procedural';
+    const opts = ['<option value="">Procedural (aleatória)</option>']
+      .concat(dungeons.map(d =>
+        `<option value="${d.file}"${d.file === sel ? ' selected' : ''}>${d.name}</option>`))
+      .join('');
+    picker.innerHTML =
+      `<label class="cs-dungeon-lbl">Masmorra:</label>` +
+      `<select id="cs-dungeon-select"${isHost ? '' : ' disabled'}>${opts}</select>` +
+      `<span class="cs-dungeon-mode">${modeTxt}</span>`;
+    // Re-liga o onchange a cada render (o lobby é redesenhado a cada lobby_state).
+    const dsel = document.getElementById('cs-dungeon-select');
+    if(dsel) dsel.onchange = () => GS.selectDungeon(dsel.value || null);
+  }
 
   const btnS = document.getElementById('cs-btn-start');
   if(btnS) btnS.style.display = (msg.host===GS.myPid && msg.can_start) ? 'block' : 'none';
