@@ -11587,6 +11587,9 @@ class GameRoom:
         # Animados roubados por um necromante agem contra os personagens (e re-testam Vontade).
         await self._agir_animados_dominados_por_monstro()
 
+        # Fase 3: prisioneiro libertado segue o herói mais próximo e leva dano de monstros adjacentes.
+        await self._processar_prisioneiro_turno()
+
         self.taunted = None
         # Reset blessed ATK bonus
         for pid2 in list(self.blessed.keys()):
@@ -11904,6 +11907,60 @@ class GameRoom:
                     await self._conceder_bonus_secundario(s)
             await self.end_game(victory=True)
 
+    async def handle_libertar_prisioneiro(self, pid):
+        if not self._is_turn(pid):
+            return
+        p = self.players.get(pid)
+        if not p or not p.get("alive") or p.get("action_done"):
+            return
+        if not self.prisoner or not self.prisoner.get("alive") or self.prisoner.get("freed"):
+            await self.send_to(pid, {"type": "error", "msg": "Não há prisioneiro para libertar."}); return
+        px, py = p["pos"]; bx, by = self.prisoner["pos"]
+        if max(abs(px - bx), abs(py - by)) > 1:
+            await self.send_to(pid, {"type": "error", "msg": "Aproxime-se do prisioneiro."}); return
+        self.prisoner["freed"] = True
+        p["action_done"] = True
+        await self.gm_say(f"🔓 **{p['name']}** libertou o prisioneiro!")
+        await self.push_state()
+
+    async def _processar_prisioneiro_turno(self):
+        """Prisioneiro libertado: 1 passo em direção ao herói vivo mais próximo;
+        depois, cada monstro adjacente o fere. Morte → rescue_failed (não encerra)."""
+        pr = self.prisoner
+        if not pr or not pr.get("freed") or not pr.get("alive"):
+            return
+        herois = [p for p in self.players.values() if self._ativo(p)]
+        if herois:
+            alvo = min(herois, key=lambda p: max(abs(p["pos"][0] - pr["pos"][0]),
+                                                 abs(p["pos"][1] - pr["pos"][1])))
+            self._step_towards(pr, alvo["pos"])
+        # Dano de monstros adjacentes (caminho dedicado, simples e isolado).
+        for m in self.monsters.values():
+            if m["hp"] <= 0:
+                continue
+            if max(abs(m["pos"][0] - pr["pos"][0]), abs(m["pos"][1] - pr["pos"][1])) <= 1:
+                dano = random.randint(2, 5)
+                pr["hp"] -= dano
+                await self.gm_say(f"⚔️ Um monstro fere o prisioneiro ({dano})!")
+                if pr["hp"] <= 0:
+                    pr["alive"] = False
+                    self.rescue_failed = True
+                    await self.gm_say("☠️ O prisioneiro foi morto! O resgate falhou.")
+                    break
+
+    def _step_towards(self, ent, dest):
+        """Move `ent` (dict com 'pos') 1 casa em direção a `dest` por casa livre
+        (FLOOR/DOOR, não ocupada por monstro/herói). Sem diagonal."""
+        ex, ey = ent["pos"]; dx, dy = dest
+        opcoes = sorted([(ex + sx, ey + sy) for sx, sy in ((1,0),(-1,0),(0,1),(0,-1))],
+                        key=lambda c: max(abs(c[0] - dx), abs(c[1] - dy)))
+        ocup = {tuple(m["pos"]) for m in self.monsters.values() if m["hp"] > 0}
+        ocup |= {tuple(p["pos"]) for p in self.players.values() if p.get("alive")}
+        for nx, ny in opcoes:
+            if (0 <= nx < self.map_w and 0 <= ny < self.map_h
+                    and self.tiles[ny][nx] != WALL and (nx, ny) not in ocup):
+                ent["pos"] = [nx, ny]; return
+
     async def end_game(self, victory):
         self.phase = "ended"
         self._cancelar_timer_turno()
@@ -12086,6 +12143,9 @@ async def handler(ws):
 
                 elif t == "open_door":
                     if room: await room.handle_open_door(pid, int(msg.get("tx", -1)), int(msg.get("ty", -1)))
+
+                elif t == "libertar_prisioneiro":
+                    if room: await room.handle_libertar_prisioneiro(pid)
 
                 elif t == "attack":
                     if room: await room.handle_attack(pid, msg.get("target_id"), msg.get("buffs"))

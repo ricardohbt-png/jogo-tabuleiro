@@ -95,9 +95,48 @@ async def test_conclusao_simples():
     r, vit = await cenario("open_key_chest", abre_chave)
     check("open_key_chest → vitória", vit["chamado"] is True)
 
+async def test_prisioneiro():
+    print("\n[3] prisioneiro: libertar, seguir, escolta, morte")
+    r = setup_authored()
+    r.dungeon_def["objectives"] = {"primary": {"type": "rescue_prisoner"}, "secondary": []}
+    await r.enter_dungeon("p1")
+    p1 = r.players["p1"]
+    # herói adjacente ao prisioneiro cativo
+    p1["pos"] = [r.prisoner["pos"][0] - 1, r.prisoner["pos"][1]]
+    p1["action_done"] = False
+    r.turn_index = r.player_order.index("p1")
+    await r.handle_libertar_prisioneiro("p1")
+    check("prisioneiro libertado por herói adjacente", r.prisoner["freed"] is True)
+    check("libertar gastou a ação", p1["action_done"] is True)
+
+    # escolta: prisioneiro junto da saída → rescue cumprido
+    r.prisoner["pos"] = [r.exit_pos[0], r.exit_pos[1]]
+    check("rescue cumprido perto da saída",
+          r._objetivo_cumprido(r.objectives["primary"]) is True)
+
+    # morte do prisioneiro → falha, sem encerrar.
+    # Chama _processar_prisioneiro_turno direto (gm_phase moveria o monstro antes),
+    # e neutraliza o passo de seguir p/ o prisioneiro não sair de perto do monstro.
+    r2 = setup_authored()
+    r2.dungeon_def["objectives"] = {"primary": {"type": "rescue_prisoner"}, "secondary": []}
+    await r2.enter_dungeon("p1")
+    r2.prisoner["freed"] = True; r2.prisoner["hp"] = 1
+    vit = {"c": False}
+    async def fe(victory): vit["c"] = True
+    r2.end_game = fe
+    r2._step_towards = lambda ent, dest: None       # isola: sem mover o prisioneiro
+    m = next(iter(r2.monsters.values()))
+    m["hp"] = 10; m["pos"] = [r2.prisoner["pos"][0] + 1, r2.prisoner["pos"][1]]   # adjacente
+    await r2._processar_prisioneiro_turno()
+    check("prisioneiro morto marca rescue_failed", r2.rescue_failed is True)
+    check("morte do prisioneiro NÃO encerra a partida", vit["c"] is False)
+    check("status do resgate = failed",
+          r2._objetivo_status(r2.objectives["primary"]) == "failed")
+
 async def main():
     await test_instanciar()
     await test_conclusao_simples()
+    await test_prisioneiro()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 
