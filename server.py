@@ -2971,8 +2971,28 @@ class GameRoom:
             "can_start": (
                 len(self.players) >= 1 and
                 all(p["class_id"] for p in self.players.values())
-            )
+            ),
+            "dungeons": listar_dungeons(),
+            "mode": self.mode,
+            "selected_dungeon": self.selected_dungeon,
         })
+
+    async def handle_select_dungeon(self, pid, file):
+        """Host escolhe a masmorra do lobby. file=None → procedural."""
+        if pid != self.host_pid:
+            return
+        if self.phase != "lobby":
+            return
+        if not file:
+            self.mode = "procedural"; self.selected_dungeon = None
+        else:
+            defn = carregar_dungeon(file)
+            ok, msg = (False, "Masmorra não encontrada.") if defn is None else validar_dungeon(defn)
+            if not ok:
+                await self.send_to(pid, {"type": "error", "msg": f"Masmorra inválida: {msg}"})
+                return
+            self.mode = "authored"; self.selected_dungeon = file
+        await self.broadcast_lobby()
 
     # ── game start ─────────────────────────────────────────────────────────
 
@@ -11956,6 +11976,9 @@ async def handler(ws):
 
                 elif t == "select_class":
                     if room: await room.select_class(pid, msg.get("class_id"))
+
+                elif t == "select_dungeon":
+                    if room: await room.handle_select_dungeon(pid, msg.get("file"))
 
                 elif t == "start_game":
                     if room: await room.start_game(pid)

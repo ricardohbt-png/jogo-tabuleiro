@@ -185,11 +185,32 @@ async def test_load_authored():
           and r.dungeon_def.get("prisoner") is not None)
     check("entrada revelada (névoa)", (2, 2) in r.explored)
 
+async def test_select_dungeon():
+    print("\n[5] handle_select_dungeon")
+    r = setup_room(); r.phase = "lobby"
+    captura = {}
+    async def cap_lobby(): captura["called"] = True
+    r.broadcast_lobby = cap_lobby
+
+    await r.handle_select_dungeon("p1", "amostra.json")
+    check("modo vira authored", r.mode == "authored")
+    check("arquivo selecionado guardado", r.selected_dungeon == "amostra.json")
+    check("rebroadcast do lobby", captura.get("called") is True)
+
+    await r.handle_select_dungeon("p1", None)
+    check("None volta para procedural", r.mode == "procedural" and r.selected_dungeon is None)
+
+    # não-host não altera
+    r.mode = "procedural"
+    await r.handle_select_dungeon("p2", "amostra.json")
+    check("não-host é ignorado", r.mode == "procedural")
+
 async def main():
     test_validacao()
     test_helpers()
     await test_grid_procedural()
     await test_load_authored()
+    await test_select_dungeon()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

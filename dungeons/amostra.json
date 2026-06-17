@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "id": "amostra",
+  "name": "Amostra",
+  "grid": { "w": 8, "h": 6 },
+  "tiles": [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 1, 1, 1, 0, 0, 0],
+    [0, 1, 1, 1, 1, 2, 1, 0],
+    [0, 1, 1, 1, 1, 0, 0, 0],
+    [0, 1, 1, 1, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0]
+  ],
+  "rooms": [
+    { "id": 0, "x": 1, "y": 1, "w": 4, "h": 4, "role": "entrance", "locked": false, "doors": [[5, 2]] }
+  ],
+  "entrance": { "x": 2, "y": 2 },
+  "exit": { "x": 6, "y": 2 },
+  "monsters": [
+    { "type": "goblin", "pos": [3, 3], "room_id": 0, "boss": false, "target": false }
+  ],
+  "chests": [
+    { "pos": [2, 3], "gold": 20, "items": [{ "id": "health_potion" }], "key_objective": false }
+  ],
+  "traps": [
+    { "tipo": "fosso_estacas", "pos": [4, 1] }
+  ],
+  "prisoner": { "pos": [4, 4], "room_id": 0 },
+  "objectives": { "primary": { "type": "kill_all" }, "secondary": [] }
+}
