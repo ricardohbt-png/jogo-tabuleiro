@@ -178,7 +178,21 @@
   function opt(list, val, fmt) { return list.map(o => `<option value="${o.v}"${o.v === val ? " selected" : ""}>${fmt(o)}</option>`).join(""); }
 
   function renderPanel() {
-    if (!S.sel) { panel.innerHTML = "<em>Nada selecionado. Escolha uma ferramenta e desenhe.</em>"; return; }
+    if (!S.sel) {
+      const OBJ = ["kill_target", "kill_all", "reach_exit", "open_key_chest", "rescue_prisoner"];
+      const o = S.objectives;
+      panel.innerHTML = `<b>🗺️ Masmorra</b>
+        <label>objetivo principal</label>
+        <select id="o-prim">${OBJ.map(t => `<option value="${t}"${o.primary.type === t ? " selected" : ""}>${t}</option>`).join("")}</select>
+        <label>objetivos secundários</label>
+        <div id="o-sec">${o.secondary.map((s, i) => `<div><select data-i="${i}" class="o-secsel">${OBJ.map(t => `<option value="${t}"${s.type === t ? " selected" : ""}>${t}</option>`).join("")}</select> <button data-i="${i}" class="o-rm">×</button></div>`).join("")}</div>
+        <button id="o-add">+ secundário</button>`;
+      document.getElementById("o-prim").onchange = e => { o.primary.type = e.target.value; };
+      document.getElementById("o-add").onclick = () => { o.secondary.push({ type: "rescue_prisoner" }); renderPanel(); };
+      panel.querySelectorAll(".o-secsel").forEach(sel => sel.onchange = e => { o.secondary[Number(e.target.dataset.i)].type = e.target.value; });
+      panel.querySelectorAll(".o-rm").forEach(b => b.onclick = () => { o.secondary.splice(Number(b.dataset.i), 1); renderPanel(); });
+      return;
+    }
     const k = S.sel.kind, ref = S.sel.ref;
     if (k === "monster") {
       panel.innerHTML = `<b>👹 Monstro</b>
@@ -334,8 +348,57 @@
     return v;
   }
 
+  function loadJSON(obj) {
+    S.meta = { schema_version: 1, id: obj.id || "masmorra", name: obj.name || "Masmorra" };
+    S.grid = { w: obj.grid.w, h: obj.grid.h };
+    S.tiles = obj.tiles.map(row => row.slice());
+    S.rooms = (obj.rooms || []).map(r => ({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, role: r.role, locked: !!r.locked, doors: (r.doors || []).map(d => d.slice()) }));
+    S.nextRoomId = S.rooms.reduce((m, r) => Math.max(m, r.id + 1), 0);
+    S.entrance = obj.entrance || null;
+    S.exit = obj.exit || null;
+    S.prisoner = obj.prisoner || null;
+    S.monsters = (obj.monsters || []).map(m => ({ type: m.type, pos: m.pos.slice(), room_id: m.room_id ?? null, boss: !!m.boss, target: !!m.target }));
+    S.chests = (obj.chests || []).map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: (c.items || []).map(i => ({ id: i.id })), key_objective: !!c.key_objective }));
+    S.traps = (obj.traps || []).map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; return o; });
+    S.objectives = obj.objectives || { primary: { type: "kill_all" }, secondary: [] };
+    S.sel = null;
+    document.getElementById("m-id").value = S.meta.id;
+    document.getElementById("m-name").value = S.meta.name;
+    document.getElementById("g-w").value = S.grid.w;
+    document.getElementById("g-h").value = S.grid.h;
+    render(); renderPanel();
+  }
+
+  function save() {
+    S.meta.id = document.getElementById("m-id").value.trim() || "masmorra";
+    S.meta.name = document.getElementById("m-name").value.trim() || "Masmorra";
+    const v = updateStatus();
+    if (!v.ok) { alert("Masmorra inválida:\n- " + v.erros.join("\n- ")); return; }
+    const blob = new Blob([JSON.stringify(buildJSON(), null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = S.meta.id + ".json";
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  document.getElementById("btn-save").onclick = save;
+  document.getElementById("btn-load").onclick = () => document.getElementById("file-input").click();
+  document.getElementById("file-input").onchange = (ev) => {
+    const f = ev.target.files[0]; if (!f) return;
+    const fr = new FileReader();
+    fr.onload = () => { try { loadJSON(JSON.parse(fr.result)); } catch (e) { alert("JSON inválido: " + e.message); } };
+    fr.readAsText(f); ev.target.value = "";
+  };
+  document.getElementById("btn-resize").onclick = () => {
+    const w = Math.max(1, Math.min(60, Number(document.getElementById("g-w").value) | 0));
+    const h = Math.max(1, Math.min(60, Number(document.getElementById("g-h").value) | 0));
+    const old = S.tiles, ow = S.grid.w, oh = S.grid.h;
+    initGrid(w, h);
+    for (let y = 0; y < Math.min(h, oh); y++) for (let x = 0; x < Math.min(w, ow); x++) S.tiles[y][x] = old[y][x];
+    render();
+  };
+
   // Expor para verificação no console / tasks seguintes.
-  window.EDITOR = { S, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, entityAt, doorLink, doorUnlink, validarEditor, buildJSON, updateStatus, WALL, FLOOR, DOOR };
+  window.EDITOR = { S, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, entityAt, doorLink, doorUnlink, validarEditor, buildJSON, loadJSON, save, updateStatus, WALL, FLOOR, DOOR };
 
   initGrid(S.grid.w, S.grid.h);
   buildToolbar();
