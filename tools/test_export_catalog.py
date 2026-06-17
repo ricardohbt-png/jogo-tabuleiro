@@ -1,0 +1,54 @@
+"""Teste do gerador de catálogo do editor (Fase 2).
+Roda da raiz: python tools/test_export_catalog.py"""
+import sys, os, json, re
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import server
+import tools.export_catalog as ec
+
+PASS = 0; FAIL = 0
+def check(name, cond):
+    global PASS, FAIL
+    if cond: PASS += 1; print(f"  ✅ {name}")
+    else:    FAIL += 1; print(f"  ❌ {name}")
+
+def main():
+    print("\n[1] build_catalog")
+    cat = ec.build_catalog()
+    tipos_srv = {m["type"] for m in server.MONSTER_DEFS}
+    ids_srv   = {i["id"] for i in server.CHEST_ITEMS}
+    check("todo monstro exportado existe no servidor",
+          all(m["type"] in tipos_srv for m in cat["monsters"]))
+    check("exporta todos os monstros", len(cat["monsters"]) == len(server.MONSTER_DEFS))
+    check("monstro tem type/name/emoji",
+          all(all(k in m for k in ("type", "name", "emoji")) for m in cat["monsters"]))
+    check("dragon marcado como boss",
+          any(m["type"] == "dragon" and m.get("boss") for m in cat["monsters"]))
+    check("todo item exportado existe no servidor",
+          all(i["id"] in ids_srv for i in cat["items"]))
+    check("toda armadilha exportada existe no servidor",
+          all(t["tipo"] in server.ARMADILHAS for t in cat["traps"]))
+    check("fosso_envenenado precisa_veneno=True",
+          any(t["tipo"] == "fosso_envenenado" and t["precisa_veneno"] for t in cat["traps"]))
+    check("todo veneno exportado existe no servidor",
+          all(v["id"] in server.VENENOS for v in cat["venoms"]))
+    check("veneno tem name", all(v.get("name") for v in cat["venoms"]))
+
+    print("\n[2] write_catalog_js")
+    destino = os.path.join(os.path.dirname(os.path.abspath(__file__)), "editor_catalog.js")
+    ec.write_catalog_js(destino)
+    with open(destino, encoding="utf-8") as f:
+        txt = f.read()
+    check("arquivo começa com a atribuição global",
+          txt.lstrip().startswith("window.EDITOR_CATALOG"))
+    m = re.search(r"window\.EDITOR_CATALOG\s*=\s*(\{.*\});", txt, re.S)
+    check("payload é JSON válido", bool(m) and isinstance(json.loads(m.group(1)), dict))
+
+    print(f"\n=== {PASS} passou, {FAIL} falhou ===")
+    sys.exit(1 if FAIL else 0)
+
+if __name__ == "__main__":
+    main()
