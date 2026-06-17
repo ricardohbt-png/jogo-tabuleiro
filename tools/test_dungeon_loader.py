@@ -143,7 +143,10 @@ async def test_grid_procedural():
     check("default map_w/map_h = 30",
           getattr(r, "map_w", None) == 30 and getattr(r, "map_h", None) == 30)
     check("modo default = procedural", getattr(r, "mode", None) == "procedural")
+    check("selected_dungeon/dungeon_def default = None",
+          getattr(r, "selected_dungeon", "x") is None and getattr(r, "dungeon_def", "x") is None)
     await r.enter_dungeon("p1")
+    check("procedural não altera o modo", r.mode == "procedural")
     check("procedural ainda gera 30×30",
           len(r.tiles) == 30 and len(r.tiles[0]) == 30)
     check("map_w/map_h batem com tiles após procedural",
