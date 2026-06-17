@@ -2880,6 +2880,7 @@ class GameRoom:
         self.prisoner = None
         self.rescue_failed = False
         self._objetivo_concluido = False
+        self.key_chest_opened = False
         self.monsters = {}      # id -> monster
         self.corpses = {}       # id -> cadáver (monstro morto, alvo de Animar Mortos)
         self.animados_phase_pid = None  # pid no "turno dos servos" (logo após o mago)
@@ -6321,6 +6322,9 @@ class GameRoom:
         px, py = p["pos"]
         if max(abs(px - cx), abs(py - cy)) > 2:
             await self.send_to(pid, {"type": "error", "msg": "Muito longe do baú!"}); return
+
+        if chest.get("key_objective"):
+            self.key_chest_opened = True
 
         if kind == "gold":
             amount = chest["gold"]
@@ -11847,6 +11851,59 @@ class GameRoom:
             p["mp"] = min(p["max_mp"], p["mp"] + 2)
             await self.gm_say(f"⭐ **{p['name']}** subiu para o nível **{p['level']}**! +1 em Ataque, CA e Testes de Resistência!")
 
+    # ── Fase 3: avaliação de objetivos ──────────────────────────────────────
+
+    async def _conceder_bonus_secundario(self, obj):
+        pass  # stub — Task 4 implementa XP/ouro
+
+    def _objetivo_cumprido(self, obj):
+        """True se o objetivo `obj` está cumprido no estado atual (só autorado)."""
+        t = (obj or {}).get("type")
+        vivos = [m for m in self.monsters.values() if m["hp"] > 0]
+        if t == "kill_all":
+            return len(vivos) == 0
+        if t == "kill_target":
+            alvos = [m for m in self.monsters.values() if m.get("authored_target")]
+            return bool(alvos) and all(m["hp"] <= 0 for m in alvos)
+        if t == "reach_exit":
+            return self.exit_pos is not None and any(
+                p["pos"] == self.exit_pos for p in self.players.values() if p.get("alive"))
+        if t == "open_key_chest":
+            return bool(getattr(self, "key_chest_opened", False))
+        if t == "rescue_prisoner":
+            if not self.prisoner or not self.prisoner.get("freed") or not self.prisoner.get("alive"):
+                return False
+            destino = self.exit_pos or self.stairs_pos
+            if not destino:
+                return False
+            px, py = self.prisoner["pos"]
+            return max(abs(px - destino[0]), abs(py - destino[1])) <= 1
+        return False
+
+    def _objetivo_status(self, obj):
+        if obj and obj.get("type") == "rescue_prisoner" and self.rescue_failed:
+            return "failed"
+        return "done" if self._objetivo_cumprido(obj) else "pending"
+
+    async def _check_objectives(self):
+        """Catch-all chamado por push_state. Recalcula o status p/ o HUD e, se o
+        principal está cumprido, concede bônus dos secundários e encerra em vitória."""
+        if not self.objectives:
+            return
+        prim = self.objectives.get("primary")
+        secs = self.objectives.get("secondary") or []
+        self.objective_status = {
+            "primary": {"type": (prim or {}).get("type"), "status": self._objetivo_status(prim)},
+            "secondary": [{"type": s.get("type"), "status": self._objetivo_status(s)} for s in secs],
+        }
+        if (self.phase == "playing" and not self._objetivo_concluido
+                and prim and self._objetivo_cumprido(prim)):
+            self._objetivo_concluido = True
+            for s in secs:
+                if self._objetivo_cumprido(s):
+                    await self._conceder_bonus_secundario(s)
+            await self.end_game(victory=True)
+
     async def end_game(self, victory):
         self.phase = "ended"
         self._cancelar_timer_turno()
@@ -11888,6 +11945,7 @@ class GameRoom:
         return tiles
 
     async def push_state(self):
+        await self._check_objectives()
         await self.broadcast({
             "type": "game_state",
             "tiles": self.tiles,
