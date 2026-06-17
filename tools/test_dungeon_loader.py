@@ -153,10 +153,43 @@ async def test_grid_procedural():
           r.map_w == len(r.tiles[0]) and r.map_h == len(r.tiles))
     check("procedural: nenhum monstro em parede", monstros_em_parede(r) == [])
 
+async def test_load_authored():
+    print("\n[4] load_authored_dungeon")
+    r = setup_room()
+    r.mode = "authored"
+    r.dungeon_def = sample_dungeon()      # injeta direto (Task 5 faz via arquivo)
+    r.selected_dungeon = "amostra.json"
+    # patch: enter_dungeon usará r.dungeon_def quando authored (ver Step 3)
+    await r.enter_dungeon("p1")
+
+    check("grid autorado aplicado (8×6)", r.map_w == 8 and r.map_h == 6)
+    check("tiles têm as dimensões do grid",
+          len(r.tiles) == 6 and len(r.tiles[0]) == 8)
+    check("1 monstro carregado", len(r.monsters) == 1)
+    m = next(iter(r.monsters.values()))
+    check("monstro na casa exata autorada", m["pos"] == [3, 3])
+    check("monstro vinculado à sala 0", m["room_id"] == 0)
+    check("authored_boss inerte (m['boss'] falsy)", not m.get("boss"))
+    check("1 baú carregado com item hidratado",
+          len(r.chests) == 1 and
+          next(iter(r.chests.values()))["items"][0]["name"] == "Poção de Vida")
+    check("baú com ouro exato", next(iter(r.chests.values()))["gold"] == 20)
+    check("1 armadilha carregada", len(r.armadilhas) == 1 and
+          r.armadilhas[0]["tipo"] == "fosso_estacas")
+    check("nenhum monstro em parede", monstros_em_parede(r) == [])
+    # heróis: todos em casas de chão (não parede), próximos à entrada
+    casas = [tuple(p["pos"]) for p in r.players.values()]
+    check("heróis em casas de chão", all(r.tiles[y][x] != WALL for x, y in casas))
+    check("stairs na entrada", r.stairs_pos == [2, 2])
+    check("dungeon_def guardado p/ Fase 3", r.dungeon_def is not None
+          and r.dungeon_def.get("prisoner") is not None)
+    check("entrada revelada (névoa)", (2, 2) in r.explored)
+
 async def main():
     test_validacao()
     test_helpers()
     await test_grid_procedural()
+    await test_load_authored()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

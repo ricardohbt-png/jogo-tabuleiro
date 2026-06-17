@@ -3321,6 +3321,78 @@ class GameRoom:
             await self.broadcast({"type": "shop_result", "msg": log})
         await self.broadcast_city_state()
 
+    def load_authored_dungeon(self, defn):
+        """Carrega uma masmorra autorada (dict já validado) no estado da sala.
+        Instancia só o que o motor entende; exit/prisoner/objectives ficam em
+        self.dungeon_def (inertes até a Fase 3)."""
+        self.dungeon_def = defn
+        self.map_w = defn["grid"]["w"]
+        self.map_h = defn["grid"]["h"]
+        self.tiles = deepcopy(defn["tiles"])
+
+        # Salas no mesmo formato de generate_dungeon.
+        self.rooms = []
+        for r in defn.get("rooms", []):
+            x, y, w, h = r["x"], r["y"], r["w"], r["h"]
+            role = r.get("role", "empty")
+            self.rooms.append({
+                "id": r["id"], "x": x, "y": y, "w": w, "h": h,
+                "cx": x + w // 2, "cy": y + h // 2, "role": role,
+                "cleared": role in ("entrance", "empty"),
+                "looted": False,
+                "locked": bool(r.get("locked", role != "entrance")),
+                "doors": [list(d) for d in r.get("doors", [])],
+            })
+
+        # Mapa porta -> salas que ela destranca.
+        self.door_rooms = {}
+        for room in self.rooms:
+            for dx, dy in room.get("doors", []):
+                self.door_rooms.setdefault((dx, dy), []).append(room["id"])
+
+        # Monstros em casa exata (sem distribuição/companheiros automáticos).
+        self.monsters = {}
+        for mo in defn.get("monsters", []):
+            mdef = next(d for d in MONSTER_DEFS if d["type"] == mo["type"])
+            room = self._room_by_id(mo.get("room_id")) or self.rooms[0]
+            m = make_monster(mdef, room)
+            m["pos"] = [mo["pos"][0], mo["pos"][1]]
+            m["room_id"] = mo.get("room_id")
+            m["boss"] = False                       # Fase 1: end_game-on-boss é da Fase 3
+            m["authored_boss"] = bool(mo.get("boss"))
+            m["authored_target"] = bool(mo.get("target"))
+            self.monsters[m["id"]] = m
+
+        # Baús com conteúdo exato (itens hidratados do catálogo do servidor).
+        self.chests = {}
+        for ch in defn.get("chests", []):
+            self._spawn_chest(ch["pos"], int(ch.get("gold", 0)),
+                              hidratar_itens_bau(ch.get("items", [])))
+
+        # Armadilhas de masmorra autoradas (hostis, ocultas).
+        self.traps = []
+        self.armadilhas = [make_authored_trap(t) for t in defn.get("traps", [])]
+
+        # Stairs = ponto de entrada.
+        ent = defn["entrance"]
+        self.stairs_pos = [ent["x"], ent["y"]]
+
+    def _spawn_tiles_near(self, start, n):
+        """Devolve até `n` casas de CHÃO (FLOOR/DOOR) mais próximas de `start`
+        por BFS, na ordem de proximidade. Usado p/ posicionar heróis."""
+        sx, sy = start
+        out = []; visto = {(sx, sy)}; fila = [(sx, sy)]
+        while fila and len(out) < n:
+            x, y = fila.pop(0)
+            if self.tiles[y][x] != WALL:
+                out.append([x, y])
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nx, ny = x + dx, y + dy
+                if (0 <= nx < self.map_w and 0 <= ny < self.map_h
+                        and (nx, ny) not in visto and self.tiles[ny][nx] != WALL):
+                    visto.add((nx, ny)); fila.append((nx, ny))
+        return out
+
     async def enter_dungeon(self, pid):
         if pid != self.host_pid:
             await self.send_to(pid, {"type": "error", "msg": "Apenas o anfitrião pode entrar na masmorra."})
@@ -3337,6 +3409,7 @@ class GameRoom:
         # como o herói deixou. Ver self.dungeon_generated.
         nova = not self.dungeon_generated
         pids = list(self.players.keys())
+        autorada = self.mode == "authored" and self.dungeon_def is not None
 
         if nova:
             self.corpses = {}        # cadáveres não persistem entre masmorras distintas
@@ -3347,20 +3420,33 @@ class GameRoom:
             self.zonas_especiais = []
             self.explored = set()    # névoa volta ao início no mapa novo
             self.magic_reveal = {}
-            self.tiles, self.rooms = generate_dungeon()
+            if autorada:
+                self.load_authored_dungeon(self.dungeon_def)
+            else:
+                self.map_w, self.map_h = MAP_W, MAP_H
+                self.tiles, self.rooms = generate_dungeon()
 
-            # Mapa porta -> salas que ela destranca (uma porta pode servir 2 salas)
-            self.door_rooms = {}
-            for room in self.rooms:
-                for dx, dy in room.get("doors", []):
-                    self.door_rooms.setdefault((dx, dy), []).append(room["id"])
+            if not autorada:
+                # Mapa porta -> salas que ela destranca (uma porta pode servir 2 salas)
+                self.door_rooms = {}
+                for room in self.rooms:
+                    for dx, dy in room.get("doors", []):
+                        self.door_rooms.setdefault((dx, dy), []).append(room["id"])
 
         # Place players at entrance (reentram pela mesma escada que usaram p/ sair).
         entrance = next((r for r in self.rooms if r["role"] == "entrance"), self.rooms[0])
+        if autorada:
+            ent_pt = [self.dungeon_def["entrance"]["x"], self.dungeon_def["entrance"]["y"]]
+            spawn_tiles = self._spawn_tiles_near(ent_pt, len(pids))
+        else:
+            spawn_tiles = None
         offsets = [(0,0),(1,0),(-1,0),(0,1),(1,1),(-1,1)]
         for i, pid2 in enumerate(pids):
-            ox, oy = offsets[i % len(offsets)]
-            self.players[pid2]["pos"] = [entrance["cx"] + ox, entrance["cy"] + oy]
+            if spawn_tiles is not None:
+                self.players[pid2]["pos"] = list(spawn_tiles[i % len(spawn_tiles)])
+            else:
+                ox, oy = offsets[i % len(offsets)]
+                self.players[pid2]["pos"] = [entrance["cx"] + ox, entrance["cy"] + oy]
             self.players[pid2]["moves_left"]       = self.players[pid2]["spd"]
             self.players[pid2]["action_done"]      = False
             self.players[pid2]["bonus_action_used"] = False
@@ -3370,24 +3456,28 @@ class GameRoom:
                 self._resetar_cerveja(self.players[pid2])    # embriaguez da cerveja não persiste
 
         if nova:
-            # Spawn monsters & traps
-            for room in self.rooms:
-                if room["role"] == "monster":
-                    spawned = self._distribuir_monstros(spawn_monsters_for_room(room, len(pids)), room)
-                    for m in spawned:
-                        self.monsters[m["id"]] = m
-                    if any("kobold" in m.get("type", "") for m in spawned):
-                        self._gerar_armadilhas_kobold(room)
-                if room["role"] == "boss":
-                    boss_def = next(m for m in MONSTER_DEFS if m.get("boss"))
-                    for m in self._distribuir_monstros([make_monster(boss_def, room)], room):
-                        self.monsters[m["id"]] = m
-                if room["role"] == "trap":
-                    self.traps.append(make_trap(room, self.tiles))
+            if not autorada:
+                # Spawn monsters & traps (só procedural; autorada já posicionou tudo)
+                for room in self.rooms:
+                    if room["role"] == "monster":
+                        spawned = self._distribuir_monstros(spawn_monsters_for_room(room, len(pids)), room)
+                        for m in spawned:
+                            self.monsters[m["id"]] = m
+                        if any("kobold" in m.get("type", "") for m in spawned):
+                            self._gerar_armadilhas_kobold(room)
+                    if room["role"] == "boss":
+                        boss_def = next(m for m in MONSTER_DEFS if m.get("boss"))
+                        for m in self._distribuir_monstros([make_monster(boss_def, room)], room):
+                            self.monsters[m["id"]] = m
+                    if room["role"] == "trap":
+                        self.traps.append(make_trap(room, self.tiles))
             self.dungeon_generated = True   # marca: próximas voltas da cidade retomam esta masmorra
 
-        # Stairs tile — centre of entrance room (same spawn point as players)
-        self.stairs_pos = [entrance["cx"], entrance["cy"]]
+        # Stairs tile — centre of entrance room (same spawn point as players).
+        # No modo autorado, load_authored_dungeon já fixou a escada no ponto de
+        # entrada autorado (que pode não coincidir com o centro da sala).
+        if not autorada:
+            self.stairs_pos = [entrance["cx"], entrance["cy"]]
 
         # Reveal entrance (room + 1-tile border so surrounding walls are visible)
         self._reveal_room(entrance)
