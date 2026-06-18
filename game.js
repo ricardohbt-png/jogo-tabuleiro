@@ -132,6 +132,9 @@ document.body.innerHTML = `
     </div>
     <div id="map-wrap">
       <canvas id="dungeon-canvas"></canvas>
+      <!-- Fase 3: HUD de objetivos + botão Libertar (só em masmorra autorada) -->
+      <div id="objectives-hud" style="display:none"></div>
+      <button id="btn-libertar" style="display:none" onclick="GS.libertarPrisioneiro()">🔓 Libertar prisioneiro</button>
     </div>
     <canvas id="dice-canvas"></canvas>
     <div id="gm-log">
@@ -2818,7 +2821,47 @@ function handleGameState(msg){
   renderGMLog(msg.gm_log);
   updateTurnBadge(msg);
   updateMoveButtons(msg);
+  renderObjectivesHUD(msg);
   _start2DHighlightLoop();
+}
+
+// ── Fase 3: HUD de objetivos + botão "Libertar" (só em masmorra autorada) ─────
+// Lê GS.objectives / GS.prisioneiroLibertavel (decisores em gameState.js).
+const _OBJ_LABELS = {
+  kill_all:        'Eliminar todos os monstros',
+  kill_target:     'Derrotar o alvo',
+  reach_exit:      'Chegar à saída',
+  open_key_chest:  'Abrir o baú-chave',
+  rescue_prisoner: 'Resgatar o prisioneiro',
+};
+function _objIcon(status){
+  return status === 'done' ? '✅' : status === 'failed' ? '❌' : '⬜';
+}
+function _objRow(o){
+  const label = _OBJ_LABELS[(o && o.type)] || (o && o.type) || 'Objetivo';
+  return `<div class="obj-row"><span class="obj-ic">${_objIcon(o && o.status)}</span><span class="obj-lbl">${label}</span></div>`;
+}
+function renderObjectivesHUD(msg){
+  const hud = $('objectives-hud');
+  const btn = $('btn-libertar');
+  if(!hud) return;
+  const obj = GS.objectives;   // null no procedural
+  if(!obj){
+    hud.style.display = 'none';
+    if(btn) btn.style.display = 'none';
+    return;
+  }
+  let html = '<div class="obj-title">🎯 Objetivos</div>';
+  if(obj.primary) html += `<div class="obj-primary">${_objRow(obj.primary)}</div>`;
+  const secs = obj.secondary || [];
+  if(secs.length){
+    html += '<div class="obj-sec-label">Secundários</div>';
+    for(const s of secs) html += _objRow(s);
+  }
+  hud.innerHTML = html;
+  hud.style.display = '';
+  // Botão "Libertar": só quando há prisioneiro cativo adjacente no meu turno.
+  if(btn) btn.style.display = GS.prisioneiroLibertavel ? '' : 'none';
 }
 
 function _start2DHighlightLoop(){
@@ -4660,6 +4703,24 @@ function renderMap(state){
     }
   }
 
+  // ── Exit tile (Fase 3 — masmorra autorada): bandeira de chegada 🏁
+  if(GS.exitPos){
+    const [ex,ey]=GS.exitPos;
+    if(exploredSet.has(`${ex},${ey}`)){
+      const X=ex*CELL, Y2=ey*CELL;
+      // Glow azul-esverdeado (distinto do dourado da escada)
+      const egl=ctx.createRadialGradient(X+CELL/2,Y2+CELL/2,0,X+CELL/2,Y2+CELL/2,CELL*0.78);
+      egl.addColorStop(0,'rgba(60,220,180,0.32)');
+      egl.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=egl; ctx.fillRect(X-CELL/4,Y2-CELL/4,CELL*1.5,CELL*1.5);
+      ctx.font=`${Math.round(CELL*0.5)}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🏁',X+CELL/2,Y2+CELL/2);
+      ctx.font=`bold ${Math.round(CELL*0.16)}px monospace`; ctx.textAlign='center'; ctx.textBaseline='top';
+      ctx.fillStyle='rgba(80,230,190,0.92)';
+      ctx.fillText('CHEGADA',X+CELL/2,Y2+CELL-14);
+    }
+  }
+
   // ── Physical chests (2D overlay — gold glow + icon)
   ctx.textAlign='center'; ctx.textBaseline='middle';
   for(const chest of (state.chests||[])){
@@ -4722,6 +4783,33 @@ function renderMap(state){
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(c.icone||'💀', cx, cy);
     ctx.restore();
+  }
+
+  // ── Prisioneiro (Fase 3): cativo (acorrentado) vs. seguindo; barra de HP ──────
+  const _pris = GS.prisoner;
+  if(_pris && _pris.alive){
+    const [pxr,pyr]=_pris.pos;
+    if(visionSet.has(`${pxr},${pyr}`) || exploredSet.has(`${pxr},${pyr}`)){
+      const cx=pxr*CELL+CELL/2, cy=pyr*CELL+CELL/2;
+      // Base do peão: tom amarelado se aliado/seguindo, acinzentado se cativo.
+      drawMiniBase(ctx, cx, cy, _pris.freed?'#2e90c0':'#8a6d3b', false);
+      ctx.font=`${Math.round(CELL*0.46)}px serif`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(_pris.freed?'🧍':'⛓️', cx, cy-3);
+      // Barra de HP simples
+      const max=_pris.max_hp||_pris.hp||1;
+      const pct=Math.max(0,Math.min(1,_pris.hp/max));
+      const barH=Math.max(4,Math.round(CELL*0.08));
+      ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.fillRect(pxr*CELL+3,pyr*CELL+2,CELL-6,barH);
+      ctx.fillStyle=pct>.5?'#27ae60':pct>.25?'#e67e22':'#e74c3c';
+      ctx.fillRect(pxr*CELL+3,pyr*CELL+2,(CELL-6)*pct,barH);
+      ctx.strokeStyle='rgba(0,0,0,0.55)'; ctx.lineWidth=0.6;
+      ctx.strokeRect(pxr*CELL+3,pyr*CELL+2,CELL-6,barH);
+      const fs=Math.round(CELL*0.125);
+      ctx.fillStyle='rgba(255,210,120,0.95)'; ctx.font=`bold ${fs}px monospace`;
+      ctx.textAlign='center'; ctx.textBaseline='top';
+      ctx.fillText('Prisioneiro', cx, pyr*CELL+barH+3);
+    }
   }
 
   // ── Animados (servos do Pedro / elementais): peão do MONSTRO ORIGINAL, aliado ──
@@ -10092,6 +10180,32 @@ function init3D(state){
     scene.add(stairGroup);
   }
 
+  // ── Exit marker (Fase 3 — masmorra autorada): mastro + bandeira 🏁 ────────────
+  // Estático; visibilidade por fog (exploredSet) em renderMap3D, como stairGroup.
+  let exitGroup = null;
+  {
+    const ex = (window.GS && GS.exitPos) || null;
+    if(ex){
+      const [exx, exy] = ex;
+      exitGroup = new T.Group();
+      const poleMat = new T.MeshStandardMaterial({color:0x8a8a96, roughness:0.5, metalness:0.6});
+      const pole = new T.Mesh(new T.CylinderGeometry(0.025,0.025,0.95,8), poleMat);
+      pole.position.set(exx, TH+0.475, exy); pole.castShadow=true; exitGroup.add(pole);
+      const flagMat = new T.MeshStandardMaterial({
+        color:new T.Color(0x3cdcb4), emissive:new T.Color(0x1c8a70),
+        emissiveIntensity:0.55, roughness:0.45, metalness:0.10, side:T.DoubleSide
+      });
+      const flag = new T.Mesh(new T.PlaneGeometry(0.34,0.20), flagMat);
+      flag.position.set(exx+0.18, TH+0.82, exy); exitGroup.add(flag);
+      const ring = new T.Mesh(new T.TorusGeometry(0.40,0.020,6,28), flagMat);
+      ring.rotation.x=Math.PI/2; ring.position.set(exx,TH+0.006,exy); exitGroup.add(ring);
+      const exLight = new T.PointLight(0x60e0c0,0.9,3.0);
+      exLight.position.set(exx,TH+0.9,exy); exitGroup.add(exLight);
+      exitGroup.visible=false;
+      scene.add(exitGroup);
+    }
+  }
+
   const entityGroup = new T.Group();
   scene.add(entityGroup);
 
@@ -10169,6 +10283,7 @@ function init3D(state){
     W, H, animFrame:null, resizeObs,
     hoverSpot,
     stairGroup,                          // staircase mesh (null if no stairs)
+    exitGroup,                           // Fase 3: marcador de saída 🏁 (null se não houver)
     chestMeshes: {},                     // chest_id → THREE.Group
     hoveredPos:  null,   // [gx, gy] of figure under cursor, or null
     selectedPos: null    // [gx, gy] of clicked-selected figure, or null
@@ -11808,6 +11923,9 @@ function renderMap3D(state){
   // ── Staircase visibility
   if(g3.stairGroup && state.stairs_pos)
     g3.stairGroup.visible = exploredSet.has(`${state.stairs_pos[0]},${state.stairs_pos[1]}`);
+  // Fase 3: marcador de saída visível quando a casa foi explorada.
+  if(g3.exitGroup && GS.exitPos)
+    g3.exitGroup.visible = exploredSet.has(`${GS.exitPos[0]},${GS.exitPos[1]}`);
 
   // ── Chest 3D models — persistent meshes, created/removed as chests appear/go ─
   const chests = state.chests || [];

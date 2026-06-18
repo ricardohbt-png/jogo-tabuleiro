@@ -1104,6 +1104,24 @@ const GS = (() => {
     }) || null;
   }
 
+  // ── Fase 3 (editor de masmorras): objetivos / saída / prisioneiro ─────────────
+  // Getters dos campos servidos no game_state (null no procedural).
+  function getObjectives() { return (gameState && gameState.objectives) || null; }
+  function getExitPos()    { return (gameState && gameState.exit_pos) || null; }
+  function getPrisoner()   { return (gameState && gameState.prisoner) || null; }
+  // Decisor puro: há prisioneiro cativo (vivo, não libertado) adjacente (Chebyshev ≤1)
+  // ao herói local, e é o turno dele? Usado pelo renderer para habilitar o botão.
+  function prisioneiroLibertavel() {
+    const pr = getPrisoner();
+    if (!pr || pr.freed || !pr.alive) return false;
+    if (!gameState || gameState.current_turn !== myPid) return false;
+    const me = (gameState.players || []).find(p => p.id === myPid && p.alive);
+    if (!me) return false;
+    return Math.max(Math.abs(me.pos[0] - pr.pos[0]), Math.abs(me.pos[1] - pr.pos[1])) <= 1;
+  }
+  // Sender: herói adjacente liberta o prisioneiro (ação principal no servidor).
+  function libertarPrisioneiro() { send({ type: 'libertar_prisioneiro' }); }
+
   // ── Hooks de sobrevivência chamados pelo renderer nos pontos de ação ───────
   // Ataque/magia/habilidade têm seus sends no renderer (game.js); ele notifica
   // a atividade do turno aqui. Magia conta como ataque ('acted').
@@ -1296,6 +1314,11 @@ const GS = (() => {
     get lobbyDungeons()   { return (lobbyState && lobbyState.dungeons) || []; },
     get lobbyMode()       { return (lobbyState && lobbyState.mode) || 'procedural'; },
     get lobbySelectedDungeon() { return (lobbyState && lobbyState.selected_dungeon) || null; },
+    // Fase 3: objetivos / saída / prisioneiro (property getters — acessados sem parênteses).
+    get objectives()            { return getObjectives(); },
+    get exitPos()               { return getExitPos(); },
+    get prisoner()              { return getPrisoner(); },
+    get prisioneiroLibertavel() { return prisioneiroLibertavel(); },
     get cityState()       { return cityState; },
     get isMyTurn()        { return isMyTurn; },
     get pendingAction()   { return pendingAction; },
@@ -1375,6 +1398,7 @@ const GS = (() => {
     desarmarArmadilha,
     armadilhaAdjacente,
     selectDungeon,
+    libertarPrisioneiro,   // Fase 3: sender (chamado com parênteses)
 
     // ── Habilidades armadas do warrior (toggle; custo cobrado na ação) ──
     isWarriorSkillSelected,
