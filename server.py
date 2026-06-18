@@ -2933,6 +2933,7 @@ class GameRoom:
         # Fase 4a — campanha.
         self.campaign = None         # dict carregado (modo "campaign")
         self.campaign_phase = 0      # índice da fase atual em campaign["dungeons"]
+        self.selected_campaign = None  # nome do arquivo da campanha selecionada (lobby)
         self.key_chest_opened = False
         self.monsters = {}      # id -> monster
         self.corpses = {}       # id -> cadáver (monstro morto, alvo de Animar Mortos)
@@ -3044,6 +3045,7 @@ class GameRoom:
             "campaigns": listar_campanhas(),
             "mode": self.mode,
             "selected_dungeon": self.selected_dungeon,
+            "selected_campaign": self.selected_campaign,
         })
 
     async def handle_select_dungeon(self, pid, file):
@@ -3055,7 +3057,7 @@ class GameRoom:
         if not file:
             self.mode = "procedural"; self.selected_dungeon = None
             self.dungeon_def = None
-            self.campaign = None; self.campaign_phase = 0
+            self.campaign = None; self.campaign_phase = 0; self.selected_campaign = None
         else:
             defn = carregar_dungeon(file)
             ok, msg = (False, "Masmorra não encontrada.") if defn is None else validar_dungeon(defn)
@@ -3066,7 +3068,7 @@ class GameRoom:
             # (autorada = mode=="authored" and self.dungeon_def is not None).
             self.mode = "authored"; self.selected_dungeon = file
             self.dungeon_def = defn
-            self.campaign = None; self.campaign_phase = 0
+            self.campaign = None; self.campaign_phase = 0; self.selected_campaign = None
         await self.broadcast_lobby()
 
     async def handle_select_campaign(self, pid, file):
@@ -3077,7 +3079,7 @@ class GameRoom:
             return
         if not file:
             self.mode = "procedural"; self.selected_dungeon = None
-            self.dungeon_def = None; self.campaign = None; self.campaign_phase = 0
+            self.dungeon_def = None; self.campaign = None; self.campaign_phase = 0; self.selected_campaign = None
         else:
             defn = carregar_campanha(file)
             ok, msg = (False, "Campanha não encontrada.") if defn is None else validar_campanha(defn)
@@ -3085,6 +3087,7 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error", "msg": f"Campanha inválida: {msg}"})
                 return
             self.mode = "campaign"; self.campaign = defn; self.campaign_phase = 0
+            self.selected_campaign = file
             self.selected_dungeon = None; self.dungeon_def = None
         await self.broadcast_lobby()
 

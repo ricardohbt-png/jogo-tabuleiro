@@ -17060,7 +17060,7 @@ function csUpdateLobbyBar(msg){
     const dungeons  = GS.lobbyDungeons;            // getter (sem parênteses)
     const campaigns = GS.lobbyCampaigns;           // getter (sem parênteses)
     const sel      = GS.lobbySelectedDungeon;     // getter (sem parênteses)
-    const selCamp  = (GS.lobbyMode === 'campaign' && msg.campaign) ? msg.campaign.file : null;
+    const selCamp  = msg.selected_campaign || null;   // campanha selecionada (lobby_state)
     const modeTxt  = (GS.lobbyMode === 'campaign') ? 'Modo: Campanha'
                    : (GS.lobbyMode === 'authored') ? 'Modo: Masmorra' : 'Modo: Procedural';
     let opts = ['<option value="">Procedural (aleatória)</option>']
