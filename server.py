@@ -3539,7 +3539,10 @@ class GameRoom:
         # como o herói deixou. Ver self.dungeon_generated.
         nova = not self.dungeon_generated
         pids = list(self.players.keys())
-        autorada = self.mode == "authored" and self.dungeon_def is not None
+        # Campanha: a 1ª entrada de cada fase carrega a masmorra da fase atual.
+        if self.mode == "campaign" and self.campaign and nova:
+            self.dungeon_def = carregar_dungeon(self.campaign["dungeons"][self.campaign_phase])
+        autorada = self.mode in ("authored", "campaign") and self.dungeon_def is not None
 
         if nova:
             self.corpses = {}        # cadáveres não persistem entre masmorras distintas

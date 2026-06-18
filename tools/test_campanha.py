@@ -62,9 +62,24 @@ async def test_selecao():
     await r.handle_select_campaign("p2", "test_campanha.json")
     check("não-host ignorado", r.mode == "procedural")
 
+async def test_entrada_fase0():
+    print("\n[3] enter_dungeon carrega a fase atual da campanha")
+    r = setup_room(); r.phase = "lobby"
+    await r.handle_select_campaign("p1", "test_campanha.json")
+    r.phase = "city"
+    await r.enter_dungeon("p1")
+    check("carregou a fase 0 (grid 10×8 de camp_a)", r.map_w == 10 and r.map_h == 8)
+    check("monstro da fase 0 (goblin)",
+          sorted(m["type"] for m in r.monsters.values()) == ["goblin"])
+    check("dungeon_def aponta a fase atual", r.dungeon_def is not None
+          and r.dungeon_def.get("id") == "test_camp_a")
+    check("objetivos da fase carregados", r.objectives
+          and r.objectives["primary"]["type"] == "kill_all")
+
 async def main():
     test_validacao()
     await test_selecao()
+    await test_entrada_fase0()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 
