@@ -149,11 +149,25 @@ async def test_bonus_secundario():
     check("XP do grupo subiu pelo secundário", p1["xp"] > xp0)
     check("ouro do grupo subiu pelo secundário", p1["gold"] > ouro0)
 
+async def test_serializacao():
+    print("\n[5] push_state expõe objectives/exit_pos/prisoner")
+    r = setup_authored()
+    capturado = {}
+    async def cap(msg):
+        if msg.get("type") == "game_state": capturado.update(msg)
+    r.broadcast = cap
+    await r.enter_dungeon("p1")
+    await GameRoom.push_state(r)   # usa o push_state real (não o stub do setup)
+    check("game_state traz exit_pos", capturado.get("exit_pos") == [14, 4])
+    check("game_state traz prisoner", capturado.get("prisoner") is not None)
+    check("game_state traz objectives", capturado.get("objectives") is not None)
+
 async def main():
     await test_instanciar()
     await test_conclusao_simples()
     await test_prisioneiro()
     await test_bonus_secundario()
+    await test_serializacao()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

@@ -12025,6 +12025,9 @@ class GameRoom:
             "explored": [list(e) for e in self.explored],
             "revealed": [list(k) for k in self._live_reveal_tiles()],   # Clarividência + visão ao vivo dos minions
             "stairs_pos": self.stairs_pos,
+            "objectives": self.objective_status,
+            "exit_pos": self.exit_pos,
+            "prisoner": self.prisoner,
             "current_turn": self.current_pid(),
             "animados_turn": self.animados_phase_pid,   # pid no turno dos servos (ou None)
             "turn_timer_started": self.turn_timer_started_ms,  # epoch ms do início do turno (p/ contagem 30s)
