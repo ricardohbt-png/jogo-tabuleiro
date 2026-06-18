@@ -76,10 +76,55 @@ async def test_entrada_fase0():
     check("objetivos da fase carregados", r.objectives
           and r.objectives["primary"]["type"] == "kill_all")
 
+async def test_avanco_e_vitoria():
+    print("\n[4] avanço de fase, preservação e vitória final")
+    r = setup_room(); r.phase = "lobby"
+    await r.handle_select_campaign("p1", "test_campanha.json")
+    r.phase = "city"
+    await r.enter_dungeon("p1")
+    p1 = r.players["p1"]
+    p1["gold"] = 99; p1["hp"] = max(1, p1["hp"] - 3); hp_antes = p1["hp"]
+    # cumpre o objetivo da fase 0 (kill_all)
+    for m in r.monsters.values(): m["hp"] = 0
+    await r._check_objectives()
+    check("após concluir fase 0 → cidade", r.phase == "city")
+    check("avançou para a fase 1", r.campaign_phase == 1)
+    check("dungeon_generated zerado p/ carregar a próxima", r.dungeon_generated is False)
+    check("HP preservado entre fases", r.players["p1"]["hp"] == hp_antes)
+    check("ouro preservado entre fases", r.players["p1"]["gold"] == 99)
+
+    # entra na fase 1
+    await r.enter_dungeon("p1")
+    check("fase 1 carregada (grid 12×8 de camp_b)", r.map_w == 12 and r.map_h == 8)
+    check("monstro da fase 1 (skeleton)",
+          sorted(m["type"] for m in r.monsters.values()) == ["skeleton"])
+
+    # cumpre o objetivo da última fase → vitória da campanha
+    vit = {"c": False, "v": None}
+    async def fake_end(victory): vit["c"] = True; vit["v"] = victory
+    r.end_game = fake_end
+    for m in r.monsters.values(): m["hp"] = 0
+    await r._check_objectives()
+    check("última fase concluída → end_game(victory)", vit["c"] and vit["v"] is True)
+
+async def test_retomar_mesma_fase():
+    print("\n[5] sair sem concluir retoma a mesma fase")
+    r = setup_room(); r.phase = "lobby"
+    await r.handle_select_campaign("p1", "test_campanha.json")
+    r.phase = "city"
+    await r.enter_dungeon("p1")
+    await r.handle_exit_dungeon("p1")     # sai sem concluir
+    check("voltou à cidade", r.phase == "city")
+    check("fase não avançou", r.campaign_phase == 0)
+    await r.enter_dungeon("p1")
+    check("retomou a fase 0 (10×8)", r.map_w == 10 and r.map_h == 8)
+
 async def main():
     test_validacao()
     await test_selecao()
     await test_entrada_fase0()
+    await test_avanco_e_vitoria()
+    await test_retomar_mesma_fase()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

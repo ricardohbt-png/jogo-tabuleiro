@@ -6090,7 +6090,11 @@ class GameRoom:
         if self.phase != "playing": return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        # No position check — clicking the staircase tile exits regardless of distance
+        await self.gm_say(f"🚪 **{p['name']}** usa as escadas de saída. Os aventureiros retornam à cidade!")
+        await self._voltar_para_cidade()
+
+    async def _voltar_para_cidade(self):
+        """Transição masmorra→cidade reusável (saída pela escada e avanço de fase)."""
         self._cancelar_timer_turno()   # fora da masmorra não há timer de turno
         self.phase = "city"
         self._gerar_loja_pergaminhos()
@@ -6099,7 +6103,6 @@ class GameRoom:
             pp["action_done"]       = False
             pp["bonus_action_used"] = False
             pp["taverna_refeicoes"] = []   # refeições de balcão renovam a cada visita à cidade
-        await self.gm_say(f"🚪 **{p['name']}** usa as escadas de saída. Os aventureiros retornam à cidade!")
         await self.broadcast_city_state()
 
     # ── inventory helpers ──────────────────────────────────────────────────
@@ -11990,7 +11993,16 @@ class GameRoom:
             for s in secs:
                 if self._objetivo_cumprido(s):
                     await self._conceder_bonus_secundario(s)
-            await self.end_game(victory=True)
+            if (self.mode == "campaign" and self.campaign
+                    and self.campaign_phase < len(self.campaign["dungeons"]) - 1):
+                # Avança para a próxima fase via cidade/loja.
+                self.campaign_phase += 1
+                self.dungeon_generated = False     # próxima entrada carrega a nova fase
+                self._objetivo_concluido = False   # a nova fase tem seus próprios objetivos
+                await self.gm_say("🏆 Fase concluída! Retornem à cidade antes da próxima masmorra.")
+                await self._voltar_para_cidade()
+            else:
+                await self.end_game(victory=True)
 
     async def handle_libertar_prisioneiro(self, pid):
         if not self._is_turn(pid):
