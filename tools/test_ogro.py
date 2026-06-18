@@ -8,6 +8,10 @@ Rodar da raiz:  PYTHONUTF8=1 python tools/test_ogro.py
 """
 import asyncio, os, sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 import server as S
 
 ok = fail = 0
@@ -46,7 +50,7 @@ def targets(g):
 
 # ── 1) Fichas ────────────────────────────────────────────────────────────────
 print("[1] Fichas Clava/Lança")
-check(CLAVA["hp"]==32 and CLAVA["ac"]==12 and CLAVA["size"]==[2,2] and CLAVA["movement"]==5, "Clava: 32/CA12/2x2/Mov5")
+check(CLAVA["hp"]==32 and CLAVA["ac"]==12 and CLAVA["size"]==[1,1] and CLAVA["movement"]==5, "Clava: 32/CA12/1x1/Mov5")
 check(LANCA["ac"]==14 and LANCA.get("reach_lanca") is True, "Lança: CA14 + alcance estendido")
 check(CLAVA["attacks"][0]["damage"]=="1d12+4", "Clava 1d12+4")
 check(LANCA["attacks"][0]["damage"]=="1d10+4", "Lança 1d10+4")
@@ -55,18 +59,18 @@ check(any(w.get("save")=="vontade" and w.get("bonus_flat")==-2 for w in CLAVA["w
 # ── 2) Alcance da lança ──────────────────────────────────────────────────────
 print("[2] Alcance da lança (2 reto / 1 diagonal)")
 g, ogro, _ = jogo(LANCA, [4,1])
-# footprint [1,1],[2,1],[1,2],[2,2]
-check(g._lanca_no_alcance(ogro, [4,1]) is True,  "2 em linha reta (de [2,1] → [4,1])")
-check(g._lanca_no_alcance(ogro, [3,3]) is True,  "1 na diagonal (de [2,2] → [3,3])")
-check(g._lanca_no_alcance(ogro, [5,1]) is False, "3 reto = fora")
-check(g._lanca_no_alcance(ogro, [4,4]) is False, "2 na diagonal = fora")
+# ogro ocupa 1 tile em [1,1]
+check(g._lanca_no_alcance(ogro, [3,1]) is True,  "2 em linha reta (de [1,1] → [3,1])")
+check(g._lanca_no_alcance(ogro, [2,2]) is True,  "1 na diagonal (de [1,1] → [2,2])")
+check(g._lanca_no_alcance(ogro, [4,1]) is False, "3 reto = fora")
+check(g._lanca_no_alcance(ogro, [3,3]) is False, "2 na diagonal = fora")
 # parede no meio bloqueia o alcance 2
-g.tiles[1][3] = S.WALL
-check(g._lanca_no_alcance(ogro, [4,1]) is False, "parede no meio bloqueia o alcance 2")
+g.tiles[1][2] = S.WALL
+check(g._lanca_no_alcance(ogro, [3,1]) is False, "parede no meio bloqueia o alcance 2")
 # Clava usa adjacência simples
 gc, oc, _ = jogo(CLAVA, [3,1])
-check(gc._em_alcance_ogro(oc, [3,1]) is True,  "Clava: adjacente a [2,1] → alcance")
-check(gc._em_alcance_ogro(oc, [4,1]) is False, "Clava: 2 de distância → fora")
+check(gc._em_alcance_ogro(oc, [2,1]) is True,  "Clava: adjacente a [1,1] → alcance")
+check(gc._em_alcance_ogro(oc, [3,1]) is False, "Clava: 2 de distância → fora")
 
 # ── 3) Golpe Brutal: finaliza alvo enfraquecido (+2) ─────────────────────────
 print("[3] Golpe Brutal (finalizar)")
@@ -109,9 +113,9 @@ ids = set()
 for _ in range(40):
     it = g._loot_comida()
     ids.add(it["id"]);
-    if it.get("effect") in ("ration","wine"):
+    if it.get("effect") in ("food","ale"):
         assert it["item_slot"]=="bag"
-check("racao" in ids or "garrafa_vinho" in ids, "pode dropar comida de fome/sede")
+check("pao" in ids or "garrafa_agua" in ids, "pode dropar comida de fome/sede")
 check(all(g._loot_comida().get("item_slot")=="bag" for _ in range(10)), "todo item de comida vai p/ a bag")
 
 print(f"\n===== RESULTADO: {ok} passaram, {fail} falharam =====")

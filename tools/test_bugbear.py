@@ -10,6 +10,10 @@ Rodar da raiz:  PYTHONUTF8=1 python tools/test_bugbear.py
 """
 import asyncio, os, sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 import server as S
 
 ok = fail = 0

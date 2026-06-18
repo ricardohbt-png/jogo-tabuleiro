@@ -21,6 +21,7 @@ def setup():
     r.gm_say = noop; r.broadcast = noop; r.push_state = noop; r.send_to = noop
     r._broadcast_dado = noop
     r._tem_linha_de_visao = lambda *a, **k: True   # sem paredes nos testes
+    r.tiles = [[server.FLOOR] * server.MAP_W for _ in range(server.MAP_H)]  # piso vazio p/ movimento
     r.phase = "playing"
     return r
 
@@ -687,7 +688,7 @@ async def main():
     # ── Lagarto Carniceiro (ND 2) ────────────────────────────────────────────────
     print("\n[18] Lagarto Carniceiro (combo, predador, faro, sensível a venenos)")
     ldef = next(m for m in MONSTER_DEFS if m["type"] == "lagarto_carniceiro")
-    check("lagarto: tamanho 2x2", ldef["size"] == [2, 2])
+    check("lagarto: tamanho 2x1 orientado", ldef["size"] == [2, 1] and ldef.get("oriented") is True)
     check("lagarto: fraqueza veneno dobrado",
           any(w.get("type") == "veneno_dobrado" for w in ldef["weaknesses"]))
     check("lagarto: garra do combo definida", ldef.get("garra_attack", {}).get("damage") == "1d6+3")
