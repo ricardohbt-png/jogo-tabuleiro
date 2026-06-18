@@ -38,8 +38,33 @@ def test_validacao():
           validar_campanha({"schema_version": 1, "dungeons": ["nao_existe.json"]})[0] is False)
     check("path traversal recusado", carregar_campanha("../server.py") is None)
 
+async def test_selecao():
+    print("\n[2] seleção de campanha no lobby")
+    r = setup_room(); r.phase = "lobby"
+    check("defaults: campaign None, phase 0",
+          getattr(r, "campaign", "x") is None and getattr(r, "campaign_phase", -1) == 0)
+    await r.handle_select_campaign("p1", "test_campanha.json")
+    check("modo vira campaign", r.mode == "campaign")
+    check("campaign carregado", r.campaign and r.campaign["id"] == "test_campanha")
+    check("campaign_phase = 0", r.campaign_phase == 0)
+    # inválida não muda estado
+    await r.handle_select_campaign("p1", "nao_existe.json")
+    check("campanha inválida mantém a seleção", r.mode == "campaign")
+    # null volta para procedural
+    await r.handle_select_campaign("p1", None)
+    check("None volta para procedural", r.mode == "procedural" and r.campaign is None)
+    # selecionar masmorra avulsa limpa a campanha
+    await r.handle_select_campaign("p1", "test_campanha.json")
+    await r.handle_select_dungeon("p1", "test_camp_a.json")
+    check("select_dungeon limpa a campanha", r.campaign is None and r.mode == "authored")
+    # não-host é ignorado
+    r.mode = "procedural"
+    await r.handle_select_campaign("p2", "test_campanha.json")
+    check("não-host ignorado", r.mode == "procedural")
+
 async def main():
     test_validacao()
+    await test_selecao()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 
