@@ -119,12 +119,27 @@ async def test_retomar_mesma_fase():
     await r.enter_dungeon("p1")
     check("retomou a fase 0 (10×8)", r.map_w == 10 and r.map_h == 8)
 
+async def test_serializacao():
+    print("\n[6] push_state expõe campaign")
+    r = setup_room(); r.phase = "lobby"
+    await r.handle_select_campaign("p1", "test_campanha.json")
+    cap = {}
+    async def capb(msg):
+        if msg.get("type") == "game_state": cap.update(msg)
+    r.broadcast = capb
+    r.phase = "city"; await r.enter_dungeon("p1")
+    await GameRoom.push_state(r)
+    check("game_state traz campaign", cap.get("campaign") is not None)
+    check("campaign phase/total corretos",
+          cap["campaign"]["phase"] == 1 and cap["campaign"]["total"] == 2)
+
 async def main():
     test_validacao()
     await test_selecao()
     await test_entrada_fase0()
     await test_avanco_e_vitoria()
     await test_retomar_mesma_fase()
+    await test_serializacao()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

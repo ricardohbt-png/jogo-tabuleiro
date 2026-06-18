@@ -3118,6 +3118,7 @@ class GameRoom:
             "type": "city_state",
             "players": list(self.players.values()),
             "host": self.host_pid,
+            "campaign": self._campaign_payload(),
             "shops": {
                 "ferreiro": {"weapons": SHOP_WEAPONS, "armors": SHOP_ARMORS},
                 "mercador": SHOP_MERCHANT + self.shop_scrolls,   # mercador inclui pergaminhos
@@ -12098,6 +12099,13 @@ class GameRoom:
                     tiles.add((x, y))
         return tiles
 
+    def _campaign_payload(self):
+        if self.mode == "campaign" and self.campaign:
+            return {"name": self.campaign.get("name"),
+                    "phase": self.campaign_phase + 1,
+                    "total": len(self.campaign["dungeons"])}
+        return None
+
     async def push_state(self):
         await self._check_objectives()
         await self.broadcast({
@@ -12113,6 +12121,7 @@ class GameRoom:
             "explored": [list(e) for e in self.explored],
             "revealed": [list(k) for k in self._live_reveal_tiles()],   # Clarividência + visão ao vivo dos minions
             "stairs_pos": self.stairs_pos,
+            "campaign": self._campaign_payload(),
             "objectives": self.objective_status,
             "exit_pos": self.exit_pos,
             "prisoner": self.prisoner,
