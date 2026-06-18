@@ -1122,6 +1122,14 @@ const GS = (() => {
   // Sender: herói adjacente liberta o prisioneiro (ação principal no servidor).
   function libertarPrisioneiro() { send({ type: 'libertar_prisioneiro' }); }
 
+  // ── Fase 4a (campanha): estado da campanha em curso + seleção no lobby ────────
+  // Getter do payload {name, phase, total} servido no game_state/city_state (null
+  // fora de campanha). lobbyCampaigns lista as campanhas disponíveis no lobby.
+  function getCampaign()       { return (gameState && gameState.campaign) || null; }
+  function getLobbyCampaigns() { return (lobbyState && lobbyState.campaigns) || []; }
+  // Sender: host escolhe uma campanha do lobby; file=null volta ao procedural.
+  function selectCampaign(file) { send({ type: 'select_campaign', file: file || null }); }
+
   // ── Hooks de sobrevivência chamados pelo renderer nos pontos de ação ───────
   // Ataque/magia/habilidade têm seus sends no renderer (game.js); ele notifica
   // a atividade do turno aqui. Magia conta como ataque ('acted').
@@ -1312,6 +1320,7 @@ const GS = (() => {
     },
     get lobbyState()      { return lobbyState; },
     get lobbyDungeons()   { return (lobbyState && lobbyState.dungeons) || []; },
+    get lobbyCampaigns()  { return getLobbyCampaigns(); },
     get lobbyMode()       { return (lobbyState && lobbyState.mode) || 'procedural'; },
     get lobbySelectedDungeon() { return (lobbyState && lobbyState.selected_dungeon) || null; },
     // Fase 3: objetivos / saída / prisioneiro (property getters — acessados sem parênteses).
@@ -1319,6 +1328,8 @@ const GS = (() => {
     get exitPos()               { return getExitPos(); },
     get prisoner()              { return getPrisoner(); },
     get prisioneiroLibertavel() { return prisioneiroLibertavel(); },
+    // Fase 4a: campanha em curso (property getter — acessado sem parênteses).
+    get campaign()              { return getCampaign(); },
     get cityState()       { return cityState; },
     get isMyTurn()        { return isMyTurn; },
     get pendingAction()   { return pendingAction; },
@@ -1398,6 +1409,7 @@ const GS = (() => {
     desarmarArmadilha,
     armadilhaAdjacente,
     selectDungeon,
+    selectCampaign,        // Fase 4a: sender (chamado com parênteses)
     libertarPrisioneiro,   // Fase 3: sender (chamado com parênteses)
 
     // ── Habilidades armadas do warrior (toggle; custo cobrado na ação) ──

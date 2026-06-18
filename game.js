@@ -979,6 +979,8 @@ function handleCityState(msg){
   const dungBar=$('city-dungeon-bar');
   if(btnD){
     const isHost=GS.myPid&&GS.myPid===msg.host;
+    // Em campanha, o botão indica a próxima fase a entrar.
+    btnD.textContent = msg.campaign ? `▶ Entrar na fase ${msg.campaign.phase}` : '⚔ Entrar na Masmorra';
     btnD.style.display=isHost?'inline-block':'none';
     if(dungBar) dungBar.style.display=isHost?'flex':'none';
     if(hint) hint.textContent=isHost
@@ -2851,7 +2853,12 @@ function renderObjectivesHUD(msg){
     if(btn) btn.style.display = 'none';
     return;
   }
-  let html = '<div class="obj-title">🎯 Objetivos</div>';
+  let html = '';
+  const camp = GS.campaign;   // {name, phase, total} em campanha; null caso contrário
+  if(camp){
+    html += `<div class="obj-campaign">🗺️ Fase ${camp.phase} de ${camp.total} — ${camp.name}</div>`;
+  }
+  html += '<div class="obj-title">🎯 Objetivos</div>';
   if(obj.primary) html += `<div class="obj-primary">${_objRow(obj.primary)}</div>`;
   const secs = obj.secondary || [];
   if(secs.length){
@@ -17050,20 +17057,34 @@ function csUpdateLobbyBar(msg){
   const picker = document.getElementById('cs-dungeon-picker');
   if(picker){
     const isHost   = (msg.host === GS.myPid);
-    const dungeons = GS.lobbyDungeons;            // getter (sem parênteses)
+    const dungeons  = GS.lobbyDungeons;            // getter (sem parênteses)
+    const campaigns = GS.lobbyCampaigns;           // getter (sem parênteses)
     const sel      = GS.lobbySelectedDungeon;     // getter (sem parênteses)
-    const modeTxt  = (GS.lobbyMode === 'authored') ? 'Modo: Campanha' : 'Modo: Procedural';
-    const opts = ['<option value="">Procedural (aleatória)</option>']
+    const selCamp  = (GS.lobbyMode === 'campaign' && msg.campaign) ? msg.campaign.file : null;
+    const modeTxt  = (GS.lobbyMode === 'campaign') ? 'Modo: Campanha'
+                   : (GS.lobbyMode === 'authored') ? 'Modo: Masmorra' : 'Modo: Procedural';
+    let opts = ['<option value="">Procedural (aleatória)</option>']
       .concat(dungeons.map(d =>
         `<option value="${d.file}"${d.file === sel ? ' selected' : ''}>${d.name}</option>`))
       .join('');
+    if(campaigns.length){
+      opts += `<optgroup label="Campanhas">` +
+        campaigns.map(c =>
+          `<option value="campaign:${c.file}"${c.file === selCamp ? ' selected' : ''}>${c.name}</option>`
+        ).join('') +
+        `</optgroup>`;
+    }
     picker.innerHTML =
       `<label class="cs-dungeon-lbl">Masmorra:</label>` +
       `<select id="cs-dungeon-select"${isHost ? '' : ' disabled'}>${opts}</select>` +
       `<span class="cs-dungeon-mode">${modeTxt}</span>`;
     // Re-liga o onchange a cada render (o lobby é redesenhado a cada lobby_state).
     const dsel = document.getElementById('cs-dungeon-select');
-    if(dsel) dsel.onchange = () => GS.selectDungeon(dsel.value || null);
+    if(dsel) dsel.onchange = () => {
+      const v = dsel.value || '';
+      if(v.startsWith('campaign:')) GS.selectCampaign(v.slice('campaign:'.length));
+      else { GS.selectCampaign(null); GS.selectDungeon(v || null); }  // limpa campanha ao escolher masmorra/procedural
+    };
   }
 
   const btnS = document.getElementById('cs-btn-start');

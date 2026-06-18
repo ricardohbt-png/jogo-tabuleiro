@@ -101,6 +101,9 @@ input:focus { outline: none; border-color: var(--gold); }
   font-size: .74rem; color: var(--text, #e8e8f0);
   box-shadow: 0 4px 16px rgba(0,0,0,.5);
 }
+#objectives-hud .obj-campaign { font-weight: 700; color: var(--gold, #ffcc44);
+  margin-bottom: 6px; padding-bottom: 5px; border-bottom: 1px solid rgba(255,204,68,.25);
+  font-size: .72rem; }
 #objectives-hud .obj-title { font-weight: 700; color: var(--gold, #ffcc44); margin-bottom: 5px; }
 #objectives-hud .obj-row { display: flex; align-items: center; gap: 6px; margin: 2px 0; line-height: 1.3; }
 #objectives-hud .obj-ic { flex-shrink: 0; }
