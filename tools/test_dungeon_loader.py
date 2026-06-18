@@ -235,18 +235,33 @@ async def test_fluxo_selecao_enter():
     # a masmorra autorada. Bug original: handle_select_dungeon não setava
     # self.dungeon_def, então enter_dungeon (autorada = ... and dungeon_def is not None)
     # caía no procedural. NÃO injeta dungeon_def à mão — usa só a seleção.
+    # Usa uma fixture TEMPORÁRIA própria (escrita em dungeons/ e removida no fim) para
+    # não depender de dungeons/test_fase1.json — que é um exemplo que o usuário edita
+    # no editor visual (Fase 2) e cujo conteúdo pode mudar.
+    import json
     print("\n[7] fluxo lobby→seleção→enter (regressão integração)")
-    r = setup_room(); r.phase = "lobby"
-    await r.handle_select_dungeon("p1", "test_fase1.json")
-    check("seleção marca authored", r.mode == "authored")
-    check("seleção carrega dungeon_def (não fica None)", r.dungeon_def is not None)
-    r.phase = "city"
-    await r.enter_dungeon("p1")
-    check("enter aplica grid autorado 16×12 (não procedural 30×30)",
-          r.map_w == 16 and r.map_h == 12)
-    check("monstros vêm do arquivo (goblin/skeleton)",
-          sorted(m["type"] for m in r.monsters.values()) == ["goblin", "skeleton"])
-    check("nenhum monstro em parede (fluxo real)", monstros_em_parede(r) == [])
+    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    tmp_name = "_test_fluxo_tmp.json"
+    tmp_path = os.path.join(base, "dungeons", tmp_name)
+    with open(tmp_path, "w", encoding="utf-8") as f:
+        json.dump(sample_dungeon(), f)   # 8×6, 1 sala entrance, 1 goblin
+    try:
+        r = setup_room(); r.phase = "lobby"
+        await r.handle_select_dungeon("p1", tmp_name)
+        check("seleção marca authored", r.mode == "authored")
+        check("seleção carrega dungeon_def (não fica None)", r.dungeon_def is not None)
+        r.phase = "city"
+        await r.enter_dungeon("p1")
+        check("enter aplica grid autorado da fixture (8×6, não procedural 30×30)",
+              r.map_w == 8 and r.map_h == 6)
+        check("monstros vêm do arquivo (goblin)",
+              sorted(m["type"] for m in r.monsters.values()) == ["goblin"])
+        check("nenhum monstro em parede (fluxo real)", monstros_em_parede(r) == [])
+    finally:
+        try:
+            os.remove(tmp_path)
+        except OSError:
+            pass
 
 async def main():
     test_validacao()
