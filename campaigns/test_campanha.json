@@ -1,0 +1,1 @@
+{ "schema_version": 1, "id": "test_campanha", "name": "Campanha de Teste", "dungeons": ["test_camp_a.json", "test_camp_b.json"] }

@@ -1836,6 +1836,54 @@ def listar_dungeons():
             out.append({"id": defn.get("id", file), "name": defn.get("name", file), "file": file})
     return out
 
+CAMPAIGNS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "campaigns")
+
+def carregar_campanha(file):
+    """Lê e parseia um arquivo de CAMPAIGNS_DIR. Retorna dict ou None."""
+    if not isinstance(file, str) or not file or file != os.path.basename(file):
+        return None  # proteção contra path traversal
+    caminho = os.path.join(CAMPAIGNS_DIR, file)
+    try:
+        with open(caminho, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+def validar_campanha(defn):
+    """Valida um dict de campanha. Retorna (ok: bool, msg: str). Cada fase deve
+    existir em dungeons/ e passar em validar_dungeon."""
+    if not isinstance(defn, dict):
+        return False, "Campanha não é um objeto JSON."
+    if defn.get("schema_version") != 1:
+        return False, f"schema_version não suportado: {defn.get('schema_version')!r} (esperado 1)."
+    dungeons = defn.get("dungeons")
+    if not (isinstance(dungeons, list) and len(dungeons) >= 1):
+        return False, "campanha precisa de ao menos uma masmorra em 'dungeons'."
+    for i, file in enumerate(dungeons):
+        d = carregar_dungeon(file) if isinstance(file, str) else None
+        if d is None:
+            return False, f"fase {i+1}: masmorra '{file}' não encontrada."
+        ok, msg = validar_dungeon(d)
+        if not ok:
+            return False, f"fase {i+1} ('{file}'): {msg}"
+    return True, "ok"
+
+def listar_campanhas():
+    """Varre CAMPAIGNS_DIR e devolve [{id, name, file}] das campanhas válidas."""
+    out = []
+    try:
+        arquivos = sorted(f for f in os.listdir(CAMPAIGNS_DIR) if f.endswith(".json"))
+    except Exception:
+        return out
+    for file in arquivos:
+        defn = carregar_campanha(file)
+        if not defn:
+            continue
+        ok, _ = validar_campanha(defn)
+        if ok:
+            out.append({"id": defn.get("id", file), "name": defn.get("name", file), "file": file})
+    return out
+
 # ─── ARMADILHAS ───────────────────────────────────────────────────────────────
 # Sistema de armadilhas COLOCÁVEIS (distinto das `self.traps` geradas na masmorra).
 # São criadas pelo Luccas (rogue) ou disparadas por quem pisar na casa. Cada

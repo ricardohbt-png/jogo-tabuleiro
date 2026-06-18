@@ -1,0 +1,19 @@
+{
+  "schema_version": 1, "id": "test_camp_a", "name": "Campanha A",
+  "grid": { "w": 10, "h": 8 },
+  "tiles": [
+    [0,0,0,0,0,0,0,0,0,0],
+    [0,1,1,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,0],
+    [0,0,0,0,0,0,0,0,0,0]
+  ],
+  "rooms": [ { "id": 0, "x": 1, "y": 1, "w": 8, "h": 6, "role": "entrance", "locked": false, "doors": [] } ],
+  "entrance": { "x": 2, "y": 2 }, "exit": null,
+  "monsters": [ { "type": "goblin", "pos": [5,3], "room_id": 0, "boss": false, "target": false } ],
+  "chests": [], "traps": [], "prisoner": null,
+  "objectives": { "primary": { "type": "kill_all" }, "secondary": [] }
+}
