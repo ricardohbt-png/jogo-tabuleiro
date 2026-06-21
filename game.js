@@ -17110,6 +17110,10 @@ function csConfirmClass(){
   }
   send({type:'select_class', class_id: csf.selectedId});
   toast(`${_CSD[csf.selectedId]?.cls ?? csf.selectedId} selecionado!`, 'var(--gold)');
+  // Mago/clérigo: escolher 2 magias de 1º círculo (obrigatório p/ iniciar — gate no servidor).
+  if(csf.selectedId === 'mage' || csf.selectedId === 'cleric'){
+    mostrarOverlaySelecaoMagiasCriacao(csf.selectedId);
+  }
 }
 
 function destroyClassSelectFull(){
@@ -18088,3 +18092,104 @@ GS.on('serverError', msg  => {
     setTimeout(() => abrirLoja(window._lojaUltimaAberta, GS.getHeroiAtivo()), 400);
   }
 });
+
+// ── Overlay de escolha de nova magia ao subir de nível (Pedro/Lewis) ──────────
+// Bloqueia só quem subiu: o servidor recusa end_turn até a escolha ser enviada.
+function mostrarOverlayEscolhaMagia(msg){
+  const rotulo = {primeiro:'1º', segundo:'2º', terceiro:'3º'}[msg.circulo] || msg.circulo;
+  const opcoes = (msg.opcoes || []).filter(id => window.GRIMORIO_CLIENT && GRIMORIO_CLIENT[id]);
+  const cartas = opcoes.map(id => {
+    const m = GRIMORIO_CLIENT[id];
+    return `
+      <div onclick="window._escolherMagiaNivel('${id}')"
+           onmouseenter="mostrarTooltipMagia('${id}', event)"
+           onmouseleave="ocultarTooltipMagia()"
+           style="display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
+                  width:74px; height:88px; cursor:pointer; margin:5px; border-radius:4px;
+                  background:rgba(255,255,255,0.04); border:2px solid #c8a95155; transition:all 0.2s;"
+           onmouseover="this.style.borderColor='#c8a951'"
+           onmouseout="this.style.borderColor='#c8a95155'">
+        <div style="font-size:26px; margin-bottom:4px; line-height:1;">${m.icone || '✨'}</div>
+        <div style="color:#c8b89a; font-family:'Cinzel',serif; font-size:8px; text-align:center; line-height:1.2; max-width:66px; word-break:break-word;">${m.nome}</div>
+      </div>`;
+  }).join('');
+  const existente = document.getElementById('overlay-escolha-magia');
+  if (existente) existente.remove();
+  const el = document.createElement('div');
+  el.id = 'overlay-escolha-magia';
+  el.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;';
+  el.innerHTML = `
+    <div style="color:#c8a951; font-family:'Cinzel Decorative',serif; font-size:15px; letter-spacing:3px; text-align:center;">SUBIU DE NÍVEL<br><span style="font-size:11px; color:#8a7a5a; letter-spacing:2px;">Escolha 1 magia de ${rotulo} círculo</span></div>
+    <div style="display:flex; flex-wrap:wrap; gap:6px; max-width:680px; justify-content:center;">${cartas || '<div style="color:#8a7a5a;">Nenhuma magia disponível</div>'}</div>`;
+  document.body.appendChild(el);
+}
+
+window._escolherMagiaNivel = function(id){
+  GS.escolherMagiaNivel(id);
+  const el = document.getElementById('overlay-escolha-magia');
+  if (el) el.remove();
+};
+
+GS.on('spellPickPrompt', mostrarOverlayEscolhaMagia);
+
+// ── Overlay de seleção das 2 magias iniciais (criação, Pedro/Lewis) ───────────
+function mostrarOverlaySelecaoMagiasCriacao(cls){
+  window._magiasCriacaoSel = [];
+  window._magiasCriacaoCls = cls;
+  const existente = document.getElementById('overlay-selecao-criacao');
+  if (existente) existente.remove();
+  const el = document.createElement('div');
+  el.id = 'overlay-selecao-criacao';
+  el.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;';
+  document.body.appendChild(el);
+  _renderOverlaySelecaoCriacao();
+}
+
+function _renderOverlaySelecaoCriacao(){
+  const el = document.getElementById('overlay-selecao-criacao');
+  if(!el) return;
+  const cls = window._magiasCriacaoCls;
+  const sel = window._magiasCriacaoSel || [];
+  const opcoes = Object.values(GRIMORIO_CLIENT).filter(m => m.circulo === 'primeiro' && m.classe.includes(cls));
+  const cartas = opcoes.map(m => {
+    const on = sel.includes(m.id);
+    return `
+      <div onclick="window._toggleMagiaCriacao('${m.id}')"
+           onmouseenter="mostrarTooltipMagia('${m.id}', event)"
+           onmouseleave="ocultarTooltipMagia()"
+           style="display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
+                  width:74px; height:88px; cursor:pointer; margin:5px; border-radius:4px;
+                  background:${on ? 'rgba(200,169,81,0.18)' : 'rgba(255,255,255,0.04)'};
+                  border:2px solid ${on ? '#c8a951' : '#c8a95155'}; transition:all 0.2s;">
+        <div style="font-size:26px; margin-bottom:4px; line-height:1;">${m.icone || '✨'}</div>
+        <div style="color:#c8b89a; font-family:'Cinzel',serif; font-size:8px; text-align:center; line-height:1.2; max-width:66px; word-break:break-word;">${m.nome}</div>
+      </div>`;
+  }).join('');
+  const pronto = sel.length === 2;
+  el.innerHTML = `
+    <div style="color:#c8a951; font-family:'Cinzel Decorative',serif; font-size:15px; letter-spacing:3px; text-align:center;">MAGIAS INICIAIS<br><span style="font-size:11px; color:#8a7a5a; letter-spacing:2px;">Escolha 2 magias de 1º círculo</span></div>
+    <div style="display:flex; flex-wrap:wrap; gap:6px; max-width:680px; justify-content:center;">${cartas}</div>
+    <div style="color:${pronto ? '#44cc88' : '#8a7a5a'}; font-size:11px; letter-spacing:1px;">${sel.length}/2 selecionadas</div>
+    <button onclick="window._confirmarMagiasCriacao()" ${pronto ? '' : 'disabled'}
+      style="padding:9px 22px; font-family:'Cinzel',serif; font-size:11px; letter-spacing:2px;
+             background:${pronto ? 'rgba(68,204,136,0.18)' : 'rgba(80,80,80,0.18)'};
+             color:${pronto ? '#44cc88' : '#666'}; border:1px solid ${pronto ? '#44cc88' : '#444'};
+             cursor:${pronto ? 'pointer' : 'not-allowed'};">✓ CONFIRMAR</button>`;
+}
+
+window._toggleMagiaCriacao = function(id){
+  const sel = window._magiasCriacaoSel || (window._magiasCriacaoSel = []);
+  const i = sel.indexOf(id);
+  if(i >= 0) sel.splice(i,1);
+  else if(sel.length < 2) sel.push(id);
+  _renderOverlaySelecaoCriacao();
+};
+
+window._confirmarMagiasCriacao = function(){
+  const sel = window._magiasCriacaoSel || [];
+  if(sel.length !== 2){ toast('Escolha 2 magias de 1º círculo.', 'var(--orange)'); return; }
+  GS.setKnownSpells(sel);
+  const el = document.getElementById('overlay-selecao-criacao');
+  if (el) el.remove();
+  toast('Magias escolhidas!', 'var(--gold)');
+};

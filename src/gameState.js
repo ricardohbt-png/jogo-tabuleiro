@@ -1044,6 +1044,10 @@ const GS = (() => {
         _emit('explosionArea', msg);
         break;
 
+      case 'spell_pick_prompt':
+        _emit('spellPickPrompt', msg);   // {circulo, count, opcoes}
+        break;
+
       case 'error':
         _emit('serverError', msg.msg);
         break;
@@ -1060,6 +1064,10 @@ const GS = (() => {
   function useItem(id)     { send({ type: 'use_item',       item_id: id }); }
   function equipFromBag(i) { send({ type: 'equip_from_bag', slot_index: i }); }
   function unequip(key)    { send({ type: 'unequip',        slot_key: key }); }
+  // Magias conhecidas (Pedro/Lewis): escolha de 2 magias de 1º círculo no lobby.
+  function setKnownSpells(ids)       { send({ type: 'set_known_spells', ids }); }
+  // Escolha da nova magia ao subir de nível (responde ao spell_pick_prompt).
+  function escolherMagiaNivel(id)    { send({ type: 'escolher_magia_nivel', magia_id: id }); }
   // Animar Mortos (Pedro): anima um cadáver adjacente (id de gameState.corpses).
   function animarMortos(cadaverId) { send({ type: 'animar_mortos', cadaver_id: cadaverId }); }
   // Comanda os animados (ação bônus do Pedro): cada um move+ataca o monstro mais próximo.
@@ -1419,6 +1427,8 @@ const GS = (() => {
     useItem,
     equipFromBag,
     unequip,
+    setKnownSpells,
+    escolherMagiaNivel,
     animarMortos,
     comandarAnimados,
     moverAnimado,
