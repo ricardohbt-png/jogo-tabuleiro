@@ -2960,6 +2960,7 @@ class GameRoom:
         self.campaign = None         # dict carregado (modo "campaign")
         self.campaign_phase = 0      # índice da fase atual em campaign["dungeons"]
         self.selected_campaign = None  # nome do arquivo da campanha selecionada (lobby)
+        self._campaign_outro = None   # beat de encerramento pendente (cidade), ou None
         self.key_chest_opened = False
         self.monsters = {}      # id -> monster
         self.corpses = {}       # id -> cadáver (monstro morto, alvo de Animar Mortos)
@@ -3572,6 +3573,7 @@ class GameRoom:
         # Campanha: a 1ª entrada de cada fase carrega a masmorra da fase atual.
         if self.mode == "campaign" and self.campaign and nova:
             self.dungeon_def = carregar_dungeon(_fase_file(self.campaign["dungeons"][self.campaign_phase]))
+            self._campaign_outro = None   # a nova fase não mostra o encerramento da anterior
         autorada = self.mode in ("authored", "campaign") and self.dungeon_def is not None
 
         if nova:
@@ -12025,14 +12027,23 @@ class GameRoom:
                     await self._conceder_bonus_secundario(s)
             if (self.mode == "campaign" and self.campaign
                     and self.campaign_phase < len(self.campaign["dungeons"]) - 1):
-                # Avança para a próxima fase via cidade/loja.
+                # Encerramento da fase concluída (mostrado na cidade).
+                fase = _fase_obj(self.campaign["dungeons"][self.campaign_phase])
+                self._campaign_outro = ({"key": f"outro:{self.campaign_phase}", "text": fase["outro"]}
+                                        if fase.get("outro") else None)
                 self.campaign_phase += 1
-                self.dungeon_generated = False     # próxima entrada carrega a nova fase
-                self._objetivo_concluido = False   # a nova fase tem seus próprios objetivos
+                self.dungeon_generated = False
+                self._objetivo_concluido = False
                 await self.gm_say("🏆 Fase concluída! Retornem à cidade antes da próxima masmorra.")
                 await self._voltar_para_cidade()
             else:
-                await self.end_game(victory=True)
+                story = None
+                if self.mode == "campaign" and self.campaign:
+                    fase = _fase_obj(self.campaign["dungeons"][self.campaign_phase])
+                    partes = [p for p in (fase.get("outro"), self.campaign.get("outro")) if p]
+                    if partes:
+                        story = {"key": f"final:{self.campaign_phase}", "text": "\n\n".join(partes)}
+                await self.end_game(victory=True, story=story)
 
     async def handle_libertar_prisioneiro(self, pid):
         if not self._is_turn(pid):
@@ -12088,7 +12099,7 @@ class GameRoom:
                     and self.tiles[ny][nx] != WALL and (nx, ny) not in ocup):
                 ent["pos"] = [nx, ny]; return
 
-    async def end_game(self, victory):
+    async def end_game(self, victory, story=None):
         self.phase = "ended"
         self._cancelar_timer_turno()
         if victory:
@@ -12096,7 +12107,7 @@ class GameRoom:
 
         text = gm("victory") if victory else gm("defeat")
         await self.gm_say(text)
-        await self.broadcast({"type": "game_over", "victory": victory})
+        await self.broadcast({"type": "game_over", "victory": victory, "story": story})
 
     # ── state serialisation ─────────────────────────────────────────────────
 
@@ -12129,11 +12140,24 @@ class GameRoom:
         return tiles
 
     def _campaign_payload(self):
-        if self.mode == "campaign" and self.campaign:
-            return {"name": self.campaign.get("name"),
-                    "phase": self.campaign_phase + 1,
-                    "total": len(self.campaign["dungeons"])}
-        return None
+        if not (self.mode == "campaign" and self.campaign):
+            return None
+        pay = {"name": self.campaign.get("name"),
+               "phase": self.campaign_phase + 1,
+               "total": len(self.campaign["dungeons"]),
+               "story": None}
+        if self.phase == "playing":
+            fase = _fase_obj(self.campaign["dungeons"][self.campaign_phase])
+            texto = ""
+            if self.campaign_phase == 0 and self.campaign.get("intro"):
+                texto = self.campaign["intro"]
+            if fase.get("intro"):
+                texto += ("\n\n" if texto else "") + fase["intro"]
+            if texto:
+                pay["story"] = {"key": f"intro:{self.campaign_phase}", "text": texto}
+        elif self.phase == "city" and self._campaign_outro:
+            pay["story"] = self._campaign_outro
+        return pay
 
     async def push_state(self):
         await self._check_objectives()

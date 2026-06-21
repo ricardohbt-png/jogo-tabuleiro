@@ -101,7 +101,7 @@ async def test_avanco_e_vitoria():
 
     # cumpre o objetivo da última fase → vitória da campanha
     vit = {"c": False, "v": None}
-    async def fake_end(victory): vit["c"] = True; vit["v"] = victory
+    async def fake_end(victory, story=None): vit["c"] = True; vit["v"] = victory
     r.end_game = fake_end
     for m in r.monsters.values(): m["hp"] = 0
     await r._check_objectives()
@@ -164,6 +164,43 @@ async def test_entrada_objeto():
     await r.enter_dungeon("p1")
     check("carregou a fase do objeto (10×8)", r.map_w == 10 and r.map_h == 8)
 
+def _camp_hist():
+    return {"schema_version": 1, "id": "ch", "name": "Hist",
+            "intro": "ABERTURA-CAMP", "outro": "FINAL-CAMP",
+            "dungeons": [
+                {"file": "test_camp_a.json", "intro": "ABRE-1", "outro": "FECHA-1"},
+                {"file": "test_camp_b.json", "intro": "ABRE-2", "outro": "FECHA-2"}]}
+
+async def test_historia_runtime():
+    print("\n[9] runtime da história")
+    r = setup_room(); r.mode = "campaign"; r.campaign = _camp_hist(); r.campaign_phase = 0; r.phase = "city"
+    await r.enter_dungeon("p1")
+    pay = r._campaign_payload()
+    check("abertura da fase 0 inclui abertura da campanha",
+          pay["story"] and "ABERTURA-CAMP" in pay["story"]["text"] and "ABRE-1" in pay["story"]["text"])
+    check("key de abertura", pay["story"]["key"] == "intro:0")
+    # conclui a fase 0 → cidade com encerramento
+    for m in r.monsters.values(): m["hp"] = 0
+    await r._check_objectives()
+    check("foi para a cidade", r.phase == "city")
+    payc = r._campaign_payload()
+    check("encerramento da fase 0 na cidade",
+          payc["story"] and payc["story"]["text"] == "FECHA-1" and payc["story"]["key"] == "outro:0")
+    # entra na fase 1: outro é limpo; abertura da fase 1 (sem abertura da campanha)
+    await r.enter_dungeon("p1")
+    pay1 = r._campaign_payload()
+    check("abertura da fase 1 (sem abertura da campanha)",
+          pay1["story"] and pay1["story"]["text"] == "ABRE-2")
+    # conclui a última → end_game com story final
+    cap = {}
+    async def fake_end(victory, story=None): cap["victory"] = victory; cap["story"] = story
+    r.end_game = fake_end
+    for m in r.monsters.values(): m["hp"] = 0
+    await r._check_objectives()
+    check("última fase → end_game com story final",
+          cap.get("victory") is True and cap.get("story")
+          and "FECHA-2" in cap["story"]["text"] and "FINAL-CAMP" in cap["story"]["text"])
+
 async def main():
     test_validacao()
     await test_selecao()
@@ -173,6 +210,7 @@ async def main():
     await test_serializacao()
     await test_schema_objeto()
     await test_entrada_objeto()
+    await test_historia_runtime()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

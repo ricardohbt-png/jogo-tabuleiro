@@ -55,7 +55,7 @@ async def test_conclusao_simples():
         d["objectives"] = {"primary": {"type": primary_type}, "secondary": []}
         await r.enter_dungeon("p1")
         vit = {"chamado": False, "victory": None}
-        async def fake_end(victory): vit["chamado"] = True; vit["victory"] = victory
+        async def fake_end(victory, story=None): vit["chamado"] = True; vit["victory"] = victory
         r.end_game = fake_end
         await prep(r)
         await r._check_objectives()
@@ -71,7 +71,7 @@ async def test_conclusao_simples():
     r2 = setup_authored(); r2.dungeon_def["objectives"] = {"primary": {"type": "kill_all"}, "secondary": []}
     await r2.enter_dungeon("p1")
     vit2 = {"c": False}
-    async def fe2(victory): vit2["c"] = True
+    async def fe2(victory, story=None): vit2["c"] = True
     r2.end_game = fe2
     await r2._check_objectives()
     check("kill_all não conclui com monstros vivos", vit2["c"] is False)
@@ -122,7 +122,7 @@ async def test_prisioneiro():
     await r2.enter_dungeon("p1")
     r2.prisoner["freed"] = True; r2.prisoner["hp"] = 1
     vit = {"c": False}
-    async def fe(victory): vit["c"] = True
+    async def fe(victory, story=None): vit["c"] = True
     r2.end_game = fe
     r2._step_towards = lambda ent, dest: None       # isola: sem mover o prisioneiro
     m = next(iter(r2.monsters.values()))
@@ -139,7 +139,7 @@ async def test_bonus_secundario():
     r.dungeon_def["objectives"] = {"primary": {"type": "kill_all"},
                                    "secondary": [{"type": "open_key_chest"}]}
     await r.enter_dungeon("p1")
-    r.end_game = lambda victory=True: asyncio.sleep(0)  # não encerra de verdade
+    r.end_game = lambda victory=True, story=None: asyncio.sleep(0)  # não encerra de verdade
     p1 = r.players["p1"]
     xp0, ouro0 = p1["xp"], p1["gold"]
     # cumpre principal (kill_all) e secundário (open_key_chest)
