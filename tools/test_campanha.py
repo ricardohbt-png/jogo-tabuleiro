@@ -201,6 +201,15 @@ async def test_historia_runtime():
           cap.get("victory") is True and cap.get("story")
           and "FECHA-2" in cap["story"]["text"] and "FINAL-CAMP" in cap["story"]["text"])
 
+async def test_roundtrip_editor_campanha():
+    print("\n[10] round-trip: campaign do editor passa em validar_campanha")
+    # formato que o editor salva (objetos com história + campos da campanha)
+    obj = {"schema_version": 1, "id": "rt", "name": "RT", "intro": "abre", "outro": "fim",
+           "dungeons": [{"file": "test_camp_a.json", "intro": "i1", "outro": "o1"},
+                        {"file": "test_camp_b.json"}]}
+    ok, msg = server.validar_campanha(obj)
+    check(f"campanha do editor é válida ({msg})", ok is True)
+
 async def main():
     test_validacao()
     await test_selecao()
@@ -211,6 +220,7 @@ async def main():
     await test_schema_objeto()
     await test_entrada_objeto()
     await test_historia_runtime()
+    await test_roundtrip_editor_campanha()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 
