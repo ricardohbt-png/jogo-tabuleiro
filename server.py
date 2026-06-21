@@ -6143,6 +6143,8 @@ class GameRoom:
             pp["action_done"]       = False
             pp["bonus_action_used"] = False
             pp["taverna_refeicoes"] = []   # refeições de balcão renovam a cada visita à cidade
+            if pp.get("class_id") in ("mage", "cleric"):
+                self._recarregar_slots(pp)   # descanso → todos os slots voltam cheios
         await self.broadcast_city_state()
 
     # ── inventory helpers ──────────────────────────────────────────────────
@@ -9470,10 +9472,6 @@ class GameRoom:
             await self._processar_manutencao_richard(cur_p)
         if cur_p.get("class_id") == "rogue":
             await self._processar_inicio_turno_luccas(cur_p)
-        if cur_p.get("class_id") in ("cleric", "mage"):
-            # Recarrega os slots de magia (Lewis e Pedro) no início do turno — os
-            # limites por círculo seguem CLERIC_SLOTS / MAGE_SLOTS_POR_NIVEL.
-            cur_p["magias_usadas_hoje"] = {"primeiro": 0, "segundo": 0, "terceiro": 0}
         # Venenos: tica/expira efeitos no início do turno do jogador (antes de fixar o movimento).
         await self._processar_venenos_turno(cur_p)
         # Corrosão Viva (Devorador Orgânico): DoT por turno em quem está sem armadura.

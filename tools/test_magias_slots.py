@@ -85,6 +85,17 @@ async def main():
     await r.handle_magia("p1", {"magia_id": "bola_fogo", "tx": 3, "ty": 3})
     check("recusa sem slot livre", any("slot" in e.lower() for e in erros))
 
+    print("\n[6] Recarga total ao voltar para a cidade")
+    r = setup(); p = mk_mage(r, 1)
+    r.player_order = ["p1"]
+    r.round_num = 3
+    r._gastar_slot(p, "primeiro")
+    check("1 slot gasto antes da cidade", r._slots_disponiveis(p, "primeiro") == 1)
+    r._gerar_loja_pergaminhos = lambda: None     # evita dependências da loja
+    r._cancelar_timer_turno  = lambda: None
+    await r._voltar_para_cidade()
+    check("slots recarregados na cidade", r._slots_disponiveis(p, "primeiro") == 2)
+
     print(f"\n{'='*40}\nPASS: {PASS}  FAIL: {FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
