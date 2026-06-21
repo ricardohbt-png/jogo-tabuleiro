@@ -62,6 +62,29 @@ async def main():
     r._recarregar_slots(p)
     check("recarga zera cooldown", r._slots_disponiveis(p, "primeiro") == 2)
 
+    print("\n[5] handle_magia: exige magia conhecida e gasta slot")
+    r = setup(); p = mk_mage(r, 1)
+    r.round_num = 1
+    erros = []
+    async def cap_send(pid, m):
+        if m.get("type") == "error": erros.append(m["msg"])
+    r.send_to = cap_send
+    r.player_order = ["p1"]; r.turn_index = 0
+    p["action_done"] = False; p["fome"] = 10; p["sede"] = 10
+    await r.handle_magia("p1", {"magia_id": "bola_fogo", "tx": 3, "ty": 3})
+    check("recusa magia não conhecida", any("conhece" in e.lower() for e in erros))
+    # conhecendo a magia, lança e gasta slot
+    p["magias_conhecidas"] = ["bola_fogo"]
+    p["action_done"] = False; erros.clear()
+    disp_antes = r._slots_disponiveis(p, "primeiro")
+    await r.handle_magia("p1", {"magia_id": "bola_fogo", "tx": 3, "ty": 3})
+    check("gastou 1 slot de 1º", r._slots_disponiveis(p, "primeiro") == disp_antes - 1)
+    # sem slots → recusa
+    p["action_done"] = False; erros.clear()
+    p["slots_cooldown"]["primeiro"] = [r.round_num + 10, r.round_num + 10]  # 2 gastos (max no nv1)
+    await r.handle_magia("p1", {"magia_id": "bola_fogo", "tx": 3, "ty": 3})
+    check("recusa sem slot livre", any("slot" in e.lower() for e in erros))
+
     print(f"\n{'='*40}\nPASS: {PASS}  FAIL: {FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

@@ -6681,8 +6681,6 @@ class GameRoom:
         p = self.players.get(pid)
         if not p or not p["alive"]:
             return
-        # MODO TESTE: Pedro lança qualquer magia ignorando classe/nível/custo/ação.
-        livre = MAGE_TESTE_LIVRE and p.get("class_id") == "mage"
         if p.get("class_id") not in ("mage", "cleric"):
             await self.send_to(pid, {"type": "error", "msg": "Sua classe não lança magias do grimório."}); return
         if p.get("petrificado"):
@@ -6698,27 +6696,26 @@ class GameRoom:
         is_mage = p.get("class_id") == "mage"
 
         # Ação principal (1 por turno).
-        if self._acao_bloqueada(p) and not livre:
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         magia_id = (data or {}).get("magia_id")
         magia = GRIMORIO.get(magia_id)
         if not magia:
             await self.send_to(pid, {"type": "error", "msg": "Magia desconhecida."}); return
-        if p["class_id"] not in magia.get("classe", []) and not livre:
-            await self.send_to(pid, {"type": "error", "msg": f"{p['name']} não pode lançar {magia['nome']}."}); return
+        if magia_id not in p.get("magias_conhecidas", []):
+            await self.send_to(pid, {"type": "error", "msg": f"{p['name']} não conhece {magia['nome']}."}); return
         if magia_id not in GRIMORIO_IMPLEMENTADAS:
             await self.send_to(pid, {"type": "error",
                 "msg": f"{magia['icone']} {magia['nome']} ainda está em desenvolvimento."}); return
 
-        # Custo do círculo: mago e clérigo gastam SLOTS de magia (ninguém usa MP).
+        # Custo do círculo: 1 SLOT do mesmo círculo (estrito). Ninguém usa MP.
         circulo = magia.get("circulo", "primeiro")
-        if not livre:
-            p.setdefault("magias_usadas_hoje", {"primeiro": 0, "segundo": 0, "terceiro": 0})
-            limite = slots_por_circulo(p, circulo)
-            if p["magias_usadas_hoje"].get(circulo, 0) >= limite:
-                await self.send_to(pid, {"type": "error",
-                    "msg": f"Sem slots de magia de {circulo} círculo."}); return
+        if self._slots_disponiveis(p, circulo) <= 0:
+            falta = self._proximo_slot_rodadas(p, circulo)
+            extra = f" (volta em {falta} rodada{'s' if (falta or 0) != 1 else ''})" if falta is not None else ""
+            await self.send_to(pid, {"type": "error",
+                "msg": f"Sem slot de magia de {circulo} círculo{extra}."}); return
 
         # ── Metamagia (Pedro): Aprimorar (+1 CD do save) / Estender (+1 turno) /
         # Fortalecer (dano ×1,5). EMPILHÁVEIS; o custo em 🍖/💧 é pago AGORA e SÓ se
@@ -6736,7 +6733,7 @@ class GameRoom:
                 dur_bonus = 1; mm_fome += 3; mm_sede += 3; partes.append("Estender (+1 turno)")
             if p.get("aprimorar_ativo") and tem_save:
                 dc_bonus = 1; mm_fome += 3; partes.append("Aprimorar (+1 CD)")
-            if (mm_fome or mm_sede) and not livre:
+            if (mm_fome or mm_sede):
                 if p["fome"] < mm_fome or p["sede"] < mm_sede:
                     await self.send_to(pid, {"type": "error",
                         "msg": f"Recursos insuficientes p/ metamagia 🍖-{mm_fome} 💧-{mm_sede}."}); return
@@ -6746,12 +6743,11 @@ class GameRoom:
                 custo_txt = (f" | 🍖-{mm_fome}" + (f" 💧-{mm_sede}" if mm_sede else "")) if (mm_fome or mm_sede) else ""
                 await self.gm_say(f"🔮 **{p['name']}** — metamagia: {', '.join(partes)}{custo_txt}.")
 
-        # Custo do círculo (SLOT, para mago e clérigo) + 🍖/💧 de sobrevivência.
-        if not livre:
-            p["magias_usadas_hoje"][circulo] = p["magias_usadas_hoje"].get(circulo, 0) + 1
-            p["fome"] = max(0, p.get("fome", 10) - 1)
-            p["sede"] = max(0, p.get("sede", 10) - 1)
-            self._verificar_estado_sobrevivencia(p)
+        # Cobra 1 SLOT do círculo + 🍖/💧 de sobrevivência.
+        self._gastar_slot(p, circulo)
+        p["fome"] = max(0, p.get("fome", 10) - 1)
+        p["sede"] = max(0, p.get("sede", 10) - 1)
+        self._verificar_estado_sobrevivencia(p)
 
         # Aprimorar: +1 na CD do save é lido por _dif_magia via flag temporária no caster.
         p["_mm_dc_bonus"] = dc_bonus
@@ -6763,8 +6759,7 @@ class GameRoom:
             p["invisivel_magico"] = False; p.pop("invisivel_magico_rodadas", None)
             await self.gm_say(f"🫥 **{p['name']}** revela-se ao lançar magia.")
 
-        if not livre:                      # MODO TESTE: não consome a ação do turno
-            p["action_done"] = True
+        p["action_done"] = True
         await self.push_state()
 
     def _magia_tem_dano(self, magia):
