@@ -118,6 +118,22 @@ async def main():
     await r.handle_end_turn("p1")
     check("end_turn bloqueado com escolha pendente", any("magia" in e.lower() for e in erros))
 
+    print("\n[8] set_known_spells: validação e persistência")
+    r = setup(); r.phase = "lobby"
+    p = make_player("p1", "Pedro", "mage", 0); p["level"] = 1
+    r.players["p1"] = p
+    async def noop_lobby(*a, **k): pass
+    r.broadcast_lobby = noop_lobby
+    erros = []
+    async def cap_err3(pid, m):
+        if m.get("type") == "error": erros.append(m["msg"])
+    r.send_to = cap_err3
+    await r.handle_set_known_spells("p1", ["bola_fogo"])       # contagem errada
+    check("recusa != 2 magias", any("2 magias" in e or "exatamente" in e.lower() for e in erros))
+    erros.clear()
+    await r.handle_set_known_spells("p1", ["bola_fogo", "relampago"])
+    check("aceita 2 magias de 1º da classe", p["magias_conhecidas"] == ["bola_fogo", "relampago"])
+
     print(f"\n{'='*40}\nPASS: {PASS}  FAIL: {FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

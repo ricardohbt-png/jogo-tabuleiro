@@ -3068,6 +3068,23 @@ class GameRoom:
         self.players[pid]["ready"] = True
         await self.broadcast_lobby()
 
+    async def handle_set_known_spells(self, pid, ids):
+        """Lobby: mago/clérigo escolhe 2 magias de 1º círculo da própria classe."""
+        p = self.players.get(pid)
+        if not p or self.phase != "lobby":
+            return
+        if p.get("class_id") not in ("mage", "cleric"):
+            await self.send_to(pid, {"type": "error", "msg": "Sua classe não escolhe magias."}); return
+        ids = list(dict.fromkeys(ids or []))   # remove duplicatas, preserva ordem
+        if len(ids) != 2:
+            await self.send_to(pid, {"type": "error", "msg": "Escolha exatamente 2 magias de 1º círculo."}); return
+        for mid in ids:
+            m = GRIMORIO.get(mid)
+            if not m or p["class_id"] not in m.get("classe", []) or m.get("circulo") != "primeiro":
+                await self.send_to(pid, {"type": "error", "msg": "Magia inválida para sua classe/círculo."}); return
+        p["magias_conhecidas"] = ids
+        await self.broadcast_lobby()
+
     async def broadcast_lobby(self):
         await self.broadcast({
             "type": "lobby_state",
@@ -3138,11 +3155,17 @@ class GameRoom:
         if not all(p["class_id"] for p in self.players.values()):
             await self.send_to(pid, {"type": "error", "msg": "Todos devem escolher uma classe."})
             return
+        for pp in self.players.values():
+            if pp["class_id"] in ("mage", "cleric") and len(pp.get("magias_conhecidas", [])) < 2:
+                await self.send_to(pid, {"type": "error",
+                    "msg": "Magos e clérigos devem escolher 2 magias antes de iniciar."}); return
 
         # Build full player states
         full_players = {}
         for slot, (pid2, p) in enumerate(self.players.items()):
-            full_players[pid2] = make_player(pid2, p["name"], p["class_id"], slot)
+            novo = make_player(pid2, p["name"], p["class_id"], slot)
+            novo["magias_conhecidas"] = list(p.get("magias_conhecidas", []))
+            full_players[pid2] = novo
         self.players = full_players
         self.player_order = list(full_players.keys())
 
@@ -12328,6 +12351,12 @@ async def handler(ws):
 
                 elif t == "select_class":
                     if room: await room.select_class(pid, msg.get("class_id"))
+
+                elif t == "set_known_spells":
+                    if room: await room.handle_set_known_spells(pid, msg.get("ids"))
+
+                elif t == "escolher_magia_nivel":
+                    if room: await room.handle_escolher_magia_nivel(pid, msg.get("magia_id"))
 
                 elif t == "select_dungeon":
                     if room: await room.handle_select_dungeon(pid, msg.get("file"))
