@@ -1230,11 +1230,11 @@ function _itemDesc(item){
   if(item.effect==='ration')
     return `+${item.value||0} fome e sede`;
   const fx={
-    heal:'Restaura HP', mana:'Restaura Mana', atk_bonus:'Bônus de Ataque',
+    heal:'Restaura HP', atk_bonus:'Bônus de Ataque',
     maxhp:'Aumenta HP máx', atk:'Bônus Ataque', spd:'Velocidade',
-    full_heal:'Cura total de HP', full_mana:'Restaura toda a mana',
+    full_heal:'Cura total de HP',
     bless:'Bônus de Ataque divino', cleanse:'Remove status negativos',
-    temp_atk:'Ataque temporário', full_heal_mp:'Cura HP e Mana completos',
+    temp_atk:'Ataque temporário',
     def_:'CA +',
   };
   const v=item.value?` ${item.value}`:'';
@@ -2694,7 +2694,7 @@ function gerarHabilidadesEspeciais(item){
   if(item.id === 'tocha')
     especiais.push(L(`🕯️ <strong style="color:#c8a951">Iluminação:</strong> Expande a linha de visão do personagem em 1 quadrado em todas as direções. Dura ${item.duracao} rodadas. Após expirar o slot fica vazio.`));
   if(item.tipo === 'varinha')
-    especiais.push(L(`✨ <strong style="color:#cc44ff">Armazenamento de Magia:</strong> Guarda ${item.slotsMagia} magia(s) durante a campanha. Usar uma magia armazenada = ação bônus (-1 fome -1 sede). Não consome MP do personagem. Recarregue na cidade.`));
+    especiais.push(L(`✨ <strong style="color:#cc44ff">Armazenamento de Magia:</strong> Guarda ${item.slotsMagia} magia(s) durante a campanha. Usar uma magia armazenada = ação bônus (-1 fome -1 sede). Não consome slot de magia do personagem. Recarregue na cidade.`));
   if(item.tipo === 'itemMagico' && item.slotsExtras)
     especiais.push(L(`🎒 <strong style="color:#cc44ff">Expansão de Inventário:</strong> Ocupa 1 slot mágico e adiciona permanentemente +${item.slotsExtras} slots ao inventário livre enquanto equipada.`));
   if(item.duasMaos && !item.modosDuasMaos && item.tipo === 'arma')
@@ -6306,15 +6306,8 @@ function renderPlayers(state){
     div.className='pcard'+(isMe?' me':'')+(isCur?' current':'')+(p.alive?'':' dead')+(disc?' disconnected':'');
     if(disc) div.style.opacity='0.45';
     const hpPct=Math.max(0,p.hp/p.max_hp*100);
-    // Warrior, Bardo e Mago (Pedro) não mostram barra de MP no card.
-    const mostrarMp = !['warrior', 'bard', 'mage'].includes(p.class_id) && p.max_mp > 0;
-    const mpPct = mostrarMp ? Math.max(0,p.mp/p.max_mp*100) : 0;
-    const mpRowHTML = mostrarMp ? `
-        <div class="bar-row">
-          <span class="bar-label">MP</span>
-          <div class="bar-bg"><div class="bar-fill mp" style="width:${mpPct}%"></div></div>
-          <span class="bar-val">${p.mp}/${p.max_mp}</span>
-        </div>` : '';
+    // MP foi removido do jogo — nenhuma classe usa mana (magias custam slots + fome/sede).
+    const mpRowHTML = '';
     const _csong = p.buffs_cancao && Object.keys(p.buffs_cancao).length;
     div.innerHTML=`
       <div class="pcard-top">
@@ -7993,53 +7986,51 @@ function ocultarTooltipMagia() {
   document.removeEventListener('mousemove', _moverTooltipMagia);
 }
 
-// Magias conhecidas do herói → lista de ids. Fallback (sem lista explícita):
-// ⚠️ MODO TESTE: Pedro (mage) vê e lança QUALQUER magia ignorando classe/nível.
-// Espelha MAGE_TESTE_LIVRE em server.py. Defina false para voltar ao normal.
-const MAGE_TESTE_LIVRE = true;
-
-// Magias conhecidas → ids. Padrão: elegíveis pela classe. Pedro em modo teste: TODAS.
-function _magiasConhecidasIds(heroi, cls) {
-  let known = heroi && (heroi.magias_conhecidas
+// Magias conhecidas do herói → lista de ids escolhidos pelo jogador.
+// Vazio = nenhuma magia disponível (a escolha é obrigatória na criação).
+function _magiasConhecidasIds(heroi) {
+  const known = heroi && (heroi.magias_conhecidas
     || (Array.isArray(heroi.magiasConhecidas) ? heroi.magiasConhecidas.map(x => x.id || x) : null));
-  if (!known || known.length === 0) {
-    known = (MAGE_TESTE_LIVRE && cls === 'mage')
-      ? Object.values(GRIMORIO_CLIENT).map(m => m.id)                                  // TESTE: todas
-      : Object.values(GRIMORIO_CLIENT).filter(m => m.classe.includes(cls)).map(m => m.id);
-  }
-  return known;
+  return Array.isArray(known) ? known : [];
 }
 
-// Aba de magias em jogo (cartas por círculo + pips de slot). Usada por Pedro e Lewis.
+// Tabela de slots por nível (espelha SLOTS_POR_NIVEL no server). Mesma p/ as 2 classes.
+const SLOTS_POR_NIVEL_CLIENT = {
+  1: {primeiro:2, segundo:0, terceiro:0},
+  2: {primeiro:3, segundo:0, terceiro:0},
+  3: {primeiro:3, segundo:1, terceiro:0},
+  4: {primeiro:3, segundo:2, terceiro:0},
+  5: {primeiro:3, segundo:2, terceiro:1},
+};
+
+// Aba de magias em jogo: cartas por círculo + pips de slot com contagem regressiva.
 function renderMagiasFichaEmJogo(heroi, cls) {
   cls = cls || (heroi && heroi.class_id) || 'mage';
-  const usados = (heroi && (heroi.magias_usadas_hoje || heroi.magiasUsadasHoje)) || {};
-  const nivel  = (heroi && (heroi.level || heroi.nivel)) || 1;
-  const known  = _magiasConhecidasIds(heroi, cls);
-
-  // Lewis (cleric) — MODO DE TESTE: todos os círculos liberados desde já, com folga
-  // de slots, para que todas as magias possam ser testadas (ignora o nível). Espelha
-  // CLERIC_SLOTS em server.py. O mago (Pedro) mantém a progressão por nível.
-  const limites = (cls === 'cleric' || (MAGE_TESTE_LIVRE && cls === 'mage'))
-    ? {primeiro:9, segundo:9, terceiro:9}
-    : ({
-        1: {primeiro:2, segundo:0, terceiro:0},
-        2: {primeiro:3, segundo:0, terceiro:0},
-        3: {primeiro:3, segundo:1, terceiro:0},
-        4: {primeiro:3, segundo:2, terceiro:0},
-        5: {primeiro:3, segundo:2, terceiro:1}
-      }[Math.min(nivel, 5)]);
+  const nivel    = Math.min((heroi && (heroi.level || heroi.nivel)) || 1, 5);
+  const known    = _magiasConhecidasIds(heroi);
+  const limites  = SLOTS_POR_NIVEL_CLIENT[nivel];
+  const cooldown = (heroi && heroi.slots_cooldown) || {primeiro:[], segundo:[], terceiro:[]};
+  const round    = (window.GS && GS.gameState && GS.gameState.round) || 0;
 
   function renderCirculoMagias(circulo, label) {
     const magiasCirculo = known.filter(id => GRIMORIO_CLIENT[id] && GRIMORIO_CLIENT[id].circulo === circulo);
-    const limite     = limites[circulo] || 0;
-    const usadosHoje = usados[circulo]  || 0;
-    const livres     = Math.max(0, limite - usadosHoje);
-
+    const limite = limites[circulo] || 0;
     if (limite === 0) return `
       <div style="opacity:0.3; margin-bottom:12px;">
         <div style="color:#4a4a4a; font-size:9px; letter-spacing:2px;">${label} — disponível em nível maior</div>
       </div>`;
+
+    // Contagens regressivas dos slots gastos (menores primeiro).
+    const espera = (cooldown[circulo] || []).map(r => Math.max(0, r - round)).sort((a,b) => a - b);
+    const livres = Math.max(0, limite - espera.length);
+
+    const pips = Array.from({length: limite}).map((_, i) => {
+      if (i < livres) {
+        return `<div title="Pronto" style="width:16px; height:16px; border-radius:50%; background:#44cc88; border:1px solid #44cc88;"></div>`;
+      }
+      const falta = espera[i - livres];   // rodadas até liberar este slot
+      return `<div title="Volta em ${falta} rodada(s)" style="width:16px; height:16px; border-radius:50%; background:#1a1a1a; border:1px solid #3a3a3a; display:flex; align-items:center; justify-content:center; color:#cc8844; font-size:9px;">${falta}</div>`;
+    }).join('');
 
     return `
       <div style="margin-bottom:14px;">
@@ -8047,13 +8038,9 @@ function renderMagiasFichaEmJogo(heroi, cls) {
           <span style="color:#8a7a5a; font-size:9px; letter-spacing:2px;">${label}</span>
           <span style="color:${livres === 0 ? '#ff4136' : '#44cc88'}; font-size:10px;">${livres}/${limite} slots</span>
         </div>
-        <div style="display:flex; gap:4px; margin-bottom:8px;">
-          ${Array.from({length:limite}).map((_,i) => `
-            <div style="width:14px; height:14px; border-radius:50%; background:${i < livres ? '#44cc88' : '#1a1a1a'}; border:1px solid ${i < livres ? '#44cc88' : '#2a2a2a'};"></div>
-          `).join('')}
-        </div>
+        <div style="display:flex; gap:4px; margin-bottom:8px;">${pips}</div>
         <div style="display:flex; flex-wrap:wrap; gap:4px;">
-          ${magiasCirculo.map((id, idx) => criarCartaMagia(id, false, idx >= usadosHoje, idx < usadosHoje, 'jogo')).join('')}
+          ${magiasCirculo.map((id, idx) => criarCartaMagia(id, false, livres > 0, livres === 0, 'jogo')).join('')}
           ${magiasCirculo.length === 0 ? `<div style="color:#4a4a4a; font-size:9px; font-style:italic; padding:8px;">Nenhuma magia memorizada</div>` : ''}
         </div>
       </div>`;
@@ -9094,7 +9081,7 @@ function renderMyPanel(state){
     const slot = document.createElement('div');
     if(item){
       const isConsumable = !item.die && ((item.item_slot === 'bag') ||
-        item.effect === 'heal' || item.effect === 'mana' || item.effect === 'atk_bonus');
+        item.effect === 'heal' || item.effect === 'atk_bonus');
       const isEquippable = !!(item.item_slot && item.item_slot !== 'bag') || !!item.die;
       const typeLabel = item.die ? '⚔ Arma'
         : item.effect === 'ammo' ? `🏹 Munição (×${item.ammo_count ?? 0})`
@@ -9360,7 +9347,6 @@ function _renderChestWindow(chest){
             bag:'🧪 Consumível'}[item.item_slot] || '📦 Item');
     const statSuffix = isWeapon ? ''
       : item.effect==='heal'  ? ` +${item.value} HP`
-      : item.effect==='mana'  ? ` +${item.value} MP`
       : item.effect==='atk'   ? ` +${item.value} Atq`
       : item.effect==='def_'  ? ` +${item.value} CA` : '';
 
@@ -9493,7 +9479,7 @@ function endTurn(){ getAudioContext(); GS.endTurn(); }
 // ── Ação Bônus — efeitos de item que consomem ação bônus (máx. 1/turno) ──────
 // Espelha BONUS_ACTION_EFFECTS em server.py — manter sincronizados.
 const ACOES_BONUS = ['beberPocao', 'usarItemMagico', 'envenenarArma', 'usarItem'];
-const BONUS_ACTION_EFFECTS = new Set(['heal', 'mana', 'atk_bonus', 'antidote']);
+const BONUS_ACTION_EFFECTS = new Set(['heal', 'atk_bonus', 'antidote']);
 
 function useItem(itemId){ send({type:'use_item',item_id:itemId}); }
 
@@ -9762,7 +9748,7 @@ $('dungeon-canvas').addEventListener('mousemove', e=>{
   }
   const player=GS.gameState.players.find(p=>p.pos[0]===tx&&p.pos[1]===ty&&p.alive);
   if(player){
-    tip.innerHTML=`<b>${player.emoji} ${player.name}</b> (Lv${player.level})<br>HP: ${player.hp}/${player.max_hp} | MP: ${player.mp}/${player.max_mp}`;
+    tip.innerHTML=`<b>${player.emoji} ${player.name}</b> (Lv${player.level})<br>HP: ${player.hp}/${player.max_hp}`;
     tip.style.display='block';
     tip.style.left=(e.clientX+14)+'px';
     tip.style.top=(e.clientY-10)+'px';
