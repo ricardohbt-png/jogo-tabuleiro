@@ -1849,6 +1849,22 @@ def carregar_campanha(file):
     except Exception:
         return None
 
+def _fase_file(item):
+    """O nome do arquivo de uma fase de campanha (string ou objeto {file,...})."""
+    if isinstance(item, str):
+        return item
+    if isinstance(item, dict):
+        return item.get("file")
+    return None
+
+def _fase_obj(item):
+    """Normaliza uma fase para {file, intro, outro}."""
+    if isinstance(item, str):
+        return {"file": item, "intro": "", "outro": ""}
+    if isinstance(item, dict):
+        return {"file": item.get("file"), "intro": item.get("intro", ""), "outro": item.get("outro", "")}
+    return {"file": None, "intro": "", "outro": ""}
+
 def validar_campanha(defn):
     """Valida um dict de campanha. Retorna (ok: bool, msg: str). Cada fase deve
     existir em dungeons/ e passar em validar_dungeon."""
@@ -1859,8 +1875,18 @@ def validar_campanha(defn):
     dungeons = defn.get("dungeons")
     if not (isinstance(dungeons, list) and len(dungeons) >= 1):
         return False, "campanha precisa de ao menos uma masmorra em 'dungeons'."
-    for i, file in enumerate(dungeons):
-        d = carregar_dungeon(file) if isinstance(file, str) else None
+    for k in ("intro", "outro"):
+        if k in defn and not isinstance(defn[k], str):
+            return False, f"campanha: '{k}' deve ser texto."
+    for i, item in enumerate(dungeons):
+        file = _fase_file(item)
+        if not isinstance(file, str) or not file:
+            return False, f"fase {i+1}: precisa de um 'file' (string)."
+        if isinstance(item, dict):
+            for k in ("intro", "outro"):
+                if k in item and not isinstance(item[k], str):
+                    return False, f"fase {i+1}: '{k}' deve ser texto."
+        d = carregar_dungeon(file)
         if d is None:
             return False, f"fase {i+1}: masmorra '{file}' não encontrada."
         ok, msg = validar_dungeon(d)
@@ -3545,7 +3571,7 @@ class GameRoom:
         pids = list(self.players.keys())
         # Campanha: a 1ª entrada de cada fase carrega a masmorra da fase atual.
         if self.mode == "campaign" and self.campaign and nova:
-            self.dungeon_def = carregar_dungeon(self.campaign["dungeons"][self.campaign_phase])
+            self.dungeon_def = carregar_dungeon(_fase_file(self.campaign["dungeons"][self.campaign_phase]))
         autorada = self.mode in ("authored", "campaign") and self.dungeon_def is not None
 
         if nova:

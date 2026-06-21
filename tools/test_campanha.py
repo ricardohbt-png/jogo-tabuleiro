@@ -133,6 +133,37 @@ async def test_serializacao():
     check("campaign phase/total corretos",
           cap["campaign"]["phase"] == 1 and cap["campaign"]["total"] == 2)
 
+async def test_schema_objeto():
+    print("\n[7] schema retrocompat (string | objeto)")
+    base = {"schema_version": 1, "id": "c", "name": "C"}
+    # objeto com file válido + intro/outro
+    d = dict(base, dungeons=[{"file": "test_camp_a.json", "intro": "oi", "outro": "tchau"}])
+    ok, msg = server.validar_campanha(d); check(f"objeto válido passa ({msg})", ok is True)
+    # string ainda válida (4a)
+    d = dict(base, dungeons=["test_camp_a.json"])
+    check("string (4a) ainda válida", server.validar_campanha(d)[0] is True)
+    # objeto sem file recusa
+    d = dict(base, dungeons=[{"intro": "x"}])
+    check("objeto sem file recusa", server.validar_campanha(d)[0] is False)
+    # intro não-string recusa
+    d = dict(base, dungeons=[{"file": "test_camp_a.json", "intro": 5}])
+    check("intro não-texto recusa", server.validar_campanha(d)[0] is False)
+    # helpers
+    check("_fase_file de string", server._fase_file("a.json") == "a.json")
+    check("_fase_file de objeto", server._fase_file({"file": "b.json"}) == "b.json")
+    check("_fase_obj normaliza string",
+          server._fase_obj("a.json") == {"file": "a.json", "intro": "", "outro": ""})
+
+async def test_entrada_objeto():
+    print("\n[8] enter_dungeon com fase em objeto")
+    r = setup_room(); r.phase = "lobby"
+    # injeta uma campanha com fase em objeto direto
+    r.mode = "campaign"; r.campaign = {"schema_version": 1, "id": "c", "name": "C",
+        "dungeons": [{"file": "test_camp_a.json", "intro": "abre", "outro": "fecha"}]}
+    r.campaign_phase = 0; r.phase = "city"
+    await r.enter_dungeon("p1")
+    check("carregou a fase do objeto (10×8)", r.map_w == 10 and r.map_h == 8)
+
 async def main():
     test_validacao()
     await test_selecao()
@@ -140,6 +171,8 @@ async def main():
     await test_avanco_e_vitoria()
     await test_retomar_mesma_fase()
     await test_serializacao()
+    await test_schema_objeto()
+    await test_entrada_objeto()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 
