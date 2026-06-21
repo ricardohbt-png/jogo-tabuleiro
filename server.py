@@ -2210,11 +2210,6 @@ def slots_max_para(p):
     return SLOTS_POR_NIVEL[nivel]
 
 # Magias cuja lógica já está implementada (as demais retornam "em desenvolvimento").
-# ⚠️ MODO TESTE: Pedro (mage) lança QUALQUER magia do grimório ignorando classe,
-# círculo/nível, MP/slots, custo de 🍖/💧 e o limite de 1 ação por turno. Para testar
-# o grimório livremente. Defina False para voltar ao comportamento normal.
-MAGE_TESTE_LIVRE = False
-
 GRIMORIO_IMPLEMENTADAS = {"manto_escuridao", "visao_escuro",
                           "bola_fogo", "relampago", "raio_congelante",
                           "saciar", "criar_alimentos", "clarividencia", "raio_divino",
