@@ -397,6 +397,22 @@
     render();
   };
 
+  function setTab(tab) {
+    const dung = tab !== "campanha";
+    document.getElementById("dungeon-controls").style.display = dung ? "" : "none";
+    document.getElementById("toolbar").style.display = dung ? "" : "none";
+    document.getElementById("workspace").style.display = dung ? "" : "none";
+    document.getElementById("campaign-controls").style.display = dung ? "none" : "";
+    document.getElementById("campaign-view").style.display = dung ? "none" : "";
+    document.getElementById("tab-masmorra").classList.toggle("active", dung);
+    document.getElementById("tab-campanha").classList.toggle("active", !dung);
+    if (dung) { render(); renderPanel(); }
+    else if (window.EDITOR_CAMPAIGN) window.EDITOR_CAMPAIGN.renderCampaign();
+  }
+  window.setTab = setTab;
+  document.getElementById("tab-masmorra").onclick = () => setTab("masmorra");
+  document.getElementById("tab-campanha").onclick = () => setTab("campanha");
+
   // Expor para verificação no console / tasks seguintes.
   window.EDITOR = { S, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, entityAt, doorLink, doorUnlink, validarEditor, buildJSON, loadJSON, save, updateStatus, WALL, FLOOR, DOOR };
 

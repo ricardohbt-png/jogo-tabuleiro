@@ -21,3 +21,7 @@ button.active { background:#d9b061; color:#1d1812; border-color:#d9b061; }
 #statusbar { padding:6px 12px; background:#1d1812; border-top:1px solid #4a3c28; font-size:12px; min-height:26px; }
 .status-ok { color:#7ec86a; }
 .status-err { color:#e08a6a; }
+#tabs { display:inline-flex; gap:4px; margin-right:10px; }
+.tab { background:#33291c; color:#b9a87f; border:1px solid #5a4830; border-radius:5px; padding:5px 12px; cursor:pointer; }
+.tab.active { background:#d9b061; color:#1d1812; border-color:#d9b061; }
+#campaign-view { padding:12px; }
