@@ -34,7 +34,28 @@ def write_catalog_js(destino):
         f.write(txt)
     return destino
 
+def build_dungeons_index():
+    """Lista as masmorras válidas de dungeons/ com o defn completo embutido."""
+    out = []
+    for d in server.listar_dungeons():   # [{id,name,file}] já só de válidas
+        defn = server.carregar_dungeon(d["file"])
+        if defn is None:
+            continue
+        out.append({"file": d["file"], "id": d["id"], "name": d["name"], "defn": defn})
+    return out
+
+def write_dungeons_js(destino):
+    payload = json.dumps(build_dungeons_index(), ensure_ascii=False, indent=2)
+    txt = ("window.EDITOR_DUNGEONS = " + payload + ";\n"
+           "// GERADO por tools/export_catalog.py — não editar à mão.\n")
+    with open(destino, "w", encoding="utf-8") as f:
+        f.write(txt)
+    return destino
+
 if __name__ == "__main__":
     destino = os.path.join(os.path.dirname(os.path.abspath(__file__)), "editor_catalog.js")
     write_catalog_js(destino)
     print(f"editor_catalog.js gerado em {destino}")
+    idx_dest = os.path.join(os.path.dirname(os.path.abspath(__file__)), "editor_dungeons.js")
+    write_dungeons_js(idx_dest)
+    print(f"editor_dungeons.js gerado em {idx_dest}")

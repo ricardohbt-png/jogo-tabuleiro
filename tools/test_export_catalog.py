@@ -47,8 +47,32 @@ def main():
     m = re.search(r"window\.EDITOR_CATALOG\s*=\s*(\{.*\});", txt, re.S)
     check("payload é JSON válido", bool(m) and isinstance(json.loads(m.group(1)), dict))
 
+    test_dungeons_index()
+
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
+
+def test_dungeons_index():
+    print("\n[3] índice de masmorras")
+    idx = ec.build_dungeons_index()
+    check("inclui test_camp_a.json", any(d["file"] == "test_camp_a.json" for d in idx))
+    check("itens têm file/id/name/defn",
+          all(all(k in d for k in ("file", "id", "name", "defn")) for d in idx))
+    check("defn é a masmorra (tem grid/tiles)",
+          all("grid" in d["defn"] and "tiles" in d["defn"] for d in idx))
+    # só válidas
+    for d in idx:
+        ok, _ = server.validar_dungeon(d["defn"]);
+        if not ok: check("masmorra do índice válida", False); break
+    else:
+        check("todas do índice são válidas", True)
+    destino = os.path.join(os.path.dirname(os.path.abspath(__file__)), "editor_dungeons.js")
+    ec.write_dungeons_js(destino)
+    with open(destino, encoding="utf-8") as f: txt = f.read()
+    check("começa com window.EDITOR_DUNGEONS",
+          txt.lstrip().startswith("window.EDITOR_DUNGEONS"))
+    m = re.search(r"window\.EDITOR_DUNGEONS\s*=\s*(\[.*\]);", txt, re.S)
+    check("payload é JSON válido", bool(m) and isinstance(json.loads(m.group(1)), list))
 
 if __name__ == "__main__":
     main()
