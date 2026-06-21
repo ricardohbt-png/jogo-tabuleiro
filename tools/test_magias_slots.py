@@ -96,6 +96,28 @@ async def main():
     await r._voltar_para_cidade()
     check("slots recarregados na cidade", r._slots_disponiveis(p, "primeiro") == 2)
 
+    print("\n[7] Level-up concede slot cheio + enfileira escolha; bloqueia end_turn")
+    r = setup(); p = mk_mage(r, 1)
+    r.player_order = ["p1"]; r.turn_index = 0
+    prompts = []
+    async def cap_send2(pid, m):
+        if m.get("type") == "spell_pick_prompt": prompts.append(m)
+    r.send_to = cap_send2
+    p["xp"] = 999   # garante subir de nível
+    await r._check_level_up(p)
+    check("subiu para nível 2", p["level"] == 2)
+    check("slot novo de 1º entra cheio (3)", r._slots_disponiveis(p, "primeiro") == 3)
+    check("fila de escolha tem 1 círculo", p["pending_spell_pick"] == ["primeiro"])
+    check("enviou spell_pick_prompt", len(prompts) == 1 and prompts[0]["circulo"] == "primeiro")
+    # end_turn bloqueado enquanto há escolha pendente
+    erros = []
+    async def cap_err(pid, m):
+        if m.get("type") == "error": erros.append(m["msg"])
+    r.send_to = cap_err
+    r.animados_phase_pid = None
+    await r.handle_end_turn("p1")
+    check("end_turn bloqueado com escolha pendente", any("magia" in e.lower() for e in erros))
+
     print(f"\n{'='*40}\nPASS: {PASS}  FAIL: {FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

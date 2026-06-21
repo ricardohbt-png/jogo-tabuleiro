@@ -9360,6 +9360,9 @@ class GameRoom:
     async def handle_end_turn(self, pid):
         if not self._is_turn(pid): return
         p = self.players[pid]
+        if p.get("pending_spell_pick"):
+            await self.send_to(pid, {"type": "error",
+                "msg": "Escolha sua nova magia antes de encerrar o turno."}); return
         # Limpa imobilização (teia/rede) — o jogador encerrou o turno bloqueado
         p.pop("perde_turno", None)
         p.pop("oculto_vela", None)   # Vela da Escuridão: oculto dura só até o fim do turno
@@ -11967,6 +11970,19 @@ class GameRoom:
         if not any(p["alive"] for p in self.players.values()):
             await self.end_game(victory=False)
 
+    async def _enviar_spell_pick_prompt(self, p):
+        """Envia ao jogador o prompt da próxima escolha de magia pendente (fila)."""
+        fila = p.get("pending_spell_pick") or []
+        if not fila:
+            return
+        circ = fila[0]
+        opcoes = [mid for mid, m in GRIMORIO.items()
+                  if p["class_id"] in m.get("classe", [])
+                  and m.get("circulo") == circ
+                  and mid not in p.get("magias_conhecidas", [])]
+        await self.send_to(p["id"], {
+            "type": "spell_pick_prompt", "circulo": circ, "count": 1, "opcoes": opcoes})
+
     async def _check_level_up(self, p):
         threshold = p["level"] * 30
         if p["xp"] >= threshold:
@@ -11982,6 +11998,12 @@ class GameRoom:
             p["ref_"] += 1
             p["will"] += 1
             await self.gm_say(f"⭐ **{p['name']}** subiu para o nível **{p['level']}**! +1 em Ataque, CA e Testes de Resistência!")
+            if p.get("class_id") in ("mage", "cleric"):
+                # Slot novo do nível já entra cheio (slots_max_para usa o novo level).
+                circ = NIVEL_NOVA_MAGIA.get(p["level"])
+                if circ:
+                    p.setdefault("pending_spell_pick", []).append(circ)
+                    await self._enviar_spell_pick_prompt(p)
 
     # ── Fase 3: avaliação de objetivos ──────────────────────────────────────
 
