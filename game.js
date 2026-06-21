@@ -17,6 +17,10 @@ document.body.innerHTML = `
 <div id="vinheta-sobrevivencia" style="position:fixed; inset:0; pointer-events:none; z-index:50; transition:box-shadow 1s ease;"></div>
 <!-- ══ CONNECT ══ -->
 <div id="screen-connect" class="screen active">
+  <!-- Capa do jogo: aparece em tela cheia no boot; após o 1º clique recua para fundo sutil (ver .dismissed em game.css) -->
+  <div id="cover-splash">
+    <div id="cover-hint">Clique para começar</div>
+  </div>
   <div class="logo">
     <h1>LEGENDS FOR HIRE</h1>
     <p>RPG de Tabuleiro Online — até 6 jogadores</p>
@@ -9790,6 +9794,28 @@ function toggleFichaDrawer(open){
 $('input-name').addEventListener('keydown',e=>{ if(e.key==='Enter') createRoom(); });
 $('input-code').addEventListener('keydown',e=>{ if(e.key==='Enter') joinRoom(); });
 $('input-code').addEventListener('input',e=>{ e.target.value=e.target.value.toUpperCase(); });
+
+// ── Capa do jogo (splash) ────────────────────────────────────────────────
+// A capa cobre a tela inicial no boot; o 1º clique/tecla a recua para fundo
+// sutil (.dismissed). Tudo confinado a #screen-connect, então some sozinha ao
+// trocar de tela. Se a imagem não existir, o splash é removido (jogo intacto).
+(function initCoverSplash(){
+  const cover = $('cover-splash');
+  if(!cover) return;
+  // Só mostra a capa se a imagem carregar; senão, remove para não bloquear nada.
+  const probe = new Image();
+  probe.onerror = () => cover.remove();
+  probe.src = 'assets/capa.png';
+  let dismissed = false;
+  const dismiss = () => {
+    if(dismissed) return;
+    dismissed = true;
+    cover.classList.add('dismissed');
+    document.removeEventListener('keydown', dismiss, true);
+  };
+  cover.addEventListener('click', dismiss);
+  document.addEventListener('keydown', dismiss, true);
+})();
 
 // THREE.JS  3D RENDERER
 // Adiciona visão isométrica 3D ao tabuleiro, sem alterar lógica de jogo.
