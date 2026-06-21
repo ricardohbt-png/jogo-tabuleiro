@@ -242,7 +242,7 @@ CLASSES = {
     },
     "mage": {
         "name": "Pedro, o Tímido", "emoji": "🔮", "color": "#9b59b6",
-        "hp": 7, "mp": 22, "spd": 5, "start_gold": 20,
+        "hp": 7, "mp": 0, "max_mp": 0, "spd": 5, "start_gold": 20,   # Pedro não usa MP — magias custam SLOTS por círculo (ver MAGE_SLOTS) + fome/sede
         "str_": 8, "dex": 12, "con_": 12, "int_": 18,
         "ac_base": 11, "weapon": "cajado_madeira", "atk_bonus": -1,  # BAB 0 + FOR mod(8)=-1; ac_base 11=10+manto+1 | Pedro: Cajado (1d6 FOR)
         "saves_base": {"fort": 0, "ref": 0, "will": 2},       # Von bom, Fort/Ref ruins
@@ -1450,7 +1450,6 @@ MONSTER_DEFS = [
 CHEST_ITEMS = [
     # ── Consumíveis (vão para a mochila, max 6 slots) ──
     {"id": "health_potion", "name": "Poção de Vida",     "emoji": "🧪", "item_slot": "bag",       "effect": "heal",      "value": 10},
-    {"id": "mana_potion",   "name": "Poção de Mana",     "emoji": "💙", "item_slot": "bag",       "effect": "mana",      "value": 8},
     {"id": "elixir",        "name": "Elixir da Força",   "emoji": "⚗️", "item_slot": "bag",       "effect": "atk_bonus", "value": 3},
     {"id": "antidote",      "name": "Antídoto",          "emoji": "💚", "item_slot": "bag",       "effect": "heal",      "value": 6},
     {"id": "garrafa_vinho", "name": "Garrafa de Vinho",  "emoji": "🍷", "item_slot": "bag",       "effect": "wine",      "value": 15},
@@ -1544,7 +1543,6 @@ SHOP_ARMORS = [
 
 SHOP_MERCHANT = [
     {"id": "health_potion", "name": "Poção de Cura",    "emoji": "🧪",  "price": 8,  "item_slot": "bag",   "effect": "heal",      "value": 10},
-    {"id": "mana_potion",   "name": "Poção de Mana",    "emoji": "💙",  "price": 8,  "item_slot": "bag",   "effect": "mana",      "value": 8},
     {"id": "elixir",        "name": "Elixir da Força",  "emoji": "⚗️", "price": 12, "item_slot": "bag",   "effect": "atk_bonus", "value": 3},
     {"id": "antidote",      "name": "Antídoto",          "emoji": "💚",  "price": 5,  "item_slot": "bag",   "effect": "heal",      "value": 6},
     {"id": "vela_escuridao","name": "Vela da Escuridão", "emoji": "🕯️", "price": 50, "item_slot": "bag",   "effect": "veil_shadow","value": 0},
@@ -1985,7 +1983,6 @@ ARMADILHAS = {
 
 SHOP_TEMPLE = [
     {"id": "full_heal", "name": "Cura Completa",  "emoji": "💖",  "price": 15, "effect": "full_heal"},
-    {"id": "full_mana", "name": "Restaurar Mana", "emoji": "🔷",  "price": 10, "effect": "full_mana"},
     {"id": "bless",     "name": "Bênção Divina",  "emoji": "✨",  "price": 12, "effect": "bless",    "value": 2},
     {"id": "cleanse",   "name": "Purificação",    "emoji": "🕊️", "price": 8,  "effect": "cleanse"},
 ]
@@ -2174,12 +2171,11 @@ def player_room(rooms, px, py):
 #   • atributos do caster são scores brutos (int_) — bônus via mod(p["int_"])
 #   • self.monsters é dict (itera .values()); posições são pos:[x,y] (não tx/ty)
 #   • saves via _testar_save (tupla); INT, fome/sede 0–10, log via gm_say
-#   • custo = MP do círculo (CIRCULO_MP) + 🍖/💧 de sobrevivência da ação
+#   • custo = SLOT do círculo (Pedro/Lewis não usam MP) + 🍖/💧 da ação
 #   • zonas (escuridão/silêncio) vivem em self.zonas_especiais e ticam por rodada
 #
 # FUNDAÇÃO: por ora apenas o sistema de escuridão/visão está conjurável
 # (GRIMORIO_IMPLEMENTADAS). As demais magias entram nos próximos prompts.
-CIRCULO_MP = {"primeiro": 1, "segundo": 2, "terceiro": 3}
 
 # ─── PERGAMINHOS MÁGICOS ───────────────────────────────────────────────────────
 # Item de uso único que guarda UMA magia do grimório. Só mago/clérigo usam.
@@ -2193,11 +2189,25 @@ PERGAMINHO_NIVEL_MAX     = 5    # a escala de dano/alcance satura no nível 5
 PERGAMINHO_INT_MAX       = 5    # bônus de INT máximo (INT 20)
 PERGAMINHO_FALHA_MAX     = 95   # teto da chance de falha / efeito nocivo (sempre 5% de chance)
 
-# Lewis (cleric) NÃO usa MP — suas magias custam SLOTS por círculo (magias por dia).
-# MODO DE TESTE: todos os círculos liberados desde o nível 1 e com folga de slots,
-# para que todas as magias possam ser testadas agora (ignora requisito de nível).
-# Os slots são resetados no início de cada turno do clérigo (ver _start de turno).
-CLERIC_SLOTS = {"primeiro": 9, "segundo": 9, "terceiro": 9}
+# Magos (Pedro) e clérigos (Lewis) NÃO usam MP. Cada magia custa 1 SLOT do seu
+# círculo + 🍖-1/💧-1. Slots regeneram por rodadas (timer independente por slot).
+# Tabela única para as duas classes. Nível 6+ = cap no nível 5 (TODO: estender).
+SLOTS_POR_NIVEL = {
+    1: {"primeiro": 2, "segundo": 0, "terceiro": 0},
+    2: {"primeiro": 3, "segundo": 0, "terceiro": 0},
+    3: {"primeiro": 3, "segundo": 1, "terceiro": 0},
+    4: {"primeiro": 3, "segundo": 2, "terceiro": 0},
+    5: {"primeiro": 3, "segundo": 2, "terceiro": 1},
+}
+# Rodadas para um slot gasto regenerar, por círculo.
+SLOT_REGEN = {"primeiro": 10, "segundo": 15, "terceiro": 20}
+# Ao SUBIR para este nível, o jogador escolhe 1 nova magia conhecida do círculo.
+NIVEL_NOVA_MAGIA = {2: "primeiro", 3: "segundo", 4: "segundo", 5: "terceiro"}
+
+def slots_max_para(p):
+    """Máximo de slots por círculo do jogador, pela tabela de nível (cap no 5)."""
+    nivel = min(max(p.get("level", 1), 1), 5)
+    return SLOTS_POR_NIVEL[nivel]
 
 # Magias cuja lógica já está implementada (as demais retornam "em desenvolvimento").
 # ⚠️ MODO TESTE: Pedro (mage) lança QUALQUER magia do grimório ignorando classe,
@@ -2674,9 +2684,10 @@ def make_player(pid, name, cls_id, slot):
         "detectar_ativo":      False,  # Detectar Armadilhas ativa (manutenção 💧-1)
         "weapon_poison":       None,   # veneno untado na arma (Veneno Rápido / coat_poison)
         "weapon_poison_hits":  0,      # golpes certeiros restantes com veneno
-        # ── Magias de Lewis (cleric) — slots por círculo (não usa MP) ──────────────
-        "magias_usadas_hoje":  {"primeiro": 0, "segundo": 0, "terceiro": 0},
-        "magias_conhecidas":   [],     # ids do GRIMORIO memorizados (vazio = todas da classe)
+        # ── Magias (Pedro/mage, Lewis/cleric) — magias conhecidas + slots c/ regen ──
+        "magias_conhecidas":   [],     # ids do GRIMORIO escolhidos (obrigatório p/ lançar)
+        "slots_cooldown":      {"primeiro": [], "segundo": [], "terceiro": []},  # ready_at por slot gasto
+        "pending_spell_pick":  [],     # fila de círculos a escolher ao subir de nível
     }
 
 def make_monster(mdef, room):
@@ -3352,9 +3363,6 @@ class GameRoom:
             if effect == "full_heal":
                 p["hp"] = p["max_hp"]
                 log = f"⛪ **{p['name']}** foi curado completamente no Templo!"
-            elif effect == "full_mana":
-                p["mp"] = p["max_mp"]
-                log = f"⛪ **{p['name']}** restaurou toda a mana no Templo!"
             elif effect == "bless":
                 bonus = item.get("value", 2)
                 p["atk_bonus"] += bonus
@@ -6500,7 +6508,7 @@ class GameRoom:
 
     # ── Ação Bônus ─────────────────────────────────────────────────────────────
     # Efeitos de item que contam como ação bônus (máx. 1 por turno).
-    BONUS_ACTION_EFFECTS = {"heal", "mana", "atk_bonus", "antidote", "coat_poison", "veil_shadow"}
+    BONUS_ACTION_EFFECTS = {"heal", "atk_bonus", "antidote", "coat_poison", "veil_shadow"}
 
     def _consumir_recursos(self, player, tipo_acao):
         """Consumo CENTRAL de fome/sede (escala 0–10). Substitui os consumos
@@ -6630,15 +6638,44 @@ class GameRoom:
     # ══════════════════════════════════════════════════════════════════════════
     # SISTEMA DE MAGIAS (GRIMÓRIO) — FUNDAÇÃO
     # Pedro (mage) e Lewis (cleric) lançam via mensagem WS 'magia'. Esta fundação
-    # entrega: roteamento (handle_magia), cobrança de custo (MP do círculo +
+    # entrega: roteamento (handle_magia), cobrança de custo (SLOT do círculo +
     # 🍖/💧), o dispatcher (_executar_magia_grimorio) e o sistema de zonas/
     # escuridão. A lógica de cada magia entra nos próximos prompts — por ora só
     # GRIMORIO_IMPLEMENTADAS são conjuráveis.
+    # ── Slots de magia (Pedro/Lewis): pool por círculo com regen por rodadas ──
+    def _slot_prune(self, p, circulo):
+        """Remove os cooldowns já vencidos (ready_at <= round_num)."""
+        cd = p.setdefault("slots_cooldown", {"primeiro": [], "segundo": [], "terceiro": []})
+        cd[circulo] = [r for r in cd.get(circulo, []) if r > self.round_num]
+
+    def _slots_disponiveis(self, p, circulo):
+        """Slots livres no círculo = máximo do nível − gastos ainda em cooldown."""
+        self._slot_prune(p, circulo)
+        usados = len(p["slots_cooldown"].get(circulo, []))
+        return slots_max_para(p).get(circulo, 0) - usados
+
+    def _gastar_slot(self, p, circulo):
+        """Marca 1 slot do círculo como gasto: volta em SLOT_REGEN[circulo] rodadas."""
+        p.setdefault("slots_cooldown", {"primeiro": [], "segundo": [], "terceiro": []})
+        p["slots_cooldown"][circulo].append(self.round_num + SLOT_REGEN[circulo])
+
+    def _proximo_slot_rodadas(self, p, circulo):
+        """Menor contagem regressiva (rodadas) até liberar 1 slot do círculo, ou None."""
+        self._slot_prune(p, circulo)
+        cd = p["slots_cooldown"].get(circulo, [])
+        if not cd:
+            return None
+        return max(0, min(cd) - self.round_num)
+
+    def _recarregar_slots(self, p):
+        """Recarga total (descanso na cidade): zera todos os cooldowns."""
+        p["slots_cooldown"] = {"primeiro": [], "segundo": [], "terceiro": []}
+
     # ══════════════════════════════════════════════════════════════════════════
 
     async def handle_magia(self, pid, data):
         """Lança uma magia do GRIMÓRIO (Pedro/mage, Lewis/cleric). Valida classe,
-        elegibilidade, MP e custo de sobrevivência; depois despacha o efeito."""
+        elegibilidade, slots do círculo e custo de sobrevivência; despacha o efeito."""
         if not self._is_turn(pid):
             return
         p = self.players.get(pid)
@@ -6674,20 +6711,14 @@ class GameRoom:
             await self.send_to(pid, {"type": "error",
                 "msg": f"{magia['icone']} {magia['nome']} ainda está em desenvolvimento."}); return
 
-        # Custo do círculo: Lewis (cleric) gasta SLOTS de magia; as demais classes, MP.
+        # Custo do círculo: mago e clérigo gastam SLOTS de magia (ninguém usa MP).
         circulo = magia.get("circulo", "primeiro")
-        is_cleric = p.get("class_id") == "cleric"
-        custo_mp = CIRCULO_MP.get(circulo, 1)
-        if livre:
-            pass   # MODO TESTE: sem checagem de slot/MP/nível
-        elif is_cleric:
+        if not livre:
             p.setdefault("magias_usadas_hoje", {"primeiro": 0, "segundo": 0, "terceiro": 0})
-            limite = CLERIC_SLOTS.get(circulo, 0)
+            limite = slots_por_circulo(p, circulo)
             if p["magias_usadas_hoje"].get(circulo, 0) >= limite:
                 await self.send_to(pid, {"type": "error",
                     "msg": f"Sem slots de magia de {circulo} círculo."}); return
-        elif p.get("mp", 0) < custo_mp:
-            await self.send_to(pid, {"type": "error", "msg": f"MP insuficiente — precisa {custo_mp}."}); return
 
         # ── Metamagia (Pedro): Aprimorar (+1 CD do save) / Estender (+1 turno) /
         # Fortalecer (dano ×1,5). EMPILHÁVEIS; o custo em 🍖/💧 é pago AGORA e SÓ se
@@ -6715,12 +6746,9 @@ class GameRoom:
                 custo_txt = (f" | 🍖-{mm_fome}" + (f" 💧-{mm_sede}" if mm_sede else "")) if (mm_fome or mm_sede) else ""
                 await self.gm_say(f"🔮 **{p['name']}** — metamagia: {', '.join(partes)}{custo_txt}.")
 
-        # Custo do círculo (slot p/ Lewis, MP p/ os demais) + 🍖/💧 de sobrevivência.
+        # Custo do círculo (SLOT, para mago e clérigo) + 🍖/💧 de sobrevivência.
         if not livre:
-            if is_cleric:
-                p["magias_usadas_hoje"][circulo] = p["magias_usadas_hoje"].get(circulo, 0) + 1
-            else:
-                p["mp"] = max(0, p["mp"] - custo_mp)
+            p["magias_usadas_hoje"][circulo] = p["magias_usadas_hoje"].get(circulo, 0) + 1
             p["fome"] = max(0, p.get("fome", 10) - 1)
             p["sede"] = max(0, p.get("sede", 10) - 1)
             self._verificar_estado_sobrevivencia(p)
@@ -9103,9 +9131,6 @@ class GameRoom:
         if effect == "heal":
             p["hp"] = min(p["max_hp"], p["hp"] + val)
             await self.gm_say(f"{item['emoji']} **{p['name']}** usa **{item['name']}** e recupera **{val}** HP!")
-        elif effect == "mana":
-            p["mp"] = min(p["max_mp"], p["mp"] + val)
-            await self.gm_say(f"{item['emoji']} **{p['name']}** usa **{item['name']}** e recupera **{val}** MP!")
         elif effect == "atk_bonus":
             self.blessed[pid] = self.blessed.get(pid, 0) + val
             p["atk_bonus"] += val
@@ -9450,9 +9475,9 @@ class GameRoom:
             await self._processar_manutencao_richard(cur_p)
         if cur_p.get("class_id") == "rogue":
             await self._processar_inicio_turno_luccas(cur_p)
-        if cur_p.get("class_id") == "cleric":
-            # MODO DE TESTE: recarrega os slots de magia do Lewis a cada turno, para
-            # que todas as magias fiquem sempre disponíveis para teste.
+        if cur_p.get("class_id") in ("cleric", "mage"):
+            # Recarrega os slots de magia (Lewis e Pedro) no início do turno — os
+            # limites por círculo seguem CLERIC_SLOTS / MAGE_SLOTS_POR_NIVEL.
             cur_p["magias_usadas_hoje"] = {"primeiro": 0, "segundo": 0, "terceiro": 0}
         # Venenos: tica/expira efeitos no início do turno do jogador (antes de fixar o movimento).
         await self._processar_venenos_turno(cur_p)
@@ -11963,8 +11988,6 @@ class GameRoom:
             p["fort"] += 1
             p["ref_"] += 1
             p["will"] += 1
-            p["max_mp"] += 2
-            p["mp"] = min(p["max_mp"], p["mp"] + 2)
             await self.gm_say(f"⭐ **{p['name']}** subiu para o nível **{p['level']}**! +1 em Ataque, CA e Testes de Resistência!")
 
     # ── Fase 3: avaliação de objetivos ──────────────────────────────────────
