@@ -965,6 +965,7 @@ const GS = (() => {
 
       case 'city_state':
         cityState = msg;
+        _captarStory(msg);
         if (!myPid) {
           const me = msg.players.find(p => p.name === myName);
           if (me) myPid = me.id;
@@ -990,6 +991,7 @@ const GS = (() => {
 
       case 'game_state':
         gameState = msg;
+        _captarStory(msg);
         if (!myPid) {
           const me = msg.players.find(p => p.name === myName);
           if (me) myPid = me.id;
@@ -1014,6 +1016,7 @@ const GS = (() => {
 
       case 'game_over':
         clearSession();   // aventura encerrada — não tentar reconectar depois
+        _captarStory(msg);
         _emit('gameOver', msg);
         break;
 
@@ -1129,6 +1132,21 @@ const GS = (() => {
   function getLobbyCampaigns() { return (lobbyState && lobbyState.campaigns) || []; }
   // Sender: host escolhe uma campanha do lobby; file=null volta ao procedural.
   function selectCampaign(file) { send({ type: 'select_campaign', file: file || null }); }
+
+  // ── Fase 4b (história): beat pendente + de-dup por key ───────────────────────
+  // O servidor expõe um "beat" {key,text} em game_state.campaign.story (abertura),
+  // city_state.campaign.story (encerramento) e game_over.story (final). Cada
+  // jogador exibe/fecha localmente; o de-dup por key garante que apareça 1×.
+  const _storyShown = new Set();
+  let _lastStory = null;   // beat mais recente recebido (game_state/city_state/game_over)
+  function _captarStory(msg) {
+    const beat = (msg && msg.campaign && msg.campaign.story) || (msg && msg.story) || null;
+    if (beat && beat.key) _lastStory = beat;
+  }
+  function pendingStory() {
+    return (_lastStory && !_storyShown.has(_lastStory.key)) ? _lastStory : null;
+  }
+  function marcarStoryVista(key) { if (key) _storyShown.add(key); }
 
   // ── Hooks de sobrevivência chamados pelo renderer nos pontos de ação ───────
   // Ataque/magia/habilidade têm seus sends no renderer (game.js); ele notifica
@@ -1410,6 +1428,8 @@ const GS = (() => {
     armadilhaAdjacente,
     selectDungeon,
     selectCampaign,        // Fase 4a: sender (chamado com parênteses)
+    pendingStory,          // Fase 4b: beat de história pendente (ou null)
+    marcarStoryVista,      // Fase 4b: marca um beat como já exibido (de-dup por key)
     libertarPrisioneiro,   // Fase 3: sender (chamado com parênteses)
 
     // ── Habilidades armadas do warrior (toggle; custo cobrado na ação) ──

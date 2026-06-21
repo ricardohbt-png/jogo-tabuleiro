@@ -963,6 +963,28 @@ function destroyCity3D(){
   if(fo) fo.remove();
 }
 
+// ── Fase 4b (história): overlay de história da campanha ───────────────────────
+// Mostra o beat pendente (GS.pendingStory) sobre o tabuleiro/cidade; não bloqueia
+// o jogo. "Continuar" marca o beat como visto (de-dup por key em gameState.js).
+function renderStory() {
+  const beat = GS.pendingStory && GS.pendingStory();
+  let ov = document.getElementById('story-overlay');
+  if (!beat) { if (ov) ov.style.display = 'none'; return; }
+  if (!ov) {
+    ov = document.createElement('div'); ov.id = 'story-overlay';
+    ov.innerHTML = '<div id="story-box"><div id="story-text"></div>'
+      + '<button id="story-continue">Continuar</button></div>';
+    document.body.appendChild(ov);
+    ov.querySelector('#story-continue').onclick = () => {
+      const b = GS.pendingStory && GS.pendingStory();
+      if (b) GS.marcarStoryVista(b.key);
+      ov.style.display = 'none';
+    };
+  }
+  ov.querySelector('#story-text').textContent = beat.text;
+  ov.style.display = 'flex';
+}
+
 function handleCityState(msg){
   _updateCityHeroBar(msg);
   // Legacy player bar (used by shop modal gold display)
@@ -995,6 +1017,7 @@ function handleCityState(msg){
   // Clear fade overlay if returning from dungeon
   const fo=document.getElementById('city-fade-overlay');
   if(fo){ fo.classList.remove('on'); setTimeout(()=>{ if(fo.parentNode) fo.remove(); },1200); }
+  renderStory();   // Fase 4b: encerramento da fase (mostrado na cidade)
 }
 
 // ── Legacy 2D city data (kept so shop modal lookups still find building names) ──
@@ -2825,6 +2848,7 @@ function handleGameState(msg){
   updateMoveButtons(msg);
   renderObjectivesHUD(msg);
   _start2DHighlightLoop();
+  renderStory();   // Fase 4b: abertura da fase (sobre o tabuleiro; não bloqueia)
 }
 
 // ── Fase 3: HUD de objetivos + botão "Libertar" (só em masmorra autorada) ─────
@@ -9575,6 +9599,7 @@ function handleGameOver(msg){
       $('end-title').style.color='var(--red)';
       $('end-msg').textContent='A escuridão venceu... desta vez.';
     }
+    renderStory();   // Fase 4b: tela final da campanha (sobre o game over)
   }, 2000);
 }
 
