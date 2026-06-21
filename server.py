@@ -3085,6 +3085,27 @@ class GameRoom:
         p["magias_conhecidas"] = ids
         await self.broadcast_lobby()
 
+    async def handle_escolher_magia_nivel(self, pid, magia_id):
+        """Resolve a escolha de nova magia pendente (1 item da fila por vez)."""
+        p = self.players.get(pid)
+        if not p:
+            return
+        fila = p.get("pending_spell_pick") or []
+        if not fila:
+            await self.send_to(pid, {"type": "error", "msg": "Nenhuma escolha de magia pendente."}); return
+        circ = fila[0]
+        m = GRIMORIO.get(magia_id)
+        if not m or p["class_id"] not in m.get("classe", []) or m.get("circulo") != circ:
+            await self.send_to(pid, {"type": "error", "msg": "Magia inválida para este círculo/classe."}); return
+        if magia_id in p.get("magias_conhecidas", []):
+            await self.send_to(pid, {"type": "error", "msg": "Você já conhece essa magia."}); return
+        p.setdefault("magias_conhecidas", []).append(magia_id)
+        fila.pop(0)
+        await self.gm_say(f"📖 **{p['name']}** aprendeu **{m['nome']}**!")
+        if fila:
+            await self._enviar_spell_pick_prompt(p)   # próxima da fila
+        await self.push_state()
+
     async def broadcast_lobby(self):
         await self.broadcast({
             "type": "lobby_state",

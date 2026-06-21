@@ -134,6 +134,23 @@ async def main():
     await r.handle_set_known_spells("p1", ["bola_fogo", "relampago"])
     check("aceita 2 magias de 1º da classe", p["magias_conhecidas"] == ["bola_fogo", "relampago"])
 
+    print("\n[9] escolher_magia_nivel adiciona magia e esvazia a fila")
+    r = setup(); p = mk_mage(r, 2)
+    p["magias_conhecidas"] = ["bola_fogo", "relampago"]
+    p["pending_spell_pick"] = ["primeiro"]
+    erros = []
+    async def cap_err4(pid, m):
+        if m.get("type") == "error": erros.append(m["msg"])
+    r.send_to = cap_err4
+    await r.handle_escolher_magia_nivel("p1", "id_que_nao_existe")
+    check("recusa magia inválida", len(erros) >= 1)
+    nova = next(mid for mid, m in server.GRIMORIO.items()
+                if "mage" in m.get("classe", []) and m.get("circulo") == "primeiro"
+                and mid not in p["magias_conhecidas"])
+    await r.handle_escolher_magia_nivel("p1", nova)
+    check("magia adicionada às conhecidas", nova in p["magias_conhecidas"])
+    check("fila esvaziada", p["pending_spell_pick"] == [])
+
     print(f"\n{'='*40}\nPASS: {PASS}  FAIL: {FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
