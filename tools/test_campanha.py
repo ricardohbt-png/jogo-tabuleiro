@@ -172,26 +172,24 @@ def _camp_hist():
                 {"file": "test_camp_b.json", "intro": "ABRE-2", "outro": "FECHA-2"}]}
 
 async def test_historia_runtime():
-    print("\n[9] runtime da história")
+    print("\n[9] runtime da história (slides)")
+    def textos(beat): return [s.get("text") for s in beat["slides"]]
     r = setup_room(); r.mode = "campaign"; r.campaign = _camp_hist(); r.campaign_phase = 0; r.phase = "city"
     await r.enter_dungeon("p1")
     pay = r._campaign_payload()
     check("abertura da fase 0 inclui abertura da campanha",
-          pay["story"] and "ABERTURA-CAMP" in pay["story"]["text"] and "ABRE-1" in pay["story"]["text"])
+          pay["story"] and textos(pay["story"]) == ["ABERTURA-CAMP", "ABRE-1"])
     check("key de abertura", pay["story"]["key"] == "intro:0")
-    # conclui a fase 0 → cidade com encerramento
     for m in r.monsters.values(): m["hp"] = 0
     await r._check_objectives()
     check("foi para a cidade", r.phase == "city")
     payc = r._campaign_payload()
     check("encerramento da fase 0 na cidade",
-          payc["story"] and payc["story"]["text"] == "FECHA-1" and payc["story"]["key"] == "outro:0")
-    # entra na fase 1: outro é limpo; abertura da fase 1 (sem abertura da campanha)
+          payc["story"] and textos(payc["story"]) == ["FECHA-1"] and payc["story"]["key"] == "outro:0")
     await r.enter_dungeon("p1")
     pay1 = r._campaign_payload()
     check("abertura da fase 1 (sem abertura da campanha)",
-          pay1["story"] and pay1["story"]["text"] == "ABRE-2")
-    # conclui a última → end_game com story final
+          pay1["story"] and textos(pay1["story"]) == ["ABRE-2"])
     cap = {}
     async def fake_end(victory, story=None): cap["victory"] = victory; cap["story"] = story
     r.end_game = fake_end
@@ -199,7 +197,24 @@ async def test_historia_runtime():
     await r._check_objectives()
     check("última fase → end_game com story final",
           cap.get("victory") is True and cap.get("story")
-          and "FECHA-2" in cap["story"]["text"] and "FINAL-CAMP" in cap["story"]["text"])
+          and textos(cap["story"]) == ["FECHA-2", "FINAL-CAMP"])
+
+
+async def test_historia_audio():
+    print("\n[12] precedência do áudio na junção")
+    camp = {"schema_version": 1, "id": "ca", "name": "CA",
+            "intro": {"slides": [{"text": "ic"}], "audio": "assets/story/camp.mp3"},
+            "dungeons": [{"file": "test_camp_a.json",
+                          "intro": {"slides": [{"text": "if"}], "audio": "assets/story/fase.mp3"},
+                          "outro": {"slides": [{"text": "of"}], "audio": "assets/story/of.mp3"}},
+                         {"file": "test_camp_b.json"}]}
+    r = setup_room(); r.mode = "campaign"; r.campaign = camp; r.campaign_phase = 0; r.phase = "city"
+    await r.enter_dungeon("p1")
+    pay = r._campaign_payload()
+    check("abertura: áudio da campanha vem antes (precede a fase)",
+          pay["story"]["audio"] == "assets/story/camp.mp3")
+    check("abertura junta os 2 slides",
+          [s["text"] for s in pay["story"]["slides"]] == ["ic", "if"])
 
 def test_story_norm():
     print("\n[11] _story_norm / _story_beat")
@@ -250,6 +265,7 @@ async def main():
     await test_historia_runtime()
     await test_roundtrip_editor_campanha()
     test_story_norm()
+    await test_historia_audio()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

@@ -12149,8 +12149,7 @@ class GameRoom:
                     and self.campaign_phase < len(self.campaign["dungeons"]) - 1):
                 # Encerramento da fase concluída (mostrado na cidade).
                 fase = _fase_obj(self.campaign["dungeons"][self.campaign_phase])
-                self._campaign_outro = ({"key": f"outro:{self.campaign_phase}", "text": fase["outro"]}
-                                        if fase.get("outro") else None)
+                self._campaign_outro = _story_beat(f"outro:{self.campaign_phase}", [fase.get("outro")])
                 self.campaign_phase += 1
                 self.dungeon_generated = False
                 self._objetivo_concluido = False
@@ -12160,9 +12159,8 @@ class GameRoom:
                 story = None
                 if self.mode == "campaign" and self.campaign:
                     fase = _fase_obj(self.campaign["dungeons"][self.campaign_phase])
-                    partes = [p for p in (fase.get("outro"), self.campaign.get("outro")) if p]
-                    if partes:
-                        story = {"key": f"final:{self.campaign_phase}", "text": "\n\n".join(partes)}
+                    story = _story_beat(f"final:{self.campaign_phase}",
+                                        [fase.get("outro"), self.campaign.get("outro")])
                 await self.end_game(victory=True, story=story)
 
     async def handle_libertar_prisioneiro(self, pid):
@@ -12268,13 +12266,11 @@ class GameRoom:
                "story": None}
         if self.phase == "playing":
             fase = _fase_obj(self.campaign["dungeons"][self.campaign_phase])
-            texto = ""
-            if self.campaign_phase == 0 and self.campaign.get("intro"):
-                texto = self.campaign["intro"]
-            if fase.get("intro"):
-                texto += ("\n\n" if texto else "") + fase["intro"]
-            if texto:
-                pay["story"] = {"key": f"intro:{self.campaign_phase}", "text": texto}
+            parts = []
+            if self.campaign_phase == 0:
+                parts.append(self.campaign.get("intro"))
+            parts.append(fase.get("intro"))
+            pay["story"] = _story_beat(f"intro:{self.campaign_phase}", parts)
         elif self.phase == "city" and self._campaign_outro:
             pay["story"] = self._campaign_outro
         return pay
