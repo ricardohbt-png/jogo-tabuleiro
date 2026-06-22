@@ -12444,6 +12444,17 @@ async def handler(ws):
                     await ws.send(json.dumps(payload))
                     continue
 
+                if t == "upload_prisoner":
+                    ok, res = _save_prisoner_upload(msg.get("name"), msg.get("data"))
+                    payload = {"type": "upload_result",
+                               "upload_id": msg.get("upload_id"), "ok": ok}
+                    if ok:
+                        payload["name"] = res
+                    else:
+                        payload["error"] = res
+                    await ws.send(json.dumps(payload))
+                    continue
+
                 if t == "create_room":
                     name = (msg.get("name") or "Herói")[:20]
                     code = make_code()
@@ -12753,6 +12764,36 @@ def _save_story_upload(name, data_b64):
     try:
         os.makedirs(STORY_DIR, exist_ok=True)
         with open(os.path.join(STORY_DIR, base), "wb") as f:
+            f.write(raw)
+    except OSError:
+        return False, "falha ao gravar"
+    return True, base
+
+PRISONER_DIR = os.path.join(BASE_DIR, "assets", "pawns", "prisioneiros")
+
+def _save_prisoner_upload(name, data_b64):
+    """Grava uma imagem de prisioneiro em assets/pawns/prisioneiros/. Só imagens.
+    Mesma proteção (path-traversal, tamanho) do _save_story_upload.
+    Retorna (ok: bool, basename_salvo | mensagem_de_erro)."""
+    base = os.path.basename(name or "")
+    if not base or "\x00" in base:
+        return False, "nome inválido"
+    ext = os.path.splitext(base)[1].lower()
+    if ext not in _STORY_IMG_EXT:
+        return False, "extensão não permitida"
+    if not isinstance(data_b64, str) or not data_b64:
+        return False, "dados inválidos"
+    if (len(data_b64) * 3) // 4 > STORY_UPLOAD_MAX:
+        return False, "arquivo grande demais"
+    try:
+        raw = base64.b64decode(data_b64, validate=True)
+    except Exception:
+        return False, "dados inválidos"
+    if len(raw) > STORY_UPLOAD_MAX:
+        return False, "arquivo grande demais"
+    try:
+        os.makedirs(PRISONER_DIR, exist_ok=True)
+        with open(os.path.join(PRISONER_DIR, base), "wb") as f:
             f.write(raw)
     except OSError:
         return False, "falha ao gravar"

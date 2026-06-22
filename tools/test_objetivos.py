@@ -184,6 +184,22 @@ async def test_serializacao():
     check("game_state traz prisoner", capturado.get("prisoner") is not None)
     check("game_state traz objectives", capturado.get("objectives") is not None)
 
+async def test_upload_prisioneiro():
+    print("\n[7] upload de imagem do prisioneiro grava em assets/pawns/prisioneiros/")
+    import base64 as _b64
+    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    # PNG 1x1 transparente válido.
+    png = _b64.b64encode(_b64.b64decode(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==")).decode()
+    ok, name = server._save_prisoner_upload("captiva.png", png)
+    check("upload ok devolve nome", ok and name == "captiva.png")
+    dest = os.path.join(base, "assets", "pawns", "prisioneiros", "captiva.png")
+    check("arquivo gravado em assets/pawns/prisioneiros/", os.path.exists(dest))
+    if os.path.exists(dest): os.remove(dest)
+    okx, _ = server._save_prisoner_upload("ruim.txt", png)
+    check("rejeita extensão não-imagem", okx is False)
+
+
 async def test_prisioneiro_segue():
     print("\n[6] prisioneiro liberto segue o resgatador (até 6, para adjacente)")
     r = setup_authored()
@@ -225,6 +241,7 @@ async def main():
     await test_bonus_secundario()
     await test_serializacao()
     await test_prisioneiro_segue()
+    await test_upload_prisioneiro()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 
