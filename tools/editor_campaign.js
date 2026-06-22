@@ -274,6 +274,25 @@
       const u = storyToSaved(o.outro); if (u !== undefined) e.outro = u;
       return e;
     });
+    if (window.EDITOR_SAVE && window.EDITOR_SAVE.saveCampaign) {
+      setCampSaveMsg("status-ok", "Salvando em campaigns/…");
+      window.EDITOR_SAVE.saveCampaign(out).then((res) => {
+        setCampSaveMsg("status-ok", "✓ salva em campaigns/" + res.file);
+      }).catch((err) => {
+        baixarCampanha(out);
+        setCampSaveMsg("status-err", "⚠ servidor offline (" + err.message + ") — baixada em Downloads");
+      });
+    } else {
+      baixarCampanha(out);
+    }
+  }
+
+  function setCampSaveMsg(cls, msg) {
+    const el = statusEl();
+    if (el) { el.className = cls; el.textContent = msg; }
+  }
+
+  function baixarCampanha(out) {
     const blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = (C.id.trim() || "campanha") + ".json";
     document.body.appendChild(a); a.click(); a.remove();

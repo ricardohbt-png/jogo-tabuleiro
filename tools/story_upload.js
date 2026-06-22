@@ -1,7 +1,11 @@
 "use strict";
-// Cliente de upload de mídia da história. Abre uma WebSocket sob demanda com o
-// servidor (ws://localhost:8765 — o editor roda como file://) e envia o arquivo
-// em base64. window.STORY_UPLOAD.upload(file) -> Promise<basename> | rejeita.
+// Cliente de upload do editor. Abre uma WebSocket sob demanda com o servidor
+// (ws://localhost:8765 — o editor roda como file://) e troca mensagens:
+//   • mídia da história  -> window.STORY_UPLOAD.upload(file) -> Promise<basename>
+//   • masmorra (JSON)     -> window.EDITOR_SAVE.saveDungeon(defn) -> Promise<{file,entry}>
+//   • campanha (JSON)     -> window.EDITOR_SAVE.saveCampaign(defn) -> Promise<{file}>
+// Todas rejeitam se o servidor não estiver no ar (o chamador pode cair no
+// fallback de download).
 (function () {
   const IMG = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
   const AUD = [".mp3", ".ogg", ".wav", ".m4a"];
@@ -33,7 +37,7 @@
         const p = pending.get(m.upload_id);
         if (!p) return;
         pending.delete(m.upload_id);
-        if (m.ok) p.resolve(m.name);
+        if (m.ok) p.resolve(m);                       // mensagem completa (name/file/entry)
         else p.reject(new Error(m.error || "falha no upload"));
       };
       sock.onclose = () => {
@@ -44,6 +48,28 @@
       };
     });
     return connecting;
+  }
+
+  // Envia uma mensagem `{type, upload_id, ...fields}` e resolve com a resposta
+  // `upload_result` correspondente (ou rejeita em erro/timeout/desconexão).
+  async function request(type, fields) {
+    const sock = await connect();
+    const id = nextId++;
+    return new Promise((resolve, reject) => {
+      const to = setTimeout(() => {
+        if (pending.has(id)) { pending.delete(id); reject(new Error("tempo esgotado")); }
+      }, 30000);
+      pending.set(id, {
+        resolve: (v) => { clearTimeout(to); resolve(v); },
+        reject: (e) => { clearTimeout(to); reject(e); },
+      });
+      try {
+        sock.send(JSON.stringify(Object.assign({ type: type, upload_id: id }, fields)));
+      } catch (e) {
+        clearTimeout(to); pending.delete(id);
+        reject(new Error("falha ao enviar"));
+      }
+    });
   }
 
   function extOf(name) {
@@ -68,26 +94,24 @@
     if (OK_EXT.indexOf(extOf(file.name)) < 0)
       throw new Error("extensão não permitida");
     if (file.size > MAX) throw new Error("arquivo grande demais");
-    const sock = await connect();
     const data = await toBase64(file);
-    const id = nextId++;
-    return new Promise((resolve, reject) => {
-      const to = setTimeout(() => {
-        if (pending.has(id)) { pending.delete(id); reject(new Error("tempo esgotado")); }
-      }, 30000);
-      pending.set(id, {
-        resolve: (v) => { clearTimeout(to); resolve(v); },
-        reject: (e) => { clearTimeout(to); reject(e); },
-      });
-      try {
-        sock.send(JSON.stringify({ type: "upload_story", upload_id: id,
-                                   name: file.name, data: data }));
-      } catch (e) {
-        clearTimeout(to); pending.delete(id);
-        reject(new Error("falha ao enviar"));
-      }
-    });
+    const m = await request("upload_story", { name: file.name, data: data });
+    return m.name;
+  }
+
+  // Grava a masmorra em dungeons/. Resolve com { file, entry } (entry = item do
+  // catálogo window.EDITOR_DUNGEONS, para injeção ao vivo na aba de campanha).
+  function saveDungeon(defn) {
+    return request("upload_dungeon", { defn: defn })
+      .then((m) => ({ file: m.file, entry: m.entry }));
+  }
+
+  // Grava a campanha em campaigns/. Resolve com { file }.
+  function saveCampaign(defn) {
+    return request("upload_campaign", { defn: defn })
+      .then((m) => ({ file: m.file }));
   }
 
   window.STORY_UPLOAD = { upload: upload };
+  window.EDITOR_SAVE = { saveDungeon: saveDungeon, saveCampaign: saveCampaign };
 })();

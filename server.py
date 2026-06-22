@@ -12384,6 +12384,29 @@ async def handler(ws):
                     await ws.send(json.dumps(payload))
                     continue
 
+                if t == "upload_dungeon":
+                    ok, res = _save_dungeon_upload(msg.get("defn"))
+                    payload = {"type": "upload_result", "kind": "dungeon",
+                               "upload_id": msg.get("upload_id"), "ok": ok}
+                    if ok:
+                        payload["file"] = res["file"]
+                        payload["entry"] = res["entry"]
+                    else:
+                        payload["error"] = res
+                    await ws.send(json.dumps(payload))
+                    continue
+
+                if t == "upload_campaign":
+                    ok, res = _save_campaign_upload(msg.get("defn"))
+                    payload = {"type": "upload_result", "kind": "campaign",
+                               "upload_id": msg.get("upload_id"), "ok": ok}
+                    if ok:
+                        payload["file"] = res["file"]
+                    else:
+                        payload["error"] = res
+                    await ws.send(json.dumps(payload))
+                    continue
+
                 if t == "create_room":
                     name = (msg.get("name") or "Herói")[:20]
                     code = make_code()
@@ -12697,6 +12720,87 @@ def _save_story_upload(name, data_b64):
     except OSError:
         return False, "falha ao gravar"
     return True, base
+
+# ─── Salvar definições do editor (masmorra → dungeons/, campanha → campaigns/) ──
+# O editor roda em file:// e o navegador não pode gravar em pastas do PC, então a
+# definição (JSON já montado) chega por WebSocket e o servidor grava na pasta
+# correta — assim a masmorra aparece na aba de campanha sem passos manuais.
+DEF_UPLOAD_MAX = 2 * 1024 * 1024               # 2 MB — JSON de masmorra/campanha é pequeno
+_BAD_FNAME = set('\\/:*?"<>|') | {"\x00"}
+
+def _safe_def_filename(raw_id):
+    """Deriva <id>.json seguro a partir do id da definição (sem componente de dir)."""
+    base = os.path.basename(str(raw_id or "")).strip()
+    base = "".join("_" if c in _BAD_FNAME else c for c in base)
+    if base.lower().endswith(".json"):
+        base = base[:-5]
+    base = base.strip(" .") or "sem_nome"
+    return base + ".json"
+
+def _gravar_def(defn, destino_dir, file):
+    """Serializa e grava `defn` em destino_dir/file. Retorna (ok, msg)."""
+    try:
+        body = json.dumps(defn, ensure_ascii=False, indent=2)
+        if len(body.encode("utf-8")) > DEF_UPLOAD_MAX:
+            return False, "arquivo grande demais"
+        os.makedirs(destino_dir, exist_ok=True)
+        with open(os.path.join(destino_dir, file), "w", encoding="utf-8") as f:
+            f.write(body)
+    except OSError:
+        return False, "falha ao gravar"
+    return True, "ok"
+
+def _save_dungeon_upload(defn):
+    """Valida e grava uma masmorra em DUNGEONS_DIR e regenera o índice do editor.
+    Retorna (ok, {'file', 'entry'} | mensagem)."""
+    if not isinstance(defn, dict):
+        return False, "definição inválida"
+    ok, msg = validar_dungeon(defn)
+    if not ok:
+        return False, msg
+    file = _safe_def_filename(defn.get("id"))
+    ok, msg = _gravar_def(defn, DUNGEONS_DIR, file)
+    if not ok:
+        return False, msg
+    _regen_dungeons_index()
+    entry = {"file": file, "id": defn.get("id", file),
+             "name": defn.get("name", file), "defn": defn}
+    return True, {"file": file, "entry": entry}
+
+def _save_campaign_upload(defn):
+    """Valida e grava uma campanha em CAMPAIGNS_DIR.
+    Retorna (ok, {'file'} | mensagem)."""
+    if not isinstance(defn, dict):
+        return False, "definição inválida"
+    ok, msg = validar_campanha(defn)
+    if not ok:
+        return False, msg
+    file = _safe_def_filename(defn.get("id"))
+    ok, msg = _gravar_def(defn, CAMPAIGNS_DIR, file)
+    if not ok:
+        return False, msg
+    return True, {"file": file}
+
+def _regen_dungeons_index():
+    """Reescreve tools/editor_dungeons.js a partir de dungeons/ para que a aba de
+    campanha do editor enxergue as masmorras salvas (inclusive após recarregar).
+    Mesma saída de tools/export_catalog.py:write_dungeons_js."""
+    try:
+        out = []
+        for d in listar_dungeons():
+            defn = carregar_dungeon(d["file"])
+            if defn is None:
+                continue
+            out.append({"file": d["file"], "id": d["id"],
+                        "name": d["name"], "defn": defn})
+        payload = json.dumps(out, ensure_ascii=False, indent=2)
+        txt = ("window.EDITOR_DUNGEONS = " + payload + ";\n"
+               "// GERADO ao salvar no editor (e por tools/export_catalog.py).\n")
+        with open(os.path.join(BASE_DIR, "tools", "editor_dungeons.js"),
+                  "w", encoding="utf-8") as f:
+            f.write(txt)
+    except Exception:
+        pass
 
 def _serve_static(request):
     """Resolve o caminho pedido pelo navegador para um arquivo do cliente.

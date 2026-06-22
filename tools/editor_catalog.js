@@ -159,11 +159,6 @@ window.EDITOR_CATALOG = {
       "emoji": "🧪"
     },
     {
-      "id": "mana_potion",
-      "name": "Poção de Mana",
-      "emoji": "💙"
-    },
-    {
       "id": "elixir",
       "name": "Elixir da Força",
       "emoji": "⚗️"

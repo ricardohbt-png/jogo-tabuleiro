@@ -256,6 +256,7 @@ function $(id){ return document.getElementById(id); }
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $(id).classList.add('active');
+  if (typeof _menuMusicOnScreen === 'function') _menuMusicOnScreen(id);
 }
 
 function toast(msg, color='var(--red)'){
@@ -928,13 +929,13 @@ function triggerDungeonEntrance(){
       osc.frequency.setValueAtTime(80,now);
       osc.frequency.linearRampToValueAtTime(40,now+1.0);
       g.gain.setValueAtTime(0.4,now); g.gain.linearRampToValueAtTime(0,now+1.3);
-      osc.connect(g); g.connect(actx.destination);
+      osc.connect(g); g.connect(_sfxBus());
       osc.start(now); osc.stop(now+1.3);
       // Low rumble
       const osc2=actx.createOscillator(), g2=actx.createGain();
       osc2.type='sine'; osc2.frequency.value=38;
       g2.gain.setValueAtTime(0.28,now); g2.gain.linearRampToValueAtTime(0,now+1.6);
-      osc2.connect(g2); g2.connect(actx.destination);
+      osc2.connect(g2); g2.connect(_sfxBus());
       osc2.start(now); osc2.stop(now+1.6);
     }
   }catch(ex){}
@@ -5408,7 +5409,7 @@ function playImpact(intensity){
     hpf.type = 'highpass'; hpf.frequency.value = 2200;
     const crackGain = ctx.createGain();
     crackGain.gain.value = 1.1;
-    crackSrc.connect(hpf); hpf.connect(crackGain); crackGain.connect(ctx.destination);
+    crackSrc.connect(hpf); hpf.connect(crackGain); crackGain.connect(_sfxBus());
     crackSrc.start(now);
 
     // Layer 2 — low body thud (pitched sine)
@@ -5419,7 +5420,7 @@ function playImpact(intensity){
     thudOsc.frequency.exponentialRampToValueAtTime(55, now + 0.07);
     thudGain.gain.setValueAtTime(0.40 * intensity, now);
     thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
-    thudOsc.connect(thudGain); thudGain.connect(ctx.destination);
+    thudOsc.connect(thudGain); thudGain.connect(_sfxBus());
     thudOsc.start(now); thudOsc.stop(now + 0.09);
   } catch(e){}
 }
@@ -5449,7 +5450,7 @@ function playSettle(){
     osc.frequency.exponentialRampToValueAtTime(110, now + 0.16);
     gain.gain.setValueAtTime(0.35, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.20);
-    osc.connect(gain); gain.connect(ctx.destination);
+    osc.connect(gain); gain.connect(_sfxBus());
     osc.start(now); osc.stop(now + 0.20);
   } catch(e){}
 }
@@ -9551,7 +9552,7 @@ function tocarSomBau(){
       g.gain.setValueAtTime(0.0001, t0);
       g.gain.exponentialRampToValueAtTime(0.18, t0 + 0.02);
       g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.55);
-      o.connect(g); g.connect(ctx.destination);
+      o.connect(g); g.connect(_sfxBus());
       o.start(t0); o.stop(t0 + 0.6);
     });
   } catch(e){}
@@ -9918,6 +9919,198 @@ $('input-code').addEventListener('input',e=>{ e.target.value=e.target.value.toUp
   };
   cover.addEventListener('click', dismiss);
   document.addEventListener('keydown', dismiss, true);
+})();
+
+// ── Sistema de áudio: música de fundo + volumes (música/SFX) ─────────────────
+// Música em loop nas telas de menu (abertura/seleção) e na cidade, com crossfade
+// suave de 3 s entre faixas e fade-out de 3 s ao entrar no jogo (tabuleiro sem
+// música). Painel ⚙️ global (em todas as telas) com dois sliders: Música e Sons.
+// Volumes persistidos em localStorage. Renderização/UI pura atrelada a telas —
+// sem lógica de jogo. Espelha o padrão do player de história (_storyAudioEl).
+const MENU_MUSIC = {
+  abertura: 'assets/music/abertura.mp3',
+  selecao:  'assets/music/selecao.mp3',
+  cidade:   'assets/music/cidade.mp3',
+};
+const _MM_FADE = 1500;    // ms de crossfade / fade-out
+const _mmTracks = {};     // id -> HTMLAudioElement (criado sob demanda)
+let _mmCurrent = null;    // id da faixa audível agora
+let _mmStarted = false;   // a 1ª reprodução já começou? (autoplay/1º gesto)
+let _mmFadeRAF = null;    // handle do requestAnimationFrame das rampas de volume
+let _mmVol  = 0.6;        // volume da música (0..1) — sobrescrito por localStorage
+let _sfxVol = 1.0;        // volume dos efeitos (0..1) — sobrescrito por localStorage
+
+// ── Persistência dos volumes ────────────────────────────────────────────────
+const _AUDIO_KEY = 'lfh_audio';
+function _audioLoadPrefs(){
+  try {
+    const o = JSON.parse(localStorage.getItem(_AUDIO_KEY) || '{}');
+    if (typeof o.music === 'number') _mmVol  = Math.max(0, Math.min(1, o.music));
+    if (typeof o.sfx   === 'number') _sfxVol = Math.max(0, Math.min(1, o.sfx));
+  } catch (e) {}
+}
+function _audioSavePrefs(){
+  try { localStorage.setItem(_AUDIO_KEY, JSON.stringify({ music: _mmVol, sfx: _sfxVol })); } catch (e) {}
+}
+
+// ── Master de SFX: TODO efeito Web Audio passa por este gain (volume único) ──
+// As funções de som conectam seu nó final a _sfxBus() em vez de ctx.destination.
+let _sfxBusNode = null, _sfxBusCtx = null;
+function _sfxBus(){
+  const ctx = getAudioContext();
+  if (!ctx) return null;
+  if (_sfxBusCtx !== ctx || !_sfxBusNode){   // (re)cria se o AudioContext mudou
+    _sfxBusNode = ctx.createGain();
+    _sfxBusNode.gain.value = _sfxVol;
+    _sfxBusNode.connect(ctx.destination);
+    _sfxBusCtx = ctx;
+  }
+  return _sfxBusNode;
+}
+function _setSfxVol(v){
+  _sfxVol = Math.max(0, Math.min(1, v));
+  if (_sfxBusNode) _sfxBusNode.gain.value = _sfxVol;
+  _audioSavePrefs();
+}
+
+// ── Música de fundo ──────────────────────────────────────────────────────────
+function _mmEl(id){
+  if (_mmTracks[id]) return _mmTracks[id];
+  const a = new Audio(MENU_MUSIC[id]);
+  a.loop = true; a.preload = 'auto'; a.volume = 0;
+  _mmTracks[id] = a;
+  return a;
+}
+
+// Loop único de rampa: cada faixa com fade ativo guarda seu descritor em _mmFade.
+function _mmTick(){
+  const now = performance.now();
+  let active = false;
+  for (const id in _mmTracks){
+    const a = _mmTracks[id], f = a._mmFade;
+    if (!f) continue;
+    active = true;
+    const t = Math.min(1, (now - f.t0) / f.dur);
+    a.volume = Math.max(0, Math.min(1, f.from + (f.to - f.from) * t));
+    if (t >= 1){
+      a._mmFade = null;
+      if (f.stop){ try { a.pause(); a.currentTime = 0; } catch (e) {} }
+    }
+  }
+  _mmFadeRAF = active ? requestAnimationFrame(_mmTick) : null;
+}
+
+function _mmFadeTo(a, to, dur, stop){
+  a._mmFade = { from: a.volume, to, dur: Math.max(1, dur), t0: performance.now(), stop: !!stop };
+  if (!_mmFadeRAF) _mmFadeRAF = requestAnimationFrame(_mmTick);
+}
+
+// Toca a faixa `id` com crossfade a partir da atual. Falha de autoplay/arquivo
+// é silenciosa (igual ao player de história) — nunca quebra o jogo.
+function _mmPlay(id){
+  if (!MENU_MUSIC[id]) return;
+  const next = _mmEl(id);
+  for (const other in _mmTracks){          // faz fade-out das demais
+    if (other !== id) _mmFadeTo(_mmTracks[other], 0, _MM_FADE, true);
+  }
+  const cross = _mmStarted && _mmCurrent && _mmCurrent !== id;
+  const p = next.play();
+  if (p && p.catch) p.catch(() => {});
+  _mmFadeTo(next, _mmVol, cross ? _MM_FADE : 600, false);
+  _mmCurrent = id;
+  _mmStarted = true;
+}
+
+function _mmStop(){                          // fade-out de tudo (entrar no jogo)
+  for (const id in _mmTracks) _mmFadeTo(_mmTracks[id], 0, _MM_FADE, true);
+  _mmCurrent = null;
+}
+
+function _setMusicVol(v){                    // slider de música — aplica ao vivo
+  _mmVol = Math.max(0, Math.min(1, v));
+  if (_mmCurrent && _mmTracks[_mmCurrent]) _mmFadeTo(_mmTracks[_mmCurrent], _mmVol, 150, false);
+  _audioSavePrefs();
+}
+
+function _mmHideHint(){                       // esconde a dica da capa ao tocar
+  const h = document.getElementById('cover-hint');
+  if (h) h.style.opacity = '0';
+}
+
+// ── Painel ⚙️ de áudio (global, em todas as telas) ───────────────────────────
+function _audioPanelEnsure(){
+  let wrap = document.getElementById('audio-settings');
+  if (wrap) return wrap;
+  const pct = (v) => Math.round(v * 100);
+  wrap = document.createElement('div');
+  wrap.id = 'audio-settings';
+  wrap.style.cssText = 'position:fixed;right:14px;top:14px;z-index:61;font-family:inherit;';
+  wrap.innerHTML =
+    '<button id="audio-gear" title="Áudio (música e sons)" style="width:42px;height:42px;'
+    + 'border-radius:50%;border:1px solid #2a4a2a;background:rgba(13,26,13,.82);color:#a0e0a0;'
+    + 'font-size:20px;cursor:pointer;line-height:1;padding:0;box-shadow:0 2px 8px rgba(0,0,0,.5);">⚙️</button>'
+    + '<div id="audio-pop" style="display:none;position:absolute;right:0;top:50px;width:210px;'
+    + 'background:rgba(13,20,13,.96);border:1px solid #2a4a2a;border-radius:10px;padding:12px 14px;'
+    + 'box-shadow:0 6px 20px rgba(0,0,0,.6);color:#cfe9cf;font-size:.8rem;">'
+    +   '<div style="display:flex;justify-content:space-between;margin-bottom:5px;">'
+    +     '<span>🎵 Música</span><span id="aud-music-val">' + pct(_mmVol) + '%</span></div>'
+    +   '<input id="aud-music" type="range" min="0" max="100" value="' + pct(_mmVol) + '" style="width:100%;">'
+    +   '<div style="display:flex;justify-content:space-between;margin:12px 0 5px;">'
+    +     '<span>🔊 Sons</span><span id="aud-sfx-val">' + pct(_sfxVol) + '%</span></div>'
+    +   '<input id="aud-sfx" type="range" min="0" max="100" value="' + pct(_sfxVol) + '" style="width:100%;">'
+    + '</div>';
+  document.body.appendChild(wrap);
+  const pop = wrap.querySelector('#audio-pop');
+  wrap.querySelector('#audio-gear').onclick = (e) => {
+    e.stopPropagation();
+    pop.style.display = (pop.style.display === 'none') ? 'block' : 'none';
+  };
+  document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) pop.style.display = 'none'; });
+  const mSl = wrap.querySelector('#aud-music'), mVal = wrap.querySelector('#aud-music-val');
+  mSl.oninput = () => { mVal.textContent = mSl.value + '%'; _setMusicVol(mSl.value / 100); };
+  const sSl = wrap.querySelector('#aud-sfx'), sVal = wrap.querySelector('#aud-sfx-val');
+  sSl.oninput = () => { sVal.textContent = sSl.value + '%'; _setSfxVol(sSl.value / 100); };
+  return wrap;
+}
+
+// Chamado por showScreen() a cada troca de tela.
+function _menuMusicOnScreen(id){
+  _audioPanelEnsure();                       // ⚙️ visível em qualquer tela
+  if (id === 'screen-connect')            _mmPlay('abertura');
+  else if (id === 'screen-class-select')  _mmPlay('selecao');
+  else if (id === 'screen-city')          _mmPlay('cidade');
+  else                                    _mmStop();   // tabuleiro / fim: sem música
+}
+
+// Início da abertura: tenta tocar junto com a capa; se o browser bloquear o
+// autoplay, começa no 1º clique/tecla (mesmo gesto que recua a capa).
+let _mmGestureHooked = false;
+function _mmHookFirstGesture(){
+  if (_mmGestureHooked || _mmStarted) return;
+  _mmGestureHooked = true;
+  const go = () => {
+    document.removeEventListener('pointerdown', go, true);
+    document.removeEventListener('keydown', go, true);
+    if (!_mmStarted){ _mmPlay('abertura'); _mmHideHint(); }
+  };
+  document.addEventListener('pointerdown', go, true);
+  document.addEventListener('keydown', go, true);
+}
+
+(function _audioInit(){
+  _audioLoadPrefs();
+  _audioPanelEnsure();
+  const active = document.querySelector('.screen.active');
+  if (!active || active.id !== 'screen-connect') return;  // boot sempre na abertura
+  const a = _mmEl('abertura');
+  const p = a.play();
+  if (p && p.then){
+    p.then(() => { _mmCurrent = 'abertura'; _mmStarted = true;
+                   _mmFadeTo(a, _mmVol, 800, false); _mmHideHint(); })
+     .catch(() => _mmHookFirstGesture());     // autoplay bloqueado → espera gesto
+  } else {
+    _mmHookFirstGesture();
+  }
 })();
 
 // THREE.JS  3D RENDERER
@@ -11690,7 +11883,7 @@ function tocarSomPasso(){
     comp.ratio.value     = 6;
     comp.attack.value    = 0.001;
     comp.release.value   = 0.08;
-    comp.connect(ctx.destination);
+    comp.connect(_sfxBus());
 
     // CAMADA 1 — Tom principal do plástico (ruído filtrado, bandpass ~280Hz)
     const bufSize = Math.floor(ctx.sampleRate * 0.06);

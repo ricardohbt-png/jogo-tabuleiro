@@ -369,15 +369,46 @@
     render(); renderPanel();
   }
 
+  function setSaveMsg(cls, msg) {
+    const el = document.getElementById("status");
+    if (el) { el.className = cls; el.textContent = msg; }
+  }
+
+  function baixarMasmorra(defn) {
+    const blob = new Blob([JSON.stringify(defn, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = S.meta.id + ".json";
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  // Injeta/atualiza a masmorra no catálogo em memória para que a aba de campanha
+  // a enxergue imediatamente (mutação in-place: editor_campaign.js guarda a mesma
+  // referência do array). NÃO reatribuir window.EDITOR_DUNGEONS.
+  function injetarNoCatalogo(entry) {
+    const arr = window.EDITOR_DUNGEONS;
+    if (!Array.isArray(arr) || !entry) return;
+    const i = arr.findIndex(d => d.file === entry.file);
+    if (i >= 0) arr[i] = entry; else arr.push(entry);
+  }
+
   function save() {
     S.meta.id = document.getElementById("m-id").value.trim() || "masmorra";
     S.meta.name = document.getElementById("m-name").value.trim() || "Masmorra";
     const v = updateStatus();
     if (!v.ok) { alert("Masmorra inválida:\n- " + v.erros.join("\n- ")); return; }
-    const blob = new Blob([JSON.stringify(buildJSON(), null, 2)], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob); a.download = S.meta.id + ".json";
-    document.body.appendChild(a); a.click(); a.remove();
+    const defn = buildJSON();
+    if (window.EDITOR_SAVE && window.EDITOR_SAVE.saveDungeon) {
+      setSaveMsg("status-ok", "Salvando em dungeons/…");
+      window.EDITOR_SAVE.saveDungeon(defn).then((res) => {
+        injetarNoCatalogo(res.entry);
+        setSaveMsg("status-ok", "✓ salva em dungeons/" + res.file + " — disponível na aba Campanha");
+      }).catch((err) => {
+        baixarMasmorra(defn);
+        setSaveMsg("status-err", "⚠ servidor offline (" + err.message + ") — baixada em Downloads");
+      });
+    } else {
+      baixarMasmorra(defn);
+    }
   }
 
   document.getElementById("btn-save").onclick = save;

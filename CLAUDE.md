@@ -106,7 +106,7 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `end_turn` | — |
 | `enter_dungeon` | — |
 | `buy_item` | `shop_id`, `item_id` |
-| `magia` | `magia_id` (id em `GRIMORIO`) + alvo conforme o tipo: `target_id` (alvo/aliado), `tx`/`ty` (área), `dir:[dx,dy]` (Relâmpago — linha), ou nenhum (auto-centrado). Pedro (mage)/Lewis (cleric) lançam (ação principal). Custo: MP do círculo (`CIRCULO_MP`) + 🍖-1/💧-1. Conjuráveis (`GRIMORIO_IMPLEMENTADAS`): `manto_escuridao`, `visao_escuro`, `bola_fogo`, `relampago`, `raio_congelante`; o resto retorna "em desenvolvimento". O servidor anima dados via broadcast `dice_roll` (dano + d20 de save). |
+| `magia` | `magia_id` (id em `GRIMORIO`) + alvo conforme o tipo: `target_id` (alvo/aliado), `tx`/`ty` (área), `dir:[dx,dy]` (Relâmpago — linha), ou nenhum (auto-centrado). Pedro (mage)/Lewis (cleric) lançam (ação principal). Nenhuma classe usa MP: o custo é um **slot de magia do círculo** (Lewis: `CLERIC_SLOTS`; Pedro: `MAGE_SLOTS_POR_NIVEL`, progressão por nível, resetam por turno via `slots_por_circulo`) + 🍖-1/💧-1. Conjuráveis (`GRIMORIO_IMPLEMENTADAS`): `manto_escuridao`, `visao_escuro`, `bola_fogo`, `relampago`, `raio_congelante`; o resto retorna "em desenvolvimento". O servidor anima dados via broadcast `dice_roll` (dano + d20 de save). |
 | `ativar_cancao` | `atributos` (Henrique liga a Canção Heroica com os atributos escolhidos) |
 | `desativar_cancao` | — (Henrique encerra a Canção Heroica) |
 | `provocacao` | `target_id` (Henrique provoca um inimigo — ação bônus) |

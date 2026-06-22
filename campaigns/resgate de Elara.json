@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "resgate de Elara",
+  "name": "Resgate de Elara",
+  "intro": {
+    "slides": [
+      {
+        "text": "Eles se tornaram lendas.\nMas antes de tudo...",
+        "image": "assets/story/WhatsApp Image 2026-05-27 at 18.08.13.jpeg",
+        "fit": "contain"
+      },
+      {
+        "text": "Eram apenas desconhecidos andando nas ruas...",
+        "image": "assets/story/WhatsApp Image 2026-04-26 at 20.43.30 (4).jpeg",
+        "fit": "contain"
+      },
+      {
+        "text": "Até que um dia tudo mudou. ",
+        "image": "assets/story/WhatsApp Image 2026-04-26 at 23.24.57.jpeg",
+        "fit": "contain"
+      }
+    ],
+    "audio": "assets/story/the_kraken_s_overture.mp3"
+  },
+  "outro": {
+    "slides": [
+      {
+        "text": "E assim... Nasce uma lenda ",
+        "image": "assets/story/WhatsApp Image 2026-04-26 at 23.24.57.jpeg"
+      }
+    ],
+    "audio": "assets/story/the_kraken_s_overture.mp3"
+  },
+  "dungeons": [
+    {
+      "file": "resgate de elara.json"
+    }
+  ]
+}
