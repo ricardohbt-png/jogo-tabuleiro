@@ -8,6 +8,7 @@ Run: python server.py
 """
 
 import asyncio
+import base64
 import websockets
 import json
 import math
@@ -12644,6 +12645,41 @@ def _http(status, reason, body, ctype="text/plain; charset=utf-8"):
                        "Content-Length": str(len(body)),
                        "Cache-Control": "no-cache"})
     return Response(status, reason, headers, body)
+
+# ─── Upload de mídia da história (editor → assets/story/) ─────────────────────
+STORY_DIR = os.path.join(BASE_DIR, "assets", "story")
+STORY_UPLOAD_MAX = 25 * 1024 * 1024            # 25 MB por arquivo
+_STORY_IMG_EXT = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+_STORY_AUDIO_EXT = {".mp3", ".ogg", ".wav", ".m4a"}
+_STORY_OK_EXT = _STORY_IMG_EXT | _STORY_AUDIO_EXT
+
+def _save_story_upload(name, data_b64):
+    """Grava uma mídia de história em assets/story/. Sobrescreve se já existir.
+    Retorna (ok: bool, basename_salvo | mensagem_de_erro)."""
+    base = os.path.basename(name or "")        # bloqueia ../ e caminhos absolutos
+    if not base:
+        return False, "nome inválido"
+    ext = os.path.splitext(base)[1].lower()
+    if ext not in _STORY_OK_EXT:
+        return False, "extensão não permitida"
+    if not isinstance(data_b64, str) or not data_b64:
+        return False, "dados inválidos"
+    # rejeita cedo pelo tamanho aproximado do base64 (evita decodificar gigante)
+    if (len(data_b64) * 3) // 4 > STORY_UPLOAD_MAX:
+        return False, "arquivo grande demais"
+    try:
+        raw = base64.b64decode(data_b64, validate=True)
+    except Exception:
+        return False, "dados inválidos"
+    if len(raw) > STORY_UPLOAD_MAX:
+        return False, "arquivo grande demais"
+    try:
+        os.makedirs(STORY_DIR, exist_ok=True)
+        with open(os.path.join(STORY_DIR, base), "wb") as f:
+            f.write(raw)
+    except OSError:
+        return False, "falha ao gravar"
+    return True, base
 
 def _serve_static(request):
     """Resolve o caminho pedido pelo navegador para um arquivo do cliente.
