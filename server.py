@@ -1863,6 +1863,49 @@ def _fase_obj(item):
         return {"file": item.get("file"), "intro": item.get("intro", ""), "outro": item.get("outro", "")}
     return {"file": None, "intro": "", "outro": ""}
 
+def _story_norm(val):
+    """Normaliza um campo de história para {'slides': [...], 'audio': str|None}.
+    Aceita string (legado = 1 slide de texto), objeto {'slides','audio'} ou vazio.
+    Slides sem text nem image são descartados; fit default 'cover'."""
+    if not val:
+        return {"slides": [], "audio": None}
+    if isinstance(val, str):
+        return {"slides": [{"text": val}], "audio": None}
+    if isinstance(val, dict):
+        out = []
+        for s in (val.get("slides") or []):
+            if not isinstance(s, dict):
+                continue
+            slide = {}
+            if isinstance(s.get("text"), str) and s["text"]:
+                slide["text"] = s["text"]
+            if isinstance(s.get("image"), str) and s["image"]:
+                slide["image"] = s["image"]
+            if not slide:
+                continue
+            slide["fit"] = "contain" if s.get("fit") == "contain" else "cover"
+            out.append(slide)
+        audio = val.get("audio")
+        audio = audio if (isinstance(audio, str) and audio) else None
+        return {"slides": out, "audio": audio}
+    return {"slides": [], "audio": None}
+
+
+def _story_beat(key, parts):
+    """parts: lista de campos de história (string|objeto) na ORDEM de exibição.
+    Retorna {'key','slides','audio'} ou None se não houver slides. O áudio é o
+    primeiro não-nulo encontrado na ordem das partes."""
+    slides, audio = [], None
+    for p in parts:
+        n = _story_norm(p)
+        slides.extend(n["slides"])
+        if audio is None and n["audio"]:
+            audio = n["audio"]
+    if not slides:
+        return None
+    return {"key": key, "slides": slides, "audio": audio}
+
+
 def validar_campanha(defn):
     """Valida um dict de campanha. Retorna (ok: bool, msg: str). Cada fase deve
     existir em dungeons/ e passar em validar_dungeon."""

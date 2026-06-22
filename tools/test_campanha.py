@@ -201,6 +201,34 @@ async def test_historia_runtime():
           cap.get("victory") is True and cap.get("story")
           and "FECHA-2" in cap["story"]["text"] and "FINAL-CAMP" in cap["story"]["text"])
 
+def test_story_norm():
+    print("\n[11] _story_norm / _story_beat")
+    # string vira 1 slide de texto
+    n = server._story_norm("oi")
+    check("string -> 1 slide texto", n == {"slides": [{"text": "oi"}], "audio": None})
+    # vazio -> sem slides
+    check("vazio -> sem slides", server._story_norm("")["slides"] == [])
+    check("None -> sem slides", server._story_norm(None)["slides"] == [])
+    # objeto: slides + audio, fit default cover, slide vazio descartado
+    obj = {"slides": [
+        {"text": "a", "image": "assets/story/x.png", "fit": "contain"},
+        {"image": "assets/story/y.png"},
+        {"text": "", "image": ""},      # descartado
+        {"text": "c"},
+    ], "audio": "assets/story/m.mp3"}
+    n = server._story_norm(obj)
+    check("audio preservado", n["audio"] == "assets/story/m.mp3")
+    check("3 slides válidos", len(n["slides"]) == 3)
+    check("fit contain mantido", n["slides"][0]["fit"] == "contain")
+    check("fit default cover", n["slides"][1]["fit"] == "cover")
+    check("slide sem image perde a chave image", "image" not in n["slides"][2])
+    # _story_beat concatena na ordem e pega o 1º áudio
+    beat = server._story_beat("k", ["abre", {"slides": [{"text": "b"}], "audio": "assets/story/t.ogg"}])
+    check("beat concatena", [s.get("text") for s in beat["slides"]] == ["abre", "b"])
+    check("beat 1º áudio", beat["audio"] == "assets/story/t.ogg")
+    check("beat vazio -> None", server._story_beat("k", ["", None]) is None)
+
+
 async def test_roundtrip_editor_campanha():
     print("\n[10] round-trip: campaign do editor passa em validar_campanha")
     # formato que o editor salva (objetos com história + campos da campanha)
@@ -221,6 +249,7 @@ async def main():
     await test_entrada_objeto()
     await test_historia_runtime()
     await test_roundtrip_editor_campanha()
+    test_story_norm()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 
