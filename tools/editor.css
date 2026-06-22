@@ -34,3 +34,35 @@ button.active { background:#d9b061; color:#1d1812; border-color:#d9b061; }
 .camp-name { font-weight:bold; color:#d9b061; } .camp-file { font-size:11px; color:#8a7a5a; }
 .camp-meta textarea { width:100%; height:26px; resize:vertical; background:#33291c; color:#e8dcc0; border:1px solid #4a3c28; border-radius:4px; }
 .camp-row button { background:#33291c; color:#e8dcc0; border:1px solid #5a4830; border-radius:4px; cursor:pointer; }
+
+/* ── Painel de história (slides) ─────────────────────────────────────────── */
+.hist-btn { background:#2a2230; color:#e8dcc0; border:1px solid #5a4830; border-radius:4px; padding:3px 8px; cursor:pointer; font-size:12px; }
+.camp-hist-row { display:flex; gap:6px; margin-top:6px; }
+.hist-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:5000; display:flex; align-items:center; justify-content:center; }
+.hist-panel { width:680px; max-width:94vw; max-height:90vh; overflow:auto; background:#1d1812; border:1px solid #5a4830; border-radius:10px; color:#e8dcc0; }
+.hist-head { display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid #4a3c28; }
+.hist-title { font-weight:bold; } .hist-spacer { flex:1; } .hist-count { color:#b7a98c; font-size:13px; }
+.hist-preview { background:#3a5a8a; color:#fff; border:none; border-radius:5px; padding:6px 12px; cursor:pointer; }
+.hist-audio { display:flex; align-items:center; gap:8px; padding:10px 16px; background:#241d15; border-bottom:1px solid #4a3c28; font-size:13px; }
+.hist-audio-pick, .hist-img-pick { background:#33291c; color:#e8dcc0; border:1px solid #5a4830; border-radius:4px; padding:3px 10px; cursor:pointer; font-size:12px; }
+.hist-audio-name { background:#1d1812; border:1px solid #4a3c28; border-radius:4px; padding:3px 8px; }
+.hist-audio-x, .op-up, .op-down, .op-del { cursor:pointer; color:#c9a; user-select:none; }
+.op-del, .hist-audio-x { color:#e06a6a; }
+.hist-audio-hint { margin-left:auto; color:#8a7e6a; font-size:11px; }
+.hist-slides { padding:12px 16px; display:flex; flex-direction:column; gap:10px; }
+.hist-slide { display:flex; gap:12px; border:1px solid #4a3c28; border-radius:6px; padding:10px; }
+.hist-thumb { width:96px; flex:0 0 96px; }
+.hist-thumb img { width:96px; height:64px; object-fit:cover; border-radius:4px; display:block; }
+.hist-noimg { display:flex; width:96px; height:64px; align-items:center; justify-content:center; border:1px dashed #5a4830; border-radius:4px; color:#8a7e6a; font-size:11px; text-align:center; }
+.hist-imgname { font-size:11px; color:#8a7e6a; text-align:center; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.hist-fields { flex:1; display:flex; flex-direction:column; gap:8px; }
+.hist-row1 { display:flex; align-items:center; gap:8px; }
+.hist-fit { display:inline-flex; border:1px solid #5a4830; border-radius:4px; overflow:hidden; font-size:12px; }
+.fit-opt { padding:3px 10px; cursor:pointer; color:#b7a98c; }
+.fit-opt.on { background:#3a5a8a; color:#fff; }
+.hist-text { width:100%; min-height:46px; resize:vertical; background:#15110c; color:#e8dcc0; border:1px solid #4a3c28; border-radius:4px; font-size:13px; }
+.hist-ops { display:flex; flex-direction:column; gap:6px; }
+.hist-add { margin:0 16px 12px; background:#33291c; color:#e8dcc0; border:1px solid #5a4830; border-radius:4px; padding:6px 12px; cursor:pointer; }
+.hist-foot { display:flex; align-items:center; gap:10px; padding:12px 16px; border-top:1px solid #4a3c28; }
+.hist-note { flex:1; color:#8a7e6a; font-size:12px; } .hist-note code { color:#d9b061; }
+.hist-close { background:#33291c; color:#e8dcc0; border:1px solid #5a4830; border-radius:4px; padding:6px 14px; cursor:pointer; }
