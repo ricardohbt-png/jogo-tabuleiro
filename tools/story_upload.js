@@ -6,29 +6,27 @@
   const IMG = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
   const AUD = [".mp3", ".ogg", ".wav", ".m4a"];
   const OK_EXT = IMG.concat(AUD);
-  const MAX = 25 * 1024 * 1024;
+  const MAX = 25 * 1024 * 1024;   // limite por arquivo; abaixo do max_size do servidor (34MB) de propósito
 
   let ws = null;
+  let connecting = null;       // Promise da conexão em andamento (evita corrida entre uploads)
   let nextId = 1;
   const pending = new Map();   // upload_id -> {resolve, reject}
 
   function serverUrl() { return "ws://localhost:8765"; }
 
   function connect() {
-    return new Promise((resolve, reject) => {
-      if (ws && ws.readyState === WebSocket.OPEN) { resolve(ws); return; }
-      if (ws && ws.readyState === WebSocket.CONNECTING) {
-        ws.addEventListener("open", () => resolve(ws), { once: true });
-        ws.addEventListener("error",
-          () => reject(new Error("não foi possível enviar — o servidor está rodando?")),
-          { once: true });
-        return;
-      }
-      ws = new WebSocket(serverUrl());
-      ws.onopen = () => resolve(ws);
-      ws.onerror = () =>
+    if (ws && ws.readyState === WebSocket.OPEN) return Promise.resolve(ws);
+    if (connecting) return connecting;
+    connecting = new Promise((resolve, reject) => {
+      const sock = new WebSocket(serverUrl());
+      ws = sock;
+      sock.onopen = () => { connecting = null; resolve(sock); };
+      sock.onerror = () => {
+        connecting = null;
         reject(new Error("não foi possível enviar — o servidor está rodando?"));
-      ws.onmessage = (ev) => {
+      };
+      sock.onmessage = (ev) => {
         let m;
         try { m = JSON.parse(ev.data); } catch (e) { return; }
         if (m.type !== "upload_result") return;
@@ -38,12 +36,14 @@
         if (m.ok) p.resolve(m.name);
         else p.reject(new Error(m.error || "falha no upload"));
       };
-      ws.onclose = () => {
+      sock.onclose = () => {
+        connecting = null;
         for (const p of pending.values()) p.reject(new Error("conexão fechada"));
         pending.clear();
-        ws = null;
+        if (ws === sock) ws = null;
       };
     });
+    return connecting;
   }
 
   function extOf(name) {
