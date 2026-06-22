@@ -18,6 +18,7 @@ import random
 import string
 import sys
 import time
+import urllib.parse
 from copy import deepcopy
 from websockets.http11 import Response
 from websockets.datastructures import Headers
@@ -12701,14 +12702,18 @@ def _serve_static(request):
     """Resolve o caminho pedido pelo navegador para um arquivo do cliente.
     Protege contra path traversal e só expõe o necessário para jogar."""
     raw = request.path.split("?", 1)[0].split("#", 1)[0]   # tira cache-buster ?v=
+    raw = urllib.parse.unquote(raw)        # %20→espaço etc. (nomes de mídia com espaços)
     rel = raw.lstrip("/") or "index.html"
     full = os.path.normpath(os.path.join(BASE_DIR, rel))
     # Mantém dentro de BASE_DIR (bloqueia ../ e caminhos absolutos)
     if full != BASE_DIR and not full.startswith(BASE_DIR + os.sep):
         return _http(403, "Forbidden", "403 Forbidden")
-    # Allow-list: arquivo solto liberado OU dentro de um dir estático permitido
-    top = rel.replace("\\", "/").split("/", 1)[0]
-    if rel not in _STATIC_FILES and top not in _STATIC_ROOTS:
+    # Allow-list a partir do caminho JÁ RESOLVIDO (não do bruto): um ../ codificado
+    # pode escapar de assets/ para a raiz sem sair de BASE_DIR — recomputar de `full`
+    # impede servir server.py via /assets/%2e%2e%2fserver.py.
+    rel_norm = os.path.relpath(full, BASE_DIR).replace("\\", "/")
+    top = rel_norm.split("/", 1)[0]
+    if rel_norm not in _STATIC_FILES and top not in _STATIC_ROOTS:
         return _http(404, "Not Found", "404 Not Found")
     if not os.path.isfile(full):
         return _http(404, "Not Found", "404 Not Found")
