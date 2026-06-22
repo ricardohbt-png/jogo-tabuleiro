@@ -12318,6 +12318,7 @@ function renderMap3D(state){
     state.players.map(p => [p.id, p.pos, p.alive, p.color, p.class_id,
       (p.animados||[]).map(a => [a.id, a.pos, a.vida_atual, a.tipo])]),
     state.monsters.map(m => [m.type, m.pos, m.hp, m.image]),
+    state.prisoner ? [state.prisoner.pos, state.prisoner.alive, state.prisoner.freed, state.prisoner.image] : null,
     state.corpses || [],
     (state.armadilhas||[]).map(a => [a.id, a.pos, a.ativada, a.so_luccas, a.icone]),
     state.rooms.map(r => [r.cx, r.cy, r.role, r.cleared]),
@@ -12376,6 +12377,18 @@ function renderMap3D(state){
         f.userData.pid = p.id;          // permite getPeaoMesh(pid) p/ animação
         return f;
       }, px, py);
+  }
+
+  // Prisioneiro (Fase 3): peão com imagem editável; só quando visível/explorado.
+  const _pris3D = state.prisoner;
+  if(_pris3D && _pris3D.alive){
+    const [prx,pry] = _pris3D.pos;
+    if(visionSet.has(`${prx},${pry}`) || exploredSet.has(`${prx},${pry}`)){
+      obterFig('prisoner',
+        JSON.stringify([_pris3D.freed, _pris3D.image]),
+        () => build3DPrisoner(g3.T, _pris3D),
+        prx, pry);
+    }
   }
 
   // Monsters — only visible within player's current vision radius
@@ -12742,6 +12755,24 @@ function _makeCharacterPawn(T, grp, classId, clr, Y0) {
   const cacheKey = classId || 'generic';
   _makeBillboardSprite(T, grp, `assets/pawns/${cacheKey}/frente.png`,
                        '__spr_' + cacheKey, Y0);
+}
+
+// Peão 3D do prisioneiro: base + billboard com a imagem editável (fallback: só a base).
+function build3DPrisoner(T, pris){
+  const TH = 0.22;
+  const Y0 = TH + 0.064;
+  const grp = new T.Group();
+  const baseCor = pris.freed ? 0x2e90c0 : 0x8a6d3b;
+  const baseGeo = new T.CylinderGeometry(0.34, 0.38, 0.12, 24);
+  const baseMat = new T.MeshStandardMaterial({ color: baseCor, roughness: 0.8 });
+  const base = new T.Mesh(baseGeo, baseMat);
+  base.position.y = 0.06;
+  grp.add(base);
+  if(pris.image){
+    _makeBillboardSprite(T, grp, `assets/pawns/prisioneiros/${pris.image}`,
+      `_pris_${pris.image}`, Y0);
+  }
+  return grp;
 }
 
 // ── Billboard 2D voltado para a câmera (THREE.Sprite) ────────────────────────
