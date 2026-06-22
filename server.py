@@ -12231,7 +12231,11 @@ class GameRoom:
             if m["hp"] <= 0:
                 continue
             if max(abs(m["pos"][0] - pr["pos"][0]), abs(m["pos"][1] - pr["pos"][1])) <= 1:
-                dano = random.randint(2, 5)
+                hit, _roll, _total, _crit = d20_attack(m.get("atk_bonus", 0), pr.get("ac", PRIS_AC))
+                if not hit:
+                    await self.gm_say("🛡️ O prisioneiro esquiva de um monstro!")
+                    continue
+                dano = roll_dice(m.get("damage", "1d4"))
                 pr["hp"] -= dano
                 await self.gm_say(f"⚔️ Um monstro fere o prisioneiro ({dano})!")
                 if pr["hp"] <= 0:

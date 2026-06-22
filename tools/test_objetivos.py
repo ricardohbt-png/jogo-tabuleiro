@@ -120,9 +120,7 @@ async def test_prisioneiro():
     check("rescue cumprido perto da saída",
           r._objetivo_cumprido(r.objectives["primary"]) is True)
 
-    # morte do prisioneiro → falha, sem encerrar.
-    # Chama _processar_prisioneiro_turno direto (gm_phase moveria o monstro antes),
-    # e neutraliza o passo de seguir p/ o prisioneiro não sair de perto do monstro.
+    # morte do prisioneiro → falha, sem encerrar. Força o ataque a ACERTAR (d20=20).
     r2 = setup_authored()
     r2.dungeon_def["objectives"] = {"primary": {"type": "rescue_prisoner"}, "secondary": []}
     await r2.enter_dungeon("p1")
@@ -130,14 +128,32 @@ async def test_prisioneiro():
     vit = {"c": False}
     async def fe(victory, story=None): vit["c"] = True
     r2.end_game = fe
-    r2._step_towards = lambda ent, dest: None       # isola: sem mover o prisioneiro
-    m = next(iter(r2.monsters.values()))
-    m["hp"] = 10; m["pos"] = [r2.prisoner["pos"][0] + 1, r2.prisoner["pos"][1]]   # adjacente
-    await r2._processar_prisioneiro_turno()
+    orig_attack = server.d20_attack
+    server.d20_attack = lambda atk, ac: (True, 20, 20 + atk, True)   # sempre acerta
+    try:
+        m = next(iter(r2.monsters.values()))
+        m["hp"] = 10; m["pos"] = [r2.prisoner["pos"][0] + 1, r2.prisoner["pos"][1]]   # adjacente
+        await r2._processar_prisioneiro_turno()
+    finally:
+        server.d20_attack = orig_attack
     check("prisioneiro morto marca rescue_failed", r2.rescue_failed is True)
     check("morte do prisioneiro NÃO encerra a partida", vit["c"] is False)
     check("status do resgate = failed",
           r2._objetivo_status(r2.objectives["primary"]) == "failed")
+
+    # CA 10 protege: ataque que ERRA (d20=1) não tira HP.
+    r3 = setup_authored()
+    r3.dungeon_def["objectives"] = {"primary": {"type": "rescue_prisoner"}, "secondary": []}
+    await r3.enter_dungeon("p1")
+    r3.prisoner["freed"] = True; r3.prisoner["hp"] = 5
+    server.d20_attack = lambda atk, ac: (False, 1, 1 + atk, False)   # sempre erra
+    try:
+        m3 = next(iter(r3.monsters.values()))
+        m3["hp"] = 10; m3["pos"] = [r3.prisoner["pos"][0] + 1, r3.prisoner["pos"][1]]
+        await r3._processar_prisioneiro_turno()
+    finally:
+        server.d20_attack = orig_attack
+    check("CA 10 protege: erro não tira HP", r3.prisoner["hp"] == 5)
 
 async def test_bonus_secundario():
     print("\n[4] secundário cumprido concede bônus de XP/ouro")
