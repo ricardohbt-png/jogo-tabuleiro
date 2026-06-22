@@ -61,15 +61,16 @@ O sistema de prisioneiro já existe (Fase 3 do editor de masmorras). Estado atua
 
 - `handle_libertar_prisioneiro`: ao libertar, gravar
   `self.prisoner["rescuer_pid"] = pid`.
-- Novo `_mover_prisioneiro_seguindo()`:
+- Novo `_mover_prisioneiro_seguindo(ended_pid)`, chamado no fim de **cada** turno
+  de herói (hook no fluxo de `end_turn`/avanço de turno), com o pid que encerrou:
   - Sai se não houver prisioneiro liberto/vivo.
   - Se `rescuer_pid` aponta para herói morto/ausente, reatribui ao herói vivo
-    mais próximo (segue um único alvo; sem caminho duplicado).
-  - Dá até `PRIS_MOVE` (6) passos via `_step_towards` em direção à posição do
-    resgatador, **parando ao ficar adjacente** (Chebyshev ≤ 1) ou quando não há
-    progresso.
-- Chamada no fim do turno **do resgatador** (hook no fluxo de `end_turn`/avanço
-  de turno): só dispara quando o pid que encerrou o turno é o `rescuer_pid`.
+    mais próximo (segue um único alvo; sem caminho duplicado). Fazer essa
+    verificação **antes** de comparar com `ended_pid`, para que a morte do
+    resgatador não trave o prisioneiro.
+  - Só **move** se `ended_pid == rescuer_pid`. Aí dá até `PRIS_MOVE` (6) passos
+    via `_step_towards` em direção à posição do resgatador, **parando ao ficar
+    adjacente** (Chebyshev ≤ 1) ou quando não há progresso.
 - Remover a parte de **movimento** de `_processar_prisioneiro_turno`.
 
 ### 3. Ameaça — CA 10 (fase inimiga)
