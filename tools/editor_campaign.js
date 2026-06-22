@@ -276,6 +276,42 @@
     renderCampaign();
   }
 
+  // Pré-visualização autossuficiente (o editor não carrega game.js): replica o
+  // layout A usando blobs em memória quando disponíveis, senão o caminho salvo.
+  function previewStory(st) {
+    const slides = (st.slides || []).filter(s => (s.text && s.text.trim()) || s.image);
+    if (!slides.length) { alert("Adicione ao menos um slide com texto ou imagem."); return; }
+    let idx = 0, muted = false, audioEl = null;
+    const ov = document.createElement("div"); ov.className = "spv-overlay";
+    ov.innerHTML =
+      `<div class="spv-img"></div><div class="spv-scrim"></div>
+       <button class="spv-mute">🔊</button>
+       <div class="spv-box"><div class="spv-text"></div>
+         <div class="spv-nav"><button class="spv-prev">‹ Voltar</button>
+           <div class="spv-dots"></div>
+           <button class="spv-next">Continuar →</button></div></div>`;
+    function stop() { if (audioEl) { try { audioEl.pause(); } catch (e) {} audioEl = null; } }
+    function paint() {
+      const s = slides[idx] || {};
+      const img = ov.querySelector(".spv-img");
+      const src = s._url || s.image;
+      if (src) { img.style.backgroundImage = `url("${src}")`; img.style.backgroundSize = s.fit === "contain" ? "contain" : "cover"; }
+      else { img.style.backgroundImage = "none"; }
+      const t = ov.querySelector(".spv-text"); t.textContent = s.text || ""; t.style.display = s.text ? "block" : "none";
+      const dots = ov.querySelector(".spv-dots"); dots.innerHTML = "";
+      slides.forEach((_, i) => { const d = document.createElement("span"); d.className = "spv-dot" + (i === idx ? " on" : ""); dots.appendChild(d); });
+      ov.querySelector(".spv-prev").style.visibility = idx > 0 ? "visible" : "hidden";
+      ov.querySelector(".spv-next").textContent = idx < slides.length - 1 ? "Continuar →" : "Fechar";
+      ov.querySelector(".spv-mute").textContent = muted ? "🔇" : "🔊";
+    }
+    ov.querySelector(".spv-prev").onclick = () => { if (idx > 0) { idx--; paint(); } };
+    ov.querySelector(".spv-next").onclick = () => { if (idx < slides.length - 1) { idx++; paint(); } else { stop(); ov.remove(); } };
+    ov.querySelector(".spv-mute").onclick = () => { muted = !muted; if (audioEl) audioEl.muted = muted; paint(); };
+    const asrc = st._audioUrl || st.audio;
+    if (asrc) { audioEl = new Audio(asrc); audioEl.loop = true; audioEl.volume = 0.6; audioEl.play().catch(() => {}); }
+    document.body.appendChild(ov); paint();
+  }
+
   window.EDITOR_CAMPAIGN = { C, renderCampaign, dunByFile, validarCampanhaEditor, saveCampaign, loadCampaign, drawMiniMap,
-                             previewStory: function () { alert("preview na próxima task"); } };
+                             previewStory };
 })();
