@@ -99,6 +99,15 @@
     return m.name;
   }
 
+  async function uploadPrisoner(file) {
+    if (IMG.indexOf(extOf(file.name)) < 0)
+      throw new Error("envie uma imagem (png/jpg/webp/gif)");
+    if (file.size > MAX) throw new Error("arquivo grande demais");
+    const data = await toBase64(file);
+    const m = await request("upload_prisoner", { name: file.name, data: data });
+    return m.name;
+  }
+
   // Grava a masmorra em dungeons/. Resolve com { file, entry } (entry = item do
   // catálogo window.EDITOR_DUNGEONS, para injeção ao vivo na aba de campanha).
   function saveDungeon(defn) {
@@ -113,5 +122,6 @@
   }
 
   window.STORY_UPLOAD = { upload: upload };
+  window.PRISONER_UPLOAD = { upload: uploadPrisoner };
   window.EDITOR_SAVE = { saveDungeon: saveDungeon, saveCampaign: saveCampaign };
 })();
