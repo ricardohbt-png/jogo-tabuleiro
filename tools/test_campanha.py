@@ -216,6 +216,26 @@ async def test_historia_audio():
     check("abertura junta os 2 slides",
           [s["text"] for s in pay["story"]["slides"]] == ["ic", "if"])
 
+def test_validacao_story():
+    print("\n[13] validação de história (string|objeto)")
+    base = {"schema_version": 1, "id": "c", "name": "C"}
+    ok = lambda d: server.validar_campanha(d)[0]
+    check("intro string ok", ok(dict(base, intro="oi", dungeons=["test_camp_a.json"])) is True)
+    d = dict(base, dungeons=[{"file": "test_camp_a.json",
+        "intro": {"slides": [{"text": "a", "image": "assets/story/x.png", "fit": "cover"}],
+                  "audio": "assets/story/m.mp3"}}])
+    check("objeto slides ok", ok(d) is True)
+    d = dict(base, dungeons=[{"file": "test_camp_a.json", "intro": {"slides": [{}]}}])
+    check("slide vazio recusa", ok(d) is False)
+    d = dict(base, dungeons=[{"file": "test_camp_a.json",
+        "intro": {"slides": [{"text": "a", "fit": "zoom"}]}}])
+    check("fit inválido recusa", ok(d) is False)
+    d = dict(base, intro={"slides": "x"}, dungeons=["test_camp_a.json"])
+    check("slides não-lista recusa", ok(d) is False)
+    d = dict(base, intro={"slides": [{"text": "a"}], "audio": 5}, dungeons=["test_camp_a.json"])
+    check("audio não-string recusa", ok(d) is False)
+
+
 def test_story_norm():
     print("\n[11] _story_norm / _story_beat")
     # string vira 1 slide de texto
@@ -255,6 +275,7 @@ async def test_roundtrip_editor_campanha():
 
 async def main():
     test_validacao()
+    test_validacao_story()
     await test_selecao()
     await test_entrada_fase0()
     await test_avanco_e_vitoria()

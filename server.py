@@ -1906,6 +1906,31 @@ def _story_beat(key, parts):
     return {"key": key, "slides": slides, "audio": audio}
 
 
+def _validar_story(val, rotulo):
+    """(ok, msg) — aceita string (legado) ou objeto {'slides':[...], 'audio'?}."""
+    if isinstance(val, str):
+        return True, "ok"
+    if not isinstance(val, dict):
+        return False, f"{rotulo}: deve ser texto ou objeto de história."
+    slides = val.get("slides")
+    if not isinstance(slides, list):
+        return False, f"{rotulo}: 'slides' deve ser uma lista."
+    for j, s in enumerate(slides):
+        if not isinstance(s, dict):
+            return False, f"{rotulo}: slide {j+1} deve ser um objeto."
+        if "text" in s and not isinstance(s["text"], str):
+            return False, f"{rotulo}: slide {j+1} 'text' deve ser texto."
+        if "image" in s and not isinstance(s["image"], str):
+            return False, f"{rotulo}: slide {j+1} 'image' deve ser texto."
+        if "fit" in s and s["fit"] not in ("cover", "contain"):
+            return False, f"{rotulo}: slide {j+1} 'fit' deve ser 'cover' ou 'contain'."
+        if not (s.get("text") or s.get("image")):
+            return False, f"{rotulo}: slide {j+1} precisa de texto ou imagem."
+    if "audio" in val and not isinstance(val["audio"], str):
+        return False, f"{rotulo}: 'audio' deve ser texto."
+    return True, "ok"
+
+
 def validar_campanha(defn):
     """Valida um dict de campanha. Retorna (ok: bool, msg: str). Cada fase deve
     existir em dungeons/ e passar em validar_dungeon."""
@@ -1917,16 +1942,20 @@ def validar_campanha(defn):
     if not (isinstance(dungeons, list) and len(dungeons) >= 1):
         return False, "campanha precisa de ao menos uma masmorra em 'dungeons'."
     for k in ("intro", "outro"):
-        if k in defn and not isinstance(defn[k], str):
-            return False, f"campanha: '{k}' deve ser texto."
+        if k in defn:
+            ok, msg = _validar_story(defn[k], f"campanha '{k}'")
+            if not ok:
+                return False, msg
     for i, item in enumerate(dungeons):
         file = _fase_file(item)
         if not isinstance(file, str) or not file:
             return False, f"fase {i+1}: precisa de um 'file' (string)."
         if isinstance(item, dict):
             for k in ("intro", "outro"):
-                if k in item and not isinstance(item[k], str):
-                    return False, f"fase {i+1}: '{k}' deve ser texto."
+                if k in item:
+                    ok, msg = _validar_story(item[k], f"fase {i+1} '{k}'")
+                    if not ok:
+                        return False, msg
         d = carregar_dungeon(file)
         if d is None:
             return False, f"fase {i+1}: masmorra '{file}' não encontrada."
