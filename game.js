@@ -968,25 +968,103 @@ function destroyCity3D(){
 }
 
 // ── Fase 4b (história): overlay de história da campanha ───────────────────────
-// Mostra o beat pendente (GS.pendingStory) sobre o tabuleiro/cidade; não bloqueia
-// o jogo. "Continuar" marca o beat como visto (de-dup por key em gameState.js).
+// Slideshow de história (layout A): imagem de fundo + texto sobreposto + áudio
+// em loop. Cada cliente navega seus próprios slides; "Continuar" no último marca
+// o beat como visto (de-dup por key em gameState.js).
+let _storyIdx = 0;
+let _storyMuted = false;
+let _storyAudioEl = null;
+
+function _storyAudioStop() {
+  if (_storyAudioEl) { try { _storyAudioEl.pause(); } catch (e) {} _storyAudioEl.src = ''; _storyAudioEl = null; }
+}
+
+function _storyPaintMute() {
+  const ov = document.getElementById('story-overlay');
+  if (ov) ov.querySelector('#story-mute').textContent = _storyMuted ? '🔇' : '🔊';
+}
+
+function _storyPaint() {
+  const beat = GS.pendingStory && GS.pendingStory();
+  const ov = document.getElementById('story-overlay');
+  if (!beat || !ov) return;
+  const slide = beat.slides[_storyIdx] || {};
+  const img = ov.querySelector('#story-img');
+  if (slide.image) {
+    img.style.backgroundImage = 'url("' + slide.image + '")';
+    img.style.backgroundSize = (slide.fit === 'contain') ? 'contain' : 'cover';
+  } else {
+    img.style.backgroundImage = 'none';
+  }
+  const txtEl = ov.querySelector('#story-text');
+  txtEl.textContent = slide.text || '';
+  txtEl.style.display = slide.text ? 'block' : 'none';
+  const dots = ov.querySelector('#story-dots');
+  dots.innerHTML = '';
+  beat.slides.forEach((_, i) => {
+    const d = document.createElement('span');
+    d.className = 'story-dot' + (i === _storyIdx ? ' on' : '');
+    dots.appendChild(d);
+  });
+  ov.querySelector('#story-prev').style.visibility = _storyIdx > 0 ? 'visible' : 'hidden';
+  ov.querySelector('#story-continue').textContent =
+    (_storyIdx < beat.slides.length - 1) ? 'Continuar →' : 'Concluir';
+  _storyPaintMute();
+}
+
 function renderStory() {
   const beat = GS.pendingStory && GS.pendingStory();
   let ov = document.getElementById('story-overlay');
-  if (!beat) { if (ov) ov.style.display = 'none'; return; }
+  if (!beat || !beat.slides || !beat.slides.length) {
+    if (ov) ov.style.display = 'none';
+    _storyAudioStop();
+    return;
+  }
   if (!ov) {
     ov = document.createElement('div'); ov.id = 'story-overlay';
-    ov.innerHTML = '<div id="story-box"><div id="story-text"></div>'
-      + '<button id="story-continue">Continuar</button></div>';
+    ov.innerHTML =
+      '<div id="story-img"></div>'
+      + '<div id="story-scrim"></div>'
+      + '<button id="story-mute" title="Som">🔊</button>'
+      + '<div id="story-box">'
+      +   '<div id="story-text"></div>'
+      +   '<div id="story-nav">'
+      +     '<button id="story-prev">‹ Voltar</button>'
+      +     '<div id="story-dots"></div>'
+      +     '<button id="story-continue">Continuar →</button>'
+      +   '</div>'
+      + '</div>';
     document.body.appendChild(ov);
+    ov.querySelector('#story-prev').onclick = () => {
+      if (_storyIdx > 0) { _storyIdx--; _storyPaint(); }
+    };
     ov.querySelector('#story-continue').onclick = () => {
       const b = GS.pendingStory && GS.pendingStory();
-      if (b) GS.marcarStoryVista(b.key);
-      ov.style.display = 'none';
+      if (!b) return;
+      if (_storyIdx < b.slides.length - 1) { _storyIdx++; _storyPaint(); }
+      else { GS.marcarStoryVista(b.key); _storyAudioStop(); ov.style.display = 'none'; }
+    };
+    ov.querySelector('#story-mute').onclick = () => {
+      _storyMuted = !_storyMuted;
+      if (_storyAudioEl) _storyAudioEl.muted = _storyMuted;
+      _storyPaintMute();
     };
   }
-  ov.querySelector('#story-text').textContent = beat.text;
-  ov.style.display = 'flex';
+  // (Re)inicializa só quando o beat muda — evita resetar o índice/áudio a cada
+  // broadcast de game_state (que reenvia a história enquanto ela está aberta).
+  if (ov.dataset.key !== beat.key) {
+    ov.dataset.key = beat.key;
+    _storyIdx = 0;
+    beat.slides.forEach(s => { if (s.image) { const im = new Image(); im.src = s.image; } });
+    _storyAudioStop();
+    if (beat.audio) {
+      _storyAudioEl = new Audio(beat.audio);
+      _storyAudioEl.loop = true; _storyAudioEl.muted = _storyMuted; _storyAudioEl.volume = 0.6;
+      _storyAudioEl.play().catch(() => {});
+    }
+  }
+  ov.style.display = 'block';
+  _storyPaint();
 }
 
 function handleCityState(msg){
