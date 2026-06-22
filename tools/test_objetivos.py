@@ -112,6 +112,7 @@ async def test_prisioneiro():
     r.turn_index = r.player_order.index("p1")
     await r.handle_libertar_prisioneiro("p1")
     check("prisioneiro libertado por herói adjacente", r.prisoner["freed"] is True)
+    check("libertar registra o resgatador", r.prisoner["rescuer_pid"] == "p1")
     check("libertar gastou a ação", p1["action_done"] is True)
 
     # escolta: prisioneiro junto da saída → rescue cumprido

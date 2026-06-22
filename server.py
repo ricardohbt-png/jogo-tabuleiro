@@ -12212,6 +12212,7 @@ class GameRoom:
         if max(abs(px - bx), abs(py - by)) > 1:
             await self.send_to(pid, {"type": "error", "msg": "Aproxime-se do prisioneiro."}); return
         self.prisoner["freed"] = True
+        self.prisoner["rescuer_pid"] = pid
         p["action_done"] = True
         await self.gm_say(f"🔓 **{p['name']}** libertou o prisioneiro!")
         await self.push_state()
