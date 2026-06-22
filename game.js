@@ -4323,6 +4323,20 @@ function _getMonster2DImg(imageName){
   return img;
 }
 
+// Miniatura 2D do prisioneiro (imagem editável). url completa em assets/pawns/prisioneiros/.
+const _pris2DImg = {};
+function _getPrisoner2DImg(imageName){
+  if(!imageName) return null;
+  let img = _pris2DImg[imageName];
+  if(img === undefined){
+    img = new Image();
+    img.onload = () => { if(!mode3D && window.GS && GS.gameState){ try{ renderMap(GS.gameState); }catch(_){} } };
+    img.src = _assetURL(`assets/pawns/prisioneiros/${imageName}`);
+    _pris2DImg[imageName] = img;
+  }
+  return img;
+}
+
 // Escala da miniatura por PORTE (categoria de tamanho da ficha do monstro, vinda
 // do servidor em m.porte). Guia a geração do sprite no 2D e no 3D. Ausente/
 // desconhecido = "medio" (1.0). Ex.: kobolds são "pequeno".
@@ -4907,9 +4921,15 @@ function renderMap(state){
       const cx=pxr*CELL+CELL/2, cy=pyr*CELL+CELL/2;
       // Base do peão: tom amarelado se aliado/seguindo, acinzentado se cativo.
       drawMiniBase(ctx, cx, cy, _pris.freed?'#2e90c0':'#8a6d3b', false);
-      ctx.font=`${Math.round(CELL*0.46)}px serif`;
-      ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText(_pris.freed?'🧍':'⛓️', cx, cy-3);
+      const _pImg = _getPrisoner2DImg(_pris.image);
+      if(_pImg && _pImg.complete && _pImg.naturalWidth){
+        const sz = Math.round(CELL*0.78);
+        ctx.drawImage(_pImg, cx - sz/2, cy - sz/2 - 3, sz, sz);
+      } else {
+        ctx.font=`${Math.round(CELL*0.46)}px serif`;
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(_pris.freed?'🧍':'⛓️', cx, cy-3);
+      }
       // Barra de HP simples
       const max=_pris.max_hp||_pris.hp||1;
       const pct=Math.max(0,Math.min(1,_pris.hp/max));
