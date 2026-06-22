@@ -42,6 +42,11 @@ async def test_instanciar():
     check("prisioneiro instanciado (cativo, vivo)",
           r.prisoner and r.prisoner["pos"] == [14, 1]
           and r.prisoner["freed"] is False and r.prisoner["alive"] is True)
+    check("prisioneiro com 7 HP", r.prisoner["hp"] == 7 and r.prisoner["max_hp"] == 7)
+    check("prisioneiro com CA 10", r.prisoner["ac"] == 10)
+    check("prisioneiro com movimento 6", r.prisoner["move"] == 6)
+    check("prisioneiro com campo image", "image" in r.prisoner)
+    check("prisioneiro com rescuer_pid None", r.prisoner["rescuer_pid"] is None)
     check("bau-chave marcado",
           any(c.get("key_objective") for c in r.chests.values()))
     check("rescue_failed comeca False", r.rescue_failed is False)

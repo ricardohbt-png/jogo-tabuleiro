@@ -30,7 +30,9 @@ FLOOR = 1
 DOOR  = 2
 MAP_W = 30
 MAP_H = 30
-PRIS_HP = 12        # vida do prisioneiro (Fase 3)
+PRIS_HP = 7         # vida do prisioneiro (Fase 3)
+PRIS_AC = 10        # classe de armadura do prisioneiro
+PRIS_MOVE = 6       # quadrados que o prisioneiro liberto anda por turno (segue o resgatador)
 OBJ_BONUS_XP = 50   # XP concedido por objetivo secundário cumprido (Fase 3)
 OBJ_BONUS_OURO = 25 # ouro concedido por objetivo secundário cumprido (Fase 3)
 
@@ -1765,6 +1767,8 @@ def validar_dungeon(defn):
             return False, f"prisioneiro em casa inválida: {pr.get('pos')}."
         if pr.get("room_id") not in room_ids:
             return False, f"prisioneiro com room_id inexistente: {pr.get('room_id')!r}."
+        if pr.get("image") is not None and not isinstance(pr.get("image"), str):
+            return False, "prisoner.image deve ser uma string (caminho do arquivo)."
 
     ex = defn.get("exit")
     if ex is not None and not in_grid([ex.get("x"), ex.get("y")]):
@@ -3652,7 +3656,9 @@ class GameRoom:
         self._objetivo_concluido = False
         pr = defn.get("prisoner")
         self.prisoner = ({"pos": [pr["pos"][0], pr["pos"][1]], "room_id": pr.get("room_id"),
-                          "hp": PRIS_HP, "max_hp": PRIS_HP, "freed": False, "alive": True}
+                          "hp": PRIS_HP, "max_hp": PRIS_HP, "ac": PRIS_AC, "move": PRIS_MOVE,
+                          "image": pr.get("image"), "rescuer_pid": None,
+                          "freed": False, "alive": True}
                          if pr else None)
         # Marca o baú-chave por posição (o dict de baú vivo não carrega a flag).
         keyposes = {tuple(c["pos"]) for c in defn.get("chests", []) if c.get("key_objective")}
