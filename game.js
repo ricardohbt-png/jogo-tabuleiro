@@ -8638,6 +8638,20 @@ function renderMyPanel(state){
     ? ` <span style="color:#4db8ff;font-weight:bold;font-size:.78em;vertical-align:top;" title="Canção Heroica de Henrique">🎵+${_cb[key]}</span>`
     : '';
 
+  // ── Bônus do Guerreiro da Luz (Richard): indicador AMARELO ao lado do atributo ──
+  // O servidor aplica os bônus na resolução (CA/ataque/dano), não no valor exibido —
+  // por isso mostramos como tag aditiva, ao lado da tag azul da Canção quando ambos
+  // estiverem ativos. Naturalmente só aparece no paladino (campos só existem nele).
+  const _glAtivo = !!me.guerreiro_luz_ativo;
+  const _glBonus = me.guerreiro_luz_bonus || {};
+  const _richardTag = (key) => (_glAtivo && _glBonus[key])
+    ? ` <span style="color:#f8d040;font-weight:bold;font-size:.78em;vertical-align:top;" title="Guerreiro da Luz de Richard">💡+${_glBonus[key]}</span>`
+    : '';
+  // Golpe Sagrado: +1d8 sagrado por ataque (buff sustentado) — tag amarela no dano.
+  const _golpeSagradoTag = () => me.golpe_sagrado_ativo
+    ? ` <span style="color:#f8d040;font-weight:bold;font-size:.78em;vertical-align:top;" title="Golpe Sagrado de Richard (+1d8 sagrado por ataque)">⚔️+1d8</span>`
+    : '';
+
   // ── Attribute values (explicit Number conversion — never undefined) ──
   const vStr  = (me.str_  != null) ? Number(me.str_)  : 10;
   const vDex  = (me.dex   != null) ? Number(me.dex)   : 10;
@@ -8707,11 +8721,11 @@ function renderMyPanel(state){
     <div class="combat-row">
       <div class="combat-chip" style="border-color:var(--gold);background:#181200;">
         <span class="cl">CA</span>
-        <b style="color:#f8d040;font-size:1.1rem;">${vAc}${_cancaoTag('bonus_ca')}</b>
+        <b style="color:#f8d040;font-size:1.1rem;">${vAc}${_cancaoTag('bonus_ca')}${_richardTag('ca')}</b>
       </div>
       <div class="combat-chip">
         <span class="cl">Ataque</span>
-        <b style="color:#e8e0c8;">${vAtk >= 0 ? '+' : ''}${vAtk}${_cancaoTag('bonus_acerto')}</b>
+        <b style="color:#e8e0c8;">${vAtk >= 0 ? '+' : ''}${vAtk}${_cancaoTag('bonus_acerto')}${_richardTag('ataque')}</b>
       </div>
       <div class="combat-chip">
         <span class="cl">Mov</span>
@@ -8768,6 +8782,11 @@ function renderMyPanel(state){
         <span class="sv-sub">bônus</span>
       </div>
     </div>
+    ${me.regeneracao_ativa ? `
+    <div style="margin-top:4px; padding:5px 8px; background:rgba(248,208,64,0.12); border:1px solid #f8d04066; border-radius:3px; display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Cinzel',serif;">
+      <span style="color:#f8d040; font-weight:bold; font-size:.95rem;">✨ +1 HP</span>
+      <span style="color:#e8d8a0; font-size:.6rem; letter-spacing:1px;">REGENERAÇÃO DIVINA: +1 HP por turno</span>
+    </div>` : ''}
 
     ${(() => {
       const f = me.fome ?? 100, s = me.sede ?? 100;
@@ -8796,7 +8815,7 @@ function renderMyPanel(state){
         <div class="gear-slot-label" style="align-self:flex-start;margin-bottom:2px;">⚔ ARMA</div>
         <canvas id="weapon-canvas" width="60" height="92" style="background:#0e0c1a;border-radius:3px;width:60px;height:92px;"></canvas>
         <div class="equip-name" style="color:#e8e0c8;font-weight:bold;">${weapon ? weapon.name : 'Desarmado'}</div>
-        <div class="equip-stat" style="color:#f8c840;font-size:.72rem;">${dmgFmt}${_cancaoTag('bonus_dano')}</div>
+        <div class="equip-stat" style="color:#f8c840;font-size:.72rem;">${dmgFmt}${_cancaoTag('bonus_dano')}${_richardTag('dano')}${_golpeSagradoTag()}</div>
       </div>
       <div class="equip-item" style="position:relative;">
         <div class="gear-slot-label" style="align-self:flex-start;margin-bottom:2px;">🛡 ARMADURA</div>
@@ -8916,7 +8935,7 @@ function renderMyPanel(state){
     <button class="btn-action" ${canAttack ? '' : 'disabled'} onclick="beginAttack()"
       style="display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 6px;">
       <span>${_wRange!=null?'🏹':'⚔'} Atacar</span>
-      <small style="color:var(--gold);font-size:.7rem;font-weight:bold;">${atkDieStr}${atkModStr} dano${_cancaoTag('bonus_dano')}</small>
+      <small style="color:var(--gold);font-size:.7rem;font-weight:bold;">${atkDieStr}${atkModStr} dano${_cancaoTag('bonus_dano')}${_richardTag('dano')}${_golpeSagradoTag()}</small>
       <small style="color:var(--text2);font-size:.62rem;">${_rangeHint}</small>
       ${_adjHint}
     </button>
