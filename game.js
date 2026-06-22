@@ -8820,6 +8820,12 @@ function renderMyPanel(state){
     // Sincroniza animados autoritativos (me.animados) no registro do Pedro p/ a aba Magias.
     const heroiPedro = HERO_DATA.pedro;
     if (Array.isArray(me.animados)) heroiPedro.animados = me.animados;
+    // Enxerta os campos autoritativos do sistema de magias (como os animados acima):
+    // sem isto, renderMagiasFichaEmJogo recebe o objeto estático sem magias conhecidas
+    // e nenhuma carta aparece (bug do Pedro vs Lewis, que passa `me` direto).
+    heroiPedro.magias_conhecidas = me.magias_conhecidas || [];
+    heroiPedro.slots_cooldown    = me.slots_cooldown || {primeiro:[], segundo:[], terceiro:[]};
+    heroiPedro.level             = me.level;
     const corpo = (aba === 'magias') ? renderAbaMagiasPedro(heroiPedro) : statsHTML;
     $('my-stats').innerHTML = abasHTML + corpo;
   } else if (me.class_id === 'cleric') {
