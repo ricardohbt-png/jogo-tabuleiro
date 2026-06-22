@@ -231,7 +231,30 @@
       document.getElementById("p-role").onchange = e => { ref.role = e.target.value; render(); };
       document.getElementById("p-locked").onchange = e => { ref.locked = e.target.checked; render(); };
     } else if (k === "prisoner") {
-      panel.innerHTML = `<b>🧍 Prisioneiro</b><div style="color:#8a7a5a;font-size:11px">sala ${ref.room_id ?? "—"}</div>`;
+      const img = ref.image
+        ? `<img src="../assets/pawns/prisioneiros/${ref.image}" style="max-width:64px;max-height:64px;display:block;margin:6px 0;border:1px solid #5a4a2a">`
+        : `<div style="color:#8a7a5a;font-size:11px;margin:6px 0">sem imagem — usará o emoji padrão</div>`;
+      panel.innerHTML = `<b>🧍 Prisioneiro</b>
+        <div style="color:#8a7a5a;font-size:11px">sala ${ref.room_id ?? "—"}</div>
+        ${img}
+        <label>miniatura</label>
+        <input type="file" id="p-pris-img" accept="image/png,image/jpeg,image/webp,image/gif">
+        <div id="p-pris-status" style="color:#8a7a5a;font-size:11px;margin-top:4px"></div>`;
+      const inp = document.getElementById("p-pris-img");
+      const st = document.getElementById("p-pris-status");
+      inp.onchange = async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        st.textContent = "enviando…";
+        try {
+          const name = await window.PRISONER_UPLOAD.upload(file);
+          ref.image = name;
+          st.textContent = "enviada ✓";
+          renderPanel(); render();
+        } catch (err) {
+          st.textContent = "falha: " + err.message;
+        }
+      };
     } else {
       panel.innerHTML = `<b>${k}</b>`;
     }
@@ -288,7 +311,7 @@
       monsters: S.monsters.map(m => ({ type: m.type, pos: m.pos.slice(), room_id: m.room_id, boss: !!m.boss, target: !!m.target })),
       chests: S.chests.map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: c.items.map(i => ({ id: i.id })), key_objective: !!c.key_objective })),
       traps: S.traps.map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; return o; }),
-      prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id } : null,
+      prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}) } : null,
       objectives: S.objectives,
     };
   }
