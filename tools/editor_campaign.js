@@ -120,6 +120,7 @@
              🎵 áudio (loop)
              <button class="hist-audio-pick">${audioName ? "trocar" : "escolher"}</button>
              ${audioName ? `<span class="hist-audio-name">${audioName}</span><span class="hist-audio-x">✕</span>` : ""}
+             ${st._audioStatus ? `<span class="hist-up-status">${st._audioStatus}</span>` : ""}
              <span class="hist-audio-hint">toca em loop durante a história</span>
            </div>
            <div class="hist-slides"></div>
@@ -137,7 +138,11 @@
       ov.querySelector(".hist-audio-pick").onclick = () => pickFile("audio/*", f => {
         if (st._audioUrl) URL.revokeObjectURL(st._audioUrl);
         st._audioUrl = URL.createObjectURL(f); st._audioFile = f.name;
-        st.audio = "assets/story/" + f.name; render();
+        st.audio = "assets/story/" + f.name;
+        st._audioStatus = "enviando…"; render();
+        window.STORY_UPLOAD.upload(f)
+          .then(() => { st._audioStatus = "✓ enviado"; render(); })
+          .catch(err => { st._audioStatus = "✗ " + err.message; render(); });
       });
       const ax = ov.querySelector(".hist-audio-x");
       if (ax) ax.onclick = () => {
@@ -151,7 +156,8 @@
       card.innerHTML =
         `<div class="hist-thumb">${(s._url || s.image)
             ? `<img src="${s._url || s.image}" alt="">` : `<span class="hist-noimg">sem imagem</span>`}
-           <div class="hist-imgname">${imgName || ""}</div></div>
+           <div class="hist-imgname">${imgName || ""}</div>
+           ${s._upStatus ? `<div class="hist-up-status">${s._upStatus}</div>` : ""}</div>
          <div class="hist-fields">
            <div class="hist-row1">
              <button class="hist-img-pick">${imgName ? "trocar imagem" : "escolher imagem"}</button>
@@ -168,7 +174,11 @@
       card.querySelector(".hist-img-pick").onclick = () => pickFile("image/*", f => {
         if (s._url) URL.revokeObjectURL(s._url);
         s._url = URL.createObjectURL(f); s._imgFile = f.name;
-        s.image = "assets/story/" + f.name; render();
+        s.image = "assets/story/" + f.name;
+        s._upStatus = "enviando…"; render();
+        window.STORY_UPLOAD.upload(f)
+          .then(() => { s._upStatus = "✓ enviado"; render(); })
+          .catch(err => { s._upStatus = "✗ " + err.message; render(); });
       });
       card.querySelectorAll(".fit-opt").forEach(el => el.onclick = () => { s.fit = el.dataset.fit; render(); });
       card.querySelector(".hist-text").oninput = e => { s.text = e.target.value; };
