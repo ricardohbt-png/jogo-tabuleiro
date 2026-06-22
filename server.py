@@ -9519,6 +9519,10 @@ class GameRoom:
             return
         self.animados_phase_pid = None
 
+        # Fase 3: o prisioneiro liberto segue o herói que o resgatou, logo após o
+        # turno dele (até PRIS_MOVE quadrados, parando adjacente).
+        await self._mover_prisioneiro_seguindo(pid)
+
         p["moves_left"]        = p["spd"]
         p["action_done"]       = False
         p["bonus_action_used"] = False
@@ -12218,17 +12222,11 @@ class GameRoom:
         await self.push_state()
 
     async def _processar_prisioneiro_turno(self):
-        """Prisioneiro libertado: 1 passo em direção ao herói vivo mais próximo;
-        depois, cada monstro adjacente o fere. Morte → rescue_failed (não encerra)."""
+        """Prisioneiro libertado: cada monstro adjacente o fere. O MOVIMENTO fica
+        em _mover_prisioneiro_seguindo (após o turno do resgatador)."""
         pr = self.prisoner
         if not pr or not pr.get("freed") or not pr.get("alive"):
             return
-        herois = [p for p in self.players.values() if self._ativo(p)]
-        if herois:
-            alvo = min(herois, key=lambda p: max(abs(p["pos"][0] - pr["pos"][0]),
-                                                 abs(p["pos"][1] - pr["pos"][1])))
-            self._step_towards(pr, alvo["pos"])
-        # Dano de monstros adjacentes (caminho dedicado, simples e isolado).
         for m in self.monsters.values():
             if m["hp"] <= 0:
                 continue
@@ -12241,6 +12239,34 @@ class GameRoom:
                     self.rescue_failed = True
                     await self.gm_say("☠️ O prisioneiro foi morto! O resgate falhou.")
                     break
+
+    async def _mover_prisioneiro_seguindo(self, ended_pid):
+        """Após o turno do resgatador, o prisioneiro liberto anda até PRIS_MOVE
+        quadrados em direção a ele, parando ao ficar adjacente. Se o resgatador
+        morreu, reatribui ao herói vivo mais próximo (verifica ANTES de comparar
+        com ended_pid, para não travar)."""
+        pr = self.prisoner
+        if not pr or not pr.get("freed") or not pr.get("alive"):
+            return
+        herois = [p for p in self.players.values() if self._ativo(p)]
+        if not herois:
+            return
+        resc = self.players.get(pr.get("rescuer_pid"))
+        if not resc or not self._ativo(resc):
+            novo = min(herois, key=lambda p: max(abs(p["pos"][0] - pr["pos"][0]),
+                                                 abs(p["pos"][1] - pr["pos"][1])))
+            pr["rescuer_pid"] = novo["id"]
+            resc = novo
+        if ended_pid != pr["rescuer_pid"]:
+            return
+        for _ in range(PRIS_MOVE):
+            if max(abs(pr["pos"][0] - resc["pos"][0]),
+                   abs(pr["pos"][1] - resc["pos"][1])) <= 1:
+                break          # já adjacente — não pisa na casa do herói
+            antes = list(pr["pos"])
+            self._step_towards(pr, resc["pos"])
+            if pr["pos"] == antes:
+                break          # sem progresso (bloqueado)
 
     def _step_towards(self, ent, dest):
         """Move `ent` (dict com 'pos') 1 casa em direção a `dest` por casa livre

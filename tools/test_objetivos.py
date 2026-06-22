@@ -168,12 +168,47 @@ async def test_serializacao():
     check("game_state traz prisoner", capturado.get("prisoner") is not None)
     check("game_state traz objectives", capturado.get("objectives") is not None)
 
+async def test_prisioneiro_segue():
+    print("\n[6] prisioneiro liberto segue o resgatador (até 6, para adjacente)")
+    r = setup_authored()
+    r.dungeon_def["objectives"] = {"primary": {"type": "rescue_prisoner"}, "secondary": []}
+    await r.enter_dungeon("p1")
+    # Tira os monstros do caminho para isolar o movimento.
+    for m in r.monsters.values(): m["hp"] = 0
+    pr = r.prisoner
+    pr["freed"] = True; pr["alive"] = True; pr["rescuer_pid"] = "p1"
+    # Garante que a linha y=8, x∈[2..10] é chão, e posiciona prisioneiro e resgatador.
+    for x in range(2, 11):
+        r.tiles[8][x] = server.FLOOR
+    pr["pos"] = [2, 8]
+    r.players["p1"]["pos"] = [10, 8]
+    r.players["p1"]["alive"] = True
+    await r._mover_prisioneiro_seguindo("p1")
+    dist = max(abs(pr["pos"][0] - 10), abs(pr["pos"][1] - 8))
+    check("prisioneiro andou até 6 (de 8 → fica a 2 de distância)", dist == 2)
+
+    # Se o pid que encerrou NÃO é o resgatador, não anda.
+    pr["pos"] = [2, 8]
+    await r._mover_prisioneiro_seguindo("p2")
+    check("não anda no turno de quem não é o resgatador", pr["pos"] == [2, 8])
+
+    # Resgatador morto → reatribui ao herói vivo mais próximo e anda no turno dele.
+    r.players["p1"]["alive"] = False
+    r.players["p2"]["alive"] = True
+    r.players["p2"]["pos"] = [10, 8]
+    pr["pos"] = [2, 8]
+    await r._mover_prisioneiro_seguindo("p2")
+    check("resgatador morto → segue novo herói", r.prisoner["rescuer_pid"] == "p2"
+          and max(abs(pr["pos"][0] - 10), abs(pr["pos"][1] - 8)) == 2)
+
+
 async def main():
     await test_instanciar()
     await test_conclusao_simples()
     await test_prisioneiro()
     await test_bonus_secundario()
     await test_serializacao()
+    await test_prisioneiro_segue()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 
