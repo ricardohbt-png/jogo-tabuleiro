@@ -12673,6 +12673,8 @@ def _save_story_upload(name, data_b64):
     base = os.path.basename(name or "")        # bloqueia ../ e caminhos absolutos
     if not base:
         return False, "nome inválido"
+    if "\x00" in base:
+        return False, "nome inválido"
     ext = os.path.splitext(base)[1].lower()
     if ext not in _STORY_OK_EXT:
         return False, "extensão não permitida"

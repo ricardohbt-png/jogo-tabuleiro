@@ -61,6 +61,10 @@ def run():
     finally:
         server.STORY_UPLOAD_MAX = saved_max
 
+    # nome com byte nulo
+    ok8, err8 = server._save_story_upload("foto\x00.png", _b64(b"x"))
+    check((not ok8) and err8 == "nome inválido", "rejeita nome com byte nulo")
+
     # limpeza
     for n in ("teste_upload.png", "hack.png"):
         fp = os.path.join(story_dir, n)
