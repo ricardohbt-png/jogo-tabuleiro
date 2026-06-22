@@ -131,6 +131,14 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 > abaixo). `animar_result` traz
 > `resultado`/`rolagem`/`d10_dezena`/`d10_unidade`/`chance`/`zona_hostil`/`animados`.
 
+> **História (slides):** os campos `intro`/`outro` da campanha e de cada fase
+> aceitam string (legado) **ou** objeto `{slides:[{text?,image?,fit}], audio?}`.
+> O servidor normaliza (`_story_norm`/`_story_beat`) e envia o beat
+> `{key, slides, audio}` em `game_state.campaign.story` (abertura),
+> `city_state.campaign.story` (encerramento) e `game_over.story` (final).
+> Imagens/áudios ficam em `assets/story/` (servida) e são referenciados por
+> caminho. Cliente: `renderStory` (slideshow layout A + áudio em loop).
+
 > **Portas/salas trancadas:** `game_state.tiles` usa `DOOR=2` nas entradas das
 > salas; cada `room` traz `locked` (bool) e `doors` (`[[x,y],…]`). Porta fechada
 > bloqueia movimento, LOS e a revelação de névoa do interior. `game_state.revealed`
