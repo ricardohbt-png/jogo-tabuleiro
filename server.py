@@ -12372,6 +12372,17 @@ async def handler(ws):
             t = msg.get("type")
 
             try:
+                if t == "upload_story":
+                    ok, res = _save_story_upload(msg.get("name"), msg.get("data"))
+                    payload = {"type": "upload_result",
+                               "upload_id": msg.get("upload_id"), "ok": ok}
+                    if ok:
+                        payload["name"] = res
+                    else:
+                        payload["error"] = res
+                    await ws.send(json.dumps(payload))
+                    continue
+
                 if t == "create_room":
                     name = (msg.get("name") or "Herói")[:20]
                     code = make_code()
@@ -12630,6 +12641,9 @@ for _ext, _ct in (
     (".woff2", "font/woff2"), (".woff", "font/woff"), (".ttf", "font/ttf"),
     (".svg", "image/svg+xml"), (".png", "image/png"), (".jpg", "image/jpeg"),
     (".webp", "image/webp"), (".ico", "image/x-icon"),
+    (".jpeg", "image/jpeg"), (".gif", "image/gif"),
+    (".mp3", "audio/mpeg"), (".ogg", "audio/ogg"),
+    (".wav", "audio/wav"), (".m4a", "audio/mp4"),
 ):
     mimetypes.add_type(_ct, _ext)
 
@@ -12741,7 +12755,8 @@ async def main():
     # process_request serve os arquivos do cliente na mesma porta → um único
     # túnel https cobre página + wss, sem mixed content nem digitar endereço.
     async with websockets.serve(handler, "0.0.0.0", 8765,
-                                process_request=process_request):
+                                process_request=process_request,
+                                max_size=34 * 1024 * 1024):
         await asyncio.Future()
 
 if __name__ == "__main__":
