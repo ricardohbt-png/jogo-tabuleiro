@@ -2950,6 +2950,14 @@ function _objRow(o){
   const label = _OBJ_LABELS[(o && o.type)] || (o && o.type) || 'Objetivo';
   return `<div class="obj-row"><span class="obj-ic">${_objIcon(o && o.status)}</span><span class="obj-lbl">${label}</span></div>`;
 }
+// Confirmação antes de encerrar a missão (itens largados podem ficar para trás).
+function encerrarMissaoConfirm(){
+  if (confirm('Pegue os itens de recompensa antes de encerrar. Tem certeza que quer terminar a missão?')) {
+    GS.encerrarMissao();
+  }
+}
+window.encerrarMissaoConfirm = encerrarMissaoConfirm;
+
 function renderObjectivesHUD(msg){
   const hud = $('objectives-hud');
   const btn = $('btn-libertar');
@@ -2971,6 +2979,9 @@ function renderObjectivesHUD(msg){
   if(secs.length){
     html += '<div class="obj-sec-label">Secundários</div>';
     for(const s of secs) html += _objRow(s);
+  }
+  if (GS.missionCompletePending) {
+    html += `<button class="btn-encerrar-missao" onclick="encerrarMissaoConfirm()">🏁 Encerrar missão</button>`;
   }
   hud.innerHTML = html;
   hud.style.display = '';
