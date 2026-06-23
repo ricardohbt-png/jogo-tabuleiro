@@ -312,6 +312,38 @@ async def test_prisioneiro_armadilha_progressiva():
     check("dano progressivo atinge o prisioneiro", pr["hp"] < hp_imediato)
 
 
+async def test_reward_dividido():
+    print("\n[11] recompensa de objetivo: XP e ouro divididos entre os vivos + itens acumulados")
+    r = setup_authored()
+    r.dungeon_def["objectives"] = {
+        "primary": {"type": "kill_all",
+                    "xp": 100, "reward": {"gold": 80, "items": [{"id": "magic_sword"}]}},
+        "secondary": []}
+    await r.enter_dungeon("p1")
+    p1, p2 = r.players["p1"], r.players["p2"]
+    xp1, ouro1 = p1["xp"], p1["gold"]
+    loot = []
+    obj = r.objectives["primary"]
+    await r._conceder_objetivo_reward(obj, is_primary=True, loot_acc=loot)
+    # 2 herois vivos: 100 XP -> 50 cada; 80 ouro -> 40 cada
+    check("XP dividido entre os vivos (50)", p1["xp"] == xp1 + 50 and p2["xp"] == p2["xp"])
+    check("ouro dividido entre os vivos (40)", p1["gold"] == ouro1 + 40)
+    check("item de recompensa acumulado", any(i.get("id") == "magic_sword" for i in loot))
+
+
+async def test_reward_default_secundario():
+    print("\n[12] secundario sem xp/reward usa o padrao (50/25)")
+    r = setup_authored()
+    r.dungeon_def["objectives"] = {"primary": {"type": "kill_all"},
+                                   "secondary": [{"type": "open_key_chest"}]}
+    await r.enter_dungeon("p1")
+    p1 = r.players["p1"]; xp0, ouro0 = p1["xp"], p1["gold"]
+    loot = []
+    await r._conceder_objetivo_reward(r.objectives["secondary"][0], is_primary=False, loot_acc=loot)
+    check("XP padrao do secundario (max(1,50//2)=25)", p1["xp"] == xp0 + 25)
+    check("ouro padrao do secundario (25//2=12)", p1["gold"] == ouro0 + 12)
+
+
 async def main():
     await test_instanciar()
     await test_conclusao_simples()
@@ -322,6 +354,8 @@ async def main():
     await test_upload_prisioneiro()
     await test_prisioneiro_armadilha()
     await test_prisioneiro_armadilha_progressiva()
+    await test_reward_dividido()
+    await test_reward_default_secundario()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

@@ -12169,6 +12169,51 @@ class GameRoom:
         nome = (obj or {}).get("type", "objetivo")
         await self.gm_say(f"⭐ Objetivo secundário **{nome}** cumprido! +{OBJ_BONUS_XP} XP, +{OBJ_BONUS_OURO} ouro ao grupo.")
 
+    def _resolve_reward_item(self, iid):
+        """Resolve um id de item de recompensa numa definicao completa (deepcopy)."""
+        idef = (
+            next((i for i in CHEST_ITEMS    if i["id"] == iid), None) or
+            next((i for i in SHOP_WEAPONS   if i["id"] == iid), None) or
+            next((i for i in SHOP_MERCHANT  if i["id"] == iid), None)
+        )
+        return deepcopy(idef) if idef else None
+
+    async def _conceder_objetivo_reward(self, obj, is_primary, loot_acc):
+        """Concede a recompensa de um objetivo cumprido.
+
+        XP e ouro vem como TOTAL no objetivo e sao divididos igualmente entre os
+        herois vivos; os itens de recompensa sao resolvidos e acrescentados a
+        `loot_acc` (uma tarefa posterior os larga num unico bau). Compatibilidade:
+        objetivos sem `xp`/`reward` usam os padroes antigos (secundario=50/25,
+        principal=0)."""
+        obj = obj or {}
+        xp_default   = 0 if is_primary else OBJ_BONUS_XP
+        ouro_default = 0 if is_primary else OBJ_BONUS_OURO
+        xp_total   = int(obj.get("xp", xp_default))
+        reward     = obj.get("reward") or {}
+        ouro_total = int(reward.get("gold", ouro_default))
+        vivos = [p for p in self.players.values() if p.get("alive")]
+        n = max(1, len(vivos))
+        xp_share   = max(1, xp_total // n) if xp_total > 0 else 0
+        ouro_share = ouro_total // n if ouro_total > 0 else 0
+        for p in vivos:
+            if xp_share:   p["xp"]   += xp_share
+            if ouro_share: p["gold"] += ouro_share
+        itens_nomes = []
+        for it in (reward.get("items") or []):
+            idef = self._resolve_reward_item(it.get("id"))
+            if idef:
+                loot_acc.append(idef)
+                itens_nomes.append(idef.get("name", idef.get("id", "item")))
+        nome = obj.get("type", "objetivo")
+        partes = [f"⭐ Objetivo **{nome}** cumprido!"]
+        if xp_share:   partes.append(f"+{xp_share} XP")
+        if ouro_share: partes.append(f"+{ouro_share} ouro")
+        partes_txt = " ".join(partes[:1]) + (" " + ", ".join(partes[1:]) + " a cada heroi." if len(partes) > 1 else "")
+        if itens_nomes:
+            partes_txt += " 🎁 Recompensa largada: " + ", ".join(itens_nomes) + "."
+        await self.gm_say(partes_txt)
+
     def _objetivo_cumprido(self, obj):
         """True se o objetivo `obj` está cumprido no estado atual (só autorado)."""
         t = (obj or {}).get("type")
