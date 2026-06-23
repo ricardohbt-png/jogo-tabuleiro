@@ -12199,6 +12199,7 @@ class GameRoom:
         for p in vivos:
             if xp_share:   p["xp"]   += xp_share
             if ouro_share: p["gold"] += ouro_share
+            await self._check_level_up(p)
         itens_nomes = []
         for it in (reward.get("items") or []):
             idef = self._resolve_reward_item(it.get("id"))
