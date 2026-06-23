@@ -87,6 +87,7 @@ async def test_avanco_e_vitoria():
     # cumpre o objetivo da fase 0 (kill_all)
     for m in r.monsters.values(): m["hp"] = 0
     await r._check_objectives()
+    await r.handle_encerrar_missao("p1")
     check("após concluir fase 0 → cidade", r.phase == "city")
     check("avançou para a fase 1", r.campaign_phase == 1)
     check("dungeon_generated zerado p/ carregar a próxima", r.dungeon_generated is False)
@@ -105,6 +106,7 @@ async def test_avanco_e_vitoria():
     r.end_game = fake_end
     for m in r.monsters.values(): m["hp"] = 0
     await r._check_objectives()
+    await r.handle_encerrar_missao("p1")
     check("última fase concluída → end_game(victory)", vit["c"] and vit["v"] is True)
 
 async def test_retomar_mesma_fase():
@@ -182,6 +184,7 @@ async def test_historia_runtime():
     check("key de abertura", pay["story"]["key"] == "intro:0")
     for m in r.monsters.values(): m["hp"] = 0
     await r._check_objectives()
+    await r.handle_encerrar_missao("p1")
     check("foi para a cidade", r.phase == "city")
     payc = r._campaign_payload()
     check("encerramento da fase 0 na cidade",
@@ -195,6 +198,7 @@ async def test_historia_runtime():
     r.end_game = fake_end
     for m in r.monsters.values(): m["hp"] = 0
     await r._check_objectives()
+    await r.handle_encerrar_missao("p1")
     check("última fase → end_game com story final",
           cap.get("victory") is True and cap.get("story")
           and textos(cap["story"]) == ["FECHA-2", "FINAL-CAMP"])

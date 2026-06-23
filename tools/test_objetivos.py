@@ -52,7 +52,7 @@ async def test_instanciar():
     check("rescue_failed comeca False", r.rescue_failed is False)
 
 async def test_conclusao_simples():
-    print("\n[2] conclusão por objetivo dispara end_game(victory)")
+    print("\n[2] cumprir o principal NAO encerra: liga mission_complete_pending")
 
     async def cenario(primary_type, prep):
         r = setup_authored()
@@ -66,39 +66,32 @@ async def test_conclusao_simples():
         await r._check_objectives()
         return r, vit
 
-    # kill_all: mata todos
     async def mata_todos(r):
         for m in r.monsters.values(): m["hp"] = 0
     r, vit = await cenario("kill_all", mata_todos)
-    check("kill_all → vitória", vit["chamado"] and vit["victory"] is True)
+    check("kill_all -> missao pode ser encerrada", r.mission_complete_pending is True)
+    check("kill_all NAO encerra automaticamente", vit["chamado"] is False)
 
-    # kill_all não conclui com monstro vivo
     r2 = setup_authored(); r2.dungeon_def["objectives"] = {"primary": {"type": "kill_all"}, "secondary": []}
     await r2.enter_dungeon("p1")
-    vit2 = {"c": False}
-    async def fe2(victory, story=None): vit2["c"] = True
-    r2.end_game = fe2
     await r2._check_objectives()
-    check("kill_all não conclui com monstros vivos", vit2["c"] is False)
+    check("kill_all com monstros vivos nao libera encerramento", r2.mission_complete_pending is False)
 
-    # kill_target: mata só o alvo
     async def mata_alvo(r):
         for m in r.monsters.values():
             if m.get("authored_target"): m["hp"] = 0
     r, vit = await cenario("kill_target", mata_alvo)
-    check("kill_target (só o alvo morto) → vitória", vit["chamado"] is True)
+    check("kill_target -> missao pode ser encerrada", r.mission_complete_pending is True)
 
-    # reach_exit: herói na saída
     async def poe_na_saida(r):
         list(r.players.values())[0]["pos"] = list(r.exit_pos)
     r, vit = await cenario("reach_exit", poe_na_saida)
-    check("reach_exit (herói na saída) → vitória", vit["chamado"] is True)
+    check("reach_exit -> missao pode ser encerrada", r.mission_complete_pending is True)
 
-    # open_key_chest
     async def abre_chave(r):
         r.key_chest_opened = True
     r, vit = await cenario("open_key_chest", abre_chave)
-    check("open_key_chest → vitória", vit["chamado"] is True)
+    check("open_key_chest -> missao pode ser encerrada", r.mission_complete_pending is True)
 
 async def test_prisioneiro():
     print("\n[3] prisioneiro: libertar, seguir, escolta, morte")
@@ -156,20 +149,23 @@ async def test_prisioneiro():
     check("CA 10 protege: erro não tira HP", r3.prisoner["hp"] == 5)
 
 async def test_bonus_secundario():
-    print("\n[4] secundário cumprido concede bônus de XP/ouro")
+    print("\n[4] secundario cumprido concede bonus ao cumprir o principal (ainda sem encerrar)")
     r = setup_authored()
     r.dungeon_def["objectives"] = {"primary": {"type": "kill_all"},
                                    "secondary": [{"type": "open_key_chest"}]}
     await r.enter_dungeon("p1")
-    r.end_game = lambda victory=True, story=None: asyncio.sleep(0)  # não encerra de verdade
+    vit = {"c": False}
+    async def fe(victory=True, story=None): vit["c"] = True
+    r.end_game = fe
     p1 = r.players["p1"]
     xp0, ouro0 = p1["xp"], p1["gold"]
-    # cumpre principal (kill_all) e secundário (open_key_chest)
     for m in r.monsters.values(): m["hp"] = 0
     r.key_chest_opened = True
     await r._check_objectives()
-    check("XP do grupo subiu pelo secundário", p1["xp"] > xp0)
-    check("ouro do grupo subiu pelo secundário", p1["gold"] > ouro0)
+    check("XP do grupo subiu pelo secundario", p1["xp"] > xp0)
+    check("ouro do grupo subiu pelo secundario", p1["gold"] > ouro0)
+    check("nao encerrou automaticamente", vit["c"] is False)
+    check("mission_complete_pending ligado", r.mission_complete_pending is True)
 
 async def test_serializacao():
     print("\n[5] push_state expõe objectives/exit_pos/prisoner")
@@ -346,6 +342,27 @@ async def test_reward_default_secundario():
     check("ouro padrao do secundario (25//2=12)", p1["gold"] == ouro0 + 12)
 
 
+async def test_encerrar_missao():
+    print("\n[13] encerrar_missao faz a transicao e larga bau de recompensa")
+    r = setup_authored()
+    r.dungeon_def["objectives"] = {
+        "primary": {"type": "kill_all", "xp": 60, "reward": {"items": [{"id": "magic_sword"}]}},
+        "secondary": []}
+    await r.enter_dungeon("p1")
+    vit = {"c": False, "v": None}
+    async def fe(victory, story=None): vit["c"] = True; vit["v"] = victory
+    r.end_game = fe
+    n_chests0 = len(r.chests)
+    for m in r.monsters.values(): m["hp"] = 0
+    await r._check_objectives()
+    check("bau de recompensa largado", len(r.chests) == n_chests0 + 1)
+    check("bau contem o item de recompensa",
+          any(any(i.get("id") == "magic_sword" for i in c["items"]) for c in r.chests.values()))
+    check("ainda nao encerrou (espera o botao)", vit["c"] is False)
+    await r.handle_encerrar_missao("p1")
+    check("encerrar_missao chama end_game(victory)", vit["c"] is True and vit["v"] is True)
+
+
 async def main():
     await test_instanciar()
     await test_conclusao_simples()
@@ -358,6 +375,7 @@ async def main():
     await test_prisioneiro_armadilha_progressiva()
     await test_reward_dividido()
     await test_reward_default_secundario()
+    await test_encerrar_missao()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

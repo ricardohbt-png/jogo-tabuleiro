@@ -3040,6 +3040,7 @@ class GameRoom:
         self.prisoner = None
         self.rescue_failed = False
         self._objetivo_concluido = False
+        self.mission_complete_pending = False
         # Fase 4a — campanha.
         self.campaign = None         # dict carregado (modo "campaign")
         self.campaign_phase = 0      # índice da fase atual em campaign["dungeons"]
@@ -3654,6 +3655,7 @@ class GameRoom:
         self.objective_status = None
         self.rescue_failed = False
         self._objetivo_concluido = False
+        self.mission_complete_pending = False
         pr = defn.get("prisoner")
         self.prisoner = ({"pos": [pr["pos"][0], pr["pos"][1]], "room_id": pr.get("room_id"),
                           "hp": PRIS_HP, "max_hp": PRIS_HP, "ac": PRIS_AC, "move": PRIS_MOVE,
@@ -3714,7 +3716,7 @@ class GameRoom:
             self.explored = set()    # névoa volta ao início no mapa novo
             self.magic_reveal = {}
             self.exit_pos = None; self.objectives = None; self.objective_status = None
-            self.prisoner = None; self.rescue_failed = False; self._objetivo_concluido = False
+            self.prisoner = None; self.rescue_failed = False; self._objetivo_concluido = False; self.mission_complete_pending = False
             self.key_chest_opened = False
             if autorada:
                 self.load_authored_dungeon(self.dungeon_def)
@@ -12159,16 +12161,6 @@ class GameRoom:
 
     # ── Fase 3: avaliação de objetivos ──────────────────────────────────────
 
-    async def _conceder_bonus_secundario(self, obj):
-        """Concede XP+ouro ao grupo por um objetivo secundário cumprido."""
-        for p in self.players.values():
-            if p.get("alive"):
-                p["xp"] += OBJ_BONUS_XP
-                p["gold"] += OBJ_BONUS_OURO
-                await self._check_level_up(p)
-        nome = (obj or {}).get("type", "objetivo")
-        await self.gm_say(f"⭐ Objetivo secundário **{nome}** cumprido! +{OBJ_BONUS_XP} XP, +{OBJ_BONUS_OURO} ouro ao grupo.")
-
     def _resolve_reward_item(self, iid):
         """Resolve um id de item de recompensa numa definicao completa (deepcopy)."""
         idef = (
@@ -12258,26 +12250,40 @@ class GameRoom:
         if (self.phase == "playing" and not self._objetivo_concluido
                 and prim and self._objetivo_cumprido(prim)):
             self._objetivo_concluido = True
+            loot = []
+            await self._conceder_objetivo_reward(prim, is_primary=True, loot_acc=loot)
             for s in secs:
                 if self._objetivo_cumprido(s):
-                    await self._conceder_bonus_secundario(s)
-            if (self.mode == "campaign" and self.campaign
-                    and self.campaign_phase < len(self.campaign["dungeons"]) - 1):
-                # Encerramento da fase concluída (mostrado na cidade).
+                    await self._conceder_objetivo_reward(s, is_primary=False, loot_acc=loot)
+            if loot:
+                vivos = [p for p in self.players.values() if p.get("alive")]
+                pos = list(vivos[0]["pos"]) if vivos else list(self.exit_pos or self.stairs_pos or [0, 0])
+                self._spawn_chest(pos, 0, loot)
+            self.mission_complete_pending = True
+            await self.gm_say("🏁 Objetivo principal cumprido! Recolham a recompensa e cliquem em **Encerrar missão** quando estiverem prontos.")
+
+    async def handle_encerrar_missao(self, pid):
+        """Encerramento manual da fase apos o objetivo principal cumprido.
+        Faz a transicao que antes era automatica em _check_objectives."""
+        if self.phase != "playing" or not self.mission_complete_pending:
+            return
+        self.mission_complete_pending = False
+        if (self.mode == "campaign" and self.campaign
+                and self.campaign_phase < len(self.campaign["dungeons"]) - 1):
+            fase = _fase_obj(self.campaign["dungeons"][self.campaign_phase])
+            self._campaign_outro = _story_beat(f"outro:{self.campaign_phase}", [fase.get("outro")])
+            self.campaign_phase += 1
+            self.dungeon_generated = False
+            self._objetivo_concluido = False
+            await self.gm_say("🏆 Fase concluída! Retornem à cidade antes da próxima masmorra.")
+            await self._voltar_para_cidade()
+        else:
+            story = None
+            if self.mode == "campaign" and self.campaign:
                 fase = _fase_obj(self.campaign["dungeons"][self.campaign_phase])
-                self._campaign_outro = _story_beat(f"outro:{self.campaign_phase}", [fase.get("outro")])
-                self.campaign_phase += 1
-                self.dungeon_generated = False
-                self._objetivo_concluido = False
-                await self.gm_say("🏆 Fase concluída! Retornem à cidade antes da próxima masmorra.")
-                await self._voltar_para_cidade()
-            else:
-                story = None
-                if self.mode == "campaign" and self.campaign:
-                    fase = _fase_obj(self.campaign["dungeons"][self.campaign_phase])
-                    story = _story_beat(f"final:{self.campaign_phase}",
-                                        [fase.get("outro"), self.campaign.get("outro")])
-                await self.end_game(victory=True, story=story)
+                story = _story_beat(f"final:{self.campaign_phase}",
+                                    [fase.get("outro"), self.campaign.get("outro")])
+            await self.end_game(victory=True, story=story)
 
     async def handle_libertar_prisioneiro(self, pid):
         if not self._is_turn(pid):
@@ -12431,6 +12437,7 @@ class GameRoom:
             "stairs_pos": self.stairs_pos,
             "campaign": self._campaign_payload(),
             "objectives": self.objective_status,
+            "mission_complete_pending": self.mission_complete_pending,
             "exit_pos": self.exit_pos,
             "prisoner": self.prisoner,
             "current_turn": self.current_pid(),
@@ -12617,6 +12624,9 @@ async def handler(ws):
 
                 elif t == "libertar_prisioneiro":
                     if room: await room.handle_libertar_prisioneiro(pid)
+
+                elif t == "encerrar_missao":
+                    if room: await room.handle_encerrar_missao(pid)
 
                 elif t == "attack":
                     if room: await room.handle_attack(pid, msg.get("target_id"), msg.get("buffs"))
