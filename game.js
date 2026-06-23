@@ -4922,8 +4922,26 @@ function renderMap(state){
   const _pris = GS.prisoner;
   if(_pris && _pris.alive){
     const [pxr,pyr]=_pris.pos;
-    if(visionSet.has(`${pxr},${pyr}`) || exploredSet.has(`${pxr},${pyr}`)){
-      const cx=pxr*CELL+CELL/2, cy=pyr*CELL+CELL/2;
+    // Interpola a posição visual durante a animação de passo (igual aos minions):
+    // desliza casa a casa pelo caminho enquanto _mininoAnimState['prisoner'] existir.
+    let drawX = pxr, drawY = pyr;
+    const _pVis = _mininoAnimState.get('prisoner');
+    if(_pVis && _pVis.pathPts){
+      const segs = Math.max(1, _pVis.pathPts.length - 1);
+      const tAll = Math.min((performance.now() - _pVis.startTime) / _pVis.dur, 1);
+      const f  = tAll * segs;
+      const si = Math.min(Math.floor(f), segs - 1);
+      const st = easeInOut(f - si);
+      const [x0,y0] = _pVis.pathPts[si];
+      const [x1,y1] = _pVis.pathPts[si+1];
+      drawX = x0 + (x1 - x0) * st;
+      drawY = y0 + (y1 - y0) * st;
+    }
+    const _visPathP = _pVis && _pVis.pathPts
+      ? _pVis.pathPts.some(([px,py]) => visionSet.has(`${px},${py}`) || exploredSet.has(`${px},${py}`))
+      : false;
+    if(visionSet.has(`${pxr},${pyr}`) || exploredSet.has(`${pxr},${pyr}`) || _visPathP){
+      const cx=drawX*CELL+CELL/2, cy=drawY*CELL+CELL/2;
       // Anel de seleção quando o controlador o selecionou (janela pós-turno).
       if(_prisSel && _pris.freed && _pris.rescuer_pid===GS.myPid && state.animados_turn===GS.myPid){
         ctx.save();
@@ -4946,15 +4964,16 @@ function renderMap(state){
       const max=_pris.max_hp||_pris.hp||1;
       const pct=Math.max(0,Math.min(1,_pris.hp/max));
       const barH=Math.max(4,Math.round(CELL*0.08));
-      ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.fillRect(pxr*CELL+3,pyr*CELL+2,CELL-6,barH);
+      const bx=drawX*CELL, by=drawY*CELL;
+      ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.fillRect(bx+3,by+2,CELL-6,barH);
       ctx.fillStyle=pct>.5?'#27ae60':pct>.25?'#e67e22':'#e74c3c';
-      ctx.fillRect(pxr*CELL+3,pyr*CELL+2,(CELL-6)*pct,barH);
+      ctx.fillRect(bx+3,by+2,(CELL-6)*pct,barH);
       ctx.strokeStyle='rgba(0,0,0,0.55)'; ctx.lineWidth=0.6;
-      ctx.strokeRect(pxr*CELL+3,pyr*CELL+2,CELL-6,barH);
+      ctx.strokeRect(bx+3,by+2,CELL-6,barH);
       const fs=Math.round(CELL*0.125);
       ctx.fillStyle='rgba(255,210,120,0.95)'; ctx.font=`bold ${fs}px monospace`;
       ctx.textAlign='center'; ctx.textBaseline='top';
-      ctx.fillText('Prisioneiro', cx, pyr*CELL+barH+3);
+      ctx.fillText('Prisioneiro', cx, by+barH+3);
     }
   }
 
@@ -11756,6 +11775,12 @@ function getMonsterMesh(monId){
   return g3.entityGroup.children.find(c => c.userData && c.userData.monId === monId) || null;
 }
 
+// Mesh (Group) do prisioneiro no entityGroup 3D (taggeado por userData.prisoner).
+function getPrisonerMesh(){
+  if(!g3 || !g3.entityGroup) return null;
+  return g3.entityGroup.children.find(c => c.userData && c.userData.prisoner) || null;
+}
+
 // ── Deslize fiel passo-a-passo de inimigos / servos auto-comandados ──────────
 // O servidor emite `entity_step` (from→to, 1 casa) a cada STEP_ANIM_DELAY. O
 // cliente interpola por TEMPO a partir de um startTime fixo, acumulando os
@@ -11886,6 +11911,40 @@ function _animarEEnviarMoverCaminhoMinino(animado, passos){
 
   // Modo 2D — interpola contínuo ao longo do caminho.
   _startMininoAnimCaminho2D(animado.id, pts, onDone);
+}
+
+// Move o prisioneiro liberto ao longo de um CAMINHO — igual ao herói/minion:
+// 3D faz lift/glide/land por casa via _animarPasso (com o som de peão); o 2D
+// interpola contínuo. Os passos vão ao servidor já no início (ele valida/decrementa).
+function _animarEEnviarMoverPrisioneiroCaminho(pris, passos){
+  if(estadoMininoMov.emMovimento) return;
+  if(!pris || !passos || !passos.length) return;
+  estadoMininoMov.emMovimento = true;
+
+  const pts = [[pris.pos[0], pris.pos[1]]];
+  let cx = pris.pos[0], cy = pris.pos[1];
+  for(const [dx,dy] of passos){ cx+=dx; cy+=dy; pts.push([cx,cy]); }
+
+  for(const [dx,dy] of passos) GS.moverPrisioneiro(dx, dy);
+
+  const onDone = () => {
+    estadoMininoMov.emMovimento = false;
+    estadoMininoMov.peaoAtivo   = null;
+    if(GS.gameState){ if(mode3D && g3) renderMap3D(GS.gameState); else renderMap(GS.gameState); }
+  };
+
+  if(mode3D && g3){
+    const peao = getPrisonerMesh();
+    if(peao){
+      estadoMininoMov.peaoAtivo = peao;
+      _animarCaminhoPeao3D(peao, pts.slice(1), onDone);   // anima casa a casa (+ som)
+      return;
+    }
+    onDone();   // mesh fora da visão — passos já enviados
+    return;
+  }
+  // Modo 2D — interpola contínuo ao longo do caminho.
+  _startMininoAnimCaminho2D('prisoner', pts, onDone);
 }
 
 // Sequência 3D: anima o peão casa a casa pelo caminho (tiles absolutos).
@@ -12406,7 +12465,11 @@ function renderMap3D(state){
         && _pris3D.rescuer_pid === GS.myPid);
       obterFig('prisoner',
         JSON.stringify([_pris3D.freed, _pris3D.image, prisSelNow]),
-        () => build3DPrisoner(g3.T, _pris3D, prisSelNow),
+        () => {
+          const f = build3DPrisoner(g3.T, _pris3D, prisSelNow);
+          f.userData.prisoner = true;   // permite getPrisonerMesh() p/ animação
+          return f;
+        },
         prx, pry);
     }
   }
@@ -18274,7 +18337,7 @@ function handleTileClick(tx, ty){
       const expSetP = new Set(_st.explored.map(([x,y])=>`${x},${y}`));
       for(const [rx,ry] of (_st.revealed||[])) expSetP.add(`${rx},${ry}`);
       const passosP = GS.findPath(_st.tiles, expSetP, _prisC.pos[0], _prisC.pos[1], tx, ty, _prisC.moves_left||0);
-      if(passosP && passosP.length){ for(const [dx,dy] of passosP) GS.moverPrisioneiro(dx,dy); return; }
+      if(passosP && passosP.length){ _animarEEnviarMoverPrisioneiroCaminho(_prisC, passosP); return; }
       _prisSel=false; renderMap(_st); return;   // sem caminho/alcance → desseleciona
     }
     const meP  = _st.players.find(p=>p.id===GS.myPid && p.alive);
