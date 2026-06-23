@@ -1135,6 +1135,11 @@ const GS = (() => {
   // Sender: herói adjacente liberta o prisioneiro (ação principal no servidor).
   function libertarPrisioneiro() { send({ type: 'libertar_prisioneiro' }); }
 
+  // Há objetivo principal cumprido aguardando o encerramento manual da fase?
+  function missionCompletePending() { return !!(gameState && gameState.mission_complete_pending); }
+  // Sender: encerra a missão (servidor faz a transição cidade/vitória).
+  function encerrarMissao() { send({ type: 'encerrar_missao' }); }
+
   // ── Fase 4a (campanha): estado da campanha em curso + seleção no lobby ────────
   // Getter do payload {name, phase, total} servido no game_state/city_state (null
   // fora de campanha). lobbyCampaigns lista as campanhas disponíveis no lobby.
@@ -1356,6 +1361,7 @@ const GS = (() => {
     get exitPos()               { return getExitPos(); },
     get prisoner()              { return getPrisoner(); },
     get prisioneiroLibertavel() { return prisioneiroLibertavel(); },
+    get missionCompletePending() { return missionCompletePending(); },
     // Fase 4a: campanha em curso (property getter — acessado sem parênteses).
     get campaign()              { return getCampaign(); },
     get cityState()       { return cityState; },
@@ -1444,6 +1450,7 @@ const GS = (() => {
     pendingStory,          // Fase 4b: beat de história pendente (ou null)
     marcarStoryVista,      // Fase 4b: marca um beat como já exibido (de-dup por key)
     libertarPrisioneiro,   // Fase 3: sender (chamado com parênteses)
+    encerrarMissao,        // encerramento manual da missão (chamado com parênteses)
 
     // ── Habilidades armadas do warrior (toggle; custo cobrado na ação) ──
     isWarriorSkillSelected,
