@@ -196,20 +196,57 @@
   const panel = document.getElementById("panel");
   function opt(list, val, fmt) { return list.map(o => `<option value="${o.v}"${o.v === val ? " selected" : ""}>${fmt(o)}</option>`).join(""); }
 
+  function objDefaults(isPrimary) {
+    return { xp: isPrimary ? 0 : 50, reward: { gold: isPrimary ? 0 : 25, items: [] } };
+  }
+  function normalizeObjective(obj, isPrimary) {
+    const d = objDefaults(isPrimary);
+    if (typeof obj.xp !== "number") obj.xp = d.xp;
+    if (!obj.reward || typeof obj.reward !== "object") obj.reward = { gold: d.reward.gold, items: [] };
+    if (typeof obj.reward.gold !== "number") obj.reward.gold = d.reward.gold;
+    if (!Array.isArray(obj.reward.items)) obj.reward.items = [];
+    return obj;
+  }
+  // HTML dos campos de recompensa de um objetivo. `pfx` é um prefixo único de ids.
+  function rewardFieldsHTML(obj, pfx) {
+    return `<label>XP (total, dividido entre os vivos) <input id="${pfx}-xp" type="number" min="0" value="${obj.xp}"></label>
+      <label>ouro (total, dividido) <input id="${pfx}-gold" type="number" min="0" value="${obj.reward.gold}"></label>
+      <label>itens de recompensa</label>
+      <div id="${pfx}-items">${obj.reward.items.map((it, i) => `<div>${it.id} <button data-i="${i}" class="${pfx}-rm">×</button></div>`).join("")}</div>
+      <select id="${pfx}-add">${opt(CAT.items.map(it => ({ v: it.id, name: it.name })), "", o => o.v + " — " + o.name)}</select>
+      <button id="${pfx}-additem">+ item</button>`;
+  }
+  function wireRewardFields(obj, pfx) {
+    document.getElementById(`${pfx}-xp`).onchange = e => { obj.xp = Math.max(0, Number(e.target.value) | 0); };
+    document.getElementById(`${pfx}-gold`).onchange = e => { obj.reward.gold = Math.max(0, Number(e.target.value) | 0); };
+    document.getElementById(`${pfx}-additem`).onclick = () => { const id = document.getElementById(`${pfx}-add`).value; if (id) obj.reward.items.push({ id }); renderPanel(); };
+    panel.querySelectorAll(`.${pfx}-rm`).forEach(b => b.onclick = () => { obj.reward.items.splice(Number(b.dataset.i), 1); renderPanel(); });
+  }
+
   function renderPanel() {
     if (!S.sel) {
       const OBJ = ["kill_target", "kill_all", "reach_exit", "open_key_chest", "rescue_prisoner"];
       const o = S.objectives;
+      normalizeObjective(o.primary, true);
+      o.secondary.forEach(s => normalizeObjective(s, false));
       panel.innerHTML = `<b>🗺️ Masmorra</b>
         <label>objetivo principal</label>
         <select id="o-prim">${OBJ.map(t => `<option value="${t}"${o.primary.type === t ? " selected" : ""}>${t}</option>`).join("")}</select>
+        ${rewardFieldsHTML(o.primary, "o-prim-rw")}
+        <hr style="border-color:#3a3022;margin:10px 0">
         <label>objetivos secundários</label>
-        <div id="o-sec">${o.secondary.map((s, i) => `<div><select data-i="${i}" class="o-secsel">${OBJ.map(t => `<option value="${t}"${s.type === t ? " selected" : ""}>${t}</option>`).join("")}</select> <button data-i="${i}" class="o-rm">×</button></div>`).join("")}</div>
+        <div id="o-sec">${o.secondary.map((s, i) => `<div class="o-sec-item" style="border-top:1px solid #3a3022;padding-top:6px;margin-top:6px">
+          <select data-i="${i}" class="o-secsel">${OBJ.map(t => `<option value="${t}"${s.type === t ? " selected" : ""}>${t}</option>`).join("")}</select>
+          <button data-i="${i}" class="o-rm">× remover</button>
+          ${rewardFieldsHTML(s, "o-sec" + i + "-rw")}
+        </div>`).join("")}</div>
         <button id="o-add">+ secundário</button>`;
       document.getElementById("o-prim").onchange = e => { o.primary.type = e.target.value; };
-      document.getElementById("o-add").onclick = () => { o.secondary.push({ type: "rescue_prisoner" }); renderPanel(); };
+      wireRewardFields(o.primary, "o-prim-rw");
+      document.getElementById("o-add").onclick = () => { o.secondary.push({ type: "rescue_prisoner", ...objDefaults(false) }); renderPanel(); };
       panel.querySelectorAll(".o-secsel").forEach(sel => sel.onchange = e => { o.secondary[Number(e.target.dataset.i)].type = e.target.value; });
       panel.querySelectorAll(".o-rm").forEach(b => b.onclick = () => { o.secondary.splice(Number(b.dataset.i), 1); renderPanel(); });
+      o.secondary.forEach((s, i) => wireRewardFields(s, "o-sec" + i + "-rw"));
       return;
     }
     const k = S.sel.kind, ref = S.sel.ref;
@@ -331,6 +368,10 @@
   });
 
   function buildJSON() {
+    if (!S.objectives.primary) S.objectives.primary = { type: "kill_all" };
+    if (!Array.isArray(S.objectives.secondary)) S.objectives.secondary = [];
+    normalizeObjective(S.objectives.primary, true);
+    S.objectives.secondary.forEach(s => normalizeObjective(s, false));
     return {
       schema_version: 1, id: S.meta.id, name: S.meta.name,
       grid: { w: S.grid.w, h: S.grid.h },
@@ -342,7 +383,12 @@
       chests: S.chests.map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: c.items.map(i => ({ id: i.id })), key_objective: !!c.key_objective })),
       traps: S.traps.map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; return o; }),
       prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}) } : null,
-      objectives: S.objectives,
+      objectives: {
+        primary: { type: S.objectives.primary.type, xp: S.objectives.primary.xp | 0,
+                   reward: { gold: (S.objectives.primary.reward.gold | 0), items: S.objectives.primary.reward.items.map(i => ({ id: i.id })) } },
+        secondary: S.objectives.secondary.map(s => ({ type: s.type, xp: s.xp | 0,
+                   reward: { gold: (s.reward.gold | 0), items: s.reward.items.map(i => ({ id: i.id })) } })),
+      },
     };
   }
 
@@ -414,6 +460,10 @@
     S.chests = (obj.chests || []).map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: (c.items || []).map(i => ({ id: i.id })), key_objective: !!c.key_objective }));
     S.traps = (obj.traps || []).map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; return o; });
     S.objectives = obj.objectives || { primary: { type: "kill_all" }, secondary: [] };
+    if (!S.objectives.primary) S.objectives.primary = { type: "kill_all" };
+    if (!Array.isArray(S.objectives.secondary)) S.objectives.secondary = [];
+    normalizeObjective(S.objectives.primary, true);
+    S.objectives.secondary.forEach(s => normalizeObjective(s, false));
     S.sel = null;
     document.getElementById("m-id").value = S.meta.id;
     document.getElementById("m-name").value = S.meta.name;
