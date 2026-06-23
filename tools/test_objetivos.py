@@ -361,8 +361,15 @@ async def test_encerrar_missao():
     check("bau contem o item de recompensa",
           bool(novos) and any(i.get("id") == "magic_sword" for i in r.chests[novos[0]]["items"]))
     check("ainda nao encerrou (espera o botao)", vit["c"] is False)
+    # pid desconhecido nao encerra
+    await r.handle_encerrar_missao("ninguem")
+    check("pid fora de self.players e recusado", vit["c"] is False)
     await r.handle_encerrar_missao("p1")
     check("encerrar_missao chama end_game(victory)", vit["c"] is True and vit["v"] is True)
+    # segunda chamada e no-op (flag ja foi limpa)
+    vit["c"] = False
+    await r.handle_encerrar_missao("p1")
+    check("encerrar_missao e idempotente (2a chamada nao reencerra)", vit["c"] is False)
 
 
 async def main():

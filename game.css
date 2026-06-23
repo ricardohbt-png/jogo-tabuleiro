@@ -152,6 +152,15 @@ input:focus { outline: none; border-color: var(--gold); }
 }
 #btn-libertar:hover { background: rgba(60, 45, 12, 0.96); }
 
+/* Botão "Encerrar missão" — inline no HUD de objetivos, após os objetivos */
+.btn-encerrar-missao {
+  display: block; width: 100%; margin-top: 10px;
+  padding: 7px 12px; border-radius: 8px; border: 1px solid var(--gold, #ffcc44);
+  background: rgba(40, 30, 8, 0.92); color: var(--gold, #ffcc44);
+  font-weight: 700; font-size: .8rem; cursor: pointer;
+}
+.btn-encerrar-missao:hover { background: rgba(60, 45, 12, 0.96); }
+
 /* Histórico de rolagens — faixa fixa sob o cabeçalho do log do Mestre */
 #dice-history { display: flex; flex-wrap: wrap; gap: 4px 10px; padding: 4px 10px;
                 border-bottom: 1px solid var(--border); background: var(--bg2);

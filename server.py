@@ -12186,12 +12186,15 @@ class GameRoom:
         ouro_total = int(reward.get("gold", ouro_default))
         vivos = [p for p in self.players.values() if p.get("alive")]
         n = max(1, len(vivos))
+        # XP nunca arredonda p/ zero (cada heroi ganha >=1); ouro pode dar 0 se o
+        # total for menor que o nº de herois (perda fracionaria aceitavel).
         xp_share   = max(1, xp_total // n) if xp_total > 0 else 0
         ouro_share = ouro_total // n if ouro_total > 0 else 0
         for p in vivos:
-            if xp_share:   p["xp"]   += xp_share
             if ouro_share: p["gold"] += ouro_share
-            await self._check_level_up(p)
+            if xp_share:
+                p["xp"] += xp_share
+                await self._check_level_up(p)
         itens_nomes = []
         for it in (reward.get("items") or []):
             idef = self._resolve_reward_item(it.get("id"))
