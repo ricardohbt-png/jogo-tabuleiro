@@ -284,6 +284,34 @@ async def test_prisioneiro_armadilha():
           (pr["alive"] is False) and (r.rescue_failed is True))
 
 
+async def test_prisioneiro_armadilha_progressiva():
+    print("\n[10] prisioneiro sofre dano progressivo de armadilha (incendiária)")
+    r = setup_authored()
+    r.dungeon_def["objectives"] = {"primary": {"type": "rescue_prisoner"}, "secondary": []}
+    await r.enter_dungeon("p1")
+    for m in r.monsters.values(): m["hp"] = 0
+    pr = r.prisoner
+    pr["freed"] = True; pr["alive"] = True; pr["rescuer_pid"] = "p1"; pr["moves_left"] = 6
+    pr["hp"] = 30; pr["max_hp"] = 30
+    for x in range(2, 5): r.tiles[8][x] = server.FLOOR
+    pr["pos"] = [2, 8]; r.players["p1"]["pos"] = [2, 8]; r.players["p1"]["alive"] = True
+    r.armadilhas.append({"id": "inc1", "tipo": "armadilha_incendiaria", "pos": [3, 8], "criador": None})
+    r.animados_phase_pid = "p1"; r.turn_index = r.player_order.index("p1")
+    orig = r._testar_save
+    r._testar_save = lambda alvo, s, d, extra_mod=0: (False, 1, 0, 1)   # falha o save
+    try:
+        await r.handle_mover_prisioneiro("p1", 1, 0)   # pisa na incendiária
+    finally:
+        r._testar_save = orig
+    hp_imediato = pr["hp"]
+    check("dano imediato da incendiária", hp_imediato < 30)
+    check("dano progressivo agendado p/ o prisioneiro",
+          any(e.get("alvo_id") == "__prisioneiro__"
+              for a in r.armadilhas for e in a.get("efeitos_ativos", [])))
+    await r._processar_efeitos_armadilha_turno()   # tica a(s) rodada(s) seguinte(s)
+    check("dano progressivo atinge o prisioneiro", pr["hp"] < hp_imediato)
+
+
 async def main():
     await test_instanciar()
     await test_conclusao_simples()
@@ -293,6 +321,7 @@ async def main():
     await test_prisioneiro_controle()
     await test_upload_prisioneiro()
     await test_prisioneiro_armadilha()
+    await test_prisioneiro_armadilha_progressiva()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

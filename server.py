@@ -8891,8 +8891,10 @@ class GameRoom:
         if tipo_ef == "dano":
             if ef.get("rodada", 1) > 1:
                 # Dano progressivo: agenda p/ rodadas seguintes (ver _processar_efeitos_armadilha_turno).
+                # O prisioneiro não tem "id" → sentinela dedicada para o lookup por turno.
+                aid = "__prisioneiro__" if alvo is self.prisoner else alvo.get("id")
                 arm.setdefault("efeitos_ativos", []).append({
-                    "alvo_id": alvo.get("id"), "valor": ef["valor"],
+                    "alvo_id": aid, "valor": ef["valor"],
                     "elemento": ef.get("elemento", "fisico"), "rodadas_restantes": ef["rodada"] - 1,
                 })
                 return
@@ -9190,7 +9192,10 @@ class GameRoom:
         for arm in list(self.armadilhas):
             restantes = []
             for ef in arm.get("efeitos_ativos", []):
-                alvo = self.players.get(ef["alvo_id"]) or self.monsters.get(ef["alvo_id"])
+                aid = ef["alvo_id"]
+                alvo = self.players.get(aid) or self.monsters.get(aid)
+                if alvo is None and aid == "__prisioneiro__":
+                    alvo = self.prisoner
                 if alvo and (alvo.get("alive") or alvo.get("hp", 0) > 0):
                     dano = self._rolar_dado(ef["valor"])
                     await self._dano_em_alvo(alvo, dano, ef.get("elemento", "fogo"), arm.get("criador"))
@@ -12287,6 +12292,9 @@ class GameRoom:
         pr = self.prisoner
         if not pr or not pr.get("freed") or not pr.get("alive"):
             return
+        # Tica venenos/efeitos por rodada (ex.: fosso_envenenado): conta durações e
+        # reverte o que expirou — igual a heróis/monstros.
+        await self._processar_venenos_turno(pr)
         for m in self.monsters.values():
             if m["hp"] <= 0:
                 continue
