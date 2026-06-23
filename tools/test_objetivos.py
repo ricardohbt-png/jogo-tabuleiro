@@ -200,8 +200,8 @@ async def test_upload_prisioneiro():
     check("rejeita extensão não-imagem", okx is False)
 
 
-async def test_prisioneiro_segue():
-    print("\n[6] prisioneiro liberto segue o resgatador (até 6, para adjacente)")
+async def test_prisioneiro_controle():
+    print("\n[6] prisioneiro liberto é controlado manualmente (janela pós-turno)")
     r = setup_authored()
     r.dungeon_def["objectives"] = {"primary": {"type": "rescue_prisoner"}, "secondary": []}
     await r.enter_dungeon("p1")
@@ -209,29 +209,37 @@ async def test_prisioneiro_segue():
     for m in r.monsters.values(): m["hp"] = 0
     pr = r.prisoner
     pr["freed"] = True; pr["alive"] = True; pr["rescuer_pid"] = "p1"
-    # Garante que a linha y=8, x∈[2..10] é chão, e posiciona prisioneiro e resgatador.
     for x in range(2, 11):
         r.tiles[8][x] = server.FLOOR
-    pr["pos"] = [2, 8]
-    r.players["p1"]["pos"] = [10, 8]
-    r.players["p1"]["alive"] = True
-    await r._mover_prisioneiro_seguindo("p1")
-    dist = max(abs(pr["pos"][0] - 10), abs(pr["pos"][1] - 8))
-    check("prisioneiro andou até 6 (de 8 → fica a 2 de distância)", dist == 2)
+    pr["pos"] = [5, 8]
+    r.players["p1"]["pos"] = [2, 8]; r.players["p1"]["alive"] = True
+    r.players["p2"]["pos"] = [9, 8]; r.players["p2"]["alive"] = True
 
-    # Se o pid que encerrou NÃO é o resgatador, não anda.
-    pr["pos"] = [2, 8]
-    await r._mover_prisioneiro_seguindo("p2")
-    check("não anda no turno de quem não é o resgatador", pr["pos"] == [2, 8])
+    # 1) encerrar o turno do resgatador ABRE a janela de controle e dá 6 de movimento
+    r.turn_index = r.player_order.index("p1")
+    await r.handle_end_turn("p1")
+    check("janela de controle abre p/ o resgatador", r.animados_phase_pid == "p1")
+    check("prisioneiro recebe 6 de movimento", r.prisoner["moves_left"] == 6)
 
-    # Resgatador morto → reatribui ao herói vivo mais próximo e anda no turno dele.
+    # 2) handle_mover_prisioneiro move 1 casa e gasta 1 de movimento
+    antes = list(pr["pos"])
+    await r.handle_mover_prisioneiro("p1", 1, 0)
+    check("prisioneiro andou 1 casa", pr["pos"] == [antes[0] + 1, antes[1]])
+    check("gastou 1 de movimento", pr["moves_left"] == 5)
+
+    # 3) quem não é o controlador não move o prisioneiro
+    fixo = list(pr["pos"])
+    await r.handle_mover_prisioneiro("p2", 1, 0)
+    check("não-controlador não move o prisioneiro", pr["pos"] == fixo)
+
+    # 4) resgatador morto → controle transfere ao herói vivo mais próximo
+    r.animados_phase_pid = None
     r.players["p1"]["alive"] = False
-    r.players["p2"]["alive"] = True
-    r.players["p2"]["pos"] = [10, 8]
-    pr["pos"] = [2, 8]
-    await r._mover_prisioneiro_seguindo("p2")
-    check("resgatador morto → segue novo herói", r.prisoner["rescuer_pid"] == "p2"
-          and max(abs(pr["pos"][0] - 10), abs(pr["pos"][1] - 8)) == 2)
+    r.turn_index = r.player_order.index("p2")
+    await r.handle_end_turn("p2")
+    check("controle transfere ao herói vivo mais próximo",
+          r.prisoner["rescuer_pid"] == "p2" and r.animados_phase_pid == "p2"
+          and r.prisoner["moves_left"] == 6)
 
 
 async def main():
@@ -240,7 +248,7 @@ async def main():
     await test_prisioneiro()
     await test_bonus_secundario()
     await test_serializacao()
-    await test_prisioneiro_segue()
+    await test_prisioneiro_controle()
     await test_upload_prisioneiro()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)

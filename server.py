@@ -3657,7 +3657,7 @@ class GameRoom:
         pr = defn.get("prisoner")
         self.prisoner = ({"pos": [pr["pos"][0], pr["pos"][1]], "room_id": pr.get("room_id"),
                           "hp": PRIS_HP, "max_hp": PRIS_HP, "ac": PRIS_AC, "move": PRIS_MOVE,
-                          "image": pr.get("image"), "rescuer_pid": None,
+                          "image": pr.get("image"), "rescuer_pid": None, "moves_left": 0,
                           "freed": False, "alive": True}
                          if pr else None)
         # Marca o baú-chave por posição (o dict de baú vivo não carrega a flag).
@@ -9495,33 +9495,50 @@ class GameRoom:
         # Animados roubados por um necromante não obedecem o jogador nesta fase.
         animados_vivos = [a for a in p.get("animados", [])
                           if a.get("vida_atual", 0) > 0 and not a.get("dominado_por_monstro")]
-        if animados_vivos and self.animados_phase_pid != pid:
+        # Fase 3: o herói que libertou o prisioneiro o controla na janela pós-turno
+        # (como os servos). Se o resgatador morreu, o controle passa ao herói vivo
+        # mais próximo do prisioneiro.
+        pr = self.prisoner
+        controla_prisioneiro = False
+        if pr and pr.get("freed") and pr.get("alive"):
+            resc = self.players.get(pr.get("rescuer_pid"))
+            if not resc or not self._ativo(resc):
+                vivos = [h for h in self.players.values() if self._ativo(h)]
+                if vivos:
+                    novo = min(vivos, key=lambda h: max(abs(h["pos"][0] - pr["pos"][0]),
+                                                        abs(h["pos"][1] - pr["pos"][1])))
+                    pr["rescuer_pid"] = novo["id"]
+            controla_prisioneiro = (pr.get("rescuer_pid") == pid)
+        if (animados_vivos or controla_prisioneiro) and self.animados_phase_pid != pid:
             self.animados_phase_pid = pid
-            # Upkeep: cada cadáver reanimado custa -1 fome e -1 sede por turno.
-            custo = len(animados_vivos)
-            p["fome"] = max(0, p.get("fome", 10) - custo)
-            p["sede"] = max(0, p.get("sede", 10) - custo)
-            for a in animados_vivos:               # orçamento p/ a janela de controle
-                a["moves_left"] = a.get("movimento", 3)
-                a["acted"] = False
-                # Sono/Lentidão em minions (de magias em área): expiram aqui.
-                for flag, rod in (("dormindo", "dormindo_rodadas"), ("lento", "lento_rodadas")):
-                    if a.get(flag):
-                        a[rod] = a.get(rod, 1) - 1
-                        if a[rod] <= 0:
-                            a.pop(flag, None); a.pop(rod, None)
-            plural = "s" if custo > 1 else ""
-            await self.gm_say(
-                f"💀 Turno dos servos de **{p['name']}** ({custo} animado{plural}) — "
-                f"mova/ataque e encerre o turno novamente. "
-                f"🍖 {p['fome']:.0f}/10 💧 {p['sede']:.0f}/10")
+            partes = []
+            if animados_vivos:
+                # Upkeep: cada cadáver reanimado custa -1 fome e -1 sede por turno.
+                custo = len(animados_vivos)
+                p["fome"] = max(0, p.get("fome", 10) - custo)
+                p["sede"] = max(0, p.get("sede", 10) - custo)
+                for a in animados_vivos:               # orçamento p/ a janela de controle
+                    a["moves_left"] = a.get("movimento", 3)
+                    a["acted"] = False
+                    # Sono/Lentidão em minions (de magias em área): expiram aqui.
+                    for flag, rod in (("dormindo", "dormindo_rodadas"), ("lento", "lento_rodadas")):
+                        if a.get(flag):
+                            a[rod] = a.get(rod, 1) - 1
+                            if a[rod] <= 0:
+                                a.pop(flag, None); a.pop(rod, None)
+                plural = "s" if custo > 1 else ""
+                partes.append(f"{custo} animado{plural}")
+            if controla_prisioneiro:
+                pr["moves_left"] = PRIS_MOVE
+                partes.append("o prisioneiro")
+            msg = (f"💀 Turno de controle de **{p['name']}** ({' e '.join(partes)}) — "
+                   f"mova e encerre o turno novamente.")
+            if animados_vivos:
+                msg += f" 🍖 {p['fome']:.0f}/10 💧 {p['sede']:.0f}/10"
+            await self.gm_say(msg)
             await self.push_state()
             return
         self.animados_phase_pid = None
-
-        # Fase 3: o prisioneiro liberto segue o herói que o resgatou, logo após o
-        # turno dele (até PRIS_MOVE quadrados, parando adjacente).
-        await self._mover_prisioneiro_seguindo(pid)
 
         p["moves_left"]        = p["spd"]
         p["action_done"]       = False
@@ -12221,9 +12238,31 @@ class GameRoom:
         await self.gm_say(f"🔓 **{p['name']}** libertou o prisioneiro!")
         await self.push_state()
 
+    async def handle_mover_prisioneiro(self, pid, dx, dy):
+        """Controle manual: o resgatador move o prisioneiro liberto 1 casa na
+        janela pós-turno (gasta 1 de movimento). Não ataca."""
+        if not self._is_turn(pid): return
+        if self.animados_phase_pid != pid:
+            await self.send_to(pid, {"type": "error", "msg": "Encerre seu turno primeiro para mover o prisioneiro."}); return
+        pr = self.prisoner
+        if not pr or not pr.get("freed") or not pr.get("alive"):
+            await self.send_to(pid, {"type": "error", "msg": "Não há prisioneiro para mover."}); return
+        if pr.get("rescuer_pid") != pid:
+            await self.send_to(pid, {"type": "error", "msg": "Você não controla este prisioneiro."}); return
+        if pr.get("moves_left", 0) <= 0:
+            await self.send_to(pid, {"type": "error", "msg": "Prisioneiro sem movimento neste turno."}); return
+        if abs(dx) > 1 or abs(dy) > 1 or (dx == 0 and dy == 0):
+            return
+        nx, ny = pr["pos"][0] + dx, pr["pos"][1] + dy
+        if not self._tile_livre_para_animado(nx, ny, None):
+            await self.send_to(pid, {"type": "error", "msg": "Caminho bloqueado para o prisioneiro."}); return
+        pr["pos"] = [nx, ny]
+        pr["moves_left"] -= 1
+        await self.push_state()
+
     async def _processar_prisioneiro_turno(self):
-        """Prisioneiro libertado: cada monstro adjacente o fere. O MOVIMENTO fica
-        em _mover_prisioneiro_seguindo (após o turno do resgatador)."""
+        """Prisioneiro libertado: cada monstro adjacente o fere. O MOVIMENTO é
+        manual, pelo resgatador, em handle_mover_prisioneiro (janela pós-turno)."""
         pr = self.prisoner
         if not pr or not pr.get("freed") or not pr.get("alive"):
             return
@@ -12243,47 +12282,6 @@ class GameRoom:
                     self.rescue_failed = True
                     await self.gm_say("☠️ O prisioneiro foi morto! O resgate falhou.")
                     break
-
-    async def _mover_prisioneiro_seguindo(self, ended_pid):
-        """Após o turno do resgatador, o prisioneiro liberto anda até PRIS_MOVE
-        quadrados em direção a ele, parando ao ficar adjacente. Se o resgatador
-        morreu, reatribui ao herói vivo mais próximo (verifica ANTES de comparar
-        com ended_pid, para não travar)."""
-        pr = self.prisoner
-        if not pr or not pr.get("freed") or not pr.get("alive"):
-            return
-        herois = [p for p in self.players.values() if self._ativo(p)]
-        if not herois:
-            return
-        resc = self.players.get(pr.get("rescuer_pid"))
-        if not resc or not self._ativo(resc):
-            novo = min(herois, key=lambda p: max(abs(p["pos"][0] - pr["pos"][0]),
-                                                 abs(p["pos"][1] - pr["pos"][1])))
-            pr["rescuer_pid"] = novo["id"]
-            resc = novo
-        if ended_pid != pr["rescuer_pid"]:
-            return
-        for _ in range(PRIS_MOVE):
-            if max(abs(pr["pos"][0] - resc["pos"][0]),
-                   abs(pr["pos"][1] - resc["pos"][1])) <= 1:
-                break          # já adjacente — não pisa na casa do herói
-            antes = list(pr["pos"])
-            self._step_towards(pr, resc["pos"])
-            if pr["pos"] == antes:
-                break          # sem progresso (bloqueado)
-
-    def _step_towards(self, ent, dest):
-        """Move `ent` (dict com 'pos') 1 casa em direção a `dest` por casa livre
-        (FLOOR/DOOR, não ocupada por monstro/herói). Sem diagonal."""
-        ex, ey = ent["pos"]; dx, dy = dest
-        opcoes = sorted([(ex + sx, ey + sy) for sx, sy in ((1,0),(-1,0),(0,1),(0,-1))],
-                        key=lambda c: max(abs(c[0] - dx), abs(c[1] - dy)))
-        ocup = {tuple(m["pos"]) for m in self.monsters.values() if m["hp"] > 0}
-        ocup |= {tuple(p["pos"]) for p in self.players.values() if p.get("alive")}
-        for nx, ny in opcoes:
-            if (0 <= nx < self.map_w and 0 <= ny < self.map_h
-                    and self.tiles[ny][nx] != WALL and (nx, ny) not in ocup):
-                ent["pos"] = [nx, ny]; return
 
     async def end_game(self, victory, story=None):
         self.phase = "ended"
@@ -12617,6 +12615,11 @@ async def handler(ws):
                     dx, dy = _delta(msg.get("dx", 0)), _delta(msg.get("dy", 0))
                     if room and abs(dx) + abs(dy) == 1:
                         await room.handle_mover_animado(pid, msg.get("animado_id"), dx, dy)
+
+                elif t == "mover_prisioneiro":
+                    dx, dy = _delta(msg.get("dx", 0)), _delta(msg.get("dy", 0))
+                    if room and abs(dx) + abs(dy) == 1:
+                        await room.handle_mover_prisioneiro(pid, dx, dy)
 
                 elif t == "atacar_animado":
                     if room: await room.handle_atacar_animado(pid, msg.get("animado_id"), msg.get("target_id"))
