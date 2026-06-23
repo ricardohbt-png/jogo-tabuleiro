@@ -352,12 +352,14 @@ async def test_encerrar_missao():
     vit = {"c": False, "v": None}
     async def fe(victory, story=None): vit["c"] = True; vit["v"] = victory
     r.end_game = fe
-    n_chests0 = len(r.chests)
+    chests0 = set(r.chests.keys())
     for m in r.monsters.values(): m["hp"] = 0
     await r._check_objectives()
-    check("bau de recompensa largado", len(r.chests) == n_chests0 + 1)
+    novos = [cid for cid in r.chests if cid not in chests0]
+    check("bau de recompensa largado", len(novos) == 1)
+    # Assere o conteúdo SÓ do baú recém-criado (não dos pré-existentes da fixture).
     check("bau contem o item de recompensa",
-          any(any(i.get("id") == "magic_sword" for i in c["items"]) for c in r.chests.values()))
+          bool(novos) and any(i.get("id") == "magic_sword" for i in r.chests[novos[0]]["items"]))
     check("ainda nao encerrou (espera o botao)", vit["c"] is False)
     await r.handle_encerrar_missao("p1")
     check("encerrar_missao chama end_game(victory)", vit["c"] is True and vit["v"] is True)

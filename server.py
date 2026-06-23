@@ -12238,7 +12238,8 @@ class GameRoom:
 
     async def _check_objectives(self):
         """Catch-all chamado por push_state. Recalcula o status p/ o HUD e, se o
-        principal está cumprido, concede bônus dos secundários e encerra em vitória."""
+        principal está cumprido, concede as recompensas (XP/ouro divididos + baú de
+        itens) e sinaliza `mission_complete_pending` para o encerramento manual."""
         if not self.objectives:
             return
         prim = self.objectives.get("primary")
@@ -12257,7 +12258,9 @@ class GameRoom:
                     await self._conceder_objetivo_reward(s, is_primary=False, loot_acc=loot)
             if loot:
                 vivos = [p for p in self.players.values() if p.get("alive")]
-                pos = list(vivos[0]["pos"]) if vivos else list(self.exit_pos or self.stairs_pos or [0, 0])
+                base = list(vivos[0]["pos"]) if vivos else list(self.exit_pos or self.stairs_pos or [0, 0])
+                # Casa livre adjacente (não em cima do herói/baús) para o baú abrir bem.
+                pos = self._free_tile_near(base)
                 self._spawn_chest(pos, 0, loot)
             self.mission_complete_pending = True
             await self.gm_say("🏁 Objetivo principal cumprido! Recolham a recompensa e cliquem em **Encerrar missão** quando estiverem prontos.")
@@ -12265,6 +12268,8 @@ class GameRoom:
     async def handle_encerrar_missao(self, pid):
         """Encerramento manual da fase apos o objetivo principal cumprido.
         Faz a transicao que antes era automatica em _check_objectives."""
+        if pid not in self.players:
+            return
         if self.phase != "playing" or not self.mission_complete_pending:
             return
         self.mission_complete_pending = False
