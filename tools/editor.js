@@ -174,6 +174,25 @@
     S.tiles[y][x] = WALL;
   }
 
+  function deleteRoom(room, clearFloor) {
+    const idx = S.rooms.indexOf(room);
+    if (idx >= 0) S.rooms.splice(idx, 1);
+    if (clearFloor) {
+      for (let j = room.y; j < room.y + room.h; j++) {
+        for (let i = room.x; i < room.x + room.w; i++) {
+          if (S.tiles[j] && S.tiles[j][i] !== undefined) {
+            if (S.tiles[j][i] === DOOR) doorUnlink(i, j);
+            S.tiles[j][i] = WALL;
+          }
+        }
+      }
+    }
+    // Entidades que apontavam para esta sala ficam sem sala (não são apagadas).
+    for (const m of S.monsters) if (m.room_id === room.id) m.room_id = null;
+    if (S.prisoner && S.prisoner.room_id === room.id) S.prisoner.room_id = null;
+    S.sel = null; renderPanel(); render();
+  }
+
   const panel = document.getElementById("panel");
   function opt(list, val, fmt) { return list.map(o => `<option value="${o.v}"${o.v === val ? " selected" : ""}>${fmt(o)}</option>`).join(""); }
 
@@ -227,9 +246,20 @@
       panel.innerHTML = `<b>▦ Sala #${ref.id}</b>
         <label>role</label><select id="p-role">${opt(["entrance", "monster", "chest", "trap", "boss", "empty"].map(r => ({ v: r })), ref.role, o => o.v)}</select>
         <label><input type="checkbox" id="p-locked" ${ref.locked ? "checked" : ""}> trancada</label>
-        <div style="margin-top:8px;color:#8a7a5a;font-size:11px">portas: ${ref.doors.length}</div>`;
+        <div style="margin-top:8px;color:#8a7a5a;font-size:11px">portas: ${ref.doors.length}</div>
+        <button id="p-del-room" style="margin-top:10px">🗑 Deletar sala</button>
+        <div id="p-del-confirm" style="display:none;margin-top:6px">
+          <div style="font-size:11px;color:#d8a0a0;margin-bottom:4px">Deletar a sala #${ref.id}?</div>
+          <button id="p-del-keep">Deletar (manter chão)</button>
+          <button id="p-del-clear">Deletar (limpar chão)</button>
+        </div>`;
       document.getElementById("p-role").onchange = e => { ref.role = e.target.value; render(); };
       document.getElementById("p-locked").onchange = e => { ref.locked = e.target.checked; render(); };
+      document.getElementById("p-del-room").onclick = () => {
+        document.getElementById("p-del-confirm").style.display = "";
+      };
+      document.getElementById("p-del-keep").onclick = () => deleteRoom(ref, false);
+      document.getElementById("p-del-clear").onclick = () => deleteRoom(ref, true);
     } else if (k === "prisoner") {
       const img = ref.image
         ? `<img src="../assets/pawns/prisioneiros/${ref.image}" style="max-width:64px;max-height:64px;display:block;margin:6px 0;border:1px solid #5a4a2a">`
@@ -468,7 +498,7 @@
   document.getElementById("tab-campanha").onclick = () => setTab("campanha");
 
   // Expor para verificação no console / tasks seguintes.
-  window.EDITOR = { S, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, entityAt, doorLink, doorUnlink, validarEditor, buildJSON, loadJSON, save, updateStatus, WALL, FLOOR, DOOR };
+  window.EDITOR = { S, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, deleteRoom, entityAt, doorLink, doorUnlink, validarEditor, buildJSON, loadJSON, save, updateStatus, WALL, FLOOR, DOOR };
 
   initGrid(S.grid.w, S.grid.h);
   buildToolbar();
