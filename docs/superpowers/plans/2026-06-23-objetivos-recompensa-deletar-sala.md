@@ -39,18 +39,19 @@ Adicione esta função em `tools/test_objetivos.py` (antes de `async def main`):
 async def test_reward_dividido():
     print("\n[11] recompensa de objetivo: XP e ouro divididos entre os vivos + itens acumulados")
     r = setup_authored()
+    # xp=40 -> 20 por herói (abaixo do limiar de level-up, p/ asserir XP exato).
     r.dungeon_def["objectives"] = {
         "primary": {"type": "kill_all",
-                    "xp": 100, "reward": {"gold": 80, "items": [{"id": "magic_sword"}]}},
+                    "xp": 40, "reward": {"gold": 80, "items": [{"id": "magic_sword"}]}},
         "secondary": []}
     await r.enter_dungeon("p1")
     p1, p2 = r.players["p1"], r.players["p2"]
-    xp1, ouro1 = p1["xp"], p1["gold"]
+    xp1, xp2, ouro1 = p1["xp"], p2["xp"], p1["gold"]
     loot = []
     obj = r.objectives["primary"]
     await r._conceder_objetivo_reward(obj, is_primary=True, loot_acc=loot)
-    # 2 heróis vivos: 100 XP -> 50 cada; 80 ouro -> 40 cada
-    check("XP dividido entre os vivos (50)", p1["xp"] == xp1 + 50 and p2["xp"] == p2["xp"])
+    # 2 heróis vivos: 40 XP -> 20 cada; 80 ouro -> 40 cada
+    check("XP dividido entre os vivos (20)", p1["xp"] == xp1 + 20 and p2["xp"] == xp2 + 20)
     check("ouro dividido entre os vivos (40)", p1["gold"] == ouro1 + 40)
     check("item de recompensa acumulado", any(i.get("id") == "magic_sword" for i in loot))
 
