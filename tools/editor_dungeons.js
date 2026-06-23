@@ -2331,7 +2331,8 @@ window.EDITOR_DUNGEONS = [
           27,
           37
         ],
-        "room_id": 18
+        "room_id": 18,
+        "image": "elara.png"
       },
       "objectives": {
         "primary": {
@@ -4191,4 +4192,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO por tools/export_catalog.py — não editar à mão.
+// GERADO ao salvar no editor (e por tools/export_catalog.py).

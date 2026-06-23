@@ -2176,7 +2176,8 @@
       27,
       37
     ],
-    "room_id": 18
+    "room_id": 18,
+    "image": "elara.png"
   },
   "objectives": {
     "primary": {
