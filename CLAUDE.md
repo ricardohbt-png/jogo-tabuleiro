@@ -102,6 +102,7 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `atacar_animado` | `animado_id`, `target_id` (controle manual — ataque) |
 | `libertar_prisioneiro` | — (herói adjacente liberta o prisioneiro; grava `rescuer_pid`). O prisioneiro (`prisoner`: CA10/mov6/7HP) é **controlado pelo resgatador**, não anda sozinho. |
 | `mover_prisioneiro` | `dx`, `dy` — controle manual do prisioneiro liberto (1 passo, só movimento). Habilitado na **janela pós-turno** do controlador (mesma do turno dos servos, `animados_phase_pid`): encerrar o turno abre a janela e dá `moves_left=6`; encerrar de novo avança. Se o resgatador morre, o controle passa ao herói vivo mais próximo. Dano vs CA10 dos monstros adjacentes continua na fase inimiga (`_processar_prisioneiro_turno`). O prisioneiro também **sofre armadilhas colocáveis** ao pisar nelas, como os heróis (saves a +0 em reflexos/fortitude); morte por qualquer fonte → `_prisioneiro_morre`/`rescue_failed`. |
+| `encerrar_missao` | — (herói encerra a fase **após** o objetivo principal cumprido; só habilitado quando `game_state.mission_complete_pending`). Concluir o principal **não** encerra mais automaticamente: o servidor concede a recompensa, larga um baú e liga `mission_complete_pending`; o cliente mostra o botão "🏁 Encerrar missão" (com confirmação) que dispara esta mensagem. Recusa `pid` fora de `self.players`. |
 | `open_chest` | — |
 | `open_door` | `tx`, `ty` — herói abre uma porta adjacente (Chebyshev ≤1). Ação **gratuita** (não gasta movimento/ação). Destranca a(s) sala(s) ligada(s) à porta, revela seu interior e **desperta** os monstros (que passam a perseguir). Salas começam trancadas (exceto a entrada); monstros em sala trancada ficam dormentes e o interior fica oculto pela névoa. **Clarividência** (`magia`, `alvoLivre`): alcance = mapa inteiro (mira em qualquer casa, mesmo na névoa — no 3D via `get3DTilePlane`); revela a área, os monstros ali (visibilidade ao vivo por 2 rodadas via `magic_reveal`) e as armadilhas do local, sem abrir a porta nem despertar os monstros. |
 | `use_item` | `item_id` |
@@ -149,6 +150,18 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 > `_blocks_tile`, `_tile_in_locked_room`, `door_rooms`, `magic_reveal`,
 > `handle_open_door`; cliente: `GS.doorSets(state)`, `TILE_DOOR`, `drawDoor2D`,
 > `doorMeshes` (3D).
+
+> **Objetivos com recompensa:** cada objetivo (`objectives.primary` e cada
+> `objectives.secondary[i]`) aceita `xp` (int — total dividido igualmente entre os
+> heróis vivos, `max(1, xp//vivos)`) e `reward { gold, items:[{id}] }` (ouro
+> dividido; itens largados num único baú via `_spawn_chest` em casa livre perto do
+> grupo). Campos ausentes usam o padrão antigo (secundário 50 XP/25 ouro; principal
+> sem extra). As recompensas são concedidas ao cumprir o objetivo **principal**
+> (`_conceder_objetivo_reward`); a fase só termina quando um herói clica em
+> "Encerrar missão" (`encerrar_missao` → `handle_encerrar_missao`).
+> `game_state.mission_complete_pending` sinaliza esse estado. No editor: é possível
+> **deletar salas** (mantendo ou limpando o chão) e definir XP/recompensa por
+> objetivo (principal e secundários).
 
 ### Armadilhas colocáveis (`game_state.armadilhas`)
 Sistema distinto das `traps` de masmorra. Cada item: `id`, `tipo`, `pos:[x,y]`,
