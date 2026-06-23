@@ -4590,10 +4590,15 @@ function renderMap(state){
   const meAnimados2D = (state.players.find(p=>p.id===GS.myPid)?.animados||[]).filter(a=>a.vida_atual>0);
   const selAnimado2D = isAnimadosTurn2D && _animadoSel
     ? meAnimados2D.find(a=>a.id===_animadoSel) : null;
+  const meuPris2D = state.prisoner && state.prisoner.alive && state.prisoner.freed
+    && state.prisoner.rescuer_pid === GS.myPid;
+  const selPris2D = isAnimadosTurn2D && _prisSel && meuPris2D ? state.prisoner : null;
 
   const reachable=new Set();
   if(selAnimado2D && selAnimado2D.moves_left>0)
     bfsReachable(state.tiles,exploredSet,selAnimado2D.pos[0],selAnimado2D.pos[1],selAnimado2D.moves_left,reachable);
+  else if(selPris2D && (selPris2D.moves_left||0)>0)
+    bfsReachable(state.tiles,exploredSet,selPris2D.pos[0],selPris2D.pos[1],selPris2D.moves_left,reachable);
   else if(!isAnimadosTurn2D&&GS.isMyTurn&&me&&me.moves_left>0)
     bfsReachable(state.tiles,exploredSet,me.pos[0],me.pos[1],me.moves_left,reachable);
 
@@ -4919,6 +4924,13 @@ function renderMap(state){
     const [pxr,pyr]=_pris.pos;
     if(visionSet.has(`${pxr},${pyr}`) || exploredSet.has(`${pxr},${pyr}`)){
       const cx=pxr*CELL+CELL/2, cy=pyr*CELL+CELL/2;
+      // Anel de seleção quando o controlador o selecionou (janela pós-turno).
+      if(_prisSel && _pris.freed && _pris.rescuer_pid===GS.myPid && state.animados_turn===GS.myPid){
+        ctx.save();
+        ctx.strokeStyle='#ffffff'; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.arc(cx, cy, CELL*0.42, 0, Math.PI*2); ctx.stroke();
+        ctx.restore();
+      }
       // Base do peão: tom amarelado se aliado/seguindo, acinzentado se cativo.
       drawMiniBase(ctx, cx, cy, _pris.freed?'#2e90c0':'#8a6d3b', false);
       const _pImg = _getPrisoner2DImg(_pris.image);
@@ -6538,6 +6550,7 @@ function renderBotoesAcaoBonus(heroi){
 // Estado de UI: aba ativa do painel principal do Pedro e animado selecionado.
 let _painelAbaPedro = 'atributos';
 let _animadoSel = null;
+let _prisSel = false;            // prisioneiro liberto selecionado (janela pós-turno do resgatador)
 let _lastAnimadosTurn = null;
 function trocarAbaPainel(aba){ _painelAbaPedro = aba; if(GS.gameState) renderMyPanel(GS.gameState); }
 window.trocarAbaPainel = trocarAbaPainel;
@@ -12148,10 +12161,15 @@ function renderMap3D(state){
   const meAnimados3D = (state.players.find(p=>p.id===GS.myPid)?.animados||[]).filter(a=>a.vida_atual>0);
   const selAnimado3D = isAnimadosTurn3D && _animadoSel
     ? meAnimados3D.find(a=>a.id===_animadoSel) : null;
+  const meuPris3D = state.prisoner && state.prisoner.alive && state.prisoner.freed
+    && state.prisoner.rescuer_pid === GS.myPid;
+  const selPris3D = isAnimadosTurn3D && _prisSel && meuPris3D ? state.prisoner : null;
 
   const reachable = new Set();
   if(selAnimado3D && selAnimado3D.moves_left > 0)
     bfsReachable(state.tiles, exploredSet, selAnimado3D.pos[0], selAnimado3D.pos[1], selAnimado3D.moves_left, reachable);
+  else if(selPris3D && (selPris3D.moves_left||0) > 0)
+    bfsReachable(state.tiles, exploredSet, selPris3D.pos[0], selPris3D.pos[1], selPris3D.moves_left, reachable);
   else if(!isAnimadosTurn3D && GS.isMyTurn && me && me.moves_left > 0)
     bfsReachable(state.tiles, exploredSet, me.pos[0], me.pos[1], me.moves_left, reachable);
 
@@ -12318,7 +12336,7 @@ function renderMap3D(state){
     state.players.map(p => [p.id, p.pos, p.alive, p.color, p.class_id,
       (p.animados||[]).map(a => [a.id, a.pos, a.vida_atual, a.tipo])]),
     state.monsters.map(m => [m.type, m.pos, m.hp, m.image]),
-    state.prisoner ? [state.prisoner.pos, state.prisoner.alive, state.prisoner.freed, state.prisoner.image] : null,
+    state.prisoner ? [state.prisoner.pos, state.prisoner.alive, state.prisoner.freed, state.prisoner.image, _prisSel] : null,
     state.corpses || [],
     (state.armadilhas||[]).map(a => [a.id, a.pos, a.ativada, a.so_luccas, a.icone]),
     state.rooms.map(r => [r.cx, r.cy, r.role, r.cleared]),
@@ -12384,9 +12402,11 @@ function renderMap3D(state){
   if(_pris3D && _pris3D.alive){
     const [prx,pry] = _pris3D.pos;
     if(visionSet.has(`${prx},${pry}`) || exploredSet.has(`${prx},${pry}`)){
+      const prisSelNow = !!(_prisSel && isAnimadosTurn3D && _pris3D.freed
+        && _pris3D.rescuer_pid === GS.myPid);
       obterFig('prisoner',
-        JSON.stringify([_pris3D.freed, _pris3D.image]),
-        () => build3DPrisoner(g3.T, _pris3D),
+        JSON.stringify([_pris3D.freed, _pris3D.image, prisSelNow]),
+        () => build3DPrisoner(g3.T, _pris3D, prisSelNow),
         prx, pry);
     }
   }
@@ -12758,7 +12778,8 @@ function _makeCharacterPawn(T, grp, classId, clr, Y0) {
 }
 
 // Peão 3D do prisioneiro: base + billboard com a imagem editável (fallback: só a base).
-function build3DPrisoner(T, pris){
+// `sel` desenha um anel branco de seleção (controle manual na janela pós-turno).
+function build3DPrisoner(T, pris, sel){
   const TH = 0.22;
   const Y0 = TH + 0.064;
   const grp = new T.Group();
@@ -12768,6 +12789,14 @@ function build3DPrisoner(T, pris){
   const base = new T.Mesh(baseGeo, baseMat);
   base.position.y = 0.06;
   grp.add(base);
+  if(sel){
+    const ringGeo = new T.TorusGeometry(0.44, 0.05, 8, 28);
+    const ringMat = new T.MeshBasicMaterial({ color: 0xffffff });
+    const ring = new T.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.13;
+    grp.add(ring);
+  }
   if(pris.image){
     _makeBillboardSprite(T, grp, `assets/pawns/prisioneiros/${pris.image}`,
       `_pris_${pris.image}`, Y0);
@@ -18235,6 +18264,19 @@ function handleTileClick(tx, ty){
   // monstro adjacente = ataca; clique em casa adjacente livre = move 1 passo.
   // Só disponível durante o turno dos servos (animados_turn === myPid).
   if(_st && GS.isMyTurn && _st.animados_turn === GS.myPid){
+    // ── Prisioneiro liberto: o resgatador o controla (só movimento) ───────────
+    const _prisC = _st.prisoner;
+    const meuPrisClk = _prisC && _prisC.alive && _prisC.freed && _prisC.rescuer_pid === GS.myPid;
+    if(meuPrisClk && _prisC.pos[0]===tx && _prisC.pos[1]===ty){
+      _prisSel = !_prisSel; _animadoSel = null; renderMap(_st); return;
+    }
+    if(meuPrisClk && _prisSel){
+      const expSetP = new Set(_st.explored.map(([x,y])=>`${x},${y}`));
+      for(const [rx,ry] of (_st.revealed||[])) expSetP.add(`${rx},${ry}`);
+      const passosP = GS.findPath(_st.tiles, expSetP, _prisC.pos[0], _prisC.pos[1], tx, ty, _prisC.moves_left||0);
+      if(passosP && passosP.length){ for(const [dx,dy] of passosP) GS.moverPrisioneiro(dx,dy); return; }
+      _prisSel=false; renderMap(_st); return;   // sem caminho/alcance → desseleciona
+    }
     const meP  = _st.players.find(p=>p.id===GS.myPid && p.alive);
     const meus = (meP && meP.animados) ? meP.animados.filter(a=>a.pos && a.vida_atual>0) : [];
     if(meus.length){
@@ -18394,13 +18436,19 @@ GS.on('gameState', msg => {
     HERO_DATA.pedro.animados = meNow.animados;
     if (GS.HERO_DATA && GS.HERO_DATA.pedro) GS.HERO_DATA.pedro.animados = meNow.animados;
   }
-  // Entrou no turno dos meus servos → dica única.
+  // Entrou na minha janela de controle (servos e/ou prisioneiro) → dica única.
   if (msg.animados_turn === GS.myPid && _lastAnimadosTurn !== GS.myPid) {
-    toast('💀 Turno dos seus servos — clique num servo (azul=movimento, vermelho=ataque); depois encerre o turno.');
+    const _pr = msg.prisoner;
+    const soPris = _pr && _pr.alive && _pr.freed && _pr.rescuer_pid === GS.myPid
+      && !((msg.players.find(p=>p.id===GS.myPid)?.animados||[]).some(a=>a.vida_atual>0));
+    toast(soPris
+      ? '🧍 Mova o prisioneiro — clique nele e depois numa casa; então encerre o turno.'
+      : '💀 Turno dos seus servos — clique num servo (azul=movimento, vermelho=ataque); depois encerre o turno.');
   }
-  // Turno dos servos encerrou → limpa seleção.
+  // Janela de controle encerrou → limpa seleções.
   if (_lastAnimadosTurn === GS.myPid && msg.animados_turn !== GS.myPid) {
     _animadoSel = null;
+    _prisSel = false;
   }
   _lastAnimadosTurn = msg.animados_turn || null;
   // Auto-refresh open chest window (contents may have changed)

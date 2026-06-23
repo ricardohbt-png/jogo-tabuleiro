@@ -1075,6 +1075,8 @@ const GS = (() => {
   // Controle manual de UM animado (no turno do Pedro).
   function moverAnimado(animadoId, dx, dy) { send({ type: 'mover_animado', animado_id: animadoId, dx, dy }); }
   function atacarAnimado(animadoId, targetId) { send({ type: 'atacar_animado', animado_id: animadoId, target_id: targetId }); }
+  // Controle manual do prisioneiro liberto (janela pós-turno do resgatador) — 1 passo.
+  function moverPrisioneiro(dx, dy) { send({ type: 'mover_prisioneiro', dx, dy }); }
   // ── Armadilhas (Passo 2) — Luccas cria/desarma armadilhas colocáveis ───────
   // tipo: id em ARMADILHAS (servidor). tx/ty opcionais (default = casa do Luccas).
   // venenoId só para 'fosso_envenenado' (consome 1 frasco da bolsa).
@@ -1433,6 +1435,7 @@ const GS = (() => {
     comandarAnimados,
     moverAnimado,
     atacarAnimado,
+    moverPrisioneiro,
     criarArmadilha,
     desarmarArmadilha,
     armadilhaAdjacente,
