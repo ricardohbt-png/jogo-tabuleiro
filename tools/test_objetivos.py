@@ -242,6 +242,48 @@ async def test_prisioneiro_controle():
           and r.prisoner["moves_left"] == 6)
 
 
+async def test_prisioneiro_armadilha():
+    print("\n[9] prisioneiro sofre armadilhas (save +0 em reflexos/fortitude)")
+    r = setup_authored()
+    r.dungeon_def["objectives"] = {"primary": {"type": "rescue_prisoner"}, "secondary": []}
+    await r.enter_dungeon("p1")
+    for m in r.monsters.values(): m["hp"] = 0
+    pr = r.prisoner
+    pr["freed"] = True; pr["alive"] = True; pr["rescuer_pid"] = "p1"; pr["moves_left"] = 6
+
+    # +0 de bônus nos saves de reflexos e fortitude
+    _, _, sb_ref, _ = r._testar_save(pr, "reflexos", 99)
+    _, _, sb_fort, _ = r._testar_save(pr, "fortitude", 99)
+    check("save de reflexos com +0", sb_ref == 0)
+    check("save de fortitude com +0", sb_fort == 0)
+
+    # pisa numa armadilha (fosso com estacas) → falha o save → toma dano
+    for x in range(2, 7): r.tiles[8][x] = server.FLOOR
+    pr["pos"] = [2, 8]
+    r.players["p1"]["pos"] = [2, 8]; r.players["p1"]["alive"] = True
+    r.armadilhas.append({"id": "tr1", "tipo": "fosso_estacas", "pos": [3, 8],
+                         "criador": None, "visivel": True})
+    r.animados_phase_pid = "p1"
+    r.turn_index = r.player_order.index("p1")
+    orig = r._testar_save
+    r._testar_save = lambda alvo, s, d, extra_mod=0: (False, 1, 0, 1)   # sempre falha
+    try:
+        hp0 = pr["hp"]
+        await r.handle_mover_prisioneiro("p1", 1, 0)   # [2,8] → [3,8] (a armadilha)
+        check("prisioneiro pisou na armadilha", pr["pos"] == [3, 8])
+        check("sofreu dano da armadilha", pr["hp"] < hp0)
+
+        # morte por armadilha → rescue_failed
+        pr["hp"] = 1; pr["alive"] = True; pr["moves_left"] = 6; pr["pos"] = [4, 8]
+        r.armadilhas.append({"id": "tr2", "tipo": "fosso_estacas", "pos": [5, 8],
+                             "criador": None, "visivel": True})
+        await r.handle_mover_prisioneiro("p1", 1, 0)   # [4,8] → [5,8]
+    finally:
+        r._testar_save = orig
+    check("morte por armadilha marca rescue_failed",
+          (pr["alive"] is False) and (r.rescue_failed is True))
+
+
 async def main():
     await test_instanciar()
     await test_conclusao_simples()
@@ -250,6 +292,7 @@ async def main():
     await test_serializacao()
     await test_prisioneiro_controle()
     await test_upload_prisioneiro()
+    await test_prisioneiro_armadilha()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

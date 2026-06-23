@@ -3658,6 +3658,7 @@ class GameRoom:
         self.prisoner = ({"pos": [pr["pos"][0], pr["pos"][1]], "room_id": pr.get("room_id"),
                           "hp": PRIS_HP, "max_hp": PRIS_HP, "ac": PRIS_AC, "move": PRIS_MOVE,
                           "image": pr.get("image"), "rescuer_pid": None, "moves_left": 0,
+                          "nome": "Prisioneiro", "fort": 0, "ref_": 0, "will": 0,
                           "freed": False, "alive": True}
                          if pr else None)
         # Marca o baú-chave por posição (o dict de baú vivo não carrega a flag).
@@ -8867,6 +8868,10 @@ class GameRoom:
                  if p["alive"] and abs(p["pos"][0]-cx) <= r and abs(p["pos"][1]-cy) <= r]
         alvos += [m for m in self.monsters.values()
                   if m["hp"] > 0 and abs(m["pos"][0]-cx) <= r and abs(m["pos"][1]-cy) <= r]
+        pr = self.prisoner
+        if pr and pr.get("alive") and pr.get("freed") \
+                and abs(pr["pos"][0]-cx) <= r and abs(pr["pos"][1]-cy) <= r:
+            alvos.append(pr)
         for alvo in alvos:
             alvo_nome = alvo.get("name") or alvo.get("nome", "Alvo")
             save_ok, d20, sb, stot = self._testar_save(alvo, tipo["save"], tipo["dificuldade"])
@@ -8936,6 +8941,8 @@ class GameRoom:
         if alvo["hp"] <= 0:
             if self._eh_jogador(alvo):
                 await self._player_dies(alvo["id"])
+            elif alvo is self.prisoner:
+                await self._prisioneiro_morre()
             else:
                 await self._monster_dies(alvo, killer_pid)
 
@@ -12258,7 +12265,21 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Caminho bloqueado para o prisioneiro."}); return
         pr["pos"] = [nx, ny]
         pr["moves_left"] -= 1
+        # Pisou numa armadilha colocável? Dispara sobre o prisioneiro (igual ao herói).
+        arm = self._armadilha_no_tile(nx, ny)
+        if arm and pr.get("alive"):
+            await self._disparar_armadilha(pr, arm)
         await self.push_state()
+
+    async def _prisioneiro_morre(self):
+        """Morte do prisioneiro (por monstro, armadilha, etc.): falha o resgate
+        sem encerrar a partida. Caminho único de morte do prisioneiro."""
+        pr = self.prisoner
+        if not pr:
+            return
+        pr["alive"] = False
+        self.rescue_failed = True
+        await self.gm_say("☠️ O prisioneiro foi morto! O resgate falhou.")
 
     async def _processar_prisioneiro_turno(self):
         """Prisioneiro libertado: cada monstro adjacente o fere. O MOVIMENTO é
@@ -12278,9 +12299,7 @@ class GameRoom:
                 pr["hp"] -= dano
                 await self.gm_say(f"⚔️ Um monstro fere o prisioneiro ({dano})!")
                 if pr["hp"] <= 0:
-                    pr["alive"] = False
-                    self.rescue_failed = True
-                    await self.gm_say("☠️ O prisioneiro foi morto! O resgate falhou.")
+                    await self._prisioneiro_morre()
                     break
 
     async def end_game(self, victory, story=None):
