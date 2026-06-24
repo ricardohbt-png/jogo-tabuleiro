@@ -1790,9 +1790,14 @@ def validar_dungeon(defn):
         if not meta:
             return False, f"decoração tipo desconhecido: {dtype!r}."
         pos = de.get("pos")
-        if not (isinstance(pos, list) and len(pos) == 2):
+        if not (isinstance(pos, list) and len(pos) == 2 and in_grid(pos)):
             return False, f"decoração com pos inválida: {pos!r}."
-        facing = de.get("facing") or [0, 1]
+        facing = de.get("facing")
+        if facing is None:
+            facing = [0, 1]
+        elif not (isinstance(facing, list) and len(facing) == 2
+                  and all(isinstance(c, int) and not isinstance(c, bool) for c in facing)):
+            return False, f"decoração com facing inválido: {facing!r}."
         w_d, h_d = meta["size"]
         ew, eh = (h_d, w_d) if (facing and facing[0] != 0) else (w_d, h_d)
         for i in range(ew):
@@ -1809,6 +1814,9 @@ def validar_dungeon(defn):
         if loot is not None:
             if not meta["loot_capaz"]:
                 return False, f"decoração {dtype} não pode conter loot."
+            gold = loot.get("gold", 0)
+            if isinstance(gold, bool) or not isinstance(gold, (int, float)) or gold < 0:
+                return False, "decoração com gold inválido."
             for it in (loot.get("items") or []):
                 if not isinstance(it, dict) or it.get("id") not in _DUNGEON_ITEM_CATALOG:
                     return False, f"item de loot inválido: {it!r}."

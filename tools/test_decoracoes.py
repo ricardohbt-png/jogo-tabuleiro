@@ -212,6 +212,24 @@ def test_validacao():
     d5 = _defn_base()
     d5["decorations"] = [{"type": "fonte", "pos": [11, 11], "facing": [0, 1]}]  # 2x2 sai do grid
     ok, _ = server.validar_dungeon(d5); check("rejeita footprint fora do grid", ok is False)
+    # pos não-int não pode levantar exceção (trust boundary)
+    d6 = _defn_base()
+    d6["decorations"] = [{"type": "cama", "pos": ["a", "b"]}]
+    try:
+        res = server.validar_dungeon(d6)
+        raised = False
+    except Exception:
+        res = None; raised = True
+    check("pos não-int não levanta exceção", raised is False and isinstance(res, tuple))
+    check("rejeita pos não-int", (not raised) and res[0] is False)
+    # gold de loot negativo
+    d7 = _defn_base()
+    d7["decorations"] = [{"type": "barril", "pos": [5, 5], "facing": [0, 1], "loot": {"gold": -5, "items": []}}]
+    ok, _ = server.validar_dungeon(d7); check("rejeita gold de loot negativo", ok is False)
+    # facing malformado
+    d8 = _defn_base()
+    d8["decorations"] = [{"type": "cama", "pos": [3, 3], "facing": "xx"}]
+    ok, _ = server.validar_dungeon(d8); check("rejeita facing malformado", ok is False)
 
 def main():
     test_catalog()
