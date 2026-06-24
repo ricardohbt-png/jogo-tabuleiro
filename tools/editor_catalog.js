@@ -305,6 +305,316 @@ window.EDITOR_CATALOG = {
       "id": "veneno_polvo_abissal",
       "name": "Tinta do Polvo Abissal"
     }
+  ],
+  "decorations": [
+    {
+      "type": "cama",
+      "nome": "Cama",
+      "emoji": "🛏️",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "lareira",
+      "nome": "Lareira",
+      "emoji": "🪵",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "fonte",
+      "nome": "Fonte",
+      "emoji": "⛲",
+      "size": [
+        2,
+        2
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": "fountain"
+    },
+    {
+      "type": "fogueira",
+      "nome": "Fogueira",
+      "emoji": "🔥",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": "campfire"
+    },
+    {
+      "type": "tumba",
+      "nome": "Tumba",
+      "emoji": "⚰️",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "mesa_cadeiras",
+      "nome": "Mesa com cadeiras",
+      "emoji": "🪑",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "estante",
+      "nome": "Estante",
+      "emoji": "🗄️",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "carroca",
+      "nome": "Carroça",
+      "emoji": "🛒",
+      "size": [
+        2,
+        2
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "coluna",
+      "nome": "Coluna de pedra",
+      "emoji": "🏛️",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "barril",
+      "nome": "Barril",
+      "emoji": "🛢️",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "arca_tesouros",
+      "nome": "Arca de tesouros",
+      "emoji": "💰",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "cama_casal",
+      "nome": "Cama de casal",
+      "emoji": "🛌",
+      "size": [
+        2,
+        2
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "estante_livros",
+      "nome": "Estante de livros",
+      "emoji": "📚",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "altar",
+      "nome": "Altar ritualístico",
+      "emoji": "🛐",
+      "size": [
+        2,
+        2
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "trono",
+      "nome": "Trono de rei",
+      "emoji": "👑",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "gaiola",
+      "nome": "Gaiola com esqueleto",
+      "emoji": "⛓️",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "grades_prisao",
+      "nome": "Grades de prisão",
+      "emoji": "🚧",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "estante_armas",
+      "nome": "Estante de armas",
+      "emoji": "⚔️",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "mesa_tortura",
+      "nome": "Mesa de tortura",
+      "emoji": "🔪",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "mesa_quimica",
+      "nome": "Mesa de química",
+      "emoji": "🧪",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "arvore",
+      "nome": "Árvore",
+      "emoji": "🌳",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "arvore_grande",
+      "nome": "Árvore grande",
+      "emoji": "🌲",
+      "size": [
+        2,
+        2
+      ],
+      "gira": false,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    }
   ]
 };
 // GERADO por tools/export_catalog.py — não editar à mão.

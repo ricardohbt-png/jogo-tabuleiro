@@ -4192,4 +4192,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO ao salvar no editor (e por tools/export_catalog.py).
+// GERADO por tools/export_catalog.py — não editar à mão.
