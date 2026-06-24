@@ -2951,10 +2951,33 @@ function _objRow(o){
   return `<div class="obj-row"><span class="obj-ic">${_objIcon(o && o.status)}</span><span class="obj-lbl">${label}</span></div>`;
 }
 // Confirmação antes de encerrar a missão (itens largados podem ficar para trás).
+// Usa um overlay próprio em vez de window.confirm(): o confirm nativo pode ser
+// silenciosamente suprimido pelo navegador ("não permitir mais diálogos"),
+// fazendo o botão parecer que "não funciona".
 function encerrarMissaoConfirm(){
-  if (confirm('Pegue os itens de recompensa antes de encerrar. Tem certeza que quer terminar a missão?')) {
-    GS.encerrarMissao();
-  }
+  if (document.getElementById('encerrar-missao-overlay')) return;   // já aberto
+  const ov = document.createElement('div');
+  ov.id = 'encerrar-missao-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:#000a;display:flex;'
+    + 'align-items:center;justify-content:center;z-index:500;';
+  ov.innerHTML =
+    '<div style="background:rgba(28,20,6,0.98);border:1px solid var(--gold,#ffcc44);'
+    + 'border-radius:12px;padding:22px 24px;max-width:340px;text-align:center;'
+    + 'box-shadow:0 8px 30px #000b;">'
+    + '<div style="color:var(--gold,#ffcc44);font-weight:700;font-size:1rem;margin-bottom:8px;">🏁 Encerrar missão?</div>'
+    + '<div style="color:#e8dcc0;font-size:.82rem;line-height:1.4;margin-bottom:16px;">'
+    + 'Pegue os itens de recompensa antes de encerrar. A missão será concluída e a campanha seguirá para a próxima aventura.</div>'
+    + '<div style="display:flex;gap:10px;">'
+    + '<button id="em-cancel" style="flex:1;padding:8px;border-radius:8px;border:1px solid #6a5a3a;'
+    + 'background:rgba(40,32,16,0.9);color:#cbbe9c;font-weight:700;font-size:.78rem;cursor:pointer;">Cancelar</button>'
+    + '<button id="em-ok" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--gold,#ffcc44);'
+    + 'background:rgba(60,45,12,0.96);color:var(--gold,#ffcc44);font-weight:700;font-size:.78rem;cursor:pointer;">🏁 Encerrar</button>'
+    + '</div></div>';
+  const close = () => { if (ov.parentNode) ov.parentNode.removeChild(ov); };
+  ov.addEventListener('click', e => { if (e.target === ov) close(); });
+  document.body.appendChild(ov);
+  document.getElementById('em-cancel').onclick = close;
+  document.getElementById('em-ok').onclick = () => { close(); GS.encerrarMissao(); };
 }
 window.encerrarMissaoConfirm = encerrarMissaoConfirm;
 
@@ -5128,14 +5151,14 @@ function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview){
 
   // Reachable tile highlight (blue) — opacity driven by _movePulse for slow pulsing
   if(isReachable){
-    const pa = 0.55 + 0.42 * _movePulse;   // stroke: 0.55 → 0.97
-    const fa = 0.10 + 0.18 * _movePulse;   // fill:   0.10 → 0.28
-    const da = 0.55 + 0.40 * _movePulse;   // corner dots: 0.55 → 0.95
-    ctx.strokeStyle=`rgba(80,180,255,${pa.toFixed(2)})`; ctx.lineWidth=2;
+    const pa = 0.70 + 0.30 * _movePulse;   // stroke: 0.70 → 1.00
+    const fa = 0.26 + 0.26 * _movePulse;   // fill:   0.26 → 0.52
+    const da = 0.65 + 0.35 * _movePulse;   // corner dots: 0.65 → 1.00
+    ctx.strokeStyle=`rgba(60,140,255,${pa.toFixed(2)})`; ctx.lineWidth=2;
     ctx.strokeRect(X+2,Y+2,CELL-4,CELL-4);
-    ctx.fillStyle=`rgba(50,120,255,${fa.toFixed(2)})`;
+    ctx.fillStyle=`rgba(30,107,255,${fa.toFixed(2)})`;
     ctx.fillRect(X+2,Y+2,CELL-4,CELL-4);
-    ctx.fillStyle=`rgba(130,210,255,${da.toFixed(2)})`;
+    ctx.fillStyle=`rgba(150,195,255,${da.toFixed(2)})`;
     const d=4;
     for(const [cx3,cy3] of [[X+d,Y+d],[X+CELL-d,Y+d],[X+d,Y+CELL-d],[X+CELL-d,Y+CELL-d]]){
       ctx.beginPath(); ctx.arc(cx3,cy3,1.8,0,Math.PI*2); ctx.fill();
@@ -5515,6 +5538,105 @@ function playSettle(){
     osc.connect(gain); gain.connect(_sfxBus());
     osc.start(now); osc.stop(now + 0.20);
   } catch(e){}
+}
+
+// ══ DAMAGE / HEAL AUDIO — anuncia quando uma criatura perde ou ganha HP ═══════
+// Som sintetizado (sem assets), roteado pelo _sfxBus() para respeitar o volume.
+
+// MEU herói tomou dano — sting descendente de dois tons, mais alarmante.
+function playHeroHurt(){
+  const ctx = getAudioContext();
+  if(!ctx || ctx.state !== 'running') return;
+  try{
+    const now = ctx.currentTime;
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(520, now);
+    osc.frequency.exponentialRampToValueAtTime(180, now + 0.18);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.85, now + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.30);
+    const lpf = ctx.createBiquadFilter();
+    lpf.type = 'lowpass'; lpf.frequency.value = 1400;
+    osc.connect(lpf); lpf.connect(gain); gain.connect(_sfxBus());
+    osc.start(now); osc.stop(now + 0.28);
+  } catch(e){}
+}
+
+// Outra criatura tomou dano — "thud" grave e suave, mais discreto.
+function playCreatureHit(){
+  const ctx = getAudioContext();
+  if(!ctx || ctx.state !== 'running') return;
+  try{
+    const now = ctx.currentTime;
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(190, now);
+    osc.frequency.exponentialRampToValueAtTime(70, now + 0.10);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.50, now + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+    osc.connect(gain); gain.connect(_sfxBus());
+    osc.start(now); osc.stop(now + 0.17);
+  } catch(e){}
+}
+
+// Qualquer criatura curou HP — chime ascendente e suave.
+function playHeal(){
+  const ctx = getAudioContext();
+  if(!ctx || ctx.state !== 'running') return;
+  try{
+    const now = ctx.currentTime;
+    [523.25, 783.99].forEach((freq, i) => {  // C5 → G5
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const t = now + i * 0.07;
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, t);
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.45, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.34);
+      osc.connect(gain); gain.connect(_sfxBus());
+      osc.start(t); osc.stop(t + 0.36);
+    });
+  } catch(e){}
+}
+
+// Compara o HP de cada criatura entre game_states e dispara o som apropriado.
+// Cobre heróis, monstros, servos (animados) de cada jogador e o prisioneiro.
+let _hpSnapshot = new Map();   // entityId -> hp do último game_state
+
+function _gatherHpEntries(st){
+  const out = [];
+  if(!st) return out;
+  (st.players  || []).forEach(p => { if(p && p.id != null) out.push([`p:${p.id}`, p.hp, p.id === GS.myPid]); });
+  (st.monsters || []).forEach(m => { if(m && m.id != null) out.push([`m:${m.id}`, m.hp, false]); });
+  (st.players  || []).forEach(p => (p && p.animados || []).forEach(a => {
+    if(a && a.id != null) out.push([`a:${a.id}`, (a.vida_atual != null ? a.vida_atual : a.hp), false]);
+  }));
+  const pr = st.prisoner;                       // singleton — sem id próprio
+  if(pr && pr.hp != null) out.push(['pr:singleton', pr.hp, false]);
+  return out;
+}
+
+function _detectHpChanges(st){
+  const entries = _gatherHpEntries(st);
+  let heroHurt = false, creatureHurt = false, healed = false;
+  for(const [key, hp, isMine] of entries){
+    if(hp == null) continue;
+    const prev = _hpSnapshot.get(key);
+    if(prev != null){
+      if(hp < prev){ if(isMine) heroHurt = true; else creatureHurt = true; }
+      else if(hp > prev){ healed = true; }
+    }
+  }
+  // Reconstrói o snapshot só com as criaturas vistas neste estado.
+  _hpSnapshot = new Map(entries.filter(e => e[1] != null).map(e => [e[0], e[1]]));
+  if(heroHurt) playHeroHurt();
+  if(creatureHurt) playCreatureHit();
+  if(healed) playHeal();
 }
 
 // ── Keep 2D canvas sized (used only for label overlay) ──────────────────────
@@ -10380,7 +10502,7 @@ function init3D(state){
 
   // ── MOVEMENT HIGHLIGHT PLANES (blue — MeshBasicMaterial, unaffected by lighting)
   const moveHighlightMeshes = {};
-  const moveHighlightMat = new T.MeshBasicMaterial({ color: 0x3399ff, opacity: 0.28, transparent: true, depthWrite: false });
+  const moveHighlightMat = new T.MeshBasicMaterial({ color: 0x1e6bff, opacity: 0.45, transparent: true, depthWrite: false });
   {
     const hGeo = new T.PlaneGeometry(TW * 0.90, TW * 0.90);
     for(let fy=0; fy<H; fy++) for(let fx=0; fx<W; fx++){
@@ -11046,7 +11168,7 @@ function startLoop3D(){
     // ── Movement highlight pulse (blue overlay planes — slow sine breath) ───────
     if(g3.moveHighlightMat){
       const pulse = 0.5 + 0.5 * Math.sin(t / 420);
-      g3.moveHighlightMat.opacity = 0.20 + 0.38 * pulse;
+      g3.moveHighlightMat.opacity = 0.36 + 0.40 * pulse;
     }
 
     // ── Floating dust motes (upward drift, reset at ceiling, re-randomise XZ) ─
@@ -18469,6 +18591,7 @@ GS.on('gameStart', () => {
 });
 
 GS.on('cityState', msg => {
+  _hpSnapshot.clear();   // de volta à cidade: zera HP base p/ a próxima masmorra
   // If returning from dungeon to city, tear down the 3D renderer first
   if(g3){ dispose3D(); mode3D = false; }
   // Ensure city screen is visible (covers both initial arrival and return from dungeon)
@@ -18488,6 +18611,7 @@ GS.on('shopResult',  msg =>
   toast(msg.msg.replace(/\*\*(.+?)\*\*/g,'$1'), 'var(--green)'));
 
 GS.on('enterDungeon', () => {
+  _hpSnapshot.clear();   // novo cenário: zera HP base (1º game_state não dispara som)
   destroyCity3D();
   // Tear down any leftover dungeon renderer from a previous run so the fresh
   // game_state rebuilds the scene from the correct (new) map. Combined with
@@ -18502,6 +18626,7 @@ GS.on('enterDungeon', () => {
 });
 
 GS.on('gameState', msg => {
+  _detectHpChanges(msg);   // som de dano/cura por variação de HP entre estados
   handleGameState(msg);
   // Sincroniza os animados autoritativos do servidor no registro do Pedro,
   // para a ficha refletir HP/pó durante o combate.

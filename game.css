@@ -158,6 +158,9 @@ input:focus { outline: none; border-color: var(--gold); }
   padding: 7px 12px; border-radius: 8px; border: 1px solid var(--gold, #ffcc44);
   background: rgba(40, 30, 8, 0.92); color: var(--gold, #ffcc44);
   font-weight: 700; font-size: .8rem; cursor: pointer;
+  /* O #objectives-hud é click-through (pointer-events:none) p/ não bloquear o
+     tabuleiro; reabilitamos os eventos só no botão, senão o clique passa direto. */
+  pointer-events: auto;
 }
 .btn-encerrar-missao:hover { background: rgba(60, 45, 12, 0.96); }
 
