@@ -1,7 +1,7 @@
 "use strict";
 (function () {
   const WALL = 0, FLOOR = 1, DOOR = 2, CELL = 28;
-  const CAT = window.EDITOR_CATALOG || { monsters: [], items: [], traps: [], venoms: [] };
+  const CAT = window.EDITOR_CATALOG || { monsters: [], items: [], traps: [], venoms: [], decorations: [] };
 
   const S = {
     meta: { schema_version: 1, id: "nova_masmorra", name: "Nova Masmorra" },
@@ -9,9 +9,11 @@
     tiles: [],
     rooms: [], nextRoomId: 0,
     entrance: null, exit: null, prisoner: null,
-    monsters: [], chests: [], traps: [],
+    monsters: [], chests: [], traps: [], decorations: [],
     objectives: { primary: { type: "kill_all" }, secondary: [] },
     tool: "wall", sel: null,
+    decorType: (CAT.decorations[0] || {}).type || "cama",
+    decorFacing: [0, 1],
   };
 
   function initGrid(w, h) {
@@ -19,6 +21,20 @@
     S.tiles = [];
     for (let y = 0; y < h; y++) S.tiles.push(new Array(w).fill(WALL));
   }
+
+  function decorMeta(type) { return CAT.decorations.find(d => d.type === type) || null; }
+  function decorEffSize(type, facing) {
+    const m = decorMeta(type); if (!m) return [1, 1];
+    const [w, h] = m.size;
+    return (facing && facing[0] !== 0) ? [h, w] : [w, h];
+  }
+  function decorTilesAt(type, ax, ay, facing) {
+    const [ew, eh] = decorEffSize(type, facing);
+    const out = [];
+    for (let i = 0; i < ew; i++) for (let j = 0; j < eh; j++) out.push([ax + i, ay + j]);
+    return out;
+  }
+  function decorTiles(d) { return decorTilesAt(d.type, d.pos[0], d.pos[1], d.facing); }
 
   const board = document.getElementById("board");
   const ctx = board.getContext("2d");
@@ -78,6 +94,7 @@
     { id: "chest", label: "baú", group: "entidades" },
     { id: "trap", label: "armadilha", group: "entidades" },
     { id: "prisoner", label: "prisioneiro", group: "entidades" },
+    { id: "decor", label: "decoração", group: "entidades" },
     { id: "room", label: "sala", group: "ações" },
     { id: "select", label: "selecionar", group: "ações" },
     { id: "erase", label: "apagar", group: "ações" },
@@ -98,6 +115,18 @@
       if (t.id === S.tool) b.classList.add("active");
       b.onclick = () => { S.tool = t.id; buildToolbar(); };
       tb.appendChild(b);
+    }
+    if (S.tool === "decor") {
+      const sel = document.createElement("select");
+      sel.id = "decor-type";
+      sel.innerHTML = CAT.decorations.map(d =>
+        `<option value="${d.type}"${d.type === S.decorType ? " selected" : ""}>${d.emoji} ${d.nome}</option>`).join("");
+      sel.onchange = e => { S.decorType = e.target.value; S.decorFacing = [0, 1]; };
+      tb.appendChild(sel);
+      const rot = document.createElement("button");
+      rot.textContent = "girar 90° (R)";
+      rot.onclick = () => { rotateDecorPending(); };
+      tb.appendChild(rot);
     }
   }
 
