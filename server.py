@@ -4029,10 +4029,12 @@ class GameRoom:
         return any(r.get("locked") for r in self._door_owner_rooms(x, y))
 
     def _blocks_tile(self, x, y):
-        """Tile intransponível: parede ou porta fechada (fora do mapa também)."""
+        """Tile intransponível: parede, porta fechada ou decoração sólida."""
         if not (0 <= x < self.map_w and 0 <= y < self.map_h):
             return True
-        return self.tiles[y][x] == WALL or self._is_closed_door(x, y)
+        if self.tiles[y][x] == WALL or self._is_closed_door(x, y):
+            return True
+        return (x, y) in self._decor_block_tiles
 
     def _tile_in_locked_room(self, x, y):
         for r in self.rooms:
@@ -4086,6 +4088,9 @@ class GameRoom:
         if self._is_closed_door(nx, ny):
             await self.send_to(pid, {"type": "error",
                 "msg": "🚪 A porta está fechada. Clique nela para abri-la."})
+            return
+        if (nx, ny) in self._decor_block_tiles:
+            await self.send_to(pid, {"type": "error", "msg": "Há um objeto bloqueando o caminho."})
             return
 
         # Block movement into a tile occupied by a living monster (footprint multi-tile incluso)

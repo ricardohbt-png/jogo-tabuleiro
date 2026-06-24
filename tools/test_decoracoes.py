@@ -86,10 +86,24 @@ def test_carga():
     check("fonte com charges", r.decorations[1]["charges"] == 3)
     check("índice de bloqueio inclui (3,4)", (3, 4) in r._decor_block_tiles)
 
+def test_bloqueio():
+    print("\n[A4] bloqueio de movimento")
+    r = _room()
+    r.decorations = [{"id": "d0", "type": "cama", "pos": [3, 3], "facing": [0, 1], "loot": None, "tem_loot": False}]
+    r._rebuild_decor_index()
+    check("casa da cama bloqueia", r._blocks_tile(3, 3) is True)
+    check("casa vizinha da cama bloqueia", r._blocks_tile(3, 4) is True)
+    check("casa livre não bloqueia", r._blocks_tile(0, 0) is False)
+    # fogueira é pisável → não bloqueia
+    r.decorations = [{"id": "d1", "type": "fogueira", "pos": [2, 2], "facing": [0, 1], "loot": None, "tem_loot": False}]
+    r._rebuild_decor_index()
+    check("fogueira não bloqueia (pisável)", r._blocks_tile(2, 2) is False)
+
 def main():
     test_catalog()
     test_footprint()
     test_carga()
+    test_bloqueio()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 
