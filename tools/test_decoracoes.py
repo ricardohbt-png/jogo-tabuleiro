@@ -115,12 +115,30 @@ def test_fogueira():
         check("sem dano fora da fogueira", p["hp"] == hp0)
     asyncio.run(run())
 
+def test_fonte():
+    print("\n[A6] fonte → garrafa de água")
+    async def run():
+        r = _room()
+        r.decorations = [{"id": "d0", "type": "fonte", "pos": [5, 5], "facing": [0, 1], "loot": None, "tem_loot": False, "charges": 2}]
+        r._rebuild_decor_index()
+        p = make_player("p1", "Herói", "warrior", 0); p["pos"] = [4, 5]; p["bag"] = []; p["bag_size"] = 6; p["alive"] = True
+        r.players = {"p1": p}
+        await r.handle_interagir_decor("p1", "d0")
+        check("ganhou garrafa de água", any(i["id"] == "garrafa_agua" for i in p["bag"]))
+        check("carga decrementou p/ 1", r.decorations[0]["charges"] == 1)
+        await r.handle_interagir_decor("p1", "d0")
+        await r.handle_interagir_decor("p1", "d0")   # 3ª vez: sem cargas
+        check("não passou de 2 garrafas", sum(1 for i in p["bag"] if i["id"] == "garrafa_agua") == 2)
+        check("cargas zeradas", r.decorations[0]["charges"] == 0)
+    asyncio.run(run())
+
 def main():
     test_catalog()
     test_footprint()
     test_carga()
     test_bloqueio()
     test_fogueira()
+    test_fonte()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

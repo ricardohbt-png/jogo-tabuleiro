@@ -2114,6 +2114,7 @@ SHOP_TAVERN = [
     {"id": "racao_viagem",   "name": "Ração de Viagem",  "emoji": "🥩", "price": 20, "item_slot": "bag", "effect": "food", "fome": 20, "sede": 0},
     {"id": "cantil_agua",    "name": "Cantil de Água",   "emoji": "🧴", "price": 25, "item_slot": "bag", "effect": "food", "fome": 0,  "sede": 20},
 ]
+_TAVERN_BY_ID = {i["id"]: i for i in SHOP_TAVERN}
 
 # ─── GM NARRATION ─────────────────────────────────────────────────────────────
 
@@ -10065,6 +10066,43 @@ class GameRoom:
         """Move o monstro 1 passo e aplica efeitos de pisar (fogueira)."""
         m["pos"] = [nx, ny]
         await self._aplicar_fogueira_se_pisar(m)
+
+    def _decor_by_id(self, decor_id):
+        return next((d for d in self.decorations if d["id"] == decor_id), None)
+
+    def _adjacente_a_decor(self, pos, d):
+        """True se `pos` está a ≤1 casa (Chebyshev) de qualquer casa do footprint."""
+        for tx, ty in self._decor_tiles(d):
+            if max(abs(pos[0] - tx), abs(pos[1] - ty)) <= 1:
+                return True
+        return False
+
+    async def handle_interagir_decor(self, pid, decor_id):
+        """Herói adjacente interage: fonte → bebe; container → abre painel de loot."""
+        p = self.players.get(pid)
+        if not p or not p.get("alive"):
+            return
+        d = self._decor_by_id(decor_id)
+        if not d:
+            await self.send_to(pid, {"type": "error", "msg": "Objeto não encontrado."}); return
+        if not self._adjacente_a_decor(p["pos"], d):
+            await self.send_to(pid, {"type": "error", "msg": "Muito longe do objeto!"}); return
+        meta = DECOR_TYPES[d["type"]]
+        if meta["special"] == "fountain":
+            if d.get("charges", 0) <= 0:
+                await self.send_to(pid, {"type": "error", "msg": "💧 A fonte está seca."}); return
+            item = deepcopy(_TAVERN_BY_ID["garrafa_agua"])
+            if self._add_to_inventory(p, item) == "full":
+                await self.send_to(pid, {"type": "error", "msg": "Inventário cheio!"}); return
+            d["charges"] -= 1
+            await self.gm_say(f"💧 **{p['name']}** encheu uma **Garrafa de Água** na fonte ({d['charges']} restantes).")
+            await self.push_state()
+            return
+        # container (loot) → tratado na Task A7
+        await self._abrir_decor_loot(pid, d)
+
+    async def _abrir_decor_loot(self, pid, d):
+        pass
 
     def _face_toward(self, m, target_pos):
         """ORIENTADO: vira a cabeça para encarar `target_pos` (cardinal dominante),
