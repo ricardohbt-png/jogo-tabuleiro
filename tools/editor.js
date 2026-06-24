@@ -486,6 +486,13 @@
       monsters: S.monsters.map(m => ({ type: m.type, pos: m.pos.slice(), room_id: m.room_id, boss: !!m.boss, target: !!m.target })),
       chests: S.chests.map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: c.items.map(i => ({ id: i.id })), key_objective: !!c.key_objective })),
       traps: S.traps.map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; return o; }),
+      decorations: S.decorations.map(d => {
+        const o = { type: d.type, pos: d.pos.slice(), facing: d.facing.slice() };
+        o.loot = d.loot ? { gold: d.loot.gold | 0, items: d.loot.items.map(i => ({ id: i.id })) } : null;
+        const m = decorMeta(d.type);
+        if (m && m.special === "fountain") o.charges = d.charges | 0;
+        return o;
+      }),
       prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}) } : null,
       objectives: {
         primary: { type: S.objectives.primary.type, xp: S.objectives.primary.xp | 0,
@@ -540,6 +547,19 @@
     if (S.prisoner && isWall(S.prisoner.pos)) e.push("prisioneiro em parede");
     for (const r of S.rooms) for (const d of r.doors) if (S.tiles[d[1]]?.[d[0]] !== DOOR) e.push(`porta declarada não é tile DOOR: ${d}`);
     if (reachableFloors(6) < 6) e.push("menos de 6 casas de chão alcançáveis da entrada");
+    const decTypes = new Set(CAT.decorations.map(d => d.type));
+    const decOcc = new Set();
+    for (const d of S.decorations) {
+      if (!decTypes.has(d.type)) { e.push(`decoração tipo inválido: ${d.type}`); continue; }
+      for (const [tx, ty] of decorTiles(d)) {
+        if (tx < 0 || ty < 0 || tx >= S.grid.w || ty >= S.grid.h || S.tiles[ty]?.[tx] !== FLOOR)
+          e.push(`decoração ${d.type} fora do chão em ${tx},${ty}`);
+        const key = tx + "," + ty;
+        if (decOcc.has(key)) e.push(`decorações sobrepostas em ${tx},${ty}`);
+        decOcc.add(key);
+      }
+      if (d.loot) for (const it of d.loot.items) if (!items.has(it.id)) e.push(`item de loot inválido: ${it.id}`);
+    }
     return { ok: e.length === 0, erros: e };
   }
 
@@ -563,6 +583,11 @@
     S.monsters = (obj.monsters || []).map(m => ({ type: m.type, pos: m.pos.slice(), room_id: m.room_id ?? null, boss: !!m.boss, target: !!m.target }));
     S.chests = (obj.chests || []).map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: (c.items || []).map(i => ({ id: i.id })), key_objective: !!c.key_objective }));
     S.traps = (obj.traps || []).map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; return o; });
+    S.decorations = (obj.decorations || []).map(d => ({
+      type: d.type, pos: d.pos.slice(), facing: (d.facing || [0, 1]).slice(),
+      loot: d.loot ? { gold: d.loot.gold | 0, items: (d.loot.items || []).map(i => ({ id: i.id })) } : null,
+      ...(d.charges !== undefined ? { charges: d.charges | 0 } : {}),
+    }));
     S.objectives = obj.objectives || { primary: { type: "kill_all" }, secondary: [] };
     if (!S.objectives.primary) S.objectives.primary = { type: "kill_all" };
     if (!Array.isArray(S.objectives.secondary)) S.objectives.secondary = [];
@@ -652,7 +677,7 @@
   document.getElementById("tab-campanha").onclick = () => setTab("campanha");
 
   // Expor para verificação no console / tasks seguintes.
-  window.EDITOR = { S, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, deleteRoom, entityAt, doorLink, doorUnlink, validarEditor, buildJSON, loadJSON, save, updateStatus, WALL, FLOOR, DOOR };
+  window.EDITOR = { S, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, deleteRoom, entityAt, doorLink, doorUnlink, validarEditor, buildJSON, loadJSON, save, updateStatus, WALL, FLOOR, DOOR, decorMeta, decorEffSize, decorTilesAt, decorTiles, rotateFacing, rotateDecorPending, decorFits, placeDecor };
 
   initGrid(S.grid.w, S.grid.h);
   buildToolbar();
