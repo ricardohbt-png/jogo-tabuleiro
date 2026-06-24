@@ -7283,6 +7283,7 @@ class GameRoom:
             return
         alvo = min(vivos, key=lambda p: abs(p["pos"][0]-m["pos"][0]) + abs(p["pos"][1]-m["pos"][1]))
         moveu = self._passo_monstro(m, alvo["pos"][0], alvo["pos"][1], away=True)
+        await self._aplicar_fogueira_se_pisar(m)
         await self.gm_say(f"😱 **{m['name']}** está apavorado e foge" + ("!" if moveu else " (encurralado)!"))
 
     async def _acao_dominado(self, m, alive_monsters):
@@ -7309,6 +7310,7 @@ class GameRoom:
                 await self.gm_say(f"🧠 **{m['name']}** (dominado) ataca **{alvo['name']}** e erra!")
         else:
             self._passo_monstro(m, alvo["pos"][0], alvo["pos"][1])
+            await self._aplicar_fogueira_se_pisar(m)
             await self.gm_say(f"🧠 **{m['name']}** (dominado) avança contra **{alvo['name']}**.")
 
     async def _processar_status_jogador_turno(self, p):
