@@ -10160,6 +10160,23 @@ class GameRoom:
         self._decor_atualiza_tem_loot(d)
         await self.push_state()
 
+    def _serializar_decoracoes(self):
+        """Payload de render do cliente (sem vazar o conteúdo do loot)."""
+        out = []
+        for d in self.decorations:
+            meta = DECOR_TYPES[d["type"]]
+            out.append({
+                "id": d["id"], "type": d["type"], "pos": d["pos"],
+                "facing": d.get("facing", [0, 1]),
+                "tiles": self._decor_tiles(d),
+                "tem_loot": bool(d.get("tem_loot")),
+                "charges": d.get("charges"),
+                "alto": meta["alto"], "pisavel": meta["pisavel"],
+                "special": meta["special"], "emoji": meta["emoji"],
+                "size": meta["size"],
+            })
+        return out
+
     def _face_toward(self, m, target_pos):
         """ORIENTADO: vira a cabeça para encarar `target_pos` (cardinal dominante),
         desde que a cauda caiba atrás. Só orientação (visual/posicional) — não move."""
@@ -12677,6 +12694,7 @@ class GameRoom:
             "gm_log": self.gm_log[-30:],
             "phase": self.phase,
             "chests": list(self.chests.values()),
+            "decorations": self._serializar_decoracoes(),
         })
 
 # ─── CONNECTION HANDLER ───────────────────────────────────────────────────────

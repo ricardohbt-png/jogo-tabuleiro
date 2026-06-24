@@ -160,6 +160,20 @@ def test_visao():
     check("casa atrás da coluna fica oculta", (5, 2) not in r.explored)
     check("casa ao lado (não ocluída) é revelada", (2, 4) in r.explored)
 
+def test_serial():
+    print("\n[A9] serialização game_state")
+    r = _room()
+    r.decorations = [{"id": "d0", "type": "estante", "pos": [3, 3], "facing": [1, 0],
+                      "loot": {"gold": 0, "items": []}, "tem_loot": False}]
+    r._rebuild_decor_index()
+    payload = r._serializar_decoracoes()
+    check("1 item serializado", len(payload) == 1)
+    d0 = payload[0]
+    check("tem type/pos/facing/tiles/tem_loot/alto/pisavel",
+          all(k in d0 for k in ("id", "type", "pos", "facing", "tiles", "tem_loot", "alto", "pisavel", "special")))
+    check("tiles resolvidos (2 casas, horizontal)", sorted(map(tuple, d0["tiles"])) == [(3, 3), (4, 3)])
+    check("não vaza loot detalhado", "loot" not in d0)
+
 def main():
     test_catalog()
     test_footprint()
@@ -169,6 +183,7 @@ def main():
     test_fonte()
     test_container()
     test_visao()
+    test_serial()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 
