@@ -125,10 +125,13 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `acao_livre_richard` | `habilidade_id` (`regeneracao_divina`/`guerreiro_luz`), `bonus` opcional |
 | `criar_armadilha` | `tipo` (id em `ARMADILHAS`), `tx`/`ty` opcionais (default = casa do Luccas), `veneno_id` (só `fosso_envenenado`) — Luccas coloca uma armadilha (ação principal) |
 | `desarmar_armadilha` | — (Luccas desarma armadilha na própria casa/adjacente; teste de DES; nat1 dispara nele) |
+| `interagir_decor` | `decor_id` — herói adjacente interage com uma decoração: fonte → recebe uma garrafa de água (consome 1 carga); container com loot → abre o painel de loot. Ação livre. |
+| `take_from_decor` | `decor_id`, `kind` (`gold`/`item`), `index` — pega ouro/item de uma decoração-container (espelha `take_from_chest`; sem restrição de turno). |
 
 ### Server → Client
 `lobby_state`, `game_start`, `city_state`, `shop_result`, `enter_dungeon`,
-`game_state`, `gm_narration`, `game_over`, `dice_roll`, `animar_result`, `error`
+`game_state`, `gm_narration`, `game_over`, `dice_roll`, `animar_result`, `error`,
+`decor_loot`
 
 > `game_state` inclui `corpses` (cadáveres) e `armadilhas` (colocáveis — ver
 > abaixo). `animar_result` traz
@@ -162,6 +165,23 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 > `game_state.mission_complete_pending` sinaliza esse estado. No editor: é possível
 > **deletar salas** (mantendo ou limpando o chão) e definir XP/recompensa por
 > objetivo (principal e secundários).
+
+> **Decorações (`game_state.decorations`):** objetos colocáveis no editor que
+> ocupam 1/2/4 casas (footprint `size:[w,h]` + `facing`, giro 90°). Catálogo
+> autoritativo `DECOR_TYPES` (server.py, 22 tipos) com `alto`/`pisavel`/`loot_capaz`/
+> `special`. Decorações sólidas bloqueiam movimento (entram em `_blocks_tile` via
+> `_decor_block_tiles`); as **altas** ocluem a revelação de névoa por raycast
+> (`_tall_oclui_caminho` em `_reveal_around`). **Fogueira** (`special:campfire`,
+> pisável): 1d4 de fogo a quem entra (heróis e monstros — `_aplicar_fogueira_se_pisar`
+> após cada commit de passo). **Fonte** (`special:fountain`): `interagir_decor` dá
+> `garrafa_agua` e gasta 1 `charges`. **Containers** (`loot:{gold,items}`, qualquer
+> tipo exceto fogueira): `interagir_decor`→`decor_loot`→`take_from_decor` (reusa o
+> painel de baú via `abrirPainelLoot`; servidor re-envia `decor_loot` após cada take
+> p/ atualizar o painel). Footprint resolvido por `_decor_tiles`/`_decor_tiles_at`
+> (espelhado no cliente `GS.decorTilesOf` e no editor `decorTilesAt`). Render: 2D
+> emoji + 3D geometria procedural (`DECOR_3D`/`decorMeshes`, preparado p/ GLB).
+> Validação em `validar_dungeon`; catálogo exportado p/ o editor via
+> `export_catalog.py`. Testes: `tools/test_decoracoes.py`, `tools/test_decor_roundtrip.py`.
 
 ### Armadilhas colocáveis (`game_state.armadilhas`)
 Sistema distinto das `traps` de masmorra. Cada item: `id`, `tipo`, `pos:[x,y]`,
