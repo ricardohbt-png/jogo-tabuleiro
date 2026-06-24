@@ -3997,6 +3997,22 @@ class GameRoom:
             for rx in range(max(0, room["x"] - 1), min(self.map_w, room["x"] + room["w"] + 1)):
                 self.explored.add((rx, ry))
 
+    def _tall_oclui_caminho(self, x0, y0, x1, y1):
+        """True se a linha (x0,y0)→(x1,y1) cruza uma casa de decoração ALTA
+        antes do destino (a própria casa-destino não conta)."""
+        if not self._decor_tall_tiles:
+            return False
+        dx = x1 - x0; dy = y1 - y0
+        passos = max(abs(dx), abs(dy))
+        if passos == 0:
+            return False
+        for s in range(1, passos):   # casas intermediárias (exclui origem e destino)
+            cx = round(x0 + dx * s / passos)
+            cy = round(y0 + dy * s / passos)
+            if (cx, cy) in self._decor_tall_tiles:
+                return True
+        return False
+
     def _reveal_around(self, px, py, radius=1):
         for dy in range(-radius, radius+1):
             for dx in range(-radius, radius+1):
@@ -4005,6 +4021,8 @@ class GameRoom:
                 # esconde o conteúdo). A própria porta, no anel externo, é
                 # revelada normalmente.
                 if self._tile_in_locked_room(x, y):
+                    continue
+                if self._tall_oclui_caminho(px, py, x, y):
                     continue
                 self.explored.add((x, y))
 

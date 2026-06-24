@@ -148,6 +148,18 @@ def test_container():
         check("loot esvaziado → tem_loot False", r.decorations[0]["tem_loot"] is False)
     asyncio.run(run())
 
+def test_visao():
+    print("\n[A8] oclusão de visão dos altos")
+    r = _room()
+    # coluna (alta) em (4,2); herói em (2,2) revelando raio 3
+    r.decorations = [{"id": "d0", "type": "coluna", "pos": [4, 2], "facing": [0, 1], "loot": None, "tem_loot": False}]
+    r._rebuild_decor_index()
+    r.explored = set()
+    r._reveal_around(2, 2, radius=3)
+    check("a própria coluna é revelada", (4, 2) in r.explored)
+    check("casa atrás da coluna fica oculta", (5, 2) not in r.explored)
+    check("casa ao lado (não ocluída) é revelada", (2, 4) in r.explored)
+
 def main():
     test_catalog()
     test_footprint()
@@ -156,6 +168,7 @@ def main():
     test_fogueira()
     test_fonte()
     test_container()
+    test_visao()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 
