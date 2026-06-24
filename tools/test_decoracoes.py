@@ -148,6 +148,38 @@ def test_container():
         check("loot esvaziado → tem_loot False", r.decorations[0]["tem_loot"] is False)
     asyncio.run(run())
 
+def test_container_refresh():
+    print("\n[A7b] container de loot — re-envio de decor_loot após take")
+    async def run():
+        r = _room()
+        loot = {"gold": 10, "items": server.hidratar_itens_bau([{"id": "health_potion"}])}
+        r.decorations = [{"id": "d0", "type": "barril", "pos": [5, 5], "facing": [0, 1], "loot": loot, "tem_loot": True}]
+        r._rebuild_decor_index()
+        p = make_player("p1", "Herói", "warrior", 0); p["pos"] = [4, 5]; p["gold"] = 0; p["bag"] = []; p["bag_size"] = 6; p["alive"] = True
+        r.players = {"p1": p}
+
+        sent = []
+        async def _capture_send_to(pid, msg):
+            sent.append((pid, msg))
+        r.send_to = _capture_send_to
+
+        # Pegar ouro → deve re-enviar decor_loot com gold zerado
+        await r.handle_take_from_decor("p1", "d0", "gold", 0)
+        decor_msgs = [m for pid, m in sent if m.get("type") == "decor_loot"]
+        check("re-enviou decor_loot após pegar ouro", len(decor_msgs) == 1)
+        check("decor_loot reflete gold zerado", decor_msgs[0]["gold"] == 0)
+        check("decor_loot tem decor_id correto", decor_msgs[0]["decor_id"] == "d0")
+        check("decor_loot ainda tem o item", len(decor_msgs[0]["items"]) == 1)
+
+        # Pegar item → deve re-enviar decor_loot com items vazio
+        sent.clear()
+        await r.handle_take_from_decor("p1", "d0", "item", 0)
+        decor_msgs2 = [m for pid, m in sent if m.get("type") == "decor_loot"]
+        check("re-enviou decor_loot após pegar item", len(decor_msgs2) == 1)
+        check("decor_loot reflete items vazio", decor_msgs2[0]["items"] == [])
+        check("decor_loot gold ainda 0", decor_msgs2[0]["gold"] == 0)
+    asyncio.run(run())
+
 def test_visao():
     print("\n[A8] oclusão de visão dos altos")
     r = _room()
@@ -239,6 +271,7 @@ def main():
     test_fogueira()
     test_fonte()
     test_container()
+    test_container_refresh()
     test_visao()
     test_serial()
     test_validacao()

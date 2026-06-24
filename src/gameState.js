@@ -1048,6 +1048,10 @@ const GS = (() => {
         _emit('spellPickPrompt', msg);   // {circulo, count, opcoes}
         break;
 
+      case 'decor_loot':
+        _emit('decor_loot', msg);
+        break;
+
       case 'error':
         _emit('serverError', msg.msg);
         break;

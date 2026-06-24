@@ -18844,6 +18844,11 @@ GS.on('gameState', msg => {
     if(updatedChest) _renderChestWindow(updatedChest);
     else closeChestWindow();   // chest was emptied and removed
   }
+  // Close decor loot panel if the decoration is now empty or gone
+  if(_openDecorLootId){
+    const decor = (msg.decorations||[]).find(d=>d.id===_openDecorLootId);
+    if(!decor || !decor.tem_loot) closeChestWindow();
+  }
 });
 
 GS.on('gmNarration', text => appendGM(text));

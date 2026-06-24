@@ -10206,6 +10206,9 @@ class GameRoom:
             loot["items"].pop(idx)
             await self.gm_say(f"🎒 **{p['name']}** pegou **{item['name']}** do objeto!")
         self._decor_atualiza_tem_loot(d)
+        # Re-send updated loot so the open panel refreshes live
+        await self.send_to(pid, {"type": "decor_loot", "decor_id": d["id"],
+                                  "gold": loot["gold"], "items": loot["items"]})
         await self.push_state()
 
     def _serializar_decoracoes(self):
