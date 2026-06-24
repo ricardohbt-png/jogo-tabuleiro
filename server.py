@@ -10102,7 +10102,45 @@ class GameRoom:
         await self._abrir_decor_loot(pid, d)
 
     async def _abrir_decor_loot(self, pid, d):
-        pass
+        """Abre o painel de loot da decoração (reusa o painel de baú no cliente)."""
+        if not d.get("loot") or not d.get("tem_loot"):
+            await self.send_to(pid, {"type": "error", "msg": "O objeto está vazio."}); return
+        await self.send_to(pid, {"type": "decor_loot", "decor_id": d["id"],
+                                  "gold": d["loot"]["gold"], "items": d["loot"]["items"]})
+
+    def _decor_atualiza_tem_loot(self, d):
+        l = d.get("loot")
+        d["tem_loot"] = bool(l and (l["gold"] > 0 or l["items"]))
+
+    async def handle_take_from_decor(self, pid, decor_id, kind, index):
+        """Pega ouro/item de uma decoração-container (sem restrição de turno)."""
+        p = self.players.get(pid)
+        if not p or not p.get("alive"):
+            return
+        d = self._decor_by_id(decor_id)
+        if not d or not d.get("loot"):
+            await self.send_to(pid, {"type": "error", "msg": "Objeto sem loot."}); return
+        if not self._adjacente_a_decor(p["pos"], d):
+            await self.send_to(pid, {"type": "error", "msg": "Muito longe do objeto!"}); return
+        loot = d["loot"]
+        if kind == "gold":
+            amount = loot["gold"]
+            if amount <= 0:
+                await self.send_to(pid, {"type": "error", "msg": "Sem ouro aqui."}); return
+            p["gold"] += amount
+            loot["gold"] = 0
+            await self.gm_say(f"🪙 **{p['name']}** pegou **{amount}** ouros do objeto!")
+        elif kind == "item":
+            idx = int(index)
+            if idx < 0 or idx >= len(loot["items"]):
+                await self.send_to(pid, {"type": "error", "msg": "Item inválido."}); return
+            item = loot["items"][idx]
+            if self._add_to_inventory(p, item) == "full":
+                await self.send_to(pid, {"type": "error", "msg": "Inventário cheio!"}); return
+            loot["items"].pop(idx)
+            await self.gm_say(f"🎒 **{p['name']}** pegou **{item['name']}** do objeto!")
+        self._decor_atualiza_tem_loot(d)
+        await self.push_state()
 
     def _face_toward(self, m, target_pos):
         """ORIENTADO: vira a cabeça para encarar `target_pos` (cardinal dominante),

@@ -132,6 +132,22 @@ def test_fonte():
         check("cargas zeradas", r.decorations[0]["charges"] == 0)
     asyncio.run(run())
 
+def test_container():
+    print("\n[A7] container de loot")
+    async def run():
+        r = _room()
+        loot = {"gold": 7, "items": server.hidratar_itens_bau([{"id": "health_potion"}])}
+        r.decorations = [{"id": "d0", "type": "barril", "pos": [5, 5], "facing": [0, 1], "loot": loot, "tem_loot": True}]
+        r._rebuild_decor_index()
+        p = make_player("p1", "Herói", "warrior", 0); p["pos"] = [4, 5]; p["gold"] = 0; p["bag"] = []; p["bag_size"] = 6; p["alive"] = True
+        r.players = {"p1": p}
+        await r.handle_take_from_decor("p1", "d0", "gold", 0)
+        check("pegou 7 de ouro", p["gold"] == 7 and r.decorations[0]["loot"]["gold"] == 0)
+        await r.handle_take_from_decor("p1", "d0", "item", 0)
+        check("pegou o item", any(i["id"] == "health_potion" for i in p["bag"]))
+        check("loot esvaziado → tem_loot False", r.decorations[0]["tem_loot"] is False)
+    asyncio.run(run())
+
 def main():
     test_catalog()
     test_footprint()
@@ -139,6 +155,7 @@ def main():
     test_bloqueio()
     test_fogueira()
     test_fonte()
+    test_container()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 
