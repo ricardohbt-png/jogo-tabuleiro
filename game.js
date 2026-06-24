@@ -236,6 +236,32 @@ const SPR_SCALE=CELL/48; // sprite scale factor (sprites designed for CELL=48)
 const _ASSET_VER = Date.now();
 function _assetURL(path){ return path + (path.includes('?') ? '&' : '?') + 'v=' + _ASSET_VER; }
 
+// ── Decoration 3D spec — shape/height/color per type (procedural render) ──────
+const DECOR_3D = {
+  cama:           { shape: 'box', h: 0.5,  color: 0x8a5a3c },
+  lareira:        { shape: 'box', h: 0.8,  color: 0x6b6b6b },
+  fonte:          { shape: 'cyl', h: 0.6,  color: 0x5a8fb0 },
+  fogueira:       { shape: 'cyl', h: 0.25, color: 0xd2691e },
+  tumba:          { shape: 'box', h: 0.6,  color: 0x777777 },
+  mesa_cadeiras:  { shape: 'box', h: 0.6,  color: 0x9a6b3c },
+  estante:        { shape: 'box', h: 1.6,  color: 0x6b4a2a },
+  carroca:        { shape: 'box', h: 0.7,  color: 0x7a5230 },
+  coluna:         { shape: 'cyl', h: 1.8,  color: 0xaaaaaa },
+  barril:         { shape: 'cyl', h: 0.8,  color: 0x8a5a2a },
+  arca_tesouros:  { shape: 'box', h: 0.6,  color: 0xc8a23a },
+  cama_casal:     { shape: 'box', h: 0.5,  color: 0x8a5a3c },
+  estante_livros: { shape: 'box', h: 1.6,  color: 0x5a3a1a },
+  altar:          { shape: 'box', h: 0.9,  color: 0x9a9aae },
+  trono:          { shape: 'box', h: 1.2,  color: 0xc8a23a },
+  gaiola:         { shape: 'box', h: 1.5,  color: 0x555555 },
+  grades_prisao:  { shape: 'box', h: 1.5,  color: 0x555555 },
+  estante_armas:  { shape: 'box', h: 1.6,  color: 0x6b4a2a },
+  mesa_tortura:   { shape: 'box', h: 0.6,  color: 0x7a4a4a },
+  mesa_quimica:   { shape: 'box', h: 0.7,  color: 0x4a7a6a },
+  arvore:         { shape: 'cyl', h: 1.8,  color: 0x2e7d32 },
+  arvore_grande:  { shape: 'cyl', h: 2.6,  color: 0x1b5e20 },
+};
+
 // ── Hi-DPI helper — call at start of every renderMap / dice frame ──
 function applyDPR(canvas, cssW, cssH){
   const dpr=window.devicePixelRatio||1;
@@ -10837,6 +10863,7 @@ function init3D(state){
     stairGroup,                          // staircase mesh (null if no stairs)
     exitGroup,                           // Fase 3: marcador de saída 🏁 (null se não houver)
     chestMeshes: {},                     // chest_id → THREE.Group
+    decorMeshes: {},                     // decor id → THREE.Mesh
     hoveredPos:  null,   // [gx, gy] of figure under cursor, or null
     selectedPos: null    // [gx, gy] of clicked-selected figure, or null
   };
@@ -12544,6 +12571,50 @@ function renderMap3D(state){
       g3.chestMeshes[chest.id] = grp;
     }
     g3.chestMeshes[chest.id].visible = exploredSet.has(key);
+  }
+
+  // ── Decoration 3D meshes — procedural boxes/cylinders per decoration ─────────
+  {
+    const decors = GS.decorations;
+    const vistosDec = new Set();
+    for (const d of decors) {
+      vistosDec.add(d.id);
+      const tiles = GS.decorTilesOf(d);
+      // Determine footprint bounds
+      const minX = Math.min(...tiles.map(t => t[0]));
+      const maxX = Math.max(...tiles.map(t => t[0]));
+      const minY = Math.min(...tiles.map(t => t[1]));
+      const maxY = Math.max(...tiles.map(t => t[1]));
+      const wCells = maxX - minX + 1;
+      const hCells = maxY - minY + 1;
+      const spec = DECOR_3D[d.type] || { shape: 'box', h: 0.6, color: 0x999999 };
+      let mesh = g3.decorMeshes[d.id];
+      if (!mesh) {
+        const geo = spec.shape === 'cyl'
+          ? new T.CylinderGeometry(0.4, 0.4, spec.h, 16)
+          : new T.BoxGeometry(1, spec.h, 1);
+        mesh = new T.Mesh(geo, new T.MeshStandardMaterial({ color: spec.color }));
+        mesh.userData.isDecor = true;
+        mesh.userData.decorId = d.id;
+        g3.scene.add(mesh);
+        g3.decorMeshes[d.id] = mesh;
+      }
+      // Center of footprint in world coords (tile x,y map directly to world x,z)
+      const worldX = (minX + maxX) / 2;
+      const worldZ = (minY + maxY) / 2;
+      mesh.position.set(worldX, spec.h / 2, worldZ);
+      // Scale box to cover full footprint; cylinder keeps fixed radius
+      if (spec.shape === 'box') mesh.scale.set(wCells * 0.9, 1, hCells * 0.9);
+      // Visibility: show if any footprint tile is explored
+      mesh.visible = tiles.some(([tx2, ty2]) => exploredSet.has(`${tx2},${ty2}`));
+    }
+    // Remove meshes for decorations that no longer exist
+    for (const id of Object.keys(g3.decorMeshes)) {
+      if (!vistosDec.has(id)) {
+        g3.scene.remove(g3.decorMeshes[id]);
+        delete g3.decorMeshes[id];
+      }
+    }
   }
 
   // ── Rebuild entity group ────────────────────────────────────────────────────
