@@ -9978,6 +9978,37 @@ class GameRoom:
         """Lista de [x,y] tiles ocupados pelo monstro (frente = m['pos'])."""
         return self._monster_tiles_at(m, m["pos"][0], m["pos"][1])
 
+    # ── DECORAÇÕES ─────────────────────────────────────────────────────────
+    def _decor_eff_size(self, dtype, facing):
+        """(ew,eh) efetivos: facing horizontal troca w↔h; vertical/None mantém."""
+        w, h = DECOR_TYPES[dtype]["size"]
+        if facing and facing[0] != 0:
+            return h, w
+        return w, h
+
+    def _decor_tiles_at(self, dtype, ax, ay, facing=None):
+        """Casas [x,y] ocupadas pela decoração `dtype` ancorada em (ax,ay)."""
+        ew, eh = self._decor_eff_size(dtype, facing)
+        return [[ax + i, ay + j] for i in range(ew) for j in range(eh)]
+
+    def _decor_tiles(self, d):
+        return self._decor_tiles_at(d["type"], d["pos"][0], d["pos"][1], d.get("facing"))
+
+    def _rebuild_decor_index(self):
+        """Recalcula os índices rápidos de bloqueio/visão das decorações."""
+        self._decor_block_tiles = set()
+        self._decor_tall_tiles = set()
+        self._campfire_tiles = set()
+        for d in getattr(self, "decorations", []):
+            meta = DECOR_TYPES[d["type"]]
+            for tx, ty in self._decor_tiles(d):
+                if not meta["pisavel"]:
+                    self._decor_block_tiles.add((tx, ty))
+                if meta["alto"]:
+                    self._decor_tall_tiles.add((tx, ty))
+                if meta["special"] == "campfire":
+                    self._campfire_tiles.add((tx, ty))
+
     def _face_toward(self, m, target_pos):
         """ORIENTADO: vira a cabeça para encarar `target_pos` (cardinal dominante),
         desde que a cauda caiba atrás. Só orientação (visual/posicional) — não move."""
