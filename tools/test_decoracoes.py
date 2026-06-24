@@ -174,6 +174,45 @@ def test_serial():
     check("tiles resolvidos (2 casas, horizontal)", sorted(map(tuple, d0["tiles"])) == [(3, 3), (4, 3)])
     check("não vaza loot detalhado", "loot" not in d0)
 
+def _defn_base():
+    return {
+        "schema_version": 1, "id": "t", "name": "T",
+        "grid": {"w": 12, "h": 12},
+        "tiles": [[FLOOR] * 12 for _ in range(12)],
+        "rooms": [{"id": 0, "x": 0, "y": 0, "w": 12, "h": 12, "role": "entrance", "locked": False, "doors": []}],
+        "entrance": {"x": 1, "y": 1}, "exit": None, "prisoner": None,
+        "monsters": [], "chests": [], "traps": [], "decorations": [],
+        "objectives": {"primary": {"type": "kill_all"}, "secondary": []},
+    }
+
+def test_validacao():
+    print("\n[A10] validação")
+    d = _defn_base()
+    d["decorations"] = [{"type": "cama", "pos": [3, 3], "facing": [0, 1], "loot": None}]
+    ok, msg = server.validar_dungeon(d)
+    check(f"válida com cama em chão ({msg})", ok is True)
+    # tipo inválido
+    d["decorations"] = [{"type": "xyz", "pos": [3, 3], "facing": [0, 1]}]
+    ok, _ = server.validar_dungeon(d); check("rejeita tipo desconhecido", ok is False)
+    # footprint em parede
+    d2 = _defn_base()
+    d2["tiles"][4][3] = WALL
+    d2["decorations"] = [{"type": "cama", "pos": [3, 3], "facing": [0, 1]}]  # ocupa (3,3) e (3,4)→parede
+    ok, _ = server.validar_dungeon(d2); check("rejeita footprint sobre parede", ok is False)
+    # sobreposição entre decorações
+    d3 = _defn_base()
+    d3["decorations"] = [{"type": "barril", "pos": [5, 5], "facing": [0, 1]},
+                         {"type": "barril", "pos": [5, 5], "facing": [0, 1]}]
+    ok, _ = server.validar_dungeon(d3); check("rejeita sobreposição", ok is False)
+    # item de loot inválido
+    d4 = _defn_base()
+    d4["decorations"] = [{"type": "barril", "pos": [5, 5], "facing": [0, 1], "loot": {"gold": 0, "items": [{"id": "nope"}]}}]
+    ok, _ = server.validar_dungeon(d4); check("rejeita item de loot inválido", ok is False)
+    # fora do grid
+    d5 = _defn_base()
+    d5["decorations"] = [{"type": "fonte", "pos": [11, 11], "facing": [0, 1]}]  # 2x2 sai do grid
+    ok, _ = server.validar_dungeon(d5); check("rejeita footprint fora do grid", ok is False)
+
 def main():
     test_catalog()
     test_footprint()
@@ -184,6 +223,7 @@ def main():
     test_container()
     test_visao()
     test_serial()
+    test_validacao()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

@@ -1777,6 +1777,46 @@ def validar_dungeon(defn):
     if _contar_chao_alcancavel(tiles, w, h, [ent["x"], ent["y"]], limite=6) < 6:
         return False, "menos de 6 casas de chão alcançáveis a partir da entrada."
 
+    decors = defn.get("decorations", [])
+    if not isinstance(decors, list):
+        return False, "decorations deve ser uma lista."
+    grid_w = defn["grid"]["w"]; grid_h = defn["grid"]["h"]
+    ocupadas = set()
+    for de in decors:
+        if not isinstance(de, dict):
+            return False, "cada decoração deve ser um objeto JSON."
+        dtype = de.get("type")
+        meta = DECOR_TYPES.get(dtype)
+        if not meta:
+            return False, f"decoração tipo desconhecido: {dtype!r}."
+        pos = de.get("pos")
+        if not (isinstance(pos, list) and len(pos) == 2):
+            return False, f"decoração com pos inválida: {pos!r}."
+        facing = de.get("facing") or [0, 1]
+        w_d, h_d = meta["size"]
+        ew, eh = (h_d, w_d) if (facing and facing[0] != 0) else (w_d, h_d)
+        for i in range(ew):
+            for j in range(eh):
+                tx, ty = pos[0] + i, pos[1] + j
+                if not (0 <= tx < grid_w and 0 <= ty < grid_h):
+                    return False, f"decoração {dtype} fora do grid em ({tx},{ty})."
+                if tile_at([tx, ty]) != FLOOR:
+                    return False, f"decoração {dtype} precisa estar sobre chão em ({tx},{ty})."
+                if (tx, ty) in ocupadas:
+                    return False, f"decorações sobrepostas em ({tx},{ty})."
+                ocupadas.add((tx, ty))
+        loot = de.get("loot")
+        if loot is not None:
+            if not meta["loot_capaz"]:
+                return False, f"decoração {dtype} não pode conter loot."
+            for it in (loot.get("items") or []):
+                if not isinstance(it, dict) or it.get("id") not in _DUNGEON_ITEM_CATALOG:
+                    return False, f"item de loot inválido: {it!r}."
+        if meta["special"] == "fountain":
+            ch = de.get("charges", 0)
+            if isinstance(ch, bool) or not isinstance(ch, int) or ch < 0:
+                return False, "fonte com charges inválido."
+
     return True, "ok"
 
 def hidratar_itens_bau(items):
