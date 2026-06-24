@@ -109,8 +109,14 @@ Novo array de topo `decorations`:
    automaticamente: movimento de heróis (`handle_move`), pathfinding e ocupação de
    monstros (`_monster_can_occupy`, `_entity_blocks`), animados, prisioneiro.
    - A fogueira (`pisavel: true`) **não** bloqueia.
-5. **Bloqueio de visão/névoa:** casas de decoração **`alto`** entram no teste de LOS /
-   revelação de névoa (mesmo ponto onde paredes/portas fechadas bloqueiam a linha).
+5. **Bloqueio de visão/névoa (oclusão por raio nos altos):** a névoa atual revela por
+   **raio** (`_reveal_around`), sem linha de visão — paredes não ocluem. Para os objetos
+   **`alto`**, adicionar **oclusão por raycast**: ao revelar o raio em torno do herói,
+   traçar uma linha (Bresenham/DDA) do herói até cada casa do raio; se a linha cruzar a
+   casa de uma decoração **`alto`** antes de chegar ao destino, o destino **não** é
+   revelado (fica oculto atrás do objeto). Vale **só** para decorações altas — paredes
+   continuam com o comportamento atual (não ocluem), para não alterar masmorras
+   existentes. A própria casa do objeto alto é revelada.
 6. **Fogueira (`campfire`):** ao uma criatura **entrar** numa casa de fogueira (heróis
    em `handle_move`; monstros/animados no respectivo movimento), aplicar **1d4** de
    dano de fogo, com broadcast de dado (`dice_roll`) e narração. Sem teste de save.
@@ -176,7 +182,8 @@ Novo array de topo `decorations`:
 1. Beber da fonte e abrir container são **ação livre** (não gastam turno), como o baú
    hoje; a fonte é limitada por **cargas**.
 2. **Grades de prisão** e **gaiola** bloqueiam **movimento** mas **não** a visão
-   (são vazadas) — `alto: false`.
+   (são vazadas) — `alto: false`. Objetos `alto` (coluna, árvores, estantes) **ocluem**
+   a revelação de névoa via raycast (ver Fase A, item 5).
 3. **Fogueira** sem teste de save — dano **automático** de 1d4 ao entrar, para todos.
 4. Decorações só podem ser colocadas sobre **chão** (FLOOR), nunca em parede, porta,
    entrada ou saída, e o footprint não pode sobrepor outra entidade.
