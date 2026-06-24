@@ -401,6 +401,31 @@
           st.textContent = "falha: " + err.message;
         }
       };
+    } else if (k === "decor") {
+      const m = decorMeta(ref.type) || {};
+      const hasLoot = !!ref.loot;
+      panel.innerHTML = `<b>${m.emoji || "🪑"} ${m.nome || ref.type}</b>
+        <div style="color:#8a7a5a;font-size:11px">${m.size ? m.size[0] + "×" + m.size[1] : ""} ${m.alto ? "· alto (oclui visão)" : ""} ${m.pisavel ? "· pisável" : ""}</div>
+        ${m.gira ? `<button id="d-rot">girar 90°</button>` : ""}
+        ${m.special === "fountain" ? `<label>cargas <input id="d-charges" type="number" min="0" value="${ref.charges ?? 0}"></label>` : ""}
+        ${m.loot_capaz ? `<label style="display:block;margin-top:8px"><input type="checkbox" id="d-haslook" ${hasLoot ? "checked" : ""}> contém loot</label>` : ""}
+        <div id="d-loot" style="${hasLoot ? "" : "display:none"}">
+          <label>ouro <input id="d-gold" type="number" min="0" value="${hasLoot ? (ref.loot.gold | 0) : 0}"></label>
+          <label>itens</label>
+          <div id="d-items">${hasLoot ? ref.loot.items.map((it, i) => `<div>${it.id} <button data-i="${i}" class="d-rm">×</button></div>`).join("") : ""}</div>
+          <select id="d-add">${opt(CAT.items.map(it => ({ v: it.id, name: it.name })), "", o => o.v + " — " + o.name)}</select>
+          <button id="d-additem">+ item</button>
+        </div>`;
+      if (m.gira) document.getElementById("d-rot").onclick = () => { ref.facing = rotateFacing(ref.facing); render(); };
+      if (m.special === "fountain") document.getElementById("d-charges").onchange = e => { ref.charges = Math.max(0, Number(e.target.value) | 0); };
+      if (m.loot_capaz) document.getElementById("d-haslook").onchange = e => {
+        ref.loot = e.target.checked ? { gold: 0, items: [] } : null; renderPanel();
+      };
+      if (hasLoot) {
+        document.getElementById("d-gold").onchange = e => { ref.loot.gold = Math.max(0, Number(e.target.value) | 0); };
+        document.getElementById("d-additem").onclick = () => { const id = document.getElementById("d-add").value; if (id) ref.loot.items.push({ id }); renderPanel(); };
+        panel.querySelectorAll(".d-rm").forEach(b => b.onclick = () => { ref.loot.items.splice(Number(b.dataset.i), 1); renderPanel(); });
+      }
     } else {
       panel.innerHTML = `<b>${k}</b>`;
     }
