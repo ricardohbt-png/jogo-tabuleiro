@@ -36,6 +36,46 @@
   }
   function decorTiles(d) { return decorTilesAt(d.type, d.pos[0], d.pos[1], d.facing); }
 
+  function rotateFacing(f) {
+    // cicla 4 facings: [0,1]→[1,0]→[0,-1]→[-1,0]→[0,1]
+    const order = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+    const i = order.findIndex(o => o[0] === f[0] && o[1] === f[1]);
+    return order[(i + 1) % 4];
+  }
+  function rotateDecorPending() {
+    if (S.sel && S.sel.kind === "decor") {
+      const m = decorMeta(S.sel.ref.type);
+      if (m && m.gira) { S.sel.ref.facing = rotateFacing(S.sel.ref.facing); render(); }
+    } else {
+      const m = decorMeta(S.decorType);
+      if (m && m.gira) S.decorFacing = rotateFacing(S.decorFacing);
+    }
+  }
+  window.addEventListener("keydown", (ev) => {
+    if (ev.key === "r" || ev.key === "R") rotateDecorPending();
+  });
+
+  function decorFits(type, ax, ay, facing, ignore) {
+    for (const [tx, ty] of decorTilesAt(type, ax, ay, facing)) {
+      if (tx < 0 || ty < 0 || tx >= S.grid.w || ty >= S.grid.h) return false;
+      if (S.tiles[ty][tx] !== FLOOR) return false;
+      for (const d of S.decorations) {
+        if (d === ignore) continue;
+        if (decorTiles(d).some(c => c[0] === tx && c[1] === ty)) return false;
+      }
+    }
+    return true;
+  }
+  function placeDecor(x, y) {
+    if (!decorFits(S.decorType, x, y, S.decorFacing)) return;
+    const m = decorMeta(S.decorType);
+    const d = { type: S.decorType, pos: [x, y], facing: S.decorFacing.slice(),
+                loot: (m && m.loot_capaz && S.decorType === "arca_tesouros") ? { gold: 0, items: [] } : null };
+    if (m && m.special === "fountain") d.charges = 3;
+    S.decorations.push(d);
+    S.sel = { kind: "decor", ref: d, pos: [x, y] };
+  }
+
   const board = document.getElementById("board");
   const ctx = board.getContext("2d");
 
@@ -49,6 +89,8 @@
     if (at(S.chests)) return "🧰";
     const tr = at(S.traps);
     if (tr) { const d = CAT.traps.find(c => c.tipo === tr.tipo); return d ? d.icone : "⚠️"; }
+    const dec = S.decorations.find(e => e.pos[0] === x && e.pos[1] === y);
+    if (dec) { const m = decorMeta(dec.type); return m ? m.emoji : "🪑"; }
     return null;
   }
 
@@ -68,6 +110,10 @@
       ctx.strokeRect(r.x * CELL + 1, r.y * CELL + 1, r.w * CELL - 2, r.h * CELL - 2);
       ctx.fillStyle = "#9fb8d8"; ctx.font = "10px sans-serif"; ctx.textBaseline = "top";
       ctx.fillText((r.locked ? "🔒" : "") + r.role + "#" + r.id, r.x * CELL + 3, r.y * CELL + 3);
+    }
+    for (const d of S.decorations) {
+      ctx.strokeStyle = "#6ad0a0"; ctx.lineWidth = 1;
+      for (const [tx, ty] of decorTiles(d)) ctx.strokeRect(tx * CELL + 2, ty * CELL + 2, CELL - 5, CELL - 5);
     }
     ctx.font = "16px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     for (let y = 0; y < S.grid.h; y++) {
@@ -172,6 +218,8 @@
     if (S.exit && S.exit.x === x && S.exit.y === y) return { kind: "exit", pos: [x, y] };
     if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) return { kind: "prisoner", ref: S.prisoner, pos: [x, y] };
     const find = (arr, kind) => { const r = arr.find(e => e.pos[0] === x && e.pos[1] === y); return r ? { kind, ref: r, pos: [x, y] } : null; };
+    const dec = S.decorations.find(d => decorTiles(d).some(c => c[0] === x && c[1] === y));
+    if (dec) return { kind: "decor", ref: dec, pos: dec.pos.slice() };
     return find(S.monsters, "monster") || find(S.chests, "chest") || find(S.traps, "trap") || null;
   }
 
@@ -189,6 +237,7 @@
       case "monster": S.monsters.push({ type: (CAT.monsters[0] || {}).type || "goblin", pos: [x, y], room_id: rid, boss: false, target: false }); break;
       case "chest": S.chests.push({ pos: [x, y], gold: 0, items: [], key_objective: false }); break;
       case "trap": S.traps.push({ tipo: (CAT.traps[0] || {}).tipo || "fosso_estacas", pos: [x, y] }); break;
+      case "decor": placeDecor(x, y); break;
     }
   }
 
@@ -200,6 +249,7 @@
     S.monsters = S.monsters.filter(e => !(e.pos[0] === x && e.pos[1] === y));
     S.chests = S.chests.filter(e => !(e.pos[0] === x && e.pos[1] === y));
     S.traps = S.traps.filter(e => !(e.pos[0] === x && e.pos[1] === y));
+    S.decorations = S.decorations.filter(d => !decorTiles(d).some(c => c[0] === x && c[1] === y));
     S.tiles[y][x] = WALL;
   }
 
@@ -361,7 +411,7 @@
     const [x, y] = c;
     if (["wall", "floor", "door"].includes(S.tool)) { painting = true; paintTile(x, y); render(); }
     else if (S.tool === "room") { roomDrag = { x0: x, y0: y, x1: x, y1: y }; }
-    else if (["entrance", "exit", "prisoner", "monster", "chest", "trap"].includes(S.tool)) { placeEntity(x, y); S.sel = entityAt(x, y); renderPanel(); render(); }
+    else if (["entrance", "exit", "prisoner", "monster", "chest", "trap", "decor"].includes(S.tool)) { placeEntity(x, y); if (S.tool !== "decor") S.sel = entityAt(x, y); renderPanel(); render(); }
     else if (S.tool === "erase") { eraseAt(x, y); S.sel = null; renderPanel(); render(); }
     else if (S.tool === "select") { S.sel = entityAt(x, y) || roomSel(x, y); renderPanel(); render(); }
   });
