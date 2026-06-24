@@ -4910,6 +4910,33 @@ function renderMap(state){
     }
   }
 
+  // ── Decorations (2D overlay — emoji at footprint center + subtle fill)
+  {
+    const decors = GS.decorations;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (const d of decors) {
+      const tiles = GS.decorTilesOf(d);
+      // Only draw if at least one tile in the footprint has been explored
+      if (!tiles.some(([tx2, ty2]) => exploredSet.has(`${tx2},${ty2}`))) continue;
+      // Subtle fill on all occupied tiles
+      ctx.fillStyle = 'rgba(120,200,160,0.12)';
+      for (const [tx2, ty2] of tiles) ctx.fillRect(tx2 * CELL, ty2 * CELL, CELL, CELL);
+      // Emoji at footprint center
+      const avgX = tiles.reduce((s, t) => s + t[0], 0) / tiles.length;
+      const avgY = tiles.reduce((s, t) => s + t[1], 0) / tiles.length;
+      const ecx = (avgX + 0.5) * CELL;
+      const ecy = (avgY + 0.5) * CELL;
+      ctx.font = `${Math.floor(CELL * 0.8)}px serif`;
+      ctx.fillText(d.emoji || '🪑', ecx, ecy);
+      // Loot indicator badge
+      if (d.tem_loot) {
+        ctx.font = `bold ${Math.round(CELL * 0.18)}px monospace`;
+        ctx.fillStyle = '#ffe060';
+        ctx.fillText('💰', ecx + CELL * 0.28, ecy - CELL * 0.28);
+      }
+    }
+  }
+
   // ── Monsters: only visible within player's vision radius
   for(const m of state.monsters){
     const [mtx,mty]=m.pos;
