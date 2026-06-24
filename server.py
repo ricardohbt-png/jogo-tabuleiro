@@ -13038,6 +13038,13 @@ async def handler(ws):
                         pid, msg.get("chest_id"), msg.get("kind"), msg.get("index", 0)
                     )
 
+                elif t == "interagir_decor":
+                    if room: await room.handle_interagir_decor(pid, msg.get("decor_id"))
+
+                elif t == "take_from_decor":
+                    if room: await room.handle_take_from_decor(
+                        pid, msg.get("decor_id"), msg.get("kind"), msg.get("index", 0))
+
                 elif t == "enter_dungeon":
                     if room: await room.enter_dungeon(pid)
 
