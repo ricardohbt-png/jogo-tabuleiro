@@ -64,9 +64,32 @@ def test_footprint():
     t = r._decor_tiles_at("coluna", 2, 2, [1, 0])
     check("coluna 1x1", sorted(map(tuple, t)) == [(2, 2)])
 
+def test_carga():
+    print("\n[A3] carga de decorações")
+    r = _room()
+    defn = {
+        "schema_version": 1, "id": "t", "name": "T",
+        "grid": {"w": 12, "h": 12},
+        "tiles": [[FLOOR] * 12 for _ in range(12)],
+        "rooms": [{"id": 0, "x": 0, "y": 0, "w": 12, "h": 12, "role": "entrance", "locked": False, "doors": []}],
+        "entrance": {"x": 1, "y": 1}, "exit": None, "prisoner": None,
+        "monsters": [], "chests": [], "traps": [],
+        "decorations": [
+            {"type": "cama", "pos": [3, 3], "facing": [0, 1], "loot": {"gold": 5, "items": [{"id": "health_potion"}]}},
+            {"type": "fonte", "pos": [6, 6], "facing": [0, 1], "loot": None, "charges": 3},
+        ],
+        "objectives": {"primary": {"type": "kill_all"}, "secondary": []},
+    }
+    r.load_authored_dungeon(defn)
+    check("2 decorações carregadas", len(r.decorations) == 2)
+    check("loot da cama hidratado (item tem name)", r.decorations[0]["loot"]["items"][0].get("name") is not None)
+    check("fonte com charges", r.decorations[1]["charges"] == 3)
+    check("índice de bloqueio inclui (3,4)", (3, 4) in r._decor_block_tiles)
+
 def main():
     test_catalog()
     test_footprint()
+    test_carga()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

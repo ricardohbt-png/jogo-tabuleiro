@@ -3110,6 +3110,10 @@ class GameRoom:
         self.taunted = None     # pid who has taunt active
         self.chests  = {}       # chest_id -> chest dict (persistent world loot)
         self.shop_scrolls = []  # pergaminhos à venda no mercador (renovados por visita à cidade)
+        self.decorations = []
+        self._decor_block_tiles = set()
+        self._decor_tall_tiles = set()
+        self._campfire_tiles = set()
 
     # ── broadcast helpers ──────────────────────────────────────────────────
 
@@ -3680,6 +3684,30 @@ class GameRoom:
         self.traps = []
         self.armadilhas = [make_authored_trap(t) for t in defn.get("traps", [])]
 
+        # Decorações autoradas (itens de loot hidratados do catálogo do servidor).
+        self.decorations = []
+        for d in defn.get("decorations", []):
+            meta = DECOR_TYPES.get(d.get("type"))
+            if not meta:
+                continue
+            dec = {
+                "id": f"dec_{len(self.decorations)}",
+                "type": d["type"],
+                "pos": [d["pos"][0], d["pos"][1]],
+                "facing": list(d.get("facing") or [0, 1]),
+                "loot": None,
+                "tem_loot": False,
+            }
+            loot = d.get("loot")
+            if loot and meta["loot_capaz"]:
+                dec["loot"] = {"gold": int(loot.get("gold", 0)),
+                               "items": hidratar_itens_bau(loot.get("items", []))}
+                dec["tem_loot"] = (dec["loot"]["gold"] > 0 or bool(dec["loot"]["items"]))
+            if meta["special"] == "fountain":
+                dec["charges"] = int(d.get("charges", 0))
+            self.decorations.append(dec)
+        self._rebuild_decor_index()
+
         # Stairs = ponto de entrada.
         ent = defn["entrance"]
         self.stairs_pos = [ent["x"], ent["y"]]
@@ -3748,6 +3776,8 @@ class GameRoom:
             self.monsters = {}       # zera monstros da expedição anterior (senão reaparecem em paredes do novo mapa)
             self.traps = []          # idem armadilhas de masmorra
             self.armadilhas = []     # idem armadilhas colocáveis
+            self.decorations = []
+            self._rebuild_decor_index()
             self.zonas_especiais = []
             self.explored = set()    # névoa volta ao início no mapa novo
             self.magic_reveal = {}
