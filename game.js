@@ -203,7 +203,7 @@ document.body.innerHTML = `
 <!-- Chest Loot Window -->
 <div id="chest-overlay">
   <div class="chest-box">
-    <h3>🎁 Baú de Tesouro</h3>
+    <h3 id="chest-title">🎁 Baú de Tesouro</h3>
     <div class="chest-subtitle" id="chest-subtitle">Aproxime-se do baú para coletar</div>
     <div id="chest-items-list"></div>
     <button class="btn-cancel" style="margin-top:10px" onclick="closeChestWindow()">Fechar</button>
@@ -9640,16 +9640,21 @@ function desequiparComprado(slot){
 }
 
 let _openChestId = null;   // currently-open chest id (for auto-refresh)
+let _openDecorLootId = null;   // currently-open decor loot id (for auto-refresh)
 
 function openChestWindow(chest){
   _openChestId = chest.id;
+  _openDecorLootId = null;   // disarm decor auto-refresh
   tocarSomBau();
+  const titleEl = $('chest-title');
+  if (titleEl) titleEl.textContent = '🎁 Baú de Tesouro';
   _renderChestWindow(chest);
   $('chest-overlay').classList.add('open');
 }
 
 function closeChestWindow(){
   _openChestId = null;
+  _openDecorLootId = null;
   $('chest-overlay').classList.remove('open');
 }
 
@@ -9729,6 +9734,74 @@ function _renderChestWindow(chest){
 
 function takeFromChest(chestId, kind, index){
   send({ type:'take_from_chest', chest_id:chestId, kind, index });
+}
+
+// ── Reusable loot panel — used by both chests and decoration containers ───────
+// { titulo, gold, items, onPegarOuro, onPegarItem(idx) }
+// Reuses the chest overlay DOM; disarms chest auto-refresh and vice-versa.
+function abrirPainelLoot({ titulo, gold, items, onPegarOuro, onPegarItem }) {
+  _openChestId = null;   // disarm chest auto-refresh
+  _openDecorLootId = null;
+  const titleEl = $('chest-title');
+  if (titleEl) titleEl.textContent = titulo || '📦 Objeto';
+  const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid && p.alive);
+  const isFull = me && (me.bag || []).length >= (me.bag_size || 6);
+  const list = $('chest-items-list');
+  list.innerHTML = '';
+
+  const hasGold  = gold > 0;
+  const hasItems = (items || []).length > 0;
+
+  if (!hasGold && !hasItems) {
+    list.innerHTML = '<div class="chest-empty-msg">O objeto está vazio.</div>';
+    $('chest-overlay').classList.add('open');
+    return;
+  }
+
+  if (hasGold) {
+    const row = document.createElement('div');
+    row.className = 'chest-gold-row';
+    row.innerHTML = `<span class="chest-gold-label">🪙 ${gold} Ouros</span>`;
+    const btn = document.createElement('button');
+    btn.className = 'chest-take-btn';
+    btn.textContent = '⬆ Pegar';
+    btn.onclick = () => onPegarOuro();
+    row.appendChild(btn);
+    list.appendChild(row);
+  }
+
+  (items || []).forEach((item, idx) => {
+    const isWeapon = !!item.die;
+    const typeLabel = isWeapon
+      ? `⚔ Arma (${item.die})`
+      : ({ weapon: '⚔ Arma', armor: '🛡 Armadura', shield: '🛡 Escudo',
+           accessory: '📿 Acessório', ring: '💍 Anel', head: '⛑ Cabeça',
+           bag: '🧪 Consumível' }[item.item_slot] || '📦 Item');
+    const statSuffix = isWeapon ? ''
+      : item.effect === 'heal' ? ` +${item.value} HP`
+      : item.effect === 'atk'  ? ` +${item.value} Atq`
+      : item.effect === 'def_' ? ` +${item.value} CA` : '';
+    const row = document.createElement('div');
+    row.className = 'chest-item-row';
+    row.innerHTML = `
+      <div class="ci-info">
+        <span class="ci-emoji">${item.emoji || '📦'}</span>
+        <div class="ci-text">
+          <div class="ci-name">${item.name}</div>
+          <div class="ci-type">${typeLabel}${statSuffix}</div>
+        </div>
+      </div>`;
+    const btn = document.createElement('button');
+    btn.className = 'chest-take-btn';
+    btn.textContent = '⬆ Pegar';
+    btn.disabled = isFull;
+    if (isFull) btn.title = 'Inventário cheio!';
+    btn.onclick = () => onPegarItem(idx);
+    row.appendChild(btn);
+    list.appendChild(row);
+  });
+
+  $('chest-overlay').classList.add('open');
 }
 
 // ── Histórico de rolagens — faixa fixa sob o cabeçalho do log do Mestre ─────
@@ -18423,6 +18496,13 @@ function on3DClick(e){
       if(dist <= 2){ openChestWindow(chest); return; }
       else { toast('Aproxime-se do baú para abri-lo!', 'var(--gold)'); return; }
     }
+    // ── Decoration click (3D path — check footprint of each decoration) ─────────
+    const decClick3D = GS.decorations.find(d =>
+      GS.decorTilesOf(d).some(t => t[0] === tx && t[1] === ty));
+    if(decClick3D){
+      if(decClick3D.tem_loot || decClick3D.special === 'fountain') GS.interagirDecor(decClick3D.id);
+      return;
+    }
   }
 
   if(g3 && GS.gameState){
@@ -18550,6 +18630,16 @@ function handleTileClick(tx, ty){
       const dist = myP ? Math.max(Math.abs(myP.pos[0]-tx), Math.abs(myP.pos[1]-ty)) : 99;
       if(dist <= 2){ openChestWindow(chest); return; }
       else { toast('Aproxime-se do baú para abri-lo!', 'var(--gold)'); return; }
+    }
+  }
+
+  // ── Decoration click (2D canvas path — 3D path handled in on3DClick) ─────────
+  if(_st && !mode3D){
+    const decClick = GS.decorations.find(d =>
+      GS.decorTilesOf(d).some(t => t[0] === tx && t[1] === ty));
+    if(decClick){
+      if(decClick.tem_loot || decClick.special === 'fountain') GS.interagirDecor(decClick.id);
+      return;
     }
   }
 
@@ -18849,6 +18939,18 @@ window._escolherMagiaNivel = function(id){
 };
 
 GS.on('spellPickPrompt', mostrarOverlayEscolhaMagia);
+
+// ── Decoration loot panel — reuses chest overlay with generic callbacks ────────
+GS.on('decor_loot', msg => {
+  abrirPainelLoot({
+    titulo: '📦 Objeto',
+    gold: msg.gold || 0,
+    items: msg.items || [],
+    onPegarOuro: () => GS.takeFromDecor(msg.decor_id, 'gold', 0),
+    onPegarItem: (i) => GS.takeFromDecor(msg.decor_id, 'item', i),
+  });
+  _openDecorLootId = msg.decor_id;   // set AFTER abrirPainelLoot (which resets it)
+});
 
 // ── Overlay de seleção das 2 magias iniciais (criação, Pedro/Lewis) ───────────
 function mostrarOverlaySelecaoMagiasCriacao(cls){
