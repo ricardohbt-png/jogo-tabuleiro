@@ -2059,6 +2059,42 @@ ARMADILHAS = {
     },
 }
 
+# ─── DECORAÇÕES DE MASMORRA ──────────────────────────────────────────────────
+# Objetos colocáveis no editor. size=[w,h] no facing canônico (vertical).
+# gira: rotação 90°. alto: oclui a revelação de névoa (raycast). pisavel: não
+# bloqueia movimento (só a fogueira). loot_capaz: pode conter ouro/itens (abre
+# como baú). special: None|"fountain"|"campfire".
+def _decor(nome, emoji, size, gira=False, alto=False, pisavel=False,
+           loot_capaz=True, special=None):
+    return {"nome": nome, "emoji": emoji, "size": size, "gira": gira,
+            "alto": alto, "pisavel": pisavel, "loot_capaz": loot_capaz,
+            "special": special}
+
+DECOR_TYPES = {
+    "cama":           _decor("Cama", "🛏️", [1, 2], gira=True),
+    "lareira":        _decor("Lareira", "🪵", [1, 2], gira=True),
+    "fonte":          _decor("Fonte", "⛲", [2, 2], special="fountain"),
+    "fogueira":       _decor("Fogueira", "🔥", [1, 1], pisavel=True, loot_capaz=False, special="campfire"),
+    "tumba":          _decor("Tumba", "⚰️", [1, 2], gira=True),
+    "mesa_cadeiras":  _decor("Mesa com cadeiras", "🪑", [1, 2], gira=True),
+    "estante":        _decor("Estante", "🗄️", [1, 2], gira=True, alto=True),
+    "carroca":        _decor("Carroça", "🛒", [2, 2], gira=True),
+    "coluna":         _decor("Coluna de pedra", "🏛️", [1, 1], alto=True),
+    "barril":         _decor("Barril", "🛢️", [1, 1]),
+    "arca_tesouros":  _decor("Arca de tesouros", "💰", [1, 1]),
+    "cama_casal":     _decor("Cama de casal", "🛌", [2, 2], gira=True),
+    "estante_livros": _decor("Estante de livros", "📚", [1, 2], gira=True, alto=True),
+    "altar":          _decor("Altar ritualístico", "🛐", [2, 2], gira=True),
+    "trono":          _decor("Trono de rei", "👑", [1, 1], gira=True),
+    "gaiola":         _decor("Gaiola com esqueleto", "⛓️", [1, 1]),
+    "grades_prisao":  _decor("Grades de prisão", "🚧", [1, 1], gira=True),
+    "estante_armas":  _decor("Estante de armas", "⚔️", [1, 2], gira=True, alto=True),
+    "mesa_tortura":   _decor("Mesa de tortura", "🔪", [1, 2], gira=True),
+    "mesa_quimica":   _decor("Mesa de química", "🧪", [1, 2], gira=True),
+    "arvore":         _decor("Árvore", "🌳", [1, 1], alto=True),
+    "arvore_grande":  _decor("Árvore grande", "🌲", [2, 2], alto=True),
+}
+
 SHOP_TEMPLE = [
     {"id": "full_heal", "name": "Cura Completa",  "emoji": "💖",  "price": 15, "effect": "full_heal"},
     {"id": "bless",     "name": "Bênção Divina",  "emoji": "✨",  "price": 12, "effect": "bless",    "value": 2},
