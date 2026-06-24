@@ -4159,6 +4159,10 @@ class GameRoom:
         if p["alive"]:
             await self._verificar_entrada_zona_fogo(p, nx, ny)
 
+        # Fogueira: 1d4 de fogo ao entrar.
+        if p["alive"]:
+            await self._aplicar_fogueira_se_pisar(p)
+
         await self.push_state()
 
     async def handle_open_door(self, pid, tx, ty):
@@ -10044,6 +10048,22 @@ class GameRoom:
                 if meta["special"] == "campfire":
                     self._campfire_tiles.add((tx, ty))
 
+    async def _aplicar_fogueira_se_pisar(self, criatura):
+        """Se a criatura está numa casa de fogueira, sofre 1d4 de fogo (sem save)."""
+        pos = criatura.get("pos")
+        if not pos or (pos[0], pos[1]) not in self._campfire_tiles:
+            return
+        dano = roll_dice("1d4")
+        nome = criatura.get("name") or criatura.get("nome", "Alguém")
+        await self.broadcast({"type": "dice_roll", "die": "d4", "value": dano, "label": "Fogueira"})
+        await self.gm_say(f"🔥 **{nome}** pisou na fogueira e sofre **{dano}** de fogo!")
+        await self._dano_em_alvo(criatura, dano, "fogo")
+
+    async def _commit_monster_step(self, m, nx, ny):
+        """Move o monstro 1 passo e aplica efeitos de pisar (fogueira)."""
+        m["pos"] = [nx, ny]
+        await self._aplicar_fogueira_se_pisar(m)
+
     def _face_toward(self, m, target_pos):
         """ORIENTADO: vira a cabeça para encarar `target_pos` (cardinal dominante),
         desde que a cauda caiba atrás. Só orientação (visual/posicional) — não move."""
@@ -10123,7 +10143,7 @@ class GameRoom:
                 continue
             if not self._monster_can_occupy(m, nx, ny, cand_facing):   # parede/porta/entidade em qualquer casa do footprint
                 continue
-            m["pos"] = [nx, ny]
+            await self._commit_monster_step(m, nx, ny)
             if cand_facing is not None:
                 m["facing"] = cand_facing
             break
@@ -11959,7 +11979,7 @@ class GameRoom:
                     nx, ny = m["pos"][0]+adx, m["pos"][1]+ady
                     if not self._monster_can_occupy(m, nx, ny):   # footprint multi-tile inteiro livre
                         continue
-                    m["pos"] = [nx, ny]
+                    await self._commit_monster_step(m, nx, ny)
                     break
                 # Monstro pisou em armadilha colocável (de aliado)?
                 arm = self._armadilha_no_tile(m["pos"][0], m["pos"][1])

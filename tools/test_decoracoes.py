@@ -99,11 +99,28 @@ def test_bloqueio():
     r._rebuild_decor_index()
     check("fogueira não bloqueia (pisável)", r._blocks_tile(2, 2) is False)
 
+def test_fogueira():
+    print("\n[A5] fogueira 1d4")
+    async def run():
+        r = _room()
+        r.decorations = [{"id": "d0", "type": "fogueira", "pos": [4, 4], "facing": [0, 1], "loot": None, "tem_loot": False}]
+        r._rebuild_decor_index()
+        p = make_player("p1", "Herói", "warrior", 0)
+        p["pos"] = [4, 4]; p["hp"] = 20; p["max_hp"] = 20; p["alive"] = True
+        await r._aplicar_fogueira_se_pisar(p)
+        check("herói perdeu entre 1 e 4 HP", 16 <= p["hp"] <= 19)
+        # fora da fogueira: sem dano
+        p["pos"] = [0, 0]; hp0 = p["hp"]
+        await r._aplicar_fogueira_se_pisar(p)
+        check("sem dano fora da fogueira", p["hp"] == hp0)
+    asyncio.run(run())
+
 def main():
     test_catalog()
     test_footprint()
     test_carga()
     test_bloqueio()
+    test_fogueira()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 
