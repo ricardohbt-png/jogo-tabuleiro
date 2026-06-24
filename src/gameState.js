@@ -1117,6 +1117,22 @@ const GS = (() => {
     }) || null;
   }
 
+  // ── Decorações de masmorra ────────────────────────────────────────────────────
+  // Helper puro: retorna a lista de tiles [[x,y],...] ocupados por uma decoração.
+  // Espelha _decor_tiles_at do servidor: o servidor já envia d.tiles resolvido;
+  // se faltar, recalcula pelo size/facing (facing horizontal troca w↔h).
+  function decorTilesOf(d) {
+    if (Array.isArray(d.tiles)) return d.tiles;
+    const [w, h] = d.size || [1, 1];
+    const [ew, eh] = (d.facing && d.facing[0] !== 0) ? [h, w] : [w, h];
+    const out = [];
+    for (let i = 0; i < ew; i++) for (let j = 0; j < eh; j++) out.push([d.pos[0] + i, d.pos[1] + j]);
+    return out;
+  }
+  // Senders: interação com decoração (fonte/loot) e retirada de item de decoração.
+  function interagirDecor(decorId) { send({ type: 'interagir_decor', decor_id: decorId }); }
+  function takeFromDecor(decorId, kind, index) { send({ type: 'take_from_decor', decor_id: decorId, kind, index }); }
+
   // ── Fase 3 (editor de masmorras): objetivos / saída / prisioneiro ─────────────
   // Getters dos campos servidos no game_state (null no procedural).
   function getObjectives() { return (gameState && gameState.objectives) || null; }
@@ -1344,6 +1360,7 @@ const GS = (() => {
     get myPid()           { return myPid; },
     get myName()          { return myName; },
     get gameState()       { return gameState; },
+    get decorations()     { return (gameState && gameState.decorations) || []; },
     // Jogador local autoritativo (estado mais recente do servidor). Usado pela
     // ficha em jogo (abrirFichaEmJogo) para HP/atributos/CA reais. Mesmo padrão
     // de lookup de getHeroiAtivo; null se ainda não há jogador.
@@ -1457,6 +1474,11 @@ const GS = (() => {
     toggleWarriorSkill,
     getWarriorSelected,
     clearWarriorSelected,
+
+    // ── Decorações de masmorra ──
+    decorTilesOf,
+    interagirDecor,
+    takeFromDecor,
 
     // ── Resolvers (no DOM — return data; renderer executes UI work) ──
     resolveAttack,
