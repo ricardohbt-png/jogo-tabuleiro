@@ -10882,6 +10882,7 @@ class GameRoom:
         # Ataca e recua: afasta-se um passo do alvo após a mordida.
         if m["hp"] > 0:
             if self._passo_monstro(m, target["pos"][0], target["pos"][1], away=True):
+                await self._aplicar_fogueira_se_pisar(m)
                 await self.gm_say(f"🐍 **{m['name']}** recua para as sombras após morder.")
 
     # ── IA Devorador Orgânico ─────────────────────────────────────────────────
@@ -10926,6 +10927,7 @@ class GameRoom:
                     break
                 if self._em_zona_fogo(m["pos"]):
                     self._passo_monstro(m, target["pos"][0], target["pos"][1], away=True)
+                    await self._aplicar_fogueira_se_pisar(m)
                     await self.gm_say(f"🟢 **{m['name']}** recua das chamas!")
                     break
                 if self._is_adjacent_to_monster(target["pos"], m):
@@ -11108,6 +11110,7 @@ class GameRoom:
                 alvo = min(targets, key=lambda t: max(abs(m["pos"][0] - t["obj"]["pos"][0]),
                                                       abs(m["pos"][1] - t["obj"]["pos"][1])))["obj"]
                 self._passo_monstro(m, alvo["pos"][0], alvo["pos"][1], away=True)
+                await self._aplicar_fogueira_se_pisar(m)
             return
         target_obj = self._get_monster_primary_target(m, targets)
         if not target_obj:
