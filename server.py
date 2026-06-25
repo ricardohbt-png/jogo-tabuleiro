@@ -6501,6 +6501,28 @@ class GameRoom:
                 return f"{log_emoji} **{p['name']}** equipou **{item['name']}**!"
         return self._equip_into_slot(p, item, keys[0], log_emoji)
 
+    async def push_state_or_city(self):
+        """Broadcast ciente da fase: na cidade os clientes estão em screen-city e
+        usam city_state; na masmorra usam game_state (push_state)."""
+        if self.phase == "city":
+            await self.broadcast_city_state()
+        else:
+            await self.push_state()
+
+    async def handle_reorder_bag(self, pid, from_index, to_index):
+        """Reordena a bolsa do jogador (organização por arrastar-e-soltar).
+        Clampa índices fora do intervalo; from inválido é no-op."""
+        p = self.players.get(pid)
+        if not p:
+            return
+        bag = p["bag"]
+        if from_index < 0 or from_index >= len(bag):
+            return
+        item = bag.pop(from_index)
+        to_index = max(0, min(to_index, len(bag)))
+        bag.insert(to_index, item)
+        await self.push_state_or_city()
+
     async def handle_equip_from_bag(self, pid, slot_index):
         """Equipar/trocar equipamento é AÇÃO LIVRE: sem custo de ação bônus e sem
         limite por turno (pode equipar/trocar quantas vezes quiser). A lógica de
@@ -6511,7 +6533,7 @@ class GameRoom:
             return
         if not await self._executar_equip_from_bag(pid, slot_index):
             return                                   # validação falhou (erro já enviado)
-        await self.push_state()
+        await self.push_state_or_city()
 
     async def _executar_equip_from_bag(self, pid, slot_index):
         """Equipa um item do inventário no slot correto (8 slots) — lógica
@@ -6612,7 +6634,7 @@ class GameRoom:
         log = self._equip_into_slot(p, item, "off_hand", "🗡️")
         if log:
             await self.gm_say(log + " (2ª arma — mão esquerda)")
-        await self.push_state()
+        await self.push_state_or_city()
 
     async def handle_unequip(self, pid, slot_key):
         """Desequipa um item de um slot, devolvendo-o ao inventário."""
@@ -6628,7 +6650,7 @@ class GameRoom:
         self._apply_gear_effect(p, item, False)
         p["bag"].append(item)
         await self.gm_say(f"📤 **{p['name']}** desequipou **{item['name']}**.")
-        await self.push_state()
+        await self.push_state_or_city()
 
     # ── validação de slot secundário (scaffolding — ver SECUNDARIO_PERMITIDO) ────
     # NOTA: handle_equip ainda NÃO é roteado (o caminho ativo é
@@ -13043,6 +13065,10 @@ async def handler(ws):
 
                 elif t == "unequip":
                     if room: await room.handle_unequip(pid, msg.get("slot_key"))
+
+                elif t == "reorder_bag":
+                    if room: await room.handle_reorder_bag(
+                        pid, int(msg.get("from_index", -1)), int(msg.get("to_index", 0)))
 
                 elif t == "take_from_chest":
                     if room: await room.handle_take_from_chest(
