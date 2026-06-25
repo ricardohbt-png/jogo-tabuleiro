@@ -1,131 +1,180 @@
-# Ficha do personagem na cidade (equipar compras) — Design
+# Ficha do personagem na cidade (fotos + equipar/organizar) — Design (v2)
 
 **Data:** 2026-06-24
-**Branch base:** master
+**Branch base:** master (trabalho na branch `feat/objetivos-recompensa-deletar-sala`)
+
+> **v2 substitui a v1.** A v1 (cliente-only, modelo cosmético `GS.getHeroiAtivo`)
+> estava errada: o modelo cosmético é sobrescrito a cada `city_state` (re-sincroniza
+> a `bag` autoritativa do servidor), então equipar por ali não persiste e duplica
+> itens. A v2 usa o **modelo autoritativo do servidor** (`player.gear` / `player.bag`),
+> que já é enviado a todos no `city_state`. As funções da v1
+> (`_renderFichaCidadeEquip`, modal central `abrirFichaCidade`) são removidas.
 
 ## Problema
 
-Na tela da cidade (`screen-city`) o jogador compra equipamentos nas lojas, mas
-não há nenhuma forma de **equipar** o que comprou antes de entrar na masmorra.
-O ato de equipar/desequipar só existe dentro da masmorra, no painel lateral
-(`renderPurchasedItems` → `equiparComprado`/`desequiparComprado`).
+Na tela da cidade não há como ver a ficha do personagem nem equipar/organizar os
+itens comprados na loja antes de entrar na masmorra. Além disso, os cards de herói
+mostram só um emoji — o usuário quer ver a foto (rosto) de cada herói.
 
 ## Objetivo
 
-Permitir abrir a **ficha do personagem** durante a tela da cidade, mostrando
-atributos + equipamento, e equipar/desequipar/usar os itens comprados na loja.
+1. Cada card de herói na cidade mostra a **foto do rosto** (recorte 3:4).
+2. Clicar na foto abre a **ficha completa** num **painel lateral esquerdo
+   deslizante**: atributos + equipamento (8 slots) + inventário.
+3. No meu herói: equipar/desequipar e **organizar o inventário por arrastar-e-soltar**.
+4. Clicar na foto de outro herói abre a ficha dele em **somente-leitura**.
 
-## Decisões (definidas no brainstorming)
+## Decisões (brainstorming)
 
 | Tópico | Decisão |
 |---|---|
-| Acesso | Clicar no **meu** card de herói na barra de heróis (topo). Sem botão novo. |
-| Conteúdo | **Equipamento + atributos** (ficha completa). |
-| Escopo | **Só o meu** herói abre/edita. Cards dos outros permanecem não-interativos. |
+| Fotos | **Todos** os cards mostram a foto do rosto (3:4, recorte no topo). |
+| Posição | Painel **lateral esquerdo** deslizante (✕ / clicar fora fecha). |
+| Modelo de dados | **Autoritativo do servidor** (`gear`/`bag`). Mexe em server.py + protocolo. |
+| Drag-and-drop | Reordenar bolsa **e** equipar/desequipar arrastando. |
+| Outros heróis | Ficha **somente-leitura** (atributos + equipamento + bolsa). |
+| Consumíveis | Só aparecem na bolsa (arrastáveis); **sem** botão usar (Taverna resolve). |
 
-## Restrições de arquitetura
+## Modelo de dados (autoritativo, já existente)
 
-- Equipar é **client-side** (modelo `GS.getHeroiAtivo().equipado` / `.inventario`),
-  **não** autoritativo no servidor — consistente com o estado atual
-  (VISUAL_CONTRACT). **Sem mudanças em `server.py` nem no protocolo WebSocket.**
-- Lógica de equipar já vive em `gameState.js` (`equiparItemComprado`,
-  `desequiparItemComprado`, `aplicarConsumivel`). A ficha da cidade é **só
-  renderização** em `game.js` e chama esses métodos de `GS` — respeita a
-  separação lógica vs. renderização.
+- `player.gear` — 8 slots nomeados: `weapon`, `off_hand`, `armor`, `head`,
+  `ring1`, `ring2`, `item1`, `item2` (server.py:2794).
+- `player.bag` — lista de itens (≤ `player.bag_size`, default 6).
+- Compras na loja vão para `player.bag` (server.py:3465+).
+- `broadcast_city_state` envia `list(self.players.values())` — `gear`/`bag` de
+  **todos** disponíveis no cliente (server.py:3367).
+- Handlers existentes (já roteados): `handle_equip_from_bag(pid, slot_index)`,
+  `handle_equip_offhand(pid, slot_index)`, `handle_unequip(pid, slot_key)`. Todos
+  terminam com `await self.push_state()`.
 
-## Componentes reaproveitados
+## Restrição-chave descoberta
 
-- `renderConteudoAtributosFichaJogo(heroi, estadoServidor)` (game.js:2296) — bloco
-  de HP/CA/atributos já usado pela ficha em jogo. Será alimentado com o registro
-  do jogador vindo de `cityState` (HP/nível atuais) em vez de `GS.me`.
-- Padrão de `renderPurchasedItems` (game.js:9545) — render dos slots equipados
-  (com ✕ Remover) e da lista "Comprados na Loja" (⚙ Equipar / ▶ Usar).
-- `_TIPO_ITEM_EMOJI`, `_TIPO_ITEM_LABEL`, `_EQUIPADO_SLOTS`, `aplicarTooltipAoItem`
-  — constantes/helpers existentes de render de item.
+`push_state()` faz broadcast de **`game_state`** (campos de masmorra: tiles,
+monsters, …). Na fase `city` não há masmorra e o cliente está em `screen-city`,
+então um `game_state` ali é incorreto. **Por isso** os handlers de equipar precisam
+de broadcast **ciente da fase**.
 
-Não reaproveitar `abrirFichaEmJogo` diretamente: é somente-leitura (sem botões de
-equipar) e lê `GS.me` (estado de masmorra), não o estado da cidade.
+## Design — Servidor (`server.py`)
 
-## Design
+### 1. Broadcast ciente da fase
+Helper:
+```python
+async def push_state_or_city(self):
+    if self.phase == "city":
+        await self.broadcast_city_state()
+    else:
+        await self.push_state()
+```
+Trocar a chamada final `await self.push_state()` por `await self.push_state_or_city()`
+em `handle_equip_from_bag`, `handle_equip_offhand` e `handle_unequip`. Comportamento
+na masmorra fica idêntico (phase != "city" → push_state).
 
-### 1. Ponto de entrada — card de herói clicável
+### 2. Reordenar a bolsa
+```python
+async def handle_reorder_bag(self, pid, from_index, to_index):
+    p = self.players.get(pid)
+    if not p: return
+    bag = p["bag"]; n = len(bag)
+    if from_index < 0 or from_index >= n: return
+    item = bag.pop(from_index)
+    to_index = max(0, min(to_index, len(bag)))   # clamp; len já decrementado
+    bag.insert(to_index, item)
+    await self.push_state_or_city()
+```
+Roteamento no protocolo: `elif t == "reorder_bag": ... handle_reorder_bag(pid,
+int(from_index), int(to_index))`.
 
-Em `_updateCityHeroBar(msg)` (game.js:918): apenas o card do próprio jogador
-(`isMe`) recebe:
-- `cursor:pointer` e um afeto de hover (classe/estilo),
-- uma dica visual discreta (ex.: "🎒") indicando que abre a ficha,
-- `onclick` → `abrirFichaCidade()`.
+> Nenhuma mudança nos handlers de equipar além do broadcast; a validação de
+> classe/2-mãos/inventário-cheio já existe e vale na cidade.
 
-Cards dos outros heróis ficam inalterados (não-clicáveis).
+## Design — Cliente (`game.js` + `game.css`)
 
-### 2. Overlay `abrirFichaCidade()`
+### 3. Fotos nos cards (todos os heróis)
+`_updateCityHeroBar`: trocar o emoji pela foto `CLASS_PORTRAITS[p.class_id]`
+(game.js:6719) recortada no rosto:
+`width:100%; aspect-ratio:3/4; object-fit:cover; object-position:top center;`
+(fallback para emoji se a imagem falhar, via `onerror`). Cada card recebe
+`cursor:pointer` e `onclick` → `abrirFichaCidade(p.id)`.
 
-Modal escuro no mesmo estilo gold-on-black de `abrirFichaEmJogo`
-(`position:fixed; inset:0; z-index:300`), contendo:
+### 4. Painel lateral esquerdo deslizante
+Elemento único `#ficha-cidade-panel` docado à esquerda (`position:fixed; left:0;
+top:0; height:100vh; transform:translateX(-100%)`), classe `.open` desliza para
+`translateX(0)`. Backdrop `#ficha-cidade-backdrop` (clicar fora fecha). Botão ✕ no
+topo. Reabrir com outro herói re-renderiza o conteúdo.
 
-1. **Cabeçalho:** retrato, nome, classe, nível — do registro do jogador em
-   `cityState.players` (lookup por `GS.myPid`) com fallback para `HERO_DATA`.
-2. **Atributos:** `renderConteudoAtributosFichaJogo(heroi, cityPlayer)` — HP/CA/
-   atributos atuais.
-3. **Equipamento** (`<div>` com id próprio para refresh isolado):
-   - Equipado (Loja): slots de `heroi.equipado` via `_EQUIPADO_SLOTS`, cada um
-     com botão **✕ Remover** → `GS.desequiparItemComprado(key)` + refresh.
-   - Comprados na Loja: `heroi.inventario`, cada item com:
-     - **⚙ Equipar** (gear) → `GS.equiparItemComprado(idx)` + refresh,
-     - **▶ Usar** (consumível) → `GS.aplicarConsumivel(item)` + consome slot + refresh,
-     - munição: sem botão (igual ao in-dungeon).
-4. **Rodapé:** botão ✕ Fechar; clicar fora também fecha.
+### 5. Corpo do painel — `renderFichaCidadeBody(player, editable)`
+- **Cabeçalho:** foto, nome, classe, nível (do registro do jogador).
+- **Atributos:** `renderConteudoAtributosFichaJogo(heroiStatic, player)` (reuso).
+- **Equipamento:** paper-doll dos 8 `EQ_SLOTS` lendo `player.gear` (espelha o
+  bloco do `renderMyPanel`, game.js:9366). Se `editable`: clique no slot cheio
+  desequipa (`unequipSlot`); é alvo de drop. Se não: só leitura.
+- **Inventário:** `bag_size` slots lendo `player.bag`. Se `editable`: cada item é
+  arrastável + botão equipar (`equipFromBag`/`equipOffhand`); slots são alvo de
+  drop para reordenar. Se não: só leitura.
 
-### 3. Refresh isolado
+`editable = (player.id === GS.myPid)`.
 
-`_refreshFichaCidade()` re-renderiza **apenas** a seção de equipamento (pelo id
-do container) após equipar/desequipar/usar. Não usa `renderMyPanel(GS.gameState)`
-(que falharia: `gameState` é `null` na cidade).
+### 6. Drag-and-drop (HTML5) — só no painel editável
+- `dragstart` guarda a origem: `{kind:'bag', index}` ou `{kind:'gear', slotKey}`.
+- Drop em **slot da bolsa** vindo de `bag` → `reorderBag(from, toIndex)`.
+- Drop em **slot da bolsa** vindo de `gear` → `unequipSlot(slotKey)`.
+- Drop em **slot de equipamento** vindo de `bag`:
+  - slot `off_hand` e item é adaga/escudo → `equipOffhand(index)`;
+  - senão → `equipFromBag(index)` (o servidor coloca no slot certo pela categoria).
+- `dragover` com `preventDefault` nos alvos válidos + classe visual `.drop-target`.
+- Senders cliente: `equipFromBag`/`equipOffhand`/`unequipSlot` já existem
+  (game.js:10078+); adicionar `reorderBag(from,to)` → `send({type:'reorder_bag',
+  from_index, to_index})`.
 
-Também atualiza a barra de heróis se o HP mudou por uso de consumível? Não —
-consumível só altera fome/sede (não HP); a barra de heróis da cidade mostra HP,
-então não precisa atualizar. (Se no futuro consumível curar HP, ligar
-`_updateCityHeroBar`.)
+### 7. Re-render ao vivo
+No handler `GS.on('cityState', …)`: se `#ficha-cidade-panel.open` existir,
+chamar `_refreshFichaCidadePanel()` (re-renderiza o corpo com o player atual do
+`city_state`). Guardar o `pid` aberto numa variável de módulo.
+
+### 8. Remoção da v1
+Remover `abrirFichaCidade` (modal central) e `_renderFichaCidadeEquip`/
+`_refreshFichaCidade` cosméticos; substituídos pelo painel autoritativo. O ponto
+de entrada (`onclick` no card) passa a chamar o novo `abrirFichaCidade(pid)`.
 
 ## Fluxo de dados
 
 ```
-clique no meu card → abrirFichaCidade()
-  └─ lê cityState.players[me] (HP/nível) + GS.getHeroiAtivo() (equipado/inventario)
-  └─ monta overlay (atributos + equipamento)
-        botão Equipar/Remover/Usar → GS.<método> → _refreshFichaCidade()
+clique na foto do card → abrirFichaCidade(pid)
+  └─ lê GS.cityState.players[pid] (gear/bag/atributos)
+  └─ renderFichaCidadeBody(player, editable = pid===myPid)
+       editable: botão/drag → equipFromBag/equipOffhand/unequipSlot/reorderBag
+         → servidor muta gear/bag → broadcast_city_state (phase==city)
+         → GS.on('cityState') → _refreshFichaCidadePanel()
 ```
-
-`GS.getHeroiAtivo()` já cai para `cityState.players` quando não há `gameState`
-(gameState.js:619), e `_sincronizarHeroiComServidor` (chamado no `cityState`)
-mantém ouro/inventário sincronizados com o servidor.
 
 ## Tratamento de erros / casos de borda
 
-- `cityState` ainda não chegou: a barra de heróis só existe depois do
-  `cityState`, então o card só é clicável quando há estado — sem caso degenerado.
-- Inventário cheio ao desequipar: `desequiparItemComprado` já loga a recusa e
-  retorna `false`; o refresh não muda nada (feedback via log existente).
-- Restrição de classe ao equipar: `equiparItemComprado`/`podeEquipar` já recusa e
-  loga; refresh sem mudança.
-- Reabrir overlay: remover qualquer overlay anterior pelo id antes de criar
-  (mesmo padrão de `abrirFichaEmJogo`).
+- **Drop em slot vazio da bolsa** além de `len(bag)`: `to_index` é clampado para o
+  fim da lista (move para o fim). Sem erro.
+- **Equipar com restrição de classe / 2 mãos / bolsa cheia:** o servidor já recusa
+  e envia `error`; o cliente mostra o toast e o estado não muda.
+- **Arrastar no painel só-leitura:** itens não recebem `draggable`; slots não são
+  alvos de drop.
+- **Foto ausente/erro de carregamento:** `onerror` cai para o emoji da classe.
+- **city_state ainda não chegou:** cards só existem após o estado; sem caso
+  degenerado.
 
 ## Testes
 
-Mudança puramente de UI client-side, sem caminho de servidor testável por
-`tools/test_*.py`. Verificação manual no app:
-1. Entrar na cidade, comprar um equipamento na loja.
-2. Clicar no próprio card → ficha abre com atributos + equipamento.
-3. Equipar o item comprado → move para "Equipado", refletido no overlay.
-4. Remover → volta para "Comprados".
-5. Usar um consumível → some da lista.
-6. Clicar no card de outro herói → nada acontece.
-7. Entrar na masmorra → equipamento equipado na cidade persiste (mesmo modelo
-   client-side `GS.getHeroiAtivo`).
+- **Servidor (`tools/test_*.py`, padrão asyncio):** novo
+  `tools/test_ficha_cidade.py` cobrindo:
+  - equipar na fase city → item vai de `bag` para o `gear` certo e o broadcast é
+    `city_state` (não `game_state`);
+  - desequipar na cidade devolve à bolsa;
+  - `reorder_bag` troca a ordem dos itens (e clampa índices fora do intervalo);
+  - equipar na masmorra continua emitindo `game_state` (não regrediu).
+- **Cliente:** sem harness unitário; verificação manual no app (carregar página
+  valida sintaxe; exercício do painel/drag in-browser).
 
 ## Fora de escopo (YAGNI)
 
-- Persistência autoritativa de equipamento no servidor.
-- Ver/editar a ficha de outros heróis.
-- Abas de magias na ficha da cidade.
+- Usar consumível pela ficha da cidade.
+- Editar a ficha de outros heróis.
+- Recorte por-herói “fino” da foto (usa-se um `object-position` único; ajuste fino
+  pode vir depois).
+- Persistência adicional além do que `gear`/`bag` já fazem.
