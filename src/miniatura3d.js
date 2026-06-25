@@ -157,7 +157,118 @@
     return (r << 16) | (g << 8) | b;
   }
 
-  const api = { marchingSquares: marchingSquares, simplifyPath: simplifyPath, classifyLoops: classifyLoops, edgeColorHex: edgeColorHex };
+  // PNG (HTMLImageElement já carregado) → {mask,w,h,imageData} reduzido a maxSide.
+  function imageToMask(image, opts) {
+    const maxSide = (opts && opts.maxSide) || 128;
+    const alphaThresh = (opts && opts.alphaThresh) || 128;
+    const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+    const w = Math.max(1, Math.round(image.width * scale));
+    const h = Math.max(1, Math.round(image.height * scale));
+    const cv = document.createElement("canvas");
+    cv.width = w; cv.height = h;
+    const cx = cv.getContext("2d");
+    cx.drawImage(image, 0, 0, w, h);
+    const imageData = cx.getImageData(0, 0, w, h);
+    const mask = new Uint8Array(w * h);
+    for (let i = 0; i < w * h; i++) mask[i] = imageData.data[i * 4 + 3] > alphaThresh ? 1 : 0;
+    return { mask, w, h, imageData };
+  }
+
+  // Constrói o Group da miniatura. THREE injetado. opts:
+  //  { image, tileSize=1, thickness(0.05–0.08*tileSize), maxSide, alphaThresh, simplifyTol }
+  // Orientação: largura→X, altura→Y(cima), espessura→Z. Origem no CENTRO DA BASE.
+  function build(THREE, opts) {
+    const image = opts.image;
+    const tileSize = opts.tileSize || 1;
+    const thickness = opts.thickness != null ? opts.thickness : tileSize * 0.06;
+    const { mask, w, h, imageData } = imageToMask(image, opts);
+    const tol = opts.simplifyTol != null ? opts.simplifyTol : 0.75;
+
+    const loopsRaw = marchingSquares(mask, w, h).map(l => simplifyPath(l, tol));
+    const shapes = classifyLoops(loopsRaw);
+    const sideColor = edgeColorHex(imageData);
+
+    const group = new THREE.Group();
+    if (!shapes.length) return group;
+
+    // Escala: encaixar a silhueta em ~0.9*tileSize de largura; Y para cima.
+    const worldW = tileSize * 0.9;
+    const s = worldW / w;
+    const toShape = (loop) => {
+      const sh = new THREE.Shape();
+      loop.forEach((p, i) => {
+        const X = p[0] * s, Y = (h - p[1]) * s;   // inverte Y (imagem desce, mundo sobe)
+        i === 0 ? sh.moveTo(X, Y) : sh.lineTo(X, Y);
+      });
+      return sh;
+    };
+
+    const silhouette = [];
+    for (const sp of shapes) {
+      const sh = toShape(sp.outer);
+      sh.holes = sp.holes.map(holeLoop => {
+        const hp = new THREE.Path();
+        holeLoop.forEach((p, i) => {
+          const X = p[0] * s, Y = (h - p[1]) * s;
+          i === 0 ? hp.moveTo(X, Y) : hp.lineTo(X, Y);
+        });
+        return hp;
+      });
+      silhouette.push(sh);
+    }
+
+    const geo = new THREE.ExtrudeGeometry(silhouette, {
+      depth: thickness, bevelEnabled: true, bevelThickness: thickness * 0.25,
+      bevelSize: thickness * 0.25, bevelSegments: 1, steps: 1,
+    });
+    // UV da frente/verso pelo bounding box (textura = a arte do PNG).
+    geo.computeBoundingBox();
+    const bb = geo.boundingBox, sx = 1 / (bb.max.x - bb.min.x || 1), sy = 1 / (bb.max.y - bb.min.y || 1);
+    const pos = geo.attributes.position, uv = geo.attributes.uv;
+    for (let i = 0; i < pos.count; i++) {
+      uv.setXY(i, (pos.getX(i) - bb.min.x) * sx, (pos.getY(i) - bb.min.y) * sy);
+    }
+    uv.needsUpdate = true;
+
+    // Materiais: grupo 0 = faces (ExtrudeGeometry separa front/back de side via groups).
+    // ExtrudeGeometry cria 2 groups: 0 = tampas(frente/verso), 1 = laterais.
+    const tex = new THREE.Texture(imageData2Canvas(imageData));
+    tex.needsUpdate = true;
+    const faceMat = new THREE.MeshStandardMaterial({
+      map: tex, transparent: true, alphaTest: 0.5, roughness: 0.85, metalness: 0,
+    });
+    const sideMat = new THREE.MeshStandardMaterial({ color: sideColor, roughness: 0.9, metalness: 0 });
+    const mesh = new THREE.Mesh(geo, [faceMat, sideMat]);
+    mesh.castShadow = true; mesh.receiveShadow = true;
+
+    // Centraliza em X e apoia a base em Y=baseTop; espessura ao longo de Z.
+    geo.computeBoundingBox();
+    const cx2 = (geo.boundingBox.max.x + geo.boundingBox.min.x) / 2;
+    const minY = geo.boundingBox.min.y;
+    mesh.position.set(-cx2, -minY, 0);          // pés na base, centrado em X
+    mesh.rotation.x = 0;                         // fica em PÉ (plano XY, espessura Z)
+
+    // Base oval integrada no chão.
+    const baseGeo = new THREE.CylinderGeometry(worldW * 0.5, worldW * 0.55, thickness * 1.5, 24);
+    const baseMat = new THREE.MeshStandardMaterial({ color: sideColor, roughness: 0.95, metalness: 0 });
+    const base = new THREE.Mesh(baseGeo, baseMat);
+    base.scale.set(1, 1, 0.6);                   // oval (achata em Z)
+    base.position.set(0, thickness * 0.75, 0);
+    base.castShadow = true; base.receiveShadow = true;
+
+    group.add(base); group.add(mesh);
+    return group;
+  }
+
+  // ImageData → <canvas> (textura usável pelo THREE no browser).
+  function imageData2Canvas(imageData) {
+    const cv = document.createElement("canvas");
+    cv.width = imageData.width; cv.height = imageData.height;
+    cv.getContext("2d").putImageData(imageData, 0, 0);
+    return cv;
+  }
+
+  const api = { marchingSquares: marchingSquares, simplifyPath: simplifyPath, classifyLoops: classifyLoops, edgeColorHex: edgeColorHex, imageToMask: imageToMask, build: build };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (root) root.Miniatura3D = api;
 })(typeof window !== "undefined" ? window : null);
