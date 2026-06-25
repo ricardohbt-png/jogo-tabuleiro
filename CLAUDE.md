@@ -258,11 +258,17 @@ e imprime UM link `https://…/index.html` para compartilhar.
 - OrbitControls com limites, reset de câmera (botão + tecla R)
 - Sistema de cidade e loja de itens entre dungeons
 
-> **Ficha na cidade:** na tela `screen-city`, clicar no **próprio** card de herói
-> (barra do topo, marcado com 🎒) abre `abrirFichaCidade()` — overlay com atributos
-> (`renderConteudoAtributosFichaJogo`, alimentado pelo registro de `cityState`) +
-> equipamento (`_renderFichaCidadeEquip`) para **equipar/desequipar/usar** itens
-> comprados na loja antes de entrar na masmorra. Só o card local é clicável.
-> Equipar é client-side (`GS.equiparItemComprado`/`desequiparItemComprado`/
-> `aplicarConsumivel`); o overlay se atualiza via `_refreshFichaCidade` (não usa
-> `renderMyPanel`, pois `GS.gameState` é null na cidade). Sem mudança de protocolo.
+> **Ficha na cidade (autoritativa):** cada card de herói em `screen-city` mostra a
+> foto do rosto (3:4, `HERO_PORTRAIT_PATHS`). Clicar abre `abrirFichaCidade(pid)` —
+> painel lateral ESQUERDO deslizante (`#ficha-cidade-panel`) com atributos
+> (`renderConteudoAtributosFichaJogo`) + equipamento (8 slots de `player.gear`) +
+> inventário (`player.bag`). O próprio herói equipa/desequipa (botão/clique) e
+> organiza a bolsa por **arrastar-e-soltar** (reordenar; arrastar item p/ um slot
+> equipa; arrastar do slot p/ a bolsa desequipa); outros heróis abrem em
+> **só-leitura**. Usa o modelo AUTORITATIVO do servidor:
+> `equip_from_bag`/`equip_offhand`/`unequip`/`reorder_bag`, com broadcast ciente da
+> fase (`push_state_or_city` → `broadcast_city_state` na cidade,
+> `push_state`/`game_state` na masmorra). Cliente: `_updateCityHeroBar` (fotos +
+> clique), `renderFichaCidadeBody`, `_refreshFichaCidadePanel` (re-render ao chegar
+> `city_state`), `_fcDropOnGear`/`_fcDropOnBag` (drag-and-drop). Teste do servidor:
+> `tools/test_ficha_cidade.py`.
