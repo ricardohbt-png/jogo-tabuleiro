@@ -70,4 +70,4 @@ const M = require("../src/miniatura3d.js");
   assert.ok((hex >> 16 & 255) > (hex >> 8 & 255), "componente vermelho domina");
 }
 
-console.log("Task 1 OK");
+console.log("miniatura3d OK (todos os testes)");

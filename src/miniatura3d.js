@@ -132,6 +132,7 @@
     return inside;
   }
   // Agrupa laços em shapes {outer, holes}. Buraco = laço contido em outro de maior área.
+  // Profundidade-1: um shape aninhado DENTRO de um buraco vira buraco do externo (não re-emerge como novo shape). Suficiente para silhuetas de decoração (1 externo + 0/1 buracos).
   function classifyLoops(loops) {
     const sorted = loops.slice().sort((a, b) => Math.abs(_area(b)) - Math.abs(_area(a)));
     const shapes = [];
