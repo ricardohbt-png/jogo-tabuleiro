@@ -922,16 +922,12 @@ function _updateCityHeroBar(msg){
     const isMe=p.id===GS.myPid;
     const hpPct=p.max_hp>0?p.hp/p.max_hp*100:0;
     const st=p.hp<=0?'dead':(hpPct<40?'wounded':'');
-    // Só o card do próprio jogador é clicável (abre a ficha p/ equipar compras).
-    const meAttrs=isMe?' id="city-hcard-me" title="Clique para abrir sua ficha" style="cursor:pointer"':'';
-    return `<div class="city-hcard${isMe?' me':''}"${meAttrs}>
+    return `<div class="city-hcard${isMe?' me':''}">
       <span style="font-size:18px;line-height:1">${p.emoji}</span>
-      <div><div class="city-hcard-name">${p.name}${isMe?' 🎒':''}</div>
+      <div><div class="city-hcard-name">${p.name}</div>
            <div class="city-hcard-hp ${st}">${p.hp}/${p.max_hp} HP</div></div>
     </div>`;
   }).join('')+`<div class="city-gold-badge">💰 ${gold} Ouro</div>`;
-  const meCard=document.getElementById('city-hcard-me');
-  if(meCard) meCard.onclick=()=>abrirFichaCidade();
 }
 
 function _updateCityTimeBadge(){
@@ -9643,175 +9639,6 @@ function desequiparComprado(slot){
   if(GS.desequiparItemComprado(slot) && GS.gameState) renderMyPanel(GS.gameState);
 }
 
-// ── Ficha do personagem na CIDADE: bloco de EQUIPAMENTO ───────────────────────
-// Reaproveita o padrão de renderPurchasedItems (equipado + comprados) mas escreve
-// num container próprio (id="ficha-cidade-equip") e se auto-atualiza via
-// _refreshFichaCidade — pois renderMyPanel(GS.gameState) não existe na cidade
-// (GS.gameState é null). Equipar é client-side (GS.getHeroiAtivo), igual à masmorra.
-function _renderFichaCidadeEquip(container){
-  container.innerHTML = '';
-  const heroi = GS.getHeroiAtivo ? GS.getHeroiAtivo() : null;
-  if(!heroi){ container.textContent = 'Sem dados do herói.'; return; }
-
-  // ── Equipado ──
-  const tEq = document.createElement('div');
-  tEq.className = 'section-title';
-  tEq.textContent = 'Equipado';
-  container.appendChild(tEq);
-
-  const equipados = _EQUIPADO_SLOTS
-    .map(s => ({ ...s, it: heroi.equipado && heroi.equipado[s.key] }))
-    .filter(x => x.it);
-  if(equipados.length){
-    const g = document.createElement('div');
-    g.className = 'bag-grid';
-    for(const {key, label, it} of equipados){
-      const slot = document.createElement('div');
-      slot.className = 'bag-slot filled';
-      slot.title = it.nome;
-      slot.innerHTML = `
-        <div class="bag-slot-num" style="font-size:.5rem;opacity:.7">${label}</div>
-        <div class="bag-slot-emoji">${_TIPO_ITEM_EMOJI[it.tipo] || '📦'}</div>
-        <div class="bag-slot-name">${it.nome}</div>`;
-      aplicarTooltipAoItem(slot, it.id);
-      const btn = document.createElement('button');
-      btn.className = 'bag-slot-btn';
-      btn.textContent = '✕ Remover';
-      btn.onclick = () => { if(GS.desequiparItemComprado(key)) _refreshFichaCidade(); };
-      slot.appendChild(btn);
-      g.appendChild(slot);
-    }
-    container.appendChild(g);
-  } else {
-    const none = document.createElement('div');
-    none.style.cssText = 'color:#8a7a5a;font-size:11px;padding:2px 0 6px;';
-    none.textContent = 'Nada equipado.';
-    container.appendChild(none);
-  }
-
-  // ── Comprados na Loja ──
-  const comprados = Array.isArray(heroi.inventario)
-    ? heroi.inventario.map((it,idx)=>({it,idx})).filter(x=>x.it)
-    : [];
-  const tComp = document.createElement('div');
-  tComp.className = 'section-title';
-  tComp.textContent = `Comprados na Loja (${comprados.length})`;
-  container.appendChild(tComp);
-
-  if(!comprados.length){
-    const none = document.createElement('div');
-    none.style.cssText = 'color:#8a7a5a;font-size:11px;padding:2px 0;';
-    none.textContent = 'Compre itens nas lojas para equipar.';
-    container.appendChild(none);
-    return;
-  }
-
-  const grid = document.createElement('div');
-  grid.className = 'bag-grid';
-  for(const {it, idx} of comprados){
-    const slot = document.createElement('div');
-    slot.className = 'bag-slot filled';
-    slot.title = it.nome;
-    slot.innerHTML = `
-      <div class="bag-slot-emoji">${_TIPO_ITEM_EMOJI[it.tipo] || '📦'}</div>
-      <div class="bag-slot-name">${it.nome}</div>
-      <div class="bag-slot-type">${_TIPO_ITEM_LABEL[it.tipo] || '📦 Item'}</div>`;
-    aplicarTooltipAoItem(slot, it.id);
-    if(it.tipo === 'consumivel'){
-      const btn = document.createElement('button');
-      btn.className = 'bag-slot-btn use';
-      btn.textContent = '▶ Usar';
-      btn.title = 'Recupera fome/sede';
-      btn.onclick = () => {
-        GS.aplicarConsumivel(it);
-        heroi.inventario[idx] = null;
-        _refreshFichaCidade();
-        toast(`Usou ${it.nome}`, 'var(--gold)');
-      };
-      slot.appendChild(btn);
-    } else if(it.tipo !== 'municao'){
-      const btn = document.createElement('button');
-      btn.className = 'bag-slot-btn equip';
-      btn.textContent = '⚙ Equipar';
-      btn.onclick = () => { if(GS.equiparItemComprado(idx)) _refreshFichaCidade(); };
-      slot.appendChild(btn);
-    }
-    grid.appendChild(slot);
-  }
-  container.appendChild(grid);
-}
-
-// Re-renderiza apenas o bloco de equipamento do overlay da ficha da cidade.
-function _refreshFichaCidade(){
-  const c = document.getElementById('ficha-cidade-equip');
-  if(c) _renderFichaCidadeEquip(c);
-}
-
-// Abre o overlay da ficha do herói LOCAL na cidade: cabeçalho + atributos
-// (renderConteudoAtributosFichaJogo, alimentado pelo registro de cityState) +
-// equipamento (_renderFichaCidadeEquip). Só o próprio herói (ver _updateCityHeroBar).
-function abrirFichaCidade(){
-  const anterior = document.getElementById('ficha-cidade-overlay');
-  if(anterior) anterior.remove();
-
-  const cityP = (GS.cityState && GS.cityState.players)
-    ? GS.cityState.players.find(p => p.id === GS.myPid)
-    : null;
-  if(!cityP){ toast('Ficha indisponível.', 'var(--gold)'); return; }
-
-  const heroiKey = _classIdParaHeroiKey(cityP.class_id || cityP.cls || cityP.key);
-  const heroi = (typeof HERO_DATA !== 'undefined' && HERO_DATA[heroiKey])
-    || (GS.HERO_DATA && GS.HERO_DATA[heroiKey]);
-  if(!heroi){ toast('Ficha indisponível.', 'var(--gold)'); return; }
-
-  const overlay = document.createElement('div');
-  overlay.id = 'ficha-cidade-overlay';
-  overlay.style.cssText = `position:fixed; inset:0; background:rgba(0,0,0,0.80);
-    z-index:300; display:flex; align-items:center; justify-content:center;
-    opacity:0; transition:opacity 0.3s ease;`;
-
-  const container = document.createElement('div');
-  container.style.cssText = `width:340px; max-height:88vh; overflow-y:auto;
-    background:rgba(10,8,5,0.98); border:1px solid #c8a951; position:relative;`;
-
-  // Cabeçalho — retrato, nome, classe, nível (do registro de cityState)
-  const cab = document.createElement('div');
-  cab.style.cssText = `padding:16px 20px 12px; border-bottom:1px solid #c8a95133;
-    display:flex; align-items:center; gap:12px;`;
-  cab.innerHTML = `
-    <img src="${heroi.portrait || ''}"
-         style="width:52px;height:52px;object-fit:cover;object-position:top;border:1px solid #c8a95166;"
-         onerror="this.style.display='none'"/>
-    <div style="flex:1;">
-      <div style="font-family:'Cinzel Decorative',serif;color:#c8a951;font-size:14px;">${cityP.name || heroi.name || heroi.nome || 'Herói'}</div>
-      <div style="color:#8a7a5a;font-size:10px;letter-spacing:3px;margin-top:2px;">${cityP.class_name || heroi.class || heroi.classeSelecao || ''}</div>
-      <div style="color:#c8b89a;font-size:10px;margin-top:4px;">NÍVEL ${cityP.level || heroi.nivel || 1}</div>
-    </div>
-    <button onclick="document.getElementById('ficha-cidade-overlay').remove()"
-            style="background:transparent;border:1px solid #4a4a4a;color:#8a7a5a;font-family:'Cinzel',serif;font-size:11px;padding:4px 10px;cursor:pointer;align-self:flex-start;">✕</button>`;
-
-  // Conteúdo — atributos (reusado) + bloco de equipamento
-  const conteudo = document.createElement('div');
-  conteudo.style.cssText = 'padding:16px 20px;';
-  conteudo.innerHTML = renderConteudoAtributosFichaJogo(heroi, cityP);
-
-  const equipWrap = document.createElement('div');
-  equipWrap.id = 'ficha-cidade-equip';
-  equipWrap.style.cssText = 'margin-top:16px;border-top:1px solid #c8a95133;padding-top:12px;';
-  conteudo.appendChild(equipWrap);
-
-  container.appendChild(cab);
-  container.appendChild(conteudo);
-  overlay.appendChild(container);
-  document.body.appendChild(overlay);
-
-  _renderFichaCidadeEquip(equipWrap);
-
-  // Clicar fora fecha
-  overlay.onclick = (e) => { if(e.target === overlay) overlay.remove(); };
-  requestAnimationFrame(() => { overlay.style.opacity = '1'; });
-}
-
 let _openChestId = null;   // currently-open chest id (for auto-refresh)
 let _openDecorLootId = null;   // currently-open decor loot id (for auto-refresh)
 
@@ -10086,6 +9913,9 @@ function equipOffhand(slotIndex){
 
 function unequipSlot(slotKey){
   send({type:'unequip', slot_key: slotKey});
+}
+function reorderBag(fromIndex, toIndex){
+  send({type:'reorder_bag', from_index: fromIndex, to_index: toIndex});
 }
 
 // Envia o ataque incluindo as habilidades ARMADAS do warrior (toggle). O custo
