@@ -257,3 +257,12 @@ e imprime UM link `https://…/index.html` para compartilhar.
 - Peões 3D com geometrias custom, outline, sombra blob, halo pulsante para turno ativo
 - OrbitControls com limites, reset de câmera (botão + tecla R)
 - Sistema de cidade e loja de itens entre dungeons
+
+> **Ficha na cidade:** na tela `screen-city`, clicar no **próprio** card de herói
+> (barra do topo, marcado com 🎒) abre `abrirFichaCidade()` — overlay com atributos
+> (`renderConteudoAtributosFichaJogo`, alimentado pelo registro de `cityState`) +
+> equipamento (`_renderFichaCidadeEquip`) para **equipar/desequipar/usar** itens
+> comprados na loja antes de entrar na masmorra. Só o card local é clicável.
+> Equipar é client-side (`GS.equiparItemComprado`/`desequiparItemComprado`/
+> `aplicarConsumivel`); o overlay se atualiza via `_refreshFichaCidade` (não usa
+> `renderMyPanel`, pois `GS.gameState` é null na cidade). Sem mudança de protocolo.
