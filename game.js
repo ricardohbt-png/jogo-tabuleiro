@@ -9639,6 +9639,110 @@ function desequiparComprado(slot){
   if(GS.desequiparItemComprado(slot) && GS.gameState) renderMyPanel(GS.gameState);
 }
 
+// ── Ficha do personagem na CIDADE: bloco de EQUIPAMENTO ───────────────────────
+// Reaproveita o padrão de renderPurchasedItems (equipado + comprados) mas escreve
+// num container próprio (id="ficha-cidade-equip") e se auto-atualiza via
+// _refreshFichaCidade — pois renderMyPanel(GS.gameState) não existe na cidade
+// (GS.gameState é null). Equipar é client-side (GS.getHeroiAtivo), igual à masmorra.
+function _renderFichaCidadeEquip(container){
+  container.innerHTML = '';
+  const heroi = GS.getHeroiAtivo ? GS.getHeroiAtivo() : null;
+  if(!heroi){ container.textContent = 'Sem dados do herói.'; return; }
+
+  // ── Equipado ──
+  const tEq = document.createElement('div');
+  tEq.className = 'section-title';
+  tEq.textContent = 'Equipado';
+  container.appendChild(tEq);
+
+  const equipados = _EQUIPADO_SLOTS
+    .map(s => ({ ...s, it: heroi.equipado && heroi.equipado[s.key] }))
+    .filter(x => x.it);
+  if(equipados.length){
+    const g = document.createElement('div');
+    g.className = 'bag-grid';
+    for(const {key, label, it} of equipados){
+      const slot = document.createElement('div');
+      slot.className = 'bag-slot filled';
+      slot.title = it.nome;
+      slot.innerHTML = `
+        <div class="bag-slot-num" style="font-size:.5rem;opacity:.7">${label}</div>
+        <div class="bag-slot-emoji">${_TIPO_ITEM_EMOJI[it.tipo] || '📦'}</div>
+        <div class="bag-slot-name">${it.nome}</div>`;
+      aplicarTooltipAoItem(slot, it.id);
+      const btn = document.createElement('button');
+      btn.className = 'bag-slot-btn';
+      btn.textContent = '✕ Remover';
+      btn.onclick = () => { if(GS.desequiparItemComprado(key)) _refreshFichaCidade(); };
+      slot.appendChild(btn);
+      g.appendChild(slot);
+    }
+    container.appendChild(g);
+  } else {
+    const none = document.createElement('div');
+    none.style.cssText = 'color:#8a7a5a;font-size:11px;padding:2px 0 6px;';
+    none.textContent = 'Nada equipado.';
+    container.appendChild(none);
+  }
+
+  // ── Comprados na Loja ──
+  const comprados = Array.isArray(heroi.inventario)
+    ? heroi.inventario.map((it,idx)=>({it,idx})).filter(x=>x.it)
+    : [];
+  const tComp = document.createElement('div');
+  tComp.className = 'section-title';
+  tComp.textContent = `Comprados na Loja (${comprados.length})`;
+  container.appendChild(tComp);
+
+  if(!comprados.length){
+    const none = document.createElement('div');
+    none.style.cssText = 'color:#8a7a5a;font-size:11px;padding:2px 0;';
+    none.textContent = 'Compre itens nas lojas para equipar.';
+    container.appendChild(none);
+    return;
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'bag-grid';
+  for(const {it, idx} of comprados){
+    const slot = document.createElement('div');
+    slot.className = 'bag-slot filled';
+    slot.title = it.nome;
+    slot.innerHTML = `
+      <div class="bag-slot-emoji">${_TIPO_ITEM_EMOJI[it.tipo] || '📦'}</div>
+      <div class="bag-slot-name">${it.nome}</div>
+      <div class="bag-slot-type">${_TIPO_ITEM_LABEL[it.tipo] || '📦 Item'}</div>`;
+    aplicarTooltipAoItem(slot, it.id);
+    if(it.tipo === 'consumivel'){
+      const btn = document.createElement('button');
+      btn.className = 'bag-slot-btn use';
+      btn.textContent = '▶ Usar';
+      btn.title = 'Recupera fome/sede';
+      btn.onclick = () => {
+        GS.aplicarConsumivel(it);
+        heroi.inventario[idx] = null;
+        _refreshFichaCidade();
+        toast(`Usou ${it.nome}`, 'var(--gold)');
+      };
+      slot.appendChild(btn);
+    } else if(it.tipo !== 'municao'){
+      const btn = document.createElement('button');
+      btn.className = 'bag-slot-btn equip';
+      btn.textContent = '⚙ Equipar';
+      btn.onclick = () => { if(GS.equiparItemComprado(idx)) _refreshFichaCidade(); };
+      slot.appendChild(btn);
+    }
+    grid.appendChild(slot);
+  }
+  container.appendChild(grid);
+}
+
+// Re-renderiza apenas o bloco de equipamento do overlay da ficha da cidade.
+function _refreshFichaCidade(){
+  const c = document.getElementById('ficha-cidade-equip');
+  if(c) _renderFichaCidadeEquip(c);
+}
+
 let _openChestId = null;   // currently-open chest id (for auto-refresh)
 let _openDecorLootId = null;   // currently-open decor loot id (for auto-refresh)
 
