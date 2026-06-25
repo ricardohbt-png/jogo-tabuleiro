@@ -14,9 +14,22 @@
         g[(y + 1) * W + (x + 1)] = mask[y * w + x] ? 1 : 0;
     const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= H) ? 0 : g[y * W + x];
 
-    // Segmentos direcionados (inside à esquerda) por célula de cantos (x,y).
-    // Edges: T=(x+.5,y) R=(x+1,y+.5) B=(x+.5,y+1) L=(x,y+.5). Coords no espaço de
-    // cantos da máscara ORIGINAL → subtrai 1 do padding ao emitir.
+    // Segmentos direcionados (inside à esquerda) por célula (x,y) da grade preenchida.
+    // Os quatro pontos de meio-aresta são calculados no espaço de CANTOS da grade
+    // preenchida (não da máscara original). O padding de 1 célula faz com que a
+    // coordenada original = coordenada preenchida − 1, de modo que o laço final já
+    // sai no espaço da máscara original sem conversão explícita.
+    //
+    // Rótulos e coordenadas reais (espaço preenchido, canto superior-esquerdo da
+    // célula em (x, y)):
+    //   eTopLeft    = (x,     y−0.5)  — meio da aresta vertical entre esta célula e a de cima
+    //   eTopRight   = (x+0.5, y    )  — meio da aresta horizontal superior desta célula
+    //   eBotLeft    = (x,     y+0.5)  — meio da aresta vertical esquerda desta célula
+    //   eBotRight   = (x−0.5, y    )  — meio da aresta horizontal entre esta célula e a da esquerda
+    //
+    // ATENÇÃO: os nomes foram escolhidos pelo vértice do quadrado de marching que
+    // cada ponto separa, NÃO pela aresta geométrica convencional (top/right/bottom/left).
+    // A tabela switch abaixo usa esses rótulos de forma consistente internamente.
     const segs = [];
     const key = p => p[0] + "," + p[1];
     for (let y = 0; y < H - 1; y++) {
@@ -24,6 +37,7 @@
         const tl = at(x, y), tr = at(x + 1, y), br = at(x + 1, y + 1), bl = at(x, y + 1);
         const c = (tl << 3) | (tr << 2) | (br << 1) | bl;
         if (c === 0 || c === 15) continue;
+        // eTopLeft=T, eTopRight=R, eBotLeft=B, eBotRight=L (aliases curtos para a tabela abaixo)
         const T = [x, y - 0.5], R = [x + 0.5, y],
               B = [x, y + 0.5], L = [x - 0.5, y];
         const push = (a, b) => segs.push([a, b]);

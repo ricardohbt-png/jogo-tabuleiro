@@ -26,4 +26,18 @@ const M = require("../src/miniatura3d.js");
   assert.strictEqual(loops.length, 2, "anel = 2 laços (externo + interno)");
 }
 
+// Empty mask → 0 loops
+{
+  const loops = M.marchingSquares(new Uint8Array(4), 2, 2);
+  assert.strictEqual(loops.length, 0, "empty mask = 0 loops");
+}
+// Single opaque pixel → 1 closed loop
+{
+  const loops = M.marchingSquares(new Uint8Array([1]), 1, 1);
+  assert.strictEqual(loops.length, 1, "1x1 pixel = 1 loop");
+  const lp = loops[0];
+  const a = lp[0], b = lp[lp.length - 1];
+  assert.ok(Math.abs(a[0]-b[0]) < 1e-9 && Math.abs(a[1]-b[1]) < 1e-9, "1x1 loop closed");
+}
+
 console.log("Task 1 OK");
