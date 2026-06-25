@@ -40,4 +40,17 @@ const M = require("../src/miniatura3d.js");
   assert.ok(Math.abs(a[0]-b[0]) < 1e-9 && Math.abs(a[1]-b[1]) < 1e-9, "1x1 loop closed");
 }
 
+// simplifyPath: um quadrado denso vira ~4-5 vértices.
+{
+  const square = [];
+  for (let i = 0; i <= 10; i++) square.push([i, 0]);
+  for (let i = 1; i <= 10; i++) square.push([10, i]);
+  for (let i = 9; i >= 0; i--) square.push([i, 10]);
+  for (let i = 9; i >= 0; i--) square.push([0, i]);
+  square.push([0, 0]);
+  const s = M.simplifyPath(square, 0.5);
+  assert.ok(s.length <= 6, "quadrado simplificado <=6 vértices, veio " + s.length);
+  assert.ok(s.length >= 4, "quadrado mantém >=4 vértices");
+}
+
 console.log("Task 1 OK");

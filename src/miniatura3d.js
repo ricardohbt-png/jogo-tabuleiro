@@ -85,7 +85,37 @@
     return loops;
   }
 
-  const api = { marchingSquares: marchingSquares };
+  // Douglas–Peucker para uma POLILINHA aberta (preserva extremos).
+  function _dpOpen(pts, tol) {
+    if (pts.length < 3) return pts.slice();
+    const a = pts[0], b = pts[pts.length - 1];
+    let idx = -1, dmax = 0;
+    const dx = b[0] - a[0], dy = b[1] - a[1];
+    const len2 = dx * dx + dy * dy || 1e-12;
+    for (let i = 1; i < pts.length - 1; i++) {
+      const px = pts[i][0] - a[0], py = pts[i][1] - a[1];
+      const t = (px * dx + py * dy) / len2;
+      const cx = px - t * dx, cy = py - t * dy;
+      const d = cx * cx + cy * cy;
+      if (d > dmax) { dmax = d; idx = i; }
+    }
+    if (dmax > tol * tol && idx > 0) {
+      const left = _dpOpen(pts.slice(0, idx + 1), tol);
+      const right = _dpOpen(pts.slice(idx), tol);
+      return left.slice(0, -1).concat(right);
+    }
+    return [a, b];
+  }
+
+  // Simplifica um laço FECHADO (1º==último). Mantém o fechamento.
+  function simplifyPath(loop, tol) {
+    if (loop.length < 4) return loop.slice();
+    const open = loop.slice(0, -1);                  // tira o ponto duplicado de fecho
+    const simplified = _dpOpen(open.concat([open[0]]), tol || 0.75);
+    return simplified;                               // já volta com 1º==último
+  }
+
+  const api = { marchingSquares: marchingSquares, simplifyPath: simplifyPath };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (root) root.Miniatura3D = api;
 })(typeof window !== "undefined" ? window : null);
