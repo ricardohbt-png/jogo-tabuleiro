@@ -33,10 +33,11 @@
       sock.onmessage = (ev) => {
         let m;
         try { m = JSON.parse(ev.data); } catch (e) { return; }
-        if (m.type !== "upload_result") return;
+        if (m.type !== "upload_result" && m.type !== "objetos_list") return;
         const p = pending.get(m.upload_id);
         if (!p) return;
         pending.delete(m.upload_id);
+        if (m.type === "objetos_list") { p.resolve(m.objetos || []); return; }
         if (m.ok) p.resolve(m);                       // mensagem completa (name/file/entry)
         else p.reject(new Error(m.error || "falha no upload"));
       };
@@ -121,7 +122,34 @@
       .then((m) => ({ file: m.file }));
   }
 
+  async function uploadObjeto(file) {
+    if (extOf(file.name) !== ".png")
+      throw new Error("envie um arquivo .png");
+    if (file.size > MAX) throw new Error("arquivo grande demais");
+    const data = await toBase64(file);
+    const m = await request("objeto_upload", { name: file.name, data: data });
+    return m.name;
+  }
+
+  // Lista os PNGs de assets/objetos. Resolve com array de basenames (ou rejeita
+  // se o servidor estiver fora — chamador cai no fallback de digitação).
+  async function listObjetos() {
+    const sock = await connect();
+    const id = nextId++;
+    return new Promise((resolve, reject) => {
+      const to = setTimeout(() => { pending.delete(id); reject(new Error("tempo esgotado")); }, 15000);
+      pending.set(id, {
+        resolve: (v) => { clearTimeout(to); resolve(v); },
+        reject: (e) => { clearTimeout(to); reject(e); },
+      });
+      try {
+        sock.send(JSON.stringify({ type: "list_objetos", upload_id: id }));
+      } catch (e) { clearTimeout(to); pending.delete(id); reject(new Error("falha ao enviar")); }
+    });
+  }
+
   window.STORY_UPLOAD = { upload: upload };
   window.PRISONER_UPLOAD = { upload: uploadPrisoner };
   window.EDITOR_SAVE = { saveDungeon: saveDungeon, saveCampaign: saveCampaign };
+  window.OBJETO_UPLOAD = { upload: uploadObjeto, list: listObjetos };
 })();
