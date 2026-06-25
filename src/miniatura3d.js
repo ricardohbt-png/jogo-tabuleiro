@@ -115,7 +115,48 @@
     return simplified;                               // já volta com 1º==último
   }
 
-  const api = { marchingSquares: marchingSquares, simplifyPath: simplifyPath };
+  function _area(loop) {                  // área com sinal (shoelace)
+    let a = 0;
+    for (let i = 0; i < loop.length - 1; i++)
+      a += loop[i][0] * loop[i + 1][1] - loop[i + 1][0] * loop[i][1];
+    return a / 2;
+  }
+  function _pointInLoop(pt, loop) {
+    let inside = false;
+    for (let i = 0, j = loop.length - 2; i < loop.length - 1; j = i++) {
+      const xi = loop[i][0], yi = loop[i][1], xj = loop[j][0], yj = loop[j][1];
+      const hit = ((yi > pt[1]) !== (yj > pt[1])) &&
+        (pt[0] < (xj - xi) * (pt[1] - yi) / ((yj - yi) || 1e-12) + xi);
+      if (hit) inside = !inside;
+    }
+    return inside;
+  }
+  // Agrupa laços em shapes {outer, holes}. Buraco = laço contido em outro de maior área.
+  function classifyLoops(loops) {
+    const sorted = loops.slice().sort((a, b) => Math.abs(_area(b)) - Math.abs(_area(a)));
+    const shapes = [];
+    for (const lp of sorted) {
+      const probe = lp[0];
+      const parent = shapes.find(s => _pointInLoop(probe, s.outer));
+      if (parent) parent.holes.push(lp);
+      else shapes.push({ outer: lp, holes: [] });
+    }
+    return shapes;
+  }
+  // Cor média (hex 0xRRGGBB) dos pixels opacos — base p/ as laterais "plástico".
+  function edgeColorHex(imageData) {
+    const d = imageData.data; let r = 0, g = 0, b = 0, n = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i + 3] > 128) { r += d[i]; g += d[i + 1]; b += d[i + 2]; n++; }
+    }
+    if (!n) return 0x888888;
+    r = (r / n) | 0; g = (g / n) | 0; b = (b / n) | 0;
+    // escurece ~30% p/ dar leitura de "lateral"
+    r = (r * 0.7) | 0; g = (g * 0.7) | 0; b = (b * 0.7) | 0;
+    return (r << 16) | (g << 8) | b;
+  }
+
+  const api = { marchingSquares: marchingSquares, simplifyPath: simplifyPath, classifyLoops: classifyLoops, edgeColorHex: edgeColorHex };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (root) root.Miniatura3D = api;
 })(typeof window !== "undefined" ? window : null);

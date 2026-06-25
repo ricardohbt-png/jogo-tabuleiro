@@ -53,4 +53,21 @@ const M = require("../src/miniatura3d.js");
   assert.ok(s.length >= 4, "quadrado mantém >=4 vértices");
 }
 
+// classifyLoops: anel → 1 externo + 1 buraco.
+{
+  const outer = [[0,0],[10,0],[10,10],[0,10],[0,0]];
+  const hole  = [[3,3],[7,3],[7,7],[3,7],[3,3]];
+  const cls = M.classifyLoops([outer, hole]);
+  assert.strictEqual(cls.length, 1, "1 shape externo");
+  assert.strictEqual(cls[0].holes.length, 1, "com 1 buraco");
+}
+// edgeColorHex: imageData só com pixels vermelhos opacos → ~vermelho.
+{
+  const w = 4, h = 4, data = new Uint8ClampedArray(w * h * 4);
+  for (let i = 0; i < w * h; i++) { data[i*4]=200; data[i*4+1]=30; data[i*4+2]=30; data[i*4+3]=255; }
+  const hex = M.edgeColorHex({ data, width: w, height: h });
+  assert.strictEqual(typeof hex, "number");
+  assert.ok((hex >> 16 & 255) > (hex >> 8 & 255), "componente vermelho domina");
+}
+
 console.log("Task 1 OK");
