@@ -922,12 +922,23 @@ function _updateCityHeroBar(msg){
     const isMe=p.id===GS.myPid;
     const hpPct=p.max_hp>0?p.hp/p.max_hp*100:0;
     const st=p.hp<=0?'dead':(hpPct<40?'wounded':'');
-    return `<div class="city-hcard${isMe?' me':''}">
-      <span style="font-size:18px;line-height:1">${p.emoji}</span>
+    const foto=HERO_PORTRAIT_PATHS[p.class_id]||'';
+    // Foto 3:4 recortada no rosto; cai para emoji se faltar/erro de carregamento.
+    const face = foto
+      ? `<img class="city-hcard-face" src="${foto}" alt=""
+            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+         <span class="city-hcard-face-fallback" style="display:none">${p.emoji}</span>`
+      : `<span class="city-hcard-face-fallback">${p.emoji}</span>`;
+    return `<div class="city-hcard${isMe?' me':''}" data-pid="${p.id}"
+                 title="Clique para ver a ficha" style="cursor:pointer">
+      ${face}
       <div><div class="city-hcard-name">${p.name}</div>
            <div class="city-hcard-hp ${st}">${p.hp}/${p.max_hp} HP</div></div>
     </div>`;
   }).join('')+`<div class="city-gold-badge">💰 ${gold} Ouro</div>`;
+  bar.querySelectorAll('.city-hcard[data-pid]').forEach(card => {
+    card.onclick = () => abrirFichaCidade(card.getAttribute('data-pid'));
+  });
 }
 
 function _updateCityTimeBadge(){
@@ -19018,12 +19029,15 @@ GS.on('cityState', msg => {
     window._comprando = false;
     abrirLoja(window._lojaUltimaAberta, GS.getHeroiAtivo());
   }
+  // Painel da ficha aberto → re-renderiza com o estado novo (equipar/reordenar).
+  if(_fcPanelPid != null) _refreshFichaCidadePanel();
 });
 
 GS.on('shopResult',  msg =>
   toast(msg.msg.replace(/\*\*(.+?)\*\*/g,'$1'), 'var(--green)'));
 
 GS.on('enterDungeon', () => {
+  fecharFichaCidade();
   _hpSnapshot.clear();   // novo cenário: zera HP base (1º game_state não dispara som)
   destroyCity3D();
   // Tear down any leftover dungeon renderer from a previous run so the fresh

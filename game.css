@@ -794,3 +794,10 @@ input:focus { outline: none; border-color: var(--gold); }
 #ficha-cidade-panel .bag-slot.drop-target{ outline:2px dashed #c8a951;
   outline-offset:-2px; }
 #ficha-cidade-panel [draggable="true"]{ cursor:grab; }
+
+/* Foto (rosto, 3:4) nos cards de herói da cidade */
+.city-hcard-face{ width:34px; aspect-ratio:3/4; object-fit:cover;
+  object-position:top center; border:1px solid #c8a95155; border-radius:3px; flex-shrink:0; }
+.city-hcard-face-fallback{ width:34px; aspect-ratio:3/4; display:flex;
+  align-items:center; justify-content:center; font-size:18px; background:#0e0c18;
+  border:1px solid #2a2848; border-radius:3px; flex-shrink:0; }
