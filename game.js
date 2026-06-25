@@ -9918,6 +9918,228 @@ function reorderBag(fromIndex, toIndex){
   send({type:'reorder_bag', from_index: fromIndex, to_index: toIndex});
 }
 
+// ── Ficha do personagem na CIDADE (v2): painel lateral autoritativo ──────────
+// Lê player.gear/player.bag do city_state (modelo autoritativo do servidor).
+// Meu herói: equipar/desequipar (botão/clique) + arrastar-e-soltar (reordenar a
+// bolsa e equipar/desequipar). Outros heróis: só leitura.
+const FC_EQ_SLOTS = [
+  {key:'weapon',   label:'Mão Direita', empty:'✊'},
+  {key:'off_hand', label:'Mão Esquerda',empty:'🤚'},
+  {key:'armor',    label:'Corpo',       empty:'👕'},
+  {key:'head',     label:'Cabeça',      empty:'🧢'},
+  {key:'ring1',    label:'Anel 1',      empty:'💍'},
+  {key:'ring2',    label:'Anel 2',      empty:'💍'},
+  {key:'item1',    label:'Item 1',      empty:'📦'},
+  {key:'item2',    label:'Item 2',      empty:'📦'},
+];
+let _fcPanelPid = null;   // pid mostrado no painel (null = fechado)
+let _fcDrag = null;       // origem do arraste: {kind:'bag',index} | {kind:'gear',slotKey}
+
+function _fcPlayerAtual(){
+  return (GS.cityState && GS.cityState.players)
+    ? GS.cityState.players.find(p => p.id === _fcPanelPid) : null;
+}
+
+function _fcEhAdaga(item){
+  return !!item && (item.id === 'dagger' || /adaga/i.test(item.name || '')) && !!item.die;
+}
+
+function abrirFichaCidade(pid){
+  _fcPanelPid = pid;
+  let panel = document.getElementById('ficha-cidade-panel');
+  let back  = document.getElementById('ficha-cidade-backdrop');
+  if(!back){
+    back = document.createElement('div');
+    back.id = 'ficha-cidade-backdrop';
+    back.onclick = fecharFichaCidade;
+    document.body.appendChild(back);
+  }
+  if(!panel){
+    panel = document.createElement('div');
+    panel.id = 'ficha-cidade-panel';
+    document.body.appendChild(panel);
+  }
+  _refreshFichaCidadePanel();
+  requestAnimationFrame(() => { panel.classList.add('open'); back.classList.add('open'); });
+}
+
+function fecharFichaCidade(){
+  _fcPanelPid = null;
+  _fcDrag = null;
+  const panel = document.getElementById('ficha-cidade-panel');
+  const back  = document.getElementById('ficha-cidade-backdrop');
+  if(panel) panel.classList.remove('open');
+  if(back)  back.classList.remove('open');
+}
+
+// Re-renderiza o corpo do painel com o player atual do city_state.
+function _refreshFichaCidadePanel(){
+  if(_fcPanelPid == null) return;
+  const panel = document.getElementById('ficha-cidade-panel');
+  if(!panel) return;
+  const player = _fcPlayerAtual();
+  if(!player){ fecharFichaCidade(); return; }
+  panel.innerHTML = '';
+  const closeBtn = document.createElement('button');
+  closeBtn.id = 'ficha-cidade-close';
+  closeBtn.textContent = '✕';
+  closeBtn.title = 'Fechar';
+  closeBtn.onclick = fecharFichaCidade;
+  panel.appendChild(closeBtn);
+  renderFichaCidadeBody(panel, player, player.id === GS.myPid);
+}
+
+function renderFichaCidadeBody(panel, player, editable){
+  // Cabeçalho (foto + nome/classe/nível)
+  const heroiKey    = _classIdParaHeroiKey(player.class_id);
+  const heroiStatic = (typeof HERO_DATA !== 'undefined' && HERO_DATA[heroiKey])
+    || (GS.HERO_DATA && GS.HERO_DATA[heroiKey]) || {};
+  const portrait = HERO_PORTRAIT_PATHS[player.class_id] || heroiStatic.portrait || '';
+  const head = document.createElement('div');
+  head.className = 'fc-head';
+  head.innerHTML = `
+    <img class="fc-head-photo" src="${portrait}" alt="" onerror="this.style.display='none'"/>
+    <div class="fc-head-info">
+      <div class="fc-head-name">${player.name || ''}</div>
+      <div class="fc-head-class">${player.class_name || ''}${editable ? '' : ' · só leitura'}</div>
+      <div class="fc-head-lvl">NÍVEL ${player.level || 1}</div>
+    </div>`;
+  panel.appendChild(head);
+
+  const body = document.createElement('div');
+  body.className = 'fc-body';
+  panel.appendChild(body);
+
+  // Atributos (reuso)
+  const attr = document.createElement('div');
+  attr.innerHTML = renderConteudoAtributosFichaJogo(heroiStatic, player);
+  body.appendChild(attr);
+
+  // Equipamento (paper-doll dos 8 slots)
+  const gear = player.gear || {};
+  const eqTitle = document.createElement('div');
+  eqTitle.className = 'section-title'; eqTitle.style.marginTop = '4px';
+  eqTitle.textContent = 'Equipamento';
+  body.appendChild(eqTitle);
+  const eqGrid = document.createElement('div');
+  eqGrid.className = 'equip-grid';
+  for(const {key, label, empty} of FC_EQ_SLOTS){
+    const item = gear[key];
+    const slot = document.createElement('div');
+    slot.className = 'eq-slot' + (item ? ' filled' : '');
+    slot.title = item ? (editable ? `${item.name} — clique/arraste p/ desequipar` : item.name) : label;
+    slot.innerHTML = `
+      <div class="eq-slot-label">${label}</div>
+      <div class="eq-slot-emoji">${item ? item.emoji : `<span style="opacity:.35">${empty}</span>`}</div>
+      <div class="eq-slot-name">${item ? item.name : '—'}</div>`;
+    if(item) aplicarTooltipAoItem(slot, item.id);
+    if(editable && item){
+      slot.appendChild(Object.assign(document.createElement('div'),
+        {className:'eq-slot-x', textContent:'⤓', title:'Desequipar'}));
+      slot.onclick = () => unequipSlot(key);
+      slot.draggable = true;
+      slot.addEventListener('dragstart', e => { _fcDrag = {kind:'gear', slotKey:key}; e.dataTransfer.effectAllowed = 'move'; });
+    }
+    if(editable){
+      slot.addEventListener('dragover',  e => { if(_fcDrag){ e.preventDefault(); slot.classList.add('drop-target'); } });
+      slot.addEventListener('dragleave', () => slot.classList.remove('drop-target'));
+      slot.addEventListener('drop',      e => { e.preventDefault(); slot.classList.remove('drop-target'); _fcDropOnGear(key); });
+    }
+    eqGrid.appendChild(slot);
+  }
+  body.appendChild(eqGrid);
+
+  // Inventário (bag_size slots)
+  const bag     = player.bag || [];
+  const bagSize = player.bag_size || 6;
+  const bagTitle = document.createElement('div');
+  bagTitle.className = 'section-title';
+  bagTitle.textContent = `Inventário (${bag.length}/${bagSize})`;
+  body.appendChild(bagTitle);
+  const bagGrid = document.createElement('div');
+  bagGrid.className = 'bag-grid';
+  for(let i = 0; i < bagSize; i++){
+    const item = bag[i];
+    const slot = document.createElement('div');
+    if(item){
+      const isEquippable = !!(item.item_slot && item.item_slot !== 'bag') || !!item.die;
+      const typeLabel = item.die ? '⚔ Arma'
+        : item.effect === 'ammo' ? `🏹 Munição (×${item.ammo_count ?? 0})`
+        : ({weapon:'⚔ Arma', shield:'🛡 Escudo', armor:'🛡 Armadura', head:'⛑ Cabeça',
+            ring:'💍 Anel', item:'🎒 Item', accessory:'📿 Acessório', bag:'🧪 Consumível'}[item.item_slot] || '📦 Item');
+      slot.className = 'bag-slot filled';
+      slot.title = item.name;
+      slot.innerHTML = `
+        <div class="bag-slot-num">${i+1}</div>
+        <div class="bag-slot-emoji">${item.emoji}</div>
+        <div class="bag-slot-name">${item.name}</div>
+        <div class="bag-slot-type">${typeLabel}</div>`;
+      aplicarTooltipAoItem(slot, item.id);
+      if(editable){
+        slot.draggable = true;
+        slot.addEventListener('dragstart', e => { _fcDrag = {kind:'bag', index:i}; e.dataTransfer.effectAllowed = 'move'; });
+        if(isEquippable){
+          const allowed = item.allowed_classes;
+          const classRestricted = allowed && player.class_id && !allowed.includes(player.class_id);
+          const btn = document.createElement('button');
+          btn.className = 'bag-slot-btn equip' + (classRestricted ? ' disabled' : '');
+          btn.textContent = classRestricted ? '🚫 Classe' : '⚙ Equipar';
+          btn.disabled = !!classRestricted;
+          btn.title = classRestricted ? `Apenas: ${allowed.join(', ')}` : '';
+          if(!classRestricted) btn.onclick = () => equipFromBag(i);
+          slot.appendChild(btn);
+          if(_fcEhAdaga(item) && !classRestricted){
+            const b2 = document.createElement('button');
+            b2.className = 'bag-slot-btn equip';
+            b2.textContent = '🗡️ 2ª arma';
+            b2.title = 'Empunhar na mão esquerda (2ª arma)';
+            b2.onclick = () => equipOffhand(i);
+            slot.appendChild(b2);
+          }
+        }
+      }
+    } else {
+      slot.className = 'bag-slot empty-slot';
+      slot.innerHTML = `
+        <div class="bag-slot-num" style="opacity:.5">${i+1}</div>
+        <div class="bag-slot-emoji" style="font-size:1rem;opacity:.4">◻</div>
+        <div class="bag-slot-type" style="font-size:.52rem">vazio</div>`;
+    }
+    if(editable){
+      slot.addEventListener('dragover',  e => { if(_fcDrag){ e.preventDefault(); slot.classList.add('drop-target'); } });
+      slot.addEventListener('dragleave', () => slot.classList.remove('drop-target'));
+      slot.addEventListener('drop',      e => { e.preventDefault(); slot.classList.remove('drop-target'); _fcDropOnBag(i); });
+    }
+    bagGrid.appendChild(slot);
+  }
+  body.appendChild(bagGrid);
+}
+
+// Drop num slot de EQUIPAMENTO: vindo da bolsa → equipar (off_hand p/ adaga/escudo).
+function _fcDropOnGear(slotKey){
+  const d = _fcDrag; _fcDrag = null;
+  if(!d || d.kind !== 'bag') return;   // gear→gear: ignora
+  const player = _fcPlayerAtual();
+  const item = player && player.bag ? player.bag[d.index] : null;
+  if(!item) return;
+  const ehOffhand = slotKey === 'off_hand'
+    && (_fcEhAdaga(item) || item.item_slot === 'shield' || item.kind === 'shield');
+  if(ehOffhand) equipOffhand(d.index);
+  else          equipFromBag(d.index);
+}
+
+// Drop num slot da BOLSA: vindo da bolsa → reordenar; vindo do gear → desequipar.
+function _fcDropOnBag(toIndex){
+  const d = _fcDrag; _fcDrag = null;
+  if(!d) return;
+  if(d.kind === 'bag'){
+    if(d.index === toIndex) return;
+    reorderBag(d.index, toIndex);
+  } else if(d.kind === 'gear'){
+    unequipSlot(d.slotKey);
+  }
+}
+
 // Envia o ataque incluindo as habilidades ARMADAS do warrior (toggle). O custo
 // de fome/sede é cobrado pelo servidor neste momento (a "ação"). Limpa a seleção
 // após enviar — no próximo turno as skills voltam a ficar selecionáveis.

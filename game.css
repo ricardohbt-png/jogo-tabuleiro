@@ -769,3 +769,28 @@ input:focus { outline: none; border-color: var(--gold); }
   border-radius: 6px; padding: 9px 16px; font-weight: bold; cursor: pointer; }
 #story-continue { background: #d9b061; color: #1d1812; border: none;
   border-radius: 6px; padding: 9px 18px; font-weight: bold; cursor: pointer; }
+
+/* ── Ficha do personagem na cidade: painel lateral esquerdo ─────────────────── */
+#ficha-cidade-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.5);
+  z-index:299; opacity:0; pointer-events:none; transition:opacity .26s ease; }
+#ficha-cidade-backdrop.open{ opacity:1; pointer-events:auto; }
+#ficha-cidade-panel{ position:fixed; left:0; top:0; height:100vh; width:300px;
+  max-width:90vw; background:rgba(10,8,5,.98); border-right:1px solid #c8a951;
+  z-index:300; transform:translateX(-100%); transition:transform .26s ease;
+  display:flex; flex-direction:column; }
+#ficha-cidade-panel.open{ transform:translateX(0); }
+#ficha-cidade-close{ position:absolute; top:8px; right:8px; background:transparent;
+  border:1px solid #4a4a4a; color:#8a7a5a; font-size:13px; padding:2px 9px;
+  cursor:pointer; z-index:1; }
+.fc-head{ padding:14px 16px 10px; border-bottom:1px solid #c8a95133;
+  display:flex; gap:12px; align-items:center; }
+.fc-head-photo{ width:54px; aspect-ratio:3/4; object-fit:cover;
+  object-position:top center; border:1px solid #c8a95166; flex-shrink:0; }
+.fc-head-name{ font-family:'Cinzel Decorative',serif; color:#c8a951; font-size:14px; }
+.fc-head-class{ color:#8a7a5a; font-size:10px; letter-spacing:2px; margin-top:2px; }
+.fc-head-lvl{ color:#c8b89a; font-size:10px; margin-top:3px; }
+.fc-body{ padding:14px 16px; overflow-y:auto; flex:1; }
+#ficha-cidade-panel .eq-slot.drop-target,
+#ficha-cidade-panel .bag-slot.drop-target{ outline:2px dashed #c8a951;
+  outline-offset:-2px; }
+#ficha-cidade-panel [draggable="true"]{ cursor:grab; }
