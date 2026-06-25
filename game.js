@@ -922,12 +922,16 @@ function _updateCityHeroBar(msg){
     const isMe=p.id===GS.myPid;
     const hpPct=p.max_hp>0?p.hp/p.max_hp*100:0;
     const st=p.hp<=0?'dead':(hpPct<40?'wounded':'');
-    return `<div class="city-hcard${isMe?' me':''}">
+    // Só o card do próprio jogador é clicável (abre a ficha p/ equipar compras).
+    const meAttrs=isMe?' id="city-hcard-me" title="Clique para abrir sua ficha" style="cursor:pointer"':'';
+    return `<div class="city-hcard${isMe?' me':''}"${meAttrs}>
       <span style="font-size:18px;line-height:1">${p.emoji}</span>
-      <div><div class="city-hcard-name">${p.name}</div>
+      <div><div class="city-hcard-name">${p.name}${isMe?' 🎒':''}</div>
            <div class="city-hcard-hp ${st}">${p.hp}/${p.max_hp} HP</div></div>
     </div>`;
   }).join('')+`<div class="city-gold-badge">💰 ${gold} Ouro</div>`;
+  const meCard=document.getElementById('city-hcard-me');
+  if(meCard) meCard.onclick=()=>abrirFichaCidade();
 }
 
 function _updateCityTimeBadge(){
