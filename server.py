@@ -12853,6 +12853,23 @@ async def handler(ws):
                     await ws.send(json.dumps(payload))
                     continue
 
+                if t == "objeto_upload":
+                    ok, res = _save_objeto_upload(msg.get("name"), msg.get("data"))
+                    payload = {"type": "upload_result",
+                               "upload_id": msg.get("upload_id"), "ok": ok}
+                    if ok:
+                        payload["name"] = res
+                    else:
+                        payload["error"] = res
+                    await ws.send(json.dumps(payload))
+                    continue
+
+                if t == "list_objetos":
+                    await ws.send(json.dumps({"type": "objetos_list",
+                                              "upload_id": msg.get("upload_id"),
+                                              "objetos": _listar_objetos()}))
+                    continue
+
                 if t == "create_room":
                     name = (msg.get("name") or "Herói")[:20]
                     code = make_code()
@@ -13215,6 +13232,46 @@ def _save_prisoner_upload(name, data_b64):
     except OSError:
         return False, "falha ao gravar"
     return True, base
+
+OBJETOS_DIR = os.path.join(BASE_DIR, "assets", "objetos")
+_OBJETOS_DIR = OBJETOS_DIR
+_OBJETOS_OK_EXT = {".png"}
+
+def _save_objeto_upload(name, data_b64):
+    """Grava um PNG de objeto em assets/objetos/. Só .png. Mesma proteção
+    (path-traversal via basename, tamanho) do _save_story_upload.
+    Retorna (ok: bool, basename_salvo | mensagem_de_erro)."""
+    base = os.path.basename(name or "")
+    if not base or "\x00" in base:
+        return False, "nome inválido"
+    ext = os.path.splitext(base)[1].lower()
+    if ext not in _OBJETOS_OK_EXT:
+        return False, "envie um arquivo .png"
+    if not isinstance(data_b64, str) or not data_b64:
+        return False, "dados inválidos"
+    if (len(data_b64) * 3) // 4 > STORY_UPLOAD_MAX:
+        return False, "arquivo grande demais"
+    try:
+        raw = base64.b64decode(data_b64, validate=True)
+    except Exception:
+        return False, "dados inválidos"
+    if len(raw) > STORY_UPLOAD_MAX:
+        return False, "arquivo grande demais"
+    try:
+        os.makedirs(OBJETOS_DIR, exist_ok=True)
+        with open(os.path.join(OBJETOS_DIR, base), "wb") as f:
+            f.write(raw)
+    except OSError:
+        return False, "falha ao gravar"
+    return True, base
+
+def _listar_objetos():
+    """Lista os basenames .png de assets/objetos/ (ordenado)."""
+    try:
+        return sorted(n for n in os.listdir(OBJETOS_DIR)
+                      if n.lower().endswith(".png"))
+    except OSError:
+        return []
 
 # ─── Salvar definições do editor (masmorra → dungeons/, campanha → campaigns/) ──
 # O editor roda em file:// e o navegador não pode gravar em pastas do PC, então a
