@@ -9743,6 +9743,71 @@ function _refreshFichaCidade(){
   if(c) _renderFichaCidadeEquip(c);
 }
 
+// Abre o overlay da ficha do herói LOCAL na cidade: cabeçalho + atributos
+// (renderConteudoAtributosFichaJogo, alimentado pelo registro de cityState) +
+// equipamento (_renderFichaCidadeEquip). Só o próprio herói (ver _updateCityHeroBar).
+function abrirFichaCidade(){
+  const anterior = document.getElementById('ficha-cidade-overlay');
+  if(anterior) anterior.remove();
+
+  const cityP = (GS.cityState && GS.cityState.players)
+    ? GS.cityState.players.find(p => p.id === GS.myPid)
+    : null;
+  if(!cityP){ toast('Ficha indisponível.', 'var(--gold)'); return; }
+
+  const heroiKey = _classIdParaHeroiKey(cityP.class_id || cityP.cls || cityP.key);
+  const heroi = (typeof HERO_DATA !== 'undefined' && HERO_DATA[heroiKey])
+    || (GS.HERO_DATA && GS.HERO_DATA[heroiKey]);
+  if(!heroi){ toast('Ficha indisponível.', 'var(--gold)'); return; }
+
+  const overlay = document.createElement('div');
+  overlay.id = 'ficha-cidade-overlay';
+  overlay.style.cssText = `position:fixed; inset:0; background:rgba(0,0,0,0.80);
+    z-index:300; display:flex; align-items:center; justify-content:center;
+    opacity:0; transition:opacity 0.3s ease;`;
+
+  const container = document.createElement('div');
+  container.style.cssText = `width:340px; max-height:88vh; overflow-y:auto;
+    background:rgba(10,8,5,0.98); border:1px solid #c8a951; position:relative;`;
+
+  // Cabeçalho — retrato, nome, classe, nível (do registro de cityState)
+  const cab = document.createElement('div');
+  cab.style.cssText = `padding:16px 20px 12px; border-bottom:1px solid #c8a95133;
+    display:flex; align-items:center; gap:12px;`;
+  cab.innerHTML = `
+    <img src="${heroi.portrait || ''}"
+         style="width:52px;height:52px;object-fit:cover;object-position:top;border:1px solid #c8a95166;"
+         onerror="this.style.display='none'"/>
+    <div style="flex:1;">
+      <div style="font-family:'Cinzel Decorative',serif;color:#c8a951;font-size:14px;">${cityP.name || heroi.name || heroi.nome || 'Herói'}</div>
+      <div style="color:#8a7a5a;font-size:10px;letter-spacing:3px;margin-top:2px;">${cityP.class_name || heroi.class || heroi.classeSelecao || ''}</div>
+      <div style="color:#c8b89a;font-size:10px;margin-top:4px;">NÍVEL ${cityP.level || heroi.nivel || 1}</div>
+    </div>
+    <button onclick="document.getElementById('ficha-cidade-overlay').remove()"
+            style="background:transparent;border:1px solid #4a4a4a;color:#8a7a5a;font-family:'Cinzel',serif;font-size:11px;padding:4px 10px;cursor:pointer;align-self:flex-start;">✕</button>`;
+
+  // Conteúdo — atributos (reusado) + bloco de equipamento
+  const conteudo = document.createElement('div');
+  conteudo.style.cssText = 'padding:16px 20px;';
+  conteudo.innerHTML = renderConteudoAtributosFichaJogo(heroi, cityP);
+
+  const equipWrap = document.createElement('div');
+  equipWrap.id = 'ficha-cidade-equip';
+  equipWrap.style.cssText = 'margin-top:16px;border-top:1px solid #c8a95133;padding-top:12px;';
+  conteudo.appendChild(equipWrap);
+
+  container.appendChild(cab);
+  container.appendChild(conteudo);
+  overlay.appendChild(container);
+  document.body.appendChild(overlay);
+
+  _renderFichaCidadeEquip(equipWrap);
+
+  // Clicar fora fecha
+  overlay.onclick = (e) => { if(e.target === overlay) overlay.remove(); };
+  requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+}
+
 let _openChestId = null;   // currently-open chest id (for auto-refresh)
 let _openDecorLootId = null;   // currently-open decor loot id (for auto-refresh)
 
