@@ -5,15 +5,15 @@
 input{width:60px}</style></head>
 <body>
 <div id="ui">
-  PNG: <input id="url" style="width:260px" value="../assets/objetos/arvore.png">
+  PNG: <input id="url" style="width:260px" value="../assets/objetos/arvore_cutout.png">
   alfa<input id="alpha" type="number" value="128">
-  maxSide<input id="max" type="number" value="128">
-  tol<input id="tol" type="number" step="0.1" value="0.75">
+  maxSide<input id="max" type="number" value="150">
+  tol<input id="tol" type="number" step="0.1" value="1.5">
   <button id="go">gerar</button>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-<script src="../src/miniatura3d.js"></script>
+<script src="../src/miniatura3d.js?v=7"></script>
 <script>
 const scene = new THREE.Scene(); scene.background = new THREE.Color(0x1a1410);
 const cam = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.01, 100);

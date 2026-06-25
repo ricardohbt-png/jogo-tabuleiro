@@ -157,20 +157,83 @@
     return (r << 16) | (g << 8) | b;
   }
 
+  // Limpa uma máscara binária: mantém só o maior componente 4-conexo (descarta
+  // ilhas de ruído pontilhado) e preenche os buracos internos cercados (vãos de
+  // folha). Resultado: um blob sólido → marchingSquares traça UM contorno limpo
+  // (sem o "tecido" que o pontilhado gera no encadeamento). Pura/testável.
+  function cleanMask(mask, w, h) {
+    const n = w * h;
+    const lab = new Int32Array(n);
+    let best = 0, bestCount = 0, cur = 0;
+    const st = [];
+    for (let i = 0; i < n; i++) {
+      if (mask[i] && !lab[i]) {
+        cur++; let count = 0; st.length = 0; st.push(i); lab[i] = cur;
+        while (st.length) {
+          const p = st.pop(); count++;
+          const x = p % w, y = (p / w) | 0;
+          if (x > 0 && mask[p - 1] && !lab[p - 1]) { lab[p - 1] = cur; st.push(p - 1); }
+          if (x < w - 1 && mask[p + 1] && !lab[p + 1]) { lab[p + 1] = cur; st.push(p + 1); }
+          if (y > 0 && mask[p - w] && !lab[p - w]) { lab[p - w] = cur; st.push(p - w); }
+          if (y < h - 1 && mask[p + w] && !lab[p + w]) { lab[p + w] = cur; st.push(p + w); }
+        }
+        if (count > bestCount) { bestCount = count; best = cur; }
+      }
+    }
+    const out = new Uint8Array(n);
+    for (let i = 0; i < n; i++) out[i] = lab[i] === best ? 1 : 0;
+    // Inunda o fundo a partir da borda; o que NÃO foi alcançado e não é frente é
+    // buraco interno cercado → preenche.
+    const bg = new Uint8Array(n);
+    st.length = 0;
+    const seed = (i) => { if (!out[i] && !bg[i]) { bg[i] = 1; st.push(i); } };
+    for (let x = 0; x < w; x++) { seed(x); seed((h - 1) * w + x); }
+    for (let y = 0; y < h; y++) { seed(y * w); seed(y * w + w - 1); }
+    while (st.length) {
+      const p = st.pop(), x = p % w, y = (p / w) | 0;
+      if (x > 0) seed(p - 1);
+      if (x < w - 1) seed(p + 1);
+      if (y > 0) seed(p - w);
+      if (y < h - 1) seed(p + w);
+    }
+    for (let i = 0; i < n; i++) if (!out[i] && !bg[i]) out[i] = 1;
+    return out;
+  }
+
   // PNG (HTMLImageElement já carregado) → {mask,w,h,imageData} reduzido a maxSide.
+  // Redução por HALVING em etapas (média de área de verdade): nem o NEAREST (que
+  // sobre-solidifica e cria halo pontilhado nas bordas rendadas), nem o bilinear
+  // de um passo só (que sub-amostra em reduções grandes). Cada metade faz média
+  // 2×2 → alfa fiel; aí o limiar dá uma silhueta sólida e limpa.
   function imageToMask(image, opts) {
     const maxSide = (opts && opts.maxSide) || 128;
     const alphaThresh = (opts && opts.alphaThresh) || 128;
-    const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
-    const w = Math.max(1, Math.round(image.width * scale));
-    const h = Math.max(1, Math.round(image.height * scale));
+    let cw = image.width, ch = image.height;
+    let src = document.createElement("canvas");
+    src.width = cw; src.height = ch;
+    src.getContext("2d").drawImage(image, 0, 0);
+    const scale = Math.min(1, maxSide / Math.max(cw, ch));
+    const w = Math.max(1, Math.round(cw * scale));
+    const h = Math.max(1, Math.round(ch * scale));
+    while (cw > w * 2 || ch > h * 2) {
+      const nw = Math.max(w, Math.floor(cw / 2)), nh = Math.max(h, Math.floor(ch / 2));
+      const dst = document.createElement("canvas");
+      dst.width = nw; dst.height = nh;
+      const dctx = dst.getContext("2d");
+      dctx.imageSmoothingEnabled = true; dctx.imageSmoothingQuality = "high";
+      dctx.drawImage(src, 0, 0, nw, nh);
+      src = dst; cw = nw; ch = nh;
+    }
     const cv = document.createElement("canvas");
     cv.width = w; cv.height = h;
     const cx = cv.getContext("2d");
-    cx.drawImage(image, 0, 0, w, h);
+    cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = "high";
+    cx.drawImage(src, 0, 0, w, h);
     const imageData = cx.getImageData(0, 0, w, h);
-    const mask = new Uint8Array(w * h);
+    let mask = new Uint8Array(w * h);
     for (let i = 0; i < w * h; i++) mask[i] = imageData.data[i * 4 + 3] > alphaThresh ? 1 : 0;
+    // Limpeza: maior componente + preenche buracos (a menos que opts.cleanMask===false).
+    if (!opts || opts.cleanMask !== false) mask = cleanMask(mask, w, h);
     return { mask, w, h, imageData };
   }
 
@@ -184,7 +247,14 @@
     const { mask, w, h, imageData } = imageToMask(image, opts);
     const tol = opts.simplifyTol != null ? opts.simplifyTol : 0.75;
 
-    const loopsRaw = marchingSquares(mask, w, h).map(l => simplifyPath(l, tol));
+    let loopsRaw = marchingSquares(mask, w, h).map(l => simplifyPath(l, tol));
+    // Descarta laços minúsculos (ilhas/buracos de ruído de borda) — mantém a
+    // silhueta principal e seus buracos relevantes. Se o filtro zerar tudo,
+    // mantém só o maior laço.
+    const minArea = (opts.minLoopAreaFrac != null ? opts.minLoopAreaFrac : 0.004) * w * h;
+    const filtered = loopsRaw.filter(l => Math.abs(_area(l)) >= minArea);
+    if (filtered.length) loopsRaw = filtered;
+    else loopsRaw = [loopsRaw.reduce((a, b) => Math.abs(_area(b)) > Math.abs(_area(a)) ? b : a)];
     const shapes = classifyLoops(loopsRaw);
     const sideColor = edgeColorHex(imageData);
 
@@ -221,21 +291,41 @@
       depth: thickness, bevelEnabled: true, bevelThickness: thickness * 0.25,
       bevelSize: thickness * 0.25, bevelSegments: 1, steps: 1,
     });
-    // UV da frente/verso pelo bounding box (textura = a arte do PNG).
-    geo.computeBoundingBox();
-    const bb = geo.boundingBox, sx = 1 / (bb.max.x - bb.min.x || 1), sy = 1 / (bb.max.y - bb.min.y || 1);
+    // UV pela EXTENSÃO DA IMAGEM (não pelo bbox da geometria): a silhueta e a
+    // textura vêm do MESMO PNG, então mapear cada vértice pela sua coord. de
+    // imagem alinha a arte exatamente com o recorte. worldW = w*s; altura = h*s.
+    // (flipY padrão da textura faz uv.y=0 amostrar a base da imagem, que é onde
+    // worldY=0 cai — consistente.)
+    const imgWx = w * s, imgHy = h * s;
     const pos = geo.attributes.position, uv = geo.attributes.uv;
     for (let i = 0; i < pos.count; i++) {
-      uv.setXY(i, (pos.getX(i) - bb.min.x) * sx, (pos.getY(i) - bb.min.y) * sy);
+      uv.setXY(i, pos.getX(i) / imgWx, pos.getY(i) / imgHy);
     }
     uv.needsUpdate = true;
 
     // Materiais: grupo 0 = faces (ExtrudeGeometry separa front/back de side via groups).
     // ExtrudeGeometry cria 2 groups: 0 = tampas(frente/verso), 1 = laterais.
-    const tex = new THREE.Texture(imageData2Canvas(imageData));
+    // Textura da face: desenha o PNG ORIGINAL com suavização (arte nítida),
+    // desacoplada da máscara (que é baixa-res e nearest p/ geometria limpa).
+    const texMax = (opts && opts.texMax) || 512;
+    const tscale = Math.min(1, texMax / Math.max(image.width, image.height));
+    const texCanvas = document.createElement("canvas");
+    texCanvas.width = Math.max(1, Math.round(image.width * tscale));
+    texCanvas.height = Math.max(1, Math.round(image.height * tscale));
+    const tctx = texCanvas.getContext("2d");
+    // Preenche o fundo com a cor da borda ANTES de desenhar a arte: os vãos
+    // internos (que o cleanMask fechou na silhueta) e qualquer fundo do PNG
+    // ficam com essa cor sólida em vez do xadrez de transparência embutido.
+    tctx.fillStyle = "#" + ("000000" + (sideColor >>> 0).toString(16)).slice(-6);
+    tctx.fillRect(0, 0, texCanvas.width, texCanvas.height);
+    tctx.drawImage(image, 0, 0, texCanvas.width, texCanvas.height);
+    const tex = new THREE.Texture(texCanvas);
     tex.needsUpdate = true;
+    // Face OPACA: a própria geometria (silhueta) define o recorte, então não há
+    // alphaTest (que abriria furos nos vãos preenchidos pelo cleanMask). A arte
+    // do PNG só colore a face.
     const faceMat = new THREE.MeshStandardMaterial({
-      map: tex, transparent: true, alphaTest: 0.5, roughness: 0.85, metalness: 0,
+      map: tex, roughness: 0.85, metalness: 0,
     });
     const sideMat = new THREE.MeshStandardMaterial({ color: sideColor, roughness: 0.9, metalness: 0 });
     const mesh = new THREE.Mesh(geo, [faceMat, sideMat]);
@@ -268,7 +358,7 @@
     return cv;
   }
 
-  const api = { marchingSquares: marchingSquares, simplifyPath: simplifyPath, classifyLoops: classifyLoops, edgeColorHex: edgeColorHex, imageToMask: imageToMask, build: build };
+  const api = { marchingSquares: marchingSquares, simplifyPath: simplifyPath, classifyLoops: classifyLoops, edgeColorHex: edgeColorHex, cleanMask: cleanMask, imageToMask: imageToMask, build: build };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (root) root.Miniatura3D = api;
 })(typeof window !== "undefined" ? window : null);

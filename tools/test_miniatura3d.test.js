@@ -70,4 +70,29 @@ const M = require("../src/miniatura3d.js");
   assert.ok((hex >> 16 & 255) > (hex >> 8 & 255), "componente vermelho domina");
 }
 
+// cleanMask: remove ilhas de ruído e preenche buracos → 1 blob sólido.
+{
+  // 10x10: bloco 6x6 sólido (1..6) + 1 pixel de ruído isolado no canto + 1
+  // buraco interno no centro do bloco.
+  const w = 10, h = 10, m = new Uint8Array(w * h);
+  for (let y = 2; y <= 7; y++) for (let x = 2; x <= 7; x++) m[y * w + x] = 1;
+  m[4 * w + 4] = 0;              // buraco interno
+  m[0] = 1;                      // ilha de ruído isolada no canto
+  const c = M.cleanMask(m, w, h);
+  assert.strictEqual(c[0], 0, "ilha de ruído removida");
+  assert.strictEqual(c[4 * w + 4], 1, "buraco interno preenchido");
+  assert.strictEqual(c[2 * w + 2], 1, "bloco principal preservado");
+  // o resultado é um único componente 4-conexo
+  const loops = M.marchingSquares(c, w, h);
+  assert.strictEqual(loops.length, 1, "blob limpo = 1 contorno");
+}
+// cleanMask: NÃO faz "tecido" num checkerboard (mantém só 1 célula = maior comp.)
+{
+  const w = 10, h = 10, c = new Uint8Array(w * h);
+  for (let i = 0; i < w * h; i++) { const x = i % w, y = (i / w) | 0; if ((x + y) % 2 === 0) c[i] = 1; }
+  const cleaned = M.cleanMask(c, w, h);
+  let count = 0; for (let i = 0; i < cleaned.length; i++) count += cleaned[i];
+  assert.ok(count <= 4, "checkerboard reduz a um único pixel (maior comp.), veio " + count);
+}
+
 console.log("miniatura3d OK (todos os testes)");
