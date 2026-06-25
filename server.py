@@ -1824,6 +1824,13 @@ def validar_dungeon(defn):
             ch = de.get("charges", 0)
             if isinstance(ch, bool) or not isinstance(ch, int) or ch < 0:
                 return False, "fonte com charges inválido."
+        img = de.get("image")
+        if img is not None:
+            if not isinstance(img, str) or os.path.basename(img) != img \
+               or not img.lower().endswith(".png") or "\x00" in img:
+                return False, f"decoração com image inválida: {img!r}."
+            if not os.path.isfile(os.path.join(OBJETOS_DIR, img)):
+                return False, f"image inexistente em assets/objetos: {img!r}."
 
     return True, "ok"
 
@@ -3746,6 +3753,7 @@ class GameRoom:
                 "facing": list(d.get("facing") or [0, 1]),
                 "loot": None,
                 "tem_loot": False,
+                "image": (d.get("image") if isinstance(d.get("image"), str) else None),
             }
             loot = d.get("loot")
             if loot and meta["loot_capaz"]:
@@ -10247,6 +10255,7 @@ class GameRoom:
                 "alto": meta["alto"], "pisavel": meta["pisavel"],
                 "special": meta["special"], "emoji": meta["emoji"],
                 "size": meta["size"],
+                "image": d.get("image"),
             })
         return out
 
