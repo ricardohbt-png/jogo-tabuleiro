@@ -79,6 +79,20 @@
   const board = document.getElementById("board");
   const ctx = board.getContext("2d");
 
+  // Cache de imagens de objetos para o preview 2D do editor.
+  const _objImgCache = {};
+  function objImg(name) {
+    if (!name) return null;
+    let im = _objImgCache[name];
+    if (im === undefined) {
+      im = new Image();
+      im.onload = () => render();
+      im.src = "../assets/objetos/" + name;
+      _objImgCache[name] = im;
+    }
+    return (im.complete && im.naturalWidth) ? im : null;
+  }
+
   function emojiForCell(x, y) {
     const at = (arr) => arr.find(e => e.pos && e.pos[0] === x && e.pos[1] === y);
     if (S.entrance && S.entrance.x === x && S.entrance.y === y) return "🚪";
@@ -90,7 +104,11 @@
     const tr = at(S.traps);
     if (tr) { const d = CAT.traps.find(c => c.tipo === tr.tipo); return d ? d.icone : "⚠️"; }
     const dec = S.decorations.find(e => e.pos[0] === x && e.pos[1] === y);
-    if (dec) { const m = decorMeta(dec.type); return m ? m.emoji : "🪑"; }
+    if (dec) {
+      // Se a decoração tem imagem e ela já carregou, não retorna emoji (a imagem cobre o footprint).
+      if (dec.image && objImg(dec.image)) return null;
+      const m = decorMeta(dec.type); return m ? m.emoji : "🪑";
+    }
     return null;
   }
 
@@ -114,6 +132,18 @@
     for (const d of S.decorations) {
       ctx.strokeStyle = "#6ad0a0"; ctx.lineWidth = 1;
       for (const [tx, ty] of decorTiles(d)) ctx.strokeRect(tx * CELL + 2, ty * CELL + 2, CELL - 5, CELL - 5);
+    }
+    // Preview 2D: desenha o PNG da decoração cobrindo o footprint (se d.image disponível).
+    for (const d of S.decorations) {
+      if (!d.image) continue;
+      const im = objImg(d.image);
+      if (!im) continue;
+      const tiles = decorTiles(d);
+      const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
+      const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
+      const px = minX * CELL + 2, py = minY * CELL + 2;
+      const pw = (maxX - minX + 1) * CELL - 4, ph = (maxY - minY + 1) * CELL - 4;
+      ctx.drawImage(im, px, py, pw, ph);
     }
     ctx.font = "16px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     for (let y = 0; y < S.grid.h; y++) {
@@ -426,6 +456,51 @@
         document.getElementById("d-additem").onclick = () => { const id = document.getElementById("d-add").value; if (id) ref.loot.items.push({ id }); renderPanel(); };
         panel.querySelectorAll(".d-rm").forEach(b => b.onclick = () => { ref.loot.items.splice(Number(b.dataset.i), 1); renderPanel(); });
       }
+      panel.innerHTML += `
+        <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
+          <b>Imagem (miniatura 3D)</b>
+          <div style="font-size:11px;color:#8a7a5a">PNG de assets/objetos — silhueta extrudada no jogo.</div>
+          <div style="margin-top:4px">
+            <select id="d-img-sel"></select>
+            <button id="d-img-refresh" title="recarregar lista">↻</button>
+          </div>
+          <div style="margin-top:4px">
+            <input id="d-img-file" type="file" accept="image/png" style="font-size:11px">
+            <span id="d-img-st" style="font-size:11px;color:#8a7a5a"></span>
+          </div>
+        </div>`;
+
+      const imgSel = document.getElementById("d-img-sel");
+      const imgSt = document.getElementById("d-img-st");
+      function fillImgOptions(list) {
+        const opts = ['<option value="">(nenhuma — procedural)</option>']
+          .concat(list.map(n => `<option value="${n}" ${ref.image === n ? "selected" : ""}>${n}</option>`));
+        // garante a imagem atual visível mesmo se a lista falhar
+        if (ref.image && list.indexOf(ref.image) < 0)
+          opts.push(`<option value="${ref.image}" selected>${ref.image} (atual)</option>`);
+        imgSel.innerHTML = opts.join("");
+      }
+      fillImgOptions([]);
+      function loadImgList() {
+        if (!window.OBJETO_UPLOAD) { imgSt.textContent = "(offline: digite/upload indisponível)"; return; }
+        window.OBJETO_UPLOAD.list()
+          .then(list => fillImgOptions(list))
+          .catch(() => { imgSt.textContent = "servidor offline"; });
+      }
+      loadImgList();
+      imgSel.onchange = e => { ref.image = e.target.value || null; render(); };
+      document.getElementById("d-img-refresh").onclick = loadImgList;
+      document.getElementById("d-img-file").onchange = async e => {
+        const file = e.target.files[0]; if (!file) return;
+        if (!window.OBJETO_UPLOAD) { imgSt.textContent = "servidor offline"; return; }
+        imgSt.textContent = "enviando…";
+        try {
+          const name = await window.OBJETO_UPLOAD.upload(file);
+          ref.image = name;
+          imgSt.textContent = "enviada ✓";
+          loadImgList(); render();
+        } catch (err) { imgSt.textContent = "falha: " + err.message; }
+      };
     } else {
       panel.innerHTML = `<b>${k}</b>`;
     }
@@ -491,6 +566,7 @@
         o.loot = d.loot ? { gold: d.loot.gold | 0, items: d.loot.items.map(i => ({ id: i.id })) } : null;
         const m = decorMeta(d.type);
         if (m && m.special === "fountain") o.charges = d.charges | 0;
+        if (d.image) o.image = d.image;
         return o;
       }),
       prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}) } : null,
@@ -587,6 +663,7 @@
       type: d.type, pos: d.pos.slice(), facing: (d.facing || [0, 1]).slice(),
       loot: d.loot ? { gold: d.loot.gold | 0, items: (d.loot.items || []).map(i => ({ id: i.id })) } : null,
       ...(d.charges !== undefined ? { charges: d.charges | 0 } : {}),
+      ...(d.image ? { image: d.image } : {}),
     }));
     S.objectives = obj.objectives || { primary: { type: "kill_all" }, secondary: [] };
     if (!S.objectives.primary) S.objectives.primary = { type: "kill_all" };
