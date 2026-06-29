@@ -20,7 +20,8 @@
     decorType: (CAT.decorations[0] || {}).type || "cama",
     decorFacing: [0, 1],
     materiais: {},                 // {"x,y": id}
-    matId: (MAT[0] ? MAT[0].id : "grama"),
+    matFloor: "pedra_cinza",       // material atual da ferramenta "chão"
+    matWall: "pedra_normal",       // material atual da ferramenta "parede"
     matFill: false,                // false = pincel; true = balde (preenchimento)
   };
 
@@ -310,7 +311,6 @@
     { id: "wall", label: "parede", group: "tiles" },
     { id: "floor", label: "chão", group: "tiles" },
     { id: "door", label: "porta", group: "tiles" },
-    { id: "material", label: "material", group: "tiles" },
     { id: "entrance", label: "entrada", group: "entidades" },
     { id: "exit", label: "saída", group: "entidades" },
     { id: "monster", label: "monstro", group: "entidades" },
@@ -351,16 +351,21 @@
       rot.onclick = () => { rotateDecorPending(); };
       tb.appendChild(rot);
     }
-    if (S.tool === "material") {
+    if (S.tool === "floor" || S.tool === "wall") {
+      const isWall = S.tool === "wall";
+      const opts = MAT.filter(m => isWall
+        ? (m.categoria === "parede" || m.id === "entulho")
+        : (m.categoria === "piso" && m.id !== "entulho"));
+      const cur = isWall ? S.matWall : S.matFloor;
       const sel = document.createElement("select");
       sel.id = "mat-id";
-      sel.innerHTML = MAT.map(m =>
-        `<option value="${m.id}"${m.id === S.matId ? " selected" : ""}>${m.categoria === "parede" ? "🧱" : (m.id === "entulho" ? "⛰️" : "▦")} ${m.nome}</option>`).join("");
-      sel.onchange = e => { S.matId = e.target.value; };
+      sel.innerHTML = opts.map(m =>
+        `<option value="${m.id}"${m.id === cur ? " selected" : ""}>${m.categoria === "parede" ? "🧱" : (m.id === "entulho" ? "⛰️" : "▦")} ${m.nome}</option>`).join("");
+      sel.onchange = e => { if (isWall) S.matWall = e.target.value; else S.matFloor = e.target.value; };
       tb.appendChild(sel);
       const fill = document.createElement("button");
       fill.textContent = S.matFill ? "balde: ON" : "balde: OFF";
-      fill.title = "Preenche a região contígua de mesma estrutura (chão↔chão / parede↔parede)";
+      fill.title = "Preenche a região contígua de mesma estrutura";
       fill.onclick = () => { S.matFill = !S.matFill; buildToolbar(); };
       tb.appendChild(fill);
     }
@@ -396,12 +401,18 @@
   }
 
   function paintTile(x, y) {
-    if (S.tool === "wall") S.tiles[y][x] = WALL;
-    else if (S.tool === "floor") S.tiles[y][x] = FLOOR;
-    else if (S.tool === "door") { S.tiles[y][x] = DOOR; doorLink(x, y); }
-    // Material que não combina mais com a nova estrutura é descartado.
-    const mid = S.materiais[x + "," + y];
-    if (mid && !matCompat(mid, x, y)) delete S.materiais[x + "," + y];
+    if (S.tool === "wall") {
+      if (S.matWall === "entulho") { S.tiles[y][x] = FLOOR; S.materiais[x + "," + y] = "entulho"; return; }
+      S.tiles[y][x] = WALL;
+      _applyMat(x, y, S.matWall, "parede");
+    } else if (S.tool === "floor") {
+      S.tiles[y][x] = FLOOR;
+      _applyMat(x, y, S.matFloor, "piso");
+    } else if (S.tool === "door") {
+      S.tiles[y][x] = DOOR; doorLink(x, y);
+      const mid = S.materiais[x + "," + y];
+      if (mid && !matCompat(mid, x, y)) delete S.materiais[x + "," + y];
+    }
   }
 
   // Categoria do material compatível com a estrutura do tile?
@@ -413,21 +424,19 @@
   }
   // Estrutura "pintável junta" p/ balde: parede vs. não-parede.
   function _structKind(x, y) { return S.tiles[y][x] === WALL ? "wall" : "floor"; }
-  // Aplica o material atual a uma casa (ou limpa se for o default da categoria).
-  function _setMat(x, y) {
-    const meta = matMeta(S.matId); if (!meta) return;
-    if (S.matId === MAT_DEFAULT[meta.categoria]) delete S.materiais[x + "," + y];
-    else S.materiais[x + "," + y] = S.matId;
+  // Aplica material M na casa (limpa se for o default da categoria → JSON esparso).
+  function _applyMat(x, y, M, cat) {
+    if (M === MAT_DEFAULT[cat]) delete S.materiais[x + "," + y];
+    else S.materiais[x + "," + y] = M;
   }
+  // Balde: preenche a região 4-conexa de mesma estrutura aplicando o tool atual.
   function paintMaterial(x, y) {
-    if (!matCompat(S.matId, x, y)) return;     // ignora casa incompatível
-    if (!S.matFill) { _setMat(x, y); return; }
-    // Balde: preenche a região 4-conexa de mesma estrutura.
+    if (!S.matFill) { paintTile(x, y); return; }
     const kind = _structKind(x, y);
     const seen = new Set([x + "," + y]); const st = [[x, y]];
     while (st.length) {
       const [cx, cy] = st.pop();
-      if (matCompat(S.matId, cx, cy)) _setMat(cx, cy);
+      if (_structKind(cx, cy) === kind) paintTile(cx, cy);
       for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
         const nx = cx + dx, ny = cy + dy, k = nx + "," + ny;
         if (nx >= 0 && ny >= 0 && nx < S.grid.w && ny < S.grid.h && !seen.has(k)
@@ -803,8 +812,7 @@
   board.addEventListener("mousedown", (ev) => {
     const c = cellFromEvent(ev); if (!c) return;
     const [x, y] = c;
-    if (["wall", "floor", "door"].includes(S.tool)) { painting = true; paintTile(x, y); render(); }
-    else if (S.tool === "material") { painting = true; paintMaterial(x, y); render(); updateStatus(); }
+    if (["wall", "floor", "door"].includes(S.tool)) { painting = true; (S.matFill && S.tool !== "door" ? paintMaterial : paintTile)(x, y); render(); updateStatus(); }
     else if (S.tool === "room") { roomDrag = { x0: x, y0: y, x1: x, y1: y }; }
     else if (["entrance", "exit", "prisoner", "monster", "chest", "trap", "decor"].includes(S.tool)) { placeEntity(x, y); if (S.tool !== "decor") S.sel = entityAt(x, y); renderPanel(); render(); }
     else if (S.tool === "erase") { eraseAt(x, y); S.sel = null; renderPanel(); render(); }
@@ -835,8 +843,8 @@
       return;
     }
     if (painting) {
-      if (S.tool === "material") { paintMaterial(c[0], c[1]); updateStatus(); }
-      else paintTile(c[0], c[1]);
+      if ((S.tool === "floor" || S.tool === "wall") && S.matFill) { paintMaterial(c[0], c[1]); updateStatus(); }
+      else { paintTile(c[0], c[1]); updateStatus(); }
       render(); return;
     }
     if (roomDrag) {
