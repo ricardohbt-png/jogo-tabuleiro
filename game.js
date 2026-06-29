@@ -11148,9 +11148,11 @@ function init3D(state){
 
       if(state.tiles[y][x] === TILE_FLOOR || state.tiles[y][x] === TILE_DOOR){
         const mat = floorBaseMat.clone();
-        // VC.floor.baseR (#888888) — clearly lighter than walls; emissive prevents pitch-black
-        const fR = VC.floor.baseR + vf*VC.floor.baseVariance;
-        mat.color.setRGB(fR, fR, fR);
+        // Cor base por material (default pedra_cinza); jitter por casa preserva o relevo.
+        const mid3 = (state.materiais && state.materiais[key]) || 'pedra_cinza';
+        const mc = (VC.materiais[mid3] || VC.materiais.pedra_cinza).color;
+        const jit = vf*VC.floor.baseVariance;
+        mat.color.setRGB(mc[0]+jit, mc[1]+jit, mc[2]+jit);
         mat.emissive.set(VC.floor.emissive);
         mat.emissiveIntensity = 1.0;
         mesh = new T.Mesh(floorGeo, mat);
@@ -11161,9 +11163,12 @@ function init3D(state){
         mesh.userData.gridY   = y;
         mesh.userData.baseMat = mat;        // saved for restoring after highlight
       } else {
+        const matId3 = (state.materiais && state.materiais[key]) || 'pedra_normal';
+        const wc = (VC.materiais[matId3] || VC.materiais.pedra_normal).color;
         const mat = wallBaseMat.clone();
-        // VC.wall.baseR (#5a5a6a) — blue-gray stone, darker than floor; emissive keeps detail
-        mat.color.setRGB(VC.wall.baseR+vw*VC.wall.variance, VC.wall.baseR+vw*VC.wall.variance, VC.wall.baseB+vw*VC.wall.varianceB);
+        // Cor base por material (default pedra_normal); jitter por casa preserva o relevo.
+        const jw = vw*VC.wall.variance;
+        mat.color.setRGB(wc[0]+jw, wc[1]+jw, wc[2]+jw);
         mat.emissive.set(VC.wall.emissive);
         mat.emissiveIntensity = 1.0;
         mesh = new T.Mesh(wallGeo, mat);
