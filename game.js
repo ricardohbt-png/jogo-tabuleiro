@@ -236,6 +236,10 @@ const SPR_SCALE=CELL/48; // sprite scale factor (sprites designed for CELL=48)
 const _ASSET_VER = Date.now();
 function _assetURL(path){ return path + (path.includes('?') ? '&' : '?') + 'v=' + _ASSET_VER; }
 
+// Tamanho da miniatura PNG extrudada por casa de footprint (maior = miniatura
+// maior/mais alta no 3D). 1 casa de árvore → ~1.8 unidades de largura.
+const DECOR_MINI_ESCALA = 2.0;
+
 // ── Decoration 3D spec — shape/height/color per type (procedural render) ──────
 const DECOR_3D = {
   cama:           { shape: 'box', h: 0.5,  color: 0x8a5a3c },
@@ -12722,7 +12726,9 @@ function _buildObjetoMini(decorId, imageName, cells){
     if (!slot || slot.userData.imageName !== imageName) return;
     // g3.T = alias do THREE (esta função é de módulo; o `T` local só existe
     // dentro de renderMap3D, então usamos g3.T para não dar ReferenceError).
-    const grp = window.Miniatura3D.build(g3.T, { image: img, tileSize: Math.max(1, cells) * 0.9 });
+    // DECOR_MINI_ESCALA: tamanho da miniatura por casa de footprint (ajuste aqui
+    // para deixar as miniaturas maiores/menores no 3D).
+    const grp = window.Miniatura3D.build(g3.T, { image: img, tileSize: Math.max(1, cells) * DECOR_MINI_ESCALA });
     grp.userData = { isDecor: true, decorId: decorId, imageName: imageName };
     grp.position.copy(slot.position);
     grp.visible = slot.visible;
