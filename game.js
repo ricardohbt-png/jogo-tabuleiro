@@ -11162,6 +11162,21 @@ function init3D(state){
         mesh.userData.gridX   = x;
         mesh.userData.gridY   = y;
         mesh.userData.baseMat = mat;        // saved for restoring after highlight
+        if((state.materiais && state.materiais[key]) === 'entulho'){
+          // Entulho oclui visão → bloco altura-de-parede de escombros sobre o chão.
+          const ec = VC.materiais.entulho.color;
+          const eMat = wallBaseMat.clone();
+          eMat.color.setRGB(ec[0], ec[1], ec[2]);
+          eMat.emissive.set(VC.wall.emissive); eMat.emissiveIntensity = 1.0;
+          const eMesh = new T.Mesh(wallGeo, eMat);
+          eMesh.position.set(x, WH/2, y);
+          eMesh.scale.y = 0.7;                 // pilha um pouco mais baixa que a parede
+          eMesh.castShadow = eMesh.receiveShadow = true;
+          eMesh.visible = false;
+          eMesh.userData.gridX = x; eMesh.userData.gridY = y;
+          scene.add(eMesh);
+          tileMeshes[`entulho:${key}`] = eMesh;   // revelado junto com a casa (ver visibilidade)
+        }
       } else {
         const matId3 = (state.materiais && state.materiais[key]) || 'pedra_normal';
         const wc = (VC.materiais[matId3] || VC.materiais.pedra_normal).color;
@@ -12994,6 +13009,8 @@ function renderMap3D(state){
       const mesh = tileMeshes[key];
       if(!mesh) continue;
       mesh.visible = terrainSet.has(key);
+      const ent3 = tileMeshes[`entulho:${key}`];
+      if(ent3) ent3.visible = mesh.visible;
     }
   }
 
