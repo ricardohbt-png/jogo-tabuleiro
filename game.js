@@ -11012,6 +11012,29 @@ function init3D(state){
   const floorBaseMat = new T.MeshStandardMaterial({ map:floorTex, roughness:0.92, metalness:0.03 });
   const wallBaseMat  = new T.MeshStandardMaterial({ map:wallTex, roughnessMap:wallTex, roughness:0.92, metalness:0.04 });
 
+  // Textura de canvas por material (cache por id). Usa os MESMOS painters do 2D
+  // para a aparência 2D/3D coincidir. Materiais "de pedra" (cinza/normal/negra)
+  // retornam null e seguem usando floorTex/wallTex tingidos pela cor.
+  const _matTexCache = {};
+  function makeMaterialTex(matId){
+    if(matId in _matTexCache) return _matTexCache[matId];
+    const S=256, cv=document.createElement('canvas'); cv.width=cv.height=S;
+    const c=cv.getContext('2d'); const r=_rng((matId.length*2654435761)>>>0);
+    let tex=null;
+    switch(matId){
+      case 'grama':         paintGrass(c,0,0,S,r); break;
+      case 'terra':         paintDirt(c,0,0,S,r); break;
+      case 'enegrecida':    paintBrick(c,0,0,S,r,[22,21,26],'#070709'); break;
+      case 'pedra_caverna': paintCave(c,0,0,S,r); break;
+      case 'desmoronada':   paintRubble(c,0,0,S,r); break;
+      case 'entulho':       paintRubble(c,0,0,S,r); break;
+    }
+    if(matId==='grama'||matId==='terra'||matId==='enegrecida'||matId==='pedra_caverna'||matId==='desmoronada'||matId==='entulho'){
+      tex=new T.CanvasTexture(cv); tex.wrapS=tex.wrapT=T.RepeatWrapping;
+    }
+    _matTexCache[matId]=tex; return tex;
+  }
+
   const floorGeo = new T.BoxGeometry(TW, TH, TW);
   const wallGeo  = new T.BoxGeometry(TW, WH, TW);
 
@@ -11215,6 +11238,8 @@ function init3D(state){
         const mc = (VC.materiais[mid3] || VC.materiais.pedra_cinza).color;
         const jit = vf*VC.floor.baseVariance;
         mat.color.setRGB(mc[0]+jit, mc[1]+jit, mc[2]+jit);
+        const ftex = makeMaterialTex(mid3);
+        if(ftex){ mat.map = ftex; mat.color.setRGB(1,1,1); }
         mat.emissive.set(VC.floor.emissive);
         mat.emissiveIntensity = 1.0;
         mesh = new T.Mesh(floorGeo, mat);
@@ -11229,6 +11254,8 @@ function init3D(state){
           const ec = VC.materiais.entulho.color;
           const eMat = wallBaseMat.clone();
           eMat.color.setRGB(ec[0], ec[1], ec[2]);
+          const etex = makeMaterialTex('entulho');
+          if(etex){ eMat.map = etex; eMat.color.setRGB(1,1,1); }
           eMat.emissive.set(VC.wall.emissive); eMat.emissiveIntensity = 1.0;
           const eMesh = new T.Mesh(wallGeo, eMat);
           eMesh.position.set(x, WH/2, y);
@@ -11246,6 +11273,8 @@ function init3D(state){
         // Cor base por material (default pedra_normal); jitter por casa preserva o relevo.
         const jw = vw*VC.wall.variance;
         mat.color.setRGB(wc[0]+jw, wc[1]+jw, wc[2]+jw);
+        const wtex = makeMaterialTex(matId3);
+        if(wtex){ mat.map = wtex; mat.color.setRGB(1,1,1); }
         mat.emissive.set(VC.wall.emissive);
         mat.emissiveIntensity = 1.0;
         mesh = new T.Mesh(wallGeo, mat);
