@@ -615,6 +615,80 @@ window.EDITOR_CATALOG = {
       "loot_capaz": true,
       "special": null
     }
+  ],
+  "materiais": [
+    {
+      "id": "pedra_cinza",
+      "nome": "Pedra cinza",
+      "categoria": "piso",
+      "cor": "#6f6f78",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "terra",
+      "nome": "Terra",
+      "categoria": "piso",
+      "cor": "#6b4f33",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "grama",
+      "nome": "Grama",
+      "categoria": "piso",
+      "cor": "#3f6b2f",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "pedra_negra",
+      "nome": "Pedra negra",
+      "categoria": "piso",
+      "cor": "#23232a",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "entulho",
+      "nome": "Entulho",
+      "categoria": "piso",
+      "cor": "#4a4640",
+      "solido": true,
+      "oclui": true
+    },
+    {
+      "id": "pedra_normal",
+      "nome": "Pedra normal",
+      "categoria": "parede",
+      "cor": "#5a5a6a",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "enegrecida",
+      "nome": "Pedra enegrecida",
+      "categoria": "parede",
+      "cor": "#2c2b30",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "pedra_caverna",
+      "nome": "Pedra de caverna",
+      "categoria": "parede",
+      "cor": "#4d4338",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "desmoronada",
+      "nome": "Parede desmoronada",
+      "categoria": "parede",
+      "cor": "#534b40",
+      "solido": false,
+      "oclui": false
+    }
   ]
 };
 // GERADO por tools/export_catalog.py — não editar à mão.

@@ -29,8 +29,14 @@ def build_catalog():
             "pisavel": meta["pisavel"], "loot_capaz": meta["loot_capaz"],
             "special": meta["special"],
         })
+    materiais = []
+    for mid, meta in server.MATERIAIS.items():
+        materiais.append({
+            "id": mid, "nome": meta["nome"], "categoria": meta["categoria"],
+            "cor": meta["cor"], "solido": meta["solido"], "oclui": meta["oclui"],
+        })
     return {"monsters": monsters, "items": items, "traps": traps,
-            "venoms": venoms, "decorations": decorations}
+            "venoms": venoms, "decorations": decorations, "materiais": materiais}
 
 def write_catalog_js(destino):
     """Escreve o catálogo como atribuição JS (carregável via <script> em file://)."""
