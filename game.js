@@ -4408,6 +4408,20 @@ function _getPrisoner2DImg(imageName){
   return img;
 }
 
+// Miniatura 2D de objeto de decoração (PNG editável em assets/objetos/).
+const _obj2DImg = {};
+function _getObjeto2DImg(imageName){
+  if(!imageName) return null;
+  let img = _obj2DImg[imageName];
+  if(img === undefined){
+    img = new Image();
+    img.onload = () => { if(!mode3D && window.GS && GS.gameState){ try{ renderMap(GS.gameState); }catch(_){} } };
+    img.src = _assetURL(`assets/objetos/${imageName}`);
+    _obj2DImg[imageName] = img;
+  }
+  return (img.complete && img.naturalWidth) ? img : null;
+}
+
 // Escala da miniatura por PORTE (categoria de tamanho da ficha do monstro, vinda
 // do servidor em m.porte). Guia a geração do sprite no 2D e no 3D. Ausente/
 // desconhecido = "medio" (1.0). Ex.: kobolds são "pequeno".
@@ -4958,13 +4972,26 @@ function renderMap(state){
       // Subtle fill on all occupied tiles
       ctx.fillStyle = 'rgba(120,200,160,0.12)';
       for (const [tx2, ty2] of tiles) ctx.fillRect(tx2 * CELL, ty2 * CELL, CELL, CELL);
-      // Emoji at footprint center
+      // Image or emoji at footprint center
       const avgX = tiles.reduce((s, t) => s + t[0], 0) / tiles.length;
       const avgY = tiles.reduce((s, t) => s + t[1], 0) / tiles.length;
       const ecx = (avgX + 0.5) * CELL;
       const ecy = (avgY + 0.5) * CELL;
-      ctx.font = `${Math.floor(CELL * 0.8)}px serif`;
-      ctx.fillText(d.emoji || '🪑', ecx, ecy);
+      const _oImg = d.image ? _getObjeto2DImg(d.image) : null;
+      if (_oImg) {
+        const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
+        const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
+        const px = minX * CELL, py = minY * CELL;
+        const pw = (maxX - minX + 1) * CELL, ph = (maxY - minY + 1) * CELL;
+        // ajusta mantendo proporção, ancorado embaixo
+        const ar = _oImg.naturalWidth / _oImg.naturalHeight;
+        let dw = pw, dh = pw / ar;
+        if (dh > ph) { dh = ph; dw = ph * ar; }
+        ctx.drawImage(_oImg, px + (pw - dw) / 2, py + (ph - dh), dw, dh);
+      } else {
+        ctx.font = `${Math.floor(CELL * 0.8)}px serif`;
+        ctx.fillText(d.emoji || '🪑', ecx, ecy);
+      }
       // Loot indicator badge
       if (d.tem_loot) {
         ctx.font = `bold ${Math.round(CELL * 0.18)}px monospace`;
