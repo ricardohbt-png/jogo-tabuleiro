@@ -4763,7 +4763,7 @@ function renderMap(state){
     if(!terrainSet.has(`${x},${y}`)) continue;
     const t=state.tiles[y][x];
     if(t===TILE_FLOOR || t===TILE_DOOR)
-      drawFloor3D(ctx, x, y, reachable.has(`${x},${y}`), attackable.has(`${x},${y}`), weaponRangeTiles.has(`${x},${y}`));
+      drawFloor3D(ctx, x, y, reachable.has(`${x},${y}`), attackable.has(`${x},${y}`), weaponRangeTiles.has(`${x},${y}`), matDaCasa(state, x, y));
   }
 
   // ── PASS 1.5: Realce de MAGIA — alcance (vermelho), zona (laranja), área (verde)
@@ -5250,10 +5250,36 @@ function renderMap(state){
   }
 }
 
+// ── PALETAS 2D DOS MATERIAIS ─────────────────────────────────────────────────
+// base [r,g,b] da pedra/superfície; accent decide os detalhes procedurais.
+// Espelha os ids de server.MATERIAIS. Pisos coloridos são cosméticos.
+const MAT_PALETTE_2D = {
+  // pisos
+  pedra_cinza: { base: [44, 42, 50],  accent: 'stone' },
+  terra:       { base: [74, 56, 38],  accent: 'dirt'  },
+  grama:       { base: [46, 78, 40],  accent: 'grass' },
+  pedra_negra: { base: [26, 25, 30],  accent: 'stone' },
+  entulho:     { base: [70, 66, 58],  accent: 'rubble' },
+  // paredes (topo)
+  pedra_normal:  { base: [132, 130, 140], accent: 'wallStone' },
+  enegrecida:    { base: [58, 56, 62],   accent: 'wallStone' },
+  pedra_caverna: { base: [104, 92, 74],  accent: 'wallRough' },
+  desmoronada:   { base: [96, 88, 76],   accent: 'wallRubble' },
+};
+// Resolve o material de uma casa para render (default por estrutura do tile).
+function matDaCasa(state, x, y){
+  const m = state && state.materiais;
+  const id = m && m[`${x},${y}`];
+  if(id && MAT_PALETTE_2D[id]) return id;
+  return (state.tiles[y][x] === TILE_WALL) ? 'pedra_normal' : 'pedra_cinza';
+}
+
 // ── DIABLO-STYLE FLOOR TILE — dark charcoal flagstones with blood & bone details
-function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview){
+function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview, matId){
   const X=x*CELL, Y=y*CELL;
   const h=((x*7919)^(y*3467)^(x<<5)^(y>>2))&0xFFFF;
+  const pal = MAT_PALETTE_2D[matId] || MAT_PALETTE_2D.pedra_cinza;
+  const [BR, BG, BB] = pal.base;
 
   // Deep mortar joints — near-black with faint blue-gray
   ctx.fillStyle='#06050a';
@@ -5269,7 +5295,7 @@ function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview){
     const bw=sp-grt*1.5, bh=sp-grt*1.5;
 
     // Dark gray-charcoal stone — slight blue-purple undertone (cave feel)
-    const r0=Math.min(255,44+v), g0=Math.min(255,42+v), b0=Math.min(255,50+Math.floor(v*0.6));
+    const r0=Math.min(255,BR+v), g0=Math.min(255,BG+v), b0=Math.min(255,BB+Math.floor(v*0.6));
 
     // Gradient: top-left torch-lit, bottom-right shadow
     const sg=ctx.createLinearGradient(bx,by,bx+bw,by+bh);
@@ -5309,6 +5335,19 @@ function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview){
       ctx.fillStyle='rgba(20,38,14,0.28)';
       ctx.fillRect(bx+3+(sh%Math.max(1,bw-12|0)), by+3+((sh>>6)%Math.max(1,bh-12|0)),
                    Math.min(9+(sh%6),bw-6), Math.min(6+(sh%4),bh-6));
+    }
+    // Tufo de grama (piso grama)
+    if(pal.accent==='grass' && ((sh%5)===2)){
+      ctx.fillStyle='rgba(70,120,46,0.45)';
+      const gx=bx+3+(sh%Math.max(1,bw-8|0)), gy=by+4+((sh>>2)%Math.max(1,bh-8|0));
+      ctx.fillRect(gx, gy, 1.4, 4+(sh%3));
+      ctx.fillRect(gx+2, gy+1, 1.2, 3+(sh%2));
+    }
+    // Seixo de terra (piso terra)
+    if(pal.accent==='dirt' && ((sh%7)===1)){
+      ctx.fillStyle='rgba(40,28,16,0.40)';
+      ctx.beginPath(); ctx.arc(bx+5+(sh%Math.max(1,bw-10|0)),
+        by+5+((sh>>3)%Math.max(1,bh-10|0)), 1.6+(sh%2), 0, Math.PI*2); ctx.fill();
     }
   }
 
