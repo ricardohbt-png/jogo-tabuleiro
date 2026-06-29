@@ -1842,6 +1842,31 @@ def validar_dungeon(defn):
             if not os.path.isfile(os.path.join(OBJETOS_DIR, img)):
                 return False, f"image inexistente em assets/objetos: {img!r}."
 
+    mats = defn.get("materiais")
+    if mats is not None:
+        if not isinstance(mats, dict):
+            return False, "materiais deve ser um objeto (mapa 'x,y' -> id)."
+        for key, mid in mats.items():
+            meta = MATERIAIS.get(mid)
+            if meta is None:
+                return False, f"material desconhecido: {mid!r}."
+            if not isinstance(key, str):
+                return False, f"chave de material inválida: {key!r}."
+            partes = key.split(",")
+            if len(partes) != 2:
+                return False, f"chave de material inválida: {key!r} (esperado 'x,y')."
+            try:
+                mx, my = int(partes[0]), int(partes[1])
+            except ValueError:
+                return False, f"chave de material inválida: {key!r} (esperado 'x,y')."
+            if not (0 <= mx < w and 0 <= my < h):
+                return False, f"material fora do grid em {key!r}."
+            t = tiles[my][mx]
+            if meta["categoria"] == "piso" and t not in (FLOOR, DOOR):
+                return False, f"material de piso {mid!r} em casa não-chão ({mx},{my})."
+            if meta["categoria"] == "parede" and t != WALL:
+                return False, f"material de parede {mid!r} em casa não-parede ({mx},{my})."
+
     return True, "ok"
 
 def hidratar_itens_bau(items):
