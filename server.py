@@ -4154,7 +4154,7 @@ class GameRoom:
     def _tall_oclui_caminho(self, x0, y0, x1, y1):
         """True se a linha (x0,y0)→(x1,y1) cruza uma casa de decoração ALTA
         antes do destino (a própria casa-destino não conta)."""
-        if not self._decor_tall_tiles:
+        if not self._decor_tall_tiles and not self._mat_oclui_tiles:
             return False
         dx = x1 - x0; dy = y1 - y0
         passos = max(abs(dx), abs(dy))
@@ -4163,7 +4163,7 @@ class GameRoom:
         for s in range(1, passos):   # casas intermediárias (exclui origem e destino)
             cx = round(x0 + dx * s / passos)
             cy = round(y0 + dy * s / passos)
-            if (cx, cy) in self._decor_tall_tiles:
+            if (cx, cy) in self._decor_tall_tiles or (cx, cy) in self._mat_oclui_tiles:
                 return True
         return False
 
@@ -4207,7 +4207,7 @@ class GameRoom:
             return True
         if self.tiles[y][x] == WALL or self._is_closed_door(x, y):
             return True
-        return (x, y) in self._decor_block_tiles
+        return (x, y) in self._decor_block_tiles or (x, y) in self._mat_solid_tiles
 
     def _tile_in_locked_room(self, x, y):
         for r in self.rooms:
@@ -4264,6 +4264,9 @@ class GameRoom:
             return
         if (nx, ny) in self._decor_block_tiles:
             await self.send_to(pid, {"type": "error", "msg": "Há um objeto bloqueando o caminho."})
+            return
+        if (nx, ny) in self._mat_solid_tiles:
+            await self.send_to(pid, {"type": "error", "msg": "Escombros bloqueiam o caminho."})
             return
 
         # Block movement into a tile occupied by a living monster (footprint multi-tile incluso)
@@ -4429,7 +4432,8 @@ class GameRoom:
                 break
             if not (0 <= x < self.map_w and 0 <= y < self.map_h):
                 return False
-            if self.tiles[y][x] == WALL or self._is_closed_door(x, y):
+            if (self.tiles[y][x] == WALL or self._is_closed_door(x, y)
+                    or (x, y) in self._mat_oclui_tiles):
                 return False
         return True
 

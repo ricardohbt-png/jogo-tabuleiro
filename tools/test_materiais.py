@@ -118,9 +118,23 @@ def test_carga():
     check("sem materiais → índices vazios",
           r2._mat_solid_tiles == set() and r2._mat_oclui_tiles == set())
 
+def test_entulho_servidor():
+    print("\n[M4] entulho bloqueia no servidor")
+    r = _room()
+    r.load_authored_dungeon(_defn_full())   # entulho em (2,1)
+    check("_blocks_tile bloqueia entulho", r._blocks_tile(2, 1) is True)
+    check("_blocks_tile não bloqueia grama", r._blocks_tile(3, 1) is False)
+    check("entulho barra LOS", r._tem_linha_de_visao([0, 1], [4, 1]) is False)
+    check("LOS livre na linha de cima", r._tem_linha_de_visao([0, 0], [4, 0]) is True)
+    r.explored = set()
+    r._reveal_around(0, 1, radius=5)
+    check("entulho oclui revelação atrás dele", (4, 1) not in r.explored)
+    check("casa antes do entulho é revelada", (1, 1) in r.explored)
+
 if __name__ == "__main__":
     test_catalog()
     test_validacao()
     test_carga()
+    test_entulho_servidor()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
