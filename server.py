@@ -2162,6 +2162,31 @@ DECOR_TYPES = {
     "arvore_grande":  _decor("Árvore grande", "🌲", [2, 2], alto=True),
 }
 
+# ─── MATERIAIS DE CHÃO E PAREDE ──────────────────────────────────────────────
+# Camada por-casa pintável no editor (game_state.materiais, mapa "x,y"->id).
+# categoria: "piso" (válido em FLOOR/DOOR) ou "parede" (válido em WALL).
+# solido: bloqueia movimento (espelhado no cliente). oclui: barra visão/névoa.
+# cor: swatch do editor (a paleta rica de render vive no cliente). Pisos
+# coloridos são cosméticos; só "entulho" tem efeito. Campos de efeito futuros
+# (custo_mov, save_ao_entrar) entram aqui sem mudar o schema.
+def _mat(nome, categoria, cor, solido=False, oclui=False):
+    return {"nome": nome, "categoria": categoria, "cor": cor,
+            "solido": solido, "oclui": oclui}
+
+MATERIAIS = {
+    "pedra_cinza":   _mat("Pedra cinza", "piso", "#6f6f78"),
+    "terra":         _mat("Terra", "piso", "#6b4f33"),
+    "grama":         _mat("Grama", "piso", "#3f6b2f"),
+    "pedra_negra":   _mat("Pedra negra", "piso", "#23232a"),
+    "entulho":       _mat("Entulho", "piso", "#4a4640", solido=True, oclui=True),
+    "pedra_normal":  _mat("Pedra normal", "parede", "#5a5a6a"),
+    "enegrecida":    _mat("Pedra enegrecida", "parede", "#2c2b30"),
+    "pedra_caverna": _mat("Pedra de caverna", "parede", "#4d4338"),
+    "desmoronada":   _mat("Parede desmoronada", "parede", "#534b40"),
+}
+MATERIAIS_PISO_DEFAULT = "pedra_cinza"
+MATERIAIS_PAREDE_DEFAULT = "pedra_normal"
+
 SHOP_TEMPLE = [
     {"id": "full_heal", "name": "Cura Completa",  "emoji": "💖",  "price": 15, "effect": "full_heal"},
     {"id": "bless",     "name": "Bênção Divina",  "emoji": "✨",  "price": 12, "effect": "bless",    "value": 2},
