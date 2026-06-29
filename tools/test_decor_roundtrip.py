@@ -90,6 +90,40 @@ def main():
         if stub_criado and os.path.isfile(img_path):
             os.remove(img_path)
 
+    # ── Teste novo: round-trip de size/vscale (redimensionamento valendo no jogo) ──
+    print("\n[RT3] round-trip size/vscale: footprint override + escala visual")
+    defn = _defn_base()
+    defn["decorations"] = [
+        {"type": "fogueira", "pos": [3, 3], "facing": [0, 1],
+         "size": [2, 1], "vscale": [1.5, 2.0]},
+        {"type": "fogueira", "pos": [6, 6], "facing": [0, 1]},  # sem override
+    ]
+    ok, msg = server.validar_dungeon(defn)
+    check(f"dungeon com size override valida ({msg})", ok is True)
+    r = _room()
+    r.load_authored_dungeon(defn)
+    d0, d1 = r.decorations
+    check("size override carregado", d0.get("size") == [2, 1])
+    check("vscale carregado", d0.get("vscale") == [1.5, 2.0])
+    check("sem override fica None", d1.get("size") is None and d1.get("vscale") is None)
+    check("_decor_tiles honra override (2 casas)", r._decor_tiles(d0) == [[3, 3], [4, 3]])
+    ser = r._serializar_decoracoes()
+    check("serializa size efetivo", ser[0]["size"] == [2, 1])
+    check("serializa vscale", ser[0]["vscale"] == [1.5, 2.0])
+    check("serializa tiles do footprint maior", ser[0]["tiles"] == [[3, 3], [4, 3]])
+    check("vscale default [1,1] sem override", ser[1]["vscale"] == [1, 1])
+
+    # ── Teste novo: monstro/prisioneiro fora de sala (room_id None) é válido ──
+    print("\n[RT4] validação aceita room_id vazio (espelha o editor)")
+    defn = _defn_base()
+    defn["monsters"] = [{"type": "goblin", "pos": [2, 2], "room_id": None,
+                          "boss": False, "target": False}]
+    ok, msg = server.validar_dungeon(defn)
+    check(f"monstro sem sala valida ({msg})", ok is True)
+    defn["monsters"][0]["room_id"] = 999  # id inexistente continua inválido
+    ok, _ = server.validar_dungeon(defn)
+    check("room_id não-nulo inexistente ainda é rejeitado", ok is False)
+
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

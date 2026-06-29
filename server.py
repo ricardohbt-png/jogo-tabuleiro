@@ -1726,7 +1726,8 @@ def validar_dungeon(defn):
             return False, f"monstro tipo desconhecido: {mo.get('type')!r}."
         if not in_grid(mo.get("pos")) or tile_at(mo["pos"]) == WALL:
             return False, f"monstro em casa inválida: {mo.get('pos')}."
-        if mo.get("room_id") not in room_ids:
+        # room_id vazio/None é válido (monstro "sem sala") — espelha o editor.
+        if mo.get("room_id") is not None and mo.get("room_id") not in room_ids:
             return False, f"monstro com room_id inexistente: {mo.get('room_id')!r}."
 
     chests = _as_list("chests")
@@ -1765,7 +1766,7 @@ def validar_dungeon(defn):
             return False, "prisoner deve ser um objeto JSON."
         if not in_grid(pr.get("pos")) or tile_at(pr["pos"]) == WALL:
             return False, f"prisioneiro em casa inválida: {pr.get('pos')}."
-        if pr.get("room_id") not in room_ids:
+        if pr.get("room_id") is not None and pr.get("room_id") not in room_ids:
             return False, f"prisioneiro com room_id inexistente: {pr.get('room_id')!r}."
         if pr.get("image") is not None and not isinstance(pr.get("image"), str):
             return False, "prisoner.image deve ser uma string (caminho do arquivo)."
@@ -1798,7 +1799,14 @@ def validar_dungeon(defn):
         elif not (isinstance(facing, list) and len(facing) == 2
                   and all(isinstance(c, int) and not isinstance(c, bool) for c in facing)):
             return False, f"decoração com facing inválido: {facing!r}."
-        w_d, h_d = meta["size"]
+        # Footprint efetivo: usa o override por-objeto `size` quando presente
+        # (espelha _decor_base_size / o editor), senão o tamanho do catálogo.
+        ov = de.get("size")
+        if isinstance(ov, list) and len(ov) == 2 \
+           and all(isinstance(c, int) and not isinstance(c, bool) and c >= 1 for c in ov):
+            w_d, h_d = ov
+        else:
+            w_d, h_d = meta["size"]
         ew, eh = (h_d, w_d) if (facing and facing[0] != 0) else (w_d, h_d)
         for i in range(ew):
             for j in range(eh):
@@ -3762,6 +3770,15 @@ class GameRoom:
                 dec["tem_loot"] = (dec["loot"]["gold"] > 0 or bool(dec["loot"]["items"]))
             if meta["special"] == "fountain":
                 dec["charges"] = int(d.get("charges", 0))
+            # Override de tamanho por-objeto (gravado pelo editor).
+            sz = d.get("size")
+            if isinstance(sz, list) and len(sz) == 2 \
+               and all(isinstance(c, int) and not isinstance(c, bool) and c >= 1 for c in sz):
+                dec["size"] = [sz[0], sz[1]]
+            vs = d.get("vscale")
+            if isinstance(vs, list) and len(vs) == 2 \
+               and all(isinstance(c, (int, float)) and not isinstance(c, bool) for c in vs):
+                dec["vscale"] = [max(0.2, min(4.0, float(vs[0]))), max(0.2, min(4.0, float(vs[1])))]
             self.decorations.append(dec)
         self._rebuild_decor_index()
 
@@ -10117,20 +10134,29 @@ class GameRoom:
         return self._monster_tiles_at(m, m["pos"][0], m["pos"][1])
 
     # ── DECORAÇÕES ─────────────────────────────────────────────────────────
-    def _decor_eff_size(self, dtype, facing):
-        """(ew,eh) efetivos: facing horizontal troca w↔h; vertical/None mantém."""
-        w, h = DECOR_TYPES[dtype]["size"]
+    def _decor_eff_size(self, dtype, facing, size=None):
+        """(ew,eh) efetivos: facing horizontal troca w↔h; vertical/None mantém.
+        `size` (override por-objeto) tem prioridade sobre o catálogo."""
+        w, h = size if (size and len(size) == 2) else DECOR_TYPES[dtype]["size"]
         if facing and facing[0] != 0:
             return h, w
         return w, h
 
-    def _decor_tiles_at(self, dtype, ax, ay, facing=None):
+    def _decor_base_size(self, d):
+        """Tamanho natural (pré-facing) da decoração: override `size` ou catálogo."""
+        sz = d.get("size")
+        if isinstance(sz, list) and len(sz) == 2:
+            return [sz[0], sz[1]]
+        return list(DECOR_TYPES[d["type"]]["size"])
+
+    def _decor_tiles_at(self, dtype, ax, ay, facing=None, size=None):
         """Casas [x,y] ocupadas pela decoração `dtype` ancorada em (ax,ay)."""
-        ew, eh = self._decor_eff_size(dtype, facing)
+        ew, eh = self._decor_eff_size(dtype, facing, size)
         return [[ax + i, ay + j] for i in range(ew) for j in range(eh)]
 
     def _decor_tiles(self, d):
-        return self._decor_tiles_at(d["type"], d["pos"][0], d["pos"][1], d.get("facing"))
+        return self._decor_tiles_at(d["type"], d["pos"][0], d["pos"][1],
+                                    d.get("facing"), d.get("size"))
 
     def _rebuild_decor_index(self):
         """Recalcula os índices rápidos de bloqueio/visão das decorações."""
@@ -10254,7 +10280,8 @@ class GameRoom:
                 "charges": d.get("charges"),
                 "alto": meta["alto"], "pisavel": meta["pisavel"],
                 "special": meta["special"], "emoji": meta["emoji"],
-                "size": meta["size"],
+                "size": self._decor_base_size(d),
+                "vscale": d.get("vscale") or [1, 1],
                 "image": d.get("image"),
             })
         return out

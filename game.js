@@ -4981,6 +4981,9 @@ function renderMap(state){
       const avgY = tiles.reduce((s, t) => s + t[1], 0) / tiles.length;
       const ecx = (avgX + 0.5) * CELL;
       const ecy = (avgY + 0.5) * CELL;
+      // Escala visual (vscale): largura ×sx, altura ×sy (cresce p/ cima, base ancorada).
+      const _vs = Array.isArray(d.vscale) ? d.vscale : [1, 1];
+      const _sx = _vs[0] || 1, _sy = _vs[1] || 1;
       const _oImg = d.image ? _getObjeto2DImg(d.image) : null;
       if (_oImg) {
         const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
@@ -4991,10 +4994,18 @@ function renderMap(state){
         const ar = _oImg.naturalWidth / _oImg.naturalHeight;
         let dw = pw, dh = pw / ar;
         if (dh > ph) { dh = ph; dw = ph * ar; }
+        dw *= _sx; dh *= _sy;
         ctx.drawImage(_oImg, px + (pw - dw) / 2, py + (ph - dh), dw, dh);
-      } else {
+      } else if (_sx === 1 && _sy === 1) {
         ctx.font = `${Math.floor(CELL * 0.8)}px serif`;
         ctx.fillText(d.emoji || '🪑', ecx, ecy);
+      } else {
+        // emoji escalado: ancorado na base do footprint, crescendo p/ cima
+        const baseY = (Math.max(...tiles.map(t => t[1])) + 1) * CELL;
+        ctx.font = `${Math.floor(CELL * 0.8 * Math.max(_sx, _sy))}px serif`;
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText(d.emoji || '🪑', ecx, baseY - 2);
+        ctx.textBaseline = 'middle';
       }
       // Loot indicator badge
       if (d.tem_loot) {
@@ -12997,6 +13008,10 @@ function renderMap3D(state){
           mesh = g3.decorMeshes[d.id];   // _buildObjetoMini pode ter trocado o mesh (cache)
         }
         mesh.position.set(worldX, 0, worldZ);
+        // Escala visual (vscale): largura no plano (x,z), altura p/ cima (y);
+        // o footprint já está embutido na geometria via tileSize.
+        const _mvs = Array.isArray(d.vscale) ? d.vscale : [1, 1];
+        mesh.scale.set(_mvs[0] || 1, _mvs[1] || 1, _mvs[0] || 1);
         mesh.visible = visivel;
         continue;
       }
@@ -13018,9 +13033,13 @@ function renderMap3D(state){
         g3.scene.add(mesh);
         g3.decorMeshes[d.id] = mesh;
       }
-      mesh.position.set(worldX, spec.h / 2, worldZ);
-      // Scale box to cover full footprint; cylinder keeps fixed radius
-      if (spec.shape === 'box') mesh.scale.set(wCells * 0.9, 1, hCells * 0.9);
+      // Escala visual (vscale): largura no plano ×sx, altura ×sy (ancorada no chão).
+      const _pvs = Array.isArray(d.vscale) ? d.vscale : [1, 1];
+      const _psx = _pvs[0] || 1, _psy = _pvs[1] || 1;
+      mesh.position.set(worldX, spec.h * _psy / 2, worldZ);
+      // Scale box to cover full footprint; cylinder mantém o raio (só vscale)
+      if (spec.shape === 'box') mesh.scale.set(wCells * 0.9 * _psx, _psy, hCells * 0.9 * _psx);
+      else mesh.scale.set(_psx, _psy, _psx);
       // Visibility: show if any footprint tile is explored
       mesh.visible = visivel;
     }
