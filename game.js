@@ -12720,7 +12720,9 @@ function _buildObjetoMini(decorId, imageName, cells){
     const slot = g3 && g3.decorMeshes[decorId];
     // a decoração pode ter sido removida/trocada enquanto carregava
     if (!slot || slot.userData.imageName !== imageName) return;
-    const grp = window.Miniatura3D.build(T, { image: img, tileSize: Math.max(1, cells) * 0.9 });
+    // g3.T = alias do THREE (esta função é de módulo; o `T` local só existe
+    // dentro de renderMap3D, então usamos g3.T para não dar ReferenceError).
+    const grp = window.Miniatura3D.build(g3.T, { image: img, tileSize: Math.max(1, cells) * 0.9 });
     grp.userData = { isDecor: true, decorId: decorId, imageName: imageName };
     grp.position.copy(slot.position);
     grp.visible = slot.visible;
@@ -12729,15 +12731,20 @@ function _buildObjetoMini(decorId, imageName, cells){
     g3.decorMeshes[decorId] = grp;
   };
   let img = _objImg3D[imageName];
-  if (img && img.complete && img.naturalWidth) { make(img); return; }
-  if (!img) {
-    img = new Image();
-    img.src = _assetURL(`assets/objetos/${imageName}`);
-    _objImg3D[imageName] = img;
+  if (img) {
+    if (img.complete && img.naturalWidth) make(img);
+    // addEventListener (não `onload=`): várias decorações com o MESMO PNG ainda
+    // carregando registram callbacks distintos sem sobrescrever umas às outras.
+    else img.addEventListener('load', () => make(img), { once: true });
+    return;
   }
-  // addEventListener (não `onload=`): várias decorações com o MESMO PNG ainda
-  // carregando registram callbacks distintos sem sobrescrever umas às outras.
+  img = new Image();
+  _objImg3D[imageName] = img;
   img.addEventListener('load', () => make(img), { once: true });
+  img.src = _assetURL(`assets/objetos/${imageName}`);
+  // Imagem em cache do navegador pode já estar `complete` ao definir o src,
+  // sem disparar 'load' — então constrói na hora nesse caso.
+  if (img.complete && img.naturalWidth) make(img);
 }
 
 function renderMap3D(state){
@@ -12973,10 +12980,15 @@ function renderMap3D(state){
           if (mesh) { g3.scene.remove(mesh); _disposeDecorMesh(mesh); }
           const placeholder = new T.Group();
           placeholder.userData = { isDecor: true, decorId: d.id, imageName: d.image, pending: true };
+          // Posiciona ANTES de construir: se a imagem já estiver em cache, o
+          // build roda síncrono e copia esta posição (senão a miniatura cairia em 0,0).
+          placeholder.position.set(worldX, 0, worldZ);
+          placeholder.visible = visivel;
           g3.scene.add(placeholder);
           g3.decorMeshes[d.id] = placeholder;
           mesh = placeholder;
-          _buildObjetoMini(d.id, d.image, Math.max(wCells, hCells));   // assíncrono
+          _buildObjetoMini(d.id, d.image, Math.max(wCells, hCells));   // assíncrono (ou síncrono se em cache)
+          mesh = g3.decorMeshes[d.id];   // _buildObjetoMini pode ter trocado o mesh (cache)
         }
         mesh.position.set(worldX, 0, worldZ);
         mesh.visible = visivel;
