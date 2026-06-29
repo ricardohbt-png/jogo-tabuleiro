@@ -445,18 +445,7 @@
           <div id="d-items">${hasLoot ? ref.loot.items.map((it, i) => `<div>${it.id} <button data-i="${i}" class="d-rm">×</button></div>`).join("") : ""}</div>
           <select id="d-add">${opt(CAT.items.map(it => ({ v: it.id, name: it.name })), "", o => o.v + " — " + o.name)}</select>
           <button id="d-additem">+ item</button>
-        </div>`;
-      if (m.gira) document.getElementById("d-rot").onclick = () => { ref.facing = rotateFacing(ref.facing); render(); };
-      if (m.special === "fountain") document.getElementById("d-charges").onchange = e => { ref.charges = Math.max(0, Number(e.target.value) | 0); };
-      if (m.loot_capaz) document.getElementById("d-haslook").onchange = e => {
-        ref.loot = e.target.checked ? { gold: 0, items: [] } : null; renderPanel();
-      };
-      if (hasLoot) {
-        document.getElementById("d-gold").onchange = e => { ref.loot.gold = Math.max(0, Number(e.target.value) | 0); };
-        document.getElementById("d-additem").onclick = () => { const id = document.getElementById("d-add").value; if (id) ref.loot.items.push({ id }); renderPanel(); };
-        panel.querySelectorAll(".d-rm").forEach(b => b.onclick = () => { ref.loot.items.splice(Number(b.dataset.i), 1); renderPanel(); });
-      }
-      panel.innerHTML += `
+        </div>
         <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
           <b>Imagem (miniatura 3D)</b>
           <div style="font-size:11px;color:#8a7a5a">PNG de assets/objetos — silhueta extrudada no jogo.</div>
@@ -469,7 +458,16 @@
             <span id="d-img-st" style="font-size:11px;color:#8a7a5a"></span>
           </div>
         </div>`;
-
+      if (m.gira) document.getElementById("d-rot").onclick = () => { ref.facing = rotateFacing(ref.facing); render(); };
+      if (m.special === "fountain") document.getElementById("d-charges").onchange = e => { ref.charges = Math.max(0, Number(e.target.value) | 0); };
+      if (m.loot_capaz) document.getElementById("d-haslook").onchange = e => {
+        ref.loot = e.target.checked ? { gold: 0, items: [] } : null; renderPanel();
+      };
+      if (hasLoot) {
+        document.getElementById("d-gold").onchange = e => { ref.loot.gold = Math.max(0, Number(e.target.value) | 0); };
+        document.getElementById("d-additem").onclick = () => { const id = document.getElementById("d-add").value; if (id) ref.loot.items.push({ id }); renderPanel(); };
+        panel.querySelectorAll(".d-rm").forEach(b => b.onclick = () => { ref.loot.items.splice(Number(b.dataset.i), 1); renderPanel(); });
+      }
       const imgSel = document.getElementById("d-img-sel");
       const imgSt = document.getElementById("d-img-st");
       function fillImgOptions(list) {
