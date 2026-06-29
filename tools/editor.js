@@ -34,7 +34,32 @@
     for (let i = 0; i < ew; i++) for (let j = 0; j < eh; j++) out.push([ax + i, ay + j]);
     return out;
   }
-  function decorTiles(d) { return decorTilesAt(d.type, d.pos[0], d.pos[1], d.facing); }
+  // Tamanho "natural" (pré-facing) de uma decoração: usa o override por-objeto
+  // d.size se presente, senão o tamanho do catálogo do tipo.
+  function decorBaseSize(d) {
+    if (d && Array.isArray(d.size) && d.size.length === 2) return [d.size[0], d.size[1]];
+    const m = decorMeta(d && d.type ? d.type : d);
+    return m ? m.size.slice() : [1, 1];
+  }
+  // Tamanho efetivo (já com a troca por facing) de uma decoração específica.
+  function decorEffSizeOf(d) {
+    const [w, h] = decorBaseSize(d);
+    return (d.facing && d.facing[0] !== 0) ? [h, w] : [w, h];
+  }
+  // Casas ocupadas a partir de pos/size(natural)/facing explícitos.
+  function tilesFor(pos, size, facing) {
+    const [w, h] = size;
+    const [ew, eh] = (facing && facing[0] !== 0) ? [h, w] : [w, h];
+    const out = [];
+    for (let i = 0; i < ew; i++) for (let j = 0; j < eh; j++) out.push([pos[0] + i, pos[1] + j]);
+    return out;
+  }
+  function decorTiles(d) {
+    const [ew, eh] = decorEffSizeOf(d);
+    const out = [];
+    for (let i = 0; i < ew; i++) for (let j = 0; j < eh; j++) out.push([d.pos[0] + i, d.pos[1] + j]);
+    return out;
+  }
 
   function rotateFacing(f) {
     // cicla 4 facings: [0,1]→[1,0]→[0,-1]→[-1,0]→[0,1]
@@ -57,6 +82,19 @@
 
   function decorFits(type, ax, ay, facing, ignore) {
     for (const [tx, ty] of decorTilesAt(type, ax, ay, facing)) {
+      if (tx < 0 || ty < 0 || tx >= S.grid.w || ty >= S.grid.h) return false;
+      if (S.tiles[ty][tx] !== FLOOR) return false;
+      for (const d of S.decorations) {
+        if (d === ignore) continue;
+        if (decorTiles(d).some(c => c[0] === tx && c[1] === ty)) return false;
+      }
+    }
+    return true;
+  }
+  // Encaixe genérico para arrasto/redimensionamento: a decoração `ignore` (a que
+  // está sendo movida/redimensionada) é desconsiderada na checagem de sobreposição.
+  function decorWouldFit(ignore, pos, size, facing) {
+    for (const [tx, ty] of tilesFor(pos, size, facing)) {
       if (tx < 0 || ty < 0 || tx >= S.grid.w || ty >= S.grid.h) return false;
       if (S.tiles[ty][tx] !== FLOOR) return false;
       for (const d of S.decorations) {
@@ -107,6 +145,9 @@
     if (dec) {
       // Se a decoração tem imagem e ela já carregou, não retorna emoji (a imagem cobre o footprint).
       if (dec.image && objImg(dec.image)) return null;
+      // Decorações com escala visual são desenhadas à parte (ancoradas/escaladas).
+      const vs = dec.vscale;
+      if (Array.isArray(vs) && (vs[0] !== 1 || vs[1] !== 1)) return null;
       const m = decorMeta(dec.type); return m ? m.emoji : "🪑";
     }
     return null;
@@ -143,7 +184,10 @@
       const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
       const px = minX * CELL + 2, py = minY * CELL + 2;
       const pw = (maxX - minX + 1) * CELL - 4, ph = (maxY - minY + 1) * CELL - 4;
-      ctx.drawImage(im, px, py, pw, ph);
+      // Escala visual: altura cresce para cima (âncora na base), largura centralizada.
+      const vs = Array.isArray(d.vscale) ? d.vscale : [1, 1];
+      const dw = pw * vs[0], dh = ph * vs[1];
+      ctx.drawImage(im, px + pw / 2 - dw / 2, py + ph - dh, dw, dh);
     }
     ctx.font = "16px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     for (let y = 0; y < S.grid.h; y++) {
@@ -153,11 +197,59 @@
       }
     }
     ctx.textAlign = "start";
-    if (S.sel && S.sel.pos) {
+    // Emojis de decorações com escala visual: desenhados à parte, ancorados na
+    // base-centro do footprint e crescendo para cima.
+    for (const d of S.decorations) {
+      const vs = Array.isArray(d.vscale) ? d.vscale : null;
+      if (!vs || (vs[0] === 1 && vs[1] === 1)) continue;
+      if (d.image && objImg(d.image)) continue;
+      const m = decorMeta(d.type); const emoji = m ? m.emoji : "🪑";
+      const tiles = decorTiles(d);
+      const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
+      const maxY = Math.max(...tiles.map(t => t[1]));
+      const cx = (minX + (maxX - minX + 1) / 2) * CELL;
+      const baseY = (maxY + 1) * CELL - 4;
+      ctx.save();
+      ctx.font = (16 * Math.max(vs[0], vs[1])) + "px sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+      ctx.fillText(emoji, cx, baseY);
+      ctx.restore();
+    }
+    if (S.sel && S.sel.kind === "decor" && S.sel.ref) {
+      // Referência: contorno do footprint realçado + rótulo W×H (casas efetivas).
+      const tiles = decorTiles(S.sel.ref);
+      const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
+      const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
+      ctx.strokeStyle = "#ffd86a"; ctx.lineWidth = 2;
+      ctx.strokeRect(minX * CELL + 1.5, minY * CELL + 1.5, (maxX - minX + 1) * CELL - 3, (maxY - minY + 1) * CELL - 3);
+      const [ew, eh] = decorEffSizeOf(S.sel.ref);
+      const label = ew + "×" + eh;
+      ctx.font = "11px sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "top";
+      const lx = minX * CELL + 3, ly = minY * CELL + 3;
+      const tw = ctx.measureText(label).width;
+      ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(lx - 1, ly - 1, tw + 4, 13);
+      ctx.fillStyle = "#ffd86a"; ctx.fillText(label, lx + 1, ly);
+      ctx.textAlign = "start";
+    } else if (S.sel && S.sel.pos) {
       ctx.strokeStyle = "#ffd86a"; ctx.lineWidth = 2;
       ctx.strokeRect(S.sel.pos[0] * CELL + 1, S.sel.pos[1] * CELL + 1, CELL - 3, CELL - 3);
     }
+    if (_drag && _drag.candidate) drawDragPreview();
     if (document.getElementById("status")) updateStatus();
+  }
+
+  // Preview do destino durante o arrasto: contorno verde (válido) / vermelho.
+  function drawDragPreview() {
+    if (!_drag || !_drag.candidate) return;
+    const [ax, ay] = _drag.candidate;
+    const tiles = _drag.sel.kind === "decor"
+      ? tilesFor([ax, ay], decorBaseSize(_drag.sel.ref), _drag.sel.ref.facing)
+      : [[ax, ay]];
+    ctx.strokeStyle = _drag.valid ? "#6ad06a" : "#d05a5a"; ctx.lineWidth = 2;
+    for (const [tx, ty] of tiles) {
+      if (tx < 0 || ty < 0 || tx >= S.grid.w || ty >= S.grid.h) continue;
+      ctx.strokeRect(tx * CELL + 1, ty * CELL + 1, CELL - 2, CELL - 2);
+    }
   }
 
   const TOOLS = [
@@ -243,6 +335,23 @@
 
   let painting = false;
   let roomDrag = null;
+  let _drag = null;  // arrasto na ferramenta "selecionar"
+
+  // Casa de destino válida para soltar a entidade `sel` ancorada em (ax,ay).
+  function dropValid(sel, ax, ay) {
+    if (sel.kind === "decor")
+      return decorWouldFit(sel.ref, [ax, ay], decorBaseSize(sel.ref), sel.ref.facing);
+    return ax >= 0 && ay >= 0 && ax < S.grid.w && ay < S.grid.h && S.tiles[ay][ax] !== WALL;
+  }
+  // Move a entidade selecionada para (nx,ny), conforme o tipo.
+  function moveSelTo(sel, nx, ny) {
+    const k = sel.kind;
+    if (k === "entrance") { S.entrance.x = nx; S.entrance.y = ny; }
+    else if (k === "exit") { S.exit.x = nx; S.exit.y = ny; }
+    else if (sel.ref) { sel.ref.pos = [nx, ny]; }  // prisoner/monster/chest/trap/decor
+    sel.pos = [nx, ny];
+  }
+
   function entityAt(x, y) {
     if (S.entrance && S.entrance.x === x && S.entrance.y === y) return { kind: "entrance", pos: [x, y] };
     if (S.exit && S.exit.x === x && S.exit.y === y) return { kind: "exit", pos: [x, y] };
@@ -434,6 +543,8 @@
     } else if (k === "decor") {
       const m = decorMeta(ref.type) || {};
       const hasLoot = !!ref.loot;
+      const [bw, bh] = decorBaseSize(ref);
+      const vs0 = Array.isArray(ref.vscale) ? ref.vscale : [1, 1];
       panel.innerHTML = `<b>${m.emoji || "🪑"} ${m.nome || ref.type}</b>
         <div style="color:#8a7a5a;font-size:11px">${m.size ? m.size[0] + "×" + m.size[1] : ""} ${m.alto ? "· alto (oclui visão)" : ""} ${m.pisavel ? "· pisável" : ""}</div>
         ${m.gira ? `<button id="d-rot">girar 90°</button>` : ""}
@@ -445,6 +556,16 @@
           <div id="d-items">${hasLoot ? ref.loot.items.map((it, i) => `<div>${it.id} <button data-i="${i}" class="d-rm">×</button></div>`).join("") : ""}</div>
           <select id="d-add">${opt(CAT.items.map(it => ({ v: it.id, name: it.name })), "", o => o.v + " — " + o.name)}</select>
           <button id="d-additem">+ item</button>
+        </div>
+        <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
+          <b>Tamanho</b>
+          <div style="font-size:11px;color:#8a7a5a">footprint em casas (quadrados ocupados)</div>
+          <label>largura <input id="d-fw" type="number" min="1" max="${S.grid.w}" value="${bw}"></label>
+          <label>altura <input id="d-fh" type="number" min="1" max="${S.grid.h}" value="${bh}"></label>
+          <div id="d-size-msg" style="font-size:11px;color:#d8a0a0;min-height:14px"></div>
+          <div style="font-size:11px;color:#8a7a5a;margin-top:4px">tamanho visual (não muda casas; altura cresce p/ cima)</div>
+          <label>escala largura <input id="d-vsx" type="number" min="0.2" max="4" step="0.1" value="${vs0[0]}"></label>
+          <label>escala altura <input id="d-vsy" type="number" min="0.2" max="4" step="0.1" value="${vs0[1]}"></label>
         </div>
         <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
           <b>Imagem (miniatura 3D)</b>
@@ -468,6 +589,34 @@
         document.getElementById("d-additem").onclick = () => { const id = document.getElementById("d-add").value; if (id) ref.loot.items.push({ id }); renderPanel(); };
         panel.querySelectorAll(".d-rm").forEach(b => b.onclick = () => { ref.loot.items.splice(Number(b.dataset.i), 1); renderPanel(); });
       }
+      // Footprint (casas): aplica com bloqueio — reverte se não couber.
+      function applyFootprint() {
+        const nw = Math.max(1, Number(document.getElementById("d-fw").value) | 0);
+        const nh = Math.max(1, Number(document.getElementById("d-fh").value) | 0);
+        const msg = document.getElementById("d-size-msg");
+        if (decorWouldFit(ref, ref.pos, [nw, nh], ref.facing)) {
+          const def = decorMeta(ref.type);
+          if (def && def.size[0] === nw && def.size[1] === nh) delete ref.size;
+          else ref.size = [nw, nh];
+          msg.textContent = ""; render();
+        } else {
+          msg.textContent = "não cabe (parede/fora/sobreposição) — revertido";
+          const [cw, ch] = decorBaseSize(ref);
+          document.getElementById("d-fw").value = cw;
+          document.getElementById("d-fh").value = ch;
+        }
+      }
+      document.getElementById("d-fw").onchange = applyFootprint;
+      document.getElementById("d-fh").onchange = applyFootprint;
+      // Escala visual: sem bloqueio (não ocupa casas).
+      function applyVScale() {
+        const sx = Math.max(0.2, Math.min(4, Number(document.getElementById("d-vsx").value) || 1));
+        const sy = Math.max(0.2, Math.min(4, Number(document.getElementById("d-vsy").value) || 1));
+        if (sx === 1 && sy === 1) delete ref.vscale; else ref.vscale = [sx, sy];
+        render();
+      }
+      document.getElementById("d-vsx").onchange = applyVScale;
+      document.getElementById("d-vsy").onchange = applyVScale;
       const imgSel = document.getElementById("d-img-sel");
       const imgSt = document.getElementById("d-img-st");
       function fillImgOptions(list) {
@@ -511,7 +660,16 @@
     else if (S.tool === "room") { roomDrag = { x0: x, y0: y, x1: x, y1: y }; }
     else if (["entrance", "exit", "prisoner", "monster", "chest", "trap", "decor"].includes(S.tool)) { placeEntity(x, y); if (S.tool !== "decor") S.sel = entityAt(x, y); renderPanel(); render(); }
     else if (S.tool === "erase") { eraseAt(x, y); S.sel = null; renderPanel(); render(); }
-    else if (S.tool === "select") { S.sel = entityAt(x, y) || roomSel(x, y); renderPanel(); render(); }
+    else if (S.tool === "select") {
+      S.sel = entityAt(x, y) || roomSel(x, y);
+      // Entidades pontuais/decorações entram em modo arrasto (sala não).
+      if (S.sel && S.sel.kind !== "room" && S.sel.pos) {
+        const anchor = S.sel.pos;
+        _drag = { sel: S.sel, offX: x - anchor[0], offY: y - anchor[1],
+                  origin: anchor.slice(), candidate: null, valid: true, moved: false };
+      } else { _drag = null; }
+      renderPanel(); render();
+    }
   });
 
   function roomSel(x, y) {
@@ -520,6 +678,14 @@
   }
   board.addEventListener("mousemove", (ev) => {
     const c = cellFromEvent(ev); if (!c) return;
+    if (_drag) {
+      const ax = c[0] - _drag.offX, ay = c[1] - _drag.offY;
+      _drag.candidate = [ax, ay];
+      if (ax !== _drag.origin[0] || ay !== _drag.origin[1]) _drag.moved = true;
+      _drag.valid = dropValid(_drag.sel, ax, ay);
+      render();  // render() já desenha o preview via drawDragPreview()
+      return;
+    }
     if (painting) { paintTile(c[0], c[1]); render(); return; }
     if (roomDrag) {
       roomDrag.x1 = c[0]; roomDrag.y1 = c[1];
@@ -532,6 +698,11 @@
   });
   window.addEventListener("mouseup", () => {
     painting = false;
+    if (_drag) {
+      if (_drag.moved && _drag.valid && _drag.candidate)
+        moveSelTo(_drag.sel, _drag.candidate[0], _drag.candidate[1]);
+      _drag = null; renderPanel(); render();
+    }
     if (roomDrag) {
       const x = Math.min(roomDrag.x0, roomDrag.x1), y = Math.min(roomDrag.y0, roomDrag.y1);
       const w = Math.abs(roomDrag.x1 - roomDrag.x0) + 1, h = Math.abs(roomDrag.y1 - roomDrag.y0) + 1;
@@ -565,6 +736,9 @@
         const m = decorMeta(d.type);
         if (m && m.special === "fountain") o.charges = d.charges | 0;
         if (d.image) o.image = d.image;
+        // Override de tamanho por-objeto (editor-only; o servidor ignora estes campos).
+        if (Array.isArray(d.size) && d.size.length === 2) o.size = [d.size[0] | 0, d.size[1] | 0];
+        if (Array.isArray(d.vscale) && (d.vscale[0] !== 1 || d.vscale[1] !== 1)) o.vscale = [d.vscale[0], d.vscale[1]];
         return o;
       }),
       prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}) } : null,
@@ -662,6 +836,8 @@
       loot: d.loot ? { gold: d.loot.gold | 0, items: (d.loot.items || []).map(i => ({ id: i.id })) } : null,
       ...(d.charges !== undefined ? { charges: d.charges | 0 } : {}),
       ...(d.image ? { image: d.image } : {}),
+      ...(Array.isArray(d.size) && d.size.length === 2 ? { size: [d.size[0] | 0, d.size[1] | 0] } : {}),
+      ...(Array.isArray(d.vscale) && d.vscale.length === 2 ? { vscale: [Number(d.vscale[0]), Number(d.vscale[1])] } : {}),
     }));
     S.objectives = obj.objectives || { primary: { type: "kill_all" }, secondary: [] };
     if (!S.objectives.primary) S.objectives.primary = { type: "kill_all" };
@@ -752,7 +928,7 @@
   document.getElementById("tab-campanha").onclick = () => setTab("campanha");
 
   // Expor para verificação no console / tasks seguintes.
-  window.EDITOR = { S, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, deleteRoom, entityAt, doorLink, doorUnlink, validarEditor, buildJSON, loadJSON, save, updateStatus, WALL, FLOOR, DOOR, decorMeta, decorEffSize, decorTilesAt, decorTiles, rotateFacing, rotateDecorPending, decorFits, placeDecor };
+  window.EDITOR = { S, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, deleteRoom, entityAt, doorLink, doorUnlink, validarEditor, buildJSON, loadJSON, save, updateStatus, WALL, FLOOR, DOOR, decorMeta, decorEffSize, decorTilesAt, decorTiles, rotateFacing, rotateDecorPending, decorFits, placeDecor, decorBaseSize, decorEffSizeOf, decorWouldFit, tilesFor, dropValid, moveSelTo };
 
   initGrid(S.grid.w, S.grid.h);
   buildToolbar();
