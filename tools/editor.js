@@ -4,7 +4,7 @@
   const CAT = window.EDITOR_CATALOG || { monsters: [], items: [], traps: [], venoms: [], decorations: [] };
 
   const S = {
-    meta: { schema_version: 1, id: "nova_masmorra", name: "Nova Masmorra" },
+    meta: { schema_version: 1, id: "nova_masmorra", name: "Nova Masmorra", ambiente: "masmorra" },
     grid: { w: 16, h: 12 },
     tiles: [],
     rooms: [], nextRoomId: 0,
@@ -66,6 +66,14 @@
     const order = [[0, 1], [1, 0], [0, -1], [-1, 0]];
     const i = order.findIndex(o => o[0] === f[0] && o[1] === f[1]);
     return order[(i + 1) % 4];
+  }
+  // facing → ângulo (rad) p/ o giro 90° da imagem no preview 2D. Espelha game.js.
+  function facingAngle2D(f) {
+    if (!f) return 0;
+    if (f[0] === 1 && f[1] === 0) return Math.PI / 2;
+    if (f[0] === 0 && f[1] === -1) return Math.PI;
+    if (f[0] === -1 && f[1] === 0) return -Math.PI / 2;
+    return 0;
   }
   function rotateDecorPending() {
     if (S.sel && S.sel.kind === "decor") {
@@ -140,7 +148,11 @@
     if (mo) { const d = CAT.monsters.find(c => c.type === mo.type); return d ? d.emoji : "👹"; }
     if (at(S.chests)) return "🧰";
     const tr = at(S.traps);
-    if (tr) { const d = CAT.traps.find(c => c.tipo === tr.tipo); return d ? d.icone : "⚠️"; }
+    if (tr) {
+      // Com imagem carregada, o PNG cobre a casa (desenhado à parte) — suprime o emoji.
+      if (tr.image && objImg(tr.image)) return null;
+      const d = CAT.traps.find(c => c.tipo === tr.tipo); return d ? d.icone : "⚠️";
+    }
     const dec = S.decorations.find(e => e.pos[0] === x && e.pos[1] === y);
     if (dec) {
       // Se a decoração tem imagem e ela já carregou, não retorna emoji (a imagem cobre o footprint).
@@ -184,10 +196,38 @@
       const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
       const px = minX * CELL + 2, py = minY * CELL + 2;
       const pw = (maxX - minX + 1) * CELL - 4, ph = (maxY - minY + 1) * CELL - 4;
-      // Escala visual: altura cresce para cima (âncora na base), largura centralizada.
       const vs = Array.isArray(d.vscale) ? d.vscale : [1, 1];
-      const dw = pw * vs[0], dh = ph * vs[1];
-      ctx.drawImage(im, px + pw / 2 - dw / 2, py + ph - dh, dw, dh);
+      const ang = facingAngle2D(d.facing);
+      if (ang === 0) {
+        // Escala visual: altura cresce para cima (âncora na base), largura centralizada.
+        const dw = pw * vs[0], dh = ph * vs[1];
+        ctx.drawImage(im, px + pw / 2 - dw / 2, py + ph - dh, dw, dh);
+      } else {
+        // Girado: encaixa no frame local (caixa trocada p/ 90°/270°), proporção do PNG,
+        // e gira sobre o centro do footprint.
+        const rot90 = (ang === Math.PI / 2 || ang === -Math.PI / 2);
+        const boxW = rot90 ? ph : pw, boxH = rot90 ? pw : ph;
+        const ar = im.naturalWidth / im.naturalHeight;
+        let dw = boxW, dh = boxW / ar;
+        if (dh > boxH) { dh = boxH; dw = boxH * ar; }
+        dw *= vs[0]; dh *= vs[1];
+        ctx.save();
+        ctx.translate(px + pw / 2, py + ph / 2);
+        ctx.rotate(ang);
+        ctx.drawImage(im, -dw / 2, -dh / 2, dw, dh);
+        ctx.restore();
+      }
+    }
+    // Preview 2D: PNG da armadilha (se houver) cobrindo a casa, proporção preservada.
+    for (const t of S.traps) {
+      if (!t.image) continue;
+      const im = objImg(t.image);
+      if (!im) continue;
+      const px = t.pos[0] * CELL + 2, py = t.pos[1] * CELL + 2, sz = CELL - 4;
+      const ar = im.naturalWidth / im.naturalHeight;
+      let dw = sz, dh = sz / ar;
+      if (dh > sz) { dh = sz; dw = sz * ar; }
+      ctx.drawImage(im, px + (sz - dw) / 2, py + (sz - dh) / 2, dw, dh);
     }
     ctx.font = "16px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     for (let y = 0; y < S.grid.h; y++) {
@@ -494,9 +534,52 @@
       const meta = CAT.traps.find(t => t.tipo === ref.tipo) || {};
       panel.innerHTML = `<b>⚠️ Armadilha</b>
         <label>tipo</label><select id="p-tt">${opt(CAT.traps.map(t => ({ v: t.tipo, name: t.nome })), ref.tipo, o => o.v + " — " + o.name)}</select>
-        ${meta.precisa_veneno ? `<label>veneno</label><select id="p-ven">${opt(CAT.venoms.map(v => ({ v: v.id, name: v.name })), ref.veneno_id || "", o => o.v + " — " + o.name)}</select>` : ""}`;
+        ${meta.precisa_veneno ? `<label>veneno</label><select id="p-ven">${opt(CAT.venoms.map(v => ({ v: v.id, name: v.name })), ref.veneno_id || "", o => o.v + " — " + o.name)}</select>` : ""}
+        <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
+          <b>Imagem</b>
+          <div style="font-size:11px;color:#8a7a5a">PNG de assets/objetos — visível no jogo só quando a armadilha for revelada.</div>
+          <div style="margin-top:4px">
+            <select id="t-img-sel"></select>
+            <button id="t-img-refresh" title="recarregar lista">↻</button>
+          </div>
+          <div style="margin-top:4px">
+            <input id="t-img-file" type="file" accept="image/png" style="font-size:11px">
+            <span id="t-img-st" style="font-size:11px;color:#8a7a5a"></span>
+          </div>
+        </div>`;
       document.getElementById("p-tt").onchange = e => { ref.tipo = e.target.value; if (!CAT.traps.find(t => t.tipo === ref.tipo).precisa_veneno) delete ref.veneno_id; renderPanel(); render(); };
       if (meta.precisa_veneno) document.getElementById("p-ven").onchange = e => { ref.veneno_id = e.target.value; };
+      // Seletor de imagem (espelha o das decorações — pasta assets/objetos via OBJETO_UPLOAD).
+      const tImgSel = document.getElementById("t-img-sel");
+      const tImgSt = document.getElementById("t-img-st");
+      function fillTrapImg(list) {
+        const opts = ['<option value="">(nenhuma — ícone padrão)</option>']
+          .concat(list.map(n => `<option value="${n}" ${ref.image === n ? "selected" : ""}>${n}</option>`));
+        if (ref.image && list.indexOf(ref.image) < 0)
+          opts.push(`<option value="${ref.image}" selected>${ref.image} (atual)</option>`);
+        tImgSel.innerHTML = opts.join("");
+      }
+      fillTrapImg([]);
+      function loadTrapImgList() {
+        if (!window.OBJETO_UPLOAD) { tImgSt.textContent = "(offline: lista/upload indisponível)"; return; }
+        window.OBJETO_UPLOAD.list()
+          .then(list => fillTrapImg(list))
+          .catch(() => { tImgSt.textContent = "servidor offline"; });
+      }
+      loadTrapImgList();
+      tImgSel.onchange = e => { ref.image = e.target.value || null; render(); };
+      document.getElementById("t-img-refresh").onclick = loadTrapImgList;
+      document.getElementById("t-img-file").onchange = async e => {
+        const file = e.target.files[0]; if (!file) return;
+        if (!window.OBJETO_UPLOAD) { tImgSt.textContent = "servidor offline"; return; }
+        tImgSt.textContent = "enviando…";
+        try {
+          const name = await window.OBJETO_UPLOAD.upload(file);
+          ref.image = name;
+          tImgSt.textContent = "enviada ✓";
+          loadTrapImgList(); render();
+        } catch (err) { tImgSt.textContent = "falha: " + err.message; }
+      };
     } else if (k === "room") {
       panel.innerHTML = `<b>▦ Sala #${ref.id}</b>
         <label>role</label><select id="p-role">${opt(["entrance", "monster", "chest", "trap", "boss", "empty"].map(r => ({ v: r })), ref.role, o => o.v)}</select>
@@ -721,7 +804,7 @@
     normalizeObjective(S.objectives.primary, true);
     S.objectives.secondary.forEach(s => normalizeObjective(s, false));
     return {
-      schema_version: 1, id: S.meta.id, name: S.meta.name,
+      schema_version: 1, id: S.meta.id, name: S.meta.name, ambiente: S.meta.ambiente || "masmorra",
       grid: { w: S.grid.w, h: S.grid.h },
       tiles: S.tiles.map(row => row.slice()),
       rooms: S.rooms.map(r => ({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, role: r.role, locked: r.locked, doors: r.doors.map(d => d.slice()) })),
@@ -729,7 +812,7 @@
       exit: S.exit ? { x: S.exit.x, y: S.exit.y } : null,
       monsters: S.monsters.map(m => ({ type: m.type, pos: m.pos.slice(), room_id: m.room_id, boss: !!m.boss, target: !!m.target })),
       chests: S.chests.map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: c.items.map(i => ({ id: i.id })), key_objective: !!c.key_objective })),
-      traps: S.traps.map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; return o; }),
+      traps: S.traps.map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; if (t.image) o.image = t.image; return o; }),
       decorations: S.decorations.map(d => {
         const o = { type: d.type, pos: d.pos.slice(), facing: d.facing.slice() };
         o.loot = d.loot ? { gold: d.loot.gold | 0, items: d.loot.items.map(i => ({ id: i.id })) } : null;
@@ -820,7 +903,8 @@
   }
 
   function loadJSON(obj) {
-    S.meta = { schema_version: 1, id: obj.id || "masmorra", name: obj.name || "Masmorra" };
+    S.meta = { schema_version: 1, id: obj.id || "masmorra", name: obj.name || "Masmorra",
+               ambiente: ["penumbra", "masmorra", "ar_livre"].includes(obj.ambiente) ? obj.ambiente : "masmorra" };
     S.grid = { w: obj.grid.w, h: obj.grid.h };
     S.tiles = obj.tiles.map(row => row.slice());
     S.rooms = (obj.rooms || []).map(r => ({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, role: r.role, locked: !!r.locked, doors: (r.doors || []).map(d => d.slice()) }));
@@ -830,7 +914,7 @@
     S.prisoner = obj.prisoner || null;
     S.monsters = (obj.monsters || []).map(m => ({ type: m.type, pos: m.pos.slice(), room_id: m.room_id ?? null, boss: !!m.boss, target: !!m.target }));
     S.chests = (obj.chests || []).map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: (c.items || []).map(i => ({ id: i.id })), key_objective: !!c.key_objective }));
-    S.traps = (obj.traps || []).map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; return o; });
+    S.traps = (obj.traps || []).map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; if (t.image) o.image = t.image; return o; });
     S.decorations = (obj.decorations || []).map(d => ({
       type: d.type, pos: d.pos.slice(), facing: (d.facing || [0, 1]).slice(),
       loot: d.loot ? { gold: d.loot.gold | 0, items: (d.loot.items || []).map(i => ({ id: i.id })) } : null,
@@ -847,6 +931,7 @@
     S.sel = null;
     document.getElementById("m-id").value = S.meta.id;
     document.getElementById("m-name").value = S.meta.name;
+    document.getElementById("m-ambiente").value = S.meta.ambiente || "masmorra";
     document.getElementById("g-w").value = S.grid.w;
     document.getElementById("g-h").value = S.grid.h;
     render(); renderPanel();
@@ -877,6 +962,7 @@
   function save() {
     S.meta.id = document.getElementById("m-id").value.trim() || "masmorra";
     S.meta.name = document.getElementById("m-name").value.trim() || "Masmorra";
+    S.meta.ambiente = document.getElementById("m-ambiente").value || "masmorra";
     const v = updateStatus();
     if (!v.ok) { alert("Masmorra inválida:\n- " + v.erros.join("\n- ")); return; }
     const defn = buildJSON();

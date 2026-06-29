@@ -4426,6 +4426,38 @@ function _getObjeto2DImg(imageName){
   return (img.complete && img.naturalWidth) ? img : null;
 }
 
+// Rotação de objetos (decorações): facing → ângulo. O facing canônico [0,1] é 0°;
+// cada giro de 90° avança no sentido [0,1]→[1,0]→[0,-1]→[-1,0]. Usado no 2D (canvas)
+// e no 3D (rotation.y), para a imagem do objeto realmente girar.
+function _facingAngle2D(f){
+  if(!f) return 0;
+  if(f[0]===1  && f[1]===0)  return Math.PI/2;
+  if(f[0]===0  && f[1]===-1) return Math.PI;
+  if(f[0]===-1 && f[1]===0)  return -Math.PI/2;
+  return 0;
+}
+function _facingAngleY3D(f){
+  // Eixo Y do mundo 3D: sinal oposto ao 2D para o giro casar visualmente com o topo.
+  if(!f) return 0;
+  if(f[0]===1  && f[1]===0)  return -Math.PI/2;
+  if(f[0]===0  && f[1]===-1) return Math.PI;
+  if(f[0]===-1 && f[1]===0)  return Math.PI/2;
+  return 0;
+}
+
+// Visibilidade de uma armadilha colocável para o jogador local:
+//  • aliada (colocada por um jogador): visível a todos (para não pisarem);
+//  • so_luccas (oculta de masmorra/kobold): só o Luccas (rogue) enxerga;
+//  • hostil autorada: ESCONDIDA até ser revelada (detecção do Luccas/Clarividência →
+//    visivel) ou disparada (ativada). Antes disso não aparece no mapa.
+function _armadilhaVisivelParaMim(arm, me){
+  if(arm.aliada) return true;
+  if(arm.so_luccas) return !!(me && me.class_id === 'rogue');
+  return !!(arm.visivel || arm.ativada);
+}
+// Cache 2D do PNG de uma armadilha (mesma pasta dos objetos de decoração).
+function _getArmadilha2DImg(imageName){ return _getObjeto2DImg(imageName); }
+
 // Escala da miniatura por PORTE (categoria de tamanho da ficha do monstro, vinda
 // do servidor em m.porte). Guia a geração do sprite no 2D e no 3D. Ausente/
 // desconhecido = "medio" (1.0). Ex.: kobolds são "pequeno".
@@ -4877,13 +4909,12 @@ function renderMap(state){
   }
 
   // ── Armadilhas colocáveis (Passo 2) — borda verde = aliada; vermelha = ativada
+  {
+  const _meArm = state.players.find(p=>p.id===GS.myPid);
   for(const arm of (state.armadilhas||[])){
     const [ax,ay]=arm.pos;
     if(!exploredSet.has(`${ax},${ay}`)) continue;
-    if(arm.so_luccas){
-      const me=state.players.find(p=>p.id===GS.myPid);
-      if(!(me && me.class_id==='rogue')) continue;   // ocultas: só Luccas enxerga
-    }
+    if(!_armadilhaVisivelParaMim(arm, _meArm)) continue;   // escondida até ser revelada
     const X=ax*CELL, Y=ay*CELL;
     ctx.fillStyle = arm.ativada ? 'rgba(255,70,55,0.28)' : 'rgba(110,200,120,0.18)';
     ctx.fillRect(X+4,Y+4,CELL-8,CELL-8);
@@ -4891,8 +4922,18 @@ function renderMap(state){
     ctx.strokeStyle = arm.ativada ? 'rgba(255,70,55,0.85)'
                     : arm.aliada ? 'rgba(110,210,120,0.75)' : 'rgba(255,150,40,0.75)';
     ctx.strokeRect(X+4.5,Y+4.5,CELL-9,CELL-9);
-    ctx.font=`${Math.round(CELL*0.5)}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(arm.icone||'🪤',X+CELL/2,Y+CELL/2);
+    // Imagem (PNG de assets/objetos) cobre o tile, mantendo proporção; senão, o ícone.
+    const _aImg = arm.image ? _getArmadilha2DImg(arm.image) : null;
+    if(_aImg){
+      const ar = _aImg.naturalWidth / _aImg.naturalHeight;
+      let dw = CELL-8, dh = (CELL-8)/ar;
+      if(dh > CELL-8){ dh = CELL-8; dw = (CELL-8)*ar; }
+      ctx.drawImage(_aImg, X+(CELL-dw)/2, Y+(CELL-dh)/2, dw, dh);
+    } else {
+      ctx.font=`${Math.round(CELL*0.5)}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(arm.icone||'🪤',X+CELL/2,Y+CELL/2);
+    }
+  }
   }
 
   // ── Stairs (dungeon entrance / exit)
@@ -4990,12 +5031,28 @@ function renderMap(state){
         const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
         const px = minX * CELL, py = minY * CELL;
         const pw = (maxX - minX + 1) * CELL, ph = (maxY - minY + 1) * CELL;
-        // ajusta mantendo proporção, ancorado embaixo
         const ar = _oImg.naturalWidth / _oImg.naturalHeight;
-        let dw = pw, dh = pw / ar;
-        if (dh > ph) { dh = ph; dw = ph * ar; }
-        dw *= _sx; dh *= _sy;
-        ctx.drawImage(_oImg, px + (pw - dw) / 2, py + (ph - dh), dw, dh);
+        const _ang = _facingAngle2D(d.facing);
+        if (_ang === 0) {
+          // ajusta mantendo proporção, ancorado embaixo (caminho original)
+          let dw = pw, dh = pw / ar;
+          if (dh > ph) { dh = ph; dw = ph * ar; }
+          dw *= _sx; dh *= _sy;
+          ctx.drawImage(_oImg, px + (pw - dw) / 2, py + (ph - dh), dw, dh);
+        } else {
+          // girado: encaixa no frame local (caixa possivelmente trocada p/ 90°/270°)
+          // e gira sobre o centro do footprint.
+          const _rot90 = (_ang === Math.PI / 2 || _ang === -Math.PI / 2);
+          const boxW = _rot90 ? ph : pw, boxH = _rot90 ? pw : ph;
+          let dw = boxW, dh = boxW / ar;
+          if (dh > boxH) { dh = boxH; dw = boxH * ar; }
+          dw *= _sx; dh *= _sy;
+          ctx.save();
+          ctx.translate(px + pw / 2, py + ph / 2);
+          ctx.rotate(_ang);
+          ctx.drawImage(_oImg, -dw / 2, -dh / 2, dw, dh);
+          ctx.restore();
+        }
       } else if (_sx === 1 && _sy === 1) {
         ctx.font = `${Math.floor(CELL * 0.8)}px serif`;
         ctx.fillText(d.emoji || '🪑', ecx, ecy);
@@ -10761,11 +10818,16 @@ function init3D(state){
   const CW = wrap.offsetWidth  || 640;
   const CH = wrap.offsetHeight || 480;
 
+  // ── Ambiente de iluminação (preset por mapa). Default "masmorra".
+  // Controla luz/fog/exposição dos tiles explorados; a névoa de guerra é igual.
+  const AMB = (VC.ambientes && VC.ambientes[state.ambiente]) || VC.ambientes.masmorra;
+  const AMBL = AMB.lighting;
+
   // ── Scene
   const scene = new T.Scene();
-  scene.background = new T.Color(VC.scene.bgColor);
+  scene.background = new T.Color(AMB.scene.bgColor);
   // Subtle fog — keeps depth cue without hiding explored areas
-  scene.fog = new T.FogExp2(VC.scene.fogColor, VC.scene.fogDensity);
+  scene.fog = new T.FogExp2(AMB.scene.fogColor, AMB.scene.fogDensity);
 
   // ── Renderer
   const renderer = new T.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
@@ -10774,7 +10836,7 @@ function init3D(state){
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type    = T.PCFShadowMap   /* PCF simples: ~igual visualmente, bem mais barato que PCFSoft */;
   renderer.toneMapping       = T.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.35;
+  renderer.toneMappingExposure = AMB.exposure;
   // Absolute-fill so canvas covers the full map-wrap area (including 8px padding)
   Object.assign(renderer.domElement.style, {
     display: 'block', position: 'absolute',
@@ -10818,12 +10880,12 @@ function init3D(state){
   // Warm brownish ambient — dark but not pitch-black. Areas away from torches
   // are still barely readable; the torches provide the main visible illumination.
   // Warm-white ambient — ensures shadow areas are still readable
-  const ambient = new T.AmbientLight(VC.lighting.ambient.color, VC.lighting.ambient.intensity);
+  const ambient = new T.AmbientLight(AMBL.ambient.color, AMBL.ambient.intensity);
   scene.add(ambient);
 
   // Main directional — warm key light from front-right above
-  const showcase = new T.DirectionalLight(VC.lighting.dirMain.color, VC.lighting.dirMain.intensity);
-  showcase.position.set(...VC.lighting.dirMain.pos);
+  const showcase = new T.DirectionalLight(AMBL.dirMain.color, AMBL.dirMain.intensity);
+  showcase.position.set(...AMBL.dirMain.pos);
   showcase.castShadow = true;
   showcase.shadow.mapSize.width = showcase.shadow.mapSize.height = 2048;
   showcase.shadow.camera.far    = 120;
@@ -10835,13 +10897,13 @@ function init3D(state){
   scene.add(showcase);
 
   // Cool fill — back-left; contrasts lit vs shadow without over-darkening
-  const fillLight = new T.DirectionalLight(VC.lighting.dirFill.color, VC.lighting.dirFill.intensity);
-  fillLight.position.set(...VC.lighting.dirFill.pos);
+  const fillLight = new T.DirectionalLight(AMBL.dirFill.color, AMBL.dirFill.intensity);
+  fillLight.position.set(...AMBL.dirFill.pos);
   scene.add(fillLight);
 
   // Warm back-rim — preserves silhouette readability on miniature backs
-  const rimLight = new T.DirectionalLight(VC.lighting.rimLight.color, VC.lighting.rimLight.intensity);
-  rimLight.position.set(...VC.lighting.rimLight.pos);
+  const rimLight = new T.DirectionalLight(AMBL.rimLight.color, AMBL.rimLight.intensity);
+  rimLight.position.set(...AMBL.rimLight.pos);
   scene.add(rimLight);
 
   // SW pawn-front light — as frentes das miniaturas apontam para sudoeste
@@ -10849,8 +10911,8 @@ function init3D(state){
   // peão carregava 2–3 PointLights próprias para compensar; esta directional
   // única ilumina todas as frentes com custo fixo e contagem de luzes ESTÁVEL
   // (variar o nº de luzes força o Three.js a recompilar todos os shaders).
-  const pawnLight = new T.DirectionalLight(VC.lighting.dirPawn.color, VC.lighting.dirPawn.intensity);
-  pawnLight.position.set(...VC.lighting.dirPawn.pos);
+  const pawnLight = new T.DirectionalLight(AMBL.dirPawn.color, AMBL.dirPawn.intensity);
+  pawnLight.position.set(...AMBL.dirPawn.pos);
   scene.add(pawnLight);
 
   // Player-carried torch — warm flicker, follows player each frame.
@@ -12730,7 +12792,7 @@ function _disposeDecorMesh(obj){
   });
 }
 const _objImg3D = {};
-function _buildObjetoMini(decorId, imageName, cells){
+function _buildObjetoMini(decorId, imageName, cells, facing){
   const make = (img) => {
     const slot = g3 && g3.decorMeshes[decorId];
     // a decoração pode ter sido removida/trocada enquanto carregava
@@ -12742,6 +12804,7 @@ function _buildObjetoMini(decorId, imageName, cells){
     const grp = window.Miniatura3D.build(g3.T, { image: img, tileSize: Math.max(1, cells) * DECOR_MINI_ESCALA });
     grp.userData = { isDecor: true, decorId: decorId, imageName: imageName };
     grp.position.copy(slot.position);
+    grp.rotation.y = _facingAngleY3D(facing);   // giro 90° aplicado já na construção assíncrona
     grp.visible = slot.visible;
     g3.scene.remove(slot); _disposeDecorMesh(slot);
     g3.scene.add(grp);
@@ -13004,10 +13067,12 @@ function renderMap3D(state){
           g3.scene.add(placeholder);
           g3.decorMeshes[d.id] = placeholder;
           mesh = placeholder;
-          _buildObjetoMini(d.id, d.image, Math.max(wCells, hCells));   // assíncrono (ou síncrono se em cache)
+          _buildObjetoMini(d.id, d.image, Math.max(wCells, hCells), d.facing);   // assíncrono (ou síncrono se em cache)
           mesh = g3.decorMeshes[d.id];   // _buildObjetoMini pode ter trocado o mesh (cache)
         }
         mesh.position.set(worldX, 0, worldZ);
+        // Giro 90° (facing): roda a miniatura em pé sobre o eixo vertical.
+        mesh.rotation.y = _facingAngleY3D(d.facing);
         // Escala visual (vscale): largura no plano (x,z), altura p/ cima (y);
         // o footprint já está embutido na geometria via tileSize.
         const _mvs = Array.isArray(d.vscale) ? d.vscale : [1, 1];
@@ -13064,7 +13129,7 @@ function renderMap3D(state){
     state.monsters.map(m => [m.type, m.pos, m.hp, m.image]),
     state.prisoner ? [state.prisoner.pos, state.prisoner.alive, state.prisoner.freed, state.prisoner.image, _prisSel] : null,
     state.corpses || [],
-    (state.armadilhas||[]).map(a => [a.id, a.pos, a.ativada, a.so_luccas, a.icone]),
+    (state.armadilhas||[]).map(a => [a.id, a.pos, a.ativada, a.so_luccas, a.icone, a.visivel, a.aliada, a.image]),
     state.rooms.map(r => [r.cx, r.cy, r.role, r.cleared]),
     state.current_turn, state.animados_turn, GS.myPid,
     g3.selectedPos, _animadoSel,
@@ -13199,11 +13264,19 @@ function renderMap3D(state){
   for(const arm of (state.armadilhas||[])){
     const [ax,ay] = arm.pos;
     if(!exploredSet.has(`${ax},${ay}`)) continue;
-    if(arm.so_luccas && !(me && me.class_id==='rogue')) continue;   // ocultas: só Luccas
-    const sp = obterFig(`arm:${arm.id}`,
-      JSON.stringify([arm.icone, arm.ativada, arm.so_luccas]),
-      () => _armadilhaSprite3D(arm, ax, ay));
-    sp.position.set(ax, 0.34, ay);   // sprite não tem hover-lift — y fixo
+    if(!_armadilhaVisivelParaMim(arm, me)) continue;   // escondida até ser revelada
+    if(arm.image){
+      // Com imagem: decal deitado no chão (plano horizontal sobre a casa).
+      const dec = obterFig(`arm:${arm.id}`,
+        JSON.stringify([arm.image, arm.ativada]),
+        () => _armadilhaDecal3D(arm, ax, ay));
+      dec.position.set(ax, 0.232, ay);   // logo acima do piso (TH=0.22)
+    } else {
+      const sp = obterFig(`arm:${arm.id}`,
+        JSON.stringify([arm.icone, arm.ativada, arm.so_luccas]),
+        () => _armadilhaSprite3D(arm, ax, ay));
+      sp.position.set(ax, 0.34, ay);   // sprite não tem hover-lift — y fixo
+    }
   }
 
   // Descarta as figuras que saíram de cena (morte, fora da visão, consumidas).
@@ -13259,6 +13332,43 @@ function _armadilhaSprite3D(arm, x, y){
   sp.userData.armadilhaId = arm.id;
   sp.userData.tipo = 'armadilha';
   return sp;
+}
+
+// Armadilha com imagem (PNG de assets/objetos): decal DEITADO no chão da casa.
+// Plano horizontal (rotacionado -90° em X) com a textura do PNG, ajustado à
+// proporção da arte sem invadir os tiles vizinhos. Vermelho quando ativada.
+function _armadilhaDecal3D(arm, x, y){
+  const T = g3.T;
+  const grp = new T.Group();
+  const mat = new T.MeshBasicMaterial({
+    transparent: true, alphaTest: 0.12, depthWrite: false,
+    color: arm.ativada ? new T.Color(0xff7766) : new T.Color(0xffffff),
+  });
+  const mesh = new T.Mesh(new T.PlaneGeometry(0.92, 0.92), mat);
+  mesh.rotation.x = -Math.PI/2;     // deita o plano no chão
+  mesh.renderOrder = 2;             // desenha sobre o piso, sob os peões
+  mesh.userData.isGroundDecal = true;   // fora do passe de outline
+  grp.add(mesh);
+  const cacheKey = '__arm_' + arm.image;
+  const aplicar = (tex) => {
+    const im = tex.image; if(!im || !im.width) return;
+    const ar = im.width / im.height;
+    let w = 0.92, h = 0.92/ar;
+    if(h > 0.92){ h = 0.92; w = 0.92*ar; }
+    mesh.geometry.dispose();
+    mesh.geometry = new T.PlaneGeometry(w, h);
+  };
+  let tex = _pawnTexCache[cacheKey];
+  if(tex){ mat.map = tex; if(tex.image && tex.image.width) aplicar(tex); }
+  else {
+    tex = new T.TextureLoader().load(_assetURL(`assets/objetos/${arm.image}`), aplicar);
+    _pawnTexCache[cacheKey] = tex;
+    mat.map = tex;
+  }
+  grp.position.set(x, 0.232, y);
+  grp.userData.armadilhaId = arm.id;
+  grp.userData.tipo = 'armadilha';
+  return grp;
 }
 
 // MINIATURE BUILDER SYSTEM

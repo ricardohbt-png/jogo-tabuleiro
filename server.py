@@ -1759,6 +1759,8 @@ def validar_dungeon(defn):
             return False, f"armadilha em casa inválida: {tr.get('pos')}."
         if tr["tipo"] == "fosso_envenenado" and tr.get("veneno_id") not in VENENOS:
             return False, f"fosso_envenenado exige veneno_id válido: {tr.get('veneno_id')!r}."
+        if tr.get("image") is not None and not isinstance(tr.get("image"), str):
+            return False, "trap.image deve ser uma string (nome do arquivo em assets/objetos)."
 
     pr = defn.get("prisoner")
     if pr is not None:
@@ -1874,6 +1876,8 @@ def make_authored_trap(tdef):
     }
     if tipo == "fosso_envenenado":
         arm["veneno_id"] = tdef.get("veneno_id")
+    if tdef.get("image"):
+        arm["image"] = tdef["image"]   # PNG opcional (assets/objetos) — só some quando revelada
     return arm
 
 def carregar_dungeon(file):
@@ -3133,6 +3137,9 @@ class GameRoom:
         self.mode = "procedural"          # "procedural" | "authored"
         self.selected_dungeon = None      # nome do arquivo em dungeons/ (modo authored)
         self.dungeon_def = None           # dict cru da masmorra autorada carregada
+        # Preset de iluminação do 3D no cliente ("penumbra"|"masmorra"|"ar_livre").
+        # Procedural usa o padrão; masmorra autorada sobrescreve em load_authored_dungeon.
+        self.ambiente = "masmorra"
         # Fase 3 — objetivos/prisioneiro/saída (só em masmorra autorada).
         self.exit_pos = None
         self.objectives = None
@@ -3704,6 +3711,9 @@ class GameRoom:
         self.map_w = defn["grid"]["w"]
         self.map_h = defn["grid"]["h"]
         self.tiles = deepcopy(defn["tiles"])
+        # Preset de iluminação do 3D (cliente). Valor desconhecido → "masmorra".
+        amb = defn.get("ambiente", "masmorra")
+        self.ambiente = amb if amb in ("penumbra", "masmorra", "ar_livre") else "masmorra"
 
         # Salas no mesmo formato de generate_dungeon.
         self.rooms = []
@@ -9222,6 +9232,16 @@ class GameRoom:
                and tuple(tr["pos"]) not in self.explored:
                 self.explored.add(tuple(tr["pos"]))
                 reveladas += 1
+        # Armadilhas COLOCÁVEIS hostis (inclui as autoradas no editor): a detecção
+        # de Luccas marca `visivel` → passam a aparecer no mapa (com imagem, se tiver).
+        for a in self.armadilhas:
+            if a.get("esgotada") or a.get("visivel"):
+                continue
+            if a.get("criador") in self.players:
+                continue   # armadilha aliada já é visível a todos
+            if max(abs(a["pos"][0] - px), abs(a["pos"][1] - py)) <= raio:
+                a["visivel"] = True
+                reveladas += 1
         return reveladas
 
     async def handle_detectar_armadilhas(self, pid, msg):
@@ -9418,6 +9438,7 @@ class GameRoom:
                 "ativada": a.get("ativada", False),
                 "aliada":  a.get("criador") in self.players,
                 "so_luccas": False,   # reservado p/ armadilhas de masmorra detectadas (futuro)
+                "image":   a.get("image"),   # PNG opcional — o cliente mostra só quando revelada
             })
         return out
 
@@ -12779,6 +12800,7 @@ class GameRoom:
         await self._check_objectives()
         await self.broadcast({
             "type": "game_state",
+            "ambiente": getattr(self, "ambiente", "masmorra"),
             "tiles": self.tiles,
             "rooms": self.rooms,
             "players": list(self.players.values()),
