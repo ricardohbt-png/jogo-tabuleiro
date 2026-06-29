@@ -12735,7 +12735,9 @@ function _buildObjetoMini(decorId, imageName, cells){
     img.src = _assetURL(`assets/objetos/${imageName}`);
     _objImg3D[imageName] = img;
   }
-  img.onload = () => make(img);
+  // addEventListener (não `onload=`): várias decorações com o MESMO PNG ainda
+  // carregando registram callbacks distintos sem sobrescrever umas às outras.
+  img.addEventListener('load', () => make(img), { once: true });
 }
 
 function renderMap3D(state){
