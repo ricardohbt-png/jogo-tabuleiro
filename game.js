@@ -5253,6 +5253,73 @@ function renderMap(state){
   }
 }
 
+// ── PAINTERS PROCEDURAIS DE MATERIAL (compartilhados 2D tile + 3D textura) ────
+// Cada painter desenha UMA superfície preenchendo [ox,oy, ox+size, oy+size].
+// r = função RNG determinística (0..1). Usados pelo 2D (size=CELL) e pelo 3D
+// (size=256, textura cacheada) para a aparência ser idêntica nas duas vistas.
+function _rng(seed){ let s=(seed>>>0)||1; return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+
+function paintGrass(ctx, ox, oy, size, r){
+  const g=ctx.createLinearGradient(ox,oy,ox,oy+size);
+  g.addColorStop(0,'#3f7a35'); g.addColorStop(1,'#2c5a26');
+  ctx.fillStyle=g; ctx.fillRect(ox,oy,size,size);
+  for(let n=0;n<Math.round(size*0.36);n++){ const px=ox+r()*size,py=oy+r()*size,rr=size*(0.05+r()*0.13);
+    ctx.fillStyle = r()<0.5 ? 'rgba(58,110,44,0.5)' : 'rgba(96,150,60,0.4)';
+    ctx.beginPath(); ctx.ellipse(px,py,rr,rr*0.7,r()*3,0,Math.PI*2); ctx.fill(); }
+  const blades=Math.round(size*1.15);
+  for(let n=0;n<blades;n++){ const px=ox+r()*size,py=oy+size*0.06+r()*size*0.94,h=size*(0.06+r()*0.14),lean=(r()-0.5)*size*0.08;
+    const sh=70+r()*70; ctx.strokeStyle=`rgb(${(sh*0.45)|0},${sh|0},${(sh*0.35)|0})`;
+    ctx.lineWidth=Math.max(1,size/64); ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px+lean,py-h); ctx.stroke(); }
+}
+
+function paintDirt(ctx, ox, oy, size, r){
+  ctx.fillStyle='#6b4a2e'; ctx.fillRect(ox,oy,size,size);
+  for(let n=0;n<Math.round(size*0.47);n++){ const px=ox+r()*size,py=oy+r()*size,rr=size*(0.06+r()*0.18);
+    ctx.fillStyle = r()<0.5 ? 'rgba(60,40,24,0.5)' : 'rgba(120,88,54,0.45)';
+    ctx.beginPath(); ctx.ellipse(px,py,rr,rr*0.8,r()*3,0,Math.PI*2); ctx.fill(); }
+  for(let n=0;n<Math.round(size*0.2);n++){ const px=ox+r()*size,py=oy+r()*size,rr=size*(0.012+r()*0.025);
+    const s=80+r()*60; ctx.fillStyle=`rgb(${s|0},${(s*0.85)|0},${(s*0.7)|0})`;
+    ctx.beginPath(); ctx.ellipse(px,py,rr,rr*0.8,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(px+rr*0.4,py+rr*0.4,rr,rr*0.7,0,0,Math.PI*2); ctx.fill(); }
+}
+
+function paintBrick(ctx, ox, oy, size, r, base, mortar){
+  ctx.fillStyle=mortar; ctx.fillRect(ox,oy,size,size);
+  const rh=size*0.17, bw=size*0.5; let row=0;
+  for(let by=oy; by<oy+size; by+=rh){ const off=(row%2)?bw*0.5:0;
+    for(let bx=ox-off; bx<ox+size; bx+=bw){ const v=(r()*16-8)|0;
+      ctx.fillStyle=`rgb(${Math.max(0,base[0]+v)},${Math.max(0,base[1]+v)},${Math.max(0,base[2]+v)})`;
+      ctx.fillRect(bx+1.5, by+1.5, bw-3, rh-3);
+      ctx.fillStyle='rgba(255,255,255,0.05)'; ctx.fillRect(bx+1.5, by+1.5, bw-3, Math.max(1,size/40)); }
+    row++; }
+}
+
+function paintCave(ctx, ox, oy, size, r){
+  ctx.fillStyle='#1c160f'; ctx.fillRect(ox,oy,size,size);
+  const step=size*0.25, pts=[];
+  for(let gy=0;gy<4;gy++) for(let gx=0;gx<4;gx++)
+    pts.push([ox+gx*step+step*0.3+(r()-0.5)*step*0.55, oy+gy*step+step*0.3+(r()-0.5)*step*0.55]);
+  for(const p of pts){ const rad=size*(0.10+r()*0.09), nv=6+(r()*3|0), base=70+r()*45;
+    ctx.fillStyle=`rgb(${base|0},${(base*0.9)|0},${(base*0.74)|0})`;
+    ctx.beginPath();
+    for(let k=0;k<nv;k++){ const a=k/nv*Math.PI*2, rr=rad*(0.7+r()*0.5);
+      const xx=p[0]+Math.cos(a)*rr, yy=p[1]+Math.sin(a)*rr; k?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy); }
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.5)'; ctx.lineWidth=Math.max(1,size/42); ctx.stroke();
+    ctx.fillStyle='rgba(255,235,200,0.10)';
+    ctx.beginPath(); ctx.ellipse(p[0]-rad*0.3,p[1]-rad*0.3,rad*0.4,rad*0.3,0,0,Math.PI*2); ctx.fill(); }
+}
+
+function paintRubble(ctx, ox, oy, size, r){
+  ctx.fillStyle='#2b2620'; ctx.fillRect(ox,oy,size,size);
+  for(let n=0;n<Math.round(size*0.13);n++){ const px=ox+size*0.06+r()*size*0.88,py=oy+size*0.06+r()*size*0.88,
+      rw=size*(0.06+r()*0.13),rh=size*(0.05+r()*0.10), t=60+r()*55;
+    ctx.fillStyle=`rgb(${t|0},${(t-7)|0},${(t-16)|0})`;
+    ctx.beginPath(); ctx.ellipse(px,py,rw,rh,(r()-0.5)*3,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.5)'; ctx.lineWidth=Math.max(1,size/64); ctx.stroke();
+    ctx.fillStyle='rgba(255,235,200,0.10)'; ctx.fillRect(px-rw*0.5,py-rh*0.7,rw,Math.max(1.5,size/40)); }
+}
+
 // ── PALETAS 2D DOS MATERIAIS ─────────────────────────────────────────────────
 // base [r,g,b] da pedra/superfície; accent decide os detalhes procedurais.
 // Espelha os ids de server.MATERIAIS. Pisos coloridos são cosméticos.
@@ -5261,12 +5328,12 @@ const MAT_PALETTE_2D = {
   pedra_cinza: { base: [44, 42, 50],  accent: 'stone' },
   terra:       { base: [74, 56, 38],  accent: 'dirt'  },
   grama:       { base: [46, 78, 40],  accent: 'grass' },
-  pedra_negra: { base: [26, 25, 30],  accent: 'stone' },
+  pedra_negra: { base: [20, 19, 24],  accent: 'stone' },
   entulho:     { base: [70, 66, 58],  accent: 'rubble' },
   // paredes (topo)
   pedra_normal:  { base: [132, 130, 140], accent: 'wallStone' },
-  enegrecida:    { base: [58, 56, 62],   accent: 'wallStone' },
-  pedra_caverna: { base: [104, 92, 74],  accent: 'wallRough' },
+  enegrecida:    { base: [24, 23, 28],   accent: 'blackbrick' },
+  pedra_caverna: { base: [104, 92, 74],  accent: 'cave' },
   desmoronada:   { base: [96, 88, 76],   accent: 'wallRubble' },
 };
 // Resolve o material de uma casa para render (default por estrutura do tile).
@@ -5284,6 +5351,10 @@ function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview, matI
   const pal = MAT_PALETTE_2D[matId] || MAT_PALETTE_2D.pedra_cinza;
   const [BR, BG, BB] = pal.base;
 
+  // Estilos não-pedra têm painter próprio (sem grade de lajota).
+  if(pal.accent==='grass'){ paintGrass(ctx, X, Y, CELL, _rng((x*53^y*97^7)>>>0)); }
+  else if(pal.accent==='dirt'){ paintDirt(ctx, X, Y, CELL, _rng((x*29^y*71^3)>>>0)); }
+  else {
   // Deep mortar joints — near-black with faint blue-gray
   ctx.fillStyle='#06050a';
   ctx.fillRect(X,Y,CELL,CELL);
@@ -5339,19 +5410,7 @@ function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview, matI
       ctx.fillRect(bx+3+(sh%Math.max(1,bw-12|0)), by+3+((sh>>6)%Math.max(1,bh-12|0)),
                    Math.min(9+(sh%6),bw-6), Math.min(6+(sh%4),bh-6));
     }
-    // Tufo de grama (piso grama)
-    if(pal.accent==='grass' && ((sh%5)===2)){
-      ctx.fillStyle='rgba(70,120,46,0.45)';
-      const gx=bx+3+(sh%Math.max(1,bw-8|0)), gy=by+4+((sh>>2)%Math.max(1,bh-8|0));
-      ctx.fillRect(gx, gy, 1.4, 4+(sh%3));
-      ctx.fillRect(gx+2, gy+1, 1.2, 3+(sh%2));
-    }
-    // Seixo de terra (piso terra)
-    if(pal.accent==='dirt' && ((sh%7)===1)){
-      ctx.fillStyle='rgba(40,28,16,0.40)';
-      ctx.beginPath(); ctx.arc(bx+5+(sh%Math.max(1,bw-10|0)),
-        by+5+((sh>>3)%Math.max(1,bh-10|0)), 1.6+(sh%2), 0, Math.PI*2); ctx.fill();
-    }
+  }
   }
 
   // Reachable tile highlight (blue) — opacity driven by _movePulse for slow pulsing
@@ -5550,6 +5609,9 @@ function drawWallTop3D(ctx, x, y, matId){
   const v=(h%18)-9;
   const pal = MAT_PALETTE_2D[matId] || MAT_PALETTE_2D.pedra_normal;
   const [BR, BG, BB] = pal.base;
+  // Estilos próprios: caverna (pedra irregular) e enegrecida (tijolo preto).
+  if(pal.accent==='cave'){ paintCave(ctx, X, Y, CELL, _rng((x*41^y*23^9)>>>0)); return; }
+  if(pal.accent==='blackbrick'){ paintBrick(ctx, X, Y, CELL, _rng((x*7^y*13)>>>0), [22,21,26], '#070709'); return; }
 
   // Deep mortar — dark gray with faint blue tinge (grout between stones)
   ctx.fillStyle='#1a1c22';
