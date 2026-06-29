@@ -4762,8 +4762,11 @@ function renderMap(state){
   for(let y=0;y<H;y++) for(let x=0;x<W;x++){
     if(!terrainSet.has(`${x},${y}`)) continue;
     const t=state.tiles[y][x];
-    if(t===TILE_FLOOR || t===TILE_DOOR)
-      drawFloor3D(ctx, x, y, reachable.has(`${x},${y}`), attackable.has(`${x},${y}`), weaponRangeTiles.has(`${x},${y}`), matDaCasa(state, x, y));
+    if(t===TILE_FLOOR || t===TILE_DOOR){
+      const mid = matDaCasa(state, x, y);
+      drawFloor3D(ctx, x, y, reachable.has(`${x},${y}`), attackable.has(`${x},${y}`), weaponRangeTiles.has(`${x},${y}`), mid);
+      if(mid==='entulho') drawEntulho2D(ctx, x, y);
+    }
   }
 
   // ── PASS 1.5: Realce de MAGIA — alcance (vermelho), zona (laranja), área (verde)
@@ -4792,7 +4795,7 @@ function renderMap(state){
     if(state.tiles[y][x]===TILE_WALL){
       const sy=y+1;
       if(sy<H && state.tiles[sy][x]===TILE_FLOOR && terrainSet.has(`${x},${sy}`))
-        drawWallSouthFace(ctx, x, y);
+        drawWallSouthFace(ctx, x, y, matDaCasa(state, x, y));
     }
   }
 
@@ -4800,7 +4803,7 @@ function renderMap(state){
   for(let y=0;y<H;y++) for(let x=0;x<W;x++){
     if(!terrainSet.has(`${x},${y}`)) continue;
     if(state.tiles[y][x]===TILE_WALL)
-      drawWallTop3D(ctx, x, y);
+      drawWallTop3D(ctx, x, y, matDaCasa(state, x, y));
   }
 
   // ── PASS 3.5: Doors — closed = wooden leaf (blocks sight), open = frame ──────
@@ -5396,6 +5399,27 @@ function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview, matI
   }
 }
 
+// ── ENTULHO 2D — monte de pedras desmoronadas (bloqueia movimento e visão) ───
+function drawEntulho2D(ctx, x, y){
+  const X=x*CELL, Y=y*CELL, h=((x*8161)^(y*5101))&0xFFFF;
+  // base sombreada sob o monte
+  ctx.fillStyle='rgba(0,0,0,0.35)';
+  ctx.fillRect(X+2, Y+2, CELL-4, CELL-4);
+  // pedras empilhadas
+  const pedras=6;
+  for(let i=0;i<pedras;i++){
+    const sh=(h^(i*2917))&0xFFFF;
+    const px=X+4+(sh%Math.max(1,CELL-12)), py=Y+5+((sh>>4)%Math.max(1,CELL-12));
+    const rw=5+(sh%6), rh=4+((sh>>3)%5);
+    const tone=70+((sh>>6)%40);
+    ctx.fillStyle=`rgb(${tone},${tone-6},${tone-14})`;
+    ctx.beginPath(); ctx.ellipse(px,py,rw,rh,(sh%6)*0.3,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.5)'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle='rgba(255,235,200,0.10)';  // brilho de tocha no topo
+    ctx.fillRect(px-rw*0.5, py-rh*0.7, rw, 1.5);
+  }
+}
+
 // ── DOOR TILE — closed = heavy wooden leaf; open = stone frame with dark gap ──
 // Orientation is inferred from neighbouring walls: a door between vertical walls
 // (left/right are walls) spans horizontally across the corridor and vice-versa.
@@ -5456,17 +5480,20 @@ function drawDoor2D(ctx, state, x, y, closed){
 }
 
 // ── 3D WALL SOUTH FACE — visible stone masonry face (the wall's front face)
-function drawWallSouthFace(ctx, x, y){
+function drawWallSouthFace(ctx, x, y, matId){
   const X=x*CELL, Y=y*CELL;
   const faceH=WALL_RISE+6;  // height of visible stone face
   const faceY=Y+CELL-1;     // starts at bottom of wall top tile
   const h=((x*6131)^(y*4919))&0xFFFF;
+  const pal = MAT_PALETTE_2D[matId] || MAT_PALETTE_2D.pedra_normal;
+  const [BR, BG, BB] = pal.base;
+  const cmix=(dr,dg,db,a)=>`rgba(${Math.max(0,Math.min(255,BR+dr))},${Math.max(0,Math.min(255,BG+dg))},${Math.max(0,Math.min(255,BB+db))},${a})`;
 
   // ── Base fill: stone wall FRONT FACE — medium gray castle stone, lit from above
   const wfG=ctx.createLinearGradient(0,faceY,0,faceY+faceH);
-  wfG.addColorStop(0,   'rgba(148,142,134,0.99)'); // top — lit face (light gray)
-  wfG.addColorStop(0.30,'rgba(110,106,100,0.99)'); // mid
-  wfG.addColorStop(0.68,'rgba(58,54,50,0.97)');    // lower — in shadow
+  wfG.addColorStop(0,    cmix(28, 26, 18, 0.99));  // top — lit face
+  wfG.addColorStop(0.30, cmix(-6, -8, -14, 0.99)); // mid
+  wfG.addColorStop(0.68, cmix(-50, -52, -54, 0.97)); // lower — shadow
   wfG.addColorStop(1,   'rgba(8,6,4,0)');
   ctx.fillStyle=wfG;
   ctx.fillRect(X+1,faceY,CELL-2,faceH);
@@ -5517,17 +5544,19 @@ function drawWallSouthFace(ctx, x, y){
 }
 
 // ── DIABLO WALL TOP — dark menacing stone block viewed from above
-function drawWallTop3D(ctx, x, y){
+function drawWallTop3D(ctx, x, y, matId){
   const X=x*CELL, Y=y*CELL;
   const h=((x*6271)^(y*2749)^(y<<4))&0xFFFF;
   const v=(h%18)-9;
+  const pal = MAT_PALETTE_2D[matId] || MAT_PALETTE_2D.pedra_normal;
+  const [BR, BG, BB] = pal.base;
 
   // Deep mortar — dark gray with faint blue tinge (grout between stones)
   ctx.fillStyle='#1a1c22';
   ctx.fillRect(X,Y,CELL,CELL);
 
   // Stone face — MEDIUM GRAY with cool blue tint (classic castle/dungeon stone wall)
-  const r0=Math.min(255,132+v), g0=Math.min(255,130+v), b0=Math.min(255,140+Math.floor(v*0.5));
+  const r0=Math.min(255,BR+v), g0=Math.min(255,BG+v), b0=Math.min(255,BB+Math.floor(v*0.5));
   const wg=ctx.createLinearGradient(X,Y,X+CELL,Y+CELL);
   wg.addColorStop(0,  `rgb(${Math.min(255,r0+28)},${Math.min(255,g0+26)},${Math.min(255,b0+28)})`);
   wg.addColorStop(0.5,`rgb(${r0},${g0},${b0})`);
@@ -5582,6 +5611,14 @@ function drawWallTop3D(ctx, x, y){
     ctx.beginPath(); ctx.arc(X+CELL/2,Y+CELL/2,5+(h%4),0,Math.PI*2); ctx.fill();
     ctx.strokeStyle='rgba(110,100,80,0.25)'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.arc(X+CELL/2,Y+CELL/2,5+(h%4),0,Math.PI*2); ctx.stroke();
+  }
+  // Parede desmoronada: juntas extras quebradas sobre o bloco
+  if(pal.accent==='wallRubble'){
+    ctx.strokeStyle='rgba(0,0,0,0.45)'; ctx.lineWidth=1;
+    for(let k=0;k<3;k++){
+      const rx=X+4+((h>>(k*3))%Math.max(1,CELL-8)), ry=Y+4+((h>>(k*2))%Math.max(1,CELL-8));
+      ctx.beginPath(); ctx.moveTo(rx,ry); ctx.lineTo(rx+5+(h%5), ry+3+(h%4)); ctx.stroke();
+    }
   }
 }
 
