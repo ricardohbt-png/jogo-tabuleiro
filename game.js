@@ -12704,6 +12704,40 @@ function _disposeEntityTree(root){
   });
 }
 
+// ── Helpers para miniaturas extrudadas de decorações (PNG → 3D) ───────────────
+function _disposeDecorMesh(obj){
+  obj.traverse(o => {
+    if (o.geometry) o.geometry.dispose();
+    if (o.material) {
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      mats.forEach(mm => { if (mm.map) mm.map.dispose(); mm.dispose(); });
+    }
+  });
+}
+const _objImg3D = {};
+function _buildObjetoMini(decorId, imageName, cells){
+  const make = (img) => {
+    const slot = g3 && g3.decorMeshes[decorId];
+    // a decoração pode ter sido removida/trocada enquanto carregava
+    if (!slot || slot.userData.imageName !== imageName) return;
+    const grp = window.Miniatura3D.build(T, { image: img, tileSize: Math.max(1, cells) * 0.9 });
+    grp.userData = { isDecor: true, decorId: decorId, imageName: imageName };
+    grp.position.copy(slot.position);
+    grp.visible = slot.visible;
+    g3.scene.remove(slot); _disposeDecorMesh(slot);
+    g3.scene.add(grp);
+    g3.decorMeshes[decorId] = grp;
+  };
+  let img = _objImg3D[imageName];
+  if (img && img.complete && img.naturalWidth) { make(img); return; }
+  if (!img) {
+    img = new Image();
+    img.src = _assetURL(`assets/objetos/${imageName}`);
+    _objImg3D[imageName] = img;
+  }
+  img.onload = () => make(img);
+}
+
 function renderMap3D(state){
   if(!state || !state.tiles) return;
   // Durante a animação de movimento não reconstrói os peões (preserva o mesh
@@ -12909,7 +12943,7 @@ function renderMap3D(state){
     g3.chestMeshes[chest.id].visible = exploredSet.has(key);
   }
 
-  // ── Decoration 3D meshes — procedural boxes/cylinders per decoration ─────────
+  // ── Decoration 3D meshes — procedural boxes/cylinders, ou miniatura extrudada ─
   {
     const decors = GS.decorations;
     const vistosDec = new Set();
@@ -12923,8 +12957,37 @@ function renderMap3D(state){
       const maxY = Math.max(...tiles.map(t => t[1]));
       const wCells = maxX - minX + 1;
       const hCells = maxY - minY + 1;
-      const spec = DECOR_3D[d.type] || { shape: 'box', h: 0.6, color: 0x999999 };
+      // Center of footprint in world coords (tile x,y map directly to world x,z)
+      const worldX = (minX + maxX) / 2;
+      const worldZ = (minY + maxY) / 2;
+      const visivel = tiles.some(([tx2, ty2]) => exploredSet.has(`${tx2},${ty2}`));
+
       let mesh = g3.decorMeshes[d.id];
+
+      if (d.image && window.Miniatura3D) {
+        // ── Caminho miniatura extrudada (PNG) ──
+        // (re)constrói se ainda não existe OU se a imagem mudou
+        if (!mesh || mesh.userData.imageName !== d.image) {
+          if (mesh) { g3.scene.remove(mesh); _disposeDecorMesh(mesh); }
+          const placeholder = new T.Group();
+          placeholder.userData = { isDecor: true, decorId: d.id, imageName: d.image, pending: true };
+          g3.scene.add(placeholder);
+          g3.decorMeshes[d.id] = placeholder;
+          mesh = placeholder;
+          _buildObjetoMini(d.id, d.image, Math.max(wCells, hCells));   // assíncrono
+        }
+        mesh.position.set(worldX, 0, worldZ);
+        mesh.visible = visivel;
+        continue;
+      }
+
+      // ── Caminho procedural (sem image) ──
+      // Se havia uma miniatura PNG antes (imageName), destrói e reconstrói como procedural
+      if (mesh && mesh.userData.imageName) {
+        g3.scene.remove(mesh); _disposeDecorMesh(mesh);
+        mesh = null;
+      }
+      const spec = DECOR_3D[d.type] || { shape: 'box', h: 0.6, color: 0x999999 };
       if (!mesh) {
         const geo = spec.shape === 'cyl'
           ? new T.CylinderGeometry(0.4, 0.4, spec.h, 16)
@@ -12935,19 +12998,17 @@ function renderMap3D(state){
         g3.scene.add(mesh);
         g3.decorMeshes[d.id] = mesh;
       }
-      // Center of footprint in world coords (tile x,y map directly to world x,z)
-      const worldX = (minX + maxX) / 2;
-      const worldZ = (minY + maxY) / 2;
       mesh.position.set(worldX, spec.h / 2, worldZ);
       // Scale box to cover full footprint; cylinder keeps fixed radius
       if (spec.shape === 'box') mesh.scale.set(wCells * 0.9, 1, hCells * 0.9);
       // Visibility: show if any footprint tile is explored
-      mesh.visible = tiles.some(([tx2, ty2]) => exploredSet.has(`${tx2},${ty2}`));
+      mesh.visible = visivel;
     }
     // Remove meshes for decorations that no longer exist
     for (const id of Object.keys(g3.decorMeshes)) {
       if (!vistosDec.has(id)) {
-        g3.scene.remove(g3.decorMeshes[id]);
+        const m = g3.decorMeshes[id];
+        g3.scene.remove(m); _disposeDecorMesh(m);
         delete g3.decorMeshes[id];
       }
     }
