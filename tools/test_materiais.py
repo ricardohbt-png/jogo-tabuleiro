@@ -131,10 +131,23 @@ def test_entulho_servidor():
     check("entulho oclui revelação atrás dele", (4, 1) not in r.explored)
     check("casa antes do entulho é revelada", (1, 1) in r.explored)
 
+def test_roundtrip():
+    print("\n[M5] round-trip materiais")
+    import json
+    d = _defn_full()
+    ok, msg = server.validar_dungeon(json.loads(json.dumps(d)))
+    check("defn com materiais valida", ok)
+    d2 = json.loads(json.dumps(d))
+    r = _room(); r.load_authored_dungeon(d2)
+    ser = r._serializar_materiais()
+    check("round-trip preserva entulho", ser.get("2,1") == "entulho")
+    check("round-trip preserva grama", ser.get("3,1") == "grama")
+
 if __name__ == "__main__":
     test_catalog()
     test_validacao()
     test_carga()
     test_entulho_servidor()
+    test_roundtrip()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
