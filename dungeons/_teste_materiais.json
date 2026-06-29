@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "id": "_teste_materiais",
+  "name": "Teste Materiais",
+  "grid": {
+    "w": 8,
+    "h": 5
+  },
+  "tiles": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "rooms": [
+    {
+      "id": 0,
+      "x": 1,
+      "y": 1,
+      "w": 6,
+      "h": 3,
+      "role": "entrance",
+      "locked": false,
+      "doors": []
+    }
+  ],
+  "entrance": {
+    "x": 1,
+    "y": 2
+  },
+  "materiais": {
+    "2,1": "grama",
+    "3,1": "grama",
+    "4,1": "terra",
+    "5,1": "pedra_negra",
+    "4,2": "entulho",
+    "0,2": "enegrecida",
+    "7,2": "desmoronada",
+    "0,0": "pedra_caverna"
+  }
+}
