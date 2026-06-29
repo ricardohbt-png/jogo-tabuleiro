@@ -3235,6 +3235,9 @@ class GameRoom:
         self._decor_block_tiles = set()
         self._decor_tall_tiles = set()
         self._campfire_tiles = set()
+        self.materiais = {}            # {(x,y): material_id} — camada de piso/parede
+        self._mat_solid_tiles = set()  # casas de material sólido (entulho) — bloqueia
+        self._mat_oclui_tiles = set()  # casas de material opaco (entulho) — barra visão
 
     # ── broadcast helpers ──────────────────────────────────────────────────
 
@@ -3765,6 +3768,22 @@ class GameRoom:
         amb = defn.get("ambiente", "masmorra")
         self.ambiente = amb if amb in ("penumbra", "masmorra", "ar_livre") else "masmorra"
 
+        # Camada de materiais (piso/parede pintável). Chaves "x,y"->id; descarta
+        # entradas malformadas/desconhecidas (a validação já recusou antes).
+        self.materiais = {}
+        for key, mid in (defn.get("materiais") or {}).items():
+            if mid not in MATERIAIS or not isinstance(key, str):
+                continue
+            partes = key.split(",")
+            if len(partes) != 2:
+                continue
+            try:
+                mx, my = int(partes[0]), int(partes[1])
+            except ValueError:
+                continue
+            self.materiais[(mx, my)] = mid
+        self._rebuild_materiais_index()
+
         # Salas no mesmo formato de generate_dungeon.
         self.rooms = []
         for r in defn.get("rooms", []):
@@ -3912,6 +3931,8 @@ class GameRoom:
             self.armadilhas = []     # idem armadilhas colocáveis
             self.decorations = []
             self._rebuild_decor_index()
+            self.materiais = {}
+            self._rebuild_materiais_index()
             self.zonas_especiais = []
             self.explored = set()    # névoa volta ao início no mapa novo
             self.magic_reveal = {}
@@ -10244,6 +10265,19 @@ class GameRoom:
                 if meta["special"] == "campfire":
                     self._campfire_tiles.add((tx, ty))
 
+    def _rebuild_materiais_index(self):
+        """Recalcula os índices de bloqueio/visão da camada de materiais."""
+        self._mat_solid_tiles = set()
+        self._mat_oclui_tiles = set()
+        for (x, y), mid in getattr(self, "materiais", {}).items():
+            meta = MATERIAIS.get(mid)
+            if not meta:
+                continue
+            if meta["solido"]:
+                self._mat_solid_tiles.add((x, y))
+            if meta["oclui"]:
+                self._mat_oclui_tiles.add((x, y))
+
     async def _aplicar_fogueira_se_pisar(self, criatura):
         """Se a criatura está numa casa de fogueira, sofre 1d4 de fogo (sem save)."""
         pos = criatura.get("pos")
@@ -10356,6 +10390,10 @@ class GameRoom:
                 "image": d.get("image"),
             })
         return out
+
+    def _serializar_materiais(self):
+        """Camada de materiais como {"x,y": id} para o cliente."""
+        return {f"{x},{y}": mid for (x, y), mid in getattr(self, "materiais", {}).items()}
 
     def _face_toward(self, m, target_pos):
         """ORIENTADO: vira a cabeça para encarar `target_pos` (cardinal dominante),
@@ -12876,6 +12914,7 @@ class GameRoom:
             "phase": self.phase,
             "chests": list(self.chests.values()),
             "decorations": self._serializar_decoracoes(),
+            "materiais": self._serializar_materiais(),
         })
 
 # ─── CONNECTION HANDLER ───────────────────────────────────────────────────────

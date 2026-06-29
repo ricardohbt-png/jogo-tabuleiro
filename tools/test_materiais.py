@@ -88,8 +88,39 @@ def test_validacao():
     ok, _ = server.validar_dungeon(d)
     check("materiais não-objeto recusado", not ok)
 
+def _room():
+    async def _noop(*a, **k): pass
+    r = GameRoom("TEST")
+    r.gm_say = _noop; r.broadcast = _noop; r.send_to = _noop; r.push_state = _noop
+    return r
+
+def _defn_full():
+    """6x3, chão todo, com entulho em (2,1) e grama em (3,1)."""
+    d = _defn_base()
+    d["materiais"] = {"2,1": "entulho", "3,1": "grama"}
+    return d
+
+def test_carga():
+    print("\n[M3] carga/índices/payload de materiais")
+    r = _room()
+    r.load_authored_dungeon(_defn_full())
+    check("materiais carregado com chave-tupla", r.materiais.get((2, 1)) == "entulho")
+    check("índice sólido tem entulho", (2, 1) in r._mat_solid_tiles)
+    check("índice opaco tem entulho", (2, 1) in r._mat_oclui_tiles)
+    check("grama não é sólida nem opaca",
+          (3, 1) not in r._mat_solid_tiles and (3, 1) not in r._mat_oclui_tiles)
+    ser = r._serializar_materiais()
+    check("serializa como 'x,y'->id", ser.get("2,1") == "entulho" and ser.get("3,1") == "grama")
+
+    r2 = _room()
+    r2.load_authored_dungeon(_defn_base())
+    check("sem campo materiais → dict vazio", r2.materiais == {})
+    check("sem materiais → índices vazios",
+          r2._mat_solid_tiles == set() and r2._mat_oclui_tiles == set())
+
 if __name__ == "__main__":
     test_catalog()
     test_validacao()
+    test_carga()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
