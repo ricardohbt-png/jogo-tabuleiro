@@ -1842,6 +1842,31 @@ def validar_dungeon(defn):
             if not os.path.isfile(os.path.join(OBJETOS_DIR, img)):
                 return False, f"image inexistente em assets/objetos: {img!r}."
 
+    mats = defn.get("materiais")
+    if mats is not None:
+        if not isinstance(mats, dict):
+            return False, "materiais deve ser um objeto (mapa 'x,y' -> id)."
+        for key, mid in mats.items():
+            meta = MATERIAIS.get(mid)
+            if meta is None:
+                return False, f"material desconhecido: {mid!r}."
+            if not isinstance(key, str):
+                return False, f"chave de material inválida: {key!r}."
+            partes = key.split(",")
+            if len(partes) != 2:
+                return False, f"chave de material inválida: {key!r} (esperado 'x,y')."
+            try:
+                mx, my = int(partes[0]), int(partes[1])
+            except ValueError:
+                return False, f"chave de material inválida: {key!r} (esperado 'x,y')."
+            if not (0 <= mx < w and 0 <= my < h):
+                return False, f"material fora do grid em {key!r}."
+            t = tiles[my][mx]
+            if meta["categoria"] == "piso" and t not in (FLOOR, DOOR):
+                return False, f"material de piso {mid!r} em casa não-chão ({mx},{my})."
+            if meta["categoria"] == "parede" and t != WALL:
+                return False, f"material de parede {mid!r} em casa não-parede ({mx},{my})."
+
     return True, "ok"
 
 def hidratar_itens_bau(items):
@@ -2161,6 +2186,31 @@ DECOR_TYPES = {
     "arvore":         _decor("Árvore", "🌳", [1, 1], alto=True),
     "arvore_grande":  _decor("Árvore grande", "🌲", [2, 2], alto=True),
 }
+
+# ─── MATERIAIS DE CHÃO E PAREDE ──────────────────────────────────────────────
+# Camada por-casa pintável no editor (game_state.materiais, mapa "x,y"->id).
+# categoria: "piso" (válido em FLOOR/DOOR) ou "parede" (válido em WALL).
+# solido: bloqueia movimento (espelhado no cliente). oclui: barra visão/névoa.
+# cor: swatch do editor (a paleta rica de render vive no cliente). Pisos
+# coloridos são cosméticos; só "entulho" tem efeito. Campos de efeito futuros
+# (custo_mov, save_ao_entrar) entram aqui sem mudar o schema.
+def _mat(nome, categoria, cor, solido=False, oclui=False):
+    return {"nome": nome, "categoria": categoria, "cor": cor,
+            "solido": solido, "oclui": oclui}
+
+MATERIAIS = {
+    "pedra_cinza":   _mat("Pedra cinza", "piso", "#6f6f78"),
+    "terra":         _mat("Terra", "piso", "#6b4f33"),
+    "grama":         _mat("Grama", "piso", "#3f6b2f"),
+    "pedra_negra":   _mat("Pedra negra", "piso", "#23232a"),
+    "entulho":       _mat("Entulho", "piso", "#4a4640", solido=True, oclui=True),
+    "pedra_normal":  _mat("Pedra normal", "parede", "#5a5a6a"),
+    "enegrecida":    _mat("Pedra enegrecida", "parede", "#2c2b30"),
+    "pedra_caverna": _mat("Pedra de caverna", "parede", "#4d4338"),
+    "desmoronada":   _mat("Parede desmoronada", "parede", "#534b40"),
+}
+MATERIAIS_PISO_DEFAULT = "pedra_cinza"
+MATERIAIS_PAREDE_DEFAULT = "pedra_normal"
 
 SHOP_TEMPLE = [
     {"id": "full_heal", "name": "Cura Completa",  "emoji": "💖",  "price": 15, "effect": "full_heal"},
@@ -3185,6 +3235,9 @@ class GameRoom:
         self._decor_block_tiles = set()
         self._decor_tall_tiles = set()
         self._campfire_tiles = set()
+        self.materiais = {}            # {(x,y): material_id} — camada de piso/parede
+        self._mat_solid_tiles = set()  # casas de material sólido (entulho) — bloqueia
+        self._mat_oclui_tiles = set()  # casas de material opaco (entulho) — barra visão
 
     # ── broadcast helpers ──────────────────────────────────────────────────
 
@@ -3715,6 +3768,22 @@ class GameRoom:
         amb = defn.get("ambiente", "masmorra")
         self.ambiente = amb if amb in ("penumbra", "masmorra", "ar_livre") else "masmorra"
 
+        # Camada de materiais (piso/parede pintável). Chaves "x,y"->id; descarta
+        # entradas malformadas/desconhecidas (a validação já recusou antes).
+        self.materiais = {}
+        for key, mid in (defn.get("materiais") or {}).items():
+            if mid not in MATERIAIS or not isinstance(key, str):
+                continue
+            partes = key.split(",")
+            if len(partes) != 2:
+                continue
+            try:
+                mx, my = int(partes[0]), int(partes[1])
+            except ValueError:
+                continue
+            self.materiais[(mx, my)] = mid
+        self._rebuild_materiais_index()
+
         # Salas no mesmo formato de generate_dungeon.
         self.rooms = []
         for r in defn.get("rooms", []):
@@ -3862,6 +3931,8 @@ class GameRoom:
             self.armadilhas = []     # idem armadilhas colocáveis
             self.decorations = []
             self._rebuild_decor_index()
+            self.materiais = {}
+            self._rebuild_materiais_index()
             self.zonas_especiais = []
             self.explored = set()    # névoa volta ao início no mapa novo
             self.magic_reveal = {}
@@ -4083,7 +4154,7 @@ class GameRoom:
     def _tall_oclui_caminho(self, x0, y0, x1, y1):
         """True se a linha (x0,y0)→(x1,y1) cruza uma casa de decoração ALTA
         antes do destino (a própria casa-destino não conta)."""
-        if not self._decor_tall_tiles:
+        if not self._decor_tall_tiles and not self._mat_oclui_tiles:
             return False
         dx = x1 - x0; dy = y1 - y0
         passos = max(abs(dx), abs(dy))
@@ -4092,7 +4163,7 @@ class GameRoom:
         for s in range(1, passos):   # casas intermediárias (exclui origem e destino)
             cx = round(x0 + dx * s / passos)
             cy = round(y0 + dy * s / passos)
-            if (cx, cy) in self._decor_tall_tiles:
+            if (cx, cy) in self._decor_tall_tiles or (cx, cy) in self._mat_oclui_tiles:
                 return True
         return False
 
@@ -4136,7 +4207,7 @@ class GameRoom:
             return True
         if self.tiles[y][x] == WALL or self._is_closed_door(x, y):
             return True
-        return (x, y) in self._decor_block_tiles
+        return (x, y) in self._decor_block_tiles or (x, y) in self._mat_solid_tiles
 
     def _tile_in_locked_room(self, x, y):
         for r in self.rooms:
@@ -4193,6 +4264,9 @@ class GameRoom:
             return
         if (nx, ny) in self._decor_block_tiles:
             await self.send_to(pid, {"type": "error", "msg": "Há um objeto bloqueando o caminho."})
+            return
+        if (nx, ny) in self._mat_solid_tiles:
+            await self.send_to(pid, {"type": "error", "msg": "Escombros bloqueiam o caminho."})
             return
 
         # Block movement into a tile occupied by a living monster (footprint multi-tile incluso)
@@ -4358,7 +4432,8 @@ class GameRoom:
                 break
             if not (0 <= x < self.map_w and 0 <= y < self.map_h):
                 return False
-            if self.tiles[y][x] == WALL or self._is_closed_door(x, y):
+            if (self.tiles[y][x] == WALL or self._is_closed_door(x, y)
+                    or (x, y) in self._mat_oclui_tiles):
                 return False
         return True
 
@@ -10194,6 +10269,19 @@ class GameRoom:
                 if meta["special"] == "campfire":
                     self._campfire_tiles.add((tx, ty))
 
+    def _rebuild_materiais_index(self):
+        """Recalcula os índices de bloqueio/visão da camada de materiais."""
+        self._mat_solid_tiles = set()
+        self._mat_oclui_tiles = set()
+        for (x, y), mid in getattr(self, "materiais", {}).items():
+            meta = MATERIAIS.get(mid)
+            if not meta:
+                continue
+            if meta["solido"]:
+                self._mat_solid_tiles.add((x, y))
+            if meta["oclui"]:
+                self._mat_oclui_tiles.add((x, y))
+
     async def _aplicar_fogueira_se_pisar(self, criatura):
         """Se a criatura está numa casa de fogueira, sofre 1d4 de fogo (sem save)."""
         pos = criatura.get("pos")
@@ -10306,6 +10394,10 @@ class GameRoom:
                 "image": d.get("image"),
             })
         return out
+
+    def _serializar_materiais(self):
+        """Camada de materiais como {"x,y": id} para o cliente."""
+        return {f"{x},{y}": mid for (x, y), mid in getattr(self, "materiais", {}).items()}
 
     def _face_toward(self, m, target_pos):
         """ORIENTADO: vira a cabeça para encarar `target_pos` (cardinal dominante),
@@ -12826,6 +12918,7 @@ class GameRoom:
             "phase": self.phase,
             "chests": list(self.chests.values()),
             "decorations": self._serializar_decoracoes(),
+            "materiais": self._serializar_materiais(),
         })
 
 # ─── CONNECTION HANDLER ───────────────────────────────────────────────────────

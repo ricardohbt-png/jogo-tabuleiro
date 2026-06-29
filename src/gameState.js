@@ -16,6 +16,11 @@ const GS = (() => {
   const TILE_FLOOR = 1;
   const TILE_DOOR  = 2;   // porta de sala (transponível só quando aberta)
 
+  // Espelha server.MATERIAIS (campos solido/oclui). Mantido mínimo de propósito:
+  // só ids com efeito precisam constar. Atualize junto com o catálogo do servidor.
+  const MATERIAIS_SOLIDOS = new Set(['entulho']);
+  const MATERIAIS_OPACOS  = new Set(['entulho']);
+
   // ── Internal state ─────────────────────────────────────────────────────────
   let ws              = null;
   let myPid           = null;
@@ -723,10 +728,21 @@ const GS = (() => {
   }
 
   // Tile transponível por pathfinding: chão, ou porta de sala ABERTA.
+  // Material sólido/opaco na casa (x,y), lido do game_state mais recente.
+  function _matSolido(x, y) {
+    const m = gameState && gameState.materiais;
+    return !!(m && MATERIAIS_SOLIDOS.has(m[`${x},${y}`]));
+  }
+  function _matOpaco(x, y) {
+    const m = gameState && gameState.materiais;
+    return !!(m && MATERIAIS_OPACOS.has(m[`${x},${y}`]));
+  }
+
   function _walkable(tiles, x, y, openDoors, occupied) {
     const t = tiles[y]?.[x];
     const onFloor = t === TILE_FLOOR || (t === TILE_DOOR && openDoors.has(`${x},${y}`));
     if (!onFloor) return false;
+    if (_matSolido(x, y)) return false;   // entulho: intransponível como parede
     // Casa ocupada por outra entidade viva é intransponível (espelha o servidor).
     return !(occupied && occupied.has(`${x},${y}`));
   }
@@ -772,7 +788,7 @@ const GS = (() => {
   // através de paredes no cliente (o servidor já recusa, isto evita oferecer).
   function _losBlocks(tiles, closed, x, y) {
     if (y < 0 || x < 0 || y >= tiles.length || x >= tiles[0].length) return true;
-    return tiles[y][x] === TILE_WALL || closed.has(`${x},${y}`);
+    return tiles[y][x] === TILE_WALL || closed.has(`${x},${y}`) || _matOpaco(x, y);
   }
   function hasLineOfSight(state, ax, ay, bx, by) {
     const tiles = state && state.tiles;
@@ -1365,6 +1381,7 @@ const GS = (() => {
     get myName()          { return myName; },
     get gameState()       { return gameState; },
     get decorations()     { return (gameState && gameState.decorations) || []; },
+    get materiais()       { return (gameState && gameState.materiais) || {}; },
     // Jogador local autoritativo (estado mais recente do servidor). Usado pela
     // ficha em jogo (abrirFichaEmJogo) para HP/atributos/CA reais. Mesmo padrão
     // de lookup de getHeroiAtivo; null se ainda não há jogador.

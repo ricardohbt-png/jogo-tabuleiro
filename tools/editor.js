@@ -1,7 +1,12 @@
 "use strict";
 (function () {
   const WALL = 0, FLOOR = 1, DOOR = 2, CELL = 28;
-  const CAT = window.EDITOR_CATALOG || { monsters: [], items: [], traps: [], venoms: [], decorations: [] };
+  const CAT = window.EDITOR_CATALOG || { monsters: [], items: [], traps: [], venoms: [], decorations: [], materiais: [] };
+  const MAT = (CAT.materiais || []);
+  const matMeta = (id) => MAT.find(m => m.id === id) || null;
+  // Default por categoria: pintar o default limpa a casa (mantém JSON esparso e
+  // serve de borracha de material). Espelha MATERIAIS_*_DEFAULT do servidor.
+  const MAT_DEFAULT = { piso: "pedra_cinza", parede: "pedra_normal" };
 
   const S = {
     meta: { schema_version: 1, id: "nova_masmorra", name: "Nova Masmorra", ambiente: "masmorra" },
@@ -14,6 +19,9 @@
     tool: "wall", sel: null,
     decorType: (CAT.decorations[0] || {}).type || "cama",
     decorFacing: [0, 1],
+    materiais: {},                 // {"x,y": id}
+    matId: (MAT[0] ? MAT[0].id : "grama"),
+    matFill: false,                // false = pincel; true = balde (preenchimento)
   };
 
   function initGrid(w, h) {
@@ -171,8 +179,14 @@
     for (let y = 0; y < S.grid.h; y++) {
       for (let x = 0; x < S.grid.w; x++) {
         const t = S.tiles[y][x];
-        ctx.fillStyle = t === WALL ? "#1d1812" : (t === DOOR ? "#c8841f" : "#5a4a32");
+        const mid = S.materiais[x + "," + y];
+        const mm = mid ? matMeta(mid) : null;
+        ctx.fillStyle = mm ? mm.cor : (t === WALL ? "#1d1812" : (t === DOOR ? "#c8841f" : "#5a4a32"));
         ctx.fillRect(x * CELL, y * CELL, CELL - 1, CELL - 1);
+        if (mid === "entulho") {            // marca de obstáculo
+          ctx.fillStyle = "rgba(0,0,0,0.45)";
+          ctx.fillRect(x * CELL + CELL * 0.3, y * CELL + CELL * 0.3, CELL * 0.4, CELL * 0.4);
+        }
       }
     }
     for (const r of S.rooms) {
@@ -296,6 +310,7 @@
     { id: "wall", label: "parede", group: "tiles" },
     { id: "floor", label: "chão", group: "tiles" },
     { id: "door", label: "porta", group: "tiles" },
+    { id: "material", label: "material", group: "tiles" },
     { id: "entrance", label: "entrada", group: "entidades" },
     { id: "exit", label: "saída", group: "entidades" },
     { id: "monster", label: "monstro", group: "entidades" },
@@ -336,6 +351,19 @@
       rot.onclick = () => { rotateDecorPending(); };
       tb.appendChild(rot);
     }
+    if (S.tool === "material") {
+      const sel = document.createElement("select");
+      sel.id = "mat-id";
+      sel.innerHTML = MAT.map(m =>
+        `<option value="${m.id}"${m.id === S.matId ? " selected" : ""}>${m.categoria === "parede" ? "🧱" : (m.id === "entulho" ? "⛰️" : "▦")} ${m.nome}</option>`).join("");
+      sel.onchange = e => { S.matId = e.target.value; };
+      tb.appendChild(sel);
+      const fill = document.createElement("button");
+      fill.textContent = S.matFill ? "balde: ON" : "balde: OFF";
+      fill.title = "Preenche a região contígua de mesma estrutura (chão↔chão / parede↔parede)";
+      fill.onclick = () => { S.matFill = !S.matFill; buildToolbar(); };
+      tb.appendChild(fill);
+    }
   }
 
   function cellFromEvent(ev) {
@@ -371,6 +399,41 @@
     if (S.tool === "wall") S.tiles[y][x] = WALL;
     else if (S.tool === "floor") S.tiles[y][x] = FLOOR;
     else if (S.tool === "door") { S.tiles[y][x] = DOOR; doorLink(x, y); }
+    // Material que não combina mais com a nova estrutura é descartado.
+    const mid = S.materiais[x + "," + y];
+    if (mid && !matCompat(mid, x, y)) delete S.materiais[x + "," + y];
+  }
+
+  // Categoria do material compatível com a estrutura do tile?
+  function matCompat(id, x, y) {
+    const meta = matMeta(id); if (!meta) return false;
+    const t = S.tiles[y][x];
+    if (meta.categoria === "parede") return t === WALL;
+    return t === FLOOR || t === DOOR;   // piso (inclui entulho)
+  }
+  // Estrutura "pintável junta" p/ balde: parede vs. não-parede.
+  function _structKind(x, y) { return S.tiles[y][x] === WALL ? "wall" : "floor"; }
+  // Aplica o material atual a uma casa (ou limpa se for o default da categoria).
+  function _setMat(x, y) {
+    const meta = matMeta(S.matId); if (!meta) return;
+    if (S.matId === MAT_DEFAULT[meta.categoria]) delete S.materiais[x + "," + y];
+    else S.materiais[x + "," + y] = S.matId;
+  }
+  function paintMaterial(x, y) {
+    if (!matCompat(S.matId, x, y)) return;     // ignora casa incompatível
+    if (!S.matFill) { _setMat(x, y); return; }
+    // Balde: preenche a região 4-conexa de mesma estrutura.
+    const kind = _structKind(x, y);
+    const seen = new Set([x + "," + y]); const st = [[x, y]];
+    while (st.length) {
+      const [cx, cy] = st.pop();
+      if (matCompat(S.matId, cx, cy)) _setMat(cx, cy);
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = cx + dx, ny = cy + dy, k = nx + "," + ny;
+        if (nx >= 0 && ny >= 0 && nx < S.grid.w && ny < S.grid.h && !seen.has(k)
+            && _structKind(nx, ny) === kind) { seen.add(k); st.push([nx, ny]); }
+      }
+    }
   }
 
   let painting = false;
@@ -429,6 +492,7 @@
     S.chests = S.chests.filter(e => !(e.pos[0] === x && e.pos[1] === y));
     S.traps = S.traps.filter(e => !(e.pos[0] === x && e.pos[1] === y));
     S.decorations = S.decorations.filter(d => !decorTiles(d).some(c => c[0] === x && c[1] === y));
+    delete S.materiais[x + "," + y];
     S.tiles[y][x] = WALL;
   }
 
@@ -740,6 +804,7 @@
     const c = cellFromEvent(ev); if (!c) return;
     const [x, y] = c;
     if (["wall", "floor", "door"].includes(S.tool)) { painting = true; paintTile(x, y); render(); }
+    else if (S.tool === "material") { painting = true; paintMaterial(x, y); render(); updateStatus(); }
     else if (S.tool === "room") { roomDrag = { x0: x, y0: y, x1: x, y1: y }; }
     else if (["entrance", "exit", "prisoner", "monster", "chest", "trap", "decor"].includes(S.tool)) { placeEntity(x, y); if (S.tool !== "decor") S.sel = entityAt(x, y); renderPanel(); render(); }
     else if (S.tool === "erase") { eraseAt(x, y); S.sel = null; renderPanel(); render(); }
@@ -769,7 +834,11 @@
       render();  // render() já desenha o preview via drawDragPreview()
       return;
     }
-    if (painting) { paintTile(c[0], c[1]); render(); return; }
+    if (painting) {
+      if (S.tool === "material") { paintMaterial(c[0], c[1]); updateStatus(); }
+      else paintTile(c[0], c[1]);
+      render(); return;
+    }
     if (roomDrag) {
       roomDrag.x1 = c[0]; roomDrag.y1 = c[1];
       render();
@@ -825,6 +894,7 @@
         return o;
       }),
       prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}) } : null,
+      materiais: { ...S.materiais },
       objectives: {
         primary: { type: S.objectives.primary.type, xp: S.objectives.primary.xp | 0,
                    reward: { gold: (S.objectives.primary.reward.gold | 0), items: S.objectives.primary.reward.items.map(i => ({ id: i.id })) } },
@@ -891,6 +961,15 @@
       }
       if (d.loot) for (const it of d.loot.items) if (!items.has(it.id)) e.push(`item de loot inválido: ${it.id}`);
     }
+    const matIds = new Set(MAT.map(m => m.id));
+    for (const [key, mid] of Object.entries(S.materiais)) {
+      if (!matIds.has(mid)) { e.push(`material inválido: ${mid}`); continue; }
+      const p = key.split(",").map(Number);
+      const t = S.tiles[p[1]]?.[p[0]];
+      const cat = matMeta(mid).categoria;
+      if (cat === "parede" && t !== WALL) e.push(`material de parede ${mid} fora de parede em ${key}`);
+      if (cat === "piso" && !(t === FLOOR || t === DOOR)) e.push(`material de piso ${mid} fora de chão em ${key}`);
+    }
     return { ok: e.length === 0, erros: e };
   }
 
@@ -923,6 +1002,7 @@
       ...(Array.isArray(d.size) && d.size.length === 2 ? { size: [d.size[0] | 0, d.size[1] | 0] } : {}),
       ...(Array.isArray(d.vscale) && d.vscale.length === 2 ? { vscale: [Number(d.vscale[0]), Number(d.vscale[1])] } : {}),
     }));
+    S.materiais = (obj.materiais && typeof obj.materiais === "object") ? { ...obj.materiais } : {};
     S.objectives = obj.objectives || { primary: { type: "kill_all" }, secondary: [] };
     if (!S.objectives.primary) S.objectives.primary = { type: "kill_all" };
     if (!Array.isArray(S.objectives.secondary)) S.objectives.secondary = [];

@@ -46,6 +46,20 @@ window.VC = {
     emissive:   0x111120,    // preserves blue-stone silhouette in deep shadow
   },
 
+  // ── Materiais de chão/parede (cores 3D por id; espelha server.MATERIAIS) ────
+  // r,g,b em 0..1. Pisos coloridos cosméticos; entulho usa cor de parede-escombro.
+  materiais: {
+    pedra_cinza:   { color: [0.533, 0.533, 0.533] },
+    terra:         { color: [0.42, 0.31, 0.20] },
+    grama:         { color: [0.25, 0.42, 0.22] },
+    pedra_negra:   { color: [0.14, 0.14, 0.16] },
+    entulho:       { color: [0.34, 0.31, 0.27] },
+    pedra_normal:  { color: [0.353, 0.353, 0.416] },
+    enegrecida:    { color: [0.17, 0.17, 0.19] },
+    pedra_caverna: { color: [0.30, 0.26, 0.21] },
+    desmoronada:   { color: [0.33, 0.30, 0.25] },
+  },
+
   // ── Dice ───────────────────────────────────────────────────────────────────
   // Material: MeshLambertMaterial — emissive ensures colors bypass scene lighting
   dice: {
