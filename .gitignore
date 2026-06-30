@@ -7,3 +7,5 @@
 # Artefatos Python
 __pycache__/
 *.py[cod]
+assets/city/_calib.html
+.claude/launch.json
