@@ -5295,19 +5295,42 @@ function paintBrick(ctx, ox, oy, size, r, base, mortar){
 }
 
 function paintCave(ctx, ox, oy, size, r){
-  ctx.fillStyle='#1c160f'; ctx.fillRect(ox,oy,size,size);
-  const step=size*0.25, pts=[];
-  for(let gy=0;gy<4;gy++) for(let gx=0;gx<4;gx++)
-    pts.push([ox+gx*step+step*0.3+(r()-0.5)*step*0.55, oy+gy*step+step*0.3+(r()-0.5)*step*0.55]);
-  for(const p of pts){ const rad=size*(0.10+r()*0.09), nv=6+(r()*3|0), base=70+r()*45;
-    ctx.fillStyle=`rgb(${base|0},${(base*0.9)|0},${(base*0.74)|0})`;
+  ctx.fillStyle='#241509'; ctx.fillRect(ox,oy,size,size);   // fundo marrom escuro (fendas)
+  const step=size*0.22, pts=[];
+  for(let gy=0;gy<5;gy++) for(let gx=0;gx<5;gx++)
+    pts.push([ox+gx*step+step*0.3+(r()-0.5)*step*0.72, oy+gy*step+step*0.3+(r()-0.5)*step*0.72]);
+  for(const p of pts){ const rad=size*(0.09+r()*0.10), nv=7+(r()*4|0), b=95+r()*60;
+    // marrom forte: muito vermelho, pouco azul
+    const R=Math.min(255,b*1.2|0), G=Math.min(255,b*0.72|0), B=Math.min(255,b*0.42|0);
+    ctx.fillStyle=`rgb(${R},${G},${B})`;
     ctx.beginPath();
-    for(let k=0;k<nv;k++){ const a=k/nv*Math.PI*2, rr=rad*(0.7+r()*0.5);
+    for(let k=0;k<nv;k++){ const a=k/nv*Math.PI*2, rr=rad*(0.55+r()*0.75);  // contorno bem irregular
       const xx=p[0]+Math.cos(a)*rr, yy=p[1]+Math.sin(a)*rr; k?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy); }
     ctx.closePath(); ctx.fill();
-    ctx.strokeStyle='rgba(0,0,0,0.5)'; ctx.lineWidth=Math.max(1,size/42); ctx.stroke();
-    ctx.fillStyle='rgba(255,235,200,0.10)';
-    ctx.beginPath(); ctx.ellipse(p[0]-rad*0.3,p[1]-rad*0.3,rad*0.4,rad*0.3,0,0,Math.PI*2); ctx.fill(); }
+    ctx.strokeStyle='rgba(0,0,0,0.6)'; ctx.lineWidth=Math.max(1,size/40); ctx.stroke();
+    // sombra/fenda (relevo rugoso) e realce de tocha
+    ctx.fillStyle='rgba(0,0,0,0.30)';
+    ctx.beginPath(); ctx.ellipse(p[0]+rad*0.28,p[1]+rad*0.32,rad*0.5,rad*0.34,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,200,130,0.16)';
+    ctx.beginPath(); ctx.ellipse(p[0]-rad*0.32,p[1]-rad*0.36,rad*0.42,rad*0.28,0,0,Math.PI*2); ctx.fill(); }
+}
+
+// Lajota de pedra (textura 3D) numa cor-base — usada para pedra_negra (preta forte).
+function paintStone(ctx, ox, oy, size, r, base){
+  ctx.fillStyle='#06050a'; ctx.fillRect(ox,oy,size,size);
+  const sub=2, sp=size/sub, grt=size*0.03;
+  for(let sy=0;sy<sub;sy++) for(let sx=0;sx<sub;sx++){
+    const v=(r()*22-11)|0, bx=ox+sx*sp+grt, by=oy+sy*sp+grt, bw=sp-grt*1.6, bh=sp-grt*1.6;
+    const r0=Math.max(0,base[0]+v), g0=Math.max(0,base[1]+v), b0=Math.max(0,base[2]+Math.floor(v*0.7));
+    const g=ctx.createLinearGradient(bx,by,bx+bw,by+bh);
+    g.addColorStop(0,`rgb(${r0+26},${g0+24},${b0+24})`);
+    g.addColorStop(0.5,`rgb(${r0},${g0},${b0})`);
+    g.addColorStop(1,`rgb(${Math.max(0,r0-18)},${Math.max(0,g0-16)},${Math.max(0,b0-14)})`);
+    ctx.fillStyle=g; ctx.fillRect(bx,by,bw,bh);
+    ctx.fillStyle='rgba(0,0,0,0.42)'; ctx.fillRect(bx,by+bh-2,bw,2); ctx.fillRect(bx+bw-2,by,2,bh);
+    if(r()<0.3){ ctx.strokeStyle='rgba(0,0,0,0.5)'; ctx.lineWidth=Math.max(1,size/120);
+      const cx=bx+r()*bw, cy=by+r()*bh; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+size*0.06,cy+size*0.04); ctx.stroke(); }
+  }
 }
 
 function paintRubble(ctx, ox, oy, size, r){
@@ -5333,7 +5356,7 @@ const MAT_PALETTE_2D = {
   // paredes (topo)
   pedra_normal:  { base: [132, 130, 140], accent: 'wallStone' },
   enegrecida:    { base: [24, 23, 28],   accent: 'blackbrick' },
-  pedra_caverna: { base: [104, 92, 74],  accent: 'cave' },
+  pedra_caverna: { base: [120, 82, 46],  accent: 'cave' },
   desmoronada:   { base: [96, 88, 76],   accent: 'wallRubble' },
 };
 // Resolve o material de uma casa para render (default por estrutura do tile).
@@ -11024,12 +11047,13 @@ function init3D(state){
     switch(matId){
       case 'grama':         paintGrass(c,0,0,S,r); break;
       case 'terra':         paintDirt(c,0,0,S,r); break;
+      case 'pedra_negra':   paintStone(c,0,0,S,r,[30,28,34]); break;
       case 'enegrecida':    paintBrick(c,0,0,S,r,[22,21,26],'#070709'); break;
       case 'pedra_caverna': paintCave(c,0,0,S,r); break;
       case 'desmoronada':   paintRubble(c,0,0,S,r); break;
       case 'entulho':       paintRubble(c,0,0,S,r); break;
     }
-    if(matId==='grama'||matId==='terra'||matId==='enegrecida'||matId==='pedra_caverna'||matId==='desmoronada'||matId==='entulho'){
+    if(matId==='grama'||matId==='terra'||matId==='pedra_negra'||matId==='enegrecida'||matId==='pedra_caverna'||matId==='desmoronada'||matId==='entulho'){
       tex=new T.CanvasTexture(cv); tex.wrapS=tex.wrapT=T.RepeatWrapping;
     }
     _matTexCache[matId]=tex; return tex;
@@ -11242,6 +11266,13 @@ function init3D(state){
         if(ftex){ mat.map = ftex; mat.color.setRGB(1,1,1); }
         mat.emissive.set(VC.floor.emissive);
         mat.emissiveIntensity = 1.0;
+        // Auto-iluminação: a própria textura emite, deixando a cor forte e
+        // diferenciada mesmo na penumbra (grama/terra/pedra negra).
+        if(ftex && (mid3==='grama' || mid3==='terra' || mid3==='pedra_negra')){
+          mat.emissiveMap = ftex;
+          mat.emissive.set(0xffffff);
+          mat.emissiveIntensity = (mid3==='pedra_negra') ? 0.35 : 0.6;
+        }
         mesh = new T.Mesh(floorGeo, mat);
         mesh.position.set(x, TH/2, y);     // bottom edge sits at y = 0
         mesh.receiveShadow = true;
