@@ -430,22 +430,22 @@ let _cityTOD = 0.78; // time-of-day: 0=midnight, 0.25=dawn, 0.5=noon, 0.75=dusk
 const _CTY_BLDGS = [
   {id:'taverna',  name:'Taverna',            emoji:'🍺',action:'Comer e beber — recuperar fome e sede',
    x:-5.5,z:-4,  w:3.2,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x7a3a10,roofHex:0x4a2208,winHex:0xffcc44,
-   hx:22, hy:58, hero:false},
+   hx:32, hy:46, hero:false},
   {id:'templo',   name:'Templo',             emoji:'⛪',action:'Bênçãos e curas divinas',
    x:0,  z:-7.5, w:4.0,d:3.2,wallH:3.0,roofH:2.2, wallHex:0x283088,roofHex:0x181858,winHex:0x88aaff,
-   hx:67, hy:44, hero:true},
+   hx:67, hy:35, hero:true},
   {id:'ferreiro', name:'Ferraria',           emoji:'⚒',action:'Comprar equipamentos',
    x:5.5,z:-4,   w:3.2,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x5a2810,roofHex:0x3a1808,winHex:0xff8822,
-   hx:73, hy:57, hero:false},
+   hx:83, hy:38, hero:false},
   {id:'guilda',   name:'Guilda dos Heróis',  emoji:'⚔',action:'Missões disponíveis',
    x:-5.5,z:2,   w:3.0,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x5a4a10,roofHex:0x3a3008,winHex:0xffee88,
-   hx:46, hy:25, hero:false},
+   hx:52, hy:21, hero:false},
   {id:'mercador', name:'Mercado',            emoji:'🛒',action:'Itens e poções',
    x:5.5,z:2,    w:3.0,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x205a20,roofHex:0x103815,winHex:0x88ff88,
-   hx:40, hy:37, hero:true},
+   hx:50, hy:40, hero:true},
   {id:'dungeon',  name:'Portão da Masmorra', emoji:'💀',action:'Entrar na masmorra!',
    x:0,  z:8,    w:3.4,d:1.8,wallH:3.6,roofH:0,   wallHex:0x1a1428,roofHex:0x000000,winHex:0xff2020,isDungeon:true,
-   hx:29, hy:78, hero:true},
+   hx:23, hy:84, hero:true},
 ];
 
 function initCity3D(){
@@ -1046,11 +1046,11 @@ function initCityImage(){
   // Vida sutil: névoa nas bordas + brilhos piscando (tochas/janelas) + pulsar do portão.
   life.innerHTML =
     '<div class="city-fog"></div>' +
-    '<div class="city-flicker" style="left:22%;top:58%"></div>' +
-    '<div class="city-flicker" style="left:40%;top:37%;animation-delay:.7s"></div>' +
-    '<div class="city-flicker" style="left:73%;top:57%;animation-delay:1.1s"></div>' +
-    '<div class="city-flicker" style="left:55%;top:62%;animation-delay:.4s"></div>' +
-    '<div class="city-gateglow" style="left:29%;top:78%"></div>';
+    '<div class="city-flicker" style="left:32%;top:46%"></div>' +
+    '<div class="city-flicker" style="left:50%;top:40%;animation-delay:.7s"></div>' +
+    '<div class="city-flicker" style="left:83%;top:38%;animation-delay:1.1s"></div>' +
+    '<div class="city-flicker" style="left:60%;top:55%;animation-delay:.4s"></div>' +
+    '<div class="city-gateglow" style="left:23%;top:84%"></div>';
   frame.appendChild(life);
 
   const hotWrap = document.createElement('div');
