@@ -707,6 +707,32 @@ input:focus { outline: none; border-color: var(--gold); }
 .city-hotspot.dungeon:focus-visible .ch-pin { background:rgba(120,26,26,.95); color:#fff;
                         border-color:#ff6a6a; box-shadow:0 0 16px 4px rgba(226,75,74,.6); }
 
+/* ── Vida sutil sobre a imagem da cidade ── */
+.city-fog { position:absolute; inset:-10%;
+            background:radial-gradient(60% 40% at 0% 50%, rgba(200,205,220,.18), transparent 70%),
+                       radial-gradient(60% 40% at 100% 50%, rgba(200,205,220,.16), transparent 70%);
+            animation:cityFog 18s ease-in-out infinite alternate; }
+@keyframes cityFog { from{transform:translateX(-2%);} to{transform:translateX(2%);} }
+.city-flicker { position:absolute; width:46px; height:46px; transform:translate(-50%,-50%);
+                border-radius:50%;
+                background:radial-gradient(closest-side, rgba(255,170,60,.5), transparent 70%);
+                animation:cityFlicker 2.6s ease-in-out infinite; }
+@keyframes cityFlicker { 0%,100%{opacity:.35;} 45%{opacity:.85;} 60%{opacity:.5;} }
+.city-gateglow { position:absolute; width:90px; height:90px; transform:translate(-50%,-50%);
+                 border-radius:50%;
+                 background:radial-gradient(closest-side, rgba(226,75,74,.45), transparent 70%);
+                 animation:cityGate 2.2s ease-in-out infinite; }
+@keyframes cityGate { 0%,100%{opacity:.4; transform:translate(-50%,-50%) scale(.9);}
+                      50%{opacity:.8; transform:translate(-50%,-50%) scale(1.1);} }
+@media (prefers-reduced-motion: reduce) {
+  .city-fog, .city-flicker, .city-gateglow { animation:none; }
+}
+@media (max-width:820px) {
+  .city-hotspot .ch-pin { font-size:14px; padding:6px 12px; }   /* alvo de toque maior */
+  .city-hotspot.hero:hover .ch-name,
+  .city-hotspot.hero:focus-visible .ch-name { max-width:130px; }
+}
+
 /* ════════════════════ MOBILE / TOUCH ════════════════════ */
 /* Elementos só-de-celular: ocultos no desktop, ativados no @media abaixo. */
 #ficha-fab, #ficha-backdrop, #ficha-close-btn { display: none; }

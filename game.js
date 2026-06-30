@@ -1043,6 +1043,14 @@ function initCityImage(){
 
   const life = document.createElement('div');
   life.id = 'city-life';
+  // Vida sutil: névoa nas bordas + brilhos piscando (tochas/janelas) + pulsar do portão.
+  life.innerHTML =
+    '<div class="city-fog"></div>' +
+    '<div class="city-flicker" style="left:22%;top:58%"></div>' +
+    '<div class="city-flicker" style="left:40%;top:37%;animation-delay:.7s"></div>' +
+    '<div class="city-flicker" style="left:73%;top:57%;animation-delay:1.1s"></div>' +
+    '<div class="city-flicker" style="left:55%;top:62%;animation-delay:.4s"></div>' +
+    '<div class="city-gateglow" style="left:29%;top:78%"></div>';
   frame.appendChild(life);
 
   const hotWrap = document.createElement('div');
@@ -1208,7 +1216,7 @@ function handleCityState(msg){
   if(btnD){
     const isHost=GS.myPid&&GS.myPid===msg.host;
     // Em campanha, o botão indica a próxima fase a entrar.
-    btnD.textContent = msg.campaign ? `▶ Entrar na fase ${msg.campaign.phase}` : '⚔ Entrar na Masmorra';
+    btnD.textContent = msg.campaign ? `▶ Ir para a aventura — Fase ${msg.campaign.phase}` : '▶ Ir para a aventura';
     btnD.style.display=isHost?'inline-block':'none';
     if(dungBar) dungBar.style.display=isHost?'flex':'none';
     if(hint) hint.textContent=isHost
