@@ -430,22 +430,22 @@ let _cityTOD = 0.78; // time-of-day: 0=midnight, 0.25=dawn, 0.5=noon, 0.75=dusk
 const _CTY_BLDGS = [
   {id:'taverna',  name:'Taverna',            emoji:'🍺',action:'Comer e beber — recuperar fome e sede',
    x:-5.5,z:-4,  w:3.2,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x7a3a10,roofHex:0x4a2208,winHex:0xffcc44,
-   hx:20, hy:64, hero:false},
+   hx:22, hy:58, hero:false},
   {id:'templo',   name:'Templo',             emoji:'⛪',action:'Bênçãos e curas divinas',
    x:0,  z:-7.5, w:4.0,d:3.2,wallH:3.0,roofH:2.2, wallHex:0x283088,roofHex:0x181858,winHex:0x88aaff,
-   hx:63, hy:42, hero:true},
+   hx:67, hy:44, hero:true},
   {id:'ferreiro', name:'Ferraria',           emoji:'⚒',action:'Comprar equipamentos',
    x:5.5,z:-4,   w:3.2,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x5a2810,roofHex:0x3a1808,winHex:0xff8822,
-   hx:74, hy:58, hero:false},
+   hx:73, hy:57, hero:false},
   {id:'guilda',   name:'Guilda dos Heróis',  emoji:'⚔',action:'Missões disponíveis',
    x:-5.5,z:2,   w:3.0,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x5a4a10,roofHex:0x3a3008,winHex:0xffee88,
-   hx:46, hy:24, hero:false},
+   hx:46, hy:25, hero:false},
   {id:'mercador', name:'Mercado',            emoji:'🛒',action:'Itens e poções',
    x:5.5,z:2,    w:3.0,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x205a20,roofHex:0x103815,winHex:0x88ff88,
-   hx:34, hy:46, hero:true},
+   hx:40, hy:37, hero:true},
   {id:'dungeon',  name:'Portão da Masmorra', emoji:'💀',action:'Entrar na masmorra!',
    x:0,  z:8,    w:3.4,d:1.8,wallH:3.6,roofH:0,   wallHex:0x1a1428,roofHex:0x000000,winHex:0xff2020,isDungeon:true,
-   hx:30, hy:88, hero:true},
+   hx:29, hy:78, hero:true},
 ];
 
 function initCity3D(){
@@ -1028,21 +1028,22 @@ function initCityImage(){
   const stage = document.createElement('div');
   stage.id = 'city-stage';
 
+  // Moldura 3:2 que define a caixa renderizada da imagem; imagem, hotspots,
+  // vida e selo são posicionados DENTRO dela em % → alinhamento garantido.
+  const frame = document.createElement('div');
+  frame.id = 'city-frame';
+  stage.appendChild(frame);
+
   const img = document.createElement('img');
   img.id = 'city-img';
   img.src = 'assets/city/alva_e_luz.jpg?v=' + (window.ASSET_VER || '1');
   img.alt = 'Cidade de Alva e Luz';
   img.draggable = false;
-  stage.appendChild(img);
+  frame.appendChild(img);
 
   const life = document.createElement('div');
   life.id = 'city-life';
-  stage.appendChild(life);
-
-  const seal = document.createElement('div');
-  seal.id = 'city-seal';
-  seal.textContent = 'Alva e Luz';
-  stage.appendChild(seal);
+  frame.appendChild(life);
 
   const hotWrap = document.createElement('div');
   hotWrap.id = 'city-hotspots';
@@ -1063,19 +1064,21 @@ function initCityImage(){
     btn.addEventListener('click', () => _cityHotspotClick(bd.id));
     hotWrap.appendChild(btn);
   }
-  stage.appendChild(hotWrap);
+  frame.appendChild(hotWrap);
   host.appendChild(stage);
 
   const tb = document.getElementById('city-time-badge');
   if(tb) tb.style.display = 'none';
 
-  _cityImg = { stage, img, life, hotWrap, raf:0 };
+  _cityImg = { stage, frame, img, life, hotWrap, raf:0 };
 }
 
 function _cityHotspotClick(id){
   if(id === 'dungeon'){ triggerDungeonEntrance(); return; }
   if(id === 'guilda'){ toast('⚔ Guilda dos Heróis — Missões em breve!','var(--gold)'); return; }
-  openShop(MAPA_IDS_LOJA[id] || id);
+  // openShop espera o id do prédio cru (ex.: 'mercador'); é o que o servidor usa
+  // como chave da loja. (NÃO usar MAPA_IDS_LOJA: 'mercado' aponta p/ loja vazia.)
+  openShop(id);
 }
 
 function destroyCityImage(){

@@ -653,6 +653,60 @@ input:focus { outline: none; border-color: var(--gold); }
                      transition:opacity .85s cubic-bezier(.4,0,.6,1); }
 .city-fade-overlay.on { opacity:1; }
 
+/* ══ CITY (modo imagem — CITY_MODE='image') ══ */
+#city-stage { position:absolute; inset:0; z-index:0;
+              display:flex; align-items:center; justify-content:center;
+              background:#0b0a12; overflow:hidden; }
+/* Moldura 3:2: largura limitada para a altura caber → letterbox vira "quadro". */
+#city-frame { position:relative; aspect-ratio:3 / 2; height:auto;
+              width:min(100%, calc(100dvh * 3 / 2));
+              box-shadow:0 0 70px 12px rgba(0,0,0,.65); }
+#city-img   { position:absolute; inset:0; width:100%; height:100%;
+              object-fit:cover; user-select:none; -webkit-user-drag:none; display:block; }
+#city-hotspots { position:absolute; inset:0; pointer-events:none; }
+#city-life     { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+#city-seal { position:absolute; top:14px; left:50%; transform:translateX(-50%);
+             padding:5px 16px; border-radius:6px; z-index:5;
+             background:rgba(20,16,10,.6); color:#e8dcc0;
+             border:1px solid rgba(232,220,192,.35);
+             font-family:var(--font-body); font-size:15px; letter-spacing:1px;
+             pointer-events:none; }
+
+.city-hotspot { position:absolute; transform:translate(-50%,-50%);
+                pointer-events:auto; cursor:pointer; background:none; border:none;
+                padding:0; margin:0; display:flex; align-items:center;
+                justify-content:center; font-family:var(--font-body); }
+.city-hotspot .ch-pin { display:inline-flex; align-items:center; gap:6px;
+                        padding:5px 11px; border-radius:18px;
+                        background:rgba(18,14,9,.72); color:#f0e6d2;
+                        border:1px solid rgba(240,230,210,.4);
+                        font-size:13px; line-height:1; white-space:nowrap;
+                        transition:transform .15s ease, box-shadow .15s ease, background .15s ease, color .15s ease; }
+.city-hotspot .ch-emoji { font-size:15px; }
+.city-hotspot .ch-glow { position:absolute; top:50%; left:50%; width:120px; height:60px;
+                         transform:translate(-50%,-30%); border-radius:50%;
+                         background:radial-gradient(closest-side, rgba(255,225,150,.55), rgba(255,225,150,0));
+                         opacity:0; transition:opacity .18s ease; pointer-events:none; }
+.city-hotspot:hover .ch-pin,
+.city-hotspot:focus-visible .ch-pin { transform:scale(1.12);
+                        background:rgba(58,44,18,.92); color:#ffe79a;
+                        border-color:#ffe79a; box-shadow:0 0 14px 3px rgba(255,225,150,.5); }
+.city-hotspot:hover .ch-glow,
+.city-hotspot:focus-visible .ch-glow { opacity:1; }
+
+/* Prédios 'hero': rótulo só no hover (o prédio se reconhece sozinho). */
+.city-hotspot.hero .ch-name { max-width:0; overflow:hidden; opacity:0;
+                        transition:max-width .2s ease, opacity .2s ease; }
+.city-hotspot.hero:hover .ch-name,
+.city-hotspot.hero:focus-visible .ch-name { max-width:160px; opacity:1; }
+/* Brilho de silhueta dos hero: glow grande sobre o prédio. */
+.city-hotspot.hero .ch-glow { width:160px; height:130px; transform:translate(-50%,-50%); }
+
+.city-hotspot.dungeon .ch-pin { background:rgba(90,20,20,.8); color:#ffd2d2; border-color:#e24b4a; }
+.city-hotspot.dungeon:hover .ch-pin,
+.city-hotspot.dungeon:focus-visible .ch-pin { background:rgba(120,26,26,.95); color:#fff;
+                        border-color:#ff6a6a; box-shadow:0 0 16px 4px rgba(226,75,74,.6); }
+
 /* ════════════════════ MOBILE / TOUCH ════════════════════ */
 /* Elementos só-de-celular: ocultos no desktop, ativados no @media abaixo. */
 #ficha-fab, #ficha-backdrop, #ficha-close-btn { display: none; }
