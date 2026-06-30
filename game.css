@@ -694,11 +694,11 @@ input:focus { outline: none; border-color: var(--gold); }
 .city-hotspot:hover .ch-glow,
 .city-hotspot:focus-visible .ch-glow { opacity:1; }
 
-/* Prédios 'hero': rótulo só no hover (o prédio se reconhece sozinho). */
-.city-hotspot.hero .ch-name { max-width:0; overflow:hidden; opacity:0;
+/* Todos os marcadores: rótulo só aparece no hover/foco (ícone fica sempre). */
+.city-hotspot .ch-name { max-width:0; overflow:hidden; opacity:0;
                         transition:max-width .2s ease, opacity .2s ease; }
-.city-hotspot.hero:hover .ch-name,
-.city-hotspot.hero:focus-visible .ch-name { max-width:160px; opacity:1; }
+.city-hotspot:hover .ch-name,
+.city-hotspot:focus-visible .ch-name { max-width:160px; opacity:1; }
 /* Brilho de silhueta dos hero: glow grande sobre o prédio. */
 .city-hotspot.hero .ch-glow { width:160px; height:130px; transform:translate(-50%,-50%); }
 
@@ -729,8 +729,8 @@ input:focus { outline: none; border-color: var(--gold); }
 }
 @media (max-width:820px) {
   .city-hotspot .ch-pin { font-size:14px; padding:6px 12px; }   /* alvo de toque maior */
-  .city-hotspot.hero:hover .ch-name,
-  .city-hotspot.hero:focus-visible .ch-name { max-width:130px; }
+  .city-hotspot:hover .ch-name,
+  .city-hotspot:focus-visible .ch-name { max-width:130px; }
 }
 
 /* ════════════════════ MOBILE / TOUCH ════════════════════ */
