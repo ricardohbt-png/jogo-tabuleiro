@@ -1,0 +1,416 @@
+{
+  "schema_version": 1,
+  "id": "terrenos",
+  "name": "terrenos",
+  "ambiente": "ar_livre",
+  "grid": {
+    "w": 16,
+    "h": 12
+  },
+  "tiles": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "rooms": [
+    {
+      "id": 0,
+      "x": 2,
+      "y": 2,
+      "w": 3,
+      "h": 8,
+      "role": "entrance",
+      "locked": false,
+      "doors": []
+    }
+  ],
+  "entrance": {
+    "x": 3,
+    "y": 6
+  },
+  "exit": null,
+  "monsters": [],
+  "chests": [],
+  "traps": [],
+  "decorations": [
+    {
+      "type": "chao",
+      "pos": [
+        12,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "image": "chãoagua.png",
+      "size": [
+        3,
+        4
+      ]
+    },
+    {
+      "type": "chao",
+      "pos": [
+        12,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "image": "chaoaguarasa.png",
+      "size": [
+        3,
+        1
+      ]
+    },
+    {
+      "type": "chao",
+      "pos": [
+        12,
+        8
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "image": "chaoaguarasa.png",
+      "size": [
+        3,
+        1
+      ]
+    },
+    {
+      "type": "chao",
+      "pos": [
+        11,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "image": "chaoaguarasa.png",
+      "size": [
+        1,
+        6
+      ]
+    },
+    {
+      "type": "chao",
+      "pos": [
+        11,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "image": "chaoterra.png",
+      "size": [
+        4,
+        1
+      ]
+    },
+    {
+      "type": "chao",
+      "pos": [
+        10,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "image": "chaoterra.png",
+      "size": [
+        1,
+        8
+      ]
+    },
+    {
+      "type": "chao",
+      "pos": [
+        11,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "image": "chaoterra.png",
+      "size": [
+        4,
+        1
+      ]
+    },
+    {
+      "type": "chao",
+      "pos": [
+        8,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "image": "chaopantano.png",
+      "size": [
+        2,
+        8
+      ]
+    },
+    {
+      "type": "chao",
+      "pos": [
+        4,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "image": "chaopedranegra.png",
+      "size": [
+        4,
+        8
+      ]
+    }
+  ],
+  "prisoner": null,
+  "materiais": {},
+  "objectives": {
+    "primary": {
+      "type": "kill_all",
+      "xp": 0,
+      "reward": {
+        "gold": 0,
+        "items": []
+      }
+    },
+    "secondary": []
+  }
+}

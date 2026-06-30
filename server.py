@@ -1810,6 +1810,10 @@ def validar_dungeon(defn):
         else:
             w_d, h_d = meta["size"]
         ew, eh = (h_d, w_d) if (facing and facing[0] != 0) else (w_d, h_d)
+        # Chão (special:floor) é camada de PISO: pode coexistir com qualquer objeto
+        # na mesma casa (não conta como ocupação). Dois objetos não-piso ainda não
+        # podem se sobrepor.
+        is_floor = (meta["special"] == "floor")
         for i in range(ew):
             for j in range(eh):
                 tx, ty = pos[0] + i, pos[1] + j
@@ -1817,9 +1821,10 @@ def validar_dungeon(defn):
                     return False, f"decoração {dtype} fora do grid em ({tx},{ty})."
                 if tile_at([tx, ty]) != FLOOR:
                     return False, f"decoração {dtype} precisa estar sobre chão em ({tx},{ty})."
-                if (tx, ty) in ocupadas:
-                    return False, f"decorações sobrepostas em ({tx},{ty})."
-                ocupadas.add((tx, ty))
+                if not is_floor:
+                    if (tx, ty) in ocupadas:
+                        return False, f"decorações sobrepostas em ({tx},{ty})."
+                    ocupadas.add((tx, ty))
         loot = de.get("loot")
         if loot is not None:
             if not meta["loot_capaz"]:
@@ -2185,6 +2190,7 @@ DECOR_TYPES = {
     "mesa_quimica":   _decor("Mesa de química", "🧪", [1, 2], gira=True),
     "arvore":         _decor("Árvore", "🌳", [1, 1], alto=True),
     "arvore_grande":  _decor("Árvore grande", "🌲", [2, 2], alto=True),
+    "chao":           _decor("Chão (grama)", "🌿", [1, 1], pisavel=True, loot_capaz=False, special="floor"),
 }
 
 # ─── MATERIAIS DE CHÃO E PAREDE ──────────────────────────────────────────────

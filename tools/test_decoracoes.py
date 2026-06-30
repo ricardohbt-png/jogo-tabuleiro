@@ -18,12 +18,15 @@ def check(name, cond):
 def test_catalog():
     print("\n[A1] DECOR_TYPES")
     d = server.DECOR_TYPES
-    check("22 tipos", len(d) == 22)
+    check("23 tipos", len(d) == 23)
     check("ids esperados presentes", all(k in d for k in (
         "cama", "lareira", "fonte", "fogueira", "tumba", "mesa_cadeiras",
         "estante", "carroca", "coluna", "barril", "arca_tesouros", "cama_casal",
         "estante_livros", "altar", "trono", "gaiola", "grades_prisao",
-        "estante_armas", "mesa_tortura", "mesa_quimica", "arvore", "arvore_grande")))
+        "estante_armas", "mesa_tortura", "mesa_quimica", "arvore", "arvore_grande",
+        "chao")))
+    check("chão é floor, pisável, 1x1", d["chao"]["special"] == "floor"
+          and d["chao"]["pisavel"] and d["chao"]["size"] == [1, 1])
     check("fonte é fountain", d["fonte"]["special"] == "fountain")
     check("fogueira é campfire e pisável", d["fogueira"]["special"] == "campfire" and d["fogueira"]["pisavel"])
     check("fonte size 2x2", d["fonte"]["size"] == [2, 2])
@@ -33,7 +36,7 @@ def test_catalog():
     check("todo tipo tem emoji/nome/gira/loot_capaz", all(
         set(("nome", "emoji", "size", "gira", "alto", "pisavel", "loot_capaz", "special")) <= set(v)
         for v in d.values()))
-    check("só fogueira é pisável", [k for k, v in d.items() if v["pisavel"]] == ["fogueira"])
+    check("pisáveis: fogueira e chão", sorted(k for k, v in d.items() if v["pisavel"]) == ["chao", "fogueira"])
 
 async def _noop(*a, **k): pass
 
@@ -98,6 +101,16 @@ def test_bloqueio():
     r.decorations = [{"id": "d1", "type": "fogueira", "pos": [2, 2], "facing": [0, 1], "loot": None, "tem_loot": False}]
     r._rebuild_decor_index()
     check("fogueira não bloqueia (pisável)", r._blocks_tile(2, 2) is False)
+    # chão é pisável → não bloqueia; objeto sólido EMPILHADO sobre o chão → bloqueia
+    r.decorations = [{"id": "c0", "type": "chao", "pos": [4, 4], "facing": [0, 1], "loot": None, "tem_loot": False}]
+    r._rebuild_decor_index()
+    check("chão não bloqueia (pisável)", r._blocks_tile(4, 4) is False)
+    r.decorations = [
+        {"id": "c1", "type": "chao",   "pos": [4, 4], "facing": [0, 1], "loot": None, "tem_loot": False},
+        {"id": "b1", "type": "barril", "pos": [4, 4], "facing": [0, 1], "loot": None, "tem_loot": False},
+    ]
+    r._rebuild_decor_index()
+    check("barril sobre chão bloqueia", r._blocks_tile(4, 4) is True)
 
 def test_fogueira():
     print("\n[A5] fogueira 1d4")
@@ -236,6 +249,11 @@ def test_validacao():
     d3["decorations"] = [{"type": "barril", "pos": [5, 5], "facing": [0, 1]},
                          {"type": "barril", "pos": [5, 5], "facing": [0, 1]}]
     ok, _ = server.validar_dungeon(d3); check("rejeita sobreposição", ok is False)
+    # chão (floor) é piso → pode coexistir com outro objeto na mesma casa
+    d3b = _defn_base()
+    d3b["decorations"] = [{"type": "chao", "pos": [5, 5], "facing": [0, 1]},
+                          {"type": "barril", "pos": [5, 5], "facing": [0, 1]}]
+    ok, _ = server.validar_dungeon(d3b); check("chão coexiste com objeto sólido", ok is True)
     # item de loot inválido
     d4 = _defn_base()
     d4["decorations"] = [{"type": "barril", "pos": [5, 5], "facing": [0, 1], "loot": {"gold": 0, "items": [{"id": "nope"}]}}]

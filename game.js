@@ -5013,7 +5013,9 @@ function renderMap(state){
   {
     const decors = GS.decorations;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    for (const d of decors) {
+    // Chão (special:floor) primeiro → fica EMBAIXO; objetos empilhados desenham por cima.
+    const decorsDrawOrder = [...decors].sort((a, b) => ((a.special === 'floor') ? 0 : 1) - ((b.special === 'floor') ? 0 : 1));
+    for (const d of decorsDrawOrder) {
       const tiles = GS.decorTilesOf(d);
       // Only draw if at least one tile in the footprint has been explored
       if (!tiles.some(([tx2, ty2]) => exploredSet.has(`${tx2},${ty2}`))) continue;
@@ -5029,7 +5031,10 @@ function renderMap(state){
       const _vs = Array.isArray(d.vscale) ? d.vscale : [1, 1];
       const _sx = _vs[0] || 1, _sy = _vs[1] || 1;
       const _oImg = d.image ? _getObjeto2DImg(d.image) : null;
-      if (_oImg) {
+      if (_oImg && d.special === 'floor') {
+        // Chão: preenche cada casa do footprint borda-a-borda (sem manter proporção).
+        for (const [tx2, ty2] of tiles) ctx.drawImage(_oImg, tx2 * CELL, ty2 * CELL, CELL, CELL);
+      } else if (_oImg) {
         const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
         const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
         const px = minX * CELL, py = minY * CELL;
@@ -5072,6 +5077,24 @@ function renderMap(state){
         ctx.font = `bold ${Math.round(CELL * 0.18)}px monospace`;
         ctx.fillStyle = '#ffe060';
         ctx.fillText('💰', ecx + CELL * 0.28, ecy - CELL * 0.28);
+      }
+    }
+    // O chão (special:floor) é PISO e foi desenhado por cima do realce de movimento
+    // (PASS 1). Re-aplica o destaque azul/vermelho nas casas de chão para que a
+    // indicação de movimentação/ataque apareça sobre a grama, como em piso normal.
+    for (const d of decors) {
+      if (d.special !== 'floor') continue;
+      for (const [tx2, ty2] of GS.decorTilesOf(d)) {
+        if (!exploredSet.has(`${tx2},${ty2}`)) continue;
+        const k = `${tx2},${ty2}`, X = tx2 * CELL, Y = ty2 * CELL;
+        if (reachable.has(k)) {
+          const fa = 0.26 + 0.26 * _movePulse, pa = 0.70 + 0.30 * _movePulse;
+          ctx.fillStyle = `rgba(30,107,255,${fa.toFixed(2)})`; ctx.fillRect(X + 2, Y + 2, CELL - 4, CELL - 4);
+          ctx.strokeStyle = `rgba(60,140,255,${pa.toFixed(2)})`; ctx.lineWidth = 2; ctx.strokeRect(X + 2, Y + 2, CELL - 4, CELL - 4);
+        } else if (attackable.has(k)) {
+          ctx.fillStyle = 'rgba(255,30,30,0.13)'; ctx.fillRect(X + 2, Y + 2, CELL - 4, CELL - 4);
+          ctx.strokeStyle = 'rgba(255,60,60,0.78)'; ctx.lineWidth = 2; ctx.strokeRect(X + 2, Y + 2, CELL - 4, CELL - 4);
+        }
       }
     }
   }
@@ -13005,7 +13028,9 @@ function _disposeDecorMesh(obj){
     if (o.geometry) o.geometry.dispose();
     if (o.material) {
       const mats = Array.isArray(o.material) ? o.material : [o.material];
-      mats.forEach(mm => { if (mm.map) mm.map.dispose(); mm.dispose(); });
+      // _shared: textura cacheada (ex.: chão via _pawnTexCache) reusada por outras
+      // decorações — não descartar aqui, senão some das demais.
+      mats.forEach(mm => { if (mm.map && !mm.map._shared) mm.map.dispose(); mm.dispose(); });
     }
   });
 }
@@ -13272,6 +13297,19 @@ function renderMap3D(state){
       const visivel = tiles.some(([tx2, ty2]) => exploredSet.has(`${tx2},${ty2}`));
 
       let mesh = g3.decorMeshes[d.id];
+
+      if (d.special === 'floor' && d.image) {
+        // ── Chão: decal deitado preenchendo TODO o footprint, borda-a-borda ──
+        if (!mesh || mesh.userData.imageName !== d.image || mesh.userData.floorW !== wCells || mesh.userData.floorH !== hCells) {
+          if (mesh) { g3.scene.remove(mesh); _disposeDecorMesh(mesh); }
+          mesh = _chaoDecal3D(d, wCells, hCells);
+          g3.scene.add(mesh);
+          g3.decorMeshes[d.id] = mesh;
+        }
+        mesh.position.set(worldX, 0.222, worldZ);   // logo acima do piso (TH=0.22), sob os realces
+        mesh.visible = visivel;
+        continue;
+      }
 
       if (d.image && window.Miniatura3D) {
         // ── Caminho miniatura extrudada (PNG) ──
@@ -13588,6 +13626,34 @@ function _armadilhaDecal3D(arm, x, y){
   grp.position.set(x, 0.232, y);
   grp.userData.armadilhaId = arm.id;
   grp.userData.tipo = 'armadilha';
+  return grp;
+}
+
+// Chão (decoração pisável): decal DEITADO no chão que preenche TODO o footprint
+// borda-a-borda (estica a textura, sem manter proporção — é um piso). Peões andam
+// por cima. `wCells`/`hCells` = footprint efetivo (já com facing aplicado).
+function _chaoDecal3D(d, wCells, hCells){
+  const T = g3.T;
+  const grp = new T.Group();
+  const mat = new T.MeshBasicMaterial({ transparent: true, depthWrite: false });
+  const mesh = new T.Mesh(new T.PlaneGeometry(wCells, hCells), mat);
+  mesh.rotation.x = -Math.PI/2;      // deita o plano no chão
+  // renderOrder -1: o chão é PISO — deve ficar SOB os realces de movimento/ataque
+  // (planos azuis/vermelhos em TH+0.004…), senão a grama esconderia a indicação.
+  mesh.renderOrder = -1;
+  mesh.userData.isGroundDecal = true;   // fora do passe de outline
+  grp.add(mesh);
+  const cacheKey = '__chao_' + d.image;
+  let tex = _pawnTexCache[cacheKey];
+  if(tex){ mat.map = tex; }
+  else {
+    tex = new T.TextureLoader().load(_assetURL(`assets/objetos/${d.image}`));
+    tex._shared = true;   // cacheada/reusada — _disposeDecorMesh não deve descartá-la
+    _pawnTexCache[cacheKey] = tex;
+    mat.map = tex;
+  }
+  grp.userData = { isDecor: true, decorId: d.id, imageName: d.image,
+                   floorW: wCells, floorH: hCells };
   return grp;
 }
 
@@ -19190,11 +19256,16 @@ function on3DClick(e){
       else { toast('Aproxime-se do baú para abri-lo!', 'var(--gold)'); return; }
     }
     // ── Decoration click (3D path — check footprint of each decoration) ─────────
-    const decClick3D = GS.decorations.find(d =>
+    // Interativa (loot/fonte) → interage. Sólida (não-pisável) → bloqueia o clique.
+    // Pisável (chão/fogueira) sem interação → deixa passar p/ a lógica de movimento
+    // (o personagem caminha sobre o chão normalmente).
+    const decsHere3D = GS.decorations.filter(d =>
       GS.decorTilesOf(d).some(t => t[0] === tx && t[1] === ty));
-    if(decClick3D){
-      if(decClick3D.tem_loot || decClick3D.special === 'fountain') GS.interagirDecor(decClick3D.id);
-      return;
+    if(decsHere3D.length){
+      const inter3D = decsHere3D.find(d => d.tem_loot || d.special === 'fountain');
+      if(inter3D){ GS.interagirDecor(inter3D.id); return; }
+      if(decsHere3D.some(d => !d.pisavel)) return;   // objeto sólido bloqueia o caminho
+      // só decoração(ões) pisável(is) → segue para o movimento
     }
   }
 
@@ -19327,12 +19398,16 @@ function handleTileClick(tx, ty){
   }
 
   // ── Decoration click (2D canvas path — 3D path handled in on3DClick) ─────────
+  // Interativa (loot/fonte) → interage. Sólida → bloqueia o clique. Pisável
+  // (chão/fogueira) sem interação → deixa passar p/ a lógica de movimento.
   if(_st && !mode3D){
-    const decClick = GS.decorations.find(d =>
+    const decsHere = GS.decorations.filter(d =>
       GS.decorTilesOf(d).some(t => t[0] === tx && t[1] === ty));
-    if(decClick){
-      if(decClick.tem_loot || decClick.special === 'fountain') GS.interagirDecor(decClick.id);
-      return;
+    if(decsHere.length){
+      const inter = decsHere.find(d => d.tem_loot || d.special === 'fountain');
+      if(inter){ GS.interagirDecor(inter.id); return; }
+      if(decsHere.some(d => !d.pisavel)) return;   // objeto sólido bloqueia o caminho
+      // só decoração(ões) pisável(is) → segue para o movimento
     }
   }
 

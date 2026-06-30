@@ -16,6 +16,13 @@
     <span id="dungeon-controls">
       <label>id <input id="m-id" value="nova_masmorra" size="12"></label>
       <label>nome <input id="m-name" value="Nova Masmorra" size="14"></label>
+      <label>ambiente
+        <select id="m-ambiente">
+          <option value="masmorra">Masmorra</option>
+          <option value="penumbra">Penumbra (escuro)</option>
+          <option value="ar_livre">Ar livre (claro)</option>
+        </select>
+      </label>
       <label>grid
         <input id="g-w" type="number" min="1" max="60" value="16" style="width:46px">×
         <input id="g-h" type="number" min="1" max="60" value="12" style="width:46px">
@@ -41,10 +48,7 @@
 
   <footer id="statusbar"><span id="status"></span></footer>
 
-  <script src="editor_catalog.js"></script>
-  <script src="editor_dungeons.js"></script>
-  <script src="editor.js"></script>
-  <script src="story_upload.js"></script>
-  <script src="editor_campaign.js"></script>
+  <!-- Cache-buster (espelha index.html): evita JS/catálogo do editor servido em cache antigo. -->
+  <script>(function(){var v=Date.now();var s=["editor_catalog.js","editor_dungeons.js","editor.js","story_upload.js","editor_campaign.js"];for(var i=0;i<s.length;i++)document.write('<script src="'+s[i]+'?v='+v+'"><\/script>');})();</script>
 </body>
 </html>

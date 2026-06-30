@@ -97,12 +97,23 @@
     if (ev.key === "r" || ev.key === "R") rotateDecorPending();
   });
 
+  // Chão (special:floor) é camada de PISO: sobrepõe qualquer objeto e é ignorado
+  // como ocupação quando se posiciona outro objeto. Dois objetos não-piso ainda
+  // não podem se sobrepor.
+  function isFloorDecor(d) { const m = decorMeta(d && d.type ? d.type : d); return !!(m && m.special === "floor"); }
   function decorFits(type, ax, ay, facing, ignore) {
+    if (isFloorDecor(type)) {  // piso cabe em qualquer chão livre, sobre outros objetos
+      for (const [tx, ty] of decorTilesAt(type, ax, ay, facing)) {
+        if (tx < 0 || ty < 0 || tx >= S.grid.w || ty >= S.grid.h) return false;
+        if (S.tiles[ty][tx] !== FLOOR) return false;
+      }
+      return true;
+    }
     for (const [tx, ty] of decorTilesAt(type, ax, ay, facing)) {
       if (tx < 0 || ty < 0 || tx >= S.grid.w || ty >= S.grid.h) return false;
       if (S.tiles[ty][tx] !== FLOOR) return false;
       for (const d of S.decorations) {
-        if (d === ignore) continue;
+        if (d === ignore || isFloorDecor(d)) continue;
         if (decorTiles(d).some(c => c[0] === tx && c[1] === ty)) return false;
       }
     }
@@ -111,11 +122,13 @@
   // Encaixe genérico para arrasto/redimensionamento: a decoração `ignore` (a que
   // está sendo movida/redimensionada) é desconsiderada na checagem de sobreposição.
   function decorWouldFit(ignore, pos, size, facing) {
+    const movingFloor = isFloorDecor(ignore);
     for (const [tx, ty] of tilesFor(pos, size, facing)) {
       if (tx < 0 || ty < 0 || tx >= S.grid.w || ty >= S.grid.h) return false;
       if (S.tiles[ty][tx] !== FLOOR) return false;
+      if (movingFloor) continue;   // piso sobrepõe qualquer coisa
       for (const d of S.decorations) {
-        if (d === ignore) continue;
+        if (d === ignore || isFloorDecor(d)) continue;
         if (decorTiles(d).some(c => c[0] === tx && c[1] === ty)) return false;
       }
     }
@@ -127,6 +140,7 @@
     const d = { type: S.decorType, pos: [x, y], facing: S.decorFacing.slice(),
                 loot: (m && m.loot_capaz && S.decorType === "arca_tesouros") ? { gold: 0, items: [] } : null };
     if (m && m.special === "fountain") d.charges = 3;
+    if (m && m.special === "floor") d.image = "chaograma1.png";   // grama por padrão (trocável no picker)
     S.decorations.push(d);
     S.sel = { kind: "decor", ref: d, pos: [x, y] };
   }
@@ -162,7 +176,9 @@
       if (tr.image && objImg(tr.image)) return null;
       const d = CAT.traps.find(c => c.tipo === tr.tipo); return d ? d.icone : "⚠️";
     }
-    const dec = S.decorations.find(e => e.pos[0] === x && e.pos[1] === y);
+    // Empilhamento: o chão (piso) fica embaixo — mostra o emoji do objeto de CIMA.
+    const _decsAt = S.decorations.filter(e => e.pos[0] === x && e.pos[1] === y);
+    const dec = _decsAt.find(e => !isFloorDecor(e)) || _decsAt[0];
     if (dec) {
       // Se a decoração tem imagem e ela já carregou, não retorna emoji (a imagem cobre o footprint).
       if (dec.image && objImg(dec.image)) return null;
@@ -202,11 +218,19 @@
       for (const [tx, ty] of decorTiles(d)) ctx.strokeRect(tx * CELL + 2, ty * CELL + 2, CELL - 5, CELL - 5);
     }
     // Preview 2D: desenha o PNG da decoração cobrindo o footprint (se d.image disponível).
-    for (const d of S.decorations) {
+    // Chão (piso) primeiro → fica EMBAIXO; objetos empilhados desenham por cima.
+    const _decorDrawOrder = [...S.decorations].sort((a, b) => (isFloorDecor(a) ? 0 : 1) - (isFloorDecor(b) ? 0 : 1));
+    for (const d of _decorDrawOrder) {
       if (!d.image) continue;
       const im = objImg(d.image);
       if (!im) continue;
       const tiles = decorTiles(d);
+      const _dm = decorMeta(d.type);
+      if (_dm && _dm.special === "floor") {
+        // Chão: preenche cada casa borda-a-borda (sem manter proporção).
+        for (const [tx, ty] of tiles) ctx.drawImage(im, tx * CELL, ty * CELL, CELL, CELL);
+        continue;
+      }
       const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
       const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
       const px = minX * CELL + 2, py = minY * CELL + 2;
@@ -469,7 +493,9 @@
     if (S.exit && S.exit.x === x && S.exit.y === y) return { kind: "exit", pos: [x, y] };
     if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) return { kind: "prisoner", ref: S.prisoner, pos: [x, y] };
     const find = (arr, kind) => { const r = arr.find(e => e.pos[0] === x && e.pos[1] === y); return r ? { kind, ref: r, pos: [x, y] } : null; };
-    const dec = S.decorations.find(d => decorTiles(d).some(c => c[0] === x && c[1] === y));
+    // Empilhamento: seleciona o objeto de CIMA (não-piso) antes do chão.
+    const _decsHere = S.decorations.filter(d => decorTiles(d).some(c => c[0] === x && c[1] === y));
+    const dec = _decsHere.find(d => !isFloorDecor(d)) || _decsHere[0];
     if (dec) return { kind: "decor", ref: dec, pos: dec.pos.slice() };
     return find(S.monsters, "monster") || find(S.chests, "chest") || find(S.traps, "trap") || null;
   }

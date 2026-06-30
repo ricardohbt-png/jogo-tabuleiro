@@ -49,7 +49,7 @@ def main():
 
     print("\n[decor] decorações exportadas")
     check("catálogo tem 'decorations'", "decorations" in cat)
-    check("22 decorações", len(cat.get("decorations", [])) == 22)
+    check("23 decorações", len(cat.get("decorations", [])) == 23)
     check("toda decoração tem type/nome/emoji/size/gira/alto/pisavel/loot_capaz/special",
           all(set(("type", "nome", "emoji", "size", "gira", "alto", "pisavel", "loot_capaz", "special")) <= set(d)
               for d in cat.get("decorations", [])))

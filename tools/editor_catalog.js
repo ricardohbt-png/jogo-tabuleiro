@@ -614,6 +614,20 @@ window.EDITOR_CATALOG = {
       "pisavel": false,
       "loot_capaz": true,
       "special": null
+    },
+    {
+      "type": "chao",
+      "nome": "Chão (grama)",
+      "emoji": "🌿",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": "floor"
     }
   ],
   "materiais": [
