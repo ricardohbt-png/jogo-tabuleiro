@@ -56,6 +56,13 @@ async def main():
     check("removeu skill_ataque_extra", "skill_ataque_extra" not in p)
     check("removeu skill_extra_usado", "skill_extra_usado" not in p)
 
+    # [3] Teto de combinação
+    print("\n[3] Teto de combinação")
+    r = setup("playing")
+    check("teto base = 1", r._teto_combinacao(warrior()) == 1)
+    check("teto combinar_2 = 2", r._teto_combinacao(warrior(esp=["guerreiro_combinar_2"])) == 2)
+    check("teto mestre = 3", r._teto_combinacao(warrior(esp=["guerreiro_combinar_2","guerreiro_mestre_combate"])) == 3)
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

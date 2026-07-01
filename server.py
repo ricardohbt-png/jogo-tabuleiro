@@ -3723,6 +3723,12 @@ class GameRoom:
         """Ataques extras concedidos pela Fúria: 2 com Nível III, senão 1."""
         return 2 if tem_espec(p, "guerreiro_furia_3") else 1
 
+    def _teto_combinacao(self, p):
+        """Máx. de habilidades do warrior armadas por turno pela posse de especializações."""
+        if tem_espec(p, "guerreiro_mestre_combate"): return 3
+        if tem_espec(p, "guerreiro_combinar_2"):      return 2
+        return 1
+
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
         if self.phase != "playing":
@@ -4887,6 +4893,10 @@ class GameRoom:
             if buffs:
                 sel = [s for s in p.get("skills", [])
                        if s["id"] in buffs and "mp" not in s]
+                teto = self._teto_combinacao(p)
+                if len(sel) > teto:
+                    sel = sel[:teto]
+                    await self.gm_say(f"**{p['name']}** só pode combinar {teto} habilidade(s) por turno — as demais foram ignoradas.")
                 total_fome = sum(s.get("fome_cost", 0) for s in sel)
                 total_sede = sum(s.get("sede_cost", 0) for s in sel)
                 # SEM teto: o jogador pode sempre gastar — pode esgotar fome/sede
