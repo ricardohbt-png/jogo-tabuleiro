@@ -3729,6 +3729,14 @@ class GameRoom:
         if tem_espec(p, "guerreiro_combinar_2"):      return 2
         return 1
 
+    def _golpe_raw(self, p, raw):
+        """Golpe Devastador nos dados: ×2 com Nível III, ×1,5 (floor) no base; sem efeito se não armado."""
+        if not p.get("skill_dobrar_dano"):
+            return raw
+        if tem_espec(p, "guerreiro_golpe_3"):
+            return raw * 2
+        return raw + raw // 2
+
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
         if self.phase != "playing":
@@ -4994,8 +5002,7 @@ class GameRoom:
                 if die_str:
                     # Armed attack — roll weapon die
                     raw_dmg = roll_dice(die_str)
-                    if p.get("skill_dobrar_dano"):
-                        raw_dmg *= 2   # Golpe Devastador: dobra os dados de dano
+                    raw_dmg = self._golpe_raw(p, raw_dmg)   # Golpe: ×1,5 base / ×2 com Nível III
                     # finesse (atributo 'forcaOuDestreza'): melhor de FOR/DES
                     if weapon.get("finesse"):
                         stat_bonus = max(mod(p.get("str_", 12)), mod(p.get("dex", 12)))
@@ -5122,8 +5129,7 @@ class GameRoom:
                                        "offhand": True})
                 if ohit:
                     oraw = roll_dice(off["die"])
-                    if p.get("skill_dobrar_dano"):
-                        oraw *= 2
+                    oraw = self._golpe_raw(p, oraw)   # Golpe também vale na mão secundária
                     odmg = max(1, (oraw + odex) * (2 if ocrit else 1) + surv_mod)
                     odie_type = "d" + off["die"].split("d")[1]
                     await self.broadcast({"type": "dice_roll", "die": odie_type,

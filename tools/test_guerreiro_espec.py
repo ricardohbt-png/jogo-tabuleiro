@@ -63,6 +63,17 @@ async def main():
     check("teto combinar_2 = 2", r._teto_combinacao(warrior(esp=["guerreiro_combinar_2"])) == 2)
     check("teto mestre = 3", r._teto_combinacao(warrior(esp=["guerreiro_combinar_2","guerreiro_mestre_combate"])) == 3)
 
+    # [4] Golpe ×1,5 / ×2
+    print("\n[4] Golpe Devastador")
+    r = setup("playing")
+    base = warrior(); base["skill_dobrar_dano"] = True
+    check("sem golpe_3 → ×1,5 (10→15)", r._golpe_raw(base, 10) == 15)
+    check("×1,5 arredonda p/ baixo (7→10)", r._golpe_raw(base, 7) == 10)
+    iii = warrior(esp=["guerreiro_golpe_3"]); iii["skill_dobrar_dano"] = True
+    check("com golpe_3 → ×2 (10→20)", r._golpe_raw(iii, 10) == 20)
+    off = warrior(); off["skill_dobrar_dano"] = False
+    check("golpe não armado → sem mudança", r._golpe_raw(off, 10) == 10)
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
