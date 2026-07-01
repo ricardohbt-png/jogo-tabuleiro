@@ -121,6 +121,30 @@ async def main():
     finally:
         S.GUILD_SAVE_DIR = old5; shutil.rmtree(tmp5, ignore_errors=True); S.CHARACTERS_IN_USE.clear()
 
+    # [6] Compra
+    print("\n[6] handle_guild_buy")
+    import tempfile, shutil
+    tmp6 = tempfile.mkdtemp(); old6 = S.GUILD_SAVE_DIR; S.GUILD_SAVE_DIR = tmp6
+    try:
+        r = setup("city")
+        w = make_player("p1", "Victor", "warrior", 0); r.players["p1"] = w
+        w["gold"] = 200
+        await r.handle_guild_buy("p1", "brutalidade")
+        check("comprou brutalidade", "brutalidade" in w["guild_owned"]["tecnicas"])
+        check("debitou ouro (200-120)", w["gold"] == 80)
+        check("persistiu", "brutalidade" in S.load_guild_save("warrior")["tecnicas"])
+        n0 = len(w["guild_owned"]["tecnicas"])
+        await r.handle_guild_buy("p1", "brutalidade")
+        check("não duplica compra", len(w["guild_owned"]["tecnicas"]) == n0)
+        r2 = setup("city"); w2 = make_player("p2","Victor","warrior",0); r2.players["p2"]=w2
+        w2["gold"] = 10
+        await r2.handle_guild_buy("p2", "brutalidade")
+        check("recusa sem ouro", "brutalidade" not in w2["guild_owned"]["tecnicas"] and r2._errs)
+        await r2.handle_guild_buy("p2", "nao_existe")
+        check("recusa item inexistente", len(r2._errs) >= 2)
+    finally:
+        S.GUILD_SAVE_DIR = old6; shutil.rmtree(tmp6, ignore_errors=True)
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

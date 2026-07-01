@@ -3566,6 +3566,13 @@ class GameRoom:
                 "templo":   SHOP_TEMPLE,
                 "taverna":  SHOP_TAVERN,
             },
+            "guild": {
+                "catalog": list(GUILD_CATALOG.values()),
+                "players": {
+                    pid: {"owned": pp["guild_owned"], "equip": pp["guild_equip"]}
+                    for pid, pp in self.players.items()
+                },
+            },
         })
 
     def _gerar_loja_pergaminhos(self):
@@ -3592,6 +3599,41 @@ class GameRoom:
             sc["id"] = f"{sc['id']}_loja{i}"   # id único p/ a compra
             ofertas.append(sc)
         self.shop_scrolls = ofertas
+
+    async def handle_guild_buy(self, pid, item_id):
+        """Compra uma técnica/especialização da Guilda dos Heróis (persistente por classe)."""
+        if self.phase != "city":
+            return
+        p = self.players.get(pid)
+        if not p:
+            return
+        item = guild_item(item_id)
+        if not item:
+            await self.send_to(pid, {"type": "error", "msg": "Item da guilda desconhecido."})
+            return
+        # Classe compatível
+        if item["classe"] is not None and item["classe"] != p.get("class_id"):
+            await self.send_to(pid, {"type": "error", "msg": "Este aprimoramento não é da sua classe."})
+            return
+        cat = item["categoria"]   # "tecnica" | "especializacao"
+        owned = p["guild_owned"]["tecnicas"] if cat == "tecnica" else p["guild_owned"]["especializacoes"]
+        if item_id in owned:
+            await self.send_to(pid, {"type": "error", "msg": "Você já possui isto."})
+            return
+        # Pré-requisito
+        req = item.get("requer")
+        if req and req not in owned:
+            nome_req = (guild_item(req) or {}).get("nome", req)
+            await self.send_to(pid, {"type": "error", "msg": f"Requer antes: {nome_req}."})
+            return
+        # Ouro
+        if p.get("gold", 0) < item["preco"]:
+            await self.send_to(pid, {"type": "error", "msg": "Ouro insuficiente."})
+            return
+        p["gold"] -= item["preco"]
+        owned.append(item_id)
+        write_guild_save(p)
+        await self.broadcast_city_state()
 
     async def handle_shop_buy(self, pid, shop, item_id):
         if self.phase != "city":
@@ -13217,6 +13259,9 @@ async def handler(ws):
 
                 elif t == "select_class":
                     if room: await room.select_class(pid, msg.get("class_id"))
+
+                elif t == "guild_buy":
+                    if room: await room.handle_guild_buy(pid, msg.get("item_id"))
 
                 elif t == "set_known_spells":
                     if room: await room.handle_set_known_spells(pid, msg.get("ids"))
