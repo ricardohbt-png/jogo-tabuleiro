@@ -3025,9 +3025,9 @@ def make_player(pid, name, cls_id, slot):
         "tecnica_buff_dano_arma": 0,        # Brutalidade: +N dano de arma até fim do turno
         # Buffs de turno do warrior (flags planas) — limpos em handle_end_turn
         "skill_bonus_acerto": 0,
+        "skill_bonus_dano":   0,      # Mira Certeira III: +2 dano quando armada
         "skill_dobrar_dano":  False,
-        "skill_ataque_extra": False,
-        "skill_extra_usado":  False,   # Fúria: extra (2º ataque) já concedido neste turno
+        "skill_ataques_extras": 0,    # Fúria: nº de ataques extras restantes neste turno (1 base / 2 c/ III)
         # Canção Heroica do bardo (toggle) — estado próprio; inerte para outras classes
         "cancao_ativa":       False,
         "cancao_atributos":   [],
@@ -3718,6 +3718,10 @@ class GameRoom:
     def _tecnica_bonus_dano(self, p):
         """+N de dano de arma concedido por técnica de turno (Brutalidade)."""
         return p.get("tecnica_buff_dano_arma", 0)
+
+    def _furia_extras(self, p):
+        """Ataques extras concedidos pela Fúria: 2 com Nível III, senão 1."""
+        return 2 if tem_espec(p, "guerreiro_furia_3") else 1
 
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
@@ -4898,7 +4902,7 @@ class GameRoom:
                     elif sid == "golpe_devastador":
                         p["skill_dobrar_dano"] = True
                     elif sid == "furia_berserker":
-                        p["skill_ataque_extra"] = True
+                        p["skill_ataques_extras"] = self._furia_extras(p)
                     nomes.append(f"{s.get('icon','')}{s.get('name', sid)}")
                 if sel:
                     await self.gm_say(
@@ -5130,12 +5134,12 @@ class GameRoom:
 
         # ── Fúria Berserker (ataque_extra) — SEGUNDO ATAQUE MANUAL ─────────────
         # Em vez de encerrar a ação, deixamos action_done=False quando a Fúria está
-        # ativa e o extra ainda não foi usado, liberando um 2º ataque manual neste
+        # ativa e ainda restam ataques extras, liberando ataque(s) manual(is) neste
         # turno (o jogador clica atacar de novo; pode rearmar habilidades, pagando
-        # mais fome/sede). skill_extra_usado garante que o extra valha 1 vez; o 2º
-        # ataque cai no else e encerra a ação. No próximo turno tudo reabre.
-        if p.get("skill_ataque_extra") and not p.get("skill_extra_usado"):
-            p["skill_extra_usado"] = True
+        # mais fome/sede). skill_ataques_extras conta quantos extras restam (1 base /
+        # 2 c/ Fúria III); ao zerar cai no else e encerra a ação. No próximo turno tudo reabre.
+        if p.get("skill_ataques_extras", 0) > 0:
+            p["skill_ataques_extras"] -= 1
             await self.gm_say(f"🔥 **{p['name']}** — Fúria Berserker: ataque extra disponível! Ataque novamente.")
         else:
             p["action_done"] = True
@@ -10140,10 +10144,10 @@ class GameRoom:
         p["moved_this_turn"]   = False   # reabre o custo de -1 sede ao caminhar no novo turno
         # buffs de turno do warrior expiram ao fim do turno (flags planas)
         p["skill_bonus_acerto"] = 0
+        p["skill_bonus_dano"]   = 0
         p["skill_dobrar_dano"]  = False
-        p["skill_ataque_extra"] = False
+        p["skill_ataques_extras"] = 0
         p["tecnica_buff_dano_arma"] = 0   # buff de técnica de turno (Brutalidade) expira
-        p["skill_extra_usado"]  = False
         p["cancao_atacou_apos"] = False   # reabre o custo extra de atacar sob a canção no novo turno
         # metamagia do mago expira ao fim do turno (flags planas)
         p["aprimorar_ativo"]   = False

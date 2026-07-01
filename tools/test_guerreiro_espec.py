@@ -45,6 +45,17 @@ async def main():
     check("tem_espec True", S.tem_espec(p, "guerreiro_golpe_3"))
     check("tem_espec False", not S.tem_espec(p, "guerreiro_mira_3"))
 
+    # [2] Campos novos + Fúria contador
+    print("\n[2] Fúria contador + campos")
+    r = setup("playing")
+    check("_furia_extras base = 1", r._furia_extras(warrior()) == 1)
+    check("_furia_extras III = 2", r._furia_extras(warrior(esp=["guerreiro_furia_3"])) == 2)
+    p = make_player("p1", "Victor", "warrior", 0)
+    check("make_player tem skill_ataques_extras", p.get("skill_ataques_extras") == 0)
+    check("make_player tem skill_bonus_dano", p.get("skill_bonus_dano") == 0)
+    check("removeu skill_ataque_extra", "skill_ataque_extra" not in p)
+    check("removeu skill_extra_usado", "skill_extra_usado" not in p)
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
