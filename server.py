@@ -3789,6 +3789,12 @@ class GameRoom:
             return raw * 2
         return raw + raw // 2
 
+    def _cura_teto(self, p):
+        """Máx. de d8 da Cura pela posse (1 base / 2 / 3)."""
+        if tem_espec(p, "clerigo_cura_3"): return 3
+        if tem_espec(p, "clerigo_cura_2"): return 2
+        return 1
+
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
         if self.phase != "playing":
@@ -6358,7 +6364,7 @@ class GameRoom:
         if p.get("action_done"):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
-        num_dados = max(1, min(3, int((data or {}).get("num_dados", 1))))
+        num_dados = max(1, min(self._cura_teto(p), int((data or {}).get("num_dados", 1))))
         alcance   = max(0, min(2, int((data or {}).get("alcance_extra", 0))))
         custo_sede = num_dados          # -1 sede por dado
         custo_fome = alcance            # -1 fome por extensão de alcance

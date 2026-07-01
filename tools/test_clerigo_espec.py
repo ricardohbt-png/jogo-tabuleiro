@@ -44,6 +44,22 @@ async def main():
     check("preço II = 150", S.guild_item("clerigo_cura_2")["preco"] == 150)
     check("preço III = 200", S.guild_item("clerigo_purif_3")["preco"] == 200)
 
+    # [2] Cura teto
+    print("\n[2] Cura teto")
+    r = setup()
+    check("teto base = 1", r._cura_teto(cleric()) == 1)
+    check("teto cura_2 = 2", r._cura_teto(cleric(esp=["clerigo_cura_2"])) == 2)
+    check("teto cura_3 = 3", r._cura_teto(cleric(esp=["clerigo_cura_2","clerigo_cura_3"])) == 3)
+    # integração: pedir 3 dados sem cura_3 cura no máx 1 (base). Dado fixo=8, INT Lewis(16)=+3.
+    _orig = S.random.randint; S.random.randint = lambda a,b: 8
+    try:
+        r = setup(); c = cleric(); c["pos"]=[0,0]; r.players["c"]=c
+        alvo = make_player("a","Ana","warrior",1); alvo["pos"]=[0,1]; alvo["hp"]=1; alvo["max_hp"]=99; r.players["a"]=alvo
+        await r.handle_cura("c", {"target_id":"a","num_dados":3,"alcance_extra":0})
+        check("cura base clampa a 1 dado (1+8+3=12)", alvo["hp"] == 1 + (8 + 3))
+    finally:
+        S.random.randint = _orig
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
