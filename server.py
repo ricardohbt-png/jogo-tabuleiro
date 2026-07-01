@@ -201,6 +201,66 @@ RANGED_AMMO = {
     "hand_crossbow": ["virotes", "virotes_incendiarios"],
 }
 
+# ─── GUILDA DOS HERÓIS — persistência por personagem (Fase 0) ─────────────────
+# Save por class_id (6 personagens fixos), global ao processo. Guarda só posse +
+# equipar da guilda; ouro/HP/nível continuam por-sessão. Ver spec Fase 0 §5.
+GUILD_SAVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "saves")
+
+# Trava global: personagem em uso não pode ser escolhido em outra sala.
+CHARACTERS_IN_USE = {}   # class_id -> room code
+
+def guild_save_path(class_id):
+    return os.path.join(GUILD_SAVE_DIR, f"{class_id}.json")
+
+def _guild_empty():
+    return {"especializacoes": [], "tecnicas": [],
+            "equip": {"tecnica": None, "tecnica_exclusiva": None}}
+
+def load_guild_save(class_id):
+    """Lê o save do personagem. Ausente/corrompido → estrutura vazia (sem crash)."""
+    try:
+        with open(guild_save_path(class_id), "r", encoding="utf-8") as f:
+            data = json.load(f)
+        eq = data.get("equip", {}) or {}
+        return {
+            "especializacoes": list(data.get("especializacoes", [])),
+            "tecnicas": list(data.get("tecnicas", [])),
+            "equip": {"tecnica": eq.get("tecnica"),
+                      "tecnica_exclusiva": eq.get("tecnica_exclusiva")},
+        }
+    except FileNotFoundError:
+        return _guild_empty()
+    except (json.JSONDecodeError, OSError, ValueError) as e:
+        print(f"[guild] save de {class_id} inválido ({e}); começando vazio")
+        return _guild_empty()
+
+def write_guild_save(player):
+    """Grava guild_owned/guild_equip de forma atômica (.tmp + replace)."""
+    class_id = player.get("class_id")
+    if not class_id:
+        return
+    os.makedirs(GUILD_SAVE_DIR, exist_ok=True)
+    data = {
+        "class_id": class_id,
+        "especializacoes": list(player["guild_owned"]["especializacoes"]),
+        "tecnicas": list(player["guild_owned"]["tecnicas"]),
+        "equip": {"tecnica": player["guild_equip"]["tecnica"],
+                  "tecnica_exclusiva": player["guild_equip"]["tecnica_exclusiva"]},
+    }
+    path = guild_save_path(class_id)
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, path)
+
+def apply_guild_save(player):
+    """Popula guild_owned/guild_equip do jogador a partir do save do personagem."""
+    s = load_guild_save(player["class_id"])
+    player["guild_owned"]["especializacoes"] = s["especializacoes"]
+    player["guild_owned"]["tecnicas"] = s["tecnicas"]
+    player["guild_equip"]["tecnica"] = s["equip"]["tecnica"]
+    player["guild_equip"]["tecnica_exclusiva"] = s["equip"]["tecnica_exclusiva"]
+
 # ─── CHARACTER CLASSES ────────────────────────────────────────────────────────
 
 CLASSES = {
@@ -2889,6 +2949,11 @@ def make_player(pid, name, cls_id, slot):
         "moved_this_turn": False,     # caminhar custa -1 sede só na 1ª casa do turno
         "slot": slot,
         "skills": cls["skills"],
+        # ── Guilda dos Heróis (Fase 0) ──────────────────────────────────────
+        "guild_owned": {"especializacoes": [], "tecnicas": []},   # ids comprados (persistido)
+        "guild_equip": {"tecnica": None, "tecnica_exclusiva": None},  # equipado (persistido)
+        "technique_cooldowns": {},          # { tecnica_id: pronta_em_round } — runtime
+        "tecnica_buff_dano_arma": 0,        # Brutalidade: +N dano de arma até fim do turno
         # Buffs de turno do warrior (flags planas) — limpos em handle_end_turn
         "skill_bonus_acerto": 0,
         "skill_dobrar_dano":  False,
