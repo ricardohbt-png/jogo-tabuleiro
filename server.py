@@ -285,6 +285,36 @@ GUILD_CATALOG = {
         "desc": "Até o fim do turno, ataques físicos com arma causam +2 de dano.",
         "efeito": {"tipo": "buff_turno", "bonus_dano_arma": 2},
     },
+    "guerreiro_combinar_2": {
+        "id": "guerreiro_combinar_2", "categoria": "especializacao", "classe": "warrior",
+        "linha": "guerreiro_combate", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Combinar Duas", "icon": "⚔️",
+        "desc": "Permite armar DUAS habilidades no mesmo turno.",
+    },
+    "guerreiro_mestre_combate": {
+        "id": "guerreiro_mestre_combate", "categoria": "especializacao", "classe": "warrior",
+        "linha": "guerreiro_combate", "nivel": 4, "requer": "guerreiro_combinar_2", "exclusiva": False,
+        "preco": 300, "nome": "Mestre de Combate", "icon": "🏆",
+        "desc": "Permite armar as TRÊS habilidades no mesmo turno.",
+    },
+    "guerreiro_mira_3": {
+        "id": "guerreiro_mira_3", "categoria": "especializacao", "classe": "warrior",
+        "linha": "guerreiro_mira", "nivel": 3, "requer": "guerreiro_combinar_2", "exclusiva": False,
+        "preco": 200, "nome": "Mira Certeira III", "icon": "🎯",
+        "desc": "Mira Certeira também concede +2 de dano (além do +2 de acerto).",
+    },
+    "guerreiro_golpe_3": {
+        "id": "guerreiro_golpe_3", "categoria": "especializacao", "classe": "warrior",
+        "linha": "guerreiro_golpe", "nivel": 3, "requer": "guerreiro_combinar_2", "exclusiva": False,
+        "preco": 200, "nome": "Golpe Devastador III", "icon": "💥",
+        "desc": "Golpe Devastador passa a multiplicar os dados de dano por 2 (era ×1,5).",
+    },
+    "guerreiro_furia_3": {
+        "id": "guerreiro_furia_3", "categoria": "especializacao", "classe": "warrior",
+        "linha": "guerreiro_furia", "nivel": 3, "requer": "guerreiro_combinar_2", "exclusiva": False,
+        "preco": 200, "nome": "Fúria Berserker III", "icon": "🔥",
+        "desc": "Fúria Berserker concede 2 ataques extras (3 ataques no total).",
+    },
     # Fases 1-2 acrescentam aqui.
 }
 
@@ -295,6 +325,10 @@ def guild_items_for_class(class_id):
     """Itens do catálogo disponíveis para uma classe (cópias para envio)."""
     return [dict(v) for v in GUILD_CATALOG.values()
             if v["classe"] is None or v["classe"] == class_id]
+
+def tem_espec(player, espec_id):
+    """True se o jogador possui a especialização comprada (Fase 1+)."""
+    return espec_id in player.get("guild_owned", {}).get("especializacoes", [])
 
 # ─── CHARACTER CLASSES ────────────────────────────────────────────────────────
 
@@ -2991,9 +3025,9 @@ def make_player(pid, name, cls_id, slot):
         "tecnica_buff_dano_arma": 0,        # Brutalidade: +N dano de arma até fim do turno
         # Buffs de turno do warrior (flags planas) — limpos em handle_end_turn
         "skill_bonus_acerto": 0,
+        "skill_bonus_dano":   0,      # Mira Certeira III: +2 dano quando armada
         "skill_dobrar_dano":  False,
-        "skill_ataque_extra": False,
-        "skill_extra_usado":  False,   # Fúria: extra (2º ataque) já concedido neste turno
+        "skill_ataques_extras": 0,    # Fúria: nº de ataques extras restantes neste turno (1 base / 2 c/ III)
         # Canção Heroica do bardo (toggle) — estado próprio; inerte para outras classes
         "cancao_ativa":       False,
         "cancao_atributos":   [],
@@ -3684,6 +3718,28 @@ class GameRoom:
     def _tecnica_bonus_dano(self, p):
         """+N de dano de arma concedido por técnica de turno (Brutalidade)."""
         return p.get("tecnica_buff_dano_arma", 0)
+
+    def _furia_extras(self, p):
+        """Ataques extras concedidos pela Fúria: 2 com Nível III, senão 1."""
+        return 2 if tem_espec(p, "guerreiro_furia_3") else 1
+
+    def _mira_dano_bonus(self, p):
+        """+2 de dano da Mira Certeira III (0 se não possuído)."""
+        return 2 if tem_espec(p, "guerreiro_mira_3") else 0
+
+    def _teto_combinacao(self, p):
+        """Máx. de habilidades do warrior armadas por turno pela posse de especializações."""
+        if tem_espec(p, "guerreiro_mestre_combate"): return 3
+        if tem_espec(p, "guerreiro_combinar_2"):      return 2
+        return 1
+
+    def _golpe_raw(self, p, raw):
+        """Golpe Devastador nos dados: ×2 com Nível III, ×1,5 (floor) no base; sem efeito se não armado."""
+        if not p.get("skill_dobrar_dano"):
+            return raw
+        if tem_espec(p, "guerreiro_golpe_3"):
+            return raw * 2
+        return raw + raw // 2
 
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
@@ -4849,6 +4905,10 @@ class GameRoom:
             if buffs:
                 sel = [s for s in p.get("skills", [])
                        if s["id"] in buffs and "mp" not in s]
+                teto = self._teto_combinacao(p)
+                if len(sel) > teto:
+                    sel = sel[:teto]
+                    await self.gm_say(f"**{p['name']}** só pode combinar {teto} habilidade(s) por turno — as demais foram ignoradas.")
                 total_fome = sum(s.get("fome_cost", 0) for s in sel)
                 total_sede = sum(s.get("sede_cost", 0) for s in sel)
                 # SEM teto: o jogador pode sempre gastar — pode esgotar fome/sede
@@ -4861,10 +4921,11 @@ class GameRoom:
                     sid = s["id"]
                     if sid == "mira_certeira":
                         p["skill_bonus_acerto"] = p.get("skill_bonus_acerto", 0) + 2
+                        p["skill_bonus_dano"] = p.get("skill_bonus_dano", 0) + self._mira_dano_bonus(p)
                     elif sid == "golpe_devastador":
                         p["skill_dobrar_dano"] = True
                     elif sid == "furia_berserker":
-                        p["skill_ataque_extra"] = True
+                        p["skill_ataques_extras"] = self._furia_extras(p)
                     nomes.append(f"{s.get('icon','')}{s.get('name', sid)}")
                 if sel:
                     await self.gm_say(
@@ -4946,8 +5007,7 @@ class GameRoom:
                 if die_str:
                     # Armed attack — roll weapon die
                     raw_dmg = roll_dice(die_str)
-                    if p.get("skill_dobrar_dano"):
-                        raw_dmg *= 2   # Golpe Devastador: dobra os dados de dano
+                    raw_dmg = self._golpe_raw(p, raw_dmg)   # Golpe: ×1,5 base / ×2 com Nível III
                     # finesse (atributo 'forcaOuDestreza'): melhor de FOR/DES
                     if weapon.get("finesse"):
                         stat_bonus = max(mod(p.get("str_", 12)), mod(p.get("dex", 12)))
@@ -4957,6 +5017,7 @@ class GameRoom:
                     if crit: dmg *= 2
                     dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano
                               + self._mod_magia(p, "dano") + self._tecnica_bonus_dano(p)
+                              + p.get("skill_bonus_dano", 0)
                               - self._corrosao_arma_pen(p))
                     # Fraquezas/imunidades ao dano físico da arma
                     dmg = self._apply_damage_types(dmg, [DMG_PHYSICAL], target, weapon)
@@ -5074,8 +5135,7 @@ class GameRoom:
                                        "offhand": True})
                 if ohit:
                     oraw = roll_dice(off["die"])
-                    if p.get("skill_dobrar_dano"):
-                        oraw *= 2
+                    oraw = self._golpe_raw(p, oraw)   # Golpe também vale na mão secundária
                     odmg = max(1, (oraw + odex) * (2 if ocrit else 1) + surv_mod)
                     odie_type = "d" + off["die"].split("d")[1]
                     await self.broadcast({"type": "dice_roll", "die": odie_type,
@@ -5096,12 +5156,12 @@ class GameRoom:
 
         # ── Fúria Berserker (ataque_extra) — SEGUNDO ATAQUE MANUAL ─────────────
         # Em vez de encerrar a ação, deixamos action_done=False quando a Fúria está
-        # ativa e o extra ainda não foi usado, liberando um 2º ataque manual neste
+        # ativa e ainda restam ataques extras, liberando ataque(s) manual(is) neste
         # turno (o jogador clica atacar de novo; pode rearmar habilidades, pagando
-        # mais fome/sede). skill_extra_usado garante que o extra valha 1 vez; o 2º
-        # ataque cai no else e encerra a ação. No próximo turno tudo reabre.
-        if p.get("skill_ataque_extra") and not p.get("skill_extra_usado"):
-            p["skill_extra_usado"] = True
+        # mais fome/sede). skill_ataques_extras conta quantos extras restam (1 base /
+        # 2 c/ Fúria III); ao zerar cai no else e encerra a ação. No próximo turno tudo reabre.
+        if p.get("skill_ataques_extras", 0) > 0:
+            p["skill_ataques_extras"] -= 1
             await self.gm_say(f"🔥 **{p['name']}** — Fúria Berserker: ataque extra disponível! Ataque novamente.")
         else:
             p["action_done"] = True
@@ -10106,10 +10166,10 @@ class GameRoom:
         p["moved_this_turn"]   = False   # reabre o custo de -1 sede ao caminhar no novo turno
         # buffs de turno do warrior expiram ao fim do turno (flags planas)
         p["skill_bonus_acerto"] = 0
+        p["skill_bonus_dano"]   = 0
         p["skill_dobrar_dano"]  = False
-        p["skill_ataque_extra"] = False
+        p["skill_ataques_extras"] = 0
         p["tecnica_buff_dano_arma"] = 0   # buff de técnica de turno (Brutalidade) expira
-        p["skill_extra_usado"]  = False
         p["cancao_atacou_apos"] = False   # reabre o custo extra de atacar sob a canção no novo turno
         # metamagia do mago expira ao fim do turno (flags planas)
         p["aprimorar_ativo"]   = False

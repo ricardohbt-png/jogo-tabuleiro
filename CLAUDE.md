@@ -297,3 +297,19 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `guildCatalogFor/guildOwnedOf/guildEquipOf/tecnicaRestante` (os getters caem para
 > o player do `game_state` na masmorra, onde `cityState=null`; catálogo cacheado).
 > Teste do servidor: `tools/test_guilda.py`.
+
+> **Especializações do Guerreiro (Fase 1a):** upgrades permanentes sempre-ativos
+> (não ocupam slot; sempre válidos) que aprimoram as 3 habilidades-base. **Baseline
+> enfraquecido (grátis):** Mira +2 acerto, **Golpe ×1,5** (era ×2 — mudança de
+> gameplay; Golpe III restaura ×2), Fúria +1 ataque extra, e **só 1 habilidade
+> armada por turno**. **Compras** (`categoria:"especializacao"`, `classe:"warrior"`
+> no `GUILD_CATALOG`): `guerreiro_combinar_2` (150, portão — arma 2/turno),
+> `guerreiro_mestre_combate` (300, arma 3/turno), `guerreiro_mira_3` (+2 dano),
+> `guerreiro_golpe_3` (×2), `guerreiro_furia_3` (2 ataques extras) — os quatro
+> exigem `guerreiro_combinar_2`. Ouro é o único custo. Efeitos em `handle_attack`
+> via `tem_espec` + helpers `_teto_combinacao`/`_golpe_raw`/`_furia_extras`/
+> `_mira_dano_bonus`; o servidor **trunca** os `buffs` ao teto (autoritativo).
+> Refactor: Fúria virou contador `skill_ataques_extras` (antes 2 booleanos);
+> `skill_bonus_dano` novo (Mira III). Cliente: `GS.warriorComboCap()` limita a
+> armação e as descrições dos botões refletem o nível possuído. Teste:
+> `tools/test_guerreiro_espec.py`.
