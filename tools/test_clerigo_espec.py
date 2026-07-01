@@ -94,6 +94,25 @@ async def main():
     await r.handle_purificacao("c", {"target_id":"a","tipo":"doenca"})
     check("recusa doença sem purif_2", any("purific" in e.lower() or "aprendeu" in e.lower() for e in r._errs))
 
+    # [5] Ressurreição: HP e custo por nível
+    print("\n[5] Ressurreição")
+    r = setup()
+    check("ressur base = 1", r._ressur_nivel(cleric()) == 1)
+    check("ressur_2 = 2", r._ressur_nivel(cleric(esp=["clerigo_ressur_2"])) == 2)
+    check("ressur_3 = 3", r._ressur_nivel(cleric(esp=["clerigo_ressur_2","clerigo_ressur_3"])) == 3)
+    # integração nível II: metade dos PV + custo 15/15
+    r = setup(); c = cleric(esp=["clerigo_ressur_2"]); c["pos"]=[0,0]; c["fome"]=50; c["sede"]=50; r.players["c"]=c
+    morto = make_player("a","Ana","warrior",1); morto["pos"]=[0,1]; morto["alive"]=False; morto["hp"]=0; morto["max_hp"]=20; r.players["a"]=morto
+    await r.handle_ressurreicao("c", {"target_id":"a"})
+    check("ressur II → metade PV (10)", morto["hp"] == 10)
+    check("ressur II → custo 15/15", c["fome"] == 35 and c["sede"] == 35)
+    # integração nível III: PV cheio + custo 20/20
+    r = setup(); c = cleric(esp=["clerigo_ressur_2","clerigo_ressur_3"]); c["pos"]=[0,0]; c["fome"]=50; c["sede"]=50; r.players["c"]=c
+    morto = make_player("a","Ana","warrior",1); morto["pos"]=[0,1]; morto["alive"]=False; morto["hp"]=0; morto["max_hp"]=20; r.players["a"]=morto
+    await r.handle_ressurreicao("c", {"target_id":"a"})
+    check("ressur III → PV cheio (20)", morto["hp"] == 20)
+    check("ressur III → custo 20/20", c["fome"] == 30 and c["sede"] == 30)
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

@@ -3808,6 +3808,12 @@ class GameRoom:
         if tem_espec(p, "clerigo_purif_3"): tipos |= {"maldicao", "petrificacao"}
         return tipos
 
+    def _ressur_nivel(self, p):
+        """Nível da Ressurreição (1/2/3) pela posse."""
+        if tem_espec(p, "clerigo_ressur_3"): return 3
+        if tem_espec(p, "clerigo_ressur_2"): return 2
+        return 1
+
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
         if self.phase != "playing":
@@ -6571,7 +6577,9 @@ class GameRoom:
             await self.push_state()
 
     async def handle_ressurreicao(self, pid, data):
-        """Traz um aliado morto adjacente de volta com 1 HP. -10 fome -10 sede."""
+        """Traz um aliado morto adjacente de volta à vida. HP e custo escalam pela
+        posse: base 1 HP (🍖10💧10); clerigo_ressur_2 → metade do PV máx (🍖15💧15);
+        clerigo_ressur_3 → PV cheio (🍖20💧20)."""
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
@@ -6580,7 +6588,8 @@ class GameRoom:
         if p.get("action_done"):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
-        custo_fome, custo_sede = 10, 10
+        nivel = self._ressur_nivel(p)
+        custo_fome = custo_sede = {1: 10, 2: 15, 3: 20}[nivel]
         if p["fome"] < custo_fome or p["sede"] < custo_sede:
             await self.send_to(pid, {"type": "error",
                 "msg": f"Recursos insuficientes — precisa 🍖{custo_fome} 💧{custo_sede}."}); return
@@ -6594,7 +6603,7 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Ressurreição requer contato adjacente com o aliado."}); return
 
         alvo["alive"] = True
-        alvo["hp"] = 1
+        alvo["hp"] = {1: 1, 2: max(1, alvo["max_hp"] // 2), 3: alvo["max_hp"]}[nivel]
         alvo["action_done"] = True          # ressuscitado não age neste turno
         alvo["bonus_action_used"] = True
         # Limpa os efeitos que possam ter causado/seguido a morte
@@ -6608,7 +6617,7 @@ class GameRoom:
 
         await self.gm_say(
             f"💫 **RESSURREIÇÃO!** **{p['name']}** traz **{alvo['name']}** de volta à "
-            f"vida com **1 HP**! (🍖-{custo_fome} 💧-{custo_sede})")
+            f"vida com **{alvo['hp']} HP**! (🍖-{custo_fome} 💧-{custo_sede})")
         await self.push_state()
 
     # ── Paladino (Richard): aço e honra ─────────────────────────────────────
