@@ -127,6 +127,9 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `desarmar_armadilha` | — (Luccas desarma armadilha na própria casa/adjacente; teste de DES; nat1 dispara nele) |
 | `interagir_decor` | `decor_id` — herói adjacente interage com uma decoração: fonte → recebe uma garrafa de água (consome 1 carga); container com loot → abre o painel de loot. Ação livre. |
 | `take_from_decor` | `decor_id`, `kind` (`gold`/`item`), `index` — pega ouro/item de uma decoração-container (espelha `take_from_chest`; sem restrição de turno). |
+| `guild_buy` | `item_id` — compra uma especialização/técnica na **Guilda dos Heróis** (id em `GUILD_CATALOG`). Só na cidade; valida classe, pré-requisito, posse e ouro; grava o save do personagem. |
+| `guild_equip` | `slot` (`tecnica`\|`tecnica_exclusiva`), `item_id` (ou `null` p/ desequipar) — equipa uma técnica possuída no 4º slot. Só na cidade. `tecnica_exclusiva` só para mago/clérigo e só técnicas `exclusiva:true`. |
+| `usar_tecnica` | `tecnica_id`, `target_id` opcional — ativa a técnica equipada na masmorra (no turno do herói). Valida equipada/fora de recarga/fome-sede; aplica efeito, debita 🍖/💧 e entra em recarga (`round_num + recarga_rodadas`). |
 
 ### Server → Client
 `lobby_state`, `game_start`, `city_state`, `shop_result`, `enter_dungeon`,
@@ -272,3 +275,25 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > clique), `renderFichaCidadeBody`, `_refreshFichaCidadePanel` (re-render ao chegar
 > `city_state`), `_fcDropOnGear`/`_fcDropOnBag` (drag-and-drop). Teste do servidor:
 > `tools/test_ficha_cidade.py`.
+
+> **Guilda dos Heróis (Fase 0):** novo prédio na cidade (hotspot `guilda` →
+> `openGuild`) onde cada personagem compra aprimoramentos **permanentes**:
+> **Especializações** (upgrades sempre-ativos das habilidades-base — conteúdo nas
+> Fases 1+) e **Técnicas da Guilda** (habilidades ativas num **4º slot**; só 1
+> equipada por vez, mago/clérigo têm 1 genérica + 1 exclusiva). Catálogo declarativo
+> `GUILD_CATALOG` (server.py, estilo `GRIMORIO`/`DECOR_TYPES`); Fase 0 traz a técnica
+> de referência **Brutalidade** (+2 dano de arma até o fim do turno; recarga 3
+> rodadas; 🍖-2/💧-2). Dados no jogador: `guild_owned`/`guild_equip` (persistidos),
+> `technique_cooldowns` (runtime). **Persistência:** save por personagem em
+> `saves/<class_id>.json` (`load_guild_save`/`write_guild_save`/`apply_guild_save`,
+> carregado no `start_game`; `saves/` é gitignored). **Trava de em-uso:**
+> `CHARACTERS_IN_USE` impede escolher em duas salas o mesmo personagem — implicação:
+> só um grupo joga cada personagem por vez no servidor (`select_class` trava;
+> `release_character`/`_release_all_locks` liberam na desconexão). **Recarga:**
+> `pronta_em = round_num + recarga_rodadas`; zera ao voltar à cidade
+> (`_voltar_para_cidade`). Compra `handle_guild_buy` (bloco `guild` no `city_state`);
+> equipar `handle_guild_equip` (na ficha); usar `handle_usar_tecnica` (4º botão no
+> HUD). Cliente: `GS.guildBuy/guildEquip/usarTecnica` +
+> `guildCatalogFor/guildOwnedOf/guildEquipOf/tecnicaRestante` (os getters caem para
+> o player do `game_state` na masmorra, onde `cityState=null`; catálogo cacheado).
+> Teste do servidor: `tools/test_guilda.py`.

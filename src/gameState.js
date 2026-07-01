@@ -36,6 +36,7 @@ const GS = (() => {
   let activeShop      = null;   // id of the shop currently open in city UI
   let shopTabIdx      = 0;      // active tab index inside shop modal
   let pendingShopOpen = null;   // shop to open once city_state first arrives
+  let guildCatalogCache = [];   // catálogo da Guilda (vem em city_state; cacheado p/ uso na masmorra)
 
   // ── Event callbacks (set by renderer) ─────────────────────────────────────
   const _handlers = {};
@@ -981,6 +982,7 @@ const GS = (() => {
 
       case 'city_state':
         cityState = msg;
+        if (msg.guild && Array.isArray(msg.guild.catalog)) guildCatalogCache = msg.guild.catalog;
         _captarStory(msg);
         if (!myPid) {
           const me = msg.players.find(p => p.name === myName);
@@ -1115,20 +1117,24 @@ const GS = (() => {
   // Getters puros: catálogo filtrado por classe, itens possuídos e equipados
   // pelo jogador (lidos de cityState.guild), e recarga restante de uma técnica
   // (lida de game_state.players[].technique_cooldowns + gameState.round).
+  // Catálogo: na cidade vem em cityState.guild; na masmorra usa o cache (cityState=null).
   function guildCatalogFor(classId) {
-    const g = (cityState && cityState.guild) || null;
-    if (!g) return [];
-    return (g.catalog || []).filter(i => i.classe == null || i.classe === classId);
+    const catalog = (cityState && cityState.guild && cityState.guild.catalog) || guildCatalogCache || [];
+    return catalog.filter(i => i.classe == null || i.classe === classId);
   }
+  // Owned/equip: na cidade vêm de cityState.guild.players[pid]; na masmorra caem
+  // para o player do game_state (que carrega guild_owned/guild_equip inteiros).
   function guildOwnedOf(pid) {
     const g = (cityState && cityState.guild) || null;
-    return (g && g.players && g.players[pid] && g.players[pid].owned)
-           || { especializacoes: [], tecnicas: [] };
+    if (g && g.players && g.players[pid] && g.players[pid].owned) return g.players[pid].owned;
+    const gp = (gameState && gameState.players || []).find(p => p.id === pid);
+    return (gp && gp.guild_owned) || { especializacoes: [], tecnicas: [] };
   }
   function guildEquipOf(pid) {
     const g = (cityState && cityState.guild) || null;
-    return (g && g.players && g.players[pid] && g.players[pid].equip)
-           || { tecnica: null, tecnica_exclusiva: null };
+    if (g && g.players && g.players[pid] && g.players[pid].equip) return g.players[pid].equip;
+    const gp = (gameState && gameState.players || []).find(p => p.id === pid);
+    return (gp && gp.guild_equip) || { tecnica: null, tecnica_exclusiva: null };
   }
   // Recarga restante (em rodadas) de uma técnica, lido do game_state.
   function tecnicaRestante(player, tid) {
