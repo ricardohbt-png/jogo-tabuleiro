@@ -8144,7 +8144,7 @@ function abrirPainelCura(){
       <div style="font-family:'Cinzel Decorative',serif;color:#44cc88;font-size:13px;margin-bottom:12px;text-align:center;">🙌 CURA</div>
       <div style="color:#8a7a5a;font-size:9px;letter-spacing:2px;margin-bottom:8px;">DADOS DE CURA — 💧-1 por dado</div>
       <div style="display:flex;gap:6px;margin-bottom:14px;">
-        ${[1,2,3].map(n => `<button onclick="window._curaSetDados(${n})" style="flex:1;padding:10px;
+        ${[1,2,3].filter(n => n <= GS.clericCuraTeto()).map(n => `<button onclick="window._curaSetDados(${n})" style="flex:1;padding:10px;
           background:${numDados===n?'rgba(68,204,136,0.20)':'transparent'};
           border:1px solid ${numDados===n?'#44cc88':'#2a2a2a'};color:${numDados===n?'#44cc88':'#c8b89a'};
           font-family:'Cinzel',serif;font-size:12px;cursor:pointer;">${n}d8</button>`).join('')}
@@ -8203,18 +8203,19 @@ function abrirPainelCuraArea(){
   function render(){
     const bonusInt = getBonusAtributo(me.int_ ?? 10);
     const custo = numDados * 4;
+    const _mNivel = GS.clericMassaNivel(), _mRaio = 2 * _mNivel;
     painel.innerHTML = `
       <div style="font-family:'Cinzel Decorative',serif;color:#44cc88;font-size:13px;margin-bottom:12px;text-align:center;">🌟 CURA EM ÁREA</div>
-      <div style="color:#8a7a5a;font-size:9px;letter-spacing:2px;margin-bottom:8px;text-align:center;">Raio 5 quadrados | 🍖-4 💧-4 por dado</div>
+      <div style="color:#8a7a5a;font-size:9px;letter-spacing:2px;margin-bottom:8px;text-align:center;">Raio ${_mRaio} quadrados | 🍖-4 💧-4 por dado</div>
       <div style="display:flex;gap:6px;margin-bottom:14px;">
-        ${[1,2,3].map(n => `<button onclick="window._curaAreaSetDados(${n})" style="flex:1;padding:10px;
+        ${[1,2,3].filter(n => n <= _mNivel).map(n => `<button onclick="window._curaAreaSetDados(${n})" style="flex:1;padding:10px;
           background:${numDados===n?'rgba(68,204,136,0.20)':'transparent'};
           border:1px solid ${numDados===n?'#44cc88':'#2a2a2a'};color:${numDados===n?'#44cc88':'#c8b89a'};
           font-family:'Cinzel',serif;font-size:12px;cursor:pointer;">${n}d8</button>`).join('')}
       </div>
       <div style="padding:10px 12px;margin-bottom:12px;background:rgba(68,204,136,0.06);border:1px solid #44cc8833;">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:#8a7a5a;font-size:10px;">Cura para todos</span><span style="color:#44cc88;font-size:12px;">${numDados}d8 ${bonusInt>=0?'+':''}${bonusInt}</span></div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:#8a7a5a;font-size:10px;">Raio</span><span style="color:#44cc88;font-size:11px;">5 quadrados</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:#8a7a5a;font-size:10px;">Raio</span><span style="color:#44cc88;font-size:11px;">${_mRaio} quadrados</span></div>
         <div style="display:flex;justify-content:space-between;"><span style="color:#8a7a5a;font-size:10px;">Custo</span><span style="color:#ff851b;font-size:11px;">🍖-${custo} 💧-${custo}</span></div>
       </div>
       <div style="display:flex;gap:6px;">
@@ -8240,14 +8241,16 @@ function abrirPainelCuraArea(){
 function iniciarModoPurificacao(){
   const me = GS.me;
   if(!_clericPodeAgir(me)) return;
+  // Só os tipos destravados pela Guilda (Fase 1b): venenos base; +doenças; +maldições/petrificação.
+  const _permitidos = GS.clericPurifTipos();
   const alvos = _aliadosVivosNoRaioCleric(me, 1, true)
-    .filter(a => PURIFICACAO_TIPOS_LEWIS.some(t => t.cond(a)));
-  if(!alvos.length){ toast('Nenhum aliado adjacente com efeito a purificar.', 'var(--orange)'); return; }
+    .filter(a => PURIFICACAO_TIPOS_LEWIS.some(t => _permitidos.includes(t.id) && t.cond(a)));
+  if(!alvos.length){ toast('Nenhum aliado adjacente com efeito que você saiba purificar.', 'var(--orange)'); return; }
   const escolher = (id) => {
     const alvo = (GS.gameState.players || []).find(p => p.id === id);
     if(!alvo) return;
-    const efeitos = PURIFICACAO_TIPOS_LEWIS.filter(t => t.cond(alvo));
-    if(efeitos.length === 0){ toast(`${alvo.name} não tem efeitos negativos.`, 'var(--orange)'); return; }
+    const efeitos = PURIFICACAO_TIPOS_LEWIS.filter(t => _permitidos.includes(t.id) && t.cond(alvo));
+    if(efeitos.length === 0){ toast(`${alvo.name} não tem efeitos que você saiba purificar.`, 'var(--orange)'); return; }
     if(efeitos.length === 1){ send({ type:'purificacao', target_id:id, tipo:efeitos[0].id }); return; }
     _abrirPainelEscolhaPurificacao(alvo, efeitos);
   };
@@ -8277,12 +8280,16 @@ function _abrirPainelEscolhaPurificacao(alvo, efeitos){
 function iniciarModoRessurreicao(){
   const me = GS.me;
   if(!_clericPodeAgir(me)) return;
-  if((me.fome||0) < 10 || (me.sede||0) < 10){ toast('Ressurreição requer 🍖10 e 💧10.', 'var(--orange)'); return; }
+  // Custo e efeito por nível da especialização (Fase 1b): 1 HP/10 · metade/15 · cheio/20.
+  const _rNivel = GS.clericRessurNivel();
+  const _rCusto = {1:10, 2:15, 3:20}[_rNivel];
+  const _rEfeito = {1:'1 HP', 2:'metade dos PV', 3:'PV cheio'}[_rNivel];
+  if((me.fome||0) < _rCusto || (me.sede||0) < _rCusto){ toast(`Ressurreição requer 🍖${_rCusto} e 💧${_rCusto}.`, 'var(--orange)'); return; }
   const mortos = _aliadosMortosNoRaioCleric(me, 1);
   if(!mortos.length){ toast('Nenhum aliado morto adjacente.', 'var(--orange)'); return; }
   const enviar = (id) => send({ type:'ressurreicao', target_id:id });
   if(mortos.length === 1){ enviar(mortos[0].id); return; }
-  openTargetModal('💫 Ressurreição — Aliado morto adjacente', mortos, 'player', enviar);
+  openTargetModal(`💫 Ressurreição (${_rEfeito}) — Aliado morto adjacente`, mortos, 'player', enviar);
 }
 
 // Botão de habilidade do Frade Lewis (padrão skill-btn, como _paladinSkillBtn).

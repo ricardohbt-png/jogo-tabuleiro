@@ -1331,6 +1331,34 @@ const GS = (() => {
     return 1;
   }
 
+  // Níveis das especializações do Clérigo (Fase 1b) — lidos da posse; caem para o
+  // player do game_state na masmorra (guildOwnedOf já trata cityState=null).
+  function clericCuraTeto() {
+    const e = (guildOwnedOf(myPid).especializacoes) || [];
+    if (e.includes('clerigo_cura_3')) return 3;
+    if (e.includes('clerigo_cura_2')) return 2;
+    return 1;
+  }
+  function clericMassaNivel() {
+    const e = (guildOwnedOf(myPid).especializacoes) || [];
+    if (e.includes('clerigo_massa_3')) return 3;
+    if (e.includes('clerigo_massa_2')) return 2;
+    return 1;
+  }
+  function clericPurifTipos() {
+    const e = (guildOwnedOf(myPid).especializacoes) || [];
+    const t = ['veneno'];
+    if (e.includes('clerigo_purif_2')) t.push('doenca');
+    if (e.includes('clerigo_purif_3')) t.push('maldicao', 'petrificacao');
+    return t;
+  }
+  function clericRessurNivel() {
+    const e = (guildOwnedOf(myPid).especializacoes) || [];
+    if (e.includes('clerigo_ressur_3')) return 3;
+    if (e.includes('clerigo_ressur_2')) return 2;
+    return 1;
+  }
+
   // ── Tile-click resolver: pure decision, no DOM ─────────────────────────────
   // Called by the unified handleTileClick(tx, ty) in game.html.
   // Returns one of:
@@ -1550,6 +1578,10 @@ const GS = (() => {
     getWarriorSelected,
     clearWarriorSelected,
     warriorComboCap,
+    clericCuraTeto,
+    clericMassaNivel,
+    clericPurifTipos,
+    clericRessurNivel,
 
     // ── Decorações de masmorra ──
     decorTilesOf,
