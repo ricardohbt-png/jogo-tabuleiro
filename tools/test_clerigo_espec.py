@@ -81,6 +81,19 @@ async def main():
     finally:
         S.random.randint = _orig
 
+    # [4] Purificação: tipos por nível
+    print("\n[4] Purificação")
+    r = setup()
+    check("base só veneno", r._purif_tipos(cleric()) == {"veneno"})
+    check("II +doença", r._purif_tipos(cleric(esp=["clerigo_purif_2"])) == {"veneno","doenca"})
+    check("III +maldição/petrif", r._purif_tipos(cleric(esp=["clerigo_purif_2","clerigo_purif_3"]))
+          == {"veneno","doenca","maldicao","petrificacao"})
+    # integração: purificar 'doenca' sem purif_2 é recusado (sem efeito)
+    r = setup(); c = cleric(); c["pos"]=[0,0]; r.players["c"]=c
+    alvo = make_player("a","Ana","warrior",1); alvo["pos"]=[0,1]; r.players["a"]=alvo
+    await r.handle_purificacao("c", {"target_id":"a","tipo":"doenca"})
+    check("recusa doença sem purif_2", any("purific" in e.lower() or "aprendeu" in e.lower() for e in r._errs))
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

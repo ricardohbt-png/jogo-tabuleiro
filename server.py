@@ -3801,6 +3801,13 @@ class GameRoom:
         if tem_espec(p, "clerigo_massa_2"): return 2
         return 1
 
+    def _purif_tipos(self, p):
+        """Tipos de purificação destravados pela posse."""
+        tipos = {"veneno"}
+        if tem_espec(p, "clerigo_purif_2"): tipos.add("doenca")
+        if tem_espec(p, "clerigo_purif_3"): tipos |= {"maldicao", "petrificacao"}
+        return tipos
+
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
         if self.phase != "playing":
@@ -6495,6 +6502,9 @@ class GameRoom:
         tipo = (data or {}).get("tipo")
         if tipo not in self.PURIFICACAO_CUSTOS:
             await self.send_to(pid, {"type": "error", "msg": "Tipo de purificação inválido."}); return
+        if tipo not in self._purif_tipos(p):
+            await self.send_to(pid, {"type": "error",
+                "msg": "Você ainda não aprendeu a purificar este mal — evolua a Purificação na Guilda."}); return
         custo = self.PURIFICACAO_CUSTOS[tipo]
 
         alvo = self.players.get((data or {}).get("target_id"))
