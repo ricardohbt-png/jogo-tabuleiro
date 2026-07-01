@@ -69,6 +69,17 @@ async def main():
         S.GUILD_SAVE_DIR = old_dir
         shutil.rmtree(tmp, ignore_errors=True)
 
+    # [3] Catálogo
+    print("\n[3] GUILD_CATALOG")
+    b = S.guild_item("brutalidade")
+    check("brutalidade existe", b is not None)
+    check("categoria tecnica", b["categoria"] == "tecnica")
+    check("recarga 3", b["recarga_rodadas"] == 3)
+    check("custo 2/2", b["custo_fome"] == 2 and b["custo_sede"] == 2)
+    itens_w = S.guild_items_for_class("warrior")
+    check("brutalidade aplicável a warrior", any(i["id"] == "brutalidade" for i in itens_w))
+    check("item None → não existe", S.guild_item("nao_existe") is None)
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

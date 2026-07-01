@@ -272,6 +272,30 @@ def apply_guild_save(player):
     player["guild_equip"]["tecnica"] = s["equip"]["tecnica"]
     player["guild_equip"]["tecnica_exclusiva"] = s["equip"]["tecnica_exclusiva"]
 
+# ─── GUILDA DOS HERÓIS — catálogo declarativo (Fase 0) ────────────────────────
+# Estilo GRIMORIO/DECOR_TYPES. categoria: "tecnica" | "especializacao".
+# classe: None = todas; ou class_id. exclusiva: técnica exclusiva Mago/Clérigo.
+# efeito: descrito por dados; casos complexos usam {"tipo":"hook","handler":...}.
+GUILD_CATALOG = {
+    "brutalidade": {
+        "id": "brutalidade", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 120, "custo_fome": 2, "custo_sede": 2, "recarga_rodadas": 3,
+        "nome": "Brutalidade", "icon": "🪓",
+        "desc": "Até o fim do turno, ataques físicos com arma causam +2 de dano.",
+        "efeito": {"tipo": "buff_turno", "bonus_dano_arma": 2},
+    },
+    # Fases 1-2 acrescentam aqui.
+}
+
+def guild_item(item_id):
+    return GUILD_CATALOG.get(item_id)
+
+def guild_items_for_class(class_id):
+    """Itens do catálogo disponíveis para uma classe (cópias para envio)."""
+    return [dict(v) for v in GUILD_CATALOG.values()
+            if v["classe"] is None or v["classe"] == class_id]
+
 # ─── CHARACTER CLASSES ────────────────────────────────────────────────────────
 
 CLASSES = {
