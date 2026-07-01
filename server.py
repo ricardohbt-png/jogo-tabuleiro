@@ -3403,11 +3403,22 @@ class GameRoom:
     async def select_class(self, pid, cls_id):
         if cls_id not in CLASSES:
             return
-        # Check not taken
+        # Não tomado na sala
         taken = [p["class_id"] for p in self.players.values() if p["id"] != pid]
         if cls_id in taken:
             await self.send_to(pid, {"type": "error", "msg": "Classe já escolhida por outro jogador."})
             return
+        # Trava global: personagem em uso em OUTRA sala
+        dono = CHARACTERS_IN_USE.get(cls_id)
+        if dono and dono != self.code:
+            await self.send_to(pid, {"type": "error",
+                "msg": f"{CLASSES[cls_id]['name']} já está em uso em outra sala."})
+            return
+        # Libera o personagem anterior deste jogador (se trocou de classe)
+        prev = self.players[pid].get("class_id")
+        if prev and prev != cls_id and CHARACTERS_IN_USE.get(prev) == self.code:
+            del CHARACTERS_IN_USE[prev]
+        CHARACTERS_IN_USE[cls_id] = self.code
         self.players[pid]["class_id"] = cls_id
         self.players[pid]["ready"] = True
         await self.broadcast_lobby()
@@ -3530,6 +3541,7 @@ class GameRoom:
         for slot, (pid2, p) in enumerate(self.players.items()):
             novo = make_player(pid2, p["name"], p["class_id"], slot)
             novo["magias_conhecidas"] = list(p.get("magias_conhecidas", []))
+            apply_guild_save(novo)   # carrega compras/equip persistidos do personagem
             full_players[pid2] = novo
         self.players = full_players
         self.player_order = list(full_players.keys())
@@ -4177,6 +4189,18 @@ class GameRoom:
                 break
             await self.handle_end_turn(pid)
 
+    def release_character(self, pid):
+        """Libera a trava do personagem deste jogador, se pertencer a esta sala."""
+        p = self.players.get(pid)
+        cls = p.get("class_id") if p else None
+        if cls and CHARACTERS_IN_USE.get(cls) == self.code:
+            del CHARACTERS_IN_USE[cls]
+
+    def _release_all_locks(self):
+        """Libera todas as travas desta sala (sala esvaziou)."""
+        for cid in [c for c, code in CHARACTERS_IN_USE.items() if code == self.code]:
+            del CHARACTERS_IN_USE[cid]
+
     # ── DESCONEXÃO / SAÍDA NO MEIO DA PARTIDA ───────────────────────────────
     async def handle_disconnect_em_jogo(self, pid):
         """Jogador caiu/saiu durante a partida: o personagem deixa a masmorra
@@ -4206,6 +4230,8 @@ class GameRoom:
             await self.push_state()
         if self.phase == "city":
             await self.broadcast_city_state()
+        if not any(q.get("connected") for q in self.players.values()):
+            self._release_all_locks()
 
     def _distribuir_monstros(self, spawned, room):
         """Espalha os monstros em casas de chão livres da sala, reservando o
@@ -13379,6 +13405,7 @@ async def handler(ws):
         if room:
             room.connections.pop(pid, None)
             if pid in room.players and room.phase == "lobby":
+                room.release_character(pid)   # libera a trava do personagem
                 room.players.pop(pid, None)
                 if room.host_pid == pid and room.players:
                     room.host_pid = next(iter(room.players))

@@ -80,6 +80,47 @@ async def main():
     check("brutalidade aplicável a warrior", any(i["id"] == "brutalidade" for i in itens_w))
     check("item None → não existe", S.guild_item("nao_existe") is None)
 
+    # [4] Trava de personagem em uso
+    print("\n[4] Trava de em-uso")
+    S.CHARACTERS_IN_USE.clear()
+    r1 = setup("lobby")
+    r1.players["a"] = {"id": "a", "class_id": None}
+    await r1.select_class("a", "mage")
+    check("sala1 escolheu mage", r1.players["a"]["class_id"] == "mage")
+    check("mage travado p/ TEST", S.CHARACTERS_IN_USE.get("mage") == "TEST")
+    r2 = GameRoom("OUTRA")
+    r2._errs = []
+    async def cap2(pid, msg, *a, **k):
+        if isinstance(msg, dict) and msg.get("type") == "error": r2._errs.append(msg["msg"])
+    r2.send_to = cap2
+    async def noop2(*a, **k): pass
+    r2.broadcast_lobby = noop2
+    r2.players["b"] = {"id": "b", "class_id": None}
+    await r2.select_class("b", "mage")
+    check("sala2 recusada (mage em uso)", r2.players["b"]["class_id"] is None and r2._errs)
+    r1.release_character("a")
+    check("release liberou mage", "mage" not in S.CHARACTERS_IN_USE)
+
+    # [5] Carga do save ao iniciar
+    print("\n[5] start_game carrega save")
+    import tempfile, shutil
+    tmp5 = tempfile.mkdtemp(); old5 = S.GUILD_SAVE_DIR; S.GUILD_SAVE_DIR = tmp5
+    S.CHARACTERS_IN_USE.clear()
+    try:
+        seed = make_player("x", "Victor", "warrior", 0)
+        seed["guild_owned"]["tecnicas"] = ["brutalidade"]
+        S.write_guild_save(seed)
+        r = setup("lobby")
+        async def noop3(*a, **k): pass
+        r.broadcast = noop3; r.broadcast_lobby = noop3
+        r.players["a"] = {"id": "a", "name": "Victor", "class_id": "warrior", "ready": True}
+        r.host_pid = "a"
+        await r.start_game("a")
+        check("save carregado no start (owned)",
+              r.players["a"]["guild_owned"]["tecnicas"] == ["brutalidade"])
+    finally:
+        S.GUILD_SAVE_DIR = old5; shutil.rmtree(tmp5, ignore_errors=True); S.CHARACTERS_IN_USE.clear()
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
