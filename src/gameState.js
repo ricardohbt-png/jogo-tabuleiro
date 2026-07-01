@@ -1107,6 +1107,37 @@ const GS = (() => {
     send(msg);
   }
   function desarmarArmadilha() { send({ type: 'desarmar_armadilha' }); }
+
+  // ── Guilda dos Heróis (Fase 0) ──────────────────────────────────────────
+  function guildBuy(itemId)           { send({ type: 'guild_buy',   item_id: itemId }); }
+  function guildEquip(slot, itemId)   { send({ type: 'guild_equip', slot: slot, item_id: itemId }); }
+  function usarTecnica(tid, targetId) { send({ type: 'usar_tecnica', tecnica_id: tid, target_id: targetId != null ? targetId : null }); }
+  // Getters puros: catálogo filtrado por classe, itens possuídos e equipados
+  // pelo jogador (lidos de cityState.guild), e recarga restante de uma técnica
+  // (lida de game_state.players[].technique_cooldowns + gameState.round).
+  function guildCatalogFor(classId) {
+    const g = (cityState && cityState.guild) || null;
+    if (!g) return [];
+    return (g.catalog || []).filter(i => i.classe == null || i.classe === classId);
+  }
+  function guildOwnedOf(pid) {
+    const g = (cityState && cityState.guild) || null;
+    return (g && g.players && g.players[pid] && g.players[pid].owned)
+           || { especializacoes: [], tecnicas: [] };
+  }
+  function guildEquipOf(pid) {
+    const g = (cityState && cityState.guild) || null;
+    return (g && g.players && g.players[pid] && g.players[pid].equip)
+           || { tecnica: null, tecnica_exclusiva: null };
+  }
+  // Recarga restante (em rodadas) de uma técnica, lido do game_state.
+  function tecnicaRestante(player, tid) {
+    const cds = (player && player.technique_cooldowns) || {};
+    const pronta = cds[tid];
+    const round = (gameState && gameState.round) || 1;
+    return pronta ? Math.max(0, pronta - round) : 0;
+  }
+
   // ── Editor de masmorras — seleção de dungeon ─────────────────────────────────
   // file: nome do arquivo da masmorra autoral, ou null para modo procedural.
   function selectDungeon(file) { send({ type: 'select_dungeon', file: file || null }); }
@@ -1483,6 +1514,16 @@ const GS = (() => {
     criarArmadilha,
     desarmarArmadilha,
     armadilhaAdjacente,
+
+    // ── Guilda dos Heróis (Fase 0) ──
+    guildBuy,
+    guildEquip,
+    usarTecnica,
+    guildCatalogFor,
+    guildOwnedOf,
+    guildEquipOf,
+    tecnicaRestante,
+
     selectDungeon,
     selectCampaign,        // Fase 4a: sender (chamado com parênteses)
     pendingStory,          // Fase 4b: beat de história pendente (ou null)
