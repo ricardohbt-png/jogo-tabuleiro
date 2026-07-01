@@ -1097,6 +1097,10 @@ function destroyCityImage(){
   }
   const tb = document.getElementById('city-time-badge');
   if(tb) tb.style.display = '';
+  // Remove o overlay preto de transição (senão fica cobrindo a masmorra — o
+  // destroyCity3D fazia isso; o modo imagem precisa fazer o mesmo).
+  const fo = document.getElementById('city-fade-overlay');
+  if(fo) fo.remove();
 }
 
 // ── Fase 4b (história): overlay de história da campanha ───────────────────────
