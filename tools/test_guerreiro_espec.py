@@ -74,6 +74,12 @@ async def main():
     off = warrior(); off["skill_dobrar_dano"] = False
     check("golpe não armado → sem mudança", r._golpe_raw(off, 10) == 10)
 
+    # [5] Mira Certeira III (+2 dano)
+    print("\n[5] Mira III")
+    r = setup("playing")
+    check("_mira_dano base = 0", r._mira_dano_bonus(warrior()) == 0)
+    check("_mira_dano III = 2", r._mira_dano_bonus(warrior(esp=["guerreiro_mira_3"])) == 2)
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

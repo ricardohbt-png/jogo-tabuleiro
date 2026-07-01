@@ -3723,6 +3723,10 @@ class GameRoom:
         """Ataques extras concedidos pela Fúria: 2 com Nível III, senão 1."""
         return 2 if tem_espec(p, "guerreiro_furia_3") else 1
 
+    def _mira_dano_bonus(self, p):
+        """+2 de dano da Mira Certeira III (0 se não possuído)."""
+        return 2 if tem_espec(p, "guerreiro_mira_3") else 0
+
     def _teto_combinacao(self, p):
         """Máx. de habilidades do warrior armadas por turno pela posse de especializações."""
         if tem_espec(p, "guerreiro_mestre_combate"): return 3
@@ -4917,6 +4921,7 @@ class GameRoom:
                     sid = s["id"]
                     if sid == "mira_certeira":
                         p["skill_bonus_acerto"] = p.get("skill_bonus_acerto", 0) + 2
+                        p["skill_bonus_dano"] = p.get("skill_bonus_dano", 0) + self._mira_dano_bonus(p)
                     elif sid == "golpe_devastador":
                         p["skill_dobrar_dano"] = True
                     elif sid == "furia_berserker":
@@ -5012,6 +5017,7 @@ class GameRoom:
                     if crit: dmg *= 2
                     dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano
                               + self._mod_magia(p, "dano") + self._tecnica_bonus_dano(p)
+                              + p.get("skill_bonus_dano", 0)
                               - self._corrosao_arma_pen(p))
                     # Fraquezas/imunidades ao dano físico da arma
                     dmg = self._apply_damage_types(dmg, [DMG_PHYSICAL], target, weapon)
