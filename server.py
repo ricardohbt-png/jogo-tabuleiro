@@ -3795,6 +3795,12 @@ class GameRoom:
         if tem_espec(p, "clerigo_cura_2"): return 2
         return 1
 
+    def _massa_nivel(self, p):
+        """Nível da Cura em Massa (1/2/3) — define teto de dados E raio (2×nível)."""
+        if tem_espec(p, "clerigo_massa_3"): return 3
+        if tem_espec(p, "clerigo_massa_2"): return 2
+        return 1
+
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
         if self.phase != "playing":
@@ -6415,10 +6421,11 @@ class GameRoom:
         if p.get("action_done"):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
-        num_dados  = max(1, min(3, int((data or {}).get("num_dados", 1))))
+        nivel = self._massa_nivel(p)
+        num_dados = max(1, min(nivel, int((data or {}).get("num_dados", 1))))
         custo_fome = num_dados * 4
         custo_sede = num_dados * 4
-        raio = 5
+        raio = 2 * nivel   # 2 / 4 / 6
 
         if p["fome"] < custo_fome or p["sede"] < custo_sede:
             await self.send_to(pid, {"type": "error",

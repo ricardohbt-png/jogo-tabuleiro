@@ -60,6 +60,27 @@ async def main():
     finally:
         S.random.randint = _orig
 
+    # [3] Cura em Massa: nível → dados + raio
+    print("\n[3] Cura em Massa")
+    r = setup()
+    check("massa base = 1", r._massa_nivel(cleric()) == 1)
+    check("massa_2 = 2", r._massa_nivel(cleric(esp=["clerigo_massa_2"])) == 2)
+    check("massa_3 = 3", r._massa_nivel(cleric(esp=["clerigo_massa_2","clerigo_massa_3"])) == 3)
+    # integração: raio usado = 2*nível (capturado via r._no_raio); dados clampados ao nível
+    _orig = S.random.randint; S.random.randint = lambda a,b: 8
+    raios = []
+    try:
+        r = setup()
+        def cap_raio(p, alvo, raio, *a, **k): raios.append(raio); return True
+        r._no_raio = cap_raio
+        c = cleric(esp=["clerigo_massa_2"]); c["pos"]=[0,0]; r.players["c"]=c
+        alvo = make_player("a","Ana","warrior",1); alvo["pos"]=[0,1]; alvo["hp"]=1; alvo["max_hp"]=99; r.players["a"]=alvo
+        await r.handle_cura_area("c", {"num_dados":3})
+        check("massa_2 usa raio 4", 4 in raios)
+        check("massa_2 clampa dados a 2 (1+2*8+3=20)", alvo["hp"] == 1 + (2*8 + 3))
+    finally:
+        S.random.randint = _orig
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
