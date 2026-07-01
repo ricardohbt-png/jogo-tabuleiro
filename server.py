@@ -285,6 +285,36 @@ GUILD_CATALOG = {
         "desc": "Até o fim do turno, ataques físicos com arma causam +2 de dano.",
         "efeito": {"tipo": "buff_turno", "bonus_dano_arma": 2},
     },
+    "guerreiro_combinar_2": {
+        "id": "guerreiro_combinar_2", "categoria": "especializacao", "classe": "warrior",
+        "linha": "guerreiro_combate", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Combinar Duas", "icon": "⚔️",
+        "desc": "Permite armar DUAS habilidades no mesmo turno.",
+    },
+    "guerreiro_mestre_combate": {
+        "id": "guerreiro_mestre_combate", "categoria": "especializacao", "classe": "warrior",
+        "linha": "guerreiro_combate", "nivel": 4, "requer": "guerreiro_combinar_2", "exclusiva": False,
+        "preco": 300, "nome": "Mestre de Combate", "icon": "🏆",
+        "desc": "Permite armar as TRÊS habilidades no mesmo turno.",
+    },
+    "guerreiro_mira_3": {
+        "id": "guerreiro_mira_3", "categoria": "especializacao", "classe": "warrior",
+        "linha": "guerreiro_mira", "nivel": 3, "requer": "guerreiro_combinar_2", "exclusiva": False,
+        "preco": 200, "nome": "Mira Certeira III", "icon": "🎯",
+        "desc": "Mira Certeira também concede +2 de dano (além do +2 de acerto).",
+    },
+    "guerreiro_golpe_3": {
+        "id": "guerreiro_golpe_3", "categoria": "especializacao", "classe": "warrior",
+        "linha": "guerreiro_golpe", "nivel": 3, "requer": "guerreiro_combinar_2", "exclusiva": False,
+        "preco": 200, "nome": "Golpe Devastador III", "icon": "💥",
+        "desc": "Golpe Devastador passa a multiplicar os dados de dano por 2 (era ×1,5).",
+    },
+    "guerreiro_furia_3": {
+        "id": "guerreiro_furia_3", "categoria": "especializacao", "classe": "warrior",
+        "linha": "guerreiro_furia", "nivel": 3, "requer": "guerreiro_combinar_2", "exclusiva": False,
+        "preco": 200, "nome": "Fúria Berserker III", "icon": "🔥",
+        "desc": "Fúria Berserker concede 2 ataques extras (3 ataques no total).",
+    },
     # Fases 1-2 acrescentam aqui.
 }
 
@@ -295,6 +325,10 @@ def guild_items_for_class(class_id):
     """Itens do catálogo disponíveis para uma classe (cópias para envio)."""
     return [dict(v) for v in GUILD_CATALOG.values()
             if v["classe"] is None or v["classe"] == class_id]
+
+def tem_espec(player, espec_id):
+    """True se o jogador possui a especialização comprada (Fase 1+)."""
+    return espec_id in player.get("guild_owned", {}).get("especializacoes", [])
 
 # ─── CHARACTER CLASSES ────────────────────────────────────────────────────────
 
