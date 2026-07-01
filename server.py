@@ -3675,6 +3675,48 @@ class GameRoom:
         write_guild_save(p)
         await self.broadcast_city_state()
 
+    # ── Guilda dos Heróis: usar técnica na masmorra ─────────────────────────
+    def tecnica_restante(self, p, tid):
+        """Rodadas restantes de recarga de uma técnica (0 se pronta)."""
+        pronta = p.get("technique_cooldowns", {}).get(tid)
+        return max(0, pronta - self.round_num) if pronta else 0
+
+    def _tecnica_bonus_dano(self, p):
+        """+N de dano de arma concedido por técnica de turno (Brutalidade)."""
+        return p.get("tecnica_buff_dano_arma", 0)
+
+    async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
+        """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
+        if self.phase != "playing":
+            return
+        p = self.players.get(pid)
+        if not p or self.current_pid() != pid:
+            await self.send_to(pid, {"type": "error", "msg": "Não é o seu turno."})
+            return
+        eq = p["guild_equip"]
+        if tecnica_id not in (eq.get("tecnica"), eq.get("tecnica_exclusiva")):
+            await self.send_to(pid, {"type": "error", "msg": "Técnica não equipada."})
+            return
+        item = guild_item(tecnica_id)
+        if not item:
+            return
+        if self.tecnica_restante(p, tecnica_id) > 0:
+            await self.send_to(pid, {"type": "error",
+                "msg": f"{item['nome']} em recarga ({self.tecnica_restante(p, tecnica_id)} rodadas)."})
+            return
+        if p.get("fome", 0) < item["custo_fome"] or p.get("sede", 0) < item["custo_sede"]:
+            await self.send_to(pid, {"type": "error", "msg": "Fome/sede insuficientes."})
+            return
+        ef = item.get("efeito", {})
+        if ef.get("tipo") == "buff_turno":
+            p["tecnica_buff_dano_arma"] = p.get("tecnica_buff_dano_arma", 0) + ef.get("bonus_dano_arma", 0)
+        # (outros tipos/handlers chegam nas Fases 1-2)
+        p["fome"] -= item["custo_fome"]
+        p["sede"] -= item["custo_sede"]
+        p["technique_cooldowns"][tecnica_id] = self.round_num + item["recarga_rodadas"]
+        await self.gm_say(f"⚔️ **{p['name']}** ativa **{item['nome']}**!")
+        await self.push_state()
+
     async def handle_shop_buy(self, pid, shop, item_id):
         if self.phase != "city":
             return
@@ -4914,7 +4956,8 @@ class GameRoom:
                     dmg = raw_dmg + stat_bonus
                     if crit: dmg *= 2
                     dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano
-                              + self._mod_magia(p, "dano") - self._corrosao_arma_pen(p))
+                              + self._mod_magia(p, "dano") + self._tecnica_bonus_dano(p)
+                              - self._corrosao_arma_pen(p))
                     # Fraquezas/imunidades ao dano físico da arma
                     dmg = self._apply_damage_types(dmg, [DMG_PHYSICAL], target, weapon)
                     die_type = "d" + die_str.split("d")[1]
@@ -4929,7 +4972,8 @@ class GameRoom:
                     base = 2 if p.get("skill_dobrar_dano") else 1   # Golpe Devastador
                     dmg = base + str_bonus
                     if crit: dmg *= 2
-                    dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano + self._mod_magia(p, "dano"))
+                    dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano + self._mod_magia(p, "dano")
+                              + self._tecnica_bonus_dano(p))
                     weapon_name = "soco"
                     sb = f"+{str_bonus}" if str_bonus >= 0 else str(str_bonus)
                     dmg_detail = f"[{base}{sb}]"
@@ -6731,6 +6775,7 @@ class GameRoom:
             pp["action_done"]       = False
             pp["bonus_action_used"] = False
             pp["taverna_refeicoes"] = []   # refeições de balcão renovam a cada visita à cidade
+            pp["technique_cooldowns"] = {}   # descanso na cidade → recarga total das técnicas
             if pp.get("class_id") in ("mage", "cleric"):
                 self._recarregar_slots(pp)   # descanso → todos os slots voltam cheios
         await self.broadcast_city_state()
@@ -10063,6 +10108,7 @@ class GameRoom:
         p["skill_bonus_acerto"] = 0
         p["skill_dobrar_dano"]  = False
         p["skill_ataque_extra"] = False
+        p["tecnica_buff_dano_arma"] = 0   # buff de técnica de turno (Brutalidade) expira
         p["skill_extra_usado"]  = False
         p["cancao_atacou_apos"] = False   # reabre o custo extra de atacar sob a canção no novo turno
         # metamagia do mago expira ao fim do turno (flags planas)
@@ -13305,6 +13351,9 @@ async def handler(ws):
 
                 elif t == "guild_equip":
                     if room: await room.handle_guild_equip(pid, msg.get("slot"), msg.get("item_id"))
+
+                elif t == "usar_tecnica":
+                    if room: await room.handle_usar_tecnica(pid, msg.get("tecnica_id"), msg.get("target_id"))
 
                 elif t == "set_known_spells":
                     if room: await room.handle_set_known_spells(pid, msg.get("ids"))

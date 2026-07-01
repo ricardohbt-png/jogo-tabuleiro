@@ -173,6 +173,40 @@ async def main():
     finally:
         S.GUILD_SAVE_DIR = old7; shutil.rmtree(tmp7, ignore_errors=True)
 
+    # [8] Usar técnica + recarga + reset
+    print("\n[8] usar_tecnica + recarga")
+    r = setup("playing")
+    w = make_player("p1", "Victor", "warrior", 0); r.players["p1"] = w
+    r.player_order = ["p1"]; r.turn_index = 0; r.round_num = 1
+    w["guild_owned"]["tecnicas"] = ["brutalidade"]
+    w["guild_equip"]["tecnica"] = "brutalidade"
+    w["fome"] = 50; w["sede"] = 50
+    await r.handle_usar_tecnica("p1", "brutalidade")
+    check("buff de dano aplicado (+2)", w["tecnica_buff_dano_arma"] == 2)
+    check("debitou fome/sede (2/2)", w["fome"] == 48 and w["sede"] == 48)
+    check("entrou em recarga (round_num+3)", w["technique_cooldowns"]["brutalidade"] == 1 + 3)
+    r._errs.clear()   # mesma lista capturada por cap_send (não rebind)
+    await r.handle_usar_tecnica("p1", "brutalidade")
+    check("reuso bloqueado em recarga", len(r._errs) >= 1)
+    r._cancelar_timer_turno = lambda *a, **k: None   # sem loop de timer no teste
+    await r._voltar_para_cidade()
+    check("cidade zera cooldowns", w["technique_cooldowns"] == {})
+
+    # [9] Prontidão via helper
+    print("\n[9] tecnica_restante")
+    r.round_num = 1
+    w["technique_cooldowns"] = {"brutalidade": 4}
+    check("restante = 3", r.tecnica_restante(w, "brutalidade") == 3)
+    w["technique_cooldowns"] = {}
+    check("restante = 0 quando ausente", r.tecnica_restante(w, "brutalidade") == 0)
+
+    # [10] Bônus de dano da técnica no cálculo
+    print("\n[10] bônus de dano da técnica")
+    w["tecnica_buff_dano_arma"] = 2
+    check("helper soma +2", r._tecnica_bonus_dano(w) == 2)
+    w["tecnica_buff_dano_arma"] = 0
+    check("helper soma 0 sem buff", r._tecnica_bonus_dano(w) == 0)
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
