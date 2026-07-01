@@ -437,7 +437,7 @@ const _CTY_BLDGS = [
   {id:'ferreiro', name:'Ferraria',           emoji:'⚒',action:'Comprar equipamentos',
    x:5.5,z:-4,   w:3.2,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x5a2810,roofHex:0x3a1808,winHex:0xff8822,
    hx:83, hy:38, hero:false},
-  {id:'guilda',   name:'Guilda dos Heróis',  emoji:'⚔',action:'Missões disponíveis',
+  {id:'guilda',   name:'Guilda dos Heróis',  emoji:'⚔',action:'Comprar especializações e técnicas',
    x:-5.5,z:2,   w:3.0,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x5a4a10,roofHex:0x3a3008,winHex:0xffee88,
    hx:52, hy:21, hero:false},
   {id:'mercador', name:'Mercado',            emoji:'🛒',action:'Itens e poções',
@@ -1083,7 +1083,7 @@ function initCityImage(){
 
 function _cityHotspotClick(id){
   if(id === 'dungeon'){ triggerDungeonEntrance(); return; }
-  if(id === 'guilda'){ toast('⚔ Guilda dos Heróis — Missões em breve!','var(--gold)'); return; }
+  if(id === 'guilda'){ openGuild(); return; }
   // openShop espera o id do prédio cru (ex.: 'mercador'); é o que o servidor usa
   // como chave da loja. (NÃO usar MAPA_IDS_LOJA: 'mercado' aponta p/ loja vazia.)
   openShop(id);
@@ -1471,6 +1471,85 @@ function sellItem(slot){
 function closeShop(){
   GS.activeShop=null;
   const m=$('shop-modal'); if(m) m.classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ■  GUILDA DOS HERÓIS (Fase 0) — compra de especializações e técnicas
+//    Overlay próprio (#guild-modal) criado sob demanda. A compra vai pelo
+//    servidor (GS.guildBuy → guild_buy) e o city_state re-broadcast reabre/
+//    re-renderiza o painel. Equipar técnica é feito na FICHA (não aqui).
+// ═══════════════════════════════════════════════════════════════════════════
+function _guildItemRow(i, owned, me){
+  const lista = i.categoria === 'tecnica' ? (owned.tecnicas || []) : (owned.especializacoes || []);
+  const has   = lista.includes(i.id);
+  const reqOk = !i.requer || lista.includes(i.requer);
+  const gold  = (me && me.gold) || 0;
+  const custo = i.categoria === 'tecnica'
+    ? ` · 🍖${i.custo_fome} 💧${i.custo_sede} · ⏱️${i.recarga_rodadas}r` : '';
+  let action;
+  if(has){
+    action = `<span class="guild-owned">Possuído ✓</span>`;
+  } else if(!reqOk){
+    const reqNome = (GS.guildCatalogFor(me.class_id).find(x=>x.id===i.requer)||{}).nome || i.requer;
+    action = `<span class="guild-locked">🔒 Requer ${reqNome}</span>`;
+  } else {
+    const can = gold >= i.preco;
+    action = `<button class="guild-buy" ${can?'':'disabled'}
+                title="${can?'':'Ouro insuficiente'}"
+                onclick="GS.guildBuy('${i.id}')">Comprar 🪙${i.preco}</button>`;
+  }
+  return `<div class="guild-item${has?' is-owned':''}">
+    <span class="gi-icon">${i.icon||'✨'}</span>
+    <div class="gi-body"><b>${i.nome}</b><br><small>${i.desc||''}${custo}</small></div>
+    ${action}</div>`;
+}
+
+function _renderGuild(){
+  const modal = $('guild-modal'); if(!modal) return;
+  const me = GS.me || ((GS.cityState && GS.cityState.players) || []).find(p => p.id === GS.myPid);
+  if(!me) return;
+  const owned   = GS.guildOwnedOf(GS.myPid);
+  const catalog = GS.guildCatalogFor(me.class_id);
+  const specs = catalog.filter(i => i.categoria === 'especializacao');
+  const tecs  = catalog.filter(i => i.categoria === 'tecnica');
+  const goldEl = $('guild-gold'); if(goldEl) goldEl.textContent = me.gold || 0;
+  const sec = (arr) => arr.length
+    ? arr.map(i => _guildItemRow(i, owned, me)).join('')
+    : `<div class="guild-empty">— em breve —</div>`;
+  const specEl = $('guild-list-spec'); if(specEl) specEl.innerHTML = sec(specs);
+  const tecEl  = $('guild-list-tec');  if(tecEl)  tecEl.innerHTML  = sec(tecs);
+}
+
+function openGuild(){
+  if(!GS.cityState){ toast('Carregando guilda…','var(--blue)'); return; }
+  const me = GS.me || (GS.cityState.players || []).find(p => p.id === GS.myPid);
+  if(!me){ toast('Guilda indisponível agora.','var(--danger)'); return; }
+  let modal = $('guild-modal');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'guild-modal';
+    modal.className = 'guild-modal';
+    modal.innerHTML =
+      `<div class="guild-box">
+         <div class="guild-head">
+           <h2>⚔ Guilda dos Heróis</h2>
+           <button class="guild-close" onclick="closeGuild()" aria-label="Fechar">✕</button>
+         </div>
+         <div class="guild-sub">Aprimore sua classe permanentemente. Ouro: 💰 <span id="guild-gold">0</span></div>
+         <div class="guild-sections">
+           <section class="guild-sec"><h3>🌟 Especializações</h3><div class="guild-list" id="guild-list-spec"></div></section>
+           <section class="guild-sec"><h3>⚔️ Técnicas da Guilda</h3><div class="guild-list" id="guild-list-tec"></div></section>
+         </div>
+       </div>`;
+    modal.addEventListener('click', (e) => { if(e.target === modal) closeGuild(); });
+    document.body.appendChild(modal);
+  }
+  modal.classList.add('open');
+  _renderGuild();
+}
+
+function closeGuild(){
+  const m = $('guild-modal'); if(m) m.classList.remove('open');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -19658,6 +19737,9 @@ GS.on('cityState', msg => {
   }
   // Painel da ficha aberto → re-renderiza com o estado novo (equipar/reordenar).
   if(_fcPanelPid != null) _refreshFichaCidadePanel();
+  // Painel da Guilda aberto → re-renderiza (compra recém-concluída atualiza saldo/estado).
+  const _gm = $('guild-modal');
+  if(_gm && _gm.classList.contains('open')) _renderGuild();
 });
 
 GS.on('shopResult',  msg =>

@@ -448,6 +448,38 @@ input:focus { outline: none; border-color: var(--gold); }
                flex-shrink: 0; padding-top: 4px; }
 .shop-gold-disp { color: var(--gold); font-size: .88rem; }
 
+/* ── Guilda dos Heróis (Fase 0) ── */
+.guild-modal { position: fixed; inset: 0; background: #000c; display: none;
+               align-items: center; justify-content: center; z-index: 210; }
+.guild-modal.open { display: flex; }
+.guild-box { background: var(--bg2); border: 1px solid var(--border2); border-radius: 12px;
+             padding: 20px 22px; width: 560px; max-width: 96vw; max-height: 86vh;
+             display: flex; flex-direction: column; gap: 12px; }
+.guild-head { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.guild-head h2 { color: var(--gold); font-size: 1.15rem; letter-spacing: 2px; margin: 0; }
+.guild-close { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius);
+               color: var(--text2); font-size: .9rem; cursor: pointer; padding: 3px 9px; font-family: inherit; }
+.guild-close:hover { border-color: var(--gold); color: var(--gold); }
+.guild-sub { color: var(--text2); font-size: .76rem; margin-top: -4px; }
+.guild-sub #guild-gold { color: var(--gold); font-weight: bold; }
+.guild-sections { display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+.guild-sec h3 { color: var(--gold); font-size: .92rem; letter-spacing: 1px; margin: 0 0 6px; }
+.guild-list { display: flex; flex-direction: column; gap: 7px; }
+.guild-empty { color: var(--text3); font-size: .74rem; font-style: italic; padding: 4px 2px; }
+.guild-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+              background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); }
+.guild-item.is-owned { opacity: .78; border-color: var(--border2); }
+.gi-icon { font-size: 1.4rem; width: 30px; text-align: center; flex-shrink: 0; }
+.gi-body { flex: 1; font-size: .86rem; }
+.gi-body small { color: var(--text2); font-size: .7rem; }
+.guild-buy { padding: 5px 13px; background: var(--gold); color: #000; font-weight: bold;
+             font-size: .78rem; flex-shrink: 0; font-family: inherit; border: none;
+             border-radius: var(--radius); cursor: pointer; }
+.guild-buy:hover:not(:disabled) { background: var(--gold2); }
+.guild-buy:disabled { opacity: .35; cursor: not-allowed; }
+.guild-owned { color: var(--green, #2ecc71); font-size: .78rem; font-weight: bold; flex-shrink: 0; }
+.guild-locked { color: var(--text3); font-size: .72rem; flex-shrink: 0; }
+
 /* ── 3D View Controls ── */
 #view-3d-ctrls  { display:flex; align-items:center; gap:6px; margin-left:auto; flex-shrink:0; }
 #orbit-hint     { color:var(--text3); font-size:.67rem; line-height:1.3; display:none; }
