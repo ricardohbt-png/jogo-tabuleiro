@@ -315,6 +315,54 @@ GUILD_CATALOG = {
         "preco": 200, "nome": "Fúria Berserker III", "icon": "🔥",
         "desc": "Fúria Berserker concede 2 ataques extras (3 ataques no total).",
     },
+    "clerigo_cura_2": {
+        "id": "clerigo_cura_2", "categoria": "especializacao", "classe": "cleric",
+        "linha": "clerigo_cura", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Cura II", "icon": "🙌",
+        "desc": "Cura pode usar até 2d8 + INT.",
+    },
+    "clerigo_cura_3": {
+        "id": "clerigo_cura_3", "categoria": "especializacao", "classe": "cleric",
+        "linha": "clerigo_cura", "nivel": 3, "requer": "clerigo_cura_2", "exclusiva": False,
+        "preco": 200, "nome": "Cura III", "icon": "🙌",
+        "desc": "Cura pode usar até 3d8 + INT.",
+    },
+    "clerigo_massa_2": {
+        "id": "clerigo_massa_2", "categoria": "especializacao", "classe": "cleric",
+        "linha": "clerigo_massa", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Cura em Massa II", "icon": "🌟",
+        "desc": "Cura em Massa: até 2d8 + INT, raio 4.",
+    },
+    "clerigo_massa_3": {
+        "id": "clerigo_massa_3", "categoria": "especializacao", "classe": "cleric",
+        "linha": "clerigo_massa", "nivel": 3, "requer": "clerigo_massa_2", "exclusiva": False,
+        "preco": 200, "nome": "Cura em Massa III", "icon": "🌟",
+        "desc": "Cura em Massa: até 3d8 + INT, raio 6.",
+    },
+    "clerigo_purif_2": {
+        "id": "clerigo_purif_2", "categoria": "especializacao", "classe": "cleric",
+        "linha": "clerigo_purif", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Purificação II", "icon": "✨",
+        "desc": "Purificação também remove doenças.",
+    },
+    "clerigo_purif_3": {
+        "id": "clerigo_purif_3", "categoria": "especializacao", "classe": "cleric",
+        "linha": "clerigo_purif", "nivel": 3, "requer": "clerigo_purif_2", "exclusiva": False,
+        "preco": 200, "nome": "Purificação III", "icon": "✨",
+        "desc": "Purificação também remove maldições e petrificação.",
+    },
+    "clerigo_ressur_2": {
+        "id": "clerigo_ressur_2", "categoria": "especializacao", "classe": "cleric",
+        "linha": "clerigo_ressur", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Ressurreição II", "icon": "💫",
+        "desc": "Ressurreição traz o aliado com metade dos PV (🍖15 💧15).",
+    },
+    "clerigo_ressur_3": {
+        "id": "clerigo_ressur_3", "categoria": "especializacao", "classe": "cleric",
+        "linha": "clerigo_ressur", "nivel": 3, "requer": "clerigo_ressur_2", "exclusiva": False,
+        "preco": 200, "nome": "Ressurreição III", "icon": "💫",
+        "desc": "Ressurreição traz o aliado com PV cheio (🍖20 💧20).",
+    },
     # Fases 1-2 acrescentam aqui.
 }
 
