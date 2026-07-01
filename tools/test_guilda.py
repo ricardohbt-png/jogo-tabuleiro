@@ -53,6 +53,14 @@ async def main():
         with open(os.path.join(tmp, "rogue.json"), "w", encoding="utf-8") as f:
             f.write("{lixo}")
         check("save corrompido → vazio", S.load_guild_save("rogue")["tecnicas"] == [])
+        # valid JSON, wrong top-level type → vazio
+        with open(os.path.join(tmp, "paladin.json"), "w", encoding="utf-8") as f:
+            f.write("[1,2,3]")
+        check("save JSON lista → vazio", S.load_guild_save("paladin")["tecnicas"] == [])
+        # valid JSON, wrong field type → vazio (não vira ['o','o','p','s'])
+        with open(os.path.join(tmp, "bard.json"), "w", encoding="utf-8") as f:
+            f.write('{"tecnicas": "oops"}')
+        check("save campo tipo errado → vazio", S.load_guild_save("bard")["tecnicas"] == [])
         q = make_player("p2", "Victor", "warrior", 0)
         S.apply_guild_save(q)
         check("apply_guild_save popula", q["guild_owned"]["tecnicas"] == ["brutalidade"]

@@ -217,20 +217,28 @@ def _guild_empty():
             "equip": {"tecnica": None, "tecnica_exclusiva": None}}
 
 def load_guild_save(class_id):
-    """Lê o save do personagem. Ausente/corrompido → estrutura vazia (sem crash)."""
+    """Lê o save do personagem. Ausente/corrompido/forma inesperada → estrutura vazia (sem crash)."""
     try:
         with open(guild_save_path(class_id), "r", encoding="utf-8") as f:
             data = json.load(f)
-        eq = data.get("equip", {}) or {}
+        if not isinstance(data, dict):
+            raise ValueError("save não é um objeto JSON")
+        especializacoes = data.get("especializacoes", [])
+        tecnicas = data.get("tecnicas", [])
+        if not isinstance(especializacoes, list) or not isinstance(tecnicas, list):
+            raise ValueError("campos de guilda com tipo inesperado")
+        eq = data.get("equip", {})
+        if not isinstance(eq, dict):
+            eq = {}
         return {
-            "especializacoes": list(data.get("especializacoes", [])),
-            "tecnicas": list(data.get("tecnicas", [])),
+            "especializacoes": list(especializacoes),
+            "tecnicas": list(tecnicas),
             "equip": {"tecnica": eq.get("tecnica"),
                       "tecnica_exclusiva": eq.get("tecnica_exclusiva")},
         }
     except FileNotFoundError:
         return _guild_empty()
-    except (json.JSONDecodeError, OSError, ValueError) as e:
+    except Exception as e:
         print(f"[guild] save de {class_id} inválido ({e}); começando vazio")
         return _guild_empty()
 
@@ -249,9 +257,12 @@ def write_guild_save(player):
     }
     path = guild_save_path(class_id)
     tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    os.replace(tmp, path)
+    try:
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        os.replace(tmp, path)
+    except OSError as e:
+        print(f"[guild] falha ao gravar save de {class_id} ({e})")
 
 def apply_guild_save(player):
     """Popula guild_owned/guild_equip do jogador a partir do save do personagem."""
