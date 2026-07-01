@@ -9773,7 +9773,23 @@ function renderMyPanel(state){
     const fomeCost = sk.fome_cost || 0;
     const sedeCost = sk.sede_cost || 0;
     const icon = sk.icon ? sk.icon + ' ' : '';
-    const desc = sk.description || sk.desc || '';
+    let desc = sk.description || sk.desc || '';
+    // Guerreiro: a descrição reflete o nível possuído da especialização (Fase 1a).
+    if (me.class_id === 'warrior') {
+      const _esp = (GS.guildOwnedOf(me.id).especializacoes) || [];
+      if (sk.id === 'golpe_devastador')
+        desc = _esp.includes('guerreiro_golpe_3')
+          ? 'Multiplica os dados de dano por 2 neste turno.'
+          : 'Multiplica os dados de dano por 1,5 neste turno.';
+      else if (sk.id === 'mira_certeira')
+        desc = _esp.includes('guerreiro_mira_3')
+          ? '+2 no acerto e +2 no dano neste turno.'
+          : '+2 no dado de acerto neste turno.';
+      else if (sk.id === 'furia_berserker')
+        desc = _esp.includes('guerreiro_furia_3')
+          ? '2 ataques extras neste turno.'
+          : '1 ataque extra neste turno.';
+    }
     const btn = document.createElement('button');
 
     if (isSurvival) {
@@ -9791,7 +9807,16 @@ function renderMyPanel(state){
           <div class="skill-desc">${desc}</div>
         </div>
         <div class="skill-cost">${[fomeCost ? `🍖${fomeCost}` : '', sedeCost ? `💧${sedeCost}` : ''].filter(Boolean).join(' ') || '—'}</div>`;
-      btn.onclick = () => { _wToggle(sk.id); renderMyPanel(GS.gameState); };
+      btn.onclick = () => {
+        if (!_wSel(sk.id) && GS.getWarriorSelected().length >= GS.warriorComboCap()) {
+          const cap = GS.warriorComboCap();
+          toast(cap === 1
+            ? 'Compre "Combinar Duas" na Guilda para armar 2 habilidades por turno.'
+            : `Você só pode armar ${cap} habilidades por turno.`, 'var(--gold)');
+          return;
+        }
+        _wToggle(sk.id); renderMyPanel(GS.gameState);
+      };
     } else {
       // ── Demais classes: habilidade de MP (comportamento original). ──
       const ok = canAct && (me.mp >= sk.mp);

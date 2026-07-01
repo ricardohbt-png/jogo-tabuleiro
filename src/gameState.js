@@ -1323,6 +1323,13 @@ const GS = (() => {
   }
   function getWarriorSelected()  { return warriorSelected.slice(); }
   function clearWarriorSelected() { warriorSelected = []; }
+  // Teto de habilidades armadas do warrior pela posse de especializações da Guilda.
+  function warriorComboCap() {
+    const esp = (guildOwnedOf(myPid).especializacoes) || [];
+    if (esp.includes('guerreiro_mestre_combate')) return 3;
+    if (esp.includes('guerreiro_combinar_2'))     return 2;
+    return 1;
+  }
 
   // ── Tile-click resolver: pure decision, no DOM ─────────────────────────────
   // Called by the unified handleTileClick(tx, ty) in game.html.
@@ -1542,6 +1549,7 @@ const GS = (() => {
     toggleWarriorSkill,
     getWarriorSelected,
     clearWarriorSelected,
+    warriorComboCap,
 
     // ── Decorações de masmorra ──
     decorTilesOf,
