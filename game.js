@@ -9817,6 +9817,31 @@ function renderMyPanel(state){
     sl.insertAdjacentHTML('beforeend', renderFlagsWarrior(me));
   }
 
+  // ── Técnica(s) da Guilda equipada(s) (Fase 0) — 4º slot com recarga em rodadas ──
+  const _tecEq  = GS.guildEquipOf(me.id);
+  const _tecIds = [_tecEq.tecnica, _tecEq.tecnica_exclusiva].filter(Boolean);
+  for(const tid of _tecIds){
+    const cat = GS.guildCatalogFor(me.class_id).find(x => x.id === tid);
+    if(!cat) continue;
+    const restante = GS.tecnicaRestante(me, tid);
+    const podeUsar = GS.isMyTurn && me.alive && state.phase === 'playing'
+                     && restante === 0
+                     && (me.fome||0) >= (cat.custo_fome||0) && (me.sede||0) >= (cat.custo_sede||0);
+    const btn = document.createElement('button');
+    btn.className = 'skill-btn guild-tec' + (restante > 0 ? ' skill-cooldown' : '');
+    btn.disabled = !podeUsar;
+    const estado = restante > 0
+      ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ recarrega em ${restante}r</small>` : '';
+    btn.innerHTML = `
+      <div class="skill-info">
+        <div class="skill-name">${cat.icon||'⚔️'} ${cat.nome} <small style="color:var(--gold);font-size:.58rem;">GUILDA</small>${estado}</div>
+        <div class="skill-desc">${cat.desc||''}</div>
+      </div>
+      <div class="skill-cost">${restante>0 ? `${restante}r` : `🍖${cat.custo_fome} 💧${cat.custo_sede}`}</div>`;
+    btn.onclick = () => GS.usarTecnica(tid);
+    sl.appendChild(btn);
+  }
+
   // Ladino (Luccas): botão de Desarmar Armadilha quando há uma na casa/adjacente.
   if (me.class_id === 'rogue') {
     const db = _rogueDesarmarBtn(me);
@@ -10581,6 +10606,51 @@ function renderFichaCidadeBody(panel, player, editable){
     bagGrid.appendChild(slot);
   }
   body.appendChild(bagGrid);
+
+  // ── Técnica da Guilda (Fase 0) — equipar no 4º slot (só o próprio herói, na cidade) ──
+  if(editable){
+    const owned   = (GS.guildOwnedOf(player.id).tecnicas) || [];
+    const eq      = GS.guildEquipOf(player.id);
+    const catalog = GS.guildCatalogFor(player.class_id);
+    const nomeDe = id => { const c = catalog.find(x => x.id === id); return c ? c.nome : id; };
+    const isEx   = id => { const c = catalog.find(x => x.id === id); return !!(c && c.exclusiva); };
+
+    const mkSelect = (slotKey, cur, filtro, labelVazio) => {
+      const sel = document.createElement('select');
+      sel.className = 'guild-equip-sel';
+      const optVazio = new Option(labelVazio, '');
+      if(!cur) optVazio.selected = true;
+      sel.appendChild(optVazio);
+      owned.filter(filtro).forEach(id => {
+        const o = new Option(nomeDe(id), id);
+        if(id === cur) o.selected = true;
+        sel.appendChild(o);
+      });
+      sel.onchange = () => GS.guildEquip(slotKey, sel.value || null);
+      return sel;
+    };
+
+    const tecTitle = document.createElement('div');
+    tecTitle.className = 'section-title'; tecTitle.style.marginTop = '4px';
+    tecTitle.textContent = '⚔️ Técnica da Guilda';
+    body.appendChild(tecTitle);
+    body.appendChild(mkSelect('tecnica', eq.tecnica, id => !isEx(id), '— nenhuma técnica —'));
+
+    if(player.class_id === 'mage' || player.class_id === 'cleric'){
+      const exTitle = document.createElement('div');
+      exTitle.className = 'section-title'; exTitle.style.marginTop = '4px';
+      exTitle.textContent = '✨ Técnica Exclusiva';
+      body.appendChild(exTitle);
+      body.appendChild(mkSelect('tecnica_exclusiva', eq.tecnica_exclusiva, id => isEx(id), '— nenhuma exclusiva —'));
+    }
+
+    if(!owned.length){
+      const hint = document.createElement('div');
+      hint.className = 'guild-empty'; hint.style.padding = '2px 2px 0';
+      hint.textContent = 'Compre técnicas na Guilda dos Heróis.';
+      body.appendChild(hint);
+    }
+  }
 }
 
 // Drop num slot de EQUIPAMENTO: vindo da bolsa → equipar (off_hand p/ adaga/escudo).

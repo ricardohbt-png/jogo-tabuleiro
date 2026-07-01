@@ -479,6 +479,13 @@ input:focus { outline: none; border-color: var(--gold); }
 .guild-buy:disabled { opacity: .35; cursor: not-allowed; }
 .guild-owned { color: var(--green, #2ecc71); font-size: .78rem; font-weight: bold; flex-shrink: 0; }
 .guild-locked { color: var(--text3); font-size: .72rem; flex-shrink: 0; }
+/* Técnica equipada no HUD (4º slot) + seletor de equipar na ficha */
+.skill-btn.guild-tec { border-color: var(--gold); }
+.skill-btn.guild-tec.skill-cooldown { opacity: .6; }
+.guild-equip-sel { width: 100%; padding: 5px 8px; background: var(--bg3); color: var(--text);
+                   border: 1px solid var(--border2); border-radius: var(--radius);
+                   font-family: inherit; font-size: .8rem; cursor: pointer; }
+.guild-equip-sel:hover { border-color: var(--gold); }
 
 /* ── 3D View Controls ── */
 #view-3d-ctrls  { display:flex; align-items:center; gap:6px; margin-left:auto; flex-shrink:0; }
