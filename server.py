@@ -3635,6 +3635,46 @@ class GameRoom:
         write_guild_save(p)
         await self.broadcast_city_state()
 
+    async def handle_guild_equip(self, pid, slot, item_id):
+        """Equipa (ou desequipa, item_id=None) uma técnica da Guilda num slot.
+        'tecnica' é genérico (todas as classes); 'tecnica_exclusiva' só mago/clérigo
+        e só aceita item com exclusiva=True."""
+        if self.phase != "city":
+            await self.send_to(pid, {"type": "error", "msg": "Só é possível equipar técnicas na cidade."})
+            return
+        p = self.players.get(pid)
+        if not p:
+            return
+        if slot not in ("tecnica", "tecnica_exclusiva"):
+            await self.send_to(pid, {"type": "error", "msg": "Slot de técnica inválido."})
+            return
+        # Slot exclusivo só para mago/clérigo
+        if slot == "tecnica_exclusiva" and p.get("class_id") not in ("mage", "cleric"):
+            await self.send_to(pid, {"type": "error", "msg": "Sua classe não tem slot de técnica exclusiva."})
+            return
+        if item_id is None:   # desequipar
+            p["guild_equip"][slot] = None
+            write_guild_save(p)
+            await self.broadcast_city_state()
+            return
+        item = guild_item(item_id)
+        if not item or item["categoria"] != "tecnica":
+            await self.send_to(pid, {"type": "error", "msg": "Técnica desconhecida."})
+            return
+        if item_id not in p["guild_owned"]["tecnicas"]:
+            await self.send_to(pid, {"type": "error", "msg": "Você não possui esta técnica."})
+            return
+        # Coerência exclusiva ↔ slot
+        if slot == "tecnica_exclusiva" and not item.get("exclusiva"):
+            await self.send_to(pid, {"type": "error", "msg": "Esta técnica não é exclusiva."})
+            return
+        if slot == "tecnica" and item.get("exclusiva"):
+            await self.send_to(pid, {"type": "error", "msg": "Técnica exclusiva vai no slot exclusivo."})
+            return
+        p["guild_equip"][slot] = item_id
+        write_guild_save(p)
+        await self.broadcast_city_state()
+
     async def handle_shop_buy(self, pid, shop, item_id):
         if self.phase != "city":
             return
@@ -13262,6 +13302,9 @@ async def handler(ws):
 
                 elif t == "guild_buy":
                     if room: await room.handle_guild_buy(pid, msg.get("item_id"))
+
+                elif t == "guild_equip":
+                    if room: await room.handle_guild_equip(pid, msg.get("slot"), msg.get("item_id"))
 
                 elif t == "set_known_spells":
                     if room: await room.handle_set_known_spells(pid, msg.get("ids"))

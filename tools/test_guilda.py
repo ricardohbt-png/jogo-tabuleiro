@@ -145,6 +145,34 @@ async def main():
     finally:
         S.GUILD_SAVE_DIR = old6; shutil.rmtree(tmp6, ignore_errors=True)
 
+    # [7] Equipar
+    print("\n[7] handle_guild_equip")
+    tmp7 = tempfile.mkdtemp(); old7 = S.GUILD_SAVE_DIR; S.GUILD_SAVE_DIR = tmp7
+    try:
+        r = setup("city")
+        w = make_player("p1", "Victor", "warrior", 0); r.players["p1"] = w
+        w["guild_owned"]["tecnicas"] = ["brutalidade"]
+        await r.handle_guild_equip("p1", "tecnica", "brutalidade")
+        check("equipou brutalidade", w["guild_equip"]["tecnica"] == "brutalidade")
+        check("persistiu equip", S.load_guild_save("warrior")["equip"]["tecnica"] == "brutalidade")
+        await r.handle_guild_equip("p1", "tecnica", None)
+        check("desequipou", w["guild_equip"]["tecnica"] is None)
+        r._errs.clear()
+        await r.handle_guild_equip("p1", "tecnica", "brutalidade_fantasma")
+        check("recusa técnica não possuída", w["guild_equip"]["tecnica"] is None and r._errs)
+        r._errs.clear()
+        await r.handle_guild_equip("p1", "tecnica_exclusiva", "brutalidade")
+        check("warrior recusa slot exclusivo", w["guild_equip"]["tecnica_exclusiva"] is None and r._errs)
+        rm = setup("city"); m = make_player("m","Pedro","mage",0); rm.players["m"] = m
+        m["guild_owned"]["tecnicas"] = ["brutalidade"]
+        await rm.handle_guild_equip("m", "tecnica", "brutalidade")
+        check("mago equipa genérica", m["guild_equip"]["tecnica"] == "brutalidade")
+        rm._errs.clear()
+        await rm.handle_guild_equip("m", "tecnica_exclusiva", "brutalidade")
+        check("exclusiva recusa técnica não-exclusiva", m["guild_equip"]["tecnica_exclusiva"] is None and rm._errs)
+    finally:
+        S.GUILD_SAVE_DIR = old7; shutil.rmtree(tmp7, ignore_errors=True)
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
