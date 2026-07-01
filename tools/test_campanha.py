@@ -87,6 +87,7 @@ async def test_avanco_e_vitoria():
     # cumpre o objetivo da fase 0 (kill_all)
     for m in r.monsters.values(): m["hp"] = 0
     await r._check_objectives()
+    await r.handle_encerrar_missao("p1")
     check("após concluir fase 0 → cidade", r.phase == "city")
     check("avançou para a fase 1", r.campaign_phase == 1)
     check("dungeon_generated zerado p/ carregar a próxima", r.dungeon_generated is False)
@@ -105,6 +106,7 @@ async def test_avanco_e_vitoria():
     r.end_game = fake_end
     for m in r.monsters.values(): m["hp"] = 0
     await r._check_objectives()
+    await r.handle_encerrar_missao("p1")
     check("última fase concluída → end_game(victory)", vit["c"] and vit["v"] is True)
 
 async def test_retomar_mesma_fase():
@@ -172,34 +174,99 @@ def _camp_hist():
                 {"file": "test_camp_b.json", "intro": "ABRE-2", "outro": "FECHA-2"}]}
 
 async def test_historia_runtime():
-    print("\n[9] runtime da história")
+    print("\n[9] runtime da história (slides)")
+    def textos(beat): return [s.get("text") for s in beat["slides"]]
     r = setup_room(); r.mode = "campaign"; r.campaign = _camp_hist(); r.campaign_phase = 0; r.phase = "city"
     await r.enter_dungeon("p1")
     pay = r._campaign_payload()
     check("abertura da fase 0 inclui abertura da campanha",
-          pay["story"] and "ABERTURA-CAMP" in pay["story"]["text"] and "ABRE-1" in pay["story"]["text"])
+          pay["story"] and textos(pay["story"]) == ["ABERTURA-CAMP", "ABRE-1"])
     check("key de abertura", pay["story"]["key"] == "intro:0")
-    # conclui a fase 0 → cidade com encerramento
     for m in r.monsters.values(): m["hp"] = 0
     await r._check_objectives()
+    await r.handle_encerrar_missao("p1")
     check("foi para a cidade", r.phase == "city")
     payc = r._campaign_payload()
     check("encerramento da fase 0 na cidade",
-          payc["story"] and payc["story"]["text"] == "FECHA-1" and payc["story"]["key"] == "outro:0")
-    # entra na fase 1: outro é limpo; abertura da fase 1 (sem abertura da campanha)
+          payc["story"] and textos(payc["story"]) == ["FECHA-1"] and payc["story"]["key"] == "outro:0")
     await r.enter_dungeon("p1")
     pay1 = r._campaign_payload()
     check("abertura da fase 1 (sem abertura da campanha)",
-          pay1["story"] and pay1["story"]["text"] == "ABRE-2")
-    # conclui a última → end_game com story final
+          pay1["story"] and textos(pay1["story"]) == ["ABRE-2"])
     cap = {}
     async def fake_end(victory, story=None): cap["victory"] = victory; cap["story"] = story
     r.end_game = fake_end
     for m in r.monsters.values(): m["hp"] = 0
     await r._check_objectives()
+    await r.handle_encerrar_missao("p1")
     check("última fase → end_game com story final",
           cap.get("victory") is True and cap.get("story")
-          and "FECHA-2" in cap["story"]["text"] and "FINAL-CAMP" in cap["story"]["text"])
+          and textos(cap["story"]) == ["FECHA-2", "FINAL-CAMP"])
+
+
+async def test_historia_audio():
+    print("\n[12] precedência do áudio na junção")
+    camp = {"schema_version": 1, "id": "ca", "name": "CA",
+            "intro": {"slides": [{"text": "ic"}], "audio": "assets/story/camp.mp3"},
+            "dungeons": [{"file": "test_camp_a.json",
+                          "intro": {"slides": [{"text": "if"}], "audio": "assets/story/fase.mp3"},
+                          "outro": {"slides": [{"text": "of"}], "audio": "assets/story/of.mp3"}},
+                         {"file": "test_camp_b.json"}]}
+    r = setup_room(); r.mode = "campaign"; r.campaign = camp; r.campaign_phase = 0; r.phase = "city"
+    await r.enter_dungeon("p1")
+    pay = r._campaign_payload()
+    check("abertura: áudio da campanha vem antes (precede a fase)",
+          pay["story"]["audio"] == "assets/story/camp.mp3")
+    check("abertura junta os 2 slides",
+          [s["text"] for s in pay["story"]["slides"]] == ["ic", "if"])
+
+def test_validacao_story():
+    print("\n[13] validação de história (string|objeto)")
+    base = {"schema_version": 1, "id": "c", "name": "C"}
+    ok = lambda d: server.validar_campanha(d)[0]
+    check("intro string ok", ok(dict(base, intro="oi", dungeons=["test_camp_a.json"])) is True)
+    d = dict(base, dungeons=[{"file": "test_camp_a.json",
+        "intro": {"slides": [{"text": "a", "image": "assets/story/x.png", "fit": "cover"}],
+                  "audio": "assets/story/m.mp3"}}])
+    check("objeto slides ok", ok(d) is True)
+    d = dict(base, dungeons=[{"file": "test_camp_a.json", "intro": {"slides": [{}]}}])
+    check("slide vazio recusa", ok(d) is False)
+    d = dict(base, dungeons=[{"file": "test_camp_a.json",
+        "intro": {"slides": [{"text": "a", "fit": "zoom"}]}}])
+    check("fit inválido recusa", ok(d) is False)
+    d = dict(base, intro={"slides": "x"}, dungeons=["test_camp_a.json"])
+    check("slides não-lista recusa", ok(d) is False)
+    d = dict(base, intro={"slides": [{"text": "a"}], "audio": 5}, dungeons=["test_camp_a.json"])
+    check("audio não-string recusa", ok(d) is False)
+
+
+def test_story_norm():
+    print("\n[11] _story_norm / _story_beat")
+    # string vira 1 slide de texto
+    n = server._story_norm("oi")
+    check("string -> 1 slide texto", n == {"slides": [{"text": "oi"}], "audio": None})
+    # vazio -> sem slides
+    check("vazio -> sem slides", server._story_norm("")["slides"] == [])
+    check("None -> sem slides", server._story_norm(None)["slides"] == [])
+    # objeto: slides + audio, fit default cover, slide vazio descartado
+    obj = {"slides": [
+        {"text": "a", "image": "assets/story/x.png", "fit": "contain"},
+        {"image": "assets/story/y.png"},
+        {"text": "", "image": ""},      # descartado
+        {"text": "c"},
+    ], "audio": "assets/story/m.mp3"}
+    n = server._story_norm(obj)
+    check("audio preservado", n["audio"] == "assets/story/m.mp3")
+    check("3 slides válidos", len(n["slides"]) == 3)
+    check("fit contain mantido", n["slides"][0]["fit"] == "contain")
+    check("fit default cover", n["slides"][1]["fit"] == "cover")
+    check("slide sem image perde a chave image", "image" not in n["slides"][2])
+    # _story_beat concatena na ordem e pega o 1º áudio
+    beat = server._story_beat("k", ["abre", {"slides": [{"text": "b"}], "audio": "assets/story/t.ogg"}])
+    check("beat concatena", [s.get("text") for s in beat["slides"]] == ["abre", "b"])
+    check("beat 1º áudio", beat["audio"] == "assets/story/t.ogg")
+    check("beat vazio -> None", server._story_beat("k", ["", None]) is None)
+
 
 async def test_roundtrip_editor_campanha():
     print("\n[10] round-trip: campaign do editor passa em validar_campanha")
@@ -212,6 +279,7 @@ async def test_roundtrip_editor_campanha():
 
 async def main():
     test_validacao()
+    test_validacao_story()
     await test_selecao()
     await test_entrada_fase0()
     await test_avanco_e_vitoria()
@@ -221,6 +289,8 @@ async def main():
     await test_entrada_objeto()
     await test_historia_runtime()
     await test_roundtrip_editor_campanha()
+    test_story_norm()
+    await test_historia_audio()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

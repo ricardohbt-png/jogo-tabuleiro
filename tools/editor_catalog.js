@@ -159,11 +159,6 @@ window.EDITOR_CATALOG = {
       "emoji": "🧪"
     },
     {
-      "id": "mana_potion",
-      "name": "Poção de Mana",
-      "emoji": "💙"
-    },
-    {
       "id": "elixir",
       "name": "Elixir da Força",
       "emoji": "⚗️"
@@ -309,6 +304,404 @@ window.EDITOR_CATALOG = {
     {
       "id": "veneno_polvo_abissal",
       "name": "Tinta do Polvo Abissal"
+    }
+  ],
+  "decorations": [
+    {
+      "type": "cama",
+      "nome": "Cama",
+      "emoji": "🛏️",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "lareira",
+      "nome": "Lareira",
+      "emoji": "🪵",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "fonte",
+      "nome": "Fonte",
+      "emoji": "⛲",
+      "size": [
+        2,
+        2
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": "fountain"
+    },
+    {
+      "type": "fogueira",
+      "nome": "Fogueira",
+      "emoji": "🔥",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": "campfire"
+    },
+    {
+      "type": "tumba",
+      "nome": "Tumba",
+      "emoji": "⚰️",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "mesa_cadeiras",
+      "nome": "Mesa com cadeiras",
+      "emoji": "🪑",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "estante",
+      "nome": "Estante",
+      "emoji": "🗄️",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "carroca",
+      "nome": "Carroça",
+      "emoji": "🛒",
+      "size": [
+        2,
+        2
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "coluna",
+      "nome": "Coluna de pedra",
+      "emoji": "🏛️",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "barril",
+      "nome": "Barril",
+      "emoji": "🛢️",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "arca_tesouros",
+      "nome": "Arca de tesouros",
+      "emoji": "💰",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "cama_casal",
+      "nome": "Cama de casal",
+      "emoji": "🛌",
+      "size": [
+        2,
+        2
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "estante_livros",
+      "nome": "Estante de livros",
+      "emoji": "📚",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "altar",
+      "nome": "Altar ritualístico",
+      "emoji": "🛐",
+      "size": [
+        2,
+        2
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "trono",
+      "nome": "Trono de rei",
+      "emoji": "👑",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "gaiola",
+      "nome": "Gaiola com esqueleto",
+      "emoji": "⛓️",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "grades_prisao",
+      "nome": "Grades de prisão",
+      "emoji": "🚧",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "estante_armas",
+      "nome": "Estante de armas",
+      "emoji": "⚔️",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "mesa_tortura",
+      "nome": "Mesa de tortura",
+      "emoji": "🔪",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "mesa_quimica",
+      "nome": "Mesa de química",
+      "emoji": "🧪",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "arvore",
+      "nome": "Árvore",
+      "emoji": "🌳",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "arvore_grande",
+      "nome": "Árvore grande",
+      "emoji": "🌲",
+      "size": [
+        2,
+        2
+      ],
+      "gira": false,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null
+    },
+    {
+      "type": "chao",
+      "nome": "Chão (grama)",
+      "emoji": "🌿",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": "floor"
+    }
+  ],
+  "materiais": [
+    {
+      "id": "pedra_cinza",
+      "nome": "Pedra cinza",
+      "categoria": "piso",
+      "cor": "#6f6f78",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "terra",
+      "nome": "Terra",
+      "categoria": "piso",
+      "cor": "#6b4f33",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "grama",
+      "nome": "Grama",
+      "categoria": "piso",
+      "cor": "#3f6b2f",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "pedra_negra",
+      "nome": "Pedra negra",
+      "categoria": "piso",
+      "cor": "#23232a",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "entulho",
+      "nome": "Entulho",
+      "categoria": "piso",
+      "cor": "#4a4640",
+      "solido": true,
+      "oclui": true
+    },
+    {
+      "id": "pedra_normal",
+      "nome": "Pedra normal",
+      "categoria": "parede",
+      "cor": "#5a5a6a",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "enegrecida",
+      "nome": "Pedra enegrecida",
+      "categoria": "parede",
+      "cor": "#2c2b30",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "pedra_caverna",
+      "nome": "Pedra de caverna",
+      "categoria": "parede",
+      "cor": "#4d4338",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "desmoronada",
+      "nome": "Parede desmoronada",
+      "categoria": "parede",
+      "cor": "#534b40",
+      "solido": false,
+      "oclui": false
     }
   ]
 };

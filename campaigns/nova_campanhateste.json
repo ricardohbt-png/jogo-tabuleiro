@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "id": "nova_campanhateste",
+  "name": "Nova Campanhateste",
+  "intro": "alguma historia legal ",
+  "outro": "Algo deu certo, parabén você venceu",
+  "dungeons": [
+    {
+      "file": "amostra.json",
+      "intro": "vamos começar ",
+      "outro": "obrigado, mas a princesa está em outro castelo"
+    },
+    {
+      "file": "teste_basico.json"
+    }
+  ]
+}

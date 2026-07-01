@@ -21,7 +21,22 @@ def build_catalog():
             "precisa_veneno": tipo == "fosso_envenenado" or bool(meta.get("custo_veneno")),
         })
     venoms = [{"id": vid, "name": meta["nome"]} for vid, meta in server.VENENOS.items()]
-    return {"monsters": monsters, "items": items, "traps": traps, "venoms": venoms}
+    decorations = []
+    for dtype, meta in server.DECOR_TYPES.items():
+        decorations.append({
+            "type": dtype, "nome": meta["nome"], "emoji": meta["emoji"],
+            "size": meta["size"], "gira": meta["gira"], "alto": meta["alto"],
+            "pisavel": meta["pisavel"], "loot_capaz": meta["loot_capaz"],
+            "special": meta["special"],
+        })
+    materiais = []
+    for mid, meta in server.MATERIAIS.items():
+        materiais.append({
+            "id": mid, "nome": meta["nome"], "categoria": meta["categoria"],
+            "cor": meta["cor"], "solido": meta["solido"], "oclui": meta["oclui"],
+        })
+    return {"monsters": monsters, "items": items, "traps": traps,
+            "venoms": venoms, "decorations": decorations, "materiais": materiais}
 
 def write_catalog_js(destino):
     """Escreve o catálogo como atribuição JS (carregável via <script> em file://)."""

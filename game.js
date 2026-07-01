@@ -17,6 +17,10 @@ document.body.innerHTML = `
 <div id="vinheta-sobrevivencia" style="position:fixed; inset:0; pointer-events:none; z-index:50; transition:box-shadow 1s ease;"></div>
 <!-- ══ CONNECT ══ -->
 <div id="screen-connect" class="screen active">
+  <!-- Capa do jogo: aparece em tela cheia no boot; após o 1º clique recua para fundo sutil (ver .dismissed em game.css) -->
+  <div id="cover-splash">
+    <div id="cover-hint">Clique para começar</div>
+  </div>
   <div class="logo">
     <h1>LEGENDS FOR HIRE</h1>
     <p>RPG de Tabuleiro Online — até 6 jogadores</p>
@@ -199,7 +203,7 @@ document.body.innerHTML = `
 <!-- Chest Loot Window -->
 <div id="chest-overlay">
   <div class="chest-box">
-    <h3>🎁 Baú de Tesouro</h3>
+    <h3 id="chest-title">🎁 Baú de Tesouro</h3>
     <div class="chest-subtitle" id="chest-subtitle">Aproxime-se do baú para coletar</div>
     <div id="chest-items-list"></div>
     <button class="btn-cancel" style="margin-top:10px" onclick="closeChestWindow()">Fechar</button>
@@ -232,6 +236,36 @@ const SPR_SCALE=CELL/48; // sprite scale factor (sprites designed for CELL=48)
 const _ASSET_VER = Date.now();
 function _assetURL(path){ return path + (path.includes('?') ? '&' : '?') + 'v=' + _ASSET_VER; }
 
+// Tamanho da miniatura PNG extrudada por casa de footprint (maior = miniatura
+// maior/mais alta no 3D). 1 casa de árvore → ~1.8 unidades de largura.
+const DECOR_MINI_ESCALA = 2.0;
+
+// ── Decoration 3D spec — shape/height/color per type (procedural render) ──────
+const DECOR_3D = {
+  cama:           { shape: 'box', h: 0.5,  color: 0x8a5a3c },
+  lareira:        { shape: 'box', h: 0.8,  color: 0x6b6b6b },
+  fonte:          { shape: 'cyl', h: 0.6,  color: 0x5a8fb0 },
+  fogueira:       { shape: 'cyl', h: 0.25, color: 0xd2691e },
+  tumba:          { shape: 'box', h: 0.6,  color: 0x777777 },
+  mesa_cadeiras:  { shape: 'box', h: 0.6,  color: 0x9a6b3c },
+  estante:        { shape: 'box', h: 1.6,  color: 0x6b4a2a },
+  carroca:        { shape: 'box', h: 0.7,  color: 0x7a5230 },
+  coluna:         { shape: 'cyl', h: 1.8,  color: 0xaaaaaa },
+  barril:         { shape: 'cyl', h: 0.8,  color: 0x8a5a2a },
+  arca_tesouros:  { shape: 'box', h: 0.6,  color: 0xc8a23a },
+  cama_casal:     { shape: 'box', h: 0.5,  color: 0x8a5a3c },
+  estante_livros: { shape: 'box', h: 1.6,  color: 0x5a3a1a },
+  altar:          { shape: 'box', h: 0.9,  color: 0x9a9aae },
+  trono:          { shape: 'box', h: 1.2,  color: 0xc8a23a },
+  gaiola:         { shape: 'box', h: 1.5,  color: 0x555555 },
+  grades_prisao:  { shape: 'box', h: 1.5,  color: 0x555555 },
+  estante_armas:  { shape: 'box', h: 1.6,  color: 0x6b4a2a },
+  mesa_tortura:   { shape: 'box', h: 0.6,  color: 0x7a4a4a },
+  mesa_quimica:   { shape: 'box', h: 0.7,  color: 0x4a7a6a },
+  arvore:         { shape: 'cyl', h: 1.8,  color: 0x2e7d32 },
+  arvore_grande:  { shape: 'cyl', h: 2.6,  color: 0x1b5e20 },
+};
+
 // ── Hi-DPI helper — call at start of every renderMap / dice frame ──
 function applyDPR(canvas, cssW, cssH){
   const dpr=window.devicePixelRatio||1;
@@ -252,6 +286,7 @@ function $(id){ return document.getElementById(id); }
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $(id).classList.add('active');
+  if (typeof _menuMusicOnScreen === 'function') _menuMusicOnScreen(id);
 }
 
 function toast(msg, color='var(--red)'){
@@ -386,22 +421,31 @@ function startGame(){ send({type:'start_game'}); }
 
 // ■  CITY SCREEN — Three.js 3D isometric hub
 
+// 'image' = cidade ilustrada com hotspots (padrão). '3d' = cena Three.js antiga (fallback).
+const CITY_MODE = 'image';
+let _cityImg = null;   // estado do overlay de imagem (espelha _city3)
 let _city3 = null;
 let _cityTOD = 0.78; // time-of-day: 0=midnight, 0.25=dawn, 0.5=noon, 0.75=dusk
 
 const _CTY_BLDGS = [
   {id:'taverna',  name:'Taverna',            emoji:'🍺',action:'Comer e beber — recuperar fome e sede',
-   x:-5.5,z:-4,  w:3.2,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x7a3a10,roofHex:0x4a2208,winHex:0xffcc44},
+   x:-5.5,z:-4,  w:3.2,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x7a3a10,roofHex:0x4a2208,winHex:0xffcc44,
+   hx:32, hy:46, hero:false},
   {id:'templo',   name:'Templo',             emoji:'⛪',action:'Bênçãos e curas divinas',
-   x:0,  z:-7.5, w:4.0,d:3.2,wallH:3.0,roofH:2.2, wallHex:0x283088,roofHex:0x181858,winHex:0x88aaff},
+   x:0,  z:-7.5, w:4.0,d:3.2,wallH:3.0,roofH:2.2, wallHex:0x283088,roofHex:0x181858,winHex:0x88aaff,
+   hx:67, hy:35, hero:true},
   {id:'ferreiro', name:'Ferraria',           emoji:'⚒',action:'Comprar equipamentos',
-   x:5.5,z:-4,   w:3.2,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x5a2810,roofHex:0x3a1808,winHex:0xff8822},
-  {id:'guilda',   name:'Guilda dos Heróis',  emoji:'⚔',action:'Missões disponíveis',
-   x:-5.5,z:2,   w:3.0,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x5a4a10,roofHex:0x3a3008,winHex:0xffee88},
+   x:5.5,z:-4,   w:3.2,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x5a2810,roofHex:0x3a1808,winHex:0xff8822,
+   hx:83, hy:38, hero:false},
+  {id:'guilda',   name:'Guilda dos Heróis',  emoji:'⚔',action:'Comprar especializações e técnicas',
+   x:-5.5,z:2,   w:3.0,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x5a4a10,roofHex:0x3a3008,winHex:0xffee88,
+   hx:52, hy:21, hero:false},
   {id:'mercador', name:'Mercado',            emoji:'🛒',action:'Itens e poções',
-   x:5.5,z:2,    w:3.0,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x205a20,roofHex:0x103815,winHex:0x88ff88},
+   x:5.5,z:2,    w:3.0,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x205a20,roofHex:0x103815,winHex:0x88ff88,
+   hx:50, hy:40, hero:true},
   {id:'dungeon',  name:'Portão da Masmorra', emoji:'💀',action:'Entrar na masmorra!',
-   x:0,  z:8,    w:3.4,d:1.8,wallH:3.6,roofH:0,   wallHex:0x1a1428,roofHex:0x000000,winHex:0xff2020,isDungeon:true},
+   x:0,  z:8,    w:3.4,d:1.8,wallH:3.6,roofH:0,   wallHex:0x1a1428,roofHex:0x000000,winHex:0xff2020,isDungeon:true,
+   hx:23, hy:84, hero:true},
 ];
 
 function initCity3D(){
@@ -891,12 +935,23 @@ function _updateCityHeroBar(msg){
     const isMe=p.id===GS.myPid;
     const hpPct=p.max_hp>0?p.hp/p.max_hp*100:0;
     const st=p.hp<=0?'dead':(hpPct<40?'wounded':'');
-    return `<div class="city-hcard${isMe?' me':''}">
-      <span style="font-size:18px;line-height:1">${p.emoji}</span>
+    const foto=HERO_PORTRAIT_PATHS[p.class_id]||'';
+    // Foto 3:4 recortada no rosto; cai para emoji se faltar/erro de carregamento.
+    const face = foto
+      ? `<img class="city-hcard-face" src="${foto}" alt=""
+            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+         <span class="city-hcard-face-fallback" style="display:none">${p.emoji}</span>`
+      : `<span class="city-hcard-face-fallback">${p.emoji}</span>`;
+    return `<div class="city-hcard${isMe?' me':''}" data-pid="${p.id}"
+                 title="Clique para ver a ficha" style="cursor:pointer">
+      ${face}
       <div><div class="city-hcard-name">${p.name}</div>
            <div class="city-hcard-hp ${st}">${p.hp}/${p.max_hp} HP</div></div>
     </div>`;
   }).join('')+`<div class="city-gold-badge">💰 ${gold} Ouro</div>`;
+  bar.querySelectorAll('.city-hcard[data-pid]').forEach(card => {
+    card.onclick = () => abrirFichaCidade(card.getAttribute('data-pid'));
+  });
 }
 
 function _updateCityTimeBadge(){
@@ -924,13 +979,13 @@ function triggerDungeonEntrance(){
       osc.frequency.setValueAtTime(80,now);
       osc.frequency.linearRampToValueAtTime(40,now+1.0);
       g.gain.setValueAtTime(0.4,now); g.gain.linearRampToValueAtTime(0,now+1.3);
-      osc.connect(g); g.connect(actx.destination);
+      osc.connect(g); g.connect(_sfxBus());
       osc.start(now); osc.stop(now+1.3);
       // Low rumble
       const osc2=actx.createOscillator(), g2=actx.createGain();
       osc2.type='sine'; osc2.frequency.value=38;
       g2.gain.setValueAtTime(0.28,now); g2.gain.linearRampToValueAtTime(0,now+1.6);
-      osc2.connect(g2); g2.connect(actx.destination);
+      osc2.connect(g2); g2.connect(_sfxBus());
       osc2.start(now); osc2.stop(now+1.6);
     }
   }catch(ex){}
@@ -963,26 +1018,189 @@ function destroyCity3D(){
   if(fo) fo.remove();
 }
 
+// ■  CITY SCREEN (modo imagem) — overlay em DOM sobre #screen-city
+
+function initCityImage(){
+  if(_cityImg) return;
+  const host = document.getElementById('screen-city');
+  if(!host) return;
+
+  const stage = document.createElement('div');
+  stage.id = 'city-stage';
+
+  // Moldura 3:2 que define a caixa renderizada da imagem; imagem, hotspots,
+  // vida e selo são posicionados DENTRO dela em % → alinhamento garantido.
+  const frame = document.createElement('div');
+  frame.id = 'city-frame';
+  stage.appendChild(frame);
+
+  const img = document.createElement('img');
+  img.id = 'city-img';
+  img.src = 'assets/city/alva_e_luz.jpg?v=' + (window.ASSET_VER || '1');
+  img.alt = 'Cidade de Alva e Luz';
+  img.draggable = false;
+  frame.appendChild(img);
+
+  const life = document.createElement('div');
+  life.id = 'city-life';
+  // Vida sutil: névoa nas bordas + brilhos piscando (tochas/janelas) + pulsar do portão.
+  life.innerHTML =
+    '<div class="city-fog"></div>' +
+    '<div class="city-flicker" style="left:32%;top:46%"></div>' +
+    '<div class="city-flicker" style="left:50%;top:40%;animation-delay:.7s"></div>' +
+    '<div class="city-flicker" style="left:83%;top:38%;animation-delay:1.1s"></div>' +
+    '<div class="city-flicker" style="left:60%;top:55%;animation-delay:.4s"></div>' +
+    '<div class="city-gateglow" style="left:23%;top:84%"></div>';
+  frame.appendChild(life);
+
+  const hotWrap = document.createElement('div');
+  hotWrap.id = 'city-hotspots';
+  for(const bd of _CTY_BLDGS){
+    if(bd.hx == null) continue;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'city-hotspot' + (bd.hero ? ' hero' : '') + (bd.id==='dungeon' ? ' dungeon' : '');
+    btn.style.left = bd.hx + '%';
+    btn.style.top  = bd.hy + '%';
+    btn.setAttribute('aria-label', bd.name + ' — ' + bd.action);
+    btn.title = bd.name + ' — ' + bd.action;
+    const label = bd.id==='dungeon' ? 'Ir para a aventura' : bd.name;
+    btn.innerHTML =
+      '<span class="ch-glow" aria-hidden="true"></span>' +
+      '<span class="ch-pin"><span class="ch-emoji">' + bd.emoji + '</span>' +
+      '<span class="ch-name">' + label + '</span></span>';
+    btn.addEventListener('click', () => _cityHotspotClick(bd.id));
+    hotWrap.appendChild(btn);
+  }
+  frame.appendChild(hotWrap);
+  host.appendChild(stage);
+
+  const tb = document.getElementById('city-time-badge');
+  if(tb) tb.style.display = 'none';
+
+  _cityImg = { stage, frame, img, life, hotWrap, raf:0 };
+}
+
+function _cityHotspotClick(id){
+  if(id === 'dungeon'){ triggerDungeonEntrance(); return; }
+  if(id === 'guilda'){ openGuild(); return; }
+  // openShop espera o id do prédio cru (ex.: 'mercador'); é o que o servidor usa
+  // como chave da loja. (NÃO usar MAPA_IDS_LOJA: 'mercado' aponta p/ loja vazia.)
+  openShop(id);
+}
+
+function destroyCityImage(){
+  if(_cityImg){
+    if(_cityImg.raf) cancelAnimationFrame(_cityImg.raf);
+    if(_cityImg.stage && _cityImg.stage.parentNode) _cityImg.stage.parentNode.removeChild(_cityImg.stage);
+    _cityImg = null;
+  }
+  const tb = document.getElementById('city-time-badge');
+  if(tb) tb.style.display = '';
+  // Remove o overlay preto de transição (senão fica cobrindo a masmorra — o
+  // destroyCity3D fazia isso; o modo imagem precisa fazer o mesmo).
+  const fo = document.getElementById('city-fade-overlay');
+  if(fo) fo.remove();
+}
+
 // ── Fase 4b (história): overlay de história da campanha ───────────────────────
-// Mostra o beat pendente (GS.pendingStory) sobre o tabuleiro/cidade; não bloqueia
-// o jogo. "Continuar" marca o beat como visto (de-dup por key em gameState.js).
+// Slideshow de história (layout A): imagem de fundo + texto sobreposto + áudio
+// em loop. Cada cliente navega seus próprios slides; "Continuar" no último marca
+// o beat como visto (de-dup por key em gameState.js).
+let _storyIdx = 0;
+let _storyMuted = false;
+let _storyAudioEl = null;
+
+function _storyAudioStop() {
+  if (_storyAudioEl) { try { _storyAudioEl.pause(); } catch (e) {} _storyAudioEl.src = ''; _storyAudioEl = null; }
+}
+
+function _storyPaintMute() {
+  const ov = document.getElementById('story-overlay');
+  if (ov) ov.querySelector('#story-mute').textContent = _storyMuted ? '🔇' : '🔊';
+}
+
+function _storyPaint() {
+  const beat = GS.pendingStory && GS.pendingStory();
+  const ov = document.getElementById('story-overlay');
+  if (!beat || !ov) return;
+  const slide = beat.slides[_storyIdx] || {};
+  const img = ov.querySelector('#story-img');
+  if (slide.image) {
+    img.style.backgroundImage = 'url("' + slide.image + '")';
+    img.style.backgroundSize = (slide.fit === 'contain') ? 'contain' : 'cover';
+  } else {
+    img.style.backgroundImage = 'none';
+  }
+  const txtEl = ov.querySelector('#story-text');
+  txtEl.textContent = slide.text || '';
+  txtEl.style.display = slide.text ? 'block' : 'none';
+  const dots = ov.querySelector('#story-dots');
+  dots.innerHTML = '';
+  beat.slides.forEach((_, i) => {
+    const d = document.createElement('span');
+    d.className = 'story-dot' + (i === _storyIdx ? ' on' : '');
+    dots.appendChild(d);
+  });
+  ov.querySelector('#story-prev').style.visibility = _storyIdx > 0 ? 'visible' : 'hidden';
+  ov.querySelector('#story-continue').textContent =
+    (_storyIdx < beat.slides.length - 1) ? 'Continuar →' : 'Concluir';
+  _storyPaintMute();
+}
+
 function renderStory() {
   const beat = GS.pendingStory && GS.pendingStory();
   let ov = document.getElementById('story-overlay');
-  if (!beat) { if (ov) ov.style.display = 'none'; return; }
+  if (!beat || !beat.slides || !beat.slides.length) {
+    if (ov) ov.style.display = 'none';
+    _storyAudioStop();
+    return;
+  }
   if (!ov) {
     ov = document.createElement('div'); ov.id = 'story-overlay';
-    ov.innerHTML = '<div id="story-box"><div id="story-text"></div>'
-      + '<button id="story-continue">Continuar</button></div>';
+    ov.innerHTML =
+      '<div id="story-img"></div>'
+      + '<div id="story-scrim"></div>'
+      + '<button id="story-mute" title="Som">🔊</button>'
+      + '<div id="story-box">'
+      +   '<div id="story-text"></div>'
+      +   '<div id="story-nav">'
+      +     '<button id="story-prev">‹ Voltar</button>'
+      +     '<div id="story-dots"></div>'
+      +     '<button id="story-continue">Continuar →</button>'
+      +   '</div>'
+      + '</div>';
     document.body.appendChild(ov);
+    ov.querySelector('#story-prev').onclick = () => {
+      if (_storyIdx > 0) { _storyIdx--; _storyPaint(); }
+    };
     ov.querySelector('#story-continue').onclick = () => {
       const b = GS.pendingStory && GS.pendingStory();
-      if (b) GS.marcarStoryVista(b.key);
-      ov.style.display = 'none';
+      if (!b) return;
+      if (_storyIdx < b.slides.length - 1) { _storyIdx++; _storyPaint(); }
+      else { GS.marcarStoryVista(b.key); _storyAudioStop(); ov.style.display = 'none'; }
+    };
+    ov.querySelector('#story-mute').onclick = () => {
+      _storyMuted = !_storyMuted;
+      if (_storyAudioEl) _storyAudioEl.muted = _storyMuted;
+      _storyPaintMute();
     };
   }
-  ov.querySelector('#story-text').textContent = beat.text;
-  ov.style.display = 'flex';
+  // (Re)inicializa só quando o beat muda — evita resetar o índice/áudio a cada
+  // broadcast de game_state (que reenvia a história enquanto ela está aberta).
+  if (ov.dataset.key !== beat.key) {
+    ov.dataset.key = beat.key;
+    _storyIdx = 0;
+    beat.slides.forEach(s => { if (s.image) { const im = new Image(); im.src = s.image; } });
+    _storyAudioStop();
+    if (beat.audio) {
+      _storyAudioEl = new Audio(beat.audio);
+      _storyAudioEl.loop = true; _storyAudioEl.muted = _storyMuted; _storyAudioEl.volume = 0.6;
+      _storyAudioEl.play().catch(() => {});
+    }
+  }
+  ov.style.display = 'block';
+  _storyPaint();
 }
 
 function handleCityState(msg){
@@ -1002,7 +1220,7 @@ function handleCityState(msg){
   if(btnD){
     const isHost=GS.myPid&&GS.myPid===msg.host;
     // Em campanha, o botão indica a próxima fase a entrar.
-    btnD.textContent = msg.campaign ? `▶ Entrar na fase ${msg.campaign.phase}` : '⚔ Entrar na Masmorra';
+    btnD.textContent = msg.campaign ? `▶ Ir para a aventura — Fase ${msg.campaign.phase}` : '▶ Ir para a aventura';
     btnD.style.display=isHost?'inline-block':'none';
     if(dungBar) dungBar.style.display=isHost?'flex':'none';
     if(hint) hint.textContent=isHost
@@ -1012,8 +1230,9 @@ function handleCityState(msg){
   // Shop
   if(GS.activeShop) _renderShopItems();
   if(GS.pendingShopOpen){ const s=GS.pendingShopOpen; GS.pendingShopOpen=null; openShop(s); }
-  // Init 3D city scene on first arrival
-  if(!_city3&&window.THREE) initCity3D();
+  // Monta a cidade conforme o modo (imagem por padrão; 3D como fallback).
+  if(CITY_MODE==='image'){ if(!_cityImg) initCityImage(); }
+  else if(!_city3&&window.THREE){ initCity3D(); }
   // Clear fade overlay if returning from dungeon
   const fo=document.getElementById('city-fade-overlay');
   if(fo){ fo.classList.remove('on'); setTimeout(()=>{ if(fo.parentNode) fo.remove(); },1200); }
@@ -1230,11 +1449,11 @@ function _itemDesc(item){
   if(item.effect==='ration')
     return `+${item.value||0} fome e sede`;
   const fx={
-    heal:'Restaura HP', mana:'Restaura Mana', atk_bonus:'Bônus de Ataque',
+    heal:'Restaura HP', atk_bonus:'Bônus de Ataque',
     maxhp:'Aumenta HP máx', atk:'Bônus Ataque', spd:'Velocidade',
-    full_heal:'Cura total de HP', full_mana:'Restaura toda a mana',
+    full_heal:'Cura total de HP',
     bless:'Bônus de Ataque divino', cleanse:'Remove status negativos',
-    temp_atk:'Ataque temporário', full_heal_mp:'Cura HP e Mana completos',
+    temp_atk:'Ataque temporário',
     def_:'CA +',
   };
   const v=item.value?` ${item.value}`:'';
@@ -1252,6 +1471,85 @@ function sellItem(slot){
 function closeShop(){
   GS.activeShop=null;
   const m=$('shop-modal'); if(m) m.classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ■  GUILDA DOS HERÓIS (Fase 0) — compra de especializações e técnicas
+//    Overlay próprio (#guild-modal) criado sob demanda. A compra vai pelo
+//    servidor (GS.guildBuy → guild_buy) e o city_state re-broadcast reabre/
+//    re-renderiza o painel. Equipar técnica é feito na FICHA (não aqui).
+// ═══════════════════════════════════════════════════════════════════════════
+function _guildItemRow(i, owned, me){
+  const lista = i.categoria === 'tecnica' ? (owned.tecnicas || []) : (owned.especializacoes || []);
+  const has   = lista.includes(i.id);
+  const reqOk = !i.requer || lista.includes(i.requer);
+  const gold  = (me && me.gold) || 0;
+  const custo = i.categoria === 'tecnica'
+    ? ` · 🍖${i.custo_fome} 💧${i.custo_sede} · ⏱️${i.recarga_rodadas}r` : '';
+  let action;
+  if(has){
+    action = `<span class="guild-owned">Possuído ✓</span>`;
+  } else if(!reqOk){
+    const reqNome = (GS.guildCatalogFor(me.class_id).find(x=>x.id===i.requer)||{}).nome || i.requer;
+    action = `<span class="guild-locked">🔒 Requer ${reqNome}</span>`;
+  } else {
+    const can = gold >= i.preco;
+    action = `<button class="guild-buy" ${can?'':'disabled'}
+                title="${can?'':'Ouro insuficiente'}"
+                onclick="GS.guildBuy('${i.id}')">Comprar 🪙${i.preco}</button>`;
+  }
+  return `<div class="guild-item${has?' is-owned':''}">
+    <span class="gi-icon">${i.icon||'✨'}</span>
+    <div class="gi-body"><b>${i.nome}</b><br><small>${i.desc||''}${custo}</small></div>
+    ${action}</div>`;
+}
+
+function _renderGuild(){
+  const modal = $('guild-modal'); if(!modal) return;
+  const me = GS.me || ((GS.cityState && GS.cityState.players) || []).find(p => p.id === GS.myPid);
+  if(!me) return;
+  const owned   = GS.guildOwnedOf(GS.myPid);
+  const catalog = GS.guildCatalogFor(me.class_id);
+  const specs = catalog.filter(i => i.categoria === 'especializacao');
+  const tecs  = catalog.filter(i => i.categoria === 'tecnica');
+  const goldEl = $('guild-gold'); if(goldEl) goldEl.textContent = me.gold || 0;
+  const sec = (arr) => arr.length
+    ? arr.map(i => _guildItemRow(i, owned, me)).join('')
+    : `<div class="guild-empty">— em breve —</div>`;
+  const specEl = $('guild-list-spec'); if(specEl) specEl.innerHTML = sec(specs);
+  const tecEl  = $('guild-list-tec');  if(tecEl)  tecEl.innerHTML  = sec(tecs);
+}
+
+function openGuild(){
+  if(!GS.cityState){ toast('Carregando guilda…','var(--blue)'); return; }
+  const me = GS.me || (GS.cityState.players || []).find(p => p.id === GS.myPid);
+  if(!me){ toast('Guilda indisponível agora.','var(--danger)'); return; }
+  let modal = $('guild-modal');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'guild-modal';
+    modal.className = 'guild-modal';
+    modal.innerHTML =
+      `<div class="guild-box">
+         <div class="guild-head">
+           <h2>⚔ Guilda dos Heróis</h2>
+           <button class="guild-close" onclick="closeGuild()" aria-label="Fechar">✕</button>
+         </div>
+         <div class="guild-sub">Aprimore sua classe permanentemente. Ouro: 💰 <span id="guild-gold">0</span></div>
+         <div class="guild-sections">
+           <section class="guild-sec"><h3>🌟 Especializações</h3><div class="guild-list" id="guild-list-spec"></div></section>
+           <section class="guild-sec"><h3>⚔️ Técnicas da Guilda</h3><div class="guild-list" id="guild-list-tec"></div></section>
+         </div>
+       </div>`;
+    modal.addEventListener('click', (e) => { if(e.target === modal) closeGuild(); });
+    document.body.appendChild(modal);
+  }
+  modal.classList.add('open');
+  _renderGuild();
+}
+
+function closeGuild(){
+  const m = $('guild-modal'); if(m) m.classList.remove('open');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2694,7 +2992,7 @@ function gerarHabilidadesEspeciais(item){
   if(item.id === 'tocha')
     especiais.push(L(`🕯️ <strong style="color:#c8a951">Iluminação:</strong> Expande a linha de visão do personagem em 1 quadrado em todas as direções. Dura ${item.duracao} rodadas. Após expirar o slot fica vazio.`));
   if(item.tipo === 'varinha')
-    especiais.push(L(`✨ <strong style="color:#cc44ff">Armazenamento de Magia:</strong> Guarda ${item.slotsMagia} magia(s) durante a campanha. Usar uma magia armazenada = ação bônus (-1 fome -1 sede). Não consome MP do personagem. Recarregue na cidade.`));
+    especiais.push(L(`✨ <strong style="color:#cc44ff">Armazenamento de Magia:</strong> Guarda ${item.slotsMagia} magia(s) durante a campanha. Usar uma magia armazenada = ação bônus (-1 fome -1 sede). Não consome slot de magia do personagem. Recarregue na cidade.`));
   if(item.tipo === 'itemMagico' && item.slotsExtras)
     especiais.push(L(`🎒 <strong style="color:#cc44ff">Expansão de Inventário:</strong> Ocupa 1 slot mágico e adiciona permanentemente +${item.slotsExtras} slots ao inventário livre enquanto equipada.`));
   if(item.duasMaos && !item.modosDuasMaos && item.tipo === 'arma')
@@ -2867,6 +3165,37 @@ function _objRow(o){
   const label = _OBJ_LABELS[(o && o.type)] || (o && o.type) || 'Objetivo';
   return `<div class="obj-row"><span class="obj-ic">${_objIcon(o && o.status)}</span><span class="obj-lbl">${label}</span></div>`;
 }
+// Confirmação antes de encerrar a missão (itens largados podem ficar para trás).
+// Usa um overlay próprio em vez de window.confirm(): o confirm nativo pode ser
+// silenciosamente suprimido pelo navegador ("não permitir mais diálogos"),
+// fazendo o botão parecer que "não funciona".
+function encerrarMissaoConfirm(){
+  if (document.getElementById('encerrar-missao-overlay')) return;   // já aberto
+  const ov = document.createElement('div');
+  ov.id = 'encerrar-missao-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:#000a;display:flex;'
+    + 'align-items:center;justify-content:center;z-index:500;';
+  ov.innerHTML =
+    '<div style="background:rgba(28,20,6,0.98);border:1px solid var(--gold,#ffcc44);'
+    + 'border-radius:12px;padding:22px 24px;max-width:340px;text-align:center;'
+    + 'box-shadow:0 8px 30px #000b;">'
+    + '<div style="color:var(--gold,#ffcc44);font-weight:700;font-size:1rem;margin-bottom:8px;">🏁 Encerrar missão?</div>'
+    + '<div style="color:#e8dcc0;font-size:.82rem;line-height:1.4;margin-bottom:16px;">'
+    + 'Pegue os itens de recompensa antes de encerrar. A missão será concluída e a campanha seguirá para a próxima aventura.</div>'
+    + '<div style="display:flex;gap:10px;">'
+    + '<button id="em-cancel" style="flex:1;padding:8px;border-radius:8px;border:1px solid #6a5a3a;'
+    + 'background:rgba(40,32,16,0.9);color:#cbbe9c;font-weight:700;font-size:.78rem;cursor:pointer;">Cancelar</button>'
+    + '<button id="em-ok" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--gold,#ffcc44);'
+    + 'background:rgba(60,45,12,0.96);color:var(--gold,#ffcc44);font-weight:700;font-size:.78rem;cursor:pointer;">🏁 Encerrar</button>'
+    + '</div></div>';
+  const close = () => { if (ov.parentNode) ov.parentNode.removeChild(ov); };
+  ov.addEventListener('click', e => { if (e.target === ov) close(); });
+  document.body.appendChild(ov);
+  document.getElementById('em-cancel').onclick = close;
+  document.getElementById('em-ok').onclick = () => { close(); GS.encerrarMissao(); };
+}
+window.encerrarMissaoConfirm = encerrarMissaoConfirm;
+
 function renderObjectivesHUD(msg){
   const hud = $('objectives-hud');
   const btn = $('btn-libertar');
@@ -2888,6 +3217,9 @@ function renderObjectivesHUD(msg){
   if(secs.length){
     html += '<div class="obj-sec-label">Secundários</div>';
     for(const s of secs) html += _objRow(s);
+  }
+  if (GS.missionCompletePending) {
+    html += `<button class="btn-encerrar-missao" onclick="encerrarMissaoConfirm()">🏁 Encerrar missão</button>`;
   }
   hud.innerHTML = html;
   hud.style.display = '';
@@ -4240,6 +4572,66 @@ function _getMonster2DImg(imageName){
   return img;
 }
 
+// Miniatura 2D do prisioneiro (imagem editável). url completa em assets/pawns/prisioneiros/.
+const _pris2DImg = {};
+function _getPrisoner2DImg(imageName){
+  if(!imageName) return null;
+  let img = _pris2DImg[imageName];
+  if(img === undefined){
+    img = new Image();
+    img.onload = () => { if(!mode3D && window.GS && GS.gameState){ try{ renderMap(GS.gameState); }catch(_){} } };
+    img.src = _assetURL(`assets/pawns/prisioneiros/${imageName}`);
+    _pris2DImg[imageName] = img;
+  }
+  return img;
+}
+
+// Miniatura 2D de objeto de decoração (PNG editável em assets/objetos/).
+const _obj2DImg = {};
+function _getObjeto2DImg(imageName){
+  if(!imageName) return null;
+  let img = _obj2DImg[imageName];
+  if(img === undefined){
+    img = new Image();
+    img.onload = () => { if(!mode3D && window.GS && GS.gameState){ try{ renderMap(GS.gameState); }catch(_){} } };
+    img.src = _assetURL(`assets/objetos/${imageName}`);
+    _obj2DImg[imageName] = img;
+  }
+  return (img.complete && img.naturalWidth) ? img : null;
+}
+
+// Rotação de objetos (decorações): facing → ângulo. O facing canônico [0,1] é 0°;
+// cada giro de 90° avança no sentido [0,1]→[1,0]→[0,-1]→[-1,0]. Usado no 2D (canvas)
+// e no 3D (rotation.y), para a imagem do objeto realmente girar.
+function _facingAngle2D(f){
+  if(!f) return 0;
+  if(f[0]===1  && f[1]===0)  return Math.PI/2;
+  if(f[0]===0  && f[1]===-1) return Math.PI;
+  if(f[0]===-1 && f[1]===0)  return -Math.PI/2;
+  return 0;
+}
+function _facingAngleY3D(f){
+  // Eixo Y do mundo 3D: sinal oposto ao 2D para o giro casar visualmente com o topo.
+  if(!f) return 0;
+  if(f[0]===1  && f[1]===0)  return -Math.PI/2;
+  if(f[0]===0  && f[1]===-1) return Math.PI;
+  if(f[0]===-1 && f[1]===0)  return Math.PI/2;
+  return 0;
+}
+
+// Visibilidade de uma armadilha colocável para o jogador local:
+//  • aliada (colocada por um jogador): visível a todos (para não pisarem);
+//  • so_luccas (oculta de masmorra/kobold): só o Luccas (rogue) enxerga;
+//  • hostil autorada: ESCONDIDA até ser revelada (detecção do Luccas/Clarividência →
+//    visivel) ou disparada (ativada). Antes disso não aparece no mapa.
+function _armadilhaVisivelParaMim(arm, me){
+  if(arm.aliada) return true;
+  if(arm.so_luccas) return !!(me && me.class_id === 'rogue');
+  return !!(arm.visivel || arm.ativada);
+}
+// Cache 2D do PNG de uma armadilha (mesma pasta dos objetos de decoração).
+function _getArmadilha2DImg(imageName){ return _getObjeto2DImg(imageName); }
+
 // Escala da miniatura por PORTE (categoria de tamanho da ficha do monstro, vinda
 // do servidor em m.porte). Guia a geração do sprite no 2D e no 3D. Ausente/
 // desconhecido = "medio" (1.0). Ex.: kobolds são "pequeno".
@@ -4493,10 +4885,15 @@ function renderMap(state){
   const meAnimados2D = (state.players.find(p=>p.id===GS.myPid)?.animados||[]).filter(a=>a.vida_atual>0);
   const selAnimado2D = isAnimadosTurn2D && _animadoSel
     ? meAnimados2D.find(a=>a.id===_animadoSel) : null;
+  const meuPris2D = state.prisoner && state.prisoner.alive && state.prisoner.freed
+    && state.prisoner.rescuer_pid === GS.myPid;
+  const selPris2D = isAnimadosTurn2D && _prisSel && meuPris2D ? state.prisoner : null;
 
   const reachable=new Set();
   if(selAnimado2D && selAnimado2D.moves_left>0)
     bfsReachable(state.tiles,exploredSet,selAnimado2D.pos[0],selAnimado2D.pos[1],selAnimado2D.moves_left,reachable);
+  else if(selPris2D && (selPris2D.moves_left||0)>0)
+    bfsReachable(state.tiles,exploredSet,selPris2D.pos[0],selPris2D.pos[1],selPris2D.moves_left,reachable);
   else if(!isAnimadosTurn2D&&GS.isMyTurn&&me&&me.moves_left>0)
     bfsReachable(state.tiles,exploredSet,me.pos[0],me.pos[1],me.moves_left,reachable);
 
@@ -4539,8 +4936,11 @@ function renderMap(state){
   for(let y=0;y<H;y++) for(let x=0;x<W;x++){
     if(!terrainSet.has(`${x},${y}`)) continue;
     const t=state.tiles[y][x];
-    if(t===TILE_FLOOR || t===TILE_DOOR)
-      drawFloor3D(ctx, x, y, reachable.has(`${x},${y}`), attackable.has(`${x},${y}`), weaponRangeTiles.has(`${x},${y}`));
+    if(t===TILE_FLOOR || t===TILE_DOOR){
+      const mid = matDaCasa(state, x, y);
+      drawFloor3D(ctx, x, y, reachable.has(`${x},${y}`), attackable.has(`${x},${y}`), weaponRangeTiles.has(`${x},${y}`), mid);
+      if(mid==='entulho') drawEntulho2D(ctx, x, y);
+    }
   }
 
   // ── PASS 1.5: Realce de MAGIA — alcance (vermelho), zona (laranja), área (verde)
@@ -4569,7 +4969,7 @@ function renderMap(state){
     if(state.tiles[y][x]===TILE_WALL){
       const sy=y+1;
       if(sy<H && state.tiles[sy][x]===TILE_FLOOR && terrainSet.has(`${x},${sy}`))
-        drawWallSouthFace(ctx, x, y);
+        drawWallSouthFace(ctx, x, y, matDaCasa(state, x, y));
     }
   }
 
@@ -4577,7 +4977,7 @@ function renderMap(state){
   for(let y=0;y<H;y++) for(let x=0;x<W;x++){
     if(!terrainSet.has(`${x},${y}`)) continue;
     if(state.tiles[y][x]===TILE_WALL)
-      drawWallTop3D(ctx, x, y);
+      drawWallTop3D(ctx, x, y, matDaCasa(state, x, y));
   }
 
   // ── PASS 3.5: Doors — closed = wooden leaf (blocks sight), open = frame ──────
@@ -4686,13 +5086,12 @@ function renderMap(state){
   }
 
   // ── Armadilhas colocáveis (Passo 2) — borda verde = aliada; vermelha = ativada
+  {
+  const _meArm = state.players.find(p=>p.id===GS.myPid);
   for(const arm of (state.armadilhas||[])){
     const [ax,ay]=arm.pos;
     if(!exploredSet.has(`${ax},${ay}`)) continue;
-    if(arm.so_luccas){
-      const me=state.players.find(p=>p.id===GS.myPid);
-      if(!(me && me.class_id==='rogue')) continue;   // ocultas: só Luccas enxerga
-    }
+    if(!_armadilhaVisivelParaMim(arm, _meArm)) continue;   // escondida até ser revelada
     const X=ax*CELL, Y=ay*CELL;
     ctx.fillStyle = arm.ativada ? 'rgba(255,70,55,0.28)' : 'rgba(110,200,120,0.18)';
     ctx.fillRect(X+4,Y+4,CELL-8,CELL-8);
@@ -4700,8 +5099,18 @@ function renderMap(state){
     ctx.strokeStyle = arm.ativada ? 'rgba(255,70,55,0.85)'
                     : arm.aliada ? 'rgba(110,210,120,0.75)' : 'rgba(255,150,40,0.75)';
     ctx.strokeRect(X+4.5,Y+4.5,CELL-9,CELL-9);
-    ctx.font=`${Math.round(CELL*0.5)}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(arm.icone||'🪤',X+CELL/2,Y+CELL/2);
+    // Imagem (PNG de assets/objetos) cobre o tile, mantendo proporção; senão, o ícone.
+    const _aImg = arm.image ? _getArmadilha2DImg(arm.image) : null;
+    if(_aImg){
+      const ar = _aImg.naturalWidth / _aImg.naturalHeight;
+      let dw = CELL-8, dh = (CELL-8)/ar;
+      if(dh > CELL-8){ dh = CELL-8; dw = (CELL-8)*ar; }
+      ctx.drawImage(_aImg, X+(CELL-dw)/2, Y+(CELL-dh)/2, dw, dh);
+    } else {
+      ctx.font=`${Math.round(CELL*0.5)}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(arm.icone||'🪤',X+CELL/2,Y+CELL/2);
+    }
+  }
   }
 
   // ── Stairs (dungeon entrance / exit)
@@ -4774,6 +5183,96 @@ function renderMap(state){
     }
   }
 
+  // ── Decorations (2D overlay — emoji at footprint center + subtle fill)
+  {
+    const decors = GS.decorations;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    // Chão (special:floor) primeiro → fica EMBAIXO; objetos empilhados desenham por cima.
+    const decorsDrawOrder = [...decors].sort((a, b) => ((a.special === 'floor') ? 0 : 1) - ((b.special === 'floor') ? 0 : 1));
+    for (const d of decorsDrawOrder) {
+      const tiles = GS.decorTilesOf(d);
+      // Only draw if at least one tile in the footprint has been explored
+      if (!tiles.some(([tx2, ty2]) => exploredSet.has(`${tx2},${ty2}`))) continue;
+      // Subtle fill on all occupied tiles
+      ctx.fillStyle = 'rgba(120,200,160,0.12)';
+      for (const [tx2, ty2] of tiles) ctx.fillRect(tx2 * CELL, ty2 * CELL, CELL, CELL);
+      // Image or emoji at footprint center
+      const avgX = tiles.reduce((s, t) => s + t[0], 0) / tiles.length;
+      const avgY = tiles.reduce((s, t) => s + t[1], 0) / tiles.length;
+      const ecx = (avgX + 0.5) * CELL;
+      const ecy = (avgY + 0.5) * CELL;
+      // Escala visual (vscale): largura ×sx, altura ×sy (cresce p/ cima, base ancorada).
+      const _vs = Array.isArray(d.vscale) ? d.vscale : [1, 1];
+      const _sx = _vs[0] || 1, _sy = _vs[1] || 1;
+      const _oImg = d.image ? _getObjeto2DImg(d.image) : null;
+      if (_oImg && d.special === 'floor') {
+        // Chão: preenche cada casa do footprint borda-a-borda (sem manter proporção).
+        for (const [tx2, ty2] of tiles) ctx.drawImage(_oImg, tx2 * CELL, ty2 * CELL, CELL, CELL);
+      } else if (_oImg) {
+        const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
+        const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
+        const px = minX * CELL, py = minY * CELL;
+        const pw = (maxX - minX + 1) * CELL, ph = (maxY - minY + 1) * CELL;
+        const ar = _oImg.naturalWidth / _oImg.naturalHeight;
+        const _ang = _facingAngle2D(d.facing);
+        if (_ang === 0) {
+          // ajusta mantendo proporção, ancorado embaixo (caminho original)
+          let dw = pw, dh = pw / ar;
+          if (dh > ph) { dh = ph; dw = ph * ar; }
+          dw *= _sx; dh *= _sy;
+          ctx.drawImage(_oImg, px + (pw - dw) / 2, py + (ph - dh), dw, dh);
+        } else {
+          // girado: encaixa no frame local (caixa possivelmente trocada p/ 90°/270°)
+          // e gira sobre o centro do footprint.
+          const _rot90 = (_ang === Math.PI / 2 || _ang === -Math.PI / 2);
+          const boxW = _rot90 ? ph : pw, boxH = _rot90 ? pw : ph;
+          let dw = boxW, dh = boxW / ar;
+          if (dh > boxH) { dh = boxH; dw = boxH * ar; }
+          dw *= _sx; dh *= _sy;
+          ctx.save();
+          ctx.translate(px + pw / 2, py + ph / 2);
+          ctx.rotate(_ang);
+          ctx.drawImage(_oImg, -dw / 2, -dh / 2, dw, dh);
+          ctx.restore();
+        }
+      } else if (_sx === 1 && _sy === 1) {
+        ctx.font = `${Math.floor(CELL * 0.8)}px serif`;
+        ctx.fillText(d.emoji || '🪑', ecx, ecy);
+      } else {
+        // emoji escalado: ancorado na base do footprint, crescendo p/ cima
+        const baseY = (Math.max(...tiles.map(t => t[1])) + 1) * CELL;
+        ctx.font = `${Math.floor(CELL * 0.8 * Math.max(_sx, _sy))}px serif`;
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText(d.emoji || '🪑', ecx, baseY - 2);
+        ctx.textBaseline = 'middle';
+      }
+      // Loot indicator badge
+      if (d.tem_loot) {
+        ctx.font = `bold ${Math.round(CELL * 0.18)}px monospace`;
+        ctx.fillStyle = '#ffe060';
+        ctx.fillText('💰', ecx + CELL * 0.28, ecy - CELL * 0.28);
+      }
+    }
+    // O chão (special:floor) é PISO e foi desenhado por cima do realce de movimento
+    // (PASS 1). Re-aplica o destaque azul/vermelho nas casas de chão para que a
+    // indicação de movimentação/ataque apareça sobre a grama, como em piso normal.
+    for (const d of decors) {
+      if (d.special !== 'floor') continue;
+      for (const [tx2, ty2] of GS.decorTilesOf(d)) {
+        if (!exploredSet.has(`${tx2},${ty2}`)) continue;
+        const k = `${tx2},${ty2}`, X = tx2 * CELL, Y = ty2 * CELL;
+        if (reachable.has(k)) {
+          const fa = 0.26 + 0.26 * _movePulse, pa = 0.70 + 0.30 * _movePulse;
+          ctx.fillStyle = `rgba(30,107,255,${fa.toFixed(2)})`; ctx.fillRect(X + 2, Y + 2, CELL - 4, CELL - 4);
+          ctx.strokeStyle = `rgba(60,140,255,${pa.toFixed(2)})`; ctx.lineWidth = 2; ctx.strokeRect(X + 2, Y + 2, CELL - 4, CELL - 4);
+        } else if (attackable.has(k)) {
+          ctx.fillStyle = 'rgba(255,30,30,0.13)'; ctx.fillRect(X + 2, Y + 2, CELL - 4, CELL - 4);
+          ctx.strokeStyle = 'rgba(255,60,60,0.78)'; ctx.lineWidth = 2; ctx.strokeRect(X + 2, Y + 2, CELL - 4, CELL - 4);
+        }
+      }
+    }
+  }
+
   // ── Monsters: only visible within player's vision radius
   for(const m of state.monsters){
     const [mtx,mty]=m.pos;
@@ -4820,26 +5319,58 @@ function renderMap(state){
   const _pris = GS.prisoner;
   if(_pris && _pris.alive){
     const [pxr,pyr]=_pris.pos;
-    if(visionSet.has(`${pxr},${pyr}`) || exploredSet.has(`${pxr},${pyr}`)){
-      const cx=pxr*CELL+CELL/2, cy=pyr*CELL+CELL/2;
+    // Interpola a posição visual durante a animação de passo (igual aos minions):
+    // desliza casa a casa pelo caminho enquanto _mininoAnimState['prisoner'] existir.
+    let drawX = pxr, drawY = pyr;
+    const _pVis = _mininoAnimState.get('prisoner');
+    if(_pVis && _pVis.pathPts){
+      const segs = Math.max(1, _pVis.pathPts.length - 1);
+      const tAll = Math.min((performance.now() - _pVis.startTime) / _pVis.dur, 1);
+      const f  = tAll * segs;
+      const si = Math.min(Math.floor(f), segs - 1);
+      const st = easeInOut(f - si);
+      const [x0,y0] = _pVis.pathPts[si];
+      const [x1,y1] = _pVis.pathPts[si+1];
+      drawX = x0 + (x1 - x0) * st;
+      drawY = y0 + (y1 - y0) * st;
+    }
+    const _visPathP = _pVis && _pVis.pathPts
+      ? _pVis.pathPts.some(([px,py]) => visionSet.has(`${px},${py}`) || exploredSet.has(`${px},${py}`))
+      : false;
+    if(visionSet.has(`${pxr},${pyr}`) || exploredSet.has(`${pxr},${pyr}`) || _visPathP){
+      const cx=drawX*CELL+CELL/2, cy=drawY*CELL+CELL/2;
+      // Anel de seleção quando o controlador o selecionou (janela pós-turno).
+      if(_prisSel && _pris.freed && _pris.rescuer_pid===GS.myPid && state.animados_turn===GS.myPid){
+        ctx.save();
+        ctx.strokeStyle='#ffffff'; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.arc(cx, cy, CELL*0.42, 0, Math.PI*2); ctx.stroke();
+        ctx.restore();
+      }
       // Base do peão: tom amarelado se aliado/seguindo, acinzentado se cativo.
       drawMiniBase(ctx, cx, cy, _pris.freed?'#2e90c0':'#8a6d3b', false);
-      ctx.font=`${Math.round(CELL*0.46)}px serif`;
-      ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText(_pris.freed?'🧍':'⛓️', cx, cy-3);
+      const _pImg = _getPrisoner2DImg(_pris.image);
+      if(_pImg && _pImg.complete && _pImg.naturalWidth){
+        const sz = Math.round(CELL*0.78);
+        ctx.drawImage(_pImg, cx - sz/2, cy - sz/2 - 3, sz, sz);
+      } else {
+        ctx.font=`${Math.round(CELL*0.46)}px serif`;
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(_pris.freed?'🧍':'⛓️', cx, cy-3);
+      }
       // Barra de HP simples
       const max=_pris.max_hp||_pris.hp||1;
       const pct=Math.max(0,Math.min(1,_pris.hp/max));
       const barH=Math.max(4,Math.round(CELL*0.08));
-      ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.fillRect(pxr*CELL+3,pyr*CELL+2,CELL-6,barH);
+      const bx=drawX*CELL, by=drawY*CELL;
+      ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.fillRect(bx+3,by+2,CELL-6,barH);
       ctx.fillStyle=pct>.5?'#27ae60':pct>.25?'#e67e22':'#e74c3c';
-      ctx.fillRect(pxr*CELL+3,pyr*CELL+2,(CELL-6)*pct,barH);
+      ctx.fillRect(bx+3,by+2,(CELL-6)*pct,barH);
       ctx.strokeStyle='rgba(0,0,0,0.55)'; ctx.lineWidth=0.6;
-      ctx.strokeRect(pxr*CELL+3,pyr*CELL+2,CELL-6,barH);
+      ctx.strokeRect(bx+3,by+2,CELL-6,barH);
       const fs=Math.round(CELL*0.125);
       ctx.fillStyle='rgba(255,210,120,0.95)'; ctx.font=`bold ${fs}px monospace`;
       ctx.textAlign='center'; ctx.textBaseline='top';
-      ctx.fillText('Prisioneiro', cx, pyr*CELL+barH+3);
+      ctx.fillText('Prisioneiro', cx, by+barH+3);
     }
   }
 
@@ -4919,11 +5450,131 @@ function renderMap(state){
   }
 }
 
+// ── PAINTERS PROCEDURAIS DE MATERIAL (compartilhados 2D tile + 3D textura) ────
+// Cada painter desenha UMA superfície preenchendo [ox,oy, ox+size, oy+size].
+// r = função RNG determinística (0..1). Usados pelo 2D (size=CELL) e pelo 3D
+// (size=256, textura cacheada) para a aparência ser idêntica nas duas vistas.
+function _rng(seed){ let s=(seed>>>0)||1; return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+
+function paintGrass(ctx, ox, oy, size, r){
+  const g=ctx.createLinearGradient(ox,oy,ox,oy+size);
+  g.addColorStop(0,'#3f7a35'); g.addColorStop(1,'#2c5a26');
+  ctx.fillStyle=g; ctx.fillRect(ox,oy,size,size);
+  for(let n=0;n<Math.round(size*0.36);n++){ const px=ox+r()*size,py=oy+r()*size,rr=size*(0.05+r()*0.13);
+    ctx.fillStyle = r()<0.5 ? 'rgba(58,110,44,0.5)' : 'rgba(96,150,60,0.4)';
+    ctx.beginPath(); ctx.ellipse(px,py,rr,rr*0.7,r()*3,0,Math.PI*2); ctx.fill(); }
+  const blades=Math.round(size*1.15);
+  for(let n=0;n<blades;n++){ const px=ox+r()*size,py=oy+size*0.06+r()*size*0.94,h=size*(0.06+r()*0.14),lean=(r()-0.5)*size*0.08;
+    const sh=70+r()*70; ctx.strokeStyle=`rgb(${(sh*0.45)|0},${sh|0},${(sh*0.35)|0})`;
+    ctx.lineWidth=Math.max(1,size/64); ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px+lean,py-h); ctx.stroke(); }
+}
+
+function paintDirt(ctx, ox, oy, size, r){
+  ctx.fillStyle='#6b4a2e'; ctx.fillRect(ox,oy,size,size);
+  for(let n=0;n<Math.round(size*0.47);n++){ const px=ox+r()*size,py=oy+r()*size,rr=size*(0.06+r()*0.18);
+    ctx.fillStyle = r()<0.5 ? 'rgba(60,40,24,0.5)' : 'rgba(120,88,54,0.45)';
+    ctx.beginPath(); ctx.ellipse(px,py,rr,rr*0.8,r()*3,0,Math.PI*2); ctx.fill(); }
+  for(let n=0;n<Math.round(size*0.2);n++){ const px=ox+r()*size,py=oy+r()*size,rr=size*(0.012+r()*0.025);
+    const s=80+r()*60; ctx.fillStyle=`rgb(${s|0},${(s*0.85)|0},${(s*0.7)|0})`;
+    ctx.beginPath(); ctx.ellipse(px,py,rr,rr*0.8,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(px+rr*0.4,py+rr*0.4,rr,rr*0.7,0,0,Math.PI*2); ctx.fill(); }
+}
+
+function paintBrick(ctx, ox, oy, size, r, base, mortar){
+  ctx.fillStyle=mortar; ctx.fillRect(ox,oy,size,size);
+  const rh=size*0.17, bw=size*0.5; let row=0;
+  for(let by=oy; by<oy+size; by+=rh){ const off=(row%2)?bw*0.5:0;
+    for(let bx=ox-off; bx<ox+size; bx+=bw){ const v=(r()*16-8)|0;
+      ctx.fillStyle=`rgb(${Math.max(0,base[0]+v)},${Math.max(0,base[1]+v)},${Math.max(0,base[2]+v)})`;
+      ctx.fillRect(bx+1.5, by+1.5, bw-3, rh-3);
+      ctx.fillStyle='rgba(255,255,255,0.05)'; ctx.fillRect(bx+1.5, by+1.5, bw-3, Math.max(1,size/40)); }
+    row++; }
+}
+
+function paintCave(ctx, ox, oy, size, r){
+  ctx.fillStyle='#241509'; ctx.fillRect(ox,oy,size,size);   // fundo marrom escuro (fendas)
+  const step=size*0.22, pts=[];
+  for(let gy=0;gy<5;gy++) for(let gx=0;gx<5;gx++)
+    pts.push([ox+gx*step+step*0.3+(r()-0.5)*step*0.72, oy+gy*step+step*0.3+(r()-0.5)*step*0.72]);
+  for(const p of pts){ const rad=size*(0.09+r()*0.10), nv=7+(r()*4|0), b=95+r()*60;
+    // marrom forte: muito vermelho, pouco azul
+    const R=Math.min(255,b*1.2|0), G=Math.min(255,b*0.72|0), B=Math.min(255,b*0.42|0);
+    ctx.fillStyle=`rgb(${R},${G},${B})`;
+    ctx.beginPath();
+    for(let k=0;k<nv;k++){ const a=k/nv*Math.PI*2, rr=rad*(0.55+r()*0.75);  // contorno bem irregular
+      const xx=p[0]+Math.cos(a)*rr, yy=p[1]+Math.sin(a)*rr; k?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy); }
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.6)'; ctx.lineWidth=Math.max(1,size/40); ctx.stroke();
+    // sombra/fenda (relevo rugoso) e realce de tocha
+    ctx.fillStyle='rgba(0,0,0,0.30)';
+    ctx.beginPath(); ctx.ellipse(p[0]+rad*0.28,p[1]+rad*0.32,rad*0.5,rad*0.34,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,200,130,0.16)';
+    ctx.beginPath(); ctx.ellipse(p[0]-rad*0.32,p[1]-rad*0.36,rad*0.42,rad*0.28,0,0,Math.PI*2); ctx.fill(); }
+}
+
+// Lajota de pedra (textura 3D) numa cor-base — usada para pedra_negra (preta forte).
+function paintStone(ctx, ox, oy, size, r, base){
+  ctx.fillStyle='#06050a'; ctx.fillRect(ox,oy,size,size);
+  const sub=2, sp=size/sub, grt=size*0.03;
+  for(let sy=0;sy<sub;sy++) for(let sx=0;sx<sub;sx++){
+    const v=(r()*22-11)|0, bx=ox+sx*sp+grt, by=oy+sy*sp+grt, bw=sp-grt*1.6, bh=sp-grt*1.6;
+    const r0=Math.max(0,base[0]+v), g0=Math.max(0,base[1]+v), b0=Math.max(0,base[2]+Math.floor(v*0.7));
+    const g=ctx.createLinearGradient(bx,by,bx+bw,by+bh);
+    g.addColorStop(0,`rgb(${r0+26},${g0+24},${b0+24})`);
+    g.addColorStop(0.5,`rgb(${r0},${g0},${b0})`);
+    g.addColorStop(1,`rgb(${Math.max(0,r0-18)},${Math.max(0,g0-16)},${Math.max(0,b0-14)})`);
+    ctx.fillStyle=g; ctx.fillRect(bx,by,bw,bh);
+    ctx.fillStyle='rgba(0,0,0,0.42)'; ctx.fillRect(bx,by+bh-2,bw,2); ctx.fillRect(bx+bw-2,by,2,bh);
+    if(r()<0.3){ ctx.strokeStyle='rgba(0,0,0,0.5)'; ctx.lineWidth=Math.max(1,size/120);
+      const cx=bx+r()*bw, cy=by+r()*bh; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+size*0.06,cy+size*0.04); ctx.stroke(); }
+  }
+}
+
+function paintRubble(ctx, ox, oy, size, r){
+  ctx.fillStyle='#2b2620'; ctx.fillRect(ox,oy,size,size);
+  for(let n=0;n<Math.round(size*0.13);n++){ const px=ox+size*0.06+r()*size*0.88,py=oy+size*0.06+r()*size*0.88,
+      rw=size*(0.06+r()*0.13),rh=size*(0.05+r()*0.10), t=60+r()*55;
+    ctx.fillStyle=`rgb(${t|0},${(t-7)|0},${(t-16)|0})`;
+    ctx.beginPath(); ctx.ellipse(px,py,rw,rh,(r()-0.5)*3,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.5)'; ctx.lineWidth=Math.max(1,size/64); ctx.stroke();
+    ctx.fillStyle='rgba(255,235,200,0.10)'; ctx.fillRect(px-rw*0.5,py-rh*0.7,rw,Math.max(1.5,size/40)); }
+}
+
+// ── PALETAS 2D DOS MATERIAIS ─────────────────────────────────────────────────
+// base [r,g,b] da pedra/superfície; accent decide os detalhes procedurais.
+// Espelha os ids de server.MATERIAIS. Pisos coloridos são cosméticos.
+const MAT_PALETTE_2D = {
+  // pisos
+  pedra_cinza: { base: [44, 42, 50],  accent: 'stone' },
+  terra:       { base: [74, 56, 38],  accent: 'dirt'  },
+  grama:       { base: [46, 78, 40],  accent: 'grass' },
+  pedra_negra: { base: [20, 19, 24],  accent: 'stone' },
+  entulho:     { base: [70, 66, 58],  accent: 'rubble' },
+  // paredes (topo)
+  pedra_normal:  { base: [132, 130, 140], accent: 'wallStone' },
+  enegrecida:    { base: [24, 23, 28],   accent: 'blackbrick' },
+  pedra_caverna: { base: [120, 82, 46],  accent: 'cave' },
+  desmoronada:   { base: [96, 88, 76],   accent: 'wallRubble' },
+};
+// Resolve o material de uma casa para render (default por estrutura do tile).
+function matDaCasa(state, x, y){
+  const m = state && state.materiais;
+  const id = m && m[`${x},${y}`];
+  if(id && MAT_PALETTE_2D[id]) return id;
+  return (state.tiles[y][x] === TILE_WALL) ? 'pedra_normal' : 'pedra_cinza';
+}
+
 // ── DIABLO-STYLE FLOOR TILE — dark charcoal flagstones with blood & bone details
-function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview){
+function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview, matId){
   const X=x*CELL, Y=y*CELL;
   const h=((x*7919)^(y*3467)^(x<<5)^(y>>2))&0xFFFF;
+  const pal = MAT_PALETTE_2D[matId] || MAT_PALETTE_2D.pedra_cinza;
+  const [BR, BG, BB] = pal.base;
 
+  // Estilos não-pedra têm painter próprio (sem grade de lajota).
+  if(pal.accent==='grass'){ paintGrass(ctx, X, Y, CELL, _rng((x*53^y*97^7)>>>0)); }
+  else if(pal.accent==='dirt'){ paintDirt(ctx, X, Y, CELL, _rng((x*29^y*71^3)>>>0)); }
+  else {
   // Deep mortar joints — near-black with faint blue-gray
   ctx.fillStyle='#06050a';
   ctx.fillRect(X,Y,CELL,CELL);
@@ -4938,7 +5589,7 @@ function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview){
     const bw=sp-grt*1.5, bh=sp-grt*1.5;
 
     // Dark gray-charcoal stone — slight blue-purple undertone (cave feel)
-    const r0=Math.min(255,44+v), g0=Math.min(255,42+v), b0=Math.min(255,50+Math.floor(v*0.6));
+    const r0=Math.min(255,BR+v), g0=Math.min(255,BG+v), b0=Math.min(255,BB+Math.floor(v*0.6));
 
     // Gradient: top-left torch-lit, bottom-right shadow
     const sg=ctx.createLinearGradient(bx,by,bx+bw,by+bh);
@@ -4980,17 +5631,18 @@ function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview){
                    Math.min(9+(sh%6),bw-6), Math.min(6+(sh%4),bh-6));
     }
   }
+  }
 
   // Reachable tile highlight (blue) — opacity driven by _movePulse for slow pulsing
   if(isReachable){
-    const pa = 0.55 + 0.42 * _movePulse;   // stroke: 0.55 → 0.97
-    const fa = 0.10 + 0.18 * _movePulse;   // fill:   0.10 → 0.28
-    const da = 0.55 + 0.40 * _movePulse;   // corner dots: 0.55 → 0.95
-    ctx.strokeStyle=`rgba(80,180,255,${pa.toFixed(2)})`; ctx.lineWidth=2;
+    const pa = 0.70 + 0.30 * _movePulse;   // stroke: 0.70 → 1.00
+    const fa = 0.26 + 0.26 * _movePulse;   // fill:   0.26 → 0.52
+    const da = 0.65 + 0.35 * _movePulse;   // corner dots: 0.65 → 1.00
+    ctx.strokeStyle=`rgba(60,140,255,${pa.toFixed(2)})`; ctx.lineWidth=2;
     ctx.strokeRect(X+2,Y+2,CELL-4,CELL-4);
-    ctx.fillStyle=`rgba(50,120,255,${fa.toFixed(2)})`;
+    ctx.fillStyle=`rgba(30,107,255,${fa.toFixed(2)})`;
     ctx.fillRect(X+2,Y+2,CELL-4,CELL-4);
-    ctx.fillStyle=`rgba(130,210,255,${da.toFixed(2)})`;
+    ctx.fillStyle=`rgba(150,195,255,${da.toFixed(2)})`;
     const d=4;
     for(const [cx3,cy3] of [[X+d,Y+d],[X+CELL-d,Y+d],[X+d,Y+CELL-d],[X+CELL-d,Y+CELL-d]]){
       ctx.beginPath(); ctx.arc(cx3,cy3,1.8,0,Math.PI*2); ctx.fill();
@@ -5023,6 +5675,27 @@ function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview){
     for(const [cx3,cy3] of [[X+d,Y+d],[X+CELL-d,Y+d],[X+d,Y+CELL-d],[X+CELL-d,Y+CELL-d]]){
       ctx.beginPath(); ctx.arc(cx3,cy3,2.5,0,Math.PI*2); ctx.fill();
     }
+  }
+}
+
+// ── ENTULHO 2D — monte de pedras desmoronadas (bloqueia movimento e visão) ───
+function drawEntulho2D(ctx, x, y){
+  const X=x*CELL, Y=y*CELL, h=((x*8161)^(y*5101))&0xFFFF;
+  // base sombreada sob o monte
+  ctx.fillStyle='rgba(0,0,0,0.35)';
+  ctx.fillRect(X+2, Y+2, CELL-4, CELL-4);
+  // pedras empilhadas
+  const pedras=6;
+  for(let i=0;i<pedras;i++){
+    const sh=(h^(i*2917))&0xFFFF;
+    const px=X+4+(sh%Math.max(1,CELL-12)), py=Y+5+((sh>>4)%Math.max(1,CELL-12));
+    const rw=5+(sh%6), rh=4+((sh>>3)%5);
+    const tone=70+((sh>>6)%40);
+    ctx.fillStyle=`rgb(${tone},${tone-6},${tone-14})`;
+    ctx.beginPath(); ctx.ellipse(px,py,rw,rh,(sh%6)*0.3,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.5)'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle='rgba(255,235,200,0.10)';  // brilho de tocha no topo
+    ctx.fillRect(px-rw*0.5, py-rh*0.7, rw, 1.5);
   }
 }
 
@@ -5086,17 +5759,20 @@ function drawDoor2D(ctx, state, x, y, closed){
 }
 
 // ── 3D WALL SOUTH FACE — visible stone masonry face (the wall's front face)
-function drawWallSouthFace(ctx, x, y){
+function drawWallSouthFace(ctx, x, y, matId){
   const X=x*CELL, Y=y*CELL;
   const faceH=WALL_RISE+6;  // height of visible stone face
   const faceY=Y+CELL-1;     // starts at bottom of wall top tile
   const h=((x*6131)^(y*4919))&0xFFFF;
+  const pal = MAT_PALETTE_2D[matId] || MAT_PALETTE_2D.pedra_normal;
+  const [BR, BG, BB] = pal.base;
+  const cmix=(dr,dg,db,a)=>`rgba(${Math.max(0,Math.min(255,BR+dr))},${Math.max(0,Math.min(255,BG+dg))},${Math.max(0,Math.min(255,BB+db))},${a})`;
 
   // ── Base fill: stone wall FRONT FACE — medium gray castle stone, lit from above
   const wfG=ctx.createLinearGradient(0,faceY,0,faceY+faceH);
-  wfG.addColorStop(0,   'rgba(148,142,134,0.99)'); // top — lit face (light gray)
-  wfG.addColorStop(0.30,'rgba(110,106,100,0.99)'); // mid
-  wfG.addColorStop(0.68,'rgba(58,54,50,0.97)');    // lower — in shadow
+  wfG.addColorStop(0,    cmix(28, 26, 18, 0.99));  // top — lit face
+  wfG.addColorStop(0.30, cmix(-6, -8, -14, 0.99)); // mid
+  wfG.addColorStop(0.68, cmix(-50, -52, -54, 0.97)); // lower — shadow
   wfG.addColorStop(1,   'rgba(8,6,4,0)');
   ctx.fillStyle=wfG;
   ctx.fillRect(X+1,faceY,CELL-2,faceH);
@@ -5147,17 +5823,22 @@ function drawWallSouthFace(ctx, x, y){
 }
 
 // ── DIABLO WALL TOP — dark menacing stone block viewed from above
-function drawWallTop3D(ctx, x, y){
+function drawWallTop3D(ctx, x, y, matId){
   const X=x*CELL, Y=y*CELL;
   const h=((x*6271)^(y*2749)^(y<<4))&0xFFFF;
   const v=(h%18)-9;
+  const pal = MAT_PALETTE_2D[matId] || MAT_PALETTE_2D.pedra_normal;
+  const [BR, BG, BB] = pal.base;
+  // Estilos próprios: caverna (pedra irregular) e enegrecida (tijolo preto).
+  if(pal.accent==='cave'){ paintCave(ctx, X, Y, CELL, _rng((x*41^y*23^9)>>>0)); return; }
+  if(pal.accent==='blackbrick'){ paintBrick(ctx, X, Y, CELL, _rng((x*7^y*13)>>>0), [22,21,26], '#070709'); return; }
 
   // Deep mortar — dark gray with faint blue tinge (grout between stones)
   ctx.fillStyle='#1a1c22';
   ctx.fillRect(X,Y,CELL,CELL);
 
   // Stone face — MEDIUM GRAY with cool blue tint (classic castle/dungeon stone wall)
-  const r0=Math.min(255,132+v), g0=Math.min(255,130+v), b0=Math.min(255,140+Math.floor(v*0.5));
+  const r0=Math.min(255,BR+v), g0=Math.min(255,BG+v), b0=Math.min(255,BB+Math.floor(v*0.5));
   const wg=ctx.createLinearGradient(X,Y,X+CELL,Y+CELL);
   wg.addColorStop(0,  `rgb(${Math.min(255,r0+28)},${Math.min(255,g0+26)},${Math.min(255,b0+28)})`);
   wg.addColorStop(0.5,`rgb(${r0},${g0},${b0})`);
@@ -5212,6 +5893,14 @@ function drawWallTop3D(ctx, x, y){
     ctx.beginPath(); ctx.arc(X+CELL/2,Y+CELL/2,5+(h%4),0,Math.PI*2); ctx.fill();
     ctx.strokeStyle='rgba(110,100,80,0.25)'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.arc(X+CELL/2,Y+CELL/2,5+(h%4),0,Math.PI*2); ctx.stroke();
+  }
+  // Parede desmoronada: juntas extras quebradas sobre o bloco
+  if(pal.accent==='wallRubble'){
+    ctx.strokeStyle='rgba(0,0,0,0.45)'; ctx.lineWidth=1;
+    for(let k=0;k<3;k++){
+      const rx=X+4+((h>>(k*3))%Math.max(1,CELL-8)), ry=Y+4+((h>>(k*2))%Math.max(1,CELL-8));
+      ctx.beginPath(); ctx.moveTo(rx,ry); ctx.lineTo(rx+5+(h%5), ry+3+(h%4)); ctx.stroke();
+    }
   }
 }
 
@@ -5326,7 +6015,7 @@ function playImpact(intensity){
     hpf.type = 'highpass'; hpf.frequency.value = 2200;
     const crackGain = ctx.createGain();
     crackGain.gain.value = 1.1;
-    crackSrc.connect(hpf); hpf.connect(crackGain); crackGain.connect(ctx.destination);
+    crackSrc.connect(hpf); hpf.connect(crackGain); crackGain.connect(_sfxBus());
     crackSrc.start(now);
 
     // Layer 2 — low body thud (pitched sine)
@@ -5337,7 +6026,7 @@ function playImpact(intensity){
     thudOsc.frequency.exponentialRampToValueAtTime(55, now + 0.07);
     thudGain.gain.setValueAtTime(0.40 * intensity, now);
     thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
-    thudOsc.connect(thudGain); thudGain.connect(ctx.destination);
+    thudOsc.connect(thudGain); thudGain.connect(_sfxBus());
     thudOsc.start(now); thudOsc.stop(now + 0.09);
   } catch(e){}
 }
@@ -5367,9 +6056,108 @@ function playSettle(){
     osc.frequency.exponentialRampToValueAtTime(110, now + 0.16);
     gain.gain.setValueAtTime(0.35, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.20);
-    osc.connect(gain); gain.connect(ctx.destination);
+    osc.connect(gain); gain.connect(_sfxBus());
     osc.start(now); osc.stop(now + 0.20);
   } catch(e){}
+}
+
+// ══ DAMAGE / HEAL AUDIO — anuncia quando uma criatura perde ou ganha HP ═══════
+// Som sintetizado (sem assets), roteado pelo _sfxBus() para respeitar o volume.
+
+// MEU herói tomou dano — sting descendente de dois tons, mais alarmante.
+function playHeroHurt(){
+  const ctx = getAudioContext();
+  if(!ctx || ctx.state !== 'running') return;
+  try{
+    const now = ctx.currentTime;
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(520, now);
+    osc.frequency.exponentialRampToValueAtTime(180, now + 0.18);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.85, now + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.30);
+    const lpf = ctx.createBiquadFilter();
+    lpf.type = 'lowpass'; lpf.frequency.value = 1400;
+    osc.connect(lpf); lpf.connect(gain); gain.connect(_sfxBus());
+    osc.start(now); osc.stop(now + 0.28);
+  } catch(e){}
+}
+
+// Outra criatura tomou dano — "thud" grave e suave, mais discreto.
+function playCreatureHit(){
+  const ctx = getAudioContext();
+  if(!ctx || ctx.state !== 'running') return;
+  try{
+    const now = ctx.currentTime;
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(190, now);
+    osc.frequency.exponentialRampToValueAtTime(70, now + 0.10);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.50, now + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+    osc.connect(gain); gain.connect(_sfxBus());
+    osc.start(now); osc.stop(now + 0.17);
+  } catch(e){}
+}
+
+// Qualquer criatura curou HP — chime ascendente e suave.
+function playHeal(){
+  const ctx = getAudioContext();
+  if(!ctx || ctx.state !== 'running') return;
+  try{
+    const now = ctx.currentTime;
+    [523.25, 783.99].forEach((freq, i) => {  // C5 → G5
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const t = now + i * 0.07;
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, t);
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.45, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.34);
+      osc.connect(gain); gain.connect(_sfxBus());
+      osc.start(t); osc.stop(t + 0.36);
+    });
+  } catch(e){}
+}
+
+// Compara o HP de cada criatura entre game_states e dispara o som apropriado.
+// Cobre heróis, monstros, servos (animados) de cada jogador e o prisioneiro.
+let _hpSnapshot = new Map();   // entityId -> hp do último game_state
+
+function _gatherHpEntries(st){
+  const out = [];
+  if(!st) return out;
+  (st.players  || []).forEach(p => { if(p && p.id != null) out.push([`p:${p.id}`, p.hp, p.id === GS.myPid]); });
+  (st.monsters || []).forEach(m => { if(m && m.id != null) out.push([`m:${m.id}`, m.hp, false]); });
+  (st.players  || []).forEach(p => (p && p.animados || []).forEach(a => {
+    if(a && a.id != null) out.push([`a:${a.id}`, (a.vida_atual != null ? a.vida_atual : a.hp), false]);
+  }));
+  const pr = st.prisoner;                       // singleton — sem id próprio
+  if(pr && pr.hp != null) out.push(['pr:singleton', pr.hp, false]);
+  return out;
+}
+
+function _detectHpChanges(st){
+  const entries = _gatherHpEntries(st);
+  let heroHurt = false, creatureHurt = false, healed = false;
+  for(const [key, hp, isMine] of entries){
+    if(hp == null) continue;
+    const prev = _hpSnapshot.get(key);
+    if(prev != null){
+      if(hp < prev){ if(isMine) heroHurt = true; else creatureHurt = true; }
+      else if(hp > prev){ healed = true; }
+    }
+  }
+  // Reconstrói o snapshot só com as criaturas vistas neste estado.
+  _hpSnapshot = new Map(entries.filter(e => e[1] != null).map(e => [e[0], e[1]]));
+  if(heroHurt) playHeroHurt();
+  if(creatureHurt) playCreatureHit();
+  if(healed) playHeal();
 }
 
 // ── Keep 2D canvas sized (used only for label overlay) ──────────────────────
@@ -6306,15 +7094,8 @@ function renderPlayers(state){
     div.className='pcard'+(isMe?' me':'')+(isCur?' current':'')+(p.alive?'':' dead')+(disc?' disconnected':'');
     if(disc) div.style.opacity='0.45';
     const hpPct=Math.max(0,p.hp/p.max_hp*100);
-    // Warrior, Bardo e Mago (Pedro) não mostram barra de MP no card.
-    const mostrarMp = !['warrior', 'bard', 'mage'].includes(p.class_id) && p.max_mp > 0;
-    const mpPct = mostrarMp ? Math.max(0,p.mp/p.max_mp*100) : 0;
-    const mpRowHTML = mostrarMp ? `
-        <div class="bar-row">
-          <span class="bar-label">MP</span>
-          <div class="bar-bg"><div class="bar-fill mp" style="width:${mpPct}%"></div></div>
-          <span class="bar-val">${p.mp}/${p.max_mp}</span>
-        </div>` : '';
+    // MP foi removido do jogo — nenhuma classe usa mana (magias custam slots + fome/sede).
+    const mpRowHTML = '';
     const _csong = p.buffs_cancao && Object.keys(p.buffs_cancao).length;
     div.innerHTML=`
       <div class="pcard-top">
@@ -6442,6 +7223,7 @@ function renderBotoesAcaoBonus(heroi){
 // Estado de UI: aba ativa do painel principal do Pedro e animado selecionado.
 let _painelAbaPedro = 'atributos';
 let _animadoSel = null;
+let _prisSel = false;            // prisioneiro liberto selecionado (janela pós-turno do resgatador)
 let _lastAnimadosTurn = null;
 function trocarAbaPainel(aba){ _painelAbaPedro = aba; if(GS.gameState) renderMyPanel(GS.gameState); }
 window.trocarAbaPainel = trocarAbaPainel;
@@ -7993,53 +8775,51 @@ function ocultarTooltipMagia() {
   document.removeEventListener('mousemove', _moverTooltipMagia);
 }
 
-// Magias conhecidas do herói → lista de ids. Fallback (sem lista explícita):
-// ⚠️ MODO TESTE: Pedro (mage) vê e lança QUALQUER magia ignorando classe/nível.
-// Espelha MAGE_TESTE_LIVRE em server.py. Defina false para voltar ao normal.
-const MAGE_TESTE_LIVRE = true;
-
-// Magias conhecidas → ids. Padrão: elegíveis pela classe. Pedro em modo teste: TODAS.
-function _magiasConhecidasIds(heroi, cls) {
-  let known = heroi && (heroi.magias_conhecidas
+// Magias conhecidas do herói → lista de ids escolhidos pelo jogador.
+// Vazio = nenhuma magia disponível (a escolha é obrigatória na criação).
+function _magiasConhecidasIds(heroi) {
+  const known = heroi && (heroi.magias_conhecidas
     || (Array.isArray(heroi.magiasConhecidas) ? heroi.magiasConhecidas.map(x => x.id || x) : null));
-  if (!known || known.length === 0) {
-    known = (MAGE_TESTE_LIVRE && cls === 'mage')
-      ? Object.values(GRIMORIO_CLIENT).map(m => m.id)                                  // TESTE: todas
-      : Object.values(GRIMORIO_CLIENT).filter(m => m.classe.includes(cls)).map(m => m.id);
-  }
-  return known;
+  return Array.isArray(known) ? known : [];
 }
 
-// Aba de magias em jogo (cartas por círculo + pips de slot). Usada por Pedro e Lewis.
+// Tabela de slots por nível (espelha SLOTS_POR_NIVEL no server). Mesma p/ as 2 classes.
+const SLOTS_POR_NIVEL_CLIENT = {
+  1: {primeiro:2, segundo:0, terceiro:0},
+  2: {primeiro:3, segundo:0, terceiro:0},
+  3: {primeiro:3, segundo:1, terceiro:0},
+  4: {primeiro:3, segundo:2, terceiro:0},
+  5: {primeiro:3, segundo:2, terceiro:1},
+};
+
+// Aba de magias em jogo: cartas por círculo + pips de slot com contagem regressiva.
 function renderMagiasFichaEmJogo(heroi, cls) {
   cls = cls || (heroi && heroi.class_id) || 'mage';
-  const usados = (heroi && (heroi.magias_usadas_hoje || heroi.magiasUsadasHoje)) || {};
-  const nivel  = (heroi && (heroi.level || heroi.nivel)) || 1;
-  const known  = _magiasConhecidasIds(heroi, cls);
-
-  // Lewis (cleric) — MODO DE TESTE: todos os círculos liberados desde já, com folga
-  // de slots, para que todas as magias possam ser testadas (ignora o nível). Espelha
-  // CLERIC_SLOTS em server.py. O mago (Pedro) mantém a progressão por nível.
-  const limites = (cls === 'cleric' || (MAGE_TESTE_LIVRE && cls === 'mage'))
-    ? {primeiro:9, segundo:9, terceiro:9}
-    : ({
-        1: {primeiro:2, segundo:0, terceiro:0},
-        2: {primeiro:3, segundo:0, terceiro:0},
-        3: {primeiro:3, segundo:1, terceiro:0},
-        4: {primeiro:3, segundo:2, terceiro:0},
-        5: {primeiro:3, segundo:2, terceiro:1}
-      }[Math.min(nivel, 5)]);
+  const nivel    = Math.min((heroi && (heroi.level || heroi.nivel)) || 1, 5);
+  const known    = _magiasConhecidasIds(heroi);
+  const limites  = SLOTS_POR_NIVEL_CLIENT[nivel];
+  const cooldown = (heroi && heroi.slots_cooldown) || {primeiro:[], segundo:[], terceiro:[]};
+  const round    = (window.GS && GS.gameState && GS.gameState.round) || 0;
 
   function renderCirculoMagias(circulo, label) {
     const magiasCirculo = known.filter(id => GRIMORIO_CLIENT[id] && GRIMORIO_CLIENT[id].circulo === circulo);
-    const limite     = limites[circulo] || 0;
-    const usadosHoje = usados[circulo]  || 0;
-    const livres     = Math.max(0, limite - usadosHoje);
-
+    const limite = limites[circulo] || 0;
     if (limite === 0) return `
       <div style="opacity:0.3; margin-bottom:12px;">
         <div style="color:#4a4a4a; font-size:9px; letter-spacing:2px;">${label} — disponível em nível maior</div>
       </div>`;
+
+    // Contagens regressivas dos slots gastos (menores primeiro).
+    const espera = (cooldown[circulo] || []).map(r => Math.max(0, r - round)).sort((a,b) => a - b);
+    const livres = Math.max(0, limite - espera.length);
+
+    const pips = Array.from({length: limite}).map((_, i) => {
+      if (i < livres) {
+        return `<div title="Pronto" style="width:16px; height:16px; border-radius:50%; background:#44cc88; border:1px solid #44cc88;"></div>`;
+      }
+      const falta = espera[i - livres];   // rodadas até liberar este slot
+      return `<div title="Volta em ${falta} rodada(s)" style="width:16px; height:16px; border-radius:50%; background:#1a1a1a; border:1px solid #3a3a3a; display:flex; align-items:center; justify-content:center; color:#cc8844; font-size:9px;">${falta}</div>`;
+    }).join('');
 
     return `
       <div style="margin-bottom:14px;">
@@ -8047,13 +8827,9 @@ function renderMagiasFichaEmJogo(heroi, cls) {
           <span style="color:#8a7a5a; font-size:9px; letter-spacing:2px;">${label}</span>
           <span style="color:${livres === 0 ? '#ff4136' : '#44cc88'}; font-size:10px;">${livres}/${limite} slots</span>
         </div>
-        <div style="display:flex; gap:4px; margin-bottom:8px;">
-          ${Array.from({length:limite}).map((_,i) => `
-            <div style="width:14px; height:14px; border-radius:50%; background:${i < livres ? '#44cc88' : '#1a1a1a'}; border:1px solid ${i < livres ? '#44cc88' : '#2a2a2a'};"></div>
-          `).join('')}
-        </div>
+        <div style="display:flex; gap:4px; margin-bottom:8px;">${pips}</div>
         <div style="display:flex; flex-wrap:wrap; gap:4px;">
-          ${magiasCirculo.map((id, idx) => criarCartaMagia(id, false, idx >= usadosHoje, idx < usadosHoje, 'jogo')).join('')}
+          ${magiasCirculo.map((id, idx) => criarCartaMagia(id, false, livres > 0, livres === 0, 'jogo')).join('')}
           ${magiasCirculo.length === 0 ? `<div style="color:#4a4a4a; font-size:9px; font-style:italic; padding:8px;">Nenhuma magia memorizada</div>` : ''}
         </div>
       </div>`;
@@ -8647,6 +9423,20 @@ function renderMyPanel(state){
     ? ` <span style="color:#4db8ff;font-weight:bold;font-size:.78em;vertical-align:top;" title="Canção Heroica de Henrique">🎵+${_cb[key]}</span>`
     : '';
 
+  // ── Bônus do Guerreiro da Luz (Richard): indicador AMARELO ao lado do atributo ──
+  // O servidor aplica os bônus na resolução (CA/ataque/dano), não no valor exibido —
+  // por isso mostramos como tag aditiva, ao lado da tag azul da Canção quando ambos
+  // estiverem ativos. Naturalmente só aparece no paladino (campos só existem nele).
+  const _glAtivo = !!me.guerreiro_luz_ativo;
+  const _glBonus = me.guerreiro_luz_bonus || {};
+  const _richardTag = (key) => (_glAtivo && _glBonus[key])
+    ? ` <span style="color:#f8d040;font-weight:bold;font-size:.78em;vertical-align:top;" title="Guerreiro da Luz de Richard">💡+${_glBonus[key]}</span>`
+    : '';
+  // Golpe Sagrado: +1d8 sagrado por ataque (buff sustentado) — tag amarela no dano.
+  const _golpeSagradoTag = () => me.golpe_sagrado_ativo
+    ? ` <span style="color:#f8d040;font-weight:bold;font-size:.78em;vertical-align:top;" title="Golpe Sagrado de Richard (+1d8 sagrado por ataque)">⚔️+1d8</span>`
+    : '';
+
   // ── Attribute values (explicit Number conversion — never undefined) ──
   const vStr  = (me.str_  != null) ? Number(me.str_)  : 10;
   const vDex  = (me.dex   != null) ? Number(me.dex)   : 10;
@@ -8716,11 +9506,11 @@ function renderMyPanel(state){
     <div class="combat-row">
       <div class="combat-chip" style="border-color:var(--gold);background:#181200;">
         <span class="cl">CA</span>
-        <b style="color:#f8d040;font-size:1.1rem;">${vAc}${_cancaoTag('bonus_ca')}</b>
+        <b style="color:#f8d040;font-size:1.1rem;">${vAc}${_cancaoTag('bonus_ca')}${_richardTag('ca')}</b>
       </div>
       <div class="combat-chip">
         <span class="cl">Ataque</span>
-        <b style="color:#e8e0c8;">${vAtk >= 0 ? '+' : ''}${vAtk}${_cancaoTag('bonus_acerto')}</b>
+        <b style="color:#e8e0c8;">${vAtk >= 0 ? '+' : ''}${vAtk}${_cancaoTag('bonus_acerto')}${_richardTag('ataque')}</b>
       </div>
       <div class="combat-chip">
         <span class="cl">Mov</span>
@@ -8777,6 +9567,11 @@ function renderMyPanel(state){
         <span class="sv-sub">bônus</span>
       </div>
     </div>
+    ${me.regeneracao_ativa ? `
+    <div style="margin-top:4px; padding:5px 8px; background:rgba(248,208,64,0.12); border:1px solid #f8d04066; border-radius:3px; display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Cinzel',serif;">
+      <span style="color:#f8d040; font-weight:bold; font-size:.95rem;">✨ +1 HP</span>
+      <span style="color:#e8d8a0; font-size:.6rem; letter-spacing:1px;">REGENERAÇÃO DIVINA: +1 HP por turno</span>
+    </div>` : ''}
 
     ${(() => {
       const f = me.fome ?? 100, s = me.sede ?? 100;
@@ -8805,7 +9600,7 @@ function renderMyPanel(state){
         <div class="gear-slot-label" style="align-self:flex-start;margin-bottom:2px;">⚔ ARMA</div>
         <canvas id="weapon-canvas" width="60" height="92" style="background:#0e0c1a;border-radius:3px;width:60px;height:92px;"></canvas>
         <div class="equip-name" style="color:#e8e0c8;font-weight:bold;">${weapon ? weapon.name : 'Desarmado'}</div>
-        <div class="equip-stat" style="color:#f8c840;font-size:.72rem;">${dmgFmt}${_cancaoTag('bonus_dano')}</div>
+        <div class="equip-stat" style="color:#f8c840;font-size:.72rem;">${dmgFmt}${_cancaoTag('bonus_dano')}${_richardTag('dano')}${_golpeSagradoTag()}</div>
       </div>
       <div class="equip-item" style="position:relative;">
         <div class="gear-slot-label" style="align-self:flex-start;margin-bottom:2px;">🛡 ARMADURA</div>
@@ -8829,6 +9624,12 @@ function renderMyPanel(state){
     // Sincroniza animados autoritativos (me.animados) no registro do Pedro p/ a aba Magias.
     const heroiPedro = HERO_DATA.pedro;
     if (Array.isArray(me.animados)) heroiPedro.animados = me.animados;
+    // Enxerta os campos autoritativos do sistema de magias (como os animados acima):
+    // sem isto, renderMagiasFichaEmJogo recebe o objeto estático sem magias conhecidas
+    // e nenhuma carta aparece (bug do Pedro vs Lewis, que passa `me` direto).
+    heroiPedro.magias_conhecidas = me.magias_conhecidas || [];
+    heroiPedro.slots_cooldown    = me.slots_cooldown || {primeiro:[], segundo:[], terceiro:[]};
+    heroiPedro.level             = me.level;
     const corpo = (aba === 'magias') ? renderAbaMagiasPedro(heroiPedro) : statsHTML;
     $('my-stats').innerHTML = abasHTML + corpo;
   } else if (me.class_id === 'cleric') {
@@ -8919,7 +9720,7 @@ function renderMyPanel(state){
     <button class="btn-action" ${canAttack ? '' : 'disabled'} onclick="beginAttack()"
       style="display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 6px;">
       <span>${_wRange!=null?'🏹':'⚔'} Atacar</span>
-      <small style="color:var(--gold);font-size:.7rem;font-weight:bold;">${atkDieStr}${atkModStr} dano${_cancaoTag('bonus_dano')}</small>
+      <small style="color:var(--gold);font-size:.7rem;font-weight:bold;">${atkDieStr}${atkModStr} dano${_cancaoTag('bonus_dano')}${_richardTag('dano')}${_golpeSagradoTag()}</small>
       <small style="color:var(--text2);font-size:.62rem;">${_rangeHint}</small>
       ${_adjHint}
     </button>
@@ -9016,6 +9817,31 @@ function renderMyPanel(state){
     sl.insertAdjacentHTML('beforeend', renderFlagsWarrior(me));
   }
 
+  // ── Técnica(s) da Guilda equipada(s) (Fase 0) — 4º slot com recarga em rodadas ──
+  const _tecEq  = GS.guildEquipOf(me.id);
+  const _tecIds = [_tecEq.tecnica, _tecEq.tecnica_exclusiva].filter(Boolean);
+  for(const tid of _tecIds){
+    const cat = GS.guildCatalogFor(me.class_id).find(x => x.id === tid);
+    if(!cat) continue;
+    const restante = GS.tecnicaRestante(me, tid);
+    const podeUsar = GS.isMyTurn && me.alive && state.phase === 'playing'
+                     && restante === 0
+                     && (me.fome||0) >= (cat.custo_fome||0) && (me.sede||0) >= (cat.custo_sede||0);
+    const btn = document.createElement('button');
+    btn.className = 'skill-btn guild-tec' + (restante > 0 ? ' skill-cooldown' : '');
+    btn.disabled = !podeUsar;
+    const estado = restante > 0
+      ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ recarrega em ${restante}r</small>` : '';
+    btn.innerHTML = `
+      <div class="skill-info">
+        <div class="skill-name">${cat.icon||'⚔️'} ${cat.nome} <small style="color:var(--gold);font-size:.58rem;">GUILDA</small>${estado}</div>
+        <div class="skill-desc">${cat.desc||''}</div>
+      </div>
+      <div class="skill-cost">${restante>0 ? `${restante}r` : `🍖${cat.custo_fome} 💧${cat.custo_sede}`}</div>`;
+    btn.onclick = () => GS.usarTecnica(tid);
+    sl.appendChild(btn);
+  }
+
   // Ladino (Luccas): botão de Desarmar Armadilha quando há uma na casa/adjacente.
   if (me.class_id === 'rogue') {
     const db = _rogueDesarmarBtn(me);
@@ -9094,7 +9920,7 @@ function renderMyPanel(state){
     const slot = document.createElement('div');
     if(item){
       const isConsumable = !item.die && ((item.item_slot === 'bag') ||
-        item.effect === 'heal' || item.effect === 'mana' || item.effect === 'atk_bonus');
+        item.effect === 'heal' || item.effect === 'atk_bonus');
       const isEquippable = !!(item.item_slot && item.item_slot !== 'bag') || !!item.die;
       const typeLabel = item.die ? '⚔ Arma'
         : item.effect === 'ammo' ? `🏹 Munição (×${item.ammo_count ?? 0})`
@@ -9307,16 +10133,21 @@ function desequiparComprado(slot){
 }
 
 let _openChestId = null;   // currently-open chest id (for auto-refresh)
+let _openDecorLootId = null;   // currently-open decor loot id (for auto-refresh)
 
 function openChestWindow(chest){
   _openChestId = chest.id;
+  _openDecorLootId = null;   // disarm decor auto-refresh
   tocarSomBau();
+  const titleEl = $('chest-title');
+  if (titleEl) titleEl.textContent = '🎁 Baú de Tesouro';
   _renderChestWindow(chest);
   $('chest-overlay').classList.add('open');
 }
 
 function closeChestWindow(){
   _openChestId = null;
+  _openDecorLootId = null;
   $('chest-overlay').classList.remove('open');
 }
 
@@ -9360,7 +10191,6 @@ function _renderChestWindow(chest){
             bag:'🧪 Consumível'}[item.item_slot] || '📦 Item');
     const statSuffix = isWeapon ? ''
       : item.effect==='heal'  ? ` +${item.value} HP`
-      : item.effect==='mana'  ? ` +${item.value} MP`
       : item.effect==='atk'   ? ` +${item.value} Atq`
       : item.effect==='def_'  ? ` +${item.value} CA` : '';
 
@@ -9397,6 +10227,74 @@ function _renderChestWindow(chest){
 
 function takeFromChest(chestId, kind, index){
   send({ type:'take_from_chest', chest_id:chestId, kind, index });
+}
+
+// ── Reusable loot panel — used by both chests and decoration containers ───────
+// { titulo, gold, items, onPegarOuro, onPegarItem(idx) }
+// Reuses the chest overlay DOM; disarms chest auto-refresh and vice-versa.
+function abrirPainelLoot({ titulo, gold, items, onPegarOuro, onPegarItem }) {
+  _openChestId = null;   // disarm chest auto-refresh
+  _openDecorLootId = null;
+  const titleEl = $('chest-title');
+  if (titleEl) titleEl.textContent = titulo || '📦 Objeto';
+  const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid && p.alive);
+  const isFull = me && (me.bag || []).length >= (me.bag_size || 6);
+  const list = $('chest-items-list');
+  list.innerHTML = '';
+
+  const hasGold  = gold > 0;
+  const hasItems = (items || []).length > 0;
+
+  if (!hasGold && !hasItems) {
+    list.innerHTML = '<div class="chest-empty-msg">O objeto está vazio.</div>';
+    $('chest-overlay').classList.add('open');
+    return;
+  }
+
+  if (hasGold) {
+    const row = document.createElement('div');
+    row.className = 'chest-gold-row';
+    row.innerHTML = `<span class="chest-gold-label">🪙 ${gold} Ouros</span>`;
+    const btn = document.createElement('button');
+    btn.className = 'chest-take-btn';
+    btn.textContent = '⬆ Pegar';
+    btn.onclick = () => onPegarOuro();
+    row.appendChild(btn);
+    list.appendChild(row);
+  }
+
+  (items || []).forEach((item, idx) => {
+    const isWeapon = !!item.die;
+    const typeLabel = isWeapon
+      ? `⚔ Arma (${item.die})`
+      : ({ weapon: '⚔ Arma', armor: '🛡 Armadura', shield: '🛡 Escudo',
+           accessory: '📿 Acessório', ring: '💍 Anel', head: '⛑ Cabeça',
+           bag: '🧪 Consumível' }[item.item_slot] || '📦 Item');
+    const statSuffix = isWeapon ? ''
+      : item.effect === 'heal' ? ` +${item.value} HP`
+      : item.effect === 'atk'  ? ` +${item.value} Atq`
+      : item.effect === 'def_' ? ` +${item.value} CA` : '';
+    const row = document.createElement('div');
+    row.className = 'chest-item-row';
+    row.innerHTML = `
+      <div class="ci-info">
+        <span class="ci-emoji">${item.emoji || '📦'}</span>
+        <div class="ci-text">
+          <div class="ci-name">${item.name}</div>
+          <div class="ci-type">${typeLabel}${statSuffix}</div>
+        </div>
+      </div>`;
+    const btn = document.createElement('button');
+    btn.className = 'chest-take-btn';
+    btn.textContent = '⬆ Pegar';
+    btn.disabled = isFull;
+    if (isFull) btn.title = 'Inventário cheio!';
+    btn.onclick = () => onPegarItem(idx);
+    row.appendChild(btn);
+    list.appendChild(row);
+  });
+
+  $('chest-overlay').classList.add('open');
 }
 
 // ── Histórico de rolagens — faixa fixa sob o cabeçalho do log do Mestre ─────
@@ -9458,7 +10356,7 @@ function tocarSomBau(){
       g.gain.setValueAtTime(0.0001, t0);
       g.gain.exponentialRampToValueAtTime(0.18, t0 + 0.02);
       g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.55);
-      o.connect(g); g.connect(ctx.destination);
+      o.connect(g); g.connect(_sfxBus());
       o.start(t0); o.stop(t0 + 0.6);
     });
   } catch(e){}
@@ -9493,7 +10391,7 @@ function endTurn(){ getAudioContext(); GS.endTurn(); }
 // ── Ação Bônus — efeitos de item que consomem ação bônus (máx. 1/turno) ──────
 // Espelha BONUS_ACTION_EFFECTS em server.py — manter sincronizados.
 const ACOES_BONUS = ['beberPocao', 'usarItemMagico', 'envenenarArma', 'usarItem'];
-const BONUS_ACTION_EFFECTS = new Set(['heal', 'mana', 'atk_bonus', 'antidote']);
+const BONUS_ACTION_EFFECTS = new Set(['heal', 'atk_bonus', 'antidote']);
 
 function useItem(itemId){ send({type:'use_item',item_id:itemId}); }
 
@@ -9508,6 +10406,276 @@ function equipOffhand(slotIndex){
 
 function unequipSlot(slotKey){
   send({type:'unequip', slot_key: slotKey});
+}
+function reorderBag(fromIndex, toIndex){
+  send({type:'reorder_bag', from_index: fromIndex, to_index: toIndex});
+}
+
+// ── Ficha do personagem na CIDADE (v2): painel lateral autoritativo ──────────
+// Lê player.gear/player.bag do city_state (modelo autoritativo do servidor).
+// Meu herói: equipar/desequipar (botão/clique) + arrastar-e-soltar (reordenar a
+// bolsa e equipar/desequipar). Outros heróis: só leitura.
+const FC_EQ_SLOTS = [
+  {key:'weapon',   label:'Mão Direita', empty:'✊'},
+  {key:'off_hand', label:'Mão Esquerda',empty:'🤚'},
+  {key:'armor',    label:'Corpo',       empty:'👕'},
+  {key:'head',     label:'Cabeça',      empty:'🧢'},
+  {key:'ring1',    label:'Anel 1',      empty:'💍'},
+  {key:'ring2',    label:'Anel 2',      empty:'💍'},
+  {key:'item1',    label:'Item 1',      empty:'📦'},
+  {key:'item2',    label:'Item 2',      empty:'📦'},
+];
+let _fcPanelPid = null;   // pid mostrado no painel (null = fechado)
+let _fcDrag = null;       // origem do arraste: {kind:'bag',index} | {kind:'gear',slotKey}
+
+function _fcPlayerAtual(){
+  return (GS.cityState && GS.cityState.players)
+    ? GS.cityState.players.find(p => p.id === _fcPanelPid) : null;
+}
+
+function _fcEhAdaga(item){
+  return !!item && (item.id === 'dagger' || /adaga/i.test(item.name || '')) && !!item.die;
+}
+
+function abrirFichaCidade(pid){
+  _fcPanelPid = pid;
+  let panel = document.getElementById('ficha-cidade-panel');
+  let back  = document.getElementById('ficha-cidade-backdrop');
+  if(!back){
+    back = document.createElement('div');
+    back.id = 'ficha-cidade-backdrop';
+    back.onclick = fecharFichaCidade;
+    document.body.appendChild(back);
+  }
+  if(!panel){
+    panel = document.createElement('div');
+    panel.id = 'ficha-cidade-panel';
+    document.body.appendChild(panel);
+  }
+  _refreshFichaCidadePanel();
+  requestAnimationFrame(() => { panel.classList.add('open'); back.classList.add('open'); });
+}
+
+function fecharFichaCidade(){
+  _fcPanelPid = null;
+  _fcDrag = null;
+  const panel = document.getElementById('ficha-cidade-panel');
+  const back  = document.getElementById('ficha-cidade-backdrop');
+  if(panel) panel.classList.remove('open');
+  if(back)  back.classList.remove('open');
+}
+
+// Re-renderiza o corpo do painel com o player atual do city_state.
+function _refreshFichaCidadePanel(){
+  if(_fcPanelPid == null) return;
+  const panel = document.getElementById('ficha-cidade-panel');
+  if(!panel) return;
+  const player = _fcPlayerAtual();
+  if(!player){ fecharFichaCidade(); return; }
+  panel.innerHTML = '';
+  const closeBtn = document.createElement('button');
+  closeBtn.id = 'ficha-cidade-close';
+  closeBtn.textContent = '✕';
+  closeBtn.title = 'Fechar';
+  closeBtn.onclick = fecharFichaCidade;
+  panel.appendChild(closeBtn);
+  renderFichaCidadeBody(panel, player, player.id === GS.myPid);
+}
+
+function renderFichaCidadeBody(panel, player, editable){
+  // Cabeçalho (foto + nome/classe/nível)
+  const heroiKey    = _classIdParaHeroiKey(player.class_id);
+  const heroiStatic = (typeof HERO_DATA !== 'undefined' && HERO_DATA[heroiKey])
+    || (GS.HERO_DATA && GS.HERO_DATA[heroiKey]) || {};
+  const portrait = HERO_PORTRAIT_PATHS[player.class_id] || heroiStatic.portrait || '';
+  const head = document.createElement('div');
+  head.className = 'fc-head';
+  head.innerHTML = `
+    <img class="fc-head-photo" src="${portrait}" alt="" onerror="this.style.display='none'"/>
+    <div class="fc-head-info">
+      <div class="fc-head-name">${player.name || ''}</div>
+      <div class="fc-head-class">${player.class_name || ''}${editable ? '' : ' · só leitura'}</div>
+      <div class="fc-head-lvl">NÍVEL ${player.level || 1}</div>
+    </div>`;
+  panel.appendChild(head);
+
+  const body = document.createElement('div');
+  body.className = 'fc-body';
+  panel.appendChild(body);
+
+  // Atributos (reuso)
+  const attr = document.createElement('div');
+  attr.innerHTML = renderConteudoAtributosFichaJogo(heroiStatic, player);
+  body.appendChild(attr);
+
+  // Equipamento (paper-doll dos 8 slots)
+  const gear = player.gear || {};
+  const eqTitle = document.createElement('div');
+  eqTitle.className = 'section-title'; eqTitle.style.marginTop = '4px';
+  eqTitle.textContent = 'Equipamento';
+  body.appendChild(eqTitle);
+  const eqGrid = document.createElement('div');
+  eqGrid.className = 'equip-grid';
+  for(const {key, label, empty} of FC_EQ_SLOTS){
+    const item = gear[key];
+    const slot = document.createElement('div');
+    slot.className = 'eq-slot' + (item ? ' filled' : '');
+    slot.title = item ? (editable ? `${item.name} — clique/arraste p/ desequipar` : item.name) : label;
+    slot.innerHTML = `
+      <div class="eq-slot-label">${label}</div>
+      <div class="eq-slot-emoji">${item ? item.emoji : `<span style="opacity:.35">${empty}</span>`}</div>
+      <div class="eq-slot-name">${item ? item.name : '—'}</div>`;
+    if(item) aplicarTooltipAoItem(slot, item.id);
+    if(editable && item){
+      slot.appendChild(Object.assign(document.createElement('div'),
+        {className:'eq-slot-x', textContent:'⤓', title:'Desequipar'}));
+      slot.onclick = () => unequipSlot(key);
+      slot.draggable = true;
+      slot.addEventListener('dragstart', e => { _fcDrag = {kind:'gear', slotKey:key}; e.dataTransfer.effectAllowed = 'move'; });
+    }
+    if(editable){
+      slot.addEventListener('dragover',  e => { if(_fcDrag){ e.preventDefault(); slot.classList.add('drop-target'); } });
+      slot.addEventListener('dragleave', () => slot.classList.remove('drop-target'));
+      slot.addEventListener('drop',      e => { e.preventDefault(); slot.classList.remove('drop-target'); _fcDropOnGear(key); });
+    }
+    eqGrid.appendChild(slot);
+  }
+  body.appendChild(eqGrid);
+
+  // Inventário (bag_size slots)
+  const bag     = player.bag || [];
+  const bagSize = player.bag_size || 6;
+  const bagTitle = document.createElement('div');
+  bagTitle.className = 'section-title';
+  bagTitle.textContent = `Inventário (${bag.length}/${bagSize})`;
+  body.appendChild(bagTitle);
+  const bagGrid = document.createElement('div');
+  bagGrid.className = 'bag-grid';
+  for(let i = 0; i < bagSize; i++){
+    const item = bag[i];
+    const slot = document.createElement('div');
+    if(item){
+      const isEquippable = !!(item.item_slot && item.item_slot !== 'bag') || !!item.die;
+      const typeLabel = item.die ? '⚔ Arma'
+        : item.effect === 'ammo' ? `🏹 Munição (×${item.ammo_count ?? 0})`
+        : ({weapon:'⚔ Arma', shield:'🛡 Escudo', armor:'🛡 Armadura', head:'⛑ Cabeça',
+            ring:'💍 Anel', item:'🎒 Item', accessory:'📿 Acessório', bag:'🧪 Consumível'}[item.item_slot] || '📦 Item');
+      slot.className = 'bag-slot filled';
+      slot.title = item.name;
+      slot.innerHTML = `
+        <div class="bag-slot-num">${i+1}</div>
+        <div class="bag-slot-emoji">${item.emoji}</div>
+        <div class="bag-slot-name">${item.name}</div>
+        <div class="bag-slot-type">${typeLabel}</div>`;
+      aplicarTooltipAoItem(slot, item.id);
+      if(editable){
+        slot.draggable = true;
+        slot.addEventListener('dragstart', e => { _fcDrag = {kind:'bag', index:i}; e.dataTransfer.effectAllowed = 'move'; });
+        if(isEquippable){
+          const allowed = item.allowed_classes;
+          const classRestricted = allowed && player.class_id && !allowed.includes(player.class_id);
+          const btn = document.createElement('button');
+          btn.className = 'bag-slot-btn equip' + (classRestricted ? ' disabled' : '');
+          btn.textContent = classRestricted ? '🚫 Classe' : '⚙ Equipar';
+          btn.disabled = !!classRestricted;
+          btn.title = classRestricted ? `Apenas: ${allowed.join(', ')}` : '';
+          if(!classRestricted) btn.onclick = () => equipFromBag(i);
+          slot.appendChild(btn);
+          if(_fcEhAdaga(item) && !classRestricted){
+            const b2 = document.createElement('button');
+            b2.className = 'bag-slot-btn equip';
+            b2.textContent = '🗡️ 2ª arma';
+            b2.title = 'Empunhar na mão esquerda (2ª arma)';
+            b2.onclick = () => equipOffhand(i);
+            slot.appendChild(b2);
+          }
+        }
+      }
+    } else {
+      slot.className = 'bag-slot empty-slot';
+      slot.innerHTML = `
+        <div class="bag-slot-num" style="opacity:.5">${i+1}</div>
+        <div class="bag-slot-emoji" style="font-size:1rem;opacity:.4">◻</div>
+        <div class="bag-slot-type" style="font-size:.52rem">vazio</div>`;
+    }
+    if(editable){
+      slot.addEventListener('dragover',  e => { if(_fcDrag){ e.preventDefault(); slot.classList.add('drop-target'); } });
+      slot.addEventListener('dragleave', () => slot.classList.remove('drop-target'));
+      slot.addEventListener('drop',      e => { e.preventDefault(); slot.classList.remove('drop-target'); _fcDropOnBag(i); });
+    }
+    bagGrid.appendChild(slot);
+  }
+  body.appendChild(bagGrid);
+
+  // ── Técnica da Guilda (Fase 0) — equipar no 4º slot (só o próprio herói, na cidade) ──
+  if(editable){
+    const owned   = (GS.guildOwnedOf(player.id).tecnicas) || [];
+    const eq      = GS.guildEquipOf(player.id);
+    const catalog = GS.guildCatalogFor(player.class_id);
+    const nomeDe = id => { const c = catalog.find(x => x.id === id); return c ? c.nome : id; };
+    const isEx   = id => { const c = catalog.find(x => x.id === id); return !!(c && c.exclusiva); };
+
+    const mkSelect = (slotKey, cur, filtro, labelVazio) => {
+      const sel = document.createElement('select');
+      sel.className = 'guild-equip-sel';
+      const optVazio = new Option(labelVazio, '');
+      if(!cur) optVazio.selected = true;
+      sel.appendChild(optVazio);
+      owned.filter(filtro).forEach(id => {
+        const o = new Option(nomeDe(id), id);
+        if(id === cur) o.selected = true;
+        sel.appendChild(o);
+      });
+      sel.onchange = () => GS.guildEquip(slotKey, sel.value || null);
+      return sel;
+    };
+
+    const tecTitle = document.createElement('div');
+    tecTitle.className = 'section-title'; tecTitle.style.marginTop = '4px';
+    tecTitle.textContent = '⚔️ Técnica da Guilda';
+    body.appendChild(tecTitle);
+    body.appendChild(mkSelect('tecnica', eq.tecnica, id => !isEx(id), '— nenhuma técnica —'));
+
+    if(player.class_id === 'mage' || player.class_id === 'cleric'){
+      const exTitle = document.createElement('div');
+      exTitle.className = 'section-title'; exTitle.style.marginTop = '4px';
+      exTitle.textContent = '✨ Técnica Exclusiva';
+      body.appendChild(exTitle);
+      body.appendChild(mkSelect('tecnica_exclusiva', eq.tecnica_exclusiva, id => isEx(id), '— nenhuma exclusiva —'));
+    }
+
+    if(!owned.length){
+      const hint = document.createElement('div');
+      hint.className = 'guild-empty'; hint.style.padding = '2px 2px 0';
+      hint.textContent = 'Compre técnicas na Guilda dos Heróis.';
+      body.appendChild(hint);
+    }
+  }
+}
+
+// Drop num slot de EQUIPAMENTO: vindo da bolsa → equipar (off_hand p/ adaga/escudo).
+function _fcDropOnGear(slotKey){
+  const d = _fcDrag; _fcDrag = null;
+  if(!d || d.kind !== 'bag') return;   // gear→gear: ignora
+  const player = _fcPlayerAtual();
+  const item = player && player.bag ? player.bag[d.index] : null;
+  if(!item) return;
+  const ehOffhand = slotKey === 'off_hand'
+    && (_fcEhAdaga(item) || item.item_slot === 'shield' || item.kind === 'shield');
+  if(ehOffhand) equipOffhand(d.index);
+  else          equipFromBag(d.index);
+}
+
+// Drop num slot da BOLSA: vindo da bolsa → reordenar; vindo do gear → desequipar.
+function _fcDropOnBag(toIndex){
+  const d = _fcDrag; _fcDrag = null;
+  if(!d) return;
+  if(d.kind === 'bag'){
+    if(d.index === toIndex) return;
+    reorderBag(d.index, toIndex);
+  } else if(d.kind === 'gear'){
+    unequipSlot(d.slotKey);
+  }
 }
 
 // Envia o ataque incluindo as habilidades ARMADAS do warrior (toggle). O custo
@@ -9762,7 +10930,7 @@ $('dungeon-canvas').addEventListener('mousemove', e=>{
   }
   const player=GS.gameState.players.find(p=>p.pos[0]===tx&&p.pos[1]===ty&&p.alive);
   if(player){
-    tip.innerHTML=`<b>${player.emoji} ${player.name}</b> (Lv${player.level})<br>HP: ${player.hp}/${player.max_hp} | MP: ${player.mp}/${player.max_mp}`;
+    tip.innerHTML=`<b>${player.emoji} ${player.name}</b> (Lv${player.level})<br>HP: ${player.hp}/${player.max_hp}`;
     tip.style.display='block';
     tip.style.left=(e.clientX+14)+'px';
     tip.style.top=(e.clientY-10)+'px';
@@ -9804,6 +10972,220 @@ function toggleFichaDrawer(open){
 $('input-name').addEventListener('keydown',e=>{ if(e.key==='Enter') createRoom(); });
 $('input-code').addEventListener('keydown',e=>{ if(e.key==='Enter') joinRoom(); });
 $('input-code').addEventListener('input',e=>{ e.target.value=e.target.value.toUpperCase(); });
+
+// ── Capa do jogo (splash) ────────────────────────────────────────────────
+// A capa cobre a tela inicial no boot; o 1º clique/tecla a recua para fundo
+// sutil (.dismissed). Tudo confinado a #screen-connect, então some sozinha ao
+// trocar de tela. Se a imagem não existir, o splash é removido (jogo intacto).
+(function initCoverSplash(){
+  const cover = $('cover-splash');
+  if(!cover) return;
+  // Só mostra a capa se a imagem carregar; senão, remove para não bloquear nada.
+  const probe = new Image();
+  probe.onerror = () => cover.remove();
+  probe.src = 'assets/capa.png';
+  let dismissed = false;
+  const dismiss = () => {
+    if(dismissed) return;
+    dismissed = true;
+    cover.classList.add('dismissed');
+    document.removeEventListener('keydown', dismiss, true);
+  };
+  cover.addEventListener('click', dismiss);
+  document.addEventListener('keydown', dismiss, true);
+})();
+
+// ── Sistema de áudio: música de fundo + volumes (música/SFX) ─────────────────
+// Música em loop nas telas de menu (abertura/seleção) e na cidade, com crossfade
+// suave de 3 s entre faixas e fade-out de 3 s ao entrar no jogo (tabuleiro sem
+// música). Painel ⚙️ global (em todas as telas) com dois sliders: Música e Sons.
+// Volumes persistidos em localStorage. Renderização/UI pura atrelada a telas —
+// sem lógica de jogo. Espelha o padrão do player de história (_storyAudioEl).
+const MENU_MUSIC = {
+  abertura: 'assets/music/abertura.mp3',
+  selecao:  'assets/music/selecao.mp3',
+  cidade:   'assets/music/cidade.mp3',
+};
+const _MM_FADE = 1500;    // ms de crossfade / fade-out
+const _mmTracks = {};     // id -> HTMLAudioElement (criado sob demanda)
+let _mmCurrent = null;    // id da faixa audível agora
+let _mmStarted = false;   // a 1ª reprodução já começou? (autoplay/1º gesto)
+let _mmFadeRAF = null;    // handle do requestAnimationFrame das rampas de volume
+let _mmVol  = 0.6;        // volume da música (0..1) — sobrescrito por localStorage
+let _sfxVol = 1.0;        // volume dos efeitos (0..1) — sobrescrito por localStorage
+
+// ── Persistência dos volumes ────────────────────────────────────────────────
+const _AUDIO_KEY = 'lfh_audio';
+function _audioLoadPrefs(){
+  try {
+    const o = JSON.parse(localStorage.getItem(_AUDIO_KEY) || '{}');
+    if (typeof o.music === 'number') _mmVol  = Math.max(0, Math.min(1, o.music));
+    if (typeof o.sfx   === 'number') _sfxVol = Math.max(0, Math.min(1, o.sfx));
+  } catch (e) {}
+}
+function _audioSavePrefs(){
+  try { localStorage.setItem(_AUDIO_KEY, JSON.stringify({ music: _mmVol, sfx: _sfxVol })); } catch (e) {}
+}
+
+// ── Master de SFX: TODO efeito Web Audio passa por este gain (volume único) ──
+// As funções de som conectam seu nó final a _sfxBus() em vez de ctx.destination.
+let _sfxBusNode = null, _sfxBusCtx = null;
+function _sfxBus(){
+  const ctx = getAudioContext();
+  if (!ctx) return null;
+  if (_sfxBusCtx !== ctx || !_sfxBusNode){   // (re)cria se o AudioContext mudou
+    _sfxBusNode = ctx.createGain();
+    _sfxBusNode.gain.value = _sfxVol;
+    _sfxBusNode.connect(ctx.destination);
+    _sfxBusCtx = ctx;
+  }
+  return _sfxBusNode;
+}
+function _setSfxVol(v){
+  _sfxVol = Math.max(0, Math.min(1, v));
+  if (_sfxBusNode) _sfxBusNode.gain.value = _sfxVol;
+  _audioSavePrefs();
+}
+
+// ── Música de fundo ──────────────────────────────────────────────────────────
+function _mmEl(id){
+  if (_mmTracks[id]) return _mmTracks[id];
+  const a = new Audio(MENU_MUSIC[id]);
+  a.loop = true; a.preload = 'auto'; a.volume = 0;
+  _mmTracks[id] = a;
+  return a;
+}
+
+// Loop único de rampa: cada faixa com fade ativo guarda seu descritor em _mmFade.
+function _mmTick(){
+  const now = performance.now();
+  let active = false;
+  for (const id in _mmTracks){
+    const a = _mmTracks[id], f = a._mmFade;
+    if (!f) continue;
+    active = true;
+    const t = Math.min(1, (now - f.t0) / f.dur);
+    a.volume = Math.max(0, Math.min(1, f.from + (f.to - f.from) * t));
+    if (t >= 1){
+      a._mmFade = null;
+      if (f.stop){ try { a.pause(); a.currentTime = 0; } catch (e) {} }
+    }
+  }
+  _mmFadeRAF = active ? requestAnimationFrame(_mmTick) : null;
+}
+
+function _mmFadeTo(a, to, dur, stop){
+  a._mmFade = { from: a.volume, to, dur: Math.max(1, dur), t0: performance.now(), stop: !!stop };
+  if (!_mmFadeRAF) _mmFadeRAF = requestAnimationFrame(_mmTick);
+}
+
+// Toca a faixa `id` com crossfade a partir da atual. Falha de autoplay/arquivo
+// é silenciosa (igual ao player de história) — nunca quebra o jogo.
+function _mmPlay(id){
+  if (!MENU_MUSIC[id]) return;
+  const next = _mmEl(id);
+  for (const other in _mmTracks){          // faz fade-out das demais
+    if (other !== id) _mmFadeTo(_mmTracks[other], 0, _MM_FADE, true);
+  }
+  const cross = _mmStarted && _mmCurrent && _mmCurrent !== id;
+  const p = next.play();
+  if (p && p.catch) p.catch(() => {});
+  _mmFadeTo(next, _mmVol, cross ? _MM_FADE : 600, false);
+  _mmCurrent = id;
+  _mmStarted = true;
+}
+
+function _mmStop(){                          // fade-out de tudo (entrar no jogo)
+  for (const id in _mmTracks) _mmFadeTo(_mmTracks[id], 0, _MM_FADE, true);
+  _mmCurrent = null;
+}
+
+function _setMusicVol(v){                    // slider de música — aplica ao vivo
+  _mmVol = Math.max(0, Math.min(1, v));
+  if (_mmCurrent && _mmTracks[_mmCurrent]) _mmFadeTo(_mmTracks[_mmCurrent], _mmVol, 150, false);
+  _audioSavePrefs();
+}
+
+function _mmHideHint(){                       // esconde a dica da capa ao tocar
+  const h = document.getElementById('cover-hint');
+  if (h) h.style.opacity = '0';
+}
+
+// ── Painel ⚙️ de áudio (global, em todas as telas) ───────────────────────────
+function _audioPanelEnsure(){
+  let wrap = document.getElementById('audio-settings');
+  if (wrap) return wrap;
+  const pct = (v) => Math.round(v * 100);
+  wrap = document.createElement('div');
+  wrap.id = 'audio-settings';
+  wrap.style.cssText = 'position:fixed;right:14px;top:14px;z-index:61;font-family:inherit;';
+  wrap.innerHTML =
+    '<button id="audio-gear" title="Áudio (música e sons)" style="width:42px;height:42px;'
+    + 'border-radius:50%;border:1px solid #2a4a2a;background:rgba(13,26,13,.82);color:#a0e0a0;'
+    + 'font-size:20px;cursor:pointer;line-height:1;padding:0;box-shadow:0 2px 8px rgba(0,0,0,.5);">⚙️</button>'
+    + '<div id="audio-pop" style="display:none;position:absolute;right:0;top:50px;width:210px;'
+    + 'background:rgba(13,20,13,.96);border:1px solid #2a4a2a;border-radius:10px;padding:12px 14px;'
+    + 'box-shadow:0 6px 20px rgba(0,0,0,.6);color:#cfe9cf;font-size:.8rem;">'
+    +   '<div style="display:flex;justify-content:space-between;margin-bottom:5px;">'
+    +     '<span>🎵 Música</span><span id="aud-music-val">' + pct(_mmVol) + '%</span></div>'
+    +   '<input id="aud-music" type="range" min="0" max="100" value="' + pct(_mmVol) + '" style="width:100%;">'
+    +   '<div style="display:flex;justify-content:space-between;margin:12px 0 5px;">'
+    +     '<span>🔊 Sons</span><span id="aud-sfx-val">' + pct(_sfxVol) + '%</span></div>'
+    +   '<input id="aud-sfx" type="range" min="0" max="100" value="' + pct(_sfxVol) + '" style="width:100%;">'
+    + '</div>';
+  document.body.appendChild(wrap);
+  const pop = wrap.querySelector('#audio-pop');
+  wrap.querySelector('#audio-gear').onclick = (e) => {
+    e.stopPropagation();
+    pop.style.display = (pop.style.display === 'none') ? 'block' : 'none';
+  };
+  document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) pop.style.display = 'none'; });
+  const mSl = wrap.querySelector('#aud-music'), mVal = wrap.querySelector('#aud-music-val');
+  mSl.oninput = () => { mVal.textContent = mSl.value + '%'; _setMusicVol(mSl.value / 100); };
+  const sSl = wrap.querySelector('#aud-sfx'), sVal = wrap.querySelector('#aud-sfx-val');
+  sSl.oninput = () => { sVal.textContent = sSl.value + '%'; _setSfxVol(sSl.value / 100); };
+  return wrap;
+}
+
+// Chamado por showScreen() a cada troca de tela.
+function _menuMusicOnScreen(id){
+  _audioPanelEnsure();                       // ⚙️ visível em qualquer tela
+  if (id === 'screen-connect')            _mmPlay('abertura');
+  else if (id === 'screen-class-select')  _mmPlay('selecao');
+  else if (id === 'screen-city')          _mmPlay('cidade');
+  else                                    _mmStop();   // tabuleiro / fim: sem música
+}
+
+// Início da abertura: tenta tocar junto com a capa; se o browser bloquear o
+// autoplay, começa no 1º clique/tecla (mesmo gesto que recua a capa).
+let _mmGestureHooked = false;
+function _mmHookFirstGesture(){
+  if (_mmGestureHooked || _mmStarted) return;
+  _mmGestureHooked = true;
+  const go = () => {
+    document.removeEventListener('pointerdown', go, true);
+    document.removeEventListener('keydown', go, true);
+    if (!_mmStarted){ _mmPlay('abertura'); _mmHideHint(); }
+  };
+  document.addEventListener('pointerdown', go, true);
+  document.addEventListener('keydown', go, true);
+}
+
+(function _audioInit(){
+  _audioLoadPrefs();
+  _audioPanelEnsure();
+  const active = document.querySelector('.screen.active');
+  if (!active || active.id !== 'screen-connect') return;  // boot sempre na abertura
+  const a = _mmEl('abertura');
+  const p = a.play();
+  if (p && p.then){
+    p.then(() => { _mmCurrent = 'abertura'; _mmStarted = true;
+                   _mmFadeTo(a, _mmVol, 800, false); _mmHideHint(); })
+     .catch(() => _mmHookFirstGesture());     // autoplay bloqueado → espera gesto
+  } else {
+    _mmHookFirstGesture();
+  }
+})();
 
 // THREE.JS  3D RENDERER
 // Adiciona visão isométrica 3D ao tabuleiro, sem alterar lógica de jogo.
@@ -9864,11 +11246,16 @@ function init3D(state){
   const CW = wrap.offsetWidth  || 640;
   const CH = wrap.offsetHeight || 480;
 
+  // ── Ambiente de iluminação (preset por mapa). Default "masmorra".
+  // Controla luz/fog/exposição dos tiles explorados; a névoa de guerra é igual.
+  const AMB = (VC.ambientes && VC.ambientes[state.ambiente]) || VC.ambientes.masmorra;
+  const AMBL = AMB.lighting;
+
   // ── Scene
   const scene = new T.Scene();
-  scene.background = new T.Color(VC.scene.bgColor);
+  scene.background = new T.Color(AMB.scene.bgColor);
   // Subtle fog — keeps depth cue without hiding explored areas
-  scene.fog = new T.FogExp2(VC.scene.fogColor, VC.scene.fogDensity);
+  scene.fog = new T.FogExp2(AMB.scene.fogColor, AMB.scene.fogDensity);
 
   // ── Renderer
   const renderer = new T.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
@@ -9877,7 +11264,7 @@ function init3D(state){
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type    = T.PCFShadowMap   /* PCF simples: ~igual visualmente, bem mais barato que PCFSoft */;
   renderer.toneMapping       = T.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.35;
+  renderer.toneMappingExposure = AMB.exposure;
   // Absolute-fill so canvas covers the full map-wrap area (including 8px padding)
   Object.assign(renderer.domElement.style, {
     display: 'block', position: 'absolute',
@@ -9915,18 +11302,42 @@ function init3D(state){
   const floorBaseMat = new T.MeshStandardMaterial({ map:floorTex, roughness:0.92, metalness:0.03 });
   const wallBaseMat  = new T.MeshStandardMaterial({ map:wallTex, roughnessMap:wallTex, roughness:0.92, metalness:0.04 });
 
+  // Textura de canvas por material (cache por id). Usa os MESMOS painters do 2D
+  // para a aparência 2D/3D coincidir. Materiais "de pedra" (cinza/normal/negra)
+  // retornam null e seguem usando floorTex/wallTex tingidos pela cor.
+  const _matTexCache = {};
+  function makeMaterialTex(matId){
+    if(matId in _matTexCache) return _matTexCache[matId];
+    const S=256, cv=document.createElement('canvas'); cv.width=cv.height=S;
+    const c=cv.getContext('2d'); const r=_rng((matId.length*2654435761)>>>0);
+    let tex=null;
+    switch(matId){
+      case 'grama':         paintGrass(c,0,0,S,r); break;
+      case 'terra':         paintDirt(c,0,0,S,r); break;
+      case 'pedra_negra':   paintStone(c,0,0,S,r,[30,28,34]); break;
+      case 'enegrecida':    paintBrick(c,0,0,S,r,[22,21,26],'#070709'); break;
+      case 'pedra_caverna': paintCave(c,0,0,S,r); break;
+      case 'desmoronada':   paintRubble(c,0,0,S,r); break;
+      case 'entulho':       paintRubble(c,0,0,S,r); break;
+    }
+    if(matId==='grama'||matId==='terra'||matId==='pedra_negra'||matId==='enegrecida'||matId==='pedra_caverna'||matId==='desmoronada'||matId==='entulho'){
+      tex=new T.CanvasTexture(cv); tex.wrapS=tex.wrapT=T.RepeatWrapping;
+    }
+    _matTexCache[matId]=tex; return tex;
+  }
+
   const floorGeo = new T.BoxGeometry(TW, TH, TW);
   const wallGeo  = new T.BoxGeometry(TW, WH, TW);
 
   // Warm brownish ambient — dark but not pitch-black. Areas away from torches
   // are still barely readable; the torches provide the main visible illumination.
   // Warm-white ambient — ensures shadow areas are still readable
-  const ambient = new T.AmbientLight(VC.lighting.ambient.color, VC.lighting.ambient.intensity);
+  const ambient = new T.AmbientLight(AMBL.ambient.color, AMBL.ambient.intensity);
   scene.add(ambient);
 
   // Main directional — warm key light from front-right above
-  const showcase = new T.DirectionalLight(VC.lighting.dirMain.color, VC.lighting.dirMain.intensity);
-  showcase.position.set(...VC.lighting.dirMain.pos);
+  const showcase = new T.DirectionalLight(AMBL.dirMain.color, AMBL.dirMain.intensity);
+  showcase.position.set(...AMBL.dirMain.pos);
   showcase.castShadow = true;
   showcase.shadow.mapSize.width = showcase.shadow.mapSize.height = 2048;
   showcase.shadow.camera.far    = 120;
@@ -9938,13 +11349,13 @@ function init3D(state){
   scene.add(showcase);
 
   // Cool fill — back-left; contrasts lit vs shadow without over-darkening
-  const fillLight = new T.DirectionalLight(VC.lighting.dirFill.color, VC.lighting.dirFill.intensity);
-  fillLight.position.set(...VC.lighting.dirFill.pos);
+  const fillLight = new T.DirectionalLight(AMBL.dirFill.color, AMBL.dirFill.intensity);
+  fillLight.position.set(...AMBL.dirFill.pos);
   scene.add(fillLight);
 
   // Warm back-rim — preserves silhouette readability on miniature backs
-  const rimLight = new T.DirectionalLight(VC.lighting.rimLight.color, VC.lighting.rimLight.intensity);
-  rimLight.position.set(...VC.lighting.rimLight.pos);
+  const rimLight = new T.DirectionalLight(AMBL.rimLight.color, AMBL.rimLight.intensity);
+  rimLight.position.set(...AMBL.rimLight.pos);
   scene.add(rimLight);
 
   // SW pawn-front light — as frentes das miniaturas apontam para sudoeste
@@ -9952,8 +11363,8 @@ function init3D(state){
   // peão carregava 2–3 PointLights próprias para compensar; esta directional
   // única ilumina todas as frentes com custo fixo e contagem de luzes ESTÁVEL
   // (variar o nº de luzes força o Three.js a recompilar todos os shaders).
-  const pawnLight = new T.DirectionalLight(VC.lighting.dirPawn.color, VC.lighting.dirPawn.intensity);
-  pawnLight.position.set(...VC.lighting.dirPawn.pos);
+  const pawnLight = new T.DirectionalLight(AMBL.dirPawn.color, AMBL.dirPawn.intensity);
+  pawnLight.position.set(...AMBL.dirPawn.pos);
   scene.add(pawnLight);
 
   // Player-carried torch — warm flicker, follows player each frame.
@@ -10009,7 +11420,7 @@ function init3D(state){
 
   // ── MOVEMENT HIGHLIGHT PLANES (blue — MeshBasicMaterial, unaffected by lighting)
   const moveHighlightMeshes = {};
-  const moveHighlightMat = new T.MeshBasicMaterial({ color: 0x3399ff, opacity: 0.28, transparent: true, depthWrite: false });
+  const moveHighlightMat = new T.MeshBasicMaterial({ color: 0x1e6bff, opacity: 0.45, transparent: true, depthWrite: false });
   {
     const hGeo = new T.PlaneGeometry(TW * 0.90, TW * 0.90);
     for(let fy=0; fy<H; fy++) for(let fx=0; fx<W; fx++){
@@ -10113,11 +11524,22 @@ function init3D(state){
 
       if(state.tiles[y][x] === TILE_FLOOR || state.tiles[y][x] === TILE_DOOR){
         const mat = floorBaseMat.clone();
-        // VC.floor.baseR (#888888) — clearly lighter than walls; emissive prevents pitch-black
-        const fR = VC.floor.baseR + vf*VC.floor.baseVariance;
-        mat.color.setRGB(fR, fR, fR);
+        // Cor base por material (default pedra_cinza); jitter por casa preserva o relevo.
+        const mid3 = (state.materiais && state.materiais[key]) || 'pedra_cinza';
+        const mc = (VC.materiais[mid3] || VC.materiais.pedra_cinza).color;
+        const jit = vf*VC.floor.baseVariance;
+        mat.color.setRGB(mc[0]+jit, mc[1]+jit, mc[2]+jit);
+        const ftex = makeMaterialTex(mid3);
+        if(ftex){ mat.map = ftex; mat.color.setRGB(1,1,1); }
         mat.emissive.set(VC.floor.emissive);
         mat.emissiveIntensity = 1.0;
+        // Auto-iluminação: a própria textura emite, deixando a cor forte e
+        // diferenciada mesmo na penumbra (grama/terra/pedra negra).
+        if(ftex && (mid3==='grama' || mid3==='terra' || mid3==='pedra_negra')){
+          mat.emissiveMap = ftex;
+          mat.emissive.set(0xffffff);
+          mat.emissiveIntensity = (mid3==='pedra_negra') ? 0.35 : 0.6;
+        }
         mesh = new T.Mesh(floorGeo, mat);
         mesh.position.set(x, TH/2, y);     // bottom edge sits at y = 0
         mesh.receiveShadow = true;
@@ -10125,10 +11547,32 @@ function init3D(state){
         mesh.userData.gridX   = x;
         mesh.userData.gridY   = y;
         mesh.userData.baseMat = mat;        // saved for restoring after highlight
+        if((state.materiais && state.materiais[key]) === 'entulho'){
+          // Entulho oclui visão → bloco altura-de-parede de escombros sobre o chão.
+          const ec = VC.materiais.entulho.color;
+          const eMat = wallBaseMat.clone();
+          eMat.color.setRGB(ec[0], ec[1], ec[2]);
+          const etex = makeMaterialTex('entulho');
+          if(etex){ eMat.map = etex; eMat.color.setRGB(1,1,1); }
+          eMat.emissive.set(VC.wall.emissive); eMat.emissiveIntensity = 1.0;
+          const eMesh = new T.Mesh(wallGeo, eMat);
+          eMesh.position.set(x, WH/2, y);
+          eMesh.scale.y = 0.7;                 // pilha um pouco mais baixa que a parede
+          eMesh.castShadow = eMesh.receiveShadow = true;
+          eMesh.visible = false;
+          eMesh.userData.gridX = x; eMesh.userData.gridY = y;
+          scene.add(eMesh);
+          tileMeshes[`entulho:${key}`] = eMesh;   // revelado junto com a casa (ver visibilidade)
+        }
       } else {
+        const matId3 = (state.materiais && state.materiais[key]) || 'pedra_normal';
+        const wc = (VC.materiais[matId3] || VC.materiais.pedra_normal).color;
         const mat = wallBaseMat.clone();
-        // VC.wall.baseR (#5a5a6a) — blue-gray stone, darker than floor; emissive keeps detail
-        mat.color.setRGB(VC.wall.baseR+vw*VC.wall.variance, VC.wall.baseR+vw*VC.wall.variance, VC.wall.baseB+vw*VC.wall.varianceB);
+        // Cor base por material (default pedra_normal); jitter por casa preserva o relevo.
+        const jw = vw*VC.wall.variance;
+        mat.color.setRGB(wc[0]+jw, wc[1]+jw, wc[2]+jw);
+        const wtex = makeMaterialTex(matId3);
+        if(wtex){ mat.map = wtex; mat.color.setRGB(1,1,1); }
         mat.emissive.set(VC.wall.emissive);
         mat.emissiveIntensity = 1.0;
         mesh = new T.Mesh(wallGeo, mat);
@@ -10317,6 +11761,7 @@ function init3D(state){
     stairGroup,                          // staircase mesh (null if no stairs)
     exitGroup,                           // Fase 3: marcador de saída 🏁 (null se não houver)
     chestMeshes: {},                     // chest_id → THREE.Group
+    decorMeshes: {},                     // decor id → THREE.Mesh
     hoveredPos:  null,   // [gx, gy] of figure under cursor, or null
     selectedPos: null    // [gx, gy] of clicked-selected figure, or null
   };
@@ -10675,7 +12120,7 @@ function startLoop3D(){
     // ── Movement highlight pulse (blue overlay planes — slow sine breath) ───────
     if(g3.moveHighlightMat){
       const pulse = 0.5 + 0.5 * Math.sin(t / 420);
-      g3.moveHighlightMat.opacity = 0.20 + 0.38 * pulse;
+      g3.moveHighlightMat.opacity = 0.36 + 0.40 * pulse;
     }
 
     // ── Floating dust motes (upward drift, reset at ceiling, re-randomise XZ) ─
@@ -11415,6 +12860,12 @@ function getMonsterMesh(monId){
   return g3.entityGroup.children.find(c => c.userData && c.userData.monId === monId) || null;
 }
 
+// Mesh (Group) do prisioneiro no entityGroup 3D (taggeado por userData.prisoner).
+function getPrisonerMesh(){
+  if(!g3 || !g3.entityGroup) return null;
+  return g3.entityGroup.children.find(c => c.userData && c.userData.prisoner) || null;
+}
+
 // ── Deslize fiel passo-a-passo de inimigos / servos auto-comandados ──────────
 // O servidor emite `entity_step` (from→to, 1 casa) a cada STEP_ANIM_DELAY. O
 // cliente interpola por TEMPO a partir de um startTime fixo, acumulando os
@@ -11547,6 +12998,40 @@ function _animarEEnviarMoverCaminhoMinino(animado, passos){
   _startMininoAnimCaminho2D(animado.id, pts, onDone);
 }
 
+// Move o prisioneiro liberto ao longo de um CAMINHO — igual ao herói/minion:
+// 3D faz lift/glide/land por casa via _animarPasso (com o som de peão); o 2D
+// interpola contínuo. Os passos vão ao servidor já no início (ele valida/decrementa).
+function _animarEEnviarMoverPrisioneiroCaminho(pris, passos){
+  if(estadoMininoMov.emMovimento) return;
+  if(!pris || !passos || !passos.length) return;
+  estadoMininoMov.emMovimento = true;
+
+  const pts = [[pris.pos[0], pris.pos[1]]];
+  let cx = pris.pos[0], cy = pris.pos[1];
+  for(const [dx,dy] of passos){ cx+=dx; cy+=dy; pts.push([cx,cy]); }
+
+  for(const [dx,dy] of passos) GS.moverPrisioneiro(dx, dy);
+
+  const onDone = () => {
+    estadoMininoMov.emMovimento = false;
+    estadoMininoMov.peaoAtivo   = null;
+    if(GS.gameState){ if(mode3D && g3) renderMap3D(GS.gameState); else renderMap(GS.gameState); }
+  };
+
+  if(mode3D && g3){
+    const peao = getPrisonerMesh();
+    if(peao){
+      estadoMininoMov.peaoAtivo = peao;
+      _animarCaminhoPeao3D(peao, pts.slice(1), onDone);   // anima casa a casa (+ som)
+      return;
+    }
+    onDone();   // mesh fora da visão — passos já enviados
+    return;
+  }
+  // Modo 2D — interpola contínuo ao longo do caminho.
+  _startMininoAnimCaminho2D('prisoner', pts, onDone);
+}
+
 // Sequência 3D: anima o peão casa a casa pelo caminho (tiles absolutos).
 function _animarCaminhoPeao3D(peao, tilesAbs, onDone){
   let i = 0;
@@ -11575,7 +13060,7 @@ function tocarSomPasso(){
     comp.ratio.value     = 6;
     comp.attack.value    = 0.001;
     comp.release.value   = 0.08;
-    comp.connect(ctx.destination);
+    comp.connect(_sfxBus());
 
     // CAMADA 1 — Tom principal do plástico (ruído filtrado, bandpass ~280Hz)
     const bufSize = Math.floor(ctx.sampleRate * 0.06);
@@ -11781,6 +13266,54 @@ function _disposeEntityTree(root){
   });
 }
 
+// ── Helpers para miniaturas extrudadas de decorações (PNG → 3D) ───────────────
+function _disposeDecorMesh(obj){
+  obj.traverse(o => {
+    if (o.geometry) o.geometry.dispose();
+    if (o.material) {
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      // _shared: textura cacheada (ex.: chão via _pawnTexCache) reusada por outras
+      // decorações — não descartar aqui, senão some das demais.
+      mats.forEach(mm => { if (mm.map && !mm.map._shared) mm.map.dispose(); mm.dispose(); });
+    }
+  });
+}
+const _objImg3D = {};
+function _buildObjetoMini(decorId, imageName, cells, facing){
+  const make = (img) => {
+    const slot = g3 && g3.decorMeshes[decorId];
+    // a decoração pode ter sido removida/trocada enquanto carregava
+    if (!slot || slot.userData.imageName !== imageName) return;
+    // g3.T = alias do THREE (esta função é de módulo; o `T` local só existe
+    // dentro de renderMap3D, então usamos g3.T para não dar ReferenceError).
+    // DECOR_MINI_ESCALA: tamanho da miniatura por casa de footprint (ajuste aqui
+    // para deixar as miniaturas maiores/menores no 3D).
+    const grp = window.Miniatura3D.build(g3.T, { image: img, tileSize: Math.max(1, cells) * DECOR_MINI_ESCALA });
+    grp.userData = { isDecor: true, decorId: decorId, imageName: imageName };
+    grp.position.copy(slot.position);
+    grp.rotation.y = _facingAngleY3D(facing);   // giro 90° aplicado já na construção assíncrona
+    grp.visible = slot.visible;
+    g3.scene.remove(slot); _disposeDecorMesh(slot);
+    g3.scene.add(grp);
+    g3.decorMeshes[decorId] = grp;
+  };
+  let img = _objImg3D[imageName];
+  if (img) {
+    if (img.complete && img.naturalWidth) make(img);
+    // addEventListener (não `onload=`): várias decorações com o MESMO PNG ainda
+    // carregando registram callbacks distintos sem sobrescrever umas às outras.
+    else img.addEventListener('load', () => make(img), { once: true });
+    return;
+  }
+  img = new Image();
+  _objImg3D[imageName] = img;
+  img.addEventListener('load', () => make(img), { once: true });
+  img.src = _assetURL(`assets/objetos/${imageName}`);
+  // Imagem em cache do navegador pode já estar `complete` ao definir o src,
+  // sem disparar 'load' — então constrói na hora nesse caso.
+  if (img.complete && img.naturalWidth) make(img);
+}
+
 function renderMap3D(state){
   if(!state || !state.tiles) return;
   // Durante a animação de movimento não reconstrói os peões (preserva o mesh
@@ -11820,10 +13353,15 @@ function renderMap3D(state){
   const meAnimados3D = (state.players.find(p=>p.id===GS.myPid)?.animados||[]).filter(a=>a.vida_atual>0);
   const selAnimado3D = isAnimadosTurn3D && _animadoSel
     ? meAnimados3D.find(a=>a.id===_animadoSel) : null;
+  const meuPris3D = state.prisoner && state.prisoner.alive && state.prisoner.freed
+    && state.prisoner.rescuer_pid === GS.myPid;
+  const selPris3D = isAnimadosTurn3D && _prisSel && meuPris3D ? state.prisoner : null;
 
   const reachable = new Set();
   if(selAnimado3D && selAnimado3D.moves_left > 0)
     bfsReachable(state.tiles, exploredSet, selAnimado3D.pos[0], selAnimado3D.pos[1], selAnimado3D.moves_left, reachable);
+  else if(selPris3D && (selPris3D.moves_left||0) > 0)
+    bfsReachable(state.tiles, exploredSet, selPris3D.pos[0], selPris3D.pos[1], selPris3D.moves_left, reachable);
   else if(!isAnimadosTurn3D && GS.isMyTurn && me && me.moves_left > 0)
     bfsReachable(state.tiles, exploredSet, me.pos[0], me.pos[1], me.moves_left, reachable);
 
@@ -11862,6 +13400,8 @@ function renderMap3D(state){
       const mesh = tileMeshes[key];
       if(!mesh) continue;
       mesh.visible = terrainSet.has(key);
+      const ent3 = tileMeshes[`entulho:${key}`];
+      if(ent3) ent3.visible = mesh.visible;
     }
   }
 
@@ -11981,6 +13521,105 @@ function renderMap3D(state){
     g3.chestMeshes[chest.id].visible = exploredSet.has(key);
   }
 
+  // ── Decoration 3D meshes — procedural boxes/cylinders, ou miniatura extrudada ─
+  {
+    const decors = GS.decorations;
+    const vistosDec = new Set();
+    for (const d of decors) {
+      vistosDec.add(d.id);
+      const tiles = GS.decorTilesOf(d);
+      // Determine footprint bounds
+      const minX = Math.min(...tiles.map(t => t[0]));
+      const maxX = Math.max(...tiles.map(t => t[0]));
+      const minY = Math.min(...tiles.map(t => t[1]));
+      const maxY = Math.max(...tiles.map(t => t[1]));
+      const wCells = maxX - minX + 1;
+      const hCells = maxY - minY + 1;
+      // Center of footprint in world coords (tile x,y map directly to world x,z)
+      const worldX = (minX + maxX) / 2;
+      const worldZ = (minY + maxY) / 2;
+      const visivel = tiles.some(([tx2, ty2]) => exploredSet.has(`${tx2},${ty2}`));
+
+      let mesh = g3.decorMeshes[d.id];
+
+      if (d.special === 'floor' && d.image) {
+        // ── Chão: decal deitado preenchendo TODO o footprint, borda-a-borda ──
+        if (!mesh || mesh.userData.imageName !== d.image || mesh.userData.floorW !== wCells || mesh.userData.floorH !== hCells) {
+          if (mesh) { g3.scene.remove(mesh); _disposeDecorMesh(mesh); }
+          mesh = _chaoDecal3D(d, wCells, hCells);
+          g3.scene.add(mesh);
+          g3.decorMeshes[d.id] = mesh;
+        }
+        mesh.position.set(worldX, 0.222, worldZ);   // logo acima do piso (TH=0.22), sob os realces
+        mesh.visible = visivel;
+        continue;
+      }
+
+      if (d.image && window.Miniatura3D) {
+        // ── Caminho miniatura extrudada (PNG) ──
+        // (re)constrói se ainda não existe OU se a imagem mudou
+        if (!mesh || mesh.userData.imageName !== d.image) {
+          if (mesh) { g3.scene.remove(mesh); _disposeDecorMesh(mesh); }
+          const placeholder = new T.Group();
+          placeholder.userData = { isDecor: true, decorId: d.id, imageName: d.image, pending: true };
+          // Posiciona ANTES de construir: se a imagem já estiver em cache, o
+          // build roda síncrono e copia esta posição (senão a miniatura cairia em 0,0).
+          placeholder.position.set(worldX, 0, worldZ);
+          placeholder.visible = visivel;
+          g3.scene.add(placeholder);
+          g3.decorMeshes[d.id] = placeholder;
+          mesh = placeholder;
+          _buildObjetoMini(d.id, d.image, Math.max(wCells, hCells), d.facing);   // assíncrono (ou síncrono se em cache)
+          mesh = g3.decorMeshes[d.id];   // _buildObjetoMini pode ter trocado o mesh (cache)
+        }
+        mesh.position.set(worldX, 0, worldZ);
+        // Giro 90° (facing): roda a miniatura em pé sobre o eixo vertical.
+        mesh.rotation.y = _facingAngleY3D(d.facing);
+        // Escala visual (vscale): largura no plano (x,z), altura p/ cima (y);
+        // o footprint já está embutido na geometria via tileSize.
+        const _mvs = Array.isArray(d.vscale) ? d.vscale : [1, 1];
+        mesh.scale.set(_mvs[0] || 1, _mvs[1] || 1, _mvs[0] || 1);
+        mesh.visible = visivel;
+        continue;
+      }
+
+      // ── Caminho procedural (sem image) ──
+      // Se havia uma miniatura PNG antes (imageName), destrói e reconstrói como procedural
+      if (mesh && mesh.userData.imageName) {
+        g3.scene.remove(mesh); _disposeDecorMesh(mesh);
+        mesh = null;
+      }
+      const spec = DECOR_3D[d.type] || { shape: 'box', h: 0.6, color: 0x999999 };
+      if (!mesh) {
+        const geo = spec.shape === 'cyl'
+          ? new T.CylinderGeometry(0.4, 0.4, spec.h, 16)
+          : new T.BoxGeometry(1, spec.h, 1);
+        mesh = new T.Mesh(geo, new T.MeshStandardMaterial({ color: spec.color }));
+        mesh.userData.isDecor = true;
+        mesh.userData.decorId = d.id;
+        g3.scene.add(mesh);
+        g3.decorMeshes[d.id] = mesh;
+      }
+      // Escala visual (vscale): largura no plano ×sx, altura ×sy (ancorada no chão).
+      const _pvs = Array.isArray(d.vscale) ? d.vscale : [1, 1];
+      const _psx = _pvs[0] || 1, _psy = _pvs[1] || 1;
+      mesh.position.set(worldX, spec.h * _psy / 2, worldZ);
+      // Scale box to cover full footprint; cylinder mantém o raio (só vscale)
+      if (spec.shape === 'box') mesh.scale.set(wCells * 0.9 * _psx, _psy, hCells * 0.9 * _psx);
+      else mesh.scale.set(_psx, _psy, _psx);
+      // Visibility: show if any footprint tile is explored
+      mesh.visible = visivel;
+    }
+    // Remove meshes for decorations that no longer exist
+    for (const id of Object.keys(g3.decorMeshes)) {
+      if (!vistosDec.has(id)) {
+        const m = g3.decorMeshes[id];
+        g3.scene.remove(m); _disposeDecorMesh(m);
+        delete g3.decorMeshes[id];
+      }
+    }
+  }
+
   // ── Rebuild entity group ────────────────────────────────────────────────────
   // Assinatura do que é visível: se nada mudou desde o último game_state, NÃO
   // reconstrói os peões. Reconstruir a cada mensagem criava/vazava dezenas de
@@ -11990,8 +13629,9 @@ function renderMap3D(state){
     state.players.map(p => [p.id, p.pos, p.alive, p.color, p.class_id,
       (p.animados||[]).map(a => [a.id, a.pos, a.vida_atual, a.tipo])]),
     state.monsters.map(m => [m.type, m.pos, m.hp, m.image]),
+    state.prisoner ? [state.prisoner.pos, state.prisoner.alive, state.prisoner.freed, state.prisoner.image, _prisSel] : null,
     state.corpses || [],
-    (state.armadilhas||[]).map(a => [a.id, a.pos, a.ativada, a.so_luccas, a.icone]),
+    (state.armadilhas||[]).map(a => [a.id, a.pos, a.ativada, a.so_luccas, a.icone, a.visivel, a.aliada, a.image]),
     state.rooms.map(r => [r.cx, r.cy, r.role, r.cleared]),
     state.current_turn, state.animados_turn, GS.myPid,
     g3.selectedPos, _animadoSel,
@@ -12048,6 +13688,24 @@ function renderMap3D(state){
         f.userData.pid = p.id;          // permite getPeaoMesh(pid) p/ animação
         return f;
       }, px, py);
+  }
+
+  // Prisioneiro (Fase 3): peão com imagem editável; só quando visível/explorado.
+  const _pris3D = state.prisoner;
+  if(_pris3D && _pris3D.alive){
+    const [prx,pry] = _pris3D.pos;
+    if(visionSet.has(`${prx},${pry}`) || exploredSet.has(`${prx},${pry}`)){
+      const prisSelNow = !!(_prisSel && isAnimadosTurn3D && _pris3D.freed
+        && _pris3D.rescuer_pid === GS.myPid);
+      obterFig('prisoner',
+        JSON.stringify([_pris3D.freed, _pris3D.image, prisSelNow]),
+        () => {
+          const f = build3DPrisoner(g3.T, _pris3D, prisSelNow);
+          f.userData.prisoner = true;   // permite getPrisonerMesh() p/ animação
+          return f;
+        },
+        prx, pry);
+    }
   }
 
   // Monsters — only visible within player's current vision radius
@@ -12108,11 +13766,19 @@ function renderMap3D(state){
   for(const arm of (state.armadilhas||[])){
     const [ax,ay] = arm.pos;
     if(!exploredSet.has(`${ax},${ay}`)) continue;
-    if(arm.so_luccas && !(me && me.class_id==='rogue')) continue;   // ocultas: só Luccas
-    const sp = obterFig(`arm:${arm.id}`,
-      JSON.stringify([arm.icone, arm.ativada, arm.so_luccas]),
-      () => _armadilhaSprite3D(arm, ax, ay));
-    sp.position.set(ax, 0.34, ay);   // sprite não tem hover-lift — y fixo
+    if(!_armadilhaVisivelParaMim(arm, me)) continue;   // escondida até ser revelada
+    if(arm.image){
+      // Com imagem: decal deitado no chão (plano horizontal sobre a casa).
+      const dec = obterFig(`arm:${arm.id}`,
+        JSON.stringify([arm.image, arm.ativada]),
+        () => _armadilhaDecal3D(arm, ax, ay));
+      dec.position.set(ax, 0.232, ay);   // logo acima do piso (TH=0.22)
+    } else {
+      const sp = obterFig(`arm:${arm.id}`,
+        JSON.stringify([arm.icone, arm.ativada, arm.so_luccas]),
+        () => _armadilhaSprite3D(arm, ax, ay));
+      sp.position.set(ax, 0.34, ay);   // sprite não tem hover-lift — y fixo
+    }
   }
 
   // Descarta as figuras que saíram de cena (morte, fora da visão, consumidas).
@@ -12168,6 +13834,71 @@ function _armadilhaSprite3D(arm, x, y){
   sp.userData.armadilhaId = arm.id;
   sp.userData.tipo = 'armadilha';
   return sp;
+}
+
+// Armadilha com imagem (PNG de assets/objetos): decal DEITADO no chão da casa.
+// Plano horizontal (rotacionado -90° em X) com a textura do PNG, ajustado à
+// proporção da arte sem invadir os tiles vizinhos. Vermelho quando ativada.
+function _armadilhaDecal3D(arm, x, y){
+  const T = g3.T;
+  const grp = new T.Group();
+  const mat = new T.MeshBasicMaterial({
+    transparent: true, alphaTest: 0.12, depthWrite: false,
+    color: arm.ativada ? new T.Color(0xff7766) : new T.Color(0xffffff),
+  });
+  const mesh = new T.Mesh(new T.PlaneGeometry(0.92, 0.92), mat);
+  mesh.rotation.x = -Math.PI/2;     // deita o plano no chão
+  mesh.renderOrder = 2;             // desenha sobre o piso, sob os peões
+  mesh.userData.isGroundDecal = true;   // fora do passe de outline
+  grp.add(mesh);
+  const cacheKey = '__arm_' + arm.image;
+  const aplicar = (tex) => {
+    const im = tex.image; if(!im || !im.width) return;
+    const ar = im.width / im.height;
+    let w = 0.92, h = 0.92/ar;
+    if(h > 0.92){ h = 0.92; w = 0.92*ar; }
+    mesh.geometry.dispose();
+    mesh.geometry = new T.PlaneGeometry(w, h);
+  };
+  let tex = _pawnTexCache[cacheKey];
+  if(tex){ mat.map = tex; if(tex.image && tex.image.width) aplicar(tex); }
+  else {
+    tex = new T.TextureLoader().load(_assetURL(`assets/objetos/${arm.image}`), aplicar);
+    _pawnTexCache[cacheKey] = tex;
+    mat.map = tex;
+  }
+  grp.position.set(x, 0.232, y);
+  grp.userData.armadilhaId = arm.id;
+  grp.userData.tipo = 'armadilha';
+  return grp;
+}
+
+// Chão (decoração pisável): decal DEITADO no chão que preenche TODO o footprint
+// borda-a-borda (estica a textura, sem manter proporção — é um piso). Peões andam
+// por cima. `wCells`/`hCells` = footprint efetivo (já com facing aplicado).
+function _chaoDecal3D(d, wCells, hCells){
+  const T = g3.T;
+  const grp = new T.Group();
+  const mat = new T.MeshBasicMaterial({ transparent: true, depthWrite: false });
+  const mesh = new T.Mesh(new T.PlaneGeometry(wCells, hCells), mat);
+  mesh.rotation.x = -Math.PI/2;      // deita o plano no chão
+  // renderOrder -1: o chão é PISO — deve ficar SOB os realces de movimento/ataque
+  // (planos azuis/vermelhos em TH+0.004…), senão a grama esconderia a indicação.
+  mesh.renderOrder = -1;
+  mesh.userData.isGroundDecal = true;   // fora do passe de outline
+  grp.add(mesh);
+  const cacheKey = '__chao_' + d.image;
+  let tex = _pawnTexCache[cacheKey];
+  if(tex){ mat.map = tex; }
+  else {
+    tex = new T.TextureLoader().load(_assetURL(`assets/objetos/${d.image}`));
+    tex._shared = true;   // cacheada/reusada — _disposeDecorMesh não deve descartá-la
+    _pawnTexCache[cacheKey] = tex;
+    mat.map = tex;
+  }
+  grp.userData = { isDecor: true, decorId: d.id, imageName: d.image,
+                   floorW: wCells, floorH: hCells };
+  return grp;
 }
 
 // MINIATURE BUILDER SYSTEM
@@ -12414,6 +14145,33 @@ function _makeCharacterPawn(T, grp, classId, clr, Y0) {
   const cacheKey = classId || 'generic';
   _makeBillboardSprite(T, grp, `assets/pawns/${cacheKey}/frente.png`,
                        '__spr_' + cacheKey, Y0);
+}
+
+// Peão 3D do prisioneiro: base + billboard com a imagem editável (fallback: só a base).
+// `sel` desenha um anel branco de seleção (controle manual na janela pós-turno).
+function build3DPrisoner(T, pris, sel){
+  const TH = 0.22;
+  const Y0 = TH + 0.064;
+  const grp = new T.Group();
+  const baseCor = pris.freed ? 0x2e90c0 : 0x8a6d3b;
+  const baseGeo = new T.CylinderGeometry(0.34, 0.38, 0.12, 24);
+  const baseMat = new T.MeshStandardMaterial({ color: baseCor, roughness: 0.8 });
+  const base = new T.Mesh(baseGeo, baseMat);
+  base.position.y = 0.06;
+  grp.add(base);
+  if(sel){
+    const ringGeo = new T.TorusGeometry(0.44, 0.05, 8, 28);
+    const ringMat = new T.MeshBasicMaterial({ color: 0xffffff });
+    const ring = new T.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.13;
+    grp.add(ring);
+  }
+  if(pris.image){
+    _makeBillboardSprite(T, grp, `assets/pawns/prisioneiros/${pris.image}`,
+      `_pris_${pris.image}`, Y0);
+  }
+  return grp;
 }
 
 // ── Billboard 2D voltado para a câmera (THREE.Sprite) ────────────────────────
@@ -17124,6 +18882,10 @@ function csConfirmClass(){
   }
   send({type:'select_class', class_id: csf.selectedId});
   toast(`${_CSD[csf.selectedId]?.cls ?? csf.selectedId} selecionado!`, 'var(--gold)');
+  // Mago/clérigo: escolher 2 magias de 1º círculo (obrigatório p/ iniciar — gate no servidor).
+  if(csf.selectedId === 'mage' || csf.selectedId === 'cleric'){
+    mostrarOverlaySelecaoMagiasCriacao(csf.selectedId);
+  }
 }
 
 function destroyClassSelectFull(){
@@ -17737,6 +19499,18 @@ function on3DClick(e){
       if(dist <= 2){ openChestWindow(chest); return; }
       else { toast('Aproxime-se do baú para abri-lo!', 'var(--gold)'); return; }
     }
+    // ── Decoration click (3D path — check footprint of each decoration) ─────────
+    // Interativa (loot/fonte) → interage. Sólida (não-pisável) → bloqueia o clique.
+    // Pisável (chão/fogueira) sem interação → deixa passar p/ a lógica de movimento
+    // (o personagem caminha sobre o chão normalmente).
+    const decsHere3D = GS.decorations.filter(d =>
+      GS.decorTilesOf(d).some(t => t[0] === tx && t[1] === ty));
+    if(decsHere3D.length){
+      const inter3D = decsHere3D.find(d => d.tem_loot || d.special === 'fountain');
+      if(inter3D){ GS.interagirDecor(inter3D.id); return; }
+      if(decsHere3D.some(d => !d.pisavel)) return;   // objeto sólido bloqueia o caminho
+      // só decoração(ões) pisável(is) → segue para o movimento
+    }
   }
 
   if(g3 && GS.gameState){
@@ -17867,11 +19641,38 @@ function handleTileClick(tx, ty){
     }
   }
 
+  // ── Decoration click (2D canvas path — 3D path handled in on3DClick) ─────────
+  // Interativa (loot/fonte) → interage. Sólida → bloqueia o clique. Pisável
+  // (chão/fogueira) sem interação → deixa passar p/ a lógica de movimento.
+  if(_st && !mode3D){
+    const decsHere = GS.decorations.filter(d =>
+      GS.decorTilesOf(d).some(t => t[0] === tx && t[1] === ty));
+    if(decsHere.length){
+      const inter = decsHere.find(d => d.tem_loot || d.special === 'fountain');
+      if(inter){ GS.interagirDecor(inter.id); return; }
+      if(decsHere.some(d => !d.pisavel)) return;   // objeto sólido bloqueia o caminho
+      // só decoração(ões) pisável(is) → segue para o movimento
+    }
+  }
+
   // ── Controle de servos/elementais (clique no tabuleiro, 2D e 3D) ────────────
   // Clique em servo = seleciona/deseleciona. Com servo selecionado: clique em
   // monstro adjacente = ataca; clique em casa adjacente livre = move 1 passo.
   // Só disponível durante o turno dos servos (animados_turn === myPid).
   if(_st && GS.isMyTurn && _st.animados_turn === GS.myPid){
+    // ── Prisioneiro liberto: o resgatador o controla (só movimento) ───────────
+    const _prisC = _st.prisoner;
+    const meuPrisClk = _prisC && _prisC.alive && _prisC.freed && _prisC.rescuer_pid === GS.myPid;
+    if(meuPrisClk && _prisC.pos[0]===tx && _prisC.pos[1]===ty){
+      _prisSel = !_prisSel; _animadoSel = null; renderMap(_st); return;
+    }
+    if(meuPrisClk && _prisSel){
+      const expSetP = new Set(_st.explored.map(([x,y])=>`${x},${y}`));
+      for(const [rx,ry] of (_st.revealed||[])) expSetP.add(`${rx},${ry}`);
+      const passosP = GS.findPath(_st.tiles, expSetP, _prisC.pos[0], _prisC.pos[1], tx, ty, _prisC.moves_left||0);
+      if(passosP && passosP.length){ _animarEEnviarMoverPrisioneiroCaminho(_prisC, passosP); return; }
+      _prisSel=false; renderMap(_st); return;   // sem caminho/alcance → desseleciona
+    }
     const meP  = _st.players.find(p=>p.id===GS.myPid && p.alive);
     const meus = (meP && meP.animados) ? meP.animados.filter(a=>a.pos && a.vida_atual>0) : [];
     if(meus.length){
@@ -17990,6 +19791,7 @@ GS.on('gameStart', () => {
 });
 
 GS.on('cityState', msg => {
+  _hpSnapshot.clear();   // de volta à cidade: zera HP base p/ a próxima masmorra
   // If returning from dungeon to city, tear down the 3D renderer first
   if(g3){ dispose3D(); mode3D = false; }
   // Ensure city screen is visible (covers both initial arrival and return from dungeon)
@@ -18003,13 +19805,20 @@ GS.on('cityState', msg => {
     window._comprando = false;
     abrirLoja(window._lojaUltimaAberta, GS.getHeroiAtivo());
   }
+  // Painel da ficha aberto → re-renderiza com o estado novo (equipar/reordenar).
+  if(_fcPanelPid != null) _refreshFichaCidadePanel();
+  // Painel da Guilda aberto → re-renderiza (compra recém-concluída atualiza saldo/estado).
+  const _gm = $('guild-modal');
+  if(_gm && _gm.classList.contains('open')) _renderGuild();
 });
 
 GS.on('shopResult',  msg =>
   toast(msg.msg.replace(/\*\*(.+?)\*\*/g,'$1'), 'var(--green)'));
 
 GS.on('enterDungeon', () => {
-  destroyCity3D();
+  fecharFichaCidade();
+  _hpSnapshot.clear();   // novo cenário: zera HP base (1º game_state não dispara som)
+  if(CITY_MODE==='image') destroyCityImage(); else destroyCity3D();
   // Tear down any leftover dungeon renderer from a previous run so the fresh
   // game_state rebuilds the scene from the correct (new) map. Combined with
   // gameState=null (gameState.js), this eliminates the "stale map / black
@@ -18023,6 +19832,7 @@ GS.on('enterDungeon', () => {
 });
 
 GS.on('gameState', msg => {
+  _detectHpChanges(msg);   // som de dano/cura por variação de HP entre estados
   handleGameState(msg);
   // Sincroniza os animados autoritativos do servidor no registro do Pedro,
   // para a ficha refletir HP/pó durante o combate.
@@ -18031,13 +19841,19 @@ GS.on('gameState', msg => {
     HERO_DATA.pedro.animados = meNow.animados;
     if (GS.HERO_DATA && GS.HERO_DATA.pedro) GS.HERO_DATA.pedro.animados = meNow.animados;
   }
-  // Entrou no turno dos meus servos → dica única.
+  // Entrou na minha janela de controle (servos e/ou prisioneiro) → dica única.
   if (msg.animados_turn === GS.myPid && _lastAnimadosTurn !== GS.myPid) {
-    toast('💀 Turno dos seus servos — clique num servo (azul=movimento, vermelho=ataque); depois encerre o turno.');
+    const _pr = msg.prisoner;
+    const soPris = _pr && _pr.alive && _pr.freed && _pr.rescuer_pid === GS.myPid
+      && !((msg.players.find(p=>p.id===GS.myPid)?.animados||[]).some(a=>a.vida_atual>0));
+    toast(soPris
+      ? '🧍 Mova o prisioneiro — clique nele e depois numa casa; então encerre o turno.'
+      : '💀 Turno dos seus servos — clique num servo (azul=movimento, vermelho=ataque); depois encerre o turno.');
   }
-  // Turno dos servos encerrou → limpa seleção.
+  // Janela de controle encerrou → limpa seleções.
   if (_lastAnimadosTurn === GS.myPid && msg.animados_turn !== GS.myPid) {
     _animadoSel = null;
+    _prisSel = false;
   }
   _lastAnimadosTurn = msg.animados_turn || null;
   // Auto-refresh open chest window (contents may have changed)
@@ -18045,6 +19861,11 @@ GS.on('gameState', msg => {
     const updatedChest = (msg.chests||[]).find(c=>c.id===_openChestId);
     if(updatedChest) _renderChestWindow(updatedChest);
     else closeChestWindow();   // chest was emptied and removed
+  }
+  // Close decor loot panel if the decoration is now empty or gone
+  if(_openDecorLootId){
+    const decor = (msg.decorations||[]).find(d=>d.id===_openDecorLootId);
+    if(!decor || !decor.tem_loot) closeChestWindow();
   }
 });
 
@@ -18102,3 +19923,116 @@ GS.on('serverError', msg  => {
     setTimeout(() => abrirLoja(window._lojaUltimaAberta, GS.getHeroiAtivo()), 400);
   }
 });
+
+// ── Overlay de escolha de nova magia ao subir de nível (Pedro/Lewis) ──────────
+// Bloqueia só quem subiu: o servidor recusa end_turn até a escolha ser enviada.
+function mostrarOverlayEscolhaMagia(msg){
+  const rotulo = {primeiro:'1º', segundo:'2º', terceiro:'3º'}[msg.circulo] || msg.circulo;
+  const opcoes = (msg.opcoes || []).filter(id => window.GRIMORIO_CLIENT && GRIMORIO_CLIENT[id]);
+  const cartas = opcoes.map(id => {
+    const m = GRIMORIO_CLIENT[id];
+    return `
+      <div onclick="window._escolherMagiaNivel('${id}')"
+           onmouseenter="mostrarTooltipMagia('${id}', event)"
+           onmouseleave="ocultarTooltipMagia()"
+           style="display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
+                  width:74px; height:88px; cursor:pointer; margin:5px; border-radius:4px;
+                  background:rgba(255,255,255,0.04); border:2px solid #c8a95155; transition:all 0.2s;"
+           onmouseover="this.style.borderColor='#c8a951'"
+           onmouseout="this.style.borderColor='#c8a95155'">
+        <div style="font-size:26px; margin-bottom:4px; line-height:1;">${m.icone || '✨'}</div>
+        <div style="color:#c8b89a; font-family:'Cinzel',serif; font-size:8px; text-align:center; line-height:1.2; max-width:66px; word-break:break-word;">${m.nome}</div>
+      </div>`;
+  }).join('');
+  const existente = document.getElementById('overlay-escolha-magia');
+  if (existente) existente.remove();
+  const el = document.createElement('div');
+  el.id = 'overlay-escolha-magia';
+  el.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;';
+  el.innerHTML = `
+    <div style="color:#c8a951; font-family:'Cinzel Decorative',serif; font-size:15px; letter-spacing:3px; text-align:center;">SUBIU DE NÍVEL<br><span style="font-size:11px; color:#8a7a5a; letter-spacing:2px;">Escolha 1 magia de ${rotulo} círculo</span></div>
+    <div style="display:flex; flex-wrap:wrap; gap:6px; max-width:680px; justify-content:center;">${cartas || '<div style="color:#8a7a5a;">Nenhuma magia disponível</div>'}</div>`;
+  document.body.appendChild(el);
+}
+
+window._escolherMagiaNivel = function(id){
+  GS.escolherMagiaNivel(id);
+  const el = document.getElementById('overlay-escolha-magia');
+  if (el) el.remove();
+};
+
+GS.on('spellPickPrompt', mostrarOverlayEscolhaMagia);
+
+// ── Decoration loot panel — reuses chest overlay with generic callbacks ────────
+GS.on('decor_loot', msg => {
+  abrirPainelLoot({
+    titulo: '📦 Objeto',
+    gold: msg.gold || 0,
+    items: msg.items || [],
+    onPegarOuro: () => GS.takeFromDecor(msg.decor_id, 'gold', 0),
+    onPegarItem: (i) => GS.takeFromDecor(msg.decor_id, 'item', i),
+  });
+  _openDecorLootId = msg.decor_id;   // set AFTER abrirPainelLoot (which resets it)
+});
+
+// ── Overlay de seleção das 2 magias iniciais (criação, Pedro/Lewis) ───────────
+function mostrarOverlaySelecaoMagiasCriacao(cls){
+  window._magiasCriacaoSel = [];
+  window._magiasCriacaoCls = cls;
+  const existente = document.getElementById('overlay-selecao-criacao');
+  if (existente) existente.remove();
+  const el = document.createElement('div');
+  el.id = 'overlay-selecao-criacao';
+  el.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;';
+  document.body.appendChild(el);
+  _renderOverlaySelecaoCriacao();
+}
+
+function _renderOverlaySelecaoCriacao(){
+  const el = document.getElementById('overlay-selecao-criacao');
+  if(!el) return;
+  const cls = window._magiasCriacaoCls;
+  const sel = window._magiasCriacaoSel || [];
+  const opcoes = Object.values(GRIMORIO_CLIENT).filter(m => m.circulo === 'primeiro' && m.classe.includes(cls));
+  const cartas = opcoes.map(m => {
+    const on = sel.includes(m.id);
+    return `
+      <div onclick="window._toggleMagiaCriacao('${m.id}')"
+           onmouseenter="mostrarTooltipMagia('${m.id}', event)"
+           onmouseleave="ocultarTooltipMagia()"
+           style="display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
+                  width:74px; height:88px; cursor:pointer; margin:5px; border-radius:4px;
+                  background:${on ? 'rgba(200,169,81,0.18)' : 'rgba(255,255,255,0.04)'};
+                  border:2px solid ${on ? '#c8a951' : '#c8a95155'}; transition:all 0.2s;">
+        <div style="font-size:26px; margin-bottom:4px; line-height:1;">${m.icone || '✨'}</div>
+        <div style="color:#c8b89a; font-family:'Cinzel',serif; font-size:8px; text-align:center; line-height:1.2; max-width:66px; word-break:break-word;">${m.nome}</div>
+      </div>`;
+  }).join('');
+  const pronto = sel.length === 2;
+  el.innerHTML = `
+    <div style="color:#c8a951; font-family:'Cinzel Decorative',serif; font-size:15px; letter-spacing:3px; text-align:center;">MAGIAS INICIAIS<br><span style="font-size:11px; color:#8a7a5a; letter-spacing:2px;">Escolha 2 magias de 1º círculo</span></div>
+    <div style="display:flex; flex-wrap:wrap; gap:6px; max-width:680px; justify-content:center;">${cartas}</div>
+    <div style="color:${pronto ? '#44cc88' : '#8a7a5a'}; font-size:11px; letter-spacing:1px;">${sel.length}/2 selecionadas</div>
+    <button onclick="window._confirmarMagiasCriacao()" ${pronto ? '' : 'disabled'}
+      style="padding:9px 22px; font-family:'Cinzel',serif; font-size:11px; letter-spacing:2px;
+             background:${pronto ? 'rgba(68,204,136,0.18)' : 'rgba(80,80,80,0.18)'};
+             color:${pronto ? '#44cc88' : '#666'}; border:1px solid ${pronto ? '#44cc88' : '#444'};
+             cursor:${pronto ? 'pointer' : 'not-allowed'};">✓ CONFIRMAR</button>`;
+}
+
+window._toggleMagiaCriacao = function(id){
+  const sel = window._magiasCriacaoSel || (window._magiasCriacaoSel = []);
+  const i = sel.indexOf(id);
+  if(i >= 0) sel.splice(i,1);
+  else if(sel.length < 2) sel.push(id);
+  _renderOverlaySelecaoCriacao();
+};
+
+window._confirmarMagiasCriacao = function(){
+  const sel = window._magiasCriacaoSel || [];
+  if(sel.length !== 2){ toast('Escolha 2 magias de 1º círculo.', 'var(--orange)'); return; }
+  GS.setKnownSpells(sel);
+  const el = document.getElementById('overlay-selecao-criacao');
+  if (el) el.remove();
+  toast('Magias escolhidas!', 'var(--gold)');
+};

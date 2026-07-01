@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "id": "teste_arvore",
+  "name": "Teste Arvore",
+  "grid": {
+    "w": 8,
+    "h": 6
+  },
+  "tiles": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      2,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "rooms": [
+    {
+      "id": 0,
+      "x": 1,
+      "y": 1,
+      "w": 4,
+      "h": 4,
+      "role": "entrance",
+      "locked": false,
+      "doors": [
+        [
+          5,
+          2
+        ]
+      ]
+    }
+  ],
+  "entrance": {
+    "x": 1,
+    "y": 3
+  },
+  "exit": {
+    "x": 6,
+    "y": 2
+  },
+  "monsters": [],
+  "chests": [],
+  "traps": [],
+  "decorations": [
+    {
+      "type": "arvore",
+      "pos": [
+        2,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "image": "arvore_cutout.png",
+      "size": [
+        1,
+        2
+      ],
+      "vscale": [
+        1,
+        2.6
+      ]
+    },
+    {
+      "type": "arvore",
+      "pos": [
+        3,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "image": "arvore_cutout.png",
+      "vscale": [
+        1,
+        3.2
+      ]
+    }
+  ],
+  "prisoner": null,
+  "objectives": {
+    "primary": {
+      "type": "reach_exit",
+      "xp": 0,
+      "reward": {
+        "gold": 0,
+        "items": []
+      }
+    },
+    "secondary": []
+  }
+}

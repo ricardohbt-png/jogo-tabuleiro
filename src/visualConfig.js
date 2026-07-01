@@ -9,23 +9,53 @@
 
 window.VC = {
 
-  // ── Scene / Atmosphere ─────────────────────────────────────────────────────
-  scene: {
-    bgColor:    0x1c1810,   // dark brownish-black
-    fogColor:   0x1c1810,
-    fogDensity: 0.02,       // FogExp2 — max per VISUAL_CONTRACT
-  },
-
-  // ── Dungeon Lighting ───────────────────────────────────────────────────────
-  lighting: {
-    ambient:  { color: 0xfff5e0, intensity: 0.70 },
-    dirMain:  { color: 0xfffaf0, intensity: 1.80, pos: [ 5.0, 10.0,  5.0] },
-    dirFill:  { color: 0xe8f0ff, intensity: 0.60, pos: [-4.0,  6.0, -4.0] },
-    rimLight: { color: 0xffe0b0, intensity: 0.22, pos: [ 0.0,  4.0, -7.0] },
-    // Luz SW dedicada às FRENTES dos peões (miniaturas olham para sudoeste,
-    // lado da câmera padrão). Substitui as 2–3 PointLights que cada peão
-    // carregava — contagem de luzes estável = sem recompilação de shaders.
-    dirPawn:  { color: 0xfff0d8, intensity: 0.95, pos: [-5.0,  8.0, -5.0] },
+  // ── Ambientes de iluminação do 3D (masmorra) ──────────────────────────────
+  // Cada masmorra escolhe um preset via campo `ambiente` no JSON (default
+  // "masmorra"). O preset controla SÓ luz/fog/exposição dos tiles já explorados;
+  // a névoa de guerra (não-explorado = mesh oculto) é idêntica nos três.
+  // Brilho crescente: penumbra < masmorra < ar_livre.
+  // Lido por init3D em game.js: VC.ambientes[state.ambiente] || .masmorra.
+  // As posições das direcionais são iguais às históricas; só mudam cores/intensidades.
+  ambientes: {
+    // Sombrio (cripta/caverna): mais escuro e fechado que o padrão.
+    penumbra: {
+      scene:    { bgColor: 0x141016, fogColor: 0x161018, fogDensity: 0.014 },
+      exposure: 1.30,
+      lighting: {
+        ambient:  { color: 0xfff5e0, intensity: 0.55 },
+        dirMain:  { color: 0xfffaf0, intensity: 1.50, pos: [ 5.0, 10.0,  5.0] },
+        dirFill:  { color: 0xe8f0ff, intensity: 0.50, pos: [-4.0,  6.0, -4.0] },
+        rimLight: { color: 0xffe0b0, intensity: 0.28, pos: [ 0.0,  4.0, -7.0] },
+        dirPawn:  { color: 0xfff0d8, intensity: 0.90, pos: [-5.0,  8.0, -5.0] },
+      },
+    },
+    // Padrão: claro e iluminado, com key forte preservando relevo/contraste.
+    masmorra: {
+      scene:    { bgColor: 0x1c1810, fogColor: 0x1c1810, fogDensity: 0.006 },
+      exposure: 1.55,
+      lighting: {
+        ambient:  { color: 0xfff5e0, intensity: 1.05 },
+        dirMain:  { color: 0xfffaf0, intensity: 2.10, pos: [ 5.0, 10.0,  5.0] },
+        dirFill:  { color: 0xe8f0ff, intensity: 0.90, pos: [-4.0,  6.0, -4.0] },
+        rimLight: { color: 0xffe0b0, intensity: 0.35, pos: [ 0.0,  4.0, -7.0] },
+        // Luz SW dedicada às FRENTES dos peões (miniaturas olham para sudoeste,
+        // lado da câmera padrão). Substitui as 2–3 PointLights que cada peão
+        // carregava — contagem de luzes estável = sem recompilação de shaders.
+        dirPawn:  { color: 0xfff0d8, intensity: 1.15, pos: [-5.0,  8.0, -5.0] },
+      },
+    },
+    // Ar livre / dia: ainda mais claro, luz de sol neutra + preenchimento de céu.
+    ar_livre: {
+      scene:    { bgColor: 0x141414, fogColor: 0x223044, fogDensity: 0.003 },
+      exposure: 1.65,
+      lighting: {
+        ambient:  { color: 0xfff6ea, intensity: 1.55 },
+        dirMain:  { color: 0xffffff, intensity: 2.70, pos: [ 5.0, 10.0,  5.0] },
+        dirFill:  { color: 0xdfeaff, intensity: 1.10, pos: [-4.0,  6.0, -4.0] },
+        rimLight: { color: 0xffe0b0, intensity: 0.40, pos: [ 0.0,  4.0, -7.0] },
+        dirPawn:  { color: 0xfff8ee, intensity: 1.30, pos: [-5.0,  8.0, -5.0] },
+      },
+    },
   },
 
   // ── Floor Tiles ────────────────────────────────────────────────────────────
@@ -44,6 +74,20 @@ window.VC = {
     variance:    0.06,       // R/G jitter per tile
     varianceB:   0.07,       // B jitter per tile
     emissive:   0x111120,    // preserves blue-stone silhouette in deep shadow
+  },
+
+  // ── Materiais de chão/parede (cores 3D por id; espelha server.MATERIAIS) ────
+  // r,g,b em 0..1. Pisos coloridos cosméticos; entulho usa cor de parede-escombro.
+  materiais: {
+    pedra_cinza:   { color: [0.533, 0.533, 0.533] },
+    terra:         { color: [0.42, 0.31, 0.20] },
+    grama:         { color: [0.25, 0.42, 0.22] },
+    pedra_negra:   { color: [0.14, 0.14, 0.16] },
+    entulho:       { color: [0.34, 0.31, 0.27] },
+    pedra_normal:  { color: [0.353, 0.353, 0.416] },
+    enegrecida:    { color: [0.17, 0.17, 0.19] },
+    pedra_caverna: { color: [0.30, 0.26, 0.21] },
+    desmoronada:   { color: [0.33, 0.30, 0.25] },
   },
 
   // ── Dice ───────────────────────────────────────────────────────────────────
@@ -120,3 +164,9 @@ window.VC = {
   },
 
 };
+
+// ── Retrocompat: `VC.scene`/`VC.lighting` apontam para o preset padrão (masmorra).
+// Código legado que lê esses caminhos continua funcionando; init3D escolhe o
+// preset por `state.ambiente` via VC.ambientes.
+window.VC.scene    = window.VC.ambientes.masmorra.scene;
+window.VC.lighting = window.VC.ambientes.masmorra.lighting;

@@ -1,17 +1,28 @@
 "use strict";
 (function () {
   const WALL = 0, FLOOR = 1, DOOR = 2, CELL = 28;
-  const CAT = window.EDITOR_CATALOG || { monsters: [], items: [], traps: [], venoms: [] };
+  const CAT = window.EDITOR_CATALOG || { monsters: [], items: [], traps: [], venoms: [], decorations: [], materiais: [] };
+  const MAT = (CAT.materiais || []);
+  const matMeta = (id) => MAT.find(m => m.id === id) || null;
+  // Default por categoria: pintar o default limpa a casa (mantém JSON esparso e
+  // serve de borracha de material). Espelha MATERIAIS_*_DEFAULT do servidor.
+  const MAT_DEFAULT = { piso: "pedra_cinza", parede: "pedra_normal" };
 
   const S = {
-    meta: { schema_version: 1, id: "nova_masmorra", name: "Nova Masmorra" },
+    meta: { schema_version: 1, id: "nova_masmorra", name: "Nova Masmorra", ambiente: "masmorra" },
     grid: { w: 16, h: 12 },
     tiles: [],
     rooms: [], nextRoomId: 0,
     entrance: null, exit: null, prisoner: null,
-    monsters: [], chests: [], traps: [],
+    monsters: [], chests: [], traps: [], decorations: [],
     objectives: { primary: { type: "kill_all" }, secondary: [] },
     tool: "wall", sel: null,
+    decorType: (CAT.decorations[0] || {}).type || "cama",
+    decorFacing: [0, 1],
+    materiais: {},                 // {"x,y": id}
+    matFloor: "pedra_cinza",       // material atual da ferramenta "chão"
+    matWall: "pedra_normal",       // material atual da ferramenta "parede"
+    matFill: false,                // false = pincel; true = balde (preenchimento)
   };
 
   function initGrid(w, h) {
@@ -20,8 +31,136 @@
     for (let y = 0; y < h; y++) S.tiles.push(new Array(w).fill(WALL));
   }
 
+  function decorMeta(type) { return CAT.decorations.find(d => d.type === type) || null; }
+  function decorEffSize(type, facing) {
+    const m = decorMeta(type); if (!m) return [1, 1];
+    const [w, h] = m.size;
+    return (facing && facing[0] !== 0) ? [h, w] : [w, h];
+  }
+  function decorTilesAt(type, ax, ay, facing) {
+    const [ew, eh] = decorEffSize(type, facing);
+    const out = [];
+    for (let i = 0; i < ew; i++) for (let j = 0; j < eh; j++) out.push([ax + i, ay + j]);
+    return out;
+  }
+  // Tamanho "natural" (pré-facing) de uma decoração: usa o override por-objeto
+  // d.size se presente, senão o tamanho do catálogo do tipo.
+  function decorBaseSize(d) {
+    if (d && Array.isArray(d.size) && d.size.length === 2) return [d.size[0], d.size[1]];
+    const m = decorMeta(d && d.type ? d.type : d);
+    return m ? m.size.slice() : [1, 1];
+  }
+  // Tamanho efetivo (já com a troca por facing) de uma decoração específica.
+  function decorEffSizeOf(d) {
+    const [w, h] = decorBaseSize(d);
+    return (d.facing && d.facing[0] !== 0) ? [h, w] : [w, h];
+  }
+  // Casas ocupadas a partir de pos/size(natural)/facing explícitos.
+  function tilesFor(pos, size, facing) {
+    const [w, h] = size;
+    const [ew, eh] = (facing && facing[0] !== 0) ? [h, w] : [w, h];
+    const out = [];
+    for (let i = 0; i < ew; i++) for (let j = 0; j < eh; j++) out.push([pos[0] + i, pos[1] + j]);
+    return out;
+  }
+  function decorTiles(d) {
+    const [ew, eh] = decorEffSizeOf(d);
+    const out = [];
+    for (let i = 0; i < ew; i++) for (let j = 0; j < eh; j++) out.push([d.pos[0] + i, d.pos[1] + j]);
+    return out;
+  }
+
+  function rotateFacing(f) {
+    // cicla 4 facings: [0,1]→[1,0]→[0,-1]→[-1,0]→[0,1]
+    const order = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+    const i = order.findIndex(o => o[0] === f[0] && o[1] === f[1]);
+    return order[(i + 1) % 4];
+  }
+  // facing → ângulo (rad) p/ o giro 90° da imagem no preview 2D. Espelha game.js.
+  function facingAngle2D(f) {
+    if (!f) return 0;
+    if (f[0] === 1 && f[1] === 0) return Math.PI / 2;
+    if (f[0] === 0 && f[1] === -1) return Math.PI;
+    if (f[0] === -1 && f[1] === 0) return -Math.PI / 2;
+    return 0;
+  }
+  function rotateDecorPending() {
+    if (S.sel && S.sel.kind === "decor") {
+      const m = decorMeta(S.sel.ref.type);
+      if (m && m.gira) { S.sel.ref.facing = rotateFacing(S.sel.ref.facing); render(); }
+    } else {
+      const m = decorMeta(S.decorType);
+      if (m && m.gira) S.decorFacing = rotateFacing(S.decorFacing);
+    }
+  }
+  window.addEventListener("keydown", (ev) => {
+    if (ev.key === "r" || ev.key === "R") rotateDecorPending();
+  });
+
+  // Chão (special:floor) é camada de PISO: sobrepõe qualquer objeto e é ignorado
+  // como ocupação quando se posiciona outro objeto. Dois objetos não-piso ainda
+  // não podem se sobrepor.
+  function isFloorDecor(d) { const m = decorMeta(d && d.type ? d.type : d); return !!(m && m.special === "floor"); }
+  function decorFits(type, ax, ay, facing, ignore) {
+    if (isFloorDecor(type)) {  // piso cabe em qualquer chão livre, sobre outros objetos
+      for (const [tx, ty] of decorTilesAt(type, ax, ay, facing)) {
+        if (tx < 0 || ty < 0 || tx >= S.grid.w || ty >= S.grid.h) return false;
+        if (S.tiles[ty][tx] !== FLOOR) return false;
+      }
+      return true;
+    }
+    for (const [tx, ty] of decorTilesAt(type, ax, ay, facing)) {
+      if (tx < 0 || ty < 0 || tx >= S.grid.w || ty >= S.grid.h) return false;
+      if (S.tiles[ty][tx] !== FLOOR) return false;
+      for (const d of S.decorations) {
+        if (d === ignore || isFloorDecor(d)) continue;
+        if (decorTiles(d).some(c => c[0] === tx && c[1] === ty)) return false;
+      }
+    }
+    return true;
+  }
+  // Encaixe genérico para arrasto/redimensionamento: a decoração `ignore` (a que
+  // está sendo movida/redimensionada) é desconsiderada na checagem de sobreposição.
+  function decorWouldFit(ignore, pos, size, facing) {
+    const movingFloor = isFloorDecor(ignore);
+    for (const [tx, ty] of tilesFor(pos, size, facing)) {
+      if (tx < 0 || ty < 0 || tx >= S.grid.w || ty >= S.grid.h) return false;
+      if (S.tiles[ty][tx] !== FLOOR) return false;
+      if (movingFloor) continue;   // piso sobrepõe qualquer coisa
+      for (const d of S.decorations) {
+        if (d === ignore || isFloorDecor(d)) continue;
+        if (decorTiles(d).some(c => c[0] === tx && c[1] === ty)) return false;
+      }
+    }
+    return true;
+  }
+  function placeDecor(x, y) {
+    if (!decorFits(S.decorType, x, y, S.decorFacing)) return;
+    const m = decorMeta(S.decorType);
+    const d = { type: S.decorType, pos: [x, y], facing: S.decorFacing.slice(),
+                loot: (m && m.loot_capaz && S.decorType === "arca_tesouros") ? { gold: 0, items: [] } : null };
+    if (m && m.special === "fountain") d.charges = 3;
+    if (m && m.special === "floor") d.image = "chaograma1.png";   // grama por padrão (trocável no picker)
+    S.decorations.push(d);
+    S.sel = { kind: "decor", ref: d, pos: [x, y] };
+  }
+
   const board = document.getElementById("board");
   const ctx = board.getContext("2d");
+
+  // Cache de imagens de objetos para o preview 2D do editor.
+  const _objImgCache = {};
+  function objImg(name) {
+    if (!name) return null;
+    let im = _objImgCache[name];
+    if (im === undefined) {
+      im = new Image();
+      im.onload = () => render();
+      im.src = "../assets/objetos/" + name;
+      _objImgCache[name] = im;
+    }
+    return (im.complete && im.naturalWidth) ? im : null;
+  }
 
   function emojiForCell(x, y) {
     const at = (arr) => arr.find(e => e.pos && e.pos[0] === x && e.pos[1] === y);
@@ -32,7 +171,22 @@
     if (mo) { const d = CAT.monsters.find(c => c.type === mo.type); return d ? d.emoji : "👹"; }
     if (at(S.chests)) return "🧰";
     const tr = at(S.traps);
-    if (tr) { const d = CAT.traps.find(c => c.tipo === tr.tipo); return d ? d.icone : "⚠️"; }
+    if (tr) {
+      // Com imagem carregada, o PNG cobre a casa (desenhado à parte) — suprime o emoji.
+      if (tr.image && objImg(tr.image)) return null;
+      const d = CAT.traps.find(c => c.tipo === tr.tipo); return d ? d.icone : "⚠️";
+    }
+    // Empilhamento: o chão (piso) fica embaixo — mostra o emoji do objeto de CIMA.
+    const _decsAt = S.decorations.filter(e => e.pos[0] === x && e.pos[1] === y);
+    const dec = _decsAt.find(e => !isFloorDecor(e)) || _decsAt[0];
+    if (dec) {
+      // Se a decoração tem imagem e ela já carregou, não retorna emoji (a imagem cobre o footprint).
+      if (dec.image && objImg(dec.image)) return null;
+      // Decorações com escala visual são desenhadas à parte (ancoradas/escaladas).
+      const vs = dec.vscale;
+      if (Array.isArray(vs) && (vs[0] !== 1 || vs[1] !== 1)) return null;
+      const m = decorMeta(dec.type); return m ? m.emoji : "🪑";
+    }
     return null;
   }
 
@@ -42,8 +196,14 @@
     for (let y = 0; y < S.grid.h; y++) {
       for (let x = 0; x < S.grid.w; x++) {
         const t = S.tiles[y][x];
-        ctx.fillStyle = t === WALL ? "#1d1812" : (t === DOOR ? "#c8841f" : "#5a4a32");
+        const mid = S.materiais[x + "," + y];
+        const mm = mid ? matMeta(mid) : null;
+        ctx.fillStyle = mm ? mm.cor : (t === WALL ? "#1d1812" : (t === DOOR ? "#c8841f" : "#5a4a32"));
         ctx.fillRect(x * CELL, y * CELL, CELL - 1, CELL - 1);
+        if (mid === "entulho") {            // marca de obstáculo
+          ctx.fillStyle = "rgba(0,0,0,0.45)";
+          ctx.fillRect(x * CELL + CELL * 0.3, y * CELL + CELL * 0.3, CELL * 0.4, CELL * 0.4);
+        }
       }
     }
     for (const r of S.rooms) {
@@ -53,6 +213,61 @@
       ctx.fillStyle = "#9fb8d8"; ctx.font = "10px sans-serif"; ctx.textBaseline = "top";
       ctx.fillText((r.locked ? "🔒" : "") + r.role + "#" + r.id, r.x * CELL + 3, r.y * CELL + 3);
     }
+    for (const d of S.decorations) {
+      ctx.strokeStyle = "#6ad0a0"; ctx.lineWidth = 1;
+      for (const [tx, ty] of decorTiles(d)) ctx.strokeRect(tx * CELL + 2, ty * CELL + 2, CELL - 5, CELL - 5);
+    }
+    // Preview 2D: desenha o PNG da decoração cobrindo o footprint (se d.image disponível).
+    // Chão (piso) primeiro → fica EMBAIXO; objetos empilhados desenham por cima.
+    const _decorDrawOrder = [...S.decorations].sort((a, b) => (isFloorDecor(a) ? 0 : 1) - (isFloorDecor(b) ? 0 : 1));
+    for (const d of _decorDrawOrder) {
+      if (!d.image) continue;
+      const im = objImg(d.image);
+      if (!im) continue;
+      const tiles = decorTiles(d);
+      const _dm = decorMeta(d.type);
+      if (_dm && _dm.special === "floor") {
+        // Chão: preenche cada casa borda-a-borda (sem manter proporção).
+        for (const [tx, ty] of tiles) ctx.drawImage(im, tx * CELL, ty * CELL, CELL, CELL);
+        continue;
+      }
+      const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
+      const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
+      const px = minX * CELL + 2, py = minY * CELL + 2;
+      const pw = (maxX - minX + 1) * CELL - 4, ph = (maxY - minY + 1) * CELL - 4;
+      const vs = Array.isArray(d.vscale) ? d.vscale : [1, 1];
+      const ang = facingAngle2D(d.facing);
+      if (ang === 0) {
+        // Escala visual: altura cresce para cima (âncora na base), largura centralizada.
+        const dw = pw * vs[0], dh = ph * vs[1];
+        ctx.drawImage(im, px + pw / 2 - dw / 2, py + ph - dh, dw, dh);
+      } else {
+        // Girado: encaixa no frame local (caixa trocada p/ 90°/270°), proporção do PNG,
+        // e gira sobre o centro do footprint.
+        const rot90 = (ang === Math.PI / 2 || ang === -Math.PI / 2);
+        const boxW = rot90 ? ph : pw, boxH = rot90 ? pw : ph;
+        const ar = im.naturalWidth / im.naturalHeight;
+        let dw = boxW, dh = boxW / ar;
+        if (dh > boxH) { dh = boxH; dw = boxH * ar; }
+        dw *= vs[0]; dh *= vs[1];
+        ctx.save();
+        ctx.translate(px + pw / 2, py + ph / 2);
+        ctx.rotate(ang);
+        ctx.drawImage(im, -dw / 2, -dh / 2, dw, dh);
+        ctx.restore();
+      }
+    }
+    // Preview 2D: PNG da armadilha (se houver) cobrindo a casa, proporção preservada.
+    for (const t of S.traps) {
+      if (!t.image) continue;
+      const im = objImg(t.image);
+      if (!im) continue;
+      const px = t.pos[0] * CELL + 2, py = t.pos[1] * CELL + 2, sz = CELL - 4;
+      const ar = im.naturalWidth / im.naturalHeight;
+      let dw = sz, dh = sz / ar;
+      if (dh > sz) { dh = sz; dw = sz * ar; }
+      ctx.drawImage(im, px + (sz - dw) / 2, py + (sz - dh) / 2, dw, dh);
+    }
     ctx.font = "16px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     for (let y = 0; y < S.grid.h; y++) {
       for (let x = 0; x < S.grid.w; x++) {
@@ -61,11 +276,59 @@
       }
     }
     ctx.textAlign = "start";
-    if (S.sel && S.sel.pos) {
+    // Emojis de decorações com escala visual: desenhados à parte, ancorados na
+    // base-centro do footprint e crescendo para cima.
+    for (const d of S.decorations) {
+      const vs = Array.isArray(d.vscale) ? d.vscale : null;
+      if (!vs || (vs[0] === 1 && vs[1] === 1)) continue;
+      if (d.image && objImg(d.image)) continue;
+      const m = decorMeta(d.type); const emoji = m ? m.emoji : "🪑";
+      const tiles = decorTiles(d);
+      const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
+      const maxY = Math.max(...tiles.map(t => t[1]));
+      const cx = (minX + (maxX - minX + 1) / 2) * CELL;
+      const baseY = (maxY + 1) * CELL - 4;
+      ctx.save();
+      ctx.font = (16 * Math.max(vs[0], vs[1])) + "px sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+      ctx.fillText(emoji, cx, baseY);
+      ctx.restore();
+    }
+    if (S.sel && S.sel.kind === "decor" && S.sel.ref) {
+      // Referência: contorno do footprint realçado + rótulo W×H (casas efetivas).
+      const tiles = decorTiles(S.sel.ref);
+      const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
+      const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
+      ctx.strokeStyle = "#ffd86a"; ctx.lineWidth = 2;
+      ctx.strokeRect(minX * CELL + 1.5, minY * CELL + 1.5, (maxX - minX + 1) * CELL - 3, (maxY - minY + 1) * CELL - 3);
+      const [ew, eh] = decorEffSizeOf(S.sel.ref);
+      const label = ew + "×" + eh;
+      ctx.font = "11px sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "top";
+      const lx = minX * CELL + 3, ly = minY * CELL + 3;
+      const tw = ctx.measureText(label).width;
+      ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(lx - 1, ly - 1, tw + 4, 13);
+      ctx.fillStyle = "#ffd86a"; ctx.fillText(label, lx + 1, ly);
+      ctx.textAlign = "start";
+    } else if (S.sel && S.sel.pos) {
       ctx.strokeStyle = "#ffd86a"; ctx.lineWidth = 2;
       ctx.strokeRect(S.sel.pos[0] * CELL + 1, S.sel.pos[1] * CELL + 1, CELL - 3, CELL - 3);
     }
+    if (_drag && _drag.candidate) drawDragPreview();
     if (document.getElementById("status")) updateStatus();
+  }
+
+  // Preview do destino durante o arrasto: contorno verde (válido) / vermelho.
+  function drawDragPreview() {
+    if (!_drag || !_drag.candidate) return;
+    const [ax, ay] = _drag.candidate;
+    const tiles = _drag.sel.kind === "decor"
+      ? tilesFor([ax, ay], decorBaseSize(_drag.sel.ref), _drag.sel.ref.facing)
+      : [[ax, ay]];
+    ctx.strokeStyle = _drag.valid ? "#6ad06a" : "#d05a5a"; ctx.lineWidth = 2;
+    for (const [tx, ty] of tiles) {
+      if (tx < 0 || ty < 0 || tx >= S.grid.w || ty >= S.grid.h) continue;
+      ctx.strokeRect(tx * CELL + 1, ty * CELL + 1, CELL - 2, CELL - 2);
+    }
   }
 
   const TOOLS = [
@@ -78,6 +341,7 @@
     { id: "chest", label: "baú", group: "entidades" },
     { id: "trap", label: "armadilha", group: "entidades" },
     { id: "prisoner", label: "prisioneiro", group: "entidades" },
+    { id: "decor", label: "decoração", group: "entidades" },
     { id: "room", label: "sala", group: "ações" },
     { id: "select", label: "selecionar", group: "ações" },
     { id: "erase", label: "apagar", group: "ações" },
@@ -98,6 +362,36 @@
       if (t.id === S.tool) b.classList.add("active");
       b.onclick = () => { S.tool = t.id; buildToolbar(); };
       tb.appendChild(b);
+    }
+    if (S.tool === "decor") {
+      const sel = document.createElement("select");
+      sel.id = "decor-type";
+      sel.innerHTML = CAT.decorations.map(d =>
+        `<option value="${d.type}"${d.type === S.decorType ? " selected" : ""}>${d.emoji} ${d.nome}</option>`).join("");
+      sel.onchange = e => { S.decorType = e.target.value; S.decorFacing = [0, 1]; };
+      tb.appendChild(sel);
+      const rot = document.createElement("button");
+      rot.textContent = "girar 90° (R)";
+      rot.onclick = () => { rotateDecorPending(); };
+      tb.appendChild(rot);
+    }
+    if (S.tool === "floor" || S.tool === "wall") {
+      const isWall = S.tool === "wall";
+      const opts = MAT.filter(m => isWall
+        ? (m.categoria === "parede" || m.id === "entulho")
+        : (m.categoria === "piso" && m.id !== "entulho"));
+      const cur = isWall ? S.matWall : S.matFloor;
+      const sel = document.createElement("select");
+      sel.id = "mat-id";
+      sel.innerHTML = opts.map(m =>
+        `<option value="${m.id}"${m.id === cur ? " selected" : ""}>${m.categoria === "parede" ? "🧱" : (m.id === "entulho" ? "⛰️" : "▦")} ${m.nome}</option>`).join("");
+      sel.onchange = e => { if (isWall) S.matWall = e.target.value; else S.matFloor = e.target.value; };
+      tb.appendChild(sel);
+      const fill = document.createElement("button");
+      fill.textContent = S.matFill ? "balde: ON" : "balde: OFF";
+      fill.title = "Preenche a região contígua de mesma estrutura";
+      fill.onclick = () => { S.matFill = !S.matFill; buildToolbar(); };
+      tb.appendChild(fill);
     }
   }
 
@@ -131,18 +425,78 @@
   }
 
   function paintTile(x, y) {
-    if (S.tool === "wall") S.tiles[y][x] = WALL;
-    else if (S.tool === "floor") S.tiles[y][x] = FLOOR;
-    else if (S.tool === "door") { S.tiles[y][x] = DOOR; doorLink(x, y); }
+    if (S.tool === "wall") {
+      if (S.matWall === "entulho") { S.tiles[y][x] = FLOOR; S.materiais[x + "," + y] = "entulho"; return; }
+      S.tiles[y][x] = WALL;
+      _applyMat(x, y, S.matWall, "parede");
+    } else if (S.tool === "floor") {
+      S.tiles[y][x] = FLOOR;
+      _applyMat(x, y, S.matFloor, "piso");
+    } else if (S.tool === "door") {
+      S.tiles[y][x] = DOOR; doorLink(x, y);
+      const mid = S.materiais[x + "," + y];
+      if (mid && !matCompat(mid, x, y)) delete S.materiais[x + "," + y];
+    }
+  }
+
+  // Categoria do material compatível com a estrutura do tile?
+  function matCompat(id, x, y) {
+    const meta = matMeta(id); if (!meta) return false;
+    const t = S.tiles[y][x];
+    if (meta.categoria === "parede") return t === WALL;
+    return t === FLOOR || t === DOOR;   // piso (inclui entulho)
+  }
+  // Estrutura "pintável junta" p/ balde: parede vs. não-parede.
+  function _structKind(x, y) { return S.tiles[y][x] === WALL ? "wall" : "floor"; }
+  // Aplica material M na casa (limpa se for o default da categoria → JSON esparso).
+  function _applyMat(x, y, M, cat) {
+    if (M === MAT_DEFAULT[cat]) delete S.materiais[x + "," + y];
+    else S.materiais[x + "," + y] = M;
+  }
+  // Balde: preenche a região 4-conexa de mesma estrutura aplicando o tool atual.
+  function paintMaterial(x, y) {
+    if (!S.matFill) { paintTile(x, y); return; }
+    const kind = _structKind(x, y);
+    const seen = new Set([x + "," + y]); const st = [[x, y]];
+    while (st.length) {
+      const [cx, cy] = st.pop();
+      if (_structKind(cx, cy) === kind) paintTile(cx, cy);
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = cx + dx, ny = cy + dy, k = nx + "," + ny;
+        if (nx >= 0 && ny >= 0 && nx < S.grid.w && ny < S.grid.h && !seen.has(k)
+            && _structKind(nx, ny) === kind) { seen.add(k); st.push([nx, ny]); }
+      }
+    }
   }
 
   let painting = false;
   let roomDrag = null;
+  let _drag = null;  // arrasto na ferramenta "selecionar"
+
+  // Casa de destino válida para soltar a entidade `sel` ancorada em (ax,ay).
+  function dropValid(sel, ax, ay) {
+    if (sel.kind === "decor")
+      return decorWouldFit(sel.ref, [ax, ay], decorBaseSize(sel.ref), sel.ref.facing);
+    return ax >= 0 && ay >= 0 && ax < S.grid.w && ay < S.grid.h && S.tiles[ay][ax] !== WALL;
+  }
+  // Move a entidade selecionada para (nx,ny), conforme o tipo.
+  function moveSelTo(sel, nx, ny) {
+    const k = sel.kind;
+    if (k === "entrance") { S.entrance.x = nx; S.entrance.y = ny; }
+    else if (k === "exit") { S.exit.x = nx; S.exit.y = ny; }
+    else if (sel.ref) { sel.ref.pos = [nx, ny]; }  // prisoner/monster/chest/trap/decor
+    sel.pos = [nx, ny];
+  }
+
   function entityAt(x, y) {
     if (S.entrance && S.entrance.x === x && S.entrance.y === y) return { kind: "entrance", pos: [x, y] };
     if (S.exit && S.exit.x === x && S.exit.y === y) return { kind: "exit", pos: [x, y] };
     if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) return { kind: "prisoner", ref: S.prisoner, pos: [x, y] };
     const find = (arr, kind) => { const r = arr.find(e => e.pos[0] === x && e.pos[1] === y); return r ? { kind, ref: r, pos: [x, y] } : null; };
+    // Empilhamento: seleciona o objeto de CIMA (não-piso) antes do chão.
+    const _decsHere = S.decorations.filter(d => decorTiles(d).some(c => c[0] === x && c[1] === y));
+    const dec = _decsHere.find(d => !isFloorDecor(d)) || _decsHere[0];
+    if (dec) return { kind: "decor", ref: dec, pos: dec.pos.slice() };
     return find(S.monsters, "monster") || find(S.chests, "chest") || find(S.traps, "trap") || null;
   }
 
@@ -160,6 +514,7 @@
       case "monster": S.monsters.push({ type: (CAT.monsters[0] || {}).type || "goblin", pos: [x, y], room_id: rid, boss: false, target: false }); break;
       case "chest": S.chests.push({ pos: [x, y], gold: 0, items: [], key_objective: false }); break;
       case "trap": S.traps.push({ tipo: (CAT.traps[0] || {}).tipo || "fosso_estacas", pos: [x, y] }); break;
+      case "decor": placeDecor(x, y); break;
     }
   }
 
@@ -171,26 +526,84 @@
     S.monsters = S.monsters.filter(e => !(e.pos[0] === x && e.pos[1] === y));
     S.chests = S.chests.filter(e => !(e.pos[0] === x && e.pos[1] === y));
     S.traps = S.traps.filter(e => !(e.pos[0] === x && e.pos[1] === y));
+    S.decorations = S.decorations.filter(d => !decorTiles(d).some(c => c[0] === x && c[1] === y));
+    delete S.materiais[x + "," + y];
     S.tiles[y][x] = WALL;
+  }
+
+  function deleteRoom(room, clearFloor) {
+    const idx = S.rooms.indexOf(room);
+    if (idx >= 0) S.rooms.splice(idx, 1);
+    if (clearFloor) {
+      for (let j = room.y; j < room.y + room.h; j++) {
+        for (let i = room.x; i < room.x + room.w; i++) {
+          if (S.tiles[j] && S.tiles[j][i] !== undefined) {
+            if (S.tiles[j][i] === DOOR) doorUnlink(i, j);
+            S.tiles[j][i] = WALL;
+          }
+        }
+      }
+    }
+    // Entidades que apontavam para esta sala ficam sem sala (não são apagadas).
+    for (const m of S.monsters) if (m.room_id === room.id) m.room_id = null;
+    if (S.prisoner && S.prisoner.room_id === room.id) S.prisoner.room_id = null;
+    S.sel = null; renderPanel(); render();
   }
 
   const panel = document.getElementById("panel");
   function opt(list, val, fmt) { return list.map(o => `<option value="${o.v}"${o.v === val ? " selected" : ""}>${fmt(o)}</option>`).join(""); }
 
+  function objDefaults(isPrimary) {
+    return { xp: isPrimary ? 0 : 50, reward: { gold: isPrimary ? 0 : 25, items: [] } };
+  }
+  function normalizeObjective(obj, isPrimary) {
+    const d = objDefaults(isPrimary);
+    if (typeof obj.xp !== "number") obj.xp = d.xp;
+    if (!obj.reward || typeof obj.reward !== "object") obj.reward = { gold: d.reward.gold, items: [] };
+    if (typeof obj.reward.gold !== "number") obj.reward.gold = d.reward.gold;
+    if (!Array.isArray(obj.reward.items)) obj.reward.items = [];
+    return obj;
+  }
+  // HTML dos campos de recompensa de um objetivo. `pfx` é um prefixo único de ids.
+  function rewardFieldsHTML(obj, pfx) {
+    return `<label>XP (total, dividido entre os vivos) <input id="${pfx}-xp" type="number" min="0" value="${obj.xp}"></label>
+      <label>ouro (total, dividido) <input id="${pfx}-gold" type="number" min="0" value="${obj.reward.gold}"></label>
+      <label>itens de recompensa</label>
+      <div id="${pfx}-items">${obj.reward.items.map((it, i) => `<div>${it.id} <button data-i="${i}" class="${pfx}-rm">×</button></div>`).join("")}</div>
+      <select id="${pfx}-add">${opt(CAT.items.map(it => ({ v: it.id, name: it.name })), "", o => o.v + " — " + o.name)}</select>
+      <button id="${pfx}-additem">+ item</button>`;
+  }
+  function wireRewardFields(obj, pfx) {
+    document.getElementById(`${pfx}-xp`).onchange = e => { obj.xp = Math.max(0, Number(e.target.value) | 0); };
+    document.getElementById(`${pfx}-gold`).onchange = e => { obj.reward.gold = Math.max(0, Number(e.target.value) | 0); };
+    document.getElementById(`${pfx}-additem`).onclick = () => { const id = document.getElementById(`${pfx}-add`).value; if (id) obj.reward.items.push({ id }); renderPanel(); };
+    panel.querySelectorAll(`.${pfx}-rm`).forEach(b => b.onclick = () => { obj.reward.items.splice(Number(b.dataset.i), 1); renderPanel(); });
+  }
+
   function renderPanel() {
     if (!S.sel) {
       const OBJ = ["kill_target", "kill_all", "reach_exit", "open_key_chest", "rescue_prisoner"];
       const o = S.objectives;
+      normalizeObjective(o.primary, true);
+      o.secondary.forEach(s => normalizeObjective(s, false));
       panel.innerHTML = `<b>🗺️ Masmorra</b>
         <label>objetivo principal</label>
         <select id="o-prim">${OBJ.map(t => `<option value="${t}"${o.primary.type === t ? " selected" : ""}>${t}</option>`).join("")}</select>
+        ${rewardFieldsHTML(o.primary, "o-prim-rw")}
+        <hr style="border-color:#3a3022;margin:10px 0">
         <label>objetivos secundários</label>
-        <div id="o-sec">${o.secondary.map((s, i) => `<div><select data-i="${i}" class="o-secsel">${OBJ.map(t => `<option value="${t}"${s.type === t ? " selected" : ""}>${t}</option>`).join("")}</select> <button data-i="${i}" class="o-rm">×</button></div>`).join("")}</div>
+        <div id="o-sec">${o.secondary.map((s, i) => `<div class="o-sec-item" style="border-top:1px solid #3a3022;padding-top:6px;margin-top:6px">
+          <select data-i="${i}" class="o-secsel">${OBJ.map(t => `<option value="${t}"${s.type === t ? " selected" : ""}>${t}</option>`).join("")}</select>
+          <button data-i="${i}" class="o-rm">× remover</button>
+          ${rewardFieldsHTML(s, "o-sec" + i + "-rw")}
+        </div>`).join("")}</div>
         <button id="o-add">+ secundário</button>`;
       document.getElementById("o-prim").onchange = e => { o.primary.type = e.target.value; };
-      document.getElementById("o-add").onclick = () => { o.secondary.push({ type: "rescue_prisoner" }); renderPanel(); };
+      wireRewardFields(o.primary, "o-prim-rw");
+      document.getElementById("o-add").onclick = () => { o.secondary.push({ type: "rescue_prisoner", ...objDefaults(false) }); renderPanel(); };
       panel.querySelectorAll(".o-secsel").forEach(sel => sel.onchange = e => { o.secondary[Number(e.target.dataset.i)].type = e.target.value; });
       panel.querySelectorAll(".o-rm").forEach(b => b.onclick = () => { o.secondary.splice(Number(b.dataset.i), 1); renderPanel(); });
+      o.secondary.forEach((s, i) => wireRewardFields(s, "o-sec" + i + "-rw"));
       return;
     }
     const k = S.sel.kind, ref = S.sel.ref;
@@ -220,18 +633,203 @@
       const meta = CAT.traps.find(t => t.tipo === ref.tipo) || {};
       panel.innerHTML = `<b>⚠️ Armadilha</b>
         <label>tipo</label><select id="p-tt">${opt(CAT.traps.map(t => ({ v: t.tipo, name: t.nome })), ref.tipo, o => o.v + " — " + o.name)}</select>
-        ${meta.precisa_veneno ? `<label>veneno</label><select id="p-ven">${opt(CAT.venoms.map(v => ({ v: v.id, name: v.name })), ref.veneno_id || "", o => o.v + " — " + o.name)}</select>` : ""}`;
+        ${meta.precisa_veneno ? `<label>veneno</label><select id="p-ven">${opt(CAT.venoms.map(v => ({ v: v.id, name: v.name })), ref.veneno_id || "", o => o.v + " — " + o.name)}</select>` : ""}
+        <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
+          <b>Imagem</b>
+          <div style="font-size:11px;color:#8a7a5a">PNG de assets/objetos — visível no jogo só quando a armadilha for revelada.</div>
+          <div style="margin-top:4px">
+            <select id="t-img-sel"></select>
+            <button id="t-img-refresh" title="recarregar lista">↻</button>
+          </div>
+          <div style="margin-top:4px">
+            <input id="t-img-file" type="file" accept="image/png" style="font-size:11px">
+            <span id="t-img-st" style="font-size:11px;color:#8a7a5a"></span>
+          </div>
+        </div>`;
       document.getElementById("p-tt").onchange = e => { ref.tipo = e.target.value; if (!CAT.traps.find(t => t.tipo === ref.tipo).precisa_veneno) delete ref.veneno_id; renderPanel(); render(); };
       if (meta.precisa_veneno) document.getElementById("p-ven").onchange = e => { ref.veneno_id = e.target.value; };
+      // Seletor de imagem (espelha o das decorações — pasta assets/objetos via OBJETO_UPLOAD).
+      const tImgSel = document.getElementById("t-img-sel");
+      const tImgSt = document.getElementById("t-img-st");
+      function fillTrapImg(list) {
+        const opts = ['<option value="">(nenhuma — ícone padrão)</option>']
+          .concat(list.map(n => `<option value="${n}" ${ref.image === n ? "selected" : ""}>${n}</option>`));
+        if (ref.image && list.indexOf(ref.image) < 0)
+          opts.push(`<option value="${ref.image}" selected>${ref.image} (atual)</option>`);
+        tImgSel.innerHTML = opts.join("");
+      }
+      fillTrapImg([]);
+      function loadTrapImgList() {
+        if (!window.OBJETO_UPLOAD) { tImgSt.textContent = "(offline: lista/upload indisponível)"; return; }
+        window.OBJETO_UPLOAD.list()
+          .then(list => fillTrapImg(list))
+          .catch(() => { tImgSt.textContent = "servidor offline"; });
+      }
+      loadTrapImgList();
+      tImgSel.onchange = e => { ref.image = e.target.value || null; render(); };
+      document.getElementById("t-img-refresh").onclick = loadTrapImgList;
+      document.getElementById("t-img-file").onchange = async e => {
+        const file = e.target.files[0]; if (!file) return;
+        if (!window.OBJETO_UPLOAD) { tImgSt.textContent = "servidor offline"; return; }
+        tImgSt.textContent = "enviando…";
+        try {
+          const name = await window.OBJETO_UPLOAD.upload(file);
+          ref.image = name;
+          tImgSt.textContent = "enviada ✓";
+          loadTrapImgList(); render();
+        } catch (err) { tImgSt.textContent = "falha: " + err.message; }
+      };
     } else if (k === "room") {
       panel.innerHTML = `<b>▦ Sala #${ref.id}</b>
         <label>role</label><select id="p-role">${opt(["entrance", "monster", "chest", "trap", "boss", "empty"].map(r => ({ v: r })), ref.role, o => o.v)}</select>
         <label><input type="checkbox" id="p-locked" ${ref.locked ? "checked" : ""}> trancada</label>
-        <div style="margin-top:8px;color:#8a7a5a;font-size:11px">portas: ${ref.doors.length}</div>`;
+        <div style="margin-top:8px;color:#8a7a5a;font-size:11px">portas: ${ref.doors.length}</div>
+        <button id="p-del-room" style="margin-top:10px">🗑 Deletar sala</button>
+        <div id="p-del-confirm" style="display:none;margin-top:6px">
+          <div style="font-size:11px;color:#d8a0a0;margin-bottom:4px">Deletar a sala #${ref.id}?</div>
+          <button id="p-del-keep">Deletar (manter chão)</button>
+          <button id="p-del-clear">Deletar (limpar chão)</button>
+        </div>`;
       document.getElementById("p-role").onchange = e => { ref.role = e.target.value; render(); };
       document.getElementById("p-locked").onchange = e => { ref.locked = e.target.checked; render(); };
+      document.getElementById("p-del-room").onclick = () => {
+        document.getElementById("p-del-confirm").style.display = "";
+      };
+      document.getElementById("p-del-keep").onclick = () => deleteRoom(ref, false);
+      document.getElementById("p-del-clear").onclick = () => deleteRoom(ref, true);
     } else if (k === "prisoner") {
-      panel.innerHTML = `<b>🧍 Prisioneiro</b><div style="color:#8a7a5a;font-size:11px">sala ${ref.room_id ?? "—"}</div>`;
+      const img = ref.image
+        ? `<img src="../assets/pawns/prisioneiros/${ref.image}" style="max-width:64px;max-height:64px;display:block;margin:6px 0;border:1px solid #5a4a2a">`
+        : `<div style="color:#8a7a5a;font-size:11px;margin:6px 0">sem imagem — usará o emoji padrão</div>`;
+      panel.innerHTML = `<b>🧍 Prisioneiro</b>
+        <div style="color:#8a7a5a;font-size:11px">sala ${ref.room_id ?? "—"}</div>
+        ${img}
+        <label>miniatura</label>
+        <input type="file" id="p-pris-img" accept="image/png,image/jpeg,image/webp,image/gif">
+        <div id="p-pris-status" style="color:#8a7a5a;font-size:11px;margin-top:4px"></div>`;
+      const inp = document.getElementById("p-pris-img");
+      const st = document.getElementById("p-pris-status");
+      inp.onchange = async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        st.textContent = "enviando…";
+        try {
+          const name = await window.PRISONER_UPLOAD.upload(file);
+          ref.image = name;
+          st.textContent = "enviada ✓";
+          renderPanel(); render();
+        } catch (err) {
+          st.textContent = "falha: " + err.message;
+        }
+      };
+    } else if (k === "decor") {
+      const m = decorMeta(ref.type) || {};
+      const hasLoot = !!ref.loot;
+      const [bw, bh] = decorBaseSize(ref);
+      const vs0 = Array.isArray(ref.vscale) ? ref.vscale : [1, 1];
+      panel.innerHTML = `<b>${m.emoji || "🪑"} ${m.nome || ref.type}</b>
+        <div style="color:#8a7a5a;font-size:11px">${m.size ? m.size[0] + "×" + m.size[1] : ""} ${m.alto ? "· alto (oclui visão)" : ""} ${m.pisavel ? "· pisável" : ""}</div>
+        ${m.gira ? `<button id="d-rot">girar 90°</button>` : ""}
+        ${m.special === "fountain" ? `<label>cargas <input id="d-charges" type="number" min="0" value="${ref.charges ?? 0}"></label>` : ""}
+        ${m.loot_capaz ? `<label style="display:block;margin-top:8px"><input type="checkbox" id="d-haslook" ${hasLoot ? "checked" : ""}> contém loot</label>` : ""}
+        <div id="d-loot" style="${hasLoot ? "" : "display:none"}">
+          <label>ouro <input id="d-gold" type="number" min="0" value="${hasLoot ? (ref.loot.gold | 0) : 0}"></label>
+          <label>itens</label>
+          <div id="d-items">${hasLoot ? ref.loot.items.map((it, i) => `<div>${it.id} <button data-i="${i}" class="d-rm">×</button></div>`).join("") : ""}</div>
+          <select id="d-add">${opt(CAT.items.map(it => ({ v: it.id, name: it.name })), "", o => o.v + " — " + o.name)}</select>
+          <button id="d-additem">+ item</button>
+        </div>
+        <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
+          <b>Tamanho</b>
+          <div style="font-size:11px;color:#8a7a5a">footprint em casas (quadrados ocupados)</div>
+          <label>largura <input id="d-fw" type="number" min="1" max="${S.grid.w}" value="${bw}"></label>
+          <label>altura <input id="d-fh" type="number" min="1" max="${S.grid.h}" value="${bh}"></label>
+          <div id="d-size-msg" style="font-size:11px;color:#d8a0a0;min-height:14px"></div>
+          <div style="font-size:11px;color:#8a7a5a;margin-top:4px">tamanho visual (não muda casas; altura cresce p/ cima)</div>
+          <label>escala largura <input id="d-vsx" type="number" min="0.2" max="4" step="0.1" value="${vs0[0]}"></label>
+          <label>escala altura <input id="d-vsy" type="number" min="0.2" max="4" step="0.1" value="${vs0[1]}"></label>
+        </div>
+        <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
+          <b>Imagem (miniatura 3D)</b>
+          <div style="font-size:11px;color:#8a7a5a">PNG de assets/objetos — silhueta extrudada no jogo.</div>
+          <div style="margin-top:4px">
+            <select id="d-img-sel"></select>
+            <button id="d-img-refresh" title="recarregar lista">↻</button>
+          </div>
+          <div style="margin-top:4px">
+            <input id="d-img-file" type="file" accept="image/png" style="font-size:11px">
+            <span id="d-img-st" style="font-size:11px;color:#8a7a5a"></span>
+          </div>
+        </div>`;
+      if (m.gira) document.getElementById("d-rot").onclick = () => { ref.facing = rotateFacing(ref.facing); render(); };
+      if (m.special === "fountain") document.getElementById("d-charges").onchange = e => { ref.charges = Math.max(0, Number(e.target.value) | 0); };
+      if (m.loot_capaz) document.getElementById("d-haslook").onchange = e => {
+        ref.loot = e.target.checked ? { gold: 0, items: [] } : null; renderPanel();
+      };
+      if (hasLoot) {
+        document.getElementById("d-gold").onchange = e => { ref.loot.gold = Math.max(0, Number(e.target.value) | 0); };
+        document.getElementById("d-additem").onclick = () => { const id = document.getElementById("d-add").value; if (id) ref.loot.items.push({ id }); renderPanel(); };
+        panel.querySelectorAll(".d-rm").forEach(b => b.onclick = () => { ref.loot.items.splice(Number(b.dataset.i), 1); renderPanel(); });
+      }
+      // Footprint (casas): aplica com bloqueio — reverte se não couber.
+      function applyFootprint() {
+        const nw = Math.max(1, Number(document.getElementById("d-fw").value) | 0);
+        const nh = Math.max(1, Number(document.getElementById("d-fh").value) | 0);
+        const msg = document.getElementById("d-size-msg");
+        if (decorWouldFit(ref, ref.pos, [nw, nh], ref.facing)) {
+          const def = decorMeta(ref.type);
+          if (def && def.size[0] === nw && def.size[1] === nh) delete ref.size;
+          else ref.size = [nw, nh];
+          msg.textContent = ""; render();
+        } else {
+          msg.textContent = "não cabe (parede/fora/sobreposição) — revertido";
+          const [cw, ch] = decorBaseSize(ref);
+          document.getElementById("d-fw").value = cw;
+          document.getElementById("d-fh").value = ch;
+        }
+      }
+      document.getElementById("d-fw").onchange = applyFootprint;
+      document.getElementById("d-fh").onchange = applyFootprint;
+      // Escala visual: sem bloqueio (não ocupa casas).
+      function applyVScale() {
+        const sx = Math.max(0.2, Math.min(4, Number(document.getElementById("d-vsx").value) || 1));
+        const sy = Math.max(0.2, Math.min(4, Number(document.getElementById("d-vsy").value) || 1));
+        if (sx === 1 && sy === 1) delete ref.vscale; else ref.vscale = [sx, sy];
+        render();
+      }
+      document.getElementById("d-vsx").onchange = applyVScale;
+      document.getElementById("d-vsy").onchange = applyVScale;
+      const imgSel = document.getElementById("d-img-sel");
+      const imgSt = document.getElementById("d-img-st");
+      function fillImgOptions(list) {
+        const opts = ['<option value="">(nenhuma — procedural)</option>']
+          .concat(list.map(n => `<option value="${n}" ${ref.image === n ? "selected" : ""}>${n}</option>`));
+        // garante a imagem atual visível mesmo se a lista falhar
+        if (ref.image && list.indexOf(ref.image) < 0)
+          opts.push(`<option value="${ref.image}" selected>${ref.image} (atual)</option>`);
+        imgSel.innerHTML = opts.join("");
+      }
+      fillImgOptions([]);
+      function loadImgList() {
+        if (!window.OBJETO_UPLOAD) { imgSt.textContent = "(offline: digite/upload indisponível)"; return; }
+        window.OBJETO_UPLOAD.list()
+          .then(list => fillImgOptions(list))
+          .catch(() => { imgSt.textContent = "servidor offline"; });
+      }
+      loadImgList();
+      imgSel.onchange = e => { ref.image = e.target.value || null; render(); };
+      document.getElementById("d-img-refresh").onclick = loadImgList;
+      document.getElementById("d-img-file").onchange = async e => {
+        const file = e.target.files[0]; if (!file) return;
+        if (!window.OBJETO_UPLOAD) { imgSt.textContent = "servidor offline"; return; }
+        imgSt.textContent = "enviando…";
+        try {
+          const name = await window.OBJETO_UPLOAD.upload(file);
+          ref.image = name;
+          imgSt.textContent = "enviada ✓";
+          loadImgList(); render();
+        } catch (err) { imgSt.textContent = "falha: " + err.message; }
+      };
     } else {
       panel.innerHTML = `<b>${k}</b>`;
     }
@@ -240,11 +838,20 @@
   board.addEventListener("mousedown", (ev) => {
     const c = cellFromEvent(ev); if (!c) return;
     const [x, y] = c;
-    if (["wall", "floor", "door"].includes(S.tool)) { painting = true; paintTile(x, y); render(); }
+    if (["wall", "floor", "door"].includes(S.tool)) { painting = true; (S.matFill && S.tool !== "door" ? paintMaterial : paintTile)(x, y); render(); updateStatus(); }
     else if (S.tool === "room") { roomDrag = { x0: x, y0: y, x1: x, y1: y }; }
-    else if (["entrance", "exit", "prisoner", "monster", "chest", "trap"].includes(S.tool)) { placeEntity(x, y); S.sel = entityAt(x, y); renderPanel(); render(); }
+    else if (["entrance", "exit", "prisoner", "monster", "chest", "trap", "decor"].includes(S.tool)) { placeEntity(x, y); if (S.tool !== "decor") S.sel = entityAt(x, y); renderPanel(); render(); }
     else if (S.tool === "erase") { eraseAt(x, y); S.sel = null; renderPanel(); render(); }
-    else if (S.tool === "select") { S.sel = entityAt(x, y) || roomSel(x, y); renderPanel(); render(); }
+    else if (S.tool === "select") {
+      S.sel = entityAt(x, y) || roomSel(x, y);
+      // Entidades pontuais/decorações entram em modo arrasto (sala não).
+      if (S.sel && S.sel.kind !== "room" && S.sel.pos) {
+        const anchor = S.sel.pos;
+        _drag = { sel: S.sel, offX: x - anchor[0], offY: y - anchor[1],
+                  origin: anchor.slice(), candidate: null, valid: true, moved: false };
+      } else { _drag = null; }
+      renderPanel(); render();
+    }
   });
 
   function roomSel(x, y) {
@@ -253,7 +860,19 @@
   }
   board.addEventListener("mousemove", (ev) => {
     const c = cellFromEvent(ev); if (!c) return;
-    if (painting) { paintTile(c[0], c[1]); render(); return; }
+    if (_drag) {
+      const ax = c[0] - _drag.offX, ay = c[1] - _drag.offY;
+      _drag.candidate = [ax, ay];
+      if (ax !== _drag.origin[0] || ay !== _drag.origin[1]) _drag.moved = true;
+      _drag.valid = dropValid(_drag.sel, ax, ay);
+      render();  // render() já desenha o preview via drawDragPreview()
+      return;
+    }
+    if (painting) {
+      if ((S.tool === "floor" || S.tool === "wall") && S.matFill) { paintMaterial(c[0], c[1]); updateStatus(); }
+      else { paintTile(c[0], c[1]); updateStatus(); }
+      render(); return;
+    }
     if (roomDrag) {
       roomDrag.x1 = c[0]; roomDrag.y1 = c[1];
       render();
@@ -265,6 +884,11 @@
   });
   window.addEventListener("mouseup", () => {
     painting = false;
+    if (_drag) {
+      if (_drag.moved && _drag.valid && _drag.candidate)
+        moveSelTo(_drag.sel, _drag.candidate[0], _drag.candidate[1]);
+      _drag = null; renderPanel(); render();
+    }
     if (roomDrag) {
       const x = Math.min(roomDrag.x0, roomDrag.x1), y = Math.min(roomDrag.y0, roomDrag.y1);
       const w = Math.abs(roomDrag.x1 - roomDrag.x0) + 1, h = Math.abs(roomDrag.y1 - roomDrag.y0) + 1;
@@ -278,8 +902,12 @@
   });
 
   function buildJSON() {
+    if (!S.objectives.primary) S.objectives.primary = { type: "kill_all" };
+    if (!Array.isArray(S.objectives.secondary)) S.objectives.secondary = [];
+    normalizeObjective(S.objectives.primary, true);
+    S.objectives.secondary.forEach(s => normalizeObjective(s, false));
     return {
-      schema_version: 1, id: S.meta.id, name: S.meta.name,
+      schema_version: 1, id: S.meta.id, name: S.meta.name, ambiente: S.meta.ambiente || "masmorra",
       grid: { w: S.grid.w, h: S.grid.h },
       tiles: S.tiles.map(row => row.slice()),
       rooms: S.rooms.map(r => ({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, role: r.role, locked: r.locked, doors: r.doors.map(d => d.slice()) })),
@@ -287,9 +915,26 @@
       exit: S.exit ? { x: S.exit.x, y: S.exit.y } : null,
       monsters: S.monsters.map(m => ({ type: m.type, pos: m.pos.slice(), room_id: m.room_id, boss: !!m.boss, target: !!m.target })),
       chests: S.chests.map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: c.items.map(i => ({ id: i.id })), key_objective: !!c.key_objective })),
-      traps: S.traps.map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; return o; }),
-      prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id } : null,
-      objectives: S.objectives,
+      traps: S.traps.map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; if (t.image) o.image = t.image; return o; }),
+      decorations: S.decorations.map(d => {
+        const o = { type: d.type, pos: d.pos.slice(), facing: d.facing.slice() };
+        o.loot = d.loot ? { gold: d.loot.gold | 0, items: d.loot.items.map(i => ({ id: i.id })) } : null;
+        const m = decorMeta(d.type);
+        if (m && m.special === "fountain") o.charges = d.charges | 0;
+        if (d.image) o.image = d.image;
+        // Override de tamanho por-objeto (editor-only; o servidor ignora estes campos).
+        if (Array.isArray(d.size) && d.size.length === 2) o.size = [d.size[0] | 0, d.size[1] | 0];
+        if (Array.isArray(d.vscale) && (d.vscale[0] !== 1 || d.vscale[1] !== 1)) o.vscale = [d.vscale[0], d.vscale[1]];
+        return o;
+      }),
+      prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}) } : null,
+      materiais: { ...S.materiais },
+      objectives: {
+        primary: { type: S.objectives.primary.type, xp: S.objectives.primary.xp | 0,
+                   reward: { gold: (S.objectives.primary.reward.gold | 0), items: S.objectives.primary.reward.items.map(i => ({ id: i.id })) } },
+        secondary: S.objectives.secondary.map(s => ({ type: s.type, xp: s.xp | 0,
+                   reward: { gold: (s.reward.gold | 0), items: s.reward.items.map(i => ({ id: i.id })) } })),
+      },
     };
   }
 
@@ -337,6 +982,28 @@
     if (S.prisoner && isWall(S.prisoner.pos)) e.push("prisioneiro em parede");
     for (const r of S.rooms) for (const d of r.doors) if (S.tiles[d[1]]?.[d[0]] !== DOOR) e.push(`porta declarada não é tile DOOR: ${d}`);
     if (reachableFloors(6) < 6) e.push("menos de 6 casas de chão alcançáveis da entrada");
+    const decTypes = new Set(CAT.decorations.map(d => d.type));
+    const decOcc = new Set();
+    for (const d of S.decorations) {
+      if (!decTypes.has(d.type)) { e.push(`decoração tipo inválido: ${d.type}`); continue; }
+      for (const [tx, ty] of decorTiles(d)) {
+        if (tx < 0 || ty < 0 || tx >= S.grid.w || ty >= S.grid.h || S.tiles[ty]?.[tx] !== FLOOR)
+          e.push(`decoração ${d.type} fora do chão em ${tx},${ty}`);
+        const key = tx + "," + ty;
+        if (decOcc.has(key)) e.push(`decorações sobrepostas em ${tx},${ty}`);
+        decOcc.add(key);
+      }
+      if (d.loot) for (const it of d.loot.items) if (!items.has(it.id)) e.push(`item de loot inválido: ${it.id}`);
+    }
+    const matIds = new Set(MAT.map(m => m.id));
+    for (const [key, mid] of Object.entries(S.materiais)) {
+      if (!matIds.has(mid)) { e.push(`material inválido: ${mid}`); continue; }
+      const p = key.split(",").map(Number);
+      const t = S.tiles[p[1]]?.[p[0]];
+      const cat = matMeta(mid).categoria;
+      if (cat === "parede" && t !== WALL) e.push(`material de parede ${mid} fora de parede em ${key}`);
+      if (cat === "piso" && !(t === FLOOR || t === DOOR)) e.push(`material de piso ${mid} fora de chão em ${key}`);
+    }
     return { ok: e.length === 0, erros: e };
   }
 
@@ -349,7 +1016,8 @@
   }
 
   function loadJSON(obj) {
-    S.meta = { schema_version: 1, id: obj.id || "masmorra", name: obj.name || "Masmorra" };
+    S.meta = { schema_version: 1, id: obj.id || "masmorra", name: obj.name || "Masmorra",
+               ambiente: ["penumbra", "masmorra", "ar_livre"].includes(obj.ambiente) ? obj.ambiente : "masmorra" };
     S.grid = { w: obj.grid.w, h: obj.grid.h };
     S.tiles = obj.tiles.map(row => row.slice());
     S.rooms = (obj.rooms || []).map(r => ({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, role: r.role, locked: !!r.locked, doors: (r.doors || []).map(d => d.slice()) }));
@@ -359,25 +1027,71 @@
     S.prisoner = obj.prisoner || null;
     S.monsters = (obj.monsters || []).map(m => ({ type: m.type, pos: m.pos.slice(), room_id: m.room_id ?? null, boss: !!m.boss, target: !!m.target }));
     S.chests = (obj.chests || []).map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: (c.items || []).map(i => ({ id: i.id })), key_objective: !!c.key_objective }));
-    S.traps = (obj.traps || []).map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; return o; });
+    S.traps = (obj.traps || []).map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; if (t.image) o.image = t.image; return o; });
+    S.decorations = (obj.decorations || []).map(d => ({
+      type: d.type, pos: d.pos.slice(), facing: (d.facing || [0, 1]).slice(),
+      loot: d.loot ? { gold: d.loot.gold | 0, items: (d.loot.items || []).map(i => ({ id: i.id })) } : null,
+      ...(d.charges !== undefined ? { charges: d.charges | 0 } : {}),
+      ...(d.image ? { image: d.image } : {}),
+      ...(Array.isArray(d.size) && d.size.length === 2 ? { size: [d.size[0] | 0, d.size[1] | 0] } : {}),
+      ...(Array.isArray(d.vscale) && d.vscale.length === 2 ? { vscale: [Number(d.vscale[0]), Number(d.vscale[1])] } : {}),
+    }));
+    S.materiais = (obj.materiais && typeof obj.materiais === "object") ? { ...obj.materiais } : {};
     S.objectives = obj.objectives || { primary: { type: "kill_all" }, secondary: [] };
+    if (!S.objectives.primary) S.objectives.primary = { type: "kill_all" };
+    if (!Array.isArray(S.objectives.secondary)) S.objectives.secondary = [];
+    normalizeObjective(S.objectives.primary, true);
+    S.objectives.secondary.forEach(s => normalizeObjective(s, false));
     S.sel = null;
     document.getElementById("m-id").value = S.meta.id;
     document.getElementById("m-name").value = S.meta.name;
+    document.getElementById("m-ambiente").value = S.meta.ambiente || "masmorra";
     document.getElementById("g-w").value = S.grid.w;
     document.getElementById("g-h").value = S.grid.h;
     render(); renderPanel();
   }
 
-  function save() {
-    S.meta.id = document.getElementById("m-id").value.trim() || "masmorra";
-    S.meta.name = document.getElementById("m-name").value.trim() || "Masmorra";
-    const v = updateStatus();
-    if (!v.ok) { alert("Masmorra inválida:\n- " + v.erros.join("\n- ")); return; }
-    const blob = new Blob([JSON.stringify(buildJSON(), null, 2)], { type: "application/json" });
+  function setSaveMsg(cls, msg) {
+    const el = document.getElementById("status");
+    if (el) { el.className = cls; el.textContent = msg; }
+  }
+
+  function baixarMasmorra(defn) {
+    const blob = new Blob([JSON.stringify(defn, null, 2)], { type: "application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob); a.download = S.meta.id + ".json";
     document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  // Injeta/atualiza a masmorra no catálogo em memória para que a aba de campanha
+  // a enxergue imediatamente (mutação in-place: editor_campaign.js guarda a mesma
+  // referência do array). NÃO reatribuir window.EDITOR_DUNGEONS.
+  function injetarNoCatalogo(entry) {
+    const arr = window.EDITOR_DUNGEONS;
+    if (!Array.isArray(arr) || !entry) return;
+    const i = arr.findIndex(d => d.file === entry.file);
+    if (i >= 0) arr[i] = entry; else arr.push(entry);
+  }
+
+  function save() {
+    S.meta.id = document.getElementById("m-id").value.trim() || "masmorra";
+    S.meta.name = document.getElementById("m-name").value.trim() || "Masmorra";
+    S.meta.ambiente = document.getElementById("m-ambiente").value || "masmorra";
+    const v = updateStatus();
+    if (!v.ok) { alert("Masmorra inválida:\n- " + v.erros.join("\n- ")); return; }
+    const defn = buildJSON();
+    if (window.EDITOR_SAVE && window.EDITOR_SAVE.saveDungeon) {
+      setSaveMsg("status-ok", "Salvando em dungeons/…");
+      window.EDITOR_SAVE.saveDungeon(defn).then((res) => {
+        injetarNoCatalogo(res.entry);
+        setSaveMsg("status-ok", "✓ salva em dungeons/" + res.file + " — disponível na aba Campanha");
+      }).catch((err) => {
+        baixarMasmorra(defn);
+        setSaveMsg("status-err", "⚠ servidor offline (" + err.message + ") — baixada em Downloads");
+      });
+    } else {
+      baixarMasmorra(defn);
+    }
   }
 
   document.getElementById("btn-save").onclick = save;
@@ -414,7 +1128,7 @@
   document.getElementById("tab-campanha").onclick = () => setTab("campanha");
 
   // Expor para verificação no console / tasks seguintes.
-  window.EDITOR = { S, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, entityAt, doorLink, doorUnlink, validarEditor, buildJSON, loadJSON, save, updateStatus, WALL, FLOOR, DOOR };
+  window.EDITOR = { S, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, deleteRoom, entityAt, doorLink, doorUnlink, validarEditor, buildJSON, loadJSON, save, updateStatus, WALL, FLOOR, DOOR, decorMeta, decorEffSize, decorTilesAt, decorTiles, rotateFacing, rotateDecorPending, decorFits, placeDecor, decorBaseSize, decorEffSizeOf, decorWouldFit, tilesFor, dropValid, moveSelTo };
 
   initGrid(S.grid.w, S.grid.h);
   buildToolbar();

@@ -16,6 +16,11 @@ const GS = (() => {
   const TILE_FLOOR = 1;
   const TILE_DOOR  = 2;   // porta de sala (transponível só quando aberta)
 
+  // Espelha server.MATERIAIS (campos solido/oclui). Mantido mínimo de propósito:
+  // só ids com efeito precisam constar. Atualize junto com o catálogo do servidor.
+  const MATERIAIS_SOLIDOS = new Set(['entulho']);
+  const MATERIAIS_OPACOS  = new Set(['entulho']);
+
   // ── Internal state ─────────────────────────────────────────────────────────
   let ws              = null;
   let myPid           = null;
@@ -31,6 +36,7 @@ const GS = (() => {
   let activeShop      = null;   // id of the shop currently open in city UI
   let shopTabIdx      = 0;      // active tab index inside shop modal
   let pendingShopOpen = null;   // shop to open once city_state first arrives
+  let guildCatalogCache = [];   // catálogo da Guilda (vem em city_state; cacheado p/ uso na masmorra)
 
   // ── Event callbacks (set by renderer) ─────────────────────────────────────
   const _handlers = {};
@@ -723,10 +729,21 @@ const GS = (() => {
   }
 
   // Tile transponível por pathfinding: chão, ou porta de sala ABERTA.
+  // Material sólido/opaco na casa (x,y), lido do game_state mais recente.
+  function _matSolido(x, y) {
+    const m = gameState && gameState.materiais;
+    return !!(m && MATERIAIS_SOLIDOS.has(m[`${x},${y}`]));
+  }
+  function _matOpaco(x, y) {
+    const m = gameState && gameState.materiais;
+    return !!(m && MATERIAIS_OPACOS.has(m[`${x},${y}`]));
+  }
+
   function _walkable(tiles, x, y, openDoors, occupied) {
     const t = tiles[y]?.[x];
     const onFloor = t === TILE_FLOOR || (t === TILE_DOOR && openDoors.has(`${x},${y}`));
     if (!onFloor) return false;
+    if (_matSolido(x, y)) return false;   // entulho: intransponível como parede
     // Casa ocupada por outra entidade viva é intransponível (espelha o servidor).
     return !(occupied && occupied.has(`${x},${y}`));
   }
@@ -772,7 +789,7 @@ const GS = (() => {
   // através de paredes no cliente (o servidor já recusa, isto evita oferecer).
   function _losBlocks(tiles, closed, x, y) {
     if (y < 0 || x < 0 || y >= tiles.length || x >= tiles[0].length) return true;
-    return tiles[y][x] === TILE_WALL || closed.has(`${x},${y}`);
+    return tiles[y][x] === TILE_WALL || closed.has(`${x},${y}`) || _matOpaco(x, y);
   }
   function hasLineOfSight(state, ax, ay, bx, by) {
     const tiles = state && state.tiles;
@@ -965,6 +982,7 @@ const GS = (() => {
 
       case 'city_state':
         cityState = msg;
+        if (msg.guild && Array.isArray(msg.guild.catalog)) guildCatalogCache = msg.guild.catalog;
         _captarStory(msg);
         if (!myPid) {
           const me = msg.players.find(p => p.name === myName);
@@ -1044,6 +1062,14 @@ const GS = (() => {
         _emit('explosionArea', msg);
         break;
 
+      case 'spell_pick_prompt':
+        _emit('spellPickPrompt', msg);   // {circulo, count, opcoes}
+        break;
+
+      case 'decor_loot':
+        _emit('decor_loot', msg);
+        break;
+
       case 'error':
         _emit('serverError', msg.msg);
         break;
@@ -1060,6 +1086,10 @@ const GS = (() => {
   function useItem(id)     { send({ type: 'use_item',       item_id: id }); }
   function equipFromBag(i) { send({ type: 'equip_from_bag', slot_index: i }); }
   function unequip(key)    { send({ type: 'unequip',        slot_key: key }); }
+  // Magias conhecidas (Pedro/Lewis): escolha de 2 magias de 1º círculo no lobby.
+  function setKnownSpells(ids)       { send({ type: 'set_known_spells', ids }); }
+  // Escolha da nova magia ao subir de nível (responde ao spell_pick_prompt).
+  function escolherMagiaNivel(id)    { send({ type: 'escolher_magia_nivel', magia_id: id }); }
   // Animar Mortos (Pedro): anima um cadáver adjacente (id de gameState.corpses).
   function animarMortos(cadaverId) { send({ type: 'animar_mortos', cadaver_id: cadaverId }); }
   // Comanda os animados (ação bônus do Pedro): cada um move+ataca o monstro mais próximo.
@@ -1067,6 +1097,8 @@ const GS = (() => {
   // Controle manual de UM animado (no turno do Pedro).
   function moverAnimado(animadoId, dx, dy) { send({ type: 'mover_animado', animado_id: animadoId, dx, dy }); }
   function atacarAnimado(animadoId, targetId) { send({ type: 'atacar_animado', animado_id: animadoId, target_id: targetId }); }
+  // Controle manual do prisioneiro liberto (janela pós-turno do resgatador) — 1 passo.
+  function moverPrisioneiro(dx, dy) { send({ type: 'mover_prisioneiro', dx, dy }); }
   // ── Armadilhas (Passo 2) — Luccas cria/desarma armadilhas colocáveis ───────
   // tipo: id em ARMADILHAS (servidor). tx/ty opcionais (default = casa do Luccas).
   // venenoId só para 'fosso_envenenado' (consome 1 frasco da bolsa).
@@ -1077,6 +1109,41 @@ const GS = (() => {
     send(msg);
   }
   function desarmarArmadilha() { send({ type: 'desarmar_armadilha' }); }
+
+  // ── Guilda dos Heróis (Fase 0) ──────────────────────────────────────────
+  function guildBuy(itemId)           { send({ type: 'guild_buy',   item_id: itemId }); }
+  function guildEquip(slot, itemId)   { send({ type: 'guild_equip', slot: slot, item_id: itemId }); }
+  function usarTecnica(tid, targetId) { send({ type: 'usar_tecnica', tecnica_id: tid, target_id: targetId != null ? targetId : null }); }
+  // Getters puros: catálogo filtrado por classe, itens possuídos e equipados
+  // pelo jogador (lidos de cityState.guild), e recarga restante de uma técnica
+  // (lida de game_state.players[].technique_cooldowns + gameState.round).
+  // Catálogo: na cidade vem em cityState.guild; na masmorra usa o cache (cityState=null).
+  function guildCatalogFor(classId) {
+    const catalog = (cityState && cityState.guild && cityState.guild.catalog) || guildCatalogCache || [];
+    return catalog.filter(i => i.classe == null || i.classe === classId);
+  }
+  // Owned/equip: na cidade vêm de cityState.guild.players[pid]; na masmorra caem
+  // para o player do game_state (que carrega guild_owned/guild_equip inteiros).
+  function guildOwnedOf(pid) {
+    const g = (cityState && cityState.guild) || null;
+    if (g && g.players && g.players[pid] && g.players[pid].owned) return g.players[pid].owned;
+    const gp = (gameState && gameState.players || []).find(p => p.id === pid);
+    return (gp && gp.guild_owned) || { especializacoes: [], tecnicas: [] };
+  }
+  function guildEquipOf(pid) {
+    const g = (cityState && cityState.guild) || null;
+    if (g && g.players && g.players[pid] && g.players[pid].equip) return g.players[pid].equip;
+    const gp = (gameState && gameState.players || []).find(p => p.id === pid);
+    return (gp && gp.guild_equip) || { tecnica: null, tecnica_exclusiva: null };
+  }
+  // Recarga restante (em rodadas) de uma técnica, lido do game_state.
+  function tecnicaRestante(player, tid) {
+    const cds = (player && player.technique_cooldowns) || {};
+    const pronta = cds[tid];
+    const round = (gameState && gameState.round) || 1;
+    return pronta ? Math.max(0, pronta - round) : 0;
+  }
+
   // ── Editor de masmorras — seleção de dungeon ─────────────────────────────────
   // file: nome do arquivo da masmorra autoral, ou null para modo procedural.
   function selectDungeon(file) { send({ type: 'select_dungeon', file: file || null }); }
@@ -1107,6 +1174,22 @@ const GS = (() => {
     }) || null;
   }
 
+  // ── Decorações de masmorra ────────────────────────────────────────────────────
+  // Helper puro: retorna a lista de tiles [[x,y],...] ocupados por uma decoração.
+  // Espelha _decor_tiles_at do servidor: o servidor já envia d.tiles resolvido;
+  // se faltar, recalcula pelo size/facing (facing horizontal troca w↔h).
+  function decorTilesOf(d) {
+    if (Array.isArray(d.tiles)) return d.tiles;
+    const [w, h] = d.size || [1, 1];
+    const [ew, eh] = (d.facing && d.facing[0] !== 0) ? [h, w] : [w, h];
+    const out = [];
+    for (let i = 0; i < ew; i++) for (let j = 0; j < eh; j++) out.push([d.pos[0] + i, d.pos[1] + j]);
+    return out;
+  }
+  // Senders: interação com decoração (fonte/loot) e retirada de item de decoração.
+  function interagirDecor(decorId) { send({ type: 'interagir_decor', decor_id: decorId }); }
+  function takeFromDecor(decorId, kind, index) { send({ type: 'take_from_decor', decor_id: decorId, kind, index }); }
+
   // ── Fase 3 (editor de masmorras): objetivos / saída / prisioneiro ─────────────
   // Getters dos campos servidos no game_state (null no procedural).
   function getObjectives() { return (gameState && gameState.objectives) || null; }
@@ -1124,6 +1207,11 @@ const GS = (() => {
   }
   // Sender: herói adjacente liberta o prisioneiro (ação principal no servidor).
   function libertarPrisioneiro() { send({ type: 'libertar_prisioneiro' }); }
+
+  // Há objetivo principal cumprido aguardando o encerramento manual da fase?
+  function missionCompletePending() { return !!(gameState && gameState.mission_complete_pending); }
+  // Sender: encerra a missão (servidor faz a transição cidade/vitória).
+  function encerrarMissao() { send({ type: 'encerrar_missao' }); }
 
   // ── Fase 4a (campanha): estado da campanha em curso + seleção no lobby ────────
   // Getter do payload {name, phase, total} servido no game_state/city_state (null
@@ -1329,6 +1417,8 @@ const GS = (() => {
     get myPid()           { return myPid; },
     get myName()          { return myName; },
     get gameState()       { return gameState; },
+    get decorations()     { return (gameState && gameState.decorations) || []; },
+    get materiais()       { return (gameState && gameState.materiais) || {}; },
     // Jogador local autoritativo (estado mais recente do servidor). Usado pela
     // ficha em jogo (abrirFichaEmJogo) para HP/atributos/CA reais. Mesmo padrão
     // de lookup de getHeroiAtivo; null se ainda não há jogador.
@@ -1346,6 +1436,7 @@ const GS = (() => {
     get exitPos()               { return getExitPos(); },
     get prisoner()              { return getPrisoner(); },
     get prisioneiroLibertavel() { return prisioneiroLibertavel(); },
+    get missionCompletePending() { return missionCompletePending(); },
     // Fase 4a: campanha em curso (property getter — acessado sem parênteses).
     get campaign()              { return getCampaign(); },
     get cityState()       { return cityState; },
@@ -1419,24 +1510,43 @@ const GS = (() => {
     useItem,
     equipFromBag,
     unequip,
+    setKnownSpells,
+    escolherMagiaNivel,
     animarMortos,
     comandarAnimados,
     moverAnimado,
     atacarAnimado,
+    moverPrisioneiro,
     criarArmadilha,
     desarmarArmadilha,
     armadilhaAdjacente,
+
+    // ── Guilda dos Heróis (Fase 0) ──
+    guildBuy,
+    guildEquip,
+    usarTecnica,
+    guildCatalogFor,
+    guildOwnedOf,
+    guildEquipOf,
+    tecnicaRestante,
+
     selectDungeon,
     selectCampaign,        // Fase 4a: sender (chamado com parênteses)
     pendingStory,          // Fase 4b: beat de história pendente (ou null)
     marcarStoryVista,      // Fase 4b: marca um beat como já exibido (de-dup por key)
     libertarPrisioneiro,   // Fase 3: sender (chamado com parênteses)
+    encerrarMissao,        // encerramento manual da missão (chamado com parênteses)
 
     // ── Habilidades armadas do warrior (toggle; custo cobrado na ação) ──
     isWarriorSkillSelected,
     toggleWarriorSkill,
     getWarriorSelected,
     clearWarriorSelected,
+
+    // ── Decorações de masmorra ──
+    decorTilesOf,
+    interagirDecor,
+    takeFromDecor,
 
     // ── Resolvers (no DOM — return data; renderer executes UI work) ──
     resolveAttack,

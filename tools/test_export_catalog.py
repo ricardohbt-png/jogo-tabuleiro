@@ -47,6 +47,15 @@ def main():
     m = re.search(r"window\.EDITOR_CATALOG\s*=\s*(\{.*\});", txt, re.S)
     check("payload é JSON válido", bool(m) and isinstance(json.loads(m.group(1)), dict))
 
+    print("\n[decor] decorações exportadas")
+    check("catálogo tem 'decorations'", "decorations" in cat)
+    check("23 decorações", len(cat.get("decorations", [])) == 23)
+    check("toda decoração tem type/nome/emoji/size/gira/alto/pisavel/loot_capaz/special",
+          all(set(("type", "nome", "emoji", "size", "gira", "alto", "pisavel", "loot_capaz", "special")) <= set(d)
+              for d in cat.get("decorations", [])))
+    check("fonte exportada como fountain",
+          any(d["type"] == "fonte" and d["special"] == "fountain" for d in cat.get("decorations", [])))
+
     test_dungeons_index()
 
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")

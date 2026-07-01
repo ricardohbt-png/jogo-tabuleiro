@@ -1,0 +1,478 @@
+{
+  "schema_version": 1,
+  "id": "teste_basico",
+  "name": "teste_basico",
+  "grid": {
+    "w": 16,
+    "h": 12
+  },
+  "tiles": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      2,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "rooms": [
+    {
+      "id": 0,
+      "x": 9,
+      "y": 0,
+      "w": 7,
+      "h": 6,
+      "role": "monster",
+      "locked": true,
+      "doors": [
+        [
+          8,
+          1
+        ],
+        [
+          8,
+          2
+        ]
+      ]
+    },
+    {
+      "id": 1,
+      "x": 4,
+      "y": 8,
+      "w": 4,
+      "h": 3,
+      "role": "entrance",
+      "locked": false,
+      "doors": []
+    },
+    {
+      "id": 2,
+      "x": 5,
+      "y": 1,
+      "w": 4,
+      "h": 2,
+      "role": "trap",
+      "locked": false,
+      "doors": [
+        [
+          8,
+          1
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ]
+      ]
+    },
+    {
+      "id": 3,
+      "x": 5,
+      "y": 3,
+      "w": 2,
+      "h": 5,
+      "role": "trap",
+      "locked": false,
+      "doors": [
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ]
+      ]
+    }
+  ],
+  "entrance": {
+    "x": 5,
+    "y": 9
+  },
+  "exit": {
+    "x": 7,
+    "y": 10
+  },
+  "monsters": [
+    {
+      "type": "goblin_dual",
+      "pos": [
+        11,
+        2
+      ],
+      "room_id": 0,
+      "boss": true,
+      "target": true
+    },
+    {
+      "type": "goblin_combatente",
+      "pos": [
+        13,
+        1
+      ],
+      "room_id": 0,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "goblin",
+      "pos": [
+        13,
+        1
+      ],
+      "room_id": 0,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "goblin_combatente",
+      "pos": [
+        11,
+        4
+      ],
+      "room_id": 0,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "goblin",
+      "pos": [
+        14,
+        1
+      ],
+      "room_id": 0,
+      "boss": false,
+      "target": false
+    }
+  ],
+  "chests": [
+    {
+      "pos": [
+        5,
+        5
+      ],
+      "gold": 1000,
+      "items": [
+        {
+          "id": "shield"
+        },
+        {
+          "id": "leather"
+        }
+      ],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        6,
+        4
+      ],
+      "gold": 20,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        7,
+        8
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        15,
+        0
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        7,
+        8
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        15,
+        5
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    }
+  ],
+  "traps": [
+    {
+      "tipo": "armadilha_urso",
+      "pos": [
+        5,
+        6
+      ]
+    },
+    {
+      "tipo": "fosso_envenenado",
+      "pos": [
+        6,
+        5
+      ],
+      "veneno_id": "veneno_cobra_cuspidora"
+    },
+    {
+      "tipo": "nuvem_gas",
+      "pos": [
+        6,
+        2
+      ]
+    },
+    {
+      "tipo": "armadilha_incendiaria",
+      "pos": [
+        6,
+        1
+      ]
+    }
+  ],
+  "prisoner": {
+    "pos": [
+      15,
+      5
+    ],
+    "room_id": 0
+  },
+  "objectives": {
+    "primary": {
+      "type": "kill_target"
+    },
+    "secondary": [
+      {
+        "type": "rescue_prisoner"
+      },
+      {
+        "type": "rescue_prisoner"
+      }
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "id": "test_decoracoes",
+  "name": "Teste de Decorações",
+  "grid": { "w": 12, "h": 12 },
+  "tiles": [
+    [0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,1,1,1,1,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0]
+  ],
+  "rooms": [{ "id": 0, "x": 1, "y": 1, "w": 10, "h": 10, "role": "entrance", "locked": false, "doors": [] }],
+  "entrance": { "x": 1, "y": 1 },
+  "exit": null,
+  "prisoner": null,
+  "monsters": [],
+  "chests": [],
+  "traps": [],
+  "decorations": [
+    { "type": "cama", "pos": [2, 2], "facing": [0, 1], "loot": null },
+    { "type": "fonte", "pos": [5, 5], "facing": [0, 1], "loot": null, "charges": 3 },
+    { "type": "fogueira", "pos": [8, 3], "facing": [0, 1], "loot": null },
+    { "type": "arca_tesouros", "pos": [3, 8], "facing": [0, 1], "loot": { "gold": 20, "items": [{ "id": "health_potion" }] } },
+    { "type": "coluna", "pos": [7, 7], "facing": [0, 1], "loot": null }
+  ],
+  "objectives": { "primary": { "type": "kill_all" }, "secondary": [] }
+}

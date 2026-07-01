@@ -8,6 +8,7 @@ Run: python server.py
 """
 
 import asyncio
+import base64
 import websockets
 import json
 import math
@@ -17,6 +18,7 @@ import random
 import string
 import sys
 import time
+import urllib.parse
 from copy import deepcopy
 from websockets.http11 import Response
 from websockets.datastructures import Headers
@@ -28,7 +30,9 @@ FLOOR = 1
 DOOR  = 2
 MAP_W = 30
 MAP_H = 30
-PRIS_HP = 12        # vida do prisioneiro (Fase 3)
+PRIS_HP = 7         # vida do prisioneiro (Fase 3)
+PRIS_AC = 10        # classe de armadura do prisioneiro
+PRIS_MOVE = 6       # quadrados que o prisioneiro liberto anda por turno (segue o resgatador)
 OBJ_BONUS_XP = 50   # XP concedido por objetivo secundário cumprido (Fase 3)
 OBJ_BONUS_OURO = 25 # ouro concedido por objetivo secundário cumprido (Fase 3)
 
@@ -197,6 +201,101 @@ RANGED_AMMO = {
     "hand_crossbow": ["virotes", "virotes_incendiarios"],
 }
 
+# ─── GUILDA DOS HERÓIS — persistência por personagem (Fase 0) ─────────────────
+# Save por class_id (6 personagens fixos), global ao processo. Guarda só posse +
+# equipar da guilda; ouro/HP/nível continuam por-sessão. Ver spec Fase 0 §5.
+GUILD_SAVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "saves")
+
+# Trava global: personagem em uso não pode ser escolhido em outra sala.
+CHARACTERS_IN_USE = {}   # class_id -> room code
+
+def guild_save_path(class_id):
+    return os.path.join(GUILD_SAVE_DIR, f"{class_id}.json")
+
+def _guild_empty():
+    return {"especializacoes": [], "tecnicas": [],
+            "equip": {"tecnica": None, "tecnica_exclusiva": None}}
+
+def load_guild_save(class_id):
+    """Lê o save do personagem. Ausente/corrompido/forma inesperada → estrutura vazia (sem crash)."""
+    try:
+        with open(guild_save_path(class_id), "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            raise ValueError("save não é um objeto JSON")
+        especializacoes = data.get("especializacoes", [])
+        tecnicas = data.get("tecnicas", [])
+        if not isinstance(especializacoes, list) or not isinstance(tecnicas, list):
+            raise ValueError("campos de guilda com tipo inesperado")
+        eq = data.get("equip", {})
+        if not isinstance(eq, dict):
+            eq = {}
+        return {
+            "especializacoes": list(especializacoes),
+            "tecnicas": list(tecnicas),
+            "equip": {"tecnica": eq.get("tecnica"),
+                      "tecnica_exclusiva": eq.get("tecnica_exclusiva")},
+        }
+    except FileNotFoundError:
+        return _guild_empty()
+    except Exception as e:
+        print(f"[guild] save de {class_id} inválido ({e}); começando vazio")
+        return _guild_empty()
+
+def write_guild_save(player):
+    """Grava guild_owned/guild_equip de forma atômica (.tmp + replace)."""
+    class_id = player.get("class_id")
+    if not class_id:
+        return
+    os.makedirs(GUILD_SAVE_DIR, exist_ok=True)
+    data = {
+        "class_id": class_id,
+        "especializacoes": list(player["guild_owned"]["especializacoes"]),
+        "tecnicas": list(player["guild_owned"]["tecnicas"]),
+        "equip": {"tecnica": player["guild_equip"]["tecnica"],
+                  "tecnica_exclusiva": player["guild_equip"]["tecnica_exclusiva"]},
+    }
+    path = guild_save_path(class_id)
+    tmp = path + ".tmp"
+    try:
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        os.replace(tmp, path)
+    except OSError as e:
+        print(f"[guild] falha ao gravar save de {class_id} ({e})")
+
+def apply_guild_save(player):
+    """Popula guild_owned/guild_equip do jogador a partir do save do personagem."""
+    s = load_guild_save(player["class_id"])
+    player["guild_owned"]["especializacoes"] = s["especializacoes"]
+    player["guild_owned"]["tecnicas"] = s["tecnicas"]
+    player["guild_equip"]["tecnica"] = s["equip"]["tecnica"]
+    player["guild_equip"]["tecnica_exclusiva"] = s["equip"]["tecnica_exclusiva"]
+
+# ─── GUILDA DOS HERÓIS — catálogo declarativo (Fase 0) ────────────────────────
+# Estilo GRIMORIO/DECOR_TYPES. categoria: "tecnica" | "especializacao".
+# classe: None = todas; ou class_id. exclusiva: técnica exclusiva Mago/Clérigo.
+# efeito: descrito por dados; casos complexos usam {"tipo":"hook","handler":...}.
+GUILD_CATALOG = {
+    "brutalidade": {
+        "id": "brutalidade", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 120, "custo_fome": 2, "custo_sede": 2, "recarga_rodadas": 3,
+        "nome": "Brutalidade", "icon": "🪓",
+        "desc": "Até o fim do turno, ataques físicos com arma causam +2 de dano.",
+        "efeito": {"tipo": "buff_turno", "bonus_dano_arma": 2},
+    },
+    # Fases 1-2 acrescentam aqui.
+}
+
+def guild_item(item_id):
+    return GUILD_CATALOG.get(item_id)
+
+def guild_items_for_class(class_id):
+    """Itens do catálogo disponíveis para uma classe (cópias para envio)."""
+    return [dict(v) for v in GUILD_CATALOG.values()
+            if v["classe"] is None or v["classe"] == class_id]
+
 # ─── CHARACTER CLASSES ────────────────────────────────────────────────────────
 
 CLASSES = {
@@ -242,7 +341,7 @@ CLASSES = {
     },
     "mage": {
         "name": "Pedro, o Tímido", "emoji": "🔮", "color": "#9b59b6",
-        "hp": 7, "mp": 22, "spd": 5, "start_gold": 20,
+        "hp": 7, "mp": 0, "max_mp": 0, "spd": 5, "start_gold": 20,   # Pedro não usa MP — magias custam SLOTS por círculo (ver MAGE_SLOTS) + fome/sede
         "str_": 8, "dex": 12, "con_": 12, "int_": 18,
         "ac_base": 11, "weapon": "cajado_madeira", "atk_bonus": -1,  # BAB 0 + FOR mod(8)=-1; ac_base 11=10+manto+1 | Pedro: Cajado (1d6 FOR)
         "saves_base": {"fort": 0, "ref": 0, "will": 2},       # Von bom, Fort/Ref ruins
@@ -1450,7 +1549,6 @@ MONSTER_DEFS = [
 CHEST_ITEMS = [
     # ── Consumíveis (vão para a mochila, max 6 slots) ──
     {"id": "health_potion", "name": "Poção de Vida",     "emoji": "🧪", "item_slot": "bag",       "effect": "heal",      "value": 10},
-    {"id": "mana_potion",   "name": "Poção de Mana",     "emoji": "💙", "item_slot": "bag",       "effect": "mana",      "value": 8},
     {"id": "elixir",        "name": "Elixir da Força",   "emoji": "⚗️", "item_slot": "bag",       "effect": "atk_bonus", "value": 3},
     {"id": "antidote",      "name": "Antídoto",          "emoji": "💚", "item_slot": "bag",       "effect": "heal",      "value": 6},
     {"id": "garrafa_vinho", "name": "Garrafa de Vinho",  "emoji": "🍷", "item_slot": "bag",       "effect": "wine",      "value": 15},
@@ -1544,7 +1642,6 @@ SHOP_ARMORS = [
 
 SHOP_MERCHANT = [
     {"id": "health_potion", "name": "Poção de Cura",    "emoji": "🧪",  "price": 8,  "item_slot": "bag",   "effect": "heal",      "value": 10},
-    {"id": "mana_potion",   "name": "Poção de Mana",    "emoji": "💙",  "price": 8,  "item_slot": "bag",   "effect": "mana",      "value": 8},
     {"id": "elixir",        "name": "Elixir da Força",  "emoji": "⚗️", "price": 12, "item_slot": "bag",   "effect": "atk_bonus", "value": 3},
     {"id": "antidote",      "name": "Antídoto",          "emoji": "💚",  "price": 5,  "item_slot": "bag",   "effect": "heal",      "value": 6},
     {"id": "vela_escuridao","name": "Vela da Escuridão", "emoji": "🕯️", "price": 50, "item_slot": "bag",   "effect": "veil_shadow","value": 0},
@@ -1724,7 +1821,8 @@ def validar_dungeon(defn):
             return False, f"monstro tipo desconhecido: {mo.get('type')!r}."
         if not in_grid(mo.get("pos")) or tile_at(mo["pos"]) == WALL:
             return False, f"monstro em casa inválida: {mo.get('pos')}."
-        if mo.get("room_id") not in room_ids:
+        # room_id vazio/None é válido (monstro "sem sala") — espelha o editor.
+        if mo.get("room_id") is not None and mo.get("room_id") not in room_ids:
             return False, f"monstro com room_id inexistente: {mo.get('room_id')!r}."
 
     chests = _as_list("chests")
@@ -1756,6 +1854,8 @@ def validar_dungeon(defn):
             return False, f"armadilha em casa inválida: {tr.get('pos')}."
         if tr["tipo"] == "fosso_envenenado" and tr.get("veneno_id") not in VENENOS:
             return False, f"fosso_envenenado exige veneno_id válido: {tr.get('veneno_id')!r}."
+        if tr.get("image") is not None and not isinstance(tr.get("image"), str):
+            return False, "trap.image deve ser uma string (nome do arquivo em assets/objetos)."
 
     pr = defn.get("prisoner")
     if pr is not None:
@@ -1763,8 +1863,10 @@ def validar_dungeon(defn):
             return False, "prisoner deve ser um objeto JSON."
         if not in_grid(pr.get("pos")) or tile_at(pr["pos"]) == WALL:
             return False, f"prisioneiro em casa inválida: {pr.get('pos')}."
-        if pr.get("room_id") not in room_ids:
+        if pr.get("room_id") is not None and pr.get("room_id") not in room_ids:
             return False, f"prisioneiro com room_id inexistente: {pr.get('room_id')!r}."
+        if pr.get("image") is not None and not isinstance(pr.get("image"), str):
+            return False, "prisoner.image deve ser uma string (caminho do arquivo)."
 
     ex = defn.get("exit")
     if ex is not None and not in_grid([ex.get("x"), ex.get("y")]):
@@ -1772,6 +1874,98 @@ def validar_dungeon(defn):
 
     if _contar_chao_alcancavel(tiles, w, h, [ent["x"], ent["y"]], limite=6) < 6:
         return False, "menos de 6 casas de chão alcançáveis a partir da entrada."
+
+    decors = defn.get("decorations", [])
+    if not isinstance(decors, list):
+        return False, "decorations deve ser uma lista."
+    grid_w = defn["grid"]["w"]; grid_h = defn["grid"]["h"]
+    ocupadas = set()
+    for de in decors:
+        if not isinstance(de, dict):
+            return False, "cada decoração deve ser um objeto JSON."
+        dtype = de.get("type")
+        meta = DECOR_TYPES.get(dtype)
+        if not meta:
+            return False, f"decoração tipo desconhecido: {dtype!r}."
+        pos = de.get("pos")
+        if not (isinstance(pos, list) and len(pos) == 2 and in_grid(pos)):
+            return False, f"decoração com pos inválida: {pos!r}."
+        facing = de.get("facing")
+        if facing is None:
+            facing = [0, 1]
+        elif not (isinstance(facing, list) and len(facing) == 2
+                  and all(isinstance(c, int) and not isinstance(c, bool) for c in facing)):
+            return False, f"decoração com facing inválido: {facing!r}."
+        # Footprint efetivo: usa o override por-objeto `size` quando presente
+        # (espelha _decor_base_size / o editor), senão o tamanho do catálogo.
+        ov = de.get("size")
+        if isinstance(ov, list) and len(ov) == 2 \
+           and all(isinstance(c, int) and not isinstance(c, bool) and c >= 1 for c in ov):
+            w_d, h_d = ov
+        else:
+            w_d, h_d = meta["size"]
+        ew, eh = (h_d, w_d) if (facing and facing[0] != 0) else (w_d, h_d)
+        # Chão (special:floor) é camada de PISO: pode coexistir com qualquer objeto
+        # na mesma casa (não conta como ocupação). Dois objetos não-piso ainda não
+        # podem se sobrepor.
+        is_floor = (meta["special"] == "floor")
+        for i in range(ew):
+            for j in range(eh):
+                tx, ty = pos[0] + i, pos[1] + j
+                if not (0 <= tx < grid_w and 0 <= ty < grid_h):
+                    return False, f"decoração {dtype} fora do grid em ({tx},{ty})."
+                if tile_at([tx, ty]) != FLOOR:
+                    return False, f"decoração {dtype} precisa estar sobre chão em ({tx},{ty})."
+                if not is_floor:
+                    if (tx, ty) in ocupadas:
+                        return False, f"decorações sobrepostas em ({tx},{ty})."
+                    ocupadas.add((tx, ty))
+        loot = de.get("loot")
+        if loot is not None:
+            if not meta["loot_capaz"]:
+                return False, f"decoração {dtype} não pode conter loot."
+            gold = loot.get("gold", 0)
+            if isinstance(gold, bool) or not isinstance(gold, (int, float)) or gold < 0:
+                return False, "decoração com gold inválido."
+            for it in (loot.get("items") or []):
+                if not isinstance(it, dict) or it.get("id") not in _DUNGEON_ITEM_CATALOG:
+                    return False, f"item de loot inválido: {it!r}."
+        if meta["special"] == "fountain":
+            ch = de.get("charges", 0)
+            if isinstance(ch, bool) or not isinstance(ch, int) or ch < 0:
+                return False, "fonte com charges inválido."
+        img = de.get("image")
+        if img is not None:
+            if not isinstance(img, str) or os.path.basename(img) != img \
+               or not img.lower().endswith(".png") or "\x00" in img:
+                return False, f"decoração com image inválida: {img!r}."
+            if not os.path.isfile(os.path.join(OBJETOS_DIR, img)):
+                return False, f"image inexistente em assets/objetos: {img!r}."
+
+    mats = defn.get("materiais")
+    if mats is not None:
+        if not isinstance(mats, dict):
+            return False, "materiais deve ser um objeto (mapa 'x,y' -> id)."
+        for key, mid in mats.items():
+            meta = MATERIAIS.get(mid)
+            if meta is None:
+                return False, f"material desconhecido: {mid!r}."
+            if not isinstance(key, str):
+                return False, f"chave de material inválida: {key!r}."
+            partes = key.split(",")
+            if len(partes) != 2:
+                return False, f"chave de material inválida: {key!r} (esperado 'x,y')."
+            try:
+                mx, my = int(partes[0]), int(partes[1])
+            except ValueError:
+                return False, f"chave de material inválida: {key!r} (esperado 'x,y')."
+            if not (0 <= mx < w and 0 <= my < h):
+                return False, f"material fora do grid em {key!r}."
+            t = tiles[my][mx]
+            if meta["categoria"] == "piso" and t not in (FLOOR, DOOR):
+                return False, f"material de piso {mid!r} em casa não-chão ({mx},{my})."
+            if meta["categoria"] == "parede" and t != WALL:
+                return False, f"material de parede {mid!r} em casa não-parede ({mx},{my})."
 
     return True, "ok"
 
@@ -1807,6 +2001,8 @@ def make_authored_trap(tdef):
     }
     if tipo == "fosso_envenenado":
         arm["veneno_id"] = tdef.get("veneno_id")
+    if tdef.get("image"):
+        arm["image"] = tdef["image"]   # PNG opcional (assets/objetos) — só some quando revelada
     return arm
 
 def carregar_dungeon(file):
@@ -1865,6 +2061,74 @@ def _fase_obj(item):
         return {"file": item.get("file"), "intro": item.get("intro", ""), "outro": item.get("outro", "")}
     return {"file": None, "intro": "", "outro": ""}
 
+def _story_norm(val):
+    """Normaliza um campo de história para {'slides': [...], 'audio': str|None}.
+    Aceita string (legado = 1 slide de texto), objeto {'slides','audio'} ou vazio.
+    Slides sem text nem image são descartados; fit default 'cover'."""
+    if not val:
+        return {"slides": [], "audio": None}
+    if isinstance(val, str):
+        return {"slides": [{"text": val}], "audio": None}
+    if isinstance(val, dict):
+        out = []
+        for s in (val.get("slides") or []):
+            if not isinstance(s, dict):
+                continue
+            slide = {}
+            if isinstance(s.get("text"), str) and s["text"]:
+                slide["text"] = s["text"]
+            if isinstance(s.get("image"), str) and s["image"]:
+                slide["image"] = s["image"]
+            if not slide:
+                continue
+            slide["fit"] = "contain" if s.get("fit") == "contain" else "cover"
+            out.append(slide)
+        audio = val.get("audio")
+        audio = audio if (isinstance(audio, str) and audio) else None
+        return {"slides": out, "audio": audio}
+    return {"slides": [], "audio": None}
+
+
+def _story_beat(key, parts):
+    """parts: lista de campos de história (string|objeto) na ORDEM de exibição.
+    Retorna {'key','slides','audio'} ou None se não houver slides. O áudio é o
+    primeiro não-nulo encontrado na ordem das partes."""
+    slides, audio = [], None
+    for p in parts:
+        n = _story_norm(p)
+        slides.extend(n["slides"])
+        if audio is None and n["audio"]:
+            audio = n["audio"]
+    if not slides:
+        return None
+    return {"key": key, "slides": slides, "audio": audio}
+
+
+def _validar_story(val, rotulo):
+    """(ok, msg) — aceita string (legado) ou objeto {'slides':[...], 'audio'?}."""
+    if isinstance(val, str):
+        return True, "ok"
+    if not isinstance(val, dict):
+        return False, f"{rotulo}: deve ser texto ou objeto de história."
+    slides = val.get("slides")
+    if not isinstance(slides, list):
+        return False, f"{rotulo}: 'slides' deve ser uma lista."
+    for j, s in enumerate(slides):
+        if not isinstance(s, dict):
+            return False, f"{rotulo}: slide {j+1} deve ser um objeto."
+        if "text" in s and not isinstance(s["text"], str):
+            return False, f"{rotulo}: slide {j+1} 'text' deve ser texto."
+        if "image" in s and not isinstance(s["image"], str):
+            return False, f"{rotulo}: slide {j+1} 'image' deve ser texto."
+        if "fit" in s and s["fit"] not in ("cover", "contain"):
+            return False, f"{rotulo}: slide {j+1} 'fit' deve ser 'cover' ou 'contain'."
+        if not (s.get("text") or s.get("image")):
+            return False, f"{rotulo}: slide {j+1} precisa de texto ou imagem."
+    if "audio" in val and not isinstance(val["audio"], str):
+        return False, f"{rotulo}: 'audio' deve ser texto."
+    return True, "ok"
+
+
 def validar_campanha(defn):
     """Valida um dict de campanha. Retorna (ok: bool, msg: str). Cada fase deve
     existir em dungeons/ e passar em validar_dungeon."""
@@ -1876,16 +2140,20 @@ def validar_campanha(defn):
     if not (isinstance(dungeons, list) and len(dungeons) >= 1):
         return False, "campanha precisa de ao menos uma masmorra em 'dungeons'."
     for k in ("intro", "outro"):
-        if k in defn and not isinstance(defn[k], str):
-            return False, f"campanha: '{k}' deve ser texto."
+        if k in defn:
+            ok, msg = _validar_story(defn[k], f"campanha '{k}'")
+            if not ok:
+                return False, msg
     for i, item in enumerate(dungeons):
         file = _fase_file(item)
         if not isinstance(file, str) or not file:
             return False, f"fase {i+1}: precisa de um 'file' (string)."
         if isinstance(item, dict):
             for k in ("intro", "outro"):
-                if k in item and not isinstance(item[k], str):
-                    return False, f"fase {i+1}: '{k}' deve ser texto."
+                if k in item:
+                    ok, msg = _validar_story(item[k], f"fase {i+1} '{k}'")
+                    if not ok:
+                        return False, msg
         d = carregar_dungeon(file)
         if d is None:
             return False, f"fase {i+1}: masmorra '{file}' não encontrada."
@@ -1983,9 +2251,70 @@ ARMADILHAS = {
     },
 }
 
+# ─── DECORAÇÕES DE MASMORRA ──────────────────────────────────────────────────
+# Objetos colocáveis no editor. size=[w,h] no facing canônico (vertical).
+# gira: rotação 90°. alto: oclui a revelação de névoa (raycast). pisavel: não
+# bloqueia movimento (só a fogueira). loot_capaz: pode conter ouro/itens (abre
+# como baú). special: None|"fountain"|"campfire".
+def _decor(nome, emoji, size, gira=False, alto=False, pisavel=False,
+           loot_capaz=True, special=None):
+    return {"nome": nome, "emoji": emoji, "size": size, "gira": gira,
+            "alto": alto, "pisavel": pisavel, "loot_capaz": loot_capaz,
+            "special": special}
+
+DECOR_TYPES = {
+    "cama":           _decor("Cama", "🛏️", [1, 2], gira=True),
+    "lareira":        _decor("Lareira", "🪵", [1, 2], gira=True),
+    "fonte":          _decor("Fonte", "⛲", [2, 2], special="fountain"),
+    "fogueira":       _decor("Fogueira", "🔥", [1, 1], pisavel=True, loot_capaz=False, special="campfire"),
+    "tumba":          _decor("Tumba", "⚰️", [1, 2], gira=True),
+    "mesa_cadeiras":  _decor("Mesa com cadeiras", "🪑", [1, 2], gira=True),
+    "estante":        _decor("Estante", "🗄️", [1, 2], gira=True, alto=True),
+    "carroca":        _decor("Carroça", "🛒", [2, 2], gira=True),
+    "coluna":         _decor("Coluna de pedra", "🏛️", [1, 1], alto=True),
+    "barril":         _decor("Barril", "🛢️", [1, 1]),
+    "arca_tesouros":  _decor("Arca de tesouros", "💰", [1, 1]),
+    "cama_casal":     _decor("Cama de casal", "🛌", [2, 2], gira=True),
+    "estante_livros": _decor("Estante de livros", "📚", [1, 2], gira=True, alto=True),
+    "altar":          _decor("Altar ritualístico", "🛐", [2, 2], gira=True),
+    "trono":          _decor("Trono de rei", "👑", [1, 1], gira=True),
+    "gaiola":         _decor("Gaiola com esqueleto", "⛓️", [1, 1]),
+    "grades_prisao":  _decor("Grades de prisão", "🚧", [1, 1], gira=True),
+    "estante_armas":  _decor("Estante de armas", "⚔️", [1, 2], gira=True, alto=True),
+    "mesa_tortura":   _decor("Mesa de tortura", "🔪", [1, 2], gira=True),
+    "mesa_quimica":   _decor("Mesa de química", "🧪", [1, 2], gira=True),
+    "arvore":         _decor("Árvore", "🌳", [1, 1], alto=True),
+    "arvore_grande":  _decor("Árvore grande", "🌲", [2, 2], alto=True),
+    "chao":           _decor("Chão (grama)", "🌿", [1, 1], pisavel=True, loot_capaz=False, special="floor"),
+}
+
+# ─── MATERIAIS DE CHÃO E PAREDE ──────────────────────────────────────────────
+# Camada por-casa pintável no editor (game_state.materiais, mapa "x,y"->id).
+# categoria: "piso" (válido em FLOOR/DOOR) ou "parede" (válido em WALL).
+# solido: bloqueia movimento (espelhado no cliente). oclui: barra visão/névoa.
+# cor: swatch do editor (a paleta rica de render vive no cliente). Pisos
+# coloridos são cosméticos; só "entulho" tem efeito. Campos de efeito futuros
+# (custo_mov, save_ao_entrar) entram aqui sem mudar o schema.
+def _mat(nome, categoria, cor, solido=False, oclui=False):
+    return {"nome": nome, "categoria": categoria, "cor": cor,
+            "solido": solido, "oclui": oclui}
+
+MATERIAIS = {
+    "pedra_cinza":   _mat("Pedra cinza", "piso", "#6f6f78"),
+    "terra":         _mat("Terra", "piso", "#6b4f33"),
+    "grama":         _mat("Grama", "piso", "#3f6b2f"),
+    "pedra_negra":   _mat("Pedra negra", "piso", "#23232a"),
+    "entulho":       _mat("Entulho", "piso", "#4a4640", solido=True, oclui=True),
+    "pedra_normal":  _mat("Pedra normal", "parede", "#5a5a6a"),
+    "enegrecida":    _mat("Pedra enegrecida", "parede", "#2c2b30"),
+    "pedra_caverna": _mat("Pedra de caverna", "parede", "#4d4338"),
+    "desmoronada":   _mat("Parede desmoronada", "parede", "#534b40"),
+}
+MATERIAIS_PISO_DEFAULT = "pedra_cinza"
+MATERIAIS_PAREDE_DEFAULT = "pedra_normal"
+
 SHOP_TEMPLE = [
     {"id": "full_heal", "name": "Cura Completa",  "emoji": "💖",  "price": 15, "effect": "full_heal"},
-    {"id": "full_mana", "name": "Restaurar Mana", "emoji": "🔷",  "price": 10, "effect": "full_mana"},
     {"id": "bless",     "name": "Bênção Divina",  "emoji": "✨",  "price": 12, "effect": "bless",    "value": 2},
     {"id": "cleanse",   "name": "Purificação",    "emoji": "🕊️", "price": 8,  "effect": "cleanse"},
 ]
@@ -2003,6 +2332,7 @@ SHOP_TAVERN = [
     {"id": "racao_viagem",   "name": "Ração de Viagem",  "emoji": "🥩", "price": 20, "item_slot": "bag", "effect": "food", "fome": 20, "sede": 0},
     {"id": "cantil_agua",    "name": "Cantil de Água",   "emoji": "🧴", "price": 25, "item_slot": "bag", "effect": "food", "fome": 0,  "sede": 20},
 ]
+_TAVERN_BY_ID = {i["id"]: i for i in SHOP_TAVERN}
 
 # ─── GM NARRATION ─────────────────────────────────────────────────────────────
 
@@ -2174,12 +2504,11 @@ def player_room(rooms, px, py):
 #   • atributos do caster são scores brutos (int_) — bônus via mod(p["int_"])
 #   • self.monsters é dict (itera .values()); posições são pos:[x,y] (não tx/ty)
 #   • saves via _testar_save (tupla); INT, fome/sede 0–10, log via gm_say
-#   • custo = MP do círculo (CIRCULO_MP) + 🍖/💧 de sobrevivência da ação
+#   • custo = SLOT do círculo (Pedro/Lewis não usam MP) + 🍖/💧 da ação
 #   • zonas (escuridão/silêncio) vivem em self.zonas_especiais e ticam por rodada
 #
 # FUNDAÇÃO: por ora apenas o sistema de escuridão/visão está conjurável
 # (GRIMORIO_IMPLEMENTADAS). As demais magias entram nos próximos prompts.
-CIRCULO_MP = {"primeiro": 1, "segundo": 2, "terceiro": 3}
 
 # ─── PERGAMINHOS MÁGICOS ───────────────────────────────────────────────────────
 # Item de uso único que guarda UMA magia do grimório. Só mago/clérigo usam.
@@ -2193,18 +2522,27 @@ PERGAMINHO_NIVEL_MAX     = 5    # a escala de dano/alcance satura no nível 5
 PERGAMINHO_INT_MAX       = 5    # bônus de INT máximo (INT 20)
 PERGAMINHO_FALHA_MAX     = 95   # teto da chance de falha / efeito nocivo (sempre 5% de chance)
 
-# Lewis (cleric) NÃO usa MP — suas magias custam SLOTS por círculo (magias por dia).
-# MODO DE TESTE: todos os círculos liberados desde o nível 1 e com folga de slots,
-# para que todas as magias possam ser testadas agora (ignora requisito de nível).
-# Os slots são resetados no início de cada turno do clérigo (ver _start de turno).
-CLERIC_SLOTS = {"primeiro": 9, "segundo": 9, "terceiro": 9}
+# Magos (Pedro) e clérigos (Lewis) NÃO usam MP. Cada magia custa 1 SLOT do seu
+# círculo + 🍖-1/💧-1. Slots regeneram por rodadas (timer independente por slot).
+# Tabela única para as duas classes. Nível 6+ = cap no nível 5 (TODO: estender).
+SLOTS_POR_NIVEL = {
+    1: {"primeiro": 2, "segundo": 0, "terceiro": 0},
+    2: {"primeiro": 3, "segundo": 0, "terceiro": 0},
+    3: {"primeiro": 3, "segundo": 1, "terceiro": 0},
+    4: {"primeiro": 3, "segundo": 2, "terceiro": 0},
+    5: {"primeiro": 3, "segundo": 2, "terceiro": 1},
+}
+# Rodadas para um slot gasto regenerar, por círculo.
+SLOT_REGEN = {"primeiro": 10, "segundo": 15, "terceiro": 20}
+# Ao SUBIR para este nível, o jogador escolhe 1 nova magia conhecida do círculo.
+NIVEL_NOVA_MAGIA = {2: "primeiro", 3: "segundo", 4: "segundo", 5: "terceiro"}
+
+def slots_max_para(p):
+    """Máximo de slots por círculo do jogador, pela tabela de nível (cap no 5)."""
+    nivel = min(max(p.get("level", 1), 1), 5)
+    return SLOTS_POR_NIVEL[nivel]
 
 # Magias cuja lógica já está implementada (as demais retornam "em desenvolvimento").
-# ⚠️ MODO TESTE: Pedro (mage) lança QUALQUER magia do grimório ignorando classe,
-# círculo/nível, MP/slots, custo de 🍖/💧 e o limite de 1 ação por turno. Para testar
-# o grimório livremente. Defina False para voltar ao comportamento normal.
-MAGE_TESTE_LIVRE = False
-
 GRIMORIO_IMPLEMENTADAS = {"manto_escuridao", "visao_escuro",
                           "bola_fogo", "relampago", "raio_congelante",
                           "saciar", "criar_alimentos", "clarividencia", "raio_divino",
@@ -2646,6 +2984,11 @@ def make_player(pid, name, cls_id, slot):
         "moved_this_turn": False,     # caminhar custa -1 sede só na 1ª casa do turno
         "slot": slot,
         "skills": cls["skills"],
+        # ── Guilda dos Heróis (Fase 0) ──────────────────────────────────────
+        "guild_owned": {"especializacoes": [], "tecnicas": []},   # ids comprados (persistido)
+        "guild_equip": {"tecnica": None, "tecnica_exclusiva": None},  # equipado (persistido)
+        "technique_cooldowns": {},          # { tecnica_id: pronta_em_round } — runtime
+        "tecnica_buff_dano_arma": 0,        # Brutalidade: +N dano de arma até fim do turno
         # Buffs de turno do warrior (flags planas) — limpos em handle_end_turn
         "skill_bonus_acerto": 0,
         "skill_dobrar_dano":  False,
@@ -2674,9 +3017,10 @@ def make_player(pid, name, cls_id, slot):
         "detectar_ativo":      False,  # Detectar Armadilhas ativa (manutenção 💧-1)
         "weapon_poison":       None,   # veneno untado na arma (Veneno Rápido / coat_poison)
         "weapon_poison_hits":  0,      # golpes certeiros restantes com veneno
-        # ── Magias de Lewis (cleric) — slots por círculo (não usa MP) ──────────────
-        "magias_usadas_hoje":  {"primeiro": 0, "segundo": 0, "terceiro": 0},
-        "magias_conhecidas":   [],     # ids do GRIMORIO memorizados (vazio = todas da classe)
+        # ── Magias (Pedro/mage, Lewis/cleric) — magias conhecidas + slots c/ regen ──
+        "magias_conhecidas":   [],     # ids do GRIMORIO escolhidos (obrigatório p/ lançar)
+        "slots_cooldown":      {"primeiro": [], "segundo": [], "terceiro": []},  # ready_at por slot gasto
+        "pending_spell_pick":  [],     # fila de círculos a escolher ao subir de nível
     }
 
 def make_monster(mdef, room):
@@ -2949,6 +3293,9 @@ class GameRoom:
         self.mode = "procedural"          # "procedural" | "authored"
         self.selected_dungeon = None      # nome do arquivo em dungeons/ (modo authored)
         self.dungeon_def = None           # dict cru da masmorra autorada carregada
+        # Preset de iluminação do 3D no cliente ("penumbra"|"masmorra"|"ar_livre").
+        # Procedural usa o padrão; masmorra autorada sobrescreve em load_authored_dungeon.
+        self.ambiente = "masmorra"
         # Fase 3 — objetivos/prisioneiro/saída (só em masmorra autorada).
         self.exit_pos = None
         self.objectives = None
@@ -2956,6 +3303,7 @@ class GameRoom:
         self.prisoner = None
         self.rescue_failed = False
         self._objetivo_concluido = False
+        self.mission_complete_pending = False
         # Fase 4a — campanha.
         self.campaign = None         # dict carregado (modo "campaign")
         self.campaign_phase = 0      # índice da fase atual em campaign["dungeons"]
@@ -2989,6 +3337,13 @@ class GameRoom:
         self.taunted = None     # pid who has taunt active
         self.chests  = {}       # chest_id -> chest dict (persistent world loot)
         self.shop_scrolls = []  # pergaminhos à venda no mercador (renovados por visita à cidade)
+        self.decorations = []
+        self._decor_block_tiles = set()
+        self._decor_tall_tiles = set()
+        self._campfire_tiles = set()
+        self.materiais = {}            # {(x,y): material_id} — camada de piso/parede
+        self._mat_solid_tiles = set()  # casas de material sólido (entulho) — bloqueia
+        self._mat_oclui_tiles = set()  # casas de material opaco (entulho) — barra visão
 
     # ── broadcast helpers ──────────────────────────────────────────────────
 
@@ -3048,14 +3403,63 @@ class GameRoom:
     async def select_class(self, pid, cls_id):
         if cls_id not in CLASSES:
             return
-        # Check not taken
+        # Não tomado na sala
         taken = [p["class_id"] for p in self.players.values() if p["id"] != pid]
         if cls_id in taken:
             await self.send_to(pid, {"type": "error", "msg": "Classe já escolhida por outro jogador."})
             return
+        # Trava global: personagem em uso em OUTRA sala
+        dono = CHARACTERS_IN_USE.get(cls_id)
+        if dono and dono != self.code:
+            await self.send_to(pid, {"type": "error",
+                "msg": f"{CLASSES[cls_id]['name']} já está em uso em outra sala."})
+            return
+        # Libera o personagem anterior deste jogador (se trocou de classe)
+        prev = self.players[pid].get("class_id")
+        if prev and prev != cls_id and CHARACTERS_IN_USE.get(prev) == self.code:
+            del CHARACTERS_IN_USE[prev]
+        CHARACTERS_IN_USE[cls_id] = self.code
         self.players[pid]["class_id"] = cls_id
         self.players[pid]["ready"] = True
         await self.broadcast_lobby()
+
+    async def handle_set_known_spells(self, pid, ids):
+        """Lobby: mago/clérigo escolhe 2 magias de 1º círculo da própria classe."""
+        p = self.players.get(pid)
+        if not p or self.phase != "lobby":
+            return
+        if p.get("class_id") not in ("mage", "cleric"):
+            await self.send_to(pid, {"type": "error", "msg": "Sua classe não escolhe magias."}); return
+        ids = list(dict.fromkeys(ids or []))   # remove duplicatas, preserva ordem
+        if len(ids) != 2:
+            await self.send_to(pid, {"type": "error", "msg": "Escolha exatamente 2 magias de 1º círculo."}); return
+        for mid in ids:
+            m = GRIMORIO.get(mid)
+            if not m or p["class_id"] not in m.get("classe", []) or m.get("circulo") != "primeiro":
+                await self.send_to(pid, {"type": "error", "msg": "Magia inválida para sua classe/círculo."}); return
+        p["magias_conhecidas"] = ids
+        await self.broadcast_lobby()
+
+    async def handle_escolher_magia_nivel(self, pid, magia_id):
+        """Resolve a escolha de nova magia pendente (1 item da fila por vez)."""
+        p = self.players.get(pid)
+        if not p:
+            return
+        fila = p.get("pending_spell_pick") or []
+        if not fila:
+            await self.send_to(pid, {"type": "error", "msg": "Nenhuma escolha de magia pendente."}); return
+        circ = fila[0]
+        m = GRIMORIO.get(magia_id)
+        if not m or p["class_id"] not in m.get("classe", []) or m.get("circulo") != circ:
+            await self.send_to(pid, {"type": "error", "msg": "Magia inválida para este círculo/classe."}); return
+        if magia_id in p.get("magias_conhecidas", []):
+            await self.send_to(pid, {"type": "error", "msg": "Você já conhece essa magia."}); return
+        p.setdefault("magias_conhecidas", []).append(magia_id)
+        fila.pop(0)
+        await self.gm_say(f"📖 **{p['name']}** aprendeu **{m['nome']}**!")
+        if fila:
+            await self._enviar_spell_pick_prompt(p)   # próxima da fila
+        await self.push_state()
 
     async def broadcast_lobby(self):
         await self.broadcast({
@@ -3127,11 +3531,18 @@ class GameRoom:
         if not all(p["class_id"] for p in self.players.values()):
             await self.send_to(pid, {"type": "error", "msg": "Todos devem escolher uma classe."})
             return
+        for pp in self.players.values():
+            if pp["class_id"] in ("mage", "cleric") and len(pp.get("magias_conhecidas", [])) < 2:
+                await self.send_to(pid, {"type": "error",
+                    "msg": "Magos e clérigos devem escolher 2 magias antes de iniciar."}); return
 
         # Build full player states
         full_players = {}
         for slot, (pid2, p) in enumerate(self.players.items()):
-            full_players[pid2] = make_player(pid2, p["name"], p["class_id"], slot)
+            novo = make_player(pid2, p["name"], p["class_id"], slot)
+            novo["magias_conhecidas"] = list(p.get("magias_conhecidas", []))
+            apply_guild_save(novo)   # carrega compras/equip persistidos do personagem
+            full_players[pid2] = novo
         self.players = full_players
         self.player_order = list(full_players.keys())
 
@@ -3154,6 +3565,13 @@ class GameRoom:
                 "mercador": SHOP_MERCHANT + self.shop_scrolls,   # mercador inclui pergaminhos
                 "templo":   SHOP_TEMPLE,
                 "taverna":  SHOP_TAVERN,
+            },
+            "guild": {
+                "catalog": list(GUILD_CATALOG.values()),
+                "players": {
+                    pid: {"owned": pp["guild_owned"], "equip": pp["guild_equip"]}
+                    for pid, pp in self.players.items()
+                },
             },
         })
 
@@ -3181,6 +3599,123 @@ class GameRoom:
             sc["id"] = f"{sc['id']}_loja{i}"   # id único p/ a compra
             ofertas.append(sc)
         self.shop_scrolls = ofertas
+
+    async def handle_guild_buy(self, pid, item_id):
+        """Compra uma técnica/especialização da Guilda dos Heróis (persistente por classe)."""
+        if self.phase != "city":
+            return
+        p = self.players.get(pid)
+        if not p:
+            return
+        item = guild_item(item_id)
+        if not item:
+            await self.send_to(pid, {"type": "error", "msg": "Item da guilda desconhecido."})
+            return
+        # Classe compatível
+        if item["classe"] is not None and item["classe"] != p.get("class_id"):
+            await self.send_to(pid, {"type": "error", "msg": "Este aprimoramento não é da sua classe."})
+            return
+        cat = item["categoria"]   # "tecnica" | "especializacao"
+        owned = p["guild_owned"]["tecnicas"] if cat == "tecnica" else p["guild_owned"]["especializacoes"]
+        if item_id in owned:
+            await self.send_to(pid, {"type": "error", "msg": "Você já possui isto."})
+            return
+        # Pré-requisito
+        req = item.get("requer")
+        if req and req not in owned:
+            nome_req = (guild_item(req) or {}).get("nome", req)
+            await self.send_to(pid, {"type": "error", "msg": f"Requer antes: {nome_req}."})
+            return
+        # Ouro
+        if p.get("gold", 0) < item["preco"]:
+            await self.send_to(pid, {"type": "error", "msg": "Ouro insuficiente."})
+            return
+        p["gold"] -= item["preco"]
+        owned.append(item_id)
+        write_guild_save(p)
+        await self.broadcast_city_state()
+
+    async def handle_guild_equip(self, pid, slot, item_id):
+        """Equipa (ou desequipa, item_id=None) uma técnica da Guilda num slot.
+        'tecnica' é genérico (todas as classes); 'tecnica_exclusiva' só mago/clérigo
+        e só aceita item com exclusiva=True."""
+        if self.phase != "city":
+            await self.send_to(pid, {"type": "error", "msg": "Só é possível equipar técnicas na cidade."})
+            return
+        p = self.players.get(pid)
+        if not p:
+            return
+        if slot not in ("tecnica", "tecnica_exclusiva"):
+            await self.send_to(pid, {"type": "error", "msg": "Slot de técnica inválido."})
+            return
+        # Slot exclusivo só para mago/clérigo
+        if slot == "tecnica_exclusiva" and p.get("class_id") not in ("mage", "cleric"):
+            await self.send_to(pid, {"type": "error", "msg": "Sua classe não tem slot de técnica exclusiva."})
+            return
+        if item_id is None:   # desequipar
+            p["guild_equip"][slot] = None
+            write_guild_save(p)
+            await self.broadcast_city_state()
+            return
+        item = guild_item(item_id)
+        if not item or item["categoria"] != "tecnica":
+            await self.send_to(pid, {"type": "error", "msg": "Técnica desconhecida."})
+            return
+        if item_id not in p["guild_owned"]["tecnicas"]:
+            await self.send_to(pid, {"type": "error", "msg": "Você não possui esta técnica."})
+            return
+        # Coerência exclusiva ↔ slot
+        if slot == "tecnica_exclusiva" and not item.get("exclusiva"):
+            await self.send_to(pid, {"type": "error", "msg": "Esta técnica não é exclusiva."})
+            return
+        if slot == "tecnica" and item.get("exclusiva"):
+            await self.send_to(pid, {"type": "error", "msg": "Técnica exclusiva vai no slot exclusivo."})
+            return
+        p["guild_equip"][slot] = item_id
+        write_guild_save(p)
+        await self.broadcast_city_state()
+
+    # ── Guilda dos Heróis: usar técnica na masmorra ─────────────────────────
+    def tecnica_restante(self, p, tid):
+        """Rodadas restantes de recarga de uma técnica (0 se pronta)."""
+        pronta = p.get("technique_cooldowns", {}).get(tid)
+        return max(0, pronta - self.round_num) if pronta else 0
+
+    def _tecnica_bonus_dano(self, p):
+        """+N de dano de arma concedido por técnica de turno (Brutalidade)."""
+        return p.get("tecnica_buff_dano_arma", 0)
+
+    async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
+        """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
+        if self.phase != "playing":
+            return
+        p = self.players.get(pid)
+        if not p or self.current_pid() != pid:
+            await self.send_to(pid, {"type": "error", "msg": "Não é o seu turno."})
+            return
+        eq = p["guild_equip"]
+        if tecnica_id not in (eq.get("tecnica"), eq.get("tecnica_exclusiva")):
+            await self.send_to(pid, {"type": "error", "msg": "Técnica não equipada."})
+            return
+        item = guild_item(tecnica_id)
+        if not item:
+            return
+        if self.tecnica_restante(p, tecnica_id) > 0:
+            await self.send_to(pid, {"type": "error",
+                "msg": f"{item['nome']} em recarga ({self.tecnica_restante(p, tecnica_id)} rodadas)."})
+            return
+        if p.get("fome", 0) < item["custo_fome"] or p.get("sede", 0) < item["custo_sede"]:
+            await self.send_to(pid, {"type": "error", "msg": "Fome/sede insuficientes."})
+            return
+        ef = item.get("efeito", {})
+        if ef.get("tipo") == "buff_turno":
+            p["tecnica_buff_dano_arma"] = p.get("tecnica_buff_dano_arma", 0) + ef.get("bonus_dano_arma", 0)
+        # (outros tipos/handlers chegam nas Fases 1-2)
+        p["fome"] -= item["custo_fome"]
+        p["sede"] -= item["custo_sede"]
+        p["technique_cooldowns"][tecnica_id] = self.round_num + item["recarga_rodadas"]
+        await self.gm_say(f"⚔️ **{p['name']}** ativa **{item['nome']}**!")
+        await self.push_state()
 
     async def handle_shop_buy(self, pid, shop, item_id):
         if self.phase != "city":
@@ -3352,9 +3887,6 @@ class GameRoom:
             if effect == "full_heal":
                 p["hp"] = p["max_hp"]
                 log = f"⛪ **{p['name']}** foi curado completamente no Templo!"
-            elif effect == "full_mana":
-                p["mp"] = p["max_mp"]
-                log = f"⛪ **{p['name']}** restaurou toda a mana no Templo!"
             elif effect == "bless":
                 bonus = item.get("value", 2)
                 p["atk_bonus"] += bonus
@@ -3474,6 +4006,25 @@ class GameRoom:
         self.map_w = defn["grid"]["w"]
         self.map_h = defn["grid"]["h"]
         self.tiles = deepcopy(defn["tiles"])
+        # Preset de iluminação do 3D (cliente). Valor desconhecido → "masmorra".
+        amb = defn.get("ambiente", "masmorra")
+        self.ambiente = amb if amb in ("penumbra", "masmorra", "ar_livre") else "masmorra"
+
+        # Camada de materiais (piso/parede pintável). Chaves "x,y"->id; descarta
+        # entradas malformadas/desconhecidas (a validação já recusou antes).
+        self.materiais = {}
+        for key, mid in (defn.get("materiais") or {}).items():
+            if mid not in MATERIAIS or not isinstance(key, str):
+                continue
+            partes = key.split(",")
+            if len(partes) != 2:
+                continue
+            try:
+                mx, my = int(partes[0]), int(partes[1])
+            except ValueError:
+                continue
+            self.materiais[(mx, my)] = mid
+        self._rebuild_materiais_index()
 
         # Salas no mesmo formato de generate_dungeon.
         self.rooms = []
@@ -3518,6 +4069,40 @@ class GameRoom:
         self.traps = []
         self.armadilhas = [make_authored_trap(t) for t in defn.get("traps", [])]
 
+        # Decorações autoradas (itens de loot hidratados do catálogo do servidor).
+        self.decorations = []
+        for d in defn.get("decorations", []):
+            meta = DECOR_TYPES.get(d.get("type"))
+            if not meta:
+                continue
+            dec = {
+                "id": f"dec_{len(self.decorations)}",
+                "type": d["type"],
+                "pos": [d["pos"][0], d["pos"][1]],
+                "facing": list(d.get("facing") or [0, 1]),
+                "loot": None,
+                "tem_loot": False,
+                "image": (d.get("image") if isinstance(d.get("image"), str) else None),
+            }
+            loot = d.get("loot")
+            if loot and meta["loot_capaz"]:
+                dec["loot"] = {"gold": int(loot.get("gold", 0)),
+                               "items": hidratar_itens_bau(loot.get("items", []))}
+                dec["tem_loot"] = (dec["loot"]["gold"] > 0 or bool(dec["loot"]["items"]))
+            if meta["special"] == "fountain":
+                dec["charges"] = int(d.get("charges", 0))
+            # Override de tamanho por-objeto (gravado pelo editor).
+            sz = d.get("size")
+            if isinstance(sz, list) and len(sz) == 2 \
+               and all(isinstance(c, int) and not isinstance(c, bool) and c >= 1 for c in sz):
+                dec["size"] = [sz[0], sz[1]]
+            vs = d.get("vscale")
+            if isinstance(vs, list) and len(vs) == 2 \
+               and all(isinstance(c, (int, float)) and not isinstance(c, bool) for c in vs):
+                dec["vscale"] = [max(0.2, min(4.0, float(vs[0]))), max(0.2, min(4.0, float(vs[1])))]
+            self.decorations.append(dec)
+        self._rebuild_decor_index()
+
         # Stairs = ponto de entrada.
         ent = defn["entrance"]
         self.stairs_pos = [ent["x"], ent["y"]]
@@ -3529,9 +4114,13 @@ class GameRoom:
         self.objective_status = None
         self.rescue_failed = False
         self._objetivo_concluido = False
+        self.mission_complete_pending = False
         pr = defn.get("prisoner")
         self.prisoner = ({"pos": [pr["pos"][0], pr["pos"][1]], "room_id": pr.get("room_id"),
-                          "hp": PRIS_HP, "max_hp": PRIS_HP, "freed": False, "alive": True}
+                          "hp": PRIS_HP, "max_hp": PRIS_HP, "ac": PRIS_AC, "move": PRIS_MOVE,
+                          "image": pr.get("image"), "rescuer_pid": None, "moves_left": 0,
+                          "nome": "Prisioneiro", "fort": 0, "ref_": 0, "will": 0,
+                          "freed": False, "alive": True}
                          if pr else None)
         # Marca o baú-chave por posição (o dict de baú vivo não carrega a flag).
         keyposes = {tuple(c["pos"]) for c in defn.get("chests", []) if c.get("key_objective")}
@@ -3582,11 +4171,15 @@ class GameRoom:
             self.monsters = {}       # zera monstros da expedição anterior (senão reaparecem em paredes do novo mapa)
             self.traps = []          # idem armadilhas de masmorra
             self.armadilhas = []     # idem armadilhas colocáveis
+            self.decorations = []
+            self._rebuild_decor_index()
+            self.materiais = {}
+            self._rebuild_materiais_index()
             self.zonas_especiais = []
             self.explored = set()    # névoa volta ao início no mapa novo
             self.magic_reveal = {}
             self.exit_pos = None; self.objectives = None; self.objective_status = None
-            self.prisoner = None; self.rescue_failed = False; self._objetivo_concluido = False
+            self.prisoner = None; self.rescue_failed = False; self._objetivo_concluido = False; self.mission_complete_pending = False
             self.key_chest_opened = False
             if autorada:
                 self.load_authored_dungeon(self.dungeon_def)
@@ -3720,6 +4313,18 @@ class GameRoom:
                 break
             await self.handle_end_turn(pid)
 
+    def release_character(self, pid):
+        """Libera a trava do personagem deste jogador, se pertencer a esta sala."""
+        p = self.players.get(pid)
+        cls = p.get("class_id") if p else None
+        if cls and CHARACTERS_IN_USE.get(cls) == self.code:
+            del CHARACTERS_IN_USE[cls]
+
+    def _release_all_locks(self):
+        """Libera todas as travas desta sala (sala esvaziou)."""
+        for cid in [c for c, code in CHARACTERS_IN_USE.items() if code == self.code]:
+            del CHARACTERS_IN_USE[cid]
+
     # ── DESCONEXÃO / SAÍDA NO MEIO DA PARTIDA ───────────────────────────────
     async def handle_disconnect_em_jogo(self, pid):
         """Jogador caiu/saiu durante a partida: o personagem deixa a masmorra
@@ -3749,6 +4354,8 @@ class GameRoom:
             await self.push_state()
         if self.phase == "city":
             await self.broadcast_city_state()
+        if not any(q.get("connected") for q in self.players.values()):
+            self._release_all_locks()
 
     def _distribuir_monstros(self, spawned, room):
         """Espalha os monstros em casas de chão livres da sala, reservando o
@@ -3800,6 +4407,22 @@ class GameRoom:
             for rx in range(max(0, room["x"] - 1), min(self.map_w, room["x"] + room["w"] + 1)):
                 self.explored.add((rx, ry))
 
+    def _tall_oclui_caminho(self, x0, y0, x1, y1):
+        """True se a linha (x0,y0)→(x1,y1) cruza uma casa de decoração ALTA
+        antes do destino (a própria casa-destino não conta)."""
+        if not self._decor_tall_tiles and not self._mat_oclui_tiles:
+            return False
+        dx = x1 - x0; dy = y1 - y0
+        passos = max(abs(dx), abs(dy))
+        if passos == 0:
+            return False
+        for s in range(1, passos):   # casas intermediárias (exclui origem e destino)
+            cx = round(x0 + dx * s / passos)
+            cy = round(y0 + dy * s / passos)
+            if (cx, cy) in self._decor_tall_tiles or (cx, cy) in self._mat_oclui_tiles:
+                return True
+        return False
+
     def _reveal_around(self, px, py, radius=1):
         for dy in range(-radius, radius+1):
             for dx in range(-radius, radius+1):
@@ -3808,6 +4431,8 @@ class GameRoom:
                 # esconde o conteúdo). A própria porta, no anel externo, é
                 # revelada normalmente.
                 if self._tile_in_locked_room(x, y):
+                    continue
+                if self._tall_oclui_caminho(px, py, x, y):
                     continue
                 self.explored.add((x, y))
 
@@ -3833,10 +4458,12 @@ class GameRoom:
         return any(r.get("locked") for r in self._door_owner_rooms(x, y))
 
     def _blocks_tile(self, x, y):
-        """Tile intransponível: parede ou porta fechada (fora do mapa também)."""
+        """Tile intransponível: parede, porta fechada ou decoração sólida."""
         if not (0 <= x < self.map_w and 0 <= y < self.map_h):
             return True
-        return self.tiles[y][x] == WALL or self._is_closed_door(x, y)
+        if self.tiles[y][x] == WALL or self._is_closed_door(x, y):
+            return True
+        return (x, y) in self._decor_block_tiles or (x, y) in self._mat_solid_tiles
 
     def _tile_in_locked_room(self, x, y):
         for r in self.rooms:
@@ -3890,6 +4517,12 @@ class GameRoom:
         if self._is_closed_door(nx, ny):
             await self.send_to(pid, {"type": "error",
                 "msg": "🚪 A porta está fechada. Clique nela para abri-la."})
+            return
+        if (nx, ny) in self._decor_block_tiles:
+            await self.send_to(pid, {"type": "error", "msg": "Há um objeto bloqueando o caminho."})
+            return
+        if (nx, ny) in self._mat_solid_tiles:
+            await self.send_to(pid, {"type": "error", "msg": "Escombros bloqueiam o caminho."})
             return
 
         # Block movement into a tile occupied by a living monster (footprint multi-tile incluso)
@@ -3957,6 +4590,10 @@ class GameRoom:
         # Pisar numa zona de Bola de Fogo ativa causa dano (entrar sofre dano).
         if p["alive"]:
             await self._verificar_entrada_zona_fogo(p, nx, ny)
+
+        # Fogueira: 1d4 de fogo ao entrar.
+        if p["alive"]:
+            await self._aplicar_fogueira_se_pisar(p)
 
         await self.push_state()
 
@@ -4051,7 +4688,8 @@ class GameRoom:
                 break
             if not (0 <= x < self.map_w and 0 <= y < self.map_h):
                 return False
-            if self.tiles[y][x] == WALL or self._is_closed_door(x, y):
+            if (self.tiles[y][x] == WALL or self._is_closed_door(x, y)
+                    or (x, y) in self._mat_oclui_tiles):
                 return False
         return True
 
@@ -4318,7 +4956,8 @@ class GameRoom:
                     dmg = raw_dmg + stat_bonus
                     if crit: dmg *= 2
                     dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano
-                              + self._mod_magia(p, "dano") - self._corrosao_arma_pen(p))
+                              + self._mod_magia(p, "dano") + self._tecnica_bonus_dano(p)
+                              - self._corrosao_arma_pen(p))
                     # Fraquezas/imunidades ao dano físico da arma
                     dmg = self._apply_damage_types(dmg, [DMG_PHYSICAL], target, weapon)
                     die_type = "d" + die_str.split("d")[1]
@@ -4333,7 +4972,8 @@ class GameRoom:
                     base = 2 if p.get("skill_dobrar_dano") else 1   # Golpe Devastador
                     dmg = base + str_bonus
                     if crit: dmg *= 2
-                    dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano + self._mod_magia(p, "dano"))
+                    dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano + self._mod_magia(p, "dano")
+                              + self._tecnica_bonus_dano(p))
                     weapon_name = "soco"
                     sb = f"+{str_bonus}" if str_bonus >= 0 else str(str_bonus)
                     dmg_detail = f"[{base}{sb}]"
@@ -6135,6 +6775,9 @@ class GameRoom:
             pp["action_done"]       = False
             pp["bonus_action_used"] = False
             pp["taverna_refeicoes"] = []   # refeições de balcão renovam a cada visita à cidade
+            pp["technique_cooldowns"] = {}   # descanso na cidade → recarga total das técnicas
+            if pp.get("class_id") in ("mage", "cleric"):
+                self._recarregar_slots(pp)   # descanso → todos os slots voltam cheios
         await self.broadcast_city_state()
 
     # ── inventory helpers ──────────────────────────────────────────────────
@@ -6227,6 +6870,28 @@ class GameRoom:
                 return f"{log_emoji} **{p['name']}** equipou **{item['name']}**!"
         return self._equip_into_slot(p, item, keys[0], log_emoji)
 
+    async def push_state_or_city(self):
+        """Broadcast ciente da fase: na cidade os clientes estão em screen-city e
+        usam city_state; na masmorra usam game_state (push_state)."""
+        if self.phase == "city":
+            await self.broadcast_city_state()
+        else:
+            await self.push_state()
+
+    async def handle_reorder_bag(self, pid, from_index, to_index):
+        """Reordena a bolsa do jogador (organização por arrastar-e-soltar).
+        Clampa índices fora do intervalo; from inválido é no-op."""
+        p = self.players.get(pid)
+        if not p:
+            return
+        bag = p["bag"]
+        if from_index < 0 or from_index >= len(bag):
+            return
+        item = bag.pop(from_index)
+        to_index = max(0, min(to_index, len(bag)))
+        bag.insert(to_index, item)
+        await self.push_state_or_city()
+
     async def handle_equip_from_bag(self, pid, slot_index):
         """Equipar/trocar equipamento é AÇÃO LIVRE: sem custo de ação bônus e sem
         limite por turno (pode equipar/trocar quantas vezes quiser). A lógica de
@@ -6237,7 +6902,7 @@ class GameRoom:
             return
         if not await self._executar_equip_from_bag(pid, slot_index):
             return                                   # validação falhou (erro já enviado)
-        await self.push_state()
+        await self.push_state_or_city()
 
     async def _executar_equip_from_bag(self, pid, slot_index):
         """Equipa um item do inventário no slot correto (8 slots) — lógica
@@ -6338,7 +7003,7 @@ class GameRoom:
         log = self._equip_into_slot(p, item, "off_hand", "🗡️")
         if log:
             await self.gm_say(log + " (2ª arma — mão esquerda)")
-        await self.push_state()
+        await self.push_state_or_city()
 
     async def handle_unequip(self, pid, slot_key):
         """Desequipa um item de um slot, devolvendo-o ao inventário."""
@@ -6354,7 +7019,7 @@ class GameRoom:
         self._apply_gear_effect(p, item, False)
         p["bag"].append(item)
         await self.gm_say(f"📤 **{p['name']}** desequipou **{item['name']}**.")
-        await self.push_state()
+        await self.push_state_or_city()
 
     # ── validação de slot secundário (scaffolding — ver SECUNDARIO_PERMITIDO) ────
     # NOTA: handle_equip ainda NÃO é roteado (o caminho ativo é
@@ -6500,7 +7165,7 @@ class GameRoom:
 
     # ── Ação Bônus ─────────────────────────────────────────────────────────────
     # Efeitos de item que contam como ação bônus (máx. 1 por turno).
-    BONUS_ACTION_EFFECTS = {"heal", "mana", "atk_bonus", "antidote", "coat_poison", "veil_shadow"}
+    BONUS_ACTION_EFFECTS = {"heal", "atk_bonus", "antidote", "coat_poison", "veil_shadow"}
 
     def _consumir_recursos(self, player, tipo_acao):
         """Consumo CENTRAL de fome/sede (escala 0–10). Substitui os consumos
@@ -6630,22 +7295,49 @@ class GameRoom:
     # ══════════════════════════════════════════════════════════════════════════
     # SISTEMA DE MAGIAS (GRIMÓRIO) — FUNDAÇÃO
     # Pedro (mage) e Lewis (cleric) lançam via mensagem WS 'magia'. Esta fundação
-    # entrega: roteamento (handle_magia), cobrança de custo (MP do círculo +
+    # entrega: roteamento (handle_magia), cobrança de custo (SLOT do círculo +
     # 🍖/💧), o dispatcher (_executar_magia_grimorio) e o sistema de zonas/
     # escuridão. A lógica de cada magia entra nos próximos prompts — por ora só
     # GRIMORIO_IMPLEMENTADAS são conjuráveis.
+    # ── Slots de magia (Pedro/Lewis): pool por círculo com regen por rodadas ──
+    def _slot_prune(self, p, circulo):
+        """Remove os cooldowns já vencidos (ready_at <= round_num)."""
+        cd = p.setdefault("slots_cooldown", {"primeiro": [], "segundo": [], "terceiro": []})
+        cd[circulo] = [r for r in cd.get(circulo, []) if r > self.round_num]
+
+    def _slots_disponiveis(self, p, circulo):
+        """Slots livres no círculo = máximo do nível − gastos ainda em cooldown."""
+        self._slot_prune(p, circulo)
+        usados = len(p["slots_cooldown"].get(circulo, []))
+        return slots_max_para(p).get(circulo, 0) - usados
+
+    def _gastar_slot(self, p, circulo):
+        """Marca 1 slot do círculo como gasto: volta em SLOT_REGEN[circulo] rodadas."""
+        p.setdefault("slots_cooldown", {"primeiro": [], "segundo": [], "terceiro": []})
+        p["slots_cooldown"][circulo].append(self.round_num + SLOT_REGEN[circulo])
+
+    def _proximo_slot_rodadas(self, p, circulo):
+        """Menor contagem regressiva (rodadas) até liberar 1 slot do círculo, ou None."""
+        self._slot_prune(p, circulo)
+        cd = p["slots_cooldown"].get(circulo, [])
+        if not cd:
+            return None
+        return max(0, min(cd) - self.round_num)
+
+    def _recarregar_slots(self, p):
+        """Recarga total (descanso na cidade): zera todos os cooldowns."""
+        p["slots_cooldown"] = {"primeiro": [], "segundo": [], "terceiro": []}
+
     # ══════════════════════════════════════════════════════════════════════════
 
     async def handle_magia(self, pid, data):
         """Lança uma magia do GRIMÓRIO (Pedro/mage, Lewis/cleric). Valida classe,
-        elegibilidade, MP e custo de sobrevivência; depois despacha o efeito."""
+        elegibilidade, slots do círculo e custo de sobrevivência; despacha o efeito."""
         if not self._is_turn(pid):
             return
         p = self.players.get(pid)
         if not p or not p["alive"]:
             return
-        # MODO TESTE: Pedro lança qualquer magia ignorando classe/nível/custo/ação.
-        livre = MAGE_TESTE_LIVRE and p.get("class_id") == "mage"
         if p.get("class_id") not in ("mage", "cleric"):
             await self.send_to(pid, {"type": "error", "msg": "Sua classe não lança magias do grimório."}); return
         if p.get("petrificado"):
@@ -6661,33 +7353,26 @@ class GameRoom:
         is_mage = p.get("class_id") == "mage"
 
         # Ação principal (1 por turno).
-        if self._acao_bloqueada(p) and not livre:
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         magia_id = (data or {}).get("magia_id")
         magia = GRIMORIO.get(magia_id)
         if not magia:
             await self.send_to(pid, {"type": "error", "msg": "Magia desconhecida."}); return
-        if p["class_id"] not in magia.get("classe", []) and not livre:
-            await self.send_to(pid, {"type": "error", "msg": f"{p['name']} não pode lançar {magia['nome']}."}); return
+        if magia_id not in p.get("magias_conhecidas", []):
+            await self.send_to(pid, {"type": "error", "msg": f"{p['name']} não conhece {magia['nome']}."}); return
         if magia_id not in GRIMORIO_IMPLEMENTADAS:
             await self.send_to(pid, {"type": "error",
                 "msg": f"{magia['icone']} {magia['nome']} ainda está em desenvolvimento."}); return
 
-        # Custo do círculo: Lewis (cleric) gasta SLOTS de magia; as demais classes, MP.
+        # Custo do círculo: 1 SLOT do mesmo círculo (estrito). Ninguém usa MP.
         circulo = magia.get("circulo", "primeiro")
-        is_cleric = p.get("class_id") == "cleric"
-        custo_mp = CIRCULO_MP.get(circulo, 1)
-        if livre:
-            pass   # MODO TESTE: sem checagem de slot/MP/nível
-        elif is_cleric:
-            p.setdefault("magias_usadas_hoje", {"primeiro": 0, "segundo": 0, "terceiro": 0})
-            limite = CLERIC_SLOTS.get(circulo, 0)
-            if p["magias_usadas_hoje"].get(circulo, 0) >= limite:
-                await self.send_to(pid, {"type": "error",
-                    "msg": f"Sem slots de magia de {circulo} círculo."}); return
-        elif p.get("mp", 0) < custo_mp:
-            await self.send_to(pid, {"type": "error", "msg": f"MP insuficiente — precisa {custo_mp}."}); return
+        if self._slots_disponiveis(p, circulo) <= 0:
+            falta = self._proximo_slot_rodadas(p, circulo)
+            extra = f" (volta em {falta} rodada{'s' if (falta or 0) != 1 else ''})" if falta is not None else ""
+            await self.send_to(pid, {"type": "error",
+                "msg": f"Sem slot de magia de {circulo} círculo{extra}."}); return
 
         # ── Metamagia (Pedro): Aprimorar (+1 CD do save) / Estender (+1 turno) /
         # Fortalecer (dano ×1,5). EMPILHÁVEIS; o custo em 🍖/💧 é pago AGORA e SÓ se
@@ -6705,7 +7390,7 @@ class GameRoom:
                 dur_bonus = 1; mm_fome += 3; mm_sede += 3; partes.append("Estender (+1 turno)")
             if p.get("aprimorar_ativo") and tem_save:
                 dc_bonus = 1; mm_fome += 3; partes.append("Aprimorar (+1 CD)")
-            if (mm_fome or mm_sede) and not livre:
+            if (mm_fome or mm_sede):
                 if p["fome"] < mm_fome or p["sede"] < mm_sede:
                     await self.send_to(pid, {"type": "error",
                         "msg": f"Recursos insuficientes p/ metamagia 🍖-{mm_fome} 💧-{mm_sede}."}); return
@@ -6715,15 +7400,11 @@ class GameRoom:
                 custo_txt = (f" | 🍖-{mm_fome}" + (f" 💧-{mm_sede}" if mm_sede else "")) if (mm_fome or mm_sede) else ""
                 await self.gm_say(f"🔮 **{p['name']}** — metamagia: {', '.join(partes)}{custo_txt}.")
 
-        # Custo do círculo (slot p/ Lewis, MP p/ os demais) + 🍖/💧 de sobrevivência.
-        if not livre:
-            if is_cleric:
-                p["magias_usadas_hoje"][circulo] = p["magias_usadas_hoje"].get(circulo, 0) + 1
-            else:
-                p["mp"] = max(0, p["mp"] - custo_mp)
-            p["fome"] = max(0, p.get("fome", 10) - 1)
-            p["sede"] = max(0, p.get("sede", 10) - 1)
-            self._verificar_estado_sobrevivencia(p)
+        # Cobra 1 SLOT do círculo + 🍖/💧 de sobrevivência.
+        self._gastar_slot(p, circulo)
+        p["fome"] = max(0, p.get("fome", 10) - 1)
+        p["sede"] = max(0, p.get("sede", 10) - 1)
+        self._verificar_estado_sobrevivencia(p)
 
         # Aprimorar: +1 na CD do save é lido por _dif_magia via flag temporária no caster.
         p["_mm_dc_bonus"] = dc_bonus
@@ -6735,8 +7416,7 @@ class GameRoom:
             p["invisivel_magico"] = False; p.pop("invisivel_magico_rodadas", None)
             await self.gm_say(f"🫥 **{p['name']}** revela-se ao lançar magia.")
 
-        if not livre:                      # MODO TESTE: não consome a ação do turno
-            p["action_done"] = True
+        p["action_done"] = True
         await self.push_state()
 
     def _magia_tem_dano(self, magia):
@@ -7061,6 +7741,7 @@ class GameRoom:
             return
         alvo = min(vivos, key=lambda p: abs(p["pos"][0]-m["pos"][0]) + abs(p["pos"][1]-m["pos"][1]))
         moveu = self._passo_monstro(m, alvo["pos"][0], alvo["pos"][1], away=True)
+        await self._aplicar_fogueira_se_pisar(m)
         await self.gm_say(f"😱 **{m['name']}** está apavorado e foge" + ("!" if moveu else " (encurralado)!"))
 
     async def _acao_dominado(self, m, alive_monsters):
@@ -7087,6 +7768,7 @@ class GameRoom:
                 await self.gm_say(f"🧠 **{m['name']}** (dominado) ataca **{alvo['name']}** e erra!")
         else:
             self._passo_monstro(m, alvo["pos"][0], alvo["pos"][1])
+            await self._aplicar_fogueira_se_pisar(m)
             await self.gm_say(f"🧠 **{m['name']}** (dominado) avança contra **{alvo['name']}**.")
 
     async def _processar_status_jogador_turno(self, p):
@@ -8723,6 +9405,10 @@ class GameRoom:
                  if p["alive"] and abs(p["pos"][0]-cx) <= r and abs(p["pos"][1]-cy) <= r]
         alvos += [m for m in self.monsters.values()
                   if m["hp"] > 0 and abs(m["pos"][0]-cx) <= r and abs(m["pos"][1]-cy) <= r]
+        pr = self.prisoner
+        if pr and pr.get("alive") and pr.get("freed") \
+                and abs(pr["pos"][0]-cx) <= r and abs(pr["pos"][1]-cy) <= r:
+            alvos.append(pr)
         for alvo in alvos:
             alvo_nome = alvo.get("name") or alvo.get("nome", "Alvo")
             save_ok, d20, sb, stot = self._testar_save(alvo, tipo["save"], tipo["dificuldade"])
@@ -8742,8 +9428,10 @@ class GameRoom:
         if tipo_ef == "dano":
             if ef.get("rodada", 1) > 1:
                 # Dano progressivo: agenda p/ rodadas seguintes (ver _processar_efeitos_armadilha_turno).
+                # O prisioneiro não tem "id" → sentinela dedicada para o lookup por turno.
+                aid = "__prisioneiro__" if alvo is self.prisoner else alvo.get("id")
                 arm.setdefault("efeitos_ativos", []).append({
-                    "alvo_id": alvo.get("id"), "valor": ef["valor"],
+                    "alvo_id": aid, "valor": ef["valor"],
                     "elemento": ef.get("elemento", "fisico"), "rodadas_restantes": ef["rodada"] - 1,
                 })
                 return
@@ -8792,6 +9480,8 @@ class GameRoom:
         if alvo["hp"] <= 0:
             if self._eh_jogador(alvo):
                 await self._player_dies(alvo["id"])
+            elif alvo is self.prisoner:
+                await self._prisioneiro_morre()
             else:
                 await self._monster_dies(alvo, killer_pid)
 
@@ -8875,6 +9565,16 @@ class GameRoom:
             if max(abs(tr["pos"][0] - px), abs(tr["pos"][1] - py)) <= raio \
                and tuple(tr["pos"]) not in self.explored:
                 self.explored.add(tuple(tr["pos"]))
+                reveladas += 1
+        # Armadilhas COLOCÁVEIS hostis (inclui as autoradas no editor): a detecção
+        # de Luccas marca `visivel` → passam a aparecer no mapa (com imagem, se tiver).
+        for a in self.armadilhas:
+            if a.get("esgotada") or a.get("visivel"):
+                continue
+            if a.get("criador") in self.players:
+                continue   # armadilha aliada já é visível a todos
+            if max(abs(a["pos"][0] - px), abs(a["pos"][1] - py)) <= raio:
+                a["visivel"] = True
                 reveladas += 1
         return reveladas
 
@@ -9039,7 +9739,10 @@ class GameRoom:
         for arm in list(self.armadilhas):
             restantes = []
             for ef in arm.get("efeitos_ativos", []):
-                alvo = self.players.get(ef["alvo_id"]) or self.monsters.get(ef["alvo_id"])
+                aid = ef["alvo_id"]
+                alvo = self.players.get(aid) or self.monsters.get(aid)
+                if alvo is None and aid == "__prisioneiro__":
+                    alvo = self.prisoner
                 if alvo and (alvo.get("alive") or alvo.get("hp", 0) > 0):
                     dano = self._rolar_dado(ef["valor"])
                     await self._dano_em_alvo(alvo, dano, ef.get("elemento", "fogo"), arm.get("criador"))
@@ -9069,6 +9772,7 @@ class GameRoom:
                 "ativada": a.get("ativada", False),
                 "aliada":  a.get("criador") in self.players,
                 "so_luccas": False,   # reservado p/ armadilhas de masmorra detectadas (futuro)
+                "image":   a.get("image"),   # PNG opcional — o cliente mostra só quando revelada
             })
         return out
 
@@ -9103,9 +9807,6 @@ class GameRoom:
         if effect == "heal":
             p["hp"] = min(p["max_hp"], p["hp"] + val)
             await self.gm_say(f"{item['emoji']} **{p['name']}** usa **{item['name']}** e recupera **{val}** HP!")
-        elif effect == "mana":
-            p["mp"] = min(p["max_mp"], p["mp"] + val)
-            await self.gm_say(f"{item['emoji']} **{p['name']}** usa **{item['name']}** e recupera **{val}** MP!")
         elif effect == "atk_bonus":
             self.blessed[pid] = self.blessed.get(pid, 0) + val
             p["atk_bonus"] += val
@@ -9338,6 +10039,9 @@ class GameRoom:
     async def handle_end_turn(self, pid):
         if not self._is_turn(pid): return
         p = self.players[pid]
+        if p.get("pending_spell_pick"):
+            await self.send_to(pid, {"type": "error",
+                "msg": "Escolha sua nova magia antes de encerrar o turno."}); return
         # Limpa imobilização (teia/rede) — o jogador encerrou o turno bloqueado
         p.pop("perde_turno", None)
         p.pop("oculto_vela", None)   # Vela da Escuridão: oculto dura só até o fim do turno
@@ -9351,26 +10055,47 @@ class GameRoom:
         # Animados roubados por um necromante não obedecem o jogador nesta fase.
         animados_vivos = [a for a in p.get("animados", [])
                           if a.get("vida_atual", 0) > 0 and not a.get("dominado_por_monstro")]
-        if animados_vivos and self.animados_phase_pid != pid:
+        # Fase 3: o herói que libertou o prisioneiro o controla na janela pós-turno
+        # (como os servos). Se o resgatador morreu, o controle passa ao herói vivo
+        # mais próximo do prisioneiro.
+        pr = self.prisoner
+        controla_prisioneiro = False
+        if pr and pr.get("freed") and pr.get("alive"):
+            resc = self.players.get(pr.get("rescuer_pid"))
+            if not resc or not self._ativo(resc):
+                vivos = [h for h in self.players.values() if self._ativo(h)]
+                if vivos:
+                    novo = min(vivos, key=lambda h: max(abs(h["pos"][0] - pr["pos"][0]),
+                                                        abs(h["pos"][1] - pr["pos"][1])))
+                    pr["rescuer_pid"] = novo["id"]
+            controla_prisioneiro = (pr.get("rescuer_pid") == pid)
+        if (animados_vivos or controla_prisioneiro) and self.animados_phase_pid != pid:
             self.animados_phase_pid = pid
-            # Upkeep: cada cadáver reanimado custa -1 fome e -1 sede por turno.
-            custo = len(animados_vivos)
-            p["fome"] = max(0, p.get("fome", 10) - custo)
-            p["sede"] = max(0, p.get("sede", 10) - custo)
-            for a in animados_vivos:               # orçamento p/ a janela de controle
-                a["moves_left"] = a.get("movimento", 3)
-                a["acted"] = False
-                # Sono/Lentidão em minions (de magias em área): expiram aqui.
-                for flag, rod in (("dormindo", "dormindo_rodadas"), ("lento", "lento_rodadas")):
-                    if a.get(flag):
-                        a[rod] = a.get(rod, 1) - 1
-                        if a[rod] <= 0:
-                            a.pop(flag, None); a.pop(rod, None)
-            plural = "s" if custo > 1 else ""
-            await self.gm_say(
-                f"💀 Turno dos servos de **{p['name']}** ({custo} animado{plural}) — "
-                f"mova/ataque e encerre o turno novamente. "
-                f"🍖 {p['fome']:.0f}/10 💧 {p['sede']:.0f}/10")
+            partes = []
+            if animados_vivos:
+                # Upkeep: cada cadáver reanimado custa -1 fome e -1 sede por turno.
+                custo = len(animados_vivos)
+                p["fome"] = max(0, p.get("fome", 10) - custo)
+                p["sede"] = max(0, p.get("sede", 10) - custo)
+                for a in animados_vivos:               # orçamento p/ a janela de controle
+                    a["moves_left"] = a.get("movimento", 3)
+                    a["acted"] = False
+                    # Sono/Lentidão em minions (de magias em área): expiram aqui.
+                    for flag, rod in (("dormindo", "dormindo_rodadas"), ("lento", "lento_rodadas")):
+                        if a.get(flag):
+                            a[rod] = a.get(rod, 1) - 1
+                            if a[rod] <= 0:
+                                a.pop(flag, None); a.pop(rod, None)
+                plural = "s" if custo > 1 else ""
+                partes.append(f"{custo} animado{plural}")
+            if controla_prisioneiro:
+                pr["moves_left"] = PRIS_MOVE
+                partes.append("o prisioneiro")
+            msg = (f"💀 Turno de controle de **{p['name']}** ({' e '.join(partes)}) — "
+                   f"mova e encerre o turno novamente.")
+            if animados_vivos:
+                msg += f" 🍖 {p['fome']:.0f}/10 💧 {p['sede']:.0f}/10"
+            await self.gm_say(msg)
             await self.push_state()
             return
         self.animados_phase_pid = None
@@ -9383,6 +10108,7 @@ class GameRoom:
         p["skill_bonus_acerto"] = 0
         p["skill_dobrar_dano"]  = False
         p["skill_ataque_extra"] = False
+        p["tecnica_buff_dano_arma"] = 0   # buff de técnica de turno (Brutalidade) expira
         p["skill_extra_usado"]  = False
         p["cancao_atacou_apos"] = False   # reabre o custo extra de atacar sob a canção no novo turno
         # metamagia do mago expira ao fim do turno (flags planas)
@@ -9450,10 +10176,6 @@ class GameRoom:
             await self._processar_manutencao_richard(cur_p)
         if cur_p.get("class_id") == "rogue":
             await self._processar_inicio_turno_luccas(cur_p)
-        if cur_p.get("class_id") == "cleric":
-            # MODO DE TESTE: recarrega os slots de magia do Lewis a cada turno, para
-            # que todas as magias fiquem sempre disponíveis para teste.
-            cur_p["magias_usadas_hoje"] = {"primeiro": 0, "segundo": 0, "terceiro": 0}
         # Venenos: tica/expira efeitos no início do turno do jogador (antes de fixar o movimento).
         await self._processar_venenos_turno(cur_p)
         # Corrosão Viva (Devorador Orgânico): DoT por turno em quem está sem armadura.
@@ -9767,6 +10489,176 @@ class GameRoom:
         """Lista de [x,y] tiles ocupados pelo monstro (frente = m['pos'])."""
         return self._monster_tiles_at(m, m["pos"][0], m["pos"][1])
 
+    # ── DECORAÇÕES ─────────────────────────────────────────────────────────
+    def _decor_eff_size(self, dtype, facing, size=None):
+        """(ew,eh) efetivos: facing horizontal troca w↔h; vertical/None mantém.
+        `size` (override por-objeto) tem prioridade sobre o catálogo."""
+        w, h = size if (size and len(size) == 2) else DECOR_TYPES[dtype]["size"]
+        if facing and facing[0] != 0:
+            return h, w
+        return w, h
+
+    def _decor_base_size(self, d):
+        """Tamanho natural (pré-facing) da decoração: override `size` ou catálogo."""
+        sz = d.get("size")
+        if isinstance(sz, list) and len(sz) == 2:
+            return [sz[0], sz[1]]
+        return list(DECOR_TYPES[d["type"]]["size"])
+
+    def _decor_tiles_at(self, dtype, ax, ay, facing=None, size=None):
+        """Casas [x,y] ocupadas pela decoração `dtype` ancorada em (ax,ay)."""
+        ew, eh = self._decor_eff_size(dtype, facing, size)
+        return [[ax + i, ay + j] for i in range(ew) for j in range(eh)]
+
+    def _decor_tiles(self, d):
+        return self._decor_tiles_at(d["type"], d["pos"][0], d["pos"][1],
+                                    d.get("facing"), d.get("size"))
+
+    def _rebuild_decor_index(self):
+        """Recalcula os índices rápidos de bloqueio/visão das decorações."""
+        self._decor_block_tiles = set()
+        self._decor_tall_tiles = set()
+        self._campfire_tiles = set()
+        for d in getattr(self, "decorations", []):
+            meta = DECOR_TYPES[d["type"]]
+            for tx, ty in self._decor_tiles(d):
+                if not meta["pisavel"]:
+                    self._decor_block_tiles.add((tx, ty))
+                if meta["alto"]:
+                    self._decor_tall_tiles.add((tx, ty))
+                if meta["special"] == "campfire":
+                    self._campfire_tiles.add((tx, ty))
+
+    def _rebuild_materiais_index(self):
+        """Recalcula os índices de bloqueio/visão da camada de materiais."""
+        self._mat_solid_tiles = set()
+        self._mat_oclui_tiles = set()
+        for (x, y), mid in getattr(self, "materiais", {}).items():
+            meta = MATERIAIS.get(mid)
+            if not meta:
+                continue
+            if meta["solido"]:
+                self._mat_solid_tiles.add((x, y))
+            if meta["oclui"]:
+                self._mat_oclui_tiles.add((x, y))
+
+    async def _aplicar_fogueira_se_pisar(self, criatura):
+        """Se a criatura está numa casa de fogueira, sofre 1d4 de fogo (sem save)."""
+        pos = criatura.get("pos")
+        if not pos or (pos[0], pos[1]) not in self._campfire_tiles:
+            return
+        dano = roll_dice("1d4")
+        nome = criatura.get("name") or criatura.get("nome", "Alguém")
+        await self.broadcast({"type": "dice_roll", "die": "d4", "value": dano, "label": "Fogueira"})
+        await self.gm_say(f"🔥 **{nome}** pisou na fogueira e sofre **{dano}** de fogo!")
+        await self._dano_em_alvo(criatura, dano, "fogo")
+
+    async def _commit_monster_step(self, m, nx, ny):
+        """Move o monstro 1 passo e aplica efeitos de pisar (fogueira)."""
+        m["pos"] = [nx, ny]
+        await self._aplicar_fogueira_se_pisar(m)
+
+    def _decor_by_id(self, decor_id):
+        return next((d for d in self.decorations if d["id"] == decor_id), None)
+
+    def _adjacente_a_decor(self, pos, d):
+        """True se `pos` está a ≤1 casa (Chebyshev) de qualquer casa do footprint."""
+        for tx, ty in self._decor_tiles(d):
+            if max(abs(pos[0] - tx), abs(pos[1] - ty)) <= 1:
+                return True
+        return False
+
+    async def handle_interagir_decor(self, pid, decor_id):
+        """Herói adjacente interage: fonte → bebe; container → abre painel de loot."""
+        p = self.players.get(pid)
+        if not p or not p.get("alive"):
+            return
+        d = self._decor_by_id(decor_id)
+        if not d:
+            await self.send_to(pid, {"type": "error", "msg": "Objeto não encontrado."}); return
+        if not self._adjacente_a_decor(p["pos"], d):
+            await self.send_to(pid, {"type": "error", "msg": "Muito longe do objeto!"}); return
+        meta = DECOR_TYPES[d["type"]]
+        if meta["special"] == "fountain":
+            if d.get("charges", 0) <= 0:
+                await self.send_to(pid, {"type": "error", "msg": "💧 A fonte está seca."}); return
+            item = deepcopy(_TAVERN_BY_ID["garrafa_agua"])
+            if self._add_to_inventory(p, item) == "full":
+                await self.send_to(pid, {"type": "error", "msg": "Inventário cheio!"}); return
+            d["charges"] -= 1
+            await self.gm_say(f"💧 **{p['name']}** encheu uma **Garrafa de Água** na fonte ({d['charges']} restantes).")
+            await self.push_state()
+            return
+        # container (loot) → tratado na Task A7
+        await self._abrir_decor_loot(pid, d)
+
+    async def _abrir_decor_loot(self, pid, d):
+        """Abre o painel de loot da decoração (reusa o painel de baú no cliente)."""
+        if not d.get("loot") or not d.get("tem_loot"):
+            await self.send_to(pid, {"type": "error", "msg": "O objeto está vazio."}); return
+        await self.send_to(pid, {"type": "decor_loot", "decor_id": d["id"],
+                                  "gold": d["loot"]["gold"], "items": d["loot"]["items"]})
+
+    def _decor_atualiza_tem_loot(self, d):
+        l = d.get("loot")
+        d["tem_loot"] = bool(l and (l["gold"] > 0 or l["items"]))
+
+    async def handle_take_from_decor(self, pid, decor_id, kind, index):
+        """Pega ouro/item de uma decoração-container (sem restrição de turno)."""
+        p = self.players.get(pid)
+        if not p or not p.get("alive"):
+            return
+        d = self._decor_by_id(decor_id)
+        if not d or not d.get("loot"):
+            await self.send_to(pid, {"type": "error", "msg": "Objeto sem loot."}); return
+        if not self._adjacente_a_decor(p["pos"], d):
+            await self.send_to(pid, {"type": "error", "msg": "Muito longe do objeto!"}); return
+        loot = d["loot"]
+        if kind == "gold":
+            amount = loot["gold"]
+            if amount <= 0:
+                await self.send_to(pid, {"type": "error", "msg": "Sem ouro aqui."}); return
+            p["gold"] += amount
+            loot["gold"] = 0
+            await self.gm_say(f"🪙 **{p['name']}** pegou **{amount}** ouros do objeto!")
+        elif kind == "item":
+            idx = int(index)
+            if idx < 0 or idx >= len(loot["items"]):
+                await self.send_to(pid, {"type": "error", "msg": "Item inválido."}); return
+            item = loot["items"][idx]
+            if self._add_to_inventory(p, item) == "full":
+                await self.send_to(pid, {"type": "error", "msg": "Inventário cheio!"}); return
+            loot["items"].pop(idx)
+            await self.gm_say(f"🎒 **{p['name']}** pegou **{item['name']}** do objeto!")
+        self._decor_atualiza_tem_loot(d)
+        # Re-send updated loot so the open panel refreshes live
+        await self.send_to(pid, {"type": "decor_loot", "decor_id": d["id"],
+                                  "gold": loot["gold"], "items": loot["items"]})
+        await self.push_state()
+
+    def _serializar_decoracoes(self):
+        """Payload de render do cliente (sem vazar o conteúdo do loot)."""
+        out = []
+        for d in self.decorations:
+            meta = DECOR_TYPES[d["type"]]
+            out.append({
+                "id": d["id"], "type": d["type"], "pos": d["pos"],
+                "facing": d.get("facing", [0, 1]),
+                "tiles": self._decor_tiles(d),
+                "tem_loot": bool(d.get("tem_loot")),
+                "charges": d.get("charges"),
+                "alto": meta["alto"], "pisavel": meta["pisavel"],
+                "special": meta["special"], "emoji": meta["emoji"],
+                "size": self._decor_base_size(d),
+                "vscale": d.get("vscale") or [1, 1],
+                "image": d.get("image"),
+            })
+        return out
+
+    def _serializar_materiais(self):
+        """Camada de materiais como {"x,y": id} para o cliente."""
+        return {f"{x},{y}": mid for (x, y), mid in getattr(self, "materiais", {}).items()}
+
     def _face_toward(self, m, target_pos):
         """ORIENTADO: vira a cabeça para encarar `target_pos` (cardinal dominante),
         desde que a cauda caiba atrás. Só orientação (visual/posicional) — não move."""
@@ -9846,7 +10738,7 @@ class GameRoom:
                 continue
             if not self._monster_can_occupy(m, nx, ny, cand_facing):   # parede/porta/entidade em qualquer casa do footprint
                 continue
-            m["pos"] = [nx, ny]
+            await self._commit_monster_step(m, nx, ny)
             if cand_facing is not None:
                 m["facing"] = cand_facing
             break
@@ -10583,6 +11475,7 @@ class GameRoom:
         # Ataca e recua: afasta-se um passo do alvo após a mordida.
         if m["hp"] > 0:
             if self._passo_monstro(m, target["pos"][0], target["pos"][1], away=True):
+                await self._aplicar_fogueira_se_pisar(m)
                 await self.gm_say(f"🐍 **{m['name']}** recua para as sombras após morder.")
 
     # ── IA Devorador Orgânico ─────────────────────────────────────────────────
@@ -10627,6 +11520,7 @@ class GameRoom:
                     break
                 if self._em_zona_fogo(m["pos"]):
                     self._passo_monstro(m, target["pos"][0], target["pos"][1], away=True)
+                    await self._aplicar_fogueira_se_pisar(m)
                     await self.gm_say(f"🟢 **{m['name']}** recua das chamas!")
                     break
                 if self._is_adjacent_to_monster(target["pos"], m):
@@ -10809,6 +11703,7 @@ class GameRoom:
                 alvo = min(targets, key=lambda t: max(abs(m["pos"][0] - t["obj"]["pos"][0]),
                                                       abs(m["pos"][1] - t["obj"]["pos"][1])))["obj"]
                 self._passo_monstro(m, alvo["pos"][0], alvo["pos"][1], away=True)
+                await self._aplicar_fogueira_se_pisar(m)
             return
         target_obj = self._get_monster_primary_target(m, targets)
         if not target_obj:
@@ -11682,7 +12577,7 @@ class GameRoom:
                     nx, ny = m["pos"][0]+adx, m["pos"][1]+ady
                     if not self._monster_can_occupy(m, nx, ny):   # footprint multi-tile inteiro livre
                         continue
-                    m["pos"] = [nx, ny]
+                    await self._commit_monster_step(m, nx, ny)
                     break
                 # Monstro pisou em armadilha colocável (de aliado)?
                 arm = self._armadilha_no_tile(m["pos"][0], m["pos"][1])
@@ -11949,6 +12844,19 @@ class GameRoom:
         if not any(p["alive"] for p in self.players.values()):
             await self.end_game(victory=False)
 
+    async def _enviar_spell_pick_prompt(self, p):
+        """Envia ao jogador o prompt da próxima escolha de magia pendente (fila)."""
+        fila = p.get("pending_spell_pick") or []
+        if not fila:
+            return
+        circ = fila[0]
+        opcoes = [mid for mid, m in GRIMORIO.items()
+                  if p["class_id"] in m.get("classe", [])
+                  and m.get("circulo") == circ
+                  and mid not in p.get("magias_conhecidas", [])]
+        await self.send_to(p["id"], {
+            "type": "spell_pick_prompt", "circulo": circ, "count": 1, "opcoes": opcoes})
+
     async def _check_level_up(self, p):
         threshold = p["level"] * 30
         if p["xp"] >= threshold:
@@ -11963,21 +12871,64 @@ class GameRoom:
             p["fort"] += 1
             p["ref_"] += 1
             p["will"] += 1
-            p["max_mp"] += 2
-            p["mp"] = min(p["max_mp"], p["mp"] + 2)
             await self.gm_say(f"⭐ **{p['name']}** subiu para o nível **{p['level']}**! +1 em Ataque, CA e Testes de Resistência!")
+            if p.get("class_id") in ("mage", "cleric"):
+                # Slot novo do nível já entra cheio (slots_max_para usa o novo level).
+                circ = NIVEL_NOVA_MAGIA.get(p["level"])
+                if circ:
+                    p.setdefault("pending_spell_pick", []).append(circ)
+                    await self._enviar_spell_pick_prompt(p)
 
     # ── Fase 3: avaliação de objetivos ──────────────────────────────────────
 
-    async def _conceder_bonus_secundario(self, obj):
-        """Concede XP+ouro ao grupo por um objetivo secundário cumprido."""
-        for p in self.players.values():
-            if p.get("alive"):
-                p["xp"] += OBJ_BONUS_XP
-                p["gold"] += OBJ_BONUS_OURO
+    def _resolve_reward_item(self, iid):
+        """Resolve um id de item de recompensa numa definicao completa (deepcopy)."""
+        idef = (
+            next((i for i in CHEST_ITEMS    if i["id"] == iid), None) or
+            next((i for i in SHOP_WEAPONS   if i["id"] == iid), None) or
+            next((i for i in SHOP_MERCHANT  if i["id"] == iid), None)
+        )
+        return deepcopy(idef) if idef else None
+
+    async def _conceder_objetivo_reward(self, obj, is_primary, loot_acc):
+        """Concede a recompensa de um objetivo cumprido.
+
+        XP e ouro vem como TOTAL no objetivo e sao divididos igualmente entre os
+        herois vivos; os itens de recompensa sao resolvidos e acrescentados a
+        `loot_acc` (uma tarefa posterior os larga num unico bau). Compatibilidade:
+        objetivos sem `xp`/`reward` usam os padroes antigos (secundario=50/25,
+        principal=0)."""
+        obj = obj or {}
+        xp_default   = 0 if is_primary else OBJ_BONUS_XP
+        ouro_default = 0 if is_primary else OBJ_BONUS_OURO
+        xp_total   = int(obj.get("xp", xp_default))
+        reward     = obj.get("reward") or {}
+        ouro_total = int(reward.get("gold", ouro_default))
+        vivos = [p for p in self.players.values() if p.get("alive")]
+        n = max(1, len(vivos))
+        # XP nunca arredonda p/ zero (cada heroi ganha >=1); ouro pode dar 0 se o
+        # total for menor que o nº de herois (perda fracionaria aceitavel).
+        xp_share   = max(1, xp_total // n) if xp_total > 0 else 0
+        ouro_share = ouro_total // n if ouro_total > 0 else 0
+        for p in vivos:
+            if ouro_share: p["gold"] += ouro_share
+            if xp_share:
+                p["xp"] += xp_share
                 await self._check_level_up(p)
-        nome = (obj or {}).get("type", "objetivo")
-        await self.gm_say(f"⭐ Objetivo secundário **{nome}** cumprido! +{OBJ_BONUS_XP} XP, +{OBJ_BONUS_OURO} ouro ao grupo.")
+        itens_nomes = []
+        for it in (reward.get("items") or []):
+            idef = self._resolve_reward_item(it.get("id"))
+            if idef:
+                loot_acc.append(idef)
+                itens_nomes.append(idef.get("name", idef.get("id", "item")))
+        nome = obj.get("type", "objetivo")
+        partes = [f"⭐ Objetivo **{nome}** cumprido!"]
+        if xp_share:   partes.append(f"+{xp_share} XP")
+        if ouro_share: partes.append(f"+{ouro_share} ouro")
+        partes_txt = " ".join(partes[:1]) + (" " + ", ".join(partes[1:]) + " a cada heroi." if len(partes) > 1 else "")
+        if itens_nomes:
+            partes_txt += " 🎁 Recompensa largada: " + ", ".join(itens_nomes) + "."
+        await self.gm_say(partes_txt)
 
     def _objetivo_cumprido(self, obj):
         """True se o objetivo `obj` está cumprido no estado atual (só autorado)."""
@@ -12010,7 +12961,8 @@ class GameRoom:
 
     async def _check_objectives(self):
         """Catch-all chamado por push_state. Recalcula o status p/ o HUD e, se o
-        principal está cumprido, concede bônus dos secundários e encerra em vitória."""
+        principal está cumprido, concede as recompensas (XP/ouro divididos + baú de
+        itens) e sinaliza `mission_complete_pending` para o encerramento manual."""
         if not self.objectives:
             return
         prim = self.objectives.get("primary")
@@ -12022,28 +12974,44 @@ class GameRoom:
         if (self.phase == "playing" and not self._objetivo_concluido
                 and prim and self._objetivo_cumprido(prim)):
             self._objetivo_concluido = True
+            loot = []
+            await self._conceder_objetivo_reward(prim, is_primary=True, loot_acc=loot)
             for s in secs:
                 if self._objetivo_cumprido(s):
-                    await self._conceder_bonus_secundario(s)
-            if (self.mode == "campaign" and self.campaign
-                    and self.campaign_phase < len(self.campaign["dungeons"]) - 1):
-                # Encerramento da fase concluída (mostrado na cidade).
+                    await self._conceder_objetivo_reward(s, is_primary=False, loot_acc=loot)
+            if loot:
+                vivos = [p for p in self.players.values() if p.get("alive")]
+                base = list(vivos[0]["pos"]) if vivos else list(self.exit_pos or self.stairs_pos or [0, 0])
+                # Casa livre adjacente (não em cima do herói/baús) para o baú abrir bem.
+                pos = self._free_tile_near(base)
+                self._spawn_chest(pos, 0, loot)
+            self.mission_complete_pending = True
+            await self.gm_say("🏁 Objetivo principal cumprido! Recolham a recompensa e cliquem em **Encerrar missão** quando estiverem prontos.")
+
+    async def handle_encerrar_missao(self, pid):
+        """Encerramento manual da fase apos o objetivo principal cumprido.
+        Faz a transicao que antes era automatica em _check_objectives."""
+        if pid not in self.players:
+            return
+        if self.phase != "playing" or not self.mission_complete_pending:
+            return
+        self.mission_complete_pending = False
+        if (self.mode == "campaign" and self.campaign
+                and self.campaign_phase < len(self.campaign["dungeons"]) - 1):
+            fase = _fase_obj(self.campaign["dungeons"][self.campaign_phase])
+            self._campaign_outro = _story_beat(f"outro:{self.campaign_phase}", [fase.get("outro")])
+            self.campaign_phase += 1
+            self.dungeon_generated = False
+            self._objetivo_concluido = False
+            await self.gm_say("🏆 Fase concluída! Retornem à cidade antes da próxima masmorra.")
+            await self._voltar_para_cidade()
+        else:
+            story = None
+            if self.mode == "campaign" and self.campaign:
                 fase = _fase_obj(self.campaign["dungeons"][self.campaign_phase])
-                self._campaign_outro = ({"key": f"outro:{self.campaign_phase}", "text": fase["outro"]}
-                                        if fase.get("outro") else None)
-                self.campaign_phase += 1
-                self.dungeon_generated = False
-                self._objetivo_concluido = False
-                await self.gm_say("🏆 Fase concluída! Retornem à cidade antes da próxima masmorra.")
-                await self._voltar_para_cidade()
-            else:
-                story = None
-                if self.mode == "campaign" and self.campaign:
-                    fase = _fase_obj(self.campaign["dungeons"][self.campaign_phase])
-                    partes = [p for p in (fase.get("outro"), self.campaign.get("outro")) if p]
-                    if partes:
-                        story = {"key": f"final:{self.campaign_phase}", "text": "\n\n".join(partes)}
-                await self.end_game(victory=True, story=story)
+                story = _story_beat(f"final:{self.campaign_phase}",
+                                    [fase.get("outro"), self.campaign.get("outro")])
+            await self.end_game(victory=True, story=story)
 
     async def handle_libertar_prisioneiro(self, pid):
         if not self._is_turn(pid):
@@ -12057,47 +13025,70 @@ class GameRoom:
         if max(abs(px - bx), abs(py - by)) > 1:
             await self.send_to(pid, {"type": "error", "msg": "Aproxime-se do prisioneiro."}); return
         self.prisoner["freed"] = True
+        self.prisoner["rescuer_pid"] = pid
         p["action_done"] = True
         await self.gm_say(f"🔓 **{p['name']}** libertou o prisioneiro!")
         await self.push_state()
 
+    async def handle_mover_prisioneiro(self, pid, dx, dy):
+        """Controle manual: o resgatador move o prisioneiro liberto 1 casa na
+        janela pós-turno (gasta 1 de movimento). Não ataca."""
+        if not self._is_turn(pid): return
+        if self.animados_phase_pid != pid:
+            await self.send_to(pid, {"type": "error", "msg": "Encerre seu turno primeiro para mover o prisioneiro."}); return
+        pr = self.prisoner
+        if not pr or not pr.get("freed") or not pr.get("alive"):
+            await self.send_to(pid, {"type": "error", "msg": "Não há prisioneiro para mover."}); return
+        if pr.get("rescuer_pid") != pid:
+            await self.send_to(pid, {"type": "error", "msg": "Você não controla este prisioneiro."}); return
+        if pr.get("moves_left", 0) <= 0:
+            await self.send_to(pid, {"type": "error", "msg": "Prisioneiro sem movimento neste turno."}); return
+        if abs(dx) > 1 or abs(dy) > 1 or (dx == 0 and dy == 0):
+            return
+        nx, ny = pr["pos"][0] + dx, pr["pos"][1] + dy
+        if not self._tile_livre_para_animado(nx, ny, None):
+            await self.send_to(pid, {"type": "error", "msg": "Caminho bloqueado para o prisioneiro."}); return
+        pr["pos"] = [nx, ny]
+        pr["moves_left"] -= 1
+        # Pisou numa armadilha colocável? Dispara sobre o prisioneiro (igual ao herói).
+        arm = self._armadilha_no_tile(nx, ny)
+        if arm and pr.get("alive"):
+            await self._disparar_armadilha(pr, arm)
+        await self.push_state()
+
+    async def _prisioneiro_morre(self):
+        """Morte do prisioneiro (por monstro, armadilha, etc.): falha o resgate
+        sem encerrar a partida. Caminho único de morte do prisioneiro."""
+        pr = self.prisoner
+        if not pr:
+            return
+        pr["alive"] = False
+        self.rescue_failed = True
+        await self.gm_say("☠️ O prisioneiro foi morto! O resgate falhou.")
+
     async def _processar_prisioneiro_turno(self):
-        """Prisioneiro libertado: 1 passo em direção ao herói vivo mais próximo;
-        depois, cada monstro adjacente o fere. Morte → rescue_failed (não encerra)."""
+        """Prisioneiro libertado: cada monstro adjacente o fere. O MOVIMENTO é
+        manual, pelo resgatador, em handle_mover_prisioneiro (janela pós-turno)."""
         pr = self.prisoner
         if not pr or not pr.get("freed") or not pr.get("alive"):
             return
-        herois = [p for p in self.players.values() if self._ativo(p)]
-        if herois:
-            alvo = min(herois, key=lambda p: max(abs(p["pos"][0] - pr["pos"][0]),
-                                                 abs(p["pos"][1] - pr["pos"][1])))
-            self._step_towards(pr, alvo["pos"])
-        # Dano de monstros adjacentes (caminho dedicado, simples e isolado).
+        # Tica venenos/efeitos por rodada (ex.: fosso_envenenado): conta durações e
+        # reverte o que expirou — igual a heróis/monstros.
+        await self._processar_venenos_turno(pr)
         for m in self.monsters.values():
             if m["hp"] <= 0:
                 continue
             if max(abs(m["pos"][0] - pr["pos"][0]), abs(m["pos"][1] - pr["pos"][1])) <= 1:
-                dano = random.randint(2, 5)
+                hit, _roll, _total, _crit = d20_attack(m.get("atk_bonus", 0), pr.get("ac", PRIS_AC))
+                if not hit:
+                    await self.gm_say("🛡️ O prisioneiro esquiva de um monstro!")
+                    continue
+                dano = roll_dice(m.get("damage", "1d4"))
                 pr["hp"] -= dano
                 await self.gm_say(f"⚔️ Um monstro fere o prisioneiro ({dano})!")
                 if pr["hp"] <= 0:
-                    pr["alive"] = False
-                    self.rescue_failed = True
-                    await self.gm_say("☠️ O prisioneiro foi morto! O resgate falhou.")
+                    await self._prisioneiro_morre()
                     break
-
-    def _step_towards(self, ent, dest):
-        """Move `ent` (dict com 'pos') 1 casa em direção a `dest` por casa livre
-        (FLOOR/DOOR, não ocupada por monstro/herói). Sem diagonal."""
-        ex, ey = ent["pos"]; dx, dy = dest
-        opcoes = sorted([(ex + sx, ey + sy) for sx, sy in ((1,0),(-1,0),(0,1),(0,-1))],
-                        key=lambda c: max(abs(c[0] - dx), abs(c[1] - dy)))
-        ocup = {tuple(m["pos"]) for m in self.monsters.values() if m["hp"] > 0}
-        ocup |= {tuple(p["pos"]) for p in self.players.values() if p.get("alive")}
-        for nx, ny in opcoes:
-            if (0 <= nx < self.map_w and 0 <= ny < self.map_h
-                    and self.tiles[ny][nx] != WALL and (nx, ny) not in ocup):
-                ent["pos"] = [nx, ny]; return
 
     async def end_game(self, victory, story=None):
         self.phase = "ended"
@@ -12148,13 +13139,11 @@ class GameRoom:
                "story": None}
         if self.phase == "playing":
             fase = _fase_obj(self.campaign["dungeons"][self.campaign_phase])
-            texto = ""
-            if self.campaign_phase == 0 and self.campaign.get("intro"):
-                texto = self.campaign["intro"]
-            if fase.get("intro"):
-                texto += ("\n\n" if texto else "") + fase["intro"]
-            if texto:
-                pay["story"] = {"key": f"intro:{self.campaign_phase}", "text": texto}
+            parts = []
+            if self.campaign_phase == 0:
+                parts.append(self.campaign.get("intro"))
+            parts.append(fase.get("intro"))
+            pay["story"] = _story_beat(f"intro:{self.campaign_phase}", parts)
         elif self.phase == "city" and self._campaign_outro:
             pay["story"] = self._campaign_outro
         return pay
@@ -12163,6 +13152,7 @@ class GameRoom:
         await self._check_objectives()
         await self.broadcast({
             "type": "game_state",
+            "ambiente": getattr(self, "ambiente", "masmorra"),
             "tiles": self.tiles,
             "rooms": self.rooms,
             "players": list(self.players.values()),
@@ -12176,6 +13166,7 @@ class GameRoom:
             "stairs_pos": self.stairs_pos,
             "campaign": self._campaign_payload(),
             "objectives": self.objective_status,
+            "mission_complete_pending": self.mission_complete_pending,
             "exit_pos": self.exit_pos,
             "prisoner": self.prisoner,
             "current_turn": self.current_pid(),
@@ -12186,6 +13177,8 @@ class GameRoom:
             "gm_log": self.gm_log[-30:],
             "phase": self.phase,
             "chests": list(self.chests.values()),
+            "decorations": self._serializar_decoracoes(),
+            "materiais": self._serializar_materiais(),
         })
 
 # ─── CONNECTION HANDLER ───────────────────────────────────────────────────────
@@ -12226,6 +13219,68 @@ async def handler(ws):
             t = msg.get("type")
 
             try:
+                if t == "upload_story":
+                    ok, res = _save_story_upload(msg.get("name"), msg.get("data"))
+                    payload = {"type": "upload_result",
+                               "upload_id": msg.get("upload_id"), "ok": ok}
+                    if ok:
+                        payload["name"] = res
+                    else:
+                        payload["error"] = res
+                    await ws.send(json.dumps(payload))
+                    continue
+
+                if t == "upload_dungeon":
+                    ok, res = _save_dungeon_upload(msg.get("defn"))
+                    payload = {"type": "upload_result", "kind": "dungeon",
+                               "upload_id": msg.get("upload_id"), "ok": ok}
+                    if ok:
+                        payload["file"] = res["file"]
+                        payload["entry"] = res["entry"]
+                    else:
+                        payload["error"] = res
+                    await ws.send(json.dumps(payload))
+                    continue
+
+                if t == "upload_campaign":
+                    ok, res = _save_campaign_upload(msg.get("defn"))
+                    payload = {"type": "upload_result", "kind": "campaign",
+                               "upload_id": msg.get("upload_id"), "ok": ok}
+                    if ok:
+                        payload["file"] = res["file"]
+                    else:
+                        payload["error"] = res
+                    await ws.send(json.dumps(payload))
+                    continue
+
+                if t == "upload_prisoner":
+                    ok, res = _save_prisoner_upload(msg.get("name"), msg.get("data"))
+                    payload = {"type": "upload_result",
+                               "upload_id": msg.get("upload_id"), "ok": ok}
+                    if ok:
+                        payload["name"] = res
+                    else:
+                        payload["error"] = res
+                    await ws.send(json.dumps(payload))
+                    continue
+
+                if t == "objeto_upload":
+                    ok, res = _save_objeto_upload(msg.get("name"), msg.get("data"))
+                    payload = {"type": "upload_result",
+                               "upload_id": msg.get("upload_id"), "ok": ok}
+                    if ok:
+                        payload["name"] = res
+                    else:
+                        payload["error"] = res
+                    await ws.send(json.dumps(payload))
+                    continue
+
+                if t == "list_objetos":
+                    await ws.send(json.dumps({"type": "objetos_list",
+                                              "upload_id": msg.get("upload_id"),
+                                              "objetos": _listar_objetos()}))
+                    continue
+
                 if t == "create_room":
                     name = (msg.get("name") or "Herói")[:20]
                     code = make_code()
@@ -12291,6 +13346,21 @@ async def handler(ws):
                 elif t == "select_class":
                     if room: await room.select_class(pid, msg.get("class_id"))
 
+                elif t == "guild_buy":
+                    if room: await room.handle_guild_buy(pid, msg.get("item_id"))
+
+                elif t == "guild_equip":
+                    if room: await room.handle_guild_equip(pid, msg.get("slot"), msg.get("item_id"))
+
+                elif t == "usar_tecnica":
+                    if room: await room.handle_usar_tecnica(pid, msg.get("tecnica_id"), msg.get("target_id"))
+
+                elif t == "set_known_spells":
+                    if room: await room.handle_set_known_spells(pid, msg.get("ids"))
+
+                elif t == "escolher_magia_nivel":
+                    if room: await room.handle_escolher_magia_nivel(pid, msg.get("magia_id"))
+
                 elif t == "select_dungeon":
                     if room: await room.handle_select_dungeon(pid, msg.get("file"))
 
@@ -12311,6 +13381,9 @@ async def handler(ws):
 
                 elif t == "libertar_prisioneiro":
                     if room: await room.handle_libertar_prisioneiro(pid)
+
+                elif t == "encerrar_missao":
+                    if room: await room.handle_encerrar_missao(pid)
 
                 elif t == "attack":
                     if room: await room.handle_attack(pid, msg.get("target_id"), msg.get("buffs"))
@@ -12383,6 +13456,11 @@ async def handler(ws):
                     if room and abs(dx) + abs(dy) == 1:
                         await room.handle_mover_animado(pid, msg.get("animado_id"), dx, dy)
 
+                elif t == "mover_prisioneiro":
+                    dx, dy = _delta(msg.get("dx", 0)), _delta(msg.get("dy", 0))
+                    if room and abs(dx) + abs(dy) == 1:
+                        await room.handle_mover_prisioneiro(pid, dx, dy)
+
                 elif t == "atacar_animado":
                     if room: await room.handle_atacar_animado(pid, msg.get("animado_id"), msg.get("target_id"))
 
@@ -12425,10 +13503,21 @@ async def handler(ws):
                 elif t == "unequip":
                     if room: await room.handle_unequip(pid, msg.get("slot_key"))
 
+                elif t == "reorder_bag":
+                    if room: await room.handle_reorder_bag(
+                        pid, int(msg.get("from_index", -1)), int(msg.get("to_index", 0)))
+
                 elif t == "take_from_chest":
                     if room: await room.handle_take_from_chest(
                         pid, msg.get("chest_id"), msg.get("kind"), msg.get("index", 0)
                     )
+
+                elif t == "interagir_decor":
+                    if room: await room.handle_interagir_decor(pid, msg.get("decor_id"))
+
+                elif t == "take_from_decor":
+                    if room: await room.handle_take_from_decor(
+                        pid, msg.get("decor_id"), msg.get("kind"), msg.get("index", 0))
 
                 elif t == "enter_dungeon":
                     if room: await room.enter_dungeon(pid)
@@ -12453,6 +13542,7 @@ async def handler(ws):
         if room:
             room.connections.pop(pid, None)
             if pid in room.players and room.phase == "lobby":
+                room.release_character(pid)   # libera a trava do personagem
                 room.players.pop(pid, None)
                 if room.host_pid == pid and room.players:
                     room.host_pid = next(iter(room.players))
@@ -12478,6 +13568,9 @@ for _ext, _ct in (
     (".woff2", "font/woff2"), (".woff", "font/woff"), (".ttf", "font/ttf"),
     (".svg", "image/svg+xml"), (".png", "image/png"), (".jpg", "image/jpeg"),
     (".webp", "image/webp"), (".ico", "image/x-icon"),
+    (".jpeg", "image/jpeg"), (".gif", "image/gif"),
+    (".mp3", "audio/mpeg"), (".ogg", "audio/ogg"),
+    (".wav", "audio/wav"), (".m4a", "audio/mp4"),
 ):
     mimetypes.add_type(_ct, _ext)
 
@@ -12494,18 +13587,210 @@ def _http(status, reason, body, ctype="text/plain; charset=utf-8"):
                        "Cache-Control": "no-cache"})
     return Response(status, reason, headers, body)
 
+# ─── Upload de mídia da história (editor → assets/story/) ─────────────────────
+STORY_DIR = os.path.join(BASE_DIR, "assets", "story")
+STORY_UPLOAD_MAX = 25 * 1024 * 1024            # 25 MB por arquivo
+_STORY_IMG_EXT = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+_STORY_AUDIO_EXT = {".mp3", ".ogg", ".wav", ".m4a"}
+_STORY_OK_EXT = _STORY_IMG_EXT | _STORY_AUDIO_EXT
+
+def _save_story_upload(name, data_b64):
+    """Grava uma mídia de história em assets/story/. Sobrescreve se já existir.
+    Retorna (ok: bool, basename_salvo | mensagem_de_erro)."""
+    base = os.path.basename(name or "")        # bloqueia ../ e caminhos absolutos
+    if not base:
+        return False, "nome inválido"
+    if "\x00" in base:
+        return False, "nome inválido"
+    ext = os.path.splitext(base)[1].lower()
+    if ext not in _STORY_OK_EXT:
+        return False, "extensão não permitida"
+    if not isinstance(data_b64, str) or not data_b64:
+        return False, "dados inválidos"
+    # rejeita cedo pelo tamanho aproximado do base64 (evita decodificar gigante)
+    if (len(data_b64) * 3) // 4 > STORY_UPLOAD_MAX:
+        return False, "arquivo grande demais"
+    try:
+        raw = base64.b64decode(data_b64, validate=True)
+    except Exception:
+        return False, "dados inválidos"
+    if len(raw) > STORY_UPLOAD_MAX:
+        return False, "arquivo grande demais"
+    try:
+        os.makedirs(STORY_DIR, exist_ok=True)
+        with open(os.path.join(STORY_DIR, base), "wb") as f:
+            f.write(raw)
+    except OSError:
+        return False, "falha ao gravar"
+    return True, base
+
+PRISONER_DIR = os.path.join(BASE_DIR, "assets", "pawns", "prisioneiros")
+
+def _save_prisoner_upload(name, data_b64):
+    """Grava uma imagem de prisioneiro em assets/pawns/prisioneiros/. Só imagens.
+    Mesma proteção (path-traversal, tamanho) do _save_story_upload.
+    Retorna (ok: bool, basename_salvo | mensagem_de_erro)."""
+    base = os.path.basename(name or "")
+    if not base or "\x00" in base:
+        return False, "nome inválido"
+    ext = os.path.splitext(base)[1].lower()
+    if ext not in _STORY_IMG_EXT:
+        return False, "extensão não permitida"
+    if not isinstance(data_b64, str) or not data_b64:
+        return False, "dados inválidos"
+    if (len(data_b64) * 3) // 4 > STORY_UPLOAD_MAX:
+        return False, "arquivo grande demais"
+    try:
+        raw = base64.b64decode(data_b64, validate=True)
+    except Exception:
+        return False, "dados inválidos"
+    if len(raw) > STORY_UPLOAD_MAX:
+        return False, "arquivo grande demais"
+    try:
+        os.makedirs(PRISONER_DIR, exist_ok=True)
+        with open(os.path.join(PRISONER_DIR, base), "wb") as f:
+            f.write(raw)
+    except OSError:
+        return False, "falha ao gravar"
+    return True, base
+
+OBJETOS_DIR = os.path.join(BASE_DIR, "assets", "objetos")
+_OBJETOS_DIR = OBJETOS_DIR
+_OBJETOS_OK_EXT = {".png"}
+
+def _save_objeto_upload(name, data_b64):
+    """Grava um PNG de objeto em assets/objetos/. Só .png. Mesma proteção
+    (path-traversal via basename, tamanho) do _save_story_upload.
+    Retorna (ok: bool, basename_salvo | mensagem_de_erro)."""
+    base = os.path.basename(name or "")
+    if not base or "\x00" in base:
+        return False, "nome inválido"
+    ext = os.path.splitext(base)[1].lower()
+    if ext not in _OBJETOS_OK_EXT:
+        return False, "envie um arquivo .png"
+    if not isinstance(data_b64, str) or not data_b64:
+        return False, "dados inválidos"
+    if (len(data_b64) * 3) // 4 > STORY_UPLOAD_MAX:
+        return False, "arquivo grande demais"
+    try:
+        raw = base64.b64decode(data_b64, validate=True)
+    except Exception:
+        return False, "dados inválidos"
+    if len(raw) > STORY_UPLOAD_MAX:
+        return False, "arquivo grande demais"
+    try:
+        os.makedirs(OBJETOS_DIR, exist_ok=True)
+        with open(os.path.join(OBJETOS_DIR, base), "wb") as f:
+            f.write(raw)
+    except OSError:
+        return False, "falha ao gravar"
+    return True, base
+
+def _listar_objetos():
+    """Lista os basenames .png de assets/objetos/ (ordenado)."""
+    try:
+        return sorted(n for n in os.listdir(OBJETOS_DIR)
+                      if n.lower().endswith(".png"))
+    except OSError:
+        return []
+
+# ─── Salvar definições do editor (masmorra → dungeons/, campanha → campaigns/) ──
+# O editor roda em file:// e o navegador não pode gravar em pastas do PC, então a
+# definição (JSON já montado) chega por WebSocket e o servidor grava na pasta
+# correta — assim a masmorra aparece na aba de campanha sem passos manuais.
+DEF_UPLOAD_MAX = 2 * 1024 * 1024               # 2 MB — JSON de masmorra/campanha é pequeno
+_BAD_FNAME = set('\\/:*?"<>|') | {"\x00"}
+
+def _safe_def_filename(raw_id):
+    """Deriva <id>.json seguro a partir do id da definição (sem componente de dir)."""
+    base = os.path.basename(str(raw_id or "")).strip()
+    base = "".join("_" if c in _BAD_FNAME else c for c in base)
+    if base.lower().endswith(".json"):
+        base = base[:-5]
+    base = base.strip(" .") or "sem_nome"
+    return base + ".json"
+
+def _gravar_def(defn, destino_dir, file):
+    """Serializa e grava `defn` em destino_dir/file. Retorna (ok, msg)."""
+    try:
+        body = json.dumps(defn, ensure_ascii=False, indent=2)
+        if len(body.encode("utf-8")) > DEF_UPLOAD_MAX:
+            return False, "arquivo grande demais"
+        os.makedirs(destino_dir, exist_ok=True)
+        with open(os.path.join(destino_dir, file), "w", encoding="utf-8") as f:
+            f.write(body)
+    except OSError:
+        return False, "falha ao gravar"
+    return True, "ok"
+
+def _save_dungeon_upload(defn):
+    """Valida e grava uma masmorra em DUNGEONS_DIR e regenera o índice do editor.
+    Retorna (ok, {'file', 'entry'} | mensagem)."""
+    if not isinstance(defn, dict):
+        return False, "definição inválida"
+    ok, msg = validar_dungeon(defn)
+    if not ok:
+        return False, msg
+    file = _safe_def_filename(defn.get("id"))
+    ok, msg = _gravar_def(defn, DUNGEONS_DIR, file)
+    if not ok:
+        return False, msg
+    _regen_dungeons_index()
+    entry = {"file": file, "id": defn.get("id", file),
+             "name": defn.get("name", file), "defn": defn}
+    return True, {"file": file, "entry": entry}
+
+def _save_campaign_upload(defn):
+    """Valida e grava uma campanha em CAMPAIGNS_DIR.
+    Retorna (ok, {'file'} | mensagem)."""
+    if not isinstance(defn, dict):
+        return False, "definição inválida"
+    ok, msg = validar_campanha(defn)
+    if not ok:
+        return False, msg
+    file = _safe_def_filename(defn.get("id"))
+    ok, msg = _gravar_def(defn, CAMPAIGNS_DIR, file)
+    if not ok:
+        return False, msg
+    return True, {"file": file}
+
+def _regen_dungeons_index():
+    """Reescreve tools/editor_dungeons.js a partir de dungeons/ para que a aba de
+    campanha do editor enxergue as masmorras salvas (inclusive após recarregar).
+    Mesma saída de tools/export_catalog.py:write_dungeons_js."""
+    try:
+        out = []
+        for d in listar_dungeons():
+            defn = carregar_dungeon(d["file"])
+            if defn is None:
+                continue
+            out.append({"file": d["file"], "id": d["id"],
+                        "name": d["name"], "defn": defn})
+        payload = json.dumps(out, ensure_ascii=False, indent=2)
+        txt = ("window.EDITOR_DUNGEONS = " + payload + ";\n"
+               "// GERADO ao salvar no editor (e por tools/export_catalog.py).\n")
+        with open(os.path.join(BASE_DIR, "tools", "editor_dungeons.js"),
+                  "w", encoding="utf-8") as f:
+            f.write(txt)
+    except Exception:
+        pass
+
 def _serve_static(request):
     """Resolve o caminho pedido pelo navegador para um arquivo do cliente.
     Protege contra path traversal e só expõe o necessário para jogar."""
     raw = request.path.split("?", 1)[0].split("#", 1)[0]   # tira cache-buster ?v=
+    raw = urllib.parse.unquote(raw)        # %20→espaço etc. (nomes de mídia com espaços)
     rel = raw.lstrip("/") or "index.html"
     full = os.path.normpath(os.path.join(BASE_DIR, rel))
     # Mantém dentro de BASE_DIR (bloqueia ../ e caminhos absolutos)
     if full != BASE_DIR and not full.startswith(BASE_DIR + os.sep):
         return _http(403, "Forbidden", "403 Forbidden")
-    # Allow-list: arquivo solto liberado OU dentro de um dir estático permitido
-    top = rel.replace("\\", "/").split("/", 1)[0]
-    if rel not in _STATIC_FILES and top not in _STATIC_ROOTS:
+    # Allow-list a partir do caminho JÁ RESOLVIDO (não do bruto): um ../ codificado
+    # pode escapar de assets/ para a raiz sem sair de BASE_DIR — recomputar de `full`
+    # impede servir server.py via /assets/%2e%2e%2fserver.py.
+    rel_norm = os.path.relpath(full, BASE_DIR).replace("\\", "/")
+    top = rel_norm.split("/", 1)[0]
+    if rel_norm not in _STATIC_FILES and top not in _STATIC_ROOTS:
         return _http(404, "Not Found", "404 Not Found")
     if not os.path.isfile(full):
         return _http(404, "Not Found", "404 Not Found")
@@ -12554,7 +13839,8 @@ async def main():
     # process_request serve os arquivos do cliente na mesma porta → um único
     # túnel https cobre página + wss, sem mixed content nem digitar endereço.
     async with websockets.serve(handler, "0.0.0.0", 8765,
-                                process_request=process_request):
+                                process_request=process_request,
+                                max_size=34 * 1024 * 1024):
         await asyncio.Future()
 
 if __name__ == "__main__":
