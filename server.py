@@ -315,6 +315,54 @@ GUILD_CATALOG = {
         "preco": 200, "nome": "Fúria Berserker III", "icon": "🔥",
         "desc": "Fúria Berserker concede 2 ataques extras (3 ataques no total).",
     },
+    "clerigo_cura_2": {
+        "id": "clerigo_cura_2", "categoria": "especializacao", "classe": "cleric",
+        "linha": "clerigo_cura", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Cura II", "icon": "🙌",
+        "desc": "Cura pode usar até 2d8 + INT.",
+    },
+    "clerigo_cura_3": {
+        "id": "clerigo_cura_3", "categoria": "especializacao", "classe": "cleric",
+        "linha": "clerigo_cura", "nivel": 3, "requer": "clerigo_cura_2", "exclusiva": False,
+        "preco": 200, "nome": "Cura III", "icon": "🙌",
+        "desc": "Cura pode usar até 3d8 + INT.",
+    },
+    "clerigo_massa_2": {
+        "id": "clerigo_massa_2", "categoria": "especializacao", "classe": "cleric",
+        "linha": "clerigo_massa", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Cura em Massa II", "icon": "🌟",
+        "desc": "Cura em Massa: até 2d8 + INT, raio 4.",
+    },
+    "clerigo_massa_3": {
+        "id": "clerigo_massa_3", "categoria": "especializacao", "classe": "cleric",
+        "linha": "clerigo_massa", "nivel": 3, "requer": "clerigo_massa_2", "exclusiva": False,
+        "preco": 200, "nome": "Cura em Massa III", "icon": "🌟",
+        "desc": "Cura em Massa: até 3d8 + INT, raio 6.",
+    },
+    "clerigo_purif_2": {
+        "id": "clerigo_purif_2", "categoria": "especializacao", "classe": "cleric",
+        "linha": "clerigo_purif", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Purificação II", "icon": "✨",
+        "desc": "Purificação também remove doenças.",
+    },
+    "clerigo_purif_3": {
+        "id": "clerigo_purif_3", "categoria": "especializacao", "classe": "cleric",
+        "linha": "clerigo_purif", "nivel": 3, "requer": "clerigo_purif_2", "exclusiva": False,
+        "preco": 200, "nome": "Purificação III", "icon": "✨",
+        "desc": "Purificação também remove maldições e petrificação.",
+    },
+    "clerigo_ressur_2": {
+        "id": "clerigo_ressur_2", "categoria": "especializacao", "classe": "cleric",
+        "linha": "clerigo_ressur", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Ressurreição II", "icon": "💫",
+        "desc": "Ressurreição traz o aliado com metade dos PV (🍖15 💧15).",
+    },
+    "clerigo_ressur_3": {
+        "id": "clerigo_ressur_3", "categoria": "especializacao", "classe": "cleric",
+        "linha": "clerigo_ressur", "nivel": 3, "requer": "clerigo_ressur_2", "exclusiva": False,
+        "preco": 200, "nome": "Ressurreição III", "icon": "💫",
+        "desc": "Ressurreição traz o aliado com PV cheio (🍖20 💧20).",
+    },
     # Fases 1-2 acrescentam aqui.
 }
 
@@ -3741,6 +3789,31 @@ class GameRoom:
             return raw * 2
         return raw + raw // 2
 
+    def _cura_teto(self, p):
+        """Máx. de d8 da Cura pela posse (1 base / 2 / 3)."""
+        if tem_espec(p, "clerigo_cura_3"): return 3
+        if tem_espec(p, "clerigo_cura_2"): return 2
+        return 1
+
+    def _massa_nivel(self, p):
+        """Nível da Cura em Massa (1/2/3) — define teto de dados E raio (2×nível)."""
+        if tem_espec(p, "clerigo_massa_3"): return 3
+        if tem_espec(p, "clerigo_massa_2"): return 2
+        return 1
+
+    def _purif_tipos(self, p):
+        """Tipos de purificação destravados pela posse."""
+        tipos = {"veneno"}
+        if tem_espec(p, "clerigo_purif_2"): tipos.add("doenca")
+        if tem_espec(p, "clerigo_purif_3"): tipos |= {"maldicao", "petrificacao"}
+        return tipos
+
+    def _ressur_nivel(self, p):
+        """Nível da Ressurreição (1/2/3) pela posse."""
+        if tem_espec(p, "clerigo_ressur_3"): return 3
+        if tem_espec(p, "clerigo_ressur_2"): return 2
+        return 1
+
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
         if self.phase != "playing":
@@ -6310,7 +6383,7 @@ class GameRoom:
         if p.get("action_done"):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
-        num_dados = max(1, min(3, int((data or {}).get("num_dados", 1))))
+        num_dados = max(1, min(self._cura_teto(p), int((data or {}).get("num_dados", 1))))
         alcance   = max(0, min(2, int((data or {}).get("alcance_extra", 0))))
         custo_sede = num_dados          # -1 sede por dado
         custo_fome = alcance            # -1 fome por extensão de alcance
@@ -6361,10 +6434,11 @@ class GameRoom:
         if p.get("action_done"):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
-        num_dados  = max(1, min(3, int((data or {}).get("num_dados", 1))))
+        nivel = self._massa_nivel(p)
+        num_dados = max(1, min(nivel, int((data or {}).get("num_dados", 1))))
         custo_fome = num_dados * 4
         custo_sede = num_dados * 4
-        raio = 5
+        raio = 2 * nivel   # 2 / 4 / 6
 
         if p["fome"] < custo_fome or p["sede"] < custo_sede:
             await self.send_to(pid, {"type": "error",
@@ -6434,6 +6508,9 @@ class GameRoom:
         tipo = (data or {}).get("tipo")
         if tipo not in self.PURIFICACAO_CUSTOS:
             await self.send_to(pid, {"type": "error", "msg": "Tipo de purificação inválido."}); return
+        if tipo not in self._purif_tipos(p):
+            await self.send_to(pid, {"type": "error",
+                "msg": "Você ainda não aprendeu a purificar este mal — evolua a Purificação na Guilda."}); return
         custo = self.PURIFICACAO_CUSTOS[tipo]
 
         alvo = self.players.get((data or {}).get("target_id"))
@@ -6500,7 +6577,9 @@ class GameRoom:
             await self.push_state()
 
     async def handle_ressurreicao(self, pid, data):
-        """Traz um aliado morto adjacente de volta com 1 HP. -10 fome -10 sede."""
+        """Traz um aliado morto adjacente de volta à vida. HP e custo escalam pela
+        posse: base 1 HP (🍖10💧10); clerigo_ressur_2 → metade do PV máx (🍖15💧15);
+        clerigo_ressur_3 → PV cheio (🍖20💧20)."""
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
@@ -6509,7 +6588,8 @@ class GameRoom:
         if p.get("action_done"):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
-        custo_fome, custo_sede = 10, 10
+        nivel = self._ressur_nivel(p)
+        custo_fome = custo_sede = {1: 10, 2: 15, 3: 20}[nivel]
         if p["fome"] < custo_fome or p["sede"] < custo_sede:
             await self.send_to(pid, {"type": "error",
                 "msg": f"Recursos insuficientes — precisa 🍖{custo_fome} 💧{custo_sede}."}); return
@@ -6523,7 +6603,7 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Ressurreição requer contato adjacente com o aliado."}); return
 
         alvo["alive"] = True
-        alvo["hp"] = 1
+        alvo["hp"] = {1: 1, 2: max(1, alvo["max_hp"] // 2), 3: alvo["max_hp"]}[nivel]
         alvo["action_done"] = True          # ressuscitado não age neste turno
         alvo["bonus_action_used"] = True
         # Limpa os efeitos que possam ter causado/seguido a morte
@@ -6537,7 +6617,7 @@ class GameRoom:
 
         await self.gm_say(
             f"💫 **RESSURREIÇÃO!** **{p['name']}** traz **{alvo['name']}** de volta à "
-            f"vida com **1 HP**! (🍖-{custo_fome} 💧-{custo_sede})")
+            f"vida com **{alvo['hp']} HP**! (🍖-{custo_fome} 💧-{custo_sede})")
         await self.push_state()
 
     # ── Paladino (Richard): aço e honra ─────────────────────────────────────

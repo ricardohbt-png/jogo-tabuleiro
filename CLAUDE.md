@@ -313,3 +313,16 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `skill_bonus_dano` novo (Mira III). Cliente: `GS.warriorComboCap()` limita a
 > armação e as descrições dos botões refletem o nível possuído. Teste:
 > `tools/test_guerreiro_espec.py`.
+
+> **Especializações do Clérigo (Fase 1b):** gateiam os 4 milagres do Lewis
+> (baseline enfraquecido — **mudança de gameplay**: Cura 3d8→**1d8**, Cura em Massa
+> raio 5→**2**). **Compras** (`categoria:"especializacao"`, `classe:"cleric"`; II=150,
+> III=200, III exige II por linha): `clerigo_cura_2/3` (máx 2d8/3d8),
+> `clerigo_massa_2/3` (2d8 raio 4 / 3d8 raio 6), `clerigo_purif_2/3` (+doenças /
+> +maldições **e petrificação**), `clerigo_ressur_2/3` (metade PV 🍖15💧15 / PV cheio
+> 🍖20💧20). Gating em `handle_cura`/`handle_cura_area`/`handle_purificacao`/
+> `handle_ressurreicao` via `_cura_teto`/`_massa_nivel`/`_purif_tipos`/`_ressur_nivel`
+> (+`tem_espec`). O "custo crescente" do design já vem da escala existente (💧/dado,
+> 🍖4💧4/dado, custo por tipo); a Ressurreição usa custo por nível 10/15/20. Cliente:
+> `GS.clericCuraTeto/clericMassaNivel/clericPurifTipos/clericRessurNivel` limitam os
+> painéis do Lewis. Teste: `tools/test_clerigo_espec.py`.
