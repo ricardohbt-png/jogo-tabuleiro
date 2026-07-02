@@ -326,3 +326,27 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > 🍖4💧4/dado, custo por tipo); a Ressurreição usa custo por nível 10/15/20. Cliente:
 > `GS.clericCuraTeto/clericMassaNivel/clericPurifTipos/clericRessurNivel` limitam os
 > painéis do Lewis. Teste: `tools/test_clerigo_espec.py`.
+
+> **Especializações do Paladino (Fase 1c):** gateiam as 5 habilidades de Richard
+> (baseline enfraquecido — **mudança de gameplay**: Guerreiro da Luz 4→**2**
+> atributos simultâneos, Cura pelas Mãos 2d6→**1d6**, Golpe Sagrado 2d8→**1d8**,
+> Defensor 50/50 fixo, Regeneração só cura o próprio Richard). **Compras**
+> (`categoria:"especializacao"`, `classe:"paladin"`; II=150, III=200, III exige II
+> por linha, exceto `ataque_sagrado` que só tem II): `paladino_cura_maos_2/3` (2d6;
+> opção +1d6 por +2🍖+2💧, até 3×), `paladino_ataque_sagrado_2` (+2d8 sagrado),
+> `paladino_luz_2/3` (3/4 atributos + **detecta armadilhas** em raio 2/3 — feature
+> nova, quando Visão ativa), `paladino_defensor_2/3` (raio 5; split 40%/40%, 20%
+> mitigado — era 50/50), `paladino_regen_2/3` (cura +1 HP também aliados em raio
+> 1/2). Gating em `handle_imposicao_maos`/`handle_attack` (bloco Golpe Sagrado)/
+> `_ativar_guerreiro_luz`/`handle_protetor`+`_processar_dano_protetor`+upkeep/
+> `_processar_manutencao_richard` via `tem_espec` + helpers `_cura_maos_dados`/
+> `_ataque_sagrado_dados`/`_gdl_max_atributos`/`_gdl_trap_raio`/`_defensor_raio`/
+> `_defensor_split`/`_regen_raio`. A detecção de armadilhas do Guerreiro da Luz
+> reusa `_revelar_armadilhas_raio` — generalização de `_revelar_armadilhas_luccas`
+> (Ladino) por raio parametrizado; o Ladino mantém comportamento idêntico (chama o
+> mesmo método com seu próprio raio de visão). Cliente:
+> `GS.paladinCuraMaosDados/paladinCuraMaosExtra/paladinAtaqueSagradoDados/
+> paladinLuzMaxAtributos/paladinDefensorRaio/paladinDefensorSplit/paladinRegenRaio`
+> limitam os painéis de Richard (o teto de atributos do Guerreiro da Luz é
+> bloqueado no cliente E recusado pelo servidor — autoritativo). Teste:
+> `tools/test_paladino_espec.py`.
