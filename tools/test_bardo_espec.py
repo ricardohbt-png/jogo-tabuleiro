@@ -151,6 +151,27 @@ async def main():
     check("sem bardo vivo → _bardo_lendas None", r._bardo_lendas() is None)
     check("bardo morto → aliado sem bônus", r._lenda_atk_bonus(ally3, monster(type_="goblin")) == 0)
 
+    # [6] Lendas — resistência +1 (via _testar_save fonte)
+    print("\n[6] Lendas: resistência")
+    r = setup()
+    b = bard(esp=["lenda_goblin"]); r.players["b"] = b
+    gob = monster(type_="goblin")
+    check("resist +1 vs habilidade de goblin (bardo)",
+          r._lenda_resist_bonus(b, gob) == 1)
+    check("resist +0 sem fonte", r._lenda_resist_bonus(b, None) == 0)
+    check("resist +0 vs espécie não estudada",
+          r._lenda_resist_bonus(b, monster(type_="orc")) == 0)
+
+    # _testar_save soma o bônus quando recebe fonte monstro (isola só o bônus)
+    def _bonus_delta(alvo, fonte):
+        _, _d, sb_no,  _t  = r._testar_save(alvo, "fortitude", 99)
+        _, _d2, sb_yes, _t2 = r._testar_save(alvo, "fortitude", 99, fonte=fonte)
+        return sb_yes - sb_no
+    check("_testar_save(fonte=goblin) soma +1 p/ bardo dono",
+          _bonus_delta(b, gob) == 1)
+    check("_testar_save(fonte=None) não soma",
+          _bonus_delta(b, None) == 0)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

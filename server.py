@@ -9629,9 +9629,12 @@ class GameRoom:
         # Fallback legado: tier + 1
         return alvo.get("tier", 1) + 1
 
-    def _testar_save(self, alvo, tipo_save, dificuldade, extra_mod=0):
-        """Retorna (passou, d20, bonus, total). extra_mod: bônus/penalidade adicional ao save."""
-        bonus = self._veneno_save_bonus(alvo, tipo_save) + self._mod_magia(alvo, "resistencia") + extra_mod
+    def _testar_save(self, alvo, tipo_save, dificuldade, extra_mod=0, fonte=None):
+        """Retorna (passou, d20, bonus, total). extra_mod: bônus/penalidade adicional.
+        fonte: monstro-origem do efeito (habilidade de criatura) — habilita o +1 de
+        resistência da Lenda do Bardo contra aquela espécie (só p/ jogadores)."""
+        bonus = (self._veneno_save_bonus(alvo, tipo_save) + self._mod_magia(alvo, "resistencia")
+                 + extra_mod + self._lenda_resist_bonus(alvo, fonte))
         d20   = random.randint(1, 20)
         total = d20 + bonus
         return (total >= dificuldade), d20, bonus, total
@@ -11432,7 +11435,7 @@ class GameRoom:
         tgt_name  = target["name"] if is_player else target["nome"]
         ab_name   = ability["name"]
 
-        save_ok, d20, sb, stot = self._testar_save(target, ability["save"], ability["dc"])
+        save_ok, d20, sb, stot = self._testar_save(target, ability["save"], ability["dc"], fonte=m)
         sb_str = f"+{sb}" if sb >= 0 else str(sb)
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
                                "label": f"{m['name']} — {ab_name}", "hit": not save_ok})
@@ -11796,7 +11799,7 @@ class GameRoom:
                              if ab["id"] == "derrubar"), None)
             if derrubar:
                 dc = derrubar.get("dc", 11)
-                save_ok, d20, sb, stot = self._testar_save(target, "reflexos", dc)
+                save_ok, d20, sb, stot = self._testar_save(target, "reflexos", dc, fonte=m)
                 sb_str = f"+{sb}" if sb >= 0 else str(sb)
                 if not save_ok:
                     target["moves_left"] = 0
@@ -11907,7 +11910,7 @@ class GameRoom:
         if hit and target_obj["kind"] == "player" and target.get("hp", 1) > 0 and not target.get("preso"):
             agarrar = next((ab for ab in m.get("special_abilities", []) if ab["id"] == "agarrar"), None)
             dc = agarrar.get("dc", 12) if agarrar else 12
-            save_ok, d20, sb, stot = self._testar_save(target, "fortitude", dc)
+            save_ok, d20, sb, stot = self._testar_save(target, "fortitude", dc, fonte=m)
             sb_str = f"+{sb}" if sb >= 0 else str(sb)
             if not save_ok:
                 target["preso"]    = True
@@ -11973,7 +11976,7 @@ class GameRoom:
         if hit and target_obj["kind"] == "player" and target.get("hp", 1) > 0 and not target.get("preso"):
             constr = next((ab for ab in m.get("special_abilities", []) if ab["id"] == "constricao"), None)
             dc = constr.get("dc", 11) if constr else 11
-            save_ok, d20, sb, stot = self._testar_save(target, "fortitude", dc)
+            save_ok, d20, sb, stot = self._testar_save(target, "fortitude", dc, fonte=m)
             sb_str = f"+{sb}" if sb >= 0 else str(sb)
             if not save_ok:
                 target["preso"]    = True
@@ -12439,7 +12442,7 @@ class GameRoom:
         if hit and target_obj["kind"] == "player" and target.get("hp", 1) > 0:
             inf = next((ab for ab in m.get("special_abilities", []) if ab["id"] == "infeccao"), None)
             dc = inf.get("dc", 10) if inf else 10
-            ok, d20, sb, tot = self._testar_save(target, "fortitude", dc)
+            ok, d20, sb, tot = self._testar_save(target, "fortitude", dc, fonte=m)
             if ok:
                 await self.gm_say(f"🦠 **{target['name']}** resiste à infecção (Fortitude {tot} vs CD {dc}).")
             else:
@@ -12757,7 +12760,7 @@ class GameRoom:
             await self.gm_say(f"💪 **{m['name']}** ataca com **Força Descomunal**!")
             hit = await self._execute_one_monster_attack(m, atk, target_obj)
             if hit and self._alvo_vivo(target_obj):
-                passou, d20, sb, stot = self._testar_save(target, "fortitude", 10)
+                passou, d20, sb, stot = self._testar_save(target, "fortitude", 10, fonte=m)
                 sbs = f"+{sb}" if sb >= 0 else str(sb)
                 await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
                                        "label": f"{m['name']} — Força Descomunal", "hit": not passou})
