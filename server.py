@@ -417,6 +417,33 @@ GUILD_CATALOG = {
         "preco": 200, "nome": "Regeneração III", "icon": "✨",
         "desc": "A Regeneração Divina alcança aliados em raio 2.",
     },
+    "ladino_furtivo_2": { "id":"ladino_furtivo_2","categoria":"especializacao","classe":"rogue",
+        "linha":"ladino_furtivo","nivel":2,"requer":None,"exclusiva":False,"preco":150,
+        "nome":"Ataque Furtivo II","icon":"🗡️",
+        "desc":"Ataque Furtivo também dispara se há aliado adjacente ao alvo." },
+    "ladino_furtivo_3": { "id":"ladino_furtivo_3","categoria":"especializacao","classe":"rogue",
+        "linha":"ladino_furtivo","nivel":3,"requer":"ladino_furtivo_2","exclusiva":False,"preco":200,
+        "nome":"Ataque Furtivo Supremo","icon":"🗡️",
+        "desc":"1×/inimigo/rodada: quando um aliado acerta um inimigo, Luccas reage com um Ataque Furtivo nele." },
+    "ladino_desarme_2": { "id":"ladino_desarme_2","categoria":"especializacao","classe":"rogue",
+        "linha":"ladino_desarme","nivel":2,"requer":None,"exclusiva":False,"preco":150,
+        "nome":"Desarme II","icon":"🔧","desc":"+2 na chance de desarmar armadilhas." },
+    "ladino_desarme_3": { "id":"ladino_desarme_3","categoria":"especializacao","classe":"rogue",
+        "linha":"ladino_desarme","nivel":3,"requer":"ladino_desarme_2","exclusiva":False,"preco":200,
+        "nome":"Desarme III","icon":"🔧","desc":"Chance extra de recuperar o ouro da armadilha desarmada." },
+    "ladino_veneno_2": { "id":"ladino_veneno_2","categoria":"especializacao","classe":"rogue",
+        "linha":"ladino_veneno","nivel":2,"requer":None,"exclusiva":False,"preco":150,
+        "nome":"Veneno Rápido II","icon":"☠️","desc":"O veneno na arma (corpo a corpo) dura 2 golpes certeiros." },
+    "ladino_veneno_3": { "id":"ladino_veneno_3","categoria":"especializacao","classe":"rogue",
+        "linha":"ladino_veneno","nivel":3,"requer":"ladino_veneno_2","exclusiva":False,"preco":200,
+        "nome":"Veneno Rápido III","icon":"☠️","desc":"Pode manter 2 venenos diferentes na arma ao mesmo tempo." },
+    "ladino_esconder_2": { "id":"ladino_esconder_2","categoria":"especializacao","classe":"rogue",
+        "linha":"ladino_esconder","nivel":2,"requer":None,"exclusiva":False,"preco":150,
+        "nome":"Esconder nas Sombras II","icon":"🌑","desc":"+2 na chance de se esconder nas sombras." },
+    "ladino_esconder_3": { "id":"ladino_esconder_3","categoria":"especializacao","classe":"rogue",
+        "linha":"ladino_esconder","nivel":3,"requer":"ladino_esconder_2","exclusiva":False,"preco":200,
+        "nome":"Esconder nas Sombras III","icon":"🌑",
+        "desc":"Ativar não gasta mais a ação bônus. Ao ser revelado, +2 de CA por 1 rodada." },
     # Fases 1-2 acrescentam aqui.
 }
 
@@ -2343,6 +2370,7 @@ ARMADILHAS = {
         "efeitos": [{"tipo": "dano", "valor": "1d4", "elemento": "fisico"},
                     {"tipo": "perder_movimento"}],
         "descricao": "1d4 de dano + perde movimento. Some após ativar.",
+        "formula_guild_id": "ladino_armadilha_urso", "formula_preco": 100,
     },
     "fosso_estacas": {
         "nome": "Fosso com Estacas", "icone": "⛏️", "dificuldade": 10, "save": "reflexos",
@@ -2350,12 +2378,14 @@ ARMADILHAS = {
         "efeitos": [{"tipo": "dano", "valor": "1d6", "elemento": "fisico"},
                     {"tipo": "perder_movimento"}],
         "descricao": "1d6 de dano + perde movimento. Fica visível após ativar.",
+        "formula_guild_id": "ladino_fosso_estacas", "formula_preco": 120,
     },
     "rede": {
         "nome": "Rede", "icone": "🕸️", "dificuldade": 11, "save": "reflexos",
         "custo_ouro": 4, "persiste": False,
         "efeitos": [{"tipo": "perder_rodada"}],
         "descricao": "Perde a rodada inteira. Some após ativar.",
+        "formula_guild_id": "ladino_rede", "formula_preco": 150,
     },
     "armadilha_incendiaria": {
         "nome": "Armadilha Incendiária", "icone": "🔥", "dificuldade": 12, "save": "reflexos",
@@ -2364,12 +2394,14 @@ ARMADILHAS = {
                     {"tipo": "dano", "valor": "1d4", "elemento": "fogo", "rodada": 2},
                     {"tipo": "dano", "valor": "1",   "elemento": "fogo", "rodada": 3}],
         "descricao": "Dano de fogo progressivo: 1d6 + 1d4 + 1 em 3 rodadas.",
+        "formula_guild_id": "ladino_armadilha_incendiaria", "formula_preco": 180,
     },
     "mina_terrestre": {
         "nome": "Mina Terrestre", "icone": "💣", "dificuldade": 12, "save": "reflexos",
         "save_reduz": True, "custo_ouro": 20, "persiste": False, "area": 1,
         "efeitos": [{"tipo": "dano", "valor": "2d6", "elemento": "explosao", "area": True}],
         "descricao": "2d6 de dano em área de 1 quadrado. Save reduz à metade.",
+        "formula_guild_id": "ladino_mina_terrestre", "formula_preco": 220,
     },
     "fosso_envenenado": {
         "nome": "Fosso com Estacas Envenenadas", "icone": "☠️", "dificuldade": 10,
@@ -2378,14 +2410,37 @@ ARMADILHAS = {
         "efeitos": [{"tipo": "dano", "valor": "1d6", "elemento": "fisico"},
                     {"tipo": "veneno"}],
         "descricao": "1d6 de dano + efeito do veneno usado. Fica visível após ativar.",
+        "formula_guild_id": "ladino_fosso_envenenado", "formula_preco": 130,
     },
     "nuvem_gas": {
         "nome": "Nuvem de Gás", "icone": "🌫️", "dificuldade": 13, "save": "fortitude",
         "custo_ouro": 25, "persiste": False, "area": 1,
         "efeitos": [{"tipo": "reduzir_con", "valor": "1d6", "duracao": 3, "area": True}],
         "descricao": "-1d6 CON por 3 rodadas em área. Recalcula HP.",
+        "formula_guild_id": "ladino_nuvem_gas", "formula_preco": 250,
     },
 }
+
+
+def _gerar_catalogo_formulas_armadilha():
+    """Gera entradas de compra para cada tipo de ARMADILHAS que tiver
+    formula_guild_id — extensível: armadilhas futuras só precisam desses
+    2 campos para aparecerem automaticamente na Guilda."""
+    entradas = {}
+    for tipo_id, tipo in ARMADILHAS.items():
+        gid = tipo.get("formula_guild_id")
+        if not gid:
+            continue
+        entradas[gid] = {
+            "id": gid, "categoria": "especializacao", "classe": "rogue",
+            "linha": "ladino_armadilhas", "nivel": None, "requer": None, "exclusiva": False,
+            "preco": tipo.get("formula_preco", 100),
+            "nome": f"Fórmula: {tipo['nome']}", "icon": tipo.get("icone", "🪤"),
+            "desc": f"Desbloqueia permanentemente a fabricação de {tipo['nome']}.",
+        }
+    return entradas
+
+GUILD_CATALOG.update(_gerar_catalogo_formulas_armadilha())
 
 # ─── DECORAÇÕES DE MASMORRA ──────────────────────────────────────────────────
 # Objetos colocáveis no editor. size=[w,h] no facing canônico (vertical).
@@ -3153,6 +3208,8 @@ def make_player(pid, name, cls_id, slot):
         "detectar_ativo":      False,  # Detectar Armadilhas ativa (manutenção 💧-1)
         "weapon_poison":       None,   # veneno untado na arma (Veneno Rápido / coat_poison)
         "weapon_poison_hits":  0,      # golpes certeiros restantes com veneno
+        "weapon_poison_2":       None,   # 2º veneno (só com ladino_veneno_3)
+        "weapon_poison_2_hits":  0,
         # ── Magias (Pedro/mage, Lewis/cleric) — magias conhecidas + slots c/ regen ──
         "magias_conhecidas":   [],     # ids do GRIMORIO escolhidos (obrigatório p/ lançar)
         "slots_cooldown":      {"primeiro": [], "segundo": [], "terceiro": []},  # ready_at por slot gasto
@@ -4940,10 +4997,13 @@ class GameRoom:
         else:            return 4
 
     def _verificar_ataque_furtivo(self, luccas, alvo):
-        """True se Luccas estiver invisível nas sombras, oculto pela Vela da
-        Escuridão, OU houver um aliado vivo (jogador) adjacente — Chebyshev — ao alvo."""
+        """True se Luccas estiver invisível nas sombras/oculto (base), OU (com
+        ladino_furtivo_2) houver um aliado vivo (jogador) adjacente — Chebyshev
+        — ao alvo."""
         if luccas.get("invisivel_sombras") or luccas.get("oculto_vela"):
             return True
+        if not tem_espec(luccas, "ladino_furtivo_2"):
+            return False
         ax, ay = alvo["pos"]
         for pid2, aliado in self.players.items():
             if pid2 == luccas["id"] or not aliado["alive"]:
@@ -4952,12 +5012,66 @@ class GameRoom:
                 return True
         return False
 
+    def _desarme_bonus(self, p):
+        return 2 if (tem_espec(p, "ladino_desarme_2") or tem_espec(p, "ladino_desarme_3")) else 0
+
+    def _veneno_rapido_max_hits(self, p):
+        """Golpes que o veneno melee dura (1 base / 2 com ladino_veneno_2)."""
+        return 2 if tem_espec(p, "ladino_veneno_2") else 1
+
+    def _veneno_rapido_2_slots(self, p):
+        return tem_espec(p, "ladino_veneno_3")
+
+    def _esconder_bonus(self, p):
+        return 2 if (tem_espec(p, "ladino_esconder_2") or tem_espec(p, "ladino_esconder_3")) else 0
+
+    def _armadilhas_desbloqueadas(self, p):
+        """Tipos de armadilha que o Ladino pode fabricar: buraco sempre grátis;
+        os demais exigem a Fórmula correspondente (extensível via ARMADILHAS)."""
+        tipos = set()
+        for tipo_id, tipo in ARMADILHAS.items():
+            gid = tipo.get("formula_guild_id")
+            if gid is None or tem_espec(p, gid):
+                tipos.add(tipo_id)
+        return tipos
+
+    async def _furtivo_reativo(self, atacante, target):
+        """Ataque Furtivo Supremo (ladino_furtivo_3): reage ao acerto de um aliado
+        contra um inimigo, 1x por inimigo por rodada. Não dispara no próprio
+        ataque de Luccas, nem se Luccas estiver incapaz de reagir (petrificado,
+        paralisado ou imobilizado — perde_turno)."""
+        if atacante.get("class_id") == "rogue" or target.get("hp", 0) <= 0:
+            return
+        luccas = next((q for q in self.players.values()
+                       if q.get("class_id") == "rogue" and q.get("alive")
+                       and q["id"] != atacante["id"]), None)
+        if not luccas or not tem_espec(luccas, "ladino_furtivo_3"):
+            return
+        if luccas.get("petrificado") or luccas.get("paralisado") or luccas.get("perde_turno"):
+            return
+        if luccas.get("furtivo_reativo_round") != self.round_num:
+            luccas["furtivo_reativo_round"] = self.round_num
+            luccas["furtivo_reativo_alvos"] = set()
+        if target["id"] in luccas.get("furtivo_reativo_alvos", set()):
+            return
+        luccas["furtivo_reativo_alvos"].add(target["id"])
+        nd4 = self._dados_furtivo(luccas.get("level", 1))
+        dano = sum(random.randint(1, 4) for _ in range(nd4))
+        await self.broadcast({"type": "dice_roll", "die": "d4", "value": dano,
+                               "label": "Ataque Furtivo (reação)"})
+        target["hp"] -= dano
+        await self.gm_say(f"🗡️ **{luccas['name']}** reage ao ataque de **{atacante['name']}** — "
+                          f"Ataque Furtivo Supremo! +{dano} de dano [{nd4}d4] em **{target['name']}**.")
+
     async def _quebrar_invisibilidade(self, p, motivo="ao agir"):
         """Encerra o estado invisível das sombras (atacar/mover revela Luccas)."""
         if not p.get("invisivel_sombras"):
             return False
         p["invisivel_sombras"] = False
         await self.gm_say(f"🌑 **{p['name']}** revela-se ({motivo}).")
+        if tem_espec(p, "ladino_esconder_3"):
+            self.temp_def[p["id"]] = self.temp_def.get(p["id"], 0) + 2
+            await self.gm_say(f"🌀 **{p['name']}** ganha +2 de CA por 1 rodada ao se revelar!")
         return True
 
     async def handle_attack(self, pid, target_id, buffs=None):
@@ -5226,6 +5340,7 @@ class GameRoom:
                     dmg += dano_furtivo
                     furtivo_detail = f" +🗡️{dano_furtivo} furtivo [{nd4}d4]"
                 target["hp"] -= dmg
+                await self._furtivo_reativo(p, target)
                 crit_str = " **CRÍTICO!**" if crit else ""
                 await self.gm_say(
                     f"⚔️ **{p['name']}** ataca **{target['name']}** com {weapon_name}"
@@ -5253,6 +5368,12 @@ class GameRoom:
                         if p["weapon_poison_hits"] <= 0:
                             p["weapon_poison"] = None
                             await self.gm_say(f"🧴 O veneno da arma de **{p['name']}** acabou.")
+                    if p.get("weapon_poison_2"):
+                        await self._aplicar_veneno(target, p["weapon_poison_2"], fonte="ataque")
+                        p["weapon_poison_2_hits"] = p.get("weapon_poison_2_hits", 1) - 1
+                        if p["weapon_poison_2_hits"] <= 0:
+                            p["weapon_poison_2"] = None
+                            await self.gm_say(f"🧴 O 2º veneno da arma de **{p['name']}** acabou.")
             else:
                 await self.gm_say(
                     f"⚔️ **{p['name']}** ataca **{target['name']}**"
@@ -5426,6 +5547,7 @@ class GameRoom:
             await self.broadcast({"type": "dice_roll", "die": die_type,
                                    "value": raw, "label": "Dano (arremesso)"})
             target["hp"] -= dmg
+            await self._furtivo_reativo(p, target)
             sb = f"+{dex_mod}" if dex_mod >= 0 else str(dex_mod)
             crit_str = " **CRÍTICO!**" if crit else ""
             await self.gm_say(
@@ -9566,6 +9688,9 @@ class GameRoom:
         tipo = ARMADILHAS.get(tipo_id)
         if not tipo:
             await self.send_to(pid, {"type": "error", "msg": "Armadilha inválida."}); return
+        if tipo_id not in self._armadilhas_desbloqueadas(p):
+            await self.send_to(pid, {"type": "error",
+                "msg": f"Você ainda não aprendeu a fórmula de {tipo['nome']} — compre na Guilda."}); return
 
         custo_ouro = tipo.get("custo_ouro", 0)
         if p["gold"] < custo_ouro:
@@ -9784,7 +9909,7 @@ class GameRoom:
         dif = tipo.get("dificuldade", 10)
         d20 = random.randint(1, 20)
         bonus = mod(p.get("dex", 10))
-        total = d20 + bonus
+        total = d20 + bonus + self._desarme_bonus(p)
         p["action_done"] = True
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20, "label": f"{p['name']} — Desarmar"})
         await self.gm_say(f"🔧 **{p['name']}** tenta desarmar **{tipo.get('nome', arm['tipo'])}**: "
@@ -9793,8 +9918,19 @@ class GameRoom:
             await self.gm_say("💀 Falha crítica! A armadilha dispara no próprio Luccas!")
             await self._disparar_armadilha(p, arm)
         elif total >= dif:
+            custo_ouro_arm = tipo.get("custo_ouro", 0)
+            recuperou = False
+            if tem_espec(p, "ladino_desarme_3") and custo_ouro_arm > 0:
+                d20r = random.randint(1, 20)
+                totalr = d20r + bonus + self._desarme_bonus(p)
+                await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20r,
+                                       "label": f"{p['name']} — Recuperar"})
+                if totalr >= dif:
+                    p["gold"] += custo_ouro_arm
+                    recuperou = True
             self.armadilhas = [a for a in self.armadilhas if a["id"] != arm["id"]]
-            await self.gm_say("✅ Armadilha desarmada com sucesso!")
+            msg_recover = f" Recuperou 🪙{custo_ouro_arm}!" if recuperou else ""
+            await self.gm_say(f"✅ Armadilha desarmada com sucesso!{msg_recover}")
         else:
             await self.gm_say(f"❌ Falha no desarme ({total} vs {dif}) — tente de novo no próximo turno.")
         await self.push_state()
@@ -9911,12 +10047,13 @@ class GameRoom:
 
         d20 = random.randint(1, 20)
         bonus_dex = mod(p.get("dex", 10))
-        total = d20 + bonus_dex
+        total = d20 + bonus_dex + self._esconder_bonus(p)
 
         # Custo é pago independentemente do resultado (gasto o fôlego ao tentar).
         p["fome"] = max(0, p["fome"] - custo_fome)
         p["sede"] = max(0, p["sede"] - custo_sede)
-        p["bonus_action_used"] = True
+        if not tem_espec(p, "ladino_esconder_3"):
+            p["bonus_action_used"] = True
 
         sucesso = total >= dificuldade
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
@@ -9972,9 +10109,13 @@ class GameRoom:
         p["sede"] = max(0, p["sede"] - custo_sede)
         _w_id = (p.get("weapon") or {}).get("id", "")
         _is_ranged = _w_id in RANGED_AMMO
-        cargas = VENENO_CARGAS if _is_ranged else 1
-        p["weapon_poison"]      = vid
-        p["weapon_poison_hits"] = cargas
+        cargas = VENENO_CARGAS if _is_ranged else self._veneno_rapido_max_hits(p)
+        if not _is_ranged and p.get("weapon_poison") and self._veneno_rapido_2_slots(p) and not p.get("weapon_poison_2"):
+            p["weapon_poison_2"]      = vid
+            p["weapon_poison_2_hits"] = cargas
+        else:
+            p["weapon_poison"]      = vid
+            p["weapon_poison_hits"] = cargas
         desc_veneno = (f"os próximos {VENENO_CARGAS} disparos (acerto ou erro) transferem o veneno"
                        if _is_ranged
                        else "o próximo golpe certeiro envenena o alvo")

@@ -1389,6 +1389,47 @@ const GS = (() => {
     return 0;
   }
 
+  // Níveis das especializações do Ladino (Fase 1d) — mesmo padrão dos getters
+  // anteriores: lidos da posse; caem para o player do game_state na masmorra.
+  function ladinoArmadilhasDesbloqueadas() {
+    const e = (guildOwnedOf(myPid).especializacoes) || [];
+    const mapa = {
+      armadilha_urso: 'ladino_armadilha_urso', fosso_estacas: 'ladino_fosso_estacas',
+      fosso_envenenado: 'ladino_fosso_envenenado', rede: 'ladino_rede',
+      armadilha_incendiaria: 'ladino_armadilha_incendiaria', mina_terrestre: 'ladino_mina_terrestre',
+      nuvem_gas: 'ladino_nuvem_gas',
+    };
+    const tipos = ['buraco'];
+    for (const [tipo, gid] of Object.entries(mapa)) if (e.includes(gid)) tipos.push(tipo);
+    return tipos;
+  }
+  function ladinoFurtivoNivel() {
+    const e = (guildOwnedOf(myPid).especializacoes) || [];
+    if (e.includes('ladino_furtivo_3')) return 3;
+    if (e.includes('ladino_furtivo_2')) return 2;
+    return 1;
+  }
+  function ladinoDesarmeBonus() {
+    const e = (guildOwnedOf(myPid).especializacoes) || [];
+    return (e.includes('ladino_desarme_2') || e.includes('ladino_desarme_3')) ? 2 : 0;
+  }
+  function ladinoDesarmeRecupera() {
+    return (guildOwnedOf(myPid).especializacoes || []).includes('ladino_desarme_3');
+  }
+  function ladinoVenenoMaxHits() {
+    return (guildOwnedOf(myPid).especializacoes || []).includes('ladino_veneno_2') ? 2 : 1;
+  }
+  function ladinoVeneno2Slots() {
+    return (guildOwnedOf(myPid).especializacoes || []).includes('ladino_veneno_3');
+  }
+  function ladinoEsconderBonus() {
+    const e = (guildOwnedOf(myPid).especializacoes) || [];
+    return (e.includes('ladino_esconder_2') || e.includes('ladino_esconder_3')) ? 2 : 0;
+  }
+  function ladinoEsconderLivre() {
+    return (guildOwnedOf(myPid).especializacoes || []).includes('ladino_esconder_3');
+  }
+
   // ── Tile-click resolver: pure decision, no DOM ─────────────────────────────
   // Called by the unified handleTileClick(tx, ty) in game.html.
   // Returns one of:
@@ -1619,6 +1660,14 @@ const GS = (() => {
     paladinDefensorRaio,
     paladinDefensorSplit,
     paladinRegenRaio,
+    ladinoArmadilhasDesbloqueadas,
+    ladinoFurtivoNivel,
+    ladinoDesarmeBonus,
+    ladinoDesarmeRecupera,
+    ladinoVenenoMaxHits,
+    ladinoVeneno2Slots,
+    ladinoEsconderBonus,
+    ladinoEsconderLivre,
 
     // ── Decorações de masmorra ──
     decorTilesOf,
