@@ -350,3 +350,39 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > limitam os painéis de Richard (o teto de atributos do Guerreiro da Luz é
 > bloqueado no cliente E recusado pelo servidor — autoritativo). Teste:
 > `tools/test_paladino_espec.py`.
+
+> **Especializações do Ladino (Fase 1d):** gateiam as 5 linhas de Luccas —
+> inclui um **redesign real** (não só números) do Ataque Furtivo e um catálogo
+> **extensível** de Fórmulas de Armadilha. **Ataque Furtivo:** baseline
+> enfraquecido — hoje disparava com "aliado adjacente" de graça; isso vira
+> `ladino_furtivo_2` (compra); o base fica só oculto/invisível
+> (`invisivel_sombras`/`oculto_vela`). `ladino_furtivo_3` (Supremo) é uma
+> **mecânica nova**: reação automática — quando qualquer aliado que não seja
+> Luccas acerta um inimigo vivo, Luccas desfere um furtivo nele também
+> (1×/inimigo/rodada, bloqueado se Luccas estiver petrificado/paralisado/
+> imobilizado). Hookado em `handle_attack` e `handle_throw` via
+> `_furtivo_reativo`; **fora de escopo**: ataque de mão secundária, arremesso de
+> lança, animados controlados. **Fórmulas de Armadilha:** hoje todas as 8
+> armadilhas de `ARMADILHAS` eram fabricáveis de graça — agora `buraco`
+> continua sempre livre e as outras 7 exigem a fórmula correspondente. O
+> catálogo é **gerado dinamicamente**: cada tipo em `ARMADILHAS` ganha campos
+> opcionais `formula_guild_id`/`formula_preco`; `_gerar_catalogo_formulas_armadilha()`
+> lê esses campos e popula `GUILD_CATALOG.update(...)` — armadilhas futuras só
+> precisam desses 2 campos para aparecerem na Guilda automaticamente, sem tocar
+> em mais nada. Gate em `handle_criar_armadilha` via `_armadilhas_desbloqueadas`.
+> **Desarme:** `ladino_desarme_2/3` dão +2 no teste (não soma mais no III);
+> `_3` também adiciona um 2º teste que, em sucesso, devolve o `custo_ouro` da
+> armadilha. **Veneno Rápido:** refactor de campo escalar para 2 slots —
+> `ladino_veneno_2` faz o veneno melee durar 2 golpes (era 1); `ladino_veneno_3`
+> permite manter 2 venenos diferentes na arma ao mesmo tempo
+> (`weapon_poison`/`weapon_poison_2`, cada um decrementando independente); só
+> afeta corpo a corpo — à distância e o efeito genérico de item `coat_poison`
+> ficam inalterados. **Esconder nas Sombras:** `ladino_esconder_2/3` dão +2 no
+> teste; `_3` também faz a ativação **deixar de gastar a ação bônus** e, ao
+> quebrar a invisibilidade (`_quebrar_invisibilidade`), concede +2 de CA por 1
+> rodada via `self.temp_def` (mecanismo já existente que expira sozinho).
+> Cliente: `GS.ladinoArmadilhasDesbloqueadas/ladinoFurtivoNivel/
+> ladinoDesarmeBonus/ladinoDesarmeRecupera/ladinoVenenoMaxHits/
+> ladinoVeneno2Slots/ladinoEsconderBonus/ladinoEsconderLivre` — o painel de
+> criar armadilha filtra por fórmula destravada (com dica "🔒 Compre a fórmula
+> na Guilda"). Teste: `tools/test_ladino_espec.py`.
