@@ -74,6 +74,12 @@ async def main():
     finally:
         S.roll_dice = _orig
 
+    # [3] Ataque Sagrado (dados)
+    print("\n[3] Ataque Sagrado")
+    r = setup()
+    check("sagrado base = 1 d8", r._ataque_sagrado_dados(paladin()) == 1)
+    check("sagrado II = 2 d8", r._ataque_sagrado_dados(paladin(esp=["paladino_ataque_sagrado_2"])) == 2)
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

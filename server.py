@@ -3872,6 +3872,10 @@ class GameRoom:
         """Dados base da Cura pelas Mãos (1 base / 2 com paladino_cura_maos_2)."""
         return 2 if tem_espec(p, "paladino_cura_maos_2") else 1
 
+    def _ataque_sagrado_dados(self, p):
+        """Dados do dano sagrado do Golpe Sagrado (1 base / 2 com paladino_ataque_sagrado_2)."""
+        return 2 if tem_espec(p, "paladino_ataque_sagrado_2") else 1
+
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
         if self.phase != "playing":
@@ -5172,7 +5176,7 @@ class GameRoom:
                 # Golpe Sagrado (Richard): +1d8 sagrado, dobrado vs morto-vivo/demônio
                 holy_detail = ""
                 if p.get("golpe_sagrado_ativo"):
-                    holy_roll = roll_dice("1d8")
+                    holy_roll = sum(roll_dice("1d8") for _ in range(self._ataque_sagrado_dados(p)))
                     await self.broadcast({"type": "dice_roll", "die": "d8", "value": holy_roll, "label": "Golpe Sagrado"})
                     holy = self._apply_damage_types(holy_roll, [DMG_HOLY], target, None)
                     if target.get("undead") or target.get("type") in ("undead", "demon", "skeleton", "esqueleto_humano"):
