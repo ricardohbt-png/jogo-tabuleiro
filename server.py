@@ -3868,6 +3868,10 @@ class GameRoom:
         if tem_espec(p, "clerigo_ressur_2"): return 2
         return 1
 
+    def _cura_maos_dados(self, p):
+        """Dados base da Cura pelas Mãos (1 base / 2 com paladino_cura_maos_2)."""
+        return 2 if tem_espec(p, "paladino_cura_maos_2") else 1
+
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
         if self.phase != "playing":
@@ -6692,7 +6696,8 @@ class GameRoom:
         if p.get("action_done"):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
-        fome_cost, sede_cost = 3, 2
+        extra_d6 = max(0, min(3, int((data or {}).get("extra_d6", 0)))) if tem_espec(p, "paladino_cura_maos_3") else 0
+        fome_cost, sede_cost = 3 + 2 * extra_d6, 2 + 2 * extra_d6
         if p["fome"] < fome_cost or p["sede"] < sede_cost:
             await self.send_to(pid, {"type": "error", "msg": f"Recursos insuficientes 🍖{fome_cost} 💧{sede_cost}."}); return
 
@@ -6705,7 +6710,8 @@ class GameRoom:
         if not self._no_raio(p, alvo, 1):
             await self.send_to(pid, {"type": "error", "msg": "Aliado deve estar adjacente a Richard."}); return
 
-        raw = roll_dice("1d6")
+        n_dados = self._cura_maos_dados(p) + extra_d6
+        raw = sum(roll_dice("1d6") for _ in range(n_dados))
         await self.broadcast({"type": "dice_roll", "die": "d6", "value": raw, "label": "Imposição das Mãos"})
         cura = max(1, raw + mod(p["str_"]))
         hp_antes = alvo["hp"]

@@ -46,6 +46,34 @@ async def main():
     check("preço II = 150", S.guild_item("paladino_defensor_2")["preco"] == 150)
     check("preço III = 200", S.guild_item("paladino_regen_3")["preco"] == 200)
 
+    # [2] Cura pelas Mãos
+    print("\n[2] Cura pelas Mãos")
+    r = setup()
+    check("dados base = 1", r._cura_maos_dados(paladin()) == 1)
+    check("dados II = 2", r._cura_maos_dados(paladin(esp=["paladino_cura_maos_2"])) == 2)
+    _orig = S.roll_dice; S.roll_dice = lambda s: sum(6 for _ in range(int(s.split("d")[0])))  # cada dado=6
+    try:
+        from server import mod
+        # II: 2d6(=12)+FOR
+        r = setup(); p = paladin(esp=["paladino_cura_maos_2"]); p["fome"]=50; p["sede"]=50; r.players["r"]=p
+        alvo = make_player("a","Ana","warrior",1); alvo["pos"]=[0,1]; alvo["hp"]=1; alvo["max_hp"]=99; r.players["a"]=alvo
+        await r.handle_imposicao_maos("r", {"target_id":"a"})
+        check("II cura 2d6+FOR", alvo["hp"] == 1 + (12 + mod(p["str_"])))
+        check("II custo base (3/2)", p["fome"] == 47 and p["sede"] == 48)
+        # III: extra_d6=2 → +2d6 e custo +4/+4 (total base+extra: 7 fome, 6 sede)
+        r = setup(); p = paladin(esp=["paladino_cura_maos_2","paladino_cura_maos_3"]); p["fome"]=50; p["sede"]=50; r.players["r"]=p
+        alvo = make_player("a","Ana","warrior",1); alvo["pos"]=[0,1]; alvo["hp"]=1; alvo["max_hp"]=999; r.players["a"]=alvo
+        await r.handle_imposicao_maos("r", {"target_id":"a","extra_d6":2})
+        check("III cura 2d6+2d6+FOR (=24+FOR)", alvo["hp"] == 1 + (24 + mod(p["str_"])))
+        check("III custo total (3+4=7 fome, 2+4=6 sede)", p["fome"] == 50-7 and p["sede"] == 50-6)
+        # extra_d6 ignorado sem cura_maos_3
+        r = setup(); p = paladin(esp=["paladino_cura_maos_2"]); p["fome"]=50; p["sede"]=50; r.players["r"]=p
+        alvo = make_player("a","Ana","warrior",1); alvo["pos"]=[0,1]; alvo["hp"]=1; alvo["max_hp"]=999; r.players["a"]=alvo
+        await r.handle_imposicao_maos("r", {"target_id":"a","extra_d6":3})
+        check("extra_d6 ignorado sem cura_maos_3", alvo["hp"] == 1 + (12 + mod(p["str_"])) and p["fome"]==47 and p["sede"]==48)
+    finally:
+        S.roll_dice = _orig
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
