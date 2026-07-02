@@ -386,3 +386,29 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > ladinoVeneno2Slots/ladinoEsconderBonus/ladinoEsconderLivre` — o painel de
 > criar armadilha filtra por fórmula destravada (com dica "🔒 Compre a fórmula
 > na Guilda"). Teste: `tools/test_ladino_espec.py`.
+
+> **Especializações do Bardo (Fase 1e):** gateiam as 3 linhas de Henrique.
+> **Canção Heroica:** 5 nós `bardo_cancao_{acerto,dano,ca,movimento,resistencia}`
+> (100 cada) sobem aquele atributo de +1 para +2 (`_cancao_nivel_atributo` em
+> `_aplicar_buffs_cancao`); `bardo_cancao_suprema` (200) reduz a manutenção em
+> -1🍖/-1💧 mín 0 (`_cancao_custo_reducao`, aplicado na ativação; `cancao_custo`
+> guarda o valor já reduzido, então o upkeep herda a redução). **Provocação:**
+> `bardo_provocacao_2` (150) faz a desvantagem durar toda a provocação (o reset de
+> `provocado_turno_efeito` nos 2 sites de ataque de monstro é pulado enquanto o
+> provocador tem a espec), dá +2 CA ao bardo (`_provocacao_ca_bonus` somado à
+> `effective_ac` nos 2 sites) e vantagem ao bardo contra o alvo; `bardo_provocacao_3`
+> (200, requer _2) estende a vantagem a todos os aliados por 1 rodada
+> (`provocado_aliados_vantagem_round == round_num`). Vantagem via
+> `_provocacao_atk_vantagem` em `handle_attack`. Helpers: `_provocador` (bardo vivo
+> que provocou). **Lendas:** catálogo **gerado** de `MONSTER_DEFS`
+> (`_gerar_catalogo_lendas` + `GUILD_CATALOG.update`, preço por tier T1 60/T2 90/T3
+> 120/T4 200) — cada `lenda_<tipo>` dá +1 de ataque (`_lenda_atk_bonus` em `eff_atk`)
+> e +1 de resistência (`_lenda_resist_bonus` via novo param `fonte` de `_testar_save`,
+> passado nos 6 sites de habilidade de monstro vs jogador — modular, derrubar,
+> agarrar, constrição, infecção, força descomunal — e no save de escape de agarrão;
+> demais saves ficam inertes com `fonte=None`) contra a espécie; só Henrique na base.
+> `bardo_lendas_supremas` (300) estende ambos os bônus a todo o grupo enquanto
+> Henrique vive (`_bardo_lendas`). Cliente: `GS.bardoCancaoNivel/bardoCancaoSuprema/
+> bardoProvocacaoNivel/bardoLendasSupremas` — o painel da Canção mostra +1/+2 por
+> atributo e a manutenção reduzida; a descrição da Provocação reflete II/III. Teste:
+> `tools/test_bardo_espec.py`.

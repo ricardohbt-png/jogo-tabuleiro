@@ -315,6 +315,61 @@ GUILD_CATALOG = {
         "preco": 200, "nome": "Fúria Berserker III", "icon": "🔥",
         "desc": "Fúria Berserker concede 2 ataques extras (3 ataques no total).",
     },
+    # ── Bardo (Fase 1e) ─────────────────────────────────────────────────────
+    "bardo_cancao_acerto": {
+        "id": "bardo_cancao_acerto", "categoria": "especializacao", "classe": "bard",
+        "linha": "bardo_cancao", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 100, "nome": "Canção: Acerto +1", "icon": "🎵",
+        "desc": "O bônus de Acerto da Canção Heroica sobe de +1 para +2.",
+    },
+    "bardo_cancao_dano": {
+        "id": "bardo_cancao_dano", "categoria": "especializacao", "classe": "bard",
+        "linha": "bardo_cancao", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 100, "nome": "Canção: Dano +1", "icon": "🎵",
+        "desc": "O bônus de Dano da Canção Heroica sobe de +1 para +2.",
+    },
+    "bardo_cancao_ca": {
+        "id": "bardo_cancao_ca", "categoria": "especializacao", "classe": "bard",
+        "linha": "bardo_cancao", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 100, "nome": "Canção: Armadura +1", "icon": "🎵",
+        "desc": "O bônus de Armadura da Canção Heroica sobe de +1 para +2.",
+    },
+    "bardo_cancao_movimento": {
+        "id": "bardo_cancao_movimento", "categoria": "especializacao", "classe": "bard",
+        "linha": "bardo_cancao", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 100, "nome": "Canção: Movimento +1", "icon": "🎵",
+        "desc": "O bônus de Movimento da Canção Heroica sobe de +1 para +2.",
+    },
+    "bardo_cancao_resistencia": {
+        "id": "bardo_cancao_resistencia", "categoria": "especializacao", "classe": "bard",
+        "linha": "bardo_cancao", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 100, "nome": "Canção: Resistência +1", "icon": "🎵",
+        "desc": "O bônus de Resistência da Canção Heroica sobe de +1 para +2.",
+    },
+    "bardo_cancao_suprema": {
+        "id": "bardo_cancao_suprema", "categoria": "especializacao", "classe": "bard",
+        "linha": "bardo_cancao", "nivel": 3, "requer": None, "exclusiva": False,
+        "preco": 200, "nome": "Canção Heroica Suprema", "icon": "🎶",
+        "desc": "A manutenção da Canção Heroica custa -1🍖 e -1💧 (mínimo 0).",
+    },
+    "bardo_provocacao_2": {
+        "id": "bardo_provocacao_2", "categoria": "especializacao", "classe": "bard",
+        "linha": "bardo_provocacao", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Provocação II", "icon": "😤",
+        "desc": "A desvantagem dura toda a provocação; Henrique ganha +2 CA e ataca o alvo com vantagem.",
+    },
+    "bardo_provocacao_3": {
+        "id": "bardo_provocacao_3", "categoria": "especializacao", "classe": "bard",
+        "linha": "bardo_provocacao", "nivel": 3, "requer": "bardo_provocacao_2", "exclusiva": False,
+        "preco": 200, "nome": "Provocação III", "icon": "😤",
+        "desc": "Todos os aliados atacam o alvo provocado com vantagem por 1 rodada.",
+    },
+    "bardo_lendas_supremas": {
+        "id": "bardo_lendas_supremas", "categoria": "especializacao", "classe": "bard",
+        "linha": "bardo_lendas", "nivel": 3, "requer": None, "exclusiva": False,
+        "preco": 300, "nome": "Lendas Supremas", "icon": "📖",
+        "desc": "Todos os bônus de Lenda passam a beneficiar o grupo inteiro (enquanto Henrique vivo).",
+    },
     "clerigo_cura_2": {
         "id": "clerigo_cura_2", "categoria": "especializacao", "classe": "cleric",
         "linha": "clerigo_cura", "nivel": 2, "requer": None, "exclusiva": False,
@@ -2441,6 +2496,26 @@ def _gerar_catalogo_formulas_armadilha():
     return entradas
 
 GUILD_CATALOG.update(_gerar_catalogo_formulas_armadilha())
+
+_LENDA_PRECO_TIER = {1: 60, 2: 90, 3: 120, 4: 200}
+
+def _gerar_catalogo_lendas():
+    """Gera um nó de compra `lenda_<type>` para cada tipo em MONSTER_DEFS —
+    extensível: monstros novos aparecem sozinhos na Guilda do Bardo."""
+    entradas = {}
+    for mdef in MONSTER_DEFS:
+        gid = f"lenda_{mdef['type']}"
+        entradas[gid] = {
+            "id": gid, "categoria": "especializacao", "classe": "bard",
+            "linha": "bardo_lendas", "nivel": None, "requer": None, "exclusiva": False,
+            "preco": _LENDA_PRECO_TIER.get(mdef.get("tier", 1), 90),
+            "nome": f"Lenda: {mdef['name']}", "icon": mdef.get("emoji", "📖"),
+            "desc": f"+1 de ataque e +1 nos saves contra {mdef['name']}.",
+            "lenda_tipo": mdef["type"],
+        }
+    return entradas
+
+GUILD_CATALOG.update(_gerar_catalogo_lendas())
 
 # ─── DECORAÇÕES DE MASMORRA ──────────────────────────────────────────────────
 # Objetos colocáveis no editor. size=[w,h] no facing canônico (vertical).
@@ -5224,6 +5299,7 @@ class GameRoom:
             eff_atk = (p["atk_bonus"] + p.get("skill_bonus_acerto", 0) + surv_mod + preso_pen
                        + cancao_acerto + gl_atk + self._pen(p, "ataque")
                        + self._mod_magia(p, "ataque")                        # Abençoar
+                       + self._lenda_atk_bonus(p, target)                    # Lenda (bardo estudou a espécie)
                        - self._corrosao_arma_pen(p)                          # arma de madeira corroída
                        - (4 if target.get("oculto_sombras") else 0))         # alvo oculto nas sombras (corpo a corpo)
             if preso_pen:
@@ -5239,7 +5315,9 @@ class GameRoom:
             # Vantagem (Invisibilidade ou Visão no Escuro na escuridão) vs Desvantagem
             # (atacar às cegas na escuridão). Vantagem+desvantagem se anulam.
             esc = self._verificar_escuridao(p, target)
-            vantagem    = bool(p.get("invisivel_magico")) or bool(p.get("oculto_vela")) or esc == "vantagem"
+            vantagem    = (bool(p.get("invisivel_magico")) or bool(p.get("oculto_vela"))
+                           or esc == "vantagem"
+                           or self._provocacao_atk_vantagem(p, target))
             desvantagem = esc == "desvantagem"
             hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
 
@@ -6441,6 +6519,14 @@ class GameRoom:
         """True se `alvo` está dentro de `raio` (Chebyshev) de `origem`."""
         return _distancia_chebyshev(origem["pos"], alvo["pos"]) <= raio
 
+    def _cancao_nivel_atributo(self, p, attr_id):
+        """Bônus daquele atributo na Canção Heroica: 2 se comprado na Guilda, senão 1."""
+        return 2 if tem_espec(p, f"bardo_cancao_{attr_id}") else 1
+
+    def _cancao_custo_reducao(self, p):
+        """Redução de manutenção da canção com a Canção Heroica Suprema (-1🍖 -1💧)."""
+        return 1 if tem_espec(p, "bardo_cancao_suprema") else 0
+
     async def handle_ativar_cancao(self, pid, data):
         if not self._is_turn(pid): return
         p = self.players.get(pid)
@@ -6456,7 +6542,10 @@ class GameRoom:
         if not atrib_validos:
             await self.send_to(pid, {"type": "error", "msg": "Escolha pelo menos um atributo para a canção."}); return
 
-        custo = _calcular_custo_cancao(atrib_validos)
+        custo_bruto = _calcular_custo_cancao(atrib_validos)
+        red = self._cancao_custo_reducao(p)
+        custo = {"fome": max(0, custo_bruto["fome"] - red),
+                 "sede": max(0, custo_bruto["sede"] - red)}
         if p["fome"] < custo["fome"] or p["sede"] < custo["sede"]:
             await self.send_to(pid, {"type": "error",
                 "msg": f"Recursos insuficientes — precisa 🍖{custo['fome']} 💧{custo['sede']}."}); return
@@ -6492,7 +6581,7 @@ class GameRoom:
         for attr_id in bardo.get("cancao_atributos", []):
             attr = next((a for a in CANCAO_ATRIBUTOS if a["id"] == attr_id), None)
             if attr:
-                buffs[attr["efeito"]] = 1
+                buffs[attr["efeito"]] = self._cancao_nivel_atributo(bardo, attr_id)
         for jogador in self.players.values():
             if not jogador.get("alive"): continue
             if not self._no_raio(bardo, jogador, CANCAO_RAIO): continue
@@ -6567,11 +6656,69 @@ class GameRoom:
         alvo["provocado_turnos"]       = PROVOCACAO_TURNOS   # 1 turno de desvantagem + 3 de alvo forçado
         alvo["provocado_turno_efeito"] = True                # próximo ataque do inimigo é com desvantagem
         alvo["provocado_por"]          = pid                 # Henrique é o alvo forçado
+        if tem_espec(p, "bardo_provocacao_3"):
+            alvo["provocado_aliados_vantagem_round"] = self.round_num
 
         await self.gm_say(
             f"😤 **{p['name']}** provoca **{alvo['name']}**! Desvantagem no próximo ataque "
             f"e alvo forçado por 3 turnos (🍖-{fome_cost} 💧-{sede_cost}).")
         await self.push_state()
+
+    def _provocador(self, monstro):
+        """Retorna o bardo (vivo) que provocou este monstro, ou None."""
+        pid = monstro.get("provocado_por")
+        b = self.players.get(pid) if pid else None
+        if (b and b.get("alive") and b.get("class_id") == "bard"
+                and monstro.get("provocado_turnos", 0) > 0):
+            return b
+        return None
+
+    def _provocacao_ca_bonus(self, alvo_player, monstro):
+        """+2 CA do alvo quando o monstro que ele provocou (Provocação II) o ataca."""
+        b = self._provocador(monstro)
+        if b and b["id"] == alvo_player.get("id") and tem_espec(b, "bardo_provocacao_2"):
+            return 2
+        return 0
+
+    def _provocacao_atk_vantagem(self, atacante, monstro):
+        """Vantagem ao atacar o monstro provocado: o bardo (Provocação II) sempre;
+        qualquer aliado se Provocação III e dentro da janela de 1 rodada."""
+        b = self._provocador(monstro)
+        if not b:
+            return False
+        if atacante.get("id") == b["id"] and tem_espec(b, "bardo_provocacao_2"):
+            return True
+        if (tem_espec(b, "bardo_provocacao_3")
+                and monstro.get("provocado_aliados_vantagem_round") == self.round_num):
+            return True
+        return False
+
+    def _bardo_lendas(self):
+        """Retorna o bardo vivo (dono das Lendas) da party, ou None."""
+        return next((q for q in self.players.values()
+                     if q.get("class_id") == "bard" and q.get("alive")), None)
+
+    def _lenda_atk_bonus(self, atacante, monstro):
+        """+1 de ataque vs a espécie estudada. Base: só o próprio bardo. Com
+        Lendas Supremas: qualquer aliado, enquanto o bardo estiver vivo."""
+        b = self._bardo_lendas()
+        if not b or not tem_espec(b, f"lenda_{monstro.get('type', '')}"):
+            return 0
+        if atacante.get("id") == b["id"] or tem_espec(b, "bardo_lendas_supremas"):
+            return 1
+        return 0
+
+    def _lenda_resist_bonus(self, alvo_player, fonte_monstro):
+        """+1 nos saves contra as habilidades daquela espécie (mesma regra de grupo
+        das Lendas de ataque). Só para jogadores; `fonte_monstro` None → 0."""
+        if not fonte_monstro:
+            return 0
+        b = self._bardo_lendas()
+        if not b or not tem_espec(b, f"lenda_{fonte_monstro.get('type', '')}"):
+            return 0
+        if alvo_player.get("id") == b["id"] or tem_espec(b, "bardo_lendas_supremas"):
+            return 1
+        return 0
 
     # ── Frade Lewis (cleric): milagres de cura ──────────────────────────────
     # As 4 habilidades de Lewis NÃO passam pelo fluxo genérico de `skill` (não
@@ -9482,9 +9629,12 @@ class GameRoom:
         # Fallback legado: tier + 1
         return alvo.get("tier", 1) + 1
 
-    def _testar_save(self, alvo, tipo_save, dificuldade, extra_mod=0):
-        """Retorna (passou, d20, bonus, total). extra_mod: bônus/penalidade adicional ao save."""
-        bonus = self._veneno_save_bonus(alvo, tipo_save) + self._mod_magia(alvo, "resistencia") + extra_mod
+    def _testar_save(self, alvo, tipo_save, dificuldade, extra_mod=0, fonte=None):
+        """Retorna (passou, d20, bonus, total). extra_mod: bônus/penalidade adicional.
+        fonte: monstro-origem do efeito (habilidade de criatura) — habilita o +1 de
+        resistência da Lenda do Bardo contra aquela espécie (só p/ jogadores)."""
+        bonus = (self._veneno_save_bonus(alvo, tipo_save) + self._mod_magia(alvo, "resistencia")
+                 + extra_mod + self._lenda_resist_bonus(alvo, fonte))
         d20   = random.randint(1, 20)
         total = d20 + bonus
         return (total >= dificuldade), d20, bonus, total
@@ -11162,6 +11312,8 @@ class GameRoom:
             return
 
         effective_ac = self._player_effective_ac(target) if is_player else target["ca"]
+        if is_player:
+            effective_ac += self._provocacao_ca_bonus(target, m)   # Provocação II
 
         m_atk = (atk_def["atk_bonus"] + self._pen(m, "ataque") + self._mod_magia(m, "ataque")
                  + self._sombras_atk_bonus(m, target)               # Ataque das Sombras (+2)
@@ -11172,7 +11324,7 @@ class GameRoom:
         vantagem    = esc == "vantagem"
         if vantagem and desvantagem:
             vantagem = desvantagem = False
-        if prov:
+        if prov and not (self._provocador(m) and tem_espec(self._provocador(m), "bardo_provocacao_2")):
             m["provocado_turno_efeito"] = False
 
         if vantagem or desvantagem:
@@ -11283,7 +11435,7 @@ class GameRoom:
         tgt_name  = target["name"] if is_player else target["nome"]
         ab_name   = ability["name"]
 
-        save_ok, d20, sb, stot = self._testar_save(target, ability["save"], ability["dc"])
+        save_ok, d20, sb, stot = self._testar_save(target, ability["save"], ability["dc"], fonte=m)
         sb_str = f"+{sb}" if sb >= 0 else str(sb)
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
                                "label": f"{m['name']} — {ab_name}", "hit": not save_ok})
@@ -11647,7 +11799,7 @@ class GameRoom:
                              if ab["id"] == "derrubar"), None)
             if derrubar:
                 dc = derrubar.get("dc", 11)
-                save_ok, d20, sb, stot = self._testar_save(target, "reflexos", dc)
+                save_ok, d20, sb, stot = self._testar_save(target, "reflexos", dc, fonte=m)
                 sb_str = f"+{sb}" if sb >= 0 else str(sb)
                 if not save_ok:
                     target["moves_left"] = 0
@@ -11682,7 +11834,7 @@ class GameRoom:
         sucesso = False
         partes  = []
         for s in saves:
-            ok, d20, sb, tot = self._testar_save(p, s, dc)
+            ok, d20, sb, tot = self._testar_save(p, s, dc, fonte=captor)   # Lenda: resistir à mesma espécie
             sb_str = f"+{sb}" if sb >= 0 else str(sb)
             partes.append(f"{SAVE_LBL.get(s, s.upper())} d20={d20}{sb_str}={tot}")
             sucesso = sucesso or ok
@@ -11758,7 +11910,7 @@ class GameRoom:
         if hit and target_obj["kind"] == "player" and target.get("hp", 1) > 0 and not target.get("preso"):
             agarrar = next((ab for ab in m.get("special_abilities", []) if ab["id"] == "agarrar"), None)
             dc = agarrar.get("dc", 12) if agarrar else 12
-            save_ok, d20, sb, stot = self._testar_save(target, "fortitude", dc)
+            save_ok, d20, sb, stot = self._testar_save(target, "fortitude", dc, fonte=m)
             sb_str = f"+{sb}" if sb >= 0 else str(sb)
             if not save_ok:
                 target["preso"]    = True
@@ -11824,7 +11976,7 @@ class GameRoom:
         if hit and target_obj["kind"] == "player" and target.get("hp", 1) > 0 and not target.get("preso"):
             constr = next((ab for ab in m.get("special_abilities", []) if ab["id"] == "constricao"), None)
             dc = constr.get("dc", 11) if constr else 11
-            save_ok, d20, sb, stot = self._testar_save(target, "fortitude", dc)
+            save_ok, d20, sb, stot = self._testar_save(target, "fortitude", dc, fonte=m)
             sb_str = f"+{sb}" if sb >= 0 else str(sb)
             if not save_ok:
                 target["preso"]    = True
@@ -12290,7 +12442,7 @@ class GameRoom:
         if hit and target_obj["kind"] == "player" and target.get("hp", 1) > 0:
             inf = next((ab for ab in m.get("special_abilities", []) if ab["id"] == "infeccao"), None)
             dc = inf.get("dc", 10) if inf else 10
-            ok, d20, sb, tot = self._testar_save(target, "fortitude", dc)
+            ok, d20, sb, tot = self._testar_save(target, "fortitude", dc, fonte=m)
             if ok:
                 await self.gm_say(f"🦠 **{target['name']}** resiste à infecção (Fortitude {tot} vs CD {dc}).")
             else:
@@ -12608,7 +12760,7 @@ class GameRoom:
             await self.gm_say(f"💪 **{m['name']}** ataca com **Força Descomunal**!")
             hit = await self._execute_one_monster_attack(m, atk, target_obj)
             if hit and self._alvo_vivo(target_obj):
-                passou, d20, sb, stot = self._testar_save(target, "fortitude", 10)
+                passou, d20, sb, stot = self._testar_save(target, "fortitude", 10, fonte=m)
                 sbs = f"+{sb}" if sb >= 0 else str(sb)
                 await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
                                        "label": f"{m['name']} — Força Descomunal", "hit": not passou})
@@ -12886,11 +13038,13 @@ class GameRoom:
                              if target.get("guerreiro_luz_ativo") else 0)
                     effective_ac = (target["ac"] + self.temp_def.get(target["id"], 0)
                                     + self._cancao_bonus(target, "bonus_ca")
-                                    + gl_ca + self._mod_magia(target, "ca"))   # Abençoar (+CA no aliado)
+                                    + gl_ca + self._mod_magia(target, "ca")   # Abençoar (+CA no aliado)
+                                    + self._provocacao_ca_bonus(target, m))   # Provocação II
                 else:
                     effective_ac = target["ca"]
                 # Provocação: o 1º ataque do inimigo provocado é com DESVANTAGEM
-                # (rola 2d20 e usa o pior). O efeito vale uma vez (turno de desvantagem).
+                # (rola 2d20 e usa o pior). Vale uma vez — salvo Provocação II, que
+                # mantém a desvantagem por toda a duração da provocação.
                 # Envia AMBOS os dados ao cliente: o "descartado" (maior) marcado para
                 # animar em vermelho, e o "usado" (menor — pior) marcado em verde.
                 # Penalidade de veneno no ataque do monstro (cego/escorpião), se houver.
@@ -12902,7 +13056,7 @@ class GameRoom:
                 vantagem    = esc == "vantagem"
                 if vantagem and desvantagem:
                     vantagem = desvantagem = False
-                if prov:
+                if prov and not (self._provocador(m) and tem_espec(self._provocador(m), "bardo_provocacao_2")):
                     m["provocado_turno_efeito"] = False
                 if vantagem or desvantagem:
                     hit, roll, total, crit, discarded = self._rolar_ataque(m_atk, effective_ac, vantagem, desvantagem)
