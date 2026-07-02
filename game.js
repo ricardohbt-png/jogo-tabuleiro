@@ -7403,6 +7403,9 @@ function abrirPainelCancao(){
   function render(){
     const custo  = calcularCustoCancao(_selecionadosCancao);
     const ataque = { fome: custo.fome + 2, sede: custo.sede + 1 };
+    // Canção Heroica Suprema reduz a MANUTENÇÃO em -1🍖/-1💧 (mín 0); só o preview.
+    const _red   = (GS.bardoCancaoSuprema && GS.bardoCancaoSuprema()) ? 1 : 0;
+    const man    = { fome: Math.max(0, custo.fome - _red), sede: Math.max(0, custo.sede - _red) };
     const linhas = CANCAO_ATRIBUTOS_CLIENT.map(attr => {
       const ativo = _selecionadosCancao.includes(attr.id);
       const cl    = attr.custo === 'sede' ? '💧' : '🍖';
@@ -7415,7 +7418,7 @@ function abrirPainelCancao(){
             background:${ativo?'#c8a951':'transparent'};display:flex;align-items:center;
             justify-content:center;font-size:10px;color:#1a1a1a;">${ativo?'✓':''}</div>
           <span style="font-size:15px;">${attr.icone}</span>
-          <div style="flex:1;color:${ativo?'#c8a951':'#c8b89a'};font-size:11px;">+1 ${attr.label}</div>
+          <div style="flex:1;color:${ativo?'#c8a951':'#c8b89a'};font-size:11px;">+${(GS.bardoCancaoNivel?GS.bardoCancaoNivel(attr.id):1)} ${attr.label}</div>
           <span style="color:#8a7a5a;font-size:9px;">${cl}-1/turno</span>
         </div>`;
     }).join('');
@@ -7425,8 +7428,8 @@ function abrirPainelCancao(){
       <div style="margin-bottom:12px;">${linhas}</div>
       <div style="padding:8px 10px;margin-bottom:8px;background:rgba(255,133,27,0.06);border:1px solid #ff851b33;">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-          <span style="color:#8a7a5a;font-size:9px;letter-spacing:2px;">ATIVAR + MANUTENÇÃO</span>
-          <span style="color:#ff851b;font-size:10px;">${(custo.fome||custo.sede)?`${custo.fome?`🍖-${custo.fome} `:''}${custo.sede?`💧-${custo.sede}`:''}/turno`:'Selecione atributos'}</span>
+          <span style="color:#8a7a5a;font-size:9px;letter-spacing:2px;">ATIVAR + MANUTENÇÃO${_red?' <span style="color:#c8a951;">(Suprema)</span>':''}</span>
+          <span style="color:#ff851b;font-size:10px;">${_selecionadosCancao.length?((man.fome||man.sede)?`${man.fome?`🍖-${man.fome} `:''}${man.sede?`💧-${man.sede}`:''}/turno`:'🍖0 💧0/turno'):'Selecione atributos'}</span>
         </div>
         <div style="display:flex;justify-content:space-between;">
           <span style="color:#8a7a5a;font-size:9px;letter-spacing:2px;">SE ATACAR NO TURNO</span>
@@ -7514,10 +7517,16 @@ function _bardSkillBtn(me, sk){
     const aviso = me.bonus_action_used
       ? ' <small style="color:var(--text2);font-size:.62rem;">bônus usado</small>'
       : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">sem recursos</small>' : '';
+    const _pnv = GS.bardoProvocacaoNivel ? GS.bardoProvocacaoNivel() : 1;
+    const _pextra = _pnv >= 3
+      ? ' <span style="color:#c8a951;">II/III: desvantagem por toda a provocação, +2 CA e vantagem — e todos os aliados atacam o alvo com vantagem por 1 rodada.</span>'
+      : _pnv === 2
+      ? ' <span style="color:#c8a951;">II: a desvantagem dura toda a provocação; Henrique ganha +2 CA e ataca o alvo com vantagem.</span>'
+      : '';
     btn.innerHTML = `
       <div class="skill-info">
         <div class="skill-name">😤 ${sk.name}${aviso}</div>
-        <div class="skill-desc">${sk.description || 'Força o inimigo a atacar Henrique (raio 3).'}</div>
+        <div class="skill-desc">${sk.description || 'Força o inimigo a atacar Henrique (raio 3).'}${_pextra}</div>
       </div>
       <div class="skill-cost">🍖${fc} 💧${sc}</div>`;
     btn.onclick = () => iniciarProvocacao();

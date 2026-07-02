@@ -1430,6 +1430,23 @@ const GS = (() => {
     return (guildOwnedOf(myPid).especializacoes || []).includes('ladino_esconder_3');
   }
 
+  // ── Bardo (Fase 1e) ────────────────────────────────────────────────────────
+  function bardoCancaoNivel(attr) {   // 'acerto'|'dano'|'ca'|'movimento'|'resistencia'
+    return (guildOwnedOf(myPid).especializacoes || []).includes('bardo_cancao_' + attr) ? 2 : 1;
+  }
+  function bardoCancaoSuprema() {
+    return (guildOwnedOf(myPid).especializacoes || []).includes('bardo_cancao_suprema');
+  }
+  function bardoProvocacaoNivel() {
+    const e = (guildOwnedOf(myPid).especializacoes) || [];
+    if (e.includes('bardo_provocacao_3')) return 3;
+    if (e.includes('bardo_provocacao_2')) return 2;
+    return 1;
+  }
+  function bardoLendasSupremas() {
+    return (guildOwnedOf(myPid).especializacoes || []).includes('bardo_lendas_supremas');
+  }
+
   // ── Tile-click resolver: pure decision, no DOM ─────────────────────────────
   // Called by the unified handleTileClick(tx, ty) in game.html.
   // Returns one of:
@@ -1668,6 +1685,10 @@ const GS = (() => {
     ladinoVeneno2Slots,
     ladinoEsconderBonus,
     ladinoEsconderLivre,
+    bardoCancaoNivel,
+    bardoCancaoSuprema,
+    bardoProvocacaoNivel,
+    bardoLendasSupremas,
 
     // ── Decorações de masmorra ──
     decorTilesOf,
