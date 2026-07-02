@@ -5010,6 +5010,9 @@ class GameRoom:
                 return True
         return False
 
+    def _desarme_bonus(self, p):
+        return 2 if (tem_espec(p, "ladino_desarme_2") or tem_espec(p, "ladino_desarme_3")) else 0
+
     def _armadilhas_desbloqueadas(self, p):
         """Tipos de armadilha que o Ladino pode fabricar: buraco sempre grátis;
         os demais exigem a Fórmula correspondente (extensível via ARMADILHAS)."""
@@ -9885,7 +9888,7 @@ class GameRoom:
         dif = tipo.get("dificuldade", 10)
         d20 = random.randint(1, 20)
         bonus = mod(p.get("dex", 10))
-        total = d20 + bonus
+        total = d20 + bonus + self._desarme_bonus(p)
         p["action_done"] = True
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20, "label": f"{p['name']} — Desarmar"})
         await self.gm_say(f"🔧 **{p['name']}** tenta desarmar **{tipo.get('nome', arm['tipo'])}**: "
@@ -9894,8 +9897,19 @@ class GameRoom:
             await self.gm_say("💀 Falha crítica! A armadilha dispara no próprio Luccas!")
             await self._disparar_armadilha(p, arm)
         elif total >= dif:
+            custo_ouro_arm = tipo.get("custo_ouro", 0)
+            recuperou = False
+            if tem_espec(p, "ladino_desarme_3") and custo_ouro_arm > 0:
+                d20r = random.randint(1, 20)
+                totalr = d20r + bonus + self._desarme_bonus(p)
+                await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20r,
+                                       "label": f"{p['name']} — Recuperar"})
+                if totalr >= dif:
+                    p["gold"] += custo_ouro_arm
+                    recuperou = True
             self.armadilhas = [a for a in self.armadilhas if a["id"] != arm["id"]]
-            await self.gm_say("✅ Armadilha desarmada com sucesso!")
+            msg_recover = f" Recuperou 🪙{custo_ouro_arm}!" if recuperou else ""
+            await self.gm_say(f"✅ Armadilha desarmada com sucesso!{msg_recover}")
         else:
             await self.gm_say(f"❌ Falha no desarme ({total} vs {dif}) — tente de novo no próximo turno.")
         await self.push_state()

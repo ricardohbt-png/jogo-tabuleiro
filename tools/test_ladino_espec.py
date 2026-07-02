@@ -151,6 +151,25 @@ async def main():
     await r.handle_criar_armadilha("l", {"tipo": "armadilha_urso", "tx": 0, "ty": 0})
     check("cria armadilha destravada com sucesso", len(r.armadilhas) == 1 and not r._errs)
 
+    # [6] Desarme — bônus e recuperação
+    print("\n[6] Desarme")
+    r = setup()
+    check("bônus base = 0", r._desarme_bonus(rogue()) == 0)
+    check("bônus com desarme_2 = 2", r._desarme_bonus(rogue(esp=["ladino_desarme_2"])) == 2)
+    check("bônus com desarme_3 = 2 (não soma mais)", r._desarme_bonus(rogue(esp=["ladino_desarme_2","ladino_desarme_3"])) == 2)
+    # integração: desarme_3 recupera ouro em sucesso duplo (mock d20 alto)
+    _orig_rand = S.random.randint; S.random.randint = lambda a,b: 20
+    try:
+        r = setup(); luccas = rogue(esp=["ladino_desarme_2","ladino_desarme_3"])
+        luccas["pos"] = [0,0]; luccas["gold"] = 0; luccas["dex"] = 10; r.players["l"] = luccas
+        r.armadilhas = [{"id":"arm1","tipo":"armadilha_urso","pos":[0,0],"visivel":True,"ativada":False}]
+        r._armadilha_no_tile = lambda x,y: next((a for a in r.armadilhas if a["pos"]==[x,y]), None)
+        await r.handle_desarmar_armadilha("l", {})
+        check("desarmou com sucesso", len(r.armadilhas) == 0)
+        check("recuperou o ouro (custo_ouro da armadilha_urso=1)", luccas["gold"] == 1)
+    finally:
+        S.random.randint = _orig_rand
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
