@@ -370,6 +370,55 @@ GUILD_CATALOG = {
         "preco": 300, "nome": "Lendas Supremas", "icon": "📖",
         "desc": "Todos os bônus de Lenda passam a beneficiar o grupo inteiro (enquanto Henrique vivo).",
     },
+    # ── Mago (Fase 1f) — Metamagia ──────────────────────────────────────────
+    "mago_tecelagem_2": {
+        "id": "mago_tecelagem_2", "categoria": "especializacao", "classe": "mage",
+        "linha": "mago_tecelagem", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Tecelagem Arcana II", "icon": "🧵",
+        "desc": "Permite empilhar 2 metamagias no mesmo lançamento.",
+    },
+    "mago_tecelagem_3": {
+        "id": "mago_tecelagem_3", "categoria": "especializacao", "classe": "mage",
+        "linha": "mago_tecelagem", "nivel": 3, "requer": "mago_tecelagem_2", "exclusiva": False,
+        "preco": 300, "nome": "Tecelagem Arcana III", "icon": "🧵",
+        "desc": "Permite empilhar as 3 metamagias no mesmo lançamento.",
+    },
+    "mago_fortalecer_2": {
+        "id": "mago_fortalecer_2", "categoria": "especializacao", "classe": "mage",
+        "linha": "mago_fortalecer", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 200, "nome": "Fortalecer II", "icon": "💥",
+        "desc": "Fortalecer Magia multiplica o dano por 1,5 (era ×1,25).",
+    },
+    "mago_fortalecer_3": {
+        "id": "mago_fortalecer_3", "categoria": "especializacao", "classe": "mage",
+        "linha": "mago_fortalecer", "nivel": 3, "requer": "mago_fortalecer_2", "exclusiva": False,
+        "preco": 250, "nome": "Fortalecer III", "icon": "💥",
+        "desc": "Fortalecer Magia multiplica o dano por 2.",
+    },
+    "mago_aprimorar_2": {
+        "id": "mago_aprimorar_2", "categoria": "especializacao", "classe": "mage",
+        "linha": "mago_aprimorar", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Aprimorar II", "icon": "🎯",
+        "desc": "Aprimorar Magia dá +2 na CD do save (era +1).",
+    },
+    "mago_aprimorar_3": {
+        "id": "mago_aprimorar_3", "categoria": "especializacao", "classe": "mage",
+        "linha": "mago_aprimorar", "nivel": 3, "requer": "mago_aprimorar_2", "exclusiva": False,
+        "preco": 200, "nome": "Aprimorar III", "icon": "🎯",
+        "desc": "Aprimorar Magia dá +3 na CD do save.",
+    },
+    "mago_estender_2": {
+        "id": "mago_estender_2", "categoria": "especializacao", "classe": "mage",
+        "linha": "mago_estender", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Estender II", "icon": "⏱️",
+        "desc": "Estender Magia dá +2 rodadas de duração (era +1).",
+    },
+    "mago_estender_3": {
+        "id": "mago_estender_3", "categoria": "especializacao", "classe": "mage",
+        "linha": "mago_estender", "nivel": 3, "requer": "mago_estender_2", "exclusiva": False,
+        "preco": 200, "nome": "Estender III", "icon": "⏱️",
+        "desc": "Estender Magia dá +3 rodadas de duração.",
+    },
     "clerigo_cura_2": {
         "id": "clerigo_cura_2", "categoria": "especializacao", "classe": "cleric",
         "linha": "clerigo_cura", "nivel": 2, "requer": None, "exclusiva": False,
