@@ -363,6 +363,60 @@ GUILD_CATALOG = {
         "preco": 200, "nome": "Ressurreição III", "icon": "💫",
         "desc": "Ressurreição traz o aliado com PV cheio (🍖20 💧20).",
     },
+    "paladino_cura_maos_2": {
+        "id": "paladino_cura_maos_2", "categoria": "especializacao", "classe": "paladin",
+        "linha": "paladino_cura_maos", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Cura pelas Mãos II", "icon": "🙏",
+        "desc": "Imposição das Mãos cura 2d6 + FOR.",
+    },
+    "paladino_cura_maos_3": {
+        "id": "paladino_cura_maos_3", "categoria": "especializacao", "classe": "paladin",
+        "linha": "paladino_cura_maos", "nivel": 3, "requer": "paladino_cura_maos_2", "exclusiva": False,
+        "preco": 200, "nome": "Cura pelas Mãos III", "icon": "🙏",
+        "desc": "Pode gastar +2🍖/+2💧 por +1d6 de cura (até 3×).",
+    },
+    "paladino_ataque_sagrado_2": {
+        "id": "paladino_ataque_sagrado_2", "categoria": "especializacao", "classe": "paladin",
+        "linha": "paladino_ataque_sagrado", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Ataque Sagrado II", "icon": "⚔️",
+        "desc": "Golpe Sagrado causa +2d8 de dano sagrado por ataque.",
+    },
+    "paladino_luz_2": {
+        "id": "paladino_luz_2", "categoria": "especializacao", "classe": "paladin",
+        "linha": "paladino_luz", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Guerreiro da Luz II", "icon": "💡",
+        "desc": "Mantém 3 atributos ativos; com Visão, detecta armadilhas em raio 2.",
+    },
+    "paladino_luz_3": {
+        "id": "paladino_luz_3", "categoria": "especializacao", "classe": "paladin",
+        "linha": "paladino_luz", "nivel": 3, "requer": "paladino_luz_2", "exclusiva": False,
+        "preco": 200, "nome": "Guerreiro da Luz III", "icon": "💡",
+        "desc": "Mantém 4 atributos ativos; com Visão, detecta armadilhas em raio 3.",
+    },
+    "paladino_defensor_2": {
+        "id": "paladino_defensor_2", "categoria": "especializacao", "classe": "paladin",
+        "linha": "paladino_defensor", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Defensor II", "icon": "🛡️",
+        "desc": "O alcance da proteção aumenta para 5 quadrados.",
+    },
+    "paladino_defensor_3": {
+        "id": "paladino_defensor_3", "categoria": "especializacao", "classe": "paladin",
+        "linha": "paladino_defensor", "nivel": 3, "requer": "paladino_defensor_2", "exclusiva": False,
+        "preco": 200, "nome": "Defensor III", "icon": "🛡️",
+        "desc": "O dano dividido cai para 40%/40% (20% é mitigado).",
+    },
+    "paladino_regen_2": {
+        "id": "paladino_regen_2", "categoria": "especializacao", "classe": "paladin",
+        "linha": "paladino_regen", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Regeneração II", "icon": "✨",
+        "desc": "Regeneração Divina também cura +1 HP dos aliados adjacentes.",
+    },
+    "paladino_regen_3": {
+        "id": "paladino_regen_3", "categoria": "especializacao", "classe": "paladin",
+        "linha": "paladino_regen", "nivel": 3, "requer": "paladino_regen_2", "exclusiva": False,
+        "preco": 200, "nome": "Regeneração III", "icon": "✨",
+        "desc": "A Regeneração Divina alcança aliados em raio 2.",
+    },
     # Fases 1-2 acrescentam aqui.
 }
 
