@@ -193,6 +193,40 @@ async def main():
     check("2º veneno preenche slot 2 (não apaga o 1º)",
           luccas["weapon_poison"] == "veneno_fraco" and luccas.get("weapon_poison_2") == "veneno_forte")
 
+    # [8] Esconder nas Sombras
+    print("\n[8] Esconder nas Sombras")
+    r = setup()
+    check("bônus base = 0", r._esconder_bonus(rogue()) == 0)
+    check("bônus com esconder_2 = 2", r._esconder_bonus(rogue(esp=["ladino_esconder_2"])) == 2)
+    check("bônus com esconder_3 = 2 (não soma mais)", r._esconder_bonus(rogue(esp=["ladino_esconder_2","ladino_esconder_3"])) == 2)
+    # sem esconder_3: gasta ação bônus
+    r = setup(); luccas = rogue(); luccas["pos"]=[0,0]; luccas["fome"]=50; luccas["sede"]=50; r.players["l"]=luccas
+    _orig_rand = S.random.randint; S.random.randint = lambda a,b: 20
+    try:
+        await r.handle_esconder_sombras("l", {})
+        check("sem esconder_3: gasta ação bônus", luccas.get("bonus_action_used") is True)
+    finally:
+        S.random.randint = _orig_rand
+    # com esconder_3: NÃO gasta ação bônus
+    r2 = setup(); luccas2 = rogue(esp=["ladino_esconder_2","ladino_esconder_3"]); luccas2["pos"]=[0,0]
+    luccas2["fome"]=50; luccas2["sede"]=50; r2.players["l"]=luccas2
+    _orig_rand2 = S.random.randint; S.random.randint = lambda a,b: 20
+    try:
+        await r2.handle_esconder_sombras("l", {})
+        check("com esconder_3: não gasta ação bônus", not luccas2.get("bonus_action_used"))
+    finally:
+        S.random.randint = _orig_rand2
+    # ao ser revelado com esconder_3, ganha +2 de CA (temp_def)
+    r3 = setup(); luccas3 = rogue(esp=["ladino_esconder_2","ladino_esconder_3"]); luccas3["id"]="l"
+    luccas3["invisivel_sombras"] = True; r3.players["l"] = luccas3
+    await r3._quebrar_invisibilidade(luccas3, "ao atacar")
+    check("CA +2 por 1 rodada ao revelar com esconder_3", r3.temp_def.get("l") == 2)
+    # sem esconder_3, não ganha CA
+    r4 = setup(); luccas4 = rogue(); luccas4["id"]="l"
+    luccas4["invisivel_sombras"] = True; r4.players["l"] = luccas4
+    await r4._quebrar_invisibilidade(luccas4, "ao atacar")
+    check("sem esconder_3, não ganha CA ao revelar", r4.temp_def.get("l", 0) == 0)
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

@@ -5022,6 +5022,9 @@ class GameRoom:
     def _veneno_rapido_2_slots(self, p):
         return tem_espec(p, "ladino_veneno_3")
 
+    def _esconder_bonus(self, p):
+        return 2 if (tem_espec(p, "ladino_esconder_2") or tem_espec(p, "ladino_esconder_3")) else 0
+
     def _armadilhas_desbloqueadas(self, p):
         """Tipos de armadilha que o Ladino pode fabricar: buraco sempre grátis;
         os demais exigem a Fórmula correspondente (extensível via ARMADILHAS)."""
@@ -5066,6 +5069,9 @@ class GameRoom:
             return False
         p["invisivel_sombras"] = False
         await self.gm_say(f"🌑 **{p['name']}** revela-se ({motivo}).")
+        if tem_espec(p, "ladino_esconder_3"):
+            self.temp_def[p["id"]] = self.temp_def.get(p["id"], 0) + 2
+            await self.gm_say(f"🌀 **{p['name']}** ganha +2 de CA por 1 rodada ao se revelar!")
         return True
 
     async def handle_attack(self, pid, target_id, buffs=None):
@@ -10041,12 +10047,13 @@ class GameRoom:
 
         d20 = random.randint(1, 20)
         bonus_dex = mod(p.get("dex", 10))
-        total = d20 + bonus_dex
+        total = d20 + bonus_dex + self._esconder_bonus(p)
 
         # Custo é pago independentemente do resultado (gasto o fôlego ao tentar).
         p["fome"] = max(0, p["fome"] - custo_fome)
         p["sede"] = max(0, p["sede"] - custo_sede)
-        p["bonus_action_used"] = True
+        if not tem_espec(p, "ladino_esconder_3"):
+            p["bonus_action_used"] = True
 
         sucesso = total >= dificuldade
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
