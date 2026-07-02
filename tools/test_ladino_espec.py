@@ -49,6 +49,18 @@ async def main():
     check("preço II = 150", S.guild_item("ladino_furtivo_2")["preco"] == 150)
     check("preço III = 200", S.guild_item("ladino_esconder_3")["preco"] == 200)
 
+    # [2] Fórmulas de armadilha (geradas)
+    print("\n[2] Fórmulas de armadilha")
+    ids = [i["id"] for i in S.guild_items_for_class("rogue")]
+    for eid, preco in [("ladino_armadilha_urso",100), ("ladino_fosso_estacas",120),
+                        ("ladino_fosso_envenenado",130), ("ladino_rede",150),
+                        ("ladino_armadilha_incendiaria",180), ("ladino_mina_terrestre",220),
+                        ("ladino_nuvem_gas",250)]:
+        check(f"catálogo tem {eid}", eid in ids)
+        check(f"{eid} preço {preco}", S.guild_item(eid)["preco"] == preco)
+    check("buraco não vira nó de compra", "ladino_buraco" not in ids and
+          not any(v.get("nome","").endswith("Buraco") for v in S.GUILD_CATALOG.values()))
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

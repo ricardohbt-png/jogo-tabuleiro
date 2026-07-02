@@ -2370,6 +2370,7 @@ ARMADILHAS = {
         "efeitos": [{"tipo": "dano", "valor": "1d4", "elemento": "fisico"},
                     {"tipo": "perder_movimento"}],
         "descricao": "1d4 de dano + perde movimento. Some após ativar.",
+        "formula_guild_id": "ladino_armadilha_urso", "formula_preco": 100,
     },
     "fosso_estacas": {
         "nome": "Fosso com Estacas", "icone": "⛏️", "dificuldade": 10, "save": "reflexos",
@@ -2377,12 +2378,14 @@ ARMADILHAS = {
         "efeitos": [{"tipo": "dano", "valor": "1d6", "elemento": "fisico"},
                     {"tipo": "perder_movimento"}],
         "descricao": "1d6 de dano + perde movimento. Fica visível após ativar.",
+        "formula_guild_id": "ladino_fosso_estacas", "formula_preco": 120,
     },
     "rede": {
         "nome": "Rede", "icone": "🕸️", "dificuldade": 11, "save": "reflexos",
         "custo_ouro": 4, "persiste": False,
         "efeitos": [{"tipo": "perder_rodada"}],
         "descricao": "Perde a rodada inteira. Some após ativar.",
+        "formula_guild_id": "ladino_rede", "formula_preco": 150,
     },
     "armadilha_incendiaria": {
         "nome": "Armadilha Incendiária", "icone": "🔥", "dificuldade": 12, "save": "reflexos",
@@ -2391,12 +2394,14 @@ ARMADILHAS = {
                     {"tipo": "dano", "valor": "1d4", "elemento": "fogo", "rodada": 2},
                     {"tipo": "dano", "valor": "1",   "elemento": "fogo", "rodada": 3}],
         "descricao": "Dano de fogo progressivo: 1d6 + 1d4 + 1 em 3 rodadas.",
+        "formula_guild_id": "ladino_armadilha_incendiaria", "formula_preco": 180,
     },
     "mina_terrestre": {
         "nome": "Mina Terrestre", "icone": "💣", "dificuldade": 12, "save": "reflexos",
         "save_reduz": True, "custo_ouro": 20, "persiste": False, "area": 1,
         "efeitos": [{"tipo": "dano", "valor": "2d6", "elemento": "explosao", "area": True}],
         "descricao": "2d6 de dano em área de 1 quadrado. Save reduz à metade.",
+        "formula_guild_id": "ladino_mina_terrestre", "formula_preco": 220,
     },
     "fosso_envenenado": {
         "nome": "Fosso com Estacas Envenenadas", "icone": "☠️", "dificuldade": 10,
@@ -2405,14 +2410,37 @@ ARMADILHAS = {
         "efeitos": [{"tipo": "dano", "valor": "1d6", "elemento": "fisico"},
                     {"tipo": "veneno"}],
         "descricao": "1d6 de dano + efeito do veneno usado. Fica visível após ativar.",
+        "formula_guild_id": "ladino_fosso_envenenado", "formula_preco": 130,
     },
     "nuvem_gas": {
         "nome": "Nuvem de Gás", "icone": "🌫️", "dificuldade": 13, "save": "fortitude",
         "custo_ouro": 25, "persiste": False, "area": 1,
         "efeitos": [{"tipo": "reduzir_con", "valor": "1d6", "duracao": 3, "area": True}],
         "descricao": "-1d6 CON por 3 rodadas em área. Recalcula HP.",
+        "formula_guild_id": "ladino_nuvem_gas", "formula_preco": 250,
     },
 }
+
+
+def _gerar_catalogo_formulas_armadilha():
+    """Gera entradas de compra para cada tipo de ARMADILHAS que tiver
+    formula_guild_id — extensível: armadilhas futuras só precisam desses
+    2 campos para aparecerem automaticamente na Guilda."""
+    entradas = {}
+    for tipo_id, tipo in ARMADILHAS.items():
+        gid = tipo.get("formula_guild_id")
+        if not gid:
+            continue
+        entradas[gid] = {
+            "id": gid, "categoria": "especializacao", "classe": "rogue",
+            "linha": "ladino_armadilhas", "nivel": None, "requer": None, "exclusiva": False,
+            "preco": tipo.get("formula_preco", 100),
+            "nome": f"Fórmula: {tipo['nome']}", "icon": tipo.get("icone", "🪤"),
+            "desc": f"Desbloqueia permanentemente a fabricação de {tipo['nome']}.",
+        }
+    return entradas
+
+GUILD_CATALOG.update(_gerar_catalogo_formulas_armadilha())
 
 # ─── DECORAÇÕES DE MASMORRA ──────────────────────────────────────────────────
 # Objetos colocáveis no editor. size=[w,h] no facing canônico (vertical).
