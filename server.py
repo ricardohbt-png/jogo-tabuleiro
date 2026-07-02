@@ -13012,7 +13012,8 @@ class GameRoom:
                 else:
                     effective_ac = target["ca"]
                 # Provocação: o 1º ataque do inimigo provocado é com DESVANTAGEM
-                # (rola 2d20 e usa o pior). O efeito vale uma vez (turno de desvantagem).
+                # (rola 2d20 e usa o pior). Vale uma vez — salvo Provocação II, que
+                # mantém a desvantagem por toda a duração da provocação.
                 # Envia AMBOS os dados ao cliente: o "descartado" (maior) marcado para
                 # animar em vermelho, e o "usado" (menor — pior) marcado em verde.
                 # Penalidade de veneno no ataque do monstro (cego/escorpião), se houver.
