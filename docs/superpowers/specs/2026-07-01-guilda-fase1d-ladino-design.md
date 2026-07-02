@@ -62,7 +62,7 @@ texto de referência** e precisam de redesign real (não só números):
 | Modelo geral | Base = comportamento enfraquecido/atual conforme a linha; compra II/III; III exige II por linha (exceto Fórmulas, que não tem níveis). II=150, III=200 (Fórmulas têm preço próprio por tipo). |
 | Ataque Furtivo I (grátis) | Só dispara oculto (`invisivel_sombras`/`oculto_vela`). |
 | Ataque Furtivo II | Também dispara com aliado adjacente ao alvo (= comportamento atual, agora exige compra). |
-| Ataque Furtivo III (Supremo) | Reação automática e imediata: quando **qualquer aliado que não seja Luccas** acerta um inimigo vivo, Luccas desfere um ataque furtivo automático nele também — **1×/inimigo/rodada** (reseta por `round_num`). Só dispara em **acerto** do aliado; não checa petrificação de Luccas (mesmo padrão do furtivo passivo). |
+| Ataque Furtivo III (Supremo) | Reação automática e imediata: quando **qualquer aliado que não seja Luccas** acerta um inimigo vivo, Luccas desfere um ataque furtivo automático nele também — **1×/inimigo/rodada** (reseta por `round_num`). Só dispara em **acerto** do aliado; **bloqueado se Luccas estiver petrificado, paralisado ou imobilizado** (`perde_turno`) — ele precisa estar capaz de reagir. Não existe "controle mental" sobre jogadores no jogo hoje (`dominado` só se aplica a mortos-vivos do Pedro), então esse caso não se aplica. |
 | Fórmulas de Armadilha | **Extensível**: cada entrada de `ARMADILHAS` ganha campos opcionais `formula_guild_id`/`formula_preco`; o catálogo da Guilda é **gerado a partir desses dados**. `buraco` não tem esses campos → sempre grátis. As outras 7 recebem preço: `armadilha_urso` 100, `fosso_estacas` 120, `fosso_envenenado` 130, `rede` 150, `armadilha_incendiaria` 180, `mina_terrestre` 220, `nuvem_gas` 250. |
 | Desarme II | +2 no teste (`d20+DES+2` vs dificuldade). |
 | Desarme III | Mantém +2 (não soma mais) + após sucesso, um **2º teste** (mesma fórmula/dificuldade) que, se passar, devolve o `custo_ouro` da armadilha desarmada. |
@@ -209,13 +209,16 @@ jogador**:
     async def _furtivo_reativo(self, atacante, target):
         """Ataque Furtivo Supremo (ladino_furtivo_3): reage ao acerto de um aliado
         contra um inimigo, 1x por inimigo por rodada. Não dispara no próprio
-        ataque de Luccas."""
+        ataque de Luccas, nem se Luccas estiver incapaz de reagir (petrificado,
+        paralisado ou imobilizado — perde_turno)."""
         if atacante.get("class_id") == "rogue" or target.get("hp", 0) <= 0:
             return
         luccas = next((q for q in self.players.values()
                        if q.get("class_id") == "rogue" and q.get("alive")
                        and q["id"] != atacante["id"]), None)
         if not luccas or not tem_espec(luccas, "ladino_furtivo_3"):
+            return
+        if luccas.get("petrificado") or luccas.get("paralisado") or luccas.get("perde_turno"):
             return
         if luccas.get("furtivo_reativo_round") != self.round_num:
             luccas["furtivo_reativo_round"] = self.round_num
@@ -365,7 +368,8 @@ Cobrir:
 1. **Furtivo:** base só dispara oculto; com `_2` também dispara com aliado
    adjacente; `_furtivo_reativo` aplica dano 1×/alvo/rodada, não dispara se o
    atacante é o próprio Luccas, não dispara se o alvo já está com HP≤0, reseta
-   ao avançar `round_num`.
+   ao avançar `round_num`, **e não dispara se Luccas estiver petrificado,
+   paralisado ou com `perde_turno`** (incapaz de reagir).
 2. **Fórmulas:** `_armadilhas_desbloqueadas` cresce por compra; `buraco` sempre
    presente; `handle_criar_armadilha` recusa tipo bloqueado e aceita o
    destravado.
@@ -398,6 +402,7 @@ Cobrir:
 |---|---|
 | Redesign do Ataque Furtivo nerfa quem já joga (base fica mais restrito) | Intencional e documentado; Furtivo II restaura o comportamento de hoje. |
 | Reação do Furtivo Supremo disparar em duplicidade ou fora de hora | `_furtivo_reativo` checa `atacante.class_id != rogue`, `target.hp>0`, e o set por rodada; chamada num único ponto de `handle_attack`. |
+| Reação disparar com Luccas incapaz de agir (petrificado/paralisado/imobilizado) | `_furtivo_reativo` checa `petrificado`/`paralisado`/`perde_turno` de Luccas antes de aplicar o dano; testado explicitamente (§7.1). Não há mecânica de controle mental sobre jogadores no jogo hoje. |
 | Refactor de veneno (2 slots) quebrar o fluxo ranged/`coat_poison` | Ranged e `coat_poison` explicitamente fora do escopo do gating; só o ramo melee de `handle_veneno_rapido`/hit muda. |
 | Catálogo gerado (Fórmulas) conflitar com ids literais | `formula_guild_id` usa prefixo `ladino_` único por tipo; `GUILD_CATALOG.update(...)` roda após os literais, sem sobrescrever nós existentes (nomes não colidem). |
 | `self.temp_def` já ser usado por outros sistemas (mago/canção) | Reuso aditivo (`+=`), como os demais usos já fazem; não zera nem substitui bônus existentes. |
