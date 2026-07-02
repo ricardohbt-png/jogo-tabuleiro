@@ -11834,7 +11834,7 @@ class GameRoom:
         sucesso = False
         partes  = []
         for s in saves:
-            ok, d20, sb, tot = self._testar_save(p, s, dc)
+            ok, d20, sb, tot = self._testar_save(p, s, dc, fonte=captor)   # Lenda: resistir à mesma espécie
             sb_str = f"+{sb}" if sb >= 0 else str(sb)
             partes.append(f"{SAVE_LBL.get(s, s.upper())} d20={d20}{sb_str}={tot}")
             sucesso = sucesso or ok
