@@ -115,6 +115,27 @@ async def main():
     r._revelar_armadilhas_raio(p, r._gdl_trap_raio(p))
     check("não revela a 2q com raio 1", r.armadilhas[0]["visivel"] is False)
 
+    # [6] Defensor
+    print("\n[6] Defensor")
+    r = setup()
+    check("raio base = 4", r._defensor_raio(paladin()) == 4)
+    check("raio II = 5", r._defensor_raio(paladin(esp=["paladino_defensor_2"])) == 5)
+    check("split base = (5,5) de 10", r._defensor_split(paladin(), 10) == (5, 5))
+    check("split III = (4,4) de 10", r._defensor_split(paladin(esp=["paladino_defensor_2","paladino_defensor_3"]), 10) == (4, 4))
+    # integração: _processar_dano_protetor divide 40/40 com _3
+    r = setup(); p = paladin(esp=["paladino_defensor_2","paladino_defensor_3"]); p["pos"]=[0,0]
+    p["protetor_ativo"]=True; p["protetor_alvo"]="a"; r.players["r"]=p
+    alvo = make_player("a","Ana","warrior",1); alvo["pos"]=[0,1]; r.players["a"]=alvo
+    dano_alvo, transfer = await r._processar_dano_protetor("a", 10)
+    check("protetor III → aliado 4", dano_alvo == 4)
+    check("protetor III → richard 4", transfer is not None and transfer[1] == 4)
+    # integração: raio 5 permite proteger a distância 5, raio 4 (base) não
+    r = setup(); p = paladin(esp=["paladino_defensor_2"]); p["pos"]=[0,0]
+    p["protetor_ativo"]=True; p["protetor_alvo"]="a"; r.players["r"]=p
+    alvo = make_player("a","Ana","warrior",1); alvo["pos"]=[0,5]; r.players["a"]=alvo
+    dano_alvo, transfer = await r._processar_dano_protetor("a", 10)
+    check("raio 5 (II) mantém proteção a 5q", transfer is not None)
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

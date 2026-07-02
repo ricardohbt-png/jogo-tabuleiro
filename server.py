@@ -3888,6 +3888,18 @@ class GameRoom:
         if tem_espec(p, "paladino_luz_2"): return 2
         return 1
 
+    def _defensor_raio(self, p):
+        """Alcance do Protetor (4 base / 5 com paladino_defensor_2)."""
+        return 5 if tem_espec(p, "paladino_defensor_2") else 4
+
+    def _defensor_split(self, richard, dano):
+        """Divisão do dano do Protetor: 50/50 base; 40/40 (20% mitigado) com paladino_defensor_3."""
+        if tem_espec(richard, "paladino_defensor_3"):
+            parte = (dano * 2) // 5   # 40% (floor); 20% mitigado
+            return parte, parte
+        metade = dano // 2
+        return metade, metade
+
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
         if self.phase != "playing":
@@ -6794,8 +6806,8 @@ class GameRoom:
         alvo = self.players.get(alvo_id)
         if not alvo or not alvo.get("alive"):
             await self.send_to(pid, {"type": "error", "msg": "Aliado inválido."}); return
-        if not self._no_raio(p, alvo, 4):
-            await self.send_to(pid, {"type": "error", "msg": "Aliado fora do raio de 4 quadrados."}); return
+        if not self._no_raio(p, alvo, self._defensor_raio(p)):
+            await self.send_to(pid, {"type": "error", "msg": f"Aliado fora do raio de {self._defensor_raio(p)} quadrados."}); return
 
         p["fome"] = max(0, p["fome"] - fome_cost)
         p["sede"] = max(0, p["sede"] - sede_cost)
@@ -6932,7 +6944,7 @@ class GameRoom:
                 p["protetor_ativo"] = False
                 p["protetor_alvo"] = None
                 await self.gm_say(f"🛡️ Protetor de **{p['name']}** se interrompe — fome insuficiente.")
-            elif not alvo or not alvo.get("alive") or not self._no_raio(p, alvo, 4):
+            elif not alvo or not alvo.get("alive") or not self._no_raio(p, alvo, self._defensor_raio(p)):
                 p["protetor_ativo"] = False
                 p["protetor_alvo"] = None
                 await self.gm_say(f"🛡️ Protetor de **{p['name']}** se desfaz — aliado fora do raio.")
@@ -6968,13 +6980,12 @@ class GameRoom:
         if not richard:
             return dano_original, None
         alvo = self.players.get(alvo_id)
-        if not alvo or not self._no_raio(richard, alvo, 4):
+        if not alvo or not self._no_raio(richard, alvo, self._defensor_raio(richard)):
             richard["protetor_ativo"] = False
             richard["protetor_alvo"] = None
             await self.gm_say(f"🛡️ Protetor de **{richard['name']}** se desfaz — aliado saiu do raio.")
             return dano_original, None
-        dano_aliado  = dano_original // 2
-        dano_richard = dano_original // 2
+        dano_aliado, dano_richard = self._defensor_split(richard, dano_original)
         await self.gm_say(
             f"🛡️ **Protetor** absorve! **{alvo['name']}** recebe {dano_aliado}, "
             f"**{richard['name']}** recebe {dano_richard}.")
