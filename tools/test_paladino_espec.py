@@ -80,6 +80,21 @@ async def main():
     check("sagrado base = 1 d8", r._ataque_sagrado_dados(paladin()) == 1)
     check("sagrado II = 2 d8", r._ataque_sagrado_dados(paladin(esp=["paladino_ataque_sagrado_2"])) == 2)
 
+    # [4] Guerreiro da Luz: teto de atributos
+    print("\n[4] Guerreiro da Luz (atributos)")
+    r = setup()
+    check("max base = 2", r._gdl_max_atributos(paladin()) == 2)
+    check("max luz_2 = 3", r._gdl_max_atributos(paladin(esp=["paladino_luz_2"])) == 3)
+    check("max luz_3 = 4", r._gdl_max_atributos(paladin(esp=["paladino_luz_2","paladino_luz_3"])) == 4)
+    # integração: 3 atributos sem luz_2 é recusado
+    r = setup(); p = paladin(); p["fome"]=50; p["sede"]=50; r.players["r"]=p
+    await r._ativar_guerreiro_luz(p, "r", {"bonus":{"ataque":1,"dano":1,"ca":1}})
+    check("recusa 3 atributos sem luz_2", not p.get("guerreiro_luz_ativo") and r._errs)
+    # com luz_2 aceita 3
+    r = setup(); p = paladin(esp=["paladino_luz_2"]); p["fome"]=50; p["sede"]=50; r.players["r"]=p
+    await r._ativar_guerreiro_luz(p, "r", {"bonus":{"ataque":1,"dano":1,"ca":1}})
+    check("aceita 3 atributos com luz_2", p.get("guerreiro_luz_ativo") is True)
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

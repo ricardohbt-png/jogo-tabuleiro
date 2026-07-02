@@ -3876,6 +3876,12 @@ class GameRoom:
         """Dados do dano sagrado do Golpe Sagrado (1 base / 2 com paladino_ataque_sagrado_2)."""
         return 2 if tem_espec(p, "paladino_ataque_sagrado_2") else 1
 
+    def _gdl_max_atributos(self, p):
+        """Máx. de atributos simultâneos do Guerreiro da Luz (2 base / 3 / 4)."""
+        if tem_espec(p, "paladino_luz_3"): return 4
+        if tem_espec(p, "paladino_luz_2"): return 3
+        return 2
+
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
         if self.phase != "playing":
@@ -6853,6 +6859,11 @@ class GameRoom:
             except (TypeError, ValueError): return 0
         bonus_validos = {"visao": _b("visao"), "ataque": _b("ataque"),
                          "dano": _b("dano"), "ca": _b("ca")}
+
+        n_ativos = sum(1 for v in bonus_validos.values() if v > 0)
+        if n_ativos > self._gdl_max_atributos(p):
+            await self.send_to(pid, {"type": "error",
+                "msg": f"Guerreiro da Luz permite {self._gdl_max_atributos(p)} atributo(s) ativo(s) — evolua na Guilda."}); return
 
         custo_fome = bonus_validos["dano"] + bonus_validos["ca"]
         custo_sede = bonus_validos["visao"] + bonus_validos["ataque"]
