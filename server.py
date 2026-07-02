@@ -3882,6 +3882,12 @@ class GameRoom:
         if tem_espec(p, "paladino_luz_2"): return 3
         return 2
 
+    def _gdl_trap_raio(self, p):
+        """Raio de detecção de armadilhas do Guerreiro da Luz (1 base / 2 / 3)."""
+        if tem_espec(p, "paladino_luz_3"): return 3
+        if tem_espec(p, "paladino_luz_2"): return 2
+        return 1
+
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
         if self.phase != "playing":
@@ -6888,6 +6894,7 @@ class GameRoom:
             raio = self._get_raio_visao(p)
             self._reveal_around(p["pos"][0], p["pos"][1], radius=raio)
             await self.gm_say(f"👁️ Visão de **{p['name']}** expandida para raio {raio}.")
+            self._revelar_armadilhas_raio(p, self._gdl_trap_raio(p))
 
     async def _processar_manutencao_richard(self, p):
         """Upkeep das habilidades sustentadas de Richard — cobrado no início do
@@ -6944,6 +6951,8 @@ class GameRoom:
                 p["fome"] = max(0, p["fome"] - custo["fome"])
                 p["sede"] = max(0, p["sede"] - custo["sede"])
                 await self.gm_say(f"💡 Guerreiro da Luz de **{p['name']}** sustentado 🍖-{custo['fome']} 💧-{custo['sede']}.")
+                if p.get("guerreiro_luz_bonus", {}).get("visao", 0) > 0:
+                    self._revelar_armadilhas_raio(p, self._gdl_trap_raio(p))
 
     async def _processar_dano_protetor(self, alvo_id, dano_original):
         """Se `alvo_id` está sob Protetor de um Richard vivo e no raio, divide o
@@ -9771,7 +9780,12 @@ class GameRoom:
     def _revelar_armadilhas_luccas(self, p):
         """Revela (adiciona a self.explored) as armadilhas de masmorra não
         disparadas dentro do raio de visão de Luccas. Retorna quantas revelou."""
-        raio = self._get_raio_visao(p)
+        return self._revelar_armadilhas_raio(p, self._get_raio_visao(p))
+
+    def _revelar_armadilhas_raio(self, p, raio):
+        """Revela traps de masmorra e armadilhas colocáveis hostis dentro de `raio`
+        (Chebyshev) de `p`. Retorna quantas revelou. Generaliza a detecção do
+        Ladino para uso também pelo Guerreiro da Luz (Paladino)."""
         px, py = p["pos"]
         reveladas = 0
         for tr in self.traps:
@@ -9782,7 +9796,7 @@ class GameRoom:
                 self.explored.add(tuple(tr["pos"]))
                 reveladas += 1
         # Armadilhas COLOCÁVEIS hostis (inclui as autoradas no editor): a detecção
-        # de Luccas marca `visivel` → passam a aparecer no mapa (com imagem, se tiver).
+        # marca `visivel` → passam a aparecer no mapa (com imagem, se tiver).
         for a in self.armadilhas:
             if a.get("esgotada") or a.get("visivel"):
                 continue

@@ -95,6 +95,26 @@ async def main():
     await r._ativar_guerreiro_luz(p, "r", {"bonus":{"ataque":1,"dano":1,"ca":1}})
     check("aceita 3 atributos com luz_2", p.get("guerreiro_luz_ativo") is True)
 
+    # [5] Guerreiro da Luz: detecção de armadilhas
+    print("\n[5] Guerreiro da Luz (armadilhas)")
+    r = setup()
+    check("trap raio base = 1", r._gdl_trap_raio(paladin()) == 1)
+    check("trap raio luz_2 = 2", r._gdl_trap_raio(paladin(esp=["paladino_luz_2"])) == 2)
+    check("trap raio luz_3 = 3", r._gdl_trap_raio(paladin(esp=["paladino_luz_2","paladino_luz_3"])) == 3)
+    # integração: revela armadilha colocável hostil a 2 quadrados com raio 2
+    r = setup(); p = paladin(esp=["paladino_luz_2"]); p["pos"]=[0,0]; r.players["r"]=p
+    r.armadilhas = [{"pos":[0,2], "visivel": False, "criador": "monstro1"}]
+    r.traps = []
+    r.explored = set()
+    n = r._revelar_armadilhas_raio(p, r._gdl_trap_raio(p))
+    check("revelou armadilha a 2q com raio 2", r.armadilhas[0]["visivel"] is True and n == 1)
+    # fora do raio (raio 1) não revela
+    r = setup(); p = paladin(); p["pos"]=[0,0]; r.players["r"]=p
+    r.armadilhas = [{"pos":[0,2], "visivel": False, "criador": "monstro1"}]
+    r.traps = []; r.explored = set()
+    r._revelar_armadilhas_raio(p, r._gdl_trap_raio(p))
+    check("não revela a 2q com raio 1", r.armadilhas[0]["visivel"] is False)
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
