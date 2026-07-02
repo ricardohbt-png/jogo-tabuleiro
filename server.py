@@ -363,6 +363,60 @@ GUILD_CATALOG = {
         "preco": 200, "nome": "Ressurreição III", "icon": "💫",
         "desc": "Ressurreição traz o aliado com PV cheio (🍖20 💧20).",
     },
+    "paladino_cura_maos_2": {
+        "id": "paladino_cura_maos_2", "categoria": "especializacao", "classe": "paladin",
+        "linha": "paladino_cura_maos", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Cura pelas Mãos II", "icon": "🙏",
+        "desc": "Imposição das Mãos cura 2d6 + FOR.",
+    },
+    "paladino_cura_maos_3": {
+        "id": "paladino_cura_maos_3", "categoria": "especializacao", "classe": "paladin",
+        "linha": "paladino_cura_maos", "nivel": 3, "requer": "paladino_cura_maos_2", "exclusiva": False,
+        "preco": 200, "nome": "Cura pelas Mãos III", "icon": "🙏",
+        "desc": "Pode gastar +2🍖/+2💧 por +1d6 de cura (até 3×).",
+    },
+    "paladino_ataque_sagrado_2": {
+        "id": "paladino_ataque_sagrado_2", "categoria": "especializacao", "classe": "paladin",
+        "linha": "paladino_ataque_sagrado", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Ataque Sagrado II", "icon": "⚔️",
+        "desc": "Golpe Sagrado causa +2d8 de dano sagrado por ataque.",
+    },
+    "paladino_luz_2": {
+        "id": "paladino_luz_2", "categoria": "especializacao", "classe": "paladin",
+        "linha": "paladino_luz", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Guerreiro da Luz II", "icon": "💡",
+        "desc": "Mantém 3 atributos ativos; com Visão, detecta armadilhas em raio 2.",
+    },
+    "paladino_luz_3": {
+        "id": "paladino_luz_3", "categoria": "especializacao", "classe": "paladin",
+        "linha": "paladino_luz", "nivel": 3, "requer": "paladino_luz_2", "exclusiva": False,
+        "preco": 200, "nome": "Guerreiro da Luz III", "icon": "💡",
+        "desc": "Mantém 4 atributos ativos; com Visão, detecta armadilhas em raio 3.",
+    },
+    "paladino_defensor_2": {
+        "id": "paladino_defensor_2", "categoria": "especializacao", "classe": "paladin",
+        "linha": "paladino_defensor", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Defensor II", "icon": "🛡️",
+        "desc": "O alcance da proteção aumenta para 5 quadrados.",
+    },
+    "paladino_defensor_3": {
+        "id": "paladino_defensor_3", "categoria": "especializacao", "classe": "paladin",
+        "linha": "paladino_defensor", "nivel": 3, "requer": "paladino_defensor_2", "exclusiva": False,
+        "preco": 200, "nome": "Defensor III", "icon": "🛡️",
+        "desc": "O dano dividido cai para 40%/40% (20% é mitigado).",
+    },
+    "paladino_regen_2": {
+        "id": "paladino_regen_2", "categoria": "especializacao", "classe": "paladin",
+        "linha": "paladino_regen", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Regeneração II", "icon": "✨",
+        "desc": "Regeneração Divina também cura +1 HP dos aliados adjacentes.",
+    },
+    "paladino_regen_3": {
+        "id": "paladino_regen_3", "categoria": "especializacao", "classe": "paladin",
+        "linha": "paladino_regen", "nivel": 3, "requer": "paladino_regen_2", "exclusiva": False,
+        "preco": 200, "nome": "Regeneração III", "icon": "✨",
+        "desc": "A Regeneração Divina alcança aliados em raio 2.",
+    },
     # Fases 1-2 acrescentam aqui.
 }
 
@@ -3814,6 +3868,44 @@ class GameRoom:
         if tem_espec(p, "clerigo_ressur_2"): return 2
         return 1
 
+    def _cura_maos_dados(self, p):
+        """Dados base da Cura pelas Mãos (1 base / 2 com paladino_cura_maos_2)."""
+        return 2 if tem_espec(p, "paladino_cura_maos_2") else 1
+
+    def _ataque_sagrado_dados(self, p):
+        """Dados do dano sagrado do Golpe Sagrado (1 base / 2 com paladino_ataque_sagrado_2)."""
+        return 2 if tem_espec(p, "paladino_ataque_sagrado_2") else 1
+
+    def _gdl_max_atributos(self, p):
+        """Máx. de atributos simultâneos do Guerreiro da Luz (2 base / 3 / 4)."""
+        if tem_espec(p, "paladino_luz_3"): return 4
+        if tem_espec(p, "paladino_luz_2"): return 3
+        return 2
+
+    def _gdl_trap_raio(self, p):
+        """Raio de detecção de armadilhas do Guerreiro da Luz (1 base / 2 / 3)."""
+        if tem_espec(p, "paladino_luz_3"): return 3
+        if tem_espec(p, "paladino_luz_2"): return 2
+        return 1
+
+    def _defensor_raio(self, p):
+        """Alcance do Protetor (4 base / 5 com paladino_defensor_2)."""
+        return 5 if tem_espec(p, "paladino_defensor_2") else 4
+
+    def _defensor_split(self, richard, dano):
+        """Divisão do dano do Protetor: 50/50 base; 40/40 (20% mitigado) com paladino_defensor_3."""
+        if tem_espec(richard, "paladino_defensor_3"):
+            parte = (dano * 2) // 5   # 40% (floor); 20% mitigado
+            return parte, parte
+        metade = dano // 2
+        return metade, metade
+
+    def _regen_raio(self, p):
+        """Raio de cura de aliados da Regeneração Divina (0 base / 1 / 2)."""
+        if tem_espec(p, "paladino_regen_3"): return 2
+        if tem_espec(p, "paladino_regen_2"): return 1
+        return 0
+
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
         if self.phase != "playing":
@@ -5114,7 +5206,7 @@ class GameRoom:
                 # Golpe Sagrado (Richard): +1d8 sagrado, dobrado vs morto-vivo/demônio
                 holy_detail = ""
                 if p.get("golpe_sagrado_ativo"):
-                    holy_roll = roll_dice("1d8")
+                    holy_roll = sum(roll_dice("1d8") for _ in range(self._ataque_sagrado_dados(p)))
                     await self.broadcast({"type": "dice_roll", "die": "d8", "value": holy_roll, "label": "Golpe Sagrado"})
                     holy = self._apply_damage_types(holy_roll, [DMG_HOLY], target, None)
                     if target.get("undead") or target.get("type") in ("undead", "demon", "skeleton", "esqueleto_humano"):
@@ -6638,7 +6730,8 @@ class GameRoom:
         if p.get("action_done"):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
-        fome_cost, sede_cost = 3, 2
+        extra_d6 = max(0, min(3, int((data or {}).get("extra_d6", 0)))) if tem_espec(p, "paladino_cura_maos_3") else 0
+        fome_cost, sede_cost = 3 + 2 * extra_d6, 2 + 2 * extra_d6
         if p["fome"] < fome_cost or p["sede"] < sede_cost:
             await self.send_to(pid, {"type": "error", "msg": f"Recursos insuficientes 🍖{fome_cost} 💧{sede_cost}."}); return
 
@@ -6651,7 +6744,8 @@ class GameRoom:
         if not self._no_raio(p, alvo, 1):
             await self.send_to(pid, {"type": "error", "msg": "Aliado deve estar adjacente a Richard."}); return
 
-        raw = roll_dice("1d6")
+        n_dados = self._cura_maos_dados(p) + extra_d6
+        raw = sum(roll_dice("1d6") for _ in range(n_dados))
         await self.broadcast({"type": "dice_roll", "die": "d6", "value": raw, "label": "Imposição das Mãos"})
         cura = max(1, raw + mod(p["str_"]))
         hp_antes = alvo["hp"]
@@ -6718,8 +6812,8 @@ class GameRoom:
         alvo = self.players.get(alvo_id)
         if not alvo or not alvo.get("alive"):
             await self.send_to(pid, {"type": "error", "msg": "Aliado inválido."}); return
-        if not self._no_raio(p, alvo, 4):
-            await self.send_to(pid, {"type": "error", "msg": "Aliado fora do raio de 4 quadrados."}); return
+        if not self._no_raio(p, alvo, self._defensor_raio(p)):
+            await self.send_to(pid, {"type": "error", "msg": f"Aliado fora do raio de {self._defensor_raio(p)} quadrados."}); return
 
         p["fome"] = max(0, p["fome"] - fome_cost)
         p["sede"] = max(0, p["sede"] - sede_cost)
@@ -6790,6 +6884,11 @@ class GameRoom:
         bonus_validos = {"visao": _b("visao"), "ataque": _b("ataque"),
                          "dano": _b("dano"), "ca": _b("ca")}
 
+        n_ativos = sum(1 for v in bonus_validos.values() if v > 0)
+        if n_ativos > self._gdl_max_atributos(p):
+            await self.send_to(pid, {"type": "error",
+                "msg": f"Guerreiro da Luz permite {self._gdl_max_atributos(p)} atributo(s) ativo(s) — evolua na Guilda."}); return
+
         custo_fome = bonus_validos["dano"] + bonus_validos["ca"]
         custo_sede = bonus_validos["visao"] + bonus_validos["ataque"]
         if custo_fome == 0 and custo_sede == 0:
@@ -6813,6 +6912,7 @@ class GameRoom:
             raio = self._get_raio_visao(p)
             self._reveal_around(p["pos"][0], p["pos"][1], radius=raio)
             await self.gm_say(f"👁️ Visão de **{p['name']}** expandida para raio {raio}.")
+            self._revelar_armadilhas_raio(p, self._gdl_trap_raio(p))
 
     async def _processar_manutencao_richard(self, p):
         """Upkeep das habilidades sustentadas de Richard — cobrado no início do
@@ -6832,6 +6932,16 @@ class GameRoom:
                 p["fome"] = max(0, p["fome"] - 1)
                 p["sede"] = max(0, p["sede"] - 1)
                 await self.gm_say(f"✨ **{p['name']}** — Regeneração Divina: +1 HP ({p['hp']}/{p['max_hp']}) 🍖-1 💧-1.")
+                raio_reg = self._regen_raio(p)
+                if raio_reg > 0:
+                    curados = []
+                    for q in self.players.values():
+                        if q is p or not q.get("alive"): continue
+                        if q.get("hp", 0) >= q.get("max_hp", 0): continue
+                        if max(abs(q["pos"][0]-p["pos"][0]), abs(q["pos"][1]-p["pos"][1])) <= raio_reg:
+                            q["hp"] = min(q["max_hp"], q["hp"] + 1); curados.append(q["name"])
+                    if curados:
+                        await self.gm_say(f"✨ Regeneração Divina de **{p['name']}** também cura: {', '.join(curados)} (+1 HP).")
 
         # Golpe Sagrado — manutenção 🍖-1 💧-1
         if p.get("golpe_sagrado_ativo"):
@@ -6850,7 +6960,7 @@ class GameRoom:
                 p["protetor_ativo"] = False
                 p["protetor_alvo"] = None
                 await self.gm_say(f"🛡️ Protetor de **{p['name']}** se interrompe — fome insuficiente.")
-            elif not alvo or not alvo.get("alive") or not self._no_raio(p, alvo, 4):
+            elif not alvo or not alvo.get("alive") or not self._no_raio(p, alvo, self._defensor_raio(p)):
                 p["protetor_ativo"] = False
                 p["protetor_alvo"] = None
                 await self.gm_say(f"🛡️ Protetor de **{p['name']}** se desfaz — aliado fora do raio.")
@@ -6869,6 +6979,8 @@ class GameRoom:
                 p["fome"] = max(0, p["fome"] - custo["fome"])
                 p["sede"] = max(0, p["sede"] - custo["sede"])
                 await self.gm_say(f"💡 Guerreiro da Luz de **{p['name']}** sustentado 🍖-{custo['fome']} 💧-{custo['sede']}.")
+                if p.get("guerreiro_luz_bonus", {}).get("visao", 0) > 0:
+                    self._revelar_armadilhas_raio(p, self._gdl_trap_raio(p))
 
     async def _processar_dano_protetor(self, alvo_id, dano_original):
         """Se `alvo_id` está sob Protetor de um Richard vivo e no raio, divide o
@@ -6884,13 +6996,12 @@ class GameRoom:
         if not richard:
             return dano_original, None
         alvo = self.players.get(alvo_id)
-        if not alvo or not self._no_raio(richard, alvo, 4):
+        if not alvo or not self._no_raio(richard, alvo, self._defensor_raio(richard)):
             richard["protetor_ativo"] = False
             richard["protetor_alvo"] = None
             await self.gm_say(f"🛡️ Protetor de **{richard['name']}** se desfaz — aliado saiu do raio.")
             return dano_original, None
-        dano_aliado  = dano_original // 2
-        dano_richard = dano_original // 2
+        dano_aliado, dano_richard = self._defensor_split(richard, dano_original)
         await self.gm_say(
             f"🛡️ **Protetor** absorve! **{alvo['name']}** recebe {dano_aliado}, "
             f"**{richard['name']}** recebe {dano_richard}.")
@@ -9696,7 +9807,12 @@ class GameRoom:
     def _revelar_armadilhas_luccas(self, p):
         """Revela (adiciona a self.explored) as armadilhas de masmorra não
         disparadas dentro do raio de visão de Luccas. Retorna quantas revelou."""
-        raio = self._get_raio_visao(p)
+        return self._revelar_armadilhas_raio(p, self._get_raio_visao(p))
+
+    def _revelar_armadilhas_raio(self, p, raio):
+        """Revela traps de masmorra e armadilhas colocáveis hostis dentro de `raio`
+        (Chebyshev) de `p`. Retorna quantas revelou. Generaliza a detecção do
+        Ladino para uso também pelo Guerreiro da Luz (Paladino)."""
         px, py = p["pos"]
         reveladas = 0
         for tr in self.traps:
@@ -9707,7 +9823,7 @@ class GameRoom:
                 self.explored.add(tuple(tr["pos"]))
                 reveladas += 1
         # Armadilhas COLOCÁVEIS hostis (inclui as autoradas no editor): a detecção
-        # de Luccas marca `visivel` → passam a aparecer no mapa (com imagem, se tiver).
+        # marca `visivel` → passam a aparecer no mapa (com imagem, se tiver).
         for a in self.armadilhas:
             if a.get("esgotada") or a.get("visivel"):
                 continue
