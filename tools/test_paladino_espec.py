@@ -136,6 +136,26 @@ async def main():
     dano_alvo, transfer = await r._processar_dano_protetor("a", 10)
     check("raio 5 (II) mantém proteção a 5q", transfer is not None)
 
+    # [7] Regeneração em área
+    print("\n[7] Regeneração")
+    r = setup()
+    check("regen raio base = 0", r._regen_raio(paladin()) == 0)
+    check("regen raio II = 1", r._regen_raio(paladin(esp=["paladino_regen_2"])) == 1)
+    check("regen raio III = 2", r._regen_raio(paladin(esp=["paladino_regen_2","paladino_regen_3"])) == 2)
+    # integração: upkeep com regen_2 cura Richard e aliado adjacente
+    r = setup(); p = paladin(esp=["paladino_regen_2"]); p["pos"]=[0,0]; p["hp"]=5; p["max_hp"]=20
+    p["fome"]=50; p["sede"]=50; p["regeneracao_ativa"]=True; r.players["r"]=p
+    alvo = make_player("a","Ana","warrior",1); alvo["pos"]=[0,1]; alvo["hp"]=5; alvo["max_hp"]=20; r.players["a"]=alvo
+    await r._processar_manutencao_richard(p)
+    check("regen II cura Richard +1", p["hp"] == 6)
+    check("regen II cura aliado adjacente +1", alvo["hp"] == 6)
+    # base não cura aliado (só Richard)
+    r = setup(); p = paladin(); p["pos"]=[0,0]; p["hp"]=5; p["max_hp"]=20; p["fome"]=50; p["sede"]=50; p["regeneracao_ativa"]=True; r.players["r"]=p
+    alvo = make_player("a","Ana","warrior",1); alvo["pos"]=[0,1]; alvo["hp"]=5; alvo["max_hp"]=20; r.players["a"]=alvo
+    await r._processar_manutencao_richard(p)
+    check("base não cura aliado", alvo["hp"] == 5)
+    check("base ainda cura Richard +1", p["hp"] == 6)
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

@@ -3900,6 +3900,12 @@ class GameRoom:
         metade = dano // 2
         return metade, metade
 
+    def _regen_raio(self, p):
+        """Raio de cura de aliados da Regeneração Divina (0 base / 1 / 2)."""
+        if tem_espec(p, "paladino_regen_3"): return 2
+        if tem_espec(p, "paladino_regen_2"): return 1
+        return 0
+
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
         if self.phase != "playing":
@@ -6926,6 +6932,16 @@ class GameRoom:
                 p["fome"] = max(0, p["fome"] - 1)
                 p["sede"] = max(0, p["sede"] - 1)
                 await self.gm_say(f"✨ **{p['name']}** — Regeneração Divina: +1 HP ({p['hp']}/{p['max_hp']}) 🍖-1 💧-1.")
+                raio_reg = self._regen_raio(p)
+                if raio_reg > 0:
+                    curados = []
+                    for q in self.players.values():
+                        if q is p or not q.get("alive"): continue
+                        if q.get("hp", 0) >= q.get("max_hp", 0): continue
+                        if max(abs(q["pos"][0]-p["pos"][0]), abs(q["pos"][1]-p["pos"][1])) <= raio_reg:
+                            q["hp"] = min(q["max_hp"], q["hp"] + 1); curados.append(q["name"])
+                    if curados:
+                        await self.gm_say(f"✨ Regeneração Divina de **{p['name']}** também cura: {', '.join(curados)} (+1 HP).")
 
         # Golpe Sagrado — manutenção 🍖-1 💧-1
         if p.get("golpe_sagrado_ativo"):
