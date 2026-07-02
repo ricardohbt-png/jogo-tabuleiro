@@ -6516,6 +6516,14 @@ class GameRoom:
         """True se `alvo` está dentro de `raio` (Chebyshev) de `origem`."""
         return _distancia_chebyshev(origem["pos"], alvo["pos"]) <= raio
 
+    def _cancao_nivel_atributo(self, p, attr_id):
+        """Bônus daquele atributo na Canção Heroica: 2 se comprado na Guilda, senão 1."""
+        return 2 if tem_espec(p, f"bardo_cancao_{attr_id}") else 1
+
+    def _cancao_custo_reducao(self, p):
+        """Redução de manutenção da canção com a Canção Heroica Suprema (-1🍖 -1💧)."""
+        return 1 if tem_espec(p, "bardo_cancao_suprema") else 0
+
     async def handle_ativar_cancao(self, pid, data):
         if not self._is_turn(pid): return
         p = self.players.get(pid)
@@ -6531,7 +6539,10 @@ class GameRoom:
         if not atrib_validos:
             await self.send_to(pid, {"type": "error", "msg": "Escolha pelo menos um atributo para a canção."}); return
 
-        custo = _calcular_custo_cancao(atrib_validos)
+        custo_bruto = _calcular_custo_cancao(atrib_validos)
+        red = self._cancao_custo_reducao(p)
+        custo = {"fome": max(0, custo_bruto["fome"] - red),
+                 "sede": max(0, custo_bruto["sede"] - red)}
         if p["fome"] < custo["fome"] or p["sede"] < custo["sede"]:
             await self.send_to(pid, {"type": "error",
                 "msg": f"Recursos insuficientes — precisa 🍖{custo['fome']} 💧{custo['sede']}."}); return
@@ -6567,7 +6578,7 @@ class GameRoom:
         for attr_id in bardo.get("cancao_atributos", []):
             attr = next((a for a in CANCAO_ATRIBUTOS if a["id"] == attr_id), None)
             if attr:
-                buffs[attr["efeito"]] = 1
+                buffs[attr["efeito"]] = self._cancao_nivel_atributo(bardo, attr_id)
         for jogador in self.players.values():
             if not jogador.get("alive"): continue
             if not self._no_raio(bardo, jogador, CANCAO_RAIO): continue

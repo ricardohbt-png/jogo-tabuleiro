@@ -64,6 +64,36 @@ async def main():
     check("preço dragon (T4) = 200", S.guild_item("lenda_dragon")["preco"] == 200)
     check("lenda guarda lenda_tipo", S.guild_item("lenda_goblin")["lenda_tipo"] == "goblin")
 
+    # [3] Canção Heroica — nível por atributo + Suprema
+    print("\n[3] Canção Heroica")
+    r = setup()
+    check("nivel base acerto = 1", r._cancao_nivel_atributo(bard(), "acerto") == 1)
+    check("nivel comprado dano = 2",
+          r._cancao_nivel_atributo(bard(esp=["bardo_cancao_dano"]), "dano") == 2)
+    check("dano não afeta acerto",
+          r._cancao_nivel_atributo(bard(esp=["bardo_cancao_dano"]), "acerto") == 1)
+    check("reducao base = 0", r._cancao_custo_reducao(bard()) == 0)
+    check("reducao com suprema = 1",
+          r._cancao_custo_reducao(bard(esp=["bardo_cancao_suprema"])) == 1)
+
+    # buffs aplicados usam o nível
+    r = setup()
+    b = bard(esp=["bardo_cancao_dano"]); r.players["b"] = b
+    b["cancao_atributos"] = ["acerto", "dano"]
+    await r._aplicar_buffs_cancao(b)
+    check("buff acerto = 1", b["buffs_cancao"].get("bonus_acerto") == 1)
+    check("buff dano = 2 (comprado)", b["buffs_cancao"].get("bonus_dano") == 2)
+
+    # ativação com Suprema debita custo reduzido (mín 0)
+    r = setup()
+    b = bard(esp=["bardo_cancao_suprema"]); r.players["b"] = b
+    b["fome"] = 10; b["sede"] = 10
+    await r.handle_ativar_cancao("b", {"atributos": ["dano", "acerto"]})
+    # dano=fome, acerto=sede → custo bruto 1/1, reduzido a 0/0
+    check("ativação suprema não gasta fome", b["fome"] == 10)
+    check("ativação suprema não gasta sede", b["sede"] == 10)
+    check("custo salvo já reduzido", b["cancao_custo"] == {"fome": 0, "sede": 0})
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
