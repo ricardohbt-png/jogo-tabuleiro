@@ -128,6 +128,29 @@ async def main():
     m4 = monster(pos=(0,1)); m4["provocado_turnos"]=3; m4["provocado_por"]="b"
     check("bardo morto → _provocador None", r._provocador(m4) is None)
 
+    # [5] Lendas — ataque +1
+    print("\n[5] Lendas: ataque")
+    r = setup()
+    b = bard(esp=["lenda_goblin"]); r.players["b"] = b
+    ally = make_player("a","Ana","warrior",1); ally["pos"]=[0,0]; ally["alive"]=True; r.players["a"] = ally
+    gob = monster(type_="goblin"); orc = monster(type_="orc")
+    check("bardo +1 ataque vs goblin estudado", r._lenda_atk_bonus(b, gob) == 1)
+    check("bardo +0 ataque vs orc não estudado", r._lenda_atk_bonus(b, orc) == 0)
+    check("aliado +0 sem Lendas Supremas", r._lenda_atk_bonus(ally, gob) == 0)
+
+    # Supremas: aliados também ganham
+    r = setup()
+    b2 = bard(esp=["lenda_goblin","bardo_lendas_supremas"]); r.players["b"] = b2
+    ally2 = make_player("a","Ana","warrior",1); ally2["pos"]=[0,0]; ally2["alive"]=True; r.players["a"] = ally2
+    check("aliado +1 com Supremas", r._lenda_atk_bonus(ally2, monster(type_="goblin")) == 1)
+
+    # bardo morto → sem bônus
+    r = setup()
+    bd = bard(esp=["lenda_goblin"]); bd["alive"] = False; r.players["b"] = bd
+    ally3 = make_player("a","Ana","warrior",1); ally3["alive"]=True; r.players["a"] = ally3
+    check("sem bardo vivo → _bardo_lendas None", r._bardo_lendas() is None)
+    check("bardo morto → aliado sem bônus", r._lenda_atk_bonus(ally3, monster(type_="goblin")) == 0)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

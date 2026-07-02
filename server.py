@@ -5299,6 +5299,7 @@ class GameRoom:
             eff_atk = (p["atk_bonus"] + p.get("skill_bonus_acerto", 0) + surv_mod + preso_pen
                        + cancao_acerto + gl_atk + self._pen(p, "ataque")
                        + self._mod_magia(p, "ataque")                        # Abençoar
+                       + self._lenda_atk_bonus(p, target)                    # Lenda (bardo estudou a espécie)
                        - self._corrosao_arma_pen(p)                          # arma de madeira corroída
                        - (4 if target.get("oculto_sombras") else 0))         # alvo oculto nas sombras (corpo a corpo)
             if preso_pen:
@@ -6691,6 +6692,33 @@ class GameRoom:
                 and monstro.get("provocado_aliados_vantagem_round") == self.round_num):
             return True
         return False
+
+    def _bardo_lendas(self):
+        """Retorna o bardo vivo (dono das Lendas) da party, ou None."""
+        return next((q for q in self.players.values()
+                     if q.get("class_id") == "bard" and q.get("alive")), None)
+
+    def _lenda_atk_bonus(self, atacante, monstro):
+        """+1 de ataque vs a espécie estudada. Base: só o próprio bardo. Com
+        Lendas Supremas: qualquer aliado, enquanto o bardo estiver vivo."""
+        b = self._bardo_lendas()
+        if not b or not tem_espec(b, f"lenda_{monstro.get('type', '')}"):
+            return 0
+        if atacante.get("id") == b["id"] or tem_espec(b, "bardo_lendas_supremas"):
+            return 1
+        return 0
+
+    def _lenda_resist_bonus(self, alvo_player, fonte_monstro):
+        """+1 nos saves contra as habilidades daquela espécie (mesma regra de grupo
+        das Lendas de ataque). Só para jogadores; `fonte_monstro` None → 0."""
+        if not fonte_monstro:
+            return 0
+        b = self._bardo_lendas()
+        if not b or not tem_espec(b, f"lenda_{fonte_monstro.get('type', '')}"):
+            return 0
+        if alvo_player.get("id") == b["id"] or tem_espec(b, "bardo_lendas_supremas"):
+            return 1
+        return 0
 
     # ── Frade Lewis (cleric): milagres de cura ──────────────────────────────
     # As 4 habilidades de Lewis NÃO passam pelo fluxo genérico de `skill` (não
