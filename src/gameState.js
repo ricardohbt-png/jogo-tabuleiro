@@ -1359,6 +1359,36 @@ const GS = (() => {
     return 1;
   }
 
+  // Níveis das especializações do Paladino (Fase 1c) — mesmo padrão dos getters
+  // do Clérigo: lidos da posse; caem para o player do game_state na masmorra.
+  function paladinCuraMaosDados() {
+    return (guildOwnedOf(myPid).especializacoes || []).includes('paladino_cura_maos_2') ? 2 : 1;
+  }
+  function paladinCuraMaosExtra() {
+    return (guildOwnedOf(myPid).especializacoes || []).includes('paladino_cura_maos_3');
+  }
+  function paladinAtaqueSagradoDados() {
+    return (guildOwnedOf(myPid).especializacoes || []).includes('paladino_ataque_sagrado_2') ? 2 : 1;
+  }
+  function paladinLuzMaxAtributos() {
+    const e = (guildOwnedOf(myPid).especializacoes) || [];
+    if (e.includes('paladino_luz_3')) return 4;
+    if (e.includes('paladino_luz_2')) return 3;
+    return 2;
+  }
+  function paladinDefensorRaio() {
+    return (guildOwnedOf(myPid).especializacoes || []).includes('paladino_defensor_2') ? 5 : 4;
+  }
+  function paladinDefensorSplit() {
+    return (guildOwnedOf(myPid).especializacoes || []).includes('paladino_defensor_3') ? 40 : 50;
+  }
+  function paladinRegenRaio() {
+    const e = (guildOwnedOf(myPid).especializacoes) || [];
+    if (e.includes('paladino_regen_3')) return 2;
+    if (e.includes('paladino_regen_2')) return 1;
+    return 0;
+  }
+
   // ── Tile-click resolver: pure decision, no DOM ─────────────────────────────
   // Called by the unified handleTileClick(tx, ty) in game.html.
   // Returns one of:
@@ -1582,6 +1612,13 @@ const GS = (() => {
     clericMassaNivel,
     clericPurifTipos,
     clericRessurNivel,
+    paladinCuraMaosDados,
+    paladinCuraMaosExtra,
+    paladinAtaqueSagradoDados,
+    paladinLuzMaxAtributos,
+    paladinDefensorRaio,
+    paladinDefensorSplit,
+    paladinRegenRaio,
 
     // ── Decorações de masmorra ──
     decorTilesOf,

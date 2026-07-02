@@ -7637,6 +7637,16 @@ function abrirPainelGuerreiroLuz(){
   window.ajustarBonusGuerreiro = (id, delta) => {
     const attr = GUERREIRO_LUZ_BONUS_CLIENT.find(a => a.id === id);
     if(!attr) return;
+    // Teto de atributos simultâneos (Fase 1c): ativar um NOVO atributo (0→>0)
+    // além do limite possuído é bloqueado; o servidor também recusa (autoritativo).
+    if(delta > 0 && _bonusGuerreiro[id] === 0){
+      const cap = GS.paladinLuzMaxAtributos ? GS.paladinLuzMaxAtributos() : 2;
+      const ativos = Object.values(_bonusGuerreiro).filter(v => v > 0).length;
+      if(ativos >= cap){
+        toast(`Guerreiro da Luz permite ${cap} atributo(s) ativo(s) — evolua na Guilda.`, 'var(--gold)');
+        return;
+      }
+    }
     _bonusGuerreiro[id] = Math.max(0, Math.min(attr.max, _bonusGuerreiro[id] + delta));
     render();
   };
@@ -7683,9 +7693,53 @@ function iniciarModoImposicaoMaos(){
   if(me.fome < 3 || me.sede < 2){ toast('Imposição das Mãos requer 🍖3 e 💧2.', 'var(--orange)'); return; }
   const alvos = _aliadosNoRaioPaladin(me, 1);
   if(!alvos.length){ toast('Nenhum aliado adjacente.', 'var(--orange)'); return; }
-  if(alvos.length === 1){ send({ type:'imposicao_maos', target_id:alvos[0].id }); return; }
+  if(alvos.length === 1){ _enviarImposicaoMaos(alvos[0].id); return; }
   openTargetModal('🙏 Imposição das Mãos — Aliado adjacente', alvos, 'player',
-    id => send({ type:'imposicao_maos', target_id:id }));
+    id => _enviarImposicaoMaos(id));
+}
+
+// Cura pelas Mãos III (opcional): +1d6 por +2🍖/+2💧, até 3×. Sem a especialização
+// envia extra_d6:0 direto (fluxo idêntico ao anterior).
+function _enviarImposicaoMaos(targetId){
+  if(!GS.paladinCuraMaosExtra || !GS.paladinCuraMaosExtra()){
+    send({ type:'imposicao_maos', target_id:targetId, extra_d6:0 }); return;
+  }
+  document.getElementById('painel-imposicao-extra')?.remove();
+  let extra = 0;
+  const painel = document.createElement('div');
+  painel.id = 'painel-imposicao-extra';
+  painel.style.cssText =
+    "position:fixed;bottom:180px;left:50%;transform:translateX(-50%);" +
+    "background:rgba(10,8,5,0.97);border:1px solid #c8a951;width:280px;" +
+    "z-index:3000;padding:16px;font-family:'Cinzel',serif;box-shadow:0 0 24px rgba(0,0,0,0.7);";
+  function render(){
+    const custoFome = 3 + 2*extra, custoSede = 2 + 2*extra;
+    painel.innerHTML = `
+      <div style="font-family:'Cinzel Decorative',serif;color:#c8a951;font-size:13px;margin-bottom:8px;text-align:center;">🙏 IMPOSIÇÃO DAS MÃOS</div>
+      <div style="color:#8a7a5a;font-size:9px;letter-spacing:2px;margin-bottom:10px;text-align:center;">+1d6 EXTRA POR +2🍖 +2💧 (até 3×)</div>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;margin-bottom:10px;background:rgba(200,169,81,0.06);border:1px solid #c8a95133;">
+        <button onclick="window._imposicaoExtraAjustar(-1)" ${extra===0?'disabled':''}
+          style="width:26px;height:26px;background:transparent;border:1px solid ${extra>0?'#c8a951':'#2a2a2a'};color:${extra>0?'#c8a951':'#4a4a4a'};cursor:${extra>0?'pointer':'not-allowed'};font-size:15px;">−</button>
+        <span style="flex:1;text-align:center;color:#c8a951;font-size:13px;">+${extra}d6 extra</span>
+        <button onclick="window._imposicaoExtraAjustar(1)" ${extra>=3?'disabled':''}
+          style="width:26px;height:26px;background:transparent;border:1px solid ${extra<3?'#c8a951':'#2a2a2a'};color:${extra<3?'#c8a951':'#4a4a4a'};cursor:${extra<3?'pointer':'not-allowed'};font-size:15px;">+</button>
+      </div>
+      <div style="padding:8px 10px;margin-bottom:10px;background:rgba(255,133,27,0.06);border:1px solid #ff851b33;display:flex;justify-content:space-between;">
+        <span style="color:#8a7a5a;font-size:9px;letter-spacing:2px;">CUSTO TOTAL</span>
+        <span style="color:#ff851b;font-size:10px;">🍖-${custoFome} 💧-${custoSede}</span>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button onclick="document.getElementById('painel-imposicao-extra').remove()" style="flex:1;padding:8px;background:transparent;border:1px solid #4a4a4a;color:#8a7a5a;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;">CANCELAR</button>
+        <button onclick="window._imposicaoExtraConfirmar()" style="flex:2;padding:8px;background:rgba(200,169,81,0.15);border:1px solid #c8a951;color:#c8a951;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;">🙏 CURAR</button>
+      </div>`;
+  }
+  render();
+  document.body.appendChild(painel);
+  window._imposicaoExtraAjustar = (delta) => { extra = Math.max(0, Math.min(3, extra + delta)); render(); };
+  window._imposicaoExtraConfirmar = () => {
+    send({ type:'imposicao_maos', target_id:targetId, extra_d6:extra });
+    document.getElementById('painel-imposicao-extra')?.remove();
+  };
 }
 
 // Indicador de visão expandida — mostrado no botão ativo do Guerreiro da Luz.
@@ -7725,26 +7779,30 @@ function _paladinSkillBtn(me, sk){
              (lbls || '—') + renderIndicadorVisao(me), `🍖${c.fome} 💧${c.sede}<br><small style="font-size:.6rem;">parar</small>`,
              false, () => send({type:'acao_livre_richard', habilidade_id:'guerreiro_luz'}), true);
     } else {
+      const _capLuz = GS.paladinLuzMaxAtributos ? GS.paladinLuzMaxAtributos() : 2;
       setBtn(`💡 ${sk.name} <small style="color:var(--text2);font-size:.62rem;">livre</small>`,
-             sk.description || sk.desc || '', 'escolher', !myTurnPlay,
+             `até ${_capLuz} atributo(s) simultâneo(s)`, 'escolher', !myTurnPlay,
              () => abrirPainelGuerreiroLuz(), false);
     }
   } else if(sk.id === 'regeneracao_divina'){
+    const _raioRegen = GS.paladinRegenRaio ? GS.paladinRegenRaio() : 0;
+    const _descRegen = _raioRegen > 0 ? `+1 HP por turno + aliados em raio ${_raioRegen}` : '+1 HP por turno';
     if(me.regeneracao_ativa){
       setBtn(`✨ ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● ativa</small>`,
-             '+1 HP por turno', `🍖1 💧1<br><small style="font-size:.6rem;">parar</small>`,
+             _descRegen, `🍖1 💧1<br><small style="font-size:.6rem;">parar</small>`,
              false, () => send({type:'acao_livre_richard', habilidade_id:'regeneracao_divina'}), true);
     } else {
       const hpFull = (me.hp != null && me.max_hp != null && me.hp >= me.max_hp);
       const aviso  = hpFull ? ' <small style="color:var(--text2);font-size:.62rem;">HP cheio</small>'
                    : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">sem recursos</small>' : '';
-      setBtn(`✨ ${sk.name}${aviso}`, sk.description || sk.desc || '', costStr,
+      setBtn(`✨ ${sk.name}${aviso}`, _descRegen, costStr,
              !myTurnPlay || hpFull, () => send({type:'acao_livre_richard', habilidade_id:'regeneracao_divina'}), false);
     }
   } else if(sk.id === 'golpe_sagrado'){
+    const _dadosSagrado = GS.paladinAtaqueSagradoDados ? GS.paladinAtaqueSagradoDados() : 1;
     if(me.golpe_sagrado_ativo){
       setBtn(`⚔️ ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● ativo</small>`,
-             '+1d8 sagrado por ataque', `manut. 🍖1 💧1<br><small style="font-size:.6rem;">parar</small>`,
+             `+${_dadosSagrado}d8 sagrado por ataque`, `manut. 🍖1 💧1<br><small style="font-size:.6rem;">parar</small>`,
              false, () => send({type:'desativar_golpe_sagrado'}), true);
     } else {
       const pode  = myTurnPlay && !me.bonus_action_used && temRec;
@@ -7754,23 +7812,27 @@ function _paladinSkillBtn(me, sk){
              () => send({type:'golpe_sagrado'}), false);
     }
   } else if(sk.id === 'protetor'){
+    const _raioDef  = GS.paladinDefensorRaio  ? GS.paladinDefensorRaio()  : 4;
+    const _splitDef = GS.paladinDefensorSplit ? GS.paladinDefensorSplit() : 50;
     if(me.protetor_ativo){
       const alvo = (GS.gameState?.players || []).find(p => p.id === me.protetor_alvo);
       setBtn(`🛡️ ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● ativo</small>`,
-             alvo ? `protegendo ${alvo.name}` : '—', `manut. 🍖1<br><small style="font-size:.6rem;">parar</small>`,
+             alvo ? `protegendo ${alvo.name} (${_splitDef}%/${_splitDef}%)` : '—',
+             `manut. 🍖1<br><small style="font-size:.6rem;">parar</small>`,
              false, () => send({type:'desativar_protetor'}), true);
     } else {
       const pode  = myTurnPlay && !me.bonus_action_used && temRec;
       const aviso = me.bonus_action_used ? ' <small style="color:var(--text2);font-size:.62rem;">bônus usado</small>'
                   : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">sem recursos</small>' : '';
-      setBtn(`🛡️ ${sk.name}${aviso}`, sk.description || sk.desc || '', costStr, !pode,
+      setBtn(`🛡️ ${sk.name}${aviso}`, `${sk.description || sk.desc || ''} (raio ${_raioDef}, ${_splitDef}%/${_splitDef}%)`, costStr, !pode,
              () => iniciarModoProtetor(), false);
     }
   } else if(sk.id === 'imposicao_maos'){
     const pode  = myTurnPlay && !me.action_done && temRec;
     const aviso = me.action_done ? ' <small style="color:var(--text2);font-size:.62rem;">ação usada</small>'
                 : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">sem recursos</small>' : '';
-    setBtn(`🙏 ${sk.name}${aviso}`, sk.description || sk.desc || '', costStr, !pode,
+    const _dadosCura = GS.paladinCuraMaosDados ? GS.paladinCuraMaosDados() : 1;
+    setBtn(`🙏 ${sk.name}${aviso}`, `${_dadosCura}d6 + FOR`, costStr, !pode,
            () => iniciarModoImposicaoMaos(), false);
   } else {
     setBtn(`${sk.icon || ''} ${sk.name}`, sk.description || sk.desc || '', costStr, !myTurnPlay, null, false);
