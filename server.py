@@ -315,6 +315,61 @@ GUILD_CATALOG = {
         "preco": 200, "nome": "Fúria Berserker III", "icon": "🔥",
         "desc": "Fúria Berserker concede 2 ataques extras (3 ataques no total).",
     },
+    # ── Bardo (Fase 1e) ─────────────────────────────────────────────────────
+    "bardo_cancao_acerto": {
+        "id": "bardo_cancao_acerto", "categoria": "especializacao", "classe": "bard",
+        "linha": "bardo_cancao", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 100, "nome": "Canção: Acerto +1", "icon": "🎵",
+        "desc": "O bônus de Acerto da Canção Heroica sobe de +1 para +2.",
+    },
+    "bardo_cancao_dano": {
+        "id": "bardo_cancao_dano", "categoria": "especializacao", "classe": "bard",
+        "linha": "bardo_cancao", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 100, "nome": "Canção: Dano +1", "icon": "🎵",
+        "desc": "O bônus de Dano da Canção Heroica sobe de +1 para +2.",
+    },
+    "bardo_cancao_ca": {
+        "id": "bardo_cancao_ca", "categoria": "especializacao", "classe": "bard",
+        "linha": "bardo_cancao", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 100, "nome": "Canção: Armadura +1", "icon": "🎵",
+        "desc": "O bônus de Armadura da Canção Heroica sobe de +1 para +2.",
+    },
+    "bardo_cancao_movimento": {
+        "id": "bardo_cancao_movimento", "categoria": "especializacao", "classe": "bard",
+        "linha": "bardo_cancao", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 100, "nome": "Canção: Movimento +1", "icon": "🎵",
+        "desc": "O bônus de Movimento da Canção Heroica sobe de +1 para +2.",
+    },
+    "bardo_cancao_resistencia": {
+        "id": "bardo_cancao_resistencia", "categoria": "especializacao", "classe": "bard",
+        "linha": "bardo_cancao", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 100, "nome": "Canção: Resistência +1", "icon": "🎵",
+        "desc": "O bônus de Resistência da Canção Heroica sobe de +1 para +2.",
+    },
+    "bardo_cancao_suprema": {
+        "id": "bardo_cancao_suprema", "categoria": "especializacao", "classe": "bard",
+        "linha": "bardo_cancao", "nivel": 3, "requer": None, "exclusiva": False,
+        "preco": 200, "nome": "Canção Heroica Suprema", "icon": "🎶",
+        "desc": "A manutenção da Canção Heroica custa -1🍖 e -1💧 (mínimo 0).",
+    },
+    "bardo_provocacao_2": {
+        "id": "bardo_provocacao_2", "categoria": "especializacao", "classe": "bard",
+        "linha": "bardo_provocacao", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Provocação II", "icon": "😤",
+        "desc": "A desvantagem dura toda a provocação; Henrique ganha +2 CA e ataca o alvo com vantagem.",
+    },
+    "bardo_provocacao_3": {
+        "id": "bardo_provocacao_3", "categoria": "especializacao", "classe": "bard",
+        "linha": "bardo_provocacao", "nivel": 3, "requer": "bardo_provocacao_2", "exclusiva": False,
+        "preco": 200, "nome": "Provocação III", "icon": "😤",
+        "desc": "Todos os aliados atacam o alvo provocado com vantagem por 1 rodada.",
+    },
+    "bardo_lendas_supremas": {
+        "id": "bardo_lendas_supremas", "categoria": "especializacao", "classe": "bard",
+        "linha": "bardo_lendas", "nivel": 3, "requer": None, "exclusiva": False,
+        "preco": 300, "nome": "Lendas Supremas", "icon": "📖",
+        "desc": "Todos os bônus de Lenda passam a beneficiar o grupo inteiro (enquanto Henrique vivo).",
+    },
     "clerigo_cura_2": {
         "id": "clerigo_cura_2", "categoria": "especializacao", "classe": "cleric",
         "linha": "clerigo_cura", "nivel": 2, "requer": None, "exclusiva": False,
@@ -2441,6 +2496,26 @@ def _gerar_catalogo_formulas_armadilha():
     return entradas
 
 GUILD_CATALOG.update(_gerar_catalogo_formulas_armadilha())
+
+_LENDA_PRECO_TIER = {1: 60, 2: 90, 3: 120, 4: 200}
+
+def _gerar_catalogo_lendas():
+    """Gera um nó de compra `lenda_<type>` para cada tipo em MONSTER_DEFS —
+    extensível: monstros novos aparecem sozinhos na Guilda do Bardo."""
+    entradas = {}
+    for mdef in MONSTER_DEFS:
+        gid = f"lenda_{mdef['type']}"
+        entradas[gid] = {
+            "id": gid, "categoria": "especializacao", "classe": "bard",
+            "linha": "bardo_lendas", "nivel": None, "requer": None, "exclusiva": False,
+            "preco": _LENDA_PRECO_TIER.get(mdef.get("tier", 1), 90),
+            "nome": f"Lenda: {mdef['name']}", "icon": mdef.get("emoji", "📖"),
+            "desc": f"+1 de ataque e +1 nos saves contra {mdef['name']}.",
+            "lenda_tipo": mdef["type"],
+        }
+    return entradas
+
+GUILD_CATALOG.update(_gerar_catalogo_lendas())
 
 # ─── DECORAÇÕES DE MASMORRA ──────────────────────────────────────────────────
 # Objetos colocáveis no editor. size=[w,h] no facing canônico (vertical).
