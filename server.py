@@ -4995,10 +4995,13 @@ class GameRoom:
         else:            return 4
 
     def _verificar_ataque_furtivo(self, luccas, alvo):
-        """True se Luccas estiver invisível nas sombras, oculto pela Vela da
-        Escuridão, OU houver um aliado vivo (jogador) adjacente — Chebyshev — ao alvo."""
+        """True se Luccas estiver invisível nas sombras/oculto (base), OU (com
+        ladino_furtivo_2) houver um aliado vivo (jogador) adjacente — Chebyshev
+        — ao alvo."""
         if luccas.get("invisivel_sombras") or luccas.get("oculto_vela"):
             return True
+        if not tem_espec(luccas, "ladino_furtivo_2"):
+            return False
         ax, ay = alvo["pos"]
         for pid2, aliado in self.players.items():
             if pid2 == luccas["id"] or not aliado["alive"]:

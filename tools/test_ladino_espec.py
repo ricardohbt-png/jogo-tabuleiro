@@ -61,6 +61,19 @@ async def main():
     check("buraco não vira nó de compra", "ladino_buraco" not in ids and
           not any(v.get("nome","").endswith("Buraco") for v in S.GUILD_CATALOG.values()))
 
+    # [3] Ataque Furtivo — base vs II
+    print("\n[3] Ataque Furtivo base/II")
+    r = setup()
+    luccas = rogue(); luccas["pos"] = [0,0]; r.players["l"] = luccas
+    aliado = make_player("a", "Ana", "warrior", 1); aliado["pos"] = [1,1]; aliado["alive"] = True; r.players["a"] = aliado
+    alvo = monster(pos=(1,1))
+    check("base: sem oculto e sem furtivo_2 → False", not r._verificar_ataque_furtivo(luccas, alvo))
+    luccas["invisivel_sombras"] = True
+    check("base: oculto → True", r._verificar_ataque_furtivo(luccas, alvo))
+    luccas["invisivel_sombras"] = False
+    luccas["guild_owned"]["especializacoes"] = ["ladino_furtivo_2"]
+    check("com furtivo_2: aliado adjacente ao alvo → True", r._verificar_ataque_furtivo(luccas, alvo))
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
