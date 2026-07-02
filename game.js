@@ -7925,9 +7925,10 @@ function abrirPainelCriarArmadilha(){
       <div style="font-family:'Cinzel Decorative',serif; color:#c8a951; font-size:13px; margin-bottom:12px; text-align:center;">🪤 CRIAR ARMADILHA</div>
       <div style="color:#8a7a5a; font-size:9px; letter-spacing:2px; margin-bottom:10px; text-align:center;">💰 ${ouro} moedas | 🍖-${ARMADILHA_FOME} 💧-${ARMADILHA_SEDE} por criação</div>
       ${ARMADILHAS_LUCCAS.map(arm => {
+        const desbloqueada = (GS.ladinoArmadilhasDesbloqueadas ? GS.ladinoArmadilhasDesbloqueadas() : ['buraco']).includes(arm.id);
         const podeComprar = ouro >= arm.custo_ouro;
         const temVeneno   = arm.requer_veneno ? venenos.length > 0 : true;
-        const pode        = podeComprar && temVeneno;
+        const pode        = desbloqueada && podeComprar && temVeneno;
         const sel         = selecionada === arm.id;
         return `
           <div ${pode ? `onclick="selecionarArmadilha('${arm.id}')"` : ''} style="
@@ -7940,7 +7941,8 @@ function abrirPainelCriarArmadilha(){
               <span style="color:#c8a951; font-size:11px;">${arm.custo_ouro}🪙</span>
             </div>
             <div style="color:#8a7a5a; font-size:9px; line-height:1.5;">${arm.desc}</div>
-            ${arm.requer_veneno ? `<div style="color:${venenos.length>0?'#9900cc':'#ff4136'}; font-size:9px; margin-top:3px;">${venenos.length>0?'☠️ Requer veneno — disponível':'⚠️ Sem veneno no inventário'}</div>` : ''}
+            ${!desbloqueada ? `<div style="color:#ff851b; font-size:9px; margin-top:3px;">🔒 Compre a fórmula na Guilda dos Heróis</div>` : ''}
+            ${desbloqueada && arm.requer_veneno ? `<div style="color:${venenos.length>0?'#9900cc':'#ff4136'}; font-size:9px; margin-top:3px;">${venenos.length>0?'☠️ Requer veneno — disponível':'⚠️ Sem veneno no inventário'}</div>` : ''}
           </div>`;
       }).join('')}
       ${selecionada && ARMADILHAS_LUCCAS.find(a=>a.id===selecionada)?.requer_veneno ? `
@@ -8066,8 +8068,14 @@ function _rogueSkillBtn(me, sk){
 
   if(sk.id === 'ataque_furtivo'){
     const nd4 = (me.level ?? 1) <= 2 ? '2' : (me.level ?? 1) <= 4 ? '3' : '4';
+    const nivelFurtivo = GS.ladinoFurtivoNivel ? GS.ladinoFurtivoNivel() : 1;
+    const descFurtivo = nivelFurtivo >= 3
+      ? `+${nd4}d4 se invisível ou com aliado adjacente; reage automaticamente 1×/inimigo/rodada ao ataque de um aliado`
+      : nivelFurtivo === 2
+      ? `+${nd4}d4 se invisível ou com aliado adjacente ao alvo`
+      : `+${nd4}d4 apenas se estiver invisível/oculto`;
     setBtn(`🗡️ ${sk.name} <small style="color:var(--text2);font-size:.62rem;">passiva</small>`,
-           `+${nd4}d4 com aliado adjacente ao alvo (ou invisível)`, '—', true, null, false);
+           descFurtivo, '—', true, null, false);
 
   } else if(sk.id === 'detectar_armadilhas'){
     if(me.detectar_ativo){
@@ -8081,30 +8089,36 @@ function _rogueSkillBtn(me, sk){
     }
 
   } else if(sk.id === 'esconder_sombras'){
+    const bonusEsc  = GS.ladinoEsconderBonus ? GS.ladinoEsconderBonus() : 0;
+    const livreEsc  = GS.ladinoEsconderLivre ? GS.ladinoEsconderLivre() : false;
+    const descEsc = `Teste de furtividade${bonusEsc>0?` (+${bonusEsc})`:''}${livreEsc?' — ação livre (não gasta bônus)':''}`;
     if(me.invisivel_sombras){
       setBtn(`🌑 ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● invisível</small>`,
-             'não é alvo dos monstros até atacar', `manut. 🍖1 💧1<br><small style="font-size:.6rem;">sair</small>`,
+             `não é alvo dos monstros até atacar${livreEsc?' · +2 CA ao revelar':''}`, `manut. 🍖1 💧1<br><small style="font-size:.6rem;">sair</small>`,
              false, () => send({type:'esconder_sombras'}), true);
     } else {
-      const pode  = myTurnPlay && !me.bonus_action_used && temRec;
-      const aviso = me.bonus_action_used ? ' <small style="color:var(--text2);font-size:.62rem;">bônus usado</small>'
+      const pode  = myTurnPlay && (livreEsc || !me.bonus_action_used) && temRec;
+      const aviso = (!livreEsc && me.bonus_action_used) ? ' <small style="color:var(--text2);font-size:.62rem;">bônus usado</small>'
                   : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">sem recursos</small>' : '';
-      setBtn(`🌑 ${sk.name}${aviso}`, sk.description || sk.desc || '', costStr, !pode,
+      setBtn(`🌑 ${sk.name}${aviso}`, descEsc, costStr, !pode,
              () => send({type:'esconder_sombras'}), false);
     }
 
   } else if(sk.id === 'veneno_rapido'){
     const venenos = _venenosNaBolsa(me);
+    const maxHits = GS.ladinoVenenoMaxHits ? GS.ladinoVenenoMaxHits() : 1;
+    const doisSlots = GS.ladinoVeneno2Slots ? GS.ladinoVeneno2Slots() : false;
     if(me.weapon_poison){
       const hits = me.weapon_poison_hits ?? 0;
+      const slot2 = me.weapon_poison_2 ? ` + 2º veneno (${me.weapon_poison_2_hits ?? 0} golpe(s))` : (doisSlots ? ' · pode aplicar um 2º veneno' : '');
       setBtn(`☠️ ${sk.name} <small style="color:#cc44ff;font-size:.65rem;">● arma envenenada</small>`,
-             `${hits} golpe(s) restante(s) — clique p/ trocar`, costStr,
+             `${hits}/${maxHits} golpe(s) restante(s)${slot2} — clique p/ trocar`, costStr,
              !(myTurnPlay && (me.sede ?? 0) >= scst && venenos.length > 0),
              () => abrirPainelVenenoRapido(), true);
     } else {
       const pode  = myTurnPlay && (me.sede ?? 0) >= scst && venenos.length > 0;
       const aviso = venenos.length === 0 ? ' <small style="color:var(--red);font-size:.62rem;">sem venenos</small>' : '';
-      setBtn(`☠️ ${sk.name}${aviso}`, sk.description || sk.desc || '', costStr, !pode,
+      setBtn(`☠️ ${sk.name}${aviso}`, `dura ${maxHits} golpe(s) certeiro(s)${doisSlots?' · até 2 venenos simultâneos':''}`, costStr, !pode,
              () => abrirPainelVenenoRapido(), false);
     }
 
@@ -8125,12 +8139,14 @@ function _rogueDesarmarBtn(me){
   if(!_temArmadilhaAdjacente(me)) return null;
   const btn = document.createElement('button');
   const pode = _rogueMyTurn(me) && !me.action_done;
+  const bonusDes = GS.ladinoDesarmeBonus ? GS.ladinoDesarmeBonus() : 0;
+  const recupera = GS.ladinoDesarmeRecupera ? GS.ladinoDesarmeRecupera() : false;
   btn.className = 'skill-btn';
   btn.disabled = !pode;
   btn.innerHTML = `
     <div class="skill-info">
       <div class="skill-name">🔧 Desarmar Armadilha${me.action_done ? ' <small style="color:var(--text2);font-size:.62rem;">ação usada</small>' : ''}</div>
-      <div class="skill-desc">Teste de DES na casa/adjacente (nat1 dispara em você)</div>
+      <div class="skill-desc">Teste de DES${bonusDes>0?` (+${bonusDes})`:''} na casa/adjacente (nat1 dispara em você)${recupera?' · chance de recuperar o ouro':''}</div>
     </div>
     <div class="skill-cost">principal</div>`;
   btn.onclick = () => send({type:'desarmar_armadilha'});
