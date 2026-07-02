@@ -5010,6 +5010,16 @@ class GameRoom:
                 return True
         return False
 
+    def _armadilhas_desbloqueadas(self, p):
+        """Tipos de armadilha que o Ladino pode fabricar: buraco sempre grátis;
+        os demais exigem a Fórmula correspondente (extensível via ARMADILHAS)."""
+        tipos = set()
+        for tipo_id, tipo in ARMADILHAS.items():
+            gid = tipo.get("formula_guild_id")
+            if gid is None or tem_espec(p, gid):
+                tipos.add(tipo_id)
+        return tipos
+
     async def _furtivo_reativo(self, atacante, target):
         """Ataque Furtivo Supremo (ladino_furtivo_3): reage ao acerto de um aliado
         contra um inimigo, 1x por inimigo por rodada. Não dispara no próprio
@@ -9654,6 +9664,9 @@ class GameRoom:
         tipo = ARMADILHAS.get(tipo_id)
         if not tipo:
             await self.send_to(pid, {"type": "error", "msg": "Armadilha inválida."}); return
+        if tipo_id not in self._armadilhas_desbloqueadas(p):
+            await self.send_to(pid, {"type": "error",
+                "msg": f"Você ainda não aprendeu a fórmula de {tipo['nome']} — compre na Guilda."}); return
 
         custo_ouro = tipo.get("custo_ouro", 0)
         if p["gold"] < custo_ouro:

@@ -136,6 +136,21 @@ async def main():
     finally:
         S.random.randint = _orig_rand
 
+    # [5] Fórmulas: gate em handle_criar_armadilha
+    print("\n[5] Fórmulas — gate")
+    r = setup()
+    r.tiles = [[S.FLOOR for _ in range(r.map_w)] for _ in range(r.map_h)]
+    luccas = rogue(); luccas["pos"] = [0,0]; luccas["gold"] = 100; r.players["l"] = luccas
+    check("buraco sempre destravado", "buraco" in r._armadilhas_desbloqueadas(luccas))
+    check("armadilha_urso bloqueada sem fórmula", "armadilha_urso" not in r._armadilhas_desbloqueadas(luccas))
+    await r.handle_criar_armadilha("l", {"tipo": "armadilha_urso", "tx": 0, "ty": 0})
+    check("recusa criar tipo bloqueado (sem armadilha nova)", len(r.armadilhas) == 0 and r._errs)
+    luccas["guild_owned"]["especializacoes"] = ["ladino_armadilha_urso"]
+    check("armadilha_urso destravada após compra (simulada)", "armadilha_urso" in r._armadilhas_desbloqueadas(luccas))
+    r._errs = []
+    await r.handle_criar_armadilha("l", {"tipo": "armadilha_urso", "tx": 0, "ty": 0})
+    check("cria armadilha destravada com sucesso", len(r.armadilhas) == 1 and not r._errs)
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
