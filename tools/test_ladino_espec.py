@@ -170,6 +170,29 @@ async def main():
     finally:
         S.random.randint = _orig_rand
 
+    # [7] Veneno Rápido
+    print("\n[7] Veneno Rápido")
+    r = setup()
+    check("golpes base = 1", r._veneno_rapido_max_hits(rogue()) == 1)
+    check("golpes com veneno_2 = 2", r._veneno_rapido_max_hits(rogue(esp=["ladino_veneno_2"])) == 2)
+    check("2 slots sem veneno_3", not r._veneno_rapido_2_slots(rogue()))
+    check("2 slots com veneno_3", r._veneno_rapido_2_slots(rogue(esp=["ladino_veneno_2","ladino_veneno_3"])))
+    # integração: aplicar 1º veneno preenche slot 1; 2º (com veneno_3) preenche slot 2 sem apagar o 1º
+    r = setup()
+    luccas = rogue(esp=["ladino_veneno_2","ladino_veneno_3"])
+    luccas["sede"] = 50
+    luccas["weapon"] = {"id": "dagger"}
+    luccas["bag"] = [{"id":"frasco_a","veneno_id":"veneno_fraco"}, {"id":"frasco_b","veneno_id":"veneno_forte"}]
+    r.players["l"] = luccas
+    S.VENENOS.setdefault("veneno_fraco", {"nome":"Fraco"})
+    S.VENENOS.setdefault("veneno_forte", {"nome":"Forte"})
+    await r.handle_veneno_rapido("l", {"veneno_id": "veneno_fraco"})
+    check("1º veneno preenche slot 1", luccas["weapon_poison"] == "veneno_fraco")
+    check("slot 1 dura 2 golpes (veneno_2)", luccas["weapon_poison_hits"] == 2)
+    await r.handle_veneno_rapido("l", {"veneno_id": "veneno_forte"})
+    check("2º veneno preenche slot 2 (não apaga o 1º)",
+          luccas["weapon_poison"] == "veneno_fraco" and luccas.get("weapon_poison_2") == "veneno_forte")
+
     print(f"\n{'='*40}\n  {PASS} passaram, {FAIL} falharam\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

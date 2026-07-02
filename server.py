@@ -3208,6 +3208,8 @@ def make_player(pid, name, cls_id, slot):
         "detectar_ativo":      False,  # Detectar Armadilhas ativa (manutenção 💧-1)
         "weapon_poison":       None,   # veneno untado na arma (Veneno Rápido / coat_poison)
         "weapon_poison_hits":  0,      # golpes certeiros restantes com veneno
+        "weapon_poison_2":       None,   # 2º veneno (só com ladino_veneno_3)
+        "weapon_poison_2_hits":  0,
         # ── Magias (Pedro/mage, Lewis/cleric) — magias conhecidas + slots c/ regen ──
         "magias_conhecidas":   [],     # ids do GRIMORIO escolhidos (obrigatório p/ lançar)
         "slots_cooldown":      {"primeiro": [], "segundo": [], "terceiro": []},  # ready_at por slot gasto
@@ -5013,6 +5015,13 @@ class GameRoom:
     def _desarme_bonus(self, p):
         return 2 if (tem_espec(p, "ladino_desarme_2") or tem_espec(p, "ladino_desarme_3")) else 0
 
+    def _veneno_rapido_max_hits(self, p):
+        """Golpes que o veneno melee dura (1 base / 2 com ladino_veneno_2)."""
+        return 2 if tem_espec(p, "ladino_veneno_2") else 1
+
+    def _veneno_rapido_2_slots(self, p):
+        return tem_espec(p, "ladino_veneno_3")
+
     def _armadilhas_desbloqueadas(self, p):
         """Tipos de armadilha que o Ladino pode fabricar: buraco sempre grátis;
         os demais exigem a Fórmula correspondente (extensível via ARMADILHAS)."""
@@ -5353,6 +5362,12 @@ class GameRoom:
                         if p["weapon_poison_hits"] <= 0:
                             p["weapon_poison"] = None
                             await self.gm_say(f"🧴 O veneno da arma de **{p['name']}** acabou.")
+                    if p.get("weapon_poison_2"):
+                        await self._aplicar_veneno(target, p["weapon_poison_2"], fonte="ataque")
+                        p["weapon_poison_2_hits"] = p.get("weapon_poison_2_hits", 1) - 1
+                        if p["weapon_poison_2_hits"] <= 0:
+                            p["weapon_poison_2"] = None
+                            await self.gm_say(f"🧴 O 2º veneno da arma de **{p['name']}** acabou.")
             else:
                 await self.gm_say(
                     f"⚔️ **{p['name']}** ataca **{target['name']}**"
@@ -10087,9 +10102,13 @@ class GameRoom:
         p["sede"] = max(0, p["sede"] - custo_sede)
         _w_id = (p.get("weapon") or {}).get("id", "")
         _is_ranged = _w_id in RANGED_AMMO
-        cargas = VENENO_CARGAS if _is_ranged else 1
-        p["weapon_poison"]      = vid
-        p["weapon_poison_hits"] = cargas
+        cargas = VENENO_CARGAS if _is_ranged else self._veneno_rapido_max_hits(p)
+        if not _is_ranged and p.get("weapon_poison") and self._veneno_rapido_2_slots(p) and not p.get("weapon_poison_2"):
+            p["weapon_poison_2"]      = vid
+            p["weapon_poison_2_hits"] = cargas
+        else:
+            p["weapon_poison"]      = vid
+            p["weapon_poison_hits"] = cargas
         desc_veneno = (f"os próximos {VENENO_CARGAS} disparos (acerto ou erro) transferem o veneno"
                        if _is_ranged
                        else "o próximo golpe certeiro envenena o alvo")
