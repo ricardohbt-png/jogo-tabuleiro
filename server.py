@@ -5010,6 +5010,34 @@ class GameRoom:
                 return True
         return False
 
+    async def _furtivo_reativo(self, atacante, target):
+        """Ataque Furtivo Supremo (ladino_furtivo_3): reage ao acerto de um aliado
+        contra um inimigo, 1x por inimigo por rodada. Não dispara no próprio
+        ataque de Luccas, nem se Luccas estiver incapaz de reagir (petrificado,
+        paralisado ou imobilizado — perde_turno)."""
+        if atacante.get("class_id") == "rogue" or target.get("hp", 0) <= 0:
+            return
+        luccas = next((q for q in self.players.values()
+                       if q.get("class_id") == "rogue" and q.get("alive")
+                       and q["id"] != atacante["id"]), None)
+        if not luccas or not tem_espec(luccas, "ladino_furtivo_3"):
+            return
+        if luccas.get("petrificado") or luccas.get("paralisado") or luccas.get("perde_turno"):
+            return
+        if luccas.get("furtivo_reativo_round") != self.round_num:
+            luccas["furtivo_reativo_round"] = self.round_num
+            luccas["furtivo_reativo_alvos"] = set()
+        if target["id"] in luccas.get("furtivo_reativo_alvos", set()):
+            return
+        luccas["furtivo_reativo_alvos"].add(target["id"])
+        nd4 = self._dados_furtivo(luccas.get("level", 1))
+        dano = sum(random.randint(1, 4) for _ in range(nd4))
+        await self.broadcast({"type": "dice_roll", "die": "d4", "value": dano,
+                               "label": "Ataque Furtivo (reação)"})
+        target["hp"] -= dano
+        await self.gm_say(f"🗡️ **{luccas['name']}** reage ao ataque de **{atacante['name']}** — "
+                          f"Ataque Furtivo Supremo! +{dano} de dano [{nd4}d4] em **{target['name']}**.")
+
     async def _quebrar_invisibilidade(self, p, motivo="ao agir"):
         """Encerra o estado invisível das sombras (atacar/mover revela Luccas)."""
         if not p.get("invisivel_sombras"):
@@ -5284,6 +5312,7 @@ class GameRoom:
                     dmg += dano_furtivo
                     furtivo_detail = f" +🗡️{dano_furtivo} furtivo [{nd4}d4]"
                 target["hp"] -= dmg
+                await self._furtivo_reativo(p, target)
                 crit_str = " **CRÍTICO!**" if crit else ""
                 await self.gm_say(
                     f"⚔️ **{p['name']}** ataca **{target['name']}** com {weapon_name}"
@@ -5484,6 +5513,7 @@ class GameRoom:
             await self.broadcast({"type": "dice_roll", "die": die_type,
                                    "value": raw, "label": "Dano (arremesso)"})
             target["hp"] -= dmg
+            await self._furtivo_reativo(p, target)
             sb = f"+{dex_mod}" if dex_mod >= 0 else str(dex_mod)
             crit_str = " **CRÍTICO!**" if crit else ""
             await self.gm_say(
