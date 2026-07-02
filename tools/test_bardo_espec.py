@@ -94,6 +94,40 @@ async def main():
     check("ativação suprema não gasta sede", b["sede"] == 10)
     check("custo salvo já reduzido", b["cancao_custo"] == {"fome": 0, "sede": 0})
 
+    # [4] Provocação II/III
+    print("\n[4] Provocação")
+    r = setup(); r.round_num = 5
+    b = bard(esp=["bardo_provocacao_2"]); r.players["b"] = b
+    ally = make_player("a", "Ana", "warrior", 1); ally["pos"] = [0,0]; ally["alive"] = True; r.players["a"] = ally
+    mprov = monster(pos=(0,1)); mprov["provocado_turnos"] = 3; mprov["provocado_por"] = "b"
+    check("_provocador acha o bardo", r._provocador(mprov) is b)
+    check("+2 CA quando o alvo é o bardo dono",
+          r._provocacao_ca_bonus(b, mprov) == 2)
+    check("sem +2 CA para outro aliado",
+          r._provocacao_ca_bonus(ally, mprov) == 0)
+    check("bardo ataca com vantagem (II)",
+          r._provocacao_atk_vantagem(b, mprov) is True)
+    check("aliado NÃO tem vantagem sem III",
+          r._provocacao_atk_vantagem(ally, mprov) is False)
+
+    # III: aliados ganham vantagem na janela da rodada
+    r = setup(); r.round_num = 5
+    b3 = bard(esp=["bardo_provocacao_2","bardo_provocacao_3"]); r.players["b"] = b3
+    ally3 = make_player("a","Ana","warrior",1); ally3["pos"]=[0,0]; ally3["alive"]=True; r.players["a"] = ally3
+    m3 = monster(pos=(0,1)); m3["provocado_turnos"]=3; m3["provocado_por"]="b"
+    m3["provocado_aliados_vantagem_round"] = 5
+    check("aliado tem vantagem (III, mesma rodada)",
+          r._provocacao_atk_vantagem(ally3, m3) is True)
+    m3["provocado_aliados_vantagem_round"] = 4  # rodada anterior
+    check("aliado sem vantagem fora da janela",
+          r._provocacao_atk_vantagem(ally3, m3) is False)
+
+    # provocador morto/ausente → sem bônus
+    r = setup(); r.round_num = 5
+    b4 = bard(esp=["bardo_provocacao_2"]); b4["alive"] = False; r.players["b"] = b4
+    m4 = monster(pos=(0,1)); m4["provocado_turnos"]=3; m4["provocado_por"]="b"
+    check("bardo morto → _provocador None", r._provocador(m4) is None)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

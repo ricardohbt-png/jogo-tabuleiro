@@ -5314,7 +5314,9 @@ class GameRoom:
             # Vantagem (Invisibilidade ou Visão no Escuro na escuridão) vs Desvantagem
             # (atacar às cegas na escuridão). Vantagem+desvantagem se anulam.
             esc = self._verificar_escuridao(p, target)
-            vantagem    = bool(p.get("invisivel_magico")) or bool(p.get("oculto_vela")) or esc == "vantagem"
+            vantagem    = (bool(p.get("invisivel_magico")) or bool(p.get("oculto_vela"))
+                           or esc == "vantagem"
+                           or self._provocacao_atk_vantagem(p, target))
             desvantagem = esc == "desvantagem"
             hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
 
@@ -6653,11 +6655,42 @@ class GameRoom:
         alvo["provocado_turnos"]       = PROVOCACAO_TURNOS   # 1 turno de desvantagem + 3 de alvo forçado
         alvo["provocado_turno_efeito"] = True                # próximo ataque do inimigo é com desvantagem
         alvo["provocado_por"]          = pid                 # Henrique é o alvo forçado
+        if tem_espec(p, "bardo_provocacao_3"):
+            alvo["provocado_aliados_vantagem_round"] = self.round_num
 
         await self.gm_say(
             f"😤 **{p['name']}** provoca **{alvo['name']}**! Desvantagem no próximo ataque "
             f"e alvo forçado por 3 turnos (🍖-{fome_cost} 💧-{sede_cost}).")
         await self.push_state()
+
+    def _provocador(self, monstro):
+        """Retorna o bardo (vivo) que provocou este monstro, ou None."""
+        pid = monstro.get("provocado_por")
+        b = self.players.get(pid) if pid else None
+        if (b and b.get("alive") and b.get("class_id") == "bard"
+                and monstro.get("provocado_turnos", 0) > 0):
+            return b
+        return None
+
+    def _provocacao_ca_bonus(self, alvo_player, monstro):
+        """+2 CA do alvo quando o monstro que ele provocou (Provocação II) o ataca."""
+        b = self._provocador(monstro)
+        if b and b["id"] == alvo_player.get("id") and tem_espec(b, "bardo_provocacao_2"):
+            return 2
+        return 0
+
+    def _provocacao_atk_vantagem(self, atacante, monstro):
+        """Vantagem ao atacar o monstro provocado: o bardo (Provocação II) sempre;
+        qualquer aliado se Provocação III e dentro da janela de 1 rodada."""
+        b = self._provocador(monstro)
+        if not b:
+            return False
+        if atacante.get("id") == b["id"] and tem_espec(b, "bardo_provocacao_2"):
+            return True
+        if (tem_espec(b, "bardo_provocacao_3")
+                and monstro.get("provocado_aliados_vantagem_round") == self.round_num):
+            return True
+        return False
 
     # ── Frade Lewis (cleric): milagres de cura ──────────────────────────────
     # As 4 habilidades de Lewis NÃO passam pelo fluxo genérico de `skill` (não
@@ -11248,6 +11281,8 @@ class GameRoom:
             return
 
         effective_ac = self._player_effective_ac(target) if is_player else target["ca"]
+        if is_player:
+            effective_ac += self._provocacao_ca_bonus(target, m)   # Provocação II
 
         m_atk = (atk_def["atk_bonus"] + self._pen(m, "ataque") + self._mod_magia(m, "ataque")
                  + self._sombras_atk_bonus(m, target)               # Ataque das Sombras (+2)
@@ -11258,7 +11293,7 @@ class GameRoom:
         vantagem    = esc == "vantagem"
         if vantagem and desvantagem:
             vantagem = desvantagem = False
-        if prov:
+        if prov and not (self._provocador(m) and tem_espec(self._provocador(m), "bardo_provocacao_2")):
             m["provocado_turno_efeito"] = False
 
         if vantagem or desvantagem:
@@ -12972,7 +13007,8 @@ class GameRoom:
                              if target.get("guerreiro_luz_ativo") else 0)
                     effective_ac = (target["ac"] + self.temp_def.get(target["id"], 0)
                                     + self._cancao_bonus(target, "bonus_ca")
-                                    + gl_ca + self._mod_magia(target, "ca"))   # Abençoar (+CA no aliado)
+                                    + gl_ca + self._mod_magia(target, "ca")   # Abençoar (+CA no aliado)
+                                    + self._provocacao_ca_bonus(target, m))   # Provocação II
                 else:
                     effective_ac = target["ca"]
                 # Provocação: o 1º ataque do inimigo provocado é com DESVANTAGEM
@@ -12988,7 +13024,7 @@ class GameRoom:
                 vantagem    = esc == "vantagem"
                 if vantagem and desvantagem:
                     vantagem = desvantagem = False
-                if prov:
+                if prov and not (self._provocador(m) and tem_espec(self._provocador(m), "bardo_provocacao_2")):
                     m["provocado_turno_efeito"] = False
                 if vantagem or desvantagem:
                     hit, roll, total, crit, discarded = self._rolar_ataque(m_atk, effective_ac, vantagem, desvantagem)
