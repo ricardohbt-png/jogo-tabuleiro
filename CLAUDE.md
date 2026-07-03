@@ -429,6 +429,25 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > magoEstenderBonus` — as descrições dos botões refletem magnitude + teto de
 > empilhamento. Teste: `tools/test_mago_espec.py`.
 
+> **Técnicas de Recarga Curta (Fase 2a):** 1º lote das **Técnicas da Guilda** (4º
+> slot, genéricas — `categoria:"tecnica"`, `classe:None`, recarga 3, preço 100).
+> Fase 2 organizada por **faixa de recarga** (3/5/8/10 rodadas — quanto maior a
+> recarga, mais forte/cara a técnica); a aba de Técnicas da Guilda é agrupada por
+> faixa (`_renderGuild`). 4 técnicas, despachadas por `efeito.tipo` em
+> `handle_usar_tecnica` (que já centraliza turno/recarga/custo e **não** consome a
+> ação — "buff-and-act"): **Mira Perfeita** (`mira_perfeita` — próximo ataque à
+> distância com vantagem +2 dano; flag `tecnica_mira_perfeita` capturada em
+> `_mira_ranged` no `handle_attack`, consumida no ataque à distância mesmo em erro,
+> expira no fim do turno), **Espírito Indomável** (`remove_status`, ação livre —
+> limpa medo/atordoamento/lentidão + 1 rodada `imune_silencio_ate`, lido em
+> `_em_silencio`), **Grito de Guerra** (`buff_aliados_mov` — +2 movimento a todos os
+> aliados: bump imediato + `mov_bonus_ate`/`mov_bonus_val` somados dentro de
+> `_moves_base` via `_grito_mov_bonus`, o cálculo autoritativo usado no reset de
+> turno), **Pressa** (`mov_self_dobrar` — `moves_left += spd`; custo 4/4). Teste:
+> `tools/test_tecnicas_espec.py`. Próximos lotes: 2b (5r), 2c reações
+> (Contra-Ataque/Ataque Coordenado/Oportunidade/Sangue Frio — exigem framework de
+> reação), 2d passivas (Último Esforço); Fase 3 exclusivas Mago/Clérigo.
+
 > **Reviver os Mortos (Fase 1g):** gateia a habilidade de classe de Pedro (não
 > mexida nas Fases 1a–1f). Slots de Controle = mod(INT) + nível_Pedro÷2 (mín. 1;
 > **mantido** o termo de nível de Pedro, ao contrário do padrão "baseline
