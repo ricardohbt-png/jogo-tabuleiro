@@ -4059,7 +4059,7 @@ class GameRoom:
         for kind, cf, cs in aplicadas:
             if kind == "fortalecer":
                 dmg_mult = self._fortalecer_mult(p); mm_fome += cf; mm_sede += cs
-                partes.append(f"Fortalecer (dano ×{dmg_mult:g})")
+                partes.append(f"Fortalecer (dano ×{f'{dmg_mult:g}'.replace('.', ',')})")
             elif kind == "estender":
                 dur_bonus = self._estender_bonus(p); mm_fome += cf; mm_sede += cs
                 partes.append(f"Estender (+{dur_bonus} turno{'s' if dur_bonus != 1 else ''})")
