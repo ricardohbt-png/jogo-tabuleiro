@@ -57,6 +57,18 @@ async def main():
     check("pressa: custo 4/4", p["fome"] == f0 - 4 and p["sede"] == s0 - 4)
     check("pressa: recarga setada", r.tecnica_restante(p, "tecnica_pressa") > 0)
 
+    # [3] Grito de Guerra
+    print("\n[3] Grito de Guerra")
+    r = setup(); r.current_pid = lambda: "h"
+    p = hero("warrior", "tecnica_grito_guerra"); r.players["h"] = p
+    ally = make_player("a", "Ana", "cleric", 1); ally["alive"] = True; ally["pos"] = [1,1]
+    ally["moves_left"] = ally["spd"]; r.players["a"] = ally
+    p["moves_left"] = p["spd"]
+    await r.handle_usar_tecnica("h", "tecnica_grito_guerra")
+    check("grito: usuário +2 movimento", p["moves_left"] == p["spd"] + 2)
+    check("grito: aliado +2 movimento", ally["moves_left"] == ally["spd"] + 2)
+    check("grito: buff transitório setado", p["mov_bonus_ate"] == r.round_num + 1)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

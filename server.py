@@ -4240,6 +4240,13 @@ class GameRoom:
             p["tecnica_buff_dano_arma"] = p.get("tecnica_buff_dano_arma", 0) + ef.get("bonus_dano_arma", 0)
         elif ef.get("tipo") == "mov_self_dobrar":
             p["moves_left"] = p.get("moves_left", 0) + p.get("spd", 0)
+        elif ef.get("tipo") == "buff_aliados_mov":
+            b = ef.get("bonus_mov", 2)
+            for q in self.players.values():
+                if not q.get("alive"): continue
+                q["moves_left"] = q.get("moves_left", 0) + b
+                q["mov_bonus_ate"] = self.round_num + 1
+                q["mov_bonus_val"] = b
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
@@ -10877,7 +10884,8 @@ class GameRoom:
             await self._aplicar_exaustao_rodada()   # sempre, mesmo sem monstros
         else:
             next_p = self.players[self.current_pid()]
-            next_p["moves_left"] = next_p["spd"]
+            _mov_extra = next_p.get("mov_bonus_val", 0) if next_p.get("mov_bonus_ate", 0) >= self.round_num else 0
+            next_p["moves_left"] = next_p["spd"] + _mov_extra
             if next_p.get("perde_turno"):
                 next_p["action_done"]       = True
                 next_p["bonus_action_used"] = True
