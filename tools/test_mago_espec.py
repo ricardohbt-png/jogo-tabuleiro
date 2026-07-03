@@ -103,6 +103,13 @@ async def main():
     check("magnitude: dur=3", dur == 3)
     check("magnitude: dc=3", dc == 3)
 
+    # teto2 com duas metamagias que NÃO são Fortalecer (Estender+Aprimorar) → ambas cabem
+    p = mage(esp=["mago_tecelagem_2"]); p["estender_ativo"]=True; p["aprimorar_ativo"]=True
+    dmg, dur, dc, mf, ms, partes, exc = r._resolver_metamagia(p, mg)
+    check("teto2 sem Fortalecer: Estender+Aprimorar aplicam", dmg == 1 and dur == 1 and dc == 1)
+    check("teto2 sem Fortalecer: custo 3+3 / 3", (mf, ms) == (6, 3))
+    check("teto2 sem Fortalecer: não excedeu", exc is False)
+
     # aplicabilidade: magia sem save não cobra Aprimorar
     p = mage(esp=["mago_tecelagem_3"]); p["aprimorar_ativo"]=True
     dmg, dur, dc, mf, ms, partes, exc = r._resolver_metamagia(p, {"id":"x","dano_por_nivel":"1d6"})

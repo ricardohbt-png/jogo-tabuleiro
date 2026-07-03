@@ -8423,9 +8423,11 @@ function _clericSkillBtn(me, sk){
 // 3 ações livres (toggles) EMPILHÁVEIS que MODIFICAM a magia do GRIMÓRIO lançada
 // no turno (mensagem `magia` / handle_magia). O servidor cobra o custo ao LANÇAR
 // e SÓ se a habilidade tiver efeito. Aqui só armamos/desarmamos (toggle).
-//   🎯 Aprimorar  → +1 na CD do teste de resistência   (🍖-3)
-//   ⏱️ Estender   → +1 turno na duração                 (🍖-3 💧-3)
-//   💥 Fortalecer → dano ×1,5                            (🍖-6 💧-6)
+// Magnitudes BASE (escalam com as especializações da Guilda — Fase 1f); baseline:
+// só 1 metamagia por lançamento (Tecelagem Arcana desbloqueia empilhar 2/3).
+//   🎯 Aprimorar  → +1 na CD do teste de resistência (base) (🍖-3)
+//   ⏱️ Estender   → +1 turno na duração (base)              (🍖-3 💧-3)
+//   💥 Fortalecer → dano ×1,25 (base)                       (🍖-6 💧-6)
 function _mageSkillBtn(me, sk){
   const btn = document.createElement('button');
   const myTurnPlay = GS.isMyTurn && me.alive && GS.gameState && GS.gameState.phase === 'playing';

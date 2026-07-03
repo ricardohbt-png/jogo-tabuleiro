@@ -3324,9 +3324,10 @@ def make_player(pid, name, cls_id, slot):
         "guerreiro_luz_bonus": {},     # {"visao","ataque","dano","ca"} — 0..2 cada
         "guerreiro_luz_custo": {"fome": 0, "sede": 0},  # manutenção por turno
         # ── Metamagia do mago (Pedro) — inerte p/ outras classes ──
-        "aprimorar_ativo":   False,  # Aprimorar Magia armada → +1 CD do save (🍖-3 ao lançar)
-        "estender_ativo":    False,  # Estender Magia armada → +1 turno de duração (🍖-3 💧-3)
-        "fortalecer_ativo":  False,  # Fortalecer Magia armada → dano ×1,5 (🍖-6 💧-6)
+        # Magnitude BASE (escala com as especializações da Guilda — ver _resolver_metamagia):
+        "aprimorar_ativo":   False,  # Aprimorar armada → +1 CD do save (base; II/III: +2/+3) (🍖-3 ao lançar)
+        "estender_ativo":    False,  # Estender armada → +1 turno de duração (base; II/III: +2/+3) (🍖-3 💧-3)
+        "fortalecer_ativo":  False,  # Fortalecer armada → dano ×1,25 (base; II/III: ×1,5/×2) (🍖-6 💧-6)
         # ── Estado das habilidades do ladino (Luccas) — inerte p/ outras classes ──
         "invisivel_sombras":   False,  # Esconder nas Sombras (manutenção 🍖-1 💧-1)
         "detectar_ativo":      False,  # Detectar Armadilhas ativa (manutenção 💧-1)
