@@ -428,3 +428,28 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > Cliente: `GS.magoTecelagemCap/magoFortalecerMult/magoAprimorarBonus/
 > magoEstenderBonus` — as descrições dos botões refletem magnitude + teto de
 > empilhamento. Teste: `tools/test_mago_espec.py`.
+
+> **Reviver os Mortos (Fase 1g):** gateia a habilidade de classe de Pedro (não
+> mexida nas Fases 1a–1f). Slots de Controle = mod(INT) + nível_Pedro÷2 (mín. 1;
+> **mantido** o termo de nível de Pedro, ao contrário do padrão "baseline
+> enfraquecido" das outras linhas). **Compras** (`categoria:"especializacao"`,
+> `classe:"mage"`; III exige II): `mago_reviver_2` (200, ND passa a ocupar Slots
+> fracionários **exatos** — antes toda criatura ocupava sempre 1 Slot — e chance
+> de sucesso 100%−ND×15%), `mago_reviver_3` (300, +2 Slots de Controle e chance
+> 100%−ND×10%). Nível I (baseline) mantém 1 Slot fixo por criatura e chance
+> 100%−ND×20%. **Bônus de nível de Pedro:** todos os Níveis da Guilda somam
+> +5% de chance por nível de Pedro (`p["level"]×5`, antes do teto/piso 1–99%) —
+> ex. Pedro nível 3 animando ND1 no Nível II: 85%+15% = 100%→clamp 99%. **Zona hostil preservada e inalterada pelos Níveis:** a falha
+> catastrófica (cadáver ressuscita vivo e hostil) continua a fórmula original —
+> só existe risco quando o ND do monstro excede o teto "seguro" pro nível de
+> Pedro (`nivel_max` 2/4/5 conforme nível 1-2/3-4/5+; `zona_hostil = max(0,
+> (ND−nivel_max)×10)`); comprar a Guilda só melhora a chance de sucesso "normal",
+> não reduz esse risco. ND agora é o CR fracionário real do monstro (`corpse["nd"]`,
+> gravado em `_monster_dies`; monstros sem `cr` caem para `tier` como ND inteiro),
+> distinto do `corpse["nivel"]` (inteiro, ≥1, usado só como bônus de ataque do
+> animado). Helpers: `_reviver_nivel`/`_reviver_slots_max`/`_reviver_slot_custo`/
+> `_reviver_chance`, usados em `handle_animar_mortos`. Cliente:
+> `GS.magoReviverNivel/magoReviverSlotsExtra/magoReviverSlotCusto/magoReviverChance`
+> — o duplicado de `HERO_DATA.pedro.habilidadeClasse` em `game.js` (ficha/tooltip,
+> não autoritativo) chama esses getters em vez de recalcular. Teste:
+> `tools/test_reviver_mortos.py`.

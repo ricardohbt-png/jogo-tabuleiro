@@ -18093,25 +18093,20 @@ const HERO_DATA = {
       custo:       { fome: 20, sede: 20 },
       descricao:   'Pedro concentra energia sombria sobre o cadáver de uma criatura derrotada, arrancando sua essência vital e aprisionando-a num corpo sem vida para servir eternamente.',
 
-      // Calcula slots disponíveis
+      // Calcula slots disponíveis (base + Nível III da Guilda "Reviver os Mortos")
       calcularSlots(nivelPedro, inteligencia) {
         const bonus = getBonusAtributo(inteligencia)
         const bonusNivel = Math.floor(nivelPedro / 2)
-        return Math.max(1, bonus + bonusNivel)
+        const extra = (window.GS && GS.magoReviverSlotsExtra) ? GS.magoReviverSlotsExtra() : 0
+        return Math.max(1, bonus + bonusNivel) + extra
       },
 
-      // Calcula chance de sucesso baseada no nível do monstro
+      // Chance de sucesso: tabela da Guilda (Nível I/II/III), só depende do ND
       calcularChance(nivelPedro, nivelMonstro) {
-        const nivelMaxPedro = nivelPedro <= 2 ? 2 :
-                              nivelPedro <= 4 ? 4 : 5
-        const diferenca = nivelMonstro - nivelMaxPedro
-        const chance = diferenca < 0
-          ? 90 + Math.abs(diferenca) * 5
-          : 90 - diferenca * 10
-        return Math.min(99, Math.max(1, chance))
+        return (window.GS && GS.magoReviverChance) ? GS.magoReviverChance(nivelMonstro) : Math.min(99, Math.max(1, Math.round(100 - nivelMonstro * 20)))
       },
 
-      // Calcula zona de resultado hostil
+      // Zona de resultado hostil: inalterada pelo Nível da Guilda (ver CLAUDE.md)
       calcularZonaHostil(nivelPedro, nivelMonstro) {
         const nivelMaxPedro = nivelPedro <= 2 ? 2 :
                               nivelPedro <= 4 ? 4 : 5
@@ -18119,9 +18114,9 @@ const HERO_DATA = {
         return diferenca > 0 ? diferenca * 10 : 0
       },
 
-      // Slots que um monstro ocupa = seu nível
+      // Slots que um monstro ocupa: 1 fixo no Nível I; ND real no II/III
       calcularSlotsOcupados(nivelMonstro) {
-        return nivelMonstro
+        return (window.GS && GS.magoReviverSlotCusto) ? GS.magoReviverSlotCusto(nivelMonstro) : 1
       },
 
       // Interpreta resultado do d100

@@ -1,0 +1,129 @@
+"""Reviver os Mortos — tabela de Slots/Chance por Nível I/II/III (Guilda do Mago).
+Roda da raiz: python tools/test_reviver_mortos.py"""
+import asyncio, sys, os
+try: sys.stdout.reconfigure(encoding="utf-8")
+except Exception: pass
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import server as S
+from server import GameRoom, make_player
+
+PASS = 0; FAIL = 0
+def check(name, cond):
+    global PASS, FAIL
+    if cond: PASS += 1; print(f"  ✅ {name}")
+    else:    FAIL += 1; print(f"  ❌ {name}")
+
+def setup(phase="playing"):
+    r = GameRoom("TEST")
+    errs = []
+    async def noop(*a, **k): pass
+    async def cap_send(pid, msg, *a, **k):
+        if isinstance(msg, dict) and msg.get("type") == "error": errs.append(msg.get("msg",""))
+    r.gm_say = noop; r.broadcast = noop; r._broadcast_dado = noop
+    r.broadcast_city_state = noop; r.push_state = noop; r.send_to = cap_send
+    r._is_turn = lambda pid: True
+    r.phase = phase; r._errs = errs
+    return r
+
+def mage(**owned):
+    p = make_player("m", "Pedro", "mage", 0)
+    p["guild_owned"]["especializacoes"] = list(owned.get("esp", []))
+    p["pos"] = [0, 0]; p["alive"] = True
+    p["level"] = owned.get("level", 1)
+    p["int_"] = owned.get("int_", 18)  # mod(18) = +4
+    return p
+
+def corpse(cr, pos=(1, 0)):
+    return {"id": "c1", "nome": "Zumbi", "icone": "💀", "tipo": "zombie",
+            "tier": 1, "nivel": max(1, round(cr)), "nd": cr,
+            "ca": 10, "vida_max": 10, "dano": "1d4", "movimento": 3,
+            "pos": list(pos), "room_id": None}
+
+async def main():
+    # [1] Catálogo do Mago
+    print("\n[1] Catálogo — Reviver os Mortos")
+    ids = [i["id"] for i in S.guild_items_for_class("mage")]
+    check("catálogo tem mago_reviver_2", "mago_reviver_2" in ids)
+    check("catálogo tem mago_reviver_3", "mago_reviver_3" in ids)
+    check("reviver_2 = 200", S.guild_item("mago_reviver_2")["preco"] == 200)
+    check("reviver_3 = 300", S.guild_item("mago_reviver_3")["preco"] == 300)
+    check("reviver_3 requer reviver_2", S.guild_item("mago_reviver_3")["requer"] == "mago_reviver_2")
+    check("reviver_2 sem requer", S.guild_item("mago_reviver_2")["requer"] is None)
+
+    # [2] Nível possuído
+    print("\n[2] _reviver_nivel")
+    r = setup()
+    check("base = 1", r._reviver_nivel(mage()) == 1)
+    check("reviver_2 = 2", r._reviver_nivel(mage(esp=["mago_reviver_2"])) == 2)
+    check("reviver_3 = 3", r._reviver_nivel(mage(esp=["mago_reviver_3"])) == 3)
+
+    # [3] Slots de Controle totais (mod(INT) + nível÷2, mín 1; +2 no III)
+    print("\n[3] _reviver_slots_max")
+    p = mage(int_=18, level=1)  # mod=4, level//2=0 → 4
+    check("nível1 int18 lvl1 = 4", r._reviver_slots_max(p) == 4)
+    p3 = mage(esp=["mago_reviver_3"], int_=18, level=1)
+    check("nível3 soma +2 = 6", r._reviver_slots_max(p3) == 6)
+    p_low = mage(int_=8, level=1)  # mod(8) = -1 → max(1, -1+0) = 1
+    check("mín 1 slot mesmo com INT baixo", r._reviver_slots_max(p_low) == 1)
+
+    # [4] Custo de slot por criatura
+    print("\n[4] _reviver_slot_custo")
+    p1 = mage()
+    check("Nível I: sempre 1 slot (ND 3)", r._reviver_slot_custo(p1, 3) == 1)
+    check("Nível I: sempre 1 slot (ND 0.25)", r._reviver_slot_custo(p1, 0.25) == 1)
+    p2 = mage(esp=["mago_reviver_2"])
+    check("Nível II: ocupa ND exato (ND 2)", r._reviver_slot_custo(p2, 2) == 2)
+    check("Nível II: ND fracionário (0.5)", r._reviver_slot_custo(p2, 0.5) == 0.5)
+    check("Nível II: piso 0.25 (ND 0.25)", r._reviver_slot_custo(p2, 0.25) == 0.25)
+
+    # [5] Chance de sucesso por Nível/ND (todas com Pedro nível 1 → +5%)
+    print("\n[5] _reviver_chance")
+    check("N.I ND1 = 80%+5% = 85%", r._reviver_chance(mage(), 1) == 85)
+    check("N.I ND2 = 60%+5% = 65%", r._reviver_chance(mage(), 2) == 65)
+    check("N.I ND5 = 0%+5% = 5%", r._reviver_chance(mage(), 5) == 5)
+    p2 = mage(esp=["mago_reviver_2"])
+    check("N.II ND1 = 85%+5% = 90%", r._reviver_chance(p2, 1) == 90)
+    check("N.II ND3 = 55%+5% = 60%", r._reviver_chance(p2, 3) == 60)
+    check("N.II ND0.25 ≈ 96%+5% → clamp 99%", r._reviver_chance(p2, 0.25) == 99)
+    p3 = mage(esp=["mago_reviver_3"])
+    check("N.III ND1 = 90%+5% = 95%", r._reviver_chance(p3, 1) == 95)
+    check("N.III ND5 = 50%+5% = 55%", r._reviver_chance(p3, 5) == 55)
+
+    # [5b] Bônus de nível de Pedro (+5%/nível), independente do Nível da Guilda
+    print("\n[5b] _reviver_chance — bônus por nível de Pedro")
+    check("nível1: +5%", r._reviver_chance(mage(level=1), 1) == 85)
+    check("nível3: +15%", r._reviver_chance(mage(level=3), 1) == 95)
+    check("nível5: +25% → clamp 99%", r._reviver_chance(mage(level=5), 1) == 99)
+    check("nível5 ND5: 0%+25% = 25%", r._reviver_chance(mage(level=5), 5) == 25)
+
+    # [6] Fluxo completo — sucesso ocupa o slot certo (Nível II)
+    print("\n[6] handle_animar_mortos — fim a fim")
+    r = setup()
+    p = mage(esp=["mago_reviver_2"], int_=18, level=1)
+    r.players = {"m": p}
+    r.corpses = {"c1": corpse(2.0)}
+    r.monsters = {"c1": {"id": "c1", "hp": 0, "max_hp": 10}}
+    orig_randint = S.random.randint
+    calls = iter([0, 1])  # dezena=0, unidade=1 → d100=1 (sucesso garantido)
+    S.random.randint = lambda a, b: next(calls)
+    try:
+        await r.handle_animar_mortos("m", {"cadaver_id": "c1"})
+    finally:
+        S.random.randint = orig_randint
+    check("nenhum erro de slot", r._errs == [])
+    check("cadáver consumido", "c1" not in r.corpses)
+
+    # [7] Slots insuficientes rejeita a ação (Nível I, monstro ND alto mas custo=1 sempre)
+    r = setup()
+    p = mage(int_=8, level=1)  # slots_max = 1
+    p["animados"] = [{"id": "prev", "slots": 1}]  # já ocupado
+    r.players = {"m": p}
+    r.corpses = {"c1": corpse(1.0)}
+    await r.handle_animar_mortos("m", {"cadaver_id": "c1"})
+    check("rejeita por slots insuficientes", any("Slots insuficientes" in e for e in r._errs))
+
+    print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
+    sys.exit(1 if FAIL else 0)
+
+if __name__ == "__main__":
+    asyncio.run(main())
