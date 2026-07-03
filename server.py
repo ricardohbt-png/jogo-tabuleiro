@@ -4051,10 +4051,6 @@ class GameRoom:
         """+N de dano de arma concedido por técnica de turno (Brutalidade)."""
         return p.get("tecnica_buff_dano_arma", 0)
 
-    def _mira_perfeita_ativa(self, p, is_ranged):
-        """+2 de dano do próximo ataque à distância sob a Técnica Mira Perfeita."""
-        return 2 if (is_ranged and p.get("tecnica_mira_perfeita")) else 0
-
     def _furia_extras(self, p):
         """Ataques extras concedidos pela Fúria: 2 com Nível III, senão 1."""
         return 2 if tem_espec(p, "guerreiro_furia_3") else 1

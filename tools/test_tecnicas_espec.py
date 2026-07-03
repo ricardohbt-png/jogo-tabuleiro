@@ -101,12 +101,31 @@ async def main():
     await r.handle_usar_tecnica("h", "tecnica_mira_perfeita")
     check("mira: flag armada", p.get("tecnica_mira_perfeita") is True)
     check("mira: recarga setada", r.tecnica_restante(p, "tecnica_mira_perfeita") > 0)
-    # helper de dano: +2 só quando à distância e flag ativa
-    p2 = hero("warrior"); p2["tecnica_mira_perfeita"] = True
-    check("mira: helper ranged=True → 2", r._mira_perfeita_ativa(p2, True) == 2)
-    check("mira: helper melee=False → 0", r._mira_perfeita_ativa(p2, False) == 0)
-    p3 = hero("warrior"); p3["tecnica_mira_perfeita"] = False
-    check("mira: helper sem flag → 0", r._mira_perfeita_ativa(p3, True) == 0)
+    # Integração: um ataque à distância consome a flag e passa vantagem ao rolar;
+    # um ataque corpo a corpo NÃO consome (aguarda um ataque à distância).
+    def _mk_attack_room(w_range):
+        rr = setup(); rr.current_pid = lambda: "h"; rr._is_turn = lambda pid: True
+        hh = hero("warrior"); hh["tecnica_mira_perfeita"] = True; hh["pos"] = [0,0]
+        hh["weapon"] = {"id":"arco","name":"Arco","die":"1d6","stat":"dex","range":w_range} if w_range else \
+                       {"id":"machado","name":"Machado","die":"1d6","stat":"str_"}
+        rr.players["h"] = hh
+        rr.monsters = {"m1": {"id":"m1","name":"Alvo","nome":"Alvo","pos":[0,1] if not w_range else [0,3],
+                              "hp":30,"max_hp":30,"ac":10,"ca":10}}
+        cap = {}
+        def fake_rolar(atk, ac, vant=False, desv=False):
+            cap["vant"] = vant; return (False, 5, 8, False, 3)   # erra (não precisa resolver dano)
+        rr._rolar_ataque = fake_rolar
+        rr._tem_linha_de_visao = lambda *a, **k: True
+        rr._alcance_escuridao = lambda p_, t_, w_: w_
+        return rr, hh, cap
+    import asyncio as _a
+    rr, hh, cap = _mk_attack_room(5)          # arco (à distância)
+    await rr.handle_attack("h", "m1")
+    check("mira: vantagem no ataque à distância", cap.get("vant") is True)
+    check("mira: flag consumida após ataque à distância", hh.get("tecnica_mira_perfeita") is False)
+    rr2, hh2, cap2 = _mk_attack_room(None)    # machado (corpo a corpo)
+    await rr2.handle_attack("h", "m1")
+    check("mira: flag NÃO consumida no corpo a corpo", hh2.get("tecnica_mira_perfeita") is True)
 
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
