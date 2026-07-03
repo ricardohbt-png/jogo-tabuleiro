@@ -9792,10 +9792,15 @@ class GameRoom:
         """Penalidade ativa de veneno para uma chave (valor já assinado, ≤ 0)."""
         return alvo.get("penalidades", {}).get(chave, 0)
 
+    def _grito_mov_bonus(self, p):
+        """+N de movimento transitório (Técnica Grito de Guerra) enquanto válido nesta rodada."""
+        return p.get("mov_bonus_val", 0) if p.get("mov_bonus_ate", 0) >= self.round_num else 0
+
     def _moves_base(self, p):
-        """Movimento do turno = spd + bônus de canção + penalidade de veneno/doença (mov)."""
+        """Movimento do turno = spd + bônus de canção + Grito de Guerra + penalidade de veneno/doença (mov)."""
         return max(0, p["spd"] + self._cancao_bonus(p, "bonus_mov")
-                   + self._pen(p, "movimento") + self._doenca_mov_pen(p))
+                   + self._pen(p, "movimento") + self._doenca_mov_pen(p)
+                   + self._grito_mov_bonus(p))
 
     def _veneno_save_bonus(self, alvo, tipo_save):
         """Bônus de save. Jogador e monstros novos usam saves individuais;
@@ -10884,8 +10889,7 @@ class GameRoom:
             await self._aplicar_exaustao_rodada()   # sempre, mesmo sem monstros
         else:
             next_p = self.players[self.current_pid()]
-            _mov_extra = next_p.get("mov_bonus_val", 0) if next_p.get("mov_bonus_ate", 0) >= self.round_num else 0
-            next_p["moves_left"] = next_p["spd"] + _mov_extra
+            next_p["moves_left"] = next_p["spd"]
             if next_p.get("perde_turno"):
                 next_p["action_done"]       = True
                 next_p["bonus_action_used"] = True

@@ -68,6 +68,16 @@ async def main():
     check("grito: usuário +2 movimento", p["moves_left"] == p["spd"] + 2)
     check("grito: aliado +2 movimento", ally["moves_left"] == ally["spd"] + 2)
     check("grito: buff transitório setado", p["mov_bonus_ate"] == r.round_num + 1)
+    # O buff DEVE fluir pelo cálculo autoritativo de movimento (_moves_base),
+    # que é o que roda no reset de início de turno (senão o buff é descartado).
+    check("grito: _moves_base do aliado inclui +2", r._moves_base(ally) == ally["spd"] + 2)
+    check("grito: _grito_mov_bonus = 2 na janela", r._grito_mov_bonus(ally) == 2)
+    # mov_bonus_ate = round_num+1 → cobre a rodada seguinte (o turno do aliado nela)
+    r.round_num += 1
+    check("grito: ainda ativo na rodada seguinte (o 'por 1 rodada')", r._grito_mov_bonus(ally) == 2)
+    r.round_num += 1   # 2 rodadas após ativar → expira
+    check("grito: expira 2 rodadas após ativar", r._grito_mov_bonus(ally) == 0)
+    check("grito: _moves_base volta ao spd após expirar", r._moves_base(ally) == ally["spd"])
 
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
