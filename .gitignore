@@ -7,8 +7,15 @@
 # Artefatos Python
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
 assets/city/_calib.html
 .claude/launch.json
+
+# Ambientes virtuais / variáveis de ambiente
+.env
+.venv/
+venv/
 
 # Saves da Guilda dos Heróis (dados de runtime, por personagem)
 saves/
