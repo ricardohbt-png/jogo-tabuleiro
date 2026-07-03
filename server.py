@@ -4051,6 +4051,10 @@ class GameRoom:
         """+N de dano de arma concedido por técnica de turno (Brutalidade)."""
         return p.get("tecnica_buff_dano_arma", 0)
 
+    def _mira_perfeita_ativa(self, p, is_ranged):
+        """+2 de dano do próximo ataque à distância sob a Técnica Mira Perfeita."""
+        return 2 if (is_ranged and p.get("tecnica_mira_perfeita")) else 0
+
     def _furia_extras(self, p):
         """Ataques extras concedidos pela Fúria: 2 com Nível III, senão 1."""
         return 2 if tem_espec(p, "guerreiro_furia_3") else 1
@@ -4251,6 +4255,8 @@ class GameRoom:
             for k in ("com_medo", "medo_rodadas", "perde_turno", "lentidao", "lentidao_rodadas"):
                 p.pop(k, None)
             p["imune_silencio_ate"] = self.round_num + 1
+        elif ef.get("tipo") == "mira_perfeita":
+            p["tecnica_mira_perfeita"] = True
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
@@ -5503,11 +5509,15 @@ class GameRoom:
             # Vantagem (Invisibilidade ou Visão no Escuro na escuridão) vs Desvantagem
             # (atacar às cegas na escuridão). Vantagem+desvantagem se anulam.
             esc = self._verificar_escuridao(p, target)
+            _mira_ranged = bool(w_range is not None and p.get("tecnica_mira_perfeita"))
             vantagem    = (bool(p.get("invisivel_magico")) or bool(p.get("oculto_vela"))
                            or esc == "vantagem"
-                           or self._provocacao_atk_vantagem(p, target))
+                           or self._provocacao_atk_vantagem(p, target)
+                           or _mira_ranged)
             desvantagem = esc == "desvantagem"
             hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
+            if _mira_ranged:
+                p["tecnica_mira_perfeita"] = False   # consumida no ataque à distância (acerto ou erro)
 
             # ── Consumo de munição (projétil gasto ao atirar, hit ou miss) ──
             _ammo_extra_dmg   = None   # dano extra do projétil especial (incendiário)
@@ -5562,6 +5572,7 @@ class GameRoom:
                     if crit: dmg *= 2
                     dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano
                               + self._mod_magia(p, "dano") + self._tecnica_bonus_dano(p)
+                              + (2 if _mira_ranged else 0)   # Mira Perfeita: +2 no ataque à distância
                               + p.get("skill_bonus_dano", 0)
                               - self._corrosao_arma_pen(p))
                     # Fraquezas/imunidades ao dano físico da arma
@@ -10848,6 +10859,7 @@ class GameRoom:
         p["skill_dobrar_dano"]  = False
         p["skill_ataques_extras"] = 0
         p["tecnica_buff_dano_arma"] = 0   # buff de técnica de turno (Brutalidade) expira
+        p["tecnica_mira_perfeita"] = False   # Mira Perfeita não usada expira no fim do turno
         p["cancao_atacou_apos"] = False   # reabre o custo extra de atacar sob a canção no novo turno
         # metamagia do mago expira ao fim do turno (flags planas)
         p["aprimorar_ativo"]   = False

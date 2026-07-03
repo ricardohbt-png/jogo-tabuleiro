@@ -94,6 +94,20 @@ async def main():
     r._em_zona_quadrada = lambda x,y,z: True
     check("indomável: imune a silêncio ativo", r._em_silencio(p) is False)
 
+    # [5] Mira Perfeita
+    print("\n[5] Mira Perfeita")
+    r = setup(); r.current_pid = lambda: "h"
+    p = hero("warrior", "tecnica_mira_perfeita"); r.players["h"] = p
+    await r.handle_usar_tecnica("h", "tecnica_mira_perfeita")
+    check("mira: flag armada", p.get("tecnica_mira_perfeita") is True)
+    check("mira: recarga setada", r.tecnica_restante(p, "tecnica_mira_perfeita") > 0)
+    # helper de dano: +2 só quando à distância e flag ativa
+    p2 = hero("warrior"); p2["tecnica_mira_perfeita"] = True
+    check("mira: helper ranged=True → 2", r._mira_perfeita_ativa(p2, True) == 2)
+    check("mira: helper melee=False → 0", r._mira_perfeita_ativa(p2, False) == 0)
+    p3 = hero("warrior"); p3["tecnica_mira_perfeita"] = False
+    check("mira: helper sem flag → 0", r._mira_perfeita_ativa(p3, True) == 0)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
