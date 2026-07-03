@@ -1447,6 +1447,32 @@ const GS = (() => {
     return (guildOwnedOf(myPid).especializacoes || []).includes('bardo_lendas_supremas');
   }
 
+  // ── Mago (Fase 1f) — Metamagia ─────────────────────────────────────────────
+  function magoTecelagemCap() {
+    const e = (guildOwnedOf(myPid).especializacoes) || [];
+    if (e.includes('mago_tecelagem_3')) return 3;
+    if (e.includes('mago_tecelagem_2')) return 2;
+    return 1;
+  }
+  function magoFortalecerMult() {
+    const e = (guildOwnedOf(myPid).especializacoes) || [];
+    if (e.includes('mago_fortalecer_3')) return 2;
+    if (e.includes('mago_fortalecer_2')) return 1.5;
+    return 1.25;
+  }
+  function magoAprimorarBonus() {
+    const e = (guildOwnedOf(myPid).especializacoes) || [];
+    if (e.includes('mago_aprimorar_3')) return 3;
+    if (e.includes('mago_aprimorar_2')) return 2;
+    return 1;
+  }
+  function magoEstenderBonus() {
+    const e = (guildOwnedOf(myPid).especializacoes) || [];
+    if (e.includes('mago_estender_3')) return 3;
+    if (e.includes('mago_estender_2')) return 2;
+    return 1;
+  }
+
   // ── Tile-click resolver: pure decision, no DOM ─────────────────────────────
   // Called by the unified handleTileClick(tx, ty) in game.html.
   // Returns one of:
@@ -1689,6 +1715,10 @@ const GS = (() => {
     bardoCancaoSuprema,
     bardoProvocacaoNivel,
     bardoLendasSupremas,
+    magoTecelagemCap,
+    magoFortalecerMult,
+    magoAprimorarBonus,
+    magoEstenderBonus,
 
     // ── Decorações de masmorra ──
     decorTilesOf,
