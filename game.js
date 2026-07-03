@@ -8423,13 +8423,31 @@ function _clericSkillBtn(me, sk){
 // 3 ações livres (toggles) EMPILHÁVEIS que MODIFICAM a magia do GRIMÓRIO lançada
 // no turno (mensagem `magia` / handle_magia). O servidor cobra o custo ao LANÇAR
 // e SÓ se a habilidade tiver efeito. Aqui só armamos/desarmamos (toggle).
-//   🎯 Aprimorar  → +1 na CD do teste de resistência   (🍖-3)
-//   ⏱️ Estender   → +1 turno na duração                 (🍖-3 💧-3)
-//   💥 Fortalecer → dano ×1,5                            (🍖-6 💧-6)
+// Magnitudes BASE (escalam com as especializações da Guilda — Fase 1f); baseline:
+// só 1 metamagia por lançamento (Tecelagem Arcana desbloqueia empilhar 2/3).
+//   🎯 Aprimorar  → +1 na CD do teste de resistência (base) (🍖-3)
+//   ⏱️ Estender   → +1 turno na duração (base)              (🍖-3 💧-3)
+//   💥 Fortalecer → dano ×1,25 (base)                       (🍖-6 💧-6)
 function _mageSkillBtn(me, sk){
   const btn = document.createElement('button');
   const myTurnPlay = GS.isMyTurn && me.alive && GS.gameState && GS.gameState.phase === 'playing';
-  const desc = sk.description || sk.desc || '';
+  let desc = sk.description || sk.desc || '';
+  // A descrição reflete a magnitude possuída da especialização e o teto de
+  // empilhamento (Fase 1f). Texto informativo — o servidor é autoritativo.
+  {
+    const cap = GS.magoTecelagemCap ? GS.magoTecelagemCap() : 1;
+    const capTxt = ` (empilha até ${cap})`;
+    if (sk.id === 'fortalecer_magia') {
+      const mult = GS.magoFortalecerMult ? GS.magoFortalecerMult() : 1.25;
+      desc = `Ação livre. Multiplica o dano da magia por ${String(mult).replace('.', ',')}.${capTxt}`;
+    } else if (sk.id === 'aprimorar_magia') {
+      const b = GS.magoAprimorarBonus ? GS.magoAprimorarBonus() : 1;
+      desc = `Ação livre. +${b} na CD do teste de resistência da magia.${capTxt}`;
+    } else if (sk.id === 'estender_magia') {
+      const b = GS.magoEstenderBonus ? GS.magoEstenderBonus() : 1;
+      desc = `Ação livre. +${b} rodada${b !== 1 ? 's' : ''} na duração da magia.${capTxt}`;
+    }
+  }
   const cfg = ({
     aprimorar_magia:  { icon: '🎯', flag: 'aprimorar_ativo',  custo: '🍖3'     },
     estender_magia:   { icon: '⏱️', flag: 'estender_ativo',   custo: '🍖3 💧3' },

@@ -412,3 +412,19 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > bardoProvocacaoNivel/bardoLendasSupremas` — o painel da Canção mostra +1/+2 por
 > atributo e a manutenção reduzida; a descrição da Provocação reflete II/III. Teste:
 > `tools/test_bardo_espec.py`.
+
+> **Especializações do Mago (Fase 1f):** gateiam a **Metamagia** de Pedro
+> (Aprimorar/Estender/Fortalecer). Baseline enfraquecido (**mudança de gameplay**):
+> hoje as 3 metamagias empilhavam ilimitado → **1 por lançamento**; **Fortalecer**
+> ×1,5 → **×1,25**. **Compras** (`categoria:"especializacao"`, `classe:"mage"`; III
+> exige II): `mago_tecelagem_2/3` (empilhar 2/3 — 150/300), `mago_fortalecer_2/3`
+> (×1,5/×2 — 200/250), `mago_aprimorar_2/3` (+2/+3 CD — 150/200), `mago_estender_2/3`
+> (+2/+3 rodadas — 150/200). O núcleo é `_resolver_metamagia(p, magia)` — helper puro
+> que substituiu o bloco inline de `handle_magia`: reúne as metamagias armadas E
+> aplicáveis (dano/duração/save), trunca ao `_teto_metamagia(p)` na ordem
+> Fortalecer→Estender→Aprimorar (as excedentes não aplicam nem cobram), e aplica as
+> magnitudes via `_fortalecer_mult`/`_aprimorar_bonus`/`_estender_bonus`. A metamagia
+> gravada em **pergaminho** (`gerar_pergaminho`) fica inalterada (+1/×1,5/+1).
+> Cliente: `GS.magoTecelagemCap/magoFortalecerMult/magoAprimorarBonus/
+> magoEstenderBonus` — as descrições dos botões refletem magnitude + teto de
+> empilhamento. Teste: `tools/test_mago_espec.py`.

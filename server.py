@@ -370,6 +370,55 @@ GUILD_CATALOG = {
         "preco": 300, "nome": "Lendas Supremas", "icon": "📖",
         "desc": "Todos os bônus de Lenda passam a beneficiar o grupo inteiro (enquanto Henrique vivo).",
     },
+    # ── Mago (Fase 1f) — Metamagia ──────────────────────────────────────────
+    "mago_tecelagem_2": {
+        "id": "mago_tecelagem_2", "categoria": "especializacao", "classe": "mage",
+        "linha": "mago_tecelagem", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Tecelagem Arcana II", "icon": "🧵",
+        "desc": "Permite empilhar 2 metamagias no mesmo lançamento.",
+    },
+    "mago_tecelagem_3": {
+        "id": "mago_tecelagem_3", "categoria": "especializacao", "classe": "mage",
+        "linha": "mago_tecelagem", "nivel": 3, "requer": "mago_tecelagem_2", "exclusiva": False,
+        "preco": 300, "nome": "Tecelagem Arcana III", "icon": "🧵",
+        "desc": "Permite empilhar as 3 metamagias no mesmo lançamento.",
+    },
+    "mago_fortalecer_2": {
+        "id": "mago_fortalecer_2", "categoria": "especializacao", "classe": "mage",
+        "linha": "mago_fortalecer", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 200, "nome": "Fortalecer II", "icon": "💥",
+        "desc": "Fortalecer Magia multiplica o dano por 1,5 (era ×1,25).",
+    },
+    "mago_fortalecer_3": {
+        "id": "mago_fortalecer_3", "categoria": "especializacao", "classe": "mage",
+        "linha": "mago_fortalecer", "nivel": 3, "requer": "mago_fortalecer_2", "exclusiva": False,
+        "preco": 250, "nome": "Fortalecer III", "icon": "💥",
+        "desc": "Fortalecer Magia multiplica o dano por 2.",
+    },
+    "mago_aprimorar_2": {
+        "id": "mago_aprimorar_2", "categoria": "especializacao", "classe": "mage",
+        "linha": "mago_aprimorar", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Aprimorar II", "icon": "🎯",
+        "desc": "Aprimorar Magia dá +2 na CD do save (era +1).",
+    },
+    "mago_aprimorar_3": {
+        "id": "mago_aprimorar_3", "categoria": "especializacao", "classe": "mage",
+        "linha": "mago_aprimorar", "nivel": 3, "requer": "mago_aprimorar_2", "exclusiva": False,
+        "preco": 200, "nome": "Aprimorar III", "icon": "🎯",
+        "desc": "Aprimorar Magia dá +3 na CD do save.",
+    },
+    "mago_estender_2": {
+        "id": "mago_estender_2", "categoria": "especializacao", "classe": "mage",
+        "linha": "mago_estender", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 150, "nome": "Estender II", "icon": "⏱️",
+        "desc": "Estender Magia dá +2 rodadas de duração (era +1).",
+    },
+    "mago_estender_3": {
+        "id": "mago_estender_3", "categoria": "especializacao", "classe": "mage",
+        "linha": "mago_estender", "nivel": 3, "requer": "mago_estender_2", "exclusiva": False,
+        "preco": 200, "nome": "Estender III", "icon": "⏱️",
+        "desc": "Estender Magia dá +3 rodadas de duração.",
+    },
     "clerigo_cura_2": {
         "id": "clerigo_cura_2", "categoria": "especializacao", "classe": "cleric",
         "linha": "clerigo_cura", "nivel": 2, "requer": None, "exclusiva": False,
@@ -3275,9 +3324,10 @@ def make_player(pid, name, cls_id, slot):
         "guerreiro_luz_bonus": {},     # {"visao","ataque","dano","ca"} — 0..2 cada
         "guerreiro_luz_custo": {"fome": 0, "sede": 0},  # manutenção por turno
         # ── Metamagia do mago (Pedro) — inerte p/ outras classes ──
-        "aprimorar_ativo":   False,  # Aprimorar Magia armada → +1 CD do save (🍖-3 ao lançar)
-        "estender_ativo":    False,  # Estender Magia armada → +1 turno de duração (🍖-3 💧-3)
-        "fortalecer_ativo":  False,  # Fortalecer Magia armada → dano ×1,5 (🍖-6 💧-6)
+        # Magnitude BASE (escala com as especializações da Guilda — ver _resolver_metamagia):
+        "aprimorar_ativo":   False,  # Aprimorar armada → +1 CD do save (base; II/III: +2/+3) (🍖-3 ao lançar)
+        "estender_ativo":    False,  # Estender armada → +1 turno de duração (base; II/III: +2/+3) (🍖-3 💧-3)
+        "fortalecer_ativo":  False,  # Fortalecer armada → dano ×1,25 (base; II/III: ×1,5/×2) (🍖-6 💧-6)
         # ── Estado das habilidades do ladino (Luccas) — inerte p/ outras classes ──
         "invisivel_sombras":   False,  # Esconder nas Sombras (manutenção 🍖-1 💧-1)
         "detectar_ativo":      False,  # Detectar Armadilhas ativa (manutenção 💧-1)
@@ -3966,6 +4016,58 @@ class GameRoom:
         if tem_espec(p, "guerreiro_mestre_combate"): return 3
         if tem_espec(p, "guerreiro_combinar_2"):      return 2
         return 1
+
+    def _teto_metamagia(self, p):
+        """Quantas metamagias podem empilhar no mesmo lançamento (base 1)."""
+        if tem_espec(p, "mago_tecelagem_3"): return 3
+        if tem_espec(p, "mago_tecelagem_2"): return 2
+        return 1
+
+    def _fortalecer_mult(self, p):
+        """Multiplicador de dano do Fortalecer Magia (base ×1,25)."""
+        if tem_espec(p, "mago_fortalecer_3"): return 2.0
+        if tem_espec(p, "mago_fortalecer_2"): return 1.5
+        return 1.25
+
+    def _aprimorar_bonus(self, p):
+        """Bônus na CD do save do Aprimorar Magia (base +1)."""
+        if tem_espec(p, "mago_aprimorar_3"): return 3
+        if tem_espec(p, "mago_aprimorar_2"): return 2
+        return 1
+
+    def _estender_bonus(self, p):
+        """Rodadas extras de duração do Estender Magia (base +1)."""
+        if tem_espec(p, "mago_estender_3"): return 3
+        if tem_espec(p, "mago_estender_2"): return 2
+        return 1
+
+    def _resolver_metamagia(self, p, magia):
+        """Resolve as metamagias armadas aplicáveis a `magia`, respeitando o teto de
+        empilhamento (ordem de prioridade: Fortalecer > Estender > Aprimorar).
+        Retorna (dmg_mult, dur_bonus, dc_bonus, mm_fome, mm_sede, partes, excedeu)."""
+        dmg_mult, dur_bonus, dc_bonus = 1, 0, 0
+        tem_dano    = self._magia_tem_dano(magia)
+        tem_duracao = "duracao" in magia
+        tem_save    = "save" in magia
+        candidatas = []   # (kind, custo_fome, custo_sede) — armadas E aplicáveis
+        if p.get("fortalecer_ativo") and tem_dano:    candidatas.append(("fortalecer", 6, 6))
+        if p.get("estender_ativo") and tem_duracao:   candidatas.append(("estender", 3, 3))
+        if p.get("aprimorar_ativo") and tem_save:     candidatas.append(("aprimorar", 3, 0))
+        teto = self._teto_metamagia(p)
+        aplicadas = candidatas[:teto]
+        mm_fome = mm_sede = 0
+        partes = []
+        for kind, cf, cs in aplicadas:
+            if kind == "fortalecer":
+                dmg_mult = self._fortalecer_mult(p); mm_fome += cf; mm_sede += cs
+                partes.append(f"Fortalecer (dano ×{f'{dmg_mult:g}'.replace('.', ',')})")
+            elif kind == "estender":
+                dur_bonus = self._estender_bonus(p); mm_fome += cf; mm_sede += cs
+                partes.append(f"Estender (+{dur_bonus} turno{'s' if dur_bonus != 1 else ''})")
+            elif kind == "aprimorar":
+                dc_bonus = self._aprimorar_bonus(p); mm_fome += cf; mm_sede += cs
+                partes.append(f"Aprimorar (+{dc_bonus} CD)")
+        return dmg_mult, dur_bonus, dc_bonus, mm_fome, mm_sede, partes, (len(candidatas) > teto)
 
     def _golpe_raw(self, p, raw):
         """Golpe Devastador nos dados: ×2 com Nível III, ×1,5 (floor) no base; sem efeito se não armado."""
@@ -7899,17 +8001,11 @@ class GameRoom:
         # a habilidade tiver efeito nesta magia (tem dano / duração / teste). ─────
         dmg_mult, dur_bonus, dc_bonus = 1, 0, 0
         if is_mage:
-            tem_dano    = self._magia_tem_dano(magia)
-            tem_duracao = "duracao" in magia
-            tem_save    = "save" in magia
-            mm_fome = mm_sede = 0
-            partes = []
-            if p.get("fortalecer_ativo") and tem_dano:
-                dmg_mult = 1.5; mm_fome += 6; mm_sede += 6; partes.append("Fortalecer (dano ×1,5)")
-            if p.get("estender_ativo") and tem_duracao:
-                dur_bonus = 1; mm_fome += 3; mm_sede += 3; partes.append("Estender (+1 turno)")
-            if p.get("aprimorar_ativo") and tem_save:
-                dc_bonus = 1; mm_fome += 3; partes.append("Aprimorar (+1 CD)")
+            dmg_mult, dur_bonus, dc_bonus, mm_fome, mm_sede, partes, excedeu = self._resolver_metamagia(p, magia)
+            if excedeu:
+                await self.gm_say(
+                    f"🧵 **{p['name']}** só pode empilhar {self._teto_metamagia(p)} metamagia(s) por "
+                    f"lançamento — as demais foram ignoradas.")
             if (mm_fome or mm_sede):
                 if p["fome"] < mm_fome or p["sede"] < mm_sede:
                     await self.send_to(pid, {"type": "error",
