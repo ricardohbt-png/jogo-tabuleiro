@@ -285,6 +285,39 @@ GUILD_CATALOG = {
         "desc": "Até o fim do turno, ataques físicos com arma causam +2 de dano.",
         "efeito": {"tipo": "buff_turno", "bonus_dano_arma": 2},
     },
+    # ── Técnicas de Recarga Curta (Fase 2a) ─────────────────────────────────
+    "tecnica_mira_perfeita": {
+        "id": "tecnica_mira_perfeita", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 100, "custo_fome": 2, "custo_sede": 2, "recarga_rodadas": 3,
+        "nome": "Mira Perfeita", "icon": "🎯",
+        "desc": "Próximo ataque à distância recebe vantagem; se acertar, +2 de dano.",
+        "efeito": {"tipo": "mira_perfeita", "bonus_dano": 2},
+    },
+    "tecnica_espirito_indomavel": {
+        "id": "tecnica_espirito_indomavel", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 100, "custo_fome": 2, "custo_sede": 2, "recarga_rodadas": 3,
+        "nome": "Espírito Indomável", "icon": "🧘", "acao_livre": True,
+        "desc": "Ação livre. Remove Medo, Atordoamento e Lentidão; 1 rodada imune a Silêncio.",
+        "efeito": {"tipo": "remove_status"},
+    },
+    "tecnica_grito_guerra": {
+        "id": "tecnica_grito_guerra", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 100, "custo_fome": 2, "custo_sede": 2, "recarga_rodadas": 3,
+        "nome": "Grito de Guerra", "icon": "📣",
+        "desc": "Todos os aliados recebem +2 de movimento por 1 rodada.",
+        "efeito": {"tipo": "buff_aliados_mov", "bonus_mov": 2},
+    },
+    "tecnica_pressa": {
+        "id": "tecnica_pressa", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 100, "custo_fome": 4, "custo_sede": 4, "recarga_rodadas": 3,
+        "nome": "Pressa", "icon": "💨",
+        "desc": "O seu movimento é dobrado nesta rodada.",
+        "efeito": {"tipo": "mov_self_dobrar"},
+    },
     "guerreiro_combinar_2": {
         "id": "guerreiro_combinar_2", "categoria": "especializacao", "classe": "warrior",
         "linha": "guerreiro_combate", "nivel": 2, "requer": None, "exclusiva": False,
@@ -418,6 +451,18 @@ GUILD_CATALOG = {
         "linha": "mago_estender", "nivel": 3, "requer": "mago_estender_2", "exclusiva": False,
         "preco": 200, "nome": "Estender III", "icon": "⏱️",
         "desc": "Estender Magia dá +3 rodadas de duração.",
+    },
+    "mago_reviver_2": {
+        "id": "mago_reviver_2", "categoria": "especializacao", "classe": "mage",
+        "linha": "mago_reviver", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 200, "nome": "Reviver os Mortos II", "icon": "💀",
+        "desc": "Criaturas passam a ocupar Slots de Controle iguais ao ND (fracionário incluso). Chance de sucesso: 100% − ND×15%.",
+    },
+    "mago_reviver_3": {
+        "id": "mago_reviver_3", "categoria": "especializacao", "classe": "mage",
+        "linha": "mago_reviver", "nivel": 3, "requer": "mago_reviver_2", "exclusiva": False,
+        "preco": 300, "nome": "Reviver os Mortos III", "icon": "💀",
+        "desc": "+2 Slots de Controle. Chance de sucesso: 100% − ND×10%.",
     },
     "clerigo_cura_2": {
         "id": "clerigo_cura_2", "categoria": "especializacao", "classe": "cleric",
@@ -4041,6 +4086,31 @@ class GameRoom:
         if tem_espec(p, "mago_estender_2"): return 2
         return 1
 
+    def _reviver_nivel(self, p):
+        """Nível de Reviver os Mortos possuído (1/2/3)."""
+        if tem_espec(p, "mago_reviver_3"): return 3
+        if tem_espec(p, "mago_reviver_2"): return 2
+        return 1
+
+    def _reviver_slots_max(self, p):
+        """Slots de Controle totais: mod(INT) + nível_Pedro÷2 (mín. 1), +2 no Nível III."""
+        bonus_int = mod(p.get("int_", 10))
+        base = max(1, bonus_int + p.get("level", 1) // 2)
+        return base + 2 if self._reviver_nivel(p) == 3 else base
+
+    def _reviver_slot_custo(self, p, nd):
+        """Slots ocupados por uma criatura de ND `nd` (fracionário): 1 fixo no
+        Nível I; exatamente `nd` (mín. proporcional) nos Níveis II/III."""
+        return 1 if self._reviver_nivel(p) == 1 else max(0.25, nd)
+
+    def _reviver_chance(self, p, nd):
+        """Chance de sucesso (%) para animar uma criatura de ND `nd`. Soma um
+        bônus de +5% por nível de Pedro (nivel_Pedro × 5) antes do teto/piso."""
+        nivel = self._reviver_nivel(p)
+        reducao = {1: 20, 2: 15, 3: 10}[nivel]
+        bonus_nivel = p.get("level", 1) * 5
+        return min(99, max(1, round(100 - nd * reducao + bonus_nivel)))
+
     def _resolver_metamagia(self, p, magia):
         """Resolve as metamagias armadas aplicáveis a `magia`, respeitando o teto de
         empilhamento (ordem de prioridade: Fortalecer > Estender > Aprimorar).
@@ -6027,13 +6097,14 @@ class GameRoom:
 
         nivel_pedro   = p.get("level", 1)
         nivel_monstro = corpse.get("nivel", corpse.get("tier", 1))
+        nd            = corpse.get("nd", nivel_monstro)  # ND fracionário real (Reviver os Mortos)
 
-        # Slots disponíveis = mod(INT) + ⌊nível/2⌋ (mín. 1); ocupados = nível do monstro
-        bonus_int     = mod(p.get("int_", 10))
-        slots_max     = max(1, bonus_int + nivel_pedro // 2)
+        # Slots de Controle: Guilda "Reviver os Mortos" (Nível I/II/III — ver
+        # _reviver_slots_max/_reviver_slot_custo/_reviver_chance)
+        slots_max     = self._reviver_slots_max(p)
         animados      = p.setdefault("animados", [])
         slots_usados  = sum(a.get("slots", 1) for a in animados)
-        slots_monstro = nivel_monstro
+        slots_monstro = self._reviver_slot_custo(p, nd)
         if slots_usados + slots_monstro > slots_max:
             await self.send_to(pid, {
                 "type": "error",
@@ -6048,11 +6119,12 @@ class GameRoom:
         p["sede"] = max(0, p.get("sede", 10) - custo)
         self._verificar_estado_sobrevivencia(p)
 
-        # Chance de sucesso e zona hostil (mesma fórmula de HERO_DATA.pedro)
+        # Chance de sucesso: tabela da Guilda (Nível I/II/III) por ND real.
+        # Zona hostil: falha catastrófica só existe quando o ND excede o teto
+        # "seguro" para o nível de Pedro (fórmula original, preservada).
         nivel_max = 2 if nivel_pedro <= 2 else 4 if nivel_pedro <= 4 else 5
-        diferenca = nivel_monstro - nivel_max
-        chance = 90 + (abs(diferenca) * 5 if diferenca < 0 else -diferenca * 10)
-        chance = min(99, max(1, chance))
+        diferenca = nd - nivel_max
+        chance = self._reviver_chance(p, nd)
         zona_hostil = max(0, diferenca * 10)
 
         # d100 = dois d10 (dezena + unidade); 00 = 100
@@ -13332,6 +13404,7 @@ class GameRoom:
                 "tipo":      m.get("type", "skeleton"),
                 "tier":      m.get("tier", 1),
                 "nivel":     nivel_animado,
+                "nd":        cr,  # ND fracionário real (0.25/0.5/1..5) p/ Reviver os Mortos
                 "ca":        m.get("ac", 10),
                 "vida_max":  m.get("max_hp", m.get("hp", 10)),
                 "dano":      primeiro_ataque.get("damage", m.get("damage", "1d4")),
