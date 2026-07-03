@@ -4016,6 +4016,58 @@ class GameRoom:
         if tem_espec(p, "guerreiro_combinar_2"):      return 2
         return 1
 
+    def _teto_metamagia(self, p):
+        """Quantas metamagias podem empilhar no mesmo lançamento (base 1)."""
+        if tem_espec(p, "mago_tecelagem_3"): return 3
+        if tem_espec(p, "mago_tecelagem_2"): return 2
+        return 1
+
+    def _fortalecer_mult(self, p):
+        """Multiplicador de dano do Fortalecer Magia (base ×1,25)."""
+        if tem_espec(p, "mago_fortalecer_3"): return 2.0
+        if tem_espec(p, "mago_fortalecer_2"): return 1.5
+        return 1.25
+
+    def _aprimorar_bonus(self, p):
+        """Bônus na CD do save do Aprimorar Magia (base +1)."""
+        if tem_espec(p, "mago_aprimorar_3"): return 3
+        if tem_espec(p, "mago_aprimorar_2"): return 2
+        return 1
+
+    def _estender_bonus(self, p):
+        """Rodadas extras de duração do Estender Magia (base +1)."""
+        if tem_espec(p, "mago_estender_3"): return 3
+        if tem_espec(p, "mago_estender_2"): return 2
+        return 1
+
+    def _resolver_metamagia(self, p, magia):
+        """Resolve as metamagias armadas aplicáveis a `magia`, respeitando o teto de
+        empilhamento (ordem de prioridade: Fortalecer > Estender > Aprimorar).
+        Retorna (dmg_mult, dur_bonus, dc_bonus, mm_fome, mm_sede, partes, excedeu)."""
+        dmg_mult, dur_bonus, dc_bonus = 1, 0, 0
+        tem_dano    = self._magia_tem_dano(magia)
+        tem_duracao = "duracao" in magia
+        tem_save    = "save" in magia
+        candidatas = []   # (kind, custo_fome, custo_sede) — armadas E aplicáveis
+        if p.get("fortalecer_ativo") and tem_dano:    candidatas.append(("fortalecer", 6, 6))
+        if p.get("estender_ativo") and tem_duracao:   candidatas.append(("estender", 3, 3))
+        if p.get("aprimorar_ativo") and tem_save:     candidatas.append(("aprimorar", 3, 0))
+        teto = self._teto_metamagia(p)
+        aplicadas = candidatas[:teto]
+        mm_fome = mm_sede = 0
+        partes = []
+        for kind, cf, cs in aplicadas:
+            if kind == "fortalecer":
+                dmg_mult = self._fortalecer_mult(p); mm_fome += cf; mm_sede += cs
+                partes.append(f"Fortalecer (dano ×{dmg_mult:g})")
+            elif kind == "estender":
+                dur_bonus = self._estender_bonus(p); mm_fome += cf; mm_sede += cs
+                partes.append(f"Estender (+{dur_bonus} turno{'s' if dur_bonus != 1 else ''})")
+            elif kind == "aprimorar":
+                dc_bonus = self._aprimorar_bonus(p); mm_fome += cf; mm_sede += cs
+                partes.append(f"Aprimorar (+{dc_bonus} CD)")
+        return dmg_mult, dur_bonus, dc_bonus, mm_fome, mm_sede, partes, (len(candidatas) > teto)
+
     def _golpe_raw(self, p, raw):
         """Golpe Devastador nos dados: ×2 com Nível III, ×1,5 (floor) no base; sem efeito se não armado."""
         if not p.get("skill_dobrar_dano"):
@@ -7948,17 +8000,11 @@ class GameRoom:
         # a habilidade tiver efeito nesta magia (tem dano / duração / teste). ─────
         dmg_mult, dur_bonus, dc_bonus = 1, 0, 0
         if is_mage:
-            tem_dano    = self._magia_tem_dano(magia)
-            tem_duracao = "duracao" in magia
-            tem_save    = "save" in magia
-            mm_fome = mm_sede = 0
-            partes = []
-            if p.get("fortalecer_ativo") and tem_dano:
-                dmg_mult = 1.5; mm_fome += 6; mm_sede += 6; partes.append("Fortalecer (dano ×1,5)")
-            if p.get("estender_ativo") and tem_duracao:
-                dur_bonus = 1; mm_fome += 3; mm_sede += 3; partes.append("Estender (+1 turno)")
-            if p.get("aprimorar_ativo") and tem_save:
-                dc_bonus = 1; mm_fome += 3; partes.append("Aprimorar (+1 CD)")
+            dmg_mult, dur_bonus, dc_bonus, mm_fome, mm_sede, partes, excedeu = self._resolver_metamagia(p, magia)
+            if excedeu:
+                await self.gm_say(
+                    f"🧵 **{p['name']}** só pode empilhar {self._teto_metamagia(p)} metamagia(s) por "
+                    f"lançamento — as demais foram ignoradas.")
             if (mm_fome or mm_sede):
                 if p["fome"] < mm_fome or p["sede"] < mm_sede:
                     await self.send_to(pid, {"type": "error",
