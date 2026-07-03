@@ -46,6 +46,17 @@ async def main():
           and S.guild_item("tecnica_pressa")["custo_sede"] == 4)
     check("mira custa 2/2", S.guild_item("tecnica_mira_perfeita")["custo_fome"] == 2)
 
+    # [2] Pressa
+    print("\n[2] Pressa")
+    r = setup()
+    p = hero("warrior", "tecnica_pressa"); r.players["h"] = p
+    r.current_pid = lambda: "h"
+    spd = p["spd"]; p["moves_left"] = spd; f0, s0 = p["fome"], p["sede"]
+    await r.handle_usar_tecnica("h", "tecnica_pressa")
+    check("pressa: +spd de movimento", p["moves_left"] == spd + spd)
+    check("pressa: custo 4/4", p["fome"] == f0 - 4 and p["sede"] == s0 - 4)
+    check("pressa: recarga setada", r.tecnica_restante(p, "tecnica_pressa") > 0)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

@@ -3349,6 +3349,9 @@ def make_player(pid, name, cls_id, slot):
         "guild_equip": {"tecnica": None, "tecnica_exclusiva": None},  # equipado (persistido)
         "technique_cooldowns": {},          # { tecnica_id: pronta_em_round } — runtime
         "tecnica_buff_dano_arma": 0,        # Brutalidade: +N dano de arma até fim do turno
+        "tecnica_mira_perfeita": False,     # Mira Perfeita: próximo ataque à distância
+        "imune_silencio_ate": 0,            # Espírito Indomável: imunidade a Silêncio até esta rodada
+        "mov_bonus_ate": 0,                 # Grito de Guerra: +2 movimento no reset até esta rodada
         # Buffs de turno do warrior (flags planas) — limpos em handle_end_turn
         "skill_bonus_acerto": 0,
         "skill_bonus_dano":   0,      # Mira Certeira III: +2 dano quando armada
@@ -4235,6 +4238,8 @@ class GameRoom:
         ef = item.get("efeito", {})
         if ef.get("tipo") == "buff_turno":
             p["tecnica_buff_dano_arma"] = p.get("tecnica_buff_dano_arma", 0) + ef.get("bonus_dano_arma", 0)
+        elif ef.get("tipo") == "mov_self_dobrar":
+            p["moves_left"] = p.get("moves_left", 0) + p.get("spd", 0)
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
