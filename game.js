@@ -1517,7 +1517,21 @@ function _renderGuild(){
     ? arr.map(i => _guildItemRow(i, owned, me)).join('')
     : `<div class="guild-empty">— em breve —</div>`;
   const specEl = $('guild-list-spec'); if(specEl) specEl.innerHTML = sec(specs);
-  const tecEl  = $('guild-list-tec');  if(tecEl)  tecEl.innerHTML  = sec(tecs);
+  // Técnicas agrupadas por faixa de recarga (3/5/8/10 rodadas) — quanto maior a
+  // recarga, mais forte a técnica; deixa o trade-off recarga×poder×preço visível.
+  const _faixaLabel = { 3:'Recarga Curta (3 rodadas)', 5:'Recarga Média (5 rodadas)',
+                        8:'Recarga Longa (8 rodadas)', 10:'Recarga Muito Longa (10 rodadas)' };
+  const _secTecnicas = (arr) => {
+    if(!arr.length) return `<div class="guild-empty">— em breve —</div>`;
+    const porFaixa = {};
+    arr.forEach(t => { (porFaixa[t.recarga_rodadas] = porFaixa[t.recarga_rodadas] || []).push(t); });
+    return Object.keys(porFaixa).sort((a,b)=>a-b).map(rec =>
+      `<div class="guild-faixa"><h4 class="guild-faixa-tit">${_faixaLabel[rec] || ('Recarga '+rec+' rodadas')}</h4>`
+      + porFaixa[rec].map(i => _guildItemRow(i, owned, me)).join('')
+      + `</div>`
+    ).join('');
+  };
+  const tecEl  = $('guild-list-tec');  if(tecEl)  tecEl.innerHTML  = _secTecnicas(tecs);
 }
 
 function openGuild(){
