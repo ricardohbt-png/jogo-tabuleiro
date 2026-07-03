@@ -4247,6 +4247,10 @@ class GameRoom:
                 q["moves_left"] = q.get("moves_left", 0) + b
                 q["mov_bonus_ate"] = self.round_num + 1
                 q["mov_bonus_val"] = b
+        elif ef.get("tipo") == "remove_status":
+            for k in ("com_medo", "medo_rodadas", "perde_turno", "lentidao", "lentidao_rodadas"):
+                p.pop(k, None)
+            p["imune_silencio_ate"] = self.round_num + 1
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
@@ -9525,6 +9529,8 @@ class GameRoom:
         return (z["cx"] - h + 1) <= x <= (z["cx"] + h) and (z["cy"] - h + 1) <= y <= (z["cy"] + h)
 
     def _em_silencio(self, obj):
+        if obj.get("imune_silencio_ate", 0) >= self.round_num:
+            return False
         x, y = obj.get("pos", [0, 0])
         return any(self._em_zona_quadrada(x, y, z) for z in self._zonas_ativas("silencio"))
 

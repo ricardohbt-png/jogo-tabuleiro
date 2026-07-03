@@ -79,6 +79,21 @@ async def main():
     check("grito: expira 2 rodadas após ativar", r._grito_mov_bonus(ally) == 0)
     check("grito: _moves_base volta ao spd após expirar", r._moves_base(ally) == ally["spd"])
 
+    # [4] Espírito Indomável
+    print("\n[4] Espírito Indomável")
+    r = setup(); r.current_pid = lambda: "h"
+    p = hero("warrior", "tecnica_espirito_indomavel"); r.players["h"] = p
+    p["com_medo"] = True; p["medo_rodadas"] = 3; p["perde_turno"] = True; p["lentidao"] = True
+    await r.handle_usar_tecnica("h", "tecnica_espirito_indomavel")
+    check("indomável: remove medo", not p.get("com_medo"))
+    check("indomável: remove atordoamento", not p.get("perde_turno"))
+    check("indomável: remove lentidão", not p.get("lentidao"))
+    check("indomável: imunidade a silêncio setada", p["imune_silencio_ate"] == r.round_num + 1)
+    # _em_silencio respeita a imunidade mesmo dentro de zona
+    r._zonas_ativas = lambda tipo: [{"cx":0,"cy":0,"raio":3}] if tipo == "silencio" else []
+    r._em_zona_quadrada = lambda x,y,z: True
+    check("indomável: imune a silêncio ativo", r._em_silencio(p) is False)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
