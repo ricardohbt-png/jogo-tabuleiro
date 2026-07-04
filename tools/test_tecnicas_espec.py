@@ -259,6 +259,22 @@ async def main():
     await r._ataque_basico_reativo(atacante, alvo3)
     check("reativo: ignora alvo morto", alvo3["hp"] == 0)
 
+    # [14] Resistência Absoluta
+    print("\n[14] Resistência Absoluta")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("warrior", "tecnica_resistencia_absoluta"); r.players["h"] = p
+    await r.handle_usar_tecnica("h", "tecnica_resistencia_absoluta")
+    check("resist: janela 2 rodadas", p["resistencia_saves_ate"] == r.round_num + 2 and p["resistencia_saves_val"] == 2)
+    check("resist: helper = 2 na janela", r._resistencia_saves_bonus(p) == 2)
+    janela_ate = p["resistencia_saves_ate"]
+    _, _d, sb_yes, _t = r._testar_save(p, "fortitude", 99)
+    p["resistencia_saves_ate"] = 0  # desliga a janela p/ isolar a diferença
+    _, _d2, sb_no, _t2 = r._testar_save(p, "fortitude", 99)
+    check("resist: _testar_save soma +2", sb_yes - sb_no == 2)
+    p["resistencia_saves_ate"] = janela_ate  # restaura p/ testar expiração natural
+    r.round_num += 3
+    check("resist: expira", r._resistencia_saves_bonus(p) == 0)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

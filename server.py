@@ -4311,6 +4311,10 @@ class GameRoom:
         if tem_espec(p, "paladino_regen_2"): return 1
         return 0
 
+    def _resistencia_saves_bonus(self, p):
+        """+N em todos os testes de resistência (Técnica Resistência Absoluta) enquanto válido nesta rodada."""
+        return p.get("resistencia_saves_val", 0) if p.get("resistencia_saves_ate", 0) >= self.round_num else 0
+
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
         if self.phase != "playing":
@@ -4383,6 +4387,9 @@ class GameRoom:
             p["moves_left"] = p.get("moves_left", 0) + p.get("spd", 0)
             p["investida_origem"] = list(p["pos"])
             p["investida_armada"] = True
+        elif ef.get("tipo") == "buff_saves":
+            p["resistencia_saves_ate"] = self.round_num + ef.get("rodadas", 2)
+            p["resistencia_saves_val"] = ef.get("saves", 2)
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
@@ -10015,7 +10022,8 @@ class GameRoom:
         fonte: monstro-origem do efeito (habilidade de criatura) — habilita o +1 de
         resistência da Lenda do Bardo contra aquela espécie (só p/ jogadores)."""
         bonus = (self._veneno_save_bonus(alvo, tipo_save) + self._mod_magia(alvo, "resistencia")
-                 + extra_mod + self._lenda_resist_bonus(alvo, fonte))
+                 + extra_mod + self._lenda_resist_bonus(alvo, fonte)
+                 + self._resistencia_saves_bonus(alvo))
         d20   = random.randint(1, 20)
         total = d20 + bonus
         return (total >= dificuldade), d20, bonus, total
