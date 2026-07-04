@@ -130,6 +130,21 @@ async def main():
     await rr2.handle_attack("h", "m1")
     check("mira: flag NÃO consumida no corpo a corpo", hh2.get("tecnica_mira_perfeita") is True)
 
+    # [6] Catálogo — Recarga Média (2b)
+    print("\n[6] Catálogo — Recarga Média")
+    for tid in ["tecnica_investida","tecnica_defesa_impecavel","tecnica_pressao_constante",
+                "tecnica_tatica_defensiva","tecnica_passo_fantasma"]:
+        it = S.guild_item(tid)
+        check(f"existe {tid}", it is not None)
+        check(f"{tid} recarga 5", it and it["recarga_rodadas"] == 5)
+        check(f"{tid} preco 180", it and it["preco"] == 180)
+        check(f"{tid} custo 4/4", it and it["custo_fome"] == 4 and it["custo_sede"] == 4)
+        check(f"{tid} classe None", it and it["classe"] is None)
+    check("pressao exige alvo monstro adjacente",
+          S.guild_item("tecnica_pressao_constante").get("alvo") == "monstro_adjacente")
+    check("tatica exige alvo aliado",
+          S.guild_item("tecnica_tatica_defensiva").get("alvo") == "aliado_raio4")
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
