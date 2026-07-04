@@ -4106,6 +4106,10 @@ class GameRoom:
         """True enquanto a janela da Defesa Impecável estiver ativa (até o próximo turno)."""
         return p.get("defesa_impecavel_ate", 0) >= self.round_num
 
+    def _passo_fantasma_ativo(self, p):
+        """True enquanto a janela do Passo Fantasma estiver ativa (1d4 rodadas)."""
+        return p.get("passo_fantasma_ate", 0) >= self.round_num
+
     def _furia_extras(self, p):
         """Ataques extras concedidos pela Fúria: 2 com Nível III, senão 1."""
         return 2 if tem_espec(p, "guerreiro_furia_3") else 1
@@ -4330,6 +4334,12 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error", "msg": "Aliado fora do alcance (4 casas)."}); return
             p["tatica_alvo"] = alvo["id"]
             p["tatica_ate"] = self.round_num + roll_dice("1d4")
+        elif ef.get("tipo") == "passo_fantasma":
+            p["passo_fantasma_ate"] = self.round_num + roll_dice("1d4")
+            b = ef.get("bonus_mov", 2)
+            p["moves_left"] = p.get("moves_left", 0) + b
+            p["mov_bonus_ate"] = self.round_num + 1
+            p["mov_bonus_val"] = b
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
@@ -5138,10 +5148,11 @@ class GameRoom:
             await self.send_to(pid, {"type": "error",
                 "msg": "🚪 A porta está fechada. Clique nela para abri-la."})
             return
-        if (nx, ny) in self._decor_block_tiles:
+        _passo = self._passo_fantasma_ativo(p)
+        if not _passo and (nx, ny) in self._decor_block_tiles:
             await self.send_to(pid, {"type": "error", "msg": "Há um objeto bloqueando o caminho."})
             return
-        if (nx, ny) in self._mat_solid_tiles:
+        if not _passo and (nx, ny) in self._mat_solid_tiles:
             await self.send_to(pid, {"type": "error", "msg": "Escombros bloqueiam o caminho."})
             return
 

@@ -194,6 +194,19 @@ async def main():
     await r3.handle_usar_tecnica("h","tecnica_tatica_defensiva","a")
     check("tatica: recusa aliado fora do raio 4", p3.get("tatica_alvo") is None)
 
+    # [10] Passo Fantasma
+    print("\n[10] Passo Fantasma")
+    import random as _rnd2; _rnd2.seed(5)
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("warrior", "tecnica_passo_fantasma"); p["moves_left"] = p["spd"]; r.players["h"] = p
+    await r.handle_usar_tecnica("h", "tecnica_passo_fantasma")
+    check("passo: +2 movimento imediato", p["moves_left"] == p["spd"] + 2)
+    check("passo: buff de mov transitório", p["mov_bonus_ate"] == r.round_num + 1 and p.get("mov_bonus_val") == 2)
+    check("passo: janela 1d4 setada", p["passo_fantasma_ate"] >= r.round_num + 1 and p["passo_fantasma_ate"] <= r.round_num + 4)
+    check("passo: _passo_fantasma_ativo True", r._passo_fantasma_ativo(p) is True)
+    r.round_num += 5
+    check("passo: expira", r._passo_fantasma_ativo(p) is False)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
