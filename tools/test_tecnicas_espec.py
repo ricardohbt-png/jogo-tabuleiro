@@ -224,6 +224,114 @@ async def main():
     p2 = hero("warrior"); p2["pos"] = [0,5]
     check("investida: sem flag → 0", r._investida_tecnica_bonus(p2, is_ranged=False) == 0)
 
+    # [12] Catálogo — Reações (2c)
+    print("\n[12] Catálogo — Reações")
+    for tid, rec, preco, cf in [("tecnica_ataque_coordenado",5,180,4),("tecnica_sangue_frio",5,180,2),
+                                ("tecnica_resistencia_absoluta",5,180,4),("tecnica_contra_ataque",8,280,6)]:
+        it = S.guild_item(tid)
+        check(f"existe {tid}", it is not None)
+        check(f"{tid} recarga {rec}", it and it["recarga_rodadas"] == rec)
+        check(f"{tid} preco {preco}", it and it["preco"] == preco)
+        check(f"{tid} custo {cf}/{cf}", it and it["custo_fome"] == cf and it["custo_sede"] == cf)
+        check(f"{tid} classe None", it and it["classe"] is None)
+    check("coordenado exige alvo aliado", S.guild_item("tecnica_ataque_coordenado").get("alvo") == "aliado")
+
+    # [13] _ataque_basico_reativo (fundação)
+    print("\n[13] _ataque_basico_reativo")
+    r = setup()
+    async def _mdies(*a, **k): return None
+    r._monster_dies = _mdies
+    r._rolar_ataque = lambda atk, ac, v=False, d=False: (True, 18, 20, False, 3)
+    atacante = hero("warrior"); atacante["atk_bonus"] = 3
+    atacante["weapon"] = {"id":"machado_basico","name":"Machado","die":"1d6","stat":"str_"}
+    alvo = {"id":"m1","name":"Orc","nome":"Orc","pos":[0,1],"hp":20,"max_hp":20,"ac":10,"ca":10}
+    r.monsters = {"m1": alvo}
+    hp0 = alvo["hp"]
+    await r._ataque_basico_reativo(atacante, alvo)
+    check("reativo: aplica dano no acerto", alvo["hp"] < hp0)
+    r._rolar_ataque = lambda atk, ac, v=False, d=False: (False, 2, 4, False, 1)
+    alvo2 = {"id":"m2","name":"Orc","nome":"Orc","pos":[0,1],"hp":20,"max_hp":20,"ac":10,"ca":10}
+    hp2 = alvo2["hp"]
+    await r._ataque_basico_reativo(atacante, alvo2)
+    check("reativo: erro não aplica dano", alvo2["hp"] == hp2)
+    alvo3 = {"id":"m3","name":"Orc","nome":"Orc","pos":[0,1],"hp":0,"max_hp":20,"ac":10,"ca":10}
+    r._rolar_ataque = lambda atk, ac, v=False, d=False: (True, 18, 20, False, 3)
+    await r._ataque_basico_reativo(atacante, alvo3)
+    check("reativo: ignora alvo morto", alvo3["hp"] == 0)
+
+    # [14] Resistência Absoluta
+    print("\n[14] Resistência Absoluta")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("warrior", "tecnica_resistencia_absoluta"); r.players["h"] = p
+    await r.handle_usar_tecnica("h", "tecnica_resistencia_absoluta")
+    check("resist: janela 2 rodadas", p["resistencia_saves_ate"] == r.round_num + 2 and p["resistencia_saves_val"] == 2)
+    check("resist: helper = 2 na janela", r._resistencia_saves_bonus(p) == 2)
+    janela_ate = p["resistencia_saves_ate"]
+    _, _d, sb_yes, _t = r._testar_save(p, "fortitude", 99)
+    p["resistencia_saves_ate"] = 0  # desliga a janela p/ isolar a diferença
+    _, _d2, sb_no, _t2 = r._testar_save(p, "fortitude", 99)
+    check("resist: _testar_save soma +2", sb_yes - sb_no == 2)
+    p["resistencia_saves_ate"] = janela_ate  # restaura p/ testar expiração natural
+    r.round_num += 3
+    check("resist: expira", r._resistencia_saves_bonus(p) == 0)
+
+    # [15] Sangue Frio
+    print("\n[15] Sangue Frio")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("warrior", "tecnica_sangue_frio"); r.players["h"] = p
+    await r.handle_usar_tecnica("h", "tecnica_sangue_frio")
+    check("sangue frio: armado", p.get("sangue_frio_armado") is True)
+    check("sangue frio: consome e retorna True quando armado", r._sangue_frio_consumir(p) is True)
+    check("sangue frio: desarmado após consumir", p.get("sangue_frio_armado") is False)
+    check("sangue frio: sem re-roll se desarmado", r._sangue_frio_consumir(p) is False)
+
+    # [16] Ataque Coordenado
+    print("\n[16] Ataque Coordenado")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1; r.turn_index = 0
+    r._alvo_no_alcance_arma = lambda p_, t_: True
+    p = hero("warrior", "tecnica_ataque_coordenado"); p["pos"] = [0,0]; r.players["h"] = p
+    ally = make_player("a","Ana","warrior",1); ally["alive"]=True; ally["pos"]=[1,0]
+    ally["atk_bonus"]=3; ally["weapon"]={"id":"machado_basico","die":"1d6","stat":"str_"}; r.players["a"]=ally
+    await r.handle_usar_tecnica("h", "tecnica_ataque_coordenado", "a")
+    check("coord: par gravado", p["coordenado_alvo"] == "a" and p["coordenado_turno"] == r.turn_index)
+    alvo = {"id":"m1","name":"Orc","nome":"Orc","pos":[0,1],"hp":20,"max_hp":20,"ac":10,"ca":10}
+    r.monsters = {"m1": alvo}; r._rolar_ataque = lambda a,b,v=False,d=False:(True,18,20,False,3)
+    async def _mdies(*a,**k): return None
+    r._monster_dies = _mdies
+    hp0 = alvo["hp"]
+    await r._reacao_ataque_coordenado(p, alvo)
+    check("coord: par atacou o alvo", alvo["hp"] < hp0)
+    check("coord: consumiu no turno", p["coordenado_alvo"] is None)
+    r2 = setup(); r2.current_pid = lambda: "h"; r2.round_num = 1
+    p2 = hero("warrior","tecnica_ataque_coordenado"); r2.players["h"]=p2
+    await r2.handle_usar_tecnica("h","tecnica_ataque_coordenado", None)
+    check("coord: recusa sem aliado", p2.get("coordenado_alvo") is None)
+
+    # [17] Contra-Ataque
+    print("\n[17] Contra-Ataque")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("warrior", "tecnica_contra_ataque"); r.players["h"] = p
+    await r.handle_usar_tecnica("h", "tecnica_contra_ataque")
+    check("contra: janela até próximo turno", p["contra_ataque_ate"] == r.round_num + 1)
+    def _w(wid, extra=None):
+        pp = hero("warrior"); pp["weapon"] = {"id": wid, **(extra or {})}; return pp
+    check("contra: machado (melee) elegível", r._arma_contra_ataque_ok(_w("machado_basico")) is True)
+    check("contra: lança elegível", r._arma_contra_ataque_ok(_w("lanca", {"reach":"lanca"})) is True)
+    check("contra: chicote elegível", r._arma_contra_ataque_ok(_w("chicote", {"range":2})) is True)
+    check("contra: besta de mão elegível", r._arma_contra_ataque_ok(_w("hand_crossbow", {"range":4})) is True)
+    check("contra: arco NÃO elegível", r._arma_contra_ataque_ok(_w("arco_curto", {"range":8})) is False)
+    check("contra: besta pesada NÃO elegível", r._arma_contra_ataque_ok(_w("besta", {"range":10})) is False)
+    # alcance por tipo de arma
+    mob = {"id":"m1","name":"Orc","nome":"Orc","pos":[0,1],"hp":9,"max_hp":9,"ac":10,"ca":10}
+    melee = _w("machado_basico"); melee["pos"] = [0,0]
+    r._is_adjacent_to_monster = lambda pos, t: max(abs(pos[0]-t["pos"][0]),abs(pos[1]-t["pos"][1]))<=1
+    r._monster_tiles = lambda m: [m["pos"]]
+    check("contra: melee adjacente no alcance", r._alvo_no_alcance_arma(melee, mob) is True)
+    far = _w("machado_basico"); far["pos"] = [0,5]
+    check("contra: melee longe fora do alcance", r._alvo_no_alcance_arma(far, mob) is False)
+    hx = _w("hand_crossbow", {"range":4}); hx["pos"] = [0,0]
+    check("contra: besta de mão alcança 4", r._alvo_no_alcance_arma(hx, {"id":"m2","pos":[0,4],"hp":9}) is True)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

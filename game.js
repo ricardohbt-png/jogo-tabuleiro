@@ -10006,6 +10006,13 @@ function renderMyPanel(state){
         if(alvos.length === 1){ GS.usarTecnica(tid, alvos[0].id); return; }
         openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — aliado (4 casas)`, alvos, 'player',
           id => GS.usarTecnica(tid, id));
+      } else if(cat.alvo === 'aliado'){
+        // Ataque Coordenado (Fase 2c): marca um aliado vivo (qualquer distância) como par.
+        const alvos = (state.players||[]).filter(q => q && q.alive && q.id !== me.id);
+        if(!alvos.length){ toast('Nenhum aliado disponível.', 'var(--orange)'); return; }
+        if(alvos.length === 1){ GS.usarTecnica(tid, alvos[0].id); return; }
+        openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — escolha o par`, alvos, 'player',
+          id => GS.usarTecnica(tid, id));
       } else {
         GS.usarTecnica(tid);
       }

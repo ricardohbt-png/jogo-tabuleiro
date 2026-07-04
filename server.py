@@ -359,6 +359,39 @@ GUILD_CATALOG = {
         "desc": "Por 1d4 rodadas: +2 de movimento e você atravessa casas ocupadas por objetos (não paredes nem criaturas).",
         "efeito": {"tipo": "passo_fantasma", "bonus_mov": 2},
     },
+    # ── Técnicas de Reação (Fase 2c) ────────────────────────────────────────
+    "tecnica_ataque_coordenado": {
+        "id": "tecnica_ataque_coordenado", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 180, "custo_fome": 4, "custo_sede": 4, "recarga_rodadas": 5,
+        "nome": "Ataque Coordenado", "icon": "🤝", "alvo": "aliado",
+        "desc": "Escolha um aliado; neste turno, quando você atacar um inimigo, o aliado também o ataca.",
+        "efeito": {"tipo": "ataque_coordenado"},
+    },
+    "tecnica_sangue_frio": {
+        "id": "tecnica_sangue_frio", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 180, "custo_fome": 2, "custo_sede": 2, "recarga_rodadas": 5,
+        "nome": "Sangue Frio", "icon": "🧊",
+        "desc": "A primeira vez que errar um ataque, você pode rolá-lo novamente.",
+        "efeito": {"tipo": "sangue_frio"},
+    },
+    "tecnica_resistencia_absoluta": {
+        "id": "tecnica_resistencia_absoluta", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 180, "custo_fome": 4, "custo_sede": 4, "recarga_rodadas": 5,
+        "nome": "Resistência Absoluta", "icon": "🛡️",
+        "desc": "Recebe +2 em todos os testes de resistência por 2 rodadas.",
+        "efeito": {"tipo": "buff_saves", "saves": 2, "rodadas": 2},
+    },
+    "tecnica_contra_ataque": {
+        "id": "tecnica_contra_ataque", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 280, "custo_fome": 6, "custo_sede": 6, "recarga_rodadas": 8,
+        "nome": "Contra-Ataque", "icon": "🗡️",
+        "desc": "Até o próximo turno, quando um inimigo errar você (arma corpo a corpo/alcance ou besta de mão, e ele no alcance), você o ataca de volta.",
+        "efeito": {"tipo": "contra_ataque"},
+    },
     "guerreiro_combinar_2": {
         "id": "guerreiro_combinar_2", "categoria": "especializacao", "classe": "warrior",
         "linha": "guerreiro_combate", "nivel": 2, "requer": None, "exclusiva": False,
@@ -3397,6 +3430,12 @@ def make_player(pid, name, cls_id, slot):
         "tatica_alvo": None,                # Tática Defensiva: aliado protegido
         "tatica_ate": 0,                    # Tática Defensiva até esta rodada
         "passo_fantasma_ate": 0,            # Passo Fantasma até esta rodada
+        "coordenado_alvo": None,            # Ataque Coordenado: aliado par (este turno)
+        "coordenado_turno": -1,             # turn_index em que o par foi armado
+        "sangue_frio_armado": False,        # Sangue Frio: re-rolagem disponível
+        "resistencia_saves_ate": 0,         # Resistência Absoluta até esta rodada
+        "resistencia_saves_val": 0,
+        "contra_ataque_ate": 0,             # Contra-Ataque até esta rodada
         "imune_silencio_ate": 0,            # Espírito Indomável: imunidade a Silêncio até esta rodada
         "mov_bonus_ate": 0,                 # Grito de Guerra: +2 movimento no reset até esta rodada
         # Buffs de turno do warrior (flags planas) — limpos em handle_end_turn
@@ -4272,6 +4311,17 @@ class GameRoom:
         if tem_espec(p, "paladino_regen_2"): return 1
         return 0
 
+    def _resistencia_saves_bonus(self, p):
+        """+N em todos os testes de resistência (Técnica Resistência Absoluta) enquanto válido nesta rodada."""
+        return p.get("resistencia_saves_val", 0) if p.get("resistencia_saves_ate", 0) >= self.round_num else 0
+
+    def _sangue_frio_consumir(self, p):
+        """Consome a re-rolagem do Sangue Frio se armada. Retorna True se deve re-rolar."""
+        if p.get("sangue_frio_armado"):
+            p["sangue_frio_armado"] = False
+            return True
+        return False
+
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
         if self.phase != "playing":
@@ -4344,6 +4394,19 @@ class GameRoom:
             p["moves_left"] = p.get("moves_left", 0) + p.get("spd", 0)
             p["investida_origem"] = list(p["pos"])
             p["investida_armada"] = True
+        elif ef.get("tipo") == "buff_saves":
+            p["resistencia_saves_ate"] = self.round_num + ef.get("rodadas", 2)
+            p["resistencia_saves_val"] = ef.get("saves", 2)
+        elif ef.get("tipo") == "sangue_frio":
+            p["sangue_frio_armado"] = True
+        elif ef.get("tipo") == "ataque_coordenado":
+            alvo = self.players.get(target_id) if target_id else None
+            if not alvo or not alvo.get("alive") or alvo["id"] == pid:
+                await self.send_to(pid, {"type": "error", "msg": "Escolha um aliado vivo."}); return
+            p["coordenado_alvo"] = alvo["id"]
+            p["coordenado_turno"] = self.turn_index
+        elif ef.get("tipo") == "contra_ataque":
+            p["contra_ataque_ate"] = self.round_num + 1
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
@@ -5422,6 +5485,72 @@ class GameRoom:
         await self.gm_say(f"🗡️ **{luccas['name']}** reage ao ataque de **{atacante['name']}** — "
                           f"Ataque Furtivo Supremo! +{dano} de dano [{nd4}d4] em **{target['name']}**.")
 
+    async def _ataque_basico_reativo(self, atacante, alvo):
+        """Ataque básico disparado por uma reação (fora do turno). Aplica dano
+        direto (não chama handle_attack → sem recursão). Furtivo se rogue elegível."""
+        if not atacante or not atacante.get("alive") or not alvo or alvo.get("hp", 0) <= 0:
+            return
+        w = atacante.get("weapon") or {}
+        atk = atacante.get("atk_bonus", 0)
+        hit, roll, total, crit, _d = self._rolar_ataque(atk, alvo.get("ac", 10), False, False)
+        await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
+                               "label": f"{atacante['name']} — reação", "hit": hit, "crit": crit})
+        if not hit:
+            await self.gm_say(f"↩️ **{atacante['name']}** reage mas **erra** **{alvo['name']}**.")
+            return
+        die = w.get("die")
+        base = roll_dice(die) if die else 1
+        stat = w.get("stat", "str_")
+        dmg = max(1, base + mod(atacante.get(stat, 10)))
+        if crit: dmg *= 2
+        extra = ""
+        if atacante.get("class_id") == "rogue" and self._verificar_ataque_furtivo(atacante, alvo):
+            nd4 = self._dados_furtivo(atacante.get("level", 1))
+            fdano = sum(random.randint(1, 4) for _ in range(nd4))
+            dmg += fdano; extra = f" +🗡️{fdano} furtivo [{nd4}d4]"
+        alvo["hp"] = max(0, alvo["hp"] - dmg)
+        await self.broadcast({"type": "dice_roll", "die": "d" + (die.split("d")[1] if die else "6"),
+                               "value": base, "label": "Dano (reação)"})
+        await self.gm_say(f"↩️ **{atacante['name']}** reage e atinge **{alvo['name']}**: "
+                          f"**{dmg}** de dano{extra}. ({alvo['hp']}/{alvo['max_hp']} HP)")
+        if alvo["hp"] <= 0:
+            await self._monster_dies(alvo, atacante.get("id"))
+
+    def _arma_contra_ataque_ok(self, p):
+        """Contra-Ataque só com arma corpo a corpo / alcance (lança, chicote, alabarda)
+        ou a Besta de Mão. Exclui arcos e a besta pesada (as demais em RANGED_AMMO)."""
+        wid = (p.get("weapon") or {}).get("id")
+        if wid == "hand_crossbow":
+            return True
+        return wid not in RANGED_AMMO
+
+    def _alvo_no_alcance_arma(self, p, target):
+        """True se `target` (monstro) está no alcance real da arma de `p`."""
+        w = p.get("weapon") or {}
+        wr = w.get("range")
+        if wr is not None:
+            body = self._monster_tiles(target)
+            return any(max(abs(p["pos"][0]-t[0]), abs(p["pos"][1]-t[1])) <= wr for t in body)
+        if w.get("reach") == "lanca":
+            return self._lanca_no_alcance_jogador(p["pos"], target)
+        if w.get("reach") == "cajado":
+            return self._cajado_no_alcance_jogador(p["pos"], target)
+        return self._is_adjacent_to_monster(p["pos"], target)
+
+    async def _reacao_ataque_coordenado(self, atacante, alvo_monstro):
+        """Ataque Coordenado: o aliado par faz um ataque básico reativo no mesmo
+        inimigo (1x no turno), se estiver no alcance da própria arma."""
+        if atacante.get("coordenado_turno") != self.turn_index:
+            return
+        par_id = atacante.get("coordenado_alvo")
+        atacante["coordenado_alvo"] = None   # consome (1x/turno), mesmo se não alcançar
+        par = self.players.get(par_id) if par_id else None
+        if not par or not par.get("alive") or not alvo_monstro or alvo_monstro.get("hp", 0) <= 0:
+            return
+        if not self._alvo_no_alcance_arma(par, alvo_monstro):
+            return
+        await self._ataque_basico_reativo(par, alvo_monstro)
+
     async def _quebrar_invisibilidade(self, p, motivo="ao agir"):
         """Encerra o estado invisível das sombras (atacar/mover revela Luccas)."""
         if not p.get("invisivel_sombras"):
@@ -5608,6 +5737,9 @@ class GameRoom:
                            or _mira_ranged or _investida)
             desvantagem = esc == "desvantagem"
             hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
+            if not hit and self._sangue_frio_consumir(p):
+                await self.gm_say(f"🧊 **{p['name']}** mantém o sangue frio e rola novamente!")
+                hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
             if _mira_ranged:
                 p["tecnica_mira_perfeita"] = False   # consumida no ataque à distância (acerto ou erro)
             if p.get("investida_armada") and w_range is None:
@@ -5765,6 +5897,7 @@ class GameRoom:
         # ── Custo de sobrevivência do ATAQUE BÁSICO: -1 fome por ação de ataque ─
         # (somado aos custos das habilidades armadas, já cobrados acima).
         p["fome"] = max(0, p["fome"] - 1)
+        await self._reacao_ataque_coordenado(p, target)
 
         # ── Ataque de mão secundária (dual-wield) — CUSTA AÇÃO BÔNUS ────────────
         # Se a off_hand for uma arma (tem `die`), o alvo seguir vivo e ao alcance,
@@ -9945,7 +10078,8 @@ class GameRoom:
         fonte: monstro-origem do efeito (habilidade de criatura) — habilita o +1 de
         resistência da Lenda do Bardo contra aquela espécie (só p/ jogadores)."""
         bonus = (self._veneno_save_bonus(alvo, tipo_save) + self._mod_magia(alvo, "resistencia")
-                 + extra_mod + self._lenda_resist_bonus(alvo, fonte))
+                 + extra_mod + self._lenda_resist_bonus(alvo, fonte)
+                 + self._resistencia_saves_bonus(alvo))
         d20   = random.randint(1, 20)
         total = d20 + bonus
         return (total >= dificuldade), d20, bonus, total
@@ -10971,6 +11105,7 @@ class GameRoom:
         p["tecnica_mira_perfeita"] = False   # Mira Perfeita não usada expira no fim do turno
         p["investida_armada"] = False   # Investida não usada expira no fim do turno
         p["investida_origem"] = None
+        p["coordenado_alvo"] = None   # Ataque Coordenado expira no fim do turno
         p["cancao_atacou_apos"] = False   # reabre o custo extra de atacar sob a canção no novo turno
         # metamagia do mago expira ao fim do turno (flags planas)
         p["aprimorar_ativo"]   = False
@@ -11731,6 +11866,9 @@ class GameRoom:
             await self.gm_say(
                 f"💢 **{m['name']}** · {atk_def.get('name','Ataque')} em **{tgt_name}**"
                 f" (d20={roll}+{m_atk}={total} vs CA {effective_ac}): **ERROU!**")
+            if is_player and target.get("contra_ataque_ate", 0) >= self.round_num \
+               and self._arma_contra_ataque_ok(target) and self._alvo_no_alcance_arma(target, m):
+                await self._ataque_basico_reativo(target, m)
             return False  # errou
 
     async def _monster_execute_attacks(self, m, target_obj):
@@ -13447,6 +13585,9 @@ class GameRoom:
                     await self.gm_say(
                         f"💢 **{m['name']}** ataca **{tgt_name}**"
                         f" (d20={roll}+{m_atk}={total} vs CA {effective_ac}): **ERROU!**")
+                    if is_player and target.get("contra_ataque_ate", 0) >= self.round_num \
+                       and self._arma_contra_ataque_ok(target) and self._alvo_no_alcance_arma(target, m):
+                        await self._ataque_basico_reativo(target, m)
             else:
                 # Move em direção ao alvo — cardinal, sem empilhar (monstros/jogadores/animados)
                 dx = 0 if m["pos"][0] == target["pos"][0] else (1 if target["pos"][0] > m["pos"][0] else -1)
