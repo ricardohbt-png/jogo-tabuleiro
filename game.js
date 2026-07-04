@@ -9989,7 +9989,27 @@ function renderMyPanel(state){
         <div class="skill-desc">${cat.desc||''}</div>
       </div>
       <div class="skill-cost">${restante>0 ? `${restante}r` : `🍖${cat.custo_fome} 💧${cat.custo_sede}`}</div>`;
-    btn.onclick = () => GS.usarTecnica(tid);
+    btn.onclick = () => {
+      const pp = me.pos || [0,0];
+      // Técnicas com alvo (Fase 2b) abrem o modal de seleção; as demais disparam direto.
+      if(cat.alvo === 'monstro_adjacente'){
+        const alvos = (state.monsters||[]).filter(m => m && m.hp>0 &&
+          Math.max(Math.abs(pp[0]-m.pos[0]), Math.abs(pp[1]-m.pos[1])) <= 1);
+        if(!alvos.length){ toast('Nenhum inimigo adjacente.', 'var(--orange)'); return; }
+        if(alvos.length === 1){ GS.usarTecnica(tid, alvos[0].id); return; }
+        openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — inimigo adjacente`, alvos, 'monster',
+          id => GS.usarTecnica(tid, id));
+      } else if(cat.alvo === 'aliado_raio4'){
+        const alvos = (state.players||[]).filter(q => q && q.alive && q.id !== me.id &&
+          Math.max(Math.abs(pp[0]-q.pos[0]), Math.abs(pp[1]-q.pos[1])) <= 4);
+        if(!alvos.length){ toast('Nenhum aliado a até 4 quadrados.', 'var(--orange)'); return; }
+        if(alvos.length === 1){ GS.usarTecnica(tid, alvos[0].id); return; }
+        openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — aliado (4 casas)`, alvos, 'player',
+          id => GS.usarTecnica(tid, id));
+      } else {
+        GS.usarTecnica(tid);
+      }
+    };
     sl.appendChild(btn);
   }
 
