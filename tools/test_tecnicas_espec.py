@@ -307,6 +307,31 @@ async def main():
     await r2.handle_usar_tecnica("h","tecnica_ataque_coordenado", None)
     check("coord: recusa sem aliado", p2.get("coordenado_alvo") is None)
 
+    # [17] Contra-Ataque
+    print("\n[17] Contra-Ataque")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("warrior", "tecnica_contra_ataque"); r.players["h"] = p
+    await r.handle_usar_tecnica("h", "tecnica_contra_ataque")
+    check("contra: janela até próximo turno", p["contra_ataque_ate"] == r.round_num + 1)
+    def _w(wid, extra=None):
+        pp = hero("warrior"); pp["weapon"] = {"id": wid, **(extra or {})}; return pp
+    check("contra: machado (melee) elegível", r._arma_contra_ataque_ok(_w("machado_basico")) is True)
+    check("contra: lança elegível", r._arma_contra_ataque_ok(_w("lanca", {"reach":"lanca"})) is True)
+    check("contra: chicote elegível", r._arma_contra_ataque_ok(_w("chicote", {"range":2})) is True)
+    check("contra: besta de mão elegível", r._arma_contra_ataque_ok(_w("hand_crossbow", {"range":4})) is True)
+    check("contra: arco NÃO elegível", r._arma_contra_ataque_ok(_w("arco_curto", {"range":8})) is False)
+    check("contra: besta pesada NÃO elegível", r._arma_contra_ataque_ok(_w("besta", {"range":10})) is False)
+    # alcance por tipo de arma
+    mob = {"id":"m1","name":"Orc","nome":"Orc","pos":[0,1],"hp":9,"max_hp":9,"ac":10,"ca":10}
+    melee = _w("machado_basico"); melee["pos"] = [0,0]
+    r._is_adjacent_to_monster = lambda pos, t: max(abs(pos[0]-t["pos"][0]),abs(pos[1]-t["pos"][1]))<=1
+    r._monster_tiles = lambda m: [m["pos"]]
+    check("contra: melee adjacente no alcance", r._alvo_no_alcance_arma(melee, mob) is True)
+    far = _w("machado_basico"); far["pos"] = [0,5]
+    check("contra: melee longe fora do alcance", r._alvo_no_alcance_arma(far, mob) is False)
+    hx = _w("hand_crossbow", {"range":4}); hx["pos"] = [0,0]
+    check("contra: besta de mão alcança 4", r._alvo_no_alcance_arma(hx, {"id":"m2","pos":[0,4],"hp":9}) is True)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

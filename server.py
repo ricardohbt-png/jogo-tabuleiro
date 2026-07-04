@@ -4405,6 +4405,8 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error", "msg": "Escolha um aliado vivo."}); return
             p["coordenado_alvo"] = alvo["id"]
             p["coordenado_turno"] = self.turn_index
+        elif ef.get("tipo") == "contra_ataque":
+            p["contra_ataque_ate"] = self.round_num + 1
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
@@ -5514,9 +5516,25 @@ class GameRoom:
         if alvo["hp"] <= 0:
             await self._monster_dies(alvo, atacante.get("id"))
 
+    def _arma_contra_ataque_ok(self, p):
+        """Contra-Ataque só com arma corpo a corpo / alcance (lança, chicote, alabarda)
+        ou a Besta de Mão. Exclui arcos e a besta pesada (as demais em RANGED_AMMO)."""
+        wid = (p.get("weapon") or {}).get("id")
+        if wid == "hand_crossbow":
+            return True
+        return wid not in RANGED_AMMO
+
     def _alvo_no_alcance_arma(self, p, target):
-        """STUB temporário (Task 6 substitui pela versão completa: melee=adjacente,
-        à distância=alcance real da arma). Por ora, só cobre corpo a corpo."""
+        """True se `target` (monstro) está no alcance real da arma de `p`."""
+        w = p.get("weapon") or {}
+        wr = w.get("range")
+        if wr is not None:
+            body = self._monster_tiles(target)
+            return any(max(abs(p["pos"][0]-t[0]), abs(p["pos"][1]-t[1])) <= wr for t in body)
+        if w.get("reach") == "lanca":
+            return self._lanca_no_alcance_jogador(p["pos"], target)
+        if w.get("reach") == "cajado":
+            return self._cajado_no_alcance_jogador(p["pos"], target)
         return self._is_adjacent_to_monster(p["pos"], target)
 
     async def _reacao_ataque_coordenado(self, atacante, alvo_monstro):
@@ -11848,6 +11866,9 @@ class GameRoom:
             await self.gm_say(
                 f"💢 **{m['name']}** · {atk_def.get('name','Ataque')} em **{tgt_name}**"
                 f" (d20={roll}+{m_atk}={total} vs CA {effective_ac}): **ERROU!**")
+            if is_player and target.get("contra_ataque_ate", 0) >= self.round_num \
+               and self._arma_contra_ataque_ok(target) and self._alvo_no_alcance_arma(target, m):
+                await self._ataque_basico_reativo(target, m)
             return False  # errou
 
     async def _monster_execute_attacks(self, m, target_obj):
@@ -13564,6 +13585,9 @@ class GameRoom:
                     await self.gm_say(
                         f"💢 **{m['name']}** ataca **{tgt_name}**"
                         f" (d20={roll}+{m_atk}={total} vs CA {effective_ac}): **ERROU!**")
+                    if is_player and target.get("contra_ataque_ate", 0) >= self.round_num \
+                       and self._arma_contra_ataque_ok(target) and self._alvo_no_alcance_arma(target, m):
+                        await self._ataque_basico_reativo(target, m)
             else:
                 # Move em direção ao alvo — cardinal, sem empilhar (monstros/jogadores/animados)
                 dx = 0 if m["pos"][0] == target["pos"][0] else (1 if target["pos"][0] > m["pos"][0] else -1)
