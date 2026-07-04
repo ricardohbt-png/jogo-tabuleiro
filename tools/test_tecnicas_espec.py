@@ -163,6 +163,18 @@ async def main():
     r.round_num += 3
     check("pressao: expira", r._pressao_ca_pen(mob) == 0)
 
+    # [8] Defesa Impecável
+    print("\n[8] Defesa Impecável")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("warrior", "tecnica_defesa_impecavel"); r.players["h"] = p
+    await r.handle_usar_tecnica("h", "tecnica_defesa_impecavel")
+    check("defesa: janela setada", p["defesa_impecavel_ate"] == r.round_num + 1)
+    check("defesa: _defesa_impecavel_ativa True", r._defesa_impecavel_ativa(p) is True)
+    luccas = hero("rogue"); luccas["invisivel_sombras"] = True
+    check("defesa: imune a furtivo", r._verificar_ataque_furtivo(luccas, p) is False)
+    r.round_num += 2
+    check("defesa: expira", r._defesa_impecavel_ativa(p) is False)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

@@ -4102,6 +4102,10 @@ class GameRoom:
         """-CA da Pressão Constante enquanto ativa no monstro."""
         return m.get("pressao_ca_val", 0) if m.get("pressao_ca_ate", 0) >= self.round_num else 0
 
+    def _defesa_impecavel_ativa(self, p):
+        """True enquanto a janela da Defesa Impecável estiver ativa (até o próximo turno)."""
+        return p.get("defesa_impecavel_ate", 0) >= self.round_num
+
     def _furia_extras(self, p):
         """Ataques extras concedidos pela Fúria: 2 com Nível III, senão 1."""
         return 2 if tem_espec(p, "guerreiro_furia_3") else 1
@@ -4316,6 +4320,8 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error", "msg": "O inimigo precisa estar adjacente."}); return
             alvo["pressao_ca_val"] = ef.get("ca", 2)
             alvo["pressao_ca_ate"] = self.round_num + ef.get("rodadas", 2)
+        elif ef.get("tipo") == "defesa_impecavel":
+            p["defesa_impecavel_ate"] = self.round_num + 1
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
@@ -5328,6 +5334,8 @@ class GameRoom:
         """True se Luccas estiver invisível nas sombras/oculto (base), OU (com
         ladino_furtivo_2) houver um aliado vivo (jogador) adjacente — Chebyshev
         — ao alvo."""
+        if alvo.get("defesa_impecavel_ate", 0) >= self.round_num:
+            return False   # Defesa Impecável: imune a Ataque Furtivo (inerte hoje — nenhum monstro dá furtivo a jogador)
         if luccas.get("invisivel_sombras") or luccas.get("oculto_vela"):
             return True
         if not tem_espec(luccas, "ladino_furtivo_2"):
@@ -11583,7 +11591,8 @@ class GameRoom:
                  + self._luz_atk_pen(m))                            # Fraqueza de Luz (-2 sob luz direta)
         esc = self._verificar_escuridao(m, target)
         prov = bool(m.get("provocado_turno_efeito"))
-        desvantagem = prov or esc == "desvantagem"
+        desvantagem = (prov or esc == "desvantagem"
+                       or (is_player and self._defesa_impecavel_ativa(target)))
         vantagem    = esc == "vantagem"
         if vantagem and desvantagem:
             vantagem = desvantagem = False
@@ -13315,7 +13324,8 @@ class GameRoom:
                 # Desvantagem: Provocação OU atacar às cegas na escuridão. Vantagem: ver na escuridão.
                 esc = self._verificar_escuridao(m, target)
                 prov = bool(m.get("provocado_turno_efeito"))
-                desvantagem = prov or esc == "desvantagem"
+                desvantagem = (prov or esc == "desvantagem"
+                               or (is_player and self._defesa_impecavel_ativa(target)))
                 vantagem    = esc == "vantagem"
                 if vantagem and desvantagem:
                     vantagem = desvantagem = False
