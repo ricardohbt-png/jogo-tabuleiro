@@ -4322,6 +4322,14 @@ class GameRoom:
             alvo["pressao_ca_ate"] = self.round_num + ef.get("rodadas", 2)
         elif ef.get("tipo") == "defesa_impecavel":
             p["defesa_impecavel_ate"] = self.round_num + 1
+        elif ef.get("tipo") == "tatica_defensiva":
+            alvo = self.players.get(target_id) if target_id else None
+            if not alvo or not alvo.get("alive") or alvo["id"] == pid:
+                await self.send_to(pid, {"type": "error", "msg": "Escolha um aliado vivo."}); return
+            if not self._no_raio(p, alvo, ef.get("raio", 4)):
+                await self.send_to(pid, {"type": "error", "msg": "Aliado fora do alcance (4 casas)."}); return
+            p["tatica_alvo"] = alvo["id"]
+            p["tatica_ate"] = self.round_num + roll_dice("1d4")
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
@@ -7532,6 +7540,20 @@ class GameRoom:
              and q.get("alive")),
             None)
         if not richard:
+            # Tática Defensiva (técnica genérica): split 50/50, expira por rodada, sem upkeep.
+            tatico = next(
+                (q for q in self.players.values()
+                 if q.get("tatica_alvo") == alvo_id and q.get("tatica_ate", 0) >= self.round_num
+                 and q.get("alive") and q["id"] != alvo_id),
+                None)
+            if tatico:
+                dano_aliado = dano_original // 2
+                dano_tatico = dano_original - dano_aliado
+                alvo_nome = self.players.get(alvo_id, {}).get("name", "aliado")
+                await self.gm_say(
+                    f"🤝 **Tática Defensiva**: **{tatico['name']}** assume {dano_tatico} do dano "
+                    f"de **{alvo_nome}** (que sofre {dano_aliado}).")
+                return dano_aliado, (tatico, dano_tatico)
             return dano_original, None
         alvo = self.players.get(alvo_id)
         if not alvo or not self._no_raio(richard, alvo, self._defensor_raio(richard)):

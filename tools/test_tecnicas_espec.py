@@ -175,6 +175,25 @@ async def main():
     r.round_num += 2
     check("defesa: expira", r._defesa_impecavel_ativa(p) is False)
 
+    # [9] Tática Defensiva
+    print("\n[9] Tática Defensiva")
+    import random as _rnd; _rnd.seed(3)
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    r._no_raio = lambda a,b,raio,*x,**k: max(abs(a["pos"][0]-b["pos"][0]), abs(a["pos"][1]-b["pos"][1])) <= raio
+    p = hero("warrior", "tecnica_tatica_defensiva"); p["pos"] = [0,0]; p["hp"] = 20; p["max_hp"] = 20; r.players["h"] = p
+    ally = make_player("a","Ana","cleric",1); ally["alive"]=True; ally["pos"]=[1,1]; ally["hp"]=20; ally["max_hp"]=20; r.players["a"]=ally
+    await r.handle_usar_tecnica("h", "tecnica_tatica_defensiva", "a")
+    check("tatica: alvo gravado no usuário", p["tatica_alvo"] == "a")
+    check("tatica: janela 1d4 setada", p["tatica_ate"] >= r.round_num + 1 and p["tatica_ate"] <= r.round_num + 4)
+    dano_alvo, transfer = await r._processar_dano_protetor("a", 10)
+    check("tatica: aliado recebe metade", dano_alvo == 5)
+    check("tatica: usuário recebe a outra metade", transfer is not None and transfer[0]["id"] == "h" and transfer[1] == 5)
+    r3 = setup(); r3.current_pid = lambda: "h"; r3.round_num = 1; r3._no_raio = r._no_raio
+    p3 = hero("warrior","tecnica_tatica_defensiva"); p3["pos"]=[0,0]; r3.players["h"]=p3
+    far = make_player("a","Ana","cleric",1); far["alive"]=True; far["pos"]=[9,9]; r3.players["a"]=far
+    await r3.handle_usar_tecnica("h","tecnica_tatica_defensiva","a")
+    check("tatica: recusa aliado fora do raio 4", p3.get("tatica_alvo") is None)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
