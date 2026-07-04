@@ -4248,7 +4248,11 @@ class GameRoom:
                 q["mov_bonus_ate"] = self.round_num + 1
                 q["mov_bonus_val"] = b
         elif ef.get("tipo") == "remove_status":
-            for k in ("com_medo", "medo_rodadas", "perde_turno", "lentidao", "lentidao_rodadas"):
+            # Medo, Atordoamento (perde_turno) e Lentidão (status "lento": perde
+            # metade dos turnos). O campo do status é "lento", não "lentidao"
+            # (esse é só o id da magia no GRIMORIO).
+            for k in ("com_medo", "medo_rodadas", "perde_turno",
+                      "lento", "lento_rodadas", "lento_pulou"):
                 p.pop(k, None)
             p["imune_silencio_ate"] = self.round_num + 1
         elif ef.get("tipo") == "mira_perfeita":

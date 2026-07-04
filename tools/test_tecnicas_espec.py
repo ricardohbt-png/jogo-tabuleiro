@@ -83,11 +83,14 @@ async def main():
     print("\n[4] Espírito Indomável")
     r = setup(); r.current_pid = lambda: "h"
     p = hero("warrior", "tecnica_espirito_indomavel"); r.players["h"] = p
-    p["com_medo"] = True; p["medo_rodadas"] = 3; p["perde_turno"] = True; p["lentidao"] = True
+    # Lentidão real usa os campos "lento"/"lento_rodadas"/"lento_pulou" (o campo
+    # "lentidao" é só o id da magia — nunca um status na entidade).
+    p["com_medo"] = True; p["medo_rodadas"] = 3; p["perde_turno"] = True
+    p["lento"] = True; p["lento_rodadas"] = 2; p["lento_pulou"] = True
     await r.handle_usar_tecnica("h", "tecnica_espirito_indomavel")
     check("indomável: remove medo", not p.get("com_medo"))
     check("indomável: remove atordoamento", not p.get("perde_turno"))
-    check("indomável: remove lentidão", not p.get("lentidao"))
+    check("indomável: remove lentidão", not p.get("lento") and not p.get("lento_rodadas"))
     check("indomável: imunidade a silêncio setada", p["imune_silencio_ate"] == r.round_num + 1)
     # _em_silencio respeita a imunidade mesmo dentro de zona
     r._zonas_ativas = lambda tipo: [{"cx":0,"cy":0,"raio":3}] if tipo == "silencio" else []
