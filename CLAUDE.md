@@ -466,6 +466,35 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > Teste: `tools/test_tecnicas_espec.py`. **Foco Absoluto** adiado (vira reação
 > "Resistência Absoluta" no lote de reações — resolver conflito de nome com a de 8r).
 
+> **Técnicas de Reação (Fase 2c):** 3º lote das Técnicas da Guilda — **reações**
+> que **auto-disparam** dentro de hooks de evento (sem prompt) e aplicam efeito
+> **direto** (nunca re-chamam `handle_attack` → sem recursão), espelhando o
+> `_furtivo_reativo` do Ladino (Fase 1d). Núcleo compartilhado
+> `_ataque_basico_reativo(atacante, alvo)`: ataque fora-de-turno via `_rolar_ataque`
+> vs CA do alvo, dano `roll_dice(die)+mod(stat)` (crít ×2), e — se o atacante for o
+> **Ladino** e `_verificar_ataque_furtivo` passar — soma os d4 de furtivo
+> (`_dados_furtivo`); mata via `_monster_dies`. 4 técnicas (recarga 5, preço 180,
+> +4🍖/+4💧, salvo indicado): **Resistência Absoluta** (`buff_saves` — +2 em **todos**
+> os saves por 2 rodadas; `resistencia_saves_ate`/`_val`, somado em `_testar_save`
+> junto ao `_lenda_resist_bonus`), **Sangue Frio** (`sangue_frio` — arma a re-rolagem
+> do **1º erro** de ataque do turno; `sangue_frio_armado` consumido em `handle_attack`
+> logo após o `_rolar_ataque` do jogador, antes de limpar os flags de Mira/Investida —
+> 2🍖/2💧), **Ataque Coordenado** (`ataque_coordenado`, `alvo:"aliado"` — marca um
+> aliado vivo como par [`coordenado_alvo`/`coordenado_turno`]; quando **você** acerta
+> um monstro no seu turno, o par desfere um `_ataque_basico_reativo` se o alvo estiver
+> no alcance da arma dele [`_alvo_no_alcance_arma`]; disparado em `handle_attack` após
+> o custo de sobrevivência; reset no fim do turno), **Contra-Ataque**
+> (`contra_ataque`, recarga **8**, preço 280, +6🍖/+6💧 — `contra_ataque_ate =
+> round_num+1`; quando um monstro **erra** um ataque contra você, revida com
+> `_ataque_basico_reativo` a **cada** erro na janela; **só armas corpo a corpo** via
+> `_arma_contra_ataque_ok` [exclui arco/besta pesada de `RANGED_AMMO`, mas **inclui a
+> besta de mão** `hand_crossbow`] e o alvo precisa estar no alcance de ameaça da arma
+> [`_alvo_no_alcance_arma` respeita `range`/`reach:lanca`/`reach:cajado`/adjacência];
+> hookado nos **2 sites de erro de monstro** — `_execute_one_monster_attack` e o loop
+> legado). **Oportunidade** (ordem-de-turno) adiada para mini-lote próprio. Cliente:
+> técnica com `alvo:"aliado"` abre `openTargetModal` (par, qualquer distância) no 4º
+> slot. Teste: `tools/test_tecnicas_espec.py` (seções [12]-[17]).
+
 > **Reviver os Mortos (Fase 1g):** gateia a habilidade de classe de Pedro (não
 > mexida nas Fases 1a–1f). Slots de Controle = mod(INT) + nível_Pedro÷2 (mín. 1;
 > **mantido** o termo de nível de Pedro, ao contrário do padrão "baseline
