@@ -318,18 +318,17 @@ const GS = (() => {
         calcularSlots(nivelPedro, inteligencia) {
           const bonus      = getBonusAtributo(inteligencia)
           const bonusNivel = Math.floor(nivelPedro / 2)
-          return Math.max(1, bonus + bonusNivel)
+          return Math.max(1, bonus + bonusNivel) + magoReviverSlotsExtra()
         },
 
+        // Chance de sucesso: tabela da Guilda "Reviver os Mortos" (Nível I/II/III),
+        // dependente só do ND (nivelMonstro aqui já é o ND real/fracionário).
         calcularChance(nivelPedro, nivelMonstro) {
-          const nivelMax  = nivelPedro <= 2 ? 2 : nivelPedro <= 4 ? 4 : 5
-          const diferenca = nivelMonstro - nivelMax
-          const chance    = diferenca < 0
-            ? 90 + Math.abs(diferenca) * 5
-            : 90 - diferenca * 10
-          return Math.min(99, Math.max(1, chance))
+          return magoReviverChance(nivelMonstro)
         },
 
+        // Zona hostil: falha catastrófica só existe acima do teto "seguro" para o
+        // nível de Pedro — inalterada pelos Níveis da Guilda (ver CLAUDE.md).
         calcularZonaHostil(nivelPedro, nivelMonstro) {
           const nivelMax  = nivelPedro <= 2 ? 2 : nivelPedro <= 4 ? 4 : 5
           const diferenca = nivelMonstro - nivelMax
@@ -337,7 +336,7 @@ const GS = (() => {
         },
 
         calcularSlotsOcupados(nivelMonstro) {
-          return nivelMonstro
+          return magoReviverSlotCusto(nivelMonstro)
         },
 
         interpretarResultado(rolagem, chance, zonaHostil) {
@@ -1472,6 +1471,27 @@ const GS = (() => {
     if (e.includes('mago_estender_2')) return 2;
     return 1;
   }
+  // Nível de Reviver os Mortos (1/2/3) — espelha server._reviver_nivel.
+  // I: toda criatura ocupa 1 slot fixo, chance 100−ND×20%.
+  // II/III: ocupa ND fracionário; chance 100−ND×15%/10%; III soma +2 Slots.
+  function magoReviverNivel() {
+    const e = (guildOwnedOf(myPid).especializacoes) || [];
+    if (e.includes('mago_reviver_3')) return 3;
+    if (e.includes('mago_reviver_2')) return 2;
+    return 1;
+  }
+  function magoReviverSlotsExtra() {
+    return magoReviverNivel() === 3 ? 2 : 0;
+  }
+  function magoReviverSlotCusto(nd) {
+    return magoReviverNivel() === 1 ? 1 : Math.max(0.25, nd);
+  }
+  function magoReviverChance(nd) {
+    const reducao = { 1: 20, 2: 15, 3: 10 }[magoReviverNivel()];
+    const gp = (gameState && gameState.players || []).find(p => p.id === myPid);
+    const bonusNivel = ((gp && gp.level) || 1) * 5;
+    return Math.min(99, Math.max(1, Math.round(100 - nd * reducao + bonusNivel)));
+  }
 
   // ── Tile-click resolver: pure decision, no DOM ─────────────────────────────
   // Called by the unified handleTileClick(tx, ty) in game.html.
@@ -1719,6 +1739,10 @@ const GS = (() => {
     magoFortalecerMult,
     magoAprimorarBonus,
     magoEstenderBonus,
+    magoReviverNivel,
+    magoReviverSlotsExtra,
+    magoReviverSlotCusto,
+    magoReviverChance,
 
     // ── Decorações de masmorra ──
     decorTilesOf,

@@ -285,6 +285,39 @@ GUILD_CATALOG = {
         "desc": "Até o fim do turno, ataques físicos com arma causam +2 de dano.",
         "efeito": {"tipo": "buff_turno", "bonus_dano_arma": 2},
     },
+    # ── Técnicas de Recarga Curta (Fase 2a) ─────────────────────────────────
+    "tecnica_mira_perfeita": {
+        "id": "tecnica_mira_perfeita", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 100, "custo_fome": 2, "custo_sede": 2, "recarga_rodadas": 3,
+        "nome": "Mira Perfeita", "icon": "🎯",
+        "desc": "Próximo ataque à distância recebe vantagem; se acertar, +2 de dano.",
+        "efeito": {"tipo": "mira_perfeita", "bonus_dano": 2},
+    },
+    "tecnica_espirito_indomavel": {
+        "id": "tecnica_espirito_indomavel", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 100, "custo_fome": 2, "custo_sede": 2, "recarga_rodadas": 3,
+        "nome": "Espírito Indomável", "icon": "🧘", "acao_livre": True,
+        "desc": "Ação livre. Remove Medo, Atordoamento e Lentidão; 1 rodada imune a Silêncio.",
+        "efeito": {"tipo": "remove_status"},
+    },
+    "tecnica_grito_guerra": {
+        "id": "tecnica_grito_guerra", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 100, "custo_fome": 2, "custo_sede": 2, "recarga_rodadas": 3,
+        "nome": "Grito de Guerra", "icon": "📣",
+        "desc": "Todos os aliados recebem +2 de movimento por 1 rodada.",
+        "efeito": {"tipo": "buff_aliados_mov", "bonus_mov": 2},
+    },
+    "tecnica_pressa": {
+        "id": "tecnica_pressa", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 100, "custo_fome": 4, "custo_sede": 4, "recarga_rodadas": 3,
+        "nome": "Pressa", "icon": "💨",
+        "desc": "O seu movimento é dobrado nesta rodada.",
+        "efeito": {"tipo": "mov_self_dobrar"},
+    },
     "guerreiro_combinar_2": {
         "id": "guerreiro_combinar_2", "categoria": "especializacao", "classe": "warrior",
         "linha": "guerreiro_combate", "nivel": 2, "requer": None, "exclusiva": False,
@@ -418,6 +451,18 @@ GUILD_CATALOG = {
         "linha": "mago_estender", "nivel": 3, "requer": "mago_estender_2", "exclusiva": False,
         "preco": 200, "nome": "Estender III", "icon": "⏱️",
         "desc": "Estender Magia dá +3 rodadas de duração.",
+    },
+    "mago_reviver_2": {
+        "id": "mago_reviver_2", "categoria": "especializacao", "classe": "mage",
+        "linha": "mago_reviver", "nivel": 2, "requer": None, "exclusiva": False,
+        "preco": 200, "nome": "Reviver os Mortos II", "icon": "💀",
+        "desc": "Criaturas passam a ocupar Slots de Controle iguais ao ND (fracionário incluso). Chance de sucesso: 100% − ND×15%.",
+    },
+    "mago_reviver_3": {
+        "id": "mago_reviver_3", "categoria": "especializacao", "classe": "mage",
+        "linha": "mago_reviver", "nivel": 3, "requer": "mago_reviver_2", "exclusiva": False,
+        "preco": 300, "nome": "Reviver os Mortos III", "icon": "💀",
+        "desc": "+2 Slots de Controle. Chance de sucesso: 100% − ND×10%.",
     },
     "clerigo_cura_2": {
         "id": "clerigo_cura_2", "categoria": "especializacao", "classe": "cleric",
@@ -3304,6 +3349,9 @@ def make_player(pid, name, cls_id, slot):
         "guild_equip": {"tecnica": None, "tecnica_exclusiva": None},  # equipado (persistido)
         "technique_cooldowns": {},          # { tecnica_id: pronta_em_round } — runtime
         "tecnica_buff_dano_arma": 0,        # Brutalidade: +N dano de arma até fim do turno
+        "tecnica_mira_perfeita": False,     # Mira Perfeita: próximo ataque à distância
+        "imune_silencio_ate": 0,            # Espírito Indomável: imunidade a Silêncio até esta rodada
+        "mov_bonus_ate": 0,                 # Grito de Guerra: +2 movimento no reset até esta rodada
         # Buffs de turno do warrior (flags planas) — limpos em handle_end_turn
         "skill_bonus_acerto": 0,
         "skill_bonus_dano":   0,      # Mira Certeira III: +2 dano quando armada
@@ -4041,6 +4089,31 @@ class GameRoom:
         if tem_espec(p, "mago_estender_2"): return 2
         return 1
 
+    def _reviver_nivel(self, p):
+        """Nível de Reviver os Mortos possuído (1/2/3)."""
+        if tem_espec(p, "mago_reviver_3"): return 3
+        if tem_espec(p, "mago_reviver_2"): return 2
+        return 1
+
+    def _reviver_slots_max(self, p):
+        """Slots de Controle totais: mod(INT) + nível_Pedro÷2 (mín. 1), +2 no Nível III."""
+        bonus_int = mod(p.get("int_", 10))
+        base = max(1, bonus_int + p.get("level", 1) // 2)
+        return base + 2 if self._reviver_nivel(p) == 3 else base
+
+    def _reviver_slot_custo(self, p, nd):
+        """Slots ocupados por uma criatura de ND `nd` (fracionário): 1 fixo no
+        Nível I; exatamente `nd` (mín. proporcional) nos Níveis II/III."""
+        return 1 if self._reviver_nivel(p) == 1 else max(0.25, nd)
+
+    def _reviver_chance(self, p, nd):
+        """Chance de sucesso (%) para animar uma criatura de ND `nd`. Soma um
+        bônus de +5% por nível de Pedro (nivel_Pedro × 5) antes do teto/piso."""
+        nivel = self._reviver_nivel(p)
+        reducao = {1: 20, 2: 15, 3: 10}[nivel]
+        bonus_nivel = p.get("level", 1) * 5
+        return min(99, max(1, round(100 - nd * reducao + bonus_nivel)))
+
     def _resolver_metamagia(self, p, magia):
         """Resolve as metamagias armadas aplicáveis a `magia`, respeitando o teto de
         empilhamento (ordem de prioridade: Fortalecer > Estender > Aprimorar).
@@ -4165,6 +4238,25 @@ class GameRoom:
         ef = item.get("efeito", {})
         if ef.get("tipo") == "buff_turno":
             p["tecnica_buff_dano_arma"] = p.get("tecnica_buff_dano_arma", 0) + ef.get("bonus_dano_arma", 0)
+        elif ef.get("tipo") == "mov_self_dobrar":
+            p["moves_left"] = p.get("moves_left", 0) + p.get("spd", 0)
+        elif ef.get("tipo") == "buff_aliados_mov":
+            b = ef.get("bonus_mov", 2)
+            for q in self.players.values():
+                if not q.get("alive"): continue
+                q["moves_left"] = q.get("moves_left", 0) + b
+                q["mov_bonus_ate"] = self.round_num + 1
+                q["mov_bonus_val"] = b
+        elif ef.get("tipo") == "remove_status":
+            # Medo, Atordoamento (perde_turno) e Lentidão (status "lento": perde
+            # metade dos turnos). O campo do status é "lento", não "lentidao"
+            # (esse é só o id da magia no GRIMORIO).
+            for k in ("com_medo", "medo_rodadas", "perde_turno",
+                      "lento", "lento_rodadas", "lento_pulou"):
+                p.pop(k, None)
+            p["imune_silencio_ate"] = self.round_num + 1
+        elif ef.get("tipo") == "mira_perfeita":
+            p["tecnica_mira_perfeita"] = True
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
@@ -5417,11 +5509,15 @@ class GameRoom:
             # Vantagem (Invisibilidade ou Visão no Escuro na escuridão) vs Desvantagem
             # (atacar às cegas na escuridão). Vantagem+desvantagem se anulam.
             esc = self._verificar_escuridao(p, target)
+            _mira_ranged = bool(w_range is not None and p.get("tecnica_mira_perfeita"))
             vantagem    = (bool(p.get("invisivel_magico")) or bool(p.get("oculto_vela"))
                            or esc == "vantagem"
-                           or self._provocacao_atk_vantagem(p, target))
+                           or self._provocacao_atk_vantagem(p, target)
+                           or _mira_ranged)
             desvantagem = esc == "desvantagem"
             hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
+            if _mira_ranged:
+                p["tecnica_mira_perfeita"] = False   # consumida no ataque à distância (acerto ou erro)
 
             # ── Consumo de munição (projétil gasto ao atirar, hit ou miss) ──
             _ammo_extra_dmg   = None   # dano extra do projétil especial (incendiário)
@@ -5476,6 +5572,7 @@ class GameRoom:
                     if crit: dmg *= 2
                     dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano
                               + self._mod_magia(p, "dano") + self._tecnica_bonus_dano(p)
+                              + (2 if _mira_ranged else 0)   # Mira Perfeita: +2 no ataque à distância
                               + p.get("skill_bonus_dano", 0)
                               - self._corrosao_arma_pen(p))
                     # Fraquezas/imunidades ao dano físico da arma
@@ -6027,13 +6124,14 @@ class GameRoom:
 
         nivel_pedro   = p.get("level", 1)
         nivel_monstro = corpse.get("nivel", corpse.get("tier", 1))
+        nd            = corpse.get("nd", nivel_monstro)  # ND fracionário real (Reviver os Mortos)
 
-        # Slots disponíveis = mod(INT) + ⌊nível/2⌋ (mín. 1); ocupados = nível do monstro
-        bonus_int     = mod(p.get("int_", 10))
-        slots_max     = max(1, bonus_int + nivel_pedro // 2)
+        # Slots de Controle: Guilda "Reviver os Mortos" (Nível I/II/III — ver
+        # _reviver_slots_max/_reviver_slot_custo/_reviver_chance)
+        slots_max     = self._reviver_slots_max(p)
         animados      = p.setdefault("animados", [])
         slots_usados  = sum(a.get("slots", 1) for a in animados)
-        slots_monstro = nivel_monstro
+        slots_monstro = self._reviver_slot_custo(p, nd)
         if slots_usados + slots_monstro > slots_max:
             await self.send_to(pid, {
                 "type": "error",
@@ -6048,11 +6146,12 @@ class GameRoom:
         p["sede"] = max(0, p.get("sede", 10) - custo)
         self._verificar_estado_sobrevivencia(p)
 
-        # Chance de sucesso e zona hostil (mesma fórmula de HERO_DATA.pedro)
+        # Chance de sucesso: tabela da Guilda (Nível I/II/III) por ND real.
+        # Zona hostil: falha catastrófica só existe quando o ND excede o teto
+        # "seguro" para o nível de Pedro (fórmula original, preservada).
         nivel_max = 2 if nivel_pedro <= 2 else 4 if nivel_pedro <= 4 else 5
-        diferenca = nivel_monstro - nivel_max
-        chance = 90 + (abs(diferenca) * 5 if diferenca < 0 else -diferenca * 10)
-        chance = min(99, max(1, chance))
+        diferenca = nd - nivel_max
+        chance = self._reviver_chance(p, nd)
         zona_hostil = max(0, diferenca * 10)
 
         # d100 = dois d10 (dezena + unidade); 00 = 100
@@ -9441,6 +9540,8 @@ class GameRoom:
         return (z["cx"] - h + 1) <= x <= (z["cx"] + h) and (z["cy"] - h + 1) <= y <= (z["cy"] + h)
 
     def _em_silencio(self, obj):
+        if obj.get("imune_silencio_ate", 0) >= self.round_num:
+            return False
         x, y = obj.get("pos", [0, 0])
         return any(self._em_zona_quadrada(x, y, z) for z in self._zonas_ativas("silencio"))
 
@@ -9708,10 +9809,15 @@ class GameRoom:
         """Penalidade ativa de veneno para uma chave (valor já assinado, ≤ 0)."""
         return alvo.get("penalidades", {}).get(chave, 0)
 
+    def _grito_mov_bonus(self, p):
+        """+N de movimento transitório (Técnica Grito de Guerra) enquanto válido nesta rodada."""
+        return p.get("mov_bonus_val", 0) if p.get("mov_bonus_ate", 0) >= self.round_num else 0
+
     def _moves_base(self, p):
-        """Movimento do turno = spd + bônus de canção + penalidade de veneno/doença (mov)."""
+        """Movimento do turno = spd + bônus de canção + Grito de Guerra + penalidade de veneno/doença (mov)."""
         return max(0, p["spd"] + self._cancao_bonus(p, "bonus_mov")
-                   + self._pen(p, "movimento") + self._doenca_mov_pen(p))
+                   + self._pen(p, "movimento") + self._doenca_mov_pen(p)
+                   + self._grito_mov_bonus(p))
 
     def _veneno_save_bonus(self, alvo, tipo_save):
         """Bônus de save. Jogador e monstros novos usam saves individuais;
@@ -10753,6 +10859,7 @@ class GameRoom:
         p["skill_dobrar_dano"]  = False
         p["skill_ataques_extras"] = 0
         p["tecnica_buff_dano_arma"] = 0   # buff de técnica de turno (Brutalidade) expira
+        p["tecnica_mira_perfeita"] = False   # Mira Perfeita não usada expira no fim do turno
         p["cancao_atacou_apos"] = False   # reabre o custo extra de atacar sob a canção no novo turno
         # metamagia do mago expira ao fim do turno (flags planas)
         p["aprimorar_ativo"]   = False
@@ -13332,6 +13439,7 @@ class GameRoom:
                 "tipo":      m.get("type", "skeleton"),
                 "tier":      m.get("tier", 1),
                 "nivel":     nivel_animado,
+                "nd":        cr,  # ND fracionário real (0.25/0.5/1..5) p/ Reviver os Mortos
                 "ca":        m.get("ac", 10),
                 "vida_max":  m.get("max_hp", m.get("hp", 10)),
                 "dano":      primeiro_ataque.get("damage", m.get("damage", "1d4")),

@@ -1517,7 +1517,21 @@ function _renderGuild(){
     ? arr.map(i => _guildItemRow(i, owned, me)).join('')
     : `<div class="guild-empty">— em breve —</div>`;
   const specEl = $('guild-list-spec'); if(specEl) specEl.innerHTML = sec(specs);
-  const tecEl  = $('guild-list-tec');  if(tecEl)  tecEl.innerHTML  = sec(tecs);
+  // Técnicas agrupadas por faixa de recarga (3/5/8/10 rodadas) — quanto maior a
+  // recarga, mais forte a técnica; deixa o trade-off recarga×poder×preço visível.
+  const _faixaLabel = { 3:'Recarga Curta (3 rodadas)', 5:'Recarga Média (5 rodadas)',
+                        8:'Recarga Longa (8 rodadas)', 10:'Recarga Muito Longa (10 rodadas)' };
+  const _secTecnicas = (arr) => {
+    if(!arr.length) return `<div class="guild-empty">— em breve —</div>`;
+    const porFaixa = {};
+    arr.forEach(t => { (porFaixa[t.recarga_rodadas] = porFaixa[t.recarga_rodadas] || []).push(t); });
+    return Object.keys(porFaixa).sort((a,b)=>a-b).map(rec =>
+      `<div class="guild-faixa"><h4 class="guild-faixa-tit">${_faixaLabel[rec] || ('Recarga '+rec+' rodadas')}</h4>`
+      + porFaixa[rec].map(i => _guildItemRow(i, owned, me)).join('')
+      + `</div>`
+    ).join('');
+  };
+  const tecEl  = $('guild-list-tec');  if(tecEl)  tecEl.innerHTML  = _secTecnicas(tecs);
 }
 
 function openGuild(){
@@ -18093,25 +18107,20 @@ const HERO_DATA = {
       custo:       { fome: 20, sede: 20 },
       descricao:   'Pedro concentra energia sombria sobre o cadáver de uma criatura derrotada, arrancando sua essência vital e aprisionando-a num corpo sem vida para servir eternamente.',
 
-      // Calcula slots disponíveis
+      // Calcula slots disponíveis (base + Nível III da Guilda "Reviver os Mortos")
       calcularSlots(nivelPedro, inteligencia) {
         const bonus = getBonusAtributo(inteligencia)
         const bonusNivel = Math.floor(nivelPedro / 2)
-        return Math.max(1, bonus + bonusNivel)
+        const extra = (window.GS && GS.magoReviverSlotsExtra) ? GS.magoReviverSlotsExtra() : 0
+        return Math.max(1, bonus + bonusNivel) + extra
       },
 
-      // Calcula chance de sucesso baseada no nível do monstro
+      // Chance de sucesso: tabela da Guilda (Nível I/II/III), só depende do ND
       calcularChance(nivelPedro, nivelMonstro) {
-        const nivelMaxPedro = nivelPedro <= 2 ? 2 :
-                              nivelPedro <= 4 ? 4 : 5
-        const diferenca = nivelMonstro - nivelMaxPedro
-        const chance = diferenca < 0
-          ? 90 + Math.abs(diferenca) * 5
-          : 90 - diferenca * 10
-        return Math.min(99, Math.max(1, chance))
+        return (window.GS && GS.magoReviverChance) ? GS.magoReviverChance(nivelMonstro) : Math.min(99, Math.max(1, Math.round(100 - nivelMonstro * 20)))
       },
 
-      // Calcula zona de resultado hostil
+      // Zona de resultado hostil: inalterada pelo Nível da Guilda (ver CLAUDE.md)
       calcularZonaHostil(nivelPedro, nivelMonstro) {
         const nivelMaxPedro = nivelPedro <= 2 ? 2 :
                               nivelPedro <= 4 ? 4 : 5
@@ -18119,9 +18128,9 @@ const HERO_DATA = {
         return diferenca > 0 ? diferenca * 10 : 0
       },
 
-      // Slots que um monstro ocupa = seu nível
+      // Slots que um monstro ocupa: 1 fixo no Nível I; ND real no II/III
       calcularSlotsOcupados(nivelMonstro) {
-        return nivelMonstro
+        return (window.GS && GS.magoReviverSlotCusto) ? GS.magoReviverSlotCusto(nivelMonstro) : 1
       },
 
       // Interpreta resultado do d100
