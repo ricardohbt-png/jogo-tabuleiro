@@ -3430,6 +3430,12 @@ def make_player(pid, name, cls_id, slot):
         "tatica_alvo": None,                # Tática Defensiva: aliado protegido
         "tatica_ate": 0,                    # Tática Defensiva até esta rodada
         "passo_fantasma_ate": 0,            # Passo Fantasma até esta rodada
+        "coordenado_alvo": None,            # Ataque Coordenado: aliado par (este turno)
+        "coordenado_turno": -1,             # turn_index em que o par foi armado
+        "sangue_frio_armado": False,        # Sangue Frio: re-rolagem disponível
+        "resistencia_saves_ate": 0,         # Resistência Absoluta até esta rodada
+        "resistencia_saves_val": 0,
+        "contra_ataque_ate": 0,             # Contra-Ataque até esta rodada
         "imune_silencio_ate": 0,            # Espírito Indomável: imunidade a Silêncio até esta rodada
         "mov_bonus_ate": 0,                 # Grito de Guerra: +2 movimento no reset até esta rodada
         # Buffs de turno do warrior (flags planas) — limpos em handle_end_turn
@@ -5454,6 +5460,37 @@ class GameRoom:
         target["hp"] -= dano
         await self.gm_say(f"🗡️ **{luccas['name']}** reage ao ataque de **{atacante['name']}** — "
                           f"Ataque Furtivo Supremo! +{dano} de dano [{nd4}d4] em **{target['name']}**.")
+
+    async def _ataque_basico_reativo(self, atacante, alvo):
+        """Ataque básico disparado por uma reação (fora do turno). Aplica dano
+        direto (não chama handle_attack → sem recursão). Furtivo se rogue elegível."""
+        if not atacante or not atacante.get("alive") or not alvo or alvo.get("hp", 0) <= 0:
+            return
+        w = atacante.get("weapon") or {}
+        atk = atacante.get("atk_bonus", 0)
+        hit, roll, total, crit, _d = self._rolar_ataque(atk, alvo.get("ac", 10), False, False)
+        await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
+                               "label": f"{atacante['name']} — reação", "hit": hit, "crit": crit})
+        if not hit:
+            await self.gm_say(f"↩️ **{atacante['name']}** reage mas **erra** **{alvo['name']}**.")
+            return
+        die = w.get("die")
+        base = roll_dice(die) if die else 1
+        stat = w.get("stat", "str_")
+        dmg = max(1, base + mod(atacante.get(stat, 10)))
+        if crit: dmg *= 2
+        extra = ""
+        if atacante.get("class_id") == "rogue" and self._verificar_ataque_furtivo(atacante, alvo):
+            nd4 = self._dados_furtivo(atacante.get("level", 1))
+            fdano = sum(random.randint(1, 4) for _ in range(nd4))
+            dmg += fdano; extra = f" +🗡️{fdano} furtivo [{nd4}d4]"
+        alvo["hp"] = max(0, alvo["hp"] - dmg)
+        await self.broadcast({"type": "dice_roll", "die": "d" + (die.split("d")[1] if die else "6"),
+                               "value": base, "label": "Dano (reação)"})
+        await self.gm_say(f"↩️ **{atacante['name']}** reage e atinge **{alvo['name']}**: "
+                          f"**{dmg}** de dano{extra}. ({alvo['hp']}/{alvo['max_hp']} HP)")
+        if alvo["hp"] <= 0:
+            await self._monster_dies(alvo, atacante.get("id"))
 
     async def _quebrar_invisibilidade(self, p, motivo="ao agir"):
         """Encerra o estado invisível das sombras (atacar/mover revela Luccas)."""

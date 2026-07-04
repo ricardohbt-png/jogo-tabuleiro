@@ -236,6 +236,29 @@ async def main():
         check(f"{tid} classe None", it and it["classe"] is None)
     check("coordenado exige alvo aliado", S.guild_item("tecnica_ataque_coordenado").get("alvo") == "aliado")
 
+    # [13] _ataque_basico_reativo (fundação)
+    print("\n[13] _ataque_basico_reativo")
+    r = setup()
+    async def _mdies(*a, **k): return None
+    r._monster_dies = _mdies
+    r._rolar_ataque = lambda atk, ac, v=False, d=False: (True, 18, 20, False, 3)
+    atacante = hero("warrior"); atacante["atk_bonus"] = 3
+    atacante["weapon"] = {"id":"machado_basico","name":"Machado","die":"1d6","stat":"str_"}
+    alvo = {"id":"m1","name":"Orc","nome":"Orc","pos":[0,1],"hp":20,"max_hp":20,"ac":10,"ca":10}
+    r.monsters = {"m1": alvo}
+    hp0 = alvo["hp"]
+    await r._ataque_basico_reativo(atacante, alvo)
+    check("reativo: aplica dano no acerto", alvo["hp"] < hp0)
+    r._rolar_ataque = lambda atk, ac, v=False, d=False: (False, 2, 4, False, 1)
+    alvo2 = {"id":"m2","name":"Orc","nome":"Orc","pos":[0,1],"hp":20,"max_hp":20,"ac":10,"ca":10}
+    hp2 = alvo2["hp"]
+    await r._ataque_basico_reativo(atacante, alvo2)
+    check("reativo: erro não aplica dano", alvo2["hp"] == hp2)
+    alvo3 = {"id":"m3","name":"Orc","nome":"Orc","pos":[0,1],"hp":0,"max_hp":20,"ac":10,"ca":10}
+    r._rolar_ataque = lambda atk, ac, v=False, d=False: (True, 18, 20, False, 3)
+    await r._ataque_basico_reativo(atacante, alvo3)
+    check("reativo: ignora alvo morto", alvo3["hp"] == 0)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
