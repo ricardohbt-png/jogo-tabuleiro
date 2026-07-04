@@ -3391,6 +3391,12 @@ def make_player(pid, name, cls_id, slot):
         "technique_cooldowns": {},          # { tecnica_id: pronta_em_round } — runtime
         "tecnica_buff_dano_arma": 0,        # Brutalidade: +N dano de arma até fim do turno
         "tecnica_mira_perfeita": False,     # Mira Perfeita: próximo ataque à distância
+        "investida_armada": False,          # Investida Heroica: charge armada
+        "investida_origem": None,           # pos ao ativar a Investida
+        "defesa_impecavel_ate": 0,          # Defesa Impecável até esta rodada
+        "tatica_alvo": None,                # Tática Defensiva: aliado protegido
+        "tatica_ate": 0,                    # Tática Defensiva até esta rodada
+        "passo_fantasma_ate": 0,            # Passo Fantasma até esta rodada
         "imune_silencio_ate": 0,            # Espírito Indomável: imunidade a Silêncio até esta rodada
         "mov_bonus_ate": 0,                 # Grito de Guerra: +2 movimento no reset até esta rodada
         # Buffs de turno do warrior (flags planas) — limpos em handle_end_turn
@@ -4092,6 +4098,10 @@ class GameRoom:
         """+N de dano de arma concedido por técnica de turno (Brutalidade)."""
         return p.get("tecnica_buff_dano_arma", 0)
 
+    def _pressao_ca_pen(self, m):
+        """-CA da Pressão Constante enquanto ativa no monstro."""
+        return m.get("pressao_ca_val", 0) if m.get("pressao_ca_ate", 0) >= self.round_num else 0
+
     def _furia_extras(self, p):
         """Ataques extras concedidos pela Fúria: 2 com Nível III, senão 1."""
         return 2 if tem_espec(p, "guerreiro_furia_3") else 1
@@ -4298,6 +4308,14 @@ class GameRoom:
             p["imune_silencio_ate"] = self.round_num + 1
         elif ef.get("tipo") == "mira_perfeita":
             p["tecnica_mira_perfeita"] = True
+        elif ef.get("tipo") == "debuff_ca_alvo":
+            alvo = self.monsters.get(target_id) if target_id else None
+            if not alvo or alvo.get("hp", 0) <= 0:
+                await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
+            if max(abs(alvo["pos"][0]-p["pos"][0]), abs(alvo["pos"][1]-p["pos"][1])) > 1:
+                await self.send_to(pid, {"type": "error", "msg": "O inimigo precisa estar adjacente."}); return
+            alvo["pressao_ca_val"] = ef.get("ca", 2)
+            alvo["pressao_ca_ate"] = self.round_num + ef.get("rodadas", 2)
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
@@ -5545,6 +5563,7 @@ class GameRoom:
             eff_target_ac = (target["ac"] + self._mod_magia(target, "ca")
                              + self._camuflagem_bonus(target)
                              + self._cacador_trevas_ca_bonus(target)        # Caçador das Trevas: +2 CA em área escura
+                             - self._pressao_ca_pen(target)                 # Pressão Constante: -2 CA
                              - self._furia_cega_ca_pen(target)
                              - self._lento_previsivel_ca_pen(target))       # Ogro: -2 CA após errar
             # Vantagem (Invisibilidade ou Visão no Escuro na escuridão) vs Desvantagem

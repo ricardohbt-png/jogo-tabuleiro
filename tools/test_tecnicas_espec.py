@@ -145,6 +145,24 @@ async def main():
     check("tatica exige alvo aliado",
           S.guild_item("tecnica_tatica_defensiva").get("alvo") == "aliado_raio4")
 
+    # [7] Pressão Constante
+    print("\n[7] Pressão Constante")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("warrior", "tecnica_pressao_constante"); p["pos"] = [0,0]; r.players["h"] = p
+    mob = {"id":"m1","name":"Orc","nome":"Orc","pos":[0,1],"hp":20,"max_hp":20,"ac":14,"ca":14}
+    r.monsters = {"m1": mob}
+    await r.handle_usar_tecnica("h", "tecnica_pressao_constante", "m1")
+    check("pressao: -2 CA marcado no alvo", mob.get("pressao_ca_val") == 2 and mob["pressao_ca_ate"] == r.round_num + 2)
+    check("pressao: helper _pressao_ca_pen = 2 na janela", r._pressao_ca_pen(mob) == 2)
+    r2 = setup(); r2.current_pid = lambda: "h"; r2.round_num = 1
+    p2 = hero("warrior", "tecnica_pressao_constante"); p2["pos"] = [0,0]; r2.players["h"] = p2
+    far = {"id":"m2","name":"Orc","nome":"Orc","pos":[5,5],"hp":20,"max_hp":20,"ac":14,"ca":14}
+    r2.monsters = {"m2": far}
+    await r2.handle_usar_tecnica("h", "tecnica_pressao_constante", "m2")
+    check("pressao: recusa alvo não-adjacente", far.get("pressao_ca_val") is None and any("adjacente" in e.lower() for e in r2._errs))
+    r.round_num += 3
+    check("pressao: expira", r._pressao_ca_pen(mob) == 0)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
