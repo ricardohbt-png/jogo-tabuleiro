@@ -207,6 +207,23 @@ async def main():
     r.round_num += 5
     check("passo: expira", r._passo_fantasma_ativo(p) is False)
 
+    # [11] Investida Heroica
+    print("\n[11] Investida Heroica")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("warrior", "tecnica_investida"); p["pos"] = [0,0]; p["moves_left"] = p["spd"]; r.players["h"] = p
+    await r.handle_usar_tecnica("h", "tecnica_investida")
+    check("investida: dobra movimento", p["moves_left"] == p["spd"] + p["spd"])
+    check("investida: armada + origem", p["investida_armada"] is True and p["investida_origem"] == [0,0])
+    p["pos"] = [0,3]   # andou 3 em linha reta (coluna)
+    check("investida: reto ≥2 melee → 2", r._investida_tecnica_bonus(p, is_ranged=False) == 2)
+    check("investida: ranged → 0", r._investida_tecnica_bonus(p, is_ranged=True) == 0)
+    p["pos"] = [1,1]   # L (dx=1,dy=1) → não é reto
+    check("investida: L → 0", r._investida_tecnica_bonus(p, is_ranged=False) == 0)
+    p["pos"] = [0,1]   # reto mas só 1
+    check("investida: reto <2 → 0", r._investida_tecnica_bonus(p, is_ranged=False) == 0)
+    p2 = hero("warrior"); p2["pos"] = [0,5]
+    check("investida: sem flag → 0", r._investida_tecnica_bonus(p2, is_ranged=False) == 0)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

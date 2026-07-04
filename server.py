@@ -4340,6 +4340,10 @@ class GameRoom:
             p["moves_left"] = p.get("moves_left", 0) + b
             p["mov_bonus_ate"] = self.round_num + 1
             p["mov_bonus_val"] = b
+        elif ef.get("tipo") == "investida":
+            p["moves_left"] = p.get("moves_left", 0) + p.get("spd", 0)
+            p["investida_origem"] = list(p["pos"])
+            p["investida_armada"] = True
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
@@ -5597,14 +5601,17 @@ class GameRoom:
             # (atacar às cegas na escuridão). Vantagem+desvantagem se anulam.
             esc = self._verificar_escuridao(p, target)
             _mira_ranged = bool(w_range is not None and p.get("tecnica_mira_perfeita"))
+            _investida = bool(w_range is None and self._investida_tecnica_bonus(p, is_ranged=False))
             vantagem    = (bool(p.get("invisivel_magico")) or bool(p.get("oculto_vela"))
                            or esc == "vantagem"
                            or self._provocacao_atk_vantagem(p, target)
-                           or _mira_ranged)
+                           or _mira_ranged or _investida)
             desvantagem = esc == "desvantagem"
             hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
             if _mira_ranged:
                 p["tecnica_mira_perfeita"] = False   # consumida no ataque à distância (acerto ou erro)
+            if p.get("investida_armada") and w_range is None:
+                p["investida_armada"] = False   # consome no 1º ataque corpo a corpo
 
             # ── Consumo de munição (projétil gasto ao atirar, hit ou miss) ──
             _ammo_extra_dmg   = None   # dano extra do projétil especial (incendiário)
@@ -5660,6 +5667,7 @@ class GameRoom:
                     dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano
                               + self._mod_magia(p, "dano") + self._tecnica_bonus_dano(p)
                               + (2 if _mira_ranged else 0)   # Mira Perfeita: +2 no ataque à distância
+                              + (2 if _investida else 0)      # Investida Heroica (carga reta ≥2)
                               + p.get("skill_bonus_dano", 0)
                               - self._corrosao_arma_pen(p))
                     # Fraquezas/imunidades ao dano físico da arma
@@ -10961,6 +10969,8 @@ class GameRoom:
         p["skill_ataques_extras"] = 0
         p["tecnica_buff_dano_arma"] = 0   # buff de técnica de turno (Brutalidade) expira
         p["tecnica_mira_perfeita"] = False   # Mira Perfeita não usada expira no fim do turno
+        p["investida_armada"] = False   # Investida não usada expira no fim do turno
+        p["investida_origem"] = None
         p["cancao_atacou_apos"] = False   # reabre o custo extra de atacar sob a canção no novo turno
         # metamagia do mago expira ao fim do turno (flags planas)
         p["aprimorar_ativo"]   = False
@@ -11084,6 +11094,19 @@ class GameRoom:
         """Investida Brutal: +2 de dano se o monstro se moveu antes de atacar
         neste turno (flag `_investiu` setada pela IA)."""
         return 2 if m.get("_investiu") else 0
+
+    def _investida_tecnica_bonus(self, p, is_ranged):
+        """Investida Heroica (Técnica): +2 de dano (e vantagem) se armada, melee
+        e carga reta ≥2 casas desde a ativação."""
+        if is_ranged or not p.get("investida_armada"):
+            return 0
+        o = p.get("investida_origem")
+        if not o:
+            return 0
+        dx, dy = p["pos"][0] - o[0], p["pos"][1] - o[1]
+        if (dx == 0 or dy == 0) and max(abs(dx), abs(dy)) >= 2:
+            return 2
+        return 0
 
     def _furia_cega_dano_bonus(self, m):
         """Fúria Cega: +1 de dano enquanto enfurecido (sofreu dano na rodada anterior)."""
