@@ -130,6 +130,100 @@ async def main():
     await rr2.handle_attack("h", "m1")
     check("mira: flag NÃO consumida no corpo a corpo", hh2.get("tecnica_mira_perfeita") is True)
 
+    # [6] Catálogo — Recarga Média (2b)
+    print("\n[6] Catálogo — Recarga Média")
+    for tid in ["tecnica_investida","tecnica_defesa_impecavel","tecnica_pressao_constante",
+                "tecnica_tatica_defensiva","tecnica_passo_fantasma"]:
+        it = S.guild_item(tid)
+        check(f"existe {tid}", it is not None)
+        check(f"{tid} recarga 5", it and it["recarga_rodadas"] == 5)
+        check(f"{tid} preco 180", it and it["preco"] == 180)
+        check(f"{tid} custo 4/4", it and it["custo_fome"] == 4 and it["custo_sede"] == 4)
+        check(f"{tid} classe None", it and it["classe"] is None)
+    check("pressao exige alvo monstro adjacente",
+          S.guild_item("tecnica_pressao_constante").get("alvo") == "monstro_adjacente")
+    check("tatica exige alvo aliado",
+          S.guild_item("tecnica_tatica_defensiva").get("alvo") == "aliado_raio4")
+
+    # [7] Pressão Constante
+    print("\n[7] Pressão Constante")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("warrior", "tecnica_pressao_constante"); p["pos"] = [0,0]; r.players["h"] = p
+    mob = {"id":"m1","name":"Orc","nome":"Orc","pos":[0,1],"hp":20,"max_hp":20,"ac":14,"ca":14}
+    r.monsters = {"m1": mob}
+    await r.handle_usar_tecnica("h", "tecnica_pressao_constante", "m1")
+    check("pressao: -2 CA marcado no alvo", mob.get("pressao_ca_val") == 2 and mob["pressao_ca_ate"] == r.round_num + 2)
+    check("pressao: helper _pressao_ca_pen = 2 na janela", r._pressao_ca_pen(mob) == 2)
+    r2 = setup(); r2.current_pid = lambda: "h"; r2.round_num = 1
+    p2 = hero("warrior", "tecnica_pressao_constante"); p2["pos"] = [0,0]; r2.players["h"] = p2
+    far = {"id":"m2","name":"Orc","nome":"Orc","pos":[5,5],"hp":20,"max_hp":20,"ac":14,"ca":14}
+    r2.monsters = {"m2": far}
+    await r2.handle_usar_tecnica("h", "tecnica_pressao_constante", "m2")
+    check("pressao: recusa alvo não-adjacente", far.get("pressao_ca_val") is None and any("adjacente" in e.lower() for e in r2._errs))
+    r.round_num += 3
+    check("pressao: expira", r._pressao_ca_pen(mob) == 0)
+
+    # [8] Defesa Impecável
+    print("\n[8] Defesa Impecável")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("warrior", "tecnica_defesa_impecavel"); r.players["h"] = p
+    await r.handle_usar_tecnica("h", "tecnica_defesa_impecavel")
+    check("defesa: janela setada", p["defesa_impecavel_ate"] == r.round_num + 1)
+    check("defesa: _defesa_impecavel_ativa True", r._defesa_impecavel_ativa(p) is True)
+    luccas = hero("rogue"); luccas["invisivel_sombras"] = True
+    check("defesa: imune a furtivo", r._verificar_ataque_furtivo(luccas, p) is False)
+    r.round_num += 2
+    check("defesa: expira", r._defesa_impecavel_ativa(p) is False)
+
+    # [9] Tática Defensiva
+    print("\n[9] Tática Defensiva")
+    import random as _rnd; _rnd.seed(3)
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    r._no_raio = lambda a,b,raio,*x,**k: max(abs(a["pos"][0]-b["pos"][0]), abs(a["pos"][1]-b["pos"][1])) <= raio
+    p = hero("warrior", "tecnica_tatica_defensiva"); p["pos"] = [0,0]; p["hp"] = 20; p["max_hp"] = 20; r.players["h"] = p
+    ally = make_player("a","Ana","cleric",1); ally["alive"]=True; ally["pos"]=[1,1]; ally["hp"]=20; ally["max_hp"]=20; r.players["a"]=ally
+    await r.handle_usar_tecnica("h", "tecnica_tatica_defensiva", "a")
+    check("tatica: alvo gravado no usuário", p["tatica_alvo"] == "a")
+    check("tatica: janela 1d4 setada", p["tatica_ate"] >= r.round_num + 1 and p["tatica_ate"] <= r.round_num + 4)
+    dano_alvo, transfer = await r._processar_dano_protetor("a", 10)
+    check("tatica: aliado recebe metade", dano_alvo == 5)
+    check("tatica: usuário recebe a outra metade", transfer is not None and transfer[0]["id"] == "h" and transfer[1] == 5)
+    r3 = setup(); r3.current_pid = lambda: "h"; r3.round_num = 1; r3._no_raio = r._no_raio
+    p3 = hero("warrior","tecnica_tatica_defensiva"); p3["pos"]=[0,0]; r3.players["h"]=p3
+    far = make_player("a","Ana","cleric",1); far["alive"]=True; far["pos"]=[9,9]; r3.players["a"]=far
+    await r3.handle_usar_tecnica("h","tecnica_tatica_defensiva","a")
+    check("tatica: recusa aliado fora do raio 4", p3.get("tatica_alvo") is None)
+
+    # [10] Passo Fantasma
+    print("\n[10] Passo Fantasma")
+    import random as _rnd2; _rnd2.seed(5)
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("warrior", "tecnica_passo_fantasma"); p["moves_left"] = p["spd"]; r.players["h"] = p
+    await r.handle_usar_tecnica("h", "tecnica_passo_fantasma")
+    check("passo: +2 movimento imediato", p["moves_left"] == p["spd"] + 2)
+    check("passo: buff de mov transitório", p["mov_bonus_ate"] == r.round_num + 1 and p.get("mov_bonus_val") == 2)
+    check("passo: janela 1d4 setada", p["passo_fantasma_ate"] >= r.round_num + 1 and p["passo_fantasma_ate"] <= r.round_num + 4)
+    check("passo: _passo_fantasma_ativo True", r._passo_fantasma_ativo(p) is True)
+    r.round_num += 5
+    check("passo: expira", r._passo_fantasma_ativo(p) is False)
+
+    # [11] Investida Heroica
+    print("\n[11] Investida Heroica")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("warrior", "tecnica_investida"); p["pos"] = [0,0]; p["moves_left"] = p["spd"]; r.players["h"] = p
+    await r.handle_usar_tecnica("h", "tecnica_investida")
+    check("investida: dobra movimento", p["moves_left"] == p["spd"] + p["spd"])
+    check("investida: armada + origem", p["investida_armada"] is True and p["investida_origem"] == [0,0])
+    p["pos"] = [0,3]   # andou 3 em linha reta (coluna)
+    check("investida: reto ≥2 melee → 2", r._investida_tecnica_bonus(p, is_ranged=False) == 2)
+    check("investida: ranged → 0", r._investida_tecnica_bonus(p, is_ranged=True) == 0)
+    p["pos"] = [1,1]   # L (dx=1,dy=1) → não é reto
+    check("investida: L → 0", r._investida_tecnica_bonus(p, is_ranged=False) == 0)
+    p["pos"] = [0,1]   # reto mas só 1
+    check("investida: reto <2 → 0", r._investida_tecnica_bonus(p, is_ranged=False) == 0)
+    p2 = hero("warrior"); p2["pos"] = [0,5]
+    check("investida: sem flag → 0", r._investida_tecnica_bonus(p2, is_ranged=False) == 0)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

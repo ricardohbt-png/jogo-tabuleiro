@@ -318,6 +318,47 @@ GUILD_CATALOG = {
         "desc": "O seu movimento é dobrado nesta rodada.",
         "efeito": {"tipo": "mov_self_dobrar"},
     },
+    # ── Técnicas de Recarga Média (Fase 2b) ─────────────────────────────────
+    "tecnica_investida": {
+        "id": "tecnica_investida", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 180, "custo_fome": 4, "custo_sede": 4, "recarga_rodadas": 5,
+        "nome": "Investida Heroica", "icon": "⚡",
+        "desc": "Dobra o movimento; se andar ≥2 casas em linha reta, o próximo ataque corpo a corpo tem vantagem +2 dano.",
+        "efeito": {"tipo": "investida", "bonus_dano": 2},
+    },
+    "tecnica_defesa_impecavel": {
+        "id": "tecnica_defesa_impecavel", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 180, "custo_fome": 4, "custo_sede": 4, "recarga_rodadas": 5,
+        "nome": "Defesa Impecável", "icon": "🛡️",
+        "desc": "Até o próximo turno, ataques contra você têm desvantagem e você fica imune a Ataque Furtivo.",
+        "efeito": {"tipo": "defesa_impecavel"},
+    },
+    "tecnica_pressao_constante": {
+        "id": "tecnica_pressao_constante", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 180, "custo_fome": 4, "custo_sede": 4, "recarga_rodadas": 5,
+        "nome": "Pressão Constante", "icon": "😖", "alvo": "monstro_adjacente",
+        "desc": "Um inimigo adjacente sofre -2 de CA por 2 rodadas.",
+        "efeito": {"tipo": "debuff_ca_alvo", "ca": 2, "rodadas": 2},
+    },
+    "tecnica_tatica_defensiva": {
+        "id": "tecnica_tatica_defensiva", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 180, "custo_fome": 4, "custo_sede": 4, "recarga_rodadas": 5,
+        "nome": "Tática Defensiva", "icon": "🤝", "alvo": "aliado_raio4",
+        "desc": "Escolha um aliado em até 4 casas; por 1d4 rodadas, metade do dano dele é transferida a você.",
+        "efeito": {"tipo": "tatica_defensiva", "raio": 4},
+    },
+    "tecnica_passo_fantasma": {
+        "id": "tecnica_passo_fantasma", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 180, "custo_fome": 4, "custo_sede": 4, "recarga_rodadas": 5,
+        "nome": "Passo Fantasma", "icon": "👻",
+        "desc": "Por 1d4 rodadas: +2 de movimento e você atravessa casas ocupadas por objetos (não paredes nem criaturas).",
+        "efeito": {"tipo": "passo_fantasma", "bonus_mov": 2},
+    },
     "guerreiro_combinar_2": {
         "id": "guerreiro_combinar_2", "categoria": "especializacao", "classe": "warrior",
         "linha": "guerreiro_combate", "nivel": 2, "requer": None, "exclusiva": False,
@@ -3350,6 +3391,12 @@ def make_player(pid, name, cls_id, slot):
         "technique_cooldowns": {},          # { tecnica_id: pronta_em_round } — runtime
         "tecnica_buff_dano_arma": 0,        # Brutalidade: +N dano de arma até fim do turno
         "tecnica_mira_perfeita": False,     # Mira Perfeita: próximo ataque à distância
+        "investida_armada": False,          # Investida Heroica: charge armada
+        "investida_origem": None,           # pos ao ativar a Investida
+        "defesa_impecavel_ate": 0,          # Defesa Impecável até esta rodada
+        "tatica_alvo": None,                # Tática Defensiva: aliado protegido
+        "tatica_ate": 0,                    # Tática Defensiva até esta rodada
+        "passo_fantasma_ate": 0,            # Passo Fantasma até esta rodada
         "imune_silencio_ate": 0,            # Espírito Indomável: imunidade a Silêncio até esta rodada
         "mov_bonus_ate": 0,                 # Grito de Guerra: +2 movimento no reset até esta rodada
         # Buffs de turno do warrior (flags planas) — limpos em handle_end_turn
@@ -4051,6 +4098,18 @@ class GameRoom:
         """+N de dano de arma concedido por técnica de turno (Brutalidade)."""
         return p.get("tecnica_buff_dano_arma", 0)
 
+    def _pressao_ca_pen(self, m):
+        """-CA da Pressão Constante enquanto ativa no monstro."""
+        return m.get("pressao_ca_val", 0) if m.get("pressao_ca_ate", 0) >= self.round_num else 0
+
+    def _defesa_impecavel_ativa(self, p):
+        """True enquanto a janela da Defesa Impecável estiver ativa (até o próximo turno)."""
+        return p.get("defesa_impecavel_ate", 0) >= self.round_num
+
+    def _passo_fantasma_ativo(self, p):
+        """True enquanto a janela do Passo Fantasma estiver ativa (1d4 rodadas)."""
+        return p.get("passo_fantasma_ate", 0) >= self.round_num
+
     def _furia_extras(self, p):
         """Ataques extras concedidos pela Fúria: 2 com Nível III, senão 1."""
         return 2 if tem_espec(p, "guerreiro_furia_3") else 1
@@ -4257,6 +4316,34 @@ class GameRoom:
             p["imune_silencio_ate"] = self.round_num + 1
         elif ef.get("tipo") == "mira_perfeita":
             p["tecnica_mira_perfeita"] = True
+        elif ef.get("tipo") == "debuff_ca_alvo":
+            alvo = self.monsters.get(target_id) if target_id else None
+            if not alvo or alvo.get("hp", 0) <= 0:
+                await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
+            if max(abs(alvo["pos"][0]-p["pos"][0]), abs(alvo["pos"][1]-p["pos"][1])) > 1:
+                await self.send_to(pid, {"type": "error", "msg": "O inimigo precisa estar adjacente."}); return
+            alvo["pressao_ca_val"] = ef.get("ca", 2)
+            alvo["pressao_ca_ate"] = self.round_num + ef.get("rodadas", 2)
+        elif ef.get("tipo") == "defesa_impecavel":
+            p["defesa_impecavel_ate"] = self.round_num + 1
+        elif ef.get("tipo") == "tatica_defensiva":
+            alvo = self.players.get(target_id) if target_id else None
+            if not alvo or not alvo.get("alive") or alvo["id"] == pid:
+                await self.send_to(pid, {"type": "error", "msg": "Escolha um aliado vivo."}); return
+            if not self._no_raio(p, alvo, ef.get("raio", 4)):
+                await self.send_to(pid, {"type": "error", "msg": "Aliado fora do alcance (4 casas)."}); return
+            p["tatica_alvo"] = alvo["id"]
+            p["tatica_ate"] = self.round_num + roll_dice("1d4")
+        elif ef.get("tipo") == "passo_fantasma":
+            p["passo_fantasma_ate"] = self.round_num + roll_dice("1d4")
+            b = ef.get("bonus_mov", 2)
+            p["moves_left"] = p.get("moves_left", 0) + b
+            p["mov_bonus_ate"] = self.round_num + 1
+            p["mov_bonus_val"] = b
+        elif ef.get("tipo") == "investida":
+            p["moves_left"] = p.get("moves_left", 0) + p.get("spd", 0)
+            p["investida_origem"] = list(p["pos"])
+            p["investida_armada"] = True
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
@@ -5065,10 +5152,11 @@ class GameRoom:
             await self.send_to(pid, {"type": "error",
                 "msg": "🚪 A porta está fechada. Clique nela para abri-la."})
             return
-        if (nx, ny) in self._decor_block_tiles:
+        _passo = self._passo_fantasma_ativo(p)
+        if not _passo and (nx, ny) in self._decor_block_tiles:
             await self.send_to(pid, {"type": "error", "msg": "Há um objeto bloqueando o caminho."})
             return
-        if (nx, ny) in self._mat_solid_tiles:
+        if not _passo and (nx, ny) in self._mat_solid_tiles:
             await self.send_to(pid, {"type": "error", "msg": "Escombros bloqueiam o caminho."})
             return
 
@@ -5269,6 +5357,8 @@ class GameRoom:
         """True se Luccas estiver invisível nas sombras/oculto (base), OU (com
         ladino_furtivo_2) houver um aliado vivo (jogador) adjacente — Chebyshev
         — ao alvo."""
+        if alvo.get("defesa_impecavel_ate", 0) >= self.round_num:
+            return False   # Defesa Impecável: imune a Ataque Furtivo (inerte hoje — nenhum monstro dá furtivo a jogador)
         if luccas.get("invisivel_sombras") or luccas.get("oculto_vela"):
             return True
         if not tem_espec(luccas, "ladino_furtivo_2"):
@@ -5504,20 +5594,24 @@ class GameRoom:
             eff_target_ac = (target["ac"] + self._mod_magia(target, "ca")
                              + self._camuflagem_bonus(target)
                              + self._cacador_trevas_ca_bonus(target)        # Caçador das Trevas: +2 CA em área escura
+                             - self._pressao_ca_pen(target)                 # Pressão Constante: -2 CA
                              - self._furia_cega_ca_pen(target)
                              - self._lento_previsivel_ca_pen(target))       # Ogro: -2 CA após errar
             # Vantagem (Invisibilidade ou Visão no Escuro na escuridão) vs Desvantagem
             # (atacar às cegas na escuridão). Vantagem+desvantagem se anulam.
             esc = self._verificar_escuridao(p, target)
             _mira_ranged = bool(w_range is not None and p.get("tecnica_mira_perfeita"))
+            _investida = bool(w_range is None and self._investida_tecnica_bonus(p, is_ranged=False))
             vantagem    = (bool(p.get("invisivel_magico")) or bool(p.get("oculto_vela"))
                            or esc == "vantagem"
                            or self._provocacao_atk_vantagem(p, target)
-                           or _mira_ranged)
+                           or _mira_ranged or _investida)
             desvantagem = esc == "desvantagem"
             hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
             if _mira_ranged:
                 p["tecnica_mira_perfeita"] = False   # consumida no ataque à distância (acerto ou erro)
+            if p.get("investida_armada") and w_range is None:
+                p["investida_armada"] = False   # consome no 1º ataque corpo a corpo
 
             # ── Consumo de munição (projétil gasto ao atirar, hit ou miss) ──
             _ammo_extra_dmg   = None   # dano extra do projétil especial (incendiário)
@@ -5573,6 +5667,7 @@ class GameRoom:
                     dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano
                               + self._mod_magia(p, "dano") + self._tecnica_bonus_dano(p)
                               + (2 if _mira_ranged else 0)   # Mira Perfeita: +2 no ataque à distância
+                              + (2 if _investida else 0)      # Investida Heroica (carga reta ≥2)
                               + p.get("skill_bonus_dano", 0)
                               - self._corrosao_arma_pen(p))
                     # Fraquezas/imunidades ao dano físico da arma
@@ -7464,6 +7559,20 @@ class GameRoom:
              and q.get("alive")),
             None)
         if not richard:
+            # Tática Defensiva (técnica genérica): split 50/50, expira por rodada, sem upkeep.
+            tatico = next(
+                (q for q in self.players.values()
+                 if q.get("tatica_alvo") == alvo_id and q.get("tatica_ate", 0) >= self.round_num
+                 and q.get("alive") and q["id"] != alvo_id),
+                None)
+            if tatico:
+                dano_aliado = dano_original // 2
+                dano_tatico = dano_original - dano_aliado
+                alvo_nome = self.players.get(alvo_id, {}).get("name", "aliado")
+                await self.gm_say(
+                    f"🤝 **Tática Defensiva**: **{tatico['name']}** assume {dano_tatico} do dano "
+                    f"de **{alvo_nome}** (que sofre {dano_aliado}).")
+                return dano_aliado, (tatico, dano_tatico)
             return dano_original, None
         alvo = self.players.get(alvo_id)
         if not alvo or not self._no_raio(richard, alvo, self._defensor_raio(richard)):
@@ -10860,6 +10969,8 @@ class GameRoom:
         p["skill_ataques_extras"] = 0
         p["tecnica_buff_dano_arma"] = 0   # buff de técnica de turno (Brutalidade) expira
         p["tecnica_mira_perfeita"] = False   # Mira Perfeita não usada expira no fim do turno
+        p["investida_armada"] = False   # Investida não usada expira no fim do turno
+        p["investida_origem"] = None
         p["cancao_atacou_apos"] = False   # reabre o custo extra de atacar sob a canção no novo turno
         # metamagia do mago expira ao fim do turno (flags planas)
         p["aprimorar_ativo"]   = False
@@ -10983,6 +11094,19 @@ class GameRoom:
         """Investida Brutal: +2 de dano se o monstro se moveu antes de atacar
         neste turno (flag `_investiu` setada pela IA)."""
         return 2 if m.get("_investiu") else 0
+
+    def _investida_tecnica_bonus(self, p, is_ranged):
+        """Investida Heroica (Técnica): +2 de dano (e vantagem) se armada, melee
+        e carga reta ≥2 casas desde a ativação."""
+        if is_ranged or not p.get("investida_armada"):
+            return 0
+        o = p.get("investida_origem")
+        if not o:
+            return 0
+        dx, dy = p["pos"][0] - o[0], p["pos"][1] - o[1]
+        if (dx == 0 or dy == 0) and max(abs(dx), abs(dy)) >= 2:
+            return 2
+        return 0
 
     def _furia_cega_dano_bonus(self, m):
         """Fúria Cega: +1 de dano enquanto enfurecido (sofreu dano na rodada anterior)."""
@@ -11523,7 +11647,8 @@ class GameRoom:
                  + self._luz_atk_pen(m))                            # Fraqueza de Luz (-2 sob luz direta)
         esc = self._verificar_escuridao(m, target)
         prov = bool(m.get("provocado_turno_efeito"))
-        desvantagem = prov or esc == "desvantagem"
+        desvantagem = (prov or esc == "desvantagem"
+                       or (is_player and self._defesa_impecavel_ativa(target)))
         vantagem    = esc == "vantagem"
         if vantagem and desvantagem:
             vantagem = desvantagem = False
@@ -13255,7 +13380,8 @@ class GameRoom:
                 # Desvantagem: Provocação OU atacar às cegas na escuridão. Vantagem: ver na escuridão.
                 esc = self._verificar_escuridao(m, target)
                 prov = bool(m.get("provocado_turno_efeito"))
-                desvantagem = prov or esc == "desvantagem"
+                desvantagem = (prov or esc == "desvantagem"
+                               or (is_player and self._defesa_impecavel_ativa(target)))
                 vantagem    = esc == "vantagem"
                 if vantagem and desvantagem:
                     vantagem = desvantagem = False

@@ -37,7 +37,7 @@ def jogo(defm, player_pos, hit=True, save_fail=True):
         return hit
     g._exec_calls = chamadas
     g._execute_one_monster_attack = _exec
-    g._testar_save = lambda alvo, t, dc, extra_mod=0: (not save_fail, 5, 0, 5)
+    g._testar_save = lambda alvo, t, dc, extra_mod=0, fonte=None: (not save_fail, 5, 0, 5)
     ogro = S.make_monster(defm, {"x":0,"y":0,"w":4,"h":4,"cx":1,"cy":1,"id":"r","role":"monster"})
     ogro["pos"] = [1, 1]
     g.monsters = {ogro["id"]: ogro}

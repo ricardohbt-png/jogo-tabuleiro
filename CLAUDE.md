@@ -448,6 +448,24 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > (Contra-Ataque/Ataque Coordenado/Oportunidade/Sangue Frio — exigem framework de
 > reação), 2d passivas (Último Esforço); Fase 3 exclusivas Mago/Clérigo.
 
+> **Técnicas de Recarga Média (Fase 2b):** 2º lote das Técnicas da Guilda (recarga 5,
+> preço 180, +4🍖/+4💧). **Investida Heroica** (`investida` — dobra movimento; se a
+> carga for reta ≥2 casas desde a ativação e o ataque for corpo a corpo, vantagem +2
+> dano; `_investida_tecnica_bonus` consumido em `handle_attack` — nome distinto do
+> `_investida_bonus` do Ogro), **Defesa Impecável** (`defesa_impecavel` — até o próximo
+> turno, ataques contra você com desvantagem via `_defesa_impecavel_ativa` nos 2 sites
+> de ataque de monstro; + imune a furtivo em `_verificar_ataque_furtivo` — inerte hoje,
+> nenhum monstro dá furtivo a jogador), **Pressão Constante** (`debuff_ca_alvo` —
+> inimigo **adjacente** −2 CA por 2 rodadas via `_pressao_ca_pen` no `eff_target_ac`),
+> **Tática Defensiva** (`tatica_defensiva` — aliado em raio 4, 1d4 rodadas, split 50/50
+> generalizando `_processar_dano_protetor`: protetor genérico além do Protetor do
+> paladino), **Passo Fantasma** (`passo_fantasma` — 1d4 rodadas: +2 movimento
+> [compartilha `mov_bonus_*` com o Grito] + atravessa objetos em `handle_move`,
+> mantendo paredes/portas/criaturas). Cliente: técnicas com campo `alvo`
+> (`monstro_adjacente`/`aliado_raio4`) abrem `openTargetModal` no botão do 4º slot.
+> Teste: `tools/test_tecnicas_espec.py`. **Foco Absoluto** adiado (vira reação
+> "Resistência Absoluta" no lote de reações — resolver conflito de nome com a de 8r).
+
 > **Reviver os Mortos (Fase 1g):** gateia a habilidade de classe de Pedro (não
 > mexida nas Fases 1a–1f). Slots de Controle = mod(INT) + nível_Pedro÷2 (mín. 1;
 > **mantido** o termo de nível de Pedro, ao contrário do padrão "baseline
