@@ -4315,6 +4315,13 @@ class GameRoom:
         """+N em todos os testes de resistência (Técnica Resistência Absoluta) enquanto válido nesta rodada."""
         return p.get("resistencia_saves_val", 0) if p.get("resistencia_saves_ate", 0) >= self.round_num else 0
 
+    def _sangue_frio_consumir(self, p):
+        """Consome a re-rolagem do Sangue Frio se armada. Retorna True se deve re-rolar."""
+        if p.get("sangue_frio_armado"):
+            p["sangue_frio_armado"] = False
+            return True
+        return False
+
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
         if self.phase != "playing":
@@ -4390,6 +4397,8 @@ class GameRoom:
         elif ef.get("tipo") == "buff_saves":
             p["resistencia_saves_ate"] = self.round_num + ef.get("rodadas", 2)
             p["resistencia_saves_val"] = ef.get("saves", 2)
+        elif ef.get("tipo") == "sangue_frio":
+            p["sangue_frio_armado"] = True
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
@@ -5685,6 +5694,9 @@ class GameRoom:
                            or _mira_ranged or _investida)
             desvantagem = esc == "desvantagem"
             hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
+            if not hit and self._sangue_frio_consumir(p):
+                await self.gm_say(f"🧊 **{p['name']}** mantém o sangue frio e rola novamente!")
+                hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
             if _mira_ranged:
                 p["tecnica_mira_perfeita"] = False   # consumida no ataque à distância (acerto ou erro)
             if p.get("investida_armada") and w_range is None:

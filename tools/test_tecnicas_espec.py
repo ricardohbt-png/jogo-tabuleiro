@@ -275,6 +275,16 @@ async def main():
     r.round_num += 3
     check("resist: expira", r._resistencia_saves_bonus(p) == 0)
 
+    # [15] Sangue Frio
+    print("\n[15] Sangue Frio")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("warrior", "tecnica_sangue_frio"); r.players["h"] = p
+    await r.handle_usar_tecnica("h", "tecnica_sangue_frio")
+    check("sangue frio: armado", p.get("sangue_frio_armado") is True)
+    check("sangue frio: consome e retorna True quando armado", r._sangue_frio_consumir(p) is True)
+    check("sangue frio: desarmado após consumir", p.get("sangue_frio_armado") is False)
+    check("sangue frio: sem re-roll se desarmado", r._sangue_frio_consumir(p) is False)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
