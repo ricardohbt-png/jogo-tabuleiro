@@ -285,6 +285,28 @@ async def main():
     check("sangue frio: desarmado após consumir", p.get("sangue_frio_armado") is False)
     check("sangue frio: sem re-roll se desarmado", r._sangue_frio_consumir(p) is False)
 
+    # [16] Ataque Coordenado
+    print("\n[16] Ataque Coordenado")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1; r.turn_index = 0
+    r._alvo_no_alcance_arma = lambda p_, t_: True
+    p = hero("warrior", "tecnica_ataque_coordenado"); p["pos"] = [0,0]; r.players["h"] = p
+    ally = make_player("a","Ana","warrior",1); ally["alive"]=True; ally["pos"]=[1,0]
+    ally["atk_bonus"]=3; ally["weapon"]={"id":"machado_basico","die":"1d6","stat":"str_"}; r.players["a"]=ally
+    await r.handle_usar_tecnica("h", "tecnica_ataque_coordenado", "a")
+    check("coord: par gravado", p["coordenado_alvo"] == "a" and p["coordenado_turno"] == r.turn_index)
+    alvo = {"id":"m1","name":"Orc","nome":"Orc","pos":[0,1],"hp":20,"max_hp":20,"ac":10,"ca":10}
+    r.monsters = {"m1": alvo}; r._rolar_ataque = lambda a,b,v=False,d=False:(True,18,20,False,3)
+    async def _mdies(*a,**k): return None
+    r._monster_dies = _mdies
+    hp0 = alvo["hp"]
+    await r._reacao_ataque_coordenado(p, alvo)
+    check("coord: par atacou o alvo", alvo["hp"] < hp0)
+    check("coord: consumiu no turno", p["coordenado_alvo"] is None)
+    r2 = setup(); r2.current_pid = lambda: "h"; r2.round_num = 1
+    p2 = hero("warrior","tecnica_ataque_coordenado"); r2.players["h"]=p2
+    await r2.handle_usar_tecnica("h","tecnica_ataque_coordenado", None)
+    check("coord: recusa sem aliado", p2.get("coordenado_alvo") is None)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

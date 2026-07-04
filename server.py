@@ -4399,6 +4399,12 @@ class GameRoom:
             p["resistencia_saves_val"] = ef.get("saves", 2)
         elif ef.get("tipo") == "sangue_frio":
             p["sangue_frio_armado"] = True
+        elif ef.get("tipo") == "ataque_coordenado":
+            alvo = self.players.get(target_id) if target_id else None
+            if not alvo or not alvo.get("alive") or alvo["id"] == pid:
+                await self.send_to(pid, {"type": "error", "msg": "Escolha um aliado vivo."}); return
+            p["coordenado_alvo"] = alvo["id"]
+            p["coordenado_turno"] = self.turn_index
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
@@ -5508,6 +5514,25 @@ class GameRoom:
         if alvo["hp"] <= 0:
             await self._monster_dies(alvo, atacante.get("id"))
 
+    def _alvo_no_alcance_arma(self, p, target):
+        """STUB temporário (Task 6 substitui pela versão completa: melee=adjacente,
+        à distância=alcance real da arma). Por ora, só cobre corpo a corpo."""
+        return self._is_adjacent_to_monster(p["pos"], target)
+
+    async def _reacao_ataque_coordenado(self, atacante, alvo_monstro):
+        """Ataque Coordenado: o aliado par faz um ataque básico reativo no mesmo
+        inimigo (1x no turno), se estiver no alcance da própria arma."""
+        if atacante.get("coordenado_turno") != self.turn_index:
+            return
+        par_id = atacante.get("coordenado_alvo")
+        atacante["coordenado_alvo"] = None   # consome (1x/turno), mesmo se não alcançar
+        par = self.players.get(par_id) if par_id else None
+        if not par or not par.get("alive") or not alvo_monstro or alvo_monstro.get("hp", 0) <= 0:
+            return
+        if not self._alvo_no_alcance_arma(par, alvo_monstro):
+            return
+        await self._ataque_basico_reativo(par, alvo_monstro)
+
     async def _quebrar_invisibilidade(self, p, motivo="ao agir"):
         """Encerra o estado invisível das sombras (atacar/mover revela Luccas)."""
         if not p.get("invisivel_sombras"):
@@ -5854,6 +5879,7 @@ class GameRoom:
         # ── Custo de sobrevivência do ATAQUE BÁSICO: -1 fome por ação de ataque ─
         # (somado aos custos das habilidades armadas, já cobrados acima).
         p["fome"] = max(0, p["fome"] - 1)
+        await self._reacao_ataque_coordenado(p, target)
 
         # ── Ataque de mão secundária (dual-wield) — CUSTA AÇÃO BÔNUS ────────────
         # Se a off_hand for uma arma (tem `die`), o alvo seguir vivo e ao alcance,
@@ -11061,6 +11087,7 @@ class GameRoom:
         p["tecnica_mira_perfeita"] = False   # Mira Perfeita não usada expira no fim do turno
         p["investida_armada"] = False   # Investida não usada expira no fim do turno
         p["investida_origem"] = None
+        p["coordenado_alvo"] = None   # Ataque Coordenado expira no fim do turno
         p["cancao_atacou_apos"] = False   # reabre o custo extra de atacar sob a canção no novo turno
         # metamagia do mago expira ao fim do turno (flags planas)
         p["aprimorar_ativo"]   = False
