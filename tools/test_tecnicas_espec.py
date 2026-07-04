@@ -224,6 +224,18 @@ async def main():
     p2 = hero("warrior"); p2["pos"] = [0,5]
     check("investida: sem flag → 0", r._investida_tecnica_bonus(p2, is_ranged=False) == 0)
 
+    # [12] Catálogo — Reações (2c)
+    print("\n[12] Catálogo — Reações")
+    for tid, rec, preco, cf in [("tecnica_ataque_coordenado",5,180,4),("tecnica_sangue_frio",5,180,2),
+                                ("tecnica_resistencia_absoluta",5,180,4),("tecnica_contra_ataque",8,280,6)]:
+        it = S.guild_item(tid)
+        check(f"existe {tid}", it is not None)
+        check(f"{tid} recarga {rec}", it and it["recarga_rodadas"] == rec)
+        check(f"{tid} preco {preco}", it and it["preco"] == preco)
+        check(f"{tid} custo {cf}/{cf}", it and it["custo_fome"] == cf and it["custo_sede"] == cf)
+        check(f"{tid} classe None", it and it["classe"] is None)
+    check("coordenado exige alvo aliado", S.guild_item("tecnica_ataque_coordenado").get("alvo") == "aliado")
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
