@@ -4479,6 +4479,8 @@ class GameRoom:
                     "msg": "Escolha um aliado vivo (não pode ser você)."}); return
             alvo["oportunidade_credito"] = True
             alvo["oportunidade_round"] = self.round_num
+        elif ef.get("tipo") == "golpe_decisivo":
+            p["tecnica_golpe_decisivo_armado"] = True
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
@@ -5822,15 +5824,20 @@ class GameRoom:
             esc = self._verificar_escuridao(p, target)
             _mira_ranged = bool(w_range is not None and p.get("tecnica_mira_perfeita"))
             _investida = bool(w_range is None and self._investida_tecnica_bonus(p, is_ranged=False))
+            _forca_critico = bool(p.get("tecnica_golpe_decisivo_armado")) or bool(p.get("ultimo_esforco_ativo"))
             vantagem    = (bool(p.get("invisivel_magico")) or bool(p.get("oculto_vela"))
                            or esc == "vantagem"
                            or self._provocacao_atk_vantagem(p, target)
-                           or _mira_ranged or _investida)
+                           or _mira_ranged or _investida or bool(p.get("ultimo_esforco_ativo")))
             desvantagem = esc == "desvantagem"
             hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
             if not hit and self._sangue_frio_consumir(p):
                 await self.gm_say(f"🧊 **{p['name']}** mantém o sangue frio e rola novamente!")
                 hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
+            if hit and _forca_critico:
+                crit = True
+            if p.get("tecnica_golpe_decisivo_armado"):
+                p["tecnica_golpe_decisivo_armado"] = False   # consumida no próximo ataque, acerte ou erre
             if _mira_ranged:
                 p["tecnica_mira_perfeita"] = False   # consumida no ataque à distância (acerto ou erro)
             if p.get("investida_armada") and w_range is None:
@@ -5886,7 +5893,7 @@ class GameRoom:
                     else:
                         stat_bonus = mod(p.get(weapon["stat"], 12))
                     dmg = raw_dmg + stat_bonus
-                    if crit: dmg *= 2
+                    if crit: dmg *= 3 if (_forca_critico and roll == 20) else 2
                     dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano
                               + self._mod_magia(p, "dano") + self._tecnica_bonus_dano(p)
                               + (2 if _mira_ranged else 0)   # Mira Perfeita: +2 no ataque à distância
@@ -5906,7 +5913,7 @@ class GameRoom:
                     str_bonus = mod(p.get("str_", 12))
                     base = 2 if p.get("skill_dobrar_dano") else 1   # Golpe Devastador
                     dmg = base + str_bonus
-                    if crit: dmg *= 2
+                    if crit: dmg *= 3 if (_forca_critico and roll == 20) else 2
                     dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano + self._mod_magia(p, "dano")
                               + self._tecnica_bonus_dano(p))
                     weapon_name = "soco"
@@ -11199,6 +11206,7 @@ class GameRoom:
         p["skill_ataques_extras"] = 0
         p["tecnica_buff_dano_arma"] = 0   # buff de técnica de turno (Brutalidade) expira
         p["tecnica_mira_perfeita"] = False   # Mira Perfeita não usada expira no fim do turno
+        p["tecnica_golpe_decisivo_armado"] = False   # Golpe Decisivo não usado expira no fim do turno
         p["investida_armada"] = False   # Investida não usada expira no fim do turno
         p["investida_origem"] = None
         p["coordenado_alvo"] = None   # Ataque Coordenado expira no fim do turno

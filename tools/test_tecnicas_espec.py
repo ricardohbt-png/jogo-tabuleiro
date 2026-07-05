@@ -530,6 +530,54 @@ async def main():
     check("instinto: Regeneração do Paladino tem prioridade", p2["hp"] == 1 and p2["alive"] is True
           and r2.tecnica_restante(p2, "tecnica_instinto_sobrevivencia") == 0)
 
+    # [25] Golpe Decisivo
+    print("\n[25] Golpe Decisivo")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1; r._is_turn = lambda pid: True
+    p = hero("warrior", "tecnica_golpe_decisivo"); r.players["h"] = p
+    await r.handle_usar_tecnica("h", "tecnica_golpe_decisivo")
+    check("golpe: flag armada", p.get("tecnica_golpe_decisivo_armado") is True)
+    check("golpe: recarga setada", r.tecnica_restante(p, "tecnica_golpe_decisivo") == 10)
+
+    # Integração: acerto SEM nat20 vira crítico (×2); acerto COM nat20 vira ×3.
+    def _mk_room_golpe(natural20):
+        rr = setup(); rr.current_pid = lambda: "h"; rr._is_turn = lambda pid: True
+        hh = hero("warrior"); hh["tecnica_golpe_decisivo_armado"] = True; hh["pos"] = [0, 0]
+        hh["atk_bonus"] = 0
+        hh["weapon"] = {"id": "machado_basico", "name": "Machado", "die": "1d6", "stat": "str_"}
+        rr.players["h"] = hh
+        rr.monsters = {"m1": {"id": "m1", "name": "Alvo", "nome": "Alvo", "pos": [0, 1],
+                              "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
+        roll = 20 if natural20 else 12
+        rr._rolar_ataque = lambda atk, ac, v=False, d=False: (True, roll, roll + atk, roll == 20, None)
+        rr._golpe_raw = lambda p_, raw: raw   # sem especialização do guerreiro interferindo
+        return rr, hh
+    rr1, hh1 = _mk_room_golpe(False)
+    hp0 = rr1.monsters["m1"]["hp"]
+    await rr1.handle_attack("h", "m1")
+    dmg1 = hp0 - rr1.monsters["m1"]["hp"]
+    check("golpe: acerto sem nat20 vira crítico (dobrado)", dmg1 >= 2)   # 1d6(min1)+0, dobrado >=2
+    check("golpe: flag consumida após o ataque", hh1.get("tecnica_golpe_decisivo_armado") is False)
+
+    rr2, hh2 = _mk_room_golpe(True)
+    hp0b = rr2.monsters["m1"]["hp"]
+    await rr2.handle_attack("h", "m1")
+    dmg2 = hp0b - rr2.monsters["m1"]["hp"]
+    check("golpe: nat20 enquanto armado triplica", dmg2 >= 3)
+
+    # Consumida mesmo em erro.
+    rr3, hh3 = _mk_room_golpe(False)
+    rr3._rolar_ataque = lambda atk, ac, v=False, d=False: (False, 2, 2, False, None)
+    await rr3.handle_attack("h", "m1")
+    check("golpe: consumida mesmo errando", hh3.get("tecnica_golpe_decisivo_armado") is False)
+
+    # Expira no fim do turno sem uso.
+    r4 = setup(); r4.current_pid = lambda: "h"
+    p4 = hero("warrior"); p4["tecnica_golpe_decisivo_armado"] = True; p4["moves_left"] = p4["spd"]
+    r4.players["h"] = p4
+    r4.player_order = ["h"]; r4.turn_index = 0
+    await r4.handle_end_turn("h")
+    check("golpe: expira no fim do turno sem uso", p4.get("tecnica_golpe_decisivo_armado") is False)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
