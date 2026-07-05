@@ -395,6 +395,36 @@ async def main():
     await r3.handle_usar_tecnica("h", "tecnica_oportunidade", "m")
     check("concessão: recusa aliado morto", morto.get("oportunidade_credito") is False)
 
+    # [21] Oportunidade — via movimento
+    print("\n[21] Oportunidade — via movimento")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 7
+    p = hero("warrior"); p["moves_left"] = p["spd"]
+    p["oportunidade_credito"] = True; p["oportunidade_round"] = 7
+    r.players["h"] = p
+    await r.handle_usar_oportunidade_movimento("h")
+    check("movimento: +spd em moves_left", p["moves_left"] == p["spd"] + p["spd"])
+    check("movimento: crédito consumido", p["oportunidade_credito"] is False)
+    # Sem crédito válido: recusa e não mexe no movimento
+    r2 = setup(); r2.current_pid = lambda: "h"; r2.round_num = 7
+    p2 = hero("warrior"); p2["moves_left"] = p2["spd"]; r2.players["h"] = p2
+    await r2.handle_usar_oportunidade_movimento("h")
+    check("movimento: recusa sem crédito", p2["moves_left"] == p2["spd"]
+          and any("oportunidade" in e.lower() for e in r2._errs))
+    # Crédito de rodada anterior (expirado): recusa
+    r3 = setup(); r3.current_pid = lambda: "h"; r3.round_num = 8
+    p3 = hero("warrior"); p3["moves_left"] = p3["spd"]
+    p3["oportunidade_credito"] = True; p3["oportunidade_round"] = 7   # round atual é 8
+    r3.players["h"] = p3
+    await r3.handle_usar_oportunidade_movimento("h")
+    check("movimento: recusa crédito expirado", p3["moves_left"] == p3["spd"])
+    # Fora do próprio turno: recusa
+    r4 = setup(); r4.current_pid = lambda: "outro"; r4.round_num = 7
+    p4 = hero("warrior"); p4["moves_left"] = p4["spd"]
+    p4["oportunidade_credito"] = True; p4["oportunidade_round"] = 7
+    r4.players["h"] = p4
+    await r4.handle_usar_oportunidade_movimento("h")
+    check("movimento: recusa fora do próprio turno", p4["moves_left"] == p4["spd"])
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

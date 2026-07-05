@@ -4433,6 +4433,24 @@ class GameRoom:
         await self.gm_say(f"⚔️ **{p['name']}** ativa **{item['nome']}**!")
         await self.push_state()
 
+    async def handle_usar_oportunidade_movimento(self, pid):
+        """Gasta o crédito de Oportunidade na via 'movimento extra' (soma spd a
+        moves_left). A via 'ação principal extra' não precisa de handler dedicado —
+        é consumida automaticamente por _acao_bloqueada na primeira ação principal."""
+        if not self._is_turn(pid):
+            return
+        p = self.players.get(pid)
+        if not p or not p.get("alive"):
+            return
+        if not (p.get("oportunidade_credito") and p.get("oportunidade_round") == self.round_num):
+            await self.send_to(pid, {"type": "error",
+                "msg": "Sem crédito de Oportunidade disponível."})
+            return
+        p["oportunidade_credito"] = False
+        p["moves_left"] = p.get("moves_left", 0) + p.get("spd", 0)
+        await self.gm_say(f"⏳ **{p['name']}** aproveita a Oportunidade para se mover mais!")
+        await self.push_state()
+
     async def handle_shop_buy(self, pid, shop, item_id):
         if self.phase != "city":
             return
@@ -14400,6 +14418,9 @@ async def handler(ws):
 
                 elif t == "usar_tecnica":
                     if room: await room.handle_usar_tecnica(pid, msg.get("tecnica_id"), msg.get("target_id"))
+
+                elif t == "usar_oportunidade_movimento":
+                    if room: await room.handle_usar_oportunidade_movimento(pid)
 
                 elif t == "set_known_spells":
                     if room: await room.handle_set_known_spells(pid, msg.get("ids"))
