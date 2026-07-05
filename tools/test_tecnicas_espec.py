@@ -625,6 +625,42 @@ async def main():
     check("sorte: limpa ultimo_ataque_perdido após usar", p.get("ultimo_ataque_perdido") is None)
     check("sorte: recarga setada", r.tecnica_restante(p, "tecnica_sorte") == 10)
 
+    # Prova stored-vs-live: o reroll TEM que usar o eff_atk CONGELADO no momento
+    # do erro original, e não recomputar a partir do atk_bonus atual do jogador.
+    # Fluxo: erra um ataque de verdade via handle_attack (eff_atk calculado com
+    # atk_bonus=0 → guardado em ultimo_ataque_perdido["eff_atk"]); DEPOIS mudamos
+    # p["atk_bonus"] para um valor bem diferente (99) — se o código relesse o
+    # estado ao vivo em vez do dict congelado, o reroll enxergaria esse 99. Em
+    # vez de mockar _rolar_ataque com um valor de retorno fixo (o que mascararia
+    # a diferença), capturamos o argumento `atk` recebido e comparamos com o
+    # eff_atk que foi de fato gravado no dict — provando que usar_tecnica lê
+    # perdido["eff_atk"] (congelado) e não toca p["atk_bonus"] de novo.
+    rs = setup(); rs.current_pid = lambda: "h"; rs.round_num = 1; rs._is_turn = lambda pid: True
+    ps = hero("warrior", "tecnica_sorte"); ps["pos"] = [0, 0]
+    ps["atk_bonus"] = 0
+    ps["weapon"] = {"id": "machado_basico", "name": "Machado", "die": "1d6", "stat": "str_"}
+    rs.players["h"] = ps
+    rs.monsters = {"m1": {"id": "m1", "name": "Alvo", "nome": "Alvo", "pos": [0, 1],
+                          "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
+    rs._rolar_ataque = lambda atk, ac, v=False, d=False: (False, 2, 2 + atk, False, None)   # erra
+    await rs.handle_attack("h", "m1")
+    eff_atk_congelado = ps["ultimo_ataque_perdido"]["eff_atk"]
+    check("sorte(stored-vs-live): eff_atk foi congelado no miss", eff_atk_congelado == 0)
+
+    # Muda o stat AO VIVO depois do erro — se o reroll recomputasse, usaria 99.
+    ps["atk_bonus"] = 99
+
+    atk_capturado = {}
+    def _rolar_captura(atk, ac, v=False, d=False):
+        atk_capturado["atk"] = atk
+        return (True, 15, 15 + atk, False, None)
+    rs._rolar_ataque = _rolar_captura
+    rs._monster_dies = _mdies
+    rs._golpe_raw = lambda p_, raw: raw
+    await rs.handle_usar_tecnica("h", "tecnica_sorte")
+    check("sorte(stored-vs-live): reroll usa o eff_atk CONGELADO, não o atk_bonus ao vivo",
+          atk_capturado.get("atk") == eff_atk_congelado and atk_capturado.get("atk") != 99)
+
     # Sem erro recente: recusa educadamente.
     r2 = setup(); r2.current_pid = lambda: "h"; r2._is_turn = lambda pid: True
     p2 = hero("warrior", "tecnica_sorte"); r2.players["h"] = p2

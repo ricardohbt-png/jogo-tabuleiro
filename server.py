@@ -4544,6 +4544,10 @@ class GameRoom:
             await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
                                    "label": "🎲 Sorte (nova rolagem)", "hit": hit, "crit": crit})
             if hit:
+                # forca_critico deliberadamente OMITIDO: Sorte só reproduz o d20/CA
+                # congelados do ataque original, nunca deve ressuscitar uma flag de
+                # crítico garantido (Golpe Decisivo/Último Esforço) que já foi
+                # consumida (ou nem estava armada) no momento do erro original.
                 dmg, weapon_name, dmg_detail, raw_dmg, die_str = self._resolver_dano_ataque_basico(
                     p, alvo, crit, roll, surv_mod=perdido.get("surv_mod", 0),
                     cancao_dano=perdido.get("cancao_dano", 0), gl_dano=perdido.get("gl_dano", 0))
@@ -5922,6 +5926,12 @@ class GameRoom:
             if p.get("investida_armada") and w_range is None:
                 p["investida_armada"] = False   # consome no 1º ataque corpo a corpo
 
+            # Dict de 7 campos em vez de um booleano: o reroll da Sorte acontece
+            # como uma AÇÃO SEPARADA E POSTERIOR (usar_tecnica), não inline aqui —
+            # então precisa reconstruir o contexto exato da rolagem original
+            # (acerto/CA/vantagem/modificadores do instante do erro), já que o
+            # estado ao vivo do jogador pode ter mudado até lá (buffs expirados,
+            # atk_bonus diferente, etc.).
             if not hit and tem_tecnica_equipada(p, "tecnica_sorte"):
                 p["ultimo_ataque_perdido"] = {
                     "target_id": target_id, "eff_atk": eff_atk, "eff_target_ac": eff_target_ac,
