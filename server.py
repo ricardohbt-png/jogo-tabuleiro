@@ -392,6 +392,16 @@ GUILD_CATALOG = {
         "desc": "Até o próximo turno, quando um inimigo errar você (arma corpo a corpo/alcance ou besta de mão, e ele no alcance), você o ataca de volta.",
         "efeito": {"tipo": "contra_ataque"},
     },
+    "tecnica_oportunidade": {
+        "id": "tecnica_oportunidade", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 350, "custo_fome": 6, "custo_sede": 6, "recarga_rodadas": 10,
+        "nome": "Oportunidade", "icon": "⏳", "alvo": "aliado",
+        "desc": "Escolha um aliado (não pode ser você); no PRÓPRIO turno dele, ganha uma "
+                "ação extra — mover mais, atacar de novo, usar a habilidade de classe de "
+                "novo, ou lançar mais uma magia. Expira no fim desta rodada se não for usada.",
+        "efeito": {"tipo": "oportunidade"},
+    },
     "guerreiro_combinar_2": {
         "id": "guerreiro_combinar_2", "categoria": "especializacao", "classe": "warrior",
         "linha": "guerreiro_combate", "nivel": 2, "requer": None, "exclusiva": False,
@@ -3436,6 +3446,8 @@ def make_player(pid, name, cls_id, slot):
         "resistencia_saves_ate": 0,         # Resistência Absoluta até esta rodada
         "resistencia_saves_val": 0,
         "contra_ataque_ate": 0,             # Contra-Ataque até esta rodada
+        "oportunidade_credito": False,       # Oportunidade: crédito de ação extra concedido, ainda não gasto
+        "oportunidade_round": 0,             # round_num em que foi concedido — expira se round_num avançar
         "imune_silencio_ate": 0,            # Espírito Indomável: imunidade a Silêncio até esta rodada
         "mov_bonus_ate": 0,                 # Grito de Guerra: +2 movimento no reset até esta rodada
         # Buffs de turno do warrior (flags planas) — limpos em handle_end_turn
@@ -4407,11 +4419,36 @@ class GameRoom:
             p["coordenado_turno"] = self.turn_index
         elif ef.get("tipo") == "contra_ataque":
             p["contra_ataque_ate"] = self.round_num + 1
+        elif ef.get("tipo") == "oportunidade":
+            alvo = self.players.get(target_id) if target_id else None
+            if not alvo or not alvo.get("alive") or alvo["id"] == pid:
+                await self.send_to(pid, {"type": "error",
+                    "msg": "Escolha um aliado vivo (não pode ser você)."}); return
+            alvo["oportunidade_credito"] = True
+            alvo["oportunidade_round"] = self.round_num
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
         p["technique_cooldowns"][tecnica_id] = self.round_num + item["recarga_rodadas"]
         await self.gm_say(f"⚔️ **{p['name']}** ativa **{item['nome']}**!")
+        await self.push_state()
+
+    async def handle_usar_oportunidade_movimento(self, pid):
+        """Gasta o crédito de Oportunidade na via 'movimento extra' (soma spd a
+        moves_left). A via 'ação principal extra' não precisa de handler dedicado —
+        é consumida automaticamente por _acao_bloqueada na primeira ação principal."""
+        if not self._is_turn(pid):
+            return
+        p = self.players.get(pid)
+        if not p or not p.get("alive"):
+            return
+        if not (p.get("oportunidade_credito") and p.get("oportunidade_round") == self.round_num):
+            await self.send_to(pid, {"type": "error",
+                "msg": "Sem crédito de Oportunidade disponível."})
+            return
+        p["oportunidade_credito"] = False
+        p["moves_left"] = p.get("moves_left", 0) + p.get("spd", 0)
+        await self.gm_say(f"⏳ **{p['name']}** aproveita a Oportunidade para se mover mais!")
         await self.push_state()
 
     async def handle_shop_buy(self, pid, shop, item_id):
@@ -6333,7 +6370,7 @@ class GameRoom:
         if p.get("class_id") != "mage":
             await self.send_to(pid, {"type": "error", "msg": "Apenas Pedro pode usar Animar Mortos."})
             return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."})
             return
 
@@ -7170,7 +7207,7 @@ class GameRoom:
         if not p or not p["alive"]: return
         if p.get("class_id") != "cleric":
             await self.send_to(pid, {"type": "error", "msg": "Apenas Lewis pode usar Cura."}); return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         num_dados = max(1, min(self._cura_teto(p), int((data or {}).get("num_dados", 1))))
@@ -7221,7 +7258,7 @@ class GameRoom:
         if not p or not p["alive"]: return
         if p.get("class_id") != "cleric":
             await self.send_to(pid, {"type": "error", "msg": "Apenas Lewis pode usar Cura em Área."}); return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         nivel = self._massa_nivel(p)
@@ -7292,7 +7329,7 @@ class GameRoom:
         if not p or not p["alive"]: return
         if p.get("class_id") != "cleric":
             await self.send_to(pid, {"type": "error", "msg": "Apenas Lewis pode usar Purificação."}); return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         tipo = (data or {}).get("tipo")
@@ -7375,7 +7412,7 @@ class GameRoom:
         if not p or not p["alive"]: return
         if p.get("class_id") != "cleric":
             await self.send_to(pid, {"type": "error", "msg": "Apenas Lewis pode usar Ressurreição."}); return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         nivel = self._ressur_nivel(p)
@@ -7425,7 +7462,7 @@ class GameRoom:
         if not p or not p["alive"]: return
         if p.get("class_id") != "paladin":
             await self.send_to(pid, {"type": "error", "msg": "Apenas Richard pode usar esta habilidade."}); return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         extra_d6 = max(0, min(3, int((data or {}).get("extra_d6", 0)))) if tem_espec(p, "paladino_cura_maos_3") else 0
@@ -9125,14 +9162,19 @@ class GameRoom:
 
     # ── Batch 3: buffs sustentados (Invisibilidade, Regeneração) ─────────────────
     def _acao_bloqueada(self, p):
-        """True se p não pode fazer outra ação principal. Velocidade concede 1 ação
-        extra por turno: ao tentar agir já tendo agido, consome a extra e libera."""
+        """True se p não pode fazer outra ação principal. Velocidade e a técnica
+        Oportunidade concedem 1 ação extra: ao tentar agir já tendo agido, consomem
+        o crédito disponível e liberam a ação."""
         if p.get("perde_turno"):
             return True  # Imobilizado (teia, etc.) — perde o turno inteiro
         if not p.get("action_done"):
             return False
         if p.get("velocidade_rodadas", 0) > 0 and not p.get("velocidade_extra_usada"):
             p["velocidade_extra_usada"] = True
+            p["action_done"] = False
+            return False
+        if p.get("oportunidade_credito") and p.get("oportunidade_round") == self.round_num:
+            p["oportunidade_credito"] = False
             p["action_done"] = False
             return False
         return True
@@ -10276,7 +10318,7 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Apenas Luccas pode criar armadilhas."}); return
         if p.get("petrificado"):
             await self.send_to(pid, {"type": "error", "msg": "🗿 Você está petrificado e não pode agir!"}); return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         tipo_id = msg.get("tipo")
@@ -10489,7 +10531,7 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         arm = self._armadilha_no_tile(p["pos"][0], p["pos"][1])
@@ -14039,7 +14081,7 @@ class GameRoom:
         if not self._is_turn(pid):
             return
         p = self.players.get(pid)
-        if not p or not p.get("alive") or p.get("action_done"):
+        if not p or not p.get("alive") or self._acao_bloqueada(p):
             return
         if not self.prisoner or not self.prisoner.get("alive") or self.prisoner.get("freed"):
             await self.send_to(pid, {"type": "error", "msg": "Não há prisioneiro para libertar."}); return
@@ -14376,6 +14418,9 @@ async def handler(ws):
 
                 elif t == "usar_tecnica":
                     if room: await room.handle_usar_tecnica(pid, msg.get("tecnica_id"), msg.get("target_id"))
+
+                elif t == "usar_oportunidade_movimento":
+                    if room: await room.handle_usar_oportunidade_movimento(pid)
 
                 elif t == "set_known_spells":
                     if room: await room.handle_set_known_spells(pid, msg.get("ids"))

@@ -332,6 +332,171 @@ async def main():
     hx = _w("hand_crossbow", {"range":4}); hx["pos"] = [0,0]
     check("contra: besta de mão alcança 4", r._alvo_no_alcance_arma(hx, {"id":"m2","pos":[0,4],"hp":9}) is True)
 
+    # [18] Catálogo — Oportunidade (2d)
+    print("\n[18] Catálogo — Oportunidade")
+    it = S.guild_item("tecnica_oportunidade")
+    check("existe tecnica_oportunidade", it is not None)
+    check("oportunidade recarga 10", it and it["recarga_rodadas"] == 10)
+    check("oportunidade preco 350", it and it["preco"] == 350)
+    check("oportunidade custo 6/6", it and it["custo_fome"] == 6 and it["custo_sede"] == 6)
+    check("oportunidade classe None", it and it["classe"] is None)
+    check("oportunidade exige alvo aliado", it and it.get("alvo") == "aliado")
+    p_tmpl = hero("warrior")
+    check("template: oportunidade_credito default False", p_tmpl["oportunidade_credito"] is False)
+    check("template: oportunidade_round default 0", p_tmpl["oportunidade_round"] == 0)
+
+    # [19] _acao_bloqueada — crédito de Oportunidade
+    print("\n[19] _acao_bloqueada — crédito de Oportunidade")
+    r = setup(); r.round_num = 5
+    p = hero("warrior"); p["action_done"] = True
+    check("sem crédito: continua bloqueado", r._acao_bloqueada(p) is True)
+    p["oportunidade_credito"] = True; p["oportunidade_round"] = 5
+    check("com crédito válido (round bate): libera", r._acao_bloqueada(p) is False)
+    check("libera: action_done volta a False", p["action_done"] is False)
+    check("libera: crédito consumido", p["oportunidade_credito"] is False)
+    # Crédito de rodada anterior (expirado) não libera
+    p2 = hero("warrior"); p2["action_done"] = True
+    p2["oportunidade_credito"] = True; p2["oportunidade_round"] = 3   # round atual é 5
+    check("crédito de rodada anterior: expirado, continua bloqueado", r._acao_bloqueada(p2) is True)
+    # Coexistência com Velocidade: os dois créditos não interferem entre si
+    p3 = hero("warrior"); p3["action_done"] = True
+    p3["velocidade_rodadas"] = 2; p3["velocidade_extra_usada"] = False
+    p3["oportunidade_credito"] = True; p3["oportunidade_round"] = 5
+    check("velocidade consumida primeiro", r._acao_bloqueada(p3) is False)
+    check("velocidade: extra usada marcada", p3["velocidade_extra_usada"] is True)
+    check("velocidade consumida NÃO gasta o crédito de Oportunidade", p3["oportunidade_credito"] is True)
+    p3["action_done"] = True   # agiu de novo
+    check("2ª ação extra: agora usa o crédito de Oportunidade", r._acao_bloqueada(p3) is False)
+    check("crédito de Oportunidade agora consumido", p3["oportunidade_credito"] is False)
+    p3["action_done"] = True   # agiu uma 3ª vez, sem mais créditos disponíveis
+    check("3ª tentativa: sem mais créditos, bloqueado", r._acao_bloqueada(p3) is True)
+
+    # [20] Oportunidade — concessão (handle_usar_tecnica)
+    print("\n[20] Oportunidade — concessão")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 7
+    p = hero("warrior", "tecnica_oportunidade"); r.players["h"] = p
+    ally = make_player("a", "Ana", "cleric", 1); ally["alive"] = True; ally["pos"] = [1, 1]
+    r.players["a"] = ally
+    await r.handle_usar_tecnica("h", "tecnica_oportunidade", "a")
+    check("concessão: crédito no aliado", ally["oportunidade_credito"] is True)
+    check("concessão: round gravado", ally["oportunidade_round"] == 7)
+    check("concessão: recarga setada no ativador", r.tecnica_restante(p, "tecnica_oportunidade") > 0)
+    check("concessão: custo 6/6 debitado", p["fome"] == 20 - 6 and p["sede"] == 20 - 6)
+    # Recusa: não pode escolher a si mesmo
+    r2 = setup(); r2.current_pid = lambda: "h"; r2.round_num = 7
+    p2 = hero("warrior", "tecnica_oportunidade"); r2.players["h"] = p2
+    await r2.handle_usar_tecnica("h", "tecnica_oportunidade", "h")
+    check("concessão: recusa auto-alvo", p2.get("oportunidade_credito") is False
+          and any("não pode ser você" in e.lower() for e in r2._errs))
+    # Recusa: aliado morto
+    r3 = setup(); r3.current_pid = lambda: "h"; r3.round_num = 7
+    p3 = hero("warrior", "tecnica_oportunidade"); r3.players["h"] = p3
+    morto = make_player("m", "Morto", "cleric", 1); morto["alive"] = False; r3.players["m"] = morto
+    await r3.handle_usar_tecnica("h", "tecnica_oportunidade", "m")
+    check("concessão: recusa aliado morto", morto.get("oportunidade_credito") is False)
+
+    # [21] Oportunidade — via movimento
+    print("\n[21] Oportunidade — via movimento")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 7
+    p = hero("warrior"); p["moves_left"] = p["spd"]
+    p["oportunidade_credito"] = True; p["oportunidade_round"] = 7
+    r.players["h"] = p
+    await r.handle_usar_oportunidade_movimento("h")
+    check("movimento: +spd em moves_left", p["moves_left"] == p["spd"] + p["spd"])
+    check("movimento: crédito consumido", p["oportunidade_credito"] is False)
+    # Sem crédito válido: recusa e não mexe no movimento
+    r2 = setup(); r2.current_pid = lambda: "h"; r2.round_num = 7
+    p2 = hero("warrior"); p2["moves_left"] = p2["spd"]; r2.players["h"] = p2
+    await r2.handle_usar_oportunidade_movimento("h")
+    check("movimento: recusa sem crédito", p2["moves_left"] == p2["spd"]
+          and any("oportunidade" in e.lower() for e in r2._errs))
+    # Crédito de rodada anterior (expirado): recusa
+    r3 = setup(); r3.current_pid = lambda: "h"; r3.round_num = 8
+    p3 = hero("warrior"); p3["moves_left"] = p3["spd"]
+    p3["oportunidade_credito"] = True; p3["oportunidade_round"] = 7   # round atual é 8
+    r3.players["h"] = p3
+    await r3.handle_usar_oportunidade_movimento("h")
+    check("movimento: recusa crédito expirado", p3["moves_left"] == p3["spd"])
+    # Fora do próprio turno: recusa
+    r4 = setup(); r4.current_pid = lambda: "outro"; r4.round_num = 7
+    p4 = hero("warrior"); p4["moves_left"] = p4["spd"]
+    p4["oportunidade_credito"] = True; p4["oportunidade_round"] = 7
+    r4.players["h"] = p4
+    await r4.handle_usar_oportunidade_movimento("h")
+    check("movimento: recusa fora do próprio turno", p4["moves_left"] == p4["spd"])
+
+    # [22] Handlers migrados para _acao_bloqueada (Oportunidade cobre todas as ações principais)
+    print("\n[22] Handlers migrados para _acao_bloqueada")
+    # Regressão: sem crédito, action_done=True continua bloqueando cada handler
+    # exatamente como antes (mesma mensagem de erro, nenhuma mudança de estado).
+
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("mage"); p["pos"] = [0, 0]; p["action_done"] = True; r.players["h"] = p
+    await r.handle_animar_mortos("h", {})
+    check("animar_mortos: bloqueado sem crédito (regressão)",
+          any("já usada" in e.lower() for e in r._errs))
+
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("cleric"); p["pos"] = [0, 0]; p["action_done"] = True; r.players["h"] = p
+    await r.handle_cura("h", {})
+    check("cura: bloqueado sem crédito (regressão)",
+          any("já usada" in e.lower() for e in r._errs))
+
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("cleric"); p["pos"] = [0, 0]; p["action_done"] = True; r.players["h"] = p
+    await r.handle_cura_area("h", {})
+    check("cura_area: bloqueado sem crédito (regressão)",
+          any("já usada" in e.lower() for e in r._errs))
+
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("cleric"); p["pos"] = [0, 0]; p["action_done"] = True; r.players["h"] = p
+    await r.handle_purificacao("h", {})
+    check("purificacao: bloqueado sem crédito (regressão)",
+          any("já usada" in e.lower() for e in r._errs))
+
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("cleric"); p["pos"] = [0, 0]; p["action_done"] = True; r.players["h"] = p
+    await r.handle_ressurreicao("h", {})
+    check("ressurreicao: bloqueado sem crédito (regressão)",
+          any("já usada" in e.lower() for e in r._errs))
+
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("paladin"); p["pos"] = [0, 0]; p["action_done"] = True; r.players["h"] = p
+    await r.handle_imposicao_maos("h", {})
+    check("imposicao_maos: bloqueado sem crédito (regressão)",
+          any("já usada" in e.lower() for e in r._errs))
+
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("rogue"); p["pos"] = [0, 0]; p["action_done"] = True; r.players["h"] = p
+    await r.handle_criar_armadilha("h", {})
+    check("criar_armadilha: bloqueado sem crédito (regressão)",
+          any("já usada" in e.lower() for e in r._errs))
+
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("rogue"); p["pos"] = [0, 0]; p["action_done"] = True; r.players["h"] = p
+    await r.handle_desarmar_armadilha("h", {})
+    check("desarmar_armadilha: bloqueado sem crédito (regressão)",
+          any("já usada" in e.lower() for e in r._errs))
+
+    # libertar_prisioneiro: assinatura diferente (sem `data`), retorno silencioso
+    # (sem mensagem de erro) — a checagem é `p.get("action_done")` embutida no `if`.
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("warrior"); p["pos"] = [0, 0]; p["action_done"] = True
+    r.players["h"] = p
+    r.prisoner = {"pos": [0, 1], "alive": True, "freed": False}
+    await r.handle_libertar_prisioneiro("h")
+    check("libertar_prisioneiro: bloqueado sem crédito (regressão)", r.prisoner["freed"] is False)
+
+    # Integração: COM crédito válido, libertar_prisioneiro (o mais simples dos 9) passa
+    r2 = setup(); r2.current_pid = lambda: "h"; r2.round_num = 3
+    p2 = hero("warrior"); p2["pos"] = [0, 0]; p2["action_done"] = True
+    p2["oportunidade_credito"] = True; p2["oportunidade_round"] = 3
+    r2.players["h"] = p2
+    r2.prisoner = {"pos": [0, 1], "alive": True, "freed": False}
+    await r2.handle_libertar_prisioneiro("h")
+    check("libertar_prisioneiro: crédito de Oportunidade libera a ação", r2.prisoner["freed"] is True)
+    check("libertar_prisioneiro: crédito consumido", p2["oportunidade_credito"] is False)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

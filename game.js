@@ -9968,6 +9968,20 @@ function renderMyPanel(state){
     sl.insertAdjacentHTML('beforeend', renderFlagsWarrior(me));
   }
 
+  // ── Crédito de Oportunidade (Fase 2d) — concedido por um aliado, gasto no próprio turno ──
+  if (me.oportunidade_credito && me.oportunidade_round === state.round && GS.isMyTurn && me.alive && state.phase === 'playing') {
+    const btnOp = document.createElement('button');
+    btnOp.className = 'skill-btn guild-tec';
+    btnOp.innerHTML = `
+      <div class="skill-info">
+        <div class="skill-name">⏳ Oportunidade <small style="color:var(--gold);font-size:.58rem;">GUILDA</small></div>
+        <div class="skill-desc">Gaste o crédito extra em movimento agora, ou apenas aja normalmente (atacar/curar/lançar magia/etc.) para gastá-lo automaticamente.</div>
+      </div>
+      <div class="skill-cost">mover +${me.spd||0}</div>`;
+    btnOp.onclick = () => GS.usarOportunidadeMovimento();
+    sl.appendChild(btnOp);
+  }
+
   // ── Técnica(s) da Guilda equipada(s) (Fase 0) — 4º slot com recarga em rodadas ──
   const _tecEq  = GS.guildEquipOf(me.id);
   const _tecIds = [_tecEq.tecnica, _tecEq.tecnica_exclusiva].filter(Boolean);

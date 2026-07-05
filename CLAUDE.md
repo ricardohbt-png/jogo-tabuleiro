@@ -491,9 +491,32 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > besta de mão** `hand_crossbow`] e o alvo precisa estar no alcance de ameaça da arma
 > [`_alvo_no_alcance_arma` respeita `range`/`reach:lanca`/`reach:cajado`/adjacência];
 > hookado nos **2 sites de erro de monstro** — `_execute_one_monster_attack` e o loop
-> legado). **Oportunidade** (ordem-de-turno) adiada para mini-lote próprio. Cliente:
-> técnica com `alvo:"aliado"` abre `openTargetModal` (par, qualquer distância) no 4º
-> slot. Teste: `tools/test_tecnicas_espec.py` (seções [12]-[17]).
+> legado). Cliente: técnica com `alvo:"aliado"` abre `openTargetModal` (par, qualquer
+> distância) no 4º slot. Teste: `tools/test_tecnicas_espec.py` (seções [12]-[17]).
+> **Oportunidade** (adiada desta fase) virou um mini-lote próprio — ver Fase 2d abaixo;
+> deixou de ser uma reação de ordem-de-turno.
+
+> **Oportunidade (Fase 2d):** mini-lote adiado da 2c — **redesenhado em
+> brainstorming**: não é mais uma reação, é uma técnica de suporte. Tier **10**
+> (novo, acima do 8 do Contra-Ataque): 350 ouro, +6🍖/+6💧, recarga 10, `alvo:"aliado"`
+> (nunca você mesmo). Concede um **crédito de ação extra** reservado para o PRÓPRIO
+> turno do aliado (não imediato) — expira sozinho se `round_num` avançar antes de ser
+> usado (`oportunidade_credito`/`oportunidade_round`, comparado no momento do uso, sem
+> precisar de reset explícito). Duas vias mutuamente exclusivas para o mesmo crédito
+> booleano: **(1) ação principal extra** — unificado com o mecanismo já existente da
+> magia Velocidade dentro do helper `_acao_bloqueada` (2 branches paralelos: Velocidade
+> e Oportunidade, cada um consome seu próprio crédito e libera a ação); **(2) movimento
+> extra** — novo handler `handle_usar_oportunidade_movimento` (`+spd` em `moves_left`).
+> Para a via 1 cobrir TODAS as ações principais (não só ataque/magia, que já usavam
+> `_acao_bloqueada`), migrou 9 handlers que faziam checagem crua de `action_done`
+> (`handle_animar_mortos/cura/cura_area/purificacao/ressurreicao/imposicao_maos/
+> criar_armadilha/desarmar_armadilha/libertar_prisioneiro`) para usar `_acao_bloqueada`
+> — efeito colateral aceito: a Velocidade agora também vale nessas 9 (antes só valia em
+> ataque/magia), tratado como correção de inconsistência pré-existente. Cliente:
+> `GS.usarOportunidadeMovimento()` + botão no HUD condicionado a
+> `me.oportunidade_credito && me.oportunidade_round === state.round` (o round-check
+> foi um catch de code-review — sem ele o botão apareceria com crédito já expirado).
+> Teste: `tools/test_tecnicas_espec.py` (seções [18]-[22]).
 
 > **Reviver os Mortos (Fase 1g):** gateia a habilidade de classe de Pedro (não
 > mexida nas Fases 1a–1f). Slots de Controle = mod(INT) + nível_Pedro÷2 (mín. 1;
