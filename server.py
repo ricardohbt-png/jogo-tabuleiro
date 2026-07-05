@@ -9137,14 +9137,19 @@ class GameRoom:
 
     # ── Batch 3: buffs sustentados (Invisibilidade, Regeneração) ─────────────────
     def _acao_bloqueada(self, p):
-        """True se p não pode fazer outra ação principal. Velocidade concede 1 ação
-        extra por turno: ao tentar agir já tendo agido, consome a extra e libera."""
+        """True se p não pode fazer outra ação principal. Velocidade e a técnica
+        Oportunidade concedem 1 ação extra: ao tentar agir já tendo agido, consomem
+        o crédito disponível e liberam a ação."""
         if p.get("perde_turno"):
             return True  # Imobilizado (teia, etc.) — perde o turno inteiro
         if not p.get("action_done"):
             return False
         if p.get("velocidade_rodadas", 0) > 0 and not p.get("velocidade_extra_usada"):
             p["velocidade_extra_usada"] = True
+            p["action_done"] = False
+            return False
+        if p.get("oportunidade_credito") and p.get("oportunidade_round") == self.round_num:
+            p["oportunidade_credito"] = False
             p["action_done"] = False
             return False
         return True

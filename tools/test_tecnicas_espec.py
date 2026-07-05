@@ -345,6 +345,32 @@ async def main():
     check("template: oportunidade_credito default False", p_tmpl["oportunidade_credito"] is False)
     check("template: oportunidade_round default 0", p_tmpl["oportunidade_round"] == 0)
 
+    # [19] _acao_bloqueada — crédito de Oportunidade
+    print("\n[19] _acao_bloqueada — crédito de Oportunidade")
+    r = setup(); r.round_num = 5
+    p = hero("warrior"); p["action_done"] = True
+    check("sem crédito: continua bloqueado", r._acao_bloqueada(p) is True)
+    p["oportunidade_credito"] = True; p["oportunidade_round"] = 5
+    check("com crédito válido (round bate): libera", r._acao_bloqueada(p) is False)
+    check("libera: action_done volta a False", p["action_done"] is False)
+    check("libera: crédito consumido", p["oportunidade_credito"] is False)
+    # Crédito de rodada anterior (expirado) não libera
+    p2 = hero("warrior"); p2["action_done"] = True
+    p2["oportunidade_credito"] = True; p2["oportunidade_round"] = 3   # round atual é 5
+    check("crédito de rodada anterior: expirado, continua bloqueado", r._acao_bloqueada(p2) is True)
+    # Coexistência com Velocidade: os dois créditos não interferem entre si
+    p3 = hero("warrior"); p3["action_done"] = True
+    p3["velocidade_rodadas"] = 2; p3["velocidade_extra_usada"] = False
+    p3["oportunidade_credito"] = True; p3["oportunidade_round"] = 5
+    check("velocidade consumida primeiro", r._acao_bloqueada(p3) is False)
+    check("velocidade: extra usada marcada", p3["velocidade_extra_usada"] is True)
+    check("velocidade consumida NÃO gasta o crédito de Oportunidade", p3["oportunidade_credito"] is True)
+    p3["action_done"] = True   # agiu de novo
+    check("2ª ação extra: agora usa o crédito de Oportunidade", r._acao_bloqueada(p3) is False)
+    check("crédito de Oportunidade agora consumido", p3["oportunidade_credito"] is False)
+    p3["action_done"] = True   # agiu uma 3ª vez, sem mais créditos disponíveis
+    check("3ª tentativa: sem mais créditos, bloqueado", r._acao_bloqueada(p3) is True)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
