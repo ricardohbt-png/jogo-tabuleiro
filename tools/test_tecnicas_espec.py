@@ -425,6 +425,78 @@ async def main():
     await r4.handle_usar_oportunidade_movimento("h")
     check("movimento: recusa fora do próprio turno", p4["moves_left"] == p4["spd"])
 
+    # [22] Handlers migrados para _acao_bloqueada (Oportunidade cobre todas as ações principais)
+    print("\n[22] Handlers migrados para _acao_bloqueada")
+    # Regressão: sem crédito, action_done=True continua bloqueando cada handler
+    # exatamente como antes (mesma mensagem de erro, nenhuma mudança de estado).
+
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("mage"); p["pos"] = [0, 0]; p["action_done"] = True; r.players["h"] = p
+    await r.handle_animar_mortos("h", {})
+    check("animar_mortos: bloqueado sem crédito (regressão)",
+          any("já usada" in e.lower() for e in r._errs))
+
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("cleric"); p["pos"] = [0, 0]; p["action_done"] = True; r.players["h"] = p
+    await r.handle_cura("h", {})
+    check("cura: bloqueado sem crédito (regressão)",
+          any("já usada" in e.lower() for e in r._errs))
+
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("cleric"); p["pos"] = [0, 0]; p["action_done"] = True; r.players["h"] = p
+    await r.handle_cura_area("h", {})
+    check("cura_area: bloqueado sem crédito (regressão)",
+          any("já usada" in e.lower() for e in r._errs))
+
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("cleric"); p["pos"] = [0, 0]; p["action_done"] = True; r.players["h"] = p
+    await r.handle_purificacao("h", {})
+    check("purificacao: bloqueado sem crédito (regressão)",
+          any("já usada" in e.lower() for e in r._errs))
+
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("cleric"); p["pos"] = [0, 0]; p["action_done"] = True; r.players["h"] = p
+    await r.handle_ressurreicao("h", {})
+    check("ressurreicao: bloqueado sem crédito (regressão)",
+          any("já usada" in e.lower() for e in r._errs))
+
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("paladin"); p["pos"] = [0, 0]; p["action_done"] = True; r.players["h"] = p
+    await r.handle_imposicao_maos("h", {})
+    check("imposicao_maos: bloqueado sem crédito (regressão)",
+          any("já usada" in e.lower() for e in r._errs))
+
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("rogue"); p["pos"] = [0, 0]; p["action_done"] = True; r.players["h"] = p
+    await r.handle_criar_armadilha("h", {})
+    check("criar_armadilha: bloqueado sem crédito (regressão)",
+          any("já usada" in e.lower() for e in r._errs))
+
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("rogue"); p["pos"] = [0, 0]; p["action_done"] = True; r.players["h"] = p
+    await r.handle_desarmar_armadilha("h", {})
+    check("desarmar_armadilha: bloqueado sem crédito (regressão)",
+          any("já usada" in e.lower() for e in r._errs))
+
+    # libertar_prisioneiro: assinatura diferente (sem `data`), retorno silencioso
+    # (sem mensagem de erro) — a checagem é `p.get("action_done")` embutida no `if`.
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1
+    p = hero("warrior"); p["pos"] = [0, 0]; p["action_done"] = True
+    r.players["h"] = p
+    r.prisoner = {"pos": [0, 1], "alive": True, "freed": False}
+    await r.handle_libertar_prisioneiro("h")
+    check("libertar_prisioneiro: bloqueado sem crédito (regressão)", r.prisoner["freed"] is False)
+
+    # Integração: COM crédito válido, libertar_prisioneiro (o mais simples dos 9) passa
+    r2 = setup(); r2.current_pid = lambda: "h"; r2.round_num = 3
+    p2 = hero("warrior"); p2["pos"] = [0, 0]; p2["action_done"] = True
+    p2["oportunidade_credito"] = True; p2["oportunidade_round"] = 3
+    r2.players["h"] = p2
+    r2.prisoner = {"pos": [0, 1], "alive": True, "freed": False}
+    await r2.handle_libertar_prisioneiro("h")
+    check("libertar_prisioneiro: crédito de Oportunidade libera a ação", r2.prisoner["freed"] is True)
+    check("libertar_prisioneiro: crédito consumido", p2["oportunidade_credito"] is False)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

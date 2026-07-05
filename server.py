@@ -6370,7 +6370,7 @@ class GameRoom:
         if p.get("class_id") != "mage":
             await self.send_to(pid, {"type": "error", "msg": "Apenas Pedro pode usar Animar Mortos."})
             return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."})
             return
 
@@ -7207,7 +7207,7 @@ class GameRoom:
         if not p or not p["alive"]: return
         if p.get("class_id") != "cleric":
             await self.send_to(pid, {"type": "error", "msg": "Apenas Lewis pode usar Cura."}); return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         num_dados = max(1, min(self._cura_teto(p), int((data or {}).get("num_dados", 1))))
@@ -7258,7 +7258,7 @@ class GameRoom:
         if not p or not p["alive"]: return
         if p.get("class_id") != "cleric":
             await self.send_to(pid, {"type": "error", "msg": "Apenas Lewis pode usar Cura em Área."}); return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         nivel = self._massa_nivel(p)
@@ -7329,7 +7329,7 @@ class GameRoom:
         if not p or not p["alive"]: return
         if p.get("class_id") != "cleric":
             await self.send_to(pid, {"type": "error", "msg": "Apenas Lewis pode usar Purificação."}); return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         tipo = (data or {}).get("tipo")
@@ -7412,7 +7412,7 @@ class GameRoom:
         if not p or not p["alive"]: return
         if p.get("class_id") != "cleric":
             await self.send_to(pid, {"type": "error", "msg": "Apenas Lewis pode usar Ressurreição."}); return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         nivel = self._ressur_nivel(p)
@@ -7462,7 +7462,7 @@ class GameRoom:
         if not p or not p["alive"]: return
         if p.get("class_id") != "paladin":
             await self.send_to(pid, {"type": "error", "msg": "Apenas Richard pode usar esta habilidade."}); return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         extra_d6 = max(0, min(3, int((data or {}).get("extra_d6", 0)))) if tem_espec(p, "paladino_cura_maos_3") else 0
@@ -10318,7 +10318,7 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Apenas Luccas pode criar armadilhas."}); return
         if p.get("petrificado"):
             await self.send_to(pid, {"type": "error", "msg": "🗿 Você está petrificado e não pode agir!"}); return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         tipo_id = msg.get("tipo")
@@ -10531,7 +10531,7 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         arm = self._armadilha_no_tile(p["pos"][0], p["pos"][1])
@@ -14081,7 +14081,7 @@ class GameRoom:
         if not self._is_turn(pid):
             return
         p = self.players.get(pid)
-        if not p or not p.get("alive") or p.get("action_done"):
+        if not p or not p.get("alive") or self._acao_bloqueada(p):
             return
         if not self.prisoner or not self.prisoner.get("alive") or self.prisoner.get("freed"):
             await self.send_to(pid, {"type": "error", "msg": "Não há prisioneiro para libertar."}); return
