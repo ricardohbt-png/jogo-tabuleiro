@@ -332,6 +332,19 @@ async def main():
     hx = _w("hand_crossbow", {"range":4}); hx["pos"] = [0,0]
     check("contra: besta de mão alcança 4", r._alvo_no_alcance_arma(hx, {"id":"m2","pos":[0,4],"hp":9}) is True)
 
+    # [18] Catálogo — Oportunidade (2d)
+    print("\n[18] Catálogo — Oportunidade")
+    it = S.guild_item("tecnica_oportunidade")
+    check("existe tecnica_oportunidade", it is not None)
+    check("oportunidade recarga 10", it and it["recarga_rodadas"] == 10)
+    check("oportunidade preco 350", it and it["preco"] == 350)
+    check("oportunidade custo 6/6", it and it["custo_fome"] == 6 and it["custo_sede"] == 6)
+    check("oportunidade classe None", it and it["classe"] is None)
+    check("oportunidade exige alvo aliado", it and it.get("alvo") == "aliado")
+    p_tmpl = hero("warrior")
+    check("template: oportunidade_credito default False", p_tmpl["oportunidade_credito"] is False)
+    check("template: oportunidade_round default 0", p_tmpl["oportunidade_round"] == 0)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

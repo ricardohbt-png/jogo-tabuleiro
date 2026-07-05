@@ -392,6 +392,16 @@ GUILD_CATALOG = {
         "desc": "Até o próximo turno, quando um inimigo errar você (arma corpo a corpo/alcance ou besta de mão, e ele no alcance), você o ataca de volta.",
         "efeito": {"tipo": "contra_ataque"},
     },
+    "tecnica_oportunidade": {
+        "id": "tecnica_oportunidade", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 350, "custo_fome": 6, "custo_sede": 6, "recarga_rodadas": 10,
+        "nome": "Oportunidade", "icon": "⏳", "alvo": "aliado",
+        "desc": "Escolha um aliado (não pode ser você); no PRÓPRIO turno dele, ganha uma "
+                "ação extra — mover mais, atacar de novo, usar a habilidade de classe de "
+                "novo, ou lançar mais uma magia. Expira no fim desta rodada se não for usada.",
+        "efeito": {"tipo": "oportunidade"},
+    },
     "guerreiro_combinar_2": {
         "id": "guerreiro_combinar_2", "categoria": "especializacao", "classe": "warrior",
         "linha": "guerreiro_combate", "nivel": 2, "requer": None, "exclusiva": False,
@@ -3436,6 +3446,8 @@ def make_player(pid, name, cls_id, slot):
         "resistencia_saves_ate": 0,         # Resistência Absoluta até esta rodada
         "resistencia_saves_val": 0,
         "contra_ataque_ate": 0,             # Contra-Ataque até esta rodada
+        "oportunidade_credito": False,       # Oportunidade: crédito de ação extra concedido, ainda não gasto
+        "oportunidade_round": 0,             # round_num em que foi concedido — expira se round_num avançar
         "imune_silencio_ate": 0,            # Espírito Indomável: imunidade a Silêncio até esta rodada
         "mov_bonus_ate": 0,                 # Grito de Guerra: +2 movimento no reset até esta rodada
         # Buffs de turno do warrior (flags planas) — limpos em handle_end_turn
