@@ -701,23 +701,28 @@ Seção `[27]` (parte 1 — abertura):
     r.players["outro"] = hero("cleric"); r.players["outro"]["id"] = "outro"
     r.player_order = ["h", "outro"]
 
-    async def _fechar_stub(pid):
-        # Fecha a janela imediatamente (evita travar o teste esperando end_turn real).
-        r.players[pid]["ultimo_esforco_turnos_restantes"] = 0
-        r.last_stand_pid = None
-        r.last_stand_event.set()
     # Não sobrescrevemos _abrir_ultimo_esforco — deixamos rodar de verdade, mas
     # fechamos a janela "de fora" via uma task concorrente logo após ela abrir.
+    # IMPORTANTE: hp=1/ativo=True só valem ENQUANTO a janela está aberta — uma
+    # vez que ela fecha (aqui, via este stub; na Task 6, via handle_end_turn de
+    # verdade), _player_dies cai no fluxo normal de morte (hp=0/alive=False).
+    # Por isso o check de "HP=1" precisa rodar DENTRO da task concorrente, no
+    # momento em que a janela está detectada aberta — não depois que
+    # _player_dies() já retornou (nesse ponto a morte já foi finalizada).
     async def _fechar_logo():
         while r.last_stand_pid != "h":
             await asyncio.sleep(0)
-        await _fechar_stub("h")
+        check("último esforço: HP=1 enquanto a janela está aberta", p["hp"] == 1)
+        check("último esforço: ainda vivo durante a janela", p["alive"] is True)
+        check("último esforço: flag ativa durante a janela", p.get("ultimo_esforco_ativo") is True)
+        r.players["h"]["ultimo_esforco_turnos_restantes"] = 0
+        r.last_stand_pid = None
+        r.last_stand_event.set()
     asyncio.create_task(_fechar_logo())
     await r._player_dies("h")
-    check("último esforço: HP=1", p["hp"] == 1)
     check("último esforço: morte finalizada após a janela fechar", p["alive"] is False)
     check("último esforço: flag ativa desligada ao fechar", p.get("ultimo_esforco_ativo") is False)
-    check("último esforço: recarga setada", r.tecnica_restante(p, "tecnica_ultimo_esforco") == 13)
+    check("último esforço: recarga setada", r.tecnica_restante(p, "tecnica_ultimo_esforco") == 10)
 
     # _is_turn aceita o pid em último esforço mesmo sem ser current_pid()
     r2 = setup(); r2.current_pid = lambda: "outro"
