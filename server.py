@@ -4387,6 +4387,55 @@ class GameRoom:
             return True
         return False
 
+    def _resolver_dano_ataque_basico(self, p, target, crit, roll, forca_critico=False,
+                                       surv_mod=0, cancao_dano=0, gl_dano=0, bonus_extra=0):
+        """Rola e computa o dano físico de um ataque básico (arma ou desarmado)
+        que JÁ acertou — reaproveitado pelo hit normal de handle_attack e pelo
+        reroll da Sorte. `forca_critico` é quem decide se um natural 20 triplica
+        (Golpe Decisivo/Último Esforço) em vez de dobrar. `bonus_extra` cobre os
+        bônus condicionais que só se aplicam ao ataque ARMADO no site original
+        (Mira Perfeita/Investida Heroica) — preservado apenas no ramo armado,
+        fiel ao comportamento pré-refactor. Retorna
+        (dmg, weapon_name, dmg_detail, raw_dmg, die_str) — raw_dmg/die_str são
+        None no ataque desarmado (sem dado de arma), e nesse caso o cálculo
+        NÃO inclui skill_bonus_dano/corrosão/_apply_damage_types — exatamente
+        como o bloco `else` original (ataque desarmado nunca teve esses termos).
+        Não repete munição/veneno/furtivo/projétil incendiário — resolvidos à
+        parte pelo chamador."""
+        weapon = p.get("weapon")
+        die_str = weapon.get("die") if weapon else None
+        if die_str:
+            raw_dmg = roll_dice(die_str)
+            raw_dmg = self._golpe_raw(p, raw_dmg)
+            if weapon.get("finesse"):
+                stat_bonus = max(mod(p.get("str_", 12)), mod(p.get("dex", 12)))
+            else:
+                stat_bonus = mod(p.get(weapon["stat"], 12))
+            dmg = raw_dmg + stat_bonus
+            if crit:
+                dmg *= 3 if (forca_critico and roll == 20) else 2
+            dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano
+                      + self._mod_magia(p, "dano") + self._tecnica_bonus_dano(p)
+                      + bonus_extra
+                      + p.get("skill_bonus_dano", 0) - self._corrosao_arma_pen(p))
+            dmg = self._apply_damage_types(dmg, [DMG_PHYSICAL], target, weapon)
+            weapon_name = weapon.get("name", "arma")
+            sb = f"+{stat_bonus}" if stat_bonus >= 0 else str(stat_bonus)
+            dmg_detail = f"[{die_str}={raw_dmg}{sb}]"
+        else:
+            raw_dmg = None
+            str_bonus = mod(p.get("str_", 12))
+            base = 2 if p.get("skill_dobrar_dano") else 1
+            dmg = base + str_bonus
+            if crit:
+                dmg *= 3 if (forca_critico and roll == 20) else 2
+            dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano + self._mod_magia(p, "dano")
+                      + self._tecnica_bonus_dano(p))
+            weapon_name = "soco"
+            sb = f"+{str_bonus}" if str_bonus >= 0 else str(str_bonus)
+            dmg_detail = f"[{base}{sb}]"
+        return dmg, weapon_name, dmg_detail, raw_dmg, die_str
+
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
         if self.phase != "playing":
@@ -4481,6 +4530,30 @@ class GameRoom:
             alvo["oportunidade_round"] = self.round_num
         elif ef.get("tipo") == "golpe_decisivo":
             p["tecnica_golpe_decisivo_armado"] = True
+        elif ef.get("tipo") == "sorte":
+            perdido = p.get("ultimo_ataque_perdido")
+            if not perdido:
+                await self.send_to(pid, {"type": "error", "msg": "Nenhum ataque recente para rerolar."})
+                return
+            alvo = self.monsters.get(perdido["target_id"])
+            if not alvo or alvo.get("hp", 0) <= 0:
+                await self.send_to(pid, {"type": "error", "msg": "O alvo não está mais disponível."})
+                return
+            hit, roll, total, crit, _desc = self._rolar_ataque(
+                perdido["eff_atk"], perdido["eff_target_ac"], perdido["vantagem"], perdido["desvantagem"])
+            await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
+                                   "label": "🎲 Sorte (nova rolagem)", "hit": hit, "crit": crit})
+            if hit:
+                dmg, weapon_name, dmg_detail, raw_dmg, die_str = self._resolver_dano_ataque_basico(
+                    p, alvo, crit, roll, surv_mod=perdido.get("surv_mod", 0),
+                    cancao_dano=perdido.get("cancao_dano", 0), gl_dano=perdido.get("gl_dano", 0))
+                alvo["hp"] -= dmg
+                await self.gm_say(f"🎲 **{p['name']}** força a Sorte e acerta **{alvo['name']}** com {weapon_name} {dmg_detail} = **{dmg}**!")
+                if alvo["hp"] <= 0:
+                    await self._monster_dies(alvo, pid)
+            else:
+                await self.gm_say(f"🎲 **{p['name']}** tenta a Sorte de novo, mas erra outra vez!")
+            p["ultimo_ataque_perdido"] = None
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
@@ -5849,6 +5922,13 @@ class GameRoom:
             if p.get("investida_armada") and w_range is None:
                 p["investida_armada"] = False   # consome no 1º ataque corpo a corpo
 
+            if not hit and tem_tecnica_equipada(p, "tecnica_sorte"):
+                p["ultimo_ataque_perdido"] = {
+                    "target_id": target_id, "eff_atk": eff_atk, "eff_target_ac": eff_target_ac,
+                    "vantagem": vantagem, "desvantagem": desvantagem,
+                    "surv_mod": surv_mod, "cancao_dano": cancao_dano, "gl_dano": gl_dano,
+                }
+
             # ── Consumo de munição (projétil gasto ao atirar, hit ou miss) ──
             _ammo_extra_dmg   = None   # dano extra do projétil especial (incendiário)
             _ammo_extra_types = []
@@ -5887,44 +5967,15 @@ class GameRoom:
             await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
                                    "label": "⚔️ Ataque (Mão Principal)", "hit": hit, "crit": crit})
             if hit:
-                weapon = p.get("weapon")
-                die_str = weapon.get("die") if weapon else None
+                _bonus_extra = (2 if _mira_ranged else 0) + (2 if _investida else 0)
+                dmg, weapon_name, dmg_detail, raw_dmg, die_str = self._resolver_dano_ataque_basico(
+                    p, target, crit, roll, forca_critico=_forca_critico,
+                    surv_mod=surv_mod, cancao_dano=cancao_dano, gl_dano=gl_dano,
+                    bonus_extra=_bonus_extra)
                 if die_str:
-                    # Armed attack — roll weapon die
-                    raw_dmg = roll_dice(die_str)
-                    raw_dmg = self._golpe_raw(p, raw_dmg)   # Golpe: ×1,5 base / ×2 com Nível III
-                    # finesse (atributo 'forcaOuDestreza'): melhor de FOR/DES
-                    if weapon.get("finesse"):
-                        stat_bonus = max(mod(p.get("str_", 12)), mod(p.get("dex", 12)))
-                    else:
-                        stat_bonus = mod(p.get(weapon["stat"], 12))
-                    dmg = raw_dmg + stat_bonus
-                    if crit: dmg *= 3 if (_forca_critico and roll == 20) else 2
-                    dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano
-                              + self._mod_magia(p, "dano") + self._tecnica_bonus_dano(p)
-                              + (2 if _mira_ranged else 0)   # Mira Perfeita: +2 no ataque à distância
-                              + (2 if _investida else 0)      # Investida Heroica (carga reta ≥2)
-                              + p.get("skill_bonus_dano", 0)
-                              - self._corrosao_arma_pen(p))
-                    # Fraquezas/imunidades ao dano físico da arma
-                    dmg = self._apply_damage_types(dmg, [DMG_PHYSICAL], target, weapon)
                     die_type = "d" + die_str.split("d")[1]
                     await self.broadcast({"type": "dice_roll", "die": die_type,
                                            "value": raw_dmg, "label": "Dano"})
-                    weapon_name = weapon.get("name", "arma")
-                    sb = f"+{stat_bonus}" if stat_bonus >= 0 else str(stat_bonus)
-                    dmg_detail = f"[{die_str}={raw_dmg}{sb}]"
-                else:
-                    # Unarmed — fixed 1 + STR modifier
-                    str_bonus = mod(p.get("str_", 12))
-                    base = 2 if p.get("skill_dobrar_dano") else 1   # Golpe Devastador
-                    dmg = base + str_bonus
-                    if crit: dmg *= 3 if (_forca_critico and roll == 20) else 2
-                    dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano + self._mod_magia(p, "dano")
-                              + self._tecnica_bonus_dano(p))
-                    weapon_name = "soco"
-                    sb = f"+{str_bonus}" if str_bonus >= 0 else str(str_bonus)
-                    dmg_detail = f"[{base}{sb}]"
                 # Golpe Sagrado (Richard): +1d8 sagrado, dobrado vs morto-vivo/demônio
                 holy_detail = ""
                 if p.get("golpe_sagrado_ativo"):
@@ -11213,6 +11264,7 @@ class GameRoom:
         p["tecnica_buff_dano_arma"] = 0   # buff de técnica de turno (Brutalidade) expira
         p["tecnica_mira_perfeita"] = False   # Mira Perfeita não usada expira no fim do turno
         p["tecnica_golpe_decisivo_armado"] = False   # Golpe Decisivo não usado expira no fim do turno
+        p["ultimo_ataque_perdido"] = None   # Sorte: janela de reroll fecha no fim do turno
         p["investida_armada"] = False   # Investida não usada expira no fim do turno
         p["investida_origem"] = None
         p["coordenado_alvo"] = None   # Ataque Coordenado expira no fim do turno

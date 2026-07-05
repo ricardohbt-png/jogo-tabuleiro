@@ -601,6 +601,43 @@ async def main():
     await r4.handle_end_turn("h")
     check("golpe: expira no fim do turno sem uso", p4.get("tecnica_golpe_decisivo_armado") is False)
 
+    # [26] Sorte
+    print("\n[26] Sorte")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1; r._is_turn = lambda pid: True
+    p = hero("warrior", "tecnica_sorte"); p["pos"] = [0, 0]
+    p["atk_bonus"] = 0
+    p["weapon"] = {"id": "machado_basico", "name": "Machado", "die": "1d6", "stat": "str_"}
+    r.players["h"] = p
+    r.monsters = {"m1": {"id": "m1", "name": "Alvo", "nome": "Alvo", "pos": [0, 1],
+                         "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
+    r._rolar_ataque = lambda atk, ac, v=False, d=False: (False, 2, 2, False, None)   # erra
+    await r.handle_attack("h", "m1")
+    check("sorte: erro guarda ultimo_ataque_perdido", p.get("ultimo_ataque_perdido") is not None)
+    check("sorte: alvo guardado é o m1", p["ultimo_ataque_perdido"]["target_id"] == "m1")
+
+    async def _mdies(*a, **k): return None
+    r._monster_dies = _mdies
+    r._golpe_raw = lambda p_, raw: raw
+    r._rolar_ataque = lambda atk, ac, v=False, d=False: (True, 15, 15, False, None)   # reroll acerta
+    hp0 = r.monsters["m1"]["hp"]
+    await r.handle_usar_tecnica("h", "tecnica_sorte")
+    check("sorte: reroll acerta e aplica dano", r.monsters["m1"]["hp"] < hp0)
+    check("sorte: limpa ultimo_ataque_perdido após usar", p.get("ultimo_ataque_perdido") is None)
+    check("sorte: recarga setada", r.tecnica_restante(p, "tecnica_sorte") == 10)
+
+    # Sem erro recente: recusa educadamente.
+    r2 = setup(); r2.current_pid = lambda: "h"; r2._is_turn = lambda pid: True
+    p2 = hero("warrior", "tecnica_sorte"); r2.players["h"] = p2
+    await r2.handle_usar_tecnica("h", "tecnica_sorte")
+    check("sorte: recusa sem ataque recente", "Nenhum ataque recente" in (r2._errs[-1] if r2._errs else ""))
+
+    # Limpo no fim do turno.
+    r3 = setup(); r3.current_pid = lambda: "h"
+    p3 = hero("warrior"); p3["ultimo_ataque_perdido"] = {"target_id": "m1"}; p3["moves_left"] = p3["spd"]
+    r3.players["h"] = p3; r3.player_order = ["h"]; r3.turn_index = 0
+    await r3.handle_end_turn("h")
+    check("sorte: ultimo_ataque_perdido limpo no fim do turno", p3.get("ultimo_ataque_perdido") is None)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
