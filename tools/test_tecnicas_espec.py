@@ -371,6 +371,30 @@ async def main():
     p3["action_done"] = True   # agiu uma 3ª vez, sem mais créditos disponíveis
     check("3ª tentativa: sem mais créditos, bloqueado", r._acao_bloqueada(p3) is True)
 
+    # [20] Oportunidade — concessão (handle_usar_tecnica)
+    print("\n[20] Oportunidade — concessão")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 7
+    p = hero("warrior", "tecnica_oportunidade"); r.players["h"] = p
+    ally = make_player("a", "Ana", "cleric", 1); ally["alive"] = True; ally["pos"] = [1, 1]
+    r.players["a"] = ally
+    await r.handle_usar_tecnica("h", "tecnica_oportunidade", "a")
+    check("concessão: crédito no aliado", ally["oportunidade_credito"] is True)
+    check("concessão: round gravado", ally["oportunidade_round"] == 7)
+    check("concessão: recarga setada no ativador", r.tecnica_restante(p, "tecnica_oportunidade") > 0)
+    check("concessão: custo 6/6 debitado", p["fome"] == 20 - 6 and p["sede"] == 20 - 6)
+    # Recusa: não pode escolher a si mesmo
+    r2 = setup(); r2.current_pid = lambda: "h"; r2.round_num = 7
+    p2 = hero("warrior", "tecnica_oportunidade"); r2.players["h"] = p2
+    await r2.handle_usar_tecnica("h", "tecnica_oportunidade", "h")
+    check("concessão: recusa auto-alvo", p2.get("oportunidade_credito") is False
+          and any("não pode ser você" in e.lower() for e in r2._errs))
+    # Recusa: aliado morto
+    r3 = setup(); r3.current_pid = lambda: "h"; r3.round_num = 7
+    p3 = hero("warrior", "tecnica_oportunidade"); r3.players["h"] = p3
+    morto = make_player("m", "Morto", "cleric", 1); morto["alive"] = False; r3.players["m"] = morto
+    await r3.handle_usar_tecnica("h", "tecnica_oportunidade", "m")
+    check("concessão: recusa aliado morto", morto.get("oportunidade_credito") is False)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

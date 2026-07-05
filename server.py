@@ -4419,6 +4419,13 @@ class GameRoom:
             p["coordenado_turno"] = self.turn_index
         elif ef.get("tipo") == "contra_ataque":
             p["contra_ataque_ate"] = self.round_num + 1
+        elif ef.get("tipo") == "oportunidade":
+            alvo = self.players.get(target_id) if target_id else None
+            if not alvo or not alvo.get("alive") or alvo["id"] == pid:
+                await self.send_to(pid, {"type": "error",
+                    "msg": "Escolha um aliado vivo (não pode ser você)."}); return
+            alvo["oportunidade_credito"] = True
+            alvo["oportunidade_round"] = self.round_num
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
