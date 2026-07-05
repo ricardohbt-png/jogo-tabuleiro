@@ -497,6 +497,17 @@ async def main():
     check("libertar_prisioneiro: crédito de Oportunidade libera a ação", r2.prisoner["freed"] is True)
     check("libertar_prisioneiro: crédito consumido", p2["oportunidade_credito"] is False)
 
+    # [23] Catálogo — Recarga Longa (Fase 2e)
+    print("\n[23] Catálogo — Recarga Longa (2e)")
+    for tid, cf in [("tecnica_instinto_sobrevivencia", 6), ("tecnica_ultimo_esforco", 6),
+                    ("tecnica_golpe_decisivo", 6), ("tecnica_sorte", 2)]:
+        it = S.guild_item(tid)
+        check(f"existe {tid}", it is not None)
+        check(f"{tid} recarga 10", it and it["recarga_rodadas"] == 10)
+        check(f"{tid} preco 350", it and it["preco"] == 350)
+        check(f"{tid} custo {cf}/{cf}", it and it["custo_fome"] == cf and it["custo_sede"] == cf)
+        check(f"{tid} classe None", it and it["classe"] is None)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

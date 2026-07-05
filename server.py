@@ -402,6 +402,47 @@ GUILD_CATALOG = {
                 "novo, ou lançar mais uma magia. Expira no fim desta rodada se não for usada.",
         "efeito": {"tipo": "oportunidade"},
     },
+    # ── Técnicas de Recarga Longa (Fase 2e) ─────────────────────────────────
+    "tecnica_instinto_sobrevivencia": {
+        "id": "tecnica_instinto_sobrevivencia", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 350, "custo_fome": 6, "custo_sede": 6, "recarga_rodadas": 10,
+        "nome": "Instinto de Sobrevivência", "icon": "🍀", "automatica": True,
+        "desc": "Automática. Se um dano zeraria seu HP, você fica com 1 em vez de "
+                "morrer. Depois disso, entra em recarga.",
+        "efeito": {"tipo": "passiva_evitar_morte"},
+    },
+    "tecnica_ultimo_esforco": {
+        "id": "tecnica_ultimo_esforco", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 350, "custo_fome": 6, "custo_sede": 6, "recarga_rodadas": 10,
+        "nome": "Último Esforço", "icon": "🔥", "automatica": True,
+        "desc": "Automática. Se um dano zeraria seu HP, você fica com 1 e ganha 2 "
+                "turnos seguidos: todo ataque tem vantagem e todo acerto é crítico "
+                "(nat20 → dano TRIPLICADO). Não pode se curar. Ao final, cai como se "
+                "tivesse morrido normalmente (pode ser reerguido por Ressurreição).",
+        "efeito": {"tipo": "passiva_ultimo_esforco"},
+    },
+    "tecnica_golpe_decisivo": {
+        "id": "tecnica_golpe_decisivo", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 350, "custo_fome": 6, "custo_sede": 6, "recarga_rodadas": 10,
+        "nome": "Golpe Decisivo", "icon": "💥",
+        "desc": "Arma o próximo ataque básico (corpo a corpo ou à distância): se "
+                "acertar, é crítico automático (dano dobrado); num natural 20 "
+                "enquanto armado, o dano é TRIPLICADO. Consumida no próximo ataque, "
+                "acerte ou erre.",
+        "efeito": {"tipo": "golpe_decisivo"},
+    },
+    "tecnica_sorte": {
+        "id": "tecnica_sorte", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 350, "custo_fome": 2, "custo_sede": 2, "recarga_rodadas": 10,
+        "nome": "Sorte", "icon": "🎲",
+        "desc": "Depois de errar um ataque, você pode gastar esta técnica para "
+                "rolá-lo novamente contra o mesmo alvo. Independente do Sangue Frio.",
+        "efeito": {"tipo": "sorte"},
+    },
     "guerreiro_combinar_2": {
         "id": "guerreiro_combinar_2", "categoria": "especializacao", "classe": "warrior",
         "linha": "guerreiro_combate", "nivel": 2, "requer": None, "exclusiva": False,
@@ -3450,6 +3491,10 @@ def make_player(pid, name, cls_id, slot):
         "oportunidade_round": 0,             # round_num em que foi concedido — expira se round_num avançar
         "imune_silencio_ate": 0,            # Espírito Indomável: imunidade a Silêncio até esta rodada
         "mov_bonus_ate": 0,                 # Grito de Guerra: +2 movimento no reset até esta rodada
+        "tecnica_golpe_decisivo_armado": False,   # Golpe Decisivo: próximo ataque básico
+        "ultimo_ataque_perdido": None,             # Sorte: {target_id, eff_atk, eff_target_ac, vantagem, desvantagem, surv_mod, cancao_dano, gl_dano}
+        "ultimo_esforco_ativo": False,              # True durante a sub-fase do Último Esforço
+        "ultimo_esforco_turnos_restantes": 0,       # 2 → 1 → 0 (fecha a sub-fase)
         # Buffs de turno do warrior (flags planas) — limpos em handle_end_turn
         "skill_bonus_acerto": 0,
         "skill_bonus_dano":   0,      # Mira Certeira III: +2 dano quando armada
@@ -3777,6 +3822,9 @@ class GameRoom:
         self.monsters = {}      # id -> monster
         self.corpses = {}       # id -> cadáver (monstro morto, alvo de Animar Mortos)
         self.animados_phase_pid = None  # pid no "turno dos servos" (logo após o mago)
+        self.last_stand_pid = None      # pid na sub-fase do Último Esforço (ou None)
+        self.last_stand_event = None    # asyncio.Event sinalizado ao fechar a janela
+        self.last_stand_timer_task = None
         self.traps = []
         self.armadilhas = []    # armadilhas colocáveis (ver ARMADILHAS) — distintas de self.traps
         self._armadilha_seq = 0 # contador p/ ids únicos de armadilha
@@ -4886,6 +4934,7 @@ class GameRoom:
 
         self.phase = "playing"
         self.animados_phase_pid = None   # ponteiro de turno transitório (zera em qualquer entrada)
+        self.last_stand_pid = None   # idem — nunca deve sobreviver a uma nova entrada
 
         # A masmorra só é GERADA na 1ª entrada da expedição (ou após concluída).
         # Toda volta da cidade apenas a RETOMA — nada do mundo é regenerado nem
@@ -14235,6 +14284,7 @@ class GameRoom:
             "prisoner": self.prisoner,
             "current_turn": self.current_pid(),
             "animados_turn": self.animados_phase_pid,   # pid no turno dos servos (ou None)
+            "last_stand_pid": self.last_stand_pid,   # pid na sub-fase do Último Esforço (ou None)
             "turn_timer_started": self.turn_timer_started_ms,  # epoch ms do início do turno (p/ contagem 30s)
             "turn_timer_limit": self.TURN_LIMIT_S,
             "round": self.round_num,
