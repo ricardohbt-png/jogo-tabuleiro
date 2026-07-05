@@ -733,6 +733,11 @@ def tem_espec(player, espec_id):
     """True se o jogador possui a especialização comprada (Fase 1+)."""
     return espec_id in player.get("guild_owned", {}).get("especializacoes", [])
 
+def tem_tecnica_equipada(player, tecnica_id):
+    """True se a técnica está no 4º slot equipado do jogador (normal ou exclusiva)."""
+    eq = player.get("guild_equip", {})
+    return tecnica_id in (eq.get("tecnica"), eq.get("tecnica_exclusiva"))
+
 # ─── CHARACTER CLASSES ────────────────────────────────────────────────────────
 
 CLASSES = {
@@ -13928,6 +13933,13 @@ class GameRoom:
             p["sede"] = max(0, p.get("sede", 0) - 3)
             p.pop("regen_pool", None); p.pop("regen_ressurge", None)
             await self.gm_say(f"🌿 **{p['name']}** seria derrotado, mas a **Regeneração** o reergue com 1 HP! (-3 fome/sede)")
+            return
+        # Instinto de Sobrevivência: técnica genérica de recarga longa — sobrevive com 1 HP.
+        if (tem_tecnica_equipada(p, "tecnica_instinto_sobrevivencia")
+                and self.tecnica_restante(p, "tecnica_instinto_sobrevivencia") == 0):
+            p["hp"] = 1
+            p["technique_cooldowns"]["tecnica_instinto_sobrevivencia"] = self.round_num + 10
+            await self.gm_say(f"🍀 **{p['name']}** recorre ao **Instinto de Sobrevivência** e resiste com 1 HP!")
             return
         p["alive"] = False
         p["hp"] = 0

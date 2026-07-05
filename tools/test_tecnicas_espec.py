@@ -508,6 +508,28 @@ async def main():
         check(f"{tid} custo {cf}/{cf}", it and it["custo_fome"] == cf and it["custo_sede"] == cf)
         check(f"{tid} classe None", it and it["classe"] is None)
 
+    # [24] Instinto de Sobrevivência
+    print("\n[24] Instinto de Sobrevivência")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 5
+    p = hero("warrior", "tecnica_instinto_sobrevivencia"); p["hp"] = 10; p["alive"] = True
+    r.players["h"] = p
+    await r._player_dies("h")
+    check("instinto: sobrevive com 1 HP", p["hp"] == 1 and p["alive"] is True)
+    check("instinto: recarga ativada", r.tecnica_restante(p, "tecnica_instinto_sobrevivencia") == 10)
+    # Dentro da recarga, um novo "zerou o HP" mata normalmente.
+    p["hp"] = 0
+    await r._player_dies("h")
+    check("instinto: morre normalmente dentro da recarga", p["alive"] is False)
+
+    # Prioridade: Regeneração do Paladino (já existente) vence se ambos disponíveis.
+    r2 = setup(); r2.current_pid = lambda: "h2"; r2.round_num = 1
+    p2 = hero("paladin", "tecnica_instinto_sobrevivencia")
+    p2["hp"] = 10; p2["alive"] = True; p2["regen_ressurge"] = True; p2["regen_pool"] = 5
+    r2.players["h2"] = p2
+    await r2._player_dies("h2")
+    check("instinto: Regeneração do Paladino tem prioridade", p2["hp"] == 1 and p2["alive"] is True
+          and r2.tecnica_restante(p2, "tecnica_instinto_sobrevivencia") == 0)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
