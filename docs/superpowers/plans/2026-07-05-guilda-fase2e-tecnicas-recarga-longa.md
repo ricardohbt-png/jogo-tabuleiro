@@ -37,12 +37,14 @@ not pytest).
 - [ ] **Step 1: Escrever o teste de catálogo (vai falhar)**
 
 Adicionar ao final de `tools/test_tecnicas_espec.py`, dentro de `async def main():`
-(antes do fechamento da função — ache o padrão `# [17]` ou a última seção
-numerada e continue a partir do próximo número):
+(antes do fechamento da função — a última seção hoje é `# [22] Handlers migrados
+para _acao_bloqueada`; **confirme com grep** `grep -n '# \[' tools/test_tecnicas_espec.py`
+antes de inserir, caso o arquivo tenha mudado desde a escrita deste plano, e
+continue a numeração a partir do próximo número real):
 
 ```python
-    # [18] Catálogo — Recarga Longa (Fase 2e)
-    print("\n[18] Catálogo — Recarga Longa (2e)")
+    # [23] Catálogo — Recarga Longa (Fase 2e)
+    print("\n[23] Catálogo — Recarga Longa (2e)")
     for tid, cf in [("tecnica_instinto_sobrevivencia", 6), ("tecnica_ultimo_esforco", 6),
                     ("tecnica_golpe_decisivo", 6), ("tecnica_sorte", 2)]:
         it = S.guild_item(tid)
@@ -56,7 +58,7 @@ numerada e continue a partir do próximo número):
 - [ ] **Step 2: Rodar o teste e confirmar que falha**
 
 Run: `python tools/test_tecnicas_espec.py`
-Expected: as novas checagens do bloco `[18]` falham com `❌` (os `it` retornam
+Expected: as novas checagens do bloco `[23]` falham com `❌` (os `it` retornam
 `None` porque as entradas ainda não existem no catálogo).
 
 - [ ] **Step 3: Adicionar as 4 entradas no `GUILD_CATALOG`**
@@ -111,7 +113,7 @@ Em `server.py`, logo depois do bloco `"tecnica_oportunidade": { ... },` (linha
 - [ ] **Step 4: Rodar o teste de novo e confirmar que passa**
 
 Run: `python tools/test_tecnicas_espec.py`
-Expected: todas as checagens do bloco `[18]` com `✅`.
+Expected: todas as checagens do bloco `[23]` com `✅`.
 
 - [ ] **Step 5: Adicionar os campos novos no template do jogador**
 
@@ -156,7 +158,7 @@ Em `server.py`, logo depois de `"animados_turn": self.animados_phase_pid,   # pi
 - [ ] **Step 9: Rodar a suíte inteira e confirmar que nada quebrou**
 
 Run: `python tools/test_tecnicas_espec.py`
-Expected: todas as seções (1 a 18) com `✅`, 0 `❌`.
+Expected: todas as seções (1 a 23) com `✅`, 0 `❌`.
 
 - [ ] **Step 10: Commit**
 
@@ -176,11 +178,11 @@ git commit -m "feat(guilda): catálogo e estado base da Fase 2e (recarga longa)"
 
 - [ ] **Step 1: Escrever o teste (vai falhar)**
 
-Adicionar à seção `[19]`:
+Adicionar à seção `[24]`:
 
 ```python
-    # [19] Instinto de Sobrevivência
-    print("\n[19] Instinto de Sobrevivência")
+    # [24] Instinto de Sobrevivência
+    print("\n[24] Instinto de Sobrevivência")
     r = setup(); r.current_pid = lambda: "h"; r.round_num = 5
     p = hero("warrior", "tecnica_instinto_sobrevivencia"); p["hp"] = 10; p["alive"] = True
     r.players["h"] = p
@@ -205,7 +207,7 @@ Adicionar à seção `[19]`:
 - [ ] **Step 2: Rodar e confirmar que falha**
 
 Run: `python tools/test_tecnicas_espec.py`
-Expected: seção `[19]` falha (nenhum ramo trata `tecnica_instinto_sobrevivencia` em
+Expected: seção `[24]` falha (nenhum ramo trata `tecnica_instinto_sobrevivencia` em
 `_player_dies` ainda — o jogador morre em vez de ficar com 1 HP).
 
 - [ ] **Step 3: Adicionar o helper `tem_tecnica_equipada`**
@@ -253,7 +255,7 @@ muda.)
 - [ ] **Step 5: Rodar e confirmar que passa**
 
 Run: `python tools/test_tecnicas_espec.py`
-Expected: seção `[19]` inteira com `✅`.
+Expected: seção `[24]` inteira com `✅`.
 
 - [ ] **Step 6: Commit**
 
@@ -274,11 +276,11 @@ git commit -m "feat(guilda): Instinto de Sobrevivência (Fase 2e)"
 
 - [ ] **Step 1: Escrever o teste (vai falhar)**
 
-Seção `[20]`:
+Seção `[25]`:
 
 ```python
-    # [20] Golpe Decisivo
-    print("\n[20] Golpe Decisivo")
+    # [25] Golpe Decisivo
+    print("\n[25] Golpe Decisivo")
     r = setup(); r.current_pid = lambda: "h"; r.round_num = 1; r._is_turn = lambda pid: True
     p = hero("warrior", "tecnica_golpe_decisivo"); r.players["h"] = p
     await r.handle_usar_tecnica("h", "tecnica_golpe_decisivo")
@@ -329,7 +331,7 @@ Seção `[20]`:
 - [ ] **Step 2: Rodar e confirmar que falha**
 
 Run: `python tools/test_tecnicas_espec.py`
-Expected: seção `[20]` falha (`handle_usar_tecnica` não tem ramo `golpe_decisivo`;
+Expected: seção `[25]` falha (`handle_usar_tecnica` não tem ramo `golpe_decisivo`;
 `handle_attack` não força crítico).
 
 - [ ] **Step 3: Adicionar o ramo de ativação em `handle_usar_tecnica`**
@@ -427,7 +429,7 @@ Em `server.py`, em `handle_end_turn` (linha ~11147), logo depois de
 - [ ] **Step 6: Rodar e confirmar que passa**
 
 Run: `python tools/test_tecnicas_espec.py`
-Expected: seção `[20]` inteira com `✅`; nenhuma seção anterior (1-19) quebrou.
+Expected: seção `[25]` inteira com `✅`; nenhuma seção anterior (1-24) quebrou.
 
 - [ ] **Step 7: Commit**
 
@@ -449,11 +451,11 @@ git commit -m "feat(guilda): Golpe Decisivo + multiplicador de crítico generali
 
 - [ ] **Step 1: Escrever o teste (vai falhar)**
 
-Seção `[21]`:
+Seção `[26]`:
 
 ```python
-    # [21] Sorte
-    print("\n[21] Sorte")
+    # [26] Sorte
+    print("\n[26] Sorte")
     r = setup(); r.current_pid = lambda: "h"; r.round_num = 1; r._is_turn = lambda pid: True
     p = hero("warrior", "tecnica_sorte"); p["pos"] = [0, 0]
     p["atk_bonus"] = 0
@@ -493,7 +495,7 @@ Seção `[21]`:
 - [ ] **Step 2: Rodar e confirmar que falha**
 
 Run: `python tools/test_tecnicas_espec.py`
-Expected: seção `[21]` falha (nada guarda `ultimo_ataque_perdido`; `handle_usar_tecnica`
+Expected: seção `[26]` falha (nada guarda `ultimo_ataque_perdido`; `handle_usar_tecnica`
 não tem ramo `sorte`).
 
 - [ ] **Step 3: Extrair o helper `_resolver_dano_ataque_basico`**
@@ -665,7 +667,7 @@ Decisivo (Task 3, Step 5):
 - [ ] **Step 8: Rodar e confirmar que passa**
 
 Run: `python tools/test_tecnicas_espec.py`
-Expected: seção `[21]` inteira com `✅`; seções 1-20 continuam `✅` (o refactor do
+Expected: seção `[26]` inteira com `✅`; seções 1-25 continuam `✅` (o refactor do
 Step 4 não deve mudar nenhum resultado numérico das seções que já testam dano de
 `handle_attack`).
 
@@ -688,11 +690,11 @@ git commit -m "feat(guilda): Sorte + extração de _resolver_dano_ataque_basico 
 
 - [ ] **Step 1: Escrever o teste (vai falhar)**
 
-Seção `[22]` (parte 1 — abertura):
+Seção `[27]` (parte 1 — abertura):
 
 ```python
-    # [22] Último Esforço — abertura da sub-fase
-    print("\n[22] Último Esforço — abertura")
+    # [27] Último Esforço — abertura da sub-fase
+    print("\n[27] Último Esforço — abertura")
     r = setup(); r.current_pid = lambda: "outro"; r.round_num = 3
     p = hero("warrior", "tecnica_ultimo_esforco"); p["hp"] = 10; p["alive"] = True; p["spd"] = 6
     r.players["h"] = p
@@ -727,7 +729,7 @@ Seção `[22]` (parte 1 — abertura):
 - [ ] **Step 2: Rodar e confirmar que falha**
 
 Run: `python tools/test_tecnicas_espec.py`
-Expected: seção `[22]` falha (`_is_turn` não conhece `last_stand_pid`;
+Expected: seção `[27]` falha (`_is_turn` não conhece `last_stand_pid`;
 `_player_dies` não abre sub-fase; `r.last_stand_event` é `None`, o teste trava ou
 lança `AttributeError`).
 
@@ -817,7 +819,7 @@ Em `server.py`, em `_player_dies`, logo depois do ramo do Instinto de Sobrevivê
 - [ ] **Step 7: Rodar e confirmar que passa**
 
 Run: `python tools/test_tecnicas_espec.py`
-Expected: seção `[22]` (abertura) inteira com `✅`.
+Expected: seção `[27]` (abertura) inteira com `✅`.
 
 - [ ] **Step 8: Commit**
 
@@ -838,11 +840,11 @@ git commit -m "feat(guilda): Último Esforço — abertura da sub-fase (Fase 2e)
 
 - [ ] **Step 1: Escrever o teste (vai falhar)**
 
-Seção `[22]` (parte 2 — fechamento), adicionar após a parte 1:
+Seção `[27]` (parte 2 — fechamento), adicionar após a parte 1:
 
 ```python
-    # [22b] Último Esforço — fechamento via end_turn (2 mini-turnos)
-    print("\n[22b] Último Esforço — fechamento")
+    # [27b] Último Esforço — fechamento via end_turn (2 mini-turnos)
+    print("\n[27b] Último Esforço — fechamento")
     r3 = setup(); r3.current_pid = lambda: "outro"; r3.round_num = 1
     p3 = hero("warrior", "tecnica_ultimo_esforco"); p3["hp"] = 1; p3["alive"] = True; p3["spd"] = 6
     r3.players["h"] = p3
@@ -877,7 +879,7 @@ Seção `[22]` (parte 2 — fechamento), adicionar após a parte 1:
 - [ ] **Step 2: Rodar e confirmar que falha**
 
 Run: `python tools/test_tecnicas_espec.py`
-Expected: seção `[22b]` falha (`handle_end_turn` não trata `last_stand_pid`;
+Expected: seção `[27b]` falha (`handle_end_turn` não trata `last_stand_pid`;
 `_fechar_mini_turno_ultimo_esforco` não existe; desconexão não fecha a janela).
 
 - [ ] **Step 3: Adicionar `_fechar_mini_turno_ultimo_esforco`**
@@ -937,7 +939,7 @@ Em `server.py`, `handle_disconnect_em_jogo` (linha ~5063), logo depois de
 - [ ] **Step 6: Rodar e confirmar que passa**
 
 Run: `python tools/test_tecnicas_espec.py`
-Expected: seções `[22]` e `[22b]` inteiras com `✅`.
+Expected: seções `[27]` e `[27b]` inteiras com `✅`.
 
 - [ ] **Step 7: Commit**
 
@@ -958,11 +960,11 @@ git commit -m "feat(guilda): Último Esforço — fechamento dos mini-turnos e d
 
 - [ ] **Step 1: Escrever o teste (vai falhar)**
 
-Seção `[23]`:
+Seção `[28]`:
 
 ```python
-    # [23] Último Esforço — proibição de auto-cura
-    print("\n[23] Último Esforço — sem auto-cura")
+    # [28] Último Esforço — proibição de auto-cura
+    print("\n[28] Último Esforço — sem auto-cura")
     r = setup(); r.current_pid = lambda: "h"; r._is_turn = lambda pid: True
     p = hero("warrior"); p["ultimo_esforco_ativo"] = True; p["hp"] = 1; p["max_hp"] = 20
     p["bag"] = [{"id": "pocao1", "effect": "heal", "value": 10, "emoji": "🧪", "name": "Poção"}]
@@ -992,7 +994,7 @@ Seção `[23]`:
 - [ ] **Step 2: Rodar e confirmar que falha**
 
 Run: `python tools/test_tecnicas_espec.py`
-Expected: seção `[23]` falha (poção cura normalmente; `handle_cura` aceita
+Expected: seção `[28]` falha (poção cura normalmente; `handle_cura` aceita
 self-target; `handle_cura_area` cura o próprio Lewis também).
 
 - [ ] **Step 3: Bloquear em `handle_use_item`**
@@ -1053,7 +1055,7 @@ Trocar por:
 - [ ] **Step 6: Rodar e confirmar que passa**
 
 Run: `python tools/test_tecnicas_espec.py`
-Expected: seção `[23]` inteira com `✅`.
+Expected: seção `[28]` inteira com `✅`.
 
 - [ ] **Step 7: Commit**
 
@@ -1072,11 +1074,11 @@ git commit -m "feat(guilda): Último Esforço — bloqueia auto-cura (Fase 2e)"
 
 - [ ] **Step 1: Escrever o teste (vai falhar)**
 
-Seção `[24]`:
+Seção `[29]`:
 
 ```python
-    # [24] Recusa ativação manual de técnicas automáticas
-    print("\n[24] Recusa ativação manual (automáticas)")
+    # [29] Recusa ativação manual de técnicas automáticas
+    print("\n[29] Recusa ativação manual (automáticas)")
     for tid in ("tecnica_instinto_sobrevivencia", "tecnica_ultimo_esforco"):
         r = setup(); r.current_pid = lambda: "h"
         p = hero("warrior", tid); r.players["h"] = p
@@ -1090,7 +1092,7 @@ Seção `[24]`:
 - [ ] **Step 2: Rodar e confirmar que falha**
 
 Run: `python tools/test_tecnicas_espec.py`
-Expected: seção `[24]` falha (hoje, `handle_usar_tecnica` cai no `if/elif` sem
+Expected: seção `[29]` falha (hoje, `handle_usar_tecnica` cai no `if/elif` sem
 nenhum ramo casar, e AINDA ASSIM debita fome/sede e ativa a recarga no rodapé
 comum — bug real que este passo corrige).
 
@@ -1112,7 +1114,7 @@ Em `server.py`, `handle_usar_tecnica` (linha ~4359), logo depois de
 - [ ] **Step 4: Rodar e confirmar que passa**
 
 Run: `python tools/test_tecnicas_espec.py`
-Expected: seção `[24]` inteira com `✅`.
+Expected: seção `[29]` inteira com `✅`.
 
 - [ ] **Step 5: Commit**
 
@@ -1274,13 +1276,13 @@ Mortos — Fase 1g"), adicionar:
 > `isMyTurn` passa a aceitar `last_stand_pid` além de `current_turn` (libera toda
 > a UI de ação existente, sem duplicar lógica), e o HUD mostra um banner "🔥
 > ÚLTIMO ESFORÇO — X turno(s) restante(s)" enquanto a janela do próprio jogador
-> estiver aberta. Teste: `tools/test_tecnicas_espec.py` (seções [18]-[24]).
+> estiver aberta. Teste: `tools/test_tecnicas_espec.py` (seções [23]-[29]).
 ```
 
 - [ ] **Step 2: Rodar a suíte de técnicas inteira**
 
 Run: `python tools/test_tecnicas_espec.py`
-Expected: todas as seções `[1]` a `[24]` com `✅`, 0 `❌`.
+Expected: todas as seções `[1]` a `[29]` com `✅`, 0 `❌`.
 
 - [ ] **Step 3: Rodar as suítes relacionadas (regressão — `_player_dies`/`handle_attack`/`handle_end_turn` são compartilhados por várias classes)**
 
