@@ -1113,6 +1113,7 @@ const GS = (() => {
   function guildBuy(itemId)           { send({ type: 'guild_buy',   item_id: itemId }); }
   function guildEquip(slot, itemId)   { send({ type: 'guild_equip', slot: slot, item_id: itemId }); }
   function usarTecnica(tid, targetId) { send({ type: 'usar_tecnica', tecnica_id: tid, target_id: targetId != null ? targetId : null }); }
+  function usarOportunidadeMovimento() { send({ type: 'usar_oportunidade_movimento' }); }
   // Getters puros: catálogo filtrado por classe, itens possuídos e equipados
   // pelo jogador (lidos de cityState.guild), e recarga restante de uma técnica
   // (lida de game_state.players[].technique_cooldowns + gameState.round).
@@ -1694,6 +1695,7 @@ const GS = (() => {
     guildBuy,
     guildEquip,
     usarTecnica,
+    usarOportunidadeMovimento,
     guildCatalogFor,
     guildOwnedOf,
     guildEquipOf,
