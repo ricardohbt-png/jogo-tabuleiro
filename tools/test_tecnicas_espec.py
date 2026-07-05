@@ -674,6 +674,43 @@ async def main():
     await r3.handle_end_turn("h")
     check("sorte: ultimo_ataque_perdido limpo no fim do turno", p3.get("ultimo_ataque_perdido") is None)
 
+    # [27] Último Esforço — abertura da sub-fase
+    print("\n[27] Último Esforço — abertura")
+    r = setup(); r.current_pid = lambda: "outro"; r.round_num = 3
+    p = hero("warrior", "tecnica_ultimo_esforco"); p["hp"] = 10; p["alive"] = True; p["spd"] = 6
+    r.players["h"] = p
+    r.players["outro"] = hero("cleric"); r.players["outro"]["id"] = "outro"
+    r.player_order = ["h", "outro"]
+
+    # Não sobrescrevemos _abrir_ultimo_esforco — deixamos rodar de verdade, mas
+    # fechamos a janela "de fora" via uma task concorrente logo após ela abrir.
+    # IMPORTANTE: hp=1/ativo=True só valem ENQUANTO a janela está aberta — uma
+    # vez que ela fecha (aqui, via este stub; na Task 6, via handle_end_turn de
+    # verdade), _player_dies cai no fluxo normal de morte (hp=0/alive=False).
+    # Por isso o check de "HP=1" precisa rodar DENTRO da task concorrente, no
+    # momento em que a janela está detectada aberta — não depois que
+    # _player_dies() já retornou (nesse ponto a morte já foi finalizada).
+    async def _fechar_logo():
+        while r.last_stand_pid != "h":
+            await asyncio.sleep(0)
+        check("último esforço: HP=1 enquanto a janela está aberta", p["hp"] == 1)
+        check("último esforço: ainda vivo durante a janela", p["alive"] is True)
+        check("último esforço: flag ativa durante a janela", p.get("ultimo_esforco_ativo") is True)
+        r.players["h"]["ultimo_esforco_turnos_restantes"] = 0
+        r.last_stand_pid = None
+        r.last_stand_event.set()
+    asyncio.create_task(_fechar_logo())
+    await r._player_dies("h")
+    check("último esforço: morte finalizada após a janela fechar", p["alive"] is False)
+    check("último esforço: flag ativa desligada ao fechar", p.get("ultimo_esforco_ativo") is False)
+    check("último esforço: recarga setada", r.tecnica_restante(p, "tecnica_ultimo_esforco") == 10)
+
+    # _is_turn aceita o pid em último esforço mesmo sem ser current_pid()
+    r2 = setup(); r2.current_pid = lambda: "outro"
+    r2.last_stand_pid = "h"
+    check("último esforço: _is_turn aceita last_stand_pid", r2._is_turn("h") is True)
+    check("último esforço: _is_turn normal p/ outros", r2._is_turn("ninguem") is False)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

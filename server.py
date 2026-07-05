@@ -5167,6 +5167,40 @@ class GameRoom:
         await self._forcar_fim_turno(
             pid, f"⏳ Tempo esgotado! O turno de **{nome}** foi encerrado automaticamente.")
 
+    def _cancelar_timer_ultimo_esforco(self):
+        t = self.last_stand_timer_task
+        if t and not t.done():
+            t.cancel()
+        self.last_stand_timer_task = None
+
+    def _iniciar_timer_ultimo_esforco(self, pid):
+        self._cancelar_timer_ultimo_esforco()
+        self.last_stand_timer_task = asyncio.create_task(self._ultimo_esforco_timer_expira(pid))
+
+    async def _ultimo_esforco_timer_expira(self, pid):
+        try:
+            await asyncio.sleep(self.TURN_LIMIT_S)
+        except asyncio.CancelledError:
+            return
+        if self.last_stand_pid != pid:
+            return
+        await self._fechar_mini_turno_ultimo_esforco(pid, forcar_fim=True)
+
+    async def _abrir_ultimo_esforco(self, p):
+        pid = p["id"]
+        p["ultimo_esforco_ativo"] = True
+        p["ultimo_esforco_turnos_restantes"] = 2
+        p["moves_left"] = p.get("spd", 0)
+        p["action_done"] = False
+        self.last_stand_pid = pid
+        self.last_stand_event = asyncio.Event()
+        await self.gm_say(f"🔥 **{p['name']}** recusa a morte — **ÚLTIMO ESFORÇO**! Dois turnos de fúria antes de cair.")
+        await self.push_state()
+        self._iniciar_timer_ultimo_esforco(pid)
+        await self.last_stand_event.wait()
+        p["ultimo_esforco_ativo"] = False
+        p.pop("ultimo_esforco_turnos_restantes", None)
+
     async def _forcar_fim_turno(self, pid, motivo=None):
         """Encerra à força o turno de `pid` (timeout de 30s ou desconexão no
         próprio turno). handle_end_turn pode só abrir a fase dos servos sem
@@ -14017,6 +14051,14 @@ class GameRoom:
             p["technique_cooldowns"]["tecnica_instinto_sobrevivencia"] = self.round_num + 10
             await self.gm_say(f"🍀 **{p['name']}** recorre ao **Instinto de Sobrevivência** e resiste com 1 HP!")
             return
+        # Último Esforço: técnica genérica de recarga longa — antes de cair de vez,
+        # abre uma sub-fase de 2 mini-turnos com 1 HP. NÃO retorna cedo: quando a
+        # janela fechar (Task 6), a execução cai para a finalização normal da morte.
+        if (tem_tecnica_equipada(p, "tecnica_ultimo_esforco")
+                and self.tecnica_restante(p, "tecnica_ultimo_esforco") == 0):
+            p["hp"] = 1
+            p["technique_cooldowns"]["tecnica_ultimo_esforco"] = self.round_num + 10
+            await self._abrir_ultimo_esforco(p)
         p["alive"] = False
         p["hp"] = 0
         await self.gm_say(f"💔 **{p['name']}** foi derrotado! Os companheiros devem continuar...")
@@ -14304,7 +14346,9 @@ class GameRoom:
     # ── state serialisation ─────────────────────────────────────────────────
 
     def _is_turn(self, pid):
-        return self.phase == "playing" and self.current_pid() == pid
+        if self.phase != "playing":
+            return False
+        return self.current_pid() == pid or self.last_stand_pid == pid
 
     # Raio (Chebyshev) de visão AO VIVO ao redor de cada minion (animado/elemental).
     # Recomputado a cada broadcast: revela área + monstros enquanto o minion está lá
