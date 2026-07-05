@@ -5824,10 +5824,16 @@ class GameRoom:
             esc = self._verificar_escuridao(p, target)
             _mira_ranged = bool(w_range is not None and p.get("tecnica_mira_perfeita"))
             _investida = bool(w_range is None and self._investida_tecnica_bonus(p, is_ranged=False))
+            # Latch compartilhado de "força crítico automático": hoje usado pelo Golpe
+            # Decisivo (Fase 2e) e, futuramente, pelo Último Esforço — qualquer nova
+            # fonte de crítico garantido deve entrar neste OR em vez de duplicar a lógica.
             _forca_critico = bool(p.get("tecnica_golpe_decisivo_armado")) or bool(p.get("ultimo_esforco_ativo"))
             vantagem    = (bool(p.get("invisivel_magico")) or bool(p.get("oculto_vela"))
                            or esc == "vantagem"
                            or self._provocacao_atk_vantagem(p, target)
+                           # Nota: só o Último Esforço concede vantagem aqui — o Golpe Decisivo
+                           # sozinho NÃO dá vantagem, apenas força o multiplicador de crítico
+                           # via _forca_critico (ver acima).
                            or _mira_ranged or _investida or bool(p.get("ultimo_esforco_ativo")))
             desvantagem = esc == "desvantagem"
             hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)

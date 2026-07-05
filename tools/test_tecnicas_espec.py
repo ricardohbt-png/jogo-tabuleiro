@@ -564,6 +564,29 @@ async def main():
     dmg2 = hp0b - rr2.monsters["m1"]["hp"]
     check("golpe: nat20 enquanto armado triplica", dmg2 >= 3)
 
+    # Regressão: SEM a técnica armada (nem Último Esforço), nat20 continua ×2 — não ×3.
+    # Stub 1d6 sempre 4 (raw) + stat_bonus=mod(STR 18)=4 (guerreiro-padrão, sem _golpe_raw
+    # multiplicando) → dano previsível: ×2 = 16, ×3 = 24 (discrimina claramente).
+    rr_reg = setup(); rr_reg.current_pid = lambda: "h"; rr_reg._is_turn = lambda pid: True
+    hh_reg = hero("warrior"); hh_reg["pos"] = [0, 0]; hh_reg["atk_bonus"] = 0
+    hh_reg["weapon"] = {"id": "machado_basico", "name": "Machado", "die": "1d6", "stat": "str_"}
+    rr_reg.players["h"] = hh_reg
+    rr_reg.monsters = {"m1": {"id": "m1", "name": "Alvo", "nome": "Alvo", "pos": [0, 1],
+                              "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
+    rr_reg._rolar_ataque = lambda atk, ac, v=False, d=False: (True, 20, 20 + atk, True, None)
+    rr_reg._golpe_raw = lambda p_, raw: raw
+    orig_roll_dice = S.roll_dice
+    S.roll_dice = lambda die_str: 4
+    try:
+        hp0c = rr_reg.monsters["m1"]["hp"]
+        await rr_reg.handle_attack("h", "m1")
+        dmg_reg = hp0c - rr_reg.monsters["m1"]["hp"]
+    finally:
+        S.roll_dice = orig_roll_dice
+    check("golpe: nat20 SEM técnica armada permanece ×2 (não ×3)", dmg_reg == 16)
+    check("golpe: flag não estava setada (controle)", hh_reg.get("tecnica_golpe_decisivo_armado") is not True
+          and hh_reg.get("ultimo_esforco_ativo") is not True)
+
     # Consumida mesmo em erro.
     rr3, hh3 = _mk_room_golpe(False)
     rr3._rolar_ataque = lambda atk, ac, v=False, d=False: (False, 2, 2, False, None)
