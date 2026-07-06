@@ -1013,7 +1013,7 @@ const GS = (() => {
           const me = msg.players.find(p => p.name === myName);
           if (me) myPid = me.id;
         }
-        isMyTurn = msg.current_turn === myPid;
+        isMyTurn = msg.current_turn === myPid || msg.last_stand_pid === myPid;
         // (Sobrevivência cliente 0–100 desativada — fome/sede são autoritativos do
         // servidor, escala 0–100. Sem consumo/colapso fantasma no cliente.)
         // Auto-clear pending skill when turn ends or action was processed

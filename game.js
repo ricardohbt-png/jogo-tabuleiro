@@ -9698,6 +9698,11 @@ function renderMyPanel(state){
       <span style="color:#f8d040; font-weight:bold; font-size:.95rem;">✨ +1 HP</span>
       <span style="color:#e8d8a0; font-size:.6rem; letter-spacing:1px;">REGENERAÇÃO DIVINA: +1 HP por turno</span>
     </div>` : ''}
+    ${state.last_stand_pid === GS.myPid ? `
+      <div class="banner-ultimo-esforco" style="background:#7a1f1f;color:#fff;padding:.4rem .8rem;border-radius:6px;margin-bottom:.5rem;text-align:center;font-weight:bold;">
+        🔥 ÚLTIMO ESFORÇO — ${me.ultimo_esforco_turnos_restantes || 0} turno(s) restante(s)
+      </div>
+    ` : ''}
 
     ${(() => {
       const f = me.fome ?? 100, s = me.sede ?? 100;
@@ -9989,7 +9994,7 @@ function renderMyPanel(state){
     const cat = GS.guildCatalogFor(me.class_id).find(x => x.id === tid);
     if(!cat) continue;
     const restante = GS.tecnicaRestante(me, tid);
-    const podeUsar = GS.isMyTurn && me.alive && state.phase === 'playing'
+    const podeUsar = !cat.automatica && GS.isMyTurn && me.alive && state.phase === 'playing'
                      && restante === 0
                      && (me.fome||0) >= (cat.custo_fome||0) && (me.sede||0) >= (cat.custo_sede||0);
     const btn = document.createElement('button');
@@ -9999,7 +10004,7 @@ function renderMyPanel(state){
       ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ recarrega em ${restante}r</small>` : '';
     btn.innerHTML = `
       <div class="skill-info">
-        <div class="skill-name">${cat.icon||'⚔️'} ${cat.nome} <small style="color:var(--gold);font-size:.58rem;">GUILDA</small>${estado}</div>
+        <div class="skill-name">${cat.icon||'⚔️'} ${cat.nome} <small style="color:var(--gold);font-size:.58rem;">${cat.automatica ? 'AUTOMÁTICA' : 'GUILDA'}</small>${estado}</div>
         <div class="skill-desc">${cat.desc||''}</div>
       </div>
       <div class="skill-cost">${restante>0 ? `${restante}r` : `🍖${cat.custo_fome} 💧${cat.custo_sede}`}</div>`;
