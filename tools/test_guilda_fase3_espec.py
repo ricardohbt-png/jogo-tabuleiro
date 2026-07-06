@@ -122,6 +122,58 @@ async def main():
         check(f"flag inicial {flag} = False", p0[flag] is False)
     check("flag inicial tec_ex_geminada_alvo2_id = None", p0["tec_ex_geminada_alvo2_id"] is None)
 
+    print("\n[5] Helpers puros da Fase 3")
+    r = setup()
+    magia_save = {"id": "x", "save": "vontade"}
+    magia_sem_save = {"id": "y"}
+    p = caster("mage")
+    check("dc_bonus=0 sem armar", r._tec_ex_dc_bonus(p, magia_save) == 0)
+    p["tec_ex_aprimorar_armado"] = True
+    check("dc_bonus=1 armado + magia com save", r._tec_ex_dc_bonus(p, magia_save) == 1)
+    check("dc_bonus=0 armado + magia sem save", r._tec_ex_dc_bonus(p, magia_sem_save) == 0)
+
+    magia_dur = {"id": "z", "duracao": "1d4"}
+    magia_sem_dur = {"id": "w", "alcance_base": 3, "alcance_escala": 1}
+    p2 = caster("mage"); p2["tec_ex_estender_armado"] = True
+    check("estender: +1 duração quando a magia tem duracao",
+          r._tec_ex_dur_alcance_bonus(p2, magia_dur) == (1, 0))
+    check("estender: +1 alcance quando a magia NÃO tem duracao",
+          r._tec_ex_dur_alcance_bonus(p2, magia_sem_dur) == (0, 1))
+    p3 = caster("mage")
+    check("estender: (0,0) sem armar", r._tec_ex_dur_alcance_bonus(p3, magia_dur) == (0, 0))
+
+    magia_dano = {"id": "k", "dano_por_nivel": "1d6"}
+    p4 = caster("mage"); p4["tec_ex_empoderar_armado"] = True
+    check("empoderar: ×1.5 em magia com dano", r._tec_ex_dmg_mult(p4, magia_dano) == 1.5)
+    check("empoderar: ×1 em magia sem dano", r._tec_ex_dmg_mult(p4, magia_sem_dur) == 1)
+    p5 = caster("mage")
+    check("empoderar: ×1 sem armar", r._tec_ex_dmg_mult(p5, magia_dano) == 1)
+
+    print("\n[5b] _geminada_alvo2_valido")
+    r2 = setup()
+    pc = caster("mage"); pc["pos"] = [0, 0]
+    ally = make_player("a", "Ana", "cleric", 1); ally["alive"] = True; ally["pos"] = [2, 0]
+    dead_ally = make_player("d", "Dan", "warrior", 2); dead_ally["alive"] = False; dead_ally["pos"] = [1, 0]
+    monster = {"id": "m1", "name": "Alvo", "pos": [3, 0], "hp": 10, "max_hp": 10}
+    dead_monster = {"id": "m2", "name": "Morto", "pos": [1, 0], "hp": 0, "max_hp": 10}
+    magia_alvo_ofensiva = {"id": "raio_congelante", "tipo": "alvo", "alcance_base": 3, "alcance_escala": 1}
+    magia_buff = {"id": "visao_escuro", "tipo": "buff_aliado", "alcance": 6}
+    check("geminada: monstro vivo no alcance de magia ofensiva → válido",
+          r2._geminada_alvo2_valido(pc, magia_alvo_ofensiva, monster))
+    check("geminada: monstro morto → inválido",
+          not r2._geminada_alvo2_valido(pc, magia_alvo_ofensiva, dead_monster))
+    check("geminada: aliado num alvo ofensivo → inválido (tipo errado)",
+          not r2._geminada_alvo2_valido(pc, magia_alvo_ofensiva, ally))
+    check("geminada: aliado vivo no alcance de magia de buff → válido",
+          r2._geminada_alvo2_valido(pc, magia_buff, ally))
+    check("geminada: monstro num buff → inválido (tipo errado)",
+          not r2._geminada_alvo2_valido(pc, magia_buff, monster))
+    check("geminada: aliado morto → inválido",
+          not r2._geminada_alvo2_valido(pc, magia_buff, dead_ally))
+    far_monster = {"id": "m3", "name": "Longe", "pos": [10, 0], "hp": 10, "max_hp": 10}
+    check("geminada: fora do alcance → inválido",
+          not r2._geminada_alvo2_valido(pc, magia_alvo_ofensiva, far_monster))
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

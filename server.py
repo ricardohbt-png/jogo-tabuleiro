@@ -4391,6 +4391,51 @@ class GameRoom:
                 partes.append(f"Aprimorar (+{dc_bonus} CD)")
         return dmg_mult, dur_bonus, dc_bonus, mm_fome, mm_sede, partes, (len(candidatas) > teto)
 
+    # ── Técnicas Exclusivas da Guilda (Fase 3, Mago/Clérigo) ────────────────────
+    # Independentes da Metamagia acima: helpers puros lidos em handle_magia; os
+    # bônus se SOMAM (dc/duração/alcance) ou multiplicam em cadeia (dano) com a
+    # Metamagia do Mago, se ambas estiverem ativas no mesmo lançamento.
+    def _tec_ex_dc_bonus(self, p, magia):
+        """+1 na CD do save se Aprimorar Magia (Fase 3) estiver armada e a magia
+        exigir teste de resistência."""
+        return 1 if (p.get("tec_ex_aprimorar_armado") and "save" in magia) else 0
+
+    def _tec_ex_dur_alcance_bonus(self, p, magia):
+        """(dur_bonus, alcance_bonus) de Estender Magia (Fase 3): +1 rodada de
+        duração se a magia tiver 'duracao', senão +1 quadrado de alcance."""
+        if not p.get("tec_ex_estender_armado"):
+            return 0, 0
+        return (1, 0) if "duracao" in magia else (0, 1)
+
+    def _tec_ex_dmg_mult(self, p, magia):
+        """×1,5 de Empoderar Magia (Fase 3) se a magia causar dano."""
+        return 1.5 if (p.get("tec_ex_empoderar_armado") and self._magia_tem_dano(magia)) else 1
+
+    def _geminada_alvo2_valido(self, caster, magia, alvo2):
+        """True se o 2º alvo da Magia Geminada é elegível: vivo, no alcance da
+        magia a partir do caster, e do tipo certo (monstro p/ magia ofensiva
+        'alvo', aliado p/ magia de buff 'alvo_aliado'/'buff_aliado').
+        Usa 'class_id' (sempre presente em jogadores, ausente em monstros) em
+        vez de _eh_jogador para não depender de self.players — alvo2 pode ser
+        um dict avulso ainda não registrado na sala."""
+        if not alvo2:
+            return False
+        eh_jogador = "class_id" in alvo2
+        vivo = alvo2["alive"] if eh_jogador else alvo2.get("hp", 0) > 0
+        if not vivo:
+            return False
+        tipo = magia.get("tipo")
+        if tipo == "alvo" and eh_jogador:
+            return False
+        if tipo in ("alvo_aliado", "buff_aliado") and not eh_jogador:
+            return False
+        alcance = magia.get("alcance")
+        if alcance is None:
+            nivel = caster.get("level", 1)
+            alcance = magia.get("alcance_base", 0) + magia.get("alcance_escala", 0) * (nivel - 1)
+        dist = max(abs(caster["pos"][0] - alvo2["pos"][0]), abs(caster["pos"][1] - alvo2["pos"][1]))
+        return dist <= alcance
+
     def _golpe_raw(self, p, raw):
         """Golpe Devastador nos dados: ×2 com Nível III, ×1,5 (floor) no base; sem efeito se não armado."""
         if not p.get("skill_dobrar_dano"):
