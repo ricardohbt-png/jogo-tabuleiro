@@ -331,6 +331,36 @@ async def main():
     await rr12.handle_magia("h", {"magia_id": "raio_congelante", "target_id": "m1"})
     check("sem acelerada: action_done vira True normalmente", pp12["action_done"] is True)
 
+    # [7i] Fortalecer Magia (Metamagia 1f, NÃO ocupa o slot exclusivo) + Magia
+    # Geminada (Fase 3, slot exclusivo) juntas — ×1,25 (base, sem espec.
+    # mago_fortalecer_2/3) aplica nos DOIS alvos. Nota: Empoderar Magia (Fase 3)
+    # NÃO pode coexistir com Geminada no mesmo personagem — ambas são
+    # "exclusiva":True e disputam o ÚNICO slot tecnica_exclusiva (handle_guild_equip
+    # só permite 1 lá); Fortalecer, ao contrário, é a Metamagia do Mago (1f), que
+    # não usa slot nenhum, então É uma combinação real alcançável em jogo.
+    rr13, pp13 = _mk_caster_room("tec_ex_magia_geminada")
+    pp13["fortalecer_ativo"] = True
+    rr13.monsters = {
+        "m1": {"id": "m1", "name": "Alvo1", "pos": [0, 1], "hp": 1000, "max_hp": 1000, "ac": 10, "ca": 10},
+        "m2": {"id": "m2", "name": "Alvo2", "pos": [0, 2], "hp": 1000, "max_hp": 1000, "ac": 10, "ca": 10},
+    }
+    rr13._rolar_dano_mostrado = _fixed_dano
+    await rr13.handle_usar_tecnica("h", "tec_ex_magia_geminada", "m2")
+    await rr13.handle_magia("h", {"magia_id": "raio_congelante", "target_id": "m1"})
+    dano_m1 = 1000 - rr13.monsters["m1"]["hp"]
+    dano_m2 = 1000 - rr13.monsters["m2"]["hp"]
+
+    rr14, pp14 = _mk_caster_room(None)
+    rr14.monsters = {"m1": {"id": "m1", "name": "Alvo", "pos": [0, 1], "hp": 1000, "max_hp": 1000, "ac": 10, "ca": 10}}
+    rr14._rolar_dano_mostrado = _fixed_dano
+    await rr14.handle_magia("h", {"magia_id": "raio_congelante", "target_id": "m1"})
+    dano_base = 1000 - rr14.monsters["m1"]["hp"]
+    dano_esperado = int(dano_base * 1.25 + 0.5)
+
+    check("fortalecer+geminada: 1º alvo recebe ×1,25", dano_m1 == dano_esperado)
+    check("fortalecer+geminada: 2º alvo (geminada) TAMBÉM recebe ×1,25", dano_m2 == dano_esperado)
+    check("fortalecer+geminada: flag geminada consumida", pp13["tec_ex_geminada_alvo2_id"] is None)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
