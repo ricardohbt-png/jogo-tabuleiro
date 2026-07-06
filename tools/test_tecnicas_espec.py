@@ -722,6 +722,38 @@ async def main():
     check("último esforço: recarga NÃO consumida (técnica não disparou)",
           r3.tecnica_restante(p3, "tecnica_ultimo_esforco") == 0)
 
+    # [27b] Último Esforço — fechamento via end_turn (2 mini-turnos)
+    print("\n[27b] Último Esforço — fechamento")
+    r3 = setup(); r3.current_pid = lambda: "outro"; r3.round_num = 1
+    p3 = hero("warrior", "tecnica_ultimo_esforco"); p3["hp"] = 1; p3["alive"] = True; p3["spd"] = 6
+    r3.players["h"] = p3
+    r3.last_stand_pid = "h"
+    r3.last_stand_event = asyncio.Event()
+    p3["ultimo_esforco_ativo"] = True
+    p3["ultimo_esforco_turnos_restantes"] = 2
+    check("fechamento: is_turn aceita antes de fechar", r3._is_turn("h") is True)
+    await r3.handle_end_turn("h")   # fecha o 1º mini-turno
+    check("fechamento: 1 mini-turno restante", p3["ultimo_esforco_turnos_restantes"] == 1)
+    check("fechamento: janela ainda aberta", r3.last_stand_pid == "h")
+    check("fechamento: moves_left resetado p/ o 2º mini-turno", p3["moves_left"] == p3["spd"])
+    await r3.handle_end_turn("h")   # fecha o 2º mini-turno
+    check("fechamento: janela fecha de vez", r3.last_stand_pid is None)
+    check("fechamento: event sinalizado", r3.last_stand_event.is_set())
+
+    # Desconexão durante a janela fecha imediatamente (não trava o jogo).
+    r4 = setup(); r4.current_pid = lambda: "outro"
+    p4 = hero("warrior"); p4["hp"] = 1; p4["alive"] = True; p4["connected"] = True
+    r4.players["h"] = p4
+    r4.host_pid = "outro"
+    r4.players["outro"] = hero("cleric"); r4.players["outro"]["id"] = "outro"; r4.players["outro"]["connected"] = True
+    r4.last_stand_pid = "h"
+    r4.last_stand_event = asyncio.Event()
+    p4["ultimo_esforco_ativo"] = True
+    p4["ultimo_esforco_turnos_restantes"] = 2
+    await r4.handle_disconnect_em_jogo("h")
+    check("desconexão: fecha a janela do Último Esforço", r4.last_stand_pid is None)
+    check("desconexão: event sinalizado", r4.last_stand_event.is_set())
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

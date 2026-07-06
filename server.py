@@ -5205,6 +5205,23 @@ class GameRoom:
         p["ultimo_esforco_ativo"] = False
         p.pop("ultimo_esforco_turnos_restantes", None)
 
+    async def _fechar_mini_turno_ultimo_esforco(self, pid, forcar_fim=False):
+        p = self.players[pid]
+        if forcar_fim:
+            p["ultimo_esforco_turnos_restantes"] = 0
+        else:
+            p["ultimo_esforco_turnos_restantes"] -= 1
+        if p["ultimo_esforco_turnos_restantes"] > 0:
+            p["moves_left"] = p.get("spd", 0)
+            p["action_done"] = False
+            await self.gm_say(f"⚔️ **{p['name']}** continua o Último Esforço — mais um turno!")
+            await self.push_state()
+            self._iniciar_timer_ultimo_esforco(pid)
+        else:
+            self._cancelar_timer_ultimo_esforco()
+            self.last_stand_pid = None
+            self.last_stand_event.set()
+
     async def _forcar_fim_turno(self, pid, motivo=None):
         """Encerra à força o turno de `pid` (timeout de 30s ou desconexão no
         próprio turno). handle_end_turn pode só abrir a fase dos servos sem
@@ -5240,6 +5257,8 @@ class GameRoom:
         if not p or not p.get("connected", True):
             return
         p["connected"] = False
+        if self.last_stand_pid == pid:
+            await self._fechar_mini_turno_ultimo_esforco(pid, forcar_fim=True)
         # Anfitrião caiu → passa o comando a outro jogador conectado.
         if self.host_pid == pid:
             nxt = next((q["id"] for q in self.players.values()
@@ -11238,6 +11257,9 @@ class GameRoom:
 
     async def handle_end_turn(self, pid):
         if not self._is_turn(pid): return
+        if self.last_stand_pid == pid:
+            await self._fechar_mini_turno_ultimo_esforco(pid)
+            return
         p = self.players[pid]
         if p.get("pending_spell_pick"):
             await self.send_to(pid, {"type": "error",
