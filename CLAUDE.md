@@ -612,3 +612,40 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `[27b]`/`[27c]`/`[28b]`/`[28c]`/`[28d]` adicionadas em ciclos de revisão,
 > incluindo um teste ponta-a-ponta do ciclo completo do Último Esforço e a prova
 > congelado-vs-ao-vivo da Sorte).
+
+> **Técnicas Exclusivas (Fase 3 — Mago/Clérigo):** primeiro uso real do 2º slot
+> (`tecnica_exclusiva`), reservado desde a Fase 0 mas nunca ocupado até agora.
+> 7 técnicas (`categoria:"tecnica"`, `classe:["mage","cleric"]`, `exclusiva:True`)
+> que aprimoram a **próxima magia** lançada — mesmo padrão "arma e age" das
+> demais técnicas, mas rodando dentro de `handle_magia` em vez de `handle_attack`.
+> **Recarga 5 (180🪙/2🍖2💧, exceto Canalização Arcana 4🍖4💧):** Aprimorar Magia
+> (+1 CD do save), Estender Magia (+1 duração se a magia tiver `duracao`, senão +1
+> alcance), Canalização Arcana (ignora Silêncio — "não pode ser interrompida" fica
+> inerte, sem mecanismo de interrupção de magia no jogo). **Recarga 8 (280🪙/4🍖4💧,
+> exceto Geminada 6🍖6💧):** Empoderar Magia (×1,5 dano ofensivo), Magia Geminada
+> (2º alvo escolhido **na ativação** — modal combinado aliado+monstro, `alvo:
+> "qualquer_vivo"` — reexecuta o mesmo efeito nele se elegível: vivo, no alcance,
+> e do tipo certo pro `tipo` da magia), Canalização Perfeita (o alvo testa
+> resistência com desvantagem). **Recarga 10 (350🪙/6🍖6💧):** Magia Acelerada (a
+> magia não marca `action_done` — libera a ação principal do turno). Todas
+> **independentes** da Metamagia do Mago (Fase 1f, toggle permanente e gratuito):
+> os bônus de Aprimorar/Estender se somam e os multiplicadores de dano
+> (Empoderar/Fortalecer) multiplicam em cadeia se ambos estiverem ativos no mesmo
+> lançamento — decisão de brainstorming, para não duplicar a lógica dos toggles
+> existentes nem criar uma relação de exclusividade sem necessidade real de
+> design. Nota: Empoderar e Geminada nunca coexistem no mesmo personagem (as duas
+> são `exclusiva:True`, disputando o mesmo slot único); a combinação realmente
+> alcançável em jogo — e a testada — é Fortalecer (Metamagia, sem slot) +
+> Geminada, provando que a bonificação ×1,25 se aplica aos DOIS alvos. Duas
+> generalizações retrocompatíveis: `classe` no catálogo passa a aceitar lista
+> (`_guild_classe_ok`, usado em `guild_items_for_class`/`handle_guild_buy`;
+> `guildCatalogFor` no cliente ganha o mesmo `Array.isArray`); `_testar_save`/
+> `_save_mostrado` ganham `desvantagem` (rola 2d20, usa o pior — só chega a
+> `_executar_raio_congelante` hoje, a única magia de alvo único com save
+> implementada; os próximos executores de alvo único devem seguir o mesmo
+> padrão). Interação com o Último Esforço (Fase 2e): decidido em brainstorming
+> **não bloquear** — o TODO deixado em `game.js` foi resolvido sem nova
+> restrição, já que `GS.isMyTurn` já cobre a janela do Último Esforço. Cliente:
+> badge "★ Exclusiva Mago/Clérigo" em `_guildItemRow`; nenhuma seção nova na UI
+> (as 7 técnicas caem nas faixas de recarga já existentes). Teste:
+> `tools/test_guilda_fase3_espec.py`.
