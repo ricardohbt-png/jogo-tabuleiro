@@ -4564,11 +4564,13 @@ class GameRoom:
         return dmg, weapon_name, dmg_detail, raw_dmg, die_str
 
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
-        """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
+        """Ativa uma técnica equipada da Guilda (ação no turno do herói, incluindo
+        a janela do Último Esforço — mesma checagem de `_is_turn` usada pelos
+        demais handlers de ação)."""
         if self.phase != "playing":
             return
         p = self.players.get(pid)
-        if not p or self.current_pid() != pid:
+        if not p or not self._is_turn(pid):
             await self.send_to(pid, {"type": "error", "msg": "Não é o seu turno."})
             return
         eq = p["guild_equip"]

@@ -361,6 +361,24 @@ async def main():
     check("fortalecer+geminada: 2º alvo (geminada) TAMBÉM recebe ×1,25", dano_m2 == dano_esperado)
     check("fortalecer+geminada: flag geminada consumida", pp13["tec_ex_geminada_alvo2_id"] is None)
 
+    print("\n[8] handle_usar_tecnica funciona durante o Último Esforço (last stand)")
+    r = setup(); r.current_pid = lambda: "outro"   # current_pid aponta p/ OUTRO jogador
+    r.last_stand_pid = "h"                          # "h" está em Último Esforço
+    p = caster("mage", tid_ex="tec_ex_aprimorar_magia"); r.players["h"] = p
+    r._errs.clear()
+    await r.handle_usar_tecnica("h", "tec_ex_aprimorar_magia")
+    check("last stand: técnica exclusiva ativa normalmente", p["tec_ex_aprimorar_armado"] is True)
+    check("last stand: sem erro de 'não é seu turno'", not any("turno" in e.lower() for e in r._errs))
+
+    r2 = setup(); r2.current_pid = lambda: "outro"
+    r2.last_stand_pid = "h"
+    p2 = caster("warrior"); r2.players["h"] = p2
+    p2["guild_owned"]["tecnicas"] = ["tecnica_mira_perfeita"]
+    p2["guild_equip"]["tecnica"] = "tecnica_mira_perfeita"
+    r2._errs.clear()
+    await r2.handle_usar_tecnica("h", "tecnica_mira_perfeita")
+    check("last stand: técnica genérica (Fase 2a) também funciona", p2["tecnica_mira_perfeita"] is True)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
