@@ -5641,23 +5641,7 @@ class GameRoom:
             await self._spawn_chest_from_room(entered)
 
         # Check trap
-        for trap in self.traps:
-            if trap["pos"] == [nx, ny] and not trap["triggered"]:
-                if "detect_trap" not in [s for s in p.get("status", [])]:
-                    trap["triggered"] = True
-                    prefix = random.choice(GM["room_trap"])
-                    save_roll = random.randint(1, 20)
-                    cancao_res = self._cancao_bonus(p, "bonus_res")
-                    passed = save_roll + p["ref_"] + self._modificador_sobrevivencia(p) + cancao_res >= 13
-                    await self.broadcast({"type": "dice_roll", "die": "d20",
-                                           "value": save_roll, "label": "Reflexos"})
-                    if passed:
-                        await self.gm_say(prefix + f" **{p['name']}** passou no teste de **Reflexos** (CD 13) e se esquivou!")
-                    else:
-                        p["hp"] = max(0, p["hp"] - trap["damage"])
-                        await self.gm_say(prefix + f" **{p['name']}** falhou em **Reflexos** (CD 13) e sofre **{trap['damage']}** de dano!")
-                        if p["hp"] <= 0:
-                            await self._player_dies(pid)
+        await self._verificar_trap_procedural(pid, p, nx, ny)
 
         # Armadilha colocável nesta casa? (dispara sobre quem pisou)
         if p["alive"]:
@@ -5674,6 +5658,37 @@ class GameRoom:
             await self._aplicar_fogueira_se_pisar(p)
 
         await self.push_state()
+
+    async def _verificar_trap_procedural(self, pid, p, nx, ny):
+        """Buraco genérico de sala procedural (self.traps, distinto do catálogo
+        ARMADILHAS) — testa Reflexos CD13, aplica dano e envia o popup
+        trap_result pra quem pisou."""
+        for trap in self.traps:
+            if trap["pos"] == [nx, ny] and not trap["triggered"]:
+                if "detect_trap" in [s for s in p.get("status", [])]:
+                    continue
+                trap["triggered"] = True
+                prefix = random.choice(GM["room_trap"])
+                save_roll = random.randint(1, 20)
+                cancao_res = self._cancao_bonus(p, "bonus_res")
+                passed = save_roll + p["ref_"] + self._modificador_sobrevivencia(p) + cancao_res >= 13
+                await self.broadcast({"type": "dice_roll", "die": "d20",
+                                       "value": save_roll, "label": "Reflexos"})
+                if passed:
+                    await self.gm_say(prefix + f" **{p['name']}** passou no teste de **Reflexos** (CD 13) e se esquivou!")
+                    await self._enviar_trap_result(
+                        p, "Buraco Escondido", "🕳️", sucesso=True, dano=0, metade=False,
+                        descricao="Um buraco disfarçado se abre sob seus pés.",
+                        efeitos_extra=[])
+                else:
+                    p["hp"] = max(0, p["hp"] - trap["damage"])
+                    await self.gm_say(prefix + f" **{p['name']}** falhou em **Reflexos** (CD 13) e sofre **{trap['damage']}** de dano!")
+                    await self._enviar_trap_result(
+                        p, "Buraco Escondido", "🕳️", sucesso=False, dano=trap["damage"], metade=False,
+                        descricao="Um buraco disfarçado se abre sob seus pés.",
+                        efeitos_extra=[f"💥 Sofreu {trap['damage']} de dano"])
+                    if p["hp"] <= 0:
+                        await self._player_dies(pid)
 
     async def handle_open_door(self, pid, tx, ty):
         """Herói abre uma porta adjacente — ação gratuita (não gasta movimento
@@ -10766,6 +10781,25 @@ class GameRoom:
         })
         await self.gm_say(f"🪤 **{p['name']}** prepara **{tipo['nome']}** em ({tx},{ty}).")
         await self.push_state()
+
+    async def _enviar_trap_result(self, alvo, nome, icone, sucesso, dano, metade,
+                                   descricao, efeitos_extra, tick=False):
+        """Envia o popup trap_result pra quem está no controle de `alvo`: o
+        próprio jogador, ou o resgatador do prisioneiro (rescuer_pid). Monstros
+        e servos animados não têm cliente — não enviamos nada pra eles."""
+        if self._eh_jogador(alvo):
+            pid = alvo["id"]
+        elif alvo is self.prisoner:
+            pid = self.prisoner.get("rescuer_pid")
+        else:
+            return
+        if not pid:
+            return
+        await self.send_to(pid, {
+            "type": "trap_result", "nome": nome, "icone": icone,
+            "sucesso": sucesso, "dano": dano, "metade": metade,
+            "descricao": descricao, "efeitos_extra": efeitos_extra, "tick": tick,
+        })
 
     async def _disparar_armadilha(self, alvo, arm):
         """Dispara a armadilha sobre `alvo` (jogador OU monstro)."""
