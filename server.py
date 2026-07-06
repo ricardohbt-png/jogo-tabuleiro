@@ -392,6 +392,76 @@ GUILD_CATALOG = {
         "desc": "Até o próximo turno, quando um inimigo errar você (arma corpo a corpo/alcance ou besta de mão, e ele no alcance), você o ataca de volta.",
         "efeito": {"tipo": "contra_ataque"},
     },
+    # ── Técnicas Exclusivas (Fase 3) — Mago/Clérigo, slot tecnica_exclusiva ──
+    "tec_ex_aprimorar_magia": {
+        "id": "tec_ex_aprimorar_magia", "categoria": "tecnica",
+        "classe": ["mage", "cleric"], "exclusiva": True,
+        "linha": None, "nivel": None, "requer": None,
+        "preco": 180, "custo_fome": 2, "custo_sede": 2, "recarga_rodadas": 5,
+        "nome": "Aprimorar Magia", "icon": "🎯",
+        "desc": "A próxima magia recebe +1 na CD do teste de resistência "
+                "(vale p/ magias de área também).",
+        "efeito": {"tipo": "tec_ex_aprimorar"},
+    },
+    "tec_ex_estender_magia": {
+        "id": "tec_ex_estender_magia", "categoria": "tecnica",
+        "classe": ["mage", "cleric"], "exclusiva": True,
+        "linha": None, "nivel": None, "requer": None,
+        "preco": 180, "custo_fome": 2, "custo_sede": 2, "recarga_rodadas": 5,
+        "nome": "Estender Magia", "icon": "⏱️",
+        "desc": "A próxima magia tem +1 rodada de duração, ou +1 quadrado de "
+                "alcance se não tiver duração.",
+        "efeito": {"tipo": "tec_ex_estender"},
+    },
+    "tec_ex_canalizacao_arcana": {
+        "id": "tec_ex_canalizacao_arcana", "categoria": "tecnica",
+        "classe": ["mage", "cleric"], "exclusiva": True,
+        "linha": None, "nivel": None, "requer": None,
+        "preco": 180, "custo_fome": 4, "custo_sede": 4, "recarga_rodadas": 5,
+        "nome": "Canalização Arcana", "icon": "🌀",
+        "desc": "A próxima magia ignora os efeitos de Silêncio.",
+        "efeito": {"tipo": "tec_ex_canalizacao_arcana"},
+    },
+    "tec_ex_empoderar_magia": {
+        "id": "tec_ex_empoderar_magia", "categoria": "tecnica",
+        "classe": ["mage", "cleric"], "exclusiva": True,
+        "linha": None, "nivel": None, "requer": None,
+        "preco": 280, "custo_fome": 4, "custo_sede": 4, "recarga_rodadas": 8,
+        "nome": "Empoderar Magia", "icon": "💥",
+        "desc": "A próxima magia ofensiva causa 50% a mais de dano (×1,5).",
+        "efeito": {"tipo": "tec_ex_empoderar"},
+    },
+    "tec_ex_magia_geminada": {
+        "id": "tec_ex_magia_geminada", "categoria": "tecnica",
+        "classe": ["mage", "cleric"], "exclusiva": True, "alvo": "qualquer_vivo",
+        "linha": None, "nivel": None, "requer": None,
+        "preco": 280, "custo_fome": 6, "custo_sede": 6, "recarga_rodadas": 8,
+        "nome": "Magia Geminada", "icon": "👯",
+        "desc": "Escolha um 2º alvo agora; a próxima magia de alvo único também "
+                "o afeta, se estiver no alcance da magia. Não funciona em "
+                "magias de área.",
+        "efeito": {"tipo": "tec_ex_geminada"},
+    },
+    "tec_ex_canalizacao_perfeita": {
+        "id": "tec_ex_canalizacao_perfeita", "categoria": "tecnica",
+        "classe": ["mage", "cleric"], "exclusiva": True,
+        "linha": None, "nivel": None, "requer": None,
+        "preco": 280, "custo_fome": 4, "custo_sede": 4, "recarga_rodadas": 8,
+        "nome": "Canalização Perfeita", "icon": "🎴",
+        "desc": "Na próxima magia de alvo único, o alvo testa resistência com "
+                "desvantagem.",
+        "efeito": {"tipo": "tec_ex_canalizacao_perfeita"},
+    },
+    "tec_ex_magia_acelerada": {
+        "id": "tec_ex_magia_acelerada", "categoria": "tecnica",
+        "classe": ["mage", "cleric"], "exclusiva": True,
+        "linha": None, "nivel": None, "requer": None,
+        "preco": 350, "custo_fome": 6, "custo_sede": 6, "recarga_rodadas": 10,
+        "nome": "Magia Acelerada", "icon": "⚡",
+        "desc": "A próxima magia é lançada como Ação Bônus — não gasta sua "
+                "ação principal.",
+        "efeito": {"tipo": "tec_ex_acelerada"},
+    },
     "guerreiro_combinar_2": {
         "id": "guerreiro_combinar_2", "categoria": "especializacao", "classe": "warrior",
         "linha": "guerreiro_combate", "nivel": 2, "requer": None, "exclusiva": False,
@@ -673,10 +743,17 @@ GUILD_CATALOG = {
 def guild_item(item_id):
     return GUILD_CATALOG.get(item_id)
 
+def _guild_classe_ok(item_classe, class_id):
+    """True se `item_classe` (None, 1 class_id, ou lista/tupla de class_ids) libera `class_id`."""
+    if item_classe is None:
+        return True
+    if isinstance(item_classe, (list, tuple, set)):
+        return class_id in item_classe
+    return item_classe == class_id
+
 def guild_items_for_class(class_id):
     """Itens do catálogo disponíveis para uma classe (cópias para envio)."""
-    return [dict(v) for v in GUILD_CATALOG.values()
-            if v["classe"] is None or v["classe"] == class_id]
+    return [dict(v) for v in GUILD_CATALOG.values() if _guild_classe_ok(v["classe"], class_id)]
 
 def tem_espec(player, espec_id):
     """True se o jogador possui a especialização comprada (Fase 1+)."""
@@ -4063,8 +4140,8 @@ class GameRoom:
         if not item:
             await self.send_to(pid, {"type": "error", "msg": "Item da guilda desconhecido."})
             return
-        # Classe compatível
-        if item["classe"] is not None and item["classe"] != p.get("class_id"):
+        # Classe compatível (classe pode ser None, 1 class_id, ou lista de class_ids)
+        if not _guild_classe_ok(item["classe"], p.get("class_id")):
             await self.send_to(pid, {"type": "error", "msg": "Este aprimoramento não é da sua classe."})
             return
         cat = item["categoria"]   # "tecnica" | "especializacao"

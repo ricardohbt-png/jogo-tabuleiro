@@ -1119,7 +1119,8 @@ const GS = (() => {
   // Catálogo: na cidade vem em cityState.guild; na masmorra usa o cache (cityState=null).
   function guildCatalogFor(classId) {
     const catalog = (cityState && cityState.guild && cityState.guild.catalog) || guildCatalogCache || [];
-    return catalog.filter(i => i.classe == null || i.classe === classId);
+    return catalog.filter(i => i.classe == null || i.classe === classId
+      || (Array.isArray(i.classe) && i.classe.includes(classId)));
   }
   // Owned/equip: na cidade vêm de cityState.guild.players[pid]; na masmorra caem
   // para o player do game_state (que carrega guild_owned/guild_equip inteiros).
