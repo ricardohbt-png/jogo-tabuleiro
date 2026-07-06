@@ -392,6 +392,57 @@ GUILD_CATALOG = {
         "desc": "Até o próximo turno, quando um inimigo errar você (arma corpo a corpo/alcance ou besta de mão, e ele no alcance), você o ataca de volta.",
         "efeito": {"tipo": "contra_ataque"},
     },
+    "tecnica_oportunidade": {
+        "id": "tecnica_oportunidade", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 350, "custo_fome": 6, "custo_sede": 6, "recarga_rodadas": 10,
+        "nome": "Oportunidade", "icon": "⏳", "alvo": "aliado",
+        "desc": "Escolha um aliado (não pode ser você); no PRÓPRIO turno dele, ganha uma "
+                "ação extra — mover mais, atacar de novo, usar a habilidade de classe de "
+                "novo, ou lançar mais uma magia. Expira no fim desta rodada se não for usada.",
+        "efeito": {"tipo": "oportunidade"},
+    },
+    # ── Técnicas de Recarga Longa (Fase 2e) ─────────────────────────────────
+    "tecnica_instinto_sobrevivencia": {
+        "id": "tecnica_instinto_sobrevivencia", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 350, "custo_fome": 6, "custo_sede": 6, "recarga_rodadas": 10,
+        "nome": "Instinto de Sobrevivência", "icon": "🍀", "automatica": True,
+        "desc": "Automática. Se um dano zeraria seu HP, você fica com 1 em vez de "
+                "morrer. Depois disso, entra em recarga.",
+        "efeito": {"tipo": "passiva_evitar_morte"},
+    },
+    "tecnica_ultimo_esforco": {
+        "id": "tecnica_ultimo_esforco", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 350, "custo_fome": 6, "custo_sede": 6, "recarga_rodadas": 10,
+        "nome": "Último Esforço", "icon": "🔥", "automatica": True,
+        "desc": "Automática. Se um dano zeraria seu HP, você fica com 1 e ganha 2 "
+                "turnos seguidos: todo ataque tem vantagem e todo acerto é crítico "
+                "(nat20 → dano TRIPLICADO). Não pode se curar. Ao final, cai como se "
+                "tivesse morrido normalmente (pode ser reerguido por Ressurreição).",
+        "efeito": {"tipo": "passiva_ultimo_esforco"},
+    },
+    "tecnica_golpe_decisivo": {
+        "id": "tecnica_golpe_decisivo", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 350, "custo_fome": 6, "custo_sede": 6, "recarga_rodadas": 10,
+        "nome": "Golpe Decisivo", "icon": "💥",
+        "desc": "Arma o próximo ataque básico (corpo a corpo ou à distância): se "
+                "acertar, é crítico automático (dano dobrado); num natural 20 "
+                "enquanto armado, o dano é TRIPLICADO. Consumida no próximo ataque, "
+                "acerte ou erre.",
+        "efeito": {"tipo": "golpe_decisivo"},
+    },
+    "tecnica_sorte": {
+        "id": "tecnica_sorte", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 350, "custo_fome": 2, "custo_sede": 2, "recarga_rodadas": 10,
+        "nome": "Sorte", "icon": "🎲",
+        "desc": "Depois de errar um ataque, você pode gastar esta técnica para "
+                "rolá-lo novamente contra o mesmo alvo. Independente do Sangue Frio.",
+        "efeito": {"tipo": "sorte"},
+    },
     # ── Técnicas Exclusivas (Fase 3) — Mago/Clérigo, slot tecnica_exclusiva ──
     "tec_ex_aprimorar_magia": {
         "id": "tec_ex_aprimorar_magia", "categoria": "tecnica",
@@ -758,6 +809,11 @@ def guild_items_for_class(class_id):
 def tem_espec(player, espec_id):
     """True se o jogador possui a especialização comprada (Fase 1+)."""
     return espec_id in player.get("guild_owned", {}).get("especializacoes", [])
+
+def tem_tecnica_equipada(player, tecnica_id):
+    """True se a técnica está no 4º slot equipado do jogador (normal ou exclusiva)."""
+    eq = player.get("guild_equip", {})
+    return tecnica_id in (eq.get("tecnica"), eq.get("tecnica_exclusiva"))
 
 # ─── CHARACTER CLASSES ────────────────────────────────────────────────────────
 
@@ -3513,8 +3569,14 @@ def make_player(pid, name, cls_id, slot):
         "resistencia_saves_ate": 0,         # Resistência Absoluta até esta rodada
         "resistencia_saves_val": 0,
         "contra_ataque_ate": 0,             # Contra-Ataque até esta rodada
+        "oportunidade_credito": False,       # Oportunidade: crédito de ação extra concedido, ainda não gasto
+        "oportunidade_round": 0,             # round_num em que foi concedido — expira se round_num avançar
         "imune_silencio_ate": 0,            # Espírito Indomável: imunidade a Silêncio até esta rodada
         "mov_bonus_ate": 0,                 # Grito de Guerra: +2 movimento no reset até esta rodada
+        "tecnica_golpe_decisivo_armado": False,   # Golpe Decisivo: próximo ataque básico
+        "ultimo_ataque_perdido": None,             # Sorte: {target_id, eff_atk, eff_target_ac, vantagem, desvantagem, surv_mod, cancao_dano, gl_dano}
+        "ultimo_esforco_ativo": False,              # True durante a sub-fase do Último Esforço
+        "ultimo_esforco_turnos_restantes": 0,       # 2 → 1 → 0 (fecha a sub-fase)
         # Buffs de turno do warrior (flags planas) — limpos em handle_end_turn
         "skill_bonus_acerto": 0,
         "skill_bonus_dano":   0,      # Mira Certeira III: +2 dano quando armada
@@ -3842,6 +3904,9 @@ class GameRoom:
         self.monsters = {}      # id -> monster
         self.corpses = {}       # id -> cadáver (monstro morto, alvo de Animar Mortos)
         self.animados_phase_pid = None  # pid no "turno dos servos" (logo após o mago)
+        self.last_stand_pid = None      # pid na sub-fase do Último Esforço (ou None)
+        self.last_stand_event = None    # asyncio.Event sinalizado ao fechar a janela
+        self.last_stand_timer_task = None
         self.traps = []
         self.armadilhas = []    # armadilhas colocáveis (ver ARMADILHAS) — distintas de self.traps
         self._armadilha_seq = 0 # contador p/ ids únicos de armadilha
@@ -4399,6 +4464,55 @@ class GameRoom:
             return True
         return False
 
+    def _resolver_dano_ataque_basico(self, p, target, crit, roll, forca_critico=False,
+                                       surv_mod=0, cancao_dano=0, gl_dano=0, bonus_extra=0):
+        """Rola e computa o dano físico de um ataque básico (arma ou desarmado)
+        que JÁ acertou — reaproveitado pelo hit normal de handle_attack e pelo
+        reroll da Sorte. `forca_critico` é quem decide se um natural 20 triplica
+        (Golpe Decisivo/Último Esforço) em vez de dobrar. `bonus_extra` cobre os
+        bônus condicionais que só se aplicam ao ataque ARMADO no site original
+        (Mira Perfeita/Investida Heroica) — preservado apenas no ramo armado,
+        fiel ao comportamento pré-refactor. Retorna
+        (dmg, weapon_name, dmg_detail, raw_dmg, die_str) — raw_dmg/die_str são
+        None no ataque desarmado (sem dado de arma), e nesse caso o cálculo
+        NÃO inclui skill_bonus_dano/corrosão/_apply_damage_types — exatamente
+        como o bloco `else` original (ataque desarmado nunca teve esses termos).
+        Não repete munição/veneno/furtivo/projétil incendiário — resolvidos à
+        parte pelo chamador."""
+        weapon = p.get("weapon")
+        die_str = weapon.get("die") if weapon else None
+        if die_str:
+            raw_dmg = roll_dice(die_str)
+            raw_dmg = self._golpe_raw(p, raw_dmg)
+            if weapon.get("finesse"):
+                stat_bonus = max(mod(p.get("str_", 12)), mod(p.get("dex", 12)))
+            else:
+                stat_bonus = mod(p.get(weapon["stat"], 12))
+            dmg = raw_dmg + stat_bonus
+            if crit:
+                dmg *= 3 if (forca_critico and roll == 20) else 2
+            dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano
+                      + self._mod_magia(p, "dano") + self._tecnica_bonus_dano(p)
+                      + bonus_extra
+                      + p.get("skill_bonus_dano", 0) - self._corrosao_arma_pen(p))
+            dmg = self._apply_damage_types(dmg, [DMG_PHYSICAL], target, weapon)
+            weapon_name = weapon.get("name", "arma")
+            sb = f"+{stat_bonus}" if stat_bonus >= 0 else str(stat_bonus)
+            dmg_detail = f"[{die_str}={raw_dmg}{sb}]"
+        else:
+            raw_dmg = None
+            str_bonus = mod(p.get("str_", 12))
+            base = 2 if p.get("skill_dobrar_dano") else 1
+            dmg = base + str_bonus
+            if crit:
+                dmg *= 3 if (forca_critico and roll == 20) else 2
+            dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano + self._mod_magia(p, "dano")
+                      + self._tecnica_bonus_dano(p))
+            weapon_name = "soco"
+            sb = f"+{str_bonus}" if str_bonus >= 0 else str(str_bonus)
+            dmg_detail = f"[{base}{sb}]"
+        return dmg, weapon_name, dmg_detail, raw_dmg, die_str
+
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói)."""
         if self.phase != "playing":
@@ -4413,6 +4527,10 @@ class GameRoom:
             return
         item = guild_item(tecnica_id)
         if not item:
+            return
+        if item.get("automatica"):
+            await self.send_to(pid, {"type": "error",
+                "msg": f"{item['nome']} é automática — não pode ser ativada manualmente."})
             return
         if self.tecnica_restante(p, tecnica_id) > 0:
             await self.send_to(pid, {"type": "error",
@@ -4484,11 +4602,66 @@ class GameRoom:
             p["coordenado_turno"] = self.turn_index
         elif ef.get("tipo") == "contra_ataque":
             p["contra_ataque_ate"] = self.round_num + 1
+        elif ef.get("tipo") == "oportunidade":
+            alvo = self.players.get(target_id) if target_id else None
+            if not alvo or not alvo.get("alive") or alvo["id"] == pid:
+                await self.send_to(pid, {"type": "error",
+                    "msg": "Escolha um aliado vivo (não pode ser você)."}); return
+            alvo["oportunidade_credito"] = True
+            alvo["oportunidade_round"] = self.round_num
+        elif ef.get("tipo") == "golpe_decisivo":
+            p["tecnica_golpe_decisivo_armado"] = True
+        elif ef.get("tipo") == "sorte":
+            perdido = p.get("ultimo_ataque_perdido")
+            if not perdido:
+                await self.send_to(pid, {"type": "error", "msg": "Nenhum ataque recente para rerolar."})
+                return
+            alvo = self.monsters.get(perdido["target_id"])
+            if not alvo or alvo.get("hp", 0) <= 0:
+                await self.send_to(pid, {"type": "error", "msg": "O alvo não está mais disponível."})
+                return
+            hit, roll, total, crit, _desc = self._rolar_ataque(
+                perdido["eff_atk"], perdido["eff_target_ac"], perdido["vantagem"], perdido["desvantagem"])
+            await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
+                                   "label": "🎲 Sorte (nova rolagem)", "hit": hit, "crit": crit})
+            if hit:
+                # forca_critico deliberadamente OMITIDO: Sorte só reproduz o d20/CA
+                # congelados do ataque original, nunca deve ressuscitar uma flag de
+                # crítico garantido (Golpe Decisivo/Último Esforço) que já foi
+                # consumida (ou nem estava armada) no momento do erro original.
+                dmg, weapon_name, dmg_detail, raw_dmg, die_str = self._resolver_dano_ataque_basico(
+                    p, alvo, crit, roll, surv_mod=perdido.get("surv_mod", 0),
+                    cancao_dano=perdido.get("cancao_dano", 0), gl_dano=perdido.get("gl_dano", 0))
+                alvo["hp"] -= dmg
+                await self.gm_say(f"🎲 **{p['name']}** força a Sorte e acerta **{alvo['name']}** com {weapon_name} {dmg_detail} = **{dmg}**!")
+                if alvo["hp"] <= 0:
+                    await self._monster_dies(alvo, pid)
+            else:
+                await self.gm_say(f"🎲 **{p['name']}** tenta a Sorte de novo, mas erra outra vez!")
+            p["ultimo_ataque_perdido"] = None
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
         p["technique_cooldowns"][tecnica_id] = self.round_num + item["recarga_rodadas"]
         await self.gm_say(f"⚔️ **{p['name']}** ativa **{item['nome']}**!")
+        await self.push_state()
+
+    async def handle_usar_oportunidade_movimento(self, pid):
+        """Gasta o crédito de Oportunidade na via 'movimento extra' (soma spd a
+        moves_left). A via 'ação principal extra' não precisa de handler dedicado —
+        é consumida automaticamente por _acao_bloqueada na primeira ação principal."""
+        if not self._is_turn(pid):
+            return
+        p = self.players.get(pid)
+        if not p or not p.get("alive"):
+            return
+        if not (p.get("oportunidade_credito") and p.get("oportunidade_round") == self.round_num):
+            await self.send_to(pid, {"type": "error",
+                "msg": "Sem crédito de Oportunidade disponível."})
+            return
+        p["oportunidade_credito"] = False
+        p["moves_left"] = p.get("moves_left", 0) + p.get("spd", 0)
+        await self.gm_say(f"⏳ **{p['name']}** aproveita a Oportunidade para se mover mais!")
         await self.push_state()
 
     async def handle_shop_buy(self, pid, shop, item_id):
@@ -4926,6 +5099,7 @@ class GameRoom:
 
         self.phase = "playing"
         self.animados_phase_pid = None   # ponteiro de turno transitório (zera em qualquer entrada)
+        self.last_stand_pid = None   # idem — nunca deve sobreviver a uma nova entrada
 
         # A masmorra só é GERADA na 1ª entrada da expedição (ou após concluída).
         # Toda volta da cidade apenas a RETOMA — nada do mundo é regenerado nem
@@ -5074,6 +5248,61 @@ class GameRoom:
         await self._forcar_fim_turno(
             pid, f"⏳ Tempo esgotado! O turno de **{nome}** foi encerrado automaticamente.")
 
+    def _cancelar_timer_ultimo_esforco(self):
+        t = self.last_stand_timer_task
+        # Não cancela a própria tarefa em execução (mesmo cuidado de
+        # _cancelar_timer_turno): quando o timeout dispara, ele chama
+        # _fechar_mini_turno_ultimo_esforco, que pode chamar de volta este
+        # método — cancelar a si mesmo abortaria o fechamento em andamento.
+        if t and not t.done() and t is not asyncio.current_task():
+            t.cancel()
+        self.last_stand_timer_task = None
+
+    def _iniciar_timer_ultimo_esforco(self, pid):
+        self._cancelar_timer_ultimo_esforco()
+        self.last_stand_timer_task = asyncio.create_task(self._ultimo_esforco_timer_expira(pid))
+
+    async def _ultimo_esforco_timer_expira(self, pid):
+        try:
+            await asyncio.sleep(self.TURN_LIMIT_S)
+        except asyncio.CancelledError:
+            return
+        if self.last_stand_pid != pid:
+            return
+        await self._fechar_mini_turno_ultimo_esforco(pid, forcar_fim=True)
+
+    async def _abrir_ultimo_esforco(self, p):
+        pid = p["id"]
+        p["ultimo_esforco_ativo"] = True
+        p["ultimo_esforco_turnos_restantes"] = 2
+        p["moves_left"] = p.get("spd", 0)
+        p["action_done"] = False
+        self.last_stand_pid = pid
+        self.last_stand_event = asyncio.Event()
+        await self.gm_say(f"🔥 **{p['name']}** recusa a morte — **ÚLTIMO ESFORÇO**! Dois turnos de fúria antes de cair.")
+        await self.push_state()
+        self._iniciar_timer_ultimo_esforco(pid)
+        await self.last_stand_event.wait()
+        p["ultimo_esforco_ativo"] = False
+        p.pop("ultimo_esforco_turnos_restantes", None)
+
+    async def _fechar_mini_turno_ultimo_esforco(self, pid, forcar_fim=False):
+        p = self.players[pid]
+        if forcar_fim:
+            p["ultimo_esforco_turnos_restantes"] = 0
+        else:
+            p["ultimo_esforco_turnos_restantes"] -= 1
+        if p["ultimo_esforco_turnos_restantes"] > 0:
+            p["moves_left"] = p.get("spd", 0)
+            p["action_done"] = False
+            await self.gm_say(f"⚔️ **{p['name']}** continua o Último Esforço — mais um turno!")
+            await self.push_state()
+            self._iniciar_timer_ultimo_esforco(pid)
+        else:
+            self._cancelar_timer_ultimo_esforco()
+            self.last_stand_pid = None
+            self.last_stand_event.set()
+
     async def _forcar_fim_turno(self, pid, motivo=None):
         """Encerra à força o turno de `pid` (timeout de 30s ou desconexão no
         próprio turno). handle_end_turn pode só abrir a fase dos servos sem
@@ -5109,6 +5338,8 @@ class GameRoom:
         if not p or not p.get("connected", True):
             return
         p["connected"] = False
+        if self.last_stand_pid == pid:
+            await self._fechar_mini_turno_ultimo_esforco(pid, forcar_fim=True)
         # Anfitrião caiu → passa o comando a outro jogador conectado.
         if self.host_pid == pid:
             nxt = next((q["id"] for q in self.players.values()
@@ -5808,19 +6039,43 @@ class GameRoom:
             esc = self._verificar_escuridao(p, target)
             _mira_ranged = bool(w_range is not None and p.get("tecnica_mira_perfeita"))
             _investida = bool(w_range is None and self._investida_tecnica_bonus(p, is_ranged=False))
+            # Latch compartilhado de "força crítico automático": hoje usado pelo Golpe
+            # Decisivo (Fase 2e) e, futuramente, pelo Último Esforço — qualquer nova
+            # fonte de crítico garantido deve entrar neste OR em vez de duplicar a lógica.
+            _forca_critico = bool(p.get("tecnica_golpe_decisivo_armado")) or bool(p.get("ultimo_esforco_ativo"))
             vantagem    = (bool(p.get("invisivel_magico")) or bool(p.get("oculto_vela"))
                            or esc == "vantagem"
                            or self._provocacao_atk_vantagem(p, target)
-                           or _mira_ranged or _investida)
+                           # Nota: só o Último Esforço concede vantagem aqui — o Golpe Decisivo
+                           # sozinho NÃO dá vantagem, apenas força o multiplicador de crítico
+                           # via _forca_critico (ver acima).
+                           or _mira_ranged or _investida or bool(p.get("ultimo_esforco_ativo")))
             desvantagem = esc == "desvantagem"
             hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
             if not hit and self._sangue_frio_consumir(p):
                 await self.gm_say(f"🧊 **{p['name']}** mantém o sangue frio e rola novamente!")
                 hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
+            if hit and _forca_critico:
+                crit = True
+            if p.get("tecnica_golpe_decisivo_armado"):
+                p["tecnica_golpe_decisivo_armado"] = False   # consumida no próximo ataque, acerte ou erre
             if _mira_ranged:
                 p["tecnica_mira_perfeita"] = False   # consumida no ataque à distância (acerto ou erro)
             if p.get("investida_armada") and w_range is None:
                 p["investida_armada"] = False   # consome no 1º ataque corpo a corpo
+
+            # Dict de 7 campos em vez de um booleano: o reroll da Sorte acontece
+            # como uma AÇÃO SEPARADA E POSTERIOR (usar_tecnica), não inline aqui —
+            # então precisa reconstruir o contexto exato da rolagem original
+            # (acerto/CA/vantagem/modificadores do instante do erro), já que o
+            # estado ao vivo do jogador pode ter mudado até lá (buffs expirados,
+            # atk_bonus diferente, etc.).
+            if not hit and tem_tecnica_equipada(p, "tecnica_sorte"):
+                p["ultimo_ataque_perdido"] = {
+                    "target_id": target_id, "eff_atk": eff_atk, "eff_target_ac": eff_target_ac,
+                    "vantagem": vantagem, "desvantagem": desvantagem,
+                    "surv_mod": surv_mod, "cancao_dano": cancao_dano, "gl_dano": gl_dano,
+                }
 
             # ── Consumo de munição (projétil gasto ao atirar, hit ou miss) ──
             _ammo_extra_dmg   = None   # dano extra do projétil especial (incendiário)
@@ -5860,44 +6115,15 @@ class GameRoom:
             await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
                                    "label": "⚔️ Ataque (Mão Principal)", "hit": hit, "crit": crit})
             if hit:
-                weapon = p.get("weapon")
-                die_str = weapon.get("die") if weapon else None
+                _bonus_extra = (2 if _mira_ranged else 0) + (2 if _investida else 0)
+                dmg, weapon_name, dmg_detail, raw_dmg, die_str = self._resolver_dano_ataque_basico(
+                    p, target, crit, roll, forca_critico=_forca_critico,
+                    surv_mod=surv_mod, cancao_dano=cancao_dano, gl_dano=gl_dano,
+                    bonus_extra=_bonus_extra)
                 if die_str:
-                    # Armed attack — roll weapon die
-                    raw_dmg = roll_dice(die_str)
-                    raw_dmg = self._golpe_raw(p, raw_dmg)   # Golpe: ×1,5 base / ×2 com Nível III
-                    # finesse (atributo 'forcaOuDestreza'): melhor de FOR/DES
-                    if weapon.get("finesse"):
-                        stat_bonus = max(mod(p.get("str_", 12)), mod(p.get("dex", 12)))
-                    else:
-                        stat_bonus = mod(p.get(weapon["stat"], 12))
-                    dmg = raw_dmg + stat_bonus
-                    if crit: dmg *= 2
-                    dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano
-                              + self._mod_magia(p, "dano") + self._tecnica_bonus_dano(p)
-                              + (2 if _mira_ranged else 0)   # Mira Perfeita: +2 no ataque à distância
-                              + (2 if _investida else 0)      # Investida Heroica (carga reta ≥2)
-                              + p.get("skill_bonus_dano", 0)
-                              - self._corrosao_arma_pen(p))
-                    # Fraquezas/imunidades ao dano físico da arma
-                    dmg = self._apply_damage_types(dmg, [DMG_PHYSICAL], target, weapon)
                     die_type = "d" + die_str.split("d")[1]
                     await self.broadcast({"type": "dice_roll", "die": die_type,
                                            "value": raw_dmg, "label": "Dano"})
-                    weapon_name = weapon.get("name", "arma")
-                    sb = f"+{stat_bonus}" if stat_bonus >= 0 else str(stat_bonus)
-                    dmg_detail = f"[{die_str}={raw_dmg}{sb}]"
-                else:
-                    # Unarmed — fixed 1 + STR modifier
-                    str_bonus = mod(p.get("str_", 12))
-                    base = 2 if p.get("skill_dobrar_dano") else 1   # Golpe Devastador
-                    dmg = base + str_bonus
-                    if crit: dmg *= 2
-                    dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano + self._mod_magia(p, "dano")
-                              + self._tecnica_bonus_dano(p))
-                    weapon_name = "soco"
-                    sb = f"+{str_bonus}" if str_bonus >= 0 else str(str_bonus)
-                    dmg_detail = f"[{base}{sb}]"
                 # Golpe Sagrado (Richard): +1d8 sagrado, dobrado vs morto-vivo/demônio
                 holy_detail = ""
                 if p.get("golpe_sagrado_ativo"):
@@ -6410,7 +6636,7 @@ class GameRoom:
         if p.get("class_id") != "mage":
             await self.send_to(pid, {"type": "error", "msg": "Apenas Pedro pode usar Animar Mortos."})
             return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."})
             return
 
@@ -7247,7 +7473,7 @@ class GameRoom:
         if not p or not p["alive"]: return
         if p.get("class_id") != "cleric":
             await self.send_to(pid, {"type": "error", "msg": "Apenas Lewis pode usar Cura."}); return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         num_dados = max(1, min(self._cura_teto(p), int((data or {}).get("num_dados", 1))))
@@ -7262,6 +7488,9 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": f"Fome insuficiente — precisa 🍖{custo_fome}."}); return
 
         alvo = self.players.get((data or {}).get("target_id"))
+        if p.get("ultimo_esforco_ativo") and (data or {}).get("target_id") == pid:
+            await self.send_to(pid, {"type": "error",
+                "msg": "🔥 Em Último Esforço você não pode se curar!"}); return
         if not alvo or not alvo.get("alive"):
             await self.send_to(pid, {"type": "error", "msg": "Aliado inválido."}); return
         if not self._no_raio(p, alvo, alcance_tiles):
@@ -7298,7 +7527,7 @@ class GameRoom:
         if not p or not p["alive"]: return
         if p.get("class_id") != "cleric":
             await self.send_to(pid, {"type": "error", "msg": "Apenas Lewis pode usar Cura em Área."}); return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         nivel = self._massa_nivel(p)
@@ -7319,6 +7548,7 @@ class GameRoom:
         curados = []
         for aliado in self.players.values():
             if not aliado.get("alive"): continue
+            if aliado["id"] == pid and p.get("ultimo_esforco_ativo"): continue
             if not self._no_raio(p, aliado, raio): continue
             # A onda curativa não atravessa paredes — só aliados visíveis
             if not self._tem_linha_de_visao(p["pos"], aliado["pos"]): continue
@@ -7369,7 +7599,7 @@ class GameRoom:
         if not p or not p["alive"]: return
         if p.get("class_id") != "cleric":
             await self.send_to(pid, {"type": "error", "msg": "Apenas Lewis pode usar Purificação."}); return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         tipo = (data or {}).get("tipo")
@@ -7452,7 +7682,7 @@ class GameRoom:
         if not p or not p["alive"]: return
         if p.get("class_id") != "cleric":
             await self.send_to(pid, {"type": "error", "msg": "Apenas Lewis pode usar Ressurreição."}); return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         nivel = self._ressur_nivel(p)
@@ -7502,7 +7732,7 @@ class GameRoom:
         if not p or not p["alive"]: return
         if p.get("class_id") != "paladin":
             await self.send_to(pid, {"type": "error", "msg": "Apenas Richard pode usar esta habilidade."}); return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         extra_d6 = max(0, min(3, int((data or {}).get("extra_d6", 0)))) if tem_espec(p, "paladino_cura_maos_3") else 0
@@ -7832,7 +8062,12 @@ class GameRoom:
             p["ac_base"] = p.get("ac_base", 10) + v
         elif e == "maxhp":
             p["max_hp"] += v
-            if equipping: p["hp"] = min(p["max_hp"], p["hp"] + v)
+            # Aumentar o teto de PV não é "cura" — mas o top-up imediato de HP
+            # atual É, e equipar/desequipar é uma ação livre (nem passa por
+            # _is_turn). Sem essa trava, Último Esforço vira um HP infinito via
+            # equipa-desequipa. Suprime só o bump; o max_hp continua subindo.
+            if equipping and not p.get("ultimo_esforco_ativo"):
+                p["hp"] = min(p["max_hp"], p["hp"] + v)
         elif e == "spd":
             p["spd"] += v
         elif e == "bagslots":
@@ -9202,14 +9437,19 @@ class GameRoom:
 
     # ── Batch 3: buffs sustentados (Invisibilidade, Regeneração) ─────────────────
     def _acao_bloqueada(self, p):
-        """True se p não pode fazer outra ação principal. Velocidade concede 1 ação
-        extra por turno: ao tentar agir já tendo agido, consome a extra e libera."""
+        """True se p não pode fazer outra ação principal. Velocidade e a técnica
+        Oportunidade concedem 1 ação extra: ao tentar agir já tendo agido, consomem
+        o crédito disponível e liberam a ação."""
         if p.get("perde_turno"):
             return True  # Imobilizado (teia, etc.) — perde o turno inteiro
         if not p.get("action_done"):
             return False
         if p.get("velocidade_rodadas", 0) > 0 and not p.get("velocidade_extra_usada"):
             p["velocidade_extra_usada"] = True
+            p["action_done"] = False
+            return False
+        if p.get("oportunidade_credito") and p.get("oportunidade_round") == self.round_num:
+            p["oportunidade_credito"] = False
             p["action_done"] = False
             return False
         return True
@@ -10353,7 +10593,7 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Apenas Luccas pode criar armadilhas."}); return
         if p.get("petrificado"):
             await self.send_to(pid, {"type": "error", "msg": "🗿 Você está petrificado e não pode agir!"}); return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         tipo_id = msg.get("tipo")
@@ -10566,7 +10806,7 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        if p.get("action_done"):
+        if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
         arm = self._armadilha_no_tile(p["pos"][0], p["pos"][1])
@@ -10867,6 +11107,13 @@ class GameRoom:
                 "msg": "Você já está furtivo — a vela não acumula com outro efeito de furtividade."})
             return
 
+        # Último Esforço bloqueia poções de cura — valida ANTES de gastar a ação
+        # bônus (senão o jogador perderia a ação/fome/sede à toa por uma cura
+        # que sempre seria recusada; espelha a checagem de veil_shadow acima).
+        if effect == "heal" and p.get("ultimo_esforco_ativo"):
+            await self.send_to(pid, {"type": "error",
+                "msg": "🔥 Em Último Esforço você não pode se curar!"}); return
+
         # Itens consumíveis de bolsa são ações bônus — verificar antes de aplicar
         if effect in self.BONUS_ACTION_EFFECTS:
             ok = await self._executar_acao_bonus(p)
@@ -11107,6 +11354,18 @@ class GameRoom:
 
     async def handle_end_turn(self, pid):
         if not self._is_turn(pid): return
+        # Último Esforço é checado ANTES da fase dos servos (animados_phase_pid,
+        # mais abaixo). As duas janelas são mutuamente exclusivas para o mesmo
+        # jogador: nada no controle da fase dos servos (mover/atacar animados,
+        # comandar_animados) pode causar dano ao próprio jogador que os controla,
+        # e as fontes de dano por tick de rodada só se aplicam depois que essa
+        # fase é totalmente encerrada (animados_phase_pid volta a None). Ou seja,
+        # um jogador nunca cai a 0 HP (abrindo o Último Esforço) enquanto está
+        # dentro da própria janela de controle dos servos — por isso não há
+        # ambiguidade em checar last_stand_pid primeiro e retornar cedo aqui.
+        if self.last_stand_pid == pid:
+            await self._fechar_mini_turno_ultimo_esforco(pid)
+            return
         p = self.players[pid]
         if p.get("pending_spell_pick"):
             await self.send_to(pid, {"type": "error",
@@ -11180,6 +11439,8 @@ class GameRoom:
         p["skill_ataques_extras"] = 0
         p["tecnica_buff_dano_arma"] = 0   # buff de técnica de turno (Brutalidade) expira
         p["tecnica_mira_perfeita"] = False   # Mira Perfeita não usada expira no fim do turno
+        p["tecnica_golpe_decisivo_armado"] = False   # Golpe Decisivo não usado expira no fim do turno
+        p["ultimo_ataque_perdido"] = None   # Sorte: janela de reroll fecha no fim do turno
         p["investida_armada"] = False   # Investida não usada expira no fim do turno
         p["investida_origem"] = None
         p["coordenado_alvo"] = None   # Ataque Coordenado expira no fim do turno
@@ -13915,6 +14176,25 @@ class GameRoom:
             p.pop("regen_pool", None); p.pop("regen_ressurge", None)
             await self.gm_say(f"🌿 **{p['name']}** seria derrotado, mas a **Regeneração** o reergue com 1 HP! (-3 fome/sede)")
             return
+        # Instinto de Sobrevivência: técnica genérica de recarga longa — sobrevive com 1 HP.
+        if (tem_tecnica_equipada(p, "tecnica_instinto_sobrevivencia")
+                and self.tecnica_restante(p, "tecnica_instinto_sobrevivencia") == 0):
+            p["hp"] = 1
+            p["technique_cooldowns"]["tecnica_instinto_sobrevivencia"] = self.round_num + 10
+            await self.gm_say(f"🍀 **{p['name']}** recorre ao **Instinto de Sobrevivência** e resiste com 1 HP!")
+            return
+        # Último Esforço: técnica genérica de recarga longa — antes de cair de vez,
+        # abre uma sub-fase de 2 mini-turnos com 1 HP. NÃO retorna cedo: quando a
+        # janela fechar (Task 6), a execução cai para a finalização normal da morte.
+        # last_stand_pid is None: evita sobrepor a janela de OUTRO herói (caso raro
+        # de 2 mortes na mesma fase de monstros) — nesse caso a técnica simplesmente
+        # não dispara desta vez (o herói morre normalmente, sem gastar a recarga).
+        if (tem_tecnica_equipada(p, "tecnica_ultimo_esforco")
+                and self.tecnica_restante(p, "tecnica_ultimo_esforco") == 0
+                and self.last_stand_pid is None):
+            p["hp"] = 1
+            p["technique_cooldowns"]["tecnica_ultimo_esforco"] = self.round_num + 10
+            await self._abrir_ultimo_esforco(p)
         p["alive"] = False
         p["hp"] = 0
         await self.gm_say(f"💔 **{p['name']}** foi derrotado! Os companheiros devem continuar...")
@@ -14116,7 +14396,7 @@ class GameRoom:
         if not self._is_turn(pid):
             return
         p = self.players.get(pid)
-        if not p or not p.get("alive") or p.get("action_done"):
+        if not p or not p.get("alive") or self._acao_bloqueada(p):
             return
         if not self.prisoner or not self.prisoner.get("alive") or self.prisoner.get("freed"):
             await self.send_to(pid, {"type": "error", "msg": "Não há prisioneiro para libertar."}); return
@@ -14202,7 +14482,9 @@ class GameRoom:
     # ── state serialisation ─────────────────────────────────────────────────
 
     def _is_turn(self, pid):
-        return self.phase == "playing" and self.current_pid() == pid
+        if self.phase != "playing":
+            return False
+        return self.current_pid() == pid or self.last_stand_pid == pid
 
     # Raio (Chebyshev) de visão AO VIVO ao redor de cada minion (animado/elemental).
     # Recomputado a cada broadcast: revela área + monstros enquanto o minion está lá
@@ -14270,6 +14552,7 @@ class GameRoom:
             "prisoner": self.prisoner,
             "current_turn": self.current_pid(),
             "animados_turn": self.animados_phase_pid,   # pid no turno dos servos (ou None)
+            "last_stand_pid": self.last_stand_pid,   # pid na sub-fase do Último Esforço (ou None)
             "turn_timer_started": self.turn_timer_started_ms,  # epoch ms do início do turno (p/ contagem 30s)
             "turn_timer_limit": self.TURN_LIMIT_S,
             "round": self.round_num,
@@ -14453,6 +14736,9 @@ async def handler(ws):
 
                 elif t == "usar_tecnica":
                     if room: await room.handle_usar_tecnica(pid, msg.get("tecnica_id"), msg.get("target_id"))
+
+                elif t == "usar_oportunidade_movimento":
+                    if room: await room.handle_usar_oportunidade_movimento(pid)
 
                 elif t == "set_known_spells":
                     if room: await room.handle_set_known_spells(pid, msg.get("ids"))

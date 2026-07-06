@@ -19,3 +19,6 @@ venv/
 
 # Saves da Guilda dos Heróis (dados de runtime, por personagem)
 saves/
+
+# Worktrees isolados (superpowers)
+.worktrees/

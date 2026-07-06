@@ -1013,7 +1013,7 @@ const GS = (() => {
           const me = msg.players.find(p => p.name === myName);
           if (me) myPid = me.id;
         }
-        isMyTurn = msg.current_turn === myPid;
+        isMyTurn = msg.current_turn === myPid || msg.last_stand_pid === myPid;
         // (Sobrevivência cliente 0–100 desativada — fome/sede são autoritativos do
         // servidor, escala 0–100. Sem consumo/colapso fantasma no cliente.)
         // Auto-clear pending skill when turn ends or action was processed
@@ -1113,6 +1113,7 @@ const GS = (() => {
   function guildBuy(itemId)           { send({ type: 'guild_buy',   item_id: itemId }); }
   function guildEquip(slot, itemId)   { send({ type: 'guild_equip', slot: slot, item_id: itemId }); }
   function usarTecnica(tid, targetId) { send({ type: 'usar_tecnica', tecnica_id: tid, target_id: targetId != null ? targetId : null }); }
+  function usarOportunidadeMovimento() { send({ type: 'usar_oportunidade_movimento' }); }
   // Getters puros: catálogo filtrado por classe, itens possuídos e equipados
   // pelo jogador (lidos de cityState.guild), e recarga restante de uma técnica
   // (lida de game_state.players[].technique_cooldowns + gameState.round).
@@ -1695,6 +1696,7 @@ const GS = (() => {
     guildBuy,
     guildEquip,
     usarTecnica,
+    usarOportunidadeMovimento,
     guildCatalogFor,
     guildOwnedOf,
     guildEquipOf,

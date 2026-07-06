@@ -9698,6 +9698,11 @@ function renderMyPanel(state){
       <span style="color:#f8d040; font-weight:bold; font-size:.95rem;">✨ +1 HP</span>
       <span style="color:#e8d8a0; font-size:.6rem; letter-spacing:1px;">REGENERAÇÃO DIVINA: +1 HP por turno</span>
     </div>` : ''}
+    ${state.last_stand_pid === GS.myPid ? `
+    <div class="banner-ultimo-esforco" style="margin-top:4px; padding:5px 8px; background:rgba(224,40,40,0.15); border:1px solid #e0282866; border-radius:3px; display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Cinzel',serif;">
+      <span style="color:#ff5050; font-weight:bold; font-size:.95rem;">🔥 ÚLTIMO ESFORÇO</span>
+      <span style="color:#f0b0b0; font-size:.6rem; letter-spacing:1px;">${me.ultimo_esforco_turnos_restantes || 0} TURNO(S) RESTANTE(S)</span>
+    </div>` : ''}
 
     ${(() => {
       const f = me.fome ?? 100, s = me.sede ?? 100;
@@ -9968,6 +9973,20 @@ function renderMyPanel(state){
     sl.insertAdjacentHTML('beforeend', renderFlagsWarrior(me));
   }
 
+  // ── Crédito de Oportunidade (Fase 2d) — concedido por um aliado, gasto no próprio turno ──
+  if (me.oportunidade_credito && me.oportunidade_round === state.round && GS.isMyTurn && me.alive && state.phase === 'playing') {
+    const btnOp = document.createElement('button');
+    btnOp.className = 'skill-btn guild-tec';
+    btnOp.innerHTML = `
+      <div class="skill-info">
+        <div class="skill-name">⏳ Oportunidade <small style="color:var(--gold);font-size:.58rem;">GUILDA</small></div>
+        <div class="skill-desc">Gaste o crédito extra em movimento agora, ou apenas aja normalmente (atacar/curar/lançar magia/etc.) para gastá-lo automaticamente.</div>
+      </div>
+      <div class="skill-cost">mover +${me.spd||0}</div>`;
+    btnOp.onclick = () => GS.usarOportunidadeMovimento();
+    sl.appendChild(btnOp);
+  }
+
   // ── Técnica(s) da Guilda equipada(s) (Fase 0) — 4º slot com recarga em rodadas ──
   const _tecEq  = GS.guildEquipOf(me.id);
   const _tecIds = [_tecEq.tecnica, _tecEq.tecnica_exclusiva].filter(Boolean);
@@ -9975,7 +9994,11 @@ function renderMyPanel(state){
     const cat = GS.guildCatalogFor(me.class_id).find(x => x.id === tid);
     if(!cat) continue;
     const restante = GS.tecnicaRestante(me, tid);
-    const podeUsar = GS.isMyTurn && me.alive && state.phase === 'playing'
+    // TODO(Fase 3): quando existirem técnicas exclusivas equipadas simultaneamente com uma automática,
+    // podeUsar também deve checar 'GS.myPid !== state.last_stand_pid' (hoje inalcançável: nenhuma
+    // técnica tem exclusiva:True ainda, então o slot exclusivo nunca fica ocupado — GS.isMyTurn já
+    // inclui a janela de Último Esforço, que hoje só existe para a técnica automática).
+    const podeUsar = !cat.automatica && GS.isMyTurn && me.alive && state.phase === 'playing'
                      && restante === 0
                      && (me.fome||0) >= (cat.custo_fome||0) && (me.sede||0) >= (cat.custo_sede||0);
     const btn = document.createElement('button');
@@ -9985,7 +10008,7 @@ function renderMyPanel(state){
       ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ recarrega em ${restante}r</small>` : '';
     btn.innerHTML = `
       <div class="skill-info">
-        <div class="skill-name">${cat.icon||'⚔️'} ${cat.nome} <small style="color:var(--gold);font-size:.58rem;">GUILDA</small>${estado}</div>
+        <div class="skill-name">${cat.icon||'⚔️'} ${cat.nome} <small style="color:var(--gold);font-size:.58rem;">${cat.automatica ? 'AUTOMÁTICA' : 'GUILDA'}</small>${estado}</div>
         <div class="skill-desc">${cat.desc||''}</div>
       </div>
       <div class="skill-cost">${restante>0 ? `${restante}r` : `🍖${cat.custo_fome} 💧${cat.custo_sede}`}</div>`;
