@@ -600,8 +600,8 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > corrigindo um bug pré-existente real em que tentar ativar manualmente uma
 > técnica automática gastava fome/sede/recarga à toa, sem nenhum efeito. Cliente:
 > `isMyTurn` (em `src/gameState.js`) alargado para aceitar `last_stand_pid ===
-> myPid` (espelha o `_is_turn` do servidor); o botão do 4º slot esconde/desabilita
-> técnicas `automatica` e rotula "AUTOMÁTICA" em vez de "GUILDA"; um banner de
+> myPid` (espelha o `_is_turn` do servidor); o botão do 4º slot desabilita
+> técnicas `automatica` (continua visível, só não clicável) e rotula "AUTOMÁTICA" em vez de "GUILDA"; um banner de
 > status ("🔥 ÚLTIMO ESFORÇO — N turno(s) restante(s)") em `renderMyPanel`,
 > estilizado como a família já existente de banners de status (regeneração/
 > saciado/exaustão) — colocado deliberadamente em `renderMyPanel` (agnóstico de
