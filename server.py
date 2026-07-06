@@ -8691,7 +8691,8 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "❄️ Você está paralisado e não pode lançar magias!"}); return
         if p.get("dormindo"):
             await self.send_to(pid, {"type": "error", "msg": "🌙 Você está dormindo e não pode lançar magias!"}); return
-        if self._em_silencio(p):
+        # Canalização Arcana (Fase 3, técnica exclusiva): ignora Silêncio.
+        if self._em_silencio(p) and not p.get("tec_ex_canalizacao_armado"):
             await self.send_to(pid, {"type": "error", "msg": "🔇 Você está numa área de Silêncio e não pode lançar magias!"}); return
 
         # ── Metamagia do mago (Pedro): Reflexa / Acelerar ─────────────────────
@@ -8739,6 +8740,18 @@ class GameRoom:
                 custo_txt = (f" | 🍖-{mm_fome}" + (f" 💧-{mm_sede}" if mm_sede else "")) if (mm_fome or mm_sede) else ""
                 await self.gm_say(f"🔮 **{p['name']}** — metamagia: {', '.join(partes)}{custo_txt}.")
 
+        # ── Técnicas Exclusivas da Guilda (Fase 3, Mago/Clérigo) ────────────────
+        # Independentes da Metamagia acima: os bônus SE SOMAM/multiplicam se
+        # ambas estiverem armadas no mesmo lançamento.
+        tec_dc = self._tec_ex_dc_bonus(p, magia)
+        tec_dur, alcance_bonus = self._tec_ex_dur_alcance_bonus(p, magia)
+        tec_mult = self._tec_ex_dmg_mult(p, magia)
+        dc_bonus  += tec_dc
+        dur_bonus += tec_dur
+        dmg_mult  *= tec_mult
+        usou_acelerada = bool(p.get("tec_ex_acelerada_armado"))
+        p["_tec_save_desvantagem"] = bool(p.get("tec_ex_canalizacao_perfeita_armado"))
+
         # Cobra 1 SLOT do círculo + 🍖/💧 de sobrevivência.
         self._gastar_slot(p, circulo)
         p["fome"] = max(0, p.get("fome", 10) - 1)
@@ -8747,15 +8760,41 @@ class GameRoom:
 
         # Aprimorar: +1 na CD do save é lido por _dif_magia via flag temporária no caster.
         p["_mm_dc_bonus"] = dc_bonus
-        await self._executar_magia_grimorio(p, magia, data or {}, dmg_mult, dur_bonus)
+        await self._executar_magia_grimorio(p, magia, data or {}, dmg_mult, dur_bonus, alcance_bonus)
+
+        # Magia Geminada (Fase 3): reexecuta o mesmo efeito no 2º alvo, se elegível.
+        # (_mm_dc_bonus/_tec_save_desvantagem seguem ativos — o 2º alvo recebe os
+        # MESMOS bônus do 1º.)
+        alvo2_id = p.get("tec_ex_geminada_alvo2_id")
+        if alvo2_id and magia.get("tipo") in ("alvo", "alvo_aliado", "buff_aliado"):
+            alvo2 = self.players.get(alvo2_id) or self.monsters.get(alvo2_id)
+            if self._geminada_alvo2_valido(p, magia, alvo2):
+                dados2 = dict(data or {}); dados2["target_id"] = alvo2_id
+                await self._executar_magia_grimorio(p, magia, dados2, dmg_mult, dur_bonus, alcance_bonus)
+                await self.gm_say(
+                    f"👯 **{p['name']}** gemina **{magia['nome']}** em "
+                    f"**{alvo2.get('name') or alvo2.get('nome')}**!")
+
         p["_mm_dc_bonus"] = 0
+        p["_tec_save_desvantagem"] = False
+
+        # Limpa as técnicas exclusivas armadas neste lançamento (consumidas).
+        p["tec_ex_aprimorar_armado"] = False
+        p["tec_ex_estender_armado"] = False
+        p["tec_ex_canalizacao_armado"] = False
+        p["tec_ex_empoderar_armado"] = False
+        p["tec_ex_geminada_alvo2_id"] = None
+        p["tec_ex_canalizacao_perfeita_armado"] = False
+        p["tec_ex_acelerada_armado"] = False
 
         # Invisibilidade quebra ao lançar (a menos que a própria magia a tenha concedido agora).
         if p.get("invisivel_magico") and magia_id != "invisibilidade":
             p["invisivel_magico"] = False; p.pop("invisivel_magico_rodadas", None)
             await self.gm_say(f"🫥 **{p['name']}** revela-se ao lançar magia.")
 
-        p["action_done"] = True
+        # Magia Acelerada (Fase 3): não gasta a ação principal deste turno.
+        if not usou_acelerada:
+            p["action_done"] = True
         await self.push_state()
 
     def _magia_tem_dano(self, magia):
@@ -9914,8 +9953,9 @@ class GameRoom:
         return passou, d20, bonus, total
 
     def _dif_magia(self, caster, magia):
-        """Dificuldade para resistir: 8 + bônus de INT + círculo (1/2/3). Aprimorar
-        Magia (Pedro) soma +1 via flag temporária `_mm_dc_bonus` setada em handle_magia."""
+        """Dificuldade para resistir: 8 + bônus de INT + círculo (1/2/3). Soma o
+        bônus temporário `_mm_dc_bonus`, setado em handle_magia a partir da
+        Metamagia do Mago (1f) e/ou da técnica Aprimorar Magia da Guilda (Fase 3)."""
         circ = {"primeiro": 1, "segundo": 2, "terceiro": 3}.get(magia.get("circulo", "primeiro"), 1)
         return 8 + mod(caster.get("int_", 10)) + circ + caster.get("_mm_dc_bonus", 0)
 
@@ -10110,8 +10150,11 @@ class GameRoom:
         alvo["hp"] = max(0, alvo["hp"] - dano)
         await self.gm_say(f"❄️ **{caster['name']}** lança **Raio Congelante**: {nd}d4 = {dano} (sem save) em **{alvo['name']}**.")
 
-        # Fortitude evita a paralisação (não o dano).
-        save_ok, *_ = await self._save_mostrado(alvo, "fortitude", self._dif_magia(caster, magia))
+        # Fortitude evita a paralisação (não o dano). desvantagem: Canalização
+        # Perfeita (Fase 3) — próximos executores de alvo único devem seguir o
+        # mesmo padrão ao chamar _save_mostrado.
+        save_ok, *_ = await self._save_mostrado(alvo, "fortitude", self._dif_magia(caster, magia),
+                                                  desvantagem=caster.get("_tec_save_desvantagem", False))
         if not save_ok:
             alvo["paralisado"]             = True
             alvo["paralisado_rodadas"]     = 1

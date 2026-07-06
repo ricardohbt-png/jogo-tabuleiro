@@ -210,6 +210,127 @@ async def main():
     await r.handle_usar_tecnica("h", "tec_ex_magia_geminada", "a")
     check("geminada: aceita aliado vivo", p["tec_ex_geminada_alvo2_id"] == "a")
 
+    print("\n[7] handle_magia: integração das 7 técnicas exclusivas")
+
+    def _mk_caster_room(tid_ex, cls="mage"):
+        rr = setup(); rr.current_pid = lambda: "h"; rr._is_turn = lambda pid: pid == "h"
+        pp = caster(cls, tid_ex=tid_ex); pp["pos"] = [0, 0]; pp["action_done"] = False
+        rr.players["h"] = pp
+        return rr, pp
+
+    async def _fixed_dano(n, d, *_a, **_k):
+        return n * d   # cada dado no valor máximo — determinístico
+
+    # [7a] Aprimorar Magia: soma +1 no _mm_dc_bonus lido por _dif_magia
+    rr, pp = _mk_caster_room("tec_ex_aprimorar_magia")
+    await rr.handle_usar_tecnica("h", "tec_ex_aprimorar_magia")
+    rr.monsters = {"m1": {"id": "m1", "name": "Alvo", "pos": [0, 1], "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
+    dc_vistos = []
+    orig_dif = rr._dif_magia
+    rr._dif_magia = lambda c, m: (dc_vistos.append(c.get("_mm_dc_bonus")), orig_dif(c, m))[1]
+    await rr.handle_magia("h", {"magia_id": "raio_congelante", "target_id": "m1"})
+    check("aprimorar: _mm_dc_bonus=1 no momento do save", dc_vistos and dc_vistos[0] == 1)
+    check("aprimorar: flag consumida após lançar", pp["tec_ex_aprimorar_armado"] is False)
+
+    # [7a2] Empilha com a Metamagia do 1f (Mago): +1 (1f) + 1 (Fase 3) = 2
+    rr2, pp2 = _mk_caster_room("tec_ex_aprimorar_magia")
+    pp2["aprimorar_ativo"] = True
+    await rr2.handle_usar_tecnica("h", "tec_ex_aprimorar_magia")
+    rr2.monsters = {"m1": {"id": "m1", "name": "Alvo", "pos": [0, 1], "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
+    dc_vistos2 = []
+    orig_dif2 = rr2._dif_magia
+    rr2._dif_magia = lambda c, m: (dc_vistos2.append(c.get("_mm_dc_bonus")), orig_dif2(c, m))[1]
+    await rr2.handle_magia("h", {"magia_id": "raio_congelante", "target_id": "m1"})
+    check("aprimorar: empilha com Metamagia do 1f (1+1=2)", dc_vistos2 and dc_vistos2[0] == 2)
+
+    # [7b] Estender Magia — caminho de duração (Visão no Escuro, círculo 2 → nível 3)
+    rr3, pp3 = _mk_caster_room("tec_ex_estender_magia")
+    pp3["level"] = 3
+    ally = make_player("a", "Ana", "cleric", 1); ally["alive"] = True; ally["pos"] = [1, 0]
+    rr3.players["a"] = ally
+    rr3._rolar_dado = lambda spec: 5
+    await rr3.handle_usar_tecnica("h", "tec_ex_estender_magia")
+    await rr3.handle_magia("h", {"magia_id": "visao_escuro", "target_id": "a"})
+    check("estender: duração 5(base)+1(técnica)=6", ally["visao_escuro_rodadas"] == 6)
+
+    # [7c] Estender Magia — caminho de alcance (Raio Congelante 1 casa além do alcance base)
+    rr4, pp4 = _mk_caster_room("tec_ex_estender_magia")
+    rr4.monsters = {"m1": {"id": "m1", "name": "Longe", "pos": [4, 0], "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
+    await rr4.handle_usar_tecnica("h", "tec_ex_estender_magia")
+    await rr4.handle_magia("h", {"magia_id": "raio_congelante", "target_id": "m1"})
+    check("estender: alcance+1 alcança alvo antes fora de alcance", rr4.monsters["m1"]["hp"] < 30)
+
+    # [7d] Empoderar Magia — ×1,5 no dano
+    rr5, pp5 = _mk_caster_room("tec_ex_empoderar_magia")
+    rr5.monsters = {"m1": {"id": "m1", "name": "Alvo", "pos": [0, 1], "hp": 1000, "max_hp": 1000, "ac": 10, "ca": 10}}
+    rr5._rolar_dano_mostrado = _fixed_dano
+    await rr5.handle_usar_tecnica("h", "tec_ex_empoderar_magia")
+    await rr5.handle_magia("h", {"magia_id": "raio_congelante", "target_id": "m1"})
+    dano5 = 1000 - rr5.monsters["m1"]["hp"]
+    rr6, pp6 = _mk_caster_room(None)
+    rr6.monsters = {"m1": {"id": "m1", "name": "Alvo", "pos": [0, 1], "hp": 1000, "max_hp": 1000, "ac": 10, "ca": 10}}
+    rr6._rolar_dano_mostrado = _fixed_dano
+    await rr6.handle_magia("h", {"magia_id": "raio_congelante", "target_id": "m1"})
+    dano6 = 1000 - rr6.monsters["m1"]["hp"]
+    check("empoderar: dano ×1,5 vs sem técnica", dano5 == int(dano6 * 1.5 + 0.5))
+
+    # [7e] Canalização Arcana — ignora Silêncio
+    rr7, pp7 = _mk_caster_room("tec_ex_canalizacao_arcana")
+    rr7._em_silencio = lambda pl: True
+    rr7.monsters = {"m1": {"id": "m1", "name": "Alvo", "pos": [0, 1], "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
+    rr7._errs.clear()
+    await rr7.handle_usar_tecnica("h", "tec_ex_canalizacao_arcana")
+    await rr7.handle_magia("h", {"magia_id": "raio_congelante", "target_id": "m1"})
+    check("canalização arcana: lança normalmente sob Silêncio",
+          not any("silêncio" in e.lower() for e in rr7._errs))
+    check("canalização arcana: dano aplicado", rr7.monsters["m1"]["hp"] < 30)
+
+    rr8, pp8 = _mk_caster_room("tec_ex_canalizacao_arcana")
+    rr8._em_silencio = lambda pl: True
+    rr8.monsters = {"m1": {"id": "m1", "name": "Alvo", "pos": [0, 1], "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
+    rr8._errs.clear()
+    await rr8.handle_magia("h", {"magia_id": "raio_congelante", "target_id": "m1"})
+    check("sem canalização arcana: Silêncio bloqueia normalmente",
+          any("silêncio" in e.lower() for e in rr8._errs))
+
+    # [7f] Canalização Perfeita — desvantagem chega ao _save_mostrado
+    rr9, pp9 = _mk_caster_room("tec_ex_canalizacao_perfeita")
+    rr9.monsters = {"m1": {"id": "m1", "name": "Alvo", "pos": [0, 1], "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
+    vistos_desv = []
+    orig_save = rr9._save_mostrado
+    async def spy_save(alvo, tipo, dif, extra_mod=0, desvantagem=False):
+        vistos_desv.append(desvantagem)
+        return await orig_save(alvo, tipo, dif, extra_mod=extra_mod, desvantagem=desvantagem)
+    rr9._save_mostrado = spy_save
+    await rr9.handle_usar_tecnica("h", "tec_ex_canalizacao_perfeita")
+    await rr9.handle_magia("h", {"magia_id": "raio_congelante", "target_id": "m1"})
+    check("canalização perfeita: save do alvo pedido com desvantagem",
+          vistos_desv and vistos_desv[0] is True)
+
+    # [7g] Magia Geminada — aplica no 2º alvo também
+    rr10, pp10 = _mk_caster_room("tec_ex_magia_geminada")
+    rr10.monsters = {
+        "m1": {"id": "m1", "name": "Alvo1", "pos": [0, 1], "hp": 30, "max_hp": 30, "ac": 10, "ca": 10},
+        "m2": {"id": "m2", "name": "Alvo2", "pos": [0, 2], "hp": 30, "max_hp": 30, "ac": 10, "ca": 10},
+    }
+    await rr10.handle_usar_tecnica("h", "tec_ex_magia_geminada", "m2")
+    await rr10.handle_magia("h", {"magia_id": "raio_congelante", "target_id": "m1"})
+    check("geminada: 1º alvo sofre dano", rr10.monsters["m1"]["hp"] < 30)
+    check("geminada: 2º alvo também sofre dano", rr10.monsters["m2"]["hp"] < 30)
+    check("geminada: flag consumida", pp10["tec_ex_geminada_alvo2_id"] is None)
+
+    # [7h] Magia Acelerada — não consome a ação principal
+    rr11, pp11 = _mk_caster_room("tec_ex_magia_acelerada")
+    rr11.monsters = {"m1": {"id": "m1", "name": "Alvo", "pos": [0, 1], "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
+    await rr11.handle_usar_tecnica("h", "tec_ex_magia_acelerada")
+    await rr11.handle_magia("h", {"magia_id": "raio_congelante", "target_id": "m1"})
+    check("acelerada: action_done continua False", pp11["action_done"] is False)
+    check("acelerada: flag consumida", pp11["tec_ex_acelerada_armado"] is False)
+    rr12, pp12 = _mk_caster_room(None)
+    rr12.monsters = {"m1": {"id": "m1", "name": "Alvo", "pos": [0, 1], "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
+    await rr12.handle_magia("h", {"magia_id": "raio_congelante", "target_id": "m1"})
+    check("sem acelerada: action_done vira True normalmente", pp12["action_done"] is True)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
