@@ -83,6 +83,19 @@ async def main():
         S.random.randint = orig_randint
     check("sem desvantagem usa só a 1ª rolagem (18)", d20b == 18)
 
+    print("\n[3] alcance_bonus chega aos 3 executores (Raio Congelante)")
+    r = setup()
+    p = caster("mage"); p["pos"] = [0, 0]; r.players["h"] = p
+    r.monsters = {"m1": {"id": "m1", "name": "Alvo", "pos": [4, 0], "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
+    magia = S.GRIMORIO["raio_congelante"]
+    r._errs.clear()
+    await r._executar_raio_congelante(p, magia, {"target_id": "m1"}, 1, 0, 0)
+    check("sem alcance_bonus: fora do alcance recusado", any("alcance" in e.lower() for e in r._errs))
+    check("sem alcance_bonus: HP intacto", r.monsters["m1"]["hp"] == 30)
+    r._errs.clear()
+    await r._executar_raio_congelante(p, magia, {"target_id": "m1"}, 1, 0, 1)
+    check("com alcance_bonus=1: alcance suficiente, dano aplicado", r.monsters["m1"]["hp"] < 30)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

@@ -8694,7 +8694,7 @@ class GameRoom:
             return True
         return magia.get("id") in ("bola_fogo", "relampago", "raio_congelante", "raio_divino", "jato_ar")
 
-    async def _executar_magia_grimorio(self, caster, magia, data, dmg_mult=1, dur_bonus=0):
+    async def _executar_magia_grimorio(self, caster, magia, data, dmg_mult=1, dur_bonus=0, alcance_bonus=0):
         """Despacha a execução de uma magia já paga. FUNDAÇÃO: implementa o sistema
         de escuridão/visão; as demais recaem em _magia_nao_implementada."""
         mid       = magia["id"]
@@ -8703,13 +8703,13 @@ class GameRoom:
 
         # ── Magias de dano de Pedro (revisadas) ─────────────────────────────────
         if mid == "bola_fogo":
-            await self._executar_bola_fogo(caster, magia, data, dmg_mult, dur_bonus)
+            await self._executar_bola_fogo(caster, magia, data, dmg_mult, dur_bonus, alcance_bonus)
 
         elif mid == "relampago":
-            await self._executar_relampago(caster, magia, data, dmg_mult)
+            await self._executar_relampago(caster, magia, data, dmg_mult, alcance_bonus)
 
         elif mid == "raio_congelante":
-            await self._executar_raio_congelante(caster, magia, data, dmg_mult, dur_bonus)
+            await self._executar_raio_congelante(caster, magia, data, dmg_mult, dur_bonus, alcance_bonus)
 
         # ── Batch 1: utilidades, dano direto ────────────────────────────────────
         elif mid == "saciar":
@@ -9850,10 +9850,10 @@ class GameRoom:
         return 8 + mod(caster.get("int_", 10)) + circ + caster.get("_mm_dc_bonus", 0)
 
     # ── Bola de Fogo (área persistente que decai R1→R2→R3) ──────────────────────
-    async def _executar_bola_fogo(self, caster, magia, data, dmg_mult, dur_bonus):
+    async def _executar_bola_fogo(self, caster, magia, data, dmg_mult, dur_bonus, alcance_bonus=0):
         nivel     = caster.get("level", 1)
         bonus_int = mod(caster.get("int_", 10))
-        alcance   = magia["alcance_base"] + magia["alcance_escala"] * (nivel - 1)
+        alcance   = magia["alcance_base"] + magia["alcance_escala"] * (nivel - 1) + alcance_bonus
         save_dif  = self._dif_magia(caster, magia)
         raio      = magia.get("area_raio", 2)
         cx = int((data or {}).get("tx", caster["pos"][0]))
@@ -9969,10 +9969,10 @@ class GameRoom:
     # direção escolhida; ao bater numa parede, ricocheteia e continua com o que
     # sobrou. Casas pisadas 2x sofrem dano 2x; Pedro (origem) só é ferido se o
     # ricochete voltar até ele. Dano (1d6/nível) + Reflexos por impacto.
-    async def _executar_relampago(self, caster, magia, data, dmg_mult):
+    async def _executar_relampago(self, caster, magia, data, dmg_mult, alcance_bonus=0):
         nivel     = caster.get("level", 1)
         bonus_int = mod(caster.get("int_", 10))
-        alcance   = magia["alcance_base"] + magia["alcance_escala"] * (nivel - 1)
+        alcance   = magia["alcance_base"] + magia["alcance_escala"] * (nivel - 1) + alcance_bonus
         save_dif  = self._dif_magia(caster, magia)
 
         dirv = (data or {}).get("dir", [0, 0])
@@ -10016,10 +10016,10 @@ class GameRoom:
             + (" | ⚠️ atingiu o próprio Pedro na volta!" if feriu_caster else ""))
 
     # ── Raio Congelante (dano sem save + paralisação por Fortitude) ──────────────
-    async def _executar_raio_congelante(self, caster, magia, data, dmg_mult, dur_bonus):
+    async def _executar_raio_congelante(self, caster, magia, data, dmg_mult, dur_bonus, alcance_bonus=0):
         nivel     = caster.get("level", 1)
         bonus_int = mod(caster.get("int_", 10))
-        alcance   = magia["alcance_base"] + magia["alcance_escala"] * (nivel - 1)
+        alcance   = magia["alcance_base"] + magia["alcance_escala"] * (nivel - 1) + alcance_bonus
         alvo_id   = (data or {}).get("target_id")
         alvo = self.players.get(alvo_id) or next(
             (m for m in self.monsters.values() if m.get("id") == alvo_id), None)
