@@ -830,6 +830,60 @@ async def main():
     check("último esforço: Cura em Área não cura a si mesmo", lewis3["hp"] == 1)
     check("último esforço: Cura em Área cura os aliados normalmente", ally3["hp"] > 1)
 
+    # [28b] Último Esforço — poção de cura não gasta ação bônus/recursos à toa
+    print("\n[28b] Último Esforço — poção recusada não consome ação bônus")
+    r = setup(); r.current_pid = lambda: "h"; r._is_turn = lambda pid: True
+    p = hero("warrior"); p["ultimo_esforco_ativo"] = True; p["hp"] = 1; p["max_hp"] = 20
+    p["bag"] = [{"id": "pocao1", "effect": "heal", "value": 10, "emoji": "🧪", "name": "Poção"}]
+    fome_antes, sede_antes = p["fome"], p["sede"]
+    r.players["h"] = p
+    await r.handle_use_item("h", "pocao1")
+    check("poção recusada: hp não muda", p["hp"] == 1)
+    check("poção recusada: ação bônus NÃO consumida", not p.get("bonus_action_used"))
+    check("poção recusada: fome intacta", p["fome"] == fome_antes)
+    check("poção recusada: sede intacta", p["sede"] == sede_antes)
+    check("poção recusada: item continua na bolsa (nada foi gasto)",
+          any(i["id"] == "pocao1" for i in p["bag"]))
+
+    # [28c] Último Esforço — equipar item maxhp não faz top-up de HP (fecha a
+    # brecha do code review: equipar/reequipar é ação livre, mas o BUMP de HP
+    # imediato ao equipar é cura disfarçada).
+    print("\n[28c] Último Esforço — equipar item maxhp não cura")
+    r = setup(); r.current_pid = lambda: "h"; r._is_turn = lambda pid: True
+    p = hero("warrior"); p["ultimo_esforco_ativo"] = True; p["hp"] = 1; p["max_hp"] = 20
+    ring = next(i for i in S.SHOP_MERCHANT if i["id"] == "ring_vita")
+    assert ring["effect"] == "maxhp" and ring["value"] == 5
+    p["bag"] = [dict(ring)]
+    r.players["h"] = p
+    await r.handle_equip_from_bag("h", 0)
+    check("equipar maxhp em Último Esforço: hp NÃO sobe", p["hp"] == 1)
+    check("equipar maxhp em Último Esforço: max_hp sobe normalmente", p["max_hp"] == 25)
+    check("equipar maxhp em Último Esforço: item foi para o gear (ring1/ring2)",
+          (p["gear"].get("ring1") or {}).get("id") == "ring_vita"
+          or (p["gear"].get("ring2") or {}).get("id") == "ring_vita")
+
+    # Reequipar (desequipar + equipar de novo) durante a janela também não deve
+    # empilhar HP — a trava reavalia ultimo_esforco_ativo a cada chamada.
+    slot_key = "ring1" if (p["gear"].get("ring1") or {}).get("id") == "ring_vita" else "ring2"
+    await r.handle_unequip("h", slot_key)
+    check("desequipar maxhp em Último Esforço: hp não muda", p["hp"] == 1)
+    check("desequipar maxhp em Último Esforço: max_hp volta ao normal", p["max_hp"] == 20)
+    novo_slot = next(i for i, it in enumerate(p["bag"]) if it["id"] == "ring_vita")
+    await r.handle_equip_from_bag("h", novo_slot)
+    check("reequipar maxhp em Último Esforço: hp ainda não sobe (sem stacking)", p["hp"] == 1)
+    check("reequipar maxhp em Último Esforço: max_hp sobe de novo (não é cura)", p["max_hp"] == 25)
+
+    # Fora do Último Esforço, o comportamento normal (top-up de HP ao equipar)
+    # continua intacto — evita regressão no fluxo comum.
+    print("\n[28d] Equipar item maxhp fora de Último Esforço continua curando (regressão)")
+    r = setup(); r.current_pid = lambda: "h"; r._is_turn = lambda pid: True
+    p = hero("warrior"); p["hp"] = 10; p["max_hp"] = 20
+    p["bag"] = [dict(ring)]
+    r.players["h"] = p
+    await r.handle_equip_from_bag("h", 0)
+    check("equipar maxhp fora de Último Esforço: hp sobe (top-up normal)", p["hp"] == 15)
+    check("equipar maxhp fora de Último Esforço: max_hp sobe", p["max_hp"] == 25)
+
     # Desconexão durante a janela fecha imediatamente (não trava o jogo).
     r4 = setup(); r4.current_pid = lambda: "outro"
     p4 = hero("warrior"); p4["hp"] = 1; p4["alive"] = True; p4["connected"] = True

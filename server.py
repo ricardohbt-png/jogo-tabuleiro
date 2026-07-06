@@ -7981,7 +7981,12 @@ class GameRoom:
             p["ac_base"] = p.get("ac_base", 10) + v
         elif e == "maxhp":
             p["max_hp"] += v
-            if equipping: p["hp"] = min(p["max_hp"], p["hp"] + v)
+            # Aumentar o teto de PV não é "cura" — mas o top-up imediato de HP
+            # atual É, e equipar/desequipar é uma ação livre (nem passa por
+            # _is_turn). Sem essa trava, Último Esforço vira um HP infinito via
+            # equipa-desequipa. Suprime só o bump; o max_hp continua subindo.
+            if equipping and not p.get("ultimo_esforco_ativo"):
+                p["hp"] = min(p["max_hp"], p["hp"] + v)
         elif e == "spd":
             p["spd"] += v
         elif e == "bagslots":
@@ -11021,6 +11026,13 @@ class GameRoom:
                 "msg": "Você já está furtivo — a vela não acumula com outro efeito de furtividade."})
             return
 
+        # Último Esforço bloqueia poções de cura — valida ANTES de gastar a ação
+        # bônus (senão o jogador perderia a ação/fome/sede à toa por uma cura
+        # que sempre seria recusada; espelha a checagem de veil_shadow acima).
+        if effect == "heal" and p.get("ultimo_esforco_ativo"):
+            await self.send_to(pid, {"type": "error",
+                "msg": "🔥 Em Último Esforço você não pode se curar!"}); return
+
         # Itens consumíveis de bolsa são ações bônus — verificar antes de aplicar
         if effect in self.BONUS_ACTION_EFFECTS:
             ok = await self._executar_acao_bonus(p)
@@ -11028,9 +11040,6 @@ class GameRoom:
                 return  # já usou ação bônus neste turno — abortar sem consumir o item
 
         if effect == "heal":
-            if p.get("ultimo_esforco_ativo"):
-                await self.send_to(pid, {"type": "error",
-                    "msg": "🔥 Em Último Esforço você não pode se curar!"}); return
             p["hp"] = min(p["max_hp"], p["hp"] + val)
             await self.gm_say(f"{item['emoji']} **{p['name']}** usa **{item['name']}** e recupera **{val}** HP!")
         elif effect == "atk_bonus":
