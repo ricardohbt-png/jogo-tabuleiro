@@ -3601,6 +3601,15 @@ def make_player(pid, name, cls_id, slot):
         "aprimorar_ativo":   False,  # Aprimorar armada → +1 CD do save (base; II/III: +2/+3) (🍖-3 ao lançar)
         "estender_ativo":    False,  # Estender armada → +1 turno de duração (base; II/III: +2/+3) (🍖-3 💧-3)
         "fortalecer_ativo":  False,  # Fortalecer armada → dano ×1,25 (base; II/III: ×1,5/×2) (🍖-6 💧-6)
+        # ── Técnicas Exclusivas da Guilda (Fase 3) — 2º slot, Mago/Clérigo ──
+        # Independentes da Metamagia acima (podem empilhar); inerte p/ outras classes.
+        "tec_ex_aprimorar_armado":              False,  # +1 CD do save na próxima magia
+        "tec_ex_estender_armado":                False,  # +1 duração OU +1 alcance na próxima magia
+        "tec_ex_canalizacao_armado":             False,  # próxima magia ignora Silêncio
+        "tec_ex_empoderar_armado":                False,  # ×1,5 dano na próxima magia ofensiva
+        "tec_ex_geminada_alvo2_id":              None,   # 2º alvo escolhido na ativação
+        "tec_ex_canalizacao_perfeita_armado":    False,  # próximo save de alvo único com desvantagem
+        "tec_ex_acelerada_armado":               False,  # próxima magia não gasta a ação principal
         # ── Estado das habilidades do ladino (Luccas) — inerte p/ outras classes ──
         "invisivel_sombras":   False,  # Esconder nas Sombras (manutenção 🍖-1 💧-1)
         "detectar_ativo":      False,  # Detectar Armadilhas ativa (manutenção 💧-1)
@@ -11450,6 +11459,14 @@ class GameRoom:
         p["aprimorar_ativo"]   = False
         p["estender_ativo"]    = False
         p["fortalecer_ativo"]  = False
+        # técnicas exclusivas da Guilda (Fase 3) não usadas expiram ao fim do turno
+        p["tec_ex_aprimorar_armado"] = False
+        p["tec_ex_estender_armado"] = False
+        p["tec_ex_canalizacao_armado"] = False
+        p["tec_ex_empoderar_armado"] = False
+        p["tec_ex_geminada_alvo2_id"] = None
+        p["tec_ex_canalizacao_perfeita_armado"] = False
+        p["tec_ex_acelerada_armado"] = False
 
         # Clear temp effects for this player.
         # temp_def normalmente dura 1 turno; o Escudo Mágico Aprimorado (Pedro)

@@ -96,6 +96,32 @@ async def main():
     await r._executar_raio_congelante(p, magia, {"target_id": "m1"}, 1, 0, 1)
     check("com alcance_bonus=1: alcance suficiente, dano aplicado", r.monsters["m1"]["hp"] < 30)
 
+    print("\n[4] Catálogo completo das 7 técnicas + flags iniciais do jogador")
+    especificacao = {
+        "tec_ex_aprimorar_magia":      (5, 180, 2, 2),
+        "tec_ex_estender_magia":       (5, 180, 2, 2),
+        "tec_ex_canalizacao_arcana":   (5, 180, 4, 4),
+        "tec_ex_empoderar_magia":      (8, 280, 4, 4),
+        "tec_ex_magia_geminada":       (8, 280, 6, 6),
+        "tec_ex_canalizacao_perfeita": (8, 280, 4, 4),
+        "tec_ex_magia_acelerada":      (10, 350, 6, 6),
+    }
+    for tid, (rec, preco, cf, cs) in especificacao.items():
+        it = S.guild_item(tid)
+        check(f"existe {tid}", it is not None)
+        check(f"{tid} recarga {rec}", it and it["recarga_rodadas"] == rec)
+        check(f"{tid} preco {preco}", it and it["preco"] == preco)
+        check(f"{tid} custo {cf}/{cs}", it and it["custo_fome"] == cf and it["custo_sede"] == cs)
+        check(f"{tid} classe = [mage, cleric]", it and set(it["classe"]) == {"mage", "cleric"})
+        check(f"{tid} exclusiva=True", it and it["exclusiva"] is True)
+    check("magia_geminada tem alvo qualquer_vivo",
+          S.guild_item("tec_ex_magia_geminada").get("alvo") == "qualquer_vivo")
+    p0 = caster("mage")
+    for flag in ["tec_ex_aprimorar_armado", "tec_ex_estender_armado", "tec_ex_canalizacao_armado",
+                 "tec_ex_empoderar_armado", "tec_ex_canalizacao_perfeita_armado", "tec_ex_acelerada_armado"]:
+        check(f"flag inicial {flag} = False", p0[flag] is False)
+    check("flag inicial tec_ex_geminada_alvo2_id = None", p0["tec_ex_geminada_alvo2_id"] is None)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
