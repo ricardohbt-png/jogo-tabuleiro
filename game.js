@@ -1486,6 +1486,8 @@ function _guildItemRow(i, owned, me){
   const gold  = (me && me.gold) || 0;
   const custo = i.categoria === 'tecnica'
     ? ` · 🍖${i.custo_fome} 💧${i.custo_sede} · ⏱️${i.recarga_rodadas}r` : '';
+  const exclusivaBadge = i.exclusiva
+    ? ' <b style="color:var(--gold);font-size:.7rem;">★ Exclusiva Mago/Clérigo</b>' : '';
   let action;
   if(has){
     action = `<span class="guild-owned">Possuído ✓</span>`;
@@ -1500,7 +1502,7 @@ function _guildItemRow(i, owned, me){
   }
   return `<div class="guild-item${has?' is-owned':''}">
     <span class="gi-icon">${i.icon||'✨'}</span>
-    <div class="gi-body"><b>${i.nome}</b><br><small>${i.desc||''}${custo}</small></div>
+    <div class="gi-body"><b>${i.nome}</b>${exclusivaBadge}<br><small>${i.desc||''}${custo}</small></div>
     ${action}</div>`;
 }
 
@@ -9994,10 +9996,9 @@ function renderMyPanel(state){
     const cat = GS.guildCatalogFor(me.class_id).find(x => x.id === tid);
     if(!cat) continue;
     const restante = GS.tecnicaRestante(me, tid);
-    // TODO(Fase 3): quando existirem técnicas exclusivas equipadas simultaneamente com uma automática,
-    // podeUsar também deve checar 'GS.myPid !== state.last_stand_pid' (hoje inalcançável: nenhuma
-    // técnica tem exclusiva:True ainda, então o slot exclusivo nunca fica ocupado — GS.isMyTurn já
-    // inclui a janela de Último Esforço, que hoje só existe para a técnica automática).
+    // Fase 3: técnicas exclusivas usam o mesmo podeUsar de qualquer técnica —
+    // GS.isMyTurn já cobre a janela do Último Esforço, e decidimos (brainstorming)
+    // NÃO bloquear o uso de técnicas da Guilda durante esses mini-turnos.
     const podeUsar = !cat.automatica && GS.isMyTurn && me.alive && state.phase === 'playing'
                      && restante === 0
                      && (me.fome||0) >= (cat.custo_fome||0) && (me.sede||0) >= (cat.custo_sede||0);
@@ -10035,6 +10036,15 @@ function renderMyPanel(state){
         if(!alvos.length){ toast('Nenhum aliado disponível.', 'var(--orange)'); return; }
         if(alvos.length === 1){ GS.usarTecnica(tid, alvos[0].id); return; }
         openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — escolha o par`, alvos, 'player',
+          id => GS.usarTecnica(tid, id));
+      } else if(cat.alvo === 'qualquer_vivo'){
+        // Magia Geminada (Fase 3): 2º alvo pode ser aliado OU monstro, qualquer
+        // distância (o servidor valida alcance/tipo na hora de lançar a magia).
+        const aliados  = (state.players||[]).filter(q => q && q.alive && q.id !== me.id);
+        const monstros = (state.monsters||[]).filter(m => m && m.hp>0);
+        const alvos = [...aliados, ...monstros];
+        if(!alvos.length){ toast('Nenhum alvo disponível.', 'var(--orange)'); return; }
+        openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — escolha o 2º alvo`, alvos, 'any',
           id => GS.usarTecnica(tid, id));
       } else {
         GS.usarTecnica(tid);
