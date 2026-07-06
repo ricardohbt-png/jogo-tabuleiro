@@ -176,6 +176,40 @@ async def main():
     check("geminada: fora do alcance → inválido",
           not r2._geminada_alvo2_valido(pc, magia_alvo_ofensiva, far_monster))
 
+    print("\n[6] handle_usar_tecnica arma cada uma das 7 técnicas")
+    for tid, flag, custo in [
+        ("tec_ex_aprimorar_magia", "tec_ex_aprimorar_armado", (2, 2)),
+        ("tec_ex_estender_magia", "tec_ex_estender_armado", (2, 2)),
+        ("tec_ex_canalizacao_arcana", "tec_ex_canalizacao_armado", (4, 4)),
+        ("tec_ex_empoderar_magia", "tec_ex_empoderar_armado", (4, 4)),
+        ("tec_ex_canalizacao_perfeita", "tec_ex_canalizacao_perfeita_armado", (4, 4)),
+        ("tec_ex_magia_acelerada", "tec_ex_acelerada_armado", (6, 6)),
+    ]:
+        r = setup(); r.current_pid = lambda: "h"
+        p = caster("mage", tid_ex=tid); r.players["h"] = p
+        f0, s0 = p["fome"], p["sede"]
+        await r.handle_usar_tecnica("h", tid)
+        check(f"{tid}: flag {flag} armada", p[flag] is True)
+        check(f"{tid}: custo {custo}", p["fome"] == f0 - custo[0] and p["sede"] == s0 - custo[1])
+        check(f"{tid}: recarga setada", r.tecnica_restante(p, tid) > 0)
+
+    print("\n[6b] Magia Geminada — validação de alvo na ativação")
+    r = setup(); r.current_pid = lambda: "h"
+    p = caster("mage", tid_ex="tec_ex_magia_geminada"); r.players["h"] = p
+    ally = make_player("a", "Ana", "cleric", 1); ally["alive"] = True; ally["pos"] = [1, 1]
+    r.players["a"] = ally
+    r._errs.clear()
+    await r.handle_usar_tecnica("h", "tec_ex_magia_geminada", "h")
+    check("geminada: recusa a si mesmo", any("você" in e.lower() for e in r._errs))
+    check("geminada: flag não setada ao recusar", p["tec_ex_geminada_alvo2_id"] is None)
+    r._errs.clear()
+    dead = make_player("d", "Dan", "warrior", 2); dead["alive"] = False; dead["pos"] = [1, 1]
+    r.players["d"] = dead
+    await r.handle_usar_tecnica("h", "tec_ex_magia_geminada", "d")
+    check("geminada: recusa alvo morto", any("vivo" in e.lower() for e in r._errs))
+    await r.handle_usar_tecnica("h", "tec_ex_magia_geminada", "a")
+    check("geminada: aceita aliado vivo", p["tec_ex_geminada_alvo2_id"] == "a")
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

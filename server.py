@@ -4689,6 +4689,26 @@ class GameRoom:
             else:
                 await self.gm_say(f"🎲 **{p['name']}** tenta a Sorte de novo, mas erra outra vez!")
             p["ultimo_ataque_perdido"] = None
+        # ── Técnicas Exclusivas da Guilda (Fase 3, Mago/Clérigo) ────────────────
+        elif ef.get("tipo") == "tec_ex_aprimorar":
+            p["tec_ex_aprimorar_armado"] = True
+        elif ef.get("tipo") == "tec_ex_estender":
+            p["tec_ex_estender_armado"] = True
+        elif ef.get("tipo") == "tec_ex_canalizacao_arcana":
+            p["tec_ex_canalizacao_armado"] = True
+        elif ef.get("tipo") == "tec_ex_empoderar":
+            p["tec_ex_empoderar_armado"] = True
+        elif ef.get("tipo") == "tec_ex_geminada":
+            alvo2 = self.players.get(target_id) or self.monsters.get(target_id)
+            vivo2 = alvo2 and (alvo2["alive"] if self._eh_jogador(alvo2) else alvo2.get("hp", 0) > 0)
+            if not alvo2 or not vivo2 or target_id == pid:
+                await self.send_to(pid, {"type": "error",
+                    "msg": "Escolha um alvo vivo (não pode ser você)."}); return
+            p["tec_ex_geminada_alvo2_id"] = target_id
+        elif ef.get("tipo") == "tec_ex_canalizacao_perfeita":
+            p["tec_ex_canalizacao_perfeita_armado"] = True
+        elif ef.get("tipo") == "tec_ex_acelerada":
+            p["tec_ex_acelerada_armado"] = True
         # (outros tipos/handlers chegam nas Fases 1-2)
         p["fome"] -= item["custo_fome"]
         p["sede"] -= item["custo_sede"]
