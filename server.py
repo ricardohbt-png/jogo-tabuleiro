@@ -9835,10 +9835,10 @@ class GameRoom:
                 total += w.get("bonus_flat", 0)
         return total
 
-    async def _save_mostrado(self, alvo, tipo, dif, extra_mod=0):
+    async def _save_mostrado(self, alvo, tipo, dif, extra_mod=0, desvantagem=False):
         """Faz um teste de resistência e anima o d20 do alvo no cliente."""
         extra_mod += self._save_weakness_pen(alvo, tipo)
-        passou, d20, bonus, total = self._testar_save(alvo, tipo, dif, extra_mod=extra_mod)
+        passou, d20, bonus, total = self._testar_save(alvo, tipo, dif, extra_mod=extra_mod, desvantagem=desvantagem)
         lab = {"reflexos": "Reflexos", "fortitude": "Fortitude", "vontade": "Vontade"}.get(tipo, tipo)
         await self._broadcast_dado("d20", d20, f"{lab} {'✓' if passou else '✗'}")
         return passou, d20, bonus, total
@@ -10390,14 +10390,15 @@ class GameRoom:
         # Fallback legado: tier + 1
         return alvo.get("tier", 1) + 1
 
-    def _testar_save(self, alvo, tipo_save, dificuldade, extra_mod=0, fonte=None):
+    def _testar_save(self, alvo, tipo_save, dificuldade, extra_mod=0, fonte=None, desvantagem=False):
         """Retorna (passou, d20, bonus, total). extra_mod: bônus/penalidade adicional.
         fonte: monstro-origem do efeito (habilidade de criatura) — habilita o +1 de
-        resistência da Lenda do Bardo contra aquela espécie (só p/ jogadores)."""
+        resistência da Lenda do Bardo contra aquela espécie (só p/ jogadores).
+        desvantagem: rola 2d20 e usa o PIOR (Canalização Perfeita, Fase 3)."""
         bonus = (self._veneno_save_bonus(alvo, tipo_save) + self._mod_magia(alvo, "resistencia")
                  + extra_mod + self._lenda_resist_bonus(alvo, fonte)
                  + self._resistencia_saves_bonus(alvo))
-        d20   = random.randint(1, 20)
+        d20   = min(random.randint(1, 20), random.randint(1, 20)) if desvantagem else random.randint(1, 20)
         total = d20 + bonus
         return (total >= dificuldade), d20, bonus, total
 

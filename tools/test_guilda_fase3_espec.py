@@ -63,6 +63,26 @@ async def main():
     check("catálogo do guerreiro NÃO inclui nenhuma exclusiva",
           not any(i.startswith("tec_ex_") for i in ids_warr))
 
+    print("\n[2] _testar_save: desvantagem rola 2d20 e usa o pior")
+    r = setup()
+    alvo = caster("mage")
+    seq = iter([18, 5])
+    orig_randint = S.random.randint
+    S.random.randint = lambda a, b: next(seq)
+    try:
+        passou, d20, bonus, total = r._testar_save(alvo, "vontade", 10, desvantagem=True)
+    finally:
+        S.random.randint = orig_randint
+    check("desvantagem usa o menor dos 2 rolls (5, não 18)", d20 == 5)
+
+    seq2 = iter([18, 5])
+    S.random.randint = lambda a, b: next(seq2)
+    try:
+        passou2, d20b, bonus2, total2 = r._testar_save(alvo, "vontade", 10)
+    finally:
+        S.random.randint = orig_randint
+    check("sem desvantagem usa só a 1ª rolagem (18)", d20b == 18)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
