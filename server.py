@@ -4414,20 +4414,16 @@ class GameRoom:
     def _geminada_alvo2_valido(self, caster, magia, alvo2):
         """True se o 2º alvo da Magia Geminada é elegível: vivo, no alcance da
         magia a partir do caster, e do tipo certo (monstro p/ magia ofensiva
-        'alvo', aliado p/ magia de buff 'alvo_aliado'/'buff_aliado').
-        Usa 'class_id' (sempre presente em jogadores, ausente em monstros) em
-        vez de _eh_jogador para não depender de self.players — alvo2 pode ser
-        um dict avulso ainda não registrado na sala."""
+        'alvo', aliado p/ magia de buff 'alvo_aliado'/'buff_aliado')."""
         if not alvo2:
             return False
-        eh_jogador = "class_id" in alvo2
-        vivo = alvo2["alive"] if eh_jogador else alvo2.get("hp", 0) > 0
+        vivo = alvo2["alive"] if self._eh_jogador(alvo2) else alvo2.get("hp", 0) > 0
         if not vivo:
             return False
         tipo = magia.get("tipo")
-        if tipo == "alvo" and eh_jogador:
+        if tipo == "alvo" and self._eh_jogador(alvo2):
             return False
-        if tipo in ("alvo_aliado", "buff_aliado") and not eh_jogador:
+        if tipo in ("alvo_aliado", "buff_aliado") and not self._eh_jogador(alvo2):
             return False
         alcance = magia.get("alcance")
         if alcance is None:

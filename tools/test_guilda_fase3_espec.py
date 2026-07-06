@@ -154,6 +154,8 @@ async def main():
     pc = caster("mage"); pc["pos"] = [0, 0]
     ally = make_player("a", "Ana", "cleric", 1); ally["alive"] = True; ally["pos"] = [2, 0]
     dead_ally = make_player("d", "Dan", "warrior", 2); dead_ally["alive"] = False; dead_ally["pos"] = [1, 0]
+    r2.players["a"] = ally
+    r2.players["d"] = dead_ally
     monster = {"id": "m1", "name": "Alvo", "pos": [3, 0], "hp": 10, "max_hp": 10}
     dead_monster = {"id": "m2", "name": "Morto", "pos": [1, 0], "hp": 0, "max_hp": 10}
     magia_alvo_ofensiva = {"id": "raio_congelante", "tipo": "alvo", "alcance_base": 3, "alcance_escala": 1}
