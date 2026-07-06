@@ -11257,6 +11257,15 @@ class GameRoom:
 
     async def handle_end_turn(self, pid):
         if not self._is_turn(pid): return
+        # Último Esforço é checado ANTES da fase dos servos (animados_phase_pid,
+        # mais abaixo). As duas janelas são mutuamente exclusivas para o mesmo
+        # jogador: nada no controle da fase dos servos (mover/atacar animados,
+        # comandar_animados) pode causar dano ao próprio jogador que os controla,
+        # e as fontes de dano por tick de rodada só se aplicam depois que essa
+        # fase é totalmente encerrada (animados_phase_pid volta a None). Ou seja,
+        # um jogador nunca cai a 0 HP (abrindo o Último Esforço) enquanto está
+        # dentro da própria janela de controle dos servos — por isso não há
+        # ambiguidade em checar last_stand_pid primeiro e retornar cedo aqui.
         if self.last_stand_pid == pid:
             await self._fechar_mini_turno_ultimo_esforco(pid)
             return

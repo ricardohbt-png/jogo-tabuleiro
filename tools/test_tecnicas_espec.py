@@ -740,6 +740,69 @@ async def main():
     check("fechamento: janela fecha de vez", r3.last_stand_pid is None)
     check("fechamento: event sinalizado", r3.last_stand_event.is_set())
 
+    # [27c] Último Esforço — ciclo PONTA-A-PONTA: morte real → 2 mini-turnos
+    # fechados via handle_end_turn REAL (não stub) → _player_dies (suspensa
+    # esse tempo todo no await do Event) retoma e finaliza a morte. Isso
+    # exercita exatamente a passagem de bastão entre corotinas que o teste
+    # [27] (stub sintético) e o [27b] (janela construída à mão) cobrem só em
+    # metades — aqui é o ciclo completo em uma única execução.
+    print("\n[27c] Último Esforço — ciclo ponta-a-ponta (morte real + 2 end_turn reais)")
+    r5 = setup(); r5.current_pid = lambda: "outro"; r5.round_num = 5
+    p5 = hero("warrior", "tecnica_ultimo_esforco"); p5["hp"] = 10; p5["alive"] = True; p5["spd"] = 6
+    r5.players["h"] = p5
+    r5.players["outro"] = hero("cleric"); r5.players["outro"]["id"] = "outro"
+    # handle_end_turn intercepta ANTES da lógica normal de avanço de turno
+    # (o branch last_stand_pid==pid retorna cedo — ver comentário no server.py),
+    # então não precisamos de player_order/turn_index "reais" para as 2 chamadas
+    # dentro da janela; setamos mesmo assim por realismo/robustez.
+    r5.player_order = ["h", "outro"]; r5.turn_index = 0
+
+    janela_estado = {"apos_1o_end_turn": None, "apos_2o_end_turn": None}
+
+    async def _fechar_via_end_turn_real():
+        # Espera a janela abrir de verdade (via _abrir_ultimo_esforco dentro
+        # de _player_dies, que está suspensa lá embaixo em last_stand_event.wait()).
+        while r5.last_stand_pid != "h":
+            await asyncio.sleep(0)
+        # 1ª chamada REAL a handle_end_turn — fecha o 1º mini-turno.
+        await r5.handle_end_turn("h")
+        janela_estado["apos_1o_end_turn"] = {
+            "last_stand_pid": r5.last_stand_pid,
+            "moves_left": p5["moves_left"],
+            "turnos_restantes": p5.get("ultimo_esforco_turnos_restantes"),
+        }
+        # 2ª chamada REAL a handle_end_turn — fecha o 2º mini-turno e
+        # dispara last_stand_event.set(), liberando _player_dies. Capturamos
+        # last_stand_pid IMEDIATAMENTE ao retornar (sem sleep(0) antes): ele já
+        # foi zerado sincronamente dentro de _fechar_mini_turno_ultimo_esforco,
+        # antes do .set() — não esperamos aqui para não perder a corrida contra
+        # a retomada de _player_dies() (que finaliza a morte assim que puder
+        # rodar de novo).
+        await r5.handle_end_turn("h")
+        janela_estado["apos_2o_end_turn"] = {"last_stand_pid": r5.last_stand_pid}
+
+    asyncio.create_task(_fechar_via_end_turn_real())
+    await r5._player_dies("h")   # é isto que aciona todo o ciclo
+
+    # Depois que _player_dies() retorna, a morte já foi finalizada de verdade.
+    check("ponta-a-ponta: morte finalizada (alive=False)", p5["alive"] is False)
+    check("ponta-a-ponta: morte finalizada (hp=0)", p5["hp"] == 0)
+    check("ponta-a-ponta: flag ativa desligada", p5.get("ultimo_esforco_ativo") is False)
+    check("ponta-a-ponta: recarga da técnica setada (10 rodadas)",
+          r5.tecnica_restante(p5, "tecnica_ultimo_esforco") == 10)
+
+    # Estado capturado DENTRO da task concorrente, nos momentos certos.
+    apos1 = janela_estado["apos_1o_end_turn"]
+    apos2 = janela_estado["apos_2o_end_turn"]
+    check("ponta-a-ponta: após o 1º end_turn real, janela ainda aberta",
+          apos1 is not None and apos1["last_stand_pid"] == "h")
+    check("ponta-a-ponta: após o 1º end_turn real, moves_left resetado",
+          apos1 is not None and apos1["moves_left"] == p5["spd"])
+    check("ponta-a-ponta: após o 1º end_turn real, 1 mini-turno restante",
+          apos1 is not None and apos1["turnos_restantes"] == 1)
+    check("ponta-a-ponta: após o 2º end_turn real, janela fechada",
+          apos2 is not None and apos2["last_stand_pid"] is None)
+
     # Desconexão durante a janela fecha imediatamente (não trava o jogo).
     r4 = setup(); r4.current_pid = lambda: "outro"
     p4 = hero("warrior"); p4["hp"] = 1; p4["alive"] = True; p4["connected"] = True
