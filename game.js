@@ -9699,10 +9699,10 @@ function renderMyPanel(state){
       <span style="color:#e8d8a0; font-size:.6rem; letter-spacing:1px;">REGENERAÇÃO DIVINA: +1 HP por turno</span>
     </div>` : ''}
     ${state.last_stand_pid === GS.myPid ? `
-      <div class="banner-ultimo-esforco" style="background:#7a1f1f;color:#fff;padding:.4rem .8rem;border-radius:6px;margin-bottom:.5rem;text-align:center;font-weight:bold;">
-        🔥 ÚLTIMO ESFORÇO — ${me.ultimo_esforco_turnos_restantes || 0} turno(s) restante(s)
-      </div>
-    ` : ''}
+    <div class="banner-ultimo-esforco" style="margin-top:4px; padding:5px 8px; background:rgba(224,40,40,0.15); border:1px solid #e0282866; border-radius:3px; display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Cinzel',serif;">
+      <span style="color:#ff5050; font-weight:bold; font-size:.95rem;">🔥 ÚLTIMO ESFORÇO</span>
+      <span style="color:#f0b0b0; font-size:.6rem; letter-spacing:1px;">${me.ultimo_esforco_turnos_restantes || 0} TURNO(S) RESTANTE(S)</span>
+    </div>` : ''}
 
     ${(() => {
       const f = me.fome ?? 100, s = me.sede ?? 100;
@@ -9994,6 +9994,10 @@ function renderMyPanel(state){
     const cat = GS.guildCatalogFor(me.class_id).find(x => x.id === tid);
     if(!cat) continue;
     const restante = GS.tecnicaRestante(me, tid);
+    // TODO(Fase 3): quando existirem técnicas exclusivas equipadas simultaneamente com uma automática,
+    // podeUsar também deve checar 'GS.myPid !== state.last_stand_pid' (hoje inalcançável: nenhuma
+    // técnica tem exclusiva:True ainda, então o slot exclusivo nunca fica ocupado — GS.isMyTurn já
+    // inclui a janela de Último Esforço, que hoje só existe para a técnica automática).
     const podeUsar = !cat.automatica && GS.isMyTurn && me.alive && state.phase === 'playing'
                      && restante === 0
                      && (me.fome||0) >= (cat.custo_fome||0) && (me.sede||0) >= (cat.custo_sede||0);
