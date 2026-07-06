@@ -898,6 +898,17 @@ async def main():
     check("desconexão: fecha a janela do Último Esforço", r4.last_stand_pid is None)
     check("desconexão: event sinalizado", r4.last_stand_event.is_set())
 
+    # [29] Recusa ativação manual de técnicas automáticas
+    print("\n[29] Recusa ativação manual (automáticas)")
+    for tid in ("tecnica_instinto_sobrevivencia", "tecnica_ultimo_esforco"):
+        r = setup(); r.current_pid = lambda: "h"
+        p = hero("warrior", tid); r.players["h"] = p
+        f0 = p["fome"]
+        await r.handle_usar_tecnica("h", tid)
+        check(f"{tid}: recusa uso manual", "automática" in (r._errs[-1] if r._errs else "").lower())
+        check(f"{tid}: não gasta fome/sede", p["fome"] == f0)
+        check(f"{tid}: não ativa recarga", r.tecnica_restante(p, tid) == 0)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

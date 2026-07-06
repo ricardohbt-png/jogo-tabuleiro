@@ -4451,6 +4451,10 @@ class GameRoom:
         item = guild_item(tecnica_id)
         if not item:
             return
+        if item.get("automatica"):
+            await self.send_to(pid, {"type": "error",
+                "msg": f"{item['nome']} é automática — não pode ser ativada manualmente."})
+            return
         if self.tecnica_restante(p, tecnica_id) > 0:
             await self.send_to(pid, {"type": "error",
                 "msg": f"{item['nome']} em recarga ({self.tecnica_restante(p, tecnica_id)} rodadas)."})
