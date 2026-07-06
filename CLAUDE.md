@@ -542,3 +542,73 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > — o duplicado de `HERO_DATA.pedro.habilidadeClasse` em `game.js` (ficha/tooltip,
 > não autoritativo) chama esses getters em vez de recalcular. Teste:
 > `tools/test_reviver_mortos.py`.
+
+> **Técnicas de Recarga Longa (Fase 2e):** 4º lote das Técnicas da Guilda, tier
+> **10** (350 ouro, recarga 10; +6🍖/+6💧 em três delas — **Sorte** é a exceção, só
+> +2🍖/+2💧). **Instinto de Sobrevivência** (`passiva_evitar_morte`) é automática:
+> segue o padrão já existente do `_player_dies` (mesmo ramo da Regeneração do
+> Paladino) — se o dano zeraria o HP, sobrevive com 1 e entra em recarga. **Último
+> Esforço** (`passiva_ultimo_esforco`) também é automática e sobrevive com 1 HP,
+> mas além disso abre uma sub-fase de **2 mini-turnos** ("last stand"): mecanismo
+> final usa `self.last_stand_pid`/`self.last_stand_event` (`asyncio.Event`),
+> `_is_turn` alargado para aceitar `last_stand_pid == pid` (espelhado no cliente,
+> ver abaixo), `_abrir_ultimo_esforco` (que aguarda o Event antes de deixar
+> `_player_dies` prosseguir para a finalização normal da morte — não há mais
+> `return` antecipado nesse ramo), e `_fechar_mini_turno_ultimo_esforco` (decrementa
+> os turnos restantes e fecha o Event no fim, hookado em `handle_end_turn` e em
+> `handle_disconnect_em_jogo`), com um timer de segurança dedicado
+> (`_iniciar_timer_ultimo_esforco`/`_cancelar_timer_ultimo_esforco`/
+> `_ultimo_esforco_timer_expira`) que espelha o timer de turno normal já existente,
+> **incluindo a mesma guarda de auto-cancelamento** (`t is not
+> asyncio.current_task()`) do `_cancelar_timer_turno` pré-existente. Dois
+> reforços de concorrência que NÃO estavam no plano original e só surgiram em
+> revisão: (a) o ramo do `_player_dies` só abre uma nova janela se
+> `self.last_stand_pid is None` — evita que uma segunda morte simultânea corrompa
+> uma janela já aberta (o segundo jogador simplesmente não recebe o efeito da
+> técnica dessa vez, sem gastar a recarga); (b) o `_cancelar_timer_ultimo_esforco`
+> tem a mesma guarda de auto-cancelamento do `_cancelar_timer_turno`. **Golpe
+> Decisivo** (`golpe_decisivo`) é manual (arma-e-age): força o próximo ataque
+> básico a ser crítico automático no acerto, e triplica (em vez de dobrar) num
+> natural 20 enquanto armado. Isso generalizou o multiplicador de crítico de
+> `handle_attack` — antes um `dmg *= 2` fixo, agora `dmg *= 3 if (_forca_critico and
+> roll == 20) else 2`, onde `_forca_critico = golpe_decisivo_armado OR
+> ultimo_esforco_ativo`; sem nenhuma das duas técnicas ativas o comportamento é
+> byte-idêntico ao anterior (risco real de regressão, testado explicitamente).
+> **Sorte** (`sorte`) é reativa — mas **diferente** do Sangue Frio (Fase 2c, que
+> arma a re-rolagem ANTES do ataque): o jogador só decide gastar a Sorte DEPOIS de
+> ver o erro, e a re-rolagem usa os modificadores **congelados** do ataque
+> original (`ultimo_ataque_perdido`: `eff_atk`/`eff_target_ac`/`vantagem`/
+> `desvantagem`/`surv_mod`/`cancao_dano`/`gl_dano`), não os recomputados ao vivo —
+> distinção provada por teste dedicado (muda `atk_bonus` do jogador entre o erro e
+> o reroll e confirma que o reroll ignora a mudança). O dano do reroll e do ataque
+> normal agora passam pelo helper extraído `_resolver_dano_ataque_basico`, que
+> preserva uma assimetria real pré-existente entre as fórmulas de dano armado/
+> desarmado (o rascunho do próprio plano tinha errado esse detalhe; o
+> implementador percebeu e corrigiu durante o Passo). **Auto-cura bloqueada
+> durante o Último Esforço:** `handle_use_item` (poção, `effect == "heal"`),
+> `handle_cura` (recusa alvo = o próprio caster) e `handle_cura_area` (pula o
+> próprio caster no loop de aliados). Lacuna real encontrada e fechada em
+> revisão: itens de equipamento com efeito `"maxhp"` (ex. `ring_vita`) davam
+> top-up instantâneo de HP ao equipar via `_apply_gear_effect` — como equipar é
+> uma ação livre e sempre disponível (nem passa por `_is_turn`), isso furava a
+> regra "não pode se curar"; o fix suprime só o bump imediato de HP enquanto
+> `ultimo_esforco_ativo` (o aumento de `max_hp` em si continua valendo). Também
+> corrigido: uma tentativa de poção de cura recusada não gasta mais a ação
+> bônus/recursos do jogador à toa. **Recusa de ativação manual de técnicas
+> automáticas:** `handle_usar_tecnica` agora rejeita técnicas com
+> `item.get("automatica")` antes de rodar o rodapé comum (recarga/custo) —
+> corrigindo um bug pré-existente real em que tentar ativar manualmente uma
+> técnica automática gastava fome/sede/recarga à toa, sem nenhum efeito. Cliente:
+> `isMyTurn` (em `src/gameState.js`) alargado para aceitar `last_stand_pid ===
+> myPid` (espelha o `_is_turn` do servidor); o botão do 4º slot esconde/desabilita
+> técnicas `automatica` e rotula "AUTOMÁTICA" em vez de "GUILDA"; um banner de
+> status ("🔥 ÚLTIMO ESFORÇO — N turno(s) restante(s)") em `renderMyPanel`,
+> estilizado como a família já existente de banners de status (regeneração/
+> saciado/exaustão) — colocado deliberadamente em `renderMyPanel` (agnóstico de
+> classe) em vez de perto do indicador de `animados_turn` sugerido no plano
+> original, porque esse indicador só aparece em painéis específicos de classe
+> (Pedro/Lewis) e não seria visível para as outras classes. Teste:
+> `tools/test_tecnicas_espec.py`, seções `[23]`-`[29]` (com subseções extras
+> `[27b]`/`[27c]`/`[28b]`/`[28c]`/`[28d]` adicionadas em ciclos de revisão,
+> incluindo um teste ponta-a-ponta do ciclo completo do Último Esforço e a prova
+> congelado-vs-ao-vivo da Sorte).
