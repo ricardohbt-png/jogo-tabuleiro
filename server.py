@@ -5169,7 +5169,11 @@ class GameRoom:
 
     def _cancelar_timer_ultimo_esforco(self):
         t = self.last_stand_timer_task
-        if t and not t.done():
+        # Não cancela a própria tarefa em execução (mesmo cuidado de
+        # _cancelar_timer_turno): quando o timeout dispara, ele chama
+        # _fechar_mini_turno_ultimo_esforco, que pode chamar de volta este
+        # método — cancelar a si mesmo abortaria o fechamento em andamento.
+        if t and not t.done() and t is not asyncio.current_task():
             t.cancel()
         self.last_stand_timer_task = None
 
@@ -14054,8 +14058,12 @@ class GameRoom:
         # Último Esforço: técnica genérica de recarga longa — antes de cair de vez,
         # abre uma sub-fase de 2 mini-turnos com 1 HP. NÃO retorna cedo: quando a
         # janela fechar (Task 6), a execução cai para a finalização normal da morte.
+        # last_stand_pid is None: evita sobrepor a janela de OUTRO herói (caso raro
+        # de 2 mortes na mesma fase de monstros) — nesse caso a técnica simplesmente
+        # não dispara desta vez (o herói morre normalmente, sem gastar a recarga).
         if (tem_tecnica_equipada(p, "tecnica_ultimo_esforco")
-                and self.tecnica_restante(p, "tecnica_ultimo_esforco") == 0):
+                and self.tecnica_restante(p, "tecnica_ultimo_esforco") == 0
+                and self.last_stand_pid is None):
             p["hp"] = 1
             p["technique_cooldowns"]["tecnica_ultimo_esforco"] = self.round_num + 10
             await self._abrir_ultimo_esforco(p)

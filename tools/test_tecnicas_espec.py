@@ -711,6 +711,17 @@ async def main():
     check("último esforço: _is_turn aceita last_stand_pid", r2._is_turn("h") is True)
     check("último esforço: _is_turn normal p/ outros", r2._is_turn("ninguem") is False)
 
+    # Não sobrepõe uma janela já aberta de OUTRO herói (2 mortes na mesma fase).
+    r3 = setup(); r3.current_pid = lambda: "z"; r3.round_num = 1
+    r3.last_stand_pid = "outro_heroi"   # janela já ativa de outro jogador
+    p3 = hero("warrior", "tecnica_ultimo_esforco"); p3["hp"] = 0; p3["alive"] = True
+    r3.players["h"] = p3
+    await r3._player_dies("h")
+    check("último esforço: 2ª morte simultânea não abre 2ª janela", p3["alive"] is False and p3["hp"] == 0)
+    check("último esforço: janela original preservada", r3.last_stand_pid == "outro_heroi")
+    check("último esforço: recarga NÃO consumida (técnica não disparou)",
+          r3.tecnica_restante(p3, "tecnica_ultimo_esforco") == 0)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
