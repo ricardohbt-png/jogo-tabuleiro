@@ -497,6 +497,418 @@ async def main():
     check("libertar_prisioneiro: crédito de Oportunidade libera a ação", r2.prisoner["freed"] is True)
     check("libertar_prisioneiro: crédito consumido", p2["oportunidade_credito"] is False)
 
+    # [23] Catálogo — Recarga Longa (Fase 2e)
+    print("\n[23] Catálogo — Recarga Longa (2e)")
+    for tid, cf in [("tecnica_instinto_sobrevivencia", 6), ("tecnica_ultimo_esforco", 6),
+                    ("tecnica_golpe_decisivo", 6), ("tecnica_sorte", 2)]:
+        it = S.guild_item(tid)
+        check(f"existe {tid}", it is not None)
+        check(f"{tid} recarga 10", it and it["recarga_rodadas"] == 10)
+        check(f"{tid} preco 350", it and it["preco"] == 350)
+        check(f"{tid} custo {cf}/{cf}", it and it["custo_fome"] == cf and it["custo_sede"] == cf)
+        check(f"{tid} classe None", it and it["classe"] is None)
+
+    # [24] Instinto de Sobrevivência
+    print("\n[24] Instinto de Sobrevivência")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 5
+    p = hero("warrior", "tecnica_instinto_sobrevivencia"); p["hp"] = 10; p["alive"] = True
+    r.players["h"] = p
+    await r._player_dies("h")
+    check("instinto: sobrevive com 1 HP", p["hp"] == 1 and p["alive"] is True)
+    check("instinto: recarga ativada", r.tecnica_restante(p, "tecnica_instinto_sobrevivencia") == 10)
+    # Dentro da recarga, um novo "zerou o HP" mata normalmente.
+    p["hp"] = 0
+    await r._player_dies("h")
+    check("instinto: morre normalmente dentro da recarga", p["alive"] is False)
+
+    # Prioridade: Regeneração do Paladino (já existente) vence se ambos disponíveis.
+    r2 = setup(); r2.current_pid = lambda: "h2"; r2.round_num = 1
+    p2 = hero("paladin", "tecnica_instinto_sobrevivencia")
+    p2["hp"] = 10; p2["alive"] = True; p2["regen_ressurge"] = True; p2["regen_pool"] = 5
+    r2.players["h2"] = p2
+    await r2._player_dies("h2")
+    check("instinto: Regeneração do Paladino tem prioridade", p2["hp"] == 1 and p2["alive"] is True
+          and r2.tecnica_restante(p2, "tecnica_instinto_sobrevivencia") == 0)
+
+    # [25] Golpe Decisivo
+    print("\n[25] Golpe Decisivo")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1; r._is_turn = lambda pid: True
+    p = hero("warrior", "tecnica_golpe_decisivo"); r.players["h"] = p
+    await r.handle_usar_tecnica("h", "tecnica_golpe_decisivo")
+    check("golpe: flag armada", p.get("tecnica_golpe_decisivo_armado") is True)
+    check("golpe: recarga setada", r.tecnica_restante(p, "tecnica_golpe_decisivo") == 10)
+
+    # Integração: acerto SEM nat20 vira crítico (×2); acerto COM nat20 vira ×3.
+    def _mk_room_golpe(natural20):
+        rr = setup(); rr.current_pid = lambda: "h"; rr._is_turn = lambda pid: True
+        hh = hero("warrior"); hh["tecnica_golpe_decisivo_armado"] = True; hh["pos"] = [0, 0]
+        hh["atk_bonus"] = 0
+        hh["weapon"] = {"id": "machado_basico", "name": "Machado", "die": "1d6", "stat": "str_"}
+        rr.players["h"] = hh
+        rr.monsters = {"m1": {"id": "m1", "name": "Alvo", "nome": "Alvo", "pos": [0, 1],
+                              "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
+        roll = 20 if natural20 else 12
+        rr._rolar_ataque = lambda atk, ac, v=False, d=False: (True, roll, roll + atk, roll == 20, None)
+        rr._golpe_raw = lambda p_, raw: raw   # sem especialização do guerreiro interferindo
+        return rr, hh
+    rr1, hh1 = _mk_room_golpe(False)
+    hp0 = rr1.monsters["m1"]["hp"]
+    await rr1.handle_attack("h", "m1")
+    dmg1 = hp0 - rr1.monsters["m1"]["hp"]
+    check("golpe: acerto sem nat20 vira crítico (dobrado)", dmg1 >= 2)   # 1d6(min1)+0, dobrado >=2
+    check("golpe: flag consumida após o ataque", hh1.get("tecnica_golpe_decisivo_armado") is False)
+
+    rr2, hh2 = _mk_room_golpe(True)
+    hp0b = rr2.monsters["m1"]["hp"]
+    await rr2.handle_attack("h", "m1")
+    dmg2 = hp0b - rr2.monsters["m1"]["hp"]
+    check("golpe: nat20 enquanto armado triplica", dmg2 >= 3)
+
+    # Regressão: SEM a técnica armada (nem Último Esforço), nat20 continua ×2 — não ×3.
+    # Stub 1d6 sempre 4 (raw) + stat_bonus=mod(STR 18)=4 (guerreiro-padrão, sem _golpe_raw
+    # multiplicando) → dano previsível: ×2 = 16, ×3 = 24 (discrimina claramente).
+    rr_reg = setup(); rr_reg.current_pid = lambda: "h"; rr_reg._is_turn = lambda pid: True
+    hh_reg = hero("warrior"); hh_reg["pos"] = [0, 0]; hh_reg["atk_bonus"] = 0
+    hh_reg["weapon"] = {"id": "machado_basico", "name": "Machado", "die": "1d6", "stat": "str_"}
+    rr_reg.players["h"] = hh_reg
+    rr_reg.monsters = {"m1": {"id": "m1", "name": "Alvo", "nome": "Alvo", "pos": [0, 1],
+                              "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
+    rr_reg._rolar_ataque = lambda atk, ac, v=False, d=False: (True, 20, 20 + atk, True, None)
+    rr_reg._golpe_raw = lambda p_, raw: raw
+    orig_roll_dice = S.roll_dice
+    S.roll_dice = lambda die_str: 4
+    try:
+        hp0c = rr_reg.monsters["m1"]["hp"]
+        await rr_reg.handle_attack("h", "m1")
+        dmg_reg = hp0c - rr_reg.monsters["m1"]["hp"]
+    finally:
+        S.roll_dice = orig_roll_dice
+    check("golpe: nat20 SEM técnica armada permanece ×2 (não ×3)", dmg_reg == 16)
+    check("golpe: flag não estava setada (controle)", hh_reg.get("tecnica_golpe_decisivo_armado") is not True
+          and hh_reg.get("ultimo_esforco_ativo") is not True)
+
+    # Consumida mesmo em erro.
+    rr3, hh3 = _mk_room_golpe(False)
+    rr3._rolar_ataque = lambda atk, ac, v=False, d=False: (False, 2, 2, False, None)
+    await rr3.handle_attack("h", "m1")
+    check("golpe: consumida mesmo errando", hh3.get("tecnica_golpe_decisivo_armado") is False)
+
+    # Expira no fim do turno sem uso.
+    r4 = setup(); r4.current_pid = lambda: "h"
+    p4 = hero("warrior"); p4["tecnica_golpe_decisivo_armado"] = True; p4["moves_left"] = p4["spd"]
+    r4.players["h"] = p4
+    r4.player_order = ["h"]; r4.turn_index = 0
+    await r4.handle_end_turn("h")
+    check("golpe: expira no fim do turno sem uso", p4.get("tecnica_golpe_decisivo_armado") is False)
+
+    # [26] Sorte
+    print("\n[26] Sorte")
+    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1; r._is_turn = lambda pid: True
+    p = hero("warrior", "tecnica_sorte"); p["pos"] = [0, 0]
+    p["atk_bonus"] = 0
+    p["weapon"] = {"id": "machado_basico", "name": "Machado", "die": "1d6", "stat": "str_"}
+    r.players["h"] = p
+    r.monsters = {"m1": {"id": "m1", "name": "Alvo", "nome": "Alvo", "pos": [0, 1],
+                         "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
+    r._rolar_ataque = lambda atk, ac, v=False, d=False: (False, 2, 2, False, None)   # erra
+    await r.handle_attack("h", "m1")
+    check("sorte: erro guarda ultimo_ataque_perdido", p.get("ultimo_ataque_perdido") is not None)
+    check("sorte: alvo guardado é o m1", p["ultimo_ataque_perdido"]["target_id"] == "m1")
+
+    async def _mdies(*a, **k): return None
+    r._monster_dies = _mdies
+    r._golpe_raw = lambda p_, raw: raw
+    r._rolar_ataque = lambda atk, ac, v=False, d=False: (True, 15, 15, False, None)   # reroll acerta
+    hp0 = r.monsters["m1"]["hp"]
+    await r.handle_usar_tecnica("h", "tecnica_sorte")
+    check("sorte: reroll acerta e aplica dano", r.monsters["m1"]["hp"] < hp0)
+    check("sorte: limpa ultimo_ataque_perdido após usar", p.get("ultimo_ataque_perdido") is None)
+    check("sorte: recarga setada", r.tecnica_restante(p, "tecnica_sorte") == 10)
+
+    # Prova stored-vs-live: o reroll TEM que usar o eff_atk CONGELADO no momento
+    # do erro original, e não recomputar a partir do atk_bonus atual do jogador.
+    # Fluxo: erra um ataque de verdade via handle_attack (eff_atk calculado com
+    # atk_bonus=0 → guardado em ultimo_ataque_perdido["eff_atk"]); DEPOIS mudamos
+    # p["atk_bonus"] para um valor bem diferente (99) — se o código relesse o
+    # estado ao vivo em vez do dict congelado, o reroll enxergaria esse 99. Em
+    # vez de mockar _rolar_ataque com um valor de retorno fixo (o que mascararia
+    # a diferença), capturamos o argumento `atk` recebido e comparamos com o
+    # eff_atk que foi de fato gravado no dict — provando que usar_tecnica lê
+    # perdido["eff_atk"] (congelado) e não toca p["atk_bonus"] de novo.
+    rs = setup(); rs.current_pid = lambda: "h"; rs.round_num = 1; rs._is_turn = lambda pid: True
+    ps = hero("warrior", "tecnica_sorte"); ps["pos"] = [0, 0]
+    ps["atk_bonus"] = 0
+    ps["weapon"] = {"id": "machado_basico", "name": "Machado", "die": "1d6", "stat": "str_"}
+    rs.players["h"] = ps
+    rs.monsters = {"m1": {"id": "m1", "name": "Alvo", "nome": "Alvo", "pos": [0, 1],
+                          "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
+    rs._rolar_ataque = lambda atk, ac, v=False, d=False: (False, 2, 2 + atk, False, None)   # erra
+    await rs.handle_attack("h", "m1")
+    eff_atk_congelado = ps["ultimo_ataque_perdido"]["eff_atk"]
+    check("sorte(stored-vs-live): eff_atk foi congelado no miss", eff_atk_congelado == 0)
+
+    # Muda o stat AO VIVO depois do erro — se o reroll recomputasse, usaria 99.
+    ps["atk_bonus"] = 99
+
+    atk_capturado = {}
+    def _rolar_captura(atk, ac, v=False, d=False):
+        atk_capturado["atk"] = atk
+        return (True, 15, 15 + atk, False, None)
+    rs._rolar_ataque = _rolar_captura
+    rs._monster_dies = _mdies
+    rs._golpe_raw = lambda p_, raw: raw
+    await rs.handle_usar_tecnica("h", "tecnica_sorte")
+    check("sorte(stored-vs-live): reroll usa o eff_atk CONGELADO, não o atk_bonus ao vivo",
+          atk_capturado.get("atk") == eff_atk_congelado and atk_capturado.get("atk") != 99)
+
+    # Sem erro recente: recusa educadamente.
+    r2 = setup(); r2.current_pid = lambda: "h"; r2._is_turn = lambda pid: True
+    p2 = hero("warrior", "tecnica_sorte"); r2.players["h"] = p2
+    await r2.handle_usar_tecnica("h", "tecnica_sorte")
+    check("sorte: recusa sem ataque recente", "Nenhum ataque recente" in (r2._errs[-1] if r2._errs else ""))
+
+    # Limpo no fim do turno.
+    r3 = setup(); r3.current_pid = lambda: "h"
+    p3 = hero("warrior"); p3["ultimo_ataque_perdido"] = {"target_id": "m1"}; p3["moves_left"] = p3["spd"]
+    r3.players["h"] = p3; r3.player_order = ["h"]; r3.turn_index = 0
+    await r3.handle_end_turn("h")
+    check("sorte: ultimo_ataque_perdido limpo no fim do turno", p3.get("ultimo_ataque_perdido") is None)
+
+    # [27] Último Esforço — abertura da sub-fase
+    print("\n[27] Último Esforço — abertura")
+    r = setup(); r.current_pid = lambda: "outro"; r.round_num = 3
+    p = hero("warrior", "tecnica_ultimo_esforco"); p["hp"] = 10; p["alive"] = True; p["spd"] = 6
+    r.players["h"] = p
+    r.players["outro"] = hero("cleric"); r.players["outro"]["id"] = "outro"
+    r.player_order = ["h", "outro"]
+
+    # Não sobrescrevemos _abrir_ultimo_esforco — deixamos rodar de verdade, mas
+    # fechamos a janela "de fora" via uma task concorrente logo após ela abrir.
+    # IMPORTANTE: hp=1/ativo=True só valem ENQUANTO a janela está aberta — uma
+    # vez que ela fecha (aqui, via este stub; na Task 6, via handle_end_turn de
+    # verdade), _player_dies cai no fluxo normal de morte (hp=0/alive=False).
+    # Por isso o check de "HP=1" precisa rodar DENTRO da task concorrente, no
+    # momento em que a janela está detectada aberta — não depois que
+    # _player_dies() já retornou (nesse ponto a morte já foi finalizada).
+    async def _fechar_logo():
+        while r.last_stand_pid != "h":
+            await asyncio.sleep(0)
+        check("último esforço: HP=1 enquanto a janela está aberta", p["hp"] == 1)
+        check("último esforço: ainda vivo durante a janela", p["alive"] is True)
+        check("último esforço: flag ativa durante a janela", p.get("ultimo_esforco_ativo") is True)
+        r.players["h"]["ultimo_esforco_turnos_restantes"] = 0
+        r.last_stand_pid = None
+        r.last_stand_event.set()
+    asyncio.create_task(_fechar_logo())
+    await r._player_dies("h")
+    check("último esforço: morte finalizada após a janela fechar", p["alive"] is False)
+    check("último esforço: flag ativa desligada ao fechar", p.get("ultimo_esforco_ativo") is False)
+    check("último esforço: recarga setada", r.tecnica_restante(p, "tecnica_ultimo_esforco") == 10)
+
+    # _is_turn aceita o pid em último esforço mesmo sem ser current_pid()
+    r2 = setup(); r2.current_pid = lambda: "outro"
+    r2.last_stand_pid = "h"
+    check("último esforço: _is_turn aceita last_stand_pid", r2._is_turn("h") is True)
+    check("último esforço: _is_turn normal p/ outros", r2._is_turn("ninguem") is False)
+
+    # Não sobrepõe uma janela já aberta de OUTRO herói (2 mortes na mesma fase).
+    r3 = setup(); r3.current_pid = lambda: "z"; r3.round_num = 1
+    r3.last_stand_pid = "outro_heroi"   # janela já ativa de outro jogador
+    p3 = hero("warrior", "tecnica_ultimo_esforco"); p3["hp"] = 0; p3["alive"] = True
+    r3.players["h"] = p3
+    await r3._player_dies("h")
+    check("último esforço: 2ª morte simultânea não abre 2ª janela", p3["alive"] is False and p3["hp"] == 0)
+    check("último esforço: janela original preservada", r3.last_stand_pid == "outro_heroi")
+    check("último esforço: recarga NÃO consumida (técnica não disparou)",
+          r3.tecnica_restante(p3, "tecnica_ultimo_esforco") == 0)
+
+    # [27b] Último Esforço — fechamento via end_turn (2 mini-turnos)
+    print("\n[27b] Último Esforço — fechamento")
+    r3 = setup(); r3.current_pid = lambda: "outro"; r3.round_num = 1
+    p3 = hero("warrior", "tecnica_ultimo_esforco"); p3["hp"] = 1; p3["alive"] = True; p3["spd"] = 6
+    r3.players["h"] = p3
+    r3.last_stand_pid = "h"
+    r3.last_stand_event = asyncio.Event()
+    p3["ultimo_esforco_ativo"] = True
+    p3["ultimo_esforco_turnos_restantes"] = 2
+    check("fechamento: is_turn aceita antes de fechar", r3._is_turn("h") is True)
+    await r3.handle_end_turn("h")   # fecha o 1º mini-turno
+    check("fechamento: 1 mini-turno restante", p3["ultimo_esforco_turnos_restantes"] == 1)
+    check("fechamento: janela ainda aberta", r3.last_stand_pid == "h")
+    check("fechamento: moves_left resetado p/ o 2º mini-turno", p3["moves_left"] == p3["spd"])
+    await r3.handle_end_turn("h")   # fecha o 2º mini-turno
+    check("fechamento: janela fecha de vez", r3.last_stand_pid is None)
+    check("fechamento: event sinalizado", r3.last_stand_event.is_set())
+
+    # [27c] Último Esforço — ciclo PONTA-A-PONTA: morte real → 2 mini-turnos
+    # fechados via handle_end_turn REAL (não stub) → _player_dies (suspensa
+    # esse tempo todo no await do Event) retoma e finaliza a morte. Isso
+    # exercita exatamente a passagem de bastão entre corotinas que o teste
+    # [27] (stub sintético) e o [27b] (janela construída à mão) cobrem só em
+    # metades — aqui é o ciclo completo em uma única execução.
+    print("\n[27c] Último Esforço — ciclo ponta-a-ponta (morte real + 2 end_turn reais)")
+    r5 = setup(); r5.current_pid = lambda: "outro"; r5.round_num = 5
+    p5 = hero("warrior", "tecnica_ultimo_esforco"); p5["hp"] = 10; p5["alive"] = True; p5["spd"] = 6
+    r5.players["h"] = p5
+    r5.players["outro"] = hero("cleric"); r5.players["outro"]["id"] = "outro"
+    # handle_end_turn intercepta ANTES da lógica normal de avanço de turno
+    # (o branch last_stand_pid==pid retorna cedo — ver comentário no server.py),
+    # então não precisamos de player_order/turn_index "reais" para as 2 chamadas
+    # dentro da janela; setamos mesmo assim por realismo/robustez.
+    r5.player_order = ["h", "outro"]; r5.turn_index = 0
+
+    janela_estado = {"apos_1o_end_turn": None, "apos_2o_end_turn": None}
+
+    async def _fechar_via_end_turn_real():
+        # Espera a janela abrir de verdade (via _abrir_ultimo_esforco dentro
+        # de _player_dies, que está suspensa lá embaixo em last_stand_event.wait()).
+        while r5.last_stand_pid != "h":
+            await asyncio.sleep(0)
+        # 1ª chamada REAL a handle_end_turn — fecha o 1º mini-turno.
+        await r5.handle_end_turn("h")
+        janela_estado["apos_1o_end_turn"] = {
+            "last_stand_pid": r5.last_stand_pid,
+            "moves_left": p5["moves_left"],
+            "turnos_restantes": p5.get("ultimo_esforco_turnos_restantes"),
+        }
+        # 2ª chamada REAL a handle_end_turn — fecha o 2º mini-turno e
+        # dispara last_stand_event.set(), liberando _player_dies. Capturamos
+        # last_stand_pid IMEDIATAMENTE ao retornar (sem sleep(0) antes): ele já
+        # foi zerado sincronamente dentro de _fechar_mini_turno_ultimo_esforco,
+        # antes do .set() — não esperamos aqui para não perder a corrida contra
+        # a retomada de _player_dies() (que finaliza a morte assim que puder
+        # rodar de novo).
+        await r5.handle_end_turn("h")
+        janela_estado["apos_2o_end_turn"] = {"last_stand_pid": r5.last_stand_pid}
+
+    asyncio.create_task(_fechar_via_end_turn_real())
+    await r5._player_dies("h")   # é isto que aciona todo o ciclo
+
+    # Depois que _player_dies() retorna, a morte já foi finalizada de verdade.
+    check("ponta-a-ponta: morte finalizada (alive=False)", p5["alive"] is False)
+    check("ponta-a-ponta: morte finalizada (hp=0)", p5["hp"] == 0)
+    check("ponta-a-ponta: flag ativa desligada", p5.get("ultimo_esforco_ativo") is False)
+    check("ponta-a-ponta: recarga da técnica setada (10 rodadas)",
+          r5.tecnica_restante(p5, "tecnica_ultimo_esforco") == 10)
+
+    # Estado capturado DENTRO da task concorrente, nos momentos certos.
+    apos1 = janela_estado["apos_1o_end_turn"]
+    apos2 = janela_estado["apos_2o_end_turn"]
+    check("ponta-a-ponta: após o 1º end_turn real, janela ainda aberta",
+          apos1 is not None and apos1["last_stand_pid"] == "h")
+    check("ponta-a-ponta: após o 1º end_turn real, moves_left resetado",
+          apos1 is not None and apos1["moves_left"] == p5["spd"])
+    check("ponta-a-ponta: após o 1º end_turn real, 1 mini-turno restante",
+          apos1 is not None and apos1["turnos_restantes"] == 1)
+    check("ponta-a-ponta: após o 2º end_turn real, janela fechada",
+          apos2 is not None and apos2["last_stand_pid"] is None)
+
+    # [28] Último Esforço — proibição de auto-cura
+    print("\n[28] Último Esforço — sem auto-cura")
+    r = setup(); r.current_pid = lambda: "h"; r._is_turn = lambda pid: True
+    p = hero("warrior"); p["ultimo_esforco_ativo"] = True; p["hp"] = 1; p["max_hp"] = 20
+    p["bag"] = [{"id": "pocao1", "effect": "heal", "value": 10, "emoji": "🧪", "name": "Poção"}]
+    r.players["h"] = p
+    await r.handle_use_item("h", "pocao1")
+    check("último esforço: recusa poção de cura", p["hp"] == 1
+          and "curar" in (r._errs[-1] if r._errs else "").lower())
+
+    r2 = setup(); r2.current_pid = lambda: "h"; r2._is_turn = lambda pid: True
+    lewis = hero("cleric"); lewis["ultimo_esforco_ativo"] = True; lewis["hp"] = 1; lewis["max_hp"] = 20
+    lewis["fome"] = 20; lewis["sede"] = 20
+    r2.players["h"] = lewis
+    await r2.handle_cura("h", {"target_id": "h", "num_dados": 1})
+    check("último esforço: recusa Cura em si mesmo", lewis["hp"] == 1)
+
+    r3 = setup(); r3.current_pid = lambda: "h"; r3._is_turn = lambda pid: True
+    lewis3 = hero("cleric"); lewis3["ultimo_esforco_ativo"] = True; lewis3["hp"] = 1; lewis3["max_hp"] = 20
+    lewis3["fome"] = 20; lewis3["sede"] = 20; lewis3["pos"] = [0, 0]
+    ally3 = make_player("a", "Ana", "warrior", 1); ally3["alive"] = True; ally3["hp"] = 1; ally3["max_hp"] = 20; ally3["pos"] = [1, 0]
+    r3.players["h"] = lewis3; r3.players["a"] = ally3
+    r3._tem_linha_de_visao = lambda a, b: True
+    await r3.handle_cura_area("h", {"num_dados": 1})
+    check("último esforço: Cura em Área não cura a si mesmo", lewis3["hp"] == 1)
+    check("último esforço: Cura em Área cura os aliados normalmente", ally3["hp"] > 1)
+
+    # [28b] Último Esforço — poção de cura não gasta ação bônus/recursos à toa
+    print("\n[28b] Último Esforço — poção recusada não consome ação bônus")
+    r = setup(); r.current_pid = lambda: "h"; r._is_turn = lambda pid: True
+    p = hero("warrior"); p["ultimo_esforco_ativo"] = True; p["hp"] = 1; p["max_hp"] = 20
+    p["bag"] = [{"id": "pocao1", "effect": "heal", "value": 10, "emoji": "🧪", "name": "Poção"}]
+    fome_antes, sede_antes = p["fome"], p["sede"]
+    r.players["h"] = p
+    await r.handle_use_item("h", "pocao1")
+    check("poção recusada: hp não muda", p["hp"] == 1)
+    check("poção recusada: ação bônus NÃO consumida", not p.get("bonus_action_used"))
+    check("poção recusada: fome intacta", p["fome"] == fome_antes)
+    check("poção recusada: sede intacta", p["sede"] == sede_antes)
+    check("poção recusada: item continua na bolsa (nada foi gasto)",
+          any(i["id"] == "pocao1" for i in p["bag"]))
+
+    # [28c] Último Esforço — equipar item maxhp não faz top-up de HP (fecha a
+    # brecha do code review: equipar/reequipar é ação livre, mas o BUMP de HP
+    # imediato ao equipar é cura disfarçada).
+    print("\n[28c] Último Esforço — equipar item maxhp não cura")
+    r = setup(); r.current_pid = lambda: "h"; r._is_turn = lambda pid: True
+    p = hero("warrior"); p["ultimo_esforco_ativo"] = True; p["hp"] = 1; p["max_hp"] = 20
+    ring = next(i for i in S.SHOP_MERCHANT if i["id"] == "ring_vita")
+    assert ring["effect"] == "maxhp" and ring["value"] == 5
+    p["bag"] = [dict(ring)]
+    r.players["h"] = p
+    await r.handle_equip_from_bag("h", 0)
+    check("equipar maxhp em Último Esforço: hp NÃO sobe", p["hp"] == 1)
+    check("equipar maxhp em Último Esforço: max_hp sobe normalmente", p["max_hp"] == 25)
+    check("equipar maxhp em Último Esforço: item foi para o gear (ring1/ring2)",
+          (p["gear"].get("ring1") or {}).get("id") == "ring_vita"
+          or (p["gear"].get("ring2") or {}).get("id") == "ring_vita")
+
+    # Reequipar (desequipar + equipar de novo) durante a janela também não deve
+    # empilhar HP — a trava reavalia ultimo_esforco_ativo a cada chamada.
+    slot_key = "ring1" if (p["gear"].get("ring1") or {}).get("id") == "ring_vita" else "ring2"
+    await r.handle_unequip("h", slot_key)
+    check("desequipar maxhp em Último Esforço: hp não muda", p["hp"] == 1)
+    check("desequipar maxhp em Último Esforço: max_hp volta ao normal", p["max_hp"] == 20)
+    novo_slot = next(i for i, it in enumerate(p["bag"]) if it["id"] == "ring_vita")
+    await r.handle_equip_from_bag("h", novo_slot)
+    check("reequipar maxhp em Último Esforço: hp ainda não sobe (sem stacking)", p["hp"] == 1)
+    check("reequipar maxhp em Último Esforço: max_hp sobe de novo (não é cura)", p["max_hp"] == 25)
+
+    # Fora do Último Esforço, o comportamento normal (top-up de HP ao equipar)
+    # continua intacto — evita regressão no fluxo comum.
+    print("\n[28d] Equipar item maxhp fora de Último Esforço continua curando (regressão)")
+    r = setup(); r.current_pid = lambda: "h"; r._is_turn = lambda pid: True
+    p = hero("warrior"); p["hp"] = 10; p["max_hp"] = 20
+    p["bag"] = [dict(ring)]
+    r.players["h"] = p
+    await r.handle_equip_from_bag("h", 0)
+    check("equipar maxhp fora de Último Esforço: hp sobe (top-up normal)", p["hp"] == 15)
+    check("equipar maxhp fora de Último Esforço: max_hp sobe", p["max_hp"] == 25)
+
+    # Desconexão durante a janela fecha imediatamente (não trava o jogo).
+    r4 = setup(); r4.current_pid = lambda: "outro"
+    p4 = hero("warrior"); p4["hp"] = 1; p4["alive"] = True; p4["connected"] = True
+    r4.players["h"] = p4
+    r4.host_pid = "outro"
+    r4.players["outro"] = hero("cleric"); r4.players["outro"]["id"] = "outro"; r4.players["outro"]["connected"] = True
+    r4.last_stand_pid = "h"
+    r4.last_stand_event = asyncio.Event()
+    p4["ultimo_esforco_ativo"] = True
+    p4["ultimo_esforco_turnos_restantes"] = 2
+    await r4.handle_disconnect_em_jogo("h")
+    check("desconexão: fecha a janela do Último Esforço", r4.last_stand_pid is None)
+    check("desconexão: event sinalizado", r4.last_stand_event.is_set())
+
+    # [29] Recusa ativação manual de técnicas automáticas
+    print("\n[29] Recusa ativação manual (automáticas)")
+    for tid in ("tecnica_instinto_sobrevivencia", "tecnica_ultimo_esforco"):
+        r = setup(); r.current_pid = lambda: "h"
+        p = hero("warrior", tid); r.players["h"] = p
+        f0 = p["fome"]
+        await r.handle_usar_tecnica("h", tid)
+        check(f"{tid}: recusa uso manual", "automática" in (r._errs[-1] if r._errs else "").lower())
+        check(f"{tid}: não gasta fome/sede", p["fome"] == f0)
+        check(f"{tid}: não ativa recarga", r.tecnica_restante(p, tid) == 0)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
