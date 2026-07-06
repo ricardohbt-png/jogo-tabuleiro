@@ -803,6 +803,33 @@ async def main():
     check("ponta-a-ponta: após o 2º end_turn real, janela fechada",
           apos2 is not None and apos2["last_stand_pid"] is None)
 
+    # [28] Último Esforço — proibição de auto-cura
+    print("\n[28] Último Esforço — sem auto-cura")
+    r = setup(); r.current_pid = lambda: "h"; r._is_turn = lambda pid: True
+    p = hero("warrior"); p["ultimo_esforco_ativo"] = True; p["hp"] = 1; p["max_hp"] = 20
+    p["bag"] = [{"id": "pocao1", "effect": "heal", "value": 10, "emoji": "🧪", "name": "Poção"}]
+    r.players["h"] = p
+    await r.handle_use_item("h", "pocao1")
+    check("último esforço: recusa poção de cura", p["hp"] == 1
+          and "curar" in (r._errs[-1] if r._errs else "").lower())
+
+    r2 = setup(); r2.current_pid = lambda: "h"; r2._is_turn = lambda pid: True
+    lewis = hero("cleric"); lewis["ultimo_esforco_ativo"] = True; lewis["hp"] = 1; lewis["max_hp"] = 20
+    lewis["fome"] = 20; lewis["sede"] = 20
+    r2.players["h"] = lewis
+    await r2.handle_cura("h", {"target_id": "h", "num_dados": 1})
+    check("último esforço: recusa Cura em si mesmo", lewis["hp"] == 1)
+
+    r3 = setup(); r3.current_pid = lambda: "h"; r3._is_turn = lambda pid: True
+    lewis3 = hero("cleric"); lewis3["ultimo_esforco_ativo"] = True; lewis3["hp"] = 1; lewis3["max_hp"] = 20
+    lewis3["fome"] = 20; lewis3["sede"] = 20; lewis3["pos"] = [0, 0]
+    ally3 = make_player("a", "Ana", "warrior", 1); ally3["alive"] = True; ally3["hp"] = 1; ally3["max_hp"] = 20; ally3["pos"] = [1, 0]
+    r3.players["h"] = lewis3; r3.players["a"] = ally3
+    r3._tem_linha_de_visao = lambda a, b: True
+    await r3.handle_cura_area("h", {"num_dados": 1})
+    check("último esforço: Cura em Área não cura a si mesmo", lewis3["hp"] == 1)
+    check("último esforço: Cura em Área cura os aliados normalmente", ally3["hp"] > 1)
+
     # Desconexão durante a janela fecha imediatamente (não trava o jogo).
     r4 = setup(); r4.current_pid = lambda: "outro"
     p4 = hero("warrior"); p4["hp"] = 1; p4["alive"] = True; p4["connected"] = True

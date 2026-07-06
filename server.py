@@ -7407,6 +7407,9 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": f"Fome insuficiente — precisa 🍖{custo_fome}."}); return
 
         alvo = self.players.get((data or {}).get("target_id"))
+        if p.get("ultimo_esforco_ativo") and (data or {}).get("target_id") == pid:
+            await self.send_to(pid, {"type": "error",
+                "msg": "🔥 Em Último Esforço você não pode se curar!"}); return
         if not alvo or not alvo.get("alive"):
             await self.send_to(pid, {"type": "error", "msg": "Aliado inválido."}); return
         if not self._no_raio(p, alvo, alcance_tiles):
@@ -7464,6 +7467,7 @@ class GameRoom:
         curados = []
         for aliado in self.players.values():
             if not aliado.get("alive"): continue
+            if aliado["id"] == pid and p.get("ultimo_esforco_ativo"): continue
             if not self._no_raio(p, aliado, raio): continue
             # A onda curativa não atravessa paredes — só aliados visíveis
             if not self._tem_linha_de_visao(p["pos"], aliado["pos"]): continue
@@ -11024,6 +11028,9 @@ class GameRoom:
                 return  # já usou ação bônus neste turno — abortar sem consumir o item
 
         if effect == "heal":
+            if p.get("ultimo_esforco_ativo"):
+                await self.send_to(pid, {"type": "error",
+                    "msg": "🔥 Em Último Esforço você não pode se curar!"}); return
             p["hp"] = min(p["max_hp"], p["hp"] + val)
             await self.gm_say(f"{item['emoji']} **{p['name']}** usa **{item['name']}** e recupera **{val}** HP!")
         elif effect == "atk_bonus":
