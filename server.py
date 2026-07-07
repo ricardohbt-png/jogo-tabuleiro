@@ -11237,6 +11237,7 @@ class GameRoom:
         """Tica o dano progressivo (incendiária) uma vez por rodada."""
         for arm in list(self.armadilhas):
             restantes = []
+            tipo_meta = ARMADILHAS.get(arm["tipo"], {})
             for ef in arm.get("efeitos_ativos", []):
                 aid = ef["alvo_id"]
                 alvo = self.players.get(aid) or self.monsters.get(aid)
@@ -11245,6 +11246,11 @@ class GameRoom:
                 if alvo and (alvo.get("alive") or alvo.get("hp", 0) > 0):
                     dano = self._rolar_dado(ef["valor"])
                     await self._dano_em_alvo(alvo, dano, ef.get("elemento", "fogo"), arm.get("criador"))
+                    await self._enviar_trap_result(
+                        alvo, tipo_meta.get("nome", arm["tipo"]), tipo_meta.get("icone", "🔥"),
+                        sucesso=False, dano=dano, metade=False,
+                        descricao=f"A {tipo_meta.get('nome', 'armadilha')} continua causando dano.",
+                        efeitos_extra=[], tick=True)
                 ef["rodadas_restantes"] -= 1
                 if ef["rodadas_restantes"] > 0:
                     restantes.append(ef)

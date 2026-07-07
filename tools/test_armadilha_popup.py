@@ -140,6 +140,23 @@ async def main():
     check("p2 resistiu: metade=True, ainda sofre dano reduzido (6→3)",
           m2[0]["sucesso"] is True and m2[0]["metade"] is True and m2[0]["dano"] == 3)
 
+    # ── [4] Tick progressivo (Incendiária) ──────────────────────────────────────
+    print("\n[4] Armadilha Incendiária — tick de dano progressivo")
+    r = setup()
+    p = make_player("p1", "Victor", "warrior", 0); p["ref_"] = 0; r.players["p1"] = p
+    arm = {"id": "i1", "tipo": "armadilha_incendiaria", "pos": [5, 5], "ativada": False}
+    r.armadilhas = [arm]
+    _o = server.random.randint; server.random.randint = fake_rng(1)   # falha o save inicial
+    await r._disparar_armadilha(p, arm)
+    server.random.randint = _o
+    r.round_num += 1
+    await r._processar_efeitos_armadilha_turno()
+    msgs = trap_msgs(r, "p1")
+    ticks = [m for m in msgs if m.get("tick")]
+    check("disparo inicial gerou popup (tick=False)", msgs and msgs[0]["tick"] is False)
+    check("dano progressivo gerou ao menos 1 popup de tick", len(ticks) >= 1)
+    check("popup(s) de tick têm dano > 0", all(t["dano"] > 0 for t in ticks))
+
     print(f"\n===== RESULTADO: {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 
