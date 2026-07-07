@@ -13467,6 +13467,7 @@ function _executarProximoPasso(){
 }
 
 function _animarPasso(peao, destino, onPasso){
+  if (destino.rotY !== undefined) peao.rotation.y = destino.rotY;   // vira primeiro, antes de andar
   const inicio = { x: peao.position.x, y: peao.position.y, z: peao.position.z };
   const destinoWorld = casaParaMundo(destino.x, destino.z);
   let startTime = null;
@@ -20082,7 +20083,7 @@ function handleTileClick(tx, ty){
         // Caminho absoluto (passos relativos → casas {x,z}) p/ a animação.
         let cx = myP.pos[0], cy = myP.pos[1];
         const caminho = [];
-        for(const [dx,dy] of action.path){ cx+=dx; cy+=dy; caminho.push({x:cx, z:cy}); }
+        for(const [dx,dy] of action.path){ cx+=dx; cy+=dy; caminho.push({x:cx, z:cy, rotY:_facingToRotY([dx,dy])}); }
         // Envia os passos ao servidor JÁ — assim a névoa é revelada (server-side)
         // em paralelo à animação local, em vez de só iniciar o round-trip DEPOIS
         // dela. Isso elimina a demora de "continuidade do mapa" ao caminhar.
