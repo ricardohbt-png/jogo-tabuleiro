@@ -5228,6 +5228,7 @@ class GameRoom:
             else:
                 ox, oy = offsets[i % len(offsets)]
                 self.players[pid2]["pos"] = [entrance["cx"] + ox, entrance["cy"] + oy]
+            self.players[pid2].pop("facing", None)
             self.players[pid2]["moves_left"]       = self.players[pid2]["spd"]
             self.players[pid2]["action_done"]      = False
             self.players[pid2]["bonus_action_used"] = False

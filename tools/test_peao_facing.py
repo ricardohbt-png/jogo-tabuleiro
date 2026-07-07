@@ -50,6 +50,13 @@ async def main():
     await r.handle_move("p1", 0, -1)
     check("facing = [0,-1] (norte) após o passo seguinte", p.get("facing") == [0, -1])
 
+    print("\n[2] enter_dungeon reseta facing ao (re)entrar na masmorra")
+    check("facing setado antes do reset (sanity)", "facing" in p)
+    r.phase = "city"                   # simula volta pra cidade
+    r.dungeon_generated = True         # reentrada na MESMA masmorra (nova=False)
+    await r.enter_dungeon("p1")
+    check("facing limpo ao reentrar na masmorra", "facing" not in r.players["p1"])
+
     print(f"\n{'='*50}\nPASS={PASS} FAIL={FAIL}")
     if FAIL: sys.exit(1)
 
