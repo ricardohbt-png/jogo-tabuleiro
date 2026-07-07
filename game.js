@@ -10526,10 +10526,11 @@ function abrirPainelLoot({ titulo, gold, items, onPegarOuro, onPegarItem }) {
 // andada — o buraco procedural + uma colocável sobrepostos).
 const _trapQueue = [];
 let _trapShowTimer = null;
+let _trapPopupOpen = false;
 
 function queueTrapResult(msg){
   _trapQueue.push(msg);
-  if(_trapShowTimer) return;   // já tem um agendado/aberto
+  if(_trapShowTimer || _trapPopupOpen) return;   // já tem um agendado ou aberto
   _trapShowTimer = setTimeout(_advanceTrapQueue, 1200);
 }
 
@@ -10570,9 +10571,11 @@ function _showTrapResult(msg){
   }
 
   $('trap-overlay').classList.add('open');
+  _trapPopupOpen = true;
 }
 
 function closeTrapWindow(){
+  _trapPopupOpen = false;
   $('trap-overlay').classList.remove('open');
   if(_trapQueue.length) _trapShowTimer = setTimeout(_advanceTrapQueue, 300);
 }
