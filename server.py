@@ -14925,6 +14925,7 @@ async def handler(ws):
                                    (room.rooms[0] if room.rooms else None))
                         if ent:
                             alvo["pos"] = [ent["cx"], ent["cy"]]
+                            alvo.pop("facing", None)
                         await ws.send(json.dumps({"type": "game_start"}))
                         await ws.send(json.dumps({"type": "enter_dungeon"}))
                         room._iniciar_timer_turno()   # reativa o timer caso estivesse parado
