@@ -10580,6 +10580,16 @@ function closeTrapWindow(){
   if(_trapQueue.length) _trapShowTimer = setTimeout(_advanceTrapQueue, 300);
 }
 
+// Descarta popup/fila pendentes ao trocar de tela (cidade ↔ masmorra) — evita
+// que um trap_result de uma masmorra já abandonada apareça travando a tela nova.
+function _resetTrapPopup(){
+  _trapQueue.length = 0;
+  clearTimeout(_trapShowTimer);
+  _trapShowTimer = null;
+  _trapPopupOpen = false;
+  $('trap-overlay').classList.remove('open');
+}
+
 // Clique fora da caixa fecha o popup (só se o clique foi no fundo, não na caixa).
 $('trap-overlay').addEventListener('click', e => {
   if(e.target.id === 'trap-overlay') closeTrapWindow();
@@ -20101,6 +20111,7 @@ GS.on('gameStart', () => {
 
 GS.on('cityState', msg => {
   _hpSnapshot.clear();   // de volta à cidade: zera HP base p/ a próxima masmorra
+  _resetTrapPopup();     // sai da masmorra: descarta popup/fila de armadilha pendente
   // If returning from dungeon to city, tear down the 3D renderer first
   if(g3){ dispose3D(); mode3D = false; }
   // Ensure city screen is visible (covers both initial arrival and return from dungeon)
@@ -20127,6 +20138,7 @@ GS.on('shopResult',  msg =>
 GS.on('enterDungeon', () => {
   fecharFichaCidade();
   _hpSnapshot.clear();   // novo cenário: zera HP base (1º game_state não dispara som)
+  _resetTrapPopup();     // masmorra nova: descarta popup/fila de armadilha da anterior
   if(CITY_MODE==='image') destroyCityImage(); else destroyCity3D();
   // Tear down any leftover dungeon renderer from a previous run so the fresh
   // game_state rebuilds the scene from the correct (new) map. Combined with
