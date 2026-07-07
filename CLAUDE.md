@@ -139,6 +139,8 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 > `game_state` inclui `corpses` (cadáveres) e `armadilhas` (colocáveis — ver
 > abaixo). `animar_result` traz
 > `resultado`/`rolagem`/`d10_dezena`/`d10_unidade`/`chance`/`zona_hostil`/`animados`.
+> Cada jogador em `game_state.players[]` também traz `facing` (`[dx,dy]`,
+> ausente até o 1º passo — ver "Peão vira na direção do movimento" abaixo).
 
 > **Popup de resultado de armadilha:** ao cair numa armadilha (buraco
 > procedural genérico de `self.traps` ou qualquer uma das 8 do catálogo
