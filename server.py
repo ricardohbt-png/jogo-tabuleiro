@@ -5621,6 +5621,7 @@ class GameRoom:
             return
 
         p["pos"] = [nx, ny]
+        p["facing"] = [dx, dy]
         p["moves_left"] -= 1
         # Caminhar custa -1 sede UMA vez por turno (na 1ª casa andada), não por casa.
         if not p.get("moved_this_turn"):

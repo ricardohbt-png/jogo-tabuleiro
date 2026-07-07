@@ -1,0 +1,57 @@
+"""Peão vira na direção do movimento — facing do jogador.
+Roda da raiz: python tools/test_peao_facing.py"""
+import asyncio, sys, os, json
+try: sys.stdout.reconfigure(encoding="utf-8")
+except Exception: pass
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import server as S
+from server import GameRoom, make_player
+
+PASS = 0; FAIL = 0
+def check(name, cond):
+    global PASS, FAIL
+    if cond: PASS += 1; print(f"  ✅ {name}")
+    else:    FAIL += 1; print(f"  ❌ {name}")
+
+def fixture():
+    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    with open(os.path.join(base, "dungeons", "test_fase3.json"), encoding="utf-8") as f:
+        return json.load(f)
+
+def setup_authored():
+    r = GameRoom("TEST")
+    async def noop(*a, **k): pass
+    r.gm_say = noop; r.broadcast = noop; r.push_state = noop; r.send_to = noop
+    r.broadcast_city_state = noop
+    for pid, nome, cls in (("p1", "Victor", "warrior"), ("p2", "Pedro", "mage")):
+        r.players[pid] = make_player(pid, nome, cls, 0)
+    r.player_order = list(r.players.keys())
+    r.host_pid = "p1"
+    r.mode = "authored"; r.dungeon_def = fixture()
+    r.phase = "city"
+    return r
+
+async def main():
+    print("\n[1] handle_move grava facing = [dx,dy] a cada passo")
+    r = setup_authored()
+    await r.enter_dungeon("p1")
+    p = r.players["p1"]
+    check("facing ausente antes do 1º passo", "facing" not in p)
+
+    # Posição/tiles controlados: independe do layout real da fixture.
+    p["pos"] = [5, 5]
+    r.tiles[5][5] = S.FLOOR
+    r.tiles[5][6] = S.FLOOR
+    await r.handle_move("p1", 1, 0)
+    check("posição avançou 1 casa a leste", p["pos"] == [6, 5])
+    check("facing = [1,0] (leste)", p.get("facing") == [1, 0])
+
+    r.tiles[4][6] = S.FLOOR
+    await r.handle_move("p1", 0, -1)
+    check("facing = [0,-1] (norte) após o passo seguinte", p.get("facing") == [0, -1])
+
+    print(f"\n{'='*50}\nPASS={PASS} FAIL={FAIL}")
+    if FAIL: sys.exit(1)
+
+if __name__ == "__main__":
+    asyncio.run(main())
