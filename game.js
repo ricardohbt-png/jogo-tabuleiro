@@ -14373,7 +14373,7 @@ function _figureName(isMonster, classId, mType){
 // For class-select:  _pawnTexCache['_cs_mage'] = Texture
 const _pawnTexCache = {};
 
-// ── Miniaturas 3D (GLB) — geradas por gerar_miniaturas_3d.py ──────────────────
+// ── Miniaturas 3D (GLB) ─────────────────────────────────────────────────────
 // Malha com volume real (frente/costas texturizadas, espessura no perfil).
 // Cache de templates: clona por instância; texturas/geometrias compartilhadas.
 const _heroGLBCache  = {};   // classId -> THREE.Group (template) | 'erro'
@@ -14416,9 +14416,6 @@ function _loadHeroGLB(T, classId, cb) {
     }
   );
 }
-
-// GLB 3D desativado a pedido: heróis usam billboard 2D (frente.png) no tabuleiro
-// e na seleção. O preload das miniaturas GLB foi removido (era trabalho inútil).
 
 // Instancia a miniatura GLB dentro de grp. Retorna true se síncrono (cache),
 // false se o template ainda não está disponível (carrega e adiciona async).
