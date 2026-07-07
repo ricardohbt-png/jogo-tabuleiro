@@ -14462,12 +14462,28 @@ function _makeCharacterPawn3D(T, grp, classId, Y0, rotY, altura, onMissing) {
 // billboard se o GLB falhar ao carregar (onMissing).
 const _GLB_ENABLED_CLASSES = new Set(['paladin']);
 
-function _makeCharacterPawn(T, grp, classId, clr, Y0) {
+// Converte a direção do último passo ([dx,dy], grid — vem de player.facing)
+// num ângulo de rotação Y (radianos) pro peão GLB encarar aquele lado. Sem
+// direção conhecida (herói ainda não andou) cai no padrão Sul — mesmo valor
+// que rotY=0 já produzia antes desta feature (sem mudança visual pra quem
+// nunca se moveu). Valores calibrados visualmente na Task 5 deste plano —
+// se algum lado aparecer errado no teste manual, ajustar as constantes
+// abaixo (múltiplos de Math.PI/2) até bater.
+function _facingToRotY(facing) {
+  if (!facing) return 0;                // Sul (padrão)
+  const [fx, fy] = facing;
+  if (fy > 0) return 0;                 // Sul  (+gy)
+  if (fy < 0) return Math.PI;           // Norte (-gy)
+  if (fx > 0) return -Math.PI / 2;      // Leste (+gx)
+  return Math.PI / 2;                   // Oeste (-gx)
+}
+
+function _makeCharacterPawn(T, grp, classId, clr, Y0, rotY) {
   const cacheKey = classId || 'generic';
   const billboard = () => _makeBillboardSprite(T, grp,
     `assets/pawns/${cacheKey}/frente.png`, '__spr_' + cacheKey, Y0);
   if (_GLB_ENABLED_CLASSES.has(classId)) {
-    _makeCharacterPawn3D(T, grp, classId, Y0, 0, _BB_H_ALVO, billboard);
+    _makeCharacterPawn3D(T, grp, classId, Y0, rotY || 0, _BB_H_ALVO, billboard);
     return;
   }
   billboard();
