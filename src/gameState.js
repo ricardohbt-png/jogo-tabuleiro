@@ -1041,6 +1041,10 @@ const GS = (() => {
         _emit('diceRoll', msg);
         break;
 
+      case 'trap_result':
+        _emit('trapResult', msg);
+        break;
+
       case 'animar_result':
         // Resultado autoritativo de Animar Mortos: sincroniza a lista de
         // animados do Pedro (modelo client-side) e repassa ao renderer, que
