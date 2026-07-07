@@ -14006,9 +14006,10 @@ function renderMap3D(state){
     const pSel = g3.selectedPos && g3.selectedPos[0]===px && g3.selectedPos[1]===py;
     const isCur = p.id===state.current_turn;
     obterFig(`pl:${p.id}`,
-      JSON.stringify([p.color, p.class_id, p.id===GS.myPid, isCur, !!pSel]),
+      JSON.stringify([p.color, p.class_id, p.id===GS.myPid, isCur, !!pSel, p.facing]),
       () => {
-        const f = build3DFig(p.color, false, p.id===GS.myPid, isCur, px, py, p.class_id, null, pSel);
+        const f = build3DFig(p.color, false, p.id===GS.myPid, isCur, px, py, p.class_id, null, pSel,
+          undefined, undefined, undefined, p.facing);
         f.userData.pid = p.id;          // permite getPeaoMesh(pid) p/ animação
         return f;
       }, px, py);
@@ -14687,7 +14688,8 @@ function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected){
 // isMe      — local player?          isCurrent — active turn?
 // gx,gy     — grid coordinates       classId   — 'warrior'|'mage'|…
 // mType     — 'goblin'|'orc'|…      (monster only)
-// mOriented/mFacing — monstro de 2 casas em pé cobrindo as 2 casas (croc/lagarto)
+// mOriented/mFacing — monstro de 2 casas em pé cobrindo as 2 casas (croc/lagarto).
+// mFacing também é reaproveitado pro peão GLB de herói (direção do último passo).
 
 function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType, isSelected, mImage, mPorte, mOriented, mFacing){
   const T   = g3.T;
@@ -14802,7 +14804,7 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
       }
     }
   } else {
-    _makeCharacterPawn(T, grp, classId, clr, Y0);
+    _makeCharacterPawn(T, grp, classId, clr, Y0, _facingToRotY(mFacing));
   }
   });
 
