@@ -10520,6 +10520,94 @@ function abrirPainelLoot({ titulo, gold, items, onPegarOuro, onPegarItem }) {
   $('chest-overlay').classList.add('open');
 }
 
+// ── Popup de resultado de armadilha ─────────────────────────────────────────
+// Fila simples: se um novo trap_result chegar com o popup atual aberto/agendado,
+// entra na fila e aparece em sequência (caso raro: 2 armadilhas na mesma casa
+// andada — o buraco procedural + uma colocável sobrepostos).
+const _trapQueue = [];
+let _trapShowTimer = null;
+
+function queueTrapResult(msg){
+  _trapQueue.push(msg);
+  if(_trapShowTimer) return;   // já tem um agendado/aberto
+  _trapShowTimer = setTimeout(_advanceTrapQueue, 1200);
+}
+
+function _advanceTrapQueue(){
+  _trapShowTimer = null;
+  const msg = _trapQueue.shift();
+  if(!msg) return;
+  _showTrapResult(msg);
+}
+
+function _showTrapResult(msg){
+  $('trap-icon').textContent = msg.icone || '🪤';
+  $('trap-title').textContent = msg.nome || 'Armadilha';
+  $('trap-desc').textContent = msg.descricao || '';
+
+  const effectsEl = $('trap-effects');
+  effectsEl.innerHTML = '';
+  (msg.efeitos_extra || []).forEach(txt => {
+    const li = document.createElement('li');
+    li.textContent = txt;
+    effectsEl.appendChild(li);
+  });
+
+  const statusEl = $('trap-status');
+  if(msg.tick){
+    statusEl.className = 'trap-status trap-status--tick';
+    statusEl.textContent = `🔥 Dano contínuo: ${msg.dano}`;
+  } else if(msg.metade){
+    statusEl.className = 'trap-status trap-status--partial';
+    statusEl.textContent = '🟡 Você resistiu parcialmente!';
+  } else if(msg.sucesso){
+    statusEl.className = 'trap-status trap-status--success';
+    statusEl.textContent = '✅ Você escapou!';
+  } else {
+    statusEl.className = 'trap-status trap-status--fail';
+    statusEl.textContent = '❌ Você foi atingido!';
+    tocarSomArmadilha();
+  }
+
+  $('trap-overlay').classList.add('open');
+}
+
+function closeTrapWindow(){
+  $('trap-overlay').classList.remove('open');
+  if(_trapQueue.length) _trapShowTimer = setTimeout(_advanceTrapQueue, 300);
+}
+
+// Clique fora da caixa fecha o popup (só se o clique foi no fundo, não na caixa).
+$('trap-overlay').addEventListener('click', e => {
+  if(e.target.id === 'trap-overlay') closeTrapWindow();
+});
+
+// Esc fecha o popup se estiver aberto.
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && $('trap-overlay').classList.contains('open')) closeTrapWindow();
+});
+
+// Som curto de impacto ao FALHAR numa armadilha (grave/dissonante). Sucesso e
+// resultado parcial não têm som dedicado — o som do dado já cobre o momento.
+function tocarSomArmadilha(){
+  const ctx = getAudioContext();
+  if(!ctx || ctx.state !== 'running') return;
+  try{
+    const now = ctx.currentTime;
+    [196.00, 146.83].forEach((f, i) => {   // G3 → D3, dissonante e grave
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sawtooth';
+      o.frequency.value = f;
+      const t0 = now + i * 0.09;
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.22, t0 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.45);
+      o.connect(g); g.connect(_sfxBus());
+      o.start(t0); o.stop(t0 + 0.5);
+    });
+  } catch(e){}
+}
+
 // ── Histórico de rolagens — faixa fixa sob o cabeçalho do log do Mestre ─────
 // Os dados físicos somem em ~3 s; quem piscou ainda vê os últimos resultados
 // aqui (mantém as 6 rolagens mais recentes, mais nova primeiro).
@@ -20117,6 +20205,8 @@ GS.on('explosionArea', msg => {
 });
 
 GS.on('diceRoll',    msg  => { handleDiceRoll(msg); updateDiceHistory(msg); });
+
+GS.on('trapResult',  msg  => queueTrapResult(msg));
 
 // Resultado de Animar Mortos: sincroniza os animados no registro completo do
 // Pedro (game.js) e dispara a animação D100. Ao final, atualiza a ficha em jogo
