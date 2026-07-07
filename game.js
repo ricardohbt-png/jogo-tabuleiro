@@ -14421,9 +14421,9 @@ function _loadHeroGLB(T, classId, cb) {
 
 // Instancia a miniatura GLB dentro de grp. Retorna true se síncrono (cache),
 // false se o template ainda não está disponível (carrega e adiciona async).
-function _makeCharacterPawn3D(T, grp, classId, Y0, rotY, altura) {
+function _makeCharacterPawn3D(T, grp, classId, Y0, rotY, altura, onMissing) {
   const montar = tpl => {
-    if (!tpl) return;
+    if (!tpl) { if (onMissing) onMissing(); return; }
     const inst = tpl.clone();
     // Limite de 1 quadrado: a peça nunca ultrapassa o tile (1.0) no chão.
     const box = new T.Box3().setFromObject(inst);
@@ -14454,7 +14454,7 @@ function _makeCharacterPawn3D(T, grp, classId, Y0, rotY, altura) {
   };
   const cached = _heroGLBCache[classId];
   if (cached && cached !== 'erro') { montar(cached); return true; }
-  if (cached === 'erro') return false;
+  if (cached === 'erro') { if (onMissing) onMissing(); return false; }
   _loadHeroGLB(T, classId, montar);
   return true;   // virá async — não desenhar fallback por cima
 }
