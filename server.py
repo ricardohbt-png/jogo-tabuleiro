@@ -10820,10 +10820,23 @@ class GameRoom:
             await self.gm_say(f"🎲 Save {tipo['save']}: d20({d20}){sb_str}={stot} vs dif "
                               f"{tipo['dificuldade']} → {'evitou' if save_ok else 'falhou'}.")
             if not save_ok:
+                dano_total = 0
+                efeitos_extra = []
                 for ef in tipo["efeitos"]:
-                    await self._aplicar_efeito_armadilha(alvo, ef, arm)
+                    dano, texto = await self._aplicar_efeito_armadilha(alvo, ef, arm)
+                    dano_total += dano
+                    if texto:
+                        efeitos_extra.append(texto)
+                if dano_total:
+                    efeitos_extra.insert(0, f"💥 Sofreu {dano_total} de dano")
+                await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=False,
+                                                dano=dano_total, metade=False,
+                                                descricao=tipo["descricao"], efeitos_extra=efeitos_extra)
             else:
                 await self.gm_say(f"✅ **{alvo_nome}** evitou **{nome}** sem dano!")
+                await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=True,
+                                                dano=0, metade=False,
+                                                descricao=tipo["descricao"], efeitos_extra=[])
 
         # Persistência / visibilidade.
         if tipo.get("persiste"):
@@ -10860,6 +10873,10 @@ class GameRoom:
                 await self._aplicar_efeito_armadilha(alvo, {**ef, "metade": metade}, arm)
 
     async def _aplicar_efeito_armadilha(self, alvo, ef, arm):
+        """Aplica um efeito de armadilha em `alvo`. Retorna (dano_aplicado,
+        texto): `texto` é a linha pronta pro popup trap_result, ou None quando
+        o efeito não gera linha própria (ex.: dano progressivo agendado, cujo
+        dano aparece nos popups de tick de _processar_efeitos_armadilha_turno)."""
         tipo_ef = ef.get("tipo")
         alvo_nome = alvo.get("name") or alvo.get("nome", "Alvo")
 
@@ -10872,16 +10889,18 @@ class GameRoom:
                     "alvo_id": aid, "valor": ef["valor"],
                     "elemento": ef.get("elemento", "fisico"), "rodadas_restantes": ef["rodada"] - 1,
                 })
-                return
+                return 0, None
             dano = self._rolar_dado(ef["valor"])
             if ef.get("metade"):
                 dano = max(1, dano // 2)
             await self._dano_em_alvo(alvo, dano, ef.get("elemento", "fisico"), arm.get("criador"))
+            return dano, None
 
         elif tipo_ef == "perder_movimento":
             alvo["moves_left"] = 0
             alvo["movimento_perdido"] = True
             await self.gm_say(f"🦵 **{alvo_nome}** perde o movimento!")
+            return 0, "🦵 Perdeu o movimento"
 
         elif tipo_ef == "perder_rodada":
             alvo["moves_left"] = 0
@@ -10891,16 +10910,24 @@ class GameRoom:
             else:
                 alvo["perde_turno"] = True
             await self.gm_say(f"⏸️ **{alvo_nome}** perde a rodada inteira!")
+            return 0, "⏸️ Perdeu a rodada inteira"
 
         elif tipo_ef == "veneno":
             if arm.get("veneno_id"):
                 await self._aplicar_veneno(alvo, arm["veneno_id"], fonte="armadilha")
+                veneno_nome = VENENOS.get(arm["veneno_id"], {}).get("nome", "Veneno")
+                return 0, f"☠️ Envenenado ({veneno_nome})"
+            return 0, None
 
         elif tipo_ef == "reduzir_con":
             valor = self._rolar_dado(ef["valor"])
             if ef.get("metade"):
                 valor = max(1, valor // 2)
-            await self._reduzir_con_temporario(alvo, valor, ef.get("duracao", 3))
+            duracao = ef.get("duracao", 3)
+            await self._reduzir_con_temporario(alvo, valor, duracao)
+            return 0, f"🌫️ -{valor} CON por {duracao} rodadas"
+
+        return 0, None
 
     async def _dano_em_alvo(self, alvo, dano, elemento, killer_pid=None):
         """Subtrai HP e trata morte de jogador / monstro / animado."""

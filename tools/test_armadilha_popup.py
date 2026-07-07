@@ -77,6 +77,49 @@ async def main():
     check("popup de falha: menciona o dano", any("dano" in t for t in msgs[0]["efeitos_extra"]))
     check("trap não dispara 2x (triggered)", r.traps[0]["triggered"] is True)
 
+    # ── [2] Armadilha de 1 alvo (Armadilha de Urso: dano + perder_movimento) ───
+    print("\n[2] Armadilha de Urso — falha (dano + efeito) e sucesso (evita)")
+    r = setup()
+    p = make_player("p1", "Victor", "warrior", 0); p["ref_"] = 0; r.players["p1"] = p
+    arm = {"id": "a1", "tipo": "armadilha_urso", "pos": [5, 5], "ativada": False}
+    r.armadilhas = [arm]
+    _o = server.random.randint; server.random.randint = fake_rng(1)   # d20=1: falha (dif 10)
+    await r._disparar_armadilha(p, arm)
+    server.random.randint = _o
+    msgs = trap_msgs(r, "p1")
+    check("popup enviado", len(msgs) == 1)
+    check("nome/ícone corretos", msgs[0]["nome"] == "Armadilha de Urso" and msgs[0]["icone"] == "🪤")
+    check("sucesso=False", msgs[0]["sucesso"] is False)
+    check("dano > 0 (1d4 fixo em 3)", msgs[0]["dano"] == 3)
+    check("efeitos_extra tem dano + movimento",
+          any("dano" in t for t in msgs[0]["efeitos_extra"])
+          and any("movimento" in t for t in msgs[0]["efeitos_extra"]))
+
+    r = setup()
+    p = make_player("p1", "Victor", "warrior", 0); p["ref_"] = 0; r.players["p1"] = p
+    arm = {"id": "a2", "tipo": "armadilha_urso", "pos": [5, 5], "ativada": False}
+    r.armadilhas = [arm]
+    _o = server.random.randint; server.random.randint = fake_rng(15)   # d20=15: passa (dif 10)
+    await r._disparar_armadilha(p, arm)
+    server.random.randint = _o
+    msgs = trap_msgs(r, "p1")
+    check("popup de sucesso: sucesso=True, dano=0", msgs and msgs[0]["sucesso"] is True and msgs[0]["dano"] == 0)
+    check("popup de sucesso: sem efeitos_extra", msgs[0]["efeitos_extra"] == [])
+
+    # ── [2b] Buraco colocável: só efeito, sem dano nenhum ───────────────────────
+    print("\n[2b] Buraco colocável — falha só com efeito, sem dano")
+    r = setup()
+    p = make_player("p1", "Victor", "warrior", 0); p["ref_"] = 0; r.players["p1"] = p
+    arm = {"id": "a3", "tipo": "buraco", "pos": [5, 5], "ativada": False}
+    r.armadilhas = [arm]
+    _o = server.random.randint; server.random.randint = fake_rng(1)   # falha (dif 10)
+    await r._disparar_armadilha(p, arm)
+    server.random.randint = _o
+    msgs = trap_msgs(r, "p1")
+    check("dano=0 mesmo na falha (só efeito)", msgs and msgs[0]["dano"] == 0)
+    check("efeitos_extra só tem o efeito, sem linha de dano",
+          msgs[0]["efeitos_extra"] == ["🦵 Perdeu o movimento"])
+
     print(f"\n===== RESULTADO: {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 
