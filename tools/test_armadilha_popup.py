@@ -157,6 +157,33 @@ async def main():
     check("dano progressivo gerou ao menos 1 popup de tick", len(ticks) >= 1)
     check("popup(s) de tick têm dano > 0", all(t["dano"] > 0 for t in ticks))
 
+    # ── [5] Prisioneiro — popup vai pro resgatador ──────────────────────────────
+    print("\n[5] Armadilha no prisioneiro — popup vai pro rescuer_pid")
+    r = setup()
+    rescuer = make_player("p1", "Victor", "warrior", 0); r.players["p1"] = rescuer
+    r.prisoner = {"pos": [5, 5], "alive": True, "freed": True, "rescuer_pid": "p1",
+                  "name": "Prisioneiro", "hp": 7, "max_hp": 7}
+    arm = {"id": "a4", "tipo": "armadilha_urso", "pos": [5, 5], "ativada": False}
+    r.armadilhas = [arm]
+    _o = server.random.randint; server.random.randint = fake_rng(1)
+    await r._disparar_armadilha(r.prisoner, arm)
+    server.random.randint = _o
+    msgs = trap_msgs(r, "p1")
+    check("popup do prisioneiro foi pro resgatador", len(msgs) == 1)
+
+    # ── [6] Monstro pisando em armadilha — sem popup (sem cliente) ──────────────
+    print("\n[6] Monstro na armadilha — nenhum popup enviado")
+    r = setup()
+    mob_def = next(m for m in MONSTER_DEFS if m["type"] == "urso_negro")
+    mob = make_monster(mob_def, {"id": 1, "cx": 5, "cy": 5}); mob["pos"] = [5, 5]
+    r.monsters[mob["id"]] = mob
+    arm = {"id": "a5", "tipo": "armadilha_urso", "pos": [5, 5], "ativada": False}
+    r.armadilhas = [arm]
+    _o = server.random.randint; server.random.randint = fake_rng(1)
+    await r._disparar_armadilha(mob, arm)
+    server.random.randint = _o
+    check("nenhuma mensagem trap_result enviada", trap_msgs(r) == [])
+
     print(f"\n===== RESULTADO: {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 
