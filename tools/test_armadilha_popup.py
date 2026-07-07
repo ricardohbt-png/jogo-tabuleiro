@@ -120,6 +120,26 @@ async def main():
     check("efeitos_extra só tem o efeito, sem linha de dano",
           msgs[0]["efeitos_extra"] == ["🦵 Perdeu o movimento"])
 
+    # ── [3] Armadilha de área com save_reduz (Mina Terrestre) ───────────────────
+    print("\n[3] Mina Terrestre (área) — 1 alvo falha, 1 resiste com metade")
+    r = setup()
+    p1 = make_player("p1", "A", "warrior", 0); p1["ref_"] = 0; p1["pos"] = [5, 5]
+    p2 = make_player("p2", "B", "rogue", 1);   p2["ref_"] = 0; p2["pos"] = [6, 5]
+    r.players = {"p1": p1, "p2": p2}
+    arm = {"id": "m1", "tipo": "mina_terrestre", "pos": [5, 5], "ativada": False}
+    r.armadilhas = [arm]
+    # dificuldade 12: p1 rola d20=2 (falha), p2 rola d20=18 (passa, mas save_reduz→metade)
+    _o = server.random.randint; server.random.randint = fake_rng_seq([2, 18])
+    await r._disparar_armadilha(p1, arm)
+    server.random.randint = _o
+    m1 = trap_msgs(r, "p1"); m2 = trap_msgs(r, "p2")
+    check("p1 recebeu seu próprio popup", len(m1) == 1)
+    check("p2 recebeu seu próprio popup", len(m2) == 1)
+    check("p1 falhou: dano cheio (2d6 fixo em 3+3=6), metade=False",
+          m1[0]["sucesso"] is False and m1[0]["metade"] is False and m1[0]["dano"] == 6)
+    check("p2 resistiu: metade=True, ainda sofre dano reduzido (6→3)",
+          m2[0]["sucesso"] is True and m2[0]["metade"] is True and m2[0]["dano"] == 3)
+
     print(f"\n===== RESULTADO: {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 

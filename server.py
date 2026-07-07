@@ -10867,10 +10867,23 @@ class GameRoom:
                                   "label": f"{alvo_nome} — {tipo['save']}"})
             if save_ok and not tipo.get("save_reduz"):
                 await self.gm_say(f"✅ **{alvo_nome}** evitou **{tipo['nome']}**!")
+                await self._enviar_trap_result(alvo, tipo["nome"], tipo["icone"], sucesso=True,
+                                                dano=0, metade=False, descricao=tipo["descricao"],
+                                                efeitos_extra=[])
                 continue
             metade = bool(save_ok and tipo.get("save_reduz"))
+            dano_total = 0
+            efeitos_extra = []
             for ef in tipo["efeitos"]:
-                await self._aplicar_efeito_armadilha(alvo, {**ef, "metade": metade}, arm)
+                dano, texto = await self._aplicar_efeito_armadilha(alvo, {**ef, "metade": metade}, arm)
+                dano_total += dano
+                if texto:
+                    efeitos_extra.append(texto)
+            if dano_total:
+                efeitos_extra.insert(0, f"💥 Sofreu {dano_total} de dano")
+            await self._enviar_trap_result(alvo, tipo["nome"], tipo["icone"], sucesso=save_ok,
+                                            dano=dano_total, metade=metade, descricao=tipo["descricao"],
+                                            efeitos_extra=efeitos_extra)
 
     async def _aplicar_efeito_armadilha(self, alvo, ef, arm):
         """Aplica um efeito de armadilha em `alvo`. Retorna (dano_aplicado,
