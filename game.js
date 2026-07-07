@@ -14395,10 +14395,11 @@ function _loadHeroGLB(T, classId, cb) {
       tpl.traverse(o => {
         if (o.isMesh) {
           o.castShadow = true;
-          // leve emissivo para nunca ficar 100% preto contra a luz
+          // emissivo p/ clarear o peão (a luz da masmorra é fraca e deixava o
+          // GLB escuro demais — 0.05 mal se notava; 0.4 acende sem lavar a textura)
           if (o.material) {
             o.material.emissive = new T.Color(0xffffff);
-            o.material.emissiveIntensity = 0.05;
+            o.material.emissiveIntensity = 0.4;
           }
         }
       });
