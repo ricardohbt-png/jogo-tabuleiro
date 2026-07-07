@@ -134,11 +134,26 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 ### Server → Client
 `lobby_state`, `game_start`, `city_state`, `shop_result`, `enter_dungeon`,
 `game_state`, `gm_narration`, `game_over`, `dice_roll`, `animar_result`, `error`,
-`decor_loot`
+`decor_loot`, `trap_result`
 
 > `game_state` inclui `corpses` (cadáveres) e `armadilhas` (colocáveis — ver
 > abaixo). `animar_result` traz
 > `resultado`/`rolagem`/`d10_dezena`/`d10_unidade`/`chance`/`zona_hostil`/`animados`.
+
+> **Popup de resultado de armadilha:** ao cair numa armadilha (buraco
+> procedural genérico de `self.traps` ou qualquer uma das 8 do catálogo
+> `ARMADILHAS`), o servidor manda `trap_result` (`send_to`, nunca broadcast —
+> só quem foi afetado recebe) com `nome`/`icone`/`sucesso`/`dano`/`metade`/
+> `descricao`/`efeitos_extra`/`tick`. Disparado em 4 pontos:
+> `_verificar_trap_procedural` (buraco de sala), `_disparar_armadilha`
+> (armadilha de 1 alvo), `_aplicar_armadilha_area` (Mina Terrestre/Nuvem de
+> Gás — cada alvo atingido recebe o seu), e `_processar_efeitos_armadilha_turno`
+> (tick de dano progressivo da Incendiária, com `tick:true`). Roteamento vai
+> pro próprio jogador, ou pro `rescuer_pid` se o alvo for o prisioneiro
+> (monstros/servos animados não recebem — sem cliente). Cliente: `game.js`
+> abre `#trap-overlay` ~1,2s depois do evento (dá tempo da animação do dado
+> terminar), com fila simples pra disparos simultâneos; fecha por botão, clique
+> fora, ou Esc; tema de perigo (borda vermelha), com som curto só na falha.
 
 > **História (slides):** os campos `intro`/`outro` da campanha e de cada fase
 > aceitam string (legado) **ou** objeto `{slides:[{text?,image?,fit}], audio?}`.
