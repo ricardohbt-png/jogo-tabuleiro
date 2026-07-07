@@ -383,9 +383,9 @@ input:focus { outline: none; border-color: var(--gold); }
 .trap-status { font-size: .95rem; font-weight: bold; padding: 6px 10px; border-radius: var(--radius);
                 margin-bottom: 10px; }
 .trap-status--success { color: var(--green); background: #113a20; }
-.trap-status--partial { color: #f39c12; background: #3a2a08; }
+.trap-status--partial { color: var(--xp); background: #3a2a08; }
 .trap-status--fail { color: var(--red); background: #3a1414; }
-.trap-status--tick { color: #e67e22; background: #3a2408; }
+.trap-status--tick { color: var(--orange); background: #3a2408; }
 .trap-desc { font-size: .82rem; color: var(--text2); margin: 0 0 10px; text-align: left; }
 .trap-effects { list-style: none; padding: 0; margin: 0 0 6px; text-align: left; }
 .trap-effects li { font-size: .82rem; padding: 4px 8px; background: var(--bg3);
