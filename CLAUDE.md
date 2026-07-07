@@ -664,3 +664,17 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > badge "★ Exclusiva Mago/Clérigo" em `_guildItemRow`; nenhuma seção nova na UI
 > (as 7 técnicas caem nas faixas de recarga já existentes). Teste:
 > `tools/test_guilda_fase3_espec.py`.
+
+> **Peão vira na direção do movimento:** o peão GLB 3D (hoje só `paladin`)
+> agora encara o lado do último passo dado, em incrementos de 90°. Servidor:
+> `handle_move` grava `p["facing"] = [dx, dy]` a cada passo válido (mesmo
+> formato/mecanismo que `m["facing"]` já usava pros monstros orientados —
+> crocodilo/lagarto); `enter_dungeon` limpa esse campo ao (re)posicionar os
+> jogadores na entrada, então toda masmorra começa com o peão olhando pro
+> Sul. Vai automaticamente no `game_state` (serialização crua do dicionário
+> do jogador, sem view filtrada). Cliente: `_facingToRotY` (`game.js`)
+> converte o vetor num ângulo múltiplo de 90°; `build3DFig` reaproveita o
+> parâmetro `mFacing` (já existente pros monstros orientados) pra também
+> carregar a direção do peão de herói, já que nenhum herói passa pelo ramo
+> de monstro orientado. Sem animação — a rotação encaixa instantaneamente a
+> cada passo confirmado. Teste: `tools/test_peao_facing.py`.
