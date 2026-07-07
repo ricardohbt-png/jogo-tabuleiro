@@ -372,6 +372,25 @@ input:focus { outline: none; border-color: var(--gold); }
 .chest-take-btn:disabled { opacity: .45; cursor: default; }
 .chest-empty-msg { text-align: center; color: var(--text2); font-size: .82rem; padding: 14px 0; }
 
+/* Trap result popup — tema de perigo, distinto do dourado do baú */
+#trap-overlay { position: fixed; inset: 0; background: #000c; display: none;
+                align-items: center; justify-content: center; z-index: 120; }
+#trap-overlay.open { display: flex; }
+.trap-box { background: var(--bg2); border: 2px solid var(--red); border-radius: 12px;
+             padding: 20px 24px; min-width: 300px; max-width: 420px; text-align: center; }
+.trap-icon { font-size: 2.4rem; line-height: 1; margin-bottom: 4px; }
+.trap-box h3 { color: var(--text); margin: 0 0 8px; font-size: 1.05rem; }
+.trap-status { font-size: .95rem; font-weight: bold; padding: 6px 10px; border-radius: var(--radius);
+                margin-bottom: 10px; }
+.trap-status--success { color: var(--green); background: #113a20; }
+.trap-status--partial { color: #f39c12; background: #3a2a08; }
+.trap-status--fail { color: var(--red); background: #3a1414; }
+.trap-status--tick { color: #e67e22; background: #3a2408; }
+.trap-desc { font-size: .82rem; color: var(--text2); margin: 0 0 10px; text-align: left; }
+.trap-effects { list-style: none; padding: 0; margin: 0 0 6px; text-align: left; }
+.trap-effects li { font-size: .82rem; padding: 4px 8px; background: var(--bg3);
+                    border-radius: var(--radius); margin-bottom: 5px; }
+
 /* GM LOG — lives at the bottom of #map-panel */
 #gm-log { flex-shrink: 0; height: 190px; border-top: 2px solid var(--border2);
            display: flex; flex-direction: column; background: #07070f; }

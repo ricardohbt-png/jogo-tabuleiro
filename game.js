@@ -210,6 +210,18 @@ document.body.innerHTML = `
   </div>
 </div>
 
+<!-- Trap Result Popup -->
+<div id="trap-overlay">
+  <div class="trap-box">
+    <div class="trap-icon" id="trap-icon">🪤</div>
+    <h3 id="trap-title">Armadilha</h3>
+    <div class="trap-status" id="trap-status"></div>
+    <p class="trap-desc" id="trap-desc"></p>
+    <ul class="trap-effects" id="trap-effects"></ul>
+    <button class="btn-cancel" onclick="closeTrapWindow()">Fechar</button>
+  </div>
+</div>
+
 <div id="tooltip"></div>
 <div id="toast"></div>
 `;
