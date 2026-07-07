@@ -14459,16 +14459,20 @@ function _makeCharacterPawn3D(T, grp, classId, Y0, rotY, altura, onMissing) {
   return true;   // virá async — não desenhar fallback por cima
 }
 
-// ── Character pawn — billboard 2D (Sprite) voltado para a câmera.
-// A figura sempre aparece de frente e em pé na tela (mesma dinâmica dos
-// monstros, via _makeBillboardSprite). Usa apenas frente.png.
+// ── Character pawn — GLB 3D real para classes em _GLB_ENABLED_CLASSES,
+// billboard 2D (Sprite, frente.png) para as demais. Fallback automático pro
+// billboard se o GLB falhar ao carregar (onMissing).
+const _GLB_ENABLED_CLASSES = new Set(['paladin']);
+
 function _makeCharacterPawn(T, grp, classId, clr, Y0) {
-  // Billboard 2D (Sprite) — sempre de frente para a câmera e em pé, em qualquer
-  // rotação. Mesma dinâmica dos monstros. GLB 3D desativado a pedido: o visual
-  // 2D (frente.png) é o oficial.
   const cacheKey = classId || 'generic';
-  _makeBillboardSprite(T, grp, `assets/pawns/${cacheKey}/frente.png`,
-                       '__spr_' + cacheKey, Y0);
+  const billboard = () => _makeBillboardSprite(T, grp,
+    `assets/pawns/${cacheKey}/frente.png`, '__spr_' + cacheKey, Y0);
+  if (_GLB_ENABLED_CLASSES.has(classId)) {
+    _makeCharacterPawn3D(T, grp, classId, Y0, 0, _BB_H_ALVO, billboard);
+    return;
+  }
+  billboard();
 }
 
 // Peão 3D do prisioneiro: base + billboard com a imagem editável (fallback: só a base).
