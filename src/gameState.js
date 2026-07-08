@@ -1089,6 +1089,8 @@ const GS = (() => {
   function useItem(id)     { send({ type: 'use_item',       item_id: id }); }
   function equipFromBag(i) { send({ type: 'equip_from_bag', slot_index: i }); }
   function unequip(key)    { send({ type: 'unequip',        slot_key: key }); }
+  function reorderBag(fromIndex, toIndex) { send({ type: 'reorder_bag', from_index: fromIndex, to_index: toIndex }); }
+  function equipOffhand(i)                { send({ type: 'equip_offhand',   slot_index: i }); }
   // Magias conhecidas (Pedro/Lewis): escolha de 2 magias de 1º círculo no lobby.
   function setKnownSpells(ids)       { send({ type: 'set_known_spells', ids }); }
   // Escolha da nova magia ao subir de nível (responde ao spell_pick_prompt).
@@ -1177,6 +1179,119 @@ const GS = (() => {
       const dy = Math.abs(myP.pos[1] - c.pos[1]);
       return Math.max(dx, dy) <= 1;
     }) || null;
+  }
+
+  // ── Inventário estilo Diablo — helpers puros (paperdoll/bolsa) ─────────────
+  // Espelha server._slot_category_for_item (server.py) — client-side, só p/
+  // feedback visual instantâneo. O servidor continua autoritativo: qualquer
+  // rejeição real chega via mensagem `error`, o preview client-side é só uma
+  // previsão.
+  function _slotCategoryForItem(item){
+    const s   = (item.item_slot || '').toLowerCase();
+    const k   = (item.kind || '').toLowerCase();
+    const iid = (item.id || '').toLowerCase();
+    const nm  = (item.name || '').toLowerCase();
+    if(s === 'weapon' || k === 'weapon') return 'weapon';
+    if(s === 'shield' || s === 'off_hand' || k === 'shield' || iid.includes('shield') || nm.includes('escudo')) return 'off_hand';
+    if(s === 'ammo' || item.effect === 'ammo') return 'off_hand';
+    if(s === 'head' || k === 'head' || ['elmo','capuz','tiara','capacete'].some(w => nm.includes(w))) return 'head';
+    // !s: item_slot explícito vence name-sniffing — evita reclassificar itens
+    // legados tipo "Botas Velozes" (item_slot="item"/"accessory") como boots
+    // (mesma regressão corrigida no server em 93a4486).
+    if(s === 'boots' || k === 'boots' || (!s && ['bota','botas','sapato'].some(w => nm.includes(w)))) return 'boots';
+    if(s === 'ring' || k === 'ring' || nm.includes('anel')) return 'ring';
+    if(['accessory','belt','gloves','backpack','item'].includes(s) ||
+       ['accessory','belt','gloves','backpack'].includes(k) ||
+       ['mochila','alforje','luva','cinto'].some(w => nm.includes(w))) return 'item';
+    if(s === 'armor' || k === 'armor') return 'armor';
+    if(item.die) return 'weapon';
+    return 'bag';
+  }
+
+  // Adaga usável como 2ª arma (dual-wield) — mesma heurística já usada 2x em
+  // game.js (_fcEhAdaga/ehAdaga), centralizada aqui p/ o modal novo não duplicar.
+  function isDagger(item){
+    if(!item) return false;
+    const iid = (item.id || '').toLowerCase();
+    const nm  = (item.name || '').toLowerCase();
+    // Casa exatamente server._eh_adaga (server.py): startswith, não ===, p/
+    // cobrir futuras variantes tipo "dagger_ferro".
+    return (iid.startsWith('dagger') || iid === 'adaga_secundaria' || nm.includes('adaga')) && !!item.die;
+  }
+
+  // Fonte única: a mão secundária fica bloqueada quando a arma principal é de
+  // duas mãos. Consultada tanto por canPlaceItem quanto pelo renderer do
+  // paperdoll (inventoryModal.js) p/ não duplicar a regra em dois lugares.
+  function offHandBlockedByTwoHanded(gearSnapshot){
+    const weapon = (gearSnapshot || {}).weapon;
+    return !!(weapon && weapon.two_handed);
+  }
+
+  // gearSnapshot = objeto gear atual (p/ checar conflito de arma de 2 mãos).
+  function canPlaceItem(item, slotKey, gearSnapshot){
+    if(!item || !slotKey) return false;
+    const cat = _slotCategoryForItem(item);
+    if(cat === 'bag') return false;   // consumível não equipa em slot nenhum
+    const gear = gearSnapshot || {};
+    if(slotKey === 'weapon'){
+      if(cat !== 'weapon') return false;
+      if(item.two_handed){
+        const off = gear.off_hand;
+        const offOcupaMao = !!off && (off.kind === 'shield' || off.item_slot === 'shield' || !!off.die);
+        if(offOcupaMao) return false;
+      }
+      return true;
+    }
+    if(slotKey === 'off_hand'){
+      const isOffhandCat = cat === 'off_hand';
+      if(!isOffhandCat && !isDagger(item)) return false;
+      if(offHandBlockedByTwoHanded(gear)) return false;
+      return true;
+    }
+    if(slotKey === 'armor') return cat === 'armor';
+    if(slotKey === 'head')  return cat === 'head';
+    if(slotKey === 'boots') return cat === 'boots';
+    if(slotKey === 'ring1' || slotKey === 'ring2') return cat === 'ring';
+    if(slotKey === 'item1' || slotKey === 'item2') return cat === 'item';
+    return false;
+  }
+
+  // Compara dois itens no formato de GS.CATALOGO_ITENS (bonusCA numérico,
+  // dano em notação de dado tipo "1d8") pra tooltip com setas ↑/↓. Só compara
+  // campos presentes em pelo menos um dos dois lados.
+  function _diceAverage(diceStr){
+    if(!diceStr) return null;
+    const m = /^(\d+)d(\d+)$/.exec(String(diceStr).trim());
+    if(!m) return null;
+    const n = Number(m[1]), sides = Number(m[2]);
+    return n * (sides + 1) / 2;
+  }
+  function compareItemStats(newItem, equippedItem){
+    if(!newItem) return [];
+    const fields = [
+      { key: 'bonusCA', label: 'CA',   fmt: v => `+${v}` },
+      { key: 'dano',    label: 'Dano', fmt: v => v, numeric: _diceAverage },
+    ];
+    const rows = [];
+    for(const f of fields){
+      const hasNew = newItem[f.key] != null;
+      const hasOld = !!equippedItem && equippedItem[f.key] != null;
+      if(!hasNew && !hasOld) continue;
+      const newVal = hasNew ? (f.numeric ? f.numeric(newItem[f.key]) : newItem[f.key]) : null;
+      const oldVal = hasOld ? (f.numeric ? f.numeric(equippedItem[f.key]) : equippedItem[f.key]) : null;
+      let arrow = null;
+      if(newVal != null && oldVal != null){
+        if(newVal > oldVal) arrow = 'up';
+        else if(newVal < oldVal) arrow = 'down';
+      }
+      rows.push({
+        label: f.label,
+        newDisplay: hasNew ? f.fmt(newItem[f.key]) : '—',
+        oldDisplay: hasOld ? f.fmt(equippedItem[f.key]) : '—',
+        arrow,
+      });
+    }
+    return rows;
   }
 
   // ── Decorações de masmorra ────────────────────────────────────────────────────
@@ -1685,6 +1800,12 @@ const GS = (() => {
     useItem,
     equipFromBag,
     unequip,
+    reorderBag,
+    equipOffhand,
+    canPlaceItem,
+    offHandBlockedByTwoHanded,
+    compareItemStats,
+    isDagger,
     setKnownSpells,
     escolherMagiaNivel,
     animarMortos,

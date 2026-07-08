@@ -3448,9 +3448,9 @@ _WEAPON_EMOJI = {
 
 # Slots de equipamento que NÃO são a armadura do corpo mas podem dar +CA
 # (escudo na mão esquerda, elmo, anéis, itens ativos).
-GEAR_BONUS_SLOTS = ("off_hand", "head", "ring1", "ring2", "item1", "item2")
-# Todos os 8 slots de equipamento, na ordem de exibição.
-GEAR_SLOTS = ("weapon", "off_hand", "armor", "head", "ring1", "ring2", "item1", "item2")
+GEAR_BONUS_SLOTS = ("off_hand", "head", "boots", "ring1", "ring2", "item1", "item2")
+# Todos os 9 slots de equipamento, na ordem de exibição.
+GEAR_SLOTS = ("weapon", "off_hand", "armor", "head", "boots", "ring1", "ring2", "item1", "item2")
 
 # ─── SLOT SECUNDÁRIO — regras por personagem ──────────────────────────────────
 # ATENÇÃO (scaffolding): estas regras usam as chaves de herói do CLIENTE
@@ -3533,6 +3533,7 @@ def make_player(pid, name, cls_id, slot):
             "off_hand": deepcopy(_STARTING_OFFHAND.get(cls_id)),  # mão esquerda: arma 2ª / escudo (dual-wield inicial)
             "armor":    starting_armor_item,   # corpo
             "head":     None,                  # elmo / tiara / capuz
+            "boots":    None,                  # bota (sem itens no catálogo ainda)
             "ring1":    None,                  # anel
             "ring2":    None,                  # anel
             "item1":    None,                  # item ativo (mochila/luvas/cinto)
@@ -4984,7 +4985,7 @@ class GameRoom:
             _recalculate_ac(p)
             log = f"💰 **{p['name']}** vendeu **{item['name']}** por {sell_price} ouro!"
 
-        elif item_slot in ("off_hand", "head", "ring1", "ring2", "item1", "item2", "acc1", "acc2"):
+        elif item_slot in ("off_hand", "head", "boots", "ring1", "ring2", "item1", "item2", "acc1", "acc2"):
             # 'acc1'/'acc2' aceitos por retrocompatibilidade
             key = {"acc1": "item1", "acc2": "item2"}.get(item_slot, item_slot)
             item = p["gear"].get(key)
@@ -8187,7 +8188,7 @@ class GameRoom:
 
     @staticmethod
     def _slot_category_for_item(item):
-        """Categoria de slot de um item: weapon|off_hand|armor|head|ring|item|bag."""
+        """Categoria de slot de um item: weapon|off_hand|armor|head|boots|ring|item|bag."""
         s   = (item.get("item_slot") or "").lower()
         k   = (item.get("kind") or "").lower()
         iid = (item.get("id") or "").lower()
@@ -8200,6 +8201,8 @@ class GameRoom:
             return "off_hand"
         if s == "head" or k == "head" or any(w in nm for w in ("elmo", "capuz", "tiara", "capacete")):
             return "head"
+        if s == "boots" or k == "boots" or (not s and any(w in nm for w in ("bota", "botas", "sapato"))):
+            return "boots"
         if s == "ring" or k == "ring" or "anel" in nm:
             return "ring"
         if s in ("accessory", "belt", "gloves", "backpack", "item") or \
@@ -8269,7 +8272,7 @@ class GameRoom:
         await self.push_state_or_city()
 
     async def _executar_equip_from_bag(self, pid, slot_index):
-        """Equipa um item do inventário no slot correto (8 slots) — lógica
+        """Equipa um item do inventário no slot correto (9 slots) — lógica
         original inalterada. Retorna True se equipou; False se a validação
         falhou (erro já enviado). NÃO marca ação nem faz push_state."""
         p = self.players.get(pid)
@@ -8324,6 +8327,7 @@ class GameRoom:
                 log = self._equip_into_slot(p, item, "off_hand", "🛡️")
         elif cat == "armor":    log = self._equip_into_slot(p, item, "armor",    "🛡️")
         elif cat == "head":     log = self._equip_into_slot(p, item, "head",     "⛑️")
+        elif cat == "boots":    log = self._equip_into_slot(p, item, "boots",    "👢")
         elif cat == "ring":     log = self._equip_into_pair(p, item, ("ring1","ring2"), "💍")
         else:                   log = self._equip_into_pair(p, item, ("item1","item2"), "🎒")
 

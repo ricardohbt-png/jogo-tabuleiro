@@ -276,22 +276,6 @@ input:focus { outline: none; border-color: var(--gold); }
 .bag-slot.empty-slot { opacity: .35; border-style: dashed; border-color: #252240; }
 .bag-slot-num { position: absolute; top: 3px; left: 5px; font-size: .52rem; color: var(--text3); }
 
-/* ── Equipamento: grid paper-doll de 8 slots ── */
-.equip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 8px; }
-.eq-slot { position: relative; background: #0e0c18; border: 1px solid #2a2848;
-           border-radius: 5px; min-height: 56px; display: flex; flex-direction: column;
-           align-items: center; justify-content: center; gap: 1px; text-align: center;
-           padding: 4px 3px; transition: border-color .15s, background .15s; }
-.eq-slot.filled { border-color: var(--gold2); background: #1a1620; cursor: pointer; }
-.eq-slot.filled:hover { border-color: var(--gold); background: #221c2a; }
-.eq-slot-label { font-size: .54rem; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; }
-.eq-slot-emoji { font-size: 1.35rem; line-height: 1; }
-.eq-slot-name  { font-size: .56rem; color: var(--text); font-weight: 600; line-height: 1.1;
-                 max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.eq-slot-x { position: absolute; top: 2px; right: 4px; font-size: .7rem; color: var(--gold2);
-             opacity: 0; transition: opacity .15s; }
-.eq-slot.filled:hover .eq-slot-x { opacity: 1; }
-
 .gold-display { display: flex; align-items: center; gap: 6px; padding: 5px 7px;
                 background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
                 font-size: .8rem; }
@@ -793,7 +777,14 @@ input:focus { outline: none; border-color: var(--gold); }
 
 /* ════════════════════ MOBILE / TOUCH ════════════════════ */
 /* Elementos só-de-celular: ocultos no desktop, ativados no @media abaixo. */
-#ficha-fab, #ficha-backdrop, #ficha-close-btn { display: none; }
+#actions-fab, #ficha-backdrop, #ficha-close-btn { display: none; }
+#ficha-fab {
+  display: flex; position: fixed; right: 14px; bottom: 16px; z-index: 340;
+  width: 56px; height: 56px; border-radius: 50%;
+  align-items: center; justify-content: center; font-size: 24px;
+  background: var(--gold); color: #000; border: none; cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0,0,0,.55);
+}
 #cs-info-btn, #cs-info-backdrop { display: none; }
 
 @media (max-width: 820px) {
@@ -821,15 +812,15 @@ input:focus { outline: none; border-color: var(--gold); }
   #side-panel.open { transform: translateX(0); }
   #players-panel { max-height: 26vh; }
 
-  /* Botão flutuante (abre a ficha) + botão de fechar + fundo escuro */
-  #ficha-fab {
-    display: flex; position: fixed; right: 14px; bottom: 16px; z-index: 300;
+  /* Botão flutuante (abre Ações/Habilidades) + botão de fechar + fundo escuro */
+  #actions-fab {
+    display: flex; position: fixed; right: 82px; bottom: 16px; z-index: 300;
     width: 56px; height: 56px; border-radius: 50%;
-    align-items: center; justify-content: center; font-size: 24px;
-    background: var(--gold); color: #000; border: none;
+    align-items: center; justify-content: center; font-size: 22px;
+    background: var(--bg3); color: var(--gold); border: 1px solid var(--gold);
     box-shadow: 0 4px 14px rgba(0,0,0,.55);
   }
-  body.drawer-open #ficha-fab { display: none; }
+  body.drawer-open #actions-fab { display: none; }
   #ficha-backdrop { position: fixed; inset: 0; z-index: 310; background: rgba(0,0,0,.5); }
   #ficha-backdrop.open { display: block; }
   #ficha-close-btn {
@@ -928,7 +919,6 @@ input:focus { outline: none; border-color: var(--gold); }
 .fc-head-class{ color:#8a7a5a; font-size:10px; letter-spacing:2px; margin-top:2px; }
 .fc-head-lvl{ color:#c8b89a; font-size:10px; margin-top:3px; }
 .fc-body{ padding:14px 16px; overflow-y:auto; flex:1; }
-#ficha-cidade-panel .eq-slot.drop-target,
 #ficha-cidade-panel .bag-slot.drop-target{ outline:2px dashed #c8a951;
   outline-offset:-2px; }
 #ficha-cidade-panel [draggable="true"]{ cursor:grab; }
