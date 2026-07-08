@@ -191,7 +191,11 @@ const InventoryModal = (() => {
       if(!_readOnly && !blocked){
         if(item){
           slot.draggable = true;
-          slot.addEventListener('dragstart', () => { _selected = { kind: 'gear', slotKey: cfg.key }; });
+          slot.addEventListener('dragstart', (e) => {
+            _selected = { kind: 'gear', slotKey: cfg.key };
+            e.dataTransfer.setData('text/plain', '');
+            e.dataTransfer.effectAllowed = 'move';
+          });
         }
         slot.addEventListener('dragover', (e) => {
           if(!_selected) return;
@@ -227,7 +231,11 @@ const InventoryModal = (() => {
       if(!_readOnly){
         if(item){
           slot.draggable = true;
-          slot.addEventListener('dragstart', () => { _selected = { kind: 'bag', index: i }; });
+          slot.addEventListener('dragstart', (e) => {
+            _selected = { kind: 'bag', index: i };
+            e.dataTransfer.setData('text/plain', '');
+            e.dataTransfer.effectAllowed = 'move';
+          });
         }
         slot.addEventListener('dragover', (e) => { if(_selected){ e.preventDefault(); slot.classList.add('drop-hover'); } });
         slot.addEventListener('dragleave', () => slot.classList.remove('drop-hover'));
