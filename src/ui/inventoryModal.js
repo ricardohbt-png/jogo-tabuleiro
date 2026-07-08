@@ -94,6 +94,7 @@ const InventoryModal = (() => {
   border:1px solid rgba(244,220,140,.35);display:flex;align-items:center;justify-content:center;
   font-size:1.1rem;cursor:pointer;}
 .inv-bagslot.selected{outline:2px solid #ffe08a;outline-offset:2px;}
+.inv-bagslot.usable{border-color:#2ecc40;box-shadow:inset 0 0 4px rgba(46,204,64,.4),0 0 6px rgba(46,204,64,.35);}
 .inv-bagslot.drop-hover{outline:2px dashed #8fe08a;outline-offset:2px;}
 `;
 
@@ -227,12 +228,33 @@ const InventoryModal = (() => {
       slot.dataset.bagIndex = String(i);
       slot.title = item ? item.name : 'Vazio';
       slot.innerHTML = item ? `<span class="inv-bagslot-emoji">${_itemIconHTML(item, '📦')}</span>` : '';
+      const isScroll = !!item && item.effect === 'scroll';
+      const isConsumable = !!item && !item.die && (item.item_slot === 'bag' || item.effect === 'heal' || item.effect === 'atk_bonus');
+      const ehCaster = player.class_id === 'mage' || player.class_id === 'cleric';
+      const gsNow = (typeof GS !== 'undefined') ? GS.gameState : null;
+      const isMyOwnDungeonTurn = !_readOnly && player.id === GS.myPid && gsNow && gsNow.phase === 'playing'
+        && GS.isMyTurn && player.alive && !player.action_done;
+      const bonusBloqueado = !!item && typeof BONUS_ACTION_EFFECTS !== 'undefined'
+        && BONUS_ACTION_EFFECTS.has(item.effect) && !!player.bonus_action_used;
+      const podeUsar = isMyOwnDungeonTurn && isConsumable && !bonusBloqueado;
+      const podeConjurar = isMyOwnDungeonTurn && isScroll && ehCaster;
       if(item){
-        const equipped = _equippedCounterpart(player, item);
-        _wireTooltip(slot, item.id, equipped ? equipped.id : null);
+        if(podeUsar || podeConjurar) slot.classList.add('usable');
+        if(isScroll && typeof aplicarTooltipPergaminho === 'function'){
+          aplicarTooltipPergaminho(slot, item);   // tooltip específico de pergaminho — substitui o genérico abaixo
+        } else {
+          const equipped = _equippedCounterpart(player, item);
+          _wireTooltip(slot, item.id, equipped ? equipped.id : null);
+        }
       }
       if(_selected && _selected.kind === 'bag' && _selected.index === i) slot.classList.add('selected');
-      if(!_readOnly) slot.onclick = () => _onBagSlotClick(i);
+      if(!_readOnly){
+        slot.onclick = () => {
+          if(podeConjurar){ close(); castarPergaminho(item); return; }
+          if(podeUsar){ useItem(item.id); return; }
+          _onBagSlotClick(i);
+        };
+      }
       if(!_readOnly){
         if(item){
           slot.draggable = true;
