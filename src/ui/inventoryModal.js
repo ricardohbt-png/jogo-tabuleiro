@@ -165,6 +165,31 @@ const InventoryModal = (() => {
     return null;
   }
 
+  function _renderGear(overlay, player){
+    const grid = overlay.querySelector('.inv-grid');
+    grid.innerHTML = '';
+    const gear = player.gear || {};
+    const twoHanded = !!(gear.weapon && gear.weapon.two_handed);
+    for(const cfg of GEAR_LAYOUT){
+      const item = gear[cfg.key];
+      const blocked = cfg.key === 'off_hand' && twoHanded && !item;
+      const slot = document.createElement('div');
+      slot.className = 'inv-slot'
+        + (cfg.small ? ' small' : '')
+        + (cfg.magic ? ' magic' : '')
+        + (item ? ' filled' : ' empty')
+        + (blocked ? ' blocked' : '');
+      slot.dataset.slotKey = cfg.key;
+      slot.title = blocked ? 'Bloqueado — arma de duas mãos equipada'
+                 : item ? item.name : cfg.label;
+      slot.innerHTML = blocked
+        ? `<span class="inv-slot-blocked-x">✕</span>`
+        : item ? `<span class="inv-slot-emoji">${_itemIconHTML(item, cfg.empty)}</span>`
+               : `<span class="inv-slot-emoji inv-slot-empty-icon">${cfg.empty}</span>`;
+      grid.appendChild(slot);
+    }
+  }
+
   function _render(){
     const overlay = document.getElementById('inv-modal-overlay');
     if(!overlay) return;
@@ -192,7 +217,8 @@ const InventoryModal = (() => {
       </div>`;
     overlay.querySelector('.inv-close').onclick = close;
     overlay.querySelector('.inv-gold span').textContent = player.gold ?? 0;
-    // _renderGear/_renderBag chegam nas próximas tasks.
+    _renderGear(overlay, player);
+    // _renderBag chega na próxima task.
   }
 
   return { open, close, toggle, isOpen, refresh };
