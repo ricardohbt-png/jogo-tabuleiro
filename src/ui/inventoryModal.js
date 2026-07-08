@@ -186,6 +186,7 @@ const InventoryModal = (() => {
         ? `<span class="inv-slot-blocked-x">✕</span>`
         : item ? `<span class="inv-slot-emoji">${_itemIconHTML(item, cfg.empty)}</span>`
                : `<span class="inv-slot-emoji inv-slot-empty-icon">${cfg.empty}</span>`;
+      if(item && !blocked) _wireTooltip(slot, item.id, null);
       if(_selected && _selected.kind === 'gear' && _selected.slotKey === cfg.key) slot.classList.add('selected');
       if(!_readOnly) slot.onclick = () => _onGearSlotClick(cfg.key, blocked);
       if(!_readOnly && !blocked){
@@ -226,6 +227,10 @@ const InventoryModal = (() => {
       slot.dataset.bagIndex = String(i);
       slot.title = item ? item.name : 'Vazio';
       slot.innerHTML = item ? `<span class="inv-bagslot-emoji">${_itemIconHTML(item, '📦')}</span>` : '';
+      if(item){
+        const equipped = _equippedCounterpart(player, item);
+        _wireTooltip(slot, item.id, equipped ? equipped.id : null);
+      }
       if(_selected && _selected.kind === 'bag' && _selected.index === i) slot.classList.add('selected');
       if(!_readOnly) slot.onclick = () => _onBagSlotClick(i);
       if(!_readOnly){
@@ -332,6 +337,74 @@ const InventoryModal = (() => {
     const item = (player.bag || [])[_selected.index];
     const ok = !!item && GS.canPlaceItem(item, slotKey, player.gear || {});
     slot.classList.toggle('drop-invalid', !ok);
+  }
+
+  // Acha, entre os 9 slots do paperdoll, qual (se algum) aceitaria este item
+  // — usado pra saber contra qual item equipado comparar no tooltip.
+  function _equippedCounterpart(player, bagItem){
+    const gear = player.gear || {};
+    for(const cfg of GEAR_LAYOUT){
+      if(gear[cfg.key] && GS.canPlaceItem(bagItem, cfg.key, gear)) return gear[cfg.key];
+    }
+    return null;
+  }
+
+  function _showInventoryTooltip(itemId, comparisonItemId, touchPos){
+    if(typeof GS === 'undefined' || !GS.CATALOGO_ITENS) return;
+    const item = GS.CATALOGO_ITENS[itemId];
+    if(!item || typeof _initItemTooltip !== 'function' || typeof gerarConteudoTooltip !== 'function') return;
+    _initItemTooltip();
+    const t = document.getElementById('item-tooltip');
+    if(!t) return;
+    let html = gerarConteudoTooltip(item);
+    const equipped = comparisonItemId ? GS.CATALOGO_ITENS[comparisonItemId] : null;
+    if(equipped){
+      const rows = GS.compareItemStats(item, equipped);
+      if(rows.length){
+        html += `<div style="padding:8px 14px;border-top:1px solid #c8a95133;">
+          <div style="color:#8a7a5a;font-size:9px;letter-spacing:2px;margin-bottom:6px;">COMPARADO AO EQUIPADO</div>
+          ${rows.map(r => `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <span style="color:#8a7a5a;font-size:10px;">${r.label}</span>
+              <span style="font-size:10px;">
+                <span style="color:#666;">${r.oldDisplay}</span> →
+                <span style="color:#c8b89a;">${r.newDisplay}</span>
+                ${r.arrow === 'up'   ? ' <span style="color:#2ecc40;">▲</span>' : ''}
+                ${r.arrow === 'down' ? ' <span style="color:#ff4136;">▼</span>' : ''}
+              </span>
+            </div>`).join('')}
+        </div>`;
+      }
+    }
+    t.innerHTML = html;
+    t.style.borderColor = (typeof corBordaPorPreco === 'function') ? corBordaPorPreco(item.preco) : '#c8a951';
+    t.style.opacity = '1';
+    if(touchPos){
+      const margin = 16;
+      const rect = t.getBoundingClientRect();
+      let x = touchPos.x + margin;
+      if(x + rect.width > window.innerWidth) x = touchPos.x - rect.width - margin;
+      let y = touchPos.y - rect.height - margin;   // acima do dedo, não cobre o item tocado
+      if(y < 0) y = touchPos.y + margin;
+      t.style.left = x + 'px';
+      t.style.top  = y + 'px';
+    }
+  }
+
+  function _wireTooltip(el, itemId, comparisonItemId){
+    if(!itemId) return;
+    let pressTimer = null;
+    el.addEventListener('mouseenter', () => _showInventoryTooltip(itemId, comparisonItemId));
+    el.addEventListener('mouseleave', () => { if(typeof esconderTooltip === 'function') esconderTooltip(); });
+    el.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      pressTimer = setTimeout(() => _showInventoryTooltip(itemId, comparisonItemId, { x: touch.clientX, y: touch.clientY }), 350);
+    }, { passive: true });
+    el.addEventListener('touchmove', () => clearTimeout(pressTimer), { passive: true });
+    el.addEventListener('touchend', () => {
+      clearTimeout(pressTimer);
+      if(typeof esconderTooltip === 'function') esconderTooltip();
+    });
   }
 
   return { open, close, toggle, isOpen, refresh };
