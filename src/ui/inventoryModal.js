@@ -188,6 +188,24 @@ const InventoryModal = (() => {
                : `<span class="inv-slot-emoji inv-slot-empty-icon">${cfg.empty}</span>`;
       if(_selected && _selected.kind === 'gear' && _selected.slotKey === cfg.key) slot.classList.add('selected');
       if(!_readOnly) slot.onclick = () => _onGearSlotClick(cfg.key, blocked);
+      if(!_readOnly && !blocked){
+        if(item){
+          slot.draggable = true;
+          slot.addEventListener('dragstart', () => { _selected = { kind: 'gear', slotKey: cfg.key }; });
+        }
+        slot.addEventListener('dragover', (e) => {
+          if(!_selected) return;
+          e.preventDefault();
+          slot.classList.add('drop-hover');
+          _updateDropFeedback(slot, cfg.key);
+        });
+        slot.addEventListener('dragleave', () => slot.classList.remove('drop-hover', 'drop-invalid'));
+        slot.addEventListener('drop', (e) => {
+          e.preventDefault();
+          slot.classList.remove('drop-hover', 'drop-invalid');
+          _attemptMoveToGear(cfg.key);
+        });
+      }
       grid.appendChild(slot);
     }
   }
@@ -206,6 +224,19 @@ const InventoryModal = (() => {
       slot.innerHTML = item ? `<span class="inv-bagslot-emoji">${_itemIconHTML(item, '📦')}</span>` : '';
       if(_selected && _selected.kind === 'bag' && _selected.index === i) slot.classList.add('selected');
       if(!_readOnly) slot.onclick = () => _onBagSlotClick(i);
+      if(!_readOnly){
+        if(item){
+          slot.draggable = true;
+          slot.addEventListener('dragstart', () => { _selected = { kind: 'bag', index: i }; });
+        }
+        slot.addEventListener('dragover', (e) => { if(_selected){ e.preventDefault(); slot.classList.add('drop-hover'); } });
+        slot.addEventListener('dragleave', () => slot.classList.remove('drop-hover'));
+        slot.addEventListener('drop', (e) => {
+          e.preventDefault();
+          slot.classList.remove('drop-hover');
+          _attemptMoveToBag(i);
+        });
+      }
       bar.appendChild(slot);
     }
   }
@@ -285,6 +316,14 @@ const InventoryModal = (() => {
       return;
     }
     GS.unequip(sel.slotKey);   // sel.kind === 'gear'
+  }
+
+  function _updateDropFeedback(slot, slotKey){
+    const player = _currentPlayer();
+    if(!player || !_selected || _selected.kind !== 'bag'){ slot.classList.add('drop-invalid'); return; }
+    const item = (player.bag || [])[_selected.index];
+    const ok = !!item && GS.canPlaceItem(item, slotKey, player.gear || {});
+    slot.classList.toggle('drop-invalid', !ok);
   }
 
   return { open, close, toggle, isOpen, refresh };
