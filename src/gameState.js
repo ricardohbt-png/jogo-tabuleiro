@@ -1213,6 +1213,14 @@ const GS = (() => {
     return (iid.startsWith('dagger') || iid === 'adaga_secundaria' || nm.includes('adaga')) && !!item.die;
   }
 
+  // Fonte única: a mão secundária fica bloqueada quando a arma principal é de
+  // duas mãos. Consultada tanto por canPlaceItem quanto pelo renderer do
+  // paperdoll (inventoryModal.js) p/ não duplicar a regra em dois lugares.
+  function offHandBlockedByTwoHanded(gearSnapshot){
+    const weapon = (gearSnapshot || {}).weapon;
+    return !!(weapon && weapon.two_handed);
+  }
+
   // gearSnapshot = objeto gear atual (p/ checar conflito de arma de 2 mãos).
   function canPlaceItem(item, slotKey, gearSnapshot){
     if(!item || !slotKey) return false;
@@ -1231,8 +1239,7 @@ const GS = (() => {
     if(slotKey === 'off_hand'){
       const isOffhandCat = cat === 'off_hand';
       if(!isOffhandCat && !isDagger(item)) return false;
-      const weapon = gear.weapon;
-      if(weapon && weapon.two_handed) return false;
+      if(offHandBlockedByTwoHanded(gear)) return false;
       return true;
     }
     if(slotKey === 'armor') return cat === 'armor';
@@ -1790,6 +1797,7 @@ const GS = (() => {
     reorderBag,
     equipOffhand,
     canPlaceItem,
+    offHandBlockedByTwoHanded,
     compareItemStats,
     isDagger,
     setKnownSpells,

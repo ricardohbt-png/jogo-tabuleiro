@@ -170,7 +170,7 @@ const InventoryModal = (() => {
     const grid = overlay.querySelector('.inv-grid');
     grid.innerHTML = '';
     const gear = player.gear || {};
-    const twoHanded = !!(gear.weapon && gear.weapon.two_handed);
+    const twoHanded = GS.offHandBlockedByTwoHanded(gear);
     for(const cfg of GEAR_LAYOUT){
       const item = gear[cfg.key];
       const blocked = cfg.key === 'off_hand' && twoHanded && !item;

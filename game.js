@@ -1379,8 +1379,8 @@ function _renderSellItems(mode){
       const bp=a.buy_price||0;
       sellable.push({slot:'armor',item:a,sp:Math.max(1,Math.floor(bp/3)),tag:'Armadura equipada'});
     }
-    const _slotTags={off_hand:'Mão esquerda',head:'Cabeça',ring1:'Anel',ring2:'Anel',item1:'Item',item2:'Item'};
-    for(const slot of ['off_hand','head','ring1','ring2','item1','item2']){
+    const _slotTags={off_hand:'Mão esquerda',head:'Cabeça',boots:'Botas',ring1:'Anel',ring2:'Anel',item1:'Item',item2:'Item'};
+    for(const slot of ['off_hand','head','boots','ring1','ring2','item1','item2']){
       const acc=myP.gear&&myP.gear[slot];
       if(acc){
         const bp=acc.buy_price||0;
@@ -10430,22 +10430,6 @@ const ACOES_BONUS = ['beberPocao', 'usarItemMagico', 'envenenarArma', 'usarItem'
 const BONUS_ACTION_EFFECTS = new Set(['heal', 'atk_bonus', 'antidote']);
 
 function useItem(itemId){ send({type:'use_item',item_id:itemId}); }
-
-function equipFromBag(slotIndex){
-  send({type:'equip_from_bag', slot_index: slotIndex});
-}
-
-// Equipa uma adaga na mão esquerda (off_hand) como 2ª arma (dual-wield).
-function equipOffhand(slotIndex){
-  send({type:'equip_offhand', slot_index: slotIndex});
-}
-
-function unequipSlot(slotKey){
-  send({type:'unequip', slot_key: slotKey});
-}
-function reorderBag(fromIndex, toIndex){
-  send({type:'reorder_bag', from_index: fromIndex, to_index: toIndex});
-}
 
 // ── Ficha do personagem na CIDADE (v2): painel lateral autoritativo ──────────
 // Lê player.gear/player.bag do city_state (modelo autoritativo do servidor).
