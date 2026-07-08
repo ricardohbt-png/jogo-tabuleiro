@@ -7800,7 +7800,7 @@ class GameRoom:
             return "off_hand"
         if s == "head" or k == "head" or any(w in nm for w in ("elmo", "capuz", "tiara", "capacete")):
             return "head"
-        if s == "boots" or k == "boots" or any(w in nm for w in ("bota", "botas", "sapato")):
+        if s == "boots" or k == "boots" or (not s and any(w in nm for w in ("bota", "botas", "sapato"))):
             return "boots"
         if s == "ring" or k == "ring" or "anel" in nm:
             return "ring"

@@ -83,6 +83,32 @@ async def main():
     check("bloqueou (weapon não mudou)", (w["gear"].get("weapon") or {}).get("id") != "espada2m")
     check("erro de 2 mãos enviado", any("2 mãos" in e for e in r._errs))
 
+    print("\n[7] Não-regressão: 'Botas Velozes' com item_slot explícito não vira boots")
+    # CHEST_ITEMS: item_slot="accessory" (cai no branch "item"); SHOP_MERCHANT:
+    # item_slot="item" (idem) — ambos têm "bota" no nome; item_slot explícito
+    # deve vencer o fallback de nome (name-sniffing só vale quando s é vazio).
+    check("CHEST_ITEMS 'Botas Velozes' → item (não boots)",
+          S.GameRoom._slot_category_for_item(
+              {"id": "boots", "name": "Botas Velozes", "item_slot": "accessory",
+               "effect": "spd", "value": 1}) == "item")
+    check("SHOP_MERCHANT 'Botas Velozes' → item (não boots)",
+          S.GameRoom._slot_category_for_item(
+              {"id": "boots", "name": "Botas Velozes", "item_slot": "item",
+               "effect": "spd", "value": 1}) == "item")
+    check("item sem item_slot com 'bota' no nome ainda cai no fallback → boots",
+          S.GameRoom._slot_category_for_item(
+              {"id": "loot_bota_solta", "name": "Bota Surrada"}) == "boots")
+
+    r = setup("city")
+    w = make_player("p1", "Richard", "paladin", 0); r.players["p1"] = w
+    botas_velozes = {"id": "boots", "name": "Botas Velozes", "emoji": "👢",
+                      "item_slot": "item", "effect": "spd", "value": 1}
+    w["bag"] = [botas_velozes]
+    await r.handle_equip_from_bag("p1", 0)
+    check("Botas Velozes foi p/ item1/item2 (não gear.boots)", w["gear"].get("boots") is None)
+    check("Botas Velozes equipou em item1 ou item2",
+          (w["gear"].get("item1") or {}).get("id") == "boots" or (w["gear"].get("item2") or {}).get("id") == "boots")
+
     print(f"\n===== RESULTADO: {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 
