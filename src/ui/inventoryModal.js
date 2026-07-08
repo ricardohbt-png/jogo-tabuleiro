@@ -190,6 +190,22 @@ const InventoryModal = (() => {
     }
   }
 
+  function _renderBag(overlay, player){
+    const bar = overlay.querySelector('.inv-bagbar');
+    bar.innerHTML = '';
+    const bag = player.bag || [];
+    const bagSize = player.bag_size || 6;
+    for(let i = 0; i < bagSize; i++){
+      const item = bag[i];
+      const slot = document.createElement('div');
+      slot.className = 'inv-bagslot' + (item ? ' filled' : ' empty');
+      slot.dataset.bagIndex = String(i);
+      slot.title = item ? item.name : 'Vazio';
+      slot.innerHTML = item ? `<span class="inv-bagslot-emoji">${_itemIconHTML(item, '📦')}</span>` : '';
+      bar.appendChild(slot);
+    }
+  }
+
   function _render(){
     const overlay = document.getElementById('inv-modal-overlay');
     if(!overlay) return;
@@ -218,7 +234,7 @@ const InventoryModal = (() => {
     overlay.querySelector('.inv-close').onclick = close;
     overlay.querySelector('.inv-gold span').textContent = player.gold ?? 0;
     _renderGear(overlay, player);
-    // _renderBag chega na próxima task.
+    _renderBag(overlay, player);
   }
 
   return { open, close, toggle, isOpen, refresh };
