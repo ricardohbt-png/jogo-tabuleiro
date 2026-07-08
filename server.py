@@ -3315,7 +3315,7 @@ _WEAPON_EMOJI = {
 
 # Slots de equipamento que NÃO são a armadura do corpo mas podem dar +CA
 # (escudo na mão esquerda, elmo, anéis, itens ativos).
-GEAR_BONUS_SLOTS = ("off_hand", "head", "ring1", "ring2", "item1", "item2")
+GEAR_BONUS_SLOTS = ("off_hand", "head", "boots", "ring1", "ring2", "item1", "item2")
 # Todos os 9 slots de equipamento, na ordem de exibição.
 GEAR_SLOTS = ("weapon", "off_hand", "armor", "head", "boots", "ring1", "ring2", "item1", "item2")
 
@@ -4663,7 +4663,7 @@ class GameRoom:
             _recalculate_ac(p)
             log = f"💰 **{p['name']}** vendeu **{item['name']}** por {sell_price} ouro!"
 
-        elif item_slot in ("off_hand", "head", "ring1", "ring2", "item1", "item2", "acc1", "acc2"):
+        elif item_slot in ("off_hand", "head", "boots", "ring1", "ring2", "item1", "item2", "acc1", "acc2"):
             # 'acc1'/'acc2' aceitos por retrocompatibilidade
             key = {"acc1": "item1", "acc2": "item2"}.get(item_slot, item_slot)
             item = p["gear"].get(key)

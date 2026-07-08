@@ -10,7 +10,7 @@ try: sys.stdout.reconfigure(encoding="utf-8")
 except Exception: pass
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import server as S
-from server import GameRoom, make_player, GEAR_SLOTS
+from server import GameRoom, make_player, GEAR_SLOTS, GEAR_BONUS_SLOTS
 
 def setup(phase="city"):
     r = GameRoom("TEST")
@@ -108,6 +108,19 @@ async def main():
     check("Botas Velozes foi p/ item1/item2 (não gear.boots)", w["gear"].get("boots") is None)
     check("Botas Velozes equipou em item1 ou item2",
           (w["gear"].get("item1") or {}).get("id") == "boots" or (w["gear"].get("item2") or {}).get("id") == "boots")
+
+    print("\n[8] Outras enumerações de slot (achadas na revisão de código) também incluem boots")
+    check("boots está em GEAR_BONUS_SLOTS (recalculo de CA)", "boots" in GEAR_BONUS_SLOTS)
+
+    r = setup("city")
+    w = make_player("p1", "Richard", "paladin", 0); r.players["p1"] = w
+    w["gold"] = 0
+    w["gear"]["boots"] = {"id": "boots_leather", "name": "Botas de Couro", "emoji": "👢",
+                           "item_slot": "boots", "ac_bonus": 1, "buy_price": 9}
+    await r.handle_shop_sell("p1", "boots")
+    check("venda de bota não deu erro (slot reconhecido)", len(r._errs) == 0)
+    check("bota vendida saiu do gear", w["gear"].get("boots") is None)
+    check("recebeu ouro pela venda", w["gold"] == 3)   # 9 // 3
 
     print(f"\n===== RESULTADO: {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
