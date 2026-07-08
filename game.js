@@ -169,7 +169,10 @@ document.body.innerHTML = `
         <div class="actions-grid" id="action-btns"></div>
         <div class="section-title">Habilidades</div>
         <div class="skills-list" id="skills-list"></div>
-        <div class="section-title">Inventário</div>
+        <!-- Sem título estático "Inventário" aqui — o inventário de verdade
+             agora vive no InventoryModal (ícone/tecla I). #inventory-list
+             só sobra pro sistema legado de "Equipado (Loja)"
+             (renderPurchasedItems), que já tem seu próprio título interno. -->
         <div class="inventory" id="inventory-list"></div>
       </div>
       <div style="padding:6px 8px;border-top:1px solid var(--border);flex-shrink:0;">
@@ -19737,6 +19740,17 @@ document.addEventListener('keydown', (e) => {
   if(!GS.myPid) return;
   InventoryModal.toggle(GS.myPid);
 });
+
+// #ficha-fab nasce dentro do markup de #screen-game (masmorra) — sem isso ele
+// fica com display:none sempre que a tela ativa é a cidade (showScreen só
+// exibe UM .screen por vez), tornando o ícone de abrir o inventário invisível
+// e inclicável na cidade. Move o botão pra fora de qualquer .screen, direto
+// pro <body>, mesmo truque já usado pelo ⚙️ de áudio (_audioPanelEnsure) pra
+// ficar "visível em qualquer tela".
+(function _fichaFabSempreVisivel(){
+  const fab = document.getElementById('ficha-fab');
+  if(fab) document.body.appendChild(fab);
+})();
 
 GS.on('gameState', msg => {
   _detectHpChanges(msg);   // som de dano/cura por variação de HP entre estados
