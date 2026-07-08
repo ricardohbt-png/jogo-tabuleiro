@@ -186,6 +186,8 @@ const InventoryModal = (() => {
         ? `<span class="inv-slot-blocked-x">✕</span>`
         : item ? `<span class="inv-slot-emoji">${_itemIconHTML(item, cfg.empty)}</span>`
                : `<span class="inv-slot-emoji inv-slot-empty-icon">${cfg.empty}</span>`;
+      if(_selected && _selected.kind === 'gear' && _selected.slotKey === cfg.key) slot.classList.add('selected');
+      if(!_readOnly) slot.onclick = () => _onGearSlotClick(cfg.key, blocked);
       grid.appendChild(slot);
     }
   }
@@ -202,6 +204,8 @@ const InventoryModal = (() => {
       slot.dataset.bagIndex = String(i);
       slot.title = item ? item.name : 'Vazio';
       slot.innerHTML = item ? `<span class="inv-bagslot-emoji">${_itemIconHTML(item, '📦')}</span>` : '';
+      if(_selected && _selected.kind === 'bag' && _selected.index === i) slot.classList.add('selected');
+      if(!_readOnly) slot.onclick = () => _onBagSlotClick(i);
       bar.appendChild(slot);
     }
   }
@@ -235,6 +239,52 @@ const InventoryModal = (() => {
     overlay.querySelector('.inv-gold span').textContent = player.gold ?? 0;
     _renderGear(overlay, player);
     _renderBag(overlay, player);
+  }
+
+  function _onGearSlotClick(slotKey, blocked){
+    if(_readOnly || blocked) return;
+    if(_selected == null){
+      const player = _currentPlayer();
+      if(player && player.gear && player.gear[slotKey]) _selected = { kind: 'gear', slotKey };
+      refresh();
+      return;
+    }
+    if(_selected.kind === 'gear' && _selected.slotKey === slotKey){ _selected = null; refresh(); return; }
+    _attemptMoveToGear(slotKey);
+  }
+
+  function _onBagSlotClick(index){
+    if(_readOnly) return;
+    if(_selected == null){
+      const player = _currentPlayer();
+      if(player && player.bag && player.bag[index]) _selected = { kind: 'bag', index };
+      refresh();
+      return;
+    }
+    if(_selected.kind === 'bag' && _selected.index === index){ _selected = null; refresh(); return; }
+    _attemptMoveToBag(index);
+  }
+
+  function _attemptMoveToGear(slotKey){
+    const sel = _selected; _selected = null;
+    if(!sel || sel.kind === 'gear'){ refresh(); return; }   // gear→gear: sem suporte, ignora
+    const player = _currentPlayer();
+    const item = player && player.bag ? player.bag[sel.index] : null;
+    if(!item || !GS.canPlaceItem(item, slotKey, player.gear || {})){ refresh(); return; }
+    const ehOffhand = slotKey === 'off_hand' && GS.isDagger(item);
+    if(ehOffhand) GS.equipOffhand(sel.index);
+    else          GS.equipFromBag(sel.index);
+  }
+
+  function _attemptMoveToBag(toIndex){
+    const sel = _selected; _selected = null;
+    if(!sel){ refresh(); return; }
+    if(sel.kind === 'bag'){
+      if(sel.index !== toIndex) GS.reorderBag(sel.index, toIndex);
+      else refresh();
+      return;
+    }
+    GS.unequip(sel.slotKey);   // sel.kind === 'gear'
   }
 
   return { open, close, toggle, isOpen, refresh };
