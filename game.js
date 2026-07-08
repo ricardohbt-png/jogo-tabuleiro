@@ -179,9 +179,11 @@ document.body.innerHTML = `
       </div>
     </div>
   </div>
-  <!-- Celular: fundo escuro + botão flutuante que abrem/fecham a ficha (gaveta) -->
+  <!-- Celular: fundo escuro + botão flutuante que abre/fecha Ações/Habilidades (gaveta) -->
   <div id="ficha-backdrop" onclick="toggleFichaDrawer(false)"></div>
-  <button id="ficha-fab" onclick="toggleFichaDrawer(true)" title="Ficha do personagem">🎒</button>
+  <button id="actions-fab" onclick="toggleFichaDrawer(true)" title="Ações e habilidades">⚔️</button>
+  <!-- Ícone de abrir o Inventário — sempre visível (cidade+masmorra, desktop+mobile) -->
+  <button id="ficha-fab" onclick="InventoryModal.toggle(GS.myPid)" title="Inventário (tecla I)">🎒</button>
 </div>
 
 <!-- ══ END SCREEN ══ -->
@@ -3161,6 +3163,7 @@ function handleGameState(msg){
   renderObjectivesHUD(msg);
   _start2DHighlightLoop();
   renderStory();   // Fase 4b: abertura da fase (sobre o tabuleiro; não bloqueia)
+  if(typeof InventoryModal !== 'undefined') InventoryModal.refresh();
 }
 
 // ── Fase 3: HUD de objetivos + botão "Libertar" (só em masmorra autorada) ─────
@@ -10028,154 +10031,6 @@ function renderMyPanel(state){
 
   // ── Inventory ──
   const inv = $('inventory-list'); inv.innerHTML = '';
-  const gear = me.gear || {};
-
-  // ── Equipamento: 8 slots (paper-doll) ──
-  const EQ_SLOTS = [
-    {key:'weapon',   label:'Mão Direita', empty:'✊'},
-    {key:'off_hand', label:'Mão Esquerda',empty:'🤚'},
-    {key:'armor',    label:'Corpo',       empty:'👕'},
-    {key:'head',     label:'Cabeça',      empty:'🧢'},
-    {key:'ring1',    label:'Anel 1',      empty:'💍'},
-    {key:'ring2',    label:'Anel 2',      empty:'💍'},
-    {key:'item1',    label:'Item 1',      empty:'📦'},
-    {key:'item2',    label:'Item 2',      empty:'📦'},
-  ];
-  const eqTitle = document.createElement('div');
-  eqTitle.className = 'section-title'; eqTitle.style.marginTop = '4px';
-  eqTitle.textContent = 'Equipamento';
-  inv.appendChild(eqTitle);
-  const eqGrid = document.createElement('div');
-  eqGrid.className = 'equip-grid';
-  for(const {key, label, empty} of EQ_SLOTS){
-    const item = gear[key];
-    const slot = document.createElement('div');
-    slot.className = 'eq-slot' + (item ? ' filled' : '');
-    slot.title = item ? `${item.name} — clique para desequipar` : label;
-    const isAmmoSlot = item && item.effect === 'ammo';
-    const ammoTag = isAmmoSlot
-      ? `<div class="eq-slot-ammo" style="font-size:1rem;font-weight:900;color:var(--gold);text-align:center;line-height:1;text-shadow:0 0 6px rgba(255,200,50,.7);">×${item.ammo_count ?? 0}</div>`
-      : '';
-    slot.innerHTML = `
-      <div class="eq-slot-label">${label}</div>
-      <div class="eq-slot-emoji">${item ? item.emoji : `<span style="opacity:.35">${empty}</span>`}</div>
-      <div class="eq-slot-name">${item ? item.name : '—'}</div>
-      ${ammoTag}`;
-    if(item){
-      slot.appendChild(Object.assign(document.createElement('div'),
-        {className:'eq-slot-x', textContent:'⤓', title:'Desequipar'}));
-      slot.onclick = () => unequipSlot(key);
-      aplicarTooltipAoItem(slot, item.id);   // tooltip (se id estiver no catálogo)
-    }
-    // Hover no slot de arma → mostra área de alcance no mapa
-    if(key === 'weapon'){
-      slot.addEventListener('mouseenter', () => {
-        if(!item) return;
-        window._weaponRangePreview = true;
-        if(GS.gameState) renderMap(GS.gameState);
-      });
-      slot.addEventListener('mouseleave', () => {
-        window._weaponRangePreview = false;
-        if(GS.gameState) renderMap(GS.gameState);
-      });
-    }
-    eqGrid.appendChild(slot);
-  }
-  inv.appendChild(eqGrid);
-
-  // ── Inventário (bag_size slots — expansível por mochilas) ──
-  const bag     = me.bag || [];
-  const bagSize = me.bag_size || 6;
-  const bagTitle = document.createElement('div');
-  bagTitle.className = 'section-title';
-  bagTitle.textContent = `Inventário (${bag.length}/${bagSize})`;
-  inv.appendChild(bagTitle);
-  const bagGrid = document.createElement('div');
-  bagGrid.className = 'bag-grid';
-
-  for(let i = 0; i < bagSize; i++){
-    const item = bag[i];
-    const slot = document.createElement('div');
-    if(item){
-      const isConsumable = !item.die && ((item.item_slot === 'bag') ||
-        item.effect === 'heal' || item.effect === 'atk_bonus');
-      const isEquippable = !!(item.item_slot && item.item_slot !== 'bag') || !!item.die;
-      const typeLabel = item.die ? '⚔ Arma'
-        : item.effect === 'ammo' ? `🏹 Munição (×${item.ammo_count ?? 0})`
-        : ({weapon:'⚔ Arma', shield:'🛡 Escudo', armor:'🛡 Armadura',
-            head:'⛑ Cabeça', ring:'💍 Anel', item:'🎒 Item',
-            accessory:'📿 Acessório', bag:'🧪 Consumível'}[item.item_slot] || '📦 Item');
-      slot.className = 'bag-slot filled';
-      slot.title = item.name;
-      const isAmmoBag = item.effect === 'ammo';
-      slot.innerHTML = `
-        <div class="bag-slot-num">${i+1}</div>
-        <div class="bag-slot-emoji">${item.emoji}</div>
-        ${isAmmoBag ? `<div style="font-size:1.05rem;font-weight:900;color:var(--gold);line-height:1;text-shadow:0 0 6px rgba(255,200,50,.7);">×${item.ammo_count ?? 0}</div>` : ''}
-        <div class="bag-slot-name">${item.name}</div>
-        <div class="bag-slot-type">${typeLabel}</div>`;
-      aplicarTooltipAoItem(slot, item.id);   // tooltip (se id estiver no catálogo)
-      if(isEquippable){
-        const allowed = item.allowed_classes;
-        const classRestricted = allowed && me?.class_id && !allowed.includes(me.class_id);
-        const btn = document.createElement('button');
-        btn.className = 'bag-slot-btn equip' + (classRestricted ? ' disabled' : '');
-        btn.textContent = classRestricted ? '🚫 Classe restrita'
-          : item.effect === 'ammo' ? '🏹 Equipar munição'
-          : '⚙ Equipar';
-        btn.disabled = !!classRestricted;
-        btn.title = classRestricted ? `Apenas: ${allowed.join(', ')}` : '';
-        if(!classRestricted) btn.onclick = () => equipFromBag(i);
-        slot.appendChild(btn);
-        // Adaga: botão extra para empunhar como 2ª arma (mão esquerda / dual-wield).
-        const ehAdaga = (item.id === 'dagger' || /adaga/i.test(item.name || '')) && item.die;
-        if(ehAdaga && !classRestricted){
-          const btn2 = document.createElement('button');
-          btn2.className = 'bag-slot-btn equip';
-          btn2.textContent = '🗡️ 2ª arma';
-          btn2.title = 'Empunhar na mão esquerda como 2ª arma (dual-wield — usa DES no acerto e dano)';
-          btn2.onclick = () => equipOffhand(i);
-          slot.appendChild(btn2);
-        }
-      } else if(item.effect === 'scroll'){
-        aplicarTooltipPergaminho(slot, item);   // tooltip com nível/dano/alcance/CD/falha
-        if(canAct){
-        // Pergaminho mágico: entra em modo de mira (reusa a UI do grimório).
-        const btn = document.createElement('button');
-        const ehCaster = me && (me.class_id === 'mage' || me.class_id === 'cleric');
-        btn.className = 'bag-slot-btn use' + (ehCaster ? '' : ' disabled');
-        btn.textContent = ehCaster ? '📜 Conjurar' : '🚫 Só mago/clérigo';
-        btn.disabled = !ehCaster;
-        btn.title = ehCaster ? 'Conjura a magia guardada (mira no tabuleiro)'
-                             : 'Apenas mago ou clérigo conseguem usar pergaminhos.';
-        if(ehCaster) btn.onclick = () => castarPergaminho(item);
-        slot.appendChild(btn);
-        }
-      } else if(isConsumable && canAct){
-        const btn = document.createElement('button');
-        // Se é ação bônus e já foi usada neste turno, desabilitar com aviso
-        const isBonusAction = BONUS_ACTION_EFFECTS.has(item.effect);
-        const bonusUsado = !!me.bonus_action_used;
-        const bloqueado  = isBonusAction && bonusUsado;
-        btn.className  = 'bag-slot-btn use' + (bloqueado ? ' disabled' : '');
-        btn.textContent = bloqueado ? '⚠ Ação bônus usada' : (isBonusAction ? '🎯 Usar (bônus)' : '▶ Usar');
-        btn.disabled    = bloqueado;
-        btn.title       = bloqueado
-          ? 'Você já usou sua ação bônus neste turno.'
-          : isBonusAction ? 'Ação bônus — consome -1 Fome e -1 Sede' : '';
-        if(!bloqueado) btn.onclick = () => useItem(item.id);
-        slot.appendChild(btn);
-      }
-    } else {
-      slot.className = 'bag-slot empty-slot';
-      slot.innerHTML = `
-        <div class="bag-slot-num" style="opacity:.5">${i+1}</div>
-        <div class="bag-slot-emoji" style="font-size:1rem;opacity:.4">◻</div>
-        <div class="bag-slot-type" style="font-size:.52rem">vazio</div>`;
-    }
-    bagGrid.appendChild(slot);
-  }
-  inv.appendChild(bagGrid);
 
   // ── Itens comprados na loja (modelo client-side GS.getHeroiAtivo) ──────────
   renderPurchasedItems(inv, canAct);
@@ -10593,26 +10448,11 @@ function reorderBag(fromIndex, toIndex){
 // Lê player.gear/player.bag do city_state (modelo autoritativo do servidor).
 // Meu herói: equipar/desequipar (botão/clique) + arrastar-e-soltar (reordenar a
 // bolsa e equipar/desequipar). Outros heróis: só leitura.
-const FC_EQ_SLOTS = [
-  {key:'weapon',   label:'Mão Direita', empty:'✊'},
-  {key:'off_hand', label:'Mão Esquerda',empty:'🤚'},
-  {key:'armor',    label:'Corpo',       empty:'👕'},
-  {key:'head',     label:'Cabeça',      empty:'🧢'},
-  {key:'ring1',    label:'Anel 1',      empty:'💍'},
-  {key:'ring2',    label:'Anel 2',      empty:'💍'},
-  {key:'item1',    label:'Item 1',      empty:'📦'},
-  {key:'item2',    label:'Item 2',      empty:'📦'},
-];
 let _fcPanelPid = null;   // pid mostrado no painel (null = fechado)
-let _fcDrag = null;       // origem do arraste: {kind:'bag',index} | {kind:'gear',slotKey}
 
 function _fcPlayerAtual(){
   return (GS.cityState && GS.cityState.players)
     ? GS.cityState.players.find(p => p.id === _fcPanelPid) : null;
-}
-
-function _fcEhAdaga(item){
-  return !!item && (item.id === 'dagger' || /adaga/i.test(item.name || '')) && !!item.die;
 }
 
 function abrirFichaCidade(pid){
@@ -10636,7 +10476,6 @@ function abrirFichaCidade(pid){
 
 function fecharFichaCidade(){
   _fcPanelPid = null;
-  _fcDrag = null;
   const panel = document.getElementById('ficha-cidade-panel');
   const back  = document.getElementById('ficha-cidade-backdrop');
   if(panel) panel.classList.remove('open');
@@ -10686,104 +10525,14 @@ function renderFichaCidadeBody(panel, player, editable){
   attr.innerHTML = renderConteudoAtributosFichaJogo(heroiStatic, player);
   body.appendChild(attr);
 
-  // Equipamento (paper-doll dos 8 slots)
-  const gear = player.gear || {};
-  const eqTitle = document.createElement('div');
-  eqTitle.className = 'section-title'; eqTitle.style.marginTop = '4px';
-  eqTitle.textContent = 'Equipamento';
-  body.appendChild(eqTitle);
-  const eqGrid = document.createElement('div');
-  eqGrid.className = 'equip-grid';
-  for(const {key, label, empty} of FC_EQ_SLOTS){
-    const item = gear[key];
-    const slot = document.createElement('div');
-    slot.className = 'eq-slot' + (item ? ' filled' : '');
-    slot.title = item ? (editable ? `${item.name} — clique/arraste p/ desequipar` : item.name) : label;
-    slot.innerHTML = `
-      <div class="eq-slot-label">${label}</div>
-      <div class="eq-slot-emoji">${item ? item.emoji : `<span style="opacity:.35">${empty}</span>`}</div>
-      <div class="eq-slot-name">${item ? item.name : '—'}</div>`;
-    if(item) aplicarTooltipAoItem(slot, item.id);
-    if(editable && item){
-      slot.appendChild(Object.assign(document.createElement('div'),
-        {className:'eq-slot-x', textContent:'⤓', title:'Desequipar'}));
-      slot.onclick = () => unequipSlot(key);
-      slot.draggable = true;
-      slot.addEventListener('dragstart', e => { _fcDrag = {kind:'gear', slotKey:key}; e.dataTransfer.effectAllowed = 'move'; });
-    }
-    if(editable){
-      slot.addEventListener('dragover',  e => { if(_fcDrag){ e.preventDefault(); slot.classList.add('drop-target'); } });
-      slot.addEventListener('dragleave', () => slot.classList.remove('drop-target'));
-      slot.addEventListener('drop',      e => { e.preventDefault(); slot.classList.remove('drop-target'); _fcDropOnGear(key); });
-    }
-    eqGrid.appendChild(slot);
-  }
-  body.appendChild(eqGrid);
-
-  // Inventário (bag_size slots)
-  const bag     = player.bag || [];
-  const bagSize = player.bag_size || 6;
-  const bagTitle = document.createElement('div');
-  bagTitle.className = 'section-title';
-  bagTitle.textContent = `Inventário (${bag.length}/${bagSize})`;
-  body.appendChild(bagTitle);
-  const bagGrid = document.createElement('div');
-  bagGrid.className = 'bag-grid';
-  for(let i = 0; i < bagSize; i++){
-    const item = bag[i];
-    const slot = document.createElement('div');
-    if(item){
-      const isEquippable = !!(item.item_slot && item.item_slot !== 'bag') || !!item.die;
-      const typeLabel = item.die ? '⚔ Arma'
-        : item.effect === 'ammo' ? `🏹 Munição (×${item.ammo_count ?? 0})`
-        : ({weapon:'⚔ Arma', shield:'🛡 Escudo', armor:'🛡 Armadura', head:'⛑ Cabeça',
-            ring:'💍 Anel', item:'🎒 Item', accessory:'📿 Acessório', bag:'🧪 Consumível'}[item.item_slot] || '📦 Item');
-      slot.className = 'bag-slot filled';
-      slot.title = item.name;
-      slot.innerHTML = `
-        <div class="bag-slot-num">${i+1}</div>
-        <div class="bag-slot-emoji">${item.emoji}</div>
-        <div class="bag-slot-name">${item.name}</div>
-        <div class="bag-slot-type">${typeLabel}</div>`;
-      aplicarTooltipAoItem(slot, item.id);
-      if(editable){
-        slot.draggable = true;
-        slot.addEventListener('dragstart', e => { _fcDrag = {kind:'bag', index:i}; e.dataTransfer.effectAllowed = 'move'; });
-        if(isEquippable){
-          const allowed = item.allowed_classes;
-          const classRestricted = allowed && player.class_id && !allowed.includes(player.class_id);
-          const btn = document.createElement('button');
-          btn.className = 'bag-slot-btn equip' + (classRestricted ? ' disabled' : '');
-          btn.textContent = classRestricted ? '🚫 Classe' : '⚙ Equipar';
-          btn.disabled = !!classRestricted;
-          btn.title = classRestricted ? `Apenas: ${allowed.join(', ')}` : '';
-          if(!classRestricted) btn.onclick = () => equipFromBag(i);
-          slot.appendChild(btn);
-          if(_fcEhAdaga(item) && !classRestricted){
-            const b2 = document.createElement('button');
-            b2.className = 'bag-slot-btn equip';
-            b2.textContent = '🗡️ 2ª arma';
-            b2.title = 'Empunhar na mão esquerda (2ª arma)';
-            b2.onclick = () => equipOffhand(i);
-            slot.appendChild(b2);
-          }
-        }
-      }
-    } else {
-      slot.className = 'bag-slot empty-slot';
-      slot.innerHTML = `
-        <div class="bag-slot-num" style="opacity:.5">${i+1}</div>
-        <div class="bag-slot-emoji" style="font-size:1rem;opacity:.4">◻</div>
-        <div class="bag-slot-type" style="font-size:.52rem">vazio</div>`;
-    }
-    if(editable){
-      slot.addEventListener('dragover',  e => { if(_fcDrag){ e.preventDefault(); slot.classList.add('drop-target'); } });
-      slot.addEventListener('dragleave', () => slot.classList.remove('drop-target'));
-      slot.addEventListener('drop',      e => { e.preventDefault(); slot.classList.remove('drop-target'); _fcDropOnBag(i); });
-    }
-    bagGrid.appendChild(slot);
-  }
-  body.appendChild(bagGrid);
+  // Botão pra abrir o inventário (equipamento+bolsa) deste jogador — o
+  // InventoryModal cuida disso agora; este painel só mostra atributos+guilda.
+  const invBtn = document.createElement('button');
+  invBtn.className = 'section-title';
+  invBtn.style.cssText = 'width:100%;text-align:left;cursor:pointer;background:none;border:none;color:var(--gold);';
+  invBtn.textContent = '🎒 Ver inventário';
+  invBtn.onclick = () => InventoryModal.open(player.id, { readOnly: !editable });
+  body.appendChild(invBtn);
 
   // ── Técnica da Guilda (Fase 0) — equipar no 4º slot (só o próprio herói, na cidade) ──
   if(editable){
@@ -10828,31 +10577,6 @@ function renderFichaCidadeBody(panel, player, editable){
       hint.textContent = 'Compre técnicas na Guilda dos Heróis.';
       body.appendChild(hint);
     }
-  }
-}
-
-// Drop num slot de EQUIPAMENTO: vindo da bolsa → equipar (off_hand p/ adaga/escudo).
-function _fcDropOnGear(slotKey){
-  const d = _fcDrag; _fcDrag = null;
-  if(!d || d.kind !== 'bag') return;   // gear→gear: ignora
-  const player = _fcPlayerAtual();
-  const item = player && player.bag ? player.bag[d.index] : null;
-  if(!item) return;
-  const ehOffhand = slotKey === 'off_hand'
-    && (_fcEhAdaga(item) || item.item_slot === 'shield' || item.kind === 'shield');
-  if(ehOffhand) equipOffhand(d.index);
-  else          equipFromBag(d.index);
-}
-
-// Drop num slot da BOLSA: vindo da bolsa → reordenar; vindo do gear → desequipar.
-function _fcDropOnBag(toIndex){
-  const d = _fcDrag; _fcDrag = null;
-  if(!d) return;
-  if(d.kind === 'bag'){
-    if(d.index === toIndex) return;
-    reorderBag(d.index, toIndex);
-  } else if(d.kind === 'gear'){
-    unequipSlot(d.slotKey);
   }
 }
 
@@ -19980,6 +19704,7 @@ GS.on('cityState', msg => {
   }
   // Painel da ficha aberto → re-renderiza com o estado novo (equipar/reordenar).
   if(_fcPanelPid != null) _refreshFichaCidadePanel();
+  if(typeof InventoryModal !== 'undefined') InventoryModal.refresh();
   // Painel da Guilda aberto → re-renderiza (compra recém-concluída atualiza saldo/estado).
   const _gm = $('guild-modal');
   if(_gm && _gm.classList.contains('open')) _renderGuild();
@@ -20002,6 +19727,15 @@ GS.on('enterDungeon', () => {
   // Auto-enable 3D when entering the dungeon (if Three.js is available).
   // gameState foi limpo no enter_dungeon → init3D aguarda o estado fresco.
   if(window.THREE) toggle3D();
+});
+
+// Atalho de teclado "I" — abre/fecha o Inventário (Diablo-style modal).
+document.addEventListener('keydown', (e) => {
+  if(e.key !== 'i' && e.key !== 'I') return;
+  const tag = (document.activeElement && document.activeElement.tagName) || '';
+  if(tag === 'INPUT' || tag === 'TEXTAREA') return;
+  if(!GS.myPid) return;
+  InventoryModal.toggle(GS.myPid);
 });
 
 GS.on('gameState', msg => {
