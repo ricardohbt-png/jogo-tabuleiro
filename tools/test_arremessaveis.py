@@ -93,6 +93,41 @@ async def main():
     await r._processar_em_chamas_turno()
     check("sem status → sem dano extra", p["hp"] == hp_p1)
 
+    # ── [4] handle_throw_item: acerto, consumo, chamas, alcance, LOS ────────────
+    print("\n[4] handle_throw_item")
+
+    # (4a) Acerto garantido (CA baixa) → dano + em chamas + item consumido
+    r = setup(); random.seed(2)
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [4, 4]; p["dex"] = 14
+    r.players["p1"] = p; p["bag"] = [throwable("frasco_oleo")]
+    m = make_monster(r, "m1", 4, 6, hp=30, ac=1)   # 2 casas, LOS livre
+    hp0 = m["hp"]
+    await r.handle_throw_item("p1", "frasco_oleo", "m1")
+    check("acerto causou dano", m["hp"] < hp0)
+    check("alvo ficou em chamas", m.get("em_chamas_rodadas", 0) > 0)
+    check("item consumido da bolsa", len(p["bag"]) == 0)
+    check("ação principal gasta", p.get("action_done") is True)
+
+    # (4b) Fora de alcance → recusa, item NÃO consumido, ação livre
+    r = setup(); random.seed(2)
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [0, 0]; r.players["p1"] = p
+    p["bag"] = [throwable("frasco_oleo")]
+    m = make_monster(r, "m1", 8, 8, ac=1)   # >4 casas
+    await r.handle_throw_item("p1", "frasco_oleo", "m1")
+    check("fora de alcance: item mantido", len(p["bag"]) == 1)
+    check("fora de alcance: ação NÃO gasta", not p.get("action_done"))
+    check("fora de alcance: erro enviado", any("alcance" in e.lower() for e in r._errs))
+
+    # (4c) Parede bloqueia LOS → recusa
+    r = setup(); random.seed(2)
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [4, 4]; r.players["p1"] = p
+    p["bag"] = [throwable("fogo_grego")]
+    r.tiles[4][5] = WALL   # parede entre (4,4) e (4,6) na coluna? ver orientação abaixo
+    r.tiles[5][4] = WALL   # bloqueia a coluna x=4 em y=5
+    m = make_monster(r, "m1", 4, 6, ac=1)
+    await r.handle_throw_item("p1", "fogo_grego", "m1")
+    check("LOS bloqueada: item mantido", len(p["bag"]) == 1)
+
     print(f"\n=== {PASS} OK / {FAIL} FALHAS ===")
     sys.exit(1 if FAIL else 0)
 

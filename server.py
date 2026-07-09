@@ -6508,6 +6508,83 @@ class GameRoom:
 
         return True
 
+    async def handle_throw_item(self, pid, item_id, target_id):
+        """Arremessa um consumível de bolsa (ARREMESSAVEIS) num monstro-alvo.
+        AÇÃO PRINCIPAL. Teste de ataque por DES vs CA (espelha _executar_arremesso).
+        Consome o item em acerto E erro (o frasco se espatifa). Só o modo
+        single-target ('ataque_alvo') é tratado aqui (Sub-projeto A)."""
+        if not self._is_turn(pid): return
+        p = self.players.get(pid)
+        if not p or not p["alive"]: return
+
+        item = next((i for i in p["bag"] if i["id"] == item_id), None)
+        if not item:
+            await self.send_to(pid, {"type": "error", "msg": "Item não encontrado na bolsa."}); return
+        defn = ARREMESSAVEIS.get(item_id)
+        if not defn or defn.get("alvo") != "ataque_alvo":
+            await self.send_to(pid, {"type": "error", "msg": "Item não arremessável."}); return
+
+        # Ação principal (cobre Velocidade/Oportunidade via _acao_bloqueada).
+        if self._acao_bloqueada(p):
+            await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
+
+        if target_id not in self.monsters:
+            await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
+        target = self.monsters[target_id]
+        if target.get("hp", 0) <= 0:
+            await self.send_to(pid, {"type": "error", "msg": "Alvo já está morto."}); return
+
+        rng = defn["alcance"]
+        dx = abs(p["pos"][0] - target["pos"][0]); dy = abs(p["pos"][1] - target["pos"][1])
+        if max(dx, dy) > rng:
+            await self.send_to(pid, {"type": "error",
+                "msg": f"⚠ {target['name']} fora de alcance (máx {rng} quadrados)."}); return
+        if not self._tem_linha_de_visao(p["pos"], target["pos"]):
+            await self.send_to(pid, {"type": "error",
+                "msg": f"🧱 Uma parede bloqueia o arremesso até {target['name']}!"}); return
+
+        # Rolagem por DESTREZA (1 natural = falha; 20 = crítico).
+        dex_mod = mod(p.get("dex", 12))
+        roll = random.randint(1, 20)
+        total = roll + p["atk_bonus"]
+        nat1 = (roll == 1); crit = (roll == 20)
+        hit = (not nat1) and (crit or total >= target["ac"])
+        await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
+                              "label": f"Arremesso ({defn['name']})", "hit": hit, "crit": crit})
+
+        # Consome o item (espatifa) — em acerto ou erro.
+        p["bag"].remove(item)
+        # Marca a ação e cobra sobrevivência (mesma cadência de um ataque).
+        p["action_done"] = True
+        self._consumir_recursos(p, 'apenas_acao')
+
+        if hit:
+            raw = roll_dice(defn["dano"])
+            dmg = max(1, (raw + dex_mod) * (2 if crit else 1))
+            die_type = "d" + defn["dano"].split("d")[1]
+            await self.broadcast({"type": "dice_roll", "die": die_type,
+                                  "value": raw, "label": "Dano (arremesso)"})
+            crit_str = " **CRÍTICO!**" if crit else ""
+            await self.gm_say(
+                f"{defn['emoji']} **{p['name']}** arremessa **{defn['name']}** em "
+                f"**{target['name']}** (d20={roll}+{p['atk_bonus']}={total} vs CA {target['ac']}):"
+                f"{crit_str} **{dmg}** de {defn['elemento']}!")
+            await self._dano_em_alvo(target, dmg, defn["elemento"], pid)
+            if defn.get("em_chamas") and target.get("hp", 0) > 0:
+                dur = self._rolar_dado(defn.get("chamas_dur", "1d4"))
+                self._aplicar_em_chamas(target, dur, defn.get("chamas_agua_apaga", True))
+                await self.gm_say(f"🔥 **{target['name']}** pega fogo por {dur} rodada(s)!")
+        elif nat1:
+            await self.gm_say(
+                f"{defn['emoji']} **{p['name']}** arremessa **{defn['name']}** mas rola "
+                f"**1 natural** — o frasco se espatifa longe do alvo!")
+        else:
+            await self.gm_say(
+                f"{defn['emoji']} **{p['name']}** arremessa **{defn['name']}** em "
+                f"**{target['name']}** (d20={roll}+{p['atk_bonus']}={total} vs CA {target['ac']}): **ERROU!**")
+
+        await self.push_state()
+
     # ── cálculo de ataque com adaga por Destreza (scaffolding) ──────────────────
     # NOTA: inserido verbatim conforme especificação. AINDA NÃO é chamado — a
     # lógica autoritativa de ataque/arremesso já vive em handle_attack e
@@ -15192,6 +15269,9 @@ async def handler(ws):
 
                 elif t == "throw":
                     if room: await room.handle_throw(pid, msg.get("target_id"), msg.get("slot"))
+
+                elif t == "throw_item":
+                    if room: await room.handle_throw_item(pid, msg.get("item_id"), msg.get("target_id"))
 
                 elif t == "skill":
                     if room: await room.handle_skill(pid, msg.get("skill_id"), msg.get("target_id"))
