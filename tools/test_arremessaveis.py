@@ -128,6 +128,30 @@ async def main():
     await r.handle_throw_item("p1", "fogo_grego", "m1")
     check("LOS bloqueada: item mantido", len(p["bag"]) == 1)
 
+    # ── [5] Beber água apaga chamas (ação livre); Fogo Grego ignora ─────────────
+    print("\n[5] Água apaga chamas")
+    from server import _TAVERN_BY_ID  # garrafa_agua vive aqui
+    def agua():
+        return deepcopy(_TAVERN_BY_ID["garrafa_agua"])
+
+    r = setup()
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [4, 4]; r.players["p1"] = p
+    p["bag"] = [agua()]
+    r._aplicar_em_chamas(p, 3, True)   # óleo → água apaga
+    await r.handle_use_item("p1", "garrafa_agua")
+    check("óleo: água apagou as chamas", p.get("em_chamas_rodadas", 0) == 0)
+    check("óleo: garrafa consumida", len(p["bag"]) == 0)
+    check("óleo: ação NÃO gasta (livre)", not p.get("action_done"))
+
+    r = setup()
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [4, 4]; r.players["p1"] = p
+    p["bag"] = [agua()]
+    r._aplicar_em_chamas(p, 3, False)  # Fogo Grego → água NÃO apaga
+    await r.handle_use_item("p1", "garrafa_agua")
+    check("grego: chamas continuam", p.get("em_chamas_rodadas", 0) == 3)
+    check("grego: garrafa NÃO consumida", len(p["bag"]) == 1)
+    check("grego: erro explicativo", any("água" in e.lower() or "grego" in e.lower() for e in r._errs))
+
     print(f"\n=== {PASS} OK / {FAIL} FALHAS ===")
     sys.exit(1 if FAIL else 0)
 

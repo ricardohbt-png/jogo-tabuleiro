@@ -11561,6 +11561,20 @@ class GameRoom:
 
         effect, val = item["effect"], item.get("value", 0)
 
+        # ── Apagar "em chamas" bebendo água (ação LIVRE) ────────────────────────
+        # Só água (effect food com sede>0) e só se as chamas forem apagáveis por
+        # água (Óleo sim; Fogo Grego não). Não gasta ação; consome 1 água.
+        if effect == "food" and item.get("sede", 0) > 0 and p.get("em_chamas_rodadas", 0) > 0:
+            if not p.get("chamas_agua_apaga", True):
+                await self.send_to(pid, {"type": "error",
+                    "msg": "🟢 Estas chamas (Fogo Grego) não se apagam com água — gaste sua ação para apagá-las!"})
+                return
+            p["em_chamas_rodadas"] = 0
+            p["bag"].remove(item)
+            await self.gm_say(f"💧 **{p['name']}** joga **{item['name']}** sobre si e apaga as chamas!")
+            await self.push_state()
+            return
+
         # Pergaminhos exigem mira — usados pelo fluxo dedicado (use_scroll).
         if effect == "scroll":
             await self.handle_use_scroll(pid, item_id, {})
