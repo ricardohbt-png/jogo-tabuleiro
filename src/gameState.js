@@ -30,6 +30,7 @@ const GS = (() => {
   let cityState       = null;   // latest city_state message from server
   let pendingAction   = null;   // reserved for future use
   let pendingSkill    = null;   // skill waiting for map-click target
+  let pendingThrow    = null;   // arremessável aguardando alvo no mapa: {id, alcance}
   let warriorSelected = [];     // warrior: ids de habilidades ARMADAS (toggle) —
                                 // custo de fome/sede cobrado só na ação (ataque)
   let isMyTurn        = false;
@@ -603,6 +604,21 @@ const GS = (() => {
       efeito:{ atributo:'cego', valor:'1d4', operacao:'status', penalidadeAtaque:-4, bloqueiaDistancia:true, duracaoFalha:'1d4', penalidadeFalha:-2, atributoFalha:'percepcao', save:'fortitude', dificuldade:11, anula:false },
       descricao:'Cega por 1d4 rodadas — -4 em ataques, sem ranged (Fort. dif. 11). Falha parcial: -2 percepção.'
     },
+
+    // ── MERCADO — Arremessáveis de fogo (consumíveis de bolsa; ver ARREMESSAVEIS no server) ──
+    // Usados por clique direito → mira de alvo → throw_item. Ataque por DES vs CA.
+    frasco_oleo: {
+      id: 'frasco_oleo', nome: 'Frasco de Óleo Incendiário', emoji: '🔥',
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, permitidoPara:['todos'],
+      descricao: 'Arremesse (4 quad., ataque por DES). 1d6 de fogo e o alvo pega ' +
+                 'fogo (1/rodada por 1d4 rodadas). Apaga com Água ou gastando a ação.',
+    },
+    fogo_grego: {
+      id: 'fogo_grego', nome: 'Fogo Grego', emoji: '🟢',
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, permitidoPara:['todos'],
+      descricao: 'Arremesse (4 quad., ataque por DES). 2d6 de fogo e o alvo pega ' +
+                 'fogo (1/rodada por 1d4 rodadas). Só a ação apaga — água não funciona.',
+    },
   };
 
   // class_id (servidor) → heroKey (HERO_DATA / EQUIPAMENTOS_INICIAIS).
@@ -1095,6 +1111,8 @@ const GS = (() => {
     send({ type: 'end_turn' });
   }
   function useItem(id)     { send({ type: 'use_item',       item_id: id }); }
+  function throwItem(id, targetId) { send({ type: 'throw_item', item_id: id, target_id: targetId }); }
+  function apagarChamas()          { send({ type: 'apagar_chamas' }); }
   function equipFromBag(i) { send({ type: 'equip_from_bag', slot_index: i }); }
   function unequip(key)    { send({ type: 'unequip',        slot_key: key }); }
   // Largar/pegar itens no chão (masmorra). Largar: source 'bag' → ref = index;
@@ -1671,6 +1689,23 @@ const GS = (() => {
       return null; // consume click, stay in pending mode (ESC to cancel)
     }
 
+    // ── Pending-throw targeting (arremessável de bolsa) ──────────────────────
+    if (pendingThrow) {
+      const th = pendingThrow;
+      const m = gameState.monsters.find(m => m.hp > 0 &&
+        monsterTiles(m).some(([bx, by]) => bx === tx && by === ty));
+      if (m) {
+        const ddx = Math.abs(myP.pos[0] - tx);
+        const ddy = Math.abs(myP.pos[1] - ty);
+        if (Math.max(ddx, ddy) <= th.alcance &&
+            hasLineOfSight(gameState, myP.pos[0], myP.pos[1], tx, ty)) {
+          return { type: 'throw', itemId: th.id, targetId: m.id };
+        }
+        return { type: 'throw_blocked' };   // fora de alcance / parede
+      }
+      return null; // consome o clique, permanece na mira (ESC cancela)
+    }
+
     // ── Closed door: click to open (free action, must be adjacent) ────────────
     const { closed } = doorSets(gameState);
     if (closed.has(`${tx},${ty}`)) {
@@ -1755,12 +1790,14 @@ const GS = (() => {
     get isMyTurn()        { return isMyTurn; },
     get pendingAction()   { return pendingAction; },
     get pendingSkill()    { return pendingSkill; },
+    get pendingThrow()    { return pendingThrow; },
     get activeShop()      { return activeShop; },
     get shopTabIdx()      { return shopTabIdx; },
     get pendingShopOpen() { return pendingShopOpen; },
 
     // ── State setters (renderer may mutate these directly) ──
     set pendingSkill(v)    { pendingSkill    = v; },
+    set pendingThrow(v)    { pendingThrow    = v; },
     set pendingAction(v)   { pendingAction   = v; },
     set activeShop(v)      { activeShop      = v; },
     set shopTabIdx(v)      { shopTabIdx      = v; },
@@ -1820,6 +1857,8 @@ const GS = (() => {
     move,
     endTurn,
     useItem,
+    throwItem,
+    apagarChamas,
     equipFromBag,
     unequip,
     reorderBag,
