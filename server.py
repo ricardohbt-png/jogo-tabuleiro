@@ -11432,6 +11432,27 @@ class GameRoom:
         self.armadilhas = [a for a in self.armadilhas
                            if not (a.get("esgotada") and not a.get("efeitos_ativos"))]
 
+    async def _processar_em_chamas_turno(self):
+        """Tica 1 de dano de fogo em cada ente 'em chamas', 1×/rodada. Decrementa
+        a duração e limpa em 0. Manda popup de tick (trap_result) ao jogador
+        afetado (ou ao rescuer do prisioneiro); monstros não recebem cliente."""
+        entes = list(self.players.values()) + list(self.monsters.values())
+        if self.prisoner is not None:
+            entes.append(self.prisoner)
+        for alvo in entes:
+            if alvo.get("em_chamas_rodadas", 0) <= 0:
+                continue
+            if not (alvo.get("alive") or alvo.get("hp", 0) > 0):
+                alvo["em_chamas_rodadas"] = 0
+                continue
+            await self._dano_em_alvo(alvo, 1, "fogo", None)
+            if self._eh_jogador(alvo) or alvo is self.prisoner:
+                await self._enviar_trap_result(
+                    alvo, "Em Chamas", "🔥", sucesso=False, dano=1, metade=False,
+                    descricao="As chamas continuam queimando.",
+                    efeitos_extra=[], tick=True)
+            alvo["em_chamas_rodadas"] = max(0, alvo.get("em_chamas_rodadas", 0) - 1)
+
     def _serializar_armadilhas(self):
         """Estado das armadilhas para o cliente. Armadilhas de aliado são visíveis
         a todos os jogadores (para não pisarem); monstros não recebem game_state."""
@@ -11864,6 +11885,7 @@ class GameRoom:
                                  if v > self.round_num}
             await self.gm_phase()
             await self._processar_efeitos_armadilha_turno()   # dano progressivo (incendiária)
+            await self._processar_em_chamas_turno()            # tick do status "em chamas"
             await self._processar_zonas_turno()               # escuridão/silêncio expiram por rodada
             await self._aplicar_exaustao_rodada()   # sempre, mesmo sem monstros
         else:

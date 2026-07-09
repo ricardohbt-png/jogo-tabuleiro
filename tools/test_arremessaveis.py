@@ -75,6 +75,24 @@ async def main():
     check("refresh sobe p/ 5", m["em_chamas_rodadas"] == 5)
     check("flag de água atualizada p/ False", m["chamas_agua_apaga"] is False)
 
+    # ── [3] Tick de fogo: 1 dano/rodada, decrementa, expira ─────────────────────
+    print("\n[3] _processar_em_chamas_turno")
+    r = setup()
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [4, 4]; r.players["p1"] = p
+    m = make_monster(r, "m1", 5, 5, hp=10)
+    r._aplicar_em_chamas(p, 2, True)
+    r._aplicar_em_chamas(m, 2, False)
+    hp_p0, hp_m0 = p["hp"], m["hp"]
+    await r._processar_em_chamas_turno()
+    check("herói perde 1 HP no tick", p["hp"] == hp_p0 - 1)
+    check("monstro perde 1 HP no tick", m["hp"] == hp_m0 - 1)
+    check("duração do herói caiu p/ 1", p["em_chamas_rodadas"] == 1)
+    await r._processar_em_chamas_turno()
+    check("status do herói expira (0)", p.get("em_chamas_rodadas", 0) == 0)
+    hp_p1 = p["hp"]
+    await r._processar_em_chamas_turno()
+    check("sem status → sem dano extra", p["hp"] == hp_p1)
+
     print(f"\n=== {PASS} OK / {FAIL} FALHAS ===")
     sys.exit(1 if FAIL else 0)
 
