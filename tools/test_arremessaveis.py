@@ -128,6 +128,18 @@ async def main():
     await r.handle_throw_item("p1", "fogo_grego", "m1")
     check("LOS bloqueada: item mantido", len(p["bag"]) == 1)
 
+    # (4d) Erro (CA altíssima) → item consumido, sem dano, sem chamas, ação gasta
+    r = setup(); random.seed(7)   # seed evita nat20 (que seria acerto crítico)
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [4, 4]; r.players["p1"] = p
+    p["bag"] = [throwable("frasco_oleo")]
+    m = make_monster(r, "m1", 4, 6, hp=30, ac=99)   # no alcance, LOS livre, impossível acertar
+    hp0 = m["hp"]
+    await r.handle_throw_item("p1", "frasco_oleo", "m1")
+    check("erro: item consumido (espatifa)", len(p["bag"]) == 0)
+    check("erro: alvo NÃO sofre dano", m["hp"] == hp0)
+    check("erro: alvo NÃO pega fogo", m.get("em_chamas_rodadas", 0) == 0)
+    check("erro: ação principal gasta", p.get("action_done") is True)
+
     # ── [5] Beber água apaga chamas (ação livre); Fogo Grego ignora ─────────────
     print("\n[5] Água apaga chamas")
     from server import _TAVERN_BY_ID  # garrafa_agua vive aqui
@@ -166,6 +178,31 @@ async def main():
     await r.handle_apagar_chamas("p1")   # não está em chamas
     check("sem chamas: erro", any("chama" in e.lower() for e in r._errs))
     check("sem chamas: ação NÃO gasta", not p.get("action_done"))
+
+    # ── [7] Correções de revisão ────────────────────────────────────────────────
+    print("\n[7] Fixes de revisão")
+
+    # (7a) Ressurreição limpa 'em chamas' → tick seguinte não re-mata o revivido
+    r = setup()
+    lewis = make_player("cle", "Lewis", "cleric", 0); lewis["pos"] = [4, 4]
+    r.players["cle"] = lewis
+    alvo = make_player("mor", "Morto", "warrior", 1); alvo["pos"] = [5, 4]
+    alvo["alive"] = False; alvo["hp"] = 0
+    r.players["mor"] = alvo
+    r._aplicar_em_chamas(alvo, 3, True)   # estava em chamas ao morrer
+    await r.handle_ressurreicao("cle", {"target_id": "mor"})
+    check("ressurreição: revivido está vivo", alvo["alive"] is True)
+    check("ressurreição: chamas zeradas", alvo.get("em_chamas_rodadas", 0) == 0)
+    await r._processar_em_chamas_turno()
+    check("ressurreição: tick não re-mata (segue vivo)", alvo["alive"] is True)
+
+    # (7b) handle_use_item com item throwable → recusa sem apagar o item
+    r = setup()
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [4, 4]; r.players["p1"] = p
+    p["bag"] = [throwable("frasco_oleo")]
+    await r.handle_use_item("p1", "frasco_oleo")
+    check("throwable via use_item: item NÃO apagado", len(p["bag"]) == 1)
+    check("throwable via use_item: erro enviado", any("arremess" in e.lower() for e in r._errs))
 
     print(f"\n=== {PASS} OK / {FAIL} FALHAS ===")
     sys.exit(1 if FAIL else 0)

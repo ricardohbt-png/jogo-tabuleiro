@@ -5250,6 +5250,8 @@ class GameRoom:
                 self._resetar_corrosao(self.players[pid2])   # corrosão reseta por dungeon
                 self._resetar_vinho(self.players[pid2])      # embriaguez não persiste
                 self._resetar_cerveja(self.players[pid2])    # embriaguez da cerveja não persiste
+                self.players[pid2]["em_chamas_rodadas"] = 0  # chamas não carregam entre missões
+                self.players[pid2]["chamas_agua_apaga"] = True
 
         if nova:
             if not autorada:
@@ -7921,6 +7923,8 @@ class GameRoom:
         alvo["petrificado"] = False
         alvo["petrificado_rodadas"] = 0
         alvo["efeitos_veneno"] = []
+        alvo["em_chamas_rodadas"] = 0        # senão o próximo tick de fogo re-mata o ressuscitado
+        alvo["chamas_agua_apaga"] = True
 
         p["fome"] = max(0, p["fome"] - custo_fome)
         p["sede"] = max(0, p["sede"] - custo_sede)
@@ -8260,6 +8264,8 @@ class GameRoom:
             pp["bonus_action_used"] = False
             pp["taverna_refeicoes"] = []   # refeições de balcão renovam a cada visita à cidade
             pp["technique_cooldowns"] = {}   # descanso na cidade → recarga total das técnicas
+            pp["em_chamas_rodadas"] = 0    # chamas não persistem fora da masmorra
+            pp["chamas_agua_apaga"] = True
             if pp.get("class_id") in ("mage", "cleric"):
                 self._recarregar_slots(pp)   # descanso → todos os slots voltam cheios
         await self.broadcast_city_state()
@@ -11539,11 +11545,10 @@ class GameRoom:
                 alvo["em_chamas_rodadas"] = 0
                 continue
             await self._dano_em_alvo(alvo, 1, "fogo", None)
-            if self._eh_jogador(alvo) or alvo is self.prisoner:
-                await self._enviar_trap_result(
-                    alvo, "Em Chamas", "🔥", sucesso=False, dano=1, metade=False,
-                    descricao="As chamas continuam queimando.",
-                    efeitos_extra=[], tick=True)
+            await self._enviar_trap_result(
+                alvo, "Em Chamas", "🔥", sucesso=False, dano=1, metade=False,
+                descricao="As chamas continuam queimando.",
+                efeitos_extra=[], tick=True)
             alvo["em_chamas_rodadas"] = max(0, alvo.get("em_chamas_rodadas", 0) - 1)
 
     def _serializar_armadilhas(self):
@@ -11576,6 +11581,13 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Item não encontrado."}); return
 
         effect, val = item["effect"], item.get("value", 0)
+
+        # Arremessáveis não são "usados" por use_item — clientes antigos/cacheados
+        # ainda roteiam clique de bolsa por aqui; sem esta guarda o tail comum
+        # (p["bag"].remove) apagaria o frasco sem efeito nenhum.
+        if effect == "throwable":
+            await self.send_to(pid, {"type": "error",
+                "msg": "Use o clique direito para arremessar este item."}); return
 
         # ── Apagar "em chamas" bebendo água (ação LIVRE) ────────────────────────
         # Só água (effect food com sede>0) e só se as chamas forem apagáveis por

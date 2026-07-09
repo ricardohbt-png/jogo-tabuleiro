@@ -106,6 +106,8 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `open_chest` | — |
 | `open_door` | `tx`, `ty` — herói abre uma porta adjacente (Chebyshev ≤1). Ação **gratuita** (não gasta movimento/ação). Destranca a(s) sala(s) ligada(s) à porta, revela seu interior e **desperta** os monstros (que passam a perseguir). Salas começam trancadas (exceto a entrada); monstros em sala trancada ficam dormentes e o interior fica oculto pela névoa. **Clarividência** (`magia`, `alvoLivre`): alcance = mapa inteiro (mira em qualquer casa, mesmo na névoa — no 3D via `get3DTilePlane`); revela a área, os monstros ali (visibilidade ao vivo por 2 rodadas via `magic_reveal`) e as armadilhas do local, sem abrir a porta nem despertar os monstros. |
 | `use_item` | `item_id` |
+| `throw_item` | `item_id`, `target_id` — arremessa um consumível de bolsa (id em `ARREMESSAVEIS`) num monstro-alvo. Ação principal; teste de ataque por DES vs CA; consome o item em acerto E erro; dano de fogo + status `em_chamas_rodadas` (tica 1/rodada). |
+| `apagar_chamas` | — (herói em chamas gasta a ação principal para se apagar; única via contra o Fogo Grego, que ignora água). |
 | `end_turn` | — |
 | `enter_dungeon` | — |
 | `buy_item` | `shop_id`, `item_id` |
