@@ -250,8 +250,13 @@ const InventoryModal = (() => {
         && BONUS_ACTION_EFFECTS.has(item.effect) && !!player.bonus_action_used;
       const podeUsar = isMyOwnDungeonTurn && isConsumable && !bonusBloqueado;
       const podeConjurar = isMyOwnDungeonTurn && isScroll && ehCaster;
+      // Arremessáveis de bolsa (frasco_oleo/fogo_grego): clique direito abre a mira.
+      const catDef = (typeof GS !== 'undefined' && GS.CATALOGO_ITENS)
+        ? GS.CATALOGO_ITENS[item && item.id] : null;
+      const isArremessavel = !!(catDef && catDef.arremessavel);
+      const podeArremessar = isMyOwnDungeonTurn && isArremessavel && !player.action_done;
       if(item){
-        if(podeUsar || podeConjurar) slot.classList.add('usable');
+        if(podeUsar || podeConjurar || podeArremessar) slot.classList.add('usable');
         if(isScroll && typeof aplicarTooltipPergaminho === 'function'){
           aplicarTooltipPergaminho(slot, item);   // tooltip específico de pergaminho — substitui o genérico abaixo
         } else {
@@ -261,11 +266,18 @@ const InventoryModal = (() => {
       }
       if(_selected && _selected.kind === 'bag' && _selected.index === i) slot.classList.add('selected');
       if(!_readOnly){
-        slot.onclick = () => {
+        // Esquerdo: só seleciona/move (arrastar continua abaixo).
+        slot.onclick = () => { _onBagSlotClick(i); };
+        // Direito: usar/ativar (regra única). preventDefault tira o menu do browser.
+        slot.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          if(!item) return;
+          if(podeArremessar && typeof window._iniciarMiraArremesso === 'function'){
+            close(); window._iniciarMiraArremesso(item, player); return;
+          }
           if(podeConjurar){ close(); castarPergaminho(item); return; }
           if(podeUsar){ useItem(item.id); return; }
-          _onBagSlotClick(i);
-        };
+        });
       }
       if(!_readOnly){
         if(item){
