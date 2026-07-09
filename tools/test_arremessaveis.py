@@ -62,6 +62,19 @@ async def main():
     check("loja: óleo effect=throwable",
           throwable("frasco_oleo")["effect"] == "throwable")
 
+    # ── [2] Status em chamas: aplicar e refresh (max, não soma) ─────────────────
+    print("\n[2] _aplicar_em_chamas")
+    r = setup()
+    m = make_monster(r, "m1", 4, 4)
+    r._aplicar_em_chamas(m, 3, True)
+    check("aplicou 3 rodadas", m.get("em_chamas_rodadas") == 3)
+    check("gravou flag de água", m.get("chamas_agua_apaga") is True)
+    r._aplicar_em_chamas(m, 2, True)   # menor → não reduz
+    check("refresh usa o MAIOR (não reduz p/ 2)", m["em_chamas_rodadas"] == 3)
+    r._aplicar_em_chamas(m, 5, False)  # maior → sobe e troca a flag
+    check("refresh sobe p/ 5", m["em_chamas_rodadas"] == 5)
+    check("flag de água atualizada p/ False", m["chamas_agua_apaga"] is False)
+
     print(f"\n=== {PASS} OK / {FAIL} FALHAS ===")
     sys.exit(1 if FAIL else 0)
 

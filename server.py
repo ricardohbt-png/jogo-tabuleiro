@@ -11128,6 +11128,14 @@ class GameRoom:
             else:
                 await self._monster_dies(alvo, killer_pid)
 
+    def _aplicar_em_chamas(self, alvo, rodadas, agua_apaga):
+        """Coloca (ou renova) o status 'em chamas' num ente (herói ou monstro).
+        Renovar usa o MAIOR valor de duração (refresh), nunca soma dano.
+        `agua_apaga`=False (Fogo Grego) prevalece: beber água não apaga."""
+        atual = alvo.get("em_chamas_rodadas", 0)
+        alvo["em_chamas_rodadas"] = max(atual, int(rodadas))
+        alvo["chamas_agua_apaga"] = bool(agua_apaga)
+
     async def _reduzir_con_temporario(self, alvo, valor, duracao):
         """Reduz CON por N rodadas (nuvem de gás). Registra em efeitos_veneno p/
         reverter automaticamente em _processar_venenos_turno (mesmo shape do veneno)."""
