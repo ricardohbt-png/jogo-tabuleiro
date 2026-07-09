@@ -2184,6 +2184,9 @@ SHOP_MERCHANT = [
     {"id": "veneno_cobra_cuspidora","name": "Veneno de Cobra Cuspidora","emoji": "🐍", "price": 16, "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_cobra_cuspidora"},
     {"id": "veneno_basilisco",      "name": "Peçonha do Basilisco",     "emoji": "🦎", "price": 20, "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_basilisco"},
     {"id": "veneno_polvo_abissal",  "name": "Tinta do Polvo Abissal",   "emoji": "🐙", "price": 15, "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_polvo_abissal"},
+    # ── Arremessáveis de fogo (consumíveis de bolsa; ver ARREMESSAVEIS) ──
+    {"id": "frasco_oleo", "name": "Frasco de Óleo Incendiário", "emoji": "🔥", "price": 15, "item_slot": "bag", "effect": "throwable", "value": 0},
+    {"id": "fogo_grego",  "name": "Fogo Grego",                 "emoji": "🟢", "price": 40, "item_slot": "bag", "effect": "throwable", "value": 0},
 ]
 
 # Munição — vendida no FERREIRO (item_slot "ammo", vai pro off_hand; 10 projéteis
@@ -2200,6 +2203,24 @@ SHOP_AMMO = [
      "item_slot": "ammo", "effect": "ammo", "ammo_type": "flechas_incendiarias", "ammo_count": 1,
      "extra_damage": "1d4", "extra_damage_types": ["fire"]},
 ]
+
+# ─── ARREMESSÁVEIS ────────────────────────────────────────────────────────────
+# Consumíveis de bolsa arremessados numa casa/alvo (não são armas equipadas).
+# Usados por `throw_item` → handle_throw_item. Catálogo declarativo, estilo
+# ARMADILHAS/GRIMORIO. Sub-projeto A implementa só o modo single-target de fogo;
+# o modo "area" já é reconhecido pelo campo `alvo` (Sub-projeto B).
+ARREMESSAVEIS = {
+    "frasco_oleo": {
+        "id": "frasco_oleo", "name": "Frasco de Óleo Incendiário", "emoji": "🔥",
+        "alcance": 4, "alvo": "ataque_alvo", "dano": "1d6", "elemento": "fogo",
+        "em_chamas": True, "chamas_dur": "1d4", "chamas_agua_apaga": True,
+    },
+    "fogo_grego": {
+        "id": "fogo_grego", "name": "Fogo Grego", "emoji": "🟢",
+        "alcance": 4, "alvo": "ataque_alvo", "dano": "2d6", "elemento": "fogo",
+        "em_chamas": True, "chamas_dur": "1d4", "chamas_agua_apaga": False,
+    },
+}
 
 # ─── VENENOS ──────────────────────────────────────────────────────────────────
 # Catálogo autoritativo de venenos (espelha CATALOGO_ITENS no cliente). O efeito
