@@ -4790,6 +4790,18 @@ function drawOrientedMonster2D(ctx, m, hcx, hcy){
   ctx.restore();
 }
 
+// Indicador "em chamas" (2D): 🔥 tremeluzente no canto superior direito da casa.
+// (X,Y) = canto superior esquerdo da casa em pixels.
+function _drawEmChamas2D(ctx, X, Y){
+  const fs = Math.round(CELL*0.34);
+  ctx.save();
+  ctx.font = `${fs}px serif`;
+  ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+  ctx.globalAlpha = 0.72 + 0.28*Math.abs(Math.sin(performance.now()/170));
+  ctx.fillText('🔥', X + CELL - 1, Y + 1);
+  ctx.restore();
+}
+
 function drawMonsterSprite(ctx, cx, cy, m){
   ctx.save(); ctx.translate(cx,cy);
   const r=CELL/2-3;
@@ -4972,8 +4984,8 @@ function renderMap(state){
   const weaponRangeTiles = (window._weaponRangePreview && me && !isAnimadosTurn2D)
     ? _computeWeaponRangeTiles(state, me) : new Set();
 
-  // Durante a mira de magia, oculta realces de movimento/ataque (mostra alcance/área).
-  if(window._modoMagia){ reachable.clear(); attackable.clear(); }
+  // Durante a mira de magia/arremesso, oculta realces de movimento/ataque (mostra alcance/área).
+  if(window._modoMagia || window._modoThrowItem){ reachable.clear(); attackable.clear(); }
 
   // ── PASS 0: Void background — near-black with deep dungeon darkness
   ctx.fillStyle='#040308';
@@ -5362,6 +5374,7 @@ function renderMap(state){
     ctx.fillStyle='rgba(255,90,90,0.95)'; ctx.font=`bold ${mNameFs}px monospace`;
     ctx.textAlign='center'; ctx.textBaseline='top';
     ctx.fillText(m.name.slice(0,10), cx, my*CELL+barH+3);
+    if(m.em_chamas_rodadas > 0) _drawEmChamas2D(ctx, mx*CELL, my*CELL);
   }
 
   // ── Corpses (cadáveres): alvos de Animar Mortos — ícone esmaecido roxo ──────
@@ -5498,6 +5511,7 @@ function renderMap(state){
     const isCur=p.id===state.current_turn, isMe=p.id===GS.myPid;
     drawMiniBase(ctx, cx, cy, p.color, isCur||isMe);
     drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur);
+    if(p.em_chamas_rodadas > 0) _drawEmChamas2D(ctx, X, Y);
     if(isMe||isCur){
       const label=p.name.slice(0,9);
       const tagFs=Math.round(CELL*0.14);
@@ -9260,6 +9274,94 @@ function _keyMagiaEsc(e) {
 
 window.castarMagia = castarMagia;
 
+// ═══════════════════════════════════════════════════════════════════════════
+// MIRA DE ARREMESSÁVEL DE BOLSA (frasco_oleo / fogo_grego) — TILES VERMELHOS
+// Espelha o modo de mira de MAGIA (window._modoMagia): reusa window._spellHL
+// (range = vermelho, lido pelos DOIS renderers 2D/3D) para pintar o alcance a
+// partir da casa do herói. A DECISÃO de alvo/alcance/LOS vive em
+// GS.resolveTileClick (gameState.js, ramo pendingThrow); aqui só desenhamos e
+// roteamos o clique. Captura em handleTileClick (2D) e on3DClick (3D).
+// ═══════════════════════════════════════════════════════════════════════════
+function _iniciarMiraArremesso(item, player){
+  const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid && p.alive);
+  if(!me){ toast('Não é possível arremessar agora.', 'var(--gold)'); return; }
+  if(!GS.isMyTurn || me.action_done){ toast('Não é a sua vez ou a ação já foi usada.', 'var(--gold)'); return; }
+  // Encerra qualquer outra mira ativa para não empilhar realces.
+  if(window._modoMagia) _encerrarModoMagia();
+  const catDef  = (GS.CATALOGO_ITENS && GS.CATALOGO_ITENS[item.id]) || {};
+  const alcance = catDef.alcance || 4;
+  window._modoThrowItem = { id: item.id, alcance };
+  GS.pendingThrow = { id: item.id, alcance };   // habilita o ramo de throw em resolveTileClick
+  // Realce de alcance em vermelho (mesmo canal _spellHL.range da mira de magia).
+  const range = new Set();
+  _addCheb(me.pos[0], me.pos[1], alcance, range);
+  window._spellHL.range  = range;
+  window._spellHL.area   = new Set();
+  window._spellHL.double = new Set();
+  _aplicarSpellHL();
+  if(typeof g3 !== 'undefined' && g3 && g3.renderer) g3.renderer.domElement.style.cursor = 'crosshair';
+  let leg = document.getElementById('legenda-arremesso-item');
+  if(!leg){
+    leg = document.createElement('div');
+    leg.id = 'legenda-arremesso-item';
+    leg.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);' +
+      "background:rgba(10,8,5,0.92);border:1px solid #ff4422;color:#ff8c66;font-family:'Cinzel',serif;" +
+      'font-size:11px;letter-spacing:2px;padding:8px 20px;pointer-events:none;z-index:1000;';
+    document.body.appendChild(leg);
+  }
+  leg.innerHTML = `${catDef.emoji || '🔥'} ${(catDef.nome || 'ARREMESSAR').toUpperCase()} — Clique num INIMIGO (alcance ${alcance}) &nbsp;|&nbsp; ESC cancela`;
+  leg.style.display = 'block';
+  GS.adicionarLog(`${catDef.emoji || '🔥'} Mira de arremesso — clique num inimigo destacado (ESC cancela).`);
+  document.addEventListener('keydown', _keyThrowEsc);
+  document.addEventListener('mousedown', _clickOutsideThrow, true);
+}
+
+// Resolve o clique numa casa durante a mira (2D e 3D). A lógica de alvo/alcance/
+// LOS está em GS.resolveTileClick; aqui só agimos sobre o resultado.
+function _clickTileThrow(tx, ty){
+  if(!window._modoThrowItem) return;
+  const r = GS.resolveTileClick(tx, ty);
+  if(r && r.type === 'throw'){
+    GS.throwItem(r.itemId, r.targetId);
+    _encerrarMiraArremesso();
+  } else if(r && r.type === 'throw_blocked'){
+    toast('Fora de alcance ou parede no caminho.', 'var(--gold)');
+  }
+  // r === null → clicou fora de um monstro; permanece na mira (ESC cancela).
+}
+
+function _encerrarMiraArremesso(){
+  window._modoThrowItem = null;
+  GS.pendingThrow = null;
+  window._spellHL.range  = new Set();
+  window._spellHL.area   = new Set();
+  window._spellHL.double = new Set();
+  _aplicarSpellHL();
+  const leg = document.getElementById('legenda-arremesso-item');
+  if(leg) leg.remove();
+  if(typeof g3 !== 'undefined' && g3 && g3.renderer) g3.renderer.domElement.style.cursor = 'default';
+  document.removeEventListener('keydown', _keyThrowEsc);
+  document.removeEventListener('mousedown', _clickOutsideThrow, true);
+}
+
+function _keyThrowEsc(e){
+  if(e.key === 'Escape'){ _encerrarMiraArremesso(); toast('Arremesso cancelado.', '#888'); }
+}
+
+// Clique-fora cancela a mira: mousedown fora dos canvas 2D/3D do tabuleiro.
+function _clickOutsideThrow(e){
+  if(!window._modoThrowItem) return;
+  const alvo = e.target;
+  const cv2d = document.getElementById('dungeon-canvas');
+  const cv3d = (typeof g3 !== 'undefined' && g3 && g3.renderer) ? g3.renderer.domElement : null;
+  if(alvo === cv2d || alvo === cv3d) return;   // clique no tabuleiro → deixa o handler de tile resolver
+  _encerrarMiraArremesso();
+  toast('Arremesso cancelado.', '#888');
+}
+
+window._iniciarMiraArremesso  = _iniciarMiraArremesso;
+window._encerrarMiraArremesso = _encerrarMiraArremesso;
+
 // ── Conjurar Elemental: escolha do tipo (4 elementos) ───────────────────────
 function _abrirPickerElemental() {
   if (!_meVivoNaVez()) { toast('Não é a sua vez ou a ação já foi usada.', '#ff6b6b'); return; }
@@ -9890,6 +9992,17 @@ function renderMyPanel(state){
     </button>`;
   }).join('');
 
+  // ── Botão "Apagar chamas" (agnóstico de classe): só quando em chamas, no meu
+  // turno e com a ação livre. Gasta a AÇÃO PRINCIPAL (única via contra o Fogo
+  // Grego; contra o Óleo, beber Água pelo inventário apaga de graça). ──────────
+  const _apagarBtn = (me.em_chamas_rodadas > 0 && canAct) ? `
+    <button class="btn-action" onclick="GS.apagarChamas()"
+      style="display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 6px;border-color:#ff5a2a;">
+      <span style="color:#ff884d;">🔥 Apagar chamas</span>
+      <small style="color:var(--gold);font-size:.7rem;font-weight:bold;">gasta a ação principal</small>
+      <small style="color:var(--text2);font-size:.62rem;">em chamas: ${me.em_chamas_rodadas} rodada(s)</small>
+    </button>` : '';
+
   // ── Action buttons (with weapon damage formula shown) ──
   const _rangeHint = _wRange != null ? `alcance ${_wRange}` : 'corpo a corpo';
   const _adjHint = canAct && !canAttack
@@ -9904,6 +10017,7 @@ function renderMyPanel(state){
       ${_adjHint}
     </button>
     ${_throwBtns}
+    ${_apagarBtn}
   `;
 
   const sl = $('skills-list'); sl.innerHTML = '';
@@ -13486,7 +13600,7 @@ function renderMap3D(state){
   }
 
   // Durante a mira de magia, oculta realces de movimento/ataque (mostra alcance/área).
-  if(window._modoMagia){ reachable.clear(); attackable3d.clear(); }
+  if(window._modoMagia || window._modoThrowItem){ reachable.clear(); attackable3d.clear(); }
 
   // ── Tile visibility
   for(let y=0; y<H; y++){
@@ -13796,10 +13910,10 @@ function renderMap3D(state){
     const pSel = g3.selectedPos && g3.selectedPos[0]===px && g3.selectedPos[1]===py;
     const isCur = p.id===state.current_turn;
     obterFig(`pl:${p.id}`,
-      JSON.stringify([p.color, p.class_id, p.id===GS.myPid, isCur, !!pSel, p.facing]),
+      JSON.stringify([p.color, p.class_id, p.id===GS.myPid, isCur, !!pSel, p.facing, p.em_chamas_rodadas > 0]),
       () => {
         const f = build3DFig(p.color, false, p.id===GS.myPid, isCur, px, py, p.class_id, null, pSel,
-          undefined, undefined, undefined, p.facing);
+          undefined, undefined, undefined, p.facing, p.em_chamas_rodadas > 0);
         f.userData.pid = p.id;          // permite getPeaoMesh(pid) p/ animação
         return f;
       }, px, py);
@@ -13830,9 +13944,9 @@ function renderMap3D(state){
     if(!visionSet.has(`${mx},${my}`)) continue;
     const mSel = g3.selectedPos && g3.selectedPos[0]===mx && g3.selectedPos[1]===my;
     obterFig(`mon:${m.id}`,
-      JSON.stringify([m.type, m.image, !!mSel, m.porte, !!m.oriented, m.facing]),
+      JSON.stringify([m.type, m.image, !!mSel, m.porte, !!m.oriented, m.facing, m.em_chamas_rodadas > 0]),
       () => {
-        const f = build3DFig('#c82020', true, false, false, mx, my, null, m.type, mSel, m.image, m.porte, m.oriented, m.facing);
+        const f = build3DFig('#c82020', true, false, false, mx, my, null, m.type, mSel, m.image, m.porte, m.oriented, m.facing, m.em_chamas_rodadas > 0);
         f.userData.monId = m.id;   // taggeado para getMonsterMesh() / deslize fiel
         return f;
       },
@@ -14481,10 +14595,12 @@ function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected){
 // mOriented/mFacing — monstro de 2 casas em pé cobrindo as 2 casas (croc/lagarto).
 // mFacing também é reaproveitado pro peão GLB de herói (direção do último passo).
 
-function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType, isSelected, mImage, mPorte, mOriented, mFacing){
+function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType, isSelected, mImage, mPorte, mOriented, mFacing, emChamas){
   const T   = g3.T;
   if (isMonster && mOriented && mImage) {
-    return _buildOrientedCreature3D(T, gx, gy, mImage, mFacing, isSelected);
+    const of = _buildOrientedCreature3D(T, gx, gy, mImage, mFacing, isSelected);
+    if(emChamas && of) of.add(_makeChamasSprite3D());
+    return of;
   }
   const TH  = 0.22;                        // floor tile thickness (must match init3D)
   const grp = new T.Group();
@@ -14642,8 +14758,27 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
   // ambient + dirMain + dirPawn + visionLamp já garante visibilidade, e cada
   // luz a menos por peão reduz o custo de TODOS os materiais da cena.
 
+  // Indicador "em chamas": 🔥 flutuando acima da cabeça (sprite billboard).
+  if(emChamas) grp.add(_makeChamasSprite3D());
+
   grp.position.set(gx, 0, gy);
   return grp;
+}
+
+// Sprite 🔥 (emoji em canvas) que flutua sobre um peão/monstro em chamas.
+function _makeChamasSprite3D(){
+  const T = g3.T;
+  const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+  const c = cv.getContext('2d');
+  c.font = '48px serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText('🔥', 32, 36);
+  const tex = new T.CanvasTexture(cv);
+  tex._owned = true;   // textura exclusiva deste sprite (descartada com ele; r128)
+  const sp = new T.Sprite(new T.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
+  sp.scale.set(0.5, 0.5, 1);
+  sp.position.set(0, 1.45, 0);   // acima da cabeça do peão
+  sp.userData.isChamasSprite = true;
+  return sp;
 }
 
 // ── Cadáver 3D: marca onde um monstro derrotado pode ser reanimado ────────────
@@ -19589,6 +19724,12 @@ function on3DClick(e){
     if(tMag) _clickTileMagia(tMag[0], tMag[1]);
     return;
   }
+  // Modo de mira de ARREMESSÁVEL (frasco_oleo/fogo_grego): resolve o alvo.
+  if(window._modoThrowItem){
+    const tThr = get3DTile(e);
+    if(tThr) _clickTileThrow(tThr[0], tThr[1]);
+    return;
+  }
   // Modo posicionamento de ARMADILHA (Luccas): clique numa casa para criar.
   if(window._modoPlacementArmadilha){
     const tArm = get3DTile(e);
@@ -19665,6 +19806,7 @@ function on3DMouseMove(e){
     g3.renderer.domElement.style.cursor = 'crosshair';
     return;
   }
+  if(window._modoThrowItem){ if(g3 && g3.renderer) g3.renderer.domElement.style.cursor = 'crosshair'; return; }
   if(window._modoArremessoLanca){ onMouseMoveArremessoLanca(e); return; }
   if(window._modoArremessoPrincipal){ onMouseMoveArremessoPrincipal(e); return; }
   if(window._modoArremessoAtivo){ onMouseMoveArremesso(e); return; }
@@ -19749,6 +19891,9 @@ function handleTileClick(tx, ty){
   // ── Mira de MAGIA (2D e 3D): resolve alvo/casa e envia `magia` ─────────────
   // (No 3D, on3DClick já intercepta antes; aqui cobre o caminho do canvas 2D.)
   if(window._modoMagia){ _clickTileMagia(tx, ty); return; }
+  // ── Mira de ARREMESSÁVEL (2D e 3D): resolve o alvo e envia `throw_item` ─────
+  // (No 3D, on3DClick já intercepta antes; aqui cobre o caminho do canvas 2D.)
+  if(window._modoThrowItem){ _clickTileThrow(tx, ty); return; }
   // ── Stairs: clicking the staircase tile exits the dungeon immediately ────
   const _st = GS.gameState;
   if(_st && _st.stairs_pos){
