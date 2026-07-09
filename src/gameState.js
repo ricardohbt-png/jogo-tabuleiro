@@ -1097,6 +1097,19 @@ const GS = (() => {
   function useItem(id)     { send({ type: 'use_item',       item_id: id }); }
   function equipFromBag(i) { send({ type: 'equip_from_bag', slot_index: i }); }
   function unequip(key)    { send({ type: 'unequip',        slot_key: key }); }
+  // Largar/pegar itens no chão (masmorra). Largar: source 'bag' → ref = index;
+  // 'gear' → ref = slotKey. Pegar: id do item no chão.
+  function dropItem(source, ref) {
+    if (source === 'bag') send({ type: 'drop_item', source: 'bag',  index: ref });
+    else                  send({ type: 'drop_item', source: 'gear', slot_key: ref });
+  }
+  function pickupItem(id) { send({ type: 'pickup_item', ground_id: id }); }
+  // Resolver puro: item do chão é pegável por `player`? (adjacência Chebyshev ≤1)
+  function groundItemPickable(gi, player) {
+    if (!gi || !player || !player.pos) return false;
+    return Math.max(Math.abs(player.pos[0] - gi.pos[0]),
+                    Math.abs(player.pos[1] - gi.pos[1])) <= 1;
+  }
   function reorderBag(fromIndex, toIndex) { send({ type: 'reorder_bag', from_index: fromIndex, to_index: toIndex }); }
   function equipOffhand(i)                { send({ type: 'equip_offhand',   slot_index: i }); }
   // Magias conhecidas (Pedro/Lewis): escolha de 2 magias de 1º círculo no lobby.
@@ -1738,6 +1751,7 @@ const GS = (() => {
     // Fase 4a: campanha em curso (property getter — acessado sem parênteses).
     get campaign()              { return getCampaign(); },
     get cityState()       { return cityState; },
+    get groundItems()     { return (gameState && gameState.ground_items) || []; },
     get isMyTurn()        { return isMyTurn; },
     get pendingAction()   { return pendingAction; },
     get pendingSkill()    { return pendingSkill; },
@@ -1810,6 +1824,9 @@ const GS = (() => {
     unequip,
     reorderBag,
     equipOffhand,
+    dropItem,
+    pickupItem,
+    groundItemPickable,
     canPlaceItem,
     offHandBlockedByTwoHanded,
     compareItemStats,

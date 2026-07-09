@@ -85,7 +85,8 @@ const InventoryModal = (() => {
   background:repeating-linear-gradient(45deg, rgba(255,65,54,.12) 0 6px, transparent 6px 12px);}
 .inv-slot-blocked-x{color:#ff4136;font-size:1.6rem;}
 .inv-slot-empty-icon{opacity:.35;}
-.inv-slot-emoji img,.inv-bagslot-emoji img{width:70%;height:70%;object-fit:contain;display:block;}
+.inv-slot-emoji,.inv-bagslot-emoji{display:flex;align-items:center;justify-content:center;width:100%;height:100%;}
+.inv-slot-emoji img,.inv-bagslot-emoji img{width:90%;height:90%;object-fit:contain;display:block;}
 .inv-gold{display:flex;align-items:center;justify-content:center;gap:6px;color:#ffcf7a;font-weight:bold;
   text-shadow:0 0 8px rgba(255,180,60,.6);font-family:Georgia,serif;margin-bottom:14px;}
 .inv-bagbar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;
@@ -98,13 +99,11 @@ const InventoryModal = (() => {
 .inv-bagslot.drop-hover{outline:2px dashed #8fe08a;outline-offset:2px;}
 `;
 
-  // Ícone do item: usa item.icon (caminho de PNG) se presente; senão cai no
-  // emoji (item.emoji ou o placeholder do slot). Nenhum item usa `icon` hoje
-  // — este é só o ponto de extensão pra quando a arte existir (fora de escopo
-  // aqui, ver spec).
+  // Ícone do item: delega ao helper global de game.js (assets/itens/<id>.png,
+  // com fallback pro emoji se o PNG não existir).
   function _itemIconHTML(item, fallbackEmoji){
-    if(item && item.icon) return `<img src="${item.icon}" alt="">`;
-    return (item && item.emoji) || fallbackEmoji || '';
+    return (typeof itemIconHTML === 'function') ? itemIconHTML(item, fallbackEmoji)
+         : (item && item.emoji) || fallbackEmoji || '';
   }
 
   function _injectStyles(){
@@ -120,6 +119,19 @@ const InventoryModal = (() => {
     const overlay = document.createElement('div');
     overlay.id = 'inv-modal-overlay';
     overlay.addEventListener('click', (e) => { if(e.target === overlay) close(); });
+    // Largar no chão: arrastar um item e soltar FORA do frame do modal (no backdrop),
+    // durante a masmorra, larga o item na casa adjacente (servidor escolhe).
+    overlay.addEventListener('dragover', (e) => { if(_selected && e.target === overlay) e.preventDefault(); });
+    overlay.addEventListener('drop', (e) => {
+      if(!_selected || e.target !== overlay) return;   // só quando solto no backdrop
+      e.preventDefault();
+      const sel = _selected; _selected = null;
+      const gsNow = (typeof GS !== 'undefined') ? GS.gameState : null;
+      if(_readOnly || !gsNow || gsNow.phase !== 'playing'){ refresh(); return; }  // só na masmorra, não em só-leitura
+      if(sel.kind === 'bag') GS.dropItem('bag', sel.index);
+      else                   GS.dropItem('gear', sel.slotKey);
+      close();
+    });
     document.body.appendChild(overlay);
   }
 

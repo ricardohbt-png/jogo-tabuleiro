@@ -319,6 +319,25 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > item vai pra bolsa; o conflito é validado só ao equipar). Teste do servidor:
 > `tools/test_roteamento_itens.py`.
 
+> **Largar/pegar itens no chão (`game_state.ground_items`):** na masmorra, o herói
+> larga um item numa das 8 casas adjacentes e pega de volta — inclusive item largado
+> por OUTRO herói (forma de passar itens e de descartar sem ir à cidade). Estado
+> `self.ground_items` (`gid -> {id, item, pos}`) **persiste como `self.chests`**: fica
+> na memória do `GameRoom` ao ir/voltar da cidade (mesmo lugar) e só é limpo no bloco
+> de masmorra nova (`if nova:`, junto de corpses/chests), ou seja, após encerrar a
+> missão. **Largar** (`drop_item {source:'bag'|'gear', index|slot_key}`): ação LIVRE
+> a qualquer momento (sem `_is_turn`); da bolsa ou de um slot equipado (desequipa na
+> hora — reverte `_apply_gear_effect` e reseta `p["weapon"]`); o servidor escolhe a
+> 1ª casa livre via `_free_drop_tile_near` (chão livre de parede/porta/decoração
+> sólida via `_blocks_tile`, monstro/jogador vivo, baú e outro item); sem casa → recusa.
+> **Pegar** (`pickup_item {ground_id}`): ação livre, qualquer jogador, adjacente
+> (Chebyshev ≤1), roteia pelo `_route_acquired_item` (bolsa-primeiro; bolsa+slot cheios
+> → recusa, fica no chão). Cliente: `GS.groundItems`/`dropItem`/`pickupItem`/
+> `groundItemPickable`; largar = arrastar o item pra FORA do modal (backdrop) na
+> masmorra; render 2D (emoji + brilho) e 3D (`buildGroundItem3D`, sprite + brilho,
+> `g3.groundItemMeshes`) espelham os baús; pegar = clicar na casa (hook unificado
+> `handleTileClick`, cobre 2D e 3D). Teste do servidor: `tools/test_ground_items.py`.
+
 > **Guilda dos Heróis (Fase 0):** novo prédio na cidade (hotspot `guilda` →
 > `openGuild`) onde cada personagem compra aprimoramentos **permanentes**:
 > **Especializações** (upgrades sempre-ativos das habilidades-base — conteúdo nas

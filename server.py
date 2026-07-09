@@ -3947,6 +3947,7 @@ class GameRoom:
         self.blessed = {}       # pid -> atk_bonus
         self.taunted = None     # pid who has taunt active
         self.chests  = {}       # chest_id -> chest dict (persistent world loot)
+        self.ground_items = {}  # gid -> {"id","item","pos":[x,y]} — itens largados no chão (persistem como chests)
         self.shop_scrolls = []  # pergaminhos à venda no mercador (renovados por visita à cidade)
         self.decorations = []
         self._decor_block_tiles = set()
@@ -5179,6 +5180,7 @@ class GameRoom:
         if nova:
             self.corpses = {}        # cadáveres não persistem entre masmorras distintas
             self.chests  = {}        # baús do andar anterior não persistem no novo mapa
+            self.ground_items = {}   # itens no chão não persistem numa masmorra NOVA (após encerrar a missão)
             self.monsters = {}       # zera monstros da expedição anterior (senão reaparecem em paredes do novo mapa)
             self.traps = []          # idem armadilhas de masmorra
             self.armadilhas = []     # idem armadilhas colocáveis
@@ -5795,6 +5797,24 @@ class GameRoom:
                    self.tiles[ny][nx] == FLOOR and (nx, ny) not in occupied:
                     cands.append([nx, ny])
         return random.choice(cands) if cands else list(pos)
+
+    def _free_drop_tile_near(self, pos):
+        """1ª casa de chão adjacente (8-dir) a `pos` livre de parede/porta/decoração
+        sólida (via _blocks_tile), monstro vivo, jogador vivo, baú e outro item no
+        chão. Ordem determinística (dy,dx de -1 a 1). Retorna [x,y] ou None."""
+        cx, cy = pos
+        occupied = {tuple(m["pos"]) for m in self.monsters.values() if m["hp"] > 0}
+        occupied |= {tuple(c["pos"]) for c in self.chests.values()}
+        occupied |= {tuple(g["pos"]) for g in self.ground_items.values()}
+        occupied |= {tuple(pp["pos"]) for pp in self.players.values() if pp.get("alive")}
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                if dx == 0 and dy == 0:
+                    continue
+                nx, ny = cx + dx, cy + dy
+                if not self._blocks_tile(nx, ny) and (nx, ny) not in occupied:
+                    return [nx, ny]
+        return None
 
     # ── Ladino (Luccas): Ataque Furtivo + Esconder nas Sombras ─────────────────
 
@@ -8592,6 +8612,61 @@ class GameRoom:
             del self.chests[chest_id]
             await self.gm_say("🔲 O baú está vazio e desaparece.")
 
+        await self.push_state()
+
+    async def handle_drop_item(self, pid, source, index=None, slot_key=None):
+        """Larga um item no chão (1ª casa adjacente livre). Ação LIVRE, a qualquer
+        momento (sem _is_turn). Origem: bolsa (index) ou slot equipado (slot_key —
+        desequipa na hora)."""
+        p = self.players.get(pid)
+        if not p or not p.get("alive") or self.phase != "playing":
+            return
+        # localiza o item sem removê-lo ainda (só remove se houver casa)
+        if source == "bag":
+            if index is None or index < 0 or index >= len(p["bag"]):
+                await self.send_to(pid, {"type": "error", "msg": "Slot de inventário inválido."}); return
+            item = p["bag"][index]
+        elif source == "gear":
+            if slot_key not in GEAR_SLOTS or not p["gear"].get(slot_key):
+                await self.send_to(pid, {"type": "error", "msg": "Nada equipado nesse slot."}); return
+            item = p["gear"][slot_key]
+        else:
+            return
+        tile = self._free_drop_tile_near(p["pos"])
+        if tile is None:
+            await self.send_to(pid, {"type": "error", "msg": "Sem espaço adjacente para largar."}); return
+        # remove da origem
+        if source == "bag":
+            p["bag"].pop(index)
+        else:
+            p["gear"][slot_key] = None
+            self._apply_gear_effect(p, item, False)
+            if slot_key == "weapon":
+                p["weapon"] = {**WEAPONS["unarmed"]}
+        gid = new_id()   # UM id só — usado como chave e como campo "id"
+        self.ground_items[gid] = {"id": gid, "item": item, "pos": tile}
+        await self.gm_say(f"🎒 **{p['name']}** largou **{item['name']}** no chão.")
+        await self.push_state()
+
+    async def handle_pickup_item(self, pid, ground_id):
+        """Pega um item do chão (adjacente, Chebyshev ≤1) para o inventário. Ação
+        LIVRE, a qualquer momento. Roteia por _route_acquired_item (bolsa-primeiro)."""
+        p = self.players.get(pid)
+        if not p or not p.get("alive") or self.phase != "playing":
+            return
+        gi = self.ground_items.get(ground_id)
+        if not gi:
+            await self.send_to(pid, {"type": "error", "msg": "Item não encontrado."}); return
+        gx, gy = gi["pos"]; px, py = p["pos"]
+        if max(abs(px - gx), abs(py - gy)) > 1:
+            await self.send_to(pid, {"type": "error", "msg": "Muito longe do item!"}); return
+        res = self._route_acquired_item(p, gi["item"])
+        if res == "full":
+            await self.send_to(pid, {"type": "error",
+                "msg": "Inventário cheio e slot ocupado — abra espaço primeiro."}); return
+        del self.ground_items[ground_id]
+        extra = " (equipado — bolsa cheia)" if res == "equipped" else ""
+        await self.gm_say(f"🎒 **{p['name']}** pegou **{gi['item']['name']}** do chão{extra}!")
         await self.push_state()
 
     # ── Ação Bônus ─────────────────────────────────────────────────────────────
@@ -14848,6 +14923,7 @@ class GameRoom:
             "gm_log": self.gm_log[-30:],
             "phase": self.phase,
             "chests": list(self.chests.values()),
+            "ground_items": list(self.ground_items.values()),
             "decorations": self._serializar_decoracoes(),
             "materiais": self._serializar_materiais(),
         })
@@ -15168,6 +15244,12 @@ async def handler(ws):
 
                 elif t == "sell_item":
                     if room: await room.handle_shop_sell(pid, msg.get("item_slot"))
+
+                elif t == "drop_item":
+                    if room: await room.handle_drop_item(pid, msg.get("source"), msg.get("index"), msg.get("slot_key"))
+
+                elif t == "pickup_item":
+                    if room: await room.handle_pickup_item(pid, msg.get("ground_id"))
 
                 elif t == "equip_from_bag":
                     if room: await room.handle_equip_from_bag(pid, int(msg.get("slot_index", -1)))

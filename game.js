@@ -1294,7 +1294,7 @@ function openShop(shopId){
   $('shop-title').textContent = titles[shopId]||shopId;
   const subtitles={
     taverna:'Descanse, coma e beba antes de partir para a aventura.',
-    ferreiro:'Compre e venda armas e armaduras.',
+    ferreiro:'Compre e venda armas, armaduras e munição.',
     mercador:'Poções, amuletos e acessórios para sobreviver na masmorra.',
     templo:'Receba bênçãos divinas e cure seus ferimentos.',
   };
@@ -1302,7 +1302,7 @@ function openShop(shopId){
   // Tabs
   const tabsEl=$('shop-tabs'); tabsEl.innerHTML='';
   const tabDefs = shopId==='ferreiro'
-    ? ['⚔ Armas','🛡 Armaduras','💰 Vender']
+    ? ['⚔ Armas','🛡 Armaduras','🏹 Munição','💰 Vender']
     : shopId==='mercador'
     ? ['🛒 Comprar','💰 Vender']
     : [];
@@ -1321,10 +1321,22 @@ function _updateShopTabs(){
     el.classList.toggle('active',i===GS.shopTabIdx));
 }
 
+// Ícone de item: PNG em assets/itens/<id>.png se existir, senão cai no emoji.
+// Pergaminhos têm id dinâmico por magia (pergaminho_<spellId>) — usam sempre
+// o mesmo ícone genérico. onerror troca a <img> pelo texto do emoji (sem
+// innerHTML, então o emoji nunca é interpretado como HTML).
+function itemIconHTML(item, fallbackEmoji){
+  const emoji = (item && item.emoji) || fallbackEmoji || '📦';
+  if(!item || !item.id) return emoji;
+  const fileId = item.effect === 'scroll' ? 'pergaminho' : item.id;
+  const src = _assetURL(`assets/itens/${fileId}.png`);
+  return `<img src="${src}" alt="" class="item-icon-img" data-fallback="${emoji}" onerror="this.replaceWith(this.dataset.fallback)">`;
+}
+
 function _renderShopItems(){
   if(!GS.cityState||!GS.activeShop) return;
   // Route sell tabs
-  if(GS.activeShop==='ferreiro'&&GS.shopTabIdx===2){ _renderSellItems('gear'); return; }
+  if(GS.activeShop==='ferreiro'&&GS.shopTabIdx===3){ _renderSellItems('gear'); return; }
   if(GS.activeShop==='mercador'&&GS.shopTabIdx===1){ _renderSellItems('bag');  return; }
 
   const myP=GS.cityState.players.find(p=>p.id===GS.myPid);
@@ -1334,8 +1346,9 @@ function _renderShopItems(){
   const shops=GS.cityState.shops;
   let items=[], shopKey=GS.activeShop;
   if(GS.activeShop==='ferreiro'){
-    if(GS.shopTabIdx===0){ items=shops.ferreiro.weapons; shopKey='ferreiro_weapon'; }
-    else                 { items=shops.ferreiro.armors;  shopKey='ferreiro_armor';  }
+    if(GS.shopTabIdx===0)      { items=shops.ferreiro.weapons; shopKey='ferreiro_weapon'; }
+    else if(GS.shopTabIdx===1) { items=shops.ferreiro.armors;  shopKey='ferreiro_armor';  }
+    else                       { items=shops.ferreiro.ammo;    shopKey='ferreiro_ammo';   }
   } else {
     items=shops[GS.activeShop]||[];
   }
@@ -1354,7 +1367,7 @@ function _renderShopItems(){
     const restritaTag=classRestrita?'<span style="color:var(--danger,#ff4136);font-size:.68rem;"> 🚫 Classe restrita</span>':'';
     const usadaTag=jaUsada?'<span style="color:var(--muted,#888);font-size:.68rem;"> ✔ já usada nesta visita</span>':'';
     return `<div class="shop-item"${(classRestrita||jaUsada)?' style="opacity:.5;"':''}>
-      <span class="shop-item-emoji">${item.emoji||'📦'}</span>
+      <span class="shop-item-emoji">${itemIconHTML(item)}</span>
       <div class="shop-item-info">
         <div class="shop-item-name">${item.name}${kindTag}${restritaTag}${usadaTag}</div>
         <div class="shop-item-desc">${desc}</div>
@@ -1413,7 +1426,7 @@ function _renderSellItems(mode){
   }
   list.innerHTML=sellable.map(({slot,item,sp,tag})=>`
     <div class="shop-item">
-      <span class="shop-item-emoji">${item.emoji||'📦'}</span>
+      <span class="shop-item-emoji">${itemIconHTML(item)}</span>
       <div class="shop-item-info">
         <div class="shop-item-name">${item.name}</div>
         <div class="shop-item-desc">${_itemDesc(item)} • <span style="color:var(--text3)">${tag}</span></div>
@@ -1444,7 +1457,9 @@ function _itemDesc(item){
     const arr=item.throw_range?` • 🎯 Arremesso ${item.throw_range}`:'';
     const ehAdaga=item.id==='dagger'||/adaga/i.test(item.name||'');
     const segMao=ehAdaga?' • 2ª mão: usa DES':'';
-    return `${item.die} dano (${item.stat==='dex'?'DES':'FOR'})${sub}${range}${duas}${arr}${segMao}`;
+    const bonus=item.dmg_bonus?` • +${item.dmg_bonus} dano`:'';
+    const resistente=item.corrosao_resistente?' • ⚙️ resiste +1 golpe de corrosão':'';
+    return `${item.die} dano (${item.stat==='dex'?'DES':'FOR'})${sub}${bonus}${range}${duas}${arr}${segMao}${resistente}`;
   }
   if(item.ac_bonus!=null){
     const kindTxt=item.kind==='shield'?'Escudo — soma com armadura':'Armadura';
@@ -3049,25 +3064,24 @@ function gerarHabilidadesEspeciais(item){
       </div>
     `);
   }
-  if (item.id === 'adaga_secundaria') {
+  if (typeof GS !== 'undefined' && GS.isDagger && GS.isDagger(item)) {
     especiais.push(`
       <div style="color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;">
-        ⚔️ <strong style="color:#c8a951">Ataque Bônus:</strong>
-        Equipe no slot secundário para um ataque extra
+        ⚔️ <strong style="color:#c8a951">Ataque Bônus (mão secundária):</strong>
+        Equipada na mão esquerda, dá um ataque extra
         adjacente como ação bônus. Usa Destreza para
         acerto e dano (1d4 + DEX). Sem penalidade.
       </div>
       <div style="color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;">
-        🎯 <strong style="color:#c8a951">Arremesso Bônus:</strong>
-        Pode ser arremessada como ação bônus até 3
-        quadrados incluindo diagonais. Resultado 1 no
-        d20 = adaga destruída permanentemente.
+        🎯 <strong style="color:#c8a951">Arremesso:</strong>
+        Pode ser arremessada até 3 quadrados incluindo
+        diagonais. Resultado 1 no d20 = adaga destruída
+        permanentemente.
       </div>
       <div style="color:#c8b89a; font-size:10px; line-height:1.6;">
         🛡️ <strong style="color:#ff4136">Atenção:</strong>
-        Ocupa o slot de escudo — incompatível com
-        armas de duas mãos. Apenas Victor, Luccas
-        e Henrique podem equipar.
+        Ocupa o slot da mão esquerda — incompatível com
+        armas de duas mãos.
       </div>
     `)
   }
@@ -5215,6 +5229,20 @@ function renderMap(state){
       ctx.font=`bold ${Math.round(CELL*0.18)}px monospace`;
       ctx.fillStyle='#ffe060'; ctx.fillText(`×${total}`,X+CELL/2,Y+CELL-10);
     }
+  }
+
+  // ── Itens largados no chão (2D — brilho verde suave + emoji do item)
+  for(const gi of (state.ground_items||[])){
+    const [gx,gy]=gi.pos;
+    if(!exploredSet.has(`${gx},${gy}`)) continue;
+    const X=gx*CELL, Y=gy*CELL;
+    const gglow=ctx.createRadialGradient(X+CELL/2,Y+CELL/2,0,X+CELL/2,Y+CELL/2,CELL*0.55);
+    gglow.addColorStop(0,'rgba(140,220,140,0.30)');
+    gglow.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=gglow; ctx.fillRect(X,Y,CELL,CELL);
+    ctx.font=`${Math.round(CELL*0.5)}px serif`;
+    ctx.fillStyle='#fff';
+    ctx.fillText((gi.item&&gi.item.emoji)||'📦',X+CELL/2,Y+CELL/2);
   }
 
   // ── Decorations (2D overlay — emoji at footprint center + subtle fill)
@@ -10288,7 +10316,7 @@ function _renderChestWindow(chest){
     row.className = 'chest-item-row';
     row.innerHTML = `
       <div class="ci-info">
-        <span class="ci-emoji">${item.emoji}</span>
+        <span class="ci-emoji">${itemIconHTML(item)}</span>
         <div class="ci-text">
           <div class="ci-name">${item.name}</div>
           <div class="ci-type">${typeLabel}${statSuffix}</div>
@@ -10359,7 +10387,7 @@ function abrirPainelLoot({ titulo, gold, items, onPegarOuro, onPegarItem }) {
     row.className = 'chest-item-row';
     row.innerHTML = `
       <div class="ci-info">
-        <span class="ci-emoji">${item.emoji || '📦'}</span>
+        <span class="ci-emoji">${itemIconHTML(item)}</span>
         <div class="ci-text">
           <div class="ci-name">${item.name}</div>
           <div class="ci-type">${typeLabel}${statSuffix}</div>
@@ -11796,6 +11824,7 @@ function init3D(state){
     stairGroup,                          // staircase mesh (null if no stairs)
     exitGroup,                           // Fase 3: marcador de saída 🏁 (null se não houver)
     chestMeshes: {},                     // chest_id → THREE.Group
+    groundItemMeshes: {},                // ground_item id → THREE.Group (item largado no chão)
     decorMeshes: {},                     // decor id → THREE.Mesh
     hoveredPos:  null,   // [gx, gy] of figure under cursor, or null
     selectedPos: null    // [gx, gy] of clicked-selected figure, or null
@@ -12840,6 +12869,36 @@ function buildChest3D(T, chest){
   return grp;
 }
 
+// Item largado no chão: sprite com o emoji do item + brilho verde no chão.
+// Posicionado por casa (mesma convenção dos baús: x=pos[0], z=pos[1]). O clique
+// é resolvido por casa em handleTileClick (o raycast pega o chão sob o sprite).
+function buildGroundItem3D(T, gi){
+  const grp = new T.Group();
+  grp.position.set(gi.pos[0], 0.22, gi.pos[1]);   // TH do topo do chão (como o baú)
+  grp.userData.groundId = gi.id;
+
+  const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+  const c2 = cv.getContext('2d');
+  c2.font = '48px serif'; c2.textAlign = 'center'; c2.textBaseline = 'middle';
+  c2.fillText((gi.item && gi.item.emoji) || '📦', 32, 36);
+  const tex = new T.CanvasTexture(cv);
+  const spr = new T.Sprite(new T.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
+  spr.scale.set(0.55, 0.55, 0.55);
+  spr.position.y = 0.32;
+  grp.add(spr);
+
+  const glowMat = new T.MeshStandardMaterial({
+    color: new T.Color(0x8ce08c), emissive: new T.Color(0x8ce08c),
+    emissiveIntensity: 0.7, transparent: true, opacity: 0.30, depthWrite: false
+  });
+  const glow = new T.Mesh(new T.CircleGeometry(0.40, 20), glowMat);
+  glow.rotation.x = -Math.PI / 2;
+  glow.position.set(0, 0.004, 0);
+  grp.add(glow);
+
+  return grp;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // MOVIMENTO ANIMADO DO PEÃO (3D) — segue o caminho do pathfinding, casa por
 // casa, com fases levantar/avançar/pousar. Anima LOCALMENTE e só então envia
@@ -13555,6 +13614,25 @@ function renderMap3D(state){
       g3.chestMeshes[chest.id] = grp;
     }
     g3.chestMeshes[chest.id].visible = exploredSet.has(key);
+  }
+
+  // ── Itens no chão 3D — sprites persistentes (emoji + brilho), como os baús ────
+  const gItems3D = state.ground_items || [];
+  const liveGiIds = new Set(gItems3D.map(g => g.id));
+  for(const [gid, grp] of Object.entries(g3.groundItemMeshes)){
+    if(!liveGiIds.has(gid)){
+      g3.scene.remove(grp);
+      delete g3.groundItemMeshes[gid];
+    }
+  }
+  for(const gi of gItems3D){
+    const key = `${gi.pos[0]},${gi.pos[1]}`;
+    if(!g3.groundItemMeshes[gi.id]){
+      const grp = buildGroundItem3D(g3.T, gi);
+      g3.scene.add(grp);
+      g3.groundItemMeshes[gi.id] = grp;
+    }
+    g3.groundItemMeshes[gi.id].visible = exploredSet.has(key);
   }
 
   // ── Decoration 3D meshes — procedural boxes/cylinders, ou miniatura extrudada ─
@@ -19678,6 +19756,17 @@ function handleTileClick(tx, ty){
     if(tx===sx && ty===sy){
       send({type:'exit_dungeon'});
       return;
+    }
+  }
+
+  // ── Item no chão (2D e 3D): clicar num item adjacente pega; senão avisa ──────
+  // Não-guardado por modo: o 3D funil por handleTileClick(tx,ty) via on3DClick.
+  if(_st && Array.isArray(_st.ground_items)){
+    const gi = _st.ground_items.find(g => g.pos[0]===tx && g.pos[1]===ty);
+    if(gi){
+      const me = _st.players.find(p=>p.id===GS.myPid&&p.alive);
+      if(me && GS.groundItemPickable(gi, me)){ GS.pickupItem(gi.id); return; }
+      toast('Muito longe do item.', 'var(--text2)'); return;
     }
   }
 
