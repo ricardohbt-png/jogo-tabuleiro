@@ -84,8 +84,11 @@ async def main():
     check("cota permanece na bolsa", bag_idx(mg, "chainmail") >= 0)
     check("erro de classe enviado", any("classe" in e.lower() for e in r._errs))
 
-    # ── [3] Comprar adaga com a mão ocupada → vai para a BOLSA ───────────────────
-    print("\n[3] Comprar adaga com mão principal ocupada → bolsa")
+    # ── [3] Compra de arma vai para a BOLSA (modelo bolsa-primeiro) ──────────────
+    # Sub-projeto B: comprar NÃO auto-equipa mais — o item vai pra bolsa (o jogador
+    # equipa pelo boneco). Auto-equipar só como resgate quando a bolsa está cheia
+    # (coberto em tools/test_roteamento_itens.py).
+    print("\n[3] Compra de arma vai para a bolsa (bolsa-primeiro)")
     r = setup(); r.phase = "city"
     w = make_player("p1", "Victor", "warrior", 0); r.players["p1"] = w
     w["gold"] = 100; w["bag"] = []
@@ -93,15 +96,17 @@ async def main():
     await r.handle_shop_buy("p1", "ferreiro_weapon", "dagger")
     check("adaga comprada foi para a bolsa", bag_idx(w, "dagger") >= 0)
     check("mão principal inalterada", w["gear"]["weapon"]["id"] == arma0)
-    # comprar arma normal (não-adaga) continua auto-equipando
+    # arma normal (não-adaga) com mão ocupada + bolsa livre → bolsa (não auto-equipa)
     await r.handle_shop_buy("p1", "ferreiro_weapon", "longsword")
-    check("arma normal auto-equipa na mão principal", w["gear"]["weapon"]["id"] == "longsword")
-    # comprar adaga com a mão VAZIA → auto-equipa
+    check("arma normal também vai pra bolsa", bag_idx(w, "longsword") >= 0)
+    check("mão principal continua com a arma inicial", w["gear"]["weapon"]["id"] == arma0)
+    # comprar com a mão VAZIA + bolsa livre → BOLSA (bolsa-primeiro; equipar é manual)
     r2 = setup(); r2.phase = "city"
     w2 = make_player("p2", "Victor", "warrior", 0); r2.players["p2"] = w2
     w2["gold"] = 100; w2["bag"] = []; w2["gear"]["weapon"] = None; w2["weapon"] = deepcopy(WEAPONS["unarmed"])
     await r2.handle_shop_buy("p2", "ferreiro_weapon", "dagger")
-    check("adaga com mão vazia auto-equipa", (w2["gear"].get("weapon") or {}).get("id") == "dagger")
+    check("compra com mão vazia vai pra bolsa (não auto-equipa)", bag_idx(w2, "dagger") >= 0)
+    check("mão principal continua vazia", w2["gear"].get("weapon") is None)
 
     # ── [4] Equipar 2ª arma (off_hand) é ação livre ─────────────────────────────
     print("\n[4] Equipar adaga como 2ª arma (off_hand) — ação livre")

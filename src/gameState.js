@@ -981,6 +981,14 @@ const GS = (() => {
 
       case 'city_state':
         cityState = msg;
+        // Descarta o estado da masmorra ANTERIOR (simétrico ao enter_dungeon, que
+        // limpa cityState). Sem isto, os leitores que preferem gameState — como o
+        // modal de inventário (_currentPlayer) — mostram o paperdoll/bolsa
+        // congelados da última masmorra na cidade: a armadura recém-comprada entra
+        // em cityState.gear mas o modal continua lendo o gameState velho (o item
+        // aparece ao vender, que lê cityState, mas não no boneco). Cidade e masmorra
+        // são fases mutuamente exclusivas no cliente.
+        gameState = null;
         if (msg.guild && Array.isArray(msg.guild.catalog)) guildCatalogCache = msg.guild.catalog;
         _captarStory(msg);
         if (!myPid) {
@@ -1216,7 +1224,7 @@ const GS = (() => {
     const nm  = (item.name || '').toLowerCase();
     // Casa exatamente server._eh_adaga (server.py): startswith, não ===, p/
     // cobrir futuras variantes tipo "dagger_ferro".
-    return (iid.startsWith('dagger') || iid === 'adaga_secundaria' || nm.includes('adaga')) && !!item.die;
+    return (iid.startsWith('dagger') || nm.includes('adaga')) && !!item.die;
   }
 
   // Fonte única: a mão secundária fica bloqueada quando a arma principal é de

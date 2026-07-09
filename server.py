@@ -2073,7 +2073,9 @@ CHEST_ITEMS = [
     {"id": "garrafa_vinho", "name": "Garrafa de Vinho",  "emoji": "🍷", "item_slot": "bag",       "effect": "wine",      "value": 15},
     {"id": "racao",         "name": "Ração (Pão e Água)", "emoji": "🥖", "item_slot": "bag",       "effect": "ration",    "value": 15},
     # ── Armas (slot weapon) ──
-    {"id": "sword",         "name": "Espada de Ferro",   "emoji": "⚔️", "item_slot": "weapon",    "effect": "atk",       "value": 2},
+    {"id": "sword",         "name": "Espada Curta de Ferro Serrilhado", "emoji": "⚔️", "item_slot": "weapon",
+     "die": "1d6", "stat": "str_", "categoria": "cortante", "dmg_bonus": 2,
+     "corrosao_resistente": 1},   # +1 golpe do Devorador de Metal antes de começar a sofrer penalidade
     {"id": "magic_sword",   "name": "Espada Mágica",     "emoji": "🗡️", "item_slot": "weapon",    "effect": "atk",       "value": 4},
     {"id": "bow",           "name": "Arco Élfico",       "emoji": "🏹", "item_slot": "weapon",    "effect": "atk",       "value": 3},
     {"id": "staff",         "name": "Cajado das Runas",  "emoji": "🪄", "item_slot": "weapon",    "effect": "atk",       "value": 3},
@@ -2104,12 +2106,14 @@ SHOP_WEAPONS = [
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     {"id": "bordao",        "name": "Bordão",             "emoji": "🪄",  "die": "1d6",  "stat": "str_", "price": 8,  "categoria": "contundente",
      "allowed_classes": ["cleric", "bard", "rogue", "paladin", "warrior"]},
+    {"id": "cajado_madeira","name": "Cajado de Madeira",  "emoji": "🪄",  "die": "1d6",  "stat": "str_", "price": 10, "reach": "cajado", "categoria": "contundente"},
     {"id": "staff",         "name": "Cajado Arcano",      "emoji": "🪄",  "die": "1d6",  "stat": "str_", "price": 10, "reach": "cajado", "categoria": "contundente",
      "allowed_classes": ["mage", "bard", "rogue", "paladin", "warrior"]},
     {"id": "maca",          "name": "Maça",               "emoji": "🔨",  "die": "1d6",  "stat": "str_", "price": 10, "categoria": "contundente",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     {"id": "shortsword",    "name": "Espada Curta",       "emoji": "⚔️",  "die": "1d6",  "stat": "str_", "price": 12, "categoria": "cortante",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
+    {"id": "machado_basico","name": "Machado de Ferro",   "emoji": "🪓",  "die": "1d6",  "stat": "str_", "price": 12, "categoria": "cortante"},
     {"id": "arco_curto",    "name": "Arco Curto",         "emoji": "🏹",  "die": "1d6",  "stat": "dex",  "price": 12, "range": 8, "categoria": "perfurante",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     # ─── Pesadas (1d8) ─────────────────────────────────────────────────────────
@@ -2180,12 +2184,15 @@ SHOP_MERCHANT = [
     {"id": "veneno_cobra_cuspidora","name": "Veneno de Cobra Cuspidora","emoji": "🐍", "price": 16, "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_cobra_cuspidora"},
     {"id": "veneno_basilisco",      "name": "Peçonha do Basilisco",     "emoji": "🦎", "price": 20, "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_basilisco"},
     {"id": "veneno_polvo_abissal",  "name": "Tinta do Polvo Abissal",   "emoji": "🐙", "price": 15, "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_polvo_abissal"},
-    # ── Munições básicas (slot off_hand — 10 projéteis por pacote) ──
+]
+
+# Munição — vendida no FERREIRO (item_slot "ammo", vai pro off_hand; 10 projéteis
+# por pacote nas básicas, vendidas individualmente nas incendiárias).
+SHOP_AMMO = [
     {"id": "flechas",  "name": "Flechas (×10)",  "emoji": "🏹", "price": 3,
      "item_slot": "ammo", "effect": "ammo", "ammo_type": "flechas", "ammo_count": 10},
     {"id": "virotes",  "name": "Virotes (×10)",  "emoji": "🏹", "price": 3,
      "item_slot": "ammo", "effect": "ammo", "ammo_type": "virotes", "ammo_count": 10},
-    # ── Munições especiais incendiárias (slot off_hand — vendidas individualmente) ──
     {"id": "virote_incendiario", "name": "Virote Incendiário", "emoji": "🔥", "price": 4,
      "item_slot": "ammo", "effect": "ammo", "ammo_type": "virotes_incendiarios", "ammo_count": 1,
      "extra_damage": "1d4", "extra_damage_types": ["fire"]},
@@ -3428,7 +3435,7 @@ _STARTING_ARMOR = {
 # Item de off_hand com `die`/`stat` → habilita o ataque de mão secundária no
 # combate. effect "none"/value 0 → não altera CA/atributos.
 _STARTING_OFFHAND = {
-    "rogue": {"id": "adaga_secundaria", "name": "Adaga Secundária", "emoji": "🗡️",
+    "rogue": {"id": "dagger", "name": "Adaga", "emoji": "🗡️",
               "item_slot": "off_hand", "kind": "weapon", "die": "1d4", "stat": "str_",
               "finesse": True, "throw_range": 3, "effect": "none", "value": 0},
     "bard":  {"id": "dagger", "name": "Adaga", "emoji": "🗡️",
@@ -4165,7 +4172,7 @@ class GameRoom:
             "host": self.host_pid,
             "campaign": self._campaign_payload(),
             "shops": {
-                "ferreiro": {"weapons": SHOP_WEAPONS, "armors": SHOP_ARMORS},
+                "ferreiro": {"weapons": SHOP_WEAPONS, "armors": SHOP_ARMORS, "ammo": SHOP_AMMO},
                 "mercador": SHOP_MERCHANT + self.shop_scrolls,   # mercador inclui pergaminhos
                 "templo":   SHOP_TEMPLE,
                 "taverna":  SHOP_TAVERN,
@@ -4544,7 +4551,7 @@ class GameRoom:
                 dmg *= 3 if (forca_critico and roll == 20) else 2
             dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano
                       + self._mod_magia(p, "dano") + self._tecnica_bonus_dano(p)
-                      + bonus_extra
+                      + bonus_extra + weapon.get("dmg_bonus", 0)
                       + p.get("skill_bonus_dano", 0) - self._corrosao_arma_pen(p))
             dmg = self._apply_damage_types(dmg, [DMG_PHYSICAL], target, weapon)
             weapon_name = weapon.get("name", "arma")
@@ -4750,6 +4757,8 @@ class GameRoom:
             item = next((i for i in SHOP_WEAPONS  if i["id"] == item_id), None)
         elif shop == "ferreiro_armor":
             item = next((i for i in SHOP_ARMORS   if i["id"] == item_id), None)
+        elif shop == "ferreiro_ammo":
+            item = next((i for i in SHOP_AMMO     if i["id"] == item_id), None)
         elif shop == "mercador":
             item = (next((i for i in SHOP_MERCHANT if i["id"] == item_id), None)
                     or next((i for i in self.shop_scrolls if i["id"] == item_id), None))
@@ -4769,19 +4778,12 @@ class GameRoom:
                 "msg": f"Sua classe não pode usar {item['name']}!"})
             return
 
-        # ── Arma de 2 mãos × escudo: não podem coexistir (bloquear com aviso) ──
-        if shop == "ferreiro_weapon":
-            if WEAPONS.get(item_id, {}).get("two_handed") and self._off_hand_ocupa_mao(p):
-                await self.send_to(pid, {"type": "error",
-                    "msg": f"{item['name']} é arma de 2 mãos — desequipe o escudo ou a 2ª arma antes de empunhá-la."})
-                return
-        elif shop == "ferreiro_armor" and item.get("kind") == "shield":
-            # O escudo só auto-equipa se a mão esquerda estiver livre; nesse caso
-            # uma arma de 2 mãos equipada criaria o conflito → bloquear.
-            if p["gear"].get("off_hand") is None and (p.get("weapon") or {}).get("two_handed"):
-                await self.send_to(pid, {"type": "error",
-                    "msg": f"Você empunha uma arma de 2 mãos — não pode equipar {item['name']}."})
-                return
+        # ── Arma de 2 mãos × escudo/2ª arma ──────────────────────────────────
+        # No modelo bolsa-primeiro a compra NÃO auto-equipa: o item vai para a
+        # bolsa e o conflito de 2 mãos é validado só ao EQUIPAR (handle_equip_from_bag
+        # e o resgate-equipar em _free_equip_slot_for). Por isso não há mais bloqueio
+        # pré-compra aqui — comprar uma arma de 2 mãos com escudo equipado é permitido
+        # (ela apenas fica na bolsa até você trocar).
 
         price = item["price"]
         if p["gold"] < price:
@@ -4792,66 +4794,51 @@ class GameRoom:
         log = ""
 
         if shop == "ferreiro_weapon":
-            # Adaga comprada com a mão principal já ocupada vai para a BOLSA — o
-            # jogador escolhe equipar na mão principal ou como 2ª arma (botões).
-            if self._eh_adaga(item) and p["gear"].get("weapon"):
-                if len(p["bag"]) >= p.get("bag_size", 6):
-                    p["gold"] += price
-                    await self.send_to(pid, {"type": "error", "msg": "Inventário cheio — abra espaço para comprar."})
-                    return
-                p["bag"].append({**item, "buy_price": price})
-                log = f"🔨 **{p['name']}** comprou **{item['name']}** (guardada na bolsa)."
-            else:
-                w = {**WEAPONS[item_id]}
-                p["weapon"] = w
-                # Dict de exibição/inventário auto-descritivo: inclui os campos de
-                # combate (die/stat/range/reach/categoria/two_handed) para que
-                # reequipar pela bolsa restaure as estatísticas e detecte 2 mãos.
-                p["gear"]["weapon"] = {
-                    "id": item_id, "name": item["name"],
-                    "emoji": item.get("emoji", "⚔️"),
-                    "item_slot": "weapon", "effect": "atk", "value": 0,
-                    "buy_price": price,
-                    **{k: w[k] for k in ("die", "stat", "range", "reach",
-                                         "finesse", "throw_range", "categoria",
-                                         "two_handed") if k in w},
-                }
-                log = f"🔨 **{p['name']}** comprou **{item['name']}**!"
+            # Dict de exibição/inventário auto-descritivo: inclui os campos de combate
+            # (die/stat/range/reach/categoria/two_handed) para que equipar pela bolsa
+            # restaure as estatísticas e detecte 2 mãos.
+            w = {**WEAPONS[item_id]}
+            weapon_item = {
+                "id": item_id, "name": item["name"],
+                "emoji": item.get("emoji", "⚔️"),
+                "item_slot": "weapon", "effect": "atk", "value": 0,
+                "buy_price": price,
+                **{k: w[k] for k in ("die", "stat", "range", "reach",
+                                     "finesse", "throw_range", "categoria",
+                                     "two_handed", "dmg_bonus", "corrosao_resistente") if k in w},
+            }
+            res = self._route_acquired_item(p, weapon_item)
+            if res == "full":
+                p["gold"] += price
+                await self.send_to(pid, {"type": "error",
+                    "msg": "Inventário cheio e mão(s) ocupada(s) — abra espaço para comprar."})
+                return
+            log = (f"🔨 **{p['name']}** comprou **{item['name']}** (equipada — bolsa cheia)!"
+                   if res == "equipped"
+                   else f"🔨 **{p['name']}** comprou **{item['name']}** (guardada na bolsa).")
 
         elif shop == "ferreiro_armor":
             ac_bonus = item.get("ac_bonus", 0)
             kind     = item.get("kind", "armor")
-            if kind == "shield":
-                # Escudo vai para a mão esquerda (off_hand)
-                shield_item = {
-                    "id": item_id, "name": item["name"],
-                    "emoji": item.get("emoji", "🛡️"),
-                    "item_slot": "shield", "effect": "def_", "value": ac_bonus,
-                    "buy_price": price,
-                }
-                if p["gear"].get("off_hand") is None:
-                    p["gear"]["off_hand"] = shield_item
-                    p["ac"] += ac_bonus
-                    log = f"🔨 **{p['name']}** equipou **{item['name']}** (+{ac_bonus} CA)!"
-                elif len(p["bag"]) < p.get("bag_size", 6):
-                    p["bag"].append(shield_item)
-                    log = f"🔨 **{p['name']}** comprou **{item['name']}** (guardado no inventário)."
-                else:
-                    p["gold"] += price
-                    await self.send_to(pid, {"type": "error", "msg": "Mão esquerda ocupada e inventário cheio!"})
-                    return
-            else:
-                # Regular armor replaces armor slot; recalculate keeping shield bonuses
-                p["gear"]["armor"] = {
-                    "id": item_id, "name": item["name"],
-                    "emoji": item.get("emoji", "🛡️"),
-                    "item_slot": "armor", "effect": "def_", "value": ac_bonus,
-                    "buy_price": price,
-                }
-                _recalculate_ac(p)
-                log = f"🔨 **{p['name']}** comprou **{item['name']}** (CA {p['ac']})!"
+            slot_disp = "shield" if kind == "shield" else "armor"
+            gear_item = {
+                "id": item_id, "name": item["name"],
+                "emoji": item.get("emoji", "🛡️"),
+                "item_slot": slot_disp, "effect": "def_", "value": ac_bonus,
+                "buy_price": price,
+            }
+            res = self._route_acquired_item(p, gear_item)
+            if res == "full":
+                p["gold"] += price
+                await self.send_to(pid, {"type": "error",
+                    "msg": "Inventário cheio e slot ocupado — abra espaço para comprar."})
+                return
+            log = (f"🔨 **{p['name']}** comprou **{item['name']}** (equipada — bolsa cheia)!"
+                   if res == "equipped"
+                   else f"🔨 **{p['name']}** comprou **{item['name']}** (guardada na bolsa).")
 
-        elif shop == "mercador":
+        elif shop in ("mercador", "ferreiro_ammo"):
+            loja_emoji = "🔨" if shop == "ferreiro_ammo" else "🛒"
             slot = item.get("item_slot", "bag")
             if slot == "ammo":
                 # Munição: vai para o slot off_hand; acumula se mesmo tipo
@@ -4864,11 +4851,11 @@ class GameRoom:
                     space = MAX_AMMO_STACK - off.get("ammo_count", 0)
                     add   = min(ammo_count, space)
                     off["ammo_count"] = off.get("ammo_count", 0) + add
-                    log = f"🛒 **{p['name']}** recarregou **{item['name']}** (+{add} → {off['ammo_count']} total)."
+                    log = f"{loja_emoji} **{p['name']}** recarregou **{item['name']}** (+{add} → {off['ammo_count']} total)."
                 elif off is None:
                     # Off-hand livre: equipa diretamente
                     p["gear"]["off_hand"] = {**item, "buy_price": price}
-                    log = f"🛒 **{p['name']}** equipou **{item['name']}** na mão esquerda ({ammo_count} projéteis)."
+                    log = f"{loja_emoji} **{p['name']}** equipou **{item['name']}** na mão esquerda ({ammo_count} projéteis)."
                 else:
                     # Off-hand ocupado ou mesmo tipo lotado: empilha na bolsa (máx MAX_AMMO_STACK)
                     existing_bag = next(
@@ -4878,29 +4865,32 @@ class GameRoom:
                     if existing_bag:
                         add = min(ammo_count, MAX_AMMO_STACK - existing_bag.get("ammo_count", 0))
                         existing_bag["ammo_count"] = existing_bag.get("ammo_count", 0) + add
-                        log = f"🛒 **{p['name']}** guardou **{item['name']}** na bolsa ({existing_bag['ammo_count']} total)."
+                        log = f"{loja_emoji} **{p['name']}** guardou **{item['name']}** na bolsa ({existing_bag['ammo_count']} total)."
                     elif len(p["bag"]) >= p.get("bag_size", 6):
                         p["gold"] += price
                         await self.send_to(pid, {"type": "error", "msg": "Mão esquerda ocupada e inventário cheio!"})
                         return
                     else:
                         p["bag"].append({**item, "buy_price": price})
-                        log = f"🛒 **{p['name']}** guardou **{item['name']}** na bolsa (equipe na mão esquerda para usar)."
+                        log = f"{loja_emoji} **{p['name']}** guardou **{item['name']}** na bolsa (equipe na mão esquerda para usar)."
             elif slot == "bag":
-                if len(p["bag"]) >= p.get("bag_size", 6):
+                # Consumível — só a bolsa (categoria 'bag' não tem slot de resgate).
+                if self._route_acquired_item(p, {**item, "buy_price": price}) == "full":
                     p["gold"] += price
                     await self.send_to(pid, {"type": "error", "msg": f"Inventário cheio (máx {p.get('bag_size', 6)} itens)!"})
                     return
-                p["bag"].append({**item, "buy_price": price})
-                log = f"🛒 **{p['name']}** comprou **{item['name']}**!"
+                log = f"{loja_emoji} **{p['name']}** comprou **{item['name']}**!"
             else:
-                # Acessório/anel/elmo/mochila — vai para o inventário; o jogador equipa no slot certo
-                if len(p["bag"]) >= p.get("bag_size", 6):
+                # Acessório/anel/elmo/mochila — bolsa-primeiro, resgate-equipa se a bolsa encher.
+                res = self._route_acquired_item(p, {**item, "buy_price": price})
+                if res == "full":
                     p["gold"] += price
-                    await self.send_to(pid, {"type": "error", "msg": "Inventário cheio — abra espaço para comprar."})
+                    await self.send_to(pid, {"type": "error",
+                        "msg": "Inventário cheio e slot ocupado — abra espaço para comprar."})
                     return
-                p["bag"].append({**item, "buy_price": price})
-                log = f"🛒 **{p['name']}** comprou **{item['name']}** (equipe pelo inventário)."
+                log = (f"{loja_emoji} **{p['name']}** comprou **{item['name']}** (equipado — bolsa cheia)!"
+                       if res == "equipped"
+                       else f"{loja_emoji} **{p['name']}** comprou **{item['name']}** (equipe pelo inventário).")
 
         elif shop == "templo":
             effect = item.get("effect")
@@ -4934,12 +4924,11 @@ class GameRoom:
                 log = f"🍺 **{p['name']}** se serve de **{item['name']}**: +{fome} fome e +{sede} sede!"
             else:
                 # Provisões (item_slot bag): vão para a mochila para consumo posterior.
-                if len(p["bag"]) >= p.get("bag_size", 6):
+                if self._route_acquired_item(p, {**item, "buy_price": price}) == "full":
                     p["gold"] += price
                     await self.send_to(pid, {"type": "error",
                         "msg": f"Inventário cheio (máx {p.get('bag_size', 6)} itens)!"})
                     return
-                p["bag"].append({**item, "buy_price": price})
                 log = f"🍺 **{p['name']}** comprou **{item['name']}**!"
 
         if log:
@@ -4978,10 +4967,11 @@ class GameRoom:
                 return
             sell_price = max(1, item.get("buy_price", 0) // 3)
             p["gold"] += sell_price
-            p["gear"]["armor"] = {
-                "id": "cloak", "name": "Manto", "emoji": "🧣",
-                "item_slot": "armor", "effect": "def_", "value": 0, "buy_price": 0,
-            }
+            # Slot vazio de verdade (mesmo estado usado quando a armadura é
+            # destruída por corrosão — ver _corroer_equipamento) em vez de trocar
+            # por um Manto: senão o slot continua com um item real equipado e
+            # parece que a armadura vendida "não sumiu" da ficha.
+            p["gear"]["armor"] = None
             _recalculate_ac(p)
             log = f"💰 **{p['name']}** vendeu **{item['name']}** por {sell_price} ouro!"
 
@@ -8186,6 +8176,72 @@ class GameRoom:
             return "bag"
         return "full"
 
+    def _route_acquired_item(self, p, item):
+        """Roteia um item recém-adquirido (compra/loot) — modelo BOLSA-PRIMEIRO com
+        resgate-equipar. Retorna 'bag' | 'equipped' | 'full':
+          1) bolsa tem espaço            → bolsa (NÃO auto-equipa, mesmo com slot livre);
+          2) bolsa cheia + slot correspondente livre e equipável → auto-equipa (resgate);
+          3) bolsa cheia + slots ocupados/inequipável → 'full' (o chamador recusa).
+        Munição (empilhamento próprio) NÃO passa por aqui; consumíveis (categoria
+        'bag') só usam o passo 1/3 (sem slot para resgatar)."""
+        # Passo 1 — bolsa primeiro.
+        if len(p["bag"]) < p.get("bag_size", 6):
+            p["bag"].append(item)
+            return "bag"
+        # Passo 2 — resgate-equipar num slot correspondente LIVRE e compatível.
+        slot_key = self._free_equip_slot_for(p, item)
+        if slot_key is not None:
+            self._rescue_equip(p, item, slot_key)
+            return "equipped"
+        # Passo 3 — sem espaço na bolsa nem slot livre → recusa.
+        return "full"
+
+    def _free_equip_slot_for(self, p, item):
+        """Chave de um slot de equipar LIVRE e compatível para o item, ou None.
+        Respeita restrição de classe e conflito de arma de 2 mãos × escudo/2ª arma.
+        Consumíveis e munição → None (sem slot de equipar)."""
+        cat = self._slot_category_for_item(item)
+        if cat == "bag" or item.get("effect") == "ammo":
+            return None
+        allowed = item.get("allowed_classes")
+        if allowed and p.get("class_id") not in allowed:
+            return None
+        gear = p["gear"]
+        if cat == "weapon":
+            cur = gear.get("weapon")
+            if cur and cur.get("id") != "unarmed":
+                return None
+            if item.get("two_handed") and self._off_hand_ocupa_mao(p):
+                return None   # arma de 2 mãos exige a mão esquerda livre
+            return "weapon"
+        if cat == "off_hand":
+            if gear.get("off_hand") is not None:
+                return None
+            is_shield = item.get("kind") == "shield" or item.get("item_slot") == "shield"
+            if (is_shield or item.get("die")) and (p.get("weapon") or {}).get("two_handed"):
+                return None   # escudo/2ª arma exige a mão principal sem arma de 2 mãos
+            return "off_hand"
+        if cat == "ring":
+            return next((k for k in ("ring1", "ring2") if gear.get(k) is None), None)
+        if cat == "item":
+            return next((k for k in ("item1", "item2") if gear.get(k) is None), None)
+        # armor / head / boots — slot único homônimo à categoria.
+        return cat if gear.get(cat) is None else None
+
+    def _rescue_equip(self, p, item, slot_key):
+        """Equipa um item adquirido num slot LIVRE (resgate — bolsa cheia). Espelha
+        o equipar de handle_equip_from_bag: aplica efeitos de gear e, para arma,
+        sincroniza a cópia de combate p['weapon']."""
+        cat = self._slot_category_for_item(item)
+        emoji = {"weapon": "⚔️", "armor": "🛡️", "off_hand": "🛡️",
+                 "head": "⛑️", "boots": "👢", "ring": "💍", "item": "🎒"}.get(cat, "🎒")
+        self._equip_into_slot(p, item, slot_key, emoji)
+        if cat == "weapon" and item.get("die") and item.get("stat"):
+            combat_fields = ("id", "name", "die", "stat", "range", "reach",
+                             "finesse", "throw_range", "categoria", "two_handed",
+                             "dmg_bonus", "corrosao_resistente")
+            p["weapon"] = {k: item[k] for k in combat_fields if k in item}
+
     @staticmethod
     def _slot_category_for_item(item):
         """Categoria de slot de um item: weapon|off_hand|armor|head|boots|ring|item|bag."""
@@ -8310,7 +8366,8 @@ class GameRoom:
             # Sincroniza p["weapon"] (usado pelo combate) se o item tiver die/stat
             if item.get("die") and item.get("stat"):
                 combat_fields = ("id", "name", "die", "stat", "range", "reach",
-                                 "finesse", "throw_range", "categoria", "two_handed")
+                                 "finesse", "throw_range", "categoria", "two_handed",
+                                 "dmg_bonus", "corrosao_resistente")
                 p["weapon"] = {k: item[k] for k in combat_fields if k in item}
         elif cat == "off_hand":
             # Munição: empilha no mesmo tipo; senão substitui o off_hand
@@ -8342,7 +8399,7 @@ class GameRoom:
             return False
         iid = (item.get("id") or "").lower()
         nm  = (item.get("name") or "").lower()
-        return iid.startswith("dagger") or iid == "adaga_secundaria" or "adaga" in nm
+        return iid.startswith("dagger") or "adaga" in nm
 
     async def handle_equip_offhand(self, pid, slot_index):
         """Equipa uma ADAGA do inventário na mão esquerda (off_hand) como 2ª arma
@@ -8385,6 +8442,10 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Inventário cheio — não há espaço para desequipar."}); return
         p["gear"][slot_key] = None
         self._apply_gear_effect(p, item, False)
+        if slot_key == "weapon":
+            # p["weapon"] é a cópia usada no combate (handle_attack); sem isto o
+            # jogador continuaria batendo com o dado/bônus da arma "desequipada".
+            p["weapon"] = {**WEAPONS["unarmed"]}
         p["bag"].append(item)
         await self.gm_say(f"📤 **{p['name']}** desequipou **{item['name']}**.")
         await self.push_state_or_city()
@@ -8516,11 +8577,13 @@ class GameRoom:
                         await self.gm_say(
                             f"📦 **{p['name']}** pegou **{item['emoji']} {item['name']}** do baú!")
             else:
-                result = self._add_to_inventory(p, item)
+                result = self._route_acquired_item(p, item)
                 if result == "full":
-                    await self.send_to(pid, {"type": "error", "msg": "Inventário cheio!"}); return
+                    await self.send_to(pid, {"type": "error",
+                        "msg": "Inventário cheio e slot ocupado — abra espaço primeiro."}); return
                 chest["items"].pop(idx)
-                await self.gm_say(f"📦 **{p['name']}** pegou **{item['emoji']} {item['name']}** do baú!")
+                extra = " (equipado — bolsa cheia)" if result == "equipped" else ""
+                await self.gm_say(f"📦 **{p['name']}** pegou **{item.get('emoji','📦')} {item['name']}** do baú{extra}!")
         else:
             return
 
@@ -11838,11 +11901,14 @@ class GameRoom:
         return min(c["armadura_lvl"], 3)   # danificado -1, quebrado -2, destruído -3
 
     def _corrosao_arma_pen(self, p):
-        """Penalidade de acerto/dano por arma de madeira corroída."""
+        """Penalidade de acerto/dano por arma corroída. Armas com `corrosao_resistente`
+        toleram N golpes a mais antes de começar a sofrer penalidade (ex.: Espada
+        Curta de Ferro Serrilhado tolera +1)."""
         c = self._corr(p)
         if c["arma_destruida"]:
             return 0                        # já desarmado (soco) — sem penalidade extra
-        return min(c["arma_lvl"], 2)        # danificado -1, quebrado -2
+        extra = (p.get("weapon") or {}).get("corrosao_resistente", 0)
+        return min(max(0, c["arma_lvl"] - extra), 2)   # danificado -1, quebrado -2
 
     async def _devorador_cura(self, m, dado):
         """Cura o devorador ao destruir/consumir um item (Absorver Matéria 1d4 /
@@ -11880,7 +11946,8 @@ class GameRoom:
 
         if (weapon and weapon.get("id") in armas_ids and not c["arma_destruida"]):
             c["arma_lvl"] += 1
-            if c["arma_lvl"] >= 3:
+            extra = weapon.get("corrosao_resistente", 0)
+            if c["arma_lvl"] >= 3 + extra:
                 c["arma_destruida"] = True
                 p["weapon"]         = {**WEAPONS["unarmed"]}
                 p["gear"]["weapon"] = None
@@ -11888,11 +11955,17 @@ class GameRoom:
                     f"💥 A arma de **{p['name']}** ({weapon.get('name','arma')}) "
                     f"foi **destruída permanentemente** — agora luta desarmado!")
                 await self._devorador_cura(m, cura)
+            elif c["arma_lvl"] - extra <= 0:
+                # Nível tolerado pela resistência da arma — golpe absorvido sem penalidade.
+                await self.gm_say(
+                    f"🦷 **{label}**: a arma de **{p['name']}** ({weapon.get('name','arma')}) "
+                    f"resistiu ao golpe sem sofrer dano!")
             else:
-                nome = CORROSAO_NIVEL_NOME[c["arma_lvl"]]
+                nivel_efetivo = c["arma_lvl"] - extra
+                nome = CORROSAO_NIVEL_NOME[nivel_efetivo]
                 await self.gm_say(
                     f"🦷 **{label}**: a arma de **{p['name']}** "
-                    f"({weapon.get('name','arma')}) está **{nome}** (-{c['arma_lvl']} acerto/dano)!")
+                    f"({weapon.get('name','arma')}) está **{nome}** (-{nivel_efetivo} acerto/dano)!")
             return
         # Nenhum equipamento do tipo certo exposto — nada a corroer.
 
@@ -12183,10 +12256,13 @@ class GameRoom:
             if idx < 0 or idx >= len(loot["items"]):
                 await self.send_to(pid, {"type": "error", "msg": "Item inválido."}); return
             item = loot["items"][idx]
-            if self._add_to_inventory(p, item) == "full":
-                await self.send_to(pid, {"type": "error", "msg": "Inventário cheio!"}); return
+            res = self._route_acquired_item(p, item)
+            if res == "full":
+                await self.send_to(pid, {"type": "error",
+                    "msg": "Inventário cheio e slot ocupado — abra espaço primeiro."}); return
             loot["items"].pop(idx)
-            await self.gm_say(f"🎒 **{p['name']}** pegou **{item['name']}** do objeto!")
+            extra = " (equipado — bolsa cheia)" if res == "equipped" else ""
+            await self.gm_say(f"🎒 **{p['name']}** pegou **{item['name']}** do objeto{extra}!")
         self._decor_atualiza_tem_loot(d)
         # Re-send updated loot so the open panel refreshes live
         await self.send_to(pid, {"type": "decor_loot", "decor_id": d["id"],
@@ -12593,7 +12669,7 @@ class GameRoom:
             # Virotes restantes → item real no loot
             virotes_rest = m.get("virotes", 0)
             if virotes_rest > 0:
-                virote_base = next((i for i in SHOP_MERCHANT if i["id"] == "virotes"), None)
+                virote_base = next((i for i in SHOP_AMMO if i["id"] == "virotes"), None)
                 if virote_base:
                     virote_loot = deepcopy(virote_base)
                     virote_loot["ammo_count"] = virotes_rest
@@ -12605,7 +12681,7 @@ class GameRoom:
             v_esp_count = m.get("virotes_especiais_count", 0)
             if v_esp_tipo and v_esp_count > 0:
                 if v_esp_tipo == "incendiario":
-                    virote_item = next((i for i in SHOP_MERCHANT if i["id"] == "virote_incendiario"), None)
+                    virote_item = next((i for i in SHOP_AMMO if i["id"] == "virote_incendiario"), None)
                     for _ in range(v_esp_count):
                         if virote_item:
                             items_sempre.append(deepcopy(virote_item))
@@ -12621,7 +12697,7 @@ class GameRoom:
                 if veneno_item:
                     items_sempre.append(deepcopy(veneno_item))
             if random.randint(1, 100) <= 5:
-                virote_item = next((i for i in SHOP_MERCHANT if i["id"] == "virote_incendiario"), None)
+                virote_item = next((i for i in SHOP_AMMO if i["id"] == "virote_incendiario"), None)
                 if virote_item:
                     for _ in range(roll_dice("1d6")):
                         items_sempre.append(deepcopy(virote_item))
@@ -14309,6 +14385,7 @@ class GameRoom:
                     item_def = (
                         next((i for i in CHEST_ITEMS    if i["id"] == loot["id"]), None) or
                         next((i for i in SHOP_WEAPONS   if i["id"] == loot["id"]), None) or
+                        next((i for i in SHOP_AMMO      if i["id"] == loot["id"]), None) or
                         next((i for i in SHOP_MERCHANT  if i["id"] == loot["id"]), None)
                     )
                     if item_def:
@@ -14342,6 +14419,7 @@ class GameRoom:
                 gdef = (
                     next((i for i in CHEST_ITEMS   if i["id"] == gid), None) or
                     next((i for i in SHOP_WEAPONS  if i["id"] == gid), None) or
+                    next((i for i in SHOP_AMMO     if i["id"] == gid), None) or
                     next((i for i in SHOP_MERCHANT if i["id"] == gid), None)
                 )
                 if gdef:
@@ -14475,6 +14553,7 @@ class GameRoom:
         idef = (
             next((i for i in CHEST_ITEMS    if i["id"] == iid), None) or
             next((i for i in SHOP_WEAPONS   if i["id"] == iid), None) or
+            next((i for i in SHOP_AMMO      if i["id"] == iid), None) or
             next((i for i in SHOP_MERCHANT  if i["id"] == iid), None)
         )
         return deepcopy(idef) if idef else None

@@ -293,6 +293,32 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `city_state`), `_fcDropOnGear`/`_fcDropOnBag` (drag-and-drop). Teste do servidor:
 > `tools/test_ficha_cidade.py`.
 
+> **Cidade × masmorra são exclusivos no cliente:** o handler de `city_state`
+> (`gameState.js`) limpa `gameState = null` (espelhando o `enter_dungeon`, que limpa
+> `cityState`). Sem isso, leitores que preferem `gameState` — como o modal de
+> inventário (`InventoryModal._currentPlayer`, que lê `GS.gameState` e só cai para
+> `GS.cityState`) — mostravam o paperdoll/bolsa **congelados** da última masmorra na
+> cidade (bug: armadura recém-comprada aparecia ao vender, que lê `cityState`, mas
+> não no boneco). Ao adicionar um novo leitor de estado, lembre que na cidade só o
+> `cityState` está preenchido e na masmorra só o `gameState`.
+
+> **Aquisição de itens — bolsa-primeiro (`_route_acquired_item`):** todo item
+> adquirido por compra OU loot passa por `_route_acquired_item(p, item)` (server.py),
+> que retorna `'bag' | 'equipped' | 'full'`: (1) bolsa com espaço → **bolsa** (NÃO
+> auto-equipa, mesmo com o slot livre); (2) bolsa cheia + slot correspondente livre e
+> compatível → **resgate-equipa** (`_rescue_equip`, que espelha `handle_equip_from_bag`
+> — aplica `_apply_gear_effect` e, p/ arma, sincroniza a cópia de combate
+> `p["weapon"]`); (3) bolsa cheia + slots ocupados/inequipável → `'full'` (compra
+> estorna ouro; loot fica no baú/container). `_free_equip_slot_for` mapeia a categoria
+> (`_slot_category_for_item`) ao slot livre e respeita restrição de classe e conflito
+> de arma de 2 mãos × escudo/2ª arma. **Exceções:** munição (empilhamento próprio em
+> off_hand/bolsa) e consumíveis (categoria `bag` → só a bolsa) não usam o passo 2.
+> Pontos de chamada: `handle_shop_buy` (arma/armadura/escudo/anel/acessório/provisão),
+> `handle_take_from_chest`, `handle_take_from_decor`. Como comprar não auto-equipa
+> mais no slot vazio, o bloqueio pré-compra de arma-2-mãos × escudo foi removido (o
+> item vai pra bolsa; o conflito é validado só ao equipar). Teste do servidor:
+> `tools/test_roteamento_itens.py`.
+
 > **Guilda dos Heróis (Fase 0):** novo prédio na cidade (hotspot `guilda` →
 > `openGuild`) onde cada personagem compra aprimoramentos **permanentes**:
 > **Especializações** (upgrades sempre-ativos das habilidades-base — conteúdo nas
