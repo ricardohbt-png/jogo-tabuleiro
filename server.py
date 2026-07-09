@@ -6585,6 +6585,22 @@ class GameRoom:
 
         await self.push_state()
 
+    async def handle_apagar_chamas(self, pid):
+        """Gasta a AÇÃO PRINCIPAL do turno para apagar o status 'em chamas'
+        (única via que funciona contra o Fogo Grego)."""
+        if not self._is_turn(pid): return
+        p = self.players.get(pid)
+        if not p or not p["alive"]: return
+        if p.get("em_chamas_rodadas", 0) <= 0:
+            await self.send_to(pid, {"type": "error", "msg": "Você não está em chamas."}); return
+        if self._acao_bloqueada(p):
+            await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
+        p["em_chamas_rodadas"] = 0
+        p["action_done"] = True
+        self._consumir_recursos(p, 'apenas_acao')
+        await self.gm_say(f"🔥 **{p['name']}** se joga no chão e apaga as chamas!")
+        await self.push_state()
+
     # ── cálculo de ataque com adaga por Destreza (scaffolding) ──────────────────
     # NOTA: inserido verbatim conforme especificação. AINDA NÃO é chamado — a
     # lógica autoritativa de ataque/arremesso já vive em handle_attack e
@@ -15286,6 +15302,9 @@ async def handler(ws):
 
                 elif t == "throw_item":
                     if room: await room.handle_throw_item(pid, msg.get("item_id"), msg.get("target_id"))
+
+                elif t == "apagar_chamas":
+                    if room: await room.handle_apagar_chamas(pid)
 
                 elif t == "skill":
                     if room: await room.handle_skill(pid, msg.get("skill_id"), msg.get("target_id"))

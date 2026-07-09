@@ -152,6 +152,21 @@ async def main():
     check("grego: garrafa NÃO consumida", len(p["bag"]) == 1)
     check("grego: erro explicativo", any("água" in e.lower() or "grego" in e.lower() for e in r._errs))
 
+    # ── [6] Apagar batendo (gasta ação principal) — funciona p/ Fogo Grego ──────
+    print("\n[6] handle_apagar_chamas")
+    r = setup()
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [4, 4]; r.players["p1"] = p
+    r._aplicar_em_chamas(p, 3, False)  # Fogo Grego
+    await r.handle_apagar_chamas("p1")
+    check("chamas apagadas", p.get("em_chamas_rodadas", 0) == 0)
+    check("ação principal gasta", p.get("action_done") is True)
+
+    r = setup()
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [4, 4]; r.players["p1"] = p
+    await r.handle_apagar_chamas("p1")   # não está em chamas
+    check("sem chamas: erro", any("chama" in e.lower() for e in r._errs))
+    check("sem chamas: ação NÃO gasta", not p.get("action_done"))
+
     print(f"\n=== {PASS} OK / {FAIL} FALHAS ===")
     sys.exit(1 if FAIL else 0)
 
