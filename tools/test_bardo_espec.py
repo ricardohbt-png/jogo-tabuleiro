@@ -30,6 +30,8 @@ def bard(**owned):
     p = make_player("b", "Henrique", "bard", 0)
     p["guild_owned"]["especializacoes"] = list(owned.get("esp", []))
     p["pos"] = [0, 0]; p["alive"] = True
+    # isola a espec da Canção do instrumento inicial (Alaúde Velho dá +1 acerto)
+    p["gear"]["instrumento"] = None
     return p
 
 def monster(mid="m1", type_="goblin", pos=(0,1), hp=20):
