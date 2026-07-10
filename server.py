@@ -3617,7 +3617,7 @@ _WEAPON_EMOJI = {
 # Slots de equipamento que NÃO são a armadura do corpo mas podem dar +CA
 # (escudo na mão esquerda, elmo, anéis, itens ativos).
 GEAR_BONUS_SLOTS = ("off_hand", "head", "boots", "ring1", "ring2", "item1", "item2")
-# Todos os 9 slots de equipamento, na ordem de exibição.
+# Todos os 10 slots de equipamento, na ordem de exibição.
 GEAR_SLOTS = ("weapon", "off_hand", "armor", "head", "boots", "ring1", "ring2", "item1", "item2", "instrumento")
 
 # ─── SLOT SECUNDÁRIO — regras por personagem ──────────────────────────────────
