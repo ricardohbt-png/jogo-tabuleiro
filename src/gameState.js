@@ -619,6 +619,36 @@ const GS = (() => {
       descricao: 'Arremesse (4 quad., ataque por DES). 2d6 de fogo e o alvo pega ' +
                  'fogo (1/rodada por 1d4 rodadas). Só a ação apaga — água não funciona.',
     },
+    // ── MERCADO — Arremessáveis de ÁREA (Sub-projeto B; ver ARREMESSAVEIS no server) ──
+    // Miram uma CASA (não um monstro): alcance vermelho + prévia de área verde.
+    bomba_incendiaria: {
+      id: 'bomba_incendiaria', nome: 'Bomba Incendiária', emoji: '💣',
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alvo: 'area',
+      alcance: 4, areaRaio: 1, permitidoPara:['todos'],
+      descricao: 'Área (raio 1, alcance 4). 2d6 de fogo, Reflexos CD 12 (metade). ' +
+                 'Todos os atingidos pegam fogo. ACERTA ALIADOS — cuidado com o posicionamento.',
+    },
+    granada: {
+      id: 'granada', nome: 'Granada Explosiva', emoji: '💣',
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alvo: 'area',
+      alcance: 4, areaRaio: 1, permitidoPara:['todos'],
+      descricao: 'Área (raio 1, alcance 4). 2d6 de explosão, Reflexos CD 12 (metade). ' +
+                 'ACERTA ALIADOS.',
+    },
+    granada_superior: {
+      id: 'granada_superior', nome: 'Granada Superior', emoji: '💥',
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alvo: 'area',
+      alcance: 4, areaRaio: 1, permitidoPara:['todos'],
+      descricao: 'Área (raio 1, alcance 4). 3d6 de explosão, Reflexos CD 15 (metade). ' +
+                 'ACERTA ALIADOS.',
+    },
+    bomba_fumaca: {
+      id: 'bomba_fumaca', nome: 'Bomba de Fumaça', emoji: '💨',
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alvo: 'area',
+      alcance: 4, areaRaio: 1, permitidoPara:['todos'],
+      descricao: 'Área (raio 1, alcance 4). Cria escuridão por 2 rodadas — bloqueia ' +
+                 'a visão e cobre o recuo. Sem dano.',
+    },
   };
 
   // class_id (servidor) → heroKey (HERO_DATA / EQUIPAMENTOS_INICIAIS).
@@ -1112,6 +1142,7 @@ const GS = (() => {
   }
   function useItem(id)     { send({ type: 'use_item',       item_id: id }); }
   function throwItem(id, targetId) { send({ type: 'throw_item', item_id: id, target_id: targetId }); }
+  function throwItemArea(id, tx, ty) { send({ type: 'throw_item', item_id: id, tx, ty }); }
   function apagarChamas()          { send({ type: 'apagar_chamas' }); }
   function equipFromBag(i) { send({ type: 'equip_from_bag', slot_index: i }); }
   function unequip(key)    { send({ type: 'unequip',        slot_key: key }); }
@@ -1691,16 +1722,22 @@ const GS = (() => {
 
     // ── Pending-throw targeting (arremessável de bolsa) ──────────────────────
     if (pendingThrow) {
-      const th = pendingThrow;
+      const th   = pendingThrow;
+      const alvo = (CATALOGO_ITENS[th.id] || {}).alvo || 'ataque_alvo';
+      const ddx  = Math.abs(myP.pos[0] - tx);
+      const ddy  = Math.abs(myP.pos[1] - ty);
+      const inRange = Math.max(ddx, ddy) <= th.alcance;
+      const losOk   = hasLineOfSight(gameState, myP.pos[0], myP.pos[1], tx, ty);
+      if (alvo === 'area') {
+        // Área: mira numa CASA (não precisa de monstro), valida alcance + LOS ao centro.
+        if (inRange && losOk) return { type: 'throw_area', itemId: th.id, tx, ty };
+        return { type: 'throw_blocked' };
+      }
+      // ataque_alvo (Sub-projeto A): precisa de um monstro na casa.
       const m = gameState.monsters.find(m => m.hp > 0 &&
         monsterTiles(m).some(([bx, by]) => bx === tx && by === ty));
       if (m) {
-        const ddx = Math.abs(myP.pos[0] - tx);
-        const ddy = Math.abs(myP.pos[1] - ty);
-        if (Math.max(ddx, ddy) <= th.alcance &&
-            hasLineOfSight(gameState, myP.pos[0], myP.pos[1], tx, ty)) {
-          return { type: 'throw', itemId: th.id, targetId: m.id };
-        }
+        if (inRange && losOk) return { type: 'throw', itemId: th.id, targetId: m.id };
         return { type: 'throw_blocked' };   // fora de alcance / parede
       }
       return null; // consome o clique, permanece na mira (ESC cancela)
@@ -1858,6 +1895,7 @@ const GS = (() => {
     endTurn,
     useItem,
     throwItem,
+    throwItemArea,
     apagarChamas,
     equipFromBag,
     unequip,
