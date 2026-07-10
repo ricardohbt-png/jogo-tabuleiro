@@ -604,6 +604,12 @@ const GS = (() => {
       efeito:{ atributo:'cego', valor:'1d4', operacao:'status', penalidadeAtaque:-4, bloqueiaDistancia:true, duracaoFalha:'1d4', penalidadeFalha:-2, atributoFalha:'percepcao', save:'fortitude', dificuldade:11, anula:false },
       descricao:'Cega por 1d4 rodadas — -4 em ataques, sem ranged (Fort. dif. 11). Falha parcial: -2 percepção.'
     },
+    veneno_agonia_sufocante: {
+      id:'veneno_agonia_sufocante', nome:'Agonia Sufocante', tipo:'veneno', loja:'mercado', preco:40, icone:'💀',
+      permitidoPara:['todos'],
+      efeito:{ operacao:'dano', dano:'1d4', duracao:'1d4', save:'fortitude', dificuldade:14 },
+      descricao:'LENDÁRIO. Untado na arma: 1d4 de dano por rodada por até 1d4 rodadas. A cada rodada, Fortitude CD 14 neutraliza o veneno.'
+    },
 
     // ── MERCADO — Arremessáveis de fogo (consumíveis de bolsa; ver ARREMESSAVEIS no server) ──
     // Usados por clique direito → mira de alvo → throw_item. Ataque por DES vs CA.
