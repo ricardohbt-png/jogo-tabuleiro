@@ -9287,7 +9287,13 @@ function _iniciarMiraArremesso(item, player){
   if(!me){ toast('Não é possível arremessar agora.', 'var(--gold)'); return; }
   if(!GS.isMyTurn || me.action_done){ toast('Não é a sua vez ou a ação já foi usada.', 'var(--gold)'); return; }
   // Encerra qualquer outra mira ativa para não empilhar realces.
+  if(window._modoThrowItem) _encerrarMiraArremesso();   // re-entrada: limpa a mira de item anterior
   if(window._modoMagia) _encerrarModoMagia();
+  // Também derruba os modos de arremesso de ADAGA (que têm realces/meshes 3D e
+  // listeners próprios) — senão ficariam órfãos na cena com dois modos "ativos".
+  if(window._modoArremessoPrincipal){ limparHighlightArremessoPrincipal(); window._modoArremessoPrincipal = false; }
+  if(window._modoArremessoAtivo){ limparHighlightArremesso(); window._modoArremessoAtivo = false; }
+  if(window._modoArremessoLanca){ limparHighlightArremessoLanca(); window._modoArremessoLanca = false; }
   const catDef  = (GS.CATALOGO_ITENS && GS.CATALOGO_ITENS[item.id]) || {};
   const alcance = catDef.alcance || 4;
   window._modoThrowItem = { id: item.id, alcance };
@@ -9853,6 +9859,11 @@ function renderMyPanel(state){
       <span style="color:#ff5050; font-weight:bold; font-size:.95rem;">🔥 ÚLTIMO ESFORÇO</span>
       <span style="color:#f0b0b0; font-size:.6rem; letter-spacing:1px;">${me.ultimo_esforco_turnos_restantes || 0} TURNO(S) RESTANTE(S)</span>
     </div>` : ''}
+    ${me.em_chamas_rodadas > 0 ? `
+    <div style="margin-top:4px; padding:5px 8px; background:rgba(255,90,42,0.13); border:1px solid #ff5a2a66; border-radius:3px; display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Cinzel',serif;">
+      <span style="color:#ff884d; font-weight:bold; font-size:.95rem;">🔥 EM CHAMAS</span>
+      <span style="color:#f0b8a0; font-size:.6rem; letter-spacing:1px;">${me.em_chamas_rodadas} RODADA(S) — ${me.chamas_agua_apaga ? 'ÁGUA OU AÇÃO APAGA' : 'SÓ A AÇÃO APAGA (FOGO GREGO)'}</span>
+    </div>` : ''}
 
     ${(() => {
       const f = me.fome ?? 100, s = me.sede ?? 100;
@@ -10000,7 +10011,6 @@ function renderMyPanel(state){
       style="display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 6px;border-color:#ff5a2a;">
       <span style="color:#ff884d;">🔥 Apagar chamas</span>
       <small style="color:var(--gold);font-size:.7rem;font-weight:bold;">gasta a ação principal</small>
-      <small style="color:var(--text2);font-size:.62rem;">em chamas: ${me.em_chamas_rodadas} rodada(s)</small>
     </button>` : '';
 
   // ── Action buttons (with weapon damage formula shown) ──
@@ -13854,7 +13864,7 @@ function renderMap3D(state){
   // geometrias, materiais, texturas e PointLights — e a variação na contagem de
   // luzes força o Three.js a recompilar shaders (travadas perceptíveis).
   const entitySig = JSON.stringify([
-    state.players.map(p => [p.id, p.pos, p.alive, p.color, p.class_id,
+    state.players.map(p => [p.id, p.pos, p.alive, p.color, p.class_id, p.em_chamas_rodadas > 0,
       (p.animados||[]).map(a => [a.id, a.pos, a.vida_atual, a.tipo])]),
     state.monsters.map(m => [m.type, m.pos, m.hp, m.image]),
     state.prisoner ? [state.prisoner.pos, state.prisoner.alive, state.prisoner.freed, state.prisoner.image, _prisSel] : null,
@@ -14506,7 +14516,7 @@ function _makeMonsterBillboard(T, grp, imageName, Y0, porte) {
 // facing) indica a direção. Espelha para leste; norte/sul ficam em pé e a base
 // mostra a direção. O flag `oriented` e o `facing` vêm do servidor. A arte é
 // horizontal com a cabeça à ESQUERDA.
-function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected){
+function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected, emChamas){
   const TH  = 0.22;
   const grp = new T.Group();
   grp.userData.gridX = gx; grp.userData.gridY = gy;
@@ -14584,6 +14594,14 @@ function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected){
   }
   grp.add(sp);
 
+  // Indicador "em chamas": 🔥 no MESMO centro (midX,midZ) do billboard da criatura
+  // (não no tile-âncora), senão flutuaria sobre a casa vizinha nas de 2 casas.
+  if(emChamas){
+    const fs = _makeChamasSprite3D();
+    fs.position.set(midX, _BB_H_ALVO * 0.85, midZ);
+    grp.add(fs);
+  }
+
   grp.position.set(gx, 0, gy);
   return grp;
 }
@@ -14598,9 +14616,9 @@ function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected){
 function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType, isSelected, mImage, mPorte, mOriented, mFacing, emChamas){
   const T   = g3.T;
   if (isMonster && mOriented && mImage) {
-    const of = _buildOrientedCreature3D(T, gx, gy, mImage, mFacing, isSelected);
-    if(emChamas && of) of.add(_makeChamasSprite3D());
-    return of;
+    // emChamas vai PARA DENTRO do helper (posiciona o 🔥 no centro midX/midZ do
+    // billboard, não no tile-âncora — senão flutuaria sobre a casa vizinha).
+    return _buildOrientedCreature3D(T, gx, gy, mImage, mFacing, isSelected, emChamas);
   }
   const TH  = 0.22;                        // floor tile thickness (must match init3D)
   const grp = new T.Group();
@@ -14776,7 +14794,7 @@ function _makeChamasSprite3D(){
   tex._owned = true;   // textura exclusiva deste sprite (descartada com ele; r128)
   const sp = new T.Sprite(new T.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
   sp.scale.set(0.5, 0.5, 1);
-  sp.position.set(0, 1.45, 0);   // acima da cabeça do peão
+  sp.position.set(0, _BB_H_ALVO * 0.85, 0);   // acima da cabeça (deriva da altura-alvo do peão)
   sp.userData.isChamasSprite = true;
   return sp;
 }
