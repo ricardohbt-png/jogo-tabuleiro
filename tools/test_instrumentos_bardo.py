@@ -196,6 +196,23 @@ def test_ecos_expira():
     _run(room._instr_ecos_retaliar(p, m))
     assert m["hp"] == 20
 
+def test_sinfonia_boost_por_qualidade():
+    room, p = _room_bardo(); _mute(room)
+    p["guild_owned"] = {"especializacoes": [], "tecnicas": []}
+    assert room._cancao_nivel_atributo(p, "acerto") == 1   # sem alaúde
+    p["gear"]["instrumento"] = server.criar_instrumento("alaude", "velho")
+    assert room._cancao_nivel_atributo(p, "acerto") == 2   # velho: só acerto
+    assert room._cancao_nivel_atributo(p, "dano") == 1
+    p["gear"]["instrumento"] = server.criar_instrumento("alaude", "padrao")
+    for a in ("acerto", "dano", "ca", "movimento", "resistencia"):
+        assert room._cancao_nivel_atributo(p, a) == 2, a
+
+def test_sinfonia_empilha_com_espec():
+    room, p = _room_bardo(); _mute(room)
+    p["guild_owned"] = {"especializacoes": ["bardo_cancao_acerto"], "tecnicas": []}
+    p["gear"]["instrumento"] = server.criar_instrumento("alaude", "padrao")
+    assert room._cancao_nivel_atributo(p, "acerto") == 3   # 2 (espec) + 1 (alaúde)
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]

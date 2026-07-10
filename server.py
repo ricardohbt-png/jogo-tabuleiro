@@ -7822,8 +7822,19 @@ class GameRoom:
         return _distancia_chebyshev(origem["pos"], alvo["pos"]) <= raio
 
     def _cancao_nivel_atributo(self, p, attr_id):
-        """Bônus daquele atributo na Canção Heroica: 2 se comprado na Guilda, senão 1."""
-        return 2 if tem_espec(p, f"bardo_cancao_{attr_id}") else 1
+        """Bônus daquele atributo na Canção: 2 se comprado na Guilda (senão 1),
+        +1 se o bardo empunha um Alaúde cuja Sinfonia Heroica cobre esse atributo."""
+        base = 2 if tem_espec(p, f"bardo_cancao_{attr_id}") else 1
+        base += self._sinfonia_bonus(p, attr_id)
+        return base
+
+    def _sinfonia_bonus(self, p, attr_id):
+        """+1 se um Alaúde equipado inclui `attr_id` na Sinfonia Heroica (por qualidade)."""
+        inst = p.get("gear", {}).get("instrumento")
+        if not inst or inst.get("base") != "alaude":
+            return 0
+        st = self._instrumento_stats(inst)
+        return 1 if attr_id in st.get("atributos", []) else 0
 
     def _cancao_custo_reducao(self, p):
         """Redução de manutenção da canção com a Canção Heroica Suprema (-1🍖 -1💧)."""
