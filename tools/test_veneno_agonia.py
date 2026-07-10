@@ -65,6 +65,44 @@ async def main():
     await r._aplicar_veneno(mu, "veneno_agonia_sufocante")
     check("morto-vivo imune (sem efeito)", not mu.get("efeitos_veneno"))
 
+    # ── [3] Tick — falha no save: sofre 1d4 e continua ─────────────────────────
+    print("\n[3] tick — falha")
+    def _efeito_dano(dur=3):
+        return {"nome": "Agonia Sufocante", "operacao": "dano", "dano": "1d4",
+                "duracao": dur, "save": "fortitude", "dificuldade": 14,
+                "save_neutraliza_por_rodada": True}
+    r = setup()
+    m = make_monster(r, "m1", 4, 4, hp=40)
+    m["efeitos_veneno"] = [_efeito_dano(3)]
+    r._testar_save = lambda *a, **k: (False, 1, 0, 1)   # falha
+    hp0 = m["hp"]
+    await r._processar_venenos_turno(m)
+    check("falha: sofreu 1..4 de dano", 1 <= (hp0 - m["hp"]) <= 4)
+    ef = [e for e in m.get("efeitos_veneno", []) if e.get("operacao") == "dano"]
+    check("falha: efeito continua", len(ef) == 1)
+    check("falha: duracao decrementou p/ 2", ef and ef[0]["duracao"] == 2)
+
+    # ── [4] Tick — sucesso no save: neutraliza sem dano ────────────────────────
+    print("\n[4] tick — sucesso")
+    r = setup()
+    m = make_monster(r, "m1", 4, 4, hp=40)
+    m["efeitos_veneno"] = [_efeito_dano(3)]
+    r._testar_save = lambda *a, **k: (True, 20, 0, 20)   # sucesso
+    hp0 = m["hp"]
+    await r._processar_venenos_turno(m)
+    check("sucesso: sem dano", m["hp"] == hp0)
+    check("sucesso: efeito removido", not [e for e in m.get("efeitos_veneno", []) if e.get("operacao") == "dano"])
+
+    # ── [5] Duração: expira em `duracao` rodadas falhando sempre ───────────────
+    print("\n[5] duração expira")
+    r = setup()
+    m = make_monster(r, "m1", 4, 4, hp=100)
+    m["efeitos_veneno"] = [_efeito_dano(2)]
+    r._testar_save = lambda *a, **k: (False, 1, 0, 1)   # falha sempre
+    await r._processar_venenos_turno(m)   # duracao 2→1
+    await r._processar_venenos_turno(m)   # duracao 1→0 (expira)
+    check("expira após `duracao` rodadas", not [e for e in m.get("efeitos_veneno", []) if e.get("operacao") == "dano"])
+
     # ── [6] Regressão: veneno de atributo (reduzir) ainda funciona ─────────────
     print("\n[6] regressão: veneno de atributo")
     r = setup()

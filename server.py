@@ -11124,6 +11124,24 @@ class GameRoom:
 
         restantes = []
         for efeito in alvo.get("efeitos_veneno", []):
+            # Veneno de DANO com save-por-rodada (Agonia Sufocante): trata aqui e
+            # segue (não usa o decremento/reversão genérico de efeitos de atributo).
+            if efeito.get("operacao") == "dano":
+                if efeito.get("save_neutraliza_por_rodada"):
+                    ok, _d20, _sb, _st = self._testar_save(
+                        alvo, efeito.get("save", "fortitude"), efeito.get("dificuldade", 10))
+                    if ok:
+                        await self.gm_say(
+                            f"☑️ **{alvo_nome}** neutraliza **{efeito.get('nome','veneno')}**!")
+                        continue   # remove o efeito (não entra em `restantes`)
+                dano = self._rolar_dado(efeito.get("dano", "1d4"))
+                # _dano_em_alvo já narra o dano (evita narração dupla, como no tick
+                # de em_chamas/ácido); a flavor do veneno aparece só no neutralizar.
+                await self._dano_em_alvo(alvo, dano, "veneno", None)
+                efeito["duracao"] -= 1
+                if efeito["duracao"] > 0 and (alvo.get("alive") or alvo.get("hp", 0) > 0):
+                    restantes.append(efeito)
+                continue
             efeito["duracao"] -= 1
             if efeito["duracao"] > 0:
                 restantes.append(efeito)
