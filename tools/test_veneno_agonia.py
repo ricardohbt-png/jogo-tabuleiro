@@ -49,6 +49,31 @@ async def main():
     check("vendável (coat_poison)", shop is not None and shop["effect"] == "coat_poison")
     check("aponta pro veneno", shop and shop.get("veneno_id") == "veneno_agonia_sufocante")
 
+    # ── [2] Aplicação registra efeito de dano (sem save de aplicação) ──────────
+    print("\n[2] _aplicar_veneno (dano)")
+    r = setup()
+    m = make_monster(r, "m1", 4, 4, hp=40)
+    await r._aplicar_veneno(m, "veneno_agonia_sufocante")
+    efs = [e for e in m.get("efeitos_veneno", []) if e.get("operacao") == "dano"]
+    check("efeito de dano registrado", len(efs) == 1)
+    check("dano 1d4", efs and efs[0]["dano"] == "1d4")
+    check("duracao entre 1 e 4", efs and 1 <= efs[0]["duracao"] <= 4)
+    check("save por rodada gravado", efs and efs[0]["save_neutraliza_por_rodada"] is True)
+
+    # morto-vivo é imune (não registra efeito)
+    mu = make_monster(r, "m2", 5, 5, hp=30); mu["undead"] = True
+    await r._aplicar_veneno(mu, "veneno_agonia_sufocante")
+    check("morto-vivo imune (sem efeito)", not mu.get("efeitos_veneno"))
+
+    # ── [6] Regressão: veneno de atributo (reduzir) ainda funciona ─────────────
+    print("\n[6] regressão: veneno de atributo")
+    r = setup()
+    p = make_player("p1", "V", "warrior", 0); r.players["p1"] = p
+    r._testar_save = lambda *a, **k: (False, 1, 0, 1)   # falha no save → aplica
+    str0 = p.get("str_", 10)
+    await r._aplicar_veneno(p, "veneno_aranha_sombria")   # operacao 'reduzir' (forca)
+    check("aranha ainda reduz Força", p.get("str_", 10) < str0)
+
     print(f"\n=== {PASS} OK / {FAIL} FALHAS ===")
     sys.exit(1 if FAIL else 0)
 

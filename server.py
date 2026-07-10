@@ -10984,6 +10984,26 @@ class GameRoom:
             await self.gm_say(f"🧪 **{nome}** não afeta **{alvo_nome}** (imune a venenos).")
             return
 
+        # Veneno de DANO (ex.: Agonia Sufocante): sem save de aplicação — o jogo é
+        # o loop por rodada (dano + save que neutraliza), tratado em
+        # _processar_venenos_turno. Registra o efeito e retorna.
+        if veneno.get("operacao") == "dano":
+            alvo.setdefault("efeitos_veneno", [])
+            dur = self._rolar_dado(veneno.get("duracao", "1d4"))
+            if any(w.get("type") == "veneno_dobrado" for w in alvo.get("weaknesses", [])):
+                dur *= 2
+                await self.gm_say(f"🧪 **{alvo_nome}** é sensível a venenos — duração dobrada!")
+            alvo["efeitos_veneno"].append({
+                "nome": nome, "operacao": "dano", "dano": veneno.get("dano", "1d4"),
+                "duracao": dur, "save": veneno.get("save", "fortitude"),
+                "dificuldade": veneno.get("dificuldade", 10),
+                "save_neutraliza_por_rodada": bool(veneno.get("save_neutraliza_por_rodada")),
+            })
+            await self.gm_say(
+                f"💀 **{alvo_nome}** é envenenado por **{nome}** — 1d4 de dano por "
+                f"rodada (até {dur} rodada(s); Fortitude CD {veneno.get('dificuldade',10)} neutraliza)!")
+            return
+
         # Fraqueza de criatura a venenos (ex: lobos/cães sofrem -2 Fort vs veneno)
         _save_pen = 0
         for _w in alvo.get("weaknesses", []):
