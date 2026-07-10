@@ -74,6 +74,40 @@ async def main():
     check("rede: enredado", rede["tipo"] == "enredado")
     check("rede: escape Fortitude CD12", rede["escape_save"] == {"tipo": "fortitude", "cd": 12})
 
+    # ── [2] _aplicar_controle_arremesso ────────────────────────────────────────
+    print("\n[2] _aplicar_controle_arremesso")
+    cola_ctrl = ARREMESSAVEIS["cola_alquimica"]["controle"]
+    rede_ctrl = ARREMESSAVEIS["rede_arremesso"]["controle"]
+
+    # cola: falha no Reflexos → corta movimento à metade
+    r = setup(); r._save_mostrado = _mk_save(False)
+    m = make_monster(r, "m1", 4, 4, movement=6)
+    await r._aplicar_controle_arremesso(m, cola_ctrl)
+    check("cola: movement 6→3", m["movement"] == 3)
+    check("cola: mov_reduzido_rodadas=2", m.get("mov_reduzido_rodadas") == 2)
+    check("cola: guardou original 6", m.get("mov_reduzido_orig") == 6)
+
+    # cola: sucesso no Reflexos → sem efeito
+    r._save_mostrado = _mk_save(True)
+    m2 = make_monster(r, "m2", 5, 5, movement=6)
+    await r._aplicar_controle_arremesso(m2, cola_ctrl)
+    check("cola resist: movement intacto", m2["movement"] == 6 and not m2.get("mov_reduzido_rodadas"))
+
+    # cola: reaplicar renova duração sem cortar de novo
+    r._save_mostrado = _mk_save(False)
+    m["mov_reduzido_rodadas"] = 1
+    await r._aplicar_controle_arremesso(m, cola_ctrl)
+    check("cola reaplicar: movement fica 3 (não corta de novo)", m["movement"] == 3)
+    check("cola reaplicar: renova p/ 2", m["mov_reduzido_rodadas"] == 2)
+
+    # rede: marca enredado + guarda o save de escape
+    r = setup()
+    m3 = make_monster(r, "m3", 6, 6)
+    await r._aplicar_controle_arremesso(m3, rede_ctrl)
+    check("rede: enredado", m3.get("enredado") is True)
+    check("rede: enredado_save fortitude", m3.get("enredado_save") == "fortitude")
+    check("rede: enredado_cd 12", m3.get("enredado_cd") == 12)
+
     print(f"\n=== {PASS} OK / {FAIL} FALHAS ===")
     sys.exit(1 if FAIL else 0)
 

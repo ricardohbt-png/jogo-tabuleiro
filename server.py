@@ -12331,6 +12331,34 @@ class GameRoom:
         else:
             await self.gm_say(f"🧪 A defesa de **{nome}** já está corroída ao máximo (CA {base}).")
 
+    async def _aplicar_controle_arremesso(self, alvo, ctrl):
+        """Aplica o efeito de controle de um arremessável tático a um monstro.
+        `ctrl` vem do campo `controle` do catálogo ARREMESSAVEIS."""
+        nome = alvo.get("name") or alvo.get("nome", "alvo")
+        tipo = ctrl.get("tipo")
+        if tipo == "mov_reduzido":
+            rs = ctrl.get("resist_save")
+            if rs:
+                ok, *_ = await self._save_mostrado(alvo, rs["tipo"], rs["cd"])
+                if ok:
+                    await self.gm_say(f"🟢 **{nome}** se esquiva da cola — sem efeito!")
+                    return
+            dur = ctrl.get("duracao", 2)
+            if not alvo.get("mov_reduzido_rodadas"):     # 1ª aplicação: corta pela metade
+                alvo["mov_reduzido_orig"] = alvo.get("movement", 5)
+                alvo["movement"] = max(1, alvo["mov_reduzido_orig"] // 2)
+            alvo["mov_reduzido_rodadas"] = max(alvo.get("mov_reduzido_rodadas", 0), dur)
+            await self.gm_say(
+                f"🟢 **{nome}** fica preso na cola — movimento reduzido à metade "
+                f"por {alvo['mov_reduzido_rodadas']} rodada(s)!")
+        elif tipo == "enredado":
+            es = ctrl.get("escape_save", {"tipo": "fortitude", "cd": 12})
+            alvo["enredado"]      = True
+            alvo["enredado_save"] = es["tipo"]
+            alvo["enredado_cd"]   = es["cd"]
+            await self.gm_say(
+                f"🕸️ **{nome}** fica preso na rede! (escapar: {es['tipo']} CD {es['cd']})")
+
     async def _corroer_equipamento(self, m, p, armaduras_ids, armas_ids, cura="1d4", label="Corrosão"):
         """Degrada UM equipamento do alvo (prioridade: armadura > arma) cujos ids
         estejam nos conjuntos dados. Destruição (nível 3) é PERMANENTE e cura o
