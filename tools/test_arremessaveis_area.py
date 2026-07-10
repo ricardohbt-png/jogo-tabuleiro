@@ -44,6 +44,11 @@ def make_monster(r, mid, x, y, hp=30, ac=1):
     r.monsters[mid] = m
     return m
 
+def _mk_save(passou):
+    async def _s(alvo, tipo, cd, *a, **k):
+        return (passou, 1, 0, 1)   # (passou, d20, bonus, total)
+    return _s
+
 async def main():
     random.seed(1)
 
@@ -74,6 +79,81 @@ async def main():
     # Sem pos → cai na casa do caster (compatibilidade com o Manto de Escuridão)
     await r._aplicar_escuridao(p, raio=1, duracao=1)
     check("sem pos usa a casa do caster", r.zonas_especiais[-1]["cx"] == 1)
+
+    # ── [3] Dano de área a TODOS (fogo amigo), save = metade ────────────────────
+    print("\n[3] Granada: dano de área + fogo amigo + save")
+    r = setup(); random.seed(3)
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [1, 1]; r.players["p1"] = p
+    p["bag"] = [throwable("granada")]
+    ally = make_player("p2", "A", "cleric", 0); ally["pos"] = [5, 5]; r.players["p2"] = ally
+    m = make_monster(r, "m1", 5, 6, hp=40)   # adjacente ao centro (5,5)
+    # saves sempre falham → dano cheio (patch determinístico)
+    r._save_mostrado = _mk_save(False)
+    hp_ally0, hp_m0 = ally["hp"], m["hp"]
+    await r.handle_throw_item("p1", {"item_id": "granada", "tx": 5, "ty": 5})
+    check("monstro no raio sofreu dano", m["hp"] < hp_m0)
+    check("ALIADO no raio sofreu dano (fogo amigo)", ally["hp"] < hp_ally0)
+    check("item consumido", len(p["bag"]) == 0)
+    check("ação principal gasta", p.get("action_done") is True)
+
+    # save com sucesso → metade
+    r = setup(); random.seed(3)
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [1, 1]; r.players["p1"] = p
+    p["bag"] = [throwable("granada")]
+    m = make_monster(r, "m1", 5, 5, hp=40)
+    r._save_mostrado = _mk_save(True)
+    hp0 = m["hp"]
+    await r.handle_throw_item("p1", {"item_id": "granada", "tx": 5, "ty": 5})
+    dano_meio = hp0 - m["hp"]
+    check("save reduz o dano (metade)", 0 < dano_meio <= (12 // 2))  # 2d6 máx 12 → ≤6
+
+    # ── [4] Bomba Incendiária: quem sofre dano fica em chamas ───────────────────
+    print("\n[4] Incendiária: em chamas nos atingidos")
+    r = setup(); random.seed(4)
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [1, 1]; r.players["p1"] = p
+    p["bag"] = [throwable("bomba_incendiaria")]
+    m = make_monster(r, "m1", 5, 5, hp=40)
+    r._save_mostrado = _mk_save(False)
+    await r.handle_throw_item("p1", {"item_id": "bomba_incendiaria", "tx": 5, "ty": 5})
+    check("atingido ficou em chamas", m.get("em_chamas_rodadas", 0) > 0)
+    check("chamas apagáveis por água", m.get("chamas_agua_apaga") is True)
+
+    # ── [5] Granada Superior: 3d6 / CD 15 aplicados ─────────────────────────────
+    print("\n[5] Granada Superior")
+    r = setup(); random.seed(5)
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [1, 1]; r.players["p1"] = p
+    p["bag"] = [throwable("granada_superior")]
+    m = make_monster(r, "m1", 5, 5, hp=60)
+    saves = []
+    async def cap_save(alvo, tipo, cd, *a, **k):
+        saves.append(cd); return (False, 1, 0, 1)
+    r._save_mostrado = cap_save
+    await r.handle_throw_item("p1", {"item_id": "granada_superior", "tx": 5, "ty": 5})
+    check("save usou CD 15", 15 in saves)
+    check("dano de 3d6 aplicado (>0)", m["hp"] < 60)
+
+    # ── [6] Bomba de Fumaça: zona de escuridão que expira em 2 rodadas ──────────
+    print("\n[6] Fumaça")
+    r = setup()
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [2, 2]; r.players["p1"] = p
+    p["bag"] = [throwable("bomba_fumaca")]
+    r.zonas_especiais = []
+    await r.handle_throw_item("p1", {"item_id": "bomba_fumaca", "tx": 6, "ty": 6})
+    z = [z for z in r.zonas_especiais if z.get("tipo") == "escuridao"]
+    check("criou zona de escuridão no tile", len(z) == 1 and z[0]["cx"] == 6 and z[0]["cy"] == 6)
+    check("fumaça consumida", len(p["bag"]) == 0)
+    await r._processar_zonas_turno(); await r._processar_zonas_turno()
+    check("zona expira após 2 rodadas",
+          not any(z.get("tipo") == "escuridao" and z.get("ativa") for z in r.zonas_especiais))
+
+    # ── [7] Alcance / LOS até o centro ──────────────────────────────────────────
+    print("\n[7] Alcance/LOS")
+    r = setup()
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [0, 0]; r.players["p1"] = p
+    p["bag"] = [throwable("granada")]
+    await r.handle_throw_item("p1", {"item_id": "granada", "tx": 9, "ty": 9})  # >4
+    check("fora de alcance: item mantido", len(p["bag"]) == 1)
+    check("fora de alcance: ação não gasta", not p.get("action_done"))
 
     print(f"\n=== {PASS} OK / {FAIL} FALHAS ===")
     sys.exit(1 if FAIL else 0)

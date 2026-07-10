@@ -6624,9 +6624,60 @@ class GameRoom:
         await self.push_state()
 
     async def _throw_item_area(self, p, defn, item, tx, ty):
-        """Placeholder — implementado na Task 4."""
-        await self.send_to(p["id"], {"type": "error",
-            "msg": f"{defn['name']} ainda está em desenvolvimento."})
+        """Arremesso de ÁREA: sem jogada de ataque. Atinge TODOS no raio (fogo
+        amigo, como a Bola de Fogo) com save de Reflexos (metade no sucesso);
+        opcionalmente aplica 'em chamas' e/ou cria uma zona (fumaça=escuridão)."""
+        pid = p["id"]
+        if tx is None or ty is None:
+            await self.send_to(pid, {"type": "error", "msg": "Alvo de área inválido."}); return
+        cx, cy = int(tx), int(ty)
+        rng = defn["alcance"]
+        if max(abs(p["pos"][0] - cx), abs(p["pos"][1] - cy)) > rng:
+            await self.send_to(pid, {"type": "error",
+                "msg": f"⚠ Centro fora de alcance (máx {rng} quadrados)."}); return
+        if not self._tem_linha_de_visao(p["pos"], [cx, cy]):
+            await self.send_to(pid, {"type": "error",
+                "msg": "🧱 Uma parede bloqueia a trajetória do arremesso!"}); return
+
+        # Consome o item + gasta a ação principal.
+        p["bag"].remove(item)
+        p["action_done"] = True
+        self._consumir_recursos(p, 'apenas_acao')
+        raio = defn.get("area_raio", 1)
+        await self.gm_say(f"{defn['emoji']} **{p['name']}** arremessa **{defn['name']}** em ({cx},{cy})!")
+
+        # Dano de área com save de Reflexos (metade no sucesso).
+        if defn.get("dano"):
+            raw = roll_dice(defn["dano"])
+            die_type = "d" + defn["dano"].split("d")[1]
+            await self.broadcast({"type": "dice_roll", "die": die_type,
+                                  "value": raw, "label": f"Dano ({defn['name']})"})
+            save = defn.get("save") or {}
+            cd = save.get("cd")
+            for alvo in self._alvos_na_area(cx, cy, raio):
+                # Sombra de parede: quem está atrás de parede a partir do centro escapa.
+                if not self._tem_linha_de_visao([cx, cy], alvo["pos"]):
+                    continue
+                d = raw
+                if cd:
+                    save_ok, *_ = await self._save_mostrado(alvo, save.get("tipo", "reflexos"), cd)
+                    if save_ok:
+                        d = raw // 2
+                if d <= 0:
+                    continue
+                nome = alvo.get("name") or alvo.get("nome", "Alvo")
+                await self.gm_say(f"{defn['emoji']} **{nome}** sofre {d} de {defn['elemento']}.")
+                await self._dano_em_alvo(alvo, d, defn["elemento"], pid)
+                if defn.get("em_chamas") and self._vivo(alvo):
+                    dur = self._rolar_dado(defn.get("chamas_dur", "1d4"))
+                    self._aplicar_em_chamas(alvo, dur, defn.get("chamas_agua_apaga", True))
+
+        # Zona (Bomba de Fumaça = escuridão centrada no tile).
+        zona = defn.get("zona")
+        if zona and zona.get("tipo") == "escuridao":
+            await self._aplicar_escuridao(p, raio=raio, duracao=zona.get("duracao", 2), pos=[cx, cy])
+
+        await self.push_state()
 
     async def handle_apagar_chamas(self, pid):
         """Gasta a AÇÃO PRINCIPAL do turno para apagar o status 'em chamas'
