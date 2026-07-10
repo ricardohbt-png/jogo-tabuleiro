@@ -152,6 +152,85 @@ def _calcular_custo_cancao(atributos_escolhidos):
             custo[attr["custo"]] += 1
     return custo
 
+# ─── INSTRUMENTOS DO BARDO (Fase 1) ─────────────────────────────────────────────
+INSTRUMENTOS_BASE = {
+    "harpa": {
+        "nome": "Harpa", "icon": "🎵", "maos": 2, "modo": "ativada",
+        "habilidade_nome": "Nota Cortante",
+        "efeito": {"tipo": "nota_cortante", "save": "reflexos"},
+        "custo_fome": 3, "custo_sede": 3,
+        "afixos_validos": ["fome", "sede", "alcance"],
+        "stats": {
+            "velho":   {"alcance": 3, "dano": "1d4"},
+            "rustico": {"alcance": 4, "dano": "1d6"},
+            "padrao":  {"alcance": 5, "dano": "2d6"},
+        },
+    },
+    "tambor": {
+        "nome": "Tambor de Guerra", "icon": "🥁", "maos": 2, "modo": "ativada",
+        "habilidade_nome": "Acorde Trovejante",
+        "efeito": {"tipo": "acorde_trovejante", "save": "reflexos"},
+        "custo_fome": 4, "custo_sede": 4,
+        "afixos_validos": ["fome", "sede", "alcance"],
+        "stats": {
+            "velho":   {"raio": 1, "dano": "1d2", "push": 0},
+            "rustico": {"raio": 2, "dano": "1d4", "push": 1},
+            "padrao":  {"raio": 2, "dano": "2d4", "push": 2},
+        },
+    },
+    "sino": {
+        "nome": "Sino", "icon": "🔔", "maos": 1, "modo": "ativada",
+        "habilidade_nome": "Ecos Dolorosos",
+        "efeito": {"tipo": "ecos_dolorosos"},
+        "custo_fome": 2, "custo_sede": 2,
+        "afixos_validos": ["fome", "sede", "duracao"],
+        "stats": {
+            "velho":   {"dano": "1",   "duracao": 2},
+            "rustico": {"dano": "1d3", "duracao": 2},
+            "padrao":  {"dano": "1d4", "duracao": 3},
+        },
+    },
+    "alaude": {
+        "nome": "Alaúde", "icon": "🪕", "maos": 2, "modo": "passiva",
+        "habilidade_nome": "Sinfonia Heroica",
+        "efeito": {"tipo": "sinfonia_heroica"},
+        "custo_fome": 0, "custo_sede": 0,
+        "afixos_validos": ["fome", "sede"],
+        "stats": {
+            "velho":   {"atributos": ["acerto"]},
+            "rustico": {"atributos": ["acerto", "dano"]},
+            "padrao":  {"atributos": ["acerto", "dano", "ca", "movimento", "resistencia"]},
+        },
+    },
+}
+
+_QUALIDADE_LABEL = {
+    "velho": ("Velho", "Velha"), "rustico": ("Rústico", "Rústica"),
+    "padrao": ("Padrão", "Padrão"), "refinado": ("Refinado", "Refinada"),
+}
+_INSTRUMENTO_GENERO_FEM = {"harpa", "trompa", "lira", "flauta", "gaita"}
+
+def criar_instrumento(base, qualidade="padrao", origem="humana", encantamento="nenhum",
+                      refinado_bonus=None, origem_bonus=None):
+    """Cria uma instância de instrumento (item de bolsa/gear)."""
+    b = INSTRUMENTOS_BASE[base]
+    inst = {
+        "id": "instrumento", "tipo_item": "instrumento",
+        "base": base, "qualidade": qualidade,
+        "origem": origem, "encantamento": encantamento,
+        "refinado_bonus": refinado_bonus if qualidade == "refinado" else None,
+        "origem_bonus": origem_bonus if origem in ("elfica", "ana") else None,
+        "icon": b["icon"], "allowed_classes": ["bard"],
+    }
+    inst["nome"] = _instrumento_nome(inst)
+    return inst
+
+def _instrumento_nome(inst):
+    b = INSTRUMENTOS_BASE[inst["base"]]
+    fem = inst["base"] in _INSTRUMENTO_GENERO_FEM
+    ql = _QUALIDADE_LABEL.get(inst["qualidade"], ("Padrão", "Padrão"))[1 if fem else 0]
+    return f"{b['nome']} {ql}"
+
 def _distancia_chebyshev(pos1, pos2):
     """Distância de rei (Chebyshev) entre dois pontos [x, y]."""
     return max(abs(pos1[0] - pos2[0]), abs(pos1[1] - pos2[1]))
@@ -7620,6 +7699,46 @@ class GameRoom:
     def _cancao_custo_reducao(self, p):
         """Redução de manutenção da canção com a Canção Heroica Suprema (-1🍖 -1💧)."""
         return 1 if tem_espec(p, "bardo_cancao_suprema") else 0
+
+    # ── Bardo: Instrumentos (Fase 1) ─────────────────────────────────────────
+
+    @staticmethod
+    def _instrumento_stats(inst):
+        """Números efetivos: Qualidade → Refinado → Origem → Encantamento. Custos ≥ 0.
+        (Origem/Encantamento são no-op na Fase 1.)"""
+        b = INSTRUMENTOS_BASE[inst["base"]]
+        q = "padrao" if inst["qualidade"] == "refinado" else inst["qualidade"]
+        st = dict(b["stats"][q])
+        st["custo_fome"] = b["custo_fome"]
+        st["custo_sede"] = b["custo_sede"]
+        st["save"] = b["efeito"].get("save")
+        if inst["qualidade"] == "refinado":
+            GameRoom._aplicar_afixo(st, inst.get("refinado_bonus"))
+        if inst.get("origem_bonus"):
+            GameRoom._aplicar_afixo(st, inst["origem_bonus"])
+        st["custo_fome"] = max(0, st["custo_fome"])
+        st["custo_sede"] = max(0, st["custo_sede"])
+        return st
+
+    @staticmethod
+    def _aplicar_afixo(st, bonus):
+        """Aplica um afixo 'Escolha 1' aos stats efetivos, se aplicável."""
+        if bonus == "fome":
+            st["custo_fome"] -= 1
+        elif bonus == "sede":
+            st["custo_sede"] -= 1
+        elif bonus == "alcance":
+            if "alcance" in st: st["alcance"] += 1
+            if "raio" in st:    st["raio"] += 1
+        elif bonus == "duracao":
+            if "duracao" in st: st["duracao"] += 1
+        elif bonus == "cd":
+            st["cd_bonus"] = st.get("cd_bonus", 0) + 1
+
+    def _instrumento_cd(self, bardo, inst):
+        """CD do save do instrumento: 8 + mod(DES) + afixo de CD (Fase 4)."""
+        st = self._instrumento_stats(inst)
+        return 8 + mod(bardo.get("dex", 10)) + st.get("cd_bonus", 0)
 
     async def handle_ativar_cancao(self, pid, data):
         if not self._is_turn(pid): return
