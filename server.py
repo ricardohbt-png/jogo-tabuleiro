@@ -220,9 +220,10 @@ def criar_instrumento(base, qualidade="padrao", origem="humana", encantamento="n
         "origem": origem, "encantamento": encantamento,
         "refinado_bonus": refinado_bonus if qualidade == "refinado" else None,
         "origem_bonus": origem_bonus if origem in ("elfica", "ana") else None,
-        "icon": b["icon"], "allowed_classes": ["bard"],
+        "emoji": b["icon"], "item_slot": "instrumento",
+        "allowed_classes": ["bard"],
     }
-    inst["nome"] = _instrumento_nome(inst)
+    inst["name"] = _instrumento_nome(inst)
     return inst
 
 def _instrumento_nome(inst):
@@ -7705,7 +7706,7 @@ class GameRoom:
     @staticmethod
     def _instrumento_stats(inst):
         """Números efetivos: Qualidade → Refinado → Origem → Encantamento. Custos ≥ 0.
-        (Origem/Encantamento são no-op na Fase 1.)"""
+        (Origem/Encantamento não são gerados na Fase 1, mas a lógica de camadas já está plumbada.)"""
         b = INSTRUMENTOS_BASE[inst["base"]]
         q = "padrao" if inst["qualidade"] == "refinado" else inst["qualidade"]
         st = dict(b["stats"][q])

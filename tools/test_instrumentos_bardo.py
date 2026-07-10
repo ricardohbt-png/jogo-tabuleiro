@@ -22,10 +22,13 @@ def test_refinado_afixo_custo_nunca_negativo():
     st = server.GameRoom._instrumento_stats(inst)
     assert st["custo_fome"] == 1, st
     assert st["custo_sede"] == 2, st
+    # cruza o zero: alaude tem custo_fome 0 → clamp em 0
+    inst0 = server.criar_instrumento("alaude", "refinado", refinado_bonus="fome")
+    assert server.GameRoom._instrumento_stats(inst0)["custo_fome"] == 0
 
 def test_nome_derivado():
-    assert server.criar_instrumento("harpa", "velho")["nome"] == "Harpa Velha"
-    assert server.criar_instrumento("tambor", "padrao")["nome"] == "Tambor de Guerra Padrão"
+    assert server.criar_instrumento("harpa", "velho")["name"] == "Harpa Velha"
+    assert server.criar_instrumento("tambor", "padrao")["name"] == "Tambor de Guerra Padrão"
 
 def test_tipo_item_e_maos():
     inst = server.criar_instrumento("harpa", "padrao")
