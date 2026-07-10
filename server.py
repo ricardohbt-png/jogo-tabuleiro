@@ -10703,9 +10703,10 @@ class GameRoom:
         usado, outro = (a, b) if (a[1] >= b[1]) == vantagem else (b, a)
         return usado[0], usado[1], usado[2], usado[3], outro[1]
 
-    async def _aplicar_escuridao(self, caster, raio, duracao):
-        """Cria uma zona de escuridão centrada no caster."""
-        x, y = caster.get("pos", [0, 0])
+    async def _aplicar_escuridao(self, caster, raio, duracao, pos=None):
+        """Cria uma zona de escuridão. `pos` (default = casa do caster) permite
+        centrar num tile arbitrário (ex.: Bomba de Fumaça)."""
+        x, y = pos if pos is not None else caster.get("pos", [0, 0])
         self.zonas_especiais.append({
             "id":      f"escuridao_{caster['id']}_{self.round_num}",
             "tipo":    "escuridao",

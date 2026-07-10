@@ -61,6 +61,20 @@ async def main():
     check("fumaça: zona escuridao", ARREMESSAVEIS["bomba_fumaca"]["zona"]["tipo"] == "escuridao")
     check("fumaça: sem dano", "dano" not in ARREMESSAVEIS["bomba_fumaca"])
 
+    # ── [2] _aplicar_escuridao com centro explícito ────────────────────────────
+    print("\n[2] _aplicar_escuridao(pos=...)")
+    r = setup()
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [1, 1]; r.players["p1"] = p
+    r.zonas_especiais = []
+    await r._aplicar_escuridao(p, raio=1, duracao=2, pos=[5, 6])
+    z = r.zonas_especiais[-1]
+    check("zona criada no centro escolhido", z["cx"] == 5 and z["cy"] == 6)
+    check("zona tipo escuridao", z["tipo"] == "escuridao")
+    check("zona duracao 2", z["duracao"] == 2)
+    # Sem pos → cai na casa do caster (compatibilidade com o Manto de Escuridão)
+    await r._aplicar_escuridao(p, raio=1, duracao=1)
+    check("sem pos usa a casa do caster", r.zonas_especiais[-1]["cx"] == 1)
+
     print(f"\n=== {PASS} OK / {FAIL} FALHAS ===")
     sys.exit(1 if FAIL else 0)
 
