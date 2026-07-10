@@ -9621,6 +9621,12 @@ class GameRoom:
                 if m["lento_pulou"]:
                     await self.gm_say(f"🐌 **{m['name']}** está lento e perde o turno.")
                     return "pulou"
+        # Movimento reduzido (Cola Alquímica): NÃO pula o turno — só reduz o passo.
+        if m.get("mov_reduzido_rodadas", 0) > 0:
+            m["mov_reduzido_rodadas"] -= 1
+            if m["mov_reduzido_rodadas"] <= 0 and "mov_reduzido_orig" in m:
+                m["movement"] = m.pop("mov_reduzido_orig")
+                await self.gm_say(f"🟢 A cola em **{m['name']}** seca — movimento normal.")
         return None
 
     # ── Batch 2: magias de status ───────────────────────────────────────────────

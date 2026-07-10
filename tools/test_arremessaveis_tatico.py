@@ -108,6 +108,19 @@ async def main():
     check("rede: enredado_save fortitude", m3.get("enredado_save") == "fortitude")
     check("rede: enredado_cd 12", m3.get("enredado_cd") == 12)
 
+    # ── [3] mov_reduzido tica e expira (restaura movement) ─────────────────────
+    print("\n[3] tick de mov_reduzido em _status_monstro_turno")
+    r = setup()
+    m = make_monster(r, "m1", 4, 4, movement=6)
+    m["movement"] = 3; m["mov_reduzido_orig"] = 6; m["mov_reduzido_rodadas"] = 2
+    res = await r._status_monstro_turno(m, [m])
+    check("mov_reduzido não pula o turno", res != "pulou")
+    check("tica p/ 1", m["mov_reduzido_rodadas"] == 1)
+    check("ainda reduzido (3)", m["movement"] == 3)
+    await r._status_monstro_turno(m, [m])
+    check("expira: movement restaurado p/ 6", m["movement"] == 6)
+    check("flag e backup limpos", m.get("mov_reduzido_rodadas", 0) == 0 and "mov_reduzido_orig" not in m)
+
     print(f"\n=== {PASS} OK / {FAIL} FALHAS ===")
     sys.exit(1 if FAIL else 0)
 
