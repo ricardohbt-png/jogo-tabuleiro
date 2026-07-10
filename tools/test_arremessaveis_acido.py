@@ -139,6 +139,17 @@ async def main():
     check("erro: sem residual", m.get("acido_residual", 0) == 0)
     check("erro: CA intacta", m["ac"] == 99)
     check("erro: item consumido", len(p["bag"]) == 0)
+
+    # residual usa max (não soma): residual grande pré-existente não regride
+    S.random.randint = _fixed_d20(15)
+    r = setup()
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [4, 4]; p["dex"] = 14
+    p["atk_bonus"] = 5
+    r.players["p1"] = p; p["bag"] = [throwable("frasco_acido")]
+    m = make_monster(r, "m1", 4, 6, hp=40, ac=12)
+    m["acido_residual"] = 100
+    await r.handle_throw_item("p1", {"item_id": "frasco_acido", "target_id": "m1"})
+    check("residual usa max (mantém 100)", m["acido_residual"] == 100)
     S.random.randint = _REAL_RANDINT   # restaura o RNG
 
     print(f"\n=== {PASS} OK / {FAIL} FALHAS ===")

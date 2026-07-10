@@ -6631,7 +6631,7 @@ class GameRoom:
                 await self.gm_say(
                     f"🧪 O ácido gruda em **{target['name']}** — **{dmg // 2}** de dano "
                     f"residual na próxima rodada!")
-            if defn.get("corrosao_ac"):
+            if defn.get("corrosao_ac") and target.get("hp", 0) > 0:
                 await self._acido_corroer(target, defn["corrosao_ac"])
         elif nat1:
             await self.gm_say(
@@ -11681,9 +11681,10 @@ class GameRoom:
             alvo["acido_residual"] = 0
             if not (alvo.get("alive") or alvo.get("hp", 0) > 0):
                 continue
-            nome = alvo.get("name") or alvo.get("nome", "alvo")
-            await self.gm_say(f"🧪 O ácido continua corroendo **{nome}**: **{d}** de dano!")
             await self._dano_em_alvo(alvo, d, "acido", None)
+            await self._enviar_trap_result(
+                alvo, "Ácido Residual", "🧪", sucesso=False, dano=d, metade=False,
+                descricao="O ácido continua corroendo.", efeitos_extra=[], tick=True)
 
     def _serializar_armadilhas(self):
         """Estado das armadilhas para o cliente. Armadilhas de aliado são visíveis
