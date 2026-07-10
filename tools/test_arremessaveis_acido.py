@@ -100,6 +100,47 @@ async def main():
     await r._processar_acido_residual_turno()
     check("alvo morto: residual limpo sem dano", m2.get("acido_residual", 0) == 0 and m2["hp"] == 0)
 
+    # ── [4] Acerto: dano + residual guardado + CA corroída ─────────────────────
+    # d20 fixo em 15 (acerto não-crítico, não-nat1); atk_bonus alto garante o acerto.
+    # CAs acima do piso 5 para que a corrosão registre.
+    print("\n[4] handle_throw_item (ácido) — acerto")
+    S.random.randint = _fixed_d20(15)
+    r = setup()
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [4, 4]; p["dex"] = 14
+    p["atk_bonus"] = 5
+    r.players["p1"] = p; p["bag"] = [throwable("frasco_acido")]
+    m = make_monster(r, "m1", 4, 6, hp=40, ac=15)   # 15+5 ≥ 15 → acerto
+    await r.handle_throw_item("p1", {"item_id": "frasco_acido", "target_id": "m1"})
+    check("dano de ácido aplicado", m["hp"] < 40)
+    dano_inicial = 40 - m["hp"]
+    check("residual guardado = dano//2", m.get("acido_residual", 0) == dano_inicial // 2)
+    check("CA corroída -1 (15→14)", m["ac"] == 14)
+    check("item consumido", len(p["bag"]) == 0)
+
+    # Vidro Grande: -2 CA (15→13)
+    r = setup()
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [4, 4]; p["dex"] = 14
+    p["atk_bonus"] = 5
+    r.players["p1"] = p; p["bag"] = [throwable("vidro_acido_grande")]
+    m = make_monster(r, "m1", 4, 6, hp=60, ac=15)
+    await r.handle_throw_item("p1", {"item_id": "vidro_acido_grande", "target_id": "m1"})
+    check("Vidro Grande corrói -2 CA (15→13)", m["ac"] == 13)
+
+    # ── [5] Erro: sem dano/residual/corrosão, item consumido ───────────────────
+    # d20 fixo em 15, mas CA 99 → 15+5 < 99 → erro determinístico.
+    print("\n[5] handle_throw_item (ácido) — erro")
+    r = setup()
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [4, 4]; p["dex"] = 14
+    p["atk_bonus"] = 5
+    r.players["p1"] = p; p["bag"] = [throwable("frasco_acido")]
+    m = make_monster(r, "m1", 4, 6, hp=40, ac=99)
+    await r.handle_throw_item("p1", {"item_id": "frasco_acido", "target_id": "m1"})
+    check("erro: sem dano", m["hp"] == 40)
+    check("erro: sem residual", m.get("acido_residual", 0) == 0)
+    check("erro: CA intacta", m["ac"] == 99)
+    check("erro: item consumido", len(p["bag"]) == 0)
+    S.random.randint = _REAL_RANDINT   # restaura o RNG
+
     print(f"\n=== {PASS} OK / {FAIL} FALHAS ===")
     sys.exit(1 if FAIL else 0)
 

@@ -6626,6 +6626,13 @@ class GameRoom:
                 dur = self._rolar_dado(defn.get("chamas_dur", "1d4"))
                 self._aplicar_em_chamas(target, dur, defn.get("chamas_agua_apaga", True))
                 await self.gm_say(f"🔥 **{target['name']}** pega fogo por {dur} rodada(s)!")
+            if defn.get("residual") and target.get("hp", 0) > 0:
+                target["acido_residual"] = max(target.get("acido_residual", 0), dmg // 2)
+                await self.gm_say(
+                    f"🧪 O ácido gruda em **{target['name']}** — **{dmg // 2}** de dano "
+                    f"residual na próxima rodada!")
+            if defn.get("corrosao_ac"):
+                await self._acido_corroer(target, defn["corrosao_ac"])
         elif nat1:
             await self.gm_say(
                 f"{defn['emoji']} **{p['name']}** arremessa **{defn['name']}** mas rola "
