@@ -662,6 +662,19 @@ const GS = (() => {
       descricao: 'Arremesse (4 quad., ataque por DES). 2d6 de ácido + metade na ' +
                  'rodada seguinte. Corrói a defesa do alvo (−2 CA por acerto).',
     },
+    // ── MERCADO — Arremessáveis TÁTICOS (Sub-projeto D; ver ARREMESSAVEIS no server) ──
+    cola_alquimica: {
+      id: 'cola_alquimica', nome: 'Cola Alquímica', emoji: '🟢',
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, permitidoPara:['todos'],
+      descricao: 'Arremesse (4 quad., ataque por DES). O alvo testa Reflexos CD 12; ' +
+                 'se falhar, fica com o movimento reduzido à metade por 2 rodadas.',
+    },
+    rede_arremesso: {
+      id: 'rede_arremesso', nome: 'Rede', emoji: '🕸️',
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, permitidoPara:['todos'],
+      descricao: 'Arremesse (4 quad., ataque por DES). O alvo fica preso; para ' +
+                 'escapar gasta o turno num teste de Fortitude CD 12.',
+    },
   };
 
   // class_id (servidor) → heroKey (HERO_DATA / EQUIPAMENTOS_INICIAIS).
