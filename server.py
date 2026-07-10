@@ -6607,7 +6607,7 @@ class GameRoom:
                 f"{defn['emoji']} **{p['name']}** arremessa **{defn['name']}** em "
                 f"**{target['name']}** (d20={roll}+{p['atk_bonus']}={total} vs CA {target['ac']}):"
                 f"{crit_str} **{dmg}** de {defn['elemento']}!")
-            await self._dano_em_alvo(target, dmg, defn["elemento"], pid)
+            await self._aplicar_dano_alvo(target, dmg, defn["elemento"], pid)
             if defn.get("em_chamas") and target.get("hp", 0) > 0:
                 dur = self._rolar_dado(defn.get("chamas_dur", "1d4"))
                 self._aplicar_em_chamas(target, dur, defn.get("chamas_agua_apaga", True))
@@ -6663,14 +6663,17 @@ class GameRoom:
                     save_ok, *_ = await self._save_mostrado(alvo, save.get("tipo", "reflexos"), cd)
                     if save_ok:
                         d = raw // 2
+                if self._eh_jogador(alvo):
+                    d = await self._absorver_energia(alvo, d, defn["elemento"])   # Proteção contra Energia
                 if d <= 0:
                     continue
                 nome = alvo.get("name") or alvo.get("nome", "Alvo")
                 await self.gm_say(f"{defn['emoji']} **{nome}** sofre {d} de {defn['elemento']}.")
-                await self._dano_em_alvo(alvo, d, defn["elemento"], pid)
+                await self._aplicar_dano_alvo(alvo, d, defn["elemento"], pid)   # aplica fraquezas elementais
                 if defn.get("em_chamas") and self._vivo(alvo):
                     dur = self._rolar_dado(defn.get("chamas_dur", "1d4"))
                     self._aplicar_em_chamas(alvo, dur, defn.get("chamas_agua_apaga", True))
+                    await self.gm_say(f"🔥 **{nome}** pega fogo por {dur} rodada(s)!")
 
         # Zona (Bomba de Fumaça = escuridão centrada no tile).
         zona = defn.get("zona")

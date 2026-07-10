@@ -96,16 +96,22 @@ async def main():
     check("item consumido", len(p["bag"]) == 0)
     check("ação principal gasta", p.get("action_done") is True)
 
-    # save com sucesso → metade
+    # save com sucesso → metade EXATA do dano rolado (monstro sem resistências)
     r = setup(); random.seed(3)
     p = make_player("p1", "V", "warrior", 0); p["pos"] = [1, 1]; r.players["p1"] = p
     p["bag"] = [throwable("granada")]
     m = make_monster(r, "m1", 5, 5, hp=40)
     r._save_mostrado = _mk_save(True)
+    rolls = []
+    async def cap_bcast(msg, *a, **k):
+        if isinstance(msg, dict) and msg.get("die", "").startswith("d") and "Dano" in str(msg.get("label", "")):
+            rolls.append(msg["value"])
+    r.broadcast = cap_bcast
     hp0 = m["hp"]
     await r.handle_throw_item("p1", {"item_id": "granada", "tx": 5, "ty": 5})
     dano_meio = hp0 - m["hp"]
-    check("save reduz o dano (metade)", 0 < dano_meio <= (12 // 2))  # 2d6 máx 12 → ≤6
+    check("save reduz o dano à metade exata", len(rolls) == 1 and dano_meio == rolls[0] // 2,
+          f"dano_meio={dano_meio} rolls={rolls}")
 
     # ── [4] Bomba Incendiária: quem sofre dano fica em chamas ───────────────────
     print("\n[4] Incendiária: em chamas nos atingidos")
@@ -154,6 +160,37 @@ async def main():
     await r.handle_throw_item("p1", {"item_id": "granada", "tx": 9, "ty": 9})  # >4
     check("fora de alcance: item mantido", len(p["bag"]) == 1)
     check("fora de alcance: ação não gasta", not p.get("action_done"))
+
+    # ── [8] Fogo amigo no PRÓPRIO arremessador ─────────────────────────────────
+    print("\n[8] Auto fogo amigo")
+    r = setup(); random.seed(8)
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [5, 5]; p["hp"] = 999; p["max_hp"] = 999
+    r.players["p1"] = p
+    p["bag"] = [throwable("granada")]
+    r._save_mostrado = _mk_save(False)
+    hp_self0 = p["hp"]
+    await r.handle_throw_item("p1", {"item_id": "granada", "tx": 5, "ty": 5})
+    check("arremessador dentro da explosão sofre o próprio dano", p["hp"] < hp_self0)
+    check("arremessador segue vivo (hp alto)", p["alive"] is True)
+
+    # ── [9] Sombra de parede: alvo atrás de parede NÃO é atingido ───────────────
+    # Chamada direta a _throw_item_area com raio 2 (os itens reais são raio 1, onde
+    # todo tile atingido é adjacente ao centro e a sombra nunca ocorre).
+    print("\n[9] Sombra de parede")
+    r = setup(); random.seed(9)
+    # Arremessador em (7,5): LOS horizontal ao centro (5,5) sem tocar a parede.
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [7, 5]; r.players["p1"] = p
+    it = throwable("granada"); p["bag"] = [it]
+    defn = dict(ARREMESSAVEIS["granada"]); defn["area_raio"] = 2
+    # Centro (5,5), raio 2 → cobre y 3..7. Parede em (5,4) faz sombra sobre (5,3).
+    r.tiles[4][5] = WALL
+    m_hit = make_monster(r, "m_hit", 5, 6, hp=40)       # adjacente, iluminado
+    m_shadow = make_monster(r, "m_shadow", 5, 3, hp=40)  # atrás da parede (5,4)
+    r._save_mostrado = _mk_save(False)
+    hp_hit0, hp_sh0 = m_hit["hp"], m_shadow["hp"]
+    await r._throw_item_area(p, defn, it, 5, 5)
+    check("alvo iluminado sofre dano", m_hit["hp"] < hp_hit0)
+    check("alvo na sombra de parede NÃO sofre dano", m_shadow["hp"] == hp_sh0)
 
     print(f"\n=== {PASS} OK / {FAIL} FALHAS ===")
     sys.exit(1 if FAIL else 0)
