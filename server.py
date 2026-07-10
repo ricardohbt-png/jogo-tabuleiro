@@ -4996,7 +4996,25 @@ class GameRoom:
         return True
 
     async def _instr_ecos_dolorosos(self, p, inst, st, data):
-        return True    # Task 6 implementa a aura; por ora só consome o custo
+        """Ativa a aura de retaliação por `duracao` rodadas. Enquanto ativa, todo
+        monstro que acertar o bardo em corpo a corpo sofre `dano` sonoro."""
+        p["ecos_ate"] = self.round_num + st["duracao"]
+        p["ecos_dano"] = st["dano"]
+        await self.gm_say(f"🔔 **{p['name']}** faz o **Sino** ressoar — "
+                          f"ecos dolorosos por {st['duracao']} rodada(s)!")
+        return True
+
+    async def _instr_ecos_retaliar(self, p, m):
+        """Aplica a retaliação de Ecos a um monstro que acabou de acertar o bardo."""
+        if p.get("ecos_ate", 0) < self.round_num:
+            return
+        if m.get("hp", 0) <= 0:
+            return
+        dano = await self._rolar_dano_mostrado(*_ndfaces(p.get("ecos_dano", "1d4")), "🔔 Ecos")
+        m["hp"] = max(0, m["hp"] - dano)
+        await self.gm_say(f"🔔 Os Ecos Dolorosos ferem **{m['name']}** em **{dano}**!")
+        if m["hp"] <= 0:
+            await self._monster_dies(m, p["id"])
 
     async def handle_usar_oportunidade_movimento(self, pid):
         """Gasta o crédito de Oportunidade na via 'movimento extra' (soma spd a
@@ -13238,6 +13256,12 @@ class GameRoom:
                     await self.gm_say(f"🔥 Virote incendiário: +{xdmg} de dano de fogo!")
                     if target["hp"] <= 0:
                         await self._player_dies(target["id"])
+                # Ecos Dolorosos (Sino, bardo): retalia dano sonoro em quem
+                # acerta o bardo em CORPO A CORPO (range ausente = melee;
+                # ataques à distância/reach não disparam a retaliação)
+                if not atk_def.get("range") and target.get("class_id") == "bard" \
+                   and target.get("ecos_ate", 0) >= self.round_num:
+                    await self._instr_ecos_retaliar(target, m)
             else:
                 dmg_ef = self._ajustar_dano_elemental(target, dmg, "fisico")
                 target["vida_atual"] = max(0, target["vida_atual"] - dmg_ef)

@@ -169,6 +169,33 @@ def test_acorde_sucesso_meia_sem_empurrao():
     _run(room.handle_usar_instrumento("p1", {}))
     assert m["hp"] == 26          # 30 - 4 (metade)
 
+def test_ecos_ativa_aura():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["instrumento"] = server.criar_instrumento("sino", "padrao")  # 1d4, dur 3
+    _run(room.handle_usar_instrumento("p1", {}))
+    assert p["ecos_ate"] == room.round_num + 3
+    assert p["ecos_dano"] == "1d4"
+    assert p["instrumento_usado"] is True
+    assert p["action_done"] is False   # 1 mão: pode atacar depois
+
+def test_ecos_retaliacao():
+    room, p = _room_bardo(); _mute(room)
+    p["ecos_ate"] = room.round_num + 2
+    p["ecos_dano"] = "1d4"
+    m = {"id": "m1", "name": "Goblin", "hp": 20, "pos": [5, 5], "alive": True}
+    room.monsters["m1"] = m
+    async def _dano3(n, faces, label): return 3
+    room._rolar_dano_mostrado = _dano3
+    _run(room._instr_ecos_retaliar(p, m))
+    assert m["hp"] == 17
+
+def test_ecos_expira():
+    room, p = _room_bardo(); _mute(room)
+    p["ecos_ate"] = room.round_num - 1   # já expirou
+    m = {"id": "m1", "name": "Goblin", "hp": 20, "pos": [5, 5], "alive": True}
+    _run(room._instr_ecos_retaliar(p, m))
+    assert m["hp"] == 20
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]
