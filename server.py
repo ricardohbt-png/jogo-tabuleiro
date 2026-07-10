@@ -10606,6 +10606,22 @@ class GameRoom:
         await self.gm_say(f"❄️ **{alvo['name']}** continua paralisado ({alvo['paralisado_rodadas']}/{max_r}).")
         return True
 
+    async def _processar_enredado_turno(self, m):
+        """Rede (item): monstro preso GASTA o turno tentando escapar (save de
+        escape configurado no monstro). Retorna True se o turno foi consumido
+        (preso ou escapou nesta rodada); False se não está enredado."""
+        if not m.get("enredado"):
+            return False
+        passou, *_ = await self._save_mostrado(
+            m, m.get("enredado_save", "fortitude"), m.get("enredado_cd", 12))
+        if passou:
+            m["enredado"] = False
+            m.pop("enredado_save", None); m.pop("enredado_cd", None)
+            await self.gm_say(f"🕸️ **{m['name']}** se solta da rede!")
+        else:
+            await self.gm_say(f"🕸️ **{m['name']}** continua preso na rede e perde o turno!")
+        return True
+
     # ── Sistema de zonas mágicas / escuridão ───────────────────────────────────
     # Zonas vivem em self.zonas_especiais; cada uma tem cx/cy/raio/duracao/ativa.
     # _verificar_escuridao/_alcance_escuridao são a API que a resolução de
@@ -14518,6 +14534,9 @@ class GameRoom:
             if m.get("perde_turno"):
                 m["perde_turno"] = False
                 await self.gm_say(f"🕸️ **{m['name']}** está preso (rede) e perde o turno!")
+                continue
+            # Enredado (Rede): gasta o turno tentando escapar.
+            if await self._processar_enredado_turno(m):
                 continue
             # Status de magia (Sono/Comando/Dominar/Medo/Lentidão): pode consumir o turno.
             if await self._status_monstro_turno(m, alive_monsters) == "pulou":

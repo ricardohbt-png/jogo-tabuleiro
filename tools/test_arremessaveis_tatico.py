@@ -121,6 +121,26 @@ async def main():
     check("expira: movement restaurado p/ 6", m["movement"] == 6)
     check("flag e backup limpos", m.get("mov_reduzido_rodadas", 0) == 0 and "mov_reduzido_orig" not in m)
 
+    # ── [4] _processar_enredado_turno (escape) ─────────────────────────────────
+    print("\n[4] _processar_enredado_turno")
+    r = setup()
+    m = make_monster(r, "m1", 4, 4)
+    m["enredado"] = True; m["enredado_save"] = "fortitude"; m["enredado_cd"] = 12
+
+    r._save_mostrado = _mk_save(False)   # falha → continua preso, turno gasto
+    consumiu = await r._processar_enredado_turno(m)
+    check("falha: turno consumido", consumiu is True)
+    check("falha: continua preso", m.get("enredado") is True)
+
+    r._save_mostrado = _mk_save(True)    # sucesso → solta, turno gasto
+    consumiu = await r._processar_enredado_turno(m)
+    check("sucesso: turno consumido", consumiu is True)
+    check("sucesso: soltou", not m.get("enredado"))
+    check("sucesso: limpou save/cd", "enredado_cd" not in m and "enredado_save" not in m)
+
+    m2 = make_monster(r, "m2", 5, 5)     # não enredado → não consome
+    check("não enredado → False", (await r._processar_enredado_turno(m2)) is False)
+
     print(f"\n=== {PASS} OK / {FAIL} FALHAS ===")
     sys.exit(1 if FAIL else 0)
 
