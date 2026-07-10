@@ -236,6 +236,15 @@ def test_instrumento_bolsa_cheia_nao_auto_equipa():
     assert res == "full"
     assert p["gear"]["instrumento"] is None    # NÃO faz resgate-equipar
 
+def test_loadout_inicial_henrique():
+    p = server.make_player("p1", "Henrique", "bard", 0)
+    # arma real (com die), não mais o "instrumento" sem dano
+    assert p["gear"]["weapon"].get("id") != "instrumento"
+    assert p["weapon"].get("die")                    # arma de dano
+    # Alaúde Velho no slot de instrumento
+    inst = p["gear"]["instrumento"]
+    assert inst and inst["base"] == "alaude" and inst["qualidade"] == "velho"
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]

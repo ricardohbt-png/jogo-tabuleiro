@@ -1117,7 +1117,7 @@ CLASSES = {
         "name": "Henrique, o Bardo", "emoji": "🎶", "color": "#9b7fd4",
         "hp": 9, "mp": 0, "max_mp": 0, "spd": 6, "start_gold": 20,   # bardo não usa MP — habilidades custam fome/sede
         "str_": 10, "dex": 16, "con_": 12, "int_": 12,
-        "ac_base": 13, "weapon": "instrumento", "atk_bonus": 3,   # BAB 0 + DES mod(16)=+3; ac_base 13 inclui manto+1 | Henrique: Instrumento (sem dano) + Adaga 2ª mão
+        "ac_base": 13, "weapon": "dagger", "atk_bonus": 3,   # BAB 0 + DES mod(16)=+3; ac_base 13 inclui manto+1 | Henrique: Adaga (mão principal) + Adaga 2ª mão + Alaúde Velho no slot de instrumento
         "saves_base": {"fort": 0, "ref": 2, "will": 2},           # Ref e Von bons, Fort ruim
         "desc": "Músico que inspira aliados com canções e provoca inimigos",
         "skills": [
@@ -3699,7 +3699,7 @@ def make_player(pid, name, cls_id, slot):
     }
     starting_armor_item = deepcopy(_STARTING_ARMOR.get(cls_id))
 
-    return {
+    player = {
         "id": pid, "name": name, "class_id": cls_id,
         "class_name": cls["name"], "emoji": cls["emoji"], "color": cls["color"],
         "hp": hp_total, "max_hp": hp_total,
@@ -3819,6 +3819,11 @@ def make_player(pid, name, cls_id, slot):
         "slots_cooldown":      {"primeiro": [], "segundo": [], "terceiro": []},  # ready_at por slot gasto
         "pending_spell_pick":  [],     # fila de círculos a escolher ao subir de nível
     }
+
+    if cls_id == "bard":
+        player["gear"]["instrumento"] = criar_instrumento("alaude", "velho")
+
+    return player
 
 def make_monster(mdef, room):
     m = deepcopy(mdef)
