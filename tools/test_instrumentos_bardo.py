@@ -101,6 +101,44 @@ def test_um_instrumento_por_turno():
     _run(room.handle_usar_instrumento("p1", {}))  # recusa
     assert p["fome"] == fome_apos_1
 
+async def _save_falha(*a, **k): return (False, 1, 0, 1)
+async def _save_passa(*a, **k): return (True, 20, 0, 20)
+async def _dano10(n, faces, label): return 10
+
+def test_nota_cortante_dano_cheio_na_falha():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["instrumento"] = server.criar_instrumento("harpa", "padrao")  # 5q, 2d6
+    m = {"id": "m1", "name": "Goblin", "hp": 30, "pos": [8, 5], "alive": True}
+    room.monsters["m1"] = m
+    room._save_mostrado = _save_falha
+    room._rolar_dano_mostrado = _dano10
+    _run(room.handle_usar_instrumento("p1", {"target_id": "m1"}))
+    assert m["hp"] == 20     # 30 - 10 (cheio)
+
+def test_nota_cortante_meia_no_sucesso():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["instrumento"] = server.criar_instrumento("harpa", "padrao")
+    m = {"id": "m1", "name": "Goblin", "hp": 30, "pos": [6, 5], "alive": True}
+    room.monsters["m1"] = m
+    room._save_mostrado = _save_passa
+    room._rolar_dano_mostrado = _dano10
+    _run(room.handle_usar_instrumento("p1", {"target_id": "m1"}))
+    assert m["hp"] == 25     # 30 - 5 (metade)
+
+def test_nota_cortante_fora_de_alcance_recusa():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["instrumento"] = server.criar_instrumento("harpa", "velho")   # 3q
+    m = {"id": "m1", "name": "Goblin", "hp": 30, "pos": [10, 5], "alive": True}
+    room.monsters["m1"] = m
+    fome0 = p["fome"]
+    _run(room.handle_usar_instrumento("p1", {"target_id": "m1"}))
+    assert m["hp"] == 30 and p["fome"] == fome0   # nada, sem custo
+
+def test_ndfaces():
+    assert server._ndfaces("2d6") == (2, 6)
+    assert server._ndfaces("1") == (1, 1)
+    assert server._ndfaces("1d4") == (1, 4)
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]

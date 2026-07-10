@@ -79,6 +79,13 @@ def roll_dice(die_str):
         sinal = 1
     return total
 
+def _ndfaces(die_str):
+    """'2d6' -> (2, 6); '1' -> (1, 1) (dano fixo de 1 ponto)."""
+    if "d" not in die_str:
+        return (int(die_str), 1)
+    n, faces = die_str.split("d")
+    return (int(n or 1), int(faces))
+
 def d20_attack(atk_bonus, target_ac):
     """Roll 1d20+atk_bonus vs target_ac. Returns (hit, roll, total, crit)."""
     roll = random.randint(1, 20)
@@ -4939,7 +4946,25 @@ class GameRoom:
         await self.push_state()
 
     async def _instr_nota_cortante(self, p, inst, st, data):
-        return False   # implementado na Task 4
+        """Alvo único até `alcance` casas; dano sonoro; save de Reflexos → metade."""
+        alvo_id = (data or {}).get("target_id")
+        m = self.monsters.get(alvo_id)
+        if not m or m.get("hp", 0) <= 0:
+            await self.send_to(p["id"], {"type": "error", "msg": "Alvo inválido."}); return False
+        if not self._no_raio(p, m, st["alcance"]):
+            await self.send_to(p["id"], {"type": "error",
+                "msg": f"Alvo fora do alcance ({st['alcance']} casas)."}); return False
+        await self.gm_say(f"🎵 **{p['name']}** dispara **Nota Cortante** em **{m['name']}**!")
+        dano = await self._rolar_dano_mostrado(*_ndfaces(st["dano"]), "🎵 Dano sonoro")
+        save_ok, *_ = await self._save_mostrado(m, "reflexos", self._instrumento_cd(p, inst))
+        if save_ok:
+            dano = dano // 2
+        m["hp"] = max(0, m["hp"] - dano)
+        await self.gm_say(f"🎵 **{m['name']}** sofre **{dano}** de dano sonoro"
+                          f"{' (metade — resistiu)' if save_ok else ''}.")
+        if m["hp"] <= 0:
+            await self._monster_dies(m, p["id"])
+        return True
 
     async def _instr_acorde_trovejante(self, p, inst, st, data):
         return False   # implementado na Task 5
