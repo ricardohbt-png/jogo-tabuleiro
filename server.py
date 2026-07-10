@@ -2193,6 +2193,8 @@ SHOP_MERCHANT = [
     {"id": "bomba_fumaca",      "name": "Bomba de Fumaça",   "emoji": "💨", "price": 30, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "frasco_acido",       "name": "Frasco de Ácido",       "emoji": "🧪", "price": 20, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "vidro_acido_grande", "name": "Vidro de Ácido Grande", "emoji": "🫙", "price": 50, "item_slot": "bag", "effect": "throwable", "value": 0},
+    {"id": "cola_alquimica", "name": "Cola Alquímica", "emoji": "🟢", "price": 15, "item_slot": "bag", "effect": "throwable", "value": 0},
+    {"id": "rede_arremesso", "name": "Rede",          "emoji": "🕸️", "price": 18, "item_slot": "bag", "effect": "throwable", "value": 0},
 ]
 
 # Munição — vendida no FERREIRO (item_slot "ammo", vai pro off_hand; 10 projéteis
@@ -2256,6 +2258,18 @@ ARREMESSAVEIS = {
         "id": "vidro_acido_grande", "name": "Vidro de Ácido Grande", "emoji": "🫙",
         "alcance": 4, "alvo": "ataque_alvo", "dano": "2d6", "elemento": "acido",
         "residual": True, "corrosao_ac": 2,
+    },
+    "cola_alquimica": {
+        "id": "cola_alquimica", "name": "Cola Alquímica", "emoji": "🟢",
+        "alcance": 4, "alvo": "ataque_alvo",
+        "controle": {"tipo": "mov_reduzido",
+                     "resist_save": {"tipo": "reflexos", "cd": 12}, "duracao": 2},
+    },
+    "rede_arremesso": {
+        "id": "rede_arremesso", "name": "Rede", "emoji": "🕸️",
+        "alcance": 4, "alvo": "ataque_alvo",
+        "controle": {"tipo": "enredado",
+                     "escape_save": {"tipo": "fortitude", "cd": 12}},
     },
 }
 
