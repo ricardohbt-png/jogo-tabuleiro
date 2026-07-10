@@ -2193,7 +2193,7 @@ SHOP_MERCHANT = [
     {"id": "bomba_fumaca",      "name": "Bomba de Fumaça",   "emoji": "💨", "price": 30, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "frasco_acido",       "name": "Frasco de Ácido",       "emoji": "🧪", "price": 20, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "vidro_acido_grande", "name": "Vidro de Ácido Grande", "emoji": "🫙", "price": 50, "item_slot": "bag", "effect": "throwable", "value": 0},
-    {"id": "cola_alquimica", "name": "Cola Alquímica", "emoji": "🟢", "price": 15, "item_slot": "bag", "effect": "throwable", "value": 0},
+    {"id": "cola_alquimica", "name": "Cola Alquímica", "emoji": "🍯", "price": 15, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "rede_arremesso", "name": "Rede",          "emoji": "🕸️", "price": 18, "item_slot": "bag", "effect": "throwable", "value": 0},
 ]
 
@@ -2260,7 +2260,7 @@ ARREMESSAVEIS = {
         "residual": True, "corrosao_ac": 2,
     },
     "cola_alquimica": {
-        "id": "cola_alquimica", "name": "Cola Alquímica", "emoji": "🟢",
+        "id": "cola_alquimica", "name": "Cola Alquímica", "emoji": "🍯",
         "alcance": 4, "alvo": "ataque_alvo",
         "controle": {"tipo": "mov_reduzido",
                      "resist_save": {"tipo": "reflexos", "cd": 12}, "duracao": 2},
@@ -6641,7 +6641,7 @@ class GameRoom:
                 await self.gm_say(
                     f"{defn['emoji']} **{p['name']}** acerta **{defn['name']}** em "
                     f"**{target['name']}** (d20={roll}+{p['atk_bonus']}={total} vs CA {target['ac']})!")
-                dmg = 0
+                dmg = 0   # itens sem dano não usam 'dmg' depois (em_chamas/residual/corrosao exigem dano no catálogo)
             if defn.get("em_chamas") and target.get("hp", 0) > 0:
                 dur = self._rolar_dado(defn.get("chamas_dur", "1d4"))
                 self._aplicar_em_chamas(target, dur, defn.get("chamas_agua_apaga", True))
@@ -9630,11 +9630,15 @@ class GameRoom:
                 if m["lento_pulou"]:
                     await self.gm_say(f"🐌 **{m['name']}** está lento e perde o turno.")
                     return "pulou"
-        # Movimento reduzido (Cola Alquímica): NÃO pula o turno — só reduz o passo.
-        if m.get("mov_reduzido_rodadas", 0) > 0:
-            m["mov_reduzido_rodadas"] -= 1
-            if m["mov_reduzido_rodadas"] <= 0 and "mov_reduzido_orig" in m:
+        # Movimento reduzido (Cola): NÃO pula o turno — só reduz o passo. Conta
+        # ANTES de decrementar (como o Sono) para garantir `duracao` turnos
+        # reduzidos de verdade — senão restauraria cedo demais (off-by-one).
+        if "mov_reduzido_orig" in m:
+            if m.get("mov_reduzido_rodadas", 0) > 0:
+                m["mov_reduzido_rodadas"] -= 1
+            else:
                 m["movement"] = m.pop("mov_reduzido_orig")
+                m.pop("mov_reduzido_rodadas", None)
                 await self.gm_say(f"🟢 A cola em **{m['name']}** seca — movimento normal.")
         return None
 
@@ -12375,7 +12379,7 @@ class GameRoom:
                     await self.gm_say(f"🟢 **{nome}** se esquiva da cola — sem efeito!")
                     return
             dur = ctrl.get("duracao", 2)
-            if not alvo.get("mov_reduzido_rodadas"):     # 1ª aplicação: corta pela metade
+            if "mov_reduzido_orig" not in alvo:     # 1ª aplicação: corta pela metade
                 alvo["mov_reduzido_orig"] = alvo.get("movement", 5)
                 alvo["movement"] = max(1, alvo["mov_reduzido_orig"] // 2)
             alvo["mov_reduzido_rodadas"] = max(alvo.get("mov_reduzido_rodadas", 0), dur)
@@ -14544,7 +14548,8 @@ class GameRoom:
                 m["perde_turno"] = False
                 await self.gm_say(f"🕸️ **{m['name']}** está preso (rede) e perde o turno!")
                 continue
-            # Enredado (Rede): gasta o turno tentando escapar.
+            # Enredado (Rede): gasta o turno tentando escapar. (Enquanto preso, o
+            # tick de mov_reduzido/Cola fica em pausa — o monstro nem se move.)
             if await self._processar_enredado_turno(m):
                 continue
             # Status de magia (Sono/Comando/Dominar/Medo/Lentidão): pode consumir o turno.

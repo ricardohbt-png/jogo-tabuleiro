@@ -115,11 +115,12 @@ async def main():
     m["movement"] = 3; m["mov_reduzido_orig"] = 6; m["mov_reduzido_rodadas"] = 2
     res = await r._status_monstro_turno(m, [m])
     check("mov_reduzido não pula o turno", res != "pulou")
-    check("tica p/ 1", m["mov_reduzido_rodadas"] == 1)
-    check("ainda reduzido (3)", m["movement"] == 3)
+    check("turno reduzido 1: tica p/ 1, movement 3", m["mov_reduzido_rodadas"] == 1 and m["movement"] == 3)
+    await r._status_monstro_turno(m, [m])
+    check("turno reduzido 2: tica p/ 0, ainda 3", m.get("mov_reduzido_rodadas", 0) == 0 and m["movement"] == 3)
     await r._status_monstro_turno(m, [m])
     check("expira: movement restaurado p/ 6", m["movement"] == 6)
-    check("flag e backup limpos", m.get("mov_reduzido_rodadas", 0) == 0 and "mov_reduzido_orig" not in m)
+    check("flag e backup limpos", "mov_reduzido_rodadas" not in m and "mov_reduzido_orig" not in m)
 
     # ── [4] _processar_enredado_turno (escape) ─────────────────────────────────
     print("\n[4] _processar_enredado_turno")
