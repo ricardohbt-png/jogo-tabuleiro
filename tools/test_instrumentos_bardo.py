@@ -139,6 +139,36 @@ def test_ndfaces():
     assert server._ndfaces("1") == (1, 1)
     assert server._ndfaces("1d4") == (1, 4)
 
+async def _dano8(n, faces, label): return 8
+
+def test_acorde_aoe_falha_empurra():
+    room, p = _room_bardo(); _mute(room)
+    p["pos"] = [5, 5]
+    p["gear"]["instrumento"] = server.criar_instrumento("tambor", "padrao")  # raio2, 2d4, push2
+    m = {"id": "m1", "name": "Goblin", "hp": 30, "pos": [6, 5], "alive": True}
+    far = {"id": "m2", "name": "Ogro", "hp": 30, "pos": [12, 5], "alive": True}
+    room.monsters = {"m1": m, "m2": far}
+    room._save_mostrado = _save_falha
+    room._rolar_dano_mostrado = _dano8
+    empurrados = []
+    room._empurrar = lambda alvo, dx, dy, dist: empurrados.append((alvo["id"], dx, dy, dist)) or False
+    _run(room.handle_usar_instrumento("p1", {}))
+    assert m["hp"] == 22          # 30 - 8 (cheio)
+    assert far["hp"] == 30        # fora do raio
+    assert ("m1", 1, 0, 2) in empurrados   # empurrado 2 casas em +x
+
+def test_acorde_sucesso_meia_sem_empurrao():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["instrumento"] = server.criar_instrumento("tambor", "padrao")
+    m = {"id": "m1", "name": "Goblin", "hp": 30, "pos": [6, 5], "alive": True}
+    room.monsters = {"m1": m}
+    room._save_mostrado = _save_passa
+    room._rolar_dano_mostrado = _dano8
+    def _no_push(*a): raise AssertionError("não deveria empurrar")
+    room._empurrar = _no_push
+    _run(room.handle_usar_instrumento("p1", {}))
+    assert m["hp"] == 26          # 30 - 4 (metade)
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]

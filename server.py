@@ -4967,7 +4967,33 @@ class GameRoom:
         return True
 
     async def _instr_acorde_trovejante(self, p, inst, st, data):
-        return False   # implementado na Task 5
+        """AoE centrada no bardo (raio Chebyshev). Falha: dano cheio + empurrão;
+        sucesso: metade, sem empurrão. push=0 → -1 movimento no lugar do empurrão."""
+        alvos = [m for m in self.monsters.values()
+                 if m.get("hp", 0) > 0 and self._no_raio(p, m, st["raio"])]
+        if not alvos:
+            await self.send_to(p["id"], {"type": "error", "msg": "Nenhum inimigo no alcance."}); return False
+        await self.gm_say(f"🥁 **{p['name']}** golpeia o **Tambor de Guerra** — onda sonora (raio {st['raio']})!")
+        cd = self._instrumento_cd(p, inst)
+        for m in alvos:
+            dano = await self._rolar_dano_mostrado(*_ndfaces(st["dano"]), "🥁 Dano sonoro")
+            save_ok, *_ = await self._save_mostrado(m, "reflexos", cd)
+            if save_ok:
+                dano = dano // 2
+            m["hp"] = max(0, m["hp"] - dano)
+            if not save_ok:
+                if st.get("push", 0) > 0:
+                    dx = (m["pos"][0] > p["pos"][0]) - (m["pos"][0] < p["pos"][0])
+                    dy = (m["pos"][1] > p["pos"][1]) - (m["pos"][1] < p["pos"][1])
+                    self._empurrar(m, dx, dy, st["push"])
+                else:
+                    m["mov_pen_val"] = 1
+                    m["mov_pen_ate"] = self.round_num + 1
+            await self.gm_say(f"🥁 **{m['name']}** sofre **{dano}**"
+                              f"{' (metade)' if save_ok else ''}.")
+            if m["hp"] <= 0:
+                await self._monster_dies(m, p["id"])
+        return True
 
     async def _instr_ecos_dolorosos(self, p, inst, st, data):
         return True    # Task 6 implementa a aura; por ora só consome o custo
