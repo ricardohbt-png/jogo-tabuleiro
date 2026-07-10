@@ -9296,12 +9296,15 @@ function _iniciarMiraArremesso(item, player){
   if(window._modoArremessoLanca){ limparHighlightArremessoLanca(); window._modoArremessoLanca = false; }
   const catDef  = (GS.CATALOGO_ITENS && GS.CATALOGO_ITENS[item.id]) || {};
   const alcance = catDef.alcance || 4;
-  window._modoThrowItem = { id: item.id, alcance };
+  const isArea  = catDef.alvo === 'area';
+  const areaRaio = isArea ? (catDef.areaRaio || 1) : 0;
+  window._modoThrowItem = { id: item.id, alcance, area: areaRaio };
   GS.pendingThrow = { id: item.id, alcance };   // habilita o ramo de throw em resolveTileClick
   // Realce de alcance em vermelho (mesmo canal _spellHL.range da mira de magia).
   const range = new Set();
   _addCheb(me.pos[0], me.pos[1], alcance, range);
   window._spellHL.range  = range;
+  // Área verde: começa vazia; é recalculada no hover (_recomputarAreaThrow).
   window._spellHL.area   = new Set();
   window._spellHL.double = new Set();
   _aplicarSpellHL();
@@ -9315,9 +9318,12 @@ function _iniciarMiraArremesso(item, player){
       'font-size:11px;letter-spacing:2px;padding:8px 20px;pointer-events:none;z-index:1000;';
     document.body.appendChild(leg);
   }
-  leg.innerHTML = `${catDef.emoji || '🔥'} ${(catDef.nome || 'ARREMESSAR').toUpperCase()} — Clique num INIMIGO (alcance ${alcance}) &nbsp;|&nbsp; ESC cancela`;
+  const _alvoTxt = isArea
+    ? `Clique numa CASA (área raio ${areaRaio}, alcance ${alcance})`
+    : `Clique num INIMIGO (alcance ${alcance})`;
+  leg.innerHTML = `${catDef.emoji || '🔥'} ${(catDef.nome || 'ARREMESSAR').toUpperCase()} — ${_alvoTxt} &nbsp;|&nbsp; ESC cancela`;
   leg.style.display = 'block';
-  GS.adicionarLog(`${catDef.emoji || '🔥'} Mira de arremesso — clique num inimigo destacado (ESC cancela).`);
+  GS.adicionarLog(`${catDef.emoji || '🔥'} Mira de arremesso — ${isArea ? 'clique numa casa (área verde segue o cursor)' : 'clique num inimigo destacado'} (ESC cancela).`);
   document.addEventListener('keydown', _keyThrowEsc);
   document.addEventListener('mousedown', _clickOutsideThrow, true);
 }
@@ -9329,6 +9335,9 @@ function _clickTileThrow(tx, ty){
   const r = GS.resolveTileClick(tx, ty);
   if(r && r.type === 'throw'){
     GS.throwItem(r.itemId, r.targetId);
+    _encerrarMiraArremesso();
+  } else if(r && r.type === 'throw_area'){
+    GS.throwItemArea(r.itemId, r.tx, r.ty);
     _encerrarMiraArremesso();
   } else if(r && r.type === 'throw_blocked'){
     toast('Fora de alcance ou parede no caminho.', 'var(--gold)');
@@ -9532,6 +9541,18 @@ function _recomputarAreaMagia(hx, hy) {
   }
   window._spellHL.area   = area;
   window._spellHL.double = dbl;
+  _aplicarSpellHL();
+}
+
+// Prévia de ÁREA VERDE do arremesso de área (espelha o ramo `tile` de
+// _recomputarAreaMagia): um quadrado Chebyshev de raio `mode.area` que segue o
+// cursor. O alcance vermelho (_spellHL.range) já foi pintado em _iniciarMiraArremesso.
+function _recomputarAreaThrow(hx, hy) {
+  const mode = window._modoThrowItem; if (!mode || !mode.area) return;
+  const area = new Set();
+  if (hx != null && hy != null) _addCheb(hx, hy, mode.area, area);
+  window._spellHL.area   = area;
+  window._spellHL.double = new Set();
   _aplicarSpellHL();
 }
 
@@ -11063,6 +11084,8 @@ $('dungeon-canvas').addEventListener('mousemove', e=>{
   const [tx,ty]=canvasTile(e);
   // Mira de MAGIA (2D): a área verde segue o cursor.
   if(window._modoMagia){ _recomputarAreaMagia(tx, ty); return; }
+  // Mira de ARREMESSO DE ÁREA (2D): a área verde segue o cursor (irmã da magia).
+  if(window._modoThrowItem && window._modoThrowItem.area){ _recomputarAreaThrow(tx, ty); return; }
   const tip=$('tooltip');
   const myP=GS.gameState.players.find(p=>p.id===GS.myPid&&p.alive);
 
@@ -19824,7 +19847,15 @@ function on3DMouseMove(e){
     g3.renderer.domElement.style.cursor = 'crosshair';
     return;
   }
-  if(window._modoThrowItem){ if(g3 && g3.renderer) g3.renderer.domElement.style.cursor = 'crosshair'; return; }
+  if(window._modoThrowItem){
+    // Arremesso de ÁREA (3D): recalcula a prévia verde no tile sob o cursor.
+    if(window._modoThrowItem.area){
+      const tThrow = get3DTile(e);
+      _recomputarAreaThrow(tThrow ? tThrow[0] : null, tThrow ? tThrow[1] : null);
+    }
+    if(g3 && g3.renderer) g3.renderer.domElement.style.cursor = 'crosshair';
+    return;
+  }
   if(window._modoArremessoLanca){ onMouseMoveArremessoLanca(e); return; }
   if(window._modoArremessoPrincipal){ onMouseMoveArremessoPrincipal(e); return; }
   if(window._modoArremessoAtivo){ onMouseMoveArremesso(e); return; }
