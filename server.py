@@ -6535,26 +6535,37 @@ class GameRoom:
 
         return True
 
-    async def handle_throw_item(self, pid, item_id, target_id):
-        """Arremessa um consumível de bolsa (ARREMESSAVEIS) num monstro-alvo.
-        AÇÃO PRINCIPAL. Teste de ataque por DES vs CA (espelha _executar_arremesso).
-        Consome o item em acerto E erro (o frasco se espatifa). Só o modo
-        single-target ('ataque_alvo') é tratado aqui (Sub-projeto A)."""
+    async def handle_throw_item(self, pid, data):
+        """Arremessa um consumível de bolsa (ARREMESSAVEIS). AÇÃO PRINCIPAL.
+        Despacha por defn['alvo']: 'ataque_alvo' (single-target, teste de ataque)
+        ou 'area' (área com save). `data` é o dict da mensagem (item_id +
+        target_id OU tx/ty)."""
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-
+        data = data or {}
+        item_id = data.get("item_id")
         item = next((i for i in p["bag"] if i["id"] == item_id), None)
         if not item:
             await self.send_to(pid, {"type": "error", "msg": "Item não encontrado na bolsa."}); return
         defn = ARREMESSAVEIS.get(item_id)
-        if not defn or defn.get("alvo") != "ataque_alvo":
+        if not defn:
             await self.send_to(pid, {"type": "error", "msg": "Item não arremessável."}); return
-
-        # Ação principal (cobre Velocidade/Oportunidade via _acao_bloqueada).
         if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
+        alvo_tipo = defn.get("alvo")
+        if alvo_tipo == "ataque_alvo":
+            await self._throw_item_alvo(p, defn, item, data.get("target_id"))
+        elif alvo_tipo == "area":
+            await self._throw_item_area(p, defn, item, data.get("tx"), data.get("ty"))
+        else:
+            await self.send_to(pid, {"type": "error", "msg": "Item não arremessável."}); return
+
+    async def _throw_item_alvo(self, p, defn, item, target_id):
+        """Arremesso single-target: teste de ataque por DES vs CA (espelha
+        _executar_arremesso). Consome o item em acerto E erro."""
+        pid = p["id"]
         if target_id not in self.monsters:
             await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
         target = self.monsters[target_id]
@@ -6611,6 +6622,11 @@ class GameRoom:
                 f"**{target['name']}** (d20={roll}+{p['atk_bonus']}={total} vs CA {target['ac']}): **ERROU!**")
 
         await self.push_state()
+
+    async def _throw_item_area(self, p, defn, item, tx, ty):
+        """Placeholder — implementado na Task 4."""
+        await self.send_to(p["id"], {"type": "error",
+            "msg": f"{defn['name']} ainda está em desenvolvimento."})
 
     async def handle_apagar_chamas(self, pid):
         """Gasta a AÇÃO PRINCIPAL do turno para apagar o status 'em chamas'
@@ -15339,7 +15355,7 @@ async def handler(ws):
                     if room: await room.handle_throw(pid, msg.get("target_id"), msg.get("slot"))
 
                 elif t == "throw_item":
-                    if room: await room.handle_throw_item(pid, msg.get("item_id"), msg.get("target_id"))
+                    if room: await room.handle_throw_item(pid, msg)
 
                 elif t == "apagar_chamas":
                     if room: await room.handle_apagar_chamas(pid)
