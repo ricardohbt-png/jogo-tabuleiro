@@ -64,6 +64,43 @@ def test_slot_category_instrumento():
     inst = server.criar_instrumento("harpa", "padrao")
     assert server.GameRoom._slot_category_for_item(inst) == "instrumento"
 
+
+import asyncio
+def _run(coro): asyncio.run(coro)
+
+def _mute(room):
+    async def noop(*a, **k): return None
+    room.gm_say = noop
+    room.send_to = noop
+    room.broadcast = noop
+    room.push_state = noop
+    room._broadcast_dado = noop
+
+def test_economia_2maos_bloqueia_apos_acao():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["instrumento"] = server.criar_instrumento("harpa", "padrao")  # 2 mãos
+    m = {"id": "m1", "name": "Goblin", "hp": 20, "pos": [6, 5], "alive": True,
+         "ref_": 0, "ca": 10, "saves_base": {}}
+    room.monsters["m1"] = m
+    p["action_done"] = True
+    _run(room.handle_usar_instrumento("p1", {"target_id": "m1"}))
+    assert m["hp"] == 20     # bloqueado
+
+def test_economia_1mao_nao_gasta_acao_principal():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["instrumento"] = server.criar_instrumento("sino", "padrao")   # 1 mão
+    _run(room.handle_usar_instrumento("p1", {}))
+    assert p["instrumento_usado"] is True
+    assert p["action_done"] is False
+
+def test_um_instrumento_por_turno():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["instrumento"] = server.criar_instrumento("sino", "padrao")
+    _run(room.handle_usar_instrumento("p1", {}))
+    fome_apos_1 = p["fome"]
+    _run(room.handle_usar_instrumento("p1", {}))  # recusa
+    assert p["fome"] == fome_apos_1
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]

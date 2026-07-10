@@ -4889,6 +4889,64 @@ class GameRoom:
         await self.gm_say(f"⚔️ **{p['name']}** ativa **{item['nome']}**!")
         await self.push_state()
 
+    async def handle_usar_instrumento(self, pid, data=None):
+        """Ativa a habilidade do instrumento equipado (bardo). Espelha
+        handle_usar_tecnica: valida turno/economia de ação/custo 🍖💧 e despacha
+        por efeito.tipo. Passivas (Alaúde) nunca chegam aqui."""
+        if self.phase != "playing":
+            return
+        p = self.players.get(pid)
+        if not p or not p.get("alive") or not self._is_turn(pid):
+            await self.send_to(pid, {"type": "error", "msg": "Não é o seu turno."}); return
+        if p.get("class_id") != "bard":
+            await self.send_to(pid, {"type": "error", "msg": "Apenas o bardo usa instrumentos."}); return
+        inst = p["gear"].get("instrumento")
+        if not inst:
+            await self.send_to(pid, {"type": "error", "msg": "Nenhum instrumento equipado."}); return
+        base = INSTRUMENTOS_BASE[inst["base"]]
+        if base["modo"] != "ativada":
+            await self.send_to(pid, {"type": "error",
+                "msg": f"{base['habilidade_nome']} é passiva — não precisa ativar."}); return
+        duas_maos = base["maos"] == 2
+        if p.get("instrumento_usado"):
+            await self.send_to(pid, {"type": "error",
+                "msg": "Você já tocou um instrumento neste turno."}); return
+        if duas_maos and p.get("action_done"):
+            await self.send_to(pid, {"type": "error",
+                "msg": "Instrumento de 2 mãos exige concentração — você já usou sua ação."}); return
+        st = self._instrumento_stats(inst)
+        if p.get("fome", 0) < st["custo_fome"] or p.get("sede", 0) < st["custo_sede"]:
+            await self.send_to(pid, {"type": "error", "msg": "Fome/sede insuficientes."}); return
+
+        tipo = base["efeito"]["tipo"]
+        ok = False
+        if tipo == "nota_cortante":
+            ok = await self._instr_nota_cortante(p, inst, st, data)
+        elif tipo == "acorde_trovejante":
+            ok = await self._instr_acorde_trovejante(p, inst, st, data)
+        elif tipo == "ecos_dolorosos":
+            ok = await self._instr_ecos_dolorosos(p, inst, st, data)
+        else:
+            await self.send_to(pid, {"type": "error", "msg": "Instrumento em desenvolvimento."}); return
+        if not ok:
+            return
+
+        p["fome"] = max(0, p["fome"] - st["custo_fome"])
+        p["sede"] = max(0, p["sede"] - st["custo_sede"])
+        p["instrumento_usado"] = True
+        if duas_maos:
+            p["action_done"] = True
+        await self.push_state()
+
+    async def _instr_nota_cortante(self, p, inst, st, data):
+        return False   # implementado na Task 4
+
+    async def _instr_acorde_trovejante(self, p, inst, st, data):
+        return False   # implementado na Task 5
+
+    async def _instr_ecos_dolorosos(self, p, inst, st, data):
+        return True    # Task 6 implementa a aura; por ora só consome o custo
+
     async def handle_usar_oportunidade_movimento(self, pid):
         """Gasta o crédito de Oportunidade na via 'movimento extra' (soma spd a
         moves_left). A via 'ação principal extra' não precisa de handler dedicado —
@@ -12302,6 +12360,7 @@ class GameRoom:
         p["moves_left"]        = p["spd"]
         p["action_done"]       = False
         p["bonus_action_used"] = False
+        p["instrumento_usado"] = False   # bardo: 1 instrumento tocado por turno
         p["moved_this_turn"]   = False   # reabre o custo de -1 sede ao caminhar no novo turno
         # buffs de turno do warrior expiram ao fim do turno (flags planas)
         p["skill_bonus_acerto"] = 0
