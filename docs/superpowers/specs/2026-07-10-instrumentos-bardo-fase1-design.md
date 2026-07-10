@@ -289,9 +289,10 @@ roteiam para a bolsa** (sem auto-equipar), e o jogador equipa manualmente.
 Hoje: `weapon="instrumento"` (sem dano) + `off_hand="adaga"`. Novo:
 
 - **Arma principal:** a adaga (ou outra arma leve) vira a arma real de dano.
-- **Slot de instrumento:** um instrumento inicial de baixa qualidade (ex. **Sino
-  Rústico** ou **Gaita Velha** — mas Gaita é Fase 5; então um dos 4 da Fase 1, ex.
-  **Sino Rústico** 1 mão, para ele já poder atacar E tocar).
+- **Slot de instrumento:** **Alaúde Velho** (2 mãos, **passiva**). Escolha
+  deliberada: por ser passiva, não consome ação nem complica a economia de ação
+  inicial — só reforça a Canção Heroica (no Velho, +1 extra apenas em **Ataque**),
+  um bônus modesto adequado a um item inicial desgastado.
 - `off_hand`: livre (pode receber a 2ª arma/escudo por compra).
 
 Isso é uma **mudança de gameplay** (Henrique fica mais forte: passa a ter dano de
@@ -350,9 +351,11 @@ Seguindo a regra de arquitetura (estado primeiro, visual depois):
 
 ---
 
-## 10. Questões em aberto (para a revisão do spec)
+## 10. Questões resolvidas / pendentes de implementação
 
-1. **Ecos Dolorosos:** aura ativada com duração (default deste spec) **ou** passiva
-   condicionada a "música ativa" sem ativação/custo próprios? (§4.3)
-2. **Instrumento inicial exato** de Henrique (§6): Sino Rústico? Outro dos 4?
-3. **Preços de loja** por qualidade — a definir no plano.
+1. **Ecos Dolorosos** — RESOLVIDO: aura ativada com duração própria (§4.3).
+2. **Instrumento inicial** — RESOLVIDO: **Alaúde Velho** (§6).
+3. **Números Velho/Rústico/Padrão** — RESOLVIDO: aprovados (§2.2).
+4. **Preços de loja** por qualidade — a definir no plano de implementação.
+5. **Fórmula exata do CD do save** — a fixar no plano, reusando a convenção de
+   save de habilidade do bardo já existente (§2.3).
