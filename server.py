@@ -2184,6 +2184,7 @@ SHOP_MERCHANT = [
     {"id": "veneno_cobra_cuspidora","name": "Veneno de Cobra Cuspidora","emoji": "🐍", "price": 16, "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_cobra_cuspidora"},
     {"id": "veneno_basilisco",      "name": "Peçonha do Basilisco",     "emoji": "🦎", "price": 20, "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_basilisco"},
     {"id": "veneno_polvo_abissal",  "name": "Tinta do Polvo Abissal",   "emoji": "🐙", "price": 15, "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_polvo_abissal"},
+    {"id": "veneno_agonia_sufocante", "name": "Agonia Sufocante", "emoji": "💀", "price": 40, "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_agonia_sufocante"},
     # ── Arremessáveis de fogo (consumíveis de bolsa; ver ARREMESSAVEIS) ──
     {"id": "frasco_oleo", "name": "Frasco de Óleo Incendiário", "emoji": "🔥", "price": 15, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "fogo_grego",  "name": "Fogo Grego",                 "emoji": "🟢", "price": 40, "item_slot": "bag", "effect": "throwable", "value": 0},
@@ -2322,6 +2323,12 @@ VENENOS = {
         "operacao": "cegar", "duracao": "1d4", "penalidade_ataque": -4, "bloqueia_distancia": True,
         "duracao_falha": "1d4", "penalidade_falha": [("percepcao", -2)],
         "save": "fortitude", "dificuldade": 11, "anula": False,
+    },
+    "veneno_agonia_sufocante": {
+        "nome": "Agonia Sufocante", "icone": "💀",
+        "operacao": "dano", "dano": "1d4", "duracao": "1d4",
+        "save": "fortitude", "dificuldade": 14,
+        "save_neutraliza_por_rodada": True, "anula": False,
     },
 }
 

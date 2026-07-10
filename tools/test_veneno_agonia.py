@@ -1,0 +1,56 @@
+"""Testes do veneno Agonia Sufocante (Sub-projeto E).
+Roda da raiz: python tools/test_veneno_agonia.py"""
+import asyncio, sys, os, random
+from copy import deepcopy
+try: sys.stdout.reconfigure(encoding="utf-8")
+except Exception: pass
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import server as S
+from server import GameRoom, make_player, FLOOR, VENENOS, SHOP_MERCHANT
+
+PASS = 0; FAIL = 0
+def check(name, cond, extra=""):
+    global PASS, FAIL
+    if cond: PASS += 1; print(f"  OK  {name}")
+    else:    FAIL += 1; print(f"  XX  {name}  {extra}")
+
+def setup(w=9, h=9):
+    r = GameRoom("TEST")
+    async def noop(*a, **k): pass
+    r.gm_say = noop; r.broadcast = noop; r.push_state = noop
+    r.broadcast_city_state = noop; r._broadcast_dado = noop
+    async def cap_send(pid, msg, *a, **k): pass
+    r.send_to = cap_send
+    r._is_turn = lambda pid: True
+    r.phase = "playing"
+    r.tiles = [[FLOOR] * w for _ in range(h)]
+    r.map_w = w; r.map_h = h
+    return r
+
+def make_monster(r, mid, x, y, hp=40):
+    m = {"id": mid, "name": "M"+mid, "pos": [x, y], "hp": hp, "max_hp": hp,
+         "ac": 12, "alive": True, "tier": 1}
+    r.monsters[mid] = m
+    return m
+
+async def main():
+    random.seed(1)
+
+    # ── [1] Catálogo + loja ────────────────────────────────────────────────────
+    print("\n[1] Catálogo do veneno + loja")
+    check("veneno no catálogo", "veneno_agonia_sufocante" in VENENOS)
+    v = VENENOS.get("veneno_agonia_sufocante", {})
+    check("operacao dano", v.get("operacao") == "dano")
+    check("dano 1d4", v.get("dano") == "1d4")
+    check("duracao 1d4", v.get("duracao") == "1d4")
+    check("Fortitude CD 14", v.get("save") == "fortitude" and v.get("dificuldade") == 14)
+    check("save por rodada", v.get("save_neutraliza_por_rodada") is True)
+    shop = next((i for i in SHOP_MERCHANT if i["id"] == "veneno_agonia_sufocante"), None)
+    check("vendável (coat_poison)", shop is not None and shop["effect"] == "coat_poison")
+    check("aponta pro veneno", shop and shop.get("veneno_id") == "veneno_agonia_sufocante")
+
+    print(f"\n=== {PASS} OK / {FAIL} FALHAS ===")
+    sys.exit(1 if FAIL else 0)
+
+if __name__ == "__main__":
+    asyncio.run(main())
