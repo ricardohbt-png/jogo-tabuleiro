@@ -119,10 +119,11 @@ INSTRUMENTOS_BASE = {
         "custo_fome": 0, "custo_sede": 0,   # herda o custo da Canção Heroica
         "afixos_validos": ["fome", "sede"], # afixo aplicado à manutenção da Canção
         "stats": {
-            # quais atributos da Canção recebem o +1 extra
-            "velho":   {"atributos": ["ataque"]},
-            "rustico": {"atributos": ["ataque", "dano"]},
-            "padrao":  {"atributos": ["movimento", "ataque", "dano", "defesa", "resistencia"]},
+            # quais atributos da Canção recebem o +1 extra (ids reais de
+            # CANCAO_ATRIBUTOS: acerto|dano|ca|movimento|resistencia)
+            "velho":   {"atributos": ["acerto"]},
+            "rustico": {"atributos": ["acerto", "dano"]},
+            "padrao":  {"atributos": ["acerto", "dano", "ca", "movimento", "resistencia"]},
         },
     },
 }
@@ -147,9 +148,10 @@ Qualidade → Refinado → Origem → Encantamento:
 Retorna um dict achatado: `{alcance?, raio?, dano, push?, duracao?, custo_fome,
 custo_sede, save?, cd?, ...}`. `custo_fome`/`custo_sede` nunca descem abaixo de 0.
 
-**CD do save:** `cd` = convenção de save de habilidade do bardo já existente
-(base ~10 + modificador). O valor exato é fixado no plano de implementação, reusando
-o helper de CD que as magias/habilidades usam. Origem Élfica soma +1 (Fase 4).
+**CD do save:** `cd = 8 + mod(DES)` do bardo — mesma convenção de `_dif_magia`
+(`8 + mod + círculo`), usando DES porque é o atributo dos instrumentos do bardo
+(`WEAPONS["instrumento"].stat == "dex"`; Henrique tem DES 16 → CD 11). Origem Élfica
+soma +1 (Fase 4).
 
 ### 2.4 Nome derivado
 
