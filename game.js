@@ -7610,6 +7610,60 @@ function _bardSkillBtn(me, sk){
   return btn;
 }
 
+// ── Instrumento do Bardo (Fase 1) — botão dedicado no HUD, fora do fluxo de
+// me.skills (o instrumento vive em me.gear.instrumento, não em me.skills).
+// Só aparece se o instrumento equipado for modo:"ativada" (o Alaúde é passivo —
+// Sinfonia Heroica não usa botão, é um hook passivo na Canção Heroica). ─────────
+function _bardInstrumentoBtn(me){
+  const inst = me.gear && me.gear.instrumento;
+  const b = inst && GS.instrumentoBase(inst.base);
+  if(!b || b.modo !== 'ativada') return null;
+  const st = GS.instrumentoStatsClient(inst) || {};
+  const disponivel = GS.instrumentoDisponivel(me);
+  const detalhes = [];
+  if(st.alcance != null) detalhes.push(`alcance ${st.alcance}q`);
+  if(st.raio != null) detalhes.push(`raio ${st.raio}q`);
+  if(st.dano != null) detalhes.push(`${st.dano} dano`);
+  if(st.duracao != null) detalhes.push(`${st.duracao} rodadas`);
+  const btn = document.createElement('button');
+  btn.className = 'skill-btn';
+  btn.disabled = !disponivel;
+  btn.title = `${b.habilidade_nome} — 🍖${st.custo_fome ?? 0} 💧${st.custo_sede ?? 0}`
+    + (detalhes.length ? ` — ${detalhes.join(' · ')}` : '');
+  btn.innerHTML = `
+    <div class="skill-info">
+      <div class="skill-name">${b.icon} ${b.habilidade_nome}</div>
+      <div class="skill-desc">${detalhes.join(' · ') || '—'}</div>
+    </div>
+    <div class="skill-cost">🍖${st.custo_fome ?? 0} 💧${st.custo_sede ?? 0}</div>`;
+  btn.onclick = () => acionarInstrumento(me, inst, b);
+  return btn;
+}
+
+// Dispara a habilidade do instrumento equipado. Nota Cortante (Harpa) mira 1
+// monstro dentro do alcance (mesmo padrão de mira da Provocação — modal só
+// quando há mais de 1 alvo válido); Acorde Trovejante (Tambor, AoE centrada no
+// bardo) e Ecos Dolorosos (Sino, aura própria) não têm alvo — GS.usarInstrumento(null).
+function acionarInstrumento(me, inst, b){
+  const tipo = b.efeito && b.efeito.tipo;
+  if(tipo === 'nota_cortante'){
+    const st = GS.instrumentoStatsClient(inst) || {};
+    const alcance = st.alcance || 0;
+    const gs = GS.gameState;
+    const pp = me.pos || [0,0];
+    const alvos = (gs && gs.monsters || []).filter(m => m && m.hp > 0 &&
+      Math.max(Math.abs(pp[0]-m.pos[0]), Math.abs(pp[1]-m.pos[1])) <= alcance);
+    if(!alvos.length){ toast(`Nenhum inimigo a até ${alcance} quadrados.`, 'var(--orange)'); return; }
+    if(alvos.length === 1){ GS.usarInstrumento(alvos[0]); return; }
+    openTargetModal(`${b.icon} ${b.habilidade_nome} — Escolha o alvo (alcance ${alcance}q)`, alvos, 'monster',
+      id => GS.usarInstrumento({ id }));
+  } else {
+    GS.usarInstrumento(null);
+  }
+}
+
+window.acionarInstrumento = acionarInstrumento;
+
 // Ring 3D da Canção Heroica — criado/atualizado/removido conforme o estado.
 function _sync3DCancaoRing(state){
   if(!g3 || !g3.scene || !window.THREE) return;
@@ -10248,6 +10302,13 @@ function renderMyPanel(state){
   if (me.class_id === 'rogue') {
     const db = _rogueDesarmarBtn(me);
     if (db) sl.appendChild(db);
+  }
+
+  // Bardo (Henrique): botão do instrumento equipado (Fase 1 — instrumento não é
+  // uma "sk" de me.skills, vive em me.gear.instrumento). Ver _bardInstrumentoBtn.
+  if (me.class_id === 'bard') {
+    const ib = _bardInstrumentoBtn(me);
+    if (ib) sl.appendChild(ib);
   }
 
   // ── Inventory ──

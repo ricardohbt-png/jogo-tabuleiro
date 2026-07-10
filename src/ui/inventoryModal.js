@@ -32,6 +32,13 @@ const InventoryModal = (() => {
     { key: 'ring2',    small: true,  magic: false, label: 'Anel 2',       empty: '💍' },
   ];
 
+  // 10º slot, bard-only (Instrumentos do Bardo — Fase 1). Fora do GEAR_LAYOUT fixo
+  // (paperdoll 3×3 dos outros 6 heróis) — só entra na lista renderizada quando
+  // player.class_id === 'bard' (ver _renderGear). Ocupa a própria linha no grid
+  // (.instrumento-slot span 3 colunas, CSS abaixo) por ser o 10º item de um 3×3.
+  const INSTRUMENTO_SLOT_CFG =
+    { key: 'instrumento', small: false, magic: false, label: '🎵 Instrumento', empty: '🎵', extra: true };
+
   const EDGE_D =
     'M0,.5 8,0 16,1 24,.25 32,.75 40,0 48,1 56,.4 64,.9 72,.15 80,1.1 88,.3 96,.7 100,0 ' +
     '100,8 99.5,16 100,24 99.25,32 100,40 99.5,48 100,56 99,64 100,72 99.6,80 100,88 99.25,96 100,100 ' +
@@ -75,6 +82,7 @@ const InventoryModal = (() => {
 .inv-slot{width:72px;height:96px;border-radius:8px;display:flex;align-items:center;justify-content:center;
   font-size:1.8rem;cursor:pointer;background:linear-gradient(160deg,rgba(20,20,22,.55),rgba(6,6,8,.7));
   border:1px solid #d4b968;box-shadow:inset 0 2px 5px rgba(0,0,0,.7),0 1px 0 rgba(244,220,140,.16);}
+.inv-slot.instrumento-slot{grid-column:1/-1;border-color:#4db8ff;}
 .inv-slot.small{width:58px;height:77px;font-size:1.4rem;}
 .inv-slot.magic{border-color:#c9a6ff;box-shadow:inset 0 2px 5px rgba(0,0,0,.7),0 0 12px #c9a6ff55;}
 .inv-slot.empty{opacity:.55;}
@@ -183,13 +191,17 @@ const InventoryModal = (() => {
     grid.innerHTML = '';
     const gear = player.gear || {};
     const twoHanded = GS.offHandBlockedByTwoHanded(gear);
-    for(const cfg of GEAR_LAYOUT){
+    // Instrumentos do Bardo (Fase 1): 10º slot, só para o bardo — não entra no
+    // GEAR_LAYOUT fixo (paperdoll 3×3 compartilhado pelos outros heróis).
+    const layout = player.class_id === 'bard' ? GEAR_LAYOUT.concat([INSTRUMENTO_SLOT_CFG]) : GEAR_LAYOUT;
+    for(const cfg of layout){
       const item = gear[cfg.key];
       const blocked = cfg.key === 'off_hand' && twoHanded && !item;
       const slot = document.createElement('div');
       slot.className = 'inv-slot'
         + (cfg.small ? ' small' : '')
         + (cfg.magic ? ' magic' : '')
+        + (cfg.extra ? ' instrumento-slot' : '')
         + (item ? ' filled' : ' empty')
         + (blocked ? ' blocked' : '');
       slot.dataset.slotKey = cfg.key;
@@ -385,11 +397,13 @@ const InventoryModal = (() => {
     slot.classList.toggle('drop-invalid', !ok);
   }
 
-  // Acha, entre os 9 slots do paperdoll, qual (se algum) aceitaria este item
-  // — usado pra saber contra qual item equipado comparar no tooltip.
+  // Acha, entre os slots do paperdoll (9 + o 10º de instrumento p/ o bardo), qual
+  // (se algum) aceitaria este item — usado pra saber contra qual item equipado
+  // comparar no tooltip.
   function _equippedCounterpart(player, bagItem){
     const gear = player.gear || {};
-    for(const cfg of GEAR_LAYOUT){
+    const layout = player.class_id === 'bard' ? GEAR_LAYOUT.concat([INSTRUMENTO_SLOT_CFG]) : GEAR_LAYOUT;
+    for(const cfg of layout){
       if(gear[cfg.key] && GS.canPlaceItem(bagItem, cfg.key, gear)) return gear[cfg.key];
     }
     return null;
