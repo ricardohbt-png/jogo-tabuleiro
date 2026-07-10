@@ -233,6 +233,14 @@ def criar_instrumento(base, qualidade="padrao", origem="humana", encantamento="n
     inst["name"] = _instrumento_nome(inst)
     return inst
 
+def instrumento_sku(base, qualidade="padrao", preco=100, refinado_bonus=None):
+    """Instância de instrumento para a loja/loot (id único + price/buy_price)."""
+    inst = criar_instrumento(base, qualidade, refinado_bonus=refinado_bonus)
+    inst["id"] = f"instrumento_{base}_{qualidade}"
+    inst["price"] = preco       # lido por handle_shop_buy (item["price"]) no catálogo
+    inst["buy_price"] = preco   # gravado na instância adquirida (revenda)
+    return inst
+
 def _instrumento_nome(inst):
     b = INSTRUMENTOS_BASE[inst["base"]]
     fem = inst["base"] in _INSTRUMENTO_GENERO_FEM
@@ -2283,6 +2291,18 @@ SHOP_MERCHANT = [
     {"id": "vidro_acido_grande", "name": "Vidro de Ácido Grande", "emoji": "🫙", "price": 50, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "cola_alquimica", "name": "Cola Alquímica", "emoji": "🍯", "price": 15, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "rede_arremesso", "name": "Rede",          "emoji": "🕸️", "price": 18, "item_slot": "bag", "effect": "throwable", "value": 0},
+    # ── Instrumentos do Bardo (item_slot "instrumento" — bolsa-primeiro, NUNCA
+    #    auto-equipa/resgata; ver _route_acquired_item) ──
+    instrumento_sku("harpa",  "velho",    60),
+    instrumento_sku("harpa",  "rustico",  120),
+    instrumento_sku("harpa",  "padrao",   220),
+    instrumento_sku("tambor", "rustico",  140),
+    instrumento_sku("tambor", "padrao",   240),
+    instrumento_sku("sino",   "rustico",  90),
+    instrumento_sku("sino",   "padrao",   160),
+    instrumento_sku("alaude", "rustico",  130),
+    instrumento_sku("alaude", "padrao",   230),
+    instrumento_sku("harpa",  "refinado", 320, refinado_bonus="alcance"),
 ]
 
 # Munição — vendida no FERREIRO (item_slot "ammo", vai pro off_hand; 10 projéteis
@@ -8728,7 +8748,14 @@ class GameRoom:
           2) bolsa cheia + slot correspondente livre e equipável → auto-equipa (resgate);
           3) bolsa cheia + slots ocupados/inequipável → 'full' (o chamador recusa).
         Munição (empilhamento próprio) NÃO passa por aqui; consumíveis (categoria
-        'bag') só usam o passo 1/3 (sem slot para resgatar)."""
+        'bag') só usam o passo 1/3 (sem slot para resgatar). Instrumentos (bardo)
+        NUNCA fazem resgate-equipar (passo 2) — bolsa cheia é sempre 'full', mesmo
+        com o slot 'instrumento' livre."""
+        if item.get("tipo_item") == "instrumento":
+            if len(p["bag"]) < p.get("bag_size", 6):
+                p["bag"].append(item)
+                return "bag"
+            return "full"
         # Passo 1 — bolsa primeiro.
         if len(p["bag"]) < p.get("bag_size", 6):
             p["bag"].append(item)

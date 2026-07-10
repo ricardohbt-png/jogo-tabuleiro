@@ -213,6 +213,29 @@ def test_sinfonia_empilha_com_espec():
     p["gear"]["instrumento"] = server.criar_instrumento("alaude", "padrao")
     assert room._cancao_nivel_atributo(p, "acerto") == 3   # 2 (espec) + 1 (alaúde)
 
+def test_instrumento_roteia_para_bolsa():
+    room, p = _room_bardo(); _mute(room)
+    inst = server.criar_instrumento("harpa", "rustico")
+    res = room._route_acquired_item(p, inst)
+    assert res == "bag"
+    assert inst in p["bag"]
+    assert p["gear"]["instrumento"] is None    # NÃO auto-equipa
+
+def test_instrumento_sku_gera_instancia():
+    sku = server.instrumento_sku("harpa", "rustico", preco=120)
+    assert sku["tipo_item"] == "instrumento"
+    assert sku["buy_price"] == 120
+    assert sku["allowed_classes"] == ["bard"]
+    assert sku["id"] == "instrumento_harpa_rustico"   # id único p/ a loja
+
+def test_instrumento_bolsa_cheia_nao_auto_equipa():
+    room, p = _room_bardo(); _mute(room)
+    p["bag"] = [{"id": f"junk{i}"} for i in range(p["bag_size"])]
+    inst = server.criar_instrumento("harpa", "rustico")
+    res = room._route_acquired_item(p, inst)
+    assert res == "full"
+    assert p["gear"]["instrumento"] is None    # NÃO faz resgate-equipar
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]
