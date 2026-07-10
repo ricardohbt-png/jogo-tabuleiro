@@ -11141,6 +11141,9 @@ class GameRoom:
                 efeito["duracao"] -= 1
                 if efeito["duracao"] > 0 and (alvo.get("alive") or alvo.get("hp", 0) > 0):
                     restantes.append(efeito)
+                elif alvo.get("alive") or alvo.get("hp", 0) > 0:
+                    await self.gm_say(
+                        f"✅ Efeito de **{efeito.get('nome','veneno')}** expirou em **{alvo_nome}**.")
                 continue
             efeito["duracao"] -= 1
             if efeito["duracao"] > 0:
@@ -15266,6 +15269,8 @@ class GameRoom:
         # Tica venenos/efeitos por rodada (ex.: fosso_envenenado): conta durações e
         # reverte o que expirou — igual a heróis/monstros.
         await self._processar_venenos_turno(pr)
+        if not pr.get("alive"):
+            return   # o veneno pode ter matado o prisioneiro no tick — não processa ataques num morto
         for m in self.monsters.values():
             if m["hp"] <= 0:
                 continue

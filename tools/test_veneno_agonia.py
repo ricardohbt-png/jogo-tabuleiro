@@ -112,6 +112,19 @@ async def main():
     await r._aplicar_veneno(p, "veneno_aranha_sombria")   # operacao 'reduzir' (forca)
     check("aranha ainda reduz Força", p.get("str_", 10) < str0)
 
+    # ── [7] Tick letal: dano mata o alvo (roteia por _monster_dies) ────────────
+    print("\n[7] tick letal")
+    r = setup()
+    m = make_monster(r, "m1", 4, 4, hp=1)
+    m["efeitos_veneno"] = [_efeito_dano(3)]
+    mortes = []
+    async def _fake_dies(alvo, killer=None, *a, **k): mortes.append(alvo["id"])
+    r._monster_dies = _fake_dies
+    r._testar_save = lambda *a, **k: (False, 1, 0, 1)   # falha → dano letal (hp=1)
+    await r._processar_venenos_turno(m)
+    check("letal: hp <= 0", m["hp"] <= 0)
+    check("letal: _monster_dies chamado", "m1" in mortes)
+
     print(f"\n=== {PASS} OK / {FAIL} FALHAS ===")
     sys.exit(1 if FAIL else 0)
 
