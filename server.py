@@ -2259,6 +2259,8 @@ ARREMESSAVEIS = {
     },
 }
 
+_ACIDO_AC_MIN = 5    # piso da CA corroída por ácido (não vira acerto automático)
+
 # ─── VENENOS ──────────────────────────────────────────────────────────────────
 # Catálogo autoritativo de venenos (espelha CATALOGO_ITENS no cliente). O efeito
 # é aplicado via _aplicar_veneno a QUALQUER alvo (jogador ou monstro): um teste
@@ -12272,6 +12274,22 @@ class GameRoom:
         ganho = m["hp"] - antes
         if ganho > 0:
             await self.gm_say(f"🍖 **{m['name']}** devora o material destruído e recupera **{ganho}** HP!")
+
+    async def _acido_corroer(self, alvo, pontos):
+        """Corrói a defesa do alvo. Ramo ATIVO: reduz a CA do monstro (piso
+        _ACIDO_AC_MIN). PONTO DE EXTENSÃO (dormant): quando monstros tiverem
+        equipamento corroível (`alvo['equipamento_corroivel']`), é aqui que se
+        pluga a corrosão estilo-herói (ver _corroer_equipamento) — nenhum monstro
+        tem esse campo hoje."""
+        base = alvo.get("ac", 10)
+        novo = max(_ACIDO_AC_MIN, base - pontos)
+        nome = alvo.get("name") or alvo.get("nome", "alvo")
+        if novo < base:
+            alvo["ac"] = novo
+            alvo["ac_corroida"] = alvo.get("ac_corroida", 0) + (base - novo)
+            await self.gm_say(f"🧪 O ácido corrói a defesa de **{nome}**: CA {base} → {novo}!")
+        else:
+            await self.gm_say(f"🧪 A defesa de **{nome}** já está corroída ao máximo (CA {base}).")
 
     async def _corroer_equipamento(self, m, p, armaduras_ids, armas_ids, cura="1d4", label="Corrosão"):
         """Degrada UM equipamento do alvo (prioridade: armadura > arma) cujos ids

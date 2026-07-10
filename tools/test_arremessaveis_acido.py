@@ -67,6 +67,23 @@ async def main():
     check("grande: corrosao 2", ARREMESSAVEIS["vidro_acido_grande"]["corrosao_ac"] == 2)
     check("elemento acido", ARREMESSAVEIS["frasco_acido"]["elemento"] == "acido")
 
+    # ── [2] _acido_corroer: reduz CA, cumulativo, com piso ─────────────────────
+    print("\n[2] _acido_corroer")
+    r = setup()
+    m = make_monster(r, "m1", 4, 4, ac=15)
+    await r._acido_corroer(m, 1)
+    check("CA cai 1 (15→14)", m["ac"] == 14)
+    check("ac_corroida acumula", m.get("ac_corroida") == 1)
+    await r._acido_corroer(m, 2)
+    check("CA cai +2 (14→12)", m["ac"] == 12)
+    check("ac_corroida total 3", m.get("ac_corroida") == 3)
+    # piso 5: uma CA baixa não desce abaixo de 5
+    m2 = make_monster(r, "m2", 5, 5, ac=6)
+    await r._acido_corroer(m2, 2)
+    check("piso: CA 6 → 5 (não 4)", m2["ac"] == 5)
+    await r._acido_corroer(m2, 2)
+    check("piso: já em 5, permanece 5", m2["ac"] == 5)
+
     print(f"\n=== {PASS} OK / {FAIL} FALHAS ===")
     sys.exit(1 if FAIL else 0)
 
