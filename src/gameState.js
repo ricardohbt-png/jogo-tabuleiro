@@ -649,6 +649,19 @@ const GS = (() => {
       descricao: 'Área (raio 1, alcance 4). Cria escuridão por 2 rodadas — bloqueia ' +
                  'a visão e cobre o recuo. Sem dano.',
     },
+    // ── MERCADO — Arremessáveis de ÁCIDO (Sub-projeto C; ver ARREMESSAVEIS no server) ──
+    frasco_acido: {
+      id: 'frasco_acido', nome: 'Frasco de Ácido', emoji: '🧪',
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4,
+      descricao: 'Arremesse (4 quad., ataque por DES). 1d6 de ácido + metade na ' +
+                 'rodada seguinte. Corrói a defesa do alvo (−1 CA por acerto).',
+    },
+    vidro_acido_grande: {
+      id: 'vidro_acido_grande', nome: 'Vidro de Ácido Grande', emoji: '🫙',
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4,
+      descricao: 'Arremesse (4 quad., ataque por DES). 2d6 de ácido + metade na ' +
+                 'rodada seguinte. Corrói a defesa do alvo (−2 CA por acerto).',
+    },
   };
 
   // class_id (servidor) → heroKey (HERO_DATA / EQUIPAMENTOS_INICIAIS).
