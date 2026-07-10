@@ -84,6 +84,22 @@ async def main():
     await r._acido_corroer(m2, 2)
     check("piso: já em 5, permanece 5", m2["ac"] == 5)
 
+    # ── [3] _processar_acido_residual_turno: aplica metade e limpa ─────────────
+    print("\n[3] tick residual")
+    r = setup()
+    m = make_monster(r, "m1", 4, 4, hp=40)
+    m["acido_residual"] = 3
+    await r._processar_acido_residual_turno()
+    check("residual aplicou 3 de dano", m["hp"] == 37)
+    check("residual limpo após o tick", m.get("acido_residual", 0) == 0)
+    await r._processar_acido_residual_turno()
+    check("sem residual → sem dano extra", m["hp"] == 37)
+    # não tica em alvo morto
+    m2 = make_monster(r, "m2", 5, 5, hp=0); m2["alive"] = False
+    m2["acido_residual"] = 5
+    await r._processar_acido_residual_turno()
+    check("alvo morto: residual limpo sem dano", m2.get("acido_residual", 0) == 0 and m2["hp"] == 0)
+
     print(f"\n=== {PASS} OK / {FAIL} FALHAS ===")
     sys.exit(1 if FAIL else 0)
 

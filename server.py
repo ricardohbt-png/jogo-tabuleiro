@@ -11661,6 +11661,23 @@ class GameRoom:
                 efeitos_extra=[], tick=True)
             alvo["em_chamas_rodadas"] = max(0, alvo.get("em_chamas_rodadas", 0) - 1)
 
+    async def _processar_acido_residual_turno(self):
+        """Aplica o dano residual do ácido (metade do inicial) UMA vez, na rodada
+        seguinte ao acerto, e limpa. Varre jogadores + monstros + prisioneiro."""
+        entes = list(self.players.values()) + list(self.monsters.values())
+        if self.prisoner is not None:
+            entes.append(self.prisoner)
+        for alvo in entes:
+            d = alvo.get("acido_residual", 0)
+            if d <= 0:
+                continue
+            alvo["acido_residual"] = 0
+            if not (alvo.get("alive") or alvo.get("hp", 0) > 0):
+                continue
+            nome = alvo.get("name") or alvo.get("nome", "alvo")
+            await self.gm_say(f"🧪 O ácido continua corroendo **{nome}**: **{d}** de dano!")
+            await self._dano_em_alvo(alvo, d, "acido", None)
+
     def _serializar_armadilhas(self):
         """Estado das armadilhas para o cliente. Armadilhas de aliado são visíveis
         a todos os jogadores (para não pisarem); monstros não recebem game_state."""
@@ -12115,6 +12132,7 @@ class GameRoom:
             await self.gm_phase()
             await self._processar_efeitos_armadilha_turno()   # dano progressivo (incendiária)
             await self._processar_em_chamas_turno()            # tick do status "em chamas"
+            await self._processar_acido_residual_turno()       # tick do dano residual de ácido
             await self._processar_zonas_turno()               # escuridão/silêncio expiram por rodada
             await self._aplicar_exaustao_rodada()   # sempre, mesmo sem monstros
         else:
