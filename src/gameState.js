@@ -38,6 +38,7 @@ const GS = (() => {
   let shopTabIdx      = 0;      // active tab index inside shop modal
   let pendingShopOpen = null;   // shop to open once city_state first arrives
   let guildCatalogCache = [];   // catálogo da Guilda (vem em city_state; cacheado p/ uso na masmorra)
+  let instrumentoBaseCache = null;   // INSTRUMENTOS_BASE, cacheado no game_start
 
   // ── Event callbacks (set by renderer) ─────────────────────────────────────
   const _handlers = {};
@@ -1052,6 +1053,7 @@ const GS = (() => {
 
       case 'game_start':
         cityState = null;
+        if (msg.instrumentos_base) instrumentoBaseCache = msg.instrumentos_base;
         _resetSurvivalAll(false);   // início da aventura → fome/sede = 80
         _resetTurnActivity();
         _emit('gameStart');
@@ -1251,6 +1253,47 @@ const GS = (() => {
     const pronta = cds[tid];
     const round = (gameState && gameState.round) || 1;
     return pronta ? Math.max(0, pronta - round) : 0;
+  }
+
+  // ── Instrumentos do Bardo (Fase 1) ──────────────────────────────────────
+  function usarInstrumento(target) {
+    send({ type: 'usar_instrumento', target_id: (target && target.id != null) ? target.id : null });
+  }
+  function instrumentoBase(baseId) {
+    return (instrumentoBaseCache && instrumentoBaseCache[baseId]) || null;
+  }
+  function instrumentoEquipadoDe(pid) {
+    const src = gameState || cityState;
+    const gp = (src && src.players || []).find(p => p.id === pid);
+    return (gp && gp.gear && gp.gear.instrumento) || null;
+  }
+  // Porta leve de _instrumento_stats (só p/ rótulos; o servidor é autoritativo).
+  function instrumentoStatsClient(inst) {
+    const b = instrumentoBase(inst && inst.base);
+    if (!b) return null;
+    const q = inst.qualidade === 'refinado' ? 'padrao' : inst.qualidade;
+    const st = Object.assign({}, b.stats[q]);
+    st.custo_fome = b.custo_fome; st.custo_sede = b.custo_sede;
+    const afixo = (bonus) => {
+      if (bonus === 'fome') st.custo_fome -= 1;
+      else if (bonus === 'sede') st.custo_sede -= 1;
+      else if (bonus === 'alcance') { if ('alcance' in st) st.alcance += 1; if ('raio' in st) st.raio += 1; }
+      else if (bonus === 'duracao') { if ('duracao' in st) st.duracao += 1; }
+    };
+    if (inst.qualidade === 'refinado') afixo(inst.refinado_bonus);
+    if (inst.origem_bonus) afixo(inst.origem_bonus);
+    st.custo_fome = Math.max(0, st.custo_fome);
+    st.custo_sede = Math.max(0, st.custo_sede);
+    return st;
+  }
+  function instrumentoDisponivel(player) {
+    const inst = player && player.gear && player.gear.instrumento;
+    if (!inst) return false;
+    const b = instrumentoBase(inst.base);
+    if (!b || b.modo !== 'ativada') return false;
+    if (player.instrumento_usado) return false;
+    if (b.maos === 2 && player.action_done) return false;
+    return true;
   }
 
   // ── Editor de masmorras — seleção de dungeon ─────────────────────────────────
@@ -1960,6 +2003,13 @@ const GS = (() => {
     guildOwnedOf,
     guildEquipOf,
     tecnicaRestante,
+
+    // ── Instrumentos do Bardo (Fase 1) ──
+    usarInstrumento,
+    instrumentoBase,
+    instrumentoEquipadoDe,
+    instrumentoStatsClient,
+    instrumentoDisponivel,
 
     selectDungeon,
     selectCampaign,        // Fase 4a: sender (chamado com parênteses)

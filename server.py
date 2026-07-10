@@ -4355,7 +4355,7 @@ class GameRoom:
         # Transition to city phase so players can shop before the dungeon
         self.phase = "city"
         self._gerar_loja_pergaminhos()
-        await self.broadcast({"type": "game_start"})
+        await self.broadcast({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE})
         await self.broadcast_city_state()
 
     # ── city phase ─────────────────────────────────────────────────────────
@@ -15836,7 +15836,7 @@ async def handler(ws):
                     if room.phase == "lobby":
                         await room.broadcast_lobby()
                     elif room.phase == "city":
-                        await ws.send(json.dumps({"type": "game_start"}))
+                        await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
                         await room.broadcast_city_state()
                         await room.gm_say(f"🔌 **{name}** reconectou-se à aventura.")
                     else:   # playing — o personagem REENTRA pela escada de entrada
@@ -15845,7 +15845,7 @@ async def handler(ws):
                         if ent:
                             alvo["pos"] = [ent["cx"], ent["cy"]]
                             alvo.pop("facing", None)
-                        await ws.send(json.dumps({"type": "game_start"}))
+                        await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
                         await ws.send(json.dumps({"type": "enter_dungeon"}))
                         room._iniciar_timer_turno()   # reativa o timer caso estivesse parado
                         await room.push_state()
@@ -15862,6 +15862,9 @@ async def handler(ws):
 
                 elif t == "usar_tecnica":
                     if room: await room.handle_usar_tecnica(pid, msg.get("tecnica_id"), msg.get("target_id"))
+
+                elif t == "usar_instrumento":
+                    if room: await room.handle_usar_instrumento(pid, msg)
 
                 elif t == "usar_oportunidade_movimento":
                     if room: await room.handle_usar_oportunidade_movimento(pid)
