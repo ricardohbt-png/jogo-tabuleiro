@@ -2191,6 +2191,8 @@ SHOP_MERCHANT = [
     {"id": "granada",           "name": "Granada Explosiva", "emoji": "💣", "price": 40, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "granada_superior",  "name": "Granada Superior",  "emoji": "💥", "price": 70, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "bomba_fumaca",      "name": "Bomba de Fumaça",   "emoji": "💨", "price": 30, "item_slot": "bag", "effect": "throwable", "value": 0},
+    {"id": "frasco_acido",       "name": "Frasco de Ácido",       "emoji": "🧪", "price": 20, "item_slot": "bag", "effect": "throwable", "value": 0},
+    {"id": "vidro_acido_grande", "name": "Vidro de Ácido Grande", "emoji": "🫙", "price": 50, "item_slot": "bag", "effect": "throwable", "value": 0},
 ]
 
 # Munição — vendida no FERREIRO (item_slot "ammo", vai pro off_hand; 10 projéteis
@@ -2244,6 +2246,16 @@ ARREMESSAVEIS = {
         "id": "bomba_fumaca", "name": "Bomba de Fumaça", "emoji": "💨",
         "alcance": 4, "alvo": "area", "area_raio": 1,
         "zona": {"tipo": "escuridao", "duracao": 2},
+    },
+    "frasco_acido": {
+        "id": "frasco_acido", "name": "Frasco de Ácido", "emoji": "🧪",
+        "alcance": 4, "alvo": "ataque_alvo", "dano": "1d6", "elemento": "acido",
+        "residual": True, "corrosao_ac": 1,
+    },
+    "vidro_acido_grande": {
+        "id": "vidro_acido_grande", "name": "Vidro de Ácido Grande", "emoji": "🫙",
+        "alcance": 4, "alvo": "ataque_alvo", "dano": "2d6", "elemento": "acido",
+        "residual": True, "corrosao_ac": 2,
     },
 }
 
