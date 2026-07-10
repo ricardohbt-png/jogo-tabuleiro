@@ -141,6 +141,40 @@ async def main():
     m2 = make_monster(r, "m2", 5, 5)     # não enredado → não consome
     check("não enredado → False", (await r._processar_enredado_turno(m2)) is False)
 
+    # ── [5] Arremesso da Cola e da Rede (acerto) ───────────────────────────────
+    print("\n[5] handle_throw_item (cola/rede) — acerto")
+    S.random.randint = _fixed_d20(15)   # acerto não-crítico, não-nat1
+
+    r = setup(); r._save_mostrado = _mk_save(False)   # falha no Reflexos → cola pega
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [4, 4]; p["atk_bonus"] = 5
+    r.players["p1"] = p; p["bag"] = [throwable("cola_alquimica")]
+    m = make_monster(r, "m1", 4, 6, ac=1, movement=6)
+    await r.handle_throw_item("p1", {"item_id": "cola_alquimica", "target_id": "m1"})
+    check("cola: movement reduzido (6→3)", m["movement"] == 3)
+    check("cola: mov_reduzido_rodadas=2", m.get("mov_reduzido_rodadas") == 2)
+    check("cola: item consumido", len(p["bag"]) == 0)
+    check("cola: sem dano (hp intacto)", m["hp"] == 40)
+
+    r = setup()
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [4, 4]; p["atk_bonus"] = 5
+    r.players["p1"] = p; p["bag"] = [throwable("rede_arremesso")]
+    m = make_monster(r, "m1", 4, 6, ac=1)
+    await r.handle_throw_item("p1", {"item_id": "rede_arremesso", "target_id": "m1"})
+    check("rede: enredado", m.get("enredado") is True)
+    check("rede: item consumido", len(p["bag"]) == 0)
+
+    # ── [6] Erro: item consumido, sem efeito ───────────────────────────────────
+    print("\n[6] handle_throw_item (tático) — erro")
+    r = setup()
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [4, 4]; p["atk_bonus"] = 5
+    r.players["p1"] = p; p["bag"] = [throwable("cola_alquimica")]
+    m = make_monster(r, "m1", 4, 6, ac=99, movement=6)   # 15+5 < 99 → erro
+    await r.handle_throw_item("p1", {"item_id": "cola_alquimica", "target_id": "m1"})
+    check("erro: movement intacto", m["movement"] == 6)
+    check("erro: sem mov_reduzido", not m.get("mov_reduzido_rodadas"))
+    check("erro: item consumido", len(p["bag"]) == 0)
+    S.random.randint = _REAL_RANDINT
+
     print(f"\n=== {PASS} OK / {FAIL} FALHAS ===")
     sys.exit(1 if FAIL else 0)
 

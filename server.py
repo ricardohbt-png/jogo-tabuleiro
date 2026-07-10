@@ -6625,17 +6625,23 @@ class GameRoom:
         self._consumir_recursos(p, 'apenas_acao')
 
         if hit:
-            raw = roll_dice(defn["dano"])
-            dmg = max(1, (raw + dex_mod) * (2 if crit else 1))
-            die_type = "d" + defn["dano"].split("d")[1]
-            await self.broadcast({"type": "dice_roll", "die": die_type,
-                                  "value": raw, "label": "Dano (arremesso)"})
-            crit_str = " **CRÍTICO!**" if crit else ""
-            await self.gm_say(
-                f"{defn['emoji']} **{p['name']}** arremessa **{defn['name']}** em "
-                f"**{target['name']}** (d20={roll}+{p['atk_bonus']}={total} vs CA {target['ac']}):"
-                f"{crit_str} **{dmg}** de {defn['elemento']}!")
-            await self._aplicar_dano_alvo(target, dmg, defn["elemento"], pid)
+            if defn.get("dano"):
+                raw = roll_dice(defn["dano"])
+                dmg = max(1, (raw + dex_mod) * (2 if crit else 1))
+                die_type = "d" + defn["dano"].split("d")[1]
+                await self.broadcast({"type": "dice_roll", "die": die_type,
+                                      "value": raw, "label": "Dano (arremesso)"})
+                crit_str = " **CRÍTICO!**" if crit else ""
+                await self.gm_say(
+                    f"{defn['emoji']} **{p['name']}** arremessa **{defn['name']}** em "
+                    f"**{target['name']}** (d20={roll}+{p['atk_bonus']}={total} vs CA {target['ac']}):"
+                    f"{crit_str} **{dmg}** de {defn['elemento']}!")
+                await self._aplicar_dano_alvo(target, dmg, defn["elemento"], pid)
+            else:
+                await self.gm_say(
+                    f"{defn['emoji']} **{p['name']}** acerta **{defn['name']}** em "
+                    f"**{target['name']}** (d20={roll}+{p['atk_bonus']}={total} vs CA {target['ac']})!")
+                dmg = 0
             if defn.get("em_chamas") and target.get("hp", 0) > 0:
                 dur = self._rolar_dado(defn.get("chamas_dur", "1d4"))
                 self._aplicar_em_chamas(target, dur, defn.get("chamas_agua_apaga", True))
@@ -6647,6 +6653,9 @@ class GameRoom:
                     f"residual na próxima rodada!")
             if defn.get("corrosao_ac") and target.get("hp", 0) > 0:
                 await self._acido_corroer(target, defn["corrosao_ac"])
+            ctrl = defn.get("controle")
+            if ctrl and target.get("hp", 0) > 0:
+                await self._aplicar_controle_arremesso(target, ctrl)
         elif nat1:
             await self.gm_say(
                 f"{defn['emoji']} **{p['name']}** arremessa **{defn['name']}** mas rola "
