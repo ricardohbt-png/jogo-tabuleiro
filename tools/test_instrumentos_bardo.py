@@ -36,6 +36,34 @@ def test_tipo_item_e_maos():
     assert server.INSTRUMENTOS_BASE["harpa"]["maos"] == 2
     assert server.INSTRUMENTOS_BASE["sino"]["maos"] == 1
 
+def _room_bardo():
+    room = server.GameRoom.__new__(server.GameRoom)
+    room.phase = "playing"
+    room.round_num = 1
+    room.turn_index = 0
+    room.monsters = {}
+    room.players = {}
+    p = {
+        "id": "p1", "name": "Henrique", "class_id": "bard", "alive": True,
+        "pos": [5, 5], "dex": 16, "int_": 12, "spd": 6,
+        "fome": 100, "sede": 100, "hp": 9, "max_hp": 9,
+        "action_done": False, "instrumento_usado": False,
+        "bag": [], "bag_size": 6,
+        "gear": {k: None for k in server.GEAR_SLOTS},
+        "moves_left": 6,
+    }
+    room.players["p1"] = p
+    room.turn_order = ["p1"]
+    room._is_turn = lambda pid: pid == "p1"
+    return room, p
+
+def test_slot_instrumento_existe():
+    assert "instrumento" in server.GEAR_SLOTS
+
+def test_slot_category_instrumento():
+    inst = server.criar_instrumento("harpa", "padrao")
+    assert server.GameRoom._slot_category_for_item(inst) == "instrumento"
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]

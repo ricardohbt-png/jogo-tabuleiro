@@ -3618,7 +3618,7 @@ _WEAPON_EMOJI = {
 # (escudo na mão esquerda, elmo, anéis, itens ativos).
 GEAR_BONUS_SLOTS = ("off_hand", "head", "boots", "ring1", "ring2", "item1", "item2")
 # Todos os 9 slots de equipamento, na ordem de exibição.
-GEAR_SLOTS = ("weapon", "off_hand", "armor", "head", "boots", "ring1", "ring2", "item1", "item2")
+GEAR_SLOTS = ("weapon", "off_hand", "armor", "head", "boots", "ring1", "ring2", "item1", "item2", "instrumento")
 
 # ─── SLOT SECUNDÁRIO — regras por personagem ──────────────────────────────────
 # ATENÇÃO (scaffolding): estas regras usam as chaves de herói do CLIENTE
@@ -3706,6 +3706,7 @@ def make_player(pid, name, cls_id, slot):
             "ring2":    None,                  # anel
             "item1":    None,                  # item ativo (mochila/luvas/cinto)
             "item2":    None,                  # item ativo
+            "instrumento": None,               # bardo: instrumento musical (Fase 1)
         },
         "status": [],
         "alive": True,
@@ -8655,6 +8656,8 @@ class GameRoom:
         k   = (item.get("kind") or "").lower()
         iid = (item.get("id") or "").lower()
         nm  = (item.get("name") or "").lower()
+        if s == "instrumento" or item.get("tipo_item") == "instrumento":
+            return "instrumento"
         if s == "weapon" or k == "weapon":
             return "weapon"
         if s in ("shield", "off_hand") or k == "shield" or "shield" in iid or "escudo" in nm:
@@ -8792,6 +8795,13 @@ class GameRoom:
         elif cat == "head":     log = self._equip_into_slot(p, item, "head",     "⛑️")
         elif cat == "boots":    log = self._equip_into_slot(p, item, "boots",    "👢")
         elif cat == "ring":     log = self._equip_into_pair(p, item, ("ring1","ring2"), "💍")
+        elif cat == "instrumento":
+            if p.get("class_id") != "bard":
+                await self.send_to(pid, {"type": "error",
+                    "msg": "Apenas o bardo pode empunhar instrumentos musicais."})
+                p["bag"].insert(slot_index, item)   # devolve à bolsa (já foi removido)
+                return False
+            log = self._equip_into_slot(p, item, "instrumento", "🎵")
         else:                   log = self._equip_into_pair(p, item, ("item1","item2"), "🎒")
 
         if log:
