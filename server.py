@@ -2187,6 +2187,10 @@ SHOP_MERCHANT = [
     # ── Arremessáveis de fogo (consumíveis de bolsa; ver ARREMESSAVEIS) ──
     {"id": "frasco_oleo", "name": "Frasco de Óleo Incendiário", "emoji": "🔥", "price": 15, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "fogo_grego",  "name": "Fogo Grego",                 "emoji": "🟢", "price": 40, "item_slot": "bag", "effect": "throwable", "value": 0},
+    {"id": "bomba_incendiaria", "name": "Bomba Incendiária", "emoji": "💣", "price": 45, "item_slot": "bag", "effect": "throwable", "value": 0},
+    {"id": "granada",           "name": "Granada Explosiva", "emoji": "💣", "price": 40, "item_slot": "bag", "effect": "throwable", "value": 0},
+    {"id": "granada_superior",  "name": "Granada Superior",  "emoji": "💥", "price": 70, "item_slot": "bag", "effect": "throwable", "value": 0},
+    {"id": "bomba_fumaca",      "name": "Bomba de Fumaça",   "emoji": "💨", "price": 30, "item_slot": "bag", "effect": "throwable", "value": 0},
 ]
 
 # Munição — vendida no FERREIRO (item_slot "ammo", vai pro off_hand; 10 projéteis
@@ -2219,6 +2223,27 @@ ARREMESSAVEIS = {
         "id": "fogo_grego", "name": "Fogo Grego", "emoji": "🟢",
         "alcance": 4, "alvo": "ataque_alvo", "dano": "2d6", "elemento": "fogo",
         "em_chamas": True, "chamas_dur": "1d4", "chamas_agua_apaga": False,
+    },
+    "bomba_incendiaria": {
+        "id": "bomba_incendiaria", "name": "Bomba Incendiária", "emoji": "💣",
+        "alcance": 4, "alvo": "area", "area_raio": 1, "dano": "2d6", "elemento": "fogo",
+        "save": {"tipo": "reflexos", "cd": 12},
+        "em_chamas": True, "chamas_dur": "1d4", "chamas_agua_apaga": True,
+    },
+    "granada": {
+        "id": "granada", "name": "Granada Explosiva", "emoji": "💣",
+        "alcance": 4, "alvo": "area", "area_raio": 1, "dano": "2d6", "elemento": "explosao",
+        "save": {"tipo": "reflexos", "cd": 12},
+    },
+    "granada_superior": {
+        "id": "granada_superior", "name": "Granada Superior", "emoji": "💥",
+        "alcance": 4, "alvo": "area", "area_raio": 1, "dano": "3d6", "elemento": "explosao",
+        "save": {"tipo": "reflexos", "cd": 15},
+    },
+    "bomba_fumaca": {
+        "id": "bomba_fumaca", "name": "Bomba de Fumaça", "emoji": "💨",
+        "alcance": 4, "alvo": "area", "area_raio": 1,
+        "zona": {"tipo": "escuridao", "duracao": 2},
     },
 }
 
