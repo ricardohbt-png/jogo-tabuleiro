@@ -398,6 +398,38 @@ def test_dueto_marcial_guardas():
     _run(room._reacoes_instrumento_apos_ataque(ally, m, 5))
     assert reacoes == []          # sem Lira equipada
 
+def test_dueto_fantasma_ativa_e_ecoa():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("flauta", "padrao")  # fracao 50, dur 3
+    _run(room.handle_usar_instrumento("p1", {}))
+    assert p["dueto_fantasma_ate"] == room.round_num + 3
+    assert p["dueto_fantasma_fracao"] == 50
+    assert p["action_done"] is False   # 1 mão
+    m = {"id": "m1", "name": "Goblin", "hp": 20, "max_hp": 20, "pos": [6, 5], "alive": True}
+    room.monsters["m1"] = m
+    _run(room._reacoes_instrumento_apos_ataque(p, m, 10))
+    assert m["hp"] == 15   # eco = 10*50//100 = 5
+
+def test_dueto_fantasma_sem_flauta_nao_ecoa():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = None
+    p["dueto_fantasma_ate"] = room.round_num + 3
+    p["dueto_fantasma_fracao"] = 50
+    m = {"id": "m1", "name": "Goblin", "hp": 20, "max_hp": 20, "pos": [6, 5], "alive": True}
+    room.monsters["m1"] = m
+    _run(room._reacoes_instrumento_apos_ataque(p, m, 10))
+    assert m["hp"] == 20
+
+def test_dueto_fantasma_expira():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("flauta", "padrao")
+    p["dueto_fantasma_ate"] = room.round_num - 1   # expirado
+    p["dueto_fantasma_fracao"] = 50
+    m = {"id": "m1", "name": "Goblin", "hp": 20, "max_hp": 20, "pos": [6, 5], "alive": True}
+    room.monsters["m1"] = m
+    _run(room._reacoes_instrumento_apos_ataque(p, m, 10))
+    assert m["hp"] == 20
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]

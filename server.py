@@ -239,6 +239,19 @@ INSTRUMENTOS_BASE = {
             "padrao":  {"duracao": 3},
         },
     },
+    "flauta": {
+        "nome": "Flauta", "icon": "🎶", "maos": 1, "modo": "ativada",
+        "habilidade_nome": "Dueto Fantasma",
+        "desc": "Invoca uma ilusão por algumas rodadas. Cada ataque básico seu que acerta é repetido pela ilusão no mesmo alvo, causando uma fração do dano.",
+        "efeito": {"tipo": "dueto_fantasma"},
+        "custo_fome": 3, "custo_sede": 3,
+        "afixos_validos": ["fome", "sede", "duracao"],
+        "stats": {
+            "velho":   {"duracao": 1, "fracao": 25},
+            "rustico": {"duracao": 2, "fracao": 40},
+            "padrao":  {"duracao": 3, "fracao": 50},
+        },
+    },
 }
 
 _QUALIDADE_LABEL = {
@@ -4993,6 +5006,8 @@ class GameRoom:
             ok = await self._instr_chamado_general(p, inst, st, data)
         elif tipo == "dueto_marcial":
             ok = await self._instr_dueto_marcial(p, inst, st, data)
+        elif tipo == "dueto_fantasma":
+            ok = await self._instr_dueto_fantasma(p, inst, st, data)
         else:
             await self.send_to(pid, {"type": "error", "msg": "Instrumento em desenvolvimento."}); return
         if not ok:
@@ -5129,6 +5144,12 @@ class GameRoom:
         await self.gm_say(f"🎼 **{p['name']}** entoa o **Dueto Marcial** por {st['duracao']} rodada(s)!")
         return True
 
+    async def _instr_dueto_fantasma(self, p, inst, st, data):
+        p["dueto_fantasma_ate"] = self.round_num + st["duracao"]
+        p["dueto_fantasma_fracao"] = st["fracao"]
+        await self.gm_say(f"🎶 **{p['name']}** conjura o **Dueto Fantasma** por {st['duracao']} rodada(s)!")
+        return True
+
     @staticmethod
     def _instr_base_off(p):
         """Base do instrumento no off_hand, ou None (off_hand pode ter escudo/arma)."""
@@ -5166,6 +5187,19 @@ class GameRoom:
     async def _reacoes_instrumento_apos_ataque(self, atacante, alvo, dmg):
         """Hooks de instrumento disparados por um ataque básico de arma (site
         principal de handle_attack). Dueto Fantasma (Task 4) e Dueto Marcial."""
+        # Dueto Fantasma — eco do próprio ataque do bardo (fração do dano)
+        if atacante.get("class_id") == "bard" and atacante.get("alive") \
+           and atacante.get("dueto_fantasma_ate", 0) >= self.round_num \
+           and self._instr_base_off(atacante) == "flauta" \
+           and alvo and alvo.get("hp", 0) > 0:
+            eco = (dmg * atacante.get("dueto_fantasma_fracao", 0)) // 100
+            if eco > 0:
+                alvo["hp"] = max(0, alvo["hp"] - eco)
+                await self.gm_say(f"🎶 A ilusão do **Dueto Fantasma** repete o golpe em **{alvo['name']}**: **{eco}** de dano!")
+                if alvo["hp"] <= 0:
+                    await self._monster_dies(alvo, atacante.get("id"))
+                    return   # alvo morto — encerra
+
         # Dueto Marcial — reação do bardo ao ataque de um ALIADO
         if atacante.get("class_id") != "bard":
             bardo = self._bardo_dueto_marcial(atacante, alvo)
