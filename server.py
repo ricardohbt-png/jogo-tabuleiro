@@ -226,6 +226,19 @@ INSTRUMENTOS_BASE = {
             "padrao":  {"cone": 5, "medo": 1, "pen_falha": 2, "pen_sucesso": 1},
         },
     },
+    "lira": {
+        "nome": "Lira", "icon": "🎼", "maos": 1, "modo": "ativada",
+        "habilidade_nome": "Dueto Marcial",
+        "desc": "Por algumas rodadas, quando um aliado adjacente a você ataca um inimigo também adjacente a você, você desfere um ataque corpo a corpo grátis nele.",
+        "efeito": {"tipo": "dueto_marcial"},
+        "custo_fome": 3, "custo_sede": 3,
+        "afixos_validos": ["fome", "sede", "duracao"],
+        "stats": {
+            "velho":   {"duracao": 1},
+            "rustico": {"duracao": 2},
+            "padrao":  {"duracao": 3},
+        },
+    },
 }
 
 _QUALIDADE_LABEL = {
@@ -4978,6 +4991,8 @@ class GameRoom:
             ok = await self._instr_ecos_dolorosos(p, inst, st, data)
         elif tipo == "chamado_general":
             ok = await self._instr_chamado_general(p, inst, st, data)
+        elif tipo == "dueto_marcial":
+            ok = await self._instr_dueto_marcial(p, inst, st, data)
         else:
             await self.send_to(pid, {"type": "error", "msg": "Instrumento em desenvolvimento."}); return
         if not ok:
@@ -5108,6 +5123,55 @@ class GameRoom:
                     self._reduzir_mov_monstro(m, st["pen_sucesso"], 1)
                 await self.gm_say(f"📯 **{m['name']}** resiste, mas hesita.")
         return True
+
+    async def _instr_dueto_marcial(self, p, inst, st, data):
+        p["dueto_marcial_ate"] = self.round_num + st["duracao"]
+        await self.gm_say(f"🎼 **{p['name']}** entoa o **Dueto Marcial** por {st['duracao']} rodada(s)!")
+        return True
+
+    @staticmethod
+    def _instr_base_off(p):
+        """Base do instrumento no off_hand, ou None (off_hand pode ter escudo/arma)."""
+        off = p.get("gear", {}).get("off_hand")
+        return off.get("base") if off and off.get("tipo_item") == "instrumento" else None
+
+    def _dueto_marcial_cap(self, inst):
+        return 2 if inst.get("encantamento") == "runico" else 1
+
+    def _bardo_dueto_marcial(self, atacante, alvo):
+        """Bardo elegível para revidar via Dueto Marcial (ou None). Reseta a cota
+        da rodada se virou a rodada."""
+        if not alvo or alvo.get("hp", 0) <= 0:
+            return None
+        for q in self.players.values():
+            if q.get("class_id") != "bard" or not q.get("alive") or q["id"] == atacante["id"]:
+                continue
+            if q.get("dueto_marcial_ate", 0) < self.round_num:
+                continue
+            off = q.get("gear", {}).get("off_hand")
+            if not off or off.get("tipo_item") != "instrumento" or off.get("base") != "lira":
+                continue
+            if _distancia_chebyshev(q["pos"], atacante["pos"]) > 1:
+                continue
+            if _distancia_chebyshev(q["pos"], alvo["pos"]) > 1:
+                continue
+            if q.get("dueto_marcial_round") != self.round_num:
+                q["dueto_marcial_round"] = self.round_num
+                q["dueto_marcial_usos"] = 0
+            if q.get("dueto_marcial_usos", 0) >= self._dueto_marcial_cap(off):
+                continue
+            return q
+        return None
+
+    async def _reacoes_instrumento_apos_ataque(self, atacante, alvo, dmg):
+        """Hooks de instrumento disparados por um ataque básico de arma (site
+        principal de handle_attack). Dueto Fantasma (Task 4) e Dueto Marcial."""
+        # Dueto Marcial — reação do bardo ao ataque de um ALIADO
+        if atacante.get("class_id") != "bard":
+            bardo = self._bardo_dueto_marcial(atacante, alvo)
+            if bardo:
+                bardo["dueto_marcial_usos"] = bardo.get("dueto_marcial_usos", 0) + 1
+                await self._ataque_basico_reativo(bardo, alvo)
 
     async def handle_usar_oportunidade_movimento(self, pid):
         """Gasta o crédito de Oportunidade na via 'movimento extra' (soma spd a
@@ -6632,6 +6696,7 @@ class GameRoom:
                     furtivo_detail = f" +🗡️{dano_furtivo} furtivo [{nd4}d4]"
                 target["hp"] -= dmg
                 await self._furtivo_reativo(p, target)
+                await self._reacoes_instrumento_apos_ataque(p, target, dmg)
                 crit_str = " **CRÍTICO!**" if crit else ""
                 await self.gm_say(
                     f"⚔️ **{p['name']}** ataca **{target['name']}** com {weapon_name}"

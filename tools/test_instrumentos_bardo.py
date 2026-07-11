@@ -340,6 +340,64 @@ def test_chamado_general_sem_direcao_recusa():
     _run(room.handle_usar_instrumento("p1", {}))
     assert p["fome"] == fome0 and m["movement"] == 6
 
+def test_dueto_marcial_ativa():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("lira", "padrao")  # dur 3
+    _run(room.handle_usar_instrumento("p1", {}))
+    assert p["dueto_marcial_ate"] == room.round_num + 3
+    assert p["instrumento_usado"] is True
+    assert p["action_done"] is False   # 1 mão
+
+def test_dueto_marcial_reage_cap_1():
+    room, p = _room_bardo(); _mute(room)   # p = bardo em [5,5]
+    p["gear"]["off_hand"] = server.criar_instrumento("lira", "padrao")
+    p["dueto_marcial_ate"] = room.round_num + 3
+    ally = {"id": "a1", "class_id": "warrior", "alive": True, "pos": [5, 6]}
+    room.players["a1"] = ally
+    m = {"id": "m1", "name": "Goblin", "hp": 20, "max_hp": 20, "ac": 5, "pos": [6, 5], "alive": True}
+    room.monsters["m1"] = m
+    reacoes = []
+    async def _react(bardo, alvo): reacoes.append((bardo["id"], alvo["id"]))
+    room._ataque_basico_reativo = _react
+    _run(room._reacoes_instrumento_apos_ataque(ally, m, 5))
+    _run(room._reacoes_instrumento_apos_ataque(ally, m, 5))   # 2ª na mesma rodada
+    assert reacoes == [("p1", "m1")]   # cap 1/rodada
+
+def test_dueto_marcial_runico_cap_2():
+    room, p = _room_bardo(); _mute(room)
+    inst = server.criar_instrumento("lira", "padrao"); inst["encantamento"] = "runico"
+    p["gear"]["off_hand"] = inst
+    p["dueto_marcial_ate"] = room.round_num + 3
+    ally = {"id": "a1", "class_id": "warrior", "alive": True, "pos": [5, 6]}
+    room.players["a1"] = ally
+    m = {"id": "m1", "name": "Goblin", "hp": 20, "max_hp": 20, "ac": 5, "pos": [6, 5], "alive": True}
+    room.monsters["m1"] = m
+    reacoes = []
+    async def _react(bardo, alvo): reacoes.append(1)
+    room._ataque_basico_reativo = _react
+    for _ in range(3):
+        _run(room._reacoes_instrumento_apos_ataque(ally, m, 5))
+    assert len(reacoes) == 2   # Rúnico: 2/rodada
+
+def test_dueto_marcial_guardas():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("lira", "padrao")
+    p["dueto_marcial_ate"] = room.round_num + 3
+    ally = {"id": "a1", "class_id": "warrior", "alive": True, "pos": [5, 6]}
+    room.players["a1"] = ally
+    longe = {"id": "m2", "name": "Longe", "hp": 9, "max_hp": 9, "ac": 5, "pos": [9, 9], "alive": True}
+    room.monsters["m2"] = longe
+    reacoes = []
+    async def _react(b, a): reacoes.append(1)
+    room._ataque_basico_reativo = _react
+    _run(room._reacoes_instrumento_apos_ataque(ally, longe, 5))
+    assert reacoes == []          # alvo fora de adjacência do bardo
+    p["gear"]["off_hand"] = None
+    m = {"id": "m1", "name": "Goblin", "hp": 9, "max_hp": 9, "ac": 5, "pos": [6, 5], "alive": True}
+    room.monsters["m1"] = m
+    _run(room._reacoes_instrumento_apos_ataque(ally, m, 5))
+    assert reacoes == []          # sem Lira equipada
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]
