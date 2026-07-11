@@ -1262,10 +1262,13 @@ const GS = (() => {
   function instrumentoBase(baseId) {
     return (instrumentoBaseCache && instrumentoBaseCache[baseId]) || null;
   }
+  // O instrumento vive na mão do escudo (off_hand). Só conta se for de fato um
+  // instrumento (o off_hand também pode ter escudo/2ª arma).
   function instrumentoEquipadoDe(pid) {
     const src = gameState || cityState;
     const gp = (src && src.players || []).find(p => p.id === pid);
-    return (gp && gp.gear && gp.gear.instrumento) || null;
+    const inst = gp && gp.gear && gp.gear.off_hand;
+    return (inst && inst.tipo_item === 'instrumento') ? inst : null;
   }
   // Porta leve de _instrumento_stats (só p/ rótulos; o servidor é autoritativo).
   function instrumentoStatsClient(inst) {
@@ -1287,8 +1290,8 @@ const GS = (() => {
     return st;
   }
   function instrumentoDisponivel(player) {
-    const inst = player && player.gear && player.gear.instrumento;
-    if (!inst) return false;
+    const inst = player && player.gear && player.gear.off_hand;
+    if (!inst || inst.tipo_item !== 'instrumento') return false;
     const b = instrumentoBase(inst.base);
     if (!b || b.modo !== 'ativada') return false;
     if (player.instrumento_usado) return false;
@@ -1336,9 +1339,9 @@ const GS = (() => {
     const k   = (item.kind || '').toLowerCase();
     const iid = (item.id || '').toLowerCase();
     const nm  = (item.name || '').toLowerCase();
-    // Instrumentos do Bardo (Fase 1) — espelha server._slot_category_for_item,
-    // checado antes das demais categorias (mesmo formato do item_slot="instrumento").
-    if(s === 'instrumento' || item.tipo_item === 'instrumento') return 'instrumento';
+    // Instrumento do Bardo (Fase 1) vive na mão do escudo (off_hand) — espelha
+    // server._slot_category_for_item; checado antes das demais categorias.
+    if(s === 'instrumento' || item.tipo_item === 'instrumento') return 'off_hand';
     if(s === 'weapon' || k === 'weapon') return 'weapon';
     if(s === 'shield' || s === 'off_hand' || k === 'shield' || iid.includes('shield') || nm.includes('escudo')) return 'off_hand';
     if(s === 'ammo' || item.effect === 'ammo') return 'off_hand';
@@ -1401,7 +1404,6 @@ const GS = (() => {
     if(slotKey === 'boots') return cat === 'boots';
     if(slotKey === 'ring1' || slotKey === 'ring2') return cat === 'ring';
     if(slotKey === 'item1' || slotKey === 'item2') return cat === 'item';
-    if(slotKey === 'instrumento') return cat === 'instrumento';
     return false;
   }
 

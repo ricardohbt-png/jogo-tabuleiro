@@ -3165,6 +3165,55 @@ function aplicarTooltipPergaminho(elemento, item){
   elemento.addEventListener('mouseleave', () => esconderTooltip());
 }
 
+// ── Tooltip de Instrumento do Bardo (Fase 1) ────────────────────────────────
+// Instrumentos não vivem em GS.CATALOGO_ITENS, então têm seu próprio quadro de
+// hover (espelha aplicarTooltipPergaminho): mostra a habilidade, o que ela faz e
+// o custo. Lê os metadados de GS.instrumentoBase + os stats derivados de
+// GS.instrumentoStatsClient.
+function _tooltipInstrumentoHTML(inst){
+  const b  = (typeof GS !== 'undefined' && GS.instrumentoBase) ? GS.instrumentoBase(inst.base) : null;
+  const st = (typeof GS !== 'undefined' && GS.instrumentoStatsClient) ? GS.instrumentoStatsClient(inst) : null;
+  if(!b) return `<div style="padding:12px 14px;color:#c8b89a;font-size:11px;">${inst.name || 'Instrumento'}</div>`;
+  const passiva = b.modo === 'passiva';
+  const maosTxt = b.maos === 2 ? '2 mãos — atacar OU tocar no mesmo turno'
+                               : '1 mão — atacar E tocar no mesmo turno';
+  const linhas = [];
+  if(st){
+    if(st.alcance != null) linhas.push(renderLinhaTooltip('🎯', 'Alcance', st.alcance + ' quadrados'));
+    if(st.raio    != null) linhas.push(renderLinhaTooltip('💥', 'Raio',    st.raio + ' quadrados'));
+    if(st.dano    != null) linhas.push(renderLinhaTooltip('🎵', 'Dano',    st.dano + ' sonoro'));
+    if(st.duracao != null) linhas.push(renderLinhaTooltip('⏳', 'Duração', st.duracao + ' rodadas'));
+  }
+  const custoLinha = passiva
+    ? renderLinhaTooltip('🎼', 'Custo', 'igual ao da Canção Heroica')
+    : renderLinhaTooltip('🍖', 'Custo', `🍖${(st && st.custo_fome) ?? 0}  💧${(st && st.custo_sede) ?? 0}`);
+  return `
+    <div style="padding:10px 14px;border-bottom:1px solid #c8a95133;">
+      <div style="color:#e8cf7e;font-weight:bold;font-size:13px;">${b.icon} ${inst.name || b.nome}</div>
+      <div style="color:#8a7a5a;font-size:9px;letter-spacing:2px;margin-top:2px;">INSTRUMENTO${passiva ? ' · PASSIVO' : ''}</div>
+    </div>
+    <div style="padding:10px 14px;">
+      <div style="color:#c8a951;font-size:11px;font-weight:bold;margin-bottom:4px;">${passiva ? '✨' : '♪'} ${b.habilidade_nome}</div>
+      <div style="color:#b8a888;font-size:10px;line-height:1.45;margin-bottom:8px;">${b.desc || ''}</div>
+      ${linhas.join('')}
+      ${custoLinha}
+      <div style="color:#7a6a4a;font-size:9px;margin-top:6px;font-style:italic;">${maosTxt}</div>
+    </div>`;
+}
+
+function aplicarTooltipInstrumento(elemento, inst){
+  if(!elemento || !inst) return;
+  elemento.addEventListener('mouseenter', () => {
+    _initItemTooltip();
+    const t = document.getElementById('item-tooltip');
+    if(!t) return;
+    t.innerHTML = _tooltipInstrumentoHTML(inst);
+    t.style.borderColor = '#4db8ff';   // azul — instrumento (mão do escudo)
+    t.style.opacity = '1';
+  });
+  elemento.addEventListener('mouseleave', () => esconderTooltip());
+}
+
 // Cor da borda do tooltip por raridade (faixa de preço).
 function corBordaPorPreco(preco){
   if(preco >= 300) return '#cc44ff'; // roxo — lendário
@@ -7611,12 +7660,14 @@ function _bardSkillBtn(me, sk){
 }
 
 // ── Instrumento do Bardo (Fase 1) — botão dedicado no HUD, fora do fluxo de
-// me.skills (o instrumento vive em me.gear.instrumento, não em me.skills).
+// me.skills. O instrumento vive na MÃO DO ESCUDO (me.gear.off_hand), que também
+// pode conter escudo/2ª arma — por isso checamos tipo_item==='instrumento'.
 // Só aparece se o instrumento equipado for modo:"ativada" (o Alaúde é passivo —
 // Sinfonia Heroica não usa botão, é um hook passivo na Canção Heroica). ─────────
 function _bardInstrumentoBtn(me){
-  const inst = me.gear && me.gear.instrumento;
-  const b = inst && GS.instrumentoBase(inst.base);
+  const inst = me.gear && me.gear.off_hand;
+  if(!inst || inst.tipo_item !== 'instrumento') return null;
+  const b = GS.instrumentoBase(inst.base);
   if(!b || b.modo !== 'ativada') return null;
   const st = GS.instrumentoStatsClient(inst) || {};
   const disponivel = GS.instrumentoDisponivel(me);
@@ -7637,6 +7688,7 @@ function _bardInstrumentoBtn(me){
     </div>
     <div class="skill-cost">🍖${st.custo_fome ?? 0} 💧${st.custo_sede ?? 0}</div>`;
   btn.onclick = () => acionarInstrumento(me, inst, b);
+  aplicarTooltipInstrumento(btn, inst);   // quadro de hover: habilidade, efeito e custo
   return btn;
 }
 
@@ -10305,7 +10357,7 @@ function renderMyPanel(state){
   }
 
   // Bardo (Henrique): botão do instrumento equipado (Fase 1 — instrumento não é
-  // uma "sk" de me.skills, vive em me.gear.instrumento). Ver _bardInstrumentoBtn.
+  // uma "sk" de me.skills, vive em me.gear.off_hand / mão do escudo). Ver _bardInstrumentoBtn.
   if (me.class_id === 'bard') {
     const ib = _bardInstrumentoBtn(me);
     if (ib) sl.appendChild(ib);

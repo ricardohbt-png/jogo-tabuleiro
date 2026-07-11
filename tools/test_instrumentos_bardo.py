@@ -57,12 +57,13 @@ def _room_bardo():
     room._is_turn = lambda pid: pid == "p1"
     return room, p
 
-def test_slot_instrumento_existe():
-    assert "instrumento" in server.GEAR_SLOTS
+def test_sem_slot_dedicado_instrumento():
+    # O instrumento vive na mão do escudo (off_hand), sem slot próprio.
+    assert "instrumento" not in server.GEAR_SLOTS
 
 def test_slot_category_instrumento():
     inst = server.criar_instrumento("harpa", "padrao")
-    assert server.GameRoom._slot_category_for_item(inst) == "instrumento"
+    assert server.GameRoom._slot_category_for_item(inst) == "off_hand"
 
 
 import asyncio
@@ -78,7 +79,7 @@ def _mute(room):
 
 def test_economia_2maos_bloqueia_apos_acao():
     room, p = _room_bardo(); _mute(room)
-    p["gear"]["instrumento"] = server.criar_instrumento("harpa", "padrao")  # 2 mãos
+    p["gear"]["off_hand"] = server.criar_instrumento("harpa", "padrao")  # 2 mãos
     m = {"id": "m1", "name": "Goblin", "hp": 20, "pos": [6, 5], "alive": True,
          "ref_": 0, "ca": 10, "saves_base": {}}
     room.monsters["m1"] = m
@@ -88,14 +89,14 @@ def test_economia_2maos_bloqueia_apos_acao():
 
 def test_economia_1mao_nao_gasta_acao_principal():
     room, p = _room_bardo(); _mute(room)
-    p["gear"]["instrumento"] = server.criar_instrumento("sino", "padrao")   # 1 mão
+    p["gear"]["off_hand"] = server.criar_instrumento("sino", "padrao")   # 1 mão
     _run(room.handle_usar_instrumento("p1", {}))
     assert p["instrumento_usado"] is True
     assert p["action_done"] is False
 
 def test_um_instrumento_por_turno():
     room, p = _room_bardo(); _mute(room)
-    p["gear"]["instrumento"] = server.criar_instrumento("sino", "padrao")
+    p["gear"]["off_hand"] = server.criar_instrumento("sino", "padrao")
     _run(room.handle_usar_instrumento("p1", {}))
     fome_apos_1 = p["fome"]
     _run(room.handle_usar_instrumento("p1", {}))  # recusa
@@ -107,7 +108,7 @@ async def _dano10(n, faces, label): return 10
 
 def test_nota_cortante_dano_cheio_na_falha():
     room, p = _room_bardo(); _mute(room)
-    p["gear"]["instrumento"] = server.criar_instrumento("harpa", "padrao")  # 5q, 2d6
+    p["gear"]["off_hand"] = server.criar_instrumento("harpa", "padrao")  # 5q, 2d6
     m = {"id": "m1", "name": "Goblin", "hp": 30, "pos": [8, 5], "alive": True}
     room.monsters["m1"] = m
     room._save_mostrado = _save_falha
@@ -117,7 +118,7 @@ def test_nota_cortante_dano_cheio_na_falha():
 
 def test_nota_cortante_meia_no_sucesso():
     room, p = _room_bardo(); _mute(room)
-    p["gear"]["instrumento"] = server.criar_instrumento("harpa", "padrao")
+    p["gear"]["off_hand"] = server.criar_instrumento("harpa", "padrao")
     m = {"id": "m1", "name": "Goblin", "hp": 30, "pos": [6, 5], "alive": True}
     room.monsters["m1"] = m
     room._save_mostrado = _save_passa
@@ -127,7 +128,7 @@ def test_nota_cortante_meia_no_sucesso():
 
 def test_nota_cortante_fora_de_alcance_recusa():
     room, p = _room_bardo(); _mute(room)
-    p["gear"]["instrumento"] = server.criar_instrumento("harpa", "velho")   # 3q
+    p["gear"]["off_hand"] = server.criar_instrumento("harpa", "velho")   # 3q
     m = {"id": "m1", "name": "Goblin", "hp": 30, "pos": [10, 5], "alive": True}
     room.monsters["m1"] = m
     fome0 = p["fome"]
@@ -144,7 +145,7 @@ async def _dano8(n, faces, label): return 8
 def test_acorde_aoe_falha_empurra():
     room, p = _room_bardo(); _mute(room)
     p["pos"] = [5, 5]
-    p["gear"]["instrumento"] = server.criar_instrumento("tambor", "padrao")  # raio2, 2d4, push2
+    p["gear"]["off_hand"] = server.criar_instrumento("tambor", "padrao")  # raio2, 2d4, push2
     m = {"id": "m1", "name": "Goblin", "hp": 30, "pos": [6, 5], "alive": True}
     far = {"id": "m2", "name": "Ogro", "hp": 30, "pos": [12, 5], "alive": True}
     room.monsters = {"m1": m, "m2": far}
@@ -159,7 +160,7 @@ def test_acorde_aoe_falha_empurra():
 
 def test_acorde_sucesso_meia_sem_empurrao():
     room, p = _room_bardo(); _mute(room)
-    p["gear"]["instrumento"] = server.criar_instrumento("tambor", "padrao")
+    p["gear"]["off_hand"] = server.criar_instrumento("tambor", "padrao")
     m = {"id": "m1", "name": "Goblin", "hp": 30, "pos": [6, 5], "alive": True}
     room.monsters = {"m1": m}
     room._save_mostrado = _save_passa
@@ -171,7 +172,7 @@ def test_acorde_sucesso_meia_sem_empurrao():
 
 def test_ecos_ativa_aura():
     room, p = _room_bardo(); _mute(room)
-    p["gear"]["instrumento"] = server.criar_instrumento("sino", "padrao")  # 1d4, dur 3
+    p["gear"]["off_hand"] = server.criar_instrumento("sino", "padrao")  # 1d4, dur 3
     _run(room.handle_usar_instrumento("p1", {}))
     assert p["ecos_ate"] == room.round_num + 3
     assert p["ecos_dano"] == "1d4"
@@ -200,17 +201,17 @@ def test_sinfonia_boost_por_qualidade():
     room, p = _room_bardo(); _mute(room)
     p["guild_owned"] = {"especializacoes": [], "tecnicas": []}
     assert room._cancao_nivel_atributo(p, "acerto") == 1   # sem alaúde
-    p["gear"]["instrumento"] = server.criar_instrumento("alaude", "velho")
+    p["gear"]["off_hand"] = server.criar_instrumento("alaude", "velho")
     assert room._cancao_nivel_atributo(p, "acerto") == 2   # velho: só acerto
     assert room._cancao_nivel_atributo(p, "dano") == 1
-    p["gear"]["instrumento"] = server.criar_instrumento("alaude", "padrao")
+    p["gear"]["off_hand"] = server.criar_instrumento("alaude", "padrao")
     for a in ("acerto", "dano", "ca", "movimento", "resistencia"):
         assert room._cancao_nivel_atributo(p, a) == 2, a
 
 def test_sinfonia_empilha_com_espec():
     room, p = _room_bardo(); _mute(room)
     p["guild_owned"] = {"especializacoes": ["bardo_cancao_acerto"], "tecnicas": []}
-    p["gear"]["instrumento"] = server.criar_instrumento("alaude", "padrao")
+    p["gear"]["off_hand"] = server.criar_instrumento("alaude", "padrao")
     assert room._cancao_nivel_atributo(p, "acerto") == 3   # 2 (espec) + 1 (alaúde)
 
 def test_instrumento_roteia_para_bolsa():
@@ -219,7 +220,7 @@ def test_instrumento_roteia_para_bolsa():
     res = room._route_acquired_item(p, inst)
     assert res == "bag"
     assert inst in p["bag"]
-    assert p["gear"]["instrumento"] is None    # NÃO auto-equipa
+    assert p["gear"]["off_hand"] is None    # NÃO auto-equipa
 
 def test_instrumento_sku_gera_instancia():
     sku = server.instrumento_sku("harpa", "rustico", preco=120)
@@ -234,7 +235,7 @@ def test_instrumento_bolsa_cheia_nao_auto_equipa():
     inst = server.criar_instrumento("harpa", "rustico")
     res = room._route_acquired_item(p, inst)
     assert res == "full"
-    assert p["gear"]["instrumento"] is None    # NÃO faz resgate-equipar
+    assert p["gear"]["off_hand"] is None    # NÃO faz resgate-equipar
 
 def test_loadout_inicial_henrique():
     p = server.make_player("p1", "Henrique", "bard", 0)
@@ -242,7 +243,7 @@ def test_loadout_inicial_henrique():
     assert p["gear"]["weapon"].get("id") != "instrumento"
     assert p["weapon"].get("die")                    # arma de dano
     # Alaúde Velho no slot de instrumento
-    inst = p["gear"]["instrumento"]
+    inst = p["gear"]["off_hand"]
     assert inst and inst["base"] == "alaude" and inst["qualidade"] == "velho"
 
 if __name__ == "__main__":

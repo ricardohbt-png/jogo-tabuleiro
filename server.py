@@ -164,6 +164,7 @@ INSTRUMENTOS_BASE = {
     "harpa": {
         "nome": "Harpa", "icon": "🎵", "maos": 2, "modo": "ativada",
         "habilidade_nome": "Nota Cortante",
+        "desc": "Dispara uma lâmina de energia sonora contra um alvo à distância. O alvo faz um teste de Reflexos: em caso de sucesso, sofre metade do dano.",
         "efeito": {"tipo": "nota_cortante", "save": "reflexos"},
         "custo_fome": 3, "custo_sede": 3,
         "afixos_validos": ["fome", "sede", "alcance"],
@@ -176,6 +177,7 @@ INSTRUMENTOS_BASE = {
     "tambor": {
         "nome": "Tambor de Guerra", "icon": "🥁", "maos": 2, "modo": "ativada",
         "habilidade_nome": "Acorde Trovejante",
+        "desc": "Onda sonora num raio ao redor do bardo. Inimigos fazem Reflexos: falha sofre o dano cheio e é empurrada; sucesso sofre metade e não é empurrada.",
         "efeito": {"tipo": "acorde_trovejante", "save": "reflexos"},
         "custo_fome": 4, "custo_sede": 4,
         "afixos_validos": ["fome", "sede", "alcance"],
@@ -188,6 +190,7 @@ INSTRUMENTOS_BASE = {
     "sino": {
         "nome": "Sino", "icon": "🔔", "maos": 1, "modo": "ativada",
         "habilidade_nome": "Ecos Dolorosos",
+        "desc": "Ativa uma aura por algumas rodadas: enquanto dura, todo inimigo que acertar o bardo em corpo a corpo sofre dano sonoro de volta.",
         "efeito": {"tipo": "ecos_dolorosos"},
         "custo_fome": 2, "custo_sede": 2,
         "afixos_validos": ["fome", "sede", "duracao"],
@@ -200,6 +203,7 @@ INSTRUMENTOS_BASE = {
     "alaude": {
         "nome": "Alaúde", "icon": "🪕", "maos": 2, "modo": "passiva",
         "habilidade_nome": "Sinfonia Heroica",
+        "desc": "Passiva: enquanto a Canção Heroica toca, reforça seus bônus (+1 nos atributos cobertos, conforme a qualidade do Alaúde). Não precisa ser ativada.",
         "efeito": {"tipo": "sinfonia_heroica"},
         "custo_fome": 0, "custo_sede": 0,
         "afixos_validos": ["fome", "sede"],
@@ -3645,7 +3649,7 @@ _WEAPON_EMOJI = {
 # (escudo na mão esquerda, elmo, anéis, itens ativos).
 GEAR_BONUS_SLOTS = ("off_hand", "head", "boots", "ring1", "ring2", "item1", "item2")
 # Todos os 10 slots de equipamento, na ordem de exibição.
-GEAR_SLOTS = ("weapon", "off_hand", "armor", "head", "boots", "ring1", "ring2", "item1", "item2", "instrumento")
+GEAR_SLOTS = ("weapon", "off_hand", "armor", "head", "boots", "ring1", "ring2", "item1", "item2")
 
 # ─── SLOT SECUNDÁRIO — regras por personagem ──────────────────────────────────
 # ATENÇÃO (scaffolding): estas regras usam as chaves de herói do CLIENTE
@@ -3733,7 +3737,6 @@ def make_player(pid, name, cls_id, slot):
             "ring2":    None,                  # anel
             "item1":    None,                  # item ativo (mochila/luvas/cinto)
             "item2":    None,                  # item ativo
-            "instrumento": None,               # bardo: instrumento musical (Fase 1)
         },
         "status": [],
         "alive": True,
@@ -3821,7 +3824,8 @@ def make_player(pid, name, cls_id, slot):
     }
 
     if cls_id == "bard":
-        player["gear"]["instrumento"] = criar_instrumento("alaude", "velho")
+        # Instrumento vive na MÃO DO ESCUDO (off_hand) — substitui a 2ª adaga inicial.
+        player["gear"]["off_hand"] = criar_instrumento("alaude", "velho")
 
     return player
 
@@ -4932,9 +4936,9 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Não é o seu turno."}); return
         if p.get("class_id") != "bard":
             await self.send_to(pid, {"type": "error", "msg": "Apenas o bardo usa instrumentos."}); return
-        inst = p["gear"].get("instrumento")
-        if not inst:
-            await self.send_to(pid, {"type": "error", "msg": "Nenhum instrumento equipado."}); return
+        inst = p["gear"].get("off_hand")
+        if not inst or inst.get("tipo_item") != "instrumento":
+            await self.send_to(pid, {"type": "error", "msg": "Nenhum instrumento equipado (mão do escudo)."}); return
         base = INSTRUMENTOS_BASE[inst["base"]]
         if base["modo"] != "ativada":
             await self.send_to(pid, {"type": "error",
@@ -7855,8 +7859,8 @@ class GameRoom:
 
     def _sinfonia_bonus(self, p, attr_id):
         """+1 se um Alaúde equipado inclui `attr_id` na Sinfonia Heroica (por qualidade)."""
-        inst = p.get("gear", {}).get("instrumento")
-        if not inst or inst.get("base") != "alaude":
+        inst = p.get("gear", {}).get("off_hand")
+        if not inst or inst.get("tipo_item") != "instrumento" or inst.get("base") != "alaude":
             return 0
         st = self._instrumento_stats(inst)
         return 1 if attr_id in st.get("atributos", []) else 0
@@ -8826,8 +8830,9 @@ class GameRoom:
         k   = (item.get("kind") or "").lower()
         iid = (item.get("id") or "").lower()
         nm  = (item.get("name") or "").lower()
+        # Instrumento do bardo vive na mão do escudo (off_hand), sem slot próprio.
         if s == "instrumento" or item.get("tipo_item") == "instrumento":
-            return "instrumento"
+            return "off_hand"
         if s == "weapon" or k == "weapon":
             return "weapon"
         if s in ("shield", "off_hand") or k == "shield" or "shield" in iid or "escudo" in nm:
@@ -8960,18 +8965,13 @@ class GameRoom:
                 else:
                     log = self._equip_into_slot(p, item, "off_hand", "🏹")
             else:
-                log = self._equip_into_slot(p, item, "off_hand", "🛡️")
+                # Instrumento do bardo (tipo_item=="instrumento") também vive aqui.
+                emoji = "🎵" if item.get("tipo_item") == "instrumento" else "🛡️"
+                log = self._equip_into_slot(p, item, "off_hand", emoji)
         elif cat == "armor":    log = self._equip_into_slot(p, item, "armor",    "🛡️")
         elif cat == "head":     log = self._equip_into_slot(p, item, "head",     "⛑️")
         elif cat == "boots":    log = self._equip_into_slot(p, item, "boots",    "👢")
         elif cat == "ring":     log = self._equip_into_pair(p, item, ("ring1","ring2"), "💍")
-        elif cat == "instrumento":
-            if p.get("class_id") != "bard":
-                await self.send_to(pid, {"type": "error",
-                    "msg": "Apenas o bardo pode empunhar instrumentos musicais."})
-                p["bag"].insert(slot_index, item)   # devolve à bolsa (já foi removido)
-                return False
-            log = self._equip_into_slot(p, item, "instrumento", "🎵")
         else:                   log = self._equip_into_pair(p, item, ("item1","item2"), "🎒")
 
         if log:
