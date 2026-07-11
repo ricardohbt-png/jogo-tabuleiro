@@ -37,15 +37,24 @@ esses campos mas ninguém os lia).
 
 ## 2. Peça compartilhada — penalidade de movimento de monstro
 
-**Campos** (num monstro `m`): `m["mov_pen_val"]` (int) e `m["mov_pen_ate"]` (rodada
-limite, inclusive). **Leitura:** no ponto onde o orçamento de movimento do monstro é
-calculado por turno (hoje `m.get("movement", …)`/spd do monstro), subtrair
-`mov_pen_val` enquanto `mov_pen_ate >= round_num`, com **piso 1** (nunca zera o
-movimento). Helper `_mov_pen_monstro(m)` → int penalidade ativa (0 se expirada).
+**Realidade do código:** o orçamento de movimento do monstro é lido como
+`m.get("movement", N)` em ~20 ramos de IA distintos — **não há um ponto único**. O
+codebase já resolve isso para a **Cola** (item de gruda): reduz `m["movement"]`
+diretamente, guardando o original em `m["mov_reduzido_orig"]` e a duração em
+`m["mov_reduzido_rodadas"]`, com **restauração** processada 1×/turno no início do turno
+do monstro (`if "mov_reduzido_orig" in m:` em `_processar_*_turno`, ~linha 9950). Vamos
+**reusar esse mesmo mecanismo** — todos os ~20 ramos passam a respeitar a redução de
+graça, e a expiração/restauração já existe.
+
+**Helper `_reduzir_mov_monstro(m, val, rodadas)`** (aplicador, não leitor): guarda o
+original (uma vez), aplica a **maior** redução (`m["movement"] = min(atual, orig-val)`,
+**piso 1**) e a **maior** duração (`max`), reusando os campos `mov_reduzido_*` da Cola.
+Nunca aumenta o movimento. A restauração fica a cargo do processador de turno já
+existente.
 
 **Retro-fix Fase 1:** o ramo `push == 0` de `_instr_acorde_trovejante` (Tambor Velho)
-já grava `mov_pen_val=1`/`mov_pen_ate=round+1`; com a leitura acima ele passa a ter
-efeito (o comentário/lacuna documentada na Fase 1 é resolvido).
+passa a chamar `_reduzir_mov_monstro(m, 1, 1)` em vez de gravar os campos `mov_pen_*`
+(que ninguém lia) — resolvendo a lacuna documentada na Fase 1.
 
 ---
 
@@ -58,10 +67,9 @@ com `comp = st["cone"]` (largura = default do helper).
 **Resolução:** cada monstro vivo nas casas do cone faz **Vontade** vs
 `_instrumento_cd(bardo, inst)`:
 - **Falha:** Amedrontado — `m["com_medo"]=True`, `m["medo_rodadas"]=st["medo"]` (reusa
-  `_processar_medo`/`_fugir_monstro`) **+** penalidade de movimento
-  `mov_pen_val=st["pen_falha"]`, `mov_pen_ate=round+1` (só se `pen_falha>0`).
-- **Sucesso:** só penalidade `mov_pen_val=st["pen_sucesso"]`, `mov_pen_ate=round+1`
-  (só se `pen_sucesso>0`).
+  `_processar_medo`/`_fugir_monstro`) **+** `_reduzir_mov_monstro(m, st["pen_falha"], 1)`
+  (só se `pen_falha>0`).
+- **Sucesso:** só `_reduzir_mov_monstro(m, st["pen_sucesso"], 1)` (só se `pen_sucesso>0`).
 
 Cada alvo recebe seu `dice_roll` de save (padrão das AoE). `custo_fome/sede` = 3/3.
 
