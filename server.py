@@ -7963,6 +7963,7 @@ class GameRoom:
         elif bonus == "alcance":
             if "alcance" in st: st["alcance"] += 1
             if "raio" in st:    st["raio"] += 1
+            if "cone" in st:    st["cone"] += 1
         elif bonus == "duracao":
             if "duracao" in st: st["duracao"] += 1
         elif bonus == "cd":

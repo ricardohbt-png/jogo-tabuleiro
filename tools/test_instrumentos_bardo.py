@@ -326,6 +326,11 @@ def test_chamado_general_sucesso_so_pen_menor():
     assert m.get("com_medo") is None
     assert m["movement"] == 5                # 6 - pen_sucesso 1
 
+def test_trompa_refinada_alcance_bump_cone():
+    inst = server.criar_instrumento("trompa", "refinado", refinado_bonus="alcance")
+    st = server.GameRoom._instrumento_stats(inst)
+    assert st["cone"] == 6   # padrao 5 + 1
+
 def test_chamado_general_sem_direcao_recusa():
     room, p = _room_bardo(); _mute(room)
     p["gear"]["off_hand"] = server.criar_instrumento("trompa", "padrao")
