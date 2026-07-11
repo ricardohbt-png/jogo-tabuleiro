@@ -9058,7 +9058,7 @@ function mostrarTooltipMagia(a, b) {
   if (!tooltip) {
     tooltip = document.createElement('div');
     tooltip.id = 'tooltip-magia';
-    tooltip.style.cssText = `position:fixed; z-index:999; pointer-events:none; background:rgba(10,8,5,0.98); border:1px solid #c8a951; width:220px; padding:12px 14px; font-family:'Cinzel',serif;`;
+    tooltip.style.cssText = `position:fixed; z-index:2147483647; pointer-events:none; background:rgba(10,8,5,0.98); border:1px solid #c8a951; width:220px; padding:12px 14px; font-family:'Cinzel',serif; box-shadow:0 6px 24px rgba(0,0,0,0.75);`;
     document.body.appendChild(tooltip);
   }
 
@@ -9076,8 +9076,33 @@ function mostrarTooltipMagia(a, b) {
     <div style="margin-top:8px; padding-top:6px; border-top:1px solid ${corCirculo}22; color:#ff851b; font-size:9px;">${m.custo}</div>
   `;
   tooltip.style.display = 'block';
-  document.addEventListener('mousemove', _moverTooltipMagia);
-  if (event) _moverTooltipMagia(event);
+  // Ancora o quadro ACIMA do ícone da magia (centralizado), sem seguir o cursor.
+  // Se não couber acima (topo da tela), cai para baixo do ícone.
+  const alvo = (event && event.currentTarget && event.currentTarget.getBoundingClientRect)
+    ? event.currentTarget.getBoundingClientRect() : null;
+  _posicionarTooltipMagia(alvo, event);
+}
+
+function _posicionarTooltipMagia(rect, event) {
+  const t = document.getElementById('tooltip-magia');
+  if (!t) return;
+  const tw = t.offsetWidth || 220;
+  const th = t.offsetHeight || 120;
+  const M = 8;   // margem mínima da borda da tela
+  let left, top;
+  if (rect) {
+    left = rect.left + rect.width / 2 - tw / 2;   // centralizado no ícone
+    top  = rect.top - th - 10;                    // acima do ícone
+    if (top < M) top = rect.bottom + 10;          // sem espaço acima → abaixo
+  } else if (event) {
+    left = event.clientX - tw / 2;
+    top  = event.clientY - th - 14;
+    if (top < M) top = event.clientY + 18;
+  } else { left = M; top = M; }
+  left = Math.max(M, Math.min(left, window.innerWidth  - tw - M));
+  top  = Math.max(M, Math.min(top,  window.innerHeight - th - M));
+  t.style.left = left + 'px';
+  t.style.top  = top + 'px';
 }
 
 function _moverTooltipMagia(e) {
