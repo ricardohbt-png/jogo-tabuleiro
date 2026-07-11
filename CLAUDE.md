@@ -772,3 +772,21 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > loot procedural, 5 Improviso/Gaita. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-07-10-instrumentos-bardo-fase1*`. Teste:
 > `tools/test_instrumentos_bardo.py`.
+
+> **Fase 2 (Trompa/Lira/Flauta):** Chamado do General (Trompa, `chamado_general`) —
+> cone direcional (`dir:[dx,dy]`, reusa `_cone_tiles`), Vontade → falha: medo
+> (`com_medo`/`medo_rodadas`, reusa `_fugir_monstro`) + penalidade de movimento; sucesso:
+> penalidade menor. A penalidade usa `_reduzir_mov_monstro`, que reusa o mecanismo da Cola
+> (`mov_reduzido_orig`/`mov_reduzido_rodadas`, restaurado em `_processar_*_turno`) e **fecha
+> a lacuna** do Tambor Velho da Fase 1 (o ramo `push=0` agora reduz o movimento de verdade).
+> Dueto Marcial (Lira, `dueto_marcial`) — buff `dueto_marcial_ate`; o hook
+> `_reacoes_instrumento_apos_ataque` (em `handle_attack`, site principal do acerto) faz o
+> bardo revidar `_ataque_basico_reativo` quando um aliado adjacente ao bardo acerta um
+> inimigo também adjacente; cota `_dueto_marcial_cap` = 1/rodada (2 se Rúnico — plumbado
+> p/ Fase 4). Dueto Fantasma (Flauta, `dueto_fantasma`) — buff `dueto_fantasma_ate`/`_fracao`;
+> o mesmo hook ecoa uma fração do dano do ataque básico do bardo no mesmo alvo (sem novo
+> teste, sem recursão, só quando acerta). Guardas do Ecos (bardo vivo + instrumento ainda
+> no `off_hand`) valem p/ Lira e Flauta. Cliente: `usarInstrumento(target, dir)` repassa
+> direção; `acionarInstrumento` abre um seletor de 8 direções (`escolherDirecaoInstrumento`)
+> p/ o Chamado; Lira/Flauta são auto-centrados. Loja: SKUs em `SHOP_MERCHANT`. Fases 3–5
+> pendentes. Testes: `tools/test_instrumentos_bardo.py`.
