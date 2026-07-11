@@ -1328,7 +1328,13 @@ function _updateShopTabs(){
 function itemIconHTML(item, fallbackEmoji){
   const emoji = (item && item.emoji) || fallbackEmoji || '📦';
   if(!item || !item.id) return emoji;
-  const fileId = item.effect === 'scroll' ? 'pergaminho' : item.id;
+  // Instrumentos do bardo: uma foto por BASE (harpa/tambor/sino/alaude…), que
+  // vale para todas as qualidades E para o instrumento equipado (id genérico
+  // "instrumento"). Sem isso, o jogo procuraria pelo id do SKU
+  // (instrumento_harpa_velho.png) e o Alaúde inicial nunca acharia foto.
+  const fileId = item.effect === 'scroll' ? 'pergaminho'
+    : (item.tipo_item === 'instrumento' && item.base) ? item.base
+    : item.id;
   const src = _assetURL(`assets/itens/${fileId}.png`);
   return `<img src="${src}" alt="" class="item-icon-img" data-fallback="${emoji}" onerror="this.replaceWith(this.dataset.fallback)">`;
 }
@@ -8982,6 +8988,17 @@ const _COR_CIRCULO = { primeiro:'#c8a951', segundo:'#4488ff', terceiro:'#cc44ff'
 const _RGB_CIRCULO = { primeiro:'200,169,81', segundo:'68,136,255', terceiro:'204,68,255' };
 const _LABEL_CIRCULO = { primeiro:'1º Círculo', segundo:'2º Círculo', terceiro:'3º Círculo' };
 
+// Ícone de magia: PNG em assets/magias/<id>.png se existir, senão cai no emoji.
+// Espelha itemIconHTML (itens). `px` dimensiona a imagem; o onerror troca a
+// <img> pelo texto do emoji (que herda o font-size do elemento pai).
+function magiaIconHTML(m, px){
+  const emoji = (m && m.icone) || '📜';
+  if(!m || !m.id) return emoji;
+  const src = _assetURL(`assets/magias/${m.id}.png`);
+  const size = px || 22;
+  return `<img src="${src}" alt="" class="magia-icon-img" style="width:${size}px;height:${size}px;object-fit:contain;vertical-align:middle;" data-fallback="${emoji}" onerror="this.replaceWith(this.dataset.fallback)">`;
+}
+
 // Carta de magia 60x72 — cor por círculo (ver VISUAL_CONTRACT.md).
 function criarCartaMagia(magiaId, selecionada, disponivel, usada, modo) {
   const m = GRIMORIO_CLIENT[magiaId];
@@ -9012,7 +9029,7 @@ function criarCartaMagia(magiaId, selecionada, disponivel, usada, modo) {
       onmouseout="if(!${selecionada})this.style.borderColor='${cor}44'"
     >
       <div style="position:absolute; top:3px; right:3px; width:8px; height:8px; border-radius:50%; background:${cor}; opacity:${usada ? 0.3 : 1};"></div>
-      <div style="font-size:22px; margin-bottom:3px; line-height:1;">${usada ? '💤' : m.icone}</div>
+      <div style="font-size:22px; margin-bottom:3px; line-height:1;">${usada ? '💤' : magiaIconHTML(m, 26)}</div>
       <div style="color:${selecionada ? cor : usada ? '#2a2a2a' : '#8a7a5a'}; font-family:'Cinzel',serif; font-size:7px; letter-spacing:0.5px; text-align:center; line-height:1.2; max-width:54px; word-break:break-word;">${m.nome}</div>
       ${selecionada ? `<div style="position:absolute; bottom:2px; width:6px; height:6px; border-radius:50%; background:${cor};"></div>` : ''}
     </div>
@@ -9039,7 +9056,7 @@ function mostrarTooltipMagia(a, b) {
   const labelCirculo = _LABEL_CIRCULO[m.circulo];
   tooltip.innerHTML = `
     <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid ${corCirculo}33;">
-      <span style="font-size:24px;">${m.icone}</span>
+      <span style="font-size:24px;">${magiaIconHTML(m, 28)}</span>
       <div>
         <div style="color:${corCirculo}; font-size:12px; font-weight:bold;">${m.nome}</div>
         <div style="color:#8a7a5a; font-size:9px; letter-spacing:2px;">${labelCirculo}</div>
