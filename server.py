@@ -6736,7 +6736,6 @@ class GameRoom:
                     furtivo_detail = f" +🗡️{dano_furtivo} furtivo [{nd4}d4]"
                 target["hp"] -= dmg
                 await self._furtivo_reativo(p, target)
-                await self._reacoes_instrumento_apos_ataque(p, target, dmg)
                 crit_str = " **CRÍTICO!**" if crit else ""
                 await self.gm_say(
                     f"⚔️ **{p['name']}** ataca **{target['name']}** com {weapon_name}"
@@ -6770,6 +6769,7 @@ class GameRoom:
                         if p["weapon_poison_2_hits"] <= 0:
                             p["weapon_poison_2"] = None
                             await self.gm_say(f"🧴 O 2º veneno da arma de **{p['name']}** acabou.")
+                await self._reacoes_instrumento_apos_ataque(p, target, dmg)
             else:
                 await self.gm_say(
                     f"⚔️ **{p['name']}** ataca **{target['name']}**"
@@ -10116,7 +10116,7 @@ class GameRoom:
             else:
                 m["movement"] = m.pop("mov_reduzido_orig")
                 m.pop("mov_reduzido_rodadas", None)
-                await self.gm_say(f"🟢 A cola em **{m['name']}** seca — movimento normal.")
+                await self.gm_say(f"🟢 **{m['name']}** recupera o movimento normal.")
         return None
 
     # ── Batch 2: magias de status ───────────────────────────────────────────────
@@ -12898,10 +12898,11 @@ class GameRoom:
                     await self.gm_say(f"🟢 **{nome}** se esquiva da cola — sem efeito!")
                     return
             dur = ctrl.get("duracao", 2)
-            if "mov_reduzido_orig" not in alvo:     # 1ª aplicação: corta pela metade
-                alvo["mov_reduzido_orig"] = alvo.get("movement", 5)
-                alvo["movement"] = max(1, alvo["mov_reduzido_orig"] // 2)
-            alvo["mov_reduzido_rodadas"] = max(alvo.get("mov_reduzido_rodadas", 0), dur)
+            # Passa pelo mecanismo unificado (_reduzir_mov_monstro) para coexistir
+            # com outras fontes de redução (ex.: Trompa) — "maior redução vence,
+            # original verdadeiro preservado". Cola corta à metade do original.
+            orig = alvo.get("mov_reduzido_orig", alvo.get("movement", 5))
+            self._reduzir_mov_monstro(alvo, orig - orig // 2, dur)
             await self.gm_say(
                 f"🟢 **{nome}** fica preso na cola — movimento reduzido à metade "
                 f"por {alvo['mov_reduzido_rodadas']} rodada(s)!")

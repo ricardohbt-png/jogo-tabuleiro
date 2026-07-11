@@ -7735,9 +7735,15 @@ window.acionarInstrumento = acionarInstrumento;
 // interferir em nenhum estado de magia/arremesso em andamento.
 // Convenção dx,dy (mesma da Relâmpago/movimento — ver _facingToRotY,
 // GS.move): +y = Sul, -y = Norte, +x = Leste, -x = Oeste.
+// Referência de fechamento da invocação aberta de escolherDirecaoInstrumento
+// (permite remover o listener de keydown dela ao reabrir — ver função abaixo).
+let _instrumentoDirFechar = null;
+
 function escolherDirecaoInstrumento(b, onEscolher){
-  const old = document.getElementById('instrumento-dir-overlay');
-  if(old) old.remove();
+  // Fecha uma invocação anterior ainda aberta (remove o overlay E o listener
+  // de keydown dela — senão cada reabertura empilhava mais um listener no
+  // document, que nunca era removido).
+  if(_instrumentoDirFechar) _instrumentoDirFechar();
 
   const overlay = document.createElement('div');
   overlay.id = 'instrumento-dir-overlay';
@@ -7783,15 +7789,20 @@ function escolherDirecaoInstrumento(b, onEscolher){
   overlay.appendChild(painel);
   document.body.appendChild(overlay);
 
+  let fechado = false;
   function fechar(){
+    if(fechado) return;      // idempotente — click, Esc e reabertura podem chamar 2x
+    fechado = true;
     document.removeEventListener('keydown', onKey);
     overlay.remove();
+    if(_instrumentoDirFechar === fechar) _instrumentoDirFechar = null;
   }
   function onKey(e){
     if(e.key === 'Escape'){ fechar(); toast('Cancelado.', 'var(--text2)'); }
   }
   overlay.onclick = e => { if(e.target === overlay){ fechar(); } };
   document.addEventListener('keydown', onKey);
+  _instrumentoDirFechar = fechar;
 }
 
 // Ring 3D da Canção Heroica — criado/atualizado/removido conforme o estado.

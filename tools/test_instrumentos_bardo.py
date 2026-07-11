@@ -440,6 +440,87 @@ def test_skus_fase2_existem():
     assert "instrumento_lira_padrao" in ids
     assert "instrumento_flauta_padrao" in ids
 
+
+# ── Bug 1 (fix): morte processada 1x quando a reação/eco do instrumento é
+# quem mata o alvo (server.py handle_attack — a chamada de
+# _reacoes_instrumento_apos_ataque foi movida para DEPOIS do check de morte
+# do golpe original, ~server.py linha 6739→6772). ──────────────────────────
+
+def test_dueto_fantasma_kill_processa_morte_1x():
+    # Eco da Flauta: quando o próprio eco é quem zera o HP, ele mesmo chama
+    # _monster_dies (e retorna) — prova que o caminho do eco só mata 1x.
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("flauta", "padrao")
+    p["dueto_fantasma_ate"] = room.round_num + 3
+    p["dueto_fantasma_fracao"] = 50
+    m = {"id": "m1", "name": "Goblin", "hp": 4, "max_hp": 20, "pos": [6, 5], "alive": True}
+    room.monsters["m1"] = m
+    mortes = []
+    async def _dies(mon, killer):
+        mortes.append(mon["id"]); mon["hp"] = 0
+    room._monster_dies = _dies
+    _run(room._reacoes_instrumento_apos_ataque(p, m, 10))   # eco = 10*50//100 = 5 → mata (hp 4)
+    assert m["hp"] == 0
+    assert mortes == ["m1"]   # morte processada 1x pelo eco
+
+def test_reacao_lira_kill_via_handle_attack_processa_morte_1x():
+    """Regressão real do Bug 1: o golpe ORIGINAL de um aliado (guerreiro) não
+    mata (5 -> 2 HP); a reação do Dueto Marcial (Lira do bardo) é quem termina
+    o alvo. Passa pelo handle_attack de verdade (sem mockar
+    _ataque_basico_reativo) — antes do fix, o check de morte do golpe original
+    via _monster_dies rodava DEPOIS da reação já ter zerado o HP, chamando
+    _monster_dies uma 2ª vez sobre o mesmo alvo (XP/loot em dobro)."""
+    room = server.GameRoom("TEST")
+    _mute(room)
+    room.phase = "playing"
+    room.round_num = 1
+    warrior = server.make_player("h", "Guerreiro", "warrior", 0)
+    warrior["pos"] = [0, 0]; warrior["alive"] = True
+    warrior["str_"] = 10; warrior["fome"] = 50; warrior["sede"] = 50
+    warrior["atk_bonus"] = 0
+    warrior["weapon"] = {"id": "espada", "name": "Espada", "die": "1d6", "stat": "str_"}
+    bardo = server.make_player("b", "Henrique", "bard", 1)
+    bardo["pos"] = [1, 1]; bardo["alive"] = True
+    bardo["str_"] = 10; bardo["fome"] = 50; bardo["sede"] = 50
+    bardo["atk_bonus"] = 0
+    bardo["weapon"] = {"id": "adaga", "name": "Adaga", "die": "1d4", "stat": "str_"}
+    bardo["gear"]["off_hand"] = server.criar_instrumento("lira", "padrao")
+    bardo["dueto_marcial_ate"] = room.round_num + 3
+    room.players = {"h": warrior, "b": bardo}
+    room.turn_order = ["h", "b"]
+    room._is_turn = lambda pid: pid == "h"
+    monstro = {"id": "m1", "name": "Goblin", "hp": 5, "max_hp": 20, "ac": 5, "pos": [0, 1], "alive": True}
+    room.monsters = {"m1": monstro}
+    room._rolar_ataque = lambda atk, ac, v=False, d=False: (True, 10, 10 + atk, False, None)
+    orig_roll_dice = server.roll_dice
+    server.roll_dice = lambda die_str: 3
+    mortes = []
+    async def _dies(mon, killer):
+        mortes.append(mon["id"]); mon["hp"] = 0; mon["alive"] = False
+    room._monster_dies = _dies
+    try:
+        _run(room.handle_attack("h", "m1"))
+    finally:
+        server.roll_dice = orig_roll_dice
+    # Guerreiro: 5 -> 2 (não mata). Reação da Lira: mais 3 -> mata.
+    assert monstro["hp"] == 0
+    assert mortes == ["m1"], f"morte processada {len(mortes)}x (esperado 1x): {mortes}"
+
+
+# ── Bug 2 (fix): Trompa (_reduzir_mov_monstro) e Cola (arremessável tático)
+# coexistem — Cola foi refatorada para passar pelo mecanismo unificado, em vez
+# de um gate `if "mov_reduzido_orig" not in alvo` que fazia a Cola virar no-op
+# quando a Trompa já tivesse marcado esse campo primeiro. ────────────────────
+
+def test_trompa_depois_cola_reduz_corretamente():
+    room, p = _room_bardo(); _mute(room)
+    m = {"id": "m1", "name": "Goblin", "hp": 20, "pos": [6, 5], "alive": True, "movement": 6}
+    room._reduzir_mov_monstro(m, 1, 1)          # Trompa -1 → 5
+    assert m["movement"] == 5
+    orig = m.get("mov_reduzido_orig", m["movement"])
+    room._reduzir_mov_monstro(m, orig - orig // 2, 2)   # simula a Cola (via helper unificado)
+    assert m["movement"] == 3                   # min(5, 6//2) = 3 (Cola não é anulada)
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]
