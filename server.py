@@ -1121,7 +1121,7 @@ CLASSES = {
         "name": "Henrique, o Bardo", "emoji": "🎶", "color": "#9b7fd4",
         "hp": 9, "mp": 0, "max_mp": 0, "spd": 6, "start_gold": 20,   # bardo não usa MP — habilidades custam fome/sede
         "str_": 10, "dex": 16, "con_": 12, "int_": 12,
-        "ac_base": 13, "weapon": "dagger", "atk_bonus": 3,   # BAB 0 + DES mod(16)=+3; ac_base 13 inclui manto+1 | Henrique: Adaga (mão principal) + Adaga 2ª mão + Alaúde Velho no slot de instrumento
+        "ac_base": 13, "weapon": "dagger", "atk_bonus": 3,   # BAB 0 + DES mod(16)=+3; ac_base 13 inclui manto+1 | Henrique: Adaga (mão principal) + Alaúde Velho na mão do escudo (off_hand, substitui a 2ª adaga)
         "saves_base": {"fort": 0, "ref": 2, "will": 2},           # Ref e Von bons, Fort ruim
         "desc": "Músico que inspira aliados com canções e provoca inimigos",
         "skills": [
@@ -3648,7 +3648,8 @@ _WEAPON_EMOJI = {
 # Slots de equipamento que NÃO são a armadura do corpo mas podem dar +CA
 # (escudo na mão esquerda, elmo, anéis, itens ativos).
 GEAR_BONUS_SLOTS = ("off_hand", "head", "boots", "ring1", "ring2", "item1", "item2")
-# Todos os 10 slots de equipamento, na ordem de exibição.
+# Todos os 9 slots de equipamento, na ordem de exibição. O instrumento do bardo
+# NÃO tem slot próprio — vive no off_hand (mão do escudo).
 GEAR_SLOTS = ("weapon", "off_hand", "armor", "head", "boots", "ring1", "ring2", "item1", "item2")
 
 # ─── SLOT SECUNDÁRIO — regras por personagem ──────────────────────────────────
@@ -5034,8 +5035,14 @@ class GameRoom:
         return True
 
     async def _instr_ecos_retaliar(self, p, m):
-        """Aplica a retaliação de Ecos a um monstro que acabou de acertar o bardo."""
-        if p.get("ecos_ate", 0) < self.round_num:
+        """Aplica a retaliação de Ecos a um monstro que acabou de acertar o bardo.
+        Requer o bardo vivo E ainda empunhando o Sino (guardar o instrumento
+        encerra a ressonância — senão dava para tocar e trocar por um escudo
+        mantendo a aura)."""
+        if not p.get("alive") or p.get("ecos_ate", 0) < self.round_num:
+            return
+        off = p.get("gear", {}).get("off_hand")
+        if not off or off.get("tipo_item") != "instrumento" or off.get("base") != "sino":
             return
         if m.get("hp", 0) <= 0:
             return
@@ -13303,6 +13310,7 @@ class GameRoom:
                 # acerta o bardo em CORPO A CORPO (range ausente = melee;
                 # ataques à distância/reach não disparam a retaliação)
                 if not atk_def.get("range") and target.get("class_id") == "bard" \
+                   and target.get("hp", 0) > 0 \
                    and target.get("ecos_ate", 0) >= self.round_num:
                     await self._instr_ecos_retaliar(target, m)
             else:

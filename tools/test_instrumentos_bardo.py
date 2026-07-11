@@ -183,6 +183,7 @@ def test_ecos_retaliacao():
     room, p = _room_bardo(); _mute(room)
     p["ecos_ate"] = room.round_num + 2
     p["ecos_dano"] = "1d4"
+    p["gear"]["off_hand"] = server.criar_instrumento("sino", "padrao")  # Sino ainda empunhado
     m = {"id": "m1", "name": "Goblin", "hp": 20, "pos": [5, 5], "alive": True}
     room.monsters["m1"] = m
     async def _dano3(n, faces, label): return 3
@@ -193,9 +194,36 @@ def test_ecos_retaliacao():
 def test_ecos_expira():
     room, p = _room_bardo(); _mute(room)
     p["ecos_ate"] = room.round_num - 1   # já expirou
+    p["gear"]["off_hand"] = server.criar_instrumento("sino", "padrao")
     m = {"id": "m1", "name": "Goblin", "hp": 20, "pos": [5, 5], "alive": True}
     _run(room._instr_ecos_retaliar(p, m))
     assert m["hp"] == 20
+
+def test_ecos_para_se_desequipar_sino():
+    # Ativou Ecos e depois trocou o Sino por outra coisa → a aura para (evita
+    # tocar-e-trocar-por-escudo mantendo a retaliação).
+    room, p = _room_bardo(); _mute(room)
+    p["ecos_ate"] = room.round_num + 2
+    p["ecos_dano"] = "1d4"
+    p["gear"]["off_hand"] = None            # Sino guardado / trocado
+    m = {"id": "m1", "name": "Goblin", "hp": 20, "pos": [5, 5], "alive": True}
+    async def _dano3(n, faces, label): return 3
+    room._rolar_dano_mostrado = _dano3
+    _run(room._instr_ecos_retaliar(p, m))
+    assert m["hp"] == 20                     # sem retaliação
+
+def test_ecos_nao_retalia_bardo_morto():
+    # Um bardo morto pelo próprio golpe que dispararia a retaliação não revida.
+    room, p = _room_bardo(); _mute(room)
+    p["ecos_ate"] = room.round_num + 2
+    p["ecos_dano"] = "1d4"
+    p["gear"]["off_hand"] = server.criar_instrumento("sino", "padrao")
+    p["alive"] = False
+    m = {"id": "m1", "name": "Goblin", "hp": 20, "pos": [5, 5], "alive": True}
+    async def _dano3(n, faces, label): return 3
+    room._rolar_dano_mostrado = _dano3
+    _run(room._instr_ecos_retaliar(p, m))
+    assert m["hp"] == 20                     # sem retaliação
 
 def test_sinfonia_boost_por_qualidade():
     room, p = _room_bardo(); _mute(room)
