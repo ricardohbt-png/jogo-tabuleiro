@@ -274,6 +274,28 @@ def test_loadout_inicial_henrique():
     inst = p["gear"]["off_hand"]
     assert inst and inst["base"] == "alaude" and inst["qualidade"] == "velho"
 
+def test_reduzir_mov_monstro():
+    room, p = _room_bardo(); _mute(room)
+    m = {"id": "m1", "name": "Goblin", "hp": 20, "pos": [6, 5], "alive": True, "movement": 6}
+    room._reduzir_mov_monstro(m, 2, 1)
+    assert m["movement"] == 4
+    assert m["mov_reduzido_orig"] == 6
+    assert m["mov_reduzido_rodadas"] == 1
+    room._reduzir_mov_monstro(m, 100, 1)
+    assert m["movement"] == 1
+    assert m["mov_reduzido_orig"] == 6
+
+def test_tambor_velho_reduz_movimento():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("tambor", "velho")  # raio1, 1d2, push0
+    m = {"id": "m1", "name": "Goblin", "hp": 20, "pos": [5, 5], "alive": True, "movement": 6}
+    room.monsters["m1"] = m
+    async def _falha(*a, **k): return (False, 1, 0, 1)
+    async def _d(n, faces, label): return 1
+    room._save_mostrado = _falha; room._rolar_dano_mostrado = _d
+    _run(room.handle_usar_instrumento("p1", {}))
+    assert m["movement"] == 5   # push=0 → -1 movimento
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]

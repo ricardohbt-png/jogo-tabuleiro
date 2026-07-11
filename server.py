@@ -4996,6 +4996,19 @@ class GameRoom:
             await self._monster_dies(m, p["id"])
         return True
 
+    def _reduzir_mov_monstro(self, m, val, rodadas):
+        """Reduz o movimento do monstro por `rodadas` turnos, reusando o mecanismo
+        da Cola (mov_reduzido_orig/rodadas, restaurado em _processar_*_turno).
+        Empilha pela MAIOR redução e MAIOR duração; piso 1; nunca aumenta o mov."""
+        if val <= 0 or rodadas <= 0:
+            return
+        if "mov_reduzido_orig" not in m:
+            m["mov_reduzido_orig"] = m.get("movement", 5)
+        orig = m["mov_reduzido_orig"]
+        novo = max(1, orig - val)
+        m["movement"] = min(m.get("movement", orig), novo)
+        m["mov_reduzido_rodadas"] = max(m.get("mov_reduzido_rodadas", 0), rodadas)
+
     async def _instr_acorde_trovejante(self, p, inst, st, data):
         """AoE centrada no bardo (raio Chebyshev). Falha: dano cheio + empurrão;
         sucesso: metade, sem empurrão. push=0 → -1 movimento no lugar do empurrão."""
@@ -5017,8 +5030,7 @@ class GameRoom:
                     dy = (m["pos"][1] > p["pos"][1]) - (m["pos"][1] < p["pos"][1])
                     self._empurrar(m, dx, dy, st["push"])
                 else:
-                    m["mov_pen_val"] = 1
-                    m["mov_pen_ate"] = self.round_num + 1
+                    self._reduzir_mov_monstro(m, 1, 1)   # Tambor Velho: -1 movimento
             await self.gm_say(f"🥁 **{m['name']}** sofre **{dano}**"
                               f"{' (metade)' if save_ok else ''}.")
             if m["hp"] <= 0:
