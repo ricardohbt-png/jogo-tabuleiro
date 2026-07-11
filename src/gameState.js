@@ -1255,9 +1255,13 @@ const GS = (() => {
     return pronta ? Math.max(0, pronta - round) : 0;
   }
 
-  // ── Instrumentos do Bardo (Fase 1) ──────────────────────────────────────
-  function usarInstrumento(target) {
-    send({ type: 'usar_instrumento', target_id: (target && target.id != null) ? target.id : null });
+  // ── Instrumentos do Bardo (Fase 1/2) ─────────────────────────────────────
+  // dir: [dx,dy] opcional — usado pela Trompa (Chamado do General, mira por
+  // direção, mesmo padrão da Relâmpago). As demais habilidades não usam dir.
+  function usarInstrumento(target, dir) {
+    send({ type: 'usar_instrumento',
+           target_id: (target && target.id != null) ? target.id : null,
+           dir: dir || null });
   }
   function instrumentoBase(baseId) {
     return (instrumentoBaseCache && instrumentoBaseCache[baseId]) || null;

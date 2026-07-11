@@ -7700,8 +7700,11 @@ function _bardInstrumentoBtn(me){
 
 // Dispara a habilidade do instrumento equipado. Nota Cortante (Harpa) mira 1
 // monstro dentro do alcance (mesmo padrão de mira da Provocação — modal só
-// quando há mais de 1 alvo válido); Acorde Trovejante (Tambor, AoE centrada no
-// bardo) e Ecos Dolorosos (Sino, aura própria) não têm alvo — GS.usarInstrumento(null).
+// quando há mais de 1 alvo válido); Chamado do General (Trompa) mira por
+// DIREÇÃO (mesmo padrão da Relâmpago — dir:[dx,dy]); Acorde Trovejante
+// (Tambor, AoE centrada no bardo), Ecos Dolorosos (Sino, aura própria), Dueto
+// Marcial (Lira) e Dueto Fantasma (Flauta) são auto-buffs sem alvo —
+// GS.usarInstrumento(null).
 function acionarInstrumento(me, inst, b){
   const tipo = b.efeito && b.efeito.tipo;
   if(tipo === 'nota_cortante'){
@@ -7715,12 +7718,81 @@ function acionarInstrumento(me, inst, b){
     if(alvos.length === 1){ GS.usarInstrumento(alvos[0]); return; }
     openTargetModal(`${b.icon} ${b.habilidade_nome} — Escolha o alvo (alcance ${alcance}q)`, alvos, 'monster',
       id => GS.usarInstrumento({ id }));
+  } else if(tipo === 'chamado_general'){
+    escolherDirecaoInstrumento(b, (dx, dy) => GS.usarInstrumento(null, [dx, dy]));
   } else {
     GS.usarInstrumento(null);
   }
 }
 
 window.acionarInstrumento = acionarInstrumento;
+
+// ── Seletor de direção (8 direções) — usado pelo Chamado do General (Trompa).
+// Overlay mínimo e autocontido: NÃO reaproveita o pipeline de mira de magia
+// (window._modoMagia/_clickTileMagia), que está fortemente acoplado ao envio
+// de `{type:'magia', magia_id}` sobre o board 2D/3D. Aqui só precisamos de
+// uma direção relativa ao bardo — um compasso de 8 botões resolve sem
+// interferir em nenhum estado de magia/arremesso em andamento.
+// Convenção dx,dy (mesma da Relâmpago/movimento — ver _facingToRotY,
+// GS.move): +y = Sul, -y = Norte, +x = Leste, -x = Oeste.
+function escolherDirecaoInstrumento(b, onEscolher){
+  const old = document.getElementById('instrumento-dir-overlay');
+  if(old) old.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'instrumento-dir-overlay';
+  overlay.style.cssText = `
+    position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.55);
+    display:flex; align-items:center; justify-content:center;`;
+
+  const painel = document.createElement('div');
+  painel.style.cssText = `
+    background:var(--bg2); border:1px solid var(--border2); border-radius:8px;
+    padding:20px 24px; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,.6);`;
+  painel.innerHTML = `
+    <div style="color:var(--gold); font-weight:bold; margin-bottom:4px;">
+      ${b.icon || '📯'} ${b.habilidade_nome || 'Escolha a direção'}
+    </div>
+    <div style="color:var(--text2); font-size:.75rem; margin-bottom:14px;">
+      Escolha a direção do chamado &nbsp;|&nbsp; ESC cancela
+    </div>`;
+
+  const grid = document.createElement('div');
+  grid.style.cssText = `display:grid; grid-template-columns:repeat(3,52px);
+    grid-template-rows:repeat(3,52px); gap:4px; justify-content:center;`;
+
+  // [label, dx, dy, posição na grade 3x3 (row,col), 0-indexed]
+  const dirs = [
+    ['↖','NO',-1,-1,0,0], ['↑','N',0,-1,0,1], ['↗','NE',1,-1,0,2],
+    ['←','O',-1,0,1,0],   [null,null,null,null,1,1], ['→','L',1,0,1,2],
+    ['↙','SO',-1,1,2,0],  ['↓','S',0,1,2,1], ['↘','SE',1,1,2,2],
+  ];
+  for(const [icon, label, dx, dy, row, col] of dirs){
+    const cell = document.createElement(icon ? 'button' : 'div');
+    cell.style.cssText = `grid-row:${row+1}; grid-column:${col+1};
+      display:flex; align-items:center; justify-content:center;`;
+    if(icon){
+      cell.className = 'btn-secondary';
+      cell.style.fontSize = '1.3rem';
+      cell.title = label;
+      cell.onclick = () => { fechar(); onEscolher(dx, dy); };
+    }
+    grid.appendChild(cell);
+  }
+  painel.appendChild(grid);
+  overlay.appendChild(painel);
+  document.body.appendChild(overlay);
+
+  function fechar(){
+    document.removeEventListener('keydown', onKey);
+    overlay.remove();
+  }
+  function onKey(e){
+    if(e.key === 'Escape'){ fechar(); toast('Cancelado.', 'var(--text2)'); }
+  }
+  overlay.onclick = e => { if(e.target === overlay){ fechar(); } };
+  document.addEventListener('keydown', onKey);
+}
 
 // Ring 3D da Canção Heroica — criado/atualizado/removido conforme o estado.
 function _sync3DCancaoRing(state){
