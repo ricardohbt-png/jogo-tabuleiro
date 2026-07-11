@@ -55,6 +55,9 @@ def _room_bardo():
     room.players["p1"] = p
     room.turn_order = ["p1"]
     room._is_turn = lambda pid: pid == "p1"
+    room.map_w = server.MAP_W
+    room.map_h = server.MAP_H
+    room.tiles = [[server.FLOOR] * server.MAP_W for _ in range(server.MAP_H)]
     return room, p
 
 def test_sem_slot_dedicado_instrumento():
@@ -295,6 +298,42 @@ def test_tambor_velho_reduz_movimento():
     room._save_mostrado = _falha; room._rolar_dano_mostrado = _d
     _run(room.handle_usar_instrumento("p1", {}))
     assert m["movement"] == 5   # push=0 → -1 movimento
+
+def test_chamado_general_falha_medo_e_pen():
+    room, p = _room_bardo(); _mute(room)
+    p["pos"] = [5, 5]
+    p["gear"]["off_hand"] = server.criar_instrumento("trompa", "padrao")  # cone5 pen_falha2 pen_suc1
+    dentro = {"id": "m1", "name": "Goblin", "hp": 20, "pos": [6, 5], "alive": True, "movement": 6}
+    fora   = {"id": "m2", "name": "Ogro",   "hp": 20, "pos": [5, 1], "alive": True, "movement": 6}
+    room.monsters = {"m1": dentro, "m2": fora}
+    async def _falha(*a, **k): return (False, 1, 0, 1)
+    room._save_mostrado = _falha
+    _run(room.handle_usar_instrumento("p1", {"dir": [1, 0]}))
+    assert dentro.get("com_medo") is True and dentro["medo_rodadas"] == 1
+    assert dentro["movement"] == 4          # 6 - pen_falha 2
+    assert fora.get("com_medo") is None
+    assert fora["movement"] == 6
+
+def test_chamado_general_sucesso_so_pen_menor():
+    room, p = _room_bardo(); _mute(room)
+    p["pos"] = [5, 5]
+    p["gear"]["off_hand"] = server.criar_instrumento("trompa", "padrao")
+    m = {"id": "m1", "name": "Goblin", "hp": 20, "pos": [6, 5], "alive": True, "movement": 6}
+    room.monsters = {"m1": m}
+    async def _passa(*a, **k): return (True, 20, 0, 20)
+    room._save_mostrado = _passa
+    _run(room.handle_usar_instrumento("p1", {"dir": [1, 0]}))
+    assert m.get("com_medo") is None
+    assert m["movement"] == 5                # 6 - pen_sucesso 1
+
+def test_chamado_general_sem_direcao_recusa():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("trompa", "padrao")
+    m = {"id": "m1", "name": "Goblin", "hp": 20, "pos": [6, 5], "alive": True, "movement": 6}
+    room.monsters = {"m1": m}
+    fome0 = p["fome"]
+    _run(room.handle_usar_instrumento("p1", {}))
+    assert p["fome"] == fome0 and m["movement"] == 6
 
 if __name__ == "__main__":
     import inspect

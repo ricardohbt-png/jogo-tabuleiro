@@ -213,6 +213,19 @@ INSTRUMENTOS_BASE = {
             "padrao":  {"atributos": ["acerto", "dano", "ca", "movimento", "resistencia"]},
         },
     },
+    "trompa": {
+        "nome": "Trompa de Guerra", "icon": "📯", "maos": 2, "modo": "ativada",
+        "habilidade_nome": "Chamado do General",
+        "desc": "Sopra a trompa num cone à frente. Inimigos fazem Vontade: falha = Amedrontados (fogem) + perdem movimento; sucesso = perdem menos movimento.",
+        "efeito": {"tipo": "chamado_general", "save": "vontade"},
+        "custo_fome": 3, "custo_sede": 3,
+        "afixos_validos": ["fome", "sede", "alcance"],
+        "stats": {
+            "velho":   {"cone": 3, "medo": 1, "pen_falha": 0, "pen_sucesso": 0},
+            "rustico": {"cone": 4, "medo": 1, "pen_falha": 1, "pen_sucesso": 0},
+            "padrao":  {"cone": 5, "medo": 1, "pen_falha": 2, "pen_sucesso": 1},
+        },
+    },
 }
 
 _QUALIDADE_LABEL = {
@@ -4963,6 +4976,8 @@ class GameRoom:
             ok = await self._instr_acorde_trovejante(p, inst, st, data)
         elif tipo == "ecos_dolorosos":
             ok = await self._instr_ecos_dolorosos(p, inst, st, data)
+        elif tipo == "chamado_general":
+            ok = await self._instr_chamado_general(p, inst, st, data)
         else:
             await self.send_to(pid, {"type": "error", "msg": "Instrumento em desenvolvimento."}); return
         if not ok:
@@ -5063,6 +5078,36 @@ class GameRoom:
         await self.gm_say(f"🔔 Os Ecos Dolorosos ferem **{m['name']}** em **{dano}**!")
         if m["hp"] <= 0:
             await self._monster_dies(m, p["id"])
+
+    async def _instr_chamado_general(self, p, inst, st, data):
+        """Cone direcional; Vontade → falha: medo + penalidade de mov.; sucesso:
+        penalidade menor."""
+        dirv = (data or {}).get("dir") or [0, 0]
+        dx = 1 if dirv[0] > 0 else -1 if dirv[0] < 0 else 0
+        dy = 1 if dirv[1] > 0 else -1 if dirv[1] < 0 else 0
+        if dx == 0 and dy == 0:
+            await self.send_to(p["id"], {"type": "error", "msg": "Escolha uma direção para o Chamado."}); return False
+        comp = st["cone"]
+        tiles = self._cone_tiles(p["pos"][0], p["pos"][1], dx, dy, comp, comp)
+        alvos = [m for m in self.monsters.values()
+                 if m.get("hp", 0) > 0 and tuple(m["pos"]) in tiles]
+        if not alvos:
+            await self.send_to(p["id"], {"type": "error", "msg": "Nenhum inimigo no cone."}); return False
+        await self.gm_say(f"📯 **{p['name']}** sopra o **Chamado do General** (cone {comp})!")
+        cd = self._instrumento_cd(p, inst)
+        for m in alvos:
+            save_ok, *_ = await self._save_mostrado(m, "vontade", cd)
+            if not save_ok:
+                m["com_medo"] = True
+                m["medo_rodadas"] = st["medo"]
+                if st.get("pen_falha", 0) > 0:
+                    self._reduzir_mov_monstro(m, st["pen_falha"], 1)
+                await self.gm_say(f"📯 **{m['name']}** entra em pânico (Amedrontado {st['medo']}r)!")
+            else:
+                if st.get("pen_sucesso", 0) > 0:
+                    self._reduzir_mov_monstro(m, st["pen_sucesso"], 1)
+                await self.gm_say(f"📯 **{m['name']}** resiste, mas hesita.")
+        return True
 
     async def handle_usar_oportunidade_movimento(self, pid):
         """Gasta o crédito de Oportunidade na via 'movimento extra' (soma spd a
