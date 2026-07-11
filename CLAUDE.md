@@ -132,6 +132,7 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `guild_buy` | `item_id` — compra uma especialização/técnica na **Guilda dos Heróis** (id em `GUILD_CATALOG`). Só na cidade; valida classe, pré-requisito, posse e ouro; grava o save do personagem. |
 | `guild_equip` | `slot` (`tecnica`\|`tecnica_exclusiva`), `item_id` (ou `null` p/ desequipar) — equipa uma técnica possuída no 4º slot. Só na cidade. `tecnica_exclusiva` só para mago/clérigo e só técnicas `exclusiva:true`. |
 | `usar_tecnica` | `tecnica_id`, `target_id` opcional — ativa a técnica equipada na masmorra (no turno do herói). Valida equipada/fora de recarga/fome-sede; aplica efeito, debita 🍖/💧 e entra em recarga (`round_num + recarga_rodadas`). |
+| `usar_instrumento` | `target_id` opcional — o bardo (Henrique) ativa a habilidade do instrumento equipado na **mão do escudo** (`off_hand`; só se `tipo_item=="instrumento"` e `modo:"ativada"`). Nota Cortante (Harpa) mira 1 monstro; Acorde Trovejante (Tambor) e Ecos Dolorosos (Sino) são auto-centrados; Sinfonia Heroica (Alaúde) é passiva (sem mensagem — reforça a Canção). Economia de ação: 2 mãos = atacar OU tocar; 1 mão = atacar E tocar; máx. 1 instrumento/turno (`instrumento_usado`, resetado no fim do turno). Custo em 🍖/💧 dos stats derivados; sem recarga. |
 
 ### Server → Client
 `lobby_state`, `game_start`, `city_state`, `shop_result`, `enter_dungeon`,
@@ -727,3 +728,47 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > carregar a direção do peão de herói, já que nenhum herói passa pelo ramo
 > de monstro orientado. Sem animação — a rotação encaixa instantaneamente a
 > cada passo confirmado. Teste: `tools/test_peao_facing.py`.
+
+> **Instrumentos do Bardo (Fase 1):** equipamento exclusivo do bardo (Henrique)
+> que concede uma habilidade de assinatura escalável por qualidade. **Modelo
+> 3-eixos:** `INSTRUMENTOS_BASE` (server.py) define 4 bases — `harpa`/`tambor`/`sino`/
+> `alaude` — com `maos` (1/2, só economia de ação), `modo` (`ativada`/`passiva`),
+> `habilidade_nome`, `desc`, `efeito`, custo-base e stats por qualidade
+> (`velho`/`rustico`/`padrao`). Uma instância é criada por `criar_instrumento(base,
+> qualidade, origem, encantamento, refinado_bonus, origem_bonus)` (item com
+> `tipo_item:"instrumento"`, `name`/`emoji`/`item_slot`, `allowed_classes:["bard"]`) —
+> guarda só os atributos; os números efetivos são derivados por `_instrumento_stats`
+> (camadas Qualidade→Refinado→Origem→Encantamento; Origem/Encantamento plumbados mas
+> não gerados na Fase 1). CD do save = `_instrumento_cd` = `8 + mod(DES)`. "Lendário"
+> é só o rótulo do máximo dos 3 eixos. **Slot — mão do escudo:** o instrumento vive
+> no `off_hand` (sem slot dedicado; compete com escudo/2ª arma). `_slot_category_for_item`
+> mapeia `tipo_item=="instrumento"` → `off_hand`; o equipar reusa o pipeline de gear
+> (`_executar_equip_from_bag`, ramo `off_hand`), com bard-only garantido por
+> `allowed_classes`. Aquisição bolsa-primeiro (`_route_acquired_item`, sem
+> auto-equipar); loja via `instrumento_sku` em `SHOP_MERCHANT`; loot reusa o pipeline
+> de item. **Ativação:** `handle_usar_instrumento` (msg `usar_instrumento`) lê o
+> `off_hand` (checando `tipo_item`), valida turno + economia de ação (flag
+> `instrumento_usado`, resetada no fim do turno: 2 mãos = atacar OU tocar; 1 mão =
+> atacar E tocar; máx. 1/turno) + custo 🍖/💧, e despacha por efeito:
+> `_instr_nota_cortante` (Harpa, alvo único, save Reflexos meia), `_instr_acorde_trovejante`
+> (Tambor, AoE raio, save + empurrão; `push=0` grava `mov_pen_*` — leitura no
+> movimento do monstro é lacuna aceita da Fase 1), `_instr_ecos_dolorosos` (Sino, aura
+> ativada por `duracao` rodadas; retaliação `_instr_ecos_retaliar` hookada em
+> `_execute_one_monster_attack`, só melee via `not atk_def.get("range")`). **Sinfonia
+> Heroica** (Alaúde) é passiva: `_cancao_nivel_atributo`/`_sinfonia_bonus` somam +1 aos
+> atributos cobertos da Canção conforme a qualidade do Alaúde no `off_hand` (empilha
+> com a espec. da Canção da Fase 1e). **Loadout de Henrique:** adaga real na mão
+> principal + Alaúde Velho no `off_hand` (passiva → +1 Acerto na Canção);
+> `test_bardo_espec` limpa o `off_hand` para isolar a base da Canção. **Cliente:**
+> `game.js` `_bardInstrumentoBtn`/`acionarInstrumento` (botão no HUD só p/ instrumento
+> ativado; Nota Cortante abre `openTargetModal`) + `aplicarTooltipInstrumento`/
+> `_tooltipInstrumentoHTML` (quadro de hover com habilidade, `desc`, custo e stats —
+> no botão do HUD e nos slots do paperdoll/bolsa, já que instrumentos não estão em
+> `CATALOGO_ITENS`); `src/gameState.js` exporta `usarInstrumento`/`instrumentoBase`/
+> `instrumentoEquipadoDe`/`instrumentoStatsClient`/`instrumentoDisponivel` (lêem o
+> `off_hand`) e mapeia a categoria em `canPlaceItem`/`_slotCategoryForItem`; a tabela
+> `INSTRUMENTOS_BASE` é enviada no `game_start`. **Fases 2–5 pendentes:** 2 Trompa/
+> Lira/Flauta, 3 Réquiem Final (Violino), 4 Origens Élfica/Anã + Rúnico + Lendário +
+> loot procedural, 5 Improviso/Gaita. Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-07-10-instrumentos-bardo-fase1*`. Teste:
+> `tools/test_instrumentos_bardo.py`.

@@ -2,7 +2,20 @@
 
 **Data:** 2026-07-10
 **Classe alvo:** `bard` (Henrique) — exclusivo.
-**Status:** design aprovado no brainstorm; pendente revisão do spec.
+**Status:** implementado (Fase 1).
+
+> **Revisão pós-implementação (a pedido do usuário):** duas mudanças em relação ao
+> design original abaixo:
+> 1. **Sem slot dedicado.** O instrumento é equipado na **mão do escudo** (`off_hand`),
+>    competindo com escudo/2ª arma — não há mais um 10º slot de gear. As seções §3.1,
+>    §6 e §7 refletem o slot dedicado original; na implementação final o instrumento
+>    vive em `p["gear"]["off_hand"]` (roteado por `_slot_category_for_item` →
+>    `off_hand`; `handle_usar_instrumento`/`_sinfonia_bonus` leem o `off_hand` e checam
+>    `tipo_item=="instrumento"`). A restrição bard-only vem de `allowed_classes:["bard"]`.
+> 2. **Tooltip de hover.** Passar o mouse sobre o instrumento (botão do HUD, slot do
+>    paperdoll ou bolsa) mostra um quadro com a habilidade, o que ela faz (novo campo
+>    `desc` em `INSTRUMENTOS_BASE`), o custo 🍖/💧 e os stats derivados
+>    (`aplicarTooltipInstrumento`/`_tooltipInstrumentoHTML` em `game.js`).
 
 ---
 
