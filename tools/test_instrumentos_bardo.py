@@ -430,6 +430,16 @@ def test_dueto_fantasma_expira():
     _run(room._reacoes_instrumento_apos_ataque(p, m, 10))
     assert m["hp"] == 20
 
+def test_skus_fase2_existem():
+    for base in ("trompa", "lira", "flauta"):
+        sku = server.instrumento_sku(base, "padrao", preco=200)
+        assert sku["tipo_item"] == "instrumento" and sku["base"] == base
+        assert sku["allowed_classes"] == ["bard"]
+    ids = {i.get("id") for i in server.SHOP_MERCHANT}
+    assert "instrumento_trompa_padrao" in ids
+    assert "instrumento_lira_padrao" in ids
+    assert "instrumento_flauta_padrao" in ids
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]
