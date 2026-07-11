@@ -8999,6 +8999,17 @@ function magiaIconHTML(m, px){
   return `<img src="${src}" alt="" class="magia-icon-img" style="width:${size}px;height:${size}px;object-fit:contain;vertical-align:middle;" data-fallback="${emoji}" onerror="this.replaceWith(this.dataset.fallback)">`;
 }
 
+// Variante que PREENCHE o quadrado da carta (object-fit:cover), sem deixar
+// espaço para o nome — que aparece no tooltip ao passar o mouse. Deve ficar
+// dentro de um container com position:relative e overflow:hidden. Ao falhar,
+// o onerror troca a <img> pelo emoji (centralizado pelo wrapper flex do pai).
+function magiaIconFill(m){
+  const emoji = (m && m.icone) || '📜';
+  if(!m || !m.id) return emoji;
+  const src = _assetURL(`assets/magias/${m.id}.png`);
+  return `<img src="${src}" alt="" class="magia-icon-fill" style="width:100%;height:100%;object-fit:cover;display:block;" data-fallback="${emoji}" onerror="this.replaceWith(this.dataset.fallback)">`;
+}
+
 // Carta de magia 60x72 — cor por círculo (ver VISUAL_CONTRACT.md).
 function criarCartaMagia(magiaId, selecionada, disponivel, usada, modo) {
   const m = GRIMORIO_CLIENT[magiaId];
@@ -9028,10 +9039,9 @@ function criarCartaMagia(magiaId, selecionada, disponivel, usada, modo) {
       onmouseover="if(${disponivel && !usada})this.style.borderColor='${cor}'"
       onmouseout="if(!${selecionada})this.style.borderColor='${cor}44'"
     >
-      <div style="position:absolute; top:3px; right:3px; width:8px; height:8px; border-radius:50%; background:${cor}; opacity:${usada ? 0.3 : 1};"></div>
-      <div style="font-size:22px; margin-bottom:3px; line-height:1;">${usada ? '💤' : magiaIconHTML(m, 26)}</div>
-      <div style="color:${selecionada ? cor : usada ? '#2a2a2a' : '#8a7a5a'}; font-family:'Cinzel',serif; font-size:7px; letter-spacing:0.5px; text-align:center; line-height:1.2; max-width:54px; word-break:break-word;">${m.nome}</div>
-      ${selecionada ? `<div style="position:absolute; bottom:2px; width:6px; height:6px; border-radius:50%; background:${cor};"></div>` : ''}
+      <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:30px; line-height:1; overflow:hidden; border-radius:3px;">${usada ? '💤' : magiaIconFill(m)}</div>
+      <div style="position:absolute; top:3px; right:3px; width:8px; height:8px; border-radius:50%; background:${cor}; opacity:${usada ? 0.3 : 1}; z-index:2; box-shadow:0 0 3px rgba(0,0,0,0.85);"></div>
+      ${selecionada ? `<div style="position:absolute; bottom:2px; left:50%; transform:translateX(-50%); width:6px; height:6px; border-radius:50%; background:${cor}; z-index:2; box-shadow:0 0 3px rgba(0,0,0,0.85);"></div>` : ''}
     </div>
   `;
 }
@@ -20424,13 +20434,12 @@ function mostrarOverlayEscolhaMagia(msg){
       <div onclick="window._escolherMagiaNivel('${id}')"
            onmouseenter="mostrarTooltipMagia('${id}', event)"
            onmouseleave="ocultarTooltipMagia()"
-           style="display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
+           style="position:relative; display:inline-block; overflow:hidden;
                   width:74px; height:88px; cursor:pointer; margin:5px; border-radius:4px;
                   background:rgba(255,255,255,0.04); border:2px solid #c8a95155; transition:all 0.2s;"
            onmouseover="this.style.borderColor='#c8a951'"
            onmouseout="this.style.borderColor='#c8a95155'">
-        <div style="font-size:26px; margin-bottom:4px; line-height:1;">${m.icone || '✨'}</div>
-        <div style="color:#c8b89a; font-family:'Cinzel',serif; font-size:8px; text-align:center; line-height:1.2; max-width:66px; word-break:break-word;">${m.nome}</div>
+        <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:40px; line-height:1;">${magiaIconFill(m)}</div>
       </div>`;
   }).join('');
   const existente = document.getElementById('overlay-escolha-magia');
@@ -20489,12 +20498,12 @@ function _renderOverlaySelecaoCriacao(){
       <div onclick="window._toggleMagiaCriacao('${m.id}')"
            onmouseenter="mostrarTooltipMagia('${m.id}', event)"
            onmouseleave="ocultarTooltipMagia()"
-           style="display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
+           style="position:relative; display:inline-block; overflow:hidden;
                   width:74px; height:88px; cursor:pointer; margin:5px; border-radius:4px;
                   background:${on ? 'rgba(200,169,81,0.18)' : 'rgba(255,255,255,0.04)'};
                   border:2px solid ${on ? '#c8a951' : '#c8a95155'}; transition:all 0.2s;">
-        <div style="font-size:26px; margin-bottom:4px; line-height:1;">${m.icone || '✨'}</div>
-        <div style="color:#c8b89a; font-family:'Cinzel',serif; font-size:8px; text-align:center; line-height:1.2; max-width:66px; word-break:break-word;">${m.nome}</div>
+        <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:40px; line-height:1;">${magiaIconFill(m)}</div>
+        ${on ? `<div style="position:absolute; bottom:3px; left:50%; transform:translateX(-50%); width:8px; height:8px; border-radius:50%; background:#c8a951; z-index:2; box-shadow:0 0 3px rgba(0,0,0,0.85);"></div>` : ''}
       </div>`;
   }).join('');
   const pronto = sel.length === 2;
