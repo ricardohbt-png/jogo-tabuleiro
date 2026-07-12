@@ -834,6 +834,14 @@ def test_afixo_cd_aumenta_instrumento_cd():
                                                               origem="elfica", origem_bonus="cd"))
     assert elf_cd == base_cd + 1
 
+def test_skus_runico_lendario():
+    ids = {i.get("id") for i in server.SHOP_MERCHANT}
+    assert "instrumento_sino_padrao_runico" in ids
+    assert "instrumento_violino_padrao_runico" in ids
+    lend = next(i for i in server.SHOP_MERCHANT
+                if i.get("id") == "instrumento_harpa_refinado_elfica_runico")
+    assert "Lendária" in lend["name"]
+
 def test_roller_gera_runico():
     _rnd.seed(7)
     encs = set()

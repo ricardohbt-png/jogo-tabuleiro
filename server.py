@@ -2470,6 +2470,14 @@ SHOP_MERCHANT = [
     instrumento_sku("tambor",  "padrao", 340, origem="ana",    origem_bonus="fome_sede"),
     instrumento_sku("lira",    "padrao", 300, origem="ana",    origem_bonus="duracao"),
     instrumento_sku("violino", "padrao", 480, origem="ana",    origem_bonus="concentracao"),
+    # Encantamento Rúnico (Fase 4b) — compráveis para teste.
+    instrumento_sku("sino",    "padrao", 300, encantamento="runico"),
+    instrumento_sku("flauta",  "padrao", 340, encantamento="runico"),
+    instrumento_sku("trompa",  "padrao", 400, encantamento="runico"),
+    instrumento_sku("violino", "padrao", 560, encantamento="runico"),
+    instrumento_sku("lira",    "padrao", 360, encantamento="runico"),
+    # Lendário (Refinado + Élfica + Rúnico) — o topo dos 3 eixos → "Harpa Lendária Élfica".
+    instrumento_sku("harpa", "refinado", 900, origem="elfica", origem_bonus="cd", encantamento="runico"),
 ]
 
 # Munição — vendida no FERREIRO (item_slot "ammo", vai pro off_hand; 10 projéteis
