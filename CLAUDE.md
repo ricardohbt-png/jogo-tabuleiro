@@ -807,3 +807,18 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > sem recursos, desequipar, recast e toggle. Cliente: mira como Nota Cortante (ou toggle-off
 > se já ativo) + banner de status roxo em `renderMyPanel`. Fase 4 Rúnico: Violino Rúnico dá
 > -1 Vontade ao alvo. Testes: `tools/test_instrumentos_bardo.py`.
+
+> **Fase 4a (Origens Élfica/Anã):** popula o eixo Origem (plumbado desde a Fase 1). Afixos por
+> origem — Élfica {`cd`,`alcance`,`duracao`}, Anã {`fome_sede`(−1🍖−1💧),`duracao`,
+> `concentracao`(+2 no Réquiem, lido em `_concentracao_requiem`)} — pré-rolados e filtrados por
+> `_afixo_aplicavel`/`_afixos_validos_origem` (Élfica sem afixo aplicável, ex.: Alaúde, rebaixa
+> p/ Humana). `_aplicar_afixo` ganhou `fome_sede`. `_instrumento_nome` acrescenta o adjetivo de
+> origem com concordância de gênero (Élfica/Élfico, Anã/Anão). Roller procedural
+> `gerar_instrumento_aleatorio` (ponderado: qualidade 35/30/25/10, origem 70/15/15; base sem
+> afixo Élfico aplicável vira Humana). Loot: token autoral `{"tipo":"instrumento_aleatorio"}`
+> resolvido por `_resolver_loot_instrumento` em `hidratar_itens_bau` (baús/recompensas) e na
+> cadeia de loot de `_monster_dies` (drop) — designers posicionam o token; placement de
+> referência no Bugbear das Sombras (3%). Loja: SKUs de origem (`instrumento_sku` com
+> `origem`/`origem_bonus`; id `instrumento_{base}_{qualidade}_{origem}`) adicionados **para
+> teste**. Cliente: `instrumentoStatsClient` espelha `fome_sede`/`cone`. Fase 4b: Encantamento
+> Rúnico (8 efeitos) + Lendário + Rúnico no roller. Testes: `tools/test_instrumentos_bardo.py`.
