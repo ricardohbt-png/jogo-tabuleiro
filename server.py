@@ -362,6 +362,12 @@ def gerar_instrumento_aleatorio(bases=None):
             refinado_bonus = random.choice(afx)
     return criar_instrumento(base, qualidade, origem, "nenhum", refinado_bonus, origem_bonus)
 
+def _resolver_loot_instrumento(entry):
+    """Token de loot procedural: {"tipo":"instrumento_aleatorio"} → instância; senão None."""
+    if isinstance(entry, dict) and entry.get("tipo") == "instrumento_aleatorio":
+        return gerar_instrumento_aleatorio()
+    return None
+
 def _instrumento_nome(inst):
     b = INSTRUMENTOS_BASE[inst["base"]]
     fem = inst["base"] in _INSTRUMENTO_GENERO_FEM
@@ -2188,7 +2194,8 @@ MONSTER_DEFS = [
              "descricao": "Sob luz direta: -2 em ataques"},
         ],
         "loot_table": {
-            "1-60":   None,
+            "1-57":   None,
+            "58-60":  {"tipo": "instrumento_aleatorio"},                  # Fase 4a: raro instrumento procedural (placement de referência)
             "61-85":  {"tipo": "gold", "valor": 2},
             "86-95":  {"tipo": "gold", "valor": 4},
             "96-98":  {"tipo": "scroll", "magia_id": "manto_escuridao"},  # pergaminho da escuridão
@@ -2823,6 +2830,9 @@ def hidratar_itens_bau(items):
     for it in items or []:
         if not isinstance(it, dict):
             continue
+        inst = _resolver_loot_instrumento(it)   # token de instrumento procedural (Fase 4a)
+        if inst:
+            out.append(inst); continue
         base = _DUNGEON_ITEM_CATALOG.get(it.get("id"))
         if base:
             out.append(deepcopy(base))
@@ -15631,6 +15641,8 @@ class GameRoom:
                     )
                     if item_def:
                         loot_items.append(deepcopy(item_def))
+                elif loot.get("tipo") == "instrumento_aleatorio":
+                    loot_items.append(gerar_instrumento_aleatorio())   # Fase 4a
                 elif loot.get("tipo") == "scroll":
                     sc = gerar_pergaminho(loot.get("circulo", 1), loot.get("classe"),
                                           magia_id=loot.get("magia_id"))

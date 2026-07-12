@@ -817,6 +817,16 @@ def test_roller_respeita_bases():
         inst = server.gerar_instrumento_aleatorio(bases=["harpa"])
         assert inst["base"] == "harpa"
 
+def test_resolver_loot_instrumento():
+    inst = server._resolver_loot_instrumento({"tipo": "instrumento_aleatorio"})
+    assert inst is not None and inst["tipo_item"] == "instrumento"
+    assert server._resolver_loot_instrumento({"tipo": "item", "id": "x"}) is None
+    assert server._resolver_loot_instrumento({"id": "y"}) is None
+
+def test_hidratar_itens_bau_token():
+    out = server.hidratar_itens_bau([{"tipo": "instrumento_aleatorio"}])
+    assert len(out) == 1 and out[0]["tipo_item"] == "instrumento"
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]
