@@ -1287,6 +1287,7 @@ const GS = (() => {
       else if (bonus === 'fome_sede') { st.custo_fome -= 1; st.custo_sede -= 1; }
       else if (bonus === 'alcance') { if ('alcance' in st) st.alcance += 1; if ('raio' in st) st.raio += 1; if ('cone' in st) st.cone += 1; }
       else if (bonus === 'duracao') { if ('duracao' in st) st.duracao += 1; }
+      else if (bonus === 'cd') st.cd_bonus = (st.cd_bonus || 0) + 1;
     };
     if (inst.qualidade === 'refinado') afixo(inst.refinado_bonus);
     if (inst.origem_bonus) afixo(inst.origem_bonus);

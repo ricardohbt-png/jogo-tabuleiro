@@ -827,6 +827,13 @@ def test_hidratar_itens_bau_token():
     out = server.hidratar_itens_bau([{"tipo": "instrumento_aleatorio"}])
     assert len(out) == 1 and out[0]["tipo_item"] == "instrumento"
 
+def test_afixo_cd_aumenta_instrumento_cd():
+    room, p = _room_bardo(); _mute(room)   # dex 16 → mod +3 → CD base 8+3=11
+    base_cd = room._instrumento_cd(p, server.criar_instrumento("harpa", "padrao"))
+    elf_cd = room._instrumento_cd(p, server.criar_instrumento("harpa", "padrao",
+                                                              origem="elfica", origem_bonus="cd"))
+    assert elf_cd == base_cd + 1
+
 def test_sku_origem():
     sku = server.instrumento_sku("harpa", "padrao", preco=320, origem="elfica", origem_bonus="cd")
     assert sku["origem"] == "elfica" and sku["origem_bonus"] == "cd"
