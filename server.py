@@ -5006,7 +5006,8 @@ class GameRoom:
             await self.send_to(pid, {"type": "error",
                 "msg": f"{base['habilidade_nome']} é passiva — não precisa ativar."}); return
         # Réquiem Final: clicar de novo com o Réquiem ativo DESLIGA (grátis, sempre disponível).
-        if base["efeito"]["tipo"] == "requiem_final" and p.get("requiem_alvo"):
+        if base["efeito"]["tipo"] == "requiem_final" and p.get("requiem_alvo") \
+           and not (data or {}).get("target_id"):
             await self._encerrar_requiem(p, "desativado manualmente")
             await self.push_state()
             return
@@ -11221,9 +11222,11 @@ class GameRoom:
         await self.gm_say(f"🎻 O Réquiem Final dilacera **{m['name']}**: {n}{st['dado']} = **{dano}**!")
         if m["hp"] <= 0:
             await self._monster_dies(m, bid)
-            # Cleanup direto (idempotente com o de _monster_dies): garante o
-            # encerramento mesmo se _monster_dies estiver substituído/mockado.
-            await self._encerrar_requiem(bardo, f"{m['name']} pereceu")
+            if m["hp"] <= 0:
+                # ainda morto (não ressuscitou por Resistência Morta) — cleanup
+                # direto, idempotente com o de _monster_dies: garante o
+                # encerramento mesmo se _monster_dies estiver substituído/mockado.
+                await self._encerrar_requiem(bardo, f"{m['name']} pereceu")
 
     async def _processar_enredado_turno(self, m):
         """Rede (item): monstro preso GASTA o turno tentando escapar (save de
@@ -15243,10 +15246,15 @@ class GameRoom:
                         m["provocado_por"] = None
                 continue
 
-            # Prioridade de alvo: Provocação do bardo (por monstro) > Provocar do
-            # guerreiro (taunt global) > inimigo mais próximo.
+            # Prioridade de alvo: Réquiem Final (Violino) > Provocação do bardo
+            # (por monstro) > Provocar do guerreiro (taunt global) > inimigo mais
+            # próximo. (Espelha _get_monster_primary_target, usado pelo caminho
+            # modular de ai_type.)
             tobj = None
-            if m.get("provocado") and m.get("provocado_turnos", 0) > 0:
+            rb = self._requiem_forca_bardo(m)
+            if rb:
+                tobj = {"kind": "player", "obj": rb}
+            if tobj is None and m.get("provocado") and m.get("provocado_turnos", 0) > 0:
                 prov_pid = m.get("provocado_por")
                 if prov_pid in self.players and self.players[prov_pid]["alive"]:
                     tobj = {"kind": "player", "obj": self.players[prov_pid]}
@@ -15346,6 +15354,12 @@ class GameRoom:
                                 await self._player_dies(richard["id"])
                         if target["hp"] <= 0:
                             await self._player_dies(target["id"])
+                        # Réquiem Final (Violino, Fase 3): dano quebra a concentração
+                        # do bardo se ele falhar em Vontade CD 8+dano. (Espelha o
+                        # hook do caminho modular de ai_type — loop legado também
+                        # deve testar concentração.)
+                        if target.get("requiem_alvo") and target.get("hp", 0) > 0:
+                            await self._concentracao_requiem(target, dmg_alvo)
                     else:
                         dmg_ef = self._ajustar_dano_elemental(target, dmg, "fisico")   # Pedra/Gelo
                         target["vida_atual"] = max(0, target["vida_atual"] - dmg_ef)
@@ -15436,11 +15450,6 @@ class GameRoom:
     async def _monster_dies(self, m, killer_pid):
         if m["hp"] > 0: return
 
-        # Réquiem Final (Violino): encerra a melodia do bardo se o alvo morreu.
-        bid_req = m.get("requiem_por")
-        if bid_req and self.players.get(bid_req):
-            await self._encerrar_requiem(self.players[bid_req], f"{m.get('name','o alvo')} pereceu")
-
         # Resistência Morta (Zumbi): a 0 HP, Fortitude CD 10 → fica com 1 HP. Dano
         # sagrado/luz IGNORA e o destrói de vez (sem retorno).
         rm = next((ab for ab in m.get("special_abilities", [])
@@ -15456,6 +15465,12 @@ class GameRoom:
                         f"🧟 **{m['name']}** recusa-se a tombar! (Fortitude {tot} vs CD {rm.get('dc',10)}) — fica com **1 HP**.")
                     return
                 await self.gm_say(f"🧟 **{m['name']}** finalmente tomba (Fortitude {tot} vs CD {rm.get('dc',10)}).")
+
+        # Réquiem Final (Violino): encerra a melodia do bardo se o alvo morreu de
+        # verdade (após a checagem de Resistência Morta acima — morte final).
+        bid_req = m.get("requiem_por")
+        if bid_req and self.players.get(bid_req):
+            await self._encerrar_requiem(self.players[bid_req], f"{m.get('name','o alvo')} pereceu")
 
         # Silêncio do Xamã Goblin termina se ele morrer.
         if any(z.get("tipo") == "silencio" and z.get("caster") == m["id"]

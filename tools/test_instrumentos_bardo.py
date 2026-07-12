@@ -695,6 +695,84 @@ def test_sku_violino_existe():
     ids = {i.get("id") for i in server.SHOP_MERCHANT}
     assert "instrumento_violino_padrao" in ids
 
+# ── Fase 3 — bugfixes de revisão final ──────────────────────────────────────
+
+def test_requiem_alvo_sobrevive_nao_encerra():
+    """Bug 1: Resistência Morta (Zumbi) sobrevive à morte "seria" — o Réquiem
+    NÃO pode ser encerrado nesse caso (_monster_dies só encerra após a morte
+    ser final; _processar_requiem_turno re-checa hp após _monster_dies)."""
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("violino", "padrao")
+    m = {"id": "m1", "name": "Zumbi", "hp": 3, "max_hp": 30, "pos": [8, 5], "alive": True, "requiem_por": "p1"}
+    room.monsters["m1"] = m
+    p["requiem_alvo"] = "m1"; p["requiem_contador"] = 0
+    async def _falha(*a, **k): return (False, 1, 0, 1)
+    room._save_mostrado = _falha
+    async def _dies(mon, killer): mon["hp"] = 1   # Resistência Morta: sobrevive
+    room._monster_dies = _dies
+    orig = server.roll_dice; server.roll_dice = lambda s: 10
+    _run(room._processar_requiem_turno(m))
+    server.roll_dice = orig
+    assert p["requiem_alvo"] == "m1"   # sobreviveu → Réquiem continua
+    assert m.get("requiem_por") == "p1"
+
+def test_requiem_recast_troca_alvo():
+    """Bug 3: reativar o instrumento COM target_id enquanto o Réquiem já está
+    ativo deve RECASTAR num novo alvo (liberando o antigo), não desligar."""
+    room, p = _room_bardo(); _mute(room)
+    p["pos"] = [5, 5]
+    p["gear"]["off_hand"] = server.criar_instrumento("violino", "padrao")
+    m1 = {"id": "m1", "name": "A", "hp": 30, "max_hp": 30, "pos": [7, 5], "alive": True}
+    m2 = {"id": "m2", "name": "B", "hp": 30, "max_hp": 30, "pos": [8, 5], "alive": True}
+    room.monsters = {"m1": m1, "m2": m2}
+    room._tem_linha_de_visao = lambda a, b: True
+    _run(room.handle_usar_instrumento("p1", {"target_id": "m1"}))
+    assert p["requiem_alvo"] == "m1" and m1["requiem_por"] == "p1"
+    p["instrumento_usado"] = False; p["action_done"] = False   # novo turno simulado
+    _run(room.handle_usar_instrumento("p1", {"target_id": "m2"}))   # recast
+    assert p["requiem_alvo"] == "m2" and m2["requiem_por"] == "p1"
+    assert m1.get("requiem_por") is None   # alvo antigo liberado
+
+def test_concentracao_legacy_loop():
+    """Bug 2: monstro SEM ai_type (ex.: goblin — usa o loop legado inline de
+    gm_phase, não o caminho modular de _run_monster_ai) acertando o bardo com
+    Réquiem ativo deve testar concentração via _concentracao_requiem. Teste
+    ponta-a-ponta: chama room.gm_phase() de verdade (não uma reprodução
+    isolada), com d20_attack/roll_dice forçados para garantir acerto
+    determinístico, e monkeypatcha _concentracao_requiem para gravar a
+    chamada — confirma tanto que ela É chamada quanto o dano exato recebido."""
+    room, p = _room_bardo(); _mute(room)
+    p["pos"] = [5, 5]; p["ac"] = 10
+    p["requiem_alvo"] = "m2"   # Réquiem ativo (em qualquer alvo — não afeta o teste)
+    m = {"id": "m1", "name": "Goblin", "hp": 10, "max_hp": 10, "pos": [6, 5],
+         "atk_bonus": 5, "damage": "1d6", "ac": 12, "movement": 5}   # SEM "ai_type"
+    room.monsters = {"m1": m}
+    room.rooms = []
+    room.zonas_especiais = []
+    room.smoke = {}
+    room.immune = {}
+    room.temp_def = {}
+    room.taunted = None
+    room.blessed = {}
+    room.prisoner = None
+
+    chamadas = []
+    async def _fake_concentracao(bardo, dano):
+        chamadas.append((bardo["id"], dano))
+    room._concentracao_requiem = _fake_concentracao
+
+    orig_d20, orig_roll = server.d20_attack, server.roll_dice
+    server.d20_attack = lambda atk, ac: (True, 15, atk + 15, False)   # sempre acerta, sem crítico
+    server.roll_dice  = lambda s: 4
+    try:
+        _run(room.gm_phase())
+    finally:
+        server.d20_attack = orig_d20
+        server.roll_dice  = orig_roll
+
+    assert p["hp"] == 5                 # 9 - 4 de dano
+    assert chamadas == [("p1", 4)]      # _concentracao_requiem foi chamado pelo loop LEGADO
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]
