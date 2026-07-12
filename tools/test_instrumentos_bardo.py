@@ -834,6 +834,35 @@ def test_afixo_cd_aumenta_instrumento_cd():
                                                               origem="elfica", origem_bonus="cd"))
     assert elf_cd == base_cd + 1
 
+def test_violino_runico_menos_1_vontade():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("violino", "padrao", encantamento="runico")
+    m = {"id": "m1", "name": "Lich", "hp": 100, "max_hp": 100, "pos": [8, 5], "alive": True, "requiem_por": "p1"}
+    room.monsters["m1"] = m
+    p["requiem_alvo"] = "m1"; p["requiem_contador"] = 0
+    caps = []
+    async def _cap(alvo, tipo, dif, extra_mod=0, **k): caps.append(extra_mod); return (True, 20, 0, 20)
+    room._save_mostrado = _cap
+    _run(room._processar_requiem_turno(m))
+    assert caps == [-1]
+
+def test_violino_normal_sem_penalidade():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("violino", "padrao")
+    m = {"id": "m1", "name": "Lich", "hp": 100, "max_hp": 100, "pos": [8, 5], "alive": True, "requiem_por": "p1"}
+    room.monsters["m1"] = m
+    p["requiem_alvo"] = "m1"; p["requiem_contador"] = 0
+    caps = []
+    async def _cap(alvo, tipo, dif, extra_mod=0, **k): caps.append(extra_mod); return (True, 20, 0, 20)
+    room._save_mostrado = _cap
+    _run(room._processar_requiem_turno(m))
+    assert caps == [0]
+
+def test_lira_runica_cap_2():
+    room, p = _room_bardo()
+    assert room._dueto_marcial_cap(server.criar_instrumento("lira", "padrao", encantamento="runico")) == 2
+    assert room._dueto_marcial_cap(server.criar_instrumento("lira", "padrao")) == 1
+
 def test_runico_stat_layer():
     sino = server.criar_instrumento("sino", "padrao", encantamento="runico")
     assert server.GameRoom._instrumento_stats(sino)["dano"] == "1d6"

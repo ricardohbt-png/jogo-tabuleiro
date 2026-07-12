@@ -11323,7 +11323,8 @@ class GameRoom:
         st = self._instrumento_stats(off)
         bardo["requiem_contador"] = min(bardo.get("requiem_contador", 0) + 1, st["teto"])
         n = bardo["requiem_contador"]
-        save_ok, *_ = await self._save_mostrado(m, "vontade", self._instrumento_cd(bardo, off))
+        extra = -1 if off.get("encantamento") == "runico" else 0   # Violino Rúnico: -1 Vontade do alvo (Fase 4b)
+        save_ok, *_ = await self._save_mostrado(m, "vontade", self._instrumento_cd(bardo, off), extra_mod=extra)
         if save_ok:
             await self.gm_say(f"🎻 **{m['name']}** resiste ao Réquiem nesta rodada.")
             return
