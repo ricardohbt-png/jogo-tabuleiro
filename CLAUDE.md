@@ -822,3 +822,17 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `origem`/`origem_bonus`; id `instrumento_{base}_{qualidade}_{origem}`) adicionados **para
 > teste**. Cliente: `instrumentoStatsClient` espelha `fome_sede`/`cone`. Fase 4b: Encantamento
 > Rúnico (8 efeitos) + Lendário + Rúnico no roller. Testes: `tools/test_instrumentos_bardo.py`.
+
+> **Fase 4b (Encantamento Rúnico — framework + efeitos simples):** popula o 3º eixo. Camada
+> Rúnica em `_instrumento_stats` (`_aplicar_runico` lê o dict `runico` do base quando
+> `encantamento=="runico"`): Sino `dano→1d6`, Flauta `duracao +2` (3/4/5), Trompa `medo +1`
+> (Amedrontado 2r). Violino Rúnico: `_processar_requiem_turno` passa `extra_mod=-1` no save de
+> Vontade do alvo. Lira Rúnica: 2×/rodada (já plumbado em `_dueto_marcial_cap`). Nome
+> (`_instrumento_nome`): sufixo "Rúnico/a"; **Lendário** (Refinado + origem≠Humana + Rúnico)
+> substitui por "Lendária/o {Origem}" (ex.: "Harpa Lendária Élfica"). Roller sorteia Rúnico
+> ~4% (independente de origem/qualidade). `instrumento_sku` ganhou `encantamento` (id
+> `..._runico`); SKUs Rúnicos + 1 Lendário na loja **para teste**. Cliente:
+> `instrumentoStatsClient` espelha a camada Rúnica. Fase 4c (efeitos Rúnicos bespoke): Harpa
+> (Nota Cortante em linha), Tambor (Atordoa/−1 Ataque), Alaúde (+resistências na Canção) —
+> uma Rúnica dessas 3 bases já pode ser gerada/comprada, mas seu efeito dedicado só chega na
+> 4c. Testes: `tools/test_instrumentos_bardo.py`.
