@@ -5355,7 +5355,9 @@ class GameRoom:
         return off.get("base") if off and off.get("tipo_item") == "instrumento" else None
 
     def _dueto_marcial_cap(self, inst):
-        return 2 if inst.get("encantamento") == "runico" else 1
+        # Só a Lira Rúnica sobe a cota (guarda defensiva contra chamadas futuras
+        # com outro instrumento no off_hand).
+        return 2 if inst.get("base") == "lira" and inst.get("encantamento") == "runico" else 1
 
     def _bardo_dueto_marcial(self, atacante, alvo):
         """Bardo elegível para revidar via Dueto Marcial (ou None). Reseta a cota

@@ -908,6 +908,8 @@ def test_lira_runica_cap_2():
     room, p = _room_bardo()
     assert room._dueto_marcial_cap(server.criar_instrumento("lira", "padrao", encantamento="runico")) == 2
     assert room._dueto_marcial_cap(server.criar_instrumento("lira", "padrao")) == 1
+    # guarda: um Rúnico de OUTRA base não herda a cota da Lira
+    assert room._dueto_marcial_cap(server.criar_instrumento("sino", "padrao", encantamento="runico")) == 1
 
 def test_runico_stat_layer():
     sino = server.criar_instrumento("sino", "padrao", encantamento="runico")
