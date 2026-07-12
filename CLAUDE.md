@@ -836,3 +836,13 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > (Nota Cortante em linha), Tambor (Atordoa/−1 Ataque), Alaúde (+resistências na Canção) —
 > uma Rúnica dessas 3 bases já pode ser gerada/comprada, mas seu efeito dedicado só chega na
 > 4c. Testes: `tools/test_instrumentos_bardo.py`.
+
+> **Fase 4c (Encantamento Rúnico — efeitos bespoke):** fecha os 8 efeitos Rúnicos. **Harpa**
+> Rúnica: Nota Cortante vira reta direcional (`_nota_cortante_linha`, reusa `_caminho_relampago`;
+> cada alvo Reflexos-meia); o cliente usa o seletor de direção do Chamado quando a Harpa é Rúnica.
+> **Tambor** Rúnico: no Acorde, falha → `perde_turno` (Atordoado), sucesso → −1 Ataque até o
+> próximo turno (`acorde_atk_pen_ate` lido por `_acorde_atk_pen`, somado ao `m_atk` no ataque
+> modular `_execute_one_monster_attack` E no loop legado). **Alaúde** Rúnico:
+> `_alaude_runico_resist` soma +1 em Fortitude/Vontade aos aliados sob a Canção (via `_testar_save`,
+> escopo amplo; "sob a Canção" = chave `buffs_cancao` presente). Fase 5: Improviso/Gaita. Testes:
+> `tools/test_instrumentos_bardo.py`.
