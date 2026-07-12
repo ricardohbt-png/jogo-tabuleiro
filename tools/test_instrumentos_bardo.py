@@ -773,6 +773,16 @@ def test_concentracao_legacy_loop():
     assert p["hp"] == 5                 # 9 - 4 de dano
     assert chamadas == [("p1", 4)]      # _concentracao_requiem foi chamado pelo loop LEGADO
 
+def test_afixo_fome_sede():
+    st = {"custo_fome": 3, "custo_sede": 3}
+    server.GameRoom._aplicar_afixo(st, "fome_sede")
+    assert st["custo_fome"] == 2 and st["custo_sede"] == 2
+
+def test_ana_fome_sede_no_instrumento():
+    inst = server.criar_instrumento("harpa", "padrao", origem="ana", origem_bonus="fome_sede")
+    st = server.GameRoom._instrumento_stats(inst)
+    assert st["custo_fome"] == 2 and st["custo_sede"] == 2
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]

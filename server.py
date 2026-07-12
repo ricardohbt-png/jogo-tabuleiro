@@ -8144,6 +8144,9 @@ class GameRoom:
             st["custo_fome"] -= 1
         elif bonus == "sede":
             st["custo_sede"] -= 1
+        elif bonus == "fome_sede":
+            st["custo_fome"] -= 1
+            st["custo_sede"] -= 1
         elif bonus == "alcance":
             if "alcance" in st: st["alcance"] += 1
             if "raio" in st:    st["raio"] += 1
