@@ -252,6 +252,20 @@ INSTRUMENTOS_BASE = {
             "padrao":  {"duracao": 3, "fracao": 50},
         },
     },
+    "violino": {
+        "nome": "Violino", "icon": "🎻", "maos": 2, "modo": "ativada",
+        "habilidade_nome": "Réquiem Final",
+        "desc": "Inicia uma melodia mortal sobre um alvo. A cada turno dele, faz Vontade ou sofre dano crescente (1d, 2d, 3d…). Enquanto toca, o alvo e inimigos a ≤3 do bardo são forçados a atacá-lo, e o bardo testa concentração ao sofrer dano. Manutenção -2🍖/-2💧 por rodada.",
+        "efeito": {"tipo": "requiem_final", "save": "vontade"},
+        "custo_fome": 4, "custo_sede": 4,
+        "manutencao_fome": 2, "manutencao_sede": 2,
+        "afixos_validos": ["fome", "sede", "alcance"],
+        "stats": {
+            "velho":   {"dado": "d2", "teto": 3, "alcance": 4},
+            "rustico": {"dado": "d4", "teto": 4, "alcance": 5},
+            "padrao":  {"dado": "d6", "teto": 5, "alcance": 6},
+        },
+    },
 }
 
 _QUALIDADE_LABEL = {
@@ -4989,6 +5003,11 @@ class GameRoom:
         if base["modo"] != "ativada":
             await self.send_to(pid, {"type": "error",
                 "msg": f"{base['habilidade_nome']} é passiva — não precisa ativar."}); return
+        # Réquiem Final: clicar de novo com o Réquiem ativo DESLIGA (grátis, sempre disponível).
+        if base["efeito"]["tipo"] == "requiem_final" and p.get("requiem_alvo"):
+            await self._encerrar_requiem(p, "desativado manualmente")
+            await self.push_state()
+            return
         duas_maos = base["maos"] == 2
         if p.get("instrumento_usado"):
             await self.send_to(pid, {"type": "error",
@@ -5014,6 +5033,8 @@ class GameRoom:
             ok = await self._instr_dueto_marcial(p, inst, st, data)
         elif tipo == "dueto_fantasma":
             ok = await self._instr_dueto_fantasma(p, inst, st, data)
+        elif tipo == "requiem_final":
+            ok = await self._instr_requiem_final(p, inst, st, data)
         else:
             await self.send_to(pid, {"type": "error", "msg": "Instrumento em desenvolvimento."}); return
         if not ok:
@@ -5155,6 +5176,35 @@ class GameRoom:
         p["dueto_fantasma_fracao"] = st["fracao"]
         await self.gm_say(f"🎶 **{p['name']}** conjura o **Dueto Fantasma** por {st['duracao']} rodada(s)!")
         return True
+
+    async def _instr_requiem_final(self, p, inst, st, data):
+        alvo_id = (data or {}).get("target_id")
+        m = self.monsters.get(alvo_id)
+        if not m or m.get("hp", 0) <= 0:
+            await self.send_to(p["id"], {"type": "error", "msg": "Alvo inválido."}); return False
+        if not self._no_raio(p, m, st["alcance"]):
+            await self.send_to(p["id"], {"type": "error",
+                "msg": f"Alvo fora do alcance ({st['alcance']} casas)."}); return False
+        if not self._tem_linha_de_visao(p["pos"], m["pos"]):
+            await self.send_to(p["id"], {"type": "error",
+                "msg": "🧱 Sem linha de visão para o alvo."}); return False
+        if p.get("requiem_alvo"):
+            await self._encerrar_requiem(p, "recomeça em novo alvo")
+        p["requiem_alvo"] = m["id"]
+        p["requiem_contador"] = 0
+        m["requiem_por"] = p["id"]
+        await self.gm_say(f"🎻 **{p['name']}** inicia o **Réquiem Final** sobre **{m['name']}**!")
+        return True
+
+    async def _encerrar_requiem(self, bardo, motivo):
+        if not bardo.get("requiem_alvo"):
+            return
+        m = self.monsters.get(bardo.get("requiem_alvo"))
+        if m:
+            m.pop("requiem_por", None)
+        bardo["requiem_alvo"] = None
+        bardo["requiem_contador"] = 0
+        await self.gm_say(f"🎻 O Réquiem Final de **{bardo['name']}** se encerra — {motivo}.")
 
     @staticmethod
     def _instr_base_off(p):

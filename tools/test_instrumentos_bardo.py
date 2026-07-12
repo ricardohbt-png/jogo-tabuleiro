@@ -521,6 +521,48 @@ def test_trompa_depois_cola_reduz_corretamente():
     room._reduzir_mov_monstro(m, orig - orig // 2, 2)   # simula a Cola (via helper unificado)
     assert m["movement"] == 3                   # min(5, 6//2) = 3 (Cola não é anulada)
 
+
+# ── Fase 3 (Réquiem Final / Violino) — Task 1: ativação, alcance/LOS, toggle ──
+
+def test_requiem_ativa():
+    room, p = _room_bardo(); _mute(room)
+    p["pos"] = [5, 5]
+    p["gear"]["off_hand"] = server.criar_instrumento("violino", "padrao")
+    m = {"id": "m1", "name": "Lich", "hp": 30, "max_hp": 30, "pos": [8, 5], "alive": True}
+    room.monsters["m1"] = m
+    room._tem_linha_de_visao = lambda a, b: True
+    _run(room.handle_usar_instrumento("p1", {"target_id": "m1"}))
+    assert p["requiem_alvo"] == "m1"
+    assert p["requiem_contador"] == 0
+    assert m["requiem_por"] == "p1"
+    assert p["action_done"] is True
+
+def test_requiem_toggle_off():
+    room, p = _room_bardo(); _mute(room)
+    p["pos"] = [5, 5]
+    p["gear"]["off_hand"] = server.criar_instrumento("violino", "padrao")
+    m = {"id": "m1", "name": "Lich", "hp": 30, "max_hp": 30, "pos": [8, 5], "alive": True}
+    room.monsters["m1"] = m
+    room._tem_linha_de_visao = lambda a, b: True
+    _run(room.handle_usar_instrumento("p1", {"target_id": "m1"}))
+    fome_apos_ativar = p["fome"]
+    p["action_done"] = True
+    _run(room.handle_usar_instrumento("p1", {}))
+    assert p["requiem_alvo"] is None
+    assert m.get("requiem_por") is None
+    assert p["fome"] == fome_apos_ativar
+
+def test_requiem_fora_de_alcance_recusa():
+    room, p = _room_bardo(); _mute(room)
+    p["pos"] = [5, 5]
+    p["gear"]["off_hand"] = server.criar_instrumento("violino", "velho")
+    m = {"id": "m1", "name": "Lich", "hp": 30, "max_hp": 30, "pos": [12, 5], "alive": True}
+    room.monsters["m1"] = m
+    room._tem_linha_de_visao = lambda a, b: True
+    fome0 = p["fome"]
+    _run(room.handle_usar_instrumento("p1", {"target_id": "m1"}))
+    assert p.get("requiem_alvo") is None and p["fome"] == fome0
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]
