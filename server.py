@@ -8516,6 +8516,21 @@ class GameRoom:
         return next((q for q in self.players.values()
                      if q.get("class_id") == "bard" and q.get("alive")), None)
 
+    def _alaude_runico_resist(self, alvo, tipo_save):
+        """+1 em Fortitude/Vontade p/ aliados sob a Canção quando um bardo empunha um
+        Alaúde Rúnico (cobre medo/doença/veneno — escopo amplo). 0 caso contrário. (Fase 4c)"""
+        if tipo_save not in ("fortitude", "vontade"):
+            return 0
+        if not self._eh_jogador(alvo) or not alvo.get("buffs_cancao"):
+            return 0
+        for q in self.players.values():
+            if q.get("class_id") == "bard" and q.get("cancao_ativa"):
+                off = q.get("gear", {}).get("off_hand")
+                if off and off.get("tipo_item") == "instrumento" \
+                   and off.get("base") == "alaude" and off.get("encantamento") == "runico":
+                    return 1
+        return 0
+
     def _lenda_atk_bonus(self, atacante, monstro):
         """+1 de ataque vs a espécie estudada. Base: só o próprio bardo. Com
         Lendas Supremas: qualquer aliado, enquanto o bardo estiver vivo."""
@@ -11735,7 +11750,8 @@ class GameRoom:
         desvantagem: rola 2d20 e usa o PIOR (Canalização Perfeita, Fase 3)."""
         bonus = (self._veneno_save_bonus(alvo, tipo_save) + self._mod_magia(alvo, "resistencia")
                  + extra_mod + self._lenda_resist_bonus(alvo, fonte)
-                 + self._resistencia_saves_bonus(alvo))
+                 + self._resistencia_saves_bonus(alvo)
+                 + self._alaude_runico_resist(alvo, tipo_save))
         d20   = min(random.randint(1, 20), random.randint(1, 20)) if desvantagem else random.randint(1, 20)
         total = d20 + bonus
         return (total >= dificuldade), d20, bonus, total

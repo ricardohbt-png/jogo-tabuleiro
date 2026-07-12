@@ -834,6 +834,36 @@ def test_afixo_cd_aumenta_instrumento_cd():
                                                               origem="elfica", origem_bonus="cd"))
     assert elf_cd == base_cd + 1
 
+def test_alaude_runico_resist():
+    room, p = _room_bardo()
+    p["gear"]["off_hand"] = server.criar_instrumento("alaude", "padrao", encantamento="runico")
+    p["cancao_ativa"] = True
+    ally = {"id": "a1", "class_id": "warrior", "alive": True, "buffs_cancao": {"bonus_acerto": 1}}
+    room.players["a1"] = ally
+    assert room._alaude_runico_resist(ally, "fortitude") == 1
+    assert room._alaude_runico_resist(ally, "vontade") == 1
+    assert room._alaude_runico_resist(ally, "reflexos") == 0
+    sem = {"id": "a2", "class_id": "rogue", "alive": True}
+    room.players["a2"] = sem
+    assert room._alaude_runico_resist(sem, "fortitude") == 0        # sem buffs_cancao
+    p["gear"]["off_hand"] = server.criar_instrumento("alaude", "padrao")   # não Rúnico
+    assert room._alaude_runico_resist(ally, "fortitude") == 0
+
+def test_alaude_runico_no_testar_save():
+    room, p = _room_bardo()
+    p["gear"]["off_hand"] = server.criar_instrumento("alaude", "padrao", encantamento="runico")
+    p["cancao_ativa"] = True
+    ally = {"id": "a1", "class_id": "warrior", "alive": True, "buffs_cancao": {},
+            "saves_base": {}, "fort": 0, "will": 0}
+    room.players["a1"] = ally
+    import random as _r
+    _r.seed(1)
+    _, _, bonus_com, _ = room._testar_save(ally, "fortitude", 99)
+    p["gear"]["off_hand"] = None
+    _r.seed(1)
+    _, _, bonus_sem, _ = room._testar_save(ally, "fortitude", 99)
+    assert bonus_com - bonus_sem == 1
+
 def test_tambor_runico_atordoa_e_penaliza():
     room, p = _room_bardo(); _mute(room)
     p["pos"] = [5, 5]
