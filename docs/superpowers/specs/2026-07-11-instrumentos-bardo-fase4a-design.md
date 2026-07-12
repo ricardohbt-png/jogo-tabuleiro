@@ -19,7 +19,10 @@ Fase 4a popula o **eixo Origem** (Élfica/Anã) que já está plumbado desde a F
 4. Um **roller procedural** ponderado (`gerar_instrumento_aleatorio`).
 5. Um **token de loot autoral** `{"tipo": "instrumento_aleatorio"}` que resolve num
    instrumento procedural onde um designer o colocar (loot table de monstro ou
-   recompensa/baú). Loja continua **só Humana**.
+   recompensa/baú).
+6. **SKUs de origem na loja** (Élfica/Anã) — decisão do usuário: **por ora**, instrumentos
+   de origem ficam compráveis na loja para facilitar o teste (ver §5.1). Conveniência de
+   teste; pode ser reduzido depois para "só loot".
 
 Encantamento Rúnico + Lendário ficam para a **Fase 4b** (slice seguinte).
 
@@ -27,9 +30,9 @@ Encantamento Rúnico + Lendário ficam para a **Fase 4b** (slice seguinte).
 
 | Tema | Decisão |
 |---|---|
-| Aquisição de origens | **Só loot** (tesouro) — Élfica/Anã nunca na loja |
-| Raridade do loot | **Ponderada** (qualidade e origem, ver §5) |
-| Entrada no jogo | **Token autoral** — nada cai automaticamente; designers posicionam o token |
+| Aquisição de origens | **Loja (para testar, por ora)** + token de loot autoral |
+| Raridade do loot | **Ponderada** (qualidade e origem, ver §4) |
+| Entrada no jogo | Token autoral **+** SKUs de origem na loja (teste) |
 
 ---
 
@@ -119,7 +122,16 @@ dict de loot, retorna a instância de instrumento se `entry.get("tipo") ==
 exemplo — a maior parte do placement fica a cargo dos designers (masmorras/recompensas).
 Documentar o token no CLAUDE.md para autores.
 
-Loja: **inalterada** (só Humana; nenhum SKU de origem).
+### 5.1 SKUs de origem na loja (teste, por ora)
+
+`instrumento_sku(base, qualidade, preco, refinado_bonus=None)` ganha parâmetros opcionais
+`origem`/`origem_bonus` (repassados a `criar_instrumento`), e o id único passa a incluir a
+origem quando não Humana (`instrumento_{base}_{qualidade}_{origem}` para não colidir com o
+SKU Humano). Adicionar ao `SHOP_MERCHANT` um punhado de SKUs de origem para teste — ao
+menos um Élfico e um Anão em bases variadas, com `origem_bonus` fixo (ex.: Harpa Padrão
+Élfica [cd], Violino Padrão Anão [concentracao], Sino Padrão Élfico [duracao]). Preços mais
+altos que os Humanos equivalentes (origens são melhores). Documentar como conveniência de
+teste (removível depois).
 
 ---
 
@@ -144,6 +156,9 @@ que aplica `origem_bonus`). **Verificar** que o mirror cliente cobre o novo afix
   Élfica-Alaúde com bônus nulo (vira Humana); só bases implementadas.
 - **Token de loot:** `_resolver_loot_instrumento({"tipo":"instrumento_aleatorio"})` devolve
   um instrumento (`tipo_item=="instrumento"`); `{"tipo":"item",...}` devolve None.
+- **SKU de origem:** `instrumento_sku("harpa","padrao",preco=..., origem="elfica",
+  origem_bonus="cd")` tem `origem=="elfica"`, `origem_bonus=="cd"`, id único distinto do
+  Humano, e aparece em `SHOP_MERCHANT`; o nome reflete a origem.
 - Regressão: `test_instrumentos_bardo`, `test_bardo_espec`, `test_roteamento_itens` verdes.
 
 ---
@@ -160,7 +175,7 @@ que aplica `origem_bonus`). **Verificar** que o mirror cliente cobre o novo afix
 
 ## 9. Questões resolvidas
 
-1. Aquisição — só loot (tesouro). §5.
+1. Aquisição — token de loot autoral **+ SKUs de origem na loja (por ora, para teste)**. §5/§5.1.
 2. Raridade — ponderada. §4.
-3. Entrada no jogo — token autoral (sem chance automática em baús). §5.
+3. Entrada no jogo — token autoral (sem chance automática em baús) + compra na loja. §5/§5.1.
 4. Élfica sem afixo aplicável (Alaúde) — rebaixa para Humana. §4.
