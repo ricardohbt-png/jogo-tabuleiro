@@ -37,7 +37,7 @@ modificação de stat. `_instrumento_stats` aplica após a camada Origem, quando
 def _aplicar_runico(st, runico):
     if not runico:
         return
-    if "dado_set" in runico:        st["dado"]    = runico["dado_set"]
+    if "dano_set" in runico:        st["dano"]    = runico["dano_set"]   # Sino usa a chave "dano"
     if "duracao_delta" in runico and "duracao" in st:  st["duracao"] += runico["duracao_delta"]
     if "medo_delta"    in runico and "medo"    in st:  st["medo"]    += runico["medo_delta"]
 ```
@@ -45,7 +45,7 @@ def _aplicar_runico(st, runico):
 **`runico` por base (4b):**
 | Base | `runico` | Efeito |
 |---|---|---|
-| `sino` | `{"dado_set": "1d6"}` | Ecos Dolorosos passa a 1d6 (era 1d4/1d3/1) |
+| `sino` | `{"dano_set": "1d6"}` | Ecos Dolorosos passa a 1d6 (era 1d4/1d3/1) |
 | `flauta` | `{"duracao_delta": 2}` | Dueto Fantasma dura +2 rodadas (3/4/5); fração 50% mantida |
 | `trompa` | `{"medo_delta": 1}` | Chamado: Amedrontado 2 rodadas (medo 1→2) |
 
