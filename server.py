@@ -4674,6 +4674,10 @@ class GameRoom:
         """-CA da Pressão Constante enquanto ativa no monstro."""
         return m.get("pressao_ca_val", 0) if m.get("pressao_ca_ate", 0) >= self.round_num else 0
 
+    def _acorde_atk_pen(self, m):
+        """-1 de Ataque do Tambor Rúnico (sucesso no save), até o próximo turno do monstro."""
+        return -1 if m.get("acorde_atk_pen_ate", 0) >= self.round_num else 0
+
     def _defesa_impecavel_ativa(self, p):
         """True enquanto a janela da Defesa Impecável estiver ativa (até o próximo turno)."""
         return p.get("defesa_impecavel_ate", 0) >= self.round_num
@@ -5239,6 +5243,7 @@ class GameRoom:
             if save_ok:
                 dano = dano // 2
             m["hp"] = max(0, m["hp"] - dano)
+            runico = inst.get("encantamento") == "runico"
             if not save_ok:
                 if st.get("push", 0) > 0:
                     dx = (m["pos"][0] > p["pos"][0]) - (m["pos"][0] < p["pos"][0])
@@ -5246,6 +5251,10 @@ class GameRoom:
                     self._empurrar(m, dx, dy, st["push"])
                 else:
                     self._reduzir_mov_monstro(m, 1, 1)   # Tambor Velho: -1 movimento
+                if runico:
+                    m["perde_turno"] = True              # Rúnico: Atordoado 1 rodada
+            elif runico:
+                m["acorde_atk_pen_ate"] = self.round_num + 1   # Rúnico: -1 Ataque até o próximo turno
             await self.gm_say(f"🥁 **{m['name']}** sofre **{dano}**"
                               f"{' (metade)' if save_ok else ''}.")
             if m["hp"] <= 0:
@@ -13697,7 +13706,8 @@ class GameRoom:
 
         m_atk = (atk_def["atk_bonus"] + self._pen(m, "ataque") + self._mod_magia(m, "ataque")
                  + self._sombras_atk_bonus(m, target)               # Ataque das Sombras (+2)
-                 + self._luz_atk_pen(m))                            # Fraqueza de Luz (-2 sob luz direta)
+                 + self._luz_atk_pen(m)                             # Fraqueza de Luz (-2 sob luz direta)
+                 + self._acorde_atk_pen(m))                         # Tambor Rúnico: -1 (sucesso no Acorde)
         esc = self._verificar_escuridao(m, target)
         prov = bool(m.get("provocado_turno_efeito"))
         desvantagem = (prov or esc == "desvantagem"
@@ -15456,7 +15466,7 @@ class GameRoom:
                 # Envia AMBOS os dados ao cliente: o "descartado" (maior) marcado para
                 # animar em vermelho, e o "usado" (menor — pior) marcado em verde.
                 # Penalidade de veneno no ataque do monstro (cego/escorpião), se houver.
-                m_atk = m["atk_bonus"] + self._pen(m, "ataque") + self._mod_magia(m, "ataque")  # Amaldiçoar
+                m_atk = m["atk_bonus"] + self._pen(m, "ataque") + self._mod_magia(m, "ataque") + self._acorde_atk_pen(m)  # Amaldiçoar / Tambor Rúnico
                 # Desvantagem: Provocação OU atacar às cegas na escuridão. Vantagem: ver na escuridão.
                 esc = self._verificar_escuridao(m, target)
                 prov = bool(m.get("provocado_turno_efeito"))

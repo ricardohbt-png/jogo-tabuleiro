@@ -834,6 +834,41 @@ def test_afixo_cd_aumenta_instrumento_cd():
                                                               origem="elfica", origem_bonus="cd"))
     assert elf_cd == base_cd + 1
 
+def test_tambor_runico_atordoa_e_penaliza():
+    room, p = _room_bardo(); _mute(room)
+    p["pos"] = [5, 5]
+    p["gear"]["off_hand"] = server.criar_instrumento("tambor", "padrao", encantamento="runico")
+    falho = {"id": "m1", "name": "A", "hp": 30, "pos": [6, 5], "alive": True}
+    passou = {"id": "m2", "name": "B", "hp": 30, "pos": [5, 6], "alive": True}
+    room.monsters = {"m1": falho, "m2": passou}
+    async def _save(alvo, tipo, dif, **k): return (alvo["id"] == "m2", 1, 0, 1)  # m2 passa, m1 falha
+    room._save_mostrado = _save
+    room._rolar_dano_mostrado = _dano8
+    room._empurrar = lambda *a: False
+    _run(room.handle_usar_instrumento("p1", {}))
+    assert falho.get("perde_turno") is True
+    assert room._acorde_atk_pen(passou) == -1
+    assert room._acorde_atk_pen(falho) == 0
+
+def test_acorde_atk_pen_expira():
+    room, p = _room_bardo()
+    m = {"acorde_atk_pen_ate": room.round_num + 1}
+    assert room._acorde_atk_pen(m) == -1
+    room.round_num += 2
+    assert room._acorde_atk_pen(m) == 0
+
+def test_tambor_normal_nao_atordoa():
+    room, p = _room_bardo(); _mute(room)
+    p["pos"] = [5, 5]
+    p["gear"]["off_hand"] = server.criar_instrumento("tambor", "padrao")   # não Rúnico
+    m = {"id": "m1", "name": "A", "hp": 30, "pos": [6, 5], "alive": True}
+    room.monsters = {"m1": m}
+    room._save_mostrado = _save_falha
+    room._rolar_dano_mostrado = _dano8
+    room._empurrar = lambda *a: False
+    _run(room.handle_usar_instrumento("p1", {}))
+    assert m.get("perde_turno") is None
+
 def test_harpa_runica_linha():
     room, p = _room_bardo(); _mute(room)
     p["pos"] = [5, 5]
