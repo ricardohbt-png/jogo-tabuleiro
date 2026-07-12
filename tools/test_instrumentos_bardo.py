@@ -834,6 +834,27 @@ def test_afixo_cd_aumenta_instrumento_cd():
                                                               origem="elfica", origem_bonus="cd"))
     assert elf_cd == base_cd + 1
 
+def test_roller_gera_runico():
+    _rnd.seed(7)
+    encs = set()
+    for _ in range(2000):
+        encs.add(server.gerar_instrumento_aleatorio().get("encantamento"))
+    assert "runico" in encs and "nenhum" in encs
+
+def test_roller_runico_valido():
+    _rnd.seed(11)
+    for _ in range(2000):
+        inst = server.gerar_instrumento_aleatorio()
+        if inst.get("encantamento") == "runico":
+            assert inst["tipo_item"] == "instrumento"
+            server.GameRoom._instrumento_stats(inst)   # não lança
+
+def test_sku_encantamento():
+    sku = server.instrumento_sku("sino", "padrao", preco=300, encantamento="runico")
+    assert sku["encantamento"] == "runico"
+    assert sku["id"] == "instrumento_sino_padrao_runico"
+    assert "Rúnico" in sku["name"]
+
 def test_nome_runico():
     assert server.criar_instrumento("sino", "padrao", encantamento="runico")["name"] == "Sino Padrão Rúnico"
     assert server.criar_instrumento("harpa", "velho", encantamento="runico")["name"] == "Harpa Velha Rúnica"

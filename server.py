@@ -325,12 +325,14 @@ def criar_instrumento(base, qualidade="padrao", origem="humana", encantamento="n
     return inst
 
 def instrumento_sku(base, qualidade="padrao", preco=100, refinado_bonus=None,
-                    origem="humana", origem_bonus=None):
+                    origem="humana", origem_bonus=None, encantamento="nenhum"):
     """Instância de instrumento para a loja/loot (id único + price/buy_price).
-    Origem ≠ Humana entra no id para não colidir com o SKU Humano (Fase 4a)."""
-    inst = criar_instrumento(base, qualidade, origem=origem, encantamento="nenhum",
+    Origem ≠ Humana e Rúnico entram no id para não colidir (Fase 4a/4b)."""
+    inst = criar_instrumento(base, qualidade, origem=origem, encantamento=encantamento,
                              refinado_bonus=refinado_bonus, origem_bonus=origem_bonus)
     suf = f"_{origem}" if origem in ("elfica", "ana") else ""
+    if encantamento == "runico":
+        suf += "_runico"
     inst["id"] = f"instrumento_{base}_{qualidade}{suf}"
     inst["price"] = preco       # lido por handle_shop_buy (item["price"]) no catálogo
     inst["buy_price"] = preco   # gravado na instância adquirida (revenda)
@@ -369,7 +371,8 @@ def gerar_instrumento_aleatorio(bases=None):
         afx = INSTRUMENTOS_BASE[base].get("afixos_validos", [])
         if afx:
             refinado_bonus = random.choice(afx)
-    return criar_instrumento(base, qualidade, origem, "nenhum", refinado_bonus, origem_bonus)
+    encantamento = "runico" if random.random() < 0.04 else "nenhum"   # Rúnico raríssimo (Fase 4b)
+    return criar_instrumento(base, qualidade, origem, encantamento, refinado_bonus, origem_bonus)
 
 def _resolver_loot_instrumento(entry):
     """Token de loot procedural: {"tipo":"instrumento_aleatorio"} → instância; senão None."""
