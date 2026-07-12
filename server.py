@@ -8521,7 +8521,9 @@ class GameRoom:
         Alaúde Rúnico (cobre medo/doença/veneno — escopo amplo). 0 caso contrário. (Fase 4c)"""
         if tipo_save not in ("fortitude", "vontade"):
             return 0
-        if not self._eh_jogador(alvo) or not alvo.get("buffs_cancao"):
+        # Sob a Canção = a CHAVE existe (_remover_buffs_cancao dá pop); um dict vazio
+        # ainda conta como "sob a Canção" (não usar truthiness).
+        if not self._eh_jogador(alvo) or alvo.get("buffs_cancao") is None:
             return 0
         for q in self.players.values():
             if q.get("class_id") == "bard" and q.get("cancao_ativa"):
