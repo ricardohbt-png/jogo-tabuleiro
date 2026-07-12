@@ -834,6 +834,41 @@ def test_afixo_cd_aumenta_instrumento_cd():
                                                               origem="elfica", origem_bonus="cd"))
     assert elf_cd == base_cd + 1
 
+def test_harpa_runica_linha():
+    room, p = _room_bardo(); _mute(room)
+    p["pos"] = [5, 5]
+    p["gear"]["off_hand"] = server.criar_instrumento("harpa", "padrao", encantamento="runico")  # alcance 5
+    a = {"id": "m1", "name": "A", "hp": 30, "pos": [6, 5], "alive": True}
+    b = {"id": "m2", "name": "B", "hp": 30, "pos": [8, 5], "alive": True}
+    fora = {"id": "m3", "name": "C", "hp": 30, "pos": [6, 7], "alive": True}
+    room.monsters = {"m1": a, "m2": b, "m3": fora}
+    room._save_mostrado = _save_falha
+    room._rolar_dano_mostrado = _dano10
+    _run(room.handle_usar_instrumento("p1", {"dir": [1, 0]}))
+    assert a["hp"] == 20 and b["hp"] == 20   # ambos na linha +x (dano cheio 10)
+    assert fora["hp"] == 30                  # fora da linha
+
+def test_harpa_runica_sem_direcao_recusa():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("harpa", "padrao", encantamento="runico")
+    m = {"id": "m1", "name": "A", "hp": 30, "pos": [6, 5], "alive": True}
+    room.monsters = {"m1": m}
+    fome0 = p["fome"]
+    _run(room.handle_usar_instrumento("p1", {}))   # sem dir
+    assert m["hp"] == 30 and p["fome"] == fome0
+
+def test_harpa_normal_ainda_alvo_unico():
+    room, p = _room_bardo(); _mute(room)
+    p["pos"] = [5, 5]
+    p["gear"]["off_hand"] = server.criar_instrumento("harpa", "padrao")   # não Rúnica
+    a = {"id": "m1", "name": "A", "hp": 30, "pos": [6, 5], "alive": True}
+    b = {"id": "m2", "name": "B", "hp": 30, "pos": [8, 5], "alive": True}
+    room.monsters = {"m1": a, "m2": b}
+    room._save_mostrado = _save_falha
+    room._rolar_dano_mostrado = _dano10
+    _run(room.handle_usar_instrumento("p1", {"target_id": "m1"}))
+    assert a["hp"] == 20 and b["hp"] == 30   # só o alvo
+
 def test_skus_runico_lendario():
     ids = {i.get("id") for i in server.SHOP_MERCHANT}
     assert "instrumento_sino_padrao_runico" in ids

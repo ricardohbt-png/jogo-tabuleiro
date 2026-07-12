@@ -5164,7 +5164,9 @@ class GameRoom:
         await self.push_state()
 
     async def _instr_nota_cortante(self, p, inst, st, data):
-        """Alvo único até `alcance` casas; dano sonoro; save de Reflexos → metade."""
+        """Alvo único até `alcance` casas; Reflexos → metade. Rúnica: linha reta direcional."""
+        if inst.get("encantamento") == "runico":
+            return await self._nota_cortante_linha(p, inst, st, data)
         alvo_id = (data or {}).get("target_id")
         m = self.monsters.get(alvo_id)
         if not m or m.get("hp", 0) <= 0:
@@ -5182,6 +5184,31 @@ class GameRoom:
                           f"{' (metade — resistiu)' if save_ok else ''}.")
         if m["hp"] <= 0:
             await self._monster_dies(m, p["id"])
+        return True
+
+    async def _nota_cortante_linha(self, p, inst, st, data):
+        """Harpa Rúnica: reta direcional; cada monstro na linha faz seu Reflexos-meia."""
+        dirv = (data or {}).get("dir") or [0, 0]
+        dx = 1 if dirv[0] > 0 else -1 if dirv[0] < 0 else 0
+        dy = 1 if dirv[1] > 0 else -1 if dirv[1] < 0 else 0
+        if dx == 0 and dy == 0:
+            await self.send_to(p["id"], {"type": "error", "msg": "Escolha uma direção para a Nota Cortante rúnica."}); return False
+        tiles = {tuple(t) for t in self._caminho_relampago(p["pos"], dx, dy, st["alcance"])}
+        alvos = [m for m in self.monsters.values()
+                 if m.get("hp", 0) > 0 and tuple(m["pos"]) in tiles]
+        if not alvos:
+            await self.send_to(p["id"], {"type": "error", "msg": "Nenhum inimigo na linha."}); return False
+        await self.gm_say(f"🎵 **{p['name']}** dispara **Nota Cortante** numa linha reta!")
+        cd = self._instrumento_cd(p, inst)
+        for m in alvos:
+            dano = await self._rolar_dano_mostrado(*_ndfaces(st["dano"]), "🎵 Dano sonoro")
+            save_ok, *_ = await self._save_mostrado(m, "reflexos", cd)
+            if save_ok:
+                dano = dano // 2
+            m["hp"] = max(0, m["hp"] - dano)
+            await self.gm_say(f"🎵 **{m['name']}** sofre **{dano}**{' (metade)' if save_ok else ''}.")
+            if m["hp"] <= 0:
+                await self._monster_dies(m, p["id"])
         return True
 
     def _reduzir_mov_monstro(self, m, val, rodadas):

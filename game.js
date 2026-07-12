@@ -218,12 +218,14 @@ document.body.innerHTML = `
 <!-- Trap Result Popup -->
 <div id="trap-overlay">
   <div class="trap-box">
-    <div class="trap-icon" id="trap-icon">🪤</div>
-    <h3 id="trap-title">Armadilha</h3>
-    <div class="trap-status" id="trap-status"></div>
-    <p class="trap-desc" id="trap-desc"></p>
-    <ul class="trap-effects" id="trap-effects"></ul>
-    <button class="btn-cancel" onclick="closeTrapWindow()">Fechar</button>
+    <div class="trap-art"><div class="trap-icon" id="trap-icon">🪤</div></div>
+    <div class="trap-content">
+      <h3 id="trap-title">Armadilha</h3>
+      <div class="trap-status" id="trap-status"></div>
+      <p class="trap-desc" id="trap-desc"></p>
+      <ul class="trap-effects" id="trap-effects"></ul>
+      <button class="btn-cancel" onclick="closeTrapWindow()">Fechar</button>
+    </div>
   </div>
 </div>
 
@@ -256,6 +258,19 @@ function _assetURL(path){ return path + (path.includes('?') ? '&' : '?') + 'v=' 
 // Tamanho da miniatura PNG extrudada por casa de footprint (maior = miniatura
 // maior/mais alta no 3D). 1 casa de árvore → ~1.8 unidades de largura.
 const DECOR_MINI_ESCALA = 2.0;
+
+// Modelos GLB usados por decorações específicas. A chave é a imagem que já
+// identifica o objeto no mapa, para não trocar outras decorações do tipo tumba.
+const DECOR_GLB_MODELS = {
+  'sarcofagocima.png': 'assets/objetos/sarcofago.glb',
+};
+const DECOR_GLB_TYPES = {
+  arvore: 'assets/objetos/arvore.glb',
+  arvore_grande: 'assets/objetos/arvore.glb',
+};
+// A superfície dos tiles 3D fica em y=0.22; um pequeno acréscimo evita que a
+// base dos modelos atravesse o piso por arredondamento de geometria.
+const DECOR_GLB_FLOOR_Y = 0.225;
 
 // ── Decoration 3D spec — shape/height/color per type (procedural render) ──────
 const DECOR_3D = {
@@ -4845,15 +4860,33 @@ function drawOrientedMonster2D(ctx, m, hcx, hcy){
   ctx.restore();
 }
 
-// Indicador "em chamas" (2D): 🔥 tremeluzente no canto superior direito da casa.
+// Indicadores de dano contínuo no canto superior direito da casa.
 // (X,Y) = canto superior esquerdo da casa em pixels.
-function _drawEmChamas2D(ctx, X, Y){
+function _drawStatusIcons2D(ctx, X, Y, entity){
   const fs = Math.round(CELL*0.34);
   ctx.save();
   ctx.font = `${fs}px serif`;
   ctx.textAlign = 'right'; ctx.textBaseline = 'top';
-  ctx.globalAlpha = 0.72 + 0.28*Math.abs(Math.sin(performance.now()/170));
-  ctx.fillText('🔥', X + CELL - 1, Y + 1);
+  let x = X + CELL - 1;
+  if(entity.em_chamas_rodadas > 0){
+    ctx.globalAlpha = 0.72 + 0.28*Math.abs(Math.sin(performance.now()/170));
+    ctx.fillText('🔥', x, Y + 1); x -= fs * 0.72;
+  }
+  const drops = [
+    [entity.acido_residual > 0, '#55df74'],
+    [Array.isArray(entity.efeitos_veneno) && entity.efeitos_veneno.length > 0, '#a85cff'],
+  ];
+  for(const [active, color] of drops){
+    if(!active) continue;
+    ctx.globalAlpha = 0.95;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x - fs*0.20, Y + fs*0.05);
+    ctx.bezierCurveTo(x - fs*0.38, Y + fs*0.32, x - fs*0.38, Y + fs*0.58, x - fs*0.20, Y + fs*0.68);
+    ctx.bezierCurveTo(x, Y + fs*0.58, x, Y + fs*0.32, x - fs*0.20, Y + fs*0.05);
+    ctx.fill();
+    x -= fs * 0.70;
+  }
   ctx.restore();
 }
 
@@ -5429,7 +5462,7 @@ function renderMap(state){
     ctx.fillStyle='rgba(255,90,90,0.95)'; ctx.font=`bold ${mNameFs}px monospace`;
     ctx.textAlign='center'; ctx.textBaseline='top';
     ctx.fillText(m.name.slice(0,10), cx, my*CELL+barH+3);
-    if(m.em_chamas_rodadas > 0) _drawEmChamas2D(ctx, mx*CELL, my*CELL);
+    _drawStatusIcons2D(ctx, mx*CELL, my*CELL, m);
   }
 
   // ── Corpses (cadáveres): alvos de Animar Mortos — ícone esmaecido roxo ──────
@@ -5566,7 +5599,7 @@ function renderMap(state){
     const isCur=p.id===state.current_turn, isMe=p.id===GS.myPid;
     drawMiniBase(ctx, cx, cy, p.color, isCur||isMe);
     drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur);
-    if(p.em_chamas_rodadas > 0) _drawEmChamas2D(ctx, X, Y);
+    _drawStatusIcons2D(ctx, X, Y, p);
     if(isMe||isCur){
       const label=p.name.slice(0,9);
       const tagFs=Math.round(CELL*0.14);
@@ -7708,6 +7741,10 @@ function _bardInstrumentoBtn(me){
 function acionarInstrumento(me, inst, b){
   const tipo = b.efeito && b.efeito.tipo;
   if(tipo === 'nota_cortante'){
+    if(inst.encantamento === 'runico'){   // Harpa Rúnica: Nota Cortante em linha direcional (Fase 4c)
+      escolherDirecaoInstrumento(b, (dx, dy) => GS.usarInstrumento(null, [dx, dy]));
+      return;
+    }
     const st = GS.instrumentoStatsClient(inst) || {};
     const alcance = st.alcance || 0;
     const gs = GS.gameState;
@@ -10844,7 +10881,34 @@ function _advanceTrapQueue(){
 }
 
 function _showTrapResult(msg){
-  $('trap-icon').textContent = msg.icone || '🪤';
+  const trapImages = {
+    'Buraco Escondido': 'armadilha_fosso.png',
+    'Buraco': 'armadilha_fosso.png',
+    'Armadilha de Urso': 'armadilha_urso.png',
+    'Fosso com Estacas': 'armadilha_fosso_estacas.png',
+    'Fosso com Estacas Envenenadas': 'armadilha_fosso_estacas.png',
+    'Estacas Envenenadas': 'armadilha_fosso_estacas.png',
+    'Rede': 'armadilha_rede.png',
+    'Armadilha Incendiária': 'armadilha_incendiaria.png',
+    'Mina Terrestre': 'armadilha_explosiva.png',
+    'Nuvem de Gás': 'armadilha_gas.png',
+  };
+  const trapIcon = $('trap-icon');
+  // Nos ticks da armadilha incendiária, a armadilha já disparou: mostre as
+  // chamas que continuam causando dano em vez da ilustração da armadilha.
+  const imageName = msg.sucesso ? 'armadilha_sucesso.png'
+    : (msg.tick && msg.nome === 'Armadilha Incendiária')
+      ? 'em_chamas.png'
+      : trapImages[msg.nome];
+  trapIcon.replaceChildren();
+  if (imageName) {
+    const image = new Image();
+    image.src = _assetURL(`assets/armadilhas/${imageName}`);
+    image.alt = msg.nome || 'Armadilha';
+    trapIcon.appendChild(image);
+  } else {
+    trapIcon.textContent = msg.icone || '🪤';
+  }
   $('trap-title').textContent = msg.nome || 'Armadilha';
   $('trap-desc').textContent = msg.descricao || '';
 
@@ -13782,6 +13846,8 @@ function _disposeEntityTree(root){
 // ── Helpers para miniaturas extrudadas de decorações (PNG → 3D) ───────────────
 function _disposeDecorMesh(obj){
   obj.traverse(o => {
+    // Instâncias GLB compartilham os recursos com o template em cache.
+    if (o.userData && o.userData.isGLB) return;
     if (o.geometry) o.geometry.dispose();
     if (o.material) {
       const mats = Array.isArray(o.material) ? o.material : [o.material];
@@ -13792,6 +13858,79 @@ function _disposeDecorMesh(obj){
   });
 }
 const _objImg3D = {};
+const _decorGLBCache = {};
+const _decorGLBQueue = {};
+
+function _loadDecorGLB(T, path, cb){
+  const cached = _decorGLBCache[path];
+  if (cached && cached !== 'erro') { cb(cached); return; }
+  if (cached === 'erro' || !T.GLTFLoader) { cb(null); return; }
+  if (_decorGLBQueue[path]) { _decorGLBQueue[path].push(cb); return; }
+
+  _decorGLBQueue[path] = [cb];
+  new T.GLTFLoader().load(
+    _assetURL(path),
+    gltf => {
+      const template = gltf.scene;
+      template.traverse(o => {
+        if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
+      });
+      _decorGLBCache[path] = template;
+      _decorGLBQueue[path].forEach(fn => fn(template));
+      delete _decorGLBQueue[path];
+    },
+    undefined,
+    error => {
+      console.warn(`[GLB] falha ao carregar decoração ${path}:`, error);
+      _decorGLBCache[path] = 'erro';
+      _decorGLBQueue[path].forEach(fn => fn(null));
+      delete _decorGLBQueue[path];
+    }
+  );
+}
+
+function _buildObjetoGLB(decorId, imageName, path, wCells, hCells, facing){
+  const montar = template => {
+    const slot = g3 && g3.decorMeshes[decorId];
+    if (!slot || slot.userData.glbPath !== path) return;
+    if (!template) {
+      // Mantém a arte 2D atual caso o arquivo não possa ser aberto.
+      slot.userData = { isDecor: true, decorId, imageName };
+      _buildObjetoMini(decorId, imageName, Math.max(wCells, hCells), facing);
+      return;
+    }
+
+    const inst = template.clone();
+    const box = new g3.T.Box3().setFromObject(inst);
+    const size = box.getSize(new g3.T.Vector3());
+    const scale = Math.min(
+      (wCells * 0.92) / Math.max(size.x, 1e-3),
+      (hCells * 0.92) / Math.max(size.z, 1e-3)
+    );
+    // Centraliza o modelo e assenta sua base no piso da masmorra.
+    inst.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2
+    );
+    inst.traverse(o => { if (o.isMesh) o.userData.isGLB = true; });
+    const wrap = new g3.T.Group();
+    wrap.add(inst);
+    wrap.scale.setScalar(scale);
+    const grp = new g3.T.Group();
+    grp.userData = { isDecor: true, decorId, glbPath: path };
+    grp.add(wrap);
+    grp.position.copy(slot.position);
+    grp.position.y = DECOR_GLB_FLOOR_Y;
+    grp.rotation.y = _facingAngleY3D(facing);
+    grp.visible = slot.visible;
+    g3.scene.remove(slot); _disposeDecorMesh(slot);
+    g3.scene.add(grp);
+    g3.decorMeshes[decorId] = grp;
+  };
+  _loadDecorGLB(g3.T, path, montar);
+}
+
 function _buildObjetoMini(decorId, imageName, cells, facing){
   const make = (img) => {
     const slot = g3 && g3.decorMeshes[decorId];
@@ -14087,6 +14226,28 @@ function renderMap3D(state){
         continue;
       }
 
+      const glbPath = (d.image && DECOR_GLB_MODELS[d.image]) || DECOR_GLB_TYPES[d.type];
+      if (glbPath && _decorGLBCache[glbPath] !== 'erro') {
+        // ── Modelo 3D real (GLB) ──
+        if (!mesh || mesh.userData.glbPath !== glbPath) {
+          if (mesh) { g3.scene.remove(mesh); _disposeDecorMesh(mesh); }
+          const placeholder = new T.Group();
+          placeholder.userData = { isDecor: true, decorId: d.id, glbPath, pending: true };
+          placeholder.position.set(worldX, 0, worldZ);
+          placeholder.visible = visivel;
+          g3.scene.add(placeholder);
+          g3.decorMeshes[d.id] = placeholder;
+          mesh = placeholder;
+          _buildObjetoGLB(d.id, d.image, glbPath, wCells, hCells, d.facing);
+          mesh = g3.decorMeshes[d.id];
+        }
+        mesh.position.set(worldX, DECOR_GLB_FLOOR_Y, worldZ);
+        const glbScale = Array.isArray(d.vscale) ? d.vscale : [1, 1];
+        mesh.scale.set(glbScale[0] || 1, glbScale[1] || 1, glbScale[0] || 1);
+        mesh.visible = visivel;
+        continue;
+      }
+
       if (d.image && window.Miniatura3D) {
         // ── Caminho miniatura extrudada (PNG) ──
         // (re)constrói se ainda não existe OU se a imagem mudou
@@ -14159,8 +14320,10 @@ function renderMap3D(state){
   // luzes força o Three.js a recompilar shaders (travadas perceptíveis).
   const entitySig = JSON.stringify([
     state.players.map(p => [p.id, p.pos, p.alive, p.color, p.class_id, p.em_chamas_rodadas > 0,
+      p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0,
       (p.animados||[]).map(a => [a.id, a.pos, a.vida_atual, a.tipo])]),
-    state.monsters.map(m => [m.type, m.pos, m.hp, m.image]),
+    state.monsters.map(m => [m.type, m.pos, m.hp, m.image, m.em_chamas_rodadas > 0,
+      m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0]),
     state.prisoner ? [state.prisoner.pos, state.prisoner.alive, state.prisoner.freed, state.prisoner.image, _prisSel] : null,
     state.corpses || [],
     (state.armadilhas||[]).map(a => [a.id, a.pos, a.ativada, a.so_luccas, a.icone, a.visivel, a.aliada, a.image]),
@@ -14214,10 +14377,12 @@ function renderMap3D(state){
     const pSel = g3.selectedPos && g3.selectedPos[0]===px && g3.selectedPos[1]===py;
     const isCur = p.id===state.current_turn;
     obterFig(`pl:${p.id}`,
-      JSON.stringify([p.color, p.class_id, p.id===GS.myPid, isCur, !!pSel, p.facing, p.em_chamas_rodadas > 0]),
+      JSON.stringify([p.color, p.class_id, p.id===GS.myPid, isCur, !!pSel, p.facing, p.em_chamas_rodadas > 0,
+        p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0]),
       () => {
         const f = build3DFig(p.color, false, p.id===GS.myPid, isCur, px, py, p.class_id, null, pSel,
-          undefined, undefined, undefined, p.facing, p.em_chamas_rodadas > 0);
+          undefined, undefined, undefined, p.facing, p.em_chamas_rodadas > 0,
+          p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0);
         f.userData.pid = p.id;          // permite getPeaoMesh(pid) p/ animação
         return f;
       }, px, py);
@@ -14248,9 +14413,11 @@ function renderMap3D(state){
     if(!visionSet.has(`${mx},${my}`)) continue;
     const mSel = g3.selectedPos && g3.selectedPos[0]===mx && g3.selectedPos[1]===my;
     obterFig(`mon:${m.id}`,
-      JSON.stringify([m.type, m.image, !!mSel, m.porte, !!m.oriented, m.facing, m.em_chamas_rodadas > 0]),
+      JSON.stringify([m.type, m.image, !!mSel, m.porte, !!m.oriented, m.facing, m.em_chamas_rodadas > 0,
+        m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0]),
       () => {
-        const f = build3DFig('#c82020', true, false, false, mx, my, null, m.type, mSel, m.image, m.porte, m.oriented, m.facing, m.em_chamas_rodadas > 0);
+        const f = build3DFig('#c82020', true, false, false, mx, my, null, m.type, mSel, m.image, m.porte, m.oriented, m.facing, m.em_chamas_rodadas > 0,
+          m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0);
         f.userData.monId = m.id;   // taggeado para getMonsterMesh() / deslize fiel
         return f;
       },
@@ -14907,7 +15074,7 @@ function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected, emCh
 // mOriented/mFacing — monstro de 2 casas em pé cobrindo as 2 casas (croc/lagarto).
 // mFacing também é reaproveitado pro peão GLB de herói (direção do último passo).
 
-function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType, isSelected, mImage, mPorte, mOriented, mFacing, emChamas){
+function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType, isSelected, mImage, mPorte, mOriented, mFacing, emChamas, acidoResidual, envenenado){
   const T   = g3.T;
   if (isMonster && mOriented && mImage) {
     // emChamas vai PARA DENTRO do helper (posiciona o 🔥 no centro midX/midZ do
@@ -15072,6 +15239,8 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
 
   // Indicador "em chamas": 🔥 flutuando acima da cabeça (sprite billboard).
   if(emChamas) grp.add(_makeChamasSprite3D());
+  if(acidoResidual) grp.add(_makeStatusDropSprite3D('#55df74', emChamas ? 0.20 : 0));
+  if(envenenado) grp.add(_makeStatusDropSprite3D('#a85cff', (emChamas ? 0.20 : 0) + (acidoResidual ? 0.20 : 0)));
 
   grp.position.set(gx, 0, gy);
   return grp;
@@ -15090,6 +15259,30 @@ function _makeChamasSprite3D(){
   sp.scale.set(0.5, 0.5, 1);
   sp.position.set(0, _BB_H_ALVO * 0.85, 0);   // acima da cabeça (deriva da altura-alvo do peão)
   sp.userData.isChamasSprite = true;
+  return sp;
+}
+
+// Gota colorida para ácido (verde) e veneno (roxa), sempre voltada à câmera.
+function _makeStatusDropSprite3D(color, xOffset){
+  const T = g3.T;
+  const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+  const c = cv.getContext('2d');
+  c.fillStyle = color;
+  c.shadowColor = '#080510'; c.shadowBlur = 5;
+  c.beginPath();
+  c.moveTo(32, 8);
+  c.bezierCurveTo(17, 28, 15, 37, 17, 45);
+  c.bezierCurveTo(20, 56, 44, 56, 47, 45);
+  c.bezierCurveTo(49, 37, 47, 28, 32, 8);
+  c.fill();
+  c.shadowBlur = 0;
+  c.fillStyle = 'rgba(255,255,255,0.55)';
+  c.beginPath(); c.arc(26, 35, 4, 0, Math.PI * 2); c.fill();
+  const tex = new T.CanvasTexture(cv); tex._owned = true;
+  const sp = new T.Sprite(new T.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
+  sp.scale.set(0.24, 0.24, 1);
+  sp.position.set(xOffset, _BB_H_ALVO * 0.85, 0);
+  sp.userData.isStatusSprite = true;
   return sp;
 }
 
