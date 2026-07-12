@@ -834,6 +834,15 @@ def test_afixo_cd_aumenta_instrumento_cd():
                                                               origem="elfica", origem_bonus="cd"))
     assert elf_cd == base_cd + 1
 
+def test_runico_stat_layer():
+    sino = server.criar_instrumento("sino", "padrao", encantamento="runico")
+    assert server.GameRoom._instrumento_stats(sino)["dano"] == "1d6"
+    flauta = server.criar_instrumento("flauta", "padrao", encantamento="runico")
+    assert server.GameRoom._instrumento_stats(flauta)["duracao"] == 5   # 3 + 2
+    trompa = server.criar_instrumento("trompa", "padrao", encantamento="runico")
+    assert server.GameRoom._instrumento_stats(trompa)["medo"] == 2      # 1 + 1
+    assert server.GameRoom._instrumento_stats(server.criar_instrumento("sino", "padrao"))["dano"] == "1d4"
+
 def test_sku_origem():
     sku = server.instrumento_sku("harpa", "padrao", preco=320, origem="elfica", origem_bonus="cd")
     assert sku["origem"] == "elfica" and sku["origem_bonus"] == "cd"

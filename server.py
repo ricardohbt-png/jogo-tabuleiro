@@ -199,6 +199,7 @@ INSTRUMENTOS_BASE = {
             "rustico": {"dano": "1d3", "duracao": 2},
             "padrao":  {"dano": "1d4", "duracao": 3},
         },
+        "runico": {"dano_set": "1d6"},        # Rúnico: Ecos Dolorosos → 1d6 (Fase 4b)
     },
     "alaude": {
         "nome": "Alaúde", "icon": "🪕", "maos": 2, "modo": "passiva",
@@ -225,6 +226,7 @@ INSTRUMENTOS_BASE = {
             "rustico": {"cone": 4, "medo": 1, "pen_falha": 1, "pen_sucesso": 0},
             "padrao":  {"cone": 5, "medo": 1, "pen_falha": 2, "pen_sucesso": 1},
         },
+        "runico": {"medo_delta": 1},          # Rúnico: Amedrontado 2 rodadas (Fase 4b)
     },
     "lira": {
         "nome": "Lira", "icon": "🎼", "maos": 1, "modo": "ativada",
@@ -251,6 +253,7 @@ INSTRUMENTOS_BASE = {
             "rustico": {"duracao": 2, "fracao": 40},
             "padrao":  {"duracao": 3, "fracao": 50},
         },
+        "runico": {"duracao_delta": 2},       # Rúnico: Dueto Fantasma +2 rodadas (Fase 4b)
     },
     "violino": {
         "nome": "Violino", "icon": "🎻", "maos": 2, "modo": "ativada",
@@ -8223,9 +8226,23 @@ class GameRoom:
             GameRoom._aplicar_afixo(st, inst.get("refinado_bonus"))
         if inst.get("origem_bonus"):
             GameRoom._aplicar_afixo(st, inst["origem_bonus"])
+        if inst.get("encantamento") == "runico":
+            GameRoom._aplicar_runico(st, b.get("runico"))
         st["custo_fome"] = max(0, st["custo_fome"])
         st["custo_sede"] = max(0, st["custo_sede"])
         return st
+
+    @staticmethod
+    def _aplicar_runico(st, runico):
+        """Camada de Encantamento Rúnico sobre os stats efetivos (só stat-based; Fase 4b)."""
+        if not runico:
+            return
+        if "dano_set" in runico:
+            st["dano"] = runico["dano_set"]
+        if "duracao_delta" in runico and "duracao" in st:
+            st["duracao"] += runico["duracao_delta"]
+        if "medo_delta" in runico and "medo" in st:
+            st["medo"] += runico["medo_delta"]
 
     @staticmethod
     def _aplicar_afixo(st, bonus):

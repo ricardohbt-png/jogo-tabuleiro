@@ -1291,6 +1291,12 @@ const GS = (() => {
     };
     if (inst.qualidade === 'refinado') afixo(inst.refinado_bonus);
     if (inst.origem_bonus) afixo(inst.origem_bonus);
+    if (inst.encantamento === 'runico' && b.runico) {   // camada Rúnica (Fase 4b)
+      const r = b.runico;
+      if ('dano_set' in r) st.dano = r.dano_set;
+      if ('duracao_delta' in r && 'duracao' in st) st.duracao += r.duracao_delta;
+      if ('medo_delta' in r && 'medo' in st) st.medo += r.medo_delta;
+    }
     st.custo_fome = Math.max(0, st.custo_fome);
     st.custo_sede = Math.max(0, st.custo_sede);
     return st;
