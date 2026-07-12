@@ -783,6 +783,14 @@ def test_ana_fome_sede_no_instrumento():
     st = server.GameRoom._instrumento_stats(inst)
     assert st["custo_fome"] == 2 and st["custo_sede"] == 2
 
+def test_afixos_validos_origem():
+    assert server._afixos_validos_origem("alaude", "elfica") == []
+    assert "concentracao" in server._afixos_validos_origem("violino", "ana")
+    va = server._afixos_validos_origem("harpa", "elfica")
+    assert "cd" in va and "alcance" in va and "duracao" not in va
+    vs = server._afixos_validos_origem("sino", "elfica")
+    assert "duracao" in vs and "cd" not in vs and "alcance" not in vs
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]

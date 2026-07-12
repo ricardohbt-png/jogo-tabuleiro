@@ -274,6 +274,31 @@ _QUALIDADE_LABEL = {
 }
 _INSTRUMENTO_GENERO_FEM = {"harpa", "trompa", "lira", "flauta", "gaita"}
 
+_ORIGEM_AFIXOS = {
+    "elfica": ["cd", "alcance", "duracao"],
+    "ana":    ["fome_sede", "duracao", "concentracao"],
+}
+
+def _afixo_aplicavel(base, bonus):
+    """True se o afixo faz efeito neste instrumento (evita origem sem bônus)."""
+    b = INSTRUMENTOS_BASE[base]
+    stp = b["stats"]["padrao"]
+    if bonus == "fome_sede":
+        return True
+    if bonus == "cd":
+        return bool(b["efeito"].get("save"))
+    if bonus == "alcance":
+        return any(k in stp for k in ("alcance", "raio", "cone"))
+    if bonus == "duracao":
+        return "duracao" in stp
+    if bonus == "concentracao":
+        return b["efeito"].get("tipo") == "requiem_final"
+    return False
+
+def _afixos_validos_origem(base, origem):
+    """Pool de afixos da origem ∩ aplicáveis à base."""
+    return [a for a in _ORIGEM_AFIXOS.get(origem, []) if _afixo_aplicavel(base, a)]
+
 def criar_instrumento(base, qualidade="padrao", origem="humana", encantamento="nenhum",
                       refinado_bonus=None, origem_bonus=None):
     """Cria uma instância de instrumento (item de bolsa/gear)."""
