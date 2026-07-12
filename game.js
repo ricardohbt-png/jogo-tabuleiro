@@ -7720,6 +7720,18 @@ function acionarInstrumento(me, inst, b){
       id => GS.usarInstrumento({ id }));
   } else if(tipo === 'chamado_general'){
     escolherDirecaoInstrumento(b, (dx, dy) => GS.usarInstrumento(null, [dx, dy]));
+  } else if(tipo === 'requiem_final'){
+    if(me.requiem_alvo){ GS.usarInstrumento(null); return; }   // clicar de novo desliga
+    const st = GS.instrumentoStatsClient(inst) || {};
+    const alcance = st.alcance || 0;
+    const gs = GS.gameState;
+    const pp = me.pos || [0,0];
+    const alvos = (gs && gs.monsters || []).filter(m => m && m.hp > 0 &&
+      Math.max(Math.abs(pp[0]-m.pos[0]), Math.abs(pp[1]-m.pos[1])) <= alcance);
+    if(!alvos.length){ toast(`Nenhum inimigo a até ${alcance} quadrados.`, 'var(--orange)'); return; }
+    if(alvos.length === 1){ GS.usarInstrumento(alvos[0]); return; }
+    openTargetModal(`${b.icon} ${b.habilidade_nome} — Escolha o alvo (alcance ${alcance}q)`, alvos, 'monster',
+      id => GS.usarInstrumento({ id }));
   } else {
     GS.usarInstrumento(null);
   }
@@ -10126,6 +10138,17 @@ function renderMyPanel(state){
       <span style="color:#ff884d; font-weight:bold; font-size:.95rem;">🔥 EM CHAMAS</span>
       <span style="color:#f0b8a0; font-size:.6rem; letter-spacing:1px;">${me.em_chamas_rodadas} RODADA(S) — ${me.chamas_agua_apaga ? 'ÁGUA OU AÇÃO APAGA' : 'SÓ A AÇÃO APAGA (FOGO GREGO)'}</span>
     </div>` : ''}
+    ${me.requiem_alvo ? (() => {
+      const alvoM = (state.monsters || []).find(m => m.id === me.requiem_alvo);
+      const instOff = me.gear && me.gear.off_hand;
+      const stReq = instOff ? (GS.instrumentoStatsClient(instOff) || {}) : {};
+      const n = me.requiem_contador || 0;
+      return `
+    <div class="banner-requiem-final" style="margin-top:4px; padding:5px 8px; background:rgba(136,80,224,0.15); border:1px solid #8850e066; border-radius:3px; display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Cinzel',serif;">
+      <span style="color:#c090ff; font-weight:bold; font-size:.95rem;">🎻 RÉQUIEM</span>
+      <span style="color:#d8c0f0; font-size:.6rem; letter-spacing:1px;">ALVO: ${alvoM ? alvoM.name : '?'} — ${n}${stReq.dado || 'd?'} (MANUT. 🍖-2 💧-2)</span>
+    </div>`;
+    })() : ''}
 
     ${(() => {
       const f = me.fome ?? 100, s = me.sede ?? 100;
