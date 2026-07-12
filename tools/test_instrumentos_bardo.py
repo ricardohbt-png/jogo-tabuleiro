@@ -827,6 +827,15 @@ def test_hidratar_itens_bau_token():
     out = server.hidratar_itens_bau([{"tipo": "instrumento_aleatorio"}])
     assert len(out) == 1 and out[0]["tipo_item"] == "instrumento"
 
+def test_sku_origem():
+    sku = server.instrumento_sku("harpa", "padrao", preco=320, origem="elfica", origem_bonus="cd")
+    assert sku["origem"] == "elfica" and sku["origem_bonus"] == "cd"
+    assert sku["id"] == "instrumento_harpa_padrao_elfica"
+    assert "Élfica" in sku["name"]
+    ids = {i.get("id") for i in server.SHOP_MERCHANT}
+    assert "instrumento_harpa_padrao_elfica" in ids
+    assert "instrumento_violino_padrao_ana" in ids
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]

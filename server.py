@@ -319,10 +319,14 @@ def criar_instrumento(base, qualidade="padrao", origem="humana", encantamento="n
     inst["name"] = _instrumento_nome(inst)
     return inst
 
-def instrumento_sku(base, qualidade="padrao", preco=100, refinado_bonus=None):
-    """Instância de instrumento para a loja/loot (id único + price/buy_price)."""
-    inst = criar_instrumento(base, qualidade, refinado_bonus=refinado_bonus)
-    inst["id"] = f"instrumento_{base}_{qualidade}"
+def instrumento_sku(base, qualidade="padrao", preco=100, refinado_bonus=None,
+                    origem="humana", origem_bonus=None):
+    """Instância de instrumento para a loja/loot (id único + price/buy_price).
+    Origem ≠ Humana entra no id para não colidir com o SKU Humano (Fase 4a)."""
+    inst = criar_instrumento(base, qualidade, origem=origem, encantamento="nenhum",
+                             refinado_bonus=refinado_bonus, origem_bonus=origem_bonus)
+    suf = f"_{origem}" if origem in ("elfica", "ana") else ""
+    inst["id"] = f"instrumento_{base}_{qualidade}{suf}"
     inst["price"] = preco       # lido por handle_shop_buy (item["price"]) no catálogo
     inst["buy_price"] = preco   # gravado na instância adquirida (revenda)
     return inst
@@ -2443,6 +2447,14 @@ SHOP_MERCHANT = [
     instrumento_sku("flauta", "padrao",  210),
     instrumento_sku("violino", "rustico", 240),
     instrumento_sku("violino", "padrao",  360),
+    # Origens (Fase 4a) — compráveis para teste; a via "real" é loot procedural.
+    # Um SKU por (base, origem) para o id `instrumento_{base}_{qualidade}_{origem}` não colidir.
+    instrumento_sku("harpa",   "padrao", 320, origem="elfica", origem_bonus="cd"),
+    instrumento_sku("trompa",  "padrao", 340, origem="elfica", origem_bonus="alcance"),
+    instrumento_sku("sino",    "padrao", 240, origem="elfica", origem_bonus="duracao"),
+    instrumento_sku("tambor",  "padrao", 340, origem="ana",    origem_bonus="fome_sede"),
+    instrumento_sku("lira",    "padrao", 300, origem="ana",    origem_bonus="duracao"),
+    instrumento_sku("violino", "padrao", 480, origem="ana",    origem_bonus="concentracao"),
 ]
 
 # Munição — vendida no FERREIRO (item_slot "ammo", vai pro off_hand; 10 projéteis
