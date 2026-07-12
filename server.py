@@ -11146,6 +11146,38 @@ class GameRoom:
         await self.gm_say(f"❄️ **{alvo['name']}** continua paralisado ({alvo['paralisado_rodadas']}/{max_r}).")
         return True
 
+    async def _processar_requiem_turno(self, m):
+        """Início do turno do alvo do Réquiem: escala o contador (até o teto), testa
+        Vontade; falha = contador×dado; sucesso = sem dano. Encerra se o bardo/violino
+        não for mais válido."""
+        bid = m.get("requiem_por")
+        if not bid:
+            return
+        bardo = self.players.get(bid)
+        off = bardo.get("gear", {}).get("off_hand") if bardo else None
+        valido = (bardo and bardo.get("alive") and bardo.get("requiem_alvo") == m["id"]
+                  and off and off.get("tipo_item") == "instrumento" and off.get("base") == "violino")
+        if not valido:
+            m.pop("requiem_por", None)
+            if bardo:
+                await self._encerrar_requiem(bardo, "instrumento guardado")
+            return
+        st = self._instrumento_stats(off)
+        bardo["requiem_contador"] = min(bardo.get("requiem_contador", 0) + 1, st["teto"])
+        n = bardo["requiem_contador"]
+        save_ok, *_ = await self._save_mostrado(m, "vontade", self._instrumento_cd(bardo, off))
+        if save_ok:
+            await self.gm_say(f"🎻 **{m['name']}** resiste ao Réquiem nesta rodada.")
+            return
+        dano = roll_dice(f"{n}{st['dado']}")
+        m["hp"] = max(0, m["hp"] - dano)
+        await self.gm_say(f"🎻 O Réquiem Final dilacera **{m['name']}**: {n}{st['dado']} = **{dano}**!")
+        if m["hp"] <= 0:
+            await self._monster_dies(m, bid)
+            # Cleanup direto (idempotente com o de _monster_dies): garante o
+            # encerramento mesmo se _monster_dies estiver substituído/mockado.
+            await self._encerrar_requiem(bardo, f"{m['name']} pereceu")
+
     async def _processar_enredado_turno(self, m):
         """Rede (item): monstro preso GASTA o turno tentando escapar (save de
         escape configurado no monstro). Retorna True se o turno foi consumido
@@ -15113,6 +15145,10 @@ class GameRoom:
             await self._processar_mods_magia_turno(m)   # Amaldiçoar expira por rodada
             if m["hp"] <= 0:
                 continue
+            # Réquiem Final (Violino): dano crescente no início do turno do alvo.
+            await self._processar_requiem_turno(m)
+            if m["hp"] <= 0:
+                continue
             # Petrificado: perde o turno (não move nem ataca).
             if m.get("petrificado"):
                 await self.gm_say(f"🗿 **{m['name']}** está petrificado e perde o turno!")
@@ -15340,6 +15376,11 @@ class GameRoom:
 
     async def _monster_dies(self, m, killer_pid):
         if m["hp"] > 0: return
+
+        # Réquiem Final (Violino): encerra a melodia do bardo se o alvo morreu.
+        bid_req = m.get("requiem_por")
+        if bid_req and self.players.get(bid_req):
+            await self._encerrar_requiem(self.players[bid_req], f"{m.get('name','o alvo')} pereceu")
 
         # Resistência Morta (Zumbi): a 0 HP, Fortitude CD 10 → fica com 1 HP. Dano
         # sagrado/luz IGNORA e o destrói de vez (sem retorno).

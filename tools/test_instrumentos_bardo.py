@@ -563,6 +563,52 @@ def test_requiem_fora_de_alcance_recusa():
     _run(room.handle_usar_instrumento("p1", {"target_id": "m1"}))
     assert p.get("requiem_alvo") is None and p["fome"] == fome0
 
+def test_requiem_escalada_e_teto():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("violino", "velho")  # dado d2, teto 3
+    m = {"id": "m1", "name": "Lich", "hp": 100, "max_hp": 100, "pos": [8, 5], "alive": True}
+    room.monsters["m1"] = m
+    p["requiem_alvo"] = "m1"; p["requiem_contador"] = 0; m["requiem_por"] = "p1"
+    async def _falha(*a, **k): return (False, 1, 0, 1)
+    room._save_mostrado = _falha
+    seq = []
+    orig_roll = server.roll_dice
+    server.roll_dice = lambda s: (seq.append(s) or 1)
+    for _ in range(5):
+        _run(room._processar_requiem_turno(m))
+    server.roll_dice = orig_roll
+    assert seq == ["1d2", "2d2", "3d2", "3d2", "3d2"]   # sobe até o teto 3 e trava
+
+def test_requiem_sucesso_sem_dano():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("violino", "padrao")
+    m = {"id": "m1", "name": "Lich", "hp": 30, "max_hp": 30, "pos": [8, 5], "alive": True}
+    room.monsters["m1"] = m
+    p["requiem_alvo"] = "m1"; p["requiem_contador"] = 0; m["requiem_por"] = "p1"
+    async def _passa(*a, **k): return (True, 20, 0, 20)
+    room._save_mostrado = _passa
+    _run(room._processar_requiem_turno(m))
+    assert m["hp"] == 30
+    assert p["requiem_contador"] == 1
+
+def test_requiem_mata_encerra():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("violino", "padrao")
+    m = {"id": "m1", "name": "Lich", "hp": 3, "max_hp": 30, "pos": [8, 5], "alive": True}
+    room.monsters["m1"] = m
+    p["requiem_alvo"] = "m1"; p["requiem_contador"] = 0; m["requiem_por"] = "p1"
+    async def _falha(*a, **k): return (False, 1, 0, 1)
+    room._save_mostrado = _falha
+    mortes = []
+    async def _dies(mon, killer): mortes.append(mon["id"]); mon["hp"] = 0
+    room._monster_dies = _dies
+    orig_roll = server.roll_dice
+    server.roll_dice = lambda s: 10
+    _run(room._processar_requiem_turno(m))
+    server.roll_dice = orig_roll
+    assert mortes == ["m1"]
+    assert p["requiem_alvo"] is None
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]
