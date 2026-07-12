@@ -664,6 +664,31 @@ def test_concentracao_sem_requiem_noop():
     _run(room._concentracao_requiem(p, 99))   # sem requiem_alvo
     assert called == []                        # não testa nada
 
+def test_requiem_manutencao_debita():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("violino", "padrao")
+    p["requiem_alvo"] = "m1"; p["fome"] = 50; p["sede"] = 50
+    _run(room._cobrar_manutencao_requiem(p))
+    assert p["fome"] == 48 and p["sede"] == 48
+    assert p["requiem_alvo"] == "m1"
+
+def test_requiem_manutencao_sem_recursos_encerra():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("violino", "padrao")
+    m = {"id": "m1", "name": "Lich", "hp": 30, "pos": [8, 5], "alive": True, "requiem_por": "p1"}
+    room.monsters["m1"] = m
+    p["requiem_alvo"] = "m1"; p["fome"] = 1; p["sede"] = 50
+    _run(room._cobrar_manutencao_requiem(p))
+    assert p["requiem_alvo"] is None
+    assert m.get("requiem_por") is None
+
+def test_requiem_manutencao_sem_violino_encerra():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = None            # guardou o violino
+    p["requiem_alvo"] = "m1"; p["fome"] = 50; p["sede"] = 50
+    _run(room._cobrar_manutencao_requiem(p))
+    assert p["requiem_alvo"] is None
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]

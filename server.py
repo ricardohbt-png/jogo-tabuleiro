@@ -8240,6 +8240,25 @@ class GameRoom:
         labels = ", ".join(next(a["label"] for a in CANCAO_ATRIBUTOS if a["id"] == x) for x in p.get("cancao_atributos", []))
         await self.gm_say(f"🎵 Canção Heroica de **{p['name']}** [{labels}] — manutenção 🍖-{custo['fome']} 💧-{custo['sede']}.")
 
+    async def _cobrar_manutencao_requiem(self, p):
+        """Upkeep do Réquiem Final, cobrado no início do turno do bardo. Sem
+        recursos (ou instrumento guardado), o Réquiem se encerra."""
+        if not p.get("requiem_alvo"):
+            return
+        off = p.get("gear", {}).get("off_hand")
+        base = INSTRUMENTOS_BASE.get(off.get("base")) if off and off.get("tipo_item") == "instrumento" else None
+        if not base or off.get("base") != "violino":
+            await self._encerrar_requiem(p, "instrumento guardado")
+            return
+        mf = base.get("manutencao_fome", 2)
+        ms = base.get("manutencao_sede", 2)
+        if p["fome"] < mf or p["sede"] < ms:
+            await self._encerrar_requiem(p, "recursos insuficientes")
+            return
+        p["fome"] = max(0, p["fome"] - mf)
+        p["sede"] = max(0, p["sede"] - ms)
+        await self.gm_say(f"🎻 Réquiem Final de **{p['name']}** — manutenção 🍖-{mf} 💧-{ms}.")
+
     def _interromper_cancao(self, p, motivo):
         """Cancela a canção sem push (chamado de contextos síncronos, ex.: morte).
         Limpa os buffs dos aliados de forma síncrona."""
@@ -12839,6 +12858,8 @@ class GameRoom:
         cur_p = self.players[self.current_pid()]
         if cur_p.get("class_id") == "bard" and cur_p.get("cancao_ativa"):
             await self._cobrar_manutencao_cancao(cur_p)
+        if cur_p.get("class_id") == "bard":
+            await self._cobrar_manutencao_requiem(cur_p)
         if cur_p.get("class_id") == "paladin":
             await self._processar_manutencao_richard(cur_p)
         if cur_p.get("class_id") == "rogue":
@@ -15623,6 +15644,10 @@ class GameRoom:
         if p.get("cancao_ativa"):
             msg = self._interromper_cancao(p, "Henrique foi incapacitado")
             if msg: await self.gm_say(msg)
+
+        # Bardo incapacitado: o Réquiem Final também se encerra.
+        if p.get("requiem_alvo"):
+            await self._encerrar_requiem(p, f"{p.get('name','o bardo')} tombou")
 
         # Paladino incapacitado: todas as habilidades sustentadas se desfazem.
         if p.get("class_id") == "paladin":
