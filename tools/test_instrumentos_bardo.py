@@ -609,6 +609,18 @@ def test_requiem_mata_encerra():
     assert mortes == ["m1"]
     assert p["requiem_alvo"] is None
 
+def test_requiem_taunt():
+    room, p = _room_bardo(); _mute(room)
+    p["pos"] = [5, 5]
+    p["requiem_alvo"] = "m1"
+    alvo   = {"id": "m1", "name": "Lich", "hp": 30, "pos": [12, 12], "alive": True, "requiem_por": "p1"}
+    perto  = {"id": "m2", "name": "Goblin", "hp": 10, "pos": [6, 5], "alive": True}
+    longe  = {"id": "m3", "name": "Ogro", "hp": 10, "pos": [15, 15], "alive": True}
+    room.monsters = {"m1": alvo, "m2": perto, "m3": longe}
+    assert room._requiem_forca_bardo(alvo) is p     # o alvo (qualquer distância)
+    assert room._requiem_forca_bardo(perto) is p    # dentro do raio 3
+    assert room._requiem_forca_bardo(longe) is None # fora e não-alvo
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]

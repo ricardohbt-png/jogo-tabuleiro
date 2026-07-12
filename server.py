@@ -5206,6 +5206,19 @@ class GameRoom:
         bardo["requiem_contador"] = 0
         await self.gm_say(f"🎻 O Réquiem Final de **{bardo['name']}** se encerra — {motivo}.")
 
+    def _requiem_forca_bardo(self, m):
+        """Bardo que este monstro é forçado a atacar por um Réquiem ativo (ou None):
+        se `m` é o alvo do Réquiem, ou está a ≤3 de um bardo com Réquiem ativo."""
+        bid = m.get("requiem_por")
+        if bid and bid in self.players and self.players[bid].get("alive") \
+           and self.players[bid].get("requiem_alvo") == m["id"]:
+            return self.players[bid]
+        for q in self.players.values():
+            if q.get("alive") and q.get("requiem_alvo") \
+               and _distancia_chebyshev(m["pos"], q["pos"]) <= 3:
+                return q
+        return None
+
     @staticmethod
     def _instr_base_off(p):
         """Base do instrumento no off_hand, ou None (off_hand pode ter escudo/arma)."""
@@ -13417,7 +13430,10 @@ class GameRoom:
         return False
 
     def _get_monster_primary_target(self, m, targets):
-        """Seleciona o alvo com prioridade: provocação > taunt > mais próximo."""
+        """Seleciona o alvo com prioridade: réquiem > provocação > taunt > mais próximo."""
+        rb = self._requiem_forca_bardo(m)
+        if rb:
+            return {"kind": "player", "obj": rb}
         if m.get("provocado") and m.get("provocado_turnos", 0) > 0:
             prov_pid = m.get("provocado_por")
             if prov_pid in self.players and self.players[prov_pid]["alive"]:
@@ -14213,7 +14229,7 @@ class GameRoom:
         """Prioriza alvos com armadura leve (couro), depois sem armadura. Aplica
         Toque Putrefato e Corrosão Viva no acerto. Evita zonas de fogo."""
         players_alvo = [t for t in targets if t["kind"] == "player"]
-        forcado = (m.get("provocado") and m.get("provocado_turnos", 0) > 0) or bool(self.taunted)
+        forcado = (m.get("provocado") and m.get("provocado_turnos", 0) > 0) or bool(self.taunted) or bool(self._requiem_forca_bardo(m))
         if forcado or not players_alvo:
             target_obj = self._get_monster_primary_target(m, targets)
         else:
@@ -14291,7 +14307,7 @@ class GameRoom:
                 return
 
         players_alvo = [t for t in targets if t["kind"] == "player"]
-        forcado = (m.get("provocado") and m.get("provocado_turnos", 0) > 0) or bool(self.taunted)
+        forcado = (m.get("provocado") and m.get("provocado_turnos", 0) > 0) or bool(self.taunted) or bool(self._requiem_forca_bardo(m))
         if forcado or not players_alvo:
             target_obj = self._get_monster_primary_target(m, targets)
         else:
@@ -14555,7 +14571,7 @@ class GameRoom:
     async def _ai_lagarto_carniceiro(self, m, targets):
         """Faro de Carniça: prioriza o alvo com MENOR HP. 2 mordidas (Predador
         Oportunista: +1 vs alvo <50% HP); se ambas acertam → Combo Devorador (2 garras)."""
-        forcado = (m.get("provocado") and m.get("provocado_turnos", 0) > 0) or bool(self.taunted)
+        forcado = (m.get("provocado") and m.get("provocado_turnos", 0) > 0) or bool(self.taunted) or bool(self._requiem_forca_bardo(m))
         if forcado:
             target_obj = self._get_monster_primary_target(m, targets)
         elif targets:
