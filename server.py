@@ -280,6 +280,8 @@ _ORIGEM_LABEL = {          # (masculino, feminino)
     "elfica": ("Élfico", "Élfica"),
     "ana":    ("Anão", "Anã"),
 }
+_RUNICO_LABEL   = ("Rúnico", "Rúnica")      # (masc, fem) — Encantamento Rúnico (Fase 4b)
+_LENDARIO_LABEL = ("Lendário", "Lendária")  # (masc, fem) — 3 eixos no máximo
 
 _ORIGEM_AFIXOS = {
     "elfica": ["cd", "alcance", "duracao"],
@@ -378,11 +380,18 @@ def _resolver_loot_instrumento(entry):
 def _instrumento_nome(inst):
     b = INSTRUMENTOS_BASE[inst["base"]]
     fem = inst["base"] in _INSTRUMENTO_GENERO_FEM
+    orig = inst.get("origem", "humana")
+    runico = inst.get("encantamento") == "runico"
+    # Lendário: 3 eixos no máximo (Refinado + Origem ≠ Humana + Rúnico) → "Lendária/o"
+    # substitui a qualidade e o sufixo Rúnico; a origem permanece.
+    if inst.get("qualidade") == "refinado" and orig in _ORIGEM_LABEL and runico:
+        return f"{b['nome']} {_LENDARIO_LABEL[1 if fem else 0]} {_ORIGEM_LABEL[orig][1 if fem else 0]}"
     ql = _QUALIDADE_LABEL.get(inst["qualidade"], ("Padrão", "Padrão"))[1 if fem else 0]
     nome = f"{b['nome']} {ql}"
-    orig = inst.get("origem", "humana")
     if orig in _ORIGEM_LABEL:
         nome += " " + _ORIGEM_LABEL[orig][1 if fem else 0]
+    if runico:
+        nome += " " + _RUNICO_LABEL[1 if fem else 0]
     return nome
 
 def _distancia_chebyshev(pos1, pos2):

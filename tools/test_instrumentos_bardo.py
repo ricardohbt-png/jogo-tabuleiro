@@ -834,6 +834,23 @@ def test_afixo_cd_aumenta_instrumento_cd():
                                                               origem="elfica", origem_bonus="cd"))
     assert elf_cd == base_cd + 1
 
+def test_nome_runico():
+    assert server.criar_instrumento("sino", "padrao", encantamento="runico")["name"] == "Sino Padrão Rúnico"
+    assert server.criar_instrumento("harpa", "velho", encantamento="runico")["name"] == "Harpa Velha Rúnica"
+
+def test_nome_lendario():
+    inst = server.criar_instrumento("harpa", "refinado", origem="elfica",
+                                    origem_bonus="cd", encantamento="runico")
+    assert inst["name"] == "Harpa Lendária Élfica"
+    inst2 = server.criar_instrumento("tambor", "refinado", origem="ana",
+                                     origem_bonus="fome_sede", encantamento="runico")
+    assert inst2["name"] == "Tambor de Guerra Lendário Anão"
+
+def test_nome_sem_runico_inalterado():
+    assert server.criar_instrumento("harpa", "velho")["name"] == "Harpa Velha"
+    assert server.criar_instrumento("harpa", "refinado", origem="elfica",
+                                    origem_bonus="cd")["name"] == "Harpa Refinada Élfica"
+
 def test_violino_runico_menos_1_vontade():
     room, p = _room_bardo(); _mute(room)
     p["gear"]["off_hand"] = server.criar_instrumento("violino", "padrao", encantamento="runico")
