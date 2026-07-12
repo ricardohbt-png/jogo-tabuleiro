@@ -791,6 +791,13 @@ def test_afixos_validos_origem():
     vs = server._afixos_validos_origem("sino", "elfica")
     assert "duracao" in vs and "cd" not in vs and "alcance" not in vs
 
+def test_nome_com_origem():
+    assert server.criar_instrumento("harpa", "refinado", origem="elfica",
+                                    origem_bonus="cd")["name"] == "Harpa Refinada Élfica"
+    assert server.criar_instrumento("tambor", "padrao", origem="ana",
+                                    origem_bonus="fome_sede")["name"] == "Tambor de Guerra Padrão Anão"
+    assert server.criar_instrumento("harpa", "velho")["name"] == "Harpa Velha"
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]

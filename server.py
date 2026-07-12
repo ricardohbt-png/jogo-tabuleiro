@@ -273,6 +273,10 @@ _QUALIDADE_LABEL = {
     "padrao": ("Padrão", "Padrão"), "refinado": ("Refinado", "Refinada"),
 }
 _INSTRUMENTO_GENERO_FEM = {"harpa", "trompa", "lira", "flauta", "gaita"}
+_ORIGEM_LABEL = {          # (masculino, feminino)
+    "elfica": ("Élfico", "Élfica"),
+    "ana":    ("Anão", "Anã"),
+}
 
 _ORIGEM_AFIXOS = {
     "elfica": ["cd", "alcance", "duracao"],
@@ -327,7 +331,11 @@ def _instrumento_nome(inst):
     b = INSTRUMENTOS_BASE[inst["base"]]
     fem = inst["base"] in _INSTRUMENTO_GENERO_FEM
     ql = _QUALIDADE_LABEL.get(inst["qualidade"], ("Padrão", "Padrão"))[1 if fem else 0]
-    return f"{b['nome']} {ql}"
+    nome = f"{b['nome']} {ql}"
+    orig = inst.get("origem", "humana")
+    if orig in _ORIGEM_LABEL:
+        nome += " " + _ORIGEM_LABEL[orig][1 if fem else 0]
+    return nome
 
 def _distancia_chebyshev(pos1, pos2):
     """Distância de rei (Chebyshev) entre dois pontos [x, y]."""
