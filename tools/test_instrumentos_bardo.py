@@ -798,6 +798,25 @@ def test_nome_com_origem():
                                     origem_bonus="fome_sede")["name"] == "Tambor de Guerra Padrão Anão"
     assert server.criar_instrumento("harpa", "velho")["name"] == "Harpa Velha"
 
+import random as _rnd
+
+def test_roller_gera_instrumentos_validos():
+    _rnd.seed(1234)
+    for _ in range(300):
+        inst = server.gerar_instrumento_aleatorio()
+        assert inst["tipo_item"] == "instrumento"
+        assert inst["base"] in server.INSTRUMENTOS_BASE
+        if inst.get("origem_bonus"):
+            assert inst["origem_bonus"] in server._afixos_validos_origem(inst["base"], inst["origem"])
+        if inst["base"] == "alaude":
+            assert inst["origem"] != "elfica"
+
+def test_roller_respeita_bases():
+    _rnd.seed(1)
+    for _ in range(50):
+        inst = server.gerar_instrumento_aleatorio(bases=["harpa"])
+        assert inst["base"] == "harpa"
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]

@@ -327,6 +327,41 @@ def instrumento_sku(base, qualidade="padrao", preco=100, refinado_bonus=None):
     inst["buy_price"] = preco   # gravado na instância adquirida (revenda)
     return inst
 
+# ─── Roller procedural de instrumentos (Fase 4a) ────────────────────────────────
+_ROLLER_BASES = ["harpa", "tambor", "sino", "alaude", "trompa", "lira", "flauta", "violino"]
+_ROLLER_QUALIDADES = [("velho", 35), ("rustico", 30), ("padrao", 25), ("refinado", 10)]
+_ROLLER_ORIGENS = [("humana", 70), ("elfica", 15), ("ana", 15)]
+
+def _weighted_choice(pairs):
+    total = sum(w for _, w in pairs)
+    r = random.uniform(0, total)
+    acc = 0.0
+    for val, w in pairs:
+        acc += w
+        if r <= acc:
+            return val
+    return pairs[-1][0]
+
+def gerar_instrumento_aleatorio(bases=None):
+    """Instrumento procedural ponderado (base × qualidade × origem), com afixos
+    pré-rolados válidos. Élfica sem afixo aplicável (Alaúde) rebaixa p/ Humana."""
+    base = random.choice(bases or _ROLLER_BASES)
+    qualidade = _weighted_choice(_ROLLER_QUALIDADES)
+    origem = _weighted_choice(_ROLLER_ORIGENS)
+    origem_bonus = None
+    if origem in ("elfica", "ana"):
+        validos = _afixos_validos_origem(base, origem)
+        if validos:
+            origem_bonus = random.choice(validos)
+        else:
+            origem = "humana"
+    refinado_bonus = None
+    if qualidade == "refinado":
+        afx = INSTRUMENTOS_BASE[base].get("afixos_validos", [])
+        if afx:
+            refinado_bonus = random.choice(afx)
+    return criar_instrumento(base, qualidade, origem, "nenhum", refinado_bonus, origem_bonus)
+
 def _instrumento_nome(inst):
     b = INSTRUMENTOS_BASE[inst["base"]]
     fem = inst["base"] in _INSTRUMENTO_GENERO_FEM
