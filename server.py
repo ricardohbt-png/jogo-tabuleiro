@@ -5206,6 +5206,19 @@ class GameRoom:
         bardo["requiem_contador"] = 0
         await self.gm_say(f"🎻 O Réquiem Final de **{bardo['name']}** se encerra — {motivo}.")
 
+    async def _concentracao_requiem(self, bardo, dano):
+        """Bardo sob Réquiem testa Vontade (CD 8+dano) ao sofrer dano; falha encerra.
+        Origem Anã (+2) plumbada p/ Fase 4."""
+        if not bardo.get("requiem_alvo") or dano <= 0:
+            return
+        extra = 0
+        off = bardo.get("gear", {}).get("off_hand")
+        if off and off.get("origem_bonus") == "concentracao":
+            extra = 2
+        save_ok, *_ = await self._save_mostrado(bardo, "vontade", 8 + dano, extra_mod=extra)
+        if not save_ok:
+            await self._encerrar_requiem(bardo, "concentração quebrada")
+
     def _requiem_forca_bardo(self, m):
         """Bardo que este monstro é forçado a atacar por um Réquiem ativo (ou None):
         se `m` é o alvo do Réquiem, ou está a ≤3 de um bardo com Réquiem ativo."""
@@ -11703,6 +11716,7 @@ class GameRoom:
                 # _dano_em_alvo já narra o dano (evita narração dupla, como no tick
                 # de em_chamas/ácido); a flavor do veneno aparece só no neutralizar.
                 await self._dano_em_alvo(alvo, dano, "veneno", None)
+                await self._concentracao_requiem(alvo, dano)   # Réquiem Final (Fase 3)
                 efeito["duracao"] -= 1
                 if efeito["duracao"] > 0 and (alvo.get("alive") or alvo.get("hp", 0) > 0):
                     restantes.append(efeito)
@@ -12297,6 +12311,7 @@ class GameRoom:
                 if alvo and (alvo.get("alive") or alvo.get("hp", 0) > 0):
                     dano = self._rolar_dado(ef["valor"])
                     await self._dano_em_alvo(alvo, dano, ef.get("elemento", "fogo"), arm.get("criador"))
+                    await self._concentracao_requiem(alvo, dano)   # Réquiem Final (Fase 3)
                     await self._enviar_trap_result(
                         alvo, tipo_meta.get("nome", arm["tipo"]), tipo_meta.get("icone", "🔥"),
                         sucesso=False, dano=dano, metade=False,
@@ -12324,6 +12339,7 @@ class GameRoom:
                 alvo["em_chamas_rodadas"] = 0
                 continue
             await self._dano_em_alvo(alvo, 1, "fogo", None)
+            await self._concentracao_requiem(alvo, 1)   # Réquiem Final (Fase 3)
             await self._enviar_trap_result(
                 alvo, "Em Chamas", "🔥", sucesso=False, dano=1, metade=False,
                 descricao="As chamas continuam queimando.",
@@ -13575,6 +13591,10 @@ class GameRoom:
                    and target.get("hp", 0) > 0 \
                    and target.get("ecos_ate", 0) >= self.round_num:
                     await self._instr_ecos_retaliar(target, m)
+                # Réquiem Final (Violino, Fase 3): dano quebra a concentração
+                # do bardo se ele falhar em Vontade CD 8+dano.
+                if target.get("requiem_alvo") and target.get("hp", 0) > 0:
+                    await self._concentracao_requiem(target, dmg_alvo)
             else:
                 dmg_ef = self._ajustar_dano_elemental(target, dmg, "fisico")
                 target["vida_atual"] = max(0, target["vida_atual"] - dmg_ef)

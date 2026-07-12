@@ -621,6 +621,49 @@ def test_requiem_taunt():
     assert room._requiem_forca_bardo(perto) is p    # dentro do raio 3
     assert room._requiem_forca_bardo(longe) is None # fora e não-alvo
 
+def test_concentracao_quebra():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("violino", "padrao")
+    m = {"id": "m1", "name": "Lich", "hp": 30, "pos": [8, 5], "alive": True, "requiem_por": "p1"}
+    room.monsters["m1"] = m
+    p["requiem_alvo"] = "m1"; p["requiem_contador"] = 2
+    async def _falha(*a, **k): return (False, 1, 0, 1)
+    room._save_mostrado = _falha
+    _run(room._concentracao_requiem(p, 12))
+    assert p["requiem_alvo"] is None
+    assert m.get("requiem_por") is None
+
+def test_concentracao_resiste():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("violino", "padrao")
+    m = {"id": "m1", "name": "Lich", "hp": 30, "pos": [8, 5], "alive": True, "requiem_por": "p1"}
+    room.monsters["m1"] = m
+    p["requiem_alvo"] = "m1"
+    async def _passa(*a, **k): return (True, 20, 0, 20)
+    room._save_mostrado = _passa
+    _run(room._concentracao_requiem(p, 12))
+    assert p["requiem_alvo"] == "m1"
+
+def test_concentracao_cd_8_mais_dano():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("violino", "padrao")
+    m = {"id": "m1", "name": "Lich", "hp": 30, "pos": [8, 5], "alive": True, "requiem_por": "p1"}
+    room.monsters["m1"] = m
+    p["requiem_alvo"] = "m1"
+    cds = []
+    async def _cap(alvo, tipo, dif, **k): cds.append(dif); return (True, 20, 0, 20)
+    room._save_mostrado = _cap
+    _run(room._concentracao_requiem(p, 7))
+    assert cds == [15]                     # 8 + 7
+
+def test_concentracao_sem_requiem_noop():
+    room, p = _room_bardo(); _mute(room)
+    called = []
+    async def _s(*a, **k): called.append(1); return (True, 20, 0, 20)
+    room._save_mostrado = _s
+    _run(room._concentracao_requiem(p, 99))   # sem requiem_alvo
+    assert called == []                        # não testa nada
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]
