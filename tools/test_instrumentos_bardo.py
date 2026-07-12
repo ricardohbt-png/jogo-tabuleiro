@@ -689,6 +689,12 @@ def test_requiem_manutencao_sem_violino_encerra():
     _run(room._cobrar_manutencao_requiem(p))
     assert p["requiem_alvo"] is None
 
+def test_sku_violino_existe():
+    sku = server.instrumento_sku("violino", "padrao", preco=320)
+    assert sku["tipo_item"] == "instrumento" and sku["base"] == "violino"
+    ids = {i.get("id") for i in server.SHOP_MERCHANT}
+    assert "instrumento_violino_padrao" in ids
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]

@@ -790,3 +790,20 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > direção; `acionarInstrumento` abre um seletor de 8 direções (`escolherDirecaoInstrumento`)
 > p/ o Chamado; Lira/Flauta são auto-centrados. Loja: SKUs em `SHOP_MERCHANT`. Fases 3–5
 > pendentes. Testes: `tools/test_instrumentos_bardo.py`.
+
+> **Fase 3 (Réquiem Final / Violino):** habilidade sustentada de alvo único (2 mãos,
+> `requiem_final`). Ativação `_instr_requiem_final` (alvo com LOS + `alcance` por qualidade;
+> grava `requiem_alvo`/`requiem_contador` no bardo e `requiem_por` no monstro); toggle-off
+> tratado cedo em `handle_usar_instrumento` (grátis, sempre disponível, mesmo após agir). DoT
+> `_processar_requiem_turno` (no turno do alvo, junto de paralisia/veneno): contador sobe até
+> o teto por qualidade (velho 3 / rústico 4 / padrão 5), Vontade → falha `contador×dado`
+> (d2/d4/d6), sucesso sem dano; matar o alvo encerra. Taunt `_requiem_forca_bardo` (o alvo +
+> monstros a ≤3 do bardo são forçados a atacá-lo — integrado em `_get_monster_primary_target`
+> e nos 3 booleanos `forcado`). Concentração `_concentracao_requiem` (Vontade CD 8+dano ao
+> sofrer dano; falha encerra) hookada no ataque de monstro + ticks de veneno/chamas/armadilha
+> (todos via `_dano_em_alvo`); Origem Anã +2 plumbada p/ Fase 4. Manutenção
+> `_cobrar_manutencao_requiem` (-2🍖/-2💧 no turno do bardo; sem recursos encerra).
+> `_encerrar_requiem` (idempotente) chamado em morte do alvo/bardo, quebra de concentração,
+> sem recursos, desequipar, recast e toggle. Cliente: mira como Nota Cortante (ou toggle-off
+> se já ativo) + banner de status roxo em `renderMyPanel`. Fase 4 Rúnico: Violino Rúnico dá
+> -1 Vontade ao alvo. Testes: `tools/test_instrumentos_bardo.py`.

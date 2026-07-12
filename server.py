@@ -2366,6 +2366,8 @@ SHOP_MERCHANT = [
     instrumento_sku("lira",   "padrao",  200),
     instrumento_sku("flauta", "rustico", 120),
     instrumento_sku("flauta", "padrao",  210),
+    instrumento_sku("violino", "rustico", 240),
+    instrumento_sku("violino", "padrao",  360),
 ]
 
 # Munição — vendida no FERREIRO (item_slot "ammo", vai pro off_hand; 10 projéteis
