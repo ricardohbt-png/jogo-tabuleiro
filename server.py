@@ -8452,6 +8452,27 @@ class GameRoom:
         for jogador in self.players.values():
             jogador.pop("buffs_cancao", None)
 
+    def _custo_fome_sede_efetivo(self, p, fome, sede, contexto=None):
+        """Custo apos descontos de Encore. Grande Encore zera; Encore Menor -1/-1;
+        magia gratis (Mago/Clerigo, contexto='magia') zera e consome a carga."""
+        if p.get("grande_encore_ate", -1) >= self.round_num:
+            return 0, 0
+        if contexto == "magia" and p.get("encore_magia_gratis", 0) > 0 \
+           and p.get("class_id") in ("mage", "cleric"):
+            p["encore_magia_gratis"] = p.get("encore_magia_gratis", 0) - 1
+            return 0, 0
+        if p.get("encore_menor_ate", -1) >= self.round_num:
+            return max(0, fome - 1), max(0, sede - 1)
+        return fome, sede
+
+    def _pagar_fome_sede(self, p, fome, sede, contexto=None):
+        """Debito central de fome/sede com desconto de Encore. Piso 0.
+        Retorna (fome_paga, sede_paga)."""
+        f, s = self._custo_fome_sede_efetivo(p, fome, sede, contexto)
+        p["fome"] = max(0, p.get("fome", 0) - f)
+        p["sede"] = max(0, p.get("sede", 0) - s)
+        return f, s
+
     async def _cobrar_manutencao_cancao(self, p):
         """Upkeep da canção, cobrado no início do turno do bardo. Sem recursos,
         a canção é interrompida. Com recursos, debita e reaplica os buffs (os

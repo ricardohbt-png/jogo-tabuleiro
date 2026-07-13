@@ -1085,6 +1085,43 @@ def test_cascata_teto_anti_loop():
     passos, meta = room._improviso_rolar_cascata(runico=True)
     assert meta["grande_encore"] is True
 
+def test_pagar_fome_sede_sem_encore():
+    room, p = _room_bardo()
+    p["fome"] = 10; p["sede"] = 10
+    room._pagar_fome_sede(p, 3, 2)
+    assert p["fome"] == 7 and p["sede"] == 8
+
+def test_pagar_fome_sede_encore_menor():
+    room, p = _room_bardo()
+    p["fome"] = 10; p["sede"] = 10
+    p["encore_menor_ate"] = room.round_num
+    room._pagar_fome_sede(p, 3, 2)
+    assert p["fome"] == 8 and p["sede"] == 9
+
+def test_pagar_fome_sede_grande_encore():
+    room, p = _room_bardo()
+    p["fome"] = 10; p["sede"] = 10
+    p["grande_encore_ate"] = room.round_num
+    room._pagar_fome_sede(p, 5, 5)
+    assert p["fome"] == 10 and p["sede"] == 10
+
+def test_pagar_fome_sede_magia_gratis():
+    room, p = _room_bardo()
+    p["class_id"] = "cleric"  # ensure mage/cleric for free-spell branch
+    p["fome"] = 10; p["sede"] = 10
+    p["encore_magia_gratis"] = 1
+    room._pagar_fome_sede(p, 4, 4, contexto="magia")
+    assert p["fome"] == 10 and p["sede"] == 10
+    assert p.get("encore_magia_gratis", 0) == 0
+    room._pagar_fome_sede(p, 4, 4, contexto="magia")
+    assert p["fome"] == 6 and p["sede"] == 6
+
+def test_pagar_fome_sede_piso_zero():
+    room, p = _room_bardo()
+    p["fome"] = 1; p["sede"] = 0
+    room._pagar_fome_sede(p, 3, 3)
+    assert p["fome"] == 0 and p["sede"] == 0
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]
