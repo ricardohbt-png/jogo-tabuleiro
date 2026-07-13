@@ -5493,6 +5493,48 @@ class GameRoom:
         elif base == "tambor":
             await self._instr_acorde_trovejante(p, virt, vst, {})
 
+    async def _improviso_requiem_tick(self, p, virt, st, m):
+        """So a 1a rodada do Requiem: Vontade vs CD -> falha sofre 1xdado do tier."""
+        if not m or m.get("hp", 0) <= 0:
+            return
+        save_ok, *_ = await self._save_mostrado(m, "vontade", self._instrumento_cd(p, virt))
+        if save_ok:
+            await self.gm_say(f"🎻 **{m['name']}** resiste ao lamento improvisado.")
+            return
+        dano = roll_dice(st["dado"])
+        m["hp"] = max(0, m["hp"] - dano)
+        await self.gm_say(f"🎻 O Réquiem improvisado fere **{m['name']}** em **{dano}**!")
+        if m["hp"] <= 0:
+            await self._monster_dies(m, p["id"])
+
+    async def handle_improviso_alvo(self, pid, data=None):
+        """Resolve o 1º passo pendente da fila do Improviso (res 7/9/11), mirando
+        no alvo/direção enviado pelo cliente. Sintetiza a base virtual no tier da
+        Gaita e reusa o handler já existente daquela habilidade."""
+        p = self.players.get(pid)
+        if not p or not p.get("alive") or not self._is_turn(pid):
+            return
+        fila = p.get("improviso_pendente") or []
+        if not fila:
+            return
+        passo = fila.pop(0)
+        inst = p["gear"].get("off_hand")
+        if not inst or inst.get("base") != "gaita":
+            await self.push_state(); return
+        virt_base = {7: "harpa", 9: "violino", 11: "trompa"}[passo["res"]]
+        virt, vst = self._improviso_virt_st(inst, virt_base)
+        if passo["res"] == 7:
+            await self._instr_nota_cortante(p, virt, vst, {"target_id": (data or {}).get("target_id")})
+        elif passo["res"] == 9:
+            m = self.monsters.get((data or {}).get("target_id"))
+            if m and self._no_raio(p, m, vst.get("alcance", 6)):
+                await self._improviso_requiem_tick(p, virt, vst, m)
+            else:
+                await self.send_to(pid, {"type": "error", "msg": "Alvo do Réquiem inválido."})
+        elif passo["res"] == 11:
+            await self._instr_chamado_general(p, virt, vst, {"dir": (data or {}).get("dir")})
+        await self.push_state()
+
     async def _encerrar_requiem(self, bardo, motivo):
         if not bardo.get("requiem_alvo"):
             return
@@ -16586,6 +16628,9 @@ async def handler(ws):
 
                 elif t == "usar_instrumento":
                     if room: await room.handle_usar_instrumento(pid, msg)
+
+                elif t == "improviso_alvo":
+                    if room: await room.handle_improviso_alvo(pid, msg)
 
                 elif t == "usar_oportunidade_movimento":
                     if room: await room.handle_usar_oportunidade_movimento(pid)

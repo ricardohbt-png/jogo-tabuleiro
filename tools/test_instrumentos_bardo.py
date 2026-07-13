@@ -1218,6 +1218,32 @@ def test_improviso_sinfonia_temp():
     assert p["sinfonia_temp_ate"] == room.round_num + 1
     assert isinstance(p.get("sinfonia_temp_atributos"), list)
 
+# ─── Fase 5 — Improviso: resolução de alvo (Task 6) ────────────────────────
+
+def test_improviso_alvo_nota_cortante():
+    room, p = _bardo_com_gaita()
+    room.monsters = {"m1": {"id": "m1", "name": "Orc", "hp": 30, "pos": [6, 5],
+                            "def_reflexos": 0}}
+    room._save_mostrado = _make_save(False); room._rolar_dano_mostrado = _make_dano(6)
+    room._instrumento_cd = lambda p, inst: 11
+    p["improviso_pendente"] = [{"res": 7, "tier": "padrao", "alvo_tipo": "monstro"}]
+    _run(room.handle_improviso_alvo("p1", {"target_id": "m1"}))
+    assert room.monsters["m1"]["hp"] == 24
+    assert p["improviso_pendente"] == []
+
+def test_improviso_requiem_tick():
+    room, p = _bardo_com_gaita()
+    room.monsters = {"m1": {"id": "m1", "name": "Orc", "hp": 30, "pos": [6, 5]}}
+    room._save_mostrado = _make_save(False); room._instrumento_cd = lambda p, i: 11
+    orig = server.roll_dice; server.roll_dice = lambda s: 5
+    try:
+        virt, vst = room._improviso_virt_st(p["gear"]["off_hand"], "violino")
+        _run(room._improviso_requiem_tick(p, virt, vst, room.monsters["m1"]))
+    finally:
+        server.roll_dice = orig
+    assert room.monsters["m1"]["hp"] == 25
+    assert "requiem_alvo" not in p
+
 
 if __name__ == "__main__":
     import inspect
