@@ -1078,6 +1078,9 @@ def test_cascata_grande_encore_runica():
     passos, meta = room._improviso_rolar_cascata(runico=True)
     assert meta["encore_menor"] is True and meta["grande_encore"] is True
     assert 12 not in passos
+    # cada 12 (inclusive aninhado) precisa gerar seus PROPRIOS 2 rerolls —
+    # trava a contagem certa de rolagens (bug: 12 aninhado rolava so 1x, nao 2x)
+    assert passos == [3, 4, 2, 3], passos
 
 def test_cascata_teto_anti_loop():
     room, p = _room_bardo()
@@ -1157,7 +1160,11 @@ def test_grande_encore_sob_cancao():
         room._aplicar_grande_encore(p)
         assert dentro["grande_encore_ate"] == room.round_num + 3
         assert "grande_encore_ate" not in fora
-        assert dentro["encore_magia_gratis"] >= 999
+        # magia gratis enquanto ativo (via grande_encore_ate zerando o custo):
+        assert room._custo_fome_sede_efetivo(dentro, 5, 5, "magia") == (0, 0)
+        # apos expirar: custo cheio, sem vazamento de magia gratis
+        room.round_num = dentro["grande_encore_ate"] + 1
+        assert room._custo_fome_sede_efetivo(dentro, 5, 5, "magia") == (5, 5)
     finally:
         server.roll_dice = orig
 
@@ -1177,6 +1184,18 @@ def _make_save(ok):
 def _make_dano(n):
     async def _d(nd, faces, label): return n
     return _d
+
+def test_gaita_sob_encore_menor_custo_reduzido():
+    # A pre-checagem de fome/sede em handle_usar_instrumento precisa usar o
+    # custo EFETIVO (pos-Encore), nao o bruto — senao recusa um bardo que tem
+    # recursos suficientes sob o desconto ativo.
+    room, p = _bardo_com_gaita()
+    room._rolar_2d6 = lambda: 3  # Falha (sem cascata)
+    p["fome"] = 2; p["sede"] = 2           # < custo bruto 3, mas >= efetivo 2 sob Encore Menor
+    p["encore_menor_ate"] = room.round_num
+    _run(room.handle_usar_instrumento("p1", {}))
+    assert p["instrumento_usado"] is True   # nao foi recusado
+    assert p["fome"] == 0 and p["sede"] == 0
 
 def test_improviso_resultado_ecos_1rodada():
     room, p = _bardo_com_gaita()

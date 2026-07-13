@@ -5130,46 +5130,43 @@ class GameRoom:
     def _rolar_2d6(self):
         return random.randint(1, 6) + random.randint(1, 6)
 
-    def _improviso_rolar_cascata(self, runico, _profundidade=0, _contador=None):
+    def _improviso_rolar_cascata(self, runico):
         """Resolve a cascata de Improviso. Devolve (passos, meta):
-          passos: lista ordenada de resultados 2-11 aplicaveis (12 nunca entra);
+          passos: resultados 2-11 aplicaveis (12 nunca entra);
           meta: {'encore_menor': bool, 'grande_encore': bool}.
-        Regra: 12 = Encore -> rola +2x. O 2o 12 na cadeia liga encore_menor.
-        So a Gaita Runica recursa em cada 12; o 3o 12 liga grande_encore.
-        _contador conta quantos 12 ja sairam na linhagem."""
-        if _contador is None:
-            _contador = [0]
+        12 = Encore -> rola +2x. O 2o 12 na cadeia liga encore_menor.
+        So a Gaita Runica recursa em cada 12; o 3o 12 liga grande_encore."""
         passos = []
         meta = {"encore_menor": False, "grande_encore": False}
-        TETO = 40  # guarda anti-loop (runica com 12 infinito)
+        contador = [0]
+        TETO = 40
+
+        def _encore():
+            # um "12" acabou de sair: conta e rola +2x, processando cada resultado.
+            contador[0] += 1
+            if contador[0] >= 2:
+                meta["encore_menor"] = True
+            if contador[0] >= 3 and runico:
+                meta["grande_encore"] = True
+            for _ in range(2):
+                if contador[0] > TETO:
+                    break
+                sub = self._rolar_2d6()
+                if sub == 12:
+                    if runico:
+                        _encore()          # cada 12 gera seus proprios 2 rerolls
+                    else:
+                        contador[0] += 1   # nao-runica: conta o 12 (liga encore_menor) mas nao recursa
+                        if contador[0] >= 2:
+                            meta["encore_menor"] = True
+                else:
+                    passos.append(sub)
+
         r = self._rolar_2d6()
-        if r != 12:
+        if r == 12:
+            _encore()
+        else:
             passos.append(r)
-            return passos, meta
-        _contador[0] += 1
-        if _contador[0] >= 2:
-            meta["encore_menor"] = True
-        if _contador[0] >= 3 and runico:
-            meta["grande_encore"] = True
-        for _ in range(2):
-            if _contador[0] > TETO:
-                meta["grande_encore"] = meta["grande_encore"] or (_contador[0] >= 3 and runico)
-                break
-            sub = self._rolar_2d6()
-            if sub == 12:
-                _contador[0] += 1
-                if _contador[0] >= 2:
-                    meta["encore_menor"] = True
-                if _contador[0] >= 3 and runico:
-                    meta["grande_encore"] = True
-                if runico:
-                    sp, sm = self._improviso_rolar_cascata(runico, _profundidade + 1, _contador)
-                    passos.extend(sp)
-                    meta["encore_menor"] = meta["encore_menor"] or sm["encore_menor"]
-                    meta["grande_encore"] = meta["grande_encore"] or sm["grande_encore"]
-                # nao-runica: o 12 do reroll nao recursa nem vira passo
-            else:
-                passos.append(sub)
         return passos, meta
 
     async def handle_usar_instrumento(self, pid, data=None):
@@ -5204,7 +5201,8 @@ class GameRoom:
             await self.send_to(pid, {"type": "error",
                 "msg": "Instrumento de 2 mãos exige concentração — você já usou sua ação."}); return
         st = self._instrumento_stats(inst)
-        if p.get("fome", 0) < st["custo_fome"] or p.get("sede", 0) < st["custo_sede"]:
+        _ef, _es = self._custo_fome_sede_efetivo(p, st["custo_fome"], st["custo_sede"])
+        if p.get("fome", 0) < _ef or p.get("sede", 0) < _es:
             await self.send_to(pid, {"type": "error", "msg": "Fome/sede insuficientes."}); return
 
         tipo = base["efeito"]["tipo"]
@@ -8635,16 +8633,15 @@ class GameRoom:
                 q["encore_magia_gratis"] = max(q.get("encore_magia_gratis", 0), 1)
 
     def _aplicar_grande_encore(self, bardo):
-        """1d4 rodadas: todos sob a Cancao Heroica agem sem custo; Mago/Clerigo
-        magias ilimitadas gratis."""
+        """1d4 rodadas: todos sob a Cancao Heroica agem sem custo (inclui magias
+        de Mago/Clerigo) via grande_encore_ate, ja checado incondicionalmente
+        no topo de _custo_fome_sede_efetivo — nao precisa de flag propria."""
         dur = roll_dice("1d4")
         ate = self.round_num + dur
         for q in self.players.values():
             if not q.get("alive") or "buffs_cancao" not in q:
                 continue
             q["grande_encore_ate"] = ate
-            if q.get("class_id") in ("mage", "cleric"):
-                q["encore_magia_gratis"] = 999999
 
     async def _cobrar_manutencao_cancao(self, p):
         """Upkeep da canção, cobrado no início do turno do bardo. Sem recursos,
