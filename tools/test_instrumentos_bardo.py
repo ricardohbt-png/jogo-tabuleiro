@@ -1287,6 +1287,22 @@ def test_desafinado_reduz_cd():
     assert room._instrumento_cd(p, p["gear"]["off_hand"]) == cd_base - 1
 
 
+def test_manutencao_cancao_gratis_sob_grande_encore():
+    room, _p = _room_bardo()
+    async def noop(*a, **k): pass
+    room.gm_say = noop; room.send_to = noop; room.push_state = noop
+    cl = {"id": "c1", "name": "Lewis", "class_id": "cleric", "alive": True,
+          "pos": [5, 5], "fome": 10, "sede": 10, "int_": 12, "wis": 14,
+          "gear": {k: None for k in server.GEAR_SLOTS}, "action_done": False,
+          "buffs_cancao": {}, "grande_encore_ate": room.round_num,
+          "cancao_ativa": True, "cancao_custo": {"fome": 3, "sede": 3},
+          "cancao_atributos": []}
+    room.players["c1"] = cl
+    room._is_turn = lambda pid: True
+    _run(room._cobrar_manutencao_cancao(cl))
+    assert cl["fome"] == 10 and cl["sede"] == 10
+
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]

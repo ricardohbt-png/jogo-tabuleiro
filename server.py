@@ -4990,7 +4990,8 @@ class GameRoom:
             await self.send_to(pid, {"type": "error",
                 "msg": f"{item['nome']} em recarga ({self.tecnica_restante(p, tecnica_id)} rodadas)."})
             return
-        if p.get("fome", 0) < item["custo_fome"] or p.get("sede", 0) < item["custo_sede"]:
+        _ef, _es = self._custo_fome_sede_efetivo(p, item["custo_fome"], item["custo_sede"])
+        if p.get("fome", 0) < _ef or p.get("sede", 0) < _es:
             await self.send_to(pid, {"type": "error", "msg": "Fome/sede insuficientes."})
             return
         ef = item.get("efeito", {})
@@ -5114,8 +5115,7 @@ class GameRoom:
         elif ef.get("tipo") == "tec_ex_acelerada":
             p["tec_ex_acelerada_armado"] = True
         # (outros tipos/handlers chegam nas Fases 1-2)
-        p["fome"] -= item["custo_fome"]
-        p["sede"] -= item["custo_sede"]
+        self._pagar_fome_sede(p, item["custo_fome"], item["custo_sede"])
         p["technique_cooldowns"][tecnica_id] = self.round_num + item["recarga_rodadas"]
         await self.gm_say(f"⚔️ **{p['name']}** ativa **{item['nome']}**!")
         await self.push_state()
@@ -7866,8 +7866,7 @@ class GameRoom:
 
         # Custo de sobrevivência (escala 0–10; spec 20/80 ≈ 2/10), independente do resultado
         custo = 2
-        p["fome"] = max(0, p.get("fome", 10) - custo)
-        p["sede"] = max(0, p.get("sede", 10) - custo)
+        self._pagar_fome_sede(p, custo, custo)
         self._verificar_estado_sobrevivencia(p)
 
         # Chance de sucesso: tabela da Guilda (Nível I/II/III) por ND real.
@@ -8646,15 +8645,15 @@ class GameRoom:
         aliados podem ter se movido para dentro/fora do raio)."""
         if not p.get("cancao_ativa"): return
         custo = p.get("cancao_custo", {"fome": 0, "sede": 0})
-        if p["fome"] < custo["fome"] or p["sede"] < custo["sede"]:
+        _ef, _es = self._custo_fome_sede_efetivo(p, custo["fome"], custo["sede"])
+        if p["fome"] < _ef or p["sede"] < _es:
             await self._remover_buffs_cancao(p)
             p["cancao_ativa"]     = False
             p["cancao_atributos"] = []
             p["cancao_custo"]     = {"fome": 0, "sede": 0}
             await self.gm_say(f"🔇 A Canção Heroica de **{p['name']}** se cala — recursos insuficientes.")
             return
-        p["fome"] = max(0, p["fome"] - custo["fome"])
-        p["sede"] = max(0, p["sede"] - custo["sede"])
+        self._pagar_fome_sede(p, custo["fome"], custo["sede"])
         await self._remover_buffs_cancao(p)
         await self._aplicar_buffs_cancao(p)
         labels = ", ".join(next(a["label"] for a in CANCAO_ATRIBUTOS if a["id"] == x) for x in p.get("cancao_atributos", []))
@@ -8672,11 +8671,11 @@ class GameRoom:
             return
         mf = base.get("manutencao_fome", 2)
         ms = base.get("manutencao_sede", 2)
-        if p["fome"] < mf or p["sede"] < ms:
+        _ef, _es = self._custo_fome_sede_efetivo(p, mf, ms)
+        if p["fome"] < _ef or p["sede"] < _es:
             await self._encerrar_requiem(p, "recursos insuficientes")
             return
-        p["fome"] = max(0, p["fome"] - mf)
-        p["sede"] = max(0, p["sede"] - ms)
+        self._pagar_fome_sede(p, mf, ms)
         await self.gm_say(f"🎻 Réquiem Final de **{p['name']}** — manutenção 🍖-{mf} 💧-{ms}.")
 
     def _interromper_cancao(self, p, motivo):
@@ -8834,9 +8833,10 @@ class GameRoom:
         custo_fome = alcance            # -1 fome por extensão de alcance
         alcance_tiles = 1 + alcance * 3 # 1, 4 ou 7 quadrados
 
-        if p["sede"] < custo_sede:
+        _ef, _es = self._custo_fome_sede_efetivo(p, custo_fome, custo_sede)
+        if p["sede"] < _es:
             await self.send_to(pid, {"type": "error", "msg": f"Sede insuficiente — precisa 💧{custo_sede}."}); return
-        if p["fome"] < custo_fome:
+        if p["fome"] < _ef:
             await self.send_to(pid, {"type": "error", "msg": f"Fome insuficiente — precisa 🍖{custo_fome}."}); return
 
         alvo = self.players.get((data or {}).get("target_id"))
@@ -8860,8 +8860,7 @@ class GameRoom:
         alvo["hp"] = min(alvo["max_hp"], alvo["hp"] + cura)
         cura_real = alvo["hp"] - hp_antes
 
-        p["sede"] = max(0, p["sede"] - custo_sede)
-        p["fome"] = max(0, p["fome"] - custo_fome)
+        self._pagar_fome_sede(p, custo_fome, custo_sede)
         p["action_done"] = True
 
         dados_str = "+".join(str(d) for d in dados)
@@ -8888,7 +8887,8 @@ class GameRoom:
         custo_sede = num_dados * 4
         raio = 2 * nivel   # 2 / 4 / 6
 
-        if p["fome"] < custo_fome or p["sede"] < custo_sede:
+        _ef, _es = self._custo_fome_sede_efetivo(p, custo_fome, custo_sede)
+        if p["fome"] < _ef or p["sede"] < _es:
             await self.send_to(pid, {"type": "error",
                 "msg": f"Recursos insuficientes — precisa 🍖{custo_fome} 💧{custo_sede}."}); return
 
@@ -8910,8 +8910,7 @@ class GameRoom:
             if cura_real > 0:
                 curados.append(f"{aliado['name']}(+{cura_real})")
 
-        p["fome"] = max(0, p["fome"] - custo_fome)
-        p["sede"] = max(0, p["sede"] - custo_sede)
+        self._pagar_fome_sede(p, custo_fome, custo_sede)
         p["action_done"] = True
 
         dados_str = "+".join(str(d) for d in dados)
@@ -8967,7 +8966,8 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Aliado inválido."}); return
         if not self._no_raio(p, alvo, 1):
             await self.send_to(pid, {"type": "error", "msg": "Purificação requer contato adjacente."}); return
-        if p["fome"] < custo["fome"] or p["sede"] < custo["sede"]:
+        _ef, _es = self._custo_fome_sede_efetivo(p, custo["fome"], custo["sede"])
+        if p["fome"] < _ef or p["sede"] < _es:
             await self.send_to(pid, {"type": "error",
                 "msg": f"Recursos insuficientes — precisa 🍖{custo['fome']} 💧{custo['sede']}."}); return
 
@@ -9017,8 +9017,7 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error", "msg": f"{alvo['name']} não está amaldiçoado."}); return
 
         if removido:
-            p["fome"] = max(0, p["fome"] - custo["fome"])
-            p["sede"] = max(0, p["sede"] - custo["sede"])
+            self._pagar_fome_sede(p, custo["fome"], custo["sede"])
             p["action_done"] = True
             await self.gm_say(
                 f"✨ **{p['name']}** purifica **{alvo['name']}** — livre de "
@@ -9039,7 +9038,8 @@ class GameRoom:
 
         nivel = self._ressur_nivel(p)
         custo_fome = custo_sede = {1: 10, 2: 15, 3: 20}[nivel]
-        if p["fome"] < custo_fome or p["sede"] < custo_sede:
+        _ef, _es = self._custo_fome_sede_efetivo(p, custo_fome, custo_sede)
+        if p["fome"] < _ef or p["sede"] < _es:
             await self.send_to(pid, {"type": "error",
                 "msg": f"Recursos insuficientes — precisa 🍖{custo_fome} 💧{custo_sede}."}); return
 
@@ -9062,8 +9062,7 @@ class GameRoom:
         alvo["em_chamas_rodadas"] = 0        # senão o próximo tick de fogo re-mata o ressuscitado
         alvo["chamas_agua_apaga"] = True
 
-        p["fome"] = max(0, p["fome"] - custo_fome)
-        p["sede"] = max(0, p["sede"] - custo_sede)
+        self._pagar_fome_sede(p, custo_fome, custo_sede)
         p["action_done"] = True
 
         await self.gm_say(
@@ -9091,7 +9090,8 @@ class GameRoom:
 
         extra_d6 = max(0, min(3, int((data or {}).get("extra_d6", 0)))) if tem_espec(p, "paladino_cura_maos_3") else 0
         fome_cost, sede_cost = 3 + 2 * extra_d6, 2 + 2 * extra_d6
-        if p["fome"] < fome_cost or p["sede"] < sede_cost:
+        _ef, _es = self._custo_fome_sede_efetivo(p, fome_cost, sede_cost)
+        if p["fome"] < _ef or p["sede"] < _es:
             await self.send_to(pid, {"type": "error", "msg": f"Recursos insuficientes 🍖{fome_cost} 💧{sede_cost}."}); return
 
         alvo_id = data.get("target_id") if data else None
@@ -9111,8 +9111,7 @@ class GameRoom:
         alvo["hp"] = min(alvo["max_hp"], alvo["hp"] + cura)
         cura_efetiva = alvo["hp"] - hp_antes
 
-        p["fome"] = max(0, p["fome"] - fome_cost)
-        p["sede"] = max(0, p["sede"] - sede_cost)
+        self._pagar_fome_sede(p, fome_cost, sede_cost)
         p["action_done"] = True
 
         await self.gm_say(
@@ -10160,11 +10159,11 @@ class GameRoom:
                     f"🧵 **{p['name']}** só pode empilhar {self._teto_metamagia(p)} metamagia(s) por "
                     f"lançamento — as demais foram ignoradas.")
             if (mm_fome or mm_sede):
-                if p["fome"] < mm_fome or p["sede"] < mm_sede:
+                _ef, _es = self._custo_fome_sede_efetivo(p, mm_fome, mm_sede)
+                if p["fome"] < _ef or p["sede"] < _es:
                     await self.send_to(pid, {"type": "error",
                         "msg": f"Recursos insuficientes p/ metamagia 🍖-{mm_fome} 💧-{mm_sede}."}); return
-                p["fome"] = max(0, p["fome"] - mm_fome)
-                p["sede"] = max(0, p["sede"] - mm_sede)
+                self._pagar_fome_sede(p, mm_fome, mm_sede)
             if partes:
                 custo_txt = (f" | 🍖-{mm_fome}" + (f" 💧-{mm_sede}" if mm_sede else "")) if (mm_fome or mm_sede) else ""
                 await self.gm_say(f"🔮 **{p['name']}** — metamagia: {', '.join(partes)}{custo_txt}.")
@@ -10183,8 +10182,7 @@ class GameRoom:
 
         # Cobra 1 SLOT do círculo + 🍖/💧 de sobrevivência.
         self._gastar_slot(p, circulo)
-        p["fome"] = max(0, p.get("fome", 10) - 1)
-        p["sede"] = max(0, p.get("sede", 10) - 1)
+        self._pagar_fome_sede(p, 1, 1, contexto="magia")
         self._verificar_estado_sobrevivencia(p)
 
         # Aprimorar: +1 na CD do save é lido por _dif_magia via flag temporária no caster.
@@ -12255,7 +12253,8 @@ class GameRoom:
         custo_ouro = tipo.get("custo_ouro", 0)
         if p["gold"] < custo_ouro:
             await self.send_to(pid, {"type": "error", "msg": f"Ouro insuficiente — precisa {custo_ouro}🪙."}); return
-        if p["fome"] < ARMADILHA_CUSTO_FOME or p["sede"] < ARMADILHA_CUSTO_SEDE:
+        _ef, _es = self._custo_fome_sede_efetivo(p, ARMADILHA_CUSTO_FOME, ARMADILHA_CUSTO_SEDE)
+        if p["fome"] < _ef or p["sede"] < _es:
             await self.send_to(pid, {"type": "error",
                 "msg": f"Recursos insuficientes (🍖-{ARMADILHA_CUSTO_FOME} 💧-{ARMADILHA_CUSTO_SEDE})."}); return
 
@@ -12281,8 +12280,7 @@ class GameRoom:
             p["bag"].remove(frasco)
 
         p["gold"] -= custo_ouro
-        p["fome"] = max(0, p["fome"] - ARMADILHA_CUSTO_FOME)
-        p["sede"] = max(0, p["sede"] - ARMADILHA_CUSTO_SEDE)
+        self._pagar_fome_sede(p, ARMADILHA_CUSTO_FOME, ARMADILHA_CUSTO_SEDE)
         p["action_done"] = True
 
         self._armadilha_seq += 1
