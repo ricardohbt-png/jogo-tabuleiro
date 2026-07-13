@@ -1048,6 +1048,43 @@ def test_gaita_stats_custo():
     st = server.GameRoom._instrumento_stats(server.criar_instrumento("gaita", "padrao"))
     assert st["custo_fome"] == 3 and st["custo_sede"] == 3
 
+def test_cascata_sem_encore():
+    room, p = _room_bardo()
+    room._rolar_2d6 = lambda: 7
+    passos, meta = room._improviso_rolar_cascata(runico=False)
+    assert passos == [7]
+    assert meta == {"encore_menor": False, "grande_encore": False}
+
+def test_cascata_encore_simples():
+    room, p = _room_bardo()
+    seq = iter([12, 7, 3])  # 12 -> rola 7 e 3
+    room._rolar_2d6 = lambda: next(seq)
+    passos, meta = room._improviso_rolar_cascata(runico=False)
+    assert passos == [7, 3]
+    assert meta["encore_menor"] is False and meta["grande_encore"] is False
+
+def test_cascata_encore_menor():
+    room, p = _room_bardo()
+    seq = iter([12, 12, 5])  # 12 -> rola 12 (2o doze) e 5; nao-runica NAO recursa
+    room._rolar_2d6 = lambda: next(seq)
+    passos, meta = room._improviso_rolar_cascata(runico=False)
+    assert passos == [5]
+    assert meta["encore_menor"] is True and meta["grande_encore"] is False
+
+def test_cascata_grande_encore_runica():
+    room, p = _room_bardo()
+    seq = iter([12, 12, 3, 12, 4, 2, 3])
+    room._rolar_2d6 = lambda: next(seq)
+    passos, meta = room._improviso_rolar_cascata(runico=True)
+    assert meta["encore_menor"] is True and meta["grande_encore"] is True
+    assert 12 not in passos
+
+def test_cascata_teto_anti_loop():
+    room, p = _room_bardo()
+    room._rolar_2d6 = lambda: 12  # sempre 12 (runica): precisa terminar
+    passos, meta = room._improviso_rolar_cascata(runico=True)
+    assert meta["grande_encore"] is True
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]

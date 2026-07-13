@@ -5120,6 +5120,51 @@ class GameRoom:
         await self.gm_say(f"⚔️ **{p['name']}** ativa **{item['nome']}**!")
         await self.push_state()
 
+    def _rolar_2d6(self):
+        return random.randint(1, 6) + random.randint(1, 6)
+
+    def _improviso_rolar_cascata(self, runico, _profundidade=0, _contador=None):
+        """Resolve a cascata de Improviso. Devolve (passos, meta):
+          passos: lista ordenada de resultados 2-11 aplicaveis (12 nunca entra);
+          meta: {'encore_menor': bool, 'grande_encore': bool}.
+        Regra: 12 = Encore -> rola +2x. O 2o 12 na cadeia liga encore_menor.
+        So a Gaita Runica recursa em cada 12; o 3o 12 liga grande_encore.
+        _contador conta quantos 12 ja sairam na linhagem."""
+        if _contador is None:
+            _contador = [0]
+        passos = []
+        meta = {"encore_menor": False, "grande_encore": False}
+        TETO = 40  # guarda anti-loop (runica com 12 infinito)
+        r = self._rolar_2d6()
+        if r != 12:
+            passos.append(r)
+            return passos, meta
+        _contador[0] += 1
+        if _contador[0] >= 2:
+            meta["encore_menor"] = True
+        if _contador[0] >= 3 and runico:
+            meta["grande_encore"] = True
+        for _ in range(2):
+            if _contador[0] > TETO:
+                meta["grande_encore"] = meta["grande_encore"] or (_contador[0] >= 3 and runico)
+                break
+            sub = self._rolar_2d6()
+            if sub == 12:
+                _contador[0] += 1
+                if _contador[0] >= 2:
+                    meta["encore_menor"] = True
+                if _contador[0] >= 3 and runico:
+                    meta["grande_encore"] = True
+                if runico:
+                    sp, sm = self._improviso_rolar_cascata(runico, _profundidade + 1, _contador)
+                    passos.extend(sp)
+                    meta["encore_menor"] = meta["encore_menor"] or sm["encore_menor"]
+                    meta["grande_encore"] = meta["grande_encore"] or sm["grande_encore"]
+                # nao-runica: o 12 do reroll nao recursa nem vira passo
+            else:
+                passos.append(sub)
+        return passos, meta
+
     async def handle_usar_instrumento(self, pid, data=None):
         """Ativa a habilidade do instrumento equipado (bardo). Espelha
         handle_usar_tecnica: valida turno/economia de ação/custo 🍖💧 e despacha
