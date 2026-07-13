@@ -5216,13 +5216,14 @@ class GameRoom:
             ok = await self._instr_dueto_fantasma(p, inst, st, data)
         elif tipo == "requiem_final":
             ok = await self._instr_requiem_final(p, inst, st, data)
+        elif tipo == "improviso":
+            ok = await self._instr_improviso(p, inst, st, data)
         else:
             await self.send_to(pid, {"type": "error", "msg": "Instrumento em desenvolvimento."}); return
         if not ok:
             return
 
-        p["fome"] = max(0, p["fome"] - st["custo_fome"])
-        p["sede"] = max(0, p["sede"] - st["custo_sede"])
+        self._pagar_fome_sede(p, st["custo_fome"], st["custo_sede"])
         p["instrumento_usado"] = True
         if duas_maos:
             p["action_done"] = True
@@ -5534,6 +5535,12 @@ class GameRoom:
         elif passo["res"] == 11:
             await self._instr_chamado_general(p, virt, vst, {"dir": (data or {}).get("dir")})
         await self.push_state()
+
+    def _limpar_improviso_pendente(self, p):
+        """Descarta passos sem-alvo pendentes do Improviso (Gaita) ao encerrar o
+        turno — não carregam pro próximo turno."""
+        if p.get("improviso_pendente"):
+            p["improviso_pendente"] = []
 
     async def _encerrar_requiem(self, bardo, motivo):
         if not bardo.get("requiem_alvo"):
@@ -13197,6 +13204,7 @@ class GameRoom:
         p["action_done"]       = False
         p["bonus_action_used"] = False
         p["instrumento_usado"] = False   # bardo: 1 instrumento tocado por turno
+        self._limpar_improviso_pendente(p)   # Gaita: passos sem-alvo não usados expiram
         p["moved_this_turn"]   = False   # reabre o custo de -1 sede ao caminhar no novo turno
         # buffs de turno do warrior expiram ao fim do turno (flags planas)
         p["skill_bonus_acerto"] = 0

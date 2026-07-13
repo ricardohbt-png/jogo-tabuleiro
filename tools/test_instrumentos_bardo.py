@@ -1244,6 +1244,23 @@ def test_improviso_requiem_tick():
     assert room.monsters["m1"]["hp"] == 25
     assert "requiem_alvo" not in p
 
+# ─── Fase 5 — Task 7: Gaita ligada ao handle_usar_instrumento + end_turn ───
+
+def test_usar_instrumento_gaita_1mao():
+    room, p = _bardo_com_gaita()
+    room._rolar_2d6 = lambda: 3          # Falha — sem efeito colateral
+    p["fome"] = 10; p["sede"] = 10
+    _run(room.handle_usar_instrumento("p1", {}))
+    assert p["instrumento_usado"] is True
+    assert p["action_done"] is False
+    assert p["fome"] == 7 and p["sede"] == 7
+
+def test_end_turn_limpa_fila_improviso():
+    room, p = _bardo_com_gaita()
+    p["improviso_pendente"] = [{"res": 7, "tier": "padrao", "alvo_tipo": "monstro"}]
+    room._limpar_improviso_pendente(p)
+    assert p.get("improviso_pendente") in (None, [])
+
 
 if __name__ == "__main__":
     import inspect
