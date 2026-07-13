@@ -132,7 +132,8 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `guild_buy` | `item_id` — compra uma especialização/técnica na **Guilda dos Heróis** (id em `GUILD_CATALOG`). Só na cidade; valida classe, pré-requisito, posse e ouro; grava o save do personagem. |
 | `guild_equip` | `slot` (`tecnica`\|`tecnica_exclusiva`), `item_id` (ou `null` p/ desequipar) — equipa uma técnica possuída no 4º slot. Só na cidade. `tecnica_exclusiva` só para mago/clérigo e só técnicas `exclusiva:true`. |
 | `usar_tecnica` | `tecnica_id`, `target_id` opcional — ativa a técnica equipada na masmorra (no turno do herói). Valida equipada/fora de recarga/fome-sede; aplica efeito, debita 🍖/💧 e entra em recarga (`round_num + recarga_rodadas`). |
-| `usar_instrumento` | `target_id` opcional — o bardo (Henrique) ativa a habilidade do instrumento equipado na **mão do escudo** (`off_hand`; só se `tipo_item=="instrumento"` e `modo:"ativada"`). Nota Cortante (Harpa) mira 1 monstro; Acorde Trovejante (Tambor) e Ecos Dolorosos (Sino) são auto-centrados; Sinfonia Heroica (Alaúde) é passiva (sem mensagem — reforça a Canção). Economia de ação: 2 mãos = atacar OU tocar; 1 mão = atacar E tocar; máx. 1 instrumento/turno (`instrumento_usado`, resetado no fim do turno). Custo em 🍖/💧 dos stats derivados; sem recarga. |
+| `usar_instrumento` | `target_id` opcional — o bardo (Henrique) ativa a habilidade do instrumento equipado na **mão do escudo** (`off_hand`; só se `tipo_item=="instrumento"` e `modo:"ativada"`). Nota Cortante (Harpa) mira 1 monstro; Acorde Trovejante (Tambor) e Ecos Dolorosos (Sino) são auto-centrados; Sinfonia Heroica (Alaúde) é passiva (sem mensagem — reforça a Canção). Economia de ação: 2 mãos = atacar OU tocar; 1 mão = atacar E tocar; máx. 1 instrumento/turno (`instrumento_usado`, resetado no fim do turno). Custo em 🍖/💧 dos stats derivados; sem recarga. Gaita (Improviso): rola 2d6 numa cascata que invoca a habilidade de outro instrumento; passos que exigem alvo/direção (Nota Cortante, Réquiem, Chamado) ficam enfileirados até o cliente responder com `improviso_alvo`. |
+| `improviso_alvo` | `target_id` opcional, `dir` opcional — resolve um passo pendente do Improviso (Gaita) que precisa de alvo/direção: mira um monstro (Nota Cortante/Réquiem) ou escolhe direção (Chamado); o servidor processa a fila FIFO (`improviso_pendente`). |
 
 ### Server → Client
 `lobby_state`, `game_start`, `city_state`, `shop_result`, `enter_dungeon`,
@@ -845,4 +846,26 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > modular `_execute_one_monster_attack` E no loop legado). **Alaúde** Rúnico:
 > `_alaude_runico_resist` soma +1 em Fortitude/Vontade aos aliados sob a Canção (via `_testar_save`,
 > escopo amplo; "sob a Canção" = chave `buffs_cancao` presente). Fase 5: Improviso/Gaita. Testes:
+> `tools/test_instrumentos_bardo.py`.
+
+> **Fase 5 (Improviso/Gaita):** fecha o roadmap dos instrumentos. Base nova `gaita` (🪗, 1 mão,
+> ativada, custo 3🍖/3💧) com a habilidade **Improviso**: `_instr_improviso` rola uma cascata 2d6
+> (`_improviso_rolar_cascata`) numa **tabela meta** que invoca a habilidade de assinatura de outro
+> instrumento **no tier da qualidade da Gaita** — sintetizando um instrumento virtual
+> (`_improviso_virt_st`) e reusando os `_instr_*` existentes. Tabela: 2 Desafinado (bardo -1
+> ataque/CD, `desafinado_ate`), 3 Falha, 4 Ecos/5 Dueto Marcial/6 Dueto Fantasma/10 Sinfonia
+> (forçados a 1 rodada; Sinfonia via `sinfonia_temp_ate`), 8 Acorde (auto), 7 Nota Cortante/9
+> Réquiem-1ª-rodada (`_improviso_requiem_tick`)/11 Chamado (enfileirados em `improviso_pendente`,
+> mirados pelo cliente via `improviso_alvo`). **12 = Encore:** rola +2×; 2º 12 → **Encore Menor**
+> (`_aplicar_encore_menor`: aliados em raio 5 gastam -1🍖/💧 por 1 rodada + Mago/Clérigo 1 magia
+> grátis); a Gaita **Rúnica** recursa em cada 12 e um 3º 12 → **Grande Encore**
+> (`_aplicar_grande_encore`: 1d4 rodadas — todos sob a Canção agem sem custo, Mago/Clérigo magias
+> ilimitadas). O desconto de custo passa por um **helper central novo**
+> `_pagar_fome_sede`/`_custo_fome_sede_efetivo`, para o qual os débitos de fome/sede das ações
+> ativas (magia, curas, imposição, técnica, armadilha, instrumentos, manutenções Canção/Réquiem)
+> foram migrados. Hooks de aura (`_instr_ecos_retaliar`, `_bardo_dueto_marcial`, Dueto Fantasma,
+> `_sinfonia_bonus`) passam a aceitar `off base=="gaita"`. Aquisição: SKUs na loja + `gaita` em
+> `_ROLLER_BASES` (loot procedural). Cliente: `game.js` `renderImprovisoQuadro` (quadro da
+> cascata) + fila de mira; `src/gameState.js` `improvisoAlvo` + evento `improvisoResultado`.
+> Spec/plano em `docs/superpowers/{specs,plans}/2026-07-12-instrumentos-bardo-fase5*`. Teste:
 > `tools/test_instrumentos_bardo.py`.
