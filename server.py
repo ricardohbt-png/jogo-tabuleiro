@@ -355,7 +355,7 @@ def instrumento_sku(base, qualidade="padrao", preco=100, refinado_bonus=None,
     return inst
 
 # ─── Roller procedural de instrumentos (Fase 4a) ────────────────────────────────
-_ROLLER_BASES = ["harpa", "tambor", "sino", "alaude", "trompa", "lira", "flauta", "violino"]
+_ROLLER_BASES = ["harpa", "tambor", "sino", "alaude", "trompa", "lira", "flauta", "violino", "gaita"]
 _ROLLER_QUALIDADES = [("velho", 35), ("rustico", 30), ("padrao", 25), ("refinado", 10)]
 _ROLLER_ORIGENS = [("humana", 70), ("elfica", 15), ("ana", 15)]
 
@@ -2494,6 +2494,13 @@ SHOP_MERCHANT = [
     instrumento_sku("lira",    "padrao", 360, encantamento="runico"),
     # Lendário (Refinado + Élfica + Rúnico) — o topo dos 3 eixos → "Harpa Lendária Élfica".
     instrumento_sku("harpa", "refinado", 900, origem="elfica", origem_bonus="cd", encantamento="runico"),
+    # Gaita (Fase 5 — Improviso).
+    instrumento_sku("gaita", "velho",    90),
+    instrumento_sku("gaita", "rustico",  170),
+    instrumento_sku("gaita", "padrao",   300),
+    instrumento_sku("gaita", "refinado", 420, refinado_bonus="fome"),
+    instrumento_sku("gaita", "padrao",   480, encantamento="runico"),
+    instrumento_sku("gaita", "refinado", 1100, origem="ana", origem_bonus="fome_sede", encantamento="runico"),
 ]
 
 # Munição — vendida no FERREIRO (item_slot "ammo", vai pro off_hand; 10 projéteis

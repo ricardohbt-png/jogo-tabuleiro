@@ -1303,6 +1303,16 @@ def test_manutencao_cancao_gratis_sob_grande_encore():
     assert cl["fome"] == 10 and cl["sede"] == 10
 
 
+# ─── Fase 5 — Task 10: Gaita na loja + roller ──────────────────────────────
+
+def test_gaita_no_roller():
+    assert "gaita" in server._ROLLER_BASES
+
+def test_gaita_sku_na_loja():
+    ids = {i.get("id") for i in server.SHOP_MERCHANT}
+    assert any(i and i.startswith("instrumento_gaita_") for i in ids)
+
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]
