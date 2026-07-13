@@ -1261,6 +1261,31 @@ def test_end_turn_limpa_fila_improviso():
     room._limpar_improviso_pendente(p)
     assert p.get("improviso_pendente") in (None, [])
 
+# ─── Fase 5 — Task 8: Gaita nos hooks de aura + Desafinado + Sinfonia temp ──
+
+def test_ecos_retalia_com_gaita():
+    room, p = _bardo_com_gaita()
+    p["ecos_ate"] = room.round_num; p["ecos_dano"] = "1d4"
+    room._rolar_dano_mostrado = _make_dano(3)
+    m = {"id": "m1", "name": "Orc", "hp": 10, "pos": [6, 5]}
+    room.monsters = {"m1": m}
+    _run(room._instr_ecos_retaliar(p, m))
+    assert m["hp"] == 7
+
+def test_sinfonia_temporaria_reforca_cancao():
+    room, p = _bardo_com_gaita()
+    p["sinfonia_temp_ate"] = room.round_num + 1
+    p["sinfonia_temp_atributos"] = ["acerto"]
+    p["buffs_cancao"] = {}
+    assert room._sinfonia_bonus(p, "acerto") == 1
+    assert room._sinfonia_bonus(p, "dano") == 0
+
+def test_desafinado_reduz_cd():
+    room, p = _bardo_com_gaita()
+    cd_base = room._instrumento_cd(p, p["gear"]["off_hand"])
+    p["desafinado_ate"] = room.round_num
+    assert room._instrumento_cd(p, p["gear"]["off_hand"]) == cd_base - 1
+
 
 if __name__ == "__main__":
     import inspect

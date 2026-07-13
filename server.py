@@ -5340,7 +5340,7 @@ class GameRoom:
         if not p.get("alive") or p.get("ecos_ate", 0) < self.round_num:
             return
         off = p.get("gear", {}).get("off_hand")
-        if not off or off.get("tipo_item") != "instrumento" or off.get("base") != "sino":
+        if not off or off.get("tipo_item") != "instrumento" or off.get("base") not in ("sino", "gaita"):
             return
         if m.get("hp", 0) <= 0:
             return
@@ -5600,7 +5600,7 @@ class GameRoom:
             if q.get("dueto_marcial_ate", 0) < self.round_num:
                 continue
             off = q.get("gear", {}).get("off_hand")
-            if not off or off.get("tipo_item") != "instrumento" or off.get("base") != "lira":
+            if not off or off.get("tipo_item") != "instrumento" or off.get("base") not in ("lira", "gaita"):
                 continue
             if _distancia_chebyshev(q["pos"], atacante["pos"]) > 1:
                 continue
@@ -5620,7 +5620,7 @@ class GameRoom:
         # Dueto Fantasma — eco do próprio ataque do bardo (fração do dano)
         if atacante.get("class_id") == "bard" and atacante.get("alive") \
            and atacante.get("dueto_fantasma_ate", 0) >= self.round_num \
-           and self._instr_base_off(atacante) == "flauta" \
+           and self._instr_base_off(atacante) in ("flauta", "gaita") \
            and alvo and alvo.get("hp", 0) > 0:
             eco = (dmg * atacante.get("dueto_fantasma_fracao", 0)) // 100
             if eco > 0:
@@ -7034,7 +7034,8 @@ class GameRoom:
                        + self._mod_magia(p, "ataque")                        # Abençoar
                        + self._lenda_atk_bonus(p, target)                    # Lenda (bardo estudou a espécie)
                        - self._corrosao_arma_pen(p)                          # arma de madeira corroída
-                       - (4 if target.get("oculto_sombras") else 0))         # alvo oculto nas sombras (corpo a corpo)
+                       - (4 if target.get("oculto_sombras") else 0)          # alvo oculto nas sombras (corpo a corpo)
+                       - (1 if p.get("desafinado_ate", -1) >= self.round_num else 0))  # Gaita: Desafinado (Fase 5)
             if preso_pen:
                 await self.gm_say(f"⛓️ **{p['name']}** ataca enquanto preso — **-2** no acerto!")
             # Amaldiçoar reduz a CA do alvo (mod_magia ca negativo) → mais fácil de acertar.
@@ -8451,12 +8452,17 @@ class GameRoom:
         return base
 
     def _sinfonia_bonus(self, p, attr_id):
-        """+1 se um Alaúde equipado inclui `attr_id` na Sinfonia Heroica (por qualidade)."""
+        """+1 se um Alaúde equipado inclui `attr_id` na Sinfonia Heroica (por qualidade),
+        ou se a Gaita improvisou uma Sinfonia Heroica temporária (Fase 5, resultado 10)."""
         inst = p.get("gear", {}).get("off_hand")
-        if not inst or inst.get("tipo_item") != "instrumento" or inst.get("base") != "alaude":
-            return 0
-        st = self._instrumento_stats(inst)
-        return 1 if attr_id in st.get("atributos", []) else 0
+        if inst and inst.get("tipo_item") == "instrumento" and inst.get("base") == "alaude":
+            st = self._instrumento_stats(inst)
+            if attr_id in st.get("atributos", []):
+                return 1
+        if p.get("sinfonia_temp_ate", -1) >= self.round_num \
+           and attr_id in p.get("sinfonia_temp_atributos", []):
+            return 1
+        return 0
 
     def _cancao_custo_reducao(self, p):
         """Redução de manutenção da canção com a Canção Heroica Suprema (-1🍖 -1💧)."""
@@ -8516,9 +8522,13 @@ class GameRoom:
             st["cd_bonus"] = st.get("cd_bonus", 0) + 1
 
     def _instrumento_cd(self, bardo, inst):
-        """CD do save do instrumento: 8 + mod(DES) + afixo de CD (Fase 4)."""
+        """CD do save do instrumento: 8 + mod(DES) + afixo de CD (Fase 4) - 1 se
+        Desafinado (Fase 5, improviso resultado 2)."""
         st = self._instrumento_stats(inst)
-        return 8 + mod(bardo.get("dex", 10)) + st.get("cd_bonus", 0)
+        cd = 8 + mod(bardo.get("dex", 10)) + st.get("cd_bonus", 0)
+        if bardo.get("desafinado_ate", -1) >= self.round_num:
+            cd -= 1
+        return cd
 
     async def handle_ativar_cancao(self, pid, data):
         if not self._is_turn(pid): return
