@@ -1122,6 +1122,45 @@ def test_pagar_fome_sede_piso_zero():
     room._pagar_fome_sede(p, 3, 3)
     assert p["fome"] == 0 and p["sede"] == 0
 
+def _add_aliado(room, pid, pos, cls="warrior", cancao=False):
+    q = {"id": pid, "name": pid, "class_id": cls, "alive": True, "pos": pos,
+         "fome": 100, "sede": 100, "gear": {k: None for k in server.GEAR_SLOTS}}
+    if cancao:
+        q["buffs_cancao"] = {}
+    room.players[pid] = q
+    return q
+
+def test_encore_menor_raio5():
+    room, p = _room_bardo()
+    perto = _add_aliado(room, "a1", [7, 5], "warrior")
+    longe = _add_aliado(room, "a2", [20, 20], "mage")
+    room._aplicar_encore_menor(p)
+    assert perto["encore_menor_ate"] == room.round_num
+    assert "encore_menor_ate" not in longe
+    assert p["encore_menor_ate"] == room.round_num
+
+def test_encore_menor_magia_gratis_mago_clerigo():
+    room, p = _room_bardo()
+    mago = _add_aliado(room, "m1", [6, 5], "mage")
+    guerreiro = _add_aliado(room, "g1", [6, 6], "warrior")
+    room._aplicar_encore_menor(p)
+    assert mago["encore_magia_gratis"] == 1
+    assert guerreiro.get("encore_magia_gratis", 0) == 0
+
+def test_grande_encore_sob_cancao():
+    room, p = _room_bardo()
+    orig = server.roll_dice
+    try:
+        server.roll_dice = lambda s: 3
+        dentro = _add_aliado(room, "c1", [9, 9], "cleric", cancao=True)
+        fora = _add_aliado(room, "c2", [9, 8], "warrior", cancao=False)
+        room._aplicar_grande_encore(p)
+        assert dentro["grande_encore_ate"] == room.round_num + 3
+        assert "grande_encore_ate" not in fora
+        assert dentro["encore_magia_gratis"] >= 999
+    finally:
+        server.roll_dice = orig
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]

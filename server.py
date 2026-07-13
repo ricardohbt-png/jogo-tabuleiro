@@ -8473,6 +8473,30 @@ class GameRoom:
         p["sede"] = max(0, p.get("sede", 0) - s)
         return f, s
 
+    def _aplicar_encore_menor(self, bardo):
+        """1 rodada: aliados do bardo em raio 5 (incl. ele) gastam -1/-1;
+        Mago/Clerigo ganham 1 magia gratis."""
+        for q in self.players.values():
+            if not q.get("alive"):
+                continue
+            if _distancia_chebyshev(q["pos"], bardo["pos"]) > 5:
+                continue
+            q["encore_menor_ate"] = self.round_num
+            if q.get("class_id") in ("mage", "cleric"):
+                q["encore_magia_gratis"] = max(q.get("encore_magia_gratis", 0), 1)
+
+    def _aplicar_grande_encore(self, bardo):
+        """1d4 rodadas: todos sob a Cancao Heroica agem sem custo; Mago/Clerigo
+        magias ilimitadas gratis."""
+        dur = roll_dice("1d4")
+        ate = self.round_num + dur
+        for q in self.players.values():
+            if not q.get("alive") or "buffs_cancao" not in q:
+                continue
+            q["grande_encore_ate"] = ate
+            if q.get("class_id") in ("mage", "cleric"):
+                q["encore_magia_gratis"] = 999999
+
     async def _cobrar_manutencao_cancao(self, p):
         """Upkeep da canção, cobrado no início do turno do bardo. Sem recursos,
         a canção é interrompida. Com recursos, debita e reaplica os buffs (os
