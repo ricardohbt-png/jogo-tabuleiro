@@ -5409,6 +5409,90 @@ class GameRoom:
         await self.gm_say(f"🎻 **{p['name']}** inicia o **Réquiem Final** sobre **{m['name']}**!")
         return True
 
+    # ── Improviso (Gaita — Fase 5) ───────────────────────────────────────────
+    _IMPROVISO_ALVO = {7: ("nota_cortante", "monstro"),
+                       9: ("requiem_tick", "monstro"),
+                       11: ("chamado_general", "direcao")}
+    _IMPROVISO_AUTO = {
+        4: ("sino",   True),
+        5: ("lira",   True),
+        6: ("flauta", True),
+        8: ("tambor", False),
+        10: ("alaude", None),
+    }
+
+    def _improviso_tier(self, inst):
+        q = inst.get("qualidade", "padrao")
+        return "padrao" if q == "refinado" else q
+
+    def _improviso_virt_st(self, inst, base):
+        virt = {"base": base, "qualidade": self._improviso_tier(inst),
+                "origem": "humana", "encantamento": "nenhum",
+                "tipo_item": "instrumento"}
+        return virt, self._instrumento_stats(virt)
+
+    def _improviso_nome_passo(self, res):
+        return {2: "Desafinado", 3: "Falha", 4: "Ecos Dolorosos", 5: "Dueto Marcial",
+                6: "Dueto Fantasma", 7: "Nota Cortante", 8: "Acorde Trovejante",
+                9: "Réquiem (1ª rodada)", 10: "Sinfonia Heroica",
+                11: "Chamado do General"}.get(res, "?")
+
+    async def _instr_improviso(self, p, inst, st, data):
+        """Rola a cascata 2d6 e improvisa, a cada passo, a habilidade de outra
+        base no tier da Gaita. Resultados 7/9/11 exigem mira do jogador e são
+        enfileirados em `improviso_pendente` (resolvidos pela Task 6/cliente)."""
+        runico = inst.get("encantamento") == "runico"
+        passos, meta = self._improviso_rolar_cascata(runico)
+        if meta["grande_encore"]:
+            self._aplicar_grande_encore(p)
+        if meta["encore_menor"]:
+            self._aplicar_encore_menor(p)
+        p.setdefault("improviso_pendente", [])
+        cascata_cli = []
+        for res in passos:
+            cascata_cli.append({"res": res, "nome": self._improviso_nome_passo(res),
+                                "precisa_alvo": res in self._IMPROVISO_ALVO})
+            if res in self._IMPROVISO_ALVO:
+                _tipo, alvo_tipo = self._IMPROVISO_ALVO[res]
+                p["improviso_pendente"].append(
+                    {"res": res, "tier": self._improviso_tier(inst), "alvo_tipo": alvo_tipo})
+            else:
+                await self._improviso_aplicar_passo(p, inst, res)
+        await self.send_to(p["id"], {
+            "type": "improviso_resultado", "cascata": cascata_cli,
+            "encore_menor": meta["encore_menor"], "grande_encore": meta["grande_encore"],
+            "pendentes": [{"res": x["res"], "alvo_tipo": x["alvo_tipo"]}
+                          for x in p["improviso_pendente"]]})
+        return True
+
+    async def _improviso_aplicar_passo(self, p, inst, res):
+        """Aplica um passo sem-alvo (2,3,4,5,6,8,10)."""
+        if res == 3:
+            await self.gm_say(f"🪗 **{p['name']}** improvisa… e desafina de leve (nada acontece).")
+            return
+        if res == 2:
+            p["desafinado_ate"] = self.round_num + 1
+            await self.gm_say(f"🪗 **{p['name']}** improvisa e **desafina** — -1 em ataques e CDs até o próximo turno.")
+            return
+        if res == 10:
+            _virt, vst = self._improviso_virt_st(inst, "alaude")
+            p["sinfonia_temp_ate"] = self.round_num + 1
+            p["sinfonia_temp_atributos"] = list(vst.get("atributos", []))
+            await self.gm_say(f"🪗 **{p['name']}** improvisa a **Sinfonia Heroica** por 1 rodada!")
+            return
+        base, forca_dur = self._IMPROVISO_AUTO[res]
+        virt, vst = self._improviso_virt_st(inst, base)
+        if forca_dur:
+            vst = dict(vst); vst["duracao"] = 1
+        if base == "sino":
+            await self._instr_ecos_dolorosos(p, virt, vst, {})
+        elif base == "lira":
+            await self._instr_dueto_marcial(p, virt, vst, {})
+        elif base == "flauta":
+            await self._instr_dueto_fantasma(p, virt, vst, {})
+        elif base == "tambor":
+            await self._instr_acorde_trovejante(p, virt, vst, {})
+
     async def _encerrar_requiem(self, bardo, motivo):
         if not bardo.get("requiem_alvo"):
             return

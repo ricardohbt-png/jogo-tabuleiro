@@ -1161,6 +1161,64 @@ def test_grande_encore_sob_cancao():
     finally:
         server.roll_dice = orig
 
+# ─── Fase 5 — Improviso: passos sem-alvo + fila de alvo + meta ────────────
+
+def _bardo_com_gaita(qual="padrao", runico=False):
+    room, p = _room_bardo()
+    async def noop(*a, **k): pass
+    room.gm_say = noop; room.send_to = noop; room.push_state = noop
+    p["gear"]["off_hand"] = server.criar_instrumento(
+        "gaita", qual, encantamento=("runico" if runico else "nenhum"))
+    return room, p
+
+def _make_save(ok):
+    async def _s(m, tipo, cd, **k): return (ok, 10, cd)
+    return _s
+def _make_dano(n):
+    async def _d(nd, faces, label): return n
+    return _d
+
+def test_improviso_resultado_ecos_1rodada():
+    room, p = _bardo_com_gaita()
+    room._rolar_2d6 = lambda: 4          # Ecos Dolorosos
+    st = server.GameRoom._instrumento_stats(p["gear"]["off_hand"])
+    _run(room._instr_improviso(p, p["gear"]["off_hand"], st, {}))
+    assert p["ecos_ate"] == room.round_num + 1
+
+def test_improviso_resultado_desafinado():
+    room, p = _bardo_com_gaita()
+    room._rolar_2d6 = lambda: 2
+    st = server.GameRoom._instrumento_stats(p["gear"]["off_hand"])
+    _run(room._instr_improviso(p, p["gear"]["off_hand"], st, {}))
+    assert p["desafinado_ate"] == room.round_num + 1
+
+def test_improviso_enfileira_alvo():
+    room, p = _bardo_com_gaita()
+    room._rolar_2d6 = lambda: 7          # Nota Cortante — precisa de alvo
+    st = server.GameRoom._instrumento_stats(p["gear"]["off_hand"])
+    _run(room._instr_improviso(p, p["gear"]["off_hand"], st, {}))
+    fila = p.get("improviso_pendente", [])
+    assert len(fila) == 1 and fila[0]["res"] == 7 and fila[0]["alvo_tipo"] == "monstro"
+
+def test_improviso_encore_aplica_meta():
+    room, p = _bardo_com_gaita()
+    seq = iter([12, 8, 12])  # 12 -> [8, 12]; o 12 do reroll -> Encore Menor (nao-runica)
+    room._rolar_2d6 = lambda: next(seq)
+    room._save_mostrado = _make_save(True); room._rolar_dano_mostrado = _make_dano(0)
+    room.monsters = {}   # sem alvos p/ o Acorde: so nao deve crashar
+    st = server.GameRoom._instrumento_stats(p["gear"]["off_hand"])
+    _run(room._instr_improviso(p, p["gear"]["off_hand"], st, {}))
+    assert p["encore_menor_ate"] == room.round_num
+
+def test_improviso_sinfonia_temp():
+    room, p = _bardo_com_gaita()
+    room._rolar_2d6 = lambda: 10         # Sinfonia Heroica
+    st = server.GameRoom._instrumento_stats(p["gear"]["off_hand"])
+    _run(room._instr_improviso(p, p["gear"]["off_hand"], st, {}))
+    assert p["sinfonia_temp_ate"] == room.round_num + 1
+    assert isinstance(p.get("sinfonia_temp_atributos"), list)
+
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]
