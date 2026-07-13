@@ -1161,6 +1161,12 @@ const GS = (() => {
         _emit('decor_loot', msg);
         break;
 
+      case 'improviso_resultado':
+        // Cascata 2d6 da Gaita (Fase 5) — quadro de resultado + fila de mira
+        // dos passos que precisam de alvo (ver renderImprovisoQuadro em game.js).
+        _emit('improvisoResultado', msg);
+        break;
+
       case 'error':
         _emit('serverError', msg.msg);
         break;
@@ -1309,6 +1315,14 @@ const GS = (() => {
     if (player.instrumento_usado) return false;
     if (b.maos === 2 && player.action_done) return false;
     return true;
+  }
+  // Fase 5 (Gaita/Improviso) — mira, em sequência, os passos pendentes da
+  // cascata (res 7/9/11: Nota Cortante/Réquiem/Chamado do General
+  // improvisados). O servidor resolve o 1º da fila (FIFO) a cada chamada.
+  function improvisoAlvo(targetId, dir) {
+    send({ type: 'improviso_alvo',
+           target_id: targetId != null ? targetId : null,
+           dir: dir || null });
   }
 
   // ── Editor de masmorras — seleção de dungeon ─────────────────────────────────
@@ -2028,6 +2042,7 @@ const GS = (() => {
     instrumentoEquipadoDe,
     instrumentoStatsClient,
     instrumentoDisponivel,
+    improvisoAlvo,          // Fase 5 (Gaita/Improviso) — sender (chamado com parênteses)
 
     selectDungeon,
     selectCampaign,        // Fase 4a: sender (chamado com parênteses)
