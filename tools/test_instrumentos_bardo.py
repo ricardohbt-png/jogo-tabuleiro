@@ -1029,6 +1029,25 @@ def test_sku_origem():
     assert "instrumento_harpa_padrao_elfica" in ids
     assert "instrumento_violino_padrao_ana" in ids
 
+# ─── Fase 5 — Gaita (Improviso) ─────────────────────────────────────────────
+
+def test_gaita_base_existe():
+    b = server.INSTRUMENTOS_BASE["gaita"]
+    assert b["maos"] == 1 and b["modo"] == "ativada"
+    assert b["habilidade_nome"] == "Improviso"
+    assert b["efeito"]["tipo"] == "improviso"
+    assert b["custo_fome"] == 3 and b["custo_sede"] == 3
+    assert b["runico"]["grande_encore"] is True
+
+def test_gaita_nome_e_genero():
+    assert server.criar_instrumento("gaita", "velho")["name"] == "Gaita Velha"
+    inst = server.criar_instrumento("gaita", "padrao", encantamento="runico")
+    assert "Rúnica" in inst["name"], inst["name"]
+
+def test_gaita_stats_custo():
+    st = server.GameRoom._instrumento_stats(server.criar_instrumento("gaita", "padrao"))
+    assert st["custo_fome"] == 3 and st["custo_sede"] == 3
+
 if __name__ == "__main__":
     import inspect
     fns = [f for n, f in sorted(globals().items()) if n.startswith("test_") and inspect.isfunction(f)]

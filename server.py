@@ -269,6 +269,22 @@ INSTRUMENTOS_BASE = {
             "padrao":  {"dado": "d6", "teto": 5, "alcance": 6},
         },
     },
+    "gaita": {
+        "nome": "Gaita", "icon": "🪗", "maos": 1, "modo": "ativada",
+        "habilidade_nome": "Improviso",
+        "desc": "Rola 2d6 e improvisa a habilidade de outro instrumento (no tier da "
+                "Gaita). 12 = Encore: toca de novo duas vezes. A Gaita Rúnica pode "
+                "escalar até o Grande Encore.",
+        "efeito": {"tipo": "improviso"},
+        "custo_fome": 3, "custo_sede": 3,
+        "afixos_validos": ["fome", "sede"],
+        "stats": {
+            "velho":   {},
+            "rustico": {},
+            "padrao":  {},
+        },
+        "runico": {"grande_encore": True},
+    },
 }
 
 _QUALIDADE_LABEL = {
