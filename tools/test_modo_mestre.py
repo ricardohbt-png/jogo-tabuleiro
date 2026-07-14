@@ -125,6 +125,23 @@ async def main():
     check("start recusado só com mestre", r.phase == "lobby")
     check("erro de herói mínimo", any("herói" in e.lower() for e in r._errs))
 
+    print("\n[6] modo de controle e alvo dos monstros")
+    r = lobby_room(); r.phase = "playing"
+    r.master_pid = "m1"; r.connections["m1"] = object()
+    r.monsters = {"g1": {"id": "g1", "hp": 8, "pos": [2, 2]},
+                  "g2": {"id": "g2", "hp": 8, "pos": [3, 3]}}
+    check("_mestre_ativo True", r._mestre_ativo() is True)
+    await r.handle_mestre_set_modo("m1", ["g1", "g2"], "semi")
+    check("g1 semi", r.monsters["g1"]["control_mode"] == "semi")
+    check("g2 semi", r.monsters["g2"]["control_mode"] == "semi")
+    await r.handle_mestre_set_alvo("m1", ["g1"], "h1")
+    check("g1 alvo h1", r.monsters["g1"]["master_target_id"] == "h1")
+    r._errs.clear()
+    await r.handle_mestre_set_modo("h1", ["g1"], "manual")
+    check("não-mestre recusado", r.monsters["g1"]["control_mode"] == "semi")
+    del r.connections["m1"]
+    check("_mestre_ativo False sem conexão", r._mestre_ativo() is False)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

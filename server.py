@@ -8294,6 +8294,35 @@ class GameRoom:
 
         await self.push_state()
 
+    def _mestre_ativo(self):
+        """True se há um mestre humano CONECTADO. Quando False, todo monstro é
+        tratado como 'auto' (partida idêntica à do jogo sem mestre)."""
+        return bool(self.master_pid) and self.master_pid in self.connections
+
+    async def handle_mestre_set_modo(self, pid, monster_ids, modo):
+        """Mestre troca o modo de controle de 1+ monstros (Seleção em Lote)."""
+        if pid != self.master_pid:
+            return
+        if modo not in ("auto", "semi", "manual"):
+            return
+        for mid in (monster_ids or []):
+            m = self.monsters.get(mid)
+            if m and m["hp"] > 0:
+                m["control_mode"] = modo
+                if modo != "semi":
+                    m.pop("master_target_id", None)
+        await self.push_state()
+
+    async def handle_mestre_set_alvo(self, pid, monster_ids, target_id):
+        """Mestre atribui um alvo (herói) a 1+ monstros em modo Semi."""
+        if pid != self.master_pid:
+            return
+        for mid in (monster_ids or []):
+            m = self.monsters.get(mid)
+            if m and m["hp"] > 0:
+                m["master_target_id"] = target_id
+        await self.push_state()
+
     async def handle_mover_animado(self, pid, animado_id, dx, dy):
         """Controle manual: move UM animado uma casa (gasta 1 de movimento)."""
         if not self._is_turn(pid): return
@@ -17297,6 +17326,12 @@ async def handler(ws):
 
                 elif t == "claim_role":
                     if room: await room.claim_role(pid, msg.get("role"))
+
+                elif t == "mestre_set_modo":
+                    if room: await room.handle_mestre_set_modo(pid, msg.get("monster_ids"), msg.get("modo"))
+
+                elif t == "mestre_set_alvo":
+                    if room: await room.handle_mestre_set_alvo(pid, msg.get("monster_ids"), msg.get("target_id"))
 
                 elif t == "guild_buy":
                     if room: await room.handle_guild_buy(pid, msg.get("item_id"))
