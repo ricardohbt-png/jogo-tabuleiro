@@ -4396,6 +4396,9 @@ class GameRoom:
         self.players = {}       # pid -> player dict
         self.master_pid = None     # pid do mestre humano (Modo Mestre) ou None
         self.master_name = None    # nome do mestre (p/ rejoin)
+        self.master_manual_mid = None       # id do monstro na janela Manual (ou None)
+        self.master_manual_event = None     # asyncio.Event que fecha a janela
+        self.master_manual_timer = None     # tarefa do timeout anti-AFK
         self.player_order = []  # list of pid in turn order
         self.phase = "lobby"    # lobby | character_select | playing | ended
         self.host_pid = None
@@ -4450,6 +4453,8 @@ class GameRoom:
         self.initiative_task = None
         # Timer de turno (30s): tarefa asyncio + token p/ descartar timers velhos.
         self.TURN_LIMIT_S = 30
+        self.MASTER_MANUAL_MOVE = 5       # passos por turno de um monstro em modo Manual
+        self.MASTER_MANUAL_LIMIT_S = 60   # timeout anti-AFK do mestre por monstro manual
         self.turn_timer_task = None
         self.turn_token = 0
         self.turn_timer_started_ms = None   # epoch ms do início do turno atual (p/ contagem no cliente)
@@ -6289,7 +6294,11 @@ class GameRoom:
         async def monster_step(mid):
             monster = self.monsters.get(mid)
             if monster and monster.get("hp", 0) > 0:
-                await self.gm_phase(monster)
+                mode = monster.get("control_mode", "auto") if self._mestre_ativo() else "auto"
+                if mode == "manual":
+                    await self._master_manual_window(monster)
+                else:
+                    await self.gm_phase(monster)   # auto e semi (semi força o alvo em _get_monster_primary_target)
             await self._advance_initiative()
         self.initiative_task = asyncio.create_task(monster_step(actor["id"]))
 
@@ -8326,6 +8335,84 @@ class GameRoom:
             if m and m["hp"] > 0:
                 m["master_target_id"] = target_id
         await self.push_state()
+
+    async def handle_mestre_mover_monstro(self, pid, monster_id, dx, dy):
+        """Manual: move o monstro da janela 1 passo ortogonal."""
+        if pid != self.master_pid or monster_id != self.master_manual_mid:
+            return
+        m = self.monsters.get(monster_id)
+        if not m or m["hp"] <= 0:
+            return
+        if m.get("master_moves_left", 0) <= 0:
+            await self.send_to(pid, {"type": "error", "msg": "Monstro sem movimento neste turno."}); return
+        dx = max(-1, min(1, int(dx))); dy = max(-1, min(1, int(dy)))
+        if (dx == 0 and dy == 0) or (dx != 0 and dy != 0):
+            return   # só passos ortogonais de 1 casa
+        nx, ny = m["pos"][0] + dx, m["pos"][1] + dy
+        if not self._monster_can_occupy(m, nx, ny):
+            await self.send_to(pid, {"type": "error", "msg": "Caminho bloqueado."}); return
+        await self._commit_monster_step(m, nx, ny)
+        m["master_moves_left"] -= 1
+        await self.push_state()
+
+    async def handle_mestre_atacar_monstro(self, pid, monster_id, target_id):
+        """Manual: o monstro da janela ataca um herói (1 ataque/turno)."""
+        if pid != self.master_pid or monster_id != self.master_manual_mid:
+            return
+        m = self.monsters.get(monster_id)
+        if not m or m["hp"] <= 0:
+            return
+        if m.get("_master_acted"):
+            await self.send_to(pid, {"type": "error", "msg": "Este monstro já atacou neste turno."}); return
+        alvo = self.players.get(target_id)
+        if not alvo or not alvo.get("alive"):
+            await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
+        m["_master_acted"] = True
+        atk_def = (m.get("attacks") or [{}])[0]
+        await self._execute_one_monster_attack(m, atk_def, {"kind": "player", "obj": alvo})
+        await self.push_state()
+
+    async def handle_mestre_encerrar_monstro(self, pid, monster_id):
+        """Manual: encerra a vez do monstro; libera o laço de iniciativa."""
+        if pid != self.master_pid or monster_id != self.master_manual_mid:
+            return
+        if self.master_manual_event and not self.master_manual_event.is_set():
+            self.master_manual_event.set()
+        self.master_manual_mid = None
+
+    async def _master_manual_window(self, m):
+        """Abre a janela interativa do modo Manual e aguarda o mestre agir.
+        Retorna quando o mestre encerra OU o timeout resolve via IA auto."""
+        self.master_manual_mid = m["id"]
+        m["master_moves_left"] = self.MASTER_MANUAL_MOVE
+        m["_master_acted"] = False
+        self.master_manual_event = asyncio.Event()
+        await self.push_state()
+        self.master_manual_timer = asyncio.create_task(self._master_manual_timeout(m["id"]))
+        try:
+            await self.master_manual_event.wait()
+        finally:
+            if self.master_manual_timer and not self.master_manual_timer.done():
+                self.master_manual_timer.cancel()
+            self.master_manual_timer = None
+            self.master_manual_mid = None
+
+    async def _master_manual_timeout(self, mid):
+        """Anti-AFK: se o mestre não encerrar em MASTER_MANUAL_LIMIT_S, o monstro
+        age via IA auto e a janela fecha."""
+        try:
+            await asyncio.sleep(self.MASTER_MANUAL_LIMIT_S)
+        except asyncio.CancelledError:
+            return
+        if self.master_manual_mid != mid:
+            return
+        m = self.monsters.get(mid)
+        if m and m["hp"] > 0:
+            alive_players = [p for p in self.players.values() if self._ativo(p)]
+            if alive_players:
+                await self.gm_phase(m)
+        if self.master_manual_event and not self.master_manual_event.is_set():
+            self.master_manual_event.set()
 
     async def handle_mover_animado(self, pid, animado_id, dx, dy):
         """Controle manual: move UM animado uma casa (gasta 1 de movimento)."""
@@ -17127,6 +17214,7 @@ class GameRoom:
         await self.broadcast({
             "type": "game_state",
             "master_pid": self.master_pid,
+            "master_manual_mid": self.master_manual_mid,
             "ambiente": getattr(self, "ambiente", "masmorra"),
             "tiles": self.tiles,
             "rooms": self.rooms,
@@ -17345,6 +17433,15 @@ async def handler(ws):
 
                 elif t == "mestre_set_alvo":
                     if room: await room.handle_mestre_set_alvo(pid, msg.get("monster_ids"), msg.get("target_id"))
+
+                elif t == "mestre_mover_monstro":
+                    if room: await room.handle_mestre_mover_monstro(pid, msg.get("monster_id"), msg.get("dx"), msg.get("dy"))
+
+                elif t == "mestre_atacar_monstro":
+                    if room: await room.handle_mestre_atacar_monstro(pid, msg.get("monster_id"), msg.get("target_id"))
+
+                elif t == "mestre_encerrar_monstro":
+                    if room: await room.handle_mestre_encerrar_monstro(pid, msg.get("monster_id"))
 
                 elif t == "guild_buy":
                     if room: await room.handle_guild_buy(pid, msg.get("item_id"))

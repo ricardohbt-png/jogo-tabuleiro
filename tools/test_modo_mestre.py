@@ -172,6 +172,48 @@ async def main():
     escolha3 = r._get_monster_primary_target(m, targets)
     check("sem mestre → padrão", escolha3["obj"] is pA)
 
+    print("\n[8] janela Manual: mover, atacar e encerrar")
+    r = lobby_room(); r.phase = "playing"
+    r.master_pid = "m1"; r.connections["m1"] = object()
+    ataques = {"n": 0}
+    async def fake_atk(m, atk_def, target_obj):
+        ataques["n"] += 1; return True
+    r._execute_one_monster_attack = fake_atk
+    async def fake_commit(m, nx, ny): m["pos"] = [nx, ny]
+    r._commit_monster_step = fake_commit
+    r._monster_can_occupy = lambda m, nx, ny, facing=None: True
+    m = {"id": "g1", "hp": 8, "pos": [4, 4], "control_mode": "manual",
+         "attacks": [{"name": "garra", "damage": "1d4"}]}
+    r.monsters = {"g1": m}
+    r.master_manual_mid = "g1"
+    m["master_moves_left"] = r.MASTER_MANUAL_MOVE
+    m["_master_acted"] = False
+    hero = {"id": "hA", "pos": [5, 4], "alive": True, "hp": 10}
+    r.players = {"hA": hero}
+    await r.handle_mestre_mover_monstro("m1", "g1", 1, 0)
+    check("monstro moveu 1 casa", m["pos"] == [5, 4])
+    check("gastou 1 de movimento", m["master_moves_left"] == r.MASTER_MANUAL_MOVE - 1)
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hA")
+    check("ataque resolvido", ataques["n"] == 1)
+    check("marcou ataque usado", m["_master_acted"] is True)
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hA")
+    check("2º ataque recusado", ataques["n"] == 1)
+    r.master_manual_event = asyncio.Event()
+    await r.handle_mestre_encerrar_monstro("m1", "g1")
+    check("Event setado ao encerrar", r.master_manual_event.is_set())
+    check("janela limpa", r.master_manual_mid is None)
+    r._errs.clear()
+    await r.handle_mestre_mover_monstro("m1", "g1", -1, 0)
+    check("mover fora da janela recusado", m["pos"] == [5, 4])
+
+    print("\n[9] sem mestre: dispatch cai em auto")
+    r = lobby_room(); r.phase = "playing"
+    r.master_pid = None
+    m = {"id": "g1", "hp": 8, "pos": [1, 1], "control_mode": "manual"}
+    r.monsters = {"g1": m}
+    mode = m.get("control_mode", "auto") if r._mestre_ativo() else "auto"
+    check("sem mestre → auto", mode == "auto")
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
