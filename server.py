@@ -14308,6 +14308,15 @@ class GameRoom:
         if (self.taunted and self.taunted in self.players and self.players[self.taunted]["alive"]
                 and presente(self.players[self.taunted])):
             return {"kind": "player", "obj": self.players[self.taunted]}
+        # Modo Semi (Mestre): força o alvo escolhido, se ele estiver visível.
+        # Fica ABAIXO de réquiem/provocação/taunt (compulsões de habilidade têm
+        # prioridade) e substitui apenas a seleção padrão do mais próximo.
+        if self._mestre_ativo() and m.get("control_mode") == "semi":
+            tid = m.get("master_target_id")
+            if tid:
+                forced = next((t for t in targets if t["obj"].get("id") == tid), None)
+                if forced:
+                    return forced
         return min(targets, key=lambda t: (
             abs(t["obj"]["pos"][0] - m["pos"][0]) + abs(t["obj"]["pos"][1] - m["pos"][1])
         ))

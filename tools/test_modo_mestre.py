@@ -154,6 +154,24 @@ async def main():
     await r.handle_mestre_set_alvo("m1", ["g1"], "hX")
     check("set_alvo fora de playing ignorado", "master_target_id" not in r.monsters["g1"])
 
+    print("\n[7] modo Semi força o alvo do monstro")
+    r = lobby_room(); r.phase = "playing"
+    r.master_pid = "m1"; r.connections["m1"] = object()
+    m = {"id": "g1", "hp": 8, "pos": [5, 5], "control_mode": "semi", "master_target_id": "hB"}
+    r.monsters = {"g1": m}
+    pA = {"id": "hA", "pos": [5, 6], "alive": True}   # mais próximo
+    pB = {"id": "hB", "pos": [9, 9], "alive": True}   # alvo forçado (mais longe)
+    targets = [{"kind": "player", "obj": pA}, {"kind": "player", "obj": pB}]
+    escolha = r._get_monster_primary_target(m, targets)
+    check("Semi escolhe o alvo forçado", escolha["obj"] is pB)
+    m["master_target_id"] = "hZ"
+    escolha2 = r._get_monster_primary_target(m, targets)
+    check("alvo inválido cai no mais próximo", escolha2["obj"] is pA)
+    del r.connections["m1"]
+    m["master_target_id"] = "hB"
+    escolha3 = r._get_monster_primary_target(m, targets)
+    check("sem mestre → padrão", escolha3["obj"] is pA)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
