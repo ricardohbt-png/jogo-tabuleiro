@@ -248,13 +248,21 @@ async def main():
     r.connections["m1"] = object()
     check("mestre ativo após religar", r._mestre_ativo() is True)
 
-    print("\n[11] mestre cai: janela Manual aberta é fechada")
+    print("\n[11] mestre cai: janela Manual resolve via IA e fecha")
     r = lobby_room(); r.phase = "playing"
     r.master_pid = "m1"
+    gm_calls = {"n": 0}
+    async def fake_gm(only_monster=None): gm_calls["n"] += 1
+    r.gm_phase = fake_gm
+    m = {"id": "g1", "hp": 8, "pos": [2, 2]}
+    r.monsters = {"g1": m}
+    r.players = {"hA": {"id": "hA", "pos": [3, 3], "alive": True, "connected": True}}
     r.master_manual_mid = "g1"
     r.master_manual_event = asyncio.Event()
     await r._on_master_disconnect()
     check("event setado ao cair", r.master_manual_event.is_set())
+    check("janela limpa", r.master_manual_mid is None)
+    check("monstro interrompido agiu via IA", gm_calls["n"] == 1)
 
     print("\n[11b] _on_master_disconnect sem janela aberta é seguro")
     r = lobby_room(); r.phase = "playing"

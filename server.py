@@ -8388,10 +8388,18 @@ class GameRoom:
         self.master_manual_mid = None
 
     async def _on_master_disconnect(self):
-        """Mestre caiu durante a partida: fecha a janela Manual aberta (se houver)
-        para o jogo não travar até o timeout de 60s. Os monstros voltam à IA
-        automaticamente (_mestre_ativo já retorna False sem a conexão)."""
-        if self.master_manual_mid and self.master_manual_event and not self.master_manual_event.is_set():
+        """Mestre caiu durante a partida: resolve a janela Manual aberta (o monstro
+        interrompido age via IA, como no timeout anti-AFK) para o jogo não travar.
+        Os monstros seguintes voltam à IA automaticamente (_mestre_ativo já retorna
+        False sem a conexão)."""
+        mid = self.master_manual_mid
+        if mid and self.master_manual_event and not self.master_manual_event.is_set():
+            self.master_manual_mid = None   # fecha a janela ANTES de resolver (evita ação dupla)
+            m = self.monsters.get(mid)
+            if m and m["hp"] > 0:
+                alive_players = [p for p in self.players.values() if self._ativo(p)]
+                if alive_players:
+                    await self.gm_phase(m)   # o monstro interrompido ainda age via IA
             self.master_manual_event.set()   # libera _master_manual_window → o turno avança
         await self.gm_say("🔌 O mestre caiu — os monstros voltam ao controle da IA.")
         await self.push_state()
