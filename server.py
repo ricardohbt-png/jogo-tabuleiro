@@ -1378,6 +1378,7 @@ DMG_LIGHTNING = "lightning"
 DMG_HOLY      = "holy"
 DMG_POISON    = "poison"
 DMG_MAGIC     = "magic"
+DMG_ACID      = "acid"
 
 # Normaliza nomes de elemento (PT, usados nas magias) → chave de damage type acima,
 # para aplicar fraquezas/imunidades elementais via _apply_damage_types.
@@ -1388,6 +1389,7 @@ _NORM_ELEMENTO = {
     "lightning": DMG_LIGHTNING,
     "sagrado": DMG_HOLY, "holy": DMG_HOLY, "luz": DMG_HOLY, "light": DMG_HOLY,
     "veneno": DMG_POISON, "poison": DMG_POISON,
+    "acido": DMG_ACID, "ácido": DMG_ACID, "acid": DMG_ACID,
     "fisico": DMG_PHYSICAL, "physical": DMG_PHYSICAL,
     "magico": DMG_MAGIC, "magic": DMG_MAGIC,
 }
@@ -1398,11 +1400,13 @@ _NORM_ELEMENTO = {
 # aplicadas em tempo de combate (CA / acerto / dano) e o estado é RESETADO ao
 # entrar em nova dungeon: níveis 1-2 são REPARADOS; nível 3 (destruído) é
 # PERMANENTE (não volta). Estado vive em p["corrosao"] e p["corrosao_viva"].
-CORROSAO_ARMADURA_ORGANICA = {"leather", "cloak"}   # couro / manto (tecido)
+# Mantidos como compatibilidade para itens antigos/saves. As armaduras novas
+# usam também os metadados `corrosion_materials` no catálogo abaixo.
+CORROSAO_ARMADURA_ORGANICA = {"leather", "cloak", "leather_plate", "leather_mail", "monster_leather_plate"}
 CORROSAO_ARMA_MADEIRA = {"cajado_madeira", "bordao", "staff", "instrumento",
                          "arco_curto", "longbow", "besta", "hand_crossbow"}
 # Devorador de Metal: corrói metal (madeira/couro/ossos são imunes).
-CORROSAO_ARMADURA_METAL = {"chainmail", "bronze_armor", "plate", "fullplate"}
+CORROSAO_ARMADURA_METAL = {"chainmail", "bronze_armor", "plate", "fullplate", "leather_plate", "leather_mail", "monster_leather_plate"}
 CORROSAO_ARMA_METAL = {"dagger", "machado_basico", "machado_duplo", "machado_orc",
                        "sword", "magic_sword", "shortsword", "longsword",
                        "bastsword", "espada2m", "warhammer", "mangual", "maca"}
@@ -2309,6 +2313,32 @@ MONSTER_DEFS = [
         "image": "ogroLanca",
         "undead": False, "boss": False,
     },
+    # Grotão: predador blindado orientado; a cabeça ocupa a âncora e a cauda a casa traseira.
+    {
+        "type": "grotao", "name": "Grotão", "emoji": "🦂",
+        "tier": 3, "cr": 3,
+        "hp": 36, "ac": 15, "natural_armor": 5, "size": [2, 3], "oriented": True, "movement": 5,
+        "str_": 18, "dex": 10, "con_": 16, "int_": 3,
+        "fort": 6, "ref_": 3, "will": 2, "visao_escuro": True,
+        "attacks": [
+            {"name": "Mordida", "atk_bonus": 6, "damage": "1d10+4", "damage_types": ["physical"], "num_attacks": 1, "on_hit": None, "categoria": "perfurante"},
+            {"name": "Garras", "atk_bonus": 6, "damage": "1d8+4", "damage_types": ["physical"], "num_attacks": 2, "on_hit": None, "categoria": "cortante"},
+        ],
+        "special_abilities": [
+            {"id": "carapaca_resistente", "name": "Carapaça Resistente", "action_type": "passiva", "descricao": "Reduz todo dano físico em 2"},
+            {"id": "cauda_varredora", "name": "Cauda Varredora", "action_type": "acao", "cooldown_turns": 2, "atk_bonus": 5, "damage": "1d8+3", "save": "reflexos", "dc": 12, "descricao": "Atinge todos atrás: +5, 1d8+3; falha derruba"},
+            {"id": "cuspir_acido", "name": "Cuspir Ácido", "action_type": "acao", "cooldown_turns": 3, "range": 3, "damage": "2d6", "save": "reflexos", "dc": 13, "descricao": "Alvo único: 2d6 ácido, Reflexos metade e corrói um equipamento"},
+            {"id": "furia_bestial", "name": "Fúria Bestial", "action_type": "passiva", "descricao": "Mordida e ao menos uma garra acertam: +1d6 dano"},
+            {"id": "ponto_vulneravel", "name": "Ponto Vulnerável", "action_type": "passiva", "nd_penalty": 0.25, "descricao": "Os dois quadrados centrais ignoram a armadura natural (CA 15 → 10; Destreza permanece) e reduções de dano; reduz o ND estimado em 0,25", "tiles": [[1, 0], [1, 1]]},
+            {"id": "corpo_pesado", "name": "Corpo Pesado", "action_type": "passiva", "descricao": "Falha em Reflexos: +1 dano daquele efeito"},
+        ],
+        "immunities": [],
+        "resistances": [{"type": "physical", "reduction": 2}],
+        "weaknesses": [{"type": "ponto_vulneravel", "nd_penalty": 0.25, "tiles": [[1, 0], [1, 1]], "descricao": "Ponto Vulnerável: os dois quadrados centrais ignoram a armadura natural (CA 15 → 10; Destreza permanece) e reduções de dano (–0,25 ND estimado)"}],
+        "loot_table": {"1-100": {"tipo": "gold", "valor": "2d6"}},
+        "spawn_min": 1, "spawn_max": 1, "ai_type": "grotao", "porte": "grande", "image": "grotao",
+        "undead": False, "boss": False,
+    },
 ]
 
 CHEST_ITEMS = [
@@ -2396,20 +2426,50 @@ SHOP_ARMORS = [
     {"id": "escudo_g",     "name": "Escudo Grande",      "emoji": "🛡️", "ac_bonus": 2, "price": 25, "kind": "shield",
      "allowed_classes": ["paladin", "warrior"]},
     # ── Armaduras (slot armadura) ─────────────────────────────────────────────
-    {"id": "cloak",        "name": "Manto",              "emoji": "🧣",  "ac_bonus": 1, "price": 15, "kind": "armor"},
+    # `armor_category` prepara as futuras penalidades de movimento. Materiais
+    # híbridos sofrem tanto corrosão orgânica quanto corrosão de metal.
+    {"id": "cloak",        "name": "Manto",              "emoji": "🧣",  "ac_bonus": 1, "price": 15, "kind": "armor",
+     "armor_category": "leve", "corrosion_materials": ["organic"]},
     {"id": "leather",      "name": "Armadura de Couro",  "emoji": "🥋",  "ac_bonus": 2, "price": 30, "kind": "armor",
+     "armor_category": "leve", "corrosion_materials": ["organic"],
      "allowed_classes": ["cleric", "bard", "rogue", "paladin", "warrior"]},
+    {"id": "leather_plate", "name": "Armadura de Couro e Placas", "emoji": "🥋", "ac_bonus": 3, "price": 60, "kind": "armor",
+     "armor_category": "leve", "corrosion_materials": ["organic", "metal"],
+     "allowed_classes": ["warrior", "rogue", "bard", "paladin"]},
     {"id": "chainmail",    "name": "Cota de Malha",      "emoji": "🪖",  "ac_bonus": 4, "price": 100, "kind": "armor",
+     "armor_category": "media", "corrosion_materials": ["metal"],
      "allowed_classes": ["cleric", "bard", "paladin", "warrior"]},
     {"id": "bronze_armor", "name": "Armadura de Bronze", "emoji": "🪖",  "ac_bonus": 5, "price": 200, "kind": "armor",
+     "armor_category": "media", "corrosion_materials": ["metal"],
      "allowed_classes": ["paladin", "warrior"]},
+    {"id": "leather_mail", "name": "Armadura de Couro Revestido com Malha", "emoji": "🪖", "ac_bonus": 6, "price": 300, "kind": "armor",
+     "armor_category": "media", "corrosion_materials": ["organic", "metal"],
+     "allowed_classes": ["cleric", "bard", "paladin", "warrior"]},
     {"id": "plate",        "name": "Armadura de Placas", "emoji": "🛡️", "ac_bonus": 6, "price": 400, "kind": "armor",
+     "armor_category": "pesada", "corrosion_materials": ["metal"],
+     "allowed_classes": ["paladin", "warrior"]},
+    {"id": "monster_leather_plate", "name": "Armadura de Couro de Monstro e Placas", "emoji": "🛡️", "ac_bonus": 7, "price": 600, "kind": "armor",
+     "armor_category": "pesada", "corrosion_materials": ["organic", "metal"],
      "allowed_classes": ["paladin", "warrior"]},
     {"id": "fullplate",    "name": "Armadura Completa",  "emoji": "🛡️", "ac_bonus": 8, "price": 800, "kind": "armor",
+     "armor_category": "pesada", "corrosion_materials": ["metal"],
      "allowed_classes": ["paladin", "warrior"]},
 ]
 
+ARMOR_CATALOG = {item["id"]: item for item in SHOP_ARMORS if item.get("kind") == "armor"}
+
 SHOP_MERCHANT = [
+    # Venenos de dano contínuo: uma dose por compra; armas à distância gastam
+    # a dose em três flechas/virotes (VENENO_CARGAS).
+    {"id": "veneno_fungo_acre", "name": "Fungo Acre", "emoji": "🍄", "price": 10,
+     "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_fungo_acre",
+     "descricao": "Fortitude CD 10 anula. Se falhar: 1 dano por rodada durante 1d4 rodadas."},
+    {"id": "veneno_dor_escarlate", "name": "Dor Escarlate", "emoji": "🩸", "price": 20,
+     "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_dor_escarlate",
+     "descricao": "Fortitude CD 12 anula. Se falhar: 1 dano por rodada durante 1d6 rodadas."},
+    {"id": "veneno_ardonia_negra", "name": "Ardonia Negra", "emoji": "🕷️", "price": 50,
+     "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_ardonia_negra",
+     "descricao": "Fortitude CD 14 anula. Se falhar: 1 dano por rodada durante 2d4 rodadas."},
     {"id": "health_potion", "name": "Poção de Cura",    "emoji": "🧪",  "price": 8,  "item_slot": "bag",   "effect": "heal",      "value": 10},
     {"id": "elixir",        "name": "Elixir da Força",  "emoji": "⚗️", "price": 12, "item_slot": "bag",   "effect": "atk_bonus", "value": 3},
     {"id": "antidote",      "name": "Antídoto",          "emoji": "💚",  "price": 5,  "item_slot": "bag",   "effect": "heal",      "value": 6},
@@ -2612,6 +2672,18 @@ VENENOS = {
         "save": "fortitude", "dificuldade": 14,
         "save_neutraliza_por_rodada": True, "anula": False,
     },
+    "veneno_fungo_acre": {
+        "nome": "Fungo Acre", "icone": "🍄", "operacao": "dano", "dano": 1, "duracao": "1d4",
+        "save": "fortitude", "dificuldade": 10, "anula": True, "save_aplicacao": True,
+    },
+    "veneno_dor_escarlate": {
+        "nome": "Dor Escarlate", "icone": "🩸", "operacao": "dano", "dano": 1, "duracao": "1d6",
+        "save": "fortitude", "dificuldade": 12, "anula": True, "save_aplicacao": True,
+    },
+    "veneno_ardonia_negra": {
+        "nome": "Ardonia Negra", "icone": "🕷️", "operacao": "dano", "dano": 1, "duracao": "2d4",
+        "save": "fortitude", "dificuldade": 14, "anula": True, "save_aplicacao": True,
+    },
 }
 
 # ─── MASMORRAS AUTORADAS (Fase 1 do editor) ───────────────────────────────────
@@ -2785,6 +2857,21 @@ def validar_dungeon(defn):
         elif not (isinstance(facing, list) and len(facing) == 2
                   and all(isinstance(c, int) and not isinstance(c, bool) for c in facing)):
             return False, f"decoração com facing inválido: {facing!r}."
+        if meta["special"] == "wall":
+            # A face aponta para a casa jogável diante da parede. Assim a arte
+            # nunca aparece do lado externo/fechado da masmorra.
+            if facing not in ([1, 0], [-1, 0], [0, 1], [0, -1]):
+                return False, f"decoração de parede {dtype} exige uma face cardinal."
+            fx, fy = pos[0] + facing[0], pos[1] + facing[1]
+            if tile_at(pos) != WALL:
+                return False, f"decoração de parede {dtype} precisa estar em uma parede."
+            if not (0 <= fx < grid_w and 0 <= fy < grid_h) or tile_at([fx, fy]) != FLOOR:
+                return False, f"face da decoração de parede {dtype} não aponta para um chão adjacente."
+            key = (pos[0], pos[1], facing[0], facing[1])
+            if key in ocupadas:
+                return False, f"duas decorações na mesma face de parede em {pos}."
+            ocupadas.add(key)
+            continue
         # Footprint efetivo: usa o override por-objeto `size` quando presente
         # (espelha _decor_base_size / o editor), senão o tamanho do catálogo.
         ov = de.get("size")
@@ -3197,10 +3284,10 @@ GUILD_CATALOG.update(_gerar_catalogo_lendas())
 # bloqueia movimento (só a fogueira). loot_capaz: pode conter ouro/itens (abre
 # como baú). special: None|"fountain"|"campfire".
 def _decor(nome, emoji, size, gira=False, alto=False, pisavel=False,
-           loot_capaz=True, special=None):
+           loot_capaz=True, special=None, image=None):
     return {"nome": nome, "emoji": emoji, "size": size, "gira": gira,
             "alto": alto, "pisavel": pisavel, "loot_capaz": loot_capaz,
-            "special": special}
+            "special": special, "image": image}
 
 DECOR_TYPES = {
     "cama":           _decor("Cama", "🛏️", [1, 2], gira=True),
@@ -3226,6 +3313,14 @@ DECOR_TYPES = {
     "arvore":         _decor("Árvore", "🌳", [1, 1], alto=True),
     "arvore_grande":  _decor("Árvore grande", "🌲", [2, 2], alto=True),
     "chao":           _decor("Chão (grama)", "🌿", [1, 1], pisavel=True, loot_capaz=False, special="floor"),
+    # Decorações de parede: ficam presas a uma face de WALL, sem ocupar nem
+    # bloquear o chão. A arte é um decal vertical no modo 3D.
+    "brasao_leao": _decor("Brasão do Leão", "🦁", [1, 1], gira=True, pisavel=True,
+                           loot_capaz=False, special="wall", image="brasao_leao.png"),
+    "cortina_vermelha": _decor("Cortina vermelha", "🔴", [1, 1], gira=True, pisavel=True,
+                                loot_capaz=False, special="wall", image="cortina_vermelha.png"),
+    "cortina_branca": _decor("Cortina branca", "⚪", [1, 1], gira=True, pisavel=True,
+                              loot_capaz=False, special="wall", image="cortina_branca.png"),
 }
 
 # ─── MATERIAIS DE CHÃO E PAREDE ──────────────────────────────────────────────
@@ -3233,16 +3328,17 @@ DECOR_TYPES = {
 # categoria: "piso" (válido em FLOOR/DOOR) ou "parede" (válido em WALL).
 # solido: bloqueia movimento (espelhado no cliente). oclui: barra visão/névoa.
 # cor: swatch do editor (a paleta rica de render vive no cliente). Pisos
-# coloridos são cosméticos; só "entulho" tem efeito. Campos de efeito futuros
-# (custo_mov, save_ao_entrar) entram aqui sem mudar o schema.
-def _mat(nome, categoria, cor, solido=False, oclui=False):
+# coloridos são cosméticos, exceto entulho (bloqueia) e água (movimento).
+# Campos de efeito futuros (custo_mov, save_ao_entrar) entram aqui sem mudar o schema.
+def _mat(nome, categoria, cor, solido=False, oclui=False, terreno=None):
     return {"nome": nome, "categoria": categoria, "cor": cor,
-            "solido": solido, "oclui": oclui}
+            "solido": solido, "oclui": oclui, "terreno": terreno}
 
 MATERIAIS = {
     "pedra_cinza":   _mat("Pedra cinza", "piso", "#6f6f78"),
-    "terra":         _mat("Terra", "piso", "#6b4f33"),
-    "grama":         _mat("Grama", "piso", "#3f6b2f"),
+    "terra":         _mat("Terra", "piso", "#75451f"),
+    "grama":         _mat("Grama", "piso", "#287322"),
+    "agua":          _mat("Água", "piso", "#126da1", terreno="agua"),
     "pedra_negra":   _mat("Pedra negra", "piso", "#23232a"),
     "entulho":       _mat("Entulho", "piso", "#4a4640", solido=True, oclui=True),
     "pedra_normal":  _mat("Pedra normal", "parede", "#5a5a6a"),
@@ -3875,8 +3971,17 @@ def make_player(pid, name, cls_id, slot):
         "id": w_id, "name": weapon["name"],
         "emoji": _WEAPON_EMOJI.get(w_id, "⚔️"),
         "item_slot": "weapon", "effect": "atk", "value": 0,
+        # As cargas pertencem a esta arma, e não ao personagem/slot equipado.
+        "poison_slots": [],
     }
     starting_armor_item = deepcopy(_STARTING_ARMOR.get(cls_id))
+    if starting_armor_item:
+        # Mantém categoria e materiais também no item equipado inicial, não só
+        # nas compras. Isso deixa todos os personagens prontos para as futuras
+        # penalidades por peso e para a corrosão por material.
+        armor_meta = ARMOR_CATALOG.get(starting_armor_item.get("id"), {})
+        starting_armor_item["armor_category"] = armor_meta.get("armor_category")
+        starting_armor_item["corrosion_materials"] = list(armor_meta.get("corrosion_materials", []))
 
     player = {
         "id": pid, "name": name, "class_id": cls_id,
@@ -3988,10 +4093,6 @@ def make_player(pid, name, cls_id, slot):
         # ── Estado das habilidades do ladino (Luccas) — inerte p/ outras classes ──
         "invisivel_sombras":   False,  # Esconder nas Sombras (manutenção 🍖-1 💧-1)
         "detectar_ativo":      False,  # Detectar Armadilhas ativa (manutenção 💧-1)
-        "weapon_poison":       None,   # veneno untado na arma (Veneno Rápido / coat_poison)
-        "weapon_poison_hits":  0,      # golpes certeiros restantes com veneno
-        "weapon_poison_2":       None,   # 2º veneno (só com ladino_veneno_3)
-        "weapon_poison_2_hits":  0,
         # ── Magias (Pedro/mage, Lewis/cleric) — magias conhecidas + slots c/ regen ──
         "magias_conhecidas":   [],     # ids do GRIMORIO escolhidos (obrigatório p/ lançar)
         "slots_cooldown":      {"primeiro": [], "segundo": [], "terceiro": []},  # ready_at por slot gasto
@@ -4006,6 +4107,20 @@ def make_player(pid, name, cls_id, slot):
 
 def make_monster(mdef, room):
     m = deepcopy(mdef)
+    # Mesmo campo usado pelo editor: os despachantes do grimório leem `level`.
+    # Mantemos ambos para compatibilidade com as fórmulas de herói.
+    m["caster_level"] = max(1, int(m.get("caster_level", m.get("level", 1))))
+    m["level"] = m["caster_level"]
+    # CA de monstros segue a mesma base D20: 10 + DES + Armadura Natural.
+    # Fichas legadas sem o novo campo preservam exatamente a CA que já tinham.
+    m["natural_armor"] = max(0, int(m.get("natural_armor",
+        int(m.get("ac", 10)) - 10 - mod(m.get("dex", 10)))))
+    m["ac"] = max(1, 10 + mod(m.get("dex", 10)) + m["natural_armor"])
+    # Visão: as fichas legadas que já possuíam darkvision_range mantêm a
+    # característica Visão no Escuro, mas agora usam o mesmo raio calculado
+    # por atributos de todos os monstros.
+    m["vision_base"] = max(0, int(m.get("vision_base", 3)))
+    m["visao_escuro"] = bool(m.get("visao_escuro") or m.get("darkvision_range"))
     m["id"] = new_id()
     m["max_hp"] = m["hp"]
     m["pos"] = [room["cx"], room["cy"]]
@@ -4013,11 +4128,33 @@ def make_monster(mdef, room):
     # Inicializa contadores de habilidades especiais (formato novo)
     if "special_abilities" in m:
         m["ability_uses"] = {
-            ab["id"]: ab["uses_per_combat"]
+            ab["id"]: (ab["uses_per_day"] if ab.get("uses_per_day") is not None else ab["uses_per_combat"])
             for ab in m["special_abilities"]
-            if "uses_per_combat" in ab and ab["uses_per_combat"] is not None
+            if ab.get("uses_per_day") is not None or ab.get("uses_per_combat") is not None
         }
         m["ability_cooldowns"] = {}
+        # Habilidades vindas do editor têm dois limites independentes. Esses
+        # contadores não interferem nas IAs nativas que já usam ability_uses.
+        m["monster_ability_uses"] = {
+            ab["id"]: ab.get("uses_per_day", 1) for ab in m["special_abilities"]
+            if ab.get("source") in {"heroi", "guilda"}
+        }
+        m["monster_ability_cooldowns"] = {}
+    # Magias são configuradas separadamente das habilidades. Fichas antigas
+    # continuam válidas: suas entradas action_type=magia são convertidas aqui.
+    spell_defs = m.get("monster_spells")
+    if not isinstance(spell_defs, list):
+        spell_defs = []
+    if not spell_defs:
+        spell_defs = [
+            {"id": ab["id"], "limit_mode": "cooldown" if ab.get("cooldown_turns") is not None else "encounter",
+             "uses_per_combat": ab.get("uses_per_combat", 1), "cooldown_turns": ab.get("cooldown_turns", 1)}
+            for ab in m.get("special_abilities", []) if ab.get("action_type") == "magia" and ab.get("id") in GRIMORIO
+        ]
+    m["monster_spells"] = spell_defs
+    m["spell_uses"] = {s["id"]: max(1, int(s.get("uses_per_combat", 1))) for s in spell_defs
+                       if s.get("id") in GRIMORIO and s.get("limit_mode", "encounter") != "cooldown"}
+    m["spell_cooldowns"] = {}
     # ── Goblins: munição do arqueiro, escolha de arma do combatente, arremesso ──
     if m.get("type") == "goblin_arqueiro":
         m["flechas"] = 10
@@ -4303,6 +4440,12 @@ class GameRoom:
         self.zonas_especiais = []  # zonas mágicas (escuridão/silêncio) — ver GRIMORIO/handle_magia
         self.turn_index = 0
         self.round_num = 1
+        # Ordem individual de iniciativa: [{kind:"player"|"monster", id, ...}].
+        # É recalculada no início de cada rodada, pois DES/INT podem mudar.
+        self.initiative_order = []
+        self.initiative_index = 0
+        self.initiative_active = False
+        self.initiative_task = None
         # Timer de turno (30s): tarefa asyncio + token p/ descartar timers velhos.
         self.TURN_LIMIT_S = 30
         self.turn_timer_task = None
@@ -4901,7 +5044,8 @@ class GameRoom:
         return False
 
     def _resolver_dano_ataque_basico(self, p, target, crit, roll, forca_critico=False,
-                                       surv_mod=0, cancao_dano=0, gl_dano=0, bonus_extra=0):
+                                       surv_mod=0, cancao_dano=0, gl_dano=0, bonus_extra=0,
+                                       target_pos=None):
         """Rola e computa o dano físico de um ataque básico (arma ou desarmado)
         que JÁ acertou — reaproveitado pelo hit normal de handle_attack e pelo
         reroll da Sorte. `forca_critico` é quem decide se um natural 20 triplica
@@ -4931,7 +5075,7 @@ class GameRoom:
                       + self._mod_magia(p, "dano") + self._tecnica_bonus_dano(p)
                       + bonus_extra + weapon.get("dmg_bonus", 0)
                       + p.get("skill_bonus_dano", 0) - self._corrosao_arma_pen(p))
-            dmg = self._apply_damage_types(dmg, [DMG_PHYSICAL], target, weapon)
+            dmg = self._apply_damage_types(dmg, [DMG_PHYSICAL], target, weapon, p.get("pos"), target_pos)
             weapon_name = weapon.get("name", "arma")
             sb = f"+{stat_bonus}" if stat_bonus >= 0 else str(stat_bonus)
             dmg_detail = f"[{die_str}={raw_dmg}{sb}]"
@@ -4944,6 +5088,7 @@ class GameRoom:
                 dmg *= 3 if (forca_critico and roll == 20) else 2
             dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano + self._mod_magia(p, "dano")
                       + self._tecnica_bonus_dano(p))
+            dmg = self._apply_damage_types(dmg, [DMG_PHYSICAL], target, None, p.get("pos"), target_pos)
             weapon_name = "soco"
             sb = f"+{str_bonus}" if str_bonus >= 0 else str(str_bonus)
             dmg_detail = f"[{base}{sb}]"
@@ -5544,6 +5689,9 @@ class GameRoom:
                 "item_slot": slot_disp, "effect": "def_", "value": ac_bonus,
                 "buy_price": price,
             }
+            if kind == "armor":
+                gear_item["armor_category"] = item.get("armor_category")
+                gear_item["corrosion_materials"] = list(item.get("corrosion_materials", []))
             res = self._route_acquired_item(p, gear_item)
             if res == "full":
                 p["gold"] += price
@@ -5809,7 +5957,7 @@ class GameRoom:
                 "facing": list(d.get("facing") or [0, 1]),
                 "loot": None,
                 "tem_loot": False,
-                "image": (d.get("image") if isinstance(d.get("image"), str) else None),
+                "image": (d.get("image") if isinstance(d.get("image"), str) else meta.get("image")),
             }
             loot = d.get("loot")
             if loot and meta["loot_capaz"]:
@@ -5938,7 +6086,7 @@ class GameRoom:
                 ox, oy = offsets[i % len(offsets)]
                 self.players[pid2]["pos"] = [entrance["cx"] + ox, entrance["cy"] + oy]
             self.players[pid2].pop("facing", None)
-            self.players[pid2]["moves_left"]       = self.players[pid2]["spd"]
+            self.players[pid2]["moves_left"]       = self._water_turn_moves(self.players[pid2], self.players[pid2]["spd"])
             self.players[pid2]["action_done"]      = False
             self.players[pid2]["bonus_action_used"] = False
             if nova:
@@ -5975,19 +6123,144 @@ class GameRoom:
         # Reveal entrance (room + 1-tile border so surrounding walls are visible)
         self._reveal_room(entrance)
 
+        self.initiative_active = True
+        self._rebuild_initiative()
         await self.broadcast({"type": "enter_dungeon"})
-        self._iniciar_timer_turno()   # 30s do 1º turno (ou do turno atual ao retomar)
-        await self.push_state()
+        await self._activate_initiative_actor()
         if nova:
             await self.gm_say(gm("intro"))
-            await self.gm_say(f"Os aventureiros partem da cidade e adentram a masmorra. Turno 1 — é a vez de **{self.players[self.current_pid()]['name']}**.")
+            actor = self.current_actor()
+            nome = (self.players.get(actor["id"], {}).get("name") if actor and actor["kind"] == "player"
+                    else self.monsters.get(actor["id"], {}).get("name") if actor else "?")
+            await self.gm_say(f"Os aventureiros partem da cidade e adentram a masmorra. Rodada 1 — iniciativa de **{nome}**.")
         else:
-            await self.gm_say(f"🚪 Os aventureiros descem novamente as escadas — a masmorra permanece exatamente como a deixaram. É a vez de **{self.players[self.current_pid()]['name']}**.")
+            await self.gm_say("🚪 Os aventureiros descem novamente as escadas — a masmorra permanece exatamente como a deixaram.")
+
+    def _initiative_attribute(self, entity, key):
+        """Atributo efetivo para iniciativa. Modificadores temporários ou
+        permanentes podem ser aplicados pelos sistemas usando *_bonus/mod_*.
+        Alterar o próprio atributo também é refletido automaticamente."""
+        base = entity.get(key, 10)
+        try: base = int(base)
+        except (TypeError, ValueError): base = 10
+        aliases = (key, key.rstrip("_"))
+        extra = 0
+        for name in aliases:
+            for prefix in ("", "temp_", "mod_"):
+                val = entity.get(prefix + name + "_bonus", 0) if prefix != "mod_" else entity.get(prefix + name, 0)
+                try: extra += int(val or 0)
+                except (TypeError, ValueError): pass
+        return base + extra
+
+    def initiative_value(self, entity):
+        return mod(self._initiative_attribute(entity, "dex")) + mod(self._initiative_attribute(entity, "int_"))
+
+    def _rebuild_initiative(self):
+        """Monta a fila da rodada. Empate total alterna herói/monstro por rodada."""
+        entries = []
+        for seq, pid in enumerate(self.player_order):
+            p = self.players.get(pid)
+            if self._ativo(p):
+                entries.append({"kind":"player", "id":pid, "seq":seq, "initiative":self.initiative_value(p),
+                                "dex":self._initiative_attribute(p,"dex"), "int":self._initiative_attribute(p,"int_")})
+        offset = len(entries)
+        for seq, monster in enumerate(self.monsters.values()):
+            if monster.get("hp", 0) > 0:
+                entries.append({"kind":"monster", "id":monster["id"], "seq":offset+seq, "initiative":self.initiative_value(monster),
+                                "dex":self._initiative_attribute(monster,"dex"), "int":self._initiative_attribute(monster,"int_")})
+        hero_first = (self.round_num % 2 == 1)
+        def key(entry):
+            group = 0 if (entry["kind"] == "player") == hero_first else 1
+            return (-entry["initiative"], -entry["dex"], -entry["int"], group, entry["seq"])
+        self.initiative_order = sorted(entries, key=key)
+        self.initiative_index = 0
+
+    def current_actor(self):
+        if not self.initiative_active or not self.initiative_order:
+            return None
+        return self.initiative_order[self.initiative_index % len(self.initiative_order)]
 
     def current_pid(self):
+        actor = self.current_actor()
+        if actor:
+            return actor["id"] if actor["kind"] == "player" else None
         if not self.player_order:
             return None
         return self.player_order[self.turn_index % len(self.player_order)]
+
+    async def _start_initiative_player_turn(self, p):
+        """Preparação comum de um turno de herói iniciado pela fila individual."""
+        if p.get("class_id") == "bard" and p.get("cancao_ativa"):
+            await self._cobrar_manutencao_cancao(p)
+        if p.get("class_id") == "bard": await self._cobrar_manutencao_requiem(p)
+        if p.get("class_id") == "paladin": await self._processar_manutencao_richard(p)
+        if p.get("class_id") == "rogue": await self._processar_inicio_turno_luccas(p)
+        await self._processar_venenos_turno(p)
+        await self._processar_corrosao_viva_turno(p)
+        await self._processar_vinho_turno(p)
+        await self._processar_cerveja_turno(p)
+        await self._processar_buffs_magicos_turno(p)
+        if p.get("paralisado"): await self._processar_paralisacao_turno(p)
+        await self._processar_status_jogador_turno(p)
+        await self._processar_mods_magia_turno(p)
+        if p.get("preso"): await self._processar_escape_agarrar(p)
+        p["moves_left"] = self._water_turn_moves(p, self._moves_base(p))
+        if p.get("preso"):
+            captor = self.monsters.get(p.get("preso_por"))
+            if captor and captor["hp"] > 0: p["moves_left"] = 0
+        if p.get("velocidade_rodadas", 0) > 0: p["moves_left"] *= 2
+        if p.pop("derrubado_sem_movimento", False):
+            p["moves_left"] = 0
+            await self.gm_say(f"🦵 **{p['name']}** está derrubado e perde o movimento deste turno!")
+        if p.get("perde_turno"):
+            p["action_done"] = p["bonus_action_used"] = True; p["moves_left"] = 0
+        self._iniciar_timer_turno()
+
+    async def _activate_initiative_actor(self):
+        actor = self.current_actor()
+        if not actor:
+            return
+        if actor["kind"] == "player":
+            p = self.players.get(actor["id"])
+            if p and self._ativo(p):
+                await self._start_initiative_player_turn(p)
+                await self.gm_say(f"🎲 Turno de **{p['name']}** (Iniciativa {actor['initiative']}).")
+                await self.push_state()
+            else:
+                await self._advance_initiative()
+            return
+        self._cancelar_timer_turno()
+        await self.push_state()
+        async def monster_step(mid):
+            monster = self.monsters.get(mid)
+            if monster and monster.get("hp", 0) > 0:
+                await self.gm_phase(monster)
+            await self._advance_initiative()
+        self.initiative_task = asyncio.create_task(monster_step(actor["id"]))
+
+    async def _advance_initiative(self):
+        if not self.initiative_active:
+            return
+        self.initiative_index += 1
+        if self.initiative_index >= len(self.initiative_order):
+            self.round_num += 1
+            self.magic_reveal = {k:v for k,v in self.magic_reveal.items() if v > self.round_num}
+            await self._processar_efeitos_armadilha_turno()
+            await self._processar_em_chamas_turno()
+            await self._processar_acido_residual_turno()
+            await self._processar_zonas_turno()
+            await self._aplicar_exaustao_rodada()
+            self._rebuild_initiative()
+        # mortos/desconectados podem ter ficado na lista desta rodada.
+        attempts = 0
+        while self.initiative_order and attempts < len(self.initiative_order):
+            a = self.current_actor()
+            if a["kind"] == "player":
+                if self._ativo(self.players.get(a["id"])): break
+            elif self.monsters.get(a["id"], {}).get("hp", 0) > 0:
+                break
+            self.initiative_index = (self.initiative_index + 1) % len(self.initiative_order); attempts += 1
+        await self._activate_initiative_actor()
 
     def _ativo(self, p):
         """Jogador ativo no jogo: vivo E conectado. Desconectados saem da
@@ -6059,7 +6332,7 @@ class GameRoom:
         pid = p["id"]
         p["ultimo_esforco_ativo"] = True
         p["ultimo_esforco_turnos_restantes"] = 2
-        p["moves_left"] = p.get("spd", 0)
+        p["moves_left"] = self._water_turn_moves(p, p.get("spd", 0))
         p["action_done"] = False
         self.last_stand_pid = pid
         self.last_stand_event = asyncio.Event()
@@ -6077,7 +6350,7 @@ class GameRoom:
         else:
             p["ultimo_esforco_turnos_restantes"] -= 1
         if p["ultimo_esforco_turnos_restantes"] > 0:
-            p["moves_left"] = p.get("spd", 0)
+            p["moves_left"] = self._water_turn_moves(p, p.get("spd", 0))
             p["action_done"] = False
             await self.gm_say(f"⚔️ **{p['name']}** continua o Último Esforço — mais um turno!")
             await self.push_state()
@@ -6261,12 +6534,43 @@ class GameRoom:
         return False
 
     def _get_raio_visao(self, p):
-        """Raio (Chebyshev) de revelação da névoa para um jogador. Base 3;
-        somado ao bônus de Visão do Guerreiro da Luz (Richard) quando ativo."""
-        raio_base = 3
+        """Raio (Chebyshev) de revelação da névoa para um herói.
+
+        A base é 3 (4 para o Guerreiro) e recebe metade, arredondada para
+        baixo, da soma dos modificadores atuais de INT e DES. Assim, doenças
+        ou quaisquer outras alterações nesses atributos afetam a visão sem
+        precisarem gravar um bônus separado. O Guerreiro da Luz continua
+        sendo somado por último, quando ativo.
+        """
+        raio_base = 4 if p.get("class_id") == "warrior" else 3
+        bonus_atributos = (mod(p.get("int_", 10)) + mod(p.get("dex", 10))) // 2
+        bonus_luz = 0
         if p.get("class_id") == "paladin" and p.get("guerreiro_luz_ativo"):
-            return raio_base + p.get("guerreiro_luz_bonus", {}).get("visao", 0)
-        return raio_base
+            bonus_luz = p.get("guerreiro_luz_bonus", {}).get("visao", 0)
+        return max(0, raio_base + bonus_atributos + bonus_luz)
+
+    def _get_raio_visao_monstro(self, m):
+        """Raio de visão de um monstro: base editável + modificadores INT/DES."""
+        base = max(0, int(m.get("vision_base", 3)))
+        bonus_atributos = (mod(m.get("int_", 10)) + mod(m.get("dex", 10))) // 2
+        return max(0, base + bonus_atributos)
+
+    def _monstro_enxerga_alvo(self, m, target_obj):
+        """Determina se o alvo está no raio e na linha de visão do monstro."""
+        alvo = target_obj.get("obj") if isinstance(target_obj, dict) else None
+        if not alvo or not alvo.get("pos"):
+            return False
+        if max(abs(m["pos"][0] - alvo["pos"][0]), abs(m["pos"][1] - alvo["pos"][1])) > self._get_raio_visao_monstro(m):
+            return False
+        escuro = bool(m.get("visao_escuro"))
+        if not self._tem_linha_de_visao(m["pos"], alvo["pos"], ignorar_objetos=escuro):
+            return False
+        # Visão comum é bloqueada por objetos altos; a visão no escuro ignora
+        # esses objetos e materiais opacos, mas nunca atravessa paredes/portas.
+        return escuro or not self._tall_oclui_caminho(m["pos"][0], m["pos"][1], alvo["pos"][0], alvo["pos"][1])
+
+    def _alvos_visiveis_para_monstro(self, m, targets):
+        return [target for target in targets if self._monstro_enxerga_alvo(m, target)]
 
     # ── turn actions ───────────────────────────────────────────────────────
 
@@ -6334,6 +6638,7 @@ class GameRoom:
 
         p["pos"] = [nx, ny]
         p["facing"] = [dx, dy]
+        self._apply_water_entry_penalty(p, nx, ny)
         p["moves_left"] -= 1
         # Caminhar custa -1 sede UMA vez por turno (na 1ª casa andada), não por casa.
         if not p.get("moved_this_turn"):
@@ -6455,7 +6760,7 @@ class GameRoom:
         dy = abs(pos_a[1] - pos_b[1])
         return (dx == 1 and dy == 0) or (dx == 0 and dy == 1)
 
-    def _tem_linha_de_visao(self, pos_a, pos_b):
+    def _tem_linha_de_visao(self, pos_a, pos_b, ignorar_objetos=False):
         """Linha de visão entre dois tiles: True se NENHUMA parede intercepta a
         linha reta entre os centros (Bresenham supercover — visita todos os
         tiles que a linha toca, sem deixar 'frestas' diagonais). Endpoints não
@@ -6484,9 +6789,13 @@ class GameRoom:
                 # Se qualquer uma for parede, não existe fresta diagonal: bloqueia.
                 cx1, cy1 = x + sx, y
                 cx2, cy2 = x, y + sy
-                if self._blocks_tile(cx1, cy1):
-                    return False
-                if self._blocks_tile(cx2, cy2):
+                if ignorar_objetos:
+                    bloqueia = lambda cx, cy: (not (0 <= cx < self.map_w and 0 <= cy < self.map_h)
+                                                or self.tiles[cy][cx] == WALL
+                                                or self._is_closed_door(cx, cy))
+                else:
+                    bloqueia = self._blocks_tile
+                if bloqueia(cx1, cy1) or bloqueia(cx2, cy2):
                     return False
                 x += sx; ix += 1
                 y += sy; iy += 1
@@ -6495,7 +6804,7 @@ class GameRoom:
             if not (0 <= x < self.map_w and 0 <= y < self.map_h):
                 return False
             if (self.tiles[y][x] == WALL or self._is_closed_door(x, y)
-                    or (x, y) in self._mat_oclui_tiles):
+                    or (not ignorar_objetos and (x, y) in self._mat_oclui_tiles)):
                 return False
         return True
 
@@ -6563,12 +6872,64 @@ class GameRoom:
     def _desarme_bonus(self, p):
         return 2 if (tem_espec(p, "ladino_desarme_2") or tem_espec(p, "ladino_desarme_3")) else 0
 
-    def _veneno_rapido_max_hits(self, p):
-        """Golpes que o veneno melee dura (1 base / 2 com ladino_veneno_2)."""
-        return 2 if tem_espec(p, "ladino_veneno_2") else 1
+    def _weapon_poison_slots(self, p):
+        """Retorna as cargas da arma principal equipada.
 
-    def _veneno_rapido_2_slots(self, p):
-        return tem_espec(p, "ladino_veneno_3")
+        Elas vivem no item da arma, para acompanhá-lo ao trocar/desequipar. O
+        pequeno bloco de migração conserva venenos de partidas salvas antes
+        desta regra, que os armazenavam diretamente no jogador.
+        """
+        weapon = p.get("weapon") or {}
+        gear_weapon = (p.get("gear") or {}).get("weapon")
+        # O item equipado é a fonte de verdade. A cópia p["weapon"] existe
+        # apenas para os cálculos de combate; nunca pode fazer uma carga de uma
+        # arma antiga "vazar" para a arma que tomou seu lugar no slot.
+        slots = gear_weapon.get("poison_slots") if isinstance(gear_weapon, dict) else None
+        if not isinstance(slots, list):
+            slots = weapon.get("poison_slots")
+        if not isinstance(slots, list):
+            legacy_id = p.get("weapon_poison")
+            legacy_hits = max(0, int(p.get("weapon_poison_hits", 0) or 0))
+            slots = [legacy_id] * legacy_hits if legacy_id in VENENOS else []
+            # O modelo antigo permitia dois venenos somente ao ladino. Agora a
+            # miniatura física da arma aceita no máximo um marcador corpo a corpo.
+            p.pop("weapon_poison", None)
+            p.pop("weapon_poison_hits", None)
+            p.pop("weapon_poison_2", None)
+            p.pop("weapon_poison_2_hits", None)
+            self._set_weapon_poison_slots(p, slots)
+        active_weapon_id = (gear_weapon or weapon).get("id", "")
+        capacity = VENENO_CARGAS if active_weapon_id in RANGED_AMMO else 1
+        valid_slots = [veneno_id for veneno_id in slots if veneno_id in VENENOS][:capacity]
+        if valid_slots != slots:
+            self._set_weapon_poison_slots(p, valid_slots)
+        return valid_slots
+
+    def _set_weapon_poison_slots(self, p, slots):
+        """Grava as cargas tanto na cópia de combate quanto no item equipado."""
+        weapon = p.get("weapon")
+        gear_weapon = (p.get("gear") or {}).get("weapon")
+        active_weapon_id = (gear_weapon or weapon or {}).get("id", "")
+        capacity = VENENO_CARGAS if active_weapon_id in RANGED_AMMO else 1
+        slots = [veneno_id for veneno_id in slots if veneno_id in VENENOS][:capacity]
+        if isinstance(gear_weapon, dict):
+            gear_weapon["poison_slots"] = list(slots)
+        # Só espelha na cópia de combate se ela representa a mesma arma. Isso
+        # protege a arma recém-equipada de uma cópia antiga durante uma troca.
+        if isinstance(weapon, dict) and (
+                not isinstance(gear_weapon, dict) or weapon.get("id") == gear_weapon.get("id")):
+            weapon["poison_slots"] = list(slots)
+
+    def _aplicar_veneno_na_arma(self, p, veneno_id):
+        """Unta a arma equipada, substituindo suas cargas atuais.
+
+        Arcos e bestas recebem três projéteis envenenados; toda arma corpo a
+        corpo tem apenas um marcador, gasto somente quando o golpe acertar.
+        """
+        is_ranged = (p.get("weapon") or {}).get("id", "") in RANGED_AMMO
+        cargas = VENENO_CARGAS if is_ranged else 1
+        self._set_weapon_poison_slots(p, [veneno_id] * cargas)
+        return is_ranged, cargas
 
     def _esconder_bonus(self, p):
         return 2 if (tem_espec(p, "ladino_esconder_2") or tem_espec(p, "ladino_esconder_3")) else 0
@@ -6688,7 +7049,7 @@ class GameRoom:
             await self.gm_say(f"🌀 **{p['name']}** ganha +2 de CA por 1 rodada ao se revelar!")
         return True
 
-    async def handle_attack(self, pid, target_id, buffs=None):
+    async def handle_attack(self, pid, target_id, buffs=None, target_pos=None):
         if not self._is_turn(pid): return
         p = self.players[pid]
         if not p["alive"] or self._acao_bloqueada(p): return
@@ -6709,6 +7070,7 @@ class GameRoom:
 
         if target_id in self.monsters:
             target = self.monsters[target_id]
+            target_tile = self._target_tile(target, target_pos)
 
             # ── Range check: ranged weapons use Chebyshev distance; melee cardinal-only ──
             weapon_here = p.get("weapon")
@@ -6852,6 +7214,7 @@ class GameRoom:
                              - self._pressao_ca_pen(target)                 # Pressão Constante: -2 CA
                              - self._furia_cega_ca_pen(target)
                              - self._lento_previsivel_ca_pen(target))       # Ogro: -2 CA após errar
+            eff_target_ac = self._ponto_vulneravel_ac(target, target_tile, eff_target_ac)
             # Vantagem (Invisibilidade ou Visão no Escuro na escuridão) vs Desvantagem
             # (atacar às cegas na escuridão). Vantagem+desvantagem se anulam.
             esc = self._verificar_escuridao(p, target)
@@ -6909,12 +7272,14 @@ class GameRoom:
                         await self.gm_say(f"🏹 **{p['name']}** usou o último projétil!")
 
             # ── Consumo de veneno (ranged: por disparo; melee: só no acerto) ──
-            _ranged_poison_vid = None   # veneno ativo neste disparo (ranged)
-            if _valid_ammo and p.get("weapon_poison"):
-                _ranged_poison_vid = p["weapon_poison"]
-                p["weapon_poison_hits"] = p.get("weapon_poison_hits", 1) - 1
-                if p["weapon_poison_hits"] <= 0:
-                    p["weapon_poison"] = None
+            # A carga é da arma equipada. Assim, trocar de arma não transfere o
+            # veneno e guardar a arma mantém exatamente suas cargas restantes.
+            _ranged_poison_vid = None
+            if _valid_ammo:
+                _poison_slots = self._weapon_poison_slots(p)
+                if _poison_slots:
+                    _ranged_poison_vid = _poison_slots.pop(0)
+                    self._set_weapon_poison_slots(p, _poison_slots)
 
             if p.get("invisivel_magico"):
                 p["invisivel_magico"] = False; p.pop("invisivel_magico_rodadas", None)
@@ -6937,7 +7302,7 @@ class GameRoom:
                 dmg, weapon_name, dmg_detail, raw_dmg, die_str = self._resolver_dano_ataque_basico(
                     p, target, crit, roll, forca_critico=_forca_critico,
                     surv_mod=surv_mod, cancao_dano=cancao_dano, gl_dano=gl_dano,
-                    bonus_extra=_bonus_extra)
+                    bonus_extra=_bonus_extra, target_pos=target_tile)
                 if die_str:
                     die_type = "d" + die_str.split("d")[1]
                     await self.broadcast({"type": "dice_roll", "die": die_type,
@@ -6977,6 +7342,15 @@ class GameRoom:
                     xdmg = self._apply_damage_types(xdmg, _ammo_extra_types, target)
                     target["hp"] = max(0, target["hp"] - xdmg)
                     await self.gm_say(f"🔥 Projétil incendiário: +{xdmg} de dano de fogo!")
+                # Corpo a corpo: gastar o único marcador em qualquer acerto,
+                # inclusive se este golpe já derrotar o alvo. O efeito do veneno
+                # só precisa ser aplicado enquanto o alvo ainda está vivo.
+                _melee_poison_vid = None
+                if not _valid_ammo:
+                    _poison_slots = self._weapon_poison_slots(p)
+                    if _poison_slots:
+                        _melee_poison_vid = _poison_slots.pop(0)
+                        self._set_weapon_poison_slots(p, _poison_slots)
                 if target["hp"] <= 0:
                     await self._monster_dies(target, pid)
                 else:
@@ -6986,27 +7360,18 @@ class GameRoom:
                     if _ranged_poison_vid:
                         # Ranged: carga já consumida antes do roll; aplica efeito no acerto.
                         await self._aplicar_veneno(target, _ranged_poison_vid, fonte="ataque")
-                    elif p.get("weapon_poison"):
-                        # Corpo a corpo: 1 carga, consumida só no golpe certeiro.
-                        await self._aplicar_veneno(target, p["weapon_poison"], fonte="ataque")
-                        p["weapon_poison_hits"] = p.get("weapon_poison_hits", 1) - 1
-                        if p["weapon_poison_hits"] <= 0:
-                            p["weapon_poison"] = None
-                            await self.gm_say(f"🧴 O veneno da arma de **{p['name']}** acabou.")
-                    if p.get("weapon_poison_2"):
-                        await self._aplicar_veneno(target, p["weapon_poison_2"], fonte="ataque")
-                        p["weapon_poison_2_hits"] = p.get("weapon_poison_2_hits", 1) - 1
-                        if p["weapon_poison_2_hits"] <= 0:
-                            p["weapon_poison_2"] = None
-                            await self.gm_say(f"🧴 O 2º veneno da arma de **{p['name']}** acabou.")
+                    elif _melee_poison_vid:
+                        await self._aplicar_veneno(target, _melee_poison_vid, fonte="ataque")
                 await self._reacoes_instrumento_apos_ataque(p, target, dmg)
+                if _melee_poison_vid and not self._weapon_poison_slots(p):
+                    await self.gm_say(f"🧴 O veneno da arma de **{p['name']}** acabou.")
             else:
                 await self.gm_say(
                     f"⚔️ **{p['name']}** ataca **{target['name']}**"
                     f" (d20={roll}+{eff_atk}={total} vs CA {target['ac']}): **ERROU!**")
 
             # Fim de veneno ranged: anuncia ao esgotar cargas (mesmo em erros).
-            if _ranged_poison_vid and p.get("weapon_poison") is None:
+            if _ranged_poison_vid and not self._weapon_poison_slots(p):
                 await self.gm_say(f"🧴 O veneno do projétil de **{p['name']}** acabou.")
 
             # Atacar quebra a invisibilidade das sombras (o furtivo já foi aplicado).
@@ -7227,19 +7592,20 @@ class GameRoom:
 
         alvo_tipo = defn.get("alvo")
         if alvo_tipo == "ataque_alvo":
-            await self._throw_item_alvo(p, defn, item, data.get("target_id"))
+            await self._throw_item_alvo(p, defn, item, data.get("target_id"), data.get("target_pos"))
         elif alvo_tipo == "area":
             await self._throw_item_area(p, defn, item, data.get("tx"), data.get("ty"))
         else:
             await self.send_to(pid, {"type": "error", "msg": "Item não arremessável."}); return
 
-    async def _throw_item_alvo(self, p, defn, item, target_id):
+    async def _throw_item_alvo(self, p, defn, item, target_id, target_pos=None):
         """Arremesso single-target: teste de ataque por DES vs CA (espelha
         _executar_arremesso). Consome o item em acerto E erro."""
         pid = p["id"]
         if target_id not in self.monsters:
             await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
         target = self.monsters[target_id]
+        target_tile = self._target_tile(target, target_pos)
         if target.get("hp", 0) <= 0:
             await self.send_to(pid, {"type": "error", "msg": "Alvo já está morto."}); return
 
@@ -7257,7 +7623,8 @@ class GameRoom:
         roll = random.randint(1, 20)
         total = roll + p["atk_bonus"]
         nat1 = (roll == 1); crit = (roll == 20)
-        hit = (not nat1) and (crit or total >= target["ac"])
+        target_ac = self._ponto_vulneravel_ac(target, target_tile, target["ac"])
+        hit = (not nat1) and (crit or total >= target_ac)
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
                               "label": f"Arremesso ({defn['name']})", "hit": hit, "crit": crit})
 
@@ -7835,9 +8202,13 @@ class GameRoom:
                         if self._tile_livre_para_animado(nx, ny, a["id"]):
                             frm = list(a["pos"])
                             a["pos"] = [nx, ny]; moved = True
+                            self._apply_water_entry_penalty(a, nx, ny)
+                            a["moves_left"] = max(0, a.get("moves_left", 0) - 1)
                             await self._emit_entity_step(a["id"], frm, a["pos"], "animado")
                             break
                     if not moved:
+                        break
+                    if a.get("moves_left", 0) <= 0:
                         break
 
             # Ataca se no alcance
@@ -7890,6 +8261,7 @@ class GameRoom:
         if not self._tile_livre_para_animado(nx, ny, a["id"]):
             await self.send_to(pid, {"type": "error", "msg": "Caminho bloqueado para o servo."}); return
         a["pos"] = [nx, ny]
+        self._apply_water_entry_penalty(a, nx, ny)
         a["moves_left"] -= 1
         await self.push_state()
 
@@ -9267,14 +9639,18 @@ class GameRoom:
         o equipar de handle_equip_from_bag: aplica efeitos de gear e, para arma,
         sincroniza a cópia de combate p['weapon']."""
         cat = self._slot_category_for_item(item)
+        if cat == "weapon":
+            item.setdefault("poison_slots", [])
         emoji = {"weapon": "⚔️", "armor": "🛡️", "off_hand": "🛡️",
                  "head": "⛑️", "boots": "👢", "ring": "💍", "item": "🎒"}.get(cat, "🎒")
         self._equip_into_slot(p, item, slot_key, emoji)
+        self._aplicar_corrosao_inicial(p, item, cat)
         if cat == "weapon" and item.get("die") and item.get("stat"):
             combat_fields = ("id", "name", "die", "stat", "range", "reach",
                              "finesse", "throw_range", "categoria", "two_handed",
                              "dmg_bonus", "corrosao_resistente")
             p["weapon"] = {k: item[k] for k in combat_fields if k in item}
+            p["weapon"]["poison_slots"] = list(item.get("poison_slots", []))
 
     @staticmethod
     def _slot_category_for_item(item):
@@ -9399,6 +9775,7 @@ class GameRoom:
         p["bag"].pop(slot_index)
 
         if cat == "weapon":
+            item.setdefault("poison_slots", [])
             log = self._equip_into_slot(p, item, "weapon", "⚔️")
             # Sincroniza p["weapon"] (usado pelo combate) se o item tiver die/stat
             if item.get("die") and item.get("stat"):
@@ -9406,6 +9783,7 @@ class GameRoom:
                                  "finesse", "throw_range", "categoria", "two_handed",
                                  "dmg_bonus", "corrosao_resistente")
                 p["weapon"] = {k: item[k] for k in combat_fields if k in item}
+                p["weapon"]["poison_slots"] = list(item.get("poison_slots", []))
         elif cat == "off_hand":
             # Munição: empilha no mesmo tipo; senão substitui o off_hand
             if item.get("effect") == "ammo":
@@ -9428,6 +9806,7 @@ class GameRoom:
         else:                   log = self._equip_into_pair(p, item, ("item1","item2"), "🎒")
 
         if log:
+            self._aplicar_corrosao_inicial(p, item, cat)
             await self.gm_say(log)
         return True
 
@@ -10059,8 +10438,8 @@ class GameRoom:
 
         # ── Visão no Escuro: concede a um aliado (ou ao caster) visão noturna ───
         elif mid == "visao_escuro":
-            alvo = self.players.get(data.get("target_id")) or caster
-            if not alvo.get("alive"):
+            alvo = self._alvo_entidade(data.get("target_id")) or caster
+            if not self._entidade_viva(alvo):
                 await self.send_to(caster["id"], {"type": "error", "msg": "Aliado inválido."}); return
             dur = self._rolar_dado(magia.get("duracao", "1d6+2")) + dur_bonus
             alvo["visao_escuro"]         = True
@@ -10109,8 +10488,8 @@ class GameRoom:
     # ── Batch 1: utilidades e dano direto ───────────────────────────────────────
     async def _executar_saciar(self, caster, magia, data):
         """Toque: +fome/+sede num aliado adjacente."""
-        alvo = self.players.get((data or {}).get("target_id"))
-        if not alvo or not alvo["alive"]:
+        alvo = self._alvo_entidade((data or {}).get("target_id"))
+        if not self._entidade_viva(alvo):
             await self.send_to(caster["id"], {"type": "error", "msg": "Aliado inválido."}); return
         dist = max(abs(caster["pos"][0]-alvo["pos"][0]), abs(caster["pos"][1]-alvo["pos"][1]))
         if dist > magia.get("alcance", 1):
@@ -10261,8 +10640,8 @@ class GameRoom:
 
     async def _executar_abencoar_arma(self, caster, magia, data, dur_bonus):
         """Aliado à distância: +1 ataque e dano na arma por algumas rodadas."""
-        alvo = self.players.get((data or {}).get("target_id"))
-        if not alvo or not alvo["alive"]:
+        alvo = self._alvo_entidade((data or {}).get("target_id"))
+        if not self._entidade_viva(alvo):
             await self.send_to(caster["id"], {"type": "error", "msg": "Aliado inválido."}); return
         dist = max(abs(caster["pos"][0]-alvo["pos"][0]), abs(caster["pos"][1]-alvo["pos"][1]))
         if dist > magia.get("alcance", 6):
@@ -10458,6 +10837,15 @@ class GameRoom:
     def _alvo_monstro(self, alvo_id):
         return next((m for m in self.monsters.values() if m.get("id") == alvo_id), None)
 
+    def _alvo_entidade(self, alvo_id):
+        """Localiza herói ou monstro; usado pelas magias que podem ser conjuradas
+        pelos dois lados do combate."""
+        return self.players.get(alvo_id) or self._alvo_monstro(alvo_id)
+
+    @staticmethod
+    def _entidade_viva(alvo):
+        return bool(alvo) and (alvo.get("alive", alvo.get("hp", 0) > 0)) and alvo.get("hp", 0) > 0
+
     async def _checar_alcance_centro(self, caster, magia, tx, ty):
         """Valida o alcance do conjurador até o CENTRO de uma magia de área.
         Retorna False (e avisa o cliente) se estiver além do `alcance` da magia.
@@ -10499,8 +10887,8 @@ class GameRoom:
 
     async def _executar_comando(self, caster, magia, data):
         bonus_int = mod(caster.get("int_", 10))
-        alvo = self._alvo_monstro((data or {}).get("target_id"))
-        if not alvo or alvo["hp"] <= 0:
+        alvo = self._alvo_entidade((data or {}).get("target_id"))
+        if not self._entidade_viva(alvo):
             await self.send_to(caster["id"], {"type": "error", "msg": "Alvo inválido."}); return
         dist = max(abs(caster["pos"][0]-alvo["pos"][0]), abs(caster["pos"][1]-alvo["pos"][1]))
         if dist > magia.get("alcance", 4):
@@ -10514,8 +10902,8 @@ class GameRoom:
 
     async def _executar_dominar_mente(self, caster, magia, data, dur_bonus):
         bonus_int = mod(caster.get("int_", 10))
-        alvo = self._alvo_monstro((data or {}).get("target_id"))
-        if not alvo or alvo["hp"] <= 0:
+        alvo = self._alvo_entidade((data or {}).get("target_id"))
+        if not self._entidade_viva(alvo):
             await self.send_to(caster["id"], {"type": "error", "msg": "Alvo inválido."}); return
         dist = max(abs(caster["pos"][0]-alvo["pos"][0]), abs(caster["pos"][1]-alvo["pos"][1]))
         if dist > magia.get("alcance", 5):
@@ -11733,6 +12121,48 @@ class GameRoom:
                    + self._pen(p, "movimento") + self._doenca_mov_pen(p)
                    + self._grito_mov_bonus(p))
 
+    def _is_water_tile(self, x, y):
+        """Água é piso atravessável; o efeito é de movimento, não de bloqueio."""
+        return getattr(self, "materiais", {}).get((x, y)) == "agua"
+
+    def _armor_category_of(self, criatura):
+        armor = (criatura.get("gear") or {}).get("armor") or {}
+        category = armor.get("armor_category")
+        if category:
+            return category
+        # Saves/jogos anteriores guardavam só o id da armadura. Consulta o
+        # catálogo para que eles também recebam a regra nova sem migração.
+        return ARMOR_CATALOG.get(armor.get("id"), {}).get("armor_category")
+
+    def _water_penalty(self, criatura):
+        category = self._armor_category_of(criatura)
+        if category == "pesada":
+            return None                 # regra especial: somente 1 casa/rodada
+        return {"leve": 2, "media": 3}.get(category, 1)
+
+    def _water_turn_moves(self, criatura, base_moves):
+        """Orçamento inicial do turno em água. Marca a penalidade para ela não
+        ser cobrada de novo ao continuar na mesma água."""
+        criatura.pop("_water_penalty_applied", None)
+        pos = criatura.get("pos") or [-1, -1]
+        if not self._is_water_tile(pos[0], pos[1]):
+            return max(0, base_moves)
+        criatura["_water_penalty_applied"] = True
+        penalty = self._water_penalty(criatura)
+        return 1 if penalty is None else max(0, base_moves - penalty)
+
+    def _apply_water_entry_penalty(self, criatura, nx, ny):
+        """Aplica uma vez a perda de movimento quando alguém entra em água no
+        meio do turno. A casa de entrada ainda custa o movimento normal."""
+        if not self._is_water_tile(nx, ny) or criatura.get("_water_penalty_applied"):
+            return
+        criatura["_water_penalty_applied"] = True
+        penalty = self._water_penalty(criatura)
+        if penalty is None:
+            criatura["moves_left"] = min(criatura.get("moves_left", 0), 1)
+        else:
+            criatura["moves_left"] = max(0, criatura.get("moves_left", 0) - penalty)
+
     def _veneno_save_bonus(self, alvo, tipo_save):
         """Bônus de save. Jogador e monstros novos usam saves individuais;
         monstros legados derivam do tier."""
@@ -11756,7 +12186,10 @@ class GameRoom:
                  + self._alaude_runico_resist(alvo, tipo_save))
         d20   = min(random.randint(1, 20), random.randint(1, 20)) if desvantagem else random.randint(1, 20)
         total = d20 + bonus
-        return (total >= dificuldade), d20, bonus, total
+        passou = total >= dificuldade
+        if not passou and tipo_save == "reflexos" and alvo.get("type") == "grotao":
+            alvo["_grotao_reflexos_falhou"] = True
+        return passou, d20, bonus, total
 
     async def _aplicar_veneno(self, alvo, veneno_id, fonte="ataque"):
         """Aplica um veneno em qualquer alvo (jogador ou monstro)."""
@@ -11777,6 +12210,23 @@ class GameRoom:
         # o loop por rodada (dano + save que neutraliza), tratado em
         # _processar_venenos_turno. Registra o efeito e retorna.
         if veneno.get("operacao") == "dano":
+            # Os venenos compráveis de dano contínuo testam Fortitude uma única
+            # vez na aplicação. Diferem da Agonia Sufocante, que testa a cada
+            # rodada por ter save_neutraliza_por_rodada.
+            if veneno.get("save_aplicacao"):
+                _save_pen = sum(
+                    w.get("bonus_flat", 0) for w in alvo.get("weaknesses", [])
+                    if w.get("type") == "save_penalty" and w.get("save") == veneno.get("save", "fortitude")
+                )
+                save_ok, d20, sb, stot = self._testar_save(
+                    alvo, veneno.get("save", "fortitude"), veneno.get("dificuldade", 10), extra_mod=_save_pen)
+                sb_str = f"+{sb}" if sb >= 0 else str(sb)
+                await self.gm_say(
+                    f"🎲 **{alvo_nome}** — Fortitude: d20({d20}){sb_str}={stot} vs CD "
+                    f"{veneno.get('dificuldade', 10)} → {'resistiu' if save_ok else 'falhou'}.")
+                if save_ok and veneno.get("anula"):
+                    await self.gm_say(f"☑️ **{alvo_nome}** resistiu ao **{nome}**!")
+                    return
             alvo.setdefault("efeitos_veneno", [])
             dur = self._rolar_dado(veneno.get("duracao", "1d4"))
             if any(w.get("type") == "veneno_dobrado" for w in alvo.get("weaknesses", [])):
@@ -11788,9 +12238,13 @@ class GameRoom:
                 "dificuldade": veneno.get("dificuldade", 10),
                 "save_neutraliza_por_rodada": bool(veneno.get("save_neutraliza_por_rodada")),
             })
+            dano_txt = str(veneno.get("dano", "1d4"))
+            regra_save = (f"Fortitude CD {veneno.get('dificuldade',10)} já foi testada e anula"
+                          if veneno.get("save_aplicacao")
+                          else f"Fortitude CD {veneno.get('dificuldade',10)} neutraliza")
             await self.gm_say(
-                f"💀 **{alvo_nome}** é envenenado por **{nome}** — 1d4 de dano por "
-                f"rodada (até {dur} rodada(s); Fortitude CD {veneno.get('dificuldade',10)} neutraliza)!")
+                f"💀 **{alvo_nome}** é envenenado por **{nome}** — {dano_txt} de dano por "
+                f"rodada (até {dur} rodada(s); {regra_save})!")
             return
 
         # Fraqueza de criatura a venenos (ex: lobos/cães sofrem -2 Fort vs veneno)
@@ -12485,15 +12939,7 @@ class GameRoom:
         vid = frasco["veneno_id"]
         p["bag"].remove(frasco)
         p["sede"] = max(0, p["sede"] - custo_sede)
-        _w_id = (p.get("weapon") or {}).get("id", "")
-        _is_ranged = _w_id in RANGED_AMMO
-        cargas = VENENO_CARGAS if _is_ranged else self._veneno_rapido_max_hits(p)
-        if not _is_ranged and p.get("weapon_poison") and self._veneno_rapido_2_slots(p) and not p.get("weapon_poison_2"):
-            p["weapon_poison_2"]      = vid
-            p["weapon_poison_2_hits"] = cargas
-        else:
-            p["weapon_poison"]      = vid
-            p["weapon_poison_hits"] = cargas
+        _is_ranged, cargas = self._aplicar_veneno_na_arma(p, vid)
         desc_veneno = (f"os próximos {VENENO_CARGAS} disparos (acerto ou erro) transferem o veneno"
                        if _is_ranged
                        else "o próximo golpe certeiro envenena o alvo")
@@ -12664,11 +13110,7 @@ class GameRoom:
             vid = item.get("veneno_id")
             if vid not in VENENOS:
                 await self.send_to(pid, {"type": "error", "msg": "Veneno desconhecido."}); return
-            _w_id = (p.get("weapon") or {}).get("id", "")
-            _is_ranged = _w_id in RANGED_AMMO
-            cargas = VENENO_CARGAS if _is_ranged else 1
-            p["weapon_poison"]      = vid
-            p["weapon_poison_hits"] = cargas
+            _is_ranged, cargas = self._aplicar_veneno_na_arma(p, vid)
             desc = (f"{VENENO_CARGAS} disparos (acerto ou erro) envenenam o alvo"
                     if _is_ranged else "1 golpe certeiro envenena o alvo")
             await self.gm_say(
@@ -12939,7 +13381,7 @@ class GameRoom:
                 p["fome"] = max(0, p.get("fome", 10) - custo)
                 p["sede"] = max(0, p.get("sede", 10) - custo)
                 for a in animados_vivos:               # orçamento p/ a janela de controle
-                    a["moves_left"] = a.get("movimento", 3)
+                    a["moves_left"] = self._water_turn_moves(a, a.get("movimento", 3))
                     a["acted"] = False
                     # Sono/Lentidão em minions (de magias em área): expiram aqui.
                     for flag, rod in (("dormindo", "dormindo_rodadas"), ("lento", "lento_rodadas")):
@@ -12950,7 +13392,7 @@ class GameRoom:
                 plural = "s" if custo > 1 else ""
                 partes.append(f"{custo} animado{plural}")
             if controla_prisioneiro:
-                pr["moves_left"] = PRIS_MOVE
+                pr["moves_left"] = self._water_turn_moves(pr, PRIS_MOVE)
                 partes.append("o prisioneiro")
             msg = (f"💀 Turno de controle de **{p['name']}** ({' e '.join(partes)}) — "
                    f"mova e encerre o turno novamente.")
@@ -12961,7 +13403,7 @@ class GameRoom:
             return
         self.animados_phase_pid = None
 
-        p["moves_left"]        = p["spd"]
+        p["moves_left"]        = self._water_turn_moves(p, p["spd"])
         p["action_done"]       = False
         p["bonus_action_used"] = False
         p["instrumento_usado"] = False   # bardo: 1 instrumento tocado por turno
@@ -13006,6 +13448,12 @@ class GameRoom:
         if self.immune.get(pid, 0) > 0:
             self.immune[pid] -= 1
 
+        # Fila individual: após a limpeza normal do herói, passa ao próximo
+        # ator (herói ou monstro). O bloco legado abaixo fica como fallback.
+        if self.initiative_active:
+            await self._advance_initiative()
+            return
+
         # Advance turn
         n_jogadores = len(self.player_order)
         volta_antes = self.turn_index // n_jogadores   # número da "volta" atual
@@ -13035,7 +13483,7 @@ class GameRoom:
             await self._aplicar_exaustao_rodada()   # sempre, mesmo sem monstros
         else:
             next_p = self.players[self.current_pid()]
-            next_p["moves_left"] = next_p["spd"]
+            next_p["moves_left"] = self._water_turn_moves(next_p, next_p["spd"])
             if next_p.get("perde_turno"):
                 next_p["action_done"]       = True
                 next_p["bonus_action_used"] = True
@@ -13076,7 +13524,7 @@ class GameRoom:
         # Agarrar (crocodilo/cobra): tentativa de escape no início do turno.
         if cur_p.get("preso"):
             await self._processar_escape_agarrar(cur_p)
-        cur_p["moves_left"] = self._moves_base(cur_p)
+        cur_p["moves_left"] = self._water_turn_moves(cur_p, self._moves_base(cur_p))
         # Se ainda preso após a tentativa, bloqueia o movimento.
         if cur_p.get("preso"):
             captor = self.monsters.get(cur_p.get("preso_por"))
@@ -13364,12 +13812,88 @@ class GameRoom:
         p.pop("corrosao", None)
         p["corrosao_viva"] = []
 
-    def _apply_damage_types(self, raw_dmg, damage_types, target, weapon=None):
+    def _aplicar_corrosao_inicial(self, p, item, categoria):
+        """Transfere o desgaste de um item achado já corroído ao estado de combate."""
+        nivel = int(item.get("corrosao_inicial", 0) or 0)
+        if nivel <= 0:
+            return
+        c = self._corr(p)
+        if categoria == "armor":
+            c["armadura_lvl"] = max(c["armadura_lvl"], min(2, nivel))
+            c["armadura_com_ca"] = item.get("id") != "cloak"
+        elif categoria == "weapon":
+            c["arma_lvl"] = max(c["arma_lvl"], min(2, nivel))
+
+    def _ponto_vulneravel_atingido(self, target, target_pos):
+        """True quando a casa atingida é uma das casas vulneráveis da criatura."""
+        if not isinstance(target_pos, (list, tuple)) or len(target_pos) != 2:
+            return False
+        weak = next((w for w in target.get("weaknesses", [])
+                     if w.get("type") == "ponto_vulneravel"), None)
+        if not weak:
+            return False
+        body = self._monster_tiles(target)
+        w, h = target.get("size", [1, 1])
+        for item in weak.get("tiles", []):
+            if not isinstance(item, (list, tuple)) or len(item) != 2:
+                continue
+            dx, dy = int(item[0]), int(item[1])
+            if target.get("oriented"):
+                # Em retângulos orientados, [profundidade, faixa]; nos antigos
+                # 2×1, [profundidade, 0].
+                width = 1 if h == 1 else w
+                index = dx * width + dy
+                tile = body[index] if 0 <= index < len(body) else None
+            else:
+                tile = [target["pos"][0] + dx, target["pos"][1] + dy]
+            if tile and list(target_pos) == list(tile):
+                return True
+        return False
+
+    def _ponto_vulneravel_ac(self, target, target_pos, effective_ac):
+        """Reduz somente a armadura natural ao atacar uma casa vulnerável.
+
+        As coordenadas de ``tiles`` são relativas ao footprint: [0,0] é a
+        cabeça/âncora e, em criaturas orientadas, [1,0] é a casa traseira.
+        """
+        if not isinstance(target_pos, (list, tuple)) or len(target_pos) != 2:
+            return effective_ac
+        if self._ponto_vulneravel_atingido(target, target_pos):
+            return max(1, effective_ac - max(0, int(target.get("natural_armor", 0))))
+        return effective_ac
+
+    def _target_tile(self, target, requested):
+        """Normaliza uma casa clicada e garante que pertence ao corpo do alvo."""
+        if isinstance(requested, (list, tuple)) and len(requested) == 2:
+            try:
+                candidate = [int(requested[0]), int(requested[1])]
+            except (TypeError, ValueError):
+                candidate = None
+            if candidate in self._monster_tiles(target):
+                return candidate
+        return list(target["pos"])
+
+    def _apply_damage_types(self, raw_dmg, damage_types, target, weapon=None, attacker_pos=None, target_pos=None):
         """Aplica imunidades e fraquezas do alvo ao dano. Retorna dano ajustado."""
         for dtype in damage_types:
             if dtype in target.get("immunities", []):
                 return 0
         total = raw_dmg
+        # Resistências: redução fixa escalonável OU metade do dano. A redução
+        # acontece antes da vulnerabilidade, preservando a ordem previsível.
+        for resistance in target.get("resistances", []):
+            if resistance.get("type") not in damage_types:
+                continue
+            if (resistance.get("mode") != "half"
+                    and self._ponto_vulneravel_atingido(target, target_pos)):
+                continue
+            req_cat = resistance.get("categoria")
+            if req_cat and (weapon or {}).get("categoria") != req_cat:
+                continue
+            if resistance.get("mode") == "half":
+                total = (total + 1) // 2
+            else:
+                total -= max(0, int(resistance.get("reduction", 1)))
         for weakness in target.get("weaknesses", []):
             if weakness.get("type") not in damage_types:
                 continue
@@ -13384,6 +13908,8 @@ class GameRoom:
         # Resistência Morta do Zumbi (morte sagrada = destruição total, sem retorno).
         if not self._eh_jogador(target):
             target["_dano_sagrado_recente"] = (DMG_HOLY in damage_types)
+        if target.pop("_grotao_reflexos_falhou", False):
+            total += 1
         min_dmg = target.get("min_damage", 0)
         return max(min_dmg, total)
 
@@ -13423,13 +13949,20 @@ class GameRoom:
 
     def _monster_tiles_at(self, m, ax, ay, facing=None):
         """Footprint do monstro com a âncora em (ax,ay).
-        - ORIENTADO (`oriented`): ocupa 2 casas em linha — FRENTE (cabeça) = (ax,ay)
-          e TRÁS (cauda) = imediatamente atrás da cabeça (oposto ao facing). O
-          parâmetro `facing` sobrepõe o atual (usado ao avaliar uma virada).
+        - ORIENTADO (`oriented`): a âncora é a frente. Os modelos antigos 2×1
+          continuam como uma linha de duas casas; retângulos (ex.: Grotão 2×3)
+          estendem o comprimento para trás e a largura perpendicular ao facing.
+          O parâmetro `facing` sobrepõe o atual (usado ao avaliar uma virada).
         - Caso geral: bloco w×h a partir do canto (ax,ay)."""
         if m.get("oriented"):
             fx, fy = facing if facing is not None else self._monster_facing(m)
-            return [[ax, ay], [ax - fx, ay - fy]]
+            w, h = m.get("size", [2, 1])
+            # Compatibilidade: os orientados legados [2,1] significam 2 de
+            # comprimento e 1 de largura, não um bloco lateral de 2 casas.
+            width, length = (1, w) if h == 1 else (w, h)
+            px, py = -fy, fx
+            return [[ax - fx * depth + px * lane, ay - fy * depth + py * lane]
+                    for depth in range(length) for lane in range(width)]
         w, h = m.get("size", [1, 1])
         return [[ax + dx, ay + dy] for dx in range(w) for dy in range(h)]
 
@@ -13469,6 +14002,8 @@ class GameRoom:
         self._campfire_tiles = set()
         for d in getattr(self, "decorations", []):
             meta = DECOR_TYPES[d["type"]]
+            if meta["special"] == "wall":
+                continue
             for tx, ty in self._decor_tiles(d):
                 if not meta["pisavel"]:
                     self._decor_block_tiles.add((tx, ty))
@@ -13503,8 +14038,19 @@ class GameRoom:
 
     async def _commit_monster_step(self, m, nx, ny):
         """Move o monstro 1 passo e aplica efeitos de pisar (fogueira)."""
+        if "_water_moves_left" not in m:
+            m["_water_moves_left"] = self._water_turn_moves(m, m.get("movement", 4))
+        if m["_water_moves_left"] <= 0:
+            return False
         m["pos"] = [nx, ny]
+        # Monstros não usam armadura de corpo: em água sofrem a penalidade
+        # padrão de -1 movimento, exatamente como alguém sem armadura.
+        if self._is_water_tile(nx, ny) and not m.get("_water_penalty_applied"):
+            m["_water_penalty_applied"] = True
+            m["_water_moves_left"] = max(0, m["_water_moves_left"] - 1)
+        m["_water_moves_left"] = max(0, m["_water_moves_left"] - 1)
         await self._aplicar_fogueira_se_pisar(m)
+        return True
 
     def _decor_by_id(self, decor_id):
         return next((d for d in self.decorations if d["id"] == decor_id), None)
@@ -13660,14 +14206,19 @@ class GameRoom:
 
     def _get_monster_primary_target(self, m, targets):
         """Seleciona o alvo com prioridade: réquiem > provocação > taunt > mais próximo."""
+        if not targets:
+            return None
+        presente = lambda obj: any(t["obj"] is obj for t in targets)
         rb = self._requiem_forca_bardo(m)
-        if rb:
+        if rb and presente(rb):
             return {"kind": "player", "obj": rb}
         if m.get("provocado") and m.get("provocado_turnos", 0) > 0:
             prov_pid = m.get("provocado_por")
-            if prov_pid in self.players and self.players[prov_pid]["alive"]:
+            if (prov_pid in self.players and self.players[prov_pid]["alive"]
+                    and presente(self.players[prov_pid])):
                 return {"kind": "player", "obj": self.players[prov_pid]}
-        if self.taunted and self.taunted in self.players and self.players[self.taunted]["alive"]:
+        if (self.taunted and self.taunted in self.players and self.players[self.taunted]["alive"]
+                and presente(self.players[self.taunted])):
             return {"kind": "player", "obj": self.players[self.taunted]}
         return min(targets, key=lambda t: (
             abs(t["obj"]["pos"][0] - m["pos"][0]) + abs(t["obj"]["pos"][1] - m["pos"][1])
@@ -13692,7 +14243,8 @@ class GameRoom:
                 continue
             if not self._monster_can_occupy(m, nx, ny, cand_facing):   # parede/porta/entidade em qualquer casa do footprint
                 continue
-            await self._commit_monster_step(m, nx, ny)
+            if not await self._commit_monster_step(m, nx, ny):
+                continue
             if cand_facing is not None:
                 m["facing"] = cand_facing
             break
@@ -13722,15 +14274,20 @@ class GameRoom:
         if is_player:
             effective_ac += self._provocacao_ca_bonus(target, m)   # Provocação II
 
-        m_atk = (atk_def["atk_bonus"] + self._pen(m, "ataque") + self._mod_magia(m, "ataque")
+        attr_key = atk_def.get("attack_attribute") or ("dex" if atk_def.get("range") else "str_")
+        attr_mod = mod(m.get(attr_key, 10))
+        dynamic_attr = (attr_mod - int(atk_def.get("attribute_mod_base", attr_mod))
+                        if atk_def.get("apply_attribute_damage") else 0)
+        m_atk = (atk_def["atk_bonus"] + dynamic_attr + self._pen(m, "ataque") + self._mod_magia(m, "ataque")
                  + self._sombras_atk_bonus(m, target)               # Ataque das Sombras (+2)
                  + self._luz_atk_pen(m)                             # Fraqueza de Luz (-2 sob luz direta)
-                 + self._acorde_atk_pen(m))                         # Tambor Rúnico: -1 (sucesso no Acorde)
+                 + self._acorde_atk_pen(m)                          # Tambor Rúnico: -1 (sucesso no Acorde)
+                 + self._monster_editor_passive_bonus(m))
         esc = self._verificar_escuridao(m, target)
         prov = bool(m.get("provocado_turno_efeito"))
         desvantagem = (prov or esc == "desvantagem"
                        or (is_player and self._defesa_impecavel_ativa(target)))
-        vantagem    = esc == "vantagem"
+        vantagem    = esc == "vantagem" or m.get("editor_ability_advantage", 0) > 0
         if vantagem and desvantagem:
             vantagem = desvantagem = False
         if prov and not (self._provocador(m) and tem_espec(self._provocador(m), "bardo_provocacao_2")):
@@ -13762,11 +14319,14 @@ class GameRoom:
             if sombra_dano:
                 await self.broadcast({"type": "dice_roll", "die": "d6",
                                        "value": sombra_dano, "label": "Ataque das Sombras"})
-            dmg = max(1, raw_dmg + self._pen(m, "dano") + self._mod_magia(m, "dano")
+            attr_dmg = attr_mod if atk_def.get("apply_attribute_damage") else 0
+            dmg = max(1, raw_dmg + attr_dmg + self._pen(m, "dano") + self._mod_magia(m, "dano")
                       + self._furia_bonus(m)                         # Fúria (HP < 50%)
                       + self._investida_bonus(m)                     # Investida Brutal (moveu)
                       + self._furia_cega_dano_bonus(m)               # Fúria Cega (dano na rodada anterior)
                       + self._golpe_brutal_bonus(m)                  # Ogro: Golpe Brutal (+2)
+                      + self._monster_editor_passive_bonus(m)
+                      + m.get("editor_ability_damage", 0)
                       + sombra_dano)                                 # Ataque das Sombras (+1d6)
             dmg = self._apply_damage_types(dmg, atk_def.get("damage_types", ["physical"]), target)
             die_type = "d" + atk_def["damage"].split("d")[1].split("+")[0]
@@ -13818,7 +14378,13 @@ class GameRoom:
                     f"{crit_str} **{dmg_ef}** de dano! ({target['vida_atual']}/{target['vida_max']} HP)")
                 if target["vida_atual"] <= 0:
                     await self._animado_morre(target, m.get("id"))
+            if m.get("editor_ability_advantage", 0):
+                m["editor_ability_advantage"] = max(0, m["editor_ability_advantage"] - 1)
+                m["editor_ability_damage"] = 0
             return True   # acertou
+        if m.get("editor_ability_advantage", 0):
+            m["editor_ability_advantage"] = max(0, m["editor_ability_advantage"] - 1)
+            m["editor_ability_damage"] = 0
         else:
             await self.gm_say(
                 f"💢 **{m['name']}** · {atk_def.get('name','Ataque')} em **{tgt_name}**"
@@ -13832,26 +14398,88 @@ class GameRoom:
         """Executa todos os ataques de um monstro no formato novo."""
         target    = target_obj["obj"]
         is_player = target_obj["kind"] == "player"
+        hits_by_group = []
         for atk_def in m.get("attacks", []):
+            group_hit = False
             for _ in range(atk_def.get("num_attacks", 1)):
                 if is_player and (not target.get("alive") or target.get("hp", 0) <= 0):
                     return
                 if not is_player and target.get("vida_atual", 0) <= 0:
                     return
-                await self._execute_one_monster_attack(m, atk_def, target_obj)
+                group_hit = (await self._execute_one_monster_attack(m, atk_def, target_obj)) or group_hit
+            hits_by_group.append(group_hit)
+        if (self._tem_habilidade(m, "furia_bestial") and len(hits_by_group) >= 2
+                and hits_by_group[0] and any(hits_by_group[1:]) and self._alvo_vivo(target_obj)):
+            extra = roll_dice("1d6")
+            if is_player:
+                target["hp"] = max(0, target["hp"] - extra)
+            else:
+                target["vida_atual"] = max(0, target["vida_atual"] - extra)
+            nome = target["name"] if is_player else target["nome"]
+            await self.gm_say(f"🦷 **Fúria Bestial**: **{nome}** sofre +**{extra}** de dano!")
+            if is_player and target["hp"] <= 0:
+                await self._player_dies(target["id"])
+            elif not is_player and target["vida_atual"] <= 0:
+                await self._animado_morre(target, m.get("id"))
+
+    def _monster_editor_passive_bonus(self, m):
+        """Bônus leve para passivas de heróis/Guilda escolhidas no editor."""
+        count = sum(1 for ab in m.get("special_abilities", [])
+                    if ab.get("source") in {"heroi", "guilda"}
+                    and ab.get("action_type") == "passiva")
+        return min(2, count)
+
+    async def _monster_try_editor_ability(self, m):
+        """IA ofensiva das habilidades reutilizadas de heróis e Guilda.
+
+        A criatura sempre procura vantagem para eliminar o grupo: ativa uma
+        habilidade disponível antes de atacar, respeitando simultaneamente os
+        usos por dia e a recarga configurados na ficha.
+        """
+        uses = m.setdefault("monster_ability_uses", {})
+        cooldowns = m.setdefault("monster_ability_cooldowns", {})
+        for ab in m.get("special_abilities", []):
+            if ab.get("source") not in {"heroi", "guilda"} or ab.get("action_type") == "passiva":
+                continue
+            aid = ab.get("id")
+            if not aid or uses.get(aid, ab.get("uses_per_day", 1)) <= 0:
+                continue
+            if cooldowns.get(aid, 0) > 0:
+                continue
+            uses[aid] = uses.get(aid, ab.get("uses_per_day", 1)) - 1
+            cd = max(0, int(ab.get("cooldown_turns", 0) or 0))
+            if cd:
+                cooldowns[aid] = cd
+            # Para habilidades cujo efeito original pertence a heróis, aplicamos
+            # um equivalente seguro e universal no monstro: vantagem no próximo
+            # golpe e dano adicional. Isso evita habilidades apenas decorativas.
+            m["editor_ability_advantage"] = max(1, m.get("editor_ability_advantage", 0))
+            m["editor_ability_damage"] = max(1, m.get("editor_ability_damage", 0))
+            await self.gm_say(f"✦ **{m['name']}** ativa **{ab.get('name', aid)}** para ganhar vantagem no combate!")
+            return True
+        return False
 
     async def _use_monster_ability(self, m, ability, target_obj):
         """Usa uma habilidade especial do monstro. Retorna True se ativada."""
         ab_id = ability["id"]
-        # Verifica usos/cooldown
-        if "uses_per_combat" in ability:
-            if m.get("ability_uses", {}).get(ab_id, 0) <= 0:
+        # Usos e recarga são limites independentes: uma habilidade pode ter
+        # ambos, como configurado no novo editor de criaturas.
+        uses_limit = ability.get("uses_per_day")
+        if uses_limit is None:
+            uses_limit = ability.get("uses_per_combat")
+        if uses_limit is not None:
+            uses = m.setdefault("ability_uses", {}).get(ab_id, uses_limit)
+            if uses <= 0:
                 return False
-            m["ability_uses"][ab_id] -= 1
-        elif "cooldown_turns" in ability:
+            m["ability_uses"][ab_id] = uses - 1
+        cooldown = max(0, int(ability.get("cooldown_turns", 0) or 0))
+        if cooldown:
             if m.get("ability_cooldowns", {}).get(ab_id, 0) > 0:
+                # Devolve o uso reservado se a recarga impediu a ativação.
+                if uses_limit is not None:
+                    m["ability_uses"][ab_id] += 1
                 return False
-            m.setdefault("ability_cooldowns", {})[ab_id] = ability["cooldown_turns"]
+            m.setdefault("ability_cooldowns", {})[ab_id] = cooldown
 
         target    = target_obj["obj"]
         is_player = target_obj["kind"] == "player"
@@ -14988,9 +15616,70 @@ class GameRoom:
         await self._execute_one_monster_attack(m, atk, target_obj)
         m["virotes"] = max(0, m.get("virotes", 1) - 1)
 
+    async def _monster_try_spell(self, m, targets):
+        """Escolhe e lança uma magia configurada no editor.
+
+        A execução é a mesma do grimório dos heróis; por isso áreas não filtram
+        aliados e podem atingi-los normalmente. As IAs especiais antigas mantêm
+        seus próprios roteiros até que suas fichas sejam convertidas por completo.
+        """
+        configs = m.get("monster_spells", [])
+        if not configs:
+            return False
+        target_obj = self._get_monster_primary_target(m, targets)
+        if not target_obj:
+            return False
+        target = target_obj["obj"]
+        ally = min((o for o in self.monsters.values() if o.get("hp", 0) > 0),
+                   key=lambda o: max(abs(o["pos"][0] - m["pos"][0]), abs(o["pos"][1] - m["pos"][1])), default=m)
+        # Magias ofensivas/controle são priorizadas; buffs entram quando forem a
+        # única opção conhecida. Isso evita que um conjurador ignore o encontro.
+        priority = {"area_persistente": 0, "linha_reflexiva": 0, "cone": 0,
+                    "area": 1, "alvo": 1, "area_fixa": 1, "area_centrada": 2,
+                    "buff_self": 3, "buff_aliado": 4, "alvo_aliado": 4, "utilidade": 5,
+                    "reacao": 9}
+        available = []
+        for cfg in configs:
+            sid = cfg.get("id")
+            magia = GRIMORIO.get(sid)
+            if not magia or sid not in GRIMORIO_IMPLEMENTADAS:
+                continue
+            if cfg.get("limit_mode", "encounter") == "cooldown":
+                if self.round_num < m.get("spell_cooldowns", {}).get(sid, 0):
+                    continue
+            elif m.get("spell_uses", {}).get(sid, max(1, int(cfg.get("uses_per_combat", 1)))) <= 0:
+                continue
+            if magia.get("tipo") in {"utilidade", "reacao"}:
+                continue
+            available.append((priority.get(magia.get("tipo"), 2), cfg, magia))
+        if not available:
+            return False
+        _, cfg, magia = min(available, key=lambda item: item[0])
+        sid = magia["id"]
+        dx, dy = target["pos"][0] - m["pos"][0], target["pos"][1] - m["pos"][1]
+        data = {"target_id": target.get("id"), "tx": target["pos"][0], "ty": target["pos"][1],
+                "dir": [0 if dx == 0 else (1 if dx > 0 else -1), 0 if dy == 0 else (1 if dy > 0 else -1)]}
+        if magia.get("tipo") in {"alvo_aliado", "buff_aliado"}:
+            data["target_id"] = ally["id"]
+        if cfg.get("limit_mode", "encounter") == "cooldown":
+            m.setdefault("spell_cooldowns", {})[sid] = self.round_num + max(1, int(cfg.get("cooldown_turns", 1)))
+        else:
+            uses = m.setdefault("spell_uses", {}).get(sid, max(1, int(cfg.get("uses_per_combat", 1))))
+            m["spell_uses"][sid] = max(0, uses - 1)
+        await self._executar_magia_grimorio(m, magia, data)
+        return True
+
     async def _run_monster_ai(self, m, targets):
         """Despacha para a IA específica do monstro."""
+        if not targets:
+            return
         ai = m.get("ai_type", "agressivo")
+        # Habilidades configuradas pelo editor são usadas com prioridade
+        # ofensiva; em seguida a IA continua perseguindo e atacando os heróis.
+        await self._monster_try_editor_ability(m)
+        if ai not in {"goblin_xama", "necromante", "bugbear_sombras"}:
+            if await self._monster_try_spell(m, targets):
+                return
         if ai == "kobold_lanceiro":
             await self._ai_kobold_lanceiro(m, targets)
         elif ai == "kobold_besteiro":
@@ -15033,6 +15722,8 @@ class GameRoom:
             await self._ai_bugbear_sombras(m, targets)
         elif ai == "ogro":
             await self._ai_ogro(m, targets)
+        elif ai == "grotao":
+            await self._ai_grotao(m, targets)
         # Outros tipos serão adicionados conforme novos monstros forem criados
 
     async def _ai_agressivo(self, m, targets):
@@ -15042,6 +15733,26 @@ class GameRoom:
         if not target_obj:
             return
         target = target_obj["obj"]
+
+        # Habilidades nativas escolhidas no editor não são decorativas: o ácido
+        # é a abertura à distância e a cauda responde a um cerco pela traseira.
+        cds = m.setdefault("ability_cooldowns", {})
+        for key in list(cds):
+            cds[key] = max(0, cds[key] - 1)
+        cauda = next((a for a in m.get("special_abilities", []) if a.get("id") == "cauda_varredora"), None)
+        if cauda and cds.get("cauda_varredora", 0) <= 0:
+            rear = self._grotao_alvos_cauda(m, targets)
+            if len(rear) >= 2 and self._ativar_habilidade_nativa(m, cauda):
+                await self._usar_cauda_varredora(m, rear, cauda)
+                return
+
+        acido = next((a for a in m.get("special_abilities", []) if a.get("id") == "cuspir_acido"), None)
+        alcance_acido = int((acido or {}).get("range", 0) or 0)
+        if acido and cds.get("cuspir_acido", 0) <= 0 and alcance_acido and any(
+                max(abs(target["pos"][0]-t[0]), abs(target["pos"][1]-t[1])) <= alcance_acido
+                for t in self._monster_tiles(m)) and self._ativar_habilidade_nativa(m, acido):
+            await self._cuspir_acido(m, target_obj, acido)
+            return
 
         if self._is_adjacent_to_monster(target["pos"], m):
             await self._monster_execute_attacks(m, target_obj)
@@ -15201,6 +15912,115 @@ class GameRoom:
             m["lento_previsivel_ativo"] = True
             await self.gm_say(f"🐢 **{m['name']}** erra e fica desequilibrado — **-2 CA** até o próximo turno!")
 
+    def _grotao_alvos_cauda(self, m, targets):
+        """Inimigos vivos adjacentes à metade traseira (arco de 180°)."""
+        fx, fy = self._monster_facing(m)
+        hx, hy = m["pos"]
+        return [t for t in targets
+                if t["kind"] == "player" and self._is_adjacent_to_monster(t["obj"]["pos"], m)
+                and ((t["obj"]["pos"][0] - hx) * fx + (t["obj"]["pos"][1] - hy) * fy) < 0]
+
+    def _ativar_habilidade_nativa(self, m, ability):
+        """Consome usos/recarga também nas habilidades nativas escolhidas no editor."""
+        aid = ability.get("id")
+        if not aid or m.setdefault("ability_cooldowns", {}).get(aid, 0) > 0:
+            return False
+        limite = ability.get("uses_per_day")
+        if limite is not None:
+            usos = m.setdefault("ability_uses", {}).get(aid, int(limite))
+            if usos <= 0:
+                return False
+            m["ability_uses"][aid] = usos - 1
+        recarga = max(0, int(ability.get("cooldown_turns", 0) or 0))
+        if recarga:
+            m["ability_cooldowns"][aid] = recarga
+        return True
+
+    async def _cuspir_acido(self, m, target_obj, ability=None):
+        """Implementação reutilizável de Cuspir Ácido para monstros do editor."""
+        ability = ability or {}
+        alvo = target_obj["obj"]
+        cd = int(ability.get("dc", 13) or 13)
+        dano_expr = ability.get("damage", "2d6")
+        passou, d20, bonus, total = self._testar_save(alvo, ability.get("save", "reflexos"), cd, fonte=m)
+        raw = roll_dice(dano_expr)
+        dano = self._apply_damage_types(raw // 2 if passou else raw, ["acid"], alvo)
+        await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
+                              "label": f"{m['name']} — Cuspir Ácido", "hit": not passou})
+        if target_obj["kind"] != "player":
+            alvo["vida_atual"] = max(0, alvo["vida_atual"] - dano)
+            if alvo["vida_atual"] <= 0: await self._animado_morre(alvo, m.get("id"))
+            return
+        alvo["hp"] = max(0, alvo["hp"] - dano)
+        await self.gm_say(f"🧪 **{m['name']}** cospe ácido em **{alvo['name']}**: **{dano}** de dano"
+                          f" (Reflexos {total} vs CD {cd}){' — metade!' if passou else '!'}")
+        if not passou:
+            await self._corroer_equipamento(m, alvo,
+                CORROSAO_ARMADURA_ORGANICA | CORROSAO_ARMADURA_METAL,
+                CORROSAO_ARMA_MADEIRA | CORROSAO_ARMA_METAL,
+                label="Ácido do Grotão")
+        if alvo["hp"] <= 0: await self._player_dies(alvo["id"])
+
+    async def _grotao_cuspir_acido(self, m, target_obj):
+        return await self._cuspir_acido(m, target_obj, next(
+            (a for a in m.get("special_abilities", []) if a.get("id") == "cuspir_acido"), {}))
+
+    async def _usar_cauda_varredora(self, m, alvos, ability=None):
+        """Ataque traseiro reutilizável; falha em Reflexos perde o próximo movimento."""
+        ability = ability or {}
+        atk = int(ability.get("atk_bonus", 5) or 5)
+        dano_expr = ability.get("damage", "1d8+3")
+        cd = int(ability.get("dc", 12) or 12)
+        await self.gm_say(f"🦂 **{m['name']}** varre a cauda pela retaguarda!")
+        for tobj in alvos:
+            vitima = tobj["obj"]
+            hit, roll, total, crit = d20_attack(atk, self._player_effective_ac(vitima))
+            if not hit:
+                continue
+            dano = self._apply_damage_types(roll_dice(dano_expr) * (2 if crit else 1), [DMG_PHYSICAL], vitima)
+            vitima["hp"] = max(0, vitima["hp"] - dano)
+            passou, d20, sb, st = self._testar_save(vitima, ability.get("save", "reflexos"), cd, fonte=m)
+            if not passou:
+                vitima["derrubado_sem_movimento"] = True
+            await self.gm_say(f"🦂 Cauda em **{vitima['name']}**: **{dano}** de dano"
+                              f"{' e derrubado' if not passou else ''}! (Reflexos {st} vs CD {cd})")
+            if vitima["hp"] <= 0:
+                await self._player_dies(vitima["id"])
+
+    async def _ai_grotao(self, m, targets):
+        """Foca armaduras; ácido primeiro, cauda ao ser cercado, depois multiataque."""
+        cds = m.setdefault("ability_cooldowns", {})
+        for key in list(cds): cds[key] = max(0, cds[key] - 1)
+        players = [t for t in targets if t["kind"] == "player"]
+        if players and not (m.get("provocado") or self.taunted or self._requiem_forca_bardo(m)):
+            target_obj = min(players, key=lambda t: (
+                0 if t["obj"].get("gear", {}).get("armor") else 1,
+                abs(t["obj"]["pos"][0] - m["pos"][0]) + abs(t["obj"]["pos"][1] - m["pos"][1])))
+        else:
+            target_obj = self._get_monster_primary_target(m, targets)
+        if not target_obj: return
+        alvo = target_obj["obj"]
+
+        cauda = self._grotao_alvos_cauda(m, targets)
+        cauda_def = next((a for a in m.get("special_abilities", []) if a.get("id") == "cauda_varredora"), {})
+        if len(cauda) >= 2 and self._ativar_habilidade_nativa(m, cauda_def):
+            await self._usar_cauda_varredora(m, cauda, cauda_def)
+            return
+
+        for _ in range(m.get("movement", 5)):
+            if min(max(abs(alvo["pos"][0]-t[0]), abs(alvo["pos"][1]-t[1])) for t in self._monster_tiles(m)) <= 3:
+                break
+            antes = list(m["pos"]); await self._monster_move_step(m, alvo["pos"])
+            if m["pos"] == antes: break
+        self._face_toward(m, alvo["pos"])
+        em_alcance_acido = min(max(abs(alvo["pos"][0]-t[0]), abs(alvo["pos"][1]-t[1])) for t in self._monster_tiles(m)) <= 3
+        acido_def = next((a for a in m.get("special_abilities", []) if a.get("id") == "cuspir_acido"), {})
+        if em_alcance_acido and self._ativar_habilidade_nativa(m, acido_def):
+            await self._grotao_cuspir_acido(m, target_obj)
+            return
+        if not self._is_adjacent_to_monster(alvo["pos"], m): return
+        await self._monster_execute_attacks(m, target_obj)
+
     def _necro_controla_animado(self, m):
         return any(a.get("dominado_por_monstro") == m["id"]
                    for pp in self.players.values() for a in pp.get("animados", []))
@@ -15274,7 +16094,8 @@ class GameRoom:
         sofreu = m["hp"] < ref
         m["_cs_hp_ref"] = m["hp"]
         pode_magia = True
-        if sofreu and any(ab["id"] == "concentracao_sombria" for ab in m.get("special_abilities", [])):
+        if sofreu and (any(ab["id"] == "concentracao_sombria" for ab in m.get("special_abilities", []))
+                       or any(w.get("type") == "concentracao_fragil" for w in m.get("weaknesses", []))):
             ok, d20, sb, tot = self._testar_save(m, "vontade", 10)
             if ok:
                 await self.gm_say(f"🧙 **{m['name']}** mantém a concentração (Vontade {tot} vs CD 10).")
@@ -15363,8 +16184,10 @@ class GameRoom:
 
     # ── GM phase (monsters act) ─────────────────────────────────────────────
 
-    async def gm_phase(self):
-        alive_monsters = [m for m in self.monsters.values() if m["hp"] > 0]
+    async def gm_phase(self, only_monster=None):
+        """Executa todos os monstros (modo legado) ou somente um, para iniciativa."""
+        alive_monsters = ([only_monster] if only_monster is not None else
+                          [m for m in self.monsters.values() if m["hp"] > 0])
         alive_players = [p for p in self.players.values() if self._ativo(p)]
         if not alive_monsters or not alive_players:
             return
@@ -15385,6 +16208,7 @@ class GameRoom:
         for m in alive_monsters:
             if m["hp"] <= 0:
                 continue
+            m["_water_moves_left"] = self._water_turn_moves(m, m.get("movement", 4))
             # Monstro dormente: sala ainda trancada (porta fechada). Não percebe
             # nem persegue os heróis — permanece imóvel até a porta ser aberta.
             room_m = self._room_by_id(m.get("room_id"))
@@ -15418,9 +16242,12 @@ class GameRoom:
             # Status de magia (Sono/Comando/Dominar/Medo/Lentidão): pode consumir o turno.
             if await self._status_monstro_turno(m, alive_monsters) == "pulou":
                 continue
-            targets = _targets()
+            targets = self._alvos_visiveis_para_monstro(m, _targets())
             if not targets:
-                break
+                continue
+            editor_cds = m.get("monster_ability_cooldowns", {})
+            for aid in list(editor_cds):
+                editor_cds[aid] = max(0, editor_cds[aid] - 1)
 
             # Monstros com ai_type usam o sistema de IA modular
             if m.get("ai_type"):
@@ -15434,27 +16261,11 @@ class GameRoom:
                         m["provocado_por"] = None
                 continue
 
-            # Prioridade de alvo: Réquiem Final (Violino) > Provocação do bardo
-            # (por monstro) > Provocar do guerreiro (taunt global) > inimigo mais
-            # próximo. (Espelha _get_monster_primary_target, usado pelo caminho
-            # modular de ai_type.)
-            tobj = None
-            rb = self._requiem_forca_bardo(m)
-            if rb:
-                tobj = {"kind": "player", "obj": rb}
-            if tobj is None and m.get("provocado") and m.get("provocado_turnos", 0) > 0:
-                prov_pid = m.get("provocado_por")
-                if prov_pid in self.players and self.players[prov_pid]["alive"]:
-                    tobj = {"kind": "player", "obj": self.players[prov_pid]}
-                else:
-                    # Provocador morto/ausente: provocação perde o efeito.
-                    m["provocado"] = False
-                    m["provocado_turnos"] = 0
-                    m["provocado_turno_efeito"] = False
-            if tobj is None and self.taunted and self.taunted in self.players and self.players[self.taunted]["alive"]:
-                tobj = {"kind": "player", "obj": self.players[self.taunted]}
+            # O caminho legado segue a mesma prioridade, porém apenas entre
+            # alvos que este monstro consegue enxergar.
+            tobj = self._get_monster_primary_target(m, targets)
             if tobj is None:
-                tobj = min(targets, key=lambda t: abs(t["obj"]["pos"][0]-m["pos"][0]) + abs(t["obj"]["pos"][1]-m["pos"][1]))
+                continue
             target = tobj["obj"]
             is_player = tobj["kind"] == "player"
             tgt_name = target["name"] if is_player else target["nome"]
@@ -15604,13 +16415,13 @@ class GameRoom:
         # Restore moves for next round
         for pid2, p in self.players.items():
             if p["alive"]:
-                p["moves_left"]        = self._moves_base(p)
+                p["moves_left"]        = self._water_turn_moves(p, self._moves_base(p))
                 p["action_done"]       = False
                 p["bonus_action_used"] = False
                 p["moved_this_turn"]   = False
                 # Animados recuperam movimento/ação a cada rodada (controle do dono)
                 for a in p.get("animados", []):
-                    a["moves_left"] = a.get("movimento", 3)
+                    a["moves_left"] = self._water_turn_moves(a, a.get("movimento", 3))
                     a["acted"] = False
 
         # Check if all players dead
@@ -15728,6 +16539,28 @@ class GameRoom:
                 f"Os ossos perdem a estrutura mágica.")
             if m.get("type") == "esqueleto_humano":
                 await self._esqueleto_loot(m)
+            return
+
+        # Grotão: ouro garantido e uma única chance de item preso na carapaça.
+        # O achado corroído entra no inventário já em nível 1 (ainda utilizável).
+        if m.get("type") == "grotao":
+            gold = roll_dice("2d6")
+            itens = []
+            roll = random.randint(1, 100)
+            if roll <= 40:
+                fontes = [i for i in (SHOP_WEAPONS + SHOP_ARMORS)
+                           if self._slot_category_for_item(i) in ("weapon", "armor")]
+                if fontes:
+                    item = deepcopy(random.choice(fontes))
+                    if roll > 10:
+                        item["corrosao_inicial"] = 1
+                        item["name"] = f"{item['name']} (corroído)"
+                    itens.append(item)
+            self._spawn_chest(list(m["pos"]), gold, itens)
+            detalhe = " Um item intacto estava preso na carapaça!" if roll <= 10 else (
+                " Um item parcialmente corroído foi encontrado." if roll <= 40 else "")
+            await self.gm_say(f"💀 **{m['name']}** foi derrotado! +{share_xp} XP. "
+                              f"Um **baú de saque** apareceu!{detalhe}")
             return
 
         if "loot_table" in m:
@@ -16081,6 +16914,7 @@ class GameRoom:
         if not self._tile_livre_para_animado(nx, ny, None):
             await self.send_to(pid, {"type": "error", "msg": "Caminho bloqueado para o prisioneiro."}); return
         pr["pos"] = [nx, ny]
+        self._apply_water_entry_penalty(pr, nx, ny)
         pr["moves_left"] -= 1
         # Pisou numa armadilha colocável? Dispara sobre o prisioneiro (igual ao herói).
         arm = self._armadilha_no_tile(nx, ny)
@@ -16186,13 +17020,20 @@ class GameRoom:
 
     async def push_state(self):
         await self._check_objectives()
+        players_state = [dict(p, initiative=self.initiative_value(p),
+                              vision_radius=self._get_raio_visao(p))
+                         for p in self.players.values()]
+        monsters_state = [dict(m, initiative=self.initiative_value(m),
+                               vision_radius=self._get_raio_visao_monstro(m))
+                          for m in self.monsters.values() if m["hp"] > 0]
+        actor = self.current_actor()
         await self.broadcast({
             "type": "game_state",
             "ambiente": getattr(self, "ambiente", "masmorra"),
             "tiles": self.tiles,
             "rooms": self.rooms,
-            "players": list(self.players.values()),
-            "monsters": [m for m in self.monsters.values() if m["hp"] > 0],
+            "players": players_state,
+            "monsters": monsters_state,
             "corpses": list(self.corpses.values()),
             "traps": [t for t in self.traps if not t["triggered"] and tuple(t["pos"]) in self.explored],
             "armadilhas": self._serializar_armadilhas(),
@@ -16206,6 +17047,8 @@ class GameRoom:
             "exit_pos": self.exit_pos,
             "prisoner": self.prisoner,
             "current_turn": self.current_pid(),
+            "current_actor": actor,
+            "initiative_order": self.initiative_order,
             "animados_turn": self.animados_phase_pid,   # pid no turno dos servos (ou None)
             "last_stand_pid": self.last_stand_pid,   # pid na sub-fase do Último Esforço (ou None)
             "turn_timer_started": self.turn_timer_started_ms,  # epoch ms do início do turno (p/ contagem 30s)
@@ -16286,6 +17129,17 @@ async def handler(ws):
                                "upload_id": msg.get("upload_id"), "ok": ok}
                     if ok:
                         payload["file"] = res["file"]
+                    else:
+                        payload["error"] = res
+                    await ws.send(json.dumps(payload))
+                    continue
+
+                if t == "upload_custom_monster":
+                    ok, res = _save_custom_monster(msg.get("monster"))
+                    payload = {"type": "upload_result", "kind": "custom_monster",
+                               "upload_id": msg.get("upload_id"), "ok": ok}
+                    if ok:
+                        payload["monster"] = res
                     else:
                         payload["error"] = res
                     await ws.send(json.dumps(payload))
@@ -16431,7 +17285,7 @@ async def handler(ws):
                     if room: await room.handle_encerrar_missao(pid)
 
                 elif t == "attack":
-                    if room: await room.handle_attack(pid, msg.get("target_id"), msg.get("buffs"))
+                    if room: await room.handle_attack(pid, msg.get("target_id"), msg.get("buffs"), msg.get("target_pos"))
 
                 elif t == "throw":
                     if room: await room.handle_throw(pid, msg.get("target_id"), msg.get("slot"))
@@ -16616,6 +17470,328 @@ async def handler(ws):
 # amigos teriam de digitar o endereço do servidor à mão. Ver process_request.
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Monstros criados no editor vivem fora de MONSTER_DEFS para nunca alterar os
+# modelos nativos. Ao iniciar o servidor eles são incorporados à lista usada
+# pelo jogo, mas continuam identificados como personalizados.
+CUSTOM_MONSTERS_FILE = os.path.join(BASE_DIR, "monstros_personalizados.json")
+CUSTOM_MONSTERS_INDEX = os.path.join(BASE_DIR, "tools", "editor_monsters_custom.js")
+
+def _base_ability_library():
+    """Habilidades selecionáveis no editor, por id (a definição é autoritativa).
+
+    Além das técnicas já usadas por monstros, o editor pode reutilizar todas as
+    habilidades não mágicas dos heróis e da Guilda. IDs recebem um prefixo de
+    origem para não colidirem com habilidades nativas de monstros.
+    """
+    out = {}
+    for monster in MONSTER_DEFS:
+        for ability in monster.get("special_abilities", []):
+            if ability.get("id"):
+                item = deepcopy(ability)
+                item.setdefault("source", "monstro")
+                out.setdefault(item["id"], item)
+    for cls_id, cls in CLASSES.items():
+        for skill in cls.get("skills", []):
+            if not skill.get("id") or skill.get("id") in GRIMORIO or skill.get("mp") is not None:
+                continue  # magias pertencem exclusivamente à aba Magias
+            item = {
+                "id": f"hero_{cls_id}_{skill['id']}", "source": "heroi",
+                "source_id": skill["id"], "source_class": cls_id,
+                "name": skill.get("name", skill["id"].replace("_", " ").title()),
+                "icon": skill.get("icon", "✦"),
+                "descricao": skill.get("description", skill.get("desc", "")),
+                "action_type": "passiva" if skill.get("tipo") == "passiva" else "acao",
+                # A IA converte habilidades ativas em uma abertura ofensiva que
+                # favorece o próximo ataque; passivas dão bônus permanente leve.
+                "monster_effect": "passiva_combate" if skill.get("tipo") == "passiva" else "vantagem_combate",
+            }
+            out.setdefault(item["id"], item)
+    for gid, entry in GUILD_CATALOG.items():
+        if not isinstance(entry, dict):
+            continue
+        if str(gid).startswith("tec_ex_"):
+            continue  # metamágicas permanecem vinculadas à aba de Magias
+        item = {
+            "id": f"guild_{gid}", "source": "guilda", "source_id": gid,
+            "name": entry.get("nome", gid.replace("_", " ").title()),
+            "icon": entry.get("icone", "✦"),
+            "descricao": entry.get("desc", entry.get("descricao", "")),
+            "action_type": "passiva" if entry.get("categoria") == "especializacao" else "acao",
+            "monster_effect": "passiva_combate" if entry.get("categoria") == "especializacao" else "vantagem_combate",
+            "guild_category": entry.get("categoria", "habilidade"),
+        }
+        out.setdefault(item["id"], item)
+    return out
+
+# Habilidades classificadas como efeitos negativos no editor. Elas não são
+# poderes ofensivos: a seleção gera a fraqueza mecânica correspondente.
+_NEGATIVE_ABILITY_WEAKNESSES = {
+    "fraqueza_magica": {"type":"save_penalty", "save":"vontade", "bonus_flat":-2, "em_magia":True,
+                          "descricao":"Fraqueza mágica: -2 em Vontade contra controle de mortos-vivos"},
+    "mente_limitada": {"type":"save_penalty", "save":"vontade", "bonus_flat":-1, "em_magia":True,
+                        "descricao":"Mente limitada: -1 em Vontade contra efeitos mentais"},
+    "mente_fraca": {"type":"save_penalty", "save":"vontade", "bonus_flat":-2, "em_magia":True,
+                     "descricao":"Mente fraca: -2 em Vontade contra controle mental"},
+    "concentracao_fragil": {"type":"concentracao_fragil",
+                             "descricao":"Concentração frágil: ao sofrer dano, pode perder a próxima magia"},
+    "concentracao_sombria": {"type":"concentracao_fragil",
+                              "descricao":"Concentração sombria: ao sofrer dano, testa Vontade ou perde a magia"},
+    "essencia_profana": {"type":"holy", "multiplier":2,
+                          "descricao":"Essência profana: dano sagrado/luz dobrado"},
+    "furia_cega": {"type":"ca_condicional", "bonus_flat":-1,
+                    "descricao":"Fúria cega: após sofrer dano, ganha dano mas perde 1 CA"},
+    "covardia_kobold": {"type":"moral_fragil",
+                         "descricao":"Covardia instintiva: pode entrar em medo sob pressão"},
+}
+
+def _same_weakness(a, b):
+    return (a.get("type") == b.get("type") and a.get("categoria") == b.get("categoria")
+            and a.get("save") == b.get("save")
+            and a.get("bonus_flat", 0) == b.get("bonus_flat", 0)
+            and a.get("multiplier", 0) == b.get("multiplier", 0))
+
+def _read_custom_monsters():
+    try:
+        with open(CUSTOM_MONSTERS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, list) else []
+    except (OSError, ValueError, TypeError):
+        return []
+
+def _apply_custom_monsters(records):
+    """Atualiza o catálogo vivo, sem duplicar uma versão anterior do mesmo monstro."""
+    global MONSTER_DEFS
+    MONSTER_DEFS[:] = [m for m in MONSTER_DEFS if not m.get("_personalizado")]
+    for item in records:
+        if isinstance(item, dict) and item.get("type"):
+            m = deepcopy(item)
+            m["_personalizado"] = True
+            MONSTER_DEFS.append(m)
+
+def _regen_custom_monsters_index(records):
+    """Permite que editor.html reencontre os monstros personalizados ao recarregar."""
+    try:
+        os.makedirs(os.path.dirname(CUSTOM_MONSTERS_INDEX), exist_ok=True)
+        payload = json.dumps(records, ensure_ascii=False, indent=2)
+        with open(CUSTOM_MONSTERS_INDEX, "w", encoding="utf-8") as f:
+            f.write("window.EDITOR_CUSTOM_MONSTERS = " + payload + ";\n"
+                    "// GERADO pelo servidor ao salvar no Editor de criaturas.\n")
+    except OSError:
+        pass
+
+def _monster_int(value, default, lo=0, hi=99):
+    try:
+        return max(lo, min(hi, int(value)))
+    except (TypeError, ValueError):
+        return default
+
+def _validate_custom_monster(raw):
+    """Normaliza o formato que o editor pode salvar. Habilidades só podem ser
+    escolhidas da biblioteca existente, evitando criar regras incompletas."""
+    if not isinstance(raw, dict):
+        return False, "ficha inválida"
+    typ = str(raw.get("type") or "").strip().lower()
+    if not typ or not all(c.isalnum() or c == "_" for c in typ):
+        return False, "id use apenas letras, números e _"
+    name = str(raw.get("name") or "").strip()[:60]
+    if not name:
+        return False, "informe o nome da criatura"
+    native_types = {m["type"] for m in MONSTER_DEFS if not m.get("_personalizado")}
+    if typ in native_types:
+        return False, "o id não pode substituir um monstro nativo"
+    ai_options = {m.get("ai_type", "agressivo") for m in MONSTER_DEFS if m.get("ai_type")}
+    ai_type = raw.get("ai_type") if raw.get("ai_type") in ai_options else "agressivo"
+    ability_lib = _base_ability_library()
+    # Configuração por habilidade: usos por dia E recarga coexistem. O formato
+    # antigo ability_ids continua aceito para fichas já salvas.
+    raw_abilities = raw.get("monster_abilities")
+    if not isinstance(raw_abilities, list):
+        legacy_ids = raw.get("ability_ids", [])
+        raw_abilities = [{"id": aid, "uses_per_day": 1, "cooldown_turns": 0}
+                         for aid in legacy_ids] if isinstance(legacy_ids, list) else []
+    abilities, monster_abilities, seen_abilities = [], [], set()
+    for config in raw_abilities[:160]:
+        if not isinstance(config, dict):
+            continue
+        aid = str(config.get("id") or "")
+        if aid in seen_abilities or aid not in ability_lib:
+            continue
+        seen_abilities.add(aid)
+        uses = _monster_int(config.get("uses_per_day", 1), 1, 1, 20)
+        cooldown = _monster_int(config.get("cooldown_turns", 0), 0, 0, 20)
+        ability = deepcopy(ability_lib[aid])
+        ability["uses_per_day"] = uses
+        ability["cooldown_turns"] = cooldown
+        abilities.append(ability)
+        monster_abilities.append({"id": aid, "uses_per_day": uses, "cooldown_turns": cooldown})
+    negative_ids = raw.get("negative_ability_ids", [])
+    if not isinstance(negative_ids, list):
+        negative_ids = []
+    negative_ids = [aid for aid in negative_ids if aid in _NEGATIVE_ABILITY_WEAKNESSES]
+    str_score = _monster_int(raw.get("str_", 10), 10, 1, 40)
+    dex_score = _monster_int(raw.get("dex", 10), 10, 1, 40)
+    con_score = _monster_int(raw.get("con_", 10), 10, 1, 40)
+    int_score = _monster_int(raw.get("int_", 10), 10, 1, 40)
+    raw_size = raw.get("size", [1, 1])
+    if not isinstance(raw_size, (list, tuple)) or len(raw_size) != 2:
+        raw_size = [1, 1]
+    size_w = _monster_int(raw_size[0], 1, 1, 4)
+    size_h = _monster_int(raw_size[1], 1, 1, 4)
+    oriented = bool(raw.get("oriented")) and size_w * size_h > 1
+    con_mod, dex_mod, int_mod = (con_score - 10) // 2, (dex_score - 10) // 2, (int_score - 10) // 2
+    base_hp = _monster_int(raw.get("base_hp", _monster_int(raw.get("hp", 10), 10, 1, 999) - con_mod), 10, 1, 999)
+    fort_base = _monster_int(raw.get("fort_base", _monster_int(raw.get("fort", 0), 0, -20, 30) - con_mod), 0, -20, 30)
+    ref_base = _monster_int(raw.get("ref_base", _monster_int(raw.get("ref_", 0), 0, -20, 30) - dex_mod), 0, -20, 30)
+    will_base = _monster_int(raw.get("will_base", _monster_int(raw.get("will", 0), 0, -20, 30) - int_mod), 0, -20, 30)
+    attacks = []
+    for attack in raw.get("attacks", []) if isinstance(raw.get("attacks"), list) else []:
+        if not isinstance(attack, dict):
+            continue
+        attr = "dex" if attack.get("attack_attribute") == "dex" else "str_"
+        base = _monster_int(attack.get("base_attack_bonus", raw.get("base_attack_bonus", 0)), 0, -20, 30)
+        stat = dex_score if attr == "dex" else str_score
+        attacks.append({
+            "name": str(attack.get("name") or "Ataque")[:40],
+            "damage": str(attack.get("damage") or "1d4")[:24],
+            "damage_types": ["physical"],
+            "num_attacks": _monster_int(attack.get("num_attacks", 1), 1, 1, 8),
+            "attack_attribute": attr,
+            "damage_attribute": attr,
+            "apply_attribute_damage": bool(attack.get("apply_attribute_damage", True)),
+            "attribute_mod_base": (stat - 10) // 2,
+            "base_attack_bonus": base,
+            "atk_bonus": base + ((stat - 10) // 2),
+            "range": _monster_int(attack.get("range", 0), 0, 0, 20) or None,
+            "on_hit": None,
+        })
+    if not attacks:
+        return False, "adicione pelo menos um ataque"
+    weaknesses = raw.get("weaknesses", [])
+    if not isinstance(weaknesses, list):
+        weaknesses = []
+    clean_weaknesses = []
+    for weakness in weaknesses[:12]:
+        if not isinstance(weakness, dict):
+            continue
+        if weakness.get("type") == "ponto_vulneravel":
+            # Só corpos multi-casa podem ter uma casa especificamente exposta.
+            if size_w * size_h <= 1:
+                continue
+            tiles = []
+            for tile in weakness.get("tiles", [])[:16]:
+                if not isinstance(tile, (list, tuple)) or len(tile) != 2:
+                    continue
+                x_limit, y_limit = (size_h, size_w) if oriented else (size_w, size_h)
+                x = _monster_int(tile[0], -1, -1, x_limit - 1)
+                y = _monster_int(tile[1], -1, -1, y_limit - 1)
+                if x >= 0 and y >= 0:
+                    tiles.append([x, y])
+            if tiles:
+                clean_weaknesses.append({"type": "ponto_vulneravel", "nd_penalty": 0.25, "tiles": tiles,
+                    "descricao": "Ponto Vulnerável: ataques nos quadrados selecionados ignoram a armadura natural (Destreza permanece) e reduções de dano (–0,25 ND estimado)"})
+            continue
+        clean_weaknesses.append(weakness)
+    weaknesses = clean_weaknesses
+    for aid in negative_ids:
+        generated = dict(_NEGATIVE_ABILITY_WEAKNESSES[aid], source_ability=aid)
+        if not any(isinstance(w, dict) and _same_weakness(w, generated) for w in weaknesses):
+            weaknesses.append(generated)
+    resistances = raw.get("resistances", [])
+    if not isinstance(resistances, list):
+        resistances = []
+    clean_resistances = []
+    for resistance in resistances[:16]:
+        if not isinstance(resistance, dict):
+            continue
+        dtype = str(resistance.get("type") or "").strip()
+        if dtype not in {DMG_PHYSICAL, DMG_FIRE, DMG_COLD, DMG_LIGHTNING, DMG_HOLY, DMG_POISON, DMG_MAGIC, DMG_ACID}:
+            continue
+        item = {"type": dtype}
+        if resistance.get("categoria") in {"cortante", "contundente", "perfurante"}:
+            item["categoria"] = resistance["categoria"]
+        if resistance.get("mode") == "half":
+            item["mode"] = "half"
+        else:
+            item["reduction"] = _monster_int(resistance.get("reduction", 1), 1, 1, 20)
+        clean_resistances.append(item)
+    raw_spells = raw.get("monster_spells", [])
+    if not isinstance(raw_spells, list):
+        raw_spells = []
+    monster_spells = []
+    seen_spells = set()
+    for spell in raw_spells[:30]:
+        if not isinstance(spell, dict):
+            continue
+        sid = str(spell.get("id") or "")
+        # Só magias completas do mesmo grimório usado pelos heróis são aceitas.
+        if sid in seen_spells or sid not in GRIMORIO_IMPLEMENTADAS:
+            continue
+        seen_spells.add(sid)
+        if spell.get("limit_mode") == "cooldown":
+            monster_spells.append({"id": sid, "limit_mode": "cooldown",
+                                  "cooldown_turns": _monster_int(spell.get("cooldown_turns", 1), 1, 1, 20)})
+        else:
+            monster_spells.append({"id": sid, "limit_mode": "encounter",
+                                  "uses_per_combat": _monster_int(spell.get("uses_per_combat", 1), 1, 1, 20)})
+    loot_table = raw.get("loot_table", {})
+    if not isinstance(loot_table, dict):
+        loot_table = {}
+    try:
+        cr = float(raw.get("cr", 1) or 1)
+    except (TypeError, ValueError):
+        cr = 1
+    natural_armor = _monster_int(raw.get("natural_armor",
+        _monster_int(raw.get("ac", 10), 10, 1, 99) - 10 - dex_mod), 0, 0, 50)
+    vision_base = _monster_int(raw.get("vision_base", 3), 3, 0, 30)
+    result = {
+        "type": typ, "name": name, "emoji": str(raw.get("emoji") or "👹")[:8],
+        "tier": _monster_int(raw.get("tier", 1), 1, 1, 10),
+        "cr": max(0.125, min(30, cr)),
+        "base_hp": base_hp, "hp": max(1, min(999, base_hp + con_mod)),
+        "natural_armor": natural_armor,
+        "ac": max(1, min(99, 10 + dex_mod + natural_armor)),
+        "movement": _monster_int(raw.get("movement", 5), 5, 1, 20),
+        "vision_base": vision_base,
+        "visao_escuro": bool(raw.get("visao_escuro")),
+        "base_attack_bonus": _monster_int(raw.get("base_attack_bonus", 0), 0, -20, 30),
+        "caster_level": _monster_int(raw.get("caster_level", 1), 1, 1, 20),
+        "str_": str_score, "dex": dex_score, "con_": con_score, "int_": int_score,
+        "fort_base": fort_base, "ref_base": ref_base, "will_base": will_base,
+        "fort": fort_base + con_mod, "ref_": ref_base + dex_mod, "will": will_base + int_mod,
+        "attacks": attacks, "special_abilities": abilities, "monster_abilities": monster_abilities,
+        "monster_spells": monster_spells,
+        "negative_ability_ids": negative_ids,
+        "immunities": [str(x)[:40] for x in raw.get("immunities", []) if str(x).strip()],
+        "resistances": clean_resistances,
+        "weaknesses": weaknesses[:12],
+        "equipment": [str(x)[:60] for x in raw.get("equipment", []) if str(x).strip()],
+        "guaranteed_loot": [str(x)[:60] for x in raw.get("guaranteed_loot", []) if str(x).strip()],
+        "loot_table": loot_table, "gold": _monster_int(raw.get("gold", 0), 0, 0, 9999),
+        "xp": _monster_int(raw.get("xp", 0), 0, 0, 99999),
+        "ai_type": ai_type, "image": str(raw.get("image") or typ)[:80],
+        "size": [size_w, size_h], "oriented": oriented, "porte": str(raw.get("porte") or "medio"),
+        "spawn_min": 0, "spawn_max": 0, "undead": bool(raw.get("undead")), "boss": bool(raw.get("boss")),
+    }
+    return True, result
+
+def _save_custom_monster(raw):
+    ok, monster = _validate_custom_monster(raw)
+    if not ok:
+        return False, monster
+    records = _read_custom_monsters()
+    old_type = str(raw.get("original_type") or "")
+    records = [m for m in records if m.get("type") not in {monster["type"], old_type}]
+    records.append(monster)
+    ok, message = _gravar_def(records, os.path.dirname(CUSTOM_MONSTERS_FILE),
+                              os.path.basename(CUSTOM_MONSTERS_FILE))
+    if not ok:
+        return False, message
+    _apply_custom_monsters(records)
+    _regen_custom_monsters_index(records)
+    return True, monster
+
+_apply_custom_monsters(_read_custom_monsters())
 
 # Tipos que o mimetypes do sistema às vezes não conhece (varia por SO).
 for _ext, _ct in (

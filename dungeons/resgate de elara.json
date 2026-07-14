@@ -2357,6 +2357,22 @@
         }
       ],
       "key_objective": false
+    },
+    {
+      "pos": [
+        5,
+        35
+      ],
+      "gold": 5000,
+      "items": [
+        {
+          "id": "health_potion"
+        },
+        {
+          "id": "sword"
+        }
+      ],
+      "key_objective": false
     }
   ],
   "traps": [
@@ -2486,7 +2502,7 @@
       "loot": null,
       "image": "fogueiracircular.png",
       "vscale": [
-        1,
+        0.6,
         1.4
       ]
     },
@@ -2500,7 +2516,10 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": []
+      },
       "image": "sarcofagocima.png",
       "vscale": [
         1,
@@ -2592,8 +2611,8 @@
         3
       ],
       "vscale": [
-        0.8,
-        0.8
+        1,
+        1.4
       ]
     },
     {
@@ -2843,8 +2862,8 @@
       "loot": null,
       "image": "arvore_cutout.png",
       "vscale": [
-        1,
-        1.7
+        1.5,
+        2
       ]
     },
     {
@@ -2920,6 +2939,62 @@
         7,
         4
       ]
+    },
+    {
+      "type": "cortina_vermelha",
+      "pos": [
+        6,
+        36
+      ],
+      "facing": [
+        -1,
+        0
+      ],
+      "loot": null,
+      "image": "cortina_vermelha.png"
+    },
+    {
+      "type": "cortina_vermelha",
+      "pos": [
+        6,
+        37
+      ],
+      "facing": [
+        -1,
+        0
+      ],
+      "loot": null,
+      "image": "cortina_vermelha.png"
+    },
+    {
+      "type": "cortina_vermelha",
+      "pos": [
+        0,
+        35
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "image": "cortina_vermelha.png",
+      "vscale": [
+        2,
+        1
+      ]
+    },
+    {
+      "type": "brasao_leao",
+      "pos": [
+        4,
+        34
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "image": "brasao_leao.png"
     }
   ],
   "prisoner": {
@@ -3228,11 +3303,11 @@
     "7,32": "desmoronada",
     "7,33": "desmoronada",
     "7,34": "desmoronada",
-    "7,35": "pedra_caverna",
-    "7,36": "pedra_caverna",
-    "7,37": "pedra_caverna",
-    "7,38": "pedra_caverna",
-    "7,39": "pedra_caverna",
+    "7,35": "desmoronada",
+    "7,36": "desmoronada",
+    "7,37": "desmoronada",
+    "7,38": "desmoronada",
+    "7,39": "desmoronada",
     "23,39": "desmoronada",
     "24,39": "desmoronada",
     "24,38": "desmoronada",

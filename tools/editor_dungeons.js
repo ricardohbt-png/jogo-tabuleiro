@@ -242,6 +242,1662 @@ window.EDITOR_DUNGEONS = [
     }
   },
   {
+    "file": "floresta.json",
+    "id": "floresta",
+    "name": "floresta",
+    "defn": {
+      "schema_version": 1,
+      "id": "floresta",
+      "name": "floresta",
+      "ambiente": "ar_livre",
+      "grid": {
+        "w": 16,
+        "h": 12
+      },
+      "tiles": [
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "rooms": [
+        {
+          "id": 0,
+          "x": 2,
+          "y": 8,
+          "w": 4,
+          "h": 3,
+          "role": "entrance",
+          "locked": false,
+          "doors": []
+        }
+      ],
+      "entrance": {
+        "x": 4,
+        "y": 9
+      },
+      "exit": null,
+      "monsters": [
+        {
+          "type": "goblin",
+          "pos": [
+            6,
+            4
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false
+        }
+      ],
+      "chests": [],
+      "traps": [],
+      "decorations": [
+        {
+          "type": "arvore",
+          "pos": [
+            0,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.5,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            0,
+            10
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1,
+            2
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            0,
+            9
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            0.7,
+            1.7
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            8,
+            10
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            8,
+            9
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            8,
+            7
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            8,
+            8
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            9,
+            7
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            9,
+            8
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            9,
+            9
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            9,
+            10
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            5,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1,
+            1.5
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            4,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            2,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1,
+            1.7
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            1,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1,
+            1.7
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            3,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.2,
+            1.5
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            6,
+            1
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "size": [
+            2,
+            2
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            6,
+            10
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            7,
+            10
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            6,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            7,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            8,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            9,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            10,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            11,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            12,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            13,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            14,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            15,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            15,
+            10
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            15,
+            9
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            15,
+            8
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            15,
+            7
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            15,
+            6
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            15,
+            5
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            15,
+            4
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            15,
+            3
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            15,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            15,
+            1
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            15,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            14,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            13,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            11,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            12,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            10,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            9,
+            1
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            9,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            8,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            7,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            6,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            5,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            4,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            3,
+            1
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            3,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            2,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            1,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            0,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            0,
+            1
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            0,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            0,
+            3
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            0,
+            4
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            0,
+            5
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            0,
+            6
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            0,
+            7
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            0,
+            8
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            7,
+            9
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            7,
+            8
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            7,
+            7
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            7,
+            6
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            8,
+            6
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            9,
+            6
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            10,
+            6
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            10,
+            7
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            10,
+            8
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            10,
+            9
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "type": "arvore",
+          "pos": [
+            10,
+            10
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        }
+      ],
+      "prisoner": null,
+      "materiais": {
+        "0,9": "grama",
+        "0,10": "grama",
+        "1,10": "grama",
+        "1,11": "grama",
+        "0,11": "grama",
+        "2,11": "grama",
+        "3,11": "grama",
+        "4,11": "grama",
+        "11,6": "grama",
+        "11,5": "grama",
+        "11,4": "terra",
+        "11,3": "terra",
+        "11,2": "grama",
+        "11,1": "grama",
+        "10,1": "grama",
+        "9,1": "grama",
+        "9,2": "grama",
+        "9,3": "terra",
+        "9,4": "terra",
+        "9,5": "grama",
+        "9,6": "grama",
+        "9,7": "grama",
+        "9,8": "grama",
+        "9,9": "grama",
+        "9,10": "grama",
+        "8,10": "grama",
+        "7,10": "grama",
+        "7,9": "grama",
+        "7,8": "grama",
+        "7,7": "grama",
+        "7,6": "grama",
+        "7,5": "grama",
+        "7,4": "terra",
+        "7,3": "terra",
+        "7,2": "grama",
+        "7,1": "grama",
+        "6,1": "grama",
+        "5,1": "grama",
+        "5,2": "grama",
+        "5,3": "terra",
+        "5,4": "terra",
+        "5,5": "grama",
+        "5,6": "grama",
+        "5,7": "grama",
+        "5,8": "grama",
+        "5,9": "grama",
+        "4,10": "terra",
+        "3,10": "terra",
+        "3,9": "terra",
+        "3,8": "terra",
+        "3,7": "terra",
+        "3,6": "terra",
+        "3,5": "terra",
+        "3,4": "terra",
+        "3,3": "terra",
+        "3,2": "grama",
+        "3,1": "grama",
+        "2,1": "grama",
+        "2,2": "grama",
+        "1,5": "grama",
+        "1,6": "grama",
+        "1,7": "grama",
+        "1,8": "grama",
+        "1,9": "grama",
+        "2,3": "grama",
+        "2,4": "grama",
+        "2,5": "grama",
+        "2,6": "grama",
+        "2,7": "grama",
+        "2,8": "grama",
+        "2,9": "grama",
+        "2,10": "grama",
+        "4,9": "terra",
+        "4,8": "terra",
+        "4,7": "terra",
+        "4,6": "terra",
+        "4,5": "terra",
+        "4,4": "terra",
+        "4,3": "terra",
+        "4,2": "grama",
+        "4,1": "grama",
+        "6,2": "grama",
+        "6,3": "terra",
+        "6,4": "terra",
+        "6,5": "grama",
+        "6,6": "grama",
+        "6,7": "grama",
+        "6,8": "grama",
+        "6,9": "grama",
+        "6,10": "grama",
+        "10,10": "grama",
+        "11,10": "grama",
+        "11,9": "grama",
+        "11,8": "grama",
+        "12,8": "grama",
+        "12,7": "grama",
+        "13,7": "terra",
+        "13,6": "terra",
+        "13,5": "terra",
+        "13,4": "terra",
+        "13,3": "terra",
+        "13,2": "grama",
+        "13,1": "grama",
+        "14,1": "grama",
+        "14,2": "grama",
+        "14,3": "terra",
+        "14,4": "terra",
+        "14,5": "terra",
+        "14,6": "terra",
+        "14,7": "terra",
+        "14,8": "terra",
+        "14,9": "terra",
+        "14,10": "terra",
+        "13,10": "terra",
+        "13,9": "terra",
+        "13,8": "terra",
+        "12,9": "grama",
+        "12,10": "grama",
+        "8,9": "grama",
+        "10,9": "grama",
+        "8,8": "grama",
+        "10,8": "grama",
+        "8,7": "grama",
+        "10,7": "grama",
+        "8,6": "grama",
+        "8,5": "grama",
+        "8,4": "terra",
+        "8,3": "terra",
+        "8,2": "grama",
+        "8,1": "grama",
+        "12,1": "grama",
+        "10,2": "grama",
+        "12,2": "grama",
+        "10,3": "terra",
+        "12,3": "terra",
+        "10,4": "terra",
+        "12,4": "terra",
+        "10,5": "grama",
+        "12,5": "grama",
+        "11,7": "grama",
+        "10,6": "grama",
+        "12,6": "grama",
+        "5,10": "grama",
+        "5,11": "grama",
+        "15,3": "grama",
+        "15,2": "grama",
+        "15,1": "grama",
+        "15,0": "grama",
+        "14,0": "grama",
+        "13,0": "grama",
+        "12,0": "grama",
+        "11,0": "grama",
+        "10,0": "grama",
+        "9,0": "grama",
+        "8,0": "grama",
+        "7,0": "grama",
+        "6,0": "grama",
+        "5,0": "grama",
+        "4,0": "grama",
+        "3,0": "grama",
+        "2,0": "grama",
+        "1,0": "grama",
+        "1,1": "grama",
+        "1,2": "grama",
+        "1,3": "grama",
+        "1,4": "grama",
+        "0,4": "grama",
+        "0,5": "grama",
+        "0,6": "grama",
+        "0,7": "grama",
+        "0,8": "grama",
+        "0,3": "grama",
+        "0,2": "grama",
+        "0,1": "grama",
+        "0,0": "grama",
+        "15,4": "grama",
+        "15,5": "grama",
+        "15,6": "grama",
+        "15,7": "grama",
+        "15,8": "grama",
+        "15,9": "grama",
+        "15,10": "grama",
+        "15,11": "grama",
+        "14,11": "grama",
+        "13,11": "grama",
+        "12,11": "grama",
+        "11,11": "grama",
+        "10,11": "grama",
+        "9,11": "grama",
+        "8,11": "grama",
+        "7,11": "grama",
+        "6,11": "grama"
+      },
+      "objectives": {
+        "primary": {
+          "type": "kill_all",
+          "xp": 0,
+          "reward": {
+            "gold": 0,
+            "items": []
+          }
+        },
+        "secondary": []
+      }
+    }
+  },
+  {
     "file": "gustavo (1).json",
     "id": "gustavo",
     "name": "gustavo",
@@ -1075,6 +2731,49 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null
+        },
+        {
+          "type": "brasao_leao",
+          "pos": [
+            0,
+            9
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "image": "brasao_leao.png"
+        },
+        {
+          "type": "brasao_leao",
+          "pos": [
+            4,
+            9
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "image": "brasao_leao.png"
+        },
+        {
+          "type": "cortina_vermelha",
+          "pos": [
+            2,
+            11
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "image": "cortina_vermelha.png",
+          "vscale": [
+            3,
+            1.5
+          ]
         }
       ],
       "prisoner": null,
@@ -3455,6 +5154,22 @@ window.EDITOR_DUNGEONS = [
             }
           ],
           "key_objective": false
+        },
+        {
+          "pos": [
+            5,
+            35
+          ],
+          "gold": 5000,
+          "items": [
+            {
+              "id": "health_potion"
+            },
+            {
+              "id": "sword"
+            }
+          ],
+          "key_objective": false
         }
       ],
       "traps": [
@@ -3584,7 +5299,7 @@ window.EDITOR_DUNGEONS = [
           "loot": null,
           "image": "fogueiracircular.png",
           "vscale": [
-            1,
+            0.6,
             1.4
           ]
         },
@@ -3598,7 +5313,10 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": []
+          },
           "image": "sarcofagocima.png",
           "vscale": [
             1,
@@ -3690,8 +5408,8 @@ window.EDITOR_DUNGEONS = [
             3
           ],
           "vscale": [
-            0.8,
-            0.8
+            1,
+            1.4
           ]
         },
         {
@@ -3941,8 +5659,8 @@ window.EDITOR_DUNGEONS = [
           "loot": null,
           "image": "arvore_cutout.png",
           "vscale": [
-            1,
-            1.7
+            1.5,
+            2
           ]
         },
         {
@@ -4018,6 +5736,62 @@ window.EDITOR_DUNGEONS = [
             7,
             4
           ]
+        },
+        {
+          "type": "cortina_vermelha",
+          "pos": [
+            6,
+            36
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "image": "cortina_vermelha.png"
+        },
+        {
+          "type": "cortina_vermelha",
+          "pos": [
+            6,
+            37
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "image": "cortina_vermelha.png"
+        },
+        {
+          "type": "cortina_vermelha",
+          "pos": [
+            0,
+            35
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "image": "cortina_vermelha.png",
+          "vscale": [
+            2,
+            1
+          ]
+        },
+        {
+          "type": "brasao_leao",
+          "pos": [
+            4,
+            34
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "image": "brasao_leao.png"
         }
       ],
       "prisoner": {
@@ -4326,11 +6100,11 @@ window.EDITOR_DUNGEONS = [
         "7,32": "desmoronada",
         "7,33": "desmoronada",
         "7,34": "desmoronada",
-        "7,35": "pedra_caverna",
-        "7,36": "pedra_caverna",
-        "7,37": "pedra_caverna",
-        "7,38": "pedra_caverna",
-        "7,39": "pedra_caverna",
+        "7,35": "desmoronada",
+        "7,36": "desmoronada",
+        "7,37": "desmoronada",
+        "7,38": "desmoronada",
+        "7,39": "desmoronada",
         "23,39": "desmoronada",
         "24,39": "desmoronada",
         "24,38": "desmoronada",
@@ -7664,4 +9438,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO ao salvar no editor (e por tools/export_catalog.py).
+// GERADO por tools/export_catalog.py — não editar à mão.

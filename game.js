@@ -218,12 +218,14 @@ document.body.innerHTML = `
 <!-- Trap Result Popup -->
 <div id="trap-overlay">
   <div class="trap-box">
-    <div class="trap-icon" id="trap-icon">🪤</div>
-    <h3 id="trap-title">Armadilha</h3>
-    <div class="trap-status" id="trap-status"></div>
-    <p class="trap-desc" id="trap-desc"></p>
-    <ul class="trap-effects" id="trap-effects"></ul>
-    <button class="btn-cancel" onclick="closeTrapWindow()">Fechar</button>
+    <div class="trap-art"><div class="trap-icon" id="trap-icon">🪤</div></div>
+    <div class="trap-content">
+      <h3 id="trap-title">Armadilha</h3>
+      <div class="trap-status" id="trap-status"></div>
+      <p class="trap-desc" id="trap-desc"></p>
+      <ul class="trap-effects" id="trap-effects"></ul>
+      <button class="btn-cancel" onclick="closeTrapWindow()">Fechar</button>
+    </div>
   </div>
 </div>
 
@@ -256,6 +258,19 @@ function _assetURL(path){ return path + (path.includes('?') ? '&' : '?') + 'v=' 
 // Tamanho da miniatura PNG extrudada por casa de footprint (maior = miniatura
 // maior/mais alta no 3D). 1 casa de árvore → ~1.8 unidades de largura.
 const DECOR_MINI_ESCALA = 2.0;
+
+// Modelos GLB usados por decorações específicas. A chave é a imagem que já
+// identifica o objeto no mapa, para não trocar outras decorações do tipo tumba.
+const DECOR_GLB_MODELS = {
+  'sarcofagocima.png': 'assets/objetos/sarcofago.glb',
+};
+const DECOR_GLB_TYPES = {
+  arvore: 'assets/objetos/arvore.glb',
+  arvore_grande: 'assets/objetos/arvore.glb',
+};
+// A superfície dos tiles 3D fica em y=0.22; um pequeno acréscimo evita que a
+// base dos modelos atravesse o piso por arredondamento de geometria.
+const DECOR_GLB_FLOOR_Y = 0.225;
 
 // ── Decoration 3D spec — shape/height/color per type (procedural render) ──────
 const DECOR_3D = {
@@ -1288,6 +1303,7 @@ function openShop(shopId){
   GS.pendingShopOpen = null;
   GS.activeShop=shopId; GS.shopTabIdx=0;
   const modal=$('shop-modal'); if(!modal) return;
+  modal.classList.toggle('shop-mercador', shopId==='mercador');
   modal.classList.add('open');
   const b=CITY_BUILDINGS.find(b=>b.id===shopId);
   const titles={taverna:'🍺 Taverna',ferreiro:'🔨 Ferreiro',mercador:'🛒 Mercador',templo:'⛪ Templo'};
@@ -1304,7 +1320,7 @@ function openShop(shopId){
   const tabDefs = shopId==='ferreiro'
     ? ['⚔ Armas','🛡 Armaduras','🏹 Munição','💰 Vender']
     : shopId==='mercador'
-    ? ['🛒 Comprar','💰 Vender']
+    ? ['🛒 Comprar','🎵 Instrumentos','☠️ Venenos','📜 Pergaminhos','💰 Vender']
     : [];
   tabDefs.forEach((t,i)=>{
     const btn=document.createElement('button');
@@ -1343,7 +1359,7 @@ function _renderShopItems(){
   if(!GS.cityState||!GS.activeShop) return;
   // Route sell tabs
   if(GS.activeShop==='ferreiro'&&GS.shopTabIdx===3){ _renderSellItems('gear'); return; }
-  if(GS.activeShop==='mercador'&&GS.shopTabIdx===1){ _renderSellItems('bag');  return; }
+  if(GS.activeShop==='mercador'&&GS.shopTabIdx===4){ _renderSellItems('bag');  return; }
 
   const myP=GS.cityState.players.find(p=>p.id===GS.myPid);
   const gold=myP?myP.gold:0;
@@ -1355,6 +1371,19 @@ function _renderShopItems(){
     if(GS.shopTabIdx===0)      { items=shops.ferreiro.weapons; shopKey='ferreiro_weapon'; }
     else if(GS.shopTabIdx===1) { items=shops.ferreiro.armors;  shopKey='ferreiro_armor';  }
     else                       { items=shops.ferreiro.ammo;    shopKey='ferreiro_ammo';   }
+  } else if(GS.activeShop==='mercador') {
+    const mercadorItems=shops.mercador||[];
+    if(GS.shopTabIdx===1) {
+      items=mercadorItems.filter(item=>item.tipo_item==='instrumento');
+    } else if(GS.shopTabIdx===2) {
+      items=mercadorItems.filter(item=>item.effect==='coat_poison');
+    } else if(GS.shopTabIdx===3) {
+      items=mercadorItems.filter(item=>item.effect==='scroll');
+    } else {
+      // Itens gerais: mantém o mercado normal sem duplicar as categorias próprias.
+      items=mercadorItems.filter(item=>item.tipo_item!=='instrumento'
+        && item.effect!=='coat_poison' && item.effect!=='scroll');
+    }
   } else {
     items=shops[GS.activeShop]||[];
   }
@@ -1469,6 +1498,12 @@ function _itemDesc(item){
   }
   if(item.ac_bonus!=null){
     const kindTxt=item.kind==='shield'?'Escudo — soma com armadura':'Armadura';
+    if(item.kind==='armor'){
+      const cat={leve:'Leve',media:'Média',pesada:'Pesada'}[item.armor_category];
+      const mats=(item.corrosion_materials||[]).map(m=>({organic:'orgânica',metal:'metálica'}[m]||m));
+      const tags=[cat, mats.length ? mats.join(' + ') : ''].filter(Boolean);
+      return `${kindTxt} • CA +${item.ac_bonus}${tags.length ? ' • '+tags.join(' • ') : ''}`;
+    }
     return `${kindTxt} • CA +${item.ac_bonus}`;
   }
   // Comida/bebida da taverna: fome/sede vêm nos campos item.fome / item.sede.
@@ -2535,6 +2570,22 @@ function trocarAbaFichaJogo(aba, heroiKey) {
     : renderAbaMagiasPedro(heroi)
 }
 
+// Raio de visão exibido na ficha. O servidor é a fonte autoritativa; o cálculo
+// local é apenas um fallback enquanto uma atualização de estado não chega.
+function obterRaioVisaoCliente(personagem){
+  const recebido = Number(personagem && personagem.vision_radius);
+  if(Number.isFinite(recebido)) return recebido;
+  const dex = Number(personagem && personagem.dex != null ? personagem.dex : 10);
+  const intel = Number(personagem && personagem.int_ != null ? personagem.int_ : 10);
+  const modDex = Math.floor((dex - 10) / 2);
+  const modInt = Math.floor((intel - 10) / 2);
+  const classe = personagem && (personagem.class_id || personagem.key || personagem.id);
+  const base = classe === 'warrior' ? 4 : 3;
+  const bonusLuz = classe === 'paladin' && personagem && personagem.guerreiro_luz_ativo
+    ? Number((personagem.guerreiro_luz_bonus || {}).visao || 0) : 0;
+  return Math.max(0, base + Math.floor((modInt + modDex) / 2) + bonusLuz);
+}
+
 // Renderiza atributos usando dados do servidor quando disponíveis
 function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
   const ATRIBUTOS = [
@@ -2551,6 +2602,7 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
     heroi.key, nivel,
     heroi.statsModificados?.constituicao || heroi.stats?.constituicao
   ) || '?'
+  const raioVisao = obterRaioVisaoCliente(estadoServidor)
 
   return `
     <!-- VIDA -->
@@ -2672,6 +2724,15 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
           </span>
         </div>
       ` : ''}
+      <div style="
+        flex:1; padding:8px 12px;
+        background:rgba(100,180,255,0.06);
+        border:1px solid #64b4ff44;
+        display:flex; justify-content:space-between;
+      ">
+        <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">RAIO DE VISÃO</span>
+        <span style="color:#8ed0ff; font-size:14px; font-weight:bold;">👁 ${raioVisao}</span>
+      </div>
     </div>
   `
 }
@@ -4702,6 +4763,16 @@ function _getObjeto2DImg(imageName){
   }
   return (img.complete && img.naturalWidth) ? img : null;
 }
+const _wallObj2DImg = {};
+function _getWallObjeto2DImg(imageName){
+  const src = _getObjeto2DImg(imageName); if(!src) return null;
+  if(_wallObj2DImg[imageName]) return _wallObj2DImg[imageName];
+  const cv=document.createElement('canvas'); cv.width=src.naturalWidth; cv.height=src.naturalHeight;
+  const c=cv.getContext('2d', {willReadFrequently:true}); c.drawImage(src,0,0);
+  const data=c.getImageData(0,0,cv.width,cv.height);
+  for(let i=0;i<data.data.length;i+=4){ const hi=Math.max(data.data[i],data.data[i+1],data.data[i+2]); if(hi<=10)data.data[i+3]=0; else if(hi<32)data.data[i+3]=Math.round(data.data[i+3]*(hi-10)/22); }
+  c.putImageData(data,0,0); _wallObj2DImg[imageName]=cv; return cv;
+}
 
 // Rotação de objetos (decorações): facing → ângulo. O facing canônico [0,1] é 0°;
 // cada giro de 90° avança no sentido [0,1]→[1,0]→[0,-1]→[-1,0]. Usado no 2D (canvas)
@@ -4845,15 +4916,33 @@ function drawOrientedMonster2D(ctx, m, hcx, hcy){
   ctx.restore();
 }
 
-// Indicador "em chamas" (2D): 🔥 tremeluzente no canto superior direito da casa.
+// Indicadores de dano contínuo no canto superior direito da casa.
 // (X,Y) = canto superior esquerdo da casa em pixels.
-function _drawEmChamas2D(ctx, X, Y){
+function _drawStatusIcons2D(ctx, X, Y, entity){
   const fs = Math.round(CELL*0.34);
   ctx.save();
   ctx.font = `${fs}px serif`;
   ctx.textAlign = 'right'; ctx.textBaseline = 'top';
-  ctx.globalAlpha = 0.72 + 0.28*Math.abs(Math.sin(performance.now()/170));
-  ctx.fillText('🔥', X + CELL - 1, Y + 1);
+  let x = X + CELL - 1;
+  if(entity.em_chamas_rodadas > 0){
+    ctx.globalAlpha = 0.72 + 0.28*Math.abs(Math.sin(performance.now()/170));
+    ctx.fillText('🔥', x, Y + 1); x -= fs * 0.72;
+  }
+  const drops = [
+    [entity.acido_residual > 0, '#55df74'],
+    [Array.isArray(entity.efeitos_veneno) && entity.efeitos_veneno.length > 0, '#a85cff'],
+  ];
+  for(const [active, color] of drops){
+    if(!active) continue;
+    ctx.globalAlpha = 0.95;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x - fs*0.20, Y + fs*0.05);
+    ctx.bezierCurveTo(x - fs*0.38, Y + fs*0.32, x - fs*0.38, Y + fs*0.58, x - fs*0.20, Y + fs*0.68);
+    ctx.bezierCurveTo(x, Y + fs*0.58, x, Y + fs*0.32, x - fs*0.20, Y + fs*0.05);
+    ctx.fill();
+    x -= fs * 0.70;
+  }
   ctx.restore();
 }
 
@@ -5333,7 +5422,7 @@ function renderMap(state){
       // Escala visual (vscale): largura ×sx, altura ×sy (cresce p/ cima, base ancorada).
       const _vs = Array.isArray(d.vscale) ? d.vscale : [1, 1];
       const _sx = _vs[0] || 1, _sy = _vs[1] || 1;
-      const _oImg = d.image ? _getObjeto2DImg(d.image) : null;
+      const _oImg = d.image ? (d.special === 'wall' ? _getWallObjeto2DImg(d.image) : _getObjeto2DImg(d.image)) : null;
       if (_oImg && d.special === 'floor') {
         // Chão: preenche cada casa do footprint borda-a-borda (sem manter proporção).
         for (const [tx2, ty2] of tiles) ctx.drawImage(_oImg, tx2 * CELL, ty2 * CELL, CELL, CELL);
@@ -5429,7 +5518,7 @@ function renderMap(state){
     ctx.fillStyle='rgba(255,90,90,0.95)'; ctx.font=`bold ${mNameFs}px monospace`;
     ctx.textAlign='center'; ctx.textBaseline='top';
     ctx.fillText(m.name.slice(0,10), cx, my*CELL+barH+3);
-    if(m.em_chamas_rodadas > 0) _drawEmChamas2D(ctx, mx*CELL, my*CELL);
+    _drawStatusIcons2D(ctx, mx*CELL, my*CELL, m);
   }
 
   // ── Corpses (cadáveres): alvos de Animar Mortos — ícone esmaecido roxo ──────
@@ -5566,7 +5655,7 @@ function renderMap(state){
     const isCur=p.id===state.current_turn, isMe=p.id===GS.myPid;
     drawMiniBase(ctx, cx, cy, p.color, isCur||isMe);
     drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur);
-    if(p.em_chamas_rodadas > 0) _drawEmChamas2D(ctx, X, Y);
+    _drawStatusIcons2D(ctx, X, Y, p);
     if(isMe||isCur){
       const label=p.name.slice(0,9);
       const tagFs=Math.round(CELL*0.14);
@@ -5679,6 +5768,7 @@ const MAT_PALETTE_2D = {
   pedra_cinza: { base: [44, 42, 50],  accent: 'stone' },
   terra:       { base: [74, 56, 38],  accent: 'dirt'  },
   grama:       { base: [46, 78, 40],  accent: 'grass' },
+  agua:        { base: [16, 88, 142], accent: 'water' },
   pedra_negra: { base: [20, 19, 24],  accent: 'stone' },
   entulho:     { base: [70, 66, 58],  accent: 'rubble' },
   // paredes (topo)
@@ -5703,7 +5793,17 @@ function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview, matI
   const [BR, BG, BB] = pal.base;
 
   // Estilos não-pedra têm painter próprio (sem grade de lajota).
-  if(pal.accent==='grass'){ paintGrass(ctx, X, Y, CELL, _rng((x*53^y*97^7)>>>0)); }
+  if(pal.accent==='water'){
+    const wr=_rng((x*113^y*211^19)>>>0);
+    ctx.fillStyle='#105b90'; ctx.fillRect(X,Y,CELL,CELL);
+    for(let i=0;i<4;i++){
+      const yy=Y+4+i*7+(wr()-0.5)*2;
+      ctx.strokeStyle=`rgba(150,225,255,${0.16+wr()*0.16})`;
+      ctx.lineWidth=1.2; ctx.beginPath();
+      ctx.moveTo(X+2,yy); ctx.quadraticCurveTo(X+CELL*0.48,yy-2,X+CELL-2,yy); ctx.stroke();
+    }
+  }
+  else if(pal.accent==='grass'){ paintGrass(ctx, X, Y, CELL, _rng((x*53^y*97^7)>>>0)); }
   else if(pal.accent==='dirt'){ paintDirt(ctx, X, Y, CELL, _rng((x*29^y*71^3)>>>0)); }
   else {
   // Deep mortar joints — near-black with faint blue-gray
@@ -9591,7 +9691,7 @@ function _clickTileThrow(tx, ty){
   if(!window._modoThrowItem) return;
   const r = GS.resolveTileClick(tx, ty);
   if(r && r.type === 'throw'){
-    GS.throwItem(r.itemId, r.targetId);
+    GS.throwItem(r.itemId, r.targetId, r.targetPos);
     _encerrarMiraArremesso();
   } else if(r && r.type === 'throw_area'){
     GS.throwItemArea(r.itemId, r.tx, r.ty);
@@ -10008,6 +10108,7 @@ function renderMyPanel(state){
   const vRef  = (me.ref_  != null) ? me.ref_  : 0;
   const vWill = (me.will  != null) ? me.will  : 0;
   const vLvlBonus = (me.level_bonus != null) ? Number(me.level_bonus) : (me.level || 1);
+  const vVisao = obterRaioVisaoCliente(me);
 
   // ── Weapon info ──
   const weapon = (me.weapon && typeof me.weapon === 'object') ? me.weapon : null;
@@ -10075,6 +10176,10 @@ function renderMyPanel(state){
       <div class="combat-chip">
         <span class="cl">Mov</span>
         <b style="color:#e8e0c8;">${me.moves_left ?? 0}/${me.spd ?? 0}${_cancaoTag('bonus_mov')}</b>
+      </div>
+      <div class="combat-chip" style="border-color:#64b4ff;background:#08131e;">
+        <span class="cl">Visão</span>
+        <b style="color:#8ed0ff;">👁 ${vVisao}</b>
       </div>
     </div>
     <div class="combat-row">
@@ -10848,7 +10953,34 @@ function _advanceTrapQueue(){
 }
 
 function _showTrapResult(msg){
-  $('trap-icon').textContent = msg.icone || '🪤';
+  const trapImages = {
+    'Buraco Escondido': 'armadilha_fosso.png',
+    'Buraco': 'armadilha_fosso.png',
+    'Armadilha de Urso': 'armadilha_urso.png',
+    'Fosso com Estacas': 'armadilha_fosso_estacas.png',
+    'Fosso com Estacas Envenenadas': 'armadilha_fosso_estacas.png',
+    'Estacas Envenenadas': 'armadilha_fosso_estacas.png',
+    'Rede': 'armadilha_rede.png',
+    'Armadilha Incendiária': 'armadilha_incendiaria.png',
+    'Mina Terrestre': 'armadilha_explosiva.png',
+    'Nuvem de Gás': 'armadilha_gas.png',
+  };
+  const trapIcon = $('trap-icon');
+  // Nos ticks da armadilha incendiária, a armadilha já disparou: mostre as
+  // chamas que continuam causando dano em vez da ilustração da armadilha.
+  const imageName = msg.sucesso ? 'armadilha_sucesso.png'
+    : (msg.tick && msg.nome === 'Armadilha Incendiária')
+      ? 'em_chamas.png'
+      : trapImages[msg.nome];
+  trapIcon.replaceChildren();
+  if (imageName) {
+    const image = new Image();
+    image.src = _assetURL(`assets/armadilhas/${imageName}`);
+    image.alt = msg.nome || 'Armadilha';
+    trapIcon.appendChild(image);
+  } else {
+    trapIcon.textContent = msg.icone || '🪤';
+  }
   $('trap-title').textContent = msg.nome || 'Armadilha';
   $('trap-desc').textContent = msg.descricao || '';
 
@@ -11164,9 +11296,9 @@ function renderFichaCidadeBody(panel, player, editable){
 // Envia o ataque incluindo as habilidades ARMADAS do warrior (toggle). O custo
 // de fome/sede é cobrado pelo servidor neste momento (a "ação"). Limpa a seleção
 // após enviar — no próximo turno as skills voltam a ficar selecionáveis.
-function sendAttack(targetId){
+function sendAttack(targetId, targetPos){
   const buffs = GS.getWarriorSelected();
-  send({type:'attack', target_id:targetId, buffs});
+  send({type:'attack', target_id:targetId, target_pos:targetPos || null, buffs});
   GS.clearWarriorSelected();
 }
 
@@ -11712,6 +11844,17 @@ function toggle3D(){
   }
 }
 
+// A malha 3D do tabuleiro é criada uma vez e reutilizada durante o turno. Esta
+// assinatura separa mudanças estáticas (tiles/materiais) das atualizações comuns
+// de jogo, para reconstituir o chão quando o editor carrega ou pinta grama/terra.
+function _assinaturaVisualTabuleiro3D(state){
+  const tiles = (state.tiles || []).map(row => row.join('')).join('|');
+  const materiais = state.materiais || {};
+  const pintura = Object.keys(materiais).sort()
+    .map(key => `${key}:${materiais[key]}`).join('|');
+  return `${tiles}#${pintura}`;
+}
+
 // Each TILE_FLOOR cell → chunky physical floor piece (thickness 0.22, gap 0.07/side)
 // Each TILE_WALL cell → tall stone wall column (height 1.75, same footprint)
 // Dark table surface underneath → gap between pieces = visible grid lines
@@ -11722,6 +11865,7 @@ function init3D(state){
   if(g3) dispose3D();
 
   const T   = window.THREE;
+  const boardVisualSig = _assinaturaVisualTabuleiro3D(state);
   const wrap = $('map-wrap');
   const W = state.tiles[0].length, H = state.tiles.length;
 
@@ -11807,6 +11951,10 @@ function init3D(state){
     }
     if(matId==='grama'||matId==='terra'||matId==='pedra_negra'||matId==='enegrecida'||matId==='pedra_caverna'||matId==='desmoronada'||matId==='entulho'){
       tex=new T.CanvasTexture(cv); tex.wrapS=tex.wrapT=T.RepeatWrapping;
+      // Canvas é desenhado em sRGB. Declarar isso impede o Three.js de tratar
+      // os verdes/marrons como cores lineares lavadas no renderizador 3D.
+      if(T.SRGBColorSpace) tex.colorSpace=T.SRGBColorSpace;
+      else if(T.sRGBEncoding) tex.encoding=T.sRGBEncoding;
     }
     _matTexCache[matId]=tex; return tex;
   }
@@ -12015,9 +12163,26 @@ function init3D(state){
         const jit = vf*VC.floor.baseVariance;
         mat.color.setRGB(mc[0]+jit, mc[1]+jit, mc[2]+jit);
         const ftex = makeMaterialTex(mid3);
-        if(ftex){ mat.map = ftex; mat.color.setRGB(1,1,1); }
+        if(ftex){
+          mat.map = ftex; mat.color.setRGB(1,1,1);
+          // Grama e terra recebem o mesmo desenho procedimental do 2D também
+          // como relevo, tornando a textura perceptível sob a luz do 3D.
+          if(mid3==='grama' || mid3==='terra'){
+            mat.bumpMap = ftex;
+            mat.bumpScale = mid3==='terra' ? 0.075 : 0.045;
+            mat.roughness = mid3==='terra' ? 0.94 : 0.98;
+          }
+        }
         mat.emissive.set(VC.floor.emissive);
         mat.emissiveIntensity = 1.0;
+        if(mid3==='agua'){
+          // Superfície azul e mais lustrosa que pedra: indica água profunda,
+          // sem transformá-la em obstáculo de navegação.
+          mat.roughness = 0.24;
+          mat.metalness = 0.12;
+          mat.emissive.set(0x06355e);
+          mat.emissiveIntensity = 0.72;
+        }
         // Auto-iluminação: a própria textura emite, deixando a cor forte e
         // diferenciada mesmo na penumbra (grama/terra/pedra negra).
         if(ftex && (mid3==='grama' || mid3==='terra' || mid3==='pedra_negra')){
@@ -12241,7 +12406,7 @@ function init3D(state){
     spellRangeMeshes, spellZonaMeshes, spellDoubleMeshes, spellAreaMeshes, spellEscuridaoMeshes, spellSilencioMeshes,
     dustPts, dustVel: _dVel, dustXZ: _dXZ, dustY: _dY,
     dustCount: DUST_N, dustCeil: DUST_CEIL,
-    W, H, animFrame:null, resizeObs,
+    W, H, boardVisualSig, animFrame:null, resizeObs,
     hoverSpot,
     stairGroup,                          // staircase mesh (null if no stairs)
     exitGroup,                           // Fase 3: marcador de saída 🏁 (null se não houver)
@@ -12675,7 +12840,7 @@ function startLoop3D(){
       const isHov = hovP && gx === hovP[0] && gy === hovP[1];
       const isSel = selP && gx === selP[0] && gy === selP[1];
       // Smooth vertical lift (lerp coefficient 0.14 ≈ snappy but not instant)
-      const targetY = isHov ? 0.15 : 0;
+      const targetY = (fig.userData.baseY || 0) + (isHov ? 0.15 : 0);
       fig.position.y += (targetY - fig.position.y) * 0.14;
       if(isHov) hovFigY = fig.position.y + 0.30;   // light tracks above base
       // Slow Y-rotation while selected (~3 rpm)
@@ -13786,6 +13951,8 @@ function _disposeEntityTree(root){
 // ── Helpers para miniaturas extrudadas de decorações (PNG → 3D) ───────────────
 function _disposeDecorMesh(obj){
   obj.traverse(o => {
+    // Instâncias GLB compartilham os recursos com o template em cache.
+    if (o.userData && o.userData.isGLB) return;
     if (o.geometry) o.geometry.dispose();
     if (o.material) {
       const mats = Array.isArray(o.material) ? o.material : [o.material];
@@ -13796,6 +13963,79 @@ function _disposeDecorMesh(obj){
   });
 }
 const _objImg3D = {};
+const _decorGLBCache = {};
+const _decorGLBQueue = {};
+
+function _loadDecorGLB(T, path, cb){
+  const cached = _decorGLBCache[path];
+  if (cached && cached !== 'erro') { cb(cached); return; }
+  if (cached === 'erro' || !T.GLTFLoader) { cb(null); return; }
+  if (_decorGLBQueue[path]) { _decorGLBQueue[path].push(cb); return; }
+
+  _decorGLBQueue[path] = [cb];
+  new T.GLTFLoader().load(
+    _assetURL(path),
+    gltf => {
+      const template = gltf.scene;
+      template.traverse(o => {
+        if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
+      });
+      _decorGLBCache[path] = template;
+      _decorGLBQueue[path].forEach(fn => fn(template));
+      delete _decorGLBQueue[path];
+    },
+    undefined,
+    error => {
+      console.warn(`[GLB] falha ao carregar decoração ${path}:`, error);
+      _decorGLBCache[path] = 'erro';
+      _decorGLBQueue[path].forEach(fn => fn(null));
+      delete _decorGLBQueue[path];
+    }
+  );
+}
+
+function _buildObjetoGLB(decorId, imageName, path, wCells, hCells, facing){
+  const montar = template => {
+    const slot = g3 && g3.decorMeshes[decorId];
+    if (!slot || slot.userData.glbPath !== path) return;
+    if (!template) {
+      // Mantém a arte 2D atual caso o arquivo não possa ser aberto.
+      slot.userData = { isDecor: true, decorId, imageName };
+      _buildObjetoMini(decorId, imageName, Math.max(wCells, hCells), facing);
+      return;
+    }
+
+    const inst = template.clone();
+    const box = new g3.T.Box3().setFromObject(inst);
+    const size = box.getSize(new g3.T.Vector3());
+    const scale = Math.min(
+      (wCells * 0.92) / Math.max(size.x, 1e-3),
+      (hCells * 0.92) / Math.max(size.z, 1e-3)
+    );
+    // Centraliza o modelo e assenta sua base no piso da masmorra.
+    inst.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2
+    );
+    inst.traverse(o => { if (o.isMesh) o.userData.isGLB = true; });
+    const wrap = new g3.T.Group();
+    wrap.add(inst);
+    wrap.scale.setScalar(scale);
+    const grp = new g3.T.Group();
+    grp.userData = { isDecor: true, decorId, glbPath: path };
+    grp.add(wrap);
+    grp.position.copy(slot.position);
+    grp.position.y = DECOR_GLB_FLOOR_Y;
+    grp.rotation.y = _facingAngleY3D(facing);
+    grp.visible = slot.visible;
+    g3.scene.remove(slot); _disposeDecorMesh(slot);
+    g3.scene.add(grp);
+    g3.decorMeshes[decorId] = grp;
+  };
+  _loadDecorGLB(g3.T, path, montar);
+}
+
 function _buildObjetoMini(decorId, imageName, cells, facing){
   const make = (img) => {
     const slot = g3 && g3.decorMeshes[decorId];
@@ -13831,13 +14071,68 @@ function _buildObjetoMini(decorId, imageName, cells, facing){
   if (img.complete && img.naturalWidth) make(img);
 }
 
+// ── Decais de parede (PNG vertical, sem ocupar o piso) ───────────────────────
+const _wallDecorTextures = {};
+function _wallDecorTexture(T, imageName, done){
+  if (_wallDecorTextures[imageName]) { done(_wallDecorTextures[imageName]); return; }
+  const loader = new T.TextureLoader();
+  loader.load(_assetURL(`assets/objetos/${imageName}`), tex => {
+    // Os três assets iniciais vieram com fundo preto opaco. Convertemos somente
+    // preto absoluto/quase absoluto em alfa, preservando sombras e detalhes.
+    const img = tex.image, cv = document.createElement('canvas');
+    cv.width = img.width; cv.height = img.height;
+    const c = cv.getContext('2d', {willReadFrequently:true}); c.drawImage(img, 0, 0);
+    const data = c.getImageData(0, 0, cv.width, cv.height);
+    for(let i=0; i<data.data.length; i+=4){
+      const hi = Math.max(data.data[i], data.data[i+1], data.data[i+2]);
+      if(hi <= 10) data.data[i+3] = 0;
+      else if(hi < 32) data.data[i+3] = Math.round(data.data[i+3] * (hi - 10) / 22);
+    }
+    c.putImageData(data, 0, 0);
+    const out = new T.CanvasTexture(cv);
+    if(T.SRGBColorSpace) out.colorSpace=T.SRGBColorSpace;
+    else if(T.sRGBEncoding) out.encoding=T.sRGBEncoding;
+    out.needsUpdate = true; out._shared = true; _wallDecorTextures[imageName] = out; done(out);
+  }, undefined, () => done(null));
+}
+
+function _wallDecorRotation(face){
+  if(face[0] === 1) return Math.PI/2;
+  if(face[0] === -1) return -Math.PI/2;
+  return face[1] === -1 ? Math.PI : 0;
+}
+
+function _buildWallDecor3D(d){
+  const slot = g3 && g3.decorMeshes[d.id];
+  if(!slot) return;
+  _wallDecorTexture(g3.T, d.image, tex => {
+    const current = g3 && g3.decorMeshes[d.id];
+    if(!current || current !== slot || !tex) return;
+    const T = g3.T, face = d.facing || [0,1];
+    const vs = Array.isArray(d.vscale) ? d.vscale : [1,1];
+    const isCurtain = d.type === 'cortina_vermelha' || d.type === 'cortina_branca';
+    const h = (isCurtain ? 1.55 : 0.92) * (vs[1] || 1);
+    const w = (isCurtain ? 0.96 : 0.74) * (vs[0] || 1);
+    const mat = new T.MeshBasicMaterial({map:tex, transparent:true, alphaTest:0.02,
+      depthWrite:false, side:T.DoubleSide});
+    const mesh = new T.Mesh(new T.PlaneGeometry(w, h), mat);
+    mesh.userData = {isDecor:true, decorId:d.id, wallImage:d.image, wallFace:face.join(','), wallScale:vs.join(',')};
+    mesh.rotation.y = _wallDecorRotation(face);
+    mesh.position.set(d.pos[0] + face[0]*0.451, isCurtain ? 0.84 : 1.05, d.pos[1] + face[1]*0.451);
+    mesh.visible = slot.visible;
+    g3.scene.remove(slot); _disposeDecorMesh(slot);
+    g3.scene.add(mesh); g3.decorMeshes[d.id] = mesh;
+  });
+}
+
 function renderMap3D(state){
   if(!state || !state.tiles) return;
   // Durante a animação de movimento não reconstrói os peões (preserva o mesh
   // animado). Ao terminar, emMovimento=false e o próximo render reconcilia.
   // Idem para animação de minions (estadoMininoMov).
   if(estadoMovimento.emMovimento || estadoMininoMov.emMovimento) return;
-  if(!g3){
+  const boardVisualSig = _assinaturaVisualTabuleiro3D(state);
+  if(!g3 || g3.boardVisualSig !== boardVisualSig){
     try { init3D(state); }
     catch(err){
       console.error('init3D failed:', err);
@@ -14078,6 +14373,24 @@ function renderMap3D(state){
 
       let mesh = g3.decorMeshes[d.id];
 
+      if (d.special === 'wall' && d.image) {
+        const faceSig = (d.facing || [0,1]).join(',');
+        const scaleSig = (Array.isArray(d.vscale) ? d.vscale : [1,1]).join(',');
+        if (!mesh || mesh.userData.wallImage !== d.image || mesh.userData.wallFace !== faceSig || mesh.userData.wallScale !== scaleSig) {
+          if (mesh) { g3.scene.remove(mesh); _disposeDecorMesh(mesh); }
+          mesh = new T.Group();
+          // A assinatura completa evita recriar o placeholder a cada render
+          // enquanto o PNG ainda está carregando.
+          mesh.userData = {isDecor:true, decorId:d.id, wallImage:d.image,
+            wallFace:faceSig, wallScale:scaleSig, pending:true};
+          mesh.visible = visivel; g3.scene.add(mesh); g3.decorMeshes[d.id] = mesh;
+          _buildWallDecor3D(d);
+        }
+        mesh = g3.decorMeshes[d.id];
+        if (mesh) mesh.visible = visivel;
+        continue;
+      }
+
       if (d.special === 'floor' && d.image) {
         // ── Chão: decal deitado preenchendo TODO o footprint, borda-a-borda ──
         if (!mesh || mesh.userData.imageName !== d.image || mesh.userData.floorW !== wCells || mesh.userData.floorH !== hCells) {
@@ -14087,6 +14400,28 @@ function renderMap3D(state){
           g3.decorMeshes[d.id] = mesh;
         }
         mesh.position.set(worldX, 0.222, worldZ);   // logo acima do piso (TH=0.22), sob os realces
+        mesh.visible = visivel;
+        continue;
+      }
+
+      const glbPath = (d.image && DECOR_GLB_MODELS[d.image]) || DECOR_GLB_TYPES[d.type];
+      if (glbPath && _decorGLBCache[glbPath] !== 'erro') {
+        // ── Modelo 3D real (GLB) ──
+        if (!mesh || mesh.userData.glbPath !== glbPath) {
+          if (mesh) { g3.scene.remove(mesh); _disposeDecorMesh(mesh); }
+          const placeholder = new T.Group();
+          placeholder.userData = { isDecor: true, decorId: d.id, glbPath, pending: true };
+          placeholder.position.set(worldX, 0, worldZ);
+          placeholder.visible = visivel;
+          g3.scene.add(placeholder);
+          g3.decorMeshes[d.id] = placeholder;
+          mesh = placeholder;
+          _buildObjetoGLB(d.id, d.image, glbPath, wCells, hCells, d.facing);
+          mesh = g3.decorMeshes[d.id];
+        }
+        mesh.position.set(worldX, DECOR_GLB_FLOOR_Y, worldZ);
+        const glbScale = Array.isArray(d.vscale) ? d.vscale : [1, 1];
+        mesh.scale.set(glbScale[0] || 1, glbScale[1] || 1, glbScale[0] || 1);
         mesh.visible = visivel;
         continue;
       }
@@ -14163,8 +14498,10 @@ function renderMap3D(state){
   // luzes força o Three.js a recompilar shaders (travadas perceptíveis).
   const entitySig = JSON.stringify([
     state.players.map(p => [p.id, p.pos, p.alive, p.color, p.class_id, p.em_chamas_rodadas > 0,
+      p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0,
       (p.animados||[]).map(a => [a.id, a.pos, a.vida_atual, a.tipo])]),
-    state.monsters.map(m => [m.type, m.pos, m.hp, m.image]),
+    state.monsters.map(m => [m.type, m.pos, m.hp, m.image, m.em_chamas_rodadas > 0,
+      m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0]),
     state.prisoner ? [state.prisoner.pos, state.prisoner.alive, state.prisoner.freed, state.prisoner.image, _prisSel] : null,
     state.corpses || [],
     (state.armadilhas||[]).map(a => [a.id, a.pos, a.ativada, a.so_luccas, a.icone, a.visivel, a.aliada, a.image]),
@@ -14203,6 +14540,17 @@ function renderMap3D(state){
       fig.position.z = y;
       fig.userData.gridX = x;
       fig.userData.gridY = y;
+      // Água profunda: afunda cada miniatura em 35% da própria altura. O
+      // deslocamento fica no grupo-raiz e serve para todos os tipos de peão.
+      if(fig.userData._waterSinkY === undefined){
+        const bounds = new T.Box3().setFromObject(fig);
+        const h = bounds.getSize(new T.Vector3()).y;
+        fig.userData._waterSinkY = -Math.max(0.10, h) * 0.35;
+      }
+      const inWater = state.materiais && state.materiais[`${x},${y}`] === 'agua';
+      fig.userData.baseY = inWater ? fig.userData._waterSinkY : 0;
+      fig.position.y = fig.userData.baseY;
+      fig.userData._stepBaseY = fig.userData.baseY;
     }
     figsUsadas.add(key);
     entityGroup.add(fig);
@@ -14218,10 +14566,12 @@ function renderMap3D(state){
     const pSel = g3.selectedPos && g3.selectedPos[0]===px && g3.selectedPos[1]===py;
     const isCur = p.id===state.current_turn;
     obterFig(`pl:${p.id}`,
-      JSON.stringify([p.color, p.class_id, p.id===GS.myPid, isCur, !!pSel, p.facing, p.em_chamas_rodadas > 0]),
+      JSON.stringify([p.color, p.class_id, p.id===GS.myPid, isCur, !!pSel, p.facing, p.em_chamas_rodadas > 0,
+        p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0]),
       () => {
         const f = build3DFig(p.color, false, p.id===GS.myPid, isCur, px, py, p.class_id, null, pSel,
-          undefined, undefined, undefined, p.facing, p.em_chamas_rodadas > 0);
+          undefined, undefined, undefined, p.facing, p.em_chamas_rodadas > 0,
+          p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0);
         f.userData.pid = p.id;          // permite getPeaoMesh(pid) p/ animação
         return f;
       }, px, py);
@@ -14252,9 +14602,11 @@ function renderMap3D(state){
     if(!visionSet.has(`${mx},${my}`)) continue;
     const mSel = g3.selectedPos && g3.selectedPos[0]===mx && g3.selectedPos[1]===my;
     obterFig(`mon:${m.id}`,
-      JSON.stringify([m.type, m.image, !!mSel, m.porte, !!m.oriented, m.facing, m.em_chamas_rodadas > 0]),
+      JSON.stringify([m.type, m.image, !!mSel, m.porte, !!m.oriented, m.facing, m.em_chamas_rodadas > 0,
+        m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0]),
       () => {
-        const f = build3DFig('#c82020', true, false, false, mx, my, null, m.type, mSel, m.image, m.porte, m.oriented, m.facing, m.em_chamas_rodadas > 0);
+        const f = build3DFig('#c82020', true, false, false, mx, my, null, m.type, mSel, m.image, m.porte, m.oriented, m.facing, m.em_chamas_rodadas > 0,
+          m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0);
         f.userData.monId = m.id;   // taggeado para getMonsterMesh() / deslize fiel
         return f;
       },
@@ -14608,12 +14960,8 @@ function _loadHeroGLB(T, classId, cb) {
       tpl.traverse(o => {
         if (o.isMesh) {
           o.castShadow = true;
-          // emissivo p/ clarear o peão (a luz da masmorra é fraca e deixava o
-          // GLB escuro demais — 0.05 mal se notava; 0.4 acende sem lavar a textura)
-          if (o.material) {
-            o.material.emissive = new T.Color(0xffffff);
-            o.material.emissiveIntensity = 0.4;
-          }
+          // Mantém os materiais exatamente como foram gravados no GLB. Aplicar
+          // emissão branca aqui clareia e desbota as cores originais do modelo.
         }
       });
       _heroGLBCache[classId] = tpl;
@@ -14628,6 +14976,22 @@ function _loadHeroGLB(T, classId, cb) {
       delete _heroGLBQueue[classId];
     }
   );
+}
+
+// Cada arquivo GLB pode ter seu próprio eixo de "frente". A rotação do grupo
+// externo é sempre a direção do movimento; este ajuste corrige somente a
+// orientação nativa do arquivo, sem interferir na caminhada.
+const _HERO_GLB_FRONT_OFFSET = Object.freeze({
+  paladin: 0,
+  warrior: 0,
+  mage: 0,
+  rogue: 0,
+  cleric: 0,
+  bard: 0,
+});
+
+function _heroGLBFrontOffset(classId) {
+  return _HERO_GLB_FRONT_OFFSET[classId] || 0;
 }
 
 // Instancia a miniatura GLB dentro de grp. Retorna true se síncrono (cache),
@@ -14654,8 +15018,12 @@ function _makeCharacterPawn3D(T, grp, classId, Y0, rotY, altura, onMissing) {
     const wrap = new T.Group();
     wrap.add(inst);
     wrap.scale.setScalar(s);
-    wrap.rotation.y = rotY;
+    // Mantém a frente real do arquivo GLB alinhada à frente lógica do peão.
+    // A orientação de movimento fica no grupo externo para cada passo poder
+    // ser aplicado como um ângulo absoluto, sem somar rotações anteriores.
+    wrap.rotation.y = _heroGLBFrontOffset(classId);
     wrap.position.y = Y0;
+    grp.rotation.y = rotY;
     // isGroundDecal (dungeon) + noOL (class-select): fora do passe de outline —
     // a malha já é a silhueta exata; um shell BackSide ficaria errado.
     // isGLB: clone compartilha geometria/material/texturas com o template em
@@ -14673,7 +15041,9 @@ function _makeCharacterPawn3D(T, grp, classId, Y0, rotY, altura, onMissing) {
 // ── Character pawn — GLB 3D real para classes em _GLB_ENABLED_CLASSES,
 // billboard 2D (Sprite, frente.png) para as demais. Fallback automático pro
 // billboard se o GLB falhar ao carregar (onMissing).
-const _GLB_ENABLED_CLASSES = new Set(['paladin']);
+const _GLB_ENABLED_CLASSES = new Set([
+  'warrior', 'mage', 'rogue', 'cleric', 'bard', 'paladin'
+]);
 
 // Converte a direção do último passo ([dx,dy], grid — vem de player.facing)
 // num ângulo de rotação Y (radianos) pro peão GLB encarar aquele lado. Sem
@@ -14687,8 +15057,11 @@ function _facingToRotY(facing) {
   const [fx, fy] = facing;
   if (fy > 0) return 0;                 // Sul  (+gy)
   if (fy < 0) return Math.PI;           // Norte (-gy)
-  if (fx > 0) return -Math.PI / 2;      // Leste (+gx)
-  return Math.PI / 2;                   // Oeste (-gx)
+  // No tabuleiro 3D, o eixo horizontal do GLB é espelhado em relação ao
+  // referencial usado pela grade. Mantemos Norte/Sul e invertemos apenas os
+  // giros laterais para a frente visual acompanhar a casa de destino.
+  if (fx > 0) return Math.PI / 2;       // Leste (+gx)
+  return -Math.PI / 2;                  // Oeste (-gx)
 }
 
 function _makeCharacterPawn(T, grp, classId, clr, Y0, rotY) {
@@ -14911,7 +15284,7 @@ function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected, emCh
 // mOriented/mFacing — monstro de 2 casas em pé cobrindo as 2 casas (croc/lagarto).
 // mFacing também é reaproveitado pro peão GLB de herói (direção do último passo).
 
-function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType, isSelected, mImage, mPorte, mOriented, mFacing, emChamas){
+function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType, isSelected, mImage, mPorte, mOriented, mFacing, emChamas, acidoResidual, envenenado){
   const T   = g3.T;
   if (isMonster && mOriented && mImage) {
     // emChamas vai PARA DENTRO do helper (posiciona o 🔥 no centro midX/midZ do
@@ -15076,6 +15449,8 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
 
   // Indicador "em chamas": 🔥 flutuando acima da cabeça (sprite billboard).
   if(emChamas) grp.add(_makeChamasSprite3D());
+  if(acidoResidual) grp.add(_makeStatusDropSprite3D('#55df74', emChamas ? 0.20 : 0));
+  if(envenenado) grp.add(_makeStatusDropSprite3D('#a85cff', (emChamas ? 0.20 : 0) + (acidoResidual ? 0.20 : 0)));
 
   grp.position.set(gx, 0, gy);
   return grp;
@@ -15094,6 +15469,30 @@ function _makeChamasSprite3D(){
   sp.scale.set(0.5, 0.5, 1);
   sp.position.set(0, _BB_H_ALVO * 0.85, 0);   // acima da cabeça (deriva da altura-alvo do peão)
   sp.userData.isChamasSprite = true;
+  return sp;
+}
+
+// Gota colorida para ácido (verde) e veneno (roxa), sempre voltada à câmera.
+function _makeStatusDropSprite3D(color, xOffset){
+  const T = g3.T;
+  const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+  const c = cv.getContext('2d');
+  c.fillStyle = color;
+  c.shadowColor = '#080510'; c.shadowBlur = 5;
+  c.beginPath();
+  c.moveTo(32, 8);
+  c.bezierCurveTo(17, 28, 15, 37, 17, 45);
+  c.bezierCurveTo(20, 56, 44, 56, 47, 45);
+  c.bezierCurveTo(49, 37, 47, 28, 32, 8);
+  c.fill();
+  c.shadowBlur = 0;
+  c.fillStyle = 'rgba(255,255,255,0.55)';
+  c.beginPath(); c.arc(26, 35, 4, 0, Math.PI * 2); c.fill();
+  const tex = new T.CanvasTexture(cv); tex._owned = true;
+  const sp = new T.Sprite(new T.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
+  sp.scale.set(0.24, 0.24, 1);
+  sp.position.set(xOffset, _BB_H_ALVO * 0.85, 0);
+  sp.userData.isStatusSprite = true;
   return sp;
 }
 
@@ -19280,7 +19679,14 @@ function _csfShowPanel(classId, animate){
     `).join('');
   }
 
-  document.getElementById('cs-stats').innerHTML = renderStats(d.stats);
+  const modVisao = valor => Math.floor((Number(valor || 10) - 10) / 2);
+  const raioVisao = Math.max(0, (classId === 'warrior' ? 4 : 3)
+    + Math.floor((modVisao(d.stats.inteligencia) + modVisao(d.stats.destreza)) / 2));
+  document.getElementById('cs-stats').innerHTML = renderStats(d.stats) + `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; padding:8px 10px; background:rgba(100,180,255,.08); border:1px solid rgba(100,180,255,.30);">
+      <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">👁 RAIO DE VISÃO</span>
+      <strong style="color:#8ed0ff; font-size:16px;">${raioVisao}</strong>
+    </div>`;
 
   // Animate stat bars (escala 1–25, mapeada para 0–100%)
   requestAnimationFrame(()=>{
@@ -20343,7 +20749,7 @@ function handleTileClick(tx, ty){
       break;
     case 'attack':
       GS.notifyAttack();
-      sendAttack(action.targetId);
+      sendAttack(action.targetId, action.targetPos);
       break;
     case 'move': {
       const myP  = _st.players.find(p=>p.id===GS.myPid && p.alive);

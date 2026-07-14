@@ -605,6 +605,24 @@ const GS = (() => {
       efeito:{ atributo:'cego', valor:'1d4', operacao:'status', penalidadeAtaque:-4, bloqueiaDistancia:true, duracaoFalha:'1d4', penalidadeFalha:-2, atributoFalha:'percepcao', save:'fortitude', dificuldade:11, anula:false },
       descricao:'Cega por 1d4 rodadas — -4 em ataques, sem ranged (Fort. dif. 11). Falha parcial: -2 percepção.'
     },
+    veneno_fungo_acre: {
+      id:'veneno_fungo_acre', nome:'Fungo Acre', tipo:'veneno', loja:'mercado', preco:10, icone:'🍄',
+      permitidoPara:['todos'],
+      efeito:{ operacao:'dano', dano:1, duracao:'1d4', save:'fortitude', dificuldade:10, anula:true, saveAplicacao:true },
+      descricao:'Fortitude CD 10 anula. Se falhar, sofre 1 ponto de dano por rodada durante 1d4 rodadas.'
+    },
+    veneno_dor_escarlate: {
+      id:'veneno_dor_escarlate', nome:'Dor Escarlate', tipo:'veneno', loja:'mercado', preco:20, icone:'🩸',
+      permitidoPara:['todos'],
+      efeito:{ operacao:'dano', dano:1, duracao:'1d6', save:'fortitude', dificuldade:12, anula:true, saveAplicacao:true },
+      descricao:'Fortitude CD 12 anula. Se falhar, sofre 1 ponto de dano por rodada durante 1d6 rodadas.'
+    },
+    veneno_ardonia_negra: {
+      id:'veneno_ardonia_negra', nome:'Ardonia Negra', tipo:'veneno', loja:'mercado', preco:50, icone:'🕷️',
+      permitidoPara:['todos'],
+      efeito:{ operacao:'dano', dano:1, duracao:'2d4', save:'fortitude', dificuldade:14, anula:true, saveAplicacao:true },
+      descricao:'Fortitude CD 14 anula. Se falhar, sofre 1 ponto de dano por rodada durante 2d4 rodadas.'
+    },
     veneno_agonia_sufocante: {
       id:'veneno_agonia_sufocante', nome:'Agonia Sufocante', tipo:'veneno', loja:'mercado', preco:40, icone:'💀',
       permitidoPara:['todos'],
@@ -816,24 +834,36 @@ const GS = (() => {
     const m = gameState && gameState.materiais;
     return !!(m && MATERIAIS_OPACOS.has(m[`${x},${y}`]));
   }
+  // Decorações sólidas ocupam as casas do seu footprint e bloqueiam rota,
+  // exatamente como o renderer e o servidor. Decorações pisáveis (chão,
+  // fogueira etc.) continuam permitindo passagem.
+  function _decorSolida(x, y) {
+    return (gameState?.decorations || []).some(d => !d.pisavel &&
+      decorTilesOf(d).some(([dx, dy]) => dx === x && dy === y));
+  }
 
   function _walkable(tiles, x, y, openDoors, occupied) {
     const t = tiles[y]?.[x];
     const onFloor = t === TILE_FLOOR || (t === TILE_DOOR && openDoors.has(`${x},${y}`));
     if (!onFloor) return false;
     if (_matSolido(x, y)) return false;   // entulho: intransponível como parede
+    if (_decorSolida(x, y)) return false; // objeto sólido: contorna pelo menor caminho
     // Casa ocupada por outra entidade viva é intransponível (espelha o servidor).
     return !(occupied && occupied.has(`${x},${y}`));
   }
 
-  // Casas ocupadas por um monstro. ORIENTADO (`oriented`): 2 casas em linha —
-  // FRENTE (cabeça) = pos e TRÁS (cauda) = atrás da cabeça (oposto ao facing);
-  // espelha _monster_tiles_at no servidor. Caso geral: bloco size w×h da âncora.
+  // Casas ocupadas por um monstro. Os orientados legados 2×1 continuam em linha;
+  // os retangulares usam comprimento para trás e largura perpendicular ao facing.
   function monsterTiles(m) {
     const [mx, my] = m.pos;
     if (m.oriented) {
       const f = m.facing || [-1, 0];
-      return [[mx, my], [mx - f[0], my - f[1]]];
+      const [w, h] = m.size || [2, 1];
+      const [width, length] = h === 1 ? [1, w] : [w, h];
+      const [px, py] = [-f[1], f[0]], out = [];
+      for (let depth=0; depth<length; depth++)
+        for (let lane=0; lane<width; lane++) out.push([mx - f[0]*depth + px*lane, my - f[1]*depth + py*lane]);
+      return out;
     }
     const [w, h] = m.size || [1, 1];
     const out = [];
@@ -914,13 +944,18 @@ const GS = (() => {
   }
 
   // ── Pure logic: BFS pathfinding — returns [[dx,dy],...] or null ────────────
-  function findPath(tiles, exploredSet, fx, fy, tx, ty, maxSteps) {
+  // Quando partial=true, se o alvo estiver além do orçamento ou separado por
+  // uma porta fechada, retorna o trecho acessível que termina mais perto dele.
+  function findPath(tiles, exploredSet, fx, fy, tx, ty, maxSteps, partial=false) {
     const openDoors = doorSets(gameState).open;
     const occupied  = _occupiedSet(fx, fy);
-    if (!exploredSet.has(`${tx},${ty}`) || !_walkable(tiles, tx, ty, openDoors, occupied)) return null;
+    if (!exploredSet.has(`${tx},${ty}`)) return null;
+    const targetWalkable = _walkable(tiles, tx, ty, openDoors, occupied);
+    if (!partial && !targetWalkable) return null;
     if (fx === tx && fy === ty) return [];
     const q   = [[fx, fy, []]];
     const vis = new Set([`${fx},${fy}`]);
+    let best = { path: [], dist: Math.abs(fx-tx) + Math.abs(fy-ty) };
     while (q.length) {
       const [x, y, path] = q.shift();
       if (path.length >= maxSteps) continue;
@@ -929,11 +964,13 @@ const GS = (() => {
         if (vis.has(k) || !exploredSet.has(k) || !_walkable(tiles, nx, ny, openDoors, occupied)) continue;
         const np = [...path, [dx, dy]];
         if (nx === tx && ny === ty) return np;
+        const dist = Math.abs(nx-tx) + Math.abs(ny-ty);
+        if (dist < best.dist) best = { path: np, dist };
         vis.add(k);
         q.push([nx, ny, np]);
       }
     }
-    return null;
+    return partial && best.path.length ? best.path : null;
   }
 
   // ── WebSocket helpers ──────────────────────────────────────────────────────
@@ -1175,7 +1212,7 @@ const GS = (() => {
     send({ type: 'end_turn' });
   }
   function useItem(id)     { send({ type: 'use_item',       item_id: id }); }
-  function throwItem(id, targetId) { send({ type: 'throw_item', item_id: id, target_id: targetId }); }
+  function throwItem(id, targetId, targetPos) { send({ type: 'throw_item', item_id: id, target_id: targetId, target_pos: targetPos }); }
   function throwItemArea(id, tx, ty) { send({ type: 'throw_item', item_id: id, tx, ty }); }
   function apagarChamas()          { send({ type: 'apagar_chamas' }); }
   function equipFromBag(i) { send({ type: 'equip_from_bag', slot_index: i }); }
@@ -1830,7 +1867,7 @@ const GS = (() => {
       const m = gameState.monsters.find(m => m.hp > 0 &&
         monsterTiles(m).some(([bx, by]) => bx === tx && by === ty));
       if (m) {
-        if (inRange && losOk) return { type: 'throw', itemId: th.id, targetId: m.id };
+        if (inRange && losOk) return { type: 'throw', itemId: th.id, targetId: m.id, targetPos: [tx, ty] };
         return { type: 'throw_blocked' };   // fora de alcance / parede
       }
       return null; // consome o clique, permanece na mira (ESC cancela)
@@ -1841,6 +1878,11 @@ const GS = (() => {
     if (closed.has(`${tx},${ty}`)) {
       const ch = Math.max(Math.abs(myP.pos[0] - tx), Math.abs(myP.pos[1] - ty));
       if (ch <= 1) return { type: 'open_door', x: tx, y: ty };
+      // Caminha somente até a melhor casa acessível antes da porta. A porta
+      // permanece fechada e a decisão de abri-la continua sendo do jogador.
+      const expSet = new Set(gameState.explored.map(([x, y]) => `${x},${y}`));
+      const path = findPath(gameState.tiles, expSet, myP.pos[0], myP.pos[1], tx, ty, myP.moves_left, true);
+      if (path && path.length) return { type: 'move', path, stopAtDoor: true };
       return { type: 'door_far' };
     }
 
@@ -1855,11 +1897,11 @@ const GS = (() => {
         if (Math.max(ddx, ddy) <= wRng) {
           // Paredes/portas fechadas barram a linha de tiro.
           if (hasLineOfSight(gameState, myP.pos[0], myP.pos[1], tx, ty))
-            return { type: 'attack', targetId: monster.id };
+            return { type: 'attack', targetId: monster.id, targetPos: [tx, ty] };
           return { type: 'attack_blocked_wall' };
         }
       } else if ((ddx === 1 && ddy === 0) || (ddx === 0 && ddy === 1)) {
-        return { type: 'attack', targetId: monster.id };
+        return { type: 'attack', targetId: monster.id, targetPos: [tx, ty] };
       }
     }
 
@@ -1867,7 +1909,7 @@ const GS = (() => {
     if (myP.moves_left <= 0) return null;
     if (tx === myP.pos[0] && ty === myP.pos[1]) return null;
     const expSet = new Set(gameState.explored.map(([x, y]) => `${x},${y}`));
-    const path   = findPath(gameState.tiles, expSet, myP.pos[0], myP.pos[1], tx, ty, myP.moves_left);
+    const path   = findPath(gameState.tiles, expSet, myP.pos[0], myP.pos[1], tx, ty, myP.moves_left, true);
     if (path && path.length) return { type: 'move', path };
     return null;
   }

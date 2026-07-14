@@ -8,9 +8,21 @@ def build_catalog():
     """Extrai só os campos que o editor precisa. Retorna dict serializável."""
     monsters = []
     for m in server.MONSTER_DEFS:
-        entry = {"type": m["type"], "name": m["name"], "emoji": m.get("emoji", "")}
-        if m.get("boss"):
-            entry["boss"] = True
+        if m.get("_personalizado"):
+            continue  # carregados separadamente por editor_monsters_custom.js
+        # A ficha do Bestiário é somente consulta, mas precisa dos dados completos
+        # já definidos no servidor. Mantemos o catálogo em JSON, sem estado de jogo.
+        fields = (
+            "type", "name", "emoji", "boss", "tier", "cr", "hp", "ac", "natural_armor",
+            "movement", "size", "porte", "image", "atk_bonus", "damage",
+            "base_attack_bonus", "base_hp", "caster_level", "str_", "dex", "con_", "int_",
+            "fort", "ref_", "will", "fort_base", "ref_base", "will_base",
+            "attacks", "special_abilities", "monster_spells", "immunities", "weaknesses",
+            "resistances",
+            "loot_table", "guaranteed_loot", "equipment", "gold", "xp",
+            "ai_type", "undead", "darkvision_range",
+        )
+        entry = {key: m[key] for key in fields if key in m}
         monsters.append(entry)
     items = [{"id": i["id"], "name": i["name"], "emoji": i.get("emoji", "")}
              for i in server.CHEST_ITEMS]
@@ -27,7 +39,7 @@ def build_catalog():
             "type": dtype, "nome": meta["nome"], "emoji": meta["emoji"],
             "size": meta["size"], "gira": meta["gira"], "alto": meta["alto"],
             "pisavel": meta["pisavel"], "loot_capaz": meta["loot_capaz"],
-            "special": meta["special"],
+            "special": meta["special"], "image": meta.get("image"),
         })
     materiais = []
     for mid, meta in server.MATERIAIS.items():
@@ -35,7 +47,18 @@ def build_catalog():
             "id": mid, "nome": meta["nome"], "categoria": meta["categoria"],
             "cor": meta["cor"], "solido": meta["solido"], "oclui": meta["oclui"],
         })
-    return {"monsters": monsters, "items": items, "traps": traps,
+    spells = []
+    for spell in server.GRIMORIO.values():
+        # O editor precisa de uma descrição completa o suficiente para explicar a
+        # magia e de seus metadados para estimar o impacto no ND.
+        spells.append({key: spell[key] for key in (
+            "id", "nome", "circulo", "classe", "icone", "tipo", "descricao",
+            "save", "dano", "dano_base", "dano_por_nivel", "area_raio",
+            "area_lado", "alcance", "alcance_base", "duracao", "buff", "debuff",
+        ) if key in spell})
+    monster_abilities = list(server._base_ability_library().values())
+    return {"monsters": monsters, "monster_abilities": monster_abilities,
+            "spells": spells, "items": items, "traps": traps,
             "venoms": venoms, "decorations": decorations, "materiais": materiais}
 
 def write_catalog_js(destino):

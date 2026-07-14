@@ -507,7 +507,7 @@ Armas iniciais por classe (`WEAPONS` + `CLASSES[*].weapon` + `_STARTING_OFFHAND`
 - warrior/Victor → `machado_basico` "Machado de Ferro" (1d6 FOR)
 - paladin/Richard → `shortsword` "Espada Curta" (1d6 FOR)
 - cleric/Lewis → `cajado_madeira` (1d6 **INT**) · mage/Pedro → `cajado_madeira` (1d6 INT)
-- rogue/Luccas → `dagger` + off_hand `adaga_secundaria` (dual-wield)
+- rogue/Luccas → `dagger` + off_hand `dagger` (dual-wield; `adaga_secundaria` foi retirada)
 - bard/Henrique → `instrumento` (sem dano) + off_hand `dagger` (dual-wield)
 
 Mecânicas de combate adicionadas (`handle_attack`):

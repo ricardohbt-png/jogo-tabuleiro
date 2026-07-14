@@ -18,13 +18,13 @@ def check(name, cond):
 def test_catalog():
     print("\n[A1] DECOR_TYPES")
     d = server.DECOR_TYPES
-    check("23 tipos", len(d) == 23)
+    check("26 tipos", len(d) == 26)
     check("ids esperados presentes", all(k in d for k in (
         "cama", "lareira", "fonte", "fogueira", "tumba", "mesa_cadeiras",
         "estante", "carroca", "coluna", "barril", "arca_tesouros", "cama_casal",
         "estante_livros", "altar", "trono", "gaiola", "grades_prisao",
         "estante_armas", "mesa_tortura", "mesa_quimica", "arvore", "arvore_grande",
-        "chao")))
+        "chao", "brasao_leao", "cortina_vermelha", "cortina_branca")))
     check("chão é floor, pisável, 1x1", d["chao"]["special"] == "floor"
           and d["chao"]["pisavel"] and d["chao"]["size"] == [1, 1])
     check("fonte é fountain", d["fonte"]["special"] == "fountain")
@@ -36,7 +36,8 @@ def test_catalog():
     check("todo tipo tem emoji/nome/gira/loot_capaz", all(
         set(("nome", "emoji", "size", "gira", "alto", "pisavel", "loot_capaz", "special")) <= set(v)
         for v in d.values()))
-    check("pisáveis: fogueira e chão", sorted(k for k, v in d.items() if v["pisavel"]) == ["chao", "fogueira"])
+    check("pisáveis: chão, fogueira e decorações de parede", sorted(k for k, v in d.items() if v["pisavel"]) == [
+        "brasao_leao", "chao", "cortina_branca", "cortina_vermelha", "fogueira"])
 
 async def _noop(*a, **k): pass
 

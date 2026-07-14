@@ -122,6 +122,12 @@
       .then((m) => ({ file: m.file }));
   }
 
+  // Salva uma cópia personalizada sem tocar nas definições nativas do servidor.
+  function saveCustomMonster(monster) {
+    return request("upload_custom_monster", { monster: monster })
+      .then((m) => m.monster);
+  }
+
   async function uploadObjeto(file) {
     if (extOf(file.name) !== ".png")
       throw new Error("envie um arquivo .png");
@@ -150,6 +156,6 @@
 
   window.STORY_UPLOAD = { upload: upload };
   window.PRISONER_UPLOAD = { upload: uploadPrisoner };
-  window.EDITOR_SAVE = { saveDungeon: saveDungeon, saveCampaign: saveCampaign };
+  window.EDITOR_SAVE = { saveDungeon: saveDungeon, saveCampaign: saveCampaign, saveCustomMonster: saveCustomMonster };
   window.OBJETO_UPLOAD = { upload: uploadObjeto, list: listObjetos };
 })();

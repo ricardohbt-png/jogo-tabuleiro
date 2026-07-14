@@ -456,6 +456,49 @@
         1
       ],
       "loot": null
+    },
+    {
+      "type": "brasao_leao",
+      "pos": [
+        0,
+        9
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "image": "brasao_leao.png"
+    },
+    {
+      "type": "brasao_leao",
+      "pos": [
+        4,
+        9
+      ],
+      "facing": [
+        -1,
+        0
+      ],
+      "loot": null,
+      "image": "brasao_leao.png"
+    },
+    {
+      "type": "cortina_vermelha",
+      "pos": [
+        2,
+        11
+      ],
+      "facing": [
+        0,
+        -1
+      ],
+      "loot": null,
+      "image": "cortina_vermelha.png",
+      "vscale": [
+        3,
+        1.5
+      ]
     }
   ],
   "prisoner": null,

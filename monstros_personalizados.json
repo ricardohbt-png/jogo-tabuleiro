@@ -1,0 +1,66 @@
+[
+  {
+    "type": "sentinela_teste",
+    "name": "Sentinela de Teste",
+    "emoji": "👹",
+    "tier": 1,
+    "cr": 1.0,
+    "hp": 24,
+    "ac": 15,
+    "movement": 5,
+    "base_attack_bonus": 3,
+    "str_": 16,
+    "dex": 12,
+    "con_": 14,
+    "int_": 8,
+    "attacks": [
+      {
+        "name": "Martelo",
+        "damage": "1d8+2",
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 1,
+        "attack_attribute": "str_",
+        "base_attack_bonus": 3,
+        "atk_bonus": 6,
+        "range": null,
+        "on_hit": null
+      }
+    ],
+    "special_abilities": [
+      {
+        "id": "disparo_teia",
+        "name": "Disparo de Teia",
+        "action_type": "acao",
+        "uses_per_combat": 1,
+        "range": 4,
+        "target": "single",
+        "dc": 11,
+        "save": "reflexos",
+        "damage": null,
+        "damage_types": [],
+        "effect": "perde_turno",
+        "effect_duration": 1
+      }
+    ],
+    "immunities": [],
+    "weaknesses": [],
+    "equipment": [],
+    "guaranteed_loot": [],
+    "loot_table": {},
+    "gold": 0,
+    "xp": 0,
+    "ai_type": "agressivo",
+    "image": "sentinela_teste",
+    "size": [
+      1,
+      1
+    ],
+    "porte": "medio",
+    "spawn_min": 0,
+    "spawn_max": 0,
+    "undead": false,
+    "boss": false
+  }
+]

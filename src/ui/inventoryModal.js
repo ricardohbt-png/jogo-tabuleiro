@@ -75,7 +75,7 @@ const InventoryModal = (() => {
 .inv-close:hover{opacity:1;}
 .inv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:center;justify-items:center;
   margin:0 auto 20px;max-width:320px;}
-.inv-slot{width:72px;height:96px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+.inv-slot{width:72px;height:96px;border-radius:8px;display:flex;align-items:center;justify-content:center;position:relative;
   font-size:1.8rem;cursor:pointer;background:linear-gradient(160deg,rgba(20,20,22,.55),rgba(6,6,8,.7));
   border:1px solid #d4b968;box-shadow:inset 0 2px 5px rgba(0,0,0,.7),0 1px 0 rgba(244,220,140,.16);}
 .inv-slot.instrumento-slot{border-color:#4db8ff;}
@@ -101,6 +101,10 @@ const InventoryModal = (() => {
 .inv-bagslot.selected{outline:2px solid #ffe08a;outline-offset:2px;}
 .inv-bagslot.usable{border-color:#2ecc40;box-shadow:inset 0 0 4px rgba(46,204,64,.4),0 0 6px rgba(46,204,64,.35);}
 .inv-bagslot.drop-hover{outline:2px dashed #8fe08a;outline-offset:2px;}
+.poison-charge-drops{position:absolute;z-index:4;top:4px;left:4px;display:flex;flex-wrap:wrap;gap:2px;
+  width:30px;pointer-events:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9));}
+.poison-charge-drop{width:8px;height:11px;display:block;background:linear-gradient(135deg,#d38cff,#7134c7);
+  clip-path:polygon(50% 0,92% 43%,80% 84%,50% 100%,20% 84%,8% 43%);border:1px solid #edc6ff;box-sizing:border-box;}
 `;
 
   // Ícone do item: delega ao helper global de game.js (assets/itens/<id>.png,
@@ -204,6 +208,8 @@ const InventoryModal = (() => {
         ? `<span class="inv-slot-blocked-x">✕</span>`
         : item ? `<span class="inv-slot-emoji">${_itemIconHTML(item, cfg.empty)}</span>`
                : `<span class="inv-slot-emoji inv-slot-empty-icon">${cfg.empty}</span>`;
+      if(item && cfg.key === 'weapon' && typeof _poisonChargeDropsHTML === 'function')
+        slot.insertAdjacentHTML('beforeend', _poisonChargeDropsHTML(player));
       if(item && !blocked){
         if(item.tipo_item === 'instrumento' && typeof aplicarTooltipInstrumento === 'function')
           aplicarTooltipInstrumento(slot, item);   // quadro próprio (não está em CATALOGO_ITENS)
@@ -452,7 +458,11 @@ const InventoryModal = (() => {
   function _wireTooltip(el, itemId, comparisonItemId){
     if(!itemId) return;
     let pressTimer = null;
-    el.addEventListener('mouseenter', () => _showInventoryTooltip(itemId, comparisonItemId));
+    el.addEventListener('mouseenter', (e) => {
+      _showInventoryTooltip(itemId, comparisonItemId);
+      const tooltip = document.getElementById('item-tooltip');
+      if(tooltip && typeof posicionarTooltipAbaixo === 'function') posicionarTooltipAbaixo(tooltip, e.currentTarget);
+    });
     el.addEventListener('mouseleave', () => { if(typeof esconderTooltip === 'function') esconderTooltip(); });
     el.addEventListener('touchstart', (e) => {
       const touch = e.touches[0];

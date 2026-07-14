@@ -1,7 +1,8 @@
 "use strict";
 (function () {
   const WALL = 0, FLOOR = 1, DOOR = 2, CELL = 28;
-  const CAT = window.EDITOR_CATALOG || { monsters: [], items: [], traps: [], venoms: [], decorations: [], materiais: [] };
+  const BASE_CAT = window.EDITOR_CATALOG || { monsters: [], items: [], traps: [], venoms: [], decorations: [], materiais: [] };
+  const CAT = Object.assign({}, BASE_CAT, { monsters: (BASE_CAT.monsters || []).concat(window.EDITOR_CUSTOM_MONSTERS || []) });
   const MAT = (CAT.materiais || []);
   const matMeta = (id) => MAT.find(m => m.id === id) || null;
   // Default por categoria: pintar o default limpa a casa (mantém JSON esparso e
@@ -24,6 +25,11 @@
     matWall: "pedra_normal",       // material atual da ferramenta "parede"
     matFill: false,                // false = pincel; true = balde (preenchimento)
   };
+  // Área de transferência exclusiva de objetos decorativos. Guarda uma cópia
+  // profunda para que loot, escala, imagem e demais ajustes nunca sejam
+  // compartilhados acidentalmente com o objeto de origem.
+  let decorClipboard = null;
+  let lastPointerCell = null;
 
   function initGrid(w, h) {
     S.grid = { w, h };
@@ -87,13 +93,33 @@
   function rotateDecorPending() {
     if (S.sel && S.sel.kind === "decor") {
       const m = decorMeta(S.sel.ref.type);
-      if (m && m.gira) { S.sel.ref.facing = rotateFacing(S.sel.ref.facing); render(); }
+      if (m && m.gira) {
+        if (m.special === "wall") {
+          const faces = wallFacesAt(S.sel.ref.pos[0], S.sel.ref.pos[1]);
+          const i = faces.findIndex(f => sameFace(f, S.sel.ref.facing));
+          if (faces.length) S.sel.ref.facing = faces[(i + 1 + faces.length) % faces.length];
+        } else S.sel.ref.facing = rotateFacing(S.sel.ref.facing);
+        render();
+      }
     } else {
       const m = decorMeta(S.decorType);
       if (m && m.gira) S.decorFacing = rotateFacing(S.decorFacing);
     }
   }
+  function editingText(ev) {
+    return /^(INPUT|TEXTAREA|SELECT)$/.test((ev.target && ev.target.tagName) || "");
+  }
   window.addEventListener("keydown", (ev) => {
+    if (editingText(ev)) return;
+    const modifier = ev.ctrlKey || ev.metaKey;
+    if (modifier && ev.key.toLowerCase() === "c") {
+      if (copySelectedDecor()) ev.preventDefault();
+      return;
+    }
+    if (modifier && ev.key.toLowerCase() === "v") {
+      if (lastPointerCell && pasteDecorAt(lastPointerCell[0], lastPointerCell[1])) ev.preventDefault();
+      return;
+    }
     if (ev.key === "r" || ev.key === "R") rotateDecorPending();
   });
 
@@ -101,7 +127,44 @@
   // como ocupação quando se posiciona outro objeto. Dois objetos não-piso ainda
   // não podem se sobrepor.
   function isFloorDecor(d) { const m = decorMeta(d && d.type ? d.type : d); return !!(m && m.special === "floor"); }
+  function isWallDecor(d) { const m = decorMeta(d && d.type ? d.type : d); return !!(m && m.special === "wall"); }
+  const CARDINAL_FACES = [[0,1],[1,0],[0,-1],[-1,0]];
+  function wallFacesAt(x, y) {
+    return CARDINAL_FACES.filter(([dx,dy]) => {
+      const nx=x+dx, ny=y+dy;
+      // Uma decoração de parede sempre olha para uma casa de chão. Não a
+      // colocamos voltada para o exterior, outra parede ou uma porta.
+      return nx>=0 && ny>=0 && nx<S.grid.w && ny<S.grid.h && S.tiles[ny][nx] === FLOOR;
+    });
+  }
+  function sameFace(a,b) { return a && b && a[0] === b[0] && a[1] === b[1]; }
+  // Aceita o clique diretamente na parede ou no chão que toca essa parede.
+  // O JSON continua armazenando a posição da PAREDE e a face voltada ao chão.
+  function wallPlacementAt(x, y, preferredFacing) {
+    if (x < 0 || y < 0 || x >= S.grid.w || y >= S.grid.h) return null;
+    if (S.tiles[y][x] === WALL) {
+      const faces = wallFacesAt(x, y);
+      const facing = faces.find(f => sameFace(f, preferredFacing)) || faces[0];
+      return facing ? { pos: [x, y], facing: facing.slice() } : null;
+    }
+    if (S.tiles[y][x] !== FLOOR) return null;
+    const candidates = CARDINAL_FACES.map(f => ({
+      pos: [x - f[0], y - f[1]], facing: f,
+    })).filter(c => c.pos[0] >= 0 && c.pos[1] >= 0
+      && c.pos[0] < S.grid.w && c.pos[1] < S.grid.h
+      && S.tiles[c.pos[1]][c.pos[0]] === WALL
+      && wallFacesAt(c.pos[0], c.pos[1]).some(face => sameFace(face, c.facing)));
+    const chosen = candidates.find(c => sameFace(c.facing, preferredFacing)) || candidates[0];
+    return chosen ? { pos: chosen.pos, facing: chosen.facing.slice() } : null;
+  }
   function decorFits(type, ax, ay, facing, ignore) {
+    if (isWallDecor(type)) {
+      if (ax < 0 || ay < 0 || ax >= S.grid.w || ay >= S.grid.h || S.tiles[ay][ax] !== WALL) return false;
+      const faces = wallFacesAt(ax, ay);
+      if (!faces.some(f => sameFace(f, facing))) return false;
+      return !S.decorations.some(d => d !== ignore && isWallDecor(d)
+        && d.pos[0] === ax && d.pos[1] === ay && sameFace(d.facing, facing));
+    }
     if (isFloorDecor(type)) {  // piso cabe em qualquer chão livre, sobre outros objetos
       for (const [tx, ty] of decorTilesAt(type, ax, ay, facing)) {
         if (tx < 0 || ty < 0 || tx >= S.grid.w || ty >= S.grid.h) return false;
@@ -122,6 +185,7 @@
   // Encaixe genérico para arrasto/redimensionamento: a decoração `ignore` (a que
   // está sendo movida/redimensionada) é desconsiderada na checagem de sobreposição.
   function decorWouldFit(ignore, pos, size, facing) {
+    if (isWallDecor(ignore)) return decorFits(ignore.type, pos[0], pos[1], facing, ignore);
     const movingFloor = isFloorDecor(ignore);
     for (const [tx, ty] of tilesFor(pos, size, facing)) {
       if (tx < 0 || ty < 0 || tx >= S.grid.w || ty >= S.grid.h) return false;
@@ -135,18 +199,91 @@
     return true;
   }
   function placeDecor(x, y) {
-    if (!decorFits(S.decorType, x, y, S.decorFacing)) return;
     const m = decorMeta(S.decorType);
-    const d = { type: S.decorType, pos: [x, y], facing: S.decorFacing.slice(),
+    const wallPlacement = m && m.special === "wall" ? wallPlacementAt(x, y, S.decorFacing) : null;
+    const pos = wallPlacement ? wallPlacement.pos : [x, y];
+    const facing = wallPlacement ? wallPlacement.facing : S.decorFacing.slice();
+    if (!wallPlacement && m && m.special === "wall") return;
+    if (!decorFits(S.decorType, pos[0], pos[1], facing)) return;
+    const d = { type: S.decorType, pos, facing,
                 loot: (m && m.loot_capaz && S.decorType === "arca_tesouros") ? { gold: 0, items: [] } : null };
     if (m && m.special === "fountain") d.charges = 3;
     if (m && m.special === "floor") d.image = "chaograma1.png";   // grama por padrão (trocável no picker)
+    if (m && m.image) d.image = m.image;
     S.decorations.push(d);
-    S.sel = { kind: "decor", ref: d, pos: [x, y] };
+    S.sel = { kind: "decor", ref: d, pos: pos.slice() };
+  }
+
+  function cloneDecor(source) { return JSON.parse(JSON.stringify(source)); }
+  function copySelectedDecor() {
+    if (!S.sel || S.sel.kind !== "decor" || !S.sel.ref) return false;
+    decorClipboard = cloneDecor(S.sel.ref);
+    render();
+    return true;
+  }
+  function pasteDecorAt(x, y) {
+    if (!decorClipboard) return false;
+    const d = cloneDecor(decorClipboard);
+    d.facing = Array.isArray(d.facing) ? d.facing.slice() : [0, 1];
+    if (isWallDecor(d)) {
+      const placement = wallPlacementAt(x, y, d.facing);
+      if (!placement) return false;
+      d.pos = placement.pos;
+      d.facing = placement.facing;
+    } else d.pos = [x, y];
+    const size = decorBaseSize(d);
+    if (!decorWouldFit(d, d.pos, size, d.facing)) return false;
+    S.decorations.push(d);
+    S.sel = { kind: "decor", ref: d, pos: d.pos.slice() };
+    renderPanel(); render();
+    return true;
+  }
+  function duplicateDecorAdjacent(source) {
+    if (!source) return false;
+    const [ew, eh] = decorEffSizeOf(source);
+    // Primeiro as quatro faces; diagonais são alternativas para objetos grandes
+    // ou quando a parede/um objeto bloqueia todos os lados imediatos.
+    const offsets = [[ew, 0], [-ew, 0], [0, eh], [0, -eh], [ew, eh], [ew, -eh], [-ew, eh], [-ew, -eh]];
+    for (const [dx, dy] of offsets) {
+      const d = cloneDecor(source);
+      d.pos = [source.pos[0] + dx, source.pos[1] + dy];
+      d.facing = Array.isArray(d.facing) ? d.facing.slice() : [0, 1];
+      if (!decorWouldFit(d, d.pos, decorBaseSize(d), d.facing)) continue;
+      S.decorations.push(d);
+      S.sel = { kind: "decor", ref: d, pos: d.pos.slice() };
+      return true;
+    }
+    return false;
   }
 
   const board = document.getElementById("board");
   const ctx = board.getContext("2d");
+  const copyMenu = document.createElement("div");
+  copyMenu.id = "editor-copy-menu";
+  copyMenu.innerHTML = `<button type="button" data-action="copy">Copiar objeto <kbd>Ctrl+C</kbd></button><button type="button" data-action="paste">Colar objeto aqui <kbd>Ctrl+V</kbd></button>`;
+  document.body.appendChild(copyMenu);
+  function hideCopyMenu() { copyMenu.classList.remove("open"); }
+  function showCopyMenu(ev, cell) {
+    const selected = entityAt(cell[0], cell[1]);
+    if (selected) { S.sel = selected; renderPanel(); render(); }
+    const copyButton = copyMenu.querySelector('[data-action="copy"]');
+    const pasteButton = copyMenu.querySelector('[data-action="paste"]');
+    copyButton.disabled = !(S.sel && S.sel.kind === "decor");
+    pasteButton.disabled = !decorClipboard;
+    copyMenu.dataset.x = String(cell[0]); copyMenu.dataset.y = String(cell[1]);
+    copyMenu.style.left = `${Math.min(ev.clientX, window.innerWidth - 190)}px`;
+    copyMenu.style.top = `${Math.min(ev.clientY, window.innerHeight - 76)}px`;
+    copyMenu.classList.add("open");
+  }
+  copyMenu.addEventListener("click", ev => {
+    const button = ev.target.closest("button[data-action]"); if (!button || button.disabled) return;
+    const x = Number(copyMenu.dataset.x), y = Number(copyMenu.dataset.y);
+    if (button.dataset.action === "copy") copySelectedDecor();
+    else pasteDecorAt(x, y);
+    hideCopyMenu();
+  });
+  document.addEventListener("mousedown", ev => { if (!copyMenu.contains(ev.target)) hideCopyMenu(); });
+  window.addEventListener("keydown", ev => { if (ev.key === "Escape") hideCopyMenu(); });
 
   // Cache de imagens de objetos para o preview 2D do editor.
   const _objImgCache = {};
@@ -160,6 +297,30 @@
       _objImgCache[name] = im;
     }
     return (im.complete && im.naturalWidth) ? im : null;
+  }
+
+  // As artes de parede recebidas podem vir com fundo preto opaco. Mantemos o
+  // PNG original e apenas tratamos os pixels quase pretos como transparentes
+  // no preview, tal como o renderer 3D faz no jogo.
+  const _wallImgCache = {};
+  function wallImg(name) {
+    const source = objImg(name);
+    if (!source) return null;
+    if (_wallImgCache[name]) return _wallImgCache[name];
+    const canvas = document.createElement("canvas");
+    canvas.width = source.naturalWidth;
+    canvas.height = source.naturalHeight;
+    const c = canvas.getContext("2d");
+    c.drawImage(source, 0, 0);
+    const pixels = c.getImageData(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < pixels.data.length; i += 4) {
+      const high = Math.max(pixels.data[i], pixels.data[i + 1], pixels.data[i + 2]);
+      if (high <= 10) pixels.data[i + 3] = 0;
+      else if (high < 32) pixels.data[i + 3] = Math.round(pixels.data[i + 3] * (high - 10) / 22);
+    }
+    c.putImageData(pixels, 0, 0);
+    _wallImgCache[name] = canvas;
+    return canvas;
   }
 
   function emojiForCell(x, y) {
@@ -181,7 +342,7 @@
     const dec = _decsAt.find(e => !isFloorDecor(e)) || _decsAt[0];
     if (dec) {
       // Se a decoração tem imagem e ela já carregou, não retorna emoji (a imagem cobre o footprint).
-      if (dec.image && objImg(dec.image)) return null;
+      if (dec.image && (isWallDecor(dec) ? wallImg(dec.image) : objImg(dec.image))) return null;
       // Decorações com escala visual são desenhadas à parte (ancoradas/escaladas).
       const vs = dec.vscale;
       if (Array.isArray(vs) && (vs[0] !== 1 || vs[1] !== 1)) return null;
@@ -222,7 +383,7 @@
     const _decorDrawOrder = [...S.decorations].sort((a, b) => (isFloorDecor(a) ? 0 : 1) - (isFloorDecor(b) ? 0 : 1));
     for (const d of _decorDrawOrder) {
       if (!d.image) continue;
-      const im = objImg(d.image);
+      const im = isWallDecor(d) ? wallImg(d.image) : objImg(d.image);
       if (!im) continue;
       const tiles = decorTiles(d);
       const _dm = decorMeta(d.type);
@@ -281,7 +442,7 @@
     for (const d of S.decorations) {
       const vs = Array.isArray(d.vscale) ? d.vscale : null;
       if (!vs || (vs[0] === 1 && vs[1] === 1)) continue;
-      if (d.image && objImg(d.image)) continue;
+      if (d.image && (isWallDecor(d) ? wallImg(d.image) : objImg(d.image))) continue;
       const m = decorMeta(d.type); const emoji = m ? m.emoji : "🪑";
       const tiles = decorTiles(d);
       const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
@@ -313,8 +474,25 @@
       ctx.strokeStyle = "#ffd86a"; ctx.lineWidth = 2;
       ctx.strokeRect(S.sel.pos[0] * CELL + 1, S.sel.pos[1] * CELL + 1, CELL - 3, CELL - 3);
     }
+    if (decorClipboard && lastPointerCell && !_drag) drawClipboardPreview();
     if (_drag && _drag.candidate) drawDragPreview();
     if (document.getElementById("status")) updateStatus();
+  }
+
+  function drawClipboardPreview() {
+    const d = cloneDecor(decorClipboard);
+    d.pos = lastPointerCell.slice();
+    const valid = decorWouldFit(d, d.pos, decorBaseSize(d), d.facing || [0, 1]);
+    ctx.save();
+    ctx.setLineDash([4, 3]); ctx.lineWidth = 2;
+    ctx.strokeStyle = valid ? "#72e6a1" : "#ed7777";
+    ctx.fillStyle = valid ? "rgba(67,180,111,0.16)" : "rgba(210,75,75,0.16)";
+    for (const [tx, ty] of decorTiles(d)) {
+      if (tx < 0 || ty < 0 || tx >= S.grid.w || ty >= S.grid.h) continue;
+      ctx.fillRect(tx * CELL + 2, ty * CELL + 2, CELL - 4, CELL - 4);
+      ctx.strokeRect(tx * CELL + 2, ty * CELL + 2, CELL - 4, CELL - 4);
+    }
+    ctx.setLineDash([]); ctx.restore();
   }
 
   // Preview do destino durante o arrasto: contorno verde (válido) / vermelho.
@@ -366,8 +544,11 @@
     if (S.tool === "decor") {
       const sel = document.createElement("select");
       sel.id = "decor-type";
-      sel.innerHTML = CAT.decorations.map(d =>
-        `<option value="${d.type}"${d.type === S.decorType ? " selected" : ""}>${d.emoji} ${d.nome}</option>`).join("");
+      const floor = CAT.decorations.filter(d => d.special !== "wall");
+      const walls = CAT.decorations.filter(d => d.special === "wall");
+      sel.innerHTML = `<optgroup label="Decorações de chão">${floor.map(d =>
+        `<option value="${d.type}"${d.type === S.decorType ? " selected" : ""}>${d.emoji} ${d.nome}</option>`).join("")}</optgroup><optgroup label="Decorações de parede">${walls.map(d =>
+        `<option value="${d.type}"${d.type === S.decorType ? " selected" : ""}>${d.emoji} ${d.nome}</option>`).join("")}</optgroup>`;
       sel.onchange = e => { S.decorType = e.target.value; S.decorFacing = [0, 1]; };
       tb.appendChild(sel);
       const rot = document.createElement("button");
@@ -475,6 +656,10 @@
 
   // Casa de destino válida para soltar a entidade `sel` ancorada em (ax,ay).
   function dropValid(sel, ax, ay) {
+    if (sel.kind === "decor" && isWallDecor(sel.ref)) {
+      const placement = wallPlacementAt(ax, ay, sel.ref.facing);
+      return !!placement && decorFits(sel.ref.type, placement.pos[0], placement.pos[1], placement.facing, sel.ref);
+    }
     if (sel.kind === "decor")
       return decorWouldFit(sel.ref, [ax, ay], decorBaseSize(sel.ref), sel.ref.facing);
     return ax >= 0 && ay >= 0 && ax < S.grid.w && ay < S.grid.h && S.tiles[ay][ax] !== WALL;
@@ -484,8 +669,15 @@
     const k = sel.kind;
     if (k === "entrance") { S.entrance.x = nx; S.entrance.y = ny; }
     else if (k === "exit") { S.exit.x = nx; S.exit.y = ny; }
-    else if (sel.ref) { sel.ref.pos = [nx, ny]; }  // prisoner/monster/chest/trap/decor
-    sel.pos = [nx, ny];
+    else if (sel.ref) {
+      if (k === "decor" && isWallDecor(sel.ref)) {
+        const placement = wallPlacementAt(nx, ny, sel.ref.facing);
+        if (!placement) return;
+        sel.ref.pos = placement.pos;
+        sel.ref.facing = placement.facing;
+      } else sel.ref.pos = [nx, ny];  // prisoner/monster/chest/trap/decor
+    }
+    sel.pos = sel.ref && sel.ref.pos ? sel.ref.pos.slice() : [nx, ny];
   }
 
   function entityAt(x, y) {
@@ -724,12 +916,16 @@
       };
     } else if (k === "decor") {
       const m = decorMeta(ref.type) || {};
+      const isWall = m.special === "wall";
       const hasLoot = !!ref.loot;
       const [bw, bh] = decorBaseSize(ref);
       const vs0 = Array.isArray(ref.vscale) ? ref.vscale : [1, 1];
       panel.innerHTML = `<b>${m.emoji || "🪑"} ${m.nome || ref.type}</b>
         <div style="color:#8a7a5a;font-size:11px">${m.size ? m.size[0] + "×" + m.size[1] : ""} ${m.alto ? "· alto (oclui visão)" : ""} ${m.pisavel ? "· pisável" : ""}</div>
-        ${m.gira ? `<button id="d-rot">girar 90°</button>` : ""}
+        ${isWall ? `<div style="color:#8a7a5a;font-size:11px;margin-top:6px">Decoração de parede: clique em uma parede; girar troca a face voltada para uma área jogável.</div>` : ""}
+        ${m.gira ? `<button id="d-rot">${isWall ? "trocar face" : "girar 90°"}</button>` : ""}
+        ${!isWall ? `<button id="d-duplicate" style="margin-top:7px">⧉ Duplicar em casa adjacente</button>` : ""}
+        <div id="d-duplicate-msg" style="font-size:11px;min-height:14px;color:#d8a0a0"></div>
         ${m.special === "fountain" ? `<label>cargas <input id="d-charges" type="number" min="0" value="${ref.charges ?? 0}"></label>` : ""}
         ${m.loot_capaz ? `<label style="display:block;margin-top:8px"><input type="checkbox" id="d-haslook" ${hasLoot ? "checked" : ""}> contém loot</label>` : ""}
         <div id="d-loot" style="${hasLoot ? "" : "display:none"}">
@@ -740,11 +936,12 @@
           <button id="d-additem">+ item</button>
         </div>
         <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
-          <b>Tamanho</b>
+          ${!isWall ? `<b>Tamanho</b>
           <div style="font-size:11px;color:#8a7a5a">footprint em casas (quadrados ocupados)</div>
           <label>largura <input id="d-fw" type="number" min="1" max="${S.grid.w}" value="${bw}"></label>
           <label>altura <input id="d-fh" type="number" min="1" max="${S.grid.h}" value="${bh}"></label>
-          <div id="d-size-msg" style="font-size:11px;color:#d8a0a0;min-height:14px"></div>
+          <div id="d-size-msg" style="font-size:11px;color:#d8a0a0;min-height:14px"></div>` : `<b>Tamanho visual</b>
+          <div style="font-size:11px;color:#8a7a5a">fica presa a uma única face da parede.</div>`}
           <div style="font-size:11px;color:#8a7a5a;margin-top:4px">tamanho visual (não muda casas; altura cresce p/ cima)</div>
           <label>escala largura <input id="d-vsx" type="number" min="0.2" max="4" step="0.1" value="${vs0[0]}"></label>
           <label>escala altura <input id="d-vsy" type="number" min="0.2" max="4" step="0.1" value="${vs0[1]}"></label>
@@ -761,7 +958,11 @@
             <span id="d-img-st" style="font-size:11px;color:#8a7a5a"></span>
           </div>
         </div>`;
-      if (m.gira) document.getElementById("d-rot").onclick = () => { ref.facing = rotateFacing(ref.facing); render(); };
+      if (m.gira) document.getElementById("d-rot").onclick = () => { rotateDecorPending(); renderPanel(); };
+      const duplicate = document.getElementById("d-duplicate"); if (duplicate) duplicate.onclick = () => {
+        if (duplicateDecorAdjacent(ref)) { renderPanel(); render(); }
+        else document.getElementById("d-duplicate-msg").textContent = "Não há uma casa adjacente livre para esta cópia.";
+      };
       if (m.special === "fountain") document.getElementById("d-charges").onchange = e => { ref.charges = Math.max(0, Number(e.target.value) | 0); };
       if (m.loot_capaz) document.getElementById("d-haslook").onchange = e => {
         ref.loot = e.target.checked ? { gold: 0, items: [] } : null; renderPanel();
@@ -788,8 +989,12 @@
           document.getElementById("d-fh").value = ch;
         }
       }
-      document.getElementById("d-fw").onchange = applyFootprint;
-      document.getElementById("d-fh").onchange = applyFootprint;
+      const footprintWidth = document.getElementById("d-fw");
+      const footprintHeight = document.getElementById("d-fh");
+      if (footprintWidth && footprintHeight) {
+        footprintWidth.onchange = applyFootprint;
+        footprintHeight.onchange = applyFootprint;
+      }
       // Escala visual: sem bloqueio (não ocupa casas).
       function applyVScale() {
         const sx = Math.max(0.2, Math.min(4, Number(document.getElementById("d-vsx").value) || 1));
@@ -836,7 +1041,9 @@
   }
 
   board.addEventListener("mousedown", (ev) => {
+    if (ev.button !== 0) return;
     const c = cellFromEvent(ev); if (!c) return;
+    lastPointerCell = c;
     const [x, y] = c;
     if (["wall", "floor", "door"].includes(S.tool)) { painting = true; (S.matFill && S.tool !== "door" ? paintMaterial : paintTile)(x, y); render(); updateStatus(); }
     else if (S.tool === "room") { roomDrag = { x0: x, y0: y, x1: x, y1: y }; }
@@ -860,6 +1067,7 @@
   }
   board.addEventListener("mousemove", (ev) => {
     const c = cellFromEvent(ev); if (!c) return;
+    lastPointerCell = c;
     if (_drag) {
       const ax = c[0] - _drag.offX, ay = c[1] - _drag.offY;
       _drag.candidate = [ax, ay];
@@ -880,7 +1088,15 @@
       const w = Math.abs(roomDrag.x1 - roomDrag.x0) + 1, h = Math.abs(roomDrag.y1 - roomDrag.y0) + 1;
       ctx.strokeStyle = "#ffd86a"; ctx.lineWidth = 1;
       ctx.strokeRect(x * CELL + 1, y * CELL + 1, w * CELL - 2, h * CELL - 2);
+      return;
     }
+    if (decorClipboard) render();
+  });
+  board.addEventListener("contextmenu", ev => {
+    ev.preventDefault();
+    const c = cellFromEvent(ev); if (!c) return;
+    lastPointerCell = c;
+    showCopyMenu(ev, c);
   });
   window.addEventListener("mouseup", () => {
     painting = false;
@@ -984,8 +1200,20 @@
     if (reachableFloors(6) < 6) e.push("menos de 6 casas de chão alcançáveis da entrada");
     const decTypes = new Set(CAT.decorations.map(d => d.type));
     const decOcc = new Set();
+    const wallDecOcc = new Set();
     for (const d of S.decorations) {
       if (!decTypes.has(d.type)) { e.push(`decoração tipo inválido: ${d.type}`); continue; }
+      if (isWallDecor(d)) {
+        const [wx, wy] = d.pos;
+        const validFace = wallFacesAt(wx, wy).some(face => sameFace(face, d.facing));
+        if (S.tiles[wy]?.[wx] !== WALL) e.push(`decoração de parede ${d.type} precisa estar em uma parede em ${wx},${wy}`);
+        else if (!validFace) e.push(`decoração de parede ${d.type} precisa apontar para um chão adjacente em ${wx},${wy}`);
+        const wallKey = `${wx},${wy}:${(d.facing || []).join(",")}`;
+        if (wallDecOcc.has(wallKey)) e.push(`decorações sobrepostas na mesma face de parede em ${wx},${wy}`);
+        wallDecOcc.add(wallKey);
+        if (d.loot) for (const it of d.loot.items) if (!items.has(it.id)) e.push(`item de loot inválido: ${it.id}`);
+        continue;
+      }
       for (const [tx, ty] of decorTiles(d)) {
         if (tx < 0 || ty < 0 || tx >= S.grid.w || ty >= S.grid.h || S.tiles[ty]?.[tx] !== FLOOR)
           e.push(`decoração ${d.type} fora do chão em ${tx},${ty}`);
@@ -1032,7 +1260,9 @@
       type: d.type, pos: d.pos.slice(), facing: (d.facing || [0, 1]).slice(),
       loot: d.loot ? { gold: d.loot.gold | 0, items: (d.loot.items || []).map(i => ({ id: i.id })) } : null,
       ...(d.charges !== undefined ? { charges: d.charges | 0 } : {}),
-      ...(d.image ? { image: d.image } : {}),
+      // Decorações catalogadas de parede sempre recuperam sua arte padrão,
+      // inclusive em arquivos antigos que ainda não guardavam `image`.
+      ...((d.image || decorMeta(d.type)?.image) ? { image: d.image || decorMeta(d.type).image } : {}),
       ...(Array.isArray(d.size) && d.size.length === 2 ? { size: [d.size[0] | 0, d.size[1] | 0] } : {}),
       ...(Array.isArray(d.vscale) && d.vscale.length === 2 ? { vscale: [Number(d.vscale[0]), Number(d.vscale[1])] } : {}),
     }));
@@ -1112,23 +1342,33 @@
   };
 
   function setTab(tab) {
-    const dung = tab !== "campanha";
+    const dung = tab === "masmorra";
+    const bestiary = tab === "bestiario";
+    const monsterEditor = tab === "editor_monstros";
     document.getElementById("dungeon-controls").style.display = dung ? "" : "none";
     document.getElementById("toolbar").style.display = dung ? "" : "none";
     document.getElementById("workspace").style.display = dung ? "" : "none";
-    document.getElementById("campaign-controls").style.display = dung ? "none" : "";
-    document.getElementById("campaign-view").style.display = dung ? "none" : "";
+    document.getElementById("campaign-controls").style.display = tab === "campanha" ? "" : "none";
+    document.getElementById("campaign-view").style.display = tab === "campanha" ? "" : "none";
+    document.getElementById("bestiary-view").style.display = bestiary ? "" : "none";
+    document.getElementById("monster-editor-view").style.display = monsterEditor ? "" : "none";
     document.getElementById("tab-masmorra").classList.toggle("active", dung);
-    document.getElementById("tab-campanha").classList.toggle("active", !dung);
+    document.getElementById("tab-bestiario").classList.toggle("active", bestiary);
+    document.getElementById("tab-editor-monstros").classList.toggle("active", monsterEditor);
+    document.getElementById("tab-campanha").classList.toggle("active", tab === "campanha");
     if (dung) { render(); renderPanel(); }
-    else if (window.EDITOR_CAMPAIGN) window.EDITOR_CAMPAIGN.renderCampaign();
+    else if (bestiary && window.EDITOR_BESTIARY) window.EDITOR_BESTIARY.render();
+    else if (monsterEditor && window.EDITOR_MONSTER_EDITOR) window.EDITOR_MONSTER_EDITOR.render();
+    else if (tab === "campanha" && window.EDITOR_CAMPAIGN) window.EDITOR_CAMPAIGN.renderCampaign();
   }
   window.setTab = setTab;
   document.getElementById("tab-masmorra").onclick = () => setTab("masmorra");
+  document.getElementById("tab-bestiario").onclick = () => setTab("bestiario");
+  document.getElementById("tab-editor-monstros").onclick = () => setTab("editor_monstros");
   document.getElementById("tab-campanha").onclick = () => setTab("campanha");
 
   // Expor para verificação no console / tasks seguintes.
-  window.EDITOR = { S, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, deleteRoom, entityAt, doorLink, doorUnlink, validarEditor, buildJSON, loadJSON, save, updateStatus, WALL, FLOOR, DOOR, decorMeta, decorEffSize, decorTilesAt, decorTiles, rotateFacing, rotateDecorPending, decorFits, placeDecor, decorBaseSize, decorEffSizeOf, decorWouldFit, tilesFor, dropValid, moveSelTo };
+  window.EDITOR = { S, catalog: CAT, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, deleteRoom, entityAt, doorLink, doorUnlink, validarEditor, buildJSON, loadJSON, save, updateStatus, WALL, FLOOR, DOOR, decorMeta, decorEffSize, decorTilesAt, decorTiles, rotateFacing, rotateDecorPending, decorFits, placeDecor, decorBaseSize, decorEffSizeOf, decorWouldFit, tilesFor, dropValid, moveSelTo, copySelectedDecor, pasteDecorAt, duplicateDecorAdjacent };
 
   initGrid(S.grid.w, S.grid.h);
   buildToolbar();
