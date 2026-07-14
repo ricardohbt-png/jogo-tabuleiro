@@ -8351,7 +8351,8 @@ class GameRoom:
         nx, ny = m["pos"][0] + dx, m["pos"][1] + dy
         if not self._monster_can_occupy(m, nx, ny):
             await self.send_to(pid, {"type": "error", "msg": "Caminho bloqueado."}); return
-        await self._commit_monster_step(m, nx, ny)
+        if not await self._commit_monster_step(m, nx, ny):
+            await self.send_to(pid, {"type": "error", "msg": "Monstro não pode se mover para lá."}); return
         m["master_moves_left"] -= 1
         await self.push_state()
 
@@ -8367,8 +8368,14 @@ class GameRoom:
         alvo = self.players.get(target_id)
         if not alvo or not alvo.get("alive"):
             await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
-        m["_master_acted"] = True
         atk_def = (m.get("attacks") or [{}])[0]
+        rng = atk_def.get("range")
+        if rng:
+            if max(abs(m["pos"][0] - alvo["pos"][0]), abs(m["pos"][1] - alvo["pos"][1])) > rng:
+                await self.send_to(pid, {"type": "error", "msg": "Alvo fora de alcance."}); return
+        elif not self._is_adjacent_to_monster(alvo["pos"], m):
+            await self.send_to(pid, {"type": "error", "msg": "Alvo não está adjacente."}); return
+        m["_master_acted"] = True
         await self._execute_one_monster_attack(m, atk_def, {"kind": "player", "obj": alvo})
         await self.push_state()
 
@@ -8406,6 +8413,7 @@ class GameRoom:
             return
         if self.master_manual_mid != mid:
             return
+        self.master_manual_mid = None   # fecha a janela ANTES da IA resolver (evita ação dupla)
         m = self.monsters.get(mid)
         if m and m["hp"] > 0:
             alive_players = [p for p in self.players.values() if self._ativo(p)]

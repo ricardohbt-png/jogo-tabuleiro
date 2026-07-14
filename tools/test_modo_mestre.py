@@ -179,7 +179,7 @@ async def main():
     async def fake_atk(m, atk_def, target_obj):
         ataques["n"] += 1; return True
     r._execute_one_monster_attack = fake_atk
-    async def fake_commit(m, nx, ny): m["pos"] = [nx, ny]
+    async def fake_commit(m, nx, ny): m["pos"] = [nx, ny]; return True
     r._commit_monster_step = fake_commit
     r._monster_can_occupy = lambda m, nx, ny, facing=None: True
     m = {"id": "g1", "hp": 8, "pos": [4, 4], "control_mode": "manual",
@@ -188,7 +188,7 @@ async def main():
     r.master_manual_mid = "g1"
     m["master_moves_left"] = r.MASTER_MANUAL_MOVE
     m["_master_acted"] = False
-    hero = {"id": "hA", "pos": [5, 4], "alive": True, "hp": 10}
+    hero = {"id": "hA", "pos": [6, 4], "alive": True, "hp": 10}
     r.players = {"hA": hero}
     await r.handle_mestre_mover_monstro("m1", "g1", 1, 0)
     check("monstro moveu 1 casa", m["pos"] == [5, 4])
@@ -205,6 +205,33 @@ async def main():
     r._errs.clear()
     await r.handle_mestre_mover_monstro("m1", "g1", -1, 0)
     check("mover fora da janela recusado", m["pos"] == [5, 4])
+
+    print("\n[8b] mover recusado quando _commit_monster_step falha")
+    r = lobby_room(); r.phase = "playing"
+    r.master_pid = "m1"; r.connections["m1"] = object()
+    async def fake_commit_false(m, nx, ny): return False
+    r._commit_monster_step = fake_commit_false
+    r._monster_can_occupy = lambda m, nx, ny, facing=None: True
+    m = {"id": "g1", "hp": 8, "pos": [4, 4], "control_mode": "manual"}
+    r.monsters = {"g1": m}; r.master_manual_mid = "g1"; m["master_moves_left"] = 3
+    r._errs.clear()
+    await r.handle_mestre_mover_monstro("m1", "g1", 1, 0)
+    check("não moveu (commit False)", m["pos"] == [4, 4])
+    check("não gastou movimento", m["master_moves_left"] == 3)
+
+    print("\n[8c] ataque manual melee exige adjacência")
+    r = lobby_room(); r.phase = "playing"
+    r.master_pid = "m1"; r.connections["m1"] = object()
+    ataques2 = {"n": 0}
+    async def fake_atk2(m, atk_def, target_obj): ataques2["n"] += 1; return True
+    r._execute_one_monster_attack = fake_atk2
+    m = {"id": "g1", "hp": 8, "pos": [1, 1], "control_mode": "manual", "attacks": [{"name": "garra"}]}
+    r.monsters = {"g1": m}; r.master_manual_mid = "g1"; m["_master_acted"] = False
+    r.players = {"hA": {"id": "hA", "pos": [8, 8], "alive": True}}
+    r._errs.clear()
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hA")
+    check("ataque melee longe recusado", ataques2["n"] == 0)
+    check("não marcou acted", m.get("_master_acted") is False)
 
     print("\n[9] sem mestre: dispatch cai em auto")
     r = lobby_room(); r.phase = "playing"
