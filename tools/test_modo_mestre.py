@@ -142,6 +142,18 @@ async def main():
     del r.connections["m1"]
     check("_mestre_ativo False sem conexão", r._mestre_ativo() is False)
 
+    print("\n[6b] modo inválido e fase != playing são no-op")
+    r = lobby_room(); r.phase = "playing"
+    r.master_pid = "m1"; r.connections["m1"] = object()
+    r.monsters = {"g1": {"id": "g1", "hp": 8, "pos": [1, 1], "control_mode": "auto"}}
+    await r.handle_mestre_set_modo("m1", ["g1"], "invalido")
+    check("modo inválido ignorado", r.monsters["g1"]["control_mode"] == "auto")
+    r.phase = "city"
+    await r.handle_mestre_set_modo("m1", ["g1"], "manual")
+    check("set_modo fora de playing ignorado", r.monsters["g1"]["control_mode"] == "auto")
+    await r.handle_mestre_set_alvo("m1", ["g1"], "hX")
+    check("set_alvo fora de playing ignorado", "master_target_id" not in r.monsters["g1"])
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

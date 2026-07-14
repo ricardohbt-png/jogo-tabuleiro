@@ -8303,6 +8303,8 @@ class GameRoom:
         """Mestre troca o modo de controle de 1+ monstros (Seleção em Lote)."""
         if pid != self.master_pid:
             return
+        if self.phase != "playing":
+            return
         if modo not in ("auto", "semi", "manual"):
             return
         for mid in (monster_ids or []):
@@ -8316,6 +8318,8 @@ class GameRoom:
     async def handle_mestre_set_alvo(self, pid, monster_ids, target_id):
         """Mestre atribui um alvo (herói) a 1+ monstros em modo Semi."""
         if pid != self.master_pid:
+            return
+        if self.phase != "playing":
             return
         for mid in (monster_ids or []):
             m = self.monsters.get(mid)
