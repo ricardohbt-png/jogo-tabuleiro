@@ -319,6 +319,13 @@ function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $(id).classList.add('active');
   if (typeof _menuMusicOnScreen === 'function') _menuMusicOnScreen(id);
+  // HUD do Mestre (#hud-mestre) só existe dentro da masmorra (screen-game) —
+  // some ao trocar de tela (o elemento persiste no DOM entre telas até o
+  // próximo renderMyPanel, então sem isto ficaria flutuando por cima).
+  if(id !== 'screen-game'){
+    const hudM = document.getElementById('hud-mestre');
+    if(hudM) hudM.style.display = 'none';
+  }
 }
 
 function toast(msg, color='var(--red)'){
@@ -428,6 +435,10 @@ function handleLobby(msg){
       msg.players.filter(p => p.id !== GS.myPid && p.class_id).map(p => p.class_id));
     _csfApplyTaken();
   }
+  // Reaplica por último — initClassSelectFull() (chamado acima, só na 1ª vez)
+  // reseta o texto de #cs-hint para o padrão de herói; isto garante que o
+  // aviso "Você é o Mestre" vença mesmo no 1º lobby_state do Mestre.
+  _csApplyMasterMode();
 }
 
 // Aplica o visual de "indisponível" (esmaecido) aos heróis já escolhidos por
@@ -1236,6 +1247,11 @@ function renderStory() {
 }
 
 function handleCityState(msg){
+  // O HUD do Mestre (#hud-mestre) só faz sentido dentro da masmorra — some ao
+  // voltar pra cidade (senão fica flutuando por cima da tela da cidade, já
+  // que o elemento persiste no DOM entre telas até o próximo renderMyPanel).
+  const hudM = document.getElementById('hud-mestre');
+  if(hudM) hudM.style.display = 'none';
   _updateCityHeroBar(msg);
   // Legacy player bar (used by shop modal gold display)
   const lbar=$('city-players-bar');
@@ -5034,6 +5050,17 @@ function computeVisionSet(state, me){
   // longe e através de portas fechadas — para mostrar o conteúdo da sala.
   if(state && state.revealed)
     for(const [rx,ry] of state.revealed) set.add(`${rx},${ry}`);
+  // Mestre: sem névoa de guerra — enxerga todo o terreno já conhecido pelo
+  // grupo (state.explored) e a posição de TODOS os monstros vivos, mesmo em
+  // salas que os heróis ainda não exploraram (visão total do Mestre). O
+  // Mestre não tem `me` (não é um herói em state.players), então sem este
+  // ramo cairia no `if(!me) return set` logo abaixo e ficaria com a mesma
+  // névoa total de um herói recém-chegado.
+  if(GS.isMaster()){
+    if(state && state.explored) for(const [ex,ey] of state.explored) set.add(`${ex},${ey}`);
+    if(state && state.monsters) for(const m of state.monsters) if(m && m.pos) set.add(`${m.pos[0]},${m.pos[1]}`);
+    return set;
+  }
   if(!me) return set;
   const [px,py] = me.pos;
   const SIGHT   = getSightRadius(me);   // dinâmico: 6, 7 ou 8 conforme o bônus de Richard
@@ -5073,14 +5100,24 @@ function renderMap(state){
   applyDPR(canvas, W*CELL, H*CELL);
   const ctx=canvas.getContext('2d');
 
-  const exploredSet=new Set(state.explored.map(([x,y])=>`${x},${y}`));
+  let exploredSet=new Set(state.explored.map(([x,y])=>`${x},${y}`));
   // Terreno visível AO VIVO: explorado (permanente) + revelado (Clarividência e
   // visão dos minions). Tiles só-revelados revertem à névoa sozinhos quando o
   // minion sai (state.revealed encolhe no próximo broadcast). exploredSet segue
   // governando lógica (BFS/alcance) — terrainSet governa só o desenho do mapa.
   const revealedSet=new Set((state.revealed||[]).map(([x,y])=>`${x},${y}`));
-  const terrainSet = revealedSet.size
+  let terrainSet = revealedSet.size
     ? new Set([...exploredSet, ...revealedSet]) : exploredSet;
+  // Mestre: sem névoa — trata o mapa inteiro como "explorado/revelado", o que
+  // também libera de graça baús/armadilhas/escadas/marcadores de sala (todos
+  // gateados por exploredSet mais abaixo). BFS/alcance não usam isto para o
+  // Mestre pois `me` é undefined (ele não é um herói em state.players).
+  if(GS.isMaster()){
+    const full = new Set();
+    for(let y=0;y<H;y++) for(let x=0;x<W;x++) full.add(`${x},${y}`);
+    exploredSet = full;
+    terrainSet  = full;
+  }
   const me=state.players.find(p=>p.id===GS.myPid&&p.alive);
   const visionSet=computeVisionSet(state, me);
   const {closed:doorClosed} = GS.doorSets(state);
@@ -5193,6 +5230,7 @@ function renderMap(state){
   }
 
   // ── PASS 4: Impenetrable fog on unexplored tiles (Diablo-style pitch-black)
+  // (no-op for the Mestre — terrainSet is the full map, see above)
   ctx.fillStyle='rgba(4,3,8,0.96)';
   for(let y=0;y<H;y++) for(let x=0;x<W;x++){
     if(!terrainSet.has(`${x},${y}`))
@@ -10054,7 +10092,114 @@ window.iniciarModoRessurreicao  = iniciarModoRessurreicao;
 window.renderAbaMagiasLewis     = renderAbaMagiasLewis;
 window.renderElementaisLewis    = renderElementaisLewis;
 
+// ══ MODO MESTRE JOGADOR (Fase A) — HUD do Mestre ═══════════════════════════
+// O Mestre não é um herói (não está em state.players durante a masmorra —
+// só master_pid o identifica), então renderMyPanel não tem "meu personagem"
+// pra desenhar. Em vez disso, mostra a lista de monstros com seleção em
+// lote (auto/semi/manual), atribuição de alvo (Semi) e os controles da
+// janela Manual (mover 1 passo + atacar + encerrar) quando master_manual_mid
+// está setado. Estado local: _masterSel (Set de monster ids selecionados —
+// só existe no cliente, não é persistido/enviado ao servidor até o jogador
+// clicar num botão de modo/alvo).
+let _masterSel = new Set();
+function renderMasterHud(state){
+  if(!state) return;
+  let host = document.getElementById('hud-mestre');
+  if(!host){
+    host = document.createElement('div');
+    host.id = 'hud-mestre';
+    document.body.appendChild(host);
+  }
+  host.style.display = 'block';
+
+  const manualMid = state.master_manual_mid;
+  const rows = (state.monsters || []).map(m => {
+    const sel = _masterSel.has(m.id) ? ' sel' : '';
+    const manualAtivo = m.id === manualMid ? ' manual-ativo' : '';
+    const modo = m.control_mode || 'auto';
+    return `<div class="mestre-row${sel}${manualAtivo}" data-mid="${m.id}">
+      <span class="nome">${m.name || m.type || '?'}</span>
+      <span class="hp">${m.hp}/${m.max_hp != null ? m.max_hp : m.hp}</span>
+      <span class="modo modo-${modo}">${modo}</span>
+    </div>`;
+  }).join('');
+
+  const heroOpts = (state.players || []).filter(p => p.alive)
+    .map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+
+  host.innerHTML = `
+    <div class="mestre-titulo">🎭 Mestre</div>
+    <div class="mestre-lista">${rows || '<div class="mestre-vazio">Nenhum monstro na masmorra.</div>'}</div>
+    <div class="mestre-modos">
+      <button data-modo="auto">Auto</button>
+      <button data-modo="semi">Semi</button>
+      <button data-modo="manual">Manual</button>
+    </div>
+    <select class="mestre-alvo">
+      <option value="">— alvo (Semi) —</option>
+      ${heroOpts}
+    </select>
+    ${manualMid ? `
+    <div class="mestre-manual">
+      <div class="mestre-manual-setas">
+        <button data-dir="0,-1">↑</button>
+        <button data-dir="0,1">↓</button>
+        <button data-dir="-1,0">←</button>
+        <button data-dir="1,0">→</button>
+      </div>
+      <button class="mestre-atacar">⚔️ Atacar alvo</button>
+      <button class="mestre-encerrar">Encerrar monstro</button>
+    </div>` : ''}
+  `;
+
+  // ── Wiring (delegado a cada render — o HUD inteiro é substituído acima) ──
+  host.querySelectorAll('.mestre-row').forEach(row => {
+    row.onclick = () => {
+      const mid = row.dataset.mid;
+      if(_masterSel.has(mid)) _masterSel.delete(mid); else _masterSel.add(mid);
+      renderMasterHud(GS.gameState);
+    };
+  });
+  host.querySelectorAll('.mestre-modos button').forEach(b => {
+    b.onclick = () => {
+      if(_masterSel.size) GS.mestreSetModo([..._masterSel], b.dataset.modo);
+    };
+  });
+  const selAlvo = host.querySelector('.mestre-alvo');
+  if(selAlvo) selAlvo.onchange = () => {
+    if(selAlvo.value && _masterSel.size) GS.mestreSetAlvo([..._masterSel], selAlvo.value);
+  };
+  if(manualMid){
+    host.querySelectorAll('.mestre-manual-setas button').forEach(b => {
+      b.onclick = () => {
+        const [dx, dy] = b.dataset.dir.split(',').map(Number);
+        GS.mestreMoverMonstro(manualMid, dx, dy);
+      };
+    });
+    const atkBtn = host.querySelector('.mestre-atacar');
+    if(atkBtn) atkBtn.onclick = () => {
+      if(selAlvo && selAlvo.value) GS.mestreAtacarMonstro(manualMid, selAlvo.value);
+      else toast('Escolha um alvo (herói) antes de atacar.', 'var(--orange)');
+    };
+    const fimBtn = host.querySelector('.mestre-encerrar');
+    if(fimBtn) fimBtn.onclick = () => GS.mestreEncerrarMonstro(manualMid);
+  }
+}
+
 function renderMyPanel(state){
+  // Mestre: sem ficha de personagem — mostra o HUD de controle de monstros
+  // em vez da ficha normal (ele não está em state.players).
+  if(GS.isMaster()){
+    renderMasterHud(state);
+    const mp = document.getElementById('my-panel');
+    if(mp) mp.style.display = 'none';
+    return;
+  }
+  const hudM = document.getElementById('hud-mestre');
+  if(hudM) hudM.style.display = 'none';
+  const mp2 = document.getElementById('my-panel');
+  if(mp2) mp2.style.display = '';
+
   const me = state.players.find(p => p.id === GS.myPid);
   if(!me) return;
 
@@ -11883,8 +12028,9 @@ function init3D(state){
   // ── Scene
   const scene = new T.Scene();
   scene.background = new T.Color(AMB.scene.bgColor);
-  // Subtle fog — keeps depth cue without hiding explored areas
-  scene.fog = new T.FogExp2(AMB.scene.fogColor, AMB.scene.fogDensity);
+  // Subtle fog — keeps depth cue without hiding explored areas.
+  // Mestre: sem fog — enxerga tiles distantes com nitidez total (visão sem névoa).
+  scene.fog = GS.isMaster() ? null : new T.FogExp2(AMB.scene.fogColor, AMB.scene.fogDensity);
 
   // ── Renderer
   const renderer = new T.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
@@ -14150,12 +14296,21 @@ function renderMap3D(state){
   if(!g3) return;
 
   const { T, tileMeshes, doorMeshes, W, H, entityGroup, sconces, torch } = g3;
-  const exploredSet = new Set(state.explored.map(([x,y])=>`${x},${y}`));
+  let exploredSet = new Set(state.explored.map(([x,y])=>`${x},${y}`));
   // Terreno visível ao vivo: explorado + revelado (Clarividência/minions). Reverte
   // à névoa sozinho quando o minion sai. exploredSet segue governando a lógica.
   const revealedSet = new Set((state.revealed||[]).map(([x,y])=>`${x},${y}`));
-  const terrainSet = revealedSet.size
+  let terrainSet = revealedSet.size
     ? new Set([...exploredSet, ...revealedSet]) : exploredSet;
+  // Mestre: sem névoa — todos os meshes de tile/porta/decoração ficam visíveis
+  // (mesma lógica-espelho do renderMap 2D). `me` continua undefined (Mestre
+  // não é herói), então BFS/alcance abaixo não usam isto.
+  if(GS.isMaster()){
+    const full = new Set();
+    for(let y=0;y<H;y++) for(let x=0;x<W;x++) full.add(`${x},${y}`);
+    exploredSet = full;
+    terrainSet  = full;
+  }
   const { closed:doorClosed3D } = GS.doorSets(state);
   const me = state.players.find(p => p.id===GS.myPid && p.alive);
   const visionSet = computeVisionSet(state, me);
@@ -19816,11 +19971,29 @@ function csUpdateLobbyBar(msg){
   const row = document.getElementById('cs-players-row');
   if(row) row.innerHTML = msg.players.map(p=>{
     const isMe = p.id === GS.myPid;
-    const rdy  = !!p.class_id;
+    const rdy  = !!p.class_id || !!p.is_master;   // Mestre não escolhe classe — já conta como "pronto"
     const cls  = (p.class_id && msg.classes) ? msg.classes[p.class_id] : null;
-    const tag  = cls ? ` ${cls.emoji}` : '';   // mostra a classe escolhida de cada um
+    const tag  = p.is_master ? ' 🎭 Mestre' : (cls ? ` ${cls.emoji}` : '');
     return `<span class="cs-player-chip${isMe?' me':''}${rdy?' ready':''}">${p.name}${tag}${p.id===msg.host?' ♛':''}</span>`;
   }).join('');
+
+  // ── Modo Mestre Jogador (Fase A) — toggle de assento no lobby ──────────────
+  {
+    const bar = document.getElementById('cs-lobby-bar');
+    if(bar){
+      let btnMestre = document.getElementById('cs-btn-master');
+      if(!btnMestre){
+        btnMestre = document.createElement('button');
+        btnMestre.id = 'cs-btn-master';
+        bar.insertBefore(btnMestre, document.getElementById('cs-btn-start'));
+      }
+      const jaMestre = GS.isMaster();
+      btnMestre.className = 'lobby-master-toggle' + (jaMestre ? ' ativo' : '');
+      btnMestre.textContent = jaMestre ? '🎭 Mestre — clique para virar herói' : '🎭 Assumir como Mestre';
+      btnMestre.onclick = () => GS.claimRole(jaMestre ? 'hero' : 'master');
+    }
+  }
+  _csApplyMasterMode();
 
   // Seletor de masmorra — controlado pelo host; o modo é exibido a todos.
   const picker = document.getElementById('cs-dungeon-picker');
@@ -19858,6 +20031,26 @@ function csUpdateLobbyBar(msg){
 
   const btnS = document.getElementById('cs-btn-start');
   if(btnS) btnS.style.display = (msg.host===GS.myPid && msg.can_start) ? 'block' : 'none';
+}
+
+// Esconde a UI de escolha de herói (painel de atributos/habilidades, botão de
+// confirmar, dica "Escolha seu herói", botão de características) quando o
+// jogador local é o Mestre — ele não escolhe classe. O carrossel 3D de peões
+// (#cs-canvas) continua rodando ao fundo (decorativo; clicar nos peões só
+// muda csf.selectedId localmente — nada é enviado ao servidor sem o botão de
+// confirmar, que fica escondido), então não precisamos tocar no Three.js aqui.
+function _csApplyMasterMode(){
+  const jaMestre = GS.isMaster();
+  const panel   = document.getElementById('cs-panel');
+  const confirm = document.getElementById('cs-confirm-wrap');
+  const hint    = document.getElementById('cs-hint');
+  const infoBtn = document.getElementById('cs-info-btn');
+  if(panel)   panel.style.display   = jaMestre ? 'none' : '';
+  if(confirm) confirm.style.display = jaMestre ? 'none' : '';
+  if(infoBtn) infoBtn.style.display = jaMestre ? 'none' : '';
+  if(hint) hint.textContent = jaMestre
+    ? '🎭 Você é o Mestre — controlará os monstros na masmorra.'
+    : 'Escolha seu herói — toque para selecionar';
 }
 
 function csConfirmClass(){

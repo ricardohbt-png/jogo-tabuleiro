@@ -990,8 +990,11 @@ const GS = (() => {
   function _saveSession() {
     if (!_sessUrl || !_sessCode || !myName) return;
     try {
+      // pid é gravado para o Mestre: ele não aparece em players[] durante
+      // city/dungeon (só master_pid identifica), então myPid nunca seria
+      // reencontrado por nome após um F5/reconexão sem persistir o pid aqui.
       localStorage.setItem('lfh_session',
-        JSON.stringify({ url: _sessUrl, code: _sessCode, name: myName }));
+        JSON.stringify({ url: _sessUrl, code: _sessCode, name: myName, pid: myPid }));
     } catch (e) {}
   }
   function savedSession() {
@@ -1041,6 +1044,10 @@ const GS = (() => {
     myName    = s.name;
     _sessUrl  = s.url;
     _sessCode = s.code;
+    // Restaura o pid salvo — essencial para o Mestre: como ele não está em
+    // players[] durante city/dungeon, o lookup por nome em lobby_state/
+    // city_state/game_state (`if (!myPid) ...`) nunca o encontraria sozinho.
+    if (s.pid) myPid = s.pid;
     ws = new WebSocket(s.url);
     ws.onopen = () => send({ type: 'rejoin', code: s.code, name: s.name });
     _wireWs();
@@ -1255,6 +1262,28 @@ const GS = (() => {
     send(msg);
   }
   function desarmarArmadilha() { send({ type: 'desarmar_armadilha' }); }
+
+  // ── Modo Mestre Jogador (Fase A) ────────────────────────────────────────
+  // Assento no lobby: role = 'master' | 'hero'.
+  function claimRole(role) { send({ type: 'claim_role', role }); }
+  // Seleção em lote — troca o modo de controle de 1+ monstros.
+  function mestreSetModo(monsterIds, modo) { send({ type: 'mestre_set_modo', monster_ids: monsterIds, modo }); }
+  // Atribui alvo (herói) a monstros em modo Semi.
+  function mestreSetAlvo(monsterIds, targetId) { send({ type: 'mestre_set_alvo', monster_ids: monsterIds, target_id: targetId }); }
+  // Janela Manual: move o monstro 1 passo ortogonal.
+  function mestreMoverMonstro(monsterId, dx, dy) { send({ type: 'mestre_mover_monstro', monster_id: monsterId, dx, dy }); }
+  // Janela Manual: o monstro ataca um herói.
+  function mestreAtacarMonstro(monsterId, targetId) { send({ type: 'mestre_atacar_monstro', monster_id: monsterId, target_id: targetId }); }
+  // Janela Manual: encerra a vez do monstro.
+  function mestreEncerrarMonstro(monsterId) { send({ type: 'mestre_encerrar_monstro', monster_id: monsterId }); }
+  // true se o jogador local é o mestre (checa lobby/city/game — o mestre não
+  // aparece em players[] durante city/dungeon, só master_pid identifica).
+  function isMaster() {
+    const st = lobbyState || cityState || gameState;
+    return !!(st && st.master_pid && st.master_pid === myPid);
+  }
+  // Id do monstro atualmente na janela Manual (ou null) — só existe em gameState.
+  function masterManualMid() { return (gameState && gameState.master_manual_mid) || null; }
 
   // ── Guilda dos Heróis (Fase 0) ──────────────────────────────────────────
   function guildBuy(itemId)           { send({ type: 'guild_buy',   item_id: itemId }); }
@@ -2053,6 +2082,16 @@ const GS = (() => {
     criarArmadilha,
     desarmarArmadilha,
     armadilhaAdjacente,
+
+    // ── Modo Mestre Jogador (Fase A) ──
+    claimRole,
+    mestreSetModo,
+    mestreSetAlvo,
+    mestreMoverMonstro,
+    mestreAtacarMonstro,
+    mestreEncerrarMonstro,
+    isMaster,
+    masterManualMid,
 
     // ── Guilda dos Heróis (Fase 0) ──
     guildBuy,

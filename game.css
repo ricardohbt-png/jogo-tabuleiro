@@ -954,3 +954,86 @@ input:focus { outline: none; border-color: var(--gold); }
 .city-hcard-face-fallback{ width:34px; aspect-ratio:3/4; display:flex;
   align-items:center; justify-content:center; font-size:18px; background:#0e0c18;
   border:1px solid #2a2848; border-radius:3px; flex-shrink:0; }
+
+/* ══ MODO MESTRE JOGADOR (Fase A) ══════════════════════════════════════════ */
+
+/* ── Lobby: toggle de assento (dentro de #cs-lobby-bar, junto ao botão Iniciar) ── */
+.lobby-master-toggle {
+  font-family: var(--font-body); font-size: 11px; letter-spacing: 2px;
+  color: var(--gold); background: transparent;
+  border: 1px solid rgba(var(--gold-rgb),.5); border-radius: 3px;
+  padding: 6px 14px; cursor: pointer; transition: all .2s; flex-shrink: 0;
+  margin-left: auto;
+}
+.lobby-master-toggle:hover { background: rgba(var(--gold-rgb),.15); }
+.lobby-master-toggle.ativo {
+  color: #ff8a5a; border-color: rgba(255,138,90,.6); background: rgba(255,138,90,.10);
+}
+.lobby-master-toggle.ativo:hover { background: rgba(255,138,90,.20); }
+
+/* ── HUD do Mestre (masmorra) — painel flutuante fixo, canto superior direito ── */
+#hud-mestre {
+  display: none;
+  position: fixed; top: 12px; right: 12px; z-index: 40;
+  width: 250px; max-height: 82vh; overflow-y: auto;
+  background: var(--dark-panel, rgba(4,2,14,0.92));
+  border: 1px solid rgba(var(--gold-rgb),.35); border-radius: var(--radius);
+  padding: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.5);
+  font-size: .8rem; color: var(--text);
+}
+#hud-mestre .mestre-titulo {
+  font-family: var(--font-title); color: var(--gold); font-size: .95rem;
+  letter-spacing: 1px; margin-bottom: 8px; text-align: center;
+}
+#hud-mestre .mestre-lista { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+#hud-mestre .mestre-vazio { color: var(--text2); font-size: .75rem; text-align: center; padding: 8px 0; }
+.mestre-row {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 4px; padding: 4px 7px; cursor: pointer; transition: border-color .15s, background .15s;
+}
+.mestre-row:hover { border-color: var(--border2); }
+.mestre-row.sel { border-color: var(--gold); background: rgba(var(--gold-rgb),.12); }
+.mestre-row.manual-ativo { border-color: #ff8a5a; box-shadow: 0 0 0 1px rgba(255,138,90,.4) inset; }
+.mestre-row .nome { flex: 1; font-size: .74rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mestre-row .hp { font-size: .68rem; color: var(--text2); }
+.mestre-row .modo {
+  font-size: .62rem; letter-spacing: .5px; text-transform: uppercase;
+  padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border2); color: var(--text2);
+}
+.mestre-row .modo-auto   { color: #8ab88a; border-color: rgba(50,200,100,.35); }
+.mestre-row .modo-semi   { color: #e6c35a; border-color: rgba(230,195,90,.35); }
+.mestre-row .modo-manual { color: #ff8a5a; border-color: rgba(255,138,90,.45); }
+
+.mestre-modos { display: flex; gap: 4px; margin-bottom: 8px; }
+.mestre-modos button {
+  flex: 1; font-size: .68rem; padding: 5px 4px; letter-spacing: .5px; text-transform: uppercase;
+  background: var(--bg3); border: 1px solid var(--border2); color: var(--text);
+}
+.mestre-modos button:hover { border-color: var(--gold); color: var(--gold); }
+
+.mestre-alvo {
+  width: 100%; font-size: .74rem; padding: 5px 6px; margin-bottom: 8px;
+  background: var(--bg3); border: 1px solid var(--border2); border-radius: 4px; color: var(--text);
+}
+
+.mestre-manual {
+  border-top: 1px solid var(--border); padding-top: 8px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.mestre-manual-setas {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; width: 108px; margin: 0 auto;
+}
+.mestre-manual-setas button:nth-child(1) { grid-column: 2; }
+.mestre-manual-setas button:nth-child(2) { grid-column: 2; }
+.mestre-manual-setas button:nth-child(3) { grid-column: 1; grid-row: 2; }
+.mestre-manual-setas button:nth-child(4) { grid-column: 3; grid-row: 2; }
+.mestre-manual-setas button {
+  font-size: .8rem; padding: 5px 0; background: var(--bg3);
+  border: 1px solid var(--border2); color: var(--gold);
+}
+.mestre-manual-setas button:hover { background: var(--border2); }
+.mestre-manual .mestre-atacar { background: #7a2a20; color: #fff; font-size: .72rem; padding: 6px; }
+.mestre-manual .mestre-atacar:hover { background: #9a3428; }
+.mestre-manual .mestre-encerrar { background: var(--bg3); border: 1px solid var(--border2); color: var(--text2); font-size: .7rem; padding: 6px; }
+.mestre-manual .mestre-encerrar:hover { color: var(--text); border-color: var(--gold); }
