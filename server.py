@@ -4702,23 +4702,28 @@ class GameRoom:
         if pid != self.host_pid:
             await self.send_to(pid, {"type": "error", "msg": "Apenas o anfitrião pode iniciar."})
             return
-        if not all(p["class_id"] for p in self.players.values()):
-            await self.send_to(pid, {"type": "error", "msg": "Todos devem escolher uma classe."})
+        heroes = {pid2: p for pid2, p in self.players.items() if not p.get("is_master")}
+        master_entry = next((p for p in self.players.values() if p.get("is_master")), None)
+        if not all(p["class_id"] for p in heroes.values()):
+            await self.send_to(pid, {"type": "error", "msg": "Todos os heróis devem escolher uma classe."})
             return
-        for pp in self.players.values():
+        for pp in heroes.values():
             if pp["class_id"] in ("mage", "cleric") and len(pp.get("magias_conhecidas", [])) < 2:
                 await self.send_to(pid, {"type": "error",
                     "msg": "Magos e clérigos devem escolher 2 magias antes de iniciar."}); return
 
-        # Build full player states
+        # Build full player states — SOMENTE heróis; o mestre não vira peão.
         full_players = {}
-        for slot, (pid2, p) in enumerate(self.players.items()):
+        for slot, (pid2, p) in enumerate(heroes.items()):
             novo = make_player(pid2, p["name"], p["class_id"], slot)
             novo["magias_conhecidas"] = list(p.get("magias_conhecidas", []))
             apply_guild_save(novo)   # carrega compras/equip persistidos do personagem
             full_players[pid2] = novo
         self.players = full_players
         self.player_order = list(full_players.keys())
+        if master_entry:
+            self.master_pid = master_entry["id"]
+            self.master_name = master_entry["name"]
 
         # Transition to city phase so players can shop before the dungeon
         self.phase = "city"
@@ -4731,6 +4736,7 @@ class GameRoom:
     async def broadcast_city_state(self):
         await self.broadcast({
             "type": "city_state",
+            "master_pid": self.master_pid,
             "players": list(self.players.values()),
             "host": self.host_pid,
             "campaign": self._campaign_payload(),
@@ -17075,6 +17081,7 @@ class GameRoom:
         actor = self.current_actor()
         await self.broadcast({
             "type": "game_state",
+            "master_pid": self.master_pid,
             "ambiente": getattr(self, "ambiente", "masmorra"),
             "tiles": self.tiles,
             "rooms": self.rooms,

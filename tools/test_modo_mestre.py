@@ -99,6 +99,24 @@ async def main():
     ok7 = await r.add_player(FakeWS(), "h6", "Setimo")
     check("7º herói barrado", ok7 is False)
 
+    print("\n[5] start_game extrai o mestre de self.players")
+    r = lobby_room()
+    cap = {}
+    async def cap_city2():
+        cap["master_pid"] = getattr(r, "master_pid", None)
+    r.broadcast_city_state = cap_city2
+    await add(r, "h1", "Victor"); await add(r, "m1", "Mestre")
+    await r.claim_role("m1", "master")
+    await r.select_class("h1", "warrior")
+    r.host_pid = "h1"
+    await r.start_game("h1")
+    check("mestre fora de self.players", "m1" not in r.players)
+    check("herói continua em self.players", "h1" in r.players)
+    check("master_pid preservado", r.master_pid == "m1")
+    check("master_name preservado", r.master_name == "Mestre")
+    check("player_order sem o mestre", "m1" not in r.player_order)
+    check("conexão do mestre preservada", "m1" in r.connections)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
