@@ -60,6 +60,10 @@ def check(name, cond):
     if cond: PASS += 1; print(f"  ✅ {name}")
     else:    FAIL += 1; print(f"  ❌ {name}")
 
+class FakeWS:
+    """WebSocket falso: .send é um no-op assíncrono (add_player usa ws.send no reject)."""
+    async def send(self, *a, **k): pass
+
 def lobby_room():
     """Sala em fase de lobby com send_to/broadcast capturados."""
     r = GameRoom("TEST")
@@ -118,9 +122,9 @@ async def main():
     print("\n[4] teto 6 heróis + 1 mestre")
     r = lobby_room()
     for i in range(6):
-        ok = await r.add_player(object(), f"h{i}", f"Heroi{i}")
+        ok = await r.add_player(FakeWS(), f"h{i}", f"Heroi{i}")
         check(f"herói {i} entra", ok is True)
-    ok7 = await r.add_player(object(), "h6", "Setimo")
+    ok7 = await r.add_player(FakeWS(), "h6", "Setimo")
     check("7º herói barrado", ok7 is False)
 
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
