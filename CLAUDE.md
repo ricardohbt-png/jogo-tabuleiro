@@ -133,6 +133,12 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `guild_equip` | `slot` (`tecnica`\|`tecnica_exclusiva`), `item_id` (ou `null` p/ desequipar) — equipa uma técnica possuída no 4º slot. Só na cidade. `tecnica_exclusiva` só para mago/clérigo e só técnicas `exclusiva:true`. |
 | `usar_tecnica` | `tecnica_id`, `target_id` opcional — ativa a técnica equipada na masmorra (no turno do herói). Valida equipada/fora de recarga/fome-sede; aplica efeito, debita 🍖/💧 e entra em recarga (`round_num + recarga_rodadas`). |
 | `usar_instrumento` | `target_id` opcional — o bardo (Henrique) ativa a habilidade do instrumento equipado na **mão do escudo** (`off_hand`; só se `tipo_item=="instrumento"` e `modo:"ativada"`). Nota Cortante (Harpa) mira 1 monstro; Acorde Trovejante (Tambor) e Ecos Dolorosos (Sino) são auto-centrados; Sinfonia Heroica (Alaúde) é passiva (sem mensagem — reforça a Canção). Economia de ação: 2 mãos = atacar OU tocar; 1 mão = atacar E tocar; máx. 1 instrumento/turno (`instrumento_usado`, resetado no fim do turno). Custo em 🍖/💧 dos stats derivados; sem recarga. |
+| `claim_role` | `role` (`"master"`\|`"hero"`) — no lobby, um jogador assume/solta o papel de **Mestre** (Modo Mestre Jogador). Mestre: `class_id=None`, não conta no teto de 6 heróis, não escolhe classe. |
+| `mestre_set_modo` | `monster_ids[]`, `modo` (`auto`\|`semi`\|`manual`) — o mestre troca o modo de controle de 1+ monstros (base da Seleção em Lote). Só na masmorra. |
+| `mestre_set_alvo` | `monster_ids[]`, `target_id` — atribui um alvo (herói) a monstros em modo Semi. |
+| `mestre_mover_monstro` | `monster_id`, `dx`, `dy` — Manual: move o monstro da janela 1 passo ortogonal. |
+| `mestre_atacar_monstro` | `monster_id`, `target_id` — Manual: o monstro ataca um herói adjacente/no alcance (1×/turno). |
+| `mestre_encerrar_monstro` | `monster_id` — Manual: encerra a vez do monstro e libera o laço de iniciativa. |
 
 ### Server → Client
 `lobby_state`, `game_start`, `city_state`, `shop_result`, `enter_dungeon`,
@@ -846,3 +852,30 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `_alaude_runico_resist` soma +1 em Fortitude/Vontade aos aliados sob a Canção (via `_testar_save`,
 > escopo amplo; "sob a Canção" = chave `buffs_cancao` presente). Fase 5: Improviso/Gaita. Testes:
 > `tools/test_instrumentos_bardo.py`.
+
+> **Modo Mestre Jogador (Fase A — núcleo de controle):** modo opcional em que um
+> humano assume o papel de **mestre** (7º participante, sem herói) e controla os
+> monstros já colocados. Rastreado por `self.master_pid`/`self.master_name` (NÃO
+> fica em `self.players` durante a partida — extraído em `start_game` —, então todo
+> laço que itera heróis segue intocado; a conexão fica em `self.connections`, então
+> os broadcasts o alcançam). Assento no lobby via `claim_role` (`is_master`; teto 6
+> heróis + 1 mestre; `_can_start` ignora o mestre). Cada monstro tem `control_mode`
+> (`auto`/`semi`/`manual`, lido via `.get(...,"auto")`); `_mestre_ativo()` (mestre
+> conectado) — quando False, todo monstro é tratado como `auto` e a partida é
+> **byte-idêntica** à do jogo sem mestre. Despacho no ramo de monstro de
+> `_activate_initiative_actor` (`monster_step`): **auto/semi** → `gm_phase(monster)`
+> (o Semi força o alvo em `_get_monster_primary_target`, abaixo de
+> réquiem/provocação/taunt); **manual** → `_master_manual_window` (janela bloqueante
+> via `asyncio.Event` + timer anti-AFK de 60s que resolve via IA, espelhando o
+> Último Esforço). Handlers `handle_mestre_set_modo`/`set_alvo` (guarda de fase
+> `playing`) e `handle_mestre_mover_monstro`/`atacar_monstro`/`encerrar_monstro`
+> (guarda `pid==master_pid` + `monster_id==master_manual_mid`; move reusa
+> `_commit_monster_step`, ataque reusa `_execute_one_monster_attack` com alcance
+> melee/ranged). `master_pid`/`master_manual_mid` vão nos payloads city/game_state.
+> Desconexão do mestre: `_on_master_disconnect` fecha a janela Manual aberta (o
+> monstro interrompido age via IA) e os monstros voltam ao auto; reconexão pelo
+> `rejoin` (casado por `master_name`). Vitória/derrota do mestre saem de graça dos
+> fluxos existentes (TPK / objetivo cumprido); sem métrica de Tensão (Camada D).
+> **Cliente (lobby toggle + HUD do mestre + visão sem névoa) e Camadas B/C/D
+> pendentes.** Spec/plano em `docs/superpowers/{specs,plans}/2026-07-13-modo-mestre-jogador-fase-a*`.
+> Teste do servidor: `tools/test_modo_mestre.py` (61 checks).
