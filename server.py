@@ -4394,6 +4394,8 @@ class GameRoom:
         self.code = code
         self.connections = {}   # pid -> websocket
         self.players = {}       # pid -> player dict
+        self.master_pid = None     # pid do mestre humano (Modo Mestre) ou None
+        self.master_name = None    # nome do mestre (p/ rejoin)
         self.player_order = []  # list of pid in turn order
         self.phase = "lobby"    # lobby | character_select | playing | ended
         self.host_pid = None
@@ -4518,8 +4520,9 @@ class GameRoom:
     # ── lobby ──────────────────────────────────────────────────────────────
 
     async def add_player(self, ws, pid, name):
-        if len(self.players) >= 6:
-            await ws.send(json.dumps({"type": "error", "msg": "Sala cheia (máximo 6 jogadores)."}))
+        heroes = sum(1 for p in self.players.values() if not p.get("is_master"))
+        if heroes >= 6:
+            await ws.send(json.dumps({"type": "error", "msg": "Sala cheia (máximo 6 heróis)."}))
             return False
         self.connections[pid] = ws
         self.players[pid] = {"id": pid, "name": name, "class_id": None, "ready": False, "connected": True, "slot": len(self.players)}
@@ -4529,6 +4532,10 @@ class GameRoom:
         return True
 
     async def select_class(self, pid, cls_id):
+        if self.players.get(pid, {}).get("is_master"):
+            await self.send_to(pid, {"type": "error",
+                "msg": "O mestre não escolhe classe. Solte o papel de mestre primeiro."})
+            return
         if cls_id not in CLASSES:
             return
         # Não tomado na sala
@@ -4549,6 +4556,36 @@ class GameRoom:
         CHARACTERS_IN_USE[cls_id] = self.code
         self.players[pid]["class_id"] = cls_id
         self.players[pid]["ready"] = True
+        await self.broadcast_lobby()
+
+    async def claim_role(self, pid, role):
+        """Lobby: um jogador assume ('master') ou solta ('hero') o papel de mestre."""
+        if self.phase != "lobby":
+            return
+        p = self.players.get(pid)
+        if not p:
+            return
+        if role == "master":
+            outro = next((q for q in self.players.values()
+                          if q.get("is_master") and q["id"] != pid), None)
+            if outro:
+                await self.send_to(pid, {"type": "error",
+                    "msg": "Já existe um mestre nesta sala."})
+                return
+            prev = p.get("class_id")
+            if prev and CHARACTERS_IN_USE.get(prev) == self.code:
+                del CHARACTERS_IN_USE[prev]
+            p["is_master"] = True
+            p["class_id"] = None
+            p["ready"] = True
+            self.master_pid = pid
+            self.master_name = p["name"]
+        else:  # "hero"
+            p["is_master"] = False
+            p["ready"] = False
+            if self.master_pid == pid:
+                self.master_pid = None
+                self.master_name = None
         await self.broadcast_lobby()
 
     async def handle_set_known_spells(self, pid, ids):
@@ -4589,6 +4626,10 @@ class GameRoom:
             await self._enviar_spell_pick_prompt(p)   # próxima da fila
         await self.push_state()
 
+    def _can_start(self):
+        heroes = [p for p in self.players.values() if not p.get("is_master")]
+        return len(heroes) >= 1 and all(p["class_id"] for p in heroes)
+
     async def broadcast_lobby(self):
         await self.broadcast({
             "type": "lobby_state",
@@ -4596,10 +4637,8 @@ class GameRoom:
             "host": self.host_pid,
             "players": list(self.players.values()),
             "classes": {k: {"name": v["name"], "emoji": v["emoji"], "color": v["color"], "desc": v["desc"]} for k, v in CLASSES.items()},
-            "can_start": (
-                len(self.players) >= 1 and
-                all(p["class_id"] for p in self.players.values())
-            ),
+            "can_start": self._can_start(),
+            "master_pid": self.master_pid,
             "dungeons": listar_dungeons(),
             "campaigns": listar_campanhas(),
             "mode": self.mode,
@@ -17238,6 +17277,9 @@ async def handler(ws):
 
                 elif t == "select_class":
                     if room: await room.select_class(pid, msg.get("class_id"))
+
+                elif t == "claim_role":
+                    if room: await room.claim_role(pid, msg.get("role"))
 
                 elif t == "guild_buy":
                     if room: await room.handle_guild_buy(pid, msg.get("item_id"))
