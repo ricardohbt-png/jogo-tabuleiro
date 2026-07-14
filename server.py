@@ -8387,6 +8387,15 @@ class GameRoom:
             self.master_manual_event.set()
         self.master_manual_mid = None
 
+    async def _on_master_disconnect(self):
+        """Mestre caiu durante a partida: fecha a janela Manual aberta (se houver)
+        para o jogo não travar até o timeout de 60s. Os monstros voltam à IA
+        automaticamente (_mestre_ativo já retorna False sem a conexão)."""
+        if self.master_manual_mid and self.master_manual_event and not self.master_manual_event.is_set():
+            self.master_manual_event.set()   # libera _master_manual_window → o turno avança
+        await self.gm_say("🔌 O mestre caiu — os monstros voltam ao controle da IA.")
+        await self.push_state()
+
     async def _master_manual_window(self, m):
         """Abre a janela interativa do modo Manual e aguarda o mestre agir.
         Retorna quando o mestre encerra OU o timeout resolve via IA auto."""
@@ -17398,6 +17407,22 @@ async def handler(ws):
                     if not alvo_room:
                         await err("Sala não encontrada para reconexão.")
                         continue
+                    # Reconexão do MESTRE (não está em players; casado por master_name).
+                    if alvo_room.master_pid and name == (alvo_room.master_name or ""):
+                        if alvo_room.master_pid in alvo_room.connections:
+                            await err("O mestre ainda está conectado.")
+                            continue
+                        pid = alvo_room.master_pid
+                        room = alvo_room
+                        room.connections[pid] = ws
+                        await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
+                        if room.phase == "city":
+                            await room.broadcast_city_state()
+                        else:
+                            await ws.send(json.dumps({"type": "enter_dungeon"}))
+                            await room.push_state()
+                        await room.gm_say(f"🔌 O mestre **{name}** reconectou-se.")
+                        continue
                     alvo = next((p for p in alvo_room.players.values()
                                  if p["name"] == name), None)
                     if not alvo:
@@ -17664,7 +17689,12 @@ async def handler(ws):
     finally:
         if room:
             room.connections.pop(pid, None)
+            if room.master_pid == pid and room.phase == "playing":
+                await room._on_master_disconnect()
             if pid in room.players and room.phase == "lobby":
+                if room.master_pid == pid:
+                    room.master_pid = None
+                    room.master_name = None
                 room.release_character(pid)   # libera a trava do personagem
                 room.players.pop(pid, None)
                 if room.host_pid == pid and room.players:

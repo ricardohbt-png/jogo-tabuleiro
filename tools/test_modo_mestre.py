@@ -241,6 +241,29 @@ async def main():
     mode = m.get("control_mode", "auto") if r._mestre_ativo() else "auto"
     check("sem mestre → auto", mode == "auto")
 
+    print("\n[10] rejoin do mestre: invariante de conexão")
+    r = lobby_room(); r.phase = "playing"
+    r.master_pid = "m1"; r.master_name = "Mestre"
+    check("mestre inativo desconectado", r._mestre_ativo() is False)
+    r.connections["m1"] = object()
+    check("mestre ativo após religar", r._mestre_ativo() is True)
+
+    print("\n[11] mestre cai: janela Manual aberta é fechada")
+    r = lobby_room(); r.phase = "playing"
+    r.master_pid = "m1"
+    r.master_manual_mid = "g1"
+    r.master_manual_event = asyncio.Event()
+    await r._on_master_disconnect()
+    check("event setado ao cair", r.master_manual_event.is_set())
+
+    print("\n[11b] _on_master_disconnect sem janela aberta é seguro")
+    r = lobby_room(); r.phase = "playing"
+    r.master_pid = "m1"
+    r.master_manual_mid = None
+    r.master_manual_event = None
+    await r._on_master_disconnect()   # não deve lançar exceção
+    check("no-op sem janela", r.master_manual_mid is None)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
