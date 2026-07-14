@@ -117,6 +117,14 @@ async def main():
     check("player_order sem o mestre", "m1" not in r.player_order)
     check("conexão do mestre preservada", "m1" in r.connections)
 
+    print("\n[5b] start_game exige ao menos 1 herói (só mestre não inicia)")
+    r = lobby_room()
+    await add(r, "m1", "Mestre"); await r.claim_role("m1", "master")
+    r.host_pid = "m1"; r._errs.clear()
+    await r.start_game("m1")
+    check("start recusado só com mestre", r.phase == "lobby")
+    check("erro de herói mínimo", any("herói" in e.lower() for e in r._errs))
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
