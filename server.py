@@ -4520,6 +4520,9 @@ class GameRoom:
     # ── lobby ──────────────────────────────────────────────────────────────
 
     async def add_player(self, ws, pid, name):
+        # Fase A: o mestre deve assumir o papel ANTES da sala encher com 6 heróis
+        # (ou um herói sentado troca para mestre, liberando um slot). Um 7º entrante
+        # dedicado a mestre não cabe numa sala já cheia de heróis — limitação aceita.
         heroes = sum(1 for p in self.players.values() if not p.get("is_master"))
         if heroes >= 6:
             await ws.send(json.dumps({"type": "error", "msg": "Sala cheia (máximo 6 heróis)."}))
@@ -4565,6 +4568,8 @@ class GameRoom:
         p = self.players.get(pid)
         if not p:
             return
+        if role not in ("master", "hero"):
+            return
         if role == "master":
             outro = next((q for q in self.players.values()
                           if q.get("is_master") and q["id"] != pid), None)
@@ -4581,6 +4586,8 @@ class GameRoom:
             self.master_pid = pid
             self.master_name = p["name"]
         else:  # "hero"
+            if not p.get("is_master"):
+                return
             p["is_master"] = False
             p["ready"] = False
             if self.master_pid == pid:

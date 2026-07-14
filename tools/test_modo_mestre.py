@@ -54,6 +54,28 @@ async def main():
     check("m1 deixou de ser mestre", not r.players["m1"].get("is_master"))
     check("m1 volta a não-ready", r.players["m1"]["ready"] is False)
 
+    print("\n[1b] claim_role hero em quem nunca foi mestre é no-op")
+    r = lobby_room()
+    await add(r, "h1", "Victor")
+    r.players["h1"]["ready"] = True   # herói já escolheu classe
+    r.players["h1"]["class_id"] = "warrior"
+    await r.claim_role("h1", "hero")
+    check("ready preservado (no-op)", r.players["h1"]["ready"] is True)
+    check("class_id preservado (no-op)", r.players["h1"]["class_id"] == "warrior")
+
+    print("\n[1c] claim_role fora do lobby é no-op")
+    r = lobby_room(); r.phase = "playing"
+    await add(r, "m1", "Mestre")
+    await r.claim_role("m1", "master")
+    check("não vira mestre fora do lobby", not r.players["m1"].get("is_master"))
+
+    print("\n[1d] role inválido é no-op")
+    r = lobby_room()
+    await add(r, "m1", "Mestre")
+    await r.claim_role("m1", "banana")
+    check("role inválido ignorado", not r.players["m1"].get("is_master"))
+    check("master_pid não setado", r.master_pid is None)
+
     print("\n[2] mestre não escolhe classe")
     r = lobby_room()
     await add(r, "m1", "Mestre"); await r.claim_role("m1", "master")
