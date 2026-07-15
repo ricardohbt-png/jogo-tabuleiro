@@ -29,6 +29,18 @@ def lobby_room():
     r.phase = "lobby"
     return r
 
+def playing_room_com_mestre():
+    """Sala em fase 'playing' com um mestre conectado e mapa mínimo."""
+    r = lobby_room()
+    r.phase = "playing"
+    r.master_pid = "m1"; r.master_name = "Mestre"
+    r.connections["m1"] = object()   # mestre conectado → _mestre_ativo() True
+    r.map_w = 10; r.map_h = 10
+    r.tiles = [[S.FLOOR]*10 for _ in range(10)]
+    r.rooms = []
+    r.monsters = {}; r.chests = {}; r.ground_items = {}
+    return r
+
 async def add(r, pid, name):
     """Adiciona um jogador sem depender de websocket real."""
     r.connections[pid] = object()   # sentinela: 'conectado'
@@ -330,6 +342,19 @@ async def main():
     check("dormente não é ativo", r._monstro_ativo_em_combate(m) is False)
     m["alertado"] = True
     check("acordado é ativo", r._monstro_ativo_em_combate(m) is True)
+
+    print("\n[16] Reforços — carga da reserva")
+    r = playing_room_com_mestre()
+    defn = {"master_reinforcements": [{"type": "goblin", "count": 2},
+                                      {"type": "orc", "count": 1},
+                                      {"type": "goblin", "count": 3}]}
+    r._carregar_master_reserve(defn)
+    check("goblin soma 2+3=5", r.master_reserve.get("goblin") == 5)
+    check("orc = 1", r.master_reserve.get("orc") == 1)
+    r._carregar_master_reserve({"master_reinforcements": [{"type": "tipo_inexistente", "count": 9}]})
+    check("tipo inválido é ignorado", "tipo_inexistente" not in r.master_reserve)
+    r._carregar_master_reserve({})
+    check("sem campo → reserva vazia", r.master_reserve == {})
 
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)

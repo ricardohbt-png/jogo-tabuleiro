@@ -4509,6 +4509,7 @@ class GameRoom:
         self.master_manual_mid = None       # id do monstro na janela Manual (ou None)
         self.master_manual_event = None     # asyncio.Event que fecha a janela
         self.master_manual_timer = None     # tarefa do timeout anti-AFK
+        self.master_reserve = {}   # Camada B: type→count restante de reforços do mestre
         self.player_order = []  # list of pid in turn order
         self.phase = "lobby"    # lobby | character_select | playing | ended
         self.host_pid = None
@@ -6292,6 +6293,9 @@ class GameRoom:
             m["authored_boss"] = bool(mo.get("boss"))
             m["authored_target"] = bool(mo.get("target"))
             self.monsters[m["id"]] = m
+
+        # Reforços do Mestre (Camada B) — reserva inerte sem mestre.
+        self._carregar_master_reserve(defn)
 
         # Baús com conteúdo exato (itens hidratados do catálogo do servidor).
         self.chests = {}
@@ -8723,6 +8727,23 @@ class GameRoom:
         """True se há um mestre humano CONECTADO. Quando False, todo monstro é
         tratado como 'auto' (partida idêntica à do jogo sem mestre)."""
         return bool(self.master_pid) and self.master_pid in self.connections
+
+    def _carregar_master_reserve(self, defn):
+        """Materializa a reserva de reforços do mestre a partir do defn da masmorra
+        (Camada B). type→count restante. Tipos desconhecidos e counts ≤0 são
+        ignorados. Inerte sem mestre (só é lido em handle_mestre_implantar_reforco)."""
+        reserve = {}
+        for entry in (defn.get("master_reinforcements") or []):
+            if not isinstance(entry, dict):
+                continue
+            t = entry.get("type")
+            try:
+                c = int(entry.get("count", 0) or 0)
+            except (TypeError, ValueError):
+                c = 0
+            if c > 0 and any(d["type"] == t for d in MONSTER_DEFS):
+                reserve[t] = reserve.get(t, 0) + c
+        self.master_reserve = reserve
 
     async def handle_mestre_set_modo(self, pid, monster_ids, modo):
         """Mestre troca o modo de controle de 1+ monstros (Seleção em Lote)."""
@@ -17929,6 +17950,12 @@ class GameRoom:
             "type": "game_state",
             "master_pid": self.master_pid,
             "master_manual_mid": self.master_manual_mid,
+            "master_reserve": [
+                {"type": t, "count": c,
+                 "name":  next((d.get("name", t)  for d in MONSTER_DEFS if d["type"] == t), t),
+                 "emoji": next((d.get("emoji", "👾") for d in MONSTER_DEFS if d["type"] == t), "👾")}
+                for t, c in self.master_reserve.items()
+            ],
             "ambiente": getattr(self, "ambiente", "masmorra"),
             "tiles": self.tiles,
             "rooms": self.rooms,
