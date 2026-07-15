@@ -104,7 +104,7 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `mover_prisioneiro` | `dx`, `dy` — controle manual do prisioneiro liberto (1 passo, só movimento). Habilitado na **janela pós-turno** do controlador (mesma do turno dos servos, `animados_phase_pid`): encerrar o turno abre a janela e dá `moves_left=6`; encerrar de novo avança. Se o resgatador morre, o controle passa ao herói vivo mais próximo. Dano vs CA10 dos monstros adjacentes continua na fase inimiga (`_processar_prisioneiro_turno`). O prisioneiro também **sofre armadilhas colocáveis** ao pisar nelas, como os heróis (saves a +0 em reflexos/fortitude); morte por qualquer fonte → `_prisioneiro_morre`/`rescue_failed`. |
 | `encerrar_missao` | — (herói encerra a fase **após** o objetivo principal cumprido; só habilitado quando `game_state.mission_complete_pending`). Concluir o principal **não** encerra mais automaticamente: o servidor concede a recompensa, larga um baú e liga `mission_complete_pending`; o cliente mostra o botão "🏁 Encerrar missão" (com confirmação) que dispara esta mensagem. Recusa `pid` fora de `self.players`. |
 | `open_chest` | — |
-| `open_door` | `tx`, `ty` — herói abre uma porta adjacente (Chebyshev ≤1). Ação **gratuita** (não gasta movimento/ação). Destranca a(s) sala(s) ligada(s) à porta, revela seu interior e **desperta** os monstros (que passam a perseguir). Salas começam trancadas (exceto a entrada); monstros em sala trancada ficam dormentes e o interior fica oculto pela névoa. **Clarividência** (`magia`, `alvoLivre`): alcance = mapa inteiro (mira em qualquer casa, mesmo na névoa — no 3D via `get3DTilePlane`); revela a área, os monstros ali (visibilidade ao vivo por 2 rodadas via `magic_reveal`) e as armadilhas do local, sem abrir a porta nem despertar os monstros. |
+| `open_door` | `tx`, `ty` — herói abre uma porta adjacente (Chebyshev ≤1). Ação **gratuita** (não gasta movimento/ação). Destranca a(s) sala(s) ligada(s) à porta, revela seu interior e **desperta** os monstros (que passam a perseguir). Salas começam trancadas (exceto a entrada); monstros em sala trancada ficam dormentes e o interior fica oculto pela névoa. **Com mestre**, além de abrir porta, os monstros também acordam por **avistamento** (o herói ganha linha de visão a um deles — `_verificar_avistamento`): o herói que avista acorda a **sala inteira** do monstro (flag `alertado`), narra "⚔️ Combate!" e coloca esses monstros em **Manual** por padrão (o mestre passa a dirigi-los); sem mestre a dormência é só por sala-trancada (byte-idêntica). **Clarividência** (`magia`, `alvoLivre`): alcance = mapa inteiro (mira em qualquer casa, mesmo na névoa — no 3D via `get3DTilePlane`); revela a área, os monstros ali (visibilidade ao vivo por 2 rodadas via `magic_reveal`) e as armadilhas do local, sem abrir a porta nem despertar os monstros. |
 | `use_item` | `item_id` |
 | `throw_item` | `item_id`, `target_id` — arremessa um consumível de bolsa (id em `ARREMESSAVEIS`) num monstro-alvo. Ação principal; teste de ataque por DES vs CA; consome o item em acerto E erro; dano de fogo + status `em_chamas_rodadas` (tica 1/rodada). |
 | `apagar_chamas` | — (herói em chamas gasta a ação principal para se apagar; única via contra o Fogo Grego, que ignora água). |
@@ -899,6 +899,33 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > monstro interrompido age via IA) e os monstros voltam ao auto; reconexão pelo
 > `rejoin` (casado por `master_name`). Vitória/derrota do mestre saem de graça dos
 > fluxos existentes (TPK / objetivo cumprido); sem métrica de Tensão (Camada D).
-> **Cliente (lobby toggle + HUD do mestre + visão sem névoa) e Camadas B/C/D
-> pendentes.** Spec/plano em `docs/superpowers/{specs,plans}/2026-07-13-modo-mestre-jogador-fase-a*`.
-> Teste do servidor: `tools/test_modo_mestre.py` (61 checks).
+> Cliente da Fase A: lobby toggle + HUD do mestre + visão sem névoa. Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-07-13-modo-mestre-jogador-fase-a*`.
+> Teste do servidor: `tools/test_modo_mestre.py`.
+
+> **Modo Mestre — Combate ao avistar, controle manual e ficha do monstro:** camada
+> seguinte à Fase A (só ativa com `_mestre_ativo()`; sem mestre, tudo byte-idêntico).
+> **Despertar por avistamento:** `_verificar_avistamento` (idempotente, chamado após
+> `handle_move` e `handle_open_door`) — se um herói vivo (`_ativo`) tem linha de visão
+> a um monstro dormente (`_heroi_enxerga_monstro`: raio de visão do HERÓI +
+> `_tem_linha_de_visao` + oclusão por objetos altos `_tall_oclui_caminho`), acorda a
+> **sala inteira** dele: seta `alertado=True` e `control_mode="manual"` em cada
+> monstro do grupo (por `room_id`; sem sala → só ele) e narra "⚔️ Combate!" uma vez
+> por sala. **Dormência generalizada:** `_monstro_ativo_em_combate(m)` é o predicado
+> único que decide se um monstro age / é controlável / é alvo — COM mestre: só se
+> `alertado`; SEM mestre: ativo a menos que a sala esteja trancada (comportamento
+> antigo). O despacho de iniciativa (`monster_step` em `_activate_initiative_actor`)
+> e o alvo de habilidades pulam o monstro quando o predicado é falso — um monstro
+> ainda não avistado fica parado e **não** abre a janela Manual quando sua iniciativa
+> chega. **Cliente (puro, sem servidor):** a tela de seleção troca o carrossel de
+> peões pela **imagem do mestre** (`assets/portraits/mestre_do_jogo.jpeg`) quando você
+> assume o papel (`_csApplyMasterMode` cria `#cs-master-portrait`); e o mestre abre a
+> **ficha do monstro** (`renderFichaMonstro` → painel `#ficha-monstro` no canto
+> inferior-esquerdo: HP/CA/movimento, atributos, ataques e habilidades) clicando num
+> monstro no tabuleiro (ramo de mestre em `handleTileClick` via `_monstroEmCasa`) ou
+> numa linha do HUD do mestre; a ficha some ao sair da masmorra e para não-mestres.
+> Os dados vêm do dict completo do monstro serializado em `game_state.monsters`
+> (`push_state` faz `dict(m,…)`), cobrindo monstros de ficha nova (`attacks`/
+> `special_abilities`) e legados (`atk_bonus`/`damage`). Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-07-14-modo-mestre-combate-controle*`.
+> Teste do servidor: `tools/test_modo_mestre.py` (75 checks).

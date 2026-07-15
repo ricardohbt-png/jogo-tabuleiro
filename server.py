@@ -6607,11 +6607,18 @@ class GameRoom:
         async def monster_step(mid):
             monster = self.monsters.get(mid)
             if monster and monster.get("hp", 0) > 0:
-                mode = monster.get("control_mode", "auto") if self._mestre_ativo() else "auto"
-                if mode == "manual":
-                    await self._master_manual_window(monster)
+                if self._mestre_ativo():
+                    # Modo Mestre: monstro dormente (não avistado) fica em silêncio
+                    # total — sem narração e sem janela. Só age quando alertado.
+                    if self._monstro_ativo_em_combate(monster):
+                        if monster.get("control_mode", "auto") == "manual":
+                            await self._master_manual_window(monster)
+                        else:
+                            await self.gm_phase(monster)   # auto e semi
                 else:
-                    await self.gm_phase(monster)   # auto e semi (semi força o alvo em _get_monster_primary_target)
+                    # Sem mestre: inalterado — gm_phase trata a dormência de sala
+                    # trancada internamente (byte-idêntico ao jogo clássico, incl. narração).
+                    await self.gm_phase(monster)
             await self._advance_initiative()
         self.initiative_task = asyncio.create_task(monster_step(actor["id"]))
 
@@ -6956,6 +6963,54 @@ class GameRoom:
     def _alvos_visiveis_para_monstro(self, m, targets):
         return [target for target in targets if self._monstro_enxerga_alvo(m, target)]
 
+    def _heroi_enxerga_monstro(self, hero, m):
+        """True se o herói tem linha de visão ao monstro (visão do HERÓI: raio +
+        LOS + oclusão por objetos altos). Base do 'avistar' que inicia o combate."""
+        if not m.get("pos") or not hero.get("pos"):
+            return False
+        hx, hy = hero["pos"]; mx, my = m["pos"]
+        if max(abs(hx - mx), abs(hy - my)) > self._get_raio_visao(hero):
+            return False
+        if not self._tem_linha_de_visao([hx, hy], [mx, my]):
+            return False
+        return not self._tall_oclui_caminho(hx, hy, mx, my)
+
+    def _monstro_ativo_em_combate(self, m):
+        """Um monstro age / é controlável / é alvo?
+        COM mestre: só se já foi 'alertado' (avistado). SEM mestre: comportamento
+        de hoje — ativo a menos que sua sala esteja trancada (byte-idêntico)."""
+        if self._mestre_ativo():
+            return bool(m.get("alertado"))
+        room_m = self._room_by_id(m.get("room_id"))
+        return not (room_m and room_m.get("locked"))
+
+    async def _verificar_avistamento(self):
+        """Só-mestre: se um herói vivo avista um monstro dormente, acorda a SALA
+        inteira dele (alertado=True) e o coloca em Manual. Idempotente."""
+        if not self._mestre_ativo():
+            return
+        herois = [p for p in self.players.values() if self._ativo(p)]
+        if not herois:
+            return
+        salas_narradas = set()
+        for m in list(self.monsters.values()):
+            if m.get("hp", 0) <= 0 or m.get("alertado"):
+                continue
+            if not any(self._heroi_enxerga_monstro(h, m) for h in herois):
+                continue
+            rid = m.get("room_id")
+            grupo = ([mm for mm in self.monsters.values()
+                      if mm.get("hp", 0) > 0 and mm.get("room_id") == rid]
+                     if rid is not None else [m])
+            for mm in grupo:
+                if not mm.get("alertado"):
+                    mm["alertado"] = True
+                    mm["control_mode"] = "manual"   # mestre dirige por padrão
+            chave = rid if rid is not None else id(m)
+            if chave not in salas_narradas:
+                salas_narradas.add(chave)
+                await self.gm_say("⚔️ **Combate!** Os monstros perceberam os heróis!")
+
     # ── turn actions ───────────────────────────────────────────────────────
 
     async def handle_move(self, pid, dx, dy):
@@ -7066,6 +7121,7 @@ class GameRoom:
         if p["alive"]:
             await self._aplicar_fogueira_se_pisar(p)
 
+        await self._verificar_avistamento()   # Modo Mestre: herói pode ter avistado monstros
         await self.push_state()
 
     async def _verificar_trap_procedural(self, pid, p, nx, ny):
@@ -7129,6 +7185,7 @@ class GameRoom:
             key = "room_" + r["role"]
             if key in GM:
                 await self.gm_say(gm(key))
+        await self._verificar_avistamento()   # sala revelada → herói avista → combate
         await self.push_state()
 
     async def _on_enter_room(self, pid, room):
@@ -17018,10 +17075,10 @@ class GameRoom:
             if m["hp"] <= 0:
                 continue
             m["_water_moves_left"] = self._water_turn_moves(m, m.get("movement", 4))
-            # Monstro dormente: sala ainda trancada (porta fechada). Não percebe
-            # nem persegue os heróis — permanece imóvel até a porta ser aberta.
-            room_m = self._room_by_id(m.get("room_id"))
-            if room_m and room_m.get("locked"):
+            # Monstro dormente: sala ainda trancada (porta fechada, ou — com
+            # mestre — ainda não avistado). Não percebe nem persegue os heróis
+            # — permanece imóvel até a porta ser aberta / ser avistado.
+            if not self._monstro_ativo_em_combate(m):
                 continue
             # Venenos: tica/expira efeitos no início do turno do monstro.
             await self._processar_venenos_turno(m)

@@ -272,6 +272,65 @@ async def main():
     await r._on_master_disconnect()   # não deve lançar exceção
     check("no-op sem janela", r.master_manual_mid is None)
 
+    print("\n[12] _monstro_ativo_em_combate — sem mestre = sala-trancada (byte-idêntico)")
+    r = lobby_room(); r.phase = "playing"
+    r.master_pid = None   # sem mestre
+    r.rooms = [{"id": 1, "locked": True}, {"id": 2, "locked": False}]
+    m_trancado = {"id": "g1", "hp": 8, "pos": [1, 1], "room_id": 1}
+    m_aberto   = {"id": "g2", "hp": 8, "pos": [2, 2], "room_id": 2}
+    m_sem_sala = {"id": "g3", "hp": 8, "pos": [3, 3]}
+    check("sem mestre: monstro em sala trancada NÃO ativo", r._monstro_ativo_em_combate(m_trancado) is False)
+    check("sem mestre: monstro em sala aberta ativo", r._monstro_ativo_em_combate(m_aberto) is True)
+    check("sem mestre: monstro sem sala ativo", r._monstro_ativo_em_combate(m_sem_sala) is True)
+
+    print("\n[12b] _monstro_ativo_em_combate — com mestre = flag alertado")
+    r.master_pid = "m1"; r.connections["m1"] = object()
+    check("com mestre: não-alertado NÃO ativo", r._monstro_ativo_em_combate(m_aberto) is False)
+    m_aberto["alertado"] = True
+    check("com mestre: alertado ativo", r._monstro_ativo_em_combate(m_aberto) is True)
+
+    print("\n[13] _verificar_avistamento acorda a sala e seta Manual (só com mestre)")
+    r = lobby_room(); r.phase = "playing"
+    r.master_pid = "m1"; r.connections["m1"] = object()
+    r.players = {"hA": {"id": "hA", "pos": [0, 0], "alive": True, "connected": True}}
+    m1 = {"id": "g1", "hp": 8, "pos": [5, 5], "room_id": 7}
+    m2 = {"id": "g2", "hp": 8, "pos": [6, 5], "room_id": 7}   # mesma sala
+    m3 = {"id": "g3", "hp": 8, "pos": [9, 9], "room_id": 8}   # outra sala
+    r.monsters = {"g1": m1, "g2": m2, "g3": m3}
+    # stub do avistamento: o herói só enxerga g1
+    r._heroi_enxerga_monstro = lambda hero, m: (m["id"] == "g1")
+    await r._verificar_avistamento()
+    check("g1 alertado", m1.get("alertado") is True)
+    check("g2 (mesma sala) alertado", m2.get("alertado") is True)
+    check("g3 (outra sala) NÃO alertado", m3.get("alertado") is not True)
+    check("g1 vira Manual", m1.get("control_mode") == "manual")
+    check("g2 vira Manual", m2.get("control_mode") == "manual")
+
+    print("\n[13b] idempotente + só-mestre")
+    chamadas = {"n": 0}
+    _orig = r.gm_say
+    async def _cnt(*a, **k): chamadas["n"] += 1
+    r.gm_say = _cnt
+    await r._verificar_avistamento()   # tudo já alertado → não re-narra
+    check("não re-narra sala já acordada", chamadas["n"] == 0)
+    r.gm_say = _orig
+    # sem mestre: no-op
+    r.master_pid = None
+    m4 = {"id": "g4", "hp": 8, "pos": [1, 1], "room_id": 9}
+    r.monsters["g4"] = m4
+    r._heroi_enxerga_monstro = lambda hero, m: True
+    await r._verificar_avistamento()
+    check("sem mestre: não acorda", m4.get("alertado") is not True)
+
+    print("\n[14] monstro não-alertado (com mestre) é pulado no despacho")
+    r = lobby_room(); r.phase = "playing"
+    r.master_pid = "m1"; r.connections["m1"] = object()
+    m = {"id": "g1", "hp": 8, "pos": [1, 1], "room_id": 5, "control_mode": "manual"}
+    r.monsters = {"g1": m}
+    check("dormente não é ativo", r._monstro_ativo_em_combate(m) is False)
+    m["alertado"] = True
+    check("acordado é ativo", r._monstro_ativo_em_combate(m) is True)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

@@ -327,6 +327,8 @@ function showScreen(id){
   if(id !== 'screen-game'){
     const hudM = document.getElementById('hud-mestre');
     if(hudM) hudM.style.display = 'none';
+    const fm = document.getElementById('ficha-monstro');
+    if(fm) fm.style.display = 'none';
   }
 }
 
@@ -10274,6 +10276,8 @@ function renderMasterHud(state){
     row.onclick = () => {
       const mid = row.dataset.mid;
       if(_masterSel.has(mid)) _masterSel.delete(mid); else _masterSel.add(mid);
+      const _mon = (GS.gameState.monsters||[]).find(x=>x.id===mid);
+      if(_mon) renderFichaMonstro(_mon);
       renderMasterHud(GS.gameState);
     };
   });
@@ -10303,6 +10307,38 @@ function renderMasterHud(state){
   }
 }
 
+// ── Ficha do monstro (só o mestre; painel canto inferior-esquerdo) ──
+function renderFichaMonstro(m){
+  if(!m){ return; }
+  let host = document.getElementById('ficha-monstro');
+  if(!host){ host = document.createElement('div'); host.id = 'ficha-monstro'; document.body.appendChild(host); }
+  host.style.display = 'block';
+  const linhaAtaque = (a) => {
+    const dano = a.damage || a.dano || '';
+    const b = (a.atk_bonus!=null) ? (a.atk_bonus>=0?'+':'')+a.atk_bonus : '';
+    return `<div class="fm-atk">⚔️ ${a.name||a.nome||'Ataque'} ${b} · ${dano}</div>`;
+  };
+  const linhaHab = (h) => `<div class="fm-hab"><b>${h.name||h.nome||h.id}</b> — ${h.descricao||h.desc||''}</div>`;
+  const ataques = (m.attacks||[]).map(linhaAtaque).join('') ||
+                  (m.atk_bonus!=null ? linhaAtaque({name:'Ataque', atk_bonus:m.atk_bonus, damage:m.damage}) : '');
+  const habs = (m.special_abilities||[]).map(linhaHab).join('');
+  const stat = (lbl,v)=> (v!=null? `<span class="fm-stat">${lbl} ${v}</span>` : '');
+  host.innerHTML =
+    `<div class="fm-head"><span class="fm-emoji">${m.emoji||'👾'}</span>`+
+    `<span class="fm-nome">${m.name||m.type||'Monstro'}</span>`+
+    `<button class="fm-close" title="Fechar">✕</button></div>`+
+    `<div class="fm-vitais">❤️ ${m.hp}/${m.max_hp||m.hp} · 🛡️ CA ${m.ac??'—'} · 👣 ${m.movement??'—'}</div>`+
+    `<div class="fm-stats">${stat('FOR',m.str_)}${stat('DES',m.dex)}${stat('CON',m.con_)}${stat('INT',m.int_)}`+
+    `${stat('Fort',m.fort)}${stat('Ref',m.ref_)}${stat('Von',m.will)}</div>`+
+    (ataques? `<div class="fm-sec">Ataques</div>${ataques}`:'')+
+    (habs? `<div class="fm-sec">Habilidades</div>${habs}`:'');
+  host.querySelector('.fm-close').onclick = () => { host.style.display='none'; };
+}
+function _monstroEmCasa(tx, ty){
+  const st = GS.gameState; if(!st) return null;
+  return (st.monsters||[]).find(m => m.hp>0 && m.pos && m.pos[0]===tx && m.pos[1]===ty) || null;
+}
+
 function renderMyPanel(state){
   // Mestre: sem ficha de personagem — mostra o HUD de controle de monstros
   // em vez da ficha normal (ele não está em state.players).
@@ -10314,6 +10350,7 @@ function renderMyPanel(state){
   }
   const hudM = document.getElementById('hud-mestre');
   if(hudM) hudM.style.display = 'none';
+  const _fm = document.getElementById('ficha-monstro'); if(_fm) _fm.style.display='none';
   const mp2 = document.getElementById('my-panel');
   if(mp2) mp2.style.display = '';
 
@@ -20241,6 +20278,20 @@ function _csApplyMasterMode(){
   if(hint) hint.textContent = jaMestre
     ? '🎭 Você é o Mestre — controlará os monstros na masmorra.'
     : 'Escolha seu herói — toque para selecionar';
+  // Carrossel 3D de peões ↔ imagem do mestre
+  const canvas = document.getElementById('cs-canvas');
+  let mimg = document.getElementById('cs-master-portrait');
+  if(jaMestre && !mimg){
+    mimg = document.createElement('div');
+    mimg.id = 'cs-master-portrait';
+    mimg.innerHTML =
+      '<img src="assets/portraits/mestre_do_jogo.jpeg" alt="Mestre do Jogo">' +
+      '<div class="cs-master-cap">📖 Mestre do Jogo</div>';
+    // insere no mesmo container do canvas
+    if(canvas && canvas.parentNode) canvas.parentNode.appendChild(mimg);
+  }
+  if(canvas) canvas.style.display = jaMestre ? 'none' : '';
+  if(mimg)   mimg.style.display   = jaMestre ? 'flex' : 'none';
 }
 
 function csConfirmClass(){
@@ -21004,6 +21055,12 @@ function on3DMouseMove(e){
 function handleTileClick(tx, ty){
   getAudioContext();
   if(!podeReceberInput()) return;   // bloqueia input durante a animação de movimento
+  // ── Mestre: clicar num monstro abre a ficha; o mestre não faz ações de herói ──
+  if(GS.isMaster()){
+    const mon = _monstroEmCasa(tx, ty);
+    if(mon) renderFichaMonstro(mon);
+    return;
+  }
   // ── Mira de MAGIA (2D e 3D): resolve alvo/casa e envia `magia` ─────────────
   // (No 3D, on3DClick já intercepta antes; aqui cobre o caminho do canvas 2D.)
   if(window._modoMagia){ _clickTileMagia(tx, ty); return; }
