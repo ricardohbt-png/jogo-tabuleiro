@@ -140,6 +140,7 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `mestre_mover_monstro` | `monster_id`, `dx`, `dy` — Manual: move o monstro da janela 1 passo ortogonal. |
 | `mestre_atacar_monstro` | `monster_id`, `target_id` — Manual: o monstro ataca um herói adjacente/no alcance (1×/turno). |
 | `mestre_encerrar_monstro` | `monster_id` — Manual: encerra a vez do monstro e libera o laço de iniciativa. |
+| `mestre_implantar_reforco` | `monster_type`, `tx`, `ty` — o mestre implanta um monstro da **reserva de reforços** (`master_reinforcements` da masmorra) numa casa livre. Ação livre, a qualquer momento; nasce `alertado`+`manual` e entra na iniciativa da próxima rodada. Só com mestre ativo. |
 
 ### Server → Client
 `lobby_state`, `game_start`, `city_state`, `shop_result`, `enter_dungeon`,
@@ -933,3 +934,19 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `special_abilities`) e legados (`atk_bonus`/`damage`). Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-07-14-modo-mestre-combate-controle*`.
 > Teste do servidor: `tools/test_modo_mestre.py` (75 checks).
+
+> **Modo Mestre — Camada B: Reforços do Mestre:** o autor grava
+> `master_reinforcements: [{type,count}]` na masmorra (editor, seção "Reforços do
+> Mestre" no painel de nível de masmorra; validado em `validar_dungeon`). Ao entrar
+> na dungeon o servidor materializa `self.master_reserve` (`type→count`, via
+> `_carregar_master_reserve`; inerte sem mestre). A mensagem `mestre_implantar_reforco`
+> (`handle_mestre_implantar_reforco`) cria o monstro via `make_monster` numa casa livre
+> (`_tile_livre_para_reforco`, espelha `_free_drop_tile_near`), `alertado`+`manual`;
+> ele entra sozinho na iniciativa da próxima rodada (`_rebuild_initiative` itera
+> `self.monsters` fresco). `master_reserve` vai no `game_state` enriquecido com
+> name/emoji para o HUD. Cliente: `GS.mestreImplantarReforco` + seção "Reforços" no
+> `renderMasterHud` com modo de clique-para-implantar (`window._modoImplantarReforco`,
+> tratado no ramo de mestre de `handleTileClick`; Esc cancela). Só-mestre; sem mestre,
+> byte-idêntico. Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-07-15-modo-mestre-camada-b-reforcos*`.
+> Teste: `tools/test_modo_mestre.py`.
