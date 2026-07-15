@@ -16,6 +16,7 @@
     rooms: [], nextRoomId: 0,
     entrance: null, exit: null, prisoner: null,
     monsters: [], chests: [], traps: [], decorations: [], secretPassages: [], nextDecorId: 0, nextPassageId: 0,
+    masterReinforcements: [],
     objectives: { primary: { type: "kill_all" }, secondary: [] },
     tool: "wall", sel: null,
     teleportExitPick: null,      // referência da armadilha aguardando clique no mapa
@@ -821,13 +822,36 @@
           <button data-i="${i}" class="o-rm">× remover</button>
           ${rewardFieldsHTML(s, "o-sec" + i + "-rw")}
         </div>`).join("")}</div>
-        <button id="o-add">+ secundário</button>`;
+        <button id="o-add">+ secundário</button>
+        <hr style="border-color:#3a3022;margin:10px 0">
+        <label>⚠️ reforços do mestre</label>
+        <div id="reinforce-list">${S.masterReinforcements.map((r, i) => {
+          const meta = CAT.monsters.find(m => m.type === r.type) || {};
+          return `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+            <span>${meta.emoji || "👾"} ${meta.name || r.type} ×${r.count}</span>
+            <button data-i="${i}" class="reinforce-rm">×</button>
+          </div>`;
+        }).join("") || '<small style="color:#8a7a5a">Nenhum reforço cadastrado.</small>'}</div>
+        <div style="display:flex;gap:4px;align-items:flex-end;margin-top:6px">
+          <select id="reinforce-type" style="flex:1">${opt(CAT.monsters.map(m => ({ v: m.type, name: m.name })), "", o => o.v + " — " + o.name)}</select>
+          <input id="reinforce-count" type="number" min="1" value="1" style="width:56px">
+          <button id="reinforce-add-btn">+</button>
+        </div>`;
       document.getElementById("o-prim").onchange = e => { o.primary.type = e.target.value; };
       wireRewardFields(o.primary, "o-prim-rw");
       document.getElementById("o-add").onclick = () => { o.secondary.push({ type: "rescue_prisoner", ...objDefaults(false) }); renderPanel(); };
       panel.querySelectorAll(".o-secsel").forEach(sel => sel.onchange = e => { o.secondary[Number(e.target.dataset.i)].type = e.target.value; });
       panel.querySelectorAll(".o-rm").forEach(b => b.onclick = () => { o.secondary.splice(Number(b.dataset.i), 1); renderPanel(); });
       o.secondary.forEach((s, i) => wireRewardFields(s, "o-sec" + i + "-rw"));
+      document.getElementById("reinforce-add-btn").onclick = () => {
+        const type = document.getElementById("reinforce-type").value;
+        const count = Math.max(1, Number(document.getElementById("reinforce-count").value) | 0);
+        if (!type) return;
+        const existing = S.masterReinforcements.find(r => r.type === type);
+        if (existing) existing.count += count; else S.masterReinforcements.push({ type, count });
+        renderPanel();
+      };
+      panel.querySelectorAll(".reinforce-rm").forEach(b => b.onclick = () => { S.masterReinforcements.splice(Number(b.dataset.i), 1); renderPanel(); });
       return;
     }
     const k = S.sel.kind, ref = S.sel.ref;
@@ -1216,6 +1240,7 @@
         return o;
       }),
       secret_passages: S.secretPassages.map(p => ({ id: p.id, type: p.type, pos: p.pos.slice(), key_decor_ids: p.key_decor_ids.slice(), keys_mode: p.keys_mode })),
+      master_reinforcements: S.masterReinforcements.map(r => ({ type: r.type, count: r.count })),
       prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}) } : null,
       materiais: { ...S.materiais },
       objectives: {
@@ -1356,6 +1381,9 @@
     S.nextDecorId = S.decorations.length;
     S.secretPassages = (obj.secret_passages || []).map((p, i) => ({ id: p.id || ("passage_" + i), type: p.type === "illusion" ? "illusion" : "mechanism", pos: p.pos.slice(), key_decor_ids: (p.key_decor_ids || []).slice(), keys_mode: p.keys_mode === "all" ? "all" : "any" }));
     S.nextPassageId = S.secretPassages.length;
+    S.masterReinforcements = (obj.master_reinforcements || [])
+      .filter(r => r && r.type)
+      .map(r => ({ type: r.type, count: Math.max(1, parseInt(r.count, 10) || 1) }));
     S.materiais = (obj.materiais && typeof obj.materiais === "object") ? { ...obj.materiais } : {};
     S.objectives = obj.objectives || { primary: { type: "kill_all" }, secondary: [] };
     if (!S.objectives.primary) S.objectives.primary = { type: "kill_all" };
