@@ -56,9 +56,14 @@ async def main():
     check("lendas supremas custa 300", S.guild_item("bardo_lendas_supremas")["preco"] == 300)
 
     # [2] Lendas geradas de MONSTER_DEFS
+    # Só os monstros embutidos entram no GUILD_CATALOG (congelado no import).
+    # Monstros personalizados (_personalizado, carregados de monstros_personalizados.json
+    # em runtime) não regeneram o catálogo — ficam de fora aqui de propósito.
     print("\n[2] Lendas Avançadas (geradas)")
     ids = [i["id"] for i in S.guild_items_for_class("bard")]
     for mdef in S.MONSTER_DEFS:
+        if mdef.get("_personalizado"):
+            continue
         gid = f"lenda_{mdef['type']}"
         check(f"catálogo tem {gid}", gid in ids)
     check("preço goblin (T1) = 60", S.guild_item("lenda_goblin")["preco"] == 60)
