@@ -6293,12 +6293,19 @@ class GameRoom:
         await self.push_state()
         async def monster_step(mid):
             monster = self.monsters.get(mid)
-            if monster and monster.get("hp", 0) > 0 and self._monstro_ativo_em_combate(monster):
-                mode = monster.get("control_mode", "auto") if self._mestre_ativo() else "auto"
-                if mode == "manual":
-                    await self._master_manual_window(monster)
+            if monster and monster.get("hp", 0) > 0:
+                if self._mestre_ativo():
+                    # Modo Mestre: monstro dormente (não avistado) fica em silêncio
+                    # total — sem narração e sem janela. Só age quando alertado.
+                    if self._monstro_ativo_em_combate(monster):
+                        if monster.get("control_mode", "auto") == "manual":
+                            await self._master_manual_window(monster)
+                        else:
+                            await self.gm_phase(monster)   # auto e semi
                 else:
-                    await self.gm_phase(monster)   # auto e semi (semi força o alvo em _get_monster_primary_target)
+                    # Sem mestre: inalterado — gm_phase trata a dormência de sala
+                    # trancada internamente (byte-idêntico ao jogo clássico, incl. narração).
+                    await self.gm_phase(monster)
             await self._advance_initiative()
         self.initiative_task = asyncio.create_task(monster_step(actor["id"]))
 
