@@ -5,6 +5,7 @@ window.EDITOR_CATALOG = {
       "name": "Goblin",
       "emoji": "👺",
       "tier": 1,
+      "cr": 0.25,
       "hp": 8,
       "ac": 12,
       "atk_bonus": 2,
@@ -17,6 +18,7 @@ window.EDITOR_CATALOG = {
       "name": "Esqueleto",
       "emoji": "💀",
       "tier": 1,
+      "cr": 0.5,
       "hp": 10,
       "ac": 13,
       "atk_bonus": 3,
@@ -30,6 +32,7 @@ window.EDITOR_CATALOG = {
       "name": "Orc",
       "emoji": "👹",
       "tier": 2,
+      "cr": 0.75,
       "hp": 16,
       "ac": 14,
       "atk_bonus": 5,
@@ -42,6 +45,7 @@ window.EDITOR_CATALOG = {
       "name": "Mago das Trevas",
       "emoji": "🧟",
       "tier": 2,
+      "cr": 0.5,
       "hp": 12,
       "ac": 12,
       "atk_bonus": 4,
@@ -54,6 +58,7 @@ window.EDITOR_CATALOG = {
       "name": "Troll",
       "emoji": "🗿",
       "tier": 3,
+      "cr": 1.5,
       "hp": 22,
       "ac": 16,
       "atk_bonus": 7,
@@ -67,6 +72,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🐉",
       "boss": true,
       "tier": 4,
+      "cr": 5.0,
       "hp": 60,
       "ac": 20,
       "atk_bonus": 12,
@@ -5036,6 +5042,36 @@ window.EDITOR_CATALOG = {
       "id": "instrumento_harpa_refinado_elfica_runico",
       "name": "Harpa Lendária Élfica",
       "emoji": "🎵"
+    },
+    {
+      "id": "instrumento_gaita_velho",
+      "name": "Gaita Velha",
+      "emoji": "🪗"
+    },
+    {
+      "id": "instrumento_gaita_rustico",
+      "name": "Gaita Rústica",
+      "emoji": "🪗"
+    },
+    {
+      "id": "instrumento_gaita_padrao",
+      "name": "Gaita Padrão",
+      "emoji": "🪗"
+    },
+    {
+      "id": "instrumento_gaita_refinado",
+      "name": "Gaita Refinada",
+      "emoji": "🪗"
+    },
+    {
+      "id": "instrumento_gaita_padrao_runico",
+      "name": "Gaita Padrão Rúnica",
+      "emoji": "🪗"
+    },
+    {
+      "id": "instrumento_gaita_refinado_ana_runico",
+      "name": "Gaita Lendária Anã",
+      "emoji": "🪗"
     },
     {
       "id": "pao",
