@@ -272,6 +272,23 @@ async def main():
     await r._on_master_disconnect()   # não deve lançar exceção
     check("no-op sem janela", r.master_manual_mid is None)
 
+    print("\n[12] _monstro_ativo_em_combate — sem mestre = sala-trancada (byte-idêntico)")
+    r = lobby_room(); r.phase = "playing"
+    r.master_pid = None   # sem mestre
+    r.rooms = [{"id": 1, "locked": True}, {"id": 2, "locked": False}]
+    m_trancado = {"id": "g1", "hp": 8, "pos": [1, 1], "room_id": 1}
+    m_aberto   = {"id": "g2", "hp": 8, "pos": [2, 2], "room_id": 2}
+    m_sem_sala = {"id": "g3", "hp": 8, "pos": [3, 3]}
+    check("sem mestre: monstro em sala trancada NÃO ativo", r._monstro_ativo_em_combate(m_trancado) is False)
+    check("sem mestre: monstro em sala aberta ativo", r._monstro_ativo_em_combate(m_aberto) is True)
+    check("sem mestre: monstro sem sala ativo", r._monstro_ativo_em_combate(m_sem_sala) is True)
+
+    print("\n[12b] _monstro_ativo_em_combate — com mestre = flag alertado")
+    r.master_pid = "m1"; r.connections["m1"] = object()
+    check("com mestre: não-alertado NÃO ativo", r._monstro_ativo_em_combate(m_aberto) is False)
+    m_aberto["alertado"] = True
+    check("com mestre: alertado ativo", r._monstro_ativo_em_combate(m_aberto) is True)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

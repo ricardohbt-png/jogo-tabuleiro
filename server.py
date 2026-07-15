@@ -6636,6 +6636,27 @@ class GameRoom:
     def _alvos_visiveis_para_monstro(self, m, targets):
         return [target for target in targets if self._monstro_enxerga_alvo(m, target)]
 
+    def _heroi_enxerga_monstro(self, hero, m):
+        """True se o herói tem linha de visão ao monstro (visão do HERÓI: raio +
+        LOS + oclusão por objetos altos). Base do 'avistar' que inicia o combate."""
+        if not m.get("pos") or not hero.get("pos"):
+            return False
+        hx, hy = hero["pos"]; mx, my = m["pos"]
+        if max(abs(hx - mx), abs(hy - my)) > self._get_raio_visao(hero):
+            return False
+        if not self._tem_linha_de_visao([hx, hy], [mx, my]):
+            return False
+        return not self._tall_oclui_caminho(hx, hy, mx, my)
+
+    def _monstro_ativo_em_combate(self, m):
+        """Um monstro age / é controlável / é alvo?
+        COM mestre: só se já foi 'alertado' (avistado). SEM mestre: comportamento
+        de hoje — ativo a menos que sua sala esteja trancada (byte-idêntico)."""
+        if self._mestre_ativo():
+            return bool(m.get("alertado"))
+        room_m = self._room_by_id(m.get("room_id"))
+        return not (room_m and room_m.get("locked"))
+
     # ── turn actions ───────────────────────────────────────────────────────
 
     async def handle_move(self, pid, dx, dy):
