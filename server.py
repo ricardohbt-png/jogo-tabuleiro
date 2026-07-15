@@ -2472,7 +2472,6 @@ SHOP_MERCHANT = [
     {"id": "veneno_ardonia_negra", "name": "Ardonia Negra", "emoji": "🕷️", "price": 50,
      "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_ardonia_negra",
      "descricao": "Fortitude CD 14 anula. Se falhar: 1 dano por rodada durante 2d4 rodadas."},
-    {"id": "health_potion", "name": "Poção de Cura",    "emoji": "🧪",  "price": 8,  "item_slot": "bag",   "effect": "heal",      "value": 10},
     {"id": "elixir",        "name": "Elixir da Força",  "emoji": "⚗️", "price": 12, "item_slot": "bag",   "effect": "atk_bonus", "value": 3},
     {"id": "antidote",      "name": "Antídoto",          "emoji": "💚",  "price": 5,  "item_slot": "bag",   "effect": "heal",      "value": 6},
     {"id": "vela_escuridao","name": "Vela da Escuridão", "emoji": "🕯️", "price": 50, "item_slot": "bag",   "effect": "veil_shadow","value": 0},
@@ -3388,6 +3387,18 @@ MATERIAIS_PISO_DEFAULT = "pedra_cinza"
 MATERIAIS_PAREDE_DEFAULT = "pedra_normal"
 
 SHOP_TEMPLE = [
+    {"id": "health_potion", "name": "Poção de Cura", "emoji": "🧪", "price": 8,
+     "item_slot": "bag", "effect": "heal", "value": 10},
+    # Poções portáteis: todas usam ação bônus na masmorra. A concentrada guarda
+    # as doses na própria instância do item (uses_left), não em um contador global.
+    {"id": "health_potion_small", "name": "Poção de Cura Pequena", "emoji": "🧪", "price": 3,
+     "item_slot": "bag", "effect": "heal", "value": 5},
+    {"id": "health_potion_concentrated", "name": "Poção de Cura Concentrada", "emoji": "🧪", "price": 40,
+     "item_slot": "bag", "effect": "heal", "value": 10, "max_uses": 3, "uses_left": 3},
+    {"id": "health_potion_improved", "name": "Poção de Cura Aprimorada", "emoji": "🧪", "price": 24,
+     "item_slot": "bag", "effect": "heal", "value": 20},
+    {"id": "regeneration_potion", "name": "Poção de Regeneração", "emoji": "🌿", "price": 16,
+     "item_slot": "bag", "effect": "regeneration", "value": 10},
     {"id": "full_heal", "name": "Cura Completa",  "emoji": "💖",  "price": 15, "effect": "full_heal"},
     {"id": "bless",     "name": "Bênção Divina",  "emoji": "✨",  "price": 12, "effect": "bless",    "value": 2},
     {"id": "cleanse",   "name": "Purificação",    "emoji": "🕊️", "price": 8,  "effect": "cleanse"},
@@ -3407,6 +3418,21 @@ SHOP_TAVERN = [
     {"id": "cantil_agua",    "name": "Cantil de Água",   "emoji": "🧴", "price": 25, "item_slot": "bag", "effect": "food", "fome": 0,  "sede": 20},
 ]
 _TAVERN_BY_ID = {i["id"]: i for i in SHOP_TAVERN}
+
+# Itens que podem ser encontrados em baús e decorações de masmorras autoradas.
+# Reúne todo o estoque portátil do ferreiro, mercador e taverna; serviços de
+# balcão (sem item_slot) não fazem sentido como saque e ficam de fora.
+def _criar_catalogo_loot_masmorra():
+    catalogo = {}
+    for fonte in (CHEST_ITEMS, SHOP_WEAPONS, SHOP_ARMORS, SHOP_AMMO,
+                  SHOP_MERCHANT, SHOP_TAVERN, SHOP_TEMPLE):
+        for item in fonte:
+            if item.get("id") and (item.get("item_slot") or item.get("die") or item.get("kind")):
+                # A definição da loja vence a versão antiga de CHEST_ITEMS.
+                catalogo[item["id"]] = item
+    return catalogo
+
+_DUNGEON_ITEM_CATALOG = _criar_catalogo_loot_masmorra()
 
 # ─── GM NARRATION ─────────────────────────────────────────────────────────────
 
@@ -5857,6 +5883,18 @@ class GameRoom:
                        else f"{loja_emoji} **{p['name']}** comprou **{item['name']}** (equipe pelo inventário).")
 
         elif shop == "templo":
+            # Itens sagrados portáteis (como a Poção de Cura) vão para a bolsa;
+            # bênçãos e serviços do templo continuam sendo aplicados na hora.
+            if item.get("item_slot"):
+                if self._route_acquired_item(p, {**item, "buy_price": price}) == "full":
+                    p["gold"] += price
+                    await self.send_to(pid, {"type": "error",
+                        "msg": f"Inventário cheio (máx {p.get('bag_size', 6)} itens)!"})
+                    return
+                log = f"⛪ **{p['name']}** recebeu **{item['name']}** do Templo!"
+                await self.broadcast({"type": "shop_result", "msg": log})
+                await self.broadcast_city_state()
+                return
             effect = item.get("effect")
             if effect == "full_heal":
                 p["hp"] = p["max_hp"]
@@ -6307,6 +6345,7 @@ class GameRoom:
         if p.get("class_id") == "rogue": await self._processar_inicio_turno_luccas(p)
         await self._processar_venenos_turno(p)
         await self._processar_corrosao_viva_turno(p)
+        await self._processar_regeneracao_pocao_turno(p)
         await self._processar_vinho_turno(p)
         await self._processar_cerveja_turno(p)
         await self._processar_buffs_magicos_turno(p)
@@ -10333,7 +10372,7 @@ class GameRoom:
 
     # ── Ação Bônus ─────────────────────────────────────────────────────────────
     # Efeitos de item que contam como ação bônus (máx. 1 por turno).
-    BONUS_ACTION_EFFECTS = {"heal", "atk_bonus", "antidote", "coat_poison", "veil_shadow"}
+    BONUS_ACTION_EFFECTS = {"heal", "regeneration", "atk_bonus", "antidote", "coat_poison", "veil_shadow"}
 
     def _consumir_recursos(self, player, tipo_acao):
         """Consumo CENTRAL de fome/sede (escala 0–10). Substitui os consumos
@@ -13358,15 +13397,43 @@ class GameRoom:
             await self.send_to(pid, {"type": "error",
                 "msg": "🔥 Em Último Esforço você não pode se curar!"}); return
 
+        # Itens com doses (hoje, a Poção de Cura Concentrada) só podem ser
+        # ativados enquanto ainda houver uma dose. A guarda vem antes da ação
+        # bônus para nunca gastá-la em uma garrafa já vazia.
+        max_uses = int(item.get("max_uses", 1) or 1)
+        uses_left = int(item.get("uses_left", max_uses) or 0)
+        if effect == "heal" and max_uses > 1 and uses_left <= 0:
+            await self.send_to(pid, {"type": "error",
+                "msg": "Esta poção já não possui doses."})
+            return
+
         # Itens consumíveis de bolsa são ações bônus — verificar antes de aplicar
         if effect in self.BONUS_ACTION_EFFECTS:
             ok = await self._executar_acao_bonus(p)
             if not ok:
                 return  # já usou ação bônus neste turno — abortar sem consumir o item
 
+        remove_item = True
         if effect == "heal":
             p["hp"] = min(p["max_hp"], p["hp"] + val)
-            await self.gm_say(f"{item['emoji']} **{p['name']}** usa **{item['name']}** e recupera **{val}** HP!")
+            if max_uses > 1:
+                uses_left -= 1
+                item["uses_left"] = uses_left
+                remove_item = uses_left <= 0
+                doses_msg = (" A garrafa se esvazia." if remove_item
+                             else f" **{uses_left}/{max_uses}** doses restantes.")
+            else:
+                doses_msg = ""
+            await self.gm_say(
+                f"{item['emoji']} **{p['name']}** usa **{item['name']}** e recupera **{val}** HP!{doses_msg}")
+        elif effect == "regeneration":
+            # A reserva fica no herói, não no frasco. Assim ela não se perde caso
+            # esteja com HP cheio: só é gasta nos próximos turnos que realmente
+            # precisarem de cura. Poções adicionais somam outra reserva de 10.
+            p["potion_regen_pool"] = p.get("potion_regen_pool", 0) + val
+            await self.gm_say(
+                f"🌿 **{p['name']}** bebe **{item['name']}** — reserva de regeneração "
+                f"**{p['potion_regen_pool']}** HP (+1 HP por rodada).")
         elif effect == "atk_bonus":
             self.blessed[pid] = self.blessed.get(pid, 0) + val
             p["atk_bonus"] += val
@@ -13435,7 +13502,8 @@ class GameRoom:
                 f"{item['emoji']} **{p['name']}** acende a **{item['name']}**, e a luz "
                 f"em volta é sugada: fica **oculto** até o fim do turno{extra}")
 
-        p["bag"].remove(item)
+        if remove_item:
+            p["bag"].remove(item)
         await self.push_state()
 
     # ── Pergaminhos mágicos ─────────────────────────────────────────────────────
@@ -13773,6 +13841,7 @@ class GameRoom:
         await self._processar_venenos_turno(cur_p)
         # Corrosão Viva (Devorador Orgânico): DoT por turno em quem está sem armadura.
         await self._processar_corrosao_viva_turno(cur_p)
+        await self._processar_regeneracao_pocao_turno(cur_p)
         # Embriaguez (Garrafa de Vinho): tica e expira a penalidade.
         await self._processar_vinho_turno(cur_p)
         # Embriaguez (Caneca de Cerveja): tica e expira a penalidade de ataque.
@@ -14033,6 +14102,32 @@ class GameRoom:
         p["corrosao_viva"] = [t - 1 for t in pilhas if t - 1 > 0]
         if p["hp"] <= 0:
             await self._player_dies(p["id"])
+
+    async def _processar_regeneracao_pocao_turno(self, p):
+        """Cura 1 HP no início do turno enquanto a reserva da poção existir.
+
+        A reserva não tem prazo: se o herói estiver com HP cheio, ela fica
+        intacta até que haja vida a recuperar. Diferente da magia homônima,
+        esta regeneração não ressuscita e usa seu próprio contador.
+        """
+        pool = int(p.get("potion_regen_pool", 0) or 0)
+        if pool <= 0:
+            p.pop("potion_regen_pool", None)
+            return
+        if not p.get("alive") or p.get("hp", 0) >= p.get("max_hp", 0):
+            return
+        cura = min(1, pool, p["max_hp"] - p["hp"])
+        if cura <= 0:
+            return
+        p["hp"] += cura
+        pool -= cura
+        if pool:
+            p["potion_regen_pool"] = pool
+        else:
+            p.pop("potion_regen_pool", None)
+        await self.gm_say(
+            f"🌿 A **Poção de Regeneração** cura **{p['name']}** +{cura} HP "
+            f"({p['hp']}/{p['max_hp']}; reserva {pool}).")
 
     async def _processar_vinho_turno(self, p):
         """Tica a embriaguez da Garrafa de Vinho; ao expirar, restaura ataque/Reflexos."""
@@ -16919,7 +17014,7 @@ class GameRoom:
                 elif loot.get("tipo") == "raro_xama":
                     # 50% Poção de Cura / 50% Pergaminho de 1º círculo (mago ou clérigo).
                     if random.random() < 0.5:
-                        pot = next((i for i in SHOP_MERCHANT if i["id"] == "health_potion"), None)
+                        pot = next((i for i in SHOP_TEMPLE if i["id"] == "health_potion"), None)
                         if pot:
                             loot_items.append(deepcopy(pot))
                     else:

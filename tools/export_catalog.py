@@ -25,7 +25,7 @@ def build_catalog():
         entry = {key: m[key] for key in fields if key in m}
         monsters.append(entry)
     items = [{"id": i["id"], "name": i["name"], "emoji": i.get("emoji", "")}
-             for i in server.CHEST_ITEMS]
+             for i in server._DUNGEON_ITEM_CATALOG.values()]
     traps = []
     for tipo, meta in server.ARMADILHAS.items():
         traps.append({

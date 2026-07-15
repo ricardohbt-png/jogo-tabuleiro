@@ -19,16 +19,21 @@ def main():
     print("\n[1] build_catalog")
     cat = ec.build_catalog()
     tipos_srv = {m["type"] for m in server.MONSTER_DEFS}
-    ids_srv   = {i["id"] for i in server.CHEST_ITEMS}
+    ids_srv   = set(server._DUNGEON_ITEM_CATALOG)
     check("todo monstro exportado existe no servidor",
           all(m["type"] in tipos_srv for m in cat["monsters"]))
-    check("exporta todos os monstros", len(cat["monsters"]) == len(server.MONSTER_DEFS))
+    check("exporta todos os monstros nativos", len(cat["monsters"]) ==
+          sum(1 for m in server.MONSTER_DEFS if not m.get("_personalizado")))
     check("monstro tem type/name/emoji",
           all(all(k in m for k in ("type", "name", "emoji")) for m in cat["monsters"]))
     check("dragon marcado como boss",
           any(m["type"] == "dragon" and m.get("boss") for m in cat["monsters"]))
     check("todo item exportado existe no servidor",
           all(i["id"] in ids_srv for i in cat["items"]))
+    lojas = (server.SHOP_WEAPONS + server.SHOP_ARMORS + server.SHOP_AMMO + server.SHOP_MERCHANT
+             + server.SHOP_TAVERN + server.SHOP_TEMPLE)
+    check("itens portáteis das lojas entram no loot",
+          all(i["id"] in ids_srv for i in lojas if i.get("item_slot") or i.get("die") or i.get("kind")))
     check("toda armadilha exportada existe no servidor",
           all(t["tipo"] in server.ARMADILHAS for t in cat["traps"]))
     check("fosso_envenenado precisa_veneno=True",
@@ -49,7 +54,7 @@ def main():
 
     print("\n[decor] decorações exportadas")
     check("catálogo tem 'decorations'", "decorations" in cat)
-    check("23 decorações", len(cat.get("decorations", [])) == 23)
+    check("todas as decorações", len(cat.get("decorations", [])) == len(server.DECOR_TYPES))
     check("toda decoração tem type/nome/emoji/size/gira/alto/pisavel/loot_capaz/special",
           all(set(("type", "nome", "emoji", "size", "gira", "alto", "pisavel", "loot_capaz", "special")) <= set(d)
               for d in cat.get("decorations", [])))

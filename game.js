@@ -1539,6 +1539,8 @@ function _itemDesc(item){
     return `+${item.value||0} fome/sede • -1 ataque e reflexos por 10 rodadas`;
   if(item.effect==='ration')
     return `+${item.value||0} fome e sede`;
+  if(item.effect==='regeneration')
+    return `Reserva ${item.value||0} HP • recupera +1 HP por rodada`;
   const fx={
     heal:'Restaura HP', atk_bonus:'Bônus de Ataque',
     maxhp:'Aumenta HP máx', atk:'Bônus Ataque', spd:'Velocidade',
@@ -4728,15 +4730,6 @@ function drawDragon(ctx){
 // usava as PNGs. Agora usa as mesmas imagens do 3D. Carrega lazy; enquanto não
 // carrega, drawHeroSprite cai no sprite procedural. Ao carregar, redesenha.
 const _hero2DImg = {};
-let _chamas2DImg;
-function _getChamas2DImg(){
-  if(_chamas2DImg === undefined){
-    _chamas2DImg = new Image();
-    _chamas2DImg.onload = () => { if(!mode3D && window.GS && GS.gameState) renderMap(GS.gameState); };
-    _chamas2DImg.src = _assetURL('assets/armadilhas/em_chamas.png');
-  }
-  return (_chamas2DImg.complete && _chamas2DImg.naturalWidth) ? _chamas2DImg : null;
-}
 function _getHero2DImg(classId){
   if(!classId) return null;
   let img = _hero2DImg[classId];
@@ -4952,12 +4945,8 @@ function _drawStatusIcons2D(ctx, X, Y, entity){
   ctx.textAlign = 'right'; ctx.textBaseline = 'top';
   let x = X + CELL - 1;
   if(entity.em_chamas_rodadas > 0){
-    const flame = _getChamas2DImg();
     ctx.globalAlpha = 0.74 + 0.26*Math.abs(Math.sin(performance.now()/170));
-    if(flame){
-      const h = CELL * 0.62, w = h * (flame.naturalWidth / flame.naturalHeight);
-      ctx.drawImage(flame, x - w, Y - h * 0.08, w, h);
-    } else ctx.fillText('🔥', x, Y + 1);
+    ctx.fillText('🔥', x, Y + 1);
     x -= fs * 0.72;
   }
   const drops = [
@@ -10423,6 +10412,11 @@ function renderMyPanel(state){
       <span style="color:#f8d040; font-weight:bold; font-size:.95rem;">✨ +1 HP</span>
       <span style="color:#e8d8a0; font-size:.6rem; letter-spacing:1px;">REGENERAÇÃO DIVINA: +1 HP por turno</span>
     </div>` : ''}
+    ${(me.potion_regen_pool || 0) > 0 ? `
+    <div style="margin-top:4px; padding:5px 8px; background:rgba(72,180,92,0.13); border:1px solid #48b45c66; border-radius:3px; display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Cinzel',serif;">
+      <span style="color:#7ee890; font-weight:bold; font-size:.95rem;">🌿 +1 HP</span>
+      <span style="color:#d4f0d0; font-size:.6rem; letter-spacing:1px;">POÇÃO DE REGENERAÇÃO: ${me.potion_regen_pool} HP NA RESERVA</span>
+    </div>` : ''}
     ${state.last_stand_pid === GS.myPid ? `
     <div class="banner-ultimo-esforco" style="margin-top:4px; padding:5px 8px; background:rgba(224,40,40,0.15); border:1px solid #e0282866; border-radius:3px; display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Cinzel',serif;">
       <span style="color:#ff5050; font-weight:bold; font-size:.95rem;">🔥 ÚLTIMO ESFORÇO</span>
@@ -11149,6 +11143,7 @@ function _advanceTrapQueue(){
 
 function _showTrapResult(msg){
   const trapImages = {
+    'Em Chamas': 'em_chamas.png',
     'Buraco Escondido': 'armadilha_fosso.png',
     'Buraco': 'armadilha_fosso.png',
     'Armadilha de Urso': 'armadilha_urso.png',
@@ -11348,7 +11343,7 @@ function endTurn(){ getAudioContext(); GS.endTurn(); }
 // ── Ação Bônus — efeitos de item que consomem ação bônus (máx. 1/turno) ──────
 // Espelha BONUS_ACTION_EFFECTS em server.py — manter sincronizados.
 const ACOES_BONUS = ['beberPocao', 'usarItemMagico', 'envenenarArma', 'usarItem'];
-const BONUS_ACTION_EFFECTS = new Set(['heal', 'atk_bonus', 'antidote']);
+const BONUS_ACTION_EFFECTS = new Set(['heal', 'regeneration', 'atk_bonus', 'antidote']);
 
 function useItem(itemId){ send({type:'use_item',item_id:itemId}); }
 
@@ -15716,19 +15711,17 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
   return grp;
 }
 
-// A arte de chamas é a mesma PNG da armadilha, sobreposta ao peão afetado.
+// Sprite 🔥 (emoji em canvas) que flutua sobre um peão/monstro em chamas.
 function _makeChamasSprite3D(){
   const T = g3.T;
-  const key = '__status_em_chamas';
-  let tex = _pawnTexCache[key];
-  if(!tex){
-    tex = new T.TextureLoader().load(_assetURL('assets/armadilhas/em_chamas.png'));
-    _pawnTexCache[key] = tex;
-  }
+  const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+  const c = cv.getContext('2d');
+  c.font = '48px serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText('🔥', 32, 36);
+  const tex = new T.CanvasTexture(cv);
+  tex._owned = true;
   const sp = new T.Sprite(new T.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
-  const image = tex.image;
-  const h = 0.72, w = image && image.width ? h * (image.width / image.height) : h;
-  sp.scale.set(w, h, 1);
+  sp.scale.set(0.5, 0.5, 1);
   sp.position.set(0, _BB_H_ALVO * 0.85, 0);   // acima da cabeça (deriva da altura-alvo do peão)
   sp.userData.isChamasSprite = true;
   return sp;

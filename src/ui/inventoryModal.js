@@ -214,7 +214,7 @@ const InventoryModal = (() => {
         if(item.tipo_item === 'instrumento' && typeof aplicarTooltipInstrumento === 'function')
           aplicarTooltipInstrumento(slot, item);   // quadro próprio (não está em CATALOGO_ITENS)
         else
-          _wireTooltip(slot, item.id, null);
+          _wireTooltip(slot, item.id, null, item);
       }
       if(_selected && _selected.kind === 'gear' && _selected.slotKey === cfg.key) slot.classList.add('selected');
       if(!_readOnly) slot.onclick = () => _onGearSlotClick(cfg.key, blocked);
@@ -279,7 +279,7 @@ const InventoryModal = (() => {
           aplicarTooltipPergaminho(slot, item);   // tooltip específico de pergaminho — substitui o genérico abaixo
         } else {
           const equipped = _equippedCounterpart(player, item);
-          _wireTooltip(slot, item.id, equipped ? equipped.id : null);
+          _wireTooltip(slot, item.id, equipped ? equipped.id : null, item);
         }
       }
       if(_selected && _selected.kind === 'bag' && _selected.index === i) slot.classList.add('selected');
@@ -413,14 +413,39 @@ const InventoryModal = (() => {
     return null;
   }
 
-  function _showInventoryTooltip(itemId, comparisonItemId, touchPos){
+  function _showInventoryTooltip(itemId, comparisonItemId, touchPos, itemInstance){
     if(typeof GS === 'undefined' || !GS.CATALOGO_ITENS) return;
-    const item = GS.CATALOGO_ITENS[itemId];
+    const item = GS.CATALOGO_ITENS[itemId] || itemInstance;
     if(!item || typeof _initItemTooltip !== 'function' || typeof gerarConteudoTooltip !== 'function') return;
     _initItemTooltip();
     const t = document.getElementById('item-tooltip');
     if(!t) return;
-    let html = gerarConteudoTooltip(item);
+    // O catálogo do cliente não guarda o número de doses da instância na
+    // mochila. Para poções de cura, o quadro usa a cópia enviada pelo servidor.
+    const atual = itemInstance || item;
+    let html;
+    if(atual.effect === 'heal' || atual.effect === 'regeneration'){
+      const maxUses = Number(atual.max_uses || 1);
+      const usesLeft = Number(atual.uses_left == null ? maxUses : atual.uses_left);
+      const doses = maxUses > 1
+        ? renderLinhaTooltip('🧪', 'Doses restantes', `${usesLeft}/${maxUses}`)
+        : '';
+      const regeneracao = atual.effect === 'regeneration';
+      html = `
+        <div style="padding:10px 14px 8px; border-bottom:1px solid #c8a95133;">
+          <div style="font-family:'Cinzel Decorative',serif; color:#2ecc40; font-size:13px; margin-bottom:2px;">${atual.name || item.name}</div>
+          <div style="color:#2ecc4088; font-size:9px; letter-spacing:3px;">CONSUMÍVEL</div>
+        </div>
+        <div style="padding:10px 14px;">
+          ${regeneracao
+            ? renderLinhaTooltip('🌿', 'Reserva', `${atual.value || 0} HP; +1 HP por rodada`)
+            : renderLinhaTooltip('❤️', 'Cura por uso', `+${atual.value || 0} HP`)}
+          ${renderLinhaTooltip('⚡', 'Uso', 'Ação bônus')}
+          ${doses}
+        </div>`;
+    } else {
+      html = gerarConteudoTooltip(item);
+    }
     const equipped = comparisonItemId ? GS.CATALOGO_ITENS[comparisonItemId] : null;
     if(equipped){
       const rows = GS.compareItemStats(item, equipped);
@@ -455,18 +480,18 @@ const InventoryModal = (() => {
     }
   }
 
-  function _wireTooltip(el, itemId, comparisonItemId){
+  function _wireTooltip(el, itemId, comparisonItemId, itemInstance){
     if(!itemId) return;
     let pressTimer = null;
     el.addEventListener('mouseenter', (e) => {
-      _showInventoryTooltip(itemId, comparisonItemId);
+      _showInventoryTooltip(itemId, comparisonItemId, null, itemInstance);
       const tooltip = document.getElementById('item-tooltip');
       if(tooltip && typeof posicionarTooltipAbaixo === 'function') posicionarTooltipAbaixo(tooltip, e.currentTarget);
     });
     el.addEventListener('mouseleave', () => { if(typeof esconderTooltip === 'function') esconderTooltip(); });
     el.addEventListener('touchstart', (e) => {
       const touch = e.touches[0];
-      pressTimer = setTimeout(() => _showInventoryTooltip(itemId, comparisonItemId, { x: touch.clientX, y: touch.clientY }), 350);
+      pressTimer = setTimeout(() => _showInventoryTooltip(itemId, comparisonItemId, { x: touch.clientX, y: touch.clientY }, itemInstance), 350);
     }, { passive: true });
     el.addEventListener('touchmove', () => clearTimeout(pressTimer), { passive: true });
     el.addEventListener('touchend', () => {

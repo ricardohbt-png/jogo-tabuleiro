@@ -4519,7 +4519,7 @@ window.EDITOR_CATALOG = {
   "items": [
     {
       "id": "health_potion",
-      "name": "Poção de Vida",
+      "name": "Poção de Cura",
       "emoji": "🧪"
     },
     {
@@ -4559,7 +4559,7 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "staff",
-      "name": "Cajado das Runas",
+      "name": "Cajado Arcano",
       "emoji": "🪄"
     },
     {
@@ -4574,12 +4574,12 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "leather",
-      "name": "Couro Reforçado",
+      "name": "Armadura de Couro",
       "emoji": "🥋"
     },
     {
       "id": "amulet",
-      "name": "Amuleto Sagrado",
+      "name": "Amuleto da Sorte",
       "emoji": "📿"
     },
     {
@@ -4594,8 +4594,498 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "cloak",
-      "name": "Manto das Sombras",
+      "name": "Manto",
       "emoji": "🧣"
+    },
+    {
+      "id": "dagger",
+      "name": "Adaga",
+      "emoji": "🗡️"
+    },
+    {
+      "id": "chicote",
+      "name": "Chicote",
+      "emoji": "🪢"
+    },
+    {
+      "id": "hand_crossbow",
+      "name": "Besta de Mão",
+      "emoji": "🏹"
+    },
+    {
+      "id": "lanca_curta",
+      "name": "Lança Curta",
+      "emoji": "🔱"
+    },
+    {
+      "id": "bordao",
+      "name": "Bordão",
+      "emoji": "🪄"
+    },
+    {
+      "id": "cajado_madeira",
+      "name": "Cajado de Madeira",
+      "emoji": "🪄"
+    },
+    {
+      "id": "maca",
+      "name": "Maça",
+      "emoji": "🔨"
+    },
+    {
+      "id": "shortsword",
+      "name": "Espada Curta",
+      "emoji": "⚔️"
+    },
+    {
+      "id": "machado_basico",
+      "name": "Machado de Ferro",
+      "emoji": "🪓"
+    },
+    {
+      "id": "arco_curto",
+      "name": "Arco Curto",
+      "emoji": "🏹"
+    },
+    {
+      "id": "lanca",
+      "name": "Lança",
+      "emoji": "🔱"
+    },
+    {
+      "id": "longsword",
+      "name": "Espada Longa",
+      "emoji": "⚔️"
+    },
+    {
+      "id": "longbow",
+      "name": "Arco Longo",
+      "emoji": "🏹"
+    },
+    {
+      "id": "warhammer",
+      "name": "Martelo de Guerra",
+      "emoji": "🔨"
+    },
+    {
+      "id": "besta",
+      "name": "Besta",
+      "emoji": "🏹"
+    },
+    {
+      "id": "mangual",
+      "name": "Mangual",
+      "emoji": "⚔️"
+    },
+    {
+      "id": "machado_duplo",
+      "name": "Machado Duplo",
+      "emoji": "🪓"
+    },
+    {
+      "id": "bastsword",
+      "name": "Espada Bastarda",
+      "emoji": "⚔️"
+    },
+    {
+      "id": "machado_orc",
+      "name": "Machado de Guerra Órquico",
+      "emoji": "🪓"
+    },
+    {
+      "id": "alabarda",
+      "name": "Alabarda",
+      "emoji": "🪓"
+    },
+    {
+      "id": "espada2m",
+      "name": "Espada de 2 Mãos",
+      "emoji": "⚔️"
+    },
+    {
+      "id": "escudo_p",
+      "name": "Escudo Pequeno",
+      "emoji": "🛡️"
+    },
+    {
+      "id": "escudo_g",
+      "name": "Escudo Grande",
+      "emoji": "🛡️"
+    },
+    {
+      "id": "leather_plate",
+      "name": "Armadura de Couro e Placas",
+      "emoji": "🥋"
+    },
+    {
+      "id": "bronze_armor",
+      "name": "Armadura de Bronze",
+      "emoji": "🪖"
+    },
+    {
+      "id": "leather_mail",
+      "name": "Armadura de Couro Revestido com Malha",
+      "emoji": "🪖"
+    },
+    {
+      "id": "plate",
+      "name": "Armadura de Placas",
+      "emoji": "🛡️"
+    },
+    {
+      "id": "monster_leather_plate",
+      "name": "Armadura de Couro de Monstro e Placas",
+      "emoji": "🛡️"
+    },
+    {
+      "id": "fullplate",
+      "name": "Armadura Completa",
+      "emoji": "🛡️"
+    },
+    {
+      "id": "flechas",
+      "name": "Flechas (×10)",
+      "emoji": "🏹"
+    },
+    {
+      "id": "virotes",
+      "name": "Virotes (×10)",
+      "emoji": "🏹"
+    },
+    {
+      "id": "virote_incendiario",
+      "name": "Virote Incendiário",
+      "emoji": "🔥"
+    },
+    {
+      "id": "flecha_incendiaria",
+      "name": "Flecha Incendiária",
+      "emoji": "🔥"
+    },
+    {
+      "id": "veneno_fungo_acre",
+      "name": "Fungo Acre",
+      "emoji": "🍄"
+    },
+    {
+      "id": "veneno_dor_escarlate",
+      "name": "Dor Escarlate",
+      "emoji": "🩸"
+    },
+    {
+      "id": "veneno_ardonia_negra",
+      "name": "Ardonia Negra",
+      "emoji": "🕷️"
+    },
+    {
+      "id": "vela_escuridao",
+      "name": "Vela da Escuridão",
+      "emoji": "🕯️"
+    },
+    {
+      "id": "ring_str",
+      "name": "Anel de Força",
+      "emoji": "💍"
+    },
+    {
+      "id": "ring_vita",
+      "name": "Anel da Vitalidade",
+      "emoji": "💍"
+    },
+    {
+      "id": "helm_iron",
+      "name": "Elmo de Ferro",
+      "emoji": "⛑️"
+    },
+    {
+      "id": "circlet",
+      "name": "Tiara Arcana",
+      "emoji": "👑"
+    },
+    {
+      "id": "backpack",
+      "name": "Mochila de Couro",
+      "emoji": "🎒"
+    },
+    {
+      "id": "veneno_aranha_sombria",
+      "name": "Veneno da Aranha Sombria",
+      "emoji": "🕷️"
+    },
+    {
+      "id": "veneno_escorpiao_pedra",
+      "name": "Veneno do Escorpião Pedra",
+      "emoji": "🦂"
+    },
+    {
+      "id": "veneno_cobra_cuspidora",
+      "name": "Veneno de Cobra Cuspidora",
+      "emoji": "🐍"
+    },
+    {
+      "id": "veneno_basilisco",
+      "name": "Peçonha do Basilisco",
+      "emoji": "🦎"
+    },
+    {
+      "id": "veneno_polvo_abissal",
+      "name": "Tinta do Polvo Abissal",
+      "emoji": "🐙"
+    },
+    {
+      "id": "veneno_agonia_sufocante",
+      "name": "Agonia Sufocante",
+      "emoji": "💀"
+    },
+    {
+      "id": "frasco_oleo",
+      "name": "Frasco de Óleo Incendiário",
+      "emoji": "🔥"
+    },
+    {
+      "id": "fogo_grego",
+      "name": "Fogo Grego",
+      "emoji": "🟢"
+    },
+    {
+      "id": "bomba_incendiaria",
+      "name": "Bomba Incendiária",
+      "emoji": "💣"
+    },
+    {
+      "id": "granada",
+      "name": "Granada Explosiva",
+      "emoji": "💣"
+    },
+    {
+      "id": "granada_superior",
+      "name": "Granada Superior",
+      "emoji": "💥"
+    },
+    {
+      "id": "bomba_fumaca",
+      "name": "Bomba de Fumaça",
+      "emoji": "💨"
+    },
+    {
+      "id": "frasco_acido",
+      "name": "Frasco de Ácido",
+      "emoji": "🧪"
+    },
+    {
+      "id": "vidro_acido_grande",
+      "name": "Vidro de Ácido Grande",
+      "emoji": "🫙"
+    },
+    {
+      "id": "cola_alquimica",
+      "name": "Cola Alquímica",
+      "emoji": "🍯"
+    },
+    {
+      "id": "rede_arremesso",
+      "name": "Rede",
+      "emoji": "🕸️"
+    },
+    {
+      "id": "instrumento_harpa_velho",
+      "name": "Harpa Velha",
+      "emoji": "🎵"
+    },
+    {
+      "id": "instrumento_harpa_rustico",
+      "name": "Harpa Rústica",
+      "emoji": "🎵"
+    },
+    {
+      "id": "instrumento_harpa_padrao",
+      "name": "Harpa Padrão",
+      "emoji": "🎵"
+    },
+    {
+      "id": "instrumento_tambor_rustico",
+      "name": "Tambor de Guerra Rústico",
+      "emoji": "🥁"
+    },
+    {
+      "id": "instrumento_tambor_padrao",
+      "name": "Tambor de Guerra Padrão",
+      "emoji": "🥁"
+    },
+    {
+      "id": "instrumento_sino_rustico",
+      "name": "Sino Rústico",
+      "emoji": "🔔"
+    },
+    {
+      "id": "instrumento_sino_padrao",
+      "name": "Sino Padrão",
+      "emoji": "🔔"
+    },
+    {
+      "id": "instrumento_alaude_rustico",
+      "name": "Alaúde Rústico",
+      "emoji": "🪕"
+    },
+    {
+      "id": "instrumento_alaude_padrao",
+      "name": "Alaúde Padrão",
+      "emoji": "🪕"
+    },
+    {
+      "id": "instrumento_harpa_refinado",
+      "name": "Harpa Refinada",
+      "emoji": "🎵"
+    },
+    {
+      "id": "instrumento_trompa_rustico",
+      "name": "Trompa de Guerra Rústica",
+      "emoji": "📯"
+    },
+    {
+      "id": "instrumento_trompa_padrao",
+      "name": "Trompa de Guerra Padrão",
+      "emoji": "📯"
+    },
+    {
+      "id": "instrumento_lira_rustico",
+      "name": "Lira Rústica",
+      "emoji": "🎼"
+    },
+    {
+      "id": "instrumento_lira_padrao",
+      "name": "Lira Padrão",
+      "emoji": "🎼"
+    },
+    {
+      "id": "instrumento_flauta_rustico",
+      "name": "Flauta Rústica",
+      "emoji": "🎶"
+    },
+    {
+      "id": "instrumento_flauta_padrao",
+      "name": "Flauta Padrão",
+      "emoji": "🎶"
+    },
+    {
+      "id": "instrumento_violino_rustico",
+      "name": "Violino Rústico",
+      "emoji": "🎻"
+    },
+    {
+      "id": "instrumento_violino_padrao",
+      "name": "Violino Padrão",
+      "emoji": "🎻"
+    },
+    {
+      "id": "instrumento_harpa_padrao_elfica",
+      "name": "Harpa Padrão Élfica",
+      "emoji": "🎵"
+    },
+    {
+      "id": "instrumento_trompa_padrao_elfica",
+      "name": "Trompa de Guerra Padrão Élfica",
+      "emoji": "📯"
+    },
+    {
+      "id": "instrumento_sino_padrao_elfica",
+      "name": "Sino Padrão Élfico",
+      "emoji": "🔔"
+    },
+    {
+      "id": "instrumento_tambor_padrao_ana",
+      "name": "Tambor de Guerra Padrão Anão",
+      "emoji": "🥁"
+    },
+    {
+      "id": "instrumento_lira_padrao_ana",
+      "name": "Lira Padrão Anã",
+      "emoji": "🎼"
+    },
+    {
+      "id": "instrumento_violino_padrao_ana",
+      "name": "Violino Padrão Anão",
+      "emoji": "🎻"
+    },
+    {
+      "id": "instrumento_sino_padrao_runico",
+      "name": "Sino Padrão Rúnico",
+      "emoji": "🔔"
+    },
+    {
+      "id": "instrumento_flauta_padrao_runico",
+      "name": "Flauta Padrão Rúnica",
+      "emoji": "🎶"
+    },
+    {
+      "id": "instrumento_trompa_padrao_runico",
+      "name": "Trompa de Guerra Padrão Rúnica",
+      "emoji": "📯"
+    },
+    {
+      "id": "instrumento_violino_padrao_runico",
+      "name": "Violino Padrão Rúnico",
+      "emoji": "🎻"
+    },
+    {
+      "id": "instrumento_lira_padrao_runico",
+      "name": "Lira Padrão Rúnica",
+      "emoji": "🎼"
+    },
+    {
+      "id": "instrumento_harpa_refinado_elfica_runico",
+      "name": "Harpa Lendária Élfica",
+      "emoji": "🎵"
+    },
+    {
+      "id": "pao",
+      "name": "Pão",
+      "emoji": "🥖"
+    },
+    {
+      "id": "garrafa_agua",
+      "name": "Garrafa de Água",
+      "emoji": "💧"
+    },
+    {
+      "id": "suco_fruta",
+      "name": "Suco de Fruta",
+      "emoji": "🧃"
+    },
+    {
+      "id": "caneca_cerveja",
+      "name": "Caneca de Cerveja",
+      "emoji": "🍺"
+    },
+    {
+      "id": "racao_viagem",
+      "name": "Ração de Viagem",
+      "emoji": "🥩"
+    },
+    {
+      "id": "cantil_agua",
+      "name": "Cantil de Água",
+      "emoji": "🧴"
+    },
+    {
+      "id": "health_potion_small",
+      "name": "Poção de Cura Pequena",
+      "emoji": "🧪"
+    },
+    {
+      "id": "health_potion_concentrated",
+      "name": "Poção de Cura Concentrada",
+      "emoji": "🧪"
+    },
+    {
+      "id": "health_potion_improved",
+      "name": "Poção de Cura Aprimorada",
+      "emoji": "🧪"
+    },
+    {
+      "id": "regeneration_potion",
+      "name": "Poção de Regeneração",
+      "emoji": "🌿"
     }
   ],
   "traps": [
