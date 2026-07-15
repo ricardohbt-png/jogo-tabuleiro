@@ -372,6 +372,39 @@ async def main():
     ok, _ = S.validar_dungeon(_com_reinf("naoelista"))
     check("não-lista rejeitada", ok is False)
 
+    print("\n[18] Reforços — implante")
+    r = playing_room_com_mestre()
+    r.master_reserve = {"goblin": 2}
+    await r.handle_mestre_implantar_reforco("m1", "goblin", 4, 4)
+    novos = [m for m in r.monsters.values() if m["pos"] == [4, 4]]
+    check("monstro criado na casa", len(novos) == 1)
+    check("nasce alertado", novos[0].get("alertado") is True)
+    check("nasce em manual", novos[0].get("control_mode") == "manual")
+    check("reserva decrementou", r.master_reserve.get("goblin") == 1)
+    r._rebuild_initiative()
+    check("entra no rebuild de iniciativa",
+          any(e["id"] == novos[0]["id"] for e in r.initiative_order))
+
+    # esgotar remove a chave
+    await r.handle_mestre_implantar_reforco("m1", "goblin", 5, 5)
+    check("reserva zerada remove a chave", "goblin" not in r.master_reserve)
+
+    # recusas
+    r2 = playing_room_com_mestre(); r2.master_reserve = {"goblin": 1}
+    r2.monsters["x"] = {"id": "x", "pos": [4, 4], "hp": 5}   # casa ocupada
+    await r2.handle_mestre_implantar_reforco("m1", "goblin", 4, 4)
+    check("recusa casa ocupada (não decrementa)", r2.master_reserve.get("goblin") == 1)
+    await r2.handle_mestre_implantar_reforco("m1", "orc", 6, 6)
+    check("recusa tipo fora da reserva", "orc" not in [m.get("type") for m in r2.monsters.values()])
+    await r2.handle_mestre_implantar_reforco("naomestre", "goblin", 6, 6)
+    check("recusa quem não é mestre", r2.master_reserve.get("goblin") == 1)
+
+    # sem mestre conectado → no-op
+    r3 = playing_room_com_mestre(); r3.master_reserve = {"goblin": 1}
+    del r3.connections["m1"]   # mestre não conectado → _mestre_ativo() False
+    await r3.handle_mestre_implantar_reforco("m1", "goblin", 6, 6)
+    check("sem mestre ativo → não implanta", r3.master_reserve.get("goblin") == 1)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

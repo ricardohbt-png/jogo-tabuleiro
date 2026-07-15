@@ -7308,6 +7308,21 @@ class GameRoom:
                     return [nx, ny]
         return None
 
+    def _tile_livre_para_reforco(self, tx, ty):
+        """True se (tx,ty) é chão livre para implantar um reforço: dentro do mapa,
+        não bloqueada por parede/porta/decoração sólida (_blocks_tile) e sem
+        monstro/jogador vivo, baú ou item no chão. Espelha _free_drop_tile_near
+        para uma casa ESCOLHIDA."""
+        if not (0 <= tx < self.map_w and 0 <= ty < self.map_h):
+            return False
+        if self._blocks_tile(tx, ty):
+            return False
+        occupied = {tuple(m["pos"]) for m in self.monsters.values() if m.get("hp", 0) > 0}
+        occupied |= {tuple(c["pos"]) for c in self.chests.values()}
+        occupied |= {tuple(g["pos"]) for g in self.ground_items.values()}
+        occupied |= {tuple(pp["pos"]) for pp in self.players.values() if pp.get("alive")}
+        return (tx, ty) not in occupied
+
     # ── Ladino (Luccas): Ataque Furtivo + Esconder nas Sombras ─────────────────
 
     def _dados_furtivo(self, nivel):
@@ -8836,6 +8851,37 @@ class GameRoom:
         if self.master_manual_event and not self.master_manual_event.is_set():
             self.master_manual_event.set()
         self.master_manual_mid = None
+
+    async def handle_mestre_implantar_reforco(self, pid, monster_type, tx, ty):
+        """Mestre implanta um reforço da reserva numa casa livre (ação livre, a
+        qualquer momento). O monstro nasce alertado+manual e entra na iniciativa
+        da próxima rodada via _rebuild_initiative. Só com mestre ativo."""
+        if pid != self.master_pid or not self._mestre_ativo():
+            return
+        if self.phase != "playing":
+            return
+        if self.master_reserve.get(monster_type, 0) <= 0:
+            await self.send_to(pid, {"type": "error", "msg": "Sem reforços desse tipo na reserva."}); return
+        mdef = next((d for d in MONSTER_DEFS if d["type"] == monster_type), None)
+        if not mdef:
+            await self.send_to(pid, {"type": "error", "msg": "Tipo de monstro inválido."}); return
+        try:
+            tx = int(tx); ty = int(ty)
+        except (TypeError, ValueError):
+            return
+        if not self._tile_livre_para_reforco(tx, ty):
+            await self.send_to(pid, {"type": "error", "msg": "Casa ocupada ou inválida para implantar."}); return
+        sala = {"id": None, "cx": tx, "cy": ty}   # reforço não pertence a sala autorada
+        m = make_monster(mdef, sala)
+        m["pos"] = [tx, ty]
+        m["alertado"] = True
+        m["control_mode"] = "manual"
+        self.monsters[m["id"]] = m
+        self.master_reserve[monster_type] -= 1
+        if self.master_reserve[monster_type] <= 0:
+            del self.master_reserve[monster_type]
+        await self.gm_say(f"⚠️ **Reforços!** Um(a) **{mdef.get('name', monster_type)}** entra na masmorra!")
+        await self.push_state()
 
     async def _on_master_disconnect(self):
         """Mestre caiu durante a partida: resolve a janela Manual aberta (o monstro
@@ -18224,6 +18270,10 @@ async def handler(ws):
 
                 elif t == "mestre_encerrar_monstro":
                     if room: await room.handle_mestre_encerrar_monstro(pid, msg.get("monster_id"))
+
+                elif t == "mestre_implantar_reforco":
+                    if room: await room.handle_mestre_implantar_reforco(
+                        pid, msg.get("monster_type"), msg.get("tx"), msg.get("ty"))
 
                 elif t == "guild_buy":
                     if room: await room.handle_guild_buy(pid, msg.get("item_id"))
