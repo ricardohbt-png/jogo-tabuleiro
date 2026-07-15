@@ -1287,6 +1287,8 @@ const GS = (() => {
   function mestreAtacarMonstro(monsterId, targetId) { send({ type: 'mestre_atacar_monstro', monster_id: monsterId, target_id: targetId }); }
   // Janela Manual: encerra a vez do monstro.
   function mestreEncerrarMonstro(monsterId) { send({ type: 'mestre_encerrar_monstro', monster_id: monsterId }); }
+  // Camada B: implanta um reforço da reserva do mestre numa casa livre.
+  function mestreImplantarReforco(monsterType, tx, ty) { send({ type: 'mestre_implantar_reforco', monster_type: monsterType, tx, ty }); }
   // true se o jogador local é o mestre (checa lobby/city/game — o mestre não
   // aparece em players[] durante city/dungeon, só master_pid identifica).
   function isMaster() {
@@ -2113,6 +2115,7 @@ const GS = (() => {
     mestreMoverMonstro,
     mestreAtacarMonstro,
     mestreEncerrarMonstro,
+    mestreImplantarReforco,
     isMaster,
     masterManualMid,
 
