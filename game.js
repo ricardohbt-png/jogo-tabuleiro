@@ -20051,6 +20051,20 @@ function _csApplyMasterMode(){
   if(hint) hint.textContent = jaMestre
     ? '🎭 Você é o Mestre — controlará os monstros na masmorra.'
     : 'Escolha seu herói — toque para selecionar';
+  // Carrossel 3D de peões ↔ imagem do mestre
+  const canvas = document.getElementById('cs-canvas');
+  let mimg = document.getElementById('cs-master-portrait');
+  if(jaMestre && !mimg){
+    mimg = document.createElement('div');
+    mimg.id = 'cs-master-portrait';
+    mimg.innerHTML =
+      '<img src="assets/portraits/mestre_do_jogo.jpeg" alt="Mestre do Jogo">' +
+      '<div class="cs-master-cap">📖 Mestre do Jogo</div>';
+    // insere no mesmo container do canvas
+    if(canvas && canvas.parentNode) canvas.parentNode.appendChild(mimg);
+  }
+  if(canvas) canvas.style.display = jaMestre ? 'none' : '';
+  if(mimg)   mimg.style.display   = jaMestre ? 'flex' : 'none';
 }
 
 function csConfirmClass(){
