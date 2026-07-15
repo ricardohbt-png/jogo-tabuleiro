@@ -322,6 +322,15 @@ async def main():
     await r._verificar_avistamento()
     check("sem mestre: não acorda", m4.get("alertado") is not True)
 
+    print("\n[14] monstro não-alertado (com mestre) é pulado no despacho")
+    r = lobby_room(); r.phase = "playing"
+    r.master_pid = "m1"; r.connections["m1"] = object()
+    m = {"id": "g1", "hp": 8, "pos": [1, 1], "room_id": 5, "control_mode": "manual"}
+    r.monsters = {"g1": m}
+    check("dormente não é ativo", r._monstro_ativo_em_combate(m) is False)
+    m["alertado"] = True
+    check("acordado é ativo", r._monstro_ativo_em_combate(m) is True)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

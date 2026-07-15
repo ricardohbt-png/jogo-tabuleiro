@@ -6293,7 +6293,7 @@ class GameRoom:
         await self.push_state()
         async def monster_step(mid):
             monster = self.monsters.get(mid)
-            if monster and monster.get("hp", 0) > 0:
+            if monster and monster.get("hp", 0) > 0 and self._monstro_ativo_em_combate(monster):
                 mode = monster.get("control_mode", "auto") if self._mestre_ativo() else "auto"
                 if mode == "manual":
                     await self._master_manual_window(monster)
@@ -16468,10 +16468,10 @@ class GameRoom:
             if m["hp"] <= 0:
                 continue
             m["_water_moves_left"] = self._water_turn_moves(m, m.get("movement", 4))
-            # Monstro dormente: sala ainda trancada (porta fechada). Não percebe
-            # nem persegue os heróis — permanece imóvel até a porta ser aberta.
-            room_m = self._room_by_id(m.get("room_id"))
-            if room_m and room_m.get("locked"):
+            # Monstro dormente: sala ainda trancada (porta fechada, ou — com
+            # mestre — ainda não avistado). Não percebe nem persegue os heróis
+            # — permanece imóvel até a porta ser aberta / ser avistado.
+            if not self._monstro_ativo_em_combate(m):
                 continue
             # Venenos: tica/expira efeitos no início do turno do monstro.
             await self._processar_venenos_turno(m)
