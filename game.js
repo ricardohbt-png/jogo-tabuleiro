@@ -7872,7 +7872,11 @@ function _bardInstrumentoBtn(me){
 // DIREÇÃO (mesmo padrão da Relâmpago — dir:[dx,dy]); Acorde Trovejante
 // (Tambor, AoE centrada no bardo), Ecos Dolorosos (Sino, aura própria), Dueto
 // Marcial (Lira) e Dueto Fantasma (Flauta) são auto-buffs sem alvo —
-// GS.usarInstrumento(null).
+// GS.usarInstrumento(null). Improviso (Gaita, Fase 5) também cai no ramo
+// default (sem alvo): a mira acontece DEPOIS da cascata 2d6, não antes — ver
+// renderImprovisoQuadro/aimNextImprovisoAlvo (GS.on('improvisoResultado', …)),
+// que enfileira os passos 7/9/11 (precisam de alvo) e envia GS.improvisoAlvo
+// em sequência.
 function acionarInstrumento(me, inst, b){
   const tipo = b.efeito && b.efeito.tipo;
   if(tipo === 'nota_cortante'){
@@ -7987,6 +7991,89 @@ function escolherDirecaoInstrumento(b, onEscolher){
   overlay.onclick = e => { if(e.target === overlay){ fechar(); } };
   document.addEventListener('keydown', onKey);
   _instrumentoDirFechar = fechar;
+}
+
+// ── Improviso da Gaita (Fase 5) — quadro da cascata + fila de mira ──────────
+// Overlay autocontido via createElement (mesmo padrão de
+// escolherDirecaoInstrumento/mostrarOverlayEscolhaMagia — não depende do HTML
+// estático injetado no topo do arquivo). Mostra a lista de passos rolados
+// (msg.cascata: {res,nome,precisa_alvo}) e destaca Encore Menor/Grande Encore;
+// o botão OK fecha o quadro e, se houver passos pendentes (res 7/9/11 —
+// Nota Cortante/Réquiem/Chamado do General improvisados), inicia a mira
+// sequencial deles.
+function renderImprovisoQuadro(msg){
+  const existente = document.getElementById('improviso-overlay');
+  if(existente) existente.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'improviso-overlay';
+  overlay.style.cssText = `
+    position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.7);
+    display:flex; align-items:center; justify-content:center;`;
+
+  const painel = document.createElement('div');
+  painel.style.cssText = `
+    background:var(--bg2); border:2px solid var(--gold); border-radius:12px;
+    padding:20px 26px; text-align:center; max-width:340px;
+    box-shadow:0 8px 32px rgba(0,0,0,.6);`;
+
+  const linhas = (msg.cascata || []).map(c => `
+    <li style="font-size:.82rem; padding:4px 8px; margin-bottom:4px;
+               background:var(--bg3); border-radius:var(--radius); text-align:left;">
+      🎲 ${c.res} — ${c.nome}${c.precisa_alvo ? ' <span style="color:var(--orange);">(aguardando alvo)</span>' : ''}
+    </li>`).join('');
+
+  let destaque = '';
+  if(msg.grande_encore) destaque = `<div style="color:var(--red); font-weight:bold; margin:6px 0;">🎺 GRANDE ENCORE!</div>`;
+  else if(msg.encore_menor) destaque = `<div style="color:var(--gold); font-weight:bold; margin:6px 0;">🎶 Encore Menor!</div>`;
+
+  painel.innerHTML = `
+    <div style="color:var(--gold); font-weight:bold; font-size:1rem; margin-bottom:2px;">🪗 Improviso</div>
+    ${destaque}
+    <ul style="list-style:none; padding:0; margin:10px 0 6px;">
+      ${linhas || '<li style="color:var(--text2); font-size:.82rem;">Nada aconteceu.</li>'}
+    </ul>
+    <button class="btn-cancel" id="improviso-ok-btn" style="color:var(--gold); border-color:var(--gold);">OK</button>`;
+
+  overlay.appendChild(painel);
+  document.body.appendChild(overlay);
+
+  const pendentes = msg.pendentes || [];
+  let fechado = false;
+  function fechar(){
+    if(fechado) return;
+    fechado = true;
+    overlay.remove();
+    if(pendentes.length) aimNextImprovisoAlvo(pendentes, 0);
+  }
+  painel.querySelector('#improviso-ok-btn').onclick = fechar;
+  overlay.onclick = e => { if(e.target === overlay) fechar(); };
+}
+
+// Mira, em sequência, os passos pendentes da cascata do Improviso (FIFO —
+// mesma ordem de msg.pendentes, que é a ordem que o servidor consome da fila
+// `improviso_pendente`). Cancelar um passo (Cancelar do target-modal, ou Esc
+// no seletor de direção) interrompe a fila: os passos restantes não são
+// enviados e expiram sozinhos no fim do turno (_limpar_improviso_pendente no
+// servidor) — nenhuma limpeza extra é necessária aqui.
+function aimNextImprovisoAlvo(pendentes, i){
+  if(i >= pendentes.length) return;
+  const step = pendentes[i];
+  if(step.alvo_tipo === 'monstro'){
+    const gs = GS.gameState;
+    const alvos = (gs && gs.monsters || []).filter(m => m && m.hp > 0);
+    if(!alvos.length){ toast('Nenhum inimigo vivo para o Improviso.', 'var(--orange)'); return; }
+    if(alvos.length === 1){
+      GS.improvisoAlvo(alvos[0].id, null);
+      aimNextImprovisoAlvo(pendentes, i + 1);
+      return;
+    }
+    openTargetModal('🪗 Improviso — Escolha o alvo', alvos, 'monster',
+      id => { GS.improvisoAlvo(id, null); aimNextImprovisoAlvo(pendentes, i + 1); });
+  } else if(step.alvo_tipo === 'direcao'){
+    escolherDirecaoInstrumento({ icon: '🪗', habilidade_nome: 'Improviso — Direção' },
+      (dx, dy) => { GS.improvisoAlvo(null, [dx, dy]); aimNextImprovisoAlvo(pendentes, i + 1); });
+  }
 }
 
 // Ring 3D da Canção Heroica — criado/atualizado/removido conforme o estado.
@@ -21300,6 +21387,11 @@ window._escolherMagiaNivel = function(id){
 };
 
 GS.on('spellPickPrompt', mostrarOverlayEscolhaMagia);
+
+// Improviso da Gaita (Fase 5) — quadro da cascata 2d6, depois fila de mira
+// dos passos pendentes (ver renderImprovisoQuadro, definida perto de
+// escolherDirecaoInstrumento).
+GS.on('improvisoResultado', renderImprovisoQuadro);
 
 // ── Decoration loot panel — reuses chest overlay with generic callbacks ────────
 GS.on('decor_loot', msg => {

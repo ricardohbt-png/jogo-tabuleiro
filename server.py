@@ -271,6 +271,22 @@ INSTRUMENTOS_BASE = {
             "padrao":  {"dado": "d6", "teto": 5, "alcance": 6},
         },
     },
+    "gaita": {
+        "nome": "Gaita", "icon": "🪗", "maos": 1, "modo": "ativada",
+        "habilidade_nome": "Improviso",
+        "desc": "Rola 2d6 e improvisa a habilidade de outro instrumento (no tier da "
+                "Gaita). 12 = Encore: toca de novo duas vezes. A Gaita Rúnica pode "
+                "escalar até o Grande Encore.",
+        "efeito": {"tipo": "improviso"},
+        "custo_fome": 3, "custo_sede": 3,
+        "afixos_validos": ["fome", "sede"],
+        "stats": {
+            "velho":   {},
+            "rustico": {},
+            "padrao":  {},
+        },
+        "runico": {"grande_encore": True},
+    },
 }
 
 _QUALIDADE_LABEL = {
@@ -341,7 +357,7 @@ def instrumento_sku(base, qualidade="padrao", preco=100, refinado_bonus=None,
     return inst
 
 # ─── Roller procedural de instrumentos (Fase 4a) ────────────────────────────────
-_ROLLER_BASES = ["harpa", "tambor", "sino", "alaude", "trompa", "lira", "flauta", "violino"]
+_ROLLER_BASES = ["harpa", "tambor", "sino", "alaude", "trompa", "lira", "flauta", "violino", "gaita"]
 _ROLLER_QUALIDADES = [("velho", 35), ("rustico", 30), ("padrao", 25), ("refinado", 10)]
 _ROLLER_ORIGENS = [("humana", 70), ("elfica", 15), ("ana", 15)]
 
@@ -2539,6 +2555,13 @@ SHOP_MERCHANT = [
     instrumento_sku("lira",    "padrao", 360, encantamento="runico"),
     # Lendário (Refinado + Élfica + Rúnico) — o topo dos 3 eixos → "Harpa Lendária Élfica".
     instrumento_sku("harpa", "refinado", 900, origem="elfica", origem_bonus="cd", encantamento="runico"),
+    # Gaita (Fase 5 — Improviso).
+    instrumento_sku("gaita", "velho",    90),
+    instrumento_sku("gaita", "rustico",  170),
+    instrumento_sku("gaita", "padrao",   300),
+    instrumento_sku("gaita", "refinado", 420, refinado_bonus="fome"),
+    instrumento_sku("gaita", "padrao",   480, encantamento="runico"),
+    instrumento_sku("gaita", "refinado", 1100, origem="ana", origem_bonus="fome_sede", encantamento="runico"),
 ]
 
 # Munição — vendida no FERREIRO (item_slot "ammo", vai pro off_hand; 10 projéteis
@@ -5267,7 +5290,8 @@ class GameRoom:
             await self.send_to(pid, {"type": "error",
                 "msg": f"{item['nome']} em recarga ({self.tecnica_restante(p, tecnica_id)} rodadas)."})
             return
-        if p.get("fome", 0) < item["custo_fome"] or p.get("sede", 0) < item["custo_sede"]:
+        _ef, _es = self._custo_fome_sede_efetivo(p, item["custo_fome"], item["custo_sede"])
+        if p.get("fome", 0) < _ef or p.get("sede", 0) < _es:
             await self.send_to(pid, {"type": "error", "msg": "Fome/sede insuficientes."})
             return
         ef = item.get("efeito", {})
@@ -5391,11 +5415,52 @@ class GameRoom:
         elif ef.get("tipo") == "tec_ex_acelerada":
             p["tec_ex_acelerada_armado"] = True
         # (outros tipos/handlers chegam nas Fases 1-2)
-        p["fome"] -= item["custo_fome"]
-        p["sede"] -= item["custo_sede"]
+        self._pagar_fome_sede(p, item["custo_fome"], item["custo_sede"])
         p["technique_cooldowns"][tecnica_id] = self.round_num + item["recarga_rodadas"]
         await self.gm_say(f"⚔️ **{p['name']}** ativa **{item['nome']}**!")
         await self.push_state()
+
+    def _rolar_2d6(self):
+        return random.randint(1, 6) + random.randint(1, 6)
+
+    def _improviso_rolar_cascata(self, runico):
+        """Resolve a cascata de Improviso. Devolve (passos, meta):
+          passos: resultados 2-11 aplicaveis (12 nunca entra);
+          meta: {'encore_menor': bool, 'grande_encore': bool}.
+        12 = Encore -> rola +2x. O 2o 12 na cadeia liga encore_menor.
+        So a Gaita Runica recursa em cada 12; o 3o 12 liga grande_encore."""
+        passos = []
+        meta = {"encore_menor": False, "grande_encore": False}
+        contador = [0]
+        TETO = 40
+
+        def _encore():
+            # um "12" acabou de sair: conta e rola +2x, processando cada resultado.
+            contador[0] += 1
+            if contador[0] >= 2:
+                meta["encore_menor"] = True
+            if contador[0] >= 3 and runico:
+                meta["grande_encore"] = True
+            for _ in range(2):
+                if contador[0] > TETO:
+                    break
+                sub = self._rolar_2d6()
+                if sub == 12:
+                    if runico:
+                        _encore()          # cada 12 gera seus proprios 2 rerolls
+                    else:
+                        contador[0] += 1   # nao-runica: conta o 12 (liga encore_menor) mas nao recursa
+                        if contador[0] >= 2:
+                            meta["encore_menor"] = True
+                else:
+                    passos.append(sub)
+
+        r = self._rolar_2d6()
+        if r == 12:
+            _encore()
+        else:
+            passos.append(r)
+        return passos, meta
 
     async def handle_usar_instrumento(self, pid, data=None):
         """Ativa a habilidade do instrumento equipado (bardo). Espelha
@@ -5429,7 +5494,8 @@ class GameRoom:
             await self.send_to(pid, {"type": "error",
                 "msg": "Instrumento de 2 mãos exige concentração — você já usou sua ação."}); return
         st = self._instrumento_stats(inst)
-        if p.get("fome", 0) < st["custo_fome"] or p.get("sede", 0) < st["custo_sede"]:
+        _ef, _es = self._custo_fome_sede_efetivo(p, st["custo_fome"], st["custo_sede"])
+        if p.get("fome", 0) < _ef or p.get("sede", 0) < _es:
             await self.send_to(pid, {"type": "error", "msg": "Fome/sede insuficientes."}); return
 
         tipo = base["efeito"]["tipo"]
@@ -5448,13 +5514,14 @@ class GameRoom:
             ok = await self._instr_dueto_fantasma(p, inst, st, data)
         elif tipo == "requiem_final":
             ok = await self._instr_requiem_final(p, inst, st, data)
+        elif tipo == "improviso":
+            ok = await self._instr_improviso(p, inst, st, data)
         else:
             await self.send_to(pid, {"type": "error", "msg": "Instrumento em desenvolvimento."}); return
         if not ok:
             return
 
-        p["fome"] = max(0, p["fome"] - st["custo_fome"])
-        p["sede"] = max(0, p["sede"] - st["custo_sede"])
+        self._pagar_fome_sede(p, st["custo_fome"], st["custo_sede"])
         p["instrumento_usado"] = True
         if duas_maos:
             p["action_done"] = True
@@ -5571,7 +5638,7 @@ class GameRoom:
         if not p.get("alive") or p.get("ecos_ate", 0) < self.round_num:
             return
         off = p.get("gear", {}).get("off_hand")
-        if not off or off.get("tipo_item") != "instrumento" or off.get("base") != "sino":
+        if not off or off.get("tipo_item") != "instrumento" or off.get("base") not in ("sino", "gaita"):
             return
         if m.get("hp", 0) <= 0:
             return
@@ -5641,6 +5708,138 @@ class GameRoom:
         await self.gm_say(f"🎻 **{p['name']}** inicia o **Réquiem Final** sobre **{m['name']}**!")
         return True
 
+    # ── Improviso (Gaita — Fase 5) ───────────────────────────────────────────
+    _IMPROVISO_ALVO = {7: ("nota_cortante", "monstro"),
+                       9: ("requiem_tick", "monstro"),
+                       11: ("chamado_general", "direcao")}
+    _IMPROVISO_AUTO = {
+        4: ("sino",   True),
+        5: ("lira",   True),
+        6: ("flauta", True),
+        8: ("tambor", False),
+        10: ("alaude", None),
+    }
+
+    def _improviso_tier(self, inst):
+        q = inst.get("qualidade", "padrao")
+        return "padrao" if q == "refinado" else q
+
+    def _improviso_virt_st(self, inst, base):
+        virt = {"base": base, "qualidade": self._improviso_tier(inst),
+                "origem": "humana", "encantamento": "nenhum",
+                "tipo_item": "instrumento"}
+        return virt, self._instrumento_stats(virt)
+
+    def _improviso_nome_passo(self, res):
+        return {2: "Desafinado", 3: "Falha", 4: "Ecos Dolorosos", 5: "Dueto Marcial",
+                6: "Dueto Fantasma", 7: "Nota Cortante", 8: "Acorde Trovejante",
+                9: "Réquiem (1ª rodada)", 10: "Sinfonia Heroica",
+                11: "Chamado do General"}.get(res, "?")
+
+    async def _instr_improviso(self, p, inst, st, data):
+        """Rola a cascata 2d6 e improvisa, a cada passo, a habilidade de outra
+        base no tier da Gaita. Resultados 7/9/11 exigem mira do jogador e são
+        enfileirados em `improviso_pendente` (resolvidos pela Task 6/cliente)."""
+        runico = inst.get("encantamento") == "runico"
+        passos, meta = self._improviso_rolar_cascata(runico)
+        if meta["grande_encore"]:
+            self._aplicar_grande_encore(p)
+        if meta["encore_menor"]:
+            self._aplicar_encore_menor(p)
+        p.setdefault("improviso_pendente", [])
+        cascata_cli = []
+        for res in passos:
+            cascata_cli.append({"res": res, "nome": self._improviso_nome_passo(res),
+                                "precisa_alvo": res in self._IMPROVISO_ALVO})
+            if res in self._IMPROVISO_ALVO:
+                _tipo, alvo_tipo = self._IMPROVISO_ALVO[res]
+                p["improviso_pendente"].append(
+                    {"res": res, "tier": self._improviso_tier(inst), "alvo_tipo": alvo_tipo})
+            else:
+                await self._improviso_aplicar_passo(p, inst, res)
+        await self.send_to(p["id"], {
+            "type": "improviso_resultado", "cascata": cascata_cli,
+            "encore_menor": meta["encore_menor"], "grande_encore": meta["grande_encore"],
+            "pendentes": [{"res": x["res"], "alvo_tipo": x["alvo_tipo"]}
+                          for x in p["improviso_pendente"]]})
+        return True
+
+    async def _improviso_aplicar_passo(self, p, inst, res):
+        """Aplica um passo sem-alvo (2,3,4,5,6,8,10)."""
+        if res == 3:
+            await self.gm_say(f"🪗 **{p['name']}** improvisa… e desafina de leve (nada acontece).")
+            return
+        if res == 2:
+            p["desafinado_ate"] = self.round_num + 1
+            await self.gm_say(f"🪗 **{p['name']}** improvisa e **desafina** — -1 em ataques e CDs até o próximo turno.")
+            return
+        if res == 10:
+            _virt, vst = self._improviso_virt_st(inst, "alaude")
+            p["sinfonia_temp_ate"] = self.round_num + 1
+            p["sinfonia_temp_atributos"] = list(vst.get("atributos", []))
+            await self.gm_say(f"🪗 **{p['name']}** improvisa a **Sinfonia Heroica** por 1 rodada!")
+            return
+        base, forca_dur = self._IMPROVISO_AUTO[res]
+        virt, vst = self._improviso_virt_st(inst, base)
+        if forca_dur:
+            vst = dict(vst); vst["duracao"] = 1
+        if base == "sino":
+            await self._instr_ecos_dolorosos(p, virt, vst, {})
+        elif base == "lira":
+            await self._instr_dueto_marcial(p, virt, vst, {})
+        elif base == "flauta":
+            await self._instr_dueto_fantasma(p, virt, vst, {})
+        elif base == "tambor":
+            await self._instr_acorde_trovejante(p, virt, vst, {})
+
+    async def _improviso_requiem_tick(self, p, virt, st, m):
+        """So a 1a rodada do Requiem: Vontade vs CD -> falha sofre 1xdado do tier."""
+        if not m or m.get("hp", 0) <= 0:
+            return
+        save_ok, *_ = await self._save_mostrado(m, "vontade", self._instrumento_cd(p, virt))
+        if save_ok:
+            await self.gm_say(f"🎻 **{m['name']}** resiste ao lamento improvisado.")
+            return
+        dano = roll_dice(st["dado"])
+        m["hp"] = max(0, m["hp"] - dano)
+        await self.gm_say(f"🎻 O Réquiem improvisado fere **{m['name']}** em **{dano}**!")
+        if m["hp"] <= 0:
+            await self._monster_dies(m, p["id"])
+
+    async def handle_improviso_alvo(self, pid, data=None):
+        """Resolve o 1º passo pendente da fila do Improviso (res 7/9/11), mirando
+        no alvo/direção enviado pelo cliente. Sintetiza a base virtual no tier da
+        Gaita e reusa o handler já existente daquela habilidade."""
+        p = self.players.get(pid)
+        if not p or not p.get("alive") or not self._is_turn(pid):
+            return
+        fila = p.get("improviso_pendente") or []
+        if not fila:
+            return
+        passo = fila.pop(0)
+        inst = p["gear"].get("off_hand")
+        if not inst or inst.get("base") != "gaita":
+            await self.push_state(); return
+        virt_base = {7: "harpa", 9: "violino", 11: "trompa"}[passo["res"]]
+        virt, vst = self._improviso_virt_st(inst, virt_base)
+        if passo["res"] == 7:
+            await self._instr_nota_cortante(p, virt, vst, {"target_id": (data or {}).get("target_id")})
+        elif passo["res"] == 9:
+            m = self.monsters.get((data or {}).get("target_id"))
+            if m and self._no_raio(p, m, vst.get("alcance", 6)):
+                await self._improviso_requiem_tick(p, virt, vst, m)
+            else:
+                await self.send_to(pid, {"type": "error", "msg": "Alvo do Réquiem inválido."})
+        elif passo["res"] == 11:
+            await self._instr_chamado_general(p, virt, vst, {"dir": (data or {}).get("dir")})
+        await self.push_state()
+
+    def _limpar_improviso_pendente(self, p):
+        """Descarta passos sem-alvo pendentes do Improviso (Gaita) ao encerrar o
+        turno — não carregam pro próximo turno."""
+        if p.get("improviso_pendente"):
+            p["improviso_pendente"] = []
+
     async def _encerrar_requiem(self, bardo, motivo):
         if not bardo.get("requiem_alvo"):
             return
@@ -5699,7 +5898,7 @@ class GameRoom:
             if q.get("dueto_marcial_ate", 0) < self.round_num:
                 continue
             off = q.get("gear", {}).get("off_hand")
-            if not off or off.get("tipo_item") != "instrumento" or off.get("base") != "lira":
+            if not off or off.get("tipo_item") != "instrumento" or off.get("base") not in ("lira", "gaita"):
                 continue
             if _distancia_chebyshev(q["pos"], atacante["pos"]) > 1:
                 continue
@@ -5719,7 +5918,7 @@ class GameRoom:
         # Dueto Fantasma — eco do próprio ataque do bardo (fração do dano)
         if atacante.get("class_id") == "bard" and atacante.get("alive") \
            and atacante.get("dueto_fantasma_ate", 0) >= self.round_num \
-           and self._instr_base_off(atacante) == "flauta" \
+           and self._instr_base_off(atacante) in ("flauta", "gaita") \
            and alvo and alvo.get("hp", 0) > 0:
             eco = (dmg * atacante.get("dueto_fantasma_fracao", 0)) // 100
             if eco > 0:
@@ -7394,7 +7593,8 @@ class GameRoom:
                        + self._mod_magia(p, "ataque")                        # Abençoar
                        + self._lenda_atk_bonus(p, target)                    # Lenda (bardo estudou a espécie)
                        - self._corrosao_arma_pen(p)                          # arma de madeira corroída
-                       - (4 if target.get("oculto_sombras") else 0))         # alvo oculto nas sombras (corpo a corpo)
+                       - (4 if target.get("oculto_sombras") else 0)          # alvo oculto nas sombras (corpo a corpo)
+                       - (1 if p.get("desafinado_ate", -1) >= self.round_num else 0))  # Gaita: Desafinado (Fase 5)
             if preso_pen:
                 await self.gm_say(f"⛓️ **{p['name']}** ataca enquanto preso — **-2** no acerto!")
             # Amaldiçoar reduz a CA do alvo (mod_magia ca negativo) → mais fácil de acertar.
@@ -8230,8 +8430,7 @@ class GameRoom:
 
         # Custo de sobrevivência (escala 0–10; spec 20/80 ≈ 2/10), independente do resultado
         custo = 2
-        p["fome"] = max(0, p.get("fome", 10) - custo)
-        p["sede"] = max(0, p.get("sede", 10) - custo)
+        self._pagar_fome_sede(p, custo, custo)
         self._verificar_estado_sobrevivencia(p)
 
         # Chance de sucesso: tabela da Guilda (Nível I/II/III) por ND real.
@@ -8957,12 +9156,17 @@ class GameRoom:
         return base
 
     def _sinfonia_bonus(self, p, attr_id):
-        """+1 se um Alaúde equipado inclui `attr_id` na Sinfonia Heroica (por qualidade)."""
+        """+1 se um Alaúde equipado inclui `attr_id` na Sinfonia Heroica (por qualidade),
+        ou se a Gaita improvisou uma Sinfonia Heroica temporária (Fase 5, resultado 10)."""
         inst = p.get("gear", {}).get("off_hand")
-        if not inst or inst.get("tipo_item") != "instrumento" or inst.get("base") != "alaude":
-            return 0
-        st = self._instrumento_stats(inst)
-        return 1 if attr_id in st.get("atributos", []) else 0
+        if inst and inst.get("tipo_item") == "instrumento" and inst.get("base") == "alaude":
+            st = self._instrumento_stats(inst)
+            if attr_id in st.get("atributos", []):
+                return 1
+        if p.get("sinfonia_temp_ate", -1) >= self.round_num \
+           and attr_id in p.get("sinfonia_temp_atributos", []):
+            return 1
+        return 0
 
     def _cancao_custo_reducao(self, p):
         """Redução de manutenção da canção com a Canção Heroica Suprema (-1🍖 -1💧)."""
@@ -9022,9 +9226,13 @@ class GameRoom:
             st["cd_bonus"] = st.get("cd_bonus", 0) + 1
 
     def _instrumento_cd(self, bardo, inst):
-        """CD do save do instrumento: 8 + mod(DES) + afixo de CD (Fase 4)."""
+        """CD do save do instrumento: 8 + mod(DES) + afixo de CD (Fase 4) - 1 se
+        Desafinado (Fase 5, improviso resultado 2)."""
         st = self._instrumento_stats(inst)
-        return 8 + mod(bardo.get("dex", 10)) + st.get("cd_bonus", 0)
+        cd = 8 + mod(bardo.get("dex", 10)) + st.get("cd_bonus", 0)
+        if bardo.get("desafinado_ate", -1) >= self.round_num:
+            cd -= 1
+        return cd
 
     async def handle_ativar_cancao(self, pid, data):
         if not self._is_turn(pid): return
@@ -9091,21 +9299,65 @@ class GameRoom:
         for jogador in self.players.values():
             jogador.pop("buffs_cancao", None)
 
+    def _custo_fome_sede_efetivo(self, p, fome, sede, contexto=None):
+        """Custo apos descontos de Encore. Grande Encore zera; Encore Menor -1/-1;
+        magia gratis (Mago/Clerigo, contexto='magia') zera e consome a carga."""
+        if p.get("grande_encore_ate", -1) >= self.round_num:
+            return 0, 0
+        if contexto == "magia" and p.get("encore_magia_gratis", 0) > 0 \
+           and p.get("class_id") in ("mage", "cleric"):
+            p["encore_magia_gratis"] = p.get("encore_magia_gratis", 0) - 1
+            return 0, 0
+        if p.get("encore_menor_ate", -1) >= self.round_num:
+            return max(0, fome - 1), max(0, sede - 1)
+        return fome, sede
+
+    def _pagar_fome_sede(self, p, fome, sede, contexto=None):
+        """Debito central de fome/sede com desconto de Encore. Piso 0.
+        Retorna (fome_paga, sede_paga)."""
+        f, s = self._custo_fome_sede_efetivo(p, fome, sede, contexto)
+        p["fome"] = max(0, p.get("fome", 0) - f)
+        p["sede"] = max(0, p.get("sede", 0) - s)
+        return f, s
+
+    def _aplicar_encore_menor(self, bardo):
+        """1 rodada: aliados do bardo em raio 5 (incl. ele) gastam -1/-1;
+        Mago/Clerigo ganham 1 magia gratis."""
+        for q in self.players.values():
+            if not q.get("alive"):
+                continue
+            if _distancia_chebyshev(q["pos"], bardo["pos"]) > 5:
+                continue
+            q["encore_menor_ate"] = self.round_num
+            if q.get("class_id") in ("mage", "cleric"):
+                q["encore_magia_gratis"] = max(q.get("encore_magia_gratis", 0), 1)
+
+    def _aplicar_grande_encore(self, bardo):
+        """1d4 rodadas: todos sob a Cancao Heroica agem sem custo (inclui magias
+        de Mago/Clerigo) via grande_encore_ate, ja checado incondicionalmente
+        no topo de _custo_fome_sede_efetivo — nao precisa de flag propria."""
+        dur = roll_dice("1d4")
+        ate = self.round_num + dur
+        for q in self.players.values():
+            if not q.get("alive") or "buffs_cancao" not in q:
+                continue
+            q["grande_encore_ate"] = ate
+
     async def _cobrar_manutencao_cancao(self, p):
         """Upkeep da canção, cobrado no início do turno do bardo. Sem recursos,
         a canção é interrompida. Com recursos, debita e reaplica os buffs (os
         aliados podem ter se movido para dentro/fora do raio)."""
         if not p.get("cancao_ativa"): return
         custo = p.get("cancao_custo", {"fome": 0, "sede": 0})
-        if p["fome"] < custo["fome"] or p["sede"] < custo["sede"]:
+        _ef, _es = self._custo_fome_sede_efetivo(p, custo["fome"], custo["sede"])
+        if p["fome"] < _ef or p["sede"] < _es:
             await self._remover_buffs_cancao(p)
             p["cancao_ativa"]     = False
             p["cancao_atributos"] = []
             p["cancao_custo"]     = {"fome": 0, "sede": 0}
             await self.gm_say(f"🔇 A Canção Heroica de **{p['name']}** se cala — recursos insuficientes.")
             return
-        p["fome"] = max(0, p["fome"] - custo["fome"])
-        p["sede"] = max(0, p["sede"] - custo["sede"])
+        self._pagar_fome_sede(p, custo["fome"], custo["sede"])
         await self._remover_buffs_cancao(p)
         await self._aplicar_buffs_cancao(p)
         labels = ", ".join(next(a["label"] for a in CANCAO_ATRIBUTOS if a["id"] == x) for x in p.get("cancao_atributos", []))
@@ -9123,11 +9375,11 @@ class GameRoom:
             return
         mf = base.get("manutencao_fome", 2)
         ms = base.get("manutencao_sede", 2)
-        if p["fome"] < mf or p["sede"] < ms:
+        _ef, _es = self._custo_fome_sede_efetivo(p, mf, ms)
+        if p["fome"] < _ef or p["sede"] < _es:
             await self._encerrar_requiem(p, "recursos insuficientes")
             return
-        p["fome"] = max(0, p["fome"] - mf)
-        p["sede"] = max(0, p["sede"] - ms)
+        self._pagar_fome_sede(p, mf, ms)
         await self.gm_say(f"🎻 Réquiem Final de **{p['name']}** — manutenção 🍖-{mf} 💧-{ms}.")
 
     def _interromper_cancao(self, p, motivo):
@@ -9285,9 +9537,10 @@ class GameRoom:
         custo_fome = alcance            # -1 fome por extensão de alcance
         alcance_tiles = 1 + alcance * 3 # 1, 4 ou 7 quadrados
 
-        if p["sede"] < custo_sede:
+        _ef, _es = self._custo_fome_sede_efetivo(p, custo_fome, custo_sede)
+        if p["sede"] < _es:
             await self.send_to(pid, {"type": "error", "msg": f"Sede insuficiente — precisa 💧{custo_sede}."}); return
-        if p["fome"] < custo_fome:
+        if p["fome"] < _ef:
             await self.send_to(pid, {"type": "error", "msg": f"Fome insuficiente — precisa 🍖{custo_fome}."}); return
 
         alvo = self.players.get((data or {}).get("target_id"))
@@ -9311,8 +9564,7 @@ class GameRoom:
         alvo["hp"] = min(alvo["max_hp"], alvo["hp"] + cura)
         cura_real = alvo["hp"] - hp_antes
 
-        p["sede"] = max(0, p["sede"] - custo_sede)
-        p["fome"] = max(0, p["fome"] - custo_fome)
+        self._pagar_fome_sede(p, custo_fome, custo_sede)
         p["action_done"] = True
 
         dados_str = "+".join(str(d) for d in dados)
@@ -9339,7 +9591,8 @@ class GameRoom:
         custo_sede = num_dados * 4
         raio = 2 * nivel   # 2 / 4 / 6
 
-        if p["fome"] < custo_fome or p["sede"] < custo_sede:
+        _ef, _es = self._custo_fome_sede_efetivo(p, custo_fome, custo_sede)
+        if p["fome"] < _ef or p["sede"] < _es:
             await self.send_to(pid, {"type": "error",
                 "msg": f"Recursos insuficientes — precisa 🍖{custo_fome} 💧{custo_sede}."}); return
 
@@ -9361,8 +9614,7 @@ class GameRoom:
             if cura_real > 0:
                 curados.append(f"{aliado['name']}(+{cura_real})")
 
-        p["fome"] = max(0, p["fome"] - custo_fome)
-        p["sede"] = max(0, p["sede"] - custo_sede)
+        self._pagar_fome_sede(p, custo_fome, custo_sede)
         p["action_done"] = True
 
         dados_str = "+".join(str(d) for d in dados)
@@ -9418,7 +9670,8 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Aliado inválido."}); return
         if not self._no_raio(p, alvo, 1):
             await self.send_to(pid, {"type": "error", "msg": "Purificação requer contato adjacente."}); return
-        if p["fome"] < custo["fome"] or p["sede"] < custo["sede"]:
+        _ef, _es = self._custo_fome_sede_efetivo(p, custo["fome"], custo["sede"])
+        if p["fome"] < _ef or p["sede"] < _es:
             await self.send_to(pid, {"type": "error",
                 "msg": f"Recursos insuficientes — precisa 🍖{custo['fome']} 💧{custo['sede']}."}); return
 
@@ -9468,8 +9721,7 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error", "msg": f"{alvo['name']} não está amaldiçoado."}); return
 
         if removido:
-            p["fome"] = max(0, p["fome"] - custo["fome"])
-            p["sede"] = max(0, p["sede"] - custo["sede"])
+            self._pagar_fome_sede(p, custo["fome"], custo["sede"])
             p["action_done"] = True
             await self.gm_say(
                 f"✨ **{p['name']}** purifica **{alvo['name']}** — livre de "
@@ -9490,7 +9742,8 @@ class GameRoom:
 
         nivel = self._ressur_nivel(p)
         custo_fome = custo_sede = {1: 10, 2: 15, 3: 20}[nivel]
-        if p["fome"] < custo_fome or p["sede"] < custo_sede:
+        _ef, _es = self._custo_fome_sede_efetivo(p, custo_fome, custo_sede)
+        if p["fome"] < _ef or p["sede"] < _es:
             await self.send_to(pid, {"type": "error",
                 "msg": f"Recursos insuficientes — precisa 🍖{custo_fome} 💧{custo_sede}."}); return
 
@@ -9513,8 +9766,7 @@ class GameRoom:
         alvo["em_chamas_rodadas"] = 0        # senão o próximo tick de fogo re-mata o ressuscitado
         alvo["chamas_agua_apaga"] = True
 
-        p["fome"] = max(0, p["fome"] - custo_fome)
-        p["sede"] = max(0, p["sede"] - custo_sede)
+        self._pagar_fome_sede(p, custo_fome, custo_sede)
         p["action_done"] = True
 
         await self.gm_say(
@@ -9542,7 +9794,8 @@ class GameRoom:
 
         extra_d6 = max(0, min(3, int((data or {}).get("extra_d6", 0)))) if tem_espec(p, "paladino_cura_maos_3") else 0
         fome_cost, sede_cost = 3 + 2 * extra_d6, 2 + 2 * extra_d6
-        if p["fome"] < fome_cost or p["sede"] < sede_cost:
+        _ef, _es = self._custo_fome_sede_efetivo(p, fome_cost, sede_cost)
+        if p["fome"] < _ef or p["sede"] < _es:
             await self.send_to(pid, {"type": "error", "msg": f"Recursos insuficientes 🍖{fome_cost} 💧{sede_cost}."}); return
 
         alvo_id = data.get("target_id") if data else None
@@ -9562,8 +9815,7 @@ class GameRoom:
         alvo["hp"] = min(alvo["max_hp"], alvo["hp"] + cura)
         cura_efetiva = alvo["hp"] - hp_antes
 
-        p["fome"] = max(0, p["fome"] - fome_cost)
-        p["sede"] = max(0, p["sede"] - sede_cost)
+        self._pagar_fome_sede(p, fome_cost, sede_cost)
         p["action_done"] = True
 
         await self.gm_say(
@@ -10618,11 +10870,11 @@ class GameRoom:
                     f"🧵 **{p['name']}** só pode empilhar {self._teto_metamagia(p)} metamagia(s) por "
                     f"lançamento — as demais foram ignoradas.")
             if (mm_fome or mm_sede):
-                if p["fome"] < mm_fome or p["sede"] < mm_sede:
+                _ef, _es = self._custo_fome_sede_efetivo(p, mm_fome, mm_sede)
+                if p["fome"] < _ef or p["sede"] < _es:
                     await self.send_to(pid, {"type": "error",
                         "msg": f"Recursos insuficientes p/ metamagia 🍖-{mm_fome} 💧-{mm_sede}."}); return
-                p["fome"] = max(0, p["fome"] - mm_fome)
-                p["sede"] = max(0, p["sede"] - mm_sede)
+                self._pagar_fome_sede(p, mm_fome, mm_sede)
             if partes:
                 custo_txt = (f" | 🍖-{mm_fome}" + (f" 💧-{mm_sede}" if mm_sede else "")) if (mm_fome or mm_sede) else ""
                 await self.gm_say(f"🔮 **{p['name']}** — metamagia: {', '.join(partes)}{custo_txt}.")
@@ -10641,8 +10893,7 @@ class GameRoom:
 
         # Cobra 1 SLOT do círculo + 🍖/💧 de sobrevivência.
         self._gastar_slot(p, circulo)
-        p["fome"] = max(0, p.get("fome", 10) - 1)
-        p["sede"] = max(0, p.get("sede", 10) - 1)
+        self._pagar_fome_sede(p, 1, 1, contexto="magia")
         self._verificar_estado_sobrevivencia(p)
 
         # Aprimorar: +1 na CD do save é lido por _dif_magia via flag temporária no caster.
@@ -12789,7 +13040,8 @@ class GameRoom:
         custo_ouro = tipo.get("custo_ouro", 0)
         if p["gold"] < custo_ouro:
             await self.send_to(pid, {"type": "error", "msg": f"Ouro insuficiente — precisa {custo_ouro}🪙."}); return
-        if p["fome"] < ARMADILHA_CUSTO_FOME or p["sede"] < ARMADILHA_CUSTO_SEDE:
+        _ef, _es = self._custo_fome_sede_efetivo(p, ARMADILHA_CUSTO_FOME, ARMADILHA_CUSTO_SEDE)
+        if p["fome"] < _ef or p["sede"] < _es:
             await self.send_to(pid, {"type": "error",
                 "msg": f"Recursos insuficientes (🍖-{ARMADILHA_CUSTO_FOME} 💧-{ARMADILHA_CUSTO_SEDE})."}); return
 
@@ -12815,8 +13067,7 @@ class GameRoom:
             p["bag"].remove(frasco)
 
         p["gold"] -= custo_ouro
-        p["fome"] = max(0, p["fome"] - ARMADILHA_CUSTO_FOME)
-        p["sede"] = max(0, p["sede"] - ARMADILHA_CUSTO_SEDE)
+        self._pagar_fome_sede(p, ARMADILHA_CUSTO_FOME, ARMADILHA_CUSTO_SEDE)
         p["action_done"] = True
 
         self._armadilha_seq += 1
@@ -13832,6 +14083,7 @@ class GameRoom:
         p["action_done"]       = False
         p["bonus_action_used"] = False
         p["instrumento_usado"] = False   # bardo: 1 instrumento tocado por turno
+        self._limpar_improviso_pendente(p)   # Gaita: passos sem-alvo não usados expiram
         p["moved_this_turn"]   = False   # reabre o custo de -1 sede ao caminhar no novo turno
         # buffs de turno do warrior expiram ao fim do turno (flags planas)
         p["skill_bonus_acerto"] = 0
@@ -17855,6 +18107,9 @@ async def handler(ws):
 
                 elif t == "usar_instrumento":
                     if room: await room.handle_usar_instrumento(pid, msg)
+
+                elif t == "improviso_alvo":
+                    if room: await room.handle_improviso_alvo(pid, msg)
 
                 elif t == "usar_oportunidade_movimento":
                     if room: await room.handle_usar_oportunidade_movimento(pid)

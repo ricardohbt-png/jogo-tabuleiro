@@ -58,6 +58,11 @@ def _room_bardo():
     room.map_w = server.MAP_W
     room.map_h = server.MAP_H
     room.tiles = [[server.FLOOR] * server.MAP_W for _ in range(server.MAP_H)]
+    # Índices de oclusão (decor alto / material) — normalmente populados no
+    # __init__/enter_dungeon; aqui o room é criado via __new__, então definimos
+    # como vazio (nenhuma oclusão) para os caminhos de visão de monstro.
+    room._decor_tall_tiles = set()
+    room._mat_oclui_tiles = set()
     return room, p
 
 def test_sem_slot_dedicado_instrumento():
@@ -1028,6 +1033,309 @@ def test_sku_origem():
     ids = {i.get("id") for i in server.SHOP_MERCHANT}
     assert "instrumento_harpa_padrao_elfica" in ids
     assert "instrumento_violino_padrao_ana" in ids
+
+# ─── Fase 5 — Gaita (Improviso) ─────────────────────────────────────────────
+
+def test_gaita_base_existe():
+    b = server.INSTRUMENTOS_BASE["gaita"]
+    assert b["maos"] == 1 and b["modo"] == "ativada"
+    assert b["habilidade_nome"] == "Improviso"
+    assert b["efeito"]["tipo"] == "improviso"
+    assert b["custo_fome"] == 3 and b["custo_sede"] == 3
+    assert b["runico"]["grande_encore"] is True
+
+def test_gaita_nome_e_genero():
+    assert server.criar_instrumento("gaita", "velho")["name"] == "Gaita Velha"
+    inst = server.criar_instrumento("gaita", "padrao", encantamento="runico")
+    assert "Rúnica" in inst["name"], inst["name"]
+
+def test_gaita_stats_custo():
+    st = server.GameRoom._instrumento_stats(server.criar_instrumento("gaita", "padrao"))
+    assert st["custo_fome"] == 3 and st["custo_sede"] == 3
+
+def test_cascata_sem_encore():
+    room, p = _room_bardo()
+    room._rolar_2d6 = lambda: 7
+    passos, meta = room._improviso_rolar_cascata(runico=False)
+    assert passos == [7]
+    assert meta == {"encore_menor": False, "grande_encore": False}
+
+def test_cascata_encore_simples():
+    room, p = _room_bardo()
+    seq = iter([12, 7, 3])  # 12 -> rola 7 e 3
+    room._rolar_2d6 = lambda: next(seq)
+    passos, meta = room._improviso_rolar_cascata(runico=False)
+    assert passos == [7, 3]
+    assert meta["encore_menor"] is False and meta["grande_encore"] is False
+
+def test_cascata_encore_menor():
+    room, p = _room_bardo()
+    seq = iter([12, 12, 5])  # 12 -> rola 12 (2o doze) e 5; nao-runica NAO recursa
+    room._rolar_2d6 = lambda: next(seq)
+    passos, meta = room._improviso_rolar_cascata(runico=False)
+    assert passos == [5]
+    assert meta["encore_menor"] is True and meta["grande_encore"] is False
+
+def test_cascata_grande_encore_runica():
+    room, p = _room_bardo()
+    seq = iter([12, 12, 3, 12, 4, 2, 3])
+    room._rolar_2d6 = lambda: next(seq)
+    passos, meta = room._improviso_rolar_cascata(runico=True)
+    assert meta["encore_menor"] is True and meta["grande_encore"] is True
+    assert 12 not in passos
+    # cada 12 (inclusive aninhado) precisa gerar seus PROPRIOS 2 rerolls —
+    # trava a contagem certa de rolagens (bug: 12 aninhado rolava so 1x, nao 2x)
+    assert passos == [3, 4, 2, 3], passos
+
+def test_cascata_teto_anti_loop():
+    room, p = _room_bardo()
+    room._rolar_2d6 = lambda: 12  # sempre 12 (runica): precisa terminar
+    passos, meta = room._improviso_rolar_cascata(runico=True)
+    assert meta["grande_encore"] is True
+
+def test_pagar_fome_sede_sem_encore():
+    room, p = _room_bardo()
+    p["fome"] = 10; p["sede"] = 10
+    room._pagar_fome_sede(p, 3, 2)
+    assert p["fome"] == 7 and p["sede"] == 8
+
+def test_pagar_fome_sede_encore_menor():
+    room, p = _room_bardo()
+    p["fome"] = 10; p["sede"] = 10
+    p["encore_menor_ate"] = room.round_num
+    room._pagar_fome_sede(p, 3, 2)
+    assert p["fome"] == 8 and p["sede"] == 9
+
+def test_pagar_fome_sede_grande_encore():
+    room, p = _room_bardo()
+    p["fome"] = 10; p["sede"] = 10
+    p["grande_encore_ate"] = room.round_num
+    room._pagar_fome_sede(p, 5, 5)
+    assert p["fome"] == 10 and p["sede"] == 10
+
+def test_pagar_fome_sede_magia_gratis():
+    room, p = _room_bardo()
+    p["class_id"] = "cleric"  # ensure mage/cleric for free-spell branch
+    p["fome"] = 10; p["sede"] = 10
+    p["encore_magia_gratis"] = 1
+    room._pagar_fome_sede(p, 4, 4, contexto="magia")
+    assert p["fome"] == 10 and p["sede"] == 10
+    assert p.get("encore_magia_gratis", 0) == 0
+    room._pagar_fome_sede(p, 4, 4, contexto="magia")
+    assert p["fome"] == 6 and p["sede"] == 6
+
+def test_pagar_fome_sede_piso_zero():
+    room, p = _room_bardo()
+    p["fome"] = 1; p["sede"] = 0
+    room._pagar_fome_sede(p, 3, 3)
+    assert p["fome"] == 0 and p["sede"] == 0
+
+def _add_aliado(room, pid, pos, cls="warrior", cancao=False):
+    q = {"id": pid, "name": pid, "class_id": cls, "alive": True, "pos": pos,
+         "fome": 100, "sede": 100, "gear": {k: None for k in server.GEAR_SLOTS}}
+    if cancao:
+        q["buffs_cancao"] = {}
+    room.players[pid] = q
+    return q
+
+def test_encore_menor_raio5():
+    room, p = _room_bardo()
+    perto = _add_aliado(room, "a1", [7, 5], "warrior")
+    longe = _add_aliado(room, "a2", [20, 20], "mage")
+    room._aplicar_encore_menor(p)
+    assert perto["encore_menor_ate"] == room.round_num
+    assert "encore_menor_ate" not in longe
+    assert p["encore_menor_ate"] == room.round_num
+
+def test_encore_menor_magia_gratis_mago_clerigo():
+    room, p = _room_bardo()
+    mago = _add_aliado(room, "m1", [6, 5], "mage")
+    guerreiro = _add_aliado(room, "g1", [6, 6], "warrior")
+    room._aplicar_encore_menor(p)
+    assert mago["encore_magia_gratis"] == 1
+    assert guerreiro.get("encore_magia_gratis", 0) == 0
+
+def test_grande_encore_sob_cancao():
+    room, p = _room_bardo()
+    orig = server.roll_dice
+    try:
+        server.roll_dice = lambda s: 3
+        dentro = _add_aliado(room, "c1", [9, 9], "cleric", cancao=True)
+        fora = _add_aliado(room, "c2", [9, 8], "warrior", cancao=False)
+        room._aplicar_grande_encore(p)
+        assert dentro["grande_encore_ate"] == room.round_num + 3
+        assert "grande_encore_ate" not in fora
+        # magia gratis enquanto ativo (via grande_encore_ate zerando o custo):
+        assert room._custo_fome_sede_efetivo(dentro, 5, 5, "magia") == (0, 0)
+        # apos expirar: custo cheio, sem vazamento de magia gratis
+        room.round_num = dentro["grande_encore_ate"] + 1
+        assert room._custo_fome_sede_efetivo(dentro, 5, 5, "magia") == (5, 5)
+    finally:
+        server.roll_dice = orig
+
+# ─── Fase 5 — Improviso: passos sem-alvo + fila de alvo + meta ────────────
+
+def _bardo_com_gaita(qual="padrao", runico=False):
+    room, p = _room_bardo()
+    async def noop(*a, **k): pass
+    room.gm_say = noop; room.send_to = noop; room.push_state = noop
+    p["gear"]["off_hand"] = server.criar_instrumento(
+        "gaita", qual, encantamento=("runico" if runico else "nenhum"))
+    return room, p
+
+def _make_save(ok):
+    async def _s(m, tipo, cd, **k): return (ok, 10, cd)
+    return _s
+def _make_dano(n):
+    async def _d(nd, faces, label): return n
+    return _d
+
+def test_gaita_sob_encore_menor_custo_reduzido():
+    # A pre-checagem de fome/sede em handle_usar_instrumento precisa usar o
+    # custo EFETIVO (pos-Encore), nao o bruto — senao recusa um bardo que tem
+    # recursos suficientes sob o desconto ativo.
+    room, p = _bardo_com_gaita()
+    room._rolar_2d6 = lambda: 3  # Falha (sem cascata)
+    p["fome"] = 2; p["sede"] = 2           # < custo bruto 3, mas >= efetivo 2 sob Encore Menor
+    p["encore_menor_ate"] = room.round_num
+    _run(room.handle_usar_instrumento("p1", {}))
+    assert p["instrumento_usado"] is True   # nao foi recusado
+    assert p["fome"] == 0 and p["sede"] == 0
+
+def test_improviso_resultado_ecos_1rodada():
+    room, p = _bardo_com_gaita()
+    room._rolar_2d6 = lambda: 4          # Ecos Dolorosos
+    st = server.GameRoom._instrumento_stats(p["gear"]["off_hand"])
+    _run(room._instr_improviso(p, p["gear"]["off_hand"], st, {}))
+    assert p["ecos_ate"] == room.round_num + 1
+
+def test_improviso_resultado_desafinado():
+    room, p = _bardo_com_gaita()
+    room._rolar_2d6 = lambda: 2
+    st = server.GameRoom._instrumento_stats(p["gear"]["off_hand"])
+    _run(room._instr_improviso(p, p["gear"]["off_hand"], st, {}))
+    assert p["desafinado_ate"] == room.round_num + 1
+
+def test_improviso_enfileira_alvo():
+    room, p = _bardo_com_gaita()
+    room._rolar_2d6 = lambda: 7          # Nota Cortante — precisa de alvo
+    st = server.GameRoom._instrumento_stats(p["gear"]["off_hand"])
+    _run(room._instr_improviso(p, p["gear"]["off_hand"], st, {}))
+    fila = p.get("improviso_pendente", [])
+    assert len(fila) == 1 and fila[0]["res"] == 7 and fila[0]["alvo_tipo"] == "monstro"
+
+def test_improviso_encore_aplica_meta():
+    room, p = _bardo_com_gaita()
+    seq = iter([12, 8, 12])  # 12 -> [8, 12]; o 12 do reroll -> Encore Menor (nao-runica)
+    room._rolar_2d6 = lambda: next(seq)
+    room._save_mostrado = _make_save(True); room._rolar_dano_mostrado = _make_dano(0)
+    room.monsters = {}   # sem alvos p/ o Acorde: so nao deve crashar
+    st = server.GameRoom._instrumento_stats(p["gear"]["off_hand"])
+    _run(room._instr_improviso(p, p["gear"]["off_hand"], st, {}))
+    assert p["encore_menor_ate"] == room.round_num
+
+def test_improviso_sinfonia_temp():
+    room, p = _bardo_com_gaita()
+    room._rolar_2d6 = lambda: 10         # Sinfonia Heroica
+    st = server.GameRoom._instrumento_stats(p["gear"]["off_hand"])
+    _run(room._instr_improviso(p, p["gear"]["off_hand"], st, {}))
+    assert p["sinfonia_temp_ate"] == room.round_num + 1
+    assert isinstance(p.get("sinfonia_temp_atributos"), list)
+
+# ─── Fase 5 — Improviso: resolução de alvo (Task 6) ────────────────────────
+
+def test_improviso_alvo_nota_cortante():
+    room, p = _bardo_com_gaita()
+    room.monsters = {"m1": {"id": "m1", "name": "Orc", "hp": 30, "pos": [6, 5],
+                            "def_reflexos": 0}}
+    room._save_mostrado = _make_save(False); room._rolar_dano_mostrado = _make_dano(6)
+    room._instrumento_cd = lambda p, inst: 11
+    p["improviso_pendente"] = [{"res": 7, "tier": "padrao", "alvo_tipo": "monstro"}]
+    _run(room.handle_improviso_alvo("p1", {"target_id": "m1"}))
+    assert room.monsters["m1"]["hp"] == 24
+    assert p["improviso_pendente"] == []
+
+def test_improviso_requiem_tick():
+    room, p = _bardo_com_gaita()
+    room.monsters = {"m1": {"id": "m1", "name": "Orc", "hp": 30, "pos": [6, 5]}}
+    room._save_mostrado = _make_save(False); room._instrumento_cd = lambda p, i: 11
+    orig = server.roll_dice; server.roll_dice = lambda s: 5
+    try:
+        virt, vst = room._improviso_virt_st(p["gear"]["off_hand"], "violino")
+        _run(room._improviso_requiem_tick(p, virt, vst, room.monsters["m1"]))
+    finally:
+        server.roll_dice = orig
+    assert room.monsters["m1"]["hp"] == 25
+    assert "requiem_alvo" not in p
+
+# ─── Fase 5 — Task 7: Gaita ligada ao handle_usar_instrumento + end_turn ───
+
+def test_usar_instrumento_gaita_1mao():
+    room, p = _bardo_com_gaita()
+    room._rolar_2d6 = lambda: 3          # Falha — sem efeito colateral
+    p["fome"] = 10; p["sede"] = 10
+    _run(room.handle_usar_instrumento("p1", {}))
+    assert p["instrumento_usado"] is True
+    assert p["action_done"] is False
+    assert p["fome"] == 7 and p["sede"] == 7
+
+def test_end_turn_limpa_fila_improviso():
+    room, p = _bardo_com_gaita()
+    p["improviso_pendente"] = [{"res": 7, "tier": "padrao", "alvo_tipo": "monstro"}]
+    room._limpar_improviso_pendente(p)
+    assert p.get("improviso_pendente") in (None, [])
+
+# ─── Fase 5 — Task 8: Gaita nos hooks de aura + Desafinado + Sinfonia temp ──
+
+def test_ecos_retalia_com_gaita():
+    room, p = _bardo_com_gaita()
+    p["ecos_ate"] = room.round_num; p["ecos_dano"] = "1d4"
+    room._rolar_dano_mostrado = _make_dano(3)
+    m = {"id": "m1", "name": "Orc", "hp": 10, "pos": [6, 5]}
+    room.monsters = {"m1": m}
+    _run(room._instr_ecos_retaliar(p, m))
+    assert m["hp"] == 7
+
+def test_sinfonia_temporaria_reforca_cancao():
+    room, p = _bardo_com_gaita()
+    p["sinfonia_temp_ate"] = room.round_num + 1
+    p["sinfonia_temp_atributos"] = ["acerto"]
+    p["buffs_cancao"] = {}
+    assert room._sinfonia_bonus(p, "acerto") == 1
+    assert room._sinfonia_bonus(p, "dano") == 0
+
+def test_desafinado_reduz_cd():
+    room, p = _bardo_com_gaita()
+    cd_base = room._instrumento_cd(p, p["gear"]["off_hand"])
+    p["desafinado_ate"] = room.round_num
+    assert room._instrumento_cd(p, p["gear"]["off_hand"]) == cd_base - 1
+
+
+def test_manutencao_cancao_gratis_sob_grande_encore():
+    room, _p = _room_bardo()
+    async def noop(*a, **k): pass
+    room.gm_say = noop; room.send_to = noop; room.push_state = noop
+    cl = {"id": "c1", "name": "Lewis", "class_id": "cleric", "alive": True,
+          "pos": [5, 5], "fome": 10, "sede": 10, "int_": 12, "wis": 14,
+          "gear": {k: None for k in server.GEAR_SLOTS}, "action_done": False,
+          "buffs_cancao": {}, "grande_encore_ate": room.round_num,
+          "cancao_ativa": True, "cancao_custo": {"fome": 3, "sede": 3},
+          "cancao_atributos": []}
+    room.players["c1"] = cl
+    room._is_turn = lambda pid: True
+    _run(room._cobrar_manutencao_cancao(cl))
+    assert cl["fome"] == 10 and cl["sede"] == 10
+
+
+# ─── Fase 5 — Task 10: Gaita na loja + roller ──────────────────────────────
+
+def test_gaita_no_roller():
+    assert "gaita" in server._ROLLER_BASES
+
+def test_gaita_sku_na_loja():
+    ids = {i.get("id") for i in server.SHOP_MERCHANT}
+    assert any(i and i.startswith("instrumento_gaita_") for i in ids)
+
 
 if __name__ == "__main__":
     import inspect
