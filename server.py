@@ -2966,6 +2966,16 @@ def validar_dungeon(defn):
         if not isinstance(c, int) or isinstance(c, bool) or c < 1:
             return False, f"reforço com count inválido: {c!r} (inteiro ≥ 1)."
 
+    ep = defn.get("expected_party")
+    if ep is not None:
+        if not isinstance(ep, dict):
+            return False, "expected_party deve ser um objeto JSON."
+        h = ep.get("heroes"); lv = ep.get("level")
+        if not isinstance(h, int) or isinstance(h, bool) or not (1 <= h <= 6):
+            return False, f"expected_party.heroes inválido: {h!r} (inteiro 1–6)."
+        if not isinstance(lv, int) or isinstance(lv, bool) or lv < 1:
+            return False, f"expected_party.level inválido: {lv!r} (inteiro ≥ 1)."
+
     # Passagens autoradas: a mecânica permanece uma parede até ser ativada;
     # a ilusória continua WALL no mapa, mas o movimento de heróis a atravessa.
     passages = defn.get("secret_passages", [])
@@ -4536,6 +4546,7 @@ class GameRoom:
         self.master_manual_event = None     # asyncio.Event que fecha a janela
         self.master_manual_timer = None     # tarefa do timeout anti-AFK
         self.master_reserve = {}   # Camada B: type→count restante de reforços do mestre
+        self.expected_party = {"heroes": 4, "level": 1}   # Camada C: grupo esperado (referência)
         self.player_order = []  # list of pid in turn order
         self.phase = "lobby"    # lobby | character_select | playing | ended
         self.host_pid = None
@@ -6322,6 +6333,7 @@ class GameRoom:
 
         # Reforços do Mestre (Camada B) — reserva inerte sem mestre.
         self._carregar_master_reserve(defn)
+        self.expected_party = self._norm_expected_party(defn.get("expected_party"))
 
         # Baús com conteúdo exato (itens hidratados do catálogo do servidor).
         self.chests = {}
@@ -8785,6 +8797,18 @@ class GameRoom:
             if c > 0 and any(d["type"] == t for d in MONSTER_DEFS):
                 reserve[t] = reserve.get(t, 0) + c
         self.master_reserve = reserve
+
+    @staticmethod
+    def _norm_expected_party(ep):
+        """Normaliza o grupo esperado da masmorra (Camada C). heroes 1–6, level ≥1.
+        Default {4,1}. Defensivo — a validação estrita fica em validar_dungeon."""
+        if isinstance(ep, dict):
+            try:
+                return {"heroes": max(1, min(6, int(ep.get("heroes", 4)))),
+                        "level":  max(1, int(ep.get("level", 1)))}
+            except (TypeError, ValueError):
+                pass
+        return {"heroes": 4, "level": 1}
 
     async def handle_mestre_set_modo(self, pid, monster_ids, modo):
         """Mestre troca o modo de controle de 1+ monstros (Seleção em Lote)."""
@@ -18028,6 +18052,7 @@ class GameRoom:
                  "emoji": next((d.get("emoji", "👾") for d in MONSTER_DEFS if d["type"] == t), "👾")}
                 for t, c in self.master_reserve.items()
             ],
+            "expected_party": self.expected_party,
             "ambiente": getattr(self, "ambiente", "masmorra"),
             "tiles": self.tiles,
             "rooms": self.rooms,

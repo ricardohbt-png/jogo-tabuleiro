@@ -419,6 +419,24 @@ async def main():
     check("dragon legado cr 5", S.monster_cr(_by("dragon")) == 5.0)
     check("todos MONSTER_DEFS resolvem cr>0", all(S.monster_cr(d) > 0 for d in S.MONSTER_DEFS))
 
+    print("\n[20] expected_party — normalização/validação")
+    check("default sem campo", S.GameRoom._norm_expected_party(None) == {"heroes": 4, "level": 1})
+    check("valores válidos preservados", S.GameRoom._norm_expected_party({"heroes": 6, "level": 3}) == {"heroes": 6, "level": 3})
+    check("clampa heroes p/ 6", S.GameRoom._norm_expected_party({"heroes": 99, "level": 1})["heroes"] == 6)
+    check("clampa heroes p/ 1", S.GameRoom._norm_expected_party({"heroes": 0, "level": 1})["heroes"] == 1)
+    check("level mínimo 1", S.GameRoom._norm_expected_party({"heroes": 4, "level": 0})["level"] == 1)
+    check("default no __init__", playing_room_com_mestre().expected_party == {"heroes": 4, "level": 1})
+    def _com_ep(ep):
+        d = dict(base); d["expected_party"] = ep; return d
+    ok, _ = S.validar_dungeon(_com_ep({"heroes": 4, "level": 2}))
+    check("ep válido aceito", ok is True)
+    ok, msg = S.validar_dungeon(_com_ep({"heroes": 7, "level": 1}))
+    check("heroes>6 rejeitado", ok is False and "heroes" in msg.lower())
+    ok, _ = S.validar_dungeon(_com_ep({"heroes": 4, "level": 0}))
+    check("level<1 rejeitado", ok is False)
+    ok, _ = S.validar_dungeon(_com_ep("naoobj"))
+    check("não-objeto rejeitado", ok is False)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
