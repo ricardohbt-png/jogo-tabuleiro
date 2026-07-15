@@ -18,6 +18,7 @@
     monsters: [], chests: [], traps: [], decorations: [], secretPassages: [], nextDecorId: 0, nextPassageId: 0,
     objectives: { primary: { type: "kill_all" }, secondary: [] },
     tool: "wall", sel: null,
+    teleportExitPick: null,      // referência da armadilha aguardando clique no mapa
     decorType: (CAT.decorations[0] || {}).type || "cama",
     decorFacing: [0, 1],
     materiais: {},                 // {"x,y": id}
@@ -857,7 +858,7 @@
       panel.innerHTML = `<b>⚠️ Armadilha</b>
         <label>tipo</label><select id="p-tt">${opt(CAT.traps.map(t => ({ v: t.tipo, name: t.nome })), ref.tipo, o => o.v + " — " + o.name)}</select>
         ${meta.precisa_veneno ? `<label>veneno</label><select id="p-ven">${opt(CAT.venoms.map(v => ({ v: v.id, name: v.name })), ref.veneno_id || "", o => o.v + " — " + o.name)}</select>` : ""}
-        ${ref.tipo === "armadilha_teletransporte" ? `<label>ponto de saída (x, y)</label><div style="display:flex;gap:4px"><input id="p-out-x" type="number" min="0" max="${S.grid.w - 1}" value="${ref.saida ? ref.saida[0] : ref.pos[0]}"><input id="p-out-y" type="number" min="0" max="${S.grid.h - 1}" value="${ref.saida ? ref.saida[1] : ref.pos[1]}"></div><small style="color:#8a7a5a">Casa de chão; se ocupada no jogo, usa a adjacente livre mais próxima.</small>` : ""}
+        ${ref.tipo === "armadilha_teletransporte" ? `<label>ponto de saída (x, y)</label><div style="display:flex;gap:4px"><input id="p-out-x" type="number" min="0" max="${S.grid.w - 1}" value="${ref.saida ? ref.saida[0] : ref.pos[0]}"><input id="p-out-y" type="number" min="0" max="${S.grid.h - 1}" value="${ref.saida ? ref.saida[1] : ref.pos[1]}"></div><button id="p-pick-out" style="margin-top:5px">📍 Selecionar saída no mapa</button><small id="p-out-help" style="color:#8a7a5a">Casa de chão; se ocupada no jogo, usa a adjacente livre mais próxima.</small>` : ""}
         <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
           <b>Imagem</b>
           <div style="font-size:11px;color:#8a7a5a">PNG de assets/objetos — visível no jogo só quando a armadilha for revelada.</div>
@@ -876,6 +877,10 @@
         const setSaida = () => { ref.saida = [Number(document.getElementById("p-out-x").value) | 0, Number(document.getElementById("p-out-y").value) | 0]; render(); };
         document.getElementById("p-out-x").onchange = setSaida;
         document.getElementById("p-out-y").onchange = setSaida;
+        document.getElementById("p-pick-out").onclick = () => {
+          S.teleportExitPick = ref;
+          document.getElementById("p-out-help").textContent = "Clique agora em uma casa de chão no mapa para definir a saída.";
+        };
       }
       // Seletor de imagem (espelha o das decorações — pasta assets/objetos via OBJETO_UPLOAD).
       const tImgSel = document.getElementById("t-img-sel");
@@ -1099,6 +1104,17 @@
     const c = cellFromEvent(ev); if (!c) return;
     lastPointerCell = c;
     const [x, y] = c;
+    if (S.teleportExitPick) {
+      if (S.tiles[y][x] !== FLOOR) {
+        const help = document.getElementById("p-out-help");
+        if (help) help.textContent = "A saída precisa ser escolhida em uma casa de chão.";
+        return;
+      }
+      S.teleportExitPick.saida = [x, y];
+      S.teleportExitPick = null;
+      renderPanel(); render(); updateStatus();
+      return;
+    }
     if (["wall", "floor", "door"].includes(S.tool)) { painting = true; (S.matFill && S.tool !== "door" ? paintMaterial : paintTile)(x, y); render(); updateStatus(); }
     else if (S.tool === "room") { roomDrag = { x0: x, y0: y, x1: x, y1: y }; }
     else if (["entrance", "exit", "prisoner", "monster", "chest", "trap", "decor", "secret_mechanism", "illusion_wall"].includes(S.tool)) { placeEntity(x, y); if (S.tool !== "decor") S.sel = entityAt(x, y); renderPanel(); render(); }
@@ -1251,7 +1267,7 @@
       if (!traps.has(t.tipo)) e.push(`armadilha tipo inválido: ${t.tipo}`);
       if (isWall(t.pos)) e.push(`armadilha em parede: ${t.pos}`);
       if ((t.tipo === "fosso_envenenado" || t.tipo === "armadilha_dardos_envenenados") && !venoms.has(t.veneno_id)) e.push(`${t.tipo} sem veneno válido`);
-      if (t.tipo === "armadilha_teletransporte" && isWall(t.saida)) e.push("armadilha de teletransporte sem saída em chão");
+      if (t.tipo === "armadilha_teletransporte" && (!Array.isArray(t.saida) || S.tiles[t.saida[1]]?.[t.saida[0]] !== FLOOR)) e.push("armadilha de teletransporte sem saída em chão");
     }
     if (S.prisoner && isWall(S.prisoner.pos)) e.push("prisioneiro em parede");
     for (const r of S.rooms) for (const d of r.doors) if (S.tiles[d[1]]?.[d[0]] !== DOOR) e.push(`porta declarada não é tile DOOR: ${d}`);

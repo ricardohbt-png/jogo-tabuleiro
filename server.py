@@ -2843,7 +2843,7 @@ def validar_dungeon(defn):
             return False, f"armadilha_dardos_envenenados exige veneno_id válido: {tr.get('veneno_id')!r}."
         if tr["tipo"] == "armadilha_teletransporte":
             destino = tr.get("saida")
-            if not in_grid(destino) or tile_at(destino) == WALL:
+            if not in_grid(destino) or tile_at(destino) != FLOOR:
                 return False, "armadilha_teletransporte exige uma saída em quadrado de chão."
         if tr.get("image") is not None and not isinstance(tr.get("image"), str):
             return False, "trap.image deve ser uma string (nome do arquivo em assets/objetos)."
