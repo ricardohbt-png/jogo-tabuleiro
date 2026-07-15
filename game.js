@@ -10246,6 +10246,17 @@ function renderMasterHud(state){
   const heroOpts = (state.players || []).filter(p => p.alive)
     .map(p => `<option value="${p.id}">${p.name}</option>`).join('');
 
+  const reserva = state.master_reserve || [];
+  const reforcoHtml = reserva.length ? (
+    '<div class="mestre-reforcos"><div class="mestre-sec">⚠️ Reforços</div>' +
+    reserva.map(r =>
+      `<button class="mestre-reforco-btn${window._modoImplantarReforco === r.type ? ' armado' : ''}" data-rtype="${r.type}">` +
+      `${r.emoji || '👾'} ${r.name || r.type} <b>×${r.count}</b></button>`
+    ).join('') +
+    (window._modoImplantarReforco ? '<div class="mestre-reforco-dica">Clique numa casa livre para implantar (Esc cancela)</div>' : '') +
+    '</div>'
+  ) : '';
+
   host.innerHTML = `
     <div class="mestre-titulo">🎭 Mestre</div>
     <div class="mestre-lista">${rows || '<div class="mestre-vazio">Nenhum monstro na masmorra.</div>'}</div>
@@ -10269,6 +10280,7 @@ function renderMasterHud(state){
       <button class="mestre-atacar">⚔️ Atacar alvo</button>
       <button class="mestre-encerrar">Encerrar monstro</button>
     </div>` : ''}
+    ${reforcoHtml}
   `;
 
   // ── Wiring (delegado a cada render — o HUD inteiro é substituído acima) ──
@@ -10305,6 +10317,13 @@ function renderMasterHud(state){
     const fimBtn = host.querySelector('.mestre-encerrar');
     if(fimBtn) fimBtn.onclick = () => GS.mestreEncerrarMonstro(manualMid);
   }
+  host.querySelectorAll('.mestre-reforco-btn').forEach(btn => {
+    btn.onclick = () => {
+      const t = btn.dataset.rtype;
+      window._modoImplantarReforco = (window._modoImplantarReforco === t) ? null : t;
+      renderMasterHud(GS.gameState);
+    };
+  });
 }
 
 // ── Ficha do monstro (só o mestre; painel canto inferior-esquerdo) ──
@@ -11709,6 +11728,13 @@ document.addEventListener('keydown', e=>{
     GS.pendingSkill=null;
     if(GS.gameState) renderMyPanel(GS.gameState);
     toast('Habilidade cancelada.','var(--text2)');
+    e.preventDefault(); return;
+  }
+  // ESC cancela o modo de implantar reforço (mestre)
+  if(e.key==='Escape' && window._modoImplantarReforco){
+    window._modoImplantarReforco = null;
+    if(GS.isMaster()) renderMasterHud(GS.gameState);
+    toast('Implantação cancelada.', 'var(--text2)');
     e.preventDefault(); return;
   }
   // R resets the 3D camera regardless of turn state
@@ -21057,6 +21083,11 @@ function handleTileClick(tx, ty){
   if(!podeReceberInput()) return;   // bloqueia input durante a animação de movimento
   // ── Mestre: clicar num monstro abre a ficha; o mestre não faz ações de herói ──
   if(GS.isMaster()){
+    if(window._modoImplantarReforco){
+      GS.mestreImplantarReforco(window._modoImplantarReforco, tx, ty);
+      window._modoImplantarReforco = null;
+      return;
+    }
     const mon = _monstroEmCasa(tx, ty);
     if(mon) renderFichaMonstro(mon);
     return;

@@ -1068,3 +1068,9 @@ input:focus { outline: none; border-color: var(--gold); }
 .mestre-manual .mestre-atacar:hover { background: #9a3428; }
 .mestre-manual .mestre-encerrar { background: var(--bg3); border: 1px solid var(--border2); color: var(--text2); font-size: .7rem; padding: 6px; }
 .mestre-manual .mestre-encerrar:hover { color: var(--text); border-color: var(--gold); }
+
+.mestre-sec { font-size: .68rem; letter-spacing: .5px; text-transform: uppercase; color: var(--text2); margin: 8px 0 4px; border-top: 1px solid var(--border); padding-top: 6px; }
+.mestre-reforcos{ margin-top:6px; }
+.mestre-reforco-btn{ display:block; width:100%; text-align:left; margin:2px 0; cursor:pointer; }
+.mestre-reforco-btn.armado{ outline:2px solid var(--gold,#d9b45a); }
+.mestre-reforco-dica{ font-size:.75rem; opacity:.85; margin-top:2px; }
