@@ -63,6 +63,12 @@ def _room_bardo():
     # como vazio (nenhuma oclusão) para os caminhos de visão de monstro.
     room._decor_tall_tiles = set()
     room._mat_oclui_tiles = set()
+    # Modo Mestre: sem mestre neste harness (master_pid None → _mestre_ativo()
+    # False → dormência por sala-trancada, caminho SEM-mestre). Espelha o __init__.
+    room.master_pid = None
+    room.master_name = None
+    room.master_manual_mid = None
+    room.rooms = []
     return room, p
 
 def test_sem_slot_dedicado_instrumento():
