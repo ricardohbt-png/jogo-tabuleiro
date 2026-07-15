@@ -6657,6 +6657,33 @@ class GameRoom:
         room_m = self._room_by_id(m.get("room_id"))
         return not (room_m and room_m.get("locked"))
 
+    async def _verificar_avistamento(self):
+        """Só-mestre: se um herói vivo avista um monstro dormente, acorda a SALA
+        inteira dele (alertado=True) e o coloca em Manual. Idempotente."""
+        if not self._mestre_ativo():
+            return
+        herois = [p for p in self.players.values() if self._ativo(p)]
+        if not herois:
+            return
+        salas_narradas = set()
+        for m in list(self.monsters.values()):
+            if m.get("hp", 0) <= 0 or m.get("alertado"):
+                continue
+            if not any(self._heroi_enxerga_monstro(h, m) for h in herois):
+                continue
+            rid = m.get("room_id")
+            grupo = ([mm for mm in self.monsters.values()
+                      if mm.get("hp", 0) > 0 and mm.get("room_id") == rid]
+                     if rid is not None else [m])
+            for mm in grupo:
+                if not mm.get("alertado"):
+                    mm["alertado"] = True
+                    mm["control_mode"] = "manual"   # mestre dirige por padrão
+            chave = rid if rid is not None else id(m)
+            if chave not in salas_narradas:
+                salas_narradas.add(chave)
+                await self.gm_say("⚔️ **Combate!** Os monstros perceberam os heróis!")
+
     # ── turn actions ───────────────────────────────────────────────────────
 
     async def handle_move(self, pid, dx, dy):
@@ -6760,6 +6787,7 @@ class GameRoom:
         if p["alive"]:
             await self._aplicar_fogueira_se_pisar(p)
 
+        await self._verificar_avistamento()   # Modo Mestre: herói pode ter avistado monstros
         await self.push_state()
 
     async def _verificar_trap_procedural(self, pid, p, nx, ny):
@@ -6823,6 +6851,7 @@ class GameRoom:
             key = "room_" + r["role"]
             if key in GM:
                 await self.gm_say(gm(key))
+        await self._verificar_avistamento()   # sala revelada → herói avista → combate
         await self.push_state()
 
     async def _on_enter_room(self, pid, room):
