@@ -170,28 +170,68 @@ async def main():
     finally:
         S.random.randint = _orig_rand
 
-    # [7] Veneno Rápido
+    # [7] Veneno Rápido — modelo de poison_slots (cargas na arma equipada).
+    # Teto de cargas melee por spec: base 1; veneno_2 → 2 cargas do mesmo veneno
+    # (dura 2 golpes); veneno_3 → um 2º veneno DIFERENTE ao mesmo tempo (máx 2
+    # distintos, FIFO); veneno_2+veneno_3 → 2 venenos × 2 cargas = 4.
     print("\n[7] Veneno Rápido")
     r = setup()
-    check("golpes base = 1", r._veneno_rapido_max_hits(rogue()) == 1)
-    check("golpes com veneno_2 = 2", r._veneno_rapido_max_hits(rogue(esp=["ladino_veneno_2"])) == 2)
-    check("2 slots sem veneno_3", not r._veneno_rapido_2_slots(rogue()))
-    check("2 slots com veneno_3", r._veneno_rapido_2_slots(rogue(esp=["ladino_veneno_2","ladino_veneno_3"])))
-    # integração: aplicar 1º veneno preenche slot 1; 2º (com veneno_3) preenche slot 2 sem apagar o 1º
-    r = setup()
-    luccas = rogue(esp=["ladino_veneno_2","ladino_veneno_3"])
-    luccas["sede"] = 50
-    luccas["weapon"] = {"id": "dagger"}
-    luccas["bag"] = [{"id":"frasco_a","veneno_id":"veneno_fraco"}, {"id":"frasco_b","veneno_id":"veneno_forte"}]
-    r.players["l"] = luccas
+    check("capacidade base = 1", r._capacidade_poison_melee(rogue()) == 1)
+    check("capacidade com veneno_2 = 2", r._capacidade_poison_melee(rogue(esp=["ladino_veneno_2"])) == 2)
+    check("capacidade com veneno_3 = 2", r._capacidade_poison_melee(rogue(esp=["ladino_veneno_3"])) == 2)
+    check("capacidade com veneno_2+veneno_3 = 4",
+          r._capacidade_poison_melee(rogue(esp=["ladino_veneno_2","ladino_veneno_3"])) == 4)
+    check("não-ladino nunca passa de 1",
+          r._capacidade_poison_melee(make_player("w","W","warrior",0)) == 1)
+
     S.VENENOS.setdefault("veneno_fraco", {"nome":"Fraco"})
     S.VENENOS.setdefault("veneno_forte", {"nome":"Forte"})
+    def _luccas_armado(esp):
+        p = rogue(esp=esp); p["sede"] = 50
+        arma = {"id": "dagger"}
+        p["gear"] = dict(p.get("gear") or {}); p["gear"]["weapon"] = arma
+        p["weapon"] = arma
+        # 2 frascos de fraco (handle_veneno_rapido consome o frasco a cada uso;
+        # o teste de reaplicar precisa de um 2º fraco na bolsa) + 1 de forte.
+        p["bag"] = [{"id":"fa","veneno_id":"veneno_fraco"},
+                    {"id":"fb","veneno_id":"veneno_forte"},
+                    {"id":"fc","veneno_id":"veneno_fraco"}]
+        return p
+
+    # base: 1 marcador; reaplicar substitui
+    r = setup(); l = _luccas_armado([]); r.players["l"] = l
     await r.handle_veneno_rapido("l", {"veneno_id": "veneno_fraco"})
-    check("1º veneno preenche slot 1", luccas["weapon_poison"] == "veneno_fraco")
-    check("slot 1 dura 2 golpes (veneno_2)", luccas["weapon_poison_hits"] == 2)
+    check("base: 1 carga", r._weapon_poison_slots(l) == ["veneno_fraco"])
     await r.handle_veneno_rapido("l", {"veneno_id": "veneno_forte"})
-    check("2º veneno preenche slot 2 (não apaga o 1º)",
-          luccas["weapon_poison"] == "veneno_fraco" and luccas.get("weapon_poison_2") == "veneno_forte")
+    check("base: outro veneno substitui", r._weapon_poison_slots(l) == ["veneno_forte"])
+
+    # veneno_2: mesmo veneno dura 2 golpes; outro veneno substitui (1 distinto só)
+    r = setup(); l = _luccas_armado(["ladino_veneno_2"]); r.players["l"] = l
+    await r.handle_veneno_rapido("l", {"veneno_id": "veneno_fraco"})
+    check("veneno_2: 2 cargas do mesmo", r._weapon_poison_slots(l) == ["veneno_fraco","veneno_fraco"])
+    await r.handle_veneno_rapido("l", {"veneno_id": "veneno_forte"})
+    check("veneno_2 sem veneno_3: outro veneno substitui",
+          r._weapon_poison_slots(l) == ["veneno_forte","veneno_forte"])
+
+    # veneno_3: 2 venenos distintos ao mesmo tempo (1 carga cada, FIFO)
+    r = setup(); l = _luccas_armado(["ladino_veneno_3"]); r.players["l"] = l
+    await r.handle_veneno_rapido("l", {"veneno_id": "veneno_fraco"})
+    await r.handle_veneno_rapido("l", {"veneno_id": "veneno_forte"})
+    check("veneno_3: mantém 2 venenos distintos (antigo primeiro)",
+          r._weapon_poison_slots(l) == ["veneno_fraco","veneno_forte"])
+
+    # veneno_2 + veneno_3: 2 venenos × 2 cargas; o antigo é gasto primeiro
+    r = setup(); l = _luccas_armado(["ladino_veneno_2","ladino_veneno_3"]); r.players["l"] = l
+    await r.handle_veneno_rapido("l", {"veneno_id": "veneno_fraco"})
+    check("veneno_2+3: 1º veneno com 2 cargas",
+          r._weapon_poison_slots(l) == ["veneno_fraco","veneno_fraco"])
+    await r.handle_veneno_rapido("l", {"veneno_id": "veneno_forte"})
+    check("veneno_2+3: 2 venenos × 2 cargas (antigo primeiro)",
+          r._weapon_poison_slots(l) == ["veneno_fraco","veneno_fraco","veneno_forte","veneno_forte"])
+    # reaplicar o fraco recarrega e o move pro fim (máx 2 distintos preservado)
+    await r.handle_veneno_rapido("l", {"veneno_id": "veneno_fraco"})
+    check("veneno_2+3: reaplicar recarrega, mantém 2 distintos",
+          r._weapon_poison_slots(l) == ["veneno_forte","veneno_forte","veneno_fraco","veneno_fraco"])
 
     # [8] Esconder nas Sombras
     print("\n[8] Esconder nas Sombras")

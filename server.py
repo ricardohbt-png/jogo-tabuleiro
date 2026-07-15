@@ -7347,7 +7347,7 @@ class GameRoom:
             p.pop("weapon_poison_2_hits", None)
             self._set_weapon_poison_slots(p, slots)
         active_weapon_id = (gear_weapon or weapon).get("id", "")
-        capacity = VENENO_CARGAS if active_weapon_id in RANGED_AMMO else 1
+        capacity = VENENO_CARGAS if active_weapon_id in RANGED_AMMO else self._capacidade_poison_melee(p)
         valid_slots = [veneno_id for veneno_id in slots if veneno_id in VENENOS][:capacity]
         if valid_slots != slots:
             self._set_weapon_poison_slots(p, valid_slots)
@@ -7358,7 +7358,7 @@ class GameRoom:
         weapon = p.get("weapon")
         gear_weapon = (p.get("gear") or {}).get("weapon")
         active_weapon_id = (gear_weapon or weapon or {}).get("id", "")
-        capacity = VENENO_CARGAS if active_weapon_id in RANGED_AMMO else 1
+        capacity = VENENO_CARGAS if active_weapon_id in RANGED_AMMO else self._capacidade_poison_melee(p)
         slots = [veneno_id for veneno_id in slots if veneno_id in VENENOS][:capacity]
         if isinstance(gear_weapon, dict):
             gear_weapon["poison_slots"] = list(slots)
@@ -7368,15 +7368,47 @@ class GameRoom:
                 not isinstance(gear_weapon, dict) or weapon.get("id") == gear_weapon.get("id")):
             weapon["poison_slots"] = list(slots)
 
-    def _aplicar_veneno_na_arma(self, p, veneno_id):
-        """Unta a arma equipada, substituindo suas cargas atuais.
+    def _capacidade_poison_melee(self, p):
+        """Cargas máximas de veneno numa arma corpo a corpo. Base: 1 marcador
+        (regra da 'miniatura física'). O Ladino sobe esse teto pelas specs da
+        Guilda: veneno_2 → 2 cargas por veneno (dura 2 golpes); veneno_3 → um 2º
+        veneno DIFERENTE ao mesmo tempo (até 2 distintos). Combinadas: 2×2=4."""
+        if p.get("class_id") != "rogue":
+            return 1
+        cargas = 2 if tem_espec(p, "ladino_veneno_2") else 1
+        distintos = 2 if tem_espec(p, "ladino_veneno_3") else 1
+        return cargas * distintos
 
-        Arcos e bestas recebem três projéteis envenenados; toda arma corpo a
-        corpo tem apenas um marcador, gasto somente quando o golpe acertar.
+    def _aplicar_veneno_na_arma(self, p, veneno_id):
+        """Unta a arma equipada. Arcos/bestas recebem VENENO_CARGAS projéteis
+        (substitui as cargas). Corpo a corpo tem 1 marcador por padrão; as specs
+        do Ladino ampliam: veneno_2 → 2 cargas do mesmo veneno (dura 2 golpes);
+        veneno_3 → soma um 2º veneno DIFERENTE mantendo o anterior (máx. 2
+        distintos, FIFO — o mais antigo é gasto primeiro; reaplicar o mesmo
+        veneno recarrega suas cargas e o move para o fim).
         """
         is_ranged = (p.get("weapon") or {}).get("id", "") in RANGED_AMMO
-        cargas = VENENO_CARGAS if is_ranged else 1
-        self._set_weapon_poison_slots(p, [veneno_id] * cargas)
+        if is_ranged:
+            cargas = VENENO_CARGAS
+            self._set_weapon_poison_slots(p, [veneno_id] * cargas)
+            return is_ranged, cargas
+        cargas = 2 if tem_espec(p, "ladino_veneno_2") else 1
+        if tem_espec(p, "ladino_veneno_3"):
+            # Mantém o veneno anterior distinto e soma o novo no fim. Reaplicar o
+            # mesmo veneno remove suas cargas antigas antes de recarregar. Teto de
+            # 2 venenos distintos: se já há outro distinto, mantém só o mais recente.
+            anteriores = [v for v in self._weapon_poison_slots(p) if v != veneno_id]
+            distintos = []
+            for v in anteriores:
+                if v not in distintos:
+                    distintos.append(v)
+            if distintos:
+                manter = distintos[-1]
+                anteriores = [v for v in anteriores if v == manter]
+            slots = anteriores + [veneno_id] * cargas
+        else:
+            slots = [veneno_id] * cargas
+        self._set_weapon_poison_slots(p, slots)
         return is_ranged, cargas
 
     def _esconder_bonus(self, p):

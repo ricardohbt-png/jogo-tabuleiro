@@ -444,12 +444,16 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > em mais nada. Gate em `handle_criar_armadilha` via `_armadilhas_desbloqueadas`.
 > **Desarme:** `ladino_desarme_2/3` dão +2 no teste (não soma mais no III);
 > `_3` também adiciona um 2º teste que, em sucesso, devolve o `custo_ouro` da
-> armadilha. **Veneno Rápido:** refactor de campo escalar para 2 slots —
-> `ladino_veneno_2` faz o veneno melee durar 2 golpes (era 1); `ladino_veneno_3`
-> permite manter 2 venenos diferentes na arma ao mesmo tempo
-> (`weapon_poison`/`weapon_poison_2`, cada um decrementando independente); só
-> afeta corpo a corpo — à distância e o efeito genérico de item `coat_poison`
-> ficam inalterados. **Esconder nas Sombras:** `ladino_esconder_2/3` dão +2 no
+> armadilha. **Veneno Rápido:** o veneno mora na **arma equipada** como uma lista
+> de cargas `poison_slots` (viaja com a arma ao trocar/desequipar; consumida por
+> `pop(0)` no acerto) — helpers `_weapon_poison_slots`/`_set_weapon_poison_slots`/
+> `_aplicar_veneno_na_arma`. Melee tem **1 marcador por padrão**; o teto sobe pelas
+> specs via `_capacidade_poison_melee`: `ladino_veneno_2` → 2 cargas do mesmo veneno
+> (dura 2 golpes); `ladino_veneno_3` → soma um 2º veneno DIFERENTE mantendo o
+> anterior (máx. 2 distintos, FIFO — o antigo é gasto primeiro; reaplicar o mesmo
+> recarrega e o move ao fim); combinadas: 2 venenos × 2 cargas = 4. À distância
+> (arco/besta) usa `VENENO_CARGAS` projéteis (substitui). O efeito genérico de item
+> `coat_poison` fica inalterado. **Esconder nas Sombras:** `ladino_esconder_2/3` dão +2 no
 > teste; `_3` também faz a ativação **deixar de gastar a ação bônus** e, ao
 > quebrar a invisibilidade (`_quebrar_invisibilidade`), concede +2 de CA por 1
 > rodada via `self.temp_def` (mecanismo já existente que expira sozinho).
