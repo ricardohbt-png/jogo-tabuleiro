@@ -405,6 +405,20 @@ async def main():
     await r3.handle_mestre_implantar_reforco("m1", "goblin", 6, 6)
     check("sem mestre ativo → não implanta", r3.master_reserve.get("goblin") == 1)
 
+    print("\n[19] ND unificado — monster_cr")
+    check("cr explícito é usado", S.monster_cr({"cr": 1.5, "tier": 1}) == 1.5)
+    check("fallback por tier sem cr", S.monster_cr({"tier": 3}) == 2.0)
+    check("sem cr nem tier → trata como tier 1 (0.5)", S.monster_cr({}) == 0.5)
+    check("tier desconhecido → fallback 1.0", S.monster_cr({"tier": 9}) == 1.0)
+    _by = lambda t: next(d for d in S.MONSTER_DEFS if d["type"] == t)
+    check("goblin legado cr 0.25", S.monster_cr(_by("goblin")) == 0.25)
+    check("skeleton legado cr 0.5", S.monster_cr(_by("skeleton")) == 0.5)
+    check("orc legado cr 0.75", S.monster_cr(_by("orc")) == 0.75)
+    check("dark_mage legado cr 0.5", S.monster_cr(_by("dark_mage")) == 0.5)
+    check("troll legado cr 1.5", S.monster_cr(_by("troll")) == 1.5)
+    check("dragon legado cr 5", S.monster_cr(_by("dragon")) == 5.0)
+    check("todos MONSTER_DEFS resolvem cr>0", all(S.monster_cr(d) > 0 for d in S.MONSTER_DEFS))
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

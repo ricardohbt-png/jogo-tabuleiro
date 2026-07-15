@@ -1433,12 +1433,12 @@ CORROSAO_NIVEL_NOME = {1: "danificado", 2: "quebrado", 3: "destruído"}
 MONSTER_DEFS = [
     # ── Placeholders (sistema legado) ─────────────────────────────────────────
     # TODO: Substituir por monstros reais com fichas completas
-    {"type": "goblin",    "name": "Goblin",         "emoji": "👺", "hp": 8,  "ac": 12, "atk_bonus": 2,  "damage": "1d4", "xp": 10,  "gold": 5,   "tier": 1},
-    {"type": "skeleton",  "name": "Esqueleto",      "emoji": "💀", "hp": 10, "ac": 13, "atk_bonus": 3,  "damage": "1d6", "xp": 15,  "gold": 8,   "tier": 1, "undead": True},
-    {"type": "orc",       "name": "Orc",            "emoji": "👹", "hp": 16, "ac": 14, "atk_bonus": 5,  "damage": "1d8", "xp": 25,  "gold": 12,  "tier": 2},
-    {"type": "dark_mage", "name": "Mago das Trevas","emoji": "🧟", "hp": 12, "ac": 12, "atk_bonus": 4,  "damage": "1d6", "xp": 30,  "gold": 20,  "tier": 2},
-    {"type": "troll",     "name": "Troll",          "emoji": "🗿", "hp": 22, "ac": 16, "atk_bonus": 7,  "damage": "1d10","xp": 40,  "gold": 25,  "tier": 3},
-    {"type": "dragon",    "name": "Dragão Ancião",  "emoji": "🐉", "hp": 60, "ac": 20, "atk_bonus": 12, "damage": "2d8", "xp": 200, "gold": 100, "tier": 4, "boss": True},
+    {"type": "goblin",    "name": "Goblin",         "emoji": "👺", "hp": 8,  "ac": 12, "atk_bonus": 2,  "damage": "1d4", "xp": 10,  "gold": 5,   "tier": 1, "cr": 0.25},
+    {"type": "skeleton",  "name": "Esqueleto",      "emoji": "💀", "hp": 10, "ac": 13, "atk_bonus": 3,  "damage": "1d6", "xp": 15,  "gold": 8,   "tier": 1, "cr": 0.5, "undead": True},
+    {"type": "orc",       "name": "Orc",            "emoji": "👹", "hp": 16, "ac": 14, "atk_bonus": 5,  "damage": "1d8", "xp": 25,  "gold": 12,  "tier": 2, "cr": 0.75},
+    {"type": "dark_mage", "name": "Mago das Trevas","emoji": "🧟", "hp": 12, "ac": 12, "atk_bonus": 4,  "damage": "1d6", "xp": 30,  "gold": 20,  "tier": 2, "cr": 0.5},
+    {"type": "troll",     "name": "Troll",          "emoji": "🗿", "hp": 22, "ac": 16, "atk_bonus": 7,  "damage": "1d10","xp": 40,  "gold": 25,  "tier": 3, "cr": 1.5},
+    {"type": "dragon",    "name": "Dragão Ancião",  "emoji": "🐉", "hp": 60, "ac": 20, "atk_bonus": 12, "damage": "2d8", "xp": 200, "gold": 100, "tier": 4, "cr": 5.0, "boss": True},
     # ── Monstros com ficha completa ───────────────────────────────────────────
     # Campo "porte": categoria de tamanho VISUAL da miniatura (guia a escala do
     # sprite no cliente — distinto de "size", que é o footprint no grid).
@@ -4227,6 +4227,19 @@ def make_player(pid, name, cls_id, slot):
         player["gear"]["off_hand"] = criar_instrumento("alaude", "velho")
 
     return player
+
+_CR_POR_TIER = {1: 0.5, 2: 1.0, 3: 2.0, 4: 5.0}
+
+def monster_cr(mdef):
+    """Nível de Desafio (cr) unificado do monstro. Usa o cr explícito quando
+    presente; senão cai para um valor derivado do tier. Fonte única da verdade."""
+    cr = mdef.get("cr")
+    if cr is not None:
+        try:
+            return float(cr)
+        except (TypeError, ValueError):
+            pass
+    return _CR_POR_TIER.get(mdef.get("tier", 1), 1.0)
 
 def make_monster(mdef, room):
     m = deepcopy(mdef)
