@@ -356,6 +356,22 @@ async def main():
     r._carregar_master_reserve({})
     check("sem campo → reserva vazia", r.master_reserve == {})
 
+    print("\n[17] Reforços — validar_dungeon")
+    base = {"schema_version": 1, "grid": {"w": 8, "h": 8},
+            "tiles": [[1]*8 for _ in range(8)],
+            "entrance": {"x": 1, "y": 1},
+            "rooms": [{"id": "r1", "role": "entrance"}]}
+    def _com_reinf(rf):
+        d = dict(base); d["master_reinforcements"] = rf; return d
+    ok, _ = S.validar_dungeon(_com_reinf([{"type": "goblin", "count": 2}]))
+    check("reforço válido aceito", ok is True)
+    ok, msg = S.validar_dungeon(_com_reinf([{"type": "naoexiste", "count": 1}]))
+    check("tipo inexistente rejeitado", ok is False and "desconhecido" in msg.lower())
+    ok, msg = S.validar_dungeon(_com_reinf([{"type": "goblin", "count": 0}]))
+    check("count < 1 rejeitado", ok is False)
+    ok, _ = S.validar_dungeon(_com_reinf("naoelista"))
+    check("não-lista rejeitada", ok is False)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

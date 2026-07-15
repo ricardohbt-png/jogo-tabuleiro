@@ -2953,6 +2953,19 @@ def validar_dungeon(defn):
             if not os.path.isfile(os.path.join(OBJETOS_DIR, img)):
                 return False, f"image inexistente em assets/objetos: {img!r}."
 
+    reinf = defn.get("master_reinforcements", [])
+    if not isinstance(reinf, list):
+        return False, "master_reinforcements deve ser uma lista."
+    _valid_monster_types = {d["type"] for d in MONSTER_DEFS}
+    for entry in reinf:
+        if not isinstance(entry, dict):
+            return False, "cada reforço deve ser um objeto JSON."
+        if entry.get("type") not in _valid_monster_types:
+            return False, f"reforço com tipo de monstro desconhecido: {entry.get('type')!r}."
+        c = entry.get("count")
+        if not isinstance(c, int) or isinstance(c, bool) or c < 1:
+            return False, f"reforço com count inválido: {c!r} (inteiro ≥ 1)."
+
     # Passagens autoradas: a mecânica permanece uma parede até ser ativada;
     # a ilusória continua WALL no mapa, mas o movimento de heróis a atravessa.
     passages = defn.get("secret_passages", [])
