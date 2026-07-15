@@ -2816,6 +2816,12 @@ def validar_dungeon(defn):
             return False, f"armadilha em casa inválida: {tr.get('pos')}."
         if tr["tipo"] == "fosso_envenenado" and tr.get("veneno_id") not in VENENOS:
             return False, f"fosso_envenenado exige veneno_id válido: {tr.get('veneno_id')!r}."
+        if tr["tipo"] == "armadilha_dardos_envenenados" and tr.get("veneno_id") not in VENENOS:
+            return False, f"armadilha_dardos_envenenados exige veneno_id válido: {tr.get('veneno_id')!r}."
+        if tr["tipo"] == "armadilha_teletransporte":
+            destino = tr.get("saida")
+            if not in_grid(destino) or tile_at(destino) == WALL:
+                return False, "armadilha_teletransporte exige uma saída em quadrado de chão."
         if tr.get("image") is not None and not isinstance(tr.get("image"), str):
             return False, "trap.image deve ser uma string (nome do arquivo em assets/objetos)."
 
@@ -2913,6 +2919,9 @@ def validar_dungeon(defn):
                 return False, "fonte com charges inválido."
         if de.get("key_objective") is not None and not isinstance(de.get("key_objective"), bool):
             return False, "key_objective da decoração deve ser booleano."
+        arm_monstro = de.get("chest_trap_monster_type")
+        if arm_monstro is not None and arm_monstro not in {m["type"] for m in MONSTER_DEFS}:
+            return False, f"baú-armadilha com monstro desconhecido: {arm_monstro!r}."
         img = de.get("image")
         if img is not None:
             if not isinstance(img, str) or os.path.basename(img) != img \
@@ -3017,6 +3026,10 @@ def make_authored_trap(tdef):
     }
     if tipo == "fosso_envenenado":
         arm["veneno_id"] = tdef.get("veneno_id")
+    if tipo == "armadilha_dardos_envenenados":
+        arm["veneno_id"] = tdef.get("veneno_id")
+    if tipo == "armadilha_teletransporte":
+        arm["saida"] = list(tdef.get("saida") or [])
     if tdef.get("image"):
         arm["image"] = tdef["image"]   # PNG opcional (assets/objetos) — só some quando revelada
     return arm
@@ -3271,6 +3284,16 @@ ARMADILHAS = {
         "efeitos": [{"tipo": "reduzir_con", "valor": "1d6", "duracao": 3, "area": True}],
         "descricao": "-1d6 CON por 3 rodadas em área. Recalcula HP.",
         "formula_guild_id": "ladino_nuvem_gas", "formula_preco": 250,
+    },
+    "armadilha_teletransporte": {
+        "nome": "Armadilha de Teletransporte", "icone": "🌀", "dificuldade": 12, "save": "vontade",
+        "persiste": False, "special": "teletransporte",
+        "descricao": "Vontade CD 12 ou é teleportado para a saída configurada.",
+    },
+    "armadilha_dardos_envenenados": {
+        "nome": "Armadilha de Dardos Envenenados", "icone": "🎯", "dificuldade": 0, "save": "fortitude",
+        "persiste": False, "special": "dardos_envenenados", "precisa_veneno": True,
+        "descricao": "Sofre 1d4 perfurante e testa Fortitude contra o veneno escolhido.",
     },
 }
 
@@ -6095,6 +6118,8 @@ class GameRoom:
                 "loot": None,
                 "tem_loot": False,
                 "key_objective": bool(d.get("key_objective", False)),
+                "chest_trap_monster_type": d.get("chest_trap_monster_type"),
+                "chest_trap_triggered": False,
                 "image": (d.get("image") if isinstance(d.get("image"), str) else meta.get("image")),
             }
             loot = d.get("loot")
@@ -12836,6 +12861,18 @@ class GameRoom:
         alvo_nome = alvo.get("name") or alvo.get("nome", "Alvo")
         await self.gm_say(f"⚠️ **{alvo_nome}** ativou **{nome}**!")
 
+        # Armadilhas autoradas com comportamento próprio (a seleção de saída e
+        # veneno fica gravada no JSON da masmorra, não no catálogo global).
+        if tipo.get("special") == "teletransporte":
+            consumiu = await self._disparar_teletransporte(alvo, arm, tipo)
+            if consumiu:
+                self.armadilhas = [a for a in self.armadilhas if a["id"] != arm["id"]]
+            return
+        if tipo.get("special") == "dardos_envenenados":
+            await self._disparar_dardos_envenenados(alvo, arm, tipo)
+            self.armadilhas = [a for a in self.armadilhas if a["id"] != arm["id"]]
+            return
+
         if tipo.get("area"):
             await self._aplicar_armadilha_area(arm, tipo)
         else:
@@ -12873,6 +12910,61 @@ class GameRoom:
             arm["esgotada"] = True   # já disparou; mantém só p/ dano residual (incendiária)
         else:
             self.armadilhas = [a for a in self.armadilhas if a["id"] != arm["id"]]
+
+    def _saida_teletransporte_livre(self, alvo, saida):
+        """Saída exata primeiro; se ocupada, procura adjacentes por proximidade."""
+        if not isinstance(saida, list) or len(saida) != 2:
+            return None
+        sx, sy = saida
+        candidatos = [[sx, sy]]
+        adj = [[sx + dx, sy + dy] for dx in (-1, 0, 1) for dy in (-1, 0, 1)
+               if dx or dy]
+        adj.sort(key=lambda p: (max(abs(p[0] - sx), abs(p[1] - sy)), abs(p[0] - sx) + abs(p[1] - sy), p[1], p[0]))
+        candidatos.extend(adj)
+        for x, y in candidatos:
+            if self._blocks_tile(x, y):
+                continue
+            if self._entity_blocks(x, y, exclude_pid=alvo.get("id")):
+                continue
+            return [x, y]
+        return None
+
+    async def _disparar_teletransporte(self, alvo, arm, tipo):
+        """Retorna True se teleportou (logo a armadilha foi consumida)."""
+        nome = tipo["nome"]
+        save_ok, d20, sb, stot = self._testar_save(alvo, "vontade", 12)
+        await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
+                              "label": f"{alvo.get('name', 'Alvo')} — vontade"})
+        if save_ok:
+            await self.gm_say(f"✅ **{alvo.get('name', 'Alvo')}** resistiu ao teletransporte!")
+            await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=True, dano=0, metade=False,
+                                            descricao=tipo["descricao"], efeitos_extra=[])
+            return False  # sucesso mantém a armadilha ativa
+        destino = self._saida_teletransporte_livre(alvo, arm.get("saida"))
+        if destino is None:
+            await self.gm_say(f"✅ O teletransporte de **{alvo.get('name', 'Alvo')}** falha: saída bloqueada.")
+            await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=True, dano=0, metade=False,
+                                            descricao="A saída está bloqueada; o portal não consegue se abrir.", efeitos_extra=[])
+            return False
+        origem = list(alvo["pos"])
+        alvo["pos"] = destino
+        if self._eh_jogador(alvo):
+            self._reveal_around(destino[0], destino[1], radius=self._get_raio_visao(alvo))
+        await self.gm_say(f"🌀 **{alvo.get('name', 'Alvo')}** desaparece de {origem} e surge em {destino}!")
+        await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=False, dano=0, metade=False,
+                                        descricao=tipo["descricao"], efeitos_extra=[f"🌀 Teleportado para {destino[0]},{destino[1]}"])
+        return True
+
+    async def _disparar_dardos_envenenados(self, alvo, arm, tipo):
+        dano = self._rolar_dado("1d4")
+        await self._dano_em_alvo(alvo, dano, "fisico", arm.get("criador"))
+        veneno_id = arm.get("veneno_id")
+        veneno_nome = VENENOS.get(veneno_id, {}).get("nome", "Veneno")
+        if (alvo.get("alive") or alvo.get("hp", 0) > 0) and veneno_id in VENENOS:
+            await self._aplicar_veneno(alvo, veneno_id, fonte="armadilha de dardos")
+        await self._enviar_trap_result(
+            alvo, tipo["nome"], tipo["icone"], sucesso=False, dano=dano, metade=False,
+            descricao=tipo["descricao"], efeitos_extra=[f"💥 Sofreu {dano} de dano perfurante", f"☠️ Veneno: {veneno_nome}"])
 
     async def _aplicar_armadilha_area(self, arm, tipo):
         """Armadilhas de área (mina/gás): cada alvo no raio testa o próprio save."""
@@ -14432,6 +14524,11 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Objeto não encontrado."}); return
         if not self._adjacente_a_decor(p["pos"], d):
             await self.send_to(pid, {"type": "error", "msg": "Muito longe do objeto!"}); return
+        if d.get("chest_trap_monster_type") and not d.get("chest_trap_triggered"):
+            # O primeiro clique sempre revela/dispara a armadilha. O conteúdo,
+            # se existir, só pode ser aberto em um clique posterior.
+            await self._disparar_bau_armadilha(pid, p, d)
+            return
         linked = [sp for sp in self.secret_passages if not sp["opened"]
                   and d["id"] in sp["key_decor_ids"]]
         # A ativação é uma escolha explícita para evitar abrir a passagem ao
@@ -14461,6 +14558,46 @@ class GameRoom:
             return
         # container (loot) → tratado na Task A7
         await self._abrir_decor_loot(pid, d)
+
+    async def _disparar_bau_armadilha(self, pid, p, d):
+        """Revela um monstro adjacente e resolve Reflexos CD 12 antes do loot."""
+        tipo_monstro = d.get("chest_trap_monster_type")
+        mdef = next((m for m in MONSTER_DEFS if m["type"] == tipo_monstro), None)
+        if not mdef:
+            await self.send_to(pid, {"type": "error", "msg": "Monstro do baú-armadilha inválido."})
+            return
+        px, py = p["pos"]
+        sala = player_room(self.rooms, px, py) or (self.rooms[0] if self.rooms else {"id": None, "cx": px, "cy": py})
+        monstro = make_monster(mdef, sala)
+        candidatos = [[px + dx, py + dy] for dx in (-1, 0, 1) for dy in (-1, 0, 1) if dx or dy]
+        candidatos.sort(key=lambda q: (abs(q[0] - px) + abs(q[1] - py), q[1], q[0]))
+        # A checagem usa o footprint completo: uma criatura grande só pode
+        # surgir se TODAS as casas que ocupa forem livres e acessíveis.
+        destino = next((q for q in candidatos if self._monster_can_occupy(monstro, q[0], q[1])), None)
+        if destino is None:
+            await self.send_to(pid, {"type": "error", "msg": "Não há espaço livre ao lado para a armadilha disparar."})
+            return
+        d["chest_trap_triggered"] = True
+        monstro["pos"] = destino
+        monstro["room_id"] = sala.get("id")
+        self.monsters[monstro["id"]] = monstro
+        save_ok, d20, sb, stot = self._testar_save(p, "reflexos", 12)
+        await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
+                              "label": f"{p['name']} — reflexos"})
+        extras = [f"👹 {monstro['name']} salta do objeto em {destino[0]},{destino[1]}!"]
+        await self.gm_say(f"📦 **{p['name']}** ativa um **Baú-Armadilha**: **{monstro['name']}** surge!")
+        if not save_ok:
+            extras.append("⚔️ Falhou nos Reflexos: o monstro ataca imediatamente!")
+            await self._enviar_trap_result(p, "Baú-Armadilha", "📦", sucesso=False, dano=0, metade=False,
+                                            descricao="Reflexos CD 12. A criatura salta do objeto.", efeitos_extra=extras)
+            ataques = monstro.get("attacks") or []
+            if ataques:
+                await self._execute_one_monster_attack(monstro, ataques[0], {"kind": "player", "obj": p})
+        else:
+            extras.append("✅ Reflexos bem-sucedidos: ele só agirá na próxima rodada.")
+            await self._enviar_trap_result(p, "Baú-Armadilha", "📦", sucesso=True, dano=0, metade=False,
+                                            descricao="Reflexos CD 12. A criatura salta do objeto.", efeitos_extra=extras)
+        await self.push_state()
 
     async def handle_activate_decor_mechanism(self, pid, decor_id):
         p = self.players.get(pid)
@@ -14547,6 +14684,7 @@ class GameRoom:
                 "facing": d.get("facing", [0, 1]),
                 "tiles": self._decor_tiles(d),
                 "tem_loot": bool(d.get("tem_loot")),
+                "chest_trap": bool(d.get("chest_trap_monster_type") and not d.get("chest_trap_triggered")),
                 "key_objective": bool(d.get("key_objective")),
                 "charges": d.get("charges"),
                 "alto": meta["alto"], "pisavel": meta["pisavel"],

@@ -30,7 +30,7 @@ def build_catalog():
     for tipo, meta in server.ARMADILHAS.items():
         traps.append({
             "tipo": tipo, "nome": meta["nome"], "icone": meta.get("icone", ""),
-            "precisa_veneno": tipo == "fosso_envenenado" or bool(meta.get("custo_veneno")),
+            "precisa_veneno": bool(meta.get("precisa_veneno") or meta.get("custo_veneno")),
         })
     venoms = [{"id": vid, "name": meta["nome"]} for vid, meta in server.VENENOS.items()]
     decorations = []

@@ -447,6 +447,13 @@
         if (e) ctx.fillText(e, x * CELL + CELL / 2, y * CELL + CELL / 2);
       }
     }
+    // Saídas das armadilhas de teletransporte: visíveis apenas no editor para
+    // facilitar conferir o ponto configurado antes de salvar a masmorra.
+    ctx.fillStyle = "#78d9ff"; ctx.font = "bold 15px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    for (const t of S.traps) {
+      if (t.tipo !== "armadilha_teletransporte" || !Array.isArray(t.saida)) continue;
+      ctx.fillText("⇱", t.saida[0] * CELL + CELL / 2, t.saida[1] * CELL + CELL / 2);
+    }
     ctx.textAlign = "start";
     // Emojis de decorações com escala visual: desenhados à parte, ancorados na
     // base-centro do footprint e crescendo para cima.
@@ -850,6 +857,7 @@
       panel.innerHTML = `<b>⚠️ Armadilha</b>
         <label>tipo</label><select id="p-tt">${opt(CAT.traps.map(t => ({ v: t.tipo, name: t.nome })), ref.tipo, o => o.v + " — " + o.name)}</select>
         ${meta.precisa_veneno ? `<label>veneno</label><select id="p-ven">${opt(CAT.venoms.map(v => ({ v: v.id, name: v.name })), ref.veneno_id || "", o => o.v + " — " + o.name)}</select>` : ""}
+        ${ref.tipo === "armadilha_teletransporte" ? `<label>ponto de saída (x, y)</label><div style="display:flex;gap:4px"><input id="p-out-x" type="number" min="0" max="${S.grid.w - 1}" value="${ref.saida ? ref.saida[0] : ref.pos[0]}"><input id="p-out-y" type="number" min="0" max="${S.grid.h - 1}" value="${ref.saida ? ref.saida[1] : ref.pos[1]}"></div><small style="color:#8a7a5a">Casa de chão; se ocupada no jogo, usa a adjacente livre mais próxima.</small>` : ""}
         <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
           <b>Imagem</b>
           <div style="font-size:11px;color:#8a7a5a">PNG de assets/objetos — visível no jogo só quando a armadilha for revelada.</div>
@@ -862,8 +870,13 @@
             <span id="t-img-st" style="font-size:11px;color:#8a7a5a"></span>
           </div>
         </div>`;
-      document.getElementById("p-tt").onchange = e => { ref.tipo = e.target.value; if (!CAT.traps.find(t => t.tipo === ref.tipo).precisa_veneno) delete ref.veneno_id; renderPanel(); render(); };
+      document.getElementById("p-tt").onchange = e => { ref.tipo = e.target.value; if (!CAT.traps.find(t => t.tipo === ref.tipo).precisa_veneno) delete ref.veneno_id; if (ref.tipo !== "armadilha_teletransporte") delete ref.saida; renderPanel(); render(); };
       if (meta.precisa_veneno) document.getElementById("p-ven").onchange = e => { ref.veneno_id = e.target.value; };
+      if (ref.tipo === "armadilha_teletransporte") {
+        const setSaida = () => { ref.saida = [Number(document.getElementById("p-out-x").value) | 0, Number(document.getElementById("p-out-y").value) | 0]; render(); };
+        document.getElementById("p-out-x").onchange = setSaida;
+        document.getElementById("p-out-y").onchange = setSaida;
+      }
       // Seletor de imagem (espelha o das decorações — pasta assets/objetos via OBJETO_UPLOAD).
       const tImgSel = document.getElementById("t-img-sel");
       const tImgSt = document.getElementById("t-img-st");
@@ -963,6 +976,8 @@
         <div id="d-duplicate-msg" style="font-size:11px;min-height:14px;color:#d8a0a0"></div>
         ${m.special === "fountain" ? `<label>cargas <input id="d-charges" type="number" min="0" value="${ref.charges ?? 0}"></label>` : ""}
         ${m.loot_capaz ? `<label style="display:block;margin-top:8px"><input type="checkbox" id="d-haslook" ${hasLoot ? "checked" : ""}> contém loot</label>` : ""}
+        <label style="display:block;margin-top:8px"><input type="checkbox" id="d-chest-trap" ${ref.chest_trap_monster_type ? "checked" : ""}> baú-armadilha</label>
+        ${ref.chest_trap_monster_type ? `<label>monstro que surge</label><select id="d-chest-monster">${opt(CAT.monsters.map(x => ({v:x.type,name:x.name})), ref.chest_trap_monster_type, o => o.v + " — " + o.name)}</select><small style="color:#8a7a5a">No primeiro clique, Reflexos CD 12; o loot só abre no próximo clique.</small>` : ""}
         <label style="display:block;margin-top:8px"><input type="checkbox" id="d-key" ${ref.key_objective ? "checked" : ""}> objeto-chave <small>(conclui “Abrir o baú-chave” ao interagir)</small></label>
         <div id="d-loot" style="${hasLoot ? "" : "display:none"}">
           <label>ouro <input id="d-gold" type="number" min="0" value="${hasLoot ? (ref.loot.gold | 0) : 0}"></label>
@@ -1001,6 +1016,8 @@
       };
       if (m.special === "fountain") document.getElementById("d-charges").onchange = e => { ref.charges = Math.max(0, Number(e.target.value) | 0); };
       document.getElementById("d-key").onchange = e => { ref.key_objective = e.target.checked; };
+      document.getElementById("d-chest-trap").onchange = e => { if (e.target.checked) ref.chest_trap_monster_type = (CAT.monsters[0] || {}).type; else delete ref.chest_trap_monster_type; renderPanel(); };
+      if (ref.chest_trap_monster_type) document.getElementById("d-chest-monster").onchange = e => { ref.chest_trap_monster_type = e.target.value; };
       if (m.loot_capaz) document.getElementById("d-haslook").onchange = e => {
         ref.loot = e.target.checked ? { gold: 0, items: [] } : null; renderPanel();
       };
@@ -1168,11 +1185,12 @@
       exit: S.exit ? { x: S.exit.x, y: S.exit.y } : null,
       monsters: S.monsters.map(m => ({ type: m.type, pos: m.pos.slice(), room_id: m.room_id, boss: !!m.boss, target: !!m.target })),
       chests: S.chests.map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: c.items.map(i => ({ id: i.id })), key_objective: !!c.key_objective })),
-      traps: S.traps.map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; if (t.image) o.image = t.image; return o; }),
+      traps: S.traps.map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; if (t.saida) o.saida = t.saida.slice(); if (t.image) o.image = t.image; return o; }),
       decorations: S.decorations.map(d => {
         const o = { id: d.id, type: d.type, pos: d.pos.slice(), facing: d.facing.slice() };
         o.loot = d.loot ? { gold: d.loot.gold | 0, items: d.loot.items.map(i => ({ id: i.id })) } : null;
         o.key_objective = !!d.key_objective;
+        if (d.chest_trap_monster_type) o.chest_trap_monster_type = d.chest_trap_monster_type;
         const m = decorMeta(d.type);
         if (m && m.special === "fountain") o.charges = d.charges | 0;
         if (d.image) o.image = d.image;
@@ -1232,7 +1250,8 @@
     for (const t of S.traps) {
       if (!traps.has(t.tipo)) e.push(`armadilha tipo inválido: ${t.tipo}`);
       if (isWall(t.pos)) e.push(`armadilha em parede: ${t.pos}`);
-      if (t.tipo === "fosso_envenenado" && !venoms.has(t.veneno_id)) e.push("fosso_envenenado sem veneno válido");
+      if ((t.tipo === "fosso_envenenado" || t.tipo === "armadilha_dardos_envenenados") && !venoms.has(t.veneno_id)) e.push(`${t.tipo} sem veneno válido`);
+      if (t.tipo === "armadilha_teletransporte" && isWall(t.saida)) e.push("armadilha de teletransporte sem saída em chão");
     }
     if (S.prisoner && isWall(S.prisoner.pos)) e.push("prisioneiro em parede");
     for (const r of S.rooms) for (const d of r.doors) if (S.tiles[d[1]]?.[d[0]] !== DOOR) e.push(`porta declarada não é tile DOOR: ${d}`);
@@ -1261,6 +1280,7 @@
         decOcc.add(key);
       }
       if (d.loot) for (const it of d.loot.items) if (!items.has(it.id)) e.push(`item de loot inválido: ${it.id}`);
+      if (d.chest_trap_monster_type && !types.has(d.chest_trap_monster_type)) e.push("baú-armadilha com monstro inválido");
     }
     const decorIds = new Set(S.decorations.map(d => d.id));
     const passageIds = new Set();
@@ -1303,12 +1323,13 @@
     S.prisoner = obj.prisoner || null;
     S.monsters = (obj.monsters || []).map(m => ({ type: m.type, pos: m.pos.slice(), room_id: m.room_id ?? null, boss: !!m.boss, target: !!m.target }));
     S.chests = (obj.chests || []).map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: (c.items || []).map(i => ({ id: i.id })), key_objective: !!c.key_objective }));
-    S.traps = (obj.traps || []).map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; if (t.image) o.image = t.image; return o; });
+    S.traps = (obj.traps || []).map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; if (t.saida) o.saida = t.saida.slice(); if (t.image) o.image = t.image; return o; });
     S.decorations = (obj.decorations || []).map((d, i) => ({
       id: d.id || ("decor_" + i),
       type: d.type, pos: d.pos.slice(), facing: (d.facing || [0, 1]).slice(),
       loot: d.loot ? { gold: d.loot.gold | 0, items: (d.loot.items || []).map(i => ({ id: i.id })) } : null,
       key_objective: !!d.key_objective,
+      ...(d.chest_trap_monster_type ? { chest_trap_monster_type: d.chest_trap_monster_type } : {}),
       ...(d.charges !== undefined ? { charges: d.charges | 0 } : {}),
       // Decorações catalogadas de parede sempre recuperam sua arte padrão,
       // inclusive em arquivos antigos que ainda não guardavam `image`.

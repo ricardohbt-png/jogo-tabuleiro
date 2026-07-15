@@ -5136,6 +5136,18 @@ window.EDITOR_CATALOG = {
       "nome": "Nuvem de Gás",
       "icone": "🌫️",
       "precisa_veneno": false
+    },
+    {
+      "tipo": "armadilha_teletransporte",
+      "nome": "Armadilha de Teletransporte",
+      "icone": "🌀",
+      "precisa_veneno": false
+    },
+    {
+      "tipo": "armadilha_dardos_envenenados",
+      "nome": "Armadilha de Dardos Envenenados",
+      "icone": "🎯",
+      "precisa_veneno": true
     }
   ],
   "venoms": [

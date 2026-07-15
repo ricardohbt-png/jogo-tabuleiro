@@ -11153,6 +11153,9 @@ function _showTrapResult(msg){
     'Rede': 'armadilha_rede.png',
     'Armadilha Incendiária': 'armadilha_incendiaria.png',
     'Mina Terrestre': 'armadilha_explosiva.png',
+    'Armadilha de Teletransporte': 'armadilha_teletransporte.png',
+    'Armadilha de Dardos Envenenados': 'armadilha_dardo.png',
+    'Baú-Armadilha': 'bau_armadilha.png',
     'Nuvem de Gás': 'armadilha_gas.png',
   };
   const trapIcon = $('trap-icon');
@@ -20794,7 +20797,7 @@ function on3DClick(e){
     const decsHere3D = GS.decorations.filter(d =>
       GS.decorTilesOf(d).some(t => t[0] === tx && t[1] === ty));
     if(decsHere3D.length){
-      const inter3D = decsHere3D.find(d => d.tem_loot || d.key_objective || d.special === 'fountain');
+      const inter3D = decsHere3D.find(d => d.tem_loot || d.chest_trap || d.key_objective || d.special === 'fountain');
       if(inter3D){ GS.interagirDecor(inter3D.id); return; }
       if(decsHere3D.some(d => !d.pisavel)) return;   // objeto sólido bloqueia o caminho
       // só decoração(ões) pisável(is) → segue para o movimento
@@ -20959,7 +20962,7 @@ function handleTileClick(tx, ty){
     const decsHere = GS.decorations.filter(d =>
       GS.decorTilesOf(d).some(t => t[0] === tx && t[1] === ty));
     if(decsHere.length){
-      const inter = decsHere.find(d => d.tem_loot || d.key_objective || d.special === 'fountain');
+      const inter = decsHere.find(d => d.tem_loot || d.chest_trap || d.key_objective || d.special === 'fountain');
       if(inter){ GS.interagirDecor(inter.id); return; }
       if(decsHere.some(d => !d.pisavel)) return;   // objeto sólido bloqueia o caminho
       // só decoração(ões) pisável(is) → segue para o movimento
