@@ -1687,6 +1687,35 @@ window.EDITOR_DUNGEONS = [
             1.3,
             1.9
           ]
+        },
+        {
+          "type": "chao",
+          "pos": [
+            12,
+            4
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null
+        },
+        {
+          "type": "chao",
+          "pos": [
+            12,
+            6
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "image": "chãoagua.png",
+          "size": [
+            2,
+            3
+          ]
         }
       ],
       "prisoner": null,
@@ -1785,10 +1814,10 @@ window.EDITOR_DUNGEONS = [
         "11,10": "grama",
         "11,9": "grama",
         "11,8": "grama",
-        "12,8": "grama",
-        "12,7": "grama",
-        "13,7": "terra",
-        "13,6": "terra",
+        "12,8": "agua",
+        "12,7": "agua",
+        "13,7": "agua",
+        "13,6": "agua",
         "13,5": "terra",
         "13,4": "terra",
         "13,3": "terra",
@@ -1806,7 +1835,7 @@ window.EDITOR_DUNGEONS = [
         "14,10": "terra",
         "13,10": "terra",
         "13,9": "terra",
-        "13,8": "terra",
+        "13,8": "agua",
         "12,9": "grama",
         "12,10": "grama",
         "8,9": "grama",
@@ -1832,7 +1861,7 @@ window.EDITOR_DUNGEONS = [
         "12,5": "grama",
         "11,7": "grama",
         "10,6": "grama",
-        "12,6": "grama",
+        "12,6": "agua",
         "5,10": "grama",
         "5,11": "grama",
         "15,3": "grama",
@@ -2549,7 +2578,7 @@ window.EDITOR_DUNGEONS = [
           "w": 7,
           "h": 3,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": []
         }
       ],
@@ -2596,119 +2625,15 @@ window.EDITOR_DUNGEONS = [
             1,
             6
           ],
-          "gold": 50,
+          "gold": 5000,
           "items": [],
           "key_objective": false
         }
       ],
-      "traps": [
-        {
-          "tipo": "buraco",
-          "pos": [
-            1,
-            1
-          ]
-        },
-        {
-          "tipo": "buraco",
-          "pos": [
-            2,
-            1
-          ]
-        },
-        {
-          "tipo": "buraco",
-          "pos": [
-            3,
-            1
-          ]
-        },
-        {
-          "tipo": "buraco",
-          "pos": [
-            3,
-            2
-          ],
-          "image": "chaograma1.png"
-        },
-        {
-          "tipo": "buraco",
-          "pos": [
-            2,
-            2
-          ],
-          "image": "chaograma3.png"
-        },
-        {
-          "tipo": "buraco",
-          "pos": [
-            1,
-            2
-          ],
-          "image": "chaograma2.png"
-        },
-        {
-          "tipo": "buraco",
-          "pos": [
-            1,
-            3
-          ],
-          "image": "chaograma1.png"
-        },
-        {
-          "tipo": "buraco",
-          "pos": [
-            2,
-            3
-          ],
-          "image": "chaograma2.png"
-        },
-        {
-          "tipo": "buraco",
-          "pos": [
-            3,
-            3
-          ],
-          "image": "chaograma1.png"
-        },
-        {
-          "tipo": "buraco",
-          "pos": [
-            2,
-            3
-          ]
-        },
-        {
-          "tipo": "buraco",
-          "pos": [
-            1,
-            3
-          ]
-        },
-        {
-          "tipo": "buraco",
-          "pos": [
-            2,
-            2
-          ]
-        },
-        {
-          "tipo": "buraco",
-          "pos": [
-            1,
-            2
-          ]
-        },
-        {
-          "tipo": "buraco",
-          "pos": [
-            3,
-            2
-          ]
-        }
-      ],
+      "traps": [],
       "decorations": [
         {
+          "id": "decor_0",
           "type": "cama",
           "pos": [
             4,
@@ -2718,9 +2643,11 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false
         },
         {
+          "id": "decor_1",
           "type": "arvore",
           "pos": [
             6,
@@ -2730,50 +2657,122 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false
         },
         {
-          "type": "brasao_leao",
+          "id": "decor_2",
+          "type": "barril",
           "pos": [
-            0,
-            9
+            3,
+            8
           ],
           "facing": [
-            1,
-            0
+            0,
+            1
           ],
           "loot": null,
-          "image": "brasao_leao.png"
-        },
+          "key_objective": true
+        }
+      ],
+      "secret_passages": [
         {
-          "type": "brasao_leao",
+          "id": "passage_1",
+          "type": "mechanism",
           "pos": [
             4,
             9
           ],
-          "facing": [
-            -1,
-            0
+          "key_decor_ids": [
+            "decor_2"
           ],
-          "loot": null,
-          "image": "brasao_leao.png"
+          "keys_mode": "any"
         },
         {
-          "type": "cortina_vermelha",
+          "id": "passage_2",
+          "type": "mechanism",
           "pos": [
-            2,
-            11
+            5,
+            9
           ],
-          "facing": [
-            0,
-            -1
+          "key_decor_ids": [
+            "decor_2"
           ],
-          "loot": null,
-          "image": "cortina_vermelha.png",
-          "vscale": [
-            3,
-            1.5
-          ]
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_3",
+          "type": "mechanism",
+          "pos": [
+            6,
+            9
+          ],
+          "key_decor_ids": [
+            "decor_2"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_4",
+          "type": "mechanism",
+          "pos": [
+            7,
+            9
+          ],
+          "key_decor_ids": [
+            "decor_2"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_5",
+          "type": "illusion",
+          "pos": [
+            4,
+            6
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_6",
+          "type": "illusion",
+          "pos": [
+            5,
+            6
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_7",
+          "type": "illusion",
+          "pos": [
+            6,
+            6
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_8",
+          "type": "illusion",
+          "pos": [
+            7,
+            6
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_9",
+          "type": "illusion",
+          "pos": [
+            8,
+            6
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
         }
       ],
       "prisoner": null,
@@ -5170,6 +5169,105 @@ window.EDITOR_DUNGEONS = [
             }
           ],
           "key_objective": false
+        },
+        {
+          "pos": [
+            5,
+            35
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            2,
+            30
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            2,
+            32
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            2,
+            32
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            12,
+            34
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            12,
+            35
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            12,
+            35
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            14,
+            35
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            14,
+            35
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            15,
+            35
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            15,
+            35
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
         }
       ],
       "traps": [
@@ -5792,6 +5890,21 @@ window.EDITOR_DUNGEONS = [
           ],
           "loot": null,
           "image": "brasao_leao.png"
+        },
+        {
+          "type": "arca_tesouros",
+          "pos": [
+            5,
+            38
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": {
+            "gold": 0,
+            "items": []
+          }
         }
       ],
       "prisoner": {
@@ -9438,4 +9551,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO por tools/export_catalog.py — não editar à mão.
+// GERADO ao salvar no editor (e por tools/export_catalog.py).

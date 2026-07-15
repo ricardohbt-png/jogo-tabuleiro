@@ -1440,6 +1440,35 @@
         1.3,
         1.9
       ]
+    },
+    {
+      "type": "chao",
+      "pos": [
+        12,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null
+    },
+    {
+      "type": "chao",
+      "pos": [
+        12,
+        6
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "image": "chãoagua.png",
+      "size": [
+        2,
+        3
+      ]
     }
   ],
   "prisoner": null,
@@ -1538,10 +1567,10 @@
     "11,10": "grama",
     "11,9": "grama",
     "11,8": "grama",
-    "12,8": "grama",
-    "12,7": "grama",
-    "13,7": "terra",
-    "13,6": "terra",
+    "12,8": "agua",
+    "12,7": "agua",
+    "13,7": "agua",
+    "13,6": "agua",
     "13,5": "terra",
     "13,4": "terra",
     "13,3": "terra",
@@ -1559,7 +1588,7 @@
     "14,10": "terra",
     "13,10": "terra",
     "13,9": "terra",
-    "13,8": "terra",
+    "13,8": "agua",
     "12,9": "grama",
     "12,10": "grama",
     "8,9": "grama",
@@ -1585,7 +1614,7 @@
     "12,5": "grama",
     "11,7": "grama",
     "10,6": "grama",
-    "12,6": "grama",
+    "12,6": "agua",
     "5,10": "grama",
     "5,11": "grama",
     "15,3": "grama",

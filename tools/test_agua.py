@@ -27,6 +27,10 @@ def main():
     check("leve: -2", room._water_turn_moves(actor_with_armor("leather"), 5) == 3)
     check("média: -3", room._water_turn_moves(actor_with_armor("chainmail"), 5) == 2)
     check("pesada: uma casa", room._water_turn_moves(actor_with_armor("plate"), 5) == 1)
+    reset_heavy = actor_with_armor("plate")
+    reset_heavy["_water_heavy_step_used"] = True
+    room._water_turn_moves(reset_heavy, 5)
+    check("rodada nova libera a única casa pesada", not reset_heavy.get("_water_heavy_step_used"))
 
     heavy = actor_with_armor("plate")
     heavy["pos"] = [0, 1]

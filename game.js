@@ -263,6 +263,8 @@ const DECOR_MINI_ESCALA = 2.0;
 // identifica o objeto no mapa, para não trocar outras decorações do tipo tumba.
 const DECOR_GLB_MODELS = {
   'sarcofagocima.png': 'assets/objetos/sarcofago.glb',
+  // A Arca de Tesouros usa o mesmo modelo 3D dos baús de loot.
+  'bau.png': 'assets/objetos/bau.glb',
 };
 const DECOR_GLB_TYPES = {
   arvore: 'assets/objetos/arvore.glb',
@@ -4726,6 +4728,15 @@ function drawDragon(ctx){
 // usava as PNGs. Agora usa as mesmas imagens do 3D. Carrega lazy; enquanto não
 // carrega, drawHeroSprite cai no sprite procedural. Ao carregar, redesenha.
 const _hero2DImg = {};
+let _chamas2DImg;
+function _getChamas2DImg(){
+  if(_chamas2DImg === undefined){
+    _chamas2DImg = new Image();
+    _chamas2DImg.onload = () => { if(!mode3D && window.GS && GS.gameState) renderMap(GS.gameState); };
+    _chamas2DImg.src = _assetURL('assets/armadilhas/em_chamas.png');
+  }
+  return (_chamas2DImg.complete && _chamas2DImg.naturalWidth) ? _chamas2DImg : null;
+}
 function _getHero2DImg(classId){
   if(!classId) return null;
   let img = _hero2DImg[classId];
@@ -4941,8 +4952,13 @@ function _drawStatusIcons2D(ctx, X, Y, entity){
   ctx.textAlign = 'right'; ctx.textBaseline = 'top';
   let x = X + CELL - 1;
   if(entity.em_chamas_rodadas > 0){
-    ctx.globalAlpha = 0.72 + 0.28*Math.abs(Math.sin(performance.now()/170));
-    ctx.fillText('🔥', x, Y + 1); x -= fs * 0.72;
+    const flame = _getChamas2DImg();
+    ctx.globalAlpha = 0.74 + 0.26*Math.abs(Math.sin(performance.now()/170));
+    if(flame){
+      const h = CELL * 0.62, w = h * (flame.naturalWidth / flame.naturalHeight);
+      ctx.drawImage(flame, x - w, Y - h * 0.08, w, h);
+    } else ctx.fillText('🔥', x, Y + 1);
+    x -= fs * 0.72;
   }
   const drops = [
     [entity.acido_residual > 0, '#55df74'],
@@ -5439,6 +5455,21 @@ function renderMap(state){
     ctx.fillText((gi.item&&gi.item.emoji)||'📦',X+CELL/2,Y+CELL/2);
   }
 
+  // Segredos: somente o ladino em Encontrar Armadilhas recebe a marca visual.
+  const _detectSecrets = !!(me && me.class_id === 'rogue' && me.detectar_ativo);
+  const _secretKeyIds = new Set((state.secret_passages || []).filter(sp => !sp.opened && sp.type === 'mechanism')
+    .flatMap(sp => sp.key_decor_ids || []));
+  if (_detectSecrets) for (const sp of (state.secret_passages || [])) {
+    const [sx, sy] = sp.pos;
+    if (!exploredSet.has(`${sx},${sy}`) || sp.opened) continue;
+    ctx.save();
+    ctx.fillStyle = sp.type === 'illusion' ? 'rgba(70,210,255,.30)' : 'rgba(185,90,255,.24)';
+    ctx.strokeStyle = sp.type === 'illusion' ? 'rgba(150,245,255,.9)' : 'rgba(235,170,255,.95)';
+    ctx.fillRect(sx * CELL, sy * CELL, CELL, CELL);
+    ctx.setLineDash([4, 3]); ctx.lineWidth = 2;
+    ctx.strokeRect(sx * CELL + 2, sy * CELL + 2, CELL - 4, CELL - 4);
+    ctx.restore();
+  }
   // ── Decorations (2D overlay — emoji at footprint center + subtle fill)
   {
     const decors = GS.decorations;
@@ -5449,6 +5480,11 @@ function renderMap(state){
       const tiles = GS.decorTilesOf(d);
       // Only draw if at least one tile in the footprint has been explored
       if (!tiles.some(([tx2, ty2]) => exploredSet.has(`${tx2},${ty2}`))) continue;
+      if (_detectSecrets && _secretKeyIds.has(d.id)) {
+        ctx.save(); ctx.strokeStyle = 'rgba(235,170,255,.95)'; ctx.lineWidth = 2; ctx.setLineDash([3, 2]);
+        for (const [tx2, ty2] of tiles) ctx.strokeRect(tx2 * CELL + 2, ty2 * CELL + 2, CELL - 4, CELL - 4);
+        ctx.restore();
+      }
       // Subtle fill on all occupied tiles
       ctx.fillStyle = 'rgba(120,200,160,0.12)';
       for (const [tx2, ty2] of tiles) ctx.fillRect(tx2 * CELL, ty2 * CELL, CELL, CELL);
@@ -5806,7 +5842,7 @@ const MAT_PALETTE_2D = {
   pedra_cinza: { base: [44, 42, 50],  accent: 'stone' },
   terra:       { base: [74, 56, 38],  accent: 'dirt'  },
   grama:       { base: [46, 78, 40],  accent: 'grass' },
-  agua:        { base: [16, 88, 142], accent: 'water' },
+  agua:        { base: [0, 120, 202], accent: 'water' },
   pedra_negra: { base: [20, 19, 24],  accent: 'stone' },
   entulho:     { base: [70, 66, 58],  accent: 'rubble' },
   // paredes (topo)
@@ -5832,13 +5868,18 @@ function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview, matI
 
   // Estilos não-pedra têm painter próprio (sem grade de lajota).
   if(pal.accent==='water'){
-    const wr=_rng((x*113^y*211^19)>>>0);
-    ctx.fillStyle='#105b90'; ctx.fillRect(X,Y,CELL,CELL);
-    for(let i=0;i<4;i++){
-      const yy=Y+4+i*7+(wr()-0.5)*2;
-      ctx.strokeStyle=`rgba(150,225,255,${0.16+wr()*0.16})`;
-      ctx.lineWidth=1.2; ctx.beginPath();
-      ctx.moveTo(X+2,yy); ctx.quadraticCurveTo(X+CELL*0.48,yy-2,X+CELL-2,yy); ctx.stroke();
+    // Sem margem, rejunte ou ruído por casa: a água forma uma única massa.
+    // As ondas usam coordenadas globais, portanto continuam naturalmente de
+    // uma célula para a seguinte em vez de reiniciar em cada quadrado.
+    ctx.fillStyle='#0078c6'; ctx.fillRect(X,Y,CELL,CELL);
+    const firstWave=Math.floor(Y/14)*14;
+    for(let yy=firstWave; yy<Y+CELL; yy+=14){
+      const phase=((yy/14)*17)%19;
+      ctx.strokeStyle='rgba(155,235,255,0.30)'; ctx.lineWidth=1.35; ctx.beginPath();
+      ctx.moveTo(X,yy);
+      ctx.quadraticCurveTo(X+CELL*.25,yy-2.5+(phase%3),X+CELL*.5,yy);
+      ctx.quadraticCurveTo(X+CELL*.75,yy+2.5-(phase%3),X+CELL,yy);
+      ctx.stroke();
     }
   }
   else if(pal.accent==='grass'){ paintGrass(ctx, X, Y, CELL, _rng((x*53^y*97^7)>>>0)); }
@@ -11011,7 +11052,7 @@ function takeFromChest(chestId, kind, index){
 // ── Reusable loot panel — used by both chests and decoration containers ───────
 // { titulo, gold, items, onPegarOuro, onPegarItem(idx) }
 // Reuses the chest overlay DOM; disarms chest auto-refresh and vice-versa.
-function abrirPainelLoot({ titulo, gold, items, onPegarOuro, onPegarItem }) {
+function abrirPainelLoot({ titulo, gold, items, onPegarOuro, onPegarItem, acao }) {
   _openChestId = null;   // disarm chest auto-refresh
   _openDecorLootId = null;
   const titleEl = $('chest-title');
@@ -11024,10 +11065,19 @@ function abrirPainelLoot({ titulo, gold, items, onPegarOuro, onPegarItem }) {
   const hasGold  = gold > 0;
   const hasItems = (items || []).length > 0;
 
-  if (!hasGold && !hasItems) {
+  if (!hasGold && !hasItems && !acao) {
     list.innerHTML = '<div class="chest-empty-msg">O objeto está vazio.</div>';
     $('chest-overlay').classList.add('open');
     return;
+  }
+
+  if (acao) {
+    const row = document.createElement('div');
+    row.className = 'chest-item-row';
+    const btn = document.createElement('button');
+    btn.className = 'chest-take-btn'; btn.textContent = acao.label || 'Ativar mecanismo';
+    btn.onclick = () => { acao.onClick(); closeChestWindow(); };
+    row.appendChild(btn); list.appendChild(row);
   }
 
   if (hasGold) {
@@ -12106,6 +12156,10 @@ function init3D(state){
   }
 
   const floorGeo = new T.BoxGeometry(TW, TH, TW);
+  // Pisos comuns mantêm a fresta de peça de tabuleiro. A água, por outro
+  // lado, encosta exatamente na célula vizinha para parecer uma superfície
+  // contínua, mesmo quando é construída com várias casas do mapa.
+  const waterFloorGeo = new T.BoxGeometry(1, TH, 1);
   const wallGeo  = new T.BoxGeometry(TW, WH, TW);
 
   // Warm brownish ambient — dark but not pitch-black. Areas away from torches
@@ -12306,7 +12360,9 @@ function init3D(state){
         // Cor base por material (default pedra_cinza); jitter por casa preserva o relevo.
         const mid3 = (state.materiais && state.materiais[key]) || 'pedra_cinza';
         const mc = (VC.materiais[mid3] || VC.materiais.pedra_cinza).color;
-        const jit = vf*VC.floor.baseVariance;
+        // A água não recebe jitter por tile: variações independentes fariam
+        // aparecer uma grade onde deveriam existir apenas ondas contínuas.
+        const jit = mid3==='agua' ? 0 : vf*VC.floor.baseVariance;
         mat.color.setRGB(mc[0]+jit, mc[1]+jit, mc[2]+jit);
         const ftex = makeMaterialTex(mid3);
         if(ftex){
@@ -12326,8 +12382,8 @@ function init3D(state){
           // sem transformá-la em obstáculo de navegação.
           mat.roughness = 0.24;
           mat.metalness = 0.12;
-          mat.emissive.set(0x06355e);
-          mat.emissiveIntensity = 0.72;
+          mat.emissive.set(0x0075bd);
+          mat.emissiveIntensity = 0.92;
         }
         // Auto-iluminação: a própria textura emite, deixando a cor forte e
         // diferenciada mesmo na penumbra (grama/terra/pedra negra).
@@ -12336,7 +12392,7 @@ function init3D(state){
           mat.emissive.set(0xffffff);
           mat.emissiveIntensity = (mid3==='pedra_negra') ? 0.35 : 0.6;
         }
-        mesh = new T.Mesh(floorGeo, mat);
+        mesh = new T.Mesh(mid3==='agua' ? waterFloorGeo : floorGeo, mat);
         mesh.position.set(x, TH/2, y);     // bottom edge sits at y = 0
         mesh.receiveShadow = true;
         mesh.userData.isFloor = true;
@@ -12377,6 +12433,10 @@ function init3D(state){
         mesh.receiveShadow = true;
         mesh.userData.isWall = true;
       }
+      // Também identifica paredes no grid: necessário para que uma parede
+      // ilusória possa receber clique e ser tratada como terreno atravessável.
+      mesh.userData.gridX = x;
+      mesh.userData.gridY = y;
       mesh.visible = false;     // revealed progressively as player explores
       scene.add(mesh);
       tileMeshes[key] = mesh;
@@ -13599,6 +13659,40 @@ function buildChest3D(T, chest){
   glow.userData.isChestGlow = true;
   grp.add(glow);
 
+  // O GLB substitui o baú geométrico provisório assim que terminar de carregar.
+  // A montagem antiga fica visível enquanto isso (e como fallback se o arquivo
+  // estiver indisponível), sem alterar a lógica de abrir/coletar tesouros.
+  _loadDecorGLB(T, 'assets/objetos/bau.glb', template => {
+    if (!template || !grp.parent) return;
+    const inst = template.clone();
+    const box = new T.Box3().setFromObject(inst);
+    const size = box.getSize(new T.Vector3());
+    const scale = Math.min(
+      0.72 / Math.max(size.x, 1e-3),
+      0.62 / Math.max(size.z, 1e-3),
+      0.54 / Math.max(size.y, 1e-3)
+    );
+    // Centraliza e encosta a base no topo do tile; o grupo já está em TH.
+    inst.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2
+    );
+    inst.traverse(o => {
+      if (o.isMesh) {
+        o.castShadow = true; o.receiveShadow = true;
+        o.userData.isChestGLB = true;
+      }
+    });
+    const wrap = new T.Group();
+    wrap.userData.isChestGLB = true;
+    wrap.scale.setScalar(scale);
+    wrap.add(inst);
+    // Remove exclusivamente a geometria provisória; o halo dourado permanece.
+    [...grp.children].filter(child => !child.userData.isChestGlow).forEach(child => grp.remove(child));
+    grp.add(wrap);
+  });
+
   return grp;
 }
 
@@ -14370,6 +14464,17 @@ function renderMap3D(state){
       const ent3 = tileMeshes[`entulho:${key}`];
       if(ent3) ent3.visible = mesh.visible;
     }
+  }
+  // Parede ilusória: só o ladino com Encontrar Armadilhas ativo a vê translúcida.
+  const _detectSecrets3D = !!(me && me.class_id === 'rogue' && me.detectar_ativo);
+  const _illusionKeys3D = new Set((state.secret_passages || [])
+    .filter(sp => sp.type === 'illusion' && !sp.opened).map(sp => `${sp.pos[0]},${sp.pos[1]}`));
+  for (const [key, mesh] of Object.entries(tileMeshes)) {
+    if (!mesh.userData?.isWall || !mesh.material) continue;
+    const showIllusion = _detectSecrets3D && _illusionKeys3D.has(key);
+    mesh.material.transparent = showIllusion;
+    mesh.material.opacity = showIllusion ? 0.28 : 1;
+    mesh.material.depthWrite = !showIllusion;
   }
 
   // ── Door leaves: visible only while closed AND the door tile is visível ──────
@@ -15611,17 +15716,19 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
   return grp;
 }
 
-// Sprite 🔥 (emoji em canvas) que flutua sobre um peão/monstro em chamas.
+// A arte de chamas é a mesma PNG da armadilha, sobreposta ao peão afetado.
 function _makeChamasSprite3D(){
   const T = g3.T;
-  const cv = document.createElement('canvas'); cv.width = cv.height = 64;
-  const c = cv.getContext('2d');
-  c.font = '48px serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.fillText('🔥', 32, 36);
-  const tex = new T.CanvasTexture(cv);
-  tex._owned = true;   // textura exclusiva deste sprite (descartada com ele; r128)
+  const key = '__status_em_chamas';
+  let tex = _pawnTexCache[key];
+  if(!tex){
+    tex = new T.TextureLoader().load(_assetURL('assets/armadilhas/em_chamas.png'));
+    _pawnTexCache[key] = tex;
+  }
   const sp = new T.Sprite(new T.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
-  sp.scale.set(0.5, 0.5, 1);
+  const image = tex.image;
+  const h = 0.72, w = image && image.width ? h * (image.width / image.height) : h;
+  sp.scale.set(w, h, 1);
   sp.position.set(0, _BB_H_ALVO * 0.85, 0);   // acima da cabeça (deriva da altura-alvo do peão)
   sp.userData.isChamasSprite = true;
   return sp;
@@ -20599,8 +20706,11 @@ function get3DTile(e){
   const mx   = ((e.clientX - rect.left) / rect.width)  *  2 - 1;
   const my   = ((e.clientY - rect.top)  / rect.height) * -2 + 1;
   raycaster.setFromCamera(new T.Vector2(mx, my), camera);
-  const floors = Object.values(tileMeshes).filter(m => m.visible && m.userData.isFloor);
-  const hits   = raycaster.intersectObjects(floors);
+  const illusionKeys = new Set(((GS.gameState && GS.gameState.secret_passages) || [])
+    .filter(p => p.type === 'illusion').map(p => `${p.pos[0]},${p.pos[1]}`));
+  const clickableTiles = Object.values(tileMeshes).filter(m => m.visible &&
+    (m.userData.isFloor || (m.userData.isWall && illusionKeys.has(`${m.userData.gridX},${m.userData.gridY}`))));
+  const hits   = raycaster.intersectObjects(clickableTiles);
   if(!hits.length) return null;
   const obj = hits[0].object;
   return [obj.userData.gridX, obj.userData.gridY];
@@ -20691,7 +20801,7 @@ function on3DClick(e){
     const decsHere3D = GS.decorations.filter(d =>
       GS.decorTilesOf(d).some(t => t[0] === tx && t[1] === ty));
     if(decsHere3D.length){
-      const inter3D = decsHere3D.find(d => d.tem_loot || d.special === 'fountain');
+      const inter3D = decsHere3D.find(d => d.tem_loot || d.key_objective || d.special === 'fountain');
       if(inter3D){ GS.interagirDecor(inter3D.id); return; }
       if(decsHere3D.some(d => !d.pisavel)) return;   // objeto sólido bloqueia o caminho
       // só decoração(ões) pisável(is) → segue para o movimento
@@ -20856,7 +20966,7 @@ function handleTileClick(tx, ty){
     const decsHere = GS.decorations.filter(d =>
       GS.decorTilesOf(d).some(t => t[0] === tx && t[1] === ty));
     if(decsHere.length){
-      const inter = decsHere.find(d => d.tem_loot || d.special === 'fountain');
+      const inter = decsHere.find(d => d.tem_loot || d.key_objective || d.special === 'fountain');
       if(inter){ GS.interagirDecor(inter.id); return; }
       if(decsHere.some(d => !d.pisavel)) return;   // objeto sólido bloqueia o caminho
       // só decoração(ões) pisável(is) → segue para o movimento
@@ -21205,6 +21315,13 @@ GS.on('decor_loot', msg => {
     onPegarItem: (i) => GS.takeFromDecor(msg.decor_id, 'item', i),
   });
   _openDecorLootId = msg.decor_id;   // set AFTER abrirPainelLoot (which resets it)
+});
+
+GS.on('decor_mechanism', msg => {
+  abrirPainelLoot({
+    titulo: '⚙ Objeto-chave', gold: 0, items: [],
+    acao: { label: '⚙ Ativar mecanismo', onClick: () => GS.activateDecorMechanism(msg.decor_id) },
+  });
 });
 
 // ── Overlay de seleção das 2 magias iniciais (criação, Pedro/Lewis) ───────────

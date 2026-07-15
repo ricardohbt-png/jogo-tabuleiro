@@ -844,7 +844,8 @@ const GS = (() => {
 
   function _walkable(tiles, x, y, openDoors, occupied) {
     const t = tiles[y]?.[x];
-    const onFloor = t === TILE_FLOOR || (t === TILE_DOOR && openDoors.has(`${x},${y}`));
+    const illusion = (gameState?.secret_passages || []).some(p => p.type === 'illusion' && p.pos[0] === x && p.pos[1] === y);
+    const onFloor = t === TILE_FLOOR || (t === TILE_DOOR && openDoors.has(`${x},${y}`)) || illusion;
     if (!onFloor) return false;
     if (_matSolido(x, y)) return false;   // entulho: intransponível como parede
     if (_decorSolida(x, y)) return false; // objeto sólido: contorna pelo menor caminho
@@ -1205,6 +1206,10 @@ const GS = (() => {
         _emit('decor_loot', msg);
         break;
 
+      case 'decor_mechanism':
+        _emit('decor_mechanism', msg);
+        break;
+
       case 'error':
         _emit('serverError', msg.msg);
         break;
@@ -1538,6 +1543,7 @@ const GS = (() => {
   // Senders: interação com decoração (fonte/loot) e retirada de item de decoração.
   function interagirDecor(decorId) { send({ type: 'interagir_decor', decor_id: decorId }); }
   function takeFromDecor(decorId, kind, index) { send({ type: 'take_from_decor', decor_id: decorId, kind, index }); }
+  function activateDecorMechanism(decorId) { send({ type: 'activate_decor_mechanism', decor_id: decorId }); }
 
   // ── Fase 3 (editor de masmorras): objetivos / saída / prisioneiro ─────────────
   // Getters dos campos servidos no game_state (null no procedural).
@@ -2066,6 +2072,9 @@ const GS = (() => {
     reorderBag,
     equipOffhand,
     dropItem,
+    interagirDecor,
+    takeFromDecor,
+    activateDecorMechanism,
     pickupItem,
     groundItemPickable,
     canPlaceItem,
@@ -2159,6 +2168,7 @@ const GS = (() => {
     decorTilesOf,
     interagirDecor,
     takeFromDecor,
+    activateDecorMechanism,
 
     // ── Resolvers (no DOM — return data; renderer executes UI work) ──
     resolveAttack,

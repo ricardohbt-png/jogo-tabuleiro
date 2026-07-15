@@ -2373,6 +2373,105 @@
         }
       ],
       "key_objective": false
+    },
+    {
+      "pos": [
+        5,
+        35
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        2,
+        30
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        2,
+        32
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        2,
+        32
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        12,
+        34
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        12,
+        35
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        12,
+        35
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        14,
+        35
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        14,
+        35
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        15,
+        35
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        15,
+        35
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
     }
   ],
   "traps": [
@@ -2995,6 +3094,21 @@
       ],
       "loot": null,
       "image": "brasao_leao.png"
+    },
+    {
+      "type": "arca_tesouros",
+      "pos": [
+        5,
+        38
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": {
+        "gold": 0,
+        "items": []
+      }
     }
   ],
   "prisoner": {

@@ -15,9 +15,11 @@ import math
 import mimetypes
 import os
 import random
+import re
 import string
 import sys
 import time
+import unicodedata
 import urllib.parse
 from copy import deepcopy
 from websockets.http11 import Response
@@ -2910,6 +2912,8 @@ def validar_dungeon(defn):
             ch = de.get("charges", 0)
             if isinstance(ch, bool) or not isinstance(ch, int) or ch < 0:
                 return False, "fonte com charges inválido."
+        if de.get("key_objective") is not None and not isinstance(de.get("key_objective"), bool):
+            return False, "key_objective da decoração deve ser booleano."
         img = de.get("image")
         if img is not None:
             if not isinstance(img, str) or os.path.basename(img) != img \
@@ -2917,6 +2921,40 @@ def validar_dungeon(defn):
                 return False, f"decoração com image inválida: {img!r}."
             if not os.path.isfile(os.path.join(OBJETOS_DIR, img)):
                 return False, f"image inexistente em assets/objetos: {img!r}."
+
+    # Passagens autoradas: a mecânica permanece uma parede até ser ativada;
+    # a ilusória continua WALL no mapa, mas o movimento de heróis a atravessa.
+    passages = defn.get("secret_passages", [])
+    if not isinstance(passages, list):
+        return False, "secret_passages deve ser uma lista."
+    decor_ids = set()
+    for i, de in enumerate(decors):
+        did = de.get("id", f"dec_{i}")
+        if not isinstance(did, str) or not did or did in decor_ids:
+            return False, "ids de decorações devem ser strings únicas."
+        decor_ids.add(did)
+    seen_passages = set()
+    for sp in passages:
+        if not isinstance(sp, dict):
+            return False, "cada passagem secreta deve ser um objeto JSON."
+        sid = sp.get("id")
+        if not isinstance(sid, str) or not sid or sid in seen_passages:
+            return False, "ids de passagens secretas devem ser strings únicas."
+        seen_passages.add(sid)
+        if sp.get("type") not in ("mechanism", "illusion"):
+            return False, "passagem secreta deve ter type mechanism ou illusion."
+        pos = sp.get("pos")
+        if not in_grid(pos) or tile_at(pos) != WALL:
+            return False, "passagem secreta precisa ser colocada em uma parede."
+        keys = sp.get("key_decor_ids", [])
+        if not isinstance(keys, list) or any(not isinstance(k, str) or k not in decor_ids for k in keys):
+            return False, "passagem secreta referencia uma decoração-chave inválida."
+        if len(set(keys)) != len(keys):
+            return False, "uma decoração-chave foi repetida na passagem secreta."
+        if sp.get("type") == "mechanism" and not keys:
+            return False, "passagem mecânica exige ao menos uma decoração-chave."
+        if sp.get("keys_mode", "any") not in ("any", "all"):
+            return False, "keys_mode deve ser any ou all."
 
     mats = defn.get("materiais")
     if mats is not None:
@@ -4473,6 +4511,7 @@ class GameRoom:
         self.ground_items = {}  # gid -> {"id","item","pos":[x,y]} — itens largados no chão (persistem como chests)
         self.shop_scrolls = []  # pergaminhos à venda no mercador (renovados por visita à cidade)
         self.decorations = []
+        self.secret_passages = []
         self._decor_block_tiles = set()
         self._decor_tall_tiles = set()
         self._campfire_tiles = set()
@@ -6011,12 +6050,13 @@ class GameRoom:
             if not meta:
                 continue
             dec = {
-                "id": f"dec_{len(self.decorations)}",
+                "id": d.get("id") or f"dec_{len(self.decorations)}",
                 "type": d["type"],
                 "pos": [d["pos"][0], d["pos"][1]],
                 "facing": list(d.get("facing") or [0, 1]),
                 "loot": None,
                 "tem_loot": False,
+                "key_objective": bool(d.get("key_objective", False)),
                 "image": (d.get("image") if isinstance(d.get("image"), str) else meta.get("image")),
             }
             loot = d.get("loot")
@@ -6037,6 +6077,16 @@ class GameRoom:
                 dec["vscale"] = [max(0.2, min(4.0, float(vs[0]))), max(0.2, min(4.0, float(vs[1])))]
             self.decorations.append(dec)
         self._rebuild_decor_index()
+
+        self.secret_passages = []
+        for sp in defn.get("secret_passages", []):
+            self.secret_passages.append({
+                "id": sp["id"], "type": sp["type"],
+                "pos": [sp["pos"][0], sp["pos"][1]],
+                "key_decor_ids": list(sp.get("key_decor_ids") or []),
+                "keys_mode": sp.get("keys_mode", "any"),
+                "activated_decor_ids": [], "opened": False,
+            })
 
         # Stairs = ponto de entrada.
         ent = defn["entrance"]
@@ -6591,6 +6641,13 @@ class GameRoom:
             return True
         return (x, y) in self._decor_block_tiles or (x, y) in self._mat_solid_tiles
 
+    def _secret_passage_at(self, x, y):
+        return next((sp for sp in self.secret_passages if sp["pos"] == [x, y]), None)
+
+    def _is_illusion_wall(self, x, y):
+        sp = self._secret_passage_at(x, y)
+        return bool(sp and sp["type"] == "illusion")
+
     def _tile_in_locked_room(self, x, y):
         for r in self.rooms:
             if r.get("locked") and room_contains(r, x, y):
@@ -6661,6 +6718,10 @@ class GameRoom:
         if p.get("dormindo"):
             await self.send_to(pid, {"type": "error", "msg": "🌙 Você está dormindo e não pode se mover!"})
             return
+        if (self._is_water_tile(p["pos"][0], p["pos"][1])
+                and self._water_penalty(p) is None and p.get("_water_heavy_step_used")):
+            await self.send_to(pid, {"type": "error", "msg": "A armadura pesada permite apenas uma casa por rodada dentro da água."})
+            return
         if p["moves_left"] <= 0:
             await self.send_to(pid, {"type": "error", "msg": "Sem movimentos restantes."})
             return
@@ -6668,7 +6729,7 @@ class GameRoom:
         nx, ny = p["pos"][0] + dx, p["pos"][1] + dy
         if not (0 <= nx < self.map_w and 0 <= ny < self.map_h):
             return
-        if self.tiles[ny][nx] == WALL:
+        if self.tiles[ny][nx] == WALL and not self._is_illusion_wall(nx, ny):
             await self.send_to(pid, {"type": "error", "msg": "Caminho bloqueado."})
             return
         if self._is_closed_door(nx, ny):
@@ -6700,10 +6761,13 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Um servo animado ocupa este espaço."})
             return
 
+        was_water = self._is_water_tile(p["pos"][0], p["pos"][1])
         p["pos"] = [nx, ny]
         p["facing"] = [dx, dy]
         self._apply_water_entry_penalty(p, nx, ny)
         p["moves_left"] -= 1
+        if self._water_penalty(p) is None and (was_water or self._is_water_tile(nx, ny)):
+            p["_water_heavy_step_used"] = True
         # Caminhar custa -1 sede UMA vez por turno (na 1ª casa andada), não por casa.
         if not p.get("moved_this_turn"):
             p["moved_this_turn"] = True
@@ -12344,6 +12408,7 @@ class GameRoom:
         """Orçamento inicial do turno em água. Marca a penalidade para ela não
         ser cobrada de novo ao continuar na mesma água."""
         criatura.pop("_water_penalty_applied", None)
+        criatura.pop("_water_heavy_step_used", None)
         pos = criatura.get("pos") or [-1, -1]
         if not self._is_water_tile(pos[0], pos[1]):
             return max(0, base_moves)
@@ -14272,6 +14337,20 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Objeto não encontrado."}); return
         if not self._adjacente_a_decor(p["pos"], d):
             await self.send_to(pid, {"type": "error", "msg": "Muito longe do objeto!"}); return
+        linked = [sp for sp in self.secret_passages if not sp["opened"]
+                  and d["id"] in sp["key_decor_ids"]]
+        # A ativação é uma escolha explícita para evitar abrir a passagem ao
+        # apenas inspecionar um altar, estátua ou outro objeto-chave.
+        if linked:
+            await self.send_to(pid, {"type": "decor_mechanism", "decor_id": d["id"],
+                                     "linked_count": len(linked)})
+            return
+        # Mantém o objetivo narrativo legado para uma decoração-chave que não
+        # esteja ligada a nenhuma passagem.
+        if d.get("key_objective") and not self.key_chest_opened:
+            self.key_chest_opened = True
+            await self.gm_say(f"🔑 **{p['name']}** encontrou o objeto-chave!")
+            await self.push_state()
         meta = DECOR_TYPES[d["type"]]
         if meta["special"] == "fountain":
             if d.get("charges", 0) <= 0:
@@ -14283,8 +14362,38 @@ class GameRoom:
             await self.gm_say(f"💧 **{p['name']}** encheu uma **Garrafa de Água** na fonte ({d['charges']} restantes).")
             await self.push_state()
             return
+        if d.get("key_objective") and not d.get("tem_loot"):
+            return
         # container (loot) → tratado na Task A7
         await self._abrir_decor_loot(pid, d)
+
+    async def handle_activate_decor_mechanism(self, pid, decor_id):
+        p = self.players.get(pid)
+        d = self._decor_by_id(decor_id)
+        if not p or not p.get("alive") or not d or not self._adjacente_a_decor(p["pos"], d):
+            await self.send_to(pid, {"type": "error", "msg": "Não é possível ativar este mecanismo."}); return
+        linked = [sp for sp in self.secret_passages if not sp["opened"] and d["id"] in sp["key_decor_ids"]]
+        if not d.get("key_objective") and not linked:
+            await self.send_to(pid, {"type": "error", "msg": "Este objeto não possui mecanismo."}); return
+        opened = []
+        for sp in linked:
+            if d["id"] not in sp["activated_decor_ids"]:
+                sp["activated_decor_ids"].append(d["id"])
+            keys = sp["key_decor_ids"]
+            ready = sp["keys_mode"] == "any" or all(k in sp["activated_decor_ids"] for k in keys)
+            if ready:
+                sp["opened"] = True
+                x, y = sp["pos"]
+                self.tiles[y][x] = FLOOR
+                opened.append(sp)
+        if d.get("key_objective") and not self.key_chest_opened:
+            self.key_chest_opened = True
+            await self.gm_say(f"🔑 **{p['name']}** ativou o objeto-chave!")
+        for sp in opened:
+            await self.gm_say(f"🧱 Uma passagem secreta se abriu em {sp['pos'][0]},{sp['pos'][1]}!")
+        if linked and not opened:
+            await self.gm_say(f"⚙️ **{p['name']}** ativou um mecanismo; outras chaves ainda são necessárias.")
+        await self.push_state()
 
     async def _abrir_decor_loot(self, pid, d):
         """Abre o painel de loot da decoração (reusa o painel de baú no cliente)."""
@@ -14343,6 +14452,7 @@ class GameRoom:
                 "facing": d.get("facing", [0, 1]),
                 "tiles": self._decor_tiles(d),
                 "tem_loot": bool(d.get("tem_loot")),
+                "key_objective": bool(d.get("key_objective")),
                 "charges": d.get("charges"),
                 "alto": meta["alto"], "pisavel": meta["pisavel"],
                 "special": meta["special"], "emoji": meta["emoji"],
@@ -14351,6 +14461,11 @@ class GameRoom:
                 "image": d.get("image"),
             })
         return out
+
+    def _serializar_passagens_secretas(self):
+        return [{"id": sp["id"], "type": sp["type"], "pos": sp["pos"],
+                 "key_decor_ids": sp["key_decor_ids"], "keys_mode": sp["keys_mode"],
+                 "opened": sp["opened"]} for sp in self.secret_passages]
 
     def _serializar_materiais(self):
         """Camada de materiais como {"x,y": id} para o cliente."""
@@ -17270,6 +17385,7 @@ class GameRoom:
             "chests": list(self.chests.values()),
             "ground_items": list(self.ground_items.values()),
             "decorations": self._serializar_decoracoes(),
+            "secret_passages": self._serializar_passagens_secretas(),
             "materiais": self._serializar_materiais(),
         })
 
@@ -17351,6 +17467,17 @@ async def handler(ws):
                                "upload_id": msg.get("upload_id"), "ok": ok}
                     if ok:
                         payload["monster"] = res
+                    else:
+                        payload["error"] = res
+                    await ws.send(json.dumps(payload))
+                    continue
+
+                if t == "upload_monster_art":
+                    ok, res = _save_monster_art(msg.get("kind"), msg.get("name"), msg.get("data"))
+                    payload = {"type": "upload_result", "kind": "monster_art",
+                               "upload_id": msg.get("upload_id"), "ok": ok}
+                    if ok:
+                        payload["key"] = res
                     else:
                         payload["error"] = res
                     await ws.send(json.dumps(payload))
@@ -17670,6 +17797,9 @@ async def handler(ws):
 
                 elif t == "interagir_decor":
                     if room: await room.handle_interagir_decor(pid, msg.get("decor_id"))
+
+                elif t == "activate_decor_mechanism":
+                    if room: await room.handle_activate_decor_mechanism(pid, msg.get("decor_id"))
 
                 elif t == "take_from_decor":
                     if room: await room.handle_take_from_decor(
@@ -18020,6 +18150,7 @@ def _validate_custom_monster(raw):
         "loot_table": loot_table, "gold": _monster_int(raw.get("gold", 0), 0, 0, 9999),
         "xp": _monster_int(raw.get("xp", 0), 0, 0, 99999),
         "ai_type": ai_type, "image": str(raw.get("image") or typ)[:80],
+        "portrait": str(raw.get("portrait") or typ)[:80],
         "size": [size_w, size_h], "oriented": oriented, "porte": str(raw.get("porte") or "medio"),
         "spawn_min": 0, "spawn_max": 0, "undead": bool(raw.get("undead")), "boss": bool(raw.get("boss")),
     }
@@ -18136,6 +18267,46 @@ def _save_prisoner_upload(name, data_b64):
     except OSError:
         return False, "falha ao gravar"
     return True, base
+
+# Arte escolhida no editor de criaturas. A miniatura e o retrato recebem
+# destinos distintos porque o jogo 3D/2D usa o primeiro, enquanto o Bestiário
+# usa o segundo. Ambos são PNG para manter os caminhos previsíveis.
+MONSTER_PAWNS_DIR = os.path.join(BASE_DIR, "assets", "pawns", "monstros")
+MONSTER_PORTRAITS_DIR = os.path.join(BASE_DIR, "assets", "retratos", "monstros")
+
+def _monster_art_key(name):
+    stem = os.path.splitext(os.path.basename(name or ""))[0]
+    stem = unicodedata.normalize("NFD", stem).encode("ascii", "ignore").decode("ascii")
+    stem = re.sub(r"[^a-zA-Z0-9_-]+", "_", stem).strip("_-").lower()
+    return stem[:64]
+
+def _save_monster_art(kind, name, data_b64):
+    """Salva PNG selecionado no editor e retorna sua chave de referência."""
+    if kind not in {"miniature", "portrait"}:
+        return False, "tipo de arte inválido"
+    if os.path.splitext(os.path.basename(name or ""))[1].lower() != ".png":
+        return False, "envie um arquivo .png"
+    key = _monster_art_key(name)
+    if not key or not isinstance(data_b64, str) or not data_b64:
+        return False, "arquivo inválido"
+    if (len(data_b64) * 3) // 4 > STORY_UPLOAD_MAX:
+        return False, "arquivo grande demais"
+    try:
+        raw = base64.b64decode(data_b64, validate=True)
+    except Exception:
+        return False, "dados inválidos"
+    # Assinatura PNG: evita armazenar um arquivo arbitrário sob a extensão .png.
+    if len(raw) > STORY_UPLOAD_MAX or not raw.startswith(b"\x89PNG\r\n\x1a\n"):
+        return False, "envie uma imagem PNG válida"
+    dest = (os.path.join(MONSTER_PAWNS_DIR, key, key + ".png")
+            if kind == "miniature" else os.path.join(MONSTER_PORTRAITS_DIR, key + ".png"))
+    try:
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        with open(dest, "wb") as f:
+            f.write(raw)
+    except OSError:
+        return False, "falha ao gravar"
+    return True, key
 
 OBJETOS_DIR = os.path.join(BASE_DIR, "assets", "objetos")
 _OBJETOS_DIR = OBJETOS_DIR

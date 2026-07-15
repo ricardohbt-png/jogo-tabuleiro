@@ -128,6 +128,15 @@
       .then((m) => m.monster);
   }
 
+  async function uploadMonsterArt(file, kind) {
+    if (extOf(file.name) !== ".png")
+      throw new Error("envie um arquivo .png");
+    if (file.size > MAX) throw new Error("arquivo grande demais");
+    const data = await toBase64(file);
+    const m = await request("upload_monster_art", { kind: kind, name: file.name, data: data });
+    return m.key;
+  }
+
   async function uploadObjeto(file) {
     if (extOf(file.name) !== ".png")
       throw new Error("envie um arquivo .png");
@@ -156,6 +165,6 @@
 
   window.STORY_UPLOAD = { upload: upload };
   window.PRISONER_UPLOAD = { upload: uploadPrisoner };
-  window.EDITOR_SAVE = { saveDungeon: saveDungeon, saveCampaign: saveCampaign, saveCustomMonster: saveCustomMonster };
+  window.EDITOR_SAVE = { saveDungeon: saveDungeon, saveCampaign: saveCampaign, saveCustomMonster: saveCustomMonster, uploadMonsterArt: uploadMonsterArt };
   window.OBJETO_UPLOAD = { upload: uploadObjeto, list: listObjetos };
 })();

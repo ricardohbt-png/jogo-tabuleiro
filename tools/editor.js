@@ -15,7 +15,7 @@
     tiles: [],
     rooms: [], nextRoomId: 0,
     entrance: null, exit: null, prisoner: null,
-    monsters: [], chests: [], traps: [], decorations: [],
+    monsters: [], chests: [], traps: [], decorations: [], secretPassages: [], nextDecorId: 0, nextPassageId: 0,
     objectives: { primary: { type: "kill_all" }, secondary: [] },
     tool: "wall", sel: null,
     decorType: (CAT.decorations[0] || {}).type || "cama",
@@ -205,8 +205,9 @@
     const facing = wallPlacement ? wallPlacement.facing : S.decorFacing.slice();
     if (!wallPlacement && m && m.special === "wall") return;
     if (!decorFits(S.decorType, pos[0], pos[1], facing)) return;
-    const d = { type: S.decorType, pos, facing,
-                loot: (m && m.loot_capaz && S.decorType === "arca_tesouros") ? { gold: 0, items: [] } : null };
+    const d = { id: "decor_" + S.nextDecorId++, type: S.decorType, pos, facing,
+                loot: (m && m.loot_capaz && S.decorType === "arca_tesouros") ? { gold: 0, items: [] } : null,
+                key_objective: false };
     if (m && m.special === "fountain") d.charges = 3;
     if (m && m.special === "floor") d.image = "chaograma1.png";   // grama por padrão (trocável no picker)
     if (m && m.image) d.image = m.image;
@@ -224,6 +225,7 @@
   function pasteDecorAt(x, y) {
     if (!decorClipboard) return false;
     const d = cloneDecor(decorClipboard);
+    d.id = "decor_" + S.nextDecorId++;
     d.facing = Array.isArray(d.facing) ? d.facing.slice() : [0, 1];
     if (isWallDecor(d)) {
       const placement = wallPlacementAt(x, y, d.facing);
@@ -246,6 +248,7 @@
     const offsets = [[ew, 0], [-ew, 0], [0, eh], [0, -eh], [ew, eh], [ew, -eh], [-ew, eh], [-ew, -eh]];
     for (const [dx, dy] of offsets) {
       const d = cloneDecor(source);
+      d.id = "decor_" + S.nextDecorId++;
       d.pos = [source.pos[0] + dx, source.pos[1] + dy];
       d.facing = Array.isArray(d.facing) ? d.facing.slice() : [0, 1];
       if (!decorWouldFit(d, d.pos, decorBaseSize(d), d.facing)) continue;
@@ -373,6 +376,14 @@
       ctx.strokeRect(r.x * CELL + 1, r.y * CELL + 1, r.w * CELL - 2, r.h * CELL - 2);
       ctx.fillStyle = "#9fb8d8"; ctx.font = "10px sans-serif"; ctx.textBaseline = "top";
       ctx.fillText((r.locked ? "🔒" : "") + r.role + "#" + r.id, r.x * CELL + 3, r.y * CELL + 3);
+    }
+    // Passagens ficam deliberadamente explícitas no editor (nunca no jogo normal).
+    for (const sp of S.secretPassages) {
+      const [sx, sy] = sp.pos;
+      ctx.fillStyle = sp.type === "illusion" ? "rgba(80,210,255,.42)" : "rgba(185,100,255,.42)";
+      ctx.fillRect(sx * CELL + 2, sy * CELL + 2, CELL - 4, CELL - 4);
+      ctx.fillStyle = "#fff"; ctx.font = "15px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(sp.type === "illusion" ? "◌" : "⚙", sx * CELL + CELL / 2, sy * CELL + CELL / 2);
     }
     for (const d of S.decorations) {
       ctx.strokeStyle = "#6ad0a0"; ctx.lineWidth = 1;
@@ -520,6 +531,8 @@
     { id: "trap", label: "armadilha", group: "entidades" },
     { id: "prisoner", label: "prisioneiro", group: "entidades" },
     { id: "decor", label: "decoração", group: "entidades" },
+    { id: "secret_mechanism", label: "passagem secreta", group: "entidades" },
+    { id: "illusion_wall", label: "parede ilusória", group: "entidades" },
     { id: "room", label: "sala", group: "ações" },
     { id: "select", label: "selecionar", group: "ações" },
     { id: "erase", label: "apagar", group: "ações" },
@@ -684,6 +697,8 @@
     if (S.entrance && S.entrance.x === x && S.entrance.y === y) return { kind: "entrance", pos: [x, y] };
     if (S.exit && S.exit.x === x && S.exit.y === y) return { kind: "exit", pos: [x, y] };
     if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) return { kind: "prisoner", ref: S.prisoner, pos: [x, y] };
+    const secret = S.secretPassages.find(p => p.pos[0] === x && p.pos[1] === y);
+    if (secret) return { kind: "secret_passage", ref: secret, pos: [x, y] };
     const find = (arr, kind) => { const r = arr.find(e => e.pos[0] === x && e.pos[1] === y); return r ? { kind, ref: r, pos: [x, y] } : null; };
     // Empilhamento: seleciona o objeto de CIMA (não-piso) antes do chão.
     const _decsHere = S.decorations.filter(d => decorTiles(d).some(c => c[0] === x && c[1] === y));
@@ -707,6 +722,14 @@
       case "chest": S.chests.push({ pos: [x, y], gold: 0, items: [], key_objective: false }); break;
       case "trap": S.traps.push({ tipo: (CAT.traps[0] || {}).tipo || "fosso_estacas", pos: [x, y] }); break;
       case "decor": placeDecor(x, y); break;
+      case "secret_mechanism":
+        if (S.tiles[y][x] === WALL && !S.secretPassages.some(p => p.pos[0] === x && p.pos[1] === y))
+          S.secretPassages.push({ id: "passage_" + S.nextPassageId++, pos: [x, y], type: "mechanism", key_decor_ids: [], keys_mode: "any" });
+        break;
+      case "illusion_wall":
+        if (S.tiles[y][x] === WALL && !S.secretPassages.some(p => p.pos[0] === x && p.pos[1] === y))
+          S.secretPassages.push({ id: "passage_" + S.nextPassageId++, pos: [x, y], type: "illusion", key_decor_ids: [], keys_mode: "any" });
+        break;
     }
   }
 
@@ -719,6 +742,7 @@
     S.chests = S.chests.filter(e => !(e.pos[0] === x && e.pos[1] === y));
     S.traps = S.traps.filter(e => !(e.pos[0] === x && e.pos[1] === y));
     S.decorations = S.decorations.filter(d => !decorTiles(d).some(c => c[0] === x && c[1] === y));
+    S.secretPassages = S.secretPassages.filter(p => !(p.pos[0] === x && p.pos[1] === y));
     delete S.materiais[x + "," + y];
     S.tiles[y][x] = WALL;
   }
@@ -914,6 +938,17 @@
           st.textContent = "falha: " + err.message;
         }
       };
+    } else if (k === "secret_passage") {
+      const keys = S.decorations.filter(d => d.key_objective);
+      panel.innerHTML = `<b>${ref.type === "illusion" ? "Parede ilusória" : "Passagem secreta"}</b>
+        <div style="font-size:11px;color:#8a7a5a;margin:6px 0">${ref.type === "illusion" ? "Atravessável desde o início; somente o ladino a identifica durante Encontrar Armadilhas." : "Abre permanentemente quando suas decorações-chave forem ativadas."}</div>
+        ${ref.type === "mechanism" ? `<label>ativação</label><select id="sp-mode"><option value="any"${ref.keys_mode === "any" ? " selected" : ""}>qualquer chave</option><option value="all"${ref.keys_mode === "all" ? " selected" : ""}>todas as chaves</option></select><label>decorações-chave</label><div id="sp-keys">${keys.length ? keys.map(d => `<label style="display:block"><input type="checkbox" value="${d.id}"${ref.key_decor_ids.includes(d.id) ? " checked" : ""}> ${decorMeta(d.type)?.nome || d.type} (${d.pos[0]},${d.pos[1]})</label>`).join("") : '<small>Marque uma decoração como objeto-chave primeiro.</small>'}</div>` : ""}`;
+      if (ref.type === "mechanism") {
+        document.getElementById("sp-mode").onchange = e => { ref.keys_mode = e.target.value; };
+        panel.querySelectorAll("#sp-keys input").forEach(el => el.onchange = () => {
+          ref.key_decor_ids = [...panel.querySelectorAll("#sp-keys input:checked")].map(i => i.value); render();
+        });
+      }
     } else if (k === "decor") {
       const m = decorMeta(ref.type) || {};
       const isWall = m.special === "wall";
@@ -928,6 +963,7 @@
         <div id="d-duplicate-msg" style="font-size:11px;min-height:14px;color:#d8a0a0"></div>
         ${m.special === "fountain" ? `<label>cargas <input id="d-charges" type="number" min="0" value="${ref.charges ?? 0}"></label>` : ""}
         ${m.loot_capaz ? `<label style="display:block;margin-top:8px"><input type="checkbox" id="d-haslook" ${hasLoot ? "checked" : ""}> contém loot</label>` : ""}
+        <label style="display:block;margin-top:8px"><input type="checkbox" id="d-key" ${ref.key_objective ? "checked" : ""}> objeto-chave <small>(conclui “Abrir o baú-chave” ao interagir)</small></label>
         <div id="d-loot" style="${hasLoot ? "" : "display:none"}">
           <label>ouro <input id="d-gold" type="number" min="0" value="${hasLoot ? (ref.loot.gold | 0) : 0}"></label>
           <label>itens</label>
@@ -964,6 +1000,7 @@
         else document.getElementById("d-duplicate-msg").textContent = "Não há uma casa adjacente livre para esta cópia.";
       };
       if (m.special === "fountain") document.getElementById("d-charges").onchange = e => { ref.charges = Math.max(0, Number(e.target.value) | 0); };
+      document.getElementById("d-key").onchange = e => { ref.key_objective = e.target.checked; };
       if (m.loot_capaz) document.getElementById("d-haslook").onchange = e => {
         ref.loot = e.target.checked ? { gold: 0, items: [] } : null; renderPanel();
       };
@@ -1047,7 +1084,7 @@
     const [x, y] = c;
     if (["wall", "floor", "door"].includes(S.tool)) { painting = true; (S.matFill && S.tool !== "door" ? paintMaterial : paintTile)(x, y); render(); updateStatus(); }
     else if (S.tool === "room") { roomDrag = { x0: x, y0: y, x1: x, y1: y }; }
-    else if (["entrance", "exit", "prisoner", "monster", "chest", "trap", "decor"].includes(S.tool)) { placeEntity(x, y); if (S.tool !== "decor") S.sel = entityAt(x, y); renderPanel(); render(); }
+    else if (["entrance", "exit", "prisoner", "monster", "chest", "trap", "decor", "secret_mechanism", "illusion_wall"].includes(S.tool)) { placeEntity(x, y); if (S.tool !== "decor") S.sel = entityAt(x, y); renderPanel(); render(); }
     else if (S.tool === "erase") { eraseAt(x, y); S.sel = null; renderPanel(); render(); }
     else if (S.tool === "select") {
       S.sel = entityAt(x, y) || roomSel(x, y);
@@ -1133,8 +1170,9 @@
       chests: S.chests.map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: c.items.map(i => ({ id: i.id })), key_objective: !!c.key_objective })),
       traps: S.traps.map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; if (t.image) o.image = t.image; return o; }),
       decorations: S.decorations.map(d => {
-        const o = { type: d.type, pos: d.pos.slice(), facing: d.facing.slice() };
+        const o = { id: d.id, type: d.type, pos: d.pos.slice(), facing: d.facing.slice() };
         o.loot = d.loot ? { gold: d.loot.gold | 0, items: d.loot.items.map(i => ({ id: i.id })) } : null;
+        o.key_objective = !!d.key_objective;
         const m = decorMeta(d.type);
         if (m && m.special === "fountain") o.charges = d.charges | 0;
         if (d.image) o.image = d.image;
@@ -1143,6 +1181,7 @@
         if (Array.isArray(d.vscale) && (d.vscale[0] !== 1 || d.vscale[1] !== 1)) o.vscale = [d.vscale[0], d.vscale[1]];
         return o;
       }),
+      secret_passages: S.secretPassages.map(p => ({ id: p.id, type: p.type, pos: p.pos.slice(), key_decor_ids: p.key_decor_ids.slice(), keys_mode: p.keys_mode })),
       prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}) } : null,
       materiais: { ...S.materiais },
       objectives: {
@@ -1223,6 +1262,15 @@
       }
       if (d.loot) for (const it of d.loot.items) if (!items.has(it.id)) e.push(`item de loot inválido: ${it.id}`);
     }
+    const decorIds = new Set(S.decorations.map(d => d.id));
+    const passageIds = new Set();
+    for (const p of S.secretPassages) {
+      if (!p.id || passageIds.has(p.id)) e.push("id de passagem secreta duplicado ou vazio");
+      passageIds.add(p.id);
+      if (!p.pos || S.tiles[p.pos[1]]?.[p.pos[0]] !== WALL) e.push("passagem secreta deve ficar em uma parede");
+      if (!Array.isArray(p.key_decor_ids) || p.key_decor_ids.some(id => !decorIds.has(id))) e.push("passagem com decoração-chave inválida");
+      if (p.type === "mechanism" && !p.key_decor_ids.length) e.push("passagem secreta sem decoração-chave");
+    }
     const matIds = new Set(MAT.map(m => m.id));
     for (const [key, mid] of Object.entries(S.materiais)) {
       if (!matIds.has(mid)) { e.push(`material inválido: ${mid}`); continue; }
@@ -1256,9 +1304,11 @@
     S.monsters = (obj.monsters || []).map(m => ({ type: m.type, pos: m.pos.slice(), room_id: m.room_id ?? null, boss: !!m.boss, target: !!m.target }));
     S.chests = (obj.chests || []).map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: (c.items || []).map(i => ({ id: i.id })), key_objective: !!c.key_objective }));
     S.traps = (obj.traps || []).map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; if (t.image) o.image = t.image; return o; });
-    S.decorations = (obj.decorations || []).map(d => ({
+    S.decorations = (obj.decorations || []).map((d, i) => ({
+      id: d.id || ("decor_" + i),
       type: d.type, pos: d.pos.slice(), facing: (d.facing || [0, 1]).slice(),
       loot: d.loot ? { gold: d.loot.gold | 0, items: (d.loot.items || []).map(i => ({ id: i.id })) } : null,
+      key_objective: !!d.key_objective,
       ...(d.charges !== undefined ? { charges: d.charges | 0 } : {}),
       // Decorações catalogadas de parede sempre recuperam sua arte padrão,
       // inclusive em arquivos antigos que ainda não guardavam `image`.
@@ -1266,6 +1316,9 @@
       ...(Array.isArray(d.size) && d.size.length === 2 ? { size: [d.size[0] | 0, d.size[1] | 0] } : {}),
       ...(Array.isArray(d.vscale) && d.vscale.length === 2 ? { vscale: [Number(d.vscale[0]), Number(d.vscale[1])] } : {}),
     }));
+    S.nextDecorId = S.decorations.length;
+    S.secretPassages = (obj.secret_passages || []).map((p, i) => ({ id: p.id || ("passage_" + i), type: p.type === "illusion" ? "illusion" : "mechanism", pos: p.pos.slice(), key_decor_ids: (p.key_decor_ids || []).slice(), keys_mode: p.keys_mode === "all" ? "all" : "any" }));
+    S.nextPassageId = S.secretPassages.length;
     S.materiais = (obj.materiais && typeof obj.materiais === "object") ? { ...obj.materiais } : {};
     S.objectives = obj.objectives || { primary: { type: "kill_all" }, secondary: [] };
     if (!S.objectives.primary) S.objectives.primary = { type: "kill_all" };

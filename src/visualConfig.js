@@ -82,7 +82,9 @@ window.VC = {
     pedra_cinza:   { color: [0.533, 0.533, 0.533] },
     terra:         { color: [0.46, 0.27, 0.12] },
     grama:         { color: [0.16, 0.45, 0.13] },
-    agua:          { color: [0.04, 0.32, 0.58] },
+    // Azul saturado e emissivo: a superfície deve continuar legível nas áreas
+    // escuras e distinguir-se claramente dos pisos de pedra.
+    agua:          { color: [0.01, 0.40, 0.78] },
     pedra_negra:   { color: [0.14, 0.14, 0.16] },
     entulho:       { color: [0.34, 0.31, 0.27] },
     pedra_normal:  { color: [0.353, 0.353, 0.416] },

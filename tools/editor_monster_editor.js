@@ -90,6 +90,8 @@
     const out = copy(m || {});
     out.original_type = isCustom ? out.type : "";
     out.type = isCustom ? out.type : `${slug(out.name || "monstro")}_customizado`;
+    out.image = String(out.image || out.type).trim();
+    out.portrait = String(out.portrait || out.type).trim();
     out.str_ = n(out.str_, 10); out.dex = n(out.dex, 10); out.con_ = n(out.con_, 10); out.int_ = n(out.int_, 10);
     out.vision_base = Math.max(0, n(out.vision_base, 3));
     out.visao_escuro = !!(out.visao_escuro || out.darkvision_range);
@@ -134,7 +136,7 @@
     const val = id => get(id).value;
     const nums = ["tier","cr","base_hp","natural_armor","movement","vision_base","base_attack_bonus","caster_level","str_","dex","con_","int_","fort_base","ref_base","will_base","gold","xp"];
     const out = Object.assign({}, draft);
-    ["name","type","emoji","ai_type","image","porte"].forEach(k => out[k] = val("me-" + k).trim());
+    ["name","type","emoji","ai_type","image","portrait","porte"].forEach(k => out[k] = val("me-" + k).trim());
     nums.forEach(k => out[k] = n(val("me-" + k), 0));
     out.hp = Math.max(1, out.base_hp + mod(out.con_));
     out.fort = out.fort_base + mod(out.con_);
@@ -234,6 +236,7 @@
       return `<div class="me-ability-panel" data-source="${source.id}"><h3>${source.label}</h3><div class="me-ability-grid">${cards}</div></div>`;
     }).join("");
     root.innerHTML = `<div class="me-layout"><aside class="me-sidebar"><button id="me-new">+ Nova criatura</button><label>Modelo ou criatura existente<select id="me-template"><option value="">Selecione…</option>${monsters.map(m => `<option value="${esc(m.type)}">${esc(m.name)}${custom.has(m.type) ? " (personalizado)" : " (modelo)"}</option>`).join("")}</select></label><p>Os modelos nativos são sempre copiados. A edição de uma criatura personalizada atualiza somente sua própria ficha.</p></aside><main class="me-form"><header><div><h1>Editor de criaturas</h1><p>${draft.original_type ? "Editando criatura personalizada" : "Criando uma nova cópia independente"}</p></div><div class="me-nd">ND estimado <b id="me-nd-estimate">${estimate(draft)}</b></div></header>
+      <section><h2>Arte da criatura</h2><p class="me-hint">Escolha imagens PNG. Ao selecionar, o arquivo é enviado ao projeto, a prévia é atualizada e a referência é salva com a ficha.</p><input id="me-image" type="hidden" value="${esc(draft.image || draft.type)}"><input id="me-portrait" type="hidden" value="${esc(draft.portrait || draft.type)}"><div style="display:flex;gap:18px;flex-wrap:wrap"><label style="display:grid;grid-template-columns:92px 1fr;gap:10px;align-items:center;min-width:250px"><img id="me-mini-preview" src="../assets/pawns/monstros/${esc(draft.image || draft.type)}/${esc(draft.image || draft.type)}.png" style="width:86px;height:86px;object-fit:contain;background:#10131a;border:1px solid #556070"><span><b>Miniatura do peão</b><small>Usada no mapa 2D e 3D.</small><input id="me-mini-file" type="file" accept="image/png,.png"></span></label><label style="display:grid;grid-template-columns:92px 1fr;gap:10px;align-items:center;min-width:250px"><img id="me-portrait-preview" src="../assets/retratos/monstros/${esc(draft.portrait || draft.type)}.png" style="width:86px;height:86px;object-fit:cover;background:#10131a;border:1px solid #556070"><span><b>Retrato do Bestiário</b><small>Usado no quadro superior do Bestiário.</small><input id="me-portrait-file" type="file" accept="image/png,.png"></span></label></div></section>
       <section><h2>Identidade e combate</h2><div class="me-fields cols-4"><label>Nome<input id="me-name" value="${esc(draft.name)}"></label><label>ID técnico<input id="me-type" value="${esc(draft.type)}"><small>letras, números e _</small></label><label>Ícone<input id="me-emoji" value="${esc(draft.emoji || "👹")}"></label><label>ND definido<input id="me-cr" type="number" step="0.25" min="0.125" value="${esc(draft.cr || 1)}"></label><label>PV base<input id="me-base_hp" type="number" min="1" value="${esc(draft.base_hp)}"></label><div class="me-calculated"><b>PV final</b><span id="me-hp-final">${esc(draft.hp)}</span></div><label>Armadura natural<input id="me-natural_armor" type="number" min="0" value="${esc(draft.natural_armor)}"><small>somada ao modificador de DES</small></label><div class="me-calculated"><b>CA total</b><span id="me-ac-final">${esc(draft.ac)}</span></div><label>Movimento<input id="me-movement" type="number" min="1" value="${esc(draft.movement || 5)}"></label><label>Bônus base de ataque<input id="me-base_attack_bonus" type="number" value="${esc(draft.base_attack_bonus || 0)}"></label></div></section>
       <section><h2>Atributos e resistências</h2><div class="me-fields cols-4"><label>Força<input id="me-str_" type="number" min="1" value="${esc(draft.str_)}"></label><label>Destreza<input id="me-dex" type="number" min="1" value="${esc(draft.dex)}"></label><label>Constituição<input id="me-con_" type="number" min="1" value="${esc(draft.con_)}"></label><label>Inteligência<input id="me-int_" type="number" min="1" value="${esc(draft.int_)}"></label><div class="me-calculated"><b>Iniciativa (DES + INT)</b><span id="me-init-final">${esc((mod(draft.dex)+mod(draft.int_)) >= 0 ? "+" + (mod(draft.dex)+mod(draft.int_)) : mod(draft.dex)+mod(draft.int_))}</span></div><label>Base Fortitude<input id="me-fort_base" type="number" value="${esc(draft.fort_base)}"></label><div class="me-calculated"><b>Fortitude final</b><span id="me-fort-final">${esc(draft.fort >= 0 ? "+" + draft.fort : draft.fort)}</span></div><label>Base Reflexos<input id="me-ref_base" type="number" value="${esc(draft.ref_base)}"></label><div class="me-calculated"><b>Reflexos final</b><span id="me-ref-final">${esc(draft.ref_ >= 0 ? "+" + draft.ref_ : draft.ref_)}</span></div><label>Base Vontade<input id="me-will_base" type="number" value="${esc(draft.will_base)}"></label><div class="me-calculated"><b>Vontade final</b><span id="me-will-final">${esc(draft.will >= 0 ? "+" + draft.will : draft.will)}</span></div></div></section>
       <section><h2>Ataques</h2><div id="me-attacks">${draft.attacks.map((a,i) => `<div class="me-attack"><label>Nome<input class="ma-name" value="${esc(a.name)}"></label><label>Dano base<input class="ma-damage" value="${esc(a.damage)}"></label><label>Atributo<select class="ma-attr"><option value="str_"${a.attack_attribute !== "dex" ? " selected" : ""}>Força (corpo a corpo)</option><option value="dex"${a.attack_attribute === "dex" ? " selected" : ""}>Destreza (à distância)</option></select></label><label>Bônus base<input class="ma-bab" type="number" value="${esc(a.base_attack_bonus != null ? a.base_attack_bonus : draft.base_attack_bonus)}"></label><label>Nº ataques<input class="ma-count" type="number" min="1" value="${esc(a.num_attacks || 1)}"></label><label>Alcance<input class="ma-range" type="number" min="0" value="${esc(a.range || 0)}"></label><strong class="ma-final">Acerto: +${attackBonus(draft,a)} · Dano: ${attackDamage(a,draft)}</strong><button class="me-remove-attack" data-i="${i}" title="remover">×</button></div>`).join("")}</div><button id="me-add-attack">+ ataque</button></section>
@@ -246,6 +249,10 @@
       <section><h2>Fraquezas especiais</h2><div class="me-abilities me-negative-abilities">${negativeAbilities.map(a => `<label class="me-tip" data-tip="${esc(abilityHint(a) + " Ao selecionar, incorpora automaticamente a mecânica correspondente.")}"><input class="me-negative-ability" type="checkbox" value="${esc(a.id)}"${selectedNegativeAbilities.has(a.id) ? " checked" : ""}><b>${esc(a.name)}</b><small>Reduz o ND · mecânica automática</small></label>`).join("") || "Nenhuma fraqueza especial cadastrada."}</div><p class="me-hint">Efeitos mistos ficam aqui e causam apenas uma redução moderada no ND.</p></section>
       <section><h2>Comportamento, defesas e tesouro</h2><div class="me-fields cols-3"><label>IA<select id="me-ai_type">${options(ai.map(v => ({value:v})), draft.ai_type, x => x.value.replace(/_/g," "))}</select></label><label>Imagem da miniatura<input id="me-image" value="${esc(draft.image || draft.type)}"></label><label>Porte<select id="me-porte">${options(["minusculo","pequeno","medio","grande","enorme"].map(value=>({value})), draft.porte || "medio", x=>x.value)}</select></label><label>Imunidades (separadas por vírgula)<input id="me-immunities" value="${esc(draft.immunities.join(", "))}"></label><label>Equipamentos (IDs, vírgula)<input id="me-equipment" value="${esc(draft.equipment.join(", "))}"></label><label>Loot garantido (IDs, vírgula)<input id="me-guaranteed-loot" value="${esc(draft.guaranteed_loot.join(", "))}"></label><label>Ouro<input id="me-gold" type="number" min="0" value="${esc(draft.gold || 0)}"></label><label>XP<input id="me-xp" type="number" min="0" value="${esc(draft.xp || 0)}"></label><label>Tier<input id="me-tier" type="number" min="1" value="${esc(draft.tier || 1)}"></label></div><label>Loot variável (JSON opcional)<textarea id="me-loot-table">${esc(JSON.stringify(draft.loot_table || {}, null, 2))}</textarea></label><div class="me-checks"><label><input id="me-undead" type="checkbox"${draft.undead ? " checked" : ""}> morto-vivo</label><label><input id="me-boss" type="checkbox"${draft.boss ? " checked" : ""}> chefe</label></div></section>
       <footer><span id="me-status">O ID é gerado pelo nome e pode ser alterado.</span><button id="me-save" class="me-save">Salvar criatura personalizada</button></footer></main></div>`;
+    // O campo de texto antigo é mantido no HTML por compatibilidade com fichas
+    // já abertas, mas a escolha agora é feita exclusivamente pelos seletores.
+    const legacyImage = root.querySelectorAll("#me-image")[1];
+    if (legacyImage) legacyImage.closest("label")?.remove();
     const attrFields = root.querySelector("#me-str_")?.closest(".me-fields");
     if (attrFields) attrFields.insertAdjacentHTML("beforeend", `<label>Base de visão<input id="me-vision_base" type="number" min="0" max="30" value="${esc(draft.vision_base)}"><small>somada à metade dos bônus de DES + INT</small></label><div class="me-calculated"><b>Raio de visão</b><span id="me-vision-final">${esc(visionRadius(draft))}</span></div><label>Largura ocupada<input id="me-size-w" type="number" min="1" max="4" value="${draft.size[0]}"><small>quadrados</small></label><label>Comprimento ocupado<input id="me-size-h" type="number" min="1" max="4" value="${draft.size[1]}"><small>quadrados</small></label><label><input id="me-oriented" type="checkbox"${draft.oriented ? " checked" : ""}${draft.size[0]*draft.size[1]>1 ? "" : " disabled"}> criatura orientada</label>`);
     const checks = root.querySelector("#me-undead")?.closest(".me-checks");
@@ -285,6 +292,36 @@
       root.querySelectorAll(".me-ability-panel").forEach(panel => panel.hidden = panel.dataset.source !== source);
     });
     root.querySelectorAll('.me-ability-panel:not([data-source="heroi"])').forEach(panel => panel.hidden = true);
+    // A escolha já envia a arte para os diretórios corretos. O campo oculto
+    // mantém somente a chave estável do arquivo na ficha personalizada.
+    const bindArtPicker = (inputId, kind, field, previewId) => {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      input.onchange = async () => {
+        const file = input.files && input.files[0];
+        const status = document.getElementById("me-status");
+        if (!file) return;
+        if (!window.EDITOR_SAVE || !window.EDITOR_SAVE.uploadMonsterArt) {
+          status.textContent = "Inicie o servidor para enviar a imagem."; status.className="me-error"; return;
+        }
+        status.textContent = "Enviando imagem…"; status.className = "";
+        try {
+          const key = await window.EDITOR_SAVE.uploadMonsterArt(file, kind);
+          draft = read(); draft[field] = key;
+          const preview = document.getElementById(previewId);
+          if (preview) preview.src = kind === "miniature"
+            ? `../assets/pawns/monstros/${key}/${key}.png?v=${Date.now()}`
+            : `../assets/retratos/monstros/${key}.png?v=${Date.now()}`;
+          // Há um campo legado de miniatura em fichas antigas: mantê-lo
+          // sincronizado evita que uma edição posterior apague a escolha.
+          root.querySelectorAll("#me-image").forEach(el => { if (field === "image") el.value = key; });
+          document.getElementById("me-portrait").value = draft.portrait || draft.type;
+          status.textContent = "✓ Imagem enviada. Salve a criatura para vincular a escolha."; status.className="me-ok";
+        } catch (err) { status.textContent = "Não foi possível enviar a imagem: " + err.message; status.className="me-error"; }
+      };
+    };
+    bindArtPicker("me-mini-file", "miniature", "image", "me-mini-preview");
+    bindArtPicker("me-portrait-file", "portrait", "portrait", "me-portrait-preview");
     document.getElementById("me-add-attack").onclick = () => { draft = read(); draft.attacks.push({name:"Ataque",damage:"1d4",attack_attribute:"str_",base_attack_bonus:draft.base_attack_bonus,num_attacks:1}); render(); };
     root.querySelectorAll(".me-remove-attack").forEach(btn => btn.onclick = () => { draft=read(); if(draft.attacks.length > 1) draft.attacks.splice(Number(btn.dataset.i),1); render(); });
     document.getElementById("me-save").onclick = async () => {

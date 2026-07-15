@@ -124,8 +124,12 @@
     const cd = a.cooldown_turns != null ? (a.cooldown_turns ? `recarga: ${a.cooldown_turns} rod.` : "sem recarga") : (a.cooldown != null ? `recarga: ${a.cooldown}` : "");
     return [uses, cd].filter(Boolean).join(" · ") || (a.action_type === "passiva" ? "Passiva" : "Sem limite informado");
   }
-  function imageBox(src, cls, fallback) {
-    return `<div class="${cls}"><img src="${esc(src)}" alt="" onerror="this.remove();this.parentElement.classList.add('empty')"><span>${esc(fallback)}</span></div>`;
+  function imageBox(src, cls, fallback, alternateSrc = "") {
+    // Retratos antigos podem ter sido salvos com o id da miniatura (campo
+    // `image`) em vez do id interno da criatura (campo `type`). Tenta o padrão
+    // oficial primeiro e, se ele não existir, usa esse nome alternativo.
+    const onError = "const alt=this.dataset.alt;if(alt){this.dataset.alt='';this.src=alt}else{this.remove();this.parentElement.classList.add('empty')}";
+    return `<div class="${cls}"><img src="${esc(src)}" data-alt="${esc(alternateSrc)}" alt="" onerror="${onError}"><span>${esc(fallback)}</span></div>`;
   }
   function loot(m) {
     const rows = [];
@@ -142,7 +146,7 @@
     const spells = monsterSpells(m).map(cfg => Object.assign({}, spellsById.get(cfg.id), cfg)).filter(s => s.id);
     const weaknesses = (m.weaknesses || []).map(w => w.descricao || `${pretty(w.categoria || w.type)} ${w.multiplier ? "×" + w.multiplier : (w.bonus_flat > 0 ? "+" : "") + (w.bonus_flat || "")}`).join(" · ") || "Nenhuma definida";
     return `<article class="best-card">
-      <section class="best-media">${imageBox(`../assets/retratos/monstros/${m.type}.png`, "best-portrait", "Retrato\na adicionar")}${imageBox(`../assets/pawns/monstros/${m.image || m.type}/${m.image || m.type}.png`, "best-mini", "Miniatura\nindisponível")}</section>
+      <section class="best-media">${imageBox(`../assets/retratos/monstros/${m.portrait || m.type}.png`, "best-portrait", "Retrato\na adicionar", m.image && m.image !== (m.portrait || m.type) ? `../assets/retratos/monstros/${m.image}.png` : "")}${imageBox(`../assets/pawns/monstros/${m.image || m.type}/${m.image || m.type}.png`, "best-mini", "Miniatura\nindisponível")}</section>
       <section class="best-sheet"><header class="best-head"><div><h1>${esc(m.emoji || "") } ${esc(m.name)}</h1><p>${esc(m.type)} · IA: <strong>${esc(pretty(m.ai_type))}</strong></p></div><div class="nd-pair"><span>ND definido <b>${esc(nd(m.cr != null ? m.cr : m.tier || "—"))}</b></span><span title="Estimativa de consulta baseada em defesa, dano, ataques e habilidades.">ND estimado <b>${esc(nd(ndEstimate(m)))}</b></span></div></header>
       <div class="best-stats"><div><b>PV</b><span>${esc(m.hp || "—")}</span></div><div><b>CA total</b><span>${esc(m.ac || "—")}</span></div><div><b>Armadura natural</b><span>${esc(m.natural_armor != null ? m.natural_armor : Math.max(0, Number(m.ac || 10) - 10 - mod(m.dex)))}</span></div><div><b>Movimento</b><span>${esc(m.movement || "—")}</span></div><div><b>Raio de visão</b><span title="${m.visao_escuro || m.darkvision_range ? "Visão no escuro: objetos não bloqueiam, apenas paredes." : "Objetos altos e paredes bloqueiam a visão."}">${esc(visionRadius(m))}${m.visao_escuro || m.darkvision_range ? " 👁️" : ""}</span></div><div><b>Ataques</b><span>${attacks.reduce((n,a) => n + Number(a.num_attacks || 1), 0)}</span></div><div><b>Iniciativa</b><span>${esc((mod(m.dex) + mod(m.int_)) >= 0 ? "+" + (mod(m.dex) + mod(m.int_)) : mod(m.dex) + mod(m.int_))}</span></div></div>
       <div class="best-attributes"><div><b>FOR</b>${esc(m.str_ != null ? m.str_ : "—")} <small>${m.str_ != null ? (mod(m.str_) >= 0 ? "+" : "") + mod(m.str_) : ""}</small></div><div><b>DES</b>${esc(m.dex != null ? m.dex : "—")} <small>${m.dex != null ? (mod(m.dex) >= 0 ? "+" : "") + mod(m.dex) : ""}</small></div><div><b>CON</b>${esc(m.con_ != null ? m.con_ : "—")} <small>${m.con_ != null ? (mod(m.con_) >= 0 ? "+" : "") + mod(m.con_) : ""}</small></div><div><b>INT</b>${esc(m.int_ != null ? m.int_ : "—")} <small>${m.int_ != null ? (mod(m.int_) >= 0 ? "+" : "") + mod(m.int_) : ""}</small></div></div>

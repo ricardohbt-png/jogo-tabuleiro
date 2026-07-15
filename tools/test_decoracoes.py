@@ -113,6 +113,21 @@ def test_bloqueio():
     r._rebuild_decor_index()
     check("barril sobre chão bloqueia", r._blocks_tile(4, 4) is True)
 
+def test_objeto_chave():
+    print("\n[A4b] objeto-chave em decoração")
+    async def run():
+        r = _room()
+        r.decorations = [{"id": "d-chave", "type": "altar", "pos": [5, 5], "facing": [0, 1],
+                          "loot": None, "tem_loot": False, "key_objective": True}]
+        r._rebuild_decor_index()
+        p = make_player("p1", "Herói", "warrior", 0); p["pos"] = [4, 5]; p["alive"] = True
+        r.players = {"p1": p}
+        await r.handle_interagir_decor("p1", "d-chave")
+        check("interagir com decoração-chave conclui a chave", r.key_chest_opened is True)
+        check("objetivo abrir baú-chave reconhece decoração", r._objetivo_cumprido({"type": "open_key_chest"}) is True)
+        check("estado do cliente recebe marca de chave", r._serializar_decoracoes()[0].get("key_objective") is True)
+    asyncio.run(run())
+
 def test_fogueira():
     print("\n[A5] fogueira 1d4")
     async def run():
@@ -287,6 +302,7 @@ def main():
     test_footprint()
     test_carga()
     test_bloqueio()
+    test_objeto_chave()
     test_fogueira()
     test_fonte()
     test_container()
