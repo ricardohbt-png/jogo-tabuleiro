@@ -971,3 +971,16 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > nunca visível aos jogadores (só UI). Spec/planos em
 > `docs/superpowers/{specs,plans}/2026-07-15-modo-mestre-camada-c*`. Teste servidor:
 > `tools/test_modo_mestre.py` (seções [19]/[20]).
+
+> **Camada C — ND/XP de armadilha:** cada tipo de `ARMADILHAS` tem `cr`; helpers
+> module-level `trap_cr(meta)` (cr explícito, senão derivado da `dificuldade`, senão
+> 0.3) e `trap_xp(cr)=round(cr×TRAP_XP_POR_CR)` (=20). Só armadilhas **autoradas**
+> (não as `aliada` do Luccas nem os buracos procedurais). **XP:** `_conceder_xp_armadilha`
+> concede uma vez (flag `xp_concedido`), dividido entre os heróis vivos (com
+> `_check_level_up`), ao **desarmar** (`handle_desarmar_armadilha`, sucesso) OU ao
+> **disparar e o herói-alvo sobreviver** (`_disparar_armadilha`, nos 3 pontos de saída:
+> alvo-único, teletransporte e dardos). **cr no termômetro/minimapa:** o `cr` das
+> autoradas vai em `game_state.armadilhas` (`_serializar_armadilhas`; `aliada`→0) e no
+> catálogo do editor (`export_catalog.py` → `editor_catalog.js`); `_crPorSalaMapa`
+> (game.js) e `_ndPorSala` (editor.js) somam as armadilhas por sala (casando `pos` à
+> sala que a contém). Teste: `tools/test_modo_mestre.py` (seções [21]/[22]).
