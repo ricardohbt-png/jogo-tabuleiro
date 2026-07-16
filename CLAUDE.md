@@ -950,3 +950,24 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > byte-idêntico. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-07-15-modo-mestre-camada-b-reforcos*`.
 > Teste: `tools/test_modo_mestre.py`.
+
+> **Modo Mestre — Camada C: ND unificado + Termômetro (editor) + Minimapa (mestre):**
+> auxílios de dificuldade — design-time no editor + leitura só-mestre em jogo; **nada
+> muda no runtime** (o `expected_party` é só referência). **ND unificado:** todo
+> monstro tem `cr`; helper module-level `monster_cr(mdef)` (cr explícito, senão
+> fallback `_CR_POR_TIER` por `tier`; sem tier→tier1). Os 6 legados ganharam `cr`
+> (goblin .25/skeleton .5/orc .75/dark_mage .5/troll 1.5/dragon 5). **Grupo esperado:**
+> campo `expected_party {heroes 1-6, level ≥1}` da masmorra (`_norm_expected_party`,
+> `validar_dungeon`, default {4,1}), serializado em `game_state`. **Módulo compartilhado
+> `src/difficulty.js`** (`window.Difficulty`): `crFromEntry`/`poder(h,l)=h×l`/
+> `faixa(nd,pod)` (Fácil<0.4 / Equilibrada<0.8 / Difícil<1.2 / Mortal, cores) — ponto
+> ÚNICO de calibração; incluído em `index.html` e `tools/editor.html`. **Termômetro no
+> editor** (`tools/editor.js`, painel `!S.sel`): total + pior sala (por `room_id`) +
+> preview 2/4/6. **Minimapa de CR do mestre em jogo** (`game.js`, só `GS.isMaster()`):
+> o `#ficha-fab` (🎒 Inventário) vira 🗺️ "Mapa de CR" (`_atualizarFichaFab` no hook de
+> `gameState`); `abrirMinimapaCR`/`renderMinimapaCR` desenham as salas de
+> `game_state.rooms` coloridas pela faixa, CR por sala (`_crPorSalaMapa` de
+> `monsters[].cr`/`room_id`), **CR médio = média das salas** no topo, seletor 2/4/6;
+> nunca visível aos jogadores (só UI). Spec/planos em
+> `docs/superpowers/{specs,plans}/2026-07-15-modo-mestre-camada-c*`. Teste servidor:
+> `tools/test_modo_mestre.py` (seções [19]/[20]).
