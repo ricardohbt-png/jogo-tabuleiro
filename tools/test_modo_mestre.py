@@ -464,6 +464,30 @@ async def main():
     await r._conceder_xp_armadilha(arm3)
     check("tipo inválido não concede", r.players["h"]["xp"] == xb)
 
+    print("\n[23] Salas obrigatórias")
+    r = playing_room_com_mestre()
+    r.rooms = [{"id":0,"x":0,"y":0,"w":3,"h":3,"required":True,"required_mode":"clear"},
+               {"id":1,"x":5,"y":0,"w":3,"h":3,"required":True,"required_mode":"visit"},
+               {"id":2,"x":0,"y":5,"w":3,"h":3}]
+    r.salas_visitadas = set()
+    r.monsters = {"m":{"id":"m","hp":5,"room_id":0,"pos":[1,1]}}
+    obj = {"type":"salas_obrigatorias"}
+    check("pendente: sala 0 com monstro vivo", r._objetivo_cumprido(obj) is False)
+    check("progresso 0/2", r._salas_obrigatorias_progresso() == (0, 2))
+    r.monsters["m"]["hp"] = 0; r.salas_visitadas.add(1)
+    check("cumprido quando todas atendem", r._objetivo_cumprido(obj) is True)
+    check("progresso 2/2", r._salas_obrigatorias_progresso() == (2, 2))
+    r2 = playing_room_com_mestre()
+    r2.rooms = [{"id":0,"x":0,"y":0,"w":3,"h":3,"required":True,"required_mode":"clear"}]
+    r2.salas_visitadas = set(); r2.monsters = {}
+    check("clear de sala vazia = cumprida", r2._objetivo_cumprido({"type":"salas_obrigatorias"}) is True)
+    base_sr = dict(base); base_sr["objectives"] = {"primary": {"type":"salas_obrigatorias"}, "secondary": []}
+    ok, msg = S.validar_dungeon(base_sr)
+    check("obj sem salas marcadas rejeitado", ok is False and "salas" in msg.lower())
+    base_rm = dict(base); base_rm["rooms"] = [{"id":9,"x":1,"y":1,"w":2,"h":2,"required_mode":"xyz"}]
+    ok, _ = S.validar_dungeon(base_rm)
+    check("required_mode inválido rejeitado", ok is False)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

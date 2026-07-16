@@ -3035,6 +3035,18 @@ def validar_dungeon(defn):
         if not isinstance(lv, int) or isinstance(lv, bool) or lv < 1:
             return False, f"expected_party.level inválido: {lv!r} (inteiro ≥ 1)."
 
+    _rooms_req = [r for r in (defn.get("rooms") or []) if isinstance(r, dict) and r.get("required")]
+    for _r in (defn.get("rooms") or []):
+        if isinstance(_r, dict) and _r.get("required_mode") not in (None, "visit", "clear"):
+            return False, f"required_mode inválido: {_r.get('required_mode')!r} (visit|clear)."
+    _objs = []
+    _o = defn.get("objectives") or {}
+    if _o.get("primary"): _objs.append(_o["primary"])
+    _objs.extend(_o.get("secondary") or [])
+    for _ob in _objs:
+        if isinstance(_ob, dict) and _ob.get("type") == "salas_obrigatorias" and not _rooms_req:
+            return False, "objetivo salas_obrigatorias sem salas marcadas como obrigatórias."
+
     # Passagens autoradas: a mecânica permanece uma parede até ser ativada;
     # a ilusória continua WALL no mapa, mas o movimento de heróis a atravessa.
     passages = defn.get("secret_passages", [])
@@ -4726,6 +4738,7 @@ class GameRoom:
         self.rescue_failed = False
         self._objetivo_concluido = False
         self.mission_complete_pending = False
+        self.salas_visitadas = set()   # room_ids visitados (objetivo salas_obrigatorias)
         # Fase 4a — campanha.
         self.campaign = None         # dict carregado (modo "campaign")
         self.campaign_phase = 0      # índice da fase atual em campaign["dungeons"]
@@ -6555,6 +6568,7 @@ class GameRoom:
         self.rescue_failed = False
         self._objetivo_concluido = False
         self.mission_complete_pending = False
+        self.salas_visitadas = set()
         pr = defn.get("prisoner")
         self.prisoner = ({"pos": [pr["pos"][0], pr["pos"][1]], "room_id": pr.get("room_id"),
                           "hp": PRIS_HP, "max_hp": PRIS_HP, "ac": PRIS_AC, "move": PRIS_MOVE,
@@ -7290,6 +7304,8 @@ class GameRoom:
 
         # Check room entry
         entered = player_room(self.rooms, nx, ny)
+        if entered:
+            self.salas_visitadas.add(entered["id"])   # objetivo salas_obrigatorias (visit)
         if entered and not entered["cleared"]:
             await self._on_enter_room(pid, entered)
 
@@ -18231,12 +18247,36 @@ class GameRoom:
                 return False
             px, py = self.prisoner["pos"]
             return max(abs(px - destino[0]), abs(py - destino[1])) <= 1
+        if t == "salas_obrigatorias":
+            req = [rm for rm in self.rooms if rm.get("required")]
+            return all(self._sala_obrigatoria_ok(rm) for rm in req)
         return False
+
+    def _sala_obrigatoria_ok(self, rm):
+        """Sala obrigatória cumprida? 'visit' = herói entrou; 'clear' (default) = sem
+        monstros vivos com aquele room_id (sala sem monstros já conta)."""
+        if rm.get("required_mode") == "visit":
+            return rm["id"] in self.salas_visitadas
+        return not any(m["hp"] > 0 and m.get("room_id") == rm["id"]
+                       for m in self.monsters.values())
+
+    def _salas_obrigatorias_progresso(self):
+        req = [rm for rm in self.rooms if rm.get("required")]
+        feitas = sum(1 for rm in req if self._sala_obrigatoria_ok(rm))
+        return feitas, len(req)
 
     def _objetivo_status(self, obj):
         if obj and obj.get("type") == "rescue_prisoner" and self.rescue_failed:
             return "failed"
         return "done" if self._objetivo_cumprido(obj) else "pending"
+
+    def _objetivo_payload(self, obj):
+        """Status do objetivo p/ o cliente; salas_obrigatorias inclui progresso N/M."""
+        d = {"type": (obj or {}).get("type"), "status": self._objetivo_status(obj)}
+        if d["type"] == "salas_obrigatorias":
+            f, t = self._salas_obrigatorias_progresso()
+            d["progresso"] = {"feitas": f, "total": t}
+        return d
 
     async def _check_objectives(self):
         """Catch-all chamado por push_state. Recalcula o status p/ o HUD e, se o
@@ -18247,8 +18287,8 @@ class GameRoom:
         prim = self.objectives.get("primary")
         secs = self.objectives.get("secondary") or []
         self.objective_status = {
-            "primary": {"type": (prim or {}).get("type"), "status": self._objetivo_status(prim)},
-            "secondary": [{"type": s.get("type"), "status": self._objetivo_status(s)} for s in secs],
+            "primary": self._objetivo_payload(prim),
+            "secondary": [self._objetivo_payload(s) for s in secs],
         }
         if (self.phase == "playing" and not self._objetivo_concluido
                 and prim and self._objetivo_cumprido(prim)):
