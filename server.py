@@ -3330,12 +3330,14 @@ ARMADILHA_CUSTO_SEDE = 1
 
 ARMADILHAS = {
     "buraco": {
+        "cr": 0.1,
         "nome": "Buraco", "icone": "🕳️", "dificuldade": 10, "save": "reflexos",
         "custo_ouro": 0, "persiste": True, "visivel_apos": True,
         "efeitos": [{"tipo": "perder_movimento"}],
         "descricao": "Reflexos dif 10 ou perde o movimento. Permanece ativa.",
     },
     "armadilha_urso": {
+        "cr": 0.25,
         "nome": "Armadilha de Urso", "icone": "🪤", "dificuldade": 10, "save": "reflexos",
         "custo_ouro": 1, "persiste": False,
         "efeitos": [{"tipo": "dano", "valor": "1d4", "elemento": "fisico"},
@@ -3344,6 +3346,7 @@ ARMADILHAS = {
         "formula_guild_id": "ladino_armadilha_urso", "formula_preco": 100,
     },
     "fosso_estacas": {
+        "cr": 0.35,
         "nome": "Fosso com Estacas", "icone": "⛏️", "dificuldade": 10, "save": "reflexos",
         "custo_ouro": 2, "persiste": True, "visivel_apos": True,
         "efeitos": [{"tipo": "dano", "valor": "1d6", "elemento": "fisico"},
@@ -3352,6 +3355,7 @@ ARMADILHAS = {
         "formula_guild_id": "ladino_fosso_estacas", "formula_preco": 120,
     },
     "rede": {
+        "cr": 0.15,
         "nome": "Rede", "icone": "🕸️", "dificuldade": 11, "save": "reflexos",
         "custo_ouro": 4, "persiste": False,
         "efeitos": [{"tipo": "perder_rodada"}],
@@ -3359,6 +3363,7 @@ ARMADILHAS = {
         "formula_guild_id": "ladino_rede", "formula_preco": 150,
     },
     "armadilha_incendiaria": {
+        "cr": 0.5,
         "nome": "Armadilha Incendiária", "icone": "🔥", "dificuldade": 12, "save": "reflexos",
         "custo_ouro": 10, "persiste": False,
         "efeitos": [{"tipo": "dano", "valor": "1d6", "elemento": "fogo", "rodada": 1},
@@ -3368,6 +3373,7 @@ ARMADILHAS = {
         "formula_guild_id": "ladino_armadilha_incendiaria", "formula_preco": 180,
     },
     "mina_terrestre": {
+        "cr": 0.75,
         "nome": "Mina Terrestre", "icone": "💣", "dificuldade": 12, "save": "reflexos",
         "save_reduz": True, "custo_ouro": 20, "persiste": False, "area": 1,
         "efeitos": [{"tipo": "dano", "valor": "2d6", "elemento": "explosao", "area": True}],
@@ -3375,6 +3381,7 @@ ARMADILHAS = {
         "formula_guild_id": "ladino_mina_terrestre", "formula_preco": 220,
     },
     "fosso_envenenado": {
+        "cr": 0.5,
         "nome": "Fosso com Estacas Envenenadas", "icone": "☠️", "dificuldade": 10,
         "save": "reflexos", "custo_ouro": 2, "custo_veneno": True,
         "persiste": True, "visivel_apos": True,
@@ -3384,6 +3391,7 @@ ARMADILHAS = {
         "formula_guild_id": "ladino_fosso_envenenado", "formula_preco": 130,
     },
     "nuvem_gas": {
+        "cr": 0.4,
         "nome": "Nuvem de Gás", "icone": "🌫️", "dificuldade": 13, "save": "fortitude",
         "custo_ouro": 25, "persiste": False, "area": 1,
         "efeitos": [{"tipo": "reduzir_con", "valor": "1d6", "duracao": 3, "area": True}],
@@ -3391,11 +3399,13 @@ ARMADILHAS = {
         "formula_guild_id": "ladino_nuvem_gas", "formula_preco": 250,
     },
     "armadilha_teletransporte": {
+        "cr": 0.4,
         "nome": "Armadilha de Teletransporte", "icone": "🌀", "dificuldade": 12, "save": "vontade",
         "persiste": False, "special": "teletransporte",
         "descricao": "Vontade CD 12 ou é teleportado para a saída configurada.",
     },
     "armadilha_dardos_envenenados": {
+        "cr": 0.4,
         "nome": "Armadilha de Dardos Envenenados", "icone": "🎯", "dificuldade": 0, "save": "fortitude",
         "persiste": False, "special": "dardos_envenenados", "precisa_veneno": True,
         "descricao": "Sofre 1d4 perfurante e testa Fortitude contra o veneno escolhido.",
@@ -4309,6 +4319,27 @@ def monster_cr(mdef):
         except (TypeError, ValueError):
             pass
     return _CR_POR_TIER.get(mdef.get("tier", 1), 1.0)
+
+TRAP_XP_POR_CR = 20
+
+def trap_cr(meta):
+    """cr unificado da armadilha (Camada C). Usa o cr explícito quando presente;
+    senão deriva da dificuldade do save (DC 8→0.0 … escala suave, teto 1.0);
+    sem nenhum dos dois, default 0.3. Fonte única da verdade."""
+    cr = meta.get("cr")
+    if cr is not None:
+        try:
+            return float(cr)
+        except (TypeError, ValueError):
+            pass
+    dif = meta.get("dificuldade")
+    if isinstance(dif, (int, float)) and not isinstance(dif, bool):
+        return max(0.1, min(1.0, round((dif - 8) / 6.0, 2)))
+    return 0.3
+
+def trap_xp(cr):
+    """XP de uma armadilha derivado do seu cr (dividido entre os heróis vivos)."""
+    return round(float(cr) * TRAP_XP_POR_CR)
 
 def _aplicar_equipamentos_monstro(m):
     """Equipa a criatura com itens da mesma loja usada pelos heróis.

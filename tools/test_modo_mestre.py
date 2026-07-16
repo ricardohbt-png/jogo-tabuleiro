@@ -437,6 +437,15 @@ async def main():
     ok, _ = S.validar_dungeon(_com_ep("naoobj"))
     check("não-objeto rejeitado", ok is False)
 
+    print("\n[21] ND/XP de armadilha — trap_cr/trap_xp")
+    check("cr explícito", S.trap_cr({"cr": 0.5}) == 0.5)
+    check("fallback por dificuldade (>0)", S.trap_cr({"dificuldade": 14}) > 0)
+    check("fallback default sem nada", S.trap_cr({}) == 0.3)
+    check("trap_xp deriva do cr", S.trap_xp(0.5) == round(0.5 * S.TRAP_XP_POR_CR))
+    check("mina cr 0.75", S.trap_cr(S.ARMADILHAS["mina_terrestre"]) == 0.75)
+    check("buraco cr 0.1", S.trap_cr(S.ARMADILHAS["buraco"]) == 0.1)
+    check("todas ARMADILHAS resolvem cr>0", all(S.trap_cr(m) > 0 for m in S.ARMADILHAS.values()))
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
