@@ -868,7 +868,7 @@
 
   function renderPanel() {
     if (!S.sel) {
-      const OBJ = ["kill_target", "kill_all", "reach_exit", "open_key_chest", "rescue_prisoner"];
+      const OBJ = ["kill_target", "kill_all", "reach_exit", "open_key_chest", "rescue_prisoner", "salas_obrigatorias"];
       const o = S.objectives;
       normalizeObjective(o.primary, true);
       o.secondary.forEach(s => normalizeObjective(s, false));
@@ -1020,6 +1020,8 @@
       panel.innerHTML = `<b>▦ Sala #${ref.id}</b>
         <label>role</label><select id="p-role">${opt(["entrance", "monster", "chest", "trap", "boss", "empty"].map(r => ({ v: r })), ref.role, o => o.v)}</select>
         <label><input type="checkbox" id="p-locked" ${ref.locked ? "checked" : ""}> trancada</label>
+        <label style="display:block;margin-top:6px"><input type="checkbox" id="p-required" ${ref.required ? "checked" : ""}> sala obrigatória</label>
+        ${ref.required ? `<label>modo</label><select id="p-reqmode"><option value="clear"${(ref.required_mode||"clear")==="clear"?" selected":""}>limpar (matar monstros)</option><option value="visit"${ref.required_mode==="visit"?" selected":""}>visitar (entrar)</option></select>` : ""}
         <div style="margin-top:8px;color:#8a7a5a;font-size:11px">portas: ${ref.doors.length}</div>
         <button id="p-del-room" style="margin-top:10px">🗑 Deletar sala</button>
         <div id="p-del-confirm" style="display:none;margin-top:6px">
@@ -1029,6 +1031,8 @@
         </div>`;
       document.getElementById("p-role").onchange = e => { ref.role = e.target.value; render(); };
       document.getElementById("p-locked").onchange = e => { ref.locked = e.target.checked; render(); };
+      document.getElementById("p-required").onchange = e => { if (e.target.checked) { ref.required = true; if (!ref.required_mode) ref.required_mode = "clear"; } else { delete ref.required; delete ref.required_mode; } renderPanel(); };
+      if (ref.required) { const _rm = document.getElementById("p-reqmode"); if (_rm) _rm.onchange = e => { ref.required_mode = e.target.value; }; }
       document.getElementById("p-del-room").onclick = () => {
         document.getElementById("p-del-confirm").style.display = "";
       };
@@ -1299,7 +1303,7 @@
       schema_version: 1, id: S.meta.id, name: S.meta.name, ambiente: S.meta.ambiente || "masmorra",
       grid: { w: S.grid.w, h: S.grid.h },
       tiles: S.tiles.map(row => row.slice()),
-      rooms: S.rooms.map(r => ({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, role: r.role, locked: r.locked, doors: r.doors.map(d => d.slice()) })),
+      rooms: S.rooms.map(r => Object.assign({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, role: r.role, locked: r.locked, doors: r.doors.map(d => d.slice()) }, r.required ? { required: true, required_mode: r.required_mode || "clear" } : {})),
       entrance: S.entrance ? { x: S.entrance.x, y: S.entrance.y } : null,
       exit: S.exit ? { x: S.exit.x, y: S.exit.y } : null,
       monsters: S.monsters.map(m => ({ type: m.type, pos: m.pos.slice(), room_id: m.room_id, boss: !!m.boss, target: !!m.target })),
@@ -1437,7 +1441,7 @@
                ambiente: ["penumbra", "masmorra", "ar_livre"].includes(obj.ambiente) ? obj.ambiente : "masmorra" };
     S.grid = { w: obj.grid.w, h: obj.grid.h };
     S.tiles = obj.tiles.map(row => row.slice());
-    S.rooms = (obj.rooms || []).map(r => ({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, role: r.role, locked: !!r.locked, doors: (r.doors || []).map(d => d.slice()) }));
+    S.rooms = (obj.rooms || []).map(r => Object.assign({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, role: r.role, locked: !!r.locked, doors: (r.doors || []).map(d => d.slice()) }, r.required ? { required: true, required_mode: r.required_mode === "visit" ? "visit" : "clear" } : {}));
     S.nextRoomId = S.rooms.reduce((m, r) => Math.max(m, r.id + 1), 0);
     S.entrance = obj.entrance || null;
     S.exit = obj.exit || null;
