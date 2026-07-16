@@ -6,6 +6,8 @@ body { margin:0; font-family: system-ui, Arial, sans-serif; background:#2a2118; 
 #topbar label { font-size:12px; color:#b9a87f; }
 #topbar input { background:#33291c; color:#e8dcc0; border:1px solid #4a3c28; border-radius:4px; padding:3px 5px; }
 button { background:#33291c; color:#e8dcc0; border:1px solid #5a4830; border-radius:5px; padding:5px 9px; cursor:pointer; font-size:12px; }
+.ndprev { padding:2px 8px; }
+.ndprev.on { outline:2px solid #d9b45a; }
 button:hover { background:#4a3c28; }
 button.active { background:#d9b061; color:#1d1812; border-color:#d9b061; }
 #toolbar { display:flex; gap:5px; padding:8px 12px; background:#241d14; border-bottom:1px solid #4a3c28; flex-wrap:wrap; align-items:center; }

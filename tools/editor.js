@@ -17,6 +17,7 @@
     entrance: null, exit: null, prisoner: null,
     monsters: [], chests: [], traps: [], decorations: [], secretPassages: [], nextDecorId: 0, nextPassageId: 0,
     masterReinforcements: [],
+    expectedParty: { heroes: 4, level: 1 },
     objectives: { primary: { type: "kill_all" }, secondary: [] },
     tool: "wall", sel: null,
     teleportExitPick: null,      // referência da armadilha aguardando clique no mapa
@@ -805,6 +806,45 @@
     panel.querySelectorAll(`.${pfx}-rm`).forEach(b => b.onclick = () => { obj.reward.items.splice(Number(b.dataset.i), 1); renderPanel(); });
   }
 
+  var _ndPreviewHeroes = null;   // null = usa S.expectedParty.heroes; 2/4/6 = preview
+
+  function _ndPorSala() {
+    // Soma de cr por room_id (null vira grupo "sem sala"). Retorna {total, pior}.
+    var porSala = {}, total = 0;
+    (S.monsters || []).forEach(function (m) {
+      var entry = (CAT.monsters || []).find(function (c) { return c.type === m.type; });
+      var cr = window.Difficulty ? window.Difficulty.crFromEntry(entry) : 0;
+      total += cr;
+      var key = (m.room_id == null) ? "__none__" : m.room_id;
+      porSala[key] = (porSala[key] || 0) + cr;
+    });
+    var pior = 0;
+    Object.keys(porSala).forEach(function (k) { if (porSala[k] > pior) pior = porSala[k]; });
+    return { total: total, pior: pior };
+  }
+
+  function _termometroHTML() {
+    if (!window.Difficulty) return "";
+    var heroes = (_ndPreviewHeroes != null) ? _ndPreviewHeroes : S.expectedParty.heroes;
+    var pod = window.Difficulty.poder(heroes, S.expectedParty.level);
+    var nd = _ndPorSala();
+    function linha(rot, valor) {
+      var f = window.Difficulty.faixa(valor, pod);
+      var pct = Math.max(4, Math.min(100, (valor / (pod * 1.5)) * 100));
+      return '<div style="margin-top:4px"><span>' + rot + ': <b>' + valor.toFixed(2) + '</b> — ' +
+        '<span style="color:' + f.color + '">' + f.label + '</span></span>' +
+        '<div style="height:8px;background:#241d14;border-radius:4px;overflow:hidden;margin-top:2px">' +
+        '<div style="height:100%;width:' + pct + '%;background:' + f.color + '"></div></div></div>';
+    }
+    var atual = (_ndPreviewHeroes != null ? _ndPreviewHeroes : S.expectedParty.heroes);
+    var sel = [2, 4, 6].map(function (n) {
+      return '<button data-ndprev="' + n + '" class="ndprev' + (atual === n ? ' on' : '') + '">' + n + '</button>';
+    }).join("");
+    return '<hr style="border-color:#3a3022;margin:10px 0"><label>🌡️ termômetro (poder ' + pod + ')</label>' +
+      linha("Total", nd.total) + linha("Pior sala", nd.pior) +
+      '<div style="margin-top:6px;display:flex;gap:4px;align-items:center"><span>preview jogadores:</span>' + sel + '</div>';
+  }
+
   function renderPanel() {
     if (!S.sel) {
       const OBJ = ["kill_target", "kill_all", "reach_exit", "open_key_chest", "rescue_prisoner"];
@@ -836,7 +876,14 @@
           <select id="reinforce-type" style="flex:1">${opt(CAT.monsters.map(m => ({ v: m.type, name: m.name })), "", o => o.v + " — " + o.name)}</select>
           <input id="reinforce-count" type="number" min="1" value="1" style="width:56px">
           <button id="reinforce-add-btn">+</button>
-        </div>`;
+        </div>
+        <hr style="border-color:#3a3022;margin:10px 0">
+        <label>👥 grupo esperado</label>
+        <div style="display:flex;gap:6px;align-items:center;margin-top:4px">
+          <span>heróis</span><input id="ep-heroes" type="number" min="1" max="6" value="${S.expectedParty.heroes}" style="width:48px">
+          <span>nível</span><input id="ep-level" type="number" min="1" value="${S.expectedParty.level}" style="width:48px">
+        </div>
+        ${_termometroHTML()}`;
       document.getElementById("o-prim").onchange = e => { o.primary.type = e.target.value; };
       wireRewardFields(o.primary, "o-prim-rw");
       document.getElementById("o-add").onclick = () => { o.secondary.push({ type: "rescue_prisoner", ...objDefaults(false) }); renderPanel(); };
@@ -852,6 +899,17 @@
         renderPanel();
       };
       panel.querySelectorAll(".reinforce-rm").forEach(b => b.onclick = () => { S.masterReinforcements.splice(Number(b.dataset.i), 1); renderPanel(); });
+      var epH = document.getElementById("ep-heroes");
+      var epL = document.getElementById("ep-level");
+      if (epH) epH.onchange = e => { S.expectedParty.heroes = Math.max(1, Math.min(6, parseInt(e.target.value, 10) || 4)); renderPanel(); };
+      if (epL) epL.onchange = e => { S.expectedParty.level = Math.max(1, parseInt(e.target.value, 10) || 1); renderPanel(); };
+      panel.querySelectorAll(".ndprev").forEach(function (b) {
+        b.onclick = function () {
+          var n = parseInt(b.dataset.ndprev, 10);
+          _ndPreviewHeroes = (_ndPreviewHeroes === n) ? null : n;
+          renderPanel();
+        };
+      });
       return;
     }
     const k = S.sel.kind, ref = S.sel.ref;
@@ -1241,6 +1299,7 @@
       }),
       secret_passages: S.secretPassages.map(p => ({ id: p.id, type: p.type, pos: p.pos.slice(), key_decor_ids: p.key_decor_ids.slice(), keys_mode: p.keys_mode })),
       master_reinforcements: S.masterReinforcements.map(r => ({ type: r.type, count: r.count })),
+      expected_party: { heroes: S.expectedParty.heroes, level: S.expectedParty.level },
       prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}) } : null,
       materiais: { ...S.materiais },
       objectives: {
@@ -1384,6 +1443,11 @@
     S.masterReinforcements = (obj.master_reinforcements || [])
       .filter(r => r && r.type)
       .map(r => ({ type: r.type, count: Math.max(1, parseInt(r.count, 10) || 1) }));
+    S.expectedParty = (function (ep) {
+      ep = ep || {};
+      return { heroes: Math.max(1, Math.min(6, parseInt(ep.heroes, 10) || 4)),
+               level:  Math.max(1, parseInt(ep.level, 10) || 1) };
+    })(obj.expected_party);
     S.materiais = (obj.materiais && typeof obj.materiais === "object") ? { ...obj.materiais } : {};
     S.objectives = obj.objectives || { primary: { type: "kill_all" }, secondary: [] };
     if (!S.objectives.primary) S.objectives.primary = { type: "kill_all" };
