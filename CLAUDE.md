@@ -984,3 +984,16 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > catálogo do editor (`export_catalog.py` → `editor_catalog.js`); `_crPorSalaMapa`
 > (game.js) e `_ndPorSala` (editor.js) somam as armadilhas por sala (casando `pos` à
 > sala que a contém). Teste: `tools/test_modo_mestre.py` (seções [21]/[22]).
+
+> **Camada C — Salas obrigatórias:** cada sala aceita `required` (bool) +
+> `required_mode` (`visit`|`clear`, default `clear`), marcado no painel da sala do
+> editor. Novo tipo de objetivo `salas_obrigatorias` (principal/secundário no dropdown
+> `OBJ`): cumprido quando TODAS as salas `required` atendem sua condição — `clear` =
+> sem monstros vivos com aquele `room_id` (sala vazia já conta); `visit` = um herói
+> entrou (rastreado em `self.salas_visitadas`, populado em `handle_move` reusando o
+> `entered = player_room(...)`). Helpers `_sala_obrigatoria_ok`/
+> `_salas_obrigatorias_progresso`; o payload de status (`_objetivo_payload`) inclui
+> `progresso {feitas,total}` → o HUD (`_objRow` em game.js) mostra "N/M salas".
+> `validar_dungeon` rejeita `salas_obrigatorias` sem salas marcadas e `required_mode`
+> inválido. Só design-time/objetivo (sem trava de encerramento extra). Teste:
+> `tools/test_modo_mestre.py` (seção [23]).
