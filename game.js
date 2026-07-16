@@ -3345,12 +3345,14 @@ const _OBJ_LABELS = {
   reach_exit:      'Chegar à saída',
   open_key_chest:  'Abrir o baú-chave',
   rescue_prisoner: 'Resgatar o prisioneiro',
+  salas_obrigatorias: 'Salas obrigatórias',
 };
 function _objIcon(status){
   return status === 'done' ? '✅' : status === 'failed' ? '❌' : '⬜';
 }
 function _objRow(o){
-  const label = _OBJ_LABELS[(o && o.type)] || (o && o.type) || 'Objetivo';
+  let label = _OBJ_LABELS[(o && o.type)] || (o && o.type) || 'Objetivo';
+  if(o && o.progresso) label += ` (${o.progresso.feitas}/${o.progresso.total} salas)`;
   return `<div class="obj-row"><span class="obj-ic">${_objIcon(o && o.status)}</span><span class="obj-lbl">${label}</span></div>`;
 }
 // Confirmação antes de encerrar a missão (itens largados podem ficar para trás).
