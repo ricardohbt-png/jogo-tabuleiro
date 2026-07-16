@@ -5599,60 +5599,70 @@ window.EDITOR_CATALOG = {
       "tipo": "buraco",
       "nome": "Buraco",
       "icone": "🕳️",
+      "cr": 0.1,
       "precisa_veneno": false
     },
     {
       "tipo": "armadilha_urso",
       "nome": "Armadilha de Urso",
       "icone": "🪤",
+      "cr": 0.25,
       "precisa_veneno": false
     },
     {
       "tipo": "fosso_estacas",
       "nome": "Fosso com Estacas",
       "icone": "⛏️",
+      "cr": 0.35,
       "precisa_veneno": false
     },
     {
       "tipo": "rede",
       "nome": "Rede",
       "icone": "🕸️",
+      "cr": 0.15,
       "precisa_veneno": false
     },
     {
       "tipo": "armadilha_incendiaria",
       "nome": "Armadilha Incendiária",
       "icone": "🔥",
+      "cr": 0.5,
       "precisa_veneno": false
     },
     {
       "tipo": "mina_terrestre",
       "nome": "Mina Terrestre",
       "icone": "💣",
+      "cr": 0.75,
       "precisa_veneno": false
     },
     {
       "tipo": "fosso_envenenado",
       "nome": "Fosso com Estacas Envenenadas",
       "icone": "☠️",
+      "cr": 0.5,
       "precisa_veneno": true
     },
     {
       "tipo": "nuvem_gas",
       "nome": "Nuvem de Gás",
       "icone": "🌫️",
+      "cr": 0.4,
       "precisa_veneno": false
     },
     {
       "tipo": "armadilha_teletransporte",
       "nome": "Armadilha de Teletransporte",
       "icone": "🌀",
+      "cr": 0.4,
       "precisa_veneno": false
     },
     {
       "tipo": "armadilha_dardos_envenenados",
       "nome": "Armadilha de Dardos Envenenados",
       "icone": "🎯",
+      "cr": 0.4,
       "precisa_veneno": true
     }
   ],
