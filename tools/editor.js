@@ -818,15 +818,24 @@
       var key = (m.room_id == null) ? "__none__" : m.room_id;
       porSala[key] = (porSala[key] || 0) + cr;
     });
-    // Armadilhas autoradas: cr do catálogo; agrupadas por sala via pos (não têm room_id).
+    // Armadilhas autoradas: cr do catálogo; agrupadas pela sala que contém a pos, ou
+    // (corredor) pela sala mais próxima (centro).
     (S.traps || []).forEach(function (t) {
       var meta = (CAT.traps || []).find(function (c) { return c.tipo === t.tipo; });
       var cr = meta ? (meta.cr || 0) : 0;
       if (!cr || !t.pos) return;
       total += cr;
-      var r = (S.rooms || []).find(function (rm) {
+      var dentro = (S.rooms || []).find(function (rm) {
         return t.pos[0] >= rm.x && t.pos[0] < rm.x + rm.w && t.pos[1] >= rm.y && t.pos[1] < rm.y + rm.h;
       });
+      var r = dentro;
+      if (!r && (S.rooms || []).length) {
+        var bestD = Infinity;
+        S.rooms.forEach(function (rm) {
+          var d = Math.abs(t.pos[0] - (rm.x + rm.w / 2)) + Math.abs(t.pos[1] - (rm.y + rm.h / 2));
+          if (d < bestD) { bestD = d; r = rm; }
+        });
+      }
       var key = r ? r.id : "__none__";
       porSala[key] = (porSala[key] || 0) + cr;
     });

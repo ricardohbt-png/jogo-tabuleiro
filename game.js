@@ -10363,6 +10363,21 @@ function _monstroEmCasa(tx, ty){
 // ── Minimapa de CR (só mestre; Camada C) ──────────────────────────────────
 var _minimapaPreviewHeroes = null;   // null = usa expected_party.heroes; 2/4/6 = preview
 
+function _salaDaPos(rooms, pos){
+  // Sala que contém pos; se nenhuma (corredor), a mais próxima (centro). null se não há salas.
+  if(!rooms || !rooms.length || !pos) return null;
+  var dentro = rooms.find(function(rm){
+    return pos[0] >= rm.x && pos[0] < rm.x + rm.w && pos[1] >= rm.y && pos[1] < rm.y + rm.h;
+  });
+  if(dentro) return dentro;
+  var best = null, bestD = Infinity;
+  rooms.forEach(function(rm){
+    var d = Math.abs(pos[0] - (rm.x + rm.w/2)) + Math.abs(pos[1] - (rm.y + rm.h/2));
+    if(d < bestD){ bestD = d; best = rm; }
+  });
+  return best;
+}
+
 function _crPorSalaMapa(state){
   // CR (cr de monstros vivos) por room_id. Retorna {porRoom:{id:cr}, medio, total}.
   var porRoom = {};
@@ -10374,12 +10389,11 @@ function _crPorSalaMapa(state){
     if(m.room_id != null && porRoom[m.room_id] != null) porRoom[m.room_id] += cr;
   });
   // Armadilhas autoradas (têm cr; pos casa com a sala que a contém — não têm room_id).
+  // Fora de qualquer sala (corredor), atribui à sala mais próxima (centro).
   (state.armadilhas || []).forEach(function(a){
     var cr = a.cr || 0; if(!cr || !a.pos) return;
     total += cr;
-    var r = (state.rooms || []).find(function(rm){
-      return a.pos[0] >= rm.x && a.pos[0] < rm.x + rm.w && a.pos[1] >= rm.y && a.pos[1] < rm.y + rm.h;
-    });
+    var r = _salaDaPos(state.rooms, a.pos);
     if(r && porRoom[r.id] != null) porRoom[r.id] += cr;
   });
   var ids = Object.keys(porRoom);
