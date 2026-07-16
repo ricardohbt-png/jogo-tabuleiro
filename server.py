@@ -14101,6 +14101,8 @@ class GameRoom:
                 "aliada":  a.get("criador") in self.players,
                 "so_luccas": False,   # reservado p/ armadilhas de masmorra detectadas (futuro)
                 "image":   a.get("image"),   # PNG opcional — o cliente mostra só quando revelada
+                # cr só das autoradas (aliadas mandam 0 — não contam no minimapa de CR).
+                "cr":      (0 if a.get("criador") in self.players else trap_cr(tipo)),
             })
         return out
 
