@@ -329,6 +329,8 @@ function showScreen(id){
     if(hudM) hudM.style.display = 'none';
     const fm = document.getElementById('ficha-monstro');
     if(fm) fm.style.display = 'none';
+    const mm = document.getElementById('minimapa-cr');
+    if(mm) mm.style.display = 'none';
   }
 }
 
@@ -10358,6 +10360,76 @@ function _monstroEmCasa(tx, ty){
   return (st.monsters||[]).find(m => m.hp>0 && m.pos && m.pos[0]===tx && m.pos[1]===ty) || null;
 }
 
+// ── Minimapa de CR (só mestre; Camada C) ──────────────────────────────────
+var _minimapaPreviewHeroes = null;   // null = usa expected_party.heroes; 2/4/6 = preview
+
+function _crPorSalaMapa(state){
+  // CR (cr de monstros vivos) por room_id. Retorna {porRoom:{id:cr}, medio, total}.
+  var porRoom = {};
+  (state.rooms || []).forEach(function(r){ porRoom[r.id] = 0; });
+  var total = 0;
+  (state.monsters || []).forEach(function(m){
+    var cr = window.Difficulty ? window.Difficulty.crFromEntry(m) : 0;
+    total += cr;
+    if(m.room_id != null && porRoom[m.room_id] != null) porRoom[m.room_id] += cr;
+  });
+  var ids = Object.keys(porRoom);
+  var soma = ids.reduce(function(a,k){ return a + porRoom[k]; }, 0);
+  var medio = ids.length ? (soma / ids.length) : 0;
+  return { porRoom: porRoom, medio: medio, total: total };
+}
+
+function abrirMinimapaCR(){
+  if(!GS.isMaster()) return;
+  const state = GS.gameState;
+  if(!state || !state.rooms){ toast('Minimapa indisponível.', 'var(--text2)'); return; }
+  let host = document.getElementById('minimapa-cr');
+  if(!host){ host = document.createElement('div'); host.id = 'minimapa-cr'; document.body.appendChild(host); }
+  host.style.display = 'flex';
+  renderMinimapaCR();
+}
+
+function renderMinimapaCR(){
+  const host = document.getElementById('minimapa-cr');
+  const state = GS.gameState;
+  if(!host || !state || !state.rooms) return;
+  const D = window.Difficulty;
+  const ep = state.expected_party || { heroes: 4, level: 1 };
+  const heroes = (_minimapaPreviewHeroes != null) ? _minimapaPreviewHeroes : ep.heroes;
+  const pod = D ? D.poder(heroes, ep.level) : Math.max(1, heroes * ep.level);
+  const nd = _crPorSalaMapa(state);
+  let maxX = 1, maxY = 1;
+  state.rooms.forEach(r => { maxX = Math.max(maxX, r.x + r.w); maxY = Math.max(maxY, r.y + r.h); });
+  const salas = state.rooms.map(r => {
+    const cr = nd.porRoom[r.id] || 0;
+    const f = D ? D.faixa(cr, pod) : { color: '#888', label: '' };
+    const left = (r.x / maxX) * 100, top = (r.y / maxY) * 100;
+    const w = (r.w / maxX) * 100, h = (r.h / maxY) * 100;
+    return `<div class="mm-sala" title="${f.label} (CR ${cr.toFixed(2)})" style="left:${left}%;top:${top}%;width:${w}%;height:${h}%;background:${f.color}">` +
+           `<span>${cr.toFixed(1)}</span></div>`;
+  }).join('');
+  const medioF = D ? D.faixa(nd.medio, pod) : { color: '#888', label: '' };
+  const sel = [2,4,6].map(n => {
+    const on = ((_minimapaPreviewHeroes != null ? _minimapaPreviewHeroes : ep.heroes) === n);
+    return `<button data-mmprev="${n}" class="mm-prev${on ? ' on' : ''}">${n}</button>`;
+  }).join('');
+  host.innerHTML =
+    `<div class="mm-box">` +
+    `<div class="mm-head"><b>🗺️ Mapa de CR</b> — CR médio: <span style="color:${medioF.color}">${nd.medio.toFixed(2)} (${medioF.label})</span>` +
+    `<button class="mm-close" title="Fechar">✕</button></div>` +
+    `<div class="mm-canvas" style="aspect-ratio:${maxX}/${maxY}">${salas}</div>` +
+    `<div class="mm-foot"><span>poder ${pod} · preview jogadores:</span> ${sel}</div>` +
+    `</div>`;
+  host.querySelector('.mm-close').onclick = () => { host.style.display = 'none'; };
+  host.querySelectorAll('.mm-prev').forEach(b => {
+    b.onclick = () => {
+      const n = parseInt(b.dataset.mmprev, 10);
+      _minimapaPreviewHeroes = (_minimapaPreviewHeroes === n) ? null : n;
+      renderMinimapaCR();
+    };
+  });
+}
+
 function renderMyPanel(state){
   // Mestre: sem ficha de personagem — mostra o HUD de controle de monstros
   // em vez da ficha normal (ele não está em state.players).
@@ -11736,6 +11808,11 @@ document.addEventListener('keydown', e=>{
     if(GS.isMaster()) renderMasterHud(GS.gameState);
     toast('Implantação cancelada.', 'var(--text2)');
     e.preventDefault(); return;
+  }
+  // ESC fecha o minimapa de CR (mestre)
+  if(e.key==='Escape'){
+    const mm = document.getElementById('minimapa-cr');
+    if(mm && mm.style.display !== 'none'){ mm.style.display = 'none'; e.preventDefault(); return; }
   }
   // R resets the 3D camera regardless of turn state
   if((e.key === 'r' || e.key === 'R') && mode3D){
@@ -21343,9 +21420,25 @@ document.addEventListener('keydown', (e) => {
   if(fab) document.body.appendChild(fab);
 })();
 
+// Camada C: o mestre não equipa itens — o 🎒 vira 🗺️ "Mapa de CR" (minimapa).
+function _atualizarFichaFab(){
+  const fab = document.getElementById('ficha-fab');
+  if(!fab) return;
+  if(GS.isMaster()){
+    fab.textContent = '🗺️';
+    fab.title = 'Mapa de CR (mestre)';
+    fab.onclick = () => abrirMinimapaCR();
+  } else {
+    fab.textContent = '🎒';
+    fab.title = 'Inventário (tecla I)';
+    fab.onclick = () => InventoryModal.toggle(GS.myPid);
+  }
+}
+
 GS.on('gameState', msg => {
   _detectHpChanges(msg);   // som de dano/cura por variação de HP entre estados
   handleGameState(msg);
+  _atualizarFichaFab();    // Camada C: 🎒↔🗺️ conforme o papel (mestre)
   // Sincroniza os animados autoritativos do servidor no registro do Pedro,
   // para a ficha refletir HP/pó durante o combate.
   const meNow = (msg.players||[]).find(p => p.id === GS.myPid);
