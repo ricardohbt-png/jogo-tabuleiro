@@ -446,6 +446,24 @@ async def main():
     check("buraco cr 0.1", S.trap_cr(S.ARMADILHAS["buraco"]) == 0.1)
     check("todas ARMADILHAS resolvem cr>0", all(S.trap_cr(m) > 0 for m in S.ARMADILHAS.values()))
 
+    print("\n[22] ND/XP de armadilha — concessão")
+    r = playing_room_com_mestre()
+    r.players["h"] = {"id":"h","name":"H","class_id":"warrior","alive":True,"hp":10,
+                      "max_hp":10,"pos":[1,1],"xp":0,"level":1,"str_":14,"dex":12,
+                      "con_":12,"int_":10}
+    arm = {"id":"a1","tipo":"mina_terrestre","pos":[2,2]}
+    await r._conceder_xp_armadilha(arm)
+    check("XP concedido no 1º (mina cr .75 → 15)", r.players["h"]["xp"] == 15)
+    check("marca xp_concedido", arm.get("xp_concedido") is True)
+    x1 = r.players["h"]["xp"]; await r._conceder_xp_armadilha(arm)
+    check("não concede 2ª vez", r.players["h"]["xp"] == x1)
+    arm2 = {"id":"a2","tipo":"buraco","pos":[3,3],"aliada":True}
+    xb = r.players["h"]["xp"]; await r._conceder_xp_armadilha(arm2)
+    check("armadilha aliada não concede", r.players["h"]["xp"] == xb)
+    arm3 = {"id":"a3","tipo":"tipo_inexistente","pos":[4,4]}
+    await r._conceder_xp_armadilha(arm3)
+    check("tipo inválido não concede", r.players["h"]["xp"] == xb)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

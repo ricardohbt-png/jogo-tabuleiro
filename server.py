@@ -13523,10 +13523,14 @@ class GameRoom:
             consumiu = await self._disparar_teletransporte(alvo, arm, tipo)
             if consumiu:
                 self.armadilhas = [a for a in self.armadilhas if a["id"] != arm["id"]]
+            if alvo.get("id") in self.players and alvo.get("alive"):
+                await self._conceder_xp_armadilha(arm, alvo)
             return
         if tipo.get("special") == "dardos_envenenados":
             await self._disparar_dardos_envenenados(alvo, arm, tipo)
             self.armadilhas = [a for a in self.armadilhas if a["id"] != arm["id"]]
+            if alvo.get("id") in self.players and alvo.get("alive"):
+                await self._conceder_xp_armadilha(arm, alvo)
             return
 
         if tipo.get("area"):
@@ -13566,6 +13570,10 @@ class GameRoom:
             arm["esgotada"] = True   # já disparou; mantém só p/ dano residual (incendiária)
         else:
             self.armadilhas = [a for a in self.armadilhas if a["id"] != arm["id"]]
+
+        # XP de armadilha vencida: só se o herói que disparou sobreviveu ao efeito.
+        if alvo.get("id") in self.players and alvo.get("alive"):
+            await self._conceder_xp_armadilha(arm, alvo)
 
     def _saida_teletransporte_livre(self, alvo, saida):
         """Saída exata primeiro; se ocupada, procura adjacentes por proximidade."""
@@ -13815,6 +13823,7 @@ class GameRoom:
             self.armadilhas = [a for a in self.armadilhas if a["id"] != arm["id"]]
             msg_recover = f" Recuperou 🪙{custo_ouro_arm}!" if recuperou else ""
             await self.gm_say(f"✅ Armadilha desarmada com sucesso!{msg_recover}")
+            await self._conceder_xp_armadilha(arm)
         else:
             await self.gm_say(f"❌ Falha no desarme ({total} vs {dif}) — tente de novo no próximo turno.")
         await self.push_state()
@@ -15054,6 +15063,28 @@ class GameRoom:
             return max(1, xp_total // alive_count), alive_count
         share = m.get("xp", 0) // alive_count
         return share, alive_count
+
+    async def _conceder_xp_armadilha(self, arm, alvo=None):
+        """XP de uma armadilha AUTORADA vencida (desarmada ou disparada-e-sobrevivida):
+        concedido UMA vez (flag xp_concedido), dividido entre os heróis vivos. As
+        armadilhas aliadas (do Luccas) não dão XP."""
+        if not arm or arm.get("aliada") or arm.get("xp_concedido"):
+            return
+        meta = ARMADILHAS.get(arm.get("tipo"))
+        if not meta:
+            return
+        vivos = [p for p in self.players.values() if p.get("alive")]
+        if not vivos:
+            return
+        total = trap_xp(trap_cr(meta))
+        arm["xp_concedido"] = True
+        if total <= 0:
+            return
+        share = max(1, total // len(vivos))
+        for p in vivos:
+            p["xp"] = p.get("xp", 0) + share
+            await self._check_level_up(p)
+        await self.gm_say(f"✨ Armadilha superada — +{share} XP para o grupo!")
 
     def _roll_monster_loot(self, m):
         """Rola a tabela de loot do monstro. Retorna dict de item ou None."""
