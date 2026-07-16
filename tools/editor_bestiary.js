@@ -20,8 +20,8 @@
   };
   function attackBonus(m, a) {
     if (a.base_attack_bonus != null || m.base_attack_bonus != null)
-      return Number(a.base_attack_bonus != null ? a.base_attack_bonus : m.base_attack_bonus || 0) + mod(m[(a.attack_attribute || (a.range ? "dex" : "str_"))]);
-    return Number(a.atk_bonus != null ? a.atk_bonus : m.atk_bonus || 0);
+      return Number(a.base_attack_bonus != null ? a.base_attack_bonus : m.base_attack_bonus || 0) + mod(m[(a.attack_attribute || (a.range ? "dex" : "str_"))]) + Number(m.equipment_attack_bonus || 0);
+    return Number(a.atk_bonus != null ? a.atk_bonus : m.atk_bonus || 0) + Number(m.equipment_attack_bonus || 0);
   }
   function attackDamageAverage(m, a) {
     const attr = a.attack_attribute || (a.range ? "dex" : "str_");
@@ -33,6 +33,23 @@
     return `${a.damage || m.damage || "—"}${bonus ? (bonus > 0 ? "+" : "") + bonus : ""}`;
   }
   const pretty = (v) => String(v || "—").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  function equipmentPreview(monster) {
+    const m = JSON.parse(JSON.stringify(monster));
+    if (!m.equipment_enabled) return m;
+    const catalog = new Map((((window.EDITOR_CATALOG || {}).items) || []).map(item => [item.id, item]));
+    const items = (m.equipped_items || m.equipment || []).map(id => catalog.get(id)).filter(Boolean);
+    const weapon = items.find(item => item.die);
+    if (weapon) {
+      const attr = weapon.stat === "dex" ? "dex" : "str_";
+      m.attacks = [{name:weapon.name, damage:weapon.die, attack_attribute:attr, apply_attribute_damage:true,
+        base_attack_bonus:Number(m.base_attack_bonus || 0), num_attacks:1, range:Number(weapon.range || 0), categoria:weapon.categoria}];
+    }
+    m.ac = Number(m.ac || 10) + items.reduce((sum, item) => sum + Number(item.ac_bonus || 0) + (item.effect === "def_" ? Number(item.value || 0) : 0), 0);
+    m.hp = Number(m.hp || 0) + items.reduce((sum, item) => sum + (item.effect === "maxhp" ? Number(item.value || 0) : 0), 0);
+    m.movement = Number(m.movement || 0) + items.reduce((sum, item) => sum + (item.effect === "spd" ? Number(item.value || 0) : 0), 0);
+    m.equipment_attack_bonus = items.reduce((sum, item) => sum + (item.effect === "atk" ? Number(item.value || 0) : 0), 0);
+    return m;
+  }
   function average(dice) {
     const m = String(dice || "").replace(/\s/g, "").match(/(\d*)d(\d+)([+-]\d+)?/i);
     return m ? (Number(m[1] || 1) * (Number(m[2]) + 1) / 2) + Number(m[3] || 0) : 0;
@@ -133,13 +150,15 @@
   }
   function loot(m) {
     const rows = [];
-    if (m.equipment) rows.push(`Equipamento: ${Array.isArray(m.equipment) ? m.equipment.map(pretty).join(", ") : pretty(m.equipment)}`);
+    const equipped = m.equipped_items || m.equipment;
+    if (equipped && (Array.isArray(equipped) ? equipped.length : true)) rows.push(`${m.equipment_enabled ? "Equipado e ativo" : "Equipamento"}: ${Array.isArray(equipped) ? equipped.map(pretty).join(", ") : pretty(equipped)}`);
     if (m.guaranteed_loot) rows.push(`Garantido: ${Array.isArray(m.guaranteed_loot) ? m.guaranteed_loot.map(x => pretty(x.name || x.id || x)).join(", ") : pretty(m.guaranteed_loot.name || m.guaranteed_loot.id || m.guaranteed_loot)}`);
     if (m.gold != null) rows.push(`${m.gold} ouro`);
     if (m.loot_table) rows.push("Tesouro variável (tabela de loot)");
     return rows.length ? rows.map(esc).join("<br>") : "Nenhum tesouro definido.";
   }
   function details(m) {
+    m = equipmentPreview(m);
     const attacks = m.attacks && m.attacks.length ? m.attacks : [{name:"Ataque", atk_bonus:m.atk_bonus, damage:m.damage, num_attacks:1}];
     const abilities = (m.special_abilities || []).filter(a => a.action_type !== "magia");
     const spellsById = new Map(spellLibrary().map(s => [s.id, s]));
@@ -147,7 +166,7 @@
     const weaknesses = (m.weaknesses || []).map(w => w.descricao || `${pretty(w.categoria || w.type)} ${w.multiplier ? "×" + w.multiplier : (w.bonus_flat > 0 ? "+" : "") + (w.bonus_flat || "")}`).join(" · ") || "Nenhuma definida";
     return `<article class="best-card">
       <section class="best-media">${imageBox(`../assets/retratos/monstros/${m.portrait || m.type}.png`, "best-portrait", "Retrato\na adicionar", m.image && m.image !== (m.portrait || m.type) ? `../assets/retratos/monstros/${m.image}.png` : "")}${imageBox(`../assets/pawns/monstros/${m.image || m.type}/${m.image || m.type}.png`, "best-mini", "Miniatura\nindisponível")}</section>
-      <section class="best-sheet"><header class="best-head"><div><h1>${esc(m.emoji || "") } ${esc(m.name)}</h1><p>${esc(m.type)} · IA: <strong>${esc(pretty(m.ai_type))}</strong></p></div><div class="nd-pair"><span>ND definido <b>${esc(nd(m.cr != null ? m.cr : m.tier || "—"))}</b></span><span title="Estimativa de consulta baseada em defesa, dano, ataques e habilidades.">ND estimado <b>${esc(nd(ndEstimate(m)))}</b></span></div></header>
+      <section class="best-sheet"><header class="best-head"><div><h1>${esc(m.emoji || "") } ${esc(m.name)}</h1><p><strong>Subtipo: ${esc(({construto:"Construto",morto_vivo:"Morto-Vivo",animal:"Animal",abissal:"Abissal",vegetal:"Vegetal",raca_padrao:"Raça Padrão"})[m.subtipo || (m.undead ? "morto_vivo" : "raca_padrao")] || "Raça Padrão")}</strong></p><p>${esc(m.type)} · IA: <strong>${esc(pretty(m.ai_type))}</strong></p></div><div class="nd-pair"><span>ND definido <b>${esc(nd(m.cr != null ? m.cr : m.tier || "—"))}</b></span><span title="Estimativa de consulta baseada em defesa, dano, ataques e habilidades.">ND estimado <b>${esc(nd(ndEstimate(m)))}</b></span></div></header>
       <div class="best-stats"><div><b>PV</b><span>${esc(m.hp || "—")}</span></div><div><b>CA total</b><span>${esc(m.ac || "—")}</span></div><div><b>Armadura natural</b><span>${esc(m.natural_armor != null ? m.natural_armor : Math.max(0, Number(m.ac || 10) - 10 - mod(m.dex)))}</span></div><div><b>Movimento</b><span>${esc(m.movement || "—")}</span></div><div><b>Raio de visão</b><span title="${m.visao_escuro || m.darkvision_range ? "Visão no escuro: objetos não bloqueiam, apenas paredes." : "Objetos altos e paredes bloqueiam a visão."}">${esc(visionRadius(m))}${m.visao_escuro || m.darkvision_range ? " 👁️" : ""}</span></div><div><b>Ataques</b><span>${attacks.reduce((n,a) => n + Number(a.num_attacks || 1), 0)}</span></div><div><b>Iniciativa</b><span>${esc((mod(m.dex) + mod(m.int_)) >= 0 ? "+" + (mod(m.dex) + mod(m.int_)) : mod(m.dex) + mod(m.int_))}</span></div></div>
       <div class="best-attributes"><div><b>FOR</b>${esc(m.str_ != null ? m.str_ : "—")} <small>${m.str_ != null ? (mod(m.str_) >= 0 ? "+" : "") + mod(m.str_) : ""}</small></div><div><b>DES</b>${esc(m.dex != null ? m.dex : "—")} <small>${m.dex != null ? (mod(m.dex) >= 0 ? "+" : "") + mod(m.dex) : ""}</small></div><div><b>CON</b>${esc(m.con_ != null ? m.con_ : "—")} <small>${m.con_ != null ? (mod(m.con_) >= 0 ? "+" : "") + mod(m.con_) : ""}</small></div><div><b>INT</b>${esc(m.int_ != null ? m.int_ : "—")} <small>${m.int_ != null ? (mod(m.int_) >= 0 ? "+" : "") + mod(m.int_) : ""}</small></div></div>
       <div class="best-saves"><div><b>Fortitude</b><span>${esc(m.fort != null ? (m.fort >= 0 ? "+" : "") + m.fort : "—")}</span><small>CON</small></div><div><b>Reflexos</b><span>${esc(m.ref_ != null ? (m.ref_ >= 0 ? "+" : "") + m.ref_ : "—")}</span><small>DES</small></div><div><b>Vontade</b><span>${esc(m.will != null ? (m.will >= 0 ? "+" : "") + m.will : "—")}</span><small>INT</small></div></div>

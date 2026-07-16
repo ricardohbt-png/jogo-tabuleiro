@@ -19,12 +19,16 @@ def build_catalog():
             "fort", "ref_", "will", "fort_base", "ref_base", "will_base",
             "attacks", "special_abilities", "monster_spells", "immunities", "weaknesses",
             "resistances",
-            "loot_table", "guaranteed_loot", "equipment", "gold", "xp",
-            "ai_type", "undead", "darkvision_range",
+            "loot_table", "guaranteed_loot", "equipment", "equipment_enabled", "equipped_items", "gold", "xp",
+            "ai_type", "undead", "subtipo", "darkvision_range",
         )
         entry = {key: m[key] for key in fields if key in m}
         monsters.append(entry)
-    items = [{"id": i["id"], "name": i["name"], "emoji": i.get("emoji", "")}
+    items = [{key: i[key] for key in (
+                "id", "name", "emoji", "die", "stat", "range", "reach", "categoria",
+                "kind", "ac_bonus", "item_slot", "effect", "value", "veneno_id",
+                "ammo_type", "ammo_count", "extra_damage", "extra_damage_types"
+             ) if key in i}
              for i in server._DUNGEON_ITEM_CATALOG.values()]
     traps = []
     for tipo, meta in server.ARMADILHAS.items():

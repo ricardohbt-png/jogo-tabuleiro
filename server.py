@@ -2357,7 +2357,66 @@ MONSTER_DEFS = [
         "spawn_min": 1, "spawn_max": 1, "ai_type": "grotao", "porte": "grande", "image": "grotao",
         "undead": False, "boss": False,
     },
+    # Elemental de Fogo (ND 3): ofensivo frágil que pune ataques corpo a corpo.
+    {
+        "type": "elemental_fogo", "name": "Elemental de Fogo", "emoji": "🔥",
+        "tier": 3, "cr": 3,
+        "hp": 28, "ac": 13, "size": [1, 1], "movement": 6,
+        "str_": 14, "dex": 14, "con_": 14, "int_": 2,
+        "fort": 4, "ref_": 4, "will": -4,
+        "attacks": [
+            {"name": "Chama", "atk_bonus": 5, "damage": "1d10+3",
+             "damage_types": ["fire"], "num_attacks": 1, "on_hit": None,
+             "categoria": "fogo", "ignora_resistencia_leve_fogo": True},
+        ],
+        "special_abilities": [
+            {"id": "corpo_em_chamas", "name": "Corpo em Chamas", "action_type": "passiva",
+             "damage": "1d6", "damage_types": ["fire"],
+             "descricao": "Quem o acerta com um ataque corpo a corpo sofre 1d6 de dano de fogo."},
+            {"id": "explosao_final", "name": "Explosão Final", "action_type": "passiva",
+             "damage": "6d6", "damage_types": ["fire"], "radius": 1,
+             "save": "reflexos", "dc": 13,
+             "descricao": "Ao morrer, explode em 1 quadrado: 6d6 de fogo; Reflexos CD 13 reduz à metade."},
+            {"id": "intensidade", "name": "Intensidade", "action_type": "passiva",
+             "descricao": "As chamas ignoram reduções leves de dano de fogo (não ignora resistência à metade)."},
+        ],
+        "immunities": ["fire"],
+        "weaknesses": [{"type": "cold", "multiplier": 1.5,
+                         "descricao": "Gelo causa 1,5× de dano."}],
+        "loot_table": {"1-55": None, "56-85": {"tipo": "gold", "valor": 3}, "86-100": {"tipo": "gold", "valor": 6}},
+        "spawn_min": 1, "spawn_max": 1, "ai_type": "agressivo", "porte": "medio",
+        "image": "elemental_fogo", "subtipo": "construto", "undead": False, "boss": False,
+    },
 ]
+
+# Subtipos gerais. As regras de dano são aplicadas centralmente em
+# _apply_damage_types; imunidades de estado que dependem de fisiologia (veneno,
+# doença, sono etc.) são consultadas pelos respectivos efeitos.
+SUBTIPOS_MONSTRO = {
+    "construto": {"nome": "Construto", "imunidades": ["paralisia", "petrificacao", "encantamento", "controle_mental", "medo", "necrótico", "veneno", "gases", "doenca", "sono"], "descricao": "Imune a paralisia, petrificação, encantamento, controle mental, medo, necrótico, venenos, gases, doença e sono."},
+    "morto_vivo": {"nome": "Morto-Vivo", "imunidades": ["veneno", "gases", "necrótico", "doenca", "sono", "encantamento", "medo"], "descricao": "Imune a veneno, gases, necrótico, doença, sono, encantamento e medo; sofre dano sagrado dobrado."},
+    "animal": {"nome": "Animal", "imunidades": [], "descricao": "Sem particularidades gerais."},
+    "abissal": {"nome": "Abissal", "imunidades": ["veneno"], "descricao": "Imune a veneno; sofre metade de fogo, frio e eletricidade; dano sagrado dobrado."},
+    "vegetal": {"nome": "Vegetal", "imunidades": [], "descricao": "Sofre 1,5× dano de fogo."},
+    "raca_padrao": {"nome": "Raça Padrão", "imunidades": [], "descricao": "Sem particularidades gerais."},
+}
+
+def _subtipo_padrao_monstro(m):
+    if m.get("undead"):
+        return "morto_vivo"
+    t = str(m.get("type", "")).lower()
+    if any(k in t for k in ("lobo", "urso", "leao", "tigre", "aranha", "escorp", "cobra", "crocod", "lagarto", "rato", "morcego", "animal")):
+        return "animal"
+    if any(k in t for k in ("golem", "construct", "elemental", "armadura_animada", "objeto_animado")):
+        return "construto"
+    if any(k in t for k in ("demon", "diabo", "abiss", "vael")):
+        return "abissal"
+    if any(k in t for k in ("ente", "planta", "arvore", "vegetal")):
+        return "vegetal"
+    return "raca_padrao"
+
+for _mdef in MONSTER_DEFS:
+    _mdef.setdefault("subtipo", _subtipo_padrao_monstro(_mdef))
 
 CHEST_ITEMS = [
     # ── Consumíveis (vão para a mochila, max 6 slots) ──
@@ -4251,6 +4310,66 @@ def monster_cr(mdef):
             pass
     return _CR_POR_TIER.get(mdef.get("tier", 1), 1.0)
 
+def _aplicar_equipamentos_monstro(m):
+    """Equipa a criatura com itens da mesma loja usada pelos heróis.
+
+    A ficha guarda apenas IDs; cada instância recebe cópias independentes para
+    que poções e doses de veneno possam ser consumidas sem alterar o catálogo.
+    """
+    if not m.get("equipment_enabled"):
+        return
+    subtipo = m.get("subtipo", _subtipo_padrao_monstro(m))
+    if subtipo not in {"raca_padrao", "abissal", "morto_vivo"}:
+        return
+    items, seen = [], set()
+    for item_id in m.get("equipped_items", m.get("equipment", [])):
+        if item_id in seen or item_id not in _DUNGEON_ITEM_CATALOG:
+            continue
+        seen.add(item_id)
+        items.append(deepcopy(_DUNGEON_ITEM_CATALOG[item_id]))
+    m["equipment_items"] = items
+    if not items:
+        return
+
+    weapon = next((item for item in items if item.get("die")), None)
+    if weapon:
+        attr = "dex" if weapon.get("stat") == "dex" else "str_"
+        atk_bonus = int(m.get("base_attack_bonus", 0)) + mod(m.get(attr, 10))
+        m["attacks"] = [{
+            "name": weapon.get("name", "Arma"), "atk_bonus": atk_bonus,
+            "damage": weapon["die"], "damage_types": [DMG_PHYSICAL],
+            "num_attacks": 1, "attack_attribute": attr,
+            "damage_attribute": attr, "apply_attribute_damage": True,
+            "attribute_mod_base": mod(m.get(attr, 10)),
+            "base_attack_bonus": int(m.get("base_attack_bonus", 0)),
+            "range": weapon.get("range"), "reach": weapon.get("reach"),
+            "categoria": weapon.get("categoria"),
+        }]
+        m["equipped_weapon"] = weapon
+
+    ac_bonus = sum(int(item.get("ac_bonus", 0) or 0) for item in items)
+    ac_bonus += sum(int(item.get("value", 0) or 0) for item in items if item.get("effect") == "def_")
+    if ac_bonus:
+        m["ac"] += ac_bonus
+        m["equipment_ac_bonus"] = ac_bonus
+    atk_bonus = sum(int(item.get("value", 0) or 0) for item in items if item.get("effect") == "atk")
+    if atk_bonus:
+        m["equipment_attack_bonus"] = atk_bonus
+    hp_bonus = sum(int(item.get("value", 0) or 0) for item in items if item.get("effect") == "maxhp")
+    if hp_bonus:
+        m["max_hp"] += hp_bonus
+        m["hp"] += hp_bonus
+        m["equipment_hp_bonus"] = hp_bonus
+    move_bonus = sum(int(item.get("value", 0) or 0) for item in items if item.get("effect") == "spd")
+    if move_bonus:
+        m["movement"] += move_bonus
+        m["equipment_movement_bonus"] = move_bonus
+    poison = next((item.get("veneno_id") for item in items if item.get("effect") == "coat_poison" and item.get("veneno_id")), None)
+    if poison and m.get("attacks"):
+        m["attacks"][0]["on_hit"] = poison
+        m["equipment_poison"] = poison
+    m["equipment_consumables"] = [item for item in items if item.get("item_slot") == "bag"]
+
 def make_monster(mdef, room):
     m = deepcopy(mdef)
     # Mesmo campo usado pelo editor: os despachantes do grimório leem `level`.
@@ -4271,6 +4390,7 @@ def make_monster(mdef, room):
     m["max_hp"] = m["hp"]
     m["pos"] = [room["cx"], room["cy"]]
     m["room_id"] = room["id"]
+    _aplicar_equipamentos_monstro(m)
     # Inicializa contadores de habilidades especiais (formato novo)
     if "special_abilities" in m:
         m["ability_uses"] = {
@@ -7889,6 +8009,28 @@ class GameRoom:
                     if _poison_slots:
                         _melee_poison_vid = _poison_slots.pop(0)
                         self._set_weapon_poison_slots(p, _poison_slots)
+                # Corpo em Chamas: um acerto corpo a corpo provoca a retaliação,
+                # até mesmo quando o golpe é fatal.
+                corpo_chamas = next((ab for ab in target.get("special_abilities", [])
+                                      if ab.get("id") == "corpo_em_chamas"), None)
+                if corpo_chamas and w_range is None and p.get("alive"):
+                    fogo_bruto = roll_dice(corpo_chamas.get("damage", "1d6"))
+                    fogo = self._apply_damage_types(
+                        fogo_bruto, corpo_chamas.get("damage_types", [DMG_FIRE]), p)
+                    await self.broadcast({"type": "dice_roll", "die": "d6", "value": fogo_bruto,
+                                          "label": "🔥 Corpo em Chamas"})
+                    fogo_alvo, transferencia = await self._processar_dano_protetor(p["id"], fogo)
+                    p["hp"] = max(0, p["hp"] - fogo_alvo)
+                    await self.gm_say(
+                        f"🔥 **{p['name']}** é queimado pelo Corpo em Chamas de "
+                        f"**{target['name']}**: **{fogo_alvo}** de dano!")
+                    if transferencia:
+                        protetor, dano_protetor = transferencia
+                        protetor["hp"] = max(0, protetor["hp"] - dano_protetor)
+                        if protetor["hp"] <= 0:
+                            await self._player_dies(protetor["id"])
+                    if p["hp"] <= 0:
+                        await self._player_dies(p["id"])
                 if target["hp"] <= 0:
                     await self._monster_dies(target, pid)
                 else:
@@ -7963,6 +8105,24 @@ class GameRoom:
                         f"🗡️ **{p['name']}** desfere golpe de mão secundária com **{off['name']}** (ação bônus)"
                         f" (d20={oroll}+{offhand_atk}={ototal} vs CA {tgt['ac']}):"
                         f"{ocrit_str} dano [{off['die']}={oraw}{osb} DES] = **{odmg}**!")
+                    corpo_chamas = next((ab for ab in tgt.get("special_abilities", [])
+                                          if ab.get("id") == "corpo_em_chamas"), None)
+                    if corpo_chamas and p.get("alive"):
+                        fogo_bruto = roll_dice(corpo_chamas.get("damage", "1d6"))
+                        fogo = self._apply_damage_types(
+                            fogo_bruto, corpo_chamas.get("damage_types", [DMG_FIRE]), p)
+                        await self.broadcast({"type": "dice_roll", "die": "d6", "value": fogo_bruto,
+                                              "label": "🔥 Corpo em Chamas"})
+                        fogo_alvo, transferencia = await self._processar_dano_protetor(p["id"], fogo)
+                        p["hp"] = max(0, p["hp"] - fogo_alvo)
+                        await self.gm_say(f"🔥 **{p['name']}** é queimado pelo Corpo em Chamas: **{fogo_alvo}** de dano!")
+                        if transferencia:
+                            protetor, dano_protetor = transferencia
+                            protetor["hp"] = max(0, protetor["hp"] - dano_protetor)
+                            if protetor["hp"] <= 0:
+                                await self._player_dies(protetor["id"])
+                        if p["hp"] <= 0:
+                            await self._player_dies(p["id"])
                     if tgt["hp"] <= 0:
                         await self._monster_dies(tgt, pid)
                 else:
@@ -11652,6 +11812,8 @@ class GameRoom:
         dur = self._rolar_dado(magia.get("duracao", "1d4+1")) + dur_bonus
         n = 0
         for alvo in self._alvos_na_area(tx, ty, magia.get("area_raio", 2)):
+            if alvo.get("subtipo", _subtipo_padrao_monstro(alvo)) in ("construto", "morto_vivo"):
+                continue
             save_ok, *_ = await self._save_mostrado(alvo, "vontade", self._dif_magia(caster, magia))
             if not save_ok:
                 alvo["dormindo"] = True; alvo["dormindo_rodadas"] = dur; n += 1
@@ -11664,6 +11826,8 @@ class GameRoom:
         dur = self._rolar_dado(magia.get("duracao", "1d4+1")) + dur_bonus
         n = 0
         for alvo in self._alvos_na_area(tx, ty, magia.get("area_raio", 2)):
+            if alvo.get("subtipo", _subtipo_padrao_monstro(alvo)) in ("construto", "morto_vivo"):
+                continue
             save_ok, *_ = await self._save_mostrado(alvo, "vontade", self._dif_magia(caster, magia))
             if not save_ok:
                 alvo["com_medo"] = True; alvo["medo_rodadas"] = dur
@@ -11678,6 +11842,8 @@ class GameRoom:
         dist = max(abs(caster["pos"][0]-alvo["pos"][0]), abs(caster["pos"][1]-alvo["pos"][1]))
         if dist > magia.get("alcance", 4):
             await self.send_to(caster["id"], {"type": "error", "msg": "Alvo fora do alcance."}); return
+        if alvo.get("subtipo", _subtipo_padrao_monstro(alvo)) in ("construto", "morto_vivo"):
+            await self.gm_say(f"🛡️ **{alvo['name']}** é imune a encantamentos."); return
         save_ok, *_ = await self._save_mostrado(alvo, "vontade", self._dif_magia(caster, magia))
         if not save_ok:
             alvo["comandado"] = True
@@ -11693,6 +11859,8 @@ class GameRoom:
         dist = max(abs(caster["pos"][0]-alvo["pos"][0]), abs(caster["pos"][1]-alvo["pos"][1]))
         if dist > magia.get("alcance", 5):
             await self.send_to(caster["id"], {"type": "error", "msg": "Alvo fora do alcance."}); return
+        if alvo.get("subtipo", _subtipo_padrao_monstro(alvo)) in ("construto", "morto_vivo"):
+            await self.gm_say(f"🛡️ **{alvo['name']}** é imune a controle mental."); return
         save_ok, *_ = await self._save_mostrado(alvo, "vontade", self._dif_magia(caster, magia))
         if not save_ok:
             dur = self._rolar_dado(magia.get("duracao", "1d4")) + dur_bonus
@@ -12987,7 +13155,7 @@ class GameRoom:
 
         # Imunidade: mortos-vivos / constructos não têm fisiologia p/ venenos.
         if not self._eh_jogador(alvo) and (
-            alvo.get("undead") or alvo.get("type") in ("skeleton", "construct", "undead")
+            alvo.get("subtipo", _subtipo_padrao_monstro(alvo)) in ("morto_vivo", "construto", "abissal")
         ):
             await self.gm_say(f"🧪 **{nome}** não afeta **{alvo_nome}** (imune a venenos).")
             return
@@ -14785,14 +14953,27 @@ class GameRoom:
 
     def _apply_damage_types(self, raw_dmg, damage_types, target, weapon=None, attacker_pos=None, target_pos=None):
         """Aplica imunidades e fraquezas do alvo ao dano. Retorna dano ajustado."""
+        subtipo = target.get("subtipo", _subtipo_padrao_monstro(target))
+        regras = SUBTIPOS_MONSTRO.get(subtipo, SUBTIPOS_MONSTRO["raca_padrao"])
+        imunes_subtipo = {
+            "necrótico": "necrotic",
+            "veneno": DMG_POISON,
+        }
+        if any(imunes_subtipo.get(nome) in damage_types for nome in regras["imunidades"] if nome in imunes_subtipo):
+            return 0
         for dtype in damage_types:
             if dtype in target.get("immunities", []):
                 return 0
         total = raw_dmg
+        if subtipo == "abissal" and any(dtype in damage_types for dtype in (DMG_FIRE, DMG_COLD, DMG_LIGHTNING)):
+            total = (total + 1) // 2
         # Resistências: redução fixa escalonável OU metade do dano. A redução
         # acontece antes da vulnerabilidade, preservando a ordem previsível.
         for resistance in target.get("resistances", []):
             if resistance.get("type") not in damage_types:
+                continue
+            if (weapon or {}).get("ignora_resistencia_leve_fogo") and DMG_FIRE in damage_types \
+                    and resistance.get("type") == DMG_FIRE and resistance.get("mode") != "half":
                 continue
             if (resistance.get("mode") != "half"
                     and self._ponto_vulneravel_atingido(target, target_pos)):
@@ -14814,6 +14995,10 @@ class GameRoom:
                 total = int(total * weakness["multiplier"])
             elif "bonus_flat" in weakness:
                 total += weakness["bonus_flat"]
+        if subtipo in ("morto_vivo", "abissal") and DMG_HOLY in damage_types:
+            total *= 2
+        if subtipo == "vegetal" and DMG_FIRE in damage_types:
+            total = (total * 3 + 1) // 2
         # Marca se o ÚLTIMO dano recebido por um monstro foi sagrado/luz — usado pela
         # Resistência Morta do Zumbi (morte sagrada = destruição total, sem retorno).
         if not self._eh_jogador(target):
@@ -15294,6 +15479,7 @@ class GameRoom:
         dynamic_attr = (attr_mod - int(atk_def.get("attribute_mod_base", attr_mod))
                         if atk_def.get("apply_attribute_damage") else 0)
         m_atk = (atk_def["atk_bonus"] + dynamic_attr + self._pen(m, "ataque") + self._mod_magia(m, "ataque")
+                 + m.get("equipment_attack_bonus", 0)
                  + self._sombras_atk_bonus(m, target)               # Ataque das Sombras (+2)
                  + self._luz_atk_pen(m)                             # Fraqueza de Luz (-2 sob luz direta)
                  + self._acorde_atk_pen(m)                          # Tambor Rúnico: -1 (sucesso no Acorde)
@@ -15343,7 +15529,10 @@ class GameRoom:
                       + self._monster_editor_passive_bonus(m)
                       + m.get("editor_ability_damage", 0)
                       + sombra_dano)                                 # Ataque das Sombras (+1d6)
-            dmg = self._apply_damage_types(dmg, atk_def.get("damage_types", ["physical"]), target)
+            damage_context = atk_def
+            if self._tem_habilidade(m, "intensidade"):
+                damage_context = dict(atk_def, ignora_resistencia_leve_fogo=True)
+            dmg = self._apply_damage_types(dmg, atk_def.get("damage_types", ["physical"]), target, damage_context)
             die_type = "d" + atk_def["damage"].split("d")[1].split("+")[0]
             await self.broadcast({"type": "dice_roll", "die": die_type, "value": raw_dmg, "label": "Dano"})
             crit_str = " **CRÍTICO!**" if crit else ""
@@ -15413,6 +15602,8 @@ class GameRoom:
         """Executa todos os ataques de um monstro no formato novo."""
         target    = target_obj["obj"]
         is_player = target_obj["kind"] == "player"
+        if await self._monster_try_equipment_item(m, target_obj):
+            return
         hits_by_group = []
         for atk_def in m.get("attacks", []):
             group_hit = False
@@ -15436,6 +15627,109 @@ class GameRoom:
                 await self._player_dies(target["id"])
             elif not is_player and target["vida_atual"] <= 0:
                 await self._animado_morre(target, m.get("id"))
+
+    async def _monster_try_equipment_item(self, m, target_obj=None):
+        """Uso simples de itens de bolsa: cura de emergência e elixir ofensivo.
+
+        Itens permanentes já são aplicados na criação da criatura. Consumíveis
+        são removidos da cópia de inventário ao serem usados.
+        """
+        bag = m.get("equipment_consumables", [])
+        if not bag:
+            return False
+        # Arremessáveis usam a ação principal, como no inventário dos heróis.
+        # A IA escolhe o primeiro que alcance o alvo e não realiza o ataque comum.
+        target = (target_obj or {}).get("obj")
+        throwable = next((item for item in bag if item.get("id") in ARREMESSAVEIS
+                         and target is not None
+                         and max(abs(m["pos"][0] - target["pos"][0]), abs(m["pos"][1] - target["pos"][1]))
+                             <= ARREMESSAVEIS[item["id"]].get("alcance", 0)
+                         and self._tem_linha_de_visao(m["pos"], target["pos"])), None)
+        if throwable:
+            await self._monster_throw_item(m, target_obj, throwable)
+            bag.remove(throwable)
+            return True
+        elixir = next((item for item in bag if item.get("effect") == "atk_bonus"), None)
+        if elixir and not m.get("equipment_elixir_used"):
+            m["equipment_elixir_used"] = True
+            m["equipment_attack_bonus"] = m.get("equipment_attack_bonus", 0) + int(elixir.get("value", 0) or 0)
+            bag.remove(elixir)
+            await self.gm_say(f"⚗️ **{m['name']}** usa **{elixir['name']}** e recebe +{elixir.get('value', 0)} no ataque!")
+            return False   # ação bônus: ainda pode atacar
+        if m.get("hp", 0) * 2 > m.get("max_hp", 1):
+            return False
+        potion = next((item for item in bag if item.get("effect") == "heal"), None)
+        if not potion:
+            return False
+        cura = int(potion.get("value", 0) or 0)
+        m["hp"] = min(m["max_hp"], m["hp"] + cura)
+        uses_left = int(potion.get("uses_left", potion.get("max_uses", 1)) or 1) - 1
+        if uses_left > 0:
+            potion["uses_left"] = uses_left
+        else:
+            bag.remove(potion)
+        await self.gm_say(f"🧪 **{m['name']}** usa **{potion['name']}** e recupera **{cura} HP**.")
+        return False       # ação bônus: ainda pode atacar
+
+    async def _monster_throw_item(self, m, target_obj, item):
+        """Versão de IA dos arremessáveis de bolsa dos heróis."""
+        defn = ARREMESSAVEIS[item["id"]]
+        target = target_obj["obj"]
+        is_player = target_obj["kind"] == "player"
+        elemento = defn.get("elemento", "physical")
+        damage_type = {"fogo": DMG_FIRE, "acido": DMG_ACID}.get(elemento, DMG_PHYSICAL)
+        await self.gm_say(f"{defn.get('emoji', '🧪')} **{m['name']}** usa **{defn['name']}**!")
+        if defn.get("alvo") == "ataque_alvo":
+            roll = random.randint(1, 20)
+            atk = int(m.get("base_attack_bonus", 0)) + mod(m.get("dex", 10)) + m.get("equipment_attack_bonus", 0)
+            ac = self._player_effective_ac(target) if is_player else target.get("ca", 10)
+            hit = roll != 1 and (roll == 20 or roll + atk >= ac)
+            await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
+                                  "label": f"{m['name']} — {defn['name']}", "hit": hit, "crit": roll == 20})
+            if not hit:
+                await self.gm_say(f"{defn.get('emoji', '🧪')} **{m['name']}** erra o arremesso em **{target.get('name', target.get('nome'))}**.")
+                return
+            raw = roll_dice(defn.get("dano", "0")) if defn.get("dano") else 0
+            dmg = self._apply_damage_types((raw + mod(m.get("dex", 10))) * (2 if roll == 20 else 1), [damage_type], target)
+            if is_player:
+                target["hp"] = max(0, target["hp"] - dmg)
+            else:
+                target["vida_atual"] = max(0, target["vida_atual"] - dmg)
+            await self.gm_say(f"{defn.get('emoji', '🧪')} **{target.get('name', target.get('nome'))}** sofre **{dmg}** de dano.")
+            if defn.get("em_chamas") and dmg >= 0:
+                self._aplicar_em_chamas(target, self._rolar_dado(defn.get("chamas_dur", "1d4")), defn.get("chamas_agua_apaga", True))
+            if defn.get("controle"):
+                await self._aplicar_controle_arremesso(target, defn["controle"])
+            if is_player and target["hp"] <= 0:
+                await self._player_dies(target["id"])
+            elif not is_player and target["vida_atual"] <= 0:
+                await self._animado_morre(target, m.get("id"))
+            return
+        # Explosivos de área: centro no alvo e reflexos para todos no raio.
+        raw = roll_dice(defn.get("dano", "0")) if defn.get("dano") else 0
+        raio = int(defn.get("area_raio", 1))
+        save = defn.get("save") or {}
+        for alvo in self._alvos_na_area(target["pos"][0], target["pos"][1], raio):
+            if not defn.get("dano"):
+                continue
+            if not self._tem_linha_de_visao(target["pos"], alvo["pos"]):
+                continue
+            passou = False
+            if save.get("cd"):
+                passou, *_ = self._testar_save(alvo, save.get("tipo", "reflexos"), save["cd"], fonte=m)
+            dmg = self._apply_damage_types((raw + 1) // 2 if passou else raw, [damage_type], alvo)
+            if self._eh_jogador(alvo):
+                alvo["hp"] = max(0, alvo["hp"] - dmg)
+                if alvo["hp"] <= 0:
+                    await self._player_dies(alvo["id"])
+            else:
+                alvo["vida_atual"] = max(0, alvo["vida_atual"] - dmg)
+                if alvo["vida_atual"] <= 0:
+                    await self._animado_morre(alvo, m.get("id"))
+            await self.gm_say(f"{defn.get('emoji', '💥')} **{alvo.get('name', alvo.get('nome'))}** sofre **{dmg}** de dano.")
+        zona = defn.get("zona")
+        if zona and zona.get("tipo") == "escuridao":
+            await self._aplicar_escuridao(m, raio=raio, duracao=zona.get("duracao", 2), pos=target["pos"])
 
     def _monster_editor_passive_bonus(self, m):
         """Bônus leve para passivas de heróis/Guilda escolhidas no editor."""
@@ -16769,7 +17063,14 @@ class GameRoom:
             await self._cuspir_acido(m, target_obj, acido)
             return
 
-        if self._is_adjacent_to_monster(target["pos"], m):
+        attack_range = max((int(a.get("range", 0) or 0) for a in m.get("attacks", [])), default=0)
+        def alvo_no_alcance():
+            if attack_range > 0:
+                return (max(abs(target["pos"][0] - m["pos"][0]), abs(target["pos"][1] - m["pos"][1])) <= attack_range
+                        and self._tem_linha_de_visao(m["pos"], target["pos"]))
+            return self._is_adjacent_to_monster(target["pos"], m)
+
+        if alvo_no_alcance():
             await self._monster_execute_attacks(m, target_obj)
             return
 
@@ -16779,10 +17080,10 @@ class GameRoom:
             await self._monster_move_step(m, target["pos"])
             if m["pos"] == pos_antes:   # bloqueado — não conseguiu avançar
                 break
-            if self._is_adjacent_to_monster(target["pos"], m):
+            if alvo_no_alcance():
                 break
 
-        if self._is_adjacent_to_monster(target["pos"], m):
+        if alvo_no_alcance():
             await self._monster_execute_attacks(m, target_obj)
 
     def _alvo_vivo(self, target_obj):
@@ -17479,6 +17780,40 @@ class GameRoom:
                         f"🧟 **{m['name']}** recusa-se a tombar! (Fortitude {tot} vs CD {rm.get('dc',10)}) — fica com **1 HP**.")
                     return
                 await self.gm_say(f"🧟 **{m['name']}** finalmente tomba (Fortitude {tot} vs CD {rm.get('dc',10)}).")
+
+        # Explosão Final: dispara uma única vez, depois de confirmar que a morte
+        # é definitiva (por isso não explode quando Resistência Morta salva um alvo).
+        explosao = next((ab for ab in m.get("special_abilities", [])
+                         if ab.get("id") == "explosao_final"), None)
+        if explosao and not m.get("_explosao_final_disparada"):
+            m["_explosao_final_disparada"] = True
+            dano_bruto = roll_dice(explosao.get("damage", "6d6"))
+            raio = int(explosao.get("radius", 1))
+            cd = int(explosao.get("dc", 13))
+            centro = m.get("pos", [0, 0])
+            await self.broadcast({"type": "dice_roll", "die": "d6", "value": dano_bruto,
+                                  "label": "💥 Explosão Final (6d6)"})
+            await self.gm_say(f"💥 **{m['name']}** explode em chamas! (Reflexos CD {cd}; raio {raio})")
+            for p in list(self.players.values()):
+                if not p.get("alive") or max(abs(p["pos"][0] - centro[0]), abs(p["pos"][1] - centro[1])) > raio:
+                    continue
+                passou, d20, save_bonus, total_save = self._testar_save(p, "reflexos", cd)
+                dano = self._apply_damage_types(
+                    (dano_bruto + 1) // 2 if passou else dano_bruto,
+                    explosao.get("damage_types", [DMG_FIRE]), p)
+                dano_alvo, transferencia = await self._processar_dano_protetor(p["id"], dano)
+                p["hp"] = max(0, p["hp"] - dano_alvo)
+                resultado = "passou — metade" if passou else "falhou"
+                await self.gm_say(
+                    f"🔥 **{p['name']}** {resultado} em Reflexos "
+                    f"({total_save} vs CD {cd}) e sofre **{dano_alvo}** de fogo.")
+                if transferencia:
+                    protetor, dano_protetor = transferencia
+                    protetor["hp"] = max(0, protetor["hp"] - dano_protetor)
+                    if protetor["hp"] <= 0:
+                        await self._player_dies(protetor["id"])
+                if p["hp"] <= 0:
+                    await self._player_dies(p["id"])
 
         # Réquiem Final (Violino): encerra a melodia do bardo se o alvo morreu de
         # verdade (após a checagem de Resistência Morta acima — morte final).
@@ -18730,16 +19065,22 @@ def _validate_custom_monster(raw):
     ref_base = _monster_int(raw.get("ref_base", _monster_int(raw.get("ref_", 0), 0, -20, 30) - dex_mod), 0, -20, 30)
     will_base = _monster_int(raw.get("will_base", _monster_int(raw.get("will", 0), 0, -20, 30) - int_mod), 0, -20, 30)
     attacks = []
+    valid_damage_types = {DMG_PHYSICAL, DMG_FIRE, DMG_COLD, DMG_LIGHTNING,
+                          DMG_HOLY, DMG_POISON, DMG_MAGIC, DMG_ACID}
     for attack in raw.get("attacks", []) if isinstance(raw.get("attacks"), list) else []:
         if not isinstance(attack, dict):
             continue
         attr = "dex" if attack.get("attack_attribute") == "dex" else "str_"
         base = _monster_int(attack.get("base_attack_bonus", raw.get("base_attack_bonus", 0)), 0, -20, 30)
         stat = dex_score if attr == "dex" else str_score
+        raw_types = attack.get("damage_types", [DMG_PHYSICAL])
+        if not isinstance(raw_types, list):
+            raw_types = [raw_types]
+        damage_types = [str(dtype) for dtype in raw_types if str(dtype) in valid_damage_types]
         attacks.append({
             "name": str(attack.get("name") or "Ataque")[:40],
             "damage": str(attack.get("damage") or "1d4")[:24],
-            "damage_types": ["physical"],
+            "damage_types": damage_types or [DMG_PHYSICAL],
             "num_attacks": _monster_int(attack.get("num_attacks", 1), 1, 1, 8),
             "attack_attribute": attr,
             "damage_attribute": attr,
@@ -18829,6 +19170,26 @@ def _validate_custom_monster(raw):
     natural_armor = _monster_int(raw.get("natural_armor",
         _monster_int(raw.get("ac", 10), 10, 1, 99) - 10 - dex_mod), 0, 0, 50)
     vision_base = _monster_int(raw.get("vision_base", 3), 3, 0, 30)
+    subtipo = str(raw.get("subtipo") or ("morto_vivo" if raw.get("undead") else "raca_padrao"))
+    if subtipo not in SUBTIPOS_MONSTRO:
+        subtipo = "raca_padrao"
+    equipment_enabled = bool(raw.get("equipment_enabled"))
+    # Raças civilizadas e abissais podem portar itens. Mortos-vivos precisam da
+    # marca individual na ficha (ex.: esqueleto humano ou vampiro); demais
+    # subtipos não usam o inventário, ainda que alguém tente editar o JSON.
+    if equipment_enabled and subtipo not in {"raca_padrao", "abissal", "morto_vivo"}:
+        return False, "este subtipo não pode usar equipamentos"
+    raw_equipment = raw.get("equipped_items", raw.get("equipment", []))
+    if not isinstance(raw_equipment, list):
+        raw_equipment = []
+    equipped_items, seen_equipment = [], set()
+    for item_id in raw_equipment[:12]:
+        item_id = str(item_id)
+        if item_id in _DUNGEON_ITEM_CATALOG and item_id not in seen_equipment:
+            seen_equipment.add(item_id)
+            equipped_items.append(item_id)
+    if not equipment_enabled:
+        equipped_items = []
     result = {
         "type": typ, "name": name, "emoji": str(raw.get("emoji") or "👹")[:8],
         "tier": _monster_int(raw.get("tier", 1), 1, 1, 10),
@@ -18850,14 +19211,16 @@ def _validate_custom_monster(raw):
         "immunities": [str(x)[:40] for x in raw.get("immunities", []) if str(x).strip()],
         "resistances": clean_resistances,
         "weaknesses": weaknesses[:12],
-        "equipment": [str(x)[:60] for x in raw.get("equipment", []) if str(x).strip()],
+        "equipment_enabled": equipment_enabled,
+        "equipped_items": equipped_items,
+        "equipment": equipped_items[:],
         "guaranteed_loot": [str(x)[:60] for x in raw.get("guaranteed_loot", []) if str(x).strip()],
         "loot_table": loot_table, "gold": _monster_int(raw.get("gold", 0), 0, 0, 9999),
         "xp": _monster_int(raw.get("xp", 0), 0, 0, 99999),
         "ai_type": ai_type, "image": str(raw.get("image") or typ)[:80],
         "portrait": str(raw.get("portrait") or typ)[:80],
         "size": [size_w, size_h], "oriented": oriented, "porte": str(raw.get("porte") or "medio"),
-        "spawn_min": 0, "spawn_max": 0, "undead": bool(raw.get("undead")), "boss": bool(raw.get("boss")),
+        "spawn_min": 0, "spawn_max": 0, "undead": bool(raw.get("undead") or subtipo == "morto_vivo"), "subtipo": subtipo, "boss": bool(raw.get("boss")),
     }
     return True, result
 

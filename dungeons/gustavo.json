@@ -321,12 +321,48 @@
         1,
         6
       ],
-      "gold": 5000,
+      "gold": 50,
       "items": [],
       "key_objective": false
     }
   ],
-  "traps": [],
+  "traps": [
+    {
+      "tipo": "armadilha_dardos_envenenados",
+      "pos": [
+        1,
+        8
+      ],
+      "veneno_id": "veneno_cobra_cuspidora"
+    },
+    {
+      "tipo": "armadilha_dardos_envenenados",
+      "pos": [
+        1,
+        7
+      ],
+      "veneno_id": "veneno_agonia_sufocante"
+    },
+    {
+      "tipo": "armadilha_dardos_envenenados",
+      "pos": [
+        1,
+        9
+      ],
+      "veneno_id": "veneno_escorpiao_pedra"
+    },
+    {
+      "tipo": "armadilha_teletransporte",
+      "pos": [
+        3,
+        6
+      ],
+      "saida": [
+        10,
+        9
+      ]
+    }
+  ],
   "decorations": [
     {
       "id": "decor_0",
@@ -355,122 +391,10 @@
       ],
       "loot": null,
       "key_objective": false
-    },
-    {
-      "id": "decor_2",
-      "type": "barril",
-      "pos": [
-        3,
-        8
-      ],
-      "facing": [
-        0,
-        1
-      ],
-      "loot": null,
-      "key_objective": true
     }
   ],
-  "secret_passages": [
-    {
-      "id": "passage_1",
-      "type": "mechanism",
-      "pos": [
-        4,
-        9
-      ],
-      "key_decor_ids": [
-        "decor_2"
-      ],
-      "keys_mode": "any"
-    },
-    {
-      "id": "passage_2",
-      "type": "mechanism",
-      "pos": [
-        5,
-        9
-      ],
-      "key_decor_ids": [
-        "decor_2"
-      ],
-      "keys_mode": "any"
-    },
-    {
-      "id": "passage_3",
-      "type": "mechanism",
-      "pos": [
-        6,
-        9
-      ],
-      "key_decor_ids": [
-        "decor_2"
-      ],
-      "keys_mode": "any"
-    },
-    {
-      "id": "passage_4",
-      "type": "mechanism",
-      "pos": [
-        7,
-        9
-      ],
-      "key_decor_ids": [
-        "decor_2"
-      ],
-      "keys_mode": "any"
-    },
-    {
-      "id": "passage_5",
-      "type": "illusion",
-      "pos": [
-        4,
-        6
-      ],
-      "key_decor_ids": [],
-      "keys_mode": "any"
-    },
-    {
-      "id": "passage_6",
-      "type": "illusion",
-      "pos": [
-        5,
-        6
-      ],
-      "key_decor_ids": [],
-      "keys_mode": "any"
-    },
-    {
-      "id": "passage_7",
-      "type": "illusion",
-      "pos": [
-        6,
-        6
-      ],
-      "key_decor_ids": [],
-      "keys_mode": "any"
-    },
-    {
-      "id": "passage_8",
-      "type": "illusion",
-      "pos": [
-        7,
-        6
-      ],
-      "key_decor_ids": [],
-      "keys_mode": "any"
-    },
-    {
-      "id": "passage_9",
-      "type": "illusion",
-      "pos": [
-        8,
-        6
-      ],
-      "key_decor_ids": [],
-      "keys_mode": "any"
-    }
-  ],
+  "secret_passages": [],
+  "master_reinforcements": [],
   "prisoner": null,
   "materiais": {},
   "objectives": {

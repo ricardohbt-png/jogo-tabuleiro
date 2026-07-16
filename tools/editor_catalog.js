@@ -11,7 +11,8 @@ window.EDITOR_CATALOG = {
       "atk_bonus": 2,
       "damage": "1d4",
       "gold": 5,
-      "xp": 10
+      "xp": 10,
+      "subtipo": "raca_padrao"
     },
     {
       "type": "skeleton",
@@ -25,7 +26,8 @@ window.EDITOR_CATALOG = {
       "damage": "1d6",
       "gold": 8,
       "xp": 15,
-      "undead": true
+      "undead": true,
+      "subtipo": "morto_vivo"
     },
     {
       "type": "orc",
@@ -38,7 +40,8 @@ window.EDITOR_CATALOG = {
       "atk_bonus": 5,
       "damage": "1d8",
       "gold": 12,
-      "xp": 25
+      "xp": 25,
+      "subtipo": "raca_padrao"
     },
     {
       "type": "dark_mage",
@@ -51,7 +54,8 @@ window.EDITOR_CATALOG = {
       "atk_bonus": 4,
       "damage": "1d6",
       "gold": 20,
-      "xp": 30
+      "xp": 30,
+      "subtipo": "raca_padrao"
     },
     {
       "type": "troll",
@@ -64,7 +68,8 @@ window.EDITOR_CATALOG = {
       "atk_bonus": 7,
       "damage": "1d10",
       "gold": 25,
-      "xp": 40
+      "xp": 40,
+      "subtipo": "raca_padrao"
     },
     {
       "type": "dragon",
@@ -78,7 +83,8 @@ window.EDITOR_CATALOG = {
       "atk_bonus": 12,
       "damage": "2d8",
       "gold": 100,
-      "xp": 200
+      "xp": 200,
+      "subtipo": "raca_padrao"
     },
     {
       "type": "aranha_sombria",
@@ -147,7 +153,8 @@ window.EDITOR_CATALOG = {
         }
       },
       "ai_type": "emboscador",
-      "undead": false
+      "undead": false,
+      "subtipo": "animal"
     },
     {
       "type": "escorpiao_pedra",
@@ -220,7 +227,8 @@ window.EDITOR_CATALOG = {
         "61-100": null
       },
       "ai_type": "agressivo",
-      "undead": false
+      "undead": false,
+      "subtipo": "animal"
     },
     {
       "type": "esqueleto_humano",
@@ -318,6 +326,7 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "esqueleto_humano",
       "undead": true,
+      "subtipo": "morto_vivo",
       "darkvision_range": 4
     },
     {
@@ -410,6 +419,7 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "esqueleto_animal",
       "undead": true,
+      "subtipo": "morto_vivo",
       "darkvision_range": 8
     },
     {
@@ -474,7 +484,8 @@ window.EDITOR_CATALOG = {
         "1-100": null
       },
       "ai_type": "lobo_cinzento",
-      "undead": false
+      "undead": false,
+      "subtipo": "animal"
     },
     {
       "type": "crocodilo_jovem",
@@ -546,7 +557,8 @@ window.EDITOR_CATALOG = {
         "1-100": null
       },
       "ai_type": "crocodilo_jovem",
-      "undead": false
+      "undead": false,
+      "subtipo": "animal"
     },
     {
       "type": "cobra_constritora",
@@ -616,7 +628,8 @@ window.EDITOR_CATALOG = {
         "1-100": null
       },
       "ai_type": "cobra_constritora",
-      "undead": false
+      "undead": false,
+      "subtipo": "animal"
     },
     {
       "type": "cobra_venenosa",
@@ -691,7 +704,8 @@ window.EDITOR_CATALOG = {
         }
       },
       "ai_type": "cobra_venenosa",
-      "undead": false
+      "undead": false,
+      "subtipo": "animal"
     },
     {
       "type": "devorador_organico",
@@ -772,7 +786,8 @@ window.EDITOR_CATALOG = {
         }
       },
       "ai_type": "devorador_organico",
-      "undead": false
+      "undead": false,
+      "subtipo": "raca_padrao"
     },
     {
       "type": "urso_negro",
@@ -848,7 +863,8 @@ window.EDITOR_CATALOG = {
         "1-100": null
       },
       "ai_type": "agressivo",
-      "undead": false
+      "undead": false,
+      "subtipo": "animal"
     },
     {
       "type": "orc_guerreiro",
@@ -935,7 +951,8 @@ window.EDITOR_CATALOG = {
         "machado_orc"
       ],
       "ai_type": "orc_guerreiro",
-      "undead": false
+      "undead": false,
+      "subtipo": "raca_padrao"
     },
     {
       "type": "goblin_arqueiro",
@@ -1011,7 +1028,8 @@ window.EDITOR_CATALOG = {
         "arco_curto"
       ],
       "ai_type": "goblin_arqueiro",
-      "undead": false
+      "undead": false,
+      "subtipo": "raca_padrao"
     },
     {
       "type": "goblin_combatente",
@@ -1092,7 +1110,8 @@ window.EDITOR_CATALOG = {
         "dagger"
       ],
       "ai_type": "goblin_melee",
-      "undead": false
+      "undead": false,
+      "subtipo": "vegetal"
     },
     {
       "type": "goblin_dual",
@@ -1185,7 +1204,8 @@ window.EDITOR_CATALOG = {
         "dagger"
       ],
       "ai_type": "goblin_melee",
-      "undead": false
+      "undead": false,
+      "subtipo": "raca_padrao"
     },
     {
       "type": "goblin_xama",
@@ -1288,7 +1308,8 @@ window.EDITOR_CATALOG = {
         }
       },
       "ai_type": "goblin_xama",
-      "undead": false
+      "undead": false,
+      "subtipo": "raca_padrao"
     },
     {
       "type": "kobold_lanceiro",
@@ -1362,7 +1383,8 @@ window.EDITOR_CATALOG = {
         }
       },
       "ai_type": "kobold_lanceiro",
-      "undead": false
+      "undead": false,
+      "subtipo": "raca_padrao"
     },
     {
       "type": "kobold_besteiro",
@@ -1434,7 +1456,8 @@ window.EDITOR_CATALOG = {
         }
       },
       "ai_type": "kobold_besteiro",
-      "undead": false
+      "undead": false,
+      "subtipo": "raca_padrao"
     },
     {
       "type": "necromante",
@@ -1532,7 +1555,8 @@ window.EDITOR_CATALOG = {
         "1-100": null
       },
       "ai_type": "necromante",
-      "undead": false
+      "undead": false,
+      "subtipo": "raca_padrao"
     },
     {
       "type": "zumbi_infectado",
@@ -1616,6 +1640,7 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "zumbi",
       "undead": true,
+      "subtipo": "morto_vivo",
       "darkvision_range": 8
     },
     {
@@ -1691,7 +1716,8 @@ window.EDITOR_CATALOG = {
         "1-100": null
       },
       "ai_type": "lagarto_carniceiro",
-      "undead": false
+      "undead": false,
+      "subtipo": "animal"
     },
     {
       "type": "devorador_metal",
@@ -1767,7 +1793,8 @@ window.EDITOR_CATALOG = {
         }
       },
       "ai_type": "devorador_metal",
-      "undead": false
+      "undead": false,
+      "subtipo": "raca_padrao"
     },
     {
       "type": "bugbear_sombras",
@@ -1893,6 +1920,7 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "bugbear_sombras",
       "undead": false,
+      "subtipo": "raca_padrao",
       "darkvision_range": 99
     },
     {
@@ -1986,7 +2014,8 @@ window.EDITOR_CATALOG = {
         }
       },
       "ai_type": "ogro",
-      "undead": false
+      "undead": false,
+      "subtipo": "raca_padrao"
     },
     {
       "type": "ogro_lanca",
@@ -2079,7 +2108,8 @@ window.EDITOR_CATALOG = {
         }
       },
       "ai_type": "ogro",
-      "undead": false
+      "undead": false,
+      "subtipo": "raca_padrao"
     },
     {
       "type": "grotao",
@@ -2219,7 +2249,101 @@ window.EDITOR_CATALOG = {
         }
       },
       "ai_type": "grotao",
-      "undead": false
+      "undead": false,
+      "subtipo": "raca_padrao"
+    },
+    {
+      "type": "elemental_fogo",
+      "name": "Elemental de Fogo",
+      "emoji": "🔥",
+      "boss": false,
+      "tier": 3,
+      "cr": 3,
+      "hp": 28,
+      "ac": 13,
+      "movement": 6,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "elemental_fogo",
+      "str_": 14,
+      "dex": 14,
+      "con_": 14,
+      "int_": 2,
+      "fort": 4,
+      "ref_": 4,
+      "will": -4,
+      "attacks": [
+        {
+          "name": "Chama",
+          "atk_bonus": 5,
+          "damage": "1d10+3",
+          "damage_types": [
+            "fire"
+          ],
+          "num_attacks": 1,
+          "on_hit": null,
+          "categoria": "fogo",
+          "ignora_resistencia_leve_fogo": true
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "corpo_em_chamas",
+          "name": "Corpo em Chamas",
+          "action_type": "passiva",
+          "damage": "1d6",
+          "damage_types": [
+            "fire"
+          ],
+          "descricao": "Quem o acerta com um ataque corpo a corpo sofre 1d6 de dano de fogo."
+        },
+        {
+          "id": "explosao_final",
+          "name": "Explosão Final",
+          "action_type": "passiva",
+          "damage": "6d6",
+          "damage_types": [
+            "fire"
+          ],
+          "radius": 1,
+          "save": "reflexos",
+          "dc": 13,
+          "descricao": "Ao morrer, explode em 1 quadrado: 6d6 de fogo; Reflexos CD 13 reduz à metade."
+        },
+        {
+          "id": "intensidade",
+          "name": "Intensidade",
+          "action_type": "passiva",
+          "descricao": "As chamas ignoram reduções leves de dano de fogo (não ignora resistência à metade)."
+        }
+      ],
+      "immunities": [
+        "fire"
+      ],
+      "weaknesses": [
+        {
+          "type": "cold",
+          "multiplier": 1.5,
+          "descricao": "Gelo causa 1,5× de dano."
+        }
+      ],
+      "loot_table": {
+        "1-55": null,
+        "56-85": {
+          "tipo": "gold",
+          "valor": 3
+        },
+        "86-100": {
+          "tipo": "gold",
+          "valor": 6
+        }
+      },
+      "ai_type": "agressivo",
+      "undead": false,
+      "subtipo": "construto"
     }
   ],
   "monster_abilities": [
@@ -2730,6 +2854,38 @@ window.EDITOR_CATALOG = {
       "name": "Corpo Pesado",
       "action_type": "passiva",
       "descricao": "Falha em Reflexos: +1 dano daquele efeito",
+      "source": "monstro"
+    },
+    {
+      "id": "corpo_em_chamas",
+      "name": "Corpo em Chamas",
+      "action_type": "passiva",
+      "damage": "1d6",
+      "damage_types": [
+        "fire"
+      ],
+      "descricao": "Quem o acerta com um ataque corpo a corpo sofre 1d6 de dano de fogo.",
+      "source": "monstro"
+    },
+    {
+      "id": "explosao_final",
+      "name": "Explosão Final",
+      "action_type": "passiva",
+      "damage": "6d6",
+      "damage_types": [
+        "fire"
+      ],
+      "radius": 1,
+      "save": "reflexos",
+      "dc": 13,
+      "descricao": "Ao morrer, explode em 1 quadrado: 6d6 de fogo; Reflexos CD 13 reduz à metade.",
+      "source": "monstro"
+    },
+    {
+      "id": "intensidade",
+      "name": "Intensidade",
+      "action_type": "passiva",
+      "descricao": "As chamas ignoram reduções leves de dano de fogo (não ignora resistência à metade).",
       "source": "monstro"
     },
     {
@@ -4139,6 +4295,17 @@ window.EDITOR_CATALOG = {
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_elemental_fogo",
+      "source": "guilda",
+      "source_id": "lenda_elemental_fogo",
+      "name": "Lenda: Elemental de Fogo",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Elemental de Fogo.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
     }
   ],
   "spells": [
@@ -4526,602 +4693,905 @@ window.EDITOR_CATALOG = {
     {
       "id": "health_potion",
       "name": "Poção de Cura",
-      "emoji": "🧪"
+      "emoji": "🧪",
+      "item_slot": "bag",
+      "effect": "heal",
+      "value": 10
     },
     {
       "id": "elixir",
       "name": "Elixir da Força",
-      "emoji": "⚗️"
+      "emoji": "⚗️",
+      "item_slot": "bag",
+      "effect": "atk_bonus",
+      "value": 3
     },
     {
       "id": "antidote",
       "name": "Antídoto",
-      "emoji": "💚"
+      "emoji": "💚",
+      "item_slot": "bag",
+      "effect": "heal",
+      "value": 6
     },
     {
       "id": "garrafa_vinho",
       "name": "Garrafa de Vinho",
-      "emoji": "🍷"
+      "emoji": "🍷",
+      "item_slot": "bag",
+      "effect": "wine",
+      "value": 15
     },
     {
       "id": "racao",
       "name": "Ração (Pão e Água)",
-      "emoji": "🥖"
+      "emoji": "🥖",
+      "item_slot": "bag",
+      "effect": "ration",
+      "value": 15
     },
     {
       "id": "sword",
       "name": "Espada Curta de Ferro Serrilhado",
-      "emoji": "⚔️"
+      "emoji": "⚔️",
+      "die": "1d6",
+      "stat": "str_",
+      "categoria": "cortante",
+      "item_slot": "weapon"
     },
     {
       "id": "magic_sword",
       "name": "Espada Mágica",
-      "emoji": "🗡️"
+      "emoji": "🗡️",
+      "item_slot": "weapon",
+      "effect": "atk",
+      "value": 4
     },
     {
       "id": "bow",
       "name": "Arco Élfico",
-      "emoji": "🏹"
+      "emoji": "🏹",
+      "item_slot": "weapon",
+      "effect": "atk",
+      "value": 3
     },
     {
       "id": "staff",
       "name": "Cajado Arcano",
-      "emoji": "🪄"
+      "emoji": "🪄",
+      "die": "1d6",
+      "stat": "str_",
+      "reach": "cajado",
+      "categoria": "contundente"
     },
     {
       "id": "shield",
       "name": "Escudo de Madeira",
-      "emoji": "🛡️"
+      "emoji": "🛡️",
+      "item_slot": "armor",
+      "effect": "def_",
+      "value": 2
     },
     {
       "id": "chainmail",
       "name": "Cota de Malha",
-      "emoji": "🪖"
+      "emoji": "🪖",
+      "kind": "armor",
+      "ac_bonus": 4
     },
     {
       "id": "leather",
       "name": "Armadura de Couro",
-      "emoji": "🥋"
+      "emoji": "🥋",
+      "kind": "armor",
+      "ac_bonus": 2
     },
     {
       "id": "amulet",
       "name": "Amuleto da Sorte",
-      "emoji": "📿"
+      "emoji": "📿",
+      "item_slot": "item",
+      "effect": "maxhp",
+      "value": 5
     },
     {
       "id": "boots",
       "name": "Botas Velozes",
-      "emoji": "👢"
+      "emoji": "👢",
+      "item_slot": "item",
+      "effect": "spd",
+      "value": 1
     },
     {
       "id": "ring",
       "name": "Anel de Força",
-      "emoji": "💍"
+      "emoji": "💍",
+      "item_slot": "accessory",
+      "effect": "atk",
+      "value": 1
     },
     {
       "id": "cloak",
       "name": "Manto",
-      "emoji": "🧣"
+      "emoji": "🧣",
+      "kind": "armor",
+      "ac_bonus": 1
     },
     {
       "id": "dagger",
       "name": "Adaga",
-      "emoji": "🗡️"
+      "emoji": "🗡️",
+      "die": "1d4",
+      "stat": "str_",
+      "categoria": "perfurante"
     },
     {
       "id": "chicote",
       "name": "Chicote",
-      "emoji": "🪢"
+      "emoji": "🪢",
+      "die": "1d4",
+      "stat": "dex",
+      "range": 2,
+      "categoria": "cortante"
     },
     {
       "id": "hand_crossbow",
       "name": "Besta de Mão",
-      "emoji": "🏹"
+      "emoji": "🏹",
+      "die": "1d4",
+      "stat": "dex",
+      "range": 4,
+      "categoria": "perfurante"
     },
     {
       "id": "lanca_curta",
       "name": "Lança Curta",
-      "emoji": "🔱"
+      "emoji": "🔱",
+      "die": "1d6",
+      "stat": "str_",
+      "categoria": "perfurante"
     },
     {
       "id": "bordao",
       "name": "Bordão",
-      "emoji": "🪄"
+      "emoji": "🪄",
+      "die": "1d6",
+      "stat": "str_",
+      "categoria": "contundente"
     },
     {
       "id": "cajado_madeira",
       "name": "Cajado de Madeira",
-      "emoji": "🪄"
+      "emoji": "🪄",
+      "die": "1d6",
+      "stat": "str_",
+      "reach": "cajado",
+      "categoria": "contundente"
     },
     {
       "id": "maca",
       "name": "Maça",
-      "emoji": "🔨"
+      "emoji": "🔨",
+      "die": "1d6",
+      "stat": "str_",
+      "categoria": "contundente"
     },
     {
       "id": "shortsword",
       "name": "Espada Curta",
-      "emoji": "⚔️"
+      "emoji": "⚔️",
+      "die": "1d6",
+      "stat": "str_",
+      "categoria": "cortante"
     },
     {
       "id": "machado_basico",
       "name": "Machado de Ferro",
-      "emoji": "🪓"
+      "emoji": "🪓",
+      "die": "1d6",
+      "stat": "str_",
+      "categoria": "cortante"
     },
     {
       "id": "arco_curto",
       "name": "Arco Curto",
-      "emoji": "🏹"
+      "emoji": "🏹",
+      "die": "1d6",
+      "stat": "dex",
+      "range": 8,
+      "categoria": "perfurante"
     },
     {
       "id": "lanca",
       "name": "Lança",
-      "emoji": "🔱"
+      "emoji": "🔱",
+      "die": "1d8",
+      "stat": "str_",
+      "reach": "lanca",
+      "categoria": "perfurante"
     },
     {
       "id": "longsword",
       "name": "Espada Longa",
-      "emoji": "⚔️"
+      "emoji": "⚔️",
+      "die": "1d8",
+      "stat": "str_",
+      "categoria": "cortante"
     },
     {
       "id": "longbow",
       "name": "Arco Longo",
-      "emoji": "🏹"
+      "emoji": "🏹",
+      "die": "1d8",
+      "stat": "dex",
+      "range": 12,
+      "categoria": "perfurante"
     },
     {
       "id": "warhammer",
       "name": "Martelo de Guerra",
-      "emoji": "🔨"
+      "emoji": "🔨",
+      "die": "1d8",
+      "stat": "str_",
+      "categoria": "contundente"
     },
     {
       "id": "besta",
       "name": "Besta",
-      "emoji": "🏹"
+      "emoji": "🏹",
+      "die": "1d8",
+      "stat": "dex",
+      "range": 10,
+      "categoria": "perfurante"
     },
     {
       "id": "mangual",
       "name": "Mangual",
-      "emoji": "⚔️"
+      "emoji": "⚔️",
+      "die": "1d8",
+      "stat": "str_",
+      "categoria": "contundente"
     },
     {
       "id": "machado_duplo",
       "name": "Machado Duplo",
-      "emoji": "🪓"
+      "emoji": "🪓",
+      "die": "1d8",
+      "stat": "str_",
+      "categoria": "cortante"
     },
     {
       "id": "bastsword",
       "name": "Espada Bastarda",
-      "emoji": "⚔️"
+      "emoji": "⚔️",
+      "die": "1d10",
+      "stat": "str_",
+      "categoria": "cortante"
     },
     {
       "id": "machado_orc",
       "name": "Machado de Guerra Órquico",
-      "emoji": "🪓"
+      "emoji": "🪓",
+      "die": "1d10",
+      "stat": "str_",
+      "categoria": "cortante"
     },
     {
       "id": "alabarda",
       "name": "Alabarda",
-      "emoji": "🪓"
+      "emoji": "🪓",
+      "die": "1d10",
+      "stat": "str_",
+      "range": 2,
+      "categoria": "perfurante"
     },
     {
       "id": "espada2m",
       "name": "Espada de 2 Mãos",
-      "emoji": "⚔️"
+      "emoji": "⚔️",
+      "die": "2d6",
+      "stat": "str_",
+      "categoria": "cortante"
     },
     {
       "id": "escudo_p",
       "name": "Escudo Pequeno",
-      "emoji": "🛡️"
+      "emoji": "🛡️",
+      "kind": "shield",
+      "ac_bonus": 1
     },
     {
       "id": "escudo_g",
       "name": "Escudo Grande",
-      "emoji": "🛡️"
+      "emoji": "🛡️",
+      "kind": "shield",
+      "ac_bonus": 2
     },
     {
       "id": "leather_plate",
       "name": "Armadura de Couro e Placas",
-      "emoji": "🥋"
+      "emoji": "🥋",
+      "kind": "armor",
+      "ac_bonus": 3
     },
     {
       "id": "bronze_armor",
       "name": "Armadura de Bronze",
-      "emoji": "🪖"
+      "emoji": "🪖",
+      "kind": "armor",
+      "ac_bonus": 5
     },
     {
       "id": "leather_mail",
       "name": "Armadura de Couro Revestido com Malha",
-      "emoji": "🪖"
+      "emoji": "🪖",
+      "kind": "armor",
+      "ac_bonus": 6
     },
     {
       "id": "plate",
       "name": "Armadura de Placas",
-      "emoji": "🛡️"
+      "emoji": "🛡️",
+      "kind": "armor",
+      "ac_bonus": 6
     },
     {
       "id": "monster_leather_plate",
       "name": "Armadura de Couro de Monstro e Placas",
-      "emoji": "🛡️"
+      "emoji": "🛡️",
+      "kind": "armor",
+      "ac_bonus": 7
     },
     {
       "id": "fullplate",
       "name": "Armadura Completa",
-      "emoji": "🛡️"
+      "emoji": "🛡️",
+      "kind": "armor",
+      "ac_bonus": 8
     },
     {
       "id": "flechas",
       "name": "Flechas (×10)",
-      "emoji": "🏹"
+      "emoji": "🏹",
+      "item_slot": "ammo",
+      "effect": "ammo",
+      "ammo_type": "flechas",
+      "ammo_count": 10
     },
     {
       "id": "virotes",
       "name": "Virotes (×10)",
-      "emoji": "🏹"
+      "emoji": "🏹",
+      "item_slot": "ammo",
+      "effect": "ammo",
+      "ammo_type": "virotes",
+      "ammo_count": 10
     },
     {
       "id": "virote_incendiario",
       "name": "Virote Incendiário",
-      "emoji": "🔥"
+      "emoji": "🔥",
+      "item_slot": "ammo",
+      "effect": "ammo",
+      "ammo_type": "virotes_incendiarios",
+      "ammo_count": 1,
+      "extra_damage": "1d4",
+      "extra_damage_types": [
+        "fire"
+      ]
     },
     {
       "id": "flecha_incendiaria",
       "name": "Flecha Incendiária",
-      "emoji": "🔥"
+      "emoji": "🔥",
+      "item_slot": "ammo",
+      "effect": "ammo",
+      "ammo_type": "flechas_incendiarias",
+      "ammo_count": 1,
+      "extra_damage": "1d4",
+      "extra_damage_types": [
+        "fire"
+      ]
     },
     {
       "id": "veneno_fungo_acre",
       "name": "Fungo Acre",
-      "emoji": "🍄"
+      "emoji": "🍄",
+      "item_slot": "bag",
+      "effect": "coat_poison",
+      "value": 0,
+      "veneno_id": "veneno_fungo_acre"
     },
     {
       "id": "veneno_dor_escarlate",
       "name": "Dor Escarlate",
-      "emoji": "🩸"
+      "emoji": "🩸",
+      "item_slot": "bag",
+      "effect": "coat_poison",
+      "value": 0,
+      "veneno_id": "veneno_dor_escarlate"
     },
     {
       "id": "veneno_ardonia_negra",
       "name": "Ardonia Negra",
-      "emoji": "🕷️"
+      "emoji": "🕷️",
+      "item_slot": "bag",
+      "effect": "coat_poison",
+      "value": 0,
+      "veneno_id": "veneno_ardonia_negra"
     },
     {
       "id": "vela_escuridao",
       "name": "Vela da Escuridão",
-      "emoji": "🕯️"
+      "emoji": "🕯️",
+      "item_slot": "bag",
+      "effect": "veil_shadow",
+      "value": 0
     },
     {
       "id": "ring_str",
       "name": "Anel de Força",
-      "emoji": "💍"
+      "emoji": "💍",
+      "item_slot": "ring",
+      "effect": "atk",
+      "value": 1
     },
     {
       "id": "ring_vita",
       "name": "Anel da Vitalidade",
-      "emoji": "💍"
+      "emoji": "💍",
+      "item_slot": "ring",
+      "effect": "maxhp",
+      "value": 5
     },
     {
       "id": "helm_iron",
       "name": "Elmo de Ferro",
-      "emoji": "⛑️"
+      "emoji": "⛑️",
+      "item_slot": "head",
+      "effect": "def_",
+      "value": 1
     },
     {
       "id": "circlet",
       "name": "Tiara Arcana",
-      "emoji": "👑"
+      "emoji": "👑",
+      "item_slot": "head",
+      "effect": "maxhp",
+      "value": 4
     },
     {
       "id": "backpack",
       "name": "Mochila de Couro",
-      "emoji": "🎒"
+      "emoji": "🎒",
+      "item_slot": "item",
+      "effect": "bagslots",
+      "value": 3
     },
     {
       "id": "veneno_aranha_sombria",
       "name": "Veneno da Aranha Sombria",
-      "emoji": "🕷️"
+      "emoji": "🕷️",
+      "item_slot": "bag",
+      "effect": "coat_poison",
+      "value": 0,
+      "veneno_id": "veneno_aranha_sombria"
     },
     {
       "id": "veneno_escorpiao_pedra",
       "name": "Veneno do Escorpião Pedra",
-      "emoji": "🦂"
+      "emoji": "🦂",
+      "item_slot": "bag",
+      "effect": "coat_poison",
+      "value": 0,
+      "veneno_id": "veneno_escorpiao_pedra"
     },
     {
       "id": "veneno_cobra_cuspidora",
       "name": "Veneno de Cobra Cuspidora",
-      "emoji": "🐍"
+      "emoji": "🐍",
+      "item_slot": "bag",
+      "effect": "coat_poison",
+      "value": 0,
+      "veneno_id": "veneno_cobra_cuspidora"
     },
     {
       "id": "veneno_basilisco",
       "name": "Peçonha do Basilisco",
-      "emoji": "🦎"
+      "emoji": "🦎",
+      "item_slot": "bag",
+      "effect": "coat_poison",
+      "value": 0,
+      "veneno_id": "veneno_basilisco"
     },
     {
       "id": "veneno_polvo_abissal",
       "name": "Tinta do Polvo Abissal",
-      "emoji": "🐙"
+      "emoji": "🐙",
+      "item_slot": "bag",
+      "effect": "coat_poison",
+      "value": 0,
+      "veneno_id": "veneno_polvo_abissal"
     },
     {
       "id": "veneno_agonia_sufocante",
       "name": "Agonia Sufocante",
-      "emoji": "💀"
+      "emoji": "💀",
+      "item_slot": "bag",
+      "effect": "coat_poison",
+      "value": 0,
+      "veneno_id": "veneno_agonia_sufocante"
     },
     {
       "id": "frasco_oleo",
       "name": "Frasco de Óleo Incendiário",
-      "emoji": "🔥"
+      "emoji": "🔥",
+      "item_slot": "bag",
+      "effect": "throwable",
+      "value": 0
     },
     {
       "id": "fogo_grego",
       "name": "Fogo Grego",
-      "emoji": "🟢"
+      "emoji": "🟢",
+      "item_slot": "bag",
+      "effect": "throwable",
+      "value": 0
     },
     {
       "id": "bomba_incendiaria",
       "name": "Bomba Incendiária",
-      "emoji": "💣"
+      "emoji": "💣",
+      "item_slot": "bag",
+      "effect": "throwable",
+      "value": 0
     },
     {
       "id": "granada",
       "name": "Granada Explosiva",
-      "emoji": "💣"
+      "emoji": "💣",
+      "item_slot": "bag",
+      "effect": "throwable",
+      "value": 0
     },
     {
       "id": "granada_superior",
       "name": "Granada Superior",
-      "emoji": "💥"
+      "emoji": "💥",
+      "item_slot": "bag",
+      "effect": "throwable",
+      "value": 0
     },
     {
       "id": "bomba_fumaca",
       "name": "Bomba de Fumaça",
-      "emoji": "💨"
+      "emoji": "💨",
+      "item_slot": "bag",
+      "effect": "throwable",
+      "value": 0
     },
     {
       "id": "frasco_acido",
       "name": "Frasco de Ácido",
-      "emoji": "🧪"
+      "emoji": "🧪",
+      "item_slot": "bag",
+      "effect": "throwable",
+      "value": 0
     },
     {
       "id": "vidro_acido_grande",
       "name": "Vidro de Ácido Grande",
-      "emoji": "🫙"
+      "emoji": "🫙",
+      "item_slot": "bag",
+      "effect": "throwable",
+      "value": 0
     },
     {
       "id": "cola_alquimica",
       "name": "Cola Alquímica",
-      "emoji": "🍯"
+      "emoji": "🍯",
+      "item_slot": "bag",
+      "effect": "throwable",
+      "value": 0
     },
     {
       "id": "rede_arremesso",
       "name": "Rede",
-      "emoji": "🕸️"
+      "emoji": "🕸️",
+      "item_slot": "bag",
+      "effect": "throwable",
+      "value": 0
     },
     {
       "id": "instrumento_harpa_velho",
       "name": "Harpa Velha",
-      "emoji": "🎵"
+      "emoji": "🎵",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_harpa_rustico",
       "name": "Harpa Rústica",
-      "emoji": "🎵"
+      "emoji": "🎵",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_harpa_padrao",
       "name": "Harpa Padrão",
-      "emoji": "🎵"
+      "emoji": "🎵",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_tambor_rustico",
       "name": "Tambor de Guerra Rústico",
-      "emoji": "🥁"
+      "emoji": "🥁",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_tambor_padrao",
       "name": "Tambor de Guerra Padrão",
-      "emoji": "🥁"
+      "emoji": "🥁",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_sino_rustico",
       "name": "Sino Rústico",
-      "emoji": "🔔"
+      "emoji": "🔔",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_sino_padrao",
       "name": "Sino Padrão",
-      "emoji": "🔔"
+      "emoji": "🔔",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_alaude_rustico",
       "name": "Alaúde Rústico",
-      "emoji": "🪕"
+      "emoji": "🪕",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_alaude_padrao",
       "name": "Alaúde Padrão",
-      "emoji": "🪕"
+      "emoji": "🪕",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_harpa_refinado",
       "name": "Harpa Refinada",
-      "emoji": "🎵"
+      "emoji": "🎵",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_trompa_rustico",
       "name": "Trompa de Guerra Rústica",
-      "emoji": "📯"
+      "emoji": "📯",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_trompa_padrao",
       "name": "Trompa de Guerra Padrão",
-      "emoji": "📯"
+      "emoji": "📯",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_lira_rustico",
       "name": "Lira Rústica",
-      "emoji": "🎼"
+      "emoji": "🎼",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_lira_padrao",
       "name": "Lira Padrão",
-      "emoji": "🎼"
+      "emoji": "🎼",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_flauta_rustico",
       "name": "Flauta Rústica",
-      "emoji": "🎶"
+      "emoji": "🎶",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_flauta_padrao",
       "name": "Flauta Padrão",
-      "emoji": "🎶"
+      "emoji": "🎶",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_violino_rustico",
       "name": "Violino Rústico",
-      "emoji": "🎻"
+      "emoji": "🎻",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_violino_padrao",
       "name": "Violino Padrão",
-      "emoji": "🎻"
+      "emoji": "🎻",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_harpa_padrao_elfica",
       "name": "Harpa Padrão Élfica",
-      "emoji": "🎵"
+      "emoji": "🎵",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_trompa_padrao_elfica",
       "name": "Trompa de Guerra Padrão Élfica",
-      "emoji": "📯"
+      "emoji": "📯",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_sino_padrao_elfica",
       "name": "Sino Padrão Élfico",
-      "emoji": "🔔"
+      "emoji": "🔔",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_tambor_padrao_ana",
       "name": "Tambor de Guerra Padrão Anão",
-      "emoji": "🥁"
+      "emoji": "🥁",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_lira_padrao_ana",
       "name": "Lira Padrão Anã",
-      "emoji": "🎼"
+      "emoji": "🎼",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_violino_padrao_ana",
       "name": "Violino Padrão Anão",
-      "emoji": "🎻"
+      "emoji": "🎻",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_sino_padrao_runico",
       "name": "Sino Padrão Rúnico",
-      "emoji": "🔔"
+      "emoji": "🔔",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_flauta_padrao_runico",
       "name": "Flauta Padrão Rúnica",
-      "emoji": "🎶"
+      "emoji": "🎶",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_trompa_padrao_runico",
       "name": "Trompa de Guerra Padrão Rúnica",
-      "emoji": "📯"
+      "emoji": "📯",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_violino_padrao_runico",
       "name": "Violino Padrão Rúnico",
-      "emoji": "🎻"
+      "emoji": "🎻",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_lira_padrao_runico",
       "name": "Lira Padrão Rúnica",
-      "emoji": "🎼"
+      "emoji": "🎼",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_harpa_refinado_elfica_runico",
       "name": "Harpa Lendária Élfica",
-      "emoji": "🎵"
+      "emoji": "🎵",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_gaita_velho",
       "name": "Gaita Velha",
-      "emoji": "🪗"
+      "emoji": "🪗",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_gaita_rustico",
       "name": "Gaita Rústica",
-      "emoji": "🪗"
+      "emoji": "🪗",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_gaita_padrao",
       "name": "Gaita Padrão",
-      "emoji": "🪗"
+      "emoji": "🪗",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_gaita_refinado",
       "name": "Gaita Refinada",
-      "emoji": "🪗"
+      "emoji": "🪗",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_gaita_padrao_runico",
       "name": "Gaita Padrão Rúnica",
-      "emoji": "🪗"
+      "emoji": "🪗",
+      "item_slot": "instrumento"
     },
     {
       "id": "instrumento_gaita_refinado_ana_runico",
       "name": "Gaita Lendária Anã",
-      "emoji": "🪗"
+      "emoji": "🪗",
+      "item_slot": "instrumento"
     },
     {
       "id": "pao",
       "name": "Pão",
-      "emoji": "🥖"
+      "emoji": "🥖",
+      "item_slot": "bag",
+      "effect": "food"
     },
     {
       "id": "garrafa_agua",
       "name": "Garrafa de Água",
-      "emoji": "💧"
+      "emoji": "💧",
+      "item_slot": "bag",
+      "effect": "food"
     },
     {
       "id": "suco_fruta",
       "name": "Suco de Fruta",
-      "emoji": "🧃"
+      "emoji": "🧃",
+      "item_slot": "bag",
+      "effect": "food"
     },
     {
       "id": "caneca_cerveja",
       "name": "Caneca de Cerveja",
-      "emoji": "🍺"
+      "emoji": "🍺",
+      "item_slot": "bag",
+      "effect": "ale",
+      "value": 10
     },
     {
       "id": "racao_viagem",
       "name": "Ração de Viagem",
-      "emoji": "🥩"
+      "emoji": "🥩",
+      "item_slot": "bag",
+      "effect": "food"
     },
     {
       "id": "cantil_agua",
       "name": "Cantil de Água",
-      "emoji": "🧴"
+      "emoji": "🧴",
+      "item_slot": "bag",
+      "effect": "food"
     },
     {
       "id": "health_potion_small",
       "name": "Poção de Cura Pequena",
-      "emoji": "🧪"
+      "emoji": "🧪",
+      "item_slot": "bag",
+      "effect": "heal",
+      "value": 5
     },
     {
       "id": "health_potion_concentrated",
       "name": "Poção de Cura Concentrada",
-      "emoji": "🧪"
+      "emoji": "🧪",
+      "item_slot": "bag",
+      "effect": "heal",
+      "value": 10
     },
     {
       "id": "health_potion_improved",
       "name": "Poção de Cura Aprimorada",
-      "emoji": "🧪"
+      "emoji": "🧪",
+      "item_slot": "bag",
+      "effect": "heal",
+      "value": 20
     },
     {
       "id": "regeneration_potion",
       "name": "Poção de Regeneração",
-      "emoji": "🌿"
+      "emoji": "🌿",
+      "item_slot": "bag",
+      "effect": "regeneration",
+      "value": 10
     }
   ],
   "traps": [
