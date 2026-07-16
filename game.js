@@ -10373,6 +10373,15 @@ function _crPorSalaMapa(state){
     total += cr;
     if(m.room_id != null && porRoom[m.room_id] != null) porRoom[m.room_id] += cr;
   });
+  // Armadilhas autoradas (têm cr; pos casa com a sala que a contém — não têm room_id).
+  (state.armadilhas || []).forEach(function(a){
+    var cr = a.cr || 0; if(!cr || !a.pos) return;
+    total += cr;
+    var r = (state.rooms || []).find(function(rm){
+      return a.pos[0] >= rm.x && a.pos[0] < rm.x + rm.w && a.pos[1] >= rm.y && a.pos[1] < rm.y + rm.h;
+    });
+    if(r && porRoom[r.id] != null) porRoom[r.id] += cr;
+  });
   var ids = Object.keys(porRoom);
   var soma = ids.reduce(function(a,k){ return a + porRoom[k]; }, 0);
   var medio = ids.length ? (soma / ids.length) : 0;
