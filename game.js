@@ -268,8 +268,34 @@ const DECOR_GLB_MODELS = {
   'sarcofagocima.png': 'assets/objetos/sarcofago.glb',
   // A Arca de Tesouros usa o mesmo modelo 3D dos baús de loot.
   'bau.png': 'assets/objetos/bau.glb',
+  // A jaula alta da missão Resgate de Elara ganha modelo 3D próprio.
+  'jaulaalta.png': 'assets/objetos/jaula_esqueleto.glb',
+  // O altar da missão também substitui sua miniatura PNG por um GLB.
+  'altar.png': 'assets/objetos/altar.glb',
+  // Coluna de pedra com geometria 3D própria.
+  'coluna.png': 'assets/objetos/coluna.glb',
+  // Fonte encaixada no canto/parede; distinta da fonte circular.
+  'fontedecanto.png': 'assets/objetos/fonte_de_parede.glb',
+  // Variante circular da fogueira usada na masmorra de Elara.
+  'fogueiracircular.png': 'assets/objetos/fogueira.glb',
+  // Cama de casal da masmorra de Elara.
+  'camacasal.png': 'assets/objetos/cama_de_casal.glb',
+  // Compatibilidade com a mesa de alquimia legada, que pode vir com type=tumba.
+  'mesaalquimia.png': 'assets/objetos/mesa_alquimia.glb',
 };
 const DECOR_GLB_TYPES = {
+  // A fonte usa o modelo GLB próprio; o PNG permanece somente como fallback
+  // caso o arquivo não possa ser carregado.
+  fonte: 'assets/objetos/fonte.glb',
+  cama: 'assets/objetos/cama.glb',
+  lareira: 'assets/objetos/lareira.glb',
+  estante_livros: 'assets/objetos/estante_livros.glb',
+  mesa_quimica: 'assets/objetos/mesa_alquimia.glb',
+  mesa_cadeiras: 'assets/objetos/mesa.glb',
+  trono: 'assets/objetos/trono.glb',
+  barril: 'assets/objetos/barril.glb',
+  // Toda decoração do tipo coluna usa o mesmo modelo, mesmo sem PNG próprio.
+  coluna: 'assets/objetos/coluna.glb',
   arvore: 'assets/objetos/arvore.glb',
   arvore_grande: 'assets/objetos/arvore.glb',
 };
@@ -438,7 +464,9 @@ function handleLobby(msg){
   csUpdateLobbyBar(msg);
   if(!csf && window.THREE) initClassSelectFull();
   if(csf){
-    csf.selectedId = msg.players.find(p=>p.id===GS.myPid)?.class_id ?? csf.selectedId;
+    const myClass = msg.players.find(p=>p.id===GS.myPid)?.class_id;
+    csf.selectedId = myClass ?? csf.selectedId;
+    if(myClass) csf.gridSelectionMade = true;
     // Classes escolhidas por OUTROS jogadores ficam indisponíveis.
     csf.takenIds = new Set(
       msg.players.filter(p => p.id !== GS.myPid && p.class_id).map(p => p.class_id));
@@ -467,6 +495,7 @@ function _csfApplyTaken(){
       else     { m.transparent = m.userData._origTransparent; m.opacity = m.userData._origOpacity; }
     });
   }
+  _csHeroGridSync();
 }
 
 function startGame(){ send({type:'start_game'}); }
@@ -19793,6 +19822,49 @@ const _CSF_CENTER_SLOT = 2;
 // Initial hero → slot mapping (slot 2 = warrior = default selection)
 const _CSF_INIT_ORDER = ['mage','rogue','warrior','cleric','bard','paladin'];
 
+// Ordem dos quadros na arte de seleção: esquerda → direita, cima → baixo.
+const _CS_GRID_HEROES = [
+  {id:'rogue',   label:'Luccas, o Ladino',    col:0, row:0},
+  {id:'paladin', label:'Richard, o Paladino', col:1, row:0},
+  {id:'bard',    label:'Henrique, o Bardo',   col:2, row:0},
+  {id:'cleric',  label:'Lewis, o Clérigo',    col:0, row:1},
+  {id:'warrior', label:'Victor, o Guerreiro', col:1, row:1},
+  {id:'mage',    label:'Pedro, o Mago',       col:2, row:1},
+];
+
+function _buildCsHeroGrid(){
+  if(document.getElementById('cs-hero-grid')) return;
+  const canvas = document.getElementById('cs-canvas');
+  if(!canvas || !canvas.parentNode) return;
+  const grid = document.createElement('div');
+  grid.id = 'cs-hero-grid';
+  grid.setAttribute('aria-label', 'Seleção de personagens');
+  grid.innerHTML = _CS_GRID_HEROES.map(h =>
+    `<button type="button" class="cs-hero-tile" data-class-id="${h.id}" ` +
+    `style="--cs-col:${h.col};--cs-row:${h.row}" aria-label="Selecionar ${h.label}"></button>`
+  ).join('');
+  grid.querySelectorAll('.cs-hero-tile').forEach(tile => {
+    tile.addEventListener('mouseenter', () => { if(csf) csf.hoveredId = tile.dataset.classId; });
+    tile.addEventListener('mouseleave', () => { if(csf) csf.hoveredId = null; });
+    tile.addEventListener('click', () => csfSelectHero(tile.dataset.classId));
+  });
+  canvas.parentNode.appendChild(grid);
+}
+
+function _csHeroGridSync(){
+  const grid = document.getElementById('cs-hero-grid');
+  if(!grid || !csf) return;
+  grid.classList.toggle('has-selection', !!csf.gridSelectionMade);
+  grid.querySelectorAll('.cs-hero-tile').forEach(tile => {
+    const id = tile.dataset.classId;
+    const taken = csf.takenIds && csf.takenIds.has(id);
+    tile.classList.toggle('selected', id === csf.selectedId && !!csf.gridSelectionMade);
+    tile.classList.toggle('taken', !!taken);
+    tile.disabled = !!taken;
+    tile.setAttribute('aria-pressed', String(id === csf.selectedId && !!csf.gridSelectionMade));
+  });
+}
+
 function initClassSelectFull(){
   if(csf) return;
   if(!window.THREE) return;
@@ -19921,6 +19993,7 @@ function initClassSelectFull(){
     particles, skyColors,
     selectedId:   defaultSel,
     hoveredId:    null,
+    gridSelectionMade: false,
     takenIds:     new Set(),   // classes já escolhidas por OUTROS jogadores (indisponíveis)
     animFrame:    null,
     tweens:       [],
@@ -19935,6 +20008,9 @@ function initClassSelectFull(){
   // Celular: tocar no modelo 3D seleciona o herói direto (raycast no toque).
   // preventDefault evita o `click` sintético duplicado logo após o touchend.
   renderer.domElement.addEventListener('touchend',   _csfTouchEnd, { passive:false });
+
+  _buildCsHeroGrid();
+  _csHeroGridSync();
 
   _startCsfLoop();
   _csfShowPanel(defaultSel, false);
@@ -20128,9 +20204,14 @@ function toggleCsInfo(show){
 window.toggleCsInfo = toggleCsInfo;
 
 function csfSelectHero(classId){
-  if(!csf || classId === csf.selectedId) return;
+  if(!csf) return;
   if(csf.takenIds && csf.takenIds.has(classId)){
     toast('Personagem já escolhido por outro jogador.', 'var(--orange)');
+    return;
+  }
+  if(classId === csf.selectedId){
+    csf.gridSelectionMade = true;
+    _csHeroGridSync();
     return;
   }
   const {slotHeroes, heroGroups, tweens} = csf;
@@ -20168,6 +20249,8 @@ function csfSelectHero(classId){
   }
 
   csf.selectedId = classId;
+  csf.gridSelectionMade = true;
+  _csHeroGridSync();
 
   // Reset confirm timer
   csf.confirmStart  = Date.now();
@@ -20512,7 +20595,10 @@ function _csApplyMasterMode(){
     // insere no mesmo container do canvas
     if(canvas && canvas.parentNode) canvas.parentNode.appendChild(mimg);
   }
-  if(canvas) canvas.style.display = jaMestre ? 'none' : '';
+  const grid = document.getElementById('cs-hero-grid');
+  // A grade ilustrada substitui o carrossel 3D durante a escolha de herói.
+  if(canvas) canvas.style.display = 'none';
+  if(grid)   grid.style.display   = jaMestre ? 'none' : 'grid';
   if(mimg)   mimg.style.display   = jaMestre ? 'flex' : 'none';
 }
 
