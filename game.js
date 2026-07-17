@@ -2604,10 +2604,10 @@ function obterRaioVisaoCliente(personagem){
   const modDex = Math.floor((dex - 10) / 2);
   const modInt = Math.floor((intel - 10) / 2);
   const classe = personagem && (personagem.class_id || personagem.key || personagem.id);
-  const base = classe === 'warrior' ? 4 : 3;
+  const base = Math.max(1, Number(personagem && personagem.spd != null ? personagem.spd : 5));
   const bonusLuz = classe === 'paladin' && personagem && personagem.guerreiro_luz_ativo
     ? Number((personagem.guerreiro_luz_bonus || {}).visao || 0) : 0;
-  return Math.max(0, base + Math.floor((modInt + modDex) / 2) + bonusLuz);
+  return Math.max(1, base + Math.floor((modInt + modDex) / 2) + bonusLuz);
 }
 
 // Renderiza atributos usando dados do servidor quando disponíveis
@@ -5048,11 +5048,7 @@ const WALL_RISE = Math.round(CELL * 0.50); // visible wall-face height — talle
 // Guerreiro da Luz (Richard). Espelha _get_raio_visao(p) no servidor (base 3),
 // mas aqui a base é maior pois governa a visibilidade AO VIVO de inimigos.
 function getSightRadius(me){
-  const base = 6;
-  if(me?.class_id === 'paladin' && me?.guerreiro_luz_ativo){
-    return base + (me?.guerreiro_luz_bonus?.visao || 0);
-  }
-  return base;
+  return obterRaioVisaoCliente(me);
 }
 
 function computeVisionSet(state, me){

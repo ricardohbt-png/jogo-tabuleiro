@@ -8,6 +8,8 @@ window.EDITOR_CATALOG = {
       "cr": 0.25,
       "hp": 8,
       "ac": 12,
+      "movement": 6,
+      "vision_base": 0,
       "atk_bonus": 2,
       "damage": "1d4",
       "gold": 5,
@@ -22,6 +24,8 @@ window.EDITOR_CATALOG = {
       "cr": 0.5,
       "hp": 10,
       "ac": 13,
+      "movement": 6,
+      "vision_base": 0,
       "atk_bonus": 3,
       "damage": "1d6",
       "gold": 8,
@@ -37,6 +41,8 @@ window.EDITOR_CATALOG = {
       "cr": 0.75,
       "hp": 16,
       "ac": 14,
+      "movement": 6,
+      "vision_base": 0,
       "atk_bonus": 5,
       "damage": "1d8",
       "gold": 12,
@@ -51,6 +57,8 @@ window.EDITOR_CATALOG = {
       "cr": 0.5,
       "hp": 12,
       "ac": 12,
+      "movement": 6,
+      "vision_base": 0,
       "atk_bonus": 4,
       "damage": "1d6",
       "gold": 20,
@@ -65,6 +73,8 @@ window.EDITOR_CATALOG = {
       "cr": 1.5,
       "hp": 22,
       "ac": 16,
+      "movement": 6,
+      "vision_base": 0,
       "atk_bonus": 7,
       "damage": "1d10",
       "gold": 25,
@@ -80,6 +90,8 @@ window.EDITOR_CATALOG = {
       "cr": 5.0,
       "hp": 60,
       "ac": 20,
+      "movement": 6,
+      "vision_base": 0,
       "atk_bonus": 12,
       "damage": "2d8",
       "gold": 100,
@@ -95,7 +107,8 @@ window.EDITOR_CATALOG = {
       "cr": 0.25,
       "hp": 8,
       "ac": 13,
-      "movement": 7,
+      "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -165,7 +178,8 @@ window.EDITOR_CATALOG = {
       "cr": 0.5,
       "hp": 12,
       "ac": 14,
-      "movement": 5,
+      "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -239,7 +253,8 @@ window.EDITOR_CATALOG = {
       "cr": 0.5,
       "hp": 10,
       "ac": 12,
-      "movement": 5,
+      "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -339,6 +354,7 @@ window.EDITOR_CATALOG = {
       "hp": 8,
       "ac": 13,
       "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -431,7 +447,8 @@ window.EDITOR_CATALOG = {
       "cr": 0.5,
       "hp": 16,
       "ac": 13,
-      "movement": 8,
+      "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -497,6 +514,7 @@ window.EDITOR_CATALOG = {
       "hp": 16,
       "ac": 13,
       "movement": 6,
+      "vision_base": 0,
       "size": [
         2,
         1
@@ -569,7 +587,8 @@ window.EDITOR_CATALOG = {
       "cr": 1,
       "hp": 14,
       "ac": 12,
-      "movement": 7,
+      "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -641,6 +660,7 @@ window.EDITOR_CATALOG = {
       "hp": 14,
       "ac": 13,
       "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -716,7 +736,8 @@ window.EDITOR_CATALOG = {
       "cr": 1,
       "hp": 16,
       "ac": 11,
-      "movement": 5,
+      "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -799,6 +820,7 @@ window.EDITOR_CATALOG = {
       "hp": 18,
       "ac": 13,
       "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -876,6 +898,7 @@ window.EDITOR_CATALOG = {
       "hp": 17,
       "ac": 13,
       "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -964,6 +987,7 @@ window.EDITOR_CATALOG = {
       "hp": 9,
       "ac": 13,
       "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -1041,6 +1065,7 @@ window.EDITOR_CATALOG = {
       "hp": 9,
       "ac": 13,
       "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -1123,6 +1148,7 @@ window.EDITOR_CATALOG = {
       "hp": 9,
       "ac": 13,
       "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -1217,6 +1243,7 @@ window.EDITOR_CATALOG = {
       "hp": 10,
       "ac": 12,
       "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -1320,7 +1347,8 @@ window.EDITOR_CATALOG = {
       "cr": 0.25,
       "hp": 7,
       "ac": 12,
-      "movement": 7,
+      "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -1395,7 +1423,8 @@ window.EDITOR_CATALOG = {
       "cr": 0.25,
       "hp": 7,
       "ac": 12,
-      "movement": 7,
+      "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -1468,7 +1497,8 @@ window.EDITOR_CATALOG = {
       "cr": 2,
       "hp": 16,
       "ac": 12,
-      "movement": 5,
+      "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -1567,7 +1597,8 @@ window.EDITOR_CATALOG = {
       "cr": 1,
       "hp": 22,
       "ac": 10,
-      "movement": 4,
+      "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -1652,7 +1683,8 @@ window.EDITOR_CATALOG = {
       "cr": 2,
       "hp": 24,
       "ac": 14,
-      "movement": 7,
+      "movement": 6,
+      "vision_base": 0,
       "size": [
         2,
         1
@@ -1728,7 +1760,8 @@ window.EDITOR_CATALOG = {
       "cr": 2,
       "hp": 22,
       "ac": 13,
-      "movement": 5,
+      "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -1805,7 +1838,8 @@ window.EDITOR_CATALOG = {
       "cr": 2,
       "hp": 22,
       "ac": 14,
-      "movement": 7,
+      "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -1932,7 +1966,8 @@ window.EDITOR_CATALOG = {
       "cr": 2,
       "hp": 32,
       "ac": 12,
-      "movement": 5,
+      "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -2026,7 +2061,8 @@ window.EDITOR_CATALOG = {
       "cr": 2,
       "hp": 32,
       "ac": 14,
-      "movement": 5,
+      "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1
@@ -2121,7 +2157,8 @@ window.EDITOR_CATALOG = {
       "hp": 36,
       "ac": 15,
       "natural_armor": 5,
-      "movement": 5,
+      "movement": 6,
+      "vision_base": 0,
       "size": [
         2,
         3
@@ -2262,6 +2299,7 @@ window.EDITOR_CATALOG = {
       "hp": 28,
       "ac": 13,
       "movement": 6,
+      "vision_base": 0,
       "size": [
         1,
         1

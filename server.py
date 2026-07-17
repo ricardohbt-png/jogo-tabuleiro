@@ -2392,6 +2392,12 @@ MONSTER_DEFS = [
 # Subtipos gerais. As regras de dano são aplicadas centralmente em
 # _apply_damage_types; imunidades de estado que dependem de fisiologia (veneno,
 # doença, sono etc.) são consultadas pelos respectivos efeitos.
+# Regra global de deslocamento e visão dos monstros. O bônus de visão começa
+# neutro e pode ser ajustado individualmente pelo editor.
+for _monster_def in MONSTER_DEFS:
+    _monster_def["movement"] = 6
+    _monster_def["vision_base"] = 0
+
 SUBTIPOS_MONSTRO = {
     "construto": {"nome": "Construto", "imunidades": ["paralisia", "petrificacao", "encantamento", "controle_mental", "medo", "necrótico", "veneno", "gases", "doenca", "sono"], "descricao": "Imune a paralisia, petrificação, encantamento, controle mental, medo, necrótico, venenos, gases, doença e sono."},
     "morto_vivo": {"nome": "Morto-Vivo", "imunidades": ["veneno", "gases", "necrótico", "doenca", "sono", "encantamento", "medo"], "descricao": "Imune a veneno, gases, necrótico, doença, sono, encantamento e medo; sofre dano sagrado dobrado."},
@@ -4432,7 +4438,9 @@ def make_monster(mdef, room):
     # Visão: as fichas legadas que já possuíam darkvision_range mantêm a
     # característica Visão no Escuro, mas agora usam o mesmo raio calculado
     # por atributos de todos os monstros.
-    m["vision_base"] = max(0, int(m.get("vision_base", 3)))
+    m["base_movement"] = 6
+    m["movement"] = 6
+    m["vision_base"] = max(-30, min(30, int(m.get("vision_base", 0))))
     m["visao_escuro"] = bool(m.get("visao_escuro") or m.get("darkvision_range"))
     m["id"] = new_id()
     m["max_hp"] = m["hp"]
@@ -6737,7 +6745,7 @@ class GameRoom:
         return base + extra
 
     def initiative_value(self, entity):
-        return mod(self._initiative_attribute(entity, "dex")) + mod(self._initiative_attribute(entity, "int_"))
+        return self._initiative_attribute(entity, "dex") + mod(self._initiative_attribute(entity, "int_"))
 
     def _rebuild_initiative(self):
         """Monta a fila da rodada. Empate total alterna herói/monstro por rodada."""
@@ -7145,18 +7153,19 @@ class GameRoom:
         precisarem gravar um bônus separado. O Guerreiro da Luz continua
         sendo somado por último, quando ativo.
         """
-        raio_base = 4 if p.get("class_id") == "warrior" else 3
+        raio_base = max(1, int(p.get("spd", 5)))
         bonus_atributos = (mod(p.get("int_", 10)) + mod(p.get("dex", 10))) // 2
         bonus_luz = 0
         if p.get("class_id") == "paladin" and p.get("guerreiro_luz_ativo"):
             bonus_luz = p.get("guerreiro_luz_bonus", {}).get("visao", 0)
-        return max(0, raio_base + bonus_atributos + bonus_luz)
+        return max(1, raio_base + bonus_atributos + bonus_luz)
 
     def _get_raio_visao_monstro(self, m):
-        """Raio de visão de um monstro: base editável + modificadores INT/DES."""
-        base = max(0, int(m.get("vision_base", 3)))
+        """Raio de visão: movimento base + bônus de visão + INT/DES."""
+        base = max(1, int(m.get("base_movement", 6)))
+        bonus_visao = max(-30, min(30, int(m.get("vision_base", 0))))
         bonus_atributos = (mod(m.get("int_", 10)) + mod(m.get("dex", 10))) // 2
-        return max(0, base + bonus_atributos)
+        return max(1, base + bonus_atributos + bonus_visao)
 
     def _monstro_enxerga_alvo(self, m, target_obj):
         """Determina se o alvo está no raio e na linha de visão do monstro."""
@@ -17152,7 +17161,7 @@ class GameRoom:
         if not alive:
             return
         if profile == "sentinela":
-            guard = max(3, int(m.get("vision_base", 3)))
+            guard = self._get_raio_visao_monstro(m)
             alive = [t for t in alive if max(abs(t["obj"]["pos"][0] - m["pos"][0]),
                                               abs(t["obj"]["pos"][1] - m["pos"][1])) <= guard]
             if not alive:
@@ -19180,6 +19189,9 @@ def _apply_custom_monsters(records):
     for item in records:
         if isinstance(item, dict) and item.get("type"):
             m = deepcopy(item)
+            m["movement"] = 6
+            # Migra o antigo raio-base 3 para o novo bônus neutro.
+            m["vision_base"] = 0 if m.get("vision_base", 0) == 3 else int(m.get("vision_base", 0) or 0)
             m["_personalizado"] = True
             MONSTER_DEFS.append(m)
 
@@ -19395,7 +19407,7 @@ def _validate_custom_monster(raw):
         cr = 1
     natural_armor = _monster_int(raw.get("natural_armor",
         _monster_int(raw.get("ac", 10), 10, 1, 99) - 10 - dex_mod), 0, 0, 50)
-    vision_base = _monster_int(raw.get("vision_base", 3), 3, 0, 30)
+    vision_base = _monster_int(raw.get("vision_base", 0), 0, -30, 30)
     subtipo = str(raw.get("subtipo") or ("morto_vivo" if raw.get("undead") else "raca_padrao"))
     if subtipo not in SUBTIPOS_MONSTRO:
         subtipo = "raca_padrao"
@@ -19423,7 +19435,7 @@ def _validate_custom_monster(raw):
         "base_hp": base_hp, "hp": max(1, min(999, base_hp + con_mod)),
         "natural_armor": natural_armor,
         "ac": max(1, min(99, 10 + dex_mod + natural_armor)),
-        "movement": _monster_int(raw.get("movement", 5), 5, 1, 20),
+        "movement": 6,
         "vision_base": vision_base,
         "visao_escuro": bool(raw.get("visao_escuro")),
         "base_attack_bonus": _monster_int(raw.get("base_attack_bonus", 0), 0, -20, 30),
