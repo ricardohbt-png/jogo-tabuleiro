@@ -5223,7 +5223,7 @@ class GameRoom:
         heroes = {pid2: p for pid2, p in self.players.items() if not p.get("is_master")}
         master_entry = next((p for p in self.players.values() if p.get("is_master")), None)
         if not heroes:
-            await self.send_to(pid, {"type": "error", "msg": "Ã‰ preciso pelo menos 1 herÃ³i para iniciar."})
+            await self.send_to(pid, {"type": "error", "msg": "É preciso pelo menos 1 herói para iniciar."})
             return
         if not all(p["class_id"] for p in heroes.values()):
             await self.send_to(pid, {"type": "error", "msg": "Todos os herÃ³is devem escolher uma classe."})
