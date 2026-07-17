@@ -997,3 +997,17 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `validar_dungeon` rejeita `salas_obrigatorias` sem salas marcadas e `required_mode`
 > inválido. Só design-time/objetivo (sem trava de encerramento extra). Teste:
 > `tools/test_modo_mestre.py` (seção [23]).
+
+> **Camada C — Validador de design (editor):** só-avisa (nunca bloqueia). Em
+> `tools/editor.js`, funções `_grafoSalas` (grafo de salas via BFS nos tiles de chão:
+> conectividade da entrada + adjacência parando ao entrar noutra sala + distância) +
+> `_ndSalaMap` (ND por sala, reusa a lógica do termômetro) + `_validarDesign`. 5 regras
+> viram avisos: **R4** conectividade (sala isolada), **R2** distância spawn→boss (nº de
+> salas, mín. `VALID_MIN_SALAS`=3), **R5** descanso antes do boss (vizinha com ND ≤
+> `poder×VALID_REST_FATOR` ou role `empty`), **R6** teto do ND **médio** da rota crítica
+> (=salas `required`; > `poder×VALID_R6_FATOR`), **R3** picos entre salas obrigatórias
+> consecutivas (Δ > `VALID_MAX_PICO`). Boss/entrada por `role`. UI: seção "⚠️ Avisos de
+> design" no painel de nível de masmorra (`_avisosDesignHTML` após o termômetro), live.
+> Limiares = constantes no topo do módulo (tunáveis). **Regra 1** (≥2 caminhos disjuntos)
+> fica p/ 2ª spec. Editor não roda no MCP (arquivos externos viram snapshot) — grafo
+> validado por teste node sintético. Spec: `docs/superpowers/specs/2026-07-16-validador-masmorra-design.md`.
