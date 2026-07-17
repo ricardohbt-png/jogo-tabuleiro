@@ -9412,6 +9412,7 @@ class GameRoom:
         self.master_manual_mid = m["id"]
         m["master_moves_left"] = int(m.get("movement", self.MASTER_MANUAL_MOVE) or self.MASTER_MANUAL_MOVE)
         m["_master_acted"] = False
+        m["_master_bonus_acted"] = False
         self.master_manual_event = asyncio.Event()
         await self.push_state()
         self.master_manual_timer = asyncio.create_task(self._master_manual_timeout(m["id"]))
@@ -16303,6 +16304,105 @@ class GameRoom:
         if zona and zona.get("tipo") == "escuridao":
             await self._aplicar_escuridao(m, raio=raio, duracao=zona.get("duracao", 2), pos=target["pos"])
 
+    def _monster_e_conjurador(self, m):
+        """True se o monstro tem conjuração na ficha (monster_spells não-vazio ou
+        alguma habilidade action_type=='magia') — ex.: necromante."""
+        if m.get("monster_spells"):
+            return True
+        return any(ab.get("action_type") == "magia" for ab in m.get("special_abilities", []))
+
+    async def handle_mestre_usar_item(self, pid, monster_id, item_id, target_id, tx, ty):
+        """Manual: o mestre usa um item de bolsa do monstro (equipment_consumables).
+        Consumíveis de alvo-próprio = ação bônus; arremesso/pergaminho = principal.
+        Espelha a economia do jogador."""
+        if pid != self.master_pid or monster_id != self.master_manual_mid:
+            return
+        m = self.monsters.get(monster_id)
+        if not m or m["hp"] <= 0:
+            return
+        bag = m.get("equipment_consumables", [])
+        item = next((i for i in bag if i.get("id") == item_id), None)
+        if not item:
+            await self.send_to(pid, {"type": "error", "msg": "Item não encontrado no inventário."}); return
+        effect = item.get("effect")
+
+        if effect in {"food", "ration", "wine", "ale"}:
+            await self.send_to(pid, {"type": "error", "msg": "Este item não tem efeito em monstros."}); return
+
+        if effect == "throwable":
+            if m.get("_master_acted"):
+                await self.send_to(pid, {"type": "error", "msg": "Este monstro já usou a ação principal."}); return
+            defn = ARREMESSAVEIS.get(item_id)
+            if not defn:
+                await self.send_to(pid, {"type": "error", "msg": "Item não arremessável."}); return
+            alvo = self.players.get(target_id)
+            if not alvo or not alvo.get("alive"):
+                await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
+            rng = defn.get("alcance", 0)
+            if max(abs(m["pos"][0] - alvo["pos"][0]), abs(m["pos"][1] - alvo["pos"][1])) > rng:
+                await self.send_to(pid, {"type": "error", "msg": "Alvo fora de alcance."}); return
+            if not self._tem_linha_de_visao(m["pos"], alvo["pos"]):
+                await self.send_to(pid, {"type": "error", "msg": "Uma parede bloqueia o arremesso."}); return
+            m["_master_acted"] = True
+            await self._monster_throw_item(m, {"kind": "player", "obj": alvo}, item)
+            if item in bag:
+                bag.remove(item)
+            await self.push_state(); return
+
+        if effect == "scroll":
+            if m.get("_master_acted"):
+                await self.send_to(pid, {"type": "error", "msg": "Este monstro já usou a ação principal."}); return
+            if not self._monster_e_conjurador(m):
+                await self.send_to(pid, {"type": "error", "msg": "Só monstros conjuradores podem usar pergaminhos."}); return
+            sid = item.get("magia_id")
+            magia = GRIMORIO.get(sid)
+            if not magia or sid not in GRIMORIO_IMPLEMENTADAS:
+                await self.send_to(pid, {"type": "error", "msg": "Magia do pergaminho não disponível."}); return
+            data = {"target_id": target_id, "tx": tx, "ty": ty}
+            m["_master_acted"] = True
+            await self._executar_magia_grimorio(m, magia, data)
+            if item in bag:
+                bag.remove(item)
+            await self.push_state(); return
+
+        if effect not in self.BONUS_ACTION_EFFECTS:
+            await self.send_to(pid, {"type": "error", "msg": "Item não usável pelo mestre."}); return
+        if m.get("_master_bonus_acted"):
+            await self.send_to(pid, {"type": "error", "msg": "Este monstro já usou a ação bônus."}); return
+        val = int(item.get("value", 0) or 0)
+        removed = True
+        if effect == "heal":
+            m["hp"] = min(m.get("max_hp", m["hp"]), m["hp"] + val)
+            max_uses = int(item.get("max_uses", 1) or 1)
+            if max_uses > 1:
+                uses_left = int(item.get("uses_left", max_uses) or 1) - 1
+                item["uses_left"] = uses_left
+                removed = uses_left <= 0
+            await self.gm_say(f"🧪 **{m.get('name', 'O monstro')}** usa **{item['name']}** e recupera **{val}** HP.")
+        elif effect == "regeneration":
+            m["potion_regen_pool"] = m.get("potion_regen_pool", 0) + val
+            await self.gm_say(f"🌿 **{m.get('name', 'O monstro')}** bebe **{item['name']}** — regeneração +{val}.")
+        elif effect == "atk_bonus":
+            m["equipment_attack_bonus"] = m.get("equipment_attack_bonus", 0) + val
+            await self.gm_say(f"⚗️ **{m.get('name', 'O monstro')}** usa **{item['name']}**: +{val} de ataque.")
+        elif effect == "coat_poison":
+            vid = item.get("veneno_id")
+            if vid and m.get("attacks"):
+                m["attacks"][0]["on_hit"] = vid
+                m["equipment_poison"] = vid
+            await self.gm_say(f"🧪 **{m.get('name', 'O monstro')}** unta **{item['name']}** na arma.")
+        elif effect == "antidote":
+            for k in ("veneno", "veneno_dano", "veneno_rodadas", "envenenado"):
+                m.pop(k, None)
+            await self.gm_say(f"🟢 **{m.get('name', 'O monstro')}** usa **{item['name']}** e neutraliza o veneno.")
+        elif effect == "veil_shadow":
+            m["oculto_item"] = True
+            await self.gm_say(f"🕯️ **{m.get('name', 'O monstro')}** usa **{item['name']}** e fica oculto.")
+        m["_master_bonus_acted"] = True
+        if removed and item in bag:
+            bag.remove(item)
+        await self.push_state()
+
     def _monster_editor_passive_bonus(self, m):
         """Bônus leve para passivas de heróis/Guilda escolhidas no editor."""
         count = sum(1 for ab in m.get("special_abilities", [])
@@ -19370,6 +19470,9 @@ async def handler(ws):
                     if room: await room.handle_mestre_atacar_monstro(pid, msg.get("monster_id"), msg.get("target_id"))
                 elif t == "mestre_usar_habilidade":
                     if room: await room.handle_mestre_usar_habilidade(pid, msg.get("monster_id"), msg.get("ability_id"), msg.get("target_id"))
+
+                elif t == "mestre_usar_item":
+                    if room: await room.handle_mestre_usar_item(pid, msg.get("monster_id"), msg.get("item_id"), msg.get("target_id"), msg.get("tx"), msg.get("ty"))
 
                 elif t == "mestre_encerrar_monstro":
                     if room: await room.handle_mestre_encerrar_monstro(pid, msg.get("monster_id"))

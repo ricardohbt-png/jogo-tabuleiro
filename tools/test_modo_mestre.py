@@ -568,6 +568,40 @@ async def main():
     await r.handle_mestre_usar_habilidade("m1", "g1", "petrificar", "hA")
     check("já-agiu recusado", any("agiu" in e.lower() for e in r._errs))
 
+    print("\n[27] mestre_usar_item — heal (bônus), throwable (principal), food recusado")
+    r = playing_room_com_mestre()
+    heal_calls = {"n": 0}
+    m = {"id": "g1", "hp": 5, "max_hp": 12, "pos": [2, 2], "size": [1, 1],
+         "control_mode": "manual", "_master_acted": False, "_master_bonus_acted": False,
+         "attacks": [{"name": "espada"}],
+         "equipment_consumables": [
+            {"id": "health_potion", "name": "Poção", "effect": "heal", "value": 6},
+            {"id": "granada", "name": "Granada", "effect": "throwable"},
+            {"id": "cantil_agua", "name": "Cantil", "effect": "food"},
+         ]}
+    r.monsters = {"g1": m}; r.master_manual_mid = "g1"
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [2, 3], "alive": True, "hp": 10, "max_hp": 10}}
+    # heal → cura o monstro, gasta a ação bônus, remove a poção
+    await r.handle_mestre_usar_item("m1", "g1", "health_potion", None, None, None)
+    check("curou o monstro", m["hp"] == 11)
+    check("gastou ação bônus", m["_master_bonus_acted"] is True)
+    check("poção removida", not any(i["id"] == "health_potion" for i in m["equipment_consumables"]))
+    check("ação principal livre", m["_master_acted"] is False)
+    # throwable → chama _monster_throw_item mirando o herói, gasta a ação principal
+    throws = {"n": 0}
+    async def fake_throw(mm, target_obj, item): throws["n"] += 1
+    r._monster_throw_item = fake_throw
+    r._tem_linha_de_visao = lambda a, b: True
+    await r.handle_mestre_usar_item("m1", "g1", "granada", "hA", None, None)
+    check("arremessou no herói", throws["n"] == 1)
+    check("gastou ação principal", m["_master_acted"] is True)
+    check("granada removida", not any(i["id"] == "granada" for i in m["equipment_consumables"]))
+    # food → recusado, sem efeito
+    r._errs.clear()
+    await r.handle_mestre_usar_item("m1", "g1", "cantil_agua", None, None, None)
+    check("food recusado", any("efeito" in e.lower() for e in r._errs))
+    check("cantil continua na bolsa", any(i["id"] == "cantil_agua" for i in m["equipment_consumables"]))
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
