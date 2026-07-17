@@ -15,7 +15,7 @@
     tiles: [],
     rooms: [], nextRoomId: 0,
     entrance: null, exit: null, prisoner: null,
-    monsters: [], chests: [], traps: [], decorations: [], secretPassages: [], nextDecorId: 0, nextPassageId: 0,
+    monsters: [], chests: [], traps: [], decorations: [], secretPassages: [], falas: [], nextDecorId: 0, nextPassageId: 0, nextFalaId: 0,
     masterReinforcements: [],
     expectedParty: { heroes: 4, level: 1 },
     objectives: { primary: { type: "kill_all" }, secondary: [] },
@@ -458,6 +458,13 @@
       ctx.fillText("⇱", t.saida[0] * CELL + CELL / 2, t.saida[1] * CELL + CELL / 2);
     }
     ctx.textAlign = "start";
+    // Marcadores de fala de NPC: pequeno 💬 no canto superior-esquerdo da casa
+    // (não conflita com o emoji central de monstro/baú que possa dividir a casa).
+    ctx.font = "11px sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "top";
+    for (const f of S.falas) {
+      ctx.fillText("💬", f.pos[0] * CELL + 2, f.pos[1] * CELL + 1);
+    }
+    ctx.textAlign = "start"; ctx.textBaseline = "middle";
     // Emojis de decorações com escala visual: desenhados à parte, ancorados na
     // base-centro do footprint e crescendo para cima.
     for (const d of S.decorations) {
@@ -543,6 +550,7 @@
     { id: "decor", label: "decoração", group: "entidades" },
     { id: "secret_mechanism", label: "passagem secreta", group: "entidades" },
     { id: "illusion_wall", label: "parede ilusória", group: "entidades" },
+    { id: "fala", label: "fala NPC", group: "entidades" },
     { id: "room", label: "sala", group: "ações" },
     { id: "select", label: "selecionar", group: "ações" },
     { id: "erase", label: "apagar", group: "ações" },
@@ -714,7 +722,7 @@
     const _decsHere = S.decorations.filter(d => decorTiles(d).some(c => c[0] === x && c[1] === y));
     const dec = _decsHere.find(d => !isFloorDecor(d)) || _decsHere[0];
     if (dec) return { kind: "decor", ref: dec, pos: dec.pos.slice() };
-    return find(S.monsters, "monster") || find(S.chests, "chest") || find(S.traps, "trap") || null;
+    return find(S.monsters, "monster") || find(S.chests, "chest") || find(S.traps, "trap") || find(S.falas, "fala") || null;
   }
 
   function roomIdAt(x, y) {
@@ -731,6 +739,7 @@
       case "monster": S.monsters.push({ type: (CAT.monsters[0] || {}).type || "goblin", pos: [x, y], room_id: rid, boss: false, target: false }); break;
       case "chest": S.chests.push({ pos: [x, y], gold: 0, items: [], key_objective: false }); break;
       case "trap": S.traps.push({ tipo: (CAT.traps[0] || {}).tipo || "fosso_estacas", pos: [x, y] }); break;
+      case "fala": S.falas.push({ id: "fala_" + S.nextFalaId++, pos: [x, y], falante: { nome: "", emoji: "🧙" }, texto: "", trigger: { tipo: "proximidade", raio: 2 } }); break;
       case "decor": placeDecor(x, y); break;
       case "secret_mechanism":
         if (S.tiles[y][x] === WALL && !S.secretPassages.some(p => p.pos[0] === x && p.pos[1] === y))
@@ -753,6 +762,7 @@
     S.traps = S.traps.filter(e => !(e.pos[0] === x && e.pos[1] === y));
     S.decorations = S.decorations.filter(d => !decorTiles(d).some(c => c[0] === x && c[1] === y));
     S.secretPassages = S.secretPassages.filter(p => !(p.pos[0] === x && p.pos[1] === y));
+    S.falas = S.falas.filter(f => !(f.pos[0] === x && f.pos[1] === y));
     delete S.materiais[x + "," + y];
     S.tiles[y][x] = WALL;
   }
@@ -1146,6 +1156,26 @@
           loadTrapImgList(); render();
         } catch (err) { tImgSt.textContent = "falha: " + err.message; }
       };
+    } else if (k === "fala") {
+      const tg = ref.trigger || (ref.trigger = { tipo: "proximidade", raio: 2 });
+      const fal = ref.falante || (ref.falante = { nome: "", emoji: "🧙" });
+      panel.innerHTML = `<b>💬 Fala de NPC</b>
+        <label>emoji do falante</label><input id="f-emoji" value="${(fal.emoji || "").replace(/"/g, "&quot;")}" maxlength="4" style="width:60px">
+        <label>nome do falante</label><input id="f-nome" value="${(fal.nome || "").replace(/"/g, "&quot;")}" placeholder="(opcional)">
+        <label>texto</label><textarea id="f-texto" rows="3" style="width:100%">${(ref.texto || "").replace(/</g, "&lt;")}</textarea>
+        <label>gatilho</label><select id="f-tipo">
+          <option value="proximidade"${tg.tipo === "proximidade" ? " selected" : ""}>proximidade (raio)</option>
+          <option value="sala"${tg.tipo === "sala" ? " selected" : ""}>entrar na sala</option>
+          <option value="manual"${tg.tipo === "manual" ? " selected" : ""}>manual (mestre)</option>
+        </select>
+        ${tg.tipo === "proximidade" ? `<label>raio (casas)</label><input id="f-raio" type="number" min="1" max="20" value="${tg.raio || 2}" style="width:60px">` : ""}
+        <div style="margin-top:8px;color:#8a7a5a;font-size:11px">Dispara uma vez. Manual só com mestre humano.</div>`;
+      document.getElementById("f-emoji").onchange = e => { fal.emoji = e.target.value; render(); };
+      document.getElementById("f-nome").onchange = e => { fal.nome = e.target.value; };
+      document.getElementById("f-texto").onchange = e => { ref.texto = e.target.value; };
+      document.getElementById("f-tipo").onchange = e => { tg.tipo = e.target.value; if (tg.tipo === "proximidade" && !tg.raio) tg.raio = 2; renderPanel(); };
+      const fr = document.getElementById("f-raio");
+      if (fr) fr.onchange = e => { tg.raio = Math.max(1, parseInt(e.target.value, 10) || 2); };
     } else if (k === "room") {
       panel.innerHTML = `<b>▦ Sala #${ref.id}</b>
         <label>role</label><select id="p-role">${opt(["entrance", "monster", "chest", "trap", "boss", "empty"].map(r => ({ v: r })), ref.role, o => o.v)}</select>
@@ -1354,7 +1384,7 @@
     }
     if (["wall", "floor", "door"].includes(S.tool)) { painting = true; (S.matFill && S.tool !== "door" ? paintMaterial : paintTile)(x, y); render(); updateStatus(); }
     else if (S.tool === "room") { roomDrag = { x0: x, y0: y, x1: x, y1: y }; }
-    else if (["entrance", "exit", "prisoner", "monster", "chest", "trap", "decor", "secret_mechanism", "illusion_wall"].includes(S.tool)) { placeEntity(x, y); if (S.tool !== "decor") S.sel = entityAt(x, y); renderPanel(); render(); }
+    else if (["entrance", "exit", "prisoner", "monster", "chest", "trap", "decor", "secret_mechanism", "illusion_wall", "fala"].includes(S.tool)) { placeEntity(x, y); if (S.tool !== "decor") S.sel = entityAt(x, y); renderPanel(); render(); }
     else if (S.tool === "erase") { eraseAt(x, y); S.sel = null; renderPanel(); render(); }
     else if (S.tool === "select") {
       S.sel = entityAt(x, y) || roomSel(x, y);
@@ -1453,6 +1483,12 @@
         return o;
       }),
       secret_passages: S.secretPassages.map(p => ({ id: p.id, type: p.type, pos: p.pos.slice(), key_decor_ids: p.key_decor_ids.slice(), keys_mode: p.keys_mode })),
+      falas: S.falas.map(f => {
+        const tg = f.trigger || {};
+        const t = { tipo: tg.tipo || "proximidade" };
+        if (t.tipo === "proximidade") t.raio = tg.raio || 2;
+        return { id: f.id, pos: f.pos.slice(), falante: { nome: (f.falante || {}).nome || "", emoji: (f.falante || {}).emoji || "" }, texto: f.texto || "", trigger: t };
+      }),
       master_reinforcements: S.masterReinforcements.map(r => ({ type: r.type, count: r.count })),
       expected_party: { heroes: S.expectedParty.heroes, level: S.expectedParty.level },
       prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}) } : null,
@@ -1546,6 +1582,12 @@
       if (!Array.isArray(p.key_decor_ids) || p.key_decor_ids.some(id => !decorIds.has(id))) e.push("passagem com decoração-chave inválida");
       if (p.type === "mechanism" && !p.key_decor_ids.length) e.push("passagem secreta sem decoração-chave");
     }
+    for (const f of S.falas) {
+      if (isWall(f.pos)) e.push(`fala de NPC em parede: ${f.pos}`);
+      if (!(f.texto || "").trim()) e.push("fala de NPC sem texto");
+      const tipo = (f.trigger || {}).tipo;
+      if (!["proximidade", "sala", "manual"].includes(tipo)) e.push(`fala de NPC com gatilho inválido: ${tipo}`);
+    }
     const matIds = new Set(MAT.map(m => m.id));
     for (const [key, mid] of Object.entries(S.materiais)) {
       if (!matIds.has(mid)) { e.push(`material inválido: ${mid}`); continue; }
@@ -1595,6 +1637,14 @@
     S.nextDecorId = S.decorations.length;
     S.secretPassages = (obj.secret_passages || []).map((p, i) => ({ id: p.id || ("passage_" + i), type: p.type === "illusion" ? "illusion" : "mechanism", pos: p.pos.slice(), key_decor_ids: (p.key_decor_ids || []).slice(), keys_mode: p.keys_mode === "all" ? "all" : "any" }));
     S.nextPassageId = S.secretPassages.length;
+    S.falas = (obj.falas || []).map((f, i) => {
+      const tg = f.trigger || {};
+      const tipo = ["proximidade", "sala", "manual"].includes(tg.tipo) ? tg.tipo : "proximidade";
+      const trigger = { tipo };
+      if (tipo === "proximidade") trigger.raio = Math.max(1, parseInt(tg.raio, 10) || 2);
+      return { id: f.id || ("fala_" + i), pos: f.pos.slice(), falante: { nome: (f.falante || {}).nome || "", emoji: (f.falante || {}).emoji || "🧙" }, texto: f.texto || "", trigger };
+    });
+    S.nextFalaId = S.falas.length;
     S.masterReinforcements = (obj.master_reinforcements || [])
       .filter(r => r && r.type)
       .map(r => ({ type: r.type, count: Math.max(1, parseInt(r.count, 10) || 1) }));

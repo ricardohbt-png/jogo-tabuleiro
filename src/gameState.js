@@ -1164,6 +1164,10 @@ const GS = (() => {
         _emit('gmNarration', msg.text);
         break;
 
+      case 'fala':
+        _emit('fala', msg);   // {falante:{nome,emoji}, texto, pos}
+        break;
+
       case 'game_over':
         clearSession();   // aventura encerrada — não tentar reconectar depois
         _captarStory(msg);
@@ -1289,6 +1293,8 @@ const GS = (() => {
   function mestreEncerrarMonstro(monsterId) { send({ type: 'mestre_encerrar_monstro', monster_id: monsterId }); }
   // Camada B: implanta um reforço da reserva do mestre numa casa livre.
   function mestreImplantarReforco(monsterType, tx, ty) { send({ type: 'mestre_implantar_reforco', monster_type: monsterType, tx, ty }); }
+  // Falas de NPC: o mestre dispara uma fala com gatilho manual.
+  function dispararFala(falaId) { send({ type: 'disparar_fala', fala_id: falaId }); }
   // true se o jogador local é o mestre (checa lobby/city/game — o mestre não
   // aparece em players[] durante city/dungeon, só master_pid identifica).
   function isMaster() {
@@ -2116,6 +2122,7 @@ const GS = (() => {
     mestreAtacarMonstro,
     mestreEncerrarMonstro,
     mestreImplantarReforco,
+    dispararFala,
     isMaster,
     masterManualMid,
 

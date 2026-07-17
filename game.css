@@ -1086,3 +1086,18 @@ input:focus { outline: none; border-color: var(--gold); }
 .mestre-reforco-btn{ display:block; width:100%; text-align:left; margin:2px 0; cursor:pointer; }
 .mestre-reforco-btn.armado{ outline:2px solid var(--gold,#d9b45a); }
 .mestre-reforco-dica{ font-size:.75rem; opacity:.85; margin-top:2px; }
+.mestre-falas{ margin-top:6px; }
+.mestre-fala-btn{ display:block; width:100%; text-align:left; margin:2px 0; cursor:pointer; font-size:.8rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mestre-fala-btn i{ opacity:.85; }
+
+/* Balão de fala de NPC — leve, canto inferior-central, distinto do log/story */
+#fala-popup{ position:fixed; left:50%; bottom:96px; transform:translateX(-50%) translateY(12px);
+  display:none; align-items:center; gap:12px; max-width:min(560px, 82vw);
+  background:linear-gradient(180deg, #2a2118f2, #1c1710f2); color:#f3e6cf;
+  border:1px solid var(--gold,#d9b45a); border-radius:14px; padding:12px 18px;
+  box-shadow:0 10px 30px #000a; cursor:pointer; z-index:120; opacity:0;
+  transition:opacity .18s ease, transform .18s ease; }
+#fala-popup.open{ display:flex; opacity:1; transform:translateX(-50%) translateY(0); }
+#fala-popup .fala-emoji{ font-size:2rem; line-height:1; flex:0 0 auto; }
+#fala-popup .fala-nome{ font-weight:700; color:var(--gold,#d9b45a); font-size:.85rem; margin-bottom:2px; }
+#fala-popup .fala-texto{ font-size:.98rem; line-height:1.35; }

@@ -229,6 +229,9 @@ document.body.innerHTML = `
   </div>
 </div>
 
+<!-- Balão de fala de NPC (Modo Mestre) -->
+<div id="fala-popup" onclick="_avancarFala()"></div>
+
 <div id="tooltip"></div>
 <div id="toast"></div>
 `;
@@ -10221,6 +10224,8 @@ window.renderElementaisLewis    = renderElementaisLewis;
 // só existe no cliente, não é persistido/enviado ao servidor até o jogador
 // clicar num botão de modo/alvo).
 let _masterSel = new Set();
+function _esc(s){ return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
 function renderMasterHud(state){
   if(!state) return;
   let host = document.getElementById('hud-mestre');
@@ -10257,6 +10262,17 @@ function renderMasterHud(state){
     '</div>'
   ) : '';
 
+  const falas = state.falas || [];
+  const falasHtml = falas.length ? (
+    '<div class="mestre-falas"><div class="mestre-sec">💬 Falas</div>' +
+    falas.map(f =>
+      `<button class="mestre-fala-btn" data-fid="${_esc(f.id)}">` +
+      `${_esc((f.falante && f.falante.emoji) || '💬')} ${_esc((f.falante && f.falante.nome) || 'NPC')}: ` +
+      `<i>${_esc((f.texto || '').slice(0, 40))}${(f.texto || '').length > 40 ? '…' : ''}</i></button>`
+    ).join('') +
+    '</div>'
+  ) : '';
+
   host.innerHTML = `
     <div class="mestre-titulo">🎭 Mestre</div>
     <div class="mestre-lista">${rows || '<div class="mestre-vazio">Nenhum monstro na masmorra.</div>'}</div>
@@ -10281,6 +10297,7 @@ function renderMasterHud(state){
       <button class="mestre-encerrar">Encerrar monstro</button>
     </div>` : ''}
     ${reforcoHtml}
+    ${falasHtml}
   `;
 
   // ── Wiring (delegado a cada render — o HUD inteiro é substituído acima) ──
@@ -10323,6 +10340,9 @@ function renderMasterHud(state){
       window._modoImplantarReforco = (window._modoImplantarReforco === t) ? null : t;
       renderMasterHud(GS.gameState);
     };
+  });
+  host.querySelectorAll('.mestre-fala-btn').forEach(btn => {
+    btn.onclick = () => { GS.dispararFala(btn.dataset.fid); };
   });
 }
 
@@ -21496,6 +21516,26 @@ GS.on('gameState', msg => {
 });
 
 GS.on('gmNarration', text => appendGM(text));
+
+// ── Falas de NPC (Modo Mestre): balão leve, distinto do log e da story ──
+let _falaFila = [];
+let _falaTimer = null;
+function _mostrarProximaFala(){
+  const host = $('fala-popup');
+  if(!host) return;
+  if(!_falaFila.length){ host.classList.remove('open'); return; }
+  const f = _falaFila.shift();
+  const emoji = (f.falante && f.falante.emoji) || '💬';
+  const nome  = (f.falante && f.falante.nome)  || '';
+  host.innerHTML = `<div class="fala-emoji">${_esc(emoji)}</div>` +
+    `<div class="fala-corpo">${nome ? `<div class="fala-nome">${_esc(nome)}</div>` : ''}` +
+    `<div class="fala-texto">${_esc(f.texto || '')}</div></div>`;
+  host.classList.add('open');
+  if(_falaTimer) clearTimeout(_falaTimer);
+  _falaTimer = setTimeout(_mostrarProximaFala, 5000);
+}
+function _avancarFala(){ if(_falaTimer) clearTimeout(_falaTimer); _mostrarProximaFala(); }
+GS.on('fala', msg => { _falaFila.push(msg); if(!$('fala-popup').classList.contains('open')) _mostrarProximaFala(); });
 
 // Deslize fiel passo-a-passo de monstros inimigos e servos auto-comandados.
 GS.on('entityStep', msg => _onEntityStep(msg));
