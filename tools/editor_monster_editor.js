@@ -19,7 +19,7 @@
     {value:"physical", name:"Físico"}, {value:"fire", name:"Fogo"},
     {value:"cold", name:"Frio / gelo"}, {value:"lightning", name:"Eletricidade"},
     {value:"poison", name:"Veneno"}, {value:"holy", name:"Sagrado / luz"},
-    {value:"magic", name:"Mágico"}, {value:"acid", name:"Ácido"},
+    {value:"magic", name:"Mágico"}, {value:"acid", name:"Ácido"}, {value:"water", name:"Água"},
   ];
   const AI_PROFILES = [
     {id:"agressivo", name:"Agressivo", desc:"Foca um alvo, persegue quem foge e usa sua ação ofensiva mais forte."},
@@ -133,6 +133,7 @@
       m.attacks = [{name:weapon.name, damage:weapon.die, damage_types:["physical"], attack_attribute:attr,
         apply_attribute_damage:true, base_attack_bonus:n(m.base_attack_bonus, 0), num_attacks:1,
         range:n(weapon.range, 0), categoria:weapon.categoria, on_hit:configuredAttack.on_hit,
+        on_hit_effect:configuredAttack.on_hit_effect,
         poison_dc:configuredAttack.poison_dc, extra_damage:configuredAttack.extra_damage,
         extra_damage_types:configuredAttack.extra_damage_types || []}];
     }
@@ -149,7 +150,7 @@
     out.image = String(out.image || out.type).trim();
     out.portrait = String(out.portrait || out.type).trim();
     out.str_ = n(out.str_, 10); out.dex = n(out.dex, 10); out.con_ = n(out.con_, 10); out.int_ = n(out.int_, 10);
-    out.movement = 6;
+    out.movement = out.movement_exception ? n(out.movement, 6) : 6;
     out.vision_base = Math.max(-30, Math.min(30, n(out.vision_base, 0)));
     out.visao_escuro = !!(out.visao_escuro || out.darkvision_range);
     out.caster_level = Math.max(1, n(out.caster_level, 1));
@@ -172,7 +173,7 @@
     const allAbilityIds = (out.special_abilities || []).filter(a => a.action_type !== "magia").map(a => a.id).filter(Boolean);
     out.monster_abilities = Array.isArray(out.monster_abilities) ? out.monster_abilities
       : (out.special_abilities || []).filter(a => a.action_type !== "magia" && a.id)
-        .map(a => ({id:a.id, uses_per_day:Math.max(1, n(a.uses_per_day, 1)), cooldown_turns:Math.max(0, n(a.cooldown_turns, 0))}));
+        .map(a => Object.assign({id:a.id, uses_per_day:Math.max(1, n(a.uses_per_day, 1)), cooldown_turns:Math.max(0, n(a.cooldown_turns, 0))}, a.id === "corpo_energetico" ? {damage:a.damage || "1d4", damage_type:(a.damage_types || ["lightning"])[0]} : {}));
     out.negative_ability_ids = (out.negative_ability_ids || allAbilityIds.filter(negativeAbility)).filter(negativeAbility);
     out.ability_ids = out.monster_abilities.map(a => a.id).filter(id => !negativeAbility(id));
     // A ficha salva traz as fraquezas mecânicas; o formulário as reconstrói a
@@ -206,7 +207,7 @@
     out.ai_tactics = [...root.querySelectorAll(".me-ai-tactic:checked")].map(el => el.value);
     out.ai_type = "agressivo";
     nums.forEach(k => out[k] = n(get("me-" + k)?.value, 0));
-    out.movement = 6;
+    out.movement = draft.movement_exception ? n(draft.movement, 6) : 6;
     out.hp = Math.max(1, out.base_hp + mod(out.con_));
     out.fort = out.fort_base + mod(out.con_);
     out.ref_ = out.ref_base + mod(out.dex);
@@ -234,7 +235,7 @@
     out.negative_ability_ids = [...root.querySelectorAll(".me-negative-ability:checked")].map(el => el.value);
     const knownWeaknesses = weaknessLibrary();
     out.weaknesses = [...root.querySelectorAll(".me-weakness:checked")]
-      .map(el => Object.assign(copy(knownWeaknesses[Number(el.dataset.i)]), {bonus_flat:Math.max(1, n(root.querySelector(`.me-weakness-level[data-i="${el.dataset.i}"]`).value, 1))}))
+      .map(el => { const trait=knownWeaknesses[Number(el.dataset.i)], existing=(draft.weaknesses || []).find(w => traitKey(w) === traitKey(trait)); return Object.assign(copy(trait), {bonus_flat:Math.max(1, n(root.querySelector(`.me-weakness-level[data-i="${el.dataset.i}"]`).value, 1)), descricao:existing?.descricao || trait.descricao}, existing?.ignora_reducao ? {ignora_reducao:true} : {}); })
       .concat([...root.querySelectorAll(".me-vulnerability:checked")].map(el => Object.assign({}, DAMAGE_TRAITS[Number(el.dataset.i)], {multiplier:2})))
       .concat(mechanicsFor(out.negative_ability_ids));
     if (get("me-ponto-vulneravel").checked && out.size[0] * out.size[1] > 1) {
@@ -248,9 +249,14 @@
     out.loot_table = {};
     out.monster_abilities = [...root.querySelectorAll(".me-ability:checked")].map(el => {
       const card = el.closest(".me-ability-card");
-      return {id:el.value,
+      const config = {id:el.value,
         uses_per_day:Math.max(1, n(card.querySelector(".me-ability-uses").value, 1)),
         cooldown_turns:Math.max(0, n(card.querySelector(".me-ability-cooldown").value, 0))};
+      if (el.value === "corpo_energetico") {
+        config.damage = card.querySelector(".me-energy-damage").value;
+        config.damage_type = card.querySelector(".me-energy-type").value;
+      }
+      return config;
     });
     out.ability_ids = out.monster_abilities.map(a => a.id);
     out.monster_spells = [...root.querySelectorAll(".me-spell:checked")].map(el => {
@@ -258,7 +264,7 @@
       const value = Math.max(1, n(card.querySelector(".me-spell-limit").value, 1));
       return mode === "cooldown" ? {id:el.value, limit_mode:mode, cooldown_turns:value} : {id:el.value, limit_mode:mode, uses_per_combat:value};
     });
-    out.attacks = [...root.querySelectorAll(".me-attack")].map(row => ({ name:row.querySelector(".ma-name").value.trim(), damage:row.querySelector(".ma-damage").value.trim(), damage_types:[row.querySelector(".ma-type").value], attack_attribute:row.querySelector(".ma-attr").value, apply_attribute_damage:true, base_attack_bonus:n(row.querySelector(".ma-bab").value), num_attacks:n(row.querySelector(".ma-count").value, 1), range:n(row.querySelector(".ma-range").value), on_hit:row.querySelector(".ma-poison")?.value || null, poison_dc:n(row.querySelector(".ma-poison-dc")?.value, 10), extra_damage:row.querySelector(".ma-extra-damage")?.value.trim() || null, extra_damage_types:row.querySelector(".ma-extra-type")?.value ? [row.querySelector(".ma-extra-type").value] : [] }));
+    out.attacks = [...root.querySelectorAll(".me-attack")].map(row => ({ name:row.querySelector(".ma-name").value.trim(), damage:row.querySelector(".ma-damage").value.trim(), damage_types:[row.querySelector(".ma-type").value], attack_attribute:row.querySelector(".ma-attr").value, apply_attribute_damage:true, base_attack_bonus:n(row.querySelector(".ma-bab").value), num_attacks:n(row.querySelector(".ma-count").value, 1), range:n(row.querySelector(".ma-range").value), on_hit:row.querySelector(".ma-poison")?.value || null, on_hit_effect:row.querySelector(".ma-on-hit-effect")?.value || null, poison_dc:n(row.querySelector(".ma-poison-dc")?.value, 10), extra_damage:row.querySelector(".ma-extra-damage")?.value.trim() || null, extra_damage_types:row.querySelector(".ma-extra-type")?.value ? [row.querySelector(".ma-extra-type").value] : [] }));
     return out;
   }
   function estimate(m) {
@@ -327,7 +333,8 @@
       const cards = positiveAbilities.filter(source.filter).map(a => {
         const cfg = configuredAbilities.get(a.id) || {uses_per_day:1, cooldown_turns:0};
         const selected = selectedAbilities.has(a.id);
-        return `<div class="me-ability-card me-tip" data-source="${source.id}" data-tip="${esc(abilityHint(a))}"><input class="me-ability" type="checkbox" value="${esc(a.id)}"${selected ? " checked" : ""}><span><b>${esc(a.icon || "✦")} ${esc(a.name)}</b><small>${esc(a.action_type || "ação")}</small></span><span class="me-ability-limit">usos/dia<input class="me-ability-uses" type="number" min="1" max="20" value="${esc(cfg.uses_per_day || 1)}"></span><span class="me-ability-limit">recarga<input class="me-ability-cooldown" type="number" min="0" max="20" value="${esc(cfg.cooldown_turns || 0)}"><small>rodadas</small></span></div>`;
+        const energyConfig = a.id === "corpo_energetico" ? `<span class="me-ability-limit">dano<select class="me-energy-damage">${["1d4","1d6","1d8","1d10","1d12"].map(v=>`<option value="${v}"${(cfg.damage || a.damage || "1d4") === v ? " selected" : ""}>${v}</option>`).join("")}</select></span><span class="me-ability-limit">elemento<select class="me-energy-type">${ATTACK_DAMAGE_TYPES.filter(t=>t.value!=="physical").map(t=>`<option value="${t.value}"${(cfg.damage_type || (a.damage_types||["lightning"])[0]) === t.value ? " selected" : ""}>${t.name}</option>`).join("")}</select></span>` : "";
+        return `<div class="me-ability-card me-tip" data-source="${source.id}" data-tip="${esc(abilityHint(a))}"><input class="me-ability" type="checkbox" value="${esc(a.id)}"${selected ? " checked" : ""}><span><b>${esc(a.icon || "✦")} ${esc(a.name)}</b><small>${esc(a.action_type || "ação")}</small></span><span class="me-ability-limit">usos/dia<input class="me-ability-uses" type="number" min="1" max="20" value="${esc(cfg.uses_per_day || 1)}"></span><span class="me-ability-limit">recarga<input class="me-ability-cooldown" type="number" min="0" max="20" value="${esc(cfg.cooldown_turns || 0)}"><small>rodadas</small></span>${energyConfig}</div>`;
       }).join("") || "Nenhuma habilidade cadastrada nesta origem.";
       return `<div class="me-ability-panel" data-source="${source.id}"><h3>${source.label}</h3><div class="me-ability-grid">${cards}</div></div>`;
     }).join("");
@@ -377,7 +384,7 @@
     const poisonOptions = ((window.EDITOR_CATALOG || {}).venoms || []).map(v => ({id:v.id, name:v.nome || v.id})).filter(v => v.id);
     root.querySelectorAll(".me-attack").forEach((row, i) => {
       const a = draft.attacks[i] || {};
-      row.insertAdjacentHTML("beforeend", `<div class="me-attack-special"><b>Especial ao acertar</b><label>Veneno<select class="ma-poison"><option value="">— nenhum —</option>${poisonOptions.map(v => `<option value="${esc(v.id)}"${a.on_hit === v.id ? " selected" : ""}>${esc(v.name)}</option>`).join("")}</select></label><label>CD do veneno<input class="ma-poison-dc" type="number" min="1" max="40" value="${esc(a.poison_dc || 10)}"></label><label>Dano extra<select class="ma-extra-type"><option value="">— nenhum —</option>${ATTACK_DAMAGE_TYPES.filter(t=>t.value!=="physical").map(t=>`<option value="${t.value}"${(a.extra_damage_types||[])[0]===t.value ? " selected" : ""}>${t.name}</option>`).join("")}</select></label><label>Dados extras<input class="ma-extra-damage" placeholder="ex.: 2d6" value="${esc(a.extra_damage || "")}"></label></div>`);
+      row.insertAdjacentHTML("beforeend", `<div class="me-attack-special"><b>Especial ao acertar</b><label>Veneno<select class="ma-poison"><option value="">— nenhum —</option>${poisonOptions.map(v => `<option value="${esc(v.id)}"${a.on_hit === v.id ? " selected" : ""}>${esc(v.name)}</option>`).join("")}</select></label><label>CD do veneno<input class="ma-poison-dc" type="number" min="1" max="40" value="${esc(a.poison_dc || 10)}"></label><label>Efeito<select class="ma-on-hit-effect"><option value="">— nenhum —</option><option value="congelamento_progressivo"${a.on_hit_effect === "congelamento_progressivo" ? " selected" : ""}>Congelamento Progressivo</option><option value="golpe_vento"${a.on_hit_effect === "golpe_vento" ? " selected" : ""}>Golpe de Vento (empurra)</option></select></label><label>Dano extra<select class="ma-extra-type"><option value="">— nenhum —</option>${ATTACK_DAMAGE_TYPES.filter(t=>t.value!=="physical").map(t=>`<option value="${t.value}"${(a.extra_damage_types||[])[0]===t.value ? " selected" : ""}>${t.name}</option>`).join("")}</select></label><label>Dados extras<input class="ma-extra-damage" placeholder="ex.: 2d6" value="${esc(a.extra_damage || "")}"></label></div>`);
     });
     const casterBox = root.querySelector(".me-spell-caster");
     if (casterBox) casterBox.insertAdjacentHTML("beforeend", `<div class="me-calculated me-spell-dc"><b>CD de resistência</b><span id="me-spell-dc-final">8 + INT + círculo</span><small>1º: ${8 + mod(draft.int_) + 1} · 2º: ${8 + mod(draft.int_) + 2} · 3º: ${8 + mod(draft.int_) + 3}</small></div>`);

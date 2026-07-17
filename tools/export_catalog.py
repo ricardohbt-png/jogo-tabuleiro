@@ -14,7 +14,7 @@ def build_catalog():
         # já definidos no servidor. Mantemos o catálogo em JSON, sem estado de jogo.
         fields = (
             "type", "name", "emoji", "boss", "tier", "cr", "hp", "ac", "natural_armor",
-            "movement", "vision_base", "size", "porte", "image", "atk_bonus", "damage",
+            "movement", "movement_exception", "vision_base", "size", "porte", "image", "atk_bonus", "damage",
             "base_attack_bonus", "base_hp", "caster_level", "str_", "dex", "con_", "int_",
             "fort", "ref_", "will", "fort_base", "ref_base", "will_base",
             "attacks", "special_abilities", "monster_spells", "immunities", "weaknesses",
