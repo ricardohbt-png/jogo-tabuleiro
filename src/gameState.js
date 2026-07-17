@@ -1286,7 +1286,8 @@ const GS = (() => {
   // Atribui alvo (herói) a monstros em modo Semi.
   function mestreSetAlvo(monsterIds, targetId) { send({ type: 'mestre_set_alvo', monster_ids: monsterIds, target_id: targetId }); }
   // Janela Manual: move o monstro 1 passo ortogonal.
-  function mestreMoverMonstro(monsterId, dx, dy) { send({ type: 'mestre_mover_monstro', monster_id: monsterId, dx, dy }); }
+  function mestreMoverMonstroPara(monsterId, tx, ty) { send({ type: 'mestre_mover_monstro_para', monster_id: monsterId, tx, ty }); }
+  function mestreUsarHabilidade(monsterId, abilityId, targetId) { send({ type: 'mestre_usar_habilidade', monster_id: monsterId, ability_id: abilityId, target_id: targetId }); }
   // Janela Manual: o monstro ataca um herói.
   function mestreAtacarMonstro(monsterId, targetId) { send({ type: 'mestre_atacar_monstro', monster_id: monsterId, target_id: targetId }); }
   // Janela Manual: encerra a vez do monstro.
@@ -2118,7 +2119,8 @@ const GS = (() => {
     claimRole,
     mestreSetModo,
     mestreSetAlvo,
-    mestreMoverMonstro,
+    mestreMoverMonstroPara,
+    mestreUsarHabilidade,
     mestreAtacarMonstro,
     mestreEncerrarMonstro,
     mestreImplantarReforco,
