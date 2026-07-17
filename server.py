@@ -9298,24 +9298,33 @@ class GameRoom:
                 m["master_target_id"] = target_id
         await self.push_state()
 
-    async def handle_mestre_mover_monstro(self, pid, monster_id, dx, dy):
-        """Manual: move o monstro da janela 1 passo ortogonal."""
+    async def handle_mestre_mover_monstro_para(self, pid, monster_id, tx, ty):
+        """Manual: caminha o monstro da janela até (tx,ty), passo a passo,
+        gastando master_moves_left. O servidor acha o caminho (footprint-aware) e
+        comita cada passo; para no bloqueio ou ao esgotar o orçamento."""
         if pid != self.master_pid or monster_id != self.master_manual_mid:
             return
         m = self.monsters.get(monster_id)
         if not m or m["hp"] <= 0:
             return
-        if m.get("master_moves_left", 0) <= 0:
+        try:
+            tx = int(tx); ty = int(ty)
+        except (TypeError, ValueError):
+            return
+        budget = int(m.get("master_moves_left", 0) or 0)
+        if budget <= 0:
             await self.send_to(pid, {"type": "error", "msg": "Monstro sem movimento neste turno."}); return
-        dx = max(-1, min(1, int(dx))); dy = max(-1, min(1, int(dy)))
-        if (dx == 0 and dy == 0) or (dx != 0 and dy != 0):
-            return   # sÃ³ passos ortogonais de 1 casa
-        nx, ny = m["pos"][0] + dx, m["pos"][1] + dy
-        if not self._monster_can_occupy(m, nx, ny):
-            await self.send_to(pid, {"type": "error", "msg": "Caminho bloqueado."}); return
-        if not await self._commit_monster_step(m, nx, ny):
-            await self.send_to(pid, {"type": "error", "msg": "Monstro nÃ£o pode se mover para lÃ¡."}); return
-        m["master_moves_left"] -= 1
+        path = self._master_path_to(m, tx, ty, budget)
+        if not path:
+            await self.send_to(pid, {"type": "error", "msg": "Destino inalcançável."}); return
+        for nx, ny in path:
+            if m.get("master_moves_left", 0) <= 0:
+                break
+            if not self._monster_can_occupy(m, nx, ny):
+                break
+            if not await self._commit_monster_step(m, nx, ny):
+                break
+            m["master_moves_left"] -= 1
         await self.push_state()
 
     async def handle_mestre_atacar_monstro(self, pid, monster_id, target_id):
@@ -19316,8 +19325,8 @@ async def handler(ws):
                 elif t == "mestre_set_alvo":
                     if room: await room.handle_mestre_set_alvo(pid, msg.get("monster_ids"), msg.get("target_id"))
 
-                elif t == "mestre_mover_monstro":
-                    if room: await room.handle_mestre_mover_monstro(pid, msg.get("monster_id"), msg.get("dx"), msg.get("dy"))
+                elif t == "mestre_mover_monstro_para":
+                    if room: await room.handle_mestre_mover_monstro_para(pid, msg.get("monster_id"), msg.get("tx"), msg.get("ty"))
 
                 elif t == "mestre_atacar_monstro":
                     if room: await room.handle_mestre_atacar_monstro(pid, msg.get("monster_id"), msg.get("target_id"))

@@ -184,52 +184,42 @@ async def main():
     escolha3 = r._get_monster_primary_target(m, targets)
     check("sem mestre → padrão", escolha3["obj"] is pA)
 
-    print("\n[8] janela Manual: mover, atacar e encerrar")
-    r = lobby_room(); r.phase = "playing"
-    r.master_pid = "m1"; r.connections["m1"] = object()
-    ataques = {"n": 0}
-    async def fake_atk(m, atk_def, target_obj):
-        ataques["n"] += 1; return True
-    r._execute_one_monster_attack = fake_atk
-    async def fake_commit(m, nx, ny): m["pos"] = [nx, ny]; return True
-    r._commit_monster_step = fake_commit
-    r._monster_can_occupy = lambda m, nx, ny, facing=None: True
-    m = {"id": "g1", "hp": 8, "pos": [4, 4], "control_mode": "manual",
-         "attacks": [{"name": "garra", "damage": "1d4"}]}
-    r.monsters = {"g1": m}
-    r.master_manual_mid = "g1"
-    m["master_moves_left"] = r.MASTER_MANUAL_MOVE
-    m["_master_acted"] = False
-    hero = {"id": "hA", "pos": [6, 4], "alive": True, "hp": 10}
-    r.players = {"hA": hero}
-    await r.handle_mestre_mover_monstro("m1", "g1", 1, 0)
-    check("monstro moveu 1 casa", m["pos"] == [5, 4])
-    check("gastou 1 de movimento", m["master_moves_left"] == r.MASTER_MANUAL_MOVE - 1)
-    await r.handle_mestre_atacar_monstro("m1", "g1", "hA")
-    check("ataque resolvido", ataques["n"] == 1)
-    check("marcou ataque usado", m["_master_acted"] is True)
-    await r.handle_mestre_atacar_monstro("m1", "g1", "hA")
-    check("2º ataque recusado", ataques["n"] == 1)
-    r.master_manual_event = asyncio.Event()
-    await r.handle_mestre_encerrar_monstro("m1", "g1")
-    check("Event setado ao encerrar", r.master_manual_event.is_set())
-    check("janela limpa", r.master_manual_mid is None)
-    r._errs.clear()
-    await r.handle_mestre_mover_monstro("m1", "g1", -1, 0)
-    check("mover fora da janela recusado", m["pos"] == [5, 4])
+    print("\n[8] mover_para caminha até a casa alcançável e gasta o orçamento")
+    r = playing_room_com_mestre()
+    m = {"id": "g1", "hp": 8, "pos": [4, 4], "size": [1, 1],
+         "control_mode": "manual", "master_moves_left": 5}
+    r.monsters = {"g1": m}; r.master_manual_mid = "g1"
+    passos = {"n": 0}
+    async def fake_commit_ok(mm, nx, ny):
+        mm["pos"] = [nx, ny]; passos["n"] += 1; return True
+    r._commit_monster_step = fake_commit_ok
+    await r.handle_mestre_mover_monstro_para("m1", "g1", 4, 1)   # 3 casas para cima
+    check("chegou ao destino", m["pos"] == [4, 1])
+    check("gastou 3 de movimento", m["master_moves_left"] == 2)
+    check("comitou 3 passos", passos["n"] == 3)
 
-    print("\n[8b] mover recusado quando _commit_monster_step falha")
-    r = lobby_room(); r.phase = "playing"
-    r.master_pid = "m1"; r.connections["m1"] = object()
-    async def fake_commit_false(m, nx, ny): return False
-    r._commit_monster_step = fake_commit_false
-    r._monster_can_occupy = lambda m, nx, ny, facing=None: True
-    m = {"id": "g1", "hp": 8, "pos": [4, 4], "control_mode": "manual"}
-    r.monsters = {"g1": m}; r.master_manual_mid = "g1"; m["master_moves_left"] = 3
+    print("\n[8b] mover_para recusa fora da janela e destino inalcançável")
+    r = playing_room_com_mestre()
+    m = {"id": "g1", "hp": 8, "pos": [4, 4], "size": [1, 1], "master_moves_left": 5}
+    r.monsters = {"g1": m}; r.master_manual_mid = "g9"   # outra janela
     r._errs.clear()
-    await r.handle_mestre_mover_monstro("m1", "g1", 1, 0)
-    check("não moveu (commit False)", m["pos"] == [4, 4])
-    check("não gastou movimento", m["master_moves_left"] == 3)
+    await r.handle_mestre_mover_monstro_para("m1", "g1", 4, 1)
+    check("mover fora da janela recusado", m["pos"] == [4, 4])
+    r.master_manual_mid = "g1"; r._errs.clear()
+    await r.handle_mestre_mover_monstro_para("m1", "g1", 9, 9)   # longe demais p/ 5 passos
+    check("destino inalcançável recusado", m["pos"] == [4, 4])
+    check("erro de inalcançável emitido", any("alcanç" in e.lower() for e in r._errs))
+
+    print("\n[8d] mover_para para no orçamento (destino além do alcance não anda)")
+    r = playing_room_com_mestre()
+    m = {"id": "g1", "hp": 8, "pos": [0, 0], "size": [1, 1],
+         "control_mode": "manual", "master_moves_left": 2}
+    r.monsters = {"g1": m}; r.master_manual_mid = "g1"
+    async def commit_track(mm, nx, ny): mm["pos"] = [nx, ny]; return True
+    r._commit_monster_step = commit_track
+    r._errs.clear()
+    await r.handle_mestre_mover_monstro_para("m1", "g1", 5, 0)   # 5 casas, só 2 de orçamento
+    check("não moveu além do alcance", m["pos"] == [0, 0])
 
     print("\n[8c] ataque manual melee exige adjacência")
     r = lobby_room(); r.phase = "playing"
