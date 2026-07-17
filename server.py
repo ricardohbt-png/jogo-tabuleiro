@@ -9401,7 +9401,7 @@ class GameRoom:
         """Abre a janela interativa do modo Manual e aguarda o mestre agir.
         Retorna quando o mestre encerra OU o timeout resolve via IA auto."""
         self.master_manual_mid = m["id"]
-        m["master_moves_left"] = self.MASTER_MANUAL_MOVE
+        m["master_moves_left"] = int(m.get("movement", self.MASTER_MANUAL_MOVE) or self.MASTER_MANUAL_MOVE)
         m["_master_acted"] = False
         self.master_manual_event = asyncio.Event()
         await self.push_state()
@@ -15834,6 +15834,55 @@ class GameRoom:
                 return False
         return True
 
+    def _master_reach_bfs(self, m, budget):
+        """BFS ortogonal footprint-aware a partir da âncora de m, ≤ budget passos.
+        Retorna prev {(x,y): (px,py)|None} de todas as casas alcançáveis (inclui a
+        inicial). Caminhabilidade = _monster_can_occupy (paredes/portas/footprint/
+        entidades vivas, ignorando a própria m)."""
+        sx, sy = m["pos"]
+        prev = {(sx, sy): None}
+        dist = {(sx, sy): 0}
+        q = [(sx, sy)]; head = 0
+        while head < len(q):
+            x, y = q[head]; head += 1
+            if dist[(x, y)] >= budget:
+                continue
+            for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0)):
+                nx, ny = x + dx, y + dy
+                if (nx, ny) in prev or not self._monster_can_occupy(m, nx, ny):
+                    continue
+                prev[(nx, ny)] = (x, y)
+                dist[(nx, ny)] = dist[(x, y)] + 1
+                q.append((nx, ny))
+        return prev
+
+    def _master_monster_reach(self, m):
+        """Lista [x,y] alcançável pela âncora de m dentro de master_moves_left
+        (exclui a casa atual). Alimenta o realce azul do cliente."""
+        budget = int(m.get("master_moves_left", 0) or 0)
+        if budget <= 0:
+            return []
+        prev = self._master_reach_bfs(m, budget)
+        sx, sy = m["pos"]
+        return [[x, y] for (x, y) in prev if (x, y) != (sx, sy)]
+
+    def _master_path_to(self, m, tx, ty, budget):
+        """Menor caminho (lista de âncoras, exclui a casa inicial, inclui o destino)
+        de m até (tx,ty) em ≤ budget passos. [] se inalcançável."""
+        if budget <= 0:
+            return []
+        sx, sy = m["pos"]
+        if (sx, sy) == (tx, ty):
+            return []
+        prev = self._master_reach_bfs(m, budget)
+        if (tx, ty) not in prev:
+            return []
+        path = []; cur = (tx, ty)
+        while cur != (sx, sy):
+            path.append([cur[0], cur[1]]); cur = prev[cur]
+        path.reverse()
+        return path
+
     def _is_adjacent_to_monster(self, pos, m):
         """True se pos Ã© cardinalmente adjacente a qualquer tile do monstro."""
         for tx, ty in self._monster_tiles(m):
@@ -19005,6 +19054,11 @@ class GameRoom:
             "type": "game_state",
             "master_pid": self.master_pid,
             "master_manual_mid": self.master_manual_mid,
+            "master_manual_reach": (
+                self._master_monster_reach(self.monsters[self.master_manual_mid])
+                if self.master_manual_mid and self.master_manual_mid in self.monsters
+                and self.monsters[self.master_manual_mid]["hp"] > 0 else []
+            ),
             "master_reserve": [
                 {"type": t, "count": c,
                  "name":  next((d.get("name", t)  for d in MONSTER_DEFS if d["type"] == t), t),

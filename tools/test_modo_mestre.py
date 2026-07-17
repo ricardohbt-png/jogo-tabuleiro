@@ -519,6 +519,27 @@ async def main():
     await r.handle_disparar_fala("naomestre", "f3")
     check("manual recusa não-mestre", r.falas[2]["disparada"] is not True)
 
+    print("\n[25] _master_reach_bfs / _master_monster_reach respeitam orçamento e paredes")
+    r = playing_room_com_mestre()
+    # parede vertical em x=3 (coluna toda), abre um vão em y=2
+    for y in range(10):
+        r.tiles[y][3] = S.WALL
+    r.tiles[2][3] = S.FLOOR
+    m = {"id": "g1", "hp": 8, "pos": [1, 2], "size": [1, 1],
+         "control_mode": "manual", "master_moves_left": 2}
+    r.monsters = {"g1": m}
+    reach = r._master_monster_reach(m)
+    reach_set = {tuple(c) for c in reach}
+    check("alcança a 2 passos ortogonais", (1, 0) in reach_set and (1, 4) in reach_set)
+    check("não inclui a casa atual", (1, 2) not in reach_set)
+    check("não atravessa parede (x=4 fora de 2 passos)", (4, 2) not in reach_set)
+    check("respeita orçamento (3 passos fora)", (1, 5) not in reach_set)
+    # com orçamento maior, cruza o vão em (3,2) e chega em (4,2)
+    m["master_moves_left"] = 3
+    reach2 = {tuple(c) for c in r._master_monster_reach(m)}
+    check("com 3 passos cruza o vão", (3, 2) in reach2 and (4, 2) in reach2)
+    check("orçamento 0 → vazio", r._master_monster_reach({"id":"g2","pos":[1,2],"master_moves_left":0}) == [])
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
