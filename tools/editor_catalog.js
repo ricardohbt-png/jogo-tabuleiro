@@ -3,7 +3,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "goblin",
       "name": "Goblin",
-      "emoji": "ðŸ‘º",
+      "emoji": "👺",
       "tier": 1,
       "cr": 0.25,
       "hp": 8,
@@ -19,7 +19,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "skeleton",
       "name": "Esqueleto",
-      "emoji": "ðŸ’€",
+      "emoji": "💀",
       "tier": 1,
       "cr": 0.5,
       "hp": 10,
@@ -36,7 +36,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "orc",
       "name": "Orc",
-      "emoji": "ðŸ‘¹",
+      "emoji": "👹",
       "tier": 2,
       "cr": 0.75,
       "hp": 16,
@@ -52,7 +52,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "dark_mage",
       "name": "Mago das Trevas",
-      "emoji": "ðŸ§Ÿ",
+      "emoji": "🧟",
       "tier": 2,
       "cr": 0.5,
       "hp": 12,
@@ -68,7 +68,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "troll",
       "name": "Troll",
-      "emoji": "ðŸ—¿",
+      "emoji": "🗿",
       "tier": 3,
       "cr": 1.5,
       "hp": 22,
@@ -83,8 +83,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "type": "dragon",
-      "name": "DragÃ£o AnciÃ£o",
-      "emoji": "ðŸ‰",
+      "name": "Dragão Ancião",
+      "emoji": "🐉",
       "boss": true,
       "tier": 4,
       "cr": 5.0,
@@ -101,7 +101,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "aranha_sombria",
       "name": "Aranha Sombria",
-      "emoji": "ðŸ•·ï¸",
+      "emoji": "🕷️",
       "boss": false,
       "tier": 1,
       "cr": 0.25,
@@ -171,8 +171,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "type": "escorpiao_pedra",
-      "name": "EscorpiÃ£o de Pedra",
-      "emoji": "ðŸ¦‚",
+      "name": "Escorpião de Pedra",
+      "emoji": "🦂",
       "boss": false,
       "tier": 1,
       "cr": 0.5,
@@ -195,7 +195,7 @@ window.EDITOR_CATALOG = {
       "will": 0,
       "attacks": [
         {
-          "name": "PinÃ§a",
+          "name": "Pinça",
           "atk_bonus": 2,
           "damage": "1d4",
           "damage_types": [
@@ -205,7 +205,7 @@ window.EDITOR_CATALOG = {
           "on_hit": null
         },
         {
-          "name": "FerrÃ£o",
+          "name": "Ferrão",
           "atk_bonus": 2,
           "damage": "1d4",
           "damage_types": [
@@ -218,7 +218,7 @@ window.EDITOR_CATALOG = {
       "special_abilities": [
         {
           "id": "veneno_ferrao",
-          "name": "Veneno do FerrÃ£o",
+          "name": "Veneno do Ferrão",
           "action_type": "passiva",
           "dc": 9,
           "save": "fortitude",
@@ -247,7 +247,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "esqueleto_humano",
       "name": "Esqueleto Humano",
-      "emoji": "ðŸ’€",
+      "emoji": "💀",
       "boss": false,
       "tier": 1,
       "cr": 0.5,
@@ -294,7 +294,7 @@ window.EDITOR_CATALOG = {
         },
         {
           "id": "fraqueza_magica",
-          "name": "Fraqueza MÃ¡gica",
+          "name": "Fraqueza Mágica",
           "action_type": "passiva",
           "descricao": "-2 em testes contra magias que controlam mortos-vivos"
         }
@@ -308,19 +308,19 @@ window.EDITOR_CATALOG = {
           "type": "physical",
           "categoria": "perfurante",
           "bonus_flat": -2,
-          "descricao": "ResistÃªncia a perfurante (-2 dano)"
+          "descricao": "Resistência a perfurante (-2 dano)"
         },
         {
           "type": "physical",
           "categoria": "cortante",
           "bonus_flat": -1,
-          "descricao": "ResistÃªncia a cortante (-1 dano)"
+          "descricao": "Resistência a cortante (-1 dano)"
         },
         {
           "type": "physical",
           "categoria": "contundente",
           "bonus_flat": 2,
-          "descricao": "VulnerÃ¡vel a impacto (+2 dano)"
+          "descricao": "Vulnerável a impacto (+2 dano)"
         },
         {
           "type": "sagrado",
@@ -347,7 +347,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "esqueleto_animal",
       "name": "Esqueleto Animal",
-      "emoji": "ðŸ¦´",
+      "emoji": "🦴",
       "boss": false,
       "tier": 1,
       "cr": 0.5,
@@ -384,19 +384,19 @@ window.EDITOR_CATALOG = {
       "special_abilities": [
         {
           "id": "movimento_erratico",
-          "name": "Movimento ErrÃ¡tico",
+          "name": "Movimento Errático",
           "action_type": "passiva",
-          "descricao": "Ignora terreno difÃ­cil â€” avanÃ§a sem hesitar"
+          "descricao": "Ignora terreno difícil — avança sem hesitar"
         },
         {
           "id": "sem_instinto",
           "name": "Sem Instinto",
           "action_type": "passiva",
-          "descricao": "Nunca foge nem recua â€” avanÃ§a atÃ© ser destruÃ­do"
+          "descricao": "Nunca foge nem recua — avança até ser destruído"
         },
         {
           "id": "fraqueza_magica",
-          "name": "Fraqueza MÃ¡gica",
+          "name": "Fraqueza Mágica",
           "action_type": "passiva",
           "descricao": "-2 em testes contra magias que controlam mortos-vivos"
         }
@@ -410,19 +410,19 @@ window.EDITOR_CATALOG = {
           "type": "physical",
           "categoria": "perfurante",
           "bonus_flat": -2,
-          "descricao": "ResistÃªncia a perfurante (-2 dano)"
+          "descricao": "Resistência a perfurante (-2 dano)"
         },
         {
           "type": "physical",
           "categoria": "cortante",
           "bonus_flat": -1,
-          "descricao": "ResistÃªncia a cortante (-1 dano)"
+          "descricao": "Resistência a cortante (-1 dano)"
         },
         {
           "type": "physical",
           "categoria": "contundente",
           "bonus_flat": 2,
-          "descricao": "VulnerÃ¡vel a impacto (+2 dano)"
+          "descricao": "Vulnerável a impacto (+2 dano)"
         },
         {
           "type": "sagrado",
@@ -441,7 +441,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "lobo_cinzento",
       "name": "Lobo Cinzento",
-      "emoji": "ðŸº",
+      "emoji": "🐺",
       "boss": false,
       "tier": 1,
       "cr": 0.5,
@@ -477,7 +477,7 @@ window.EDITOR_CATALOG = {
       "special_abilities": [
         {
           "id": "caca_em_bando",
-          "name": "CaÃ§a em Bando",
+          "name": "Caça em Bando",
           "action_type": "passiva"
         },
         {
@@ -494,7 +494,7 @@ window.EDITOR_CATALOG = {
           "type": "save_penalty",
           "save": "fortitude",
           "bonus_flat": -2,
-          "descricao": "SensÃ­vel a venenos â€” -2 Fort vs venenos"
+          "descricao": "Sensível a venenos — -2 Fort vs venenos"
         }
       ],
       "loot_table": {
@@ -507,7 +507,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "crocodilo_jovem",
       "name": "Crocodilo Jovem",
-      "emoji": "ðŸŠ",
+      "emoji": "🐊",
       "boss": false,
       "tier": 1,
       "cr": 1,
@@ -548,11 +548,11 @@ window.EDITOR_CATALOG = {
           "action_type": "passiva",
           "dc": 12,
           "save": "fortitude",
-          "descricao": "Ao acertar, alvo testa FOR ou REF CD 12 â€” falha: preso"
+          "descricao": "Ao acertar, alvo testa FOR ou REF CD 12 — falha: preso"
         },
         {
           "id": "atq_mandibula",
-          "name": "Ataque de MandÃ­bula",
+          "name": "Ataque de Mandíbula",
           "action_type": "passiva",
           "descricao": "Se alvo preso e adjacente: 1d8+3 dano direto (sem rolagem de acerto)"
         },
@@ -568,7 +568,7 @@ window.EDITOR_CATALOG = {
         {
           "type": "lightning",
           "multiplier": 1.5,
-          "descricao": "+50% dano elÃ©trico (dobrado na Ã¡gua)"
+          "descricao": "+50% dano elétrico (dobrado na água)"
         }
       ],
       "loot_table": {
@@ -581,7 +581,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "cobra_constritora",
       "name": "Cobra Constritora",
-      "emoji": "ðŸ",
+      "emoji": "🐍",
       "boss": false,
       "tier": 1,
       "cr": 1,
@@ -618,20 +618,20 @@ window.EDITOR_CATALOG = {
       "special_abilities": [
         {
           "id": "constricao",
-          "name": "ConstriÃ§Ã£o",
+          "name": "Constrição",
           "action_type": "passiva",
           "dc": 11,
           "save": "fortitude",
           "escape_saves": [
             "fortitude"
           ],
-          "descricao": "Ao acertar, alvo testa FOR CD 11 â€” falha: preso"
+          "descricao": "Ao acertar, alvo testa FOR CD 11 — falha: preso"
         },
         {
           "id": "esmagar",
           "name": "Esmagar",
           "action_type": "passiva",
-          "descricao": "Enquanto preso e adjacente: 1d6 dano automÃ¡tico por turno"
+          "descricao": "Enquanto preso e adjacente: 1d6 dano automático por turno"
         }
       ],
       "immunities": [],
@@ -640,7 +640,7 @@ window.EDITOR_CATALOG = {
           "type": "physical",
           "categoria": "cortante",
           "bonus_flat": 2,
-          "descricao": "Corpo vulnerÃ¡vel a corte (+2 dano cortante)"
+          "descricao": "Corpo vulnerável a corte (+2 dano cortante)"
         }
       ],
       "loot_table": {
@@ -653,7 +653,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "cobra_venenosa",
       "name": "Cobra Venenosa",
-      "emoji": "ðŸ",
+      "emoji": "🐍",
       "boss": false,
       "tier": 1,
       "cr": 1,
@@ -692,13 +692,13 @@ window.EDITOR_CATALOG = {
           "id": "veneno",
           "name": "Veneno",
           "action_type": "passiva",
-          "descricao": "Ao acertar a mordida, aplica veneno (doenÃ§a leve)"
+          "descricao": "Ao acertar a mordida, aplica veneno (doença leve)"
         },
         {
           "id": "ataque_rapido",
-          "name": "Ataque RÃ¡pido",
+          "name": "Ataque Rápido",
           "action_type": "passiva",
-          "descricao": "Se nÃ£o se mover no turno: +1 no ataque"
+          "descricao": "Se não se mover no turno: +1 no ataque"
         },
         {
           "id": "camuflagem_natural",
@@ -713,7 +713,7 @@ window.EDITOR_CATALOG = {
           "type": "physical",
           "categoria": "contundente",
           "bonus_flat": 1,
-          "descricao": "Corpo frÃ¡gil (+1 dano de concussÃ£o)"
+          "descricao": "Corpo frágil (+1 dano de concussão)"
         }
       ],
       "loot_table": {
@@ -729,8 +729,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "type": "devorador_organico",
-      "name": "Devorador OrgÃ¢nico",
-      "emoji": "ðŸŸ¢",
+      "name": "Devorador Orgânico",
+      "emoji": "🟢",
       "boss": false,
       "tier": 1,
       "cr": 1,
@@ -769,19 +769,19 @@ window.EDITOR_CATALOG = {
           "id": "toque_putrefato",
           "name": "Toque Putrefato",
           "action_type": "passiva",
-          "descricao": "Ao acertar: +1 nÃ­vel de dano em equipamento orgÃ¢nico do alvo (couro/madeira/tecido)"
+          "descricao": "Ao acertar: +1 nível de dano em equipamento orgânico do alvo (couro/madeira/tecido)"
         },
         {
           "id": "corrosao_viva",
-          "name": "CorrosÃ£o Viva",
+          "name": "Corrosão Viva",
           "action_type": "passiva",
           "descricao": "Alvo sem armadura: 1 dano/turno por 2 turnos (acumula a cada acerto)"
         },
         {
           "id": "absorver_materia",
-          "name": "Absorver MatÃ©ria",
+          "name": "Absorver Matéria",
           "action_type": "passiva",
-          "descricao": "Quando destrÃ³i um item orgÃ¢nico: recupera 1d4 HP"
+          "descricao": "Quando destrói um item orgânico: recupera 1d4 HP"
         }
       ],
       "immunities": [
@@ -792,7 +792,7 @@ window.EDITOR_CATALOG = {
         {
           "type": "fire",
           "multiplier": 2,
-          "descricao": "CombustÃ£o rÃ¡pida (dano de fogo dobrado)"
+          "descricao": "Combustão rápida (dano de fogo dobrado)"
         }
       ],
       "loot_table": {
@@ -813,7 +813,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "urso_negro",
       "name": "Urso Negro",
-      "emoji": "ðŸ»",
+      "emoji": "🐻",
       "boss": false,
       "tier": 1,
       "cr": 1,
@@ -861,7 +861,7 @@ window.EDITOR_CATALOG = {
       "special_abilities": [
         {
           "id": "furia",
-          "name": "FÃºria",
+          "name": "Fúria",
           "action_type": "passiva",
           "descricao": "Com HP < 50%: +2 de dano em todos os ataques"
         }
@@ -872,13 +872,13 @@ window.EDITOR_CATALOG = {
           "type": "physical",
           "categoria": "perfurante",
           "bonus_flat": 1,
-          "descricao": "Corpo massivo: +1 dano de perfuraÃ§Ã£o/alcance (arcos, bestas, lanÃ§as)"
+          "descricao": "Corpo massivo: +1 dano de perfuração/alcance (arcos, bestas, lanças)"
         },
         {
           "type": "physical",
           "categoria": "contundente",
           "bonus_flat": -1,
-          "descricao": "Corpo massivo: -1 dano de concussÃ£o (martelos, maÃ§as, bastÃµes)"
+          "descricao": "Corpo massivo: -1 dano de concussão (martelos, maças, bastões)"
         }
       ],
       "loot_table": {
@@ -891,7 +891,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "orc_guerreiro",
       "name": "Orc Guerreiro",
-      "emoji": "ðŸ‘¹",
+      "emoji": "👹",
       "boss": false,
       "tier": 1,
       "cr": 1,
@@ -934,7 +934,7 @@ window.EDITOR_CATALOG = {
         },
         {
           "id": "furia_cega",
-          "name": "FÃºria Cega",
+          "name": "Fúria Cega",
           "action_type": "passiva",
           "descricao": "Se sofreu dano na rodada anterior: +1 de dano, mas -1 CA"
         },
@@ -980,7 +980,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "goblin_arqueiro",
       "name": "Goblin Arqueiro",
-      "emoji": "ðŸ‘º",
+      "emoji": "👺",
       "boss": false,
       "tier": 1,
       "cr": 0.25,
@@ -1058,7 +1058,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "goblin_combatente",
       "name": "Goblin Combatente",
-      "emoji": "ðŸ‘º",
+      "emoji": "👺",
       "boss": false,
       "tier": 1,
       "cr": 0.25,
@@ -1097,7 +1097,7 @@ window.EDITOR_CATALOG = {
           "id": "arremesso",
           "name": "Arremesso",
           "action_type": "acao_bonus",
-          "descricao": "Arremesso 1d4+2 (alcance 3) como aÃ§Ã£o bÃ´nus; 1 natural quebra a arma"
+          "descricao": "Arremesso 1d4+2 (alcance 3) como ação bônus; 1 natural quebra a arma"
         },
         {
           "id": "mente_fraca",
@@ -1141,7 +1141,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "goblin_dual",
       "name": "Goblin Dual",
-      "emoji": "ðŸ‘º",
+      "emoji": "👺",
       "boss": false,
       "tier": 1,
       "cr": 1,
@@ -1191,7 +1191,7 @@ window.EDITOR_CATALOG = {
           "id": "arremesso",
           "name": "Arremesso",
           "action_type": "acao_bonus",
-          "descricao": "Arremesso 1d4+2 (alcance 3) como aÃ§Ã£o bÃ´nus; 1 natural quebra a arma"
+          "descricao": "Arremesso 1d4+2 (alcance 3) como ação bônus; 1 natural quebra a arma"
         },
         {
           "id": "mente_fraca",
@@ -1235,8 +1235,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "type": "goblin_xama",
-      "name": "XamÃ£ Goblin",
-      "emoji": "ðŸ‘º",
+      "name": "Xamã Goblin",
+      "emoji": "👺",
       "boss": false,
       "tier": 1,
       "cr": 1,
@@ -1273,33 +1273,33 @@ window.EDITOR_CATALOG = {
       "special_abilities": [
         {
           "id": "silencio",
-          "name": "SilÃªncio",
+          "name": "Silêncio",
           "action_type": "magia",
           "uses_per_combat": 1,
           "circulo": 2,
-          "descricao": "Cria Ã¡rea de SilÃªncio (some se o xamÃ£ morrer)"
+          "descricao": "Cria área de Silêncio (some se o xamã morrer)"
         },
         {
           "id": "amaldicoar",
-          "name": "AmaldiÃ§oar",
+          "name": "Amaldiçoar",
           "action_type": "magia",
           "uses_per_combat": 1,
           "circulo": 1,
-          "descricao": "Debuff -1 em ataque/dano/CA/resistÃªncia nos herÃ³is"
+          "descricao": "Debuff -1 em ataque/dano/CA/resistência nos heróis"
         },
         {
           "id": "abencoar",
-          "name": "AbenÃ§oar",
+          "name": "Abençoar",
           "action_type": "magia",
           "uses_per_combat": 1,
           "circulo": 1,
-          "descricao": "Buff +1 em ataque/dano/CA/resistÃªncia nos goblins aliados"
+          "descricao": "Buff +1 em ataque/dano/CA/resistência nos goblins aliados"
         },
         {
           "id": "concentracao_fragil",
-          "name": "ConcentraÃ§Ã£o FrÃ¡gil",
+          "name": "Concentração Frágil",
           "action_type": "passiva",
-          "descricao": "Se sofrer dano, nÃ£o pode usar magia no prÃ³ximo turno"
+          "descricao": "Se sofrer dano, não pode usar magia no próximo turno"
         }
       ],
       "immunities": [],
@@ -1341,7 +1341,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "kobold_lanceiro",
       "name": "Kobold Lanceiro",
-      "emoji": "ðŸŠ",
+      "emoji": "🐊",
       "boss": false,
       "tier": 1,
       "cr": 0.25,
@@ -1364,7 +1364,7 @@ window.EDITOR_CATALOG = {
       "will": 2,
       "attacks": [
         {
-          "name": "LanÃ§a Curta",
+          "name": "Lança Curta",
           "atk_bonus": 1,
           "damage": "1d6-1",
           "damage_types": [
@@ -1377,7 +1377,7 @@ window.EDITOR_CATALOG = {
       "special_abilities": [
         {
           "id": "veneno_lanca",
-          "name": "LanÃ§a Envenenada",
+          "name": "Lança Envenenada",
           "action_type": "acao_livre",
           "dc": 8,
           "save": "fortitude",
@@ -1417,7 +1417,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "kobold_besteiro",
       "name": "Kobold Besteiro",
-      "emoji": "ðŸŠ",
+      "emoji": "🐊",
       "boss": false,
       "tier": 1,
       "cr": 0.25,
@@ -1440,7 +1440,7 @@ window.EDITOR_CATALOG = {
       "will": 2,
       "attacks": [
         {
-          "name": "Besta de MÃ£o",
+          "name": "Besta de Mão",
           "atk_bonus": 4,
           "damage": "1d4+2",
           "damage_types": [
@@ -1491,7 +1491,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "necromante",
       "name": "Necromante",
-      "emoji": "ðŸ§™",
+      "emoji": "🧙",
       "boss": false,
       "tier": 2,
       "cr": 2,
@@ -1542,7 +1542,7 @@ window.EDITOR_CATALOG = {
         },
         {
           "id": "amaldicoar",
-          "name": "AmaldiÃ§oar",
+          "name": "Amaldiçoar",
           "action_type": "magia",
           "uses_per_combat": 1,
           "circulo": 1
@@ -1558,17 +1558,17 @@ window.EDITOR_CATALOG = {
           "id": "mestre_dos_mortos",
           "name": "Mestre dos Mortos",
           "action_type": "passiva",
-          "descricao": "Inicia com 2 esqueletos; mortos-vivos prÃ³ximos recebem +1 em Vontade"
+          "descricao": "Inicia com 2 esqueletos; mortos-vivos próximos recebem +1 em Vontade"
         },
         {
           "id": "concentracao_sombria",
-          "name": "ConcentraÃ§Ã£o Sombria",
+          "name": "Concentração Sombria",
           "action_type": "passiva",
-          "descricao": "Ao sofrer dano: Vontade CD 10 ou perde a aÃ§Ã£o de magia no turno"
+          "descricao": "Ao sofrer dano: Vontade CD 10 ou perde a ação de magia no turno"
         },
         {
           "id": "essencia_profana",
-          "name": "EssÃªncia Profana",
+          "name": "Essência Profana",
           "action_type": "passiva",
           "descricao": "Sofre dano dobrado de efeitos sagrados/luz"
         }
@@ -1578,7 +1578,7 @@ window.EDITOR_CATALOG = {
         {
           "type": "holy",
           "multiplier": 2,
-          "descricao": "EssÃªncia profana: dano sagrado/luz dobrado"
+          "descricao": "Essência profana: dano sagrado/luz dobrado"
         }
       ],
       "loot_table": {
@@ -1591,7 +1591,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "zumbi_infectado",
       "name": "Zumbi Infectado",
-      "emoji": "ðŸ§Ÿ",
+      "emoji": "🧟",
       "boss": false,
       "tier": 1,
       "cr": 1,
@@ -1628,15 +1628,15 @@ window.EDITOR_CATALOG = {
       "special_abilities": [
         {
           "id": "resistencia_morta",
-          "name": "ResistÃªncia Morta",
+          "name": "Resistência Morta",
           "action_type": "passiva",
           "dc": 10,
           "save": "fortitude",
-          "descricao": "A 0 HP: Fortitude CD 10 â†’ fica com 1 HP (dano sagrado/luz ignora e destrÃ³i de vez)"
+          "descricao": "A 0 HP: Fortitude CD 10 → fica com 1 HP (dano sagrado/luz ignora e destrói de vez)"
         },
         {
           "id": "infeccao",
-          "name": "InfecÃ§Ã£o",
+          "name": "Infecção",
           "action_type": "passiva",
           "dc": 10,
           "save": "fortitude",
@@ -1644,15 +1644,15 @@ window.EDITOR_CATALOG = {
         },
         {
           "id": "lento_incansavel",
-          "name": "Lento e IncansÃ¡vel",
+          "name": "Lento e Incansável",
           "action_type": "passiva",
-          "descricao": "NÃ£o corre nem foge â€” avanÃ§a sem parar"
+          "descricao": "Não corre nem foge — avança sem parar"
         },
         {
           "id": "corpo_morto",
           "name": "Corpo Morto",
           "action_type": "passiva",
-          "descricao": "NÃ£o come, bebe nem respira"
+          "descricao": "Não come, bebe nem respira"
         }
       ],
       "immunities": [
@@ -1663,7 +1663,7 @@ window.EDITOR_CATALOG = {
         {
           "type": "holy",
           "multiplier": 2,
-          "descricao": "Consagrado Ã  destruiÃ§Ã£o: dano sagrado/luz dobrado (morte sagrada = destruiÃ§Ã£o total)"
+          "descricao": "Consagrado à destruição: dano sagrado/luz dobrado (morte sagrada = destruição total)"
         }
       ],
       "loot_table": {
@@ -1677,7 +1677,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "lagarto_carniceiro",
       "name": "Lagarto Carniceiro",
-      "emoji": "ðŸ¦Ž",
+      "emoji": "🦎",
       "boss": false,
       "tier": 2,
       "cr": 2,
@@ -1726,22 +1726,22 @@ window.EDITOR_CATALOG = {
         },
         {
           "id": "faro_carnica",
-          "name": "Faro de CarniÃ§a",
+          "name": "Faro de Carniça",
           "action_type": "passiva",
           "descricao": "Prioriza sempre o alvo com menor HP"
         },
         {
           "id": "duas_cabecas",
-          "name": "Duas CabeÃ§as",
+          "name": "Duas Cabeças",
           "action_type": "passiva",
-          "descricao": "+1 em percepÃ§Ã£o; difÃ­cil de surpreender (flavor)"
+          "descricao": "+1 em percepção; difícil de surpreender (flavor)"
         }
       ],
       "immunities": [],
       "weaknesses": [
         {
           "type": "veneno_dobrado",
-          "descricao": "SensÃ­vel a venenos: todos os efeitos dobrados"
+          "descricao": "Sensível a venenos: todos os efeitos dobrados"
         }
       ],
       "loot_table": {
@@ -1754,7 +1754,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "devorador_metal",
       "name": "Devorador de Metal",
-      "emoji": "ðŸ”©",
+      "emoji": "🔩",
       "boss": false,
       "tier": 2,
       "cr": 2,
@@ -1793,19 +1793,19 @@ window.EDITOR_CATALOG = {
           "id": "mordida_corrosiva",
           "name": "Mordida Corrosiva",
           "action_type": "passiva",
-          "descricao": "Ao acertar: +1 nÃ­vel de dano na arma OU armadura metÃ¡lica do alvo"
+          "descricao": "Ao acertar: +1 nível de dano na arma OU armadura metálica do alvo"
         },
         {
           "id": "devorar_metal",
           "name": "Devorar Metal",
           "action_type": "passiva",
-          "descricao": "Item a 3 nÃ­veis Ã© destruÃ­do e o Devorador recupera 1d6 HP"
+          "descricao": "Item a 3 níveis é destruído e o Devorador recupera 1d6 HP"
         },
         {
           "id": "alimentacao_metalica",
-          "name": "AlimentaÃ§Ã£o MetÃ¡lica",
+          "name": "Alimentação Metálica",
           "action_type": "passiva",
-          "descricao": "Gasta a aÃ§Ã£o para consumir item metÃ¡lico no chÃ£o e recuperar 1d6 HP"
+          "descricao": "Gasta a ação para consumir item metálico no chão e recuperar 1d6 HP"
         }
       ],
       "immunities": [
@@ -1831,8 +1831,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "type": "bugbear_sombras",
-      "name": "Bugbear â€” Bicho-PapÃ£o das Sombras",
-      "emoji": "ðŸ˜ˆ",
+      "name": "Bugbear — Bicho-Papão das Sombras",
+      "emoji": "😈",
       "boss": false,
       "tier": 2,
       "cr": 2,
@@ -1880,36 +1880,36 @@ window.EDITOR_CATALOG = {
       "special_abilities": [
         {
           "id": "manto_escuridao",
-          "name": "Manto de EscuridÃ£o",
+          "name": "Manto de Escuridão",
           "action_type": "magia",
           "uses_per_combat": 1,
           "circulo": 1,
-          "descricao": "Cria uma Ã¡rea de escuridÃ£o centrada em si (1x por combate)"
+          "descricao": "Cria uma área de escuridão centrada em si (1x por combate)"
         },
         {
           "id": "ataque_das_sombras",
           "name": "Ataque das Sombras",
           "action_type": "passiva",
-          "descricao": "Se o alvo nÃ£o o enxerga (bugbear oculto OU alvo na escuridÃ£o sem visÃ£o no escuro): +2 ataque e +1d6 de dano em TODOS os ataques"
+          "descricao": "Se o alvo não o enxerga (bugbear oculto OU alvo na escuridão sem visão no escuro): +2 ataque e +1d6 de dano em TODOS os ataques"
         },
         {
           "id": "cacador_das_trevas",
-          "name": "CaÃ§ador das Trevas",
+          "name": "Caçador das Trevas",
           "action_type": "passiva",
-          "descricao": "Em Ã¡rea escura: +2 CA, +1 ataque e sempre pode usar Ataque das Sombras"
+          "descricao": "Em área escura: +2 CA, +1 ataque e sempre pode usar Ataque das Sombras"
         },
         {
           "id": "desaparecer_nas_sombras",
           "name": "Desaparecer nas Sombras",
           "action_type": "acao_livre",
           "cooldown_turns": 5,
-          "descricao": "SÃ³ na escuridÃ£o (apÃ³s Manto): fica oculto (imune a ataques Ã  distÃ¢ncia; corpo a corpo -4), move atÃ© 3, atÃ© o inÃ­cio do prÃ³ximo turno"
+          "descricao": "Só na escuridão (após Manto): fica oculto (imune a ataques à distância; corpo a corpo -4), move até 3, até o início do próximo turno"
         },
         {
           "id": "visao_perfeita_escuro",
-          "name": "VisÃ£o no Escuro",
+          "name": "Visão no Escuro",
           "action_type": "passiva",
-          "descricao": "Enxerga perfeitamente no escuro â€” nÃ£o sofre penalidades nas trevas"
+          "descricao": "Enxerga perfeitamente no escuro — não sofre penalidades nas trevas"
         }
       ],
       "immunities": [],
@@ -1960,7 +1960,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "ogro_clava",
       "name": "Ogro de Clava",
-      "emoji": "ðŸ§Œ",
+      "emoji": "🧌",
       "boss": false,
       "tier": 2,
       "cr": 2,
@@ -2004,12 +2004,12 @@ window.EDITOR_CATALOG = {
         },
         {
           "id": "forca_descomunal",
-          "name": "ForÃ§a Descomunal",
+          "name": "Força Descomunal",
           "action_type": "ataque",
           "cooldown_turns": 4,
           "save": "fortitude",
           "dc": 10,
-          "descricao": "Ataque normal; se acertar, Fortitude CD 10 ou atordoado (perde a prÃ³xima rodada). Recarga 4 rodadas"
+          "descricao": "Ataque normal; se acertar, Fortitude CD 10 ou atordoado (perde a próxima rodada). Recarga 4 rodadas"
         },
         {
           "id": "mente_bruta",
@@ -2019,9 +2019,9 @@ window.EDITOR_CATALOG = {
         },
         {
           "id": "lento_previsivel",
-          "name": "Lento e PrevisÃ­vel",
+          "name": "Lento e Previsível",
           "action_type": "passiva",
-          "descricao": "Se errar um ataque: -2 de CA atÃ© o prÃ³ximo turno"
+          "descricao": "Se errar um ataque: -2 de CA até o próximo turno"
         }
       ],
       "immunities": [],
@@ -2054,8 +2054,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "type": "ogro_lanca",
-      "name": "Ogro de LanÃ§a",
-      "emoji": "ðŸ§Œ",
+      "name": "Ogro de Lança",
+      "emoji": "🧌",
       "boss": false,
       "tier": 2,
       "cr": 2,
@@ -2078,7 +2078,7 @@ window.EDITOR_CATALOG = {
       "will": 0,
       "attacks": [
         {
-          "name": "LanÃ§a Grande",
+          "name": "Lança Grande",
           "atk_bonus": 6,
           "damage": "1d10+4",
           "damage_types": [
@@ -2099,12 +2099,12 @@ window.EDITOR_CATALOG = {
         },
         {
           "id": "forca_descomunal",
-          "name": "ForÃ§a Descomunal",
+          "name": "Força Descomunal",
           "action_type": "ataque",
           "cooldown_turns": 4,
           "save": "fortitude",
           "dc": 10,
-          "descricao": "Ataque normal; se acertar, Fortitude CD 10 ou atordoado (perde a prÃ³xima rodada). Recarga 4 rodadas"
+          "descricao": "Ataque normal; se acertar, Fortitude CD 10 ou atordoado (perde a próxima rodada). Recarga 4 rodadas"
         },
         {
           "id": "mente_bruta",
@@ -2114,9 +2114,9 @@ window.EDITOR_CATALOG = {
         },
         {
           "id": "lento_previsivel",
-          "name": "Lento e PrevisÃ­vel",
+          "name": "Lento e Previsível",
           "action_type": "passiva",
-          "descricao": "Se errar um ataque: -2 de CA atÃ© o prÃ³ximo turno"
+          "descricao": "Se errar um ataque: -2 de CA até o próximo turno"
         }
       ],
       "immunities": [],
@@ -2149,8 +2149,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "type": "grotao",
-      "name": "GrotÃ£o",
-      "emoji": "ðŸ¦‚",
+      "name": "Grotão",
+      "emoji": "🦂",
       "boss": false,
       "tier": 3,
       "cr": 3,
@@ -2199,9 +2199,9 @@ window.EDITOR_CATALOG = {
       "special_abilities": [
         {
           "id": "carapaca_resistente",
-          "name": "CarapaÃ§a Resistente",
+          "name": "Carapaça Resistente",
           "action_type": "passiva",
-          "descricao": "Reduz todo dano fÃ­sico em 2"
+          "descricao": "Reduz todo dano físico em 2"
         },
         {
           "id": "cauda_varredora",
@@ -2212,31 +2212,31 @@ window.EDITOR_CATALOG = {
           "damage": "1d8+3",
           "save": "reflexos",
           "dc": 12,
-          "descricao": "Atinge todos atrÃ¡s: +5, 1d8+3; falha derruba"
+          "descricao": "Atinge todos atrás: +5, 1d8+3; falha derruba"
         },
         {
           "id": "cuspir_acido",
-          "name": "Cuspir Ãcido",
+          "name": "Cuspir Ácido",
           "action_type": "acao",
           "cooldown_turns": 3,
           "range": 3,
           "damage": "2d6",
           "save": "reflexos",
           "dc": 13,
-          "descricao": "Alvo Ãºnico: 2d6 Ã¡cido, Reflexos metade e corrÃ³i um equipamento"
+          "descricao": "Alvo único: 2d6 ácido, Reflexos metade e corrói um equipamento"
         },
         {
           "id": "furia_bestial",
-          "name": "FÃºria Bestial",
+          "name": "Fúria Bestial",
           "action_type": "passiva",
           "descricao": "Mordida e ao menos uma garra acertam: +1d6 dano"
         },
         {
           "id": "ponto_vulneravel",
-          "name": "Ponto VulnerÃ¡vel",
+          "name": "Ponto Vulnerável",
           "action_type": "passiva",
           "nd_penalty": 0.25,
-          "descricao": "Os dois quadrados centrais ignoram a armadura natural (CA 15 â†’ 10; Destreza permanece) e reduÃ§Ãµes de dano; reduz o ND estimado em 0,25",
+          "descricao": "Os dois quadrados centrais ignoram a armadura natural (CA 15 → 10; Destreza permanece) e reduções de dano; reduz o ND estimado em 0,25",
           "tiles": [
             [
               1,
@@ -2270,7 +2270,7 @@ window.EDITOR_CATALOG = {
               1
             ]
           ],
-          "descricao": "Ponto VulnerÃ¡vel: os dois quadrados centrais ignoram a armadura natural (CA 15 â†’ 10; Destreza permanece) e reduÃ§Ãµes de dano (â€“0,25 ND estimado)"
+          "descricao": "Ponto Vulnerável: os dois quadrados centrais ignoram a armadura natural (CA 15 → 10; Destreza permanece) e reduções de dano (–0,25 ND estimado)"
         }
       ],
       "resistances": [
@@ -2292,7 +2292,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "elemental_fogo",
       "name": "Elemental de Fogo",
-      "emoji": "ðŸ”¥",
+      "emoji": "🔥",
       "boss": false,
       "tier": 3,
       "cr": 3,
@@ -2330,7 +2330,7 @@ window.EDITOR_CATALOG = {
       "special_abilities": [
         {
           "id": "corpo_energetico",
-          "name": "Corpo EnergÃ©tico",
+          "name": "Corpo Energético",
           "action_type": "passiva",
           "damage": "1d4",
           "damage_types": [
@@ -2350,7 +2350,7 @@ window.EDITOR_CATALOG = {
         },
         {
           "id": "explosao_final",
-          "name": "ExplosÃ£o Final",
+          "name": "Explosão Final",
           "action_type": "passiva",
           "damage": "6d6",
           "damage_types": [
@@ -2359,13 +2359,13 @@ window.EDITOR_CATALOG = {
           "radius": 1,
           "save": "reflexos",
           "dc": 13,
-          "descricao": "Ao morrer, explode em 1 quadrado: 6d6 de fogo; Reflexos CD 13 reduz Ã  metade."
+          "descricao": "Ao morrer, explode em 1 quadrado: 6d6 de fogo; Reflexos CD 13 reduz à metade."
         },
         {
           "id": "intensidade",
           "name": "Intensidade",
           "action_type": "passiva",
-          "descricao": "As chamas ignoram reduÃ§Ãµes leves de dano de fogo (nÃ£o ignora resistÃªncia Ã  metade)."
+          "descricao": "As chamas ignoram reduções leves de dano de fogo (não ignora resistência à metade)."
         }
       ],
       "immunities": [
@@ -2375,7 +2375,7 @@ window.EDITOR_CATALOG = {
         {
           "type": "cold",
           "multiplier": 1.5,
-          "descricao": "Gelo causa 1,5Ã— de dano."
+          "descricao": "Gelo causa 1,5× de dano."
         }
       ],
       "loot_table": {
@@ -2396,7 +2396,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "elemental_gelo",
       "name": "Elemental de Gelo",
-      "emoji": "â„ï¸",
+      "emoji": "❄️",
       "boss": false,
       "tier": 3,
       "cr": 3,
@@ -2441,17 +2441,17 @@ window.EDITOR_CATALOG = {
           "id": "corpo_congelado",
           "name": "Corpo Congelado",
           "action_type": "passiva",
-          "descricao": "Ataques fÃ­sicos sofrem â€“1 de dano."
+          "descricao": "Ataques físicos sofrem –1 de dano."
         },
         {
           "id": "congelamento_progressivo",
           "name": "Congelamento Progressivo",
           "action_type": "passiva",
-          "descricao": "Ao acertar, reduz o movimento em 1 por 2 turnos; acumula atÃ© â€“3 e renova a duraÃ§Ã£o."
+          "descricao": "Ao acertar, reduz o movimento em 1 por 2 turnos; acumula até –3 e renova a duração."
         },
         {
           "id": "nucleo_frio",
-          "name": "NÃºcleo Frio",
+          "name": "Núcleo Frio",
           "action_type": "passiva",
           "descricao": "Reduz em 2 todo dano recebido, exceto fogo."
         }
@@ -2463,7 +2463,7 @@ window.EDITOR_CATALOG = {
         {
           "type": "fire",
           "multiplier": 1.5,
-          "descricao": "Fogo causa 1,5Ã— de dano."
+          "descricao": "Fogo causa 1,5× de dano."
         }
       ],
       "resistances": [
@@ -2492,7 +2492,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "elemental_pedra",
       "name": "Elemental de Pedra",
-      "emoji": "ðŸª¨",
+      "emoji": "🪨",
       "boss": false,
       "tier": 3,
       "cr": 3,
@@ -2536,19 +2536,19 @@ window.EDITOR_CATALOG = {
           "id": "corpo_rochoso",
           "name": "Corpo Rochoso",
           "action_type": "passiva",
-          "descricao": "Reduz dano fÃ­sico em 4."
+          "descricao": "Reduz dano físico em 4."
         },
         {
           "id": "impacto_devastador",
           "name": "Impacto Devastador",
           "action_type": "passiva",
-          "descricao": "Se nÃ£o se mover no turno, causa +4 de dano."
+          "descricao": "Se não se mover no turno, causa +4 de dano."
         },
         {
           "id": "inabalavel",
-          "name": "InabalÃ¡vel",
+          "name": "Inabalável",
           "action_type": "passiva",
-          "descricao": "NÃ£o pode ser imobilizado por redes, cola ou efeitos equivalentes."
+          "descricao": "Não pode ser imobilizado por redes, cola ou efeitos equivalentes."
         }
       ],
       "immunities": [],
@@ -2558,7 +2558,7 @@ window.EDITOR_CATALOG = {
           "categoria": "contundente",
           "bonus_flat": 2,
           "ignora_reducao": true,
-          "descricao": "Dano contundente ignora reduÃ§Ãµes e causa +2 de dano."
+          "descricao": "Dano contundente ignora reduções e causa +2 de dano."
         }
       ],
       "resistances": [
@@ -2579,8 +2579,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "type": "elemental_eletrico",
-      "name": "Elemental ElÃ©trico",
-      "emoji": "âš¡",
+      "name": "Elemental Elétrico",
+      "emoji": "⚡",
       "boss": false,
       "tier": 3,
       "cr": 3,
@@ -2622,7 +2622,7 @@ window.EDITOR_CATALOG = {
       "special_abilities": [
         {
           "id": "corpo_energetico",
-          "name": "Corpo EnergÃ©tico",
+          "name": "Corpo Energético",
           "action_type": "passiva",
           "damage": "1d4",
           "damage_types": [
@@ -2638,7 +2638,7 @@ window.EDITOR_CATALOG = {
         },
         {
           "id": "salto_eletrico",
-          "name": "Salto ElÃ©trico",
+          "name": "Salto Elétrico",
           "action_type": "passiva",
           "descricao": "Ignora a CA concedida por armaduras de metal."
         }
@@ -2656,7 +2656,7 @@ window.EDITOR_CATALOG = {
         {
           "type": "cold",
           "bonus_flat": 2,
-          "descricao": "Ãgua (tratada como frio) causa +2 de dano."
+          "descricao": "Água (tratada como frio) causa +2 de dano."
         }
       ],
       "loot_table": {
@@ -2672,7 +2672,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "elemental_ar",
       "name": "Elemental de Ar",
-      "emoji": "ðŸŒªï¸",
+      "emoji": "🌪️",
       "boss": false,
       "tier": 3,
       "cr": 3,
@@ -2715,9 +2715,9 @@ window.EDITOR_CATALOG = {
       "special_abilities": [
         {
           "id": "corpo_intangivel",
-          "name": "Corpo IntangÃ­vel",
+          "name": "Corpo Intangível",
           "action_type": "passiva",
-          "descricao": "NÃ£o sofre dano de armas fÃ­sicas."
+          "descricao": "Não sofre dano de armas físicas."
         },
         {
           "id": "golpe_vento",
@@ -2733,14 +2733,14 @@ window.EDITOR_CATALOG = {
         },
         {
           "id": "turbilhao",
-          "name": "TurbilhÃ£o",
+          "name": "Turbilhão",
           "action_type": "acao",
           "cooldown_turns": 2,
           "damage": "1d8",
           "radius": 1,
           "dc": 13,
           "save": "reflexos",
-          "descricao": "Ãrea de 1 quadrado: 1d8; Reflexos CD 13. Falha perde a prÃ³xima aÃ§Ã£o; sucesso perde o movimento."
+          "descricao": "Área de 1 quadrado: 1d8; Reflexos CD 13. Falha perde a próxima ação; sucesso perde o movimento."
         }
       ],
       "immunities": [
@@ -2768,8 +2768,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "type": "elemental_agua",
-      "name": "Elemental de Ãgua",
-      "emoji": "ðŸŒŠ",
+      "name": "Elemental de Água",
+      "emoji": "🌊",
       "boss": false,
       "tier": 3,
       "cr": 3,
@@ -2793,7 +2793,7 @@ window.EDITOR_CATALOG = {
       "will": -4,
       "attacks": [
         {
-          "name": "Golpe de Ãgua",
+          "name": "Golpe de Água",
           "atk_bonus": 5,
           "damage": "1d10",
           "damage_types": [
@@ -2812,26 +2812,26 @@ window.EDITOR_CATALOG = {
           "id": "corpo_fluido",
           "name": "Corpo Fluido",
           "action_type": "passiva",
-          "descricao": "Sofre metade do dano de armas fÃ­sicas."
+          "descricao": "Sofre metade do dano de armas físicas."
         },
         {
           "id": "onda_envolvente",
           "name": "Onda Envolvente / Afogar",
           "action_type": "passiva",
           "damage": "1d6",
-          "descricao": "Ao acertar, pode prender uma criatura mÃ©dia; presa sofre 1d6 por rodada e testa FOR para escapar."
+          "descricao": "Ao acertar, pode prender uma criatura média; presa sofre 1d6 por rodada e testa FOR para escapar."
         },
         {
           "id": "mare_viva",
-          "name": "MarÃ© Viva",
+          "name": "Maré Viva",
           "action_type": "passiva",
-          "descricao": "Perto de fonte ou piso de Ã¡gua, recupera 1d6 HP."
+          "descricao": "Perto de fonte ou piso de água, recupera 1d6 HP."
         },
         {
           "id": "solidificar_frio",
           "name": "Solidificar",
           "action_type": "passiva",
-          "descricao": "Frio em 2 rodadas consecutivas remove a resistÃªncia fÃ­sica por 2 rodadas."
+          "descricao": "Frio em 2 rodadas consecutivas remove a resistência física por 2 rodadas."
         }
       ],
       "immunities": [],
@@ -2865,7 +2865,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "lobisomem",
       "name": "Lobisomem",
-      "emoji": "ðŸº",
+      "emoji": "🐺",
       "boss": false,
       "tier": 3,
       "cr": 3,
@@ -2920,25 +2920,25 @@ window.EDITOR_CATALOG = {
       "special_abilities": [
         {
           "id": "olfato_agucado",
-          "name": "Olfato AguÃ§ado",
+          "name": "Olfato Aguçado",
           "action_type": "passiva",
-          "descricao": "Detecta invisÃ­veis e impede ocultaÃ§Ã£o."
+          "descricao": "Detecta invisíveis e impede ocultação."
         },
         {
           "id": "pele_amaldicoada",
-          "name": "Pele AmaldiÃ§oada",
+          "name": "Pele Amaldiçoada",
           "action_type": "passiva",
-          "descricao": "Armas nÃ£o mÃ¡gicas e sem prata causam metade do dano."
+          "descricao": "Armas não mágicas e sem prata causam metade do dano."
         },
         {
           "id": "regeneracao_lobisomem",
-          "name": "RegeneraÃ§Ã£o",
+          "name": "Regeneração",
           "action_type": "passiva",
-          "descricao": "Recupera 2 HP no inÃ­cio do turno, exceto apÃ³s dano mÃ¡gico ou de prata."
+          "descricao": "Recupera 2 HP no início do turno, exceto após dano mágico ou de prata."
         },
         {
           "id": "furia_bestial_lobisomem",
-          "name": "FÃºria Bestial",
+          "name": "Fúria Bestial",
           "action_type": "passiva",
           "descricao": "Com 12 HP ou menos: +2 ataque e dano."
         }
@@ -2948,7 +2948,7 @@ window.EDITOR_CATALOG = {
         {
           "type": "silver",
           "multiplier": 2,
-          "descricao": "Prata causa dano dobrado e bloqueia regeneraÃ§Ã£o."
+          "descricao": "Prata causa dano dobrado e bloqueia regeneração."
         }
       ],
       "resistances": [],
@@ -2959,8 +2959,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "type": "escravo_vampirico",
-      "name": "Escravo VampÃ­rico",
-      "emoji": "ðŸ§›",
+      "name": "Escravo Vampírico",
+      "emoji": "🧛",
       "boss": false,
       "tier": 3,
       "cr": 3,
@@ -3004,9 +3004,9 @@ window.EDITOR_CATALOG = {
       "special_abilities": [
         {
           "id": "reducao_vampirica",
-          "name": "ReduÃ§Ã£o de Dano 5",
+          "name": "Redução de Dano 5",
           "action_type": "passiva",
-          "descricao": "Armas comuns sofrem â€“5; prata, magia e magias ignoram."
+          "descricao": "Armas comuns sofrem –5; prata, magia e magias ignoram."
         },
         {
           "id": "cura_acelerada_vampirica",
@@ -3022,9 +3022,9 @@ window.EDITOR_CATALOG = {
         },
         {
           "id": "ressurreicao_vampirica",
-          "name": "RessurreiÃ§Ã£o VampÃ­rica",
+          "name": "Ressurreição Vampírica",
           "action_type": "passiva",
-          "descricao": "Retorna uma vez apÃ³s 1d4 rodadas, salvo dano sagrado/luz suficiente."
+          "descricao": "Retorna uma vez após 1d4 rodadas, salvo dano sagrado/luz suficiente."
         }
       ],
       "immunities": [
@@ -3054,7 +3054,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "vampiro_jovem",
       "name": "Vampiro Jovem",
-      "emoji": "ðŸ§›",
+      "emoji": "🧛",
       "boss": false,
       "tier": 5,
       "cr": 5,
@@ -3098,7 +3098,7 @@ window.EDITOR_CATALOG = {
       "special_abilities": [
         {
           "id": "reducao_vampirica",
-          "name": "ReduÃ§Ã£o de Dano 5",
+          "name": "Redução de Dano 5",
           "action_type": "passiva"
         },
         {
@@ -3120,7 +3120,7 @@ window.EDITOR_CATALOG = {
         },
         {
           "id": "ressurreicao_vampirica",
-          "name": "RessurreiÃ§Ã£o VampÃ­rica",
+          "name": "Ressurreição Vampírica",
           "action_type": "passiva"
         }
       ],
@@ -3150,8 +3150,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "type": "vampiro_anciao",
-      "name": "Vampiro AnciÃ£o",
-      "emoji": "ðŸ§›",
+      "name": "Vampiro Ancião",
+      "emoji": "🧛",
       "boss": false,
       "tier": 7,
       "cr": 7,
@@ -3195,7 +3195,7 @@ window.EDITOR_CATALOG = {
       "special_abilities": [
         {
           "id": "reducao_vampirica",
-          "name": "ReduÃ§Ã£o de Dano 5",
+          "name": "Redução de Dano 5",
           "action_type": "passiva"
         },
         {
@@ -3210,7 +3210,7 @@ window.EDITOR_CATALOG = {
         },
         {
           "id": "encantar_area_vampirico",
-          "name": "Encantar em Ãrea",
+          "name": "Encantar em Área",
           "action_type": "acao",
           "dc": 13,
           "range": 4,
@@ -3223,7 +3223,7 @@ window.EDITOR_CATALOG = {
         },
         {
           "id": "ressurreicao_vampirica",
-          "name": "RessurreiÃ§Ã£o VampÃ­rica",
+          "name": "Ressurreição Vampírica",
           "action_type": "passiva"
         }
       ],
@@ -3254,7 +3254,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "lorde_vampiro",
       "name": "Lorde Vampiro",
-      "emoji": "ðŸ‘‘ðŸ§›",
+      "emoji": "👑🧛",
       "boss": true,
       "tier": 9,
       "cr": 9,
@@ -3277,7 +3277,7 @@ window.EDITOR_CATALOG = {
       "will": 10,
       "attacks": [
         {
-          "name": "Espada Longa MÃ¡gica",
+          "name": "Espada Longa Mágica",
           "atk_bonus": 12,
           "damage": "1d8+7",
           "damage_types": [
@@ -3298,7 +3298,7 @@ window.EDITOR_CATALOG = {
       "special_abilities": [
         {
           "id": "reducao_vampirica",
-          "name": "ReduÃ§Ã£o de Dano 5",
+          "name": "Redução de Dano 5",
           "action_type": "passiva"
         },
         {
@@ -3313,7 +3313,7 @@ window.EDITOR_CATALOG = {
         },
         {
           "id": "encantar_supremo_vampirico",
-          "name": "Encantar Supremo em Ãrea",
+          "name": "Encantar Supremo em Área",
           "action_type": "acao",
           "dc": 14,
           "range": 6,
@@ -3326,7 +3326,7 @@ window.EDITOR_CATALOG = {
         },
         {
           "id": "ressurreicao_vampirica",
-          "name": "RessurreiÃ§Ã£o VampÃ­rica",
+          "name": "Ressurreição Vampírica",
           "action_type": "passiva"
         }
       ],
@@ -3373,7 +3373,7 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "veneno_ferrao",
-      "name": "Veneno do FerrÃ£o",
+      "name": "Veneno do Ferrão",
       "action_type": "passiva",
       "dc": 9,
       "save": "fortitude",
@@ -3394,28 +3394,28 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "fraqueza_magica",
-      "name": "Fraqueza MÃ¡gica",
+      "name": "Fraqueza Mágica",
       "action_type": "passiva",
       "descricao": "-2 em testes contra magias que controlam mortos-vivos",
       "source": "monstro"
     },
     {
       "id": "movimento_erratico",
-      "name": "Movimento ErrÃ¡tico",
+      "name": "Movimento Errático",
       "action_type": "passiva",
-      "descricao": "Ignora terreno difÃ­cil â€” avanÃ§a sem hesitar",
+      "descricao": "Ignora terreno difícil — avança sem hesitar",
       "source": "monstro"
     },
     {
       "id": "sem_instinto",
       "name": "Sem Instinto",
       "action_type": "passiva",
-      "descricao": "Nunca foge nem recua â€” avanÃ§a atÃ© ser destruÃ­do",
+      "descricao": "Nunca foge nem recua — avança até ser destruído",
       "source": "monstro"
     },
     {
       "id": "caca_em_bando",
-      "name": "CaÃ§a em Bando",
+      "name": "Caça em Bando",
       "action_type": "passiva",
       "source": "monstro"
     },
@@ -3433,12 +3433,12 @@ window.EDITOR_CATALOG = {
       "action_type": "passiva",
       "dc": 12,
       "save": "fortitude",
-      "descricao": "Ao acertar, alvo testa FOR ou REF CD 12 â€” falha: preso",
+      "descricao": "Ao acertar, alvo testa FOR ou REF CD 12 — falha: preso",
       "source": "monstro"
     },
     {
       "id": "atq_mandibula",
-      "name": "Ataque de MandÃ­bula",
+      "name": "Ataque de Mandíbula",
       "action_type": "passiva",
       "descricao": "Se alvo preso e adjacente: 1d8+3 dano direto (sem rolagem de acerto)",
       "source": "monstro"
@@ -3452,35 +3452,35 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "constricao",
-      "name": "ConstriÃ§Ã£o",
+      "name": "Constrição",
       "action_type": "passiva",
       "dc": 11,
       "save": "fortitude",
       "escape_saves": [
         "fortitude"
       ],
-      "descricao": "Ao acertar, alvo testa FOR CD 11 â€” falha: preso",
+      "descricao": "Ao acertar, alvo testa FOR CD 11 — falha: preso",
       "source": "monstro"
     },
     {
       "id": "esmagar",
       "name": "Esmagar",
       "action_type": "passiva",
-      "descricao": "Enquanto preso e adjacente: 1d6 dano automÃ¡tico por turno",
+      "descricao": "Enquanto preso e adjacente: 1d6 dano automático por turno",
       "source": "monstro"
     },
     {
       "id": "veneno",
       "name": "Veneno",
       "action_type": "passiva",
-      "descricao": "Ao acertar a mordida, aplica veneno (doenÃ§a leve)",
+      "descricao": "Ao acertar a mordida, aplica veneno (doença leve)",
       "source": "monstro"
     },
     {
       "id": "ataque_rapido",
-      "name": "Ataque RÃ¡pido",
+      "name": "Ataque Rápido",
       "action_type": "passiva",
-      "descricao": "Se nÃ£o se mover no turno: +1 no ataque",
+      "descricao": "Se não se mover no turno: +1 no ataque",
       "source": "monstro"
     },
     {
@@ -3494,26 +3494,26 @@ window.EDITOR_CATALOG = {
       "id": "toque_putrefato",
       "name": "Toque Putrefato",
       "action_type": "passiva",
-      "descricao": "Ao acertar: +1 nÃ­vel de dano em equipamento orgÃ¢nico do alvo (couro/madeira/tecido)",
+      "descricao": "Ao acertar: +1 nível de dano em equipamento orgânico do alvo (couro/madeira/tecido)",
       "source": "monstro"
     },
     {
       "id": "corrosao_viva",
-      "name": "CorrosÃ£o Viva",
+      "name": "Corrosão Viva",
       "action_type": "passiva",
       "descricao": "Alvo sem armadura: 1 dano/turno por 2 turnos (acumula a cada acerto)",
       "source": "monstro"
     },
     {
       "id": "absorver_materia",
-      "name": "Absorver MatÃ©ria",
+      "name": "Absorver Matéria",
       "action_type": "passiva",
-      "descricao": "Quando destrÃ³i um item orgÃ¢nico: recupera 1d4 HP",
+      "descricao": "Quando destrói um item orgânico: recupera 1d4 HP",
       "source": "monstro"
     },
     {
       "id": "furia",
-      "name": "FÃºria",
+      "name": "Fúria",
       "action_type": "passiva",
       "descricao": "Com HP < 50%: +2 de dano em todos os ataques",
       "source": "monstro"
@@ -3527,7 +3527,7 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "furia_cega",
-      "name": "FÃºria Cega",
+      "name": "Fúria Cega",
       "action_type": "passiva",
       "descricao": "Se sofreu dano na rodada anterior: +1 de dano, mas -1 CA",
       "source": "monstro"
@@ -3550,46 +3550,46 @@ window.EDITOR_CATALOG = {
       "id": "arremesso",
       "name": "Arremesso",
       "action_type": "acao_bonus",
-      "descricao": "Arremesso 1d4+2 (alcance 3) como aÃ§Ã£o bÃ´nus; 1 natural quebra a arma",
+      "descricao": "Arremesso 1d4+2 (alcance 3) como ação bônus; 1 natural quebra a arma",
       "source": "monstro"
     },
     {
       "id": "silencio",
-      "name": "SilÃªncio",
+      "name": "Silêncio",
       "action_type": "magia",
       "uses_per_combat": 1,
       "circulo": 2,
-      "descricao": "Cria Ã¡rea de SilÃªncio (some se o xamÃ£ morrer)",
+      "descricao": "Cria área de Silêncio (some se o xamã morrer)",
       "source": "monstro"
     },
     {
       "id": "amaldicoar",
-      "name": "AmaldiÃ§oar",
+      "name": "Amaldiçoar",
       "action_type": "magia",
       "uses_per_combat": 1,
       "circulo": 1,
-      "descricao": "Debuff -1 em ataque/dano/CA/resistÃªncia nos herÃ³is",
+      "descricao": "Debuff -1 em ataque/dano/CA/resistência nos heróis",
       "source": "monstro"
     },
     {
       "id": "abencoar",
-      "name": "AbenÃ§oar",
+      "name": "Abençoar",
       "action_type": "magia",
       "uses_per_combat": 1,
       "circulo": 1,
-      "descricao": "Buff +1 em ataque/dano/CA/resistÃªncia nos goblins aliados",
+      "descricao": "Buff +1 em ataque/dano/CA/resistência nos goblins aliados",
       "source": "monstro"
     },
     {
       "id": "concentracao_fragil",
-      "name": "ConcentraÃ§Ã£o FrÃ¡gil",
+      "name": "Concentração Frágil",
       "action_type": "passiva",
-      "descricao": "Se sofrer dano, nÃ£o pode usar magia no prÃ³ximo turno",
+      "descricao": "Se sofrer dano, não pode usar magia no próximo turno",
       "source": "monstro"
     },
     {
       "id": "veneno_lanca",
-      "name": "LanÃ§a Envenenada",
+      "name": "Lança Envenenada",
       "action_type": "acao_livre",
       "dc": 8,
       "save": "fortitude",
@@ -3634,35 +3634,35 @@ window.EDITOR_CATALOG = {
       "id": "mestre_dos_mortos",
       "name": "Mestre dos Mortos",
       "action_type": "passiva",
-      "descricao": "Inicia com 2 esqueletos; mortos-vivos prÃ³ximos recebem +1 em Vontade",
+      "descricao": "Inicia com 2 esqueletos; mortos-vivos próximos recebem +1 em Vontade",
       "source": "monstro"
     },
     {
       "id": "concentracao_sombria",
-      "name": "ConcentraÃ§Ã£o Sombria",
+      "name": "Concentração Sombria",
       "action_type": "passiva",
-      "descricao": "Ao sofrer dano: Vontade CD 10 ou perde a aÃ§Ã£o de magia no turno",
+      "descricao": "Ao sofrer dano: Vontade CD 10 ou perde a ação de magia no turno",
       "source": "monstro"
     },
     {
       "id": "essencia_profana",
-      "name": "EssÃªncia Profana",
+      "name": "Essência Profana",
       "action_type": "passiva",
       "descricao": "Sofre dano dobrado de efeitos sagrados/luz",
       "source": "monstro"
     },
     {
       "id": "resistencia_morta",
-      "name": "ResistÃªncia Morta",
+      "name": "Resistência Morta",
       "action_type": "passiva",
       "dc": 10,
       "save": "fortitude",
-      "descricao": "A 0 HP: Fortitude CD 10 â†’ fica com 1 HP (dano sagrado/luz ignora e destrÃ³i de vez)",
+      "descricao": "A 0 HP: Fortitude CD 10 → fica com 1 HP (dano sagrado/luz ignora e destrói de vez)",
       "source": "monstro"
     },
     {
       "id": "infeccao",
-      "name": "InfecÃ§Ã£o",
+      "name": "Infecção",
       "action_type": "passiva",
       "dc": 10,
       "save": "fortitude",
@@ -3671,16 +3671,16 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "lento_incansavel",
-      "name": "Lento e IncansÃ¡vel",
+      "name": "Lento e Incansável",
       "action_type": "passiva",
-      "descricao": "NÃ£o corre nem foge â€” avanÃ§a sem parar",
+      "descricao": "Não corre nem foge — avança sem parar",
       "source": "monstro"
     },
     {
       "id": "corpo_morto",
       "name": "Corpo Morto",
       "action_type": "passiva",
-      "descricao": "NÃ£o come, bebe nem respira",
+      "descricao": "Não come, bebe nem respira",
       "source": "monstro"
     },
     {
@@ -3699,60 +3699,60 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "faro_carnica",
-      "name": "Faro de CarniÃ§a",
+      "name": "Faro de Carniça",
       "action_type": "passiva",
       "descricao": "Prioriza sempre o alvo com menor HP",
       "source": "monstro"
     },
     {
       "id": "duas_cabecas",
-      "name": "Duas CabeÃ§as",
+      "name": "Duas Cabeças",
       "action_type": "passiva",
-      "descricao": "+1 em percepÃ§Ã£o; difÃ­cil de surpreender (flavor)",
+      "descricao": "+1 em percepção; difícil de surpreender (flavor)",
       "source": "monstro"
     },
     {
       "id": "mordida_corrosiva",
       "name": "Mordida Corrosiva",
       "action_type": "passiva",
-      "descricao": "Ao acertar: +1 nÃ­vel de dano na arma OU armadura metÃ¡lica do alvo",
+      "descricao": "Ao acertar: +1 nível de dano na arma OU armadura metálica do alvo",
       "source": "monstro"
     },
     {
       "id": "devorar_metal",
       "name": "Devorar Metal",
       "action_type": "passiva",
-      "descricao": "Item a 3 nÃ­veis Ã© destruÃ­do e o Devorador recupera 1d6 HP",
+      "descricao": "Item a 3 níveis é destruído e o Devorador recupera 1d6 HP",
       "source": "monstro"
     },
     {
       "id": "alimentacao_metalica",
-      "name": "AlimentaÃ§Ã£o MetÃ¡lica",
+      "name": "Alimentação Metálica",
       "action_type": "passiva",
-      "descricao": "Gasta a aÃ§Ã£o para consumir item metÃ¡lico no chÃ£o e recuperar 1d6 HP",
+      "descricao": "Gasta a ação para consumir item metálico no chão e recuperar 1d6 HP",
       "source": "monstro"
     },
     {
       "id": "manto_escuridao",
-      "name": "Manto de EscuridÃ£o",
+      "name": "Manto de Escuridão",
       "action_type": "magia",
       "uses_per_combat": 1,
       "circulo": 1,
-      "descricao": "Cria uma Ã¡rea de escuridÃ£o centrada em si (1x por combate)",
+      "descricao": "Cria uma área de escuridão centrada em si (1x por combate)",
       "source": "monstro"
     },
     {
       "id": "ataque_das_sombras",
       "name": "Ataque das Sombras",
       "action_type": "passiva",
-      "descricao": "Se o alvo nÃ£o o enxerga (bugbear oculto OU alvo na escuridÃ£o sem visÃ£o no escuro): +2 ataque e +1d6 de dano em TODOS os ataques",
+      "descricao": "Se o alvo não o enxerga (bugbear oculto OU alvo na escuridão sem visão no escuro): +2 ataque e +1d6 de dano em TODOS os ataques",
       "source": "monstro"
     },
     {
       "id": "cacador_das_trevas",
-      "name": "CaÃ§ador das Trevas",
+      "name": "Caçador das Trevas",
       "action_type": "passiva",
-      "descricao": "Em Ã¡rea escura: +2 CA, +1 ataque e sempre pode usar Ataque das Sombras",
+      "descricao": "Em área escura: +2 CA, +1 ataque e sempre pode usar Ataque das Sombras",
       "source": "monstro"
     },
     {
@@ -3760,14 +3760,14 @@ window.EDITOR_CATALOG = {
       "name": "Desaparecer nas Sombras",
       "action_type": "acao_livre",
       "cooldown_turns": 5,
-      "descricao": "SÃ³ na escuridÃ£o (apÃ³s Manto): fica oculto (imune a ataques Ã  distÃ¢ncia; corpo a corpo -4), move atÃ© 3, atÃ© o inÃ­cio do prÃ³ximo turno",
+      "descricao": "Só na escuridão (após Manto): fica oculto (imune a ataques à distância; corpo a corpo -4), move até 3, até o início do próximo turno",
       "source": "monstro"
     },
     {
       "id": "visao_perfeita_escuro",
-      "name": "VisÃ£o no Escuro",
+      "name": "Visão no Escuro",
       "action_type": "passiva",
-      "descricao": "Enxerga perfeitamente no escuro â€” nÃ£o sofre penalidades nas trevas",
+      "descricao": "Enxerga perfeitamente no escuro — não sofre penalidades nas trevas",
       "source": "monstro"
     },
     {
@@ -3780,12 +3780,12 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "forca_descomunal",
-      "name": "ForÃ§a Descomunal",
+      "name": "Força Descomunal",
       "action_type": "ataque",
       "cooldown_turns": 4,
       "save": "fortitude",
       "dc": 10,
-      "descricao": "Ataque normal; se acertar, Fortitude CD 10 ou atordoado (perde a prÃ³xima rodada). Recarga 4 rodadas",
+      "descricao": "Ataque normal; se acertar, Fortitude CD 10 ou atordoado (perde a próxima rodada). Recarga 4 rodadas",
       "source": "monstro"
     },
     {
@@ -3797,16 +3797,16 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "lento_previsivel",
-      "name": "Lento e PrevisÃ­vel",
+      "name": "Lento e Previsível",
       "action_type": "passiva",
-      "descricao": "Se errar um ataque: -2 de CA atÃ© o prÃ³ximo turno",
+      "descricao": "Se errar um ataque: -2 de CA até o próximo turno",
       "source": "monstro"
     },
     {
       "id": "carapaca_resistente",
-      "name": "CarapaÃ§a Resistente",
+      "name": "Carapaça Resistente",
       "action_type": "passiva",
-      "descricao": "Reduz todo dano fÃ­sico em 2",
+      "descricao": "Reduz todo dano físico em 2",
       "source": "monstro"
     },
     {
@@ -3818,34 +3818,34 @@ window.EDITOR_CATALOG = {
       "damage": "1d8+3",
       "save": "reflexos",
       "dc": 12,
-      "descricao": "Atinge todos atrÃ¡s: +5, 1d8+3; falha derruba",
+      "descricao": "Atinge todos atrás: +5, 1d8+3; falha derruba",
       "source": "monstro"
     },
     {
       "id": "cuspir_acido",
-      "name": "Cuspir Ãcido",
+      "name": "Cuspir Ácido",
       "action_type": "acao",
       "cooldown_turns": 3,
       "range": 3,
       "damage": "2d6",
       "save": "reflexos",
       "dc": 13,
-      "descricao": "Alvo Ãºnico: 2d6 Ã¡cido, Reflexos metade e corrÃ³i um equipamento",
+      "descricao": "Alvo único: 2d6 ácido, Reflexos metade e corrói um equipamento",
       "source": "monstro"
     },
     {
       "id": "furia_bestial",
-      "name": "FÃºria Bestial",
+      "name": "Fúria Bestial",
       "action_type": "passiva",
       "descricao": "Mordida e ao menos uma garra acertam: +1d6 dano",
       "source": "monstro"
     },
     {
       "id": "ponto_vulneravel",
-      "name": "Ponto VulnerÃ¡vel",
+      "name": "Ponto Vulnerável",
       "action_type": "passiva",
       "nd_penalty": 0.25,
-      "descricao": "Os dois quadrados centrais ignoram a armadura natural (CA 15 â†’ 10; Destreza permanece) e reduÃ§Ãµes de dano; reduz o ND estimado em 0,25",
+      "descricao": "Os dois quadrados centrais ignoram a armadura natural (CA 15 → 10; Destreza permanece) e reduções de dano; reduz o ND estimado em 0,25",
       "tiles": [
         [
           1,
@@ -3867,7 +3867,7 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "corpo_energetico",
-      "name": "Corpo EnergÃ©tico",
+      "name": "Corpo Energético",
       "action_type": "passiva",
       "damage": "1d4",
       "damage_types": [
@@ -3889,7 +3889,7 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "explosao_final",
-      "name": "ExplosÃ£o Final",
+      "name": "Explosão Final",
       "action_type": "passiva",
       "damage": "6d6",
       "damage_types": [
@@ -3898,33 +3898,33 @@ window.EDITOR_CATALOG = {
       "radius": 1,
       "save": "reflexos",
       "dc": 13,
-      "descricao": "Ao morrer, explode em 1 quadrado: 6d6 de fogo; Reflexos CD 13 reduz Ã  metade.",
+      "descricao": "Ao morrer, explode em 1 quadrado: 6d6 de fogo; Reflexos CD 13 reduz à metade.",
       "source": "monstro"
     },
     {
       "id": "intensidade",
       "name": "Intensidade",
       "action_type": "passiva",
-      "descricao": "As chamas ignoram reduÃ§Ãµes leves de dano de fogo (nÃ£o ignora resistÃªncia Ã  metade).",
+      "descricao": "As chamas ignoram reduções leves de dano de fogo (não ignora resistência à metade).",
       "source": "monstro"
     },
     {
       "id": "corpo_congelado",
       "name": "Corpo Congelado",
       "action_type": "passiva",
-      "descricao": "Ataques fÃ­sicos sofrem â€“1 de dano.",
+      "descricao": "Ataques físicos sofrem –1 de dano.",
       "source": "monstro"
     },
     {
       "id": "congelamento_progressivo",
       "name": "Congelamento Progressivo",
       "action_type": "passiva",
-      "descricao": "Ao acertar, reduz o movimento em 1 por 2 turnos; acumula atÃ© â€“3 e renova a duraÃ§Ã£o.",
+      "descricao": "Ao acertar, reduz o movimento em 1 por 2 turnos; acumula até –3 e renova a duração.",
       "source": "monstro"
     },
     {
       "id": "nucleo_frio",
-      "name": "NÃºcleo Frio",
+      "name": "Núcleo Frio",
       "action_type": "passiva",
       "descricao": "Reduz em 2 todo dano recebido, exceto fogo.",
       "source": "monstro"
@@ -3933,21 +3933,21 @@ window.EDITOR_CATALOG = {
       "id": "corpo_rochoso",
       "name": "Corpo Rochoso",
       "action_type": "passiva",
-      "descricao": "Reduz dano fÃ­sico em 4.",
+      "descricao": "Reduz dano físico em 4.",
       "source": "monstro"
     },
     {
       "id": "impacto_devastador",
       "name": "Impacto Devastador",
       "action_type": "passiva",
-      "descricao": "Se nÃ£o se mover no turno, causa +4 de dano.",
+      "descricao": "Se não se mover no turno, causa +4 de dano.",
       "source": "monstro"
     },
     {
       "id": "inabalavel",
-      "name": "InabalÃ¡vel",
+      "name": "Inabalável",
       "action_type": "passiva",
-      "descricao": "NÃ£o pode ser imobilizado por redes, cola ou efeitos equivalentes.",
+      "descricao": "Não pode ser imobilizado por redes, cola ou efeitos equivalentes.",
       "source": "monstro"
     },
     {
@@ -3959,16 +3959,16 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "salto_eletrico",
-      "name": "Salto ElÃ©trico",
+      "name": "Salto Elétrico",
       "action_type": "passiva",
       "descricao": "Ignora a CA concedida por armaduras de metal.",
       "source": "monstro"
     },
     {
       "id": "corpo_intangivel",
-      "name": "Corpo IntangÃ­vel",
+      "name": "Corpo Intangível",
       "action_type": "passiva",
-      "descricao": "NÃ£o sofre dano de armas fÃ­sicas.",
+      "descricao": "Não sofre dano de armas físicas.",
       "source": "monstro"
     },
     {
@@ -3987,21 +3987,21 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "turbilhao",
-      "name": "TurbilhÃ£o",
+      "name": "Turbilhão",
       "action_type": "acao",
       "cooldown_turns": 2,
       "damage": "1d8",
       "radius": 1,
       "dc": 13,
       "save": "reflexos",
-      "descricao": "Ãrea de 1 quadrado: 1d8; Reflexos CD 13. Falha perde a prÃ³xima aÃ§Ã£o; sucesso perde o movimento.",
+      "descricao": "Área de 1 quadrado: 1d8; Reflexos CD 13. Falha perde a próxima ação; sucesso perde o movimento.",
       "source": "monstro"
     },
     {
       "id": "corpo_fluido",
       "name": "Corpo Fluido",
       "action_type": "passiva",
-      "descricao": "Sofre metade do dano de armas fÃ­sicas.",
+      "descricao": "Sofre metade do dano de armas físicas.",
       "source": "monstro"
     },
     {
@@ -4009,56 +4009,56 @@ window.EDITOR_CATALOG = {
       "name": "Onda Envolvente / Afogar",
       "action_type": "passiva",
       "damage": "1d6",
-      "descricao": "Ao acertar, pode prender uma criatura mÃ©dia; presa sofre 1d6 por rodada e testa FOR para escapar.",
+      "descricao": "Ao acertar, pode prender uma criatura média; presa sofre 1d6 por rodada e testa FOR para escapar.",
       "source": "monstro"
     },
     {
       "id": "mare_viva",
-      "name": "MarÃ© Viva",
+      "name": "Maré Viva",
       "action_type": "passiva",
-      "descricao": "Perto de fonte ou piso de Ã¡gua, recupera 1d6 HP.",
+      "descricao": "Perto de fonte ou piso de água, recupera 1d6 HP.",
       "source": "monstro"
     },
     {
       "id": "solidificar_frio",
       "name": "Solidificar",
       "action_type": "passiva",
-      "descricao": "Frio em 2 rodadas consecutivas remove a resistÃªncia fÃ­sica por 2 rodadas.",
+      "descricao": "Frio em 2 rodadas consecutivas remove a resistência física por 2 rodadas.",
       "source": "monstro"
     },
     {
       "id": "olfato_agucado",
-      "name": "Olfato AguÃ§ado",
+      "name": "Olfato Aguçado",
       "action_type": "passiva",
-      "descricao": "Detecta invisÃ­veis e impede ocultaÃ§Ã£o.",
+      "descricao": "Detecta invisíveis e impede ocultação.",
       "source": "monstro"
     },
     {
       "id": "pele_amaldicoada",
-      "name": "Pele AmaldiÃ§oada",
+      "name": "Pele Amaldiçoada",
       "action_type": "passiva",
-      "descricao": "Armas nÃ£o mÃ¡gicas e sem prata causam metade do dano.",
+      "descricao": "Armas não mágicas e sem prata causam metade do dano.",
       "source": "monstro"
     },
     {
       "id": "regeneracao_lobisomem",
-      "name": "RegeneraÃ§Ã£o",
+      "name": "Regeneração",
       "action_type": "passiva",
-      "descricao": "Recupera 2 HP no inÃ­cio do turno, exceto apÃ³s dano mÃ¡gico ou de prata.",
+      "descricao": "Recupera 2 HP no início do turno, exceto após dano mágico ou de prata.",
       "source": "monstro"
     },
     {
       "id": "furia_bestial_lobisomem",
-      "name": "FÃºria Bestial",
+      "name": "Fúria Bestial",
       "action_type": "passiva",
       "descricao": "Com 12 HP ou menos: +2 ataque e dano.",
       "source": "monstro"
     },
     {
       "id": "reducao_vampirica",
-      "name": "ReduÃ§Ã£o de Dano 5",
+      "name": "Redução de Dano 5",
       "action_type": "passiva",
-      "descricao": "Armas comuns sofrem â€“5; prata, magia e magias ignoram.",
+      "descricao": "Armas comuns sofrem –5; prata, magia e magias ignoram.",
       "source": "monstro"
     },
     {
@@ -4077,9 +4077,9 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "ressurreicao_vampirica",
-      "name": "RessurreiÃ§Ã£o VampÃ­rica",
+      "name": "Ressurreição Vampírica",
       "action_type": "passiva",
-      "descricao": "Retorna uma vez apÃ³s 1d4 rodadas, salvo dano sagrado/luz suficiente.",
+      "descricao": "Retorna uma vez após 1d4 rodadas, salvo dano sagrado/luz suficiente.",
       "source": "monstro"
     },
     {
@@ -4092,7 +4092,7 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "encantar_area_vampirico",
-      "name": "Encantar em Ãrea",
+      "name": "Encantar em Área",
       "action_type": "acao",
       "dc": 13,
       "range": 4,
@@ -4107,7 +4107,7 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "encantar_supremo_vampirico",
-      "name": "Encantar Supremo em Ãrea",
+      "name": "Encantar Supremo em Área",
       "action_type": "acao",
       "dc": 14,
       "range": 6,
@@ -4126,7 +4126,7 @@ window.EDITOR_CATALOG = {
       "source_id": "mira_certeira",
       "source_class": "warrior",
       "name": "Mira Certeira",
-      "icon": "âš”ï¸",
+      "icon": "⚔️",
       "descricao": "+2 no dado de acerto neste turno",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
@@ -4137,7 +4137,7 @@ window.EDITOR_CATALOG = {
       "source_id": "golpe_devastador",
       "source_class": "warrior",
       "name": "Golpe Devastador",
-      "icon": "ðŸ’¥",
+      "icon": "💥",
       "descricao": "Dobra cada dado de dano neste turno",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
@@ -4147,8 +4147,8 @@ window.EDITOR_CATALOG = {
       "source": "heroi",
       "source_id": "furia_berserker",
       "source_class": "warrior",
-      "name": "FÃºria Berserker",
-      "icon": "ðŸ”¥",
+      "name": "Fúria Berserker",
+      "icon": "🔥",
       "descricao": "Ataque extra neste turno com habilidades ativas",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
@@ -4159,8 +4159,8 @@ window.EDITOR_CATALOG = {
       "source_id": "aprimorar_magia",
       "source_class": "mage",
       "name": "Aprimorar Magia",
-      "icon": "ðŸŽ¯",
-      "descricao": "AÃ§Ã£o livre. +1 na dificuldade (CD) do teste de resistÃªncia da magia. ðŸ–-3 ao lanÃ§ar.",
+      "icon": "🎯",
+      "descricao": "Ação livre. +1 na dificuldade (CD) do teste de resistência da magia. 🍖-3 ao lançar.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
     },
@@ -4170,8 +4170,8 @@ window.EDITOR_CATALOG = {
       "source_id": "estender_magia",
       "source_class": "mage",
       "name": "Estender Magia",
-      "icon": "â±ï¸",
-      "descricao": "AÃ§Ã£o livre. +1 turno na duraÃ§Ã£o da magia. ðŸ–-3 ðŸ’§-3 ao lanÃ§ar.",
+      "icon": "⏱️",
+      "descricao": "Ação livre. +1 turno na duração da magia. 🍖-3 💧-3 ao lançar.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
     },
@@ -4181,8 +4181,8 @@ window.EDITOR_CATALOG = {
       "source_id": "fortalecer_magia",
       "source_class": "mage",
       "name": "Fortalecer Magia",
-      "icon": "ðŸ’¥",
-      "descricao": "AÃ§Ã£o livre. Multiplica o dano da magia por 1,5. ðŸ–-6 ðŸ’§-6 ao lanÃ§ar.",
+      "icon": "💥",
+      "descricao": "Ação livre. Multiplica o dano da magia por 1,5. 🍖-6 💧-6 ao lançar.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
     },
@@ -4192,8 +4192,8 @@ window.EDITOR_CATALOG = {
       "source_id": "ataque_furtivo",
       "source_class": "rogue",
       "name": "Ataque Furtivo",
-      "icon": "ðŸ—¡ï¸",
-      "descricao": "Passiva. +2d4 dano extra quando hÃ¡ aliado adjacente ao alvo (ou se estiver invisÃ­vel). +1d4 por faixa de nÃ­vel.",
+      "icon": "🗡️",
+      "descricao": "Passiva. +2d4 dano extra quando há aliado adjacente ao alvo (ou se estiver invisível). +1d4 por faixa de nível.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate"
     },
@@ -4203,8 +4203,8 @@ window.EDITOR_CATALOG = {
       "source_id": "detectar_armadilhas",
       "source_class": "rogue",
       "name": "Detectar Armadilhas",
-      "icon": "ðŸ”",
-      "descricao": "AÃ§Ã£o bÃ´nus (alternÃ¡vel). Revela armadilhas prÃ³ximas e nÃ£o dispara as da masmorra. ManutenÃ§Ã£o ðŸ’§-1/turno.",
+      "icon": "🔍",
+      "descricao": "Ação bônus (alternável). Revela armadilhas próximas e não dispara as da masmorra. Manutenção 💧-1/turno.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
     },
@@ -4214,8 +4214,8 @@ window.EDITOR_CATALOG = {
       "source_id": "esconder_sombras",
       "source_class": "rogue",
       "name": "Esconder nas Sombras",
-      "icon": "ðŸŒ‘",
-      "descricao": "AÃ§Ã£o bÃ´nus. d20+DES vs percepÃ§Ã£o dos monstros. InvisÃ­vel (nÃ£o Ã© alvo) enquanto ativo. ManutenÃ§Ã£o ðŸ–-1 ðŸ’§-1/turno.",
+      "icon": "🌑",
+      "descricao": "Ação bônus. d20+DES vs percepção dos monstros. Invisível (não é alvo) enquanto ativo. Manutenção 🍖-1 💧-1/turno.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
     },
@@ -4224,9 +4224,9 @@ window.EDITOR_CATALOG = {
       "source": "heroi",
       "source_id": "veneno_rapido",
       "source_class": "rogue",
-      "name": "Veneno RÃ¡pido",
-      "icon": "â˜ ï¸",
-      "descricao": "AÃ§Ã£o livre. Unta um veneno da bolsa na arma â€” os prÃ³ximos golpes certeiros envenenam o alvo.",
+      "name": "Veneno Rápido",
+      "icon": "☠️",
+      "descricao": "Ação livre. Unta um veneno da bolsa na arma — os próximos golpes certeiros envenenam o alvo.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
     },
@@ -4236,8 +4236,8 @@ window.EDITOR_CATALOG = {
       "source_id": "criar_armadilha",
       "source_class": "rogue",
       "name": "Criar Armadilha",
-      "icon": "ðŸª¤",
-      "descricao": "AÃ§Ã£o principal. Coloca uma armadilha na prÃ³pria casa ou adjacente. Custa fome/sede + ouro.",
+      "icon": "🪤",
+      "descricao": "Ação principal. Coloca uma armadilha na própria casa ou adjacente. Custa fome/sede + ouro.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
     },
@@ -4247,8 +4247,8 @@ window.EDITOR_CATALOG = {
       "source_id": "cura",
       "source_class": "cleric",
       "name": "Cura",
-      "icon": "ðŸ™Œ",
-      "descricao": "1d8 a 3d8 + INT em um aliado. ðŸ’§-1 por dado. Alcance estendÃ­vel com ðŸ–.",
+      "icon": "🙌",
+      "descricao": "1d8 a 3d8 + INT em um aliado. 💧-1 por dado. Alcance estendível com 🍖.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
     },
@@ -4257,9 +4257,9 @@ window.EDITOR_CATALOG = {
       "source": "heroi",
       "source_id": "cura_area",
       "source_class": "cleric",
-      "name": "Cura em Ãrea",
-      "icon": "ðŸŒŸ",
-      "descricao": "1d8 a 3d8 + INT em todos os aliados no raio 5. ðŸ–-4 ðŸ’§-4 por dado.",
+      "name": "Cura em Área",
+      "icon": "🌟",
+      "descricao": "1d8 a 3d8 + INT em todos os aliados no raio 5. 🍖-4 💧-4 por dado.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
     },
@@ -4268,9 +4268,9 @@ window.EDITOR_CATALOG = {
       "source": "heroi",
       "source_id": "purificacao",
       "source_class": "cleric",
-      "name": "PurificaÃ§Ã£o",
-      "icon": "âœ¨",
-      "descricao": "Remove veneno, doenÃ§a, maldiÃ§Ã£o ou petrificaÃ§Ã£o de um aliado adjacente.",
+      "name": "Purificação",
+      "icon": "✨",
+      "descricao": "Remove veneno, doença, maldição ou petrificação de um aliado adjacente.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
     },
@@ -4279,9 +4279,9 @@ window.EDITOR_CATALOG = {
       "source": "heroi",
       "source_id": "ressurreicao",
       "source_class": "cleric",
-      "name": "RessurreiÃ§Ã£o",
-      "icon": "ðŸ’«",
-      "descricao": "Traz um aliado morto adjacente de volta com 1 HP. ðŸ–-10 ðŸ’§-10.",
+      "name": "Ressurreição",
+      "icon": "💫",
+      "descricao": "Traz um aliado morto adjacente de volta com 1 HP. 🍖-10 💧-10.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
     },
@@ -4290,8 +4290,8 @@ window.EDITOR_CATALOG = {
       "source": "heroi",
       "source_id": "cancao_heroica",
       "source_class": "bard",
-      "name": "CanÃ§Ã£o Heroica",
-      "icon": "ðŸŽµ",
+      "name": "Canção Heroica",
+      "icon": "🎵",
       "descricao": "Ativa buffs musicais para aliados em raio de 5 quadrados",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
@@ -4301,9 +4301,9 @@ window.EDITOR_CATALOG = {
       "source": "heroi",
       "source_id": "provocacao",
       "source_class": "bard",
-      "name": "ProvocaÃ§Ã£o",
-      "icon": "ðŸ˜¤",
-      "descricao": "ImpÃµe desvantagem ao inimigo e o forÃ§a a atacar Henrique por 3 turnos",
+      "name": "Provocação",
+      "icon": "😤",
+      "descricao": "Impõe desvantagem ao inimigo e o força a atacar Henrique por 3 turnos",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
     },
@@ -4312,9 +4312,9 @@ window.EDITOR_CATALOG = {
       "source": "heroi",
       "source_id": "imposicao_maos",
       "source_class": "paladin",
-      "name": "ImposiÃ§Ã£o das MÃ£os",
-      "icon": "ðŸ™",
-      "descricao": "Cura 1d6 + bÃ´nus ForÃ§a em aliado adjacente",
+      "name": "Imposição das Mãos",
+      "icon": "🙏",
+      "descricao": "Cura 1d6 + bônus Força em aliado adjacente",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
     },
@@ -4324,8 +4324,8 @@ window.EDITOR_CATALOG = {
       "source_id": "golpe_sagrado",
       "source_class": "paladin",
       "name": "Golpe Sagrado",
-      "icon": "âš”ï¸",
-      "descricao": "+1d8 dano sagrado. Dobrado contra mortos-vivos e demÃ´nios",
+      "icon": "⚔️",
+      "descricao": "+1d8 dano sagrado. Dobrado contra mortos-vivos e demônios",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
     },
@@ -4335,7 +4335,7 @@ window.EDITOR_CATALOG = {
       "source_id": "protetor",
       "source_class": "paladin",
       "name": "Protetor",
-      "icon": "ðŸ›¡ï¸",
+      "icon": "🛡️",
       "descricao": "Aliado recebe metade do dano. A outra metade vai para Richard",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
@@ -4345,9 +4345,9 @@ window.EDITOR_CATALOG = {
       "source": "heroi",
       "source_id": "regeneracao_divina",
       "source_class": "paladin",
-      "name": "RegeneraÃ§Ã£o Divina",
-      "icon": "âœ¨",
-      "descricao": "Recupera 1 HP por turno atÃ© HP mÃ¡ximo",
+      "name": "Regeneração Divina",
+      "icon": "✨",
+      "descricao": "Recupera 1 HP por turno até HP máximo",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
     },
@@ -4357,8 +4357,8 @@ window.EDITOR_CATALOG = {
       "source_id": "guerreiro_luz",
       "source_class": "paladin",
       "name": "Guerreiro da Luz",
-      "icon": "ðŸ’¡",
-      "descricao": "+1/+2 em VisÃ£o, Ataque, Dano e CA. Apenas Richard",
+      "icon": "💡",
+      "descricao": "+1/+2 em Visão, Ataque, Dano e CA. Apenas Richard",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
     },
@@ -4367,8 +4367,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "brutalidade",
       "name": "Brutalidade",
-      "icon": "âœ¦",
-      "descricao": "AtÃ© o fim do turno, ataques fÃ­sicos com arma causam +2 de dano.",
+      "icon": "✦",
+      "descricao": "Até o fim do turno, ataques físicos com arma causam +2 de dano.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica"
@@ -4378,8 +4378,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "tecnica_mira_perfeita",
       "name": "Mira Perfeita",
-      "icon": "âœ¦",
-      "descricao": "PrÃ³ximo ataque Ã  distÃ¢ncia recebe vantagem; se acertar, +2 de dano.",
+      "icon": "✦",
+      "descricao": "Próximo ataque à distância recebe vantagem; se acertar, +2 de dano.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica"
@@ -4388,9 +4388,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_tecnica_espirito_indomavel",
       "source": "guilda",
       "source_id": "tecnica_espirito_indomavel",
-      "name": "EspÃ­rito IndomÃ¡vel",
-      "icon": "âœ¦",
-      "descricao": "AÃ§Ã£o livre. Remove Medo, Atordoamento e LentidÃ£o; 1 rodada imune a SilÃªncio.",
+      "name": "Espírito Indomável",
+      "icon": "✦",
+      "descricao": "Ação livre. Remove Medo, Atordoamento e Lentidão; 1 rodada imune a Silêncio.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica"
@@ -4400,7 +4400,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "tecnica_grito_guerra",
       "name": "Grito de Guerra",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "Todos os aliados recebem +2 de movimento por 1 rodada.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
@@ -4411,8 +4411,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "tecnica_pressa",
       "name": "Pressa",
-      "icon": "âœ¦",
-      "descricao": "O seu movimento Ã© dobrado nesta rodada.",
+      "icon": "✦",
+      "descricao": "O seu movimento é dobrado nesta rodada.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica"
@@ -4422,8 +4422,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "tecnica_investida",
       "name": "Investida Heroica",
-      "icon": "âœ¦",
-      "descricao": "Dobra o movimento; se andar â‰¥2 casas em linha reta, o prÃ³ximo ataque corpo a corpo tem vantagem +2 dano.",
+      "icon": "✦",
+      "descricao": "Dobra o movimento; se andar ≥2 casas em linha reta, o próximo ataque corpo a corpo tem vantagem +2 dano.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica"
@@ -4432,9 +4432,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_tecnica_defesa_impecavel",
       "source": "guilda",
       "source_id": "tecnica_defesa_impecavel",
-      "name": "Defesa ImpecÃ¡vel",
-      "icon": "âœ¦",
-      "descricao": "AtÃ© o prÃ³ximo turno, ataques contra vocÃª tÃªm desvantagem e vocÃª fica imune a Ataque Furtivo.",
+      "name": "Defesa Impecável",
+      "icon": "✦",
+      "descricao": "Até o próximo turno, ataques contra você têm desvantagem e você fica imune a Ataque Furtivo.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica"
@@ -4443,8 +4443,8 @@ window.EDITOR_CATALOG = {
       "id": "guild_tecnica_pressao_constante",
       "source": "guilda",
       "source_id": "tecnica_pressao_constante",
-      "name": "PressÃ£o Constante",
-      "icon": "âœ¦",
+      "name": "Pressão Constante",
+      "icon": "✦",
       "descricao": "Um inimigo adjacente sofre -2 de CA por 2 rodadas.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
@@ -4454,9 +4454,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_tecnica_tatica_defensiva",
       "source": "guilda",
       "source_id": "tecnica_tatica_defensiva",
-      "name": "TÃ¡tica Defensiva",
-      "icon": "âœ¦",
-      "descricao": "Escolha um aliado em atÃ© 4 casas; por 1d4 rodadas, metade do dano dele Ã© transferida a vocÃª.",
+      "name": "Tática Defensiva",
+      "icon": "✦",
+      "descricao": "Escolha um aliado em até 4 casas; por 1d4 rodadas, metade do dano dele é transferida a você.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica"
@@ -4466,8 +4466,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "tecnica_passo_fantasma",
       "name": "Passo Fantasma",
-      "icon": "âœ¦",
-      "descricao": "Por 1d4 rodadas: +2 de movimento e vocÃª atravessa casas ocupadas por objetos (nÃ£o paredes nem criaturas).",
+      "icon": "✦",
+      "descricao": "Por 1d4 rodadas: +2 de movimento e você atravessa casas ocupadas por objetos (não paredes nem criaturas).",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica"
@@ -4477,8 +4477,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "tecnica_ataque_coordenado",
       "name": "Ataque Coordenado",
-      "icon": "âœ¦",
-      "descricao": "Escolha um aliado; neste turno, quando vocÃª atacar um inimigo, o aliado tambÃ©m o ataca.",
+      "icon": "✦",
+      "descricao": "Escolha um aliado; neste turno, quando você atacar um inimigo, o aliado também o ataca.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica"
@@ -4488,8 +4488,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "tecnica_sangue_frio",
       "name": "Sangue Frio",
-      "icon": "âœ¦",
-      "descricao": "A primeira vez que errar um ataque, vocÃª pode rolÃ¡-lo novamente.",
+      "icon": "✦",
+      "descricao": "A primeira vez que errar um ataque, você pode rolá-lo novamente.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica"
@@ -4498,9 +4498,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_tecnica_resistencia_absoluta",
       "source": "guilda",
       "source_id": "tecnica_resistencia_absoluta",
-      "name": "ResistÃªncia Absoluta",
-      "icon": "âœ¦",
-      "descricao": "Recebe +2 em todos os testes de resistÃªncia por 2 rodadas.",
+      "name": "Resistência Absoluta",
+      "icon": "✦",
+      "descricao": "Recebe +2 em todos os testes de resistência por 2 rodadas.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica"
@@ -4510,8 +4510,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "tecnica_contra_ataque",
       "name": "Contra-Ataque",
-      "icon": "âœ¦",
-      "descricao": "AtÃ© o prÃ³ximo turno, quando um inimigo errar vocÃª (arma corpo a corpo/alcance ou besta de mÃ£o, e ele no alcance), vocÃª o ataca de volta.",
+      "icon": "✦",
+      "descricao": "Até o próximo turno, quando um inimigo errar você (arma corpo a corpo/alcance ou besta de mão, e ele no alcance), você o ataca de volta.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica"
@@ -4521,8 +4521,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "tecnica_oportunidade",
       "name": "Oportunidade",
-      "icon": "âœ¦",
-      "descricao": "Escolha um aliado (nÃ£o pode ser vocÃª); no PRÃ“PRIO turno dele, ganha uma aÃ§Ã£o extra â€” mover mais, atacar de novo, usar a habilidade de classe de novo, ou lanÃ§ar mais uma magia. Expira no fim desta rodada se nÃ£o for usada.",
+      "icon": "✦",
+      "descricao": "Escolha um aliado (não pode ser você); no PRÓPRIO turno dele, ganha uma ação extra — mover mais, atacar de novo, usar a habilidade de classe de novo, ou lançar mais uma magia. Expira no fim desta rodada se não for usada.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica"
@@ -4531,9 +4531,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_tecnica_instinto_sobrevivencia",
       "source": "guilda",
       "source_id": "tecnica_instinto_sobrevivencia",
-      "name": "Instinto de SobrevivÃªncia",
-      "icon": "âœ¦",
-      "descricao": "AutomÃ¡tica. Se um dano zeraria seu HP, vocÃª fica com 1 em vez de morrer. Depois disso, entra em recarga.",
+      "name": "Instinto de Sobrevivência",
+      "icon": "✦",
+      "descricao": "Automática. Se um dano zeraria seu HP, você fica com 1 em vez de morrer. Depois disso, entra em recarga.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica"
@@ -4542,9 +4542,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_tecnica_ultimo_esforco",
       "source": "guilda",
       "source_id": "tecnica_ultimo_esforco",
-      "name": "Ãšltimo EsforÃ§o",
-      "icon": "âœ¦",
-      "descricao": "AutomÃ¡tica. Se um dano zeraria seu HP, vocÃª fica com 1 e ganha 2 turnos seguidos: todo ataque tem vantagem e todo acerto Ã© crÃ­tico (nat20 â†’ dano TRIPLICADO). NÃ£o pode se curar. Ao final, cai como se tivesse morrido normalmente (pode ser reerguido por RessurreiÃ§Ã£o).",
+      "name": "Último Esforço",
+      "icon": "✦",
+      "descricao": "Automática. Se um dano zeraria seu HP, você fica com 1 e ganha 2 turnos seguidos: todo ataque tem vantagem e todo acerto é crítico (nat20 → dano TRIPLICADO). Não pode se curar. Ao final, cai como se tivesse morrido normalmente (pode ser reerguido por Ressurreição).",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica"
@@ -4554,8 +4554,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "tecnica_golpe_decisivo",
       "name": "Golpe Decisivo",
-      "icon": "âœ¦",
-      "descricao": "Arma o prÃ³ximo ataque bÃ¡sico (corpo a corpo ou Ã  distÃ¢ncia): se acertar, Ã© crÃ­tico automÃ¡tico (dano dobrado); num natural 20 enquanto armado, o dano Ã© TRIPLICADO. Consumida no prÃ³ximo ataque, acerte ou erre.",
+      "icon": "✦",
+      "descricao": "Arma o próximo ataque básico (corpo a corpo ou à distância): se acertar, é crítico automático (dano dobrado); num natural 20 enquanto armado, o dano é TRIPLICADO. Consumida no próximo ataque, acerte ou erre.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica"
@@ -4565,8 +4565,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "tecnica_sorte",
       "name": "Sorte",
-      "icon": "âœ¦",
-      "descricao": "Depois de errar um ataque, vocÃª pode gastar esta tÃ©cnica para rolÃ¡-lo novamente contra o mesmo alvo. Independente do Sangue Frio.",
+      "icon": "✦",
+      "descricao": "Depois de errar um ataque, você pode gastar esta técnica para rolá-lo novamente contra o mesmo alvo. Independente do Sangue Frio.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica"
@@ -4576,7 +4576,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "guerreiro_combinar_2",
       "name": "Combinar Duas",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "Permite armar DUAS habilidades no mesmo turno.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -4587,8 +4587,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "guerreiro_mestre_combate",
       "name": "Mestre de Combate",
-      "icon": "âœ¦",
-      "descricao": "Permite armar as TRÃŠS habilidades no mesmo turno.",
+      "icon": "✦",
+      "descricao": "Permite armar as TRÊS habilidades no mesmo turno.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4598,8 +4598,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "guerreiro_mira_3",
       "name": "Mira Certeira III",
-      "icon": "âœ¦",
-      "descricao": "Mira Certeira tambÃ©m concede +2 de dano (alÃ©m do +2 de acerto).",
+      "icon": "✦",
+      "descricao": "Mira Certeira também concede +2 de dano (além do +2 de acerto).",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4609,8 +4609,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "guerreiro_golpe_3",
       "name": "Golpe Devastador III",
-      "icon": "âœ¦",
-      "descricao": "Golpe Devastador passa a multiplicar os dados de dano por 2 (era Ã—1,5).",
+      "icon": "✦",
+      "descricao": "Golpe Devastador passa a multiplicar os dados de dano por 2 (era ×1,5).",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4619,9 +4619,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_guerreiro_furia_3",
       "source": "guilda",
       "source_id": "guerreiro_furia_3",
-      "name": "FÃºria Berserker III",
-      "icon": "âœ¦",
-      "descricao": "FÃºria Berserker concede 2 ataques extras (3 ataques no total).",
+      "name": "Fúria Berserker III",
+      "icon": "✦",
+      "descricao": "Fúria Berserker concede 2 ataques extras (3 ataques no total).",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4630,9 +4630,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_bardo_cancao_acerto",
       "source": "guilda",
       "source_id": "bardo_cancao_acerto",
-      "name": "CanÃ§Ã£o: Acerto +1",
-      "icon": "âœ¦",
-      "descricao": "O bÃ´nus de Acerto da CanÃ§Ã£o Heroica sobe de +1 para +2.",
+      "name": "Canção: Acerto +1",
+      "icon": "✦",
+      "descricao": "O bônus de Acerto da Canção Heroica sobe de +1 para +2.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4641,9 +4641,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_bardo_cancao_dano",
       "source": "guilda",
       "source_id": "bardo_cancao_dano",
-      "name": "CanÃ§Ã£o: Dano +1",
-      "icon": "âœ¦",
-      "descricao": "O bÃ´nus de Dano da CanÃ§Ã£o Heroica sobe de +1 para +2.",
+      "name": "Canção: Dano +1",
+      "icon": "✦",
+      "descricao": "O bônus de Dano da Canção Heroica sobe de +1 para +2.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4652,9 +4652,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_bardo_cancao_ca",
       "source": "guilda",
       "source_id": "bardo_cancao_ca",
-      "name": "CanÃ§Ã£o: Armadura +1",
-      "icon": "âœ¦",
-      "descricao": "O bÃ´nus de Armadura da CanÃ§Ã£o Heroica sobe de +1 para +2.",
+      "name": "Canção: Armadura +1",
+      "icon": "✦",
+      "descricao": "O bônus de Armadura da Canção Heroica sobe de +1 para +2.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4663,9 +4663,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_bardo_cancao_movimento",
       "source": "guilda",
       "source_id": "bardo_cancao_movimento",
-      "name": "CanÃ§Ã£o: Movimento +1",
-      "icon": "âœ¦",
-      "descricao": "O bÃ´nus de Movimento da CanÃ§Ã£o Heroica sobe de +1 para +2.",
+      "name": "Canção: Movimento +1",
+      "icon": "✦",
+      "descricao": "O bônus de Movimento da Canção Heroica sobe de +1 para +2.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4674,9 +4674,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_bardo_cancao_resistencia",
       "source": "guilda",
       "source_id": "bardo_cancao_resistencia",
-      "name": "CanÃ§Ã£o: ResistÃªncia +1",
-      "icon": "âœ¦",
-      "descricao": "O bÃ´nus de ResistÃªncia da CanÃ§Ã£o Heroica sobe de +1 para +2.",
+      "name": "Canção: Resistência +1",
+      "icon": "✦",
+      "descricao": "O bônus de Resistência da Canção Heroica sobe de +1 para +2.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4685,9 +4685,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_bardo_cancao_suprema",
       "source": "guilda",
       "source_id": "bardo_cancao_suprema",
-      "name": "CanÃ§Ã£o Heroica Suprema",
-      "icon": "âœ¦",
-      "descricao": "A manutenÃ§Ã£o da CanÃ§Ã£o Heroica custa -1ðŸ– e -1ðŸ’§ (mÃ­nimo 0).",
+      "name": "Canção Heroica Suprema",
+      "icon": "✦",
+      "descricao": "A manutenção da Canção Heroica custa -1🍖 e -1💧 (mínimo 0).",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4696,9 +4696,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_bardo_provocacao_2",
       "source": "guilda",
       "source_id": "bardo_provocacao_2",
-      "name": "ProvocaÃ§Ã£o II",
-      "icon": "âœ¦",
-      "descricao": "A desvantagem dura toda a provocaÃ§Ã£o; Henrique ganha +2 CA e ataca o alvo com vantagem.",
+      "name": "Provocação II",
+      "icon": "✦",
+      "descricao": "A desvantagem dura toda a provocação; Henrique ganha +2 CA e ataca o alvo com vantagem.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4707,8 +4707,8 @@ window.EDITOR_CATALOG = {
       "id": "guild_bardo_provocacao_3",
       "source": "guilda",
       "source_id": "bardo_provocacao_3",
-      "name": "ProvocaÃ§Ã£o III",
-      "icon": "âœ¦",
+      "name": "Provocação III",
+      "icon": "✦",
       "descricao": "Todos os aliados atacam o alvo provocado com vantagem por 1 rodada.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -4719,8 +4719,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "bardo_lendas_supremas",
       "name": "Lendas Supremas",
-      "icon": "âœ¦",
-      "descricao": "Todos os bÃ´nus de Lenda passam a beneficiar o grupo inteiro (enquanto Henrique vivo).",
+      "icon": "✦",
+      "descricao": "Todos os bônus de Lenda passam a beneficiar o grupo inteiro (enquanto Henrique vivo).",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4730,8 +4730,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "mago_tecelagem_2",
       "name": "Tecelagem Arcana II",
-      "icon": "âœ¦",
-      "descricao": "Permite empilhar 2 metamagias no mesmo lanÃ§amento.",
+      "icon": "✦",
+      "descricao": "Permite empilhar 2 metamagias no mesmo lançamento.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4741,8 +4741,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "mago_tecelagem_3",
       "name": "Tecelagem Arcana III",
-      "icon": "âœ¦",
-      "descricao": "Permite empilhar as 3 metamagias no mesmo lanÃ§amento.",
+      "icon": "✦",
+      "descricao": "Permite empilhar as 3 metamagias no mesmo lançamento.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4752,8 +4752,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "mago_fortalecer_2",
       "name": "Fortalecer II",
-      "icon": "âœ¦",
-      "descricao": "Fortalecer Magia multiplica o dano por 1,5 (era Ã—1,25).",
+      "icon": "✦",
+      "descricao": "Fortalecer Magia multiplica o dano por 1,5 (era ×1,25).",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4763,7 +4763,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "mago_fortalecer_3",
       "name": "Fortalecer III",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "Fortalecer Magia multiplica o dano por 2.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -4774,8 +4774,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "mago_aprimorar_2",
       "name": "Aprimorar II",
-      "icon": "âœ¦",
-      "descricao": "Aprimorar Magia dÃ¡ +2 na CD do save (era +1).",
+      "icon": "✦",
+      "descricao": "Aprimorar Magia dá +2 na CD do save (era +1).",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4785,8 +4785,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "mago_aprimorar_3",
       "name": "Aprimorar III",
-      "icon": "âœ¦",
-      "descricao": "Aprimorar Magia dÃ¡ +3 na CD do save.",
+      "icon": "✦",
+      "descricao": "Aprimorar Magia dá +3 na CD do save.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4796,8 +4796,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "mago_estender_2",
       "name": "Estender II",
-      "icon": "âœ¦",
-      "descricao": "Estender Magia dÃ¡ +2 rodadas de duraÃ§Ã£o (era +1).",
+      "icon": "✦",
+      "descricao": "Estender Magia dá +2 rodadas de duração (era +1).",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4807,8 +4807,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "mago_estender_3",
       "name": "Estender III",
-      "icon": "âœ¦",
-      "descricao": "Estender Magia dÃ¡ +3 rodadas de duraÃ§Ã£o.",
+      "icon": "✦",
+      "descricao": "Estender Magia dá +3 rodadas de duração.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4818,8 +4818,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "mago_reviver_2",
       "name": "Reviver os Mortos II",
-      "icon": "âœ¦",
-      "descricao": "Criaturas passam a ocupar Slots de Controle iguais ao ND (fracionÃ¡rio incluso). Chance de sucesso: 100% âˆ’ NDÃ—15%.",
+      "icon": "✦",
+      "descricao": "Criaturas passam a ocupar Slots de Controle iguais ao ND (fracionário incluso). Chance de sucesso: 100% − ND×15%.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4829,8 +4829,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "mago_reviver_3",
       "name": "Reviver os Mortos III",
-      "icon": "âœ¦",
-      "descricao": "+2 Slots de Controle. Chance de sucesso: 100% âˆ’ NDÃ—10%.",
+      "icon": "✦",
+      "descricao": "+2 Slots de Controle. Chance de sucesso: 100% − ND×10%.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4840,8 +4840,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "clerigo_cura_2",
       "name": "Cura II",
-      "icon": "âœ¦",
-      "descricao": "Cura pode usar atÃ© 2d8 + INT.",
+      "icon": "✦",
+      "descricao": "Cura pode usar até 2d8 + INT.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4851,8 +4851,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "clerigo_cura_3",
       "name": "Cura III",
-      "icon": "âœ¦",
-      "descricao": "Cura pode usar atÃ© 3d8 + INT.",
+      "icon": "✦",
+      "descricao": "Cura pode usar até 3d8 + INT.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4862,8 +4862,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "clerigo_massa_2",
       "name": "Cura em Massa II",
-      "icon": "âœ¦",
-      "descricao": "Cura em Massa: atÃ© 2d8 + INT, raio 4.",
+      "icon": "✦",
+      "descricao": "Cura em Massa: até 2d8 + INT, raio 4.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4873,8 +4873,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "clerigo_massa_3",
       "name": "Cura em Massa III",
-      "icon": "âœ¦",
-      "descricao": "Cura em Massa: atÃ© 3d8 + INT, raio 6.",
+      "icon": "✦",
+      "descricao": "Cura em Massa: até 3d8 + INT, raio 6.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4883,9 +4883,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_clerigo_purif_2",
       "source": "guilda",
       "source_id": "clerigo_purif_2",
-      "name": "PurificaÃ§Ã£o II",
-      "icon": "âœ¦",
-      "descricao": "PurificaÃ§Ã£o tambÃ©m remove doenÃ§as.",
+      "name": "Purificação II",
+      "icon": "✦",
+      "descricao": "Purificação também remove doenças.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4894,9 +4894,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_clerigo_purif_3",
       "source": "guilda",
       "source_id": "clerigo_purif_3",
-      "name": "PurificaÃ§Ã£o III",
-      "icon": "âœ¦",
-      "descricao": "PurificaÃ§Ã£o tambÃ©m remove maldiÃ§Ãµes e petrificaÃ§Ã£o.",
+      "name": "Purificação III",
+      "icon": "✦",
+      "descricao": "Purificação também remove maldições e petrificação.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4905,9 +4905,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_clerigo_ressur_2",
       "source": "guilda",
       "source_id": "clerigo_ressur_2",
-      "name": "RessurreiÃ§Ã£o II",
-      "icon": "âœ¦",
-      "descricao": "RessurreiÃ§Ã£o traz o aliado com metade dos PV (ðŸ–15 ðŸ’§15).",
+      "name": "Ressurreição II",
+      "icon": "✦",
+      "descricao": "Ressurreição traz o aliado com metade dos PV (🍖15 💧15).",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4916,9 +4916,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_clerigo_ressur_3",
       "source": "guilda",
       "source_id": "clerigo_ressur_3",
-      "name": "RessurreiÃ§Ã£o III",
-      "icon": "âœ¦",
-      "descricao": "RessurreiÃ§Ã£o traz o aliado com PV cheio (ðŸ–20 ðŸ’§20).",
+      "name": "Ressurreição III",
+      "icon": "✦",
+      "descricao": "Ressurreição traz o aliado com PV cheio (🍖20 💧20).",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4927,9 +4927,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_paladino_cura_maos_2",
       "source": "guilda",
       "source_id": "paladino_cura_maos_2",
-      "name": "Cura pelas MÃ£os II",
-      "icon": "âœ¦",
-      "descricao": "ImposiÃ§Ã£o das MÃ£os cura 2d6 + FOR.",
+      "name": "Cura pelas Mãos II",
+      "icon": "✦",
+      "descricao": "Imposição das Mãos cura 2d6 + FOR.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4938,9 +4938,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_paladino_cura_maos_3",
       "source": "guilda",
       "source_id": "paladino_cura_maos_3",
-      "name": "Cura pelas MÃ£os III",
-      "icon": "âœ¦",
-      "descricao": "Pode gastar +2ðŸ–/+2ðŸ’§ por +1d6 de cura (atÃ© 3Ã—).",
+      "name": "Cura pelas Mãos III",
+      "icon": "✦",
+      "descricao": "Pode gastar +2🍖/+2💧 por +1d6 de cura (até 3×).",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4950,7 +4950,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "paladino_ataque_sagrado_2",
       "name": "Ataque Sagrado II",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "Golpe Sagrado causa +2d8 de dano sagrado por ataque.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -4961,8 +4961,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "paladino_luz_2",
       "name": "Guerreiro da Luz II",
-      "icon": "âœ¦",
-      "descricao": "MantÃ©m 3 atributos ativos; com VisÃ£o, detecta armadilhas em raio 2.",
+      "icon": "✦",
+      "descricao": "Mantém 3 atributos ativos; com Visão, detecta armadilhas em raio 2.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4972,8 +4972,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "paladino_luz_3",
       "name": "Guerreiro da Luz III",
-      "icon": "âœ¦",
-      "descricao": "MantÃ©m 4 atributos ativos; com VisÃ£o, detecta armadilhas em raio 3.",
+      "icon": "✦",
+      "descricao": "Mantém 4 atributos ativos; com Visão, detecta armadilhas em raio 3.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4983,8 +4983,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "paladino_defensor_2",
       "name": "Defensor II",
-      "icon": "âœ¦",
-      "descricao": "O alcance da proteÃ§Ã£o aumenta para 5 quadrados.",
+      "icon": "✦",
+      "descricao": "O alcance da proteção aumenta para 5 quadrados.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -4994,8 +4994,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "paladino_defensor_3",
       "name": "Defensor III",
-      "icon": "âœ¦",
-      "descricao": "O dano dividido cai para 40%/40% (20% Ã© mitigado).",
+      "icon": "✦",
+      "descricao": "O dano dividido cai para 40%/40% (20% é mitigado).",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5004,9 +5004,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_paladino_regen_2",
       "source": "guilda",
       "source_id": "paladino_regen_2",
-      "name": "RegeneraÃ§Ã£o II",
-      "icon": "âœ¦",
-      "descricao": "RegeneraÃ§Ã£o Divina tambÃ©m cura +1 HP dos aliados adjacentes.",
+      "name": "Regeneração II",
+      "icon": "✦",
+      "descricao": "Regeneração Divina também cura +1 HP dos aliados adjacentes.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5015,9 +5015,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_paladino_regen_3",
       "source": "guilda",
       "source_id": "paladino_regen_3",
-      "name": "RegeneraÃ§Ã£o III",
-      "icon": "âœ¦",
-      "descricao": "A RegeneraÃ§Ã£o Divina alcanÃ§a aliados em raio 2.",
+      "name": "Regeneração III",
+      "icon": "✦",
+      "descricao": "A Regeneração Divina alcança aliados em raio 2.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5027,8 +5027,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "ladino_furtivo_2",
       "name": "Ataque Furtivo II",
-      "icon": "âœ¦",
-      "descricao": "Ataque Furtivo tambÃ©m dispara se hÃ¡ aliado adjacente ao alvo.",
+      "icon": "✦",
+      "descricao": "Ataque Furtivo também dispara se há aliado adjacente ao alvo.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5038,8 +5038,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "ladino_furtivo_3",
       "name": "Ataque Furtivo Supremo",
-      "icon": "âœ¦",
-      "descricao": "1Ã—/inimigo/rodada: quando um aliado acerta um inimigo, Luccas reage com um Ataque Furtivo nele.",
+      "icon": "✦",
+      "descricao": "1×/inimigo/rodada: quando um aliado acerta um inimigo, Luccas reage com um Ataque Furtivo nele.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5049,7 +5049,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "ladino_desarme_2",
       "name": "Desarme II",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+2 na chance de desarmar armadilhas.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5060,7 +5060,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "ladino_desarme_3",
       "name": "Desarme III",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "Chance extra de recuperar o ouro da armadilha desarmada.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5070,8 +5070,8 @@ window.EDITOR_CATALOG = {
       "id": "guild_ladino_veneno_2",
       "source": "guilda",
       "source_id": "ladino_veneno_2",
-      "name": "Veneno RÃ¡pido II",
-      "icon": "âœ¦",
+      "name": "Veneno Rápido II",
+      "icon": "✦",
       "descricao": "O veneno na arma (corpo a corpo) dura 2 golpes certeiros.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5081,8 +5081,8 @@ window.EDITOR_CATALOG = {
       "id": "guild_ladino_veneno_3",
       "source": "guilda",
       "source_id": "ladino_veneno_3",
-      "name": "Veneno RÃ¡pido III",
-      "icon": "âœ¦",
+      "name": "Veneno Rápido III",
+      "icon": "✦",
       "descricao": "Pode manter 2 venenos diferentes na arma ao mesmo tempo.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5093,7 +5093,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "ladino_esconder_2",
       "name": "Esconder nas Sombras II",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+2 na chance de se esconder nas sombras.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5104,8 +5104,8 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "ladino_esconder_3",
       "name": "Esconder nas Sombras III",
-      "icon": "âœ¦",
-      "descricao": "Ativar nÃ£o gasta mais a aÃ§Ã£o bÃ´nus. Ao ser revelado, +2 de CA por 1 rodada.",
+      "icon": "✦",
+      "descricao": "Ativar não gasta mais a ação bônus. Ao ser revelado, +2 de CA por 1 rodada.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5114,9 +5114,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_ladino_armadilha_urso",
       "source": "guilda",
       "source_id": "ladino_armadilha_urso",
-      "name": "FÃ³rmula: Armadilha de Urso",
-      "icon": "âœ¦",
-      "descricao": "Desbloqueia permanentemente a fabricaÃ§Ã£o de Armadilha de Urso.",
+      "name": "Fórmula: Armadilha de Urso",
+      "icon": "✦",
+      "descricao": "Desbloqueia permanentemente a fabricação de Armadilha de Urso.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5125,9 +5125,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_ladino_fosso_estacas",
       "source": "guilda",
       "source_id": "ladino_fosso_estacas",
-      "name": "FÃ³rmula: Fosso com Estacas",
-      "icon": "âœ¦",
-      "descricao": "Desbloqueia permanentemente a fabricaÃ§Ã£o de Fosso com Estacas.",
+      "name": "Fórmula: Fosso com Estacas",
+      "icon": "✦",
+      "descricao": "Desbloqueia permanentemente a fabricação de Fosso com Estacas.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5136,9 +5136,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_ladino_rede",
       "source": "guilda",
       "source_id": "ladino_rede",
-      "name": "FÃ³rmula: Rede",
-      "icon": "âœ¦",
-      "descricao": "Desbloqueia permanentemente a fabricaÃ§Ã£o de Rede.",
+      "name": "Fórmula: Rede",
+      "icon": "✦",
+      "descricao": "Desbloqueia permanentemente a fabricação de Rede.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5147,9 +5147,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_ladino_armadilha_incendiaria",
       "source": "guilda",
       "source_id": "ladino_armadilha_incendiaria",
-      "name": "FÃ³rmula: Armadilha IncendiÃ¡ria",
-      "icon": "âœ¦",
-      "descricao": "Desbloqueia permanentemente a fabricaÃ§Ã£o de Armadilha IncendiÃ¡ria.",
+      "name": "Fórmula: Armadilha Incendiária",
+      "icon": "✦",
+      "descricao": "Desbloqueia permanentemente a fabricação de Armadilha Incendiária.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5158,9 +5158,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_ladino_mina_terrestre",
       "source": "guilda",
       "source_id": "ladino_mina_terrestre",
-      "name": "FÃ³rmula: Mina Terrestre",
-      "icon": "âœ¦",
-      "descricao": "Desbloqueia permanentemente a fabricaÃ§Ã£o de Mina Terrestre.",
+      "name": "Fórmula: Mina Terrestre",
+      "icon": "✦",
+      "descricao": "Desbloqueia permanentemente a fabricação de Mina Terrestre.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5169,9 +5169,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_ladino_fosso_envenenado",
       "source": "guilda",
       "source_id": "ladino_fosso_envenenado",
-      "name": "FÃ³rmula: Fosso com Estacas Envenenadas",
-      "icon": "âœ¦",
-      "descricao": "Desbloqueia permanentemente a fabricaÃ§Ã£o de Fosso com Estacas Envenenadas.",
+      "name": "Fórmula: Fosso com Estacas Envenenadas",
+      "icon": "✦",
+      "descricao": "Desbloqueia permanentemente a fabricação de Fosso com Estacas Envenenadas.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5180,9 +5180,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_ladino_nuvem_gas",
       "source": "guilda",
       "source_id": "ladino_nuvem_gas",
-      "name": "FÃ³rmula: Nuvem de GÃ¡s",
-      "icon": "âœ¦",
-      "descricao": "Desbloqueia permanentemente a fabricaÃ§Ã£o de Nuvem de GÃ¡s.",
+      "name": "Fórmula: Nuvem de Gás",
+      "icon": "✦",
+      "descricao": "Desbloqueia permanentemente a fabricação de Nuvem de Gás.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5192,7 +5192,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_goblin",
       "name": "Lenda: Goblin",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Goblin.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5203,7 +5203,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_skeleton",
       "name": "Lenda: Esqueleto",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Esqueleto.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5214,7 +5214,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_orc",
       "name": "Lenda: Orc",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Orc.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5225,7 +5225,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_dark_mage",
       "name": "Lenda: Mago das Trevas",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Mago das Trevas.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5236,7 +5236,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_troll",
       "name": "Lenda: Troll",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Troll.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5246,9 +5246,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_lenda_dragon",
       "source": "guilda",
       "source_id": "lenda_dragon",
-      "name": "Lenda: DragÃ£o AnciÃ£o",
-      "icon": "âœ¦",
-      "descricao": "+1 de ataque e +1 nos saves contra DragÃ£o AnciÃ£o.",
+      "name": "Lenda: Dragão Ancião",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Dragão Ancião.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5258,7 +5258,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_aranha_sombria",
       "name": "Lenda: Aranha Sombria",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Aranha Sombria.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5268,9 +5268,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_lenda_escorpiao_pedra",
       "source": "guilda",
       "source_id": "lenda_escorpiao_pedra",
-      "name": "Lenda: EscorpiÃ£o de Pedra",
-      "icon": "âœ¦",
-      "descricao": "+1 de ataque e +1 nos saves contra EscorpiÃ£o de Pedra.",
+      "name": "Lenda: Escorpião de Pedra",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Escorpião de Pedra.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5280,7 +5280,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_esqueleto_humano",
       "name": "Lenda: Esqueleto Humano",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Esqueleto Humano.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5291,7 +5291,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_esqueleto_animal",
       "name": "Lenda: Esqueleto Animal",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Esqueleto Animal.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5302,7 +5302,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_lobo_cinzento",
       "name": "Lenda: Lobo Cinzento",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Lobo Cinzento.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5313,7 +5313,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_crocodilo_jovem",
       "name": "Lenda: Crocodilo Jovem",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Crocodilo Jovem.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5324,7 +5324,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_cobra_constritora",
       "name": "Lenda: Cobra Constritora",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Cobra Constritora.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5335,7 +5335,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_cobra_venenosa",
       "name": "Lenda: Cobra Venenosa",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Cobra Venenosa.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5345,9 +5345,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_lenda_devorador_organico",
       "source": "guilda",
       "source_id": "lenda_devorador_organico",
-      "name": "Lenda: Devorador OrgÃ¢nico",
-      "icon": "âœ¦",
-      "descricao": "+1 de ataque e +1 nos saves contra Devorador OrgÃ¢nico.",
+      "name": "Lenda: Devorador Orgânico",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Devorador Orgânico.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5357,7 +5357,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_urso_negro",
       "name": "Lenda: Urso Negro",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Urso Negro.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5368,7 +5368,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_orc_guerreiro",
       "name": "Lenda: Orc Guerreiro",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Orc Guerreiro.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5379,7 +5379,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_goblin_arqueiro",
       "name": "Lenda: Goblin Arqueiro",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Goblin Arqueiro.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5390,7 +5390,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_goblin_combatente",
       "name": "Lenda: Goblin Combatente",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Goblin Combatente.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5401,7 +5401,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_goblin_dual",
       "name": "Lenda: Goblin Dual",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Goblin Dual.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5411,9 +5411,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_lenda_goblin_xama",
       "source": "guilda",
       "source_id": "lenda_goblin_xama",
-      "name": "Lenda: XamÃ£ Goblin",
-      "icon": "âœ¦",
-      "descricao": "+1 de ataque e +1 nos saves contra XamÃ£ Goblin.",
+      "name": "Lenda: Xamã Goblin",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Xamã Goblin.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5423,7 +5423,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_kobold_lanceiro",
       "name": "Lenda: Kobold Lanceiro",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Kobold Lanceiro.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5434,7 +5434,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_kobold_besteiro",
       "name": "Lenda: Kobold Besteiro",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Kobold Besteiro.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5445,7 +5445,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_necromante",
       "name": "Lenda: Necromante",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Necromante.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5456,7 +5456,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_zumbi_infectado",
       "name": "Lenda: Zumbi Infectado",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Zumbi Infectado.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5467,7 +5467,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_lagarto_carniceiro",
       "name": "Lenda: Lagarto Carniceiro",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Lagarto Carniceiro.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5478,7 +5478,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_devorador_metal",
       "name": "Lenda: Devorador de Metal",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Devorador de Metal.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5488,9 +5488,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_lenda_bugbear_sombras",
       "source": "guilda",
       "source_id": "lenda_bugbear_sombras",
-      "name": "Lenda: Bugbear â€” Bicho-PapÃ£o das Sombras",
-      "icon": "âœ¦",
-      "descricao": "+1 de ataque e +1 nos saves contra Bugbear â€” Bicho-PapÃ£o das Sombras.",
+      "name": "Lenda: Bugbear — Bicho-Papão das Sombras",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Bugbear — Bicho-Papão das Sombras.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5500,7 +5500,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_ogro_clava",
       "name": "Lenda: Ogro de Clava",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Ogro de Clava.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5510,9 +5510,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_lenda_ogro_lanca",
       "source": "guilda",
       "source_id": "lenda_ogro_lanca",
-      "name": "Lenda: Ogro de LanÃ§a",
-      "icon": "âœ¦",
-      "descricao": "+1 de ataque e +1 nos saves contra Ogro de LanÃ§a.",
+      "name": "Lenda: Ogro de Lança",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Ogro de Lança.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5521,9 +5521,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_lenda_grotao",
       "source": "guilda",
       "source_id": "lenda_grotao",
-      "name": "Lenda: GrotÃ£o",
-      "icon": "âœ¦",
-      "descricao": "+1 de ataque e +1 nos saves contra GrotÃ£o.",
+      "name": "Lenda: Grotão",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Grotão.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5533,7 +5533,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_elemental_fogo",
       "name": "Lenda: Elemental de Fogo",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Elemental de Fogo.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5544,7 +5544,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_elemental_gelo",
       "name": "Lenda: Elemental de Gelo",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Elemental de Gelo.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5555,7 +5555,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_elemental_pedra",
       "name": "Lenda: Elemental de Pedra",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Elemental de Pedra.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5565,9 +5565,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_lenda_elemental_eletrico",
       "source": "guilda",
       "source_id": "lenda_elemental_eletrico",
-      "name": "Lenda: Elemental ElÃ©trico",
-      "icon": "âœ¦",
-      "descricao": "+1 de ataque e +1 nos saves contra Elemental ElÃ©trico.",
+      "name": "Lenda: Elemental Elétrico",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Elemental Elétrico.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5577,7 +5577,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_elemental_ar",
       "name": "Lenda: Elemental de Ar",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Elemental de Ar.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5587,9 +5587,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_lenda_elemental_agua",
       "source": "guilda",
       "source_id": "lenda_elemental_agua",
-      "name": "Lenda: Elemental de Ãgua",
-      "icon": "âœ¦",
-      "descricao": "+1 de ataque e +1 nos saves contra Elemental de Ãgua.",
+      "name": "Lenda: Elemental de Água",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Elemental de Água.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5599,7 +5599,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_lobisomem",
       "name": "Lenda: Lobisomem",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Lobisomem.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5609,9 +5609,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_lenda_escravo_vampirico",
       "source": "guilda",
       "source_id": "lenda_escravo_vampirico",
-      "name": "Lenda: Escravo VampÃ­rico",
-      "icon": "âœ¦",
-      "descricao": "+1 de ataque e +1 nos saves contra Escravo VampÃ­rico.",
+      "name": "Lenda: Escravo Vampírico",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Escravo Vampírico.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5621,7 +5621,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_vampiro_jovem",
       "name": "Lenda: Vampiro Jovem",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Vampiro Jovem.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5631,9 +5631,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_lenda_vampiro_anciao",
       "source": "guilda",
       "source_id": "lenda_vampiro_anciao",
-      "name": "Lenda: Vampiro AnciÃ£o",
-      "icon": "âœ¦",
-      "descricao": "+1 de ataque e +1 nos saves contra Vampiro AnciÃ£o.",
+      "name": "Lenda: Vampiro Ancião",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Vampiro Ancião.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -5643,7 +5643,7 @@ window.EDITOR_CATALOG = {
       "source": "guilda",
       "source_id": "lenda_lorde_vampiro",
       "name": "Lenda: Lorde Vampiro",
-      "icon": "âœ¦",
+      "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Lorde Vampiro.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
@@ -5658,9 +5658,9 @@ window.EDITOR_CATALOG = {
       "classe": [
         "mage"
       ],
-      "icone": "ðŸ”¥",
+      "icone": "🔥",
       "tipo": "area_persistente",
-      "descricao": "1d6/nÃ­vel. Ãrea persiste 3 rodadas com dano decaindo.",
+      "descricao": "1d6/nível. Área persiste 3 rodadas com dano decaindo.",
       "save": "reflexos",
       "dano_por_nivel": "1d6",
       "area_raio": 2,
@@ -5668,14 +5668,14 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "relampago",
-      "nome": "RelÃ¢mpago",
+      "nome": "Relâmpago",
       "circulo": "primeiro",
       "classe": [
         "mage"
       ],
-      "icone": "âš¡",
+      "icone": "⚡",
       "tipo": "linha_reflexiva",
-      "descricao": "1d6/nÃ­vel por impacto. Linha reta de 7 casas + ricochete de volta (casas atingidas 2x). Pedro sÃ³ Ã© ferido na volta.",
+      "descricao": "1d6/nível por impacto. Linha reta de 7 casas + ricochete de volta (casas atingidas 2x). Pedro só é ferido na volta.",
       "save": "reflexos",
       "dano_por_nivel": "1d6",
       "alcance_base": 7
@@ -5687,9 +5687,9 @@ window.EDITOR_CATALOG = {
       "classe": [
         "mage"
       ],
-      "icone": "â„ï¸",
+      "icone": "❄️",
       "tipo": "alvo",
-      "descricao": "3d4+2d4/2nÃ­veis sem save. Fortitude ou paralisado 1-2 rodadas.",
+      "descricao": "3d4+2d4/2níveis sem save. Fortitude ou paralisado 1-2 rodadas.",
       "save": "fortitude",
       "dano_base": "3d4",
       "alcance_base": 3
@@ -5701,9 +5701,9 @@ window.EDITOR_CATALOG = {
       "classe": [
         "mage"
       ],
-      "icone": "ðŸŒ™",
+      "icone": "🌙",
       "tipo": "area",
-      "descricao": "Ãrea. Vontade ou dorme 1d4+1. Primeiro ataque = crÃ­tico. Acorda com dano.",
+      "descricao": "Área. Vontade ou dorme 1d4+1. Primeiro ataque = crítico. Acorda com dano.",
       "save": "vontade",
       "area_raio": 2,
       "alcance": 5,
@@ -5717,9 +5717,9 @@ window.EDITOR_CATALOG = {
         "mage",
         "cleric"
       ],
-      "icone": "ðŸ—£ï¸",
+      "icone": "🗣️",
       "tipo": "alvo",
-      "descricao": "Vontade ou controla 1 aÃ§Ã£o do alvo. Sem habilidades especiais.",
+      "descricao": "Vontade ou controla 1 ação do alvo. Sem habilidades especiais.",
       "save": "vontade",
       "alcance": 4,
       "duracao": 1
@@ -5732,9 +5732,9 @@ window.EDITOR_CATALOG = {
         "mage",
         "cleric"
       ],
-      "icone": "ðŸ˜±",
+      "icone": "😱",
       "tipo": "area",
-      "descricao": "Ãrea. Vontade ou foge 1d4+1 rodadas. -1 ataque. NÃ£o se aproxima.",
+      "descricao": "Área. Vontade ou foge 1d4+1 rodadas. -1 ataque. Não se aproxima.",
       "save": "vontade",
       "area_raio": 2,
       "alcance": 5,
@@ -5742,15 +5742,15 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "clarividencia",
-      "nome": "ClarividÃªncia",
+      "nome": "Clarividência",
       "circulo": "primeiro",
       "classe": [
         "mage",
         "cleric"
       ],
-      "icone": "ðŸ”®",
+      "icone": "🔮",
       "tipo": "area_fixa",
-      "descricao": "Remove nÃ©voa em Ã¡rea 4x4 (+escala por nÃ­vel). Dura 2 rodadas.",
+      "descricao": "Remove névoa em área 4x4 (+escala por nível). Dura 2 rodadas.",
       "duracao": 2
     },
     {
@@ -5760,33 +5760,33 @@ window.EDITOR_CATALOG = {
       "classe": [
         "mage"
       ],
-      "icone": "ðŸ›¡ï¸",
+      "icone": "🛡️",
       "tipo": "buff_self",
-      "descricao": "Cancela 1 magia recebida. Slot consumido ao absorver. Dura atÃ© ativar.",
+      "descricao": "Cancela 1 magia recebida. Slot consumido ao absorver. Dura até ativar.",
       "duracao": "ate_absorver"
     },
     {
       "id": "contramagica",
-      "nome": "ContramÃ¡gica",
+      "nome": "Contramágica",
       "circulo": "primeiro",
       "classe": [
         "mage"
       ],
-      "icone": "ðŸ›‘",
+      "icone": "🛑",
       "tipo": "reacao",
-      "descricao": "ReaÃ§Ã£o. Teste oposto vs magia inimiga. Sucesso: cancela + inimigo perde aÃ§Ã£o.",
+      "descricao": "Reação. Teste oposto vs magia inimiga. Sucesso: cancela + inimigo perde ação.",
       "save": "teste_oposto"
     },
     {
       "id": "abencoar",
-      "nome": "AbenÃ§oar",
+      "nome": "Abençoar",
       "circulo": "primeiro",
       "classe": [
         "cleric"
       ],
-      "icone": "âœ¨",
+      "icone": "✨",
       "tipo": "area",
-      "descricao": "Ãrea 6x6. +1 ataque/dano/CA/resistÃªncia. Dura 1d4+1 rodadas.",
+      "descricao": "Área 6x6. +1 ataque/dano/CA/resistência. Dura 1d4+1 rodadas.",
       "area_raio": 3,
       "alcance": 0,
       "duracao": "1d4+1",
@@ -5799,14 +5799,14 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "amaldicoar",
-      "nome": "AmaldiÃ§oar",
+      "nome": "Amaldiçoar",
       "circulo": "primeiro",
       "classe": [
         "cleric"
       ],
-      "icone": "â˜ ï¸",
+      "icone": "☠️",
       "tipo": "area",
-      "descricao": "Ãrea 3x3. -1 ataque/dano/CA/resistÃªncia. Dura 1d4+1 rodadas.",
+      "descricao": "Área 3x3. -1 ataque/dano/CA/resistência. Dura 1d4+1 rodadas.",
       "area_raio": 1,
       "alcance": 5,
       "duracao": "1d4+1",
@@ -5819,12 +5819,12 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "abencoar_arma",
-      "nome": "AbenÃ§oar Arma",
+      "nome": "Abençoar Arma",
       "circulo": "primeiro",
       "classe": [
         "cleric"
       ],
-      "icone": "âš”ï¸",
+      "icone": "⚔️",
       "tipo": "alvo_aliado",
       "descricao": "+1 ataque e dano na arma de aliado. Dura 1d6+2 rodadas.",
       "alcance": 6,
@@ -5841,37 +5841,37 @@ window.EDITOR_CATALOG = {
       "classe": [
         "cleric"
       ],
-      "icone": "ðŸ’§",
+      "icone": "💧",
       "tipo": "toque",
       "descricao": "Toque. +10 fome +10 sede em 1 aliado.",
       "alcance": 1
     },
     {
       "id": "silencio",
-      "nome": "SilÃªncio",
+      "nome": "Silêncio",
       "circulo": "segundo",
       "classe": [
         "mage",
         "cleric"
       ],
-      "icone": "ðŸ”‡",
+      "icone": "🔇",
       "tipo": "area_fixa",
-      "descricao": "Ãrea 4x4. Sem magias nem bÃ´nus de CanÃ§Ã£o Heroica dentro. Dura 1d4 rodadas.",
+      "descricao": "Área 4x4. Sem magias nem bônus de Canção Heroica dentro. Dura 1d4 rodadas.",
       "area_lado": 4,
       "alcance_base": 5,
       "duracao": "1d4"
     },
     {
       "id": "manto_escuridao",
-      "nome": "Manto de EscuridÃ£o",
+      "nome": "Manto de Escuridão",
       "circulo": "segundo",
       "classe": [
         "mage",
         "cleric"
       ],
-      "icone": "ðŸŒ‘",
+      "icone": "🌑",
       "tipo": "area_centrada",
-      "descricao": "Raio 3. EscuridÃ£o â€” sem visÃ£o noturna: desvantagem. Com visÃ£o noturna: vantagem.",
+      "descricao": "Raio 3. Escuridão — sem visão noturna: desvantagem. Com visão noturna: vantagem.",
       "area_raio": 3,
       "duracao": "1d4"
     },
@@ -5882,31 +5882,31 @@ window.EDITOR_CATALOG = {
       "classe": [
         "cleric"
       ],
-      "icone": "ðŸž",
+      "icone": "🍞",
       "tipo": "utilidade",
-      "descricao": "Cria 1d6+1 Ã¡gua e 1d6+2 pÃ£o. Lewis distribui para o grupo."
+      "descricao": "Cria 1d6+1 água e 1d6+2 pão. Lewis distribui para o grupo."
     },
     {
       "id": "regeneracao_magica",
-      "nome": "RegeneraÃ§Ã£o",
+      "nome": "Regeneração",
       "circulo": "segundo",
       "classe": [
         "cleric"
       ],
-      "icone": "ðŸŒ¿",
+      "icone": "🌿",
       "tipo": "buff_aliado",
       "descricao": "Pool 2d6+2. +1 HP/rodada. Se morrer: volta com 1 HP -3 fome/sede.",
       "alcance": 6
     },
     {
       "id": "protecao_energia",
-      "nome": "ProteÃ§Ã£o contra Energia",
+      "nome": "Proteção contra Energia",
       "circulo": "segundo",
       "classe": [
         "mage",
         "cleric"
       ],
-      "icone": "ðŸ›¡ï¸",
+      "icone": "🛡️",
       "tipo": "buff_self",
       "descricao": "Absorve 10 dano/rodada de fogo, gelo ou eletricidade. Dura 1d6+1.",
       "duracao": "1d6+1"
@@ -5918,22 +5918,22 @@ window.EDITOR_CATALOG = {
       "classe": [
         "mage"
       ],
-      "icone": "ðŸ«¥",
+      "icone": "🫥",
       "tipo": "buff_self",
-      "descricao": "Inimigos nÃ£o atacam. Ataque com vantagem + furtivo. Quebra ao atacar/lanÃ§ar.",
+      "descricao": "Inimigos não atacam. Ataque com vantagem + furtivo. Quebra ao atacar/lançar.",
       "duracao": "1d6+1"
     },
     {
       "id": "visao_escuro",
-      "nome": "VisÃ£o no Escuro",
+      "nome": "Visão no Escuro",
       "circulo": "segundo",
       "classe": [
         "mage",
         "cleric"
       ],
-      "icone": "ðŸ‘ï¸",
+      "icone": "👁️",
       "tipo": "buff_aliado",
-      "descricao": "Aliado ignora escuridÃ£o completamente. Dura 1d6+2 rodadas.",
+      "descricao": "Aliado ignora escuridão completamente. Dura 1d6+2 rodadas.",
       "alcance": 6,
       "duracao": "1d6+2"
     },
@@ -5944,9 +5944,9 @@ window.EDITOR_CATALOG = {
       "classe": [
         "mage"
       ],
-      "icone": "ðŸŒªï¸",
+      "icone": "🌪️",
       "tipo": "cone",
-      "descricao": "Cone 4q. 1d6 dano. Falha: empurra 1d6q. ColisÃ£o com parede: +1d4.",
+      "descricao": "Cone 4q. 1d6 dano. Falha: empurra 1d6q. Colisão com parede: +1d4.",
       "save": "reflexos",
       "dano": "1d6"
     },
@@ -5957,21 +5957,21 @@ window.EDITOR_CATALOG = {
       "classe": [
         "mage"
       ],
-      "icone": "âš¡",
+      "icone": "⚡",
       "tipo": "buff_self",
-      "descricao": "Dobra todas as aÃ§Ãµes no turno. Custo normal por aÃ§Ã£o. Dura 1d4 rodadas.",
+      "descricao": "Dobra todas as ações no turno. Custo normal por ação. Dura 1d4 rodadas.",
       "duracao": "1d4"
     },
     {
       "id": "lentidao",
-      "nome": "LentidÃ£o",
+      "nome": "Lentidão",
       "circulo": "terceiro",
       "classe": [
         "mage"
       ],
-      "icone": "ðŸŒ",
+      "icone": "🐌",
       "tipo": "area",
-      "descricao": "Ãrea 3x3. Falha: 1 aÃ§Ã£o/rodada, -1 CA, sem reaÃ§Ã£o. Sucesso: mov/2, -1 ataque.",
+      "descricao": "Área 3x3. Falha: 1 ação/rodada, -1 CA, sem reação. Sucesso: mov/2, -1 ataque.",
       "save": "vontade",
       "area_raio": 1,
       "alcance": 5,
@@ -5985,7 +5985,7 @@ window.EDITOR_CATALOG = {
         "mage",
         "cleric"
       ],
-      "icone": "ðŸ§ ",
+      "icone": "🧠",
       "tipo": "alvo",
       "descricao": "Vontade ou dominado 1d4 rodadas. Novo teste ao sofrer dano.",
       "save": "vontade",
@@ -5999,9 +5999,9 @@ window.EDITOR_CATALOG = {
       "classe": [
         "mage"
       ],
-      "icone": "ðŸ’€",
+      "icone": "💀",
       "tipo": "alvo",
-      "descricao": "Morto-vivo testa Vontade (bÃ´nus = ND) ao ser lanÃ§ada e a cada rodada na fase dos servos. Passar quebra o controle (volta hostil); 3 falhas seguidas = controle permanente. Slot Ãºnico. NÃ£o conta para Animar Mortos.",
+      "descricao": "Morto-vivo testa Vontade (bônus = ND) ao ser lançada e a cada rodada na fase dos servos. Passar quebra o controle (volta hostil); 3 falhas seguidas = controle permanente. Slot único. Não conta para Animar Mortos.",
       "save": "vontade",
       "alcance": 4
     },
@@ -6012,9 +6012,9 @@ window.EDITOR_CATALOG = {
       "classe": [
         "cleric"
       ],
-      "icone": "ðŸŒªï¸",
+      "icone": "🌪️",
       "tipo": "invocacao",
-      "descricao": "Invoca elemental controlado. Age apÃ³s Lewis. Movimento 6q."
+      "descricao": "Invoca elemental controlado. Age após Lewis. Movimento 6q."
     },
     {
       "id": "raio_divino",
@@ -6023,9 +6023,9 @@ window.EDITOR_CATALOG = {
       "classe": [
         "cleric"
       ],
-      "icone": "âœ¨",
+      "icone": "✨",
       "tipo": "alvo",
-      "descricao": "1d6+1 por nÃ­vel. Reflexos: metade. Dobrado vs mortos-vivos e demÃ´nios.",
+      "descricao": "1d6+1 por nível. Reflexos: metade. Dobrado vs mortos-vivos e demônios.",
       "save": "reflexos",
       "dano_por_nivel": "1d6+1",
       "alcance": 6
@@ -6034,24 +6034,24 @@ window.EDITOR_CATALOG = {
   "items": [
     {
       "id": "health_potion",
-      "name": "PoÃ§Ã£o de Cura",
-      "emoji": "ðŸ§ª",
+      "name": "Poção de Cura",
+      "emoji": "🧪",
       "item_slot": "bag",
       "effect": "heal",
       "value": 10
     },
     {
       "id": "elixir",
-      "name": "Elixir da ForÃ§a",
-      "emoji": "âš—ï¸",
+      "name": "Elixir da Força",
+      "emoji": "⚗️",
       "item_slot": "bag",
       "effect": "atk_bonus",
       "value": 3
     },
     {
       "id": "antidote",
-      "name": "AntÃ­doto",
-      "emoji": "ðŸ’š",
+      "name": "Antídoto",
+      "emoji": "💚",
       "item_slot": "bag",
       "effect": "heal",
       "value": 6
@@ -6059,15 +6059,15 @@ window.EDITOR_CATALOG = {
     {
       "id": "garrafa_vinho",
       "name": "Garrafa de Vinho",
-      "emoji": "ðŸ·",
+      "emoji": "🍷",
       "item_slot": "bag",
       "effect": "wine",
       "value": 15
     },
     {
       "id": "racao",
-      "name": "RaÃ§Ã£o (PÃ£o e Ãgua)",
-      "emoji": "ðŸ¥–",
+      "name": "Ração (Pão e Água)",
+      "emoji": "🥖",
       "item_slot": "bag",
       "effect": "ration",
       "value": 15
@@ -6075,7 +6075,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "sword",
       "name": "Espada Curta de Ferro Serrilhado",
-      "emoji": "âš”ï¸",
+      "emoji": "⚔️",
       "die": "1d6",
       "stat": "str_",
       "categoria": "cortante",
@@ -6083,16 +6083,16 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "magic_sword",
-      "name": "Espada MÃ¡gica",
-      "emoji": "ðŸ—¡ï¸",
+      "name": "Espada Mágica",
+      "emoji": "🗡️",
       "item_slot": "weapon",
       "effect": "atk",
       "value": 4
     },
     {
       "id": "bow",
-      "name": "Arco Ã‰lfico",
-      "emoji": "ðŸ¹",
+      "name": "Arco Élfico",
+      "emoji": "🏹",
       "item_slot": "weapon",
       "effect": "atk",
       "value": 3
@@ -6100,7 +6100,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "staff",
       "name": "Cajado Arcano",
-      "emoji": "ðŸª„",
+      "emoji": "🪄",
       "die": "1d6",
       "stat": "str_",
       "reach": "cajado",
@@ -6109,7 +6109,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "shield",
       "name": "Escudo de Madeira",
-      "emoji": "ðŸ›¡ï¸",
+      "emoji": "🛡️",
       "item_slot": "armor",
       "effect": "def_",
       "value": 2
@@ -6117,21 +6117,21 @@ window.EDITOR_CATALOG = {
     {
       "id": "chainmail",
       "name": "Cota de Malha",
-      "emoji": "ðŸª–",
+      "emoji": "🪖",
       "kind": "armor",
       "ac_bonus": 4
     },
     {
       "id": "leather",
       "name": "Armadura de Couro",
-      "emoji": "ðŸ¥‹",
+      "emoji": "🥋",
       "kind": "armor",
       "ac_bonus": 2
     },
     {
       "id": "amulet",
       "name": "Amuleto da Sorte",
-      "emoji": "ðŸ“¿",
+      "emoji": "📿",
       "item_slot": "item",
       "effect": "maxhp",
       "value": 5
@@ -6139,15 +6139,15 @@ window.EDITOR_CATALOG = {
     {
       "id": "boots",
       "name": "Botas Velozes",
-      "emoji": "ðŸ‘¢",
+      "emoji": "👢",
       "item_slot": "item",
       "effect": "spd",
       "value": 1
     },
     {
       "id": "ring",
-      "name": "Anel de ForÃ§a",
-      "emoji": "ðŸ’",
+      "name": "Anel de Força",
+      "emoji": "💍",
       "item_slot": "accessory",
       "effect": "atk",
       "value": 1
@@ -6155,14 +6155,14 @@ window.EDITOR_CATALOG = {
     {
       "id": "cloak",
       "name": "Manto",
-      "emoji": "ðŸ§£",
+      "emoji": "🧣",
       "kind": "armor",
       "ac_bonus": 1
     },
     {
       "id": "dagger",
       "name": "Adaga",
-      "emoji": "ðŸ—¡ï¸",
+      "emoji": "🗡️",
       "die": "1d4",
       "stat": "str_",
       "categoria": "perfurante"
@@ -6170,7 +6170,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "chicote",
       "name": "Chicote",
-      "emoji": "ðŸª¢",
+      "emoji": "🪢",
       "die": "1d4",
       "stat": "dex",
       "range": 2,
@@ -6178,8 +6178,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "hand_crossbow",
-      "name": "Besta de MÃ£o",
-      "emoji": "ðŸ¹",
+      "name": "Besta de Mão",
+      "emoji": "🏹",
       "die": "1d4",
       "stat": "dex",
       "range": 4,
@@ -6187,16 +6187,16 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "lanca_curta",
-      "name": "LanÃ§a Curta",
-      "emoji": "ðŸ”±",
+      "name": "Lança Curta",
+      "emoji": "🔱",
       "die": "1d6",
       "stat": "str_",
       "categoria": "perfurante"
     },
     {
       "id": "bordao",
-      "name": "BordÃ£o",
-      "emoji": "ðŸª„",
+      "name": "Bordão",
+      "emoji": "🪄",
       "die": "1d6",
       "stat": "str_",
       "categoria": "contundente"
@@ -6204,7 +6204,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "cajado_madeira",
       "name": "Cajado de Madeira",
-      "emoji": "ðŸª„",
+      "emoji": "🪄",
       "die": "1d6",
       "stat": "str_",
       "reach": "cajado",
@@ -6212,8 +6212,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "maca",
-      "name": "MaÃ§a",
-      "emoji": "ðŸ”¨",
+      "name": "Maça",
+      "emoji": "🔨",
       "die": "1d6",
       "stat": "str_",
       "categoria": "contundente"
@@ -6221,7 +6221,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "shortsword",
       "name": "Espada Curta",
-      "emoji": "âš”ï¸",
+      "emoji": "⚔️",
       "die": "1d6",
       "stat": "str_",
       "categoria": "cortante"
@@ -6229,7 +6229,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "machado_basico",
       "name": "Machado de Ferro",
-      "emoji": "ðŸª“",
+      "emoji": "🪓",
       "die": "1d6",
       "stat": "str_",
       "categoria": "cortante"
@@ -6237,7 +6237,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "arco_curto",
       "name": "Arco Curto",
-      "emoji": "ðŸ¹",
+      "emoji": "🏹",
       "die": "1d6",
       "stat": "dex",
       "range": 8,
@@ -6245,8 +6245,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "lanca",
-      "name": "LanÃ§a",
-      "emoji": "ðŸ”±",
+      "name": "Lança",
+      "emoji": "🔱",
       "die": "1d8",
       "stat": "str_",
       "reach": "lanca",
@@ -6255,7 +6255,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "longsword",
       "name": "Espada Longa",
-      "emoji": "âš”ï¸",
+      "emoji": "⚔️",
       "die": "1d8",
       "stat": "str_",
       "categoria": "cortante"
@@ -6263,7 +6263,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "longbow",
       "name": "Arco Longo",
-      "emoji": "ðŸ¹",
+      "emoji": "🏹",
       "die": "1d8",
       "stat": "dex",
       "range": 12,
@@ -6272,7 +6272,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "warhammer",
       "name": "Martelo de Guerra",
-      "emoji": "ðŸ”¨",
+      "emoji": "🔨",
       "die": "1d8",
       "stat": "str_",
       "categoria": "contundente"
@@ -6280,7 +6280,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "besta",
       "name": "Besta",
-      "emoji": "ðŸ¹",
+      "emoji": "🏹",
       "die": "1d8",
       "stat": "dex",
       "range": 10,
@@ -6289,7 +6289,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "mangual",
       "name": "Mangual",
-      "emoji": "âš”ï¸",
+      "emoji": "⚔️",
       "die": "1d8",
       "stat": "str_",
       "categoria": "contundente"
@@ -6297,7 +6297,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "machado_duplo",
       "name": "Machado Duplo",
-      "emoji": "ðŸª“",
+      "emoji": "🪓",
       "die": "1d8",
       "stat": "str_",
       "categoria": "cortante"
@@ -6305,15 +6305,15 @@ window.EDITOR_CATALOG = {
     {
       "id": "bastsword",
       "name": "Espada Bastarda",
-      "emoji": "âš”ï¸",
+      "emoji": "⚔️",
       "die": "1d10",
       "stat": "str_",
       "categoria": "cortante"
     },
     {
       "id": "machado_orc",
-      "name": "Machado de Guerra Ã“rquico",
-      "emoji": "ðŸª“",
+      "name": "Machado de Guerra Órquico",
+      "emoji": "🪓",
       "die": "1d10",
       "stat": "str_",
       "categoria": "cortante"
@@ -6321,7 +6321,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "alabarda",
       "name": "Alabarda",
-      "emoji": "ðŸª“",
+      "emoji": "🪓",
       "die": "1d10",
       "stat": "str_",
       "range": 2,
@@ -6329,8 +6329,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "espada2m",
-      "name": "Espada de 2 MÃ£os",
-      "emoji": "âš”ï¸",
+      "name": "Espada de 2 Mãos",
+      "emoji": "⚔️",
       "die": "2d6",
       "stat": "str_",
       "categoria": "cortante"
@@ -6338,7 +6338,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "dagger_prata",
       "name": "Adaga de Prata",
-      "emoji": "ðŸ—¡ï¸",
+      "emoji": "🗡️",
       "die": "1d4",
       "stat": "str_",
       "categoria": "perfurante"
@@ -6346,7 +6346,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "chicote_prata",
       "name": "Chicote de Prata",
-      "emoji": "ðŸª¢",
+      "emoji": "🪢",
       "die": "1d4",
       "stat": "dex",
       "range": 2,
@@ -6354,8 +6354,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "hand_crossbow_prata",
-      "name": "Besta de MÃ£o de Prata",
-      "emoji": "ðŸ¹",
+      "name": "Besta de Mão de Prata",
+      "emoji": "🏹",
       "die": "1d4",
       "stat": "dex",
       "range": 4,
@@ -6363,16 +6363,16 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "lanca_curta_prata",
-      "name": "LanÃ§a Curta de Prata",
-      "emoji": "ðŸ”±",
+      "name": "Lança Curta de Prata",
+      "emoji": "🔱",
       "die": "1d6",
       "stat": "str_",
       "categoria": "perfurante"
     },
     {
       "id": "bordao_prata",
-      "name": "BordÃ£o de Prata",
-      "emoji": "ðŸª„",
+      "name": "Bordão de Prata",
+      "emoji": "🪄",
       "die": "1d6",
       "stat": "str_",
       "categoria": "contundente"
@@ -6380,7 +6380,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "cajado_madeira_prata",
       "name": "Cajado de Madeira de Prata",
-      "emoji": "ðŸª„",
+      "emoji": "🪄",
       "die": "1d6",
       "stat": "str_",
       "reach": "cajado",
@@ -6389,7 +6389,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "staff_prata",
       "name": "Cajado Arcano de Prata",
-      "emoji": "ðŸª„",
+      "emoji": "🪄",
       "die": "1d6",
       "stat": "str_",
       "reach": "cajado",
@@ -6397,8 +6397,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "maca_prata",
-      "name": "MaÃ§a de Prata",
-      "emoji": "ðŸ”¨",
+      "name": "Maça de Prata",
+      "emoji": "🔨",
       "die": "1d6",
       "stat": "str_",
       "categoria": "contundente"
@@ -6406,7 +6406,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "shortsword_prata",
       "name": "Espada Curta de Prata",
-      "emoji": "âš”ï¸",
+      "emoji": "⚔️",
       "die": "1d6",
       "stat": "str_",
       "categoria": "cortante"
@@ -6414,7 +6414,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "machado_basico_prata",
       "name": "Machado de Ferro de Prata",
-      "emoji": "ðŸª“",
+      "emoji": "🪓",
       "die": "1d6",
       "stat": "str_",
       "categoria": "cortante"
@@ -6422,7 +6422,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "arco_curto_prata",
       "name": "Arco Curto de Prata",
-      "emoji": "ðŸ¹",
+      "emoji": "🏹",
       "die": "1d6",
       "stat": "dex",
       "range": 8,
@@ -6430,8 +6430,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "lanca_prata",
-      "name": "LanÃ§a de Prata",
-      "emoji": "ðŸ”±",
+      "name": "Lança de Prata",
+      "emoji": "🔱",
       "die": "1d8",
       "stat": "str_",
       "reach": "lanca",
@@ -6440,7 +6440,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "longsword_prata",
       "name": "Espada Longa de Prata",
-      "emoji": "âš”ï¸",
+      "emoji": "⚔️",
       "die": "1d8",
       "stat": "str_",
       "categoria": "cortante"
@@ -6448,7 +6448,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "longbow_prata",
       "name": "Arco Longo de Prata",
-      "emoji": "ðŸ¹",
+      "emoji": "🏹",
       "die": "1d8",
       "stat": "dex",
       "range": 12,
@@ -6457,7 +6457,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "warhammer_prata",
       "name": "Martelo de Guerra de Prata",
-      "emoji": "ðŸ”¨",
+      "emoji": "🔨",
       "die": "1d8",
       "stat": "str_",
       "categoria": "contundente"
@@ -6465,7 +6465,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "besta_prata",
       "name": "Besta de Prata",
-      "emoji": "ðŸ¹",
+      "emoji": "🏹",
       "die": "1d8",
       "stat": "dex",
       "range": 10,
@@ -6474,7 +6474,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "mangual_prata",
       "name": "Mangual de Prata",
-      "emoji": "âš”ï¸",
+      "emoji": "⚔️",
       "die": "1d8",
       "stat": "str_",
       "categoria": "contundente"
@@ -6482,7 +6482,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "machado_duplo_prata",
       "name": "Machado Duplo de Prata",
-      "emoji": "ðŸª“",
+      "emoji": "🪓",
       "die": "1d8",
       "stat": "str_",
       "categoria": "cortante"
@@ -6490,15 +6490,15 @@ window.EDITOR_CATALOG = {
     {
       "id": "bastsword_prata",
       "name": "Espada Bastarda de Prata",
-      "emoji": "âš”ï¸",
+      "emoji": "⚔️",
       "die": "1d10",
       "stat": "str_",
       "categoria": "cortante"
     },
     {
       "id": "machado_orc_prata",
-      "name": "Machado de Guerra Ã“rquico de Prata",
-      "emoji": "ðŸª“",
+      "name": "Machado de Guerra Órquico de Prata",
+      "emoji": "🪓",
       "die": "1d10",
       "stat": "str_",
       "categoria": "cortante"
@@ -6506,7 +6506,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "alabarda_prata",
       "name": "Alabarda de Prata",
-      "emoji": "ðŸª“",
+      "emoji": "🪓",
       "die": "1d10",
       "stat": "str_",
       "range": 2,
@@ -6514,8 +6514,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "espada2m_prata",
-      "name": "Espada de 2 MÃ£os de Prata",
-      "emoji": "âš”ï¸",
+      "name": "Espada de 2 Mãos de Prata",
+      "emoji": "⚔️",
       "die": "2d6",
       "stat": "str_",
       "categoria": "cortante"
@@ -6523,63 +6523,63 @@ window.EDITOR_CATALOG = {
     {
       "id": "escudo_p",
       "name": "Escudo Pequeno",
-      "emoji": "ðŸ›¡ï¸",
+      "emoji": "🛡️",
       "kind": "shield",
       "ac_bonus": 1
     },
     {
       "id": "escudo_g",
       "name": "Escudo Grande",
-      "emoji": "ðŸ›¡ï¸",
+      "emoji": "🛡️",
       "kind": "shield",
       "ac_bonus": 2
     },
     {
       "id": "leather_plate",
       "name": "Armadura de Couro e Placas",
-      "emoji": "ðŸ¥‹",
+      "emoji": "🥋",
       "kind": "armor",
       "ac_bonus": 3
     },
     {
       "id": "bronze_armor",
       "name": "Armadura de Bronze",
-      "emoji": "ðŸª–",
+      "emoji": "🪖",
       "kind": "armor",
       "ac_bonus": 5
     },
     {
       "id": "leather_mail",
       "name": "Armadura de Couro Revestido com Malha",
-      "emoji": "ðŸª–",
+      "emoji": "🪖",
       "kind": "armor",
       "ac_bonus": 6
     },
     {
       "id": "plate",
       "name": "Armadura de Placas",
-      "emoji": "ðŸ›¡ï¸",
+      "emoji": "🛡️",
       "kind": "armor",
       "ac_bonus": 6
     },
     {
       "id": "monster_leather_plate",
       "name": "Armadura de Couro de Monstro e Placas",
-      "emoji": "ðŸ›¡ï¸",
+      "emoji": "🛡️",
       "kind": "armor",
       "ac_bonus": 7
     },
     {
       "id": "fullplate",
       "name": "Armadura Completa",
-      "emoji": "ðŸ›¡ï¸",
+      "emoji": "🛡️",
       "kind": "armor",
       "ac_bonus": 8
     },
     {
       "id": "flechas",
-      "name": "Flechas (Ã—10)",
-      "emoji": "ðŸ¹",
+      "name": "Flechas (×10)",
+      "emoji": "🏹",
       "item_slot": "ammo",
       "effect": "ammo",
       "ammo_type": "flechas",
@@ -6587,8 +6587,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "virotes",
-      "name": "Virotes (Ã—10)",
-      "emoji": "ðŸ¹",
+      "name": "Virotes (×10)",
+      "emoji": "🏹",
       "item_slot": "ammo",
       "effect": "ammo",
       "ammo_type": "virotes",
@@ -6596,8 +6596,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "virote_incendiario",
-      "name": "Virote IncendiÃ¡rio",
-      "emoji": "ðŸ”¥",
+      "name": "Virote Incendiário",
+      "emoji": "🔥",
       "item_slot": "ammo",
       "effect": "ammo",
       "ammo_type": "virotes_incendiarios",
@@ -6609,8 +6609,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "flecha_incendiaria",
-      "name": "Flecha IncendiÃ¡ria",
-      "emoji": "ðŸ”¥",
+      "name": "Flecha Incendiária",
+      "emoji": "🔥",
       "item_slot": "ammo",
       "effect": "ammo",
       "ammo_type": "flechas_incendiarias",
@@ -6623,7 +6623,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "veneno_fungo_acre",
       "name": "Fungo Acre",
-      "emoji": "ðŸ„",
+      "emoji": "🍄",
       "item_slot": "bag",
       "effect": "coat_poison",
       "value": 0,
@@ -6632,7 +6632,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "veneno_dor_escarlate",
       "name": "Dor Escarlate",
-      "emoji": "ðŸ©¸",
+      "emoji": "🩸",
       "item_slot": "bag",
       "effect": "coat_poison",
       "value": 0,
@@ -6641,7 +6641,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "veneno_ardonia_negra",
       "name": "Ardonia Negra",
-      "emoji": "ðŸ•·ï¸",
+      "emoji": "🕷️",
       "item_slot": "bag",
       "effect": "coat_poison",
       "value": 0,
@@ -6649,16 +6649,16 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "vela_escuridao",
-      "name": "Vela da EscuridÃ£o",
-      "emoji": "ðŸ•¯ï¸",
+      "name": "Vela da Escuridão",
+      "emoji": "🕯️",
       "item_slot": "bag",
       "effect": "veil_shadow",
       "value": 0
     },
     {
       "id": "ring_str",
-      "name": "Anel de ForÃ§a",
-      "emoji": "ðŸ’",
+      "name": "Anel de Força",
+      "emoji": "💍",
       "item_slot": "ring",
       "effect": "atk",
       "value": 1
@@ -6666,7 +6666,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "ring_vita",
       "name": "Anel da Vitalidade",
-      "emoji": "ðŸ’",
+      "emoji": "💍",
       "item_slot": "ring",
       "effect": "maxhp",
       "value": 5
@@ -6674,7 +6674,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "helm_iron",
       "name": "Elmo de Ferro",
-      "emoji": "â›‘ï¸",
+      "emoji": "⛑️",
       "item_slot": "head",
       "effect": "def_",
       "value": 1
@@ -6682,7 +6682,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "circlet",
       "name": "Tiara Arcana",
-      "emoji": "ðŸ‘‘",
+      "emoji": "👑",
       "item_slot": "head",
       "effect": "maxhp",
       "value": 4
@@ -6690,7 +6690,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "backpack",
       "name": "Mochila de Couro",
-      "emoji": "ðŸŽ’",
+      "emoji": "🎒",
       "item_slot": "item",
       "effect": "bagslots",
       "value": 3
@@ -6698,7 +6698,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "veneno_aranha_sombria",
       "name": "Veneno da Aranha Sombria",
-      "emoji": "ðŸ•·ï¸",
+      "emoji": "🕷️",
       "item_slot": "bag",
       "effect": "coat_poison",
       "value": 0,
@@ -6706,8 +6706,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "veneno_escorpiao_pedra",
-      "name": "Veneno do EscorpiÃ£o Pedra",
-      "emoji": "ðŸ¦‚",
+      "name": "Veneno do Escorpião Pedra",
+      "emoji": "🦂",
       "item_slot": "bag",
       "effect": "coat_poison",
       "value": 0,
@@ -6716,7 +6716,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "veneno_cobra_cuspidora",
       "name": "Veneno de Cobra Cuspidora",
-      "emoji": "ðŸ",
+      "emoji": "🐍",
       "item_slot": "bag",
       "effect": "coat_poison",
       "value": 0,
@@ -6724,8 +6724,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "veneno_basilisco",
-      "name": "PeÃ§onha do Basilisco",
-      "emoji": "ðŸ¦Ž",
+      "name": "Peçonha do Basilisco",
+      "emoji": "🦎",
       "item_slot": "bag",
       "effect": "coat_poison",
       "value": 0,
@@ -6734,7 +6734,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "veneno_polvo_abissal",
       "name": "Tinta do Polvo Abissal",
-      "emoji": "ðŸ™",
+      "emoji": "🐙",
       "item_slot": "bag",
       "effect": "coat_poison",
       "value": 0,
@@ -6743,7 +6743,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "veneno_agonia_sufocante",
       "name": "Agonia Sufocante",
-      "emoji": "ðŸ’€",
+      "emoji": "💀",
       "item_slot": "bag",
       "effect": "coat_poison",
       "value": 0,
@@ -6751,8 +6751,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "frasco_oleo",
-      "name": "Frasco de Ã“leo IncendiÃ¡rio",
-      "emoji": "ðŸ”¥",
+      "name": "Frasco de Óleo Incendiário",
+      "emoji": "🔥",
       "item_slot": "bag",
       "effect": "throwable",
       "value": 0
@@ -6760,15 +6760,15 @@ window.EDITOR_CATALOG = {
     {
       "id": "fogo_grego",
       "name": "Fogo Grego",
-      "emoji": "ðŸŸ¢",
+      "emoji": "🟢",
       "item_slot": "bag",
       "effect": "throwable",
       "value": 0
     },
     {
       "id": "bomba_incendiaria",
-      "name": "Bomba IncendiÃ¡ria",
-      "emoji": "ðŸ’£",
+      "name": "Bomba Incendiária",
+      "emoji": "💣",
       "item_slot": "bag",
       "effect": "throwable",
       "value": 0
@@ -6776,7 +6776,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "granada",
       "name": "Granada Explosiva",
-      "emoji": "ðŸ’£",
+      "emoji": "💣",
       "item_slot": "bag",
       "effect": "throwable",
       "value": 0
@@ -6784,39 +6784,39 @@ window.EDITOR_CATALOG = {
     {
       "id": "granada_superior",
       "name": "Granada Superior",
-      "emoji": "ðŸ’¥",
+      "emoji": "💥",
       "item_slot": "bag",
       "effect": "throwable",
       "value": 0
     },
     {
       "id": "bomba_fumaca",
-      "name": "Bomba de FumaÃ§a",
-      "emoji": "ðŸ’¨",
+      "name": "Bomba de Fumaça",
+      "emoji": "💨",
       "item_slot": "bag",
       "effect": "throwable",
       "value": 0
     },
     {
       "id": "frasco_acido",
-      "name": "Frasco de Ãcido",
-      "emoji": "ðŸ§ª",
+      "name": "Frasco de Ácido",
+      "emoji": "🧪",
       "item_slot": "bag",
       "effect": "throwable",
       "value": 0
     },
     {
       "id": "vidro_acido_grande",
-      "name": "Vidro de Ãcido Grande",
-      "emoji": "ðŸ«™",
+      "name": "Vidro de Ácido Grande",
+      "emoji": "🫙",
       "item_slot": "bag",
       "effect": "throwable",
       "value": 0
     },
     {
       "id": "cola_alquimica",
-      "name": "Cola AlquÃ­mica",
-      "emoji": "ðŸ¯",
+      "name": "Cola Alquímica",
+      "emoji": "🍯",
       "item_slot": "bag",
       "effect": "throwable",
       "value": 0
@@ -6824,7 +6824,7 @@ window.EDITOR_CATALOG = {
     {
       "id": "rede_arremesso",
       "name": "Rede",
-      "emoji": "ðŸ•¸ï¸",
+      "emoji": "🕸️",
       "item_slot": "bag",
       "effect": "throwable",
       "value": 0
@@ -6832,259 +6832,259 @@ window.EDITOR_CATALOG = {
     {
       "id": "instrumento_harpa_velho",
       "name": "Harpa Velha",
-      "emoji": "ðŸŽµ",
+      "emoji": "🎵",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_harpa_rustico",
-      "name": "Harpa RÃºstica",
-      "emoji": "ðŸŽµ",
+      "name": "Harpa Rústica",
+      "emoji": "🎵",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_harpa_padrao",
-      "name": "Harpa PadrÃ£o",
-      "emoji": "ðŸŽµ",
+      "name": "Harpa Padrão",
+      "emoji": "🎵",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_tambor_rustico",
-      "name": "Tambor de Guerra RÃºstico",
-      "emoji": "ðŸ¥",
+      "name": "Tambor de Guerra Rústico",
+      "emoji": "🥁",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_tambor_padrao",
-      "name": "Tambor de Guerra PadrÃ£o",
-      "emoji": "ðŸ¥",
+      "name": "Tambor de Guerra Padrão",
+      "emoji": "🥁",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_sino_rustico",
-      "name": "Sino RÃºstico",
-      "emoji": "ðŸ””",
+      "name": "Sino Rústico",
+      "emoji": "🔔",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_sino_padrao",
-      "name": "Sino PadrÃ£o",
-      "emoji": "ðŸ””",
+      "name": "Sino Padrão",
+      "emoji": "🔔",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_alaude_rustico",
-      "name": "AlaÃºde RÃºstico",
-      "emoji": "ðŸª•",
+      "name": "Alaúde Rústico",
+      "emoji": "🪕",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_alaude_padrao",
-      "name": "AlaÃºde PadrÃ£o",
-      "emoji": "ðŸª•",
+      "name": "Alaúde Padrão",
+      "emoji": "🪕",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_harpa_refinado",
       "name": "Harpa Refinada",
-      "emoji": "ðŸŽµ",
+      "emoji": "🎵",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_trompa_rustico",
-      "name": "Trompa de Guerra RÃºstica",
-      "emoji": "ðŸ“¯",
+      "name": "Trompa de Guerra Rústica",
+      "emoji": "📯",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_trompa_padrao",
-      "name": "Trompa de Guerra PadrÃ£o",
-      "emoji": "ðŸ“¯",
+      "name": "Trompa de Guerra Padrão",
+      "emoji": "📯",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_lira_rustico",
-      "name": "Lira RÃºstica",
-      "emoji": "ðŸŽ¼",
+      "name": "Lira Rústica",
+      "emoji": "🎼",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_lira_padrao",
-      "name": "Lira PadrÃ£o",
-      "emoji": "ðŸŽ¼",
+      "name": "Lira Padrão",
+      "emoji": "🎼",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_flauta_rustico",
-      "name": "Flauta RÃºstica",
-      "emoji": "ðŸŽ¶",
+      "name": "Flauta Rústica",
+      "emoji": "🎶",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_flauta_padrao",
-      "name": "Flauta PadrÃ£o",
-      "emoji": "ðŸŽ¶",
+      "name": "Flauta Padrão",
+      "emoji": "🎶",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_violino_rustico",
-      "name": "Violino RÃºstico",
-      "emoji": "ðŸŽ»",
+      "name": "Violino Rústico",
+      "emoji": "🎻",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_violino_padrao",
-      "name": "Violino PadrÃ£o",
-      "emoji": "ðŸŽ»",
+      "name": "Violino Padrão",
+      "emoji": "🎻",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_harpa_padrao_elfica",
-      "name": "Harpa PadrÃ£o Ã‰lfica",
-      "emoji": "ðŸŽµ",
+      "name": "Harpa Padrão Élfica",
+      "emoji": "🎵",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_trompa_padrao_elfica",
-      "name": "Trompa de Guerra PadrÃ£o Ã‰lfica",
-      "emoji": "ðŸ“¯",
+      "name": "Trompa de Guerra Padrão Élfica",
+      "emoji": "📯",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_sino_padrao_elfica",
-      "name": "Sino PadrÃ£o Ã‰lfico",
-      "emoji": "ðŸ””",
+      "name": "Sino Padrão Élfico",
+      "emoji": "🔔",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_tambor_padrao_ana",
-      "name": "Tambor de Guerra PadrÃ£o AnÃ£o",
-      "emoji": "ðŸ¥",
+      "name": "Tambor de Guerra Padrão Anão",
+      "emoji": "🥁",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_lira_padrao_ana",
-      "name": "Lira PadrÃ£o AnÃ£",
-      "emoji": "ðŸŽ¼",
+      "name": "Lira Padrão Anã",
+      "emoji": "🎼",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_violino_padrao_ana",
-      "name": "Violino PadrÃ£o AnÃ£o",
-      "emoji": "ðŸŽ»",
+      "name": "Violino Padrão Anão",
+      "emoji": "🎻",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_sino_padrao_runico",
-      "name": "Sino PadrÃ£o RÃºnico",
-      "emoji": "ðŸ””",
+      "name": "Sino Padrão Rúnico",
+      "emoji": "🔔",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_flauta_padrao_runico",
-      "name": "Flauta PadrÃ£o RÃºnica",
-      "emoji": "ðŸŽ¶",
+      "name": "Flauta Padrão Rúnica",
+      "emoji": "🎶",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_trompa_padrao_runico",
-      "name": "Trompa de Guerra PadrÃ£o RÃºnica",
-      "emoji": "ðŸ“¯",
+      "name": "Trompa de Guerra Padrão Rúnica",
+      "emoji": "📯",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_violino_padrao_runico",
-      "name": "Violino PadrÃ£o RÃºnico",
-      "emoji": "ðŸŽ»",
+      "name": "Violino Padrão Rúnico",
+      "emoji": "🎻",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_lira_padrao_runico",
-      "name": "Lira PadrÃ£o RÃºnica",
-      "emoji": "ðŸŽ¼",
+      "name": "Lira Padrão Rúnica",
+      "emoji": "🎼",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_harpa_refinado_elfica_runico",
-      "name": "Harpa LendÃ¡ria Ã‰lfica",
-      "emoji": "ðŸŽµ",
+      "name": "Harpa Lendária Élfica",
+      "emoji": "🎵",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_gaita_velho",
       "name": "Gaita Velha",
-      "emoji": "ðŸª—",
+      "emoji": "🪗",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_gaita_rustico",
-      "name": "Gaita RÃºstica",
-      "emoji": "ðŸª—",
+      "name": "Gaita Rústica",
+      "emoji": "🪗",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_gaita_padrao",
-      "name": "Gaita PadrÃ£o",
-      "emoji": "ðŸª—",
+      "name": "Gaita Padrão",
+      "emoji": "🪗",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_gaita_refinado",
       "name": "Gaita Refinada",
-      "emoji": "ðŸª—",
+      "emoji": "🪗",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_gaita_padrao_runico",
-      "name": "Gaita PadrÃ£o RÃºnica",
-      "emoji": "ðŸª—",
+      "name": "Gaita Padrão Rúnica",
+      "emoji": "🪗",
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_gaita_refinado_ana_runico",
-      "name": "Gaita LendÃ¡ria AnÃ£",
-      "emoji": "ðŸª—",
+      "name": "Gaita Lendária Anã",
+      "emoji": "🪗",
       "item_slot": "instrumento"
     },
     {
       "id": "pao",
-      "name": "PÃ£o",
-      "emoji": "ðŸ¥–",
+      "name": "Pão",
+      "emoji": "🥖",
       "item_slot": "bag",
       "effect": "food"
     },
     {
       "id": "garrafa_agua",
-      "name": "Garrafa de Ãgua",
-      "emoji": "ðŸ’§",
+      "name": "Garrafa de Água",
+      "emoji": "💧",
       "item_slot": "bag",
       "effect": "food"
     },
     {
       "id": "suco_fruta",
       "name": "Suco de Fruta",
-      "emoji": "ðŸ§ƒ",
+      "emoji": "🧃",
       "item_slot": "bag",
       "effect": "food"
     },
     {
       "id": "caneca_cerveja",
       "name": "Caneca de Cerveja",
-      "emoji": "ðŸº",
+      "emoji": "🍺",
       "item_slot": "bag",
       "effect": "ale",
       "value": 10
     },
     {
       "id": "racao_viagem",
-      "name": "RaÃ§Ã£o de Viagem",
-      "emoji": "ðŸ¥©",
+      "name": "Ração de Viagem",
+      "emoji": "🥩",
       "item_slot": "bag",
       "effect": "food"
     },
     {
       "id": "cantil_agua",
-      "name": "Cantil de Ãgua",
-      "emoji": "ðŸ§´",
+      "name": "Cantil de Água",
+      "emoji": "🧴",
       "item_slot": "bag",
       "effect": "food"
     },
@@ -7097,32 +7097,32 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "health_potion_small",
-      "name": "PoÃ§Ã£o de Cura Pequena",
-      "emoji": "ðŸ§ª",
+      "name": "Poção de Cura Pequena",
+      "emoji": "🧪",
       "item_slot": "bag",
       "effect": "heal",
       "value": 5
     },
     {
       "id": "health_potion_concentrated",
-      "name": "PoÃ§Ã£o de Cura Concentrada",
-      "emoji": "ðŸ§ª",
+      "name": "Poção de Cura Concentrada",
+      "emoji": "🧪",
       "item_slot": "bag",
       "effect": "heal",
       "value": 10
     },
     {
       "id": "health_potion_improved",
-      "name": "PoÃ§Ã£o de Cura Aprimorada",
-      "emoji": "ðŸ§ª",
+      "name": "Poção de Cura Aprimorada",
+      "emoji": "🧪",
       "item_slot": "bag",
       "effect": "heal",
       "value": 20
     },
     {
       "id": "regeneration_potion",
-      "name": "PoÃ§Ã£o de RegeneraÃ§Ã£o",
-      "emoji": "ðŸŒ¿",
+      "name": "Poção de Regeneração",
+      "emoji": "🌿",
       "item_slot": "bag",
       "effect": "regeneration",
       "value": 10
@@ -7132,70 +7132,70 @@ window.EDITOR_CATALOG = {
     {
       "tipo": "buraco",
       "nome": "Buraco",
-      "icone": "ðŸ•³ï¸",
+      "icone": "🕳️",
       "cr": 0.1,
       "precisa_veneno": false
     },
     {
       "tipo": "armadilha_urso",
       "nome": "Armadilha de Urso",
-      "icone": "ðŸª¤",
+      "icone": "🪤",
       "cr": 0.25,
       "precisa_veneno": false
     },
     {
       "tipo": "fosso_estacas",
       "nome": "Fosso com Estacas",
-      "icone": "â›ï¸",
+      "icone": "⛏️",
       "cr": 0.35,
       "precisa_veneno": false
     },
     {
       "tipo": "rede",
       "nome": "Rede",
-      "icone": "ðŸ•¸ï¸",
+      "icone": "🕸️",
       "cr": 0.15,
       "precisa_veneno": false
     },
     {
       "tipo": "armadilha_incendiaria",
-      "nome": "Armadilha IncendiÃ¡ria",
-      "icone": "ðŸ”¥",
+      "nome": "Armadilha Incendiária",
+      "icone": "🔥",
       "cr": 0.5,
       "precisa_veneno": false
     },
     {
       "tipo": "mina_terrestre",
       "nome": "Mina Terrestre",
-      "icone": "ðŸ’£",
+      "icone": "💣",
       "cr": 0.75,
       "precisa_veneno": false
     },
     {
       "tipo": "fosso_envenenado",
       "nome": "Fosso com Estacas Envenenadas",
-      "icone": "â˜ ï¸",
+      "icone": "☠️",
       "cr": 0.5,
       "precisa_veneno": true
     },
     {
       "tipo": "nuvem_gas",
-      "nome": "Nuvem de GÃ¡s",
-      "icone": "ðŸŒ«ï¸",
+      "nome": "Nuvem de Gás",
+      "icone": "🌫️",
       "cr": 0.4,
       "precisa_veneno": false
     },
     {
       "tipo": "armadilha_teletransporte",
       "nome": "Armadilha de Teletransporte",
-      "icone": "ðŸŒ€",
+      "icone": "🌀",
       "cr": 0.4,
       "precisa_veneno": false
     },
     {
       "tipo": "armadilha_dardos_envenenados",
       "nome": "Armadilha de Dardos Envenenados",
-      "icone": "ðŸŽ¯",
+      "icone": "🎯",
       "cr": 0.4,
       "precisa_veneno": true
     }
@@ -7207,7 +7207,7 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "veneno_escorpiao_pedra",
-      "name": "Veneno do EscorpiÃ£o Pedra"
+      "name": "Veneno do Escorpião Pedra"
     },
     {
       "id": "veneno_cobra_cuspidora",
@@ -7215,7 +7215,7 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "veneno_basilisco",
-      "name": "PeÃ§onha do Basilisco"
+      "name": "Peçonha do Basilisco"
     },
     {
       "id": "veneno_polvo_abissal",
@@ -7242,7 +7242,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "cama",
       "nome": "Cama",
-      "emoji": "ðŸ›ï¸",
+      "emoji": "🛏️",
       "size": [
         1,
         2
@@ -7257,7 +7257,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "lareira",
       "nome": "Lareira",
-      "emoji": "ðŸªµ",
+      "emoji": "🪵",
       "size": [
         1,
         2
@@ -7272,7 +7272,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "fonte",
       "nome": "Fonte",
-      "emoji": "â›²",
+      "emoji": "⛲",
       "size": [
         2,
         2
@@ -7287,7 +7287,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "fogueira",
       "nome": "Fogueira",
-      "emoji": "ðŸ”¥",
+      "emoji": "🔥",
       "size": [
         1,
         1
@@ -7302,7 +7302,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "tumba",
       "nome": "Tumba",
-      "emoji": "âš°ï¸",
+      "emoji": "⚰️",
       "size": [
         1,
         2
@@ -7317,7 +7317,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "mesa_cadeiras",
       "nome": "Mesa com cadeiras",
-      "emoji": "ðŸª‘",
+      "emoji": "🪑",
       "size": [
         1,
         2
@@ -7332,7 +7332,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "estante",
       "nome": "Estante",
-      "emoji": "ðŸ—„ï¸",
+      "emoji": "🗄️",
       "size": [
         1,
         2
@@ -7346,8 +7346,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "type": "carroca",
-      "nome": "CarroÃ§a",
-      "emoji": "ðŸ›’",
+      "nome": "Carroça",
+      "emoji": "🛒",
       "size": [
         2,
         2
@@ -7362,7 +7362,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "coluna",
       "nome": "Coluna de pedra",
-      "emoji": "ðŸ›ï¸",
+      "emoji": "🏛️",
       "size": [
         1,
         1
@@ -7377,7 +7377,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "barril",
       "nome": "Barril",
-      "emoji": "ðŸ›¢ï¸",
+      "emoji": "🛢️",
       "size": [
         1,
         1
@@ -7392,7 +7392,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "arca_tesouros",
       "nome": "Arca de tesouros",
-      "emoji": "ðŸ’°",
+      "emoji": "💰",
       "size": [
         1,
         1
@@ -7407,7 +7407,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "cama_casal",
       "nome": "Cama de casal",
-      "emoji": "ðŸ›Œ",
+      "emoji": "🛌",
       "size": [
         2,
         2
@@ -7422,7 +7422,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "estante_livros",
       "nome": "Estante de livros",
-      "emoji": "ðŸ“š",
+      "emoji": "📚",
       "size": [
         1,
         2
@@ -7436,8 +7436,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "type": "altar",
-      "nome": "Altar ritualÃ­stico",
-      "emoji": "ðŸ›",
+      "nome": "Altar ritualístico",
+      "emoji": "🛐",
       "size": [
         2,
         2
@@ -7452,7 +7452,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "trono",
       "nome": "Trono de rei",
-      "emoji": "ðŸ‘‘",
+      "emoji": "👑",
       "size": [
         1,
         1
@@ -7467,7 +7467,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "gaiola",
       "nome": "Gaiola com esqueleto",
-      "emoji": "â›“ï¸",
+      "emoji": "⛓️",
       "size": [
         1,
         1
@@ -7481,8 +7481,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "type": "grades_prisao",
-      "nome": "Grades de prisÃ£o",
-      "emoji": "ðŸš§",
+      "nome": "Grades de prisão",
+      "emoji": "🚧",
       "size": [
         1,
         1
@@ -7497,7 +7497,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "estante_armas",
       "nome": "Estante de armas",
-      "emoji": "âš”ï¸",
+      "emoji": "⚔️",
       "size": [
         1,
         2
@@ -7512,7 +7512,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "mesa_tortura",
       "nome": "Mesa de tortura",
-      "emoji": "ðŸ”ª",
+      "emoji": "🔪",
       "size": [
         1,
         2
@@ -7526,8 +7526,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "type": "mesa_quimica",
-      "nome": "Mesa de quÃ­mica",
-      "emoji": "ðŸ§ª",
+      "nome": "Mesa de química",
+      "emoji": "🧪",
       "size": [
         1,
         2
@@ -7541,8 +7541,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "type": "arvore",
-      "nome": "Ãrvore",
-      "emoji": "ðŸŒ³",
+      "nome": "Árvore",
+      "emoji": "🌳",
       "size": [
         1,
         1
@@ -7556,8 +7556,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "type": "arvore_grande",
-      "nome": "Ãrvore grande",
-      "emoji": "ðŸŒ²",
+      "nome": "Árvore grande",
+      "emoji": "🌲",
       "size": [
         2,
         2
@@ -7571,8 +7571,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "type": "chao",
-      "nome": "ChÃ£o (grama)",
-      "emoji": "ðŸŒ¿",
+      "nome": "Chão (grama)",
+      "emoji": "🌿",
       "size": [
         1,
         1
@@ -7586,8 +7586,8 @@ window.EDITOR_CATALOG = {
     },
     {
       "type": "brasao_leao",
-      "nome": "BrasÃ£o do LeÃ£o",
-      "emoji": "ðŸ¦",
+      "nome": "Brasão do Leão",
+      "emoji": "🦁",
       "size": [
         1,
         1
@@ -7602,7 +7602,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "cortina_vermelha",
       "nome": "Cortina vermelha",
-      "emoji": "ðŸ”´",
+      "emoji": "🔴",
       "size": [
         1,
         1
@@ -7617,7 +7617,7 @@ window.EDITOR_CATALOG = {
     {
       "type": "cortina_branca",
       "nome": "Cortina branca",
-      "emoji": "âšª",
+      "emoji": "⚪",
       "size": [
         1,
         1
@@ -7657,7 +7657,7 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "agua",
-      "nome": "Ãgua",
+      "nome": "Água",
       "categoria": "piso",
       "cor": "#126da1",
       "solido": false,

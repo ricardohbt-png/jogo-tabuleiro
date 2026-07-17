@@ -4,6 +4,77 @@ import sys, os, json
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import server
 
+_MOJIBAKE_MARKERS = ("Ã", "Â", "ð", "�")
+_MOJIBAKE_SEQUENCES = ("â€", "â€“", "â€”", "â€œ", "â€\x9d")
+_CP1252_BYTES = {}
+for _byte in range(256):
+    try:
+        _CP1252_BYTES[bytes([_byte]).decode("cp1252")] = _byte
+    except UnicodeDecodeError:
+        pass
+
+
+def _mojibake_score(text):
+    """Conta sinais comuns de UTF-8 interpretado como Windows-1252."""
+    return (sum(text.count(marker) for marker in _MOJIBAKE_MARKERS)
+            + sum(text.count(sequence) for sequence in _MOJIBAKE_SEQUENCES)
+            # "â" é legítimo em português (ex.: Relâmpago), mas seguido de
+            # um caractere não ASCII ele é a assinatura de símbolos como ⚡.
+            + sum(1 for index, char in enumerate(text[:-1])
+                  if char == "â" and ord(text[index + 1]) > 0x7f))
+
+
+def _legacy_bytes(text):
+    """Reconstrói bytes CP-1252/Latin-1, inclusive os controles legados."""
+    output = bytearray()
+    for char in text:
+        if char in _CP1252_BYTES:
+            output.append(_CP1252_BYTES[char])
+        elif ord(char) <= 0xff:
+            output.append(ord(char))
+        else:
+            raise UnicodeEncodeError("legacy", text, 0, len(text), "caractere fora da tabela")
+    return bytes(output)
+
+
+def _repair_text(text):
+    """Recupera texto UTF-8 corrompido sem tocar em texto já válido.
+
+    O catálogo do servidor tem dados legados com sequências como ``DragÃ£o`` e
+    ``ðŸ��º``. O editor recebe este JSON diretamente no navegador; portanto,
+    normalizamos apenas quando a conversão reduz comprovadamente esses sinais.
+    """
+    if not isinstance(text, str):
+        return text
+    for _ in range(3):
+        candidates = []
+        for encoding in ("cp1252", "latin1"):
+            try:
+                candidates.append(text.encode(encoding).decode("utf-8"))
+            except UnicodeError:
+                continue
+        try:
+            candidates.append(_legacy_bytes(text).decode("utf-8"))
+        except UnicodeError:
+            pass
+        if not candidates:
+            break
+        candidate = min(candidates, key=_mojibake_score)
+        if _mojibake_score(candidate) >= _mojibake_score(text):
+            break
+        text = candidate
+    return text
+
+
+def _normalize_catalog(value):
+    """Aplica a reparação a todos os textos do JSON exportado."""
+    if isinstance(value, dict):
+        return {key: _normalize_catalog(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_normalize_catalog(item) for item in value]
+    return _repair_text(value)
+
+
 def build_catalog():
     """Extrai só os campos que o editor precisa. Retorna dict serializável."""
     monsters = []
@@ -68,7 +139,7 @@ def build_catalog():
 
 def write_catalog_js(destino):
     """Escreve o catálogo como atribuição JS (carregável via <script> em file://)."""
-    cat = build_catalog()
+    cat = _normalize_catalog(build_catalog())
     payload = json.dumps(cat, ensure_ascii=False, indent=2)
     txt = ("window.EDITOR_CATALOG = " + payload + ";\n"
            "// GERADO por tools/export_catalog.py — não editar à mão.\n"
