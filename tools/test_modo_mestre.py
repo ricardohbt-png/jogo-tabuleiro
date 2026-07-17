@@ -488,6 +488,37 @@ async def main():
     ok, _ = S.validar_dungeon(base_rm)
     check("required_mode inválido rejeitado", ok is False)
 
+    print("\n[24] Falas de NPC")
+    r = playing_room_com_mestre()
+    r.rooms = [{"id":0,"x":0,"y":0,"w":5,"h":5,"cleared":True}]
+    r.falas = [
+        {"id":"f1","pos":[3,3],"falante":{"nome":"Velho","emoji":"🧙"},"texto":"Cuidado!","trigger":{"tipo":"proximidade","raio":2},"disparada":False},
+        {"id":"f2","pos":[1,1],"falante":{},"texto":"Bem-vindos.","trigger":{"tipo":"sala"},"disparada":False},
+        {"id":"f3","pos":[4,4],"falante":{},"texto":"Tolos!","trigger":{"tipo":"manual"},"disparada":False},
+    ]
+    ditas = []
+    async def cap_bc(msg, *a, **k):
+        if isinstance(msg, dict) and msg.get("type") == "fala": ditas.append(msg["texto"])
+    r.broadcast = cap_bc
+    p = {"id":"h","name":"H","alive":True,"pos":[10,10]}; r.players["h"] = p
+    await r._verificar_falas(p, None)
+    check("proximidade longe não dispara", "Cuidado!" not in ditas)
+    p["pos"] = [3,4]; await r._verificar_falas(p, None)
+    check("proximidade perto dispara", "Cuidado!" in ditas)
+    check("marca disparada", r.falas[0]["disparada"] is True)
+    n = len(ditas); await r._verificar_falas(p, None)
+    check("proximidade não repete", len(ditas) == n)
+    await r._verificar_falas(p, r.rooms[0])
+    check("sala dispara ao entrar", "Bem-vindos." in ditas)
+    await r.handle_disparar_fala("m1", "f3")
+    check("manual dispara (mestre)", "Tolos!" in ditas)
+    r.falas.append({"id":"f4","pos":[0,0],"texto":"x","trigger":{"tipo":"proximidade"},"disparada":False})
+    await r.handle_disparar_fala("m1", "f4")
+    check("manual recusa fala não-manual", r.falas[-1]["disparada"] is not True)
+    r.falas[2]["disparada"] = False
+    await r.handle_disparar_fala("naomestre", "f3")
+    check("manual recusa não-mestre", r.falas[2]["disparada"] is not True)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

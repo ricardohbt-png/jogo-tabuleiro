@@ -3225,6 +3225,17 @@ def validar_dungeon(defn):
         if isinstance(_ob, dict) and _ob.get("type") == "salas_obrigatorias" and not _rooms_req:
             return False, "objetivo salas_obrigatorias sem salas marcadas como obrigatÃ³rias."
 
+    for _f in (defn.get("falas") or []):
+        if not isinstance(_f, dict):
+            return False, "cada fala deve ser um objeto JSON."
+        if not (_f.get("texto") or "").strip():
+            return False, "fala com texto vazio."
+        _tg = (_f.get("trigger") or {}).get("tipo")
+        if _tg not in ("proximidade", "sala", "manual"):
+            return False, f"fala com gatilho inválido: {_tg!r} (proximidade|sala|manual)."
+        if not in_grid(_f.get("pos")):
+            return False, f"fala em casa inválida: {_f.get('pos')}."
+
     # Passagens autoradas: a mecÃ¢nica permanece uma parede atÃ© ser ativada;
     # a ilusÃ³ria continua WALL no mapa, mas o movimento de herÃ³is a atravessa.
     passages = defn.get("secret_passages", [])
@@ -4974,6 +4985,7 @@ class GameRoom:
         self.shop_scrolls = []  # pergaminhos Ã  venda no mercador (renovados por visita Ã  cidade)
         self.decorations = []
         self.secret_passages = []
+        self.falas = []            # Falas de NPC (marcadores autorados)
         self._decor_block_tiles = set()
         self._decor_tall_tiles = set()
         self._campfire_tiles = set()
@@ -6744,6 +6756,8 @@ class GameRoom:
                 "activated_decor_ids": [], "opened": False,
             })
 
+        self.falas = [dict(f, disparada=False) for f in (defn.get("falas") or [])]
+
         # Stairs = ponto de entrada.
         ent = defn["entrance"]
         self.stairs_pos = [ent["x"], ent["y"]]
@@ -7500,6 +7514,7 @@ class GameRoom:
         entered = player_room(self.rooms, nx, ny)
         if entered:
             self.salas_visitadas.add(entered["id"])   # objetivo salas_obrigatorias (visit)
+        await self._verificar_falas(p, entered)       # Falas de NPC: proximidade + sala
         if entered and not entered["cleared"]:
             await self._on_enter_room(pid, entered)
 
@@ -7589,6 +7604,45 @@ class GameRoom:
             if key in GM:
                 await self.gm_say(gm(key))
         await self._verificar_avistamento()   # sala revelada â†’ herÃ³i avista â†’ combate
+        await self.push_state()
+
+    async def _disparar_fala(self, fala):
+        """Exibe uma fala de NPC (popup leve no cliente), uma única vez."""
+        if not fala or fala.get("disparada"):
+            return
+        fala["disparada"] = True
+        await self.broadcast({"type": "fala",
+                              "falante": fala.get("falante") or {},
+                              "texto": fala.get("texto", ""),
+                              "pos": fala.get("pos")})
+
+    async def _verificar_falas(self, p, entered):
+        """Gatilhos automáticos de fala (proximidade + entrar na sala) após um passo."""
+        for fala in list(getattr(self, "falas", [])):
+            if fala.get("disparada"):
+                continue
+            trig = fala.get("trigger") or {}
+            tipo = trig.get("tipo")
+            pos = fala.get("pos")
+            if tipo == "proximidade" and pos:
+                raio = int(trig.get("raio", 2) or 2)
+                if max(abs(p["pos"][0] - pos[0]), abs(p["pos"][1] - pos[1])) <= raio:
+                    await self._disparar_fala(fala)
+            elif tipo == "sala" and entered and pos:
+                sala = player_room(self.rooms, pos[0], pos[1])
+                if sala and sala["id"] == entered["id"]:
+                    await self._disparar_fala(fala)
+
+    async def handle_disparar_fala(self, pid, fala_id):
+        """Mestre humano dispara uma fala 'manual' pelo HUD."""
+        if pid != self.master_pid or not self._mestre_ativo():
+            return
+        fala = next((f for f in getattr(self, "falas", []) if f.get("id") == fala_id), None)
+        if not fala or fala.get("disparada"):
+            return
+        if (fala.get("trigger") or {}).get("tipo") != "manual":
+            return
+        await self._disparar_fala(fala)
         await self.push_state()
 
     async def _on_enter_room(self, pid, room):
@@ -18958,6 +19012,9 @@ class GameRoom:
                 for t, c in self.master_reserve.items()
             ],
             "expected_party": self.expected_party,
+            "falas": [{"id": f["id"], "falante": f.get("falante") or {}, "texto": f.get("texto", "")}
+                      for f in getattr(self, "falas", [])
+                      if (f.get("trigger") or {}).get("tipo") == "manual" and not f.get("disparada")],
             "ambiente": getattr(self, "ambiente", "masmorra"),
             "tiles": self.tiles,
             "rooms": self.rooms,
@@ -19217,6 +19274,8 @@ async def handler(ws):
                 elif t == "mestre_implantar_reforco":
                     if room: await room.handle_mestre_implantar_reforco(
                         pid, msg.get("monster_type"), msg.get("tx"), msg.get("ty"))
+                elif t == "disparar_fala":
+                    if room: await room.handle_disparar_fala(pid, msg.get("fala_id"))
 
                 elif t == "guild_buy":
                     if room: await room.handle_guild_buy(pid, msg.get("item_id"))
