@@ -530,6 +530,44 @@ async def main():
     check("com 3 passos cruza o vão", (3, 2) in reach2 and (4, 2) in reach2)
     check("orçamento 0 → vazio", r._master_monster_reach({"id":"g2","pos":[1,2],"master_moves_left":0}) == [])
 
+    print("\n[26] mestre_usar_habilidade — ativa via _use_monster_ability e consome a ação")
+    r = playing_room_com_mestre()
+    usada = {"ab": None, "alvo": None}
+    async def fake_use(mm, ability, target_obj):
+        usada["ab"] = ability["id"]; usada["alvo"] = target_obj["obj"]["id"]; return True
+    r._use_monster_ability = fake_use
+    ab_ok = {"id": "petrificar", "name": "Petrificar", "action_type": "acao",
+             "save": "fort", "dc": 13}
+    ab_passiva = {"id": "sem_dor", "name": "Sem Dor", "action_type": "passiva"}
+    ab_ia = {"id": "turbilhao", "name": "Turbilhão", "action_type": "acao"}   # sem save/dc
+    m = {"id": "g1", "hp": 20, "pos": [2, 2], "size": [1, 1], "control_mode": "manual",
+         "attacks": [{"name": "garra"}], "_master_acted": False,
+         "special_abilities": [ab_ok, ab_passiva, ab_ia]}
+    r.monsters = {"g1": m}; r.master_manual_mid = "g1"
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [2, 3], "alive": True}}
+    await r.handle_mestre_usar_habilidade("m1", "g1", "petrificar", "hA")
+    check("habilidade ativada", usada["ab"] == "petrificar" and usada["alvo"] == "hA")
+    check("consumiu a ação", m["_master_acted"] is True)
+
+    print("\n[26b] recusa passiva / IA-apenas / já-agiu / alvo fora de alcance")
+    r = playing_room_com_mestre()
+    r._use_monster_ability = fake_use
+    m = {"id": "g1", "hp": 20, "pos": [2, 2], "size": [1, 1], "control_mode": "manual",
+         "_master_acted": False, "special_abilities": [ab_ok, ab_passiva, ab_ia]}
+    r.monsters = {"g1": m}; r.master_manual_mid = "g1"
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [2, 3], "alive": True},
+                 "hB": {"id": "hB", "name": "Bea", "pos": [9, 9], "alive": True}}
+    r._errs.clear()
+    await r.handle_mestre_usar_habilidade("m1", "g1", "sem_dor", "hA")
+    check("passiva recusada", m["_master_acted"] is False)
+    await r.handle_mestre_usar_habilidade("m1", "g1", "turbilhao", "hA")
+    check("IA-apenas (sem save/dc) recusada", m["_master_acted"] is False)
+    await r.handle_mestre_usar_habilidade("m1", "g1", "petrificar", "hB")
+    check("alvo fora de alcance (melee) recusado", m["_master_acted"] is False)
+    m["_master_acted"] = True; r._errs.clear()
+    await r.handle_mestre_usar_habilidade("m1", "g1", "petrificar", "hA")
+    check("já-agiu recusado", any("agiu" in e.lower() for e in r._errs))
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

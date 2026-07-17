@@ -16340,6 +16340,44 @@ class GameRoom:
             return True
         return False
 
+    def _habilidade_ativavel_manual(self, ability):
+        """SP1: o mestre só ativa habilidades ATIVAS resolvíveis por
+        _use_monster_ability (têm save e dc — as do editor de criaturas). As demais
+        (bespoke hardcoded, action_type 'magia') aparecem na ficha como 'IA apenas'.
+        Ponto único de plugagem para lotes futuros (dispatch por id/action_type)."""
+        if not ability or ability.get("action_type") == "passiva":
+            return False
+        return ability.get("save") is not None and ability.get("dc") is not None
+
+    async def handle_mestre_usar_habilidade(self, pid, monster_id, ability_id, target_id):
+        """Manual: o mestre ativa uma habilidade ativa do monstro num herói.
+        Consome a ação do turno (como atacar). Só habilidades ativáveis (save+dc)."""
+        if pid != self.master_pid or monster_id != self.master_manual_mid:
+            return
+        m = self.monsters.get(monster_id)
+        if not m or m["hp"] <= 0:
+            return
+        if m.get("_master_acted"):
+            await self.send_to(pid, {"type": "error", "msg": "Este monstro já agiu neste turno."}); return
+        ability = next((a for a in m.get("special_abilities", []) if a.get("id") == ability_id), None)
+        if not self._habilidade_ativavel_manual(ability):
+            await self.send_to(pid, {"type": "error", "msg": "Habilidade não ativável manualmente (IA apenas)."}); return
+        alvo = self.players.get(target_id)
+        if not alvo or not alvo.get("alive"):
+            await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
+        rng = ability.get("range")
+        dist = max(abs(m["pos"][0] - alvo["pos"][0]), abs(m["pos"][1] - alvo["pos"][1]))
+        if rng:
+            if dist > rng:
+                await self.send_to(pid, {"type": "error", "msg": "Alvo fora de alcance."}); return
+        elif not self._is_adjacent_to_monster(alvo["pos"], m):
+            await self.send_to(pid, {"type": "error", "msg": "Alvo não está adjacente."}); return
+        used = await self._use_monster_ability(m, ability, {"kind": "player", "obj": alvo})
+        if not used:
+            await self.send_to(pid, {"type": "error", "msg": "Habilidade sem usos ou em recarga."}); return
+        m["_master_acted"] = True
+        await self.push_state()
+
     async def _use_monster_ability(self, m, ability, target_obj):
         """Usa uma habilidade especial do monstro. Retorna True se ativada."""
         ab_id = ability["id"]
@@ -19330,6 +19368,8 @@ async def handler(ws):
 
                 elif t == "mestre_atacar_monstro":
                     if room: await room.handle_mestre_atacar_monstro(pid, msg.get("monster_id"), msg.get("target_id"))
+                elif t == "mestre_usar_habilidade":
+                    if room: await room.handle_mestre_usar_habilidade(pid, msg.get("monster_id"), msg.get("ability_id"), msg.get("target_id"))
 
                 elif t == "mestre_encerrar_monstro":
                     if room: await room.handle_mestre_encerrar_monstro(pid, msg.get("monster_id"))
