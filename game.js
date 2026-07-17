@@ -5148,6 +5148,10 @@ function renderMap(state){
   else if(!isAnimadosTurn2D&&GS.isMyTurn&&me&&me.moves_left>0)
     bfsReachable(state.tiles,exploredSet,me.pos[0],me.pos[1],me.moves_left,reachable);
 
+  if(GS.isMaster()){
+    _masterReachSet(state).forEach(k => reachable.add(k));
+  }
+
   const attackable=new Set();
   // Ataque do jogador (apenas no próprio turno, fora do turno dos servos)
   if(!isAnimadosTurn2D&&GS.isMyTurn&&me&&!me.action_done){
@@ -5170,6 +5174,9 @@ function renderMap(state){
     for(const [ddx,ddy] of [[1,0],[-1,0],[0,1],[0,-1]])
       for(let r=1; r<=atkRange2D; r++)
         attackable.add(`${ax+ddx*r},${ay+ddy*r}`);
+  }
+  if(GS.isMaster()){
+    _masterAttackSet(state).forEach(k => attackable.add(k));
   }
 
   const weaponRangeTiles = (window._weaponRangePreview && me && !isAnimadosTurn2D)
@@ -10287,13 +10294,8 @@ function renderMasterHud(state){
     </select>
     ${manualMid ? `
     <div class="mestre-manual">
-      <div class="mestre-manual-setas">
-        <button data-dir="0,-1">↑</button>
-        <button data-dir="0,1">↓</button>
-        <button data-dir="-1,0">←</button>
-        <button data-dir="1,0">→</button>
-      </div>
-      <button class="mestre-atacar">⚔️ Atacar alvo</button>
+      <div class="mestre-manual-dica">Clique numa casa azul para mover · num herói no alcance para atacar.</div>
+      <button class="mestre-atacar">⚔️ Atacar (alvo do seletor)</button>
       <button class="mestre-encerrar">Encerrar monstro</button>
     </div>` : ''}
     ${reforcoHtml}
@@ -10320,12 +10322,6 @@ function renderMasterHud(state){
     if(selAlvo.value && _masterSel.size) GS.mestreSetAlvo([..._masterSel], selAlvo.value);
   };
   if(manualMid){
-    host.querySelectorAll('.mestre-manual-setas button').forEach(b => {
-      b.onclick = () => {
-        const [dx, dy] = b.dataset.dir.split(',').map(Number);
-        GS.mestreMoverMonstro(manualMid, dx, dy);
-      };
-    });
     const atkBtn = host.querySelector('.mestre-atacar');
     if(atkBtn) atkBtn.onclick = () => {
       if(selAlvo && selAlvo.value) GS.mestreAtacarMonstro(manualMid, selAlvo.value);
@@ -10344,6 +10340,13 @@ function renderMasterHud(state){
   host.querySelectorAll('.mestre-fala-btn').forEach(btn => {
     btn.onclick = () => { GS.dispararFala(btn.dataset.fid); };
   });
+  // Auto-abre a ficha do monstro quando ele entra na janela Manual (muda de mid).
+  if(manualMid && window._lastManualFichaMid !== manualMid){
+    const mm = (state.monsters||[]).find(x=>x.id===manualMid);
+    if(mm) renderFichaMonstro(mm);
+    window._lastManualFichaMid = manualMid;
+  }
+  if(!manualMid) window._lastManualFichaMid = null;
 }
 
 // ── Ficha do monstro (só o mestre; painel canto inferior-esquerdo) ──
@@ -10376,6 +10379,29 @@ function renderFichaMonstro(m){
 function _monstroEmCasa(tx, ty){
   const st = GS.gameState; if(!st) return null;
   return (st.monsters||[]).find(m => m.hp>0 && m.pos && m.pos[0]===tx && m.pos[1]===ty) || null;
+}
+
+// Casas alcançáveis pelo monstro Manual (autoritativo — vem do servidor).
+function _masterReachSet(state){
+  const s = new Set();
+  if(GS.isMaster() && state && Array.isArray(state.master_manual_reach))
+    state.master_manual_reach.forEach(([x,y]) => s.add(`${x},${y}`));
+  return s;
+}
+// Heróis no alcance de ataque do monstro Manual (realce vermelho + clique-atacar).
+function _masterAttackSet(state){
+  const s = new Set();
+  if(!(GS.isMaster() && state && state.master_manual_mid)) return s;
+  const mm = (state.monsters||[]).find(x=>x.id===state.master_manual_mid);
+  if(!mm || mm._master_acted) return s;
+  const atk = (mm.attacks||[{}])[0]; const rng = atk.range || null;
+  for(const p of (state.players||[])){
+    if(!p.alive) continue;
+    const dx=Math.abs(mm.pos[0]-p.pos[0]), dy=Math.abs(mm.pos[1]-p.pos[1]);
+    const inR = rng!=null ? Math.max(dx,dy)<=rng : ((dx===1&&dy===0)||(dx===0&&dy===1));
+    if(inR) s.add(`${p.pos[0]},${p.pos[1]}`);
+  }
+  return s;
 }
 
 // ── Minimapa de CR (só mestre; Camada C) ──────────────────────────────────
@@ -14691,6 +14717,9 @@ function renderMap3D(state){
     bfsReachable(state.tiles, exploredSet, selPris3D.pos[0], selPris3D.pos[1], selPris3D.moves_left, reachable);
   else if(!isAnimadosTurn3D && GS.isMyTurn && me && me.moves_left > 0)
     bfsReachable(state.tiles, exploredSet, me.pos[0], me.pos[1], me.moves_left, reachable);
+  if(GS.isMaster()){
+    _masterReachSet(state).forEach(k => reachable.add(k));
+  }
 
   // Attackable tiles (attack range highlight)
   const attackable3d = new Set();
@@ -14715,6 +14744,9 @@ function renderMap3D(state){
     for(const [ddx,ddy] of [[1,0],[-1,0],[0,1],[0,-1]])
       for(let r=1; r<=atkRange3D; r++)
         attackable3d.add(`${ax3+ddx*r},${ay3+ddy*r}`);
+  }
+  if(GS.isMaster()){
+    _masterAttackSet(state).forEach(k => attackable3d.add(k));
   }
 
   // Durante a mira de magia, oculta realces de movimento/ataque (mostra alcance/área).
@@ -21205,6 +21237,23 @@ function handleTileClick(tx, ty){
       GS.mestreImplantarReforco(window._modoImplantarReforco, tx, ty);
       window._modoImplantarReforco = null;
       return;
+    }
+    const st = GS.gameState;
+    const manualMid = st && st.master_manual_mid;
+    if(manualMid){
+      const mm = (st.monsters||[]).find(x=>x.id===manualMid);
+      // 1) herói no alcance → ataca
+      const alvo = (st.players||[]).find(p=>p.alive && p.pos[0]===tx && p.pos[1]===ty);
+      if(mm && alvo && !mm._master_acted){
+        const atk=(mm.attacks||[{}])[0]; const rng=atk.range||null;
+        const dx=Math.abs(mm.pos[0]-tx), dy=Math.abs(mm.pos[1]-ty);
+        const inR = rng!=null ? Math.max(dx,dy)<=rng : ((dx===1&&dy===0)||(dx===0&&dy===1));
+        if(inR){ GS.mestreAtacarMonstro(manualMid, alvo.id); return; }
+      }
+      // 2) casa azul → move
+      if((st.master_manual_reach||[]).some(([x,y])=>x===tx&&y===ty)){
+        GS.mestreMoverMonstroPara(manualMid, tx, ty); return;
+      }
     }
     const mon = _monstroEmCasa(tx, ty);
     if(mon) renderFichaMonstro(mon);
