@@ -1008,6 +1008,7 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > (=salas `required`; > `poder×VALID_R6_FATOR`), **R3** picos entre salas obrigatórias
 > consecutivas (Δ > `VALID_MAX_PICO`). Boss/entrada por `role`. UI: seção "⚠️ Avisos de
 > design" no painel de nível de masmorra (`_avisosDesignHTML` após o termômetro), live.
-> Limiares = constantes no topo do módulo (tunáveis). **Regra 1** (≥2 caminhos disjuntos)
-> fica p/ 2ª spec. Editor não roda no MCP (arquivos externos viram snapshot) — grafo
+> Limiares = constantes no topo do módulo (tunáveis). **R1** rota alternativa: detecção de
+> gargalo/cut-vertex (`_alcancaSemSala` — remove cada sala intermediária e vê se o boss ainda
+> alcança a entrada; por Menger ⇔ ≥2 caminhos vértice-disjuntos). Editor não roda no MCP (arquivos externos viram snapshot) — grafo
 > validado por teste node sintético. Spec: `docs/superpowers/specs/2026-07-16-validador-masmorra-design.md`.

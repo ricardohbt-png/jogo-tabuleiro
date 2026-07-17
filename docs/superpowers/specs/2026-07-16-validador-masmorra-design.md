@@ -98,10 +98,16 @@ do módulo — ponto único de calibração, tunáveis.
 - (Opcional) extrair as funções puras do grafo/regras de forma que possam ser testadas
   via `node -e` com um `S` sintético, se viável sem DOM.
 
-## Fora de escopo
+## Regra 1 (adicionada 2026-07-16)
 
-- **Regra 1** (≥2 caminhos disjuntos até o boss) — 2ª spec (algoritmo de caminhos
-  disjuntos).
+- **R1 Rota alternativa** (≥2 caminhos distintos até o boss): implementada como
+  **detecção de gargalo (cut vertex)** — para cada sala intermediária alcançável
+  (≠ entrada, ≠ boss), remove-a do grafo (`_alcancaSemSala`) e testa se o boss ainda
+  é alcançável da entrada; se alguma remoção desconecta o boss, ela é gargalo e R1
+  avisa listando as salas-gargalo. Por Menger, "sem cut vertex" ⇔ ≥2 caminhos
+  vértice-disjuntos. O caso boss-colado-no-spawn (1 rota curta) é coberto por R2.
+
+## Fora de escopo
 - Bloquear o save; thresholds editáveis pelo autor na UI (usa defaults no código).
 - Multiplicador de quantidade no ND (divergência registrada; o validador usa o ND atual).
 - Distância em tiles (usa distância em nº de salas no grafo).
