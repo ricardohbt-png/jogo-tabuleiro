@@ -911,6 +911,24 @@
     return Infinity;
   }
 
+  function _alcancaSemSala(adj, fromId, toId, excluirId) {
+    // toId é alcançável de fromId no grafo IGNORANDO a sala excluirId?
+    if (fromId == null || toId == null) return false;
+    var seen = {}; seen[fromId] = 1; var q = [fromId];
+    while (q.length) {
+      var id = q.shift();
+      var vizinhos = adj[id] || new Set();
+      var achou = false;
+      vizinhos.forEach(function (n) {
+        if (n === excluirId || seen[n]) return;
+        if (n === toId) achou = true;
+        seen[n] = 1; q.push(n);
+      });
+      if (achou) return true;
+    }
+    return !!seen[toId];
+  }
+
   function _validarDesign() {
     var avisos = [];
     if (!S.rooms || !S.rooms.length) return avisos;
@@ -924,6 +942,14 @@
       var viz = Array.from(g.adj[g.bossId] || []);
       var temDescanso = viz.some(function (id) { var rm = S.rooms.find(function (x) { return x.id === id; }); return rm && (rm.role === "empty" || (nd[id] || 0) <= pod * VALID_REST_FATOR); });
       if (viz.length && !temDescanso) avisos.push("R5: sem sala de descanso (ND baixo) logo antes do boss.");
+      // R1: gargalos (cut vertices) — salas cuja remoção isola o boss do spawn.
+      if (dist !== Infinity) {
+        var gargalos = S.rooms.filter(function (r) {
+          return r.id !== g.entradaId && r.id !== g.bossId && g.reach.has(r.id) &&
+                 !_alcancaSemSala(g.adj, g.entradaId, g.bossId, r.id);
+        }).map(function (r) { return "#" + r.id; });
+        if (gargalos.length) avisos.push("R1: rota única — sem caminho alternativo até o boss (gargalo em " + gargalos.join(", ") + ").");
+      }
     }
     var req = S.rooms.filter(function (r) { return r.required; });
     if (!req.length) { avisos.push("R3/R6: nenhuma sala marcada como obrigatória (rota crítica)."); }
