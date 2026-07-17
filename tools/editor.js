@@ -844,6 +844,109 @@
     return { total: total, pior: pior };
   }
 
+  // ── Validador de design (Camada C): grafo de salas + 5 regras (só avisa) ──
+  var VALID_MIN_SALAS = 3;      // R2: distância mín. spawn→boss (nº de salas)
+  var VALID_REST_FATOR = 0.3;   // R5: ND "baixo" = poder × fator
+  var VALID_R6_FATOR = 0.9;     // R6: teto do ND médio da rota crítica = poder × fator
+  var VALID_MAX_PICO = 1.0;     // R3: Δ máx. de ND entre salas obrigatórias consecutivas
+
+  function _tileRoom(x, y) {
+    return (S.rooms || []).find(function (r) { return x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h; }) || null;
+  }
+
+  function _ndSalaMap() {
+    var m = {};
+    (S.rooms || []).forEach(function (r) { m[r.id] = 0; });
+    (S.monsters || []).forEach(function (mo) {
+      var e = (CAT.monsters || []).find(function (c) { return c.type === mo.type; });
+      var cr = window.Difficulty ? window.Difficulty.crFromEntry(e) : 0;
+      if (mo.room_id != null && m[mo.room_id] != null) m[mo.room_id] += cr;
+    });
+    (S.traps || []).forEach(function (t) {
+      var meta = (CAT.traps || []).find(function (c) { return c.tipo === t.tipo; });
+      var cr = meta ? (meta.cr || 0) : 0; if (!cr || !t.pos) return;
+      var r = _tileRoom(t.pos[0], t.pos[1]);
+      if (!r && (S.rooms || []).length) {
+        var bestD = Infinity;
+        S.rooms.forEach(function (rm) { var d = Math.abs(t.pos[0]-(rm.x+rm.w/2))+Math.abs(t.pos[1]-(rm.y+rm.h/2)); if (d < bestD) { bestD = d; r = rm; } });
+      }
+      if (r && m[r.id] != null) m[r.id] += cr;
+    });
+    return m;
+  }
+
+  function _grafoSalas() {
+    var W = S.grid.w, H = S.grid.h;
+    var floor = function (x, y) { return x >= 0 && y >= 0 && x < W && y < H && S.tiles[y][x] !== WALL; };
+    var entradaSala = (S.rooms || []).find(function (r) { return r.role === "entrance"; });
+    var bossSala = (S.rooms || []).find(function (r) { return r.role === "boss"; });
+    var adj = {};
+    (S.rooms || []).forEach(function (r) {
+      adj[r.id] = new Set();
+      var seen = {}, q = [];
+      for (var yy = r.y; yy < r.y + r.h; yy++) for (var xx = r.x; xx < r.x + r.w; xx++) { seen[xx + "," + yy] = 1; q.push([xx, yy]); }
+      while (q.length) {
+        var c = q.shift();
+        [[1,0],[-1,0],[0,1],[0,-1]].forEach(function (d) {
+          var nx = c[0]+d[0], ny = c[1]+d[1], k = nx+","+ny;
+          if (seen[k] || !floor(nx, ny)) return;
+          var other = _tileRoom(nx, ny);
+          if (other && other.id !== r.id) { adj[r.id].add(other.id); return; }   // vizinha; não atravessa outra sala
+          seen[k] = 1; q.push([nx, ny]);
+        });
+      }
+    });
+    var reach = new Set();
+    if (entradaSala) {
+      var st = [entradaSala.id]; reach.add(entradaSala.id);
+      while (st.length) { var id = st.pop(); adj[id].forEach(function (n) { if (!reach.has(n)) { reach.add(n); st.push(n); } }); }
+    }
+    return { adj: adj, reach: reach, entradaId: entradaSala && entradaSala.id, bossId: bossSala && bossSala.id };
+  }
+
+  function _distSalas(adj, fromId, toId) {
+    if (fromId == null || toId == null) return Infinity;
+    var dist = {}; dist[fromId] = 0; var q = [fromId];
+    while (q.length) { var id = q.shift(); if (id === toId) return dist[id]; (adj[id] || new Set()).forEach(function (n) { if (dist[n] == null) { dist[n] = dist[id] + 1; q.push(n); } }); }
+    return Infinity;
+  }
+
+  function _validarDesign() {
+    var avisos = [];
+    if (!S.rooms || !S.rooms.length) return avisos;
+    var g = _grafoSalas(), nd = _ndSalaMap();
+    var pod = window.Difficulty ? window.Difficulty.poder(S.expectedParty.heroes, S.expectedParty.level) : Math.max(1, S.expectedParty.heroes * S.expectedParty.level);
+    S.rooms.forEach(function (r) { if (!g.reach.has(r.id)) avisos.push("R4: sala #" + r.id + " isolada do mapa principal."); });
+    if (g.bossId == null) { avisos.push("R2/R5: sem sala com role 'boss' (regras puladas)."); }
+    else {
+      var dist = _distSalas(g.adj, g.entradaId, g.bossId);
+      if (dist !== Infinity && dist < VALID_MIN_SALAS) avisos.push("R2: boss a só " + dist + " sala(s) do spawn (mín " + VALID_MIN_SALAS + ").");
+      var viz = Array.from(g.adj[g.bossId] || []);
+      var temDescanso = viz.some(function (id) { var rm = S.rooms.find(function (x) { return x.id === id; }); return rm && (rm.role === "empty" || (nd[id] || 0) <= pod * VALID_REST_FATOR); });
+      if (viz.length && !temDescanso) avisos.push("R5: sem sala de descanso (ND baixo) logo antes do boss.");
+    }
+    var req = S.rooms.filter(function (r) { return r.required; });
+    if (!req.length) { avisos.push("R3/R6: nenhuma sala marcada como obrigatória (rota crítica)."); }
+    else {
+      var media = req.reduce(function (a, r) { return a + (nd[r.id] || 0); }, 0) / req.length;
+      var teto = pod * VALID_R6_FATOR;
+      if (media > teto) avisos.push("R6: rota crítica pesada (ND médio " + media.toFixed(2) + " > teto " + teto.toFixed(2) + ").");
+      var ord = req.slice().sort(function (a, b) { return _distSalas(g.adj, g.entradaId, a.id) - _distSalas(g.adj, g.entradaId, b.id); });
+      for (var i = 1; i < ord.length; i++) {
+        var delta = Math.abs((nd[ord[i-1].id] || 0) - (nd[ord[i].id] || 0));
+        if (delta > VALID_MAX_PICO) avisos.push("R3: pico de ND entre salas #" + ord[i-1].id + " e #" + ord[i].id + " (Δ=" + delta.toFixed(2) + ").");
+      }
+    }
+    return avisos;
+  }
+
+  function _avisosDesignHTML() {
+    var av = _validarDesign();
+    if (!av.length) return '<hr style="border-color:#3a3022;margin:10px 0"><div style="color:#7ea87e;font-size:12px">✅ Sem avisos de design.</div>';
+    return '<hr style="border-color:#3a3022;margin:10px 0"><label>⚠️ Avisos de design (' + av.length + ')</label>' +
+      av.map(function (a) { return '<div style="color:#d8b06a;font-size:11px;margin-top:2px">• ' + a + '</div>'; }).join("");
+  }
+
   function _termometroHTML() {
     if (!window.Difficulty) return "";
     var heroes = (_ndPreviewHeroes != null) ? _ndPreviewHeroes : S.expectedParty.heroes;
@@ -904,7 +1007,8 @@
           <span>heróis</span><input id="ep-heroes" type="number" min="1" max="6" value="${S.expectedParty.heroes}" style="width:48px">
           <span>nível</span><input id="ep-level" type="number" min="1" value="${S.expectedParty.level}" style="width:48px">
         </div>
-        ${_termometroHTML()}`;
+        ${_termometroHTML()}
+        ${_avisosDesignHTML()}`;
       document.getElementById("o-prim").onchange = e => { o.primary.type = e.target.value; };
       wireRewardFields(o.primary, "o-prim-rw");
       document.getElementById("o-add").onclick = () => { o.secondary.push({ type: "rescue_prisoner", ...objDefaults(false) }); renderPanel(); };
