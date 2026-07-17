@@ -10349,21 +10349,47 @@ function renderMasterHud(state){
   if(!manualMid) window._lastManualFichaMid = null;
 }
 
-// ── Ficha do monstro (só o mestre; painel canto inferior-esquerdo) ──
+// ── Ficha do monstro (só o mestre; painel à direita, abaixo do HUD do mestre) ──
 function renderFichaMonstro(m){
   if(!m){ return; }
   let host = document.getElementById('ficha-monstro');
   if(!host){ host = document.createElement('div'); host.id = 'ficha-monstro'; document.body.appendChild(host); }
   host.style.display = 'block';
+  const st = GS.gameState;
+  const isManual = !!(st && st.master_manual_mid === m.id);
+  const acted = !!m._master_acted;
   const linhaAtaque = (a) => {
     const dano = a.damage || a.dano || '';
     const b = (a.atk_bonus!=null) ? (a.atk_bonus>=0?'+':'')+a.atk_bonus : '';
     return `<div class="fm-atk">⚔️ ${a.name||a.nome||'Ataque'} ${b} · ${dano}</div>`;
   };
+  const ativavel = (a) => a.action_type!=='passiva' && a.save!=null && a.dc!=null;
+  const usosRest = (a) => {
+    const lim = (a.uses_per_combat!=null) ? a.uses_per_combat
+              : (a.uses_per_day!=null ? a.uses_per_day : null);
+    if(lim==null) return '∞';
+    const u = (m.ability_uses||{})[a.id];
+    return (u!=null ? u : lim);
+  };
+  const cdRest = (a) => (m.ability_cooldowns||{})[a.id] || 0;
+  const abis = m.special_abilities||[];
+  const ativas   = abis.filter(a => a.action_type && a.action_type!=='passiva');
+  const passivas = abis.filter(a => !a.action_type || a.action_type==='passiva');
+  const linhaAcao = (a) => {
+    const ok = ativavel(a);
+    const cd = cdRest(a), usos = usosRest(a);
+    const semUso = (usos===0 || usos==='0');
+    const podeUsar = isManual && !acted && ok && cd===0 && !semUso;
+    const meta = `<span class="fm-ab-meta">usos: ${usos} · recarga: ${cd>0?cd+'r':'—'}</span>`;
+    const ctrl = ok
+      ? `<button class="fm-usar" data-abid="${a.id}"${podeUsar?'':' disabled'}>Ativar</button>`
+      : `<span class="fm-ia">IA apenas</span>`;
+    return `<div class="fm-hab fm-acao"><div class="fm-ab-top"><b>${a.name||a.nome||a.id}</b> ${ctrl}</div>`+
+           `<div class="fm-ab-desc">${a.descricao||a.desc||''}</div>${meta}</div>`;
+  };
   const linhaHab = (h) => `<div class="fm-hab"><b>${h.name||h.nome||h.id}</b> — ${h.descricao||h.desc||''}</div>`;
   const ataques = (m.attacks||[]).map(linhaAtaque).join('') ||
                   (m.atk_bonus!=null ? linhaAtaque({name:'Ataque', atk_bonus:m.atk_bonus, damage:m.damage}) : '');
-  const habs = (m.special_abilities||[]).map(linhaHab).join('');
   const stat = (lbl,v)=> (v!=null? `<span class="fm-stat">${lbl} ${v}</span>` : '');
   host.innerHTML =
     `<div class="fm-head"><span class="fm-emoji">${m.emoji||'👾'}</span>`+
@@ -10373,8 +10399,28 @@ function renderFichaMonstro(m){
     `<div class="fm-stats">${stat('FOR',m.str_)}${stat('DES',m.dex)}${stat('CON',m.con_)}${stat('INT',m.int_)}`+
     `${stat('Fort',m.fort)}${stat('Ref',m.ref_)}${stat('Von',m.will)}</div>`+
     (ataques? `<div class="fm-sec">Ataques</div>${ataques}`:'')+
-    (habs? `<div class="fm-sec">Habilidades</div>${habs}`:'');
+    (ativas.length? `<div class="fm-sec">Ações</div>${ativas.map(linhaAcao).join('')}`:'')+
+    (passivas.length? `<div class="fm-sec">Passivas</div>${passivas.map(linhaHab).join('')}`:'');
   host.querySelector('.fm-close').onclick = () => { host.style.display='none'; };
+  host.querySelectorAll('.fm-usar').forEach(btn => {
+    btn.onclick = () => _mestreAtivarHabilidade(m, btn.dataset.abid);
+  });
+}
+
+// Ativar (mestre): mira um herói no alcance e envia mestre_usar_habilidade.
+function _mestreAtivarHabilidade(m, abid){
+  const st = GS.gameState; if(!st) return;
+  const ab = (m.special_abilities||[]).find(a=>a.id===abid);
+  if(!ab) return;
+  const rng = ab.range || null;
+  const alvos = (st.players||[]).filter(p => {
+    if(!p.alive) return false;
+    const dx=Math.abs(m.pos[0]-p.pos[0]), dy=Math.abs(m.pos[1]-p.pos[1]);
+    return rng!=null ? Math.max(dx,dy)<=rng : ((dx===1&&dy===0)||(dx===0&&dy===1));
+  });
+  if(!alvos.length){ toast(`Nenhum herói ${rng?('a até '+rng+'q'):'adjacente'}.`, 'var(--orange)'); return; }
+  openTargetModal(`${ab.name||abid} — Escolha o alvo`, alvos, 'player',
+    (alvoId)=> GS.mestreUsarHabilidade(m.id, abid, alvoId));
 }
 function _monstroEmCasa(tx, ty){
   const st = GS.gameState; if(!st) return null;
