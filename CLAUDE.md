@@ -141,11 +141,12 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `mestre_atacar_monstro` | `monster_id`, `target_id` — Manual: o monstro ataca um herói adjacente/no alcance (1×/turno). |
 | `mestre_encerrar_monstro` | `monster_id` — Manual: encerra a vez do monstro e libera o laço de iniciativa. |
 | `mestre_implantar_reforco` | `monster_type`, `tx`, `ty` — o mestre implanta um monstro da **reserva de reforços** (`master_reinforcements` da masmorra) numa casa livre. Ação livre, a qualquer momento; nasce `alertado`+`manual` e entra na iniciativa da próxima rodada. Só com mestre ativo. |
+| `disparar_fala` | `fala_id` — o mestre dispara manualmente uma **fala de NPC** de gatilho `manual` (marcador autorado no editor). Só com mestre ativo; recusa falas não-manuais ou já disparadas. As falas `proximidade`/`sala` disparam sozinhas no `handle_move` (sem/com mestre). |
 
 ### Server → Client
 `lobby_state`, `game_start`, `city_state`, `shop_result`, `enter_dungeon`,
 `game_state`, `gm_narration`, `game_over`, `dice_roll`, `animar_result`, `error`,
-`decor_loot`, `trap_result`
+`decor_loot`, `trap_result`, `fala`
 
 > `game_state` inclui `corpses` (cadáveres) e `armadilhas` (colocáveis — ver
 > abaixo). `animar_result` traz
@@ -1012,3 +1013,25 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > gargalo/cut-vertex (`_alcancaSemSala` — remove cada sala intermediária e vê se o boss ainda
 > alcança a entrada; por Menger ⇔ ≥2 caminhos vértice-disjuntos). Editor não roda no MCP (arquivos externos viram snapshot) — grafo
 > validado por teste node sintético. Spec: `docs/superpowers/specs/2026-07-16-validador-masmorra-design.md`.
+
+> **Modo Mestre — Camada B: Falas de NPC:** marcadores de fala autorados no editor
+> que exibem um **balão leve** em jogo (`#fala-popup`, distinto do log `gm_narration`
+> e da story de tela cheia). Cada fala = `{id, pos, falante:{nome,emoji}, texto,
+> trigger}`; **3 gatilhos** (`trigger.tipo`): `proximidade` (herói a ≤`raio` Chebyshev
+> do marcador), `sala` (herói entra na sala do marcador) e `manual` (botão do mestre
+> no HUD). Cada uma dispara **uma vez** (flag `disparada`). Servidor: `self.falas`
+> carregado na entrada da masmorra (`disparada=False`); `_verificar_falas(p, entered)`
+> hookado em `handle_move` (proximidade + sala, reusa o `entered=player_room` do
+> rastreio de visita); `_disparar_fala` (idempotente) → broadcast `{type:"fala",
+> falante, texto, pos}`; `handle_disparar_fala`+dispatch `disparar_fala` (guarda
+> `pid==master_pid` + `_mestre_ativo()` + só `manual` + não-disparada). As
+> `proximidade`/`sala` disparam **com ou sem mestre** (CPU no papel); a `manual` só
+> com mestre humano (ninguém clica sem ele). `push_state` serializa as `manual`
+> não-disparadas em `game_state.falas` (p/ o HUD). `validar_dungeon`: texto
+> não-vazio, gatilho válido, `pos` no grid. Editor (`tools/editor.js`): ferramenta
+> "fala NPC" + entidade `S.falas` + painel (emoji/nome/texto/gatilho/raio) + marcador
+> 💬 no mapa + seleção/mover/apagar + save/load + validação. Cliente: `game.js` balão
+> com fila (auto-dismiss 5s, clique avança) + seção "💬 Falas" no `renderMasterHud`
+> (dispara as manuais); `src/gameState.js` `dispararFala(id)` + evento `fala`.
+> Spec: `docs/superpowers/specs/2026-07-16-falas-npc-design.md`. Teste:
+> `tools/test_modo_mestre.py` (seção [24]).
