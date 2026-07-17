@@ -1035,3 +1035,21 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > (dispara as manuais); `src/gameState.js` `dispararFala(id)` + evento `fala`.
 > Spec: `docs/superpowers/specs/2026-07-16-falas-npc-design.md`. Teste:
 > `tools/test_modo_mestre.py` (seção [24]).
+
+> **Modo Mestre — Controle manual do monstro (SP1):** na janela Manual, o monstro
+> se move como um herói — as casas alcançáveis (BFS footprint-aware sobre o
+> `movement` real, autoritativo em `_master_reach_bfs`/`_master_monster_reach`,
+> enviado em `game_state.master_manual_reach`) aparecem em azul; clicar numa delas
+> anda até lá via `mestre_mover_monstro_para`→`handle_mestre_mover_monstro_para`
+> (path-walk por `_master_path_to` + `_commit_monster_step`, gastando
+> `master_moves_left`). As setas do HUD saíram. Clicar num herói no alcance ataca
+> (reusa `mestre_atacar_monstro`). A ficha (`renderFichaMonstro`, agora à direita
+> abaixo do HUD) ganhou seção **Ações**: habilidades ativas resolvíveis por
+> `_use_monster_ability` (save+dc — as do editor de criaturas) têm botão **Ativar**
+> (`mestre_usar_habilidade`→`handle_mestre_usar_habilidade`, mira um herói, consome
+> a ação via `_master_acted`, mostra usos/recarga de `ability_uses`/
+> `ability_cooldowns`); as demais aparecem como "IA apenas"
+> (`_habilidade_ativavel_manual` é o ponto de plugagem futuro). Sem mestre,
+> byte-idêntico. SP2 (pendente): inventário de itens do monstro. Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-07-17-modo-mestre-controle-manual-monstro-sp1*`.
+> Teste: `tools/test_modo_mestre.py` (seções [25]/[26]).
