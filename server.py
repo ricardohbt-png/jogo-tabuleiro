@@ -4376,6 +4376,7 @@ def _aplicar_equipamentos_monstro(m):
 
     weapon = next((item for item in items if item.get("die")), None)
     if weapon:
+        configured_attack = (m.get("attacks") or [{}])[0]
         attr = "dex" if weapon.get("stat") == "dex" else "str_"
         atk_bonus = int(m.get("base_attack_bonus", 0)) + mod(m.get(attr, 10))
         m["attacks"] = [{
@@ -4387,6 +4388,10 @@ def _aplicar_equipamentos_monstro(m):
             "base_attack_bonus": int(m.get("base_attack_bonus", 0)),
             "range": weapon.get("range"), "reach": weapon.get("reach"),
             "categoria": weapon.get("categoria"),
+            "on_hit": configured_attack.get("on_hit"),
+            "poison_dc": configured_attack.get("poison_dc"),
+            "extra_damage": configured_attack.get("extra_damage"),
+            "extra_damage_types": configured_attack.get("extra_damage_types", []),
         }]
         m["equipped_weapon"] = weapon
 
@@ -11859,7 +11864,7 @@ class GameRoom:
         dur = self._rolar_dado(magia.get("duracao", "1d4+1")) + dur_bonus
         n = 0
         for alvo in self._alvos_na_area(tx, ty, magia.get("area_raio", 2)):
-            if alvo.get("subtipo", _subtipo_padrao_monstro(alvo)) in ("construto", "morto_vivo"):
+            if self._tem_imunidade(alvo, "sono") or alvo.get("subtipo", _subtipo_padrao_monstro(alvo)) in ("construto", "morto_vivo"):
                 continue
             save_ok, *_ = await self._save_mostrado(alvo, "vontade", self._dif_magia(caster, magia))
             if not save_ok:
@@ -11873,7 +11878,7 @@ class GameRoom:
         dur = self._rolar_dado(magia.get("duracao", "1d4+1")) + dur_bonus
         n = 0
         for alvo in self._alvos_na_area(tx, ty, magia.get("area_raio", 2)):
-            if alvo.get("subtipo", _subtipo_padrao_monstro(alvo)) in ("construto", "morto_vivo"):
+            if self._tem_imunidade(alvo, "encantamento") or alvo.get("subtipo", _subtipo_padrao_monstro(alvo)) in ("construto", "morto_vivo"):
                 continue
             save_ok, *_ = await self._save_mostrado(alvo, "vontade", self._dif_magia(caster, magia))
             if not save_ok:
@@ -11889,7 +11894,7 @@ class GameRoom:
         dist = max(abs(caster["pos"][0]-alvo["pos"][0]), abs(caster["pos"][1]-alvo["pos"][1]))
         if dist > magia.get("alcance", 4):
             await self.send_to(caster["id"], {"type": "error", "msg": "Alvo fora do alcance."}); return
-        if alvo.get("subtipo", _subtipo_padrao_monstro(alvo)) in ("construto", "morto_vivo"):
+        if self._tem_imunidade(alvo, "encantamento") or alvo.get("subtipo", _subtipo_padrao_monstro(alvo)) in ("construto", "morto_vivo"):
             await self.gm_say(f"🛡️ **{alvo['name']}** é imune a encantamentos."); return
         save_ok, *_ = await self._save_mostrado(alvo, "vontade", self._dif_magia(caster, magia))
         if not save_ok:
@@ -11906,7 +11911,7 @@ class GameRoom:
         dist = max(abs(caster["pos"][0]-alvo["pos"][0]), abs(caster["pos"][1]-alvo["pos"][1]))
         if dist > magia.get("alcance", 5):
             await self.send_to(caster["id"], {"type": "error", "msg": "Alvo fora do alcance."}); return
-        if alvo.get("subtipo", _subtipo_padrao_monstro(alvo)) in ("construto", "morto_vivo"):
+        if self._tem_imunidade(alvo, "encantamento") or alvo.get("subtipo", _subtipo_padrao_monstro(alvo)) in ("construto", "morto_vivo"):
             await self.gm_say(f"🛡️ **{alvo['name']}** é imune a controle mental."); return
         save_ok, *_ = await self._save_mostrado(alvo, "vontade", self._dif_magia(caster, magia))
         if not save_ok:
@@ -12731,8 +12736,12 @@ class GameRoom:
         # Fortitude evita a paralisação (não o dano). desvantagem: Canalização
         # Perfeita (Fase 3) — próximos executores de alvo único devem seguir o
         # mesmo padrão ao chamar _save_mostrado.
-        save_ok, *_ = await self._save_mostrado(alvo, "fortitude", self._dif_magia(caster, magia),
-                                                  desvantagem=caster.get("_tec_save_desvantagem", False))
+        if self._tem_imunidade(alvo, "paralisia"):
+            await self.gm_say(f"🛡️ **{alvo['name']}** é imune à paralisia.")
+            save_ok = True
+        else:
+            save_ok, *_ = await self._save_mostrado(alvo, "fortitude", self._dif_magia(caster, magia),
+                                                      desvantagem=caster.get("_tec_save_desvantagem", False))
         if not save_ok:
             alvo["paralisado"]             = True
             alvo["paralisado_rodadas"]     = 1
@@ -13192,18 +13201,26 @@ class GameRoom:
             alvo["_grotao_reflexos_falhou"] = True
         return passou, d20, bonus, total
 
-    async def _aplicar_veneno(self, alvo, veneno_id, fonte="ataque"):
+    async def _aplicar_veneno(self, alvo, veneno_id, fonte="ataque", dificuldade=None):
         """Aplica um veneno em qualquer alvo (jogador ou monstro)."""
         veneno = VENENOS.get(veneno_id)
         if not veneno:
             return
+        # Criaturas personalizadas podem tornar o veneno mais ou menos difícil
+        # de resistir sem alterar o catálogo compartilhado de venenos.
+        if dificuldade is not None:
+            try:
+                veneno = dict(veneno)
+                veneno["dificuldade"] = max(1, min(40, int(dificuldade)))
+            except (TypeError, ValueError):
+                pass
         nome      = veneno["nome"]
         alvo_nome = alvo.get("name", "Alvo")
 
         # Imunidade: mortos-vivos / constructos não têm fisiologia p/ venenos.
-        if not self._eh_jogador(alvo) and (
+        if (not self._eh_jogador(alvo) and (
             alvo.get("subtipo", _subtipo_padrao_monstro(alvo)) in ("morto_vivo", "construto", "abissal")
-        ):
+        )) or self._tem_imunidade(alvo, "poison"):
             await self.gm_say(f"🧪 **{nome}** não afeta **{alvo_nome}** (imune a venenos).")
             return
 
@@ -15066,6 +15083,14 @@ class GameRoom:
         min_dmg = target.get("min_damage", 0)
         return max(min_dmg, total)
 
+    def _tem_imunidade(self, alvo, efeito):
+        """Imunidades explícitas de fichas personalizadas, além do subtipo."""
+        aliases = {"luz": DMG_HOLY, "sagrado": DMG_HOLY, "gelo": DMG_COLD,
+                   "eletrico": DMG_LIGHTNING, "eletricidade": DMG_LIGHTNING}
+        wanted = aliases.get(efeito, efeito)
+        values = set(alvo.get("immunities", []))
+        return wanted in values or efeito in values
+
     def _avg_level(self):
         alive = [p for p in self.players.values() if p["alive"]]
         if not alive:
@@ -15633,7 +15658,8 @@ class GameRoom:
                     await self._player_dies(target["id"])
                 # Efeito on-hit (ex: veneno na mordida)
                 elif atk_def.get("on_hit"):
-                    await self._aplicar_veneno(target, atk_def["on_hit"], fonte="ataque")
+                    await self._aplicar_veneno(target, atk_def["on_hit"], fonte="ataque",
+                                                dificuldade=atk_def.get("poison_dc"))
                 # Extra damage (ex: virote incendiário do kobold besteiro)
                 if atk_def.get("extra_damage") and target.get("hp", 1) > 0:
                     xdmg = roll_dice(atk_def["extra_damage"])
@@ -17062,6 +17088,9 @@ class GameRoom:
         """Despacha para a IA específica do monstro."""
         if not targets:
             return
+        if m.get("_personalizado") or m.get("ai_profile_explicit"):
+            await self._run_profile_ai(m, targets)
+            return
         ai = m.get("ai_type", "agressivo")
         # Habilidades configuradas pelo editor são usadas com prioridade
         # ofensiva; em seguida a IA continua perseguindo e atacando os heróis.
@@ -17114,6 +17143,37 @@ class GameRoom:
         elif ai == "grotao":
             await self._ai_grotao(m, targets)
         # Outros tipos serão adicionados conforme novos monstros forem criados
+
+    async def _run_profile_ai(self, m, targets):
+        """Comportamento reutilizável das criaturas personalizadas."""
+        profile = m.get("ai_profile", "agressivo")
+        tactics = set(m.get("ai_tactics", []))
+        alive = [t for t in targets if self._alvo_vivo(t)]
+        if not alive:
+            return
+        if profile == "sentinela":
+            guard = max(3, int(m.get("vision_base", 3)))
+            alive = [t for t in alive if max(abs(t["obj"]["pos"][0] - m["pos"][0]),
+                                              abs(t["obj"]["pos"][1] - m["pos"][1])) <= guard]
+            if not alive:
+                return
+        def health_ratio(t):
+            obj = t["obj"]
+            hp = obj.get("hp", obj.get("vida_atual", 1))
+            maximum = obj.get("max_hp", obj.get("vida_max", hp))
+            return hp / max(1, maximum)
+        if profile in {"tatico", "cacador"} or "focar_feridos" in tactics:
+            target = min(alive, key=health_ratio)
+        else:
+            target = self._get_monster_primary_target(m, alive) or alive[0]
+        if profile == "conjurador" and await self._monster_try_spell(m, [target]):
+            return
+        if profile in {"agressivo", "tatico", "cacador", "emboscador", "protetor"} or "usar_habilidades_fortes" in tactics:
+            await self._monster_try_editor_ability(m)
+        if profile == "emboscador":
+            await self._ai_emboscador(m, [target])
+            return
+        await self._ai_agressivo(m, [target])
 
     async def _ai_agressivo(self, m, targets):
         """IA de monstros agressivos: move na direção do alvo mais próximo
@@ -18037,8 +18097,26 @@ class GameRoom:
                             sc = gerar_pergaminho(1)
                         if sc:
                             loot_items.append(sc)
+            # Drops do editor: cada linha é uma rolagem própria, portanto um
+            # monstro pode deixar mais de um item no mesmo baú.
+            for drop in m.get("loot_drops", []):
+                if random.randint(1, 100) > int(drop.get("chance", 0)):
+                    continue
+                if drop.get("kind") == "gold":
+                    gold += max(0, int(drop.get("amount", 0)))
+                    continue
+                iid = drop.get("item_id")
+                item_def = (
+                    next((i for i in CHEST_ITEMS   if i["id"] == iid), None) or
+                    next((i for i in SHOP_WEAPONS  if i["id"] == iid), None) or
+                    next((i for i in SHOP_AMMO     if i["id"] == iid), None) or
+                    next((i for i in SHOP_MERCHANT if i["id"] == iid), None)
+                )
+                if item_def:
+                    loot_items.append(deepcopy(item_def))
             # Loot garantido (ex.: "arma equipada" do Orc) — sempre dropa.
-            for gid in m.get("guaranteed_loot", []):
+            equipped_drop = m.get("equipped_items", []) if m.get("equipment_enabled") else []
+            for gid in dict.fromkeys([*m.get("guaranteed_loot", []), *equipped_drop]):
                 gdef = (
                     next((i for i in CHEST_ITEMS   if i["id"] == gid), None) or
                     next((i for i in SHOP_WEAPONS  if i["id"] == gid), None) or
@@ -19057,6 +19135,8 @@ _NEGATIVE_ABILITY_WEAKNESSES = {
                         "descricao":"Mente limitada: -1 em Vontade contra efeitos mentais"},
     "mente_fraca": {"type":"save_penalty", "save":"vontade", "bonus_flat":-2, "em_magia":True,
                      "descricao":"Mente fraca: -2 em Vontade contra controle mental"},
+    "mente_bruta": {"type":"save_penalty", "save":"vontade", "bonus_flat":-2, "em_magia":True,
+                     "descricao":"Mente bruta: -2 em Vontade contra controle mental"},
     "concentracao_fragil": {"type":"concentracao_fragil",
                              "descricao":"Concentração frágil: ao sofrer dano, pode perder a próxima magia"},
     "concentracao_sombria": {"type":"concentracao_fragil",
@@ -19067,7 +19147,17 @@ _NEGATIVE_ABILITY_WEAKNESSES = {
                     "descricao":"Fúria cega: após sofrer dano, ganha dano mas perde 1 CA"},
     "covardia_kobold": {"type":"moral_fragil",
                          "descricao":"Covardia instintiva: pode entrar em medo sob pressão"},
+    "corpo_pesado": {"type":"corpo_pesado",
+                       "descricao":"Corpo Pesado: ao falhar em Reflexos, recebe +1 dano daquele efeito."},
+    "lento_previsivel": {"type":"ca_condicional", "bonus_flat":-2,
+                           "descricao":"Lento e Previsível: ao errar um ataque, perde 2 CA até o próximo turno."},
 }
+
+AI_PROFILES = {"agressivo", "tatico", "cacador", "conjurador", "emboscador",
+               "protetor", "covarde", "irracional", "sentinela"}
+AI_TACTICS = {"focar_feridos", "perseguir_fugitivos", "manter_distancia",
+              "usar_habilidades_fortes", "usar_veneno", "usar_bombas",
+              "proteger_aliados", "recuar_pouca_vida", "ocultar_se", "prender_alvo"}
 
 def _same_weakness(a, b):
     return (a.get("type") == b.get("type") and a.get("categoria") == b.get("categoria")
@@ -19126,6 +19216,11 @@ def _validate_custom_monster(raw):
         return False, "o id não pode substituir um monstro nativo"
     ai_options = {m.get("ai_type", "agressivo") for m in MONSTER_DEFS if m.get("ai_type")}
     ai_type = raw.get("ai_type") if raw.get("ai_type") in ai_options else "agressivo"
+    ai_profile = str(raw.get("ai_profile") or "agressivo")
+    if ai_profile not in AI_PROFILES:
+        ai_profile = "agressivo"
+    raw_tactics = raw.get("ai_tactics", [])
+    ai_tactics = [str(t) for t in raw_tactics if str(t) in AI_TACTICS] if isinstance(raw_tactics, list) else []
     ability_lib = _base_ability_library()
     # Configuração por habilidade: usos por dia E recarga coexistem. O formato
     # antigo ability_ids continua aceito para fichas já salvas.
@@ -19181,6 +19276,11 @@ def _validate_custom_monster(raw):
         if not isinstance(raw_types, list):
             raw_types = [raw_types]
         damage_types = [str(dtype) for dtype in raw_types if str(dtype) in valid_damage_types]
+        extra_types = attack.get("extra_damage_types", [])
+        if not isinstance(extra_types, list):
+            extra_types = [extra_types]
+        extra_types = [str(dtype) for dtype in extra_types if str(dtype) in valid_damage_types]
+        poison_id = str(attack.get("on_hit") or "")
         attacks.append({
             "name": str(attack.get("name") or "Ataque")[:40],
             "damage": str(attack.get("damage") or "1d4")[:24],
@@ -19193,7 +19293,10 @@ def _validate_custom_monster(raw):
             "base_attack_bonus": base,
             "atk_bonus": base + ((stat - 10) // 2),
             "range": _monster_int(attack.get("range", 0), 0, 0, 20) or None,
-            "on_hit": None,
+            "on_hit": poison_id if poison_id in VENENOS else None,
+            "poison_dc": _monster_int(attack.get("poison_dc", 10), 10, 1, 40),
+            "extra_damage": str(attack.get("extra_damage") or "")[:24] or None,
+            "extra_damage_types": extra_types,
         })
     if not attacks:
         return False, "adicione pelo menos um ataque"
@@ -19267,6 +19370,25 @@ def _validate_custom_monster(raw):
     loot_table = raw.get("loot_table", {})
     if not isinstance(loot_table, dict):
         loot_table = {}
+    # Cada drop personalizado é rolado independentemente. Mantemos loot_table
+    # para todos os monstros legados e para a compatibilidade de saves antigos.
+    loot_drops = []
+    raw_drops = raw.get("loot_drops", [])
+    if isinstance(raw_drops, list):
+        valid_loot_ids = set(_DUNGEON_ITEM_CATALOG)
+        for drop in raw_drops[:20]:
+            if not isinstance(drop, dict):
+                continue
+            if drop.get("kind") == "gold":
+                loot_drops.append({"kind": "gold",
+                                   "amount": _monster_int(drop.get("amount", 1), 1, 1, 9999),
+                                   "chance": _monster_int(drop.get("chance", 100), 100, 0, 100)})
+                continue
+            iid = str(drop.get("item_id") or "")
+            if iid not in valid_loot_ids:
+                continue
+            loot_drops.append({"kind": "item", "item_id": iid,
+                               "chance": _monster_int(drop.get("chance", 100), 100, 0, 100)})
     try:
         cr = float(raw.get("cr", 1) or 1)
     except (TypeError, ValueError):
@@ -19319,9 +19441,11 @@ def _validate_custom_monster(raw):
         "equipped_items": equipped_items,
         "equipment": equipped_items[:],
         "guaranteed_loot": [str(x)[:60] for x in raw.get("guaranteed_loot", []) if str(x).strip()],
-        "loot_table": loot_table, "gold": _monster_int(raw.get("gold", 0), 0, 0, 9999),
+        "loot_table": loot_table, "loot_drops": loot_drops,
+        "gold": _monster_int(raw.get("gold", 0), 0, 0, 9999),
         "xp": _monster_int(raw.get("xp", 0), 0, 0, 99999),
-        "ai_type": ai_type, "image": str(raw.get("image") or typ)[:80],
+        "ai_type": ai_type, "ai_profile": ai_profile, "ai_tactics": list(dict.fromkeys(ai_tactics)),
+        "image": str(raw.get("image") or typ)[:80],
         "portrait": str(raw.get("portrait") or typ)[:80],
         "size": [size_w, size_h], "oriented": oriented, "porte": str(raw.get("porte") or "medio"),
         "spawn_min": 0, "spawn_max": 0, "undead": bool(raw.get("undead") or subtipo == "morto_vivo"), "subtipo": subtipo, "boss": bool(raw.get("boss")),

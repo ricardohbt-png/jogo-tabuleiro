@@ -2,7 +2,7 @@
 (function () {
   "use strict";
   const root = document.getElementById("monster-editor-view");
-  let draft = null, idManual = false;
+  let draft = null, idManual = false, summaryRenderer = null;
   const esc = v => String(v == null ? "" : v).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
   const copy = v => JSON.parse(JSON.stringify(v));
   const slug = v => String(v || "monstro").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "monstro";
@@ -21,6 +21,24 @@
     {value:"poison", name:"Veneno"}, {value:"holy", name:"Sagrado / luz"},
     {value:"magic", name:"Mágico"}, {value:"acid", name:"Ácido"},
   ];
+  const AI_PROFILES = [
+    {id:"agressivo", name:"Agressivo", desc:"Foca um alvo, persegue quem foge e usa sua ação ofensiva mais forte."},
+    {id:"tatico", name:"Tático", desc:"Prioriza inimigos vulneráveis e prefere atacar à distância quando possível."},
+    {id:"cacador", name:"Caçador", desc:"Busca alvos feridos para finalizar."},
+    {id:"conjurador", name:"Conjurador", desc:"Prioriza magias e mantém a pressão à distância."},
+    {id:"emboscador", name:"Emboscador", desc:"Tenta atacar com surpresa e aproveitar ocultação."},
+    {id:"protetor", name:"Protetor", desc:"Combate próximo aos aliados e responde a ameaças."},
+    {id:"covarde", name:"Covarde", desc:"Evita riscos quando está muito ferido."},
+    {id:"irracional", name:"Irracional", desc:"Ataca sem planejamento o alvo disponível."},
+    {id:"sentinela", name:"Sentinela", desc:"Só reage a inimigos dentro de sua área de guarda."},
+  ];
+  const AI_TACTICS = [
+    ["focar_feridos","Focar feridos"], ["perseguir_fugitivos","Perseguir fugitivos"],
+    ["manter_distancia","Manter distância"], ["usar_habilidades_fortes","Usar habilidades fortes"],
+    ["usar_veneno","Usar veneno"], ["usar_bombas","Usar bombas"],
+    ["proteger_aliados","Proteger aliados"], ["recuar_pouca_vida","Recuar com pouca vida"],
+    ["ocultar_se","Ocultar-se quando possível"], ["prender_alvo","Prender alvo"],
+  ];
   const SUBTIPOS = [
     {id:"construto", nome:"Construto", desc:"Imune a paralisia, petrificação, controle mental, medo, necrótico, veneno, gases, doença e sono."},
     {id:"morto_vivo", nome:"Morto-Vivo", desc:"Imune a veneno, gases, necrótico, doença, sono, encantamento e medo; sagrado dobrado."},
@@ -35,11 +53,14 @@
     fraqueza_magica: {type:"save_penalty",save:"vontade",bonus_flat:-2,em_magia:true,descricao:"Fraqueza mágica: -2 em Vontade contra controle de mortos-vivos"},
     mente_limitada: {type:"save_penalty",save:"vontade",bonus_flat:-1,em_magia:true,descricao:"Mente limitada: -1 em Vontade contra efeitos mentais"},
     mente_fraca: {type:"save_penalty",save:"vontade",bonus_flat:-2,em_magia:true,descricao:"Mente fraca: -2 em Vontade contra controle mental"},
+    mente_bruta: {type:"save_penalty",save:"vontade",bonus_flat:-2,em_magia:true,descricao:"Mente bruta: -2 em Vontade contra controle mental"},
     concentracao_fragil: {type:"concentracao_fragil",descricao:"Concentração frágil: ao sofrer dano, pode perder a próxima magia"},
     concentracao_sombria: {type:"concentracao_fragil",descricao:"Concentração sombria: ao sofrer dano, testa Vontade ou perde a magia"},
     essencia_profana: {type:"holy",multiplier:2,descricao:"Essência profana: dano sagrado/luz dobrado"},
     furia_cega: {type:"ca_condicional",bonus_flat:-1,descricao:"Fúria cega: após sofrer dano, ganha dano mas perde 1 CA"},
     covardia_kobold: {type:"moral_fragil",descricao:"Covardia instintiva: pode entrar em medo sob pressão"},
+    corpo_pesado: {type:"corpo_pesado",descricao:"Corpo Pesado: ao falhar em Reflexos, recebe +1 dano daquele efeito."},
+    lento_previsivel: {type:"ca_condicional",bonus_flat:-2,descricao:"Lento e Previsível: ao errar um ataque, perde 2 CA até o próximo turno."},
   };
   const negativeAbility = id => Object.prototype.hasOwnProperty.call(NEGATIVE_ABILITY_WEAKNESSES, id);
   const mechanicsFor = ids => (ids || []).filter(negativeAbility).map(id => Object.assign({source_ability:id}, NEGATIVE_ABILITY_WEAKNESSES[id]));
@@ -49,10 +70,10 @@
     // Catálogo completo: habilidades não mágicas dos heróis, da Guilda e do
     // bestiário. Magias continuam exclusivamente na aba Magias.
     ((window.EDITOR_CATALOG || {}).monster_abilities || []).forEach(a => {
-      if (a.id && a.action_type !== "magia" && !map.has(a.id)) map.set(a.id, a);
+      if (a.id && a.id !== "ponto_vulneravel" && a.action_type !== "magia" && !map.has(a.id)) map.set(a.id, a);
     });
     // Magias possuem sua própria aba; não devem parecer habilidades genéricas.
-    ((window.EDITOR_CATALOG || {}).monsters || []).forEach(m => (m.special_abilities || []).forEach(a => { if (a.id && a.action_type !== "magia" && !map.has(a.id)) map.set(a.id, a); }));
+    ((window.EDITOR_CATALOG || {}).monsters || []).forEach(m => (m.special_abilities || []).forEach(a => { if (a.id && a.id !== "ponto_vulneravel" && a.action_type !== "magia" && !map.has(a.id)) map.set(a.id, a); }));
     return [...map.values()];
   }
   const spellLibrary = () => ((window.EDITOR_CATALOG || {}).spells || []);
@@ -107,10 +128,13 @@
     const items = (m.equipped_items || []).map(id => catalog.get(id)).filter(Boolean);
     const weapon = items.find(item => item.die);
     if (weapon) {
+      const configuredAttack = (m.attacks || [])[0] || {};
       const attr = weapon.stat === "dex" ? "dex" : "str_";
       m.attacks = [{name:weapon.name, damage:weapon.die, damage_types:["physical"], attack_attribute:attr,
         apply_attribute_damage:true, base_attack_bonus:n(m.base_attack_bonus, 0), num_attacks:1,
-        range:n(weapon.range, 0), categoria:weapon.categoria}];
+        range:n(weapon.range, 0), categoria:weapon.categoria, on_hit:configuredAttack.on_hit,
+        poison_dc:configuredAttack.poison_dc, extra_damage:configuredAttack.extra_damage,
+        extra_damage_types:configuredAttack.extra_damage_types || []}];
     }
     m.ac += items.reduce((sum, item) => sum + n(item.ac_bonus, 0) + (item.effect === "def_" ? n(item.value, 0) : 0), 0);
     m.hp += items.reduce((sum, item) => sum + (item.effect === "maxhp" ? n(item.value, 0) : 0), 0);
@@ -159,8 +183,11 @@
     out.resistances = out.resistances || [];
     out.equipment = out.equipment || []; out.equipped_items = out.equipped_items || out.equipment || [];
     out.equipment_enabled = !!out.equipment_enabled;
+    out.ai_profile = AI_PROFILES.some(p => p.id === out.ai_profile) ? out.ai_profile : "agressivo";
+    out.ai_tactics = Array.isArray(out.ai_tactics) ? out.ai_tactics : [];
     out.guaranteed_loot = out.guaranteed_loot || [];
-    out.loot_table = out.loot_table || {}; out.ai_type = out.ai_type || "agressivo";
+    out.loot_table = out.loot_table || {}; out.loot_drops = Array.isArray(out.loot_drops) ? out.loot_drops : [];
+    out.ai_type = out.ai_type || "agressivo";
     return out;
   }
   function blank() { const m = normalize({ name:"Nova Criatura", hp:10, ac:10, movement:5, tier:1, cr:1, str_:10, dex:10, con_:10, int_:10, base_attack_bonus:0, attacks:[{name:"Ataque", damage:"1d4", num_attacks:1, attack_attribute:"str_", base_attack_bonus:0}] }, false); m.type = "nova_criatura"; m.original_type = ""; return m; }
@@ -171,25 +198,37 @@
     const val = id => get(id).value;
     const nums = ["tier","cr","base_hp","natural_armor","movement","vision_base","base_attack_bonus","caster_level","str_","dex","con_","int_","fort_base","ref_base","will_base","gold","xp"];
     const out = Object.assign({}, draft);
-    ["name","type","emoji","ai_type","image","portrait","porte"].forEach(k => out[k] = val("me-" + k).trim());
-    nums.forEach(k => out[k] = n(val("me-" + k), 0));
+    ["name","type","emoji","image","portrait","porte"].forEach(k => out[k] = val("me-" + k).trim());
+    // Na primeira montagem o resumo é calculado antes de o seletor visual de
+    // perfil substituir o campo legado; use o rascunho nesse curto intervalo.
+    out.ai_profile = get("me-ai_profile")?.value || draft.ai_profile || "agressivo";
+    out.ai_tactics = [...root.querySelectorAll(".me-ai-tactic:checked")].map(el => el.value);
+    out.ai_type = "agressivo";
+    nums.forEach(k => out[k] = n(get("me-" + k)?.value, 0));
     out.hp = Math.max(1, out.base_hp + mod(out.con_));
     out.fort = out.fort_base + mod(out.con_);
     out.ref_ = out.ref_base + mod(out.dex);
     out.will = out.will_base + mod(out.int_);
     out.ac = Math.max(1, 10 + mod(out.dex) + out.natural_armor);
-    out.boss = get("me-boss").checked; out.undead = get("me-undead").checked;
+    out.boss = get("me-boss").checked;
     out.subtipo = val("me-subtipo") || "raca_padrao";
+    out.undead = out.subtipo === "morto_vivo";
     out.visao_escuro = get("me-visao_escuro").checked;
     out.size = [Math.max(1, n(val("me-size-w"), 1)), Math.max(1, n(val("me-size-h"), 1))];
     out.oriented = get("me-oriented").checked && out.size[0] * out.size[1] > 1;
-    out.immunities = val("me-immunities").split(",").map(x => x.trim()).filter(Boolean);
+    out.immunities = [...root.querySelectorAll(".me-immunity:checked")].map(el => el.value);
     out.equipment_enabled = get("me-equipment-enabled").checked;
     out.equipped_items = [...root.querySelectorAll(".me-equipped-item")]
       .flatMap(el => el.multiple ? [...el.selectedOptions].map(o => o.value) : [el.value])
       .filter(Boolean);
     out.equipment = out.equipped_items.slice();
-    out.guaranteed_loot = val("me-guaranteed-loot").split(",").map(x => x.trim()).filter(Boolean);
+    out.guaranteed_loot = [];
+    out.loot_drops = [...root.querySelectorAll(".me-loot-row")].map(row => {
+      const selected = row.querySelector(".me-loot-id").value;
+      return selected === "__gold__"
+        ? {kind:"gold", amount:Math.max(1, n(row.querySelector(".me-loot-amount").value, 1)), chance:Math.max(0, Math.min(100, n(row.querySelector(".me-loot-chance").value, 100)))}
+        : {kind:"item", item_id:selected, chance:Math.max(0, Math.min(100, n(row.querySelector(".me-loot-chance").value, 100)))};
+    }).filter(drop => drop.kind === "gold" || drop.item_id);
     out.negative_ability_ids = [...root.querySelectorAll(".me-negative-ability:checked")].map(el => el.value);
     const knownWeaknesses = weaknessLibrary();
     out.weaknesses = [...root.querySelectorAll(".me-weakness:checked")]
@@ -204,7 +243,7 @@
     out.resistances = [...root.querySelectorAll(".me-resistance:checked")]
       .map(el => Object.assign({}, DAMAGE_TRAITS[Number(el.dataset.i)], {reduction:Math.max(1, n(root.querySelector(`.me-resistance-level[data-i="${el.dataset.i}"]`).value, 1))}))
       .concat([...root.querySelectorAll(".me-half-resistance:checked")].map(el => Object.assign({}, DAMAGE_TRAITS[Number(el.dataset.i)], {mode:"half"})));
-    try { out.loot_table = val("me-loot-table").trim() ? JSON.parse(val("me-loot-table")) : {}; } catch (_) { out.loot_table = null; }
+    out.loot_table = {};
     out.monster_abilities = [...root.querySelectorAll(".me-ability:checked")].map(el => {
       const card = el.closest(".me-ability-card");
       return {id:el.value,
@@ -217,7 +256,7 @@
       const value = Math.max(1, n(card.querySelector(".me-spell-limit").value, 1));
       return mode === "cooldown" ? {id:el.value, limit_mode:mode, cooldown_turns:value} : {id:el.value, limit_mode:mode, uses_per_combat:value};
     });
-    out.attacks = [...root.querySelectorAll(".me-attack")].map(row => ({ name:row.querySelector(".ma-name").value.trim(), damage:row.querySelector(".ma-damage").value.trim(), damage_types:[row.querySelector(".ma-type").value], attack_attribute:row.querySelector(".ma-attr").value, apply_attribute_damage:true, base_attack_bonus:n(row.querySelector(".ma-bab").value), num_attacks:n(row.querySelector(".ma-count").value, 1), range:n(row.querySelector(".ma-range").value) }));
+    out.attacks = [...root.querySelectorAll(".me-attack")].map(row => ({ name:row.querySelector(".ma-name").value.trim(), damage:row.querySelector(".ma-damage").value.trim(), damage_types:[row.querySelector(".ma-type").value], attack_attribute:row.querySelector(".ma-attr").value, apply_attribute_damage:true, base_attack_bonus:n(row.querySelector(".ma-bab").value), num_attacks:n(row.querySelector(".ma-count").value, 1), range:n(row.querySelector(".ma-range").value), on_hit:row.querySelector(".ma-poison")?.value || null, poison_dc:n(row.querySelector(".ma-poison-dc")?.value, 10), extra_damage:row.querySelector(".ma-extra-damage")?.value.trim() || null, extra_damage_types:row.querySelector(".ma-extra-type")?.value ? [row.querySelector(".ma-extra-type").value] : [] }));
     return out;
   }
   function estimate(m) {
@@ -229,8 +268,12 @@
     const initiative = mod(m.dex) + mod(m.int_);
     const final = { "me-hp-final":m.hp, "me-ac-final":m.ac, "me-vision-final":visionRadius(m), "me-fort-final":m.fort >= 0 ? "+" + m.fort : m.fort, "me-ref-final":m.ref_ >= 0 ? "+" + m.ref_ : m.ref_, "me-will-final":m.will >= 0 ? "+" + m.will : m.will, "me-init-final":initiative >= 0 ? "+" + initiative : initiative };
     Object.entries(final).forEach(([id, value]) => { const el=document.getElementById(id); if(el) el.textContent=value; });
+    const spellDc = root.querySelector("#me-spell-dc-final");
+    if (spellDc) spellDc.innerHTML = `1º: ${8 + mod(m.int_) + 1} · 2º: ${8 + mod(m.int_) + 2} · 3º: ${8 + mod(m.int_) + 3}`;
     const pv = root.querySelector("#me-nd-estimate"); if (pv) pv.textContent = estimate(m);
     const known = root.querySelector("#me-spell-known-count"); if (known) known.textContent = `${m.monster_spells.length} conhecida${m.monster_spells.length === 1 ? "" : "s"}`;
+    const summary = root.querySelector(".me-tab-panel[data-tab=\"Resumo\"]");
+    if (summary && summaryRenderer) summary.innerHTML = summaryRenderer(read());
   }
   function render() {
     if (!draft) draft = blank();
@@ -327,6 +370,78 @@
       }).join("");
       behavior.insertAdjacentHTML("afterbegin", `<div class="me-checks"><label class="me-tip" data-tip="Ataques contra os quadrados selecionados ignoram somente a armadura natural — a Destreza ainda conta na CA — e também ignoram reduções de dano da criatura."><input id="me-ponto-vulneravel" type="checkbox"${pontoVulneravel && draft.size[0]*draft.size[1]>1 ? " checked" : ""}${draft.size[0]*draft.size[1]>1 ? "" : " disabled"}> Ponto Vulnerável</label><label>Quadrados vulneráveis<select id="me-ponto-vulneravel-tile" multiple size="${Math.min(6, Math.max(2, cells.length))}"${draft.size[0]*draft.size[1]>1 ? "" : " disabled"}>${labels}</select></label></div><p class="me-hint">Disponível somente para criaturas que ocupam mais de uma casa. Use Ctrl (ou ⌘ no Mac) para selecionar mais de um quadrado.</p>`);
     }
+    // Controles estruturados adicionados sobre a ficha legada: mantêm os
+    // mesmos campos de persistência e deixam a edição legível por abas.
+    const poisonOptions = ((window.EDITOR_CATALOG || {}).venoms || []).map(v => ({id:v.id, name:v.nome || v.id})).filter(v => v.id);
+    root.querySelectorAll(".me-attack").forEach((row, i) => {
+      const a = draft.attacks[i] || {};
+      row.insertAdjacentHTML("beforeend", `<div class="me-attack-special"><b>Especial ao acertar</b><label>Veneno<select class="ma-poison"><option value="">— nenhum —</option>${poisonOptions.map(v => `<option value="${esc(v.id)}"${a.on_hit === v.id ? " selected" : ""}>${esc(v.name)}</option>`).join("")}</select></label><label>CD do veneno<input class="ma-poison-dc" type="number" min="1" max="40" value="${esc(a.poison_dc || 10)}"></label><label>Dano extra<select class="ma-extra-type"><option value="">— nenhum —</option>${ATTACK_DAMAGE_TYPES.filter(t=>t.value!=="physical").map(t=>`<option value="${t.value}"${(a.extra_damage_types||[])[0]===t.value ? " selected" : ""}>${t.name}</option>`).join("")}</select></label><label>Dados extras<input class="ma-extra-damage" placeholder="ex.: 2d6" value="${esc(a.extra_damage || "")}"></label></div>`);
+    });
+    const casterBox = root.querySelector(".me-spell-caster");
+    if (casterBox) casterBox.insertAdjacentHTML("beforeend", `<div class="me-calculated me-spell-dc"><b>CD de resistência</b><span id="me-spell-dc-final">8 + INT + círculo</span><small>1º: ${8 + mod(draft.int_) + 1} · 2º: ${8 + mod(draft.int_) + 2} · 3º: ${8 + mod(draft.int_) + 3}</small></div>`);
+    const behaviorPanel = root.querySelector("#me-ai_type")?.closest("section");
+    if (behaviorPanel) {
+      const legacyImmunities = behaviorPanel.querySelector("#me-immunities")?.closest("label");
+      const legacyGuaranteed = behaviorPanel.querySelector("#me-guaranteed-loot")?.closest("label");
+      const legacyTable = behaviorPanel.querySelector("#me-loot-table")?.closest("label");
+      const legacyGold = behaviorPanel.querySelector("#me-gold")?.closest("label");
+      [legacyImmunities, legacyGuaranteed, legacyTable, legacyGold].forEach(el => el?.remove());
+      const immunityChoices = [["fire","Fogo"],["cold","Gelo"],["acid","Ácido"],["lightning","Elétrico"],["poison","Veneno"],["holy","Sagrado / luz"],["encantamento","Encantamento"],["sono","Sono"],["paralisia","Paralisia"]];
+      const drops = draft.loot_drops || (draft.guaranteed_loot || []).map(item_id => ({kind:"item",item_id,chance:100}));
+      const itemOptions = shopItems.map(item => `<option value="${esc(item.id)}">${esc(item.emoji || "")} ${esc(item.name)}</option>`).join("");
+      behaviorPanel.insertAdjacentHTML("beforeend", `<div class="me-defense-loot"><h3>Imunidades</h3><div class="me-immunity-grid">${immunityChoices.map(([id,label])=>`<label><input class="me-immunity" type="checkbox" value="${id}"${draft.immunities.includes(id)?" checked":""}> ${label}</label>`).join("")}</div><h3>Tesouro deixado</h3><p class="me-hint">Cada item é rolado separadamente; vários itens podem cair.</p><div id="me-loot-rows">${(drops.length?drops:[{item_id:"",chance:100}]).map(drop=>`<div class="me-loot-row"><select class="me-loot-id"><option value="">— selecione um item —</option>${shopItems.map(item=>`<option value="${esc(item.id)}"${drop.item_id===item.id?" selected":""}>${esc(item.emoji || "")} ${esc(item.name)}</option>`).join("")}</select><label>Chance %<input class="me-loot-chance" type="number" min="0" max="100" value="${esc(drop.chance)}"></label><button type="button" class="me-remove-loot">×</button></div>`).join("")}</div><button type="button" id="me-add-loot">+ item no loot</button></div>`);
+      behaviorPanel.querySelector("#me-add-loot").onclick = () => { const box=behaviorPanel.querySelector("#me-loot-rows"); box.insertAdjacentHTML("beforeend", `<div class="me-loot-row"><select class="me-loot-id"><option value="">— selecione um item —</option>${itemOptions}</select><label>Chance %<input class="me-loot-chance" type="number" min="0" max="100" value="100"></label><button type="button" class="me-remove-loot">×</button></div>`); box.lastElementChild.querySelector(".me-remove-loot").onclick = e => e.currentTarget.closest(".me-loot-row").remove(); };
+      behaviorPanel.querySelectorAll(".me-remove-loot").forEach(btn => btn.onclick = e => e.currentTarget.closest(".me-loot-row").remove());
+      // Ouro é um drop independente como qualquer item: quantidade e chance
+      // ficam na própria linha (ex.: 10 moedas / 30%).
+      const makeLootRow = drop => `<div class="me-loot-row"><select class="me-loot-id"><option value="">— selecione um item —</option><option value="__gold__"${drop.kind === "gold" ? " selected" : ""}>🪙 Moedas de ouro</option>${shopItems.map(item => `<option value="${esc(item.id)}"${drop.item_id === item.id ? " selected" : ""}>${esc(item.emoji || "")} ${esc(item.name)}</option>`).join("")}</select><label>Quantidade<input class="me-loot-amount" type="number" min="1" value="${esc(drop.amount || 1)}"></label><label>Chance %<input class="me-loot-chance" type="number" min="0" max="100" value="${esc(drop.chance || 100)}"></label><button type="button" class="me-remove-loot">×</button></div>`;
+      const lootRows = behaviorPanel.querySelector("#me-loot-rows");
+      if (lootRows) {
+        const savedDrops = drops.length ? drops : [{kind:"item",item_id:"",chance:100}];
+        lootRows.innerHTML = savedDrops.map(makeLootRow).join("");
+        const bindLootRemove = row => row.querySelector(".me-remove-loot").onclick = () => row.remove();
+        [...lootRows.children].forEach(bindLootRemove);
+        behaviorPanel.querySelector("#me-add-loot").onclick = () => {
+          lootRows.insertAdjacentHTML("beforeend", makeLootRow({kind:"item",item_id:"",chance:100}));
+          bindLootRemove(lootRows.lastElementChild);
+        };
+      }
+    }
+    const makeSummary = m => window.EDITOR_BESTIARY?.details ? window.EDITOR_BESTIARY.details(m) : `<article class="me-summary"><h2>${esc(m.emoji||"")} ${esc(m.name)}</h2></article>`; summaryRenderer=makeSummary;
+    const form = root.querySelector(".me-form"), footer = form.querySelector("footer");
+    const groups = [["Resumo", []], ["Identidade", ["Arte da criatura","Identidade e combate","Atributos e resistências"]], ["Ataques", ["Ataques","Inventário e equipamentos"]], ["Habilidades", ["Habilidades"]], ["Magias", ["Magias"]], ["Resistências", ["Resistências a dano","Resistência pela metade","Fraquezas a dano","Vulnerabilidade a dano dobrado","Fraquezas especiais"]], ["Comportamento e tesouro", ["Comportamento, defesas e tesouro"]]];
+    const nav = document.createElement("nav"); nav.className="me-main-tabs";
+    groups.forEach(([name]) => nav.insertAdjacentHTML("beforeend", `<button type="button" data-tab="${esc(name)}">${esc(name)}</button>`));
+    form.insertBefore(nav, form.querySelector("section"));
+    groups.forEach(([name, heads]) => { const panel=document.createElement("div"); panel.className="me-tab-panel"; panel.dataset.tab=name; if(name==="Resumo") panel.innerHTML=makeSummary(read()); else [...form.querySelectorAll(":scope > section")].filter(s=>heads.includes(s.querySelector("h2")?.textContent)).forEach(s=>panel.appendChild(s)); form.insertBefore(panel, footer); });
+    const switchTab = name => { root.querySelectorAll(".me-tab-panel").forEach(p=>p.hidden=p.dataset.tab!==name); root.querySelectorAll(".me-main-tabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab===name)); };
+    // Ponto Vulnerável é uma desvantagem, não uma habilidade ofensiva: o
+    // controle especializado fica junto às demais fraquezas.
+    const vulnerableControl = root.querySelector("#me-ponto-vulneravel")?.closest(".me-checks");
+    const resistancePanel = root.querySelector('.me-tab-panel[data-tab="Resistências"]');
+    if (vulnerableControl && resistancePanel) {
+      const hint = vulnerableControl.nextElementSibling;
+      resistancePanel.appendChild(vulnerableControl);
+      if (hint?.classList.contains("me-hint")) resistancePanel.appendChild(hint);
+    }
+    // O subtipo é a identidade da criatura. O antigo checkbox "morto-vivo"
+    // duplicava essa escolha, portanto fica somente o seletor na ficha base.
+    root.querySelector("#me-undead")?.closest("label")?.remove();
+    const subtypeControl = root.querySelector("#me-subtipo")?.closest("label");
+    const identityFields = root.querySelector("#me-name")?.closest(".me-fields");
+    if (subtypeControl && identityFields) identityFields.appendChild(subtypeControl);
+    const aiControl = root.querySelector("#me-ai_type")?.closest("label");
+    if (aiControl && identityFields) {
+      const selectedTactics = new Set(draft.ai_tactics || []);
+      aiControl.outerHTML = `<label>Perfil de IA<select id="me-ai_profile">${AI_PROFILES.map(p => `<option value="${p.id}"${draft.ai_profile === p.id ? " selected" : ""}>${p.name}</option>`).join("")}</select><small id="me-ai-profile-desc"></small></label>`;
+      const profileControl = identityFields.querySelector("#me-ai_profile")?.closest("label");
+      profileControl?.insertAdjacentHTML("afterend", `<div class="me-ai-tactics"><b>Táticas especiais</b><small>Refinam como o perfil toma decisões.</small><div>${AI_TACTICS.map(([id,label]) => `<label><input class="me-ai-tactic" type="checkbox" value="${id}"${selectedTactics.has(id) ? " checked" : ""}> ${label}</label>`).join("")}</div></div>`);
+      const profileSelect = identityFields.querySelector("#me-ai_profile");
+      const showProfile = () => { const p=AI_PROFILES.find(x=>x.id===profileSelect.value); const e=identityFields.querySelector("#me-ai-profile-desc"); if(e) e.textContent=p?.desc || ""; };
+      if (profileSelect) { profileSelect.onchange=showProfile; showProfile(); }
+    }
+    root.querySelector("#me-tier")?.closest("label")?.remove();
+    root.querySelectorAll(".me-main-tabs button").forEach(btn=>btn.onclick=()=>switchTab(btn.dataset.tab)); switchTab("Resumo");
     const equipmentToggle = document.getElementById("me-equipment-enabled");
     const equipmentInventory = document.getElementById("me-equipment-inventory");
     if (equipmentToggle && equipmentInventory) equipmentToggle.onchange = () => {

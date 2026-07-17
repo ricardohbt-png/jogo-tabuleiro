@@ -126,3 +126,15 @@ button.active { background:#d9b061; color:#1d1812; border-color:#d9b061; }
 .spv-dot.on { background:#d9b061; }
 .spv-prev { background:transparent; color:#d9b061; border:1px solid #5a4830; border-radius:6px; padding:9px 16px; font-weight:bold; cursor:pointer; }
 .spv-next { background:#d9b061; color:#1d1812; border:none; border-radius:6px; padding:9px 18px; font-weight:bold; cursor:pointer; }
+
+/* Editor de criatura: navegação por abas e campos estruturados. */
+.me-main-tabs { display:flex; gap:5px; flex-wrap:wrap; padding:0 0 10px; border-bottom:1px solid #4a3c28; margin-bottom:4px; }
+.me-main-tabs button { color:#b9a87f; }.me-main-tabs button.active { background:#d9b061; color:#1d1812; border-color:#d9b061; }
+.me-tab-panel > section:first-child { border-top:0; }.me-summary { padding:10px 0; }.me-summary h2 { color:#d9b061; margin:0; }.me-summary p { color:#cbbd9d; font-size:12px; }
+.me-summary-stats { display:flex; flex-wrap:wrap; gap:6px; }.me-summary-stats b { padding:6px 8px; background:#241d14; border:1px solid #4a3c28; border-radius:5px; color:#e8dcc0; font-size:12px; }
+.me-attack-special { grid-column:1/-1; display:grid; grid-template-columns:1.2fr .7fr 1fr .7fr; gap:6px; padding-top:6px; border-top:1px solid #3f3324; }.me-attack-special b { grid-column:1/-1; color:#d9b061; font-size:11px; }.me-attack-special label { font-size:10px; }
+.me-defense-loot { margin-top:10px; padding-top:8px; border-top:1px solid #3f3324; }.me-defense-loot h3 { color:#d9b061; font-size:12px; margin:8px 0 5px; }
+.me-immunity-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; }.me-immunity-grid label { padding:5px; background:#20252d; border:1px solid #475469; border-radius:4px; }.me-immunity-grid input { display:inline; width:auto; margin:0 4px 0 0; }
+.me-loot-row { display:grid; grid-template-columns:minmax(0,1fr) 90px 90px 28px; gap:6px; align-items:end; margin:5px 0; }.me-loot-row button { color:#e06a6a; padding:4px; }.me-spell-dc { min-width:165px; }.me-spell-dc small { display:block; color:#a99bbe; font-size:10px; margin-top:2px; }
+.me-ai-tactics { grid-column:1/-1; padding:7px; background:#20251d; border:1px solid #4b6740; border-radius:5px; }.me-ai-tactics > b,.me-ai-tactics > small { display:block; }.me-ai-tactics > small { color:#9cad89; font-size:10px; margin:2px 0 6px; }.me-ai-tactics > div { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; }.me-ai-tactics label { padding:3px 4px; font-size:10px; }.me-ai-tactics input { display:inline; width:auto; margin:0 4px 0 0; }
+@media (max-width:700px) { .me-attack-special,.me-immunity-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }

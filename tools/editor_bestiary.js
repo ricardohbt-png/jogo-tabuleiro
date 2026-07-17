@@ -40,9 +40,12 @@
     const items = (m.equipped_items || m.equipment || []).map(id => catalog.get(id)).filter(Boolean);
     const weapon = items.find(item => item.die);
     if (weapon) {
+      const configuredAttack = (m.attacks || [])[0] || {};
       const attr = weapon.stat === "dex" ? "dex" : "str_";
       m.attacks = [{name:weapon.name, damage:weapon.die, attack_attribute:attr, apply_attribute_damage:true,
-        base_attack_bonus:Number(m.base_attack_bonus || 0), num_attacks:1, range:Number(weapon.range || 0), categoria:weapon.categoria}];
+        base_attack_bonus:Number(m.base_attack_bonus || 0), num_attacks:1, range:Number(weapon.range || 0), categoria:weapon.categoria,
+        on_hit:configuredAttack.on_hit, poison_dc:configuredAttack.poison_dc,
+        extra_damage:configuredAttack.extra_damage, extra_damage_types:configuredAttack.extra_damage_types || []}];
     }
     m.ac = Number(m.ac || 10) + items.reduce((sum, item) => sum + Number(item.ac_bonus || 0) + (item.effect === "def_" ? Number(item.value || 0) : 0), 0);
     m.hp = Number(m.hp || 0) + items.reduce((sum, item) => sum + (item.effect === "maxhp" ? Number(item.value || 0) : 0), 0);
@@ -153,6 +156,7 @@
     const equipped = m.equipped_items || m.equipment;
     if (equipped && (Array.isArray(equipped) ? equipped.length : true)) rows.push(`${m.equipment_enabled ? "Equipado e ativo" : "Equipamento"}: ${Array.isArray(equipped) ? equipped.map(pretty).join(", ") : pretty(equipped)}`);
     if (m.guaranteed_loot) rows.push(`Garantido: ${Array.isArray(m.guaranteed_loot) ? m.guaranteed_loot.map(x => pretty(x.name || x.id || x)).join(", ") : pretty(m.guaranteed_loot.name || m.guaranteed_loot.id || m.guaranteed_loot)}`);
+    if (m.loot_drops && m.loot_drops.length) rows.push(`Drops: ${m.loot_drops.map(d => d.kind === "gold" ? `${d.amount} ouro (${d.chance}%)` : `${pretty(d.item_id)} (${d.chance}%)`).join(", ")}`);
     if (m.gold != null) rows.push(`${m.gold} ouro`);
     if (m.loot_table) rows.push("Tesouro variável (tabela de loot)");
     return rows.length ? rows.map(esc).join("<br>") : "Nenhum tesouro definido.";
@@ -170,7 +174,7 @@
       <div class="best-stats"><div><b>PV</b><span>${esc(m.hp || "—")}</span></div><div><b>CA total</b><span>${esc(m.ac || "—")}</span></div><div><b>Armadura natural</b><span>${esc(m.natural_armor != null ? m.natural_armor : Math.max(0, Number(m.ac || 10) - 10 - mod(m.dex)))}</span></div><div><b>Movimento</b><span>${esc(m.movement || "—")}</span></div><div><b>Raio de visão</b><span title="${m.visao_escuro || m.darkvision_range ? "Visão no escuro: objetos não bloqueiam, apenas paredes." : "Objetos altos e paredes bloqueiam a visão."}">${esc(visionRadius(m))}${m.visao_escuro || m.darkvision_range ? " 👁️" : ""}</span></div><div><b>Ataques</b><span>${attacks.reduce((n,a) => n + Number(a.num_attacks || 1), 0)}</span></div><div><b>Iniciativa</b><span>${esc((mod(m.dex) + mod(m.int_)) >= 0 ? "+" + (mod(m.dex) + mod(m.int_)) : mod(m.dex) + mod(m.int_))}</span></div></div>
       <div class="best-attributes"><div><b>FOR</b>${esc(m.str_ != null ? m.str_ : "—")} <small>${m.str_ != null ? (mod(m.str_) >= 0 ? "+" : "") + mod(m.str_) : ""}</small></div><div><b>DES</b>${esc(m.dex != null ? m.dex : "—")} <small>${m.dex != null ? (mod(m.dex) >= 0 ? "+" : "") + mod(m.dex) : ""}</small></div><div><b>CON</b>${esc(m.con_ != null ? m.con_ : "—")} <small>${m.con_ != null ? (mod(m.con_) >= 0 ? "+" : "") + mod(m.con_) : ""}</small></div><div><b>INT</b>${esc(m.int_ != null ? m.int_ : "—")} <small>${m.int_ != null ? (mod(m.int_) >= 0 ? "+" : "") + mod(m.int_) : ""}</small></div></div>
       <div class="best-saves"><div><b>Fortitude</b><span>${esc(m.fort != null ? (m.fort >= 0 ? "+" : "") + m.fort : "—")}</span><small>CON</small></div><div><b>Reflexos</b><span>${esc(m.ref_ != null ? (m.ref_ >= 0 ? "+" : "") + m.ref_ : "—")}</span><small>DES</small></div><div><b>Vontade</b><span>${esc(m.will != null ? (m.will >= 0 ? "+" : "") + m.will : "—")}</span><small>INT</small></div></div>
-      <div class="best-grid"><section><h2>Ataques</h2><table><thead><tr><th>Ataque</th><th>Base</th><th>Acerto</th><th>Dano</th><th>Qtd.</th></tr></thead><tbody>${attacks.map(a => { const attr=a.attack_attribute || (a.range ? "dex" : "str_"); return `<tr><td>${esc(a.name || "Ataque")}</td><td>${esc(attr === "dex" ? "Destreza" : "Força")}</td><td>+${esc(attackBonus(m, a))}</td><td>${esc(attackDamageText(m, a))}</td><td>${esc(a.num_attacks || 1)}</td></tr>`; }).join("")}</tbody></table></section>
+      <div class="best-grid"><section><h2>Ataques</h2><table><thead><tr><th>Ataque</th><th>Base</th><th>Acerto</th><th>Dano</th><th>Qtd.</th></tr></thead><tbody>${attacks.map(a => { const attr=a.attack_attribute || (a.range ? "dex" : "str_"); const special=[a.extra_damage ? `+ ${a.extra_damage} ${pretty((a.extra_damage_types||[])[0])}` : "", a.on_hit ? `Veneno CD ${a.poison_dc || 10}` : ""].filter(Boolean).join(" · "); return `<tr><td>${esc(a.name || "Ataque")}${special ? `<small>${esc(special)}</small>` : ""}</td><td>${esc(attr === "dex" ? "Destreza" : "Força")}</td><td>+${esc(attackBonus(m, a))}</td><td>${esc(attackDamageText(m, a))}</td><td>${esc(a.num_attacks || 1)}</td></tr>`; }).join("")}</tbody></table></section>
       <section><h2>Habilidades especiais</h2><div class="best-abilities">${abilities.length ? abilities.map(a => `<div><strong>${esc(a.name || pretty(a.id))}</strong><small>${esc(pretty(a.action_type))} · ${esc(cooldown(a))}${a.dc ? ` · CD ${esc(a.dc)} (${esc(pretty(a.save))})` : ""}</small>${a.descricao ? `<p>${esc(a.descricao)}</p>` : ""}</div>`).join("") : "<p>Sem habilidades especiais definidas.</p>"}</div></section>
       <section><h2>Magias</h2><p><b>Nível de conjurador:</b> ${esc(m.caster_level || m.level || 1)}</p><div class="best-abilities">${spells.length ? spells.map(s => `<div><strong>${esc(s.icone || "✦")} ${esc(s.nome || pretty(s.id))}</strong><small>${esc(pretty(s.circulo))} círculo · ${s.limit_mode === "cooldown" ? `recarga: ${esc(s.cooldown_turns || 1)} rodada(s)` : `${esc(s.uses_per_combat || 1)}× por encontro`}</small>${s.descricao ? `<p>${esc(s.descricao)}</p>` : ""}</div>`).join("") : "<p>Não conhece magias.</p>"}</div></section>
       <section><h2>Defesas e fraquezas</h2><p><b>Imunidades:</b> ${esc((m.immunities || []).map(pretty).join(", ") || "Nenhuma definida")}</p><p><b>Resistências:</b> ${esc((m.resistances || []).map(r => `${pretty(r.categoria || r.type)} ${r.mode === "half" ? "(metade do dano)" : "(-" + (r.reduction || 1) + ")"}`).join(", ") || "Nenhuma definida")}</p><p><b>Fraquezas:</b> ${esc(weaknesses)}</p></section>
@@ -190,5 +194,5 @@
     search.oninput = () => { filter = search.value; render(); };
     root.querySelectorAll(".best-row").forEach(btn => btn.onclick = () => { selected = btn.dataset.type; render(); });
   }
-  window.EDITOR_BESTIARY = { render, estimateND: ndEstimate };
+  window.EDITOR_BESTIARY = { render, estimateND: ndEstimate, details };
 })();
