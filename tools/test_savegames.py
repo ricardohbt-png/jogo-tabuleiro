@@ -154,6 +154,33 @@ def main():
         S.SAVEGAMES_DIR = olds
         shutil.rmtree(tmp, ignore_errors=True)
 
+    # [8] validação de segurança (path traversal)
+    print("\n[8] Segurança de caminhos")
+    tmp = tempfile.mkdtemp()
+    olda = S.ACCOUNTS_DIR
+    S.ACCOUNTS_DIR = tmp
+    S.ACCOUNTS_ONLINE.clear()
+    try:
+        _, e1 = S.create_account("../evil", "1234")
+        check("recusa apelido com ../", e1 is not None)
+        _, e2 = S.create_account("c:/temp/evil", "1234")
+        check("recusa apelido com caminho absoluto", e2 is not None)
+        _, e3 = S.create_account("bob smith", "1234")
+        check("recusa apelido com espaço", e3 is not None)
+        check("load_savegame recusa id inválido", S.load_savegame("../foo") is None)
+        check("load_savegame recusa id None", S.load_savegame(None) is None)
+        # re-login pela mesma conexão libera a conta anterior
+        S.create_account("aaa", "1111")
+        S.create_account("bbb", "2222")
+        S.try_login("pidX", "aaa", "1111")
+        S.try_login("pidX", "bbb", "2222")
+        check("re-login libera conta anterior",
+              "aaa" not in S.ACCOUNTS_ONLINE and S.ACCOUNTS_ONLINE.get("bbb") == "pidX")
+    finally:
+        S.ACCOUNTS_DIR = olda
+        S.ACCOUNTS_ONLINE.clear()
+        shutil.rmtree(tmp, ignore_errors=True)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

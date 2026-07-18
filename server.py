@@ -511,13 +511,18 @@ ACCOUNTS_DIR = os.path.join(BASE_DIR, "accounts")
 def _norm_username(name):
     return (name or "").strip().lower()
 
+def _username_valido(u):
+    """Apelido normalizado só pode ter letras minúsculas, dígitos e _ (1–20).
+    Barra path traversal/caminho absoluto vindo do cliente (vira nome de arquivo)."""
+    return bool(re.fullmatch(r"[a-z0-9_]{1,20}", u or ""))
+
 def account_path(username):
     return os.path.join(ACCOUNTS_DIR, f"{_norm_username(username)}.json")
 
 def load_account(username):
     """Lê a conta; ausente/corrompida/forma inesperada → None (sem crash)."""
     u = _norm_username(username)
-    if not u:
+    if not _username_valido(u):
         return None
     try:
         with open(account_path(u), "r", encoding="utf-8") as f:
@@ -534,8 +539,8 @@ def load_account(username):
 def create_account(username, pin):
     """Cria a conta. Retorna (data, None) ou (None, mensagem_de_erro)."""
     u = _norm_username(username)
-    if not u or len(u) > 20:
-        return None, "Apelido inválido (1–20 caracteres)."
+    if not _username_valido(u):
+        return None, "Apelido inválido (use letras minúsculas, números e _; 1–20)."
     if not re.fullmatch(r"\d{4}", str(pin or "")):
         return None, "O PIN deve ter 4 dígitos."
     os.makedirs(ACCOUNTS_DIR, exist_ok=True)
@@ -550,6 +555,11 @@ SAVEGAMES_DIR = os.path.join(BASE_DIR, "savegames")
 def savegame_path(sid):
     return os.path.join(SAVEGAMES_DIR, f"{sid}.json")
 
+def _sid_valido(sid):
+    """Id de savegame só pode ser 'sg_' + 6 alfanuméricos minúsculos (o que
+    _new_savegame_id gera). Barra path traversal em ids vindos do cliente."""
+    return bool(isinstance(sid, str) and re.fullmatch(r"sg_[a-z0-9]{6}", sid))
+
 def _new_savegame_id():
     while True:
         sid = "sg_" + "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
@@ -563,6 +573,8 @@ def _savegame_valid_shape(d):
 
 def load_savegame(sid):
     """Carrega o savegame; se o principal estiver corrompido, tenta o .bak; senão None."""
+    if not _sid_valido(sid):
+        return None
     for p in (savegame_path(sid), savegame_path(sid) + ".bak"):
         try:
             with open(p, "r", encoding="utf-8") as f:
@@ -661,6 +673,10 @@ def try_login(pid, username, pin):
     dono = ACCOUNTS_ONLINE.get(u)
     if dono and dono != pid:
         return False, "Esta conta já está em uso em outra conexão."
+    # Se esta conexão já estava logada noutra conta, libera a anterior.
+    for outra, opid in list(ACCOUNTS_ONLINE.items()):
+        if opid == pid and outra != u:
+            del ACCOUNTS_ONLINE[outra]
     ACCOUNTS_ONLINE[u] = pid
     return True, {"username": u}
 
@@ -20000,7 +20016,7 @@ async def handler(ws):
 # domÃ­nio. Sem isso, pÃ¡gina https + ws inseguro dÃ¡ erro de "mixed content" e os
 # amigos teriam de digitar o endereÃ§o do servidor Ã  mÃ£o. Ver process_request.
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# BASE_DIR já definido no bloco de persistência (topo do arquivo).
 
 # Monstros criados no editor vivem fora de MONSTER_DEFS para nunca alterar os
 # modelos nativos. Ao iniciar o servidor eles sÃ£o incorporados Ã  lista usada
