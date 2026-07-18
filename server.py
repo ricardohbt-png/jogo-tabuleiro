@@ -545,6 +545,105 @@ def create_account(username, pin):
     _atomic_write_json(account_path(u), data)
     return data, None
 
+SAVEGAMES_DIR = os.path.join(BASE_DIR, "savegames")
+
+def savegame_path(sid):
+    return os.path.join(SAVEGAMES_DIR, f"{sid}.json")
+
+def _new_savegame_id():
+    while True:
+        sid = "sg_" + "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
+        if not os.path.exists(savegame_path(sid)):
+            return sid
+
+def _savegame_valid_shape(d):
+    return (isinstance(d, dict) and isinstance(d.get("id"), str)
+            and isinstance(d.get("members"), dict)
+            and isinstance(d.get("characters"), dict))
+
+def load_savegame(sid):
+    """Carrega o savegame; se o principal estiver corrompido, tenta o .bak; senão None."""
+    for p in (savegame_path(sid), savegame_path(sid) + ".bak"):
+        try:
+            with open(p, "r", encoding="utf-8") as f:
+                d = json.load(f)
+            if _savegame_valid_shape(d):
+                return d
+        except FileNotFoundError:
+            continue
+        except Exception:
+            continue
+    return None
+
+def write_savegame(sg):
+    """Grava atômico; antes, rotaciona a versão atual para .bak (backup de 1 nível)."""
+    sid = sg.get("id")
+    if not sid:
+        return
+    os.makedirs(SAVEGAMES_DIR, exist_ok=True)
+    path = savegame_path(sid)
+    if os.path.exists(path):
+        try:
+            shutil.copy2(path, path + ".bak")
+        except OSError:
+            pass
+    sg["updated"] = _now_iso()
+    _atomic_write_json(path, sg)
+
+def create_savegame(name, owner, mode, campaign_file, has_master):
+    sid = _new_savegame_id()
+    is_campaign = (mode == "campaign")
+    sg = {
+        "id": sid, "name": (name or "Jogo")[:40], "owner": _norm_username(owner),
+        "created": _now_iso(), "updated": _now_iso(),
+        "mode": "campaign" if is_campaign else "procedural",
+        "campaign_file": campaign_file if is_campaign else None,
+        "campaign_phase": 0,
+        "has_master": bool(has_master),
+        "master_account": _norm_username(owner) if has_master else None,
+        "members": {}, "characters": {},
+    }
+    write_savegame(sg)
+    return sg
+
+def list_savegames(username):
+    """Resumo dos jogos onde a conta é dona, membro ou mestre (mais recentes primeiro)."""
+    u = _norm_username(username)
+    out = []
+    if not u or not os.path.isdir(SAVEGAMES_DIR):
+        return out
+    for fn in os.listdir(SAVEGAMES_DIR):
+        if not fn.endswith(".json"):
+            continue
+        sg = load_savegame(fn[:-5])
+        if not sg:
+            continue
+        if (sg.get("owner") == u or u in (sg.get("members") or {})
+                or sg.get("master_account") == u):
+            out.append({
+                "id": sg["id"], "name": sg.get("name"), "mode": sg.get("mode"),
+                "campaign_file": sg.get("campaign_file"),
+                "campaign_phase": sg.get("campaign_phase", 0),
+                "updated": sg.get("updated"), "owner": sg.get("owner"),
+                "has_master": sg.get("has_master", False),
+                "members": sg.get("members", {}),
+            })
+    out.sort(key=lambda s: s.get("updated") or "", reverse=True)
+    return out
+
+def delete_savegame(sid, requester):
+    sg = load_savegame(sid)
+    if not sg:
+        return False, "Jogo não encontrado."
+    if sg.get("owner") != _norm_username(requester):
+        return False, "Apenas o dono pode apagar este jogo."
+    for p in (savegame_path(sid), savegame_path(sid) + ".bak"):
+        try:
+            os.remove(p)
+        except OSError:
+            pass
+    return True, None
+
 GUILD_SAVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "saves")
 
 # Trava global: personagem em uso nÃ£o pode ser escolhido em outra sala.
