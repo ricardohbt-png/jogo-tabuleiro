@@ -5188,6 +5188,10 @@ class GameRoom:
         self.campaign = None         # dict carregado (modo "campaign")
         self.campaign_phase = 0      # Ã­ndice da fase atual em campaign["dungeons"]
         self.selected_campaign = None  # nome do arquivo da campanha selecionada (lobby)
+        # ── Jogos salvos (Fase 2) ─────────────────────────────────────────
+        self.savegame_id = None      # id do savegame ligado a esta sala (ou None)
+        self.savegame = None         # dict do savegame carregado (ou None)
+        self.account_by_pid = {}     # pid -> apelido da conta logada
         self._campaign_outro = None   # beat de encerramento pendente (cidade), ou None
         self.key_chest_opened = False
         self.monsters = {}      # id -> monster
@@ -5283,7 +5287,7 @@ class GameRoom:
 
     # â”€â”€ lobby â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-    async def add_player(self, ws, pid, name):
+    async def add_player(self, ws, pid, name, account=None):
         # Fase A: o mestre deve assumir o papel ANTES da sala encher com 6 herÃ³is
         # (ou um herÃ³i sentado troca para mestre, liberando um slot). Um 7Âº entrante
         # dedicado a mestre nÃ£o cabe numa sala jÃ¡ cheia de herÃ³is â€” limitaÃ§Ã£o aceita.
@@ -5292,6 +5296,8 @@ class GameRoom:
             await ws.send(json.dumps({"type": "error", "msg": "Sala cheia (máximo 6 heróis)."}))
             return False
         self.connections[pid] = ws
+        if account:
+            self.account_by_pid[pid] = account
         self.players[pid] = {"id": pid, "name": name, "class_id": None, "ready": False, "connected": True, "slot": len(self.players)}
         if not self.host_pid:
             self.host_pid = pid

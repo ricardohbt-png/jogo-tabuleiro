@@ -206,6 +206,14 @@ def main():
     snap["bag"].append({"id": "x"})
     check("restore fez deep copy (bag isolada)", not any(i.get("id") == "x" for i in p2["bag"]))
 
+    # [10] GameRoom ↔ savegame
+    print("\n[10] Sala conhece savegame e contas")
+    from server import GameRoom
+    r = GameRoom("TST0")
+    check("savegame_id default None", r.savegame_id is None)
+    check("savegame default None", r.savegame is None)
+    check("account_by_pid default vazio", r.account_by_pid == {})
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
