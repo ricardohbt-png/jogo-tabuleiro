@@ -1053,3 +1053,30 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > byte-idêntico. SP2 (pendente): inventário de itens do monstro. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-07-17-modo-mestre-controle-manual-monstro-sp1*`.
 > Teste: `tools/test_modo_mestre.py` (seções [25]/[26]).
+
+> **Modo Mestre — Inventário do monstro (SP2):** o mestre usa os itens de bolsa da
+> criatura e ativa TODAS as habilidades especiais dela na janela Manual. Apoia-se no
+> sistema de equipamento já existente (`equipment_enabled`/`equipped_items` →
+> `_aplicar_equipamentos_monstro`, que equipa arma/armadura afetando ataque/CA e
+> coleta `m["equipment_consumables"]`, os itens `item_slot=="bag"`). **Itens:**
+> `use_item`-do-mestre via `mestre_usar_item`→`handle_mestre_usar_item` (reusa
+> `_monster_throw_item` p/ arremessáveis mirando um herói; heal/regeneration/atk_bonus/
+> coat_poison/antidote/veil_shadow p/ alvo-próprio; pergaminho `scroll` só se
+> `_monster_e_conjurador` via `_executar_magia_grimorio`; food/ração/vinho/cerveja
+> recusados — sem efeito em monstros). Economia **espelha o jogador**: consumível de
+> bolsa = ação bônus (`_master_bonus_acted`), arremesso/pergaminho = principal
+> (`_master_acted`), ambos resetados na abertura da janela. Itens não usados caem no
+> loot na morte (comportamento de `equipped_items` já existente). **Habilidades de
+> editor (herói/guilda):** o SP1 só tornava ativáveis as save+dc; agora as derivadas
+> de herói/guilda (`source in {heroi,guilda}`, ex.: Mira Certeira) também são, via o
+> helper `_ativar_editor_ability` (extraído de `_monster_try_editor_ability` e
+> compartilhado IA+mestre — contadores `monster_ability_uses`/`monster_ability_cooldowns`);
+> `_habilidade_ativavel_manual` e `handle_mestre_usar_habilidade` ganharam o ramo (b)
+> self-buff (sem alvo). Cliente: `renderFichaMonstro` ganhou seções **Itens** (botão
+> Usar; arremessável/pergaminho abrem mira num herói via `_mestreUsarItemFicha`;
+> food/só-conjurador rotulados) e **Equipado** (arma/armadura em leitura);
+> `ativavel`/`usosRest`/`cdRest` cobrem as duas famílias de contador (`ability_*` vs
+> `monster_ability_*`); `mestreUsarItem` em `gameState.js`. Monstro exemplo:
+> **"soldado"** em `monstros_personalizados.json`. Sem mestre, byte-idêntico. Spec/
+> plano em `docs/superpowers/{specs,plans}/2026-07-17-modo-mestre-inventario-monstro-sp2*`.
+> Teste: `tools/test_modo_mestre.py` (seções [27]/[28]).
