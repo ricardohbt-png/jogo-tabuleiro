@@ -326,6 +326,35 @@ def main():
         S.SAVEGAMES_DIR = olds; S.CHARACTERS_IN_USE.clear()
         shutil.rmtree(tmp, ignore_errors=True)
 
+    # [15] lobby_state carrega savegame + conta por jogador
+    print("\n[15] Lobby com contexto de savegame")
+    tmp = tempfile.mkdtemp(); olds = S.SAVEGAMES_DIR; S.SAVEGAMES_DIR = tmp
+    try:
+        r = GameRoom("LOBS")
+        cap = {}
+        async def _capb(msg, *a, **k): cap.update(msg)
+        r.broadcast = _capb
+        sg = S.create_savegame("Jogo", "ricardo", "campaign", "elara.json", False)
+        sg["members"]["joao"] = {"class_id": "warrior"}; S.write_savegame(sg)
+        r.savegame_id = sg["id"]; r.savegame = sg
+        r.players["j1"] = {"id": "j1", "name": "Joao", "class_id": "warrior", "ready": True, "connected": True, "slot": 0}
+        r.account_by_pid["j1"] = "joao"
+        r.players["j2"] = {"id": "j2", "name": "Maria", "class_id": None, "ready": False, "connected": True, "slot": 1}
+        r.account_by_pid["j2"] = "maria"
+        _aio.run(r.broadcast_lobby())
+        check("payload traz savegame {id,name}", cap.get("savegame", {}).get("id") == sg["id"] and cap["savegame"]["name"] == "Jogo")
+        pj = {p["id"]: p for p in cap["players"]}
+        check("jogador vinculado marcado bound", pj["j1"].get("account") == "joao" and pj["j1"].get("bound") is True)
+        check("jogador não-vinculado bound=False", pj["j2"].get("account") == "maria" and pj["j2"].get("bound") is False)
+        r2 = GameRoom("LOB2"); cap2 = {}
+        async def _capb2(msg, *a, **k): cap2.update(msg)
+        r2.broadcast = _capb2
+        r2.players["a"] = {"id": "a", "name": "X", "class_id": None, "ready": False, "connected": True, "slot": 0}
+        _aio.run(r2.broadcast_lobby())
+        check("sem savegame → savegame None", cap2.get("savegame") is None)
+    finally:
+        S.SAVEGAMES_DIR = olds; shutil.rmtree(tmp, ignore_errors=True)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

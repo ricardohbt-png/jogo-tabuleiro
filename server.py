@@ -5470,11 +5470,20 @@ class GameRoom:
         return len(heroes) >= 1 and all(p["class_id"] for p in heroes)
 
     async def broadcast_lobby(self):
+        membros = (self.savegame or {}).get("members", {}) if self.savegame else {}
+        jogadores = []
+        for p in self.players.values():
+            pj = dict(p)
+            conta = self.account_by_pid.get(p["id"])
+            pj["account"] = conta
+            pj["bound"] = bool(conta and membros.get(conta, {}).get("class_id"))
+            jogadores.append(pj)
+        sg_ctx = {"id": self.savegame["id"], "name": self.savegame.get("name")} if self.savegame else None
         await self.broadcast({
             "type": "lobby_state",
             "code": self.code,
             "host": self.host_pid,
-            "players": list(self.players.values()),
+            "players": jogadores,
             "classes": {k: {"name": v["name"], "emoji": v["emoji"], "color": v["color"], "desc": v["desc"]} for k, v in CLASSES.items()},
             "can_start": self._can_start(),
             "master_pid": self.master_pid,
@@ -5483,6 +5492,7 @@ class GameRoom:
             "mode": self.mode,
             "selected_dungeon": self.selected_dungeon,
             "selected_campaign": self.selected_campaign,
+            "savegame": sg_ctx,
         })
 
     async def handle_select_dungeon(self, pid, file):
