@@ -276,6 +276,29 @@ def main():
     finally:
         S.SAVEGAMES_DIR = olds; shutil.rmtree(tmp, ignore_errors=True)
 
+    # [13] retomar savegame (helper puro)
+    print("\n[13] Retomar savegame")
+    tmp = tempfile.mkdtemp(); olds = S.SAVEGAMES_DIR; S.SAVEGAMES_DIR = tmp
+    S.SAVEGAMES_IN_USE.clear()
+    try:
+        sg = S.create_savegame("Jogo", "ricardo", "campaign", "elara.json", True)
+        sg["members"]["joao"] = {"class_id": "warrior"}; S.write_savegame(sg)
+        rooms = {}
+        room, e = S.try_open_savegame_room("ricardo", sg["id"], rooms)
+        check("abre sala para o dono", room is not None and e is None)
+        check("sala ligada ao savegame", room.savegame_id == sg["id"] and room.savegame is not None)
+        check("herda modo/campanha/fase", room.mode == "campaign" and room.selected_campaign == "elara.json")
+        check("marca SAVEGAMES_IN_USE", S.SAVEGAMES_IN_USE.get(sg["id"]) == room.code)
+        room2, e2 = S.try_open_savegame_room("joao", sg["id"], rooms)
+        check("recusa 2ª sessão do mesmo savegame", room2 is None and "uso" in (e2 or "").lower())
+        room3, e3 = S.try_open_savegame_room("estranho", sg["id"], rooms)
+        check("recusa não-membro", room3 is None)
+        room4, e4 = S.try_open_savegame_room(None, sg["id"], rooms)
+        check("recusa sem login", room4 is None)
+    finally:
+        S.SAVEGAMES_DIR = olds; S.SAVEGAMES_IN_USE.clear()
+        shutil.rmtree(tmp, ignore_errors=True)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

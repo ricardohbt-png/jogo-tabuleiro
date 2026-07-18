@@ -713,6 +713,37 @@ def restore_character(player, snap):
         if k in snap:
             player[k] = deepcopy(snap[k])
 
+def _conta_participa(sg, conta):
+    return bool(sg) and (sg.get("owner") == conta
+                         or conta in (sg.get("members") or {})
+                         or sg.get("master_account") == conta)
+
+def try_open_savegame_room(account, sid, rooms):
+    """Abre uma GameRoom retomando um savegame. Retorna (room, None) ou (None, erro)."""
+    if not account:
+        return None, "Você precisa estar logado."
+    sg = load_savegame(sid)
+    if not sg:
+        return None, "Jogo salvo não encontrado."
+    if not _conta_participa(sg, account):
+        return None, "Você não faz parte deste jogo."
+    if sid in SAVEGAMES_IN_USE:
+        return None, "Este jogo já está em uso em outra sessão."
+    code = make_code()
+    room = GameRoom(code)
+    rooms[code] = room
+    room.savegame_id = sid
+    room.savegame = sg
+    room.campaign_phase = sg.get("campaign_phase", 0)
+    if sg.get("mode") == "campaign" and sg.get("campaign_file"):
+        room.mode = "campaign"
+        room.selected_campaign = sg["campaign_file"]
+        defn = carregar_campanha(sg["campaign_file"])
+        if defn is not None:
+            room.campaign = defn
+    SAVEGAMES_IN_USE[sid] = code
+    return room, None
+
 GUILD_SAVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "saves")
 
 # Trava global: personagem em uso nÃ£o pode ser escolhido em outra sala.
@@ -19740,12 +19771,22 @@ async def handler(ws):
                         await err(e)
                     continue
 
+                if t == "load_savegame":
+                    novo, e = try_open_savegame_room(account["name"], msg.get("id"), rooms)
+                    if novo:
+                        room = novo
+                        nome = account["name"] or (msg.get("name") or "Herói")[:20]
+                        await room.add_player(ws, pid, nome, account["name"])
+                    else:
+                        await err(e)
+                    continue
+
                 if t == "create_room":
                     name = (msg.get("name") or "Herói")[:20]
                     code = make_code()
                     room = GameRoom(code)
                     rooms[code] = room
-                    await room.add_player(ws, pid, name)
+                    await room.add_player(ws, pid, name, account["name"])
 
                 elif t == "join_room":
                     code = (msg.get("code") or "").upper()
@@ -19757,7 +19798,7 @@ async def handler(ws):
                     if room.phase != "lobby":
                         await err("Jogo já iniciado.")
                         continue
-                    ok = await room.add_player(ws, pid, name)
+                    ok = await room.add_player(ws, pid, name, account["name"])
                     if not ok:
                         room = None
 
@@ -20072,6 +20113,8 @@ async def handler(ws):
             del ACCOUNTS_ONLINE[account["name"]]
         if room:
             room.connections.pop(pid, None)
+            if room.savegame_id and not room.connections:
+                SAVEGAMES_IN_USE.pop(room.savegame_id, None)
             if room.master_pid == pid and room.phase == "playing":
                 await room._on_master_disconnect()
             if pid in room.players and room.phase == "lobby":
