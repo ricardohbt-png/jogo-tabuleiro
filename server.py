@@ -506,6 +506,45 @@ def verify_pin(pin, stored):
     except Exception:
         return False
 
+ACCOUNTS_DIR = os.path.join(BASE_DIR, "accounts")
+
+def _norm_username(name):
+    return (name or "").strip().lower()
+
+def account_path(username):
+    return os.path.join(ACCOUNTS_DIR, f"{_norm_username(username)}.json")
+
+def load_account(username):
+    """Lê a conta; ausente/corrompida/forma inesperada → None (sem crash)."""
+    u = _norm_username(username)
+    if not u:
+        return None
+    try:
+        with open(account_path(u), "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if not isinstance(data, dict) or not isinstance(data.get("pin_hash"), str):
+            return None
+        return data
+    except FileNotFoundError:
+        return None
+    except Exception as e:
+        print(f"[accounts] conta {u} inválida ({e})")
+        return None
+
+def create_account(username, pin):
+    """Cria a conta. Retorna (data, None) ou (None, mensagem_de_erro)."""
+    u = _norm_username(username)
+    if not u or len(u) > 20:
+        return None, "Apelido inválido (1–20 caracteres)."
+    if not re.fullmatch(r"\d{4}", str(pin or "")):
+        return None, "O PIN deve ter 4 dígitos."
+    os.makedirs(ACCOUNTS_DIR, exist_ok=True)
+    if os.path.exists(account_path(u)):
+        return None, "Apelido já existe."
+    data = {"username": u, "pin_hash": hash_pin(pin), "created": _now_iso()}
+    _atomic_write_json(account_path(u), data)
+    return data, None
+
 GUILD_SAVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "saves")
 
 # Trava global: personagem em uso nÃ£o pode ser escolhido em outra sala.
