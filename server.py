@@ -648,6 +648,22 @@ def delete_savegame(sid, requester):
 SAVEGAMES_IN_USE = {}   # savegame_id -> room code
 ACCOUNTS_ONLINE = {}    # username -> pid da conexão autenticada
 
+
+def try_login(pid, username, pin):
+    """Valida credenciais e reserva a conta em ACCOUNTS_ONLINE.
+    Retorna (True, dados_da_conta) ou (False, mensagem_de_erro)."""
+    u = _norm_username(username)
+    acc = load_account(u)
+    if not acc:
+        return False, "Conta não encontrada. Crie uma conta primeiro."
+    if not verify_pin(pin, acc.get("pin_hash", "")):
+        return False, "PIN incorreto."
+    dono = ACCOUNTS_ONLINE.get(u)
+    if dono and dono != pid:
+        return False, "Esta conta já está em uso em outra conexão."
+    ACCOUNTS_ONLINE[u] = pid
+    return True, {"username": u}
+
 GUILD_SAVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "saves")
 
 # Trava global: personagem em uso nÃ£o pode ser escolhido em outra sala.
@@ -19569,6 +19585,24 @@ async def handler(ws):
                     await ws.send(json.dumps({"type": "objetos_list",
                                               "upload_id": msg.get("upload_id"),
                                               "objetos": _listar_objetos()}))
+                    continue
+
+                if t == "create_account":
+                    acc, e = create_account(msg.get("username"), msg.get("pin"))
+                    if acc:
+                        ok, pay = try_login(pid, acc["username"], msg.get("pin"))
+                        await ws.send(json.dumps({"type": "login_result", "ok": ok,
+                                                  "username": acc["username"] if ok else None,
+                                                  "error": None if ok else pay}))
+                    else:
+                        await ws.send(json.dumps({"type": "login_result", "ok": False, "error": e}))
+                    continue
+
+                if t == "login":
+                    ok, pay = try_login(pid, msg.get("username"), msg.get("pin"))
+                    await ws.send(json.dumps({"type": "login_result", "ok": ok,
+                                              "username": pay["username"] if ok else None,
+                                              "error": None if ok else pay}))
                     continue
 
                 if t == "create_room":

@@ -112,6 +112,32 @@ def main():
     check("SAVEGAMES_IN_USE existe e é dict", isinstance(S.SAVEGAMES_IN_USE, dict))
     check("ACCOUNTS_ONLINE existe e é dict", isinstance(S.ACCOUNTS_ONLINE, dict))
 
+    # [6] try_login (helper puro)
+    print("\n[6] Login")
+    tmp = tempfile.mkdtemp()
+    olda = S.ACCOUNTS_DIR
+    S.ACCOUNTS_DIR = tmp
+    S.ACCOUNTS_ONLINE.clear()
+    try:
+        S.create_account("ana", "4321")
+        ok, pay = S.try_login("pid1", "Ana", "4321")
+        check("login com PIN certo ok", ok is True and pay["username"] == "ana")
+        ok2, err2 = S.try_login("pid2", "ana", "0000")
+        check("login com PIN errado recusa", ok2 is False and "pin" in (err2 or "").lower())
+        ok3, err3 = S.try_login("pid3", "fantasma", "1111")
+        check("login de conta inexistente recusa", ok3 is False)
+        # já online noutra conexão
+        S.ACCOUNTS_ONLINE["ana"] = "pid1"
+        ok4, err4 = S.try_login("pid9", "ana", "4321")
+        check("conta já online recusa 2º login", ok4 is False and "uso" in (err4 or "").lower())
+        # mesma conexão relogando é permitido (idempotente)
+        ok5, _ = S.try_login("pid1", "ana", "4321")
+        check("mesma conexão pode relogar", ok5 is True)
+    finally:
+        S.ACCOUNTS_DIR = olda
+        S.ACCOUNTS_ONLINE.clear()
+        shutil.rmtree(tmp, ignore_errors=True)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
