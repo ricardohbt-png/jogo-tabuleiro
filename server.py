@@ -9,6 +9,10 @@ Run: python server.py
 
 import asyncio
 import base64
+import datetime
+import hashlib
+import hmac
+import shutil
 import websockets
 import json
 import math
@@ -467,6 +471,21 @@ RANGED_AMMO = {
 # â”€â”€â”€ GUILDA DOS HERÃ“IS â€” persistÃªncia por personagem (Fase 0) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Save por class_id (6 personagens fixos), global ao processo. Guarda sÃ³ posse +
 # equipar da guilda; ouro/HP/nÃ­vel continuam por-sessÃ£o. Ver spec Fase 0 Â§5.
+# ─── Persistência de contas e jogos salvos ────────────────────────────────
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def _now_iso():
+    """Timestamp UTC no formato 2026-07-18T14:00:00Z."""
+    return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+def _atomic_write_json(path, data):
+    """Grava JSON de forma atômica (.tmp + os.replace), criando a pasta."""
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, path)
+
 GUILD_SAVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "saves")
 
 # Trava global: personagem em uso nÃ£o pode ser escolhido em outra sala.
