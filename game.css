@@ -248,6 +248,10 @@ input:focus { outline: none; border-color: var(--gold); }
 .skill-btn.skill-active { border-color: var(--gold) !important; background: #1a1400 !important; box-shadow: 0 0 8px rgba(240,192,64,0.5); }
 .skill-info { flex: 1; }
 .skill-name { font-size: .8rem; font-weight: bold; color: var(--purple); }
+.ability-icon { width: 1.25em; height: 1.25em; object-fit: cover; border-radius: 50%; vertical-align: -.28em; margin-right: .18em; transition: transform .18s ease; }
+.skill-btn:hover .ability-icon,
+.guild-item:hover .ability-icon,
+.cs-skill:hover .ability-icon { transform: scale(1.5); }
 .skill-desc { font-size: .7rem; color: var(--text2); margin-top: 2px; }
 .skill-cost { font-size: .7rem; color: var(--blue); white-space: nowrap; }
 .gear-slot { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius);

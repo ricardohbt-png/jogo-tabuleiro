@@ -1,4 +1,150 @@
 'use strict';
+
+// Ícones de habilidades. O servidor continua enviando o emoji como fallback para
+// mensagens e clientes antigos; a interface troca-o pela arte quando houver uma
+// imagem correspondente em assets/habilidades.
+const ABILITY_ICON_ASSETS = Object.freeze({
+  brutalidade: 'assets/habilidades/brutalidade.png',
+  tecnica_mira_perfeita: 'assets/habilidades/mira_perfeita.png',
+  tecnica_espirito_indomavel: 'assets/habilidades/espirito_indomavel.png',
+  tecnica_grito_guerra: 'assets/habilidades/grito_de_guerra.png',
+  tecnica_pressa: 'assets/habilidades/pressa.png',
+  tecnica_oportunidade: 'assets/habilidades/oportunidade.png',
+  tecnica_sorte: 'assets/habilidades/sorte.png',
+  mira_certeira: 'assets/habilidades/mira_certeira.png',
+  golpe_devastador: 'assets/habilidades/golpe_devastador.png',
+  furia_berserker: 'assets/habilidades/furia_berserker.png',
+  animar_mortos: 'assets/habilidades/animar_mortos_vivos.png',
+  aprimorar_magia: 'assets/habilidades/aprimorar_magia.png',
+  estender_magia: 'assets/habilidades/estender_magia.png',
+  ataque_furtivo: 'assets/habilidades/ataque_furtivo.jpeg',
+  detectar_armadilhas: 'assets/habilidades/detectar_armadilhas.png',
+  esconder_sombras: 'assets/habilidades/esconder-se.png',
+  veneno_rapido: 'assets/habilidades/veneno_rapido.png',
+  criar_armadilha: 'assets/habilidades/preparar_armadilhas.png',
+  cura: 'assets/habilidades/cura.png',
+  cura_area: 'assets/habilidades/cura_em_massa.png',
+  purificacao: 'assets/habilidades/purificar.png',
+  ressurreicao: 'assets/habilidades/ressurreicao.png',
+  cancao_heroica: 'assets/habilidades/cancao_heroica.png',
+  provocacao: 'assets/habilidades/provocacao.png',
+  conhecimento_lendas: 'assets/habilidades/lendas.png',
+  imposicao_maos: 'assets/habilidades/cura_pelas_maos.png',
+  golpe_sagrado: 'assets/habilidades/ataque_sagrado.png',
+  protetor: 'assets/habilidades/defensor.png',
+  guerreiro_luz: 'assets/habilidades/guerreiro_da_luz.png',
+  tecnica_investida: 'assets/habilidades/investida_heroica.png',
+  tecnica_defesa_impecavel: 'assets/habilidades/defesa_impecavel.png',
+  tecnica_pressao_constante: 'assets/habilidades/pressao_constante.png',
+  tecnica_tatica_defensiva: 'assets/habilidades/tatica_defensiva.png',
+  tecnica_passo_fantasma: 'assets/habilidades/passo_fantasma.png',
+  tecnica_ataque_coordenado: 'assets/habilidades/ataque_coordenado.png',
+  tecnica_sangue_frio: 'assets/habilidades/sangue_frio.png',
+  tecnica_resistencia_absoluta: 'assets/habilidades/resistencia_absoluta.png',
+  tecnica_contra_ataque: 'assets/habilidades/contra_ataque.png',
+  tecnica_instinto_sobrevivencia: 'assets/habilidades/instinto_de_sobrevivencia.png',
+  tecnica_ultimo_esforco: 'assets/habilidades/ultimo_esfor%C3%A7o.png',
+  tecnica_golpe_decisivo: 'assets/habilidades/golpe_decisivo.png',
+  tec_ex_aprimorar_magia: 'assets/habilidades/aprimorar_magia.png',
+  tec_ex_estender_magia: 'assets/habilidades/estender_magia.png',
+  tec_ex_canalizacao_arcana: 'assets/habilidades/canalizacao_arcana.png',
+  tec_ex_canalizacao_perfeita: 'assets/habilidades/canalizacao_perfeita.png',
+  tec_ex_empoderar_magia: 'assets/habilidades/empoderar_magia.png',
+  tec_ex_magia_geminada: 'assets/habilidades/magia_geminada.png',
+  tec_ex_magia_acelerada: 'assets/habilidades/acelerar_magia.png',
+  guerreiro_mira_3: 'assets/habilidades/mira_certeira.png',
+  guerreiro_golpe_3: 'assets/habilidades/golpe_devastador.png',
+  guerreiro_furia_3: 'assets/habilidades/furia_berserker.png',
+  guerreiro_combinar_2: 'assets/habilidades/combinar_duas.png',
+  guerreiro_mestre_combate: 'assets/habilidades/mestre_de_combate.png',
+  bardo_cancao_acerto: 'assets/habilidades/cancao_heroica.png',
+  bardo_cancao_dano: 'assets/habilidades/cancao_heroica.png',
+  bardo_cancao_ca: 'assets/habilidades/cancao_heroica.png',
+  bardo_cancao_movimento: 'assets/habilidades/cancao_heroica.png',
+  bardo_cancao_resistencia: 'assets/habilidades/cancao_heroica.png',
+  bardo_cancao_suprema: 'assets/habilidades/cancao_heroica.png',
+  bardo_provocacao_2: 'assets/habilidades/provocacao.png',
+  bardo_provocacao_3: 'assets/habilidades/provocacao.png',
+  bardo_lendas_supremas: 'assets/habilidades/lendas.png',
+  mago_aprimorar_2: 'assets/habilidades/aprimorar_magia.png',
+  mago_aprimorar_3: 'assets/habilidades/aprimorar_magia.png',
+  mago_estender_2: 'assets/habilidades/estender_magia.png',
+  mago_estender_3: 'assets/habilidades/estender_magia.png',
+  clerigo_cura_2: 'assets/habilidades/cura.png',
+  clerigo_cura_3: 'assets/habilidades/cura.png',
+  clerigo_massa_2: 'assets/habilidades/cura_em_massa.png',
+  clerigo_massa_3: 'assets/habilidades/cura_em_massa.png',
+  clerigo_purif_2: 'assets/habilidades/purificar.png',
+  clerigo_purif_3: 'assets/habilidades/purificar.png',
+  clerigo_ressur_2: 'assets/habilidades/ressurreicao.png',
+  clerigo_ressur_3: 'assets/habilidades/ressurreicao.png',
+  paladino_cura_maos_2: 'assets/habilidades/cura_pelas_maos.png',
+  paladino_cura_maos_3: 'assets/habilidades/cura_pelas_maos.png',
+  paladino_ataque_sagrado_2: 'assets/habilidades/ataque_sagrado.png',
+  paladino_luz_2: 'assets/habilidades/guerreiro_da_luz.png',
+  paladino_luz_3: 'assets/habilidades/guerreiro_da_luz.png',
+  paladino_defensor_2: 'assets/habilidades/defensor.png',
+  paladino_defensor_3: 'assets/habilidades/defensor.png',
+  regeneracao_divina: 'assets/habilidades/regeneracao_divina.png',
+  paladino_regen_2: 'assets/habilidades/regeneracao_divina.png',
+  paladino_regen_3: 'assets/habilidades/regeneracao_divina.png',
+  ladino_furtivo_2: 'assets/habilidades/ataque_furtivo.jpeg',
+  ladino_furtivo_3: 'assets/habilidades/ataque_furtivo.jpeg',
+  ladino_veneno_2: 'assets/habilidades/veneno_rapido.png',
+  ladino_veneno_3: 'assets/habilidades/veneno_rapido.png',
+  ladino_esconder_2: 'assets/habilidades/esconder-se.png',
+  ladino_esconder_3: 'assets/habilidades/esconder-se.png',
+  // Desarme é a progressão da técnica de armadilhas do ladino.
+  ladino_desarme_2: 'assets/habilidades/preparar_armadilhas.png',
+  ladino_desarme_3: 'assets/habilidades/preparar_armadilhas.png',
+});
+
+const ABILITY_NAME_TO_ID = Object.freeze({
+  'Mira Certeira': 'mira_certeira', 'Golpe Devastador': 'golpe_devastador',
+  'Fúria Berserker': 'furia_berserker', 'Animar Mortos': 'animar_mortos',
+  'Aprimorar Magia': 'aprimorar_magia', 'Estender Magia': 'estender_magia',
+  'Ataque Furtivo': 'ataque_furtivo', 'Detectar Armadilhas': 'detectar_armadilhas',
+  'Esconder nas Sombras': 'esconder_sombras', 'Veneno Rápido': 'veneno_rapido',
+  'Criar Armadilha': 'criar_armadilha', 'Cura': 'cura', 'Cura em Área': 'cura_area',
+  'Purificação': 'purificacao', 'Ressurreição': 'ressurreicao',
+  'Canção Heroica': 'cancao_heroica', 'Provocação': 'provocacao',
+  'Conhecimento das Lendas': 'conhecimento_lendas', 'Imposição das Mãos': 'imposicao_maos',
+  'Golpe Sagrado': 'golpe_sagrado', 'Protetor': 'protetor', 'Regeneração Divina': 'regeneracao_divina',
+  'Guerreiro da Luz': 'guerreiro_luz',
+});
+
+function abilityIconHtml(ability, fallback = '') {
+  const id = typeof ability === 'string' ? ability : ability?.id || ABILITY_NAME_TO_ID[ability?.name || ability?.nome];
+  const src = ABILITY_ICON_ASSETS[id];
+  return src ? `<img class="ability-icon" src="${src}" alt="" aria-hidden="true">` : fallback;
+}
+
+// Alguns botões de classe têm estados próprios e montam seu texto diretamente.
+// Este observador mantém esses estados visuais sincronizados sem alterar as regras
+// de cada habilidade: remove o emoji inicial e injeta a mesma arte do catálogo.
+function replaceAbilityEmoji(root) {
+  const elements = [];
+  if (root?.nodeType === 1 && root.matches?.('.skill-name, .cs-skill-icon, .gi-icon')) elements.push(root);
+  root?.querySelectorAll?.('.skill-name, .cs-skill-icon, .gi-icon').forEach(el => elements.push(el));
+  for (const element of elements) {
+    if (element.dataset.abilityIconApplied || element.querySelector('.ability-icon')) continue;
+    const match = Object.entries(ABILITY_NAME_TO_ID).find(([name]) => element.textContent.includes(name));
+    if (!match || !ABILITY_ICON_ASSETS[match[1]]) continue;
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    let textNode;
+    while ((textNode = walker.nextNode())) {
+      const index = textNode.data.indexOf(match[0]);
+      if (index >= 0) { textNode.data = textNode.data.slice(index); break; }
+    }
+    element.insertAdjacentHTML('afterbegin', abilityIconHtml(match[1]));
+    element.dataset.abilityIconApplied = 'true';
+  }
+}
+
+const abilityIconObserver = new MutationObserver(records => {
+  records.forEach(record => record.addedNodes.forEach(node => replaceAbilityEmoji(node)));
+});
+abilityIconObserver.observe(document.body, { childList: true, subtree: true });
 // ===========================================================================
 // game.js — Legends for Hire (todo o JavaScript do jogo)
 // A estrutura HTML do <body> foi movida para cá e é injetada ANTES de
@@ -1630,7 +1776,7 @@ function _guildItemRow(i, owned, me){
                 onclick="GS.guildBuy('${i.id}')">Comprar 🪙${i.preco}</button>`;
   }
   return `<div class="guild-item${has?' is-owned':''}">
-    <span class="gi-icon">${i.icon||'✨'}</span>
+    <span class="gi-icon">${abilityIconHtml(i, i.icon||'✨')}</span>
     <div class="gi-body"><b>${i.nome}</b>${exclusivaBadge}<br><small>${i.desc||''}${custo}</small></div>
     ${action}</div>`;
 }
@@ -11058,7 +11204,7 @@ function renderMyPanel(state){
     const isSurvival = sk.mp == null;
     const fomeCost = sk.fome_cost || 0;
     const sedeCost = sk.sede_cost || 0;
-    const icon = sk.icon ? sk.icon + ' ' : '';
+    const icon = abilityIconHtml(sk, sk.icon || '') + ' ';
     let desc = sk.description || sk.desc || '';
     // Guerreiro: a descrição reflete o nível possuído da especialização (Fase 1a).
     if (me.class_id === 'warrior') {
@@ -11162,7 +11308,7 @@ function renderMyPanel(state){
       ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ recarrega em ${restante}r</small>` : '';
     btn.innerHTML = `
       <div class="skill-info">
-        <div class="skill-name">${cat.icon||'⚔️'} ${cat.nome} <small style="color:var(--gold);font-size:.58rem;">${cat.automatica ? 'AUTOMÁTICA' : 'GUILDA'}</small>${estado}</div>
+        <div class="skill-name">${abilityIconHtml(cat, cat.icon||'⚔️')} ${cat.nome} <small style="color:var(--gold);font-size:.58rem;">${cat.automatica ? 'AUTOMÁTICA' : 'GUILDA'}</small>${estado}</div>
         <div class="skill-desc">${cat.desc||''}</div>
       </div>
       <div class="skill-cost">${restante>0 ? `${restante}r` : `🍖${cat.custo_fome} 💧${cat.custo_sede}`}</div>`;
@@ -20447,7 +20593,7 @@ function _csfShowPanel(classId, animate){
   const skillsForSelect = classId === 'mage' ? (d.selectionSkills || d.skills.slice(0, 4)) : d.skills;
   document.getElementById('cs-skills').innerHTML = skillsForSelect.map(sk => `
     <div class="cs-skill">
-      <span class="cs-skill-icon">${sk.icon ?? sk.icone ?? ''}</span>
+      <span class="cs-skill-icon">${abilityIconHtml(sk, sk.icon ?? sk.icone ?? '')}</span>
       <div class="cs-skill-body">
         <div class="cs-skill-name">${sk.name ?? sk.nome ?? ''}</div>
         <div class="cs-skill-desc">${sk.desc ?? ''}</div>
@@ -21797,6 +21943,10 @@ GS.on('explosionArea', msg => {
 });
 
 GS.on('diceRoll',    msg  => { handleDiceRoll(msg); updateDiceHistory(msg); });
+GS.on('sorteReacao', msg => {
+  const aceitar = window.confirm(`🎲 SORTE\n\n${msg.texto || 'Usar Sorte?'}`);
+  GS.responderSorteReacao(aceitar);
+});
 
 GS.on('trapResult',  msg  => queueTrapResult(msg));
 

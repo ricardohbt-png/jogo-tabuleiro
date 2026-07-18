@@ -1181,6 +1181,10 @@ const GS = (() => {
         _emit('diceRoll', msg);
         break;
 
+      case 'sorte_reacao':
+        _emit('sorteReacao', msg);
+        break;
+
       case 'trap_result':
         _emit('trapResult', msg);
         break;
@@ -1327,6 +1331,7 @@ const GS = (() => {
   function guildBuy(itemId)           { send({ type: 'guild_buy',   item_id: itemId }); }
   function guildEquip(slot, itemId)   { send({ type: 'guild_equip', slot: slot, item_id: itemId }); }
   function usarTecnica(tid, targetId) { send({ type: 'usar_tecnica', tecnica_id: tid, target_id: targetId != null ? targetId : null }); }
+  function responderSorteReacao(usar) { send({ type: 'sorte_reacao', usar: !!usar }); }
   function usarOportunidadeMovimento() { send({ type: 'usar_oportunidade_movimento' }); }
   // Getters puros: catálogo filtrado por classe, itens possuídos e equipados
   // pelo jogador (lidos de cityState.guild), e recarga restante de uma técnica
@@ -2178,6 +2183,7 @@ const GS = (() => {
     guildBuy,
     guildEquip,
     usarTecnica,
+    responderSorteReacao,
     usarOportunidadeMovimento,
     guildCatalogFor,
     guildOwnedOf,

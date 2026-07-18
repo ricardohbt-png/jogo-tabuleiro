@@ -5231,6 +5231,7 @@ class GameRoom:
         self.last_stand_pid = None      # pid na sub-fase do Ãšltimo EsforÃ§o (ou None)
         self.last_stand_event = None    # asyncio.Event sinalizado ao fechar a janela
         self.last_stand_timer_task = None
+        self.sorte_reacao = None  # janela reativa: {pid, event, usar}
         self.traps = []
         self.armadilhas = []    # armadilhas colocÃ¡veis (ver ARMADILHAS) â€” distintas de self.traps
         self._armadilha_seq = 0 # contador p/ ids Ãºnicos de armadilha
@@ -6001,6 +6002,49 @@ class GameRoom:
             dmg_detail = f"[{base}{sb}]"
         return dmg, weapon_name, dmg_detail, raw_dmg, die_str
 
+    async def _oferecer_sorte(self, p, contexto):
+        """Pausa a resolução para a reação passiva Sorte; True = rerrolar."""
+        if (self.sorte_reacao or not p.get("connected", False) or not tem_tecnica_equipada(p, "tecnica_sorte")
+                or self.tecnica_restante(p, "tecnica_sorte") > 0):
+            return False
+        event = asyncio.Event()
+        self.sorte_reacao = {"pid": p["id"], "event": event, "usar": False}
+        await self.send_to(p["id"], {"type": "sorte_reacao", **contexto})
+        try:
+            await asyncio.wait_for(event.wait(), timeout=12)
+        except asyncio.TimeoutError:
+            pass
+        reaction = self.sorte_reacao
+        self.sorte_reacao = None
+        if not reaction or not reaction["usar"]:
+            return False
+        item = guild_item("tecnica_sorte")
+        fome, sede = self._custo_fome_sede_efetivo(p, item["custo_fome"], item["custo_sede"])
+        if p.get("fome", 0) < fome or p.get("sede", 0) < sede:
+            return False
+        p["fome"] -= fome; p["sede"] -= sede
+        p["technique_cooldowns"]["tecnica_sorte"] = self.round_num + 10
+        return True
+
+    async def handle_sorte_reacao(self, pid, usar):
+        reaction = self.sorte_reacao
+        if reaction and reaction["pid"] == pid:
+            reaction["usar"] = bool(usar)
+            reaction["event"].set()
+
+    async def _testar_save_com_sorte(self, alvo, tipo_save, dificuldade, extra_mod=0, fonte=None, desvantagem=False):
+        resultado = self._testar_save(alvo, tipo_save, dificuldade, extra_mod, fonte, desvantagem)
+        passou, _, _, _ = resultado
+        if passou or not self._eh_jogador(alvo):
+            return resultado
+        if await self._oferecer_sorte(alvo, {"kind": "save", "nome": tipo_save, "cd": dificuldade,
+                                              "texto": f"Você falhou no teste de {tipo_save}. Usar Sorte para rerrolar com +2?"}):
+            passou, d20, bonus, total = self._testar_save(alvo, tipo_save, dificuldade, extra_mod + 2, fonte, desvantagem)
+            await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
+                                  "label": "🎲 Sorte (+2 no teste de resistência)", "hit": passou})
+            return passou, d20, bonus, total
+        return resultado
+
     async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói, incluindo
         a janela do Último Esforço — mesma checagem de `_is_turn` usada pelos
@@ -6031,6 +6075,9 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Fome/sede insuficientes."})
             return
         ef = item.get("efeito", {})
+        if ef.get("tipo") == "sorte":
+            await self.send_to(pid, {"type": "error", "msg": "Sorte é passiva e reage automaticamente quando uma rolagem falha."})
+            return
         if ef.get("tipo") == "buff_turno":
             p["tecnica_buff_dano_arma"] = p.get("tecnica_buff_dano_arma", 0) + ef.get("bonus_dano_arma", 0)
         elif ef.get("tipo") == "mov_self_dobrar":
@@ -8523,6 +8570,11 @@ class GameRoom:
             if not hit and self._sangue_frio_consumir(p):
                 await self.gm_say(f"🧊 **{p['name']}** mantém o sangue frio e rola novamente!")
                 hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
+            if not hit and await self._oferecer_sorte(p, {
+                    "kind": "attack", "texto": "Você errou o ataque. Usar Sorte para rerrolar com +2?"}):
+                hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk + 2, eff_target_ac, vantagem, desvantagem)
+                await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
+                                      "label": "🎲 Sorte (+2 no ataque)", "hit": hit, "crit": crit})
             if hit and _forca_critico:
                 crit = True
             if p.get("tecnica_golpe_decisivo_armado"):
@@ -13162,7 +13214,8 @@ class GameRoom:
     async def _save_mostrado(self, alvo, tipo, dif, extra_mod=0, desvantagem=False):
         """Faz um teste de resistência e anima o d20 do alvo no cliente."""
         extra_mod += self._save_weakness_pen(alvo, tipo)
-        passou, d20, bonus, total = self._testar_save(alvo, tipo, dif, extra_mod=extra_mod, desvantagem=desvantagem)
+        passou, d20, bonus, total = await self._testar_save_com_sorte(
+            alvo, tipo, dif, extra_mod=extra_mod, desvantagem=desvantagem)
         lab = {"reflexos": "Reflexos", "fortitude": "Fortitude", "vontade": "Vontade"}.get(tipo, tipo)
         await self._broadcast_dado("d20", d20, f"{lab} {'✓' if passou else '✗'}")
         return passou, d20, bonus, total
@@ -16410,6 +16463,12 @@ class GameRoom:
             hit, crit = True, True
             target.pop("dormindo", None); target.pop("dormindo_rodadas", None)
             await self.gm_say(f"🌙 **{tgt_name}** é atacado dormindo — golpe **CRÍTICO** e desperta!")
+
+        if hit and is_player and await self._oferecer_sorte(target, {
+                "kind": "monster_attack", "texto": f"{m['name']} acertou você. Usar Sorte para forçá-lo a rerrolar com −2?"}):
+            hit, roll, total, crit, _ = self._rolar_ataque(m_atk - 2, effective_ac, vantagem, desvantagem)
+            await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
+                                  "label": f"🎲 Sorte — {m['name']} rerrola (−2)", "hit": hit, "crit": crit})
 
         if hit:
             raw_dmg = roll_dice(atk_def["damage"])
@@ -19914,6 +19973,9 @@ async def handler(ws):
 
                 elif t == "usar_tecnica":
                     if room: await room.handle_usar_tecnica(pid, msg.get("tecnica_id"), msg.get("target_id"))
+
+                elif t == "sorte_reacao":
+                    if room: await room.handle_sorte_reacao(pid, msg.get("usar"))
 
                 elif t == "usar_instrumento":
                     if room: await room.handle_usar_instrumento(pid, msg)
