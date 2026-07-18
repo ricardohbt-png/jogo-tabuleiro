@@ -184,6 +184,15 @@ document.body.innerHTML = `
       <label>Endereço do servidor</label>
       <input id="input-server" type="text" placeholder="ws://localhost:8765" value="ws://localhost:8765">
     </div>
+    <div class="field">
+      <label>PIN (4 dígitos) — para jogos salvos</label>
+      <input id="input-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+    </div>
+    <button class="btn-primary" onclick="entrarComConta()">🎲 Entrar com minha conta</button>
+    <div style="font-size:.7rem;color:#8ab88a;margin-top:4px;">
+      Primeira vez? O apelido acima vira sua conta. Use o mesmo apelido + PIN para voltar aos seus jogos.
+    </div>
+    <div class="divider">ou jogo rápido (sem salvar)</div>
     <button class="btn-primary" onclick="createRoom()">⚔ Criar Nova Sala</button>
     <div class="divider">ou</div>
     <div class="field">
@@ -550,6 +559,17 @@ function createRoom(){
   const name=getName(); if(!name) return;
   const url=$('input-server').value.trim()||defaultServerUrl();
   GS.connect(url, name, 'create');
+}
+
+// Login por conta (apelido+PIN) — Fase 3 dos Jogos Salvos.
+function entrarComConta() {
+  const name = (document.getElementById('input-name').value || '').trim();
+  const pin  = (document.getElementById('input-pin').value || '').trim();
+  const url  = (document.getElementById('input-server').value || 'ws://localhost:8765').trim();
+  if (!name) { alert('Escolha um apelido.'); return; }
+  if (!/^\d{4}$/.test(pin)) { alert('O PIN deve ter 4 dígitos.'); return; }
+  window._contaCtx = { url, name, pin };
+  GS.loginConta(url, name, pin);
 }
 
 // Reconexão manual a partir da sessão salva (botão da tela inicial).
@@ -21765,6 +21785,21 @@ GS.on('reconnecting', (n, max) =>
   toast(`🔌 Conexão perdida — reconectando (${n}/${max})...`, 'var(--orange)'));
 GS.on('reconnectFailed', () =>
   toast('❌ Não foi possível reconectar. Recarregue a página e use "Reconectar à última partida".', 'var(--red)'));
+
+// Jogos Salvos — Fase 3: login por conta (apelido+PIN) na tela inicial.
+GS.on('loginResult', (msg) => {
+  if (msg.ok) {
+    GS.listSavegames();
+    showScreen('screen-savegames');
+  } else if ((msg.error || '').includes('não encontrada')) {
+    const c = window._contaCtx || {};
+    if (confirm('Conta não existe. Criar agora com esse apelido e PIN?')) {
+      GS.criarConta(c.url, c.name, c.pin);
+    }
+  } else {
+    alert(msg.error || 'Falha no login.');
+  }
+});
 
 GS.on('lobbyState',  msg => handleLobby(msg));
 
