@@ -20,5 +20,9 @@ venv/
 # Saves da Guilda dos Heróis (dados de runtime, por personagem)
 saves/
 
+# Jogos salvos e contas (persistência por conta — Fase 1)
+accounts/
+savegames/
+
 # Worktrees isolados (superpowers)
 .worktrees/
