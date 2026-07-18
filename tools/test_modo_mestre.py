@@ -602,6 +602,28 @@ async def main():
     check("food recusado", any("efeito" in e.lower() for e in r._errs))
     check("cantil continua na bolsa", any(i["id"] == "cantil_agua" for i in m["equipment_consumables"]))
 
+    print("\n[28] mestre_usar_habilidade — habilidade de editor (herói/guilda) ativável")
+    r = playing_room_com_mestre()
+    ab = {"id": "hero_warrior_mira_certeira", "source": "heroi", "name": "Mira Certeira",
+          "action_type": "acao", "monster_effect": "vantagem_combate",
+          "uses_per_day": 3, "cooldown_turns": 4}
+    m = {"id": "g1", "hp": 10, "pos": [2, 2], "size": [1, 1], "control_mode": "manual",
+         "_master_acted": False, "special_abilities": [ab],
+         "monster_ability_uses": {"hero_warrior_mira_certeira": 3},
+         "monster_ability_cooldowns": {}}
+    r.monsters = {"g1": m}; r.master_manual_mid = "g1"
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [2, 3], "alive": True}}
+    check("predicado aceita editor ability", r._habilidade_ativavel_manual(ab) is True)
+    await r.handle_mestre_usar_habilidade("m1", "g1", "hero_warrior_mira_certeira", None)
+    check("aplicou vantagem", m.get("editor_ability_advantage", 0) >= 1)
+    check("gastou 1 uso", m["monster_ability_uses"]["hero_warrior_mira_certeira"] == 2)
+    check("entrou em recarga", m["monster_ability_cooldowns"].get("hero_warrior_mira_certeira", 0) > 0)
+    check("consumiu a ação", m["_master_acted"] is True)
+    m["_master_acted"] = False; m["monster_ability_uses"]["hero_warrior_mira_certeira"] = 0
+    r._errs.clear()
+    await r.handle_mestre_usar_habilidade("m1", "g1", "hero_warrior_mira_certeira", None)
+    check("sem usos recusado", m["_master_acted"] is False)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

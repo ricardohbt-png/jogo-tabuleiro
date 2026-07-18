@@ -16410,6 +16410,29 @@ class GameRoom:
                     and ab.get("action_type") == "passiva")
         return min(2, count)
 
+    def _ativar_editor_ability(self, m, ab):
+        """Aplica o efeito genérico de uma habilidade de editor (herói/guilda):
+        gasta uso+recarga (monster_ability_*) e concede vantagem+dano no próximo
+        golpe. Compartilhado pela IA e pelo controle manual do mestre. Retorna
+        True se ativou, False se sem usos / em recarga."""
+        aid = ab.get("id")
+        uses = m.setdefault("monster_ability_uses", {})
+        cds = m.setdefault("monster_ability_cooldowns", {})
+        if not aid or uses.get(aid, ab.get("uses_per_day", 1)) <= 0:
+            return False
+        if cds.get(aid, 0) > 0:
+            return False
+        uses[aid] = uses.get(aid, ab.get("uses_per_day", 1)) - 1
+        cd = max(0, int(ab.get("cooldown_turns", 0) or 0))
+        if cd:
+            cds[aid] = cd
+        # Para habilidades cujo efeito original pertence a herÃ³is, aplicamos
+        # um equivalente seguro e universal no monstro: vantagem no prÃ³ximo
+        # golpe e dano adicional. Isso evita habilidades apenas decorativas.
+        m["editor_ability_advantage"] = max(1, m.get("editor_ability_advantage", 0))
+        m["editor_ability_damage"] = max(1, m.get("editor_ability_damage", 0))
+        return True
+
     async def _monster_try_editor_ability(self, m):
         """IA ofensiva das habilidades reutilizadas de heróis e Guilda.
 
@@ -16417,37 +16440,25 @@ class GameRoom:
         habilidade disponível antes de atacar, respeitando simultaneamente os
         usos por dia e a recarga configurados na ficha.
         """
-        uses = m.setdefault("monster_ability_uses", {})
-        cooldowns = m.setdefault("monster_ability_cooldowns", {})
         for ab in m.get("special_abilities", []):
             if ab.get("source") not in {"heroi", "guilda"} or ab.get("action_type") == "passiva":
                 continue
-            aid = ab.get("id")
-            if not aid or uses.get(aid, ab.get("uses_per_day", 1)) <= 0:
-                continue
-            if cooldowns.get(aid, 0) > 0:
-                continue
-            uses[aid] = uses.get(aid, ab.get("uses_per_day", 1)) - 1
-            cd = max(0, int(ab.get("cooldown_turns", 0) or 0))
-            if cd:
-                cooldowns[aid] = cd
-            # Para habilidades cujo efeito original pertence a herÃ³is, aplicamos
-            # um equivalente seguro e universal no monstro: vantagem no prÃ³ximo
-            # golpe e dano adicional. Isso evita habilidades apenas decorativas.
-            m["editor_ability_advantage"] = max(1, m.get("editor_ability_advantage", 0))
-            m["editor_ability_damage"] = max(1, m.get("editor_ability_damage", 0))
-            await self.gm_say(f"✦ **{m['name']}** ativa **{ab.get('name', aid)}** para ganhar vantagem no combate!")
-            return True
+            if self._ativar_editor_ability(m, ab):
+                await self.gm_say(f"✦ **{m.get('name', 'O monstro')}** ativa **{ab.get('name', ab.get('id'))}** para ganhar vantagem no combate!")
+                return True
         return False
 
     def _habilidade_ativavel_manual(self, ability):
-        """SP1: o mestre só ativa habilidades ATIVAS resolvíveis por
-        _use_monster_ability (têm save e dc — as do editor de criaturas). As demais
-        (bespoke hardcoded, action_type 'magia') aparecem na ficha como 'IA apenas'.
-        Ponto único de plugagem para lotes futuros (dispatch por id/action_type)."""
+        """O mestre ativa: (a) habilidades save+dc (via _use_monster_ability) OU
+        (b) habilidades de editor herói/guilda (self-buff, via _ativar_editor_ability).
+        As demais (bespoke hardcoded, action_type 'magia') aparecem na ficha como
+        'IA apenas'. Ponto único de plugagem para lotes futuros (dispatch por id/
+        action_type)."""
         if not ability or ability.get("action_type") == "passiva":
             return False
-        return ability.get("save") is not None and ability.get("dc") is not None
+        if ability.get("save") is not None and ability.get("dc") is not None:
+            return True
+        return ability.get("source") in {"heroi", "guilda"}
 
     async def handle_mestre_usar_habilidade(self, pid, monster_id, ability_id, target_id):
         """Manual: o mestre ativa uma habilidade ativa do monstro num herói.
@@ -16462,6 +16473,13 @@ class GameRoom:
         ability = next((a for a in m.get("special_abilities", []) if a.get("id") == ability_id), None)
         if not self._habilidade_ativavel_manual(ability):
             await self.send_to(pid, {"type": "error", "msg": "Habilidade não ativável manualmente (IA apenas)."}); return
+        # Ramo (b): habilidade de editor (herói/guilda) — self-buff, sem alvo.
+        if not (ability.get("save") is not None and ability.get("dc") is not None):
+            if not self._ativar_editor_ability(m, ability):
+                await self.send_to(pid, {"type": "error", "msg": "Habilidade sem usos ou em recarga."}); return
+            m["_master_acted"] = True
+            await self.gm_say(f"✦ **{m.get('name', 'O monstro')}** ativa **{ability.get('name', ability['id'])}**!")
+            await self.push_state(); return
         alvo = self.players.get(target_id)
         if not alvo or not alvo.get("alive"):
             await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
