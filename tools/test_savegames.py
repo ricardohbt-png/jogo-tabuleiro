@@ -243,6 +243,39 @@ def main():
     finally:
         S.SAVEGAMES_DIR = olds; shutil.rmtree(tmp, ignore_errors=True)
 
+    # [12] overlay no start + checkpoint na cidade
+    print("\n[12] Overlay e checkpoint")
+    tmp = tempfile.mkdtemp(); olds = S.SAVEGAMES_DIR; S.SAVEGAMES_DIR = tmp
+    try:
+        r = GameRoom("TST2")
+        async def _noop(*a, **k): pass
+        r.broadcast = _noop; r.broadcast_city_state = _noop; r.send_to = _noop
+        r.gm_say = _noop; r._gerar_loja_pergaminhos = lambda: None
+        r._cancelar_timer_turno = lambda: None
+        sg = S.create_savegame("Jogo", "ricardo", "campaign", "elara.json", False)
+        base = S.snapshot_character(S.make_player("x", "x", "warrior", 0))
+        base["gold"] = 777; base["level"] = 4
+        sg["members"]["joao"] = {"class_id": "warrior"}
+        sg["characters"]["warrior"] = base
+        sg["campaign_phase"] = 2
+        S.write_savegame(sg)
+        r.savegame_id = sg["id"]; r.savegame = sg
+        r.campaign_phase = 2
+        r.players = {"j1": {"id": "j1", "name": "Joao", "class_id": "warrior", "connected": True, "slot": 0}}
+        r.account_by_pid = {"j1": "joao"}
+        r.host_pid = "j1"
+        _aio.run(r.start_game("j1"))
+        check("overlay restaurou ouro salvo", r.players["j1"]["gold"] == 777)
+        check("overlay restaurou nível salvo", r.players["j1"]["level"] == 4)
+        r.players["j1"]["gold"] = 1234
+        _aio.run(r._voltar_para_cidade())
+        disco = S.load_savegame(sg["id"])
+        check("checkpoint gravou ouro atual", disco["characters"]["warrior"]["gold"] == 1234)
+        check("checkpoint preservou ausente", "mage" not in disco["characters"])
+        check("checkpoint gravou fase", disco["campaign_phase"] == 2)
+    finally:
+        S.SAVEGAMES_DIR = olds; shutil.rmtree(tmp, ignore_errors=True)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

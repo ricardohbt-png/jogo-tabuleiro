@@ -5517,10 +5517,20 @@ class GameRoom:
         for slot, (pid2, p) in enumerate(heroes.items()):
             novo = make_player(pid2, p["name"], p["class_id"], slot)
             novo["magias_conhecidas"] = list(p.get("magias_conhecidas", []))
-            apply_guild_save(novo)   # carrega compras/equip persistidos do personagem
+            if self.savegame is not None:
+                snap = (self.savegame.get("characters", {}) or {}).get(p["class_id"])
+                if snap:
+                    restore_character(novo, snap)   # sobrepõe a ficha salva
+                # sem snap (não deveria ocorrer — o bind cria a ficha): fica
+                # a ficha FRESCA. NÃO cai no apply_guild_save global, que
+                # reintroduziria o vazamento entre jogos que a Fase 1 eliminou.
+            else:
+                apply_guild_save(novo)   # jogo sem savegame (fluxo antigo)
             full_players[pid2] = novo
         self.players = full_players
         self.player_order = list(full_players.keys())
+        if self.savegame is not None:
+            self.campaign_phase = self.savegame.get("campaign_phase", 0)
         if master_entry:
             self.master_pid = master_entry["id"]
             self.master_name = master_entry["name"]
@@ -11063,6 +11073,20 @@ class GameRoom:
             if pp.get("class_id") in ("mage", "cleric"):
                 self._recarregar_slots(pp)   # descanso â†’ todos os slots voltam cheios
         await self.broadcast_city_state()
+        self._checkpoint_savegame()
+
+    def _checkpoint_savegame(self):
+        """Grava a ficha durável dos heróis PRESENTES + a fase atual no savegame.
+        Ausentes ficam intocados. No-op se a sala não tem savegame."""
+        if self.savegame is None:
+            return
+        chars = self.savegame.setdefault("characters", {})
+        for p in self.players.values():
+            if p.get("is_master") or not p.get("class_id"):
+                continue
+            chars[p["class_id"]] = snapshot_character(p)
+        self.savegame["campaign_phase"] = self.campaign_phase
+        write_savegame(self.savegame)
 
     # â”€â”€ inventory helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
