@@ -486,6 +486,26 @@ def _atomic_write_json(path, data):
         json.dump(data, f, ensure_ascii=False, indent=2)
     os.replace(tmp, path)
 
+def hash_pin(pin, salt=None, iterations=100_000):
+    """PBKDF2-SHA256 com salt por conta. Retorna 'pbkdf2_sha256$iter$salt$hash'."""
+    if salt is None:
+        salt = os.urandom(16)
+    dk = hashlib.pbkdf2_hmac("sha256", str(pin).encode("utf-8"), salt, iterations)
+    return (f"pbkdf2_sha256${iterations}$"
+            f"{base64.b64encode(salt).decode()}${base64.b64encode(dk).decode()}")
+
+def verify_pin(pin, stored):
+    """True se o PIN bate com o hash armazenado; False em qualquer falha/forma inválida."""
+    try:
+        algo, iters, salt_b64, hash_b64 = stored.split("$")
+        if algo != "pbkdf2_sha256":
+            return False
+        salt = base64.b64decode(salt_b64)
+        dk = hashlib.pbkdf2_hmac("sha256", str(pin).encode("utf-8"), salt, int(iters))
+        return hmac.compare_digest(base64.b64encode(dk).decode(), hash_b64)
+    except Exception:
+        return False
+
 GUILD_SAVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "saves")
 
 # Trava global: personagem em uso nÃ£o pode ser escolhido em outra sala.
