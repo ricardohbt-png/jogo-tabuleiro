@@ -644,6 +644,10 @@ def delete_savegame(sid, requester):
             pass
     return True, None
 
+# Um savegame só roda em uma sessão ao vivo por vez; uma conta só loga em uma.
+SAVEGAMES_IN_USE = {}   # savegame_id -> room code
+ACCOUNTS_ONLINE = {}    # username -> pid da conexão autenticada
+
 GUILD_SAVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "saves")
 
 # Trava global: personagem em uso nÃ£o pode ser escolhido em outra sala.

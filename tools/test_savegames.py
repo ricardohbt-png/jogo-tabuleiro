@@ -107,6 +107,11 @@ def main():
         S.SAVEGAMES_DIR = old
         shutil.rmtree(tmp, ignore_errors=True)
 
+    # [5] travas
+    print("\n[5] Travas de concorrência")
+    check("SAVEGAMES_IN_USE existe e é dict", isinstance(S.SAVEGAMES_IN_USE, dict))
+    check("ACCOUNTS_ONLINE existe e é dict", isinstance(S.ACCOUNTS_ONLINE, dict))
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
