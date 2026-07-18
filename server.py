@@ -692,6 +692,27 @@ def try_create_savegame(account, name, mode, campaign_file, has_master):
     sg = create_savegame(name, account, mode, campaign_file, has_master)
     return sg, None
 
+# Campos duráveis da ficha (o resto é runtime e reseta por sessão). Na cidade,
+# esses valores já estão consistentes, então restore é só sobrescrita.
+_DURABLE_FIELDS = (
+    "gold", "hp", "max_hp", "mp", "max_mp", "xp", "level", "level_bonus",
+    "ac", "ac_base", "atk_bonus", "base_atk_bonus", "weapon",
+    "fort", "ref_", "will", "spd",
+    "bag", "bag_size", "gear",
+    "guild_owned", "guild_equip", "magias_conhecidas",
+)
+
+def snapshot_character(player):
+    """Extrai a ficha durável do jogador (deep copy). Ver _DURABLE_FIELDS."""
+    return {k: deepcopy(player[k]) for k in _DURABLE_FIELDS if k in player}
+
+def restore_character(player, snap):
+    """Sobrepõe a ficha durável num make_player fresco (deep copy). Mantém
+    id/nome/class_id/slot do shell; ignora chaves fora da whitelist."""
+    for k in _DURABLE_FIELDS:
+        if k in snap:
+            player[k] = deepcopy(snap[k])
+
 GUILD_SAVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "saves")
 
 # Trava global: personagem em uso nÃ£o pode ser escolhido em outra sala.

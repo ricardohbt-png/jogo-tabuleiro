@@ -181,6 +181,31 @@ def main():
         S.ACCOUNTS_ONLINE.clear()
         shutil.rmtree(tmp, ignore_errors=True)
 
+    # [9] snapshot/restore da ficha
+    print("\n[9] Snapshot/restore de personagem")
+    from server import make_player
+    p = make_player("p1", "Herói", "warrior", 0)
+    p["gold"] = 999; p["hp"] = 3; p["xp"] = 120; p["level"] = 2
+    p["bag"].append({"id": "pocao", "name": "Poção"})
+    p["guild_owned"]["tecnicas"].append("brutalidade")
+    p["guild_equip"]["tecnica"] = "brutalidade"
+    p["technique_cooldowns"]["brutalidade"] = 7   # runtime — NÃO deve entrar
+    snap = S.snapshot_character(p)
+    check("snapshot pega ouro", snap["gold"] == 999)
+    check("snapshot pega hp", snap["hp"] == 3)
+    check("snapshot pega guild", snap["guild_owned"]["tecnicas"] == ["brutalidade"])
+    check("snapshot ignora runtime (cooldowns)", "technique_cooldowns" not in snap)
+    p2 = make_player("p2", "Outro", "warrior", 1)
+    S.restore_character(p2, snap)
+    check("restore aplica ouro", p2["gold"] == 999)
+    check("restore aplica hp", p2["hp"] == 3)
+    check("restore aplica nível/xp", p2["level"] == 2 and p2["xp"] == 120)
+    check("restore aplica bag", any(i.get("id") == "pocao" for i in p2["bag"]))
+    check("restore aplica guild equip", p2["guild_equip"]["tecnica"] == "brutalidade")
+    check("restore preserva id/nome do shell", p2["id"] == "p2" and p2["name"] == "Outro")
+    snap["bag"].append({"id": "x"})
+    check("restore fez deep copy (bag isolada)", not any(i.get("id") == "x" for i in p2["bag"]))
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
