@@ -5311,6 +5311,33 @@ class GameRoom:
             return
         if cls_id not in CLASSES:
             return
+        # ── Jogo salvo: vínculo conta↔personagem (Fase 2) ─────────────────
+        if self.savegame is not None:
+            conta = self.account_by_pid.get(pid)
+            if not conta:
+                await self.send_to(pid, {"type": "error",
+                    "msg": "Faça login para escolher um personagem neste jogo."})
+                return
+            membros = self.savegame.setdefault("members", {})
+            ja = membros.get(conta, {}).get("class_id")
+            if ja:
+                # Conta já vinculada: força a classe dela (ignora cls_id pedido).
+                cls_id = ja
+            else:
+                # Classe já pertence a OUTRA conta neste savegame?
+                dono_conta = next((c for c, m in membros.items()
+                                   if m.get("class_id") == cls_id and c != conta), None)
+                if dono_conta:
+                    await self.send_to(pid, {"type": "error",
+                        "msg": "Esse personagem é de outro jogador neste jogo."})
+                    return
+                # 1ª escolha: grava vínculo + ficha fresca e persiste.
+                membros[conta] = {"class_id": cls_id}
+                chars = self.savegame.setdefault("characters", {})
+                if cls_id not in chars:
+                    novo = make_player(pid, self.players[pid]["name"], cls_id, self.players[pid].get("slot", 0))
+                    chars[cls_id] = snapshot_character(novo)
+                write_savegame(self.savegame)
         # NÃ£o tomado na sala
         taken = [p["class_id"] for p in self.players.values() if p["id"] != pid]
         if cls_id in taken:

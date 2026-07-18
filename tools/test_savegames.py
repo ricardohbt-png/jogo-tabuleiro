@@ -214,6 +214,35 @@ def main():
     check("savegame default None", r.savegame is None)
     check("account_by_pid default vazio", r.account_by_pid == {})
 
+    # [11] bind conta↔personagem no lobby
+    print("\n[11] Bind de personagem no savegame")
+    import asyncio as _aio
+    tmp = tempfile.mkdtemp(); olds = S.SAVEGAMES_DIR; S.SAVEGAMES_DIR = tmp
+    try:
+        r = GameRoom("TST1")
+        async def _noop(*a, **k): pass
+        r.broadcast_lobby = _noop; r.send_to = _noop
+        sg = S.create_savegame("Jogo", "ricardo", "campaign", "elara.json", False)
+        r.savegame_id = sg["id"]; r.savegame = sg
+        r.players["j1"] = {"id": "j1", "name": "Joao", "class_id": None, "ready": False, "connected": True, "slot": 0}
+        r.account_by_pid["j1"] = "joao"
+        _aio.run(r.select_class("j1", "warrior"))
+        check("grava vínculo no savegame", sg["members"].get("joao", {}).get("class_id") == "warrior")
+        check("cria ficha fresca do personagem", "warrior" in sg["characters"])
+        check("persistiu em disco", S.load_savegame(sg["id"])["members"]["joao"]["class_id"] == "warrior")
+        r.players["j2"] = {"id": "j2", "name": "Maria", "class_id": None, "ready": False, "connected": True, "slot": 1}
+        r.account_by_pid["j2"] = "maria"
+        errs = []
+        async def _cap(pid, m, *a, **k):
+            if isinstance(m, dict) and m.get("type") == "error": errs.append(m.get("msg", ""))
+        r.send_to = _cap
+        _aio.run(r.select_class("j2", "warrior"))
+        check("recusa classe de outra conta", r.players["j2"]["class_id"] is None and errs)
+        _aio.run(r.select_class("j1", "mage"))
+        check("conta vinculada é forçada à sua classe", r.players["j1"]["class_id"] == "warrior")
+    finally:
+        S.SAVEGAMES_DIR = olds; shutil.rmtree(tmp, ignore_errors=True)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
