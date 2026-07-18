@@ -10392,15 +10392,20 @@ function renderFichaMonstro(m){
     const b = (a.atk_bonus!=null) ? (a.atk_bonus>=0?'+':'')+a.atk_bonus : '';
     return `<div class="fm-atk">⚔️ ${a.name||a.nome||'Ataque'} ${b} · ${dano}</div>`;
   };
-  const ativavel = (a) => a.action_type!=='passiva' && a.save!=null && a.dc!=null;
+  const ehEditor = (a) => (a.source === 'heroi' || a.source === 'guilda') && a.action_type && a.action_type !== 'passiva';
+  const ativavel = (a) => (a.action_type !== 'passiva' && a.save != null && a.dc != null) || ehEditor(a);
   const usosRest = (a) => {
-    const lim = (a.uses_per_combat!=null) ? a.uses_per_combat
-              : (a.uses_per_day!=null ? a.uses_per_day : null);
-    if(lim==null) return '∞';
-    const u = (m.ability_uses||{})[a.id];
-    return (u!=null ? u : lim);
+    const lim = (a.uses_per_combat != null) ? a.uses_per_combat
+              : (a.uses_per_day != null ? a.uses_per_day : null);
+    if (lim == null) return '∞';
+    const dict = ehEditor(a) ? (m.monster_ability_uses || {}) : (m.ability_uses || {});
+    const u = dict[a.id];
+    return (u != null ? u : lim);
   };
-  const cdRest = (a) => (m.ability_cooldowns||{})[a.id] || 0;
+  const cdRest = (a) => {
+    const dict = ehEditor(a) ? (m.monster_ability_cooldowns || {}) : (m.ability_cooldowns || {});
+    return dict[a.id] || 0;
+  };
   const abis = m.special_abilities||[];
   const ativas   = abis.filter(a => a.action_type && a.action_type!=='passiva');
   const passivas = abis.filter(a => !a.action_type || a.action_type==='passiva');
@@ -10420,6 +10425,25 @@ function renderFichaMonstro(m){
   const ataques = (m.attacks||[]).map(linhaAtaque).join('') ||
                   (m.atk_bonus!=null ? linhaAtaque({name:'Ataque', atk_bonus:m.atk_bonus, damage:m.damage}) : '');
   const stat = (lbl,v)=> (v!=null? `<span class="fm-stat">${lbl} ${v}</span>` : '');
+  const cons = m.equipment_consumables || [];
+  const FOOD = new Set(['food','ration','wine','ale']);
+  const itemUsavel = (it) => {
+    if(FOOD.has(it.effect)) return false;
+    if(it.effect === 'throwable') return isManual && !acted;
+    if(it.effect === 'scroll') return isManual && !acted && _monConjurador(m);
+    return isManual && !m._master_bonus_acted;   // consumível bônus
+  };
+  const linhaItem = (it) => {
+    const podeUsar = itemUsavel(it);
+    const motivo = FOOD.has(it.effect) ? '<span class="fm-ia">sem efeito</span>'
+                 : (it.effect === 'scroll' && !_monConjurador(m)) ? '<span class="fm-ia">só conjurador</span>'
+                 : `<button class="fm-usar-item" data-iid="${it.id}"${podeUsar?'':' disabled'}>Usar</button>`;
+    return `<div class="fm-hab fm-item"><div class="fm-ab-top"><b>${it.emoji||'🎒'} ${it.name||it.id}</b> ${motivo}</div>`+
+           `<div class="fm-ab-desc">${it.descricao||it.desc||''}</div></div>`;
+  };
+  const eqW = m.equipped_weapon ? `<div class="fm-eq">🗡️ ${m.equipped_weapon.name}</div>` : '';
+  const eqA = (m.equipment_items||[]).filter(i=>i.ac_bonus||i.effect==='def_')
+              .map(i=>`<div class="fm-eq">🛡️ ${i.name}</div>`).join('');
   host.innerHTML =
     `<div class="fm-head"><span class="fm-emoji">${m.emoji||'👾'}</span>`+
     `<span class="fm-nome">${m.name||m.type||'Monstro'}</span>`+
@@ -10429,10 +10453,15 @@ function renderFichaMonstro(m){
     `${stat('Fort',m.fort)}${stat('Ref',m.ref_)}${stat('Von',m.will)}</div>`+
     (ataques? `<div class="fm-sec">Ataques</div>${ataques}`:'')+
     (ativas.length? `<div class="fm-sec">Ações</div>${ativas.map(linhaAcao).join('')}`:'')+
-    (passivas.length? `<div class="fm-sec">Passivas</div>${passivas.map(linhaHab).join('')}`:'');
+    (passivas.length? `<div class="fm-sec">Passivas</div>${passivas.map(linhaHab).join('')}`:'')+
+    (cons.length? `<div class="fm-sec">Itens</div>${cons.map(linhaItem).join('')}`:'')+
+    ((eqW||eqA)? `<div class="fm-sec">Equipado</div>${eqW}${eqA}`:'');
   host.querySelector('.fm-close').onclick = () => { host.style.display='none'; };
   host.querySelectorAll('.fm-usar').forEach(btn => {
     btn.onclick = () => _mestreAtivarHabilidade(m, btn.dataset.abid);
+  });
+  host.querySelectorAll('.fm-usar-item').forEach(btn => {
+    btn.onclick = () => _mestreUsarItemFicha(m, btn.dataset.iid);
   });
 }
 
@@ -10441,6 +10470,10 @@ function _mestreAtivarHabilidade(m, abid){
   const st = GS.gameState; if(!st) return;
   const ab = (m.special_abilities||[]).find(a=>a.id===abid);
   if(!ab) return;
+  // Habilidade de editor (herói/guilda): self-buff, ativa direto sem alvo.
+  if((ab.source === 'heroi' || ab.source === 'guilda') && !(ab.save != null && ab.dc != null)){
+    GS.mestreUsarHabilidade(m.id, abid, null); return;
+  }
   const rng = ab.range || null;
   const alvos = (st.players||[]).filter(p => {
     if(!p.alive) return false;
@@ -10450,6 +10483,25 @@ function _mestreAtivarHabilidade(m, abid){
   if(!alvos.length){ toast(`Nenhum herói ${rng?('a até '+rng+'q'):'adjacente'}.`, 'var(--orange)'); return; }
   openTargetModal(`${ab.name||abid} — Escolha o alvo`, alvos, 'player',
     (alvoId)=> GS.mestreUsarHabilidade(m.id, abid, alvoId));
+}
+function _monConjurador(m){
+  return (m.monster_spells && m.monster_spells.length > 0) ||
+         (m.special_abilities||[]).some(a => a.action_type === 'magia');
+}
+function _mestreUsarItemFicha(m, iid){
+  const st = GS.gameState; if(!st) return;
+  const it = (m.equipment_consumables||[]).find(i=>i.id===iid);
+  if(!it) return;
+  // Arremessável / pergaminho de alvo: mira um herói.
+  if(it.effect === 'throwable' || it.effect === 'scroll'){
+    const alvos = (st.players||[]).filter(p=>p.alive);
+    if(!alvos.length){ toast('Nenhum herói vivo.', 'var(--orange)'); return; }
+    openTargetModal(`${it.name||iid} — Escolha o alvo`, alvos, 'player',
+      (alvoId)=> GS.mestreUsarItem(m.id, iid, alvoId, null, null));
+    return;
+  }
+  // Consumível de alvo-próprio: usa direto.
+  GS.mestreUsarItem(m.id, iid, null, null, null);
 }
 function _monstroEmCasa(tx, ty){
   const st = GS.gameState; if(!st) return null;
@@ -15615,7 +15667,8 @@ function _loadHeroGLB(T, classId, cb) {
 // externo é sempre a direção do movimento; este ajuste corrige somente a
 // orientação nativa do arquivo, sem interferir na caminhada.
 const _HERO_GLB_FRONT_OFFSET = Object.freeze({
-  paladin: 0,
+  // O GLB do Richard foi exportado com a frente no eixo oposto aos demais.
+  paladin: Math.PI,
   warrior: 0,
   mage: 0,
   rogue: 0,
@@ -19730,6 +19783,12 @@ const _CSD = {
       { nome: 'Névoa Venenosa',   icone: '☠️', desc: '2º Círculo — área 2 quad, -2 testes, 3 turnos' },
       { nome: 'Raio da Morte',    icone: '💜', desc: '3º Círculo — 5d6+INT em linha reta' },
       { nome: 'Controlar Mente',  icone: '🧠', desc: '3º Círculo — inimigo luta pelo grupo por 3 turnos' },
+    ],
+    selectionSkills:[
+      { icon:'💀', name:'Animar Mortos', desc:'Habilidade de classe — anima cadáveres como servos eternos.' },
+      { icon:'⏱️', name:'Estender Magia', desc:'Ação livre. Aumenta em 1 turno a duração de uma magia.' },
+      { icon:'💥', name:'Fortalecer Magia', desc:'Ação livre. Multiplica por 1,5 o dano da próxima magia.' },
+      { icon:'🎯', name:'Aprimorar Magia', desc:'Ação livre. Aumenta em +1 a CD do teste de resistência da próxima magia.' },
     ]},
   rogue:{ name:'LUCCAS, O ASTUTO', cls:'LUCCAS', skyHex:'#040800', lightHex:0x44cc44,
     portrait:'assets/portraits/luccas.jpeg',
@@ -20383,7 +20442,10 @@ function _csfShowPanel(classId, animate){
     });
   });
 
-  document.getElementById('cs-skills').innerHTML = d.skills.map(sk => `
+  // A seleção mostra quatro habilidades por herói. O grimório completo do Pedro
+  // continua disponível dentro da partida; aqui ele segue o mesmo layout dos demais.
+  const skillsForSelect = classId === 'mage' ? (d.selectionSkills || d.skills.slice(0, 4)) : d.skills;
+  document.getElementById('cs-skills').innerHTML = skillsForSelect.map(sk => `
     <div class="cs-skill">
       <span class="cs-skill-icon">${sk.icon ?? sk.icone ?? ''}</span>
       <div class="cs-skill-body">
@@ -20411,17 +20473,6 @@ function _csfShowPanel(classId, animate){
       </div>
     </div>
   `).join('');
-
-  // ── Pedro: injeta o sistema novo de ficha (abas Atributos/Magias) (PASSO B) ──
-  // Substitui o conteúdo de #cs-skills pelas abas; para outros heróis, remove
-  // qualquer resíduo de uma seleção anterior do Pedro.
-  const heroiKey = _classIdParaHeroiKey(classId);
-  if (heroiKey === 'pedro') {
-    _injetarFichaPedro();
-  } else {
-    const abaExistente = document.getElementById('abas-ficha-pedro');
-    if (abaExistente) abaExistente.remove();
-  }
 
   const panel = document.getElementById('cs-panel');
   if(panel) panel.classList.add('ready');
