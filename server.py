@@ -664,6 +664,18 @@ def try_login(pid, username, pin):
     ACCOUNTS_ONLINE[u] = pid
     return True, {"username": u}
 
+def try_create_savegame(account, name, mode, campaign_file, has_master):
+    """Valida a criação de um savegame por uma conta logada.
+    Retorna (savegame, None) ou (None, mensagem_de_erro)."""
+    if not account:
+        return None, "Você precisa estar logado para criar um jogo."
+    if not (name or "").strip():
+        return None, "Dê um nome ao jogo."
+    if mode == "campaign" and not campaign_file:
+        return None, "Escolha uma campanha."
+    sg = create_savegame(name, account, mode, campaign_file, has_master)
+    return sg, None
+
 GUILD_SAVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "saves")
 
 # Trava global: personagem em uso nÃ£o pode ser escolhido em outra sala.
@@ -19489,6 +19501,7 @@ def _delta(v):
 async def handler(ws):
     pid = new_id()
     room = None
+    account = {"name": None}   # conta autenticada nesta conexão (via login)
 
     async def err(msg):
         await ws.send(json.dumps({"type": "error", "msg": msg}))
@@ -19591,6 +19604,8 @@ async def handler(ws):
                     acc, e = create_account(msg.get("username"), msg.get("pin"))
                     if acc:
                         ok, pay = try_login(pid, acc["username"], msg.get("pin"))
+                        if ok:
+                            account["name"] = pay["username"]
                         await ws.send(json.dumps({"type": "login_result", "ok": ok,
                                                   "username": acc["username"] if ok else None,
                                                   "error": None if ok else pay}))
@@ -19600,9 +19615,35 @@ async def handler(ws):
 
                 if t == "login":
                     ok, pay = try_login(pid, msg.get("username"), msg.get("pin"))
+                    if ok:
+                        account["name"] = pay["username"]
                     await ws.send(json.dumps({"type": "login_result", "ok": ok,
                                               "username": pay["username"] if ok else None,
                                               "error": None if ok else pay}))
+                    continue
+
+                if t == "list_savegames":
+                    await ws.send(json.dumps({"type": "savegames_list",
+                                              "savegames": list_savegames(account["name"])}))
+                    continue
+
+                if t == "create_savegame":
+                    sg, e = try_create_savegame(account["name"], msg.get("name"),
+                                                msg.get("mode"), msg.get("campaign_file"),
+                                                bool(msg.get("has_master")))
+                    if sg:
+                        await ws.send(json.dumps({"type": "savegame_created", "savegame": sg}))
+                    else:
+                        await err(e)
+                    continue
+
+                if t == "delete_savegame":
+                    ok, e = delete_savegame(msg.get("id"), account["name"])
+                    if ok:
+                        await ws.send(json.dumps({"type": "savegames_list",
+                                                  "savegames": list_savegames(account["name"])}))
+                    else:
+                        await err(e)
                     continue
 
                 if t == "create_room":
@@ -19933,6 +19974,8 @@ async def handler(ws):
     except websockets.exceptions.ConnectionClosed:
         pass
     finally:
+        if account["name"] and ACCOUNTS_ONLINE.get(account["name"]) == pid:
+            del ACCOUNTS_ONLINE[account["name"]]
         if room:
             room.connections.pop(pid, None)
             if room.master_pid == pid and room.phase == "playing":

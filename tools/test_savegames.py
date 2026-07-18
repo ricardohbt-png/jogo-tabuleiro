@@ -138,6 +138,22 @@ def main():
         S.ACCOUNTS_ONLINE.clear()
         shutil.rmtree(tmp, ignore_errors=True)
 
+    # [7] try_create_savegame (helper puro)
+    print("\n[7] Criar savegame (validação)")
+    tmp = tempfile.mkdtemp()
+    olds = S.SAVEGAMES_DIR
+    S.SAVEGAMES_DIR = tmp
+    try:
+        sg, e = S.try_create_savegame("ricardo", "Nova", "campaign", "elara.json", False)
+        check("cria com conta logada", sg is not None and e is None)
+        sg2, e2 = S.try_create_savegame(None, "Nova", "campaign", "elara.json", False)
+        check("recusa sem conta logada", sg2 is None and e2 is not None)
+        sg3, e3 = S.try_create_savegame("ricardo", "", "campaign", "elara.json", False)
+        check("recusa nome vazio", sg3 is None and e3 is not None)
+    finally:
+        S.SAVEGAMES_DIR = olds
+        shutil.rmtree(tmp, ignore_errors=True)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
