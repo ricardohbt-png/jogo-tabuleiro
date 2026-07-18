@@ -25,6 +25,8 @@ const GS = (() => {
   let ws              = null;
   let myPid           = null;
   let myName          = '';
+  let account   = null;   // apelido logado (ou null)
+  let savegames = [];     // último savegames_list recebido
   let gameState       = null;   // latest game_state message from server
   let lobbyState      = null;   // latest lobby_state message from server
   let cityState       = null;   // latest city_state message from server
@@ -1074,8 +1076,9 @@ const GS = (() => {
     ws = new WebSocket(url);
 
     ws.onopen = () => {
-      if (mode === 'create') send({ type: 'create_room', name });
-      else                   send({ type: 'join_room',   name, code });
+      if      (mode === 'create') send({ type: 'create_room', name });
+      else if (mode === 'join')   send({ type: 'join_room',   name, code });
+      // mode 'login': não cria/entra em sala aqui; a UI dispara login/create_account.
     };
 
     _wireWs();
@@ -1218,6 +1221,20 @@ const GS = (() => {
         // Cascata 2d6 da Gaita (Fase 5) — quadro de resultado + fila de mira
         // dos passos que precisam de alvo (ver renderImprovisoQuadro em game.js).
         _emit('improvisoResultado', msg);
+        break;
+
+      case 'login_result':
+        if (msg.ok) account = msg.username;
+        _emit('loginResult', msg);   // {ok, username, error}
+        break;
+
+      case 'savegames_list':
+        savegames = msg.savegames || [];
+        _emit('savegamesList', savegames);
+        break;
+
+      case 'savegame_created':
+        _emit('savegameCreated', msg.savegame);
         break;
 
       case 'error':
@@ -1973,6 +1990,28 @@ const GS = (() => {
     return null;
   }
 
+  // ── Contas / Jogos Salvos (Fase 3) ──────────────────────────────────────────
+  function loginConta(url, name, pin) {
+    connect(url, name, 'login');
+    const trySend = () => {
+      if (ws && ws.readyState === 1) send({ type: 'login', username: name, pin });
+      else setTimeout(trySend, 60);
+    };
+    trySend();
+  }
+  function criarConta(url, name, pin) {
+    connect(url, name, 'login');
+    const trySend = () => {
+      if (ws && ws.readyState === 1) send({ type: 'create_account', username: name, pin });
+      else setTimeout(trySend, 60);
+    };
+    trySend();
+  }
+  function listSavegames()      { send({ type: 'list_savegames' }); }
+  function createSavegame(opts) { send({ type: 'create_savegame', ...opts }); } // {name, mode, campaign_file, has_master}
+  function loadSavegame(id)     { send({ type: 'load_savegame', id }); }
+  function deleteSavegame(id)   { send({ type: 'delete_savegame', id }); }
+
   // ── Public API ─────────────────────────────────────────────────────────────
   return {
     // ── Constants ──
@@ -2083,6 +2122,11 @@ const GS = (() => {
     rejoin,                  // religa à partida (queda/F5) via mensagem `rejoin`
     savedSession,            // {url, code, name} persistidos — ou null
     clearSession,            // descarta a sessão salva (ex.: sair de propósito)
+
+    // ── Contas / Jogos Salvos (Fase 3) ──
+    loginConta, criarConta, listSavegames, createSavegame, loadSavegame, deleteSavegame,
+    getAccount: () => account,
+    getSavegames: () => savegames,
 
     // ── Actions ──
     move,
