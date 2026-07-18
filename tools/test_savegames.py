@@ -299,6 +299,33 @@ def main():
         S.SAVEGAMES_DIR = olds; S.SAVEGAMES_IN_USE.clear()
         shutil.rmtree(tmp, ignore_errors=True)
 
+    # [14] a mesma classe pode existir em savegames diferentes (trava global não vale c/ savegame)
+    print("\n[14] Classe repetida entre savegames")
+    tmp = tempfile.mkdtemp(); olds = S.SAVEGAMES_DIR; S.SAVEGAMES_DIR = tmp
+    S.CHARACTERS_IN_USE.clear()
+    try:
+        async def _noop(*a, **k): pass
+        # sala A (savegame 1) — joao pega warrior
+        rA = GameRoom("AAAA"); rA.broadcast_lobby = _noop; rA.send_to = _noop
+        sgA = S.create_savegame("A", "ricardo", "campaign", "elara.json", False)
+        rA.savegame_id = sgA["id"]; rA.savegame = sgA
+        rA.players["a1"] = {"id": "a1", "name": "Joao", "class_id": None, "ready": False, "connected": True, "slot": 0}
+        rA.account_by_pid["a1"] = "joao"
+        _aio.run(rA.select_class("a1", "warrior"))
+        check("sala A vinculou warrior", rA.players["a1"]["class_id"] == "warrior")
+        check("savegame NÃO usa trava global CHARACTERS_IN_USE", "warrior" not in S.CHARACTERS_IN_USE)
+        # sala B (savegame 2, OUTRA conta) — também pega warrior, sem bloqueio
+        rB = GameRoom("BBBB"); rB.broadcast_lobby = _noop; rB.send_to = _noop
+        sgB = S.create_savegame("B", "maria", "campaign", "elara.json", False)
+        rB.savegame_id = sgB["id"]; rB.savegame = sgB
+        rB.players["b1"] = {"id": "b1", "name": "Maria", "class_id": None, "ready": False, "connected": True, "slot": 0}
+        rB.account_by_pid["b1"] = "maria"
+        _aio.run(rB.select_class("b1", "warrior"))
+        check("sala B também vincula warrior (savegames independentes)", rB.players["b1"]["class_id"] == "warrior")
+    finally:
+        S.SAVEGAMES_DIR = olds; S.CHARACTERS_IN_USE.clear()
+        shutil.rmtree(tmp, ignore_errors=True)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

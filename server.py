@@ -5374,17 +5374,21 @@ class GameRoom:
         if cls_id in taken:
             await self.send_to(pid, {"type": "error", "msg": "Classe já escolhida por outro jogador."})
             return
-        # Trava global: personagem em uso em OUTRA sala
-        dono = CHARACTERS_IN_USE.get(cls_id)
-        if dono and dono != self.code:
-            await self.send_to(pid, {"type": "error",
-                "msg": f"{CLASSES[cls_id]['name']} já está em uso em outra sala."})
-            return
-        # Libera o personagem anterior deste jogador (se trocou de classe)
-        prev = self.players[pid].get("class_id")
-        if prev and prev != cls_id and CHARACTERS_IN_USE.get(prev) == self.code:
-            del CHARACTERS_IN_USE[prev]
-        CHARACTERS_IN_USE[cls_id] = self.code
+        # Trava global de personagem por sala SÓ vale sem jogo salvo: com savegame
+        # a ficha é por-jogo (e SAVEGAMES_IN_USE já impede a mesma partida rodar
+        # duas vezes), então a mesma classe pode existir em savegames diferentes.
+        if self.savegame is None:
+            # Trava global: personagem em uso em OUTRA sala
+            dono = CHARACTERS_IN_USE.get(cls_id)
+            if dono and dono != self.code:
+                await self.send_to(pid, {"type": "error",
+                    "msg": f"{CLASSES[cls_id]['name']} já está em uso em outra sala."})
+                return
+            # Libera o personagem anterior deste jogador (se trocou de classe)
+            prev = self.players[pid].get("class_id")
+            if prev and prev != cls_id and CHARACTERS_IN_USE.get(prev) == self.code:
+                del CHARACTERS_IN_USE[prev]
+            CHARACTERS_IN_USE[cls_id] = self.code
         self.players[pid]["class_id"] = cls_id
         self.players[pid]["ready"] = True
         await self.broadcast_lobby()
