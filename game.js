@@ -208,6 +208,23 @@ document.body.innerHTML = `
   </div>
 </div>
 
+<!-- ══ MEUS JOGOS (Fase 3 — Jogos Salvos) ══ -->
+<div id="screen-savegames" class="screen">
+  <div class="connect-panel">
+    <h2>Meus Jogos</h2>
+    <div id="savegames-list" style="display:flex;flex-direction:column;gap:8px;max-height:40vh;overflow:auto;"></div>
+    <div class="divider">criar novo</div>
+    <div class="field"><label>Nome do jogo</label>
+      <input id="sg-name" type="text" maxlength="40" placeholder="Ex: A Sociedade do Anel"></div>
+    <div class="field"><label>Campanha</label>
+      <select id="sg-campaign"></select></div>
+    <label style="display:flex;gap:6px;align-items:center;font-size:.8rem;">
+      <input id="sg-master" type="checkbox"> Este jogo terá um Mestre humano</label>
+    <button class="btn-primary" onclick="criarJogoSalvo()">➕ Criar jogo</button>
+    <button class="btn-secondary" onclick="showScreen('screen-connect')" style="margin-top:8px;">← Voltar</button>
+  </div>
+</div>
+
 <!-- ══ CLASS SELECT ══ -->
 <div id="screen-class-select" class="screen">
   <div id="cs-sky"></div>
@@ -570,6 +587,15 @@ function entrarComConta() {
   if (!/^\d{4}$/.test(pin)) { alert('O PIN deve ter 4 dígitos.'); return; }
   window._contaCtx = { url, name, pin };
   GS.loginConta(url, name, pin);
+}
+
+// Criação de novo jogo salvo (tela "Meus Jogos") — Fase 3 dos Jogos Salvos.
+function criarJogoSalvo() {
+  const name = (document.getElementById('sg-name').value || '').trim();
+  const campaign_file = document.getElementById('sg-campaign').value || null;
+  const has_master = document.getElementById('sg-master').checked;
+  if (!name) { alert('Dê um nome ao jogo.'); return; }
+  GS.createSavegame({ name, mode: 'campaign', campaign_file, has_master });
 }
 
 // Reconexão manual a partir da sessão salva (botão da tela inicial).
@@ -21800,6 +21826,39 @@ GS.on('loginResult', (msg) => {
     alert(msg.error || 'Falha no login.');
   }
 });
+
+GS.on('savegamesList', (list) => {
+  const box = document.getElementById('savegames-list');
+  if (!box) return;
+  box.innerHTML = list.length ? '' : '<div style="color:#8ab88a;">Nenhum jogo salvo ainda.</div>';
+  for (const sg of list) {
+    const membros = Object.keys(sg.members || {}).length;
+    const el = document.createElement('div');
+    el.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:8px;background:#0d1a0d;border:1px solid #2a4a2a;border-radius:6px;padding:8px 10px;';
+    el.innerHTML = '<div><b>' + sg.name + '</b><br><span style="font-size:.7rem;color:#8ab88a;">'
+      + (sg.mode === 'campaign' ? 'Campanha' : 'Avulso') + ' · fase ' + ((sg.campaign_phase||0)+1) + ' · ' + membros + ' herói(s)</span></div>';
+    const btns = document.createElement('div');
+    const cont = document.createElement('button'); cont.className='btn-secondary btn-sm'; cont.textContent='Continuar';
+    cont.onclick = () => GS.loadSavegame(sg.id);
+    btns.appendChild(cont);
+    if (sg.owner === GS.getAccount()) {
+      const del = document.createElement('button'); del.className='btn-secondary btn-sm'; del.textContent='🗑';
+      del.style.marginLeft='6px';
+      del.onclick = () => { if (confirm('Apagar "' + sg.name + '"? Isso é permanente.')) GS.deleteSavegame(sg.id); };
+      btns.appendChild(del);
+    }
+    el.appendChild(btns); box.appendChild(el);
+  }
+  const sel = document.getElementById('sg-campaign');
+  if (sel) {
+    sel.innerHTML = '';
+    for (const c of GS.getCampaigns()) {
+      const o = document.createElement('option'); o.value = c.file; o.textContent = c.name; sel.appendChild(o);
+    }
+  }
+});
+
+GS.on('savegameCreated', (sg) => { GS.loadSavegame(sg.id); });
 
 GS.on('lobbyState',  msg => handleLobby(msg));
 

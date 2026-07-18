@@ -27,6 +27,7 @@ const GS = (() => {
   let myName          = '';
   let account   = null;   // apelido logado (ou null)
   let savegames = [];     // último savegames_list recebido
+  let campaignsCache = []; // último campaigns recebido junto do savegames_list
   let gameState       = null;   // latest game_state message from server
   let lobbyState      = null;   // latest lobby_state message from server
   let cityState       = null;   // latest city_state message from server
@@ -1234,6 +1235,7 @@ const GS = (() => {
 
       case 'savegames_list':
         savegames = msg.savegames || [];
+        campaignsCache = msg.campaigns || [];
         _emit('savegamesList', savegames);
         break;
 
@@ -2132,6 +2134,7 @@ const GS = (() => {
     loginConta, criarConta, listSavegames, createSavegame, loadSavegame, deleteSavegame,
     getAccount: () => account,
     getSavegames: () => savegames,
+    getCampaigns: () => campaignsCache,
 
     // ── Actions ──
     move,

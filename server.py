@@ -19822,7 +19822,8 @@ async def handler(ws):
 
                 if t == "list_savegames":
                     await ws.send(json.dumps({"type": "savegames_list",
-                                              "savegames": list_savegames(account["name"])}))
+                                              "savegames": list_savegames(account["name"]),
+                                              "campaigns": listar_campanhas()}))
                     continue
 
                 if t == "create_savegame":
