@@ -50,6 +50,7 @@ const ABILITY_ICON_ASSETS = Object.freeze({
   tec_ex_canalizacao_arcana: 'assets/habilidades/canalizacao_arcana.png',
   tec_ex_canalizacao_perfeita: 'assets/habilidades/canalizacao_perfeita.png',
   tec_ex_empoderar_magia: 'assets/habilidades/empoderar_magia.png',
+  fortalecer_magia: 'assets/habilidades/empoderar_magia.png',
   tec_ex_magia_geminada: 'assets/habilidades/magia_geminada.png',
   tec_ex_magia_acelerada: 'assets/habilidades/acelerar_magia.png',
   guerreiro_mira_3: 'assets/habilidades/mira_certeira.png',
@@ -70,6 +71,12 @@ const ABILITY_ICON_ASSETS = Object.freeze({
   mago_aprimorar_3: 'assets/habilidades/aprimorar_magia.png',
   mago_estender_2: 'assets/habilidades/estender_magia.png',
   mago_estender_3: 'assets/habilidades/estender_magia.png',
+  mago_fortalecer_2: 'assets/habilidades/empoderar_magia.png',
+  mago_fortalecer_3: 'assets/habilidades/empoderar_magia.png',
+  mago_tecelagem_2: 'assets/habilidades/tecelagem_arcana.png',
+  mago_tecelagem_3: 'assets/habilidades/tecelagem_arcana.png',
+  mago_reviver_2: 'assets/habilidades/animar_mortos_vivos.png',
+  mago_reviver_3: 'assets/habilidades/animar_mortos_vivos.png',
   clerigo_cura_2: 'assets/habilidades/cura.png',
   clerigo_cura_3: 'assets/habilidades/cura.png',
   clerigo_massa_2: 'assets/habilidades/cura_em_massa.png',
@@ -103,6 +110,7 @@ const ABILITY_NAME_TO_ID = Object.freeze({
   'Mira Certeira': 'mira_certeira', 'Golpe Devastador': 'golpe_devastador',
   'Fúria Berserker': 'furia_berserker', 'Animar Mortos': 'animar_mortos',
   'Aprimorar Magia': 'aprimorar_magia', 'Estender Magia': 'estender_magia',
+  'Fortalecer Magia': 'fortalecer_magia',
   'Ataque Furtivo': 'ataque_furtivo', 'Detectar Armadilhas': 'detectar_armadilhas',
   'Esconder nas Sombras': 'esconder_sombras', 'Veneno Rápido': 'veneno_rapido',
   'Criar Armadilha': 'criar_armadilha', 'Cura': 'cura', 'Cura em Área': 'cura_area',
@@ -357,7 +365,7 @@ document.body.innerHTML = `
   <!-- Celular: fundo escuro + botão flutuante que abre/fecha Ações/Habilidades (gaveta) -->
   <div id="ficha-backdrop" onclick="toggleFichaDrawer(false)"></div>
   <button id="actions-fab" onclick="toggleFichaDrawer(true)" title="Ações e habilidades">⚔️</button>
-  <!-- Ícone de abrir o Inventário — sempre visível (cidade+masmorra, desktop+mobile) -->
+  <!-- Ícone de abrir o Inventário — visível somente na cidade e na masmorra -->
   <button id="ficha-fab" onclick="InventoryModal.toggle(GS.myPid)" title="Inventário (tecla I)">🎒</button>
 </div>
 
@@ -521,6 +529,10 @@ function $(id){ return document.getElementById(id); }
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $(id).classList.add('active');
+  // A mochila pertence somente à cidade e à masmorra. Como o botão fica no
+  // <body>, ele não acompanha automaticamente a visibilidade das telas.
+  const fichaFab = document.getElementById('ficha-fab');
+  if(fichaFab) fichaFab.style.display = (id === 'screen-city' || id === 'screen-game') ? 'flex' : 'none';
   if (typeof _menuMusicOnScreen === 'function') _menuMusicOnScreen(id);
   // HUD do Mestre (#hud-mestre) só existe dentro da masmorra (screen-game) —
   // some ao trocar de tela (o elemento persiste no DOM entre telas até o
@@ -2192,8 +2204,8 @@ function renderAbaMagiasPedro(heroi) {
       ">⚗️ HABILIDADE DE CLASSE</div>
 
       <div
-        onmouseenter="mostrarTooltipHabilidade(event,'animar_mortos')"
-        onmouseleave="esconderTooltip()"
+        onmouseenter="mostrarTooltipAnimarMortos(event)"
+        onmouseleave="ocultarTooltipMagia()"
         onclick="usarAnimarMortos()"
         title="Clique para animar um cadáver adjacente"
         style="
@@ -2204,7 +2216,9 @@ function renderAbaMagiasPedro(heroi) {
           cursor:pointer;
         "
       >
-        <div style="font-size:28px;">💀</div>
+        <img src="assets/habilidades/animar_mortos_vivos.png" alt="Animar Mortos"
+          style="width:38px;height:38px;object-fit:cover;border-radius:3px;flex:none;"
+          onerror="this.replaceWith(document.createTextNode('💀'))">
         <div style="flex:1;">
           <div style="
             color:#cc44ff;
@@ -9708,6 +9722,33 @@ function ocultarTooltipMagia() {
   document.removeEventListener('mousemove', _moverTooltipMagia);
 }
 
+// A habilidade de classe do Pedro usa o mesmo quadro de detalhes das magias.
+function mostrarTooltipAnimarMortos(event) {
+  let tooltip = document.getElementById('tooltip-magia');
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.id = 'tooltip-magia';
+    tooltip.style.cssText = `position:fixed; z-index:2147483647; pointer-events:none; background:rgba(10,8,5,0.98); border:1px solid #c8a951; width:220px; padding:12px 14px; font-family:'Cinzel',serif; box-shadow:0 6px 24px rgba(0,0,0,0.75);`;
+    document.body.appendChild(tooltip);
+  }
+
+  tooltip.innerHTML = `
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid #9900cc33;">
+      <img src="assets/habilidades/animar_mortos_vivos.png" alt="Animar Mortos" style="width:28px; height:28px; object-fit:cover;">
+      <div>
+        <div style="color:#d98cff; font-size:12px; font-weight:bold;">Animar Mortos</div>
+        <div style="color:#8a7a5a; font-size:9px; letter-spacing:2px;">HABILIDADE DE CLASSE</div>
+      </div>
+    </div>
+    <div style="color:#c8b89a; font-size:10px; line-height:1.7;">Anime um cadáver adjacente para criar um servo morto-vivo. A chance de sucesso aumenta conforme o nível do Pedro.</div>
+    <div style="margin-top:8px; padding-top:6px; border-top:1px solid #9900cc22; color:#ff851b; font-size:9px;">🍖 20 &nbsp; 💧 20 &nbsp; · &nbsp; Cadáver adjacente</div>
+  `;
+  tooltip.style.display = 'block';
+  const alvo = (event && event.currentTarget && event.currentTarget.getBoundingClientRect)
+    ? event.currentTarget.getBoundingClientRect() : null;
+  _posicionarTooltipMagia(alvo, event);
+}
+
 // Magias conhecidas do herói → lista de ids escolhidos pelo jogador.
 // Vazio = nenhuma magia disponível (a escolha é obrigatória na criação).
 function _magiasConhecidasIds(heroi) {
@@ -9733,7 +9774,6 @@ function renderMagiasFichaEmJogo(heroi, cls) {
   const limites  = SLOTS_POR_NIVEL_CLIENT[nivel];
   const cooldown = (heroi && heroi.slots_cooldown) || {primeiro:[], segundo:[], terceiro:[]};
   const round    = (window.GS && GS.gameState && GS.gameState.round) || 0;
-
   function renderCirculoMagias(circulo, label) {
     const magiasCirculo = known.filter(id => GRIMORIO_CLIENT[id] && GRIMORIO_CLIENT[id].circulo === circulo);
     const limite = limites[circulo] || 0;
@@ -11958,8 +11998,9 @@ function useItem(itemId){ send({type:'use_item',item_id:itemId}); }
 let _fcPanelPid = null;   // pid mostrado no painel (null = fechado)
 
 function _fcPlayerAtual(){
-  return (GS.cityState && GS.cityState.players)
-    ? GS.cityState.players.find(p => p.id === _fcPanelPid) : null;
+  const naMasmorra = document.getElementById('screen-game')?.classList.contains('active');
+  const state = naMasmorra ? GS.gameState : GS.cityState;
+  return (state && state.players) ? state.players.find(p => p.id === _fcPanelPid) : null;
 }
 
 function abrirFichaCidade(pid){
@@ -12003,7 +12044,8 @@ function _refreshFichaCidadePanel(){
   closeBtn.title = 'Fechar';
   closeBtn.onclick = fecharFichaCidade;
   panel.appendChild(closeBtn);
-  renderFichaCidadeBody(panel, player, player.id === GS.myPid);
+  const naCidade = document.getElementById('screen-city')?.classList.contains('active');
+  renderFichaCidadeBody(panel, player, player.id === GS.myPid && naCidade);
 }
 
 function renderFichaCidadeBody(panel, player, editable){
@@ -19944,7 +19986,7 @@ function calcularVidaMaxima(heroKey, nivel = 1, constituicao) {
 let csf = null; // full class-select state handle
 
 const _CSD = {
-  warrior:{ name:'VICTOR COICE BRAVO', cls:'VICTOR', skyHex:'#1a0800', lightHex:0xff4400,
+  warrior:{ name:'VICTOR COICE BRAVO', cls:'VICTOR', skyHex:'#1a0800', lightHex:0xff4400, spd:6,
     portrait:'assets/portraits/victor.jpeg',   // foto de referência (salvar o arquivo aqui)
     hp:14, stats:{forca:18,destreza:10,inteligencia:8,constituicao:14},
     desc:'Tanque de aço e sangue. Absorve golpes devastadores, afasta inimigos e nunca recua diante do perigo.',
@@ -19960,7 +20002,7 @@ const _CSD = {
        desc:'Concede um ataque extra (2º ataque manual) neste turno.',
        fome_cost:5, sede_cost:5},
     ]},
-  mage:{ name:'PEDRO, O TÍMIDO', cls:'PEDRO', skyHex:'#0a0020', lightHex:0x8833ff,
+  mage:{ name:'PEDRO, O TÍMIDO', cls:'PEDRO', skyHex:'#0a0020', lightHex:0x8833ff, spd:5,
     portrait:'assets/portraits/pedro.jpeg',
     hp:7, stats:{forca:8,destreza:12,inteligencia:18,constituicao:12},
     desc:'Domina os arcanos proibidos. Devasta grupos de inimigos com magia de área letal.',
@@ -19982,7 +20024,7 @@ const _CSD = {
       { icon:'💥', name:'Fortalecer Magia', desc:'Ação livre. Multiplica por 1,5 o dano da próxima magia.' },
       { icon:'🎯', name:'Aprimorar Magia', desc:'Ação livre. Aumenta em +1 a CD do teste de resistência da próxima magia.' },
     ]},
-  rogue:{ name:'LUCCAS, O ASTUTO', cls:'LUCCAS', skyHex:'#040800', lightHex:0x44cc44,
+  rogue:{ name:'LUCCAS, O ASTUTO', cls:'LUCCAS', skyHex:'#040800', lightHex:0x44cc44, spd:7,
     portrait:'assets/portraits/luccas.jpeg',
     hp:9, stats:{forca:10,destreza:18,inteligencia:10,constituicao:12},
     desc:'Morte silenciosa nas sombras. Dano crítico devastador e mobilidade inigualável.',
@@ -20004,7 +20046,7 @@ const _CSD = {
        desc:'Ação principal. 8 tipos de armadilha na casa/adjacente. 🍖-2 💧-1 + custo em ouro.',
        fome_cost:2, sede_cost:1},
     ]},
-  cleric:{ name:'FRADE LEWIS', cls:'FRADE LEWIS', skyHex:'#140c00', lightHex:0xffdd44,
+  cleric:{ name:'FRADE LEWIS', cls:'FRADE LEWIS', skyHex:'#140c00', lightHex:0xffdd44, spd:5,
     portrait:'assets/portraits/lewis.jpeg',
     hp:10, stats:{forca:10,destreza:10,inteligencia:16,constituicao:14},
     desc:'Frade que canaliza milagres. Cura, purifica e ressuscita aliados. Não usa mana — seus milagres custam fome/sede.',
@@ -20022,7 +20064,7 @@ const _CSD = {
        desc:'Ação principal. Traz um aliado morto adjacente de volta com 1 HP.',
        fome_cost:10, sede_cost:10},
     ]},
-  bard:{ name:'HENRIQUE, O BARDO', cls:'HENRIQUE', skyHex:'#0a0005', lightHex:0xff66cc,
+  bard:{ name:'HENRIQUE, O BARDO', cls:'HENRIQUE', skyHex:'#0a0005', lightHex:0xff66cc, spd:6,
     portrait:'assets/portraits/henrique.jpeg',
     hp:9, stats:{forca:10,destreza:16,inteligencia:12,constituicao:12},
     desc:'Alma da taverna, terror do calabouço. Inspira aliados com canções e provoca inimigos. Não usa mana — suas habilidades custam fome/sede.',
@@ -20037,7 +20079,7 @@ const _CSD = {
        desc:'Ação bônus. Impõe desvantagem ao inimigo e o força a atacar Henrique por 3 turnos.',
        fome_cost:3, sede_cost:3},
     ]},
-  paladin:{ name:'RICHARD, O CAVALEIRO', cls:'RICHARD', skyHex:'#0e0a00', lightHex:0xeeeeff,
+  paladin:{ name:'RICHARD, O CAVALEIRO', cls:'RICHARD', skyHex:'#0e0a00', lightHex:0xeeeeff, spd:6,
     portrait:'assets/portraits/richard.jpeg',
     hp:12, stats:{forca:16,destreza:10,inteligencia:10,constituicao:14},
     desc:'Aço e honra forjados na mesma bigorna. Richard não conhece recuo — apenas o peso do escudo e a clareza do dever. Não usa mana — suas habilidades custam fome/sede.',
@@ -20618,7 +20660,9 @@ function _csfShowPanel(classId, animate){
   }
 
   const modVisao = valor => Math.floor((Number(valor || 10) - 10) / 2);
-  const raioVisao = Math.max(0, (classId === 'warrior' ? 4 : 3)
+  // Espelha GameRoom._get_raio_visao: deslocamento base da classe + metade
+  // da soma dos modificadores de INT e DES.
+  const raioVisao = Math.max(1, (d.spd || 5)
     + Math.floor((modVisao(d.stats.inteligencia) + modVisao(d.stats.destreza)) / 2));
   document.getElementById('cs-stats').innerHTML = renderStats(d.stats) + `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; padding:8px 10px; background:rgba(100,180,255,.08); border:1px solid rgba(100,180,255,.30);">
@@ -21919,7 +21963,24 @@ document.addEventListener('keydown', (e) => {
   const tag = (document.activeElement && document.activeElement.tagName) || '';
   if(tag === 'INPUT' || tag === 'TEXTAREA') return;
   if(!GS.myPid) return;
+  if(!document.getElementById('screen-city')?.classList.contains('active') &&
+     !document.getElementById('screen-game')?.classList.contains('active')) return;
   InventoryModal.toggle(GS.myPid);
+});
+
+// Atalho C: abre/fecha a ficha do próprio herói na cidade ou na masmorra.
+document.addEventListener('keydown', (e) => {
+  if(e.key !== 'c' && e.key !== 'C') return;
+  const tag = (document.activeElement && document.activeElement.tagName) || '';
+  if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  const naCidade = document.getElementById('screen-city')?.classList.contains('active');
+  const naMasmorra = document.getElementById('screen-game')?.classList.contains('active');
+  if(!GS.myPid || (!naCidade && !naMasmorra)) return;
+
+  const fichaAberta = document.getElementById('ficha-cidade-panel')?.classList.contains('open');
+  if(fichaAberta) fecharFichaCidade();
+  else abrirFichaCidade(GS.myPid);
+  e.preventDefault();
 });
 
 // #ficha-fab nasce dentro do markup de #screen-game (masmorra) — sem isso ele

@@ -903,7 +903,8 @@ input:focus { outline: none; border-color: var(--gold); }
 /* Elementos só-de-celular: ocultos no desktop, ativados no @media abaixo. */
 #actions-fab, #ficha-backdrop, #ficha-close-btn { display: none; }
 #ficha-fab {
-  display: flex; position: fixed; right: 14px; bottom: 16px; z-index: 340;
+  /* Só é liberado por showScreen na cidade ou na masmorra. */
+  display: none; position: fixed; right: 14px; bottom: 84px; z-index: 340;
   width: 56px; height: 56px; border-radius: 50%;
   align-items: center; justify-content: center; font-size: 24px;
   background: var(--gold); color: #000; border: none; cursor: pointer;
