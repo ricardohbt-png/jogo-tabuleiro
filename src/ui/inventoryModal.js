@@ -71,6 +71,7 @@ const InventoryModal = (() => {
 .inv-header{display:flex;justify-content:space-between;align-items:center;margin:40px 0 16px;}
 .inv-title{color:#f4ecd8;font-family:Georgia,serif;font-weight:bold;letter-spacing:1px;
   text-shadow:0 0 10px rgba(244,220,140,.4);font-size:.95rem;}
+.inv-title-icon{width:20px;height:20px;object-fit:contain;vertical-align:middle;margin:-3px 5px 0 0;}
 .inv-close{color:#e8cf7e;cursor:pointer;font-size:1.1rem;opacity:.8;}
 .inv-close:hover{opacity:1;}
 .inv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:center;justify-items:center;
@@ -333,7 +334,7 @@ const InventoryModal = (() => {
           </svg>
           <div class="inv-body">
             <div class="inv-header">
-              <div class="inv-title">⚔️ INVENTÁRIO — ${player.name || ''}${_readOnly ? ' (somente leitura)' : ''}</div>
+              <div class="inv-title"><img class="inv-title-icon" src="assets/inventario.png" alt="" aria-hidden="true"> INVENTÁRIO — ${player.name || ''}${_readOnly ? ' (somente leitura)' : ''}</div>
               <div class="inv-close" title="Fechar">✕</div>
             </div>
             <div class="inv-grid"></div>

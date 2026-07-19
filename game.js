@@ -349,11 +349,6 @@ document.body.innerHTML = `
         <div class="actions-grid" id="action-btns"></div>
         <div class="section-title">Habilidades</div>
         <div class="skills-list" id="skills-list"></div>
-        <!-- Sem título estático "Inventário" aqui — o inventário de verdade
-             agora vive no InventoryModal (ícone/tecla I). #inventory-list
-             só sobra pro sistema legado de "Equipado (Loja)"
-             (renderPurchasedItems), que já tem seu próprio título interno. -->
-        <div class="inventory" id="inventory-list"></div>
       </div>
       <div style="padding:6px 8px;border-top:1px solid var(--border);flex-shrink:0;">
         <button class="btn-end-turn" id="btn-end-turn" onclick="endTurn()" disabled>
@@ -366,7 +361,7 @@ document.body.innerHTML = `
   <div id="ficha-backdrop" onclick="toggleFichaDrawer(false)"></div>
   <button id="actions-fab" onclick="toggleFichaDrawer(true)" title="Ações e habilidades">⚔️</button>
   <!-- Ícone de abrir o Inventário — visível somente na cidade e na masmorra -->
-  <button id="ficha-fab" onclick="InventoryModal.toggle(GS.myPid)" title="Inventário (tecla I)">🎒</button>
+  <button id="ficha-fab" onclick="InventoryModal.toggle(GS.myPid)" title="Inventário (tecla I)"><img src="assets/inventario.png" alt="Inventário"></button>
 </div>
 
 <!-- ══ END SCREEN ══ -->
@@ -10915,16 +10910,6 @@ function renderMyPanel(state){
 
   // ── Attribute values (explicit Number conversion — never undefined) ──
   const vStr  = (me.str_  != null) ? Number(me.str_)  : 10;
-  const vDex  = (me.dex   != null) ? Number(me.dex)   : 10;
-  const vCon  = (me.con_  != null) ? Number(me.con_)  : 10;
-  const vInt  = (me.int_  != null) ? Number(me.int_)  : 10;
-  const vAc   = (me.ac    != null) ? Number(me.ac)    : 10;
-  const vAtk  = (me.atk_bonus != null) ? me.atk_bonus : 0;
-  const vFort = (me.fort  != null) ? me.fort  : 0;
-  const vRef  = (me.ref_  != null) ? me.ref_  : 0;
-  const vWill = (me.will  != null) ? me.will  : 0;
-  const vLvlBonus = (me.level_bonus != null) ? Number(me.level_bonus) : (me.level || 1);
-  const vVisao = obterRaioVisaoCliente(me);
 
   // ── Weapon info ──
   const weapon = (me.weapon && typeof me.weapon === 'object') ? me.weapon : null;
@@ -10957,91 +10942,14 @@ function renderMyPanel(state){
 
   // ── Build HTML ──
   const statsHTML = `
-    <div class="ability-grid">
-      <div class="ability-box">
-        <span class="ability-label">Força</span>
-        <span class="ability-score" style="color:#e8dfc8;font-size:1.2rem;">${vStr}</span>
-        <span class="ability-mod">${(Math.floor((vStr-10)/2)>=0?'+':'')}${Math.floor((vStr-10)/2)}</span>
-      </div>
-      <div class="ability-box">
-        <span class="ability-label">Destreza</span>
-        <span class="ability-score" style="color:#e8dfc8;font-size:1.2rem;">${vDex}</span>
-        <span class="ability-mod">${(Math.floor((vDex-10)/2)>=0?'+':'')}${Math.floor((vDex-10)/2)}</span>
-      </div>
-      <div class="ability-box">
-        <span class="ability-label">Constituição</span>
-        <span class="ability-score" style="color:#e8dfc8;font-size:1.2rem;">${vCon}</span>
-        <span class="ability-mod">${(Math.floor((vCon-10)/2)>=0?'+':'')}${Math.floor((vCon-10)/2)}</span>
-      </div>
-      <div class="ability-box">
-        <span class="ability-label">Inteligência</span>
-        <span class="ability-score" style="color:#e8dfc8;font-size:1.2rem;">${vInt}</span>
-        <span class="ability-mod">${(Math.floor((vInt-10)/2)>=0?'+':'')}${Math.floor((vInt-10)/2)}</span>
-      </div>
-    </div>
-
     <div class="combat-row">
-      <div class="combat-chip" style="border-color:var(--gold);background:#181200;">
-        <span class="cl">CA</span>
-        <b style="color:#f8d040;font-size:1.1rem;">${vAc}${_cancaoTag('bonus_ca')}${_richardTag('ca')}</b>
-      </div>
-      <div class="combat-chip">
-        <span class="cl">Ataque</span>
-        <b style="color:#e8e0c8;">${vAtk >= 0 ? '+' : ''}${vAtk}${_cancaoTag('bonus_acerto')}${_richardTag('ataque')}</b>
-      </div>
-      <div class="combat-chip">
-        <span class="cl">Mov</span>
-        <b style="color:#e8e0c8;">${me.moves_left ?? 0}/${me.spd ?? 0}${_cancaoTag('bonus_mov')}</b>
-      </div>
-      <div class="combat-chip" style="border-color:#64b4ff;background:#08131e;">
-        <span class="cl">Visão</span>
-        <b style="color:#8ed0ff;">👁 ${vVisao}</b>
-      </div>
-    </div>
-    <div class="combat-row">
-      <div class="combat-chip" style="border-color:var(--purple);background:#0e0820;flex:2;">
-        <span class="cl">Bônus de Nível</span>
-        <b style="color:#c080ff;">+${vLvlBonus}</b>
-      </div>
-      <div class="combat-chip">
-        <span class="cl">Nível</span>
-        <b style="color:#e8e0c8;">${me.level ?? 1}</b>
-      </div>
-      <div class="combat-chip">
+      <div class="combat-chip" style="flex:1;">
         <span class="cl">XP</span>
         <b style="color:#e8e0c8;">${me.xp ?? 0}</b>
       </div>
     </div>
 
-    <div class="save-row">
-      <div class="save-box" style="border-color:var(--orange)">
-        <span class="sv" style="color:var(--orange)">Fort</span>
-        <span class="sv-val" style="color:#f8d040;">${vFort >= 0 ? '+' : ''}${vFort}${_cancaoTag('bonus_res')}</span>
-        <span class="sv-sub">venenos</span>
-      </div>
-      <div class="save-box" style="border-color:var(--teal)">
-        <span class="sv" style="color:var(--teal)">Ref</span>
-        <span class="sv-val" style="color:#f8d040;">${vRef >= 0 ? '+' : ''}${vRef}${_cancaoTag('bonus_res')}</span>
-        <span class="sv-sub">área/arm.</span>
-      </div>
-      <div class="save-box" style="border-color:var(--purple)">
-        <span class="sv" style="color:var(--purple)">Von</span>
-        <span class="sv-val" style="color:#f8d040;">${vWill >= 0 ? '+' : ''}${vWill}${_cancaoTag('bonus_res')}</span>
-        <span class="sv-sub">magia</span>
-      </div>
-    </div>
-
     <div class="save-row" style="margin-top:4px;">
-      <div class="save-box" style="border-color:#b8601a; min-width:60px;">
-        <span class="sv" style="color:#e07820;">🍖</span>
-        <span class="sv-val" style="color:${(me.fome??100)<=30?'#e05050':'#f8d040'};">${me.fome??100}/100</span>
-        <span class="sv-sub">fome</span>
-      </div>
-      <div class="save-box" style="border-color:#1a60b8; min-width:60px;">
-        <span class="sv" style="color:#2090e0;">💧</span>
-        <span class="sv-val" style="color:${(me.sede??100)<=30?'#e05050':'#f8d040'};">${me.sede??100}/100</span>
-        <span class="sv-sub">sede</span>
-      </div>
       <div class="save-box" style="border-color:${me.bonus_action_used?'#555':'#c8a951'}; min-width:60px;">
         <span class="sv" style="color:${me.bonus_action_used?'#666':'#c8a951'};">🎯</span>
         <span class="sv-val" style="color:${me.bonus_action_used?'#666':'#c8a951'}; font-size:.72rem;">${me.bonus_action_used?'usada':'livre'}</span>
@@ -11113,7 +11021,6 @@ function renderMyPanel(state){
         <div class="gear-slot-label" style="align-self:flex-start;margin-bottom:2px;">🛡 ARMADURA</div>
         <canvas id="armor-canvas" width="60" height="92" style="background:#0e0c1a;border-radius:3px;width:60px;height:92px;"></canvas>
         <div class="equip-name" style="color:#e8e0c8;font-weight:bold;">${armorName}</div>
-        <div class="equip-stat" style="color:#f8c840;font-size:.72rem;">CA ${vAc}</div>
       </div>
     </div>
   `;
@@ -11381,17 +11288,19 @@ function renderMyPanel(state){
     const cat = GS.guildCatalogFor(me.class_id).find(x => x.id === tid);
     if(!cat) continue;
     const restante = GS.tecnicaRestante(me, tid);
+    const pendente = !!GS.tecnicaPendente?.(me, tid);
     // Fase 3: técnicas exclusivas usam o mesmo podeUsar de qualquer técnica —
     // GS.isMyTurn já cobre a janela do Último Esforço, e decidimos (brainstorming)
     // NÃO bloquear o uso de técnicas da Guilda durante esses mini-turnos.
     const podeUsar = !cat.automatica && GS.isMyTurn && me.alive && state.phase === 'playing'
-                     && restante === 0
+                     && restante === 0 && !pendente
                      && (me.fome||0) >= (cat.custo_fome||0) && (me.sede||0) >= (cat.custo_sede||0);
     const btn = document.createElement('button');
     btn.className = 'skill-btn guild-tec' + (restante > 0 ? ' skill-cooldown' : '');
     btn.disabled = !podeUsar;
     const estado = restante > 0
-      ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ recarrega em ${restante}r</small>` : '';
+      ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ recarrega em ${restante}r</small>`
+      : pendente ? ' <small style="color:var(--gold);font-size:.65rem;">● preparada</small>' : '';
     btn.innerHTML = `
       <div class="skill-info">
         <div class="skill-name">${abilityIconHtml(cat, cat.icon||'⚔️')} ${cat.nome} <small style="color:var(--gold);font-size:.58rem;">${cat.automatica ? 'AUTOMÁTICA' : 'GUILDA'}</small>${estado}</div>
@@ -11450,18 +11359,6 @@ function renderMyPanel(state){
     const ib = _bardInstrumentoBtn(me);
     if (ib) sl.appendChild(ib);
   }
-
-  // ── Inventory ──
-  const inv = $('inventory-list'); inv.innerHTML = '';
-
-  // ── Itens comprados na loja (modelo client-side GS.getHeroiAtivo) ──────────
-  renderPurchasedItems(inv, canAct);
-
-  // Gold
-  const goldDiv = document.createElement('div');
-  goldDiv.className = 'gold-display';
-  goldDiv.innerHTML = `🪙 Ouro: <span>${me.gold ?? 0}</span>`;
-  inv.appendChild(goldDiv);
 
   // End turn button
   $('btn-end-turn').disabled = !GS.isMyTurn || !me.alive || state.phase !== 'playing';
@@ -12079,9 +11976,33 @@ function renderFichaCidadeBody(panel, player, editable){
   const invBtn = document.createElement('button');
   invBtn.className = 'section-title';
   invBtn.style.cssText = 'width:100%;text-align:left;cursor:pointer;background:none;border:none;color:var(--gold);';
-  invBtn.textContent = '🎒 Ver inventário';
+  invBtn.innerHTML = '<img class="menu-inventario-icone" src="assets/inventario.png" alt="" aria-hidden="true"> Ver inventário';
   invBtn.onclick = () => InventoryModal.open(player.id, { readOnly: !editable });
   body.appendChild(invBtn);
+
+  const statusBtn = document.createElement('button');
+  statusBtn.className = 'section-title';
+  statusBtn.style.cssText = 'width:100%;text-align:left;cursor:pointer;background:none;border:none;color:var(--gold);margin-top:5px;';
+  statusBtn.textContent = '📊 Status (S)';
+  statusBtn.onclick = () => abrirMenuStatus(player.id);
+  body.appendChild(statusBtn);
+
+  const abilityBtn = document.createElement('button');
+  abilityBtn.className = 'section-title';
+  abilityBtn.style.cssText = 'width:100%;text-align:left;cursor:pointer;background:none;border:none;color:var(--gold);margin-top:5px;';
+  abilityBtn.innerHTML = '<img class="menu-habilidades-icone" src="assets/habilidades.png" alt="" aria-hidden="true"> Habilidades (H)';
+  abilityBtn.onclick = () => abrirMenuHabilidades(player.id);
+  body.appendChild(abilityBtn);
+
+  // Grimório/Metamagia: disponível para as classes que lançam magias.
+  if(player.class_id === 'mage' || player.class_id === 'cleric'){
+    const magicBtn = document.createElement('button');
+    magicBtn.className = 'section-title';
+    magicBtn.style.cssText = 'width:100%;text-align:left;cursor:pointer;background:none;border:none;color:var(--gold);margin-top:5px;';
+    magicBtn.innerHTML = '<img class="menu-magias-icone" src="assets/magias.png" alt="" aria-hidden="true"> Ver magias (M)';
+    magicBtn.onclick = () => abrirMenuMagias(player.id);
+    body.appendChild(magicBtn);
+  }
 
   // ── Técnica da Guilda (Fase 0) — equipar no 4º slot (só o próprio herói, na cidade) ──
   if(editable){
@@ -12129,6 +12050,579 @@ function renderFichaCidadeBody(panel, player, editable){
   }
 }
 
+// ── Menu de Status ──────────────────────────────────────────────────────────
+function _fmtBonus(n){ n = Number(n) || 0; return `${n >= 0 ? '+' : ''}${n}`; }
+function _modAtributo(n){ return Math.floor(((Number(n) || 10) - 10) / 2); }
+function _modificadoresTemporariosStatus(p){
+  const out = [];
+  const add = (nome, efeito, ate) => out.push({nome, efeito, ate});
+  const r = GS.gameState?.round;
+  const fome = Number(p.fome ?? p.hunger ?? 100), sede = Number(p.sede ?? p.thirst ?? 100);
+  if(fome > 80 && sede > 80) add('Saciado', '+1 ataque · +1 dano · +1 resistências');
+  else {
+    const exaustao = (fome < 20 ? 1 : 0) + (sede < 20 ? 1 : 0);
+    if(exaustao) add('Exaustão', `-${exaustao} ataque · -${exaustao} dano · -${exaustao} resistências`);
+  }
+  if(p.buffs_cancao && typeof p.buffs_cancao === 'object'){
+    const nomes = {bonus_acerto:'ataque', bonus_dano:'dano', bonus_ca:'CA', bonus_mov:'movimento', bonus_res:'resistências'};
+    const valores = Object.entries(p.buffs_cancao).filter(([,v]) => v).map(([k,v]) => `+${v} ${nomes[k] || k}`);
+    if(valores.length) add('Canção Heroica', valores.join(' · '));
+  }
+  if(p.guerreiro_luz_ativo){
+    const b = p.guerreiro_luz_bonus || {};
+    add('Guerreiro da Luz', Object.entries(b).filter(([,v]) => v).map(([k,v]) => `+${v} ${k}`).join(' · ') || 'Bênção ativa');
+  }
+  if(p.golpe_sagrado_ativo) add('Golpe Sagrado', '+1d8 sagrado nos ataques');
+  if(p.regeneracao_ativa) add('Regeneração Divina', '+1 PV por rodada');
+  if(p.tecnica_buff_dano_arma) add('Brutalidade', `+${p.tecnica_buff_dano_arma} dano de arma`);
+  if(p.tecnica_mira_perfeita) add('Mira Perfeita', 'Vantagem à distância · +2 dano');
+  const armadas = GS.getWarriorSelected?.() || [];
+  if(armadas.includes('mira_certeira')) add('Mira Certeira', '+2 ataque');
+  if(armadas.includes('golpe_devastador')) add('Golpe Devastador', 'Dados de dano aprimorados');
+  if(armadas.includes('furia_berserker')) add('Fúria Berserker', 'Ataque extra');
+  if(p.investida_armada) add('Investida Heroica', 'Próximo ataque corpo a corpo aprimorado');
+  if(p.tecnica_golpe_decisivo_armado) add('Golpe Decisivo', 'Próximo ataque será crítico');
+  if(p.defesa_impecavel_ate >= r) add('Defesa Impecável', 'Ataques contra você têm desvantagem', p.defesa_impecavel_ate);
+  if(p.resistencia_saves_ate >= r) add('Resistência Absoluta', `+${p.resistencia_saves_val || 0} em testes de resistência`, p.resistencia_saves_ate);
+  if(p.em_chamas_rodadas) add('Em chamas', `Sofre dano por ${p.em_chamas_rodadas} rodada(s)`);
+  if(p.veneno_rodadas || p.envenenado_rodadas) add('Envenenado', `Penalidade ativa · ${p.veneno_rodadas || p.envenenado_rodadas} rodada(s)`);
+  if(p.com_medo || p.medo_rodadas) add('Medo', 'Penalidade de combate', p.medo_rodadas);
+  if(p.lento || p.lento_rodadas) add('Lentidão', 'Movimento reduzido', p.lento_rodadas);
+  if(p.paralisado) add('Paralisado', 'Não pode agir');
+  if(p.cego) add('Cego', 'Penalidade em ataques à distância');
+  return out;
+}
+function fecharMenuStatus(){ document.getElementById('menu-status-overlay')?.classList.remove('open'); }
+function abrirMenuStatus(pid){
+  const p = _playerMenuMagias(pid);
+  if(!p){ toast('Status indisponível agora.'); return; }
+  let overlay = document.getElementById('menu-status-overlay');
+  if(!overlay){ overlay = document.createElement('div'); overlay.id = 'menu-status-overlay'; overlay.onclick = e => { if(e.target === overlay) fecharMenuStatus(); }; document.body.appendChild(overlay); }
+  const weapon = p.weapon || p.gear?.weapon;
+  const statKey = weapon?.stat || 'str_';
+  const dadoDano = weapon?.die || '1';
+  const danoBase = _modAtributo(p[statKey]);
+  const baseAtk = Number(p.atk_bonus) || 0;
+  const cancao = p.buffs_cancao || {};
+  const gl = p.guerreiro_luz_ativo ? (p.guerreiro_luz_bonus || {}) : {};
+  const sobrevivencia = (Number(p.fome ?? p.hunger ?? 100) > 80 && Number(p.sede ?? p.thirst ?? 100) > 80) ? 1
+    : -((Number(p.fome ?? p.hunger ?? 100) < 20 ? 1 : 0) + (Number(p.sede ?? p.thirst ?? 100) < 20 ? 1 : 0));
+  const armadas = GS.getWarriorSelected?.() || [];
+  const bonusAtaque = sobrevivencia + (cancao.bonus_acerto || 0) + (gl.ataque || 0) + (p.skill_bonus_acerto || 0) + (armadas.includes('mira_certeira') ? 2 : 0);
+  const bonusDano = sobrevivencia + (cancao.bonus_dano || 0) + (gl.dano || 0) + (p.tecnica_buff_dano_arma || 0);
+  const bonusCa = (cancao.bonus_ca || 0) + (gl.ca || 0);
+  const bonusRes = sobrevivencia + (cancao.bonus_res || 0);
+  const dano = `${dadoDano} ${_fmtBonus(danoBase)} → ${dadoDano} ${_fmtBonus(danoBase + bonusDano)}`;
+  const temporarios = _modificadoresTemporariosStatus(p);
+  const linha = (rotulo, valor, detalhe='') => `<div class="st-row"><span>${rotulo}</span><b>${valor}</b>${detalhe ? `<small>${detalhe}</small>` : ''}</div>`;
+  overlay.innerHTML = `<section class="menu-status" role="dialog" aria-modal="true" aria-label="Status do personagem">
+    <header class="st-header"><div><b>📊 STATUS</b><small>${p.name || 'Herói'} · tecla S</small></div><button onclick="fecharMenuStatus()" aria-label="Fechar">✕</button></header>
+    <div class="st-body"><section><h3>COMBATE</h3>${linha('Bônus de ataque', `${_fmtBonus(baseAtk)} → ${_fmtBonus(baseAtk + bonusAtaque)}`, 'base → atual')}${linha('Classe de Armadura', `${p.ac ?? 10} → ${Number(p.ac ?? 10) + bonusCa}`, 'base → atual')}${linha('Arma equipada', weapon?.name || 'Desarmado')}${linha('Dano', dano, `${weapon?.stat === 'dex' ? 'Destreza' : 'Força'} · base → atual`)}</section>
+    <section><h3>TESTES DE RESISTÊNCIA</h3>${linha('Fortitude', `${_fmtBonus(p.fort)} → ${_fmtBonus(Number(p.fort || 0) + bonusRes)}`, 'base → atual')}${linha('Reflexos', `${_fmtBonus(p.ref_)} → ${_fmtBonus(Number(p.ref_ || 0) + bonusRes)}`, 'base → atual')}${linha('Vontade', `${_fmtBonus(p.will)} → ${_fmtBonus(Number(p.will || 0) + bonusRes)}`, 'base → atual')}</section>
+    <section><h3>MODIFICADORES TEMPORÁRIOS</h3>${temporarios.length ? temporarios.map(m => `<div class="st-effect"><b>${m.nome}</b><span>${m.efeito}</span>${m.ate && GS.gameState?.round ? `<em>${Math.max(0,m.ate-GS.gameState.round)} rodada(s)</em>` : ''}</div>`).join('') : '<p class="st-empty">Nenhum bônus ou penalidade temporária.</p>'}</section></div></section>`;
+  requestAnimationFrame(() => overlay.classList.add('open'));
+}
+window.abrirMenuStatus = abrirMenuStatus;
+window.fecharMenuStatus = fecharMenuStatus;
+
+// ── Menu de Magias ──────────────────────────────────────────────────────────
+// Consulta o mesmo estado autoritativo da ficha e reúne magias conhecidas com
+// as melhorias que podem alterá-las no próximo lançamento.
+let _menuMagiasPid = null;
+
+function _playerMenuMagias(pid){
+  const naMasmorra = document.getElementById('screen-game')?.classList.contains('active');
+  const state = naMasmorra ? GS.gameState : GS.cityState;
+  return (state && state.players || []).find(p => p.id === pid) || null;
+}
+
+function fecharMenuMagias(){
+  _menuMagiasPid = null;
+  document.getElementById('menu-magias-overlay')?.classList.remove('open');
+  ocultarTooltipMagia();
+}
+
+function ativarMagiaDoMenu(magiaId){
+  const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid);
+  if(!me || GS.gameState.phase !== 'playing') { toast('Magias só podem ser usadas na masmorra.'); return; }
+  fecharMenuMagias();
+  castarMagia(magiaId);
+}
+
+function abrirMenuMagias(pid){
+  const player = _playerMenuMagias(pid);
+  if(!player){ toast('Ficha de magias indisponível agora.'); return; }
+  if(player.class_id !== 'mage' && player.class_id !== 'cleric'){
+    toast('Este personagem não possui magias.'); return;
+  }
+  _menuMagiasPid = pid;
+  let overlay = document.getElementById('menu-magias-overlay');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'menu-magias-overlay';
+    overlay.addEventListener('click', e => { if(e.target === overlay) fecharMenuMagias(); });
+    document.body.appendChild(overlay);
+  }
+
+  const owned = GS.guildOwnedOf(pid);
+  const equip = GS.guildEquipOf(pid);
+  const catalog = GS.guildCatalogFor(player.class_id) || [];
+  const idsPossuidos = new Set([...(owned.especializacoes || []), ...(owned.tecnicas || [])]);
+  const modificadoresGuilda = catalog.filter(item => {
+    if(!idsPossuidos.has(item.id)) return false;
+    if(item.id.startsWith('mago_') && !item.id.startsWith('mago_reviver_')) return true;
+    return item.id.startsWith('tec_ex_') && equip.tecnica_exclusiva === item.id;
+  });
+  const modificadoresBase = player.class_id === 'mage'
+    ? (player.skills || []).filter(s => ['aprimorar_magia','estender_magia','fortalecer_magia'].includes(s.id))
+    : [];
+  const modificadores = [...modificadoresBase, ...modificadoresGuilda];
+  const conhecidos = _magiasConhecidasIds(player)
+    .map(id => GRIMORIO_CLIENT[id]).filter(Boolean);
+  const porCirculo = ['primeiro', 'segundo', 'terceiro'];
+  const podeAgir = document.getElementById('screen-game')?.classList.contains('active') && pid === GS.myPid;
+  const renderMagia = m => `
+    <div class="mm-magia${podeAgir ? ' mm-acionavel' : ''}" ${podeAgir ? `onclick="ativarMagiaDoMenu('${m.id}')"` : ''}
+      onmouseenter="mostrarTooltipMagia('${m.id}', event)" onmouseleave="ocultarTooltipMagia()">
+      <span class="mm-magia-icon">${magiaIconHTML(m, 34)}</span>
+      <span><b>${m.nome}</b><small>${_LABEL_CIRCULO[m.circulo] || ''} · ${m.custo || ''}</small></span>
+    </div>`;
+  const renderMod = m => {
+    const pendente = m.categoria === 'tecnica' && !!GS.tecnicaPendente?.(player, m.id);
+    const ativavel = !pendente && podeAgir && (modificadoresBase.includes(m) || (m.categoria === 'tecnica' && equip.tecnica_exclusiva === m.id && !m.automatica));
+    const onclick = ativavel && modificadoresBase.includes(m) ? `onclick="ativarHabilidadeDoMenu('${m.id}')"`
+      : ativavel ? `onclick="ativarTecnicaGuildaDoMenu('${m.id}')"` : '';
+    return `
+    <div class="mm-modificador${onclick ? ' mm-acionavel' : ''}${_modificadorMagiaAtivo(player, m.id) || pendente ? ' mm-selecionada' : ''}" ${onclick}>
+      <span class="mm-mod-icon">${abilityIconHtml(m, m.icon || '✨')}</span>
+      <span><b>${m.nome || m.name}${pendente ? ' · PREPARADA' : ''}</b><small>${m.desc || m.description || ''}</small></span>
+    </div>`;
+  };
+
+  overlay.innerHTML = `
+    <section class="menu-magias" role="dialog" aria-modal="true" aria-label="Menu de magias">
+      <header class="mm-header"><div><b><img class="menu-magias-icone" src="assets/magias.png" alt="" aria-hidden="true"> GRIMÓRIO</b><small>${player.name || 'Herói'} · tecla M</small></div><button onclick="fecharMenuMagias()" aria-label="Fechar">✕</button></header>
+      <div class="mm-body">
+        <section><h3>MODIFICADORES DE MAGIA</h3>
+          ${modificadores.length ? `<div class="mm-list">${modificadores.map(renderMod).join('')}</div>`
+            : '<p class="mm-empty">Nenhum modificador de magia disponível.</p>'}
+        </section>
+        <section><h3>MAGIAS CONHECIDAS</h3>
+          ${conhecidos.length ? porCirculo.map(c => {
+            const magias = conhecidos.filter(m => m.circulo === c);
+            return magias.length ? `<div class="mm-circle"><h4>${_LABEL_CIRCULO[c]}</h4><div class="mm-list">${magias.map(renderMagia).join('')}</div></div>` : '';
+          }).join('') : '<p class="mm-empty">Nenhuma magia conhecida.</p>'}
+        </section>
+      </div>
+    </section>`;
+  requestAnimationFrame(() => overlay.classList.add('open'));
+}
+
+window.abrirMenuMagias = abrirMenuMagias;
+window.fecharMenuMagias = fecharMenuMagias;
+window.ativarMagiaDoMenu = ativarMagiaDoMenu;
+
+// ── Menu de Habilidades ─────────────────────────────────────────────────────
+// Reúne as habilidades nativas enviadas pelo servidor e tudo que foi comprado
+// na Guilda, inclusive especializações passivas e técnicas não equipadas.
+function fecharMenuHabilidades(){
+  if(window._comboGuerreiroMenu){
+    GS.clearWarriorSelected?.();
+    window._comboGuerreiroMenu = null;
+  }
+  if(window._comboTecelagemArcanaMenu){
+    const me = GS.gameState?.players?.find(p => p.id === GS.myPid);
+    if(me) _armarMetamagiasDoMenu(me, []);
+    window._comboTecelagemArcanaMenu = null;
+  }
+  document.getElementById('menu-habilidades-overlay')?.classList.remove('open');
+  ocultarTooltipMagia();
+}
+
+const MODIFICADORES_METAMAGIA = Object.freeze(['aprimorar_magia', 'estender_magia', 'fortalecer_magia']);
+
+function _flagModificadorMagia(skillId){
+  return ({aprimorar_magia:'aprimorar_ativo', estender_magia:'estender_ativo', fortalecer_magia:'fortalecer_ativo'})[skillId] || null;
+}
+
+function _modificadorMagiaAtivo(player, skillId){
+  const flag = _flagModificadorMagia(skillId);
+  return !!(flag && player && player[flag]);
+}
+
+// Habilidades sustentadas devem conservar o mesmo destaque de uma seleção até
+// serem desativadas ou expirarem no estado autoritativo do servidor.
+function _habilidadeSustentadaAtiva(player, skillId){
+  if(!player) return false;
+  const rodada = GS.gameState?.round || 0;
+  const ativas = {
+    cancao_heroica: !!player.cancao_ativa,
+    esconder_sombras: !!player.invisivel_sombras,
+    detectar_armadilhas: !!player.detectar_ativo,
+    regeneracao_divina: !!player.regeneracao_ativa,
+    guerreiro_luz: !!player.guerreiro_luz_ativo,
+    golpe_sagrado: !!player.golpe_sagrado_ativo,
+    protetor: !!player.protetor_ativo,
+    brutalidade: !!player.tecnica_buff_dano_arma,
+    tecnica_mira_perfeita: !!player.tecnica_mira_perfeita,
+    tecnica_investida: !!player.investida_armada,
+    tecnica_ataque_coordenado: !!player.coordenado_alvo,
+    tecnica_sangue_frio: !!player.sangue_frio_armado,
+    tecnica_golpe_decisivo: !!player.tecnica_golpe_decisivo_armado,
+    tecnica_tatica_defensiva: !!player.tatica_alvo && player.tatica_ate >= rodada,
+    tecnica_defesa_impecavel: player.defesa_impecavel_ate >= rodada,
+    tecnica_passo_fantasma: player.passo_fantasma_ate >= rodada,
+    tecnica_resistencia_absoluta: player.resistencia_saves_ate >= rodada,
+    tecnica_contra_ataque: player.contra_ataque_ate >= rodada,
+  };
+  return !!ativas[skillId];
+}
+
+// Prepara apenas as metamagias escolhidas. A magia e o alvo permanecem para o
+// fluxo manual normal do grimório.
+function _armarMetamagiasDoMenu(mago, skillIds){
+  const desejadas = new Set(skillIds);
+  for(const skillId of MODIFICADORES_METAMAGIA){
+    const flag = _flagModificadorMagia(skillId);
+    const novo = desejadas.has(skillId);
+    if(!!mago[flag] !== novo){
+      mago[flag] = novo;
+      send({type:skillId});
+    }
+  }
+}
+
+function iniciarTecelagemArcanaMenu(capacidade){
+  const state = GS.gameState;
+  const me = state?.players?.find(p => p.id === GS.myPid);
+  if(!me || me.class_id !== 'mage' || state.phase !== 'playing' || !GS.isMyTurn || !me.alive){
+    toast('Tecelagem Arcana só pode ser preparada no turno do mago.'); return;
+  }
+  _armarMetamagiasDoMenu(me, []);
+  if(capacidade === 3){
+    _armarMetamagiasDoMenu(me, MODIFICADORES_METAMAGIA);
+    window._comboTecelagemArcanaMenu = null;
+    fecharMenuHabilidades();
+    renderMyPanel(state);
+    toast('Três metamagias armadas. Escolha a magia e o alvo manualmente.', 'var(--gold)');
+    return;
+  }
+  window._comboTecelagemArcanaMenu = {capacidade:2};
+  abrirMenuHabilidades(me.id);
+}
+
+function iniciarComboGuerreiroMenu(capacidade){
+  const state = GS.gameState;
+  const me = state && state.players.find(p => p.id === GS.myPid);
+  if(!me || me.class_id !== 'warrior' || state.phase !== 'playing' || !GS.isMyTurn || !me.alive){
+    toast('A combinação só pode ser preparada no turno do guerreiro.'); return;
+  }
+  GS.clearWarriorSelected();
+  if(capacidade === 3){
+    for(const skill of (me.skills || []).slice(0, 3)) GS.toggleWarriorSkill(skill.id);
+    window._comboGuerreiroMenu = null;
+    window._ataqueGuerreiroArmado = true;
+    fecharMenuHabilidades();
+    renderMyPanel(state);
+    toast('Três habilidades armadas. Escolha o alvo manualmente para atacar.', 'var(--gold)');
+    return;
+  }
+  window._comboGuerreiroMenu = {capacidade:2};
+  abrirMenuHabilidades(me.id);
+}
+
+function _cancelarAtaqueGuerreiroArmado(){
+  if(!window._ataqueGuerreiroArmado && !window._comboGuerreiroMenu) return false;
+  GS.clearWarriorSelected?.();
+  window._comboGuerreiroMenu = null;
+  window._ataqueGuerreiroArmado = false;
+  document.getElementById('menu-habilidades-overlay')?.classList.remove('open');
+  if(GS.gameState) renderMyPanel(GS.gameState);
+  toast('Combinação de ataque cancelada.', 'var(--text2)');
+  return true;
+}
+
+function _atualizarSelecaoComboGuerreiro(){
+  const selecionadas = new Set(GS.getWarriorSelected?.() || []);
+  document.querySelectorAll('#menu-habilidades-overlay .mh-card[data-skill-id]').forEach(card => {
+    card.classList.toggle('mh-selected', selecionadas.has(card.dataset.skillId));
+  });
+}
+
+function mostrarTooltipMenuHabilidade(event, habilidadeId){
+  const h = window._menuHabilidadesDados && window._menuHabilidadesDados[habilidadeId];
+  if(!h) return;
+  let tooltip = document.getElementById('tooltip-magia');
+  if(!tooltip){
+    tooltip = document.createElement('div');
+    tooltip.id = 'tooltip-magia';
+    tooltip.style.cssText = `position:fixed; z-index:2147483647; pointer-events:none; background:rgba(10,8,5,0.98); border:1px solid #c8a951; width:220px; padding:12px 14px; font-family:'Cinzel',serif; box-shadow:0 6px 24px rgba(0,0,0,0.75);`;
+    document.body.appendChild(tooltip);
+  }
+  const nome = h.name || h.nome || habilidadeId;
+  const descricao = h.description || h.desc || 'Sem descrição disponível.';
+  const tipo = (h.tipo || h.categoria || 'habilidade').replaceAll('_', ' ').toUpperCase();
+  const custos = [];
+  if(h.fome_cost || h.custo_fome) custos.push(`🍖 ${h.fome_cost || h.custo_fome}`);
+  if(h.sede_cost || h.custo_sede) custos.push(`💧 ${h.sede_cost || h.custo_sede}`);
+  if(h.recarga_rodadas) custos.push(`⏳ ${h.recarga_rodadas} rodadas`);
+  tooltip.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #c8a95133;">
+      <span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:3px;">${abilityIconHtml(h, h.icon || h.icone || '⚔️')}</span>
+      <div><div style="color:#e5cd83;font-size:12px;font-weight:bold;">${nome}</div><div style="color:#8a7a5a;font-size:9px;letter-spacing:2px;">${tipo}</div></div>
+    </div>
+    <div style="color:#c8b89a;font-size:10px;line-height:1.7;">${descricao}</div>
+    ${custos.length ? `<div style="margin-top:8px;padding-top:6px;border-top:1px solid #c8a95122;color:#ffae55;font-size:9px;">${custos.join(' · ')}</div>` : ''}`;
+  tooltip.style.display = 'block';
+  const alvo = event?.currentTarget?.getBoundingClientRect ? event.currentTarget.getBoundingClientRect() : null;
+  _posicionarTooltipMagia(alvo, event);
+}
+
+function ativarHabilidadeDoMenu(skillId){
+  const state = GS.gameState;
+  const me = state && state.players.find(p => p.id === GS.myPid);
+  if(!me || state.phase !== 'playing'){ toast('Habilidades só podem ser usadas na masmorra.'); return; }
+  if(!GS.isMyTurn || !me.alive){ toast('Não é a sua vez.'); return; }
+  const comboTecelagem = window._comboTecelagemArcanaMenu;
+  if(me.class_id === 'mage' && comboTecelagem){
+    if(!MODIFICADORES_METAMAGIA.includes(skillId)){
+      toast('Escolha uma das três metamagias do mago.', 'var(--gold)'); return;
+    }
+    const selecionadas = MODIFICADORES_METAMAGIA.filter(id => _modificadorMagiaAtivo(me, id));
+    if(!selecionadas.includes(skillId) && selecionadas.length >= comboTecelagem.capacidade){
+      toast(`Escolha somente ${comboTecelagem.capacidade} metamagias para a Tecelagem Arcana.`, 'var(--gold)'); return;
+    }
+    const proximas = selecionadas.includes(skillId)
+      ? selecionadas.filter(id => id !== skillId) : [...selecionadas, skillId];
+    _armarMetamagiasDoMenu(me, proximas);
+    if(proximas.length === comboTecelagem.capacidade){
+      window._comboTecelagemArcanaMenu = null;
+      fecharMenuHabilidades();
+      renderMyPanel(state);
+      toast('Metamagias armadas. Escolha a magia e o alvo manualmente.', 'var(--gold)');
+    } else {
+      abrirMenuHabilidades(me.id);
+    }
+    return;
+  }
+  if(me.class_id === 'mage' && _flagModificadorMagia(skillId)){
+    // Metamagias são toggles: permanecem visíveis e destacadas até o próximo
+    // clique ou até a magia ser lançada.
+    const flag = _flagModificadorMagia(skillId);
+    me[flag] = !me[flag];
+    send({type:skillId});
+    if(document.getElementById('menu-habilidades-overlay')?.classList.contains('open')) abrirMenuHabilidades(me.id);
+    if(document.getElementById('menu-magias-overlay')?.classList.contains('open')) abrirMenuMagias(me.id);
+    return;
+  }
+  const combo = window._comboGuerreiroMenu;
+  if(me.class_id === 'warrior' && combo){
+    const selecionadas = GS.getWarriorSelected();
+    if(!selecionadas.includes(skillId) && selecionadas.length >= combo.capacidade){
+      toast(`Escolha somente ${combo.capacidade} habilidades para esta combinação.`, 'var(--gold)'); return;
+    }
+    GS.toggleWarriorSkill(skillId);
+    if(GS.getWarriorSelected().length === combo.capacidade){
+      window._comboGuerreiroMenu = null;
+      window._ataqueGuerreiroArmado = true;
+      fecharMenuHabilidades();
+      renderMyPanel(state);
+      toast('Combinação armada. Escolha o alvo manualmente para atacar.', 'var(--gold)');
+    } else {
+      // Mantém o menu aberto na primeira escolha: só a segunda fecha o menu.
+      _atualizarSelecaoComboGuerreiro();
+      renderMyPanel(state);
+      toast(`1 de ${combo.capacidade} habilidades selecionada.`, 'var(--gold)');
+    }
+    return;
+  }
+  fecharMenuHabilidades();
+  fecharMenuMagias();
+
+  if(me.class_id === 'warrior'){
+    if(!GS.isWarriorSkillSelected(skillId) && GS.getWarriorSelected().length >= GS.warriorComboCap()){
+      toast(`Você só pode armar ${GS.warriorComboCap()} habilidade(s) por turno.`, 'var(--gold)'); return;
+    }
+    GS.toggleWarriorSkill(skillId); renderMyPanel(state); return;
+  }
+  const acoes = {
+    detectar_armadilhas: () => send({type:'detectar_armadilhas'}),
+    esconder_sombras:    () => send({type:'esconder_sombras'}),
+    veneno_rapido:       () => abrirPainelVenenoRapido(),
+    criar_armadilha:     () => abrirPainelCriarArmadilha(),
+    cura:                () => abrirPainelCura(),
+    cura_area:           () => abrirPainelCuraArea(),
+    purificacao:         () => iniciarModoPurificacao(),
+    ressurreicao:        () => iniciarModoRessurreicao(),
+    guerreiro_luz:       () => me.guerreiro_luz_ativo ? send({type:'acao_livre_richard', habilidade_id:'guerreiro_luz'}) : abrirPainelGuerreiroLuz(),
+    regeneracao_divina:  () => send({type:'acao_livre_richard', habilidade_id:'regeneracao_divina'}),
+    golpe_sagrado:       () => me.golpe_sagrado_ativo ? send({type:'desativar_golpe_sagrado'}) : send({type:'golpe_sagrado'}),
+    protetor:            () => me.protetor_ativo ? send({type:'desativar_protetor'}) : iniciarModoProtetor(),
+    imposicao_maos:      () => iniciarModoImposicaoMaos(),
+    cancao_heroica:      () => me.cancao_ativa ? send({type:'desativar_cancao'}) : abrirPainelCancao(),
+    provocacao:          () => iniciarProvocacao(),
+    animar_mortos:       () => usarAnimarMortos(),
+  };
+  if(acoes[skillId]) acoes[skillId]();
+  else toast('Esta habilidade é passiva ou não possui uma ação manual.');
+}
+
+function ativarTecnicaGuildaDoMenu(tid){
+  const state = GS.gameState;
+  const me = state && state.players.find(p => p.id === GS.myPid);
+  if(!me || state.phase !== 'playing' || !GS.isMyTurn || !me.alive){ toast('A técnica só pode ser usada no seu turno na masmorra.'); return; }
+  const cat = (GS.guildCatalogFor(me.class_id) || []).find(x => x.id === tid);
+  if(!cat){ return; }
+  const restante = GS.tecnicaRestante(me, tid);
+  if(cat.automatica){ toast('Esta técnica é automática.'); return; }
+  if(restante > 0){ toast(`Técnica recarrega em ${restante} rodada(s).`, 'var(--orange)'); return; }
+  fecharMenuHabilidades();
+  fecharMenuMagias();
+  const pp = me.pos || [0,0];
+  if(cat.alvo === 'monstro_adjacente'){
+    const alvos = (state.monsters||[]).filter(m => m && m.hp>0 && Math.max(Math.abs(pp[0]-m.pos[0]), Math.abs(pp[1]-m.pos[1])) <= 1);
+    if(!alvos.length){ toast('Nenhum inimigo adjacente.', 'var(--orange)'); return; }
+    if(alvos.length === 1) return GS.usarTecnica(tid, alvos[0].id);
+    return openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — inimigo adjacente`, alvos, 'monster', id => GS.usarTecnica(tid, id));
+  }
+  const aliados = (state.players||[]).filter(q => q && q.alive && q.id !== me.id);
+  if(cat.alvo === 'aliado_raio4'){
+    const alvos = aliados.filter(q => Math.max(Math.abs(pp[0]-q.pos[0]), Math.abs(pp[1]-q.pos[1])) <= 4);
+    if(!alvos.length){ toast('Nenhum aliado a até 4 quadrados.', 'var(--orange)'); return; }
+    if(alvos.length === 1) return GS.usarTecnica(tid, alvos[0].id);
+    return openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — aliado`, alvos, 'player', id => GS.usarTecnica(tid, id));
+  }
+  if(cat.alvo === 'aliado'){
+    if(!aliados.length){ toast('Nenhum aliado disponível.', 'var(--orange)'); return; }
+    if(aliados.length === 1) return GS.usarTecnica(tid, aliados[0].id);
+    return openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — escolha o aliado`, aliados, 'player', id => GS.usarTecnica(tid, id));
+  }
+  if(cat.alvo === 'qualquer_vivo'){
+    const alvos = [...aliados, ...(state.monsters||[]).filter(m => m && m.hp>0)];
+    if(!alvos.length){ toast('Nenhum alvo disponível.', 'var(--orange)'); return; }
+    return openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — escolha o 2º alvo`, alvos, 'any', id => GS.usarTecnica(tid, id));
+  }
+  GS.usarTecnica(tid);
+}
+
+function abrirMenuHabilidades(pid){
+  const player = _playerMenuMagias(pid);
+  if(!player){ toast('Ficha de habilidades indisponível agora.'); return; }
+  let overlay = document.getElementById('menu-habilidades-overlay');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'menu-habilidades-overlay';
+    overlay.addEventListener('click', e => { if(e.target === overlay) fecharMenuHabilidades(); });
+    document.body.appendChild(overlay);
+  }
+  const owned = GS.guildOwnedOf(pid);
+  const equip = GS.guildEquipOf(pid);
+  const catalog = GS.guildCatalogFor(player.class_id) || [];
+  // As três magias legadas do antigo sistema de MP não são habilidades do
+  // mago. A Bola de Fogo do grimório continua intacta no menu de Magias.
+  const base = [...(player.skills || [])].filter(s =>
+    !['fireball', 'ice_lance', 'magic_shield'].includes(s.id));
+  // A passiva do bardo não integra `skills` no estado antigo do servidor, mas
+  // é uma habilidade-base e deve sempre constar no compêndio.
+  if(player.class_id === 'bard' && !base.some(s => s.id === 'conhecimento_lendas')){
+    base.unshift({id:'conhecimento_lendas', name:'Conhecimento das Lendas', icon:'📖', tipo:'passiva',
+      description:'Revela a ficha completa de qualquer inimigo ao passar o mouse.'});
+  }
+  if(player.class_id === 'mage' && !base.some(s => s.id === 'animar_mortos')){
+    base.unshift({id:'animar_mortos', name:'Animar Mortos', icon:'💀', tipo:'acao_principal',
+      fome_cost:20, sede_cost:20,
+      description:'Anime um cadáver adjacente para criar um servo morto-vivo.'});
+  }
+  const especializacoes = catalog.filter(i => (owned.especializacoes || []).includes(i.id));
+  const tecnicas = catalog.filter(i => (owned.tecnicas || []).includes(i.id));
+  // Progressões II/III substituem a habilidade-base exibida, mas preservam o
+  // id original para que o clique continue acionando a regra autoritativa.
+  const basePorLinha = {
+    guerreiro_mira:'mira_certeira', guerreiro_golpe:'golpe_devastador', guerreiro_furia:'furia_berserker',
+    bardo_provocacao:'provocacao', bardo_lendas:'conhecimento_lendas',
+    mago_fortalecer:'fortalecer_magia', mago_aprimorar:'aprimorar_magia', mago_estender:'estender_magia',
+    mago_reviver:'animar_mortos', clerigo_cura:'cura', clerigo_massa:'cura_area',
+    clerigo_purif:'purificacao', clerigo_ressur:'ressurreicao', paladino_regen:'regeneracao_divina',
+    paladino_ataque_sagrado:'golpe_sagrado', paladino_cura_maos:'imposicao_maos', paladino_luz:'guerreiro_luz',
+    paladino_defensor:'protetor', ladino_furtivo:'ataque_furtivo', ladino_esconder:'esconder_sombras',
+    ladino_veneno:'veneno_rapido', ladino_desarme:'detectar_armadilhas', ladino_armadilha:'criar_armadilha',
+  };
+  const upgradesPorBase = new Map();
+  especializacoes.forEach(item => {
+    const baseId = basePorLinha[item.linha];
+    if(!baseId || !(item.nivel >= 2)) return;
+    const anterior = upgradesPorBase.get(baseId);
+    if(!anterior || (item.nivel || 0) > (anterior.nivel || 0)) upgradesPorBase.set(baseId, item);
+  });
+  const baseComGraduacao = base.map(h => {
+    const up = upgradesPorBase.get(h.id);
+    return up ? {...h, name:up.nome, description:up.desc, icon:up.icon, _graduacao:true} : h;
+  });
+  const especializacoesRestantes = especializacoes.filter(i => ![...upgradesPorBase.values()].includes(i));
+  const ehPassiva = h => h.tipo === 'passiva' || h.automatica || h.categoria === 'especializacao';
+  const habilidadesAtivas = baseComGraduacao.filter(h => !ehPassiva(h));
+  const passivas = [...baseComGraduacao.filter(ehPassiva), ...especializacoesRestantes];
+  const custo = h => {
+    const partes = [];
+    if(h.fome_cost || h.custo_fome) partes.push(`🍖 ${h.fome_cost || h.custo_fome}`);
+    if(h.sede_cost || h.custo_sede) partes.push(`💧 ${h.sede_cost || h.custo_sede}`);
+    if(h.recarga_rodadas) partes.push(`⏳ ${h.recarga_rodadas}r`);
+    return partes.join(' · ');
+  };
+  window._menuHabilidadesDados = Object.fromEntries([...baseComGraduacao, ...especializacoes, ...tecnicas]
+    .map(h => [h.id, h]));
+  const podeAgir = document.getElementById('screen-game')?.classList.contains('active') && pid === GS.myPid;
+  const comboAtivo = player.class_id === 'warrior' && window._comboGuerreiroMenu;
+  const tecelagemAtiva = player.class_id === 'mage' && window._comboTecelagemArcanaMenu;
+  const card = (h, guilda=false) => {
+    const nome = h.name || h.nome || h.id;
+    const desc = h.description || h.desc || '';
+    const equipada = guilda && (equip.tecnica === h.id || equip.tecnica_exclusiva === h.id);
+    const restante = h.categoria === 'tecnica' ? (GS.tecnicaRestante(player, h.id) || 0) : 0;
+    const pendente = h.categoria === 'tecnica' && !!GS.tecnicaPendente?.(player, h.id);
+    const tecnicaAtivavel = guilda && h.categoria === 'tecnica' && equipada && !h.automatica && restante === 0 && !pendente;
+    const comboGuilda = guilda && player.class_id === 'warrior' && (h.id === 'guerreiro_combinar_2' || h.id === 'guerreiro_mestre_combate');
+    const tecelagemGuilda = guilda && player.class_id === 'mage' && (h.id === 'mago_tecelagem_2' || h.id === 'mago_tecelagem_3');
+    const selecionada = _modificadorMagiaAtivo(player, h.id) || _habilidadeSustentadaAtiva(player, h.id)
+      || (player.class_id === 'warrior' && !!GS.isWarriorSkillSelected?.(h.id));
+    const onclick = !guilda && podeAgir ? `onclick="ativarHabilidadeDoMenu('${h.id}')"`
+      : comboGuilda && podeAgir ? `onclick="iniciarComboGuerreiroMenu(${h.id === 'guerreiro_mestre_combate' ? 3 : 2})"`
+      : tecelagemGuilda && podeAgir ? `onclick="iniciarTecelagemArcanaMenu(${h.id === 'mago_tecelagem_3' ? 3 : 2})"`
+      : tecnicaAtivavel && podeAgir ? `onclick="ativarTecnicaGuildaDoMenu('${h.id}')"` : '';
+    return `<div class="mh-card${guilda ? ' mh-guild' : ''}${onclick ? ' mh-acionavel' : ''}${selecionada || pendente ? ' mh-selected' : ''}${restante > 0 ? ' mh-cooldown' : ''}" data-skill-id="${h.id}" ${onclick}
+      onmouseenter="mostrarTooltipMenuHabilidade(event,'${h.id}')" onmouseleave="ocultarTooltipMagia()">
+      ${restante > 0 ? `<strong class="mh-cooldown-badge">⏳ ${restante} R</strong>` : ''}
+      <span class="mh-icon">${abilityIconHtml(h, h.icon || h.icone || '⚔️')}</span>
+      <span class="mh-info"><b>${nome}</b><small>${desc}</small>${custo(h) ? `<em>${custo(h)}</em>` : ''}</span>
+      ${equipada ? '<i>Equipada</i>' : ''}
+      ${pendente ? '<i>Preparada</i>' : ''}
+    </div>`;
+  };
+  const secao = (titulo, lista, guilda=false, vazio='Nenhuma habilidade.') => `
+    <section class="mh-section"><h3>${titulo}</h3>${lista.length
+      ? `<div class="mh-list">${lista.map(h => card(h, guilda)).join('')}</div>`
+      : `<p class="mh-empty">${vazio}</p>`}</section>`;
+
+  overlay.innerHTML = `
+    <section class="menu-habilidades" role="dialog" aria-modal="true" aria-label="Menu de habilidades">
+      <header class="mh-header"><div><b><img class="menu-habilidades-icone" src="assets/habilidades.png" alt="" aria-hidden="true"> HABILIDADES</b><small>${comboAtivo ? `Escolha ${comboAtivo.capacidade} habilidades para o ataque` : tecelagemAtiva ? `Escolha ${tecelagemAtiva.capacidade} metamagias para a próxima magia` : `${player.name || 'Herói'} · tecla H`}</small></div><button onclick="fecharMenuHabilidades()" aria-label="Fechar">✕</button></header>
+      <div class="mh-body">
+        ${secao('HABILIDADES ATIVAS', habilidadesAtivas, false, 'Nenhuma habilidade ativa encontrada.')}
+        ${secao('TÉCNICAS DA GUILDA', tecnicas, true, 'Nenhuma técnica da Guilda adquirida.')}
+        ${secao('PASSIVAS E SEMPRE ATIVAS', passivas, true, 'Nenhuma habilidade passiva encontrada.')}
+      </div>
+    </section>`;
+  requestAnimationFrame(() => overlay.classList.add('open'));
+}
+
+window.abrirMenuHabilidades = abrirMenuHabilidades;
+window.fecharMenuHabilidades = fecharMenuHabilidades;
+window.ativarHabilidadeDoMenu = ativarHabilidadeDoMenu;
+window.ativarTecnicaGuildaDoMenu = ativarTecnicaGuildaDoMenu;
+window.mostrarTooltipMenuHabilidade = mostrarTooltipMenuHabilidade;
+window.iniciarComboGuerreiroMenu = iniciarComboGuerreiroMenu;
+window.iniciarTecelagemArcanaMenu = iniciarTecelagemArcanaMenu;
+
 // Envia o ataque incluindo as habilidades ARMADAS do warrior (toggle). O custo
 // de fome/sede é cobrado pelo servidor neste momento (a "ação"). Limpa a seleção
 // após enviar — no próximo turno as skills voltam a ficar selecionáveis.
@@ -12136,6 +12630,7 @@ function sendAttack(targetId, targetPos){
   const buffs = GS.getWarriorSelected();
   send({type:'attack', target_id:targetId, target_pos:targetPos || null, buffs});
   GS.clearWarriorSelected();
+  window._ataqueGuerreiroArmado = false;
 }
 
 function beginAttack(){
@@ -12223,6 +12718,12 @@ function handleGameOver(msg){
 }
 
 document.addEventListener('keydown', e=>{
+  // Combinar Duas/Mestre de Combate não consome nada enquanto só está armado.
+  // ESC desfaz tanto a escolha parcial no menu quanto a combinação pronta antes
+  // de o ataque ser enviado ao servidor.
+  if(e.key === 'Escape' && _cancelarAtaqueGuerreiroArmado()){
+    e.preventDefault(); return;
+  }
   // ESC cancels pending skill regardless of whose turn it is
   if(e.key==='Escape' && GS.pendingSkill){
     GS.pendingSkill=null;
@@ -21983,6 +22484,52 @@ document.addEventListener('keydown', (e) => {
   e.preventDefault();
 });
 
+// Atalho M: abre/fecha o grimório do próprio personagem.
+document.addEventListener('keydown', (e) => {
+  if(e.key !== 'm' && e.key !== 'M') return;
+  const tag = (document.activeElement && document.activeElement.tagName) || '';
+  if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  const naCidade = document.getElementById('screen-city')?.classList.contains('active');
+  const naMasmorra = document.getElementById('screen-game')?.classList.contains('active');
+  if(!GS.myPid || (!naCidade && !naMasmorra)) return;
+
+  if(document.getElementById('menu-magias-overlay')?.classList.contains('open')) fecharMenuMagias();
+  else abrirMenuMagias(GS.myPid);
+  e.preventDefault();
+});
+
+// Atalho H: abre/fecha o compêndio de habilidades do próprio personagem.
+document.addEventListener('keydown', (e) => {
+  if(e.key !== 'h' && e.key !== 'H') return;
+  const tag = (document.activeElement && document.activeElement.tagName) || '';
+  if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  const naCidade = document.getElementById('screen-city')?.classList.contains('active');
+  const naMasmorra = document.getElementById('screen-game')?.classList.contains('active');
+  if(!GS.myPid || (!naCidade && !naMasmorra)) return;
+
+  if(document.getElementById('menu-habilidades-overlay')?.classList.contains('open')) fecharMenuHabilidades();
+  else abrirMenuHabilidades(GS.myPid);
+  e.preventDefault();
+});
+
+// Atalho S: abre Status. Usa captura para não disparar o movimento para baixo
+// (também associado à tecla S) enquanto a ficha de status é aberta.
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape' && document.getElementById('menu-status-overlay')?.classList.contains('open')){
+    fecharMenuStatus(); e.preventDefault(); e.stopImmediatePropagation(); return;
+  }
+  if(e.key !== 's' && e.key !== 'S') return;
+  const tag = (document.activeElement && document.activeElement.tagName) || '';
+  if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  const naCidade = document.getElementById('screen-city')?.classList.contains('active');
+  const naMasmorra = document.getElementById('screen-game')?.classList.contains('active');
+  if(!GS.myPid || (!naCidade && !naMasmorra)) return;
+  if(document.getElementById('menu-status-overlay')?.classList.contains('open')) fecharMenuStatus();
+  else abrirMenuStatus(GS.myPid);
+  e.preventDefault();
+  e.stopImmediatePropagation();
+}, true);
+
 // #ficha-fab nasce dentro do markup de #screen-game (masmorra) — sem isso ele
 // fica com display:none sempre que a tela ativa é a cidade (showScreen só
 // exibe UM .screen por vez), tornando o ícone de abrir o inventário invisível
@@ -22003,7 +22550,7 @@ function _atualizarFichaFab(){
     fab.title = 'Mapa de CR (mestre)';
     fab.onclick = () => abrirMinimapaCR();
   } else {
-    fab.textContent = '🎒';
+    fab.innerHTML = '<img src="assets/inventario.png" alt="Inventário">';
     fab.title = 'Inventário (tecla I)';
     fab.onclick = () => InventoryModal.toggle(GS.myPid);
   }

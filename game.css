@@ -227,6 +227,11 @@ input:focus { outline: none; border-color: var(--gold); }
   display: block;
 }
 .section-title { color: var(--text2); font-size: .7rem; text-transform: uppercase; letter-spacing: 1px; padding: 3px 0 6px; }
+.menu-habilidades-icone{width:18px;height:18px;object-fit:contain;vertical-align:middle;margin:-2px 4px 0 0;}
+.menu-magias-icone{width:18px;height:18px;object-fit:contain;vertical-align:middle;margin:-2px 4px 0 0;}
+.menu-inventario-icone{width:18px;height:18px;object-fit:contain;vertical-align:middle;margin:-2px 4px 0 0;}
+#menu-status-overlay{position:fixed;inset:0;z-index:520;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.66);opacity:0;pointer-events:none;transition:opacity .16s ease;}
+#menu-status-overlay.open{opacity:1;pointer-events:auto;}.menu-status{width:430px;max-width:94vw;max-height:86vh;overflow:auto;background:linear-gradient(145deg,#15110a,#090806);border:1px solid #c8a951;border-radius:8px;box-shadow:0 18px 55px rgba(0,0,0,.8);font-family:'Cinzel',serif;}.st-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #c8a95155;color:#f0d98a;letter-spacing:2px;}.st-header small{display:block;color:#8a7a5a;font-size:9px;letter-spacing:1px;margin-top:3px;}.st-header button{background:transparent;border:1px solid #78663b;color:#e5cd83;border-radius:3px;cursor:pointer;padding:3px 8px;}.st-body{padding:14px 16px 18px;}.st-body section+section{margin-top:17px;}.st-body h3{margin:0 0 7px;color:#d5b862;font-size:10px;letter-spacing:2px;}.st-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:7px 9px;border:1px solid rgba(200,169,81,.2);background:rgba(255,255,255,.03);font-size:11px;color:#c8b89a;}.st-row b{color:#f0d98a;font-size:13px;}.st-row small{grid-column:1 / -1;color:#8a7a5a;font-size:9px;}.st-effect{display:grid;grid-template-columns:1fr auto;gap:4px 8px;padding:8px 9px;border-left:3px solid #c8a951;background:rgba(200,169,81,.08);color:#c8b89a;font-size:10px;}.st-effect b{color:#f0d98a;}.st-effect span{grid-column:1 / -1;}.st-effect em{color:#ffae55;font-size:9px;font-style:normal;}.st-empty{margin:0;color:#8a7a5a;font-size:10px;}
 .my-stats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
 .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 8px; }
 .btn-action { padding: 7px 6px; font-size: .75rem; background: var(--bg3);
@@ -910,6 +915,7 @@ input:focus { outline: none; border-color: var(--gold); }
   background: var(--gold); color: #000; border: none; cursor: pointer;
   box-shadow: 0 4px 14px rgba(0,0,0,.55);
 }
+#ficha-fab img{width:34px;height:34px;object-fit:contain;display:block;}
 #cs-info-btn, #cs-info-backdrop { display: none; }
 
 @media (max-width: 820px) {
@@ -1049,6 +1055,52 @@ input:focus { outline: none; border-color: var(--gold); }
 #ficha-cidade-panel .bag-slot.drop-target{ outline:2px dashed #c8a951;
   outline-offset:-2px; }
 #ficha-cidade-panel [draggable="true"]{ cursor:grab; }
+
+/* ── Grimório: magias conhecidas e modificadores de magia ─────────────────── */
+#menu-magias-overlay{position:fixed;inset:0;z-index:510;display:flex;align-items:center;justify-content:center;
+  padding:18px;background:rgba(0,0,0,.66);opacity:0;pointer-events:none;transition:opacity .18s ease;}
+#menu-magias-overlay.open{opacity:1;pointer-events:auto;}
+.menu-magias{width:510px;max-width:96vw;max-height:88vh;display:flex;flex-direction:column;
+  background:linear-gradient(145deg,#10091b,#08060e);border:1px solid #9e63c8;border-radius:8px;
+  box-shadow:0 18px 55px rgba(0,0,0,.8),0 0 24px rgba(145,63,200,.25);font-family:'Cinzel',serif;}
+.mm-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #9e63c855;color:#e9c7ff;letter-spacing:2px;}
+.mm-header b{font-size:14px;}.mm-header small{display:block;color:#8a7a5a;font-size:9px;letter-spacing:1px;margin-top:3px;}
+.mm-header button{background:transparent;border:1px solid #6e5180;color:#d8b6ec;border-radius:3px;cursor:pointer;padding:3px 8px;font-size:13px;}
+.mm-body{overflow-y:auto;padding:14px 16px 18px;}.mm-body h3{margin:0 0 8px;color:#b982e0;font-size:10px;letter-spacing:2px;}
+.mm-circle{margin-top:14px;}.mm-circle h4{margin:0 0 6px;color:#8daeff;font-size:10px;letter-spacing:1px;}
+.mm-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;}
+.mm-magia,.mm-modificador{min-height:53px;display:flex;align-items:center;gap:8px;padding:7px;background:rgba(255,255,255,.035);border:1px solid rgba(200,169,81,.25);border-radius:4px;}
+.mm-magia{cursor:help;}.mm-magia:hover{border-color:#c8a951;}.mm-magia.mm-acionavel{cursor:pointer;}.mm-magia.mm-acionavel:hover{background:rgba(200,169,81,.13);box-shadow:0 0 9px rgba(200,169,81,.20);}.mm-modificador{border-color:rgba(174,105,220,.34);}.mm-modificador.mm-acionavel{cursor:pointer;}.mm-modificador.mm-acionavel:hover{background:rgba(174,105,220,.13);border-color:#b982e0;}.mm-modificador.mm-selecionada{background:rgba(185,130,224,.22);border-color:#e0b1ff;box-shadow:0 0 11px rgba(202,126,255,.65) inset,0 0 10px rgba(202,126,255,.35);}
+.mm-magia-icon,.mm-mod-icon{width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden;border-radius:3px;}
+.mm-mod-icon .ability-icon{width:32px;height:32px;margin:0;border-radius:3px;}.mm-magia b,.mm-modificador b{display:block;color:#e3dacd;font-size:10px;line-height:1.2;}
+.mm-magia small,.mm-modificador small{display:block;color:#958878;font-size:8px;line-height:1.35;margin-top:3px;}.mm-empty{margin:0;color:#71665b;font-size:10px;padding:8px 0;}
+@media(max-width:520px){.mm-list{grid-template-columns:1fr;}.menu-magias{max-height:92vh;}.mm-body{padding:12px;}}
+
+/* ── Compêndio de habilidades ─────────────────────────────────────────────── */
+#menu-habilidades-overlay{position:fixed;inset:0;z-index:510;display:flex;align-items:center;justify-content:center;
+  padding:18px;background:rgba(0,0,0,.66);opacity:0;pointer-events:none;transition:opacity .18s ease;}
+#menu-habilidades-overlay.open{opacity:1;pointer-events:auto;}
+.menu-habilidades{width:560px;max-width:96vw;max-height:88vh;display:flex;flex-direction:column;
+  background:linear-gradient(145deg,#15110a,#090806);border:1px solid #c8a951;border-radius:8px;
+  box-shadow:0 18px 55px rgba(0,0,0,.8),0 0 24px rgba(200,169,81,.20);font-family:'Cinzel',serif;}
+.mh-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #c8a95155;color:#f0d98a;letter-spacing:2px;}
+.mh-header b{font-size:14px;}.mh-header small{display:block;color:#8a7a5a;font-size:9px;letter-spacing:1px;margin-top:3px;}
+.mh-header button{background:transparent;border:1px solid #78663b;color:#e5cd83;border-radius:3px;cursor:pointer;padding:3px 8px;font-size:13px;}
+.mh-body{overflow-y:auto;padding:14px 16px 18px;}.mh-section+.mh-section{margin-top:18px;}.mh-section h3{margin:0 0 8px;color:#d5b862;font-size:10px;letter-spacing:2px;}
+.mh-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;}.mh-card{min-height:58px;display:flex;align-items:center;gap:8px;padding:7px;
+  background:rgba(255,255,255,.035);border:1px solid rgba(200,169,81,.25);border-radius:4px;position:relative;transition:transform .16s ease,background .16s ease,border-color .16s ease,box-shadow .16s ease;}.mh-card.mh-guild{border-color:rgba(155,89,182,.42);}
+.mh-icon{width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden;border-radius:3px;}.mh-icon .ability-icon{width:32px;height:32px;margin:0;border-radius:3px;}
+.mh-info{min-width:0;}.mh-info b{display:block;color:#e3dacd;font-size:10px;line-height:1.2;}.mh-info small{display:block;color:#958878;font-size:8px;line-height:1.35;margin-top:3px;}.mh-info em{display:block;color:#ffae55;font-size:8px;font-style:normal;margin-top:3px;}
+.mh-card i{position:absolute;right:5px;top:4px;color:#b987e2;font-size:7px;font-style:normal;letter-spacing:.4px;}.mh-empty{margin:0;color:#71665b;font-size:10px;padding:8px 0;}
+.mh-card.mh-acionavel{cursor:pointer;}.mh-card.mh-acionavel:hover{background:rgba(200,169,81,.13);border-color:#d5b862;box-shadow:0 0 9px rgba(200,169,81,.18);}
+.mh-card.mh-selected{background:rgba(185,130,224,.22);border-color:#e0b1ff;box-shadow:0 0 11px rgba(202,126,255,.62) inset,0 0 10px rgba(202,126,255,.35);}
+.mh-card:hover{transform:scale(1.3);z-index:4;box-shadow:0 5px 16px rgba(0,0,0,.55);}
+.mh-card.mh-cooldown:hover{transform:scale(1.3);}
+.mh-card.mh-cooldown{filter:grayscale(.85);opacity:.62;background:rgba(90,90,90,.16);border-color:#6e6e6e;cursor:not-allowed;}
+.mh-cooldown-badge{position:absolute;top:-10px;left:50%;transform:translateX(-50%);z-index:2;white-space:nowrap;
+  padding:2px 7px;border:1px solid #ffb347;border-radius:9px;background:#21180b;color:#ffd166;font-size:10px;font-weight:900;letter-spacing:1px;
+  box-shadow:0 1px 5px rgba(0,0,0,.8);}
+@media(max-width:520px){.mh-list{grid-template-columns:1fr;}.menu-habilidades{max-height:92vh;}.mh-body{padding:12px;}}
 
 /* Foto (rosto, 3:4) nos cards de herói da cidade */
 .city-hcard-face{ width:34px; aspect-ratio:3/4; object-fit:cover;

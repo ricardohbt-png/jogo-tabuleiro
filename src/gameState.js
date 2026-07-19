@@ -1254,6 +1254,10 @@ const GS = (() => {
   function endTurn()       {
     // Consumo de fome/sede é 100% autoritativo do servidor (escala 0–100).
     // O antigo consumo cliente foi desativado.
+    // Habilidades do guerreiro só valem para o ataque que as envia. Encerrar o
+    // turno sem atacar as descarta localmente, sem custo e sem gastar a
+    // especialização de combinação da Guilda.
+    clearWarriorSelected();
     send({ type: 'end_turn' });
   }
   function useItem(id)     { send({ type: 'use_item',       item_id: id }); }
@@ -1364,6 +1368,9 @@ const GS = (() => {
     const pronta = cds[tid];
     const round = (gameState && gameState.round) || 1;
     return pronta ? Math.max(0, pronta - round) : 0;
+  }
+  function tecnicaPendente(player, tid) {
+    return !!(player && player.technique_pending && player.technique_pending[tid]);
   }
 
   // ── Instrumentos do Bardo (Fase 1/2) ─────────────────────────────────────
@@ -2192,6 +2199,7 @@ const GS = (() => {
     guildOwnedOf,
     guildEquipOf,
     tecnicaRestante,
+    tecnicaPendente,
 
     // ── Instrumentos do Bardo (Fase 1) ──
     usarInstrumento,

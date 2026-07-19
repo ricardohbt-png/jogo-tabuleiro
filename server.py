@@ -4716,6 +4716,9 @@ def make_player(pid, name, cls_id, slot):
         "guild_owned": {"especializacoes": [], "tecnicas": []},   # ids comprados (persistido)
         "guild_equip": {"tecnica": None, "tecnica_exclusiva": None},  # equipado (persistido)
         "technique_cooldowns": {},          # { tecnica_id: pronta_em_round } â€” runtime
+        # Técnicas que apenas preparam um ataque/magia. Custo e recarga só são
+        # aplicados quando o efeito preparado realmente acontece.
+        "technique_pending": {},
         "tecnica_buff_dano_arma": 0,        # Brutalidade: +N dano de arma atÃ© fim do turno
         "tecnica_mira_perfeita": False,     # Mira Perfeita: prÃ³ximo ataque Ã  distÃ¢ncia
         "investida_armada": False,          # Investida Heroica: charge armada
@@ -5717,6 +5720,22 @@ class GameRoom:
         pronta = p.get("technique_cooldowns", {}).get(tid)
         return max(0, pronta - self.round_num) if pronta else 0
 
+    def _consumir_tecnica_apos_efeito(self, p, tid):
+        """Inicia custo/recarga de uma técnica previamente armada.
+
+        Técnicas de ataque e magia não são gastas ao serem preparadas: só entram
+        em recarga quando o ataque ou a magia que elas modificam é executado.
+        """
+        pendentes = p.get("technique_pending", {})
+        if not pendentes.pop(tid, None):
+            return False
+        item = guild_item(tid)
+        if not item:
+            return False
+        self._pagar_fome_sede(p, item["custo_fome"], item["custo_sede"])
+        p["technique_cooldowns"][tid] = self.round_num + item["recarga_rodadas"]
+        return True
+
     def _tecnica_bonus_dano(self, p):
         """+N de dano de arma concedido por técnica de turno (Brutalidade)."""
         return p.get("tecnica_buff_dano_arma", 0)
@@ -5948,6 +5967,7 @@ class GameRoom:
         """Consome a re-rolagem do Sangue Frio se armada. Retorna True se deve re-rolar."""
         if p.get("sangue_frio_armado"):
             p["sangue_frio_armado"] = False
+            self._consumir_tecnica_apos_efeito(p, "tecnica_sangue_frio")
             return True
         return False
 
@@ -6069,6 +6089,10 @@ class GameRoom:
         if self.tecnica_restante(p, tecnica_id) > 0:
             await self.send_to(pid, {"type": "error",
                 "msg": f"{item['nome']} em recarga ({self.tecnica_restante(p, tecnica_id)} rodadas)."})
+            return
+        if p.get("technique_pending", {}).get(tecnica_id):
+            await self.send_to(pid, {"type": "error",
+                "msg": f"{item['nome']} já está preparada para o próximo efeito."})
             return
         _ef, _es = self._custo_fome_sede_efetivo(p, item["custo_fome"], item["custo_sede"])
         if p.get("fome", 0) < _ef or p.get("sede", 0) < _es:
@@ -6197,10 +6221,22 @@ class GameRoom:
             p["tec_ex_canalizacao_perfeita_armado"] = True
         elif ef.get("tipo") == "tec_ex_acelerada":
             p["tec_ex_acelerada_armado"] = True
-        # (outros tipos/handlers chegam nas Fases 1-2)
-        self._pagar_fome_sede(p, item["custo_fome"], item["custo_sede"])
-        p["technique_cooldowns"][tecnica_id] = self.round_num + item["recarga_rodadas"]
-        await self.gm_say(f"⚔️ **{p['name']}** ativa **{item['nome']}**!")
+        # Técnicas que apenas armam/modificam o próximo ataque ou magia não são
+        # consumidas neste clique. O custo e a recarga começam no ponto em que o
+        # efeito realmente for aplicado (handle_attack / handle_magia).
+        efeitos_adiados = {
+            "buff_turno", "mira_perfeita", "investida", "ataque_coordenado",
+            "sangue_frio", "golpe_decisivo", "tec_ex_aprimorar", "tec_ex_estender",
+            "tec_ex_canalizacao_arcana", "tec_ex_empoderar", "tec_ex_geminada",
+            "tec_ex_canalizacao_perfeita", "tec_ex_acelerada",
+        }
+        if ef.get("tipo") in efeitos_adiados:
+            p.setdefault("technique_pending", {})[tecnica_id] = True
+            await self.gm_say(f"⚔️ **{p['name']}** prepara **{item['nome']}** — custo e recarga após o efeito.")
+        else:
+            self._pagar_fome_sede(p, item["custo_fome"], item["custo_sede"])
+            p["technique_cooldowns"][tecnica_id] = self.round_num + item["recarga_rodadas"]
+            await self.gm_say(f"⚔️ **{p['name']}** ativa **{item['nome']}**!")
         await self.push_state()
 
     def _rolar_2d6(self):
@@ -8369,6 +8405,7 @@ class GameRoom:
             return
         if not self._alvo_no_alcance_arma(par, alvo_monstro):
             return
+        self._consumir_tecnica_apos_efeito(atacante, "tecnica_ataque_coordenado")
         await self._ataque_basico_reativo(par, alvo_monstro)
 
     async def _quebrar_invisibilidade(self, p, motivo="ao agir"):
@@ -8554,6 +8591,16 @@ class GameRoom:
             esc = self._verificar_escuridao(p, target)
             _mira_ranged = bool(w_range is not None and p.get("tecnica_mira_perfeita"))
             _investida = bool(w_range is None and self._investida_tecnica_bonus(p, is_ranged=False))
+            # Técnicas apenas armadas tornam-se gastas quando modificam de fato
+            # este ataque; até aqui um clique no menu não iniciava recarga.
+            if p.get("tecnica_buff_dano_arma"):
+                self._consumir_tecnica_apos_efeito(p, "brutalidade")
+            if _mira_ranged:
+                self._consumir_tecnica_apos_efeito(p, "tecnica_mira_perfeita")
+            if _investida:
+                self._consumir_tecnica_apos_efeito(p, "tecnica_investida")
+            if p.get("tecnica_golpe_decisivo_armado"):
+                self._consumir_tecnica_apos_efeito(p, "tecnica_golpe_decisivo")
             # Latch compartilhado de "forÃ§a crÃ­tico automÃ¡tico": hoje usado pelo Golpe
             # Decisivo (Fase 2e) e, futuramente, pelo Ãšltimo EsforÃ§o â€” qualquer nova
             # fonte de crÃ­tico garantido deve entrar neste OR em vez de duplicar a lÃ³gica.
@@ -11993,6 +12040,21 @@ class GameRoom:
         p["_tec_save_desvantagem"] = False
 
         # Limpa as tÃ©cnicas exclusivas armadas neste lanÃ§amento (consumidas).
+        # Técnicas exclusivas só entram em recarga depois desta magia, que é o
+        # momento em que seus modificadores foram realmente aplicados.
+        for _flag, _tid in (
+            ("tec_ex_aprimorar_armado", "tec_ex_aprimorar_magia"),
+            ("tec_ex_estender_armado", "tec_ex_estender_magia"),
+            ("tec_ex_canalizacao_armado", "tec_ex_canalizacao_arcana"),
+            ("tec_ex_empoderar_armado", "tec_ex_empoderar_magia"),
+            ("tec_ex_canalizacao_perfeita_armado", "tec_ex_canalizacao_perfeita"),
+            ("tec_ex_acelerada_armado", "tec_ex_magia_acelerada"),
+        ):
+            if p.get(_flag):
+                self._consumir_tecnica_apos_efeito(p, _tid)
+        if p.get("tec_ex_geminada_alvo2_id"):
+            self._consumir_tecnica_apos_efeito(p, "tec_ex_magia_geminada")
+
         p["tec_ex_aprimorar_armado"] = False
         p["tec_ex_estender_armado"] = False
         p["tec_ex_canalizacao_armado"] = False
@@ -12000,6 +12062,9 @@ class GameRoom:
         p["tec_ex_geminada_alvo2_id"] = None
         p["tec_ex_canalizacao_perfeita_armado"] = False
         p["tec_ex_acelerada_armado"] = False
+        # Técnicas preparadas que não chegaram a afetar ataque/magia expiram sem
+        # custo e sem recarga ao terminar o turno.
+        p["technique_pending"] = {}
 
         # Invisibilidade quebra ao lanÃ§ar (a menos que a prÃ³pria magia a tenha concedido agora).
         if p.get("invisivel_magico") and magia_id != "invisibilidade":
