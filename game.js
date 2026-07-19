@@ -5084,6 +5084,7 @@ function _facingAngleY3D(f){
 //  • hostil autorada: ESCONDIDA até ser revelada (detecção do Luccas/Clarividência →
 //    visivel) ou disparada (ativada). Antes disso não aparece no mapa.
 function _armadilhaVisivelParaMim(arm, me){
+  if(GS.isMaster()) return true;   // o mestre enxerga TODA a masmorra, incl. armadilhas ocultas
   if(arm.aliada) return true;
   if(arm.so_luccas) return !!(me && me.class_id === 'rogue');
   return !!(arm.visivel || arm.ativada);
@@ -11148,6 +11149,11 @@ function renderMyPanel(state){
     </button>` : '';
 
   // ── Action buttons (with weapon damage formula shown) ──
+  // Alcance da arma equipada (null = corpo a corpo). Mesmo padrão usado no resto
+  // do cliente (ex.: BFS de alcance). Sem esta definição, renderMyPanel lançava
+  // ReferenceError: _wRange is not defined e abortava ANTES de habilitar o botão
+  // de encerrar turno (e o resto das ações/habilidades).
+  const _wRange = me.weapon?.range ?? null;
   const _rangeHint = _wRange != null ? `alcance ${_wRange}` : 'corpo a corpo';
   const _adjHint = canAct && !canAttack
     ? `<small style="color:#e07060;display:block;font-size:.62rem;margin-top:2px;">${_wRange!=null?'inimigo fora de alcance':'aproxime-se!'}</small>`
