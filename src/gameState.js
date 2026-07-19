@@ -2049,6 +2049,16 @@ const GS = (() => {
   function createSavegame(opts) { send({ type: 'create_savegame', ...opts }); } // {name, mode, campaign_file, has_master}
   function loadSavegame(id)     { send({ type: 'load_savegame', id }); }
   function deleteSavegame(id)   { send({ type: 'delete_savegame', id }); }
+  // Entra na sala de um amigo (jogo salvo dele) pela conexão JÁ LOGADA — sem
+  // reconectar, para não perder a conta autenticada nesta conexão. O nome do
+  // jogador é o próprio apelido (o servidor casa myPid por nome e vincula o
+  // personagem à conta via account_by_pid). Só faz sentido após o login.
+  function joinByCode(code) {
+    if (!account) return false;
+    myPid = null;   // sala nova → myPid é resolvido pelo próximo lobby_state
+    send({ type: 'join_room', name: account, code: (code || '').toUpperCase() });
+    return true;
+  }
 
   // ── Public API ─────────────────────────────────────────────────────────────
   return {
@@ -2162,7 +2172,7 @@ const GS = (() => {
     clearSession,            // descarta a sessão salva (ex.: sair de propósito)
 
     // ── Contas / Jogos Salvos (Fase 3) ──
-    loginConta, criarConta, listSavegames, createSavegame, loadSavegame, deleteSavegame,
+    loginConta, criarConta, listSavegames, createSavegame, loadSavegame, deleteSavegame, joinByCode,
     getAccount: () => account,
     getSavegames: () => savegames,
     getCampaigns: () => campaignsCache,

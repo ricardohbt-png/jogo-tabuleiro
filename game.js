@@ -221,6 +221,17 @@ document.body.innerHTML = `
   <div class="connect-panel">
     <h2>Meus Jogos</h2>
     <div id="savegames-list" style="display:flex;flex-direction:column;gap:8px;max-height:40vh;overflow:auto;"></div>
+    <div class="divider">entrar no jogo de um amigo</div>
+    <div class="field"><label>Código da sala do amigo</label>
+      <div class="join-row">
+        <input id="sg-join-code" type="text" maxlength="4" placeholder="ABCD">
+        <button class="btn-secondary btn-sm" onclick="entrarPorCodigoLogado()">Entrar</button>
+      </div>
+    </div>
+    <div style="font-size:.7rem;color:#8ab88a;margin-top:2px;">
+      Peça o código que aparece no topo do lobby de quem criou o jogo. Você escolhe seu
+      personagem lá e ele fica vinculado à sua conta.
+    </div>
     <div class="divider">criar novo</div>
     <div class="field"><label>Nome do jogo</label>
       <input id="sg-name" type="text" maxlength="40" placeholder="Ex: A Sociedade do Anel"></div>
@@ -603,6 +614,13 @@ function criarJogoSalvo() {
   const has_master = document.getElementById('sg-master').checked;
   if (!name) { alert('Dê um nome ao jogo.'); return; }
   GS.createSavegame({ name, mode: 'campaign', campaign_file, has_master });
+}
+
+// Entrar (já logado) na sala do jogo salvo de um amigo pelo código — Fase 3.
+function entrarPorCodigoLogado() {
+  const code = (document.getElementById('sg-join-code').value || '').trim().toUpperCase();
+  if (code.length !== 4) { alert('O código deve ter 4 letras.'); return; }
+  GS.joinByCode(code);   // usa a conexão já logada (leva a conta junto)
 }
 
 // Reconexão manual a partir da sessão salva (botão da tela inicial).
