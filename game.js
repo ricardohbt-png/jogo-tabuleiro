@@ -351,7 +351,7 @@ document.body.innerHTML = `
         <div class="skills-list" id="skills-list"></div>
       </div>
       <div style="padding:6px 8px;border-top:1px solid var(--border);flex-shrink:0;">
-        <button class="btn-end-turn" id="btn-end-turn" onclick="endTurn()" disabled>
+        <button type="button" class="btn-end-turn" id="btn-end-turn" disabled>
           ⏭ Encerrar Turno
         </button>
       </div>
@@ -360,8 +360,8 @@ document.body.innerHTML = `
   <!-- Celular: fundo escuro + botão flutuante que abre/fecha Ações/Habilidades (gaveta) -->
   <div id="ficha-backdrop" onclick="toggleFichaDrawer(false)"></div>
   <button id="actions-fab" onclick="toggleFichaDrawer(true)" title="Ações e habilidades">⚔️</button>
-  <!-- Ícone de abrir o Inventário — visível somente na cidade e na masmorra -->
-  <button id="ficha-fab" onclick="InventoryModal.toggle(GS.myPid)" title="Inventário (tecla I)"><img src="assets/inventario.png" alt="Inventário"></button>
+  <!-- Atalho exclusivo do mestre para o Mapa de CR; heróis usam o menu de personagem. -->
+  <button id="ficha-fab" title="Mapa de CR (mestre)">🗺️</button>
 </div>
 
 <!-- ══ END SCREEN ══ -->
@@ -524,10 +524,10 @@ function $(id){ return document.getElementById(id); }
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $(id).classList.add('active');
-  // A mochila pertence somente à cidade e à masmorra. Como o botão fica no
-  // <body>, ele não acompanha automaticamente a visibilidade das telas.
+  // O botão flutuante ficou reservado ao Mapa de CR do mestre. O inventário
+  // dos heróis é acessado pelo menu de personagem, sem atalho duplicado.
   const fichaFab = document.getElementById('ficha-fab');
-  if(fichaFab) fichaFab.style.display = (id === 'screen-city' || id === 'screen-game') ? 'flex' : 'none';
+  if(fichaFab) fichaFab.style.display = (id === 'screen-game' && GS.isMaster()) ? 'flex' : 'none';
   if (typeof _menuMusicOnScreen === 'function') _menuMusicOnScreen(id);
   // HUD do Mestre (#hud-mestre) só existe dentro da masmorra (screen-game) —
   // some ao trocar de tela (o elemento persiste no DOM entre telas até o
@@ -1739,15 +1739,19 @@ function _itemDesc(item){
     const SUBTIPO={cortante:'Cortante',perfurante:'Perfurante',contundente:'Contusão'};
     const range=item.reach==='lanca' ? ' • Alcance 2 (reto) / 1 (diag)'
               : item.reach==='cajado' ? ' • Alcance: adjacentes + diagonais'
+              : ['besta','hand_crossbow'].includes(item.id) ? ` • Alcance ${item.range} em linha reta`
+              : ['arco_curto','longbow'].includes(item.id) ? ` • Alcance ${item.range} reto / ${Math.ceil(item.range / 2)} diagonal`
               : item.range ? ` • Alcance ${item.range}` : '';
     const sub=item.categoria?` • ${SUBTIPO[item.categoria]||item.categoria}`:'';
     const duas=item.two_handed?' • ✋✋ 2 mãos':'';
     const arr=item.throw_range?` • 🎯 Arremesso ${item.throw_range}`:'';
+    const municao=['besta','hand_crossbow'].includes(item.id) ? ' • Virotes: bolsa ou mão esquerda'
+      : ['arco_curto','longbow'].includes(item.id) ? ' • Flechas: mão esquerda' : '';
     const ehAdaga=item.id==='dagger'||/adaga/i.test(item.name||'');
     const segMao=ehAdaga?' • 2ª mão: usa DES':'';
     const bonus=item.dmg_bonus?` • +${item.dmg_bonus} dano`:'';
     const resistente=item.corrosao_resistente?' • ⚙️ resiste +1 golpe de corrosão':'';
-    return `${item.die} dano (${item.stat==='dex'?'DES':'FOR'})${sub}${bonus}${range}${duas}${arr}${segMao}${resistente}`;
+    return `${item.die} dano (${item.stat==='dex'?'DES':'FOR'})${sub}${bonus}${range}${municao}${duas}${arr}${segMao}${resistente}`;
   }
   if(item.ac_bonus!=null){
     const kindTxt=item.kind==='shield'?'Escudo — soma com armadura':'Armadura';
@@ -5311,6 +5315,21 @@ function computeVisionSet(state, me){
   return set;
 }
 
+function _alvoNoAlcanceArmaClient(me, tx, ty) {
+  const weapon = me?.weapon || {};
+  const range = weapon.range;
+  const dx = Math.abs(me.pos[0] - tx), dy = Math.abs(me.pos[1] - ty);
+  if(range != null){
+    const distancia = Math.max(dx, dy);
+    if(['besta', 'hand_crossbow'].includes(weapon.id))
+      return (dx === 0 || dy === 0) && distancia <= range;
+    if(['arco_curto', 'longbow'].includes(weapon.id))
+      return distancia <= ((dx === 0 || dy === 0) ? range : Math.ceil(range / 2));
+    return distancia <= range;
+  }
+  return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+}
+
 function _computeWeaponRangeTiles(state, me) {
   const tiles = state.tiles;
   const H = tiles.length, W = tiles[0].length;
@@ -5323,9 +5342,7 @@ function _computeWeaponRangeTiles(state, me) {
     if(!exploredSet.has(`${x},${y}`)) continue;
     const dx = Math.abs(px - x), dy = Math.abs(py - y);
     if(dx === 0 && dy === 0) continue;
-    const inR = wRng != null
-      ? Math.max(dx, dy) <= wRng && GS.hasLineOfSight(state, px, py, x, y)
-      : (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+    const inR = _alvoNoAlcanceArmaClient(me, x, y) && GS.hasLineOfSight(state, px, py, x, y);
     if(inR) result.add(`${x},${y}`);
   }
   return result;
@@ -5389,9 +5406,8 @@ function renderMap(state){
     for(const m of state.monsters){
       if(!m||m.hp<=0) continue;
       const dx=Math.abs(me.pos[0]-m.pos[0]), dy=Math.abs(me.pos[1]-m.pos[1]);
-      const inR=wRng!=null
-        ? Math.max(dx,dy)<=wRng && GS.hasLineOfSight(state, me.pos[0],me.pos[1], m.pos[0],m.pos[1])
-        : (dx===1&&dy===0)||(dx===0&&dy===1);
+      const inR=_alvoNoAlcanceArmaClient(me, m.pos[0], m.pos[1])
+        && GS.hasLineOfSight(state, me.pos[0],me.pos[1], m.pos[0],m.pos[1]);
       if(inR) attackable.add(`${m.pos[0]},${m.pos[1]}`);
     }
   }
@@ -10942,13 +10958,6 @@ function renderMyPanel(state){
 
   // ── Build HTML ──
   const statsHTML = `
-    <div class="combat-row">
-      <div class="combat-chip" style="flex:1;">
-        <span class="cl">XP</span>
-        <b style="color:#e8e0c8;">${me.xp ?? 0}</b>
-      </div>
-    </div>
-
     <div class="save-row" style="margin-top:4px;">
       <div class="save-box" style="border-color:${me.bonus_action_used?'#555':'#c8a951'}; min-width:60px;">
         <span class="sv" style="color:${me.bonus_action_used?'#666':'#c8a951'};">🎯</span>
@@ -11013,13 +11022,13 @@ function renderMyPanel(state){
     <div class="equip-row">
       <div class="equip-item" style="position:relative;">
         <div class="gear-slot-label" style="align-self:flex-start;margin-bottom:2px;">⚔ ARMA</div>
-        <canvas id="weapon-canvas" width="60" height="92" style="background:#0e0c1a;border-radius:3px;width:60px;height:92px;"></canvas>
+        <div id="weapon-canvas" class="equip-item-image" title="Passe o mouse para ver o alcance da arma">${itemIconHTML(weapon, '⚔️')}</div>
         <div class="equip-name" style="color:#e8e0c8;font-weight:bold;">${weapon ? weapon.name : 'Desarmado'}</div>
         <div class="equip-stat" style="color:#f8c840;font-size:.72rem;">${dmgFmt}${_cancaoTag('bonus_dano')}${_richardTag('dano')}${_golpeSagradoTag()}</div>
       </div>
       <div class="equip-item" style="position:relative;">
         <div class="gear-slot-label" style="align-self:flex-start;margin-bottom:2px;">🛡 ARMADURA</div>
-        <canvas id="armor-canvas" width="60" height="92" style="background:#0e0c1a;border-radius:3px;width:60px;height:92px;"></canvas>
+        <div id="armor-canvas" class="equip-item-image">${itemIconHTML(equippedArmor || {id:armorId, emoji:'🛡️'}, '🛡️')}</div>
         <div class="equip-name" style="color:#e8e0c8;font-weight:bold;">${armorName}</div>
       </div>
     </div>
@@ -11063,43 +11072,24 @@ function renderMyPanel(state){
     $('my-stats').innerHTML = statsHTML;
   }
 
-  // ── Draw weapon & armor icons (hi-DPI + scaled to fill larger canvas) ──
-  const _capWId = weapon ? weapon.id : 'unarmed';
-  const _capAId = armorId;
+  // Hover no retrato da arma revela o alcance real no tabuleiro. Só é uma
+  // prévia visual: não inicia ataque nem altera a seleção atual.
   requestAnimationFrame(() => {
-    function drawEquipCanvas(id, drawFn){
-      const c = document.getElementById(id);
-      if(!c) return;
-      try{
-        const dpr = window.devicePixelRatio || 1;
-        const cssW = 60, cssH = 92;
-        const sc = (cssH / 68) * dpr; // scale to fill + DPR sharpness
-        c.width  = Math.round(cssW * dpr);
-        c.height = Math.round(cssH * dpr);
-        c.style.width  = cssW + 'px';
-        c.style.height = cssH + 'px';
-        const cx2 = c.getContext('2d');
-        cx2.clearRect(0, 0, c.width, c.height);
-        // Origin at canvas centre, scaled for sharpness
-        cx2.setTransform(sc, 0, 0, sc,
-          Math.round(cssW / 2 * dpr),
-          Math.round(cssH / 2 * dpr));
-        drawFn(cx2);
-      }catch(e){}
+    const weaponSlot = document.getElementById('weapon-canvas');
+    const atualizarPreview = ativo => {
+      window._weaponRangePreview = ativo;
+      if(GS.gameState) renderMap(GS.gameState);
+    };
+    if(weaponSlot){
+      weaponSlot.onmouseenter = () => atualizarPreview(true);
+      weaponSlot.onmouseleave = () => atualizarPreview(false);
     }
-    drawEquipCanvas('weapon-canvas', cx2 => drawWeapon(cx2, _capWId, 0, 0));
-    drawEquipCanvas('armor-canvas',  cx2 => drawArmor(cx2,  _capAId, 0, 0));
   });
 
-  // ── Check for attackable monsters (ranged: Chebyshev≤range; melee: cardinal adjacent) ──
-  const _pp = me.pos || [0,0];
-  const _wRange = weapon ? weapon.range : null;  // undefined for melee
+  // ── Check for attackable monsters using the same range rules as the board ──
   const _adjMonsters = (GS.gameState ? GS.gameState.monsters : []).filter(m=>{
     if(!m || m.hp <= 0) return false;
-    const dx = Math.abs(_pp[0] - m.pos[0]);
-    const dy = Math.abs(_pp[1] - m.pos[1]);
-    if(_wRange != null) return Math.max(dx, dy) <= _wRange;   // ranged
-    return (dx===1 && dy===0) || (dx===0 && dy===1);           // melee: cardinal only
+    return _alvoNoAlcanceArmaClient(me, m.pos[0], m.pos[1]);
   });
   const canAttack = canAct && _adjMonsters.length > 0;
 
@@ -11879,7 +11869,18 @@ function appendGM(text){
 
 function move(dx,dy){ GS.move(dx,dy); }
 
-function endTurn(){ getAudioContext(); GS.endTurn(); }
+function endTurn(){
+  const btn = $('btn-end-turn');
+  // A validação visual continua sendo feita em renderMyPanel; esta guarda evita
+  // que um clique atrasado envie um turno fora da vez do jogador.
+  if(!btn || btn.disabled) return;
+  getAudioContext();
+  if(!GS.endTurn()) toast('Sem conexão com o servidor.', 'var(--red)');
+}
+
+// Mantém o comando de encerrar turno ligado mesmo se o código for carregado em
+// um contexto que não expõe funções globais para atributos onclick.
+$('btn-end-turn')?.addEventListener('click', endTurn);
 
 // ── Ação Bônus — efeitos de item que consomem ação bônus (máx. 1/turno) ──────
 // Espelha BONUS_ACTION_EFFECTS em server.py — manter sincronizados.
@@ -11961,6 +11962,11 @@ function renderFichaCidadeBody(panel, player, editable){
       <div class="fc-head-lvl">NÍVEL ${player.level || 1}</div>
     </div>`;
   panel.appendChild(head);
+
+  const xp = document.createElement('div');
+  xp.className = 'fc-xp-display';
+  xp.innerHTML = `<span>EXPERIÊNCIA</span><b>${player.xp ?? 0} XP</b>`;
+  panel.appendChild(xp);
 
   const body = document.createElement('div');
   body.className = 'fc-body';
@@ -12103,12 +12109,21 @@ function abrirMenuStatus(pid){
   const dadoDano = weapon?.die || '1';
   const danoBase = _modAtributo(p[statKey]);
   const baseAtk = Number(p.atk_bonus) || 0;
+  // `atk_bonus` já guarda BAB + atributo e os efeitos permanentes do equipamento.
+  // Separamos esses componentes aqui para que a ficha mostre exatamente como o
+  // acerto da arma está sendo formado.
+  const bonusArma = Number(weapon?.attack_bonus ?? weapon?.atk_bonus ?? weapon?.bonus_atk
+    ?? weapon?.bonus_ataque ?? ((weapon?.effect === 'atk' || weapon?.effect === 'atk_bonus') ? weapon?.value : 0)) || 0;
+  const bonusBaseAtaque = baseAtk - danoBase - bonusArma;
+  const nomeAtributoAtaque = {str_: 'FOR', dex: 'DES', con_: 'CON', int_: 'INT'}[statKey] || 'FOR';
   const cancao = p.buffs_cancao || {};
   const gl = p.guerreiro_luz_ativo ? (p.guerreiro_luz_bonus || {}) : {};
   const sobrevivencia = (Number(p.fome ?? p.hunger ?? 100) > 80 && Number(p.sede ?? p.thirst ?? 100) > 80) ? 1
     : -((Number(p.fome ?? p.hunger ?? 100) < 20 ? 1 : 0) + (Number(p.sede ?? p.thirst ?? 100) < 20 ? 1 : 0));
   const armadas = GS.getWarriorSelected?.() || [];
   const bonusAtaque = sobrevivencia + (cancao.bonus_acerto || 0) + (gl.ataque || 0) + (p.skill_bonus_acerto || 0) + (armadas.includes('mira_certeira') ? 2 : 0);
+  const acertoTotal = bonusBaseAtaque + danoBase + bonusArma + bonusAtaque;
+  const detalheAcerto = `BBA ${_fmtBonus(bonusBaseAtaque)} · ${nomeAtributoAtaque} ${_fmtBonus(danoBase)} · arma ${_fmtBonus(bonusArma)} · temporários ${_fmtBonus(bonusAtaque)}`;
   const bonusDano = sobrevivencia + (cancao.bonus_dano || 0) + (gl.dano || 0) + (p.tecnica_buff_dano_arma || 0);
   const bonusCa = (cancao.bonus_ca || 0) + (gl.ca || 0);
   const bonusRes = sobrevivencia + (cancao.bonus_res || 0);
@@ -12117,7 +12132,7 @@ function abrirMenuStatus(pid){
   const linha = (rotulo, valor, detalhe='') => `<div class="st-row"><span>${rotulo}</span><b>${valor}</b>${detalhe ? `<small>${detalhe}</small>` : ''}</div>`;
   overlay.innerHTML = `<section class="menu-status" role="dialog" aria-modal="true" aria-label="Status do personagem">
     <header class="st-header"><div><b>📊 STATUS</b><small>${p.name || 'Herói'} · tecla S</small></div><button onclick="fecharMenuStatus()" aria-label="Fechar">✕</button></header>
-    <div class="st-body"><section><h3>COMBATE</h3>${linha('Bônus de ataque', `${_fmtBonus(baseAtk)} → ${_fmtBonus(baseAtk + bonusAtaque)}`, 'base → atual')}${linha('Classe de Armadura', `${p.ac ?? 10} → ${Number(p.ac ?? 10) + bonusCa}`, 'base → atual')}${linha('Arma equipada', weapon?.name || 'Desarmado')}${linha('Dano', dano, `${weapon?.stat === 'dex' ? 'Destreza' : 'Força'} · base → atual`)}</section>
+    <div class="st-body"><section><h3>COMBATE</h3>${linha('Arma equipada', weapon?.name || 'Desarmado')}${linha('Acerto total', _fmtBonus(acertoTotal), detalheAcerto)}${linha('Classe de Armadura', `${p.ac ?? 10} → ${Number(p.ac ?? 10) + bonusCa}`, 'base → atual')}${linha('Dano', dano, `${weapon?.stat === 'dex' ? 'Destreza' : 'Força'} · base → atual`)}</section>
     <section><h3>TESTES DE RESISTÊNCIA</h3>${linha('Fortitude', `${_fmtBonus(p.fort)} → ${_fmtBonus(Number(p.fort || 0) + bonusRes)}`, 'base → atual')}${linha('Reflexos', `${_fmtBonus(p.ref_)} → ${_fmtBonus(Number(p.ref_ || 0) + bonusRes)}`, 'base → atual')}${linha('Vontade', `${_fmtBonus(p.will)} → ${_fmtBonus(Number(p.will || 0) + bonusRes)}`, 'base → atual')}</section>
     <section><h3>MODIFICADORES TEMPORÁRIOS</h3>${temporarios.length ? temporarios.map(m => `<div class="st-effect"><b>${m.nome}</b><span>${m.efeito}</span>${m.ate && GS.gameState?.round ? `<em>${Math.max(0,m.ate-GS.gameState.round)} rodada(s)</em>` : ''}</div>`).join('') : '<p class="st-empty">Nenhum bônus ou penalidade temporária.</p>'}</section></div></section>`;
   requestAnimationFrame(() => overlay.classList.add('open'));
@@ -12883,7 +12898,7 @@ $('dungeon-canvas').addEventListener('mousemove', e=>{
   if(monster){
     const _ddx=myP?Math.abs(myP.pos[0]-tx):99, _ddy=myP?Math.abs(myP.pos[1]-ty):99;
     const _wRng=myP&&myP.weapon&&myP.weapon.range!=null?myP.weapon.range:null;
-    const inRange=_wRng!=null ? Math.max(_ddx,_ddy)<=_wRng : (_ddx===1&&_ddy===0)||(_ddx===0&&_ddy===1);
+    const inRange=myP ? _alvoNoAlcanceArmaClient(myP, tx, ty) : false;
     const canAtk=GS.isMyTurn&&myP&&!myP.action_done&&inRange&&GS.gameState.phase==='playing';
     const atkLabel=canAtk?`<br><span style="color:#f55">${_wRng!=null?'🏹':'⚔'} Clique para atacar</span>`:'';
     // Conhecimento das Lendas (passiva do Henrique): ficha completa se há bardo vivo.
@@ -15591,9 +15606,8 @@ function renderMap3D(state){
     for(const m of state.monsters){
       if(!m || m.hp <= 0) continue;
       const dx = Math.abs(me.pos[0] - m.pos[0]), dy = Math.abs(me.pos[1] - m.pos[1]);
-      const inR = wRng != null
-        ? Math.max(dx,dy) <= wRng && GS.hasLineOfSight(state, me.pos[0],me.pos[1], m.pos[0],m.pos[1])
-        : (dx===1&&dy===0)||(dx===0&&dy===1);
+      const inR = _alvoNoAlcanceArmaClient(me, m.pos[0], m.pos[1])
+        && GS.hasLineOfSight(state, me.pos[0],me.pos[1], m.pos[0],m.pos[1]);
       if(inR) attackable3d.add(`${m.pos[0]},${m.pos[1]}`);
     }
   }
@@ -22117,7 +22131,7 @@ function on3DMouseMove(e){
   if(monster){
     const dx=myP?Math.abs(myP.pos[0]-tx):99, dy=myP?Math.abs(myP.pos[1]-ty):99;
     const wRng = myP?.weapon?.range ?? null;
-    const inR  = wRng!=null ? Math.max(dx,dy)<=wRng : (dx===1&&dy===0)||(dx===0&&dy===1);
+    const inR  = myP ? _alvoNoAlcanceArmaClient(myP, tx, ty) : false;
     const canA = GS.isMyTurn && myP && !myP.action_done && inR && GS.gameState.phase==='playing';
     tip.innerHTML=fichaInimigoTooltipHTML(monster, _partyTemBardoVivo()) +
                   (canA ? `<br><span style="color:#f88">⚔ Clique → atacar</span>` : '');
@@ -22530,36 +22544,32 @@ document.addEventListener('keydown', (e) => {
   e.stopImmediatePropagation();
 }, true);
 
-// #ficha-fab nasce dentro do markup de #screen-game (masmorra) — sem isso ele
-// fica com display:none sempre que a tela ativa é a cidade (showScreen só
-// exibe UM .screen por vez), tornando o ícone de abrir o inventário invisível
-// e inclicável na cidade. Move o botão pra fora de qualquer .screen, direto
-// pro <body>, mesmo truque já usado pelo ⚙️ de áudio (_audioPanelEnsure) pra
-// ficar "visível em qualquer tela".
+// #ficha-fab nasce dentro do markup de #screen-game, mas o Mapa de CR do mestre
+// precisa permanecer acima da interface da masmorra. Por isso ele é movido para
+// o <body>; para heróis, fica oculto (o inventário está no menu de personagem).
 (function _fichaFabSempreVisivel(){
   const fab = document.getElementById('ficha-fab');
   if(fab) document.body.appendChild(fab);
 })();
 
-// Camada C: o mestre não equipa itens — o 🎒 vira 🗺️ "Mapa de CR" (minimapa).
+// Camada C: o botão flutuante é exclusivo do mestre e abre o Mapa de CR.
 function _atualizarFichaFab(){
   const fab = document.getElementById('ficha-fab');
   if(!fab) return;
   if(GS.isMaster()){
+    fab.style.display = document.getElementById('screen-game')?.classList.contains('active') ? 'flex' : 'none';
     fab.textContent = '🗺️';
     fab.title = 'Mapa de CR (mestre)';
     fab.onclick = () => abrirMinimapaCR();
   } else {
-    fab.innerHTML = '<img src="assets/inventario.png" alt="Inventário">';
-    fab.title = 'Inventário (tecla I)';
-    fab.onclick = () => InventoryModal.toggle(GS.myPid);
+    fab.style.display = 'none';
   }
 }
 
 GS.on('gameState', msg => {
   _detectHpChanges(msg);   // som de dano/cura por variação de HP entre estados
   handleGameState(msg);
-  _atualizarFichaFab();    // Camada C: 🎒↔🗺️ conforme o papel (mestre)
+  _atualizarFichaFab();    // mantém o Mapa de CR disponível apenas ao mestre
   // Sincroniza os animados autoritativos do servidor no registro do Pedro,
   // para a ficha refletir HP/pó durante o combate.
   const meNow = (msg.players||[]).find(p => p.id === GS.myPid);

@@ -454,10 +454,10 @@ WEAPONS = {
     "alabarda":      {"id": "alabarda",      "name": "Alabarda",             "die": "1d10", "stat": "str_", "range": 2, "categoria": "perfurante", "two_handed": True},
     "espada2m":      {"id": "espada2m",      "name": "Espada de 2 Mãos",    "die": "2d6",  "stat": "str_", "categoria": "cortante", "two_handed": True},
     # â”€â”€ Ã€ DistÃ¢ncia â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    "arco_curto":    {"id": "arco_curto",    "name": "Arco Curto",           "die": "1d6",  "stat": "dex",  "range": 8,  "categoria": "perfurante"},
+    "arco_curto":    {"id": "arco_curto",    "name": "Arco Curto",           "die": "1d6",  "stat": "dex",  "range": 6,  "categoria": "perfurante"},
     "hand_crossbow": {"id": "hand_crossbow", "name": "Besta de Mão",         "die": "1d4",  "stat": "dex",  "range": 4,  "categoria": "perfurante"},
-    "longbow":       {"id": "longbow",       "name": "Arco Longo",           "die": "1d8",  "stat": "dex",  "range": 12, "categoria": "perfurante"},
-    "besta":         {"id": "besta",         "name": "Besta",                "die": "1d8",  "stat": "dex",  "range": 10, "categoria": "perfurante"},
+    "longbow":       {"id": "longbow",       "name": "Arco Longo",           "die": "1d8",  "stat": "dex",  "range": 10, "categoria": "perfurante"},
+    "besta":         {"id": "besta",         "name": "Besta",                "die": "1d8",  "stat": "dex",  "range": 8,  "categoria": "perfurante"},
 }
 
 # Armas de projÃ©til â†’ tipos de muniÃ§Ã£o aceitos (bÃ¡sica e especial)
@@ -2913,18 +2913,18 @@ SHOP_WEAPONS = [
     {"id": "shortsword",    "name": "Espada Curta",       "emoji": "⚔️",  "die": "1d6",  "stat": "str_", "price": 12, "categoria": "cortante",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     {"id": "machado_basico","name": "Machado de Ferro",   "emoji": "🪓",  "die": "1d6",  "stat": "str_", "price": 12, "categoria": "cortante"},
-    {"id": "arco_curto",    "name": "Arco Curto",         "emoji": "🏹",  "die": "1d6",  "stat": "dex",  "price": 12, "range": 8, "categoria": "perfurante",
+    {"id": "arco_curto",    "name": "Arco Curto",         "emoji": "🏹",  "die": "1d6",  "stat": "dex",  "price": 12, "range": 6, "categoria": "perfurante",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     # â”€â”€â”€ Pesadas (1d8) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     {"id": "lanca",         "name": "Lança",              "emoji": "🔱",  "die": "1d8",  "stat": "str_", "price": 14, "reach": "lanca", "categoria": "perfurante",
      "allowed_classes": ["paladin", "warrior"]},
     {"id": "longsword",     "name": "Espada Longa",       "emoji": "⚔️",  "die": "1d8",  "stat": "str_", "price": 16, "categoria": "cortante",
      "allowed_classes": ["paladin", "warrior"]},
-    {"id": "longbow",       "name": "Arco Longo",         "emoji": "🏹",  "die": "1d8",  "stat": "dex",  "price": 16, "range": 12, "categoria": "perfurante",
+    {"id": "longbow",       "name": "Arco Longo",         "emoji": "🏹",  "die": "1d8",  "stat": "dex",  "price": 16, "range": 10, "categoria": "perfurante",
      "allowed_classes": ["paladin", "warrior"]},
     {"id": "warhammer",     "name": "Martelo de Guerra",  "emoji": "🔨",  "die": "1d8",  "stat": "str_", "price": 18, "categoria": "contundente",
      "allowed_classes": ["paladin", "warrior"]},
-    {"id": "besta",         "name": "Besta",              "emoji": "🏹",  "die": "1d8",  "stat": "dex",  "price": 18, "range": 10, "categoria": "perfurante",
+    {"id": "besta",         "name": "Besta",              "emoji": "🏹",  "die": "1d8",  "stat": "dex",  "price": 18, "range": 8, "categoria": "perfurante",
      "allowed_classes": ["cleric", "rogue", "paladin", "warrior"]},
     {"id": "mangual",       "name": "Mangual",            "emoji": "⚔️",  "die": "1d8",  "stat": "str_", "price": 20, "categoria": "contundente",
      "allowed_classes": ["cleric", "paladin", "warrior"]},
@@ -6903,7 +6903,7 @@ class GameRoom:
                         return
                     else:
                         p["bag"].append({**item, "buy_price": price})
-                        log = f"{loja_emoji} **{p['name']}** guardou **{item['name']}** na bolsa (equipe na mão esquerda para usar)."
+                        log = f"{loja_emoji} **{p['name']}** guardou **{item['name']}** na bolsa (bestas usam virotes diretamente; arcos exigem flechas na mão esquerda)."
             elif slot == "bag":
                 # ConsumÃ­vel â€” sÃ³ a bolsa (categoria 'bag' nÃ£o tem slot de resgate).
                 if self._route_acquired_item(p, {**item, "buy_price": price}) == "full":
@@ -8386,12 +8386,26 @@ class GameRoom:
         wr = w.get("range")
         if wr is not None:
             body = self._monster_tiles(target)
-            return any(max(abs(p["pos"][0]-t[0]), abs(p["pos"][1]-t[1])) <= wr for t in body)
+            return any(self._tile_no_alcance_arma_distancia(p, t, wr) for t in body)
         if w.get("reach") == "lanca":
             return self._lanca_no_alcance_jogador(p["pos"], target)
         if w.get("reach") == "cajado":
             return self._cajado_no_alcance_jogador(p["pos"], target)
         return self._is_adjacent_to_monster(p["pos"], target)
+
+    def _tile_no_alcance_arma_distancia(self, p, tile, alcance):
+        """Bestas só disparam em linha ortogonal; arcos têm metade do alcance
+        nas diagonais. Os demais ataques à distância preservam a regra legado."""
+        dx = abs(p["pos"][0] - tile[0])
+        dy = abs(p["pos"][1] - tile[1])
+        weapon_id = (p.get("weapon") or {}).get("id")
+        distancia = max(dx, dy)
+        if weapon_id in ("besta", "hand_crossbow"):
+            return (dx == 0 or dy == 0) and distancia <= alcance
+        if weapon_id in ("arco_curto", "longbow"):
+            limite = alcance if (dx == 0 or dy == 0) else (alcance + 1) // 2
+            return distancia <= limite
+        return distancia <= alcance
 
     async def _reacao_ataque_coordenado(self, atacante, alvo_monstro):
         """Ataque Coordenado: o aliado par faz um ataque básico reativo no mesmo
@@ -8448,13 +8462,29 @@ class GameRoom:
 
             # â”€â”€ Checagem de muniÃ§Ã£o para arcos e bestas â”€â”€
             _valid_ammo = RANGED_AMMO.get((weapon_here or {}).get("id")) if w_range is not None else None
+            _ammo_source = None
             if _valid_ammo:
                 _off = p.get("gear", {}).get("off_hand")
                 _off_type = (_off or {}).get("ammo_type")
-                if not _off or _off_type not in _valid_ammo or _off.get("ammo_count", 0) <= 0:
+                _is_crossbow = (weapon_here or {}).get("id") in ("besta", "hand_crossbow")
+                if _is_crossbow:
+                    # Bestas recarregam diretamente dos virotes da bolsa e deixam
+                    # a mão esquerda livre para escudo. Munição equipada também vale.
+                    _bag_ammo = next((item for item in p.get("bag", [])
+                                      if item.get("effect") == "ammo"
+                                      and item.get("ammo_type") in _valid_ammo
+                                      and item.get("ammo_count", 0) > 0), None)
+                    if _bag_ammo:
+                        _ammo_source = ("bag", _bag_ammo)
+                    elif _off and _off_type in _valid_ammo and _off.get("ammo_count", 0) > 0:
+                        _ammo_source = ("off_hand", _off)
+                elif _off and _off_type in _valid_ammo and _off.get("ammo_count", 0) > 0:
+                    _ammo_source = ("off_hand", _off)
+                if not _ammo_source:
                     nome_proj = "flechas" if _valid_ammo[0] == "flechas" else "virotes"
+                    onde = "na bolsa ou na mão esquerda" if _is_crossbow else "na mão esquerda"
                     await self.send_to(pid, {"type": "error",
-                        "msg": f"🏹 Sem {nome_proj} (básicos ou incendiários)! Equipe na mão esquerda."})
+                        "msg": f"🏹 Sem {nome_proj} (básicos ou incendiários) {onde}!"})
                     return
 
             if w_range is not None:
@@ -8467,12 +8497,16 @@ class GameRoom:
                 # Multi-tile: vale a casa do corpo mais prÃ³xima com linha de visÃ£o.
                 body = self._monster_tiles(target)
                 in_range = [t for t in body
-                            if max(abs(p["pos"][0] - t[0]), abs(p["pos"][1] - t[1])) <= eff_range]
+                            if self._tile_no_alcance_arma_distancia(p, t, eff_range)]
                 if not in_range:
                     extra = " (escuridão limita o alcance a 2q — use Visão no Escuro)" if eff_range < w_range else ""
+                    weapon_id = (weapon_here or {}).get("id")
+                    regra = (" em linha reta" if weapon_id in ("besta", "hand_crossbow")
+                              else f"; diagonal até {(eff_range + 1) // 2}" if weapon_id in ("arco_curto", "longbow")
+                              else "")
                     await self.send_to(pid, {
                         "type": "error",
-                        "msg": f"⚠ {target['name']} está fora de alcance! (máximo {eff_range} quadrados){extra}"
+                        "msg": f"⚠ {target['name']} está fora de alcance! (máximo {eff_range} quadrados{regra}){extra}"
                     })
                     return
                 if not any(self._tem_linha_de_visao(p["pos"], t) for t in in_range):
@@ -8647,15 +8681,17 @@ class GameRoom:
             # â”€â”€ Consumo de muniÃ§Ã£o (projÃ©til gasto ao atirar, hit ou miss) â”€â”€
             _ammo_extra_dmg   = None   # dano extra do projÃ©til especial (incendiÃ¡rio)
             _ammo_extra_types = []
-            if _valid_ammo:
-                _off = p["gear"].get("off_hand")
-                if _off and _off.get("ammo_type") in _valid_ammo:
-                    _ammo_extra_dmg   = _off.get("extra_damage")
-                    _ammo_extra_types = _off.get("extra_damage_types", [])
-                    _off["ammo_count"] = _off.get("ammo_count", 1) - 1
-                    if _off["ammo_count"] <= 0:
+            if _valid_ammo and _ammo_source:
+                _ammo_slot, _ammo_item = _ammo_source
+                _ammo_extra_dmg   = _ammo_item.get("extra_damage")
+                _ammo_extra_types = _ammo_item.get("extra_damage_types", [])
+                _ammo_item["ammo_count"] = _ammo_item.get("ammo_count", 1) - 1
+                if _ammo_item["ammo_count"] <= 0:
+                    if _ammo_slot == "off_hand":
                         p["gear"]["off_hand"] = None
-                        await self.gm_say(f"🏹 **{p['name']}** usou o último projétil!")
+                    else:
+                        p["bag"].remove(_ammo_item)
+                    await self.gm_say(f"🏹 **{p['name']}** usou o último projétil!")
 
             # â”€â”€ Consumo de veneno (ranged: por disparo; melee: sÃ³ no acerto) â”€â”€
             # A carga Ã© da arma equipada. Assim, trocar de arma nÃ£o transfere o

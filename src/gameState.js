@@ -523,11 +523,11 @@ const GS = (() => {
     lanca_curta:     { id:'lanca_curta',     nome:'Lança Curta',          tipo:'arma', loja:'ferreiro', preco:20, dano:'1d6', atributo:'forca', escudo:true,  arremesso:true,  alcanceArremesso:3, duasMaos:false, alcanceEspecial:{ descricao:'Adjacente + casas laterais' }, permitidoPara:['victorCoiceBravo','richardCavaleiro','lewis','luccas','henrique'] },
     besta_mao:       { id:'besta_mao',       nome:'Besta de Mão',         tipo:'armaDistancia', loja:'ferreiro', preco:20, dano:'1d4', atributo:'destreza', bonusDano:'destreza', alcance:4, linhaVisao:true, slotSecundario:'livre',   duasMaos:false, permitidoPara:['todos'] },
     espada_longa:    { id:'espada_longa',    nome:'Espada Longa',         tipo:'arma', loja:'ferreiro', preco:25, dano:'1d8', atributo:'forca', escudo:true,  arremesso:false, duasMaos:false, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
-    arco_curto:      { id:'arco_curto',      nome:'Arco Curto',           tipo:'armaDistancia', loja:'ferreiro', preco:30, dano:'1d6', atributo:'destreza', bonusDano:'destreza', alcance:5, linhaVisao:true, slotSecundario:'flechas', duasMaos:true,  permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    arco_curto:      { id:'arco_curto',      nome:'Arco Curto',           tipo:'armaDistancia', loja:'ferreiro', preco:30, dano:'1d6', atributo:'destreza', bonusDano:'destreza', alcance:6, linhaVisao:true, slotSecundario:'flechas', duasMaos:true,  permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
     machado:         { id:'machado',         nome:'Machado',              tipo:'arma', loja:'ferreiro', preco:35, dano:'1d10', atributo:'forca', escudo:true,  arremesso:false, duasMaos:false, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
-    besta_leve:      { id:'besta_leve',      nome:'Besta Leve',           tipo:'armaDistancia', loja:'ferreiro', preco:40, dano:'1d8', atributo:'destreza', bonusDano:'destreza', alcance:6, linhaVisao:true, slotSecundario:'livre',   duasMaos:true,  permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas','henrique'] },
+    besta_leve:      { id:'besta_leve',      nome:'Besta Leve',           tipo:'armaDistancia', loja:'ferreiro', preco:40, dano:'1d8', atributo:'destreza', bonusDano:'destreza', alcance:8, linhaVisao:true, slotSecundario:'livre',   duasMaos:true,  permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas','henrique'] },
     lanca_longa:     { id:'lanca_longa',     nome:'Lança Longa',          tipo:'arma', loja:'ferreiro', preco:40, dano:'1d8', atributo:'forca', escudo:false, arremesso:false, duasMaos:true,  alcanceEspecial:{ descricao:'2 casas adjacentes + 1 diagonal adjacente' }, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
-    arco_longo:      { id:'arco_longo',      nome:'Arco Longo',           tipo:'armaDistancia', loja:'ferreiro', preco:50, dano:'1d8', atributo:'destreza', bonusDano:'destreza', alcance:8, linhaVisao:true, slotSecundario:'flechas', duasMaos:true,  permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    arco_longo:      { id:'arco_longo',      nome:'Arco Longo',           tipo:'armaDistancia', loja:'ferreiro', preco:50, dano:'1d8', atributo:'destreza', bonusDano:'destreza', alcance:10, linhaVisao:true, slotSecundario:'flechas', duasMaos:true,  permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
     espada_bastarda: { id:'espada_bastarda', nome:'Espada Bastarda',      tipo:'arma', loja:'ferreiro', preco:50, danoUmaMao:'1d10', danoDuasMaos:'3d4', atributo:'forca', escudo:true, arremesso:false, duasMaos:false, modosDuasMaos:true, permitidoPara:['richardCavaleiro'] },
     instrumento:     { id:'instrumento',     nome:'Instrumento Musical',  tipo:'arma', loja:'ferreiro', preco:60, dano:'—', atributo:'carisma', escudo:false, arremesso:false, duasMaos:false, permitidoPara:['henrique'] },
     alabarda:        { id:'alabarda',        nome:'Alabarda',             tipo:'arma', loja:'ferreiro', preco:80, dano:'1d10', atributo:'forca', escudo:false, arremesso:false, duasMaos:true,  alcanceEspecial:{ descricao:'2 casas adjacentes + 1 diagonal adjacente' }, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
@@ -979,7 +979,9 @@ const GS = (() => {
 
   // ── WebSocket helpers ──────────────────────────────────────────────────────
   function send(obj) {
-    if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj));
+    if (!ws || ws.readyState !== 1) return false;
+    ws.send(JSON.stringify(obj));
+    return true;
   }
 
   // ── Sessão para reconexão ────────────────────────────────────────────────
@@ -1258,7 +1260,7 @@ const GS = (() => {
     // turno sem atacar as descarta localmente, sem custo e sem gastar a
     // especialização de combinação da Guilda.
     clearWarriorSelected();
-    send({ type: 'end_turn' });
+    return send({ type: 'end_turn' });
   }
   function useItem(id)     { send({ type: 'use_item',       item_id: id }); }
   function throwItem(id, targetId, targetPos) { send({ type: 'throw_item', item_id: id, target_id: targetId, target_pos: targetPos }); }
@@ -1659,6 +1661,23 @@ const GS = (() => {
   //   {type:'none',   reason}          — no valid targets (show toast)
   //   {type:'direct', targetId}        — single target (send attack immediately)
   //   {type:'modal',  title, targets}  — multiple targets (open target modal)
+  function _alvoNoAlcanceArma(myP, tx, ty) {
+    const weapon = myP?.weapon || {};
+    const range = weapon.range;
+    const dx = Math.abs(myP.pos[0] - tx), dy = Math.abs(myP.pos[1] - ty);
+    if (range != null) {
+      const distancia = Math.max(dx, dy);
+      if (weapon.id === 'besta' || weapon.id === 'hand_crossbow')
+        return (dx === 0 || dy === 0) && distancia <= range;
+      if (weapon.id === 'arco_curto' || weapon.id === 'longbow') {
+        const limite = (dx === 0 || dy === 0) ? range : Math.ceil(range / 2);
+        return distancia <= limite;
+      }
+      return distancia <= range;
+    }
+    return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+  }
+
   function resolveAttack() {
     if (!gameState) return null;
     const myP = gameState.players.find(p => p.id === myPid && p.alive);
@@ -1669,8 +1688,7 @@ const GS = (() => {
       const tiles = monsterTiles(m);   // atacável em qualquer casa do corpo
       if (wRange != null) {
         // À distância: alguma casa do corpo no alcance E com linha de visão.
-        return tiles.some(([tx, ty]) =>
-          Math.max(Math.abs(myP.pos[0] - tx), Math.abs(myP.pos[1] - ty)) <= wRange
+        return tiles.some(([tx, ty]) => _alvoNoAlcanceArma(myP, tx, ty)
           && hasLineOfSight(gameState, myP.pos[0], myP.pos[1], tx, ty));
       }
       // Corpo a corpo: adjacente (ortogonal) a alguma casa do corpo.
@@ -1984,7 +2002,7 @@ const GS = (() => {
       const ddy  = Math.abs(myP.pos[1] - ty);
       const wRng = myP.weapon?.range ?? null;
       if (wRng != null) {
-        if (Math.max(ddx, ddy) <= wRng) {
+        if (_alvoNoAlcanceArma(myP, tx, ty)) {
           // Paredes/portas fechadas barram a linha de tiro.
           if (hasLineOfSight(gameState, myP.pos[0], myP.pos[1], tx, ty))
             return { type: 'attack', targetId: monster.id, targetPos: [tx, ty] };

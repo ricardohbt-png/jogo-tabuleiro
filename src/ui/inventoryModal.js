@@ -92,6 +92,9 @@ const InventoryModal = (() => {
 .inv-slot-empty-icon{opacity:.35;}
 .inv-slot-emoji,.inv-bagslot-emoji{display:flex;align-items:center;justify-content:center;width:100%;height:100%;}
 .inv-slot-emoji img,.inv-bagslot-emoji img{width:90%;height:90%;object-fit:contain;display:block;}
+.inv-ammo-count{position:absolute;right:-5px;bottom:-5px;z-index:5;min-width:19px;height:19px;padding:0 4px;
+  display:flex;align-items:center;justify-content:center;box-sizing:border-box;border:1px solid #ffe29a;border-radius:10px;
+  background:#3b2410;color:#fff0bd;font:700 11px/1 Georgia,serif;box-shadow:0 1px 4px rgba(0,0,0,.9);pointer-events:none;}
 .inv-gold{display:flex;align-items:center;justify-content:center;gap:6px;color:#ffcf7a;font-weight:bold;
   text-shadow:0 0 8px rgba(255,180,60,.6);font-family:Georgia,serif;margin-bottom:14px;}
 .inv-bagbar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;
@@ -113,6 +116,12 @@ const InventoryModal = (() => {
   function _itemIconHTML(item, fallbackEmoji){
     return (typeof itemIconHTML === 'function') ? itemIconHTML(item, fallbackEmoji)
          : (item && item.emoji) || fallbackEmoji || '';
+  }
+
+  function _ammoCountBadgeHTML(item){
+    if(!item || item.effect !== 'ammo') return '';
+    const count = Math.max(0, Number(item.ammo_count) || 0);
+    return `<span class="inv-ammo-count" aria-label="${count} projéteis restantes">${count}</span>`;
   }
 
   function _injectStyles(){
@@ -207,7 +216,7 @@ const InventoryModal = (() => {
                  : item ? item.name : cfg.label;
       slot.innerHTML = blocked
         ? `<span class="inv-slot-blocked-x">✕</span>`
-        : item ? `<span class="inv-slot-emoji">${_itemIconHTML(item, cfg.empty)}</span>`
+        : item ? `<span class="inv-slot-emoji">${_itemIconHTML(item, cfg.empty)}</span>${_ammoCountBadgeHTML(item)}`
                : `<span class="inv-slot-emoji inv-slot-empty-icon">${cfg.empty}</span>`;
       if(item && cfg.key === 'weapon' && typeof _poisonChargeDropsHTML === 'function')
         slot.insertAdjacentHTML('beforeend', _poisonChargeDropsHTML(player));
@@ -256,7 +265,7 @@ const InventoryModal = (() => {
       slot.className = 'inv-bagslot' + (item ? ' filled' : ' empty');
       slot.dataset.bagIndex = String(i);
       slot.title = item ? item.name : 'Vazio';
-      slot.innerHTML = item ? `<span class="inv-bagslot-emoji">${_itemIconHTML(item, '📦')}</span>` : '';
+      slot.innerHTML = item ? `<span class="inv-bagslot-emoji">${_itemIconHTML(item, '📦')}</span>${_ammoCountBadgeHTML(item)}` : '';
       const isScroll = !!item && item.effect === 'scroll';
       const isConsumable = !!item && !item.die && (item.item_slot === 'bag' || item.effect === 'heal' || item.effect === 'atk_bonus');
       const ehCaster = player.class_id === 'mage' || player.class_id === 'cleric';
