@@ -19941,7 +19941,8 @@ async def handler(ws):
                     ok, e = delete_savegame(msg.get("id"), account["name"])
                     if ok:
                         await ws.send(json.dumps({"type": "savegames_list",
-                                                  "savegames": list_savegames(account["name"])}))
+                                                  "savegames": list_savegames(account["name"]),
+                                                  "campaigns": listar_campanhas()}))
                     else:
                         await err(e)
                     continue

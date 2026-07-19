@@ -1243,7 +1243,10 @@ const GS = (() => {
 
       case 'savegames_list':
         savegames = msg.savegames || [];
-        campaignsCache = msg.campaigns || [];
+        // Cache "grudento": só substitui se a mensagem trouxer campaigns. Assim um
+        // savegames_list parcial (ex.: resposta de apagar) não zera as campanhas já
+        // conhecidas — o que esvaziava o seletor de campanha da tela "Meus Jogos".
+        if (msg.campaigns) campaignsCache = msg.campaigns;
         _emit('savegamesList', savegames);
         break;
 
