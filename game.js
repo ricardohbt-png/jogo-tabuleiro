@@ -663,9 +663,13 @@ function handleLobby(msg){
   csUpdateLobbyBar(msg);
   if(!csf && window.THREE) initClassSelectFull();
   if(csf){
-    const myClass = msg.players.find(p=>p.id===GS.myPid)?.class_id;
+    const meP = msg.players.find(p=>p.id===GS.myPid);
+    const myClass = meP?.class_id;
     csf.selectedId = myClass ?? csf.selectedId;
     if(myClass) csf.gridSelectionMade = true;
+    // Jogo salvo: se a minha conta já tem personagem fixo, a classe fica travada
+    // (o servidor força; a UI só reflete). Jogo rápido: classLocked=false.
+    csf.classLocked = !!(msg.savegame && meP && meP.bound);
     // Classes escolhidas por OUTROS jogadores ficam indisponíveis.
     csf.takenIds = new Set(
       msg.players.filter(p => p.id !== GS.myPid && p.class_id).map(p => p.class_id));
@@ -20666,9 +20670,11 @@ function _csHeroGridSync(){
   grid.querySelectorAll('.cs-hero-tile').forEach(tile => {
     const id = tile.dataset.classId;
     const taken = csf.takenIds && csf.takenIds.has(id);
+    // Jogo salvo com personagem fixo: só o herói vinculado fica clicável.
+    const locked = csf.classLocked && id !== csf.selectedId;
     tile.classList.toggle('selected', id === csf.selectedId && !!csf.gridSelectionMade);
     tile.classList.toggle('taken', !!taken);
-    tile.disabled = !!taken;
+    tile.disabled = !!taken || locked;
     tile.setAttribute('aria-pressed', String(id === csf.selectedId && !!csf.gridSelectionMade));
   });
 }
@@ -21300,7 +21306,8 @@ function _injetarFichaPedro() {
 
 function csUpdateLobbyBar(msg){
   const codeEl = document.getElementById('cs-room-code');
-  if(codeEl) codeEl.textContent = msg.code || '----';
+  // Jogo salvo: mostra o nome do jogo antes do código da sala.
+  if(codeEl) codeEl.textContent = (msg.savegame ? '🎮 ' + msg.savegame.name + '  ·  ' : '') + (msg.code || '----');
 
   const row = document.getElementById('cs-players-row');
   if(row) row.innerHTML = msg.players.map(p=>{
@@ -21308,7 +21315,10 @@ function csUpdateLobbyBar(msg){
     const rdy  = !!p.class_id || !!p.is_master;   // Mestre não escolhe classe — já conta como "pronto"
     const cls  = (p.class_id && msg.classes) ? msg.classes[p.class_id] : null;
     const tag  = p.is_master ? ' 🎭 Mestre' : (cls ? ` ${cls.emoji}` : '');
-    return `<span class="cs-player-chip${isMe?' me':''}${rdy?' ready':''}">${p.name}${tag}${p.id===msg.host?' ♛':''}</span>`;
+    // Jogo salvo: identifica de quem é cada personagem (conta) via tooltip.
+    const title = (msg.savegame && p.account)
+      ? ` title="conta de ${p.account}${p.bound ? ' · personagem fixo' : ''}"` : '';
+    return `<span class="cs-player-chip${isMe?' me':''}${rdy?' ready':''}"${title}>${p.name}${tag}${p.id===msg.host?' ♛':''}</span>`;
   }).join('');
 
   // ── Modo Mestre Jogador (Fase A) — toggle de assento no lobby ──────────────

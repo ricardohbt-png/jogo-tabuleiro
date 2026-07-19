@@ -1231,7 +1231,13 @@ const GS = (() => {
         break;
 
       case 'login_result':
-        if (msg.ok) account = msg.username;
+        if (msg.ok) {
+          account = msg.username;
+          // O servidor normaliza o apelido (minúsculas) e o usa como nome do
+          // jogador na sala do jogo salvo. Alinhar myName evita que a resolução
+          // de myPid (por nome, em lobby/city/game_state) falhe por caixa.
+          myName = msg.username;
+        }
         _emit('loginResult', msg);   // {ok, username, error}
         break;
 
