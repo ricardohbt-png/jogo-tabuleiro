@@ -173,8 +173,11 @@ async def main():
     finally:
         S.GUILD_SAVE_DIR = old7; shutil.rmtree(tmp7, ignore_errors=True)
 
-    # [8] Usar técnica + recarga + reset
-    print("\n[8] usar_tecnica + recarga")
+    # [8] Usar técnica de preparo (Brutalidade): custo/recarga ADIADOS para o efeito
+    # Brutalidade é "buff_turno" (efeitos_adiados): ativar só arma o buff; o custo
+    # de fome/sede e a recarga só começam quando o ataque que ela modifica é
+    # executado (_consumir_tecnica_apos_efeito, chamado em handle_attack).
+    print("\n[8] usar_tecnica + recarga (preparo adiado)")
     r = setup("playing")
     w = make_player("p1", "Victor", "warrior", 0); r.players["p1"] = w
     r.player_order = ["p1"]; r.turn_index = 0; r.round_num = 1
@@ -183,9 +186,19 @@ async def main():
     w["fome"] = 50; w["sede"] = 50
     await r.handle_usar_tecnica("p1", "brutalidade")
     check("buff de dano aplicado (+2)", w["tecnica_buff_dano_arma"] == 2)
-    check("debitou fome/sede (2/2)", w["fome"] == 48 and w["sede"] == 48)
-    check("entrou em recarga (round_num+3)", w["technique_cooldowns"]["brutalidade"] == 1 + 3)
+    check("marcada como preparada (technique_pending)", w.get("technique_pending", {}).get("brutalidade") is True)
+    check("custo NÃO debitado na ativação", w["fome"] == 50 and w["sede"] == 50)
+    check("recarga NÃO inicia na ativação", "brutalidade" not in w["technique_cooldowns"])
     r._errs.clear()   # mesma lista capturada por cap_send (não rebind)
+    await r.handle_usar_tecnica("p1", "brutalidade")
+    check("reuso bloqueado enquanto preparada", len(r._errs) >= 1)
+    # O ataque que usa a técnica consome o preparo → agora custo + recarga entram.
+    consumiu = r._consumir_tecnica_apos_efeito(w, "brutalidade")
+    check("consumo pós-efeito retorna True", consumiu is True)
+    check("custo debitado no efeito (2/2)", w["fome"] == 48 and w["sede"] == 48)
+    check("recarga inicia no efeito (round_num+3)", w["technique_cooldowns"]["brutalidade"] == 1 + 3)
+    check("technique_pending limpo após consumo", "brutalidade" not in w.get("technique_pending", {}))
+    r._errs.clear()
     await r.handle_usar_tecnica("p1", "brutalidade")
     check("reuso bloqueado em recarga", len(r._errs) >= 1)
     r._cancelar_timer_turno = lambda *a, **k: None   # sem loop de timer no teste
