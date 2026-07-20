@@ -355,6 +355,101 @@ def main():
     finally:
         S.SAVEGAMES_DIR = olds; shutil.rmtree(tmp, ignore_errors=True)
 
+    # [16] checkpoint ANTES da aventura (start_game + enter_dungeon) + magias do lobby
+    print("\n[16] Checkpoint antes da aventura")
+    tmp = tempfile.mkdtemp(); olds = S.SAVEGAMES_DIR; S.SAVEGAMES_DIR = tmp
+    try:
+        def _sala_pronta(sg):
+            r = GameRoom("TST3")
+            async def _noop(*a, **k): pass
+            r.broadcast = _noop; r.broadcast_city_state = _noop; r.send_to = _noop
+            r.gm_say = _noop; r.push_state = _noop; r.broadcast_lobby = _noop
+            r._gerar_loja_pergaminhos = lambda: None
+            r._cancelar_timer_turno = lambda: None
+            r.savegame_id = sg["id"]; r.savegame = sg
+            r.players = {
+                "j1": {"id": "j1", "name": "Joao", "class_id": "warrior", "connected": True, "slot": 0},
+                "j2": {"id": "j2", "name": "Maria", "class_id": "mage", "connected": True, "slot": 1,
+                       "magias_conhecidas": ["bola_fogo", "raio_congelante"]},
+            }
+            r.account_by_pid = {"j1": "joao", "j2": "maria"}
+            r.host_pid = "j1"
+            return r
+
+        sg = S.create_savegame("Jogo", "ricardo", "procedural", None, False)
+        base_w = S.snapshot_character(S.make_player("x", "x", "warrior", 0)); base_w["gold"] = 777
+        base_m = S.snapshot_character(S.make_player("y", "y", "mage", 0))   # bind: magias []
+        sg["members"]["joao"] = {"class_id": "warrior"}
+        sg["members"]["maria"] = {"class_id": "mage"}
+        sg["characters"]["warrior"] = base_w
+        sg["characters"]["mage"] = base_m
+        S.write_savegame(sg)
+        r = _sala_pronta(sg)
+        _aio.run(r.start_game("j1"))
+        check("1º início mantém as magias escolhidas no lobby",
+              r.players["j2"]["magias_conhecidas"] == ["bola_fogo", "raio_congelante"])
+        disco = S.load_savegame(sg["id"])
+        check("start_game checkpointa (magias do lobby no disco)",
+              disco["characters"]["mage"].get("magias_conhecidas") == ["bola_fogo", "raio_congelante"])
+        # compras na cidade persistem ao ENTRAR na masmorra (não só ao voltar)
+        r.players["j1"]["gold"] = 555
+        _aio.run(r.enter_dungeon("j1"))
+        disco = S.load_savegame(sg["id"])
+        check("enter_dungeon checkpointa compras da cidade",
+              disco["characters"]["warrior"]["gold"] == 555)
+        # retomada: as magias SALVAS vencem a re-escolha do lobby (sem reroll)
+        sg2 = S.create_savegame("Jogo2", "ricardo", "procedural", None, False)
+        base_m2 = S.snapshot_character(S.make_player("y", "y", "mage", 0))
+        base_m2["magias_conhecidas"] = ["relampago", "manto_escuridao"]
+        sg2["members"]["joao"] = {"class_id": "warrior"}
+        sg2["members"]["maria"] = {"class_id": "mage"}
+        sg2["characters"]["warrior"] = S.snapshot_character(S.make_player("x", "x", "warrior", 0))
+        sg2["characters"]["mage"] = base_m2
+        S.write_savegame(sg2)
+        r2 = _sala_pronta(sg2)
+        _aio.run(r2.start_game("j1"))
+        check("retomada mantém as magias salvas (ignora re-escolha do lobby)",
+              r2.players["j2"]["magias_conhecidas"] == ["relampago", "manto_escuridao"])
+    finally:
+        S.SAVEGAMES_DIR = olds; shutil.rmtree(tmp, ignore_errors=True)
+
+    # [17] Guilda em jogo salvo persiste no savegame, NÃO no save global
+    print("\n[17] Guilda × jogo salvo")
+    tmp = tempfile.mkdtemp(); olds = S.SAVEGAMES_DIR; S.SAVEGAMES_DIR = tmp
+    tmpg = tempfile.mkdtemp(); oldg = S.GUILD_SAVE_DIR; S.GUILD_SAVE_DIR = tmpg
+    try:
+        async def _noop(*a, **k): pass
+        sg = S.create_savegame("Jogo", "ricardo", "procedural", None, False)
+        sg["members"]["joao"] = {"class_id": "warrior"}
+        S.write_savegame(sg)
+        r = GameRoom("TST4")
+        r.broadcast = _noop; r.broadcast_city_state = _noop; r.send_to = _noop
+        r.savegame_id = sg["id"]; r.savegame = sg
+        r.phase = "city"
+        p = S.make_player("j1", "Joao", "warrior", 0); p["gold"] = 500
+        r.players = {"j1": p}; r.account_by_pid = {"j1": "joao"}
+        _aio.run(r.handle_guild_buy("j1", "guerreiro_combinar_2"))
+        check("compra aplicou na sala",
+              "guerreiro_combinar_2" in p["guild_owned"]["especializacoes"])
+        check("NÃO gravou o save global saves/<classe>.json",
+              not os.path.exists(S.guild_save_path("warrior")))
+        disco = S.load_savegame(sg["id"])
+        check("compra da Guilda checkpointou no savegame",
+              "guerreiro_combinar_2" in (disco["characters"].get("warrior") or {})
+              .get("guild_owned", {}).get("especializacoes", []))
+        # jogo rápido legado (sem savegame) continua gravando o save global
+        rl = GameRoom("TST5")
+        rl.broadcast = _noop; rl.broadcast_city_state = _noop; rl.send_to = _noop
+        rl.phase = "city"
+        pl = S.make_player("q1", "Ana", "warrior", 0); pl["gold"] = 500
+        rl.players = {"q1": pl}
+        _aio.run(rl.handle_guild_buy("q1", "guerreiro_combinar_2"))
+        check("legado (sem savegame) grava o save global",
+              os.path.exists(S.guild_save_path("warrior")))
+    finally:
+        S.SAVEGAMES_DIR = olds; S.GUILD_SAVE_DIR = oldg
+        shutil.rmtree(tmp, ignore_errors=True); shutil.rmtree(tmpg, ignore_errors=True)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

@@ -5570,6 +5570,11 @@ class GameRoom:
                 snap = (self.savegame.get("characters", {}) or {}).get(p["class_id"])
                 if snap:
                     restore_character(novo, snap)   # sobrepõe a ficha salva
+                    # 1º início: o snapshot do bind foi tirado ANTES da escolha
+                    # de magias no lobby (magias []) — a escolha do lobby vale.
+                    # Retomada: as magias salvas vencem (sem reroll no lobby).
+                    if not novo.get("magias_conhecidas"):
+                        novo["magias_conhecidas"] = list(p.get("magias_conhecidas", []))
                 # sem snap (não deveria ocorrer — o bind cria a ficha): fica
                 # a ficha FRESCA. NÃO cai no apply_guild_save global, que
                 # reintroduziria o vazamento entre jogos que a Fase 1 eliminou.
@@ -5589,6 +5594,7 @@ class GameRoom:
         self._gerar_loja_pergaminhos()
         await self.broadcast({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE})
         await self.broadcast_city_state()
+        self._checkpoint_savegame()   # ponto seguro: fichas completas na 1ª cidade
 
     # â”€â”€ city phase â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -5639,6 +5645,15 @@ class GameRoom:
             ofertas.append(sc)
         self.shop_scrolls = ofertas
 
+    def _persistir_guilda(self, p):
+        """Persiste compra/equipar da Guilda: no savegame (jogo salvo) ou no
+        save global por classe (jogo rápido legado). Em jogo salvo, gravar o
+        global vazaria a compra da campanha para o fluxo sem conta."""
+        if self.savegame is not None:
+            self._checkpoint_savegame()
+        else:
+            write_guild_save(p)
+
     async def handle_guild_buy(self, pid, item_id):
         """Compra uma técnica/especialização da Guilda dos Heróis (persistente por classe)."""
         if self.phase != "city":
@@ -5671,7 +5686,7 @@ class GameRoom:
             return
         p["gold"] -= item["preco"]
         owned.append(item_id)
-        write_guild_save(p)
+        self._persistir_guilda(p)
         await self.broadcast_city_state()
 
     async def handle_guild_equip(self, pid, slot, item_id):
@@ -5693,7 +5708,7 @@ class GameRoom:
             return
         if item_id is None:   # desequipar
             p["guild_equip"][slot] = None
-            write_guild_save(p)
+            self._persistir_guilda(p)
             await self.broadcast_city_state()
             return
         item = guild_item(item_id)
@@ -5711,7 +5726,7 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Técnica exclusiva vai no slot exclusivo."})
             return
         p["guild_equip"][slot] = item_id
-        write_guild_save(p)
+        self._persistir_guilda(p)
         await self.broadcast_city_state()
 
     # â”€â”€ Guilda dos HerÃ³is: usar tÃ©cnica na masmorra â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -7222,6 +7237,10 @@ class GameRoom:
             return
         if self.phase != "city":
             return
+
+        # Ponto seguro: fotografa o estado "cidade concluída" ANTES da aventura —
+        # compras/equips da cidade não se perdem se a expedição cair no meio.
+        self._checkpoint_savegame()
 
         self.phase = "playing"
         self.animados_phase_pid = None   # ponteiro de turno transitÃ³rio (zera em qualquer entrada)
