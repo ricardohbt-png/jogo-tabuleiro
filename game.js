@@ -7449,8 +7449,15 @@ function _tickDie3(obj, dt){
   }
 
   // ── Settle detection: met both velocity thresholds after ≥2 bounces ──
+  // Fallback por TEMPO (espelha a versão 2D): sem ele, em quadros irregulares
+  // (celular, ou quando o overlay de armadilha abre no meio da rolagem) um dado
+  // podia quicar para sempre — nunca sumindo E chamando playImpact a cada quique
+  // (o "chiado travado" do som). Força o assentamento depois de ~2,8 s.
+  obj.t = (obj.t || 0) + dt;
   const avMag=Math.hypot(obj.angVel.x, obj.angVel.y, obj.angVel.z);
-  if(obj.bounces>=2 && Math.abs(obj.vel.y)<0.05 && avMag<0.30){
+  const _assentaPorVel = obj.bounces>=2 && Math.abs(obj.vel.y)<0.05 && avMag<0.30;
+  const _assentaPorTempo = obj.t > 2800;
+  if(_assentaPorVel || _assentaPorTempo){
     obj.phase='snapping';
     const snapQ=_snapRotation(window.THREE, mesh, obj.faceNormals);
     _addTween(mesh, mesh.quaternion.clone(), snapQ, 420, ()=>{
