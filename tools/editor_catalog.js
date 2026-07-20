@@ -1659,13 +1659,7 @@ window.EDITOR_CATALOG = {
         "veneno",
         "controle_mental"
       ],
-      "weaknesses": [
-        {
-          "type": "holy",
-          "multiplier": 2,
-          "descricao": "Consagrado à destruição: dano sagrado/luz dobrado (morte sagrada = destruição total)"
-        }
-      ],
+      "weaknesses": [],
       "loot_table": {
         "1-100": null
       },
@@ -4129,7 +4123,22 @@ window.EDITOR_CATALOG = {
       "icon": "⚔️",
       "descricao": "+2 no dado de acerto neste turno",
       "action_type": "acao",
-      "monster_effect": "vantagem_combate"
+      "monster_effect": "vantagem_combate",
+      "uses_per_day": 3,
+      "cooldown_turns": 4
+    },
+    {
+      "id": "guild_brutalidade",
+      "source": "guilda",
+      "source_id": "brutalidade",
+      "name": "Brutalidade",
+      "icon": "✦",
+      "descricao": "Até o fim do turno, ataques físicos com arma causam +2 de dano.",
+      "action_type": "acao",
+      "monster_effect": "vantagem_combate",
+      "guild_category": "tecnica",
+      "uses_per_day": 1,
+      "cooldown_turns": 0
     },
     {
       "id": "hero_warrior_golpe_devastador",
@@ -4361,17 +4370,6 @@ window.EDITOR_CATALOG = {
       "descricao": "+1/+2 em Visão, Ataque, Dano e CA. Apenas Richard",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
-    },
-    {
-      "id": "guild_brutalidade",
-      "source": "guilda",
-      "source_id": "brutalidade",
-      "name": "Brutalidade",
-      "icon": "✦",
-      "descricao": "Até o fim do turno, ataques físicos com arma causam +2 de dano.",
-      "action_type": "acao",
-      "monster_effect": "vantagem_combate",
-      "guild_category": "tecnica"
     },
     {
       "id": "guild_tecnica_mira_perfeita",
@@ -6033,46 +6031,6 @@ window.EDITOR_CATALOG = {
   ],
   "items": [
     {
-      "id": "health_potion",
-      "name": "Poção de Cura",
-      "emoji": "🧪",
-      "item_slot": "bag",
-      "effect": "heal",
-      "value": 10
-    },
-    {
-      "id": "elixir",
-      "name": "Elixir da Força",
-      "emoji": "⚗️",
-      "item_slot": "bag",
-      "effect": "atk_bonus",
-      "value": 3
-    },
-    {
-      "id": "antidote",
-      "name": "Antídoto",
-      "emoji": "💚",
-      "item_slot": "bag",
-      "effect": "heal",
-      "value": 6
-    },
-    {
-      "id": "garrafa_vinho",
-      "name": "Garrafa de Vinho",
-      "emoji": "🍷",
-      "item_slot": "bag",
-      "effect": "wine",
-      "value": 15
-    },
-    {
-      "id": "racao",
-      "name": "Ração (Pão e Água)",
-      "emoji": "🥖",
-      "item_slot": "bag",
-      "effect": "ration",
-      "value": 15
-    },
-    {
       "id": "sword",
       "name": "Espada Curta de Ferro Serrilhado",
       "emoji": "⚔️",
@@ -6080,84 +6038,6 @@ window.EDITOR_CATALOG = {
       "stat": "str_",
       "categoria": "cortante",
       "item_slot": "weapon"
-    },
-    {
-      "id": "magic_sword",
-      "name": "Espada Mágica",
-      "emoji": "🗡️",
-      "item_slot": "weapon",
-      "effect": "atk",
-      "value": 4
-    },
-    {
-      "id": "bow",
-      "name": "Arco Élfico",
-      "emoji": "🏹",
-      "item_slot": "weapon",
-      "effect": "atk",
-      "value": 3
-    },
-    {
-      "id": "staff",
-      "name": "Cajado Arcano",
-      "emoji": "🪄",
-      "die": "1d6",
-      "stat": "str_",
-      "reach": "cajado",
-      "categoria": "contundente"
-    },
-    {
-      "id": "shield",
-      "name": "Escudo de Madeira",
-      "emoji": "🛡️",
-      "item_slot": "armor",
-      "effect": "def_",
-      "value": 2
-    },
-    {
-      "id": "chainmail",
-      "name": "Cota de Malha",
-      "emoji": "🪖",
-      "kind": "armor",
-      "ac_bonus": 4
-    },
-    {
-      "id": "leather",
-      "name": "Armadura de Couro",
-      "emoji": "🥋",
-      "kind": "armor",
-      "ac_bonus": 2
-    },
-    {
-      "id": "amulet",
-      "name": "Amuleto da Sorte",
-      "emoji": "📿",
-      "item_slot": "item",
-      "effect": "maxhp",
-      "value": 5
-    },
-    {
-      "id": "boots",
-      "name": "Botas Velozes",
-      "emoji": "👢",
-      "item_slot": "item",
-      "effect": "spd",
-      "value": 1
-    },
-    {
-      "id": "ring",
-      "name": "Anel de Força",
-      "emoji": "💍",
-      "item_slot": "accessory",
-      "effect": "atk",
-      "value": 1
-    },
-    {
-      "id": "cloak",
-      "name": "Manto",
-      "emoji": "🧣",
-      "kind": "armor",
-      "ac_bonus": 1
     },
     {
       "id": "dagger",
@@ -6211,6 +6091,15 @@ window.EDITOR_CATALOG = {
       "categoria": "contundente"
     },
     {
+      "id": "staff",
+      "name": "Cajado Arcano",
+      "emoji": "🪄",
+      "die": "1d6",
+      "stat": "str_",
+      "reach": "cajado",
+      "categoria": "contundente"
+    },
+    {
       "id": "maca",
       "name": "Maça",
       "emoji": "🔨",
@@ -6240,7 +6129,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🏹",
       "die": "1d6",
       "stat": "dex",
-      "range": 8,
+      "range": 6,
       "categoria": "perfurante"
     },
     {
@@ -6266,7 +6155,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🏹",
       "die": "1d8",
       "stat": "dex",
-      "range": 12,
+      "range": 10,
       "categoria": "perfurante"
     },
     {
@@ -6283,7 +6172,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🏹",
       "die": "1d8",
       "stat": "dex",
-      "range": 10,
+      "range": 8,
       "categoria": "perfurante"
     },
     {
@@ -6353,15 +6242,6 @@ window.EDITOR_CATALOG = {
       "categoria": "cortante"
     },
     {
-      "id": "hand_crossbow_prata",
-      "name": "Besta de Mão de Prata",
-      "emoji": "🏹",
-      "die": "1d4",
-      "stat": "dex",
-      "range": 4,
-      "categoria": "perfurante"
-    },
-    {
       "id": "lanca_curta_prata",
       "name": "Lança Curta de Prata",
       "emoji": "🔱",
@@ -6375,24 +6255,6 @@ window.EDITOR_CATALOG = {
       "emoji": "🪄",
       "die": "1d6",
       "stat": "str_",
-      "categoria": "contundente"
-    },
-    {
-      "id": "cajado_madeira_prata",
-      "name": "Cajado de Madeira de Prata",
-      "emoji": "🪄",
-      "die": "1d6",
-      "stat": "str_",
-      "reach": "cajado",
-      "categoria": "contundente"
-    },
-    {
-      "id": "staff_prata",
-      "name": "Cajado Arcano de Prata",
-      "emoji": "🪄",
-      "die": "1d6",
-      "stat": "str_",
-      "reach": "cajado",
       "categoria": "contundente"
     },
     {
@@ -6420,15 +6282,6 @@ window.EDITOR_CATALOG = {
       "categoria": "cortante"
     },
     {
-      "id": "arco_curto_prata",
-      "name": "Arco Curto de Prata",
-      "emoji": "🏹",
-      "die": "1d6",
-      "stat": "dex",
-      "range": 8,
-      "categoria": "perfurante"
-    },
-    {
       "id": "lanca_prata",
       "name": "Lança de Prata",
       "emoji": "🔱",
@@ -6446,30 +6299,12 @@ window.EDITOR_CATALOG = {
       "categoria": "cortante"
     },
     {
-      "id": "longbow_prata",
-      "name": "Arco Longo de Prata",
-      "emoji": "🏹",
-      "die": "1d8",
-      "stat": "dex",
-      "range": 12,
-      "categoria": "perfurante"
-    },
-    {
       "id": "warhammer_prata",
       "name": "Martelo de Guerra de Prata",
       "emoji": "🔨",
       "die": "1d8",
       "stat": "str_",
       "categoria": "contundente"
-    },
-    {
-      "id": "besta_prata",
-      "name": "Besta de Prata",
-      "emoji": "🏹",
-      "die": "1d8",
-      "stat": "dex",
-      "range": 10,
-      "categoria": "perfurante"
     },
     {
       "id": "mangual_prata",
@@ -6535,11 +6370,32 @@ window.EDITOR_CATALOG = {
       "ac_bonus": 2
     },
     {
+      "id": "cloak",
+      "name": "Manto",
+      "emoji": "🧣",
+      "kind": "armor",
+      "ac_bonus": 1
+    },
+    {
+      "id": "leather",
+      "name": "Armadura de Couro",
+      "emoji": "🥋",
+      "kind": "armor",
+      "ac_bonus": 2
+    },
+    {
       "id": "leather_plate",
       "name": "Armadura de Couro e Placas",
       "emoji": "🥋",
       "kind": "armor",
       "ac_bonus": 3
+    },
+    {
+      "id": "chainmail",
+      "name": "Cota de Malha",
+      "emoji": "🪖",
+      "kind": "armor",
+      "ac_bonus": 4
     },
     {
       "id": "bronze_armor",
@@ -6592,6 +6448,24 @@ window.EDITOR_CATALOG = {
       "item_slot": "ammo",
       "effect": "ammo",
       "ammo_type": "virotes",
+      "ammo_count": 10
+    },
+    {
+      "id": "flechas_prata",
+      "name": "Flechas de Prata (×10)",
+      "emoji": "🏹",
+      "item_slot": "ammo",
+      "effect": "ammo",
+      "ammo_type": "flechas_prata",
+      "ammo_count": 10
+    },
+    {
+      "id": "virotes_prata",
+      "name": "Virotes de Prata (×10)",
+      "emoji": "🏹",
+      "item_slot": "ammo",
+      "effect": "ammo",
+      "ammo_type": "virotes_prata",
       "ammo_count": 10
     },
     {
@@ -6648,6 +6522,22 @@ window.EDITOR_CATALOG = {
       "veneno_id": "veneno_ardonia_negra"
     },
     {
+      "id": "elixir",
+      "name": "Elixir da Força",
+      "emoji": "⚗️",
+      "item_slot": "bag",
+      "effect": "atk_bonus",
+      "value": 3
+    },
+    {
+      "id": "antidote",
+      "name": "Antídoto",
+      "emoji": "💚",
+      "item_slot": "bag",
+      "effect": "heal",
+      "value": 6
+    },
+    {
       "id": "vela_escuridao",
       "name": "Vela da Escuridão",
       "emoji": "🕯️",
@@ -6686,6 +6576,22 @@ window.EDITOR_CATALOG = {
       "item_slot": "head",
       "effect": "maxhp",
       "value": 4
+    },
+    {
+      "id": "boots",
+      "name": "Botas Velozes",
+      "emoji": "👢",
+      "item_slot": "item",
+      "effect": "spd",
+      "value": 1
+    },
+    {
+      "id": "amulet",
+      "name": "Amuleto da Sorte",
+      "emoji": "📿",
+      "item_slot": "item",
+      "effect": "maxhp",
+      "value": 5
     },
     {
       "id": "backpack",
@@ -7075,6 +6981,14 @@ window.EDITOR_CATALOG = {
       "value": 10
     },
     {
+      "id": "garrafa_vinho",
+      "name": "Garrafa de Vinho",
+      "emoji": "🍷",
+      "item_slot": "bag",
+      "effect": "wine",
+      "value": 15
+    },
+    {
       "id": "racao_viagem",
       "name": "Ração de Viagem",
       "emoji": "🥩",
@@ -7094,6 +7008,14 @@ window.EDITOR_CATALOG = {
       "emoji": "💧✝️",
       "item_slot": "bag",
       "effect": "throwable"
+    },
+    {
+      "id": "health_potion",
+      "name": "Poção de Cura",
+      "emoji": "🧪",
+      "item_slot": "bag",
+      "effect": "heal",
+      "value": 10
     },
     {
       "id": "health_potion_small",
