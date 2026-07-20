@@ -370,7 +370,13 @@ document.body.innerHTML = `
   </div>
   <!-- Celular: fundo escuro + botão flutuante que abre/fecha Ações/Habilidades (gaveta) -->
   <div id="ficha-backdrop" onclick="toggleFichaDrawer(false)"></div>
-  <button id="actions-fab" onclick="toggleFichaDrawer(true)" title="Ações e habilidades">⚔️</button>
+  <!-- Celular: fileira de menus do jogador (Personagem, Inventário, Habilidades, Magias) -->
+  <div id="player-fabs">
+    <button id="actions-fab" onclick="toggleFichaDrawer(true)" title="Personagem (ações e habilidades)">⚔️</button>
+    <button id="fab-inventario" onclick="if(GS.myPid) InventoryModal.toggle(GS.myPid)" title="Inventário">🎒</button>
+    <button id="fab-habilidades" onclick="if(GS.myPid) abrirMenuHabilidades(GS.myPid)" title="Habilidades">📖</button>
+    <button id="fab-magias" onclick="if(GS.myPid) abrirMenuMagias(GS.myPid)" title="Magias" style="display:none">✨</button>
+  </div>
   <!-- Atalho exclusivo do mestre para o Mapa de CR; heróis usam o menu de personagem. -->
   <button id="ficha-fab" title="Mapa de CR (mestre)">🗺️</button>
 </div>
@@ -417,6 +423,18 @@ document.body.innerHTML = `
 
 <!-- Balão de fala de NPC (Modo Mestre) -->
 <div id="fala-popup" onclick="_avancarFala()"></div>
+
+<!-- Menu de pausa — aberto por Esc durante a aventura. -->
+<div id="pause-menu" role="dialog" aria-modal="true" aria-labelledby="pause-menu-title">
+  <div class="pause-menu-box">
+    <button type="button" class="pause-menu-close" onclick="togglePauseMenu(false)" aria-label="Fechar menu">×</button>
+    <h2 id="pause-menu-title">Menu de pausa</h2>
+    <p>O que deseja fazer?</p>
+    <button type="button" class="pause-menu-primary" onclick="returnToInitialMenu()">⌂ Voltar ao menu inicial</button>
+    <button type="button" class="pause-menu-exit" onclick="exitGameWindow()">⏻ Sair do jogo</button>
+    <button type="button" class="pause-menu-cancel" onclick="togglePauseMenu(false)">Continuar jogando <kbd>Esc</kbd></button>
+  </div>
+</div>
 
 <div id="tooltip"></div>
 <div id="toast"></div>
@@ -535,6 +553,9 @@ function $(id){ return document.getElementById(id); }
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $(id).classList.add('active');
+  if(!['screen-game', 'screen-city', 'screen-class-select'].includes(id)){
+    document.getElementById('pause-menu')?.classList.remove('open');
+  }
   // O botão flutuante ficou reservado ao Mapa de CR do mestre. O inventário
   // dos heróis é acessado pelo menu de personagem, sem atalho duplicado.
   const fichaFab = document.getElementById('ficha-fab');
@@ -551,6 +572,35 @@ function showScreen(id){
     const mm = document.getElementById('minimapa-cr');
     if(mm) mm.style.display = 'none';
   }
+}
+
+function togglePauseMenu(open){
+  const menu = document.getElementById('pause-menu');
+  if(!menu) return;
+  menu.classList.toggle('open', !!open);
+  if(open) menu.querySelector('.pause-menu-primary')?.focus();
+}
+
+function returnToInitialMenu(){
+  togglePauseMenu(false);
+  document.getElementById('loja-overlay')?.remove();
+  document.getElementById('painel-ajuda')?.remove();
+  document.getElementById('ficha-overlay-jogo')?.remove();
+  if(typeof closeTargetModal === 'function') closeTargetModal();
+  if(typeof closeChestWindow === 'function') closeChestWindow();
+  if(g3) { dispose3D(); mode3D = false; }
+  if(_city3) destroyCity3D();
+  if(_cityImg) destroyCityImage();
+  GS.leaveSession();
+  showScreen('screen-connect');
+}
+
+function exitGameWindow(){
+  returnToInitialMenu();
+  window.close();
+  window.setTimeout(() => {
+    if(!window.closed) toast('Seu navegador bloqueou o fechamento. Você já saiu da partida e voltou ao menu inicial.', 'var(--text2)');
+  }, 150);
 }
 
 function toast(msg, color='var(--red)'){
@@ -1774,6 +1824,12 @@ function _itemDesc(item){
     const bonus=item.dmg_bonus?` • +${item.dmg_bonus} dano`:'';
     const resistente=item.corrosao_resistente?' • ⚙️ resiste +1 golpe de corrosão':'';
     return `${item.die} dano (${item.stat==='dex'?'DES':'FOR'})${sub}${bonus}${range}${municao}${duas}${arr}${segMao}${resistente}`;
+  }
+  if(item.effect==='ammo'){
+    const detalhes=[`×${item.ammo_count ?? 0}`];
+    if(item.damage_bonus) detalhes.push(`+${item.damage_bonus} dano`);
+    if(item.silver) detalhes.push('Prata');
+    return detalhes.join(' • ');
   }
   if(item.ac_bonus!=null){
     const kindTxt=item.kind==='shield'?'Escudo — soma com armadura':'Armadura';
@@ -3053,6 +3109,7 @@ document.addEventListener('keydown', (e) => {
     if (aberta) {
       aberta.style.opacity = '0'
       setTimeout(() => aberta.remove(), 300)
+      e.preventDefault()
     }
   }
 })
@@ -8267,7 +8324,7 @@ function escolherDirecaoInstrumento(b, onEscolher){
     if(_instrumentoDirFechar === fechar) _instrumentoDirFechar = null;
   }
   function onKey(e){
-    if(e.key === 'Escape'){ fechar(); toast('Cancelado.', 'var(--text2)'); }
+    if(e.key === 'Escape'){ fechar(); toast('Cancelado.', 'var(--text2)'); e.preventDefault(); }
   }
   overlay.onclick = e => { if(e.target === overlay){ fechar(); } };
   document.addEventListener('keydown', onKey);
@@ -8824,7 +8881,7 @@ function _ativarModoPlacementArmadilha(tipoId, venenoId){
   document.body.appendChild(legenda);
 
   document.addEventListener('keydown', function cancelarPlacement(e){
-    if(e.key === 'Escape'){ _cancelarPlacementArmadilha(); document.removeEventListener('keydown', cancelarPlacement); }
+    if(e.key === 'Escape'){ _cancelarPlacementArmadilha(); document.removeEventListener('keydown', cancelarPlacement); e.preventDefault(); }
   });
 }
 
@@ -10088,7 +10145,7 @@ function _encerrarModoMagia() {
 }
 
 function _keyMagiaEsc(e) {
-  if (e.key === 'Escape') { _encerrarModoMagia(); toast('Magia cancelada.', '#888'); }
+  if (e.key === 'Escape') { _encerrarModoMagia(); toast('Magia cancelada.', '#888'); e.preventDefault(); }
 }
 
 window.castarMagia = castarMagia;
@@ -10179,7 +10236,7 @@ function _encerrarMiraArremesso(){
 }
 
 function _keyThrowEsc(e){
-  if(e.key === 'Escape'){ _encerrarMiraArremesso(); toast('Arremesso cancelado.', '#888'); }
+  if(e.key === 'Escape'){ _encerrarMiraArremesso(); toast('Arremesso cancelado.', '#888'); e.preventDefault(); }
 }
 
 // Clique-fora cancela a mira: mousedown fora dos canvas 2D/3D do tabuleiro.
@@ -10897,6 +10954,7 @@ function renderMyPanel(state){
     renderMasterHud(state);
     const mp = document.getElementById('my-panel');
     if(mp) mp.style.display = 'none';
+    const _pf = document.getElementById('player-fabs'); if(_pf) _pf.style.display = 'none';
     return;
   }
   const hudM = document.getElementById('hud-mestre');
@@ -10907,6 +10965,12 @@ function renderMyPanel(state){
 
   const me = state.players.find(p => p.id === GS.myPid);
   if(!me) return;
+
+  // Fileira de FABs do jogador (mobile): mostra a fileira; Magias só p/ conjuradores.
+  const _pfabs = document.getElementById('player-fabs');
+  if(_pfabs) _pfabs.style.display = '';
+  const _fabMag = document.getElementById('fab-magias');
+  if(_fabMag) _fabMag.style.display = (me.class_id === 'mage' || me.class_id === 'cleric') ? '' : 'none';
 
   const pFrame = document.getElementById('my-hero-portrait');
   const pImg   = document.getElementById('my-hero-portrait-img');
@@ -11784,7 +11848,7 @@ $('trap-overlay').addEventListener('click', e => {
 
 // Esc fecha o popup se estiver aberto.
 document.addEventListener('keydown', e => {
-  if(e.key === 'Escape' && $('trap-overlay').classList.contains('open')) closeTrapWindow();
+  if(e.key === 'Escape' && $('trap-overlay').classList.contains('open')) { closeTrapWindow(); e.preventDefault(); }
 });
 
 // Som curto de impacto ao FALHAR numa armadilha (grave/dissonante). Sucesso e
@@ -13141,13 +13205,28 @@ function _audioPanelEnsure(){
     +   '<div style="display:flex;justify-content:space-between;margin:12px 0 5px;">'
     +     '<span>🔊 Sons</span><span id="aud-sfx-val">' + pct(_sfxVol) + '%</span></div>'
     +   '<input id="aud-sfx" type="range" min="0" max="100" value="' + pct(_sfxVol) + '" style="width:100%;">'
+    // Menu de saída unificado (antes era o menu de pausa separado, aberto por Esc).
+    +   '<div id="cfg-saida" style="display:none;border-top:1px solid #2a4a2a;margin-top:12px;padding-top:10px;">'
+    +     '<button id="cfg-voltar-inicio" style="width:100%;padding:8px;margin-bottom:6px;background:rgba(40,32,10,.6);'
+    +       'border:1px solid #c8a95155;border-radius:6px;color:#e8d9a8;font-family:inherit;font-size:.8rem;cursor:pointer;">⌂ Voltar ao menu inicial</button>'
+    +     '<button id="cfg-sair" style="width:100%;padding:8px;background:rgba(60,20,20,.6);'
+    +       'border:1px solid #a0505055;border-radius:6px;color:#e8b0a8;font-family:inherit;font-size:.8rem;cursor:pointer;">⏻ Sair do jogo</button>'
+    +   '</div>'
     + '</div>';
   document.body.appendChild(wrap);
   const pop = wrap.querySelector('#audio-pop');
   wrap.querySelector('#audio-gear').onclick = (e) => {
     e.stopPropagation();
-    pop.style.display = (pop.style.display === 'none') ? 'block' : 'none';
+    const abrir = (pop.style.display === 'none');
+    // Só mostra "Voltar/Sair" dentro de uma partida (não na tela inicial).
+    const emJogo = ['screen-game','screen-city','screen-class-select']
+      .includes((document.querySelector('.screen.active')||{}).id);
+    const saida = wrap.querySelector('#cfg-saida');
+    if(saida) saida.style.display = emJogo ? 'block' : 'none';
+    pop.style.display = abrir ? 'block' : 'none';
   };
+  wrap.querySelector('#cfg-voltar-inicio').onclick = () => { pop.style.display='none'; returnToInitialMenu(); };
+  wrap.querySelector('#cfg-sair').onclick = () => { pop.style.display='none'; exitGameWindow(); };
   document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) pop.style.display = 'none'; });
   const mSl = wrap.querySelector('#aud-music'), mVal = wrap.querySelector('#aud-music-val');
   mSl.oninput = () => { mVal.textContent = mSl.value + '%'; _setMusicVol(mSl.value / 100); };
@@ -13155,6 +13234,21 @@ function _audioPanelEnsure(){
   sSl.oninput = () => { sVal.textContent = sSl.value + '%'; _setSfxVol(sSl.value / 100); };
   return wrap;
 }
+
+// Abre/fecha o painel ⚙️ por programa (usado pelo Esc, que unifica o antigo
+// menu de pausa com as configurações). force=true abre, false fecha, undefined alterna.
+function _toggleConfigPop(force){
+  _audioPanelEnsure();
+  const pop = document.getElementById('audio-pop');
+  if(!pop) return;
+  const abrir = (force !== undefined) ? force : (pop.style.display === 'none');
+  const saida = document.getElementById('cfg-saida');
+  const emJogo = ['screen-game','screen-city','screen-class-select']
+    .includes((document.querySelector('.screen.active')||{}).id);
+  if(saida) saida.style.display = emJogo ? 'block' : 'none';
+  pop.style.display = abrir ? 'block' : 'none';
+}
+window._toggleConfigPop = _toggleConfigPop;
 
 // Chamado por showScreen() a cada troca de tela.
 function _menuMusicOnScreen(id){
@@ -21695,6 +21789,7 @@ function iniciarModoArremessoAdagaSecundaria(){
       window._modoArremessoAtivo = false;
       GS.adicionarLog('❌ Arremesso cancelado.');
       document.removeEventListener('keydown', cancelar);
+      ev.preventDefault();
     }
   });
 }
@@ -21835,6 +21930,7 @@ function iniciarModoArremessoAdagaPrincipal(){
       window._modoArremessoPrincipal = false;
       GS.adicionarLog('❌ Arremesso cancelado.');
       document.removeEventListener('keydown', cancelar);
+      ev.preventDefault();
     }
   });
 }
@@ -21971,6 +22067,7 @@ function iniciarModoArremessoLanca(){
       window._modoArremessoLanca = false;
       GS.adicionarLog('❌ Arremesso cancelado.');
       document.removeEventListener('keydown', cancelar);
+      ev.preventDefault();
     }
   });
 }
@@ -22843,3 +22940,31 @@ window._confirmarMagiasCriacao = function(){
   if (el) el.remove();
   toast('Magias escolhidas!', 'var(--gold)');
 };
+
+// Esc abre o menu somente quando nenhuma interface contextual está usando a
+// tecla para cancelar/fechar uma ação. Os demais listeners registram-se antes
+// deste e marcam o evento como preventDefault quando o consomem.
+document.addEventListener('keydown', e => {
+  if(e.key !== 'Escape') return;
+  // Esc agora abre/fecha o painel ⚙️ unificado (config + Voltar ao início/Sair).
+  const pop = document.getElementById('audio-pop');
+  if(pop && pop.style.display !== 'none'){
+    _toggleConfigPop(false);
+    e.preventDefault();
+    return;
+  }
+  // Alguns modos de mira registram seus próprios handlers dinamicamente. Esperar
+  // o fim da propagação permite que eles consumam Esc antes de abrir o menu.
+  setTimeout(() => {
+    if(e.defaultPrevented) return;
+    if(document.querySelector('#target-modal.open, #chest-overlay.open, #trap-overlay.open, #shop-modal.open, .guild-modal.open, #menu-status-overlay.open, #overlay-selecao-criacao, #loja-overlay, #ficha-overlay-jogo')) return;
+    if(GS.pendingSkill || GS.pendingThrow || GS.pendingAction || window._modoImplantarReforco) return;
+    const active = document.querySelector('.screen.active');
+    if(!active || !['screen-game', 'screen-city', 'screen-class-select'].includes(active.id)) return;
+    _toggleConfigPop(true);
+  }, 0);
+});
+
+document.getElementById('pause-menu')?.addEventListener('click', e => {
+  if(e.target === e.currentTarget) togglePauseMenu(false);
+});
