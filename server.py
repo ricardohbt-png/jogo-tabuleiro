@@ -462,10 +462,10 @@ WEAPONS = {
 
 # Armas de projÃ©til â†’ tipos de muniÃ§Ã£o aceitos (bÃ¡sica e especial)
 RANGED_AMMO = {
-    "arco_curto":    ["flechas", "flechas_incendiarias"],
-    "longbow":       ["flechas", "flechas_incendiarias"],
-    "besta":         ["virotes", "virotes_incendiarios"],
-    "hand_crossbow": ["virotes", "virotes_incendiarios"],
+    "arco_curto":    ["flechas", "flechas_incendiarias", "flechas_prata"],
+    "longbow":       ["flechas", "flechas_incendiarias", "flechas_prata"],
+    "besta":         ["virotes", "virotes_incendiarios", "virotes_prata"],
+    "hand_crossbow": ["virotes", "virotes_incendiarios", "virotes_prata"],
 }
 
 # â”€â”€â”€ GUILDA DOS HERÃ“IS â€” persistÃªncia por personagem (Fase 0) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -2388,10 +2388,10 @@ MONSTER_DEFS = [
              "descricao": "Não come, bebe nem respira"},
         ],
         "immunities": ["veneno", "controle_mental"],
-        "weaknesses": [
-            {"type": "holy", "multiplier": 2,
-             "descricao": "Consagrado à destruição: dano sagrado/luz dobrado (morte sagrada = destruição total)"},
-        ],
+        # Sem fraqueza explícita a sagrado: o subtipo morto-vivo já dobra o dano
+        # sagrado/luz em _apply_damage_types. Uma entrada holy×2 aqui empilharia
+        # com a regra de subtipo e causaria dano ×4 (Consagrado à destruição = ×2).
+        "weaknesses": [],
         "loot_table": {"1-100": None},
         "spawn_min": 1, "spawn_max": 2,
         "ai_type": "zumbi",
@@ -2889,6 +2889,16 @@ CHEST_ITEMS = [
     {"id": "cloak",         "name": "Manto das Sombras", "emoji": "🧣", "item_slot": "accessory", "effect": "def_",      "value": 1},
 ]
 
+# IDs sorteados em baús PROCEDURAIS (os que surgem ao limpar salas). Fonte única:
+# definições de loja, resolvidas por _DUNGEON_ITEM_CATALOG (montado mais abaixo no
+# módulo; já está pronto quando _spawn_chest_from_room roda). Extensível quando os
+# itens mágicos ganharem regras de colocação.
+LOOT_POOL_PROCEDURAL = [
+    "health_potion", "health_potion_small", "health_potion_improved",
+    "health_potion_concentrated", "regeneration_potion", "antidote", "elixir",
+    "racao_viagem", "garrafa_vinho",
+]
+
 # â”€â”€â”€ SHOP CATALOGS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 # allowed_classes ausente = TODAS as classes podem usar (sem restriÃ§Ã£o).
@@ -2943,7 +2953,15 @@ SHOP_WEAPONS = [
 
 # allowed_classes ausente = TODAS as classes podem usar (sem restriÃ§Ã£o).
 # Variantes de prata: preÃ§o Ã—10, 5 nÃ­veis atÃ© quebrar e os 2 primeiros sem penalidade.
+# Armas de projÃ©til e cajados de madeira nÃ£o recebem revestimento de prata.
+SILVER_WEAPON_EXCLUSIONS = {
+    "hand_crossbow", "besta",      # bestas
+    "arco_curto", "longbow",       # arcos
+    "staff", "cajado_madeira",    # cajados de madeira
+}
 for _weapon in list(SHOP_WEAPONS):
+    if _weapon["id"] in SILVER_WEAPON_EXCLUSIONS:
+        continue
     _silver = deepcopy(_weapon)
     _silver.update({"id": f"{_weapon['id']}_prata", "name": f"{_weapon['name']} de Prata",
                     "price": int(_weapon.get("price", 0) or 0) * 10, "silver": True,
@@ -3084,6 +3102,12 @@ SHOP_AMMO = [
      "item_slot": "ammo", "effect": "ammo", "ammo_type": "flechas", "ammo_count": 10},
     {"id": "virotes",  "name": "Virotes (×10)",  "emoji": "🏹", "price": 3,
      "item_slot": "ammo", "effect": "ammo", "ammo_type": "virotes", "ammo_count": 10},
+    {"id": "flechas_prata", "name": "Flechas de Prata (×10)", "emoji": "🏹", "price": 30,
+     "item_slot": "ammo", "effect": "ammo", "ammo_type": "flechas_prata", "ammo_count": 10,
+     "damage_bonus": 1, "silver": True},
+    {"id": "virotes_prata", "name": "Virotes de Prata (×10)", "emoji": "🏹", "price": 30,
+     "item_slot": "ammo", "effect": "ammo", "ammo_type": "virotes_prata", "ammo_count": 10,
+     "damage_bonus": 1, "silver": True},
     {"id": "virote_incendiario", "name": "Virote Incendiário", "emoji": "🔥", "price": 4,
      "item_slot": "ammo", "effect": "ammo", "ammo_type": "virotes_incendiarios", "ammo_count": 1,
      "extra_damage": "1d4", "extra_damage_types": ["fire"]},
@@ -3484,9 +3508,9 @@ def validar_dungeon(defn):
     if ep is not None:
         if not isinstance(ep, dict):
             return False, "expected_party deve ser um objeto JSON."
-        h = ep.get("heroes"); lv = ep.get("level")
-        if not isinstance(h, int) or isinstance(h, bool) or not (1 <= h <= 6):
-            return False, f"expected_party.heroes inválido: {h!r} (inteiro 1–6)."
+        heroes = ep.get("heroes"); lv = ep.get("level")
+        if not isinstance(heroes, int) or isinstance(heroes, bool) or not (1 <= heroes <= 6):
+            return False, f"expected_party.heroes inválido: {heroes!r} (inteiro 1–6)."
         if not isinstance(lv, int) or isinstance(lv, bool) or lv < 1:
             return False, f"expected_party.level inválido: {lv!r} (inteiro ≥ 1)."
 
@@ -6007,7 +6031,7 @@ class GameRoom:
 
     def _resolver_dano_ataque_basico(self, p, target, crit, roll, forca_critico=False,
                                        surv_mod=0, cancao_dano=0, gl_dano=0, bonus_extra=0,
-                                       target_pos=None):
+                                       target_pos=None, weapon_override=None):
         """Rola e computa o dano físico de um ataque básico (arma ou desarmado)
         que JÁ acertou — reaproveitado pelo hit normal de handle_attack e pelo
         reroll da Sorte. `forca_critico` é quem decide se um natural 20 triplica
@@ -6021,7 +6045,7 @@ class GameRoom:
         como o bloco `else` original (ataque desarmado nunca teve esses termos).
         Não repete munição/veneno/furtivo/projétil incendiário — resolvidos à
         parte pelo chamador."""
-        weapon = p.get("weapon")
+        weapon = weapon_override if weapon_override is not None else p.get("weapon")
         die_str = weapon.get("die") if weapon else None
         if die_str:
             raw_dmg = roll_dice(die_str)
@@ -8507,22 +8531,30 @@ class GameRoom:
                 _is_crossbow = (weapon_here or {}).get("id") in ("besta", "hand_crossbow")
                 if _is_crossbow:
                     # Bestas recarregam diretamente dos virotes da bolsa e deixam
-                    # a mão esquerda livre para escudo. Munição equipada também vale.
-                    _bag_ammo = next((item for item in p.get("bag", [])
-                                      if item.get("effect") == "ammo"
-                                      and item.get("ammo_type") in _valid_ammo
-                                      and item.get("ammo_count", 0) > 0), None)
-                    if _bag_ammo:
-                        _ammo_source = ("bag", _bag_ammo)
-                    elif _off and _off_type in _valid_ammo and _off.get("ammo_count", 0) > 0:
+                    # a mão esquerda livre para escudo. Munição EQUIPADA na mão
+                    # esquerda é escolha explícita do jogador e tem prioridade
+                    # (única forma de forçar um projétil especial, ex.: prata).
+                    # Na bolsa, a munição básica é gasta antes das especiais
+                    # (incendiária/prata) — ordem de RANGED_AMMO — para não
+                    # queimar projéteis caros sem querer.
+                    if _off and _off_type in _valid_ammo and _off.get("ammo_count", 0) > 0:
                         _ammo_source = ("off_hand", _off)
+                    else:
+                        _bag_candidatas = sorted(
+                            (item for item in p.get("bag", [])
+                             if item.get("effect") == "ammo"
+                             and item.get("ammo_type") in _valid_ammo
+                             and item.get("ammo_count", 0) > 0),
+                            key=lambda it: _valid_ammo.index(it["ammo_type"]))
+                        if _bag_candidatas:
+                            _ammo_source = ("bag", _bag_candidatas[0])
                 elif _off and _off_type in _valid_ammo and _off.get("ammo_count", 0) > 0:
                     _ammo_source = ("off_hand", _off)
                 if not _ammo_source:
                     nome_proj = "flechas" if _valid_ammo[0] == "flechas" else "virotes"
                     onde = "na bolsa ou na mão esquerda" if _is_crossbow else "na mão esquerda"
                     await self.send_to(pid, {"type": "error",
-                        "msg": f"🏹 Sem {nome_proj} (básicos ou incendiários) {onde}!"})
+                        "msg": f"🏹 Sem {nome_proj} (básicos, incendiários ou de prata) {onde}!"})
                     return
 
             if w_range is not None:
@@ -8719,10 +8751,14 @@ class GameRoom:
             # â”€â”€ Consumo de muniÃ§Ã£o (projÃ©til gasto ao atirar, hit ou miss) â”€â”€
             _ammo_extra_dmg   = None   # dano extra do projÃ©til especial (incendiÃ¡rio)
             _ammo_extra_types = []
+            _ammo_damage_bonus = 0      # bÃ´nus fixo do projÃ©til (ex.: prata)
+            _ammo_silver = False
             if _valid_ammo and _ammo_source:
                 _ammo_slot, _ammo_item = _ammo_source
                 _ammo_extra_dmg   = _ammo_item.get("extra_damage")
                 _ammo_extra_types = _ammo_item.get("extra_damage_types", [])
+                _ammo_damage_bonus = int(_ammo_item.get("damage_bonus", 0) or 0)
+                _ammo_silver = bool(_ammo_item.get("silver"))
                 _ammo_item["ammo_count"] = _ammo_item.get("ammo_count", 1) - 1
                 if _ammo_item["ammo_count"] <= 0:
                     if _ammo_slot == "off_hand":
@@ -8759,10 +8795,16 @@ class GameRoom:
                                    "label": "⚔️ Ataque (Mão Principal)", "hit": hit, "crit": crit})
             if hit:
                 _bonus_extra = (2 if _mira_ranged else 0) + (2 if _investida else 0)
+                # A muniÃ§Ã£o de prata empresta sua propriedade ao disparo, sem
+                # transformar permanentemente a arma equipada em uma arma de prata.
+                damage_weapon = {**(p.get("weapon") or {})}
+                if _ammo_silver:
+                    damage_weapon["silver"] = True
                 dmg, weapon_name, dmg_detail, raw_dmg, die_str = self._resolver_dano_ataque_basico(
                     p, target, crit, roll, forca_critico=_forca_critico,
                     surv_mod=surv_mod, cancao_dano=cancao_dano, gl_dano=gl_dano,
-                    bonus_extra=_bonus_extra, target_pos=target_tile)
+                    bonus_extra=_bonus_extra + _ammo_damage_bonus, target_pos=target_tile,
+                    weapon_override=damage_weapon)
                 if die_str:
                     die_type = "d" + die_str.split("d")[1]
                     await self.broadcast({"type": "dice_roll", "die": die_type,
@@ -8791,6 +8833,8 @@ class GameRoom:
                     furtivo_detail = f" +🗡️{dano_furtivo} furtivo [{nd4}d4]"
                 target["hp"] -= dmg
                 await self._furtivo_reativo(p, target)
+                if _ammo_damage_bonus:
+                    dmg_detail += f" +{_ammo_damage_bonus} prata"
                 crit_str = " **CRÍTICO!**" if crit else ""
                 await self.gm_say(
                     f"⚔️ **{p['name']}** ataca **{target['name']}** com {weapon_name}"
@@ -11702,9 +11746,9 @@ class GameRoom:
         """Spawn a physical chest at room centre (replaces _auto_pickup_chest)."""
         room["looted"] = True
         gold  = random.randint(10, 35)
-        items = [deepcopy(random.choice(CHEST_ITEMS))]
+        items = [deepcopy(_DUNGEON_ITEM_CATALOG[random.choice(LOOT_POOL_PROCEDURAL)])]
         if random.random() < 0.45:                            # 45 % chance for 2nd item
-            extra = deepcopy(random.choice(CHEST_ITEMS))
+            extra = deepcopy(_DUNGEON_ITEM_CATALOG[random.choice(LOOT_POOL_PROCEDURAL)])
             if extra["id"] != items[0]["id"]:
                 items.append(extra)
         self._spawn_chest([room["cx"], room["cy"]], gold, items)
@@ -16760,6 +16804,10 @@ class GameRoom:
         # A IA escolhe o primeiro que alcance o alvo e nÃ£o realiza o ataque comum.
         target = (target_obj or {}).get("obj")
         throwable = next((item for item in bag if item.get("id") in ARREMESSAVEIS
+                         # A granada do Soldado é decidida antes do movimento por
+                         # _soldado_try_granada, que avalia alcance, risco próprio e HP
+                         # (outros monstros no raio NÃO são considerados na mira).
+                         and not (m.get("type") == "soldado" and item.get("id") in {"granada", "granada_superior"})
                          and target is not None
                          and max(abs(m["pos"][0] - target["pos"][0]), abs(m["pos"][1] - target["pos"][1]))
                              <= ARREMESSAVEIS[item["id"]].get("alcance", 0)
@@ -16789,6 +16837,56 @@ class GameRoom:
             bag.remove(potion)
         await self.gm_say(f"🧪 **{m['name']}** usa **{potion['name']}** e recupera **{cura} HP**.")
         return False       # aÃ§Ã£o bÃ´nus: ainda pode atacar
+
+    async def _soldado_try_granada(self, m):
+        """IA tática do Soldado para granadas.
+
+        Fora de risco, só mira heróis distantes e não se inclui na explosão.
+        Com menos de 30% de HP, aceita o risco e escolhe o alvo que concentra o
+        maior número de heróis no raio da explosão.
+        """
+        if m.get("type") != "soldado":
+            return False
+        bag = m.get("equipment_consumables", [])
+        item = next((it for it in bag if it.get("id") in {"granada", "granada_superior"}), None)
+        if not item:
+            return False
+        defn = ARREMESSAVEIS.get(item["id"])
+        if not defn:
+            return False
+        max_hp = max(1, int(m.get("max_hp", m.get("hp", 1)) or 1))
+        em_desespero = m.get("hp", 0) / max_hp < 0.30
+        raio = int(defn.get("area_raio", 1) or 1)
+        candidatos = []
+        for hero in self.players.values():
+            if not hero.get("alive") or not hero.get("pos"):
+                continue
+            dist = max(abs(m["pos"][0] - hero["pos"][0]), abs(m["pos"][1] - hero["pos"][1]))
+            if dist > int(defn.get("alcance", 0) or 0):
+                continue
+            # Normalmente só lança à distância; em desespero pode explodir
+            # adjacente para acertar um agrupamento, mesmo entrando no raio.
+            if dist <= 1 and not em_desespero:
+                continue
+            if not self._tem_linha_de_visao(m["pos"], hero["pos"]):
+                continue
+            auto_atinge = self._na_area(m, hero["pos"][0], hero["pos"][1], raio)
+            if auto_atinge and not em_desespero:
+                continue
+            herois_atingidos = sum(
+                1 for alvo in self.players.values()
+                if alvo.get("alive") and self._na_area(alvo, hero["pos"][0], hero["pos"][1], raio)
+            )
+            candidatos.append((herois_atingidos, auto_atinge, dist, hero))
+        if not candidatos:
+            return False
+        # Em ambos os casos prioriza a maior concentração. Fora de desespero,
+        # `auto_atinge` já é sempre False; no desespero ele é aceito.
+        _, _, _, alvo = min(candidatos, key=lambda c: (-c[0], c[1], c[2], c[3]["id"]))
+        await self._monster_throw_item(m, {"kind": "player", "obj": alvo}, item)
+        if item in bag:
+            bag.remove(item)
+        return True
 
     async def _monster_throw_item(self, m, target_obj, item):
         """Versão de IA dos arremessáveis de bolsa dos heróis."""
@@ -16841,10 +16939,18 @@ class GameRoom:
                 alvo["hp"] = max(0, alvo["hp"] - dmg)
                 if alvo["hp"] <= 0:
                     await self._player_dies(alvo["id"])
-            else:
+            elif "vida_atual" in alvo:
                 alvo["vida_atual"] = max(0, alvo["vida_atual"] - dmg)
                 if alvo["vida_atual"] <= 0:
                     await self._animado_morre(alvo, m.get("id"))
+            else:
+                # A explosão também pode atingir o próprio monstro ou outros
+                # monstros. Eles usam `hp`; somente servos/animados usam
+                # `vida_atual` (o antigo `else` tratava ambos como animados e
+                # causava KeyError ao Soldado estar no raio da granada).
+                alvo["hp"] = max(0, alvo["hp"] - dmg)
+                if alvo["hp"] <= 0:
+                    await self._monster_dies(alvo, None)
             await self.gm_say(f"{defn.get('emoji', '💥')} **{alvo.get('name', alvo.get('nome'))}** sofre **{dmg}** de dano.")
         zona = defn.get("zona")
         if zona and zona.get("tipo") == "escuridao":
@@ -18392,6 +18498,11 @@ class GameRoom:
                 max(abs(target["pos"][0]-t[0]), abs(target["pos"][1]-t[1])) <= alcance_acido
                 for t in self._monster_tiles(m)) and self._ativar_habilidade_nativa(m, acido):
             await self._cuspir_acido(m, target_obj, acido)
+            return
+
+        # Soldado abre o turno com a granada quando ainda está à distância,
+        # antes de avançar para o combate corpo a corpo.
+        if await self._soldado_try_granada(m):
             return
 
         attack_range = max((int(a.get("range", 0) or 0) for a in m.get("attacks", [])), default=0)
