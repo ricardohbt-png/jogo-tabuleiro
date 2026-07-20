@@ -17382,11 +17382,11 @@ class GameRoom:
             gold = 2                                                  # 30% 2 moedas
         elif roll <= 90:                                              # 20% 2 moedas + vinho
             gold = 2
-            v = next((i for i in CHEST_ITEMS if i["id"] == "garrafa_vinho"), None)
+            v = _DUNGEON_ITEM_CATALOG.get("garrafa_vinho")            # def da taverna
             if v: itens.append(deepcopy(v))
         elif roll <= 95:                                             # 5% 2 moedas + raÃ§Ã£o
             gold = 2
-            r = next((i for i in CHEST_ITEMS if i["id"] == "racao"), None)
+            r = _DUNGEON_ITEM_CATALOG.get("racao_viagem")            # equivalente de viagem
             if r: itens.append(deepcopy(r))
         else:                                                        # 5% pergaminho 1Âº cÃ­rculo
             sc = gerar_pergaminho(1)

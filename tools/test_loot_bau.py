@@ -38,6 +38,26 @@ async def main():
     check("nenhum item fora do pool em 200 baús", fora == [], f"fora: {set(fora)}")
     check("todo baú tem ao menos 1 item", all(c["items"] for c in r.chests.values()))
 
+    print("\n[3] _necromante_loot usa defs de loja (vinho/ração de viagem)")
+    from server import make_monster, MONSTER_DEFS
+    r = setup()
+    ndef = next(d for d in MONSTER_DEFS if d.get("type") == "dark_mage")
+    # rola 71..90 -> vinho ; 91..95 -> ração
+    for alvo_roll, esperado in ((80, "garrafa_vinho"), (93, "racao_viagem")):
+        m = make_monster(ndef, {"id": 1, "cx": 2, "cy": 2})
+        m["pos"] = [2, 2]
+        m["usou_dominar"] = True   # evita o pergaminho de dominar no fim
+        _orig = random.randint
+        random.randint = lambda a, b: alvo_roll if (a, b) == (1, 100) else _orig(a, b)
+        try:
+            await r._necromante_loot(m)
+        finally:
+            random.randint = _orig
+        achou = any(it["id"] == esperado
+                    for c in r.chests.values() for it in c["items"])
+        check(f"necromante larga '{esperado}'", achou)
+        r.chests.clear()
+
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 
