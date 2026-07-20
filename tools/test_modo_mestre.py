@@ -108,8 +108,30 @@ async def main():
     for i in range(6):
         ok = await r.add_player(FakeWS(), f"h{i}", f"Heroi{i}")
         check(f"herói {i} entra", ok is True)
-    ok7 = await r.add_player(FakeWS(), "h6", "Setimo")
-    check("7º herói barrado", ok7 is False)
+    ok7 = await r.add_player(FakeWS(), "m7", "Setimo")
+    check("7º entrante aceito como MESTRE (sala sem mestre)", ok7 is True)
+    check("7º virou mestre", r.players.get("m7", {}).get("is_master") is True
+          and r.master_pid == "m7" and r.master_name == "Setimo")
+    check("mestre auto-assentado sem classe e ready",
+          r.players.get("m7", {}).get("class_id") is None
+          and r.players.get("m7", {}).get("ready") is True)
+    ok8 = await r.add_player(FakeWS(), "h8", "Oitavo")
+    check("8º barrado (6 heróis + mestre)", ok8 is False)
+    # o mestre auto-assentado não pode largar o papel com a sala já cheia de heróis
+    r._errs.clear()
+    await r.claim_role("m7", "hero")
+    check("mestre não vira 7º herói (sala cheia)",
+          r.players["m7"].get("is_master") is True)
+    check("erro de sala cheia ao soltar o papel", any("cheia" in e.lower() for e in r._errs))
+    # sala que JÁ tem mestre assentado: 7º entrante continua barrado
+    r2 = lobby_room()
+    await add(r2, "m1", "Mestre"); await r2.claim_role("m1", "master")
+    for i in range(6):
+        await r2.add_player(FakeWS(), f"x{i}", f"H{i}")
+    check("6 heróis entram com mestre assentado",
+          sum(1 for p in r2.players.values() if not p.get("is_master")) == 6)
+    ok7b = await r2.add_player(FakeWS(), "y7", "Setimo")
+    check("7º barrado quando já há mestre", ok7b is False)
 
     print("\n[5] start_game extrai o mestre de self.players")
     r = lobby_room()

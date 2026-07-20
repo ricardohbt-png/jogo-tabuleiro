@@ -5323,13 +5323,25 @@ class GameRoom:
     # â”€â”€ lobby â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def add_player(self, ws, pid, name, account=None):
-        # Fase A: o mestre deve assumir o papel ANTES da sala encher com 6 herÃ³is
-        # (ou um herÃ³i sentado troca para mestre, liberando um slot). Um 7Âº entrante
-        # dedicado a mestre nÃ£o cabe numa sala jÃ¡ cheia de herÃ³is â€” limitaÃ§Ã£o aceita.
         heroes = sum(1 for p in self.players.values() if not p.get("is_master"))
         if heroes >= 6:
-            await ws.send(json.dumps({"type": "error", "msg": "Sala cheia (máximo 6 heróis)."}))
-            return False
+            # Sala cheia de heróis: o 7º entrante ainda cabe — como MESTRE —
+            # se ninguém tiver assumido o papel (Modo Mestre Jogador).
+            tem_mestre = any(p.get("is_master") for p in self.players.values())
+            if tem_mestre:
+                await ws.send(json.dumps({"type": "error", "msg": "Sala cheia (máximo 6 heróis + 1 mestre)."}))
+                return False
+            self.connections[pid] = ws
+            if account:
+                self.account_by_pid[pid] = account
+            self.players[pid] = {"id": pid, "name": name, "class_id": None, "ready": True,
+                                 "connected": True, "slot": len(self.players), "is_master": True}
+            self.master_pid = pid
+            self.master_name = name
+            if not self.host_pid:
+                self.host_pid = pid
+            await self.broadcast_lobby()
+            return True
         self.connections[pid] = ws
         if account:
             self.account_by_pid[pid] = account
@@ -5423,6 +5435,13 @@ class GameRoom:
             self.master_name = p["name"]
         else:  # "hero"
             if not p.get("is_master"):
+                return
+            # O mestre que entrou numa sala já com 6 heróis não tem vaga de
+            # herói para ocupar — soltar o papel criaria um 7º herói.
+            heroes = sum(1 for q in self.players.values() if not q.get("is_master"))
+            if heroes >= 6:
+                await self.send_to(pid, {"type": "error",
+                    "msg": "Sala cheia (6 heróis) — não há vaga de herói para você."})
                 return
             p["is_master"] = False
             p["ready"] = False
