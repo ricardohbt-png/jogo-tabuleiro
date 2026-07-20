@@ -15,6 +15,20 @@ def check(name, cond):
     if cond: PASS += 1; print(f"  ✅ {name}")
     else:    FAIL += 1; print(f"  ❌ {name}")
 
+def forcar_turno(r, pid):
+    """Posiciona a INICIATIVA no herói `pid` (sistema atual). Substitui o antigo
+    `r.turn_index = r.player_order.index(pid)`, que não tem efeito desde que os
+    turnos passaram a ser regidos por `initiative_order`/`initiative_index`
+    (Modo Mestre Fase A). `enter_dungeon` já liga `initiative_active`."""
+    r.initiative_active = True
+    if not r.initiative_order:
+        r._rebuild_initiative()
+    idx = next((i for i, e in enumerate(r.initiative_order)
+                if e["kind"] == "player" and e["id"] == pid), None)
+    if idx is not None:
+        r.initiative_index = idx
+    return idx
+
 def fixture():
     base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     with open(os.path.join(base, "dungeons", "test_fase3.json"), encoding="utf-8") as f:
@@ -102,7 +116,7 @@ async def test_prisioneiro():
     # herói adjacente ao prisioneiro cativo
     p1["pos"] = [r.prisoner["pos"][0] - 1, r.prisoner["pos"][1]]
     p1["action_done"] = False
-    r.turn_index = r.player_order.index("p1")
+    forcar_turno(r, "p1")
     await r.handle_libertar_prisioneiro("p1")
     check("prisioneiro libertado por herói adjacente", r.prisoner["freed"] is True)
     check("libertar registra o resgatador", r.prisoner["rescuer_pid"] == "p1")
@@ -212,7 +226,7 @@ async def test_prisioneiro_controle():
     r.players["p2"]["pos"] = [9, 8]; r.players["p2"]["alive"] = True
 
     # 1) encerrar o turno do resgatador ABRE a janela de controle e dá 6 de movimento
-    r.turn_index = r.player_order.index("p1")
+    forcar_turno(r, "p1")
     await r.handle_end_turn("p1")
     check("janela de controle abre p/ o resgatador", r.animados_phase_pid == "p1")
     check("prisioneiro recebe 6 de movimento", r.prisoner["moves_left"] == 6)
@@ -231,7 +245,7 @@ async def test_prisioneiro_controle():
     # 4) resgatador morto → controle transfere ao herói vivo mais próximo
     r.animados_phase_pid = None
     r.players["p1"]["alive"] = False
-    r.turn_index = r.player_order.index("p2")
+    forcar_turno(r, "p2")
     await r.handle_end_turn("p2")
     check("controle transfere ao herói vivo mais próximo",
           r.prisoner["rescuer_pid"] == "p2" and r.animados_phase_pid == "p2"
@@ -260,7 +274,7 @@ async def test_prisioneiro_armadilha():
     r.armadilhas.append({"id": "tr1", "tipo": "fosso_estacas", "pos": [3, 8],
                          "criador": None, "visivel": True})
     r.animados_phase_pid = "p1"
-    r.turn_index = r.player_order.index("p1")
+    forcar_turno(r, "p1")
     orig = r._testar_save
     r._testar_save = lambda alvo, s, d, extra_mod=0: (False, 1, 0, 1)   # sempre falha
     try:
@@ -292,7 +306,7 @@ async def test_prisioneiro_armadilha_progressiva():
     for x in range(2, 5): r.tiles[8][x] = server.FLOOR
     pr["pos"] = [2, 8]; r.players["p1"]["pos"] = [2, 8]; r.players["p1"]["alive"] = True
     r.armadilhas.append({"id": "inc1", "tipo": "armadilha_incendiaria", "pos": [3, 8], "criador": None})
-    r.animados_phase_pid = "p1"; r.turn_index = r.player_order.index("p1")
+    r.animados_phase_pid = "p1"; forcar_turno(r, "p1")
     orig = r._testar_save
     r._testar_save = lambda alvo, s, d, extra_mod=0: (False, 1, 0, 1)   # falha o save
     try:
@@ -315,7 +329,7 @@ async def test_reward_dividido():
     # gold=80 -> 40 por heroi.
     r.dungeon_def["objectives"] = {
         "primary": {"type": "kill_all",
-                    "xp": 40, "reward": {"gold": 80, "items": [{"id": "magic_sword"}]}},
+                    "xp": 40, "reward": {"gold": 80, "items": [{"id": "shortsword"}]}},
         "secondary": []}
     await r.enter_dungeon("p1")
     p1, p2 = r.players["p1"], r.players["p2"]
@@ -326,7 +340,7 @@ async def test_reward_dividido():
     # 2 herois vivos: 40 XP -> 20 cada; 80 ouro -> 40 cada
     check("XP dividido entre os vivos (20)", p1["xp"] == xp1 + 20 and p2["xp"] == xp2 + 20)
     check("ouro dividido entre os vivos (40)", p1["gold"] == ouro1 + 40)
-    check("item de recompensa acumulado", any(i.get("id") == "magic_sword" for i in loot))
+    check("item de recompensa acumulado", any(i.get("id") == "shortsword" for i in loot))
 
 
 async def test_reward_default_secundario():
@@ -346,7 +360,7 @@ async def test_encerrar_missao():
     print("\n[13] encerrar_missao faz a transicao e larga bau de recompensa")
     r = setup_authored()
     r.dungeon_def["objectives"] = {
-        "primary": {"type": "kill_all", "xp": 60, "reward": {"items": [{"id": "magic_sword"}]}},
+        "primary": {"type": "kill_all", "xp": 60, "reward": {"items": [{"id": "shortsword"}]}},
         "secondary": []}
     await r.enter_dungeon("p1")
     vit = {"c": False, "v": None}
@@ -359,7 +373,7 @@ async def test_encerrar_missao():
     check("bau de recompensa largado", len(novos) == 1)
     # Assere o conteúdo SÓ do baú recém-criado (não dos pré-existentes da fixture).
     check("bau contem o item de recompensa",
-          bool(novos) and any(i.get("id") == "magic_sword" for i in r.chests[novos[0]]["items"]))
+          bool(novos) and any(i.get("id") == "shortsword" for i in r.chests[novos[0]]["items"]))
     check("ainda nao encerrou (espera o botao)", vit["c"] is False)
     # pid desconhecido nao encerra
     await r.handle_encerrar_missao("ninguem")
