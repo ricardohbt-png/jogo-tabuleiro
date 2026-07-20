@@ -349,8 +349,9 @@ async def main():
     lt = xama_def["loot_table"]
     check("loot 21-40 = garrafa de vinho", lt["21-40"] == {"tipo": "item", "id": "garrafa_vinho"})
     check("loot 99-100 = raro (poção ou pergaminho)", lt["99-100"] == {"tipo": "raro_xama"})
-    check("garrafa_vinho existe em CHEST_ITEMS",
-          any(i["id"] == "garrafa_vinho" for i in CHEST_ITEMS))
+    from server import _DUNGEON_ITEM_CATALOG
+    check("garrafa_vinho resolve no catálogo de loot (def da taverna)",
+          "garrafa_vinho" in _DUNGEON_ITEM_CATALOG)
 
     print("\n[12] Garrafa de Vinho (consumível)")
     r = setup(); r._is_turn = lambda pid: True

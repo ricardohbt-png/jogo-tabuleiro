@@ -19361,12 +19361,10 @@ class GameRoom:
                     gv = loot.get("valor", loot.get("amount", 0))
                     gold = roll_dice(gv) if isinstance(gv, str) else gv
                 elif loot.get("tipo") == "item":
-                    item_def = (
-                        next((i for i in CHEST_ITEMS    if i["id"] == loot["id"]), None) or
-                        next((i for i in SHOP_WEAPONS   if i["id"] == loot["id"]), None) or
-                        next((i for i in SHOP_AMMO      if i["id"] == loot["id"]), None) or
-                        next((i for i in SHOP_MERCHANT  if i["id"] == loot["id"]), None)
-                    )
+                    # Resolve pelo catálogo mesclado (CHEST_ITEMS + as 6 lojas) —
+                    # fonte única. Antes buscava só em 4 listas e ignorava taverna/
+                    # templo, então loot de vinho/ração/poção de templo caía silencioso.
+                    item_def = _DUNGEON_ITEM_CATALOG.get(loot["id"])
                     if item_def:
                         loot_items.append(deepcopy(item_def))
                 elif loot.get("tipo") == "instrumento_aleatorio":
