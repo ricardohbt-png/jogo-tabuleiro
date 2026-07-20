@@ -58,6 +58,22 @@ async def main():
         check(f"necromante larga '{esperado}'", achou)
         r.chests.clear()
 
+    print("\n[4] CHEST_ITEMS podado + catálogo consistente")
+    from server import CHEST_ITEMS
+    ids_chest = [i["id"] for i in CHEST_ITEMS]
+    check("CHEST_ITEMS só tem a serrilhada", ids_chest == ["sword"], f"tem: {ids_chest}")
+    sword = CHEST_ITEMS[0]
+    check("serrilhada com price 32", sword.get("price") == 32)
+    check("serrilhada mantém corrosao_resistente", sword.get("corrosao_resistente") == 1)
+    for iid in ("magic_sword", "bow", "shield", "ring", "racao"):
+        check(f"'{iid}' saiu do catálogo", iid not in _DUNGEON_ITEM_CATALOG)
+    for iid in ("health_potion", "elixir", "antidote", "garrafa_vinho",
+                "staff", "chainmail", "leather", "amulet", "boots", "cloak"):
+        check(f"'{iid}' permanece no catálogo (loja)", iid in _DUNGEON_ITEM_CATALOG)
+    check("health_potion resolve p/ 'Poção de Cura'",
+          _DUNGEON_ITEM_CATALOG["health_potion"]["name"] == "Poção de Cura")
+    check("sword permanece no catálogo", "sword" in _DUNGEON_ITEM_CATALOG)
+
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 

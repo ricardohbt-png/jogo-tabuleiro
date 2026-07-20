@@ -2865,28 +2865,13 @@ for _mdef in MONSTER_DEFS:
     _mdef.setdefault("subtipo", _subtipo_padrao_monstro(_mdef))
 
 CHEST_ITEMS = [
-    # â”€â”€ ConsumÃ­veis (vÃ£o para a mochila, max 6 slots) â”€â”€
-    {"id": "health_potion", "name": "Poção de Vida",     "emoji": "🧪", "item_slot": "bag",       "effect": "heal",      "value": 10},
-    {"id": "elixir",        "name": "Elixir da Força",   "emoji": "⚗️", "item_slot": "bag",       "effect": "atk_bonus", "value": 3},
-    {"id": "antidote",      "name": "Antídoto",          "emoji": "💚", "item_slot": "bag",       "effect": "heal",      "value": 6},
-    {"id": "garrafa_vinho", "name": "Garrafa de Vinho",  "emoji": "🍷", "item_slot": "bag",       "effect": "wine",      "value": 15},
-    {"id": "racao",         "name": "Ração (Pão e Água)", "emoji": "🥖", "item_slot": "bag",       "effect": "ration",    "value": 15},
-    # â”€â”€ Armas (slot weapon) â”€â”€
-    {"id": "sword",         "name": "Espada Curta de Ferro Serrilhado", "emoji": "⚔️", "item_slot": "weapon",
-     "die": "1d6", "stat": "str_", "categoria": "cortante", "dmg_bonus": 2,
-     "corrosao_resistente": 1},   # +1 golpe do Devorador de Metal antes de comeÃ§ar a sofrer penalidade
-    {"id": "magic_sword",   "name": "Espada Mágica",     "emoji": "🗡️", "item_slot": "weapon",    "effect": "atk",       "value": 4},
-    {"id": "bow",           "name": "Arco Élfico",       "emoji": "🏹", "item_slot": "weapon",    "effect": "atk",       "value": 3},
-    {"id": "staff",         "name": "Cajado das Runas",  "emoji": "🪄", "item_slot": "weapon",    "effect": "atk",       "value": 3},
-    # â”€â”€ Armaduras (slot armor) â”€â”€
-    {"id": "shield",        "name": "Escudo de Madeira", "emoji": "🛡️", "item_slot": "armor",     "effect": "def_",      "value": 2},
-    {"id": "chainmail",     "name": "Cota de Malha",     "emoji": "🪖", "item_slot": "armor",     "effect": "def_",      "value": 3},
-    {"id": "leather",       "name": "Couro Reforçado",   "emoji": "🥋", "item_slot": "armor",     "effect": "def_",      "value": 1},
-    # â”€â”€ AcessÃ³rios (slots acc1 / acc2) â”€â”€
-    {"id": "amulet",        "name": "Amuleto Sagrado",   "emoji": "📿", "item_slot": "accessory", "effect": "maxhp",     "value": 5},
-    {"id": "boots",         "name": "Botas Velozes",     "emoji": "👢", "item_slot": "accessory", "effect": "spd",       "value": 1},
-    {"id": "ring",          "name": "Anel de Força",     "emoji": "💍", "item_slot": "accessory", "effect": "atk",       "value": 1},
-    {"id": "cloak",         "name": "Manto das Sombras", "emoji": "🧣", "item_slot": "accessory", "effect": "def_",      "value": 1},
+    # Loot AUTORADO especial (referenciável no editor). Os consumíveis e o
+    # equipamento genérico saíram daqui — baús procedurais usam LOOT_POOL_PROCEDURAL
+    # (defs de loja) e os autorados resolvem pelo catálogo mesclado. A serrilhada
+    # fica: é uma arma única (tolera +1 golpe do Devorador de Metal antes de corroer).
+    {"id": "sword", "name": "Espada Curta de Ferro Serrilhado", "emoji": "⚔️",
+     "item_slot": "weapon", "die": "1d6", "stat": "str_", "categoria": "cortante",
+     "dmg_bonus": 2, "corrosao_resistente": 1, "price": 32},   # Espada Curta (12) + 20
 ]
 
 # IDs sorteados em baús PROCEDURAIS (os que surgem ao limpar salas). Fonte única:
