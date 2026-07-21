@@ -15675,6 +15675,9 @@ class GameRoom:
         c.setdefault("armadura_destruida", False)
         c.setdefault("arma_lvl", 0)
         c.setdefault("arma_destruida", False)
+        c.setdefault("escudo_lvl", 0); c.setdefault("escudo_destruido", False)
+        c.setdefault("elmo_lvl", 0);   c.setdefault("elmo_destruido", False)
+        c.setdefault("botas_lvl", 0);  c.setdefault("botas_destruido", False)
         return c
 
     def _tem_armadura(self, p):
@@ -15688,11 +15691,27 @@ class GameRoom:
         return bool(a) and a.get("id") != "cloak"
 
     def _corrosao_ca_pen(self, p):
-        """Penalidade de CA por corrosão (só armadura que concede CA perde CA)."""
+        """Penalidade de CA por corrosão das peças de defesa que concedem CA
+        (armadura + escudo + elmo). Persiste após a destruição (a CA da peça
+        segue embutida em p['ac'] mesmo depois de removida do slot)."""
         c = self._corr(p)
-        if not c["armadura_com_ca"]:
-            return 0
-        return min(c["armadura_lvl"], 3)   # danificado -1, quebrado -2, destruÃ­do -3
+        gear = p["gear"]
+
+        def _pen(piece, lvl):
+            extra = int((piece or {}).get("corrosao_resistente", 0) or 0)
+            m = int((piece or {}).get("corrosao_niveis_penalidade", 2) or 2)
+            return max(0, min(lvl - extra, m))
+
+        total = 0
+        if c["armadura_com_ca"]:
+            total += _pen(gear.get("armor"), c["armadura_lvl"])
+        off = gear.get("off_hand") or {}
+        if off.get("kind") == "shield" or off.get("item_slot") == "shield":
+            total += _pen(off, c["escudo_lvl"])
+        head = gear.get("head") or {}
+        if head.get("effect") == "def_":
+            total += _pen(head, c["elmo_lvl"])
+        return total
 
     def _corrosao_arma_pen(self, p):
         """Penalidade de acerto/dano por arma corroída. Armas com `corrosao_resistente`
@@ -15768,56 +15787,72 @@ class GameRoom:
             await self.gm_say(
                 f"🕸️ **{nome}** fica preso na rede! (escapar: {es['tipo']} CD {es['cd']})")
 
+    @staticmethod
+    def _peca_corroivel(piece, ids_slot, materiais_devorador):
+        """Corrói se o id está no set nativo do devorador OU se declara material
+        compatível (peça custom). materiais_devorador: {'metal'} ou {'organic'}."""
+        if not piece:
+            return False
+        if piece.get("id") in ids_slot:
+            return True
+        return bool(set(piece.get("corrosion_materials", [])) & materiais_devorador)
+
+    @staticmethod
+    def _corrosao_nm_quebra(piece, lvl):
+        """(quebrou?, nivel_penalidade) modelo N/M. Base sem N/M → N=0,M=2."""
+        extra = int((piece or {}).get("corrosao_resistente", 0) or 0)
+        pen = int((piece or {}).get("corrosao_niveis_penalidade", 2) or 2)
+        if lvl >= extra + pen + 1:
+            return True, 0
+        return False, max(0, min(lvl - extra, pen))
+
     async def _corroer_equipamento(self, m, p, armaduras_ids, armas_ids, cura="1d4", label="Corrosão"):
-        """Degrada UM equipamento do alvo (prioridade: armadura > arma) cujos ids
-        estejam nos conjuntos dados. Destruição (nível 3) é PERMANENTE e cura o
-        devorador por `cura`. Usado pelos Devoradores Orgânico e de Metal."""
+        """Degrada UMA peça na prioridade armadura → escudo → arma → elmo → botas.
+        armaduras_ids/armas_ids: sets nativos do devorador; peças custom corroem por
+        corrosion_materials. Destruição é permanente e cura o devorador."""
         c = self._corr(p)
-        armor  = p["gear"].get("armor")
-        weapon = p.get("weapon")
-
-        if (armor and armor.get("id") in armaduras_ids and not c["armadura_destruida"]):
-            c["armadura_lvl"] += 1
-            c["armadura_com_ca"] = (armor.get("id") != "cloak")   # manto nÃ£o dÃ¡ CA; couro/metal sim
-            if c["armadura_lvl"] >= 3:
-                c["armadura_destruida"] = True
-                p["gear"]["armor"]      = None
-                await self.gm_say(
-                    f"💥 A armadura de **{p['name']}** ({armor.get('name','armadura')}) "
-                    f"foi **destruída permanentemente**!")
+        material = "metal" if armaduras_ids is CORROSAO_ARMADURA_METAL else "organic"
+        mats = {material}
+        gear = p["gear"]
+        # A chave de "destruído" segue o gênero gramatical já usado em `_corr`
+        # (armadura_destruida/arma_destruida são pré-existentes, femininas —
+        # NÃO seguem o padrão f"{pref}_destruido" dos slots novos).
+        alvos = [
+            ("armor",    "armadura", armaduras_ids, "armadura_destruida"),
+            ("off_hand", "escudo",   armaduras_ids, "escudo_destruido"),
+            ("weapon",   "arma",     armas_ids,     "arma_destruida"),
+            ("head",     "elmo",     armaduras_ids, "elmo_destruido"),
+            ("boots",    "botas",    armaduras_ids, "botas_destruido"),
+        ]
+        for slot, pref, ids_slot, destruido_key in alvos:
+            peca = p.get("weapon") if slot == "weapon" else gear.get(slot)
+            if slot == "off_hand" and not (peca and (peca.get("kind") == "shield" or peca.get("item_slot") == "shield")):
+                continue
+            if c.get(destruido_key):
+                continue
+            if not self._peca_corroivel(peca, ids_slot, mats):
+                continue
+            c[f"{pref}_lvl"] = c.get(f"{pref}_lvl", 0) + 1
+            lvl = c[f"{pref}_lvl"]
+            if slot == "armor":
+                c["armadura_com_ca"] = (peca.get("id") != "cloak")
+            quebrou, nivel_pen = self._corrosao_nm_quebra(peca, lvl)
+            nome_peca = peca.get("name", pref)
+            if quebrou:
+                c[destruido_key] = True
+                if slot == "weapon":
+                    p["weapon"] = {**WEAPONS["unarmed"]}; gear["weapon"] = None
+                else:
+                    gear[slot] = None
+                await self.gm_say(f"💥 {nome_peca} de **{p['name']}** foi **destruída permanentemente**!")
                 await self._devorador_cura(m, cura)
+            elif nivel_pen <= 0:
+                await self.gm_say(f"🦷 **{label}**: {nome_peca} de **{p['name']}** resistiu ao golpe sem sofrer dano!")
             else:
-                nome = CORROSAO_NIVEL_NOME[c["armadura_lvl"]]
-                efeito = f" (-{c['armadura_lvl']} CA)" if c["armadura_com_ca"] else ""
-                await self.gm_say(f"🦷 **{label}**: a armadura de **{p['name']}** está **{nome}**{efeito}!")
+                rot = CORROSAO_NIVEL_NOME.get(nivel_pen, "muito danificado")
+                await self.gm_say(f"🦷 **{label}**: {nome_peca} de **{p['name']}** está **{rot}** (-{nivel_pen})!")
             return
-
-        if (weapon and weapon.get("id") in armas_ids and not c["arma_destruida"]):
-            c["arma_lvl"] += 1
-            extra = weapon.get("corrosao_resistente", 0)
-            # Quebra em N(livres)+M(penalidade)+1. Com M=2 (default) → 3+extra, idêntico.
-            pen_niveis = int(weapon.get("corrosao_niveis_penalidade", 2) or 2)
-            if c["arma_lvl"] >= extra + pen_niveis + 1:
-                c["arma_destruida"] = True
-                p["weapon"]         = {**WEAPONS["unarmed"]}
-                p["gear"]["weapon"] = None
-                await self.gm_say(
-                    f"💥 A arma de **{p['name']}** ({weapon.get('name','arma')}) "
-                    f"foi **destruída permanentemente** — agora luta desarmado!")
-                await self._devorador_cura(m, cura)
-            elif c["arma_lvl"] - extra <= 0:
-                # NÃ­vel tolerado pela resistÃªncia da arma â€” golpe absorvido sem penalidade.
-                await self.gm_say(
-                    f"🦷 **{label}**: a arma de **{p['name']}** ({weapon.get('name','arma')}) "
-                    f"resistiu ao golpe sem sofrer dano!")
-            else:
-                nivel_efetivo = c["arma_lvl"] - extra
-                nome = CORROSAO_NIVEL_NOME.get(nivel_efetivo, "muito danificado")
-                await self.gm_say(
-                    f"🦷 **{label}**: a arma de **{p['name']}** "
-                    f"({weapon.get('name','arma')}) está **{nome}** (-{nivel_efetivo} acerto/dano)!")
-            return
-        # Nenhum equipamento do tipo certo exposto â€” nada a corroer.
+        # Nenhum equipamento do tipo certo exposto — nada a corroer.
 
     async def _aplicar_toque_putrefato(self, m, p):
         """Devorador Orgânico: corrói couro/manto e armas de madeira (cura 1d4)."""

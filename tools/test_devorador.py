@@ -50,7 +50,11 @@ async def main():
     check("quebrado: ca_pen=2", r._corrosao_ca_pen(w) == 2)
     hp_antes = d["hp"]
     await r._aplicar_toque_putrefato(d, w)
-    check("destruído: ca_pen=3", r._corrosao_ca_pen(w) == 3)
+    # Fase 2a (corrosão generalizada): a penalidade persistida após a destruição
+    # passa a ser travada em M=2 (default) em vez de crescer p/ 3 — a peça some
+    # do slot, mas a CA que ela concedia já estava embutida em p["ac"]; a
+    # penalidade agora cancela exatamente essa CA (antes deixava a base -1).
+    check("destruído: ca_pen=2 (correção intencional, Fase 2a)", r._corrosao_ca_pen(w) == 2)
     check("armadura removida do slot", w["gear"]["armor"] is None)
     check("Absorver Matéria curou (1d4)", d["hp"] >= hp_antes)  # >= pois pode já estar no máx
     # arma do warrior é metal (machado) → nunca corrói

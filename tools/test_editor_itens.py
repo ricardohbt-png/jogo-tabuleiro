@@ -334,6 +334,44 @@ def test_compra_armadura():
     check("bolsa preserva N/M", comprada and comprada.get("corrosao_niveis_penalidade") == 2)
     S._apply_custom_items([])
 
+def _corr_setup():
+    r = S.GameRoom("TEST")
+    async def noop(*a, **k): pass
+    r.gm_say = noop; r.broadcast = noop; r._devorador_cura = noop
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    return r, p
+
+def test_corrosao_armadura_nm():
+    print("\n[A5] Corrosão: armadura byte-idêntica + escudo + prioridade")
+    # (a) armadura base (leather, sem N/M): quebra no 3º nível, penalidade 1,2
+    r, p = _corr_setup()
+    p["gear"]["armor"] = {"id": "leather", "name": "Couro"}
+    m = {"id": "d", "name": "Devorador", "hp": 10, "max_hp": 10}
+    for _ in range(2):
+        asyncio.run(r._corroer_equipamento(m, p, S.CORROSAO_ARMADURA_ORGANICA, S.CORROSAO_ARMA_MADEIRA, "1d4", "T"))
+    check("armadura viva após 2 níveis", p["gear"]["armor"] is not None)
+    check("penalidade de CA = 2 no nível 2", r._corrosao_ca_pen(p) == 2)
+    asyncio.run(r._corroer_equipamento(m, p, S.CORROSAO_ARMADURA_ORGANICA, S.CORROSAO_ARMA_MADEIRA, "1d4", "T"))
+    check("armadura destruída no 3º nível", p["gear"]["armor"] is None)
+    # (b) escudo custom com material metal corrói e quebra em N+M+1 (N=1,M=2 → 4)
+    S._apply_custom_items([S._validate_custom_item(armor_sample(id="esc_c", item_type="shield",
+        corrosion_materials=["metal"], corrosao_resistente=1, corrosao_niveis_penalidade=2))[1]])
+    r, p = _corr_setup()
+    p["gear"]["off_hand"] = deepcopy(next(a for a in S.SHOP_ARMORS if a["id"] == "esc_c"))
+    for _ in range(3):
+        asyncio.run(r._corroer_equipamento(m, p, S.CORROSAO_ARMADURA_METAL, S.CORROSAO_ARMA_METAL, "1d6", "M"))
+    check("escudo vivo após 3 níveis (N=1,M=2)", p["gear"]["off_hand"] is not None)
+    asyncio.run(r._corroer_equipamento(m, p, S.CORROSAO_ARMADURA_METAL, S.CORROSAO_ARMA_METAL, "1d6", "M"))
+    check("escudo destruído no 4º nível", p["gear"]["off_hand"] is None)
+    # (c) prioridade: armadura (metal) corrói antes do escudo
+    r, p = _corr_setup()
+    p["gear"]["armor"] = {"id": "chainmail", "name": "Cota"}
+    p["gear"]["off_hand"] = {"id": "esc_c", "name": "Esc", "kind": "shield", "corrosion_materials": ["metal"]}
+    asyncio.run(r._corroer_equipamento(m, p, S.CORROSAO_ARMADURA_METAL, S.CORROSAO_ARMA_METAL, "1d6", "M"))
+    check("prioridade: armadura corroída antes do escudo",
+          r._corr(p)["armadura_lvl"] == 1 and r._corr(p).get("escudo_lvl", 0) == 0)
+    S._apply_custom_items([])
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
@@ -341,5 +379,6 @@ if __name__ == "__main__":
     test_penalidade_engine(); test_material_e_municao()
     test_validacao_armadura(); test_merge_armadura()
     test_multi_efeito(); test_compra_armadura()
+    test_corrosao_armadura_nm()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)
