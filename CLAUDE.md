@@ -1080,3 +1080,28 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > **"soldado"** em `monstros_personalizados.json`. Sem mestre, byte-idêntico. Spec/
 > plano em `docs/superpowers/{specs,plans}/2026-07-17-modo-mestre-inventario-monstro-sp2*`.
 > Teste: `tools/test_modo_mestre.py` (seções [27]/[28]).
+
+> **Editor de Itens — Fase 1 (Armas):** nova aba "Editor de itens" no editor de
+> masmorras (`tools/editor.html` + `tools/editor_items_editor.js`); sub-aba
+> **Armas** funcional, as outras 7 (armaduras/escudos/anéis/botas/poções/
+> arremessáveis/venenos) visíveis mas desabilitadas (fases futuras). **Catálogo
+> global vivo:** salvo em `itens_personalizados.json` + índice regenerado
+> `tools/editor_items_custom.js` (`window.EDITOR_CUSTOM_ITEMS`), mesclado no boot
+> por `_apply_custom_items` em `WEAPONS`/`SHOP_WEAPONS`/`_DUNGEON_ITEM_CATALOG`/
+> `LOOT_POOL_PROCEDURAL` (server.py). Handlers WS `upload_custom_item` +
+> `upload_item_art` (PNG → `assets/itens/<id>.png`). **Efeitos passivos
+> funcionais** no combate (lidos de `p["weapon"]` em `handle_attack`): dado/
+> categoria/stat/manejo/alcance, bônus fixo de ataque (`atk_bonus`) OU dano
+> (`damage_bonus`), e dano elemental adicional (`extra_damages`, lista de
+> `{die,type}` em fire/cold/lightning/acid/holy); `granted_ability` (habilidade
+> de Guilda/herói) é só **metadado** nesta fase. Compra/equipar preservam esses
+> campos (whitelists de `handle_shop_buy`/`combat_fields`). **Disponibilidade**
+> por item (loja/baús/loot de monstro); armas com `baus=true` aparecem no
+> seletor de itens de baú/recompensa do editor (`CAT.items` em `tools/editor.js`).
+> **Preço sugerido** e serialização/validação puras em
+> `tools/editor_items_logic.js` (reusado pelo teste node). **Copiar-como-modelo:**
+> itens base nunca são alterados; todo item salvo é sempre novo (id próprio).
+> Testes: `tools/test_editor_itens.py` (servidor) e
+> `tools/test_editor_items_logic.js` (node). Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-07-20-editor-itens-fase1-armas*`.
+> Fases seguintes: as outras 7 abas + habilidades ativáveis funcionais.
