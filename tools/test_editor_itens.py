@@ -268,11 +268,38 @@ def test_validacao_armadura():
     okw, _ = S._validate_custom_item(sample())
     check("arma ainda valida", okw)
 
+def test_merge_armadura():
+    print("\n[A2] Merge de armadura/escudo")
+    arm = S._validate_custom_item(armor_sample(id="cota_m", corrosion_materials=["metal"]))[1]
+    org = S._validate_custom_item(armor_sample(id="couro_o", corrosion_materials=["organic"]))[1]
+    esc = S._validate_custom_item(armor_sample(id="esc_m", item_type="shield", corrosion_materials=["metal"]))[1]
+    S._apply_custom_items([arm, org, esc])
+    check("armadura entra em SHOP_ARMORS", any(a["id"] == "cota_m" for a in S.SHOP_ARMORS))
+    check("escudo entra em SHOP_ARMORS", any(a["id"] == "esc_m" for a in S.SHOP_ARMORS))
+    check("SHOP_ARMORS carrega ac_bonus", next(a for a in S.SHOP_ARMORS if a["id"] == "cota_m")["ac_bonus"] == 4)
+    check("metal armadura -> CORROSAO_ARMADURA_METAL", "cota_m" in S.CORROSAO_ARMADURA_METAL)
+    check("organic armadura -> CORROSAO_ARMADURA_ORGANICA", "couro_o" in S.CORROSAO_ARMADURA_ORGANICA)
+    check("escudo metal -> CORROSAO_ARMADURA_METAL", "esc_m" in S.CORROSAO_ARMADURA_METAL)
+    arm2 = S._validate_custom_item(armor_sample(id="cota_bau",
+        disponibilidade={"loja": False, "baus": True, "loot_monstro": True}))[1]
+    S._apply_custom_items([arm, org, esc, arm2])
+    check("baus: entra em _DUNGEON_ITEM_CATALOG", "cota_bau" in S._DUNGEON_ITEM_CATALOG)
+    check("loot: entra em LOOT_POOL_PROCEDURAL", "cota_bau" in S.LOOT_POOL_PROCEDURAL)
+    check("catalogo de baus e equipavel (item_slot armor + effect def_)",
+          S._DUNGEON_ITEM_CATALOG["cota_bau"].get("item_slot") == "armor"
+          and S._DUNGEON_ITEM_CATALOG["cota_bau"].get("effect") == "def_")
+    S._apply_custom_items([])
+    check("cleanup remove de SHOP_ARMORS", not any(a.get("custom") for a in S.SHOP_ARMORS))
+    check("cleanup remove de CORROSAO_ARMADURA_METAL", "cota_m" not in S.CORROSAO_ARMADURA_METAL)
+    check("cleanup remove de CORROSAO_ARMADURA_ORGANICA", "couro_o" not in S.CORROSAO_ARMADURA_ORGANICA)
+    check("base leather intacto em SHOP_ARMORS", any(a["id"] == "leather" for a in S.SHOP_ARMORS))
+    check("base leather intacto em CORROSAO_ARMADURA_ORGANICA", "leather" in S.CORROSAO_ARMADURA_ORGANICA)
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
     test_compra_equipa_preserva(); test_corrosao()
     test_penalidade_engine(); test_material_e_municao()
-    test_validacao_armadura()
+    test_validacao_armadura(); test_merge_armadura()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)

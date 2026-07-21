@@ -21086,8 +21086,40 @@ def _custom_weapon_inventory_dict(item):
         inv["allowed_classes"] = list(item["allowed_classes"])
     return inv
 
+def _custom_armor_shop_dict(item):
+    """Entrada de SHOP_ARMORS para uma peça custom."""
+    out = {"id": item["id"], "name": item["name"], "emoji": item["emoji"],
+           "ac_bonus": item["ac_bonus"], "kind": item["kind"], "price": item["price"],
+           "corrosion_materials": list(item["corrosion_materials"]),
+           "corrosao_resistente": item["corrosao_resistente"],
+           "corrosao_niveis_penalidade": item["corrosao_niveis_penalidade"],
+           "bonuses": [dict(b) for b in item["bonuses"]],
+           "granted_ability": item["granted_ability"], "custom": True}
+    if item["kind"] == "armor" and item.get("armor_category"):
+        out["armor_category"] = item["armor_category"]
+    if item["allowed_classes"]:
+        out["allowed_classes"] = list(item["allowed_classes"])
+    return out
+
+def _custom_armor_inventory_dict(item):
+    """Peça equipável (baús/loot) — vai pra bolsa e equipa via effect def_."""
+    slot = "shield" if item["kind"] == "shield" else "armor"
+    inv = {"id": item["id"], "name": item["name"], "emoji": item["emoji"],
+           "item_slot": slot, "effect": "def_", "value": item["ac_bonus"],
+           "kind": item["kind"], "custom": True, "price": item["price"],
+           "corrosion_materials": list(item["corrosion_materials"]),
+           "corrosao_resistente": item["corrosao_resistente"],
+           "corrosao_niveis_penalidade": item["corrosao_niveis_penalidade"],
+           "bonuses": [dict(b) for b in item["bonuses"]],
+           "granted_ability": item["granted_ability"]}
+    if item["kind"] == "armor" and item.get("armor_category"):
+        inv["armor_category"] = item["armor_category"]
+    if item["allowed_classes"]:
+        inv["allowed_classes"] = list(item["allowed_classes"])
+    return inv
+
 def _apply_custom_items(records):
-    """Mescla armas custom nos catálogos vivos (idempotente: remove os customs antes)."""
+    """Mescla armas/armaduras/escudos custom nos catálogos vivos (idempotente: remove os customs antes)."""
     global SHOP_WEAPONS, LOOT_POOL_PROCEDURAL
     # Limpa os ids custom anteriores de WEAPONS e dos registros derivados
     # (munição e sets de corrosão) para o merge ser idempotente.
@@ -21102,11 +21134,35 @@ def _apply_custom_items(records):
     for k in prev_custom_ids:
         _DUNGEON_ITEM_CATALOG.pop(k, None)
     LOOT_POOL_PROCEDURAL[:] = [i for i in LOOT_POOL_PROCEDURAL if i not in prev_custom_ids]
+    # Peças de defesa custom: limpar SHOP_ARMORS, catálogo de baús e sets de corrosão.
+    prev_def_ids = {a["id"] for a in SHOP_ARMORS if a.get("custom")}
+    prev_def_ids |= {k for k, v in _DUNGEON_ITEM_CATALOG.items()
+                     if v.get("custom") and v.get("kind") in ("armor", "shield")}
+    SHOP_ARMORS[:] = [a for a in SHOP_ARMORS if not a.get("custom")]
+    for k in prev_def_ids:
+        CORROSAO_ARMADURA_METAL.discard(k)
+        CORROSAO_ARMADURA_ORGANICA.discard(k)
+        _DUNGEON_ITEM_CATALOG.pop(k, None)
+    LOOT_POOL_PROCEDURAL[:] = [i for i in LOOT_POOL_PROCEDURAL if i not in prev_def_ids]
     for raw in records:
-        if not isinstance(raw, dict) or raw.get("item_type", "weapon") != "weapon":
+        if not isinstance(raw, dict):
             continue
+        it = raw.get("item_type", "weapon")
         ok, item = _validate_custom_item(raw)
         if not ok:
+            continue
+        if it in ("armor", "shield"):
+            disp = item["disponibilidade"]
+            if disp["loja"]:
+                SHOP_ARMORS.append(_custom_armor_shop_dict(item))
+            inv = _custom_armor_inventory_dict(item)
+            if disp["baus"] or disp["loot_monstro"]:
+                _DUNGEON_ITEM_CATALOG[item["id"]] = inv
+            if disp["loot_monstro"]:
+                LOOT_POOL_PROCEDURAL.append(item["id"])
+            mats = item["corrosion_materials"]
+            if "metal" in mats:   CORROSAO_ARMADURA_METAL.add(item["id"])
+            if "organic" in mats: CORROSAO_ARMADURA_ORGANICA.add(item["id"])
             continue
         WEAPONS[item["id"]] = _custom_weapon_combat_dict(item)
         # Material → set de corrosão (define qual Devorador a corrói).
