@@ -4297,13 +4297,13 @@ GRIMORIO = {
         "id": "relampago", "nome": "Relâmpago",
         "circulo": "primeiro", "classe": ["mage"],
         "icone": "⚡", "tipo": "linha_reflexiva",
-        "alcance_base": 7, "alcance_escala": 2,    # 7 casas no nÃ­vel 1 (+2/nÃ­vel)
+        "alcance_base": 4, "alcance_escala": 1,    # 4 casas no nível 1 (+1/nível)
         "dano_por_nivel": "1d6",                   # 1d6 por nÃ­vel por impacto
         "save": "reflexos", "save_efeito": "metade",
         "pode_ferir_aliados": True, "pode_ferir_caster": True,
         "ricochete_volta": True,                   # ricocheteia de volta pelo mesmo trajeto
         "dano_por_impacto": True, "save_por_impacto": True,
-        "descricao": "1d6/nível por impacto. Linha reta de 7 casas + ricochete de volta (casas atingidas 2x). Pedro só é ferido na volta.",
+        "descricao": "1d6/nível por impacto. Linha reta de 4 casas (+1/nível) + ricochete de volta (casas atingidas 2x). Pedro só é ferido na volta.",
     },
     "raio_congelante": {
         "id": "raio_congelante", "nome": "Raio Congelante",
@@ -5905,6 +5905,9 @@ class GameRoom:
         """(dur_bonus, alcance_bonus) de Estender Magia (Fase 3): +1 rodada de
         duração se a magia tiver 'duracao' ou 'rodadas', senão +1 quadrado de alcance."""
         if not p.get("tec_ex_estender_armado"):
+            return 0, 0
+        # Relâmpago é instantâneo: Estender não amplia sua duração nem alcance.
+        if magia.get("id") == "relampago":
             return 0, 0
         return (1, 0) if ("duracao" in magia or "rodadas" in magia) else (0, 1)
 
@@ -13564,14 +13567,15 @@ class GameRoom:
         return seq
 
     # â”€â”€ RelÃ¢mpago (linha reta; ricocheteia na parede gastando o mesmo alcance) â”€â”€â”€â”€
-    # O raio tem um orÃ§amento de deslocamento = alcance (7 no nÃ­vel 1). Anda na
+    # O raio tem um orçamento de deslocamento = alcance (4 no nível 1). Anda na
     # direÃ§Ã£o escolhida; ao bater numa parede, ricocheteia e continua com o que
     # sobrou. Casas pisadas 2x sofrem dano 2x; Pedro (origem) sÃ³ Ã© ferido se o
     # ricochete voltar atÃ© ele. Dano (1d6/nÃ­vel) + Reflexos por impacto.
     async def _executar_relampago(self, caster, magia, data, dmg_mult, alcance_bonus=0):
         nivel     = caster.get("level", 1)
         bonus_int = mod(caster.get("int_", 10))
-        alcance   = magia["alcance_base"] + magia["alcance_escala"] * (nivel - 1) + alcance_bonus
+        # Relâmpago é instantâneo: Estender não altera seu alcance.
+        alcance   = magia["alcance_base"] + magia["alcance_escala"] * (nivel - 1)
         save_dif  = self._dif_magia(caster, magia)
 
         dirv = (data or {}).get("dir", [0, 0])

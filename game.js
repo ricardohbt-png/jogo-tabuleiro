@@ -9395,14 +9395,15 @@ const GRIMORIO_CLIENT = {
   relampago: {
     id:'relampago', nome:'Relâmpago', icone:'⚡',
     circulo:'primeiro', classe:['mage'],
-    tipo:'linha_reflexiva', alcance_base:7, alcance_escala:2,
+    tipo:'linha_reflexiva', alcance_base:4, alcance_escala:1,
     custo:'🍖-1 💧-1',
-    resumo:'1d6/nível por impacto. Linha de 7 + ricochete.',
-    descricao:`<b>Alcance:</b> 7 casas em linha reta (+2 por nível)<br>
+    resumo:'1d6/nível por impacto. Linha de 4 + ricochete.',
+    descricao:`<b>Alcance:</b> 4 casas em linha reta (+1 por nível)<br>
                <b>Dano:</b> 1d6 por nível por impacto<br>
                <b>Ricochete:</b> volta pelo mesmo trajeto — casas atingidas 2x (verde escuro)<br>
                <b>Save:</b> Reflexos → metade por impacto<br>
-               <b>⚠️ Pedro só é ferido na volta; pode ferir aliados</b>`
+               <b>⚠️ Pedro só é ferido na volta; pode ferir aliados</b><br>
+               <b>Estender Magia:</b> não se aplica (efeito instantâneo)`
   },
   raio_congelante: {
     id:'raio_congelante', nome:'Raio Congelante', icone:'❄️',
