@@ -388,6 +388,21 @@ def test_corrosao_armadura_nm():
     check("escudo base corrói pelo metal", r._corr(p)["escudo_lvl"] == 1)
     S._apply_custom_items([])
 
+def test_corrosao_botas():
+    print("\n[A6] Botas custom corroem e penalizam velocidade")
+    S._apply_custom_items([S._validate_custom_item(armor_sample(id="botas_c", item_type="armor",
+        armor_category="leve", corrosion_materials=["organic"],
+        bonuses=[{"effect": "spd", "value": 1}]))[1]])
+    r, p = _corr_setup()
+    base = r._moves_base(p)
+    p["gear"]["armor"] = None  # isola a corrosão nas botas (armadura inicial é organic e tem prioridade)
+    p["gear"]["boots"] = {"id": "botas_c", "name": "Botas", "corrosion_materials": ["organic"]}
+    m = {"id": "d", "name": "Dev", "hp": 10, "max_hp": 10}
+    asyncio.run(r._corroer_equipamento(m, p, S.CORROSAO_ARMADURA_ORGANICA, S.CORROSAO_ARMA_MADEIRA, "1d4", "T"))
+    check("botas corroídas (nível 1)", r._corr(p)["botas_lvl"] == 1)
+    check("movimento cai 1 com botas corroídas", r._moves_base(p) == base - 1)
+    S._apply_custom_items([])
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
@@ -396,5 +411,6 @@ if __name__ == "__main__":
     test_validacao_armadura(); test_merge_armadura()
     test_multi_efeito(); test_compra_armadura()
     test_corrosao_armadura_nm()
+    test_corrosao_botas()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)

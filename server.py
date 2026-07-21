@@ -14054,10 +14054,11 @@ class GameRoom:
         return p.get("mov_bonus_val", 0) if p.get("mov_bonus_ate", 0) >= self.round_num else 0
 
     def _moves_base(self, p):
-        """Movimento do turno = spd + bônus de canção + Grito de Guerra + penalidade de veneno/doença (mov)."""
+        """Movimento do turno = spd + bônus de canção + Grito de Guerra + penalidade de veneno/doença (mov)
+        - penalidade de botas corroídas."""
         return max(0, p["spd"] + self._cancao_bonus(p, "bonus_mov")
                    + self._pen(p, "movimento") + self._doenca_mov_pen(p)
-                   + self._grito_mov_bonus(p))
+                   + self._grito_mov_bonus(p) - self._corrosao_spd_pen(p))
 
     def _is_water_tile(self, x, y):
         """Água é piso atravessável; o efeito é de movimento, não de bloqueio."""
@@ -15707,6 +15708,14 @@ class GameRoom:
         if c.get("escudo_com_ca"):   total += _pen("escudo")
         if c.get("elmo_com_ca"):     total += _pen("elmo")
         return total
+
+    def _corrosao_spd_pen(self, p):
+        """Penalidade de velocidade por botas corroídas (persiste após destruição,
+        cancelando o bônus de velocidade que ficou embutido em p['spd'])."""
+        c = self._corr(p)
+        n = int(c.get("botas_resist", 0) or 0)
+        m = int(c.get("botas_penmax", 2) or 2)
+        return max(0, min(c.get("botas_lvl", 0) - n, m))
 
     def _corrosao_arma_pen(self, p):
         """Penalidade de acerto/dano por arma corroída. Armas com `corrosao_resistente`
