@@ -8,8 +8,9 @@ Status: aprovado (aguardando revisão da spec escrita)
 Habilitar no "Editor de itens" (aba do editor de masmorras) as sub-abas
 **Armaduras** e **Escudos**, criando peças de defesa personalizadas que entram no
 catálogo global vivo e funcionam no jogo. Esta é a **Fase 2a**: entrega o editor +
-os bônus que o motor de equipamento **já suporta** (CA, PV máximo, velocidade) +
-material/corrosão + metadados. As capacidades de motor novas — bônus de **atributo**
+os bônus que o motor de equipamento **já suporta** (CA, PV máximo, velocidade) + um
+**motor de corrosão de peças de defesa generalizado** (armadura/escudo/elmo/botas,
+com N/M como as armas) + metadados. As capacidades de motor novas — bônus de **atributo**
 (B), **resistências** de dano (C) e **iniciativa** (D) — são incrementos seguintes,
 cada um ligando seus campos no editor quando chegar.
 
@@ -20,7 +21,11 @@ cada um ligando seus campos no editor quando chegar.
    atributo/resistência/iniciativa **não** aparecem na UI de A (evita controle morto).
 3. **Bônus adicionais em A:** CA extra, PV máximo, velocidade (efeitos que o motor já
    conhece), via um **motor de multi-efeito** novo (lista `bonuses`).
-4. Carrega da Fase 1 (Armas), sem re-perguntar: catálogo global vivo (mesmo
+4. **Corrosão generalizada:** o sistema de quebra por corrosão+material passa a valer
+   para **armadura, escudo, elmo e botas** (não só armadura de corpo), com o modelo
+   **N/M** das armas; peças base permanecem byte-idênticas (N=0/M=2). Editor expõe
+   material+N/M para armadura e escudo agora; botas/elmos ficam engine-ready.
+5. Carrega da Fase 1 (Armas), sem re-perguntar: catálogo global vivo (mesmo
    `itens_personalizados.json`, com `item_type` `"armor"`/`"shield"`), efeitos passivos
    funcionais + `granted_ability` só metadado, copiar-como-modelo, upload PNG,
    disponibilidade (loja/baús/loot), preço sugerido.
@@ -60,6 +65,8 @@ cada um ligando seus campos no editor quando chegar.
   "ac_bonus": 4,
   "armor_category": "media",
   "corrosion_materials": ["metal"],
+  "corrosao_resistente": 0,
+  "corrosao_niveis_penalidade": 2,
   "bonuses": [{"effect": "maxhp", "value": 5}, {"effect": "spd", "value": -1}],
   "granted_ability": null,
   "allowed_classes": ["warrior", "paladin"],
@@ -71,8 +78,10 @@ cada um ligando seus campos no editor quando chegar.
 Regras:
 - `item_type ∈ {"armor","shield"}`; `kind` = `item_type` (mantido para o motor).
 - `ac_bonus` inteiro ≥ 0 (defesa base da peça).
-- `armor_category ∈ {"leve","media","pesada", null}` e `corrosion_materials ⊆
-  {"organic","metal"}` **só para `armor`**; escudo ignora ambos.
+- `armor_category ∈ {"leve","media","pesada", null}` **só para `armor`** (escudo ignora).
+- `corrosion_materials ⊆ {"organic","metal"}` para **armor E shield** (ambos corroem);
+  `corrosao_resistente` (N níveis sem penalidade, ≥0) + `corrosao_niveis_penalidade`
+  (M níveis com penalidade, ≥1, default 2) — mesmo modelo N/M das armas.
 - `bonuses[i].effect ∈ {"def_","maxhp","spd"}` nesta fase (CA extra / PV máx /
   velocidade); `value` inteiro (pode ser negativo, ex.: penalidade de velocidade).
 - `granted_ability` só metadado; `allowed_classes ⊆ 6 classes`; `price ≥ 0`;
@@ -83,13 +92,14 @@ Regras:
 ### 1. Servidor — validação e merge (generalização da Fase 1)
 - `_validate_custom_item(raw)` passa a **despachar por `item_type`**: `weapon` →
   validação atual (extraída para `_validate_custom_weapon`); `armor`/`shield` → nova
-  `_validate_custom_armor` (normaliza os campos acima; escudo zera categoria/material).
+  `_validate_custom_armor` (normaliza os campos acima; escudo zera só a categoria —
+  material/corrosão valem para escudo também).
 - `_apply_custom_items(records)` passa a **rotear por `item_type`**:
   - armadura/escudo → registra em `SHOP_ARMORS` (se `loja`), `_DUNGEON_ITEM_CATALOG`
     (se `baus`/`loot`), `LOOT_POOL_PROCEDURAL` (se `loot`);
-  - material → `CORROSAO_ARMADURA_METAL`/`_ORGANICA` (armadura; escudo nunca);
+  - material → sets de corrosão do slot certo (ver Componente 3), armadura E escudo;
   - **limpeza idempotente**: além de WEAPONS/SHOP_WEAPONS/RANGED_AMMO/sets de arma,
-    remover os ids custom de `SHOP_ARMORS` e dos sets de corrosão de armadura antes de
+    remover os ids custom de `SHOP_ARMORS` e dos sets de corrosão de defesa antes de
     re-adicionar.
 - Helpers novos `_custom_armor_shop_dict(item)` (entrada de `SHOP_ARMORS`: id, name,
   emoji, ac_bonus, kind, price, armor_category, corrosion_materials, allowed_classes,
@@ -106,10 +116,26 @@ Regras:
 - Garantir que os `bonuses` sobrevivem em `gear_item` no ramo `ferreiro_armor` de
   `handle_shop_buy` e nas whitelists de equipar de armadura/escudo.
 
-### 3. Servidor — corrosão de armadura custom
-- No merge, `corrosion_materials` do item → `.add(id)` nos sets de armadura
-  correspondentes; limpeza no re-apply. O modelo de 3 níveis já existente passa a
-  disparar na peça custom. Escudos: sem material, não corroem.
+### 3. Servidor — motor de corrosão de peças de defesa (generalizado, N/M)
+Hoje a corrosão cobre só a **armadura de corpo** e a **arma**. Passa a cobrir os
+**quatro slots de defesa** — armadura (`armor`), escudo (`off_hand` shield), elmo
+(`head`) e botas (`boots`) — cada peça com `corrosion_materials` + `corrosao_resistente`
+(N) + `corrosao_niveis_penalidade` (M), espelhando o modelo N/M das armas (penalidade
+escala −1/nível até −M, quebra em N+M+1).
+- **Generalizar** `_corr` (uma trilha `lvl`/`destruido` por slot de defesa, além da
+  arma), `_corroer_equipamento` (alvos por slot; a ordem de prioridade fica no plano) e
+  as penalidades: cada peça corroída **reduz o bônus que concede** por −nível — CA para
+  armadura/escudo/elmo-`def_`, PV para elmo-`maxhp`, velocidade para botas-`spd` — e ao
+  quebrar é **removida do slot** (perde todo o bônus).
+- **Material → Devorador:** `metal` entra no set de metal do slot, `organic` no
+  orgânico; híbrido nos dois. Registro/limpeza idempotentes no merge.
+- **Backward-compat (crítico):** peças base sem N/M usam N=0/M=2 → comportamento
+  **byte-idêntico** ao atual (armadura de corpo quebra no 3º nível com −1/−2 CA). O
+  plano deve provar isso por teste, como foi feito nas armas.
+- **Botas/elmos base NÃO** recebem material automaticamente (mudaria o balanceamento):
+  só corroem se forem peças **custom** que declararem material. Nesta fase o editor
+  expõe material+N/M para **armadura e escudo**; botas/elmos ficam *engine-ready* (os
+  campos entram no editor quando a sub-aba deles for construída).
 
 ### 4. Cliente — editor (sub-abas Armaduras/Escudos)
 - Generalizar `tools/editor_items_editor.js` para renderizar um formulário **por
@@ -117,9 +143,10 @@ Regras:
   Restrição de classe, Disponibilidade, Preço, Imagem, Habilidade concedida, Prévia)
   + seções específicas do tipo.
 - **Armadura:** Bônus de CA, categoria (leve/média/pesada), material (checkboxes
-  orgânico/metal — pode marcar os dois), bônus adicionais (lista {efeito PV/velocidade/
-  CA extra, valor}).
-- **Escudo:** Bônus de CA, bônus adicionais; sem categoria/material.
+  orgânico/metal — pode marcar os dois), corrosão N/M (níveis sem/com penalidade),
+  bônus adicionais (lista {efeito PV/velocidade/CA extra, valor}).
+- **Escudo:** Bônus de CA, material (orgânico/metal), corrosão N/M, bônus adicionais;
+  sem categoria.
 - `tools/editor_items_logic.js` ganha `serializeArmor(draft)`, `validateArmorDraft`,
   e um `suggestPriceArmor` (a partir de ac_bonus + bônus adicionais).
 - Habilitar as sub-abas `armaduras`/`escudos` (remover o `disabled`); as outras 5
@@ -142,17 +169,20 @@ sugerido no `editor_items_logic.js`, validação no servidor com mensagens amig�
 ## Testes
 
 `tools/test_editor_itens.py` (servidor):
-- validação aceita/rejeita armadura e escudo (campos, categoria, material);
-- merge: armadura entra em `SHOP_ARMORS`, catálogo de baús e loot; material →
-  set de corrosão; **cleanup idempotente** remove dos sets e de `SHOP_ARMORS`;
+- validação aceita/rejeita armadura e escudo (campos, categoria, material, N/M);
+- merge: armadura/escudo entram em `SHOP_ARMORS`, catálogo de baús e loot; material →
+  set de corrosão do slot; **cleanup idempotente** remove dos sets e de `SHOP_ARMORS`;
   itens base (ex.: `leather`, `escudo_p`) e sets nativos permanecem intactos;
 - **multi-efeito**: equipar uma armadura com `bonuses` (maxhp/spd/def_ extra) aplica os
   três e desequipar reverte exatamente (CA/PV/velocidade voltam ao valor original);
-- compra→bolsa→equipar preserva `bonuses`/campos;
-- escudo não registra material/corrosão.
+- **corrosão generalizada**: armadura base sem N/M continua byte-idêntica (quebra no 3º,
+  −1/−2 CA); um escudo custom com material corrói (penalidade de CA por nível) e quebra
+  em N+M+1; botas/elmos base **não** corroem (sem material);
+- compra→bolsa→equipar preserva `bonuses`/N/M/campos.
 
 `tools/test_editor_items_logic.js` (node): `serializeArmor`/`validateArmorDraft`/
-`suggestPriceArmor` (shape, defaults, escudo sem categoria/material, bônus adicionais).
+`suggestPriceArmor` (shape, defaults, escudo sem categoria mas com material/N/M, bônus
+adicionais).
 
 ## Fora de escopo (Fases seguintes)
 
@@ -161,7 +191,8 @@ sugerido no `editor_items_logic.js`, validação no servidor com mensagens amig�
 - **C** — **resistências** de dano do herói (novo ramo em `_apply_damage_types` p/
   jogadores);
 - **D** — bônus de **iniciativa** (campo lido em `initiative_value`);
-- as outras 5 sub-abas (anéis/botas/poções/arremessáveis/venenos);
+- as outras 5 sub-abas (anéis/botas/poções/arremessáveis/venenos) — **a corrosão de
+  botas/elmos já fica no motor nesta fase**, mas os campos de material/N/M deles no
+  editor só aparecem quando a sub-aba for construída;
 - habilidades **ativáveis** concedidas por item;
-- N/M de corrosão para armadura (mantém o modelo de 3 níveis existente nesta fase);
 - balanceador automático.
