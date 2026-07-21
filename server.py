@@ -4285,13 +4285,13 @@ GRIMORIO = {
         "id": "bola_fogo", "nome": "Bola de Fogo",
         "circulo": "primeiro", "classe": ["mage"],
         "icone": "🔥", "tipo": "area_persistente",
-        "alcance_base": 5, "alcance_escala": 1,   # +1 por nÃ­vel
-        "area_raio": 2,
+        "alcance_base": 5, "alcance_escala": 0,   # alcance fixo
+        "area_raio": 1,                             # 3x3 centrado no alvo
         "dano_por_nivel": "1d6",                   # 1d6 por nÃ­vel na rodada 1
         "save": "reflexos", "save_efeito": "metade",
         "rodadas": 3, "dano_decai": True,          # R2 = Â½R1, R3 = Â½R2
         "entrar_sofre_dano": True, "sair_evita": True,
-        "descricao": "1d6/nível. Área persiste 3 rodadas com dano decaindo.",
+        "descricao": "Alcance 5. Área 3x3; 1d6/nível e fogo residual decrescente por 3 rodadas.",
     },
     "relampago": {
         "id": "relampago", "nome": "Relâmpago",
@@ -5868,7 +5868,9 @@ class GameRoom:
         Retorna (dmg_mult, dur_bonus, dc_bonus, mm_fome, mm_sede, partes, excedeu)."""
         dmg_mult, dur_bonus, dc_bonus = 1, 0, 0
         tem_dano    = self._magia_tem_dano(magia)
-        tem_duracao = "duracao" in magia
+        # Algumas magias persistentes, como Bola de Fogo, usam `rodadas` em vez
+        # de `duracao`; ambas são elegíveis para Estender Magia.
+        tem_duracao = "duracao" in magia or "rodadas" in magia
         tem_save    = "save" in magia
         candidatas = []   # (kind, custo_fome, custo_sede) â€” armadas E aplicÃ¡veis
         if p.get("fortalecer_ativo") and tem_dano:    candidatas.append(("fortalecer", 6, 6))
@@ -5901,10 +5903,10 @@ class GameRoom:
 
     def _tec_ex_dur_alcance_bonus(self, p, magia):
         """(dur_bonus, alcance_bonus) de Estender Magia (Fase 3): +1 rodada de
-        duração se a magia tiver 'duracao', senão +1 quadrado de alcance."""
+        duração se a magia tiver 'duracao' ou 'rodadas', senão +1 quadrado de alcance."""
         if not p.get("tec_ex_estender_armado"):
             return 0, 0
-        return (1, 0) if "duracao" in magia else (0, 1)
+        return (1, 0) if ("duracao" in magia or "rodadas" in magia) else (0, 1)
 
     def _tec_ex_dmg_mult(self, p, magia):
         """×1,5 de Empoderar Magia (Fase 3) se a magia causar dano."""
@@ -13439,9 +13441,10 @@ class GameRoom:
     async def _executar_bola_fogo(self, caster, magia, data, dmg_mult, dur_bonus, alcance_bonus=0):
         nivel     = caster.get("level", 1)
         bonus_int = mod(caster.get("int_", 10))
-        alcance   = magia["alcance_base"] + magia["alcance_escala"] * (nivel - 1) + alcance_bonus
+        # Bola de Fogo mantém alcance fixo de 5: Estender amplia somente o fogo residual.
+        alcance   = magia["alcance_base"]
         save_dif  = self._dif_magia(caster, magia)
-        raio      = magia.get("area_raio", 2)
+        raio      = magia.get("area_raio", 1)
         cx = int((data or {}).get("tx", caster["pos"][0]))
         cy = int((data or {}).get("ty", caster["pos"][1]))
 
@@ -13455,24 +13458,28 @@ class GameRoom:
             await self.send_to(caster["id"], {"type": "error",
                 "msg": "🧱 Uma parede bloqueia a trajetória da Bola de Fogo!"}); return
 
-        # R1 = 1d6 por nÃ­vel; R2 = Â½R1; R3 = Â½R2. (anima cada d6 no cliente)
+        # R1 = 1d6 por nível; cada rodada residual vale metade da anterior.
+        # Estender acrescenta rodada(s) residual(is) mantendo essa progressão.
         dano_r1 = int((await self._rolar_dano_mostrado(nivel, 6, "🔥 Dano")) * dmg_mult + 0.5)
-        dano_r2 = dano_r1 // 2
-        dano_r3 = dano_r2 // 2
+        rodadas_max = max(1, int(magia.get("rodadas", 3)) + dur_bonus)
+        danos_por_rodada = {1: dano_r1}
+        for rodada in range(2, rodadas_max + 1):
+            danos_por_rodada[rodada] = danos_por_rodada[rodada - 1] // 2
 
         atingidos = await self._aplicar_dano_area_fogo(caster["id"], cx, cy, raio, dano_r1, save_dif, "R1")
 
-        # Zona persistente que aplica R2 e R3 no inÃ­cio das prÃ³ximas rodadas.
+        # Zona persistente que aplica as rodadas residuais no início das próximas rodadas.
         self.zonas_especiais.append({
             "id": f"bola_fogo_{cx}_{cy}_{self.round_num}", "tipo": "bola_fogo",
             "cx": cx, "cy": cy, "raio": raio,
-            "dano_r2": dano_r2, "dano_r3": dano_r3,
-            "rodada_atual": 2, "rodadas_max": 3,
+            **{f"dano_r{rodada}": dano for rodada, dano in danos_por_rodada.items()},
+            "rodada_atual": 2, "rodadas_max": rodadas_max,
             "save_dif": save_dif, "ativa": True, "caster": caster["id"],
         })
+        dano_txt = " ".join(f"R{rodada}:{dano}" for rodada, dano in danos_por_rodada.items())
         await self.gm_say(
             f"🔥 **{caster['name']}** lança **Bola de Fogo** (nível {nivel}) — "
-            f"R1:{dano_r1} R2:{dano_r2} R3:{dano_r3} | alcance {alcance}q | {atingidos} atingido(s).")
+            f"{dano_txt} | alcance {alcance}q | área 3x3 | {atingidos} atingido(s).")
 
     async def _aplicar_dano_area_fogo(self, caster_id, cx, cy, raio, dano, save_dif, rotulo, com_save=True):
         """Dano de fogo a TODOS no raio — monstros, jogadores E animados (não discrimina

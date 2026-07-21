@@ -9381,13 +9381,14 @@ const GRIMORIO_CLIENT = {
   bola_fogo: {
     id:'bola_fogo', nome:'Bola de Fogo', icone:'🔥',
     circulo:'primeiro', classe:['mage'],
-    tipo:'area_persistente', alcance_base:5, alcance_escala:1,
+    tipo:'area_persistente', alcance_base:5, alcance_escala:0, area_raio:1,
     custo:'🍖-1 💧-1',
-    resumo:'1d6/nível. Área persiste 3 rodadas decaindo.',
-    descricao:`<b>Alcance:</b> 5 +1 por nível<br>
+    resumo:'Alcance 5. Área 3x3; fogo persiste e decai.',
+    descricao:`<b>Alcance:</b> 5 casas<br>
+               <b>Área:</b> 3×3, centrada no ponto escolhido<br>
                <b>R1:</b> 1d6 por nível | Reflexos: metade<br>
                <b>R2:</b> metade do dano R1<br>
-               <b>R3:</b> metade do dano R2<br>
+               <b>R3:</b> metade do dano R2 (Estender: +1 rodada residual)<br>
                <b>Área persiste:</b> entrar sofre dano, sair evita futuro<br>
                <b>Custo:</b> 🍖-1 💧-1 + 1 slot`
   },
