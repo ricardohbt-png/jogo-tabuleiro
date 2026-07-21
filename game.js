@@ -9610,9 +9610,9 @@ const GRIMORIO_CLIENT = {
     circulo:'segundo', classe:['mage'],
     tipo:'cone', comprimento:4, base:4,
     custo:'🍖-1 💧-1',
-    resumo:'Cone. 1d6 dano + empurrão.',
+    resumo:'Cone. 1d6 por nível + empurrão.',
     descricao:`<b>Cone:</b> 4 quadrados comp., 4 base<br>
-               <b>Dano:</b> 1d6<br>
+               <b>Dano:</b> 1d6 por nível<br>
                <b>Falha Reflexos:</b> empurra 1d6 quadrados<br>
                <b>Sucesso:</b> empurra 2 quadrados<br>
                <b>Colisão parede:</b> +1d4 dano`

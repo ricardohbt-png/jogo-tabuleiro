@@ -4481,11 +4481,11 @@ GRIMORIO = {
         "circulo": "segundo", "classe": ["mage"],
         "icone": "🌪️", "tipo": "cone",
         "comprimento": 4, "base_largura": 4,
-        "dano": "1d6",
+        "dano_por_nivel": "1d6",
         "save": "reflexos",
         "empurra_falha": "1d6", "empurra_sucesso": 2,
         "dano_colisao": "1d4",
-        "descricao": "Cone 4q. 1d6 dano. Falha: empurra 1d6q. Colisão com parede: +1d4.",
+        "descricao": "Cone 4q. 1d6 por nível. Falha: empurra 1d6q. Colisão com parede: +1d4.",
     },
     # â”€â”€ 3Âº CÃRCULO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "velocidade": {
@@ -13359,7 +13359,7 @@ class GameRoom:
         return False
 
     async def _executar_jato_ar(self, caster, magia, data, dmg_mult):
-        bonus_int = mod(caster.get("int_", 10))
+        nivel     = max(1, caster.get("level", 1))
         save_dif  = self._dif_magia(caster, magia)
         dirv = (data or {}).get("dir", [0, 0])
         dx = 1 if dirv[0] > 0 else -1 if dirv[0] < 0 else 0
@@ -13382,7 +13382,9 @@ class GameRoom:
             nome = alvo.get("name") or alvo.get("nome", "Alvo")
             if self._eh_jogador(alvo) and await self._reacao_anti_magia(alvo, caster):
                 continue
-            dano = int((await self._rolar_dano_mostrado(1, 6, "🌪️ Dano")) * dmg_mult + 0.5)
+            # O cone inteiro recebe 1d6 por nível; cada alvo sofre sua própria
+            # rolagem, mantendo os demais efeitos do Jato de Ar inalterados.
+            dano = int((await self._rolar_dano_mostrado(nivel, 6, "🌪️ Dano")) * dmg_mult + 0.5)
             save_ok, *_ = await self._save_mostrado(alvo, "reflexos", save_dif)
             push = magia.get("empurra_sucesso", 2) if save_ok else self._rolar_dado(magia.get("empurra_falha", "1d6"))
             if self._empurrar(alvo, dx, dy, push):
