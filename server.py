@@ -20862,6 +20862,156 @@ def _save_custom_monster(raw):
 
 _apply_custom_monsters(_read_custom_monsters())
 
+# ─── ITENS PERSONALIZADOS (Editor de Itens — Fase 1: Armas) ───────────────
+CUSTOM_ITEMS_FILE  = os.path.join(BASE_DIR, "itens_personalizados.json")
+CUSTOM_ITEMS_INDEX = os.path.join(BASE_DIR, "tools", "editor_items_custom.js")
+
+_ITEM_CLASSES = {"warrior", "mage", "rogue", "cleric", "ranger", "paladin", "bard"}
+_ITEM_DIE_FACES = {4, 6, 8, 10, 12}
+_ITEM_ELEM_TYPES = {DMG_FIRE, DMG_COLD, DMG_LIGHTNING, DMG_ACID, DMG_HOLY}
+_ITEM_CATEGORIAS = {"cortante", "contundente", "perfurante"}
+
+def _die_ok(txt):
+    try:
+        n, faces = str(txt).lower().split("d"); return int(n) >= 1 and int(faces) in _ITEM_DIE_FACES
+    except (ValueError, AttributeError):
+        return False
+
+def _read_custom_items():
+    try:
+        with open(CUSTOM_ITEMS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, list) else []
+    except (OSError, ValueError, TypeError):
+        return []
+
+def _validate_custom_item(raw):
+    """Normaliza/valida uma arma personalizada. Só o item_type 'weapon' nesta fase."""
+    if not isinstance(raw, dict):
+        return False, "ficha inválida"
+    if raw.get("item_type", "weapon") != "weapon":
+        return False, "só armas nesta fase"
+    iid = str(raw.get("id") or "").strip().lower()
+    if not iid or not all(c.isalnum() or c == "_" for c in iid):
+        return False, "id use apenas letras, números e _"
+    name = str(raw.get("name") or "").strip()[:60]
+    if not name:
+        return False, "informe o nome da arma"
+    native = {w["id"] for w in SHOP_WEAPONS if not w.get("custom")} | \
+             {k for k, v in WEAPONS.items() if not v.get("custom")}
+    if iid in native:
+        return False, "o id não pode substituir uma arma nativa"
+    die = str(raw.get("die") or "")
+    if not _die_ok(die):
+        return False, "dado de dano inválido (use NdX, X em 4/6/8/10/12)"
+    categoria = raw.get("categoria")
+    if categoria not in _ITEM_CATEGORIAS:
+        return False, "categoria inválida"
+    stat = raw.get("stat") if raw.get("stat") in ("str_", "dex") else "str_"
+    reach = raw.get("reach") if raw.get("reach") in ("lanca", "cajado") else None
+    def _pos_int(v):
+        try: return max(1, int(v))
+        except (TypeError, ValueError): return None
+    rng = _pos_int(raw.get("range")) if raw.get("range") not in (None, "", 0) else None
+    throw = _pos_int(raw.get("throw_range")) if raw.get("throw_range") not in (None, "", 0) else None
+    extra = []
+    for xd in raw.get("extra_damages", []) or []:
+        if not (isinstance(xd, dict) and _die_ok(xd.get("die")) and xd.get("type") in _ITEM_ELEM_TYPES):
+            return False, "dano extra inválido (dado ou tipo elemental desconhecido)"
+        extra.append({"die": str(xd["die"]).lower(), "type": xd["type"]})
+    classes = [c for c in (raw.get("allowed_classes") or []) if c in _ITEM_CLASSES]
+    try: price = max(0, int(raw.get("price", 0)))
+    except (TypeError, ValueError): price = 0
+    disp = raw.get("disponibilidade") or {}
+    item = {
+        "id": iid, "name": name, "emoji": str(raw.get("emoji") or "⚔️")[:8],
+        "item_type": "weapon", "custom": True,
+        "die": die.lower(), "stat": stat, "categoria": categoria,
+        "finesse": bool(raw.get("finesse")), "two_handed": bool(raw.get("two_handed")),
+        "atk_bonus": int(raw.get("atk_bonus", 0) or 0),
+        "damage_bonus": int(raw.get("damage_bonus", 0) or 0),
+        "extra_damages": extra,
+        "granted_ability": (str(raw["granted_ability"]) if raw.get("granted_ability") else None),
+        "allowed_classes": classes, "price": price,
+        "disponibilidade": {"loja": bool(disp.get("loja")), "baus": bool(disp.get("baus")),
+                             "loot_monstro": bool(disp.get("loot_monstro"))},
+    }
+    if reach: item["reach"] = reach
+    if rng:   item["range"] = rng
+    if throw: item["throw_range"] = throw
+    return True, item
+
+def _custom_weapon_combat_dict(item):
+    """Cópia da arma para WEAPONS[id] (mesmo estilo dos dicts base)."""
+    out = {k: item[k] for k in ("id", "name", "die", "stat", "categoria", "finesse",
+            "two_handed", "atk_bonus", "damage_bonus", "extra_damages",
+            "granted_ability", "reach", "range", "throw_range") if k in item}
+    out["custom"] = True
+    return out
+
+def _custom_weapon_inventory_dict(item):
+    """Item equipável (baús/loot/loja) — arma que entra na bolsa e equipa."""
+    inv = {"id": item["id"], "name": item["name"], "emoji": item["emoji"],
+           "item_slot": "weapon", "effect": "atk", "value": 0, "custom": True,
+           "price": item["price"]}
+    inv.update(_custom_weapon_combat_dict(item))
+    if item["allowed_classes"]:
+        inv["allowed_classes"] = list(item["allowed_classes"])
+    return inv
+
+def _apply_custom_items(records):
+    """Mescla armas custom nos catálogos vivos (idempotente: remove os customs antes)."""
+    global SHOP_WEAPONS, LOOT_POOL_PROCEDURAL
+    for k in [k for k, v in WEAPONS.items() if v.get("custom")]:
+        WEAPONS.pop(k, None)
+    SHOP_WEAPONS[:] = [w for w in SHOP_WEAPONS if not w.get("custom")]
+    for k in [k for k, v in _DUNGEON_ITEM_CATALOG.items() if v.get("custom")]:
+        _DUNGEON_ITEM_CATALOG.pop(k, None)
+    LOOT_POOL_PROCEDURAL[:] = [i for i in LOOT_POOL_PROCEDURAL
+                               if not (i in _DUNGEON_ITEM_CATALOG and _DUNGEON_ITEM_CATALOG[i].get("custom"))]
+    for raw in records:
+        if not isinstance(raw, dict) or raw.get("item_type", "weapon") != "weapon":
+            continue
+        ok, item = _validate_custom_item(raw)
+        if not ok:
+            continue
+        WEAPONS[item["id"]] = _custom_weapon_combat_dict(item)
+        disp = item["disponibilidade"]
+        inv = _custom_weapon_inventory_dict(item)
+        if disp["loja"]:
+            SHOP_WEAPONS.append(inv)
+        if disp["baus"] or disp["loot_monstro"]:
+            _DUNGEON_ITEM_CATALOG[item["id"]] = inv
+        if disp["loot_monstro"]:
+            LOOT_POOL_PROCEDURAL.append(item["id"])
+
+def _regen_custom_items_index(records):
+    try:
+        os.makedirs(os.path.dirname(CUSTOM_ITEMS_INDEX), exist_ok=True)
+        payload = json.dumps(records, ensure_ascii=False, indent=2)
+        with open(CUSTOM_ITEMS_INDEX, "w", encoding="utf-8") as f:
+            f.write("window.EDITOR_CUSTOM_ITEMS = " + payload + ";\n"
+                    "// GERADO pelo servidor ao salvar no Editor de itens.\n")
+    except OSError:
+        pass
+
+def _save_custom_item(raw):
+    ok, item = _validate_custom_item(raw)
+    if not ok:
+        return False, item
+    records = [r for r in _read_custom_items()
+               if isinstance(r, dict) and r.get("id") not in {item["id"], str(raw.get("original_id") or "")}]
+    records.append(item)
+    ok2, message = _gravar_def(records, os.path.dirname(CUSTOM_ITEMS_FILE),
+                               os.path.basename(CUSTOM_ITEMS_FILE))
+    if not ok2:
+        return False, message
+    _apply_custom_items(records)
+    _regen_custom_items_index(records)
+    return True, item
+
+_apply_custom_items(_read_custom_items())
+
 # Tipos que o mimetypes do sistema Ã s vezes nÃ£o conhece (varia por SO).
 for _ext, _ct in (
     (".js", "application/javascript"), (".mjs", "application/javascript"),
