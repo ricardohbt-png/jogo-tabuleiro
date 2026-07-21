@@ -7217,6 +7217,8 @@ class GameRoom:
                 "key_decor_ids": list(sp.get("key_decor_ids") or []),
                 "keys_mode": sp.get("keys_mode", "any"),
                 "activated_decor_ids": [], "opened": False,
+                # Clarividência revela o segredo temporariamente, sem abri-lo.
+                "revealed_by_clarividencia_until": 0,
             })
 
         self.falas = [dict(f, disparada=False) for f in (defn.get("falas") or [])]
@@ -12418,10 +12420,21 @@ class GameRoom:
                 a["visivel"] = True
                 traps_mascara += 1
 
+        # Revela passagens secretas e paredes ilusórias dentro da área pelo
+        # mesmo período da Clarividência. Isso não abre mecanismos nem muda a
+        # regra de movimento das paredes ilusórias.
+        segredos = 0
+        for sp in self.secret_passages:
+            if not sp.get("opened") and tuple(sp["pos"]) in reveladas:
+                sp["revealed_by_clarividencia_until"] = max(
+                    sp.get("revealed_by_clarividencia_until", 0), expira)
+                segredos += 1
+
         novos = len(self.explored) - antes
         partes = [f"{novos} casa(s) reveladas"]
         if monstros:        partes.append(f"{monstros} monstro(s) à vista")
         if traps_mascara:   partes.append(f"{traps_mascara} armadilha(s) detectada(s)")
+        if segredos:        partes.append(f"{segredos} segredo(s) revelado(s)")
         if salas_reveladas: partes.append("interior de sala trancada exposto")
         await self.gm_say(
             f"🔮 **{caster['name']}** lança Clarividência — " + ", ".join(partes) +
@@ -16397,7 +16410,9 @@ class GameRoom:
     def _serializar_passagens_secretas(self):
         return [{"id": sp["id"], "type": sp["type"], "pos": sp["pos"],
                  "key_decor_ids": sp["key_decor_ids"], "keys_mode": sp["keys_mode"],
-                 "opened": sp["opened"]} for sp in self.secret_passages]
+                 "opened": sp["opened"],
+                 "revealed_by_clarividencia": sp.get("revealed_by_clarividencia_until", 0) > self.round_num}
+                for sp in self.secret_passages]
 
     def _serializar_materiais(self):
         """Camada de materiais como {"x,y": id} para o cliente."""

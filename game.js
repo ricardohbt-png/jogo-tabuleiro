@@ -5784,13 +5784,15 @@ function renderMap(state){
     ctx.fillText((gi.item&&gi.item.emoji)||'📦',X+CELL/2,Y+CELL/2);
   }
 
-  // Segredos: somente o ladino em Encontrar Armadilhas recebe a marca visual.
+  // Segredos: o ladino os vê com Encontrar Armadilhas; Clarividência também os
+  // revela temporariamente para todo o grupo, sem abrir mecanismos.
   const _detectSecrets = !!(me && me.class_id === 'rogue' && me.detectar_ativo);
   const _secretKeyIds = new Set((state.secret_passages || []).filter(sp => !sp.opened && sp.type === 'mechanism')
     .flatMap(sp => sp.key_decor_ids || []));
-  if (_detectSecrets) for (const sp of (state.secret_passages || [])) {
+  for (const sp of (state.secret_passages || [])) {
     const [sx, sy] = sp.pos;
-    if (!exploredSet.has(`${sx},${sy}`) || sp.opened) continue;
+    const revealedByMagic = !!sp.revealed_by_clarividencia;
+    if ((!_detectSecrets && !revealedByMagic) || !exploredSet.has(`${sx},${sy}`) || sp.opened) continue;
     ctx.save();
     ctx.fillStyle = sp.type === 'illusion' ? 'rgba(70,210,255,.30)' : 'rgba(185,90,255,.24)';
     ctx.strokeStyle = sp.type === 'illusion' ? 'rgba(150,245,255,.9)' : 'rgba(235,170,255,.95)';
@@ -15844,16 +15846,19 @@ function renderMap3D(state){
       if(ent3) ent3.visible = mesh.visible;
     }
   }
-  // Parede ilusória: só o ladino com Encontrar Armadilhas ativo a vê translúcida.
+  // Segredos 3D: Encontrar Armadilhas ou Clarividência os revela. A parede
+  // continua existindo; a transparência é somente uma indicação visual.
   const _detectSecrets3D = !!(me && me.class_id === 'rogue' && me.detectar_ativo);
-  const _illusionKeys3D = new Set((state.secret_passages || [])
-    .filter(sp => sp.type === 'illusion' && !sp.opened).map(sp => `${sp.pos[0]},${sp.pos[1]}`));
+  const _secretWalls3D = new Map((state.secret_passages || [])
+    .filter(sp => !sp.opened && (_detectSecrets3D || sp.revealed_by_clarividencia))
+    .map(sp => [`${sp.pos[0]},${sp.pos[1]}`, sp.type]));
   for (const [key, mesh] of Object.entries(tileMeshes)) {
     if (!mesh.userData?.isWall || !mesh.material) continue;
-    const showIllusion = _detectSecrets3D && _illusionKeys3D.has(key);
-    mesh.material.transparent = showIllusion;
-    mesh.material.opacity = showIllusion ? 0.28 : 1;
-    mesh.material.depthWrite = !showIllusion;
+    const secretType = _secretWalls3D.get(key);
+    const showSecret = !!secretType;
+    mesh.material.transparent = showSecret;
+    mesh.material.opacity = showSecret ? (secretType === 'illusion' ? 0.28 : 0.55) : 1;
+    mesh.material.depthWrite = !showSecret;
   }
 
   // ── Door leaves: visible only while closed AND the door tile is visível ──────
