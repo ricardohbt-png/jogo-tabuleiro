@@ -236,10 +236,43 @@ def test_material_e_municao():
     check("base arco_curto intacto em RANGED_AMMO", "flechas" in S.RANGED_AMMO.get("arco_curto", []))
     check("base dagger intacto em CORROSAO_ARMA_METAL", "dagger" in S.CORROSAO_ARMA_METAL)
 
+def armor_sample(**over):
+    base = {"id": "cota_teste", "name": "Cota Teste", "emoji": "🛡️", "item_type": "armor",
+            "ac_bonus": 4, "armor_category": "media", "corrosion_materials": ["metal"],
+            "corrosao_resistente": 0, "corrosao_niveis_penalidade": 2,
+            "bonuses": [{"effect": "maxhp", "value": 5}], "allowed_classes": ["warrior"],
+            "price": 120, "disponibilidade": {"loja": True, "baus": False, "loot_monstro": False}}
+    base.update(over); return base
+
+def test_validacao_armadura():
+    print("\n[A1] Validacao de armadura/escudo")
+    ok, it = S._validate_custom_item(armor_sample())
+    check("aceita armadura valida", ok)
+    check("kind = armor", ok and it.get("kind") == "armor")
+    check("ac_bonus preservado", ok and it.get("ac_bonus") == 4)
+    check("categoria preservada", ok and it.get("armor_category") == "media")
+    check("materiais preservados", ok and it.get("corrosion_materials") == ["metal"])
+    check("N/M preservados", ok and it.get("corrosao_resistente") == 0 and it.get("corrosao_niveis_penalidade") == 2)
+    check("bonuses preservados", ok and it.get("bonuses") == [{"effect": "maxhp", "value": 5}])
+    ok2, it2 = S._validate_custom_item(armor_sample(id="esc_teste", item_type="shield",
+        armor_category="media", corrosion_materials=["metal"]))
+    check("aceita escudo", ok2 and it2.get("kind") == "shield")
+    check("escudo zera categoria", ok2 and it2.get("armor_category") is None)
+    check("escudo mantem material", ok2 and it2.get("corrosion_materials") == ["metal"])
+    ok3, _ = S._validate_custom_item(armor_sample(armor_category="ultra"))
+    check("rejeita categoria invalida", not ok3)
+    ok4, it4 = S._validate_custom_item(armor_sample(corrosion_materials=["metal", "trevas"]))
+    check("filtra material desconhecido", ok4 and it4.get("corrosion_materials") == ["metal"])
+    ok5, it5 = S._validate_custom_item(armor_sample(bonuses=[{"effect": "atk", "value": 3}]))
+    check("filtra efeito nao permitido em bonuses", ok5 and it5.get("bonuses") == [])
+    okw, _ = S._validate_custom_item(sample())
+    check("arma ainda valida", okw)
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
     test_compra_equipa_preserva(); test_corrosao()
     test_penalidade_engine(); test_material_e_municao()
+    test_validacao_armadura()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)

@@ -20940,12 +20940,70 @@ def _read_custom_items():
     except (OSError, ValueError, TypeError):
         return []
 
+_ITEM_ARMOR_CATS = {"leve", "media", "pesada"}
+_ITEM_MATERIAIS = {"organic", "metal"}
+_ITEM_BONUS_EFFECTS = {"def_", "maxhp", "spd"}
+
 def _validate_custom_item(raw):
-    """Normaliza/valida uma arma personalizada. Só o item_type 'weapon' nesta fase."""
+    """Despacha por item_type: weapon | armor | shield."""
     if not isinstance(raw, dict):
         return False, "ficha inválida"
-    if raw.get("item_type", "weapon") != "weapon":
-        return False, "só armas nesta fase"
+    it = raw.get("item_type", "weapon")
+    if it == "weapon":
+        return _validate_custom_weapon(raw)
+    if it in ("armor", "shield"):
+        return _validate_custom_armor(raw)
+    return False, "tipo de item não suportado"
+
+def _validate_custom_armor(raw):
+    """Valida armadura/escudo custom (Fase 2a)."""
+    kind = raw.get("item_type")
+    iid = str(raw.get("id") or "").strip().lower()
+    if not iid or not all(c.isalnum() or c == "_" for c in iid):
+        return False, "id use apenas letras, números e _"
+    name = str(raw.get("name") or "").strip()[:60]
+    if not name:
+        return False, "informe o nome da peça"
+    native = {a["id"] for a in SHOP_ARMORS if not a.get("custom")}
+    if iid in native:
+        return False, "o id não pode substituir uma peça nativa"
+    def _int0(v):
+        try: return int(v or 0)
+        except (TypeError, ValueError): return 0
+    ac_bonus = max(0, _int0(raw.get("ac_bonus")))
+    cat = raw.get("armor_category")
+    if kind == "shield":
+        cat = None
+    elif cat not in _ITEM_ARMOR_CATS:
+        if cat not in (None, ""):
+            return False, "categoria de armadura inválida"
+        cat = None
+    materiais = [m for m in (raw.get("corrosion_materials") or []) if m in _ITEM_MATERIAIS]
+    bonuses = []
+    for b in raw.get("bonuses", []) or []:
+        if isinstance(b, dict) and b.get("effect") in _ITEM_BONUS_EFFECTS:
+            bonuses.append({"effect": b["effect"], "value": _int0(b.get("value"))})
+    classes = [c for c in (raw.get("allowed_classes") or []) if c in _ITEM_CLASSES]
+    try: price = max(0, int(raw.get("price", 0)))
+    except (TypeError, ValueError): price = 0
+    disp = raw.get("disponibilidade") or {}
+    item = {
+        "id": iid, "name": name, "emoji": str(raw.get("emoji") or "🛡️")[:8],
+        "item_type": kind, "kind": kind, "custom": True,
+        "ac_bonus": ac_bonus, "armor_category": cat,
+        "corrosion_materials": materiais,
+        "corrosao_resistente": max(0, _int0(raw.get("corrosao_resistente"))),
+        "corrosao_niveis_penalidade": max(1, _int0(raw.get("corrosao_niveis_penalidade", 2))),
+        "bonuses": bonuses,
+        "granted_ability": (str(raw["granted_ability"]) if raw.get("granted_ability") else None),
+        "allowed_classes": classes, "price": price,
+        "disponibilidade": {"loja": bool(disp.get("loja")), "baus": bool(disp.get("baus")),
+                             "loot_monstro": bool(disp.get("loot_monstro"))},
+    }
+    return True, item
+
+def _validate_custom_weapon(raw):
+    """Normaliza/valida uma arma personalizada."""
     iid = str(raw.get("id") or "").strip().lower()
     if not iid or not all(c.isalnum() or c == "_" for c in iid):
         return False, "id use apenas letras, números e _"
