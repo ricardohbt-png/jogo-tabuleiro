@@ -14,9 +14,9 @@
   var draft = null, artFile = null, artURL = null;
   function novoDraft() {
     return { name:"", emoji:"⚔️", die_qtd:1, die_faces:8, categoria:"cortante",
-      stat:"str_", finesse:false, manejo:"corpo", range:4, throw_range:3, two_handed:false,
-      atk_bonus:0, damage_bonus:0, corrosao_pontos:3, extra_damages:[],
-      granted_ability:"", allowed_classes:[],
+      stat:"str_", finesse:false, manejo:"corpo", range:4, throw_range:3, ammo:"", two_handed:false,
+      atk_bonus:0, damage_bonus:0, corrosao_livres:0, corrosao_penalidade:2, material:"metal",
+      extra_damages:[], granted_ability:"", allowed_classes:[],
       disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:0, id:"" };
   }
 
@@ -42,7 +42,8 @@
     d.finesse = !!item.finesse; d.two_handed = !!item.two_handed;
     if (item.reach === "lanca" || item.reach === "cajado") d.manejo = item.reach;
     else if (item.range) { d.manejo = "distancia"; d.range = item.range; }
-    d.corrosao_pontos = 3 + (item.corrosao_resistente || 0);
+    d.corrosao_livres = item.corrosao_resistente || 0;
+    d.corrosao_penalidade = item.corrosao_niveis_penalidade || 2;
     return d;
   }
 
@@ -76,18 +77,23 @@
         campo("Quantidade", numInput("ie-dieq", draft.die_qtd, 1, 10)) +
         campo("Dado", selectFaces()) +
         campo("Categoria", selectOpts("ie-cat", L.CATS, draft.categoria))),
-      seccao("Atributo / manejo",
+      seccao("Atributo / manejo / alcance",
         campo("Atributo", selectOpts("ie-stat", ["str_","dex"], draft.stat)) +
-        campo("Acuidade (finesse)", chk("ie-finesse", draft.finesse)) +
+        campo("Acuidade (usa Força ou Destreza no dano)", chk("ie-finesse", draft.finesse)) +
         campo("Manejo", selectOpts("ie-manejo",
           ["corpo","lanca","cajado","distancia","arremessavel"], draft.manejo)) +
-        campo("Duas mãos", chk("ie-2m", draft.two_handed))),
+        campo("Duas mãos", chk("ie-2m", draft.two_handed)) +
+        manejoControls()),
       seccao("Bônus fixo (independentes)",
         campo("Bônus de acerto", numInput("ie-atkbonus", draft.atk_bonus, -5, 10)) +
         campo("Bônus de dano", numInput("ie-dmgbonus", draft.damage_bonus, -5, 10))),
-      seccao("Durabilidade",
-        campo("Resistência à corrosão (pontos)", numInput("ie-corr", draft.corrosao_pontos, 1, 12)) +
-        '<span class="ie-hint">3 = normal · 5 = como prata. Os 2 pontos finais dão −1/−2 no acerto e dano antes de a arma quebrar.</span>'),
+      seccao("Durabilidade (corrosão)",
+        campo("Níveis sem penalidade", numInput("ie-corrlivre", draft.corrosao_livres, 0, 12)) +
+        campo("Níveis com penalidade", numInput("ie-corrpen", draft.corrosao_penalidade, 1, 12)) +
+        campo("Material", '<select id="ie-material">' +
+          '<option value="metal"' + (draft.material === "madeira" ? "" : " selected") + '>Metal (Devorador de Metal)</option>' +
+          '<option value="madeira"' + (draft.material === "madeira" ? " selected" : "") + '>Madeira / orgânico (Devorador Orgânico)</option></select>') +
+        '<span class="ie-hint">Aguenta N+M golpes de ácido e quebra no seguinte; a penalidade escala −1 por nível (até −M). O material define qual Devorador a corrói.</span>'),
       seccao("Dano elemental adicional",
         '<div id="ie-elems"></div><button id="ie-add-elem">+ linha</button>' +
         '<template id="ie-elem-tpl"><span class="ie-elem-row">' +
@@ -133,6 +139,21 @@
   function selectBase() {
     return '<select id="ie-base"><option value="">— do zero —</option>' + baseWeapons().map(function (w) {
       return '<option value="' + esc(w.id) + '">' + esc(w.name) + '</option>'; }).join("") + '</select>'; }
+  // Controles que dependem do manejo (alcance em quadrados + munição à distância).
+  function manejoControls() {
+    if (draft.manejo === "distancia") {
+      return campo("Alcance (quadrados)", numInput("ie-range", draft.range, 1, 20)) +
+        campo("Munição", '<select id="ie-ammo">' +
+          '<option value=""' + (draft.ammo ? "" : " selected") + '>nenhuma</option>' +
+          '<option value="flechas"' + (draft.ammo === "flechas" ? " selected" : "") + '>flechas</option>' +
+          '<option value="virotes"' + (draft.ammo === "virotes" ? " selected" : "") + '>virotes</option></select>');
+    }
+    if (draft.manejo === "arremessavel")
+      return campo("Alcance de arremesso (quadrados)", numInput("ie-throw", draft.throw_range, 1, 20));
+    if (draft.manejo === "lanca" || draft.manejo === "cajado")
+      return '<span class="ie-hint">Alcance estendido: 2 quadrados (' + esc(draft.manejo) + ').</span>';
+    return '<span class="ie-hint">Corpo a corpo: alcance 1 (adjacente).</span>';
+  }
 
   function currentDraftFromForm() {
     var g = function (id) { return root.querySelector("#" + id); };
@@ -143,7 +164,12 @@
     draft.two_handed = g("ie-2m").checked;
     draft.atk_bonus = +g("ie-atkbonus").value || 0;
     draft.damage_bonus = +g("ie-dmgbonus").value || 0;
-    draft.corrosao_pontos = Math.max(1, +g("ie-corr").value || 3);
+    draft.corrosao_livres = Math.max(0, +g("ie-corrlivre").value || 0);
+    draft.corrosao_penalidade = Math.max(1, +g("ie-corrpen").value || 2);
+    draft.material = g("ie-material").value;
+    var rEl = g("ie-range"); if (rEl) draft.range = Math.max(1, +rEl.value || 4);
+    var tEl = g("ie-throw"); if (tEl) draft.throw_range = Math.max(1, +tEl.value || 3);
+    var aEl = g("ie-ammo"); if (aEl) draft.ammo = aEl.value;
     draft.granted_ability = g("ie-abil").value;
     draft.allowed_classes = Array.prototype.map.call(root.querySelectorAll(".ie-class:checked"), function (c) { return c.value; });
     draft.disponibilidade = { loja: g("ie-disp-loja").checked, baus: g("ie-disp-baus").checked, loot_monstro: g("ie-disp-loot").checked };
@@ -177,7 +203,10 @@
     (item.extra_damages || []).forEach(function (x) { parts.push("+" + x.die + " " + x.type); });
     if (item.damage_bonus) parts.push("+" + item.damage_bonus + " dano");
     if (item.atk_bonus) parts.push("+" + item.atk_bonus + " acerto");
-    parts.push("🛡️ corrosão " + (3 + (item.corrosao_resistente || 0)) + " pts");
+    if (item.range) parts.push("🎯 alcance " + item.range);
+    if (item.ammo) parts.push("🏹 " + item.ammo);
+    if (item.throw_range) parts.push("↗️ arremesso " + item.throw_range);
+    parts.push("🛡️ corrosão " + (item.corrosao_resistente || 0) + "+" + (item.corrosao_niveis_penalidade || 2) + " (" + (item.material || "metal") + ")");
     var topo = artURL
       ? '<img class="ie-card-img" src="' + artURL + '" alt="">'
       : '<div class="ie-card-emoji">' + esc(item.emoji) + '</div>';
@@ -198,6 +227,8 @@
       if (el.id === "ie-base" || el.id === "ie-art") return;
       el.onchange = renderPreview; el.oninput = renderPreview;
     });
+    // Trocar o manejo muda quais controles de alcance/munição aparecem.
+    root.querySelector("#ie-manejo").onchange = function () { currentDraftFromForm(); renderForm(); };
     (draft.allowed_classes || []).forEach(function (c) {
       var el = root.querySelector('.ie-class[value="' + c + '"]'); if (el) el.checked = true; });
     root.querySelector("#ie-add-elem").onclick = function () { addElemRow(null); renderPreview(); };

@@ -6877,6 +6877,7 @@ class GameRoom:
                 **{k: w[k] for k in ("die", "stat", "range", "reach",
                                      "finesse", "throw_range", "categoria",
                                      "two_handed", "dmg_bonus", "corrosao_resistente",
+                                     "corrosao_niveis_penalidade",
                                      "atk_bonus", "damage_bonus", "extra_damages",
                                      "granted_ability") if k in w},
             }
@@ -11476,7 +11477,7 @@ class GameRoom:
         if cat == "weapon" and item.get("die") and item.get("stat"):
             combat_fields = ("id", "name", "die", "stat", "range", "reach",
                              "finesse", "throw_range", "categoria", "two_handed",
-                             "dmg_bonus", "corrosao_resistente",
+                             "dmg_bonus", "corrosao_resistente", "corrosao_niveis_penalidade",
                              "atk_bonus", "damage_bonus", "extra_damages", "granted_ability")
             p["weapon"] = {k: item[k] for k in combat_fields if k in item}
             p["weapon"]["poison_slots"] = list(item.get("poison_slots", []))
@@ -15665,10 +15666,13 @@ class GameRoom:
         if c["arma_destruida"]:
             return 0                        # jÃ¡ desarmado (soco) â€” sem penalidade extra
         weapon = p.get("weapon") or {}
+        # Níveis COM penalidade (default 2 → -1,-2, como sempre). Armas custom podem
+        # configurar quantos níveis penalizam antes de quebrar (escala -1 por nível).
+        pen_niveis = int(weapon.get("corrosao_niveis_penalidade", 2) or 2)
         if weapon.get("silver"):
-            return min(max(0, c["arma_lvl"] - 2), 2)
+            return min(max(0, c["arma_lvl"] - 2), pen_niveis)
         extra = weapon.get("corrosao_resistente", 0)
-        return min(max(0, c["arma_lvl"] - extra), 2)   # danificado -1, quebrado -2
+        return min(max(0, c["arma_lvl"] - extra), pen_niveis)   # danificado -1, quebrado -2, ...
 
     async def _devorador_cura(self, m, dado):
         """Cura o devorador ao destruir/consumir um item (Absorver Matéria 1d4 /
@@ -15755,7 +15759,9 @@ class GameRoom:
         if (weapon and weapon.get("id") in armas_ids and not c["arma_destruida"]):
             c["arma_lvl"] += 1
             extra = weapon.get("corrosao_resistente", 0)
-            if c["arma_lvl"] >= 3 + extra:
+            # Quebra em N(livres)+M(penalidade)+1. Com M=2 (default) → 3+extra, idêntico.
+            pen_niveis = int(weapon.get("corrosao_niveis_penalidade", 2) or 2)
+            if c["arma_lvl"] >= extra + pen_niveis + 1:
                 c["arma_destruida"] = True
                 p["weapon"]         = {**WEAPONS["unarmed"]}
                 p["gear"]["weapon"] = None
@@ -15770,7 +15776,7 @@ class GameRoom:
                     f"resistiu ao golpe sem sofrer dano!")
             else:
                 nivel_efetivo = c["arma_lvl"] - extra
-                nome = CORROSAO_NIVEL_NOME[nivel_efetivo]
+                nome = CORROSAO_NIVEL_NOME.get(nivel_efetivo, "muito danificado")
                 await self.gm_say(
                     f"🦷 **{label}**: a arma de **{p['name']}** "
                     f"({weapon.get('name','arma')}) está **{nome}** (-{nivel_efetivo} acerto/dano)!")
@@ -20916,6 +20922,9 @@ _ITEM_CLASSES = {"warrior", "mage", "rogue", "cleric", "ranger", "paladin", "bar
 _ITEM_DIE_FACES = {4, 6, 8, 10, 12}
 _ITEM_ELEM_TYPES = {DMG_FIRE, DMG_COLD, DMG_LIGHTNING, DMG_ACID, DMG_HOLY}
 _ITEM_CATEGORIAS = {"cortante", "contundente", "perfurante"}
+# Munição de armas custom à distância → família de projéteis aceita (reusa as
+# listas já definidas em RANGED_AMMO para arco/besta).
+_AMMO_FAMILIES = {"flechas": RANGED_AMMO["arco_curto"], "virotes": RANGED_AMMO["besta"]}
 
 def _die_ok(txt):
     try:
@@ -20982,22 +20991,30 @@ def _validate_custom_item(raw):
         # Tolerância extra à corrosão (golpes sem penalidade + adiamento da quebra):
         # 0 = arma normal (quebra no 3º nível), 2 = como prata (quebra no 5º).
         "corrosao_resistente": max(0, _int0(raw.get("corrosao_resistente"))),
+        # Níveis COM penalidade antes de quebrar (escala -1/nível). Default 2 (= base).
+        "corrosao_niveis_penalidade": max(1, _int0(raw.get("corrosao_niveis_penalidade", 2))),
+        # Material: define qual Devorador corrói a arma (metal → Devorador de Metal,
+        # madeira → Devorador Orgânico). Registrado no set de corrosão em _apply_custom_items.
+        "material": (raw.get("material") if raw.get("material") in ("metal", "madeira") else "metal"),
         "extra_damages": extra,
         "granted_ability": (str(raw["granted_ability"]) if raw.get("granted_ability") else None),
         "allowed_classes": classes, "price": price,
         "disponibilidade": {"loja": bool(disp.get("loja")), "baus": bool(disp.get("baus")),
                              "loot_monstro": bool(disp.get("loot_monstro"))},
     }
+    am = raw.get("ammo") if raw.get("ammo") in ("flechas", "virotes") else None
     if reach: item["reach"] = reach
     if rng:   item["range"] = rng
     if throw: item["throw_range"] = throw
+    if rng and am: item["ammo"] = am   # munição só faz sentido em arma à distância
     return True, item
 
 def _custom_weapon_combat_dict(item):
     """Cópia da arma para WEAPONS[id] (mesmo estilo dos dicts base)."""
     out = {k: item[k] for k in ("id", "name", "die", "stat", "categoria", "finesse",
             "two_handed", "atk_bonus", "damage_bonus", "extra_damages",
-            "granted_ability", "corrosao_resistente", "reach", "range", "throw_range") if k in item}
+            "granted_ability", "corrosao_resistente", "corrosao_niveis_penalidade",
+            "material", "ammo", "reach", "range", "throw_range") if k in item}
     out["custom"] = True
     return out
 
@@ -21014,8 +21031,14 @@ def _custom_weapon_inventory_dict(item):
 def _apply_custom_items(records):
     """Mescla armas custom nos catálogos vivos (idempotente: remove os customs antes)."""
     global SHOP_WEAPONS, LOOT_POOL_PROCEDURAL
-    for k in [k for k, v in WEAPONS.items() if v.get("custom")]:
+    # Limpa os ids custom anteriores de WEAPONS e dos registros derivados
+    # (munição e sets de corrosão) para o merge ser idempotente.
+    prev_weapon_ids = {k for k, v in WEAPONS.items() if v.get("custom")}
+    for k in prev_weapon_ids:
         WEAPONS.pop(k, None)
+        RANGED_AMMO.pop(k, None)
+        CORROSAO_ARMA_METAL.discard(k)
+        CORROSAO_ARMA_MADEIRA.discard(k)
     SHOP_WEAPONS[:] = [w for w in SHOP_WEAPONS if not w.get("custom")]
     prev_custom_ids = {k for k, v in _DUNGEON_ITEM_CATALOG.items() if v.get("custom")}
     for k in prev_custom_ids:
@@ -21028,6 +21051,15 @@ def _apply_custom_items(records):
         if not ok:
             continue
         WEAPONS[item["id"]] = _custom_weapon_combat_dict(item)
+        # Material → set de corrosão (define qual Devorador a corrói).
+        if item.get("material") == "madeira":
+            CORROSAO_ARMA_MADEIRA.add(item["id"])
+        else:
+            CORROSAO_ARMA_METAL.add(item["id"])
+        # Munição → RANGED_AMMO (só armas à distância com munição declarada).
+        _fam = _AMMO_FAMILIES.get(item.get("ammo"))
+        if _fam and item.get("range"):
+            RANGED_AMMO[item["id"]] = list(_fam)
         disp = item["disponibilidade"]
         inv = _custom_weapon_inventory_dict(item)
         if disp["loja"]:

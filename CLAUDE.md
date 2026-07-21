@@ -1091,14 +1091,19 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `LOOT_POOL_PROCEDURAL` (server.py). Handlers WS `upload_custom_item` +
 > `upload_item_art` (PNG → `assets/itens/<id>.png`). **Efeitos passivos
 > funcionais** no combate (lidos de `p["weapon"]` em `handle_attack`): dado/
-> categoria/stat/manejo/alcance, bônus fixo **independentes** de ataque
-> (`atk_bonus`) e de dano (`damage_bonus`), dano elemental adicional
-> (`extra_damages`, lista de `{die,type}` em fire/cold/lightning/acid/holy), e
-> **resistência à corrosão** (`corrosao_resistente` = pontos−3, editor expõe
-> "pontos": 3 normal / 5 como prata; lido por `_corrosao_arma_pen` e
-> `_corroer_equipamento`); `granted_ability` (habilidade
-> de Guilda/herói) é só **metadado** nesta fase. Compra/equipar preservam esses
-> campos (whitelists de `handle_shop_buy`/`combat_fields`). **Disponibilidade**
+> categoria/stat/manejo, **alcance editável** em quadrados (`range`/`throw_range`),
+> **acuidade** (`finesse` → dano usa o melhor de FOR/DES), bônus fixo
+> **independentes** de ataque (`atk_bonus`) e de dano (`damage_bonus`), dano
+> elemental adicional (`extra_damages`, lista de `{die,type}` em
+> fire/cold/lightning/acid/holy), **munição** para armas à distância (`ammo`:
+> flechas/virotes → registrado em `RANGED_AMMO` no merge), **material**
+> (`material`: metal/madeira → registrado em `CORROSAO_ARMA_METAL`/`_MADEIRA`,
+> define qual Devorador corrói) e **corrosão em dois eixos** — `corrosao_resistente`
+> (N níveis sem penalidade) + `corrosao_niveis_penalidade` (M níveis com penalidade,
+> escala −1/nível, quebra em N+M+1; lidos por `_corrosao_arma_pen`/
+> `_corroer_equipamento`, byte-idêntico p/ armas base quando M=2). `granted_ability`
+> (habilidade de Guilda/herói) é só **metadado** nesta fase. Compra/equipar preservam
+> esses campos (whitelists de `handle_shop_buy`/`combat_fields`). **Disponibilidade**
 > por item (loja/baús/loot de monstro); armas com `baus=true` aparecem no
 > seletor de itens de baú/recompensa do editor (`CAT.items` em `tools/editor.js`).
 > **Preço sugerido** e serialização/validação puras em

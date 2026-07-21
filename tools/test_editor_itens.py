@@ -178,20 +178,68 @@ def test_compra_equipa_preserva():
     S._apply_custom_items([])
 
 def test_corrosao():
-    print("\n[8] Resistencia a corrosao")
-    ok, item = S._validate_custom_item(sample(id="lamina_reforcada", corrosao_resistente=2))
+    print("\n[8] Corrosao: niveis livres/penalidade")
+    ok, item = S._validate_custom_item(sample(id="lamina_reforcada",
+        corrosao_resistente=2, corrosao_niveis_penalidade=3))
     check("valida corrosao_resistente", ok and item.get("corrosao_resistente") == 2)
+    check("valida corrosao_niveis_penalidade", ok and item.get("corrosao_niveis_penalidade") == 3)
     ok2, item2 = S._validate_custom_item(sample(id="arma_normal"))
-    check("default corrosao_resistente = 0", ok2 and item2.get("corrosao_resistente") == 0)
+    check("defaults (0 livres / 2 penalidade)",
+          ok2 and item2.get("corrosao_resistente") == 0 and item2.get("corrosao_niveis_penalidade") == 2)
     S._apply_custom_items([item])
-    check("WEAPONS carrega corrosao_resistente", S.WEAPONS["lamina_reforcada"].get("corrosao_resistente") == 2)
-    check("baus/loot dict carrega corrosao_resistente",
-          S._DUNGEON_ITEM_CATALOG["lamina_reforcada"].get("corrosao_resistente") == 2)
+    check("WEAPONS carrega os dois campos",
+          S.WEAPONS["lamina_reforcada"].get("corrosao_resistente") == 2
+          and S.WEAPONS["lamina_reforcada"].get("corrosao_niveis_penalidade") == 3)
     S._apply_custom_items([])
+
+def test_penalidade_engine():
+    print("\n[9] Corrosao no motor: penalidade escala e quebra em N+M+1")
+    r = S.GameRoom("TEST")
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    # N=1 livre, M=3 penalidade → quebra no nivel 1+3+1=5; penalidade -1,-2,-3.
+    p["weapon"] = {"id": "arma_t", "name": "T", "die": "1d8", "stat": "str_",
+                   "categoria": "cortante", "corrosao_resistente": 1, "corrosao_niveis_penalidade": 3}
+    c = p.setdefault("corrosao", {})
+    def pen_no_nivel(lvl):
+        c["arma_lvl"] = lvl; c["arma_destruida"] = False
+        return r._corrosao_arma_pen(p)
+    check("nivel 1 (livre) sem penalidade", pen_no_nivel(1) == 0)
+    check("nivel 2 penalidade -1", pen_no_nivel(2) == 1)
+    check("nivel 3 penalidade -2", pen_no_nivel(3) == 2)
+    check("nivel 4 penalidade -3 (teto = M)", pen_no_nivel(4) == 3)
+    check("nivel 5 penalidade travada em M=3", pen_no_nivel(5) == 3)
+    # Arma normal (sem campos) permanece identica: -1,-2, teto 2.
+    p["weapon"] = {"id": "n", "name": "N", "die": "1d6", "stat": "str_", "categoria": "cortante"}
+    check("arma normal nivel 2 = -2", pen_no_nivel(2) == 2)
+    check("arma normal nivel 3 travada em 2", pen_no_nivel(3) == 2)
+
+def test_material_e_municao():
+    print("\n[10] Material -> set de corrosao; municao -> RANGED_AMMO")
+    madeira = S._validate_custom_item(sample(id="cajado_t", material="madeira"))[1]
+    metal   = S._validate_custom_item(sample(id="espada_t", material="metal"))[1]
+    arco    = S._validate_custom_item(sample(id="arco_t", range=6, ammo="flechas",
+                                             disponibilidade={"loja": True, "baus": False, "loot_monstro": False}))[1]
+    besta   = S._validate_custom_item(sample(id="besta_t", range=8, ammo="virotes",
+                                             disponibilidade={"loja": True, "baus": False, "loot_monstro": False}))[1]
+    S._apply_custom_items([madeira, metal, arco, besta])
+    check("madeira entra em CORROSAO_ARMA_MADEIRA", "cajado_t" in S.CORROSAO_ARMA_MADEIRA)
+    check("metal entra em CORROSAO_ARMA_METAL", "espada_t" in S.CORROSAO_ARMA_METAL)
+    check("arco requer flechas (RANGED_AMMO)", "flechas" in S.RANGED_AMMO.get("arco_t", []))
+    check("besta requer virotes (RANGED_AMMO)", "virotes" in S.RANGED_AMMO.get("besta_t", []))
+    check("municao ignorada sem alcance", "ammo" not in S._validate_custom_item(sample(id="soco_t", ammo="flechas"))[1])
+    # cleanup idempotente: lista vazia remove dos sets e do RANGED_AMMO
+    S._apply_custom_items([])
+    check("cleanup remove de CORROSAO_ARMA_MADEIRA", "cajado_t" not in S.CORROSAO_ARMA_MADEIRA)
+    check("cleanup remove de CORROSAO_ARMA_METAL", "espada_t" not in S.CORROSAO_ARMA_METAL)
+    check("cleanup remove de RANGED_AMMO", "arco_t" not in S.RANGED_AMMO)
+    # bases nativas do RANGED_AMMO/sets permanecem intactas
+    check("base arco_curto intacto em RANGED_AMMO", "flechas" in S.RANGED_AMMO.get("arco_curto", []))
+    check("base dagger intacto em CORROSAO_ARMA_METAL", "dagger" in S.CORROSAO_ARMA_METAL)
 
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
     test_compra_equipa_preserva(); test_corrosao()
+    test_penalidade_engine(); test_material_e_municao()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)

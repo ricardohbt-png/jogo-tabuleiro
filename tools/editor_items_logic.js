@@ -39,10 +39,12 @@
       granted_ability: d.granted_ability || null,
       allowed_classes: (d.allowed_classes || []).slice(),
       price: Math.max(0, +d.price || 0),
-      // Pontos de vida contra corrosão: 3 = normal, 5 = como prata. O motor lê a
-      // "tolerância extra" (corrosao_resistente = pontos − 3): quebra em 3+extra e
-      // os `extra` primeiros níveis não sofrem penalidade de acerto/dano.
-      corrosao_resistente: Math.max(0, (+d.corrosao_pontos || 3) - 3),
+      // Corrosão em dois eixos: N níveis SEM penalidade (corrosao_resistente) +
+      // M níveis COM penalidade (corrosao_niveis_penalidade, escala -1/nível);
+      // quebra no golpe N+M+1. Material define qual Devorador a corrói.
+      corrosao_resistente: Math.max(0, +d.corrosao_livres || 0),
+      corrosao_niveis_penalidade: Math.max(1, +d.corrosao_penalidade || 2),
+      material: d.material === "madeira" ? "madeira" : "metal",
       disponibilidade: {
         loja: !!(d.disponibilidade || {}).loja, baus: !!(d.disponibilidade || {}).baus,
         loot_monstro: !!(d.disponibilidade || {}).loot_monstro,
@@ -50,7 +52,10 @@
     };
     if (d.manejo === "lanca") item.reach = "lanca";
     else if (d.manejo === "cajado") item.reach = "cajado";
-    else if (d.manejo === "distancia") item.range = Math.max(1, +d.range || 4);
+    else if (d.manejo === "distancia") {
+      item.range = Math.max(1, +d.range || 4);
+      if (d.ammo === "flechas" || d.ammo === "virotes") item.ammo = d.ammo;
+    }
     if (d.manejo === "arremessavel" || d.throw_range) item.throw_range = Math.max(1, +d.throw_range || 3);
     return item;
   }

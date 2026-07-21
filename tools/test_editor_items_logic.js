@@ -24,10 +24,21 @@ check("validateDraft rejeita sem nome", !L.validateDraft(Object.assign({}, draft
 // atk_bonus e damage_bonus são independentes (podem coexistir)
 const doisBonus = L.serializeWeapon(Object.assign({}, draft, {atk_bonus:2, damage_bonus:3}));
 check("serializeWeapon mantem atk_bonus e damage_bonus juntos", doisBonus.atk_bonus === 2 && doisBonus.damage_bonus === 3);
-// pontos de corrosão → corrosao_resistente = pontos - 3 (3 normal → 0, 5 prata → 2)
-check("corrosao 3 pontos => resistente 0", L.serializeWeapon(Object.assign({}, draft, {corrosao_pontos:3})).corrosao_resistente === 0);
-check("corrosao 5 pontos => resistente 2 (prata)", L.serializeWeapon(Object.assign({}, draft, {corrosao_pontos:5})).corrosao_resistente === 2);
-check("corrosao ausente => resistente 0 (default 3 pts)", L.serializeWeapon(draft).corrosao_resistente === 0);
+// corrosão em dois eixos: níveis livres (N) + níveis com penalidade (M)
+const corr = L.serializeWeapon(Object.assign({}, draft, {corrosao_livres:2, corrosao_penalidade:3}));
+check("corrosao_livres => corrosao_resistente", corr.corrosao_resistente === 2);
+check("corrosao_penalidade => corrosao_niveis_penalidade", corr.corrosao_niveis_penalidade === 3);
+check("defaults de corrosao (0 livres, 2 penalidade)",
+      L.serializeWeapon(draft).corrosao_resistente === 0 && L.serializeWeapon(draft).corrosao_niveis_penalidade === 2);
+// material: metal por padrão, madeira quando escolhido
+check("material default metal", L.serializeWeapon(draft).material === "metal");
+check("material madeira", L.serializeWeapon(Object.assign({}, draft, {material:"madeira"})).material === "madeira");
+// alcance editável + munição só em arma à distância
+const rng = L.serializeWeapon(Object.assign({}, draft, {manejo:"distancia", range:7, ammo:"flechas"}));
+check("alcance à distância editável", rng.range === 7);
+check("munição gravada em arma à distância", rng.ammo === "flechas");
+check("munição ignorada em arma corpo a corpo",
+      L.serializeWeapon(Object.assign({}, draft, {manejo:"corpo", ammo:"flechas"})).ammo === undefined);
 
 console.log(`\n${PASS} passaram, ${FAIL} falharam`);
 process.exit(FAIL ? 1 : 0);
