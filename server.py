@@ -6876,7 +6876,9 @@ class GameRoom:
                 "buy_price": price,
                 **{k: w[k] for k in ("die", "stat", "range", "reach",
                                      "finesse", "throw_range", "categoria",
-                                     "two_handed", "dmg_bonus", "corrosao_resistente") if k in w},
+                                     "two_handed", "dmg_bonus", "corrosao_resistente",
+                                     "atk_bonus", "damage_bonus", "extra_damages",
+                                     "granted_ability") if k in w},
             }
             res = self._route_acquired_item(p, weapon_item)
             if res == "full":
@@ -11474,7 +11476,8 @@ class GameRoom:
         if cat == "weapon" and item.get("die") and item.get("stat"):
             combat_fields = ("id", "name", "die", "stat", "range", "reach",
                              "finesse", "throw_range", "categoria", "two_handed",
-                             "dmg_bonus", "corrosao_resistente")
+                             "dmg_bonus", "corrosao_resistente",
+                             "atk_bonus", "damage_bonus", "extra_damages", "granted_ability")
             p["weapon"] = {k: item[k] for k in combat_fields if k in item}
             p["weapon"]["poison_slots"] = list(item.get("poison_slots", []))
 
@@ -11607,7 +11610,8 @@ class GameRoom:
             if item.get("die") and item.get("stat"):
                 combat_fields = ("id", "name", "die", "stat", "range", "reach",
                                  "finesse", "throw_range", "categoria", "two_handed",
-                                 "dmg_bonus", "corrosao_resistente")
+                                 "dmg_bonus", "corrosao_resistente",
+                                 "atk_bonus", "damage_bonus", "extra_damages", "granted_ability")
                 p["weapon"] = {k: item[k] for k in combat_fields if k in item}
                 p["weapon"]["poison_slots"] = list(item.get("poison_slots", []))
         elif cat == "off_hand":

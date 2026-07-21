@@ -156,8 +156,30 @@ def test_combate_passivo():
     check("mão secundária NÃO herda o atk_bonus da arma principal",
           cap_offhand(0) == cap_offhand(7))
 
+def test_compra_equipa_preserva():
+    print("\n[7] Comprar+equipar preserva campos custom")
+    S._apply_custom_items([S._validate_custom_item(sample(id="lamina_gelo",
+        extra_damages=[{"die": "1d6", "type": "cold"}], damage_bonus=2))[1]])
+    r = S.GameRoom("TEST")
+    async def noop(*a, **k): pass
+    r.gm_say = noop; r.broadcast = noop; r.push_state = noop
+    r.broadcast_city_state = noop; r.send_to = noop
+    r._is_turn = lambda pid: True; r.phase = "city"
+    p = S.make_player("p1", "Victor", "warrior", 0); r.players["p1"] = p
+    p["gold"] = 9999; p["bag"] = []; p["gear"]["weapon"] = None
+    asyncio.run(r.handle_shop_buy("p1", "ferreiro_weapon", "lamina_gelo"))
+    comprada = next((it for it in p["bag"] if it and it.get("id") == "lamina_gelo"), None)
+    check("comprada foi pra bolsa", comprada is not None)
+    check("bolsa preserva extra_damages", comprada and comprada.get("extra_damages"))
+    check("bolsa preserva damage_bonus", comprada and comprada.get("damage_bonus") == 2)
+    idx = p["bag"].index(comprada)
+    asyncio.run(r._executar_equip_from_bag("p1", idx))
+    check("equipar sincroniza extra_damages em p['weapon']", p["weapon"].get("extra_damages"))
+    S._apply_custom_items([])
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
+    test_compra_equipa_preserva()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)
