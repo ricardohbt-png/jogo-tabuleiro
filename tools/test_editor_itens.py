@@ -297,11 +297,31 @@ def test_merge_armadura():
     check("base leather intacto em SHOP_ARMORS", any(a["id"] == "leather" for a in S.SHOP_ARMORS))
     check("base leather intacto em CORROSAO_ARMADURA_ORGANICA", "leather" in S.CORROSAO_ARMADURA_ORGANICA)
 
+def test_multi_efeito():
+    print("\n[A3] Motor de multi-efeito (bonuses)")
+    r = S.GameRoom("TEST")
+    async def noop(*a, **k): pass
+    r.gm_say = noop; r.broadcast = noop; r.push_state = noop; r.broadcast_city_state = noop; r.send_to = noop
+    p = S.make_player("p1", "Victor", "warrior", 0); r.players["p1"] = p
+    hp0, spd0, ac0 = p["max_hp"], p["spd"], p["ac"]
+    item = {"id": "x", "name": "X", "item_slot": "armor", "effect": "def_", "value": 3,
+            "bonuses": [{"effect": "maxhp", "value": 5}, {"effect": "spd", "value": -1},
+                        {"effect": "def_", "value": 1}]}
+    r._apply_gear_effect(p, item, True)
+    check("def_ primario aplicado (+3 CA)", p["ac"] == ac0 + 3 + 1)  # primario +3, bonus +1
+    check("maxhp bonus aplicado (+5)", p["max_hp"] == hp0 + 5)
+    check("spd bonus aplicado (-1)", p["spd"] == spd0 - 1)
+    r._apply_gear_effect(p, item, False)
+    check("desequipar reverte CA", p["ac"] == ac0)
+    check("desequipar reverte maxhp", p["max_hp"] == hp0)
+    check("desequipar reverte spd", p["spd"] == spd0)
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
     test_compra_equipa_preserva(); test_corrosao()
     test_penalidade_engine(); test_material_e_municao()
     test_validacao_armadura(); test_merge_armadura()
+    test_multi_efeito()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)

@@ -11364,9 +11364,9 @@ class GameRoom:
 
     # â”€â”€ inventory helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-    def _apply_gear_effect(self, p, item, equipping):
+    def _apply_single_effect(self, p, effect, value, equipping):
         mult = 1 if equipping else -1
-        e, v = item.get("effect"), item.get("value", 0) * mult
+        e, v = effect, value * mult
         if e in ("atk", "atk_bonus"):
             p["atk_bonus"] += v; p["base_atk_bonus"] += v
         elif e in ("def_", "ac_bonus"):
@@ -11385,6 +11385,12 @@ class GameRoom:
         elif e == "bagslots":
             # Mochila/alforje: expande o inventÃ¡rio enquanto equipada
             p["bag_size"] = max(1, p.get("bag_size", 6) + v)
+
+    def _apply_gear_effect(self, p, item, equipping):
+        self._apply_single_effect(p, item.get("effect"), item.get("value", 0), equipping)
+        for b in item.get("bonuses", []) or []:
+            if isinstance(b, dict):
+                self._apply_single_effect(p, b.get("effect"), int(b.get("value", 0) or 0), equipping)
 
     def _escudo_equipado(self, p):
         """True se o jogador tem um escudo na mão esquerda (off_hand)."""
