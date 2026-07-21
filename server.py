@@ -19996,8 +19996,10 @@ async def handler(ws):
                     ok, res = _save_custom_item(msg.get("item"))
                     payload = {"type": "upload_result", "kind": "custom_item",
                                "upload_id": msg.get("upload_id"), "ok": ok}
-                    if ok: payload["item"] = res
-                    else:  payload["error"] = res
+                    if ok:
+                        payload["item"] = res
+                    else:
+                        payload["error"] = res
                     await ws.send(json.dumps(payload))
                     continue
 
@@ -20005,8 +20007,10 @@ async def handler(ws):
                     ok, res = _save_item_art(msg.get("name"), msg.get("data"))
                     payload = {"type": "upload_result", "kind": "item_art",
                                "upload_id": msg.get("upload_id"), "ok": ok}
-                    if ok: payload["name"] = res
-                    else:  payload["error"] = res
+                    if ok:
+                        payload["name"] = res
+                    else:
+                        payload["error"] = res
                     await ws.send(json.dumps(payload))
                     continue
 

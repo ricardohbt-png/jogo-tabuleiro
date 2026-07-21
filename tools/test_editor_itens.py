@@ -73,6 +73,12 @@ def test_upload_art():
     check("rejeita extensao nao-png", not ok2)
     ok3, _ = S._save_item_art("y.png", base64.b64encode(b"not a png").decode())
     check("rejeita conteudo nao-PNG", not ok3)
+    ok4, _ = S._save_item_art("../../evil.png", PNG)
+    # basename() reduz para "evil.png" e grava dentro de assets/itens — nunca fora
+    fora = os.path.join(S.BASE_DIR, "evil.png")
+    check("path traversal neutralizado (nao grava fora de assets/itens)", not os.path.exists(fora))
+    inside = os.path.join(S.BASE_DIR, "assets", "itens", "evil.png")
+    if os.path.exists(inside): os.remove(inside)
 
 def test_save_item():
     print("\n[5] Salvar item (fluxo completo)")
