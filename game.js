@@ -13340,6 +13340,9 @@ function toggle3D(){
 // A malha 3D do tabuleiro é criada uma vez e reutilizada durante o turno. Esta
 // assinatura separa mudanças estáticas (tiles/materiais) das atualizações comuns
 // de jogo, para reconstituir o chão quando o editor carrega ou pinta grama/terra.
+// Nº de luzes do pool de tochas/arandelas (contagem constante — ver init3D).
+const LIGHT_POOL_N = 8;
+
 function _assinaturaVisualTabuleiro3D(state){
   const tiles = (state.tiles || []).map(row => row.join('')).join('|');
   const materiais = state.materiais || {};
@@ -13513,8 +13516,11 @@ function init3D(state){
   const visionLamp = new T.PointLight(0xfff8e8, 14.0, 9.0, 1.4);  // large bright halo around player
   scene.add(visionLamp);
 
-  // ── WALL-SCONCE FILL LIGHTS (deterministic PointLights, corridor atmosphere) ──
-  // Reduced intensity — now that per-room torches are the main room lights.
+  // ── WALL-SCONCE ANCHORS (posições de luz; iluminadas pelo POOL fixo) ─────────
+  // Sem PointLight própria por arandela: ligar/desligar luzes ao revelar área
+  // muda a CONTAGEM de luzes visíveis e força o Three.js a recompilar todos os
+  // shaders (travada perceptível). O pool de luzes abaixo cobre as âncoras
+  // reveladas mais próximas do herói.
   const sconces = [];
   for(let ty=0; ty<H; ty++){
     for(let tx=0; tx<W; tx++){
@@ -13526,17 +13532,25 @@ function init3D(state){
         return nx>=0&&ny>=0&&nx<W&&ny<H&&state.tiles[ny][nx]===TILE_FLOOR;
       });
       if(!hasFloor) continue;
-      const sl = new T.PointLight(0xffaa44, 2.8, 7.5, 1.8);
-      sl.position.set(tx, 1.2, ty);
-      sl.visible = false;
-      scene.add(sl);
-      sconces.push({x:tx, y:ty, light:sl});
+      sconces.push({x:tx, y:ty, revealed:false});
     }
   }
 
-  // ── PER-ROOM TORCHES (bracket + flame geometry + animated PointLight) ────────
+  // ── PER-ROOM TORCHES (bracket + flame geometry; luz vem do pool) ─────────────
   const wallTorches = [];
   try{ buildRoomTorches(T, scene, state, wallTorches, TW, TH, WH); }catch(e){ console.warn('buildRoomTorches:', e); }
+
+  // ── LIGHT POOL (contagem de luzes CONSTANTE — zero recompilações em jogo) ────
+  // Pool fixo de PointLights sempre-visíveis, reatribuídas às âncoras reveladas
+  // (tochas de sala + arandelas) mais próximas do herói. "Apagada" = intensity 0
+  // — nunca visible=false, que mudaria a contagem e recompilaria os shaders.
+  const lightPool = [];
+  for(let i=0; i<LIGHT_POOL_N; i++){
+    const pl = new T.PointLight(0xffaa44, 0, 7.5, 1.8);
+    pl.position.set(0, -50, 0);   // estacionada fora do tabuleiro até ser atribuída
+    scene.add(pl);
+    lightPool.push({ light: pl, anchor: null });
+  }
 
   // ── ROOM FLOOR OVERLAYS (colored translucent plane per room role) ─────────────
   const roomOverlayMeshes = {};
@@ -13901,7 +13915,7 @@ function init3D(state){
 
   g3 = {
     T, scene, renderer, camera, controls,
-    ambient, torch, visionLamp, rimLight, fillLight, sconces,
+    ambient, torch, visionLamp, rimLight, fillLight, sconces, lightPool,
     tileMeshes, doorMeshes, wallDetailMeshes, entityGroup, raycaster,
     wallTorches, roomOverlayMeshes,
     sceneryMeshes, groutMeshes, groutMats,
@@ -13931,6 +13945,10 @@ function init3D(state){
   // mudanças posteriores; estes rAFs cobrem o primeiro frame.
   requestAnimationFrame(() => { if(g3) resize3D(); });
   requestAnimationFrame(() => requestAnimationFrame(() => { if(g3) resize3D(); }));
+  // Pré-compila os shaders com a contagem FINAL de luzes já na entrada da
+  // masmorra (momento de carregamento) — como o pool mantém a contagem
+  // constante, nenhum outro programa precisa compilar durante a partida.
+  try{ renderer.compile(scene, camera); }catch(e){ console.warn('renderer.compile:', e); }
   startLoop3D();
 
   // ── Drag-guard listeners (detect any button drag → block next click) ──────
@@ -14234,6 +14252,52 @@ function resize3D(){
   renderer.setSize(CW, CH);
 }
 
+// ── Pool de luzes: atribui as N luzes fixas às âncoras REVELADAS (tochas de
+// sala + arandelas) mais próximas do herói. As luzes nunca mudam de visible
+// (contagem constante → zero recompilações de shader); "apagar" = intensity 0.
+function _atribuirLightPool(){
+  if(!g3 || !g3.lightPool) return;
+  const px = g3.torch.position.x, pz = g3.torch.position.z;
+  const cands = [];
+  if(g3.wallTorches){
+    for(const wt of g3.wallTorches){
+      if(!wt.group.visible) continue;
+      cands.push({x:wt.lx, y:wt.ly, z:wt.lz, kind:'torch', offset:wt.offset});
+    }
+  }
+  if(g3.sconces){
+    for(const sc of g3.sconces){
+      if(!sc.revealed) continue;
+      cands.push({x:sc.x, y:1.2, z:sc.y, kind:'sconce', offset:0});
+    }
+  }
+  for(const c of cands){
+    const dx = c.x - px, dz = c.z - pz;
+    c.d2 = dx*dx + dz*dz;
+  }
+  cands.sort((a,b) => a.d2 - b.d2);
+  for(let i=0; i<g3.lightPool.length; i++){
+    const slot = g3.lightPool[i];
+    const c = cands[i] || null;
+    slot.anchor = c;
+    if(!c){ slot.light.intensity = 0; continue; }
+    slot.light.position.set(c.x, c.y, c.z);
+    if(c.kind === 'torch'){
+      // mesmos parâmetros da antiga PointLight por tocha de sala
+      slot.light.color.setHex(0xff8800);
+      slot.light.distance = 5.5;
+      slot.light.decay    = 2.0;
+      slot.light.intensity = 3.8;   // o tick anima o flicker por cima
+    } else {
+      // mesmos parâmetros da antiga PointLight por arandela
+      slot.light.color.setHex(0xffaa44);
+      slot.light.distance = 7.5;
+      slot.light.decay    = 1.8;
+      slot.light.intensity = 2.8;
+    }
+  }
+}
+
 function startLoop3D(){
   function tick(){
     if(!g3) return;
@@ -14254,7 +14318,6 @@ function startLoop3D(){
         // Two overlapping sine waves → irregular organic crackle
         const fl = Math.sin(t*0.003  + wt.offset)*0.28
                  + Math.sin(t*0.0071 + wt.offset*1.3)*0.10;
-        wt.light.intensity = 3.8 + fl;
         if(wt.flames){
           for(const cone of wt.flames){
             const subFl = fl + Math.sin(t*0.005 + cone.userData.subOffset)*0.12;
@@ -14262,6 +14325,21 @@ function startLoop3D(){
             cone.scale.y = 1.0 + subFl * 0.18;
           }
         }
+      }
+    }
+
+    // ── Pool de luzes: reatribuição periódica (segue o herói) + flicker ──────
+    if(g3.lightPool){
+      if(!g3._poolNextAt || t > g3._poolNextAt){
+        g3._poolNextAt = t + 150;   // reatribuir 6-7×/s é de sobra e quase grátis
+        _atribuirLightPool();
+      }
+      for(const slot of g3.lightPool){
+        const a = slot.anchor;
+        if(!a || a.kind !== 'torch') continue;
+        const fl = Math.sin(t*0.003  + a.offset)*0.28
+                 + Math.sin(t*0.0071 + a.offset*1.3)*0.10;
+        slot.light.intensity = 3.8 + fl;
       }
     }
 
@@ -14579,7 +14657,7 @@ function buildWallDetails(T, scene, state, wallTex, TW, TH, WH){
 
 // ── Per-room wall torches (bracket + flame + animated PointLight) ─────────────
 // Selects 1–2 wall tiles per room and places a full torch assembly on each.
-// wallTorches entries: { group, light, flame, offset, wallKey }
+// wallTorches entries: { group, lx, ly, lz, flames, offset, wallKey }
 // L-shaped iron bracket via CatmullRomCurve3 + TubeGeometry
 // Flattened TorusGeometry rusty bowl
 // 3 overlapping ConeGeometry fire cones with independent Y-scale animation
@@ -14686,18 +14764,14 @@ function buildRoomTorches(T, scene, state, wallTorches, TW, TH, WH){
         }catch(e){}
       }
 
-      // castShadow is OFF for room torches — each castShadow PointLight needs
-      // 6 cubemap shadow passes; with 10+ rooms this overflows WebGL resources.
-      // Shadow casting is handled solely by the player's moving torch.
-      const pl = new T.PointLight(0xff8800, 2.2, 5.5, 2.0);
-      pl.position.set(fx, 0.28, fz);
-      grp.add(pl);
-
+      // Sem PointLight própria: a luz da tocha vem do POOL fixo (init3D), que é
+      // atribuído às âncoras reveladas mais próximas do herói. Luz por tocha
+      // mudava a contagem de luzes ao revelar a sala → recompilação de shaders.
       grp.visible = false;
       scene.add(grp);
       wallTorches.push({
         group:   grp,
-        light:   pl,
+        lx: fx, ly: 0.28, lz: fz,   // âncora de luz p/ o pool
         flames:  flames,
         offset:  ((wx*7919 ^ wy*3467) & 0xFF) / 255 * Math.PI * 2,
         wallKey: `${wx},${wy}`
@@ -15863,9 +15937,11 @@ function renderMap3D(state){
     g3.visionLamp.position.set(W/2, 1.8, H/2);
   }
 
-  // ── Sconce visibility
+  // ── Sconce anchors: marca as reveladas e reatribui o pool de luzes na hora
+  // (a área recém-aberta já acende no mesmo frame, sem esperar o tick).
   for(const sc of sconces)
-    sc.light.visible = exploredSet.has(`${sc.x},${sc.y}`);
+    sc.revealed = exploredSet.has(`${sc.x},${sc.y}`);
+  _atribuirLightPool();
 
   // ── Staircase visibility
   if(g3.stairGroup && state.stairs_pos)
@@ -16507,6 +16583,21 @@ const _pawnTexCache = {};
 const _heroGLBCache  = {};   // classId -> THREE.Group (template) | 'erro'
 const _heroGLBQueue  = {};   // classId -> [callbacks]
 
+// Miniaturas 3D de monstros. A chave é `image` enviada pelo servidor, assim a
+// ficha, a IA e a arte 2D continuam usando exatamente os mesmos identificadores.
+// O PNG existente permanece como fallback na visão 3D e como miniatura da visão 2D.
+const _MONSTER_GLB_MODELS = Object.freeze({
+  goblinArqueiro:    'assets/models3d/monstros/goblin_arqueiro.glb',
+  goblinCombatente:  'assets/models3d/monstros/goblin_combatente.glb',
+  crocodiloJovem:    'assets/models3d/monstros/crocodilo.glb',
+  cobraVenenosa:     'assets/models3d/monstros/cobra_venenosa.glb',
+  cobraConstritora:  'assets/models3d/monstros/cobra_constritora.glb',
+  bugbear:           'assets/models3d/monstros/bugbear.glb',
+  aranhasombria:     'assets/models3d/monstros/aranha.glb',
+});
+const _monsterGLBCache = {};  // caminho -> template | 'erro'
+const _monsterGLBQueue = {};  // caminho -> [callbacks]
+
 function _loadHeroGLB(T, classId, cb) {
   const cached = _heroGLBCache[classId];
   if (cached && cached !== 'erro') { cb(cached); return; }
@@ -16600,6 +16691,68 @@ function _makeCharacterPawn3D(T, grp, classId, Y0, rotY, altura, onMissing) {
   if (cached === 'erro') { if (onMissing) onMissing(); return false; }
   _loadHeroGLB(T, classId, montar);
   return true;   // virá async — não desenhar fallback por cima
+}
+
+function _loadMonsterGLB(T, path, cb) {
+  const cached = _monsterGLBCache[path];
+  if (cached && cached !== 'erro') { cb(cached); return; }
+  if (cached === 'erro' || !T.GLTFLoader) { cb(null); return; }
+  if (_monsterGLBQueue[path]) { _monsterGLBQueue[path].push(cb); return; }
+
+  _monsterGLBQueue[path] = [cb];
+  new T.GLTFLoader().load(
+    _assetURL(path),
+    gltf => {
+      const template = gltf.scene;
+      template.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+      _monsterGLBCache[path] = template;
+      _monsterGLBQueue[path].forEach(fn => fn(template));
+      delete _monsterGLBQueue[path];
+    },
+    undefined,
+    error => {
+      console.warn(`[GLB] falha ao carregar miniatura de monstro ${path}:`, error);
+      _monsterGLBCache[path] = 'erro';
+      _monsterGLBQueue[path].forEach(fn => fn(null));
+      delete _monsterGLBQueue[path];
+    }
+  );
+}
+
+// Usa o GLB real quando disponível. O molde é clonado para cada criatura;
+// recursos gráficos ficam em cache e nunca são liberados ao remover um peão.
+function _makeMonsterPawn3D(T, grp, imageName, Y0, facing, oriented, onMissing) {
+  const path = _MONSTER_GLB_MODELS[imageName];
+  if (!path) { if (onMissing) onMissing(); return false; }
+  const montar = template => {
+    if (!template) { if (onMissing) onMissing(); return; }
+    const inst = template.clone();
+    const box = new T.Box3().setFromObject(inst);
+    const size = box.getSize(new T.Vector3());
+    // Crocodilos ocupam duas casas; os demais cabem inteiros em sua própria casa.
+    const footprint = oriented ? 1.86 : 0.94;
+    const scale = Math.min(
+      2.05 / Math.max(size.y, 1e-3),
+      footprint / Math.max(size.x, size.z, 1e-3)
+    );
+    inst.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2
+    );
+    const wrap = new T.Group();
+    wrap.add(inst);
+    wrap.scale.setScalar(scale);
+    wrap.rotation.y = _facingToRotY(facing);
+    wrap.position.y = Y0;
+    inst.traverse(o => { if (o.isMesh) { o.userData.isGroundDecal = true; o.userData.noOL = true; o.userData.isGLB = true; } });
+    grp.add(wrap);
+  };
+  const cached = _monsterGLBCache[path];
+  if (cached && cached !== 'erro') { montar(cached); return true; }
+  if (cached === 'erro') { if (onMissing) onMissing(); return false; }
+  _loadMonsterGLB(T, path, montar);
+  return true;
 }
 
 // ── Character pawn — GLB 3D real para classes em _GLB_ENABLED_CLASSES,
@@ -16850,7 +17003,7 @@ function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected, emCh
 
 function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType, isSelected, mImage, mPorte, mOriented, mFacing, emChamas, acidoResidual, envenenado){
   const T   = g3.T;
-  if (isMonster && mOriented && mImage) {
+  if (isMonster && mOriented && mImage && !_MONSTER_GLB_MODELS[mImage]) {
     // emChamas vai PARA DENTRO do helper (posiciona o 🔥 no centro midX/midZ do
     // billboard, não no tile-âncora — senão flutuaria sobre a casa vizinha).
     return _buildOrientedCreature3D(T, gx, gy, mImage, mFacing, isSelected, emChamas);
@@ -16949,7 +17102,10 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
   // Booster de resolução: silhuetas suaves (menos poligonal) em todos os peões
   _withSmoothGeo(T, () => {
   if(isMonster){
-    if(mImage){
+    if(mImage && _MONSTER_GLB_MODELS[mImage]){
+      _makeMonsterPawn3D(T, grp, mImage, Y0, mFacing, mOriented,
+        () => _makeMonsterBillboard(T, grp, mImage, Y0, mPorte));
+    } else if(mImage){
       _makeMonsterBillboard(T, grp, mImage, Y0, mPorte);
     } else {
       switch(mType){
