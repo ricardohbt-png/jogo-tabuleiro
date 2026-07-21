@@ -1091,9 +1091,12 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `LOOT_POOL_PROCEDURAL` (server.py). Handlers WS `upload_custom_item` +
 > `upload_item_art` (PNG → `assets/itens/<id>.png`). **Efeitos passivos
 > funcionais** no combate (lidos de `p["weapon"]` em `handle_attack`): dado/
-> categoria/stat/manejo/alcance, bônus fixo de ataque (`atk_bonus`) OU dano
-> (`damage_bonus`), e dano elemental adicional (`extra_damages`, lista de
-> `{die,type}` em fire/cold/lightning/acid/holy); `granted_ability` (habilidade
+> categoria/stat/manejo/alcance, bônus fixo **independentes** de ataque
+> (`atk_bonus`) e de dano (`damage_bonus`), dano elemental adicional
+> (`extra_damages`, lista de `{die,type}` em fire/cold/lightning/acid/holy), e
+> **resistência à corrosão** (`corrosao_resistente` = pontos−3, editor expõe
+> "pontos": 3 normal / 5 como prata; lido por `_corrosao_arma_pen` e
+> `_corroer_equipamento`); `granted_ability` (habilidade
 > de Guilda/herói) é só **metadado** nesta fase. Compra/equipar preservam esses
 > campos (whitelists de `handle_shop_buy`/`combat_fields`). **Disponibilidade**
 > por item (loja/baús/loot de monstro); armas com `baus=true` aparecem no

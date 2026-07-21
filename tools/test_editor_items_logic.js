@@ -21,5 +21,13 @@ check("serializeWeapon marca item_type weapon", item.item_type === "weapon");
 check("validateDraft aceita valido", L.validateDraft(draft).ok);
 check("validateDraft rejeita sem nome", !L.validateDraft(Object.assign({}, draft, {name:""})).ok);
 
+// atk_bonus e damage_bonus são independentes (podem coexistir)
+const doisBonus = L.serializeWeapon(Object.assign({}, draft, {atk_bonus:2, damage_bonus:3}));
+check("serializeWeapon mantem atk_bonus e damage_bonus juntos", doisBonus.atk_bonus === 2 && doisBonus.damage_bonus === 3);
+// pontos de corrosão → corrosao_resistente = pontos - 3 (3 normal → 0, 5 prata → 2)
+check("corrosao 3 pontos => resistente 0", L.serializeWeapon(Object.assign({}, draft, {corrosao_pontos:3})).corrosao_resistente === 0);
+check("corrosao 5 pontos => resistente 2 (prata)", L.serializeWeapon(Object.assign({}, draft, {corrosao_pontos:5})).corrosao_resistente === 2);
+check("corrosao ausente => resistente 0 (default 3 pts)", L.serializeWeapon(draft).corrosao_resistente === 0);
+
 console.log(`\n${PASS} passaram, ${FAIL} falharam`);
 process.exit(FAIL ? 1 : 0);

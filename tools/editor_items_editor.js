@@ -11,11 +11,11 @@
   var CLASSES = [["warrior","Guerreiro"],["mage","Mago"],["rogue","Ladino"],
     ["cleric","Clérigo"],["ranger","Patrulheiro"],["paladin","Paladino"],["bard","Bardo"]];
 
-  var draft = null, artFile = null;
+  var draft = null, artFile = null, artURL = null;
   function novoDraft() {
     return { name:"", emoji:"⚔️", die_qtd:1, die_faces:8, categoria:"cortante",
       stat:"str_", finesse:false, manejo:"corpo", range:4, throw_range:3, two_handed:false,
-      atk_bonus:0, damage_bonus:0, bonus_alvo:"dano", extra_damages:[],
+      atk_bonus:0, damage_bonus:0, corrosao_pontos:3, extra_damages:[],
       granted_ability:"", allowed_classes:[],
       disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:0, id:"" };
   }
@@ -42,6 +42,7 @@
     d.finesse = !!item.finesse; d.two_handed = !!item.two_handed;
     if (item.reach === "lanca" || item.reach === "cajado") d.manejo = item.reach;
     else if (item.range) { d.manejo = "distancia"; d.range = item.range; }
+    d.corrosao_pontos = 3 + (item.corrosao_resistente || 0);
     return d;
   }
 
@@ -81,9 +82,12 @@
         campo("Manejo", selectOpts("ie-manejo",
           ["corpo","lanca","cajado","distancia","arremessavel"], draft.manejo)) +
         campo("Duas mãos", chk("ie-2m", draft.two_handed))),
-      seccao("Bônus fixo",
-        campo("Aplica em", selectOpts("ie-bonusalvo", ["ataque","dano"], draft.bonus_alvo)) +
-        campo("Valor", numInput("ie-bonusval", draft.bonus_alvo === "ataque" ? draft.atk_bonus : draft.damage_bonus, -5, 10))),
+      seccao("Bônus fixo (independentes)",
+        campo("Bônus de acerto", numInput("ie-atkbonus", draft.atk_bonus, -5, 10)) +
+        campo("Bônus de dano", numInput("ie-dmgbonus", draft.damage_bonus, -5, 10))),
+      seccao("Durabilidade",
+        campo("Resistência à corrosão (pontos)", numInput("ie-corr", draft.corrosao_pontos, 1, 12)) +
+        '<span class="ie-hint">3 = normal · 5 = como prata. Os 2 pontos finais dão −1/−2 no acerto e dano antes de a arma quebrar.</span>'),
       seccao("Dano elemental adicional",
         '<div id="ie-elems"></div><button id="ie-add-elem">+ linha</button>' +
         '<template id="ie-elem-tpl"><span class="ie-elem-row">' +
@@ -137,10 +141,9 @@
     draft.categoria = g("ie-cat").value; draft.stat = g("ie-stat").value;
     draft.finesse = g("ie-finesse").checked; draft.manejo = g("ie-manejo").value;
     draft.two_handed = g("ie-2m").checked;
-    draft.bonus_alvo = g("ie-bonusalvo").value;
-    var bv = +g("ie-bonusval").value || 0;
-    draft.atk_bonus = draft.bonus_alvo === "ataque" ? bv : 0;
-    draft.damage_bonus = draft.bonus_alvo === "dano" ? bv : 0;
+    draft.atk_bonus = +g("ie-atkbonus").value || 0;
+    draft.damage_bonus = +g("ie-dmgbonus").value || 0;
+    draft.corrosao_pontos = Math.max(1, +g("ie-corr").value || 3);
     draft.granted_ability = g("ie-abil").value;
     draft.allowed_classes = Array.prototype.map.call(root.querySelectorAll(".ie-class:checked"), function (c) { return c.value; });
     draft.disponibilidade = { loja: g("ie-disp-loja").checked, baus: g("ie-disp-baus").checked, loot_monstro: g("ie-disp-loot").checked };
@@ -174,8 +177,12 @@
     (item.extra_damages || []).forEach(function (x) { parts.push("+" + x.die + " " + x.type); });
     if (item.damage_bonus) parts.push("+" + item.damage_bonus + " dano");
     if (item.atk_bonus) parts.push("+" + item.atk_bonus + " acerto");
+    parts.push("🛡️ corrosão " + (3 + (item.corrosao_resistente || 0)) + " pts");
+    var topo = artURL
+      ? '<img class="ie-card-img" src="' + artURL + '" alt="">'
+      : '<div class="ie-card-emoji">' + esc(item.emoji) + '</div>';
     root.querySelector("#ie-preview").innerHTML =
-      '<div class="ie-card"><div class="ie-card-emoji">' + esc(item.emoji) + '</div>' +
+      '<div class="ie-card">' + topo +
       '<div class="ie-card-name">' + esc(item.name || "(sem nome)") + '</div>' +
       '<div class="ie-card-stats">' + esc(parts.join(" · ")) + '</div>' +
       '<div class="ie-card-id">id: ' + esc(item.id) + '</div></div>';
@@ -196,7 +203,10 @@
     root.querySelector("#ie-add-elem").onclick = function () { addElemRow(null); renderPreview(); };
     root.querySelector("#ie-art").onchange = function (e) {
       artFile = e.target.files[0] || null;
+      if (artURL) { URL.revokeObjectURL(artURL); artURL = null; }
+      if (artFile) artURL = URL.createObjectURL(artFile);
       root.querySelector("#ie-art-name").textContent = artFile ? artFile.name : "";
+      renderPreview();
     };
     root.querySelector("#ie-save").onclick = onSave;
   }

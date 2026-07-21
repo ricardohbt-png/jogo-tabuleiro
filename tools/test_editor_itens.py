@@ -177,9 +177,21 @@ def test_compra_equipa_preserva():
     check("equipar sincroniza extra_damages em p['weapon']", p["weapon"].get("extra_damages"))
     S._apply_custom_items([])
 
+def test_corrosao():
+    print("\n[8] Resistencia a corrosao")
+    ok, item = S._validate_custom_item(sample(id="lamina_reforcada", corrosao_resistente=2))
+    check("valida corrosao_resistente", ok and item.get("corrosao_resistente") == 2)
+    ok2, item2 = S._validate_custom_item(sample(id="arma_normal"))
+    check("default corrosao_resistente = 0", ok2 and item2.get("corrosao_resistente") == 0)
+    S._apply_custom_items([item])
+    check("WEAPONS carrega corrosao_resistente", S.WEAPONS["lamina_reforcada"].get("corrosao_resistente") == 2)
+    check("baus/loot dict carrega corrosao_resistente",
+          S._DUNGEON_ITEM_CATALOG["lamina_reforcada"].get("corrosao_resistente") == 2)
+    S._apply_custom_items([])
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
-    test_compra_equipa_preserva()
+    test_compra_equipa_preserva(); test_corrosao()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)

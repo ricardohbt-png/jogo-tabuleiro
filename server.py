@@ -20979,6 +20979,9 @@ def _validate_custom_item(raw):
         "finesse": bool(raw.get("finesse")), "two_handed": bool(raw.get("two_handed")),
         "atk_bonus": _int0(raw.get("atk_bonus")),
         "damage_bonus": _int0(raw.get("damage_bonus")),
+        # Tolerância extra à corrosão (golpes sem penalidade + adiamento da quebra):
+        # 0 = arma normal (quebra no 3º nível), 2 = como prata (quebra no 5º).
+        "corrosao_resistente": max(0, _int0(raw.get("corrosao_resistente"))),
         "extra_damages": extra,
         "granted_ability": (str(raw["granted_ability"]) if raw.get("granted_ability") else None),
         "allowed_classes": classes, "price": price,
@@ -20994,7 +20997,7 @@ def _custom_weapon_combat_dict(item):
     """Cópia da arma para WEAPONS[id] (mesmo estilo dos dicts base)."""
     out = {k: item[k] for k in ("id", "name", "die", "stat", "categoria", "finesse",
             "two_handed", "atk_bonus", "damage_bonus", "extra_damages",
-            "granted_ability", "reach", "range", "throw_range") if k in item}
+            "granted_ability", "corrosao_resistente", "reach", "range", "throw_range") if k in item}
     out["custom"] = True
     return out
 

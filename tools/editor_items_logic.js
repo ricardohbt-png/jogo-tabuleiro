@@ -39,6 +39,10 @@
       granted_ability: d.granted_ability || null,
       allowed_classes: (d.allowed_classes || []).slice(),
       price: Math.max(0, +d.price || 0),
+      // Pontos de vida contra corrosão: 3 = normal, 5 = como prata. O motor lê a
+      // "tolerância extra" (corrosao_resistente = pontos − 3): quebra em 3+extra e
+      // os `extra` primeiros níveis não sofrem penalidade de acerto/dano.
+      corrosao_resistente: Math.max(0, (+d.corrosao_pontos || 3) - 3),
       disponibilidade: {
         loja: !!(d.disponibilidade || {}).loja, baus: !!(d.disponibilidade || {}).baus,
         loot_monstro: !!(d.disponibilidade || {}).loot_monstro,

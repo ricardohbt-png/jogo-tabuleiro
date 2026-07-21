@@ -150,3 +150,4 @@ button.active { background:#d9b061; color:#1d1812; border-color:#d9b061; }
 .ie-card{border:1px solid #8886;border-radius:8px;padding:10px;text-align:center}
 .ie-hint{opacity:.75;font-size:.85em;margin-left:6px}
 .ie-elem-row{display:inline-flex;gap:4px;align-items:center;margin:2px 6px 2px 0}
+.ie-card-img{width:96px;height:96px;object-fit:contain;margin:0 auto 6px;display:block;image-rendering:auto}
