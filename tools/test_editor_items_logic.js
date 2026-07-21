@@ -40,5 +40,27 @@ check("munição gravada em arma à distância", rng.ammo === "flechas");
 check("munição ignorada em arma corpo a corpo",
       L.serializeWeapon(Object.assign({}, draft, {manejo:"corpo", ammo:"flechas"})).ammo === undefined);
 
+// ── Armadura/Escudo ──
+const adraft = {name:"Cota Teste", emoji:"🛡️", item_type:"armor", ac_bonus:4,
+  armor_category:"media", materiais:{organic:false, metal:true},
+  corrosao_livres:0, corrosao_penalidade:2,
+  bonuses:[{effect:"maxhp", value:5}], allowed_classes:[],
+  disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:120};
+const aitem = L.serializeArmor(adraft);
+check("serializeArmor gera id", aitem.id === "cota_teste");
+check("serializeArmor item_type armor", aitem.item_type === "armor");
+check("serializeArmor ac_bonus", aitem.ac_bonus === 4);
+check("serializeArmor materiais lista", JSON.stringify(aitem.corrosion_materials) === JSON.stringify(["metal"]));
+check("serializeArmor N/M", aitem.corrosao_resistente === 0 && aitem.corrosao_niveis_penalidade === 2);
+check("serializeArmor bonuses", aitem.bonuses.length === 1 && aitem.bonuses[0].effect === "maxhp");
+const sdraft = Object.assign({}, adraft, {name:"Escudo T", item_type:"shield", armor_category:"media"});
+const sitem = L.serializeArmor(sdraft);
+check("escudo item_type shield", sitem.item_type === "shield");
+check("escudo zera categoria", sitem.armor_category == null);
+check("escudo mantém material", JSON.stringify(sitem.corrosion_materials) === JSON.stringify(["metal"]));
+check("validateArmorDraft aceita válido", L.validateArmorDraft(adraft).ok);
+check("validateArmorDraft rejeita sem nome", !L.validateArmorDraft(Object.assign({}, adraft, {name:""})).ok);
+check("suggestPriceArmor cresce com CA", L.suggestPriceArmor({ac_bonus:6}) > L.suggestPriceArmor({ac_bonus:2}));
+
 console.log(`\n${PASS} passaram, ${FAIL} falharam`);
 process.exit(FAIL ? 1 : 0);

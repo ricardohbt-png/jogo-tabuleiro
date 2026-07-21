@@ -65,9 +65,52 @@
     if (CATS.indexOf(d.categoria) < 0) return { ok: false, msg: "categoria invalida" };
     return { ok: true };
   }
+  var ARMOR_CATS = ["leve", "media", "pesada"];
+  var BONUS_EFFECTS = ["def_", "maxhp", "spd"];
+  function serializeArmor(d) {
+    var kind = d.item_type === "shield" ? "shield" : "armor";
+    var mats = [];
+    var mm = d.materiais || {};
+    if (mm.organic) mats.push("organic");
+    if (mm.metal) mats.push("metal");
+    var item = {
+      id: slugify(d.id || d.name), name: String(d.name || "").trim().slice(0, 60),
+      emoji: d.emoji || "🛡️", item_type: kind, kind: kind, custom: true,
+      ac_bonus: Math.max(0, +d.ac_bonus || 0),
+      armor_category: (kind === "armor" && ARMOR_CATS.indexOf(d.armor_category) >= 0) ? d.armor_category : null,
+      corrosion_materials: mats,
+      corrosao_resistente: Math.max(0, +d.corrosao_livres || 0),
+      corrosao_niveis_penalidade: Math.max(1, +d.corrosao_penalidade || 2),
+      bonuses: (d.bonuses || []).filter(function (b) {
+        return b && BONUS_EFFECTS.indexOf(b.effect) >= 0;
+      }).map(function (b) { return { effect: b.effect, value: +b.value || 0 }; }),
+      granted_ability: d.granted_ability || null,
+      allowed_classes: (d.allowed_classes || []).slice(),
+      price: Math.max(0, +d.price || 0),
+      disponibilidade: {
+        loja: !!(d.disponibilidade || {}).loja, baus: !!(d.disponibilidade || {}).baus,
+        loot_monstro: !!(d.disponibilidade || {}).loot_monstro,
+      },
+    };
+    return item;
+  }
+  var KA_CA = 20, KA_BONUS = 6;
+  function suggestPriceArmor(item) {
+    var p = KA_CA * (+item.ac_bonus || 0);
+    (item.bonuses || []).forEach(function (b) { p += KA_BONUS * Math.abs(+b.value || 0); });
+    return Math.max(1, Math.round(p));
+  }
+  function validateArmorDraft(d) {
+    if (!String(d.name || "").trim()) return { ok: false, msg: "informe o nome" };
+    if ((+d.ac_bonus || 0) < 0) return { ok: false, msg: "CA inválida" };
+    return { ok: true };
+  }
   var api = { slugify: slugify, buildDie: buildDie, dieAvg: dieAvg,
               suggestPrice: suggestPrice, serializeWeapon: serializeWeapon,
-              validateDraft: validateDraft, ELEM: ELEM, CATS: CATS, FACES: FACES };
+              validateDraft: validateDraft, ELEM: ELEM, CATS: CATS, FACES: FACES,
+              serializeArmor: serializeArmor, suggestPriceArmor: suggestPriceArmor,
+              validateArmorDraft: validateArmorDraft,
+              ARMOR_CATS: ARMOR_CATS, BONUS_EFFECTS: BONUS_EFFECTS };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (root) root.EDITOR_ITEMS_LOGIC = api;
 })(typeof window !== "undefined" ? window : null);
