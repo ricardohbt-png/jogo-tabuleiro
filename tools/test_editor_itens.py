@@ -316,12 +316,30 @@ def test_multi_efeito():
     check("desequipar reverte maxhp", p["max_hp"] == hp0)
     check("desequipar reverte spd", p["spd"] == spd0)
 
+def test_compra_armadura():
+    print("\n[A4] Comprar armadura custom preserva campos")
+    S._apply_custom_items([S._validate_custom_item(armor_sample(id="cota_cmp",
+        corrosion_materials=["metal"], bonuses=[{"effect": "maxhp", "value": 5}]))[1]])
+    r = S.GameRoom("TEST")
+    async def noop(*a, **k): pass
+    r.gm_say = noop; r.broadcast = noop; r.push_state = noop; r.broadcast_city_state = noop; r.send_to = noop
+    r._is_turn = lambda pid: True; r.phase = "city"
+    p = S.make_player("p1", "Victor", "warrior", 0); r.players["p1"] = p
+    p["gold"] = 9999; p["bag"] = []; p["gear"]["armor"] = None
+    asyncio.run(r.handle_shop_buy("p1", "ferreiro_armor", "cota_cmp"))
+    comprada = next((it for it in p["bag"] if it and it.get("id") == "cota_cmp"), None)
+    check("armadura foi pra bolsa", comprada is not None)
+    check("bolsa preserva bonuses", comprada and comprada.get("bonuses"))
+    check("bolsa preserva material", comprada and comprada.get("corrosion_materials") == ["metal"])
+    check("bolsa preserva N/M", comprada and comprada.get("corrosao_niveis_penalidade") == 2)
+    S._apply_custom_items([])
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
     test_compra_equipa_preserva(); test_corrosao()
     test_penalidade_engine(); test_material_e_municao()
     test_validacao_armadura(); test_merge_armadura()
-    test_multi_efeito()
+    test_multi_efeito(); test_compra_armadura()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)

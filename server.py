@@ -6909,6 +6909,10 @@ class GameRoom:
             if kind == "armor":
                 gear_item["armor_category"] = item.get("armor_category")
                 gear_item["corrosion_materials"] = list(item.get("corrosion_materials", []))
+            for _k in ("corrosion_materials", "corrosao_resistente", "corrosao_niveis_penalidade",
+                       "bonuses", "granted_ability", "kind"):
+                if _k in item and _k not in gear_item:
+                    gear_item[_k] = deepcopy(item[_k])
             res = self._route_acquired_item(p, gear_item)
             if res == "full":
                 p["gold"] += price
