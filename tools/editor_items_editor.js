@@ -5,12 +5,13 @@
   var L = window.EDITOR_ITEMS_LOGIC;
   var esc = function (v) { return String(v == null ? "" : v).replace(/[&<>"']/g,
     function (c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];}); };
-  var TYPES = [["armas","Armas",true],["armaduras","Armaduras",false],["escudos","Escudos",false],
+  var TYPES = [["armas","Armas",true],["armaduras","Armaduras",true],["escudos","Escudos",true],
     ["aneis","Anéis",false],["botas","Botas",false],["pocoes","Poções",false],
     ["arremessaveis","Arremessáveis",false],["venenos","Venenos",false]];
   var CLASSES = [["warrior","Guerreiro"],["mage","Mago"],["rogue","Ladino"],
     ["cleric","Clérigo"],["ranger","Patrulheiro"],["paladin","Paladino"],["bard","Bardo"]];
 
+  var activeType = "armas";
   var draft = null, artFile = null, artURL = null;
   function novoDraft() {
     return { name:"", emoji:"⚔️", die_qtd:1, die_faces:8, categoria:"cortante",
@@ -18,6 +19,16 @@
       atk_bonus:0, damage_bonus:0, corrosao_livres:0, corrosao_penalidade:2, material:"metal",
       extra_damages:[], granted_ability:"", allowed_classes:[],
       disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:0, id:"" };
+  }
+  function novoDraftArmor(kind) {
+    return { name:"", emoji:"🛡️", item_type:(kind === "escudos" ? "shield" : "armor"),
+      ac_bonus: 2, armor_category:"leve",
+      materiais:{organic:false, metal:true}, corrosao_livres:0, corrosao_penalidade:2,
+      bonuses:[], granted_ability:"", allowed_classes:[],
+      disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:0, id:"" };
+  }
+  function novoDraftFor(type) {
+    return (type === "armaduras" || type === "escudos") ? novoDraftArmor(type) : novoDraft();
   }
 
   function baseWeapons() {
@@ -48,9 +59,9 @@
   }
 
   function render() {
-    if (!draft) draft = novoDraft();
+    if (!draft) draft = novoDraftFor(activeType);
     var subtabs = TYPES.map(function (t) {
-      return '<button class="ie-subtab' + (t[0] === "armas" ? " active" : "") + '"' +
+      return '<button class="ie-subtab' + (t[0] === activeType ? " active" : "") + '"' +
         (t[2] ? "" : " disabled title='em breve'") + ' data-type="' + t[0] + '">' +
         esc(t[1]) + (t[2] ? "" : " 🔒") + "</button>";
     }).join("");
@@ -59,13 +70,25 @@
       '<div class="ie-body"><div class="ie-form" id="ie-form"></div>' +
       '<aside class="ie-preview" id="ie-preview"></aside></div>';
     root.querySelectorAll(".ie-subtab").forEach(function (b) {
-      if (!b.disabled) b.onclick = function () { renderForm(); };
+      if (!b.disabled) b.onclick = function () {
+        var type = b.dataset.type;
+        if (type === activeType) return;
+        activeType = type;
+        draft = novoDraftFor(activeType);
+        artFile = null;
+        if (artURL) { URL.revokeObjectURL(artURL); artURL = null; }
+        render();
+      };
     });
     renderForm();
   }
 
   function renderForm() {
     var f = root.querySelector("#ie-form");
+    if (activeType === "armaduras" || activeType === "escudos") {
+      renderArmorForm(f);
+      return;
+    }
     var elemTypes = L.ELEM.map(function (e) { return '<option value="' + e + '">' + e + '</option>'; }).join("");
     var abil = abilityOptions();
     f.innerHTML = [
@@ -123,6 +146,137 @@
     bindForm();
     renderElems();
     renderPreview();
+  }
+
+  function renderArmorForm(f) {
+    var isShield = activeType === "escudos";
+    f.innerHTML = [
+      seccao("Identidade",
+        campo("Nome", '<input id="ie-name" value="' + esc(draft.name) + '">') +
+        campo("Emoji", '<input id="ie-emoji" size="3" value="' + esc(draft.emoji) + '">')),
+      seccao("Defesa",
+        campo("Bônus de CA", numInput("ie-ac", draft.ac_bonus, 0, 20)) +
+        (isShield ? "" : campo("Categoria", selectOpts("ie-cat", L.ARMOR_CATS, draft.armor_category)))),
+      seccao("Bônus adicionais",
+        '<div id="ie-abonus"></div><button id="ie-add-abonus">+ bônus</button>' +
+        '<template id="ie-abonus-tpl"><span class="ie-elem-row">' +
+        '<select class="ie-abonus-eff"><option value="def_">CA extra</option>' +
+        '<option value="maxhp">PV máx</option><option value="spd">Velocidade</option></select> ' +
+        numInput("", 0, -10, 20) + ' <button class="ie-abonus-del">✕</button></span></template>'),
+      seccao("Durabilidade (corrosão)",
+        campo("Níveis sem penalidade", numInput("ie-corrlivre", draft.corrosao_livres, 0, 12)) +
+        campo("Níveis com penalidade", numInput("ie-corrpen", draft.corrosao_penalidade, 1, 12)) +
+        '<label class="ie-field"><input type="checkbox" id="ie-mat-organic"' + (draft.materiais.organic ? " checked" : "") + '> Orgânico (Devorador Orgânico)</label>' +
+        '<label class="ie-field"><input type="checkbox" id="ie-mat-metal"' + (draft.materiais.metal ? " checked" : "") + '> Metal (Devorador de Metal)</label>' +
+        '<span class="ie-hint">Sem material marcado, a peça não corrói. Quebra em N+M+1.</span>'),
+      seccao("Restrição de classe (vazio = todas)",
+        CLASSES.map(function (c) { return '<label class="ie-cls">' +
+          '<input type="checkbox" class="ie-class" value="' + c[0] + '"> ' + esc(c[1]) + '</label>'; }).join("")),
+      seccao("Disponibilidade",
+        chkLbl("ie-disp-loja", "Loja (Ferreiro)", draft.disponibilidade.loja) +
+        chkLbl("ie-disp-baus", "Baús / recompensas", draft.disponibilidade.baus) +
+        chkLbl("ie-disp-loot", "Loot de monstro", draft.disponibilidade.loot_monstro)),
+      seccao("Preço",
+        campo("Ouro", numInput("ie-price", draft.price, 0, 99999)) +
+        '<span id="ie-price-sug" class="ie-hint"></span>'),
+      seccao("Imagem",
+        '<input type="file" id="ie-art" accept="image/png"> ' +
+        '<span id="ie-art-name" class="ie-hint"></span>'),
+      '<div class="ie-actions"><button id="ie-save">💾 Salvar peça</button>' +
+        '<span id="ie-status" class="ie-hint"></span></div>',
+    ].join("");
+    bindArmorForm();
+    renderArmorBonuses();
+    renderArmorPreview();
+  }
+
+  function currentArmorDraftFromForm() {
+    var g = function (id) { return root.querySelector("#" + id); };
+    draft.name = g("ie-name").value; draft.emoji = g("ie-emoji").value;
+    draft.ac_bonus = Math.max(0, +g("ie-ac").value || 0);
+    var catEl = g("ie-cat"); if (catEl) draft.armor_category = catEl.value;
+    draft.corrosao_livres = Math.max(0, +g("ie-corrlivre").value || 0);
+    draft.corrosao_penalidade = Math.max(1, +g("ie-corrpen").value || 2);
+    draft.materiais = { organic: g("ie-mat-organic").checked, metal: g("ie-mat-metal").checked };
+    draft.allowed_classes = Array.prototype.map.call(root.querySelectorAll(".ie-class:checked"), function (c) { return c.value; });
+    draft.disponibilidade = { loja: g("ie-disp-loja").checked, baus: g("ie-disp-baus").checked, loot_monstro: g("ie-disp-loot").checked };
+    draft.price = +g("ie-price").value || 0;
+    draft.bonuses = Array.prototype.map.call(root.querySelectorAll("#ie-abonus .ie-elem-row"), function (r) {
+      return { effect: r.querySelector(".ie-abonus-eff").value, value: +r.querySelector("input[type=number]").value || 0 }; });
+    return draft;
+  }
+
+  function renderArmorBonuses() {
+    var box = root.querySelector("#ie-abonus"); box.innerHTML = "";
+    (draft.bonuses || []).forEach(function (b) { addArmorBonusRow(b); });
+  }
+  function addArmorBonusRow(b) {
+    var tpl = root.querySelector("#ie-abonus-tpl");
+    var node = tpl.content.firstElementChild.cloneNode(true);
+    if (b) {
+      node.querySelector(".ie-abonus-eff").value = b.effect || "def_";
+      node.querySelector("input[type=number]").value = (b.value == null ? 0 : b.value);
+    }
+    node.querySelector(".ie-abonus-del").onclick = function () { node.remove(); renderArmorPreview(); };
+    node.querySelectorAll("input,select").forEach(function (el) { el.onchange = renderArmorPreview; });
+    root.querySelector("#ie-abonus").appendChild(node);
+  }
+
+  function renderArmorPreview() {
+    currentArmorDraftFromForm();
+    var item = L.serializeArmor(draft);
+    var sug = L.suggestPriceArmor(item);
+    root.querySelector("#ie-price-sug").textContent = "sugerido: " + sug + " 🪙";
+    var parts = ["+" + item.ac_bonus + " CA"];
+    if (item.armor_category) parts.push(item.armor_category);
+    (item.bonuses || []).forEach(function (b) {
+      var lbl = b.effect === "def_" ? "CA extra" : (b.effect === "maxhp" ? "PV máx" : "Velocidade");
+      parts.push((b.value >= 0 ? "+" : "") + b.value + " " + lbl);
+    });
+    var matsLabel = (item.corrosion_materials || []).length ? item.corrosion_materials.join("+") : "nenhum";
+    parts.push("🛡️ corrosão " + (item.corrosao_resistente || 0) + "+" + (item.corrosao_niveis_penalidade || 2) + " (" + matsLabel + ")");
+    var topo = artURL
+      ? '<img class="ie-card-img" src="' + artURL + '" alt="">'
+      : '<div class="ie-card-emoji">' + esc(item.emoji) + '</div>';
+    root.querySelector("#ie-preview").innerHTML =
+      '<div class="ie-card">' + topo +
+      '<div class="ie-card-name">' + esc(item.name || "(sem nome)") + '</div>' +
+      '<div class="ie-card-stats">' + esc(parts.join(" · ")) + '</div>' +
+      '<div class="ie-card-id">id: ' + esc(item.id) + '</div></div>';
+  }
+
+  function bindArmorForm() {
+    root.querySelectorAll("#ie-form input,#ie-form select").forEach(function (el) {
+      if (el.id === "ie-art") return;
+      el.onchange = renderArmorPreview; el.oninput = renderArmorPreview;
+    });
+    (draft.allowed_classes || []).forEach(function (c) {
+      var el = root.querySelector('.ie-class[value="' + c + '"]'); if (el) el.checked = true; });
+    root.querySelector("#ie-add-abonus").onclick = function () { addArmorBonusRow(null); renderArmorPreview(); };
+    root.querySelector("#ie-art").onchange = function (e) {
+      artFile = e.target.files[0] || null;
+      if (artURL) { URL.revokeObjectURL(artURL); artURL = null; }
+      if (artFile) artURL = URL.createObjectURL(artFile);
+      root.querySelector("#ie-art-name").textContent = artFile ? artFile.name : "";
+      renderArmorPreview();
+    };
+    root.querySelector("#ie-save").onclick = onSaveArmor;
+  }
+
+  async function onSaveArmor() {
+    currentArmorDraftFromForm();
+    var v = L.validateArmorDraft(draft);
+    var status = root.querySelector("#ie-status");
+    if (!v.ok) { status.textContent = "⚠️ " + v.msg; return; }
+    var item = L.serializeArmor(draft);
+    status.textContent = "salvando…";
+    try {
+      if (artFile) { await window.EDITOR_SAVE.uploadItemArt(artFile, item.id); }
+      var saved = await window.EDITOR_SAVE.saveCustomItem(item);
+      status.textContent = "✅ salvo: " + saved.id;
+      window.EDITOR_CUSTOM_ITEMS = (window.EDITOR_CUSTOM_ITEMS || []).filter(function (r) { return r.id !== saved.id; });
+      window.EDITOR_CUSTOM_ITEMS.push(saved);
+    } catch (e) { status.textContent = "❌ " + (e && e.message || "falha ao salvar"); }
   }
 
   function seccao(t, body) { return '<fieldset class="ie-sec"><legend>' + esc(t) + '</legend>' + body + '</fieldset>'; }
