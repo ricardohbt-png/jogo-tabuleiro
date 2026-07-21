@@ -123,10 +123,13 @@ Hoje a corrosão cobre só a **armadura de corpo** e a **arma**. Passa a cobrir 
 (N) + `corrosao_niveis_penalidade` (M), espelhando o modelo N/M das armas (penalidade
 escala −1/nível até −M, quebra em N+M+1).
 - **Generalizar** `_corr` (uma trilha `lvl`/`destruido` por slot de defesa, além da
-  arma), `_corroer_equipamento` (alvos por slot; a ordem de prioridade fica no plano) e
-  as penalidades: cada peça corroída **reduz o bônus que concede** por −nível — CA para
-  armadura/escudo/elmo-`def_`, PV para elmo-`maxhp`, velocidade para botas-`spd` — e ao
-  quebrar é **removida do slot** (perde todo o bônus).
+  arma), `_corroer_equipamento` e as penalidades: cada peça corroída **reduz o bônus que
+  concede** por −nível — CA para armadura/escudo/elmo-`def_`, PV para elmo-`maxhp`,
+  velocidade para botas-`spd` — e ao quebrar é **removida do slot** (perde todo o bônus).
+- **Ordem de prioridade** (qual peça o Devorador/ácido corrói primeiro, se o alvo tiver
+  material compatível e a peça não estiver destruída): **armadura → escudo → arma →
+  elmo → botas**. (Hoje é armadura → arma; a generalização insere escudo entre armadura
+  e arma e acrescenta elmo e botas ao fim.)
 - **Material → Devorador:** `metal` entra no set de metal do slot, `organic` no
   orgânico; híbrido nos dois. Registro/limpeza idempotentes no merge.
 - **Backward-compat (crítico):** peças base sem N/M usam N=0/M=2 → comportamento
