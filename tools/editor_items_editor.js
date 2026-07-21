@@ -30,6 +30,9 @@
   }
 
   function fromBase(item) {
+    // "Basear em" empresta só os stats de combate da base (dado/nome/categoria/
+    // atributo/finesse/duas mãos/manejo/alcance) — bônus, elemental, disponibilidade
+    // e preço ficam nos valores padrão do rascunho, de propósito.
     var d = novoDraft();
     var m = /^(\d+)d(\d+)$/.exec(item.die || "1d6");
     if (m) { d.die_qtd = +m[1]; d.die_faces = +m[2]; }
@@ -80,7 +83,7 @@
         campo("Duas mãos", chk("ie-2m", draft.two_handed))),
       seccao("Bônus fixo",
         campo("Aplica em", selectOpts("ie-bonusalvo", ["ataque","dano"], draft.bonus_alvo)) +
-        campo("Valor", numInput("ie-bonusval", 0, -5, 10))),
+        campo("Valor", numInput("ie-bonusval", draft.bonus_alvo === "ataque" ? draft.atk_bonus : draft.damage_bonus, -5, 10))),
       seccao("Dano elemental adicional",
         '<div id="ie-elems"></div><button id="ie-add-elem">+ linha</button>' +
         '<template id="ie-elem-tpl"><span class="ie-elem-row">' +
@@ -89,8 +92,8 @@
         ' <select class="ie-elem-type">' + elemTypes + '</select>' +
         ' <button class="ie-elem-del">✕</button></span></template>'),
       seccao("Habilidade concedida (liga em fase futura)",
-        campo("Habilidade", '<select id="ie-abil"><option value="">— nenhuma —</option>' +
-          abil.map(function (a) { return '<option value="' + esc(a.id) + '">' + esc(a.name) + '</option>'; }).join("") + '</select>')),
+        campo("Habilidade", '<select id="ie-abil"><option value=""' + (draft.granted_ability ? "" : " selected") + '>— nenhuma —</option>' +
+          abil.map(function (a) { return '<option value="' + esc(a.id) + '"' + (a.id === draft.granted_ability ? " selected" : "") + '>' + esc(a.name) + '</option>'; }).join("") + '</select>')),
       seccao("Restrição de classe (vazio = todas)",
         CLASSES.map(function (c) { return '<label class="ie-cls">' +
           '<input type="checkbox" class="ie-class" value="' + c[0] + '"> ' + esc(c[1]) + '</label>'; }).join("")),
