@@ -1732,6 +1732,7 @@
     const dung = tab === "masmorra";
     const bestiary = tab === "bestiario";
     const monsterEditor = tab === "editor_monstros";
+    const itemsEditor = tab === "editor_itens";
     document.getElementById("dungeon-controls").style.display = dung ? "" : "none";
     document.getElementById("toolbar").style.display = dung ? "" : "none";
     document.getElementById("workspace").style.display = dung ? "" : "none";
@@ -1739,19 +1740,23 @@
     document.getElementById("campaign-view").style.display = tab === "campanha" ? "" : "none";
     document.getElementById("bestiary-view").style.display = bestiary ? "" : "none";
     document.getElementById("monster-editor-view").style.display = monsterEditor ? "" : "none";
+    document.getElementById("items-editor-view").style.display = itemsEditor ? "" : "none";
     document.getElementById("tab-masmorra").classList.toggle("active", dung);
     document.getElementById("tab-bestiario").classList.toggle("active", bestiary);
     document.getElementById("tab-editor-monstros").classList.toggle("active", monsterEditor);
+    document.getElementById("tab-editor-itens").classList.toggle("active", itemsEditor);
     document.getElementById("tab-campanha").classList.toggle("active", tab === "campanha");
     if (dung) { render(); renderPanel(); }
     else if (bestiary && window.EDITOR_BESTIARY) window.EDITOR_BESTIARY.render();
     else if (monsterEditor && window.EDITOR_MONSTER_EDITOR) window.EDITOR_MONSTER_EDITOR.render();
+    else if (itemsEditor && window.EDITOR_ITEMS_EDITOR) window.EDITOR_ITEMS_EDITOR.render();
     else if (tab === "campanha" && window.EDITOR_CAMPAIGN) window.EDITOR_CAMPAIGN.renderCampaign();
   }
   window.setTab = setTab;
   document.getElementById("tab-masmorra").onclick = () => setTab("masmorra");
   document.getElementById("tab-bestiario").onclick = () => setTab("bestiario");
   document.getElementById("tab-editor-monstros").onclick = () => setTab("editor_monstros");
+  document.getElementById("tab-editor-itens").onclick = () => setTab("editor_itens");
   document.getElementById("tab-campanha").onclick = () => setTab("campanha");
 
   // Expor para verificação no console / tasks seguintes.

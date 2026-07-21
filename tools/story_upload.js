@@ -137,6 +137,17 @@
     return m.key;
   }
 
+  function saveCustomItem(item) {
+    return request("upload_custom_item", { item: item }).then((m) => m.item);
+  }
+  async function uploadItemArt(file, itemId) {
+    if (extOf(file.name) !== ".png") throw new Error("envie um arquivo .png");
+    if (file.size > MAX) throw new Error("arquivo grande demais");
+    const data = await toBase64(file);
+    const m = await request("upload_item_art", { name: itemId + ".png", data: data });
+    return m.name;
+  }
+
   async function uploadObjeto(file) {
     if (extOf(file.name) !== ".png")
       throw new Error("envie um arquivo .png");
@@ -165,6 +176,6 @@
 
   window.STORY_UPLOAD = { upload: upload };
   window.PRISONER_UPLOAD = { upload: uploadPrisoner };
-  window.EDITOR_SAVE = { saveDungeon: saveDungeon, saveCampaign: saveCampaign, saveCustomMonster: saveCustomMonster, uploadMonsterArt: uploadMonsterArt };
+  window.EDITOR_SAVE = { saveDungeon: saveDungeon, saveCampaign: saveCampaign, saveCustomMonster: saveCustomMonster, uploadMonsterArt: uploadMonsterArt, saveCustomItem: saveCustomItem, uploadItemArt: uploadItemArt };
   window.OBJETO_UPLOAD = { upload: uploadObjeto, list: listObjetos };
 })();

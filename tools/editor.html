@@ -13,6 +13,7 @@
       <button id="tab-masmorra" class="tab active">Masmorra</button>
       <button id="tab-bestiario" class="tab">Bestiário</button>
       <button id="tab-editor-monstros" class="tab">Editor de criaturas</button>
+      <button id="tab-editor-itens" class="tab">Editor de itens</button>
       <button id="tab-campanha" class="tab">Campanha</button>
     </span>
     <span id="dungeon-controls">
@@ -49,10 +50,11 @@
   </div>
   <div id="bestiary-view" style="display:none"></div>
   <div id="monster-editor-view" style="display:none"></div>
+  <div id="items-editor-view" style="display:none"></div>
 
   <footer id="statusbar"><span id="status"></span></footer>
 
   <!-- Cache-buster (espelha index.html): evita JS/catálogo do editor servido em cache antigo. -->
-  <script>(function(){var v=Date.now();var s=["../src/difficulty.js","editor_catalog.js","editor_monsters_custom.js","editor_dungeons.js","editor.js","editor_bestiary.js","editor_monster_editor.js","story_upload.js","editor_campaign.js"];for(var i=0;i<s.length;i++)document.write('<script src="'+s[i]+'?v='+v+'"><\/script>');})();</script>
+  <script>(function(){var v=Date.now();var s=["../src/difficulty.js","editor_items_logic.js","editor_catalog.js","editor_monsters_custom.js","editor_dungeons.js","editor.js","editor_bestiary.js","editor_monster_editor.js","story_upload.js","editor_campaign.js","editor_items_editor.js"];for(var i=0;i<s.length;i++)document.write('<script src="'+s[i]+'?v='+v+'"><\/script>');})();</script>
 </body>
 </html>
