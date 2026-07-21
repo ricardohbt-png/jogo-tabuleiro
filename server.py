@@ -20922,14 +20922,17 @@ def _validate_custom_item(raw):
     classes = [c for c in (raw.get("allowed_classes") or []) if c in _ITEM_CLASSES]
     try: price = max(0, int(raw.get("price", 0)))
     except (TypeError, ValueError): price = 0
+    def _int0(v):
+        try: return int(v or 0)
+        except (TypeError, ValueError): return 0
     disp = raw.get("disponibilidade") or {}
     item = {
         "id": iid, "name": name, "emoji": str(raw.get("emoji") or "⚔️")[:8],
         "item_type": "weapon", "custom": True,
         "die": die.lower(), "stat": stat, "categoria": categoria,
         "finesse": bool(raw.get("finesse")), "two_handed": bool(raw.get("two_handed")),
-        "atk_bonus": int(raw.get("atk_bonus", 0) or 0),
-        "damage_bonus": int(raw.get("damage_bonus", 0) or 0),
+        "atk_bonus": _int0(raw.get("atk_bonus")),
+        "damage_bonus": _int0(raw.get("damage_bonus")),
         "extra_damages": extra,
         "granted_ability": (str(raw["granted_ability"]) if raw.get("granted_ability") else None),
         "allowed_classes": classes, "price": price,
@@ -20965,10 +20968,10 @@ def _apply_custom_items(records):
     for k in [k for k, v in WEAPONS.items() if v.get("custom")]:
         WEAPONS.pop(k, None)
     SHOP_WEAPONS[:] = [w for w in SHOP_WEAPONS if not w.get("custom")]
-    for k in [k for k, v in _DUNGEON_ITEM_CATALOG.items() if v.get("custom")]:
+    prev_custom_ids = {k for k, v in _DUNGEON_ITEM_CATALOG.items() if v.get("custom")}
+    for k in prev_custom_ids:
         _DUNGEON_ITEM_CATALOG.pop(k, None)
-    LOOT_POOL_PROCEDURAL[:] = [i for i in LOOT_POOL_PROCEDURAL
-                               if not (i in _DUNGEON_ITEM_CATALOG and _DUNGEON_ITEM_CATALOG[i].get("custom"))]
+    LOOT_POOL_PROCEDURAL[:] = [i for i in LOOT_POOL_PROCEDURAL if i not in prev_custom_ids]
     for raw in records:
         if not isinstance(raw, dict) or raw.get("item_type", "weapon") != "weapon":
             continue

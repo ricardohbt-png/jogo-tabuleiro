@@ -30,9 +30,8 @@ def test_validacao():
     check("rejeita categoria invalida", not ok3)
     ok4, _ = S._validate_custom_item(sample(extra_damages=[{"die": "1d6", "type": "trevas"}]))
     check("rejeita tipo elemental desconhecido", not ok4)
-    native = {w["id"] for w in S.SHOP_WEAPONS}
     ok5, _ = S._validate_custom_item(sample(id="longsword"))
-    check("rejeita id que colide com arma nativa", (not ok5) or ("longsword" not in native))
+    check("rejeita id que colide com arma nativa", not ok5)
 
 def test_merge():
     print("\n[2] Merge nos catalogos vivos")
@@ -46,9 +45,12 @@ def test_merge():
     S._apply_custom_items([item])
     check("reaplicar nao duplica em SHOP_WEAPONS",
           sum(1 for w in S.SHOP_WEAPONS if w["id"] == "espada_flamejante") == 1)
+    check("reaplicar nao duplica em LOOT_POOL_PROCEDURAL",
+          S.LOOT_POOL_PROCEDURAL.count("espada_flamejante") == 1)
     S._apply_custom_items([])
     check("lista vazia remove de WEAPONS", "espada_flamejante" not in S.WEAPONS)
     check("lista vazia remove de SHOP_WEAPONS", not any(w["id"] == "espada_flamejante" for w in S.SHOP_WEAPONS))
+    check("lista vazia remove de LOOT_POOL_PROCEDURAL", "espada_flamejante" not in S.LOOT_POOL_PROCEDURAL)
 
 def test_base_intacta():
     print("\n[3] Itens base intocados")
