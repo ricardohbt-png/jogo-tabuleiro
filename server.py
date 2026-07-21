@@ -1703,7 +1703,8 @@ CORROSAO_ARMADURA_ORGANICA = {"leather", "cloak", "leather_plate", "leather_mail
 CORROSAO_ARMA_MADEIRA = {"cajado_madeira", "bordao", "staff", "instrumento",
                          "arco_curto", "longbow", "besta", "hand_crossbow"}
 # Devorador de Metal: corrÃ³i metal (madeira/couro/ossos sÃ£o imunes).
-CORROSAO_ARMADURA_METAL = {"chainmail", "bronze_armor", "plate", "fullplate", "leather_plate", "leather_mail", "monster_leather_plate"}
+CORROSAO_ARMADURA_METAL = {"chainmail", "bronze_armor", "plate", "fullplate", "leather_plate", "leather_mail", "monster_leather_plate",
+                           "escudo_p", "escudo_g"}
 CORROSAO_ARMA_METAL = {"dagger", "machado_basico", "machado_duplo", "machado_orc",
                        "sword", "magic_sword", "shortsword", "longsword",
                        "bastsword", "espada2m", "warhammer", "mangual", "maca"}
@@ -15691,26 +15692,20 @@ class GameRoom:
         return bool(a) and a.get("id") != "cloak"
 
     def _corrosao_ca_pen(self, p):
-        """Penalidade de CA por corrosão das peças de defesa que concedem CA
-        (armadura + escudo + elmo). Persiste após a destruição (a CA da peça
-        segue embutida em p['ac'] mesmo depois de removida do slot)."""
+        """Penalidade de CA por corrosão das peças de defesa que concedem CA.
+        Lê N/M e 'dá CA' do estado c (cacheado na corrosão) → persiste após a
+        destruição, cancelando a CA que segue embutida em p['ac']."""
         c = self._corr(p)
-        gear = p["gear"]
 
-        def _pen(piece, lvl):
-            extra = int((piece or {}).get("corrosao_resistente", 0) or 0)
-            m = int((piece or {}).get("corrosao_niveis_penalidade", 2) or 2)
-            return max(0, min(lvl - extra, m))
+        def _pen(pref):
+            n = int(c.get(f"{pref}_resist", 0) or 0)
+            m = int(c.get(f"{pref}_penmax", 2) or 2)
+            return max(0, min(c.get(f"{pref}_lvl", 0) - n, m))
 
         total = 0
-        if c["armadura_com_ca"]:
-            total += _pen(gear.get("armor"), c["armadura_lvl"])
-        off = gear.get("off_hand") or {}
-        if off.get("kind") == "shield" or off.get("item_slot") == "shield":
-            total += _pen(off, c["escudo_lvl"])
-        head = gear.get("head") or {}
-        if head.get("effect") == "def_":
-            total += _pen(head, c["elmo_lvl"])
+        if c.get("armadura_com_ca"): total += _pen("armadura")
+        if c.get("escudo_com_ca"):   total += _pen("escudo")
+        if c.get("elmo_com_ca"):     total += _pen("elmo")
         return total
 
     def _corrosao_arma_pen(self, p):
@@ -15836,6 +15831,12 @@ class GameRoom:
             lvl = c[f"{pref}_lvl"]
             if slot == "armor":
                 c["armadura_com_ca"] = (peca.get("id") != "cloak")
+            if slot == "off_hand":
+                c["escudo_com_ca"] = True
+            elif slot == "head":
+                c["elmo_com_ca"] = (peca.get("effect") == "def_")
+            c[f"{pref}_resist"] = int(peca.get("corrosao_resistente", 0) or 0)
+            c[f"{pref}_penmax"] = int(peca.get("corrosao_niveis_penalidade", 2) or 2)
             quebrou, nivel_pen = self._corrosao_nm_quebra(peca, lvl)
             nome_peca = peca.get("name", pref)
             if quebrou:

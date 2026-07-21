@@ -363,6 +363,8 @@ def test_corrosao_armadura_nm():
     check("escudo vivo após 3 níveis (N=1,M=2)", p["gear"]["off_hand"] is not None)
     asyncio.run(r._corroer_equipamento(m, p, S.CORROSAO_ARMADURA_METAL, S.CORROSAO_ARMA_METAL, "1d6", "M"))
     check("escudo destruído no 4º nível", p["gear"]["off_hand"] is None)
+    # (b2) penalidade de CA do escudo PERSISTE após a destruição, com N/M corretos
+    check("escudo destruído ainda penaliza CA (persiste)", r._corrosao_ca_pen(p) == 2)
     # (c) prioridade: armadura (metal) corrói antes do escudo
     r, p = _corr_setup()
     p["gear"]["armor"] = {"id": "chainmail", "name": "Cota"}
@@ -370,6 +372,20 @@ def test_corrosao_armadura_nm():
     asyncio.run(r._corroer_equipamento(m, p, S.CORROSAO_ARMADURA_METAL, S.CORROSAO_ARMA_METAL, "1d6", "M"))
     check("prioridade: armadura corroída antes do escudo",
           r._corr(p)["armadura_lvl"] == 1 and r._corr(p).get("escudo_lvl", 0) == 0)
+    # (d) custom armor com M=4 mantém a penalidade após destruição
+    S._apply_custom_items([S._validate_custom_item(armor_sample(id="cota_m4",
+        corrosion_materials=["metal"], corrosao_resistente=0, corrosao_niveis_penalidade=4))[1]])
+    r, p = _corr_setup()
+    p["gear"]["armor"] = deepcopy(next(a for a in S.SHOP_ARMORS if a["id"] == "cota_m4"))
+    for _ in range(5):
+        asyncio.run(r._corroer_equipamento(m, p, S.CORROSAO_ARMADURA_METAL, S.CORROSAO_ARMA_METAL, "1d6", "M"))
+    check("cota_m4 destruída (5º nível)", p["gear"]["armor"] is None)
+    check("cota_m4 penalidade persiste em M=4", r._corrosao_ca_pen(p) == 4)
+    # (e) escudo base (escudo_p) corrói pelo Devorador de Metal
+    r, p = _corr_setup()
+    p["gear"]["off_hand"] = {"id": "escudo_p", "name": "Escudo Pequeno", "kind": "shield"}
+    asyncio.run(r._corroer_equipamento(m, p, S.CORROSAO_ARMADURA_METAL, S.CORROSAO_ARMA_METAL, "1d6", "M"))
+    check("escudo base corrói pelo metal", r._corr(p)["escudo_lvl"] == 1)
     S._apply_custom_items([])
 
 if __name__ == "__main__":
