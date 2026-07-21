@@ -136,6 +136,26 @@ def test_combate_passivo():
         return cap["e"]
     check("atk_bonus da arma soma +7 no eff_atk", cap_eff(7) - cap_eff(0) == 7)
 
+    def cap_offhand(bonus):
+        r, p = _room_com_alvo()
+        p["weapon"] = {"id": "wt", "name": "T", "die": "1d8", "stat": "str_",
+                       "categoria": "cortante", "atk_bonus": bonus}
+        p["gear"]["off_hand"] = {"id": "dagger", "name": "Adaga", "die": "1d4",
+                                  "stat": "dex_", "categoria": "perfurante"}
+        calls = []
+        orig = S.d20_attack
+        def spy(atk_bonus, target_ac):
+            calls.append(atk_bonus); return orig(atk_bonus, target_ac)
+        S.d20_attack = spy
+        try:
+            asyncio.run(r.handle_attack("p1", "m1"))
+        finally:
+            S.d20_attack = orig
+        # calls[0] = ataque principal (eff_atk); calls[1] = mão secundária (offhand_atk)
+        return calls[1] if len(calls) > 1 else None
+    check("mão secundária NÃO herda o atk_bonus da arma principal",
+          cap_offhand(0) == cap_offhand(7))
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()

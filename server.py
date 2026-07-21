@@ -8790,6 +8790,10 @@ class GameRoom:
                     p, target, crit, roll, forca_critico=_forca_critico,
                     surv_mod=surv_mod, cancao_dano=cancao_dano, gl_dano=gl_dano,
                     bonus_extra=_bonus_extra + _ammo_damage_bonus
+                                # "damage_bonus" (Editor de Itens) Ã© DISTINTO do "dmg_bonus"
+                                # legado lido dentro de _resolver_dano_ataque_basico â€” os
+                                # dois somam aditivamente ali, mas sÃ³ damage_bonus Ã© setado
+                                # em armas custom.
                                 + int((p.get("weapon") or {}).get("damage_bonus", 0) or 0),
                     target_pos=target_tile,
                     weapon_override=damage_weapon)
@@ -8843,7 +8847,9 @@ class GameRoom:
                         continue
                     _xr = self._apply_damage_types(_xr, [_xd.get("type")], target)
                     target["hp"] = max(0, target["hp"] - _xr)
-                    await self.gm_say(f"✨ Dano elemental (+{_xr} {_xd.get('type')})!")
+                    _elem_pt = {DMG_FIRE: "fogo", DMG_COLD: "frio", DMG_LIGHTNING: "relâmpago",
+                                DMG_ACID: "ácido", DMG_HOLY: "sagrado"}.get(_xd.get("type"), _xd.get("type"))
+                    await self.gm_say(f"✨ Dano elemental: +{_xr} de {_elem_pt}!")
                 # Corpo a corpo: gastar o Ãºnico marcador em qualquer acerto,
                 # inclusive se este golpe jÃ¡ derrotar o alvo. O efeito do veneno
                 # sÃ³ precisa ser aplicado enquanto o alvo ainda estÃ¡ vivo.
@@ -8930,7 +8936,8 @@ class GameRoom:
                 p["bonus_action_used"] = True
                 self._consumir_recursos(p, 'acao_bonus')
                 odex = mod(p.get("dex", 12))
-                offhand_atk = odex + p.get("level_bonus", 1) + (eff_atk - p["atk_bonus"])
+                _mainhand_atk_bonus = int((p.get("weapon") or {}).get("atk_bonus", 0) or 0)
+                offhand_atk = odex + p.get("level_bonus", 1) + (eff_atk - p["atk_bonus"] - _mainhand_atk_bonus)
                 ohit, oroll, ototal, ocrit = d20_attack(offhand_atk, tgt["ac"] + self._mod_magia(tgt, "ca"))
                 await self.broadcast({"type": "dice_roll", "die": "d20", "value": oroll,
                                        "label": "🗡️ Ataque (Mão Secundária)", "hit": ohit, "crit": ocrit,
