@@ -292,6 +292,8 @@ def test_merge_armadura():
     check("cleanup remove de SHOP_ARMORS", not any(a.get("custom") for a in S.SHOP_ARMORS))
     check("cleanup remove de CORROSAO_ARMADURA_METAL", "cota_m" not in S.CORROSAO_ARMADURA_METAL)
     check("cleanup remove de CORROSAO_ARMADURA_ORGANICA", "couro_o" not in S.CORROSAO_ARMADURA_ORGANICA)
+    check("cleanup remove cota_bau (catalog-only) de CORROSAO_ARMADURA_METAL",
+          "cota_bau" not in S.CORROSAO_ARMADURA_METAL)
     check("base leather intacto em SHOP_ARMORS", any(a["id"] == "leather" for a in S.SHOP_ARMORS))
     check("base leather intacto em CORROSAO_ARMADURA_ORGANICA", "leather" in S.CORROSAO_ARMADURA_ORGANICA)
 

@@ -21141,6 +21141,13 @@ def _apply_custom_items(records):
     # Limpa os ids custom anteriores de WEAPONS e dos registros derivados
     # (munição e sets de corrosão) para o merge ser idempotente.
     prev_weapon_ids = {k for k, v in WEAPONS.items() if v.get("custom")}
+    # Capturado ANTES de qualquer pop em _DUNGEON_ITEM_CATALOG (abaixo) — do
+    # contrário as peças "só catálogo" (loja=False, baus/loot=True) já teriam
+    # sumido do catálogo e ficariam de fora do cleanup dos sets de corrosão.
+    # Não mover esta linha para depois da limpeza de armas.
+    prev_def_ids = {a["id"] for a in SHOP_ARMORS if a.get("custom")}
+    prev_def_ids |= {k for k, v in _DUNGEON_ITEM_CATALOG.items()
+                     if v.get("custom") and v.get("kind") in ("armor", "shield")}
     for k in prev_weapon_ids:
         WEAPONS.pop(k, None)
         RANGED_AMMO.pop(k, None)
@@ -21152,9 +21159,6 @@ def _apply_custom_items(records):
         _DUNGEON_ITEM_CATALOG.pop(k, None)
     LOOT_POOL_PROCEDURAL[:] = [i for i in LOOT_POOL_PROCEDURAL if i not in prev_custom_ids]
     # Peças de defesa custom: limpar SHOP_ARMORS, catálogo de baús e sets de corrosão.
-    prev_def_ids = {a["id"] for a in SHOP_ARMORS if a.get("custom")}
-    prev_def_ids |= {k for k, v in _DUNGEON_ITEM_CATALOG.items()
-                     if v.get("custom") and v.get("kind") in ("armor", "shield")}
     SHOP_ARMORS[:] = [a for a in SHOP_ARMORS if not a.get("custom")]
     for k in prev_def_ids:
         CORROSAO_ARMADURA_METAL.discard(k)
