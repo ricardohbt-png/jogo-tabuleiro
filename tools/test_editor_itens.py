@@ -90,8 +90,54 @@ def test_save_item():
     S._gravar_def(recs, os.path.dirname(S.CUSTOM_ITEMS_FILE), os.path.basename(S.CUSTOM_ITEMS_FILE))
     S._apply_custom_items(recs); S._regen_custom_items_index(recs)
 
+import asyncio
+from copy import deepcopy
+
+def _room_com_alvo():
+    r = S.GameRoom("TEST")
+    async def noop(*a, **k): pass
+    r.gm_say = noop; r.broadcast = noop; r.push_state = noop
+    r.broadcast_city_state = noop; r.send_to = noop
+    r._is_turn = lambda pid: True
+    r._tem_linha_de_visao = lambda *a, **k: True
+    r.phase = "playing"
+    p = S.make_player("p1", "Victor", "warrior", 0); r.players["p1"] = p
+    p["pos"] = [1, 1]; p["atk_bonus"] = 50   # garante acerto
+    r.monsters["m1"] = {"id": "m1", "name": "Alvo", "type": "orc", "hp": 999, "ac": 1,
+                        "pos": [2, 1], "alive": True, "special_abilities": []}
+    return r, p
+
+def _dano_de_um_ataque(weapon):
+    r, p = _room_com_alvo()
+    p["weapon"] = deepcopy(weapon)
+    import random; random.seed(1234)
+    hp0 = r.monsters["m1"]["hp"]
+    asyncio.run(r.handle_attack("p1", "m1"))
+    return hp0 - r.monsters["m1"]["hp"]
+
+def test_combate_passivo():
+    print("\n[6] Efeitos passivos no combate")
+    plain = {"id": "wt", "name": "T", "die": "1d8", "stat": "str_", "categoria": "cortante"}
+    with_elem = dict(plain, extra_damages=[{"die": "1d6", "type": "fire"}])
+    with_dmg  = dict(plain, damage_bonus=5)
+    check("dano elemental soma dano extra", _dano_de_um_ataque(with_elem) > _dano_de_um_ataque(plain))
+    check("damage_bonus +5 soma exatamente 5", _dano_de_um_ataque(with_dmg) - _dano_de_um_ataque(plain) == 5)
+
+    def cap_eff(bonus):
+        r, p = _room_com_alvo(); p["atk_bonus"] = 0
+        p["weapon"] = {"id": "wt", "name": "T", "die": "1d8", "stat": "str_",
+                       "categoria": "cortante", "atk_bonus": bonus}
+        cap = {}
+        orig = r._rolar_ataque
+        def spy(eff_atk, *a, **k):
+            cap["e"] = eff_atk; return orig(eff_atk, *a, **k)
+        r._rolar_ataque = spy
+        asyncio.run(r.handle_attack("p1", "m1"))
+        return cap["e"]
+    check("atk_bonus da arma soma +7 no eff_atk", cap_eff(7) - cap_eff(0) == 7)
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
-    test_upload_art(); test_save_item()
+    test_upload_art(); test_save_item(); test_combate_passivo()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)

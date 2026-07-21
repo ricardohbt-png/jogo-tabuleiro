@@ -8659,6 +8659,7 @@ class GameRoom:
             eff_atk = (p["atk_bonus"] + p.get("skill_bonus_acerto", 0) + surv_mod + preso_pen
                        + cancao_acerto + gl_atk + self._pen(p, "ataque")
                        + self._mod_magia(p, "ataque")                        # AbenÃ§oar
+                       + int((p.get("weapon") or {}).get("atk_bonus", 0) or 0)  # arma custom
                        + self._lenda_atk_bonus(p, target)                    # Lenda (bardo estudou a espÃ©cie)
                        - self._corrosao_arma_pen(p)                          # arma de madeira corroÃ­da
                        - (4 if target.get("oculto_sombras") else 0)          # alvo oculto nas sombras (corpo a corpo)
@@ -8788,7 +8789,9 @@ class GameRoom:
                 dmg, weapon_name, dmg_detail, raw_dmg, die_str = self._resolver_dano_ataque_basico(
                     p, target, crit, roll, forca_critico=_forca_critico,
                     surv_mod=surv_mod, cancao_dano=cancao_dano, gl_dano=gl_dano,
-                    bonus_extra=_bonus_extra + _ammo_damage_bonus, target_pos=target_tile,
+                    bonus_extra=_bonus_extra + _ammo_damage_bonus
+                                + int((p.get("weapon") or {}).get("damage_bonus", 0) or 0),
+                    target_pos=target_tile,
                     weapon_override=damage_weapon)
                 if die_str:
                     die_type = "d" + die_str.split("d")[1]
@@ -8831,6 +8834,16 @@ class GameRoom:
                     xdmg = self._apply_damage_types(xdmg, _ammo_extra_types, target)
                     target["hp"] = max(0, target["hp"] - xdmg)
                     await self.gm_say(f"🔥 Projétil incendiário: +{xdmg} de dano de fogo!")
+                # ── Dano elemental adicional da arma (Editor de Itens) ──
+                for _xd in (p.get("weapon") or {}).get("extra_damages", []) or []:
+                    if not isinstance(_xd, dict) or target.get("hp", 1) <= 0:
+                        continue
+                    _xr = roll_dice(_xd.get("die", "0"))
+                    if _xr <= 0:
+                        continue
+                    _xr = self._apply_damage_types(_xr, [_xd.get("type")], target)
+                    target["hp"] = max(0, target["hp"] - _xr)
+                    await self.gm_say(f"✨ Dano elemental (+{_xr} {_xd.get('type')})!")
                 # Corpo a corpo: gastar o Ãºnico marcador em qualquer acerto,
                 # inclusive se este golpe jÃ¡ derrotar o alvo. O efeito do veneno
                 # sÃ³ precisa ser aplicado enquanto o alvo ainda estÃ¡ vivo.
