@@ -495,6 +495,8 @@ const DECOR_GLB_TYPES = {
   lareira: 'assets/objetos/lareira.glb',
   estante_livros: 'assets/objetos/estante_livros.glb',
   mesa_quimica: 'assets/objetos/mesa_alquimia.glb',
+  // Armorial/estante de armas vertical (1×2 casas).
+  estante_armas: 'assets/objetos/armorial.glb',
   mesa_cadeiras: 'assets/objetos/mesa.glb',
   trono: 'assets/objetos/trono.glb',
   barril: 'assets/objetos/barril.glb',
