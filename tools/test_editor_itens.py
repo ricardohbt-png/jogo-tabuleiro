@@ -59,7 +59,33 @@ def test_base_intacta():
     check("longsword base inalterada", S.WEAPONS["longsword"] == antes)
     S._apply_custom_items([])
 
+def test_upload_art():
+    print("\n[4] Upload de arte do item")
+    import base64
+    PNG = base64.b64encode(b"\x89PNG\r\n\x1a\n" + b"0" * 32).decode()
+    ok, key = S._save_item_art("espada_flamejante.png", PNG)
+    check("salva PNG valido", ok)
+    dest = os.path.join(S.BASE_DIR, "assets", "itens", "espada_flamejante.png")
+    check("gravou em assets/itens/<id>.png", ok and os.path.exists(dest))
+    if ok and os.path.exists(dest):
+        os.remove(dest)
+    ok2, _ = S._save_item_art("x.gif", PNG)
+    check("rejeita extensao nao-png", not ok2)
+    ok3, _ = S._save_item_art("y.png", base64.b64encode(b"not a png").decode())
+    check("rejeita conteudo nao-PNG", not ok3)
+
+def test_save_item():
+    print("\n[5] Salvar item (fluxo completo)")
+    ok, item = S._save_custom_item(sample(id="teste_persist"))
+    check("save retorna ok", ok)
+    check("consta no arquivo JSON", any(r.get("id") == "teste_persist" for r in S._read_custom_items()))
+    check("mesclado em WEAPONS", "teste_persist" in S.WEAPONS)
+    recs = [r for r in S._read_custom_items() if r.get("id") != "teste_persist"]
+    S._gravar_def(recs, os.path.dirname(S.CUSTOM_ITEMS_FILE), os.path.basename(S.CUSTOM_ITEMS_FILE))
+    S._apply_custom_items(recs); S._regen_custom_items_index(recs)
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
+    test_upload_art(); test_save_item()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)

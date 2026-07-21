@@ -19992,6 +19992,24 @@ async def handler(ws):
                     await ws.send(json.dumps(payload))
                     continue
 
+                if t == "upload_custom_item":
+                    ok, res = _save_custom_item(msg.get("item"))
+                    payload = {"type": "upload_result", "kind": "custom_item",
+                               "upload_id": msg.get("upload_id"), "ok": ok}
+                    if ok: payload["item"] = res
+                    else:  payload["error"] = res
+                    await ws.send(json.dumps(payload))
+                    continue
+
+                if t == "upload_item_art":
+                    ok, res = _save_item_art(msg.get("name"), msg.get("data"))
+                    payload = {"type": "upload_result", "kind": "item_art",
+                               "upload_id": msg.get("upload_id"), "ok": ok}
+                    if ok: payload["name"] = res
+                    else:  payload["error"] = res
+                    await ws.send(json.dumps(payload))
+                    continue
+
                 if t == "upload_monster_art":
                     ok, res = _save_monster_art(msg.get("kind"), msg.get("name"), msg.get("data"))
                     payload = {"type": "upload_result", "kind": "monster_art",
@@ -21148,6 +21166,32 @@ def _save_monster_art(kind, name, data_b64):
     except OSError:
         return False, "falha ao gravar"
     return True, key
+
+ITENS_DIR = os.path.join(BASE_DIR, "assets", "itens")
+
+def _save_item_art(name, data_b64):
+    """Grava o PNG de um item custom em assets/itens/<basename>. Só .png; valida a
+    assinatura PNG (mesma proteção de _save_monster_art)."""
+    base = os.path.basename(name or "")
+    if not base or "\x00" in base or os.path.splitext(base)[1].lower() != ".png":
+        return False, "envie um arquivo .png"
+    if not isinstance(data_b64, str) or not data_b64:
+        return False, "arquivo inválido"
+    if (len(data_b64) * 3) // 4 > STORY_UPLOAD_MAX:
+        return False, "arquivo grande demais"
+    try:
+        raw = base64.b64decode(data_b64, validate=True)
+    except Exception:
+        return False, "dados inválidos"
+    if len(raw) > STORY_UPLOAD_MAX or not raw.startswith(b"\x89PNG\r\n\x1a\n"):
+        return False, "envie uma imagem PNG válida"
+    try:
+        os.makedirs(ITENS_DIR, exist_ok=True)
+        with open(os.path.join(ITENS_DIR, base), "wb") as f:
+            f.write(raw)
+    except OSError:
+        return False, "falha ao gravar"
+    return True, base
 
 OBJETOS_DIR = os.path.join(BASE_DIR, "assets", "objetos")
 _OBJETOS_DIR = OBJETOS_DIR
