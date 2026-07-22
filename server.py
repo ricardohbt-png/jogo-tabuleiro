@@ -21082,7 +21082,7 @@ def _read_custom_items():
 
 _ITEM_ARMOR_CATS = {"leve", "media", "pesada"}
 _ITEM_MATERIAIS = {"organic", "metal"}
-_ITEM_BONUS_EFFECTS = {"def_", "maxhp", "spd", "str_", "dex", "con_", "int_"}
+_ITEM_BONUS_EFFECTS = {"def_", "maxhp", "spd", "str_", "dex", "con_", "int_", "resist"}
 
 # Tipos de dano válidos p/ o bônus de resistência do herói (Fase C).
 _RESIST_TYPES = {DMG_PHYSICAL, DMG_FIRE, DMG_COLD, DMG_LIGHTNING, DMG_ACID,
@@ -21130,7 +21130,13 @@ def _validate_custom_armor(raw):
     materiais = [m for m in (raw.get("corrosion_materials") or []) if m in _ITEM_MATERIAIS]
     bonuses = []
     for b in raw.get("bonuses", []) or []:
-        if isinstance(b, dict) and b.get("effect") in _ITEM_BONUS_EFFECTS:
+        if not (isinstance(b, dict) and b.get("effect") in _ITEM_BONUS_EFFECTS):
+            continue
+        if b.get("effect") == "resist":
+            if b.get("type") not in _RESIST_TYPES:
+                continue
+            bonuses.append({"effect": "resist", "type": b["type"], "value": _int0(b.get("value"))})
+        else:
             bonuses.append({"effect": b["effect"], "value": _int0(b.get("value"))})
     classes = [c for c in (raw.get("allowed_classes") or []) if c in _ITEM_CLASSES]
     try: price = max(0, int(raw.get("price", 0)))

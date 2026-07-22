@@ -536,6 +536,24 @@ def test_resistencia_empilha():
     check("tipo desconhecido não entra em resistances",
           not any(e.get("type") == "trevas" for e in p.get("resistances", [])))
 
+def test_validacao_resist():
+    print("\n[C3] Validação de bônus resist (preserva type)")
+    ok, it = S._validate_custom_item(armor_sample(id="cota_res",
+        bonuses=[{"effect": "resist", "type": "fire", "value": 0},
+                 {"effect": "resist", "type": "cold", "value": 3}]))
+    check("resist preservado com type e value", ok and it.get("bonuses") ==
+          [{"effect": "resist", "type": "fire", "value": 0},
+           {"effect": "resist", "type": "cold", "value": 3}])
+    ok2, it2 = S._validate_custom_item(armor_sample(id="cota_res_bad",
+        bonuses=[{"effect": "resist", "type": "trevas", "value": 0}]))
+    check("resist com type inválido é descartado", ok2 and it2.get("bonuses") == [])
+    ok3, it3 = S._validate_custom_item(armor_sample(id="cota_res_semtipo",
+        bonuses=[{"effect": "resist", "value": 0}]))
+    check("resist sem type é descartado", ok3 and it3.get("bonuses") == [])
+    ok4, it4 = S._validate_custom_item(armor_sample(id="cota_spd",
+        bonuses=[{"effect": "spd", "value": -1}]))
+    check("bônus escalar segue {effect,value}", ok4 and it4.get("bonuses") == [{"effect": "spd", "value": -1}])
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
@@ -549,5 +567,6 @@ if __name__ == "__main__":
     test_atributo_con_int(); test_atributo_empilha_e_aovivo()
     test_validacao_bonus_atributo()
     test_resistencia_aplica(); test_resistencia_empilha()
+    test_validacao_resist()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)
