@@ -11429,10 +11429,32 @@ class GameRoom:
         elif attr == "int_":
             p["will"] = p.get("will", 0) + dm
 
+    def _apply_resistance(self, p, bonus, equipping):
+        """Bônus de resistência (Fase C): adiciona/remove uma entrada em
+        p['resistances'] (lida por _apply_damage_types). value<=0 → metade
+        (mode:half); value>0 → redução fixa. Empilha (uma entrada por item)."""
+        dtype = bonus.get("type")
+        if dtype not in _RESIST_TYPES:
+            return
+        val = int(bonus.get("value", 0) or 0)
+        entry = {"type": dtype, "mode": "half"} if val <= 0 else {"type": dtype, "reduction": val}
+        lst = p.setdefault("resistances", [])
+        if equipping:
+            lst.append(entry)
+        else:
+            for i, e in enumerate(lst):
+                if e == entry:
+                    lst.pop(i)
+                    break
+
     def _apply_gear_effect(self, p, item, equipping):
         self._apply_single_effect(p, item.get("effect"), item.get("value", 0), equipping)
         for b in item.get("bonuses", []) or []:
-            if isinstance(b, dict):
+            if not isinstance(b, dict):
+                continue
+            if b.get("effect") == "resist":
+                self._apply_resistance(p, b, equipping)
+            else:
                 self._apply_single_effect(p, b.get("effect"), int(b.get("value", 0) or 0), equipping)
 
     def _escudo_equipado(self, p):
@@ -21061,6 +21083,10 @@ def _read_custom_items():
 _ITEM_ARMOR_CATS = {"leve", "media", "pesada"}
 _ITEM_MATERIAIS = {"organic", "metal"}
 _ITEM_BONUS_EFFECTS = {"def_", "maxhp", "spd", "str_", "dex", "con_", "int_"}
+
+# Tipos de dano válidos p/ o bônus de resistência do herói (Fase C).
+_RESIST_TYPES = {DMG_PHYSICAL, DMG_FIRE, DMG_COLD, DMG_LIGHTNING, DMG_ACID,
+                 DMG_HOLY, DMG_POISON, DMG_MAGIC, DMG_WATER}
 
 # Atributo que rege a jogada de ATAQUE (acerto) de cada classe — embutido no
 # atk_bonus inicial de CLASSES. Usado pela cascata de bônus de atributo (Fase B).

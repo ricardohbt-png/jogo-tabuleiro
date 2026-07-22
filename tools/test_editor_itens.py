@@ -497,6 +497,45 @@ def test_validacao_bonus_atributo():
         bonuses=[{"effect": "atk", "value": 3}]))
     check("efeito fora do allowlist ainda é filtrado", ok2 and it2.get("bonuses") == [])
 
+def _resist_item(dtype, value):
+    return {"id": "r", "name": "R", "item_slot": "armor", "effect": "def_", "value": 0,
+            "bonuses": [{"effect": "resist", "type": dtype, "value": value}]}
+
+def test_resistencia_aplica():
+    print("\n[C1] Resistência: aplica/remove entrada + efeito no dano")
+    r = _gear_room(); r.round_num = 1
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    it = _resist_item("fire", 0)
+    r._apply_gear_effect(p, it, True)
+    check("equipar adiciona resistência de metade",
+          {"type": "fire", "mode": "half"} in p.get("resistances", []))
+    check("dano de fogo cai pela metade", r._apply_damage_types(10, ["fire"], p) == 5)
+    check("outro tipo não é reduzido", r._apply_damage_types(10, ["cold"], p) == 10)
+    r._apply_gear_effect(p, it, False)
+    check("desequipar remove a resistência", {"type": "fire", "mode": "half"} not in p.get("resistances", []))
+    check("sem resistência, fogo volta ao cheio", r._apply_damage_types(10, ["fire"], p) == 10)
+    it3 = _resist_item("cold", 3)
+    r._apply_gear_effect(p, it3, True)
+    check("redução fixa entra como reduction", {"type": "cold", "reduction": 3} in p.get("resistances", []))
+    check("dano de frio -3", r._apply_damage_types(10, ["cold"], p) == 7)
+    r._apply_gear_effect(p, it3, False)
+
+def test_resistencia_empilha():
+    print("\n[C2] Resistência: empilhamento")
+    r = _gear_room(); r.round_num = 1
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    it = _resist_item("fire", 0)
+    r._apply_gear_effect(p, it, True); r._apply_gear_effect(p, it, True)
+    check("dois itens = duas entradas",
+          sum(1 for e in p["resistances"] if e == {"type": "fire", "mode": "half"}) == 2)
+    r._apply_gear_effect(p, it, False)
+    check("remover um deixa uma",
+          sum(1 for e in p["resistances"] if e == {"type": "fire", "mode": "half"}) == 1)
+    r._apply_gear_effect(p, it, False)
+    r._apply_gear_effect(p, _resist_item("trevas", 0), True)
+    check("tipo desconhecido não entra em resistances",
+          not any(e.get("type") == "trevas" for e in p.get("resistances", [])))
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
@@ -509,5 +548,6 @@ if __name__ == "__main__":
     test_atributo_forca(); test_atributo_destreza()
     test_atributo_con_int(); test_atributo_empilha_e_aovivo()
     test_validacao_bonus_atributo()
+    test_resistencia_aplica(); test_resistencia_empilha()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)
