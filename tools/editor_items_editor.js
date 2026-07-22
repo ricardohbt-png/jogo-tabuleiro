@@ -161,7 +161,9 @@
         '<div id="ie-abonus"></div><button id="ie-add-abonus">+ bônus</button>' +
         '<template id="ie-abonus-tpl"><span class="ie-elem-row">' +
         '<select class="ie-abonus-eff"><option value="def_">CA extra</option>' +
-        '<option value="maxhp">PV máx</option><option value="spd">Velocidade</option></select> ' +
+        '<option value="maxhp">PV máx</option><option value="spd">Velocidade</option>' +
+        '<option value="str_">Força</option><option value="dex">Destreza</option>' +
+        '<option value="con_">Constituição</option><option value="int_">Inteligência</option></select> ' +
         numInput("", 0, -10, 20) + ' <button class="ie-abonus-del">✕</button></span></template>'),
       seccao("Durabilidade (corrosão)",
         campo("Níveis sem penalidade", numInput("ie-corrlivre", draft.corrosao_livres, 0, 12)) +
