@@ -11393,6 +11393,41 @@ class GameRoom:
         elif e == "bagslots":
             # Mochila/alforje: expande o inventÃ¡rio enquanto equipada
             p["bag_size"] = max(1, p.get("bag_size", 6) + v)
+        elif e in ("str_", "dex", "con_", "int_"):
+            self._apply_attribute_delta(p, e, v)
+
+    def _apply_attribute_delta(self, p, attr, delta):
+        """Bônus de atributo bruto (Fase B): muda p[attr] e ajusta os derivados
+        ARMAZENADOS por delta do modificador. Dano/visão/iniciativa são lidos ao
+        vivo do bruto e se atualizam sozinhos. Simétrico (apply/reverse exatos)."""
+        antes = int(p.get(attr, 10))
+        depois = max(1, antes + int(delta))
+        p[attr] = depois
+        if attr == "con_":
+            dm = get_bonus_constituicao(depois) - get_bonus_constituicao(antes)
+        else:
+            dm = mod(depois) - mod(antes)
+        if dm == 0:
+            return
+        atk_attr = _CLASS_ATK_ATTR.get(p.get("class_id"), "str_")
+        if attr == "str_":
+            if atk_attr == "str_":
+                p["atk_bonus"] += dm; p["base_atk_bonus"] += dm
+        elif attr == "dex":
+            p["ac"] += dm; p["ac_base"] = p.get("ac_base", 10) + dm
+            p["ref_"] = p.get("ref_", 0) + dm
+            if atk_attr == "dex":
+                p["atk_bonus"] += dm; p["base_atk_bonus"] += dm
+        elif attr == "con_":
+            level = int(p.get("level", 1))
+            p["max_hp"] = max(1, p["max_hp"] + dm * level)
+            if dm > 0 and not p.get("ultimo_esforco_ativo"):
+                p["hp"] = min(p["max_hp"], p["hp"] + dm * level)
+            elif dm < 0:
+                p["hp"] = min(p["hp"], p["max_hp"])
+            p["fort"] = p.get("fort", 0) + dm
+        elif attr == "int_":
+            p["will"] = p.get("will", 0) + dm
 
     def _apply_gear_effect(self, p, item, equipping):
         self._apply_single_effect(p, item.get("effect"), item.get("value", 0), equipping)
@@ -21026,6 +21061,11 @@ def _read_custom_items():
 _ITEM_ARMOR_CATS = {"leve", "media", "pesada"}
 _ITEM_MATERIAIS = {"organic", "metal"}
 _ITEM_BONUS_EFFECTS = {"def_", "maxhp", "spd"}
+
+# Atributo que rege a jogada de ATAQUE (acerto) de cada classe — embutido no
+# atk_bonus inicial de CLASSES. Usado pela cascata de bônus de atributo (Fase B).
+_CLASS_ATK_ATTR = {"warrior": "str_", "mage": "str_", "cleric": "str_", "paladin": "str_",
+                   "rogue": "dex", "bard": "dex", "ranger": "dex"}
 
 def _validate_custom_item(raw):
     """Despacha por item_type: weapon | armor | shield."""

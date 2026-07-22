@@ -403,6 +403,90 @@ def test_corrosao_botas():
     check("movimento cai 1 com botas corroídas", r._moves_base(p) == base - 1)
     S._apply_custom_items([])
 
+def _gear_room():
+    r = S.GameRoom("TEST")
+    async def noop(*a, **k): pass
+    r.gm_say = noop; r.broadcast = noop; r.push_state = noop; r.broadcast_city_state = noop; r.send_to = noop
+    return r
+
+def _bonus_item(effect, value):
+    return {"id": "x", "name": "X", "item_slot": "armor", "effect": "def_", "value": 0,
+            "bonuses": [{"effect": effect, "value": value}]}
+
+def test_atributo_forca():
+    print("\n[B1] Bônus de Força (acerto por classe + simetria)")
+    r = _gear_room()
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    atk0, str0 = p["atk_bonus"], p["str_"]
+    it = _bonus_item("str_", 2)
+    r._apply_gear_effect(p, it, True)
+    check("str_ sobe 2", p["str_"] == str0 + 2)
+    check("guerreiro: acerto sobe Δmod (+1)", p["atk_bonus"] == atk0 + 1)
+    r._apply_gear_effect(p, it, False)
+    check("desequipar reverte str_", p["str_"] == str0)
+    check("desequipar reverte acerto", p["atk_bonus"] == atk0)
+    pr = S.make_player("p2", "Luccas", "rogue", 0)
+    atkr = pr["atk_bonus"]
+    r._apply_gear_effect(pr, it, True)
+    check("ladino: Força não muda o acerto", pr["atk_bonus"] == atkr)
+    check("ladino: str_ ainda sobe (dano lê ao vivo)", pr["str_"] > 0)
+    r._apply_gear_effect(pr, it, False)
+
+def test_atributo_destreza():
+    print("\n[B2] Bônus de Destreza (CA/Reflexos/acerto)")
+    r = _gear_room()
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    ac0, acb0, ref0, atk0 = p["ac"], p["ac_base"], p["ref_"], p["atk_bonus"]
+    it = _bonus_item("dex", 2)
+    r._apply_gear_effect(p, it, True)
+    check("CA sobe Δmod (+1)", p["ac"] == ac0 + 1 and p["ac_base"] == acb0 + 1)
+    check("Reflexos sobe (+1)", p["ref_"] == ref0 + 1)
+    check("guerreiro: Destreza não muda o acerto", p["atk_bonus"] == atk0)
+    r._apply_gear_effect(p, it, False)
+    check("reverte CA/Reflexos", p["ac"] == ac0 and p["ref_"] == ref0)
+    pr = S.make_player("p2", "Luccas", "rogue", 0)
+    atkr = pr["atk_bonus"]
+    r._apply_gear_effect(pr, it, True)
+    check("ladino: Destreza sobe o acerto (+1)", pr["atk_bonus"] == atkr + 1)
+    r._apply_gear_effect(pr, it, False)
+
+def test_atributo_con_int():
+    print("\n[B3] Constituição (PV+Fortitude) e Inteligência (Vontade)")
+    r = _gear_room()
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    hp0, max0, fort0, will0 = p["hp"], p["max_hp"], p["fort"], p["will"]
+    itc = _bonus_item("con_", 2)
+    r._apply_gear_effect(p, itc, True)
+    dcb = S.get_bonus_constituicao(16) - S.get_bonus_constituicao(14)
+    check("max_hp sobe Δcb × nível", p["max_hp"] == max0 + dcb * p["level"])
+    check("Fortitude sobe Δcb", p["fort"] == fort0 + dcb)
+    check("HP atual sobe no equipar", p["hp"] == min(p["max_hp"], hp0 + dcb * p["level"]))
+    r._apply_gear_effect(p, itc, False)
+    check("reverte max_hp", p["max_hp"] == max0)
+    check("reverte Fortitude", p["fort"] == fort0)
+    iti = _bonus_item("int_", 2)
+    r._apply_gear_effect(p, iti, True)
+    check("Vontade sobe Δmod (+1)", p["will"] == will0 + 1)
+    r._apply_gear_effect(p, iti, False)
+    check("reverte Vontade", p["will"] == will0)
+
+def test_atributo_empilha_e_aovivo():
+    print("\n[B4] Empilhamento simétrico + visão/iniciativa ao vivo")
+    r = _gear_room()
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    atk0, str0 = p["atk_bonus"], p["str_"]
+    a = _bonus_item("str_", 2); b = dict(_bonus_item("str_", 2), id="y")
+    r._apply_gear_effect(p, a, True); r._apply_gear_effect(p, b, True)
+    check("dois +2 FOR: str_ +4", p["str_"] == str0 + 4)
+    r._apply_gear_effect(p, a, False); r._apply_gear_effect(p, b, False)
+    check("remover ambos volta str_ ao inicial", p["str_"] == str0)
+    check("remover ambos volta acerto ao inicial", p["atk_bonus"] == atk0)
+    p2 = S.make_player("p2", "Luccas", "rogue", 0); r.players["p2"] = p2
+    vis0 = r._get_raio_visao(p2); ini0 = r.initiative_value(p2)
+    r._apply_gear_effect(p2, _bonus_item("dex", 2), True)
+    check("visão aumenta com +Destreza (ao vivo)", r._get_raio_visao(p2) >= vis0)
+    check("iniciativa aumenta com +Destreza (ao vivo)", r.initiative_value(p2) == ini0 + 2)
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
@@ -412,5 +496,7 @@ if __name__ == "__main__":
     test_multi_efeito(); test_compra_armadura()
     test_corrosao_armadura_nm()
     test_corrosao_botas()
+    test_atributo_forca(); test_atributo_destreza()
+    test_atributo_con_int(); test_atributo_empilha_e_aovivo()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)
