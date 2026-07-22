@@ -66,7 +66,7 @@
     return { ok: true };
   }
   var ARMOR_CATS = ["leve", "media", "pesada"];
-  var BONUS_EFFECTS = ["def_", "maxhp", "spd"];
+  var BONUS_EFFECTS = ["def_", "maxhp", "spd", "str_", "dex", "con_", "int_"];
   function serializeArmor(d) {
     var kind = d.item_type === "shield" ? "shield" : "armor";
     var mats = [];

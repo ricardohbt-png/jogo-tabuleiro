@@ -61,6 +61,12 @@ check("escudo mantém material", JSON.stringify(sitem.corrosion_materials) === J
 check("validateArmorDraft aceita válido", L.validateArmorDraft(adraft).ok);
 check("validateArmorDraft rejeita sem nome", !L.validateArmorDraft(Object.assign({}, adraft, {name:""})).ok);
 check("suggestPriceArmor cresce com CA", L.suggestPriceArmor({ac_bonus:6}) > L.suggestPriceArmor({ac_bonus:2}));
+// bônus de atributo passam por serializeArmor (Fase B)
+const aitem2 = L.serializeArmor(Object.assign({}, adraft, {
+  bonuses:[{effect:"str_", value:2}, {effect:"con_", value:1}, {effect:"atk", value:9}]}));
+check("serializeArmor mantém bônus de atributo", aitem2.bonuses.length === 2
+  && aitem2.bonuses[0].effect === "str_" && aitem2.bonuses[1].effect === "con_");
+check("serializeArmor filtra efeito não permitido", !aitem2.bonuses.some(function(b){return b.effect==="atk";}));
 
 console.log(`\n${PASS} passaram, ${FAIL} falharam`);
 process.exit(FAIL ? 1 : 0);
