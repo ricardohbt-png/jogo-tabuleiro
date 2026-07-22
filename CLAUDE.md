@@ -1139,3 +1139,22 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > Spec/plano em `docs/superpowers/{specs,plans}/2026-07-21-editor-itens-fase2a-armaduras-escudos*`.
 > Fases seguintes: **B** bônus de atributo (motor), **C** resistências de dano, **D**
 > iniciativa; depois anéis/botas/poções/arremessáveis/venenos + habilidades ativáveis.
+
+> **Editor de Itens — Fase B (motor de bônus de atributo):** os efeitos `str_`/`dex`/
+> `con_`/`int_` na lista `bonuses` do motor de multi-efeito passam a ser **funcionais**.
+> `_apply_single_effect` despacha esses efeitos para `_apply_attribute_delta(p, attr,
+> delta)`, que muda o **atributo bruto** (`p[attr]`) e ajusta os derivados
+> **armazenados** por Δ do modificador: **acerto** (`atk_bonus`/`base_atk_bonus`) só para
+> a classe cujo atributo de ataque bate (`_CLASS_ATK_ATTR`: warrior/mage/cleric/paladin→
+> `str_`, rogue/bard/ranger→`dex`); **CA** (`ac`/`ac_base`) e **Reflexos** (`ref_`) para
+> DES; **Fortitude** (`fort`) e **PV máx** (`max_hp += Δ(get_bonus_constituicao)×nível`,
+> com top-up de HP travado pelo Último Esforço) para CON; **Vontade** (`will`) para INT.
+> **Dano, visão** (`_get_raio_visao` lê int/dex/spd) **e iniciativa** (`initiative_value`
+> = dex + mod(int)) se atualizam **sozinhos** (leem o bruto). É **simétrico** e
+> **independente de ordem** (o Δmod telescópica), então empilhar/remover itens sempre
+> volta ao estado inicial. Validação (`_ITEM_BONUS_EFFECTS`) e editor (`BONUS_EFFECTS` +
+> dropdown de bônus adicionais em `editor_items_editor.js`) ganharam as 4 opções.
+> **Limitação conhecida** (aceita, igual ao veneno): subir de nível com item de +CON
+> equipado pode dessincronizar o `max_hp`. Testes: `tools/test_editor_itens.py` [B1]-[B5].
+> Spec/plano em `docs/superpowers/{specs,plans}/2026-07-21-editor-itens-fase-b-atributos*`.
+> Fases seguintes: **C** resistências de dano do herói, **D** iniciativa como campo próprio.
