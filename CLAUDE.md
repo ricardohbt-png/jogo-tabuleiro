@@ -1158,3 +1158,20 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > equipado pode dessincronizar o `max_hp`. Testes: `tools/test_editor_itens.py` [B1]-[B5].
 > Spec/plano em `docs/superpowers/{specs,plans}/2026-07-21-editor-itens-fase-b-atributos*`.
 > Fases seguintes: **C** resistências de dano do herói, **D** iniciativa como campo próprio.
+
+> **Editor de Itens — Fase C (resistências de dano do herói):** um efeito **`resist`**
+> na lista `bonuses` do motor de multi-efeito **adiciona/remove uma entrada em
+> `p["resistances"]`** ao equipar/desequipar (via `_apply_resistance` no laço de
+> `_apply_gear_effect`; roteado para lá em vez do `_apply_single_effect` escalar). A
+> entrada carrega um `type` (um de `_RESIST_TYPES`, os 9 tipos de dano) e um modo pela
+> convenção do `value`: **value≤0 → metade** (`{type,mode:"half"}`), **value>0 → redução
+> fixa** (`{type,reduction:N}`). Como `_apply_damage_types` já é **genérico pelo alvo**
+> (lê `target["resistances"]`) e é chamado com o jogador como alvo nos caminhos de dano
+> tipado (ataque de monstro/elementais, armadilhas, gás/ácido, fogo…), a redução vale
+> **automaticamente** — zero mudança nos ~24 sites. Empilha (uma entrada por item;
+> desequipar remove uma igual). Validação (`_ITEM_BONUS_EFFECTS`+`resist`) **preserva o
+> `type`** (descarta tipo desconhecido/ausente); cliente: `serializeArmor` preserva o
+> `type` (`RESIST_TYPES`) e o editor tem um **dropdown de tipo** que só aparece quando o
+> bônus é "Resistência". Testes: `tools/test_editor_itens.py` [C1]-[C3] + node. Fora de
+> escopo: imunidade total e vulnerabilidade do herói. Fase seguinte: **D** iniciativa
+> como campo próprio.
