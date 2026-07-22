@@ -66,7 +66,8 @@
     return { ok: true };
   }
   var ARMOR_CATS = ["leve", "media", "pesada"];
-  var BONUS_EFFECTS = ["def_", "maxhp", "spd", "str_", "dex", "con_", "int_"];
+  var BONUS_EFFECTS = ["def_", "maxhp", "spd", "str_", "dex", "con_", "int_", "resist"];
+  var RESIST_TYPES = ["physical", "fire", "cold", "lightning", "acid", "holy", "poison", "magic", "water"];
   function serializeArmor(d) {
     var kind = d.item_type === "shield" ? "shield" : "armor";
     var mats = [];
@@ -82,8 +83,14 @@
       corrosao_resistente: Math.max(0, +d.corrosao_livres || 0),
       corrosao_niveis_penalidade: Math.max(1, +d.corrosao_penalidade || 2),
       bonuses: (d.bonuses || []).filter(function (b) {
-        return b && BONUS_EFFECTS.indexOf(b.effect) >= 0;
-      }).map(function (b) { return { effect: b.effect, value: +b.value || 0 }; }),
+        if (!b || BONUS_EFFECTS.indexOf(b.effect) < 0) return false;
+        if (b.effect === "resist" && RESIST_TYPES.indexOf(b.type) < 0) return false;
+        return true;
+      }).map(function (b) {
+        return b.effect === "resist"
+          ? { effect: "resist", type: b.type, value: +b.value || 0 }
+          : { effect: b.effect, value: +b.value || 0 };
+      }),
       granted_ability: d.granted_ability || null,
       allowed_classes: (d.allowed_classes || []).slice(),
       price: Math.max(0, +d.price || 0),
@@ -110,7 +117,7 @@
               validateDraft: validateDraft, ELEM: ELEM, CATS: CATS, FACES: FACES,
               serializeArmor: serializeArmor, suggestPriceArmor: suggestPriceArmor,
               validateArmorDraft: validateArmorDraft,
-              ARMOR_CATS: ARMOR_CATS, BONUS_EFFECTS: BONUS_EFFECTS };
+              ARMOR_CATS: ARMOR_CATS, BONUS_EFFECTS: BONUS_EFFECTS, RESIST_TYPES: RESIST_TYPES };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (root) root.EDITOR_ITEMS_LOGIC = api;
 })(typeof window !== "undefined" ? window : null);

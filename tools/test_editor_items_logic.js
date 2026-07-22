@@ -68,5 +68,19 @@ check("serializeArmor mantém bônus de atributo", aitem2.bonuses.length === 2
   && aitem2.bonuses[0].effect === "str_" && aitem2.bonuses[1].effect === "con_");
 check("serializeArmor filtra efeito não permitido", !aitem2.bonuses.some(function(b){return b.effect==="atk";}));
 
+// bônus resist preserva type; type inválido descartado (Fase C)
+const aitemR = L.serializeArmor(Object.assign({}, adraft, {bonuses:[
+  {effect:"resist", type:"fire", value:0},
+  {effect:"resist", type:"cold", value:3},
+  {effect:"resist", type:"trevas", value:0},
+  {effect:"spd", value:-1}]}));
+check("serializeArmor mantém resist com type/value",
+  JSON.stringify(aitemR.bonuses.filter(function(b){return b.effect==="resist";}))
+  === JSON.stringify([{effect:"resist",type:"fire",value:0},{effect:"resist",type:"cold",value:3}]));
+check("serializeArmor descarta resist de tipo inválido",
+  !aitemR.bonuses.some(function(b){return b.type==="trevas";}));
+check("serializeArmor mantém bônus escalar junto do resist",
+  aitemR.bonuses.some(function(b){return b.effect==="spd" && b.value===-1;}));
+
 console.log(`\n${PASS} passaram, ${FAIL} falharam`);
 process.exit(FAIL ? 1 : 0);
