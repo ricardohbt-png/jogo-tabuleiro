@@ -163,7 +163,12 @@
         '<select class="ie-abonus-eff"><option value="def_">CA extra</option>' +
         '<option value="maxhp">PV máx</option><option value="spd">Velocidade</option>' +
         '<option value="str_">Força</option><option value="dex">Destreza</option>' +
-        '<option value="con_">Constituição</option><option value="int_">Inteligência</option></select> ' +
+        '<option value="con_">Constituição</option><option value="int_">Inteligência</option>' +
+        '<option value="resist">Resistência</option></select> ' +
+        '<select class="ie-abonus-type" style="display:none"><option value="physical">Físico</option>' +
+        '<option value="fire">Fogo</option><option value="cold">Frio</option><option value="lightning">Elétrico</option>' +
+        '<option value="acid">Ácido</option><option value="holy">Sagrado</option><option value="poison">Veneno</option>' +
+        '<option value="magic">Mágico</option><option value="water">Água</option></select> ' +
         numInput("", 0, -10, 20) + ' <button class="ie-abonus-del">✕</button></span></template>'),
       seccao("Durabilidade (corrosão)",
         campo("Níveis sem penalidade", numInput("ie-corrlivre", draft.corrosao_livres, 0, 12)) +
@@ -204,7 +209,10 @@
     draft.disponibilidade = { loja: g("ie-disp-loja").checked, baus: g("ie-disp-baus").checked, loot_monstro: g("ie-disp-loot").checked };
     draft.price = +g("ie-price").value || 0;
     draft.bonuses = Array.prototype.map.call(root.querySelectorAll("#ie-abonus .ie-elem-row"), function (r) {
-      return { effect: r.querySelector(".ie-abonus-eff").value, value: +r.querySelector("input[type=number]").value || 0 }; });
+      var eff = r.querySelector(".ie-abonus-eff").value;
+      var o = { effect: eff, value: +r.querySelector("input[type=number]").value || 0 };
+      if (eff === "resist") { var t = r.querySelector(".ie-abonus-type"); o.type = t ? t.value : "fire"; }
+      return o; });
     return draft;
   }
 
@@ -215,12 +223,18 @@
   function addArmorBonusRow(b) {
     var tpl = root.querySelector("#ie-abonus-tpl");
     var node = tpl.content.firstElementChild.cloneNode(true);
+    var effSel = node.querySelector(".ie-abonus-eff");
+    var typeSel = node.querySelector(".ie-abonus-type");
+    function syncType() { typeSel.style.display = (effSel.value === "resist") ? "" : "none"; }
     if (b) {
-      node.querySelector(".ie-abonus-eff").value = b.effect || "def_";
+      effSel.value = b.effect || "def_";
       node.querySelector("input[type=number]").value = (b.value == null ? 0 : b.value);
+      if (b.effect === "resist" && b.type) typeSel.value = b.type;
     }
     node.querySelector(".ie-abonus-del").onclick = function () { node.remove(); renderArmorPreview(); };
     node.querySelectorAll("input,select").forEach(function (el) { el.onchange = renderArmorPreview; });
+    effSel.addEventListener("change", syncType);
+    syncType();
     root.querySelector("#ie-abonus").appendChild(node);
   }
 
