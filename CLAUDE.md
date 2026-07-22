@@ -1113,3 +1113,29 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `tools/test_editor_items_logic.js` (node). Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-07-20-editor-itens-fase1-armas*`.
 > Fases seguintes: as outras 7 abas + habilidades ativáveis funcionais.
+
+> **Editor de Itens — Fase 2a (Armaduras + Escudos):** habilita as sub-abas
+> **Armaduras** e **Escudos** (as outras 5 seguem 🔒). `item_type` `"armor"`/`"shield"`,
+> mesmo catálogo global vivo (`itens_personalizados.json`), mesclado por
+> `_apply_custom_items` (despacho por `item_type`) em `SHOP_ARMORS`/
+> `_DUNGEON_ITEM_CATALOG`/`LOOT_POOL_PROCEDURAL`. Campos: `ac_bonus` (CA base) +
+> **motor de multi-efeito** `bonuses:[{effect,value}]` (`def_`/`maxhp`/`spd`, via
+> `_apply_single_effect` extraído de `_apply_gear_effect`), `armor_category` (só
+> armadura), `granted_ability` (metadado), `allowed_classes`, disponibilidade, preço.
+> **Corrosão generalizada** para os slots de defesa (armadura/escudo/elmo/botas), com
+> o modelo **N/M** das armas: `_corr` ganhou trilhas por slot; `_corroer_equipamento`
+> degrada UMA peça na prioridade **armadura→escudo→arma→elmo→botas** (custom corrói por
+> `corrosion_materials`, base por id-set; escudos base `escudo_p`/`escudo_g` agora em
+> `CORROSAO_ARMADURA_METAL`); a penalidade (`_corrosao_ca_pen` CA; `_corrosao_spd_pen`
+> velocidade em `_moves_base`) lê o N/M **cacheado** em `_corr` no momento da corrosão,
+> então **persiste após a destruição**. Peças base sem N/M usam N=0/M=2 → byte-idêntico
+> (uma correção só na destruição: CA vira base em vez de base−1; `test_devorador` ajustado).
+> Elmo/botas ficam **engine-ready** (UI de material/N/M deles na sub-aba futura; base
+> não recebe material). Compra/equipar preservam os campos (ramo `ferreiro_armor` +
+> whitelists). Cliente: `serializeArmor`/`validateArmorDraft`/`suggestPriceArmor` em
+> `editor_items_logic.js`; formulário armadura/escudo em `editor_items_editor.js`;
+> `CAT.items` do editor de masmorras inclui armaduras/escudos custom. Testes:
+> `tools/test_editor_itens.py` (seções [A1]-[A6]) + `tools/test_editor_items_logic.js`.
+> Spec/plano em `docs/superpowers/{specs,plans}/2026-07-21-editor-itens-fase2a-armaduras-escudos*`.
+> Fases seguintes: **B** bônus de atributo (motor), **C** resistências de dano, **D**
+> iniciativa; depois anéis/botas/poções/arremessáveis/venenos + habilidades ativáveis.
