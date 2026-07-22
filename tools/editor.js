@@ -2,11 +2,12 @@
 (function () {
   const WALL = 0, FLOOR = 1, DOOR = 2, CELL = 28;
   const BASE_CAT = window.EDITOR_CATALOG || { monsters: [], items: [], traps: [], venoms: [], decorations: [], materiais: [] };
-  // Armas customizadas marcadas disponibilidade.baus=true entram no seletor de
-  // baús/recompensas ao lado dos itens base (mesma forma mínima: id/name/emoji…).
+  // Itens customizados (arma/armadura/escudo/…) marcados disponibilidade.baus=true
+  // entram no seletor de baús/recompensas ao lado dos itens base. Forma mínima
+  // genérica (id/name/emoji/item_type) — o seletor só usa id/name/emoji.
   const customBaus = (window.EDITOR_CUSTOM_ITEMS || [])
     .filter(function (i) { return i && i.disponibilidade && i.disponibilidade.baus; })
-    .map(function (i) { return { id: i.id, name: i.name, emoji: i.emoji, die: i.die, stat: i.stat, categoria: i.categoria, custom: true }; });
+    .map(function (i) { return { id: i.id, name: i.name, emoji: i.emoji, item_type: i.item_type, custom: true }; });
   const CAT = Object.assign({}, BASE_CAT, {
     monsters: (BASE_CAT.monsters || []).concat(window.EDITOR_CUSTOM_MONSTERS || []),
     items: (BASE_CAT.items || []).concat(customBaus),
