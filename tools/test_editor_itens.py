@@ -487,6 +487,16 @@ def test_atributo_empilha_e_aovivo():
     check("visão aumenta com +Destreza (ao vivo)", r._get_raio_visao(p2) >= vis0)
     check("iniciativa aumenta com +Destreza (ao vivo)", r.initiative_value(p2) == ini0 + 2)
 
+def test_validacao_bonus_atributo():
+    print("\n[B5] Validação aceita bônus de atributo")
+    ok, it = S._validate_custom_item(armor_sample(id="cota_atr",
+        bonuses=[{"effect": "str_", "value": 2}, {"effect": "int_", "value": 1}]))
+    check("bonuses de atributo preservados", ok and it.get("bonuses") ==
+          [{"effect": "str_", "value": 2}, {"effect": "int_", "value": 1}])
+    ok2, it2 = S._validate_custom_item(armor_sample(id="cota_bad",
+        bonuses=[{"effect": "atk", "value": 3}]))
+    check("efeito fora do allowlist ainda é filtrado", ok2 and it2.get("bonuses") == [])
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
@@ -498,5 +508,6 @@ if __name__ == "__main__":
     test_corrosao_botas()
     test_atributo_forca(); test_atributo_destreza()
     test_atributo_con_int(); test_atributo_empilha_e_aovivo()
+    test_validacao_bonus_atributo()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)

@@ -21060,7 +21060,7 @@ def _read_custom_items():
 
 _ITEM_ARMOR_CATS = {"leve", "media", "pesada"}
 _ITEM_MATERIAIS = {"organic", "metal"}
-_ITEM_BONUS_EFFECTS = {"def_", "maxhp", "spd"}
+_ITEM_BONUS_EFFECTS = {"def_", "maxhp", "spd", "str_", "dex", "con_", "int_"}
 
 # Atributo que rege a jogada de ATAQUE (acerto) de cada classe — embutido no
 # atk_bonus inicial de CLASSES. Usado pela cascata de bônus de atributo (Fase B).
