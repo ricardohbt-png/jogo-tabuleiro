@@ -6,7 +6,7 @@
   var esc = function (v) { return String(v == null ? "" : v).replace(/[&<>"']/g,
     function (c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];}); };
   var TYPES = [["armas","Armas",true],["armaduras","Armaduras",true],["escudos","Escudos",true],
-    ["aneis","Anéis",true],["botas","Botas",true],["pocoes","Poções",false],
+    ["aneis","Anéis",true],["botas","Botas",true],["pocoes","Poções",true],
     ["arremessaveis","Arremessáveis",false],["venenos","Venenos",false]];
   var CLASSES = [["warrior","Guerreiro"],["mage","Mago"],["rogue","Ladino"],
     ["cleric","Clérigo"],["ranger","Patrulheiro"],["paladin","Paladino"],["bard","Bardo"]];
@@ -35,9 +35,14 @@
       granted_ability:"", allowed_classes:[],
       disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:0, id:"" };
   }
+  function novoDraftPotion() {
+    return { name:"", emoji:"🧪", item_type:"potion", effect:"heal", value:10, max_uses:1,
+      allowed_classes:[], disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:0, id:"" };
+  }
   function novoDraftFor(type) {
     if (type === "armaduras" || type === "escudos") return novoDraftArmor(type);
     if (type === "aneis" || type === "botas") return novoDraftAccessory(type);
+    if (type === "pocoes") return novoDraftPotion();
     return novoDraft();
   }
 
@@ -103,6 +108,7 @@
       renderAccessoryForm(f, activeType === "botas" ? "boots" : "ring");
       return;
     }
+    if (activeType === "pocoes") { renderPotionForm(f); return; }
     var elemTypes = L.ELEM.map(function (e) { return '<option value="' + e + '">' + e + '</option>'; }).join("");
     var abil = abilityOptions();
     f.innerHTML = [
@@ -405,6 +411,103 @@
     var status = root.querySelector("#ie-status");
     if (!v.ok) { status.textContent = "⚠️ " + v.msg; return; }
     var item = L.serializeAccessory(draft);
+    status.textContent = "salvando…";
+    try {
+      if (artFile) { await window.EDITOR_SAVE.uploadItemArt(artFile, item.id); }
+      var saved = await window.EDITOR_SAVE.saveCustomItem(item);
+      status.textContent = "✅ salvo: " + saved.id;
+      window.EDITOR_CUSTOM_ITEMS = (window.EDITOR_CUSTOM_ITEMS || []).filter(function (r) { return r.id !== saved.id; });
+      window.EDITOR_CUSTOM_ITEMS.push(saved);
+    } catch (e) { status.textContent = "❌ " + (e && e.message || "falha ao salvar"); }
+  }
+
+  var POTION_LABELS = { heal:"Cura (+HP)", regeneration:"Regeneração (pool +1/rodada)", atk_bonus:"Elixir (+ataque no turno)" };
+
+  function renderPotionForm(f) {
+    var isHeal = draft.effect === "heal";
+    f.innerHTML = [
+      seccao("Identidade",
+        campo("Nome", '<input id="ie-name" value="' + esc(draft.name) + '">') +
+        campo("Emoji", '<input id="ie-emoji" size="3" value="' + esc(draft.emoji) + '">')),
+      seccao("Efeito",
+        campo("Tipo", '<select id="ie-effect">' + (L.POTION_EFFECTS || ["heal","regeneration","atk_bonus"]).map(function (e) {
+          return '<option value="' + e + '"' + (e === draft.effect ? " selected" : "") + '>' + esc(POTION_LABELS[e] || e) + '</option>'; }).join("") + '</select>') +
+        campo("Valor", numInput("ie-value", draft.value, 0, 999)) +
+        (isHeal ? campo("Doses (garrafa)", numInput("ie-maxuses", draft.max_uses, 1, 20)) :
+          '<span class="ie-hint">Doses só se aplicam a poções de Cura.</span>')),
+      seccao("Restrição de classe (vazio = todas)",
+        CLASSES.map(function (c) { return '<label class="ie-cls">' +
+          '<input type="checkbox" class="ie-class" value="' + c[0] + '"> ' + esc(c[1]) + '</label>'; }).join("")),
+      seccao("Disponibilidade",
+        chkLbl("ie-disp-loja", "Loja (Mercador)", draft.disponibilidade.loja) +
+        chkLbl("ie-disp-baus", "Baús / recompensas", draft.disponibilidade.baus) +
+        chkLbl("ie-disp-loot", "Loot de monstro", draft.disponibilidade.loot_monstro)),
+      seccao("Preço",
+        campo("Ouro", numInput("ie-price", draft.price, 0, 99999)) +
+        '<span id="ie-price-sug" class="ie-hint"></span>'),
+      seccao("Imagem",
+        '<input type="file" id="ie-art" accept="image/png"> ' +
+        '<span id="ie-art-name" class="ie-hint"></span>'),
+      '<div class="ie-actions"><button id="ie-save">💾 Salvar poção</button>' +
+        '<span id="ie-status" class="ie-hint"></span></div>',
+    ].join("");
+    previewFn = renderPotionPreview;
+    bindPotionForm();
+    renderPotionPreview();
+  }
+
+  function currentPotionDraftFromForm() {
+    var g = function (id) { return root.querySelector("#" + id); };
+    draft.name = g("ie-name").value; draft.emoji = g("ie-emoji").value;
+    draft.effect = g("ie-effect").value;
+    draft.value = Math.max(0, +g("ie-value").value || 0);
+    var mu = g("ie-maxuses"); if (mu) draft.max_uses = Math.max(1, +mu.value || 1);
+    draft.allowed_classes = Array.prototype.map.call(root.querySelectorAll(".ie-class:checked"), function (c) { return c.value; });
+    draft.disponibilidade = { loja: g("ie-disp-loja").checked, baus: g("ie-disp-baus").checked, loot_monstro: g("ie-disp-loot").checked };
+    draft.price = +g("ie-price").value || 0;
+    return draft;
+  }
+
+  function renderPotionPreview() {
+    currentPotionDraftFromForm();
+    var item = L.serializePotion(draft);
+    root.querySelector("#ie-price-sug").textContent = "sugerido: " + L.suggestPricePotion(item) + " 🪙";
+    var parts = [POTION_LABELS[item.effect] || item.effect, "valor " + item.value];
+    if (item.max_uses) parts.push(item.max_uses + " doses");
+    var topo = artURL ? '<img class="ie-card-img" src="' + artURL + '" alt="">'
+      : '<div class="ie-card-emoji">' + esc(item.emoji) + '</div>';
+    root.querySelector("#ie-preview").innerHTML =
+      '<div class="ie-card">' + topo +
+      '<div class="ie-card-name">' + esc(item.name || "(sem nome)") + '</div>' +
+      '<div class="ie-card-stats">' + esc(parts.join(" · ")) + '</div>' +
+      '<div class="ie-card-id">id: ' + esc(item.id) + '</div></div>';
+  }
+
+  function bindPotionForm() {
+    root.querySelectorAll("#ie-form input,#ie-form select").forEach(function (el) {
+      if (el.id === "ie-art") return;
+      el.onchange = renderPotionPreview; el.oninput = renderPotionPreview;
+    });
+    // Trocar o efeito troca o form (o campo Doses só existe para Cura).
+    root.querySelector("#ie-effect").onchange = function () { currentPotionDraftFromForm(); renderPotionForm(root.querySelector("#ie-form")); };
+    (draft.allowed_classes || []).forEach(function (c) {
+      var el = root.querySelector('.ie-class[value="' + c + '"]'); if (el) el.checked = true; });
+    root.querySelector("#ie-art").onchange = function (e) {
+      artFile = e.target.files[0] || null;
+      if (artURL) { URL.revokeObjectURL(artURL); artURL = null; }
+      if (artFile) artURL = URL.createObjectURL(artFile);
+      root.querySelector("#ie-art-name").textContent = artFile ? artFile.name : "";
+      renderPotionPreview();
+    };
+    root.querySelector("#ie-save").onclick = onSavePotion;
+  }
+
+  async function onSavePotion() {
+    currentPotionDraftFromForm();
+    var v = L.validatePotionDraft(draft);
+    var status = root.querySelector("#ie-status");
+    if (!v.ok) { status.textContent = "⚠️ " + v.msg; return; }
+    var item = L.serializePotion(draft);
     status.textContent = "salvando…";
     try {
       if (artFile) { await window.EDITOR_SAVE.uploadItemArt(artFile, item.id); }
