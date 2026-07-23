@@ -6,13 +6,14 @@
   var esc = function (v) { return String(v == null ? "" : v).replace(/[&<>"']/g,
     function (c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];}); };
   var TYPES = [["armas","Armas",true],["armaduras","Armaduras",true],["escudos","Escudos",true],
-    ["aneis","Anéis",false],["botas","Botas",false],["pocoes","Poções",false],
+    ["aneis","Anéis",true],["botas","Botas",true],["pocoes","Poções",false],
     ["arremessaveis","Arremessáveis",false],["venenos","Venenos",false]];
   var CLASSES = [["warrior","Guerreiro"],["mage","Mago"],["rogue","Ladino"],
     ["cleric","Clérigo"],["ranger","Patrulheiro"],["paladin","Paladino"],["bard","Bardo"]];
 
   var activeType = "armas";
   var draft = null, artFile = null, artURL = null;
+  var previewFn = function () {};
   function novoDraft() {
     return { name:"", emoji:"⚔️", die_qtd:1, die_faces:8, categoria:"cortante",
       stat:"str_", finesse:false, manejo:"corpo", range:4, throw_range:3, ammo:"", two_handed:false,
@@ -27,8 +28,17 @@
       bonuses:[], granted_ability:"", allowed_classes:[],
       disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:0, id:"" };
   }
+  function novoDraftAccessory(kind) {
+    return { name:"", emoji:(kind === "botas" ? "👢" : "💍"),
+      item_type:(kind === "botas" ? "boots" : "ring"),
+      bonuses:[], materiais:{organic:false, metal:true}, corrosao_livres:0, corrosao_penalidade:2,
+      granted_ability:"", allowed_classes:[],
+      disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:0, id:"" };
+  }
   function novoDraftFor(type) {
-    return (type === "armaduras" || type === "escudos") ? novoDraftArmor(type) : novoDraft();
+    if (type === "armaduras" || type === "escudos") return novoDraftArmor(type);
+    if (type === "aneis" || type === "botas") return novoDraftAccessory(type);
+    return novoDraft();
   }
 
   function baseWeapons() {
@@ -87,6 +97,10 @@
     var f = root.querySelector("#ie-form");
     if (activeType === "armaduras" || activeType === "escudos") {
       renderArmorForm(f);
+      return;
+    }
+    if (activeType === "aneis" || activeType === "botas") {
+      renderAccessoryForm(f, activeType === "botas" ? "boots" : "ring");
       return;
     }
     var elemTypes = L.ELEM.map(function (e) { return '<option value="' + e + '">' + e + '</option>'; }).join("");
@@ -159,18 +173,7 @@
         (isShield ? "" : campo("Categoria", selectOpts("ie-cat", L.ARMOR_CATS, draft.armor_category)))),
       seccao("Bônus adicionais",
         '<div id="ie-abonus"></div><button id="ie-add-abonus">+ bônus</button>' +
-        '<template id="ie-abonus-tpl"><span class="ie-elem-row">' +
-        '<select class="ie-abonus-eff"><option value="def_">CA extra</option>' +
-        '<option value="maxhp">PV máx</option><option value="spd">Velocidade</option>' +
-        '<option value="str_">Força</option><option value="dex">Destreza</option>' +
-        '<option value="con_">Constituição</option><option value="int_">Inteligência</option>' +
-        '<option value="initiative">Iniciativa</option>' +
-        '<option value="resist">Resistência</option></select> ' +
-        '<select class="ie-abonus-type" style="display:none"><option value="physical">Físico</option>' +
-        '<option value="fire">Fogo</option><option value="cold">Frio</option><option value="lightning">Elétrico</option>' +
-        '<option value="acid">Ácido</option><option value="holy">Sagrado</option><option value="poison">Veneno</option>' +
-        '<option value="magic">Mágico</option><option value="water">Água</option></select> ' +
-        numInput("", 0, -10, 20) + ' <button class="ie-abonus-del">✕</button></span></template>'),
+        abonusTemplate()),
       seccao("Durabilidade (corrosão)",
         campo("Níveis sem penalidade", numInput("ie-corrlivre", draft.corrosao_livres, 0, 12)) +
         campo("Níveis com penalidade", numInput("ie-corrpen", draft.corrosao_penalidade, 1, 12)) +
@@ -193,6 +196,7 @@
       '<div class="ie-actions"><button id="ie-save">💾 Salvar peça</button>' +
         '<span id="ie-status" class="ie-hint"></span></div>',
     ].join("");
+    previewFn = renderArmorPreview;
     bindArmorForm();
     renderArmorBonuses();
     renderArmorPreview();
@@ -232,8 +236,8 @@
       node.querySelector("input[type=number]").value = (b.value == null ? 0 : b.value);
       if (b.effect === "resist" && b.type) typeSel.value = b.type;
     }
-    node.querySelector(".ie-abonus-del").onclick = function () { node.remove(); renderArmorPreview(); };
-    node.querySelectorAll("input,select").forEach(function (el) { el.onchange = renderArmorPreview; });
+    node.querySelector(".ie-abonus-del").onclick = function () { node.remove(); previewFn(); };
+    node.querySelectorAll("input,select").forEach(function (el) { el.onchange = previewFn; });
     effSel.addEventListener("change", syncType);
     syncType();
     root.querySelector("#ie-abonus").appendChild(node);
@@ -296,6 +300,136 @@
     } catch (e) { status.textContent = "❌ " + (e && e.message || "falha ao salvar"); }
   }
 
+  function renderAccessoryForm(f, kind) {
+    var isBoots = kind === "boots";
+    f.innerHTML = [
+      seccao("Identidade",
+        campo("Nome", '<input id="ie-name" value="' + esc(draft.name) + '">') +
+        campo("Emoji", '<input id="ie-emoji" size="3" value="' + esc(draft.emoji) + '">')),
+      seccao("Bônus (motor de efeitos)",
+        '<div id="ie-abonus"></div><button id="ie-add-abonus">+ bônus</button>' +
+        abonusTemplate()),
+      isBoots ? seccao("Durabilidade (corrosão)",
+        campo("Níveis sem penalidade", numInput("ie-corrlivre", draft.corrosao_livres, 0, 12)) +
+        campo("Níveis com penalidade", numInput("ie-corrpen", draft.corrosao_penalidade, 1, 12)) +
+        '<label class="ie-field"><input type="checkbox" id="ie-mat-organic"' + (draft.materiais.organic ? " checked" : "") + '> Orgânico (Devorador Orgânico)</label>' +
+        '<label class="ie-field"><input type="checkbox" id="ie-mat-metal"' + (draft.materiais.metal ? " checked" : "") + '> Metal (Devorador de Metal)</label>' +
+        '<span class="ie-hint">Sem material marcado, a peça não corrói. Quebra em N+M+1.</span>') : "",
+      seccao("Restrição de classe (vazio = todas)",
+        CLASSES.map(function (c) { return '<label class="ie-cls">' +
+          '<input type="checkbox" class="ie-class" value="' + c[0] + '"> ' + esc(c[1]) + '</label>'; }).join("")),
+      seccao("Disponibilidade",
+        chkLbl("ie-disp-loja", "Loja (Mercador)", draft.disponibilidade.loja) +
+        chkLbl("ie-disp-baus", "Baús / recompensas", draft.disponibilidade.baus) +
+        chkLbl("ie-disp-loot", "Loot de monstro", draft.disponibilidade.loot_monstro)),
+      seccao("Preço",
+        campo("Ouro", numInput("ie-price", draft.price, 0, 99999)) +
+        '<span id="ie-price-sug" class="ie-hint"></span>'),
+      seccao("Imagem",
+        '<input type="file" id="ie-art" accept="image/png"> ' +
+        '<span id="ie-art-name" class="ie-hint"></span>'),
+      '<div class="ie-actions"><button id="ie-save">💾 Salvar ' + (isBoots ? "botas" : "anel") + '</button>' +
+        '<span id="ie-status" class="ie-hint"></span></div>',
+    ].join("");
+    previewFn = renderAccessoryPreview;
+    bindAccessoryForm();
+    renderArmorBonuses();          // popula #ie-abonus a partir de draft.bonuses (genérico)
+    renderAccessoryPreview();
+  }
+
+  function currentAccessoryDraftFromForm() {
+    var g = function (id) { return root.querySelector("#" + id); };
+    draft.name = g("ie-name").value; draft.emoji = g("ie-emoji").value;
+    draft.allowed_classes = Array.prototype.map.call(root.querySelectorAll(".ie-class:checked"), function (c) { return c.value; });
+    draft.disponibilidade = { loja: g("ie-disp-loja").checked, baus: g("ie-disp-baus").checked, loot_monstro: g("ie-disp-loot").checked };
+    draft.price = +g("ie-price").value || 0;
+    draft.bonuses = Array.prototype.map.call(root.querySelectorAll("#ie-abonus .ie-elem-row"), function (r) {
+      var eff = r.querySelector(".ie-abonus-eff").value;
+      var o = { effect: eff, value: +r.querySelector("input[type=number]").value || 0 };
+      if (eff === "resist") { var t = r.querySelector(".ie-abonus-type"); o.type = t ? t.value : "fire"; }
+      return o; });
+    if (draft.item_type === "boots") {
+      draft.corrosao_livres = Math.max(0, +g("ie-corrlivre").value || 0);
+      draft.corrosao_penalidade = Math.max(1, +g("ie-corrpen").value || 2);
+      draft.materiais = { organic: g("ie-mat-organic").checked, metal: g("ie-mat-metal").checked };
+    }
+    return draft;
+  }
+
+  function renderAccessoryPreview() {
+    currentAccessoryDraftFromForm();
+    var item = L.serializeAccessory(draft);
+    root.querySelector("#ie-price-sug").textContent = "sugerido: " + L.suggestPriceAccessory(item) + " 🪙";
+    var LBL = { def_:"CA", maxhp:"PV máx", spd:"velocidade", atk_bonus:"acerto",
+      str_:"Força", dex:"Destreza", con_:"CON", int_:"INT", initiative:"iniciativa" };
+    var parts = [];
+    (item.bonuses || []).forEach(function (b) {
+      var lbl = b.effect === "resist" ? ("resist " + (b.type || "")) : (LBL[b.effect] || b.effect);
+      parts.push((b.value >= 0 ? "+" : "") + b.value + " " + lbl);
+    });
+    if (item.corrosion_materials) {
+      var matsLabel = item.corrosion_materials.length ? item.corrosion_materials.join("+") : "nenhum";
+      parts.push("🛡️ corrosão " + (item.corrosao_resistente || 0) + "+" + (item.corrosao_niveis_penalidade || 2) + " (" + matsLabel + ")");
+    }
+    if (!parts.length) parts.push("(sem bônus)");
+    var topo = artURL ? '<img class="ie-card-img" src="' + artURL + '" alt="">'
+      : '<div class="ie-card-emoji">' + esc(item.emoji) + '</div>';
+    root.querySelector("#ie-preview").innerHTML =
+      '<div class="ie-card">' + topo +
+      '<div class="ie-card-name">' + esc(item.name || "(sem nome)") + '</div>' +
+      '<div class="ie-card-stats">' + esc(parts.join(" · ")) + '</div>' +
+      '<div class="ie-card-id">id: ' + esc(item.id) + '</div></div>';
+  }
+
+  function bindAccessoryForm() {
+    root.querySelectorAll("#ie-form input,#ie-form select").forEach(function (el) {
+      if (el.id === "ie-art") return;
+      el.onchange = renderAccessoryPreview; el.oninput = renderAccessoryPreview;
+    });
+    (draft.allowed_classes || []).forEach(function (c) {
+      var el = root.querySelector('.ie-class[value="' + c + '"]'); if (el) el.checked = true; });
+    root.querySelector("#ie-add-abonus").onclick = function () { addArmorBonusRow(null); renderAccessoryPreview(); };
+    root.querySelector("#ie-art").onchange = function (e) {
+      artFile = e.target.files[0] || null;
+      if (artURL) { URL.revokeObjectURL(artURL); artURL = null; }
+      if (artFile) artURL = URL.createObjectURL(artFile);
+      root.querySelector("#ie-art-name").textContent = artFile ? artFile.name : "";
+      renderAccessoryPreview();
+    };
+    root.querySelector("#ie-save").onclick = onSaveAccessory;
+  }
+
+  async function onSaveAccessory() {
+    currentAccessoryDraftFromForm();
+    var v = L.validateAccessoryDraft(draft);
+    var status = root.querySelector("#ie-status");
+    if (!v.ok) { status.textContent = "⚠️ " + v.msg; return; }
+    var item = L.serializeAccessory(draft);
+    status.textContent = "salvando…";
+    try {
+      if (artFile) { await window.EDITOR_SAVE.uploadItemArt(artFile, item.id); }
+      var saved = await window.EDITOR_SAVE.saveCustomItem(item);
+      status.textContent = "✅ salvo: " + saved.id;
+      window.EDITOR_CUSTOM_ITEMS = (window.EDITOR_CUSTOM_ITEMS || []).filter(function (r) { return r.id !== saved.id; });
+      window.EDITOR_CUSTOM_ITEMS.push(saved);
+    } catch (e) { status.textContent = "❌ " + (e && e.message || "falha ao salvar"); }
+  }
+
+  function abonusTemplate() {
+    return '<template id="ie-abonus-tpl"><span class="ie-elem-row">' +
+      '<select class="ie-abonus-eff"><option value="def_">CA extra</option>' +
+      '<option value="maxhp">PV máx</option><option value="spd">Velocidade</option>' +
+      '<option value="atk_bonus">Bônus de acerto</option>' +
+      '<option value="str_">Força</option><option value="dex">Destreza</option>' +
+      '<option value="con_">Constituição</option><option value="int_">Inteligência</option>' +
+      '<option value="initiative">Iniciativa</option>' +
+      '<option value="resist">Resistência</option></select> ' +
+      '<select class="ie-abonus-type" style="display:none"><option value="physical">Físico</option>' +
+      '<option value="fire">Fogo</option><option value="cold">Frio</option><option value="lightning">Elétrico</option>' +
+      '<option value="acid">Ácido</option><option value="holy">Sagrado</option><option value="poison">Veneno</option>' +
+      '<option value="magic">Mágico</option><option value="water">Água</option></select> ' +
+      numInput("", 0, -10, 20) + ' <button class="ie-abonus-del">✕</button></span></template>';
+  }
   function seccao(t, body) { return '<fieldset class="ie-sec"><legend>' + esc(t) + '</legend>' + body + '</fieldset>'; }
   function campo(l, ctrl) { return '<label class="ie-field"><span>' + esc(l) + '</span>' + ctrl + '</label>'; }
   function numInput(id, v, lo, hi) { return '<input type="number"' + (id ? ' id="' + id + '"' : ' class="ie-num"') +
