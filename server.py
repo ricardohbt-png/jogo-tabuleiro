@@ -21325,6 +21325,21 @@ def _custom_armor_inventory_dict(item):
         inv["allowed_classes"] = list(item["allowed_classes"])
     return inv
 
+def _custom_accessory_inventory_dict(item):
+    """Anel/bota custom — dict único p/ loja (SHOP_MERCHANT) E bolsa/baú (como os
+    anéis nativos). Efeito só via bonuses (sem effect/value escalar)."""
+    inv = {"id": item["id"], "name": item["name"], "emoji": item["emoji"],
+           "item_slot": item["item_slot"], "kind": item["kind"], "custom": True,
+           "price": item["price"], "bonuses": [dict(b) for b in item["bonuses"]],
+           "granted_ability": item["granted_ability"]}
+    if item["kind"] == "boots":
+        inv["corrosion_materials"] = list(item.get("corrosion_materials", []))
+        inv["corrosao_resistente"] = item.get("corrosao_resistente", 0)
+        inv["corrosao_niveis_penalidade"] = item.get("corrosao_niveis_penalidade", 2)
+    if item["allowed_classes"]:
+        inv["allowed_classes"] = list(item["allowed_classes"])
+    return inv
+
 def _apply_custom_items(records):
     """Mescla armas/armaduras/escudos custom nos catálogos vivos (idempotente: remove os customs antes)."""
     global SHOP_WEAPONS, LOOT_POOL_PROCEDURAL
@@ -21350,6 +21365,8 @@ def _apply_custom_items(records):
     LOOT_POOL_PROCEDURAL[:] = [i for i in LOOT_POOL_PROCEDURAL if i not in prev_custom_ids]
     # Peças de defesa custom: limpar SHOP_ARMORS, catálogo de baús e sets de corrosão.
     SHOP_ARMORS[:] = [a for a in SHOP_ARMORS if not a.get("custom")]
+    # Acessórios custom (anel/bota) vivem no mercador — nenhum outro bloco limpa SHOP_MERCHANT.
+    SHOP_MERCHANT[:] = [i for i in SHOP_MERCHANT if not i.get("custom")]
     for k in prev_def_ids:
         CORROSAO_ARMADURA_METAL.discard(k)
         CORROSAO_ARMADURA_ORGANICA.discard(k)
@@ -21374,6 +21391,16 @@ def _apply_custom_items(records):
             mats = item["corrosion_materials"]
             if "metal" in mats:   CORROSAO_ARMADURA_METAL.add(item["id"])
             if "organic" in mats: CORROSAO_ARMADURA_ORGANICA.add(item["id"])
+            continue
+        if it in ("ring", "boots"):
+            disp = item["disponibilidade"]
+            inv = _custom_accessory_inventory_dict(item)
+            if disp["loja"]:
+                SHOP_MERCHANT.append(inv)
+            if disp["baus"] or disp["loot_monstro"]:
+                _DUNGEON_ITEM_CATALOG[item["id"]] = inv
+            if disp["loot_monstro"]:
+                LOOT_POOL_PROCEDURAL.append(item["id"])
             continue
         WEAPONS[item["id"]] = _custom_weapon_combat_dict(item)
         # Material → set de corrosão (define qual Devorador a corrói).

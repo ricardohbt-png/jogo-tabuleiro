@@ -276,6 +276,75 @@ def test_validacao_acessorio():
     oka, ita = S._validate_custom_item(accessory_sample(bonuses=[{"effect": "atk_bonus", "value": 2}]))
     check("aceita atk_bonus", oka and ita.get("bonuses") == [{"effect": "atk_bonus", "value": 2}])
 
+def test_acessorio_equip_efeitos():
+    print("\n[E2] Anel aplica/reverte efeitos do motor multi-efeito")
+    r = _gear_room()
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    ok, it = S._validate_custom_item(accessory_sample())   # maxhp+5, atk_bonus+1
+    inv = S._custom_accessory_inventory_dict(it)
+    hp0, atk0 = p["max_hp"], p["atk_bonus"]
+    r._apply_gear_effect(p, inv, True)
+    check("equipar +5 PV máx", p["max_hp"] == hp0 + 5)
+    check("equipar +1 acerto (atk_bonus)", p["atk_bonus"] == atk0 + 1)
+    r._apply_gear_effect(p, inv, False)
+    check("desequipar reverte PV", p["max_hp"] == hp0)
+    check("desequipar reverte acerto", p["atk_bonus"] == atk0)
+
+def test_acessorio_resist():
+    print("\n[E3] Anel de resistência entra/sai de resistances")
+    r = _gear_room()
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    ok, it = S._validate_custom_item(accessory_sample(id="anel_fogo",
+        bonuses=[{"effect": "resist", "type": "fire", "value": 0}]))
+    inv = S._custom_accessory_inventory_dict(it)
+    r._apply_gear_effect(p, inv, True)
+    check("resist fire adicionado", {"type": "fire", "mode": "half"} in p.get("resistances", []))
+    r._apply_gear_effect(p, inv, False)
+    check("resist fire removido", {"type": "fire", "mode": "half"} not in p.get("resistances", []))
+
+def test_acessorio_botas_corrosao():
+    print("\n[E4] Botas custom corroem por material (N/M)")
+    S._apply_custom_items([S._validate_custom_item(accessory_sample(id="botas_metal",
+        item_type="boots", emoji="👢", corrosion_materials=["metal"],
+        corrosao_resistente=0, corrosao_niveis_penalidade=2,
+        bonuses=[{"effect": "spd", "value": 1}]))[1]])
+    r, p = _corr_setup()
+    base = r._moves_base(p)
+    p["gear"]["armor"] = None  # isola a corrosão nas botas
+    # arma inicial do guerreiro (machado_basico) é metal e corroeria antes das
+    # botas na ordem de prioridade (armor→off_hand→weapon→head→boots) — zera
+    # também a arma para isolar de fato, como o teste organic (test_corrosao_botas)
+    # já fazia sem precisar disso (arma inicial não é madeira).
+    p["weapon"] = None
+    p["gear"]["boots"] = {"id": "botas_metal", "name": "Botas de Metal",
+                          "corrosion_materials": ["metal"],
+                          "corrosao_resistente": 0, "corrosao_niveis_penalidade": 2}
+    m = {"id": "d", "name": "Dev", "hp": 10, "max_hp": 10}
+    asyncio.run(r._corroer_equipamento(m, p, S.CORROSAO_ARMADURA_METAL, S.CORROSAO_ARMA_METAL, "1d4", "T"))
+    check("botas corroídas (nível 1)", r._corr(p)["botas_lvl"] == 1)
+    check("movimento cai 1 com botas corroídas", r._moves_base(p) == base - 1)
+    S._apply_custom_items([])
+
+def test_acessorio_merge():
+    print("\n[E5] Merge de acessório no mercador/baús/loot")
+    ok, it = S._validate_custom_item(accessory_sample(
+        disponibilidade={"loja": True, "baus": True, "loot_monstro": True}))
+    S._apply_custom_items([it])
+    check("loja: entra em SHOP_MERCHANT", any(i["id"] == "anel_teste" for i in S.SHOP_MERCHANT))
+    check("baus: entra em _DUNGEON_ITEM_CATALOG", "anel_teste" in S._DUNGEON_ITEM_CATALOG)
+    check("loot: entra em LOOT_POOL_PROCEDURAL", "anel_teste" in S.LOOT_POOL_PROCEDURAL)
+    check("nativo SHOP_MERCHANT intacto", any(i["id"] == "ring_str" for i in S.SHOP_MERCHANT))
+    S._apply_custom_items([it])
+    check("reaplicar nao duplica em SHOP_MERCHANT",
+          sum(1 for i in S.SHOP_MERCHANT if i["id"] == "anel_teste") == 1)
+    check("reaplicar nao duplica em LOOT_POOL_PROCEDURAL",
+          S.LOOT_POOL_PROCEDURAL.count("anel_teste") == 1)
+    S._apply_custom_items([])
+    check("lista vazia remove de SHOP_MERCHANT", not any(i["id"] == "anel_teste" for i in S.SHOP_MERCHANT))
+    check("lista vazia remove de _DUNGEON_ITEM_CATALOG", "anel_teste" not in S._DUNGEON_ITEM_CATALOG)
+    check("lista vazia remove de LOOT_POOL_PROCEDURAL", "anel_teste" not in S.LOOT_POOL_PROCEDURAL)
+    check("nativo SHOP_MERCHANT sobrevive ao clear", any(i["id"] == "ring_str" for i in S.SHOP_MERCHANT))
+
 def test_validacao_armadura():
     print("\n[A1] Validacao de armadura/escudo")
     ok, it = S._validate_custom_item(armor_sample())
@@ -626,5 +695,7 @@ if __name__ == "__main__":
     test_validacao_resist()
     test_iniciativa_bonus()
     test_validacao_acessorio()
+    test_acessorio_equip_efeitos(); test_acessorio_resist()
+    test_acessorio_botas_corrosao(); test_acessorio_merge()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)
