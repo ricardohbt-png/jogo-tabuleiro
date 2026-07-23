@@ -21383,6 +21383,19 @@ def _custom_accessory_inventory_dict(item):
         inv["allowed_classes"] = list(item["allowed_classes"])
     return inv
 
+def _custom_potion_inventory_dict(item):
+    """Poção custom — dict plano p/ loja (SHOP_MERCHANT) E bolsa/baú. Consumível
+    de bolsa despachado por effect em handle_use_item."""
+    inv = {"id": item["id"], "name": item["name"], "emoji": item["emoji"],
+           "item_slot": "bag", "effect": item["effect"], "value": item["value"],
+           "custom": True, "price": item["price"]}
+    if "max_uses" in item:
+        inv["max_uses"] = item["max_uses"]
+        inv["uses_left"] = item.get("uses_left", item["max_uses"])
+    if item["allowed_classes"]:
+        inv["allowed_classes"] = list(item["allowed_classes"])
+    return inv
+
 def _apply_custom_items(records):
     """Mescla armas/armaduras/escudos custom nos catálogos vivos (idempotente: remove os customs antes)."""
     global SHOP_WEAPONS, LOOT_POOL_PROCEDURAL
@@ -21438,6 +21451,16 @@ def _apply_custom_items(records):
         if it in ("ring", "boots"):
             disp = item["disponibilidade"]
             inv = _custom_accessory_inventory_dict(item)
+            if disp["loja"]:
+                SHOP_MERCHANT.append(inv)
+            if disp["baus"] or disp["loot_monstro"]:
+                _DUNGEON_ITEM_CATALOG[item["id"]] = inv
+            if disp["loot_monstro"]:
+                LOOT_POOL_PROCEDURAL.append(item["id"])
+            continue
+        if it == "potion":
+            disp = item["disponibilidade"]
+            inv = _custom_potion_inventory_dict(item)
             if disp["loja"]:
                 SHOP_MERCHANT.append(inv)
             if disp["baus"] or disp["loot_monstro"]:

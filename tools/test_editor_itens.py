@@ -279,6 +279,75 @@ def test_validacao_pocao():
     oke, _ = S._validate_custom_item(potion_sample(id="elixir"))
     check("rejeita id nativo do mercador (elixir)", not oke)
 
+def test_pocao_merge():
+    print("\n[F2] Merge de poção no mercador/baús/loot")
+    ok, it = S._validate_custom_item(potion_sample(
+        disponibilidade={"loja": True, "baus": True, "loot_monstro": True}))
+    S._apply_custom_items([it])
+    check("loja: entra em SHOP_MERCHANT", any(i["id"] == "pocao_teste" for i in S.SHOP_MERCHANT))
+    check("baus: entra em _DUNGEON_ITEM_CATALOG", "pocao_teste" in S._DUNGEON_ITEM_CATALOG)
+    check("loot: entra em LOOT_POOL_PROCEDURAL", "pocao_teste" in S.LOOT_POOL_PROCEDURAL)
+    check("nativo SHOP_MERCHANT (elixir) intacto", any(i["id"] == "elixir" for i in S.SHOP_MERCHANT))
+    check("nativo SHOP_TEMPLE (health_potion) intacto", any(i["id"] == "health_potion" for i in S.SHOP_TEMPLE))
+    S._apply_custom_items([it])
+    check("reaplicar nao duplica em SHOP_MERCHANT",
+          sum(1 for i in S.SHOP_MERCHANT if i["id"] == "pocao_teste") == 1)
+    S._apply_custom_items([])
+    check("lista vazia remove de SHOP_MERCHANT", not any(i["id"] == "pocao_teste" for i in S.SHOP_MERCHANT))
+    check("lista vazia remove de _DUNGEON_ITEM_CATALOG", "pocao_teste" not in S._DUNGEON_ITEM_CATALOG)
+    check("lista vazia remove de LOOT_POOL_PROCEDURAL", "pocao_teste" not in S.LOOT_POOL_PROCEDURAL)
+
+def _turn_room():
+    """Sala mínima com um herói cujo turno está ativo (para handle_use_item)."""
+    r = _gear_room()
+    r.phase = "playing"
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    r.players["p1"] = p
+    r.player_order = ["p1"]; r.turn_index = 0
+    r.current_actor = lambda: None   # força o caminho player_order em current_pid
+    return r, p
+
+def test_pocao_uso():
+    print("\n[F3] Uso ponta-a-ponta via handle_use_item")
+    # Cura
+    r, p = _turn_room()
+    inv = S._custom_potion_inventory_dict(S._validate_custom_item(potion_sample(value=15))[1])
+    p["hp"] = 1
+    p["bag"] = [dict(inv)]
+    asyncio.run(r.handle_use_item("p1", "pocao_teste"))
+    check("cura sobe o HP", p["hp"] == min(p["max_hp"], 16))
+    check("poção consumida da bolsa", not any(i["id"] == "pocao_teste" for i in p["bag"]))
+    # Regeneração
+    r, p = _turn_room()
+    invr = S._custom_potion_inventory_dict(S._validate_custom_item(
+        potion_sample(id="pocao_regen", effect="regeneration", value=10))[1])
+    p["bag"] = [dict(invr)]
+    pool0 = p.get("potion_regen_pool", 0)
+    asyncio.run(r.handle_use_item("p1", "pocao_regen"))
+    check("regeneração soma ao pool", p.get("potion_regen_pool", 0) == pool0 + 10)
+    # Buff de ataque
+    r, p = _turn_room()
+    inva = S._custom_potion_inventory_dict(S._validate_custom_item(
+        potion_sample(id="pocao_elixir", effect="atk_bonus", value=3))[1])
+    p["bag"] = [dict(inva)]
+    atk0 = p["atk_bonus"]
+    asyncio.run(r.handle_use_item("p1", "pocao_elixir"))
+    check("atk_bonus buff aplicado", p["atk_bonus"] == atk0 + 3)
+
+def test_pocao_multidose():
+    print("\n[F4] Multi-dose consome uma dose por uso")
+    r, p = _turn_room()
+    inv = S._custom_potion_inventory_dict(S._validate_custom_item(
+        potion_sample(id="pocao_doses", value=8, max_uses=2))[1])
+    p["hp"] = 1
+    p["bag"] = [dict(inv)]
+    asyncio.run(r.handle_use_item("p1", "pocao_doses"))
+    check("dose 1: fica na bolsa", any(i["id"] == "pocao_doses" for i in p["bag"]))
+    check("dose 1: uses_left = 1", next(i for i in p["bag"] if i["id"] == "pocao_doses")["uses_left"] == 1)
+    p["bonus_action_used"] = False   # novo turno (libera a ação bônus)
+    asyncio.run(r.handle_use_item("p1", "pocao_doses"))
+    check("dose 2: sai da bolsa ao zerar", not any(i["id"] == "pocao_doses" for i in p["bag"]))
+
 def test_validacao_acessorio():
     print("\n[E1] Validacao de anel/bota")
     ok, it = S._validate_custom_item(accessory_sample())
@@ -726,5 +795,6 @@ if __name__ == "__main__":
     test_acessorio_equip_efeitos(); test_acessorio_resist()
     test_acessorio_botas_corrosao(); test_acessorio_merge()
     test_validacao_pocao()
+    test_pocao_merge(); test_pocao_uso(); test_pocao_multidose()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)
