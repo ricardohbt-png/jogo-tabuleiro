@@ -66,7 +66,7 @@
     return { ok: true };
   }
   var ARMOR_CATS = ["leve", "media", "pesada"];
-  var BONUS_EFFECTS = ["def_", "maxhp", "spd", "str_", "dex", "con_", "int_", "resist"];
+  var BONUS_EFFECTS = ["def_", "maxhp", "spd", "str_", "dex", "con_", "int_", "resist", "initiative"];
   var RESIST_TYPES = ["physical", "fire", "cold", "lightning", "acid", "holy", "poison", "magic", "water"];
   function serializeArmor(d) {
     var kind = d.item_type === "shield" ? "shield" : "armor";

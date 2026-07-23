@@ -82,5 +82,10 @@ check("serializeArmor descarta resist de tipo inválido",
 check("serializeArmor mantém bônus escalar junto do resist",
   aitemR.bonuses.some(function(b){return b.effect==="spd" && b.value===-1;}));
 
+// bônus escalar initiative passa por serializeArmor (Fase D)
+const aitemI = L.serializeArmor(Object.assign({}, adraft, {bonuses:[{effect:"initiative", value:3}]}));
+check("serializeArmor mantém initiative", aitemI.bonuses.length === 1
+  && aitemI.bonuses[0].effect === "initiative" && aitemI.bonuses[0].value === 3);
+
 console.log(`\n${PASS} passaram, ${FAIL} falharam`);
 process.exit(FAIL ? 1 : 0);

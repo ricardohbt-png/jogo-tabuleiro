@@ -164,6 +164,7 @@
         '<option value="maxhp">PV máx</option><option value="spd">Velocidade</option>' +
         '<option value="str_">Força</option><option value="dex">Destreza</option>' +
         '<option value="con_">Constituição</option><option value="int_">Inteligência</option>' +
+        '<option value="initiative">Iniciativa</option>' +
         '<option value="resist">Resistência</option></select> ' +
         '<select class="ie-abonus-type" style="display:none"><option value="physical">Físico</option>' +
         '<option value="fire">Fogo</option><option value="cold">Frio</option><option value="lightning">Elétrico</option>' +
