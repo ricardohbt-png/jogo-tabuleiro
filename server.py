@@ -21088,6 +21088,9 @@ _ITEM_ARMOR_CATS = {"leve", "media", "pesada"}
 _ITEM_MATERIAIS = {"organic", "metal"}
 _ITEM_BONUS_EFFECTS = {"def_", "maxhp", "spd", "atk_bonus", "str_", "dex", "con_", "int_", "resist", "initiative"}
 
+# Efeitos válidos p/ poção custom (Fase F) — já implementados em handle_use_item.
+_ITEM_POTION_EFFECTS = {"heal", "regeneration", "atk_bonus"}
+
 # Tipos de dano válidos p/ o bônus de resistência do herói (Fase C).
 _RESIST_TYPES = {DMG_PHYSICAL, DMG_FIRE, DMG_COLD, DMG_LIGHTNING, DMG_ACID,
                  DMG_HOLY, DMG_POISON, DMG_MAGIC, DMG_WATER}
@@ -21108,6 +21111,8 @@ def _validate_custom_item(raw):
         return _validate_custom_armor(raw)
     if it in ("ring", "boots"):
         return _validate_custom_accessory(raw)
+    if it == "potion":
+        return _validate_custom_potion(raw)
     return False, "tipo de item não suportado"
 
 def _validate_custom_armor(raw):
@@ -21207,6 +21212,44 @@ def _validate_custom_accessory(raw):
         item["corrosion_materials"] = [m for m in (raw.get("corrosion_materials") or []) if m in _ITEM_MATERIAIS]
         item["corrosao_resistente"] = max(0, _int0(raw.get("corrosao_resistente")))
         item["corrosao_niveis_penalidade"] = max(1, _int0(raw.get("corrosao_niveis_penalidade", 2)))
+    return True, item
+
+def _validate_custom_potion(raw):
+    """Valida poção custom (Fase F). Consumível de bolsa despachado por effect em
+    handle_use_item (heal/regeneration/atk_bonus — todos já implementados)."""
+    iid = str(raw.get("id") or "").strip().lower()
+    if not iid or not all(c.isalnum() or c == "_" for c in iid):
+        return False, "id use apenas letras, números e _"
+    name = str(raw.get("name") or "").strip()[:60]
+    if not name:
+        return False, "informe o nome da poção"
+    native = {i["id"] for shop in (SHOP_MERCHANT, SHOP_TEMPLE, SHOP_TAVERN)
+              for i in shop if not i.get("custom")}
+    if iid in native:
+        return False, "o id não pode substituir um item nativo"
+    effect = raw.get("effect")
+    if effect not in _ITEM_POTION_EFFECTS:
+        return False, "efeito de poção inválido"
+    def _int0(v):
+        try: return int(v or 0)
+        except (TypeError, ValueError): return 0
+    classes = [c for c in (raw.get("allowed_classes") or []) if c in _ITEM_CLASSES]
+    try: price = max(0, int(raw.get("price", 0)))
+    except (TypeError, ValueError): price = 0
+    disp = raw.get("disponibilidade") or {}
+    item = {
+        "id": iid, "name": name, "emoji": str(raw.get("emoji") or "🧪")[:8],
+        "item_type": "potion", "item_slot": "bag", "custom": True,
+        "effect": effect, "value": max(0, _int0(raw.get("value"))),
+        "allowed_classes": classes, "price": price,
+        "disponibilidade": {"loja": bool(disp.get("loja")), "baus": bool(disp.get("baus")),
+                             "loot_monstro": bool(disp.get("loot_monstro"))},
+    }
+    if effect == "heal":
+        mu = max(1, _int0(raw.get("max_uses", 1)))
+        if mu > 1:
+            item["max_uses"] = mu
+            item["uses_left"] = mu
     return True, item
 
 def _validate_custom_weapon(raw):

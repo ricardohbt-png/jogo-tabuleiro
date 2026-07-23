@@ -251,6 +251,34 @@ def accessory_sample(**over):
             "disponibilidade": {"loja": True, "baus": False, "loot_monstro": False}}
     base.update(over); return base
 
+def potion_sample(**over):
+    base = {"id": "pocao_teste", "name": "Poção Teste", "emoji": "🧪", "item_type": "potion",
+            "effect": "heal", "value": 15, "allowed_classes": [], "price": 20,
+            "disponibilidade": {"loja": True, "baus": False, "loot_monstro": False}}
+    base.update(over); return base
+
+def test_validacao_pocao():
+    print("\n[F1] Validacao de poção")
+    ok, it = S._validate_custom_item(potion_sample())
+    check("aceita poção heal valida", ok)
+    check("item_type = potion", ok and it.get("item_type") == "potion")
+    check("item_slot = bag", ok and it.get("item_slot") == "bag")
+    check("effect/value preservados", ok and it.get("effect") == "heal" and it.get("value") == 15)
+    check("single-dose nao grava uses_left", ok and "uses_left" not in it)
+    okd, itd = S._validate_custom_item(potion_sample(id="pocao_doses", max_uses=3))
+    check("heal multi-dose grava max_uses+uses_left",
+          okd and itd.get("max_uses") == 3 and itd.get("uses_left") == 3)
+    okr, itr = S._validate_custom_item(potion_sample(id="pocao_regen", effect="regeneration", value=10))
+    check("aceita regeneration", okr and itr.get("effect") == "regeneration")
+    oka, ita = S._validate_custom_item(potion_sample(id="pocao_elixir", effect="atk_bonus", value=3, max_uses=5))
+    check("atk_bonus ignora doses", oka and "max_uses" not in ita)
+    okb, _ = S._validate_custom_item(potion_sample(effect="teleporte"))
+    check("rejeita effect invalido", not okb)
+    okn, _ = S._validate_custom_item(potion_sample(id="health_potion"))
+    check("rejeita id nativo (health_potion)", not okn)
+    oke, _ = S._validate_custom_item(potion_sample(id="elixir"))
+    check("rejeita id nativo do mercador (elixir)", not oke)
+
 def test_validacao_acessorio():
     print("\n[E1] Validacao de anel/bota")
     ok, it = S._validate_custom_item(accessory_sample())
@@ -697,5 +725,6 @@ if __name__ == "__main__":
     test_validacao_acessorio()
     test_acessorio_equip_efeitos(); test_acessorio_resist()
     test_acessorio_botas_corrosao(); test_acessorio_merge()
+    test_validacao_pocao()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)
