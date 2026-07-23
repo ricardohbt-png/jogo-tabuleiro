@@ -21086,7 +21086,7 @@ def _read_custom_items():
 
 _ITEM_ARMOR_CATS = {"leve", "media", "pesada"}
 _ITEM_MATERIAIS = {"organic", "metal"}
-_ITEM_BONUS_EFFECTS = {"def_", "maxhp", "spd", "str_", "dex", "con_", "int_", "resist", "initiative"}
+_ITEM_BONUS_EFFECTS = {"def_", "maxhp", "spd", "atk_bonus", "str_", "dex", "con_", "int_", "resist", "initiative"}
 
 # Tipos de dano válidos p/ o bônus de resistência do herói (Fase C).
 _RESIST_TYPES = {DMG_PHYSICAL, DMG_FIRE, DMG_COLD, DMG_LIGHTNING, DMG_ACID,
@@ -21106,6 +21106,8 @@ def _validate_custom_item(raw):
         return _validate_custom_weapon(raw)
     if it in ("armor", "shield"):
         return _validate_custom_armor(raw)
+    if it in ("ring", "boots"):
+        return _validate_custom_accessory(raw)
     return False, "tipo de item não suportado"
 
 def _validate_custom_armor(raw):
@@ -21159,6 +21161,52 @@ def _validate_custom_armor(raw):
         "disponibilidade": {"loja": bool(disp.get("loja")), "baus": bool(disp.get("baus")),
                              "loot_monstro": bool(disp.get("loot_monstro"))},
     }
+    return True, item
+
+def _validate_custom_accessory(raw):
+    """Valida anel/bota custom (Fase E). Efeito só via o motor de multi-efeito (bonuses).
+    Anel = slot ring1/ring2; bota = slot dedicado boots (corrói por corrosion_materials)."""
+    kind = raw.get("item_type")   # "ring" | "boots"
+    iid = str(raw.get("id") or "").strip().lower()
+    if not iid or not all(c.isalnum() or c == "_" for c in iid):
+        return False, "id use apenas letras, números e _"
+    name = str(raw.get("name") or "").strip()[:60]
+    if not name:
+        return False, "informe o nome do acessório"
+    native = {i["id"] for i in SHOP_MERCHANT if not i.get("custom")}
+    if iid in native:
+        return False, "o id não pode substituir um item nativo"
+    def _int0(v):
+        try: return int(v or 0)
+        except (TypeError, ValueError): return 0
+    bonuses = []
+    for b in raw.get("bonuses", []) or []:
+        if not (isinstance(b, dict) and b.get("effect") in _ITEM_BONUS_EFFECTS):
+            continue
+        if b.get("effect") == "resist":
+            if b.get("type") not in _RESIST_TYPES:
+                continue
+            bonuses.append({"effect": "resist", "type": b["type"], "value": _int0(b.get("value"))})
+        else:
+            bonuses.append({"effect": b["effect"], "value": _int0(b.get("value"))})
+    classes = [c for c in (raw.get("allowed_classes") or []) if c in _ITEM_CLASSES]
+    try: price = max(0, int(raw.get("price", 0)))
+    except (TypeError, ValueError): price = 0
+    disp = raw.get("disponibilidade") or {}
+    item = {
+        "id": iid, "name": name,
+        "emoji": str(raw.get("emoji") or ("👢" if kind == "boots" else "💍"))[:8],
+        "item_type": kind, "kind": kind, "item_slot": kind, "custom": True,
+        "bonuses": bonuses,
+        "granted_ability": (str(raw["granted_ability"]) if raw.get("granted_ability") else None),
+        "allowed_classes": classes, "price": price,
+        "disponibilidade": {"loja": bool(disp.get("loja")), "baus": bool(disp.get("baus")),
+                             "loot_monstro": bool(disp.get("loot_monstro"))},
+    }
+    if kind == "boots":
+        item["corrosion_materials"] = [m for m in (raw.get("corrosion_materials") or []) if m in _ITEM_MATERIAIS]
+        item["corrosao_resistente"] = max(0, _int0(raw.get("corrosao_resistente")))
+        item["corrosao_niveis_penalidade"] = max(1, _int0(raw.get("corrosao_niveis_penalidade", 2)))
     return True, item
 
 def _validate_custom_weapon(raw):

@@ -244,6 +244,38 @@ def armor_sample(**over):
             "price": 120, "disponibilidade": {"loja": True, "baus": False, "loot_monstro": False}}
     base.update(over); return base
 
+def accessory_sample(**over):
+    base = {"id": "anel_teste", "name": "Anel Teste", "emoji": "💍", "item_type": "ring",
+            "bonuses": [{"effect": "maxhp", "value": 5}, {"effect": "atk_bonus", "value": 1}],
+            "allowed_classes": [], "price": 30,
+            "disponibilidade": {"loja": True, "baus": False, "loot_monstro": False}}
+    base.update(over); return base
+
+def test_validacao_acessorio():
+    print("\n[E1] Validacao de anel/bota")
+    ok, it = S._validate_custom_item(accessory_sample())
+    check("aceita anel valido", ok)
+    check("kind = ring", ok and it.get("kind") == "ring")
+    check("item_slot = ring", ok and it.get("item_slot") == "ring")
+    check("bonuses preservados (maxhp+atk_bonus)",
+          ok and it.get("bonuses") == [{"effect": "maxhp", "value": 5}, {"effect": "atk_bonus", "value": 1}])
+    check("anel nao tem corrosao", ok and "corrosion_materials" not in it)
+    okb, itb = S._validate_custom_item(accessory_sample(id="botas_ferro", item_type="boots",
+        emoji="👢", corrosion_materials=["metal"], corrosao_resistente=1,
+        corrosao_niveis_penalidade=3, bonuses=[{"effect": "spd", "value": 1}]))
+    check("aceita bota", okb and itb.get("kind") == "boots")
+    check("bota item_slot = boots", okb and itb.get("item_slot") == "boots")
+    check("bota mantem material e N/M", okb and itb.get("corrosion_materials") == ["metal"]
+          and itb.get("corrosao_resistente") == 1 and itb.get("corrosao_niveis_penalidade") == 3)
+    okr, _ = S._validate_custom_item(accessory_sample(id="ring_str"))
+    check("rejeita id nativo (ring_str)", not okr)
+    okt, _ = S._validate_custom_item(accessory_sample(item_type="colar"))
+    check("rejeita item_type nao suportado", not okt)
+    okf, itf = S._validate_custom_item(accessory_sample(bonuses=[{"effect": "atk", "value": 3}]))
+    check("filtra efeito atk cru (usar atk_bonus)", okf and itf.get("bonuses") == [])
+    oka, ita = S._validate_custom_item(accessory_sample(bonuses=[{"effect": "atk_bonus", "value": 2}]))
+    check("aceita atk_bonus", oka and ita.get("bonuses") == [{"effect": "atk_bonus", "value": 2}])
+
 def test_validacao_armadura():
     print("\n[A1] Validacao de armadura/escudo")
     ok, it = S._validate_custom_item(armor_sample())
@@ -593,5 +625,6 @@ if __name__ == "__main__":
     test_resistencia_aplica(); test_resistencia_empilha()
     test_validacao_resist()
     test_iniciativa_bonus()
+    test_validacao_acessorio()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)
