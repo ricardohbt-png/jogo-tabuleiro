@@ -66,8 +66,19 @@
     return { ok: true };
   }
   var ARMOR_CATS = ["leve", "media", "pesada"];
-  var BONUS_EFFECTS = ["def_", "maxhp", "spd", "str_", "dex", "con_", "int_", "resist", "initiative"];
+  var BONUS_EFFECTS = ["def_", "maxhp", "spd", "atk_bonus", "str_", "dex", "con_", "int_", "resist", "initiative"];
   var RESIST_TYPES = ["physical", "fire", "cold", "lightning", "acid", "holy", "poison", "magic", "water"];
+  function filterBonuses(list) {
+    return (list || []).filter(function (b) {
+      if (!b || BONUS_EFFECTS.indexOf(b.effect) < 0) return false;
+      if (b.effect === "resist" && RESIST_TYPES.indexOf(b.type) < 0) return false;
+      return true;
+    }).map(function (b) {
+      return b.effect === "resist"
+        ? { effect: "resist", type: b.type, value: +b.value || 0 }
+        : { effect: b.effect, value: +b.value || 0 };
+    });
+  }
   function serializeArmor(d) {
     var kind = d.item_type === "shield" ? "shield" : "armor";
     var mats = [];
@@ -82,15 +93,7 @@
       corrosion_materials: mats,
       corrosao_resistente: Math.max(0, +d.corrosao_livres || 0),
       corrosao_niveis_penalidade: Math.max(1, +d.corrosao_penalidade || 2),
-      bonuses: (d.bonuses || []).filter(function (b) {
-        if (!b || BONUS_EFFECTS.indexOf(b.effect) < 0) return false;
-        if (b.effect === "resist" && RESIST_TYPES.indexOf(b.type) < 0) return false;
-        return true;
-      }).map(function (b) {
-        return b.effect === "resist"
-          ? { effect: "resist", type: b.type, value: +b.value || 0 }
-          : { effect: b.effect, value: +b.value || 0 };
-      }),
+      bonuses: filterBonuses(d.bonuses),
       granted_ability: d.granted_ability || null,
       allowed_classes: (d.allowed_classes || []).slice(),
       price: Math.max(0, +d.price || 0),
@@ -112,12 +115,50 @@
     if ((+d.ac_bonus || 0) < 0) return { ok: false, msg: "CA inválida" };
     return { ok: true };
   }
+  function serializeAccessory(d) {
+    var kind = d.item_type === "boots" ? "boots" : "ring";
+    var item = {
+      id: slugify(d.id || d.name), name: String(d.name || "").trim().slice(0, 60),
+      emoji: d.emoji || (kind === "boots" ? "👢" : "💍"),
+      item_type: kind, kind: kind, item_slot: kind, custom: true,
+      bonuses: filterBonuses(d.bonuses),
+      granted_ability: d.granted_ability || null,
+      allowed_classes: (d.allowed_classes || []).slice(),
+      price: Math.max(0, +d.price || 0),
+      disponibilidade: {
+        loja: !!(d.disponibilidade || {}).loja, baus: !!(d.disponibilidade || {}).baus,
+        loot_monstro: !!(d.disponibilidade || {}).loot_monstro,
+      },
+    };
+    if (kind === "boots") {
+      var mats = [];
+      var mm = d.materiais || {};
+      if (mm.organic) mats.push("organic");
+      if (mm.metal) mats.push("metal");
+      item.corrosion_materials = mats;
+      item.corrosao_resistente = Math.max(0, +d.corrosao_livres || 0);
+      item.corrosao_niveis_penalidade = Math.max(1, +d.corrosao_penalidade || 2);
+    }
+    return item;
+  }
+  function validateAccessoryDraft(d) {
+    if (!String(d.name || "").trim()) return { ok: false, msg: "informe o nome" };
+    return { ok: true };
+  }
+  function suggestPriceAccessory(item) {
+    var p = 0;
+    (item.bonuses || []).forEach(function (b) { p += KA_BONUS * Math.abs(+b.value || 0); });
+    return Math.max(1, Math.round(p));
+  }
   var api = { slugify: slugify, buildDie: buildDie, dieAvg: dieAvg,
               suggestPrice: suggestPrice, serializeWeapon: serializeWeapon,
               validateDraft: validateDraft, ELEM: ELEM, CATS: CATS, FACES: FACES,
               serializeArmor: serializeArmor, suggestPriceArmor: suggestPriceArmor,
               validateArmorDraft: validateArmorDraft,
-              ARMOR_CATS: ARMOR_CATS, BONUS_EFFECTS: BONUS_EFFECTS, RESIST_TYPES: RESIST_TYPES };
+              ARMOR_CATS: ARMOR_CATS, BONUS_EFFECTS: BONUS_EFFECTS, RESIST_TYPES: RESIST_TYPES,
+              serializeAccessory: serializeAccessory,
+              validateAccessoryDraft: validateAccessoryDraft,
+              suggestPriceAccessory: suggestPriceAccessory };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (root) root.EDITOR_ITEMS_LOGIC = api;
 })(typeof window !== "undefined" ? window : null);

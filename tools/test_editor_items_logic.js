@@ -87,5 +87,31 @@ const aitemI = L.serializeArmor(Object.assign({}, adraft, {bonuses:[{effect:"ini
 check("serializeArmor mantém initiative", aitemI.bonuses.length === 1
   && aitemI.bonuses[0].effect === "initiative" && aitemI.bonuses[0].value === 3);
 
+// Fase E — acessórios (anéis + botas)
+check("BONUS_EFFECTS inclui atk_bonus", L.BONUS_EFFECTS.indexOf("atk_bonus") >= 0);
+const ring = L.serializeAccessory({name:"Anel de Vigor", item_type:"ring",
+  bonuses:[{effect:"maxhp",value:5},{effect:"atk_bonus",value:1},{effect:"atk",value:9}],
+  disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:30});
+check("serializeAccessory gera id+slot ring",
+  ring.id === "anel_de_vigor" && ring.item_slot === "ring" && ring.kind === "ring");
+check("serializeAccessory mantém atk_bonus",
+  ring.bonuses.some(function(b){return b.effect==="atk_bonus"&&b.value===1;}));
+check("serializeAccessory filtra efeito atk cru",
+  !ring.bonuses.some(function(b){return b.effect==="atk";}));
+check("anel não tem corrosão", ring.corrosion_materials === undefined);
+const boot = L.serializeAccessory({name:"Botas de Ferro", item_type:"boots",
+  bonuses:[{effect:"spd",value:1}], materiais:{metal:true,organic:false},
+  corrosao_livres:1, corrosao_penalidade:3,
+  disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:20});
+check("botas slot boots + material metal",
+  boot.item_slot === "boots" && boot.corrosion_materials.indexOf("metal") >= 0);
+check("botas N/M gravados",
+  boot.corrosao_resistente === 1 && boot.corrosao_niveis_penalidade === 3);
+check("botas emoji default 👢", boot.emoji === "👢");
+check("validateAccessoryDraft aceita com nome", L.validateAccessoryDraft({name:"X"}).ok);
+check("validateAccessoryDraft rejeita sem nome", !L.validateAccessoryDraft({name:""}).ok);
+check("suggestPriceAccessory soma bonuses",
+  L.suggestPriceAccessory({bonuses:[{value:2},{value:3}]}) > 0);
+
 console.log(`\n${PASS} passaram, ${FAIL} falharam`);
 process.exit(FAIL ? 1 : 0);
