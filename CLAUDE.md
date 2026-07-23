@@ -1175,3 +1175,14 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > bônus é "Resistência". Testes: `tools/test_editor_itens.py` [C1]-[C3] + node. Fora de
 > escopo: imunidade total e vulnerabilidade do herói. Fase seguinte: **D** iniciativa
 > como campo próprio.
+
+> **Editor de Itens — Fase D (bônus de iniciativa):** efeito escalar **`initiative`**
+> no motor de multi-efeito (`_apply_single_effect`, ramo igual ao de `spd`) →
+> `p["initiative_bonus"]`, somado em `initiative_value` (junto de `dex + mod(int)`).
+> Vale a partir do próximo `_rebuild_initiative` (por encontro — igual ao efeito de
+> DES/INT da Fase B). Valor pode ser **negativo** (armadura pesada −2). Validação
+> (`_ITEM_BONUS_EFFECTS`) + cliente (`BONUS_EFFECTS` + opção "Iniciativa" no dropdown de
+> bônus adicionais) ganharam o efeito; por ser escalar, cai no caminho comum do
+> `serializeArmor` (sem tratamento especial como o `resist`). Fecha o trio **B/C/D** do
+> Editor de Itens. Testes: `tools/test_editor_itens.py` [D1] + node. Fases seguintes: as
+> outras sub-abas (anéis/botas/poções/arremessáveis/venenos) + habilidades ativáveis.
