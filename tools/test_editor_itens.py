@@ -554,6 +554,30 @@ def test_validacao_resist():
         bonuses=[{"effect": "spd", "value": -1}]))
     check("bônus escalar segue {effect,value}", ok4 and it4.get("bonuses") == [{"effect": "spd", "value": -1}])
 
+def test_iniciativa_bonus():
+    print("\n[D1] Bônus de iniciativa (escalar + validação)")
+    r = _gear_room()
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    ini0 = r.initiative_value(p)
+    it = {"id": "i", "name": "I", "item_slot": "armor", "effect": "def_", "value": 0,
+          "bonuses": [{"effect": "initiative", "value": 3}]}
+    r._apply_gear_effect(p, it, True)
+    check("equipar +3 iniciativa", r.initiative_value(p) == ini0 + 3)
+    r._apply_gear_effect(p, it, True)
+    check("empilhar dois = +6", r.initiative_value(p) == ini0 + 6)
+    r._apply_gear_effect(p, it, False)
+    check("remover um = +3", r.initiative_value(p) == ini0 + 3)
+    r._apply_gear_effect(p, it, False)
+    check("remover ambos volta ao inicial", r.initiative_value(p) == ini0)
+    itn = {"id": "j", "name": "J", "item_slot": "armor", "effect": "def_", "value": 0,
+           "bonuses": [{"effect": "initiative", "value": -2}]}
+    r._apply_gear_effect(p, itn, True)
+    check("valor negativo reduz", r.initiative_value(p) == ini0 - 2)
+    r._apply_gear_effect(p, itn, False)
+    ok, itv = S._validate_custom_item(armor_sample(id="cota_ini",
+        bonuses=[{"effect": "initiative", "value": 3}]))
+    check("validação preserva initiative", ok and itv.get("bonuses") == [{"effect": "initiative", "value": 3}])
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
@@ -568,5 +592,6 @@ if __name__ == "__main__":
     test_validacao_bonus_atributo()
     test_resistencia_aplica(); test_resistencia_empilha()
     test_validacao_resist()
+    test_iniciativa_bonus()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)

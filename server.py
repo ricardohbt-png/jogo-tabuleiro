@@ -7413,7 +7413,9 @@ class GameRoom:
         return base + extra
 
     def initiative_value(self, entity):
-        return self._initiative_attribute(entity, "dex") + mod(self._initiative_attribute(entity, "int_"))
+        return (self._initiative_attribute(entity, "dex")
+                + mod(self._initiative_attribute(entity, "int_"))
+                + int(entity.get("initiative_bonus", 0) or 0))
 
     def _rebuild_initiative(self):
         """Monta a fila da rodada. Empate total alterna herói/monstro por rodada."""
@@ -11390,6 +11392,8 @@ class GameRoom:
                 p["hp"] = min(p["max_hp"], p["hp"] + v)
         elif e == "spd":
             p["spd"] += v
+        elif e == "initiative":
+            p["initiative_bonus"] = p.get("initiative_bonus", 0) + v
         elif e == "bagslots":
             # Mochila/alforje: expande o inventÃ¡rio enquanto equipada
             p["bag_size"] = max(1, p.get("bag_size", 6) + v)
@@ -21082,7 +21086,7 @@ def _read_custom_items():
 
 _ITEM_ARMOR_CATS = {"leve", "media", "pesada"}
 _ITEM_MATERIAIS = {"organic", "metal"}
-_ITEM_BONUS_EFFECTS = {"def_", "maxhp", "spd", "str_", "dex", "con_", "int_", "resist"}
+_ITEM_BONUS_EFFECTS = {"def_", "maxhp", "spd", "str_", "dex", "con_", "int_", "resist", "initiative"}
 
 # Tipos de dano válidos p/ o bônus de resistência do herói (Fase C).
 _RESIST_TYPES = {DMG_PHYSICAL, DMG_FIRE, DMG_COLD, DMG_LIGHTNING, DMG_ACID,
