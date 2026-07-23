@@ -113,5 +113,33 @@ check("validateAccessoryDraft rejeita sem nome", !L.validateAccessoryDraft({name
 check("suggestPriceAccessory soma bonuses",
   L.suggestPriceAccessory({bonuses:[{value:2},{value:3}]}) > 0);
 
+// Fase F — poções
+check("POTION_EFFECTS tem os 3 efeitos",
+  L.POTION_EFFECTS.indexOf("heal") >= 0 && L.POTION_EFFECTS.indexOf("regeneration") >= 0
+  && L.POTION_EFFECTS.indexOf("atk_bonus") >= 0);
+const potHeal = L.serializePotion({name:"Poção Robusta", item_type:"potion",
+  effect:"heal", value:25, max_uses:3,
+  disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:30});
+check("serializePotion gera id + item_slot bag + item_type potion",
+  potHeal.id === "pocao_robusta" && potHeal.item_slot === "bag" && potHeal.item_type === "potion");
+check("serializePotion heal grava value", potHeal.value === 25);
+check("serializePotion heal multi-dose grava max_uses+uses_left",
+  potHeal.max_uses === 3 && potHeal.uses_left === 3);
+check("serializePotion emoji default 🧪", L.serializePotion({name:"X",effect:"heal"}).emoji === "🧪");
+const potRegen = L.serializePotion({name:"Regen", item_type:"potion", effect:"regeneration", value:10,
+  disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:16});
+check("serializePotion regen sem doses", potRegen.effect === "regeneration" && potRegen.max_uses === undefined);
+const potElix = L.serializePotion({name:"Elixir", item_type:"potion", effect:"atk_bonus", value:3, max_uses:5,
+  disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:12});
+check("serializePotion não-heal ignora doses", potElix.max_uses === undefined && potElix.uses_left === undefined);
+const potBad = L.serializePotion({name:"Ruim", item_type:"potion", effect:"teleporte", value:1,
+  disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:1});
+check("serializePotion normaliza efeito inválido p/ heal", potBad.effect === "heal");
+check("validatePotionDraft aceita heal", L.validatePotionDraft({name:"X", effect:"heal"}).ok);
+check("validatePotionDraft rejeita sem nome", !L.validatePotionDraft({name:"", effect:"heal"}).ok);
+check("validatePotionDraft rejeita efeito inválido", !L.validatePotionDraft({name:"X", effect:"voar"}).ok);
+check("suggestPricePotion cresce com value", L.suggestPricePotion({value:20,max_uses:1}) > L.suggestPricePotion({value:5,max_uses:1}));
+check("suggestPricePotion cresce com doses", L.suggestPricePotion({value:10,max_uses:3}) > L.suggestPricePotion({value:10,max_uses:1}));
+
 console.log(`\n${PASS} passaram, ${FAIL} falharam`);
 process.exit(FAIL ? 1 : 0);

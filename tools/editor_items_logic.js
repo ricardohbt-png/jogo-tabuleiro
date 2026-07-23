@@ -16,7 +16,7 @@
     return (+m[1]) * ((+m[2]) + 1) / 2;
   }
   // Preco sugerido: transparente e recalibravel (constantes no topo).
-  var K_DIE = 4, K_BONUS = 6, K_ELEM = 5, K_2M = 4;
+  var K_DIE = 4, K_BONUS = 6, K_ELEM = 5, K_2M = 4, K_POTION = 2;
   function suggestPrice(item) {
     var p = K_DIE * dieAvg(item.die);
     p += K_BONUS * (Math.abs(+item.atk_bonus || 0) + Math.abs(+item.damage_bonus || 0));
@@ -68,6 +68,7 @@
   var ARMOR_CATS = ["leve", "media", "pesada"];
   var BONUS_EFFECTS = ["def_", "maxhp", "spd", "atk_bonus", "str_", "dex", "con_", "int_", "resist", "initiative"];
   var RESIST_TYPES = ["physical", "fire", "cold", "lightning", "acid", "holy", "poison", "magic", "water"];
+  var POTION_EFFECTS = ["heal", "regeneration", "atk_bonus"];
   function filterBonuses(list) {
     return (list || []).filter(function (b) {
       if (!b || BONUS_EFFECTS.indexOf(b.effect) < 0) return false;
@@ -150,6 +151,34 @@
     (item.bonuses || []).forEach(function (b) { p += KA_BONUS * Math.abs(+b.value || 0); });
     return Math.max(1, Math.round(p));
   }
+  function serializePotion(d) {
+    var effect = POTION_EFFECTS.indexOf(d.effect) >= 0 ? d.effect : "heal";
+    var item = {
+      id: slugify(d.id || d.name), name: String(d.name || "").trim().slice(0, 60),
+      emoji: d.emoji || "🧪", item_type: "potion", item_slot: "bag", custom: true,
+      effect: effect, value: Math.max(0, +d.value || 0),
+      allowed_classes: (d.allowed_classes || []).slice(),
+      price: Math.max(0, +d.price || 0),
+      disponibilidade: {
+        loja: !!(d.disponibilidade || {}).loja, baus: !!(d.disponibilidade || {}).baus,
+        loot_monstro: !!(d.disponibilidade || {}).loot_monstro,
+      },
+    };
+    if (effect === "heal") {
+      var mu = Math.max(1, +d.max_uses || 1);
+      if (mu > 1) { item.max_uses = mu; item.uses_left = mu; }
+    }
+    return item;
+  }
+  function validatePotionDraft(d) {
+    if (!String(d.name || "").trim()) return { ok: false, msg: "informe o nome" };
+    if (POTION_EFFECTS.indexOf(d.effect) < 0) return { ok: false, msg: "efeito inválido" };
+    return { ok: true };
+  }
+  function suggestPricePotion(item) {
+    var mu = Math.max(1, +item.max_uses || 1);
+    return Math.max(1, Math.round(K_POTION * (+item.value || 0) * mu));
+  }
   var api = { slugify: slugify, buildDie: buildDie, dieAvg: dieAvg,
               suggestPrice: suggestPrice, serializeWeapon: serializeWeapon,
               validateDraft: validateDraft, ELEM: ELEM, CATS: CATS, FACES: FACES,
@@ -158,7 +187,11 @@
               ARMOR_CATS: ARMOR_CATS, BONUS_EFFECTS: BONUS_EFFECTS, RESIST_TYPES: RESIST_TYPES,
               serializeAccessory: serializeAccessory,
               validateAccessoryDraft: validateAccessoryDraft,
-              suggestPriceAccessory: suggestPriceAccessory };
+              suggestPriceAccessory: suggestPriceAccessory,
+              serializePotion: serializePotion,
+              validatePotionDraft: validatePotionDraft,
+              suggestPricePotion: suggestPricePotion,
+              POTION_EFFECTS: POTION_EFFECTS };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (root) root.EDITOR_ITEMS_LOGIC = api;
 })(typeof window !== "undefined" ? window : null);
