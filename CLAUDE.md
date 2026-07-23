@@ -1215,3 +1215,27 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > Spec/plano em `docs/superpowers/{specs,plans}/2026-07-22-editor-itens-fase-e-aneis-botas*`.
 > Fases seguintes: poções/arremessáveis/venenos (subsistemas próprios) + `granted_ability`
 > ativável.
+
+> **Editor de Itens — Fase F (Poções):** destrava a sub-aba **Poções** (as outras 2 —
+> arremessáveis/venenos — seguem 🔒). Poções são **consumíveis de bolsa**
+> (`item_slot:"bag"`) despachados por `effect` em `handle_use_item`; os 3 efeitos do
+> escopo (`heal` com multi-dose, `regeneration`, `atk_bonus`) **já estão implementados**
+> para o jogador, então esta fase **não toca no motor de combate** — só validar/mesclar/UI.
+> `item_type:"potion"` → `_validate_custom_potion` (dispatch em `_validate_custom_item`;
+> efeito validado contra o novo set `_ITEM_POTION_EFFECTS`; `max_uses`/`uses_left` só p/
+> `heal`; protege ids nativos da união `SHOP_MERCHANT ∪ SHOP_TEMPLE ∪ SHOP_TAVERN`).
+> `_custom_potion_inventory_dict` = dict plano único p/ loja e bolsa/baú. Merge por
+> `_apply_custom_items` no **mercador** (`SHOP_MERCHANT`) + `_DUNGEON_ITEM_CATALOG`/
+> `LOOT_POOL_PROCEDURAL` — **cleanup herdado** da Fase E (a linha do `SHOP_MERCHANT` + o
+> bloco genérico `prev_custom_ids`; sem código de limpeza novo). O `atk_bonus` de poção
+> (buff temporário do turno via `blessed`) é distinto do `atk_bonus` de gear da Fase E
+> (lista `bonuses`) — sem colisão, pois a poção é consumível por `effect`. Cliente:
+> `serializePotion`/`validatePotionDraft`/`suggestPricePotion` + `POTION_EFFECTS` em
+> `editor_items_logic.js`; `editor_items_editor.js` destrava a sub-aba com `renderPotionForm`
+> (seletor de efeito com rótulos amigáveis; campo Doses só p/ Cura, re-render no toggle como
+> o `ie-manejo` das armas; rótulo "Loja (Mercador)"). Testes: `tools/test_editor_itens.py`
+> [F1]–[F4] (inclui uso ponta-a-ponta via `handle_use_item` — cura/regen/buff + multi-dose)
+> + `tools/test_editor_items_logic.js`. Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-07-23-editor-itens-fase-f-pocoes*`. Fases seguintes:
+> arremessáveis/venenos (subsistemas próprios) + antídoto/cura de status (ramo novo no
+> `handle_use_item`) + `granted_ability` ativável.
