@@ -1186,3 +1186,32 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `serializeArmor` (sem tratamento especial como o `resist`). Fecha o trio **B/C/D** do
 > Editor de Itens. Testes: `tools/test_editor_itens.py` [D1] + node. Fases seguintes: as
 > outras sub-abas (anéis/botas/poções/arremessáveis/venenos) + habilidades ativáveis.
+
+> **Editor de Itens — Fase E (Anéis + Botas):** destrava as sub-abas **Anéis** e
+> **Botas** (as outras 3 seguem 🔒). Acessórios reusam o **motor de multi-efeito**
+> (`bonuses:[{effect,value}]`) — sem CA-base nem `armor_category`; todo efeito vem da
+> lista `bonuses`. `item_type` `"ring"`/`"boots"`, validados por
+> `_validate_custom_accessory` (dispatch em `_validate_custom_item`), mesclados por
+> `_apply_custom_items` no **mercador** (`SHOP_MERCHANT` — nova linha de cleanup dos
+> customs, já que nenhum outro bloco o limpava) + `_DUNGEON_ITEM_CATALOG`/
+> `LOOT_POOL_PROCEDURAL` (baús/loot). `_custom_accessory_inventory_dict` gera um dict
+> único p/ loja e bolsa/baú (como os anéis nativos). O **equip já era funcional**:
+> `_slot_category_for_item` mapeia `item_slot:"ring"`→`ring1`/`ring2` e
+> `item_slot:"boots"`→ slot dedicado `boots`; `_apply_gear_effect` aplica a lista
+> `bonuses`. **Novo efeito `atk_bonus`** (bônus fixo de acerto) adicionado a
+> `_ITEM_BONUS_EFFECTS` (server) e `BONUS_EFFECTS` (cliente) — vale para anéis, botas
+> **e** armaduras/escudos (motor compartilhado); `_apply_single_effect` já o tratava.
+> **Botas corroem** só via `corrosion_materials` no dict (`_peca_corroivel` corrói
+> peça custom por interseção de material; o slot `boots` já está no laço de
+> `_corroer_equipamento`) — **não** são registradas nos sets `CORROSAO_ARMADURA_*`
+> (evita poluir a detecção de metal dos monstros). **Anéis não corroem.** Cliente:
+> `serializeAccessory`/`validateAccessoryDraft`/`suggestPriceAccessory` em
+> `editor_items_logic.js` (filtro de bônus extraído p/ `filterBonuses`, DRY com
+> `serializeArmor`); `editor_items_editor.js` destrava as sub-abas + form parametrizado
+> (`renderAccessoryForm`, corrosão só em botas, rótulo "Loja (Mercador)"), com o
+> template de bônus compartilhado `abonusTemplate` e a indireção `previewFn` (para as
+> linhas de bônus reusarem o maquinário da armadura sem quebrar no preview de anel).
+> Testes: `tools/test_editor_itens.py` [E1]–[E5] + `tools/test_editor_items_logic.js`.
+> Spec/plano em `docs/superpowers/{specs,plans}/2026-07-22-editor-itens-fase-e-aneis-botas*`.
+> Fases seguintes: poções/arremessáveis/venenos (subsistemas próprios) + `granted_ability`
+> ativável.
