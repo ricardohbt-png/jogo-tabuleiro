@@ -10955,6 +10955,17 @@ class GameRoom:
         alvo["petrificado_rodadas"] = 0
         return True
 
+    def _conceder_imunidade_status(self, p, status, rodadas):
+        """Imunidade temporária a um status (veneno/petrificacao/doenca). Guarda a
+        rodada-limite absoluta, como os demais buffs temporários do motor."""
+        if status not in _STATUS_IMUNIZAVEIS or rodadas <= 0:
+            return
+        p.setdefault("imunidades_status", {})[status] = self.round_num + int(rodadas)
+
+    def _imune_a_status(self, p, status):
+        """True enquanto a imunidade temporária àquele status não expirou."""
+        return (p.get("imunidades_status", {}) or {}).get(status, 0) > self.round_num
+
     async def handle_purificacao(self, pid, data):
         """Remove veneno, doença, maldição ou petrificação de um aliado adjacente."""
         if not self._is_turn(pid): return
@@ -12096,6 +12107,9 @@ class GameRoom:
         """Aplica/agrava uma doença no jogador. 'fonte define o nível': uma fonte
         mais forte sobe a severidade; igual/menor não piora. Retorna True se mudou."""
         if not self._eh_jogador(p):
+            return False
+        if self._imune_a_status(p, "doenca"):
+            await self.gm_say(f"🛡️ **{p.get('name','O herói')}** está imunizado contra doenças.")
             return False
         novos = DOENCA_SEVERIDADE.get(severidade, ["leve"])
         d = p.get("doenca") if p.get("doente") else None
@@ -14270,6 +14284,10 @@ class GameRoom:
             await self.gm_say(f"🧪 **{nome}** não afeta **{alvo_nome}** (imune a venenos).")
             return
 
+        if self._eh_jogador(alvo) and self._imune_a_status(alvo, "veneno"):
+            await self.gm_say(f"🛡️ **{alvo_nome}** está imunizado — **{nome}** não faz efeito.")
+            return
+
         # Veneno de DANO (ex.: Agonia Sufocante): sem save de aplicaÃ§Ã£o â€” o jogo Ã©
         # o loop por rodada (dano + save que neutraliza), tratado em
         # _processar_venenos_turno. Registra o efeito e retorna.
@@ -14396,6 +14414,10 @@ class GameRoom:
                     "atributos": list(veneno.get("penalidade_falha", [])), "duracao": dur_falha})
                 await self.gm_say(f"⚠️ **{nome}**: save parcial — **{alvo_nome}** -1 movimento por {dur_falha} rodada(s).")
             else:
+                if self._eh_jogador(alvo) and self._imune_a_status(alvo, "petrificacao"):
+                    await self.gm_say(f"🛡️ **{alvo_nome}** resiste à petrificação (imunizado)!")
+                    await self.push_state()
+                    return
                 pet_dur = self._rolar_dado(veneno.get("duracao", 1)) * dobro
                 alvo["petrificado"]         = True
                 alvo["petrificado_rodadas"] = pet_dur
@@ -17420,9 +17442,12 @@ class GameRoom:
                 target["perde_turno"] = True
                 await self.gm_say(f"🕸️ **{tgt_name}** está imobilizado e perderá o próximo turno!")
             elif effect == "petrificado":
-                target["petrificado"] = True
-                target["petrificado_rodadas"] = ability.get("effect_duration", 1)
-                await self.gm_say(f"🗿 **{tgt_name}** foi petrificado!")
+                if self._eh_jogador(target) and self._imune_a_status(target, "petrificacao"):
+                    await self.gm_say(f"🛡️ **{tgt_name}** resiste à petrificação (imunizado)!")
+                else:
+                    target["petrificado"] = True
+                    target["petrificado_rodadas"] = ability.get("effect_duration", 1)
+                    await self.gm_say(f"🗿 **{tgt_name}** foi petrificado!")
             elif effect == "dormindo":
                 target["dormindo"] = True
                 target["dormindo_rodadas"] = ability.get("effect_duration", 1)
@@ -21192,6 +21217,9 @@ _ITEM_BONUS_EFFECTS = {"def_", "maxhp", "spd", "atk_bonus", "str_", "dex", "con_
 
 # Efeitos válidos p/ poção custom (Fase F) — já implementados em handle_use_item.
 _ITEM_POTION_EFFECTS = {"heal", "regeneration", "atk_bonus"}
+
+# Status que um consumível pode curar e contra os quais pode imunizar.
+_STATUS_IMUNIZAVEIS = {"veneno", "petrificacao", "doenca"}
 
 # Modos de mira e elementos válidos p/ arremessável custom (Fase G).
 _ITEM_THROW_TARGETS = {"ataque_alvo", "area"}

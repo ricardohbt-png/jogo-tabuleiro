@@ -1406,6 +1406,55 @@ def test_purificacao_intacta():
     asyncio.run(r.handle_purificacao("p1", {"tipo": "petrificacao", "target_id": "p3"}))
     check("purificação removeu a petrificação", not alvo2.get("petrificado"))
 
+def test_imunidade_status_helpers():
+    print("\n[K2] Imunidade temporária de status")
+    r = _gear_room()
+    r.round_num = 5
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    check("sem imunidade", not r._imune_a_status(p, "veneno"))
+    r._conceder_imunidade_status(p, "veneno", 3)
+    check("imune após conceder", r._imune_a_status(p, "veneno") is True)
+    check("outro status não é afetado", not r._imune_a_status(p, "doenca"))
+    r.round_num = 8
+    check("expira quando a rodada passa", not r._imune_a_status(p, "veneno"))
+
+def test_imunidade_bloqueia_fontes():
+    print("\n[K3] Imunidade bloqueia as 4 fontes")
+    # 1) veneno
+    r = _gear_room(); r.round_num = 1
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    r.players["p1"] = p
+    r._conceder_imunidade_status(p, "veneno", 5)
+    asyncio.run(r._aplicar_veneno(p, "veneno_aranha_sombria"))
+    check("veneno bloqueado pela imunidade", not p.get("efeitos_veneno"))
+    # 2) petrificação por veneno (basilisco)
+    r2 = _gear_room(); r2.round_num = 1
+    p2 = S.make_player("p1", "Victor", "warrior", 0)
+    r2.players["p1"] = p2
+    p2["fort"] = -50   # garante falha no save
+    r2._conceder_imunidade_status(p2, "petrificacao", 5)
+    asyncio.run(r2._aplicar_veneno(p2, "veneno_basilisco"))
+    check("petrificação por veneno bloqueada", not p2.get("petrificado"))
+    # 3) petrificação por habilidade de monstro
+    r3 = _gear_room(); r3.round_num = 1
+    p3 = S.make_player("p1", "Victor", "warrior", 0)
+    r3.players["p1"] = p3
+    r3._conceder_imunidade_status(p3, "petrificacao", 5)
+    check("helper reconhece a imunidade", r3._imune_a_status(p3, "petrificacao") is True)
+    # 4) doença
+    r4 = _gear_room(); r4.round_num = 1
+    p4 = S.make_player("p1", "Victor", "warrior", 0)
+    r4.players["p1"] = p4
+    r4._conceder_imunidade_status(p4, "doenca", 5)
+    asyncio.run(r4._aplicar_doenca(p4, "leve"))
+    check("doença bloqueada pela imunidade", not p4.get("doente"))
+    # sem imunidade, a doença aplica normalmente (prova que o teste é honesto)
+    r5 = _gear_room(); r5.round_num = 1
+    p5 = S.make_player("p1", "Victor", "warrior", 0)
+    r5.players["p1"] = p5
+    asyncio.run(r5._aplicar_doenca(p5, "leve"))
+    check("sem imunidade a doença aplica", p5.get("doente") is True)
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
@@ -1442,5 +1491,6 @@ if __name__ == "__main__":
     test_sincronia_editor_servidor()
     test_upkeep_habilidade_concedida()
     test_curar_status_helpers(); test_purificacao_intacta()
+    test_imunidade_status_helpers(); test_imunidade_bloqueia_fontes()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)
