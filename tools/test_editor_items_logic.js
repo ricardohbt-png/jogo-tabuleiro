@@ -184,5 +184,62 @@ check("suggestPriceThrowable cresce com o dado",
 check("suggestPriceThrowable cresce com area",
   L.suggestPriceThrowable({dano:"2d6", alvo:"area", area_raio:2}) > L.suggestPriceThrowable({dano:"2d6"}));
 
+// Fase H — venenos
+check("POISON_OPS tem as 5 operações",
+  L.POISON_OPS.length === 5 && L.POISON_OPS.indexOf("dano") >= 0
+  && L.POISON_OPS.indexOf("petrificar") >= 0 && L.POISON_OPS.indexOf("cegar") >= 0);
+check("POISON_ATTRS / POISON_PENS / POISON_SAVES",
+  L.POISON_ATTRS.indexOf("forca") >= 0 && L.POISON_PENS.indexOf("ataque") >= 0
+  && L.POISON_SAVES.indexOf("fortitude") >= 0);
+const pDano = L.serializePoison({name:"Bile Ácida", operacao:"dano", save:"fortitude",
+  dificuldade:12, anula:true, dur_qtd:1, dur_faces:6,
+  dano_fixo:false, dano_qtd:1, dano_faces:4, modelo_save:"aplicacao",
+  descricao:"Corrói por dentro.",
+  disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:20});
+check("serializePoison id/slot/effect/veneno_id",
+  pDano.id === "bile_acida" && pDano.item_slot === "bag"
+  && pDano.effect === "coat_poison" && pDano.item_type === "poison");
+check("serializePoison dano por dado", pDano.operacao === "dano" && pDano.dano === "1d4");
+check("serializePoison duracao", pDano.duracao === "1d6");
+check("serializePoison save_aplicacao", pDano.save_aplicacao === true
+  && pDano.save_neutraliza_por_rodada === undefined);
+check("serializePoison guarda descricao", pDano.descricao === "Corrói por dentro.");
+const pRodada = L.serializePoison({name:"X", operacao:"dano", dano_fixo:true, dano_valor:2,
+  modelo_save:"rodada", dur_qtd:1, dur_faces:4});
+check("dano fixo vira número", pRodada.dano === 2);
+check("modelo rodada grava save_neutraliza_por_rodada",
+  pRodada.save_neutraliza_por_rodada === true && pRodada.save_aplicacao === undefined);
+const pRed = L.serializePoison({name:"Y", operacao:"reduzir", atributo:"constituicao",
+  val_qtd:1, val_faces:4, dur_qtd:1, dur_faces:6});
+check("reduzir grava atributo e valor",
+  pRed.operacao === "reduzir" && pRed.atributo === "constituicao" && pRed.valor === "1d4");
+const pPen = L.serializePoison({name:"Z", operacao:"penalidade",
+  atributos:[{chave:"ataque", valor:2},{chave:"movimento", valor:1},{chave:"xpto", valor:9}],
+  dur_qtd:1, dur_faces:6});
+check("penalidade normaliza pares negativos",
+  JSON.stringify(pPen.atributos) === JSON.stringify([["ataque",-2],["movimento",-1]]));
+const pPet = L.serializePoison({name:"W", operacao:"petrificar", dur_qtd:1, dur_faces:4,
+  durfalha_qtd:1, durfalha_faces:4, penalidade_falha:[{chave:"movimento", valor:1}]});
+check("petrificar grava duracao_falha e penalidade_falha",
+  pPet.duracao_falha === "1d4"
+  && JSON.stringify(pPet.penalidade_falha) === JSON.stringify([["movimento",-1]]));
+const pCeg = L.serializePoison({name:"V", operacao:"cegar", dur_qtd:1, dur_faces:4,
+  penalidade_ataque:4, bloqueia_distancia:true});
+check("cegar grava penalidade_ataque negativa e bloqueio",
+  pCeg.penalidade_ataque === -4 && pCeg.bloqueia_distancia === true);
+check("icone default ☠️", L.serializePoison({name:"Q", operacao:"dano"}).emoji === "☠️");
+check("validatePoisonDraft aceita valido",
+  L.validatePoisonDraft({name:"X", operacao:"dano"}).ok);
+check("validatePoisonDraft rejeita sem nome",
+  !L.validatePoisonDraft({name:"", operacao:"dano"}).ok);
+check("validatePoisonDraft rejeita operacao invalida",
+  !L.validatePoisonDraft({name:"X", operacao:"explodir"}).ok);
+check("validatePoisonDraft rejeita reduzir sem atributo valido",
+  !L.validatePoisonDraft({name:"X", operacao:"reduzir", atributo:"carisma"}).ok);
+check("validatePoisonDraft rejeita penalidade sem pares",
+  !L.validatePoisonDraft({name:"X", operacao:"penalidade", atributos:[]}).ok);
+check("suggestPricePoison cresce com a CD",
+  L.suggestPricePoison({dificuldade:16}) > L.suggestPricePoison({dificuldade:8}));
+
 console.log(`\n${PASS} passaram, ${FAIL} falharam`);
 process.exit(FAIL ? 1 : 0);

@@ -16,7 +16,7 @@
     return (+m[1]) * ((+m[2]) + 1) / 2;
   }
   // Preco sugerido: transparente e recalibravel (constantes no topo).
-  var K_DIE = 4, K_BONUS = 6, K_ELEM = 5, K_2M = 4, K_POTION = 2, K_THROW = 5;
+  var K_DIE = 4, K_BONUS = 6, K_ELEM = 5, K_2M = 4, K_POTION = 2, K_THROW = 5, K_POISON = 3;
   function suggestPrice(item) {
     var p = K_DIE * dieAvg(item.die);
     p += K_BONUS * (Math.abs(+item.atk_bonus || 0) + Math.abs(+item.damage_bonus || 0));
@@ -70,6 +70,10 @@
   var RESIST_TYPES = ["physical", "fire", "cold", "lightning", "acid", "holy", "poison", "magic", "water"];
   var POTION_EFFECTS = ["heal", "regeneration", "atk_bonus"];
   var THROW_TARGETS = ["ataque_alvo", "area"];
+  var POISON_OPS = ["dano", "reduzir", "penalidade", "petrificar", "cegar"];
+  var POISON_ATTRS = ["forca", "constituicao", "destreza", "inteligencia"];
+  var POISON_PENS = ["ataque", "movimento", "dano", "ca", "percepcao"];
+  var POISON_SAVES = ["fortitude", "reflexos", "vontade"];
   var THROW_ELEMENTS = ["fogo", "frio", "eletrico", "acido", "sagrado", "explosao"];
   function filterBonuses(list) {
     return (list || []).filter(function (b) {
@@ -222,6 +226,64 @@
     if (item.em_chamas) p += 10;
     return Math.max(1, Math.round(p));
   }
+  // Pares [chave, valor] de penalidade: filtra chaves desconhecidas e força negativo.
+  function poisonPares(lista) {
+    return (lista || []).filter(function (o) {
+      return o && POISON_PENS.indexOf(o.chave) >= 0;
+    }).map(function (o) {
+      return [o.chave, -Math.abs(+o.valor || 0)];
+    });
+  }
+  function serializePoison(d) {
+    var op = POISON_OPS.indexOf(d.operacao) >= 0 ? d.operacao : "dano";
+    var item = {
+      id: slugify(d.id || d.name), name: String(d.name || "").trim().slice(0, 60),
+      emoji: d.emoji || "☠️", item_type: "poison", item_slot: "bag",
+      effect: "coat_poison", custom: true, operacao: op,
+      save: POISON_SAVES.indexOf(d.save) >= 0 ? d.save : "fortitude",
+      dificuldade: Math.max(1, Math.min(40, +d.dificuldade || 10)),
+      anula: d.anula !== false,
+      duracao: buildDie(d.dur_qtd, d.dur_faces || 4),
+      allowed_classes: (d.allowed_classes || []).slice(),
+      price: Math.max(0, +d.price || 0),
+      disponibilidade: {
+        loja: !!(d.disponibilidade || {}).loja, baus: !!(d.disponibilidade || {}).baus,
+        loot_monstro: !!(d.disponibilidade || {}).loot_monstro,
+      },
+    };
+    var desc = String(d.descricao || "").trim().slice(0, 160);
+    if (desc) item.descricao = desc;
+    if (op === "dano") {
+      item.dano = d.dano_fixo ? Math.max(1, +d.dano_valor || 1) : buildDie(d.dano_qtd, d.dano_faces || 4);
+      if (d.modelo_save === "rodada") item.save_neutraliza_por_rodada = true;
+      else item.save_aplicacao = true;
+    } else if (op === "reduzir") {
+      item.atributo = POISON_ATTRS.indexOf(d.atributo) >= 0 ? d.atributo : "forca";
+      item.valor = buildDie(d.val_qtd, d.val_faces || 4);
+    } else if (op === "penalidade") {
+      item.atributos = poisonPares(d.atributos);
+    } else if (op === "petrificar" || op === "cegar") {
+      item.duracao_falha = buildDie(d.durfalha_qtd, d.durfalha_faces || 4);
+      item.penalidade_falha = poisonPares(d.penalidade_falha);
+      if (op === "cegar") {
+        item.penalidade_ataque = -Math.abs(+d.penalidade_ataque || 4);
+        item.bloqueia_distancia = !!d.bloqueia_distancia;
+      }
+    }
+    return item;
+  }
+  function validatePoisonDraft(d) {
+    if (!String(d.name || "").trim()) return { ok: false, msg: "informe o nome" };
+    if (POISON_OPS.indexOf(d.operacao) < 0) return { ok: false, msg: "efeito inválido" };
+    if (d.operacao === "reduzir" && POISON_ATTRS.indexOf(d.atributo) < 0)
+      return { ok: false, msg: "atributo inválido" };
+    if (d.operacao === "penalidade" && !poisonPares(d.atributos).length)
+      return { ok: false, msg: "adicione ao menos uma penalidade" };
+    return { ok: true };
+  }
+  function suggestPricePoison(item) {
+    return Math.max(1, Math.round(K_POISON * (+item.dificuldade || 10)));
+  }
   var api = { slugify: slugify, buildDie: buildDie, dieAvg: dieAvg,
               suggestPrice: suggestPrice, serializeWeapon: serializeWeapon,
               validateDraft: validateDraft, ELEM: ELEM, CATS: CATS, FACES: FACES,
@@ -238,7 +300,12 @@
               serializeThrowable: serializeThrowable,
               validateThrowableDraft: validateThrowableDraft,
               suggestPriceThrowable: suggestPriceThrowable,
-              THROW_TARGETS: THROW_TARGETS, THROW_ELEMENTS: THROW_ELEMENTS };
+              THROW_TARGETS: THROW_TARGETS, THROW_ELEMENTS: THROW_ELEMENTS,
+              serializePoison: serializePoison,
+              validatePoisonDraft: validatePoisonDraft,
+              suggestPricePoison: suggestPricePoison,
+              POISON_OPS: POISON_OPS, POISON_ATTRS: POISON_ATTRS,
+              POISON_PENS: POISON_PENS, POISON_SAVES: POISON_SAVES };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (root) root.EDITOR_ITEMS_LOGIC = api;
 })(typeof window !== "undefined" ? window : null);
