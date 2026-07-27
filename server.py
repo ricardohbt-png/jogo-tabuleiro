@@ -21454,6 +21454,38 @@ def _custom_potion_inventory_dict(item):
         inv["allowed_classes"] = list(item["allowed_classes"])
     return inv
 
+def _custom_throwable_defn(item):
+    """Entrada de ARREMESSAVEIS para um arremessável custom (formato nativo).
+    'custom' marca o registro p/ o cleanup idempotente em _apply_custom_items."""
+    defn = {"id": item["id"], "name": item["name"], "emoji": item["emoji"],
+            "alcance": item["alcance"], "alvo": item["alvo"], "custom": True}
+    if "dano" in item:
+        defn["dano"] = item["dano"]
+        defn["elemento"] = item["elemento"]
+    if item["alvo"] == "area":
+        defn["area_raio"] = item["area_raio"]
+        if "save" in item:
+            defn["save"] = dict(item["save"])
+    if item.get("em_chamas"):
+        defn["em_chamas"] = True
+        defn["chamas_dur"] = item["chamas_dur"]
+        defn["chamas_agua_apaga"] = item["chamas_agua_apaga"]
+    return defn
+
+def _custom_throwable_inventory_dict(item):
+    """Arremessável custom — dict de bolsa/loja. Carrega os metadados de mira
+    (alvo/alcance/area_raio) porque o cliente decide a mira pelo item quando o id
+    não está no CATALOGO_ITENS estático."""
+    inv = {"id": item["id"], "name": item["name"], "emoji": item["emoji"],
+           "item_slot": "bag", "effect": "throwable", "value": 0,
+           "custom": True, "price": item["price"],
+           "alvo": item["alvo"], "alcance": item["alcance"]}
+    if item["alvo"] == "area":
+        inv["area_raio"] = item["area_raio"]
+    if item["allowed_classes"]:
+        inv["allowed_classes"] = list(item["allowed_classes"])
+    return inv
+
 def _apply_custom_items(records):
     """Mescla armas/armaduras/escudos custom nos catálogos vivos (idempotente: remove os customs antes)."""
     global SHOP_WEAPONS, LOOT_POOL_PROCEDURAL
@@ -21481,6 +21513,9 @@ def _apply_custom_items(records):
     SHOP_ARMORS[:] = [a for a in SHOP_ARMORS if not a.get("custom")]
     # Acessórios custom (anel/bota) vivem no mercador — nenhum outro bloco limpa SHOP_MERCHANT.
     SHOP_MERCHANT[:] = [i for i in SHOP_MERCHANT if not i.get("custom")]
+    # Arremessáveis custom vivem no dict ARREMESSAVEIS (espelha o cleanup de WEAPONS).
+    for k in [k for k, v in ARREMESSAVEIS.items() if v.get("custom")]:
+        ARREMESSAVEIS.pop(k, None)
     for k in prev_def_ids:
         CORROSAO_ARMADURA_METAL.discard(k)
         CORROSAO_ARMADURA_ORGANICA.discard(k)
@@ -21519,6 +21554,17 @@ def _apply_custom_items(records):
         if it == "potion":
             disp = item["disponibilidade"]
             inv = _custom_potion_inventory_dict(item)
+            if disp["loja"]:
+                SHOP_MERCHANT.append(inv)
+            if disp["baus"] or disp["loot_monstro"]:
+                _DUNGEON_ITEM_CATALOG[item["id"]] = inv
+            if disp["loot_monstro"]:
+                LOOT_POOL_PROCEDURAL.append(item["id"])
+            continue
+        if it == "throwable":
+            disp = item["disponibilidade"]
+            ARREMESSAVEIS[item["id"]] = _custom_throwable_defn(item)
+            inv = _custom_throwable_inventory_dict(item)
             if disp["loja"]:
                 SHOP_MERCHANT.append(inv)
             if disp["baus"] or disp["loot_monstro"]:

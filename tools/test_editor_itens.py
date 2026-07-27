@@ -295,6 +295,60 @@ def test_validacao_arremessavel():
     oke, _ = S._validate_custom_item(throwable_sample(id="elixir"))
     check("rejeita id nativo de loja (elixir)", not oke)
 
+def test_arremessavel_merge():
+    print("\n[G2] Merge de arremessável (ARREMESSAVEIS + lojas)")
+    ok, it = S._validate_custom_item(throwable_sample(
+        disponibilidade={"loja": True, "baus": True, "loot_monstro": True}))
+    S._apply_custom_items([it])
+    check("entra em ARREMESSAVEIS", "frasco_teste" in S.ARREMESSAVEIS)
+    check("defn carrega alvo/dano",
+          S.ARREMESSAVEIS.get("frasco_teste", {}).get("alvo") == "ataque_alvo"
+          and S.ARREMESSAVEIS["frasco_teste"].get("dano") == "2d6")
+    check("loja: entra em SHOP_MERCHANT", any(i["id"] == "frasco_teste" for i in S.SHOP_MERCHANT))
+    check("item de bolsa carrega metadados de mira",
+          next(i for i in S.SHOP_MERCHANT if i["id"] == "frasco_teste").get("alvo") == "ataque_alvo")
+    check("baus: entra em _DUNGEON_ITEM_CATALOG", "frasco_teste" in S._DUNGEON_ITEM_CATALOG)
+    check("loot: entra em LOOT_POOL_PROCEDURAL", "frasco_teste" in S.LOOT_POOL_PROCEDURAL)
+    check("nativo ARREMESSAVEIS (frasco_oleo) intacto", "frasco_oleo" in S.ARREMESSAVEIS)
+    S._apply_custom_items([it])
+    check("reaplicar nao duplica em SHOP_MERCHANT",
+          sum(1 for i in S.SHOP_MERCHANT if i["id"] == "frasco_teste") == 1)
+    S._apply_custom_items([])
+    check("lista vazia remove de ARREMESSAVEIS", "frasco_teste" not in S.ARREMESSAVEIS)
+    check("lista vazia remove de SHOP_MERCHANT", not any(i["id"] == "frasco_teste" for i in S.SHOP_MERCHANT))
+    check("lista vazia remove de _DUNGEON_ITEM_CATALOG", "frasco_teste" not in S._DUNGEON_ITEM_CATALOG)
+    check("nativos de ARREMESSAVEIS sobrevivem ao clear", "frasco_oleo" in S.ARREMESSAVEIS)
+
+def test_arremessavel_uso_alvo():
+    print("\n[G3] Arremesso mirado ponta-a-ponta")
+    ok, it = S._validate_custom_item(throwable_sample(dano="2d6", em_chamas=True))
+    S._apply_custom_items([it])
+    r, p = _room_com_alvo()          # turno forçado, LOS livre, atk_bonus 50, monstro ac 1
+    p["bag"] = [dict(S._custom_throwable_inventory_dict(it))]
+    hp0 = r.monsters["m1"]["hp"]
+    import random; random.seed(4321)   # evita nat1 (que faria o arremesso errar)
+    asyncio.run(r.handle_throw_item("p1", {"item_id": "frasco_teste", "target_id": "m1"}))
+    check("alvo sofre dano", r.monsters["m1"]["hp"] < hp0)
+    check("item consumido da bolsa", not any(i["id"] == "frasco_teste" for i in p["bag"]))
+    check("gastou a ação principal", p.get("action_done") is True)
+    check("alvo pegou fogo", r.monsters["m1"].get("em_chamas_rodadas", 0) > 0)
+    S._apply_custom_items([])
+
+def test_arremessavel_uso_area():
+    print("\n[G4] Arremesso de área ponta-a-ponta")
+    ok, it = S._validate_custom_item(throwable_sample(id="bomba_teste", alvo="area",
+        area_raio=1, save_cd=99, dano="3d6", elemento="explosao"))   # cd 99 → save sempre falha
+    S._apply_custom_items([it])
+    r, p = _room_com_alvo()
+    r.monsters["m1"]["pos"] = [4, 1]   # dentro do alcance (4) mas fora do raio da área (1) do herói
+    p["bag"] = [dict(S._custom_throwable_inventory_dict(it))]
+    hp0 = r.monsters["m1"]["hp"]
+    asyncio.run(r.handle_throw_item("p1", {"item_id": "bomba_teste", "tx": 4, "ty": 1}))
+    check("alvo na área sofre dano", r.monsters["m1"]["hp"] < hp0)
+    check("item de área consumido", not any(i["id"] == "bomba_teste" for i in p["bag"]))
+    check("herói fora do raio ileso", p["hp"] == p["max_hp"])
+    S._apply_custom_items([])
+
 def test_validacao_pocao():
     print("\n[F1] Validacao de poção")
     ok, it = S._validate_custom_item(potion_sample())
@@ -835,5 +889,6 @@ if __name__ == "__main__":
     test_validacao_pocao()
     test_pocao_merge(); test_pocao_uso(); test_pocao_multidose()
     test_validacao_arremessavel()
+    test_arremessavel_merge(); test_arremessavel_uso_alvo(); test_arremessavel_uso_area()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)
