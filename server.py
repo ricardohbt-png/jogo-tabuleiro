@@ -1346,14 +1346,32 @@ def guild_items_for_class(class_id):
     """Itens do catálogo disponíveis para uma classe (cópias para envio)."""
     return [dict(v) for v in GUILD_CATALOG.values() if _guild_classe_ok(v["classe"], class_id)]
 
+def _habilidades_concedidas(player):
+    """Ids de `granted_ability` dos itens EQUIPADOS (Fase I). Varre todos os slots
+    de gear: hoje só arma/armadura/escudo/anel/bota carregam o campo, mas assim
+    elmo/acessórios futuros funcionam sem mexer aqui."""
+    out = set()
+    for peca in (player.get("gear") or {}).values():
+        if isinstance(peca, dict):
+            aid = peca.get("granted_ability")
+            if aid:
+                out.add(aid)
+    return out
+
 def tem_espec(player, espec_id):
-    """True se o jogador possui a especialização comprada (Fase 1+)."""
-    return espec_id in player.get("guild_owned", {}).get("especializacoes", [])
+    """True se o jogador possui a especialização comprada (Fase 1+) OU se um item
+    equipado a concede (Fase I)."""
+    if espec_id in player.get("guild_owned", {}).get("especializacoes", []):
+        return True
+    return f"guild_{espec_id}" in _habilidades_concedidas(player)
 
 def tem_tecnica_equipada(player, tecnica_id):
-    """True se a técnica está no 4º slot equipado do jogador (normal ou exclusiva)."""
+    """True se a técnica está no 4º slot equipado do jogador (normal ou exclusiva)
+    OU se um item equipado a concede (Fase I)."""
     eq = player.get("guild_equip", {})
-    return tecnica_id in (eq.get("tecnica"), eq.get("tecnica_exclusiva"))
+    if tecnica_id in (eq.get("tecnica"), eq.get("tecnica_exclusiva")):
+        return True
+    return f"guild_{tecnica_id}" in _habilidades_concedidas(player)
 
 # â”€â”€â”€ CHARACTER CLASSES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 

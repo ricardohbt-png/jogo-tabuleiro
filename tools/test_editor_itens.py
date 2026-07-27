@@ -1006,6 +1006,79 @@ def test_iniciativa_bonus():
         bonuses=[{"effect": "initiative", "value": 3}]))
     check("validação preserva initiative", ok and itv.get("bonuses") == [{"effect": "initiative", "value": 3}])
 
+def _item_com_habilidade(aid, **over):
+    """Peça de gear mínima que concede uma habilidade."""
+    base = {"id": "peca_hab", "name": "Peça Encantada", "granted_ability": aid}
+    base.update(over); return base
+
+def test_habilidade_concedida_helper():
+    print("\n[I1] _habilidades_concedidas varre o gear equipado")
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    check("sem itens: conjunto vazio", S._habilidades_concedidas(p) == set())
+    p["gear"]["weapon"] = _item_com_habilidade("guild_brutalidade")
+    check("coleta da arma", S._habilidades_concedidas(p) == {"guild_brutalidade"})
+    p["gear"]["ring1"] = _item_com_habilidade("guild_guerreiro_mira_3", id="anel_x")
+    check("coleta de vários slots",
+          S._habilidades_concedidas(p) == {"guild_brutalidade", "guild_guerreiro_mira_3"})
+    p["gear"]["armor"] = {"id": "sem_hab", "name": "Cota"}
+    check("ignora item sem granted_ability",
+          S._habilidades_concedidas(p) == {"guild_brutalidade", "guild_guerreiro_mira_3"})
+    p["gear"]["boots"] = _item_com_habilidade(None, id="bota_x")
+    check("ignora granted_ability vazio",
+          S._habilidades_concedidas(p) == {"guild_brutalidade", "guild_guerreiro_mira_3"})
+    check("gear ausente não quebra", S._habilidades_concedidas({}) == set())
+
+def test_portoes_concedidos():
+    print("\n[I2] Portões aceitam habilidade concedida por item")
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    check("sem item: técnica não equipada", not S.tem_tecnica_equipada(p, "brutalidade"))
+    check("sem item: sem especialização", not S.tem_espec(p, "guerreiro_mira_3"))
+    p["gear"]["weapon"] = _item_com_habilidade("guild_brutalidade")
+    check("com item: técnica liberada", S.tem_tecnica_equipada(p, "brutalidade"))
+    check("item de técnica não libera especialização", not S.tem_espec(p, "guerreiro_mira_3"))
+    p["gear"]["ring1"] = _item_com_habilidade("guild_guerreiro_mira_3", id="anel_x")
+    check("com item: especialização liberada", S.tem_espec(p, "guerreiro_mira_3"))
+    p["gear"]["weapon"] = None
+    check("desequipar remove a técnica", not S.tem_tecnica_equipada(p, "brutalidade"))
+    check("a outra peça continua valendo", S.tem_espec(p, "guerreiro_mira_3"))
+
+def test_tecnica_concedida_uso():
+    print("\n[I3] Técnica concedida por item é usável (efeito+custo+recarga)")
+    r = _gear_room()
+    r.phase = "playing"
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    r.players["p1"] = p
+    r.player_order = ["p1"]; r.turn_index = 0
+    r.current_actor = lambda: None
+    p["gear"]["weapon"] = _item_com_habilidade("guild_brutalidade")
+    p["fome"], p["sede"] = 10, 10
+    asyncio.run(r.handle_usar_tecnica("p1", "brutalidade"))
+    # Brutalidade é `buff_turno`: fica ARMADA (technique_pending) — custo/recarga só
+    # entram quando o ataque que ela modifica de fato acontece
+    # (`_consumir_tecnica_apos_efeito`, espelhando o mesmo comportamento pra quem
+    # possui a técnica via Guilda normal — nada muda por vir de um item).
+    check("efeito aplicado (+2 dano de arma)", p.get("tecnica_buff_dano_arma") == 2)
+    check("armada mas ainda sem custo", p["fome"] == 10 and p["sede"] == 10)
+    check("ainda sem recarga (não consumida)", r.tecnica_restante(p, "brutalidade") == 0)
+    check("marcada como pendente", p.get("technique_pending", {}).get("brutalidade") is True)
+    consumida = r._consumir_tecnica_apos_efeito(p, "brutalidade")
+    check("consumida ao modificar o ataque", consumida)
+    check("custo debitado", p["fome"] < 10 and p["sede"] < 10)
+    check("entrou em recarga", r.tecnica_restante(p, "brutalidade") > 0)
+    p["tecnica_buff_dano_arma"] = 0
+    asyncio.run(r.handle_usar_tecnica("p1", "brutalidade"))
+    check("2ª ativação recusada pela recarga", p.get("tecnica_buff_dano_arma") == 0)
+
+def test_espec_concedida_efeito():
+    print("\n[I4] Especialização concedida altera o efeito real")
+    r = _gear_room()
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    check("sem item: Mira III não dá bônus", r._mira_dano_bonus(p) == 0)
+    p["gear"]["ring1"] = _item_com_habilidade("guild_guerreiro_mira_3", id="anel_x")
+    check("com item: Mira III dá +2 de dano", r._mira_dano_bonus(p) == 2)
+    p["gear"]["ring1"] = None
+    check("desequipar volta a 0", r._mira_dano_bonus(p) == 0)
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
@@ -1031,5 +1104,7 @@ if __name__ == "__main__":
     test_validacao_veneno()
     test_veneno_merge(); test_veneno_uso(); test_veneno_efeitos()
     test_veneno_msg_penalidade()
+    test_habilidade_concedida_helper(); test_portoes_concedidos()
+    test_tecnica_concedida_uso(); test_espec_concedida_efeito()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)
