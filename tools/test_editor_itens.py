@@ -264,6 +264,55 @@ def throwable_sample(**over):
             "disponibilidade": {"loja": True, "baus": False, "loot_monstro": False}}
     base.update(over); return base
 
+def poison_sample(**over):
+    base = {"id": "veneno_teste", "name": "Veneno Teste", "emoji": "☠️",
+            "item_type": "poison", "operacao": "dano", "dano": "1d4",
+            "save": "fortitude", "dificuldade": 12, "anula": True, "duracao": "1d6",
+            "save_aplicacao": True, "descricao": "Dói.",
+            "allowed_classes": [], "price": 20,
+            "disponibilidade": {"loja": True, "baus": False, "loot_monstro": False}}
+    base.update(over); return base
+
+def test_validacao_veneno():
+    print("\n[H1] Validacao de veneno")
+    ok, it = S._validate_custom_item(poison_sample())
+    check("aceita veneno de dano", ok)
+    check("item_type/slot/effect",
+          ok and it.get("item_type") == "poison" and it.get("item_slot") == "bag"
+          and it.get("effect") == "coat_poison")
+    check("campos comuns preservados",
+          ok and it.get("save") == "fortitude" and it.get("dificuldade") == 12
+          and it.get("anula") is True and it.get("duracao") == "1d6")
+    check("dano + save_aplicacao", ok and it.get("dano") == "1d4" and it.get("save_aplicacao") is True)
+    check("descricao preservada", ok and it.get("descricao") == "Dói.")
+    okr, itr = S._validate_custom_item(poison_sample(id="veneno_red", operacao="reduzir",
+        atributo="constituicao", valor="1d4"))
+    check("aceita reduzir", okr and itr.get("operacao") == "reduzir"
+          and itr.get("atributo") == "constituicao" and itr.get("valor") == "1d4")
+    okp, itp = S._validate_custom_item(poison_sample(id="veneno_pen", operacao="penalidade",
+        atributos=[["ataque", -2], ["movimento", -1], ["xpto", -9]]))
+    check("penalidade filtra chave invalida",
+          okp and itp.get("atributos") == [["ataque", -2], ["movimento", -1]])
+    okt, itt = S._validate_custom_item(poison_sample(id="veneno_pet", operacao="petrificar",
+        anula=False, duracao_falha="1d4", penalidade_falha=[["movimento", -1]]))
+    check("aceita petrificar", okt and itt.get("operacao") == "petrificar"
+          and itt.get("duracao_falha") == "1d4"
+          and itt.get("penalidade_falha") == [["movimento", -1]])
+    okc, itc = S._validate_custom_item(poison_sample(id="veneno_ceg", operacao="cegar",
+        anula=False, penalidade_ataque=-4, bloqueia_distancia=True, duracao_falha="1d4"))
+    check("aceita cegar", okc and itc.get("operacao") == "cegar"
+          and itc.get("penalidade_ataque") == -4 and itc.get("bloqueia_distancia") is True)
+    oko, _ = S._validate_custom_item(poison_sample(operacao="explodir"))
+    check("rejeita operacao invalida", not oko)
+    oka, _ = S._validate_custom_item(poison_sample(operacao="reduzir", atributo="carisma"))
+    check("rejeita atributo invalido em reduzir", not oka)
+    okv, _ = S._validate_custom_item(poison_sample(operacao="penalidade", atributos=[]))
+    check("rejeita penalidade sem pares", not okv)
+    okn, _ = S._validate_custom_item(poison_sample(id="veneno_fungo_acre"))
+    check("rejeita id nativo de VENENOS", not okn)
+    oks, its = S._validate_custom_item(poison_sample(save="carisma"))
+    check("save invalido cai para fortitude", oks and its.get("save") == "fortitude")
+
 def test_validacao_arremessavel():
     print("\n[G1] Validacao de arremessável")
     ok, it = S._validate_custom_item(throwable_sample())
@@ -890,5 +939,6 @@ if __name__ == "__main__":
     test_pocao_merge(); test_pocao_uso(); test_pocao_multidose()
     test_validacao_arremessavel()
     test_arremessavel_merge(); test_arremessavel_uso_alvo(); test_arremessavel_uso_area()
+    test_validacao_veneno()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)

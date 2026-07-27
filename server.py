@@ -21095,6 +21095,12 @@ _ITEM_POTION_EFFECTS = {"heal", "regeneration", "atk_bonus"}
 _ITEM_THROW_TARGETS = {"ataque_alvo", "area"}
 _ITEM_THROW_ELEMENTS = {"fogo", "frio", "eletrico", "acido", "sagrado", "explosao"}
 
+# Operações/atributos/penalidades/saves válidos p/ veneno custom (Fase H).
+_ITEM_POISON_OPS = {"dano", "reduzir", "penalidade", "petrificar", "cegar"}
+_ITEM_POISON_ATTRS = {"forca", "constituicao", "destreza", "inteligencia"}
+_ITEM_POISON_PENS = {"ataque", "movimento", "dano", "ca", "percepcao"}
+_ITEM_POISON_SAVES = {"fortitude", "reflexos", "vontade"}
+
 # Tipos de dano válidos p/ o bônus de resistência do herói (Fase C).
 _RESIST_TYPES = {DMG_PHYSICAL, DMG_FIRE, DMG_COLD, DMG_LIGHTNING, DMG_ACID,
                  DMG_HOLY, DMG_POISON, DMG_MAGIC, DMG_WATER}
@@ -21119,6 +21125,8 @@ def _validate_custom_item(raw):
         return _validate_custom_potion(raw)
     if it == "throwable":
         return _validate_custom_throwable(raw)
+    if it == "poison":
+        return _validate_custom_poison(raw)
     return False, "tipo de item não suportado"
 
 def _validate_custom_armor(raw):
@@ -21308,6 +21316,84 @@ def _validate_custom_throwable(raw):
         item["em_chamas"] = True
         item["chamas_dur"] = str(dur).lower() if _die_ok(dur) else "1d4"
         item["chamas_agua_apaga"] = bool(raw.get("chamas_agua_apaga", True))
+    return True, item
+
+def _validate_custom_poison(raw):
+    """Valida veneno custom (Fase H). Gera DUAS coisas no merge: a entrada de
+    VENENOS (definição do efeito, via _custom_poison_defn) e o item de bolsa
+    'coat_poison' que unta a arma. Convenção dos nativos: o MESMO id serve aos dois.
+    _aplicar_veneno é data-driven nas 5 operações — o motor não muda."""
+    iid = str(raw.get("id") or "").strip().lower()
+    if not iid or not all(c.isalnum() or c == "_" for c in iid):
+        return False, "id use apenas letras, números e _"
+    name = str(raw.get("name") or "").strip()[:60]
+    if not name:
+        return False, "informe o nome do veneno"
+    native = {i["id"] for shop in (SHOP_MERCHANT, SHOP_TEMPLE, SHOP_TAVERN)
+              for i in shop if not i.get("custom")}
+    native |= {k for k, v in VENENOS.items() if not v.get("custom")}
+    if iid in native:
+        return False, "o id não pode substituir um item nativo"
+    op = raw.get("operacao")
+    if op not in _ITEM_POISON_OPS:
+        return False, "efeito de veneno inválido"
+    def _int0(v):
+        try: return int(v or 0)
+        except (TypeError, ValueError): return 0
+    def _dur(v, padrao="1d4"):
+        """Duração/valor: aceita dado NdX ou int >= 1."""
+        if isinstance(v, bool):
+            return padrao
+        if isinstance(v, int):
+            return max(1, v)
+        return str(v).lower() if _die_ok(v) else padrao
+    def _pares(lista):
+        out = []
+        for par in (lista or []):
+            if isinstance(par, (list, tuple)) and len(par) == 2 and par[0] in _ITEM_POISON_PENS:
+                out.append([par[0], -abs(_int0(par[1]))])
+        return out
+    classes = [c for c in (raw.get("allowed_classes") or []) if c in _ITEM_CLASSES]
+    try: price = max(0, int(raw.get("price", 0)))
+    except (TypeError, ValueError): price = 0
+    disp = raw.get("disponibilidade") or {}
+    save = raw.get("save") if raw.get("save") in _ITEM_POISON_SAVES else "fortitude"
+    item = {
+        "id": iid, "name": name, "emoji": str(raw.get("emoji") or "☠️")[:8],
+        "item_type": "poison", "item_slot": "bag", "effect": "coat_poison", "custom": True,
+        "operacao": op, "save": save,
+        "dificuldade": max(1, min(40, _int0(raw.get("dificuldade", 10)) or 10)),
+        "anula": bool(raw.get("anula", True)),
+        "duracao": _dur(raw.get("duracao"), "1d4"),
+        "allowed_classes": classes, "price": price,
+        "disponibilidade": {"loja": bool(disp.get("loja")), "baus": bool(disp.get("baus")),
+                             "loot_monstro": bool(disp.get("loot_monstro"))},
+    }
+    desc = str(raw.get("descricao") or "").strip()[:160]
+    if desc:
+        item["descricao"] = desc
+    if op == "dano":
+        item["dano"] = _dur(raw.get("dano"), "1d4")
+        if raw.get("save_neutraliza_por_rodada"):
+            item["save_neutraliza_por_rodada"] = True
+        else:
+            item["save_aplicacao"] = True
+    elif op == "reduzir":
+        if raw.get("atributo") not in _ITEM_POISON_ATTRS:
+            return False, "atributo de veneno inválido"
+        item["atributo"] = raw["atributo"]
+        item["valor"] = _dur(raw.get("valor"), "1d4")
+    elif op == "penalidade":
+        pares = _pares(raw.get("atributos"))
+        if not pares:
+            return False, "informe ao menos uma penalidade válida"
+        item["atributos"] = pares
+    else:   # petrificar | cegar
+        item["duracao_falha"] = _dur(raw.get("duracao_falha"), "1d4")
+        item["penalidade_falha"] = _pares(raw.get("penalidade_falha"))
+        if op == "cegar":
+            item["penalidade_ataque"] = -abs(_int0(raw.get("penalidade_ataque", -4)) or 4)
+            item["bloqueia_distancia"] = bool(raw.get("bloqueia_distancia"))
     return True, item
 
 def _validate_custom_weapon(raw):
