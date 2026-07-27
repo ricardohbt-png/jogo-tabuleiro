@@ -1239,3 +1239,31 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `docs/superpowers/{specs,plans}/2026-07-23-editor-itens-fase-f-pocoes*`. Fases seguintes:
 > arremessáveis/venenos (subsistemas próprios) + antídoto/cura de status (ramo novo no
 > `handle_use_item`) + `granted_ability` ativável.
+
+> **Editor de Itens — Fase G (Arremessáveis):** destrava a sub-aba **Arremessáveis** (só
+> **Venenos** segue 🔒). Cobre os **dois modos de mira** do subsistema: `ataque_alvo` (teste de
+> ataque por DES vs CA) e `area` (raio + save de Reflexos, metade no sucesso), com dano+elemento
+> e o status **em chamas**. `item_type:"throwable"` → `_validate_custom_throwable` (dispatch em
+> `_validate_custom_item`; `alvo` em `_ITEM_THROW_TARGETS`, `elemento` em `_ITEM_THROW_ELEMENTS`,
+> alcance clamp 1–12, `area_raio` 1–3 e `save {tipo:"reflexos",cd}` só na área, `chamas_dur`/
+> `chamas_agua_apaga` quando `em_chamas`; protege ids nativos da união das 3 lojas **∪
+> `ARREMESSAVEIS`**). `_custom_throwable_defn` gera a entrada de `ARREMESSAVEIS` no formato
+> nativo (marcada `custom:True` para o **cleanup próprio** em `_apply_custom_items`, espelhando
+> o `prev_weapon_ids` de `WEAPONS`); `_custom_throwable_inventory_dict` é o dict de bolsa/loja e
+> **carrega os metadados de mira** (`alvo`/`alcance`/`area_raio`). Merge no mercador +
+> `_DUNGEON_ITEM_CATALOG`/`LOOT_POOL_PROCEDURAL` (limpeza de loja/baús/loot herdada da Fase E).
+> **`handle_throw_item`/`_throw_item_alvo`/`_throw_item_area` ficam intocados** — leem tudo do
+> `defn`. **Primeira fase do Editor de Itens a tocar o cliente de jogo:** a mira é decidida por
+> `CATALOGO_ITENS[item.id]` (catálogo ESTÁTICO em `src/gameState.js`, que não conhece customs),
+> então dois pontos ganharam fallback para os campos do próprio item — `resolveTileClick`
+> (`src/gameState.js`, ramo `pendingThrow`: `… || th.alvo || 'ataque_alvo'`) e
+> `_iniciarMiraArremesso` (`game.js`: `alvoTipo`/`alcance`/`area_raio` + `alvo` no
+> `GS.pendingThrow`). Itens **nativos** mantêm a precedência do `CATALOGO_ITENS` (comportamento
+> inalterado). Cliente: `serializeThrowable`/`validateThrowableDraft`/`suggestPriceThrowable` +
+> `THROW_TARGETS`/`THROW_ELEMENTS` em `editor_items_logic.js`; `renderThrowableForm` com campos
+> condicionais (área/dano/chamas re-renderizam no toggle, padrão do `ie-manejo`). **Fora de
+> escopo:** efeitos bespoke do catálogo nativo — ácido residual (`residual`/`corrosao_ac`),
+> controle (`controle`, cola/rede), zonas (`zona`, fumaça) e água benta. Testes:
+> `tools/test_editor_itens.py` [G1]–[G4] (inclui arremesso mirado e de área ponta-a-ponta via
+> `handle_throw_item`) + `tools/test_editor_items_logic.js`. Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-07-26-editor-itens-fase-g-arremessaveis*`.
