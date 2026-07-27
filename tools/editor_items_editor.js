@@ -7,7 +7,7 @@
     function (c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];}); };
   var TYPES = [["armas","Armas",true],["armaduras","Armaduras",true],["escudos","Escudos",true],
     ["aneis","Anéis",true],["botas","Botas",true],["pocoes","Poções",true],
-    ["arremessaveis","Arremessáveis",true],["venenos","Venenos",false]];
+    ["arremessaveis","Arremessáveis",true],["venenos","Venenos",true]];
   var CLASSES = [["warrior","Guerreiro"],["mage","Mago"],["rogue","Ladino"],
     ["cleric","Clérigo"],["ranger","Patrulheiro"],["paladin","Paladino"],["bard","Bardo"]];
 
@@ -45,11 +45,22 @@
       em_chamas:false, chamas_qtd:1, chamas_faces:4, chamas_agua_apaga:true,
       allowed_classes:[], disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:0, id:"" };
   }
+  function novoDraftPoison() {
+    return { name:"", emoji:"☠️", item_type:"poison", operacao:"dano", descricao:"",
+      save:"fortitude", dificuldade:12, anula:true, dur_qtd:1, dur_faces:6,
+      dano_fixo:false, dano_valor:1, dano_qtd:1, dano_faces:4, modelo_save:"aplicacao",
+      atributo:"forca", val_qtd:1, val_faces:4,
+      atributos:[{chave:"ataque", valor:1}],
+      durfalha_qtd:1, durfalha_faces:4, penalidade_falha:[{chave:"movimento", valor:1}],
+      penalidade_ataque:4, bloqueia_distancia:false,
+      allowed_classes:[], disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:0, id:"" };
+  }
   function novoDraftFor(type) {
     if (type === "armaduras" || type === "escudos") return novoDraftArmor(type);
     if (type === "aneis" || type === "botas") return novoDraftAccessory(type);
     if (type === "pocoes") return novoDraftPotion();
     if (type === "arremessaveis") return novoDraftThrowable();
+    if (type === "venenos") return novoDraftPoison();
     return novoDraft();
   }
 
@@ -117,6 +128,7 @@
     }
     if (activeType === "pocoes") { renderPotionForm(f); return; }
     if (activeType === "arremessaveis") { renderThrowableForm(f); return; }
+    if (activeType === "venenos") { renderPoisonForm(f); return; }
     var elemTypes = L.ELEM.map(function (e) { return '<option value="' + e + '">' + e + '</option>'; }).join("");
     var abil = abilityOptions();
     f.innerHTML = [
@@ -647,6 +659,221 @@
     var status = root.querySelector("#ie-status");
     if (!v.ok) { status.textContent = "⚠️ " + v.msg; return; }
     var item = L.serializeThrowable(draft);
+    status.textContent = "salvando…";
+    try {
+      if (artFile) { await window.EDITOR_SAVE.uploadItemArt(artFile, item.id); }
+      var saved = await window.EDITOR_SAVE.saveCustomItem(item);
+      status.textContent = "✅ salvo: " + saved.id;
+      window.EDITOR_CUSTOM_ITEMS = (window.EDITOR_CUSTOM_ITEMS || []).filter(function (r) { return r.id !== saved.id; });
+      window.EDITOR_CUSTOM_ITEMS.push(saved);
+    } catch (e) { status.textContent = "❌ " + (e && e.message || "falha ao salvar"); }
+  }
+
+  var POISON_OP_LABELS = { dano:"Dano por rodada", reduzir:"Reduzir atributo",
+    penalidade:"Penalidade (ataque/movimento/…)", petrificar:"Petrificar", cegar:"Cegar" };
+  var POISON_ATTR_LABELS = { forca:"Força", constituicao:"Constituição",
+    destreza:"Destreza", inteligencia:"Inteligência" };
+  var POISON_PEN_LABELS = { ataque:"Ataque", movimento:"Movimento", dano:"Dano",
+    ca:"CA", percepcao:"Percepção" };
+
+  // Linhas dinâmicas de penalidade (chave + valor). `cls` separa as duas listas
+  // (penalidade da operação × penalidade do save parcial) no mesmo formulário.
+  function penRowsHTML(cls, lista) {
+    var opts = (L.POISON_PENS || []).map(function (k) {
+      return '<option value="' + k + '">' + esc(POISON_PEN_LABELS[k] || k) + '</option>'; }).join("");
+    var linhas = (lista || []).map(function (o) {
+      return '<span class="ie-elem-row ' + cls + '-row">' +
+        '<select class="' + cls + '-k">' + opts + '</select> −' +
+        '<input type="number" class="' + cls + '-v" value="' + (Math.abs(+o.valor) || 1) + '" min="1" max="20">' +
+        ' <button class="' + cls + '-del">✕</button></span>'; }).join("");
+    return '<div class="' + cls + '-box">' + linhas + '</div>' +
+      '<button class="' + cls + '-add">+ penalidade</button>';
+  }
+
+  function renderPoisonForm(f) {
+    var op = draft.operacao;
+    var faces = [4,6,8,10,12];
+    var dieSel = function (id, sel) {
+      return '<select id="' + id + '">' + faces.map(function (x) {
+        return '<option' + (x === sel ? " selected" : "") + '>' + x + '</option>'; }).join("") + '</select>'; };
+    var blocos = "";
+    if (op === "dano") {
+      blocos = seccao("Dano por rodada",
+        campo("Valor fixo (em vez de dado)", chk("ie-danofixo", draft.dano_fixo)) +
+        (draft.dano_fixo ? campo("Dano", numInput("ie-danoval", draft.dano_valor, 1, 99))
+          : campo("Quantidade", numInput("ie-danoq", draft.dano_qtd, 1, 10)) +
+            campo("Dado", dieSel("ie-danof", draft.dano_faces))) +
+        campo("Modelo de resistência", '<select id="ie-modelosave">' +
+          '<option value="aplicacao"' + (draft.modelo_save === "rodada" ? "" : " selected") + '>Testa 1× ao aplicar</option>' +
+          '<option value="rodada"' + (draft.modelo_save === "rodada" ? " selected" : "") + '>Testa a cada rodada (neutraliza)</option></select>'));
+    } else if (op === "reduzir") {
+      blocos = seccao("Redução de atributo",
+        campo("Atributo", '<select id="ie-patributo">' + (L.POISON_ATTRS || []).map(function (a) {
+          return '<option value="' + a + '"' + (a === draft.atributo ? " selected" : "") + '>' + esc(POISON_ATTR_LABELS[a] || a) + '</option>'; }).join("") + '</select>') +
+        campo("Quantidade", numInput("ie-valq", draft.val_qtd, 1, 10)) +
+        campo("Dado", dieSel("ie-valf", draft.val_faces)) +
+        '<span class="ie-hint">Constituição recalcula PV máximo e Fortitude automaticamente.</span>');
+    } else if (op === "penalidade") {
+      blocos = seccao("Penalidades", penRowsHTML("iepen", draft.atributos));
+    } else {
+      blocos = seccao("Sucesso parcial (save bem-sucedido)",
+        campo("Duração (quantidade)", numInput("ie-durfq", draft.durfalha_qtd, 1, 10)) +
+        campo("Duração (dado)", dieSel("ie-durff", draft.durfalha_faces)) +
+        penRowsHTML("iepf", draft.penalidade_falha)) +
+        (op === "cegar" ? seccao("Cegueira",
+          campo("Penalidade de ataque (−)", numInput("ie-penatk", draft.penalidade_ataque, 1, 20)) +
+          campo("Bloqueia ataques à distância", chk("ie-bloqdist", draft.bloqueia_distancia))) : "");
+    }
+    f.innerHTML = [
+      seccao("Identidade",
+        campo("Nome", '<input id="ie-name" value="' + esc(draft.name) + '">') +
+        campo("Ícone", '<input id="ie-emoji" size="3" value="' + esc(draft.emoji) + '">') +
+        campo("Descrição (tooltip)", '<input id="ie-desc" value="' + esc(draft.descricao) + '">')),
+      seccao("Efeito",
+        campo("Tipo", '<select id="ie-pop">' + (L.POISON_OPS || []).map(function (o) {
+          return '<option value="' + o + '"' + (o === op ? " selected" : "") + '>' + esc(POISON_OP_LABELS[o] || o) + '</option>'; }).join("") + '</select>')),
+      seccao("Resistência",
+        campo("Save", '<select id="ie-psave">' + (L.POISON_SAVES || []).map(function (s) {
+          return '<option value="' + s + '"' + (s === draft.save ? " selected" : "") + '>' + esc(s) + '</option>'; }).join("") + '</select>') +
+        campo("CD", numInput("ie-pcd", draft.dificuldade, 1, 40)) +
+        campo("Sucesso anula o efeito", chk("ie-panula", draft.anula))),
+      seccao("Duração",
+        campo("Quantidade", numInput("ie-durq", draft.dur_qtd, 1, 10)) +
+        campo("Dado", dieSel("ie-durf", draft.dur_faces))),
+      blocos,
+      seccao("Restrição de classe (vazio = todas)",
+        CLASSES.map(function (c) { return '<label class="ie-cls">' +
+          '<input type="checkbox" class="ie-class" value="' + c[0] + '"> ' + esc(c[1]) + '</label>'; }).join("")),
+      seccao("Disponibilidade",
+        chkLbl("ie-disp-loja", "Loja (Mercador)", draft.disponibilidade.loja) +
+        chkLbl("ie-disp-baus", "Baús / recompensas", draft.disponibilidade.baus) +
+        chkLbl("ie-disp-loot", "Loot de monstro", draft.disponibilidade.loot_monstro)),
+      seccao("Preço",
+        campo("Ouro", numInput("ie-price", draft.price, 0, 99999)) +
+        '<span id="ie-price-sug" class="ie-hint"></span>'),
+      seccao("Imagem",
+        '<input type="file" id="ie-art" accept="image/png"> ' +
+        '<span id="ie-art-name" class="ie-hint"></span>'),
+      '<div class="ie-actions"><button id="ie-save">💾 Salvar veneno</button>' +
+        '<span id="ie-status" class="ie-hint"></span></div>',
+    ].join("");
+    // Restaura os selects de chave das linhas de penalidade (o HTML não os marca).
+    ["iepen", "iepf"].forEach(function (cls) {
+      var fonte = cls === "iepen" ? draft.atributos : draft.penalidade_falha;
+      root.querySelectorAll("." + cls + "-row").forEach(function (row, i) {
+        var sel = row.querySelector("." + cls + "-k");
+        if (sel && fonte && fonte[i]) sel.value = fonte[i].chave;
+      });
+    });
+    previewFn = renderPoisonPreview;
+    bindPoisonForm();
+    renderPoisonPreview();
+  }
+
+  function lerPenRows(cls) {
+    return Array.prototype.map.call(root.querySelectorAll("." + cls + "-row"), function (row) {
+      return { chave: row.querySelector("." + cls + "-k").value,
+               valor: Math.abs(+row.querySelector("." + cls + "-v").value || 1) };
+    });
+  }
+
+  function currentPoisonDraftFromForm() {
+    var g = function (id) { return root.querySelector("#" + id); };
+    draft.name = g("ie-name").value; draft.emoji = g("ie-emoji").value;
+    draft.descricao = g("ie-desc").value;
+    draft.operacao = g("ie-pop").value;
+    draft.save = g("ie-psave").value;
+    draft.dificuldade = Math.max(1, Math.min(40, +g("ie-pcd").value || 10));
+    draft.anula = g("ie-panula").checked;
+    draft.dur_qtd = Math.max(1, +g("ie-durq").value || 1);
+    draft.dur_faces = +g("ie-durf").value || 4;
+    var df = g("ie-danofixo"); if (df) draft.dano_fixo = df.checked;
+    var dv = g("ie-danoval"); if (dv) draft.dano_valor = Math.max(1, +dv.value || 1);
+    var dq = g("ie-danoq"); if (dq) draft.dano_qtd = Math.max(1, +dq.value || 1);
+    var dfa = g("ie-danof"); if (dfa) draft.dano_faces = +dfa.value || 4;
+    var ms = g("ie-modelosave"); if (ms) draft.modelo_save = ms.value;
+    var at = g("ie-patributo"); if (at) draft.atributo = at.value;
+    var vq = g("ie-valq"); if (vq) draft.val_qtd = Math.max(1, +vq.value || 1);
+    var vf = g("ie-valf"); if (vf) draft.val_faces = +vf.value || 4;
+    if (root.querySelector(".iepen-box")) draft.atributos = lerPenRows("iepen");
+    if (root.querySelector(".iepf-box")) draft.penalidade_falha = lerPenRows("iepf");
+    var dfq = g("ie-durfq"); if (dfq) draft.durfalha_qtd = Math.max(1, +dfq.value || 1);
+    var dff = g("ie-durff"); if (dff) draft.durfalha_faces = +dff.value || 4;
+    var pa = g("ie-penatk"); if (pa) draft.penalidade_ataque = Math.max(1, +pa.value || 4);
+    var bd = g("ie-bloqdist"); if (bd) draft.bloqueia_distancia = bd.checked;
+    draft.allowed_classes = Array.prototype.map.call(root.querySelectorAll(".ie-class:checked"), function (c) { return c.value; });
+    draft.disponibilidade = { loja: g("ie-disp-loja").checked, baus: g("ie-disp-baus").checked, loot_monstro: g("ie-disp-loot").checked };
+    draft.price = +g("ie-price").value || 0;
+    return draft;
+  }
+
+  function renderPoisonPreview() {
+    currentPoisonDraftFromForm();
+    var item = L.serializePoison(draft);
+    root.querySelector("#ie-price-sug").textContent = "sugerido: " + L.suggestPricePoison(item) + " 🪙";
+    var parts = [POISON_OP_LABELS[item.operacao] || item.operacao,
+                 item.save + " CD " + item.dificuldade + (item.anula ? " (anula)" : " (parcial)"),
+                 "dura " + item.duracao];
+    if (item.dano) parts.push("dano " + item.dano);
+    if (item.atributo) parts.push("−" + item.valor + " " + (POISON_ATTR_LABELS[item.atributo] || item.atributo));
+    if (item.atributos && item.atributos.length)
+      parts.push(item.atributos.map(function (p) { return p[1] + " " + p[0]; }).join(", "));
+    if (item.penalidade_ataque) parts.push(item.penalidade_ataque + " ataque (cego)");
+    var topo = artURL ? '<img class="ie-card-img" src="' + artURL + '" alt="">'
+      : '<div class="ie-card-emoji">' + esc(item.emoji) + '</div>';
+    root.querySelector("#ie-preview").innerHTML =
+      '<div class="ie-card">' + topo +
+      '<div class="ie-card-name">' + esc(item.name || "(sem nome)") + '</div>' +
+      '<div class="ie-card-stats">' + esc(parts.join(" · ")) + '</div>' +
+      '<div class="ie-card-id">id: ' + esc(item.id) + '</div></div>';
+  }
+
+  function bindPoisonForm() {
+    root.querySelectorAll("#ie-form input,#ie-form select").forEach(function (el) {
+      if (el.id === "ie-art") return;
+      el.onchange = renderPoisonPreview; el.oninput = renderPoisonPreview;
+    });
+    // Trocar a operação (ou o modo do dano) troca QUAIS campos existem.
+    ["ie-pop", "ie-danofixo"].forEach(function (id) {
+      var el = root.querySelector("#" + id);
+      if (el) el.onchange = function () { currentPoisonDraftFromForm(); renderPoisonForm(root.querySelector("#ie-form")); };
+    });
+    // Linhas de penalidade: adicionar/remover re-renderiza o form.
+    ["iepen", "iepf"].forEach(function (cls) {
+      var add = root.querySelector("." + cls + "-add");
+      if (add) add.onclick = function () {
+        currentPoisonDraftFromForm();
+        var alvo = cls === "iepen" ? "atributos" : "penalidade_falha";
+        draft[alvo] = (draft[alvo] || []).concat([{ chave: "ataque", valor: 1 }]);
+        renderPoisonForm(root.querySelector("#ie-form"));
+      };
+      root.querySelectorAll("." + cls + "-del").forEach(function (btn, i) {
+        btn.onclick = function () {
+          currentPoisonDraftFromForm();
+          var alvo = cls === "iepen" ? "atributos" : "penalidade_falha";
+          draft[alvo] = (draft[alvo] || []).filter(function (_, j) { return j !== i; });
+          renderPoisonForm(root.querySelector("#ie-form"));
+        };
+      });
+    });
+    (draft.allowed_classes || []).forEach(function (c) {
+      var el = root.querySelector('.ie-class[value="' + c + '"]'); if (el) el.checked = true; });
+    root.querySelector("#ie-art").onchange = function (e) {
+      artFile = e.target.files[0] || null;
+      if (artURL) { URL.revokeObjectURL(artURL); artURL = null; }
+      if (artFile) artURL = URL.createObjectURL(artFile);
+      root.querySelector("#ie-art-name").textContent = artFile ? artFile.name : "";
+      renderPoisonPreview();
+    };
+    root.querySelector("#ie-save").onclick = onSavePoison;
+  }
+
+  async function onSavePoison() {
+    currentPoisonDraftFromForm();
+    var v = L.validatePoisonDraft(draft);
+    var status = root.querySelector("#ie-status");
+    if (!v.ok) { status.textContent = "⚠️ " + v.msg; return; }
+    var item = L.serializePoison(draft);
     status.textContent = "salvando…";
     try {
       if (artFile) { await window.EDITOR_SAVE.uploadItemArt(artFile, item.id); }
