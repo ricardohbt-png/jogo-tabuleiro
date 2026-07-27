@@ -10678,8 +10678,8 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        if p.get("class_id") != "bard":
-            await self.send_to(pid, {"type": "error", "msg": "Apenas Henrique pode usar Provocação."}); return
+        if not _pode_hab_heroi(p, "bard", "hero_bard_provocacao"):
+            await self.send_to(pid, {"type": "error", "msg": "Você não sabe usar Provocação."}); return
         if p.get("bonus_action_used"):
             await self.send_to(pid, {"type": "error", "msg": "Ação bônus já usada neste turno."}); return
 
@@ -10717,7 +10717,8 @@ class GameRoom:
         """Retorna o bardo (vivo) que provocou este monstro, ou None."""
         pid = monstro.get("provocado_por")
         b = self.players.get(pid) if pid else None
-        if (b and b.get("alive") and b.get("class_id") == "bard"
+        if (b and b.get("alive")
+                and _pode_hab_heroi(b, "bard", "hero_bard_provocacao")
                 and monstro.get("provocado_turnos", 0) > 0):
             return b
         return None
@@ -11109,8 +11110,8 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        if p.get("class_id") != "paladin":
-            await self.send_to(pid, {"type": "error", "msg": "Apenas Richard pode usar Golpe Sagrado."}); return
+        if not _pode_hab_heroi(p, "paladin", "hero_paladin_golpe_sagrado"):
+            await self.send_to(pid, {"type": "error", "msg": "Você não sabe usar Golpe Sagrado."}); return
         if p.get("golpe_sagrado_ativo"):
             await self.send_to(pid, {"type": "error", "msg": "Golpe Sagrado já está ativo."}); return
         if p.get("bonus_action_used"):
@@ -11132,7 +11133,8 @@ class GameRoom:
 
     async def handle_desativar_golpe_sagrado(self, pid, data=None):
         p = self.players.get(pid)
-        if not p or p.get("class_id") != "paladin" or not p.get("golpe_sagrado_ativo"): return
+        if not p or not _pode_hab_heroi(p, "paladin", "hero_paladin_golpe_sagrado") \
+                or not p.get("golpe_sagrado_ativo"): return
         p["golpe_sagrado_ativo"] = False
         await self.gm_say(f"⚔️ **{p['name']}** baixa a lâmina sagrada — Golpe Sagrado desativado.")
         await self.push_state()
@@ -11141,8 +11143,8 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        if p.get("class_id") != "paladin":
-            await self.send_to(pid, {"type": "error", "msg": "Apenas Richard pode usar Protetor."}); return
+        if not _pode_hab_heroi(p, "paladin", "hero_paladin_protetor"):
+            await self.send_to(pid, {"type": "error", "msg": "Você não sabe usar Protetor."}); return
         if p.get("bonus_action_used"):
             await self.send_to(pid, {"type": "error", "msg": "Ação bônus já usada neste turno."}); return
 
@@ -11172,7 +11174,8 @@ class GameRoom:
 
     async def handle_desativar_protetor(self, pid, data=None):
         p = self.players.get(pid)
-        if not p or p.get("class_id") != "paladin" or not p.get("protetor_ativo"): return
+        if not p or not _pode_hab_heroi(p, "paladin", "hero_paladin_protetor") \
+                or not p.get("protetor_ativo"): return
         p["protetor_ativo"] = False
         p["protetor_alvo"] = None
         await self.gm_say(f"🛡️ **{p['name']}** encerra a proteção — Protetor desativado.")
@@ -11182,10 +11185,12 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        if p.get("class_id") != "paladin":
-            await self.send_to(pid, {"type": "error", "msg": "Apenas Richard pode usar esta habilidade."}); return
-
         habilidade_id = data.get("habilidade_id") if data else None
+        if habilidade_id not in ("regeneracao_divina", "guerreiro_luz"):
+            await self.send_to(pid, {"type": "error", "msg": "Habilidade livre inválida."}); return
+        if not _pode_hab_heroi(p, "paladin", f"hero_paladin_{habilidade_id}"):
+            await self.send_to(pid, {"type": "error", "msg": "Você não sabe usar esta habilidade."}); return
+
         if habilidade_id == "regeneracao_divina":
             await self._ativar_regeneracao_divina(p, pid)
         elif habilidade_id == "guerreiro_luz":
@@ -11261,7 +11266,10 @@ class GameRoom:
     async def _processar_manutencao_richard(self, p):
         """Upkeep das habilidades sustentadas de Richard — cobrado no início do
         seu turno. Sem recursos, a habilidade correspondente é interrompida."""
-        if p.get("class_id") != "paladin" or not p.get("alive"): return
+        if not _tem_alguma_hab_heroi(p, "paladin", (
+                "hero_paladin_golpe_sagrado", "hero_paladin_protetor",
+                "hero_paladin_regeneracao_divina", "hero_paladin_guerreiro_luz",
+        )) or not p.get("alive"): return
 
         # RegeneraÃ§Ã£o Divina â€” +1 HP por turno atÃ© o mÃ¡ximo
         if p.get("regeneracao_ativa"):
@@ -15071,7 +15079,9 @@ class GameRoom:
 
     async def _processar_inicio_turno_luccas(self, p):
         """Upkeep das habilidades alternáveis de Luccas no início do seu turno."""
-        if p.get("class_id") != "rogue" or not p["alive"]:
+        if not _tem_alguma_hab_heroi(p, "rogue", (
+                "hero_rogue_detectar_armadilhas", "hero_rogue_esconder_sombras",
+        )) or not p["alive"]:
             return
         await self._cobrar_manutencao_detectar(p)
         await self._cobrar_manutencao_sombras(p)

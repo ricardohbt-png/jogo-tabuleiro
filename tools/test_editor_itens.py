@@ -1279,6 +1279,71 @@ def test_hab_ladino_concedida():
     asyncio.run(r2.handle_veneno_rapido("p1", {"veneno_id": "veneno_aranha_sombria"}))
     check("com item: arma untada", r2._weapon_poison_slots(p2) != [])
 
+def test_hab_paladino_concedida():
+    print("\n[J3] Sustentadas do paladino concedidas por item")
+    # Golpe Sagrado: ativa e desativa
+    r, p = _turn_room_hero("warrior")
+    asyncio.run(r.handle_golpe_sagrado("p1"))
+    check("sem item: golpe sagrado recusado", not p.get("golpe_sagrado_ativo"))
+    p["gear"]["weapon"] = _item_com_habilidade("hero_paladin_golpe_sagrado", id="esp_g")
+    asyncio.run(r.handle_golpe_sagrado("p1"))
+    check("com item: golpe sagrado ativo", p.get("golpe_sagrado_ativo") is True)
+    asyncio.run(r.handle_desativar_golpe_sagrado("p1"))
+    check("com item: golpe sagrado desativado", not p.get("golpe_sagrado_ativo"))
+    # Protetor: ativa e desativa (alvo aliado)
+    r2, p2 = _turn_room_hero("warrior")
+    al = S.make_player("p2", "Aliado", "rogue", 1)
+    r2.players["p2"] = al
+    p2["pos"] = [1, 1]; al["pos"] = [2, 1]
+    asyncio.run(r2.handle_protetor("p1", {"target_id": "p2"}))
+    check("sem item: protetor recusado", not p2.get("protetor_ativo"))
+    p2["gear"]["armor"] = _item_com_habilidade("hero_paladin_protetor", id="cota_pr")
+    asyncio.run(r2.handle_protetor("p1", {"target_id": "p2"}))
+    check("com item: protetor ativo", p2.get("protetor_ativo") is True)
+    asyncio.run(r2.handle_desativar_protetor("p1"))
+    check("com item: protetor desativado", not p2.get("protetor_ativo"))
+    # Ação livre: conceder UMA não libera a OUTRA
+    r3, p3 = _turn_room_hero("warrior")
+    p3["hp"] = max(1, p3["max_hp"] - 5)
+    p3["gear"]["ring1"] = _item_com_habilidade("hero_paladin_regeneracao_divina", id="anel_rg")
+    asyncio.run(r3.handle_acao_livre_richard("p1", {"habilidade_id": "regeneracao_divina"}))
+    check("com item: regeneração ativa", p3.get("regeneracao_ativa") is True)
+    asyncio.run(r3.handle_acao_livre_richard("p1", {"habilidade_id": "guerreiro_luz"}))
+    check("item de regeneração NÃO libera guerreiro da luz",
+          not p3.get("guerreiro_luz_ativo") and not p3.get("gdl_ativo"))
+
+def test_hab_bardo_concedida():
+    print("\n[J4] Provocação concedida por item")
+    r, p = _room_com_alvo()
+    p["class_id"] = "warrior"
+    m = r.monsters["m1"]
+    asyncio.run(r.handle_provocacao("p1", {"target_id": "m1"}))
+    check("sem item: provocação recusada", not m.get("provocado_por"))
+    p["gear"]["ring1"] = _item_com_habilidade("hero_bard_provocacao", id="anel_pv")
+    asyncio.run(r.handle_provocacao("p1", {"target_id": "m1"}))
+    check("com item: monstro provocado", m.get("provocado_por") == "p1")
+    check("_provocador reconhece o não-bardo", r._provocador(m) is not None)
+
+def test_upkeep_habilidade_concedida():
+    print("\n[J5] Upkeep cobra manutenção de habilidade concedida (fix da Fase I)")
+    # Ladino: Detectar Armadilhas concedida a um guerreiro passa a custar sede
+    r, p = _turn_room_hero("warrior")
+    p["gear"]["ring1"] = _item_com_habilidade("hero_rogue_detectar_armadilhas", id="anel_d")
+    asyncio.run(r.handle_detectar_armadilhas("p1", {}))
+    check("detectar ativo", p.get("detectar_ativo") is True)
+    sede0 = p["sede"]
+    asyncio.run(r._processar_inicio_turno_luccas(p))
+    check("upkeep do ladino cobrado", p["sede"] < sede0)
+    # Paladino: Regeneração Divina concedida a um guerreiro tica no upkeep
+    r2, p2 = _turn_room_hero("warrior")
+    p2["gear"]["ring1"] = _item_com_habilidade("hero_paladin_regeneracao_divina", id="anel_rg")
+    p2["hp"] = max(1, p2["max_hp"] - 5)
+    asyncio.run(r2.handle_acao_livre_richard("p1", {"habilidade_id": "regeneracao_divina"}))
+    hp0 = p2["hp"]
+    asyncio.run(r2._processar_manutencao_richard(p2))
+    check("upkeep do paladino rodou (curou ou cobrou)",
+          p2["hp"] != hp0 or p2["fome"] < 10 or p2["sede"] < 10)
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
@@ -1311,5 +1376,7 @@ if __name__ == "__main__":
     test_validacao_granted_ability()
     test_helpers_hab_heroi(); test_mapa_14_habilidades()
     test_hab_clerigo_concedida(); test_hab_ladino_concedida()
+    test_hab_paladino_concedida(); test_hab_bardo_concedida()
+    test_upkeep_habilidade_concedida()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)
