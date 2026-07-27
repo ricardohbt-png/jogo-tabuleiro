@@ -1970,7 +1970,9 @@ const GS = (() => {
     // ── Pending-throw targeting (arremessável de bolsa) ──────────────────────
     if (pendingThrow) {
       const th   = pendingThrow;
-      const alvo = (CATALOGO_ITENS[th.id] || {}).alvo || 'ataque_alvo';
+      // Itens custom (Editor de Itens) não estão no CATALOGO_ITENS estático:
+      // o alvo vem no próprio pendingThrow (carregado do item de bolsa).
+      const alvo = (CATALOGO_ITENS[th.id] || {}).alvo || th.alvo || 'ataque_alvo';
       const ddx  = Math.abs(myP.pos[0] - tx);
       const ddy  = Math.abs(myP.pos[1] - ty);
       const inRange = Math.max(ddx, ddy) <= th.alcance;

@@ -10184,11 +10184,14 @@ function _iniciarMiraArremesso(item, player){
   if(window._modoArremessoAtivo){ limparHighlightArremesso(); window._modoArremessoAtivo = false; }
   if(window._modoArremessoLanca){ limparHighlightArremessoLanca(); window._modoArremessoLanca = false; }
   const catDef  = (GS.CATALOGO_ITENS && GS.CATALOGO_ITENS[item.id]) || {};
-  const alcance = catDef.alcance || 4;
-  const isArea  = catDef.alvo === 'area';
-  const areaRaio = isArea ? (catDef.areaRaio || 1) : 0;
+  // Itens custom (Editor de Itens) não estão no CATALOGO_ITENS estático — a mira
+  // cai para os metadados que o servidor carrega no próprio item de bolsa.
+  const alvoTipo = catDef.alvo || item.alvo || 'ataque_alvo';
+  const alcance = catDef.alcance || item.alcance || 4;
+  const isArea  = alvoTipo === 'area';
+  const areaRaio = isArea ? (catDef.areaRaio || item.area_raio || 1) : 0;
   window._modoThrowItem = { id: item.id, alcance, area: areaRaio };
-  GS.pendingThrow = { id: item.id, alcance };   // habilita o ramo de throw em resolveTileClick
+  GS.pendingThrow = { id: item.id, alcance, alvo: alvoTipo };   // habilita o ramo de throw em resolveTileClick
   // Realce de alcance em vermelho (mesmo canal _spellHL.range da mira de magia).
   const range = new Set();
   _addCheb(me.pos[0], me.pos[1], alcance, range);
@@ -10210,7 +10213,7 @@ function _iniciarMiraArremesso(item, player){
   const _alvoTxt = isArea
     ? `Clique numa CASA (área raio ${areaRaio}, alcance ${alcance})`
     : `Clique num INIMIGO (alcance ${alcance})`;
-  leg.innerHTML = `${catDef.emoji || '🔥'} ${(catDef.nome || 'ARREMESSAR').toUpperCase()} — ${_alvoTxt} &nbsp;|&nbsp; ESC cancela`;
+  leg.innerHTML = `${catDef.emoji || item.emoji || '🔥'} ${(catDef.nome || item.name || 'ARREMESSAR').toUpperCase()} — ${_alvoTxt} &nbsp;|&nbsp; ESC cancela`;
   leg.style.display = 'block';
   GS.adicionarLog(`${catDef.emoji || '🔥'} Mira de arremesso — ${isArea ? 'clique numa casa (área verde segue o cursor)' : 'clique num inimigo destacado'} (ESC cancela).`);
   document.addEventListener('keydown', _keyThrowEsc);
