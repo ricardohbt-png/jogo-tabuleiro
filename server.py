@@ -14327,7 +14327,8 @@ class GameRoom:
             for attr, val in atribs:
                 alvo["penalidades"][attr] = alvo["penalidades"].get(attr, 0) + val
             alvo["efeitos_veneno"].append(efeito)
-            await self.gm_say(f"☠️ **{nome}**: -1 ataque e -1 movimento em **{alvo_nome}** por {duracao} rodada(s).")
+            _txt = ", ".join(f"{val:+d} {attr}" for attr, val in atribs) or "sem efeito"
+            await self.gm_say(f"☠️ **{nome}**: {_txt} em **{alvo_nome}** por {duracao} rodada(s).")
 
         elif op == "petrificar":
             if save_ok:

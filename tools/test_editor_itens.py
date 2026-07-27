@@ -382,6 +382,26 @@ def test_veneno_efeitos():
     check("cegar bloqueia distancia", alvo2.get("bloqueia_distancia") is True)
     S._apply_custom_items([])
 
+def test_veneno_msg_penalidade():
+    print("\n[H5] Mensagem de penalidade reflete os valores reais")
+    ok, it = S._validate_custom_item(poison_sample(id="veneno_pen2", operacao="penalidade",
+        atributos=[["ataque", -3], ["ca", -2]], dificuldade=40))
+    S._apply_custom_items([it])
+    r, p = _room_com_alvo()
+    falas = []
+    async def cap(msg): falas.append(msg)
+    r.gm_say = cap
+    alvo = r.monsters["m1"]
+    alvo["penalidades"] = {}
+    asyncio.run(r._aplicar_veneno(alvo, "veneno_pen2"))
+    txt = " ".join(falas)
+    check("mensagem cita -3 ataque", "-3 ataque" in txt)
+    check("mensagem cita -2 ca", "-2 ca" in txt)
+    check("mensagem nao usa o texto fixo antigo", "-1 ataque e -1 movimento" not in txt)
+    check("penalidades aplicadas de fato",
+          alvo["penalidades"].get("ataque") == -3 and alvo["penalidades"].get("ca") == -2)
+    S._apply_custom_items([])
+
 def test_validacao_arremessavel():
     print("\n[G1] Validacao de arremessável")
     ok, it = S._validate_custom_item(throwable_sample())
@@ -1010,5 +1030,6 @@ if __name__ == "__main__":
     test_arremessavel_merge(); test_arremessavel_uso_alvo(); test_arremessavel_uso_area()
     test_validacao_veneno()
     test_veneno_merge(); test_veneno_uso(); test_veneno_efeitos()
+    test_veneno_msg_penalidade()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)
