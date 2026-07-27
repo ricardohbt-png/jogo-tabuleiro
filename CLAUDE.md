@@ -1267,3 +1267,29 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `tools/test_editor_itens.py` [G1]–[G4] (inclui arremesso mirado e de área ponta-a-ponta via
 > `handle_throw_item`) + `tools/test_editor_items_logic.js`. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-07-26-editor-itens-fase-g-arremessaveis*`.
+
+> **Editor de Itens — Fase H (Venenos):** destrava a sub-aba **Venenos** e **fecha as 8
+> sub-abas** do editor. Cobre as **5 operações** de `VENENOS`: `dano` (com os 2 modelos de
+> resistência — `save_aplicacao`, testa 1× ao aplicar, ou `save_neutraliza_por_rodada`, testa a
+> cada rodada), `reduzir` (atributo via `_VENENO_ATTR_MAP`; CON recalcula PV/Fortitude sozinho),
+> `penalidade` (pares `[chave, valor]` em ataque/movimento/dano/ca/percepcao), `petrificar` e
+> `cegar` (ambos com `duracao_falha`/`penalidade_falha` do sucesso parcial; `cegar` ainda com
+> `penalidade_ataque` e `bloqueia_distancia`). **Um veneno vive em DUAS estruturas** — a entrada
+> de `VENENOS` (definição do efeito) e um item de bolsa `effect:"coat_poison"` com `veneno_id`;
+> nos nativos o id do item e a chave do veneno são o MESMO string, convenção mantida aqui.
+> `item_type:"poison"` → `_validate_custom_poison` (sets `_ITEM_POISON_OPS`/`_ATTRS`/`_PENS`/
+> `_SAVES`; CD clamp 1–40; duração/valores aceitam dado `NdX` ou int; protege ids nativos das 3
+> lojas **∪ `VENENOS`**). `_custom_poison_defn` gera a entrada de `VENENOS` no formato nativo
+> (`nome`/`icone`), marcada `custom:True` para o **cleanup próprio** (mesmo padrão de
+> `ARREMESSAVEIS`); `_custom_poison_inventory_dict` é o frasco de bolsa/loja e carrega
+> `veneno_id` + **`descricao`/`efeito {save,dificuldade,anula}`**, exatamente o que o tooltip do
+> cliente já lê. **`_aplicar_veneno` fica intocado** — é data-driven nas 5 operações. **Cliente
+> sem mudanças:** `coat_poison` é genérico (loja filtra por `effect`, tooltip lê do próprio
+> item, uso pelo caminho comum de `use_item`). Único retoque fora da região de itens custom: a
+> mensagem de `penalidade` em `_aplicar_veneno` era hardcoded ("−1 ataque e −1 movimento") e
+> agora é montada dos pares reais — com valores custom ela mentia. Testes:
+> `tools/test_editor_itens.py` [H1]–[H5] (inclui untar a arma → acertar → envenenar, e os ramos
+> `reduzir`/`cegar`) + `tools/test_editor_items_logic.js`. Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-07-26-editor-itens-fase-h-venenos*`. **Com esta fase, as 8
+> sub-abas do Editor de Itens estão completas**; o que resta são `granted_ability` ativável
+> (habilidades concedidas por item) e antídoto/cura de status.
