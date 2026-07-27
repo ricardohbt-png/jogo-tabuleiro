@@ -10927,6 +10927,34 @@ class GameRoom:
             for attr, val in efeito.get("atributos", []):
                 alvo["penalidades"][attr] = alvo["penalidades"].get(attr, 0) - val
 
+    def _curar_veneno_status(self, alvo):
+        """Remove todos os efeitos de veneno e a cegueira por veneno. Devolve True
+        se havia algo para curar. Extraído de handle_purificacao para ser reusado
+        pelos consumíveis de cura (antídoto)."""
+        efeitos = alvo.get("efeitos_veneno", [])
+        cego = alvo.get("cego")
+        if not efeitos and not cego:
+            return False
+        for efeito in efeitos:
+            self._reverter_efeito_veneno(alvo, efeito)
+        alvo["efeitos_veneno"] = []
+        if cego:
+            alvo["cego"] = False
+            alvo["cego_rodadas"] = 0
+            pen = alvo.pop("cego_pen_ataque", -4)
+            alvo.setdefault("penalidades", {})
+            alvo["penalidades"]["ataque"] = alvo["penalidades"].get("ataque", 0) - pen
+            alvo["bloqueia_distancia"] = False
+        return True
+
+    def _curar_petrificacao(self, alvo):
+        """Remove a petrificação. Devolve True se havia algo para curar."""
+        if not alvo.get("petrificado"):
+            return False
+        alvo["petrificado"] = False
+        alvo["petrificado_rodadas"] = 0
+        return True
+
     async def handle_purificacao(self, pid, data):
         """Remove veneno, doença, maldição ou petrificação de um aliado adjacente."""
         if not self._is_turn(pid): return
@@ -10960,27 +10988,13 @@ class GameRoom:
         removido = False
 
         if tipo == "veneno":
-            efeitos = alvo.get("efeitos_veneno", [])
-            cego = alvo.get("cego")
-            if efeitos or cego:
-                for efeito in efeitos:
-                    self._reverter_efeito_veneno(alvo, efeito)
-                alvo["efeitos_veneno"] = []
-                if cego:
-                    alvo["cego"] = False
-                    alvo["cego_rodadas"] = 0
-                    pen = alvo.pop("cego_pen_ataque", -4)
-                    alvo.setdefault("penalidades", {})
-                    alvo["penalidades"]["ataque"] = alvo["penalidades"].get("ataque", 0) - pen
-                    alvo["bloqueia_distancia"] = False
+            if self._curar_veneno_status(alvo):
                 removido = True
             else:
                 await self.send_to(pid, {"type": "error", "msg": f"{alvo['name']} não está envenenado."}); return
 
         elif tipo == "petrificacao":
-            if alvo.get("petrificado"):
-                alvo["petrificado"] = False
-                alvo["petrificado_rodadas"] = 0
+            if self._curar_petrificacao(alvo):
                 removido = True
             else:
                 await self.send_to(pid, {"type": "error", "msg": f"{alvo['name']} não está petrificado."}); return

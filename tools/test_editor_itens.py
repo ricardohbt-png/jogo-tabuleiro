@@ -1359,6 +1359,53 @@ def test_sincronia_editor_servidor():
     check(f"editor não deixa nenhuma de fora (faltam: {sorted(faltam)})", not faltam)
     check(f"editor não lista id inexistente (sobram: {sorted(sobram)})", not sobram)
 
+def test_curar_status_helpers():
+    print("\n[K1] Helpers de cura de status")
+    r = _gear_room()
+    # Veneno: efeitos + cegueira
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    p["efeitos_veneno"] = [{"nome": "V", "operacao": "dano", "dano": 1, "duracao": 3,
+                            "save": "fortitude", "dificuldade": 10}]
+    p["cego"] = True; p["cego_rodadas"] = 3; p["cego_pen_ataque"] = -4
+    p["penalidades"] = {"ataque": -4}
+    p["bloqueia_distancia"] = True
+    check("cura veneno devolve True", r._curar_veneno_status(p) is True)
+    check("efeitos_veneno limpos", p["efeitos_veneno"] == [])
+    check("cegueira removida", not p.get("cego") and p.get("cego_rodadas") == 0)
+    check("penalidade de ataque revertida", p["penalidades"].get("ataque") == 0)
+    check("volta a atacar à distância", p.get("bloqueia_distancia") is False)
+    check("sem veneno devolve False", r._curar_veneno_status(p) is False)
+    # Petrificação
+    p2 = S.make_player("p2", "Aliado", "rogue", 1)
+    p2["petrificado"] = True; p2["petrificado_rodadas"] = 3
+    check("cura petrificação devolve True", r._curar_petrificacao(p2) is True)
+    check("petrificado limpo", not p2.get("petrificado") and p2.get("petrificado_rodadas") == 0)
+    check("sem petrificação devolve False", r._curar_petrificacao(p2) is False)
+
+def test_purificacao_intacta():
+    print("\n[K1b] Purificação do clérigo continua funcionando após a extração")
+    r = _gear_room()
+    r.phase = "playing"
+    p = S.make_player("p1", "Lewis", "cleric", 0)
+    r.players["p1"] = p
+    r.player_order = ["p1"]; r.turn_index = 0
+    r.current_actor = lambda: None
+    p["fome"], p["sede"] = 20, 20
+    alvo = S.make_player("p2", "Aliado", "rogue", 1)
+    r.players["p2"] = alvo
+    p["pos"] = [1, 1]; alvo["pos"] = [2, 1]
+    alvo["efeitos_veneno"] = [{"nome": "V", "operacao": "dano", "dano": 1, "duracao": 3,
+                               "save": "fortitude", "dificuldade": 10}]
+    asyncio.run(r.handle_purificacao("p1", {"tipo": "veneno", "target_id": "p2"}))
+    check("purificação removeu o veneno", not alvo.get("efeitos_veneno"))
+    alvo2 = S.make_player("p3", "Outro", "rogue", 2)
+    r.players["p3"] = alvo2; alvo2["pos"] = [1, 2]
+    alvo2["petrificado"] = True; alvo2["petrificado_rodadas"] = 2
+    p["action_done"] = False
+    p["guild_owned"]["especializacoes"] = ["clerigo_purif_3"]
+    asyncio.run(r.handle_purificacao("p1", {"tipo": "petrificacao", "target_id": "p3"}))
+    check("purificação removeu a petrificação", not alvo2.get("petrificado"))
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
@@ -1394,5 +1441,6 @@ if __name__ == "__main__":
     test_hab_paladino_concedida(); test_hab_bardo_concedida()
     test_sincronia_editor_servidor()
     test_upkeep_habilidade_concedida()
+    test_curar_status_helpers(); test_purificacao_intacta()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)
