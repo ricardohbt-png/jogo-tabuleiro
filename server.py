@@ -10805,8 +10805,8 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        if p.get("class_id") != "cleric":
-            await self.send_to(pid, {"type": "error", "msg": "Apenas Lewis pode usar Cura."}); return
+        if not _pode_hab_heroi(p, "cleric", "hero_cleric_cura"):
+            await self.send_to(pid, {"type": "error", "msg": "Você não sabe usar Cura."}); return
         if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
@@ -10859,8 +10859,8 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        if p.get("class_id") != "cleric":
-            await self.send_to(pid, {"type": "error", "msg": "Apenas Lewis pode usar Cura em Área."}); return
+        if not _pode_hab_heroi(p, "cleric", "hero_cleric_cura_area"):
+            await self.send_to(pid, {"type": "error", "msg": "Você não sabe usar Cura em Área."}); return
         if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
@@ -10931,8 +10931,8 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        if p.get("class_id") != "cleric":
-            await self.send_to(pid, {"type": "error", "msg": "Apenas Lewis pode usar Purificação."}); return
+        if not _pode_hab_heroi(p, "cleric", "hero_cleric_purificacao"):
+            await self.send_to(pid, {"type": "error", "msg": "Você não sabe usar Purificação."}); return
         if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
@@ -11014,8 +11014,8 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        if p.get("class_id") != "cleric":
-            await self.send_to(pid, {"type": "error", "msg": "Apenas Lewis pode usar Ressurreição."}); return
+        if not _pode_hab_heroi(p, "cleric", "hero_cleric_ressurreicao"):
+            await self.send_to(pid, {"type": "error", "msg": "Você não sabe usar Ressurreição."}); return
         if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
@@ -14485,8 +14485,8 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        if p.get("class_id") != "rogue":
-            await self.send_to(pid, {"type": "error", "msg": "Apenas Luccas pode criar armadilhas."}); return
+        if not _pode_hab_heroi(p, "rogue", "hero_rogue_criar_armadilha"):
+            await self.send_to(pid, {"type": "error", "msg": "Você não sabe criar armadilhas."}); return
         if p.get("petrificado"):
             await self.send_to(pid, {"type": "error", "msg": "🗿 Você está petrificado e não pode agir!"}); return
         if self._acao_bloqueada(p):
@@ -15041,8 +15041,8 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        if p.get("class_id") != "rogue":
-            await self.send_to(pid, {"type": "error", "msg": "Apenas Luccas pode usar Veneno Rápido."}); return
+        if not _pode_hab_heroi(p, "rogue", "hero_rogue_veneno_rapido"):
+            await self.send_to(pid, {"type": "error", "msg": "Você não sabe usar Veneno Rápido."}); return
         if p.get("petrificado"):
             await self.send_to(pid, {"type": "error", "msg": "🗿 Você está petrificado e não pode agir!"}); return
 

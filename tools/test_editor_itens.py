@@ -1209,6 +1209,76 @@ def test_mapa_14_habilidades():
     check("payload traz a skill real de cura", len(sk) == 1 and sk[0].get("id") == "cura")
     check("payload marca a origem", sk and sk[0].get("granted_origem") == "cleric")
 
+def test_hab_clerigo_concedida():
+    print("\n[J1] Milagres do clérigo concedidos por item")
+    # Cura: guerreiro cura um aliado ferido
+    r, p = _turn_room_hero("warrior")
+    aliado = S.make_player("p2", "Aliado", "rogue", 1)
+    r.players["p2"] = aliado
+    p["pos"] = [1, 1]; aliado["pos"] = [2, 1]; aliado["hp"] = 1
+    asyncio.run(r.handle_cura("p1", {"target_id": "p2", "num_dados": 1}))
+    check("sem item: cura recusada", aliado["hp"] == 1)
+    p["gear"]["ring1"] = _item_com_habilidade("hero_cleric_cura", id="anel_c")
+    asyncio.run(r.handle_cura("p1", {"target_id": "p2", "num_dados": 1}))
+    check("com item: aliado curado", aliado["hp"] > 1)
+    # Purificação: remove veneno de um aliado adjacente
+    r2, p2 = _turn_room_hero("warrior")
+    al2 = S.make_player("p2", "Aliado", "rogue", 1)
+    r2.players["p2"] = al2
+    p2["pos"] = [1, 1]; al2["pos"] = [2, 1]
+    al2["efeitos_veneno"] = [{"nome": "V", "operacao": "dano", "dano": 1,
+                              "duracao": 3, "save": "fortitude", "dificuldade": 10}]
+    asyncio.run(r2.handle_purificacao("p1", {"tipo": "veneno", "target_id": "p2"}))
+    check("sem item: purificação recusada", len(al2.get("efeitos_veneno", [])) == 1)
+    p2["gear"]["armor"] = _item_com_habilidade("hero_cleric_purificacao", id="cota_p")
+    asyncio.run(r2.handle_purificacao("p1", {"tipo": "veneno", "target_id": "p2"}))
+    check("com item: veneno removido", not al2.get("efeitos_veneno"))
+    # Ressurreição: revive um aliado morto adjacente
+    r3, p3 = _turn_room_hero("warrior")
+    al3 = S.make_player("p2", "Morto", "rogue", 1)
+    r3.players["p2"] = al3
+    p3["pos"] = [1, 1]; al3["pos"] = [2, 1]
+    al3["alive"] = False; al3["hp"] = 0
+    p3["fome"], p3["sede"] = 30, 30
+    asyncio.run(r3.handle_ressurreicao("p1", {"target_id": "p2"}))
+    check("sem item: ressurreição recusada", al3["alive"] is False)
+    p3["gear"]["ring2"] = _item_com_habilidade("hero_cleric_ressurreicao", id="anel_r")
+    asyncio.run(r3.handle_ressurreicao("p1", {"target_id": "p2"}))
+    check("com item: aliado revivido", al3["alive"] is True)
+    # Cura em Área: aceita a chamada com o item (sem erro de classe)
+    r4, p4 = _turn_room_hero("warrior")
+    al4 = S.make_player("p2", "Aliado", "rogue", 1)
+    r4.players["p2"] = al4
+    p4["pos"] = [1, 1]; al4["pos"] = [2, 1]; al4["hp"] = 1
+    p4["gear"]["boots"] = _item_com_habilidade("hero_cleric_cura_area", id="bota_ca")
+    asyncio.run(r4.handle_cura_area("p1", {"num_dados": 1}))
+    check("com item: cura em área curou alguém", al4["hp"] > 1 or p4["hp"] == p4["max_hp"])
+
+def test_hab_ladino_concedida():
+    print("\n[J2] Habilidades do ladino concedidas por item")
+    # Criar armadilha (buraco é sempre liberado, sem fórmula)
+    r, p = _turn_room_hero("warrior")
+    r.tiles = [[S.FLOOR for _ in range(r.map_w)] for _ in range(r.map_h)]
+    p["pos"] = [3, 3]
+    n0 = len(r.armadilhas)
+    asyncio.run(r.handle_criar_armadilha("p1", {"tipo": "buraco"}))
+    check("sem item: criar armadilha recusado", len(r.armadilhas) == n0)
+    p["gear"]["ring1"] = _item_com_habilidade("hero_rogue_criar_armadilha", id="anel_a")
+    asyncio.run(r.handle_criar_armadilha("p1", {"tipo": "buraco"}))
+    check("com item: armadilha criada", len(r.armadilhas) == n0 + 1)
+    # Veneno rápido: unta a arma equipada
+    r2, p2 = _turn_room_hero("warrior")
+    p2["weapon"] = {"id": "wt", "name": "Lâmina", "die": "1d8", "stat": "str_",
+                    "categoria": "cortante", "poison_slots": []}
+    p2["bag"] = [{"id": "veneno_aranha_sombria", "name": "Veneno", "emoji": "🕷️",
+                  "item_slot": "bag", "effect": "coat_poison",
+                  "veneno_id": "veneno_aranha_sombria"}]
+    asyncio.run(r2.handle_veneno_rapido("p1", {"veneno_id": "veneno_aranha_sombria"}))
+    check("sem item: veneno rápido recusado", r2._weapon_poison_slots(p2) == [])
+    p2["gear"]["boots"] = _item_com_habilidade("hero_rogue_veneno_rapido", id="bota_v")
+    asyncio.run(r2.handle_veneno_rapido("p1", {"veneno_id": "veneno_aranha_sombria"}))
+    check("com item: arma untada", r2._weapon_poison_slots(p2) != [])
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
@@ -1240,5 +1310,6 @@ if __name__ == "__main__":
     test_granted_hero_skills_payload()
     test_validacao_granted_ability()
     test_helpers_hab_heroi(); test_mapa_14_habilidades()
+    test_hab_clerigo_concedida(); test_hab_ladino_concedida()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)
