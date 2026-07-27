@@ -1455,6 +1455,77 @@ def test_imunidade_bloqueia_fontes():
     asyncio.run(r5._aplicar_doenca(p5, "leve"))
     check("sem imunidade a doença aplica", p5.get("doente") is True)
 
+def _sala_turno_cura():
+    """Sala com herói no turno + um aliado adjacente e um distante."""
+    r = _gear_room()
+    r.phase = "playing"; r.round_num = 1
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    r.players["p1"] = p
+    r.player_order = ["p1"]; r.turn_index = 0
+    r.current_actor = lambda: None
+    p["pos"] = [1, 1]; p["fome"], p["sede"] = 10, 10
+    perto = S.make_player("p2", "Perto", "rogue", 1)
+    longe = S.make_player("p3", "Longe", "cleric", 2)
+    r.players["p2"] = perto; r.players["p3"] = longe
+    perto["pos"] = [2, 1]; longe["pos"] = [9, 9]
+    return r, p, perto, longe
+
+def _frasco(effect, imunidade="1d4", iid=None):
+    return {"id": iid or effect, "name": "Frasco", "emoji": "🧪",
+            "item_slot": "bag", "effect": effect, "value": 0,
+            "imunidade_dado": imunidade}
+
+def test_cura_status_em_si():
+    print("\n[K4] Consumíveis curam o próprio herói e imunizam")
+    # Veneno
+    r, p, _, _ = _sala_turno_cura()
+    p["efeitos_veneno"] = [{"nome": "V", "operacao": "dano", "dano": 1, "duracao": 3,
+                            "save": "fortitude", "dificuldade": 10}]
+    p["bag"] = [_frasco("cure_poison")]
+    asyncio.run(r.handle_use_item("p1", "cure_poison"))
+    check("veneno curado", not p.get("efeitos_veneno"))
+    check("imunidade concedida", r._imune_a_status(p, "veneno") is True)
+    check("frasco consumido", not p["bag"])
+    # Petrificação
+    r2, p2, _, _ = _sala_turno_cura()
+    p2["petrificado"] = True; p2["petrificado_rodadas"] = 3
+    p2["bag"] = [_frasco("cure_petrification")]
+    asyncio.run(r2.handle_use_item("p1", "cure_petrification"))
+    check("petrificação curada", not p2.get("petrificado"))
+    check("imune a petrificação", r2._imune_a_status(p2, "petrificacao") is True)
+    # Doença
+    r3, p3, _, _ = _sala_turno_cura()
+    asyncio.run(r3._aplicar_doenca(p3, "leve"))
+    p3["bag"] = [_frasco("cure_disease")]
+    asyncio.run(r3.handle_use_item("p1", "cure_disease"))
+    check("doença curada", not p3.get("doente"))
+    check("imune a doença", r3._imune_a_status(p3, "doenca") is True)
+    # Uso preventivo: consome mesmo sem o status
+    r4, p4, _, _ = _sala_turno_cura()
+    p4["bag"] = [_frasco("cure_poison")]
+    asyncio.run(r4.handle_use_item("p1", "cure_poison"))
+    check("uso preventivo consome o item", not p4["bag"])
+    check("uso preventivo imuniza", r4._imune_a_status(p4, "veneno") is True)
+
+def test_cura_status_em_aliado():
+    print("\n[K5] Consumíveis em aliado adjacente")
+    r, p, perto, longe = _sala_turno_cura()
+    perto["petrificado"] = True; perto["petrificado_rodadas"] = 3
+    p["bag"] = [_frasco("cure_petrification")]
+    asyncio.run(r.handle_use_item("p1", "cure_petrification", "p2"))
+    check("aliado adjacente curado", not perto.get("petrificado"))
+    check("imunidade vai para o ALVO", r._imune_a_status(perto, "petrificacao") is True)
+    check("quem usou não fica imune", not r._imune_a_status(p, "petrificacao"))
+    check("frasco consumido", not p["bag"])
+    # Alvo distante: recusa sem consumir
+    r2, p2, _, longe2 = _sala_turno_cura()
+    longe2["petrificado"] = True
+    p2["bag"] = [_frasco("cure_petrification")]
+    asyncio.run(r2.handle_use_item("p1", "cure_petrification", "p3"))
+    check("alvo distante recusado", longe2.get("petrificado") is True)
+    check("item NÃO consumido em alvo inválido", len(p2["bag"]) == 1)
+    check("ação bônus NÃO gasta em alvo inválido", not p2.get("bonus_action_used"))
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
@@ -1492,5 +1563,6 @@ if __name__ == "__main__":
     test_upkeep_habilidade_concedida()
     test_curar_status_helpers(); test_purificacao_intacta()
     test_imunidade_status_helpers(); test_imunidade_bloqueia_fontes()
+    test_cura_status_em_si(); test_cura_status_em_aliado()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)

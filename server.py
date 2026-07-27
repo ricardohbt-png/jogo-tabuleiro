@@ -12045,7 +12045,8 @@ class GameRoom:
 
     # â”€â”€ AÃ§Ã£o BÃ´nus â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # Efeitos de item que contam como aÃ§Ã£o bÃ´nus (mÃ¡x. 1 por turno).
-    BONUS_ACTION_EFFECTS = {"heal", "regeneration", "atk_bonus", "antidote", "coat_poison", "veil_shadow"}
+    BONUS_ACTION_EFFECTS = {"heal", "regeneration", "atk_bonus", "antidote", "coat_poison",
+                            "veil_shadow", "cure_poison", "cure_petrification", "cure_disease"}
 
     def _consumir_recursos(self, player, tipo_acao):
         """Consumo CENTRAL de fome/sede (escala 0–10). Substitui os consumos
@@ -15212,7 +15213,7 @@ class GameRoom:
             })
         return out
 
-    async def handle_use_item(self, pid, item_id):
+    async def handle_use_item(self, pid, item_id, target_id=None):
         if not self._is_turn(pid): return
         p = self.players[pid]
         item = next((i for i in p["bag"] if i["id"] == item_id), None)
@@ -15265,6 +15266,20 @@ class GameRoom:
         # Itens com doses (hoje, a PoÃ§Ã£o de Cura Concentrada) sÃ³ podem ser
         # ativados enquanto ainda houver uma dose. A guarda vem antes da aÃ§Ã£o
         # bÃ´nus para nunca gastÃ¡-la em uma garrafa jÃ¡ vazia.
+        # Consumíveis de cura de status miram o próprio herói ou um aliado ADJACENTE.
+        # Validar antes da ação bônus: alvo inválido não gasta item nem ação.
+        _CURA_STATUS = {"cure_poison": "veneno", "cure_petrification": "petrificacao",
+                        "cure_disease": "doenca"}
+        alvo_cura = p
+        if effect in _CURA_STATUS:
+            if target_id and target_id != pid:
+                alvo_cura = self.players.get(target_id)
+                if not alvo_cura or not alvo_cura.get("alive"):
+                    await self.send_to(pid, {"type": "error", "msg": "Aliado inválido."}); return
+                if not self._no_raio(p, alvo_cura, 1):
+                    await self.send_to(pid, {"type": "error",
+                        "msg": "O aliado precisa estar adjacente."}); return
+
         max_uses = int(item.get("max_uses", 1) or 1)
         uses_left = int(item.get("uses_left", max_uses) or 0)
         if effect == "heal" and max_uses > 1 and uses_left <= 0:
@@ -15303,6 +15318,23 @@ class GameRoom:
             self.blessed[pid] = self.blessed.get(pid, 0) + val
             p["atk_bonus"] += val
             await self.gm_say(f"{item['emoji']} **{p['name']}** usa **{item['name']}**! +{val} Bônus de Ataque neste turno!")
+        elif effect in _CURA_STATUS:
+            status = _CURA_STATUS[effect]
+            curou = (self._curar_veneno_status(alvo_cura) if status == "veneno" else
+                     self._curar_petrificacao(alvo_cura) if status == "petrificacao" else
+                     self._curar_doenca(alvo_cura))
+            rod = self._rolar_dado(item.get("imunidade_dado", 0))
+            if rod:
+                self._conceder_imunidade_status(alvo_cura, status, rod)
+            quem = "" if alvo_cura is p else f" em **{alvo_cura['name']}**"
+            nome_status = {"veneno": "veneno", "petrificacao": "petrificação",
+                           "doenca": "doença"}[status]
+            if curou:
+                txt = f"cura o {nome_status}{quem}"
+            else:
+                txt = f"não havia {nome_status}{quem} para curar"
+            extra = f" — imune a {nome_status} por **{rod}** rodada(s)!" if rod else "."
+            await self.gm_say(f"{item['emoji']} **{p['name']}** usa **{item['name']}**: {txt}{extra}")
         elif effect == "coat_poison":
             vid = item.get("veneno_id")
             if vid not in VENENOS:
@@ -20675,7 +20707,7 @@ async def handler(ws):
                     if room: await room.handle_veneno_rapido(pid, msg)
 
                 elif t == "use_item":
-                    if room: await room.handle_use_item(pid, msg.get("item_id"))
+                    if room: await room.handle_use_item(pid, msg.get("item_id"), msg.get("target_id"))
 
                 elif t == "use_scroll":
                     if room: await room.handle_use_scroll(pid, msg.get("item_id"), msg)
