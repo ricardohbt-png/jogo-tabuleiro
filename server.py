@@ -6143,7 +6143,7 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Não é o seu turno."})
             return
         eq = p["guild_equip"]
-        if tecnica_id not in (eq.get("tecnica"), eq.get("tecnica_exclusiva")):
+        if not tem_tecnica_equipada(p, tecnica_id):
             await self.send_to(pid, {"type": "error", "msg": "Técnica não equipada."})
             return
         item = guild_item(tecnica_id)
