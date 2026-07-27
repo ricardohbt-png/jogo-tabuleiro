@@ -11384,6 +11384,8 @@ function renderMyPanel(state){
   for(const sk of (me.granted_hero_skills || [])){
     if(sk.granted_origem === 'rogue')        sl.appendChild(_rogueSkillBtn(me, sk));
     else if(sk.granted_origem === 'paladin') sl.appendChild(_paladinSkillBtn(me, sk));
+    else if(sk.granted_origem === 'cleric')  sl.appendChild(_clericSkillBtn(me, sk));
+    else if(sk.granted_origem === 'bard')    sl.appendChild(_bardSkillBtn(me, sk));
   }
 
   // ── Técnica(s) da Guilda equipada(s) (Fase 0) — 4º slot com recarga em rodadas ──

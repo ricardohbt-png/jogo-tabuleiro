@@ -1344,6 +1344,21 @@ def test_upkeep_habilidade_concedida():
     check("upkeep do paladino rodou (curou ou cobrou)",
           p2["hp"] != hp0 or p2["fome"] < 10 or p2["sede"] < 10)
 
+def test_sincronia_editor_servidor():
+    print("\n[J6] Lista do editor em sincronia com o servidor")
+    import re, os
+    caminho = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                           "tools", "editor_items_editor.js")
+    src = open(caminho, encoding="utf-8").read()
+    bloco = re.search(r"GRANTED_HERO_IDS\s*=\s*\[(.*?)\]", src, re.S)
+    check("GRANTED_HERO_IDS encontrado no editor", bool(bloco))
+    ids_js = set(re.findall(r'"([^"]+)"', bloco.group(1))) if bloco else set()
+    ids_py = set(S.GameRoom.GRANTED_HERO_SKILLS.keys())
+    faltam = ids_py - ids_js
+    sobram = ids_js - ids_py
+    check(f"editor não deixa nenhuma de fora (faltam: {sorted(faltam)})", not faltam)
+    check(f"editor não lista id inexistente (sobram: {sorted(sobram)})", not sobram)
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
@@ -1377,6 +1392,7 @@ if __name__ == "__main__":
     test_helpers_hab_heroi(); test_mapa_14_habilidades()
     test_hab_clerigo_concedida(); test_hab_ladino_concedida()
     test_hab_paladino_concedida(); test_hab_bardo_concedida()
+    test_sincronia_editor_servidor()
     test_upkeep_habilidade_concedida()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)

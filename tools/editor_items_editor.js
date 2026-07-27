@@ -69,9 +69,17 @@
   }
   // Fase I: só habilidades que o motor realmente concede — técnicas e
   // especializações da Guilda, e a amostra de habilidades de herói.
+  // Mantida em sincronia com GameRoom.GRANTED_HERO_SKILLS (server.py) — há um
+  // teste que compara as duas listas (test_editor_itens.py, seção [J6]).
   var GRANTED_HERO_IDS = ["hero_rogue_detectar_armadilhas",
                           "hero_rogue_esconder_sombras",
-                          "hero_paladin_imposicao_maos"];
+                          "hero_paladin_imposicao_maos",
+                          "hero_cleric_cura", "hero_cleric_cura_area",
+                          "hero_cleric_purificacao", "hero_cleric_ressurreicao",
+                          "hero_rogue_criar_armadilha", "hero_rogue_veneno_rapido",
+                          "hero_paladin_golpe_sagrado", "hero_paladin_protetor",
+                          "hero_paladin_regeneracao_divina", "hero_paladin_guerreiro_luz",
+                          "hero_bard_provocacao"];
   function abilityGroups() {
     var libs = (window.EDITOR_CATALOG || {}).monster_abilities || [];
     var tec = [], esp = [], her = [];
