@@ -1351,3 +1351,30 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `tools/test_editor_itens.py` [J0]–[J6] + as suítes de classe (`test_guilda`,
 > `test_paladino_espec`, `test_bardo_espec`, `test_ladino_espec`, `test_clerigo_espec`). Spec/plano
 > em `docs/superpowers/{specs,plans}/2026-07-27-fase-j-habilidades-heroi-concedidas*`.
+
+> **Antídotos e curas de status (consumíveis):** três itens que **curam um status e imunizam
+> temporariamente** contra ele — **Antídoto** (veneno), **Óleo Dissolvente** (petrificação) e
+> **Elixir Depurativo** (doença), todos no mercador com `imunidade_dado:"1d4"`. A lógica de cura
+> vivia **inline** dentro de `handle_purificacao`; foi extraída para `_curar_veneno_status` (reverte
+> `efeitos_veneno` + cegueira) e `_curar_petrificacao` (`_curar_doenca` já existia), e a Purificação
+> do clérigo passou a chamá-las. **Imunidade temporária genérica:**
+> `_conceder_imunidade_status(p, status, rodadas)` grava `p["imunidades_status"][status] =
+> round_num + N` (rodada absoluta, como os demais buffs) e `_imune_a_status(p, status)` lê;
+> `_STATUS_IMUNIZAVEIS = {veneno, petrificacao, doenca}`. São **4 pontos de bloqueio**, levantados
+> das fontes reais: `_aplicar_veneno` (veneno), o ramo `petrificar` do veneno **e** a habilidade de
+> monstro `effect == "petrificado"` (fonte independente — por isso a imunidade à petrificação não é
+> redundante), e o topo de `_aplicar_doenca`. **Três efeitos de consumível** (`cure_poison`/
+> `cure_petrification`/`cure_disease`) em `handle_use_item`, como ação bônus: curam o alvo e
+> concedem a imunidade rolando `imunidade_dado`. O item **é consumido mesmo sem o status presente**
+> (imunidade preventiva é uso legítimo); a narração distingue os dois casos. **Alvo:** `use_item`
+> ganhou **`target_id` opcional** (ausente = quem usou, retrocompatível); com alvo, valida jogador
+> vivo e **adjacente** (`_no_raio ≤1`) **antes** do bloco de ação bônus, então alvo inválido não
+> gasta item nem ação. Cliente: a decisão de mira mora dentro de `useItem` (game.js) — se o efeito
+> é de cura e não veio alvo, abre o `openTargetModal` com o próprio herói + aliados adjacentes (com
+> só o próprio por perto, o modal é pulado); `src/ui/inventoryModal.js` **não mudou**. **Mudança de
+> gameplay:** o `antidote` nativo era `effect:"heal", value:6` — curava 6 HP e **não removia veneno
+> nenhum** apesar do nome; agora cura de verdade. Editor: os 3 efeitos entram em
+> `_ITEM_POTION_EFFECTS`/`POTION_EFFECTS` e o form da sub-aba Poções troca "Valor/Doses" pelos
+> campos do **dado de imunidade**. Testes: `tools/test_editor_itens.py` [K1]–[K6] +
+> `tools/test_editor_items_logic.js`. Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-07-28-antidotos-cura-de-status*`.
