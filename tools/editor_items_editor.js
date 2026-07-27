@@ -67,10 +67,33 @@
   function baseWeapons() {
     return ((window.EDITOR_CATALOG || {}).items || []).filter(function (i) { return i.die && i.stat; });
   }
-  function abilityOptions() {
-    var libs = ((window.EDITOR_CATALOG || {}).monster_abilities || [])
-      .filter(function (a) { return a.source === "heroi" || a.source === "guilda"; });
-    return libs.map(function (a) { return { id: a.id, name: a.name }; });
+  // Fase I: só habilidades que o motor realmente concede — técnicas e
+  // especializações da Guilda, e a amostra de habilidades de herói.
+  var GRANTED_HERO_IDS = ["hero_rogue_detectar_armadilhas",
+                          "hero_rogue_esconder_sombras",
+                          "hero_paladin_imposicao_maos"];
+  function abilityGroups() {
+    var libs = (window.EDITOR_CATALOG || {}).monster_abilities || [];
+    var tec = [], esp = [], her = [];
+    libs.forEach(function (a) {
+      if (a.source === "guilda" && a.guild_category === "tecnica") tec.push(a);
+      else if (a.source === "guilda" && a.guild_category === "especializacao") esp.push(a);
+      else if (a.source === "heroi" && GRANTED_HERO_IDS.indexOf(a.id) >= 0) her.push(a);
+    });
+    return [["Técnicas da Guilda", tec], ["Especializações da Guilda", esp],
+            ["Habilidades de Herói", her]];
+  }
+  // Campo reusado pelos 5 formulários de item equipável.
+  function campoHabilidade() {
+    var grupos = abilityGroups().map(function (g) {
+      if (!g[1].length) return "";
+      return '<optgroup label="' + esc(g[0]) + '">' + g[1].map(function (a) {
+        return '<option value="' + esc(a.id) + '"' +
+          (a.id === draft.granted_ability ? " selected" : "") + '>' + esc(a.name) + '</option>';
+      }).join("") + '</optgroup>';
+    }).join("");
+    return campo("Habilidade", '<select id="ie-abil"><option value=""' +
+      (draft.granted_ability ? "" : " selected") + '>— nenhuma —</option>' + grupos + '</select>');
   }
 
   function fromBase(item) {
@@ -130,7 +153,6 @@
     if (activeType === "arremessaveis") { renderThrowableForm(f); return; }
     if (activeType === "venenos") { renderPoisonForm(f); return; }
     var elemTypes = L.ELEM.map(function (e) { return '<option value="' + e + '">' + e + '</option>'; }).join("");
-    var abil = abilityOptions();
     f.innerHTML = [
       seccao("Identidade",
         campo("Nome", '<input id="ie-name" value="' + esc(draft.name) + '">') +
@@ -164,9 +186,7 @@
         '<select class="ie-elem-faces">' + [4,6,8,10,12].map(function(x){return "<option>"+x+"</option>";}).join("") + '</select>' +
         ' <select class="ie-elem-type">' + elemTypes + '</select>' +
         ' <button class="ie-elem-del">✕</button></span></template>'),
-      seccao("Habilidade concedida (liga em fase futura)",
-        campo("Habilidade", '<select id="ie-abil"><option value=""' + (draft.granted_ability ? "" : " selected") + '>— nenhuma —</option>' +
-          abil.map(function (a) { return '<option value="' + esc(a.id) + '"' + (a.id === draft.granted_ability ? " selected" : "") + '>' + esc(a.name) + '</option>'; }).join("") + '</select>')),
+      seccao("Habilidade concedida (ativa ao equipar)", campoHabilidade()),
       seccao("Restrição de classe (vazio = todas)",
         CLASSES.map(function (c) { return '<label class="ie-cls">' +
           '<input type="checkbox" class="ie-class" value="' + c[0] + '"> ' + esc(c[1]) + '</label>'; }).join("")),
@@ -206,6 +226,7 @@
         '<label class="ie-field"><input type="checkbox" id="ie-mat-organic"' + (draft.materiais.organic ? " checked" : "") + '> Orgânico (Devorador Orgânico)</label>' +
         '<label class="ie-field"><input type="checkbox" id="ie-mat-metal"' + (draft.materiais.metal ? " checked" : "") + '> Metal (Devorador de Metal)</label>' +
         '<span class="ie-hint">Sem material marcado, a peça não corrói. Quebra em N+M+1.</span>'),
+      seccao("Habilidade concedida (ativa ao equipar)", campoHabilidade()),
       seccao("Restrição de classe (vazio = todas)",
         CLASSES.map(function (c) { return '<label class="ie-cls">' +
           '<input type="checkbox" class="ie-class" value="' + c[0] + '"> ' + esc(c[1]) + '</label>'; }).join("")),
@@ -244,6 +265,7 @@
       var o = { effect: eff, value: +r.querySelector("input[type=number]").value || 0 };
       if (eff === "resist") { var t = r.querySelector(".ie-abonus-type"); o.type = t ? t.value : "fire"; }
       return o; });
+    var ab = g("ie-abil"); if (ab) draft.granted_ability = ab.value;
     return draft;
   }
 
@@ -341,6 +363,7 @@
         '<label class="ie-field"><input type="checkbox" id="ie-mat-organic"' + (draft.materiais.organic ? " checked" : "") + '> Orgânico (Devorador Orgânico)</label>' +
         '<label class="ie-field"><input type="checkbox" id="ie-mat-metal"' + (draft.materiais.metal ? " checked" : "") + '> Metal (Devorador de Metal)</label>' +
         '<span class="ie-hint">Sem material marcado, a peça não corrói. Quebra em N+M+1.</span>') : "",
+      seccao("Habilidade concedida (ativa ao equipar)", campoHabilidade()),
       seccao("Restrição de classe (vazio = todas)",
         CLASSES.map(function (c) { return '<label class="ie-cls">' +
           '<input type="checkbox" class="ie-class" value="' + c[0] + '"> ' + esc(c[1]) + '</label>'; }).join("")),
@@ -379,6 +402,7 @@
       draft.corrosao_penalidade = Math.max(1, +g("ie-corrpen").value || 2);
       draft.materiais = { organic: g("ie-mat-organic").checked, metal: g("ie-mat-metal").checked };
     }
+    var ab = g("ie-abil"); if (ab) draft.granted_ability = ab.value;
     return draft;
   }
 
