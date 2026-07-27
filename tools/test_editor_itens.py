@@ -1144,6 +1144,31 @@ def test_granted_hero_skills_payload():
     pr["gear"]["ring1"] = _item_com_habilidade("hero_rogue_detectar_armadilhas", id="anel_d")
     check("ladino não duplica a própria habilidade", r._granted_hero_skills(pr) == [])
 
+def test_validacao_granted_ability():
+    print("\n[I6] Validação de granted_ability")
+    check("aceita técnica da Guilda", S._granted_ability_valida("guild_brutalidade"))
+    check("aceita especialização", S._granted_ability_valida("guild_guerreiro_mira_3"))
+    check("aceita habilidade de herói da amostra",
+          S._granted_ability_valida("hero_rogue_detectar_armadilhas"))
+    check("rejeita id desconhecido", not S._granted_ability_valida("guild_nao_existe"))
+    check("rejeita herói fora da amostra",
+          not S._granted_ability_valida("hero_cleric_ressurreicao"))
+    check("rejeita None", not S._granted_ability_valida(None))
+    ok, it = S._validate_custom_item(sample(id="arma_hab", granted_ability="guild_brutalidade"))
+    check("arma preserva id suportado", ok and it.get("granted_ability") == "guild_brutalidade")
+    ok2, it2 = S._validate_custom_item(sample(id="arma_hab2", granted_ability="xpto"))
+    check("arma descarta id nao suportado", ok2 and it2.get("granted_ability") is None)
+    ok3, it3 = S._validate_custom_item(armor_sample(id="cota_hab", granted_ability="guild_brutalidade"))
+    check("armadura preserva id suportado", ok3 and it3.get("granted_ability") == "guild_brutalidade")
+    ok4, it4 = S._validate_custom_item(armor_sample(id="cota_hab2", granted_ability="xpto"))
+    check("armadura descarta id nao suportado", ok4 and it4.get("granted_ability") is None)
+    ok5, it5 = S._validate_custom_item(accessory_sample(id="anel_hab",
+        granted_ability="hero_paladin_imposicao_maos"))
+    check("acessorio preserva id suportado",
+          ok5 and it5.get("granted_ability") == "hero_paladin_imposicao_maos")
+    ok6, it6 = S._validate_custom_item(accessory_sample(id="anel_hab2", granted_ability="xpto"))
+    check("acessorio descarta id nao suportado", ok6 and it6.get("granted_ability") is None)
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
@@ -1173,5 +1198,6 @@ if __name__ == "__main__":
     test_tecnica_concedida_uso(); test_espec_concedida_efeito()
     test_habilidades_heroi_concedidas(); test_mensagens_sem_richard()
     test_granted_hero_skills_payload()
+    test_validacao_granted_ability()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)

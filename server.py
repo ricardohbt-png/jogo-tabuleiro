@@ -21163,6 +21163,19 @@ _RESIST_TYPES = {DMG_PHYSICAL, DMG_FIRE, DMG_COLD, DMG_LIGHTNING, DMG_ACID,
 _CLASS_ATK_ATTR = {"warrior": "str_", "mage": "str_", "cleric": "str_", "paladin": "str_",
                    "rogue": "dex", "bard": "dex", "ranger": "dex"}
 
+def _granted_ability_valida(aid):
+    """True se o id de granted_ability é suportado pela Fase I: técnica ou
+    especialização da Guilda (prefixo guild_), ou uma das habilidades de herói da
+    amostra. Ids fora disso seriam metadado morto — a validação os descarta."""
+    if not aid or not isinstance(aid, str):
+        return False
+    if aid in GameRoom.GRANTED_HERO_SKILLS:
+        return True
+    if aid.startswith("guild_"):
+        entry = GUILD_CATALOG.get(aid[len("guild_"):])
+        return bool(entry) and entry.get("categoria") in ("tecnica", "especializacao")
+    return False
+
 def _validate_custom_item(raw):
     """Despacha por item_type: weapon | armor | shield."""
     if not isinstance(raw, dict):
@@ -21228,7 +21241,8 @@ def _validate_custom_armor(raw):
         "corrosao_resistente": max(0, _int0(raw.get("corrosao_resistente"))),
         "corrosao_niveis_penalidade": max(1, _int0(raw.get("corrosao_niveis_penalidade", 2))),
         "bonuses": bonuses,
-        "granted_ability": (str(raw["granted_ability"]) if raw.get("granted_ability") else None),
+        "granted_ability": (str(raw["granted_ability"])
+                            if _granted_ability_valida(raw.get("granted_ability")) else None),
         "allowed_classes": classes, "price": price,
         "disponibilidade": {"loja": bool(disp.get("loja")), "baus": bool(disp.get("baus")),
                              "loot_monstro": bool(disp.get("loot_monstro"))},
@@ -21270,7 +21284,8 @@ def _validate_custom_accessory(raw):
         "emoji": str(raw.get("emoji") or ("👢" if kind == "boots" else "💍"))[:8],
         "item_type": kind, "kind": kind, "item_slot": kind, "custom": True,
         "bonuses": bonuses,
-        "granted_ability": (str(raw["granted_ability"]) if raw.get("granted_ability") else None),
+        "granted_ability": (str(raw["granted_ability"])
+                            if _granted_ability_valida(raw.get("granted_ability")) else None),
         "allowed_classes": classes, "price": price,
         "disponibilidade": {"loja": bool(disp.get("loja")), "baus": bool(disp.get("baus")),
                              "loot_monstro": bool(disp.get("loot_monstro"))},
@@ -21502,7 +21517,8 @@ def _validate_custom_weapon(raw):
         # madeira → Devorador Orgânico). Registrado no set de corrosão em _apply_custom_items.
         "material": (raw.get("material") if raw.get("material") in ("metal", "madeira") else "metal"),
         "extra_damages": extra,
-        "granted_ability": (str(raw["granted_ability"]) if raw.get("granted_ability") else None),
+        "granted_ability": (str(raw["granted_ability"])
+                            if _granted_ability_valida(raw.get("granted_ability")) else None),
         "allowed_classes": classes, "price": price,
         "disponibilidade": {"loja": bool(disp.get("loja")), "baus": bool(disp.get("baus")),
                              "loot_monstro": bool(disp.get("loot_monstro"))},
