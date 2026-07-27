@@ -313,6 +313,75 @@ def test_validacao_veneno():
     oks, its = S._validate_custom_item(poison_sample(save="carisma"))
     check("save invalido cai para fortitude", oks and its.get("save") == "fortitude")
 
+def test_veneno_merge():
+    print("\n[H2] Merge de veneno (VENENOS + lojas)")
+    ok, it = S._validate_custom_item(poison_sample(
+        disponibilidade={"loja": True, "baus": True, "loot_monstro": True}))
+    S._apply_custom_items([it])
+    check("entra em VENENOS", "veneno_teste" in S.VENENOS)
+    check("defn carrega operacao/dificuldade",
+          S.VENENOS.get("veneno_teste", {}).get("operacao") == "dano"
+          and S.VENENOS["veneno_teste"].get("dificuldade") == 12)
+    check("defn usa 'nome' (formato nativo)", S.VENENOS.get("veneno_teste", {}).get("nome") == "Veneno Teste")
+    check("loja: entra em SHOP_MERCHANT", any(i["id"] == "veneno_teste" for i in S.SHOP_MERCHANT))
+    _inv = next(i for i in S.SHOP_MERCHANT if i["id"] == "veneno_teste")
+    check("item aponta veneno_id", _inv.get("veneno_id") == "veneno_teste")
+    check("item carrega efeito p/ tooltip",
+          (_inv.get("efeito") or {}).get("dificuldade") == 12
+          and (_inv.get("efeito") or {}).get("save") == "fortitude")
+    check("item carrega descricao", _inv.get("descricao") == "Dói.")
+    check("baus: entra em _DUNGEON_ITEM_CATALOG", "veneno_teste" in S._DUNGEON_ITEM_CATALOG)
+    check("loot: entra em LOOT_POOL_PROCEDURAL", "veneno_teste" in S.LOOT_POOL_PROCEDURAL)
+    check("nativo VENENOS intacto", "veneno_fungo_acre" in S.VENENOS)
+    S._apply_custom_items([it])
+    check("reaplicar nao duplica em SHOP_MERCHANT",
+          sum(1 for i in S.SHOP_MERCHANT if i["id"] == "veneno_teste") == 1)
+    S._apply_custom_items([])
+    check("lista vazia remove de VENENOS", "veneno_teste" not in S.VENENOS)
+    check("lista vazia remove de SHOP_MERCHANT", not any(i["id"] == "veneno_teste" for i in S.SHOP_MERCHANT))
+    check("nativos de VENENOS sobrevivem ao clear", "veneno_fungo_acre" in S.VENENOS)
+
+def test_veneno_uso():
+    print("\n[H3] Untar a arma e envenenar no acerto")
+    ok, it = S._validate_custom_item(poison_sample(dificuldade=40))   # CD 40 → alvo sempre falha
+    S._apply_custom_items([it])
+    r, p = _room_com_alvo()
+    p["weapon"] = {"id": "wt", "name": "Lâmina", "die": "1d8", "stat": "str_",
+                   "categoria": "cortante", "poison_slots": []}
+    p["bag"] = [dict(S._custom_poison_inventory_dict(it))]
+    asyncio.run(r.handle_use_item("p1", "veneno_teste"))
+    check("arma recebeu carga de veneno", r._weapon_poison_slots(p) == ["veneno_teste"])
+    check("frasco consumido", not any(i["id"] == "veneno_teste" for i in p["bag"]))
+    import random; random.seed(99)
+    asyncio.run(r.handle_attack("p1", "m1"))
+    efeitos = r.monsters["m1"].get("efeitos_veneno", [])
+    check("alvo envenenado no acerto", any(e.get("nome") == "Veneno Teste" for e in efeitos))
+    check("carga consumida", r._weapon_poison_slots(p) == [])
+    S._apply_custom_items([])
+
+def test_veneno_efeitos():
+    print("\n[H4] Efeitos de reduzir e cegar")
+    okr, itr = S._validate_custom_item(poison_sample(id="veneno_red", operacao="reduzir",
+        atributo="forca", valor="1d4", dificuldade=40))
+    S._apply_custom_items([itr])
+    r, p = _room_com_alvo()
+    alvo = r.monsters["m1"]
+    alvo["penalidades"] = {}
+    asyncio.run(r._aplicar_veneno(alvo, "veneno_red"))
+    check("reduzir registra efeito", any(e.get("operacao") == "reduzir"
+          for e in alvo.get("efeitos_veneno", [])))
+    okc, itc = S._validate_custom_item(poison_sample(id="veneno_ceg", operacao="cegar",
+        anula=False, dificuldade=40, penalidade_ataque=-4, bloqueia_distancia=True))
+    S._apply_custom_items([itc])
+    r2, p2 = _room_com_alvo()
+    alvo2 = r2.monsters["m1"]
+    alvo2["penalidades"] = {}
+    asyncio.run(r2._aplicar_veneno(alvo2, "veneno_ceg"))
+    check("cegar liga o status", alvo2.get("cego") is True)
+    check("cegar aplica penalidade de ataque", alvo2["penalidades"].get("ataque") == -4)
+    check("cegar bloqueia distancia", alvo2.get("bloqueia_distancia") is True)
+    S._apply_custom_items([])
+
 def test_validacao_arremessavel():
     print("\n[G1] Validacao de arremessável")
     ok, it = S._validate_custom_item(throwable_sample())
@@ -940,5 +1009,6 @@ if __name__ == "__main__":
     test_validacao_arremessavel()
     test_arremessavel_merge(); test_arremessavel_uso_alvo(); test_arremessavel_uso_area()
     test_validacao_veneno()
+    test_veneno_merge(); test_veneno_uso(); test_veneno_efeitos()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)

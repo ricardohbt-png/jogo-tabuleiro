@@ -21572,6 +21572,46 @@ def _custom_throwable_inventory_dict(item):
         inv["allowed_classes"] = list(item["allowed_classes"])
     return inv
 
+def _custom_poison_defn(item):
+    """Entrada de VENENOS para um veneno custom (formato nativo: 'nome'/'icone').
+    'custom' marca o registro p/ o cleanup idempotente em _apply_custom_items."""
+    defn = {"nome": item["name"], "icone": item["emoji"], "operacao": item["operacao"],
+            "save": item["save"], "dificuldade": item["dificuldade"],
+            "anula": item["anula"], "duracao": item["duracao"], "custom": True}
+    op = item["operacao"]
+    if op == "dano":
+        defn["dano"] = item["dano"]
+        if item.get("save_neutraliza_por_rodada"):
+            defn["save_neutraliza_por_rodada"] = True
+        else:
+            defn["save_aplicacao"] = True
+    elif op == "reduzir":
+        defn["atributo"] = item["atributo"]
+        defn["valor"] = item["valor"]
+    elif op == "penalidade":
+        defn["atributos"] = [list(par) for par in item["atributos"]]
+    else:   # petrificar | cegar
+        defn["duracao_falha"] = item["duracao_falha"]
+        defn["penalidade_falha"] = [list(par) for par in item["penalidade_falha"]]
+        if op == "cegar":
+            defn["penalidade_ataque"] = item["penalidade_ataque"]
+            defn["bloqueia_distancia"] = item["bloqueia_distancia"]
+    return defn
+
+def _custom_poison_inventory_dict(item):
+    """Veneno custom — frasco de bolsa/loja (effect 'coat_poison'). 'efeito' e
+    'descricao' alimentam o tooltip do cliente, que já os lê do próprio item."""
+    inv = {"id": item["id"], "name": item["name"], "emoji": item["emoji"],
+           "item_slot": "bag", "effect": "coat_poison", "value": 0,
+           "veneno_id": item["id"], "custom": True, "price": item["price"],
+           "efeito": {"save": item["save"], "dificuldade": item["dificuldade"],
+                       "anula": item["anula"]}}
+    if item.get("descricao"):
+        inv["descricao"] = item["descricao"]
+    if item["allowed_classes"]:
+        inv["allowed_classes"] = list(item["allowed_classes"])
+    return inv
+
 def _apply_custom_items(records):
     """Mescla armas/armaduras/escudos custom nos catálogos vivos (idempotente: remove os customs antes)."""
     global SHOP_WEAPONS, LOOT_POOL_PROCEDURAL
@@ -21602,6 +21642,9 @@ def _apply_custom_items(records):
     # Arremessáveis custom vivem no dict ARREMESSAVEIS (espelha o cleanup de WEAPONS).
     for k in [k for k, v in ARREMESSAVEIS.items() if v.get("custom")]:
         ARREMESSAVEIS.pop(k, None)
+    # Venenos custom vivem no dict VENENOS (mesmo padrão de ARREMESSAVEIS).
+    for k in [k for k, v in VENENOS.items() if v.get("custom")]:
+        VENENOS.pop(k, None)
     for k in prev_def_ids:
         CORROSAO_ARMADURA_METAL.discard(k)
         CORROSAO_ARMADURA_ORGANICA.discard(k)
@@ -21651,6 +21694,17 @@ def _apply_custom_items(records):
             disp = item["disponibilidade"]
             ARREMESSAVEIS[item["id"]] = _custom_throwable_defn(item)
             inv = _custom_throwable_inventory_dict(item)
+            if disp["loja"]:
+                SHOP_MERCHANT.append(inv)
+            if disp["baus"] or disp["loot_monstro"]:
+                _DUNGEON_ITEM_CATALOG[item["id"]] = inv
+            if disp["loot_monstro"]:
+                LOOT_POOL_PROCEDURAL.append(item["id"])
+            continue
+        if it == "poison":
+            disp = item["disponibilidade"]
+            VENENOS[item["id"]] = _custom_poison_defn(item)
+            inv = _custom_poison_inventory_dict(item)
             if disp["loja"]:
                 SHOP_MERCHANT.append(inv)
             if disp["baus"] or disp["loot_monstro"]:
