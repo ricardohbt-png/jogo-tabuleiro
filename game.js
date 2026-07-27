@@ -11379,9 +11379,20 @@ function renderMyPanel(state){
     sl.appendChild(btnOp);
   }
 
+  // ── Fase I: habilidades de herói concedidas por item (renderiza o botão da
+  // classe de origem; o servidor manda a definição real em granted_hero_skills) ──
+  for(const sk of (me.granted_hero_skills || [])){
+    if(sk.granted_origem === 'rogue')        sl.appendChild(_rogueSkillBtn(me, sk));
+    else if(sk.granted_origem === 'paladin') sl.appendChild(_paladinSkillBtn(me, sk));
+  }
+
   // ── Técnica(s) da Guilda equipada(s) (Fase 0) — 4º slot com recarga em rodadas ──
   const _tecEq  = GS.guildEquipOf(me.id);
-  const _tecIds = [_tecEq.tecnica, _tecEq.tecnica_exclusiva].filter(Boolean);
+  // Fase I: técnicas concedidas por itens equipados entram no mesmo laço
+  // (rótulo "ITEM"); a recarga é compartilhada com a da Guilda pelo id.
+  const _tecItem = GS.tecnicasConcedidasPorItem(me);
+  const _tecEqIds = [_tecEq.tecnica, _tecEq.tecnica_exclusiva].filter(Boolean);
+  const _tecIds = _tecEqIds.concat(_tecItem.filter(t => !_tecEqIds.includes(t)));
   for(const tid of _tecIds){
     const cat = GS.guildCatalogFor(me.class_id).find(x => x.id === tid);
     if(!cat) continue;
@@ -11401,7 +11412,7 @@ function renderMyPanel(state){
       : pendente ? ' <small style="color:var(--gold);font-size:.65rem;">● preparada</small>' : '';
     btn.innerHTML = `
       <div class="skill-info">
-        <div class="skill-name">${abilityIconHtml(cat, cat.icon||'⚔️')} ${cat.nome} <small style="color:var(--gold);font-size:.58rem;">${cat.automatica ? 'AUTOMÁTICA' : 'GUILDA'}</small>${estado}</div>
+        <div class="skill-name">${abilityIconHtml(cat, cat.icon||'⚔️')} ${cat.nome} <small style="color:var(--gold);font-size:.58rem;">${cat.automatica ? 'AUTOMÁTICA' : (_tecItem.includes(tid) ? 'ITEM' : 'GUILDA')}</small>${estado}</div>
         <div class="skill-desc">${cat.desc||''}</div>
       </div>
       <div class="skill-cost">${restante>0 ? `${restante}r` : `🍖${cat.custo_fome} 💧${cat.custo_sede}`}</div>`;

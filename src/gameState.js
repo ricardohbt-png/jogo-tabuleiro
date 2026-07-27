@@ -1383,6 +1383,20 @@ const GS = (() => {
   function tecnicaPendente(player, tid) {
     return !!(player && player.technique_pending && player.technique_pending[tid]);
   }
+  // Fase I: técnicas concedidas por itens equipados (ids SEM o prefixo guild_).
+  function tecnicasConcedidasPorItem(player) {
+    const out = [];
+    const gear = (player && player.gear) || {};
+    Object.keys(gear).forEach(k => {
+      const it = gear[k];
+      const aid = it && it.granted_ability;
+      if (aid && aid.indexOf('guild_') === 0) {
+        const tid = aid.slice(6);
+        if (out.indexOf(tid) < 0) out.push(tid);
+      }
+    });
+    return out;
+  }
 
   // ── Instrumentos do Bardo (Fase 1/2) ─────────────────────────────────────
   // dir: [dx,dy] opcional — usado pela Trompa (Chamado do General, mira por
@@ -2239,6 +2253,7 @@ const GS = (() => {
     guildEquipOf,
     tecnicaRestante,
     tecnicaPendente,
+    tecnicasConcedidasPorItem,
 
     // ── Instrumentos do Bardo (Fase 1) ──
     usarInstrumento,
