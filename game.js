@@ -12008,7 +12008,26 @@ $('btn-end-turn')?.addEventListener('click', endTurn);
 const ACOES_BONUS = ['beberPocao', 'usarItemMagico', 'envenenarArma', 'usarItem'];
 const BONUS_ACTION_EFFECTS = new Set(['heal', 'regeneration', 'atk_bonus', 'antidote']);
 
-function useItem(itemId){ send({type:'use_item',item_id:itemId}); }
+// Consumíveis que curam status podem ser usados no próprio herói ou num aliado
+// ADJACENTE — se o alvo não veio, abre o modal de alvo (o servidor revalida).
+const CURA_STATUS_EFFECTS = ['cure_poison', 'cure_petrification', 'cure_disease'];
+function useItem(itemId, targetId){
+  if(targetId === undefined){
+    const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid);
+    const it = me && (me.bag || []).find(b => b.id === itemId);
+    if(it && CURA_STATUS_EFFECTS.includes(it.effect)){
+      const alvos = (GS.gameState.players || []).filter(q =>
+        q.alive && (q.id === me.id ||
+          Math.max(Math.abs(q.pos[0] - me.pos[0]), Math.abs(q.pos[1] - me.pos[1])) <= 1));
+      if(alvos.length > 1){
+        openTargetModal(`${it.emoji || '🧪'} ${it.name} — Escolha o alvo`, alvos, 'ally',
+          id => useItem(itemId, id));
+        return;
+      }
+    }
+  }
+  send({type:'use_item', item_id:itemId, target_id: targetId});
+}
 
 // ── Ficha do personagem na CIDADE (v2): painel lateral autoritativo ──────────
 // Lê player.gear/player.bag do city_state (modelo autoritativo do servidor).

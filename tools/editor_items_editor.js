@@ -37,6 +37,7 @@
   }
   function novoDraftPotion() {
     return { name:"", emoji:"🧪", item_type:"potion", effect:"heal", value:10, max_uses:1,
+      imun_qtd:1, imun_faces:4,
       allowed_classes:[], disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:0, id:"" };
   }
   function novoDraftThrowable() {
@@ -473,7 +474,9 @@
     } catch (e) { status.textContent = "❌ " + (e && e.message || "falha ao salvar"); }
   }
 
-  var POTION_LABELS = { heal:"Cura (+HP)", regeneration:"Regeneração (pool +1/rodada)", atk_bonus:"Elixir (+ataque no turno)" };
+  var POTION_LABELS = { heal:"Cura (+HP)", regeneration:"Regeneração (pool +1/rodada)", atk_bonus:"Elixir (+ataque no turno)",
+    cure_poison:"Antídoto (cura veneno)", cure_petrification:"Óleo (cura petrificação)",
+    cure_disease:"Elixir (cura doença)" };
 
   function renderPotionForm(f) {
     var isHeal = draft.effect === "heal";
@@ -484,9 +487,14 @@
       seccao("Efeito",
         campo("Tipo", '<select id="ie-effect">' + (L.POTION_EFFECTS || ["heal","regeneration","atk_bonus"]).map(function (e) {
           return '<option value="' + e + '"' + (e === draft.effect ? " selected" : "") + '>' + esc(POTION_LABELS[e] || e) + '</option>'; }).join("") + '</select>') +
-        campo("Valor", numInput("ie-value", draft.value, 0, 999)) +
-        (isHeal ? campo("Doses (garrafa)", numInput("ie-maxuses", draft.max_uses, 1, 20)) :
-          '<span class="ie-hint">Doses só se aplicam a poções de Cura.</span>')),
+        (draft.effect.indexOf("cure_") === 0
+          ? campo("Imunidade (quantidade)", numInput("ie-imunq", draft.imun_qtd, 1, 10)) +
+            campo("Imunidade (dado)", '<select id="ie-imunf">' + [4,6,8,10,12].map(function (x) {
+              return '<option' + (x === draft.imun_faces ? " selected" : "") + '>' + x + '</option>'; }).join("") + '</select>') +
+            '<span class="ie-hint">Cura o status e imuniza pelo número de rodadas rolado.</span>'
+          : campo("Valor", numInput("ie-value", draft.value, 0, 999)) +
+            (isHeal ? campo("Doses (garrafa)", numInput("ie-maxuses", draft.max_uses, 1, 20)) :
+              '<span class="ie-hint">Doses só se aplicam a poções de Cura.</span>'))),
       seccao("Restrição de classe (vazio = todas)",
         CLASSES.map(function (c) { return '<label class="ie-cls">' +
           '<input type="checkbox" class="ie-class" value="' + c[0] + '"> ' + esc(c[1]) + '</label>'; }).join("")),
@@ -512,7 +520,9 @@
     var g = function (id) { return root.querySelector("#" + id); };
     draft.name = g("ie-name").value; draft.emoji = g("ie-emoji").value;
     draft.effect = g("ie-effect").value;
-    draft.value = Math.max(0, +g("ie-value").value || 0);
+    var vv = g("ie-value"); if (vv) draft.value = Math.max(0, +vv.value || 0);
+    var iq = g("ie-imunq"); if (iq) draft.imun_qtd = Math.max(1, +iq.value || 1);
+    var ifa = g("ie-imunf"); if (ifa) draft.imun_faces = +ifa.value || 4;
     var mu = g("ie-maxuses"); if (mu) draft.max_uses = Math.max(1, +mu.value || 1);
     draft.allowed_classes = Array.prototype.map.call(root.querySelectorAll(".ie-class:checked"), function (c) { return c.value; });
     draft.disponibilidade = { loja: g("ie-disp-loja").checked, baus: g("ie-disp-baus").checked, loot_monstro: g("ie-disp-loot").checked };
