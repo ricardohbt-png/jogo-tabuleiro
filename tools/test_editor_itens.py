@@ -1079,6 +1079,71 @@ def test_espec_concedida_efeito():
     p["gear"]["ring1"] = None
     check("desequipar volta a 0", r._mira_dano_bonus(p) == 0)
 
+def _turn_room_hero(cls_id="warrior"):
+    """Sala com um herói da classe dada, turno ativo (para handlers de habilidade)."""
+    r = _gear_room()
+    r.phase = "playing"
+    p = S.make_player("p1", "Heroi", cls_id, 0)
+    r.players["p1"] = p
+    r.player_order = ["p1"]; r.turn_index = 0
+    r.current_actor = lambda: None
+    p["fome"], p["sede"] = 10, 10
+    return r, p
+
+def test_habilidades_heroi_concedidas():
+    print("\n[I5] Amostra de habilidades de herói concedidas por item")
+    # Detectar Armadilhas (ladino) num guerreiro
+    r, p = _turn_room_hero("warrior")
+    asyncio.run(r.handle_detectar_armadilhas("p1", {}))
+    check("sem item: detectar recusado", not p.get("detectar_ativo"))
+    p["gear"]["ring1"] = _item_com_habilidade("hero_rogue_detectar_armadilhas", id="anel_d")
+    asyncio.run(r.handle_detectar_armadilhas("p1", {}))
+    check("com item: detectar ativado", p.get("detectar_ativo") is True)
+    # Esconder nas Sombras (ladino) num clérigo
+    r2, p2 = _turn_room_hero("cleric")
+    asyncio.run(r2.handle_esconder_sombras("p1", {}))
+    check("sem item: esconder recusado", not p2.get("invisivel_sombras"))
+    p2["gear"]["boots"] = _item_com_habilidade("hero_rogue_esconder_sombras", id="bota_e")
+    asyncio.run(r2.handle_esconder_sombras("p1", {}))
+    check("com item: esconder tentado (ativou ou gastou a ação bônus)",
+          p2.get("invisivel_sombras") or p2.get("bonus_action_used"))
+    # Imposição das Mãos (paladino) num guerreiro, curando um aliado adjacente
+    r3, p3 = _turn_room_hero("warrior")
+    aliado = S.make_player("p2", "Aliado", "cleric", 1)
+    r3.players["p2"] = aliado
+    p3["pos"] = [1, 1]; aliado["pos"] = [2, 1]
+    aliado["hp"] = 1
+    asyncio.run(r3.handle_imposicao_maos("p1", {"target_id": "p2"}))
+    check("sem item: imposição recusada", aliado["hp"] == 1)
+    p3["gear"]["armor"] = _item_com_habilidade("hero_paladin_imposicao_maos", id="cota_i")
+    asyncio.run(r3.handle_imposicao_maos("p1", {"target_id": "p2"}))
+    check("com item: aliado curado", aliado["hp"] > 1)
+
+def test_mensagens_sem_richard():
+    print("\n[I5b] Mensagens da Imposição não citam Richard")
+    r, p = _turn_room_hero("warrior")
+    erros = []
+    async def se(pid, msg): erros.append(msg.get("msg", ""))
+    r.send_to = se
+    p["gear"]["armor"] = _item_com_habilidade("hero_paladin_imposicao_maos", id="cota_i")
+    asyncio.run(r.handle_imposicao_maos("p1", {"target_id": "p1"}))   # curar a si mesmo
+    check("erro de auto-cura não cita Richard",
+          erros and all("Richard" not in e for e in erros))
+
+def test_granted_hero_skills_payload():
+    print("\n[I5c] push_state expõe as habilidades de herói concedidas")
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    r = _gear_room()
+    check("sem item: lista vazia", r._granted_hero_skills(p) == [])
+    p["gear"]["ring1"] = _item_com_habilidade("hero_rogue_detectar_armadilhas", id="anel_d")
+    skills = r._granted_hero_skills(p)
+    check("com item: 1 habilidade", len(skills) == 1)
+    check("traz o id real da skill", skills and skills[0].get("id") == "detectar_armadilhas")
+    check("marca a classe de origem", skills and skills[0].get("granted_origem") == "rogue")
+    pr = S.make_player("p2", "Luccas", "rogue", 1)
+    pr["gear"]["ring1"] = _item_com_habilidade("hero_rogue_detectar_armadilhas", id="anel_d")
+    check("ladino não duplica a própria habilidade", r._granted_hero_skills(pr) == [])
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
@@ -1106,5 +1171,7 @@ if __name__ == "__main__":
     test_veneno_msg_penalidade()
     test_habilidade_concedida_helper(); test_portoes_concedidos()
     test_tecnica_concedida_uso(); test_espec_concedida_efeito()
+    test_habilidades_heroi_concedidas(); test_mensagens_sem_richard()
+    test_granted_hero_skills_payload()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)

@@ -11054,8 +11054,10 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        if p.get("class_id") != "paladin":
-            await self.send_to(pid, {"type": "error", "msg": "Apenas Richard pode usar esta habilidade."}); return
+        if p.get("class_id") != "paladin" and \
+                "hero_paladin_imposicao_maos" not in _habilidades_concedidas(p):
+            await self.send_to(pid, {"type": "error",
+                "msg": "Você não sabe usar Imposição das Mãos (habilidade do Paladino)."}); return
         if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
@@ -11067,12 +11069,14 @@ class GameRoom:
 
         alvo_id = data.get("target_id") if data else None
         if alvo_id == pid:
-            await self.send_to(pid, {"type": "error", "msg": "Richard não pode curar a si mesmo com esta habilidade."}); return
+            await self.send_to(pid, {"type": "error",
+                "msg": "Você não pode curar a si mesmo com esta habilidade."}); return
         alvo = self.players.get(alvo_id)
         if not alvo or not alvo.get("alive"):
             await self.send_to(pid, {"type": "error", "msg": "Aliado inválido."}); return
         if not self._no_raio(p, alvo, 1):
-            await self.send_to(pid, {"type": "error", "msg": "Aliado deve estar adjacente a Richard."}); return
+            await self.send_to(pid, {"type": "error",
+                "msg": "O aliado deve estar adjacente a você."}); return
 
         n_dados = self._cura_maos_dados(p) + extra_d6
         raw = sum(roll_dice("1d6") for _ in range(n_dados))
@@ -14912,8 +14916,10 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        if p.get("class_id") != "rogue":
-            await self.send_to(pid, {"type": "error", "msg": "Apenas Luccas pode detectar armadilhas."}); return
+        if p.get("class_id") != "rogue" and \
+                "hero_rogue_detectar_armadilhas" not in _habilidades_concedidas(p):
+            await self.send_to(pid, {"type": "error",
+                "msg": "Você não sabe detectar armadilhas (habilidade do Ladino)."}); return
         if p.get("petrificado"):
             await self.send_to(pid, {"type": "error", "msg": "🗿 Você está petrificado e não pode agir!"}); return
 
@@ -14958,8 +14964,10 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        if p.get("class_id") != "rogue":
-            await self.send_to(pid, {"type": "error", "msg": "Apenas Luccas pode usar esta habilidade."}); return
+        if p.get("class_id") != "rogue" and \
+                "hero_rogue_esconder_sombras" not in _habilidades_concedidas(p):
+            await self.send_to(pid, {"type": "error",
+                "msg": "Você não sabe se esconder nas sombras (habilidade do Ladino)."}); return
         if p.get("petrificado"):
             await self.send_to(pid, {"type": "error", "msg": "🗿 Você está petrificado e não pode agir!"}); return
 
@@ -20039,10 +20047,36 @@ class GameRoom:
             pay["story"] = self._campaign_outro
         return pay
 
+    # Amostra da Fase I: habilidades de herói que um item pode conceder.
+    # id do catálogo do editor -> (classe de origem, id real da skill)
+    GRANTED_HERO_SKILLS = {
+        "hero_rogue_detectar_armadilhas": ("rogue", "detectar_armadilhas"),
+        "hero_rogue_esconder_sombras":    ("rogue", "esconder_sombras"),
+        "hero_paladin_imposicao_maos":    ("paladin", "imposicao_maos"),
+    }
+
+    def _granted_hero_skills(self, p):
+        """Definições reais das habilidades de herói concedidas por itens equipados
+        (Fase I), para o cliente renderizar o botão. Cada entrada é a skill da classe
+        de origem + 'granted_origem'. Evita duplicar nomes/custos no cliente."""
+        out = []
+        concedidas = _habilidades_concedidas(p)
+        for aid, (cls_id, skill_id) in self.GRANTED_HERO_SKILLS.items():
+            if aid not in concedidas:
+                continue
+            if p.get("class_id") == cls_id:
+                continue   # já é da classe: o painel normal já mostra
+            skill = next((s for s in CLASSES.get(cls_id, {}).get("skills", [])
+                          if s.get("id") == skill_id), None)
+            if skill:
+                out.append(dict(skill, granted_origem=cls_id))
+        return out
+
     async def push_state(self):
         await self._check_objectives()
         players_state = [dict(p, initiative=self.initiative_value(p),
-                              vision_radius=self._get_raio_visao(p))
+                              vision_radius=self._get_raio_visao(p),
+                              granted_hero_skills=self._granted_hero_skills(p))
                          for p in self.players.values()]
         monsters_state = [dict(m, initiative=self.initiative_value(m),
                                vision_radius=self._get_raio_visao_monstro(m))
