@@ -21091,6 +21091,10 @@ _ITEM_BONUS_EFFECTS = {"def_", "maxhp", "spd", "atk_bonus", "str_", "dex", "con_
 # Efeitos válidos p/ poção custom (Fase F) — já implementados em handle_use_item.
 _ITEM_POTION_EFFECTS = {"heal", "regeneration", "atk_bonus"}
 
+# Modos de mira e elementos válidos p/ arremessável custom (Fase G).
+_ITEM_THROW_TARGETS = {"ataque_alvo", "area"}
+_ITEM_THROW_ELEMENTS = {"fogo", "frio", "eletrico", "acido", "sagrado", "explosao"}
+
 # Tipos de dano válidos p/ o bônus de resistência do herói (Fase C).
 _RESIST_TYPES = {DMG_PHYSICAL, DMG_FIRE, DMG_COLD, DMG_LIGHTNING, DMG_ACID,
                  DMG_HOLY, DMG_POISON, DMG_MAGIC, DMG_WATER}
@@ -21113,6 +21117,8 @@ def _validate_custom_item(raw):
         return _validate_custom_accessory(raw)
     if it == "potion":
         return _validate_custom_potion(raw)
+    if it == "throwable":
+        return _validate_custom_throwable(raw)
     return False, "tipo de item não suportado"
 
 def _validate_custom_armor(raw):
@@ -21250,6 +21256,58 @@ def _validate_custom_potion(raw):
         if mu > 1:
             item["max_uses"] = mu
             item["uses_left"] = mu
+    return True, item
+
+def _validate_custom_throwable(raw):
+    """Valida arremessável custom (Fase G). Consumível de bolsa (effect 'throwable')
+    cujo comportamento é resolvido por ARREMESSAVEIS em handle_throw_item:
+    'ataque_alvo' (teste de ataque por DES) ou 'area' (raio + save de Reflexos)."""
+    iid = str(raw.get("id") or "").strip().lower()
+    if not iid or not all(c.isalnum() or c == "_" for c in iid):
+        return False, "id use apenas letras, números e _"
+    name = str(raw.get("name") or "").strip()[:60]
+    if not name:
+        return False, "informe o nome do arremessável"
+    native = {i["id"] for shop in (SHOP_MERCHANT, SHOP_TEMPLE, SHOP_TAVERN)
+              for i in shop if not i.get("custom")}
+    native |= {k for k, v in ARREMESSAVEIS.items() if not v.get("custom")}
+    if iid in native:
+        return False, "o id não pode substituir um item nativo"
+    alvo = raw.get("alvo")
+    if alvo not in _ITEM_THROW_TARGETS:
+        return False, "alvo de arremesso inválido"
+    def _int0(v):
+        try: return int(v or 0)
+        except (TypeError, ValueError): return 0
+    dano = raw.get("dano")
+    if dano not in (None, "") and not _die_ok(dano):
+        return False, "dado de dano inválido (use NdX, X em 4/6/8/10/12)"
+    classes = [c for c in (raw.get("allowed_classes") or []) if c in _ITEM_CLASSES]
+    try: price = max(0, int(raw.get("price", 0)))
+    except (TypeError, ValueError): price = 0
+    disp = raw.get("disponibilidade") or {}
+    item = {
+        "id": iid, "name": name, "emoji": str(raw.get("emoji") or "💥")[:8],
+        "item_type": "throwable", "item_slot": "bag", "effect": "throwable", "custom": True,
+        "alvo": alvo, "alcance": max(1, min(12, _int0(raw.get("alcance", 4)) or 4)),
+        "allowed_classes": classes, "price": price,
+        "disponibilidade": {"loja": bool(disp.get("loja")), "baus": bool(disp.get("baus")),
+                             "loot_monstro": bool(disp.get("loot_monstro"))},
+    }
+    if dano:
+        item["dano"] = str(dano).lower()
+        el = raw.get("elemento")
+        item["elemento"] = el if el in _ITEM_THROW_ELEMENTS else "fogo"
+    if alvo == "area":
+        item["area_raio"] = max(1, min(3, _int0(raw.get("area_raio", 1)) or 1))
+        cd = _int0(raw.get("save_cd"))
+        if cd:
+            item["save"] = {"tipo": "reflexos", "cd": max(5, min(25, cd))}
+    if raw.get("em_chamas"):
+        dur = raw.get("chamas_dur") or "1d4"
+        item["em_chamas"] = True
+        item["chamas_dur"] = str(dur).lower() if _die_ok(dur) else "1d4"
+        item["chamas_agua_apaga"] = bool(raw.get("chamas_agua_apaga", True))
     return True, item
 
 def _validate_custom_weapon(raw):

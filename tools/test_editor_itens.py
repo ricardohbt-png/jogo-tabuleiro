@@ -257,6 +257,44 @@ def potion_sample(**over):
             "disponibilidade": {"loja": True, "baus": False, "loot_monstro": False}}
     base.update(over); return base
 
+def throwable_sample(**over):
+    base = {"id": "frasco_teste", "name": "Frasco Teste", "emoji": "💥",
+            "item_type": "throwable", "alvo": "ataque_alvo", "alcance": 4,
+            "dano": "2d6", "elemento": "fogo", "allowed_classes": [], "price": 25,
+            "disponibilidade": {"loja": True, "baus": False, "loot_monstro": False}}
+    base.update(over); return base
+
+def test_validacao_arremessavel():
+    print("\n[G1] Validacao de arremessável")
+    ok, it = S._validate_custom_item(throwable_sample())
+    check("aceita arremessável mirado", ok)
+    check("item_type = throwable", ok and it.get("item_type") == "throwable")
+    check("item_slot = bag + effect throwable",
+          ok and it.get("item_slot") == "bag" and it.get("effect") == "throwable")
+    check("alvo/alcance/dano preservados",
+          ok and it.get("alvo") == "ataque_alvo" and it.get("alcance") == 4 and it.get("dano") == "2d6")
+    check("mirado nao grava area_raio/save", ok and "area_raio" not in it and "save" not in it)
+    oka, ita = S._validate_custom_item(throwable_sample(id="bomba_teste", alvo="area",
+        area_raio=2, save_cd=13, dano="3d6", elemento="explosao"))
+    check("aceita área com raio", oka and ita.get("alvo") == "area" and ita.get("area_raio") == 2)
+    check("área grava save reflexos+cd",
+          oka and ita.get("save") == {"tipo": "reflexos", "cd": 13})
+    okc, itc = S._validate_custom_item(throwable_sample(id="frasco_chamas",
+        em_chamas=True, chamas_dur="1d6", chamas_agua_apaga=False))
+    check("em_chamas grava duracao e agua_apaga",
+          okc and itc.get("em_chamas") is True and itc.get("chamas_dur") == "1d6"
+          and itc.get("chamas_agua_apaga") is False)
+    oks, its = S._validate_custom_item(throwable_sample(id="frasco_seco", dano=None))
+    check("sem dano nao grava dano/elemento", oks and "dano" not in its and "elemento" not in its)
+    okb, _ = S._validate_custom_item(throwable_sample(alvo="parede"))
+    check("rejeita alvo invalido", not okb)
+    okd, _ = S._validate_custom_item(throwable_sample(dano="2d7"))
+    check("rejeita dado de dano invalido", not okd)
+    okn, _ = S._validate_custom_item(throwable_sample(id="frasco_oleo"))
+    check("rejeita id nativo de ARREMESSAVEIS (frasco_oleo)", not okn)
+    oke, _ = S._validate_custom_item(throwable_sample(id="elixir"))
+    check("rejeita id nativo de loja (elixir)", not oke)
+
 def test_validacao_pocao():
     print("\n[F1] Validacao de poção")
     ok, it = S._validate_custom_item(potion_sample())
@@ -796,5 +834,6 @@ if __name__ == "__main__":
     test_acessorio_botas_corrosao(); test_acessorio_merge()
     test_validacao_pocao()
     test_pocao_merge(); test_pocao_uso(); test_pocao_multidose()
+    test_validacao_arremessavel()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)
