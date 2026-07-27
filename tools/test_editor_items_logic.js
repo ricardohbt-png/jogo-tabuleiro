@@ -241,5 +241,19 @@ check("validatePoisonDraft rejeita penalidade sem pares",
 check("suggestPricePoison cresce com a CD",
   L.suggestPricePoison({dificuldade:16}) > L.suggestPricePoison({dificuldade:8}));
 
+// Antídotos — efeitos de cura de status com dado de imunidade
+check("POTION_EFFECTS inclui os 3 efeitos de cura",
+  L.POTION_EFFECTS.indexOf("cure_poison") >= 0
+  && L.POTION_EFFECTS.indexOf("cure_petrification") >= 0
+  && L.POTION_EFFECTS.indexOf("cure_disease") >= 0);
+const cura = L.serializePotion({name:"Antídoto Forte", effect:"cure_poison",
+  imun_qtd:2, imun_faces:6,
+  disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:30});
+check("serializePotion cura grava effect", cura.effect === "cure_poison");
+check("serializePotion cura grava imunidade_dado", cura.imunidade_dado === "2d6");
+check("cura não grava doses", cura.max_uses === undefined);
+const heal = L.serializePotion({name:"Cura", effect:"heal", value:10});
+check("heal não grava imunidade_dado", heal.imunidade_dado === undefined);
+
 console.log(`\n${PASS} passaram, ${FAIL} falharam`);
 process.exit(FAIL ? 1 : 0);

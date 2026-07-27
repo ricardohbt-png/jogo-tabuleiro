@@ -3036,7 +3036,12 @@ SHOP_MERCHANT = [
      "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_ardonia_negra",
      "descricao": "Fortitude CD 14 anula. Se falhar: 1 dano por rodada durante 2d4 rodadas."},
     {"id": "elixir",        "name": "Elixir da Força",  "emoji": "⚗️", "price": 12, "item_slot": "bag",   "effect": "atk_bonus", "value": 3},
-    {"id": "antidote",      "name": "Antídoto",          "emoji": "💚",  "price": 5,  "item_slot": "bag",   "effect": "heal",      "value": 6},
+    {"id": "antidote",      "name": "Antídoto",          "emoji": "💚",  "price": 5,  "item_slot": "bag",   "effect": "cure_poison", "value": 0, "imunidade_dado": "1d4",
+     "descricao": "Neutraliza venenos e protege contra novos por 1d4 rodadas."},
+    {"id": "oleo_dissolvente", "name": "Óleo Dissolvente", "emoji": "🫗", "price": 25, "item_slot": "bag", "effect": "cure_petrification", "value": 0, "imunidade_dado": "1d4",
+     "descricao": "Dissolve a pedra: cura petrificação e protege por 1d4 rodadas."},
+    {"id": "elixir_depurativo", "name": "Elixir Depurativo", "emoji": "🧴", "price": 20, "item_slot": "bag", "effect": "cure_disease", "value": 0, "imunidade_dado": "1d4",
+     "descricao": "Purga doenças do corpo e protege por 1d4 rodadas."},
     {"id": "vela_escuridao","name": "Vela da Escuridão", "emoji": "🕯️", "price": 50, "item_slot": "bag",   "effect": "veil_shadow","value": 0},
     # â”€â”€ AnÃ©is (slots ring1 / ring2) â”€â”€
     {"id": "ring_str",      "name": "Anel de Força",     "emoji": "💍",  "price": 12, "item_slot": "ring",  "effect": "atk",       "value": 1},
@@ -21248,7 +21253,8 @@ _ITEM_MATERIAIS = {"organic", "metal"}
 _ITEM_BONUS_EFFECTS = {"def_", "maxhp", "spd", "atk_bonus", "str_", "dex", "con_", "int_", "resist", "initiative"}
 
 # Efeitos válidos p/ poção custom (Fase F) — já implementados em handle_use_item.
-_ITEM_POTION_EFFECTS = {"heal", "regeneration", "atk_bonus"}
+_ITEM_POTION_EFFECTS = {"heal", "regeneration", "atk_bonus",
+                        "cure_poison", "cure_petrification", "cure_disease"}
 
 # Status que um consumível pode curar e contra os quais pode imunizar.
 _STATUS_IMUNIZAVEIS = {"veneno", "petrificacao", "doenca"}
@@ -21441,6 +21447,10 @@ def _validate_custom_potion(raw):
         if mu > 1:
             item["max_uses"] = mu
             item["uses_left"] = mu
+    if effect in ("cure_poison", "cure_petrification", "cure_disease"):
+        dado = raw.get("imunidade_dado")
+        if dado and _die_ok(dado):
+            item["imunidade_dado"] = str(dado).lower()
     return True, item
 
 def _validate_custom_throwable(raw):

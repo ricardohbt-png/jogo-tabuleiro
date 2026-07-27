@@ -68,7 +68,8 @@
   var ARMOR_CATS = ["leve", "media", "pesada"];
   var BONUS_EFFECTS = ["def_", "maxhp", "spd", "atk_bonus", "str_", "dex", "con_", "int_", "resist", "initiative"];
   var RESIST_TYPES = ["physical", "fire", "cold", "lightning", "acid", "holy", "poison", "magic", "water"];
-  var POTION_EFFECTS = ["heal", "regeneration", "atk_bonus"];
+  var POTION_EFFECTS = ["heal", "regeneration", "atk_bonus",
+                        "cure_poison", "cure_petrification", "cure_disease"];
   var THROW_TARGETS = ["ataque_alvo", "area"];
   var POISON_OPS = ["dano", "reduzir", "penalidade", "petrificar", "cegar"];
   var POISON_ATTRS = ["forca", "constituicao", "destreza", "inteligencia"];
@@ -173,6 +174,10 @@
     if (effect === "heal") {
       var mu = Math.max(1, +d.max_uses || 1);
       if (mu > 1) { item.max_uses = mu; item.uses_left = mu; }
+    }
+    if (effect.indexOf("cure_") === 0) {
+      var iq = Math.max(1, +d.imun_qtd || 1);
+      item.imunidade_dado = buildDie(iq, d.imun_faces || 4);
     }
     return item;
   }

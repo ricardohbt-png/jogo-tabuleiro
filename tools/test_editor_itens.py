@@ -1526,6 +1526,26 @@ def test_cura_status_em_aliado():
     check("item NÃO consumido em alvo inválido", len(p2["bag"]) == 1)
     check("ação bônus NÃO gasta em alvo inválido", not p2.get("bonus_action_used"))
 
+def test_itens_nativos_e_editor_cura():
+    print("\n[K6] Itens nativos + validação no editor")
+    ant = next((i for i in S.SHOP_MERCHANT if i["id"] == "antidote"), None)
+    check("antídoto nativo existe", ant is not None)
+    check("antídoto cura veneno de verdade", ant and ant.get("effect") == "cure_poison")
+    check("antídoto tem dado de imunidade", ant and ant.get("imunidade_dado") == "1d4")
+    oleo = next((i for i in S.SHOP_MERCHANT if i["id"] == "oleo_dissolvente"), None)
+    check("óleo dissolvente na loja", oleo and oleo.get("effect") == "cure_petrification")
+    elix = next((i for i in S.SHOP_MERCHANT if i["id"] == "elixir_depurativo"), None)
+    check("elixir depurativo na loja", elix and elix.get("effect") == "cure_disease")
+    # Validação de poção custom com os 3 efeitos
+    for eff in ("cure_poison", "cure_petrification", "cure_disease"):
+        ok, it = S._validate_custom_item(potion_sample(id=f"p_{eff}", effect=eff,
+                                                       imunidade_dado="1d6"))
+        check(f"aceita {eff}", ok and it.get("effect") == eff)
+        check(f"{eff} preserva imunidade_dado", ok and it.get("imunidade_dado") == "1d6")
+    okb, itb = S._validate_custom_item(potion_sample(id="p_bad", effect="cure_poison",
+                                                     imunidade_dado="1d7"))
+    check("dado de imunidade inválido é descartado", okb and "imunidade_dado" not in itb)
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
@@ -1564,5 +1584,6 @@ if __name__ == "__main__":
     test_curar_status_helpers(); test_purificacao_intacta()
     test_imunidade_status_helpers(); test_imunidade_bloqueia_fontes()
     test_cura_status_em_si(); test_cura_status_em_aliado()
+    test_itens_nativos_e_editor_cura()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)
