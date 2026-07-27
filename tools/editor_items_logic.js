@@ -16,7 +16,7 @@
     return (+m[1]) * ((+m[2]) + 1) / 2;
   }
   // Preco sugerido: transparente e recalibravel (constantes no topo).
-  var K_DIE = 4, K_BONUS = 6, K_ELEM = 5, K_2M = 4, K_POTION = 2;
+  var K_DIE = 4, K_BONUS = 6, K_ELEM = 5, K_2M = 4, K_POTION = 2, K_THROW = 5;
   function suggestPrice(item) {
     var p = K_DIE * dieAvg(item.die);
     p += K_BONUS * (Math.abs(+item.atk_bonus || 0) + Math.abs(+item.damage_bonus || 0));
@@ -69,6 +69,8 @@
   var BONUS_EFFECTS = ["def_", "maxhp", "spd", "atk_bonus", "str_", "dex", "con_", "int_", "resist", "initiative"];
   var RESIST_TYPES = ["physical", "fire", "cold", "lightning", "acid", "holy", "poison", "magic", "water"];
   var POTION_EFFECTS = ["heal", "regeneration", "atk_bonus"];
+  var THROW_TARGETS = ["ataque_alvo", "area"];
+  var THROW_ELEMENTS = ["fogo", "frio", "eletrico", "acido", "sagrado", "explosao"];
   function filterBonuses(list) {
     return (list || []).filter(function (b) {
       if (!b || BONUS_EFFECTS.indexOf(b.effect) < 0) return false;
@@ -179,6 +181,47 @@
     var mu = Math.max(1, +item.max_uses || 1);
     return Math.max(1, Math.round(K_POTION * (+item.value || 0) * mu));
   }
+  function serializeThrowable(d) {
+    var alvo = THROW_TARGETS.indexOf(d.alvo) >= 0 ? d.alvo : "ataque_alvo";
+    var item = {
+      id: slugify(d.id || d.name), name: String(d.name || "").trim().slice(0, 60),
+      emoji: d.emoji || "💥", item_type: "throwable", item_slot: "bag",
+      effect: "throwable", custom: true,
+      alvo: alvo, alcance: Math.max(1, Math.min(12, +d.alcance || 4)),
+      allowed_classes: (d.allowed_classes || []).slice(),
+      price: Math.max(0, +d.price || 0),
+      disponibilidade: {
+        loja: !!(d.disponibilidade || {}).loja, baus: !!(d.disponibilidade || {}).baus,
+        loot_monstro: !!(d.disponibilidade || {}).loot_monstro,
+      },
+    };
+    if (d.tem_dano) {
+      item.dano = buildDie(d.die_qtd, d.die_faces);
+      item.elemento = THROW_ELEMENTS.indexOf(d.elemento) >= 0 ? d.elemento : "fogo";
+    }
+    if (alvo === "area") {
+      item.area_raio = Math.max(1, Math.min(3, +d.area_raio || 1));
+      if (+d.save_cd) item.save_cd = Math.max(5, Math.min(25, +d.save_cd));
+    }
+    if (d.em_chamas) {
+      item.em_chamas = true;
+      item.chamas_dur = buildDie(d.chamas_qtd, d.chamas_faces || 4);
+      item.chamas_agua_apaga = d.chamas_agua_apaga !== false;
+    }
+    return item;
+  }
+  function validateThrowableDraft(d) {
+    if (!String(d.name || "").trim()) return { ok: false, msg: "informe o nome" };
+    if (d.alvo && THROW_TARGETS.indexOf(d.alvo) < 0) return { ok: false, msg: "alvo inválido" };
+    if (d.tem_dano && FACES.indexOf(+d.die_faces) < 0) return { ok: false, msg: "dado de dano inválido" };
+    return { ok: true };
+  }
+  function suggestPriceThrowable(item) {
+    var p = K_THROW * dieAvg(item.dano);
+    if (item.alvo === "area") p *= (1 + 0.5 * Math.max(1, +item.area_raio || 1));
+    if (item.em_chamas) p += 10;
+    return Math.max(1, Math.round(p));
+  }
   var api = { slugify: slugify, buildDie: buildDie, dieAvg: dieAvg,
               suggestPrice: suggestPrice, serializeWeapon: serializeWeapon,
               validateDraft: validateDraft, ELEM: ELEM, CATS: CATS, FACES: FACES,
@@ -191,7 +234,11 @@
               serializePotion: serializePotion,
               validatePotionDraft: validatePotionDraft,
               suggestPricePotion: suggestPricePotion,
-              POTION_EFFECTS: POTION_EFFECTS };
+              POTION_EFFECTS: POTION_EFFECTS,
+              serializeThrowable: serializeThrowable,
+              validateThrowableDraft: validateThrowableDraft,
+              suggestPriceThrowable: suggestPriceThrowable,
+              THROW_TARGETS: THROW_TARGETS, THROW_ELEMENTS: THROW_ELEMENTS };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (root) root.EDITOR_ITEMS_LOGIC = api;
 })(typeof window !== "undefined" ? window : null);

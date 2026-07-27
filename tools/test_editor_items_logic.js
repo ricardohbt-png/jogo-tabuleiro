@@ -141,5 +141,48 @@ check("validatePotionDraft rejeita efeito inválido", !L.validatePotionDraft({na
 check("suggestPricePotion cresce com value", L.suggestPricePotion({value:20,max_uses:1}) > L.suggestPricePotion({value:5,max_uses:1}));
 check("suggestPricePotion cresce com doses", L.suggestPricePotion({value:10,max_uses:3}) > L.suggestPricePotion({value:10,max_uses:1}));
 
+// Fase G — arremessáveis
+check("THROW_TARGETS tem os 2 modos",
+  L.THROW_TARGETS.indexOf("ataque_alvo") >= 0 && L.THROW_TARGETS.indexOf("area") >= 0);
+check("THROW_ELEMENTS tem fogo e acido",
+  L.THROW_ELEMENTS.indexOf("fogo") >= 0 && L.THROW_ELEMENTS.indexOf("acido") >= 0);
+const thAlvo = L.serializeThrowable({name:"Frasco Ardente", alvo:"ataque_alvo", alcance:5,
+  tem_dano:true, die_qtd:2, die_faces:6, elemento:"fogo",
+  em_chamas:true, chamas_qtd:1, chamas_faces:4, chamas_agua_apaga:true,
+  disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:25});
+check("serializeThrowable id/slot/effect",
+  thAlvo.id === "frasco_ardente" && thAlvo.item_slot === "bag"
+  && thAlvo.effect === "throwable" && thAlvo.item_type === "throwable");
+check("serializeThrowable alvo/alcance", thAlvo.alvo === "ataque_alvo" && thAlvo.alcance === 5);
+check("serializeThrowable dano/elemento", thAlvo.dano === "2d6" && thAlvo.elemento === "fogo");
+check("serializeThrowable em chamas", thAlvo.em_chamas === true
+  && thAlvo.chamas_dur === "1d4" && thAlvo.chamas_agua_apaga === true);
+check("single-target não grava area_raio/save_cd",
+  thAlvo.area_raio === undefined && thAlvo.save_cd === undefined);
+const thArea = L.serializeThrowable({name:"Bomba X", alvo:"area", alcance:4, area_raio:2, save_cd:13,
+  tem_dano:true, die_qtd:3, die_faces:6, elemento:"explosao",
+  disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:60});
+check("area grava raio e save_cd", thArea.alvo === "area" && thArea.area_raio === 2 && thArea.save_cd === 13);
+check("area sem chamas nao grava chamas_dur", thArea.chamas_dur === undefined);
+const thSemDano = L.serializeThrowable({name:"Frasco Vazio", alvo:"ataque_alvo",
+  disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:5});
+check("sem dano nao grava dano/elemento",
+  thSemDano.dano === undefined && thSemDano.elemento === undefined);
+check("alcance default 4", thSemDano.alcance === 4);
+check("emoji default 💥", thSemDano.emoji === "💥");
+check("alvo invalido normaliza p/ ataque_alvo",
+  L.serializeThrowable({name:"Y", alvo:"parede"}).alvo === "ataque_alvo");
+check("alcance clampado em 12", L.serializeThrowable({name:"Y", alcance:99}).alcance === 12);
+check("validateThrowableDraft aceita valido",
+  L.validateThrowableDraft({name:"X", alvo:"area", tem_dano:true, die_faces:6}).ok);
+check("validateThrowableDraft rejeita sem nome",
+  !L.validateThrowableDraft({name:"", alvo:"area"}).ok);
+check("validateThrowableDraft rejeita dado invalido",
+  !L.validateThrowableDraft({name:"X", alvo:"area", tem_dano:true, die_faces:7}).ok);
+check("suggestPriceThrowable cresce com o dado",
+  L.suggestPriceThrowable({dano:"3d6"}) > L.suggestPriceThrowable({dano:"1d6"}));
+check("suggestPriceThrowable cresce com area",
+  L.suggestPriceThrowable({dano:"2d6", alvo:"area", area_raio:2}) > L.suggestPriceThrowable({dano:"2d6"}));
+
 console.log(`\n${PASS} passaram, ${FAIL} falharam`);
 process.exit(FAIL ? 1 : 0);
