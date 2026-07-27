@@ -7,7 +7,7 @@
     function (c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];}); };
   var TYPES = [["armas","Armas",true],["armaduras","Armaduras",true],["escudos","Escudos",true],
     ["aneis","Anéis",true],["botas","Botas",true],["pocoes","Poções",true],
-    ["arremessaveis","Arremessáveis",false],["venenos","Venenos",false]];
+    ["arremessaveis","Arremessáveis",true],["venenos","Venenos",false]];
   var CLASSES = [["warrior","Guerreiro"],["mage","Mago"],["rogue","Ladino"],
     ["cleric","Clérigo"],["ranger","Patrulheiro"],["paladin","Paladino"],["bard","Bardo"]];
 
@@ -39,10 +39,17 @@
     return { name:"", emoji:"🧪", item_type:"potion", effect:"heal", value:10, max_uses:1,
       allowed_classes:[], disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:0, id:"" };
   }
+  function novoDraftThrowable() {
+    return { name:"", emoji:"💥", item_type:"throwable", alvo:"ataque_alvo", alcance:4,
+      area_raio:1, save_cd:12, tem_dano:true, die_qtd:2, die_faces:6, elemento:"fogo",
+      em_chamas:false, chamas_qtd:1, chamas_faces:4, chamas_agua_apaga:true,
+      allowed_classes:[], disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:0, id:"" };
+  }
   function novoDraftFor(type) {
     if (type === "armaduras" || type === "escudos") return novoDraftArmor(type);
     if (type === "aneis" || type === "botas") return novoDraftAccessory(type);
     if (type === "pocoes") return novoDraftPotion();
+    if (type === "arremessaveis") return novoDraftThrowable();
     return novoDraft();
   }
 
@@ -109,6 +116,7 @@
       return;
     }
     if (activeType === "pocoes") { renderPotionForm(f); return; }
+    if (activeType === "arremessaveis") { renderThrowableForm(f); return; }
     var elemTypes = L.ELEM.map(function (e) { return '<option value="' + e + '">' + e + '</option>'; }).join("");
     var abil = abilityOptions();
     f.innerHTML = [
@@ -508,6 +516,137 @@
     var status = root.querySelector("#ie-status");
     if (!v.ok) { status.textContent = "⚠️ " + v.msg; return; }
     var item = L.serializePotion(draft);
+    status.textContent = "salvando…";
+    try {
+      if (artFile) { await window.EDITOR_SAVE.uploadItemArt(artFile, item.id); }
+      var saved = await window.EDITOR_SAVE.saveCustomItem(item);
+      status.textContent = "✅ salvo: " + saved.id;
+      window.EDITOR_CUSTOM_ITEMS = (window.EDITOR_CUSTOM_ITEMS || []).filter(function (r) { return r.id !== saved.id; });
+      window.EDITOR_CUSTOM_ITEMS.push(saved);
+    } catch (e) { status.textContent = "❌ " + (e && e.message || "falha ao salvar"); }
+  }
+
+  var THROW_ALVO_LABELS = { ataque_alvo:"Mirado (teste de ataque por Destreza)", area:"Área (save de Reflexos)" };
+  var THROW_ELEM_LABELS = { fogo:"Fogo", frio:"Frio", eletrico:"Elétrico", acido:"Ácido", sagrado:"Sagrado", explosao:"Explosão" };
+
+  function renderThrowableForm(f) {
+    var isArea = draft.alvo === "area";
+    var faces = [4,6,8,10,12];
+    f.innerHTML = [
+      seccao("Identidade",
+        campo("Nome", '<input id="ie-name" value="' + esc(draft.name) + '">') +
+        campo("Emoji", '<input id="ie-emoji" size="3" value="' + esc(draft.emoji) + '">')),
+      seccao("Mira",
+        campo("Alvo", '<select id="ie-alvo">' + (L.THROW_TARGETS || ["ataque_alvo","area"]).map(function (a) {
+          return '<option value="' + a + '"' + (a === draft.alvo ? " selected" : "") + '>' + esc(THROW_ALVO_LABELS[a] || a) + '</option>'; }).join("") + '</select>') +
+        campo("Alcance (quadrados)", numInput("ie-alcance", draft.alcance, 1, 12)) +
+        (isArea ? campo("Raio da área", numInput("ie-raio", draft.area_raio, 1, 3)) +
+                  campo("CD do save (0 = sem save)", numInput("ie-savecd", draft.save_cd, 0, 25)) : "")),
+      seccao("Dano",
+        campo("Causa dano", chk("ie-temdano", draft.tem_dano)) +
+        (draft.tem_dano ?
+          campo("Quantidade", numInput("ie-dieq", draft.die_qtd, 1, 10)) +
+          campo("Dado", '<select id="ie-dief">' + faces.map(function (x) {
+            return '<option' + (x === draft.die_faces ? " selected" : "") + '>' + x + '</option>'; }).join("") + '</select>') +
+          campo("Elemento", '<select id="ie-elemento">' + (L.THROW_ELEMENTS || ["fogo"]).map(function (e) {
+            return '<option value="' + e + '"' + (e === draft.elemento ? " selected" : "") + '>' + esc(THROW_ELEM_LABELS[e] || e) + '</option>'; }).join("") + '</select>')
+          : '<span class="ie-hint">Sem dano: use para itens de efeito puro.</span>')),
+      seccao("Incêndio",
+        campo("Coloca o alvo em chamas", chk("ie-chamas", draft.em_chamas)) +
+        (draft.em_chamas ?
+          campo("Duração (quantidade)", numInput("ie-chamasq", draft.chamas_qtd, 1, 5)) +
+          campo("Duração (dado)", '<select id="ie-chamasf">' + faces.map(function (x) {
+            return '<option' + (x === draft.chamas_faces ? " selected" : "") + '>' + x + '</option>'; }).join("") + '</select>') +
+          campo("Água apaga", chk("ie-chamasagua", draft.chamas_agua_apaga))
+          : '<span class="ie-hint">Marque para aplicar o status "em chamas" no acerto.</span>')),
+      seccao("Restrição de classe (vazio = todas)",
+        CLASSES.map(function (c) { return '<label class="ie-cls">' +
+          '<input type="checkbox" class="ie-class" value="' + c[0] + '"> ' + esc(c[1]) + '</label>'; }).join("")),
+      seccao("Disponibilidade",
+        chkLbl("ie-disp-loja", "Loja (Mercador)", draft.disponibilidade.loja) +
+        chkLbl("ie-disp-baus", "Baús / recompensas", draft.disponibilidade.baus) +
+        chkLbl("ie-disp-loot", "Loot de monstro", draft.disponibilidade.loot_monstro)),
+      seccao("Preço",
+        campo("Ouro", numInput("ie-price", draft.price, 0, 99999)) +
+        '<span id="ie-price-sug" class="ie-hint"></span>'),
+      seccao("Imagem",
+        '<input type="file" id="ie-art" accept="image/png"> ' +
+        '<span id="ie-art-name" class="ie-hint"></span>'),
+      '<div class="ie-actions"><button id="ie-save">💾 Salvar arremessável</button>' +
+        '<span id="ie-status" class="ie-hint"></span></div>',
+    ].join("");
+    previewFn = renderThrowablePreview;
+    bindThrowableForm();
+    renderThrowablePreview();
+  }
+
+  function currentThrowableDraftFromForm() {
+    var g = function (id) { return root.querySelector("#" + id); };
+    draft.name = g("ie-name").value; draft.emoji = g("ie-emoji").value;
+    draft.alvo = g("ie-alvo").value;
+    draft.alcance = Math.max(1, Math.min(12, +g("ie-alcance").value || 4));
+    var raio = g("ie-raio"); if (raio) draft.area_raio = Math.max(1, Math.min(3, +raio.value || 1));
+    var scd = g("ie-savecd"); if (scd) draft.save_cd = Math.max(0, +scd.value || 0);
+    draft.tem_dano = g("ie-temdano").checked;
+    var dq = g("ie-dieq"); if (dq) draft.die_qtd = Math.max(1, +dq.value || 1);
+    var df = g("ie-dief"); if (df) draft.die_faces = +df.value || 6;
+    var el = g("ie-elemento"); if (el) draft.elemento = el.value;
+    draft.em_chamas = g("ie-chamas").checked;
+    var cq = g("ie-chamasq"); if (cq) draft.chamas_qtd = Math.max(1, +cq.value || 1);
+    var cf = g("ie-chamasf"); if (cf) draft.chamas_faces = +cf.value || 4;
+    var ca = g("ie-chamasagua"); if (ca) draft.chamas_agua_apaga = ca.checked;
+    draft.allowed_classes = Array.prototype.map.call(root.querySelectorAll(".ie-class:checked"), function (c) { return c.value; });
+    draft.disponibilidade = { loja: g("ie-disp-loja").checked, baus: g("ie-disp-baus").checked, loot_monstro: g("ie-disp-loot").checked };
+    draft.price = +g("ie-price").value || 0;
+    return draft;
+  }
+
+  function renderThrowablePreview() {
+    currentThrowableDraftFromForm();
+    var item = L.serializeThrowable(draft);
+    root.querySelector("#ie-price-sug").textContent = "sugerido: " + L.suggestPriceThrowable(item) + " 🪙";
+    var parts = [item.alvo === "area" ? ("área raio " + item.area_raio) : "mirado",
+                 "alcance " + item.alcance];
+    if (item.dano) parts.push(item.dano + " " + (THROW_ELEM_LABELS[item.elemento] || item.elemento));
+    if (item.save_cd) parts.push("Reflexos CD " + item.save_cd);
+    if (item.em_chamas) parts.push("🔥 chamas " + item.chamas_dur + (item.chamas_agua_apaga ? "" : " (água não apaga)"));
+    var topo = artURL ? '<img class="ie-card-img" src="' + artURL + '" alt="">'
+      : '<div class="ie-card-emoji">' + esc(item.emoji) + '</div>';
+    root.querySelector("#ie-preview").innerHTML =
+      '<div class="ie-card">' + topo +
+      '<div class="ie-card-name">' + esc(item.name || "(sem nome)") + '</div>' +
+      '<div class="ie-card-stats">' + esc(parts.join(" · ")) + '</div>' +
+      '<div class="ie-card-id">id: ' + esc(item.id) + '</div></div>';
+  }
+
+  function bindThrowableForm() {
+    root.querySelectorAll("#ie-form input,#ie-form select").forEach(function (el) {
+      if (el.id === "ie-art") return;
+      el.onchange = renderThrowablePreview; el.oninput = renderThrowablePreview;
+    });
+    // Alvo/dano/chamas mudam QUAIS campos existem — re-renderiza o form (padrão do ie-manejo).
+    ["ie-alvo", "ie-temdano", "ie-chamas"].forEach(function (id) {
+      var el = root.querySelector("#" + id);
+      if (el) el.onchange = function () { currentThrowableDraftFromForm(); renderThrowableForm(root.querySelector("#ie-form")); };
+    });
+    (draft.allowed_classes || []).forEach(function (c) {
+      var el = root.querySelector('.ie-class[value="' + c + '"]'); if (el) el.checked = true; });
+    root.querySelector("#ie-art").onchange = function (e) {
+      artFile = e.target.files[0] || null;
+      if (artURL) { URL.revokeObjectURL(artURL); artURL = null; }
+      if (artFile) artURL = URL.createObjectURL(artFile);
+      root.querySelector("#ie-art-name").textContent = artFile ? artFile.name : "";
+      renderThrowablePreview();
+    };
+    root.querySelector("#ie-save").onclick = onSaveThrowable;
+  }
+
+  async function onSaveThrowable() {
+    currentThrowableDraftFromForm();
+    var v = L.validateThrowableDraft(draft);
+    var status = root.querySelector("#ie-status");
+    if (!v.ok) { status.textContent = "⚠️ " + v.msg; return; }
+    var item = L.serializeThrowable(draft);
     status.textContent = "salvando…";
     try {
       if (artFile) { await window.EDITOR_SAVE.uploadItemArt(artFile, item.id); }
