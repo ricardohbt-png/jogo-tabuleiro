@@ -1293,3 +1293,34 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `docs/superpowers/{specs,plans}/2026-07-26-editor-itens-fase-h-venenos*`. **Com esta fase, as 8
 > sub-abas do Editor de Itens estão completas**; o que resta são `granted_ability` ativável
 > (habilidades concedidas por item) e antídoto/cura de status.
+
+> **Editor de Itens — Fase I (habilidades concedidas por item):** `granted_ability` deixa de ser
+> metadado e vira poder real nos **5 tipos de item equipável** (arma/armadura/escudo/anel/bota).
+> O núcleo é um helper module-level **`_habilidades_concedidas(player)`** (varre TODOS os slots
+> de `gear` — assim elmo/acessórios futuros funcionam sem mexer aqui) + a extensão de **dois
+> portões de uma linha**: `tem_espec` e `tem_tecnica_equipada` passam a aceitar
+> `guild_<id>` vindo de um item. Com isso, **técnicas da Guilda** viram ativáveis (botão no HUD
+> com efeito, recarga, custo e mira REAIS — reusa `handle_usar_tecnica`, sem tocar nos efeitos) e
+> **especializações** viram passivas sempre-ativas. Como `technique_cooldowns` é indexado pelo id,
+> ter a técnica no slot da Guilda **e** num item compartilha a mesma recarga (sem uso duplo); a
+> restrição de classe da técnica é respeitada (o cliente só renderiza o que está em
+> `guildCatalogFor`). **Fix necessário:** `handle_usar_tecnica` fazia a checagem **inline**
+> (`tecnica_id not in (eq.get("tecnica"), eq.get("tecnica_exclusiva"))`) em vez de chamar o
+> portão — sem passar a usar `tem_tecnica_equipada`, a concessão por item não chegava ao handler.
+> **Amostra de 3 habilidades de herói** (`hero_<classe>_<skill>`): Detectar Armadilhas e Esconder
+> nas Sombras (Ladino) e Imposição das Mãos (Paladino) — a trava de classe virou
+> `class_id != X and <id> not in _habilidades_concedidas(p)`, e as mensagens que citavam
+> "Richard"/"Luccas" como donos exclusivos foram generalizadas. `GRANTED_HERO_SKILLS` (mapa
+> id→(classe, skill)) + `_granted_hero_skills(p)` injetado no `push_state` mandam a **definição
+> real** da skill ao cliente (sem duplicar nomes/custos lá). **Por que só 3:** `handle_skill` é
+> **legado e inerte** (retorna cedo; o guerreiro arma as habilidades no cliente e o efeito ocorre
+> em `handle_attack` via `buffs`) — cada habilidade de classe é mensagem+handler+trava+painel
+> próprios (há 24 checagens `class_id != …`), várias acopladas ao maquinário da classe. As outras
+> ~17 ficam para uma **Fase J** com o padrão já validado. Validação: `_granted_ability_valida`
+> rejeita ids não suportados nos 3 validadores (antes qualquer string virava metadado morto).
+> Editor: o seletor "Habilidade concedida" — que só existia em armas — agora está nos 5 forms,
+> com opções **filtradas e agrupadas** (Técnicas / Especializações / Herói). Cliente: técnicas
+> concedidas entram no laço do 4º slot com rótulo **"ITEM"**; habilidades de herói ganham um bloco
+> que reusa `_rogueSkillBtn`/`_paladinSkillBtn` (ambos agnósticos de classe). Testes:
+> `tools/test_editor_itens.py` [I1]–[I6] + `tools/test_guilda.py`. Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-07-27-editor-itens-fase-i-habilidades-concedidas*`.
