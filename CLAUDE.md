@@ -1324,3 +1324,30 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > que reusa `_rogueSkillBtn`/`_paladinSkillBtn` (ambos agnósticos de classe). Testes:
 > `tools/test_editor_itens.py` [I1]–[I6] + `tools/test_guilda.py`. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-07-27-editor-itens-fase-i-habilidades-concedidas*`.
+
+> **Fase J (habilidades de herói restantes concedidas por item):** completa o padrão da Fase I
+> com mais **11 habilidades** — **14 no total**. Núcleo: **portão único**
+> `_pode_hab_heroi(player, cls_id, aid)` (classe dona OU item concede) + `_tem_alguma_hab_heroi`
+> (classe dona OU **qualquer** id de um conjunto — usado pelos upkeeps, que cobrem várias
+> sustentadas de uma vez). As 3 travas da Fase I foram **retrofitadas** para o helper, então há um
+> só padrão no código. **15 sites** tocados: clérigo (`handle_cura`, `handle_cura_area`,
+> `handle_purificacao`, `handle_ressurreicao`), ladino (`handle_criar_armadilha`,
+> `handle_veneno_rapido`), paladino (`handle_golpe_sagrado` + `desativar`, `handle_protetor` +
+> `desativar`, `handle_acao_livre_richard`, `_processar_manutencao_richard`) e bardo
+> (`handle_provocacao` + `_provocador`, que exigia `class_id=="bard"` e mataria os bônus da
+> provocação concedida). Em `handle_acao_livre_richard` a trava passou a ser lida **depois** do
+> `habilidade_id`, gateando por `hero_paladin_<habilidade_id>` — conceder Regeneração Divina não
+> libera Guerreiro da Luz. **Fix de uma lacuna da Fase I:** os dois upkeeps
+> (`_processar_inicio_turno_luccas`, `_processar_manutencao_richard`) eram travados por classe, de
+> modo que uma habilidade **concedida** nunca pagava manutenção — agora pagam. Sem mudança em
+> `_capacidade_poison_melee` (já retorna o base 1 para não-ladinos). Cliente: o bloco de
+> habilidades concedidas ganhou os despachos de `_clericSkillBtn`/`_bardSkillBtn` (os quatro
+> helpers de botão são agnósticos de classe). Editor: `GRANTED_HERO_IDS` cresceu para 14, com um
+> **teste de sincronia** ([J6]) que lê o JS e compara com `GRANTED_HERO_SKILLS` — necessário
+> porque `editor_catalog.js` é gerado e não podia ser regenerado. **Fora de escopo (Tier 3):**
+> Canção Heroica, Animar Mortos, metamagias, Usar Instrumento (exige instrumento no `off_hand`),
+> Mira/Golpe/Fúria do guerreiro (não têm handler — são armadas no cliente e aplicadas em
+> `handle_attack` via `buffs`), Ataque Furtivo (passiva) e as 3 magias de MP legadas. Testes:
+> `tools/test_editor_itens.py` [J0]–[J6] + as suítes de classe (`test_guilda`,
+> `test_paladino_espec`, `test_bardo_espec`, `test_ladino_espec`, `test_clerigo_espec`). Spec/plano
+> em `docs/superpowers/{specs,plans}/2026-07-27-fase-j-habilidades-heroi-concedidas*`.
