@@ -1358,6 +1358,18 @@ def _habilidades_concedidas(player):
                 out.add(aid)
     return out
 
+def _pode_hab_heroi(player, cls_id, aid):
+    """True se o jogador é da classe dona da habilidade OU se um item equipado a
+    concede (Fase I/J). Portão único de todas as habilidades de herói concedíveis."""
+    return player.get("class_id") == cls_id or aid in _habilidades_concedidas(player)
+
+def _tem_alguma_hab_heroi(player, cls_id, aids):
+    """True se o jogador é da classe OU tem qualquer um dos ids concedidos. Usado
+    pelos upkeeps, que cobrem várias habilidades sustentadas de uma vez."""
+    if player.get("class_id") == cls_id:
+        return True
+    return bool(set(aids) & _habilidades_concedidas(player))
+
 def tem_espec(player, espec_id):
     """True se o jogador possui a especialização comprada (Fase 1+) OU se um item
     equipado a concede (Fase I)."""
@@ -11054,8 +11066,7 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        if p.get("class_id") != "paladin" and \
-                "hero_paladin_imposicao_maos" not in _habilidades_concedidas(p):
+        if not _pode_hab_heroi(p, "paladin", "hero_paladin_imposicao_maos"):
             await self.send_to(pid, {"type": "error",
                 "msg": "Você não sabe usar Imposição das Mãos (habilidade do Paladino)."}); return
         if self._acao_bloqueada(p):
@@ -14916,8 +14927,7 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        if p.get("class_id") != "rogue" and \
-                "hero_rogue_detectar_armadilhas" not in _habilidades_concedidas(p):
+        if not _pode_hab_heroi(p, "rogue", "hero_rogue_detectar_armadilhas"):
             await self.send_to(pid, {"type": "error",
                 "msg": "Você não sabe detectar armadilhas (habilidade do Ladino)."}); return
         if p.get("petrificado"):
@@ -14964,8 +14974,7 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        if p.get("class_id") != "rogue" and \
-                "hero_rogue_esconder_sombras" not in _habilidades_concedidas(p):
+        if not _pode_hab_heroi(p, "rogue", "hero_rogue_esconder_sombras"):
             await self.send_to(pid, {"type": "error",
                 "msg": "Você não sabe se esconder nas sombras (habilidade do Ladino)."}); return
         if p.get("petrificado"):
@@ -20050,9 +20059,25 @@ class GameRoom:
     # Amostra da Fase I: habilidades de herói que um item pode conceder.
     # id do catálogo do editor -> (classe de origem, id real da skill)
     GRANTED_HERO_SKILLS = {
+        # Fase I (amostra)
         "hero_rogue_detectar_armadilhas": ("rogue", "detectar_armadilhas"),
         "hero_rogue_esconder_sombras":    ("rogue", "esconder_sombras"),
         "hero_paladin_imposicao_maos":    ("paladin", "imposicao_maos"),
+        # Fase J — clérigo
+        "hero_cleric_cura":               ("cleric", "cura"),
+        "hero_cleric_cura_area":          ("cleric", "cura_area"),
+        "hero_cleric_purificacao":        ("cleric", "purificacao"),
+        "hero_cleric_ressurreicao":       ("cleric", "ressurreicao"),
+        # Fase J — ladino
+        "hero_rogue_criar_armadilha":     ("rogue", "criar_armadilha"),
+        "hero_rogue_veneno_rapido":       ("rogue", "veneno_rapido"),
+        # Fase J — paladino
+        "hero_paladin_golpe_sagrado":     ("paladin", "golpe_sagrado"),
+        "hero_paladin_protetor":          ("paladin", "protetor"),
+        "hero_paladin_regeneracao_divina":("paladin", "regeneracao_divina"),
+        "hero_paladin_guerreiro_luz":     ("paladin", "guerreiro_luz"),
+        # Fase J — bardo
+        "hero_bard_provocacao":           ("bard", "provocacao"),
     }
 
     def _granted_hero_skills(self, p):

@@ -1152,7 +1152,7 @@ def test_validacao_granted_ability():
           S._granted_ability_valida("hero_rogue_detectar_armadilhas"))
     check("rejeita id desconhecido", not S._granted_ability_valida("guild_nao_existe"))
     check("rejeita herói fora da amostra",
-          not S._granted_ability_valida("hero_cleric_ressurreicao"))
+          not S._granted_ability_valida("hero_ranger_tiro_certeiro"))
     check("rejeita None", not S._granted_ability_valida(None))
     ok, it = S._validate_custom_item(sample(id="arma_hab", granted_ability="guild_brutalidade"))
     check("arma preserva id suportado", ok and it.get("granted_ability") == "guild_brutalidade")
@@ -1168,6 +1168,46 @@ def test_validacao_granted_ability():
           ok5 and it5.get("granted_ability") == "hero_paladin_imposicao_maos")
     ok6, it6 = S._validate_custom_item(accessory_sample(id="anel_hab2", granted_ability="xpto"))
     check("acessorio descarta id nao suportado", ok6 and it6.get("granted_ability") is None)
+
+def test_helpers_hab_heroi():
+    print("\n[J0] Helpers de habilidade de herói")
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    check("classe dona passa sem item",
+          S._pode_hab_heroi(S.make_player("p2", "L", "cleric", 1), "cleric", "hero_cleric_cura"))
+    check("outra classe sem item: não", not S._pode_hab_heroi(p, "cleric", "hero_cleric_cura"))
+    p["gear"]["ring1"] = _item_com_habilidade("hero_cleric_cura", id="anel_c")
+    check("outra classe com item: sim", S._pode_hab_heroi(p, "cleric", "hero_cleric_cura"))
+    check("item de uma não libera outra",
+          not S._pode_hab_heroi(p, "cleric", "hero_cleric_ressurreicao"))
+    aids = {"hero_rogue_detectar_armadilhas", "hero_rogue_esconder_sombras"}
+    check("conjunto: sem nenhuma concedida", not S._tem_alguma_hab_heroi(p, "rogue", aids))
+    p["gear"]["boots"] = _item_com_habilidade("hero_rogue_esconder_sombras", id="bota_s")
+    check("conjunto: com uma concedida", S._tem_alguma_hab_heroi(p, "rogue", aids))
+    check("conjunto: classe dona passa",
+          S._tem_alguma_hab_heroi(S.make_player("p3", "L", "rogue", 2), "rogue", aids))
+
+def test_mapa_14_habilidades():
+    print("\n[J0b] Mapa GRANTED_HERO_SKILLS com 14 habilidades")
+    m = S.GameRoom.GRANTED_HERO_SKILLS
+    check("14 entradas", len(m) == 14)
+    esperados = {
+        "hero_rogue_detectar_armadilhas", "hero_rogue_esconder_sombras",
+        "hero_paladin_imposicao_maos",
+        "hero_cleric_cura", "hero_cleric_cura_area", "hero_cleric_purificacao",
+        "hero_cleric_ressurreicao",
+        "hero_rogue_criar_armadilha", "hero_rogue_veneno_rapido",
+        "hero_paladin_golpe_sagrado", "hero_paladin_protetor",
+        "hero_paladin_regeneracao_divina", "hero_paladin_guerreiro_luz",
+        "hero_bard_provocacao",
+    }
+    check("ids esperados", set(m.keys()) == esperados)
+    check("todos validam", all(S._granted_ability_valida(a) for a in esperados))
+    r = _gear_room()
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    p["gear"]["ring1"] = _item_com_habilidade("hero_cleric_cura", id="anel_c")
+    sk = r._granted_hero_skills(p)
+    check("payload traz a skill real de cura", len(sk) == 1 and sk[0].get("id") == "cura")
+    check("payload marca a origem", sk and sk[0].get("granted_origem") == "cleric")
 
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
@@ -1199,5 +1239,6 @@ if __name__ == "__main__":
     test_habilidades_heroi_concedidas(); test_mensagens_sem_richard()
     test_granted_hero_skills_payload()
     test_validacao_granted_ability()
+    test_helpers_hab_heroi(); test_mapa_14_habilidades()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)
