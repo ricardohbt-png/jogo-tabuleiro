@@ -8558,9 +8558,11 @@ class GameRoom:
         await self._activate_initiative_actor()
 
     def _ativo(self, p):
-        """Jogador ativo no jogo: vivo E conectado. Desconectados saem da
-        masmorra (peão fora do tabuleiro) e são pulados na ordem de turnos."""
-        return bool(p) and bool(p.get("alive")) and p.get("connected", True)
+        """Jogador ativo no jogo: vivo, conectado E dentro da masmorra.
+        Desconectados e quem saiu pela escada (`fora_masmorra`) ficam com o peão
+        fora do tabuleiro, são pulados na ordem de turnos e não são alvo."""
+        return (bool(p) and bool(p.get("alive")) and p.get("connected", True)
+                and not p.get("fora_masmorra"))
 
     # â”€â”€ TIMER DE TURNO (30s) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def _cancelar_timer_turno(self):
@@ -12422,12 +12424,41 @@ class GameRoom:
 
     # â”€â”€ exit dungeon (return to city via entrance stairs) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+    def _custo_viagem_saida(self):
+        """Custo de IDA E VOLTA da saída individual: 2× o custo da aventura em
+        curso. Fora de uma aventura (masmorra avulsa/campanha) a viagem é grátis."""
+        adv = WORLD_ADVENTURES.get(self.world_adventure_id) or {}
+        return 2 * int(adv.get("fome", 0) or 0), 2 * int(adv.get("sede", 0) or 0)
+
     async def handle_exit_dungeon(self, pid):
-        if self.phase != "playing": return
+        """Saída INDIVIDUAL pela escada de entrada: o herói vai para a cidade e a
+        masmorra continua para os demais. Espelha handle_disconnect_em_jogo (peão
+        fora do tabuleiro + turno avança); o retorno é contado em
+        _tick_retorno_masmorra."""
         p = self.players.get(pid)
-        if not p or not p["alive"]: return
-        await self.gm_say(f"🚪 **{p['name']}** usa as escadas de saída. Os aventureiros retornam à cidade!")
-        await self._voltar_para_cidade()
+        if not p or not p.get("alive") or p.get("fora_masmorra"):
+            return
+        if not self._is_turn(pid):
+            await self.send_to(pid, {"type": "error", "msg": "Só é possível sair no seu turno."}); return
+        if not self.saida_permitida:
+            await self.send_to(pid, {"type": "error", "msg": "Não há como sair desta masmorra."}); return
+        if not self.stairs_pos or list(p["pos"]) != list(self.stairs_pos):
+            await self.send_to(pid, {"type": "error", "msg": "Vá até a escada de entrada para sair."}); return
+        fome, sede = self._custo_viagem_saida()
+        if p.get("fome", 0) < fome or p.get("sede", 0) < sede:
+            await self.send_to(pid, {"type": "error",
+                "msg": f"Provisões insuficientes para ir e voltar (precisa de 🍖{fome} e 💧{sede})."}); return
+        p["fome"] -= fome; p["sede"] -= sede
+        espera = _rolar_espera((WORLD_ADVENTURES.get(self.world_adventure_id) or {}).get("espera_retorno"))
+        p["fora_masmorra"] = {"rodadas_restantes": espera}
+        p["pos"] = [-1, -1]   # fora do tabuleiro: monstros ignoram, não ocupa casa
+        await self.gm_say(
+            f"🚪 **{p['name']}** sobe as escadas rumo à cidade "
+            f"(🍖-{fome} 💧-{sede}) e volta em {espera} rodada(s).")
+        era_turno = (self.phase == "playing" and self.current_pid() == pid)
+        if era_turno:
+            await self._forcar_fim_turno(pid)   # avança o turno (já reinicia o timer)
+        await self.push_state()
 
     async def _voltar_para_cidade(self):
         """Transição masmorra→cidade reusável (saída pela escada e avanço de fase)."""

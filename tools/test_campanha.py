@@ -115,7 +115,7 @@ async def test_retomar_mesma_fase():
     await r.handle_select_campaign("p1", "test_campanha.json")
     r.phase = "city"
     await r.enter_dungeon("p1")
-    await r.handle_exit_dungeon("p1")     # sai sem concluir
+    await r._voltar_para_cidade()         # grupo abandona a masmorra sem concluir
     check("voltou à cidade", r.phase == "city")
     check("fase não avançou", r.campaign_phase == 0)
     await r.enter_dungeon("p1")

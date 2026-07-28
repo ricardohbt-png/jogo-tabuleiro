@@ -74,7 +74,7 @@ async def main():
     snap_chests   = copy.deepcopy(r.chests)
 
     print("\n[3] Sai para a cidade e retorna")
-    await r.handle_exit_dungeon("p1")
+    await r._voltar_para_cidade()   # grupo inteiro abandona a masmorra (a escada é individual)
     check("phase volta para city ao sair", r.phase == "city")
     await r.enter_dungeon("p1")
     check("phase volta para playing ao reentrar", r.phase == "playing")

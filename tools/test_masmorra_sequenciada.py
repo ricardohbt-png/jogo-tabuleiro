@@ -143,12 +143,67 @@ async def test_sem_encadeamento():
     check("aventura liberada", r.world_adventure_id is None)
     check("progresso gravado mesmo assim", r.world_adventure_progress.get("test_seq") == 1)
 
+async def _entrar_e_posicionar_na_escada(r, pid="p1"):
+    await r.handle_world_adventure("p1", "test_seq")
+    r.players[pid]["pos"] = list(r.stairs_pos)
+    r.initiative_order = [{"kind": "player", "id": pid, "seq": 0, "initiative": 99,
+                           "dex": 0, "int": 0}]
+    r.initiative_index = 0; r.initiative_active = True
+    return r.players[pid]
+
+async def test_saida_recusada():
+    print("\n[6] saída pela escada — recusas")
+    r = setup_room()
+    p = await _entrar_e_posicionar_na_escada(r)
+    p["fome"] = 50; p["sede"] = 50
+    # longe da escada
+    p["pos"] = [r.stairs_pos[0] + 2, r.stairs_pos[1]]
+    await r.handle_exit_dungeon("p1")
+    check("longe da escada não sai", p.get("fora_masmorra") is None)
+    check("recusa não leva o grupo à cidade", r.phase == "playing")
+    p["pos"] = list(r.stairs_pos)
+    # fora do turno
+    r.initiative_order[0]["id"] = "p2"
+    await r.handle_exit_dungeon("p1")
+    check("fora do turno não sai", p.get("fora_masmorra") is None)
+    r.initiative_order[0]["id"] = "p1"
+    # sem provisões para ida e volta (custo da aventura é 1/1 → precisa de 2/2)
+    p["fome"] = 1; p["sede"] = 50
+    await r.handle_exit_dungeon("p1")
+    check("sem fome para ida+volta não sai", p.get("fora_masmorra") is None)
+    p["fome"] = 50; p["sede"] = 1
+    await r.handle_exit_dungeon("p1")
+    check("sem sede para ida+volta não sai", p.get("fora_masmorra") is None)
+    # masmorra sem saída
+    p["fome"] = 50; p["sede"] = 50; r.saida_permitida = False
+    await r.handle_exit_dungeon("p1")
+    check("masmorra sem saída não deixa sair", p.get("fora_masmorra") is None)
+
+async def test_saida_efetiva():
+    print("\n[7] saída pela escada — efeito")
+    r = setup_room()
+    p = await _entrar_e_posicionar_na_escada(r)
+    p["fome"] = 10; p["sede"] = 10
+    await r.handle_exit_dungeon("p1")
+    check("marcado como fora", isinstance(p.get("fora_masmorra"), dict))
+    check("espera fixa de 2 rodadas", p["fora_masmorra"]["rodadas_restantes"] == 2)
+    check("cobrou ida e volta (2×1 fome)", p["fome"] == 8)
+    check("cobrou ida e volta (2×1 sede)", p["sede"] == 8)
+    check("peão saiu do tabuleiro", p["pos"] == [-1, -1])
+    check("_ativo passa a ser falso", r._ativo(p) is False)
+    check("companheiro segue ativo", r._ativo(r.players["p2"]) is True)
+    check("a sala continua na masmorra", r.phase == "playing")
+    await r.handle_exit_dungeon("p1")
+    check("não sai duas vezes (não cobra de novo)", p["fome"] == 8)
+
 async def main():
     test_helpers_etapa()
     test_persistencia_campos()
     test_validacao_saida()
     await test_encadeamento()
     await test_sem_encadeamento()
+    await test_saida_recusada()
+    await test_saida_efetiva()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 
