@@ -336,6 +336,9 @@
     const lista = '<div class="cityed-cities">' + (config.cities || []).map(x => '<button data-city="' + esc(x.id) + '" class="' + (x.id === cityId ? "active" : "") + '">' + esc(x.nome) + '<small>' + esc(x.tipo || "cidade") + '</small></button>').join("") + '</div>';
     let painel = '<p>Selecione uma cidade para editar, ou crie uma nova.</p>';
     if (cityDraft) {
+      // As 4 cidades originais têm a posição no mapa-múndi em world_map_points.json
+      // (arrastar o marcador na aba "Mapa do Mundo"); o painel não a edita.
+      const posEditavel = cityDraft.novo || customIds().indexOf(cityDraft.id) >= 0;
       const outras = (config.cities || []).filter(x => x.id && x.id !== cityDraft.id);
       const rotas = outras.map(x => {
         const r = (!cityDraft.novo && rotaEntre(cityDraft.id, x.id)) || { fome: 0, sede: 0 };
@@ -347,8 +350,10 @@
         + '<label>Imagem de fundo<input id="cityed-img-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>'
         + '<button id="cityed-img-upload" type="button">Enviar imagem</button>'
         + (cityDraft.imagem ? '<img class="cityed-city-preview" src="../' + esc(cityDraft.imagem) + '" alt="Prévia da cidade">' : '<small>Nenhuma imagem enviada ainda.</small>')
-        + '<div class="worlded-cost"><label>X %<input id="cityed-x" type="number" min="0" max="100" step="0.1" value="' + Number(cityDraft.x) + '"></label><label>Y %<input id="cityed-y" type="number" min="0" max="100" step="0.1" value="' + Number(cityDraft.y) + '"></label></div>'
-        + '<p>Posição no mapa-múndi. O ajuste fino também pode ser feito arrastando o marcador na aba “Mapa do Mundo”.</p>'
+        + (posEditavel
+          ? '<div class="worlded-cost"><label>X %<input id="cityed-x" type="number" min="0" max="100" step="0.1" value="' + Number(cityDraft.x) + '"></label><label>Y %<input id="cityed-y" type="number" min="0" max="100" step="0.1" value="' + Number(cityDraft.y) + '"></label></div>'
+            + '<p>Posição no mapa-múndi. O ajuste fino também pode ser feito arrastando o marcador na aba “Mapa do Mundo”.</p>'
+          : '<p>A posição de <b>' + esc(cityDraft.nome) + '</b> no mapa-múndi é ajustada arrastando o marcador na aba “Mapa do Mundo”.</p>')
         + '<div class="cityed-routes"><b>Custo de viagem</b><small>Deixe 0 para viagem gratuita.</small>' + rotas + '</div>'
         + '<button id="cityed-city-save" type="button">Salvar cidade</button>'
         + (cityDraft.novo || cityDraft.id === inicial ? "" : '<button id="cityed-city-delete" type="button">Excluir cidade</button>');
@@ -367,7 +372,8 @@
       el.onchange = el.oninput;
     };
     campo("#cityed-nome", "nome"); campo("#cityed-tipo", "tipo");
-    campo("#cityed-x", "x", true); campo("#cityed-y", "y", true);
+    // Só as cidades criadas pelo usuário têm x/y no payload; nas originais os campos nem existem.
+    if (cityDraft.novo || customIds().indexOf(cityDraft.id) >= 0) { campo("#cityed-x", "x", true); campo("#cityed-y", "y", true); }
     root.querySelector("#cityed-img-upload").onclick = async () => {
       const status = root.querySelector("#cityed-status"), file = root.querySelector("#cityed-img-file").files[0];
       if (!file) { status.textContent = "Escolha uma imagem primeiro."; return; }
