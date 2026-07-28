@@ -4,7 +4,8 @@
   • Rota sem custo definido = viagem grátis; par com custo debita o valor.
   • Excluir limpa os subsistemas derivados; Alva e Luz nunca é excluída.
 Roda da raiz: python tools/test_cidades_editor.py"""
-import asyncio, json, os, sys, tempfile
+import asyncio, json, os, shutil, sys, tempfile
+from copy import deepcopy
 try: sys.stdout.reconfigure(encoding="utf-8")
 except Exception: pass
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -19,12 +20,36 @@ def check(name, cond):
 CIDADE_NOVA = {"id": "porto_negro", "nome": "Porto Negro", "tipo": "cidade",
                "imagem": "assets/city/porto_negro.png", "x": 60.1, "y": 44.0}
 
+def isolar_arquivos():
+    """O teste mexe nos dicionários globais e chama handlers que gravam em disco.
+    Redireciona TODOS os arquivos para uma pasta temporária — nunca toca nos dados
+    reais do usuário — e devolve um restaurador do estado inicial do processo."""
+    tmpdir = tempfile.mkdtemp(prefix="cidades_teste_")
+    arquivos = ("WORLD_CITIES_FILE", "CITY_SHOPS_FILE", "TAVERN_SCENES_FILE", "CITY_MAP_POINTS_FILE")
+    originais = {nome: getattr(S, nome) for nome in arquivos}
+    for nome in arquivos:
+        setattr(S, nome, os.path.join(tmpdir, nome.lower() + ".json"))
+    inicial = {"shops": deepcopy(S.CITY_SHOPS), "points": deepcopy(S.CITY_MAP_POINTS),
+               "taverns": deepcopy(S.TAVERN_SCENES), "cities": deepcopy(S.WORLD_CITIES),
+               "locations": deepcopy(S.WORLD_LOCATIONS), "routes": dict(S.WORLD_ROUTES)}
+
+    def restaurar():
+        for nome, valor in originais.items():
+            setattr(S, nome, valor)
+        for alvo, copia in ((S.CITY_SHOPS, inicial["shops"]), (S.CITY_MAP_POINTS, inicial["points"]),
+                            (S.TAVERN_SCENES, inicial["taverns"]), (S.WORLD_LOCATIONS, inicial["locations"]),
+                            (S.WORLD_ROUTES, inicial["routes"])):
+            alvo.clear(); alvo.update(copia)
+        S.WORLD_CITIES = inicial["cities"]
+        shutil.rmtree(tmpdir, ignore_errors=True)
+    return restaurar
+
 def reset_mundo():
     """Volta o mundo às 4 cidades originais, sem nenhuma edição do editor."""
     S._aplicar_estado_cidades([], {}, [], None)
     S._sincronizar_cidades_derivadas()
 
-def main():
+def _rodar_verificacoes():
     print("\n[1] Criar cidade")
     reset_mundo()
     S._aplicar_estado_cidades([CIDADE_NOVA], {}, [], None)
@@ -148,7 +173,8 @@ def main():
     original_file = S.WORLD_CITIES_FILE
     S.WORLD_CITIES_FILE = tmp2
     try:
-        ok, payload = S._save_world_cities_upload([CIDADE_NOVA], {}, [], [])
+        ok, payload = S._save_world_cities_upload([CIDADE_NOVA], {}, [],
+                                                  [{"from": "alva_e_luz", "to": "porto_negro", "fome": 5, "sede": 3}])
         check("save aceito", ok is True)
         check("payload devolve a cidade nova",
               any(c["id"] == "porto_negro" for c in (payload or {}).get("cities", [])))
@@ -166,7 +192,7 @@ def main():
         sala2.phase = "city"; sala2.world_location = "porto_negro"
         S.rooms["TEST2"] = sala2
         try:
-            S._save_world_cities_upload([], {}, [], [])
+            S._save_world_cities_upload([], {}, [], [{"from": "alva_e_luz", "to": "graciero", "fome": 14, "sede": 14}])
             check("sala em cidade excluída volta para Alva e Luz",
                   sala2.world_location == "alva_e_luz")
         finally:
@@ -196,6 +222,41 @@ def main():
     ok4, _ = S._save_city_art_upload("grande.png", "A" * (S.STORY_UPLOAD_MAX * 2))
     check("arquivo grande demais recusado", ok4 is False)
 
+    print("\n[11] Regressões apontadas na revisão")
+    reset_mundo()
+    # x/y de cidade criada é editável (o painel do editor expõe o campo)
+    S._aplicar_estado_cidades([CIDADE_NOVA], {}, [], None)
+    S._aplicar_estado_cidades([dict(CIDADE_NOVA, x=88.0, y=12.0)], {}, [], None)
+    check("x/y de cidade criada podem ser editados", S.WORLD_LOCATIONS["porto_negro"]["x"] == 88.0)
+    # arraste no mapa-múndi das originais continua preservado no rebuild
+    reset_mundo()
+    S.WORLD_LOCATIONS["graciero"]["x"] = 33.3
+    S._aplicar_estado_cidades([CIDADE_NOVA], {}, [], None)
+    check("arraste das originais preservado", S.WORLD_LOCATIONS["graciero"]["x"] == 33.3)
+    # tabela de rotas vazia é recusada pelo handler (zeraria os custos originais)
+    reset_mundo()
+    ok_vazio, msg_vazio = S._save_world_cities_upload([], {}, [], [])
+    check("tabela de rotas vazia recusada", ok_vazio is False and isinstance(msg_vazio, str))
+    check("custos originais sobreviveram",
+          S.WORLD_ROUTES[frozenset(("alva_e_luz", "graciero"))]["fome"] == 14)
+    # arquivo ilegível bloqueia o save em vez de gravar a perda
+    reset_mundo()
+    with open(S.WORLD_CITIES_FILE, "w", encoding="utf-8") as f: f.write("{isto não é json")
+    S._load_world_cities()
+    check("arquivo corrompido marca o estado como não-carregado", S.WORLD_CITIES_OK is False)
+    ok_bloq, msg_bloq = S._save_world_cities_upload([CIDADE_NOVA], {}, [],
+                                                    [{"from": "alva_e_luz", "to": "porto_negro", "fome": 1, "sede": 1}])
+    check("save bloqueado com arquivo corrompido", ok_bloq is False)
+    S.WORLD_CITIES_OK = True
+    os.remove(S.WORLD_CITIES_FILE)
+    reset_mundo()
+
+def main():
+    restaurar = isolar_arquivos()
+    try:
+        _rodar_verificacoes()
+    finally:
+        restaurar()
     print(f"\n===== RESULTADO: {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 

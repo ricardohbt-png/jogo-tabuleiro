@@ -62,11 +62,12 @@ WORLD_ROUTES = {
 # cidades_personalizadas.json (cria, edita e remove), aplicada aqui no boot pela
 # MESMA função usada pelo handler de save — arquivo e edição ao vivo convergem.
 _BUILTIN_WORLD_LOCATIONS = deepcopy(WORLD_LOCATIONS)
-_BUILTIN_WORLD_ROUTES = dict(WORLD_ROUTES)
+_BUILTIN_WORLD_ROUTES = deepcopy(WORLD_ROUTES)
 CITY_INICIAL = "alva_e_luz"      # cidade de partida e fallback; nunca excluível
 _CITY_TIPOS = ("cidade", "vila")
 WORLD_CITIES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cidades_personalizadas.json")
 WORLD_CITIES = {"cities": [], "overrides": {}, "deleted": [], "routes": []}
+WORLD_CITIES_OK = True   # False = arquivo existe mas não pôde ser lido; salvar apagaria conteúdo
 
 def _cidade_valida(raw):
     """Valida um registro de cidade (do arquivo ou do editor).
@@ -129,15 +130,13 @@ def _aplicar_estado_cidades(cities, overrides, deleted, routes):
     WORLD_LOCATIONS.clear()
     for cid, base in _BUILTIN_WORLD_LOCATIONS.items():
         loc = deepcopy(base)
-        if cid in coords:                      # preserva o arraste no mapa-múndi
+        if cid in coords:                      # originais: preserva o arraste no mapa-múndi
             loc["x"], loc["y"] = coords[cid]
         WORLD_LOCATIONS[cid] = loc
     for row in list(cities or [])[:60]:
         ok, city = _cidade_valida(row)
         if not ok or city["id"] in WORLD_LOCATIONS:
             continue
-        if city["id"] in coords:
-            city["x"], city["y"] = coords[city["id"]]
         WORLD_LOCATIONS[city["id"]] = city
         limpo["cities"].append(city)
     for cid, patch in (overrides or {}).items():
@@ -171,13 +170,21 @@ def _aplicar_estado_cidades(cities, overrides, deleted, routes):
     WORLD_CITIES = limpo
 
 def _load_world_cities():
-    """Aplica cidades_personalizadas.json sobre as cidades originais."""
+    """Aplica cidades_personalizadas.json sobre as cidades originais. Um arquivo
+    ausente é normal; um arquivo ilegível NÃO pode virar 'mundo sem edições' em
+    silêncio, porque o próximo save gravaria essa perda — marca WORLD_CITIES_OK."""
+    global WORLD_CITIES_OK
+    if not os.path.exists(WORLD_CITIES_FILE):
+        return
     try:
         with open(WORLD_CITIES_FILE, "r", encoding="utf-8") as f:
             raw = json.load(f)
-    except (OSError, ValueError, TypeError, json.JSONDecodeError):
-        return
-    if not isinstance(raw, dict):
+        if not isinstance(raw, dict):
+            raise ValueError("conteúdo não é um objeto JSON")
+    except (OSError, ValueError, TypeError, json.JSONDecodeError) as e:
+        WORLD_CITIES_OK = False
+        print(f"[cidades] {os.path.basename(WORLD_CITIES_FILE)} ilegível ({e}); "
+              f"as cidades personalizadas NÃO foram carregadas e salvar está bloqueado.")
         return
     rotas = raw.get("routes")
     _aplicar_estado_cidades(raw.get("cities"), raw.get("overrides"), raw.get("deleted"),
@@ -188,6 +195,14 @@ def _save_world_cities():
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(WORLD_CITIES, f, ensure_ascii=False, indent=2)
     os.replace(tmp, WORLD_CITIES_FILE)
+
+def _tabela_rotas():
+    """Uma entrada por par de cidades (custo salvo ou 0/0). O cliente e o editor
+    nunca veem um destino sem rota — WORLD_ROUTES guarda preços, não trajetos."""
+    return [{"from": origem, "to": destino,
+             **(WORLD_ROUTES.get(frozenset((origem, destino))) or {"fome": 0, "sede": 0})}
+            for indice, origem in enumerate(WORLD_LOCATIONS)
+            for destino in list(WORLD_LOCATIONS)[indice + 1:]]
 
 _load_world_cities()
 
@@ -6261,10 +6276,7 @@ class GameRoom:
                 "locations": list(WORLD_LOCATIONS.values()),
                 # Todo par aparece (custo salvo ou 0/0) para o cliente nunca
                 # tratar um destino como inalcançável.
-                "routes": [{"from": origem, "to": destino,
-                            **(WORLD_ROUTES.get(frozenset((origem, destino))) or {"fome": 0, "sede": 0})}
-                           for indice, origem in enumerate(WORLD_LOCATIONS)
-                           for destino in list(WORLD_LOCATIONS)[indice + 1:]],
+                "routes": _tabela_rotas(),
                 "map_image": "assets/city/varluzia - Copia.png",
                 "transition_images": _transition_images(),
                 "adventures": [{**adventure,
@@ -21341,11 +21353,15 @@ async def handler(ws):
                     continue
 
                 if t == "upload_custom_item":
-                    ok, res = _save_custom_item(msg.get("item"))
+                    cidades = msg.get("cidades_loja")
+                    ok, res = _save_custom_item(msg.get("item"),
+                                                cidades if isinstance(cidades, list) else None)
                     payload = {"type": "upload_result", "kind": "custom_item",
                                "upload_id": msg.get("upload_id"), "ok": ok}
                     if ok:
                         payload["item"] = res
+                        if isinstance(cidades, list):
+                            await _refresh_city_states_after_editor_save()
                     else:
                         payload["error"] = res
                     await ws.send(json.dumps(payload))
@@ -22970,10 +22986,7 @@ def _city_shops_editor_payload():
                             "item_slot": item.get("item_slot"), "effect": item.get("effect"),
                             "veneno_id": item.get("veneno_id"),
                             "arremessavel": item.get("id") in ARREMESSAVEIS})
-    rotas = [{"from": origem, "to": destino,
-              **(WORLD_ROUTES.get(frozenset((origem, destino))) or {"fome": 0, "sede": 0})}
-             for indice, origem in enumerate(WORLD_LOCATIONS)
-             for destino in list(WORLD_LOCATIONS)[indice + 1:]]
+    rotas = _tabela_rotas()
     return {"cities": list(WORLD_LOCATIONS.values()), "shops": CITY_SHOP_LABELS,
             "stock": CITY_SHOPS, "catalog": catalog, "taverns": TAVERN_SCENES,
             "city_points": CITY_MAP_POINTS, "routes": rotas,
@@ -23053,6 +23066,11 @@ def _save_world_cities_upload(cities, overrides, deleted, routes):
         return False, "dados de cidades inválidos"
     if not isinstance(overrides, dict) or not isinstance(deleted, list):
         return False, "dados de cidades inválidos"
+    if not routes and len(WORLD_LOCATIONS) > 1:
+        return False, "tabela de rotas vazia: o editor precisa enviar a tabela completa"
+    if not WORLD_CITIES_OK:
+        return False, ("cidades_personalizadas.json não pôde ser lido no boot; "
+                       "corrija ou remova o arquivo e reinicie o servidor antes de salvar")
     _aplicar_estado_cidades(cities, overrides, deleted, routes)
     _sincronizar_cidades_derivadas()
     for sala in rooms.values():
@@ -23073,12 +23091,41 @@ async def _refresh_city_states_after_editor_save():
         if active_room.phase == "city":
             await active_room.broadcast_city_state()
 
-def _save_custom_item(raw):
+# ── Estoque do item custom nas lojas das cidades ─────────────────────────────
+# O catálogo global (SHOP_WEAPONS/SHOP_ARMORS/SHOP_MERCHANT) diz o que EXISTE;
+# quem diz o que cada loja VENDE é a allow-list por cidade (city_shops.json).
+# Sem sincronizar as duas, o checkbox "Loja" do Editor de Itens não teria efeito
+# nenhum em jogo. O city_shops.json continua sendo a fonte única do estoque.
+_CUSTOM_ITEM_SHOP = {
+    "weapon": "ferreiro_weapon", "armor": "ferreiro_armor", "shield": "ferreiro_armor",
+    "ring": "mercador", "boots": "mercador", "potion": "mercador",
+    "throwable": "mercador", "poison": "mercador",
+}
+
+def _custom_item_shop_id(item_type):
+    return _CUSTOM_ITEM_SHOP.get(item_type or "weapon", "mercador")
+
+def _sync_custom_item_city_stock(item, city_ids, old_id=None):
+    """Estoca o item custom nas cidades escolhidas no editor e o retira das demais.
+    Sai de TODAS as lojas antes de entrar: cobre renomear o item, trocar de tipo
+    (muda a loja de destino) e desmarcar 'Loja'."""
+    shop_id = _custom_item_shop_id(item.get("item_type"))
+    quer = set(city_ids or []) if item.get("disponibilidade", {}).get("loja") else set()
+    obsoletos = {item["id"]} | ({str(old_id)} if old_id else set())
+    for city_id, shops in CITY_SHOPS.items():
+        for sid in list(shops):
+            shops[sid] = [i for i in shops[sid] if i not in obsoletos]
+        if city_id in quer:
+            shops.setdefault(shop_id, []).append(item["id"])
+    _save_city_shops()
+
+def _save_custom_item(raw, city_ids=None):
     ok, item = _validate_custom_item(raw)
     if not ok:
         return False, item
+    original_id = str(raw.get("original_id") or "")
     records = [r for r in _read_custom_items()
-               if isinstance(r, dict) and r.get("id") not in {item["id"], str(raw.get("original_id") or "")}]
+               if isinstance(r, dict) and r.get("id") not in {item["id"], original_id}]
     records.append(item)
     ok2, message = _gravar_def(records, os.path.dirname(CUSTOM_ITEMS_FILE),
                                os.path.basename(CUSTOM_ITEMS_FILE))
@@ -23086,9 +23133,19 @@ def _save_custom_item(raw):
         return False, message
     _apply_custom_items(records)
     _regen_custom_items_index(records)
+    # None = editor antigo, que não manda cidades: não mexe no estoque existente.
+    if city_ids is not None:
+        try:
+            _sync_custom_item_city_stock(item, city_ids, original_id or None)
+        except OSError as e:
+            return False, str(e)
     return True, item
 
 _apply_custom_items(_read_custom_items())
+# _load_city_shops() já rodou lá em cima, antes de os itens custom existirem nos
+# catálogos — e ele descarta ids fora do catálogo, então todo item do Editor de
+# Itens era apagado do estoque a cada boot. Relê agora que o merge terminou.
+_load_city_shops()
 
 # Tipos que o mimetypes do sistema Ã s vezes nÃ£o conhece (varia por SO).
 for _ext, _ct in (
