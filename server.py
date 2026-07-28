@@ -339,6 +339,7 @@ def _save_world_adventures_upload(raw_locations, raw_adventures):
         cleaned[aid] = {"id": aid, "nome": name[:80], "x": x, "y": y,
                         "fome": fome, "sede": sede, "dungeons": etapas,
                         "espera_retorno": _clean_espera(row.get("espera_retorno")),
+                        "oculto_ate_liberar": bool(row.get("oculto_ate_liberar")),
                         "requisito": req, "renome_recompensa": renome_reward}
     try:
         WORLD_ADVENTURES = cleaned
@@ -4703,11 +4704,13 @@ MATERIAIS = {
     "agua":          _mat("Água", "piso", "#126da1", terreno="agua"),
     "agua_profunda": _mat("Água profunda", "piso", "#06173f", terreno="agua_profunda"),
     "pedra_negra":   _mat("Pedra negra", "piso", "#23232a"),
+    "madeira_escura": _mat("Piso de tábuas escuras", "piso", "#3b200f"),
     "entulho":       _mat("Entulho", "piso", "#4a4640", solido=True, oclui=True),
     "pedra_normal":  _mat("Pedra normal", "parede", "#5a5a6a"),
     "enegrecida":    _mat("Pedra enegrecida", "parede", "#2c2b30"),
     "pedra_caverna": _mat("Pedra de caverna", "parede", "#4d4338"),
     "desmoronada":   _mat("Parede desmoronada", "parede", "#534b40"),
+    "madeira":        _mat("Parede de madeira envernizada", "parede", "#4a270f"),
 }
 MATERIAIS_PISO_DEFAULT = "pedra_cinza"
 MATERIAIS_PAREDE_DEFAULT = "pedra_normal"
@@ -6451,9 +6454,12 @@ class GameRoom:
                 "routes": _tabela_rotas(),
                 "map_image": "assets/city/varluzia - Copia.png",
                 "transition_images": _transition_images(),
+                # Destino oculto e ainda bloqueado nem entra no payload — não há
+                # o que espiar no cliente.
                 "adventures": [{**adventure,
                                 "progresso": self.world_adventure_progress.get(adventure["id"], 0)}
-                               for adventure in WORLD_ADVENTURES.values()],
+                               for adventure in WORLD_ADVENTURES.values()
+                               if self._aventura_visivel(adventure)],
             },
             "reputacao": {"renome": self.renome, "fatos": sorted(self.fatos)},
             "city_map_points": CITY_MAP_POINTS,
@@ -6494,8 +6500,9 @@ class GameRoom:
                 key = f"{self.world_location}:{slot.get('id')}:{conversation.get('id')}"
                 conversation["disponivel"] = available and not (conversation.get("uma_vez") and key in self.tavern_conversations_done)
                 conversation["bloqueio"] = reasons
-                if not available:
-                    conversation["texto"] = "Esta pessoa ainda não confia o bastante em vocês para falar sobre isso."
+                # A fala só passa a existir para o jogador depois de cumprir a
+                # descoberta; evita revelar spoilers pelo próprio painel.
+                conversation["oculta"] = not available
         return scene
 
     def _gerar_loja_pergaminhos(self):
@@ -8217,6 +8224,15 @@ class GameRoom:
             if not adventure or self.world_adventure_progress.get(req["aventura_id"], 0) < len(adventure.get("dungeons") or []):
                 reasons.append("rota anterior concluída")
         return not reasons, reasons
+
+    def _aventura_visivel(self, adventure):
+        """Destino oculto some do mapa até o requisito ser cumprido. Sem o flag,
+        o destino é sempre visível (bloqueado ou não), como sempre foi.
+        Cuidado: requisito vazio passa em _avaliar_requisito — o flag sozinho,
+        sem nenhum requisito, não esconde nada."""
+        if not adventure.get("oculto_ate_liberar"):
+            return True
+        return self._avaliar_requisito(adventure.get("requisito"))[0]
 
     async def handle_tavern_npc(self, pid, npc_id, conversation_id):
         if not self._em_cidade(pid) or pid not in self.players:

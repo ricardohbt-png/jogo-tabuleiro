@@ -103,6 +103,70 @@ def test_slides_na_aventura():
         server.WORLD_ADVENTURES = salvos
         server._save_world_adventures()
 
+def _aventura_oculta(oculto, renome_min=5):
+    return {"id": "test_oculto", "nome": "Ruínas Esquecidas", "x": 20, "y": 30,
+            "fome": 0, "sede": 0, "renome_recompensa": 1,
+            "oculto_ate_liberar": oculto,
+            "requisito": {"renome_min": renome_min, "nivel_grupo_min": 0,
+                          "item_id": "", "fato": "", "aventura_id": ""},
+            "espera_retorno": {"modo": "fixa", "rodadas": 0, "dados": ""},
+            "dungeons": [{"file": "test_camp_a.json", "encadear": False,
+                          "intro": "", "outro": ""}]}
+
+def _ids_no_mapa(r):
+    return [a["id"] for a in r._city_state_payload()["world"]["adventures"]]
+
+async def test_destino_oculto():
+    print("\n[18] destino oculto no mapa-múndi")
+    salvos = server.WORLD_ADVENTURES
+    try:
+        # oculto + requisito não cumprido → some do mapa
+        server.WORLD_ADVENTURES = {"test_oculto": _aventura_oculta(True)}
+        r = setup_room(); r.renome = 0
+        check("oculto e bloqueado não aparece", "test_oculto" not in _ids_no_mapa(r))
+        # requisito cumprido → aparece
+        r.renome = 5
+        check("oculto e liberado aparece", "test_oculto" in _ids_no_mapa(r))
+        # sem o flag, bloqueado continua visível (não-regressão)
+        server.WORLD_ADVENTURES = {"test_oculto": _aventura_oculta(False)}
+        r2 = setup_room(); r2.renome = 0
+        check("sem o flag, bloqueado continua visível", "test_oculto" in _ids_no_mapa(r2))
+        # o editor enxerga o destino oculto
+        server.WORLD_ADVENTURES = {"test_oculto": _aventura_oculta(True)}
+        pay = server._world_adventures_editor_payload()
+        check("editor lista o destino oculto",
+              any(a["id"] == "test_oculto" for a in pay["adventures"]))
+        # helper direto
+        r3 = setup_room(); r3.renome = 0
+        check("_aventura_visivel False quando oculto e bloqueado",
+              r3._aventura_visivel(server.WORLD_ADVENTURES["test_oculto"]) is False)
+        r3.renome = 5
+        check("_aventura_visivel True quando liberado",
+              r3._aventura_visivel(server.WORLD_ADVENTURES["test_oculto"]) is True)
+    finally:
+        server.WORLD_ADVENTURES = salvos
+
+def test_flag_persistida():
+    print("\n[18b] o flag sobrevive ao salvar")
+    row = {"id": "rota_oculta", "nome": "Rota", "x": 10, "y": 20, "fome": 0, "sede": 0,
+           "oculto_ate_liberar": True,
+           "requisito": {"renome_min": 3},
+           "dungeons": ["test_camp_a.json"]}
+    salvos = server.WORLD_ADVENTURES
+    try:
+        ok, res = server._save_world_adventures_upload([], [row])
+        check(f"salvou ({res if not ok else 'ok'})", ok is True)
+        check("flag preservado",
+              server.WORLD_ADVENTURES["rota_oculta"]["oculto_ate_liberar"] is True)
+        # ausente vira False (rotas antigas continuam visíveis)
+        row2 = dict(row, id="rota_normal"); row2.pop("oculto_ate_liberar")
+        server._save_world_adventures_upload([], [row2])
+        check("ausente vira False",
+              server.WORLD_ADVENTURES["rota_normal"]["oculto_ate_liberar"] is False)
+    finally:
+        server.WORLD_ADVENTURES = salvos
+        server._save_world_adventures()
+
 def _aventura(encadear):
     return {"id": "test_seq", "nome": "Rota Encadeada", "x": 10, "y": 10,
             "fome": 1, "sede": 1, "renome_recompensa": 1,
@@ -388,10 +452,12 @@ async def main():
     test_persistencia_campos()
     test_validacao_saida()
     test_slides_na_aventura()
+    test_flag_persistida()
     await test_encadeamento()
     await test_sem_encadeamento()
     await test_beat_abertura()
     await test_beat_encerramento()
+    await test_destino_oculto()
     await test_saida_recusada()
     await test_saida_efetiva()
     await test_ausente_na_cidade()
