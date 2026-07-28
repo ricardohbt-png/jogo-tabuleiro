@@ -1529,3 +1529,18 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > preenchido, e preencher um re-renderiza o painel para habilitá-lo. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-07-29-destino-oculto-ate-liberar*`. Teste:
 > `tools/test_masmorra_sequenciada.py` seções [18]-[18c].
+
+> **Fim da rota:** além do `intro`/`outro` de cada etapa, o **destino** tem um campo de
+> história próprio, `outro_rota` (mesmo formato: string ou `{slides, audio}`, salvo por
+> `_clean_story_field`). No ramo não-encadeado de `handle_encerrar_missao` o beat `fim:` é
+> montado com duas partes — `[etapa.outro]` e, **só quando `completed_index + 1 >=
+> len(stages)`** (a etapa concluída era a última), também `adventure.outro_rota`. Como
+> `_story_beat` concatena na ordem e descarta as partes vazias, sai de graça: etapa
+> intermediária mostra só o encerramento dela; a última mostra encerramento da etapa **e**
+> fim da rota no mesmo slideshow; destino sem `outro_rota` fica idêntico ao de antes. A
+> `key` do beat não muda. Editor: botão "🏁 fim da rota" no painel do destino (abaixo de
+> "Renome por etapa concluída"), estado `_outroRotaSt`, mesmo painel de slides do
+> `EDITOR_STORY`. Não há mudança de momento: o beat viaja no `city_state` e o slideshow é
+> um overlay de tela cheia, então o jogador lê antes de ver a cidade. Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-07-29-fim-da-rota*`. Teste:
+> `tools/test_masmorra_sequenciada.py` seções [19]/[19b].
