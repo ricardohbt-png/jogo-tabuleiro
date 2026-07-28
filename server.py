@@ -6259,8 +6259,12 @@ class GameRoom:
             "world": {
                 "location": self.world_location,
                 "locations": list(WORLD_LOCATIONS.values()),
-                "routes": [{"from": tuple(route)[0], "to": tuple(route)[1], **cost}
-                           for route, cost in WORLD_ROUTES.items()],
+                # Todo par aparece (custo salvo ou 0/0) para o cliente nunca
+                # tratar um destino como inalcançável.
+                "routes": [{"from": origem, "to": destino,
+                            **(WORLD_ROUTES.get(frozenset((origem, destino))) or {"fome": 0, "sede": 0})}
+                           for indice, origem in enumerate(WORLD_LOCATIONS)
+                           for destino in list(WORLD_LOCATIONS)[indice + 1:]],
                 "map_image": "assets/city/varluzia - Copia.png",
                 "transition_images": _transition_images(),
                 "adventures": [{**adventure,
@@ -7930,10 +7934,9 @@ class GameRoom:
         if destination not in WORLD_LOCATIONS or destination == self.world_location:
             await self.send_to(pid, {"type": "error", "msg": "Destino inválido."})
             return
-        cost = WORLD_ROUTES.get(frozenset((self.world_location, destination)))
-        if not cost:
-            await self.send_to(pid, {"type": "error", "msg": "Não existe rota conhecida para esse destino."})
-            return
+        # Sem custo cadastrado a viagem é gratuita: a tabela guarda preços, não
+        # a lista de trajetos existentes.
+        cost = WORLD_ROUTES.get(frozenset((self.world_location, destination))) or {"fome": 0, "sede": 0}
         sem_recursos = [p["name"] for p in self.players.values()
                          if p.get("fome", 0) < cost["fome"] or p.get("sede", 0) < cost["sede"]]
         if sem_recursos:

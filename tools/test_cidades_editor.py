@@ -105,6 +105,43 @@ def main():
     check("excluir limpa pontos", "porto_negro" not in S.CITY_MAP_POINTS)
     check("excluir limpa taverna", "porto_negro" not in S.TAVERN_SCENES)
 
+    print("\n[7] Rota ausente = viagem grátis")
+    reset_mundo()
+    S._aplicar_estado_cidades([CIDADE_NOVA], {}, [], [])   # tabela de custos vazia
+    S._sincronizar_cidades_derivadas()
+    sala = S.GameRoom("TEST")
+    enviados = []
+    async def noop(*a, **k): pass
+    async def cap_broadcast(msg, *a, **k): enviados.append(msg)
+    sala.gm_say = noop; sala.broadcast = cap_broadcast; sala.send_to = noop
+    sala._checkpoint_savegame = lambda *a, **k: None
+    sala.phase = "city"; sala.host_pid = "p1"; sala.world_location = "alva_e_luz"
+    heroi = S.make_player("p1", "Victor", "warrior", 0)
+    heroi["fome"], heroi["sede"] = 20, 20
+    sala.players["p1"] = heroi
+    asyncio.run(sala.handle_world_travel("p1", "porto_negro"))
+    check("viajou para a cidade nova", sala.world_location == "porto_negro")
+    check("não gastou fome", heroi["fome"] == 20)
+    check("não gastou sede", heroi["sede"] == 20)
+
+    print("\n[8] Rota com custo debita; payload cobre todos os pares")
+    reset_mundo()
+    S._aplicar_estado_cidades([CIDADE_NOVA], {}, [],
+                              [{"from": "alva_e_luz", "to": "porto_negro", "fome": 5, "sede": 3}])
+    S._sincronizar_cidades_derivadas()
+    sala.world_location = "alva_e_luz"; heroi["fome"], heroi["sede"] = 20, 20
+    asyncio.run(sala.handle_world_travel("p1", "porto_negro"))
+    check("custo de fome debitado", heroi["fome"] == 15)
+    check("custo de sede debitado", heroi["sede"] == 17)
+    enviados.clear()
+    asyncio.run(sala.broadcast_city_state())
+    rotas = (enviados[-1].get("world") or {}).get("routes") or []
+    n_cidades = len(S.WORLD_LOCATIONS)
+    check("payload traz todos os pares", len(rotas) == n_cidades * (n_cidades - 1) // 2)
+    par = next((r for r in rotas if {r["from"], r["to"]} == {"porto_negro", "vila_riacho"}), None)
+    check("par sem custo vai como 0/0", par is not None and par["fome"] == 0 and par["sede"] == 0)
+    reset_mundo()
+
     print(f"\n===== RESULTADO: {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 
