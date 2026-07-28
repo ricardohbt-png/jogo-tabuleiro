@@ -1489,3 +1489,28 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > **propriedade booleana**, não função — chamá-la com `()` lança `TypeError`. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-07-28-masmorra-sequenciada-saida-individual*`. Teste:
 > `tools/test_masmorra_sequenciada.py`.
+
+> **História em slides nas aventuras:** o `intro`/`outro` de cada etapa de aventura aceita
+> **string** (1 slide de texto) ou **`{slides:[{text,image,fit}], audio}`** — o mesmo formato
+> das campanhas, já normalizado por `_story_norm`. Ao salvar, `_clean_story_field` preserva o
+> objeto (antes um `str(...)` o destruía) e **restringe a mídia a `assets/story/`**
+> (`_story_media_ok`, sem `..`). **Três beats**, todos no campo `story` que o cliente já
+> consome sem mudança (`_captarStory` lê `msg.story` de qualquer mensagem e deduplica por
+> `key`): **abertura** da etapa em `handle_world_adventure` (`aventura:<id>:<i>`, vale para
+> toda etapa iniciada pelo mapa), **transição** em `_emendar_proxima_etapa`
+> (`encadeada:<id>:<i>`) e **encerramento** no ramo não-encadeado de `handle_encerrar_missao`
+> (`fim:<id>:<i>`), que sai no `city_state`. `_voltar_para_cidade` ganhou o parâmetro
+> `story=None`: ela limpa `_story_encadeada` e faz o broadcast na mesma chamada, então gravar
+> o beat antes não sobreviveria. O encerramento cobre tanto a última etapa quanto uma
+> intermediária sem `encadear` — nos dois casos o grupo volta à cidade. **Editor:** o painel
+> de slides (miniatura, upload de imagem/áudio para `assets/story/` via `STORY_UPLOAD`,
+> reordenar, pré-visualizar) saiu de `editor_campaign.js` para **`tools/editor_story.js`**
+> (`window.EDITOR_STORY`, 8 funções) e agora serve as duas abas; cada etapa do mapa-múndi tem
+> "📖 abertura" e "📖 encerramento" (estado em `_introSt`/`_outroSt`, serializado por
+> `storyToSaved` no salvar). Em `editor_campaign.js` os apelidos `const` do módulo precisam
+> vir **antes** de `const C`, que chama `emptyStory()` na inicialização. **Cliente:**
+> `hideWorldMap()` no handler de `enterDungeon` — o mapa-múndi é um overlay sobre
+> `screen-city` que só sumia quando a cidade mudava, então voltar da masmorra caía nele em vez
+> da ilustração da cidade (`world_location` nunca muda ao entrar numa aventura). Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-07-28-historia-em-slides-nas-aventuras*`. Teste:
+> `tools/test_masmorra_sequenciada.py` seções [15]-[17].
