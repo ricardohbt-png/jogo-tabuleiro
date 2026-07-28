@@ -672,6 +672,25 @@ async def main():
     await r._monster_dies(z, "p1")
     S.random.randint = _o
     check("Resistência Morta: sobrevive a 0 com 1 HP", z["hp"] == 1)
+    # CD aumenta pela metade do dano que excedeu 0 HP, arredondando para cima.
+    # Ex.: 2 HP - 6 dano = -4 → CD 10 + ceil(4/2) = 12.
+    r = setup(); r.rooms = []; r.players = {"p1": make_player("p1", "A", "warrior", 0)}
+    z = make_monster(zdef, {"id": 1, "cx": 5, "cy": 5}); z["pos"] = [5, 5]; z["hp"] = -4
+    r.monsters[z["id"]] = z
+    cds = []
+    r._testar_save = lambda alvo, tipo, cd: (cds.append(cd) or (True, 20, 0, 20))
+    await r._monster_dies(z, "p1")
+    check("Resistência Morta: excesso 4 → CD 12", cds == [12] and z["hp"] == 1)
+    # Ex.: 1 HP - 9 dano = -8 → CD 10 + ceil(8/2) = 14.
+    z["hp"] = -8
+    cds.clear()
+    await r._monster_dies(z, "p1")
+    check("Resistência Morta: excesso 8 → CD 14", cds == [14] and z["hp"] == 1)
+    # Excesso ímpar também sobe: ceil(3/2) = 2, portanto CD 12.
+    z["hp"] = -3
+    cds.clear()
+    await r._monster_dies(z, "p1")
+    check("Resistência Morta: excesso 3 arredonda para CD 12", cds == [12] and z["hp"] == 1)
     # Morte sagrada destrói (sem save)
     r = setup(); r.rooms = []; r.players = {"p1": make_player("p1", "A", "warrior", 0)}
     z = make_monster(zdef, {"id": 1, "cx": 5, "cy": 5}); z["pos"] = [5, 5]; z["hp"] = 0

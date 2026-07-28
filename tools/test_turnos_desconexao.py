@@ -37,10 +37,30 @@ def setup(n=3, limit=999):
     r.phase = "city"
     return r
 
+def iniciativa_jogadores(r):
+    """Isola a rotação de turnos entre os HERÓIS. O sistema atual
+    (`initiative_order`, Modo Mestre Fase A) intercala monstros na iniciativa,
+    então logo após `enter_dungeon` o ator da vez costuma ser um monstro e
+    `current_pid()` é None. Aqui neutralizamos os monstros e reconstruímos a
+    iniciativa só com jogadores — que, sendo idênticos, mantêm a ordem
+    p1→p2→p3 pelo desempate de sequência (equivale ao antigo turn_index). Testa
+    exatamente o alvo desta suíte: desconexão/pulo/avanço entre heróis."""
+    if r.initiative_task and not r.initiative_task.done():
+        r.initiative_task.cancel()
+    r.initiative_task = None
+    r.monsters.clear()
+    r._rebuild_initiative()
+    r.initiative_index = 0
+    # Reinicia o timer do herói da vez. Sem isso, se um MONSTRO tivesse a maior
+    # iniciativa em enter_dungeon (ramo de monstro cancela o timer), o estado do
+    # timer ficaria None — flaky. É o mesmo passo final de _start_initiative_player_turn.
+    r._iniciar_timer_turno()
+
 async def main():
     print("\n[1] enter_dungeon inicia o timer do turno")
     r = setup()
     await r.enter_dungeon("p1")
+    iniciativa_jogadores(r)
     check("timer iniciado (started_ms definido)", r.turn_timer_started_ms is not None)
     check("tarefa de timer criada", r.turn_timer_task is not None)
     check("current = primeiro da ordem", r.current_pid() == "p1")
@@ -48,6 +68,7 @@ async def main():
     print("\n[2] Desconexão de jogador que NÃO é a vez → é pulado")
     r = setup()
     await r.enter_dungeon("p1")                  # vez de p1
+    iniciativa_jogadores(r)
     await r.handle_disconnect_em_jogo("p2")      # p2 cai (não é a vez)
     check("p2 marcado desconectado", r.players["p2"]["connected"] is False)
     check("p2 saiu do tabuleiro (pos -1,-1)", r.players["p2"]["pos"] == [-1, -1])
@@ -58,6 +79,7 @@ async def main():
     print("\n[3] Desconexão de QUEM é a vez → turno avança sozinho")
     r = setup()
     await r.enter_dungeon("p1")
+    iniciativa_jogadores(r)
     check("pré: vez de p1", r.current_pid() == "p1")
     await r.handle_disconnect_em_jogo("p1")      # cai no próprio turno
     check("p1 desconectado", r.players["p1"]["connected"] is False)
@@ -71,10 +93,9 @@ async def main():
     r.players["p1"]["pos"] = [ent["cx"], ent["cy"]]
     check("p1 reconectado e reposicionado na entrada",
           r.players["p1"]["connected"] and r.players["p1"]["pos"] == [ent["cx"], ent["cy"]])
-    # agora a ordem não deve mais pular p1
-    r.turn_index = 0
-    while not r._ativo(r.players[r.current_pid()]):
-        r.turn_index += 1
+    # agora a ordem não deve mais pular p1 — reconstrói a iniciativa (só heróis)
+    # com p1 novamente ativo, começando por ele.
+    iniciativa_jogadores(r)
     # dá uma volta completa e confirma que p1 aparece como vez novamente
     vistos = set()
     for _ in range(6):
@@ -85,6 +106,7 @@ async def main():
     print("\n[5] _forcar_fim_turno encerra igual ao end_turn manual")
     r = setup()
     await r.enter_dungeon("p1")
+    iniciativa_jogadores(r)
     antes = r.current_pid()
     await r._forcar_fim_turno(antes)
     check("forçar fim avança o turno", r.current_pid() != antes)
@@ -94,6 +116,7 @@ async def main():
     print("\n[6] Timer de 30s esgota → encerra o turno automaticamente")
     r = setup(limit=0.05)                        # 50ms p/ não esperar
     await r.enter_dungeon("p1")
+    iniciativa_jogadores(r)
     antes = r.current_pid()
     r._iniciar_timer_turno()
     await r.turn_timer_task                       # aguarda UMA expiração (determinístico)

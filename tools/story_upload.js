@@ -137,8 +137,12 @@
     return m.key;
   }
 
-  function saveCustomItem(item) {
-    return request("upload_custom_item", { item: item }).then((m) => m.item);
+  // cidades: ids das cidades cuja loja vende o item (o servidor grava no
+  // city_shops.json). Omitir mantém o estoque atual intocado.
+  function saveCustomItem(item, cidades) {
+    const msg = { item: item };
+    if (Array.isArray(cidades)) msg.cidades_loja = cidades;
+    return request("upload_custom_item", msg).then((m) => m.item);
   }
   function loadCityShops() { return request("load_city_shops", {}).then((m) => m.config); }
   function saveCityShops(stock, taverns, cityPoints) { return request("save_city_shops", { stock: stock, taverns: taverns, city_points: cityPoints }).then((m) => m.config); }

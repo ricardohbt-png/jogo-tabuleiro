@@ -1632,7 +1632,7 @@ window.EDITOR_CATALOG = {
           "action_type": "passiva",
           "dc": 10,
           "save": "fortitude",
-          "descricao": "A 0 HP: Fortitude CD 10 → fica com 1 HP (dano sagrado/luz ignora e destrói de vez)"
+          "descricao": "A 0 HP: Fortitude CD 10 + metade do dano excedente (arredonda para cima) → fica com 1 HP (dano sagrado/luz ignora e destrói de vez)"
         },
         {
           "id": "infeccao",
@@ -3651,7 +3651,7 @@ window.EDITOR_CATALOG = {
       "action_type": "passiva",
       "dc": 10,
       "save": "fortitude",
-      "descricao": "A 0 HP: Fortitude CD 10 → fica com 1 HP (dano sagrado/luz ignora e destrói de vez)",
+      "descricao": "A 0 HP: Fortitude CD 10 + metade do dano excedente (arredonda para cima) → fica com 1 HP (dano sagrado/luz ignora e destrói de vez)",
       "source": "monstro"
     },
     {
@@ -4370,6 +4370,17 @@ window.EDITOR_CATALOG = {
       "descricao": "+1/+2 em Visão, Ataque, Dano e CA. Apenas Richard",
       "action_type": "acao",
       "monster_effect": "vantagem_combate"
+    },
+    {
+      "id": "guild_sorrateiro",
+      "source": "guilda",
+      "source_id": "sorrateiro",
+      "name": "Sorrateiro",
+      "icon": "✦",
+      "descricao": "Enquanto equipada, revela o círculo de alcance da visão de cada monstro visível.",
+      "action_type": "acao",
+      "monster_effect": "vantagem_combate",
+      "guild_category": "tecnica"
     },
     {
       "id": "guild_tecnica_mira_perfeita",
@@ -5658,10 +5669,10 @@ window.EDITOR_CATALOG = {
       ],
       "icone": "🔥",
       "tipo": "area_persistente",
-      "descricao": "1d6/nível. Área persiste 3 rodadas com dano decaindo.",
+      "descricao": "Alcance 5. Área 3x3; 1d6/nível e fogo residual decrescente por 3 rodadas.",
       "save": "reflexos",
       "dano_por_nivel": "1d6",
-      "area_raio": 2,
+      "area_raio": 1,
       "alcance_base": 5
     },
     {
@@ -5673,10 +5684,10 @@ window.EDITOR_CATALOG = {
       ],
       "icone": "⚡",
       "tipo": "linha_reflexiva",
-      "descricao": "1d6/nível por impacto. Linha reta de 7 casas + ricochete de volta (casas atingidas 2x). Pedro só é ferido na volta.",
+      "descricao": "1d6/nível por impacto. Linha reta de 4 casas (+1/nível) + ricochete de volta (casas atingidas 2x). Pedro só é ferido na volta.",
       "save": "reflexos",
       "dano_por_nivel": "1d6",
-      "alcance_base": 7
+      "alcance_base": 4
     },
     {
       "id": "raio_congelante",
@@ -5760,8 +5771,8 @@ window.EDITOR_CATALOG = {
       ],
       "icone": "🛡️",
       "tipo": "buff_self",
-      "descricao": "Cancela 1 magia recebida. Slot consumido ao absorver. Dura até ativar.",
-      "duracao": "ate_absorver"
+      "descricao": "Reduz 5 de todo dano recebido por 1d6 + 1 rodada por nível. Estender aumenta a duração; Fortalecer reduz 7.",
+      "duracao": "1d6"
     },
     {
       "id": "contramagica",
@@ -5829,7 +5840,8 @@ window.EDITOR_CATALOG = {
       "duracao": "1d6+2",
       "buff": {
         "ataque": 1,
-        "dano": 1
+        "dano": 1,
+        "arma_ignora_resistencia": true
       }
     },
     {
@@ -5841,7 +5853,7 @@ window.EDITOR_CATALOG = {
       ],
       "icone": "💧",
       "tipo": "toque",
-      "descricao": "Toque. +10 fome +10 sede em 1 aliado.",
+      "descricao": "Toque. +20 fome +20 sede em 1 aliado.",
       "alcance": 1
     },
     {
@@ -5881,8 +5893,9 @@ window.EDITOR_CATALOG = {
         "cleric"
       ],
       "icone": "🍞",
-      "tipo": "utilidade",
-      "descricao": "Cria 1d6+1 água e 1d6+2 pão. Lewis distribui para o grupo."
+      "tipo": "posicionar_bau",
+      "descricao": "Cria em uma casa adjacente um baú com 1d4+2 alimentos aleatórios da taverna.",
+      "alcance": 1
     },
     {
       "id": "regeneracao_magica",
@@ -5906,7 +5919,7 @@ window.EDITOR_CATALOG = {
       ],
       "icone": "🛡️",
       "tipo": "buff_self",
-      "descricao": "Absorve 10 dano/rodada de fogo, gelo ou eletricidade. Dura 1d6+1.",
+      "descricao": "Absorve 10 dano/rodada de fogo, gelo, eletricidade, ácido, água ou sagrado. Dura 1d6+1.",
       "duracao": "1d6+1"
     },
     {
@@ -5931,9 +5944,8 @@ window.EDITOR_CATALOG = {
       ],
       "icone": "👁️",
       "tipo": "buff_aliado",
-      "descricao": "Aliado ignora escuridão completamente. Dura 1d6+2 rodadas.",
-      "alcance": 6,
-      "duracao": "1d6+2"
+      "descricao": "Aliado ignora escuridão completamente até o fim da missão.",
+      "alcance": 6
     },
     {
       "id": "jato_ar",
@@ -5944,9 +5956,9 @@ window.EDITOR_CATALOG = {
       ],
       "icone": "🌪️",
       "tipo": "cone",
-      "descricao": "Cone 4q. 1d6 dano. Falha: empurra 1d6q. Colisão com parede: +1d4.",
+      "descricao": "Cone 4q. 1d6 por nível. Falha: empurra 1d6q. Colisão com parede: +1d4.",
       "save": "reflexos",
-      "dano": "1d6"
+      "dano_por_nivel": "1d6"
     },
     {
       "id": "velocidade",
@@ -6534,8 +6546,24 @@ window.EDITOR_CATALOG = {
       "name": "Antídoto",
       "emoji": "💚",
       "item_slot": "bag",
-      "effect": "heal",
-      "value": 6
+      "effect": "cure_poison",
+      "value": 0
+    },
+    {
+      "id": "oleo_dissolvente",
+      "name": "Óleo Dissolvente",
+      "emoji": "🫗",
+      "item_slot": "bag",
+      "effect": "cure_petrification",
+      "value": 0
+    },
+    {
+      "id": "elixir_depurativo",
+      "name": "Elixir Depurativo",
+      "emoji": "🧴",
+      "item_slot": "bag",
+      "effect": "cure_disease",
+      "value": 0
     },
     {
       "id": "vela_escuridao",
@@ -7582,6 +7610,14 @@ window.EDITOR_CATALOG = {
       "nome": "Água",
       "categoria": "piso",
       "cor": "#126da1",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "agua_profunda",
+      "nome": "Água profunda",
+      "categoria": "piso",
+      "cor": "#06173f",
       "solido": false,
       "oclui": false
     },

@@ -158,8 +158,9 @@ def test_combate_passivo():
 
 def test_compra_equipa_preserva():
     print("\n[7] Comprar+equipar preserva campos custom")
-    S._apply_custom_items([S._validate_custom_item(sample(id="lamina_gelo",
-        extra_damages=[{"die": "1d6", "type": "cold"}], damage_bonus=2))[1]])
+    ok_lg, lamina = S._validate_custom_item(sample(id="lamina_gelo",
+        extra_damages=[{"die": "1d6", "type": "cold"}], damage_bonus=2))
+    S._apply_custom_items([lamina])
     r = S.GameRoom("TEST")
     async def noop(*a, **k): pass
     r.gm_say = noop; r.broadcast = noop; r.push_state = noop
@@ -167,14 +168,24 @@ def test_compra_equipa_preserva():
     r._is_turn = lambda pid: True; r.phase = "city"
     p = S.make_player("p1", "Victor", "warrior", 0); r.players["p1"] = p
     p["gold"] = 9999; p["bag"] = []; p["gear"]["weapon"] = None
-    asyncio.run(r.handle_shop_buy("p1", "ferreiro_weapon", "lamina_gelo"))
-    comprada = next((it for it in p["bag"] if it and it.get("id") == "lamina_gelo"), None)
-    check("comprada foi pra bolsa", comprada is not None)
-    check("bolsa preserva extra_damages", comprada and comprada.get("extra_damages"))
-    check("bolsa preserva damage_bonus", comprada and comprada.get("damage_bonus") == 2)
-    idx = p["bag"].index(comprada)
-    asyncio.run(r._executar_equip_from_bag("p1", idx))
-    check("equipar sincroniza extra_damages em p['weapon']", p["weapon"].get("extra_damages"))
+    # A loja da cidade só vende o que está no estoque dela (city_shops.json) —
+    # é o que o checkbox "Loja" do editor sincroniza.
+    orig_stock, tmp_stock = _stock_sandbox()
+    try:
+        S._sync_custom_item_city_stock(lamina, [r.world_location])
+        asyncio.run(r.handle_shop_buy("p1", "ferreiro_weapon", "lamina_gelo"))
+        comprada = next((it for it in p["bag"] if it and it.get("id") == "lamina_gelo"), None)
+        check("comprada foi pra bolsa", comprada is not None)
+        check("bolsa preserva extra_damages", comprada and comprada.get("extra_damages"))
+        check("bolsa preserva damage_bonus", comprada and comprada.get("damage_bonus") == 2)
+        idx = p["bag"].index(comprada)
+        asyncio.run(r._executar_equip_from_bag("p1", idx))
+        check("equipar sincroniza extra_damages em p['weapon']", p["weapon"].get("extra_damages"))
+    finally:
+        S.CITY_SHOPS_FILE = orig_stock["file"]
+        S.CITY_SHOPS.clear(); S.CITY_SHOPS.update(orig_stock["stock"])
+        try: os.unlink(tmp_stock)
+        except OSError: pass
     S._apply_custom_items([])
 
 def test_corrosao():
@@ -746,20 +757,29 @@ def test_multi_efeito():
 
 def test_compra_armadura():
     print("\n[A4] Comprar armadura custom preserva campos")
-    S._apply_custom_items([S._validate_custom_item(armor_sample(id="cota_cmp",
-        corrosion_materials=["metal"], bonuses=[{"effect": "maxhp", "value": 5}]))[1]])
+    ok_ct, cota = S._validate_custom_item(armor_sample(id="cota_cmp",
+        corrosion_materials=["metal"], bonuses=[{"effect": "maxhp", "value": 5}]))
+    S._apply_custom_items([cota])
     r = S.GameRoom("TEST")
     async def noop(*a, **k): pass
     r.gm_say = noop; r.broadcast = noop; r.push_state = noop; r.broadcast_city_state = noop; r.send_to = noop
     r._is_turn = lambda pid: True; r.phase = "city"
     p = S.make_player("p1", "Victor", "warrior", 0); r.players["p1"] = p
     p["gold"] = 9999; p["bag"] = []; p["gear"]["armor"] = None
-    asyncio.run(r.handle_shop_buy("p1", "ferreiro_armor", "cota_cmp"))
-    comprada = next((it for it in p["bag"] if it and it.get("id") == "cota_cmp"), None)
-    check("armadura foi pra bolsa", comprada is not None)
-    check("bolsa preserva bonuses", comprada and comprada.get("bonuses"))
-    check("bolsa preserva material", comprada and comprada.get("corrosion_materials") == ["metal"])
-    check("bolsa preserva N/M", comprada and comprada.get("corrosao_niveis_penalidade") == 2)
+    orig_stock, tmp_stock = _stock_sandbox()
+    try:
+        S._sync_custom_item_city_stock(cota, [r.world_location])
+        asyncio.run(r.handle_shop_buy("p1", "ferreiro_armor", "cota_cmp"))
+        comprada = next((it for it in p["bag"] if it and it.get("id") == "cota_cmp"), None)
+        check("armadura foi pra bolsa", comprada is not None)
+        check("bolsa preserva bonuses", comprada and comprada.get("bonuses"))
+        check("bolsa preserva material", comprada and comprada.get("corrosion_materials") == ["metal"])
+        check("bolsa preserva N/M", comprada and comprada.get("corrosao_niveis_penalidade") == 2)
+    finally:
+        S.CITY_SHOPS_FILE = orig_stock["file"]
+        S.CITY_SHOPS.clear(); S.CITY_SHOPS.update(orig_stock["stock"])
+        try: os.unlink(tmp_stock)
+        except OSError: pass
     S._apply_custom_items([])
 
 def _corr_setup():
@@ -1546,6 +1566,104 @@ def test_itens_nativos_e_editor_cura():
                                                      imunidade_dado="1d7"))
     check("dado de imunidade inválido é descartado", okb and "imunidade_dado" not in itb)
 
+def _stock_sandbox():
+    """Isola CITY_SHOPS + o arquivo de estoque para não sujar o city_shops.json real."""
+    import copy
+    orig = {"stock": copy.deepcopy(S.CITY_SHOPS), "file": S.CITY_SHOPS_FILE}
+    tmp = tempfile.NamedTemporaryFile(suffix=".json", delete=False); tmp.close()
+    S.CITY_SHOPS_FILE = tmp.name
+    return orig, tmp.name
+
+def _stock_restore(orig, tmp_path):
+    S.CITY_SHOPS_FILE = orig["file"]
+    S.CITY_SHOPS.clear(); S.CITY_SHOPS.update(orig["stock"])
+    try: os.unlink(tmp_path)
+    except OSError: pass
+    S._apply_custom_items(S._read_custom_items())   # devolve os catálogos ao estado real
+
+def test_estoque_cidade_helpers():
+    print("\n[L1] Loja por cidade — mapeamento item→loja")
+    check("arma → ferreiro_weapon", S._custom_item_shop_id("weapon") == "ferreiro_weapon")
+    check("armadura → ferreiro_armor", S._custom_item_shop_id("armor") == "ferreiro_armor")
+    check("escudo → ferreiro_armor", S._custom_item_shop_id("shield") == "ferreiro_armor")
+    for t in ("ring", "boots", "potion", "throwable", "poison"):
+        check(f"{t} → mercador", S._custom_item_shop_id(t) == "mercador")
+
+def test_estoque_cidade_sincronia_editor():
+    print("\n[L4] Mapa item→loja em sincronia com o editor")
+    import re
+    caminho = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                           "tools", "editor_items_logic.js")
+    src = open(caminho, encoding="utf-8").read()
+    bloco = re.search(r"SHOP_BY_ITEM_TYPE\s*=\s*\{(.*?)\}", src, re.S)
+    check("SHOP_BY_ITEM_TYPE encontrado no editor", bool(bloco))
+    mapa_js = dict(re.findall(r'(\w+):\s*"([^"]+)"', bloco.group(1))) if bloco else {}
+    check(f"mesmo mapa do servidor (js={mapa_js})", mapa_js == S._CUSTOM_ITEM_SHOP)
+
+def test_estoque_cidade_sync():
+    print("\n[L2] Loja por cidade — sincronismo ao salvar o item")
+    orig, tmp_path = _stock_sandbox()
+    try:
+        cidades = list(S.CITY_SHOPS.keys())
+        c1, c2 = cidades[0], cidades[1]
+        ok, item = S._validate_custom_item(poison_sample(id="veneno_teste_cidade"))
+        check("veneno de teste válido", ok)
+        S._apply_custom_items([item])
+        # Antes de estocar: está no catálogo global mas não na loja de nenhuma cidade.
+        check("no catálogo global (SHOP_MERCHANT)",
+              any(i["id"] == "veneno_teste_cidade" for i in S.SHOP_MERCHANT))
+        check("ainda não aparece na loja da cidade",
+              not any(i["id"] == "veneno_teste_cidade"
+                      for i in S._city_shop_items(c1, "mercador")))
+        # Estoca em c1.
+        S._sync_custom_item_city_stock(item, [c1])
+        check("aparece na loja de c1",
+              any(i["id"] == "veneno_teste_cidade" for i in S._city_shop_items(c1, "mercador")))
+        check("não aparece em c2",
+              not any(i["id"] == "veneno_teste_cidade" for i in S._city_shop_items(c2, "mercador")))
+        # Troca de cidade: sai de c1, entra em c2 (sem duplicar).
+        S._sync_custom_item_city_stock(item, [c2])
+        check("saiu de c1 ao desmarcar",
+              not any(i["id"] == "veneno_teste_cidade" for i in S._city_shop_items(c1, "mercador")))
+        check("entrou em c2", any(i["id"] == "veneno_teste_cidade"
+                                  for i in S._city_shop_items(c2, "mercador")))
+        S._sync_custom_item_city_stock(item, [c2, c2])
+        check("não duplica o id na lista",
+              S.CITY_SHOPS[c2]["mercador"].count("veneno_teste_cidade") == 1)
+        # loja=False esvazia o estoque mesmo com cidades marcadas.
+        item_sem_loja = dict(item, disponibilidade=dict(item["disponibilidade"], loja=False))
+        S._sync_custom_item_city_stock(item_sem_loja, [c1, c2])
+        check("loja desmarcada retira de todas as cidades",
+              not any("veneno_teste_cidade" in shops.get("mercador", [])
+                      for shops in S.CITY_SHOPS.values()))
+        # Renomear: o id antigo sai do estoque.
+        S._sync_custom_item_city_stock(item, [c1])
+        novo = dict(item, id="veneno_teste_cidade2")
+        S._sync_custom_item_city_stock(novo, [c1], old_id="veneno_teste_cidade")
+        check("id antigo removido ao renomear",
+              not any("veneno_teste_cidade" in shops.get("mercador", [])
+                      for shops in S.CITY_SHOPS.values()))
+        check("id novo estocado", "veneno_teste_cidade2" in S.CITY_SHOPS[c1]["mercador"])
+    finally:
+        _stock_restore(orig, tmp_path)
+
+def test_estoque_cidade_persiste_no_boot():
+    print("\n[L3] Loja por cidade — id custom sobrevive ao reload do boot")
+    orig, tmp_path = _stock_sandbox()
+    try:
+        c1 = list(S.CITY_SHOPS.keys())[0]
+        ok, item = S._validate_custom_item(poison_sample(id="veneno_boot_teste"))
+        S._apply_custom_items([item])
+        S._sync_custom_item_city_stock(item, [c1])          # grava no arquivo
+        S.CITY_SHOPS[c1]["mercador"] = []                    # zera a memória
+        S._load_city_shops()                                 # relê como no boot
+        check("id custom preservado pelo _load_city_shops",
+              "veneno_boot_teste" in S.CITY_SHOPS[c1]["mercador"])
+        check("item volta a aparecer na loja",
+              any(i["id"] == "veneno_boot_teste" for i in S._city_shop_items(c1, "mercador")))
+    finally:
+        _stock_restore(orig, tmp_path)
+
 if __name__ == "__main__":
     test_validacao(); test_merge(); test_base_intacta()
     test_upload_art(); test_save_item(); test_combate_passivo()
@@ -1585,5 +1703,8 @@ if __name__ == "__main__":
     test_imunidade_status_helpers(); test_imunidade_bloqueia_fontes()
     test_cura_status_em_si(); test_cura_status_em_aliado()
     test_itens_nativos_e_editor_cura()
+    test_estoque_cidade_helpers(); test_estoque_cidade_sincronia_editor()
+    test_estoque_cidade_sync()
+    test_estoque_cidade_persiste_no_boot()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)

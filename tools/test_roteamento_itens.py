@@ -35,7 +35,9 @@ def setup(city=True):
     return r
 
 def full_bag():
-    return [deepcopy(next(i for i in SHOP_MERCHANT if i["id"] == "health_potion")) for _ in range(6)]
+    # Enche a bolsa com um consumível qualquer presente em SHOP_MERCHANT
+    # (health_potion migrou para outra loja; elixir continua no mercador).
+    return [deepcopy(next(i for i in SHOP_MERCHANT if i["id"] == "elixir")) for _ in range(6)]
 
 def bag_has(p, iid):
     return any(it and it.get("id") == iid for it in p["bag"])
@@ -128,8 +130,8 @@ async def main():
     w = make_player("p1", "Victor", "warrior", 0); r.players["p1"] = w
     w["gold"] = 9999; w["bag"] = full_bag()
     gold0 = w["gold"]
-    await r.handle_shop_buy("p1", "mercador", "health_potion")
-    check("poção recusada", not bag_has(w, "health_potion") or len(w["bag"]) == 6)
+    await r.handle_shop_buy("p1", "mercador", "antidote")
+    check("consumível recusado", not bag_has(w, "antidote") or len(w["bag"]) == 6)
     check("ouro estornado", w["gold"] == gold0)
     check("erro de cheio enviado", any("cheio" in e.lower() for e in r._errs))
 

@@ -8,7 +8,14 @@
   const slug = v => String(v || "monstro").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "monstro";
   const mod = v => Math.floor((Number(v || 10) - 10) / 2);
   const n = (v, fallback=0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
-  const all = () => (((window.EDITOR_CATALOG || {}).monsters || []).concat(window.EDITOR_CUSTOM_MONSTERS || []));
+  // Uma edição salva de monstro nativo substitui sua entrada no seletor, em vez
+  // de exibir a ficha-base e a ficha editada como duas criaturas distintas.
+  const all = () => {
+    const byType = new Map();
+    ((window.EDITOR_CATALOG || {}).monsters || []).forEach(m => byType.set(m.type, m));
+    (window.EDITOR_CUSTOM_MONSTERS || []).forEach(m => byType.set(m.type, m));
+    return [...byType.values()];
+  };
   const customTypes = () => new Set((window.EDITOR_CUSTOM_MONSTERS || []).map(m => m.type));
   const options = (items, value, label) => items.map(x => `<option value="${esc(x.value)}"${x.value === value ? " selected" : ""}>${esc(label(x))}</option>`).join("");
   const DAMAGE_TRAITS = [
@@ -143,10 +150,11 @@
     m.equipment_attack_bonus = items.reduce((sum, item) => sum + (item.effect === "atk" ? n(item.value, 0) : 0), 0);
     return m;
   }
-  function normalize(m, isCustom) {
+  function normalize(m, isCustom, overwriteNative=false) {
     const out = copy(m || {});
-    out.original_type = isCustom ? out.type : "";
-    out.type = isCustom ? out.type : `${slug(out.name || "monstro")}_customizado`;
+    out.original_type = (isCustom || overwriteNative) ? out.type : "";
+    out.overwrite_native = !!(overwriteNative || out.overwrite_native);
+    out.type = (isCustom || overwriteNative) ? out.type : `${slug(out.name || "monstro")}_customizado`;
     out.image = String(out.image || out.type).trim();
     out.portrait = String(out.portrait || out.type).trim();
     out.str_ = n(out.str_, 10); out.dex = n(out.dex, 10); out.con_ = n(out.con_, 10); out.int_ = n(out.int_, 10);
@@ -352,6 +360,15 @@
       <section><h2>Fraquezas especiais</h2><div class="me-abilities me-negative-abilities">${negativeAbilities.map(a => `<label class="me-tip" data-tip="${esc(abilityHint(a) + " Ao selecionar, incorpora automaticamente a mecânica correspondente.")}"><input class="me-negative-ability" type="checkbox" value="${esc(a.id)}"${selectedNegativeAbilities.has(a.id) ? " checked" : ""}><b>${esc(a.name)}</b><small>Reduz o ND · mecânica automática</small></label>`).join("") || "Nenhuma fraqueza especial cadastrada."}</div><p class="me-hint">Efeitos mistos ficam aqui e causam apenas uma redução moderada no ND.</p></section>
       <section><h2>Comportamento, defesas e tesouro</h2><div class="me-fields cols-3"><label>IA<select id="me-ai_type">${options(ai.map(v => ({value:v})), draft.ai_type, x => x.value.replace(/_/g," "))}</select></label><label>Imagem da miniatura<input id="me-image" value="${esc(draft.image || draft.type)}"></label><label>Porte<select id="me-porte">${options(["minusculo","pequeno","medio","grande","enorme"].map(value=>({value})), draft.porte || "medio", x=>x.value)}</select></label><label>Imunidades (separadas por vírgula)<input id="me-immunities" value="${esc(draft.immunities.join(", "))}"></label><label>Loot garantido (IDs, vírgula)<input id="me-guaranteed-loot" value="${esc(draft.guaranteed_loot.join(", "))}"></label><label>Ouro<input id="me-gold" type="number" min="0" value="${esc(draft.gold || 0)}"></label><label>XP<input id="me-xp" type="number" min="0" value="${esc(draft.xp || 0)}"></label><label>Tier<input id="me-tier" type="number" min="1" value="${esc(draft.tier || 1)}"></label></div><label>Loot variável (JSON opcional)<textarea id="me-loot-table">${esc(JSON.stringify(draft.loot_table || {}, null, 2))}</textarea></label><div class="me-checks"><label><input id="me-undead" type="checkbox"${draft.undead ? " checked" : ""}> morto-vivo</label><label><input id="me-boss" type="checkbox"${draft.boss ? " checked" : ""}> chefe</label></div></section>
       <footer><span id="me-status">O ID é gerado pelo nome e pode ser alterado.</span><button id="me-save" class="me-save">Salvar criatura personalizada</button></footer></main></div>`;
+    const sidebar = root.querySelector(".me-sidebar");
+    const templateSelect = document.getElementById("me-template");
+    if (sidebar && templateSelect) {
+      if (draft.original_type) templateSelect.value = draft.original_type;
+      const editMode = document.createElement("label");
+      editMode.innerHTML = '<input id="me-edit-existing" type="checkbox"> Editar monstro existente <small>Salva por cima da ficha selecionada após confirmação.</small>';
+      sidebar.insertBefore(editMode, templateSelect.parentElement.nextSibling);
+      editMode.querySelector("input").checked = !!draft.overwrite_native;
+    }
     const behaviorSection = root.querySelector("#me-ai_type")?.closest("section");
     if (behaviorSection) behaviorSection.insertAdjacentHTML("afterend", `<section class="me-equipment"><h2>Inventário e equipamentos</h2><p class="me-hint">Marque a permissão e escolha os itens ativos. Raça Padrão e Abissais podem usar equipamentos; um Morto-Vivo só poderá fazê-lo quando esta opção for marcada na ficha. Construtos, animais e vegetais não podem usar equipamentos.</p><div class="me-checks"><label><input id="me-equipment-enabled" type="checkbox"${draft.equipment_enabled ? " checked" : ""}> usar itens e equipamentos</label></div><fieldset id="me-equipment-inventory"${draft.equipment_enabled ? "" : " disabled"}><div class="me-fields cols-3">${selectEquipment("me-equip-weapon", "Arma equipada", weapons)}${selectEquipment("me-equip-armor", "Armadura", armors)}${selectEquipment("me-equip-shield", "Escudo", shields)}${selectEquipment("me-equip-head", "Cabeça", heads)}${selectEquipment("me-equip-ring-1", "Anel 1", rings)}${selectEquipment("me-equip-ring-2", "Anel 2", rings)}${selectEquipment("me-equip-item-1", "Item mágico 1", accessories)}${selectEquipment("me-equip-item-2", "Item mágico 2", accessories)}${Array.from({length:6}, (_, i) => selectEquipment(`me-equip-bag-${i+1}`, `Bolsa ${i+1}`, bagItems)).join("")}</div></fieldset><p class="me-hint">Seis espaços de bolsa para itens não equipados. A IA usa poções, elixires, venenos e arremessáveis quando a situação permitir.</p></section>`);
     // O campo de texto antigo é mantido no HTML por compatibilidade com fichas
@@ -458,7 +475,18 @@
       updateCalculated();
     };
     document.getElementById("me-new").onclick = () => { draft = blank(); idManual = false; render(); };
-    document.getElementById("me-template").onchange = e => { const m=monsters.find(x=>x.type===e.target.value); if(!m) return; draft=normalize(m, custom.has(m.type)); idManual=custom.has(m.type); render(); };
+    const loadSelectedMonster = () => {
+      const selectedType = document.getElementById("me-template").value;
+      const m = monsters.find(x => x.type === selectedType);
+      if (!m) return;
+      const isCustom = custom.has(m.type);
+      const overwriteNative = !isCustom && document.getElementById("me-edit-existing")?.checked;
+      draft = normalize(m, isCustom, overwriteNative);
+      idManual = isCustom || overwriteNative;
+      render();
+    };
+    document.getElementById("me-template").onchange = loadSelectedMonster;
+    document.getElementById("me-edit-existing").onchange = loadSelectedMonster;
     document.getElementById("me-name").oninput = e => { if (!idManual) document.getElementById("me-type").value = slug(e.target.value); updateCalculated(); };
     document.getElementById("me-type").oninput = () => { idManual = true; };
     root.querySelectorAll("input, select, textarea").forEach(el => { if (!el.id || !["me-name","me-type"].includes(el.id)) el.addEventListener("input", updateCalculated); el.addEventListener("change", updateCalculated); });
@@ -514,6 +542,10 @@
     root.querySelectorAll(".me-remove-attack").forEach(btn => btn.onclick = () => { draft=read(); if(draft.attacks.length > 1) draft.attacks.splice(Number(btn.dataset.i),1); render(); });
     document.getElementById("me-save").onclick = async () => {
       const monster = read(); const status = document.getElementById("me-status");
+      if (monster.original_type) {
+        const alvo = monster.overwrite_native ? "a ficha original" : "a criatura personalizada";
+        if (!window.confirm(`Salvar por cima de ${alvo} “${monster.name}”? Esta ação substituirá a versão atual.`)) return;
+      }
       if (monster.loot_table === null) { status.textContent = "Corrija o JSON do loot variável antes de salvar."; status.className="me-error"; return; }
       if (!window.EDITOR_SAVE || !window.EDITOR_SAVE.saveCustomMonster) { status.textContent = "Inicie o servidor para salvar a ficha."; status.className="me-error"; return; }
       status.textContent = "Salvando…"; status.className="";

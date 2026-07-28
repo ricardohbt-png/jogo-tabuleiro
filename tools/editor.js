@@ -366,6 +366,63 @@
     return null;
   }
 
+  // Marcadores de edição: não dependem de emoji, PNG, GLB ou do catálogo. Eles
+  // ficam por cima da arte e garantem que cada entidade colocada seja visível.
+  function drawEntityMarkers() {
+    const byCell = new Map();
+    const add = (x, y, label, color) => {
+      const key = x + "," + y;
+      if (!byCell.has(key)) byCell.set(key, []);
+      byCell.get(key).push({ label, color });
+    };
+    if (S.entrance) add(S.entrance.x, S.entrance.y, "↑", "#468fc6");
+    if (S.exit) add(S.exit.x, S.exit.y, "↓", "#c99a3c");
+    for (const m of S.monsters) add(m.pos[0], m.pos[1], "M", "#bc4a5a");
+    for (const c of S.chests) add(c.pos[0], c.pos[1], "$", "#bd9130");
+    for (const t of S.traps) add(t.pos[0], t.pos[1], "!", "#cf6c3b");
+    for (const d of S.decorations) add(d.pos[0], d.pos[1], "D", "#348d72");
+    if (S.prisoner) add(S.prisoner.pos[0], S.prisoner.pos[1], "P", "#5c88c7");
+    for (const f of S.falas) add(f.pos[0], f.pos[1], "…", "#8065ac");
+    for (const p of S.secretPassages) add(p.pos[0], p.pos[1], "S", "#5b9fbe");
+    for (const [key, markers] of byCell) {
+      const [x, y] = key.split(",").map(Number);
+      markers.forEach((marker, i) => {
+        const col = i % 2, row = Math.floor(i / 2);
+        const cx = x * CELL + CELL - 6 - col * 11;
+        const cy = y * CELL + 6 + row * 11;
+        ctx.save();
+        ctx.fillStyle = marker.color;
+        ctx.strokeStyle = "#16120d";
+        ctx.lineWidth = 1.25;
+        ctx.beginPath(); ctx.arc(cx, cy, 5.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#fff"; ctx.font = "bold 7px sans-serif";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText(marker.label, cx, cy + .2);
+        ctx.restore();
+      });
+    }
+  }
+
+  // Escadas do editor são desenhadas no canvas, sem depender de fonte/emoji.
+  // Assim a entrada e a saída permanecem reconhecíveis até em navegadores que
+  // não renderizam corretamente os símbolos usados no mapa.
+  function drawStairs(x, y, color, sobe) {
+    const px = x * CELL, py = y * CELL;
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.strokeStyle = "#17120e";
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 4; i++) {
+      const step = sobe ? i : 3 - i;
+      const w = 8 + step * 3;
+      const sx = px + (CELL - w) / 2;
+      const sy = py + 20 - i * 4;
+      ctx.fillRect(sx, sy, w, 4);
+      ctx.strokeRect(sx, sy, w, 4);
+    }
+    ctx.restore();
+  }
+
   function render() {
     board.width = S.grid.w * CELL;
     board.height = S.grid.h * CELL;
@@ -376,6 +433,22 @@
         const mm = mid ? matMeta(mid) : null;
         ctx.fillStyle = mm ? mm.cor : (t === WALL ? "#1d1812" : (t === DOOR ? "#c8841f" : "#5a4a32"));
         ctx.fillRect(x * CELL, y * CELL, CELL - 1, CELL - 1);
+        if (t === DOOR) {
+          // Porta visível no editor, em vez de parecer apenas piso laranja.
+          const px = x * CELL, py = y * CELL, s = CELL - 1;
+          ctx.fillStyle = "#5c3319";
+          ctx.fillRect(px + s * .16, py + s * .06, s * .68, s * .88);
+          ctx.strokeStyle = "#d7a34b";
+          ctx.lineWidth = Math.max(1, s * .055);
+          ctx.strokeRect(px + s * .16, py + s * .06, s * .68, s * .88);
+          ctx.beginPath();
+          ctx.moveTo(px + s * .5, py + s * .08); ctx.lineTo(px + s * .5, py + s * .92);
+          ctx.stroke();
+          ctx.fillStyle = "#f0c867";
+          ctx.beginPath();
+          ctx.arc(px + s * .42, py + s * .52, Math.max(1, s * .055), 0, Math.PI * 2);
+          ctx.fill();
+        }
         if (mid === "entulho") {            // marca de obstáculo
           ctx.fillStyle = "rgba(0,0,0,0.45)";
           ctx.fillRect(x * CELL + CELL * 0.3, y * CELL + CELL * 0.3, CELL * 0.4, CELL * 0.4);
@@ -492,6 +565,9 @@
       ctx.fillText(emoji, cx, baseY);
       ctx.restore();
     }
+    drawEntityMarkers();
+    if (S.entrance) drawStairs(S.entrance.x, S.entrance.y, "#69bde9", true);
+    if (S.exit) drawStairs(S.exit.x, S.exit.y, "#e5b653", false);
     if (S.sel && S.sel.kind === "decor" && S.sel.ref) {
       // Referência: contorno do footprint realçado + rótulo W×H (casas efetivas).
       const tiles = decorTiles(S.sel.ref);
@@ -720,7 +796,7 @@
     sel.pos = sel.ref && sel.ref.pos ? sel.ref.pos.slice() : [nx, ny];
   }
 
-  function entityAt(x, y) {
+  function legacyEntityAt(x, y) {
     if (S.entrance && S.entrance.x === x && S.entrance.y === y) return { kind: "entrance", pos: [x, y] };
     if (S.exit && S.exit.x === x && S.exit.y === y) return { kind: "exit", pos: [x, y] };
     if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) return { kind: "prisoner", ref: S.prisoner, pos: [x, y] };
@@ -732,6 +808,40 @@
     const dec = _decsHere.find(d => !isFloorDecor(d)) || _decsHere[0];
     if (dec) return { kind: "decor", ref: dec, pos: dec.pos.slice() };
     return find(S.monsters, "monster") || find(S.chests, "chest") || find(S.traps, "trap") || find(S.falas, "fala") || null;
+  }
+
+  // Lista todas as entidades em uma casa. A versão antiga retornava apenas a
+  // primeira e escondia as demais quando havia sobreposição.
+  function entitiesAt(x, y) {
+    const found = [];
+    if (S.entrance && S.entrance.x === x && S.entrance.y === y) found.push({ kind: "entrance", pos: [x, y] });
+    if (S.exit && S.exit.x === x && S.exit.y === y) found.push({ kind: "exit", pos: [x, y] });
+    if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) found.push({ kind: "prisoner", ref: S.prisoner, pos: S.prisoner.pos.slice() });
+    for (const p of S.secretPassages) if (p.pos[0] === x && p.pos[1] === y)
+      found.push({ kind: "secret_passage", ref: p, pos: p.pos.slice() });
+    const decs = S.decorations.filter(d => decorTiles(d).some(c => c[0] === x && c[1] === y));
+    for (const d of decs.filter(d => !isFloorDecor(d)).concat(decs.filter(isFloorDecor)))
+      found.push({ kind: "decor", ref: d, pos: d.pos.slice() });
+    for (const m of S.monsters) if (m.pos[0] === x && m.pos[1] === y)
+      found.push({ kind: "monster", ref: m, pos: m.pos.slice() });
+    for (const c of S.chests) if (c.pos[0] === x && c.pos[1] === y)
+      found.push({ kind: "chest", ref: c, pos: c.pos.slice() });
+    for (const t of S.traps) if (t.pos[0] === x && t.pos[1] === y)
+      found.push({ kind: "trap", ref: t, pos: t.pos.slice() });
+    for (const f of S.falas) if (f.pos[0] === x && f.pos[1] === y)
+      found.push({ kind: "fala", ref: f, pos: f.pos.slice() });
+    return found;
+  }
+
+  let _selectionCycle = { key: null, index: 0 };
+  function entityAt(x, y, cycle) {
+    const found = entitiesAt(x, y);
+    if (!found.length) { _selectionCycle = { key: null, index: 0 }; return null; }
+    if (!cycle) return found[0];
+    const key = x + "," + y;
+    if (_selectionCycle.key !== key) _selectionCycle = { key, index: 0 };
+    else _selectionCycle.index = (_selectionCycle.index + 1) % found.length;
+    return found[_selectionCycle.index];
   }
 
   function roomIdAt(x, y) {
@@ -1396,7 +1506,8 @@
     else if (["entrance", "exit", "prisoner", "monster", "chest", "trap", "decor", "secret_mechanism", "illusion_wall", "fala"].includes(S.tool)) { placeEntity(x, y); if (S.tool !== "decor") S.sel = entityAt(x, y); renderPanel(); render(); }
     else if (S.tool === "erase") { eraseAt(x, y); S.sel = null; renderPanel(); render(); }
     else if (S.tool === "select") {
-      S.sel = entityAt(x, y) || roomSel(x, y);
+      // Clique repetido na mesma casa alterna entre as entidades empilhadas.
+      S.sel = entityAt(x, y, true) || roomSel(x, y);
       // Entidades pontuais/decorações entram em modo arrasto (sala não).
       if (S.sel && S.sel.kind !== "room" && S.sel.pos) {
         const anchor = S.sel.pos;
@@ -1742,6 +1853,8 @@
     const bestiary = tab === "bestiario";
     const monsterEditor = tab === "editor_monstros";
     const itemsEditor = tab === "editor_itens";
+    const cityEditor = tab === "cidade";
+    const worldEditor = tab === "mapa_mundi";
     document.getElementById("dungeon-controls").style.display = dung ? "" : "none";
     document.getElementById("toolbar").style.display = dung ? "" : "none";
     document.getElementById("workspace").style.display = dung ? "" : "none";
@@ -1750,15 +1863,21 @@
     document.getElementById("bestiary-view").style.display = bestiary ? "" : "none";
     document.getElementById("monster-editor-view").style.display = monsterEditor ? "" : "none";
     document.getElementById("items-editor-view").style.display = itemsEditor ? "" : "none";
+    document.getElementById("city-editor-view").style.display = cityEditor ? "" : "none";
+    document.getElementById("world-editor-view").style.display = worldEditor ? "" : "none";
     document.getElementById("tab-masmorra").classList.toggle("active", dung);
     document.getElementById("tab-bestiario").classList.toggle("active", bestiary);
     document.getElementById("tab-editor-monstros").classList.toggle("active", monsterEditor);
     document.getElementById("tab-editor-itens").classList.toggle("active", itemsEditor);
+    document.getElementById("tab-cidade").classList.toggle("active", cityEditor);
+    document.getElementById("tab-mapa-mundi").classList.toggle("active", worldEditor);
     document.getElementById("tab-campanha").classList.toggle("active", tab === "campanha");
     if (dung) { render(); renderPanel(); }
     else if (bestiary && window.EDITOR_BESTIARY) window.EDITOR_BESTIARY.render();
     else if (monsterEditor && window.EDITOR_MONSTER_EDITOR) window.EDITOR_MONSTER_EDITOR.render();
     else if (itemsEditor && window.EDITOR_ITEMS_EDITOR) window.EDITOR_ITEMS_EDITOR.render();
+    else if (cityEditor && window.EDITOR_CITY) window.EDITOR_CITY.render();
+    else if (worldEditor && window.EDITOR_WORLD) window.EDITOR_WORLD.render();
     else if (tab === "campanha" && window.EDITOR_CAMPAIGN) window.EDITOR_CAMPAIGN.renderCampaign();
   }
   window.setTab = setTab;
@@ -1766,6 +1885,8 @@
   document.getElementById("tab-bestiario").onclick = () => setTab("bestiario");
   document.getElementById("tab-editor-monstros").onclick = () => setTab("editor_monstros");
   document.getElementById("tab-editor-itens").onclick = () => setTab("editor_itens");
+  document.getElementById("tab-cidade").onclick = () => setTab("cidade");
+  document.getElementById("tab-mapa-mundi").onclick = () => setTab("mapa_mundi");
   document.getElementById("tab-campanha").onclick = () => setTab("campanha");
 
   // Expor para verificação no console / tasks seguintes.

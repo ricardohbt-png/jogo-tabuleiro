@@ -1,0 +1,129 @@
+{
+  "alva_e_luz": {
+    "taverna": {
+      "x": 32.0,
+      "y": 46.0,
+      "type": "taverna"
+    },
+    "templo": {
+      "x": 67.0,
+      "y": 35.0,
+      "type": "templo"
+    },
+    "ferreiro": {
+      "x": 83.0,
+      "y": 38.0,
+      "type": "ferreiro"
+    },
+    "guilda": {
+      "x": 52.0,
+      "y": 21.0,
+      "type": "guilda"
+    },
+    "mercador": {
+      "x": 50.0,
+      "y": 40.0,
+      "type": "mercador"
+    },
+    "caravana": {
+      "x": 24.54,
+      "y": 84.01,
+      "type": "caravana"
+    }
+  },
+  "vila_riacho": {
+    "taverna": {
+      "x": 31.01,
+      "y": 47.69,
+      "type": "taverna"
+    },
+    "templo": {
+      "x": 32.51,
+      "y": 34.64,
+      "type": "templo"
+    },
+    "ferreiro": {
+      "x": 64.73,
+      "y": 49.23,
+      "type": "ferreiro"
+    },
+    "mercador": {
+      "x": 44.59,
+      "y": 36.33,
+      "type": "mercador"
+    },
+    "caravana": {
+      "x": 24.5,
+      "y": 67.98,
+      "type": "caravana"
+    }
+  },
+  "vila_corvin": {
+    "taverna": {
+      "x": 62.67,
+      "y": 39.55,
+      "type": "taverna"
+    },
+    "templo": {
+      "x": 41.78,
+      "y": 28.89,
+      "type": "templo"
+    },
+    "ferreiro": {
+      "x": 10.96,
+      "y": 51.89,
+      "type": "ferreiro"
+    },
+    "mercador": {
+      "x": 45.34,
+      "y": 38.85,
+      "type": "mercador"
+    },
+    "caravana": {
+      "x": 55.74,
+      "y": 71.39,
+      "type": "caravana"
+    }
+  },
+  "graciero": {
+    "taverna": {
+      "x": 32.0,
+      "y": 46.0,
+      "type": "taverna"
+    },
+    "templo": {
+      "x": 59.02,
+      "y": 42.36,
+      "type": "templo"
+    },
+    "ferreiro": {
+      "x": 68.95,
+      "y": 39.13,
+      "type": "ferreiro"
+    },
+    "mercador": {
+      "x": 43.37,
+      "y": 47.41,
+      "type": "mercador"
+    },
+    "caravana": {
+      "x": 20.13,
+      "y": 68.52,
+      "type": "caravana"
+    }
+  },
+  "vila_dos_charcos": {
+    "ponto_1": {
+      "x": 58.08,
+      "y": 75.04,
+      "type": "caravana",
+      "name": "Caravana de Viajem"
+    },
+    "ponto_2": {
+      "x": 30.44,
+      "y": 52.45,
+      "type": "taverna",
+      "name": "Taverna"
+    }
+  }
+}

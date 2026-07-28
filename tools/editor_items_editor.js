@@ -140,6 +140,7 @@
         if (type === activeType) return;
         activeType = type;
         draft = novoDraftFor(activeType);
+        citySel = null;   // volta ao padrão de cidades do novo tipo de item
         artFile = null;
         if (artURL) { URL.revokeObjectURL(artURL); artURL = null; }
         render();
@@ -149,6 +150,12 @@
   }
 
   function renderForm() {
+    renderFormBody();
+    ensureCities();          // 1ª vez: preenche o bloco de cidades quando chegar
+    aplicarEstadoCidades();
+  }
+
+  function renderFormBody() {
     var f = root.querySelector("#ie-form");
     if (activeType === "armaduras" || activeType === "escudos") {
       renderArmorForm(f);
@@ -202,7 +209,8 @@
       seccao("Disponibilidade",
         chkLbl("ie-disp-loja", "Loja (Ferreiro)", draft.disponibilidade.loja) +
         chkLbl("ie-disp-baus", "Baús / recompensas", draft.disponibilidade.baus) +
-        chkLbl("ie-disp-loot", "Loot de monstro", draft.disponibilidade.loot_monstro)),
+        chkLbl("ie-disp-loot", "Loot de monstro", draft.disponibilidade.loot_monstro) +
+        dispCidades()),
       seccao("Preço",
         campo("Ouro", numInput("ie-price", draft.price, 0, 99999)) +
         '<span id="ie-price-sug" class="ie-hint"></span>'),
@@ -242,7 +250,8 @@
       seccao("Disponibilidade",
         chkLbl("ie-disp-loja", "Loja (Ferreiro)", draft.disponibilidade.loja) +
         chkLbl("ie-disp-baus", "Baús / recompensas", draft.disponibilidade.baus) +
-        chkLbl("ie-disp-loot", "Loot de monstro", draft.disponibilidade.loot_monstro)),
+        chkLbl("ie-disp-loot", "Loot de monstro", draft.disponibilidade.loot_monstro) +
+        dispCidades()),
       seccao("Preço",
         campo("Ouro", numInput("ie-price", draft.price, 0, 99999)) +
         '<span id="ie-price-sug" class="ie-hint"></span>'),
@@ -350,7 +359,7 @@
     status.textContent = "salvando…";
     try {
       if (artFile) { await window.EDITOR_SAVE.uploadItemArt(artFile, item.id); }
-      var saved = await window.EDITOR_SAVE.saveCustomItem(item);
+      var saved = await window.EDITOR_SAVE.saveCustomItem(item, cidadesSelecionadas());
       status.textContent = "✅ salvo: " + saved.id;
       window.EDITOR_CUSTOM_ITEMS = (window.EDITOR_CUSTOM_ITEMS || []).filter(function (r) { return r.id !== saved.id; });
       window.EDITOR_CUSTOM_ITEMS.push(saved);
@@ -379,7 +388,8 @@
       seccao("Disponibilidade",
         chkLbl("ie-disp-loja", "Loja (Mercador)", draft.disponibilidade.loja) +
         chkLbl("ie-disp-baus", "Baús / recompensas", draft.disponibilidade.baus) +
-        chkLbl("ie-disp-loot", "Loot de monstro", draft.disponibilidade.loot_monstro)),
+        chkLbl("ie-disp-loot", "Loot de monstro", draft.disponibilidade.loot_monstro) +
+        dispCidades()),
       seccao("Preço",
         campo("Ouro", numInput("ie-price", draft.price, 0, 99999)) +
         '<span id="ie-price-sug" class="ie-hint"></span>'),
@@ -467,7 +477,7 @@
     status.textContent = "salvando…";
     try {
       if (artFile) { await window.EDITOR_SAVE.uploadItemArt(artFile, item.id); }
-      var saved = await window.EDITOR_SAVE.saveCustomItem(item);
+      var saved = await window.EDITOR_SAVE.saveCustomItem(item, cidadesSelecionadas());
       status.textContent = "✅ salvo: " + saved.id;
       window.EDITOR_CUSTOM_ITEMS = (window.EDITOR_CUSTOM_ITEMS || []).filter(function (r) { return r.id !== saved.id; });
       window.EDITOR_CUSTOM_ITEMS.push(saved);
@@ -501,7 +511,8 @@
       seccao("Disponibilidade",
         chkLbl("ie-disp-loja", "Loja (Mercador)", draft.disponibilidade.loja) +
         chkLbl("ie-disp-baus", "Baús / recompensas", draft.disponibilidade.baus) +
-        chkLbl("ie-disp-loot", "Loot de monstro", draft.disponibilidade.loot_monstro)),
+        chkLbl("ie-disp-loot", "Loot de monstro", draft.disponibilidade.loot_monstro) +
+        dispCidades()),
       seccao("Preço",
         campo("Ouro", numInput("ie-price", draft.price, 0, 99999)) +
         '<span id="ie-price-sug" class="ie-hint"></span>'),
@@ -573,7 +584,7 @@
     status.textContent = "salvando…";
     try {
       if (artFile) { await window.EDITOR_SAVE.uploadItemArt(artFile, item.id); }
-      var saved = await window.EDITOR_SAVE.saveCustomItem(item);
+      var saved = await window.EDITOR_SAVE.saveCustomItem(item, cidadesSelecionadas());
       status.textContent = "✅ salvo: " + saved.id;
       window.EDITOR_CUSTOM_ITEMS = (window.EDITOR_CUSTOM_ITEMS || []).filter(function (r) { return r.id !== saved.id; });
       window.EDITOR_CUSTOM_ITEMS.push(saved);
@@ -619,7 +630,8 @@
       seccao("Disponibilidade",
         chkLbl("ie-disp-loja", "Loja (Mercador)", draft.disponibilidade.loja) +
         chkLbl("ie-disp-baus", "Baús / recompensas", draft.disponibilidade.baus) +
-        chkLbl("ie-disp-loot", "Loot de monstro", draft.disponibilidade.loot_monstro)),
+        chkLbl("ie-disp-loot", "Loot de monstro", draft.disponibilidade.loot_monstro) +
+        dispCidades()),
       seccao("Preço",
         campo("Ouro", numInput("ie-price", draft.price, 0, 99999)) +
         '<span id="ie-price-sug" class="ie-hint"></span>'),
@@ -704,7 +716,7 @@
     status.textContent = "salvando…";
     try {
       if (artFile) { await window.EDITOR_SAVE.uploadItemArt(artFile, item.id); }
-      var saved = await window.EDITOR_SAVE.saveCustomItem(item);
+      var saved = await window.EDITOR_SAVE.saveCustomItem(item, cidadesSelecionadas());
       status.textContent = "✅ salvo: " + saved.id;
       window.EDITOR_CUSTOM_ITEMS = (window.EDITOR_CUSTOM_ITEMS || []).filter(function (r) { return r.id !== saved.id; });
       window.EDITOR_CUSTOM_ITEMS.push(saved);
@@ -789,7 +801,8 @@
       seccao("Disponibilidade",
         chkLbl("ie-disp-loja", "Loja (Mercador)", draft.disponibilidade.loja) +
         chkLbl("ie-disp-baus", "Baús / recompensas", draft.disponibilidade.baus) +
-        chkLbl("ie-disp-loot", "Loot de monstro", draft.disponibilidade.loot_monstro)),
+        chkLbl("ie-disp-loot", "Loot de monstro", draft.disponibilidade.loot_monstro) +
+        dispCidades()),
       seccao("Preço",
         campo("Ouro", numInput("ie-price", draft.price, 0, 99999)) +
         '<span id="ie-price-sug" class="ie-hint"></span>'),
@@ -919,7 +932,7 @@
     status.textContent = "salvando…";
     try {
       if (artFile) { await window.EDITOR_SAVE.uploadItemArt(artFile, item.id); }
-      var saved = await window.EDITOR_SAVE.saveCustomItem(item);
+      var saved = await window.EDITOR_SAVE.saveCustomItem(item, cidadesSelecionadas());
       status.textContent = "✅ salvo: " + saved.id;
       window.EDITOR_CUSTOM_ITEMS = (window.EDITOR_CUSTOM_ITEMS || []).filter(function (r) { return r.id !== saved.id; });
       window.EDITOR_CUSTOM_ITEMS.push(saved);
@@ -941,6 +954,60 @@
       '<option value="magic">Mágico</option><option value="water">Água</option></select> ' +
       numInput("", 0, -10, 20) + ' <button class="ie-abonus-del">✕</button></span></template>';
   }
+  // ── Estoque por cidade ──────────────────────────────────────────────────────
+  // Marcar "Loja" só coloca o item no catálogo global; quem vende é a allow-list
+  // de cada cidade (city_shops.json). Sem escolher a cidade aqui, o item existe
+  // mas não aparece em loja nenhuma no jogo. O servidor grava a escolha ao salvar.
+  var cityCfg = null, cityLoading = null, citySel = null;
+  function ensureCities() {
+    if (cityCfg || cityLoading) return;
+    if (!window.EDITOR_SAVE || !window.EDITOR_SAVE.loadCityShops) return;
+    cityLoading = window.EDITOR_SAVE.loadCityShops().then(function (c) {
+      cityCfg = c; cityLoading = null; patchCidades();
+    }, function () { cityLoading = null; });
+  }
+  // Cidades que já estocam este id (quando se salva de novo um item existente).
+  function cidadesDoItem(itemId) {
+    if (!cityCfg || !itemId) return null;
+    var shop = L.shopIdForItemType(draft.item_type || "weapon");
+    var out = Object.keys(cityCfg.stock || {}).filter(function (cid) {
+      return ((cityCfg.stock[cid] || {})[shop] || []).indexOf(itemId) >= 0;
+    });
+    return out.length ? out : null;
+  }
+  function cidadesHTML() {
+    if (!cityCfg) return '<span class="ie-hint" id="ie-cidades">carregando cidades…</span>';
+    var cidades = cityCfg.cities || [];
+    if (!cidades.length) return '<span class="ie-hint" id="ie-cidades">nenhuma cidade cadastrada</span>';
+    var sel = citySel || cidadesDoItem(L.slugify(draft.id || draft.name || "")) || [cidades[0].id];
+    return '<div id="ie-cidades">' + cidades.map(function (c) {
+      return '<label class="ie-cls"><input type="checkbox" class="ie-city" value="' + esc(c.id) + '"' +
+        (sel.indexOf(c.id) >= 0 ? " checked" : "") + '> ' + esc(c.name || c.id) + '</label>';
+    }).join("") + '<span class="ie-hint">A loja de cada cidade vende só o que estiver marcado aqui.</span></div>';
+  }
+  function dispCidades() { return '<span class="ie-hint">Cidades que vendem:</span>' + cidadesHTML(); }
+  function patchCidades() {
+    var el = root.querySelector("#ie-cidades");
+    if (el) { el.outerHTML = cidadesHTML(); aplicarEstadoCidades(); }
+  }
+  function aplicarEstadoCidades() {
+    var loja = root.querySelector("#ie-disp-loja");
+    var on = !loja || loja.checked;
+    root.querySelectorAll(".ie-city").forEach(function (el) { el.disabled = !on; });
+  }
+  // null = cidades ainda não carregadas → o servidor não mexe no estoque.
+  function cidadesSelecionadas() {
+    if (!cityCfg) return null;
+    return Array.prototype.map.call(root.querySelectorAll(".ie-city:checked"),
+      function (el) { return el.value; });
+  }
+  root.addEventListener("change", function (e) {
+    var t = e.target;
+    if (!t) return;
+    if (t.id === "ie-disp-loja") aplicarEstadoCidades();
+    else if (t.classList && t.classList.contains("ie-city")) citySel = cidadesSelecionadas();
+  });
+
   function seccao(t, body) { return '<fieldset class="ie-sec"><legend>' + esc(t) + '</legend>' + body + '</fieldset>'; }
   function campo(l, ctrl) { return '<label class="ie-field"><span>' + esc(l) + '</span>' + ctrl + '</label>'; }
   function numInput(id, v, lo, hi) { return '<input type="number"' + (id ? ' id="' + id + '"' : ' class="ie-num"') +
@@ -1067,7 +1134,7 @@
     status.textContent = "salvando…";
     try {
       if (artFile) { await window.EDITOR_SAVE.uploadItemArt(artFile, item.id); }
-      var saved = await window.EDITOR_SAVE.saveCustomItem(item);
+      var saved = await window.EDITOR_SAVE.saveCustomItem(item, cidadesSelecionadas());
       status.textContent = "✅ salvo: " + saved.id;
       window.EDITOR_CUSTOM_ITEMS = (window.EDITOR_CUSTOM_ITEMS || []).filter(function (r) { return r.id !== saved.id; });
       window.EDITOR_CUSTOM_ITEMS.push(saved);

@@ -425,7 +425,9 @@ const InventoryModal = (() => {
 
   function _showInventoryTooltip(itemId, comparisonItemId, touchPos, itemInstance){
     if(typeof GS === 'undefined' || !GS.CATALOGO_ITENS) return;
-    const item = GS.CATALOGO_ITENS[itemId] || itemInstance;
+    const bruto = itemInstance || GS.CATALOGO_ITENS[itemId];
+    const item = (typeof normalizarItemTooltip === 'function')
+      ? normalizarItemTooltip(bruto) : bruto;
     if(!item || typeof _initItemTooltip !== 'function' || typeof gerarConteudoTooltip !== 'function') return;
     _initItemTooltip();
     const t = document.getElementById('item-tooltip');

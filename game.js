@@ -491,8 +491,15 @@ const DECOR_GLB_TYPES = {
   // A fonte usa o modelo GLB próprio; o PNG permanece somente como fallback
   // caso o arquivo não possa ser carregado.
   fonte: 'assets/objetos/fonte.glb',
+  // Altar criado pelo editor pode não trazer `image`; usa o modelo pelo tipo.
+  altar: 'assets/objetos/altar.glb',
   cama: 'assets/objetos/cama.glb',
+  cama_casal: 'assets/objetos/cama_de_casal.glb',
   lareira: 'assets/objetos/lareira.glb',
+  fogueira: 'assets/objetos/fogueira.glb',
+  tumba: 'assets/objetos/sarcofago.glb',
+  arca_tesouros: 'assets/objetos/bau.glb',
+  gaiola: 'assets/objetos/jaula_esqueleto.glb',
   estante_livros: 'assets/objetos/estante_livros.glb',
   mesa_quimica: 'assets/objetos/mesa_alquimia.glb',
   // Armorial/estante de armas vertical (1×2 casas).
@@ -548,7 +555,7 @@ function applyDPR(canvas, cssW, cssH){
 }
 
 // ── Thin send wrapper so existing call sites need no change ────────────────
-function send(obj){ GS.send(obj); }
+function send(obj){ return GS.send(obj); }
 
 function $(id){ return document.getElementById(id); }
 
@@ -778,6 +785,9 @@ function startGame(){ send({type:'start_game'}); }
 // 'image' = cidade ilustrada com hotspots (padrão). '3d' = cena Three.js antiga (fallback).
 const CITY_MODE = 'image';
 let _cityImg = null;   // estado do overlay de imagem (espelha _city3)
+let _cityPointDraft = null;
+let _cityPointDraggingId = null;
+let _cityPointDragOffset = {x:0, y:0};
 let _city3 = null;
 let _cityTOD = 0.78; // time-of-day: 0=midnight, 0.25=dawn, 0.5=noon, 0.75=dusk
 
@@ -797,9 +807,6 @@ const _CTY_BLDGS = [
   {id:'mercador', name:'Mercado',            emoji:'🛒',action:'Itens e poções',
    x:5.5,z:2,    w:3.0,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x205a20,roofHex:0x103815,winHex:0x88ff88,
    hx:50, hy:40, hero:true},
-  {id:'dungeon',  name:'Portão da Masmorra', emoji:'💀',action:'Entrar na masmorra!',
-   x:0,  z:8,    w:3.4,d:1.8,wallH:3.6,roofH:0,   wallHex:0x1a1428,roofHex:0x000000,winHex:0xff2020,isDungeon:true,
-   hx:23, hy:84, hero:true},
 ];
 
 function initCity3D(){
@@ -1257,6 +1264,7 @@ function _cityClick(e){
   const id=_cityPickBldg(e);
   if(!id) return;
   if(id==='dungeon') triggerDungeonEntrance();
+  else if(id==='caravana') showWorldMap();
   else if(id==='guilda') toast('⚔ Guilda dos Heróis — Missões em breve!','var(--gold)');
   else openShop(id);
 }
@@ -1413,9 +1421,11 @@ function initCityImage(){
     if(bd.hx == null) continue;
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'city-hotspot' + (bd.hero ? ' hero' : '') + (bd.id==='dungeon' ? ' dungeon' : '');
+    btn.className = 'city-hotspot city-building city-map-point' + (bd.hero ? ' hero' : '') + (bd.id==='dungeon' ? ' dungeon' : '');
     btn.style.left = bd.hx + '%';
     btn.style.top  = bd.hy + '%';
+    btn.dataset.cityBuilding = bd.id;
+    btn.dataset.cityPoint = bd.id;
     btn.setAttribute('aria-label', bd.name + ' — ' + bd.action);
     btn.title = bd.name + ' — ' + bd.action;
     const label = bd.id==='dungeon' ? 'Ir para a aventura' : bd.name;
@@ -1426,6 +1436,42 @@ function initCityImage(){
     btn.addEventListener('click', () => _cityHotspotClick(bd.id));
     hotWrap.appendChild(btn);
   }
+  const caravan = document.createElement('button');
+  caravan.type = 'button'; caravan.className = 'city-hotspot city-caravan city-map-point';
+  caravan.dataset.cityCaravan = 'true';
+  caravan.dataset.cityPoint = 'caravana';
+  caravan.style.left = '42%'; caravan.style.top = '63%';
+  caravan.setAttribute('aria-label', 'Caravana de Viagem — abrir mapa-múndi');
+  caravan.title = 'Caravana de Viagem — abrir mapa-múndi';
+  caravan.innerHTML = '<span class="ch-glow" aria-hidden="true"></span><span class="ch-pin"><span class="ch-emoji">🧭</span><span class="ch-name">Caravana de Viagem</span></span>';
+  caravan.addEventListener('click', showWorldMap);
+  hotWrap.appendChild(caravan);
+  hotWrap.addEventListener('pointerdown', e => {
+    if(!_cityPointDraft) return;
+    const marker = e.target.closest('[data-city-point]');
+    if(!marker || marker.style.display === 'none') return;
+    const pointId = marker.dataset.cityPoint;
+    const point = _cityPointDraft[pointId];
+    if(!point) return;
+    const rect = hotWrap.getBoundingClientRect();
+    _cityPointDraggingId = pointId;
+    _cityPointDragOffset = {
+      x: ((e.clientX - rect.left) / rect.width) * 100 - point.x,
+      y: ((e.clientY - rect.top) / rect.height) * 100 - point.y,
+    };
+    marker.setPointerCapture?.(e.pointerId);
+    e.preventDefault(); e.stopPropagation();
+  });
+  hotWrap.addEventListener('pointermove', e => {
+    if(!_cityPointDraft || !_cityPointDraggingId) return;
+    const rect = hotWrap.getBoundingClientRect();
+    const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100 - _cityPointDragOffset.x));
+    const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100 - _cityPointDragOffset.y));
+    _cityPointDraft[_cityPointDraggingId] = {x:Math.round(x * 100) / 100, y:Math.round(y * 100) / 100};
+    const marker = hotWrap.querySelector('[data-city-point="' + _cityPointDraggingId + '"]');
+    if(marker){ marker.style.left = x + '%'; marker.style.top = y + '%'; }
+  });
+  ['pointerup','pointercancel'].forEach(eventName => hotWrap.addEventListener(eventName, () => { _cityPointDraggingId = null; }));
   frame.appendChild(hotWrap);
   host.appendChild(stage);
 
@@ -1437,6 +1483,7 @@ function initCityImage(){
 
 function _cityHotspotClick(id){
   if(id === 'dungeon'){ triggerDungeonEntrance(); return; }
+  if(id === 'caravana'){ showWorldMap(); return; }
   if(id === 'guilda'){ openGuild(); return; }
   // openShop espera o id do prédio cru (ex.: 'mercador'); é o que o servidor usa
   // como chave da loja. (NÃO usar MAPA_IDS_LOJA: 'mercado' aponta p/ loja vazia.)
@@ -1455,6 +1502,292 @@ function destroyCityImage(){
   // destroyCity3D fazia isso; o modo imagem precisa fazer o mesmo).
   const fo = document.getElementById('city-fade-overlay');
   if(fo) fo.remove();
+}
+
+// ── Mapa-múndi / viagem entre cidades ─────────────────────────────────────
+let _worldMapEl = null;
+
+function _worldOfCityState(){ return (GS.cityState && GS.cityState.world) || null; }
+
+function _refreshCityLocation(msg){
+  if(!_cityImg) return;
+  const world = msg && msg.world;
+  const location = world && (world.locations || []).find(l => l.id === world.location);
+  if(!location) return;
+  const isAlva = location.id === 'alva_e_luz';
+  if(_worldMapEl && _worldMapEl.dataset.location && _worldMapEl.dataset.location !== location.id) hideWorldMap();
+  _cityImg.img.src = location.imagem + '?v=' + (window.ASSET_VER || '1');
+  _cityImg.img.alt = location.nome;
+  _cityImg.hotWrap.style.display = '';
+  const localShops = (msg.city_shops || {})[location.id] || {};
+  const hasShopPoint = id => id === 'ferreiro'
+    ? ['ferreiro_weapon','ferreiro_armor','ferreiro_ammo'].some(key => Array.isArray(localShops[key]))
+    : Array.isArray(localShops[id]);
+  _cityImg.life.style.display = isAlva ? '' : 'none';
+  const cityPoints = (msg.city_map_points || {})[location.id] || {};
+  const pointAllowed = type => type === 'caravana' || type === 'guilda' || type === 'dungeon'
+    || isAlva || hasShopPoint(type);
+  // CITY_MAP_POINTS é a fonte ÚNICA do que aparece na ilustração: o marcador
+  // nativo só é exibido se existir um ponto com o mesmo id. Sem isso ele
+  // duplicava o ponto equivalente criado no editor — e ficava num lugar que o
+  // editor não tinha como listar nem reposicionar. O servidor semeia os pontos
+  // implícitos (Caravana + prédio de cada loja), então nada some por falta deles.
+  _cityImg.hotWrap.querySelectorAll('[data-city-point]').forEach(marker => {
+    const point = cityPoints[marker.dataset.cityPoint];
+    if(!point){
+      if(marker.dataset.cityExtra) marker.remove(); else marker.style.display = 'none';
+      return;
+    }
+    const type = point.type || marker.dataset.cityBuilding || marker.dataset.cityPoint;
+    marker.style.display = pointAllowed(type) ? '' : 'none';
+    if(Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y))){
+      marker.style.left = point.x + '%'; marker.style.top = point.y + '%';
+    }
+  });
+  // Pontos criados no editor de cidades. Os prédios nativos continuam usando
+  // seus hotspots; estes adicionais podem apontar para qualquer loja existente.
+  const pointMeta = {
+    ferreiro:{name:'Ferreiro',emoji:'⚒'}, mercador:{name:'Mercador',emoji:'🛒'},
+    templo:{name:'Templo',emoji:'⛪'}, taverna:{name:'Taverna',emoji:'🍺'},
+    guilda:{name:'Guilda',emoji:'⚔'}, caravana:{name:'Caravana de Viagem',emoji:'🧭'},
+    dungeon:{name:'Entrada da masmorra',emoji:'🚪'}
+  };
+  Object.entries(cityPoints).forEach(([id, point]) => {
+    if (_cityImg.hotWrap.querySelector('[data-city-point="' + id + '"]') || !point || !point.type) return;
+    const meta = pointMeta[point.type]; if(!meta) return;
+    if(!pointAllowed(point.type)) return;
+    const btn = document.createElement('button'); btn.type='button';
+    btn.className='city-hotspot city-building city-map-point' + (point.type === 'dungeon' ? ' dungeon' : '');
+    btn.dataset.cityBuilding=point.type; btn.dataset.cityPoint=id; btn.dataset.cityExtra='1'; btn.style.left=point.x+'%'; btn.style.top=point.y+'%';
+    const label=point.name || meta.name; btn.title=label; btn.setAttribute('aria-label',label);
+    btn.innerHTML='<span class="ch-glow" aria-hidden="true"></span><span class="ch-pin"><span class="ch-emoji">'+meta.emoji+'</span><span class="ch-name">'+label+'</span></span>';
+    btn.addEventListener('click',()=>_cityHotspotClick(point.type)); _cityImg.hotWrap.appendChild(btn);
+  });
+  const dungeonBar = document.getElementById('city-dungeon-bar');
+  if(dungeonBar) dungeonBar.style.display = 'none';
+  const cityHost = _cityImg.stage.parentElement;
+  let nav = cityHost.querySelector('#city-world-nav');
+  if(!nav){
+    nav = document.createElement('button'); nav.id = 'city-world-nav'; nav.type = 'button';
+    nav.textContent = '🧭 Mapa-múndi'; nav.onclick = showWorldMap;
+    cityHost.appendChild(nav);
+  }
+  nav.style.display = 'none';
+  let caravanEdit = cityHost.querySelector('#city-caravan-edit');
+  if(!caravanEdit){
+    caravanEdit = document.createElement('button'); caravanEdit.id = 'city-caravan-edit'; caravanEdit.type = 'button';
+    caravanEdit.onclick = () => {
+      if(_cityPointDraft){
+        _cityPointDraft = null; _cityPointDraggingId = null;
+        _cityImg.hotWrap.classList.remove('editing');
+        caravanEdit.textContent = '📍 Ajustar pontos';
+        document.getElementById('city-points-save')?.remove();
+        _refreshCityLocation(GS.cityState);
+        return;
+      }
+      _cityPointDraft = {};
+      _cityImg.hotWrap.querySelectorAll('[data-city-point]').forEach(marker => {
+        if(marker.style.display !== 'none') _cityPointDraft[marker.dataset.cityPoint] = {
+          x: parseFloat(marker.style.left), y: parseFloat(marker.style.top),
+        };
+      });
+      _cityImg.hotWrap.classList.add('editing');
+      caravanEdit.textContent = '✕ Cancelar ajuste';
+      const save = document.createElement('button'); save.id = 'city-points-save'; save.type = 'button'; save.textContent = 'Salvar pontos';
+      save.onclick = () => {
+        GS.saveCityMapPoints(location.id, _cityPointDraft);
+        _cityPointDraft = null; _cityPointDraggingId = null;
+        _cityImg.hotWrap.classList.remove('editing');
+        save.remove(); caravanEdit.textContent = '📍 Ajustar pontos';
+      };
+      cityHost.appendChild(save);
+      toast('Arraste os pontos de referência para os locais corretos e clique em Salvar pontos.');
+    };
+    cityHost.appendChild(caravanEdit);
+  }
+  caravanEdit.textContent = _cityPointDraft ? '✕ Cancelar ajuste' : '📍 Ajustar pontos';
+  caravanEdit.style.display = '';
+  const seal = document.getElementById('city-seal');
+  if(seal) seal.textContent = location.nome;
+}
+
+function hideWorldMap(){ if(_worldMapEl) _worldMapEl.style.display = 'none'; }
+
+function _worldRouteCost(world, from, to){
+  return (world.routes || []).find(r => (r.from === from && r.to === to) || (r.from === to && r.to === from));
+}
+
+let _worldMapEditPoints = null;
+let _cityTravelTransition = null;
+
+function _preloadImage(path){
+  return new Promise(resolve => { const img=new Image(); img.onload=img.onerror=resolve; img.src=_assetURL(path); });
+}
+
+function _showCityTravelTransition(world, destination){
+  const images=(world.transition_images || []);
+  const art=images.length ? images[Math.floor(Math.random()*images.length)] : '';
+  let overlay=document.getElementById('city-travel-transition');
+  if(!overlay){ overlay=document.createElement('div'); overlay.id='city-travel-transition'; document.body.appendChild(overlay); }
+  overlay.innerHTML='<div class="city-travel-art"></div><div class="city-travel-shade"></div><div class="city-travel-copy"><b>Em viagem</b><span>Rumo a '+destination.nome+'…</span></div>';
+  overlay.querySelector('.city-travel-art').style.backgroundImage=art ? 'url("'+_assetURL(art)+'")' : 'none';
+  overlay.classList.add('open');
+  const token={}; _cityTravelTransition=token;
+  Promise.all([_preloadImage(destination.imagem), new Promise(resolve=>setTimeout(resolve,3000))]).then(()=>{
+    if(_cityTravelTransition!==token) return;
+    overlay.classList.remove('open');
+    setTimeout(()=>{ if(_cityTravelTransition===token) overlay.remove(); },350);
+    _cityTravelTransition=null;
+  });
+}
+
+function showWorldLocationPreview(world, loc){
+  if(!_worldMapEl) return;
+  const route = _worldRouteCost(world, world.location, loc.id);
+  _worldMapEl.innerHTML = '';
+  const frame = document.createElement('div'); frame.id = 'worldmap-location-frame';
+  const img = document.createElement('img'); img.src = loc.imagem; img.alt = loc.nome; frame.appendChild(img);
+  const title = document.createElement('div'); title.className = 'worldmap-location-title'; title.textContent = loc.nome; frame.appendChild(title);
+  const back = document.createElement('button'); back.className = 'worldmap-back'; back.textContent = '← Voltar ao mapa-múndi'; back.onclick = showWorldMap; frame.appendChild(back);
+  const panel = document.createElement('div'); panel.className = 'worldmap-location-info';
+  if(loc.id === world.location){
+    panel.innerHTML = '<b>Local atual</b><small>O grupo já está nesta cidade.</small>';
+  } else if(route){
+    panel.innerHTML = `<b>Rota disponível</b><small>Viagem do grupo: 🍖 -${route.fome} e 💧 -${route.sede} para cada herói.</small>`;
+    const go = document.createElement('button'); go.className = 'worldmap-travel'; go.textContent = 'Viajar para ' + loc.nome;
+    go.disabled = GS.myPid !== GS.cityState.host;
+    go.title = go.disabled ? 'Apenas o anfitrião escolhe o destino.' : '';
+    go.onclick = () => {
+      if(window.confirm(`Viajar para ${loc.nome}? Cada herói perderá ${route.fome} de fome e ${route.sede} de sede.`)) GS.worldTravel(loc.id);
+    };
+    go.onclick = () => {
+      if(!window.confirm(`Viajar para ${loc.nome}? Cada herói perderá ${route.fome} de fome e ${route.sede} de sede.`)) return;
+      go.disabled=true; _showCityTravelTransition(world, loc); GS.worldTravel(loc.id);
+    };
+    panel.appendChild(go);
+  } else {
+    panel.innerHTML = '<b>Local distante</b><small>Ainda não existe uma rota direta disponível a partir da cidade atual.</small>';
+  }
+  frame.appendChild(panel);
+  _worldMapEl.appendChild(frame);
+}
+
+function showWorldAdventurePreview(world, adventure){
+  if(!_worldMapEl) return;
+  _worldMapEl.innerHTML = '';
+  const frame = document.createElement('div'); frame.id = 'worldmap-location-frame';
+  const img = document.createElement('img'); img.src = world.map_image; img.alt = 'Mapa de Varlúzia'; frame.appendChild(img);
+  const title = document.createElement('div'); title.className = 'worldmap-location-title'; title.textContent = '⚔ ' + adventure.nome; frame.appendChild(title);
+  const back = document.createElement('button'); back.className = 'worldmap-back'; back.textContent = '← Voltar ao mapa-múndi'; back.onclick = showWorldMap; frame.appendChild(back);
+  const panel = document.createElement('div'); panel.className = 'worldmap-location-info';
+  const count = (adventure.dungeons || []).length;
+  const progress = Math.max(0, Number(adventure.progresso || 0));
+  const completed = count > 0 && progress >= count;
+  const req = adventure.requisito || {};
+  const reqText = [Number(req.renome_min)>0 ? 'renome '+req.renome_min : '', Number(req.nivel_grupo_min)>0 ? 'nível de grupo '+req.nivel_grupo_min : '', req.item_id ? 'item: '+req.item_id : '', req.fato ? 'informação: '+req.fato : '', req.aventura_id ? 'rota concluída: '+req.aventura_id : ''].filter(Boolean);
+  panel.innerHTML = completed
+    ? `<b>Rota concluída</b><small>O grupo já concluiu as ${count} masmorras deste destino.</small>`
+    : `<b>Entrada de masmorra</b><small>Expedição: 🍖 -${adventure.fome || 0} e 💧 -${adventure.sede || 0} para cada herói.${count > 1 ? ' Próxima etapa: ' + (progress + 1) + ' de ' + count + '. As demais liberam após concluir a anterior.' : ''}${reqText.length ? ' Requisito: ' + reqText.join(' · ') + '.' : ''}</small>`;
+  if(!completed){
+  const go = document.createElement('button'); go.className = 'worldmap-travel'; go.textContent = 'Entrar em ' + adventure.nome;
+  go.disabled = GS.myPid !== GS.cityState.host;
+  go.title = go.disabled ? 'Apenas o anfitrião inicia a expedição.' : '';
+  go.onclick = () => { if(window.confirm(`Entrar em ${adventure.nome}? Cada herói perderá ${adventure.fome || 0} de fome e ${adventure.sede || 0} de sede.`)) GS.worldAdventure(adventure.id); };
+  go.onclick = () => {
+    if(!window.confirm(`Entrar em ${adventure.nome}? Cada herói perderá ${adventure.fome || 0} de fome e ${adventure.sede || 0} de sede.`)) return;
+    go.disabled = true; go.textContent = 'Iniciando expedição…';
+    GS.worldAdventure(adventure.id);
+  };
+  panel.appendChild(go);
+  }
+  frame.appendChild(panel); _worldMapEl.appendChild(frame);
+}
+
+function showWorldMap(){
+  const world = _worldOfCityState();
+  if(!world) return;
+  const editing = !!_worldMapEditPoints;
+  if(!_worldMapEl){
+    _worldMapEl = document.createElement('div'); _worldMapEl.id = 'worldmap-overlay';
+    document.getElementById('screen-city').appendChild(_worldMapEl);
+  }
+  _worldMapEl.style.display = 'block';
+  _worldMapEl.dataset.location = world.location;
+  _worldMapEl.innerHTML = '';
+  const frame = document.createElement('div'); frame.id = 'worldmap-frame';
+  const img = document.createElement('img'); img.src = world.map_image; img.alt = 'Mapa-múndi de Varlúzia';
+  frame.appendChild(img);
+  const title = document.createElement('div'); title.className = 'worldmap-title'; title.textContent = '🧭 Varlúzia — escolha um destino'; frame.appendChild(title);
+  const back = document.createElement('button'); back.className = 'worldmap-back'; back.textContent = '← Voltar à cidade'; back.onclick = hideWorldMap; frame.appendChild(back);
+  if(GS.myPid === GS.cityState.host){
+    const edit = document.createElement('button'); edit.className = 'worldmap-edit';
+    edit.textContent = editing ? 'Cancelar ajuste' : 'Ajustar pontos';
+    edit.onclick = () => {
+      _worldMapEditPoints = editing ? null : Object.fromEntries((world.locations || []).map(l => [l.id, {x:l.x, y:l.y}]));
+      showWorldMap();
+    };
+    frame.appendChild(edit);
+  }
+  const info = document.createElement('div'); info.className = 'worldmap-info';
+  const current = (world.locations || []).find(l => l.id === world.location);
+  info.innerHTML = editing
+    ? '<b>Ajuste dos pontos</b><small>Arraste cada rosa até a posição correta no mapa.</small>'
+    : `<b>${current ? current.nome : 'Local atual'}</b><small>Selecione uma cidade ou vila conectada para consultar o custo da viagem.</small>`;
+  if(editing){
+    const save = document.createElement('button'); save.className = 'worldmap-travel'; save.textContent = 'Salvar posições';
+    save.onclick = () => { GS.saveWorldMapPoints(_worldMapEditPoints); _worldMapEditPoints = null; showWorldMap(); };
+    info.appendChild(save);
+  }
+  frame.appendChild(info);
+  let draggingId = null, dragOffsetX = 0, dragOffsetY = 0;
+  const setPointFromEvent = e => {
+    if(!draggingId) return;
+    const rect = frame.getBoundingClientRect();
+    const pointerX = ((e.clientX - rect.left) / rect.width) * 100;
+    const pointerY = ((e.clientY - rect.top) / rect.height) * 100;
+    const x = Math.max(0, Math.min(100, pointerX - dragOffsetX));
+    const y = Math.max(0, Math.min(100, pointerY - dragOffsetY));
+    _worldMapEditPoints[draggingId] = {x:Math.round(x * 100) / 100, y:Math.round(y * 100) / 100};
+    const marker = frame.querySelector('[data-world-location="' + draggingId + '"]');
+    if(marker){ marker.style.left = x + '%'; marker.style.top = y + '%'; marker.title = `${marker.dataset.worldName}: ${x.toFixed(1)}%, ${y.toFixed(1)}%`; }
+  };
+  frame.addEventListener('pointermove', setPointFromEvent);
+  frame.addEventListener('pointerup', () => { draggingId = null; });
+  frame.addEventListener('pointercancel', () => { draggingId = null; });
+  (world.locations || []).forEach(loc => {
+    const route = _worldRouteCost(world, world.location, loc.id);
+    const marker = document.createElement('button'); marker.type = 'button';
+    const point = editing ? _worldMapEditPoints[loc.id] : loc;
+    marker.className = 'worldmap-marker' + (loc.id === world.location ? ' current' : '') + (!editing && !route && loc.id !== world.location ? ' locked' : '') + (editing ? ' editing' : '');
+    marker.style.left = point.x + '%'; marker.style.top = point.y + '%';
+    marker.disabled = false;
+    marker.dataset.worldLocation = loc.id; marker.dataset.worldName = loc.nome;
+    marker.setAttribute('aria-label', loc.nome);
+    marker.title = editing ? `${loc.nome}: ${point.x.toFixed(1)}%, ${point.y.toFixed(1)}%` : loc.nome;
+    marker.innerHTML = '<span class="wm-rose">✦</span><span class="wm-name">' + loc.nome + '</span>';
+    if(editing){
+      marker.onpointerdown = e => {
+        const rect = frame.getBoundingClientRect();
+        draggingId = loc.id;
+        dragOffsetX = ((e.clientX - rect.left) / rect.width) * 100 - point.x;
+        dragOffsetY = ((e.clientY - rect.top) / rect.height) * 100 - point.y;
+        marker.setPointerCapture?.(e.pointerId);
+        e.preventDefault();
+      };
+      frame.appendChild(marker);
+      return;
+    }
+    marker.onclick = () => showWorldLocationPreview(world, loc);
+    frame.appendChild(marker);
+  });
+  if(!editing) (world.adventures || []).forEach(adventure => {
+    const marker = document.createElement('button'); marker.type = 'button';
+    marker.className = 'worldmap-marker adventure'; marker.style.left = adventure.x + '%'; marker.style.top = adventure.y + '%';
+    marker.dataset.worldName = adventure.nome; marker.setAttribute('aria-label', adventure.nome); marker.title = adventure.nome;
+    marker.innerHTML = '<span class="wm-rose">⚔</span><span class="wm-name">' + adventure.nome + '</span>';
+    marker.onclick = () => showWorldAdventurePreview(world, adventure); frame.appendChild(marker);
+  });
+  _worldMapEl.appendChild(frame);
 }
 
 // ── Fase 4b (história): overlay de história da campanha ───────────────────────
@@ -1590,7 +1923,10 @@ function handleCityState(msg){
   if(GS.activeShop) _renderShopItems();
   if(GS.pendingShopOpen){ const s=GS.pendingShopOpen; GS.pendingShopOpen=null; openShop(s); }
   // Monta a cidade conforme o modo (imagem por padrão; 3D como fallback).
-  if(CITY_MODE==='image'){ if(!_cityImg) initCityImage(); }
+  if(CITY_MODE==='image'){
+    if(!_cityImg) initCityImage();
+    _refreshCityLocation(msg);
+  }
   else if(!_city3&&window.THREE){ initCity3D(); }
   // Clear fade overlay if returning from dungeon
   const fo=document.getElementById('city-fade-overlay');
@@ -1631,6 +1967,7 @@ function openShop(shopId){
   GS.activeShop=shopId; GS.shopTabIdx=0;
   const modal=$('shop-modal'); if(!modal) return;
   modal.classList.toggle('shop-mercador', shopId==='mercador');
+  modal.classList.toggle('shop-taverna', shopId==='taverna');
   modal.classList.add('open');
   const b=CITY_BUILDINGS.find(b=>b.id===shopId);
   const titles={taverna:'🍺 Taverna',ferreiro:'🔨 Ferreiro',mercador:'🛒 Mercador',templo:'⛪ Templo'};
@@ -1648,6 +1985,8 @@ function openShop(shopId){
     ? ['⚔ Armas','🛡 Armaduras','🏹 Munição','💰 Vender']
     : shopId==='mercador'
     ? ['🛒 Comprar','🎵 Instrumentos','☠️ Venenos','📜 Pergaminhos','💰 Vender']
+    : shopId==='taverna'
+    ? ['💬 Conversas','🍺 Alimentos']
     : [];
   tabDefs.forEach((t,i)=>{
     const btn=document.createElement('button');
@@ -1662,6 +2001,82 @@ function openShop(shopId){
 function _updateShopTabs(){
   document.querySelectorAll('.shop-tab').forEach((el,i)=>
     el.classList.toggle('active',i===GS.shopTabIdx));
+}
+
+function _renderTavernConversations(){
+  const list=$('shop-items-list'); if(!list) return;
+  const tavern=GS.cityState && GS.cityState.tavern;
+  if(!tavern || !tavern.background){
+    list.innerHTML='<div class="tavern-empty">Esta taverna ainda não possui frequentadores configurados.</div>';
+    return;
+  }
+  const scene=document.createElement('div'); scene.className='tavern-scene';
+  // O palco é 3:2 e o fundo é `object-fit:cover`, exatamente como a prévia do
+  // editor (.cityed-tavern-preview). Os slots vão em % crus, sem correção
+  // alguma — qualquer transformação aqui sem contraparte no editor faz a
+  // máscara/NPC cair fora do lugar em relação ao que o autor posicionou.
+  const base=document.createElement('img'); base.className='tavern-bg'; base.src=_assetURL(tavern.background); base.alt='Interior da taverna'; scene.appendChild(base);
+  // A máscara inteira acompanha o fundo, mantendo a composição original em
+  // qualquer tamanho. Os slots seguem acima dela apenas para clique/hover.
+  if(tavern.mask && tavern.mode !== 'individual'){
+    const mask=document.createElement('img');
+    mask.className='tavern-mask-layer'; mask.src=_assetURL(tavern.mask); mask.alt='';
+    scene.appendChild(mask);
+  }
+  (tavern.slots||[]).forEach(slot=>{
+    if(slot.removed || !slot.image) return;
+    const npc=document.createElement('button'); npc.type='button'; npc.className='tavern-npc';
+    npc.style.left=slot.x+'%'; npc.style.top=slot.y+'%';
+    npc.style.width=slot.w+'%'; npc.style.height=slot.h+'%';
+    npc.style.zIndex=String(10 + Number(slot.z || 1));
+    npc.title=slot.name; npc.setAttribute('aria-label','Conversar com '+slot.name);
+    if(tavern.mask && tavern.mode !== 'individual'){
+      const maskStyle='width:'+(10000/slot.w)+'%;height:'+(10000/slot.h)+'%;left:'+(-slot.x*100/slot.w)+'%;top:'+(-slot.y*100/slot.h)+'%;';
+      npc.innerHTML='<img class="tavern-mask" style="'+maskStyle+'" src="'+_assetURL(tavern.mask)+'" alt=""><span>'+slot.name+'</span>';
+    } else {
+      npc.innerHTML='<img src="'+_assetURL(slot.image)+'" alt=""><span>'+slot.name+'</span>';
+    }
+    npc.onclick=()=>_showTavernDialogue(slot, list);
+    scene.appendChild(npc);
+  });
+  list.innerHTML='';
+  const back=document.createElement('button');
+  back.type='button'; back.className='tavern-back'; back.textContent='← Voltar à cidade';
+  back.onclick=closeShop;
+  list.appendChild(back); list.appendChild(scene);
+  const rep=document.createElement('p'); rep.className='tavern-hint'; rep.textContent='★ Renome do grupo: '+Number(((GS.cityState||{}).reputacao||{}).renome||0); list.appendChild(rep);
+  const hint=document.createElement('p'); hint.className='tavern-hint'; hint.textContent='Clique em um grupo de frequentadores para conversar.'; list.appendChild(hint);
+}
+
+function _showTavernDialogue(slot, list){
+  let panel=list.querySelector('.tavern-dialogue');
+  if(!panel){ panel=document.createElement('div'); panel.className='tavern-dialogue'; list.appendChild(panel); }
+  panel.innerHTML='';
+  const title=document.createElement('b'); title.textContent=slot.name; panel.appendChild(title);
+  const reputation=(GS.cityState&&GS.cityState.reputacao)||{renome:0,fatos:[]};
+  const conversations=(slot.conversations&&slot.conversations.length?slot.conversations:[{id:'inicial',texto:slot.dialog||'',requisito:{},efeito:{},uma_vez:false}]);
+  const requirementText=req=>{
+    const parts=[]; req=req||{};
+    if(Number(req.renome_min)>0) parts.push('renome '+req.renome_min);
+    if(Number(req.nivel_grupo_min)>0) parts.push('nível do grupo '+req.nivel_grupo_min);
+    if(req.item_id) parts.push('item: '+req.item_id);
+    if(req.fato) parts.push('informação: '+req.fato);
+    if(req.aventura_id) parts.push('rota concluída: '+req.aventura_id);
+    return parts;
+  };
+  conversations.forEach(conv=>{
+    const block=document.createElement('div'); block.className='tavern-dialogue-option';
+    const reqs=requirementText(conv.requisito);
+    const text=document.createElement('p'); text.textContent=conv.texto; block.appendChild(text);
+    const action=document.createElement('button'); action.type='button'; action.textContent=reqs.length?'Conversar':'Ouvir';
+    action.title=reqs.length?'Requer: '+reqs.join(', '):'';
+    if(conv.disponivel === false){ action.disabled=true; action.textContent='Bloqueada'; }
+    action.onclick=()=>{ action.disabled=true; action.textContent='Conversando…'; GS.talkTavernNpc(slot.id,conv.id); };
+    block.appendChild(action);
+    if(reqs.length){const hint=document.createElement('small');hint.textContent='Requisito: '+reqs.join(' · ');block.appendChild(hint);}
+    const effect=conv.efeito||{}; if(effect.renome||effect.fato||effect.item_id){const effectEl=document.createElement('small');effectEl.className='tavern-dialogue-effect';effectEl.textContent='Ao concluir: '+[effect.renome?'renome '+(Number(effect.renome)>0?'+':'')+effect.renome:'',effect.fato?'informação: '+effect.fato:'',effect.item_id?'item: '+effect.item_id:''].filter(Boolean).join(' · ');block.appendChild(effectEl);}
+    panel.appendChild(block);
+  });
 }
 
 // Ícone de item: PNG em assets/itens/<id>.png se existir, senão cai no emoji.
@@ -1684,6 +2099,7 @@ function itemIconHTML(item, fallbackEmoji){
 
 function _renderShopItems(){
   if(!GS.cityState||!GS.activeShop) return;
+  if(GS.activeShop==='taverna'&&GS.shopTabIdx===0){ _renderTavernConversations(); return; }
   // Route sell tabs
   if(GS.activeShop==='ferreiro'&&GS.shopTabIdx===3){ _renderSellItems('gear'); return; }
   if(GS.activeShop==='mercador'&&GS.shopTabIdx===4){ _renderSellItems('bag');  return; }
@@ -2436,6 +2852,7 @@ function renderAbaMagiasPedro(heroi) {
 // mostrarTooltipAnimado é autossuficiente (usa o objeto recebido) e funciona já.
 function mostrarTooltipHabilidade(event, id) {
   if (id !== 'animar_mortos') return
+  _marcarDonoTooltip(event && (event.currentTarget || event.target))
   // Tooltip é específico do Pedro: usa o registro COMPLETO (habilidadeClasse +
   // statsModificados). GS.getHeroiAtivo() devolveria o modelo de equipamento
   // (sem esses campos), por isso preferimos HERO_DATA.pedro / GS.HERO_DATA.pedro.
@@ -2521,6 +2938,7 @@ function mostrarTooltipHabilidade(event, id) {
 }
 
 function mostrarTooltipAnimado(event, id, dadosAnimado) {
+  _marcarDonoTooltip(event && (event.currentTarget || event.target))
   const a = typeof dadosAnimado === 'string'
     ? JSON.parse(dadosAnimado)
     : dadosAnimado
@@ -2528,6 +2946,14 @@ function mostrarTooltipAnimado(event, id, dadosAnimado) {
   const pctVida = (a.vida_atual / a.vida_max) * 100
   const corVida = pctVida > 60 ? '#2ecc40' :
                   pctVida > 30 ? '#ff851b' : '#ff4136'
+  const ataques = Array.isArray(a.attacks) ? a.attacks : []
+  const habilidades = Array.isArray(a.special_abilities) ? a.special_abilities : []
+  const listaAtaques = ataques.length
+    ? ataques.map(at => `${at.name || 'Ataque'}: +${at.atk_bonus ?? 0}, ${at.damage || a.dano}${at.num_attacks > 1 ? ` ×${at.num_attacks}` : ''}`).join('<br>')
+    : a.dano
+  const listaHabilidades = habilidades.length
+    ? habilidades.map(h => h.name || h.id).join(' • ')
+    : 'Nenhuma'
 
   t.innerHTML = `
     <div style="padding:10px 14px 8px; border-bottom:1px solid #9900cc33;">
@@ -2562,9 +2988,10 @@ function mostrarTooltipAnimado(event, id, dadosAnimado) {
         </div>
       </div>
       ${renderLinhaTooltip('🛡️', 'Classe de Armadura', a.ca)}
-      ${renderLinhaTooltip('🎲', 'Dano', a.dano)}
+      ${renderLinhaTooltip('🎲', 'Ataques', listaAtaques)}
       ${renderLinhaTooltip('👣', 'Movimento', `${a.movimento} casas`)}
       ${renderLinhaTooltip('⚔️', 'Alcance de ataque', '1 casa (4 direções)')}
+      ${renderLinhaTooltip('✨', 'Habilidades', listaHabilidades)}
     </div>
 
     <div style="
@@ -3078,14 +3505,16 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
   `
 }
 
-// Usa Animar Mortos no cadáver adjacente (decisor puro em GS.cadaverAdjacente).
-// Fecha a ficha para a animação D100 aparecer; o servidor valida e responde.
+// Arma a mira de Animar Mortos: escolha um cadáver a até 3 casas de Pedro.
 function usarAnimarMortos() {
-  const cad = GS.cadaverAdjacente?.()
-  if (!cad) { toast('Nenhum cadáver adjacente para animar.'); return }
+  const estado = GS.gameState;
+  const me = estado?.players?.find(p => p.id === GS.myPid && p.alive);
+  const cadaveres = (estado?.corpses || []).filter(c => me &&
+    Math.max(Math.abs(me.pos[0] - c.pos[0]), Math.abs(me.pos[1] - c.pos[1])) <= 3);
+  if (!cadaveres.length) { toast('Nenhum cadáver a até 3 casas para animar.'); return; }
   const ov = document.getElementById('ficha-overlay-jogo')
   if (ov) ov.remove()
-  GS.animarMortos(cad.id)
+  _iniciarModoAnimarMortos(cadaveres)
 }
 
 // Comanda os animados (ação bônus). Fecha a ficha para ver o tabuleiro/ações.
@@ -3286,6 +3715,12 @@ const onClicarMercado  = () => abrirLoja('mercado',  GS.getHeroiAtivo());
 // aplicarTooltipAoItem(elemento, itemId). (DOM → vive em game.js.)
 // ═══════════════════════════════════════════════════════════════════════════
 let _itemTooltipReady = false;
+// Elemento que abriu o quadro. Remover (ou ocultar) um elemento que está sob o
+// cursor NÃO dispara mouseleave — é o caso de pegar um item do baú, que
+// re-renderiza a lista e destrói a linha em hover. Sem esse registro o quadro
+// ficava preso na tela até outro item receber mouseenter+mouseleave.
+let _itemTooltipDono = null;
+function _marcarDonoTooltip(el){ _itemTooltipDono = el || null; }
 function _initItemTooltip(){
   if(_itemTooltipReady) return;
   _itemTooltipReady = true;
@@ -3308,6 +3743,8 @@ function _initItemTooltip(){
   document.addEventListener('mousemove', (e) => {
     const t = document.getElementById('item-tooltip');
     if(!t || t.style.opacity === '0') return;
+    // Dono sumiu da tela (ou o cursor já saiu dele) sem que mouseleave ocorresse.
+    if(_itemTooltipDono && !_itemTooltipDono.contains(e.target)){ esconderTooltip(); return; }
     const margin = 16;
     const rect = t.getBoundingClientRect();
     let x = e.clientX + margin;
@@ -3323,6 +3760,7 @@ function mostrarTooltip(itemId, event){
   _initItemTooltip();
   const item = GS.CATALOGO_ITENS[itemId];
   if(!item) return;
+  _marcarDonoTooltip(event && (event.currentTarget || event.target));
   const t = document.getElementById('item-tooltip');
   t.innerHTML = gerarConteudoTooltip(item);
   t.style.borderColor = corBordaPorPreco(item.preco);   // raridade por preço
@@ -3332,7 +3770,15 @@ function mostrarTooltip(itemId, event){
 function esconderTooltip(){
   const t = document.getElementById('item-tooltip');
   if(t) t.style.opacity = '0';
+  _itemTooltipDono = null;
   if(window._animadoHover){ window._animadoHover = null; if(GS.gameState) renderMap(GS.gameState); }
+}
+
+function fecharQuadrosFlutuantes(){
+  esconderTooltip();
+  ocultarTooltipMagia();
+  const quadroMapa = document.getElementById('tooltip');
+  if(quadroMapa) quadroMapa.style.display = 'none';
 }
 
 function renderLinhaTooltip(icone, label, valor){
@@ -3342,7 +3788,29 @@ function renderLinhaTooltip(icone, label, valor){
   </div>`;
 }
 
+function normalizarItemTooltip(item){
+  const bruto = item || {};
+  const catalogado = (typeof GS !== 'undefined' && GS.CATALOGO_ITENS && bruto.id)
+    ? (GS.CATALOGO_ITENS[bruto.id] || {}) : {};
+  const porSlot = { weapon:'arma', armor:'armadura', shield:'escudo', ammo:'municao', bag:'consumivel' };
+  const tipo = bruto.tipo || catalogado.tipo || porSlot[bruto.item_slot] || porSlot[bruto.kind] || 'item';
+  const permitido = bruto.permitidoPara || catalogado.permitidoPara || bruto.allowed_classes || ['todos'];
+  return {
+    ...catalogado, ...bruto, tipo,
+    nome: bruto.nome || bruto.name || catalogado.nome || catalogado.name || 'Item',
+    preco: bruto.preco ?? bruto.price ?? catalogado.preco ?? catalogado.price ?? 0,
+    dano: bruto.dano || bruto.die || catalogado.dano,
+    alcance: bruto.alcance ?? bruto.range ?? catalogado.alcance,
+    bonusCA: bruto.bonusCA ?? bruto.ac_bonus ?? (bruto.effect === 'def_' ? bruto.value : catalogado.bonusCA),
+    quantidade: bruto.ammo_count ?? bruto.quantidade ?? catalogado.quantidade,
+    danoExtra: bruto.danoExtra ?? bruto.damage_bonus ?? bruto.extra_damage ?? catalogado.danoExtra,
+    tipoDano: bruto.tipoDano || (bruto.extra_damage_types || []).join(', ') || catalogado.tipoDano,
+    permitidoPara: Array.isArray(permitido) ? permitido : ['todos'],
+  };
+}
+
 function gerarConteudoTooltip(item){
+  item = normalizarItemTooltip(item);
   const coresTipo = {
     arma:          { cor:'#c8a951', label:'ARMA' },
     armaDistancia: { cor:'#c8a951', label:'ARMA À DISTÂNCIA' },
@@ -3378,7 +3846,21 @@ function gerarConteudoTooltip(item){
   if(item.sede > 0) linhas.push(renderLinhaTooltip('💧','Sede',`+${item.sede}`));
   if(item.duracao) linhas.push(renderLinhaTooltip('⏱️','Duração',`${item.duracao} rodadas`));
   if(item.bonusVisao) linhas.push(renderLinhaTooltip('👁️','Visão',`+${item.bonusVisao} quadrado`));
-  if(item.quantidade) linhas.push(renderLinhaTooltip('📦','Quantidade',`${item.quantidade} unidades por slot`));
+  if(item.quantidade && item.effect !== 'ammo' && item.tipo !== 'municao') linhas.push(renderLinhaTooltip('📦','Quantidade',`${item.quantidade} unidades por slot`));
+  if(item.effect === 'ammo' || item.tipo === 'municao') {
+    linhas.push(renderLinhaTooltip('🏹','Restantes',`${item.quantidade ?? 0} projéteis`));
+    if(item.danoExtra) linhas.push(renderLinhaTooltip('💥','Dano adicional',`+${item.danoExtra}${item.tipoDano ? ` (${item.tipoDano})` : ''}`));
+  }
+  if(item.tipo === 'veneno' || item.effect === 'coat_poison') {
+    const e = item.efeito || {};
+    if(item.descricao) linhas.push(renderLinhaTooltip('☠️','Efeito',item.descricao));
+    if(e.save && e.dificuldade != null) {
+      const anula = e.anula === false ? 'efeito parcial em sucesso' : 'anula';
+      linhas.push(renderLinhaTooltip('🛡️','Resistência',`${String(e.save).replace(/^./, c => c.toUpperCase())} CD ${e.dificuldade} — ${anula}`));
+    }
+  } else if(item.descricao) {
+    linhas.push(renderLinhaTooltip('✨','Efeito',item.descricao));
+  }
   if(item.slotsMagia) linhas.push(renderLinhaTooltip('✨','Slots de magia',`${item.slotsMagia}`));
   if(item.slotsExtras) linhas.push(renderLinhaTooltip('🎒','Slots extras',`+${item.slotsExtras} de inventário`));
 
@@ -3505,6 +3987,27 @@ function aplicarTooltipAoItem(elemento, itemId){
   elemento.addEventListener('mouseleave', () => esconderTooltip());
 }
 
+// Itens vindos de baús/decorações chegam como instâncias do servidor e nem
+// sempre estão no catálogo local. Normaliza os nomes para reutilizar o mesmo
+// quadro detalhado exibido ao passar o mouse sobre uma magia.
+function aplicarTooltipAoItemDados(elemento, item){
+  if(!elemento || !item) return;
+  elemento.addEventListener('mouseenter', () => {
+    _initItemTooltip();
+    _marcarDonoTooltip(elemento);
+    const catalogado = GS.CATALOGO_ITENS[item.id] || {};
+    const dados = { ...catalogado, ...item,
+      nome: item.nome || item.name || catalogado.nome || catalogado.name || 'Item',
+      preco: item.preco ?? item.price ?? catalogado.preco ?? catalogado.price ?? 0 };
+    const t = document.getElementById('item-tooltip');
+    if(!t) return;
+    t.innerHTML = gerarConteudoTooltip(dados);
+    t.style.borderColor = corBordaPorPreco(dados.preco);
+    t.style.opacity = '1';
+  });
+  elemento.addEventListener('mouseleave', () => esconderTooltip());
+}
+
 // ── Tooltip de PERGAMINHO: nível de conjurador, dano/alcance/CD no nível e a
 // chance de falha para o personagem ATUAL. Usa item.preview (vindo do servidor).
 const _SAVE_LABEL_CLI = { reflexos:'Reflexos', fortitude:'Fortitude', vontade:'Vontade' };
@@ -3565,6 +4068,7 @@ function aplicarTooltipPergaminho(elemento, item){
   if(!elemento || !item) return;
   elemento.addEventListener('mouseenter', () => {
     _initItemTooltip();
+    _marcarDonoTooltip(elemento);
     const t = document.getElementById('item-tooltip');
     if(!t) return;
     t.innerHTML = _tooltipPergaminhoHTML(item);
@@ -3614,6 +4118,7 @@ function aplicarTooltipInstrumento(elemento, inst){
   if(!elemento || !inst) return;
   elemento.addEventListener('mouseenter', () => {
     _initItemTooltip();
+    _marcarDonoTooltip(elemento);
     const t = document.getElementById('item-tooltip');
     if(!t) return;
     t.innerHTML = _tooltipInstrumentoHTML(inst);
@@ -5511,7 +6016,7 @@ function renderMap(state){
     ? _computeWeaponRangeTiles(state, me) : new Set();
 
   // Durante a mira de magia/arremesso, oculta realces de movimento/ataque (mostra alcance/área).
-  if(window._modoMagia || window._modoThrowItem){ reachable.clear(); attackable.clear(); }
+  if(window._modoMagia || window._modoThrowItem || window._modoAnimarMortos){ reachable.clear(); attackable.clear(); }
 
   // ── PASS 0: Void background — near-black with deep dungeon darkness
   ctx.fillStyle='#040308';
@@ -5896,6 +6401,23 @@ function renderMap(state){
     }
   }
 
+  // Sorrateiro: o círculo mostra o alcance que a IA do monstro pode enxergar.
+  // A oclusão por paredes/objetos continua sendo aplicada pelo servidor; o aro
+  // comunica o raio máximo sem revelar informação de monstros na névoa.
+  if(GS.sorrateiroAtivo()){
+    ctx.save();
+    ctx.setLineDash([Math.max(3, CELL*.16), Math.max(2, CELL*.10)]);
+    ctx.lineWidth = Math.max(1, CELL*.045);
+    for(const m of state.monsters){
+      if(!m || m.hp<=0 || !visionSet.has(`${m.pos[0]},${m.pos[1]}`)) continue;
+      const raio = Math.max(1, Number(m.vision_radius || 6));
+      ctx.beginPath();
+      ctx.arc(m.pos[0]*CELL+CELL/2, m.pos[1]*CELL+CELL/2, raio*CELL, 0, Math.PI*2);
+      ctx.strokeStyle='rgba(108,210,255,0.72)'; ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   // ── Monsters: only visible within player's vision radius
   for(const m of state.monsters){
     const [mtx,mty]=m.pos;
@@ -6035,7 +6557,7 @@ function renderMap(state){
       const cx=drawX*CELL+CELL/2, cy=drawY*CELL+CELL/2;
       drawMiniBase(ctx, cx, cy, '#9900cc', false);
       // Sprite original do monstro (goblin/orc/etc.) — fallback p/ ícone via emoji.
-      drawMonsterSprite(ctx, cx, cy-3, { type:a.tipo, emoji:a.icone, name:a.nome });
+      drawMonsterSprite(ctx, cx, cy-3, { type:a.tipo, image:a.image, porte:a.porte, emoji:a.icone, name:a.nome });
       // Anel roxo de "animado aliado"; branco e grosso se selecionado.
       ctx.save();
       ctx.strokeStyle = (_animadoSel===a.id) ? '#ffffff' : '#cc44ff';
@@ -6174,6 +6696,7 @@ const MAT_PALETTE_2D = {
   terra:       { base: [74, 56, 38],  accent: 'dirt'  },
   grama:       { base: [46, 78, 40],  accent: 'grass' },
   agua:        { base: [0, 120, 202], accent: 'water' },
+  agua_profunda: { base: [6, 23, 63], accent: 'deepWater' },
   pedra_negra: { base: [20, 19, 24],  accent: 'stone' },
   entulho:     { base: [70, 66, 58],  accent: 'rubble' },
   // paredes (topo)
@@ -6198,15 +6721,16 @@ function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview, matI
   const [BR, BG, BB] = pal.base;
 
   // Estilos não-pedra têm painter próprio (sem grade de lajota).
-  if(pal.accent==='water'){
+  if(pal.accent==='water' || pal.accent==='deepWater'){
     // Sem margem, rejunte ou ruído por casa: a água forma uma única massa.
     // As ondas usam coordenadas globais, portanto continuam naturalmente de
     // uma célula para a seguinte em vez de reiniciar em cada quadrado.
-    ctx.fillStyle='#0078c6'; ctx.fillRect(X,Y,CELL,CELL);
+    const profunda = pal.accent==='deepWater';
+    ctx.fillStyle=profunda ? '#06173f' : '#0078c6'; ctx.fillRect(X,Y,CELL,CELL);
     const firstWave=Math.floor(Y/14)*14;
     for(let yy=firstWave; yy<Y+CELL; yy+=14){
       const phase=((yy/14)*17)%19;
-      ctx.strokeStyle='rgba(155,235,255,0.30)'; ctx.lineWidth=1.35; ctx.beginPath();
+      ctx.strokeStyle=profunda ? 'rgba(68,133,214,0.22)' : 'rgba(155,235,255,0.30)'; ctx.lineWidth=1.35; ctx.beginPath();
       ctx.moveTo(X,yy);
       ctx.quadraticCurveTo(X+CELL*.25,yy-2.5+(phase%3),X+CELL*.5,yy);
       ctx.quadraticCurveTo(X+CELL*.75,yy+2.5-(phase%3),X+CELL,yy);
@@ -7652,10 +8176,12 @@ function _startDiceLoop3D(){
 // o ataque básico, o caminhar e as ações bônus consomem. `p` = jogador do game_state.
 function renderBarrasSobrevivencia(p){
   if(!p) return '';
-  const fome = Math.max(0, Math.min(100, Math.round(p.fome ?? 100)));   // 0–100 (servidor)
-  const sede = Math.max(0, Math.min(100, Math.round(p.sede ?? 100)));
-  const pctFome = fome;   // já está na escala 0–100
-  const pctSede = sede;
+  const fomeMax = Math.max(1, Math.round(p.fome_max ?? 100));
+  const sedeMax = Math.max(1, Math.round(p.sede_max ?? 100));
+  const fome = Math.max(0, Math.min(fomeMax, Math.round(p.fome ?? fomeMax)));
+  const sede = Math.max(0, Math.min(sedeMax, Math.round(p.sede ?? sedeMax)));
+  const pctFome = fome / fomeMax * 100;
+  const pctSede = sede / sedeMax * 100;
 
   function corBarra(v){                 // v na escala 0–100
     if(v > 70) return '#f0c040'; // dourado — saciado
@@ -7688,10 +8214,10 @@ function renderBarrasSobrevivencia(p){
     <div style="width:100%; margin-bottom:5px;">
       <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
         <span style="color:#8a7a5a; font-family:'Cinzel',serif; font-size:9px; letter-spacing:2px;">🍖 FOME</span>
-        <span style="color:${corBarra(fome)}; font-family:'Cinzel',serif; font-size:9px;">${fome}/100</span>
+        <span style="color:${corBarra(pctFome)}; font-family:'Cinzel',serif; font-size:9px;">${fome}/${fomeMax}</span>
       </div>
       <div style="width:100%; height:5px; background:#1a1a1a; border:1px solid #2a2a2a;">
-        <div style="width:${pctFome}%; height:100%; background:${corBarra(fome)}; transition:width 0.5s ease, background 0.5s ease;"></div>
+        <div style="width:${pctFome}%; height:100%; background:${corBarra(pctFome)}; transition:width 0.5s ease, background 0.5s ease;"></div>
       </div>
     </div>
 
@@ -7699,10 +8225,10 @@ function renderBarrasSobrevivencia(p){
     <div style="width:100%; margin-bottom:5px;">
       <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
         <span style="color:#8a7a5a; font-family:'Cinzel',serif; font-size:9px; letter-spacing:2px;">💧 SEDE</span>
-        <span style="color:${corBarra(sede)}; font-family:'Cinzel',serif; font-size:9px;">${sede}/100</span>
+        <span style="color:${corBarra(pctSede)}; font-family:'Cinzel',serif; font-size:9px;">${sede}/${sedeMax}</span>
       </div>
       <div style="width:100%; height:5px; background:#1a1a1a; border:1px solid #2a2a2a;">
-        <div style="width:${pctSede}%; height:100%; background:${corBarra(sede)}; transition:width 0.5s ease, background 0.5s ease;"></div>
+        <div style="width:${pctSede}%; height:100%; background:${corBarra(pctSede)}; transition:width 0.5s ease, background 0.5s ease;"></div>
       </div>
     </div>
   `;
@@ -9469,12 +9995,13 @@ const GRIMORIO_CLIENT = {
     id:'barreira_arcana', nome:'Barreira Arcana', icone:'🛡️',
     circulo:'primeiro', classe:['mage'],
     tipo:'buff_self', alcance:0,
-    custo:'slot ao absorver',
-    resumo:'Cancela 1 magia. Slot ao absorver.',
-    descricao:`<b>Efeito:</b> cancela próxima magia recebida<br>
-               <b>Duração:</b> até absorver<br>
-               <b>Slot:</b> consumido ao absorver (não ao ativar)<br>
-               <b>Ativação:</b> reação quando inimigo lança`
+    custo:'🍖-1 💧-1 + 1 slot',
+    resumo:'Reduz 5 de dano por 1d6 + nível + 1 rodadas.',
+    descricao:`<b>Efeito:</b> reduz 5 de todo dano recebido<br>
+               <b>Duração:</b> 1d6 + 1 rodada por nível do mago + 1 rodada fixa<br>
+               <b>Estender:</b> +1 rodada<br>
+               <b>Fortalecer:</b> redução passa a 7<br>
+               <b>Aprimorar:</b> não se aplica (sem teste de resistência)`
   },
   contramagica: {
     id:'contramagica', nome:'Contramágica', icone:'🛑',
@@ -9514,9 +10041,10 @@ const GRIMORIO_CLIENT = {
     circulo:'primeiro', classe:['cleric'],
     tipo:'alvo_aliado', alcance:6,
     custo:'🍖-1 💧-1',
-    resumo:'Arma de aliado +1 ataque/dano.',
+    resumo:'Arma de aliado +1 ataque/dano e ignora resistências físicas.',
     descricao:`<b>Alcance:</b> 6 quadrados<br>
                <b>Buff:</b> +1 ataque e dano na arma<br>
+               <b>Arma abençoada:</b> ignora reduções, dano pela metade e imunidade física<br>
                <b>Duração:</b> 1d6+2 rodadas<br>
                <b>Custo:</b> 🍖-1 💧-1 + 1 slot`
   },
@@ -9525,9 +10053,9 @@ const GRIMORIO_CLIENT = {
     circulo:'primeiro', classe:['cleric'],
     tipo:'toque', alcance:1,
     custo:'🍖-1 💧-1',
-    resumo:'Toque. +10 fome +10 sede.',
+    resumo:'Toque. +20 fome +20 sede.',
     descricao:`<b>Alcance:</b> adjacente<br>
-               <b>Efeito:</b> +10 fome e +10 sede<br>
+               <b>Efeito:</b> +20 fome e +20 sede<br>
                <b>Custo:</b> 🍖-1 💧-1 + 1 slot`
   },
   // ── 2º CÍRCULO ─────────────────────────────────────────────────────────────
@@ -9547,21 +10075,23 @@ const GRIMORIO_CLIENT = {
     circulo:'segundo', classe:['mage','cleric'],
     tipo:'area_centrada', alcance:0, area:3,
     custo:'🍖-1 💧-1',
-    resumo:'Raio 3. Escuridão — desvantagem sem visão noturna.',
+    resumo:'Raio 3. Escuridão; o conjurador recebe visão no escuro.',
     descricao:`<b>Raio:</b> 3 quadrados centrado no caster<br>
                <b>Sem visão noturna:</b> 2d20 usa menor nos ataques<br>
                <b>Com visão noturna:</b> 2d20 usa maior vs cegos<br>
+               <b>Conjurador:</b> recebe visão no escuro pela duração do manto<br>
                <b>Distância máxima à distância:</b> 2 quadrados<br>
                <b>Duração:</b> 1d4 rodadas`
   },
   criar_alimentos: {
     id:'criar_alimentos', nome:'Criar Alimentos', icone:'🍞',
     circulo:'segundo', classe:['cleric'],
-    tipo:'utilidade', alcance:0,
+    tipo:'posicionar_bau', alcance:1,
     custo:'🍖-1 💧-1',
-    resumo:'Cria pão e água. Lewis distribui.',
-    descricao:`<b>Cria:</b> 1d6+1 água e 1d6+2 pão<br>
-               <b>Distribuição:</b> Lewis escolhe quem recebe<br>
+    resumo:'Cria um baú adjacente com 1d4+2 provisões aleatórias.',
+    descricao:`<b>Cria:</b> baú em uma casa adjacente livre<br>
+               <b>Conteúdo:</b> 1d4+2 alimentos aleatórios da taverna<br>
+               <b>Fortalecer:</b> multiplica a quantidade final de itens<br>
                <b>Custo:</b> 🍖-1 💧-1 + 1 slot`
   },
   regeneracao_magica: {
@@ -9580,9 +10110,9 @@ const GRIMORIO_CLIENT = {
     circulo:'segundo', classe:['mage','cleric'],
     tipo:'buff_self', alcance:0,
     custo:'🍖-1 💧-1',
-    resumo:'Absorve 10 dano/rodada de fogo, gelo ou eletricidade.',
+    resumo:'Absorve 10 dano/rodada de fogo, gelo, eletricidade, ácido, água ou sagrado.',
     descricao:`<b>Proteção:</b> 10 pontos/rodada de dano elemental<br>
-               <b>Tipos:</b> fogo, gelo ou eletricidade<br>
+               <b>Tipos:</b> fogo, gelo, eletricidade, ácido, água ou sagrado<br>
                <b>Duração:</b> 1d6+1 rodadas<br>
                <b>Custo:</b> 🍖-1 💧-1 + 1 slot`
   },
@@ -9602,9 +10132,9 @@ const GRIMORIO_CLIENT = {
     circulo:'segundo', classe:['mage','cleric'],
     tipo:'buff_aliado', alcance:6,
     custo:'🍖-1 💧-1',
-    resumo:'Aliado ignora escuridão. 1d6+2 rodadas.',
+    resumo:'Aliado ignora escuridão até o fim da missão.',
     descricao:`<b>Efeito:</b> ignora completamente o sistema de escuridão<br>
-               <b>Duração:</b> 1d6+2 rodadas<br>
+               <b>Duração:</b> até sair da masmorra<br>
                <b>Custo:</b> 🍖-1 💧-1 + 1 slot`
   },
   jato_ar: {
@@ -9844,8 +10374,8 @@ function mostrarTooltipAnimarMortos(event) {
         <div style="color:#8a7a5a; font-size:9px; letter-spacing:2px;">HABILIDADE DE CLASSE</div>
       </div>
     </div>
-    <div style="color:#c8b89a; font-size:10px; line-height:1.7;">Anime um cadáver adjacente para criar um servo morto-vivo. A chance de sucesso aumenta conforme o nível do Pedro.</div>
-    <div style="margin-top:8px; padding-top:6px; border-top:1px solid #9900cc22; color:#ff851b; font-size:9px;">🍖 20 &nbsp; 💧 20 &nbsp; · &nbsp; Cadáver adjacente</div>
+    <div style="color:#c8b89a; font-size:10px; line-height:1.7;">Anime um cadáver a até 3 casas para criar um servo morto-vivo. A chance de sucesso aumenta conforme o nível do Pedro.</div>
+    <div style="margin-top:8px; padding-top:6px; border-top:1px solid #9900cc22; color:#ff851b; font-size:9px;">🍖 -20 &nbsp; 💧 -20 &nbsp; · &nbsp; Alcance: 3 casas</div>
   `;
   tooltip.style.display = 'block';
   const alvo = (event && event.currentTarget && event.currentTarget.getBoundingClientRect)
@@ -9887,7 +10417,10 @@ function renderMagiasFichaEmJogo(heroi, cls) {
       </div>`;
 
     // Contagens regressivas dos slots gastos (menores primeiro).
-    const espera = (cooldown[circulo] || []).map(r => Math.max(0, r - round)).sort((a,b) => a - b);
+    const espera = (cooldown[circulo] || [])
+      .filter(r => r > round)
+      .map(r => r - round)
+      .sort((a,b) => a - b);
     const livres = Math.max(0, limite - espera.length);
 
     const pips = Array.from({length: limite}).map((_, i) => {
@@ -10000,6 +10533,7 @@ function castarMagia(magiaId) {
   }
   // Conjurar Elemental: escolhe o tipo (4 elementos) antes de lançar.
   if (magiaId === 'conjurar_elemental') { _abrirPickerElemental(); return; }
+  if (magiaId === 'criar_alimentos') { _iniciarModoMagia(magiaId, 'adjacent_tile'); return; }
   const tipo = m.tipo;
   // Buffs no próprio caster sem área desenhável → lança imediatamente.
   if (['buff_self', 'utilidade', 'reacao', 'invocacao'].includes(tipo)) {
@@ -10036,6 +10570,7 @@ function castarPergaminho(item) {
     send({ type: 'use_scroll', item_id: item.id });
     toast(`📜 ${m.nome} (pergaminho)!`, '#c8a951'); return;
   }
+  if (magiaId === 'criar_alimentos') { _iniciarModoMagia(magiaId, 'adjacent_tile', item.id); return; }
   const tipo = m.tipo;
   if (['buff_self', 'utilidade', 'reacao', 'invocacao'].includes(tipo)) {
     send({ type: 'use_scroll', item_id: item.id });
@@ -10053,6 +10588,26 @@ function castarPergaminho(item) {
   _iniciarModoMagia(magiaId, alvoTipo, item.id);
 }
 
+function _tilesAdjacentesLivresMagia(){
+  const me = GS.me, state = GS.gameState;
+  if(!me || !state?.tiles) return new Set();
+  const occupied = new Set();
+  for(const p of (state.players || [])) if(p.alive) occupied.add(`${p.pos[0]},${p.pos[1]}`);
+  for(const m of (state.monsters || [])) if(m.hp > 0) occupied.add(`${m.pos[0]},${m.pos[1]}`);
+  for(const c of (state.chests || [])) occupied.add(`${c.pos[0]},${c.pos[1]}`);
+  for(const g of (state.ground_items || [])) occupied.add(`${g.pos[0]},${g.pos[1]}`);
+  for(const d of (state.decorations || [])) if(!d.pisavel)
+    for(const [x,y] of (d.tiles || [d.pos])) occupied.add(`${x},${y}`);
+  const out = new Set(), [cx, cy] = me.pos;
+  for(let dy=-1; dy<=1; dy++) for(let dx=-1; dx<=1; dx++){
+    if(dx===0 && dy===0) continue;
+    const x=cx+dx, y=cy+dy, key=`${x},${y}`;
+    if(y >= 0 && y < state.tiles.length && x >= 0 && x < state.tiles[0].length
+       && state.tiles[y][x] === TILE_FLOOR && !occupied.has(key)) out.add(key);
+  }
+  return out;
+}
+
 function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
   const _def = GRIMORIO_CLIENT[magiaId];
   // alvoLivre: a magia mira qualquer casa do mapa, sem limite de alcance e
@@ -10060,9 +10615,15 @@ function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
   window._modoMagia = { magiaId, alvoTipo, alvoLivre: !!(_def && _def.alvoLivre),
                         scrollItemId: scrollItemId || null };
   // Realce: alcance (vermelho) fixo no caster; área (verde) segue o cursor.
-  _recomputarAlcanceMagia();
-  if (alvoTipo === 'self_area') _recomputarAreaMagia(null, null); // área fixa no caster
-  else window._spellHL.area = new Set();
+  if (alvoTipo === 'adjacent_tile') {
+    window._modoMagia.validTiles = _tilesAdjacentesLivresMagia();
+    window._spellHL.range = new Set();
+    window._spellHL.area = new Set(window._modoMagia.validTiles);
+  } else {
+    _recomputarAlcanceMagia();
+    if (alvoTipo === 'self_area') _recomputarAreaMagia(null, null); // área fixa no caster
+    else window._spellHL.area = new Set();
+  }
   _aplicarSpellHL();
   const dicas = {
     foe:       'Clique num INIMIGO',
@@ -10070,6 +10631,7 @@ function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
     tile:      'Clique numa CASA (centro da área)',
     linha:     'Clique numa CASA (direção do raio)',
     cone:      'Clique numa CASA (direção do cone)',
+    adjacent_tile: 'Clique numa CASA VERDE adjacente para criar o baú',
     self_area: 'Clique para CONFIRMAR (área em você)'
   };
   if (typeof g3 !== 'undefined' && g3 && g3.renderer) g3.renderer.domElement.style.cursor = 'crosshair';
@@ -10097,6 +10659,11 @@ function _specAlvoMagia(alvoTipo, tx, ty) {
   const me = GS.me;
   const gs = GS.gameState || {};
   if (alvoTipo === 'self_area') return { ok: true, fields: {} };          // centrada no caster
+  if (alvoTipo === 'adjacent_tile') {
+    if (!me || Math.max(Math.abs(me.pos[0] - tx), Math.abs(me.pos[1] - ty)) !== 1)
+      return { ok: false, msg: 'Escolha uma casa adjacente.' };
+    return { ok: true, fields: { tx, ty } };
+  }
   if (alvoTipo === 'tile')      return { ok: true, fields: { tx, ty } };
   if (alvoTipo === 'linha' || alvoTipo === 'cone') {
     if (!me) return { ok: false };
@@ -10119,6 +10686,10 @@ function _clickTileMagia(tx, ty) {
   if (!mode) return;
   const magiaId = mode.magiaId;
   const m  = GRIMORIO_CLIENT[magiaId];
+
+  if (mode.alvoTipo === 'adjacent_tile' && !mode.validTiles?.has(`${tx},${ty}`)) {
+    toast('Escolha uma das casas verdes livres.', '#ff6b6b'); return;
+  }
 
   const spec = _specAlvoMagia(mode.alvoTipo, tx, ty);
   if (!spec.ok) { if (spec.msg) toast(spec.msg, '#ff6b6b'); return; }
@@ -10155,6 +10726,62 @@ function _encerrarModoMagia() {
   if (leg) leg.style.display = 'none';
   if (typeof g3 !== 'undefined' && g3 && g3.renderer) g3.renderer.domElement.style.cursor = 'default';
   document.removeEventListener('keydown', _keyMagiaEsc);
+}
+
+function _iniciarModoAnimarMortos(cadaveres) {
+  if (window._modoMagia) _encerrarModoMagia();
+  if (window._modoThrowItem) _encerrarMiraArremesso();
+  const me = GS.me;
+  if (!me) return;
+  const validos = new Set(cadaveres.map(c => c.id));
+  window._modoAnimarMortos = { cadaveres: validos, alcance: 3 };
+  const alcance = new Set();
+  _addCheb(me.pos[0], me.pos[1], 3, alcance);
+  window._spellHL.range = alcance;
+  window._spellHL.area = new Set(cadaveres.map(c => `${c.pos[0]},${c.pos[1]}`));
+  _aplicarSpellHL();
+  if (typeof g3 !== 'undefined' && g3 && g3.renderer) g3.renderer.domElement.style.cursor = 'crosshair';
+  let leg = document.getElementById('legenda-magia');
+  if (!leg) {
+    leg = document.createElement('div');
+    leg.id = 'legenda-magia';
+    leg.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);' +
+      'background:rgba(10,8,5,0.92);border:1px solid #b36bff;color:#d98cff;font-family:inherit;' +
+      'font-size:11px;letter-spacing:2px;padding:8px 20px;pointer-events:none;z-index:1000;';
+    document.body.appendChild(leg);
+  }
+  leg.textContent = '💀 ANIMAR MORTOS — clique em um cadáver verde a até 3 casas | ESC cancela';
+  leg.style.borderColor = '#b36bff';
+  leg.style.color = '#d98cff';
+  leg.style.display = 'block';
+  document.addEventListener('keydown', _keyAnimarMortosEsc);
+}
+
+function _clickTileAnimarMortos(tx, ty) {
+  const mode = window._modoAnimarMortos;
+  if (!mode) return;
+  const corpse = (GS.gameState?.corpses || []).find(c =>
+    c.pos[0] === tx && c.pos[1] === ty && mode.cadaveres.has(c.id));
+  if (!corpse) { toast('Clique em um cadáver destacado dentro do alcance.', '#ff6b6b'); return; }
+  GS.animarMortos(corpse.id);
+  _encerrarModoAnimarMortos();
+}
+
+function _encerrarModoAnimarMortos() {
+  window._modoAnimarMortos = null;
+  _limparSpellHLMira();
+  const leg = document.getElementById('legenda-magia');
+  if (leg) leg.style.display = 'none';
+  if (typeof g3 !== 'undefined' && g3 && g3.renderer) g3.renderer.domElement.style.cursor = 'default';
+  document.removeEventListener('keydown', _keyAnimarMortosEsc);
+}
+
+function _keyAnimarMortosEsc(e) {
+  if (e.key === 'Escape') {
+    _encerrarModoAnimarMortos();
+    toast('Animar Mortos cancelado.', '#888');
+    e.preventDefault();
+  }
 }
 
 function _keyMagiaEsc(e) {
@@ -10366,6 +10993,9 @@ function _coneTilesCli(ox, oy, dx, dy, comp, base) {
   return out;
 }
 function _areaRaioMagiaCli(m) {
+  // Algumas magias novas (Bola de Fogo) usam o nome do campo do servidor.
+  // Ele tem prioridade para que a prévia verde replique a área autoritativa.
+  if (m.area_raio != null) return m.area_raio;
   if (m.area != null) return m.area;
   return ['area', 'area_persistente', 'area_fixa', 'area_centrada'].includes(m.tipo) ? 2 : 0;
 }
@@ -10403,6 +11033,12 @@ function _recomputarAlcanceMagia() {
 
 function _recomputarAreaMagia(hx, hy) {
   const mode = window._modoMagia; if (!mode) return;
+  if (mode.alvoTipo === 'adjacent_tile') {
+    window._spellHL.area = new Set(mode.validTiles || []);
+    window._spellHL.double = new Set();
+    _aplicarSpellHL();
+    return;
+  }
   const m = GRIMORIO_CLIENT[mode.magiaId], me = GS.me;
   const area = new Set(), dbl = new Set();
   if (m && me) {
@@ -11393,7 +12029,7 @@ function renderMyPanel(state){
   // Fase I: técnicas concedidas por itens equipados entram no mesmo laço
   // (rótulo "ITEM"); a recarga é compartilhada com a da Guilda pelo id.
   const _tecItem = GS.tecnicasConcedidasPorItem(me);
-  const _tecEqIds = [_tecEq.tecnica, _tecEq.tecnica_exclusiva].filter(Boolean);
+  const _tecEqIds = (_tecEq.tecnicas || []).filter(Boolean);
   const _tecIds = _tecEqIds.concat(_tecItem.filter(t => !_tecEqIds.includes(t)));
   for(const tid of _tecIds){
     const cat = GS.guildCatalogFor(me.class_id).find(x => x.id === tid);
@@ -11597,6 +12233,21 @@ function desequiparComprado(slot){
 
 let _openChestId = null;   // currently-open chest id (for auto-refresh)
 let _openDecorLootId = null;   // currently-open decor loot id (for auto-refresh)
+// A retirada continua sendo validada pelo servidor, mas o painel não deve
+// manter uma cópia visual do item enquanto aguarda a atualização autoritativa.
+let _pendingChestTake = null;
+let _pendingChestTakeTimer = null;
+
+function clearPendingChestTake({ restore = false } = {}){
+  if(_pendingChestTakeTimer) clearTimeout(_pendingChestTakeTimer);
+  const pending = _pendingChestTake;
+  _pendingChestTakeTimer = null;
+  _pendingChestTake = null;
+  if(restore && pending && _openChestId === pending.chestId){
+    const chest = (GS.gameState?.chests || []).find(c => c.id === pending.chestId);
+    if(chest) _renderChestWindow(chest);
+  }
+}
 
 function openChestWindow(chest){
   _openChestId = chest.id;
@@ -11611,6 +12262,8 @@ function openChestWindow(chest){
 function closeChestWindow(){
   _openChestId = null;
   _openDecorLootId = null;
+  esconderTooltip();   // o overlay some sob o cursor: mouseleave não ocorreria
+  clearPendingChestTake();
   $('chest-overlay').classList.remove('open');
 }
 
@@ -11618,10 +12271,15 @@ function _renderChestWindow(chest){
   const me = GS.gameState && GS.gameState.players.find(p=>p.id===GS.myPid&&p.alive);
   const isFull = me && (me.bag||[]).length >= (me.bag_size||6);
   const list = $('chest-items-list');
+  esconderTooltip();   // as linhas em hover somem no re-render (pegar item)
   list.innerHTML = '';
 
-  const itemCount = (chest.items||[]).length;
-  const hasGold   = chest.gold > 0;
+  const pending = _pendingChestTake?.chestId === chest.id ? _pendingChestTake : null;
+
+  const visibleItems = (chest.items || []).map((item, idx) => ({ item, idx }))
+    .filter(({ idx }) => !(pending?.kind === 'item' && pending.index === idx));
+  const itemCount = visibleItems.length;
+  const hasGold   = chest.gold > 0 && pending?.kind !== 'gold';
 
   if(!hasGold && itemCount === 0){
     list.innerHTML = '<div class="chest-empty-msg">O baú está vazio.</div>';
@@ -11642,7 +12300,7 @@ function _renderChestWindow(chest){
   }
 
   // Item rows
-  (chest.items||[]).forEach((item, idx) => {
+  visibleItems.forEach(({ item, idx }) => {
     const isAmmo    = item.effect === 'ammo';
     const isWeapon  = !!item.die;
     const typeLabel = isWeapon
@@ -11680,16 +12338,27 @@ function _renderChestWindow(chest){
     btn.className = 'chest-take-btn';
     btn.textContent = '⬆ Pegar';
     const cantPick = isFull && !ammoHasSpace;
-    btn.disabled = cantPick;
+    btn.disabled = cantPick || !!pending;
     if(cantPick) btn.title = 'Inventário cheio!';
     btn.onclick = () => takeFromChest(chest.id, 'item', idx);
     row.appendChild(btn);
+    aplicarTooltipAoItemDados(row, item);
     list.appendChild(row);
   });
 }
 
 function takeFromChest(chestId, kind, index){
-  send({ type:'take_from_chest', chest_id:chestId, kind, index });
+  if(_pendingChestTake) return;
+  _pendingChestTake = { chestId, kind, index };
+  const chest = (GS.gameState?.chests || []).find(c => c.id === chestId);
+  if(chest) _renderChestWindow(chest); // remove a linha imediatamente do painel
+  if(!send({ type:'take_from_chest', chest_id:chestId, kind, index })){
+    clearPendingChestTake({ restore: true });
+    toast('Sem conexão com o servidor.');
+    return;
+  }
+  // Falha de rede não pode deixar o painel permanentemente bloqueado.
+  _pendingChestTakeTimer = setTimeout(() => clearPendingChestTake({ restore: true }), 5000);
 }
 
 // ── Reusable loot panel — used by both chests and decoration containers ───────
@@ -11703,6 +12372,7 @@ function abrirPainelLoot({ titulo, gold, items, onPegarOuro, onPegarItem, acao }
   const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid && p.alive);
   const isFull = me && (me.bag || []).length >= (me.bag_size || 6);
   const list = $('chest-items-list');
+  esconderTooltip();   // as linhas em hover somem no re-render (pegar item)
   list.innerHTML = '';
 
   const hasGold  = gold > 0;
@@ -11763,6 +12433,7 @@ function abrirPainelLoot({ titulo, gold, items, onPegarOuro, onPegarItem, acao }
     if (isFull) btn.title = 'Inventário cheio!';
     btn.onclick = () => onPegarItem(idx);
     row.appendChild(btn);
+    aplicarTooltipAoItemDados(row, item);
     list.appendChild(row);
   });
 
@@ -12156,7 +12827,7 @@ function renderFichaCidadeBody(panel, player, editable){
     const eq      = GS.guildEquipOf(player.id);
     const catalog = GS.guildCatalogFor(player.class_id);
     const nomeDe = id => { const c = catalog.find(x => x.id === id); return c ? c.nome : id; };
-    const isEx   = id => { const c = catalog.find(x => x.id === id); return !!(c && c.exclusiva); };
+    const isEx = () => false; // todas as técnicas usam os slots genéricos
 
     const mkSelect = (slotKey, cur, filtro, labelVazio) => {
       const sel = document.createElement('select');
@@ -12179,13 +12850,21 @@ function renderFichaCidadeBody(panel, player, editable){
     body.appendChild(tecTitle);
     body.appendChild(mkSelect('tecnica', eq.tecnica, id => !isEx(id), '— nenhuma técnica —'));
 
-    if(player.class_id === 'mage' || player.class_id === 'cleric'){
+    if(false && (player.class_id === 'mage' || player.class_id === 'cleric')){
       const exTitle = document.createElement('div');
       exTitle.className = 'section-title'; exTitle.style.marginTop = '4px';
       exTitle.textContent = '✨ Técnica Exclusiva';
       body.appendChild(exTitle);
       body.appendChild(mkSelect('tecnica_exclusiva', eq.tecnica_exclusiva, id => isEx(id), '— nenhuma exclusiva —'));
     }
+
+    (eq.tecnicas || []).slice(1).forEach((cur, indice) => {
+      const tituloExtra = document.createElement('div');
+      tituloExtra.className = 'section-title'; tituloExtra.style.marginTop = '4px';
+      tituloExtra.textContent = `Técnica da Guilda ${indice + 2}`;
+      body.appendChild(tituloExtra);
+      body.appendChild(mkSelect(`tecnica_${indice + 1}`, cur, () => true, '— nenhuma técnica —'));
+    });
 
     if(!owned.length){
       const hint = document.createElement('div');
@@ -12220,6 +12899,9 @@ function _modificadoresTemporariosStatus(p){
   }
   if(p.golpe_sagrado_ativo) add('Golpe Sagrado', '+1d8 sagrado nos ataques');
   if(p.regeneracao_ativa) add('Regeneração Divina', '+1 PV por rodada');
+  if(Number(p.barreira_arcana_rodadas || 0) > 0){
+    add('Barreira Arcana', `-${Number(p.barreira_arcana_reducao || 0)} de todo dano · ${Number(p.barreira_arcana_rodadas)} rodada(s)`);
+  }
   if(p.tecnica_buff_dano_arma) add('Brutalidade', `+${p.tecnica_buff_dano_arma} dano de arma`);
   if(p.tecnica_mira_perfeita) add('Mira Perfeita', 'Vantagem à distância · +2 dano');
   const armadas = GS.getWarriorSelected?.() || [];
@@ -12326,7 +13008,7 @@ function abrirMenuMagias(pid){
   const modificadoresGuilda = catalog.filter(item => {
     if(!idsPossuidos.has(item.id)) return false;
     if(item.id.startsWith('mago_') && !item.id.startsWith('mago_reviver_')) return true;
-    return item.id.startsWith('tec_ex_') && equip.tecnica_exclusiva === item.id;
+    return item.id.startsWith('tec_ex_') && (equip.tecnicas || []).includes(item.id);
   });
   const modificadoresBase = player.class_id === 'mage'
     ? (player.skills || []).filter(s => ['aprimorar_magia','estender_magia','fortalecer_magia'].includes(s.id))
@@ -12344,7 +13026,7 @@ function abrirMenuMagias(pid){
     </div>`;
   const renderMod = m => {
     const pendente = m.categoria === 'tecnica' && !!GS.tecnicaPendente?.(player, m.id);
-    const ativavel = !pendente && podeAgir && (modificadoresBase.includes(m) || (m.categoria === 'tecnica' && equip.tecnica_exclusiva === m.id && !m.automatica));
+    const ativavel = !pendente && podeAgir && (modificadoresBase.includes(m) || (m.categoria === 'tecnica' && (equip.tecnicas || []).includes(m.id) && !m.automatica));
     const onclick = ativavel && modificadoresBase.includes(m) ? `onclick="ativarHabilidadeDoMenu('${m.id}')"`
       : ativavel ? `onclick="ativarTecnicaGuildaDoMenu('${m.id}')"` : '';
     return `
@@ -12686,7 +13368,7 @@ function abrirMenuHabilidades(pid){
   if(player.class_id === 'mage' && !base.some(s => s.id === 'animar_mortos')){
     base.unshift({id:'animar_mortos', name:'Animar Mortos', icon:'💀', tipo:'acao_principal',
       fome_cost:20, sede_cost:20,
-      description:'Anime um cadáver adjacente para criar um servo morto-vivo.'});
+      description:'Clique em um cadáver a até 3 casas para criar um servo morto-vivo.'});
   }
   const especializacoes = catalog.filter(i => (owned.especializacoes || []).includes(i.id));
   const tecnicas = catalog.filter(i => (owned.tecnicas || []).includes(i.id));
@@ -12732,7 +13414,7 @@ function abrirMenuHabilidades(pid){
   const card = (h, guilda=false) => {
     const nome = h.name || h.nome || h.id;
     const desc = h.description || h.desc || '';
-    const equipada = guilda && (equip.tecnica === h.id || equip.tecnica_exclusiva === h.id);
+    const equipada = guilda && (equip.tecnicas || []).includes(h.id);
     const restante = h.categoria === 'tecnica' ? (GS.tecnicaRestante(player, h.id) || 0) : 0;
     const pendente = h.categoria === 'tecnica' && !!GS.tecnicaPendente?.(player, h.id);
     const tecnicaAtivavel = guilda && h.categoria === 'tecnica' && equipada && !h.automatica && restante === 0 && !pendente;
@@ -13715,7 +14397,8 @@ function init3D(state){
         const mc = (VC.materiais[mid3] || VC.materiais.pedra_cinza).color;
         // A água não recebe jitter por tile: variações independentes fariam
         // aparecer uma grade onde deveriam existir apenas ondas contínuas.
-        const jit = mid3==='agua' ? 0 : vf*VC.floor.baseVariance;
+        const isWater3 = mid3==='agua' || mid3==='agua_profunda';
+        const jit = isWater3 ? 0 : vf*VC.floor.baseVariance;
         mat.color.setRGB(mc[0]+jit, mc[1]+jit, mc[2]+jit);
         const ftex = makeMaterialTex(mid3);
         if(ftex){
@@ -13730,13 +14413,13 @@ function init3D(state){
         }
         mat.emissive.set(VC.floor.emissive);
         mat.emissiveIntensity = 1.0;
-        if(mid3==='agua'){
+        if(isWater3){
           // Superfície azul e mais lustrosa que pedra: indica água profunda,
           // sem transformá-la em obstáculo de navegação.
           mat.roughness = 0.24;
           mat.metalness = 0.12;
-          mat.emissive.set(0x0075bd);
-          mat.emissiveIntensity = 0.92;
+          mat.emissive.set(mid3==='agua_profunda' ? 0x06173f : 0x0075bd);
+          mat.emissiveIntensity = mid3==='agua_profunda' ? 0.58 : 0.92;
         }
         // Auto-iluminação: a própria textura emite, deixando a cor forte e
         // diferenciada mesmo na penumbra (grama/terra/pedra negra).
@@ -13745,7 +14428,7 @@ function init3D(state){
           mat.emissive.set(0xffffff);
           mat.emissiveIntensity = (mid3==='pedra_negra') ? 0.35 : 0.6;
         }
-        mesh = new T.Mesh(mid3==='agua' ? waterFloorGeo : floorGeo, mat);
+        mesh = new T.Mesh(isWater3 ? waterFloorGeo : floorGeo, mat);
         mesh.position.set(x, TH/2, y);     // bottom edge sits at y = 0
         mesh.receiveShadow = true;
         mesh.userData.isFloor = true;
@@ -15870,7 +16553,7 @@ function renderMap3D(state){
   }
 
   // Durante a mira de magia, oculta realces de movimento/ataque (mostra alcance/área).
-  if(window._modoMagia || window._modoThrowItem){ reachable.clear(); attackable3d.clear(); }
+  if(window._modoMagia || window._modoThrowItem || window._modoAnimarMortos){ reachable.clear(); attackable3d.clear(); }
 
   // ── Tile visibility
   for(let y=0; y<H; y++){
@@ -16182,7 +16865,7 @@ function renderMap3D(state){
   const entitySig = JSON.stringify([
     state.players.map(p => [p.id, p.pos, p.alive, p.color, p.class_id, p.em_chamas_rodadas > 0,
       p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0,
-      (p.animados||[]).map(a => [a.id, a.pos, a.vida_atual, a.tipo])]),
+      (p.animados||[]).map(a => [a.id, a.pos, a.vida_atual, a.tipo, a.image, a.porte, a.oriented, a.facing])]),
     state.monsters.map(m => [m.type, m.pos, m.hp, m.image, m.em_chamas_rodadas > 0,
       m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0]),
     state.prisoner ? [state.prisoner.pos, state.prisoner.alive, state.prisoner.freed, state.prisoner.image, _prisSel] : null,
@@ -16230,7 +16913,7 @@ function renderMap3D(state){
         const h = bounds.getSize(new T.Vector3()).y;
         fig.userData._waterSinkY = -Math.max(0.10, h) * 0.35;
       }
-      const inWater = state.materiais && state.materiais[`${x},${y}`] === 'agua';
+      const inWater = state.materiais && state.materiais[`${x},${y}`] === 'agua_profunda';
       fig.userData.baseY = inWater ? fig.userData._waterSinkY : 0;
       fig.position.y = fig.userData.baseY;
       fig.userData._stepBaseY = fig.userData.baseY;
@@ -16286,10 +16969,10 @@ function renderMap3D(state){
     const mSel = g3.selectedPos && g3.selectedPos[0]===mx && g3.selectedPos[1]===my;
     obterFig(`mon:${m.id}`,
       JSON.stringify([m.type, m.image, !!mSel, m.porte, !!m.oriented, m.facing, m.em_chamas_rodadas > 0,
-        m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0]),
+        m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, m.vision_radius, GS.sorrateiroAtivo()]),
       () => {
         const f = build3DFig('#c82020', true, false, false, mx, my, null, m.type, mSel, m.image, m.porte, m.oriented, m.facing, m.em_chamas_rodadas > 0,
-          m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0);
+          m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, m.vision_radius);
         f.userData.monId = m.id;   // taggeado para getMonsterMesh() / deslize fiel
         return f;
       },
@@ -16310,9 +16993,10 @@ function renderMap3D(state){
       const [ax,ay] = a.pos;
       if(!visionSet.has(`${ax},${ay}`)) continue;
       obterFig(`ani:${a.id}`,
-        JSON.stringify([a.tipo, _animadoSel===a.id]),
+        JSON.stringify([a.tipo, a.image, a.porte, a.oriented, a.facing, _animadoSel===a.id]),
         () => {
-          const f = build3DFig('#9900cc', true, false, false, ax, ay, null, a.tipo, _animadoSel===a.id);
+          const f = build3DFig('#9900cc', true, false, false, ax, ay, null, a.tipo, _animadoSel===a.id,
+            a.image, a.porte, a.oriented, a.facing);
           f.userData.animadoId = a.id;   // taggeado para getAnimadoMesh()
           return f;
         }, ax, ay);
@@ -16638,6 +17322,15 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   cobraConstritora:  'assets/models3d/monstros/cobra_constritora.glb',
   bugbear:           'assets/models3d/monstros/bugbear.glb',
   aranhasombria:     'assets/models3d/monstros/aranha.glb',
+  escorpiaodepedra:  'assets/models3d/monstros/escorpiao.glb',
+  devoradorOrganico: 'assets/models3d/monstros/devorador_organico.glb',
+  koboldlanceiro:    'assets/models3d/monstros/kobold.glb',
+  koboldbesteiro:    'assets/models3d/monstros/kobold.glb',
+  grotao:            'assets/models3d/monstros/grotao.glb',
+  lagartoCarniceiro: 'assets/models3d/monstros/lagarto_carniceiro.glb',
+  loboCinzento:      'assets/models3d/monstros/lobo.glb',
+  ursoNegro:         'assets/models3d/monstros/urso.glb',
+  zumbi:             'assets/models3d/monstros/zumbi.glb',
 });
 const _monsterGLBCache = {};  // caminho -> template | 'erro'
 const _monsterGLBQueue = {};  // caminho -> [callbacks]
@@ -17045,7 +17738,7 @@ function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected, emCh
 // mOriented/mFacing — monstro de 2 casas em pé cobrindo as 2 casas (croc/lagarto).
 // mFacing também é reaproveitado pro peão GLB de herói (direção do último passo).
 
-function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType, isSelected, mImage, mPorte, mOriented, mFacing, emChamas, acidoResidual, envenenado){
+function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType, isSelected, mImage, mPorte, mOriented, mFacing, emChamas, acidoResidual, envenenado, monsterVisionRadius){
   const T   = g3.T;
   if (isMonster && mOriented && mImage && !_MONSTER_GLB_MODELS[mImage]) {
     // emChamas vai PARA DENTRO do helper (posiciona o 🔥 no centro midX/midZ do
@@ -17059,6 +17752,19 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
   const clr = new T.Color(hexColor);
 
   const baseGrp = new T.Group(); baseGrp.name = 'base'; grp.add(baseGrp);
+
+  if(isMonster && GS.sorrateiroAtivo()){
+    const raio = Math.max(1, Number(monsterVisionRadius || 6));
+    const visionRing = new T.Mesh(
+      new T.RingGeometry(Math.max(0.01, raio - 0.018), raio + 0.018, 96),
+      new T.MeshBasicMaterial({ color:0x6cd2ff, transparent:true, opacity:0.48, side:T.DoubleSide, depthWrite:false })
+    );
+    visionRing.rotation.x = -Math.PI / 2;
+    visionRing.position.y = TH + 0.009;
+    visionRing.userData.isGroundDecal = true;
+    visionRing.userData.noRay = true;
+    grp.add(visionRing);
+  }
 
   // Blob shadow — soft dark oval on the tile surface
   const shadowR = isMonster ? 0.42 : 0.36;
@@ -22331,6 +23037,11 @@ function on3DClick(e){
     if(tMag) _clickTileMagia(tMag[0], tMag[1]);
     return;
   }
+  if(window._modoAnimarMortos){
+    const tAni = get3DTile(e);
+    if(tAni) _clickTileAnimarMortos(tAni[0], tAni[1]);
+    return;
+  }
   // Modo de mira de ARREMESSÁVEL (frasco_oleo/fogo_grego): resolve o alvo.
   if(window._modoThrowItem){
     const tThr = get3DTile(e);
@@ -22534,6 +23245,7 @@ function handleTileClick(tx, ty){
   // ── Mira de MAGIA (2D e 3D): resolve alvo/casa e envia `magia` ─────────────
   // (No 3D, on3DClick já intercepta antes; aqui cobre o caminho do canvas 2D.)
   if(window._modoMagia){ _clickTileMagia(tx, ty); return; }
+  if(window._modoAnimarMortos){ _clickTileAnimarMortos(tx, ty); return; }
   // ── Mira de ARREMESSÁVEL (2D e 3D): resolve o alvo e envia `throw_item` ─────
   // (No 3D, on3DClick já intercepta antes; aqui cobre o caminho do canvas 2D.)
   if(window._modoThrowItem){ _clickTileThrow(tx, ty); return; }
@@ -22542,6 +23254,7 @@ function handleTileClick(tx, ty){
   if(_st && _st.stairs_pos){
     const [sx,sy] = _st.stairs_pos;
     if(tx===sx && ty===sy){
+      fecharQuadrosFlutuantes();
       send({type:'exit_dungeon'});
       return;
     }
@@ -22767,6 +23480,7 @@ GS.on('gameStart', () => {
 });
 
 GS.on('cityState', msg => {
+  fecharQuadrosFlutuantes();
   _hpSnapshot.clear();   // de volta à cidade: zera HP base p/ a próxima masmorra
   _resetTrapPopup();     // sai da masmorra: descarta popup/fila de armadilha pendente
   // If returning from dungeon to city, tear down the 3D renderer first
@@ -22917,12 +23631,21 @@ GS.on('gameState', msg => {
   }
   // Entrou na minha janela de controle (servos e/ou prisioneiro) → dica única.
   if (msg.animados_turn === GS.myPid && _lastAnimadosTurn !== GS.myPid) {
+    const meusAnimados = (msg.players.find(p=>p.id===GS.myPid)?.animados || [])
+      .filter(a => a.vida_atual > 0 && !a.dominado_por_monstro);
+    const porId = new Map(meusAnimados.map(a => [a.id, a]));
+    const ordem = (msg.animados_order || []).map(id => porId.get(id)).filter(Boolean);
+    const proximo = (ordem.length ? ordem : meusAnimados.sort((a, b) =>
+      (b.initiative || 0) - (a.initiative || 0))).find(a => !a.acted) || null;
+    _animadoSel = proximo ? proximo.id : null;
+    _prisSel = false;
     const _pr = msg.prisoner;
     const soPris = _pr && _pr.alive && _pr.freed && _pr.rescuer_pid === GS.myPid
       && !((msg.players.find(p=>p.id===GS.myPid)?.animados||[]).some(a=>a.vida_atual>0));
     toast(soPris
       ? '🧍 Mova o prisioneiro — clique nele e depois numa casa; então encerre o turno.'
-      : '💀 Turno dos seus servos — clique num servo (azul=movimento, vermelho=ataque); depois encerre o turno.');
+      : `💀 Turno dos seus servos${proximo ? ` — ${proximo.nome} está selecionado.` : ''}`);
+    if (mode3D && g3) renderMap3D(msg); else renderMap(msg);
   }
   // Janela de controle encerrou → limpa seleções.
   if (_lastAnimadosTurn === GS.myPid && msg.animados_turn !== GS.myPid) {
@@ -22933,6 +23656,9 @@ GS.on('gameState', msg => {
   // Auto-refresh open chest window (contents may have changed)
   if(_openChestId){
     const updatedChest = (msg.chests||[]).find(c=>c.id===_openChestId);
+    // A confirmação autoritativa chegou: volta a usar somente o conteúdo vindo
+    // do servidor, que já não contém o item retirado.
+    if(_pendingChestTake?.chestId === _openChestId) clearPendingChestTake();
     if(updatedChest) _renderChestWindow(updatedChest);
     else closeChestWindow();   // chest was emptied and removed
   }
@@ -23016,6 +23742,9 @@ GS.on('animarResult', msg => {
 });
 
 GS.on('serverError', msg  => {
+  // Caso uma retirada seja recusada (inventário cheio, distância, etc.), restaura
+  // a linha que foi ocultada otimisticamente no painel do baú.
+  if(_pendingChestTake) clearPendingChestTake({ restore: true });
   toast(msg);
   // Compra recusada pelo servidor → reabre a loja para nova tentativa.
   if(window._comprando && window._lojaUltimaAberta){
@@ -23027,6 +23756,10 @@ GS.on('serverError', msg  => {
 // ── Overlay de escolha de nova magia ao subir de nível (Pedro/Lewis) ──────────
 // Bloqueia só quem subiu: o servidor recusa end_turn até a escolha ser enviada.
 function mostrarOverlayEscolhaMagia(msg){
+  // A remoção de um elemento sob o cursor não dispara mouseleave. Fecha os
+  // tooltips globais antes de recriar o painel para evitar descrições presas.
+  ocultarTooltipMagia();
+  esconderTooltip();
   const rotulo = {primeiro:'1º', segundo:'2º', terceiro:'3º'}[msg.circulo] || msg.circulo;
   const opcoes = (msg.opcoes || []).filter(id => window.GRIMORIO_CLIENT && GRIMORIO_CLIENT[id]);
   const cartas = opcoes.map(id => {
@@ -23055,6 +23788,9 @@ function mostrarOverlayEscolhaMagia(msg){
 }
 
 window._escolherMagiaNivel = function(id){
+  // O clique remove a carta que está em hover; mouseleave não ocorrerá.
+  ocultarTooltipMagia();
+  esconderTooltip();
   GS.escolherMagiaNivel(id);
   const el = document.getElementById('overlay-escolha-magia');
   if (el) el.remove();

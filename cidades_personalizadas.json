@@ -1,0 +1,98 @@
+{
+  "cities": [
+    {
+      "id": "vila_dos_charcos",
+      "nome": "Vila dos Charcos",
+      "tipo": "vila",
+      "imagem": "assets/city/vila_charcos.png",
+      "x": 30.0,
+      "y": 50.0,
+      "servicos": true
+    }
+  ],
+  "overrides": {
+    "alva_e_luz": {
+      "nome": "Alva e Luz",
+      "tipo": "cidade",
+      "imagem": "assets/city/alva_e_luz.jpg"
+    },
+    "vila_riacho": {
+      "nome": "Vila do Riacho",
+      "tipo": "vila",
+      "imagem": "assets/city/vila_do_riacho.png"
+    },
+    "vila_corvin": {
+      "nome": "Vila de Corvin",
+      "tipo": "vila",
+      "imagem": "assets/city/vila_de_corvin.png"
+    },
+    "graciero": {
+      "nome": "Graciero",
+      "tipo": "cidade",
+      "imagem": "assets/city/graciero.png"
+    }
+  },
+  "deleted": [],
+  "routes": [
+    {
+      "from": "vila_riacho",
+      "to": "alva_e_luz",
+      "fome": 6,
+      "sede": 6
+    },
+    {
+      "from": "vila_corvin",
+      "to": "alva_e_luz",
+      "fome": 12,
+      "sede": 12
+    },
+    {
+      "from": "graciero",
+      "to": "alva_e_luz",
+      "fome": 14,
+      "sede": 14
+    },
+    {
+      "from": "vila_dos_charcos",
+      "to": "alva_e_luz",
+      "fome": 8,
+      "sede": 8
+    },
+    {
+      "from": "vila_corvin",
+      "to": "vila_riacho",
+      "fome": 7,
+      "sede": 7
+    },
+    {
+      "from": "graciero",
+      "to": "vila_riacho",
+      "fome": 9,
+      "sede": 9
+    },
+    {
+      "from": "vila_dos_charcos",
+      "to": "vila_riacho",
+      "fome": 14,
+      "sede": 14
+    },
+    {
+      "from": "vila_corvin",
+      "to": "graciero",
+      "fome": 8,
+      "sede": 8
+    },
+    {
+      "from": "vila_corvin",
+      "to": "vila_dos_charcos",
+      "fome": 18,
+      "sede": 18
+    },
+    {
+      "from": "graciero",
+      "to": "vila_dos_charcos",
+      "fome": 20,
+      "sede": 20
+    }
+  ]
+}

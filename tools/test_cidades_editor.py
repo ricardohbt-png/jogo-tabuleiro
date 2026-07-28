@@ -117,7 +117,12 @@ def _rodar_verificacoes():
     S._aplicar_estado_cidades([CIDADE_NOVA], {}, [], None)
     S._sincronizar_cidades_derivadas()
     check("sem lojas", S.CITY_SHOPS.get("porto_negro") == {})
-    check("sem pontos no mapa da cidade", S.CITY_MAP_POINTS.get("porto_negro") == {})
+    # Sem lojas, o único ponto implícito é a Caravana de Viagem — ela precisa
+    # existir como ponto editável, senão o cliente a desenharia num lugar fixo
+    # que o editor não lista nem reposiciona.
+    pontos = S.CITY_MAP_POINTS.get("porto_negro") or {}
+    check("só a Caravana no mapa da cidade nova", list(pontos) == ["caravana"])
+    check("Caravana implícita tem tipo", (pontos.get("caravana") or {}).get("type") == "caravana")
     cena = S.TAVERN_SCENES.get("porto_negro") or {}
     check("cena de taverna existe", isinstance(cena.get("slots"), list))
     check("taverna sem NPCs copiados de Alva e Luz", cena.get("slots") == [])
@@ -221,6 +226,36 @@ def _rodar_verificacoes():
         if os.path.exists(arquivo3): os.remove(arquivo3)
     ok4, _ = S._save_city_art_upload("grande.png", "A" * (S.STORY_UPLOAD_MAX * 2))
     check("arquivo grande demais recusado", ok4 is False)
+
+    print("\n[12] Pontos implícitos são editáveis (Caravana e prédio de cada loja)")
+    reset_mundo()
+    S._aplicar_estado_cidades([CIDADE_NOVA], {}, [], None)
+    S._sincronizar_cidades_derivadas()
+    # Abrir a loja da taverna na cidade tem de materializar o ponto do prédio:
+    # antes ele era desenhado só pelo cliente, num lugar fixo e invisível ao editor.
+    ok_stock, payload = S._save_city_shops_upload({"porto_negro": {"taverna": []}})
+    pontos = S.CITY_MAP_POINTS.get("porto_negro") or {}
+    check("estoque salvo", ok_stock is True)
+    check("prédio da loja virou ponto editável", pontos.get("taverna", {}).get("type") == "taverna")
+    check("ponto implícito vai para o editor",
+          "taverna" in (payload["city_points"].get("porto_negro") or {}))
+    # Ponto autoral do mesmo tipo (id diferente) não ganha um segundo ponto implícito.
+    S.CITY_MAP_POINTS["porto_negro"]["ponto_1"] = {"x": 10.0, "y": 20.0, "type": "mercador"}
+    S._save_city_shops_upload({"porto_negro": {"mercador": []}})
+    tipos = [p.get("type") for p in (S.CITY_MAP_POINTS.get("porto_negro") or {}).values()]
+    check("sem ponto duplicado do mesmo tipo", tipos.count("mercador") == 1)
+    check("ponto autoral preservado", S.CITY_MAP_POINTS["porto_negro"]["ponto_1"]["x"] == 10.0)
+    # Ajustar em jogo só move: tipo e nome do ponto autoral sobrevivem.
+    S.CITY_MAP_POINTS["porto_negro"]["ponto_1"]["name"] = "Feira"
+    sala = S.GameRoom("PONTO")
+    sala.phase = "city"; sala.host_pid = "h1"; sala.world_location = "porto_negro"
+    sala.connections = {}
+    asyncio.run(sala.handle_city_map_points("h1", "porto_negro", {"ponto_1": {"x": 70.0, "y": 30.0}}))
+    movido = S.CITY_MAP_POINTS["porto_negro"]["ponto_1"]
+    check("ajuste em jogo move o ponto", (movido["x"], movido["y"]) == (70.0, 30.0))
+    check("ajuste em jogo preserva tipo e nome",
+          movido.get("type") == "mercador" and movido.get("name") == "Feira")
+    reset_mundo()
 
     print("\n[11] Regressões apontadas na revisão")
     reset_mundo()

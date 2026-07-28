@@ -274,6 +274,22 @@ def _world_adventures_editor_payload():
         "map_image": "assets/city/varluzia - Copia.png",
     }
 
+def _clean_requirement(raw):
+    """Normaliza a trava comum de conversas e destinos.
+
+    Todos os campos são opcionais e se acumulam (AND). Assim o editor não
+    precisa criar uma regra nova a cada combinação narrativa.
+    """
+    raw = raw if isinstance(raw, dict) else {}
+    def text(key): return str(raw.get(key) or "").strip()[:100]
+    try: renome = max(0, min(9999, int(raw.get("renome_min", 0))))
+    except (TypeError, ValueError): renome = 0
+    try: nivel = max(0, min(99, int(raw.get("nivel_grupo_min", 0))))
+    except (TypeError, ValueError): nivel = 0
+    return {"renome_min": renome, "nivel_grupo_min": nivel,
+            "item_id": text("item_id"), "fato": text("fato"),
+            "aventura_id": text("aventura_id")}
+
 def _save_world_adventures_upload(raw_locations, raw_adventures):
     """Valida e grava cidades e entradas de aventura criadas no editor."""
     global WORLD_ADVENTURES
@@ -311,14 +327,12 @@ def _save_world_adventures_upload(raw_locations, raw_adventures):
         files = [str(f) for f in files if str(f) in allowed_files][:20]
         if not files:
             continue
-        # Requisito estruturado para descoberta futura. Hoje todos os pontos aparecem.
-        req = row.get("requisito") if isinstance(row.get("requisito"), dict) else {}
-        req_type = str(req.get("tipo") or "nenhum")
-        if req_type not in ("nenhum", "saida_masmorra", "missao", "item", "npc"):
-            req_type = "nenhum"
+        req = _clean_requirement(row.get("requisito"))
+        try: renome_reward = max(0, min(9999, int(row.get("renome_recompensa", 1))))
+        except (TypeError, ValueError): renome_reward = 1
         cleaned[aid] = {"id": aid, "nome": name[:80], "x": x, "y": y,
                         "fome": fome, "sede": sede, "dungeons": files,
-                        "requisito": {"tipo": req_type, "valor": str(req.get("valor") or "")[:100]}}
+                        "requisito": req, "renome_recompensa": renome_reward}
     try:
         WORLD_ADVENTURES = cleaned
         _save_world_map_points(); _save_world_adventures()
@@ -419,6 +433,29 @@ def _cena_taverna_vazia():
     """Cena editável e sem conteúdo — o estado inicial de uma cidade criada no editor."""
     return {"background": "", "art_ratio": 1.5, "mode": "individual", "mask": "", "slots": []}
 
+def _clean_tavern_conversations(raw, fallback=""):
+    """Conversa base + ramificações desbloqueáveis de um NPC da taverna."""
+    rows = raw if isinstance(raw, list) else []
+    cleaned = []
+    for index, row in enumerate(rows[:12]):
+        if not isinstance(row, dict): continue
+        cid = str(row.get("id") or f"fala_{index + 1}").strip().lower()
+        if not re.fullmatch(r"[a-z0-9_-]{1,48}", cid): continue
+        text = str(row.get("texto") or "").strip()[:1200]
+        if not text: continue
+        effect = row.get("efeito") if isinstance(row.get("efeito"), dict) else {}
+        try: bonus = max(-9999, min(9999, int(effect.get("renome", 0))))
+        except (TypeError, ValueError): bonus = 0
+        item = str(effect.get("item_id") or "").strip()[:100]
+        fact = str(effect.get("fato") or "").strip()[:100]
+        cleaned.append({"id":cid, "texto":text, "requisito":_clean_requirement(row.get("requisito")),
+                        "efeito":{"renome":bonus, "fato":fact, "item_id":item},
+                        "uma_vez": bool(row.get("uma_vez", True))})
+    if not cleaned and fallback:
+        cleaned.append({"id":"inicial", "texto":str(fallback)[:1200], "requisito":_clean_requirement({}),
+                        "efeito":{"renome":0, "fato":"", "item_id":""}, "uma_vez":False})
+    return cleaned
+
 # As 4 cidades originais começam com a mesma composição-base de Alva e Luz; as
 # criadas no editor nascem vazias e ganham fundo e NPCs pela aba Taverna.
 for _tavern_city_id in WORLD_LOCATIONS:
@@ -454,6 +491,8 @@ def _load_tavern_scenes():
                 else: target = by_id[edited["id"]]
                 for key in ("name", "dialog"):
                     if isinstance(edited.get(key), str): target[key] = edited[key][:1200]
+                if isinstance(edited.get("conversations"), list):
+                    target["conversations"] = _clean_tavern_conversations(edited["conversations"], target.get("dialog", ""))
                 if edited.get("remove_image") is True:
                     target["image"] = ""
                 elif isinstance(edited.get("image"), str) and edited["image"].startswith("assets/"):
@@ -478,6 +517,7 @@ _load_tavern_scenes()
 for _scene in TAVERN_SCENES.values():
     for _z_index, _slot in enumerate(_scene.get("slots", []), start=1):
         _slot.setdefault("z", _z_index)
+        _slot["conversations"] = _clean_tavern_conversations(_slot.get("conversations"), _slot.get("dialog", ""))
 PRIS_HP = 7         # vida do prisioneiro (Fase 3)
 PRIS_AC = 10        # classe de armadura do prisioneiro
 PRIS_MOVE = 6       # quadrados que o prisioneiro liberto anda por turno (segue o resgatador)
@@ -1076,6 +1116,9 @@ def create_savegame(name, owner, mode, campaign_file, has_master):
         "world_location": "alva_e_luz",
         # Próxima etapa liberada em cada destino do mapa-múndi.
         "world_adventure_progress": {},
+        "renome": 0,
+        "fatos": [],
+        "tavern_conversations_done": [],
         "has_master": bool(has_master),
         "master_account": _norm_username(owner) if has_master else None,
         "members": {}, "characters": {},
@@ -1202,6 +1245,10 @@ def try_open_savegame_room(account, sid, rooms):
     room.savegame = sg
     room.campaign_phase = sg.get("campaign_phase", 0)
     room.world_location = sg.get("world_location", "alva_e_luz") if sg.get("world_location") in WORLD_LOCATIONS else "alva_e_luz"
+    try: room.renome = max(0, int(sg.get("renome", 0)))
+    except (TypeError, ValueError): room.renome = 0
+    room.fatos = {str(f)[:100] for f in (sg.get("fatos") or []) if isinstance(f, str) and str(f).strip()}
+    room.tavern_conversations_done = {str(k)[:160] for k in (sg.get("tavern_conversations_done") or []) if isinstance(k, str)}
     raw_adventure_progress = sg.get("world_adventure_progress", {})
     if isinstance(raw_adventure_progress, dict):
         for adventure_id, stage in raw_adventure_progress.items():
@@ -4670,6 +4717,32 @@ def _sincronizar_cidades_derivadas():
         CITY_SHOPS.setdefault(cid, {})
         CITY_MAP_POINTS.setdefault(cid, {})
         TAVERN_SCENES.setdefault(cid, _cena_taverna_vazia())
+    _garantir_pontos_implicitos()
+
+# Posição inicial de cada ponto que a cidade ganha sozinha (Caravana + o prédio
+# de cada loja que a cidade tem). O cliente NÃO desenha mais nenhum marcador
+# fixo: tudo que aparece na ilustração vem de CITY_MAP_POINTS, senão o jogador
+# via um ponto que o editor não tinha como mostrar nem reposicionar.
+_PONTO_PADRAO = {"taverna": (32.0, 46.0), "templo": (67.0, 35.0), "ferreiro": (83.0, 38.0),
+                 "guilda": (52.0, 21.0), "mercador": (50.0, 40.0), "caravana": (42.0, 63.0)}
+# Cada prédio nativo e as chaves de loja que o fazem existir na cidade.
+_PONTO_LOJAS = {"ferreiro": ("ferreiro_weapon", "ferreiro_armor", "ferreiro_ammo"),
+                "mercador": ("mercador",), "templo": ("templo",), "taverna": ("taverna",)}
+
+def _garantir_pontos_implicitos():
+    """Materializa como ponto editável tudo que a cidade mostraria sozinho: a
+    Caravana de Viagem e o prédio de cada loja existente. Só cria o que falta —
+    se já houver um ponto daquele tipo (mesmo com outro id), respeita o autor."""
+    for cid, pontos in CITY_MAP_POINTS.items():
+        lojas = CITY_SHOPS.get(cid, {})
+        tipos = ["caravana"] + [b for b, chaves in _PONTO_LOJAS.items()
+                                if any(isinstance(lojas.get(k), list) for k in chaves)]
+        existentes = {str(p.get("type") or pid) for pid, p in pontos.items()}
+        for tipo in tipos:
+            if tipo in existentes or tipo in pontos:
+                continue
+            x, y = _PONTO_PADRAO[tipo]
+            pontos[tipo] = {"x": x, "y": y, "type": tipo}
 
 _sincronizar_cidades_derivadas()
 _TAVERN_BY_ID = {i["id"]: i for i in SHOP_TAVERN}
@@ -5852,6 +5925,9 @@ class GameRoom:
         self.world_adventure_id = None
         self.world_adventure_index = None
         self.world_adventure_progress = {}
+        self.renome = 0
+        self.fatos = set()
+        self.tavern_conversations_done = set()
         # Preset de iluminaÃ§Ã£o do 3D no cliente ("penumbra"|"masmorra"|"ar_livre").
         # Procedural usa o padrÃ£o; masmorra autorada sobrescreve em load_authored_dungeon.
         self.ambiente = "masmorra"
@@ -6283,9 +6359,10 @@ class GameRoom:
                                 "progresso": self.world_adventure_progress.get(adventure["id"], 0)}
                                for adventure in WORLD_ADVENTURES.values()],
             },
+            "reputacao": {"renome": self.renome, "fatos": sorted(self.fatos)},
             "city_map_points": CITY_MAP_POINTS,
             "city_shops": CITY_SHOPS,
-            "tavern": TAVERN_SCENES.get(self.world_location),
+            "tavern": self._tavern_payload(),
             "campaign": self._campaign_payload(),
             "shops": {
                 "ferreiro": {"weapons": _city_shop_items(self.world_location, "ferreiro_weapon"),
@@ -6303,6 +6380,19 @@ class GameRoom:
                 },
             },
         })
+
+    def _tavern_payload(self):
+        """Oculta falas bloqueadas, mas informa ao cliente que existe um gancho."""
+        scene = deepcopy(TAVERN_SCENES.get(self.world_location) or {})
+        for slot in scene.get("slots", []):
+            for conversation in slot.get("conversations", []):
+                available, reasons = self._avaliar_requisito(conversation.get("requisito"))
+                key = f"{self.world_location}:{slot.get('id')}:{conversation.get('id')}"
+                conversation["disponivel"] = available and not (conversation.get("uma_vez") and key in self.tavern_conversations_done)
+                conversation["bloqueio"] = reasons
+                if not available:
+                    conversation["texto"] = "Esta pessoa ainda não confia o bastante em vocês para falar sobre isso."
+        return scene
 
     def _gerar_loja_pergaminhos(self):
         """Renova o estoque de pergaminhos do mercador: uma MISTURA de básicos
@@ -7995,6 +8085,70 @@ class GameRoom:
         await self.gm_say("🧭 As coordenadas do mapa-múndi foram atualizadas.")
         await self.broadcast_city_state()
 
+    def _grupo_tem_item(self, item_id):
+        if not item_id: return True
+        for player in self.players.values():
+            for item in (player.get("bag") or []):
+                if isinstance(item, dict) and item.get("id") == item_id: return True
+                if item == item_id: return True
+            for item in (player.get("gear") or {}).values():
+                if isinstance(item, dict) and item.get("id") == item_id: return True
+        return False
+
+    def _avaliar_requisito(self, raw):
+        """Avalia os requisitos comuns de renome, diálogo e mapa-múndi."""
+        req = _clean_requirement(raw)
+        reasons = []
+        if self.renome < req["renome_min"]:
+            reasons.append(f"renome {req['renome_min']}")
+        levels = [int(p.get("level", 1) or 1) for p in self.players.values()]
+        if req["nivel_grupo_min"] and (not levels or min(levels) < req["nivel_grupo_min"]):
+            reasons.append(f"nível de grupo {req['nivel_grupo_min']}")
+        if req["item_id"] and not self._grupo_tem_item(req["item_id"]):
+            reasons.append(f"item-chave: {req['item_id']}")
+        if req["fato"] and req["fato"] not in self.fatos:
+            reasons.append(f"informação: {req['fato']}")
+        if req["aventura_id"]:
+            adventure = WORLD_ADVENTURES.get(req["aventura_id"])
+            if not adventure or self.world_adventure_progress.get(req["aventura_id"], 0) < len(adventure.get("dungeons") or []):
+                reasons.append("rota anterior concluída")
+        return not reasons, reasons
+
+    async def handle_tavern_npc(self, pid, npc_id, conversation_id):
+        if self.phase != "city" or pid not in self.players:
+            return
+        scene = TAVERN_SCENES.get(self.world_location) or {}
+        slot = next((s for s in scene.get("slots", []) if s.get("id") == str(npc_id) and not s.get("removed")), None)
+        if not slot:
+            await self.send_to(pid, {"type":"error", "msg":"Frequentador não encontrado."}); return
+        conversations = _clean_tavern_conversations(slot.get("conversations"), slot.get("dialog", ""))
+        conversation = next((c for c in conversations if c["id"] == str(conversation_id)), None)
+        if not conversation:
+            await self.send_to(pid, {"type":"error", "msg":"Conversa não encontrada."}); return
+        key = f"{self.world_location}:{slot['id']}:{conversation['id']}"
+        if conversation.get("uma_vez") and key in self.tavern_conversations_done:
+            await self.send_to(pid, {"type":"error", "msg":"Esta conversa já foi concluída."}); return
+        ok, reasons = self._avaliar_requisito(conversation.get("requisito"))
+        if not ok:
+            await self.send_to(pid, {"type":"error", "msg":"Conversa bloqueada: requer " + ", ".join(reasons) + "."}); return
+        effect = conversation.get("efeito") or {}
+        bonus = int(effect.get("renome", 0) or 0)
+        if bonus:
+            self.renome = max(0, self.renome + bonus)
+        fact = str(effect.get("fato") or "").strip()
+        if fact: self.fatos.add(fact)
+        item_id = str(effect.get("item_id") or "").strip()
+        item_note = ""
+        if item_id:
+            item = _DUNGEON_ITEM_CATALOG.get(item_id)
+            if item:
+                route = self._route_acquired_item(self.players[pid], deepcopy(item))
+                item_note = f" {item.get('emoji', '📦')} Recebeu **{item.get('name', item_id)}**." if route != "full" else " A bolsa está cheia; o item não pôde ser recebido."
+        if conversation.get("uma_vez"): self.tavern_conversations_done.add(key)
+        await self.gm_say(f"💬 **{slot.get('name', 'NPC')}**: {conversation['texto']}" + (f" (Renome {bonus:+d})" if bonus else "") + item_note)
+        self._checkpoint_savegame()
+        await self.broadcast_city_state()
+
     async def handle_world_adventure(self, pid, adventure_id):
         """Parte diretamente para uma entrada autorada marcada no mapa-múndi."""
         if self.phase != "city" or pid != self.host_pid:
@@ -8003,6 +8157,10 @@ class GameRoom:
         adventure = WORLD_ADVENTURES.get(str(adventure_id or ""))
         if not adventure:
             await self.send_to(pid, {"type": "error", "msg": "Destino de aventura inválido."})
+            return
+        allowed, reasons = self._avaliar_requisito(adventure.get("requisito"))
+        if not allowed:
+            await self.send_to(pid, {"type": "error", "msg": "Destino bloqueado: requer " + ", ".join(reasons) + "."})
             return
         stages = list(adventure.get("dungeons") or [])
         try:
@@ -8051,7 +8209,8 @@ class GameRoom:
                 continue
             if not (0 <= x <= 100 and 0 <= y <= 100):
                 continue
-            CITY_MAP_POINTS[city_id][point_id] = {"x": x, "y": y}
+            # Preserva tipo/nome: o ajuste em jogo só move o ponto.
+            CITY_MAP_POINTS[city_id][point_id].update({"x": x, "y": y})
             updated += 1
         if not updated:
             await self.send_to(pid, {"type": "error", "msg": "Nenhuma coordenada válida foi informada."})
@@ -12243,6 +12402,9 @@ class GameRoom:
         self.savegame["campaign_phase"] = self.campaign_phase
         self.savegame["world_location"] = self.world_location
         self.savegame["world_adventure_progress"] = dict(self.world_adventure_progress)
+        self.savegame["renome"] = self.renome
+        self.savegame["fatos"] = sorted(self.fatos)
+        self.savegame["tavern_conversations_done"] = sorted(self.tavern_conversations_done)
         write_savegame(self.savegame)
 
     # â”€â”€ inventory helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -20929,11 +21091,14 @@ class GameRoom:
             completed_index = self.world_adventure_index if isinstance(self.world_adventure_index, int) else 0
             self.world_adventure_progress[adventure_id] = max(
                 int(self.world_adventure_progress.get(adventure_id, 0) or 0), completed_index + 1)
+            reward = int((WORLD_ADVENTURES.get(adventure_id) or {}).get("renome_recompensa", 1) or 0)
+            if reward:
+                self.renome = max(0, self.renome + reward)
             self.world_adventure_id = None
             self.world_adventure_index = None
             self.dungeon_generated = False
             self._objetivo_concluido = False
-            await self.gm_say(f"🏁 **{adventure_name}** concluída! O grupo retorna gratuitamente à cidade.")
+            await self.gm_say(f"🏁 **{adventure_name}** concluída! O grupo retorna gratuitamente à cidade." + (f" Renome {reward:+d}." if reward else ""))
             await self._voltar_para_cidade()
             return
         if (self.mode == "campaign" and self.campaign
@@ -21794,6 +21959,9 @@ async def handler(ws):
 
                 elif t == "world_adventure":
                     if room: await room.handle_world_adventure(pid, msg.get("adventure_id"))
+
+                elif t == "tavern_npc":
+                    if room: await room.handle_tavern_npc(pid, msg.get("npc_id"), msg.get("conversation_id"))
 
                 elif t == "city_map_points":
                     if room: await room.handle_city_map_points(pid, msg.get("city_id"), msg.get("points"))
@@ -23021,6 +23189,8 @@ def _save_city_shops_upload(raw, taverns=None, raw_city_points=None):
                 else: target = by_id[edited["id"]]
                 for key in ("name", "dialog"):
                     if isinstance(edited.get(key), str): target[key] = edited[key][:1200]
+                if isinstance(edited.get("conversations"), list):
+                    target["conversations"] = _clean_tavern_conversations(edited["conversations"], target.get("dialog", ""))
                 if edited.get("remove_image") is True:
                     target["image"] = ""
                 elif isinstance(edited.get("image"), str) and edited["image"].startswith("assets/"):
@@ -23050,6 +23220,7 @@ def _save_city_shops_upload(raw, taverns=None, raw_city_points=None):
                 if name: item["name"] = name[:60]
                 cleaned[point_id] = item
             if cleaned: CITY_MAP_POINTS[city_id] = cleaned
+    _garantir_pontos_implicitos()
     try:
         _save_city_shops()
         _save_tavern_scenes()

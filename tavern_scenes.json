@@ -1,0 +1,522 @@
+{
+  "alva_e_luz": {
+    "background": "assets/tavern/taverna.png",
+    "art_ratio": 1.5,
+    "mode": "individual",
+    "mask": "assets/tavern/frequentadores.png",
+    "slots": [
+      {
+        "id": "barman",
+        "name": "Bartender",
+        "image": "assets/tavern/barman.png",
+        "x": 0.0,
+        "y": 17.5,
+        "w": 16.3,
+        "h": 32.2,
+        "dialog": "Bem-vindos a Alva e Luz. Uma refeição quente sempre ajuda antes da estrada.",
+        "z": 1.0
+      },
+      {
+        "id": "patrono_fundo",
+        "name": "Frequente silencioso",
+        "image": "assets/tavern/garconete_servindobebida2.png",
+        "x": 23.7,
+        "y": 39.7,
+        "w": 23.4,
+        "h": 40.4,
+        "dialog": "O homem evita encarar vocês. Talvez tenha algo a dizer quando os boatos chegarem.",
+        "z": 2.0
+      },
+      {
+        "id": "cartas",
+        "name": "Mesa de cartas",
+        "image": "assets/tavern/mesa_de_jogo.png",
+        "x": 6.2,
+        "y": 47.4,
+        "w": 56.0,
+        "h": 52.5,
+        "dialog": "Quatro jogadores disputam a última rodada. Eles parecem conhecer todos os rumores da cidade.",
+        "z": 3.0
+      },
+      {
+        "id": "misteriosos",
+        "name": "Figuras misteriosas",
+        "image": "assets/tavern/homem_misterioso.png",
+        "x": 35.1,
+        "y": 29.7,
+        "w": 20.2,
+        "h": 22.1,
+        "dialog": "Duas figuras conversam baixo ao fundo. A conversa para quando vocês se aproximam.",
+        "z": 4.0
+      },
+      {
+        "id": "serva_centro",
+        "name": "Servente",
+        "image": "assets/tavern/garconete.png",
+        "x": 41.5,
+        "y": 24.1,
+        "w": 29.5,
+        "h": 53.3,
+        "dialog": "A servente equilibra as canecas com prática. Ela conhece bem os clientes habituais.",
+        "z": 5.0
+      },
+      {
+        "id": "mesa_fundo",
+        "name": "Mesa ao fundo",
+        "image": "assets/tavern/homem_bebendo.png",
+        "x": 63.9,
+        "y": 31.0,
+        "w": 12.4,
+        "h": 26.0,
+        "dialog": "Uma mesa discreta observa a entrada e a escadaria.",
+        "z": 6.0
+      },
+      {
+        "id": "mesa_direita",
+        "name": "Mesa dos viajantes",
+        "image": "assets/tavern/mesa_de_cartas.png",
+        "x": 51.7,
+        "y": 37.3,
+        "w": 48.3,
+        "h": 57.8,
+        "dialog": "Viajantes cansados compartilham histórias, mapas e cerveja.",
+        "z": 7.0
+      },
+      {
+        "id": "bardo",
+        "name": "Bardo da taverna",
+        "image": "assets/tavern/bardo.png",
+        "x": 72.2,
+        "y": 20.0,
+        "w": 18.3,
+        "h": 37.0,
+        "dialog": "O bardo muda a melodia ao perceber aventureiros. Talvez uma canção revele um boato.",
+        "z": 8.0
+      }
+    ]
+  },
+  "vila_riacho": {
+    "background": "assets/tavern/taverna_pequena.png",
+    "art_ratio": 1.5,
+    "mode": "individual",
+    "mask": "assets/tavern/frequentadores.png",
+    "slots": [
+      {
+        "id": "barman",
+        "name": "Bartender",
+        "image": "assets/tavern/barman.png",
+        "x": 21.3,
+        "y": 20.1,
+        "w": 14.4,
+        "h": 34.0,
+        "dialog": "Bem-vindos a Alva e Luz. Uma refeição quente sempre ajuda antes da estrada.",
+        "z": 1.0
+      },
+      {
+        "id": "patrono_fundo",
+        "name": "mesa de amigos",
+        "image": "assets/tavern/mesa_de_jogo.png",
+        "x": 34.8,
+        "y": 42.7,
+        "w": 57.8,
+        "h": 57.3,
+        "dialog": "O homem evita encarar vocês. Talvez tenha algo a dizer quando os boatos chegarem.",
+        "z": 2.0
+      },
+      {
+        "id": "cartas",
+        "name": "bardo",
+        "image": "assets/tavern/bardo2.png",
+        "x": 0.0,
+        "y": 36.9,
+        "w": 48.4,
+        "h": 63.1,
+        "dialog": "Quatro jogadores disputam a última rodada. Eles parecem conhecer todos os rumores da cidade.",
+        "z": 3.0
+      },
+      {
+        "id": "misteriosos",
+        "name": "Figuras misteriosas",
+        "image": "assets/tavern/garconete_servindobebida.png",
+        "x": 34.4,
+        "y": 31.3,
+        "w": 32.4,
+        "h": 55.0,
+        "dialog": "Duas figuras conversam baixo ao fundo. A conversa para quando vocês se aproximam.",
+        "removed": true,
+        "z": 4.0
+      },
+      {
+        "id": "serva_centro",
+        "name": "Servente",
+        "image": "assets/tavern/slots/servente_centro.png",
+        "x": 54.0,
+        "y": 28.3,
+        "w": 13.7,
+        "h": 33.2,
+        "dialog": "A servente equilibra as canecas com prática. Ela conhece bem os clientes habituais.",
+        "removed": true,
+        "z": 5.0
+      },
+      {
+        "id": "mesa_fundo",
+        "name": "Mesa ao fundo",
+        "image": "assets/tavern/slots/mesa_fundo.png",
+        "x": 67.0,
+        "y": 33.2,
+        "w": 13.0,
+        "h": 24.4,
+        "dialog": "Uma mesa discreta observa a entrada e a escadaria.",
+        "removed": true,
+        "z": 6.0
+      },
+      {
+        "id": "mesa_direita",
+        "name": "Mesa dos viajantes",
+        "image": "assets/tavern/slots/mesa_direita.png",
+        "x": 58.6,
+        "y": 42.9,
+        "w": 41.4,
+        "h": 45.9,
+        "dialog": "Viajantes cansados compartilham histórias, mapas e cerveja.",
+        "removed": true,
+        "z": 7.0
+      },
+      {
+        "id": "bardo",
+        "name": "Bardo da taverna",
+        "image": "assets/tavern/slots/bardo.png",
+        "x": 83.3,
+        "y": 24.4,
+        "w": 16.7,
+        "h": 30.3,
+        "dialog": "O bardo muda a melodia ao perceber aventureiros. Talvez uma canção revele um boato.",
+        "removed": true,
+        "z": 8.0
+      },
+      {
+        "id": "npc_ms254rwd",
+        "name": "garçonete",
+        "image": "assets/tavern/garconete_servindobebida2.png",
+        "x": 50.1,
+        "y": 27.8,
+        "w": 31.9,
+        "h": 52.1,
+        "z": 0.0,
+        "dialog": ""
+      }
+    ]
+  },
+  "vila_corvin": {
+    "background": "assets/tavern/taverna_pequena.png",
+    "art_ratio": 1.5,
+    "mode": "individual",
+    "mask": "assets/tavern/frequentadores.png",
+    "slots": [
+      {
+        "id": "barman",
+        "name": "Bartender",
+        "image": "assets/tavern/taverneira.png",
+        "x": 16.7,
+        "y": 20.9,
+        "w": 19.4,
+        "h": 36.8,
+        "dialog": "Bem-vindos a Corvin. Uma refeição quente sempre ajuda antes da estrada.",
+        "z": 1.0
+      },
+      {
+        "id": "patrono_fundo",
+        "name": "Bardo Misterioso",
+        "image": "assets/tavern/bardo3.png",
+        "x": 63.9,
+        "y": 33.8,
+        "w": 25.3,
+        "h": 47.5,
+        "dialog": "O bardo ignora você e continua tocando. ",
+        "z": 2.0
+      },
+      {
+        "id": "cartas",
+        "name": "Mesa de cartas",
+        "image": "assets/tavern/slots/cartas.png",
+        "x": 0.0,
+        "y": 44.0,
+        "w": 54.7,
+        "h": 48.8,
+        "dialog": "Quatro jogadores disputam a última rodada. Eles parecem conhecer todos os rumores da cidade.",
+        "removed": true,
+        "z": 3.0
+      },
+      {
+        "id": "misteriosos",
+        "name": "Figuras misteriosas",
+        "image": "assets/tavern/slots/misteriosos.png",
+        "x": 32.6,
+        "y": 31.2,
+        "w": 23.4,
+        "h": 25.4,
+        "dialog": "Duas figuras conversam baixo ao fundo. A conversa para quando vocês se aproximam.",
+        "removed": true,
+        "z": 4.0
+      },
+      {
+        "id": "serva_centro",
+        "name": "Servente",
+        "image": "assets/tavern/slots/servente_centro.png",
+        "x": 54.0,
+        "y": 28.3,
+        "w": 13.7,
+        "h": 33.2,
+        "dialog": "A servente equilibra as canecas com prática. Ela conhece bem os clientes habituais.",
+        "removed": true,
+        "z": 5.0
+      },
+      {
+        "id": "mesa_fundo",
+        "name": "Mesa ao fundo",
+        "image": "assets/tavern/slots/mesa_fundo.png",
+        "x": 67.0,
+        "y": 33.2,
+        "w": 13.0,
+        "h": 24.4,
+        "dialog": "Uma mesa discreta observa a entrada e a escadaria.",
+        "removed": true,
+        "z": 6.0
+      },
+      {
+        "id": "mesa_direita",
+        "name": "Mesa dos viajantes",
+        "image": "assets/tavern/slots/mesa_direita.png",
+        "x": 58.6,
+        "y": 46.9,
+        "w": 41.4,
+        "h": 45.9,
+        "dialog": "Viajantes cansados compartilham histórias, mapas e cerveja.",
+        "removed": true,
+        "z": 7.0
+      },
+      {
+        "id": "bardo",
+        "name": "Bardo da taverna",
+        "image": "assets/tavern/slots/bardo.png",
+        "x": 83.3,
+        "y": 24.4,
+        "w": 16.7,
+        "h": 30.3,
+        "dialog": "O bardo muda a melodia ao perceber aventureiros. Talvez uma canção revele um boato.",
+        "removed": true,
+        "z": 8.0
+      },
+      {
+        "id": "npc_ms2e74bw",
+        "name": "Garçonete",
+        "image": "assets/tavern/garconete_humilde.png",
+        "x": 23.5,
+        "y": 38.0,
+        "w": 40.6,
+        "h": 62.0,
+        "z": 5.0,
+        "dialog": "A comida esta bem gostosa. "
+      },
+      {
+        "id": "npc_ms2e85ew",
+        "name": "Homem sombrio ",
+        "image": "assets/tavern/homem_misterioso.png",
+        "x": 5.3,
+        "y": 27.5,
+        "w": 42.6,
+        "h": 72.5,
+        "z": 4.0,
+        "dialog": "Não me incomode. "
+      }
+    ]
+  },
+  "graciero": {
+    "background": "assets/tavern/taver_luxuosa.png",
+    "art_ratio": 1.5,
+    "mode": "individual",
+    "mask": "assets/tavern/frequentadores.png",
+    "slots": [
+      {
+        "id": "barman",
+        "name": "Bartender",
+        "image": "assets/tavern/taverneiro2.png",
+        "x": 16.0,
+        "y": 30.6,
+        "w": 16.3,
+        "h": 32.2,
+        "dialog": "Bem-vindos a Alva e Luz. Uma refeição quente sempre ajuda antes da estrada.",
+        "z": 1.0
+      },
+      {
+        "id": "patrono_fundo",
+        "name": "Frequente silencioso",
+        "image": "assets/tavern/slots/patrono_fundo.png",
+        "x": 16.0,
+        "y": 22.9,
+        "w": 13.0,
+        "h": 25.4,
+        "dialog": "O homem evita encarar vocês. Talvez tenha algo a dizer quando os boatos chegarem.",
+        "removed": true,
+        "z": 2.0
+      },
+      {
+        "id": "cartas",
+        "name": "Mesa de cartas",
+        "image": "assets/tavern/slots/cartas.png",
+        "x": 0.0,
+        "y": 44.1,
+        "w": 54.7,
+        "h": 48.8,
+        "dialog": "Quatro jogadores disputam a última rodada. Eles parecem conhecer todos os rumores da cidade.",
+        "removed": true,
+        "z": 3.0
+      },
+      {
+        "id": "misteriosos",
+        "name": "Figuras misteriosas",
+        "image": "assets/tavern/slots/misteriosos.png",
+        "x": 32.7,
+        "y": 31.2,
+        "w": 23.4,
+        "h": 25.4,
+        "dialog": "Duas figuras conversam baixo ao fundo. A conversa para quando vocês se aproximam.",
+        "removed": true,
+        "z": 4.0
+      },
+      {
+        "id": "serva_centro",
+        "name": "Servente",
+        "image": "assets/tavern/slots/servente_centro.png",
+        "x": 54.0,
+        "y": 28.3,
+        "w": 13.7,
+        "h": 33.2,
+        "dialog": "A servente equilibra as canecas com prática. Ela conhece bem os clientes habituais.",
+        "removed": true,
+        "z": 5.0
+      },
+      {
+        "id": "mesa_fundo",
+        "name": "Mesa ao fundo",
+        "image": "assets/tavern/slots/mesa_fundo.png",
+        "x": 67.0,
+        "y": 33.2,
+        "w": 13.0,
+        "h": 24.4,
+        "dialog": "Uma mesa discreta observa a entrada e a escadaria.",
+        "removed": true,
+        "z": 6.0
+      },
+      {
+        "id": "mesa_direita",
+        "name": "Mesa dos viajantes",
+        "image": "assets/tavern/slots/mesa_direita.png",
+        "x": 58.6,
+        "y": 46.9,
+        "w": 41.4,
+        "h": 45.9,
+        "dialog": "Viajantes cansados compartilham histórias, mapas e cerveja.",
+        "removed": true,
+        "z": 7.0
+      },
+      {
+        "id": "bardo",
+        "name": "Bardo da taverna",
+        "image": "assets/tavern/slots/bardo.png",
+        "x": 83.3,
+        "y": 24.4,
+        "w": 16.7,
+        "h": 30.3,
+        "dialog": "O bardo muda a melodia ao perceber aventureiros. Talvez uma canção revele um boato.",
+        "removed": true,
+        "z": 8.0
+      },
+      {
+        "id": "npc_ms2ee41a",
+        "name": "garçonete",
+        "image": "assets/tavern/garconete_ruiva.png",
+        "x": 38.9,
+        "y": 41.4,
+        "w": 29.6,
+        "h": 58.3,
+        "z": 2.0,
+        "dialog": ""
+      },
+      {
+        "id": "npc_ms2ef8oi",
+        "name": "Elfo Suspeito ",
+        "image": "assets/tavern/elfo.png",
+        "x": 63.7,
+        "y": 44.3,
+        "w": 14.0,
+        "h": 20.0,
+        "z": 3.0,
+        "dialog": ""
+      },
+      {
+        "id": "npc_ms2egify",
+        "name": "Homem nobre",
+        "image": "assets/tavern/nobre2.png",
+        "x": 0.0,
+        "y": 36.6,
+        "w": 23.4,
+        "h": 58.4,
+        "z": 4.0,
+        "dialog": ""
+      },
+      {
+        "id": "npc_ms2ej3o7",
+        "name": "Gnomo",
+        "image": "assets/tavern/gnomo_rico.png",
+        "x": 88.3,
+        "y": 24.7,
+        "w": 11.7,
+        "h": 17.9,
+        "z": 5.0,
+        "dialog": ""
+      }
+    ]
+  },
+  "vila_dos_charcos": {
+    "background": "assets/tavern/taverna_charco.png",
+    "art_ratio": 1.5,
+    "mode": "individual",
+    "mask": "",
+    "slots": [
+      {
+        "id": "npc_ms42peq8",
+        "name": "Novo NPC",
+        "image": "assets/tavern/garconete_humilde.png",
+        "x": 35.0,
+        "y": 30.3,
+        "w": 30.0,
+        "h": 69.7,
+        "z": 1.0,
+        "dialog": ""
+      },
+      {
+        "id": "npc_ms42qx5t",
+        "name": "Novo NPC",
+        "image": "assets/tavern/taverneiro3.png",
+        "x": 0.5,
+        "y": 14.7,
+        "w": 23.9,
+        "h": 46.1,
+        "z": 2.0,
+        "dialog": ""
+      },
+      {
+        "id": "npc_ms42snq6",
+        "name": "Novo NPC",
+        "image": "assets/tavern/homem_bebendo.png",
+        "x": 63.2,
+        "y": 42.2,
+        "w": 33.8,
+        "h": 57.8,
+        "z": 3.0,
+        "dialog": ""
+      }
+    ]
+  }
+}

@@ -116,7 +116,10 @@ def test_validacao():
 def test_helpers():
     print("\n[2] helpers (hidratação / trap / arquivos)")
     itens = hidratar_itens_bau([{"id": "health_potion"}])
-    check("hidratação devolve dict completo", itens and itens[0]["name"] == "Poção de Vida")
+    # O catálogo de loot resolve pela definição de LOJA (SHOP_TEMPLE), que vence a
+    # "versão antiga" de CHEST_ITEMS no merge de _criar_catalogo_loot_masmorra —
+    # por isso "Poção de Cura", não a "Poção de Vida" de CHEST_ITEMS.
+    check("hidratação devolve dict completo", itens and itens[0]["name"] == "Poção de Cura")
     check("hidratação ignora id inexistente", hidratar_itens_bau([{"id": "x"}]) == [])
 
     arm = make_authored_trap({"tipo": "fosso_estacas", "pos": [4, 1]})
@@ -178,7 +181,7 @@ async def test_load_authored():
     check("authored_boss inerte (m['boss'] falsy)", not m.get("boss"))
     check("1 baú carregado com item hidratado",
           len(r.chests) == 1 and
-          next(iter(r.chests.values()))["items"][0]["name"] == "Poção de Vida")
+          next(iter(r.chests.values()))["items"][0]["name"] == "Poção de Cura")
     check("baú com ouro exato", next(iter(r.chests.values()))["gold"] == 20)
     check("1 armadilha carregada", len(r.armadilhas) == 1 and
           r.armadilhas[0]["tipo"] == "fosso_estacas")

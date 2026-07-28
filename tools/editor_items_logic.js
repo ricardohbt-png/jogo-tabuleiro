@@ -11,6 +11,14 @@
       .toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "arma";
   }
   function buildDie(qtd, faces) { return Math.max(1, +qtd || 1) + "d" + (+faces || 6); }
+  // Espelha _CUSTOM_ITEM_SHOP (server.py): em qual loja da cidade o item entra.
+  // Há teste comparando os dois mapas.
+  var SHOP_BY_ITEM_TYPE = {
+    weapon: "ferreiro_weapon", armor: "ferreiro_armor", shield: "ferreiro_armor",
+    ring: "mercador", boots: "mercador", potion: "mercador",
+    throwable: "mercador", poison: "mercador",
+  };
+  function shopIdForItemType(t) { return SHOP_BY_ITEM_TYPE[t || "weapon"] || "mercador"; }
   function dieAvg(txt) {
     var m = /^(\d+)d(\d+)$/.exec(String(txt || "")); if (!m) return 0;
     return (+m[1]) * ((+m[2]) + 1) / 2;
@@ -310,7 +318,9 @@
               validatePoisonDraft: validatePoisonDraft,
               suggestPricePoison: suggestPricePoison,
               POISON_OPS: POISON_OPS, POISON_ATTRS: POISON_ATTRS,
-              POISON_PENS: POISON_PENS, POISON_SAVES: POISON_SAVES };
+              POISON_PENS: POISON_PENS, POISON_SAVES: POISON_SAVES,
+              slugify: slugify, shopIdForItemType: shopIdForItemType,
+              SHOP_BY_ITEM_TYPE: SHOP_BY_ITEM_TYPE };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (root) root.EDITOR_ITEMS_LOGIC = api;
 })(typeof window !== "undefined" ? window : null);

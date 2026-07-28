@@ -550,6 +550,8 @@ const GS = (() => {
     // ── FERREIRO — Munição ──
     flechas:               { id:'flechas',               nome:'Flechas (10)',                tipo:'municao', loja:'ferreiro', preco:5,  quantidade:10, danoExtra:null,  paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
     virotes:               { id:'virotes',               nome:'Virotes (10)',                tipo:'municao', loja:'ferreiro', preco:5,  quantidade:10, danoExtra:null,  paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
+    flechas_prata:         { id:'flechas_prata',         nome:'Flechas de Prata (10)',       tipo:'municao', loja:'ferreiro', preco:30, quantidade:10, danoExtra:1, prata:true, paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    virotes_prata:         { id:'virotes_prata',         nome:'Virotes de Prata (10)',       tipo:'municao', loja:'ferreiro', preco:30, quantidade:10, danoExtra:1, prata:true, paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
     flechas_incendiarias:  { id:'flechas_incendiarias',  nome:'Flechas Incendiárias (10)',   tipo:'municao', loja:'ferreiro', preco:20, quantidade:10, danoExtra:'1d4', tipoDano:'fogo', paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
     virotes_incendiarios:  { id:'virotes_incendiarios',  nome:'Virotes Incendiários (10)',   tipo:'municao', loja:'ferreiro', preco:20, quantidade:10, danoExtra:'1d4', tipoDano:'fogo', paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
 
@@ -635,6 +637,11 @@ const GS = (() => {
 
     // ── MERCADO — Arremessáveis de fogo (consumíveis de bolsa; ver ARREMESSAVEIS no server) ──
     // Usados por clique direito → mira de alvo → throw_item. Ataque por DES vs CA.
+    agua_benta: {
+      id: 'agua_benta', nome: 'Água Benta', emoji: '💧✝️',
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, permitidoPara:['todos'],
+      descricao: 'Arremesse (4 quad., ataque por DES). Causa 2d6 de dano sagrado e cria uma zona sagrada por 2 rodadas.',
+    },
     frasco_oleo: {
       id: 'frasco_oleo', nome: 'Frasco de Óleo Incendiário', emoji: '🔥',
       tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, permitidoPara:['todos'],
@@ -816,14 +823,24 @@ const GS = (() => {
   function doorSets(state) {
     const open = new Set(), closed = new Set();
     const rooms = state && state.rooms ? state.rooms : [];
+    const locked = new Set();
+    const tiles = state && state.tiles ? state.tiles : [];
+    for (let y = 0; y < tiles.length; y++) for (let x = 0; x < tiles[y].length; x++) {
+      if (tiles[y][x] === 2) closed.add(`${x},${y}`);
+    }
     for (const r of rooms) {
-      const locked = !!r.locked;
+      const roomLocked = !!r.locked;
       for (const d of (r.doors || [])) {
         const k = `${d[0]},${d[1]}`;
-        if (locked) closed.add(k); else open.add(k);
+        if (roomLocked) locked.add(k); else open.add(k);
       }
     }
-    for (const k of closed) open.delete(k);   // trancada vence: porta fechada
+    for (const k of open) if (!locked.has(k)) closed.delete(k);
+    for (const k of locked) { closed.add(k); open.delete(k); }
+    for (const d of ((state && state.opened_doors) || [])) {
+      const k = `${d[0]},${d[1]}`;
+      if (!locked.has(k)) { closed.delete(k); open.add(k); }
+    }
     return { open, closed };
   }
 
@@ -1010,6 +1027,30 @@ const GS = (() => {
   function clearSession() {
     _sessCode = null;
     try { localStorage.removeItem('lfh_session'); } catch (e) {}
+  }
+
+  // Saída voluntária: interrompe a reconexão automática e descarta o estado
+  // local antes de fechar o socket. A tela/DOM permanecem responsabilidade do
+  // renderer (game.js).
+  function leaveSession() {
+    clearTimeout(_rejoinTimer);
+    _rejoinTimer = null;
+    _rejoinTries = REJOIN_MAX;
+    clearSession();
+    _sessUrl = null;
+    const socket = ws;
+    ws = null;
+    myPid = null;
+    gameState = null;
+    lobbyState = null;
+    cityState = null;
+    isMyTurn = false;
+    pendingSkill = null;
+    pendingAction = null;
+    pendingThrow = null;
+    activeShop = null;
+    pendingShopOpen = null;
+    if (socket && socket.readyState < 2) { try { socket.close(); } catch (e) {} }
   }
 
   // Liga os callbacks comuns a connect() e rejoin().
@@ -1296,7 +1337,7 @@ const GS = (() => {
   function setKnownSpells(ids)       { send({ type: 'set_known_spells', ids }); }
   // Escolha da nova magia ao subir de nível (responde ao spell_pick_prompt).
   function escolherMagiaNivel(id)    { send({ type: 'escolher_magia_nivel', magia_id: id }); }
-  // Animar Mortos (Pedro): anima um cadáver adjacente (id de gameState.corpses).
+  // Animar Mortos (Pedro): anima o cadáver selecionado a até 3 casas.
   function animarMortos(cadaverId) { send({ type: 'animar_mortos', cadaver_id: cadaverId }); }
   // Comanda os animados (ação bônus do Pedro): cada um move+ataca o monstro mais próximo.
   function comandarAnimados() { send({ type: 'comandar_animados' }); }
@@ -1346,6 +1387,11 @@ const GS = (() => {
 
   // ── Guilda dos Heróis (Fase 0) ──────────────────────────────────────────
   function guildBuy(itemId)           { send({ type: 'guild_buy',   item_id: itemId }); }
+  function worldTravel(destination)   { send({ type: 'world_travel', destination: destination }); }
+  function worldAdventure(adventureId) { send({ type: 'world_adventure', adventure_id: adventureId }); }
+  function talkTavernNpc(npcId, conversationId) { send({ type: 'tavern_npc', npc_id: npcId, conversation_id: conversationId }); }
+  function saveWorldMapPoints(points) { send({ type: 'world_map_points', points: points }); }
+  function saveCityMapPoints(cityId, points) { send({ type: 'city_map_points', city_id: cityId, points: points }); }
   function guildEquip(slot, itemId)   { send({ type: 'guild_equip', slot: slot, item_id: itemId }); }
   function usarTecnica(tid, targetId) { send({ type: 'usar_tecnica', tecnica_id: tid, target_id: targetId != null ? targetId : null }); }
   function responderSorteReacao(usar) { send({ type: 'sorte_reacao', usar: !!usar }); }
@@ -1369,9 +1415,11 @@ const GS = (() => {
   }
   function guildEquipOf(pid) {
     const g = (cityState && cityState.guild) || null;
-    if (g && g.players && g.players[pid] && g.players[pid].equip) return g.players[pid].equip;
-    const gp = (gameState && gameState.players || []).find(p => p.id === pid);
-    return (gp && gp.guild_equip) || { tecnica: null, tecnica_exclusiva: null };
+    const raw = (g && g.players && g.players[pid] && g.players[pid].equip)
+      || ((gameState && gameState.players || []).find(p => p.id === pid) || {}).guild_equip;
+    if (raw && Array.isArray(raw.tecnicas)) return { ...raw, tecnica: raw.tecnicas[0] || null };
+    // Compatibilidade com estados/saves enviados antes dos slots genéricos.
+    return { tecnicas: [raw && raw.tecnica || null] };
   }
   // Recarga restante (em rodadas) de uma técnica, lido do game_state.
   function tecnicaRestante(player, tid) {
@@ -1396,6 +1444,9 @@ const GS = (() => {
       }
     });
     return out;
+  }
+  function sorrateiroAtivo() {
+    return guildEquipOf(myPid).tecnicas.includes('sorrateiro');
   }
 
   // ── Instrumentos do Bardo (Fase 1/2) ─────────────────────────────────────
@@ -1478,7 +1529,7 @@ const GS = (() => {
       return (dx + dy) <= 1;   // mesma casa ou cardinal adjacente
     }) || null;
   }
-  // Cadáver adjacente (Chebyshev ≤ 1) ao herói local — ou null. Decisor puro,
+  // Cadáver no alcance de Animar Mortos (Chebyshev ≤ 3) ao herói local — ou null.
   // usado pelo renderer para habilitar/disparar Animar Mortos.
   function cadaverAdjacente() {
     if (!gameState) return null;
@@ -1488,7 +1539,7 @@ const GS = (() => {
     return corpses.find(c => {
       const dx = Math.abs(myP.pos[0] - c.pos[0]);
       const dy = Math.abs(myP.pos[1] - c.pos[1]);
-      return Math.max(dx, dy) <= 1;
+      return Math.max(dx, dy) <= 3;
     }) || null;
   }
 
@@ -2189,6 +2240,7 @@ const GS = (() => {
     rejoin,                  // religa à partida (queda/F5) via mensagem `rejoin`
     savedSession,            // {url, code, name} persistidos — ou null
     clearSession,            // descarta a sessão salva (ex.: sair de propósito)
+    leaveSession,            // encerra a conexão sem programar reconexão
 
     // ── Contas / Jogos Salvos (Fase 3) ──
     loginConta, criarConta, listSavegames, createSavegame, loadSavegame, deleteSavegame, joinByCode,
@@ -2244,6 +2296,11 @@ const GS = (() => {
 
     // ── Guilda dos Heróis (Fase 0) ──
     guildBuy,
+    worldTravel,
+    worldAdventure,
+    talkTavernNpc,
+    saveWorldMapPoints,
+    saveCityMapPoints,
     guildEquip,
     usarTecnica,
     responderSorteReacao,
@@ -2251,6 +2308,7 @@ const GS = (() => {
     guildCatalogFor,
     guildOwnedOf,
     guildEquipOf,
+    sorrateiroAtivo,
     tecnicaRestante,
     tecnicaPendente,
     tecnicasConcedidasPorItem,

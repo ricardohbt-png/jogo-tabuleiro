@@ -85,6 +85,7 @@ window.VC = {
     // Azul saturado e emissivo: a superfície deve continuar legível nas áreas
     // escuras e distinguir-se claramente dos pisos de pedra.
     agua:          { color: [0.01, 0.40, 0.78] },
+    agua_profunda: { color: [0.006, 0.045, 0.18] },
     pedra_negra:   { color: [0.14, 0.14, 0.16] },
     entulho:       { color: [0.34, 0.31, 0.27] },
     pedra_normal:  { color: [0.353, 0.353, 0.416] },

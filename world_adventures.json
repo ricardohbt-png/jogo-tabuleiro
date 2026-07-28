@@ -1,0 +1,33 @@
+{
+  "destino_2": {
+    "id": "destino_2",
+    "nome": "esconderijo de Leonel",
+    "x": 58.32,
+    "y": 36.6,
+    "fome": 0,
+    "sede": 0,
+    "dungeons": [
+      "mapaga_grande.json"
+    ],
+    "requisito": {
+      "tipo": "nenhum",
+      "valor": ""
+    }
+  },
+  "destino_1": {
+    "id": "destino_1",
+    "nome": "casa suspeita",
+    "x": 50.0,
+    "y": 50.0,
+    "fome": 0,
+    "sede": 0,
+    "dungeons": [
+      "casa_secreta.json",
+      "gustavo.json"
+    ],
+    "requisito": {
+      "tipo": "nenhum",
+      "valor": ""
+    }
+  }
+}

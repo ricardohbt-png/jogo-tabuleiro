@@ -1418,5 +1418,21 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > custos originais). `alva_e_luz` (`CITY_INICIAL`) nunca é excluível e é o fallback das salas cuja
 > cidade sumiu. x/y: das **originais** vem do arraste no mapa-múndi (`world_map_points.json`, o
 > painel nem mostra os campos); das **criadas** viaja no payload. Upload da ilustração:
-> `upload_city_art` → `assets/city/`. Teste: `tools/test_cidades_editor.py` (56 checks). Spec/plano
+> `upload_city_art` → `assets/city/`. Teste: `tools/test_cidades_editor.py` (64 checks). Spec/plano
 > em `docs/superpowers/{specs,plans}/2026-07-28-editor-cidades-nova-cidade*`.
+
+> **Pontos da ilustração da cidade — `CITY_MAP_POINTS` é a fonte única:** o cliente **não**
+> desenha mais nenhum marcador fixo. Os hotspots nativos de `_CTY_BLDGS` e a Caravana embutida
+> (`game.js`) só aparecem quando existe um ponto com o **mesmo id** em
+> `game_state/city_state.city_map_points`; sem isso eles duplicavam o ponto equivalente criado no
+> editor e ficavam numa posição fixa que o editor não listava nem reposicionava. Marcadores
+> criados a partir de pontos do editor levam `dataset.cityExtra` e são **removidos** quando o
+> ponto some (antes ficavam presos até rebuildar a cidade). Do lado do servidor,
+> `_garantir_pontos_implicitos()` materializa como ponto editável tudo que a cidade mostraria
+> sozinha — a **Caravana de Viagem** (sempre) e o **prédio de cada loja existente** (`_PONTO_LOJAS`,
+> posições em `_PONTO_PADRAO`) — pulando o tipo que já tenha um ponto autoral (mesmo com outro id),
+> para não duplicar. Roda em `_sincronizar_cidades_derivadas` (boot + save de cidades) e em
+> `_save_city_shops_upload` (abrir uma loja nova numa cidade cria o ponto do prédio na hora).
+> `handle_city_map_points` (ajuste "📍 Ajustar pontos" em jogo) passou a fazer `update` de x/y em
+> vez de substituir o dict — antes o ajuste apagava `type`/`name` do ponto autoral. Teste:
+> `tools/test_cidades_editor.py` seção [12].

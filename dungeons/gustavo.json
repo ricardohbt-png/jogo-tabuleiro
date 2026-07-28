@@ -33,10 +33,10 @@
       1,
       1,
       1,
+      0,
       1,
       1,
-      1,
-      1,
+      0,
       1,
       1,
       1,
@@ -52,29 +52,10 @@
       1,
       1,
       1,
+      2,
       1,
       1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
-      0,
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
+      2,
       1,
       1,
       1,
@@ -90,10 +71,10 @@
       1,
       1,
       1,
+      2,
       1,
       1,
-      1,
-      1,
+      2,
       1,
       1,
       1,
@@ -108,6 +89,25 @@
       1,
       1,
       1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      2,
+      0,
       0,
       0,
       0,
@@ -313,6 +313,46 @@
       "room_id": null,
       "boss": false,
       "target": false
+    },
+    {
+      "type": "escorpiao_pequeno",
+      "pos": [
+        2,
+        6
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "escorpiao_pedra",
+      "pos": [
+        2,
+        2
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "kobold_lanceiro",
+      "pos": [
+        10,
+        3
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "kobold_besteiro",
+      "pos": [
+        11,
+        1
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false
     }
   ],
   "chests": [
@@ -326,50 +366,14 @@
       "key_objective": false
     }
   ],
-  "traps": [
-    {
-      "tipo": "armadilha_dardos_envenenados",
-      "pos": [
-        1,
-        8
-      ],
-      "veneno_id": "veneno_cobra_cuspidora"
-    },
-    {
-      "tipo": "armadilha_dardos_envenenados",
-      "pos": [
-        1,
-        7
-      ],
-      "veneno_id": "veneno_agonia_sufocante"
-    },
-    {
-      "tipo": "armadilha_dardos_envenenados",
-      "pos": [
-        1,
-        9
-      ],
-      "veneno_id": "veneno_escorpiao_pedra"
-    },
-    {
-      "tipo": "armadilha_teletransporte",
-      "pos": [
-        3,
-        6
-      ],
-      "saida": [
-        10,
-        9
-      ]
-    }
-  ],
+  "traps": [],
   "decorations": [
     {
       "id": "decor_0",
       "type": "cama",
       "pos": [
-        4,
-        2
+        14,
+        8
       ],
       "facing": [
         0,
@@ -391,18 +395,112 @@
       ],
       "loot": null,
       "key_objective": false
+    },
+    {
+      "id": "decor_2",
+      "type": "lareira",
+      "pos": [
+        1,
+        10
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": true,
+      "vscale": [
+        1.5,
+        2
+      ]
+    },
+    {
+      "id": "decor_3",
+      "type": "altar",
+      "pos": [
+        3,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "racao_viagem"
+          }
+        ]
+      },
+      "key_objective": false,
+      "chest_trap_monster_type": "esqueleto_humano"
     }
   ],
-  "secret_passages": [],
+  "secret_passages": [
+    {
+      "id": "passage_0",
+      "type": "mechanism",
+      "pos": [
+        4,
+        9
+      ],
+      "key_decor_ids": [
+        "decor_2"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_1",
+      "type": "mechanism",
+      "pos": [
+        5,
+        9
+      ],
+      "key_decor_ids": [
+        "decor_2"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_2",
+      "type": "mechanism",
+      "pos": [
+        6,
+        9
+      ],
+      "key_decor_ids": [
+        "decor_2"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_3",
+      "type": "mechanism",
+      "pos": [
+        7,
+        9
+      ],
+      "key_decor_ids": [
+        "decor_2"
+      ],
+      "keys_mode": "any"
+    }
+  ],
+  "falas": [],
   "master_reinforcements": [],
+  "expected_party": {
+    "heroes": 4,
+    "level": 1
+  },
   "prisoner": null,
   "materiais": {},
   "objectives": {
     "primary": {
       "type": "kill_all",
-      "xp": 0,
+      "xp": 500,
       "reward": {
-        "gold": 0,
+        "gold": 200,
         "items": []
       }
     },

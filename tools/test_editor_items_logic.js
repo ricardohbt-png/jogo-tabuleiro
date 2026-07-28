@@ -255,5 +255,16 @@ check("cura não grava doses", cura.max_uses === undefined);
 const heal = L.serializePotion({name:"Cura", effect:"heal", value:10});
 check("heal não grava imunidade_dado", heal.imunidade_dado === undefined);
 
+// Estoque por cidade — qual loja recebe cada tipo de item
+check("arma vai para o ferreiro", L.shopIdForItemType("weapon") === "ferreiro_weapon");
+check("armadura e escudo vão para o ferreiro",
+  L.shopIdForItemType("armor") === "ferreiro_armor"
+  && L.shopIdForItemType("shield") === "ferreiro_armor");
+check("consumíveis e acessórios vão para o mercador",
+  ["ring","boots","potion","throwable","poison"].every(t => L.shopIdForItemType(t) === "mercador"));
+check("tipo desconhecido cai no mercador", L.shopIdForItemType("xpto") === "mercador");
+check("sem tipo assume arma", L.shopIdForItemType() === "ferreiro_weapon");
+check("slugify exportado", L.slugify("Ensaio sobre a Cegueira") === "ensaio_sobre_a_cegueira");
+
 console.log(`\n${PASS} passaram, ${FAIL} falharam`);
 process.exit(FAIL ? 1 : 0);
