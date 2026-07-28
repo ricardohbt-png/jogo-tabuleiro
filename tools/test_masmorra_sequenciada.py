@@ -240,6 +240,85 @@ async def test_broadcast_separado():
     check("p1 recebe city_state", "city_state" in recebidos["p1"])
     check("p2 não recebe city_state", "city_state" not in recebidos["p2"])
 
+async def test_contador_e_retorno():
+    print("\n[10] contador de rodadas e retorno")
+    r = setup_room()
+    p = await _entrar_e_posicionar_na_escada(r)
+    p["fome"] = 10; p["sede"] = 10
+    await r.handle_exit_dungeon("p1")
+    check("espera inicial 2", p["fora_masmorra"]["rodadas_restantes"] == 2)
+    await r._tick_retorno_masmorra()
+    check("após 1 rodada resta 1", p["fora_masmorra"]["rodadas_restantes"] == 1)
+    await r._tick_retorno_masmorra()
+    check("após 2 rodadas resta 0", p["fora_masmorra"]["rodadas_restantes"] == 0)
+    check("ainda está fora (rodada de tolerância)", r._ativo(p) is False)
+    await r._tick_retorno_masmorra()
+    check("na rodada seguinte volta sozinho", p.get("fora_masmorra") is None)
+    check("voltou ativo", r._ativo(p) is True)
+    check("reapareceu na escada", list(p["pos"]) == list(r.stairs_pos))
+    check("com turno cheio", p["action_done"] is False and p["moves_left"] > 0)
+
+async def test_volta_manual():
+    print("\n[11] botão de voltar à masmorra")
+    r = setup_room()
+    p = await _entrar_e_posicionar_na_escada(r)
+    p["fome"] = 10; p["sede"] = 10
+    await r.handle_exit_dungeon("p1")
+    await r.handle_voltar_masmorra("p1")
+    check("não volta antes de zerar", p.get("fora_masmorra") is not None)
+    p["fora_masmorra"]["rodadas_restantes"] = 0
+    await r.handle_voltar_masmorra("p1")
+    check("volta ao zerar", p.get("fora_masmorra") is None)
+    check("de volta ao tabuleiro", list(p["pos"]) == list(r.stairs_pos))
+
+async def test_masmorra_esvazia():
+    print("\n[12] masmorra sem ninguém volta para a cidade")
+    r = setup_room()
+    for pid in ("p1", "p2"):
+        r.players[pid]["fome"] = 10; r.players[pid]["sede"] = 10
+    await _entrar_e_posicionar_na_escada(r, "p1")
+    await r.handle_exit_dungeon("p1")
+    check("com 1 dentro, segue em jogo", r.phase == "playing")
+    r.players["p2"]["pos"] = list(r.stairs_pos)
+    r.initiative_order = [{"kind": "player", "id": "p2", "seq": 0, "initiative": 99,
+                           "dex": 0, "int": 0}]
+    r.initiative_index = 0
+    await r.handle_exit_dungeon("p2")
+    check("todos fora → sala volta à cidade", r.phase == "city")
+    check("ninguém fica marcado como fora",
+          all(not q.get("fora_masmorra") for q in r.players.values()))
+
+async def test_morte_com_heroi_na_cidade():
+    print("\n[13] presentes morrem com um herói na cidade")
+    r = setup_room()
+    p = await _entrar_e_posicionar_na_escada(r)
+    p["fome"] = 10; p["sede"] = 10
+    await r.handle_exit_dungeon("p1")
+    fim = {"chamou": False}
+    async def fake_end(victory, story=None): fim["chamou"] = True
+    r.end_game = fake_end
+    r.players["p2"]["alive"] = False
+    await r._checar_masmorra_vazia()
+    check("não é game over", fim["chamou"] is False)
+    check("sala volta à cidade", r.phase == "city")
+
+async def test_recompensa_com_ausente():
+    print("\n[14] o ausente participa da recompensa e da etapa encadeada")
+    r = setup_room(encadear=True)
+    p = await _entrar_e_posicionar_na_escada(r)
+    p["fome"] = 10; p["sede"] = 10
+    await r.handle_exit_dungeon("p1")
+    xp_antes = p["xp"]; ouro_antes = p["gold"]
+    r.objectives = {"primary": {"type": "kill_all", "xp": 100,
+                                "reward": {"gold": 100, "items": []}},
+                    "secondary": []}
+    r._objetivo_concluido = False
+    await _concluir_etapa(r)
+    check("ausente recebeu XP", p["xp"] > xp_antes)
+    check("ausente recebeu ouro", p["gold"] > ouro_antes)
+    check("emendou na etapa 2", r.phase == "playing" and r.world_adventure_index == 1)
+    check("segue fora, com o contador de pé", p.get("fora_masmorra") is not None)
+
 async def main():
     test_helpers_etapa()
     test_persistencia_campos()
@@ -250,6 +329,11 @@ async def main():
     await test_saida_efetiva()
     await test_ausente_na_cidade()
     await test_broadcast_separado()
+    await test_contador_e_retorno()
+    await test_volta_manual()
+    await test_masmorra_esvazia()
+    await test_morte_com_heroi_na_cidade()
+    await test_recompensa_com_ausente()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

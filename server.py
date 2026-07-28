@@ -8557,6 +8557,7 @@ class GameRoom:
             await self._processar_acido_residual_turno()
             await self._processar_zonas_turno()
             await self._aplicar_exaustao_rodada()
+            await self._tick_retorno_masmorra()
             self._rebuild_initiative()
         # mortos/desconectados podem ter ficado na lista desta rodada.
         attempts = 0
@@ -12475,15 +12476,89 @@ class GameRoom:
                 "msg": f"Provisões insuficientes para ir e voltar (precisa de 🍖{fome} e 💧{sede})."}); return
         p["fome"] -= fome; p["sede"] -= sede
         espera = _rolar_espera((WORLD_ADVENTURES.get(self.world_adventure_id) or {}).get("espera_retorno"))
-        p["fora_masmorra"] = {"rodadas_restantes": espera}
+        # `ignorar_primeiro_fecho`: sair encerra o turno, o que pode fechar a
+        # rodada em curso na hora. Sem isto a espera valeria N ou N-1 conforme o
+        # momento da saída — o fecho da rodada em que ele saiu não conta.
+        p["fora_masmorra"] = {"rodadas_restantes": espera, "ignorar_primeiro_fecho": True}
         p["pos"] = [-1, -1]   # fora do tabuleiro: monstros ignoram, não ocupa casa
         await self.gm_say(
             f"🚪 **{p['name']}** sobe as escadas rumo à cidade "
             f"(🍖-{fome} 💧-{sede}) e volta em {espera} rodada(s).")
         era_turno = (self.phase == "playing" and self.current_pid() == pid)
+        if await self._checar_masmorra_vazia():
+            return
         if era_turno:
             await self._forcar_fim_turno(pid)   # avança o turno (já reinicia o timer)
+        await self.send_city_state_to(pid)
         await self.push_state()
+
+    async def _tick_retorno_masmorra(self):
+        """Fecho de rodada: conta a espera de quem está fora. Ao zerar, o herói
+        ganha UMA rodada de tolerância (para clicar em 'Voltar à masmorra' sem
+        pressa); na rodada seguinte ele volta sozinho."""
+        for pid, p in list(self.players.items()):
+            fora = p.get("fora_masmorra")
+            if not fora:
+                continue
+            if fora.pop("ignorar_primeiro_fecho", False):
+                continue
+            if fora.get("rodadas_restantes", 0) > 0:
+                fora["rodadas_restantes"] -= 1
+                if fora["rodadas_restantes"] == 0:
+                    await self.send_to(pid, {"type": "error",
+                        "msg": "Você já pode voltar à masmorra."})
+            else:
+                await self._reentrar_masmorra(pid)
+
+    async def _reentrar_masmorra(self, pid):
+        """Traz de volta quem estava na cidade: reaparece na escada de entrada,
+        com turno cheio, e volta a contar na iniciativa da próxima rodada."""
+        p = self.players.get(pid)
+        if not p or not p.get("fora_masmorra"):
+            return
+        p.pop("fora_masmorra", None)
+        if self.phase != "playing":
+            return   # a sala já voltou à cidade — não há masmorra para reentrar
+        # Reaparece NA escada; se ela estiver ocupada, numa casa livre ao lado.
+        escada = list(self.stairs_pos or [0, 0])
+        ocupada = any(list(q["pos"]) == escada for q in self.players.values()
+                      if q["id"] != pid and self._ativo(q)) or \
+                  any(list(m["pos"]) == escada for m in self.monsters.values() if m["hp"] > 0)
+        p["pos"] = self._free_tile_near(escada) if ocupada else escada
+        p.pop("facing", None)
+        p["moves_left"]        = self._water_turn_moves(p, p["spd"])
+        p["action_done"]       = False
+        p["bonus_action_used"] = False
+        await self.send_to(pid, {"type": "enter_dungeon"})
+        await self.gm_say(f"🚪 **{p['name']}** desce as escadas e retorna à masmorra!")
+        await self.push_state()
+
+    async def handle_voltar_masmorra(self, pid):
+        """Botão 'Voltar à masmorra': só depois que a espera zerou."""
+        p = self.players.get(pid)
+        fora = p.get("fora_masmorra") if p else None
+        if not fora:
+            return
+        if fora.get("rodadas_restantes", 0) > 0:
+            await self.send_to(pid, {"type": "error",
+                "msg": f"A viagem ainda leva {fora['rodadas_restantes']} rodada(s)."}); return
+        await self._reentrar_masmorra(pid)
+
+    async def _checar_masmorra_vazia(self):
+        """Sem nenhum herói ativo dentro da masmorra (todos saíram ou os presentes
+        morreram) mas com alguém vivo na cidade, a expedição termina: a sala volta
+        à cidade em vez de ficar travada. Devolve True se voltou."""
+        if self.phase != "playing":
+            return False
+        if any(self._ativo(p) for p in self.players.values()):
+            return False
+        if not any(p.get("alive") for p in self.players.values()):
+            return False   # TPK de verdade — quem trata é o fluxo de game over
+        for p in self.players.values():
+            p.pop("fora_masmorra", None)
+        await self.gm_say("🏙️ Sem heróis na masmorra, a expedição é interrompida — o grupo se reúne na cidade.")
+        await self._voltar_para_cidade()
+        return True
 
     async def _voltar_para_cidade(self):
         """Transição masmorra→cidade reusável (saída pela escada e avanço de fase)."""
@@ -21018,6 +21093,10 @@ class GameRoom:
 
         if not any(p["alive"] for p in self.players.values()):
             await self.end_game(victory=False)
+        else:
+            # Morreu o último herói que estava DENTRO da masmorra, mas alguém
+            # segue vivo na cidade: a expedição é interrompida, não é derrota.
+            await self._checar_masmorra_vazia()
 
     async def _enviar_spell_pick_prompt(self, p):
         """Envia ao jogador o prompt da próxima escolha de magia pendente (fila)."""
@@ -22134,6 +22213,9 @@ async def handler(ws):
 
                 elif t == "exit_dungeon":
                     if room: await room.handle_exit_dungeon(pid)
+
+                elif t == "voltar_masmorra":
+                    if room: await room.handle_voltar_masmorra(pid)
 
                 elif t == "get_city_state":
                     if room and room.phase == "city":
