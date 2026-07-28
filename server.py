@@ -327,6 +327,10 @@ CITY_MAP_POINTS = {
     "graciero": {"taverna": {"x": 32.0, "y": 46.0}, "templo": {"x": 67.0, "y": 35.0},
                   "ferreiro": {"x": 83.0, "y": 38.0}, "mercador": {"x": 50.0, "y": 40.0}, "caravana": {"x": 50.0, "y": 55.0}},
 }
+# Toda cidade tem sua entrada (as criadas no editor começam sem nenhum ponto);
+# cidades removidas somem daqui. Precisa vir antes de _load_city_map_points(),
+# que só aceita ids já presentes neste dicionário.
+CITY_MAP_POINTS = {cid: CITY_MAP_POINTS.get(cid, {}) for cid in WORLD_LOCATIONS}
 CITY_MAP_POINTS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "city_map_points.json")
 
 def _load_city_map_points():
@@ -396,11 +400,20 @@ TAVERN_SCENES = {
         ],
     },
 }
-# Cada cidade guarda sua própria cena. Elas começam com a mesma composição-base,
-# mas o editor salva fundo, imagens, posições e diálogos por ID de cidade.
+def _cena_taverna_vazia():
+    """Cena editável e sem conteúdo — o estado inicial de uma cidade criada no editor."""
+    return {"background": "", "art_ratio": 1.5, "mode": "individual", "mask": "", "slots": []}
+
+# As 4 cidades originais começam com a mesma composição-base de Alva e Luz; as
+# criadas no editor nascem vazias e ganham fundo e NPCs pela aba Taverna.
 for _tavern_city_id in WORLD_LOCATIONS:
-    if _tavern_city_id not in TAVERN_SCENES:
-        TAVERN_SCENES[_tavern_city_id] = deepcopy(TAVERN_SCENES["alva_e_luz"])
+    if _tavern_city_id in TAVERN_SCENES:
+        continue
+    TAVERN_SCENES[_tavern_city_id] = (deepcopy(TAVERN_SCENES["alva_e_luz"])
+                                      if _tavern_city_id in _BUILTIN_WORLD_LOCATIONS
+                                      else _cena_taverna_vazia())
+for _tavern_city_id in [c for c in TAVERN_SCENES if c not in WORLD_LOCATIONS]:
+    del TAVERN_SCENES[_tavern_city_id]
 TAVERN_SCENES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tavern_scenes.json")
 
 def _load_tavern_scenes():
@@ -4627,6 +4640,23 @@ def _city_shop_items(city_id, shop_id):
     return [item for item in CITY_SHOP_SOURCES.get(shop_id, []) if item["id"] in ids]
 
 _load_city_shops()
+
+def _sincronizar_cidades_derivadas():
+    """Garante uma entrada vazia de lojas/pontos/taverna para cada cidade e
+    remove as sobras de cidades excluídas. Usado após salvar pelo editor (no
+    boot cada subsistema já se semeia na sua própria declaração)."""
+    for cid in [c for c in CITY_SHOPS if c not in WORLD_LOCATIONS]:
+        del CITY_SHOPS[cid]
+    for cid in [c for c in CITY_MAP_POINTS if c not in WORLD_LOCATIONS]:
+        del CITY_MAP_POINTS[cid]
+    for cid in [c for c in TAVERN_SCENES if c not in WORLD_LOCATIONS]:
+        del TAVERN_SCENES[cid]
+    for cid in WORLD_LOCATIONS:
+        CITY_SHOPS.setdefault(cid, {})
+        CITY_MAP_POINTS.setdefault(cid, {})
+        TAVERN_SCENES.setdefault(cid, _cena_taverna_vazia())
+
+_sincronizar_cidades_derivadas()
 _TAVERN_BY_ID = {i["id"]: i for i in SHOP_TAVERN}
 
 # Itens que podem ser encontrados em baÃºs e decoraÃ§Ãµes de masmorras autoradas.

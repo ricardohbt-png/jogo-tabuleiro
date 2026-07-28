@@ -22,6 +22,7 @@ CIDADE_NOVA = {"id": "porto_negro", "nome": "Porto Negro", "tipo": "cidade",
 def reset_mundo():
     """Volta o mundo às 4 cidades originais, sem nenhuma edição do editor."""
     S._aplicar_estado_cidades([], {}, [], None)
+    S._sincronizar_cidades_derivadas()
 
 def main():
     print("\n[1] Criar cidade")
@@ -85,6 +86,24 @@ def main():
         S.WORLD_CITIES_FILE = original_file
         if os.path.exists(tmp): os.remove(tmp)
         reset_mundo()
+
+    print("\n[6] Cidade nova nasce vazia; excluir limpa os derivados")
+    reset_mundo()
+    S._aplicar_estado_cidades([CIDADE_NOVA], {}, [], None)
+    S._sincronizar_cidades_derivadas()
+    check("sem lojas", S.CITY_SHOPS.get("porto_negro") == {})
+    check("sem pontos no mapa da cidade", S.CITY_MAP_POINTS.get("porto_negro") == {})
+    cena = S.TAVERN_SCENES.get("porto_negro") or {}
+    check("cena de taverna existe", isinstance(cena.get("slots"), list))
+    check("taverna sem NPCs copiados de Alva e Luz", cena.get("slots") == [])
+    check("taverna sem fundo", not cena.get("background"))
+    check("Alva e Luz mantém seus NPCs",
+          len((S.TAVERN_SCENES.get("alva_e_luz") or {}).get("slots") or []) >= 8)
+    S._aplicar_estado_cidades([], {}, [], None)
+    S._sincronizar_cidades_derivadas()
+    check("excluir limpa lojas", "porto_negro" not in S.CITY_SHOPS)
+    check("excluir limpa pontos", "porto_negro" not in S.CITY_MAP_POINTS)
+    check("excluir limpa taverna", "porto_negro" not in S.TAVERN_SCENES)
 
     print(f"\n===== RESULTADO: {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
