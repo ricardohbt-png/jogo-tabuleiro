@@ -6460,6 +6460,7 @@ class GameRoom:
             "city_shops": CITY_SHOPS,
             "tavern": self._tavern_payload(),
             "campaign": self._campaign_payload(),
+            "story": self._story_encadeada,   # encerramento da etapa; de-dup por key no cliente
             "shops": {
                 "ferreiro": {"weapons": _city_shop_items(self.world_location, "ferreiro_weapon"),
                              "armors": _city_shop_items(self.world_location, "ferreiro_armor"),
@@ -12600,11 +12601,13 @@ class GameRoom:
         await self._voltar_para_cidade()
         return True
 
-    async def _voltar_para_cidade(self):
-        """Transição masmorra→cidade reusável (saída pela escada e avanço de fase)."""
+    async def _voltar_para_cidade(self, story=None):
+        """Transição masmorra→cidade reusável (saída pela escada e avanço de fase).
+        `story` é o beat de encerramento a exibir na cidade — gravado DEPOIS da
+        limpeza, já que o broadcast do city_state acontece aqui dentro."""
         self._cancelar_timer_turno()   # fora da masmorra nÃ£o hÃ¡ timer de turno
         self.phase = "city"
-        self._story_encadeada = None   # a emenda nÃ£o sobrevive Ã  volta para a cidade
+        self._story_encadeada = story   # limpa a emenda; instala o encerramento, se houver
         self._gerar_loja_pergaminhos()
         for pp in self.players.values():
             pp["moves_left"]        = pp["spd"]
@@ -21341,12 +21344,16 @@ class GameRoom:
             if etapa["encadear"] and completed_index + 1 < len(stages):
                 await self._emendar_proxima_etapa(adventure, completed_index + 1)
                 return
+            # Encerramento da etapa concluída (última da rota ou intermediária sem
+            # encadeamento): nos dois casos o grupo volta à cidade e vê este beat.
+            fim = _story_beat(f"fim:{adventure_id}:{completed_index}",
+                              [etapa.get("outro")])
             self.world_adventure_id = None
             self.world_adventure_index = None
             self.dungeon_generated = False
             self._objetivo_concluido = False
             await self.gm_say(f"🏁 **{adventure_name}** concluída! O grupo retorna gratuitamente à cidade." + (f" Renome {reward:+d}." if reward else ""))
-            await self._voltar_para_cidade()
+            await self._voltar_para_cidade(story=fim)
             return
         if (self.mode == "campaign" and self.campaign
                 and self.campaign_phase < len(self.campaign["dungeons"]) - 1):

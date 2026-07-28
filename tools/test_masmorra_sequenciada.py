@@ -187,6 +187,26 @@ async def test_beat_abertura():
     await r2.handle_world_adventure("p1", "test_seq")
     check("sem intro não emite beat", r2._story_encadeada is None)
 
+async def test_beat_encerramento():
+    print("\n[17] encerramento ao concluir a etapa sem encadeamento")
+    r = setup_room(encadear=False)     # etapa 0 tem outro "FECHA-1"
+    await r.handle_world_adventure("p1", "test_seq")
+    await _concluir_etapa(r)
+    check("voltou à cidade", r.phase == "city")
+    beat = r._story_encadeada
+    check("beat de encerramento montado", beat is not None)
+    check("texto do encerramento",
+          beat and [s.get("text") for s in beat["slides"]] == ["FECHA-1"])
+    check("key identifica a etapa concluída", beat and beat["key"] == "fim:test_seq:0")
+    check("city_state carrega o beat",
+          r._city_state_payload().get("story") == beat)
+    # etapa sem outro não emite beat
+    r2 = setup_room(encadear=False)
+    server.WORLD_ADVENTURES["test_seq"]["dungeons"][0]["outro"] = ""
+    await r2.handle_world_adventure("p1", "test_seq")
+    await _concluir_etapa(r2)
+    check("sem outro não emite beat", r2._story_encadeada is None)
+
 async def _entrar_e_posicionar_na_escada(r, pid="p1"):
     await r.handle_world_adventure("p1", "test_seq")
     r.players[pid]["pos"] = list(r.stairs_pos)
@@ -371,6 +391,7 @@ async def main():
     await test_encadeamento()
     await test_sem_encadeamento()
     await test_beat_abertura()
+    await test_beat_encerramento()
     await test_saida_recusada()
     await test_saida_efetiva()
     await test_ausente_na_cidade()
