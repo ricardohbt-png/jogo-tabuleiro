@@ -176,6 +176,26 @@ def main():
         if os.path.exists(tmp2): os.remove(tmp2)
         reset_mundo()
 
+    print("\n[10] Upload da ilustração da cidade")
+    import base64
+    png = base64.b64encode(b"\x89PNG\r\n\x1a\n" + b"0" * 64).decode()
+    ok, caminho = S._save_city_art_upload("porto negro.png", png)
+    check("upload aceito", ok is True)
+    check("caminho em assets/city", str(caminho).startswith("assets/city/"))
+    arquivo = os.path.join(S.BASE_DIR, str(caminho).replace("/", os.sep))
+    check("arquivo gravado no disco", os.path.exists(arquivo))
+    if os.path.exists(arquivo): os.remove(arquivo)
+    ok2, _ = S._save_city_art_upload("mapa.exe", png)
+    check("extensão inválida recusada", ok2 is False)
+    ok3, caminho3 = S._save_city_art_upload("../fuga.png", png)
+    check("path traversal neutralizado",
+          ok3 is False or ".." not in str(caminho3))
+    if ok3:
+        arquivo3 = os.path.join(S.BASE_DIR, str(caminho3).replace("/", os.sep))
+        if os.path.exists(arquivo3): os.remove(arquivo3)
+    ok4, _ = S._save_city_art_upload("grande.png", "A" * (S.STORY_UPLOAD_MAX * 2))
+    check("arquivo grande demais recusado", ok4 is False)
+
     print(f"\n===== RESULTADO: {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 

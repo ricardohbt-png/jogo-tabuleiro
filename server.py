@@ -21251,6 +21251,27 @@ async def handler(ws):
                     await ws.send(json.dumps(payload))
                     continue
 
+                if t == "upload_city_art":
+                    ok, res = _save_city_art_upload(msg.get("name"), msg.get("data"))
+                    payload = {"type": "upload_result", "kind": "city_art",
+                               "upload_id": msg.get("upload_id"), "ok": ok}
+                    if ok: payload["path"] = res
+                    else: payload["error"] = res
+                    await ws.send(json.dumps(payload))
+                    continue
+
+                if t == "save_world_cities":
+                    ok, res = _save_world_cities_upload(msg.get("cities"), msg.get("overrides"),
+                                                        msg.get("deleted"), msg.get("routes"))
+                    if ok:
+                        await _refresh_city_states_after_editor_save()
+                    payload = {"type": "upload_result", "kind": "world_cities",
+                               "upload_id": msg.get("upload_id"), "ok": ok}
+                    if ok: payload["config"] = res
+                    else: payload["error"] = res
+                    await ws.send(json.dumps(payload))
+                    continue
+
                 if t == "load_city_shops":
                     await ws.send(json.dumps({"type": "upload_result", "kind": "city_shops",
                                                "upload_id": msg.get("upload_id"), "ok": True,
@@ -23150,6 +23171,26 @@ def _save_tavern_art_upload(name, data_b64):
         with open(os.path.join(TAVERN_ASSET_DIR, safe), "wb") as f: f.write(raw)
     except OSError: return False, "falha ao gravar"
     return True, "assets/tavern/" + safe
+
+CITY_ASSET_DIR = os.path.join(BASE_DIR, "assets", "city")
+
+def _save_city_art_upload(name, data_b64):
+    """Grava a ilustração de uma cidade em assets/city/. Mesmas proteções do
+    _save_tavern_art_upload (extensão, tamanho e path traversal)."""
+    base = os.path.basename(name or "")
+    if not base or "\x00" in base or os.path.splitext(base)[1].lower() not in _STORY_IMG_EXT:
+        return False, "imagem inválida"
+    if not isinstance(data_b64, str) or not data_b64 or (len(data_b64) * 3) // 4 > STORY_UPLOAD_MAX:
+        return False, "dados inválidos ou arquivo grande demais"
+    try: raw = base64.b64decode(data_b64, validate=True)
+    except Exception: return False, "dados inválidos"
+    if len(raw) > STORY_UPLOAD_MAX: return False, "arquivo grande demais"
+    safe = re.sub(r"[^a-zA-Z0-9._-]", "_", base)
+    try:
+        os.makedirs(CITY_ASSET_DIR, exist_ok=True)
+        with open(os.path.join(CITY_ASSET_DIR, safe), "wb") as f: f.write(raw)
+    except OSError: return False, "falha ao gravar"
+    return True, "assets/city/" + safe
 
 PRISONER_DIR = os.path.join(BASE_DIR, "assets", "pawns", "prisioneiros")
 
