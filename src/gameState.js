@@ -1699,6 +1699,21 @@ const GS = (() => {
   // Sender: encerra a missão (servidor faz a transição cidade/vitória).
   function encerrarMissao() { send({ type: 'encerrar_missao' }); }
 
+  // ── Saída individual pela escada (masmorra sequenciada) ────────────────────
+  // O herói sai sozinho, vai para a cidade e volta N rodadas depois. Enquanto
+  // está fora, o servidor manda city_state só para ele (nunca game_state), então
+  // o estado do ausente é lido do cityState.
+  function voltarMasmorra() { send({ type: 'voltar_masmorra' }); }
+  function foraMasmorraDe(p) { return (p && p.fora_masmorra) || null; }
+  function _meNaCidade() {
+    return cityState && (cityState.players || []).find(p => p.id === myPid);
+  }
+  function estouForaDaMasmorra() { return !!foraMasmorraDe(_meNaCidade()); }
+  function rodadasParaVoltar() {
+    const fora = foraMasmorraDe(_meNaCidade());
+    return fora ? (fora.rodadas_restantes | 0) : 0;
+  }
+
   // ── Fase 4a (campanha): estado da campanha em curso + seleção no lobby ────────
   // Getter do payload {name, phase, total} servido no game_state/city_state (null
   // fora de campanha). lobbyCampaigns lista as campanhas disponíveis no lobby.
@@ -2327,6 +2342,12 @@ const GS = (() => {
     marcarStoryVista,      // Fase 4b: marca um beat como já exibido (de-dup por key)
     libertarPrisioneiro,   // Fase 3: sender (chamado com parênteses)
     encerrarMissao,        // encerramento manual da missão (chamado com parênteses)
+
+    // ── Saída individual pela escada ──
+    voltarMasmorra,        // sender (chamado com parênteses)
+    foraMasmorraDe,        // {rodadas_restantes} de um player, ou null
+    estouForaDaMasmorra,
+    rodadasParaVoltar,
 
     // ── Habilidades armadas do warrior (toggle; custo cobrado na ação) ──
     isWarriorSkillSelected,
