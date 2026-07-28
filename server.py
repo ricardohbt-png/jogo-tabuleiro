@@ -21584,6 +21584,11 @@ class GameRoom:
             "explored": [list(e) for e in self.explored],
             "revealed": [list(k) for k in self._live_reveal_tiles()],   # ClarividÃªncia + visÃ£o ao vivo dos minions
             "stairs_pos": self.stairs_pos,
+            # Saída individual: o cliente confirma o custo antes de enviar exit_dungeon.
+            "saida_permitida": self.saida_permitida,
+            "custo_saida": dict(zip(("fome", "sede"), self._custo_viagem_saida())),
+            "espera_saida": (lambda e: e["dados"] if e["modo"] == "dados" else str(e["rodadas"]))(
+                _clean_espera((WORLD_ADVENTURES.get(self.world_adventure_id) or {}).get("espera_retorno"))),
             "campaign": self._campaign_payload(),
             "story": self._story_encadeada,   # beat da emenda; cliente faz de-dup por key
             "objectives": self.objective_status,

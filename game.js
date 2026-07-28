@@ -8264,9 +8264,10 @@ function renderPlayers(state){
   for(const p of state.players){
     const isMe=p.id===GS.myPid, isCur=p.id===state.current_turn;
     const disc=p.connected===false;
+    const fora=p.fora_masmorra||null;   // saiu pela escada: está na cidade
     const div=document.createElement('div');
     div.className='pcard'+(isMe?' me':'')+(isCur?' current':'')+(p.alive?'':' dead')+(disc?' disconnected':'');
-    if(disc) div.style.opacity='0.45';
+    if(disc||fora) div.style.opacity='0.45';
     const hpPct=Math.max(0,p.hp/p.max_hp*100);
     // MP foi removido do jogo — nenhuma classe usa mana (magias custam slots + fome/sede).
     const mpRowHTML = '';
@@ -8278,6 +8279,7 @@ function renderPlayers(state){
         ${_csong ? '<span title="Inspirado pela Canção Heroica" style="color:#4db8ff;font-size:11px;">🎵</span>' : ''}
         <span class="pcard-lvl">Lv${p.level}</span>
       </div>
+      ${fora ? `<div class="pcard-fora" style="font-size:11px;color:#8fc6ff;">🏙️ na cidade — volta em ${fora.rodadas_restantes|0} rodada(s)</div>` : ''}
       <div class="bars">
         <div class="bar-row">
           <span class="bar-label">HP</span>
@@ -23249,11 +23251,24 @@ function handleTileClick(tx, ty){
   // ── Mira de ARREMESSÁVEL (2D e 3D): resolve o alvo e envia `throw_item` ─────
   // (No 3D, on3DClick já intercepta antes; aqui cobre o caminho do canvas 2D.)
   if(window._modoThrowItem){ _clickTileThrow(tx, ty); return; }
-  // ── Stairs: clicking the staircase tile exits the dungeon immediately ────
+  // ── Escada: sair é INDIVIDUAL — custa fome/sede e tem espera em rodadas ────
   const _st = GS.gameState;
   if(_st && _st.stairs_pos){
     const [sx,sy] = _st.stairs_pos;
     if(tx===sx && ty===sy){
+      const me = (_st.players||[]).find(p=>p.id===GS.myPid && p.alive);
+      if(!me) return;
+      if(_st.saida_permitida === false){ toast('Não há como sair desta masmorra.', 'var(--red)'); return; }
+      if(!GS.isMyTurn()){ toast('Só é possível sair no seu turno.', 'var(--red)'); return; }
+      if(me.pos[0]!==sx || me.pos[1]!==sy){ toast('Vá até a escada para sair.', 'var(--red)'); return; }
+      const custo = _st.custo_saida || {fome:0, sede:0};
+      const espera = _st.espera_saida || '0';
+      if(me.fome < custo.fome || me.sede < custo.sede){
+        toast(`Provisões insuficientes: a viagem custa 🍖${custo.fome} e 💧${custo.sede}.`, 'var(--red)');
+        return;
+      }
+      if(!confirm(`Sair pela escada custa 🍖${custo.fome} e 💧${custo.sede} (ida e volta).\n`
+                  + `Você volta em ${espera} rodada(s) e a masmorra continua sem você.\n\nSair?`)) return;
       fecharQuadrosFlutuantes();
       send({type:'exit_dungeon'});
       return;
@@ -23479,6 +23494,29 @@ GS.on('gameStart', () => {
   setTimeout(()=>{ if(!GS.cityState) send({type:'get_city_state'}); }, 400);
 });
 
+// Banner do herói que saiu sozinho da masmorra: contador + botão de retorno.
+// Só existe quando a SALA continua na masmorra e este cliente está na cidade.
+function _renderBannerForaMasmorra(){
+  const host = document.getElementById('screen-city');
+  let el = document.getElementById('fora-masmorra-banner');
+  if(!GS.estouForaDaMasmorra()){ if(el) el.remove(); return; }
+  const n = GS.rodadasParaVoltar();
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'fora-masmorra-banner';
+    el.style.cssText = 'position:absolute;top:8px;left:50%;transform:translateX(-50%);'
+      + 'z-index:60;background:rgba(20,26,38,.92);border:1px solid #4a6f9e;border-radius:8px;'
+      + 'padding:8px 14px;color:#dce8ff;font-size:13px;display:flex;gap:10px;align-items:center;';
+    host.appendChild(el);
+  }
+  el.innerHTML = `<span>🏙️ Você deixou a masmorra — ${n>0 ? `volta em <b>${n}</b> rodada(s)` : '<b>pronto para voltar</b>'}</span>`;
+  const btn = document.createElement('button');
+  btn.textContent = '⛓️ Voltar à masmorra';
+  btn.disabled = n > 0;
+  btn.onclick = () => GS.voltarMasmorra();
+  el.appendChild(btn);
+}
+
 GS.on('cityState', msg => {
   fecharQuadrosFlutuantes();
   _hpSnapshot.clear();   // de volta à cidade: zera HP base p/ a próxima masmorra
@@ -23488,6 +23526,7 @@ GS.on('cityState', msg => {
   // Ensure city screen is visible (covers both initial arrival and return from dungeon)
   showScreen('screen-city');
   handleCityState(msg);
+  _renderBannerForaMasmorra();
   // ── Sincroniza o herói do overlay com o estado autoritativo do servidor ──
   const meSrv = (msg.players || []).find(p => p.id === GS.myPid);
   if(meSrv) _sincronizarHeroiComServidor(meSrv);
