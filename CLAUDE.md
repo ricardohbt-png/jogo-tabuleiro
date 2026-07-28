@@ -1514,3 +1514,18 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > da ilustração da cidade (`world_location` nunca muda ao entrar numa aventura). Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-07-28-historia-em-slides-nas-aventuras*`. Teste:
 > `tools/test_masmorra_sequenciada.py` seções [15]-[17].
+
+> **Destino oculto no mapa-múndi:** cada destino de aventura aceita
+> `oculto_ate_liberar` (bool, default `false`). Com o flag ligado, o destino **não entra**
+> em `city_state.world.adventures` enquanto o requisito não é cumprido — o filtro é do
+> servidor (`_aventura_visivel`, ao lado de `_avaliar_requisito`), então o cliente não muda
+> e não há o que espiar no payload. `handle_world_adventure` responde **"Destino de aventura
+> inválido."** (a mesma resposta de um id inexistente) quando o destino é oculto e ainda
+> bloqueado; destinos visíveis mantêm a mensagem detalhada com o que falta. O payload do
+> **editor** (`_world_adventures_editor_payload`) não filtra — o autor precisa enxergar o que
+> criou. **Atenção:** requisito vazio **passa** em `_avaliar_requisito`, então o flag sozinho,
+> sem nenhum requisito, não esconde nada; por isso o checkbox "🕵️ ocultar no mapa até liberar"
+> (bloco de requisitos em `tools/editor_world.js`) fica desabilitado até haver um requisito
+> preenchido, e preencher um re-renderiza o painel para habilitá-lo. Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-07-29-destino-oculto-ate-liberar*`. Teste:
+> `tools/test_masmorra_sequenciada.py` seções [18]-[18c].
