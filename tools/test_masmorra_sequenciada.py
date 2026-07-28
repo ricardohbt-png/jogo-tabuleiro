@@ -43,8 +43,43 @@ def test_helpers_etapa():
     check("_rolar_espera dados fica na faixa",
           1 <= server._rolar_espera({"modo": "dados", "dados": "1d4"}) <= 4)
 
+def test_persistencia_campos():
+    print("\n[2] persistência dos campos novos")
+    row = {"id": "rota_teste", "nome": "Rota", "x": 10, "y": 20, "fome": 2, "sede": 3,
+           "espera_retorno": {"modo": "dados", "dados": "1d4"},
+           "dungeons": [{"file": "test_camp_a.json", "encadear": True, "outro": "fecha-1"},
+                        "test_camp_b.json"]}
+    salvos = server.WORLD_ADVENTURES
+    try:
+        ok, res = server._save_world_adventures_upload([], [row])
+        check(f"salvou a aventura ({res if not ok else 'ok'})", ok is True)
+        a = server.WORLD_ADVENTURES["rota_teste"]
+        check("etapa 1 virou objeto com encadear",
+              a["dungeons"][0] == {"file": "test_camp_a.json", "encadear": True,
+                                   "intro": "", "outro": "fecha-1"})
+        check("etapa 2 (string legada) normalizada",
+              a["dungeons"][1]["file"] == "test_camp_b.json"
+              and a["dungeons"][1]["encadear"] is False)
+        check("espera_retorno preservada",
+              a["espera_retorno"] == {"modo": "dados", "rodadas": 0, "dados": "1d4"})
+    finally:
+        server.WORLD_ADVENTURES = salvos
+        server._save_world_adventures()
+
+def test_validacao_saida():
+    print("\n[3] validar_dungeon aceita saida_permitida")
+    defn = server.carregar_dungeon("test_camp_a.json")
+    defn["saida_permitida"] = False
+    check("saida_permitida False é válida", server.validar_dungeon(defn)[0] is True)
+    defn["saida_permitida"] = "talvez"
+    check("saida_permitida não-booleana recusa", server.validar_dungeon(defn)[0] is False)
+    defn.pop("saida_permitida")
+    check("ausente continua válida", server.validar_dungeon(defn)[0] is True)
+
 async def main():
     test_helpers_etapa()
+    test_persistencia_campos()
+    test_validacao_saida()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

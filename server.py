@@ -324,14 +324,21 @@ def _save_world_adventures_upload(raw_locations, raw_adventures):
             continue
         files = row.get("dungeons", [])
         if not isinstance(files, list): files = []
-        files = [str(f) for f in files if str(f) in allowed_files][:20]
-        if not files:
+        etapas = []
+        for raw_stage in files[:20]:
+            et = _etapa_obj(raw_stage)
+            if et["file"] in allowed_files:
+                etapas.append({"file": et["file"], "encadear": et["encadear"],
+                               "intro": str(et["intro"] or "")[:2000],
+                               "outro": str(et["outro"] or "")[:2000]})
+        if not etapas:
             continue
         req = _clean_requirement(row.get("requisito"))
         try: renome_reward = max(0, min(9999, int(row.get("renome_recompensa", 1))))
         except (TypeError, ValueError): renome_reward = 1
         cleaned[aid] = {"id": aid, "nome": name[:80], "x": x, "y": y,
-                        "fome": fome, "sede": sede, "dungeons": files,
+                        "fome": fome, "sede": sede, "dungeons": etapas,
+                        "espera_retorno": _clean_espera(row.get("espera_retorno")),
                         "requisito": req, "renome_recompensa": renome_reward}
     try:
         WORLD_ADVENTURES = cleaned
@@ -4111,6 +4118,10 @@ def validar_dungeon(defn):
         if not isinstance(lv, int) or isinstance(lv, bool) or lv < 1:
             return False, f"expected_party.level inválido: {lv!r} (inteiro ≥ 1)."
 
+    sp = defn.get("saida_permitida")
+    if sp is not None and not isinstance(sp, bool):
+        return False, f"saida_permitida inválido: {sp!r} (booleano)."
+
     _rooms_req = [r for r in (defn.get("rooms") or []) if isinstance(r, dict) and r.get("required")]
     for _r in (defn.get("rooms") or []):
         if isinstance(_r, dict) and _r.get("required_mode") not in (None, "visit", "clear"):
@@ -5944,6 +5955,7 @@ class GameRoom:
         self.master_manual_timer = None     # tarefa do timeout anti-AFK
         self.master_reserve = {}   # Camada B: typeâ†’count restante de reforÃ§os do mestre
         self.expected_party = {"heroes": 4, "level": 1}   # Camada C: grupo esperado (referÃªncia)
+        self.saida_permitida = True   # masmorra permite sair pela escada de entrada
         self.player_order = []  # list of pid in turn order
         self.phase = "lobby"    # lobby | character_select | playing | ended
         self.host_pid = None
@@ -8212,7 +8224,7 @@ class GameRoom:
         if stage_index >= len(stages):
             await self.send_to(pid, {"type": "error", "msg": "Todas as masmorras deste destino já foram concluídas."})
             return
-        file = stages[stage_index]
+        file = _etapa_file(stages[stage_index])
         defn = carregar_dungeon(file)
         ok, reason = validar_dungeon(defn) if defn else (False, "Masmorra não encontrada.")
         if not ok:
@@ -8317,6 +8329,9 @@ class GameRoom:
             else:
                 self.map_w, self.map_h = MAP_W, MAP_H
                 self.tiles, self.rooms = generate_dungeon()
+
+            # Saída pela escada: autorável por masmorra; procedural sempre permite.
+            self.saida_permitida = bool(self.dungeon_def.get("saida_permitida", True)) if autorada else True
 
             if not autorada:
                 # Mapa porta -> salas que ela destranca (uma porta pode servir 2 salas)
