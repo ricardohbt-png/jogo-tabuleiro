@@ -1294,6 +1294,25 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > sub-abas do Editor de Itens estão completas**; o que resta são `granted_ability` ativável
 > (habilidades concedidas por item) e antídoto/cura de status.
 
+> **Editor de Itens — estoque por cidade (checkbox "Loja"):** com as lojas por cidade
+> (`city_shops.json`), o catálogo global (`SHOP_WEAPONS`/`SHOP_ARMORS`/`SHOP_MERCHANT`) diz o que
+> **existe** e a allow-list de ids de cada cidade diz o que a loja **vende** (`_city_shop_items`).
+> Por isso o checkbox "Loja" sozinho não fazia o item custom aparecer em jogo. Agora o formulário
+> tem um **seletor de cidades** (checkboxes na seção Disponibilidade dos 6 forms, desabilitados
+> quando "Loja" está desmarcado): ao salvar, o cliente manda `cidades_loja` em `upload_custom_item`
+> e `_save_custom_item(raw, city_ids)` chama `_sync_custom_item_city_stock(item, city_ids, old_id)`,
+> que **retira o id de todas as lojas antes de inserir** (cobre renomear, trocar de tipo e desmarcar
+> "Loja") e grava o `city_shops.json`. A loja de destino vem de `_custom_item_shop_id`
+> (arma→`ferreiro_weapon`; armadura/escudo→`ferreiro_armor`; anel/bota/poção/arremessável/veneno→
+> `mercador`), espelhado no cliente por `shopIdForItemType` (`editor_items_logic.js`) — há teste de
+> sincronia dos dois mapas. `cidades_loja` ausente (cliente antigo) **não** mexe no estoque.
+> **Fix de ordem de boot:** `_load_city_shops()` filtra os ids contra o catálogo vivo e roda antes
+> de `_apply_custom_items`, então apagava todo id custom do estoque a cada boot (inclusive os
+> adicionados pelo Editor de Cidades) — passou a rodar **de novo** logo após o merge dos customs.
+> O `city_shops.json` continua sendo a **fonte única** do estoque: o item não guarda a lista de
+> cidades; o editor lê o estoque atual para pré-marcar os checkboxes. Testes:
+> `tools/test_editor_itens.py` [L1]–[L4] + `tools/test_editor_items_logic.js`.
+
 > **Editor de Itens — Fase I (habilidades concedidas por item):** `granted_ability` deixa de ser
 > metadado e vira poder real nos **5 tipos de item equipável** (arma/armadura/escudo/anel/bota).
 > O núcleo é um helper module-level **`_habilidades_concedidas(player)`** (varre TODOS os slots
@@ -1378,3 +1397,26 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > campos do **dado de imunidade**. Testes: `tools/test_editor_itens.py` [K1]–[K6] +
 > `tools/test_editor_items_logic.js`. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-07-28-antidotos-cura-de-status*`.
+
+> **Cidades editáveis (editor):** a aba "🏘️ Cidades" do editor de cidades cria cidades novas,
+> edita as existentes (nome/tipo/imagem) e as exclui. As 4 originais continuam declaradas em
+> `WORLD_LOCATIONS`/`WORLD_ROUTES` como base imutável (snapshot em `_BUILTIN_WORLD_LOCATIONS`/
+> `_BUILTIN_WORLD_ROUTES`); `cidades_personalizadas.json` é a camada por cima
+> (`cities`/`overrides`/`deleted`/`routes`), aplicada no boot e no save do editor pela MESMA
+> função `_aplicar_estado_cidades` — arquivo e edição ao vivo não podem divergir. Um arquivo
+> **ilegível** (≠ ausente) liga `WORLD_CITIES_OK=False` e **bloqueia salvar**, senão o save
+> gravaria a perda. Lojas (`CITY_SHOPS`), pontos (`CITY_MAP_POINTS`) e taverna (`TAVERN_SCENES`)
+> são derivados: toda cidade ganha entrada vazia e as excluídas somem
+> (`_sincronizar_cidades_derivadas`; no boot cada subsistema se semeia na própria declaração,
+> **antes** do seu loader — ordem load-bearing). Cidade nova nasce **vazia** (sem lojas, sem
+> pontos, taverna sem NPCs — `_cena_taverna_vazia`), e o editor de taverna passou a mostrar o
+> upload de fundo e o "+ Adicionar NPC" também com a cena vazia. **Mudança de regra:**
+> `WORLD_ROUTES` virou tabela de **preços** — par sem entrada = viagem grátis
+> (`handle_world_travel`), e `broadcast_city_state`/`_city_shops_editor_payload` emitem uma rota
+> para TODOS os pares via `_tabela_rotas()`, então o cliente (`game.js`) **não mudou** e nunca vê
+> destino bloqueado. O handler `_save_world_cities_upload` recusa `routes` vazio (zeraria os
+> custos originais). `alva_e_luz` (`CITY_INICIAL`) nunca é excluível e é o fallback das salas cuja
+> cidade sumiu. x/y: das **originais** vem do arraste no mapa-múndi (`world_map_points.json`, o
+> painel nem mostra os campos); das **criadas** viaja no payload. Upload da ilustração:
+> `upload_city_art` → `assets/city/`. Teste: `tools/test_cidades_editor.py` (56 checks). Spec/plano
+> em `docs/superpowers/{specs,plans}/2026-07-28-editor-cidades-nova-cidade*`.
