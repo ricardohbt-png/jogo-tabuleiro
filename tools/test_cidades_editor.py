@@ -142,6 +142,40 @@ def main():
     check("par sem custo vai como 0/0", par is not None and par["fome"] == 0 and par["sede"] == 0)
     reset_mundo()
 
+    print("\n[9] Handler de save do editor")
+    reset_mundo()
+    tmp2 = os.path.join(tempfile.gettempdir(), "cidades_teste2.json")
+    original_file = S.WORLD_CITIES_FILE
+    S.WORLD_CITIES_FILE = tmp2
+    try:
+        ok, payload = S._save_world_cities_upload([CIDADE_NOVA], {}, [], [])
+        check("save aceito", ok is True)
+        check("payload devolve a cidade nova",
+              any(c["id"] == "porto_negro" for c in (payload or {}).get("cities", [])))
+        check("payload traz a tabela de rotas", isinstance((payload or {}).get("routes"), list))
+        check("payload informa a cidade inicial", (payload or {}).get("city_inicial") == "alva_e_luz")
+        check("arquivo gravado", os.path.exists(tmp2))
+        with open(tmp2, encoding="utf-8") as f: gravado = json.load(f)
+        check("arquivo contém a cidade", gravado["cities"][0]["id"] == "porto_negro")
+        check("derivados sincronizados pelo handler", S.CITY_SHOPS.get("porto_negro") == {})
+
+        ok2, erro = S._save_world_cities_upload("não é lista", {}, [], [])
+        check("payload inválido recusado", ok2 is False and isinstance(erro, str))
+
+        sala2 = S.GameRoom("TEST2")
+        sala2.phase = "city"; sala2.world_location = "porto_negro"
+        S.rooms["TEST2"] = sala2
+        try:
+            S._save_world_cities_upload([], {}, [], [])
+            check("sala em cidade excluída volta para Alva e Luz",
+                  sala2.world_location == "alva_e_luz")
+        finally:
+            S.rooms.pop("TEST2", None)
+    finally:
+        S.WORLD_CITIES_FILE = original_file
+        if os.path.exists(tmp2): os.remove(tmp2)
+        reset_mundo()
+
     print(f"\n===== RESULTADO: {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 

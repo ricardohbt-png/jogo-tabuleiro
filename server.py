@@ -22949,9 +22949,15 @@ def _city_shops_editor_payload():
                             "item_slot": item.get("item_slot"), "effect": item.get("effect"),
                             "veneno_id": item.get("veneno_id"),
                             "arremessavel": item.get("id") in ARREMESSAVEIS})
+    rotas = [{"from": origem, "to": destino,
+              **(WORLD_ROUTES.get(frozenset((origem, destino))) or {"fome": 0, "sede": 0})}
+             for indice, origem in enumerate(WORLD_LOCATIONS)
+             for destino in list(WORLD_LOCATIONS)[indice + 1:]]
     return {"cities": list(WORLD_LOCATIONS.values()), "shops": CITY_SHOP_LABELS,
             "stock": CITY_SHOPS, "catalog": catalog, "taverns": TAVERN_SCENES,
-            "city_points": CITY_MAP_POINTS}
+            "city_points": CITY_MAP_POINTS, "routes": rotas,
+            "custom_cities": [c["id"] for c in WORLD_CITIES.get("cities", [])],
+            "city_inicial": CITY_INICIAL}
 
 def _save_city_shops_upload(raw, taverns=None, raw_city_points=None):
     if not isinstance(raw, dict): return False, "configuração inválida"
@@ -23011,6 +23017,28 @@ def _save_city_shops_upload(raw, taverns=None, raw_city_points=None):
                 cleaned[point_id] = item
             if cleaned: CITY_MAP_POINTS[city_id] = cleaned
     try:
+        _save_city_shops()
+        _save_tavern_scenes()
+        _save_city_map_points()
+    except OSError as e:
+        return False, str(e)
+    return True, _city_shops_editor_payload()
+
+def _save_world_cities_upload(cities, overrides, deleted, routes):
+    """Aplica e grava o estado de cidades vindo do editor. O editor envia sempre
+    o conjunto completo (cidades criadas, overrides, exclusões e a tabela de
+    rotas), então isto é uma substituição, não um merge incremental."""
+    if not isinstance(cities, list) or not isinstance(routes, list):
+        return False, "dados de cidades inválidos"
+    if not isinstance(overrides, dict) or not isinstance(deleted, list):
+        return False, "dados de cidades inválidos"
+    _aplicar_estado_cidades(cities, overrides, deleted, routes)
+    _sincronizar_cidades_derivadas()
+    for sala in rooms.values():
+        if getattr(sala, "world_location", None) not in WORLD_LOCATIONS:
+            sala.world_location = CITY_INICIAL
+    try:
+        _save_world_cities()
         _save_city_shops()
         _save_tavern_scenes()
         _save_city_map_points()
