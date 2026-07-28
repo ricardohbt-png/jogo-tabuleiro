@@ -4294,6 +4294,48 @@ def _fase_obj(item):
         return {"file": item.get("file"), "intro": item.get("intro", ""), "outro": item.get("outro", "")}
     return {"file": None, "intro": "", "outro": ""}
 
+def _etapa_file(item):
+    """O arquivo de uma etapa de aventura (string legada ou objeto {file,...})."""
+    if isinstance(item, str):
+        return item
+    if isinstance(item, dict):
+        return item.get("file")
+    return None
+
+def _etapa_obj(item):
+    """Normaliza uma etapa de aventura para {file, encadear, intro, outro}.
+    `encadear` faz a próxima etapa começar imediatamente, sem passar pela cidade."""
+    if isinstance(item, str):
+        return {"file": item, "encadear": False, "intro": "", "outro": ""}
+    if isinstance(item, dict):
+        return {"file": item.get("file"), "encadear": bool(item.get("encadear")),
+                "intro": item.get("intro", ""), "outro": item.get("outro", "")}
+    return {"file": None, "encadear": False, "intro": "", "outro": ""}
+
+def _clean_espera(raw):
+    """Normaliza a espera de retorno de uma aventura para
+    {'modo': 'fixa'|'dados', 'rodadas': int, 'dados': str}. Fórmula inválida
+    rebaixa o modo para 'fixa' — o autor nunca fica com uma espera quebrada."""
+    raw = raw if isinstance(raw, dict) else {}
+    modo = "dados" if raw.get("modo") == "dados" else "fixa"
+    try:
+        rodadas = max(0, min(99, int(raw.get("rodadas", 0))))
+    except (TypeError, ValueError):
+        rodadas = 0
+    dados = str(raw.get("dados") or "").strip()[:16]
+    if not re.fullmatch(r"\d{0,2}d\d{1,3}([+-]\d{1,3})?", dados):
+        dados = ""
+    if modo == "dados" and not dados:
+        modo = "fixa"
+    return {"modo": modo, "rodadas": rodadas, "dados": dados}
+
+def _rolar_espera(espera):
+    """Quantas rodadas o herói fica fora da masmorra nesta saída."""
+    e = _clean_espera(espera)
+    if e["modo"] == "dados":
+        return max(0, roll_dice(e["dados"]))
+    return e["rodadas"]
+
 def _story_norm(val):
     """Normaliza um campo de história para {'slides': [...], 'audio': str|None}.
     Aceita string (legado = 1 slide de texto), objeto {'slides','audio'} ou vazio.
