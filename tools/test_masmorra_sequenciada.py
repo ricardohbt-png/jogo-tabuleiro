@@ -76,10 +76,79 @@ def test_validacao_saida():
     defn.pop("saida_permitida")
     check("ausente continua válida", server.validar_dungeon(defn)[0] is True)
 
+def _aventura(encadear):
+    return {"id": "test_seq", "nome": "Rota Encadeada", "x": 10, "y": 10,
+            "fome": 1, "sede": 1, "renome_recompensa": 1,
+            "requisito": {"renome_min": 0, "nivel_grupo_min": 0,
+                          "item_id": "", "fato": "", "aventura_id": ""},
+            "espera_retorno": {"modo": "fixa", "rodadas": 2, "dados": ""},
+            "dungeons": [{"file": "test_camp_a.json", "encadear": encadear,
+                          "intro": "", "outro": "FECHA-1"},
+                         {"file": "test_camp_b.json", "encadear": False,
+                          "intro": "ABRE-2", "outro": ""}]}
+
+def setup_room(encadear=True):
+    """Sala de 2 heróis parada na cidade, com a aventura de teste instalada."""
+    server.WORLD_ADVENTURES["test_seq"] = _aventura(encadear)
+    r = GameRoom("SEQ")
+    async def noop(*a, **k): pass
+    r.gm_say = noop; r.broadcast = noop; r.push_state = noop; r.send_to = noop
+    r.broadcast_city_state = noop; r.broadcast_lobby = noop
+    for pid, nome, cls in (("p1", "Victor", "warrior"), ("p2", "Pedro", "mage")):
+        r.players[pid] = make_player(pid, nome, cls, 0)
+    r.player_order = list(r.players.keys()); r.host_pid = "p1"
+    r.phase = "city"
+    return r
+
+async def _concluir_etapa(r):
+    """Mata tudo, recalcula objetivos e encerra a missão pelo host."""
+    for m in r.monsters.values(): m["hp"] = 0
+    await r._check_objectives()
+    await r.handle_encerrar_missao("p1")
+
+async def test_encadeamento():
+    print("\n[4] etapa encadeada começa imediatamente")
+    r = setup_room(encadear=True)
+    await r.handle_world_adventure("p1", "test_seq")
+    check("entrou na etapa 1 (10×8)", r.map_w == 10 and r.map_h == 8)
+    p1 = r.players["p1"]
+    p1["hp"] = max(1, p1["hp"] - 4); hp_antes = p1["hp"]
+    p1["technique_cooldowns"] = {"brutalidade": 99}
+    p1["fome"] = 7; p1["sede"] = 5
+    await _concluir_etapa(r)
+    check("NÃO passou pela cidade", r.phase == "playing")
+    check("carregou a etapa 2 (12×8)", r.map_w == 12 and r.map_h == 8)
+    check("índice avançou", r.world_adventure_index == 1)
+    check("progresso gravado", r.world_adventure_progress.get("test_seq") == 1)
+    check("segue na mesma aventura", r.world_adventure_id == "test_seq")
+    check("HP não se recupera", r.players["p1"]["hp"] == hp_antes)
+    check("recarga de técnica não se recupera",
+          r.players["p1"]["technique_cooldowns"] == {"brutalidade": 99})
+    check("fome/sede não se recuperam e não são cobradas de novo",
+          r.players["p1"]["fome"] == 7 and r.players["p1"]["sede"] == 5)
+    check("beat de história encadeada montado",
+          r._story_encadeada and [s.get("text") for s in r._story_encadeada["slides"]]
+          == ["FECHA-1", "ABRE-2"])
+    # última etapa: sem próxima, encerra normalmente pela cidade
+    await _concluir_etapa(r)
+    check("última etapa volta à cidade", r.phase == "city")
+    check("aventura encerrada", r.world_adventure_id is None)
+
+async def test_sem_encadeamento():
+    print("\n[5] sem o flag, continua voltando à cidade (não-regressão)")
+    r = setup_room(encadear=False)
+    await r.handle_world_adventure("p1", "test_seq")
+    await _concluir_etapa(r)
+    check("voltou à cidade", r.phase == "city")
+    check("aventura liberada", r.world_adventure_id is None)
+    check("progresso gravado mesmo assim", r.world_adventure_progress.get("test_seq") == 1)
+
 async def main():
     test_helpers_etapa()
     test_persistencia_campos()
     test_validacao_saida()
+    await test_encadeamento()
+    await test_sem_encadeamento()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

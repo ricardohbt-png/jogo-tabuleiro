@@ -5956,6 +5956,8 @@ class GameRoom:
         self.master_reserve = {}   # Camada B: typeâ†’count restante de reforÃ§os do mestre
         self.expected_party = {"heroes": 4, "level": 1}   # Camada C: grupo esperado (referÃªncia)
         self.saida_permitida = True   # masmorra permite sair pela escada de entrada
+        self._story_encadeada = None   # beat de emenda entre etapas (consumido pelo cliente)
+        self._emendando = False        # True durante _emendar_proxima_etapa
         self.player_order = []  # list of pid in turn order
         self.phase = "lobby"    # lobby | character_select | playing | ended
         self.host_pid = None
@@ -8283,7 +8285,9 @@ class GameRoom:
         if pid != self.host_pid:
             await self.send_to(pid, {"type": "error", "msg": "Apenas o anfitrião pode entrar na masmorra."})
             return
-        if self.phase != "city":
+        # Na emenda entre etapas encadeadas a sala já está em "playing" — é o único
+        # caminho que entra numa masmorra sem passar pela cidade.
+        if self.phase != "city" and not self._emendando:
             return
 
         # Ponto seguro: fotografa o estado "cidade concluída" ANTES da aventura —
@@ -8358,7 +8362,7 @@ class GameRoom:
             self.players[pid2]["moves_left"]       = self._water_turn_moves(self.players[pid2], self.players[pid2]["spd"])
             self.players[pid2]["action_done"]      = False
             self.players[pid2]["bonus_action_used"] = False
-            if nova:
+            if nova and not self._emendando:
                 self._resetar_corrosao(self.players[pid2])   # corrosÃ£o reseta por dungeon
                 self._resetar_vinho(self.players[pid2])      # embriaguez nÃ£o persiste
                 self._resetar_cerveja(self.players[pid2])    # embriaguez da cerveja nÃ£o persiste
@@ -12429,6 +12433,7 @@ class GameRoom:
         """Transição masmorra→cidade reusável (saída pela escada e avanço de fase)."""
         self._cancelar_timer_turno()   # fora da masmorra nÃ£o hÃ¡ timer de turno
         self.phase = "city"
+        self._story_encadeada = None   # a emenda nÃ£o sobrevive Ã  volta para a cidade
         self._gerar_loja_pergaminhos()
         for pp in self.players.values():
             pp["moves_left"]        = pp["spd"]
@@ -21144,13 +21149,20 @@ class GameRoom:
         self.mission_complete_pending = False
         if self.world_adventure_id:
             adventure_id = self.world_adventure_id
-            adventure_name = (WORLD_ADVENTURES.get(adventure_id) or {}).get("nome", "aventura")
+            adventure = WORLD_ADVENTURES.get(adventure_id) or {}
+            adventure_name = adventure.get("nome", "aventura")
+            stages = list(adventure.get("dungeons") or [])
             completed_index = self.world_adventure_index if isinstance(self.world_adventure_index, int) else 0
             self.world_adventure_progress[adventure_id] = max(
                 int(self.world_adventure_progress.get(adventure_id, 0) or 0), completed_index + 1)
-            reward = int((WORLD_ADVENTURES.get(adventure_id) or {}).get("renome_recompensa", 1) or 0)
+            reward = int(adventure.get("renome_recompensa", 1) or 0)
             if reward:
                 self.renome = max(0, self.renome + reward)
+            # Etapa marcada como encadeada: emenda direto na próxima, sem cidade.
+            etapa = _etapa_obj(stages[completed_index]) if completed_index < len(stages) else {"encadear": False}
+            if etapa["encadear"] and completed_index + 1 < len(stages):
+                await self._emendar_proxima_etapa(adventure, completed_index + 1)
+                return
             self.world_adventure_id = None
             self.world_adventure_index = None
             self.dungeon_generated = False
@@ -21174,6 +21186,37 @@ class GameRoom:
                 story = _story_beat(f"final:{self.campaign_phase}",
                                     [fase.get("outro"), self.campaign.get("outro")])
             await self.end_game(victory=True, story=story)
+
+    async def _emendar_proxima_etapa(self, adventure, indice):
+        """Encadeamento: a próxima etapa começa imediatamente, sem passar pela
+        cidade. Como quem recarrega slots/recargas/refeições é
+        `_voltar_para_cidade`, não chamá-lo já entrega o 'nada se recupera' —
+        HP, fome/sede, slots, recargas e status atravessam a emenda."""
+        stages = list(adventure.get("dungeons") or [])
+        anterior = _etapa_obj(stages[indice - 1])
+        proxima  = _etapa_obj(stages[indice])
+        defn = carregar_dungeon(proxima["file"])
+        ok, motivo = validar_dungeon(defn) if defn else (False, "masmorra não encontrada")
+        if not ok:
+            # Etapa quebrada não pode prender o grupo na masmorra concluída.
+            await self.gm_say(f"⚠️ A próxima etapa está indisponível ({motivo}). O grupo retorna à cidade.")
+            self.world_adventure_id = None; self.world_adventure_index = None
+            self.dungeon_generated = False; self._objetivo_concluido = False
+            await self._voltar_para_cidade()
+            return
+        self._story_encadeada = _story_beat(
+            f"encadeada:{adventure.get('id')}:{indice}",
+            [anterior.get("outro"), proxima.get("intro")])
+        self.mode = "authored"; self.selected_dungeon = proxima["file"]; self.dungeon_def = defn
+        self.world_adventure_index = indice
+        self.dungeon_generated = False
+        self._objetivo_concluido = False
+        self._emendando = True    # suprime os resets "por masmorra nova" (ver enter_dungeon)
+        await self.gm_say(f"⛓️ Sem descanso: o grupo avança direto para a etapa {indice + 1}/{len(stages)} de **{adventure.get('nome', 'aventura')}**.")
+        try:
+            await self.enter_dungeon(self.host_pid, from_world_adventure=True)
+        finally:
+            self._emendando = False
 
     async def handle_libertar_prisioneiro(self, pid):
         if not self._is_turn(pid):
@@ -21404,6 +21447,7 @@ class GameRoom:
             "revealed": [list(k) for k in self._live_reveal_tiles()],   # ClarividÃªncia + visÃ£o ao vivo dos minions
             "stairs_pos": self.stairs_pos,
             "campaign": self._campaign_payload(),
+            "story": self._story_encadeada,   # beat da emenda; cliente faz de-dup por key
             "objectives": self.objective_status,
             "mission_complete_pending": self.mission_complete_pending,
             "exit_pos": self.exit_pos,
