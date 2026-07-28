@@ -103,6 +103,8 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `libertar_prisioneiro` | — (herói adjacente liberta o prisioneiro; grava `rescuer_pid`). O prisioneiro (`prisoner`: CA10/mov6/7HP) é **controlado pelo resgatador**, não anda sozinho. |
 | `mover_prisioneiro` | `dx`, `dy` — controle manual do prisioneiro liberto (1 passo, só movimento). Habilitado na **janela pós-turno** do controlador (mesma do turno dos servos, `animados_phase_pid`): encerrar o turno abre a janela e dá `moves_left=6`; encerrar de novo avança. Se o resgatador morre, o controle passa ao herói vivo mais próximo. Dano vs CA10 dos monstros adjacentes continua na fase inimiga (`_processar_prisioneiro_turno`). O prisioneiro também **sofre armadilhas colocáveis** ao pisar nelas, como os heróis (saves a +0 em reflexos/fortitude); morte por qualquer fonte → `_prisioneiro_morre`/`rescue_failed`. |
 | `encerrar_missao` | — (herói encerra a fase **após** o objetivo principal cumprido; só habilitado quando `game_state.mission_complete_pending`). Concluir o principal **não** encerra mais automaticamente: o servidor concede a recompensa, larga um baú e liga `mission_complete_pending`; o cliente mostra o botão "🏁 Encerrar missão" (com confirmação) que dispara esta mensagem. Recusa `pid` fora de `self.players`. |
+| `exit_dungeon` | — (saída **individual** pela escada de entrada: exige turno próprio, estar em cima de `stairs_pos` e `saida_permitida` da masmorra; cobra ida+volta de 🍖/💧 da aventura e marca `fora_masmorra`. A masmorra continua para os demais.) |
+| `voltar_masmorra` | — (o herói na cidade volta à masmorra assim que a espera zera; senão ele volta sozinho na rodada seguinte) |
 | `open_chest` | — |
 | `open_door` | `tx`, `ty` — herói abre uma porta adjacente (Chebyshev ≤1). Ação **gratuita** (não gasta movimento/ação). Destranca a(s) sala(s) ligada(s) à porta, revela seu interior e **desperta** os monstros (que passam a perseguir). Salas começam trancadas (exceto a entrada); monstros em sala trancada ficam dormentes e o interior fica oculto pela névoa. **Com mestre**, além de abrir porta, os monstros também acordam por **avistamento** (o herói ganha linha de visão a um deles — `_verificar_avistamento`): o herói que avista acorda a **sala inteira** do monstro (flag `alertado`), narra "⚔️ Combate!" e coloca esses monstros em **Manual** por padrão (o mestre passa a dirigi-los); sem mestre a dormência é só por sala-trancada (byte-idêntica). **Clarividência** (`magia`, `alvoLivre`): alcance = mapa inteiro (mira em qualquer casa, mesmo na névoa — no 3D via `get3DTilePlane`); revela a área, os monstros ali (visibilidade ao vivo por 2 rodadas via `magic_reveal`) e as armadilhas do local, sem abrir a porta nem despertar os monstros. |
 | `use_item` | `item_id` |
@@ -1436,3 +1438,54 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `handle_city_map_points` (ajuste "📍 Ajustar pontos" em jogo) passou a fazer `update` de x/y em
 > vez de substituir o dict — antes o ajuste apagava `type`/`name` do ponto autoral. Teste:
 > `tools/test_cidades_editor.py` seção [12].
+
+> **Masmorra sequenciada + saída individual pela escada:** duas mudanças no fluxo de
+> expedição. **(1) Etapas encadeadas:** cada etapa de uma aventura do mapa-múndi
+> (`WORLD_ADVENTURES[...]["dungeons"]`) aceita **string (legado) ou objeto
+> `{file, encadear, intro, outro}`** — normalizado por `_etapa_obj`/`_etapa_file`, mesmo
+> padrão de `_fase_obj`/`_fase_file` das campanhas. Com `encadear`, `handle_encerrar_missao`
+> chama `_emendar_proxima_etapa`, que carrega a próxima masmorra e entra nela **sem** passar
+> por `_voltar_para_cidade` — e como é justamente `_voltar_para_cidade` quem recarrega slots,
+> zera `technique_cooldowns` e renova refeições, o "**nada se recupera**" sai de graça (HP,
+> fome/sede, slots, recargas e status atravessam a emenda). O flag `self._emendando` abre a
+> guarda `phase != "city"` de `enter_dungeon` (único caminho que entra numa masmorra vindo de
+> `playing`) e suprime os resets "por masmorra nova" (corrosão/vinho/cerveja/chamas). A
+> história da emenda vai em `game_state.story` (`self._story_encadeada`, beat
+> `outro da etapa N + intro da N+1`) — o cliente **não mudou**: `_captarStory` já lê
+> `msg.story` de qualquer mensagem e deduplica por `key`. **(2) Saída individual:**
+> `handle_exit_dungeon` deixou de levar o grupo inteiro — agora exige turno próprio, estar em
+> cima de `stairs_pos` e a masmorra permitir (`saida_permitida`, campo novo da masmorra,
+> default `True`), cobra **ida e volta** (`_custo_viagem_saida` = 2× o `fome`/`sede` da
+> aventura; fora de aventura é grátis) e marca
+> `p["fora_masmorra"] = {rodadas_restantes, ignorar_primeiro_fecho}`. O portão é o
+> **`_ativo(p)`** — que já significa "está no tabuleiro, na iniciativa e é alvo válido" —
+> estendido com `and not p.get("fora_masmorra")`: os 27 sites que o consultam tratam o ausente
+> como um desconectado, sem serem tocados (o peão vai para `[-1,-1]`, espelhando
+> `handle_disconnect_em_jogo`). Na cidade, `_em_cidade(pid)` (= sala na cidade **ou** este
+> jogador fora) substitui `phase != "city"` em `handle_shop_buy`/`handle_shop_sell`/
+> `handle_guild_buy`/`handle_guild_equip`/`handle_tavern_npc`; ficam **de fora** de propósito
+> `world_travel`, `world_adventure`, `enter_dungeon` e `city_map_points` (ações de grupo).
+> `broadcast` ganhou `skip` e `push_state` **não** manda `game_state` a quem está fora (o
+> cliente prefere `gameState` a `cityState` e mostraria o paperdoll da masmorra);
+> `push_state_or_city` manda `city_state` individual (`_city_state_payload`/
+> `send_city_state_to`). **Espera:** `_tick_retorno_masmorra` decrementa no fecho de rodada
+> (`_advance_initiative`), guardando **rodadas restantes** e não uma rodada-alvo absoluta —
+> assim sobrevive à emenda, que reinicia `round_num`; `ignorar_primeiro_fecho` faz o fecho da
+> rodada em que o herói saiu não contar (senão a espera valeria N ou N-1 conforme o momento da
+> saída). Ao zerar ele ganha 1 rodada de tolerância e volta sozinho na seguinte;
+> `voltar_masmorra` (`handle_voltar_masmorra`) antecipa. `_reentrar_masmorra` recoloca na
+> escada (casa vizinha só se ocupada) com turno cheio e manda `enter_dungeon` só para ele.
+> `_checar_masmorra_vazia` (chamado na saída e em `_player_dies`) devolve a sala à cidade
+> quando não sobra herói ativo dentro mas há alguém vivo na cidade — não é derrota. O ausente
+> **participa** da divisão de XP/ouro (`_conceder_objetivo_reward` já itera por `alive`) e vai
+> junto na etapa encadeada. Editor: checkbox "⛓️ emendar na próxima" + encerramento/abertura
+> por etapa e **espera de retorno** (fixa em rodadas ou fórmula `NdX`, `_clean_espera`/
+> `_rolar_espera`) em `tools/editor_world.js`; checkbox "🚪 saída pela escada" no painel da
+> masmorra (`tools/editor.html`/`editor.js`). Cliente: `game_state` traz
+> `saida_permitida`/`custo_saida`/`espera_saida` para a confirmação no clique da escada; card
+> esmaecido "🏙️ na cidade — volta em N rodada(s)" em `renderPlayers`; banner com contador e
+> botão "⛓️ Voltar à masmorra" em `_renderBannerForaMasmorra`; `GS.voltarMasmorra`/
+> `foraMasmorraDe`/`estouForaDaMasmorra`/`rodadasParaVoltar`. **Atenção:** `GS.isMyTurn` é uma
+> **propriedade booleana**, não função — chamá-la com `()` lança `TypeError`. Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-07-28-masmorra-sequenciada-saida-individual*`. Teste:
+> `tools/test_masmorra_sequenciada.py`.
