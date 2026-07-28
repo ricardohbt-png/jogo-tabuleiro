@@ -19,7 +19,7 @@
   const MAT_DEFAULT = { piso: "pedra_cinza", parede: "pedra_normal" };
 
   const S = {
-    meta: { schema_version: 1, id: "nova_masmorra", name: "Nova Masmorra", ambiente: "masmorra" },
+    meta: { schema_version: 1, id: "nova_masmorra", name: "Nova Masmorra", ambiente: "masmorra", saida_permitida: true },
     grid: { w: 16, h: 12 },
     tiles: [],
     rooms: [], nextRoomId: 0,
@@ -1581,6 +1581,7 @@
     S.objectives.secondary.forEach(s => normalizeObjective(s, false));
     return {
       schema_version: 1, id: S.meta.id, name: S.meta.name, ambiente: S.meta.ambiente || "masmorra",
+      saida_permitida: S.meta.saida_permitida !== false,
       grid: { w: S.grid.w, h: S.grid.h },
       tiles: S.tiles.map(row => row.slice()),
       rooms: S.rooms.map(r => Object.assign({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, role: r.role, locked: r.locked, doors: r.doors.map(d => d.slice()) }, r.required ? { required: true, required_mode: r.required_mode || "clear" } : {})),
@@ -1730,7 +1731,9 @@
 
   function loadJSON(obj) {
     S.meta = { schema_version: 1, id: obj.id || "masmorra", name: obj.name || "Masmorra",
-               ambiente: ["penumbra", "masmorra", "ar_livre"].includes(obj.ambiente) ? obj.ambiente : "masmorra" };
+               ambiente: ["penumbra", "masmorra", "ar_livre"].includes(obj.ambiente) ? obj.ambiente : "masmorra",
+               // Ausente = permitida: masmorras salvas antes deste campo não mudam de comportamento.
+               saida_permitida: obj.saida_permitida !== false };
     S.grid = { w: obj.grid.w, h: obj.grid.h };
     S.tiles = obj.tiles.map(row => row.slice());
     S.rooms = (obj.rooms || []).map(r => Object.assign({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, role: r.role, locked: !!r.locked, doors: (r.doors || []).map(d => d.slice()) }, r.required ? { required: true, required_mode: r.required_mode === "visit" ? "visit" : "clear" } : {}));
@@ -1783,6 +1786,7 @@
     document.getElementById("m-id").value = S.meta.id;
     document.getElementById("m-name").value = S.meta.name;
     document.getElementById("m-ambiente").value = S.meta.ambiente || "masmorra";
+    document.getElementById("m-saida").checked = S.meta.saida_permitida !== false;
     document.getElementById("g-w").value = S.grid.w;
     document.getElementById("g-h").value = S.grid.h;
     render(); renderPanel();
@@ -1814,6 +1818,7 @@
     S.meta.id = document.getElementById("m-id").value.trim() || "masmorra";
     S.meta.name = document.getElementById("m-name").value.trim() || "Masmorra";
     S.meta.ambiente = document.getElementById("m-ambiente").value || "masmorra";
+    S.meta.saida_permitida = document.getElementById("m-saida").checked;
     const v = updateStatus();
     if (!v.ok) { alert("Masmorra inválida:\n- " + v.erros.join("\n- ")); return; }
     const defn = buildJSON();
