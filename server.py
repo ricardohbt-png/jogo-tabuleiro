@@ -8290,6 +8290,11 @@ class GameRoom:
         self.campaign = None; self.selected_campaign = None; self.campaign_phase = 0
         self.world_adventure_id = adventure["id"]
         self.world_adventure_index = stage_index
+        # Abertura da etapa (slides autorados no editor de mapa-múndi). Vale para
+        # toda etapa iniciada pelo mapa, não só a primeira.
+        self._story_encadeada = _story_beat(
+            f"aventura:{adventure['id']}:{stage_index}",
+            [_etapa_obj(stages[stage_index]).get("intro")])
         self.dungeon_generated = False
         await self.gm_say(f"O grupo parte para **{adventure['nome']}** — etapa {stage_index + 1}/{len(stages)} (fome -{fome}, sede -{sede} por herói).")
         await self.enter_dungeon(pid, from_world_adventure=True)

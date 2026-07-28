@@ -170,6 +170,23 @@ async def test_sem_encadeamento():
     check("aventura liberada", r.world_adventure_id is None)
     check("progresso gravado mesmo assim", r.world_adventure_progress.get("test_seq") == 1)
 
+async def test_beat_abertura():
+    print("\n[16] abertura da etapa ao entrar pelo mapa")
+    r = setup_room(encadear=True)
+    # a etapa 0 da aventura de teste não tem intro; damos um a ela
+    server.WORLD_ADVENTURES["test_seq"]["dungeons"][0]["intro"] = "ABRE-1"
+    await r.handle_world_adventure("p1", "test_seq")
+    beat = r._story_encadeada
+    check("beat de abertura montado", beat is not None)
+    check("texto da abertura",
+          beat and [s.get("text") for s in beat["slides"]] == ["ABRE-1"])
+    check("key identifica aventura e etapa", beat and beat["key"] == "aventura:test_seq:0")
+    # etapa sem intro não emite beat
+    r2 = setup_room(encadear=True)
+    server.WORLD_ADVENTURES["test_seq"]["dungeons"][0]["intro"] = ""
+    await r2.handle_world_adventure("p1", "test_seq")
+    check("sem intro não emite beat", r2._story_encadeada is None)
+
 async def _entrar_e_posicionar_na_escada(r, pid="p1"):
     await r.handle_world_adventure("p1", "test_seq")
     r.players[pid]["pos"] = list(r.stairs_pos)
@@ -353,6 +370,7 @@ async def main():
     test_slides_na_aventura()
     await test_encadeamento()
     await test_sem_encadeamento()
+    await test_beat_abertura()
     await test_saida_recusada()
     await test_saida_efetiva()
     await test_ausente_na_cidade()
