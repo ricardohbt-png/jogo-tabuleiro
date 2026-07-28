@@ -185,7 +185,7 @@ async def test_serializacao():
     print("\n[5] push_state expõe objectives/exit_pos/prisoner")
     r = setup_authored()
     capturado = {}
-    async def cap(msg):
+    async def cap(msg, skip=None):
         if msg.get("type") == "game_state": capturado.update(msg)
     r.broadcast = cap
     await r.enter_dungeon("p1")

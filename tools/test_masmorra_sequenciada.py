@@ -196,6 +196,50 @@ async def test_saida_efetiva():
     await r.handle_exit_dungeon("p1")
     check("não sai duas vezes (não cobra de novo)", p["fome"] == 8)
 
+async def test_ausente_na_cidade():
+    print("\n[8] o ausente age na cidade, a sala segue na masmorra")
+    r = setup_room()
+    p = await _entrar_e_posicionar_na_escada(r)
+    p["fome"] = 10; p["sede"] = 10
+    await r.handle_exit_dungeon("p1")
+    check("sala continua em playing", r.phase == "playing")
+    check("_em_cidade só para quem saiu",
+          r._em_cidade("p1") is True and r._em_cidade("p2") is False)
+    # compra na loja estando fora
+    p["gold"] = 999
+    antes = len(p["bag"])
+    await r.handle_shop_buy("p1", "mercador", "antidote")
+    check("comprou no mercador estando fora", len(p["bag"]) > antes)
+    # o companheiro dentro da masmorra NÃO compra
+    q = r.players["p2"]; q["gold"] = 999; antes_q = len(q["bag"])
+    await r.handle_shop_buy("p2", "mercador", "antidote")
+    check("quem está na masmorra não compra", len(q["bag"]) == antes_q)
+    # ações de grupo continuam bloqueadas para o ausente
+    destino_antes = r.world_location
+    await r.handle_world_travel("p1", "vila_charcos")
+    check("ausente não viaja pelo mundo", r.world_location == destino_antes)
+
+async def test_broadcast_separado():
+    print("\n[9] game_state não chega a quem está na cidade")
+    import json as _j
+    r = setup_room()
+    p = await _entrar_e_posicionar_na_escada(r)
+    p["fome"] = 10; p["sede"] = 10
+    recebidos = {"p1": [], "p2": []}
+    class FakeWS:
+        def __init__(self, pid): self.pid = pid
+        async def send(self, data): recebidos[self.pid].append(_j.loads(data)["type"])
+    r.connections = {"p1": FakeWS("p1"), "p2": FakeWS("p2")}
+    del r.broadcast; del r.send_to        # usa os métodos reais da classe
+    await r.handle_exit_dungeon("p1")
+    recebidos["p1"].clear(); recebidos["p2"].clear()
+    await GameRoom.push_state(r)
+    check("p1 (na cidade) não recebe game_state", "game_state" not in recebidos["p1"])
+    check("p2 (na masmorra) recebe game_state", "game_state" in recebidos["p2"])
+    await r.push_state_or_city()
+    check("p1 recebe city_state", "city_state" in recebidos["p1"])
+    check("p2 não recebe city_state", "city_state" not in recebidos["p2"])
+
 async def main():
     test_helpers_etapa()
     test_persistencia_campos()
@@ -204,6 +248,8 @@ async def main():
     await test_sem_encadeamento()
     await test_saida_recusada()
     await test_saida_efetiva()
+    await test_ausente_na_cidade()
+    await test_broadcast_separado()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

@@ -126,7 +126,7 @@ async def test_serializacao():
     r = setup_room(); r.phase = "lobby"
     await r.handle_select_campaign("p1", "test_campanha.json")
     cap = {}
-    async def capb(msg):
+    async def capb(msg, skip=None):
         if msg.get("type") == "game_state": cap.update(msg)
     r.broadcast = capb
     r.phase = "city"; await r.enter_dungeon("p1")

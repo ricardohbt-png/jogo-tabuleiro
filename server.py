@@ -6060,10 +6060,15 @@ class GameRoom:
 
     # â”€â”€ broadcast helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-    async def broadcast(self, msg):
+    async def broadcast(self, msg, skip=None):
+        """Envia a todos os conectados. `skip` (set de pids) exclui destinatários —
+        usado para não mandar game_state a quem está na cidade (fora_masmorra)."""
         dead = []
         data = json.dumps(msg)
+        skip = skip or ()
         for pid, ws in list(self.connections.items()):
+            if pid in skip:
+                continue
             try:
                 await ws.send(data)
             except Exception:
@@ -6397,8 +6402,8 @@ class GameRoom:
 
     # â”€â”€ city phase â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-    async def broadcast_city_state(self):
-        await self.broadcast({
+    def _city_state_payload(self):
+        return {
             "type": "city_state",
             "master_pid": self.master_pid,
             "players": list(self.players.values()),
@@ -6435,7 +6440,14 @@ class GameRoom:
                     for pid, pp in self.players.items()
                 },
             },
-        })
+        }
+
+    async def broadcast_city_state(self):
+        await self.broadcast(self._city_state_payload())
+
+    async def send_city_state_to(self, pid):
+        """city_state individual — para quem está na cidade com a sala em jogo."""
+        await self.send_to(pid, self._city_state_payload())
 
     def _tavern_payload(self):
         """Oculta falas bloqueadas, mas informa ao cliente que existe um gancho."""
@@ -6486,7 +6498,7 @@ class GameRoom:
 
     async def handle_guild_buy(self, pid, item_id):
         """Compra uma técnica/especialização da Guilda dos Heróis (persistente por classe)."""
-        if self.phase != "city":
+        if not self._em_cidade(pid):
             return
         p = self.players.get(pid)
         if not p:
@@ -6517,13 +6529,13 @@ class GameRoom:
         p["gold"] -= item["preco"]
         owned.append(item_id)
         self._persistir_guilda(p)
-        await self.broadcast_city_state()
+        await self.push_state_or_city()
 
     async def handle_guild_equip(self, pid, slot, item_id):
         """Equipa (ou desequipa, item_id=None) uma técnica da Guilda num slot.
         'tecnica' é genérico (todas as classes); 'tecnica_exclusiva' só mago/clérigo
         e só aceita item com exclusiva=True."""
-        if self.phase != "city":
+        if not self._em_cidade(pid):
             await self.send_to(pid, {"type": "error", "msg": "Só é possível equipar técnicas na cidade."})
             return
         p = self.players.get(pid)
@@ -6542,7 +6554,7 @@ class GameRoom:
             slots[slot] = None
             p["guild_equip"]["tecnica"] = slots[0] if slots else None
             self._persistir_guilda(p)
-            await self.broadcast_city_state()
+            await self.push_state_or_city()
             return
         item = guild_item(item_id)
         if not item or item["categoria"] != "tecnica":
@@ -6561,7 +6573,7 @@ class GameRoom:
         slots[slot] = item_id
         p["guild_equip"]["tecnica"] = slots[0] if slots else None
         self._persistir_guilda(p)
-        await self.broadcast_city_state()
+        await self.push_state_or_city()
 
     # â”€â”€ Guilda dos HerÃ³is: usar tÃ©cnica na masmorra â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def tecnica_restante(self, p, tid):
@@ -7629,7 +7641,7 @@ class GameRoom:
         await self.push_state()
 
     async def handle_shop_buy(self, pid, shop, item_id):
-        if self.phase != "city":
+        if not self._em_cidade(pid):
             return
         p = self.players.get(pid)
         if not p:
@@ -7797,7 +7809,7 @@ class GameRoom:
                     return
                 log = f"⛪ **{p['name']}** recebeu **{item['name']}** do Templo!"
                 await self.broadcast({"type": "shop_result", "msg": log})
-                await self.broadcast_city_state()
+                await self.push_state_or_city()
                 return
             effect = item.get("effect")
             if effect == "full_heal":
@@ -7838,11 +7850,11 @@ class GameRoom:
 
         if log:
             await self.broadcast({"type": "shop_result", "msg": log})
-        await self.broadcast_city_state()
+        await self.push_state_or_city()
 
     async def handle_shop_sell(self, pid, item_slot):
         """Sell an equipped item or bag item; player receives buy_price // 3 gold."""
-        if self.phase != "city":
+        if not self._em_cidade(pid):
             return
         p = self.players.get(pid)
         if not p:
@@ -7911,7 +7923,7 @@ class GameRoom:
 
         if log:
             await self.broadcast({"type": "shop_result", "msg": log})
-        await self.broadcast_city_state()
+        await self.push_state_or_city()
 
     def load_authored_dungeon(self, defn):
         """Carrega uma masmorra autorada (dict já validado) no estado da sala.
@@ -8171,7 +8183,7 @@ class GameRoom:
         return not reasons, reasons
 
     async def handle_tavern_npc(self, pid, npc_id, conversation_id):
-        if self.phase != "city" or pid not in self.players:
+        if not self._em_cidade(pid) or pid not in self.players:
             return
         scene = TAVERN_SCENES.get(self.world_location) or {}
         slot = next((s for s in scene.get("slots", []) if s.get("id") == str(npc_id) and not s.get("removed")), None)
@@ -8203,7 +8215,7 @@ class GameRoom:
         if conversation.get("uma_vez"): self.tavern_conversations_done.add(key)
         await self.gm_say(f"💬 **{slot.get('name', 'NPC')}**: {conversation['texto']}" + (f" (Renome {bonus:+d})" if bonus else "") + item_note)
         self._checkpoint_savegame()
-        await self.broadcast_city_state()
+        await self.push_state_or_city()
 
     async def handle_world_adventure(self, pid, adventure_id):
         """Parte diretamente para uma entrada autorada marcada no mapa-múndi."""
@@ -8563,6 +8575,19 @@ class GameRoom:
         fora do tabuleiro, são pulados na ordem de turnos e não são alvo."""
         return (bool(p) and bool(p.get("alive")) and p.get("connected", True)
                 and not p.get("fora_masmorra"))
+
+    def _fora_da_masmorra(self, pid):
+        """Pids que saíram pela escada e estão na cidade com a sala em jogo."""
+        p = self.players.get(pid)
+        return bool(p and p.get("fora_masmorra"))
+
+    def _pids_fora(self):
+        return {pid for pid, p in self.players.items() if p.get("fora_masmorra")}
+
+    def _em_cidade(self, pid):
+        """Pode usar lojas/guilda/taverna: a sala inteira está na cidade OU este
+        jogador saiu sozinho pela escada."""
+        return self.phase == "city" or self._fora_da_masmorra(pid)
 
     # â”€â”€ TIMER DE TURNO (30s) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def _cancelar_timer_turno(self):
@@ -12745,11 +12770,14 @@ class GameRoom:
 
     async def push_state_or_city(self):
         """Broadcast ciente da fase: na cidade os clientes estão em screen-city e
-        usam city_state; na masmorra usam game_state (push_state)."""
+        usam city_state; na masmorra usam game_state (push_state). Quem saiu pela
+        escada recebe city_state individual mesmo com a sala em jogo."""
         if self.phase == "city":
             await self.broadcast_city_state()
-        else:
-            await self.push_state()
+            return
+        for pid in self._pids_fora():
+            await self.send_city_state_to(pid)
+        await self.push_state()
 
     async def handle_reorder_bag(self, pid, from_index, to_index):
         """Reordena a bolsa do jogador (organização por arrastar-e-soltar).
@@ -21445,7 +21473,7 @@ class GameRoom:
                                vision_radius=self._get_raio_visao_monstro(m))
                           for m in self.monsters.values() if m["hp"] > 0]
         actor = self.current_actor()
-        await self.broadcast({
+        msg_state = {
             "type": "game_state",
             "master_pid": self.master_pid,
             "master_manual_mid": self.master_manual_mid,
@@ -21499,7 +21527,10 @@ class GameRoom:
             "decorations": self._serializar_decoracoes(),
             "secret_passages": self._serializar_passagens_secretas(),
             "materiais": self._serializar_materiais(),
-        })
+        }
+        # Quem está na cidade (fora_masmorra) não recebe game_state: o cliente
+        # prefere gameState a cityState e mostraria o paperdoll da masmorra.
+        await self.broadcast(msg_state, skip=self._pids_fora())
 
 # â”€â”€â”€ CONNECTION HANDLER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
