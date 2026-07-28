@@ -76,6 +76,33 @@ def test_validacao_saida():
     defn.pop("saida_permitida")
     check("ausente continua válida", server.validar_dungeon(defn)[0] is True)
 
+def test_slides_na_aventura():
+    print("\n[15] slides sobrevivem ao salvar a aventura")
+    row = {"id": "rota_slides", "nome": "Rota", "x": 10, "y": 20, "fome": 0, "sede": 0,
+           "dungeons": [{"file": "test_camp_a.json", "encadear": True,
+                         "intro": {"slides": [{"text": "abre", "image": "assets/story/a.png",
+                                               "fit": "contain"},
+                                              {"image": "../../etc/passwd"}],
+                                   "audio": "assets/story/m.mp3"},
+                         "outro": "só texto"},
+                        {"file": "test_camp_b.json"}]}
+    salvos = server.WORLD_ADVENTURES
+    try:
+        ok, res = server._save_world_adventures_upload([], [row])
+        check(f"salvou ({res if not ok else 'ok'})", ok is True)
+        et = server.WORLD_ADVENTURES["rota_slides"]["dungeons"][0]
+        check("intro continua sendo objeto", isinstance(et["intro"], dict))
+        check("slide com imagem preservado",
+              et["intro"]["slides"][0] == {"text": "abre", "image": "assets/story/a.png",
+                                           "fit": "contain"})
+        check("mídia fora de assets/story/ descartada",
+              len(et["intro"]["slides"]) == 1)
+        check("áudio preservado", et["intro"]["audio"] == "assets/story/m.mp3")
+        check("outro em texto continua string", et["outro"] == "só texto")
+    finally:
+        server.WORLD_ADVENTURES = salvos
+        server._save_world_adventures()
+
 def _aventura(encadear):
     return {"id": "test_seq", "nome": "Rota Encadeada", "x": 10, "y": 10,
             "fome": 1, "sede": 1, "renome_recompensa": 1,
@@ -323,6 +350,7 @@ async def main():
     test_helpers_etapa()
     test_persistencia_campos()
     test_validacao_saida()
+    test_slides_na_aventura()
     await test_encadeamento()
     await test_sem_encadeamento()
     await test_saida_recusada()

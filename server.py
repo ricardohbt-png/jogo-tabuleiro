@@ -329,8 +329,8 @@ def _save_world_adventures_upload(raw_locations, raw_adventures):
             et = _etapa_obj(raw_stage)
             if et["file"] in allowed_files:
                 etapas.append({"file": et["file"], "encadear": et["encadear"],
-                               "intro": str(et["intro"] or "")[:2000],
-                               "outro": str(et["outro"] or "")[:2000]})
+                               "intro": _clean_story_field(et["intro"]),
+                               "outro": _clean_story_field(et["outro"])})
         if not etapas:
             continue
         req = _clean_requirement(row.get("requisito"))
@@ -4373,6 +4373,41 @@ def _story_norm(val):
         audio = audio if (isinstance(audio, str) and audio) else None
         return {"slides": out, "audio": audio}
     return {"slides": [], "audio": None}
+
+
+_STORY_MEDIA_PREFIX = "assets/story/"
+
+def _story_media_ok(caminho):
+    """Mídia de história vem do cliente e é servida como arquivo estático:
+    só vale caminho dentro de assets/story/, sem subir de diretório."""
+    return (isinstance(caminho, str) and caminho.startswith(_STORY_MEDIA_PREFIX)
+            and ".." not in caminho)
+
+def _clean_story_field(raw):
+    """Normaliza um campo de história do editor para persistência.
+    Aceita string (legado/1 slide de texto) ou {'slides':[...], 'audio':...};
+    devolve string, {'slides':[...], 'audio'?} ou "" quando não sobra nada."""
+    if isinstance(raw, str):
+        return raw.strip()[:2000]
+    norm = _story_norm(raw)
+    slides = []
+    for s in norm["slides"][:20]:
+        slide = {}
+        if s.get("text"):
+            slide["text"] = s["text"][:2000]
+        if _story_media_ok(s.get("image")):
+            slide["image"] = s["image"]
+        if not slide:
+            continue
+        if s.get("fit") == "contain":
+            slide["fit"] = "contain"
+        slides.append(slide)
+    if not slides:
+        return ""
+    out = {"slides": slides}
+    if _story_media_ok(norm.get("audio")):
+        out["audio"] = norm["audio"]
+    return out
 
 
 def _story_beat(key, parts):
