@@ -140,12 +140,37 @@
   function saveCustomItem(item) {
     return request("upload_custom_item", { item: item }).then((m) => m.item);
   }
+  function loadCityShops() { return request("load_city_shops", {}).then((m) => m.config); }
+  function saveCityShops(stock, taverns, cityPoints) { return request("save_city_shops", { stock: stock, taverns: taverns, city_points: cityPoints }).then((m) => m.config); }
+  function loadWorldAdventures() { return request("load_world_adventures", {}).then((m) => m.config); }
+  function saveWorldAdventures(locations, adventures) { return request("save_world_adventures", { locations: locations, adventures: adventures }).then((m) => m.config); }
   async function uploadItemArt(file, itemId) {
     if (extOf(file.name) !== ".png") throw new Error("envie um arquivo .png");
     if (file.size > MAX) throw new Error("arquivo grande demais");
     const data = await toBase64(file);
     const m = await request("upload_item_art", { name: itemId + ".png", data: data });
     return m.name;
+  }
+  async function uploadTavernArt(file) {
+    if (IMG.indexOf(extOf(file.name)) < 0) throw new Error("envie uma imagem PNG, JPG, WebP ou GIF");
+    if (file.size > MAX) throw new Error("arquivo grande demais");
+    const m = await request("upload_tavern_art", { name: file.name, data: await toBase64(file) });
+    return m.path;
+  }
+
+  async function uploadCityArt(file) {
+    if (IMG.indexOf(extOf(file.name)) < 0) throw new Error("envie uma imagem PNG, JPG, WebP ou GIF");
+    if (file.size > MAX) throw new Error("arquivo grande demais");
+    const m = await request("upload_city_art", { name: file.name, data: await toBase64(file) });
+    return m.path;
+  }
+
+  // Envia o conjunto completo de cidades: criadas, edições nas originais,
+  // exclusões e a tabela de custos de viagem. Resolve com a config atualizada.
+  function saveWorldCities(cities, overrides, deleted, routes) {
+    return request("save_world_cities", {
+      cities: cities, overrides: overrides, deleted: deleted, routes: routes,
+    }).then((m) => m.config);
   }
 
   async function uploadObjeto(file) {
@@ -176,6 +201,6 @@
 
   window.STORY_UPLOAD = { upload: upload };
   window.PRISONER_UPLOAD = { upload: uploadPrisoner };
-  window.EDITOR_SAVE = { saveDungeon: saveDungeon, saveCampaign: saveCampaign, saveCustomMonster: saveCustomMonster, uploadMonsterArt: uploadMonsterArt, saveCustomItem: saveCustomItem, uploadItemArt: uploadItemArt };
+  window.EDITOR_SAVE = { saveDungeon: saveDungeon, saveCampaign: saveCampaign, saveCustomMonster: saveCustomMonster, uploadMonsterArt: uploadMonsterArt, saveCustomItem: saveCustomItem, uploadItemArt: uploadItemArt, uploadTavernArt: uploadTavernArt, uploadCityArt: uploadCityArt, loadCityShops: loadCityShops, saveCityShops: saveCityShops, saveWorldCities: saveWorldCities, loadWorldAdventures: loadWorldAdventures, saveWorldAdventures: saveWorldAdventures };
   window.OBJETO_UPLOAD = { upload: uploadObjeto, list: listObjetos };
 })();
