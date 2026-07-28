@@ -23548,6 +23548,10 @@ GS.on('shopResult',  msg =>
 
 GS.on('enterDungeon', () => {
   fecharFichaCidade();
+  // O mapa-múndi é um overlay sobre screen-city e só some quando a cidade MUDA.
+  // Entrar numa aventura não muda a cidade, então sem isto o jogador voltaria da
+  // masmorra para o mapa-múndi em vez da ilustração da cidade.
+  hideWorldMap();
   _hpSnapshot.clear();   // novo cenário: zera HP base (1º game_state não dispara som)
   _resetTrapPopup();     // masmorra nova: descarta popup/fila de armadilha da anterior
   if(CITY_MODE==='image') destroyCityImage(); else destroyCity3D();
