@@ -146,6 +146,34 @@ async def test_destino_oculto():
     finally:
         server.WORLD_ADVENTURES = salvos
 
+async def test_oculto_recusa_generica():
+    print("\n[18c] entrar num destino oculto responde como id inexistente")
+    salvos = server.WORLD_ADVENTURES
+    try:
+        server.WORLD_ADVENTURES = {"test_oculto": _aventura_oculta(True)}
+        r = setup_room(); r.renome = 0
+        erros = []
+        async def cap(pid, msg):
+            if msg.get("type") == "error": erros.append(msg["msg"])
+        r.send_to = cap
+        await r.handle_world_adventure("p1", "test_oculto")
+        check("não entrou na masmorra", r.phase == "city")
+        check("erro genérico de id inválido",
+              erros and erros[-1] == "Destino de aventura inválido.")
+        check("não vaza o requisito", all("renome" not in e for e in erros))
+        # destino NÃO oculto mantém a mensagem detalhada (útil ao jogador)
+        server.WORLD_ADVENTURES = {"test_oculto": _aventura_oculta(False)}
+        r2 = setup_room(); r2.renome = 0
+        erros2 = []
+        async def cap2(pid, msg):
+            if msg.get("type") == "error": erros2.append(msg["msg"])
+        r2.send_to = cap2
+        await r2.handle_world_adventure("p1", "test_oculto")
+        check("visível mantém a mensagem detalhada",
+              erros2 and "renome" in erros2[-1])
+    finally:
+        server.WORLD_ADVENTURES = salvos
+
 def test_flag_persistida():
     print("\n[18b] o flag sobrevive ao salvar")
     row = {"id": "rota_oculta", "nome": "Rota", "x": 10, "y": 20, "fome": 0, "sede": 0,
@@ -458,6 +486,7 @@ async def main():
     await test_beat_abertura()
     await test_beat_encerramento()
     await test_destino_oculto()
+    await test_oculto_recusa_generica()
     await test_saida_recusada()
     await test_saida_efetiva()
     await test_ausente_na_cidade()

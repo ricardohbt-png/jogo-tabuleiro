@@ -8280,7 +8280,11 @@ class GameRoom:
             return
         allowed, reasons = self._avaliar_requisito(adventure.get("requisito"))
         if not allowed:
-            await self.send_to(pid, {"type": "error", "msg": "Destino bloqueado: requer " + ", ".join(reasons) + "."})
+            # Destino oculto responde como id inexistente: a mensagem detalhada
+            # entregaria justamente o requisito que se quis esconder.
+            msg = ("Destino de aventura inválido." if adventure.get("oculto_ate_liberar")
+                   else "Destino bloqueado: requer " + ", ".join(reasons) + ".")
+            await self.send_to(pid, {"type": "error", "msg": msg})
             return
         stages = list(adventure.get("dungeons") or [])
         try:
