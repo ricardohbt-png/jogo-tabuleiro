@@ -299,6 +299,60 @@ async def test_beat_encerramento():
     await _concluir_etapa(r2)
     check("sem outro não emite beat", r2._story_encadeada is None)
 
+def _textos(beat):
+    return [s.get("text") for s in beat["slides"]] if beat else None
+
+async def test_fim_da_rota():
+    print("\n[19] fim da rota ao concluir a última etapa")
+    # rota de 2 etapas, nenhuma encadeada, com fim de rota autorado
+    r = setup_room(encadear=False)
+    server.WORLD_ADVENTURES["test_seq"]["outro_rota"] = "FIM-DA-ROTA"
+    await r.handle_world_adventure("p1", "test_seq")
+    await _concluir_etapa(r)
+    check("etapa intermediária: só o encerramento dela",
+          _textos(r._story_encadeada) == ["FECHA-1"])
+    # segunda (e última) etapa
+    await r.handle_world_adventure("p1", "test_seq")
+    check("entrou na etapa 2", r.world_adventure_index == 1)
+    server.WORLD_ADVENTURES["test_seq"]["dungeons"][1]["outro"] = "FECHA-2"
+    await _concluir_etapa(r)
+    check("última etapa: encerramento da etapa + fim da rota, nessa ordem",
+          _textos(r._story_encadeada) == ["FECHA-2", "FIM-DA-ROTA"])
+    check("key continua a da etapa concluída",
+          r._story_encadeada["key"] == "fim:test_seq:1")
+    # sem outro_rota, o comportamento é o de antes
+    r2 = setup_room(encadear=False)
+    server.WORLD_ADVENTURES["test_seq"].pop("outro_rota", None)
+    await r2.handle_world_adventure("p1", "test_seq")
+    await _concluir_etapa(r2)
+    check("sem fim de rota, só o encerramento da etapa",
+          _textos(r2._story_encadeada) == ["FECHA-1"])
+
+def test_fim_da_rota_persistido():
+    print("\n[19b] fim da rota sobrevive ao salvar")
+    row = {"id": "rota_fim", "nome": "Rota", "x": 10, "y": 20, "fome": 0, "sede": 0,
+           "outro_rota": {"slides": [{"text": "acabou", "image": "assets/story/f.png"}],
+                          "audio": "assets/story/tema.mp3"},
+           "dungeons": ["test_camp_a.json"]}
+    salvos = server.WORLD_ADVENTURES
+    try:
+        ok, res = server._save_world_adventures_upload([], [row])
+        check(f"salvou ({res if not ok else 'ok'})", ok is True)
+        av = server.WORLD_ADVENTURES["rota_fim"]
+        check("outro_rota preservado como objeto", isinstance(av["outro_rota"], dict))
+        check("slide preservado",
+              av["outro_rota"]["slides"][0] == {"text": "acabou",
+                                                "image": "assets/story/f.png"})
+        check("áudio preservado", av["outro_rota"]["audio"] == "assets/story/tema.mp3")
+        # destino sem o campo fica com string vazia (nada a exibir)
+        row2 = dict(row, id="rota_sem"); row2.pop("outro_rota")
+        server._save_world_adventures_upload([], [row2])
+        check("ausente vira vazio",
+              server.WORLD_ADVENTURES["rota_sem"]["outro_rota"] == "")
+    finally:
+        server.WORLD_ADVENTURES = salvos
+        server._save_world_adventures()
+
 async def _entrar_e_posicionar_na_escada(r, pid="p1"):
     await r.handle_world_adventure("p1", "test_seq")
     r.players[pid]["pos"] = list(r.stairs_pos)
@@ -481,12 +535,14 @@ async def main():
     test_validacao_saida()
     test_slides_na_aventura()
     test_flag_persistida()
+    test_fim_da_rota_persistido()
     await test_encadeamento()
     await test_sem_encadeamento()
     await test_beat_abertura()
     await test_beat_encerramento()
     await test_destino_oculto()
     await test_oculto_recusa_generica()
+    await test_fim_da_rota()
     await test_saida_recusada()
     await test_saida_efetiva()
     await test_ausente_na_cidade()

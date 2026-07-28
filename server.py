@@ -340,6 +340,7 @@ def _save_world_adventures_upload(raw_locations, raw_adventures):
                         "fome": fome, "sede": sede, "dungeons": etapas,
                         "espera_retorno": _clean_espera(row.get("espera_retorno")),
                         "oculto_ate_liberar": bool(row.get("oculto_ate_liberar")),
+                        "outro_rota": _clean_story_field(row.get("outro_rota")),
                         "requisito": req, "renome_recompensa": renome_reward}
     try:
         WORLD_ADVENTURES = cleaned
@@ -3952,6 +3953,11 @@ def validar_dungeon(defn):
         # room_id vazio/None Ã© vÃ¡lido (monstro "sem sala") â€” espelha o editor.
         if mo.get("room_id") is not None and mo.get("room_id") not in room_ids:
             return False, f"monstro com room_id inexistente: {mo.get('room_id')!r}."
+        vs = mo.get("vscale")
+        if vs is not None and (not isinstance(vs, list) or len(vs) != 2
+                               or any(isinstance(v, bool) or not isinstance(v, (int, float))
+                                      or not math.isfinite(v) for v in vs)):
+            return False, "vscale do monstro deve ter duas escalas numéricas."
 
     chests = _as_list("chests")
     if not isinstance(chests, list):
@@ -8028,6 +8034,10 @@ class GameRoom:
             m["boss"] = False                       # Fase 1: end_game-on-boss Ã© da Fase 3
             m["authored_boss"] = bool(mo.get("boss"))
             m["authored_target"] = bool(mo.get("target"))
+            vs = mo.get("vscale")
+            if isinstance(vs, list) and len(vs) == 2:
+                m["vscale"] = [max(0.2, min(4.0, float(vs[0]))),
+                               max(0.2, min(4.0, float(vs[1])))]
             self.monsters[m["id"]] = m
 
         # ReforÃ§os do Mestre (Camada B) â€” reserva inerte sem mestre.
@@ -21366,8 +21376,12 @@ class GameRoom:
                 return
             # Encerramento da etapa concluída (última da rota ou intermediária sem
             # encadeamento): nos dois casos o grupo volta à cidade e vê este beat.
-            fim = _story_beat(f"fim:{adventure_id}:{completed_index}",
-                              [etapa.get("outro")])
+            # A última etapa fecha a rota: o encerramento dela e o fim da rota saem
+            # no mesmo slideshow, nessa ordem. _story_beat descarta as partes vazias.
+            partes = [etapa.get("outro")]
+            if completed_index + 1 >= len(stages):
+                partes.append(adventure.get("outro_rota"))
+            fim = _story_beat(f"fim:{adventure_id}:{completed_index}", partes)
             self.world_adventure_id = None
             self.world_adventure_index = None
             self.dungeon_generated = False
