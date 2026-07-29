@@ -24144,9 +24144,44 @@ if(GS.isPreview){
     // objeto ficaria fora do lugar, sem o vscale ou invisível.
     [250, 800, 2000, 4000].forEach(ms => setTimeout(() => {
       if(GS.gameState) renderMap(GS.gameState);
+      _preview_reportarModelos();
     }, ms));
   });
   // O editor só manda o estado depois deste aviso: antes disso a tela do jogo
   // ainda não existe e o init3D não teria onde desenhar.
   try { window.parent.postMessage({ type: 'preview_ready' }, '*'); } catch(e) {}
+}
+
+// Diz ao editor qual arte 3D cada objeto e cada monstro resolveu, usando as
+// MESMAS tabelas que o renderer consulta. Sem isto a resolução é invisível: um
+// modelo que não existe, ou um tipo sem entrada na tabela, some do mapa sem
+// explicação e o autor não tem como saber se o problema é dele ou do arquivo.
+function _preview_reportarModelos(){
+  const st = GS.gameState;
+  if(!st) return;
+  const fonte = (caminho, cache) => {
+    if(!caminho) return null;
+    const c = cache[caminho];
+    return { caminho, estado: c === 'erro' ? 'erro' : (c ? 'carregado' : 'carregando') };
+  };
+  const objetos = (st.decorations || []).map(d => {
+    const glb = (d.image && DECOR_GLB_MODELS[d.image]) || DECOR_GLB_TYPES[d.type];
+    const arte = fonte(glb, _decorGLBCache);
+    return {
+      nome: d.type, pos: d.pos, emoji: d.emoji || '📦',
+      arte: arte || (d.image
+        ? { caminho: `assets/objetos/${d.image}`, estado: 'imagem' }
+        : { caminho: null, estado: 'procedural' }),
+    };
+  });
+  const monstros = (st.monsters || []).map(m => {
+    const arte = fonte(_MONSTER_GLB_MODELS[m.image], _monsterGLBCache);
+    return {
+      nome: m.type, pos: m.pos, emoji: m.emoji || '👹',
+      arte: arte || (m.image
+        ? { caminho: `assets/pawns/monstros/${m.image}/${m.image}.png`, estado: 'imagem' }
+        : { caminho: null, estado: 'procedural' }),
+    };
+  });
+  try { window.parent.postMessage({ type: 'preview_modelos', objetos, monstros }, '*'); } catch(e) {}
 }

@@ -26,6 +26,37 @@
     bar.classList.toggle("erro", !!erro);
   }
 
+  const ESTADO_ROTULO = {
+    carregado:  ["✔", "modelo 3D"],
+    carregando: ["⏳", "carregando"],
+    erro:       ["✖", "FALHOU ao carregar"],
+    imagem:     ["🖼", "imagem 2D (sem modelo 3D)"],
+    procedural: ["◻", "forma genérica (sem arte)"],
+  };
+
+  // Lista o que cada objeto e cada monstro resolveu como arte 3D. É a resposta
+  // para "por que isso não apareceu?": ou o modelo carregou, ou falhou, ou o
+  // tipo não tem modelo e caiu no PNG/forma genérica.
+  function renderModelos(msg) {
+    if (!active) return;
+    const linha = (it, kind) => {
+      const [icone, rotulo] = ESTADO_ROTULO[it.arte.estado] || ["?", it.arte.estado];
+      const alvo = it.arte.caminho ? it.arte.caminho.split("/").pop() : "—";
+      return '<div class="ed3d-mrow ed3d-' + it.arte.estado + '">' +
+        '<span class="ed3d-mico">' + icone + '</span>' +
+        '<b>' + it.nome + '</b> <span class="ed3d-mpos">(' + it.pos.join(",") + ')</span>' +
+        '<span class="ed3d-marte" title="' + (it.arte.caminho || "") + '">' + alvo + '</span>' +
+        '<span class="ed3d-mest">' + rotulo + '</span></div>';
+    };
+    const box = active.el.querySelector(".ed3d-modelos-corpo");
+    const partes = [];
+    if (msg.objetos.length) partes.push('<div class="ed3d-mtit">Objetos</div>' +
+      msg.objetos.map(o => linha(o, "obj")).join(""));
+    if (msg.monstros.length) partes.push('<div class="ed3d-mtit">Monstros</div>' +
+      msg.monstros.map(m => linha(m, "mon")).join(""));
+    box.innerHTML = partes.join("") || "<em>Nada colocado nesta masmorra.</em>";
+  }
+
   async function enviarEstado() {
     const editor = window.EDITOR;
     if (!editor || !window.EDITOR_SAVE || !window.EDITOR_SAVE.previewDungeon) {
@@ -66,14 +97,18 @@
       '<span class="ed3d-hint">Mesma aparência do jogo · esq: orbitar · roda: zoom · dir: mover</span>' +
       '<button type="button" id="ed3d-close">← Voltar ao editor</button></div>' +
       '<div class="ed3d-status"></div>' +
-      '<div class="ed3d-view"><iframe class="ed3d-frame" src="../index.html?preview=1"></iframe></div>';
+      '<div class="ed3d-view"><iframe class="ed3d-frame" src="../index.html?preview=1"></iframe>' +
+      '<details class="ed3d-modelos"><summary>🧩 Arte 3D de cada objeto</summary>' +
+      '<div class="ed3d-modelos-corpo"><em>Aguardando a prévia…</em></div></details></div>';
     document.body.appendChild(el);
 
     const frame = el.querySelector(".ed3d-frame");
     // O cliente avisa quando a tela de jogo já existe; só então o estado vai
     // (antes disso o init3D não teria onde desenhar).
     const onMessage = (ev) => {
-      if (ev.data && ev.data.type === "preview_ready") enviarEstado();
+      if (!ev.data) return;
+      if (ev.data.type === "preview_ready") enviarEstado();
+      if (ev.data.type === "preview_modelos") renderModelos(ev.data);
     };
     window.addEventListener("message", onMessage);
     active = { el, frame, onMessage };
