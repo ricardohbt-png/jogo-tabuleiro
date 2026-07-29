@@ -24129,12 +24129,22 @@ document.getElementById('pause-menu')?.addEventListener('click', e => {
 // renderer do jogo, a prévia não pode divergir do que o jogador vai ver.
 if(GS.isPreview){
   document.body.classList.add('preview-mode');
-  mode3D = true;
   showScreen('screen-game');
+  // Mesmo caminho de entrada na masmorra (GS.on('enterDungeon')): toggle3D faz
+  // mais do que ligar a flag — esconde o canvas 2D e prepara os controles.
+  if(window.THREE) toggle3D();
   window.addEventListener('message', ev => {
     const d = ev.data;
     if(!d || d.type !== 'preview_state' || !d.state) return;
     GS.injectPreviewState(d.state);
+    // O jogo recebe um game_state a cada ação; a prévia recebe UM só. Quem
+    // posiciona, escala e mostra os meshes que chegam depois (GLB de objeto,
+    // modelo de monstro, miniatura extrudada) é o renderMap3D — que sem estes
+    // passes extras rodaria só uma vez, antes de os arquivos carregarem, e o
+    // objeto ficaria fora do lugar, sem o vscale ou invisível.
+    [250, 800, 2000, 4000].forEach(ms => setTimeout(() => {
+      if(GS.gameState) renderMap(GS.gameState);
+    }, ms));
   });
   // O editor só manda o estado depois deste aviso: antes disso a tela do jogo
   // ainda não existe e o init3D não teria onde desenhar.
