@@ -96,6 +96,15 @@ async def main():
     check("não ok", ok is False)
     check("erro é texto", isinstance(res, str) and bool(res))
 
+    print("\n[4b] resposta estática declara que a conexão fecha")
+    # A lib websockets fecha a conexão depois de responder. Sem "Connection: close"
+    # o navegador supõe keep-alive, reusa o socket e a requisição seguinte morre na
+    # rede — o que derrubava os .glb pedidos sob demanda (ProgressEvent status 0).
+    resp = S._http(200, "OK", b"x", "model/gltf-binary")
+    check("Connection: close presente",
+          resp.headers.get("Connection", "").lower() == "close")
+    check("Content-Length continua correto", resp.headers.get("Content-Length") == "1")
+
     print("\n[5] a prévia não deixa rastro numa sala real")
     check("nenhuma sala criada", "PREVIEW" not in S.rooms)
 

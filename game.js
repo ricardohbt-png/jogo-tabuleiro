@@ -16459,8 +16459,14 @@ const _objImg3D = {};
 const _glbErroMsg = {};
 function _glbMotivo(error){
   if(!error) return 'erro desconhecido';
-  // O GLTFLoader embrulha falhas de rede num evento com o status HTTP.
-  if(error.target && error.target.status) return 'HTTP ' + error.target.status;
+  // O GLTFLoader entrega um ProgressEvent do XHR. String(ProgressEvent) é
+  // "[object ProgressEvent]" — inútil. O que informa é o status: 0 significa
+  // falha de CONEXÃO (socket morto/recusado), não resposta do servidor.
+  const alvo = error.target;
+  if(alvo && typeof alvo.status === 'number'){
+    if(alvo.status === 0) return 'conexão falhou (o servidor está no ar?)';
+    return 'HTTP ' + alvo.status + (alvo.statusText ? ' ' + alvo.statusText : '');
+  }
   const m = String(error.message || error);
   return m.length > 120 ? m.slice(0, 120) + '…' : m;
 }

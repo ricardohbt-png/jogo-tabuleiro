@@ -23959,7 +23959,14 @@ def _http(status, reason, body, ctype="text/plain; charset=utf-8"):
         body = body.encode("utf-8")
     headers = Headers({"Content-Type": ctype,
                        "Content-Length": str(len(body)),
-                       "Cache-Control": "no-cache"})
+                       "Cache-Control": "no-cache",
+                       # A lib websockets FECHA a conexão depois de responder. Sem
+                       # este cabeçalho o navegador supõe keep-alive (padrão do
+                       # HTTP/1.1), guarda o socket no pool e reusa numa requisição
+                       # posterior — que morre na rede. Aparecia como falha
+                       # intermitente nos pedidos TARDIOS: os .glb carregados sob
+                       # demanda (objetos e miniaturas de monstro).
+                       "Connection": "close"})
     return Response(status, reason, headers, body)
 
 # â”€â”€â”€ Upload de mÃ­dia da histÃ³ria (editor â†’ assets/story/) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
