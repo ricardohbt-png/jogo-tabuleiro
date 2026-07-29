@@ -89,10 +89,19 @@
   }
 
   function rotateFacing(f) {
-    // cicla 4 facings: [0,1]→[1,0]→[0,-1]→[-1,0]→[0,1]
+    // A sequência acompanha facingAngle2D: cada passo equivale a ctx.rotate(+90°),
+    // isto é, um giro visual HORÁRIO no canvas.
     const order = [[0, 1], [1, 0], [0, -1], [-1, 0]];
     const i = order.findIndex(o => o[0] === f[0] && o[1] === f[1]);
-    return order[(i + 1) % 4];
+    return order[(i < 0 ? 0 : i + 1) % 4];
+  }
+  // Para paredes, algumas faces não são válidas. Ainda assim, procura a próxima
+  // face disponível seguindo a mesma ordem horária, nunca a ordem acidental da lista.
+  function nextWallFaceClockwise(current, validFaces) {
+    for (let turns = 1, face = rotateFacing(current); turns <= 4; turns++, face = rotateFacing(face)) {
+      if (validFaces.some(f => sameFace(f, face))) return face;
+    }
+    return validFaces[0] || current;
   }
   // facing → ângulo (rad) p/ o giro 90° da imagem no preview 2D. Espelha game.js.
   function facingAngle2D(f) {
@@ -108,8 +117,7 @@
       if (m && m.gira) {
         if (m.special === "wall") {
           const faces = wallFacesAt(S.sel.ref.pos[0], S.sel.ref.pos[1]);
-          const i = faces.findIndex(f => sameFace(f, S.sel.ref.facing));
-          if (faces.length) S.sel.ref.facing = faces[(i + 1 + faces.length) % faces.length];
+          if (faces.length) S.sel.ref.facing = nextWallFaceClockwise(S.sel.ref.facing, faces);
         } else S.sel.ref.facing = rotateFacing(S.sel.ref.facing);
         render();
       }
@@ -344,7 +352,11 @@
     if (S.exit && S.exit.x === x && S.exit.y === y) return "🏁";
     if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) return "🧍";
     const mo = at(S.monsters);
-    if (mo) { const d = CAT.monsters.find(c => c.type === mo.type); return d ? d.emoji : "👹"; }
+    if (mo) {
+      const vs = mo.vscale;
+      if (Array.isArray(vs) && (vs[0] !== 1 || vs[1] !== 1)) return null;
+      const d = CAT.monsters.find(c => c.type === mo.type); return d ? d.emoji : "👹";
+    }
     if (at(S.chests)) return "🧰";
     const tr = at(S.traps);
     if (tr) {
@@ -401,6 +413,39 @@
         ctx.restore();
       });
     }
+  }
+
+  // Marcador explícito de orientação: aparece somente na decoração selecionada
+  // para não poluir o mapa. A ponta e o texto indicam exatamente a sua frente.
+  function drawDecorFrontMarker(d) {
+    if (!d || !d.facing) return;
+    const tiles = decorTiles(d);
+    if (!tiles.length) return;
+    const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
+    const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
+    const vo = Array.isArray(d.voffset) ? d.voffset : [0, 0];
+    const cx = (minX + maxX + 1) * CELL / 2 + Math.max(-.45, Math.min(.45, Number(vo[0]) || 0)) * CELL;
+    const cy = (minY + maxY + 1) * CELL / 2 + Math.max(-.45, Math.min(.45, Number(vo[1]) || 0)) * CELL;
+    // A seta usa exatamente a mesma transformação aplicada ao sprite: começa
+    // apontando para cima e gira no sentido horário a cada clique.
+    // A arte da lareira foi modelada com a frente invertida em relação às demais.
+    const angle = facingAngle2D(d.facing) + (d.type === "lareira" ? Math.PI : 0);
+    const dx = Math.sin(angle), dy = -Math.cos(angle);
+    const reach = Math.max((maxX - minX + 1) * CELL, (maxY - minY + 1) * CELL) * .42;
+    const tipX = cx + dx * reach, tipY = cy + dy * reach;
+    const sideX = -dy, sideY = dx;
+    ctx.save();
+    ctx.fillStyle = "#ffd45a"; ctx.strokeStyle = "#3a2405"; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(tipX + dx * 8, tipY + dy * 8);
+    ctx.lineTo(tipX - dx * 7 + sideX * 6, tipY - dy * 7 + sideY * 6);
+    ctx.lineTo(tipX - dx * 7 - sideX * 6, tipY - dy * 7 - sideY * 6);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.font = "bold 9px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = "#ffe9a3"; ctx.strokeStyle = "#271600"; ctx.lineWidth = 3;
+    const tx = cx + dx * (reach + 14), ty = cy + dy * (reach + 14);
+    ctx.strokeText("FRENTE", tx, ty); ctx.fillText("FRENTE", tx, ty);
+    ctx.restore();
   }
 
   // Escadas do editor são desenhadas no canvas, sem depender de fonte/emoji.
@@ -493,11 +538,14 @@
       const px = minX * CELL + 2, py = minY * CELL + 2;
       const pw = (maxX - minX + 1) * CELL - 4, ph = (maxY - minY + 1) * CELL - 4;
       const vs = Array.isArray(d.vscale) ? d.vscale : [1, 1];
+      const vo = Array.isArray(d.voffset) ? d.voffset : [0, 0];
+      const ox = Math.max(-.45, Math.min(.45, Number(vo[0]) || 0)) * CELL;
+      const oy = Math.max(-.45, Math.min(.45, Number(vo[1]) || 0)) * CELL;
       const ang = facingAngle2D(d.facing);
       if (ang === 0) {
         // Escala visual: altura cresce para cima (âncora na base), largura centralizada.
         const dw = pw * vs[0], dh = ph * vs[1];
-        ctx.drawImage(im, px + pw / 2 - dw / 2, py + ph - dh, dw, dh);
+        ctx.drawImage(im, px + ox + pw / 2 - dw / 2, py + oy + ph - dh, dw, dh);
       } else {
         // Girado: encaixa no frame local (caixa trocada p/ 90°/270°), proporção do PNG,
         // e gira sobre o centro do footprint.
@@ -508,7 +556,7 @@
         if (dh > boxH) { dh = boxH; dw = boxH * ar; }
         dw *= vs[0]; dh *= vs[1];
         ctx.save();
-        ctx.translate(px + pw / 2, py + ph / 2);
+        ctx.translate(px + ox + pw / 2, py + oy + ph / 2);
         ctx.rotate(ang);
         ctx.drawImage(im, -dw / 2, -dh / 2, dw, dh);
         ctx.restore();
@@ -557,12 +605,29 @@
       const tiles = decorTiles(d);
       const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
       const maxY = Math.max(...tiles.map(t => t[1]));
-      const cx = (minX + (maxX - minX + 1) / 2) * CELL;
-      const baseY = (maxY + 1) * CELL - 4;
+      const vo = Array.isArray(d.voffset) ? d.voffset : [0, 0];
+      const cx = (minX + (maxX - minX + 1) / 2) * CELL + Math.max(-.45, Math.min(.45, Number(vo[0]) || 0)) * CELL;
+      const baseY = (maxY + 1) * CELL - 4 + Math.max(-.45, Math.min(.45, Number(vo[1]) || 0)) * CELL;
       ctx.save();
       ctx.font = (16 * Math.max(vs[0], vs[1])) + "px sans-serif";
       ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
       ctx.fillText(emoji, cx, baseY);
+      ctx.restore();
+    }
+    // Mesmo preview para a escala visual dos monstros. A casa ocupada segue
+    // sendo uma só; isto mostra apenas como o sprite aparecerá durante o jogo.
+    for (const m of S.monsters) {
+      const vs = Array.isArray(m.vscale) ? m.vscale : null;
+      if (!vs || (vs[0] === 1 && vs[1] === 1)) continue;
+      const meta = CAT.monsters.find(c => c.type === m.type);
+      const emoji = meta ? meta.emoji : "👹";
+      const sx = Math.max(.2, Math.min(4, Number(vs[0]) || 1));
+      const sy = Math.max(.2, Math.min(4, Number(vs[1]) || 1));
+      ctx.save();
+      ctx.translate(m.pos[0] * CELL + CELL / 2, m.pos[1] * CELL + CELL - 4);
+      ctx.scale(sx, sy); ctx.font = "16px sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+      ctx.fillText(emoji, 0, 0);
       ctx.restore();
     }
     drawEntityMarkers();
@@ -583,6 +648,7 @@
       ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(lx - 1, ly - 1, tw + 4, 13);
       ctx.fillStyle = "#ffd86a"; ctx.fillText(label, lx + 1, ly);
       ctx.textAlign = "start";
+      drawDecorFrontMarker(S.sel.ref);
     } else if (S.sel && S.sel.pos) {
       ctx.strokeStyle = "#ffd86a"; ctx.lineWidth = 2;
       ctx.strokeRect(S.sel.pos[0] * CELL + 1, S.sel.pos[1] * CELL + 1, CELL - 3, CELL - 3);
@@ -1194,15 +1260,30 @@
     }
     const k = S.sel.kind, ref = S.sel.ref;
     if (k === "monster") {
+      const vs = Array.isArray(ref.vscale) ? ref.vscale : [1, 1];
       panel.innerHTML = `<b>👹 Monstro</b>
         <label>tipo</label><select id="p-type">${opt(CAT.monsters.map(m => ({ v: m.type, name: m.name })), ref.type, o => o.v + " — " + o.name)}</select>
         <label>room_id <input id="p-room" value="${ref.room_id ?? ""}"></label>
         <label><input type="checkbox" id="p-boss" ${ref.boss ? "checked" : ""}> chefe (boss)</label>
-        <label><input type="checkbox" id="p-target" ${ref.target ? "checked" : ""}> alvo do objetivo</label>`;
+        <label><input type="checkbox" id="p-target" ${ref.target ? "checked" : ""}> alvo do objetivo</label>
+        <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
+          <b>Tamanho visual do sprite</b>
+          <div style="font-size:11px;color:#8a7a5a">não muda as casas ocupadas nem as regras de combate.</div>
+          <label>escala largura <input id="p-vsx" type="number" min="0.2" max="4" step="0.1" value="${vs[0]}"></label>
+          <label>escala altura <input id="p-vsy" type="number" min="0.2" max="4" step="0.1" value="${vs[1]}"></label>
+        </div>`;
       document.getElementById("p-type").onchange = e => { ref.type = e.target.value; render(); };
       document.getElementById("p-room").onchange = e => { ref.room_id = e.target.value === "" ? null : Number(e.target.value); };
       document.getElementById("p-boss").onchange = e => { ref.boss = e.target.checked; };
       document.getElementById("p-target").onchange = e => { ref.target = e.target.checked; };
+      const applyMonsterScale = () => {
+        const sx = Math.max(0.2, Math.min(4, Number(document.getElementById("p-vsx").value) || 1));
+        const sy = Math.max(0.2, Math.min(4, Number(document.getElementById("p-vsy").value) || 1));
+        if (sx === 1 && sy === 1) delete ref.vscale; else ref.vscale = [sx, sy];
+        render();
+      };
+      document.getElementById("p-vsx").onchange = applyMonsterScale;
+      document.getElementById("p-vsy").onchange = applyMonsterScale;
     } else if (k === "chest") {
       panel.innerHTML = `<b>🧰 Baú</b>
         <label>ouro <input id="p-gold" type="number" value="${ref.gold}"></label>
@@ -1359,6 +1440,7 @@
       const hasLoot = !!ref.loot;
       const [bw, bh] = decorBaseSize(ref);
       const vs0 = Array.isArray(ref.vscale) ? ref.vscale : [1, 1];
+      const vo0 = Array.isArray(ref.voffset) ? ref.voffset : [0, 0];
       panel.innerHTML = `<b>${m.emoji || "🪑"} ${m.nome || ref.type}</b>
         <div style="color:#8a7a5a;font-size:11px">${m.size ? m.size[0] + "×" + m.size[1] : ""} ${m.alto ? "· alto (oclui visão)" : ""} ${m.pisavel ? "· pisável" : ""}</div>
         ${isWall ? `<div style="color:#8a7a5a;font-size:11px;margin-top:6px">Decoração de parede: clique em uma parede; girar troca a face voltada para uma área jogável.</div>` : ""}
@@ -1387,6 +1469,10 @@
           <div style="font-size:11px;color:#8a7a5a;margin-top:4px">tamanho visual (não muda casas; altura cresce p/ cima)</div>
           <label>escala largura <input id="d-vsx" type="number" min="0.2" max="4" step="0.1" value="${vs0[0]}"></label>
           <label>escala altura <input id="d-vsy" type="number" min="0.2" max="4" step="0.1" value="${vs0[1]}"></label>
+          <div style="font-size:11px;color:#8a7a5a;margin-top:8px">posição visual (não muda casas; use ±0,45 para encostar na parede)</div>
+          <label>deslocamento X <input id="d-vox" type="number" min="-0.45" max="0.45" step="0.05" value="${vo0[0]}"></label>
+          <label>deslocamento Y <input id="d-voy" type="number" min="-0.45" max="0.45" step="0.05" value="${vo0[1]}"></label>
+          <button id="d-voreset" type="button" style="margin-top:5px">Centralizar objeto</button>
         </div>
         <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
           <b>Imagem (miniatura 3D)</b>
@@ -1449,6 +1535,15 @@
       }
       document.getElementById("d-vsx").onchange = applyVScale;
       document.getElementById("d-vsy").onchange = applyVScale;
+      function applyVOffset() {
+        const ox = Math.max(-.45, Math.min(.45, Number(document.getElementById("d-vox").value) || 0));
+        const oy = Math.max(-.45, Math.min(.45, Number(document.getElementById("d-voy").value) || 0));
+        if (ox === 0 && oy === 0) delete ref.voffset; else ref.voffset = [ox, oy];
+        render();
+      }
+      document.getElementById("d-vox").onchange = applyVOffset;
+      document.getElementById("d-voy").onchange = applyVOffset;
+      document.getElementById("d-voreset").onclick = () => { delete ref.voffset; renderPanel(); render(); };
       const imgSel = document.getElementById("d-img-sel");
       const imgSt = document.getElementById("d-img-st");
       function fillImgOptions(list) {
@@ -1587,7 +1682,11 @@
       rooms: S.rooms.map(r => Object.assign({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, role: r.role, locked: r.locked, doors: r.doors.map(d => d.slice()) }, r.required ? { required: true, required_mode: r.required_mode || "clear" } : {})),
       entrance: S.entrance ? { x: S.entrance.x, y: S.entrance.y } : null,
       exit: S.exit ? { x: S.exit.x, y: S.exit.y } : null,
-      monsters: S.monsters.map(m => ({ type: m.type, pos: m.pos.slice(), room_id: m.room_id, boss: !!m.boss, target: !!m.target })),
+      monsters: S.monsters.map(m => {
+        const o = { type: m.type, pos: m.pos.slice(), room_id: m.room_id, boss: !!m.boss, target: !!m.target };
+        if (Array.isArray(m.vscale) && (m.vscale[0] !== 1 || m.vscale[1] !== 1)) o.vscale = [m.vscale[0], m.vscale[1]];
+        return o;
+      }),
       chests: S.chests.map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: c.items.map(i => ({ id: i.id })), key_objective: !!c.key_objective })),
       traps: S.traps.map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; if (t.saida) o.saida = t.saida.slice(); if (t.image) o.image = t.image; return o; }),
       decorations: S.decorations.map(d => {
@@ -1601,6 +1700,7 @@
         // Override de tamanho por-objeto (editor-only; o servidor ignora estes campos).
         if (Array.isArray(d.size) && d.size.length === 2) o.size = [d.size[0] | 0, d.size[1] | 0];
         if (Array.isArray(d.vscale) && (d.vscale[0] !== 1 || d.vscale[1] !== 1)) o.vscale = [d.vscale[0], d.vscale[1]];
+        if (Array.isArray(d.voffset) && (d.voffset[0] !== 0 || d.voffset[1] !== 0)) o.voffset = [d.voffset[0], d.voffset[1]];
         return o;
       }),
       secret_passages: S.secretPassages.map(p => ({ id: p.id, type: p.type, pos: p.pos.slice(), key_decor_ids: p.key_decor_ids.slice(), keys_mode: p.keys_mode })),
@@ -1741,7 +1841,10 @@
     S.entrance = obj.entrance || null;
     S.exit = obj.exit || null;
     S.prisoner = obj.prisoner || null;
-    S.monsters = (obj.monsters || []).map(m => ({ type: m.type, pos: m.pos.slice(), room_id: m.room_id ?? null, boss: !!m.boss, target: !!m.target }));
+    S.monsters = (obj.monsters || []).map(m => ({
+      type: m.type, pos: m.pos.slice(), room_id: m.room_id ?? null, boss: !!m.boss, target: !!m.target,
+      ...(Array.isArray(m.vscale) && m.vscale.length === 2 ? { vscale: [Number(m.vscale[0]), Number(m.vscale[1])] } : {}),
+    }));
     S.chests = (obj.chests || []).map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: (c.items || []).map(i => ({ id: i.id })), key_objective: !!c.key_objective }));
     S.traps = (obj.traps || []).map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; if (t.saida) o.saida = t.saida.slice(); if (t.image) o.image = t.image; return o; });
     S.decorations = (obj.decorations || []).map((d, i) => ({
@@ -1756,6 +1859,7 @@
       ...((d.image || decorMeta(d.type)?.image) ? { image: d.image || decorMeta(d.type).image } : {}),
       ...(Array.isArray(d.size) && d.size.length === 2 ? { size: [d.size[0] | 0, d.size[1] | 0] } : {}),
       ...(Array.isArray(d.vscale) && d.vscale.length === 2 ? { vscale: [Number(d.vscale[0]), Number(d.vscale[1])] } : {}),
+      ...(Array.isArray(d.voffset) && d.voffset.length === 2 ? { voffset: [Number(d.voffset[0]), Number(d.voffset[1])] } : {}),
     }));
     S.nextDecorId = S.decorations.length;
     S.secretPassages = (obj.secret_passages || []).map((p, i) => ({ id: p.id || ("passage_" + i), type: p.type === "illusion" ? "illusion" : "mechanism", pos: p.pos.slice(), key_decor_ids: (p.key_decor_ids || []).slice(), keys_mode: p.keys_mode === "all" ? "all" : "any" }));

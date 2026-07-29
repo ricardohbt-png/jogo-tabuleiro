@@ -87,11 +87,13 @@ window.VC = {
     agua:          { color: [0.01, 0.40, 0.78] },
     agua_profunda: { color: [0.006, 0.045, 0.18] },
     pedra_negra:   { color: [0.14, 0.14, 0.16] },
+    madeira_escura:{ color: [0.23, 0.11, 0.045] },
     entulho:       { color: [0.34, 0.31, 0.27] },
     pedra_normal:  { color: [0.353, 0.353, 0.416] },
     enegrecida:    { color: [0.17, 0.17, 0.19] },
     pedra_caverna: { color: [0.30, 0.26, 0.21] },
     desmoronada:   { color: [0.33, 0.30, 0.25] },
+    madeira:        { color: [0.29, 0.13, 0.045] },
   },
 
   // ── Dice ───────────────────────────────────────────────────────────────────

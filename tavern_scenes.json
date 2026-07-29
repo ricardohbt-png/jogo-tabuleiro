@@ -14,17 +14,72 @@
         "w": 16.3,
         "h": 32.2,
         "dialog": "Bem-vindos a Alva e Luz. Uma refeição quente sempre ajuda antes da estrada.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "essa é a pista 1",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "pista1",
+              "item_id": ""
+            },
+            "uma_vez": false
+          },
+          {
+            "id": "fala_ms56fj37",
+            "texto": "Essa é a pista 3",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "pista2",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "pista3",
+              "item_id": ""
+            },
+            "uma_vez": true
+          }
+        ],
         "z": 1.0
       },
       {
         "id": "patrono_fundo",
-        "name": "Frequente silencioso",
+        "name": "Atendente",
         "image": "assets/tavern/garconete_servindobebida2.png",
-        "x": 23.7,
+        "x": 23.8,
         "y": 39.7,
         "w": 23.4,
         "h": 40.4,
         "dialog": "O homem evita encarar vocês. Talvez tenha algo a dizer quando os boatos chegarem.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "essa é a pista 2",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "pista1",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "pista2",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "z": 2.0
       },
       {
@@ -36,6 +91,25 @@
         "w": 56.0,
         "h": 52.5,
         "dialog": "Quatro jogadores disputam a última rodada. Eles parecem conhecer todos os rumores da cidade.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "Quatro jogadores disputam a última rodada. Eles parecem conhecer todos os rumores da cidade.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "z": 3.0
       },
       {
@@ -47,6 +121,25 @@
         "w": 20.2,
         "h": 22.1,
         "dialog": "Duas figuras conversam baixo ao fundo. A conversa para quando vocês se aproximam.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "Duas figuras conversam baixo ao fundo. A conversa para quando vocês se aproximam.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "z": 4.0
       },
       {
@@ -58,6 +151,25 @@
         "w": 29.5,
         "h": 53.3,
         "dialog": "A servente equilibra as canecas com prática. Ela conhece bem os clientes habituais.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "A servente equilibra as canecas com prática. Ela conhece bem os clientes habituais.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "z": 5.0
       },
       {
@@ -69,6 +181,25 @@
         "w": 12.4,
         "h": 26.0,
         "dialog": "Uma mesa discreta observa a entrada e a escadaria.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "Uma mesa discreta observa a entrada e a escadaria.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "z": 6.0
       },
       {
@@ -80,6 +211,25 @@
         "w": 48.3,
         "h": 57.8,
         "dialog": "Viajantes cansados compartilham histórias, mapas e cerveja.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "Viajantes cansados compartilham histórias, mapas e cerveja.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "z": 7.0
       },
       {
@@ -91,6 +241,42 @@
         "w": 18.3,
         "h": 37.0,
         "dialog": "O bardo muda a melodia ao perceber aventureiros. Talvez uma canção revele um boato.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "O bardo muda a melodia ao perceber aventureiros. Talvez uma canção revele um boato.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          },
+          {
+            "id": "fala_ms56k46k",
+            "texto": "pista 4",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "pista3",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "pista4",
+              "item_id": ""
+            },
+            "uma_vez": true
+          }
+        ],
         "z": 8.0
       }
     ]
@@ -110,6 +296,42 @@
         "w": 14.4,
         "h": 34.0,
         "dialog": "Bem-vindos a Alva e Luz. Uma refeição quente sempre ajuda antes da estrada.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "Bem-vindos a Alva e Luz. Uma refeição quente sempre ajuda antes da estrada.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          },
+          {
+            "id": "fala_ms520tuz",
+            "texto": "Existe uma casa abandonada muito suspeita nessa cidade. Pessoas referiram muitos barulho estranhos a noite. Mas dizem que nunca viram nada lá dentro.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 5,
+              "fato": "chave1",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "z": 1.0
       },
       {
@@ -121,6 +343,42 @@
         "w": 57.8,
         "h": 57.3,
         "dialog": "O homem evita encarar vocês. Talvez tenha algo a dizer quando os boatos chegarem.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "O homem evita encarar vocês. Talvez tenha algo a dizer quando os boatos chegarem.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          },
+          {
+            "id": "fala_ms527p9a",
+            "texto": "Meu cunhado entrou naquela casa há 2 semanas e desapareceu.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "chave 1",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "cunhado desaparecido",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "z": 2.0
       },
       {
@@ -132,6 +390,42 @@
         "w": 48.4,
         "h": 63.1,
         "dialog": "Quatro jogadores disputam a última rodada. Eles parecem conhecer todos os rumores da cidade.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "O bardo ignora você e continua tocando.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          },
+          {
+            "id": "fala_ms52ekay",
+            "texto": "Ouvi o boato de um homem desaparecido há 2 semanas. Aquela casa é amaldiçoada. Desistam de procurar algo lá.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "cunhado desaparecido",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": true
+          }
+        ],
         "z": 3.0
       },
       {
@@ -143,6 +437,25 @@
         "w": 32.4,
         "h": 55.0,
         "dialog": "Duas figuras conversam baixo ao fundo. A conversa para quando vocês se aproximam.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "Duas figuras conversam baixo ao fundo. A conversa para quando vocês se aproximam.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "removed": true,
         "z": 4.0
       },
@@ -155,6 +468,25 @@
         "w": 13.7,
         "h": 33.2,
         "dialog": "A servente equilibra as canecas com prática. Ela conhece bem os clientes habituais.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "A servente equilibra as canecas com prática. Ela conhece bem os clientes habituais.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "removed": true,
         "z": 5.0
       },
@@ -167,6 +499,25 @@
         "w": 13.0,
         "h": 24.4,
         "dialog": "Uma mesa discreta observa a entrada e a escadaria.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "Uma mesa discreta observa a entrada e a escadaria.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "removed": true,
         "z": 6.0
       },
@@ -179,6 +530,25 @@
         "w": 41.4,
         "h": 45.9,
         "dialog": "Viajantes cansados compartilham histórias, mapas e cerveja.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "Viajantes cansados compartilham histórias, mapas e cerveja.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "removed": true,
         "z": 7.0
       },
@@ -191,6 +561,25 @@
         "w": 16.7,
         "h": 30.3,
         "dialog": "O bardo muda a melodia ao perceber aventureiros. Talvez uma canção revele um boato.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "O bardo muda a melodia ao perceber aventureiros. Talvez uma canção revele um boato.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "removed": true,
         "z": 8.0
       },
@@ -203,7 +592,8 @@
         "w": 31.9,
         "h": 52.1,
         "z": 0.0,
-        "dialog": ""
+        "dialog": "",
+        "conversations": []
       }
     ]
   },
@@ -222,6 +612,25 @@
         "w": 19.4,
         "h": 36.8,
         "dialog": "Bem-vindos a Corvin. Uma refeição quente sempre ajuda antes da estrada.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "Bem-vindos a Corvin. Uma refeição quente sempre ajuda antes da estrada.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "z": 1.0
       },
       {
@@ -233,6 +642,25 @@
         "w": 25.3,
         "h": 47.5,
         "dialog": "O bardo ignora você e continua tocando. ",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "O bardo ignora você e continua tocando.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "z": 2.0
       },
       {
@@ -244,6 +672,25 @@
         "w": 54.7,
         "h": 48.8,
         "dialog": "Quatro jogadores disputam a última rodada. Eles parecem conhecer todos os rumores da cidade.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "Quatro jogadores disputam a última rodada. Eles parecem conhecer todos os rumores da cidade.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "removed": true,
         "z": 3.0
       },
@@ -256,6 +703,25 @@
         "w": 23.4,
         "h": 25.4,
         "dialog": "Duas figuras conversam baixo ao fundo. A conversa para quando vocês se aproximam.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "Duas figuras conversam baixo ao fundo. A conversa para quando vocês se aproximam.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "removed": true,
         "z": 4.0
       },
@@ -268,6 +734,25 @@
         "w": 13.7,
         "h": 33.2,
         "dialog": "A servente equilibra as canecas com prática. Ela conhece bem os clientes habituais.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "A servente equilibra as canecas com prática. Ela conhece bem os clientes habituais.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "removed": true,
         "z": 5.0
       },
@@ -280,6 +765,25 @@
         "w": 13.0,
         "h": 24.4,
         "dialog": "Uma mesa discreta observa a entrada e a escadaria.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "Uma mesa discreta observa a entrada e a escadaria.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "removed": true,
         "z": 6.0
       },
@@ -292,6 +796,25 @@
         "w": 41.4,
         "h": 45.9,
         "dialog": "Viajantes cansados compartilham histórias, mapas e cerveja.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "Viajantes cansados compartilham histórias, mapas e cerveja.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "removed": true,
         "z": 7.0
       },
@@ -304,6 +827,25 @@
         "w": 16.7,
         "h": 30.3,
         "dialog": "O bardo muda a melodia ao perceber aventureiros. Talvez uma canção revele um boato.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "O bardo muda a melodia ao perceber aventureiros. Talvez uma canção revele um boato.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "removed": true,
         "z": 8.0
       },
@@ -316,7 +858,26 @@
         "w": 40.6,
         "h": 62.0,
         "z": 5.0,
-        "dialog": "A comida esta bem gostosa. "
+        "dialog": "A comida esta bem gostosa. ",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "A comida esta bem gostosa.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ]
       },
       {
         "id": "npc_ms2e85ew",
@@ -327,7 +888,26 @@
         "w": 42.6,
         "h": 72.5,
         "z": 4.0,
-        "dialog": "Não me incomode. "
+        "dialog": "Não me incomode. ",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "Não me incomode.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ]
       }
     ]
   },
@@ -346,6 +926,25 @@
         "w": 16.3,
         "h": 32.2,
         "dialog": "Bem-vindos a Alva e Luz. Uma refeição quente sempre ajuda antes da estrada.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "Bem-vindos a Alva e Luz. Uma refeição quente sempre ajuda antes da estrada.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "z": 1.0
       },
       {
@@ -357,6 +956,25 @@
         "w": 13.0,
         "h": 25.4,
         "dialog": "O homem evita encarar vocês. Talvez tenha algo a dizer quando os boatos chegarem.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "O homem evita encarar vocês. Talvez tenha algo a dizer quando os boatos chegarem.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "removed": true,
         "z": 2.0
       },
@@ -369,6 +987,25 @@
         "w": 54.7,
         "h": 48.8,
         "dialog": "Quatro jogadores disputam a última rodada. Eles parecem conhecer todos os rumores da cidade.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "Quatro jogadores disputam a última rodada. Eles parecem conhecer todos os rumores da cidade.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "removed": true,
         "z": 3.0
       },
@@ -381,6 +1018,25 @@
         "w": 23.4,
         "h": 25.4,
         "dialog": "Duas figuras conversam baixo ao fundo. A conversa para quando vocês se aproximam.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "Duas figuras conversam baixo ao fundo. A conversa para quando vocês se aproximam.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "removed": true,
         "z": 4.0
       },
@@ -393,6 +1049,25 @@
         "w": 13.7,
         "h": 33.2,
         "dialog": "A servente equilibra as canecas com prática. Ela conhece bem os clientes habituais.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "A servente equilibra as canecas com prática. Ela conhece bem os clientes habituais.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "removed": true,
         "z": 5.0
       },
@@ -405,6 +1080,25 @@
         "w": 13.0,
         "h": 24.4,
         "dialog": "Uma mesa discreta observa a entrada e a escadaria.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "Uma mesa discreta observa a entrada e a escadaria.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "removed": true,
         "z": 6.0
       },
@@ -417,6 +1111,25 @@
         "w": 41.4,
         "h": 45.9,
         "dialog": "Viajantes cansados compartilham histórias, mapas e cerveja.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "Viajantes cansados compartilham histórias, mapas e cerveja.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "removed": true,
         "z": 7.0
       },
@@ -429,6 +1142,25 @@
         "w": 16.7,
         "h": 30.3,
         "dialog": "O bardo muda a melodia ao perceber aventureiros. Talvez uma canção revele um boato.",
+        "conversations": [
+          {
+            "id": "inicial",
+            "texto": "O bardo muda a melodia ao perceber aventureiros. Talvez uma canção revele um boato.",
+            "requisito": {
+              "renome_min": 0,
+              "nivel_grupo_min": 0,
+              "item_id": "",
+              "fato": "",
+              "aventura_id": ""
+            },
+            "efeito": {
+              "renome": 0,
+              "fato": "",
+              "item_id": ""
+            },
+            "uma_vez": false
+          }
+        ],
         "removed": true,
         "z": 8.0
       },
@@ -441,7 +1173,8 @@
         "w": 29.6,
         "h": 58.3,
         "z": 2.0,
-        "dialog": ""
+        "dialog": "",
+        "conversations": []
       },
       {
         "id": "npc_ms2ef8oi",
@@ -452,7 +1185,8 @@
         "w": 14.0,
         "h": 20.0,
         "z": 3.0,
-        "dialog": ""
+        "dialog": "",
+        "conversations": []
       },
       {
         "id": "npc_ms2egify",
@@ -463,7 +1197,8 @@
         "w": 23.4,
         "h": 58.4,
         "z": 4.0,
-        "dialog": ""
+        "dialog": "",
+        "conversations": []
       },
       {
         "id": "npc_ms2ej3o7",
@@ -474,7 +1209,8 @@
         "w": 11.7,
         "h": 17.9,
         "z": 5.0,
-        "dialog": ""
+        "dialog": "",
+        "conversations": []
       }
     ]
   },
@@ -493,7 +1229,8 @@
         "w": 30.0,
         "h": 69.7,
         "z": 1.0,
-        "dialog": ""
+        "dialog": "",
+        "conversations": []
       },
       {
         "id": "npc_ms42qx5t",
@@ -504,7 +1241,8 @@
         "w": 23.9,
         "h": 46.1,
         "z": 2.0,
-        "dialog": ""
+        "dialog": "",
+        "conversations": []
       },
       {
         "id": "npc_ms42snq6",
@@ -515,7 +1253,8 @@
         "w": 33.8,
         "h": 57.8,
         "z": 3.0,
-        "dialog": ""
+        "dialog": "",
+        "conversations": []
       }
     ]
   }

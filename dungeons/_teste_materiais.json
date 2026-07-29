@@ -2,9 +2,11 @@
   "schema_version": 1,
   "id": "_teste_materiais",
   "name": "Teste Materiais",
+  "ambiente": "masmorra",
+  "saida_permitida": true,
   "grid": {
-    "w": 8,
-    "h": 5
+    "w": 12,
+    "h": 12
   },
   "tiles": [
     [
@@ -15,6 +17,10 @@
       0,
       0,
       0,
+      0,
+      0,
+      0,
+      0,
       0
     ],
     [
@@ -24,7 +30,11 @@
       1,
       1,
       1,
-      1,
+      0,
+      0,
+      0,
+      0,
+      0,
       0
     ],
     [
@@ -34,7 +44,11 @@
       1,
       1,
       1,
-      1,
+      0,
+      0,
+      0,
+      0,
+      0,
       0
     ],
     [
@@ -44,10 +58,116 @@
       1,
       1,
       1,
-      1,
+      0,
+      0,
+      0,
+      0,
+      0,
       0
     ],
     [
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
       0,
       0,
       0,
@@ -60,10 +180,10 @@
   ],
   "rooms": [
     {
-      "id": 0,
+      "id": 1,
       "x": 1,
       "y": 1,
-      "w": 6,
+      "w": 5,
       "h": 3,
       "role": "entrance",
       "locked": false,
@@ -74,14 +194,154 @@
     "x": 1,
     "y": 2
   },
+  "exit": null,
+  "monsters": [
+    {
+      "type": "zumbi_infectado",
+      "pos": [
+        5,
+        8
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false,
+      "vscale": [
+        1,
+        2.4
+      ]
+    }
+  ],
+  "chests": [],
+  "traps": [],
+  "decorations": [
+    {
+      "id": "decor_1",
+      "type": "lareira",
+      "pos": [
+        5,
+        3
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "size": [
+        1,
+        1
+      ],
+      "voffset": [
+        0.35,
+        0
+      ]
+    },
+    {
+      "id": "decor_2",
+      "type": "lareira",
+      "pos": [
+        3,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "size": [
+        1,
+        1
+      ],
+      "voffset": [
+        0,
+        -0.35
+      ]
+    }
+  ],
+  "secret_passages": [],
+  "falas": [],
+  "master_reinforcements": [],
+  "expected_party": {
+    "heroes": 4,
+    "level": 1
+  },
+  "prisoner": null,
   "materiais": {
-    "2,1": "grama",
-    "3,1": "grama",
-    "4,1": "terra",
-    "5,1": "pedra_negra",
-    "4,2": "entulho",
-    "0,2": "enegrecida",
-    "7,2": "desmoronada",
-    "0,0": "pedra_caverna"
+    "4,4": "agua",
+    "4,5": "agua",
+    "5,5": "agua",
+    "5,4": "agua",
+    "5,6": "agua",
+    "4,6": "agua",
+    "4,7": "agua_profunda",
+    "3,7": "agua_profunda",
+    "2,7": "agua_profunda",
+    "2,8": "agua_profunda",
+    "3,8": "agua_profunda",
+    "3,9": "agua_profunda",
+    "4,9": "agua_profunda",
+    "4,8": "agua_profunda",
+    "6,8": "agua_profunda",
+    "6,7": "agua_profunda",
+    "5,7": "agua_profunda",
+    "7,7": "agua_profunda",
+    "7,8": "agua_profunda",
+    "7,9": "agua_profunda",
+    "6,9": "agua_profunda",
+    "5,9": "agua_profunda",
+    "2,9": "agua_profunda",
+    "3,6": "pedra_caverna",
+    "2,6": "pedra_caverna",
+    "1,6": "pedra_caverna",
+    "1,7": "pedra_caverna",
+    "1,8": "pedra_caverna",
+    "1,9": "pedra_caverna",
+    "1,10": "pedra_caverna",
+    "2,10": "pedra_caverna",
+    "3,10": "pedra_caverna",
+    "4,10": "pedra_caverna",
+    "5,10": "pedra_caverna",
+    "6,10": "pedra_caverna",
+    "7,10": "pedra_caverna",
+    "8,10": "pedra_caverna",
+    "8,9": "pedra_caverna",
+    "8,8": "pedra_caverna",
+    "8,7": "pedra_caverna",
+    "8,6": "pedra_caverna",
+    "7,6": "pedra_caverna",
+    "6,6": "pedra_caverna",
+    "9,6": "pedra_caverna",
+    "9,7": "pedra_caverna",
+    "9,8": "pedra_caverna",
+    "9,9": "pedra_caverna",
+    "9,10": "pedra_caverna",
+    "9,11": "pedra_caverna",
+    "8,11": "pedra_caverna",
+    "7,11": "pedra_caverna",
+    "6,11": "pedra_caverna",
+    "5,11": "pedra_caverna",
+    "4,11": "pedra_caverna",
+    "3,11": "pedra_caverna",
+    "2,11": "pedra_caverna",
+    "1,11": "pedra_caverna",
+    "0,11": "pedra_caverna",
+    "0,10": "pedra_caverna",
+    "0,9": "pedra_caverna",
+    "0,8": "pedra_caverna",
+    "0,7": "pedra_caverna",
+    "0,6": "pedra_caverna",
+    "5,8": "agua_profunda"
+  },
+  "objectives": {
+    "primary": {
+      "type": "kill_all",
+      "xp": 0,
+      "reward": {
+        "gold": 0,
+        "items": []
+      }
+    },
+    "secondary": []
   }
 }

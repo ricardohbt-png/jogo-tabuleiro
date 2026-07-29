@@ -25,7 +25,6 @@ const GS = (() => {
   // sem servidor e sem lobby — o estado chega por postMessage e nada sai daqui.
   const PREVIEW = typeof location !== 'undefined' && /[?&]preview=1/.test(location.search);
 
-
   // ── Internal state ─────────────────────────────────────────────────────────
   let ws              = null;
   let myPid           = null;
@@ -1237,6 +1236,50 @@ const GS = (() => {
 
       case 'trap_result':
         _emit('trapResult', msg);
+        break;
+
+      case 'disease_result':
+        _emit('diseaseResult', msg);
+        break;
+
+      case 'poison_result':
+        _emit('poisonResult', msg);
+        break;
+
+      case 'equipment_damage_result':
+        _emit('equipmentDamageResult', msg);
+        break;
+
+      case 'petrify_result':
+        _emit('petrifyResult', msg);
+        break;
+
+      case 'mental_control_result':
+        _emit('mentalControlResult', msg);
+        break;
+
+      case 'acid_spit_result':
+        _emit('acidSpitResult', msg);
+        break;
+
+      case 'magic_damage_failure_result':
+        _emit('magicDamageFailureResult', msg);
+        break;
+
+      case 'freezing_result':
+        _emit('freezingResult', msg);
+        break;
+
+      case 'stun_result':
+        _emit('stunResult', msg);
+        break;
+
+      case 'death_result':
+        _emit('deathResult', msg);
+        break;
+
+      case 'sleep_result':
+        _emit('sleepResult', msg);
         break;
 
       case 'animar_result':

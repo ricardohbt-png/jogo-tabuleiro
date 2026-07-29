@@ -18,13 +18,13 @@ def check(name, cond):
 def test_catalog():
     print("\n[M1] catálogo MATERIAIS")
     m = server.MATERIAIS
-    for k in ("pedra_cinza", "terra", "grama", "pedra_negra", "entulho",
-              "pedra_normal", "enegrecida", "pedra_caverna", "desmoronada"):
+    for k in ("pedra_cinza", "terra", "grama", "pedra_negra", "madeira_escura", "entulho",
+              "pedra_normal", "enegrecida", "pedra_caverna", "desmoronada", "madeira"):
         check(f"{k} presente", k in m)
     check("pisos são categoria piso", all(m[k]["categoria"] == "piso"
-          for k in ("pedra_cinza", "terra", "grama", "pedra_negra", "entulho")))
+          for k in ("pedra_cinza", "terra", "grama", "pedra_negra", "madeira_escura", "entulho")))
     check("paredes são categoria parede", all(m[k]["categoria"] == "parede"
-          for k in ("pedra_normal", "enegrecida", "pedra_caverna", "desmoronada")))
+          for k in ("pedra_normal", "enegrecida", "pedra_caverna", "desmoronada", "madeira")))
     check("entulho é sólido e oclui", m["entulho"]["solido"] and m["entulho"]["oclui"])
     check("grama é cosmética (não sólida/oclui)",
           not m["grama"]["solido"] and not m["grama"]["oclui"])

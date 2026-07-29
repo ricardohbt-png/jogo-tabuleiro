@@ -7076,6 +7076,15 @@ window.EDITOR_CATALOG = {
       "item_slot": "bag",
       "effect": "regeneration",
       "value": 10
+    },
+    {
+      "id": "ensaio_sobre_a_cegueira",
+      "name": "Ensaio sobre a Cegueira",
+      "emoji": "☠️",
+      "item_slot": "bag",
+      "effect": "coat_poison",
+      "value": 0,
+      "veneno_id": "ensaio_sobre_a_cegueira"
     }
   ],
   "traps": [
@@ -7186,6 +7195,10 @@ window.EDITOR_CATALOG = {
     {
       "id": "veneno_ardonia_negra",
       "name": "Ardonia Negra"
+    },
+    {
+      "id": "ensaio_sobre_a_cegueira",
+      "name": "Ensaio sobre a Cegueira"
     }
   ],
   "decorations": [
@@ -7630,6 +7643,14 @@ window.EDITOR_CATALOG = {
       "oclui": false
     },
     {
+      "id": "madeira_escura",
+      "nome": "Piso de tábuas escuras",
+      "categoria": "piso",
+      "cor": "#3b200f",
+      "solido": false,
+      "oclui": false
+    },
+    {
       "id": "entulho",
       "nome": "Entulho",
       "categoria": "piso",
@@ -7666,6 +7687,14 @@ window.EDITOR_CATALOG = {
       "nome": "Parede desmoronada",
       "categoria": "parede",
       "cor": "#534b40",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "madeira",
+      "nome": "Parede de madeira envernizada",
+      "categoria": "parede",
+      "cor": "#4a270f",
       "solido": false,
       "oclui": false
     }

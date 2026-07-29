@@ -8088,6 +8088,11 @@ class GameRoom:
             if isinstance(vs, list) and len(vs) == 2 \
                and all(isinstance(c, (int, float)) and not isinstance(c, bool) for c in vs):
                 dec["vscale"] = [max(0.2, min(4.0, float(vs[0]))), max(0.2, min(4.0, float(vs[1])))]
+            vo = d.get("voffset")
+            if isinstance(vo, list) and len(vo) == 2 \
+               and all(isinstance(c, (int, float)) and not isinstance(c, bool) and math.isfinite(c) for c in vo):
+                # Deslocamento puramente visual dentro da mesma casa (não muda colisão).
+                dec["voffset"] = [max(-0.45, min(0.45, float(vo[0]))), max(-0.45, min(0.45, float(vo[1])))]
             self.decorations.append(dec)
         self._rebuild_decor_index()
 
@@ -13366,10 +13371,23 @@ class GameRoom:
         d["severidade"] = DOENCA_NIVEL_NOME[len(d["sintomas"]) - 1]
         p["doenca_tipo"] = d["severidade"]
         sint = ", ".join(DOENCA_SINTOMA_DESC[t] for t in d["sintomas"])
+        await self._enviar_resultado_doenca(p, d["severidade"], d["sintomas"])
         await self.gm_say(
             f"🦠 **{p['name']}** contrai uma **Doença {d['severidade'].capitalize()}**! "
             f"Sintomas: {sint}. (curável por clérigo ou templo)")
         return True
+
+    async def _enviar_resultado_doenca(self, alvo, severidade, sintomas):
+        """Popup pessoal de doença, no mesmo padrão dos resultados de armadilha."""
+        if not alvo.get("id"):
+            return
+        efeitos = [DOENCA_SINTOMA_DESC[t] for t in sintomas if t in DOENCA_SINTOMA_DESC]
+        await self.send_to(alvo["id"], {
+            "type": "disease_result", "tipo": "doenca", "nome": f"Doença {severidade.capitalize()}",
+            "icone": "🦠", "severidade": severidade,
+            "descricao": "A infecção se espalha pelo seu corpo. A condição permanece até ser curada por Purificação, elixir ou templo.",
+            "efeitos_extra": efeitos,
+        })
 
     def _curar_doenca(self, p):
         """Remove a doença inteira, revertendo todos os deltas. Retorna True se curou."""
@@ -13867,6 +13885,12 @@ class GameRoom:
             await self.gm_say(f"✨ Raio Divino DOBRADO contra **{alvo['name']}** (morto-vivo/demônio)!")
         alvo["hp"] = max(0, alvo["hp"] - dano)
         await self.gm_say(f"✨ **{caster['name']}** atinge **{alvo['name']}** com Raio Divino: {dano} de dano sagrado.")
+        if not save_ok:
+            await self._enviar_resultado_falha_magia_dano(
+                alvo, "Raio Divino", dano,
+                "O raio sagrado atinge você sem que consiga se esquivar.",
+                ["Dano sagrado total por falhar no teste de Reflexos"],
+            )
         if alvo["hp"] <= 0:
             if self._eh_jogador(alvo):
                 await self._player_dies(alvo["id"])
@@ -13979,6 +14003,11 @@ class GameRoom:
         pilhas = min(3, int(alvo.get("congelamento_progressivo_pilhas", 0)) + 1)
         alvo["congelamento_progressivo_pilhas"] = pilhas
         alvo["congelamento_progressivo_rodadas"] = 2
+        await self._enviar_resultado_congelamento(
+            alvo, "Congelamento Progressivo",
+            "O frio se acumula em seu corpo após a Garra Congelante.",
+            [f"Movimento reduzido em {pilhas} quadrado(s)", "Duração: 2 turnos", "O efeito acumula até -3 de movimento"],
+        )
         await self.gm_say(
             f"❄️ **{alvo['name']}** sofre **Congelamento Progressivo**: "
             f"–{pilhas} movimento pelos próximos 2 turnos.")
@@ -14170,6 +14199,11 @@ class GameRoom:
             save_ok, *_ = await self._save_mostrado(alvo, "vontade", self._dif_magia(caster, magia))
             if not save_ok:
                 alvo["dormindo"] = True; alvo["dormindo_rodadas"] = dur; n += 1
+                await self._enviar_resultado_controle_mental(
+                    alvo, "Sono", dur,
+                    "Uma magia de sono domina seus sentidos.",
+                    ["Não pode se mover, atacar ou usar habilidades", "O primeiro ataque recebido é crítico", "Você acorda ao sofrer dano"],
+                )
         await self.gm_say(f"🌙 **{caster['name']}** lança Sono — {n} alvo(s) adormecem por até {dur} rodada(s) (afeta aliados/minions também).")
 
     async def _executar_medo(self, caster, magia, data, dur_bonus):
@@ -14185,6 +14219,11 @@ class GameRoom:
             if not save_ok:
                 alvo["com_medo"] = True; alvo["medo_rodadas"] = dur
                 self._set_mod_magia(alvo, {"ataque": -1}, dur); n += 1
+                await self._enviar_resultado_controle_mental(
+                    alvo, "Medo", dur,
+                    "O medo mágico toma conta de você.",
+                    ["Não pode se aproximar da fonte do medo", "Deve fugir sempre que possível", "-1 em ataques"],
+                )
         await self.gm_say(f"😱 **{caster['name']}** lança Medo — {n} alvo(s) afetado(s) por {dur} rodada(s) (-1 ataque; afeta aliados/minions).")
 
     async def _executar_comando(self, caster, magia, data):
@@ -14200,6 +14239,11 @@ class GameRoom:
         save_ok, *_ = await self._save_mostrado(alvo, "vontade", self._dif_magia(caster, magia))
         if not save_ok:
             alvo["comandado"] = True
+            await self._enviar_resultado_controle_mental(
+                alvo, "Comando", 1,
+                "Uma ordem mágica invade sua mente.",
+                ["Você perde sua próxima ação", "Não pode usar habilidades especiais nesta ação"],
+            )
             await self.gm_say(f"🗣️ **{caster['name']}** comanda **{alvo['name']}** — perderá a próxima ação!")
         else:
             await self.gm_say(f"🗣️ **{alvo['name']}** resiste ao Comando.")
@@ -14218,6 +14262,11 @@ class GameRoom:
         if not save_ok:
             dur = self._rolar_dado(magia.get("duracao", "1d4")) + dur_bonus
             alvo["dominado"] = True; alvo["dominado_rodadas"] = dur; alvo["dominado_por"] = caster["id"]
+            await self._enviar_resultado_controle_mental(
+                alvo, "Dominar Mente", dur,
+                "Sua vontade foi subjugada por uma força arcana.",
+                ["Age sob o controle do conjurador", "Pode receber um novo teste de Vontade ao sofrer dano"],
+            )
             await self.gm_say(f"🧠 **{caster['name']}** domina a mente de **{alvo['name']}** por {dur} rodada(s)!")
         else:
             await self.gm_say(f"🧠 **{alvo['name']}** resiste a Dominar Mente.")
@@ -14423,8 +14472,18 @@ class GameRoom:
             if not save_ok:   # falha grave: perde metade dos turnos, -1 CA, -1 ataque
                 alvo["lento"] = True; alvo["lento_rodadas"] = dur; alvo["lento_pulou"] = False
                 self._set_mod_magia(alvo, {"ca": -1, "ataque": -1}, dur)
+                await self._enviar_resultado_controle_mental(
+                    alvo, "Lentidão", dur,
+                    "Uma força mágica torna cada gesto mais difícil.",
+                    ["Age apenas em rodadas alternadas", "-1 CA", "-1 em ataques"],
+                )
             else:             # sucesso: efeito brando (-1 ataque)
                 self._set_mod_magia(alvo, {"ataque": -1}, dur)
+                await self._enviar_resultado_controle_mental(
+                    alvo, "Lentidão", dur,
+                    "Você resistiu parcialmente à Lentidão, mas ainda sente seus efeitos.",
+                    ["-1 em ataques"],
+                )
             n += 1
         await self.gm_say(f"🐌 **{caster['name']}** lança Lentidão — {n} alvo(s) afetado(s) por {dur} rodada(s) (afeta aliados/minions).")
 
@@ -14801,11 +14860,19 @@ class GameRoom:
             dano = int((await self._rolar_dano_mostrado(nivel, 6, "🌪️ Dano")) * dmg_mult + 0.5)
             save_ok, *_ = await self._save_mostrado(alvo, "reflexos", save_dif)
             push = magia.get("empurra_sucesso", 2) if save_ok else self._rolar_dado(magia.get("empurra_falha", "1d6"))
+            col = 0
             if self._empurrar(alvo, dx, dy, push):
                 col = self._rolar_dado(magia.get("dano_colisao", "1d4"))
                 dano += col
                 await self.gm_say(f"🌪️ **{nome}** é arremessado contra a parede (+{col} de colisão).")
             await self.gm_say(f"🌪️ **{nome}** sofre {dano} (empurrado {push}q).")
+            if self._eh_jogador(alvo) and not save_ok:
+                efeitos = [f"Empurrado {push} quadrado(s)"]
+                if col:
+                    efeitos.append(f"+{col} de dano por colisão")
+                await self._enviar_resultado_falha_magia_dano(
+                    alvo, "Jato de Ar", dano,
+                    "A rajada violenta o atinge e o arremessa para trás.", efeitos)
             await self._aplicar_dano_alvo(alvo, dano, None, caster["id"]); n += 1
         await self.gm_say(f"🌪️ **{caster['name']}** lança Jato de Ar — {n} alvo(s) no cone.")
 
@@ -14914,6 +14981,12 @@ class GameRoom:
                 d = await self._absorver_energia(alvo, d, "fogo")   # ProteÃ§Ã£o contra Energia
             nome = alvo.get("name") or alvo.get("nome", "Alvo")
             await self.gm_say(f"🔥 {rotulo}: **{nome}** sofre {d}{extra}.")
+            if ehjog and com_save and not save_ok:
+                await self._enviar_resultado_falha_magia_dano(
+                    alvo, "Bola de Fogo", d,
+                    "A explosão de fogo envolve você completamente.",
+                    ["Dano de fogo total por falhar no teste de Reflexos", "A área permanece em chamas e pode causar dano novamente"],
+                )
             await self._aplicar_dano_alvo(alvo, d, "fogo", caster_id)
             n += 1
         return n
@@ -15013,6 +15086,12 @@ class GameRoom:
             logs.append(f"{(alvo.get('name') or alvo.get('nome','?'))}:{d}")
             if ehjog and aid == caster["id"]:
                 feriu_caster = True
+            if ehjog and not save_ok:
+                await self._enviar_resultado_falha_magia_dano(
+                    alvo, "Relâmpago", d,
+                    "A descarga elétrica atravessa seu corpo.",
+                    ["Dano elétrico total por falhar no teste de Reflexos", "O raio pode ricochetear e atingir o mesmo alvo novamente"],
+                )
             await self._aplicar_dano_alvo(alvo, d, "eletricidade", caster["id"])
 
         multi = sum(1 for v in impactos.values() if v > 1)
@@ -15065,6 +15144,16 @@ class GameRoom:
             await self.gm_say(f"❄️ **{alvo['name']}** está **paralisado**! (novo Fortitude por rodada, máx {alvo['paralisado_rodada_max']})")
         else:
             await self.gm_say(f"❄️ **{alvo['name']}** resistiu à paralisação.")
+
+        if self._eh_jogador(alvo):
+            efeitos = [f"{dano} de dano de gelo"]
+            if save_ok:
+                efeitos.append("Resistiu à paralisia no teste de Fortitude")
+            else:
+                efeitos.extend(["Você está paralisado", "Novo teste de Fortitude no início de cada turno", f"Paralisia dura no máximo {alvo['paralisado_rodada_max']} rodada(s)"])
+            await self._enviar_resultado_congelamento(
+                alvo, "Raio Congelante",
+                "Um raio de frio arcano atinge você.", efeitos)
 
         if alvo["hp"] <= 0:
             if self._eh_jogador(alvo):
@@ -15643,6 +15732,8 @@ class GameRoom:
                 "dificuldade": veneno.get("dificuldade", 10),
                 "save_neutraliza_por_rodada": bool(veneno.get("save_neutraliza_por_rodada")),
             })
+            await self._enviar_resultado_veneno(alvo, veneno, dur,
+                                                 [f"{veneno.get('dano', '1d4')} de dano por rodada"])
             dano_txt = str(veneno.get("dano", "1d4"))
             regra_save = (f"Fortitude CD {veneno.get('dificuldade',10)} já foi testada e anula"
                           if veneno.get("save_aplicacao")
@@ -15744,6 +15835,7 @@ class GameRoom:
                 pet_dur = self._rolar_dado(veneno.get("duracao", 1)) * dobro
                 alvo["petrificado"]         = True
                 alvo["petrificado_rodadas"] = pet_dur
+                await self._enviar_resultado_petrificacao(alvo, pet_dur, nome)
                 await self.gm_say(f"🗿 **{nome}**: **{alvo_nome}** petrificado por {pet_dur} rodada(s)!")
 
         elif op == "cegar":
@@ -15767,7 +15859,134 @@ class GameRoom:
                 alvo["penalidades"]["ataque"] = alvo["penalidades"].get("ataque", 0) + pen
                 await self.gm_say(f"🙈 **{nome}**: **{alvo_nome}** cego por {duracao} rodada(s) ({pen} em ataques)!")
 
+        if self._eh_jogador(alvo):
+            if op == "reduzir":
+                efeitos_popup = [f"-{valor} de {attr}"]
+            elif op == "penalidade":
+                efeitos_popup = [f"{val:+d} {atrib}" for atrib, val in atribs]
+            elif op == "petrificar":
+                efeitos_popup = ([f"Petrificado por {pet_dur} rodada(s)"] if not save_ok
+                                  else [f"-1 movimento por {dur_falha} rodada(s)"])
+            elif op == "cegar":
+                efeitos_popup = ([f"Cego: {pen} em ataques por {duracao} rodada(s)"] if not save_ok
+                                  else [f"Percepção reduzida por {dur_falha} rodada(s)"])
+            else:
+                efeitos_popup = []
+            dur_popup = (pet_dur if op == "petrificar" and not save_ok
+                          else (dur_falha if op in ("petrificar", "cegar") and save_ok else duracao))
+            await self._enviar_resultado_veneno(alvo, veneno, dur_popup, efeitos_popup)
         await self.push_state()
+
+    async def _enviar_resultado_petrificacao(self, alvo, duracao, fonte="Petrificação"):
+        """Mostra ao herói afetado o alerta de petrificação com sua duração."""
+        if not self._eh_jogador(alvo) or not alvo.get("id"):
+            return
+        await self.send_to(alvo["id"], {
+            "type": "petrify_result", "tipo": "petrificado", "nome": "Petrificado",
+            "icone": "🗿", "duracao": int(duracao or 0),
+            "descricao": f"{fonte} transformou seu corpo em pedra. Você não pode agir enquanto o efeito durar.",
+            "efeitos_extra": ["Não pode se mover", "Não pode atacar nem usar habilidades", f"Duração: {int(duracao or 0)} rodada(s)"],
+        })
+
+    async def _enviar_resultado_controle_mental(self, alvo, magia, duracao, descricao, efeitos):
+        """Envia ao herói afetado o alerta pessoal de magia de controle."""
+        if not self._eh_jogador(alvo) or not alvo.get("id"):
+            return
+        if magia == "Sono":
+            await self._enviar_resultado_sono(alvo, duracao)
+            return
+        await self.send_to(alvo["id"], {
+            "type": "mental_control_result",
+            "tipo": "enfeiticado",
+            "nome": magia,
+            "icone": "✨",
+            "duracao": int(duracao or 0),
+            "descricao": descricao,
+            "efeitos_extra": efeitos,
+        })
+
+    async def _enviar_resultado_cuspe_acido(self, alvo, fonte, dano, cd, total_save, passou):
+        """Alerta pessoal do ataque Cuspir Ácido e de sua possível corrosão."""
+        if not self._eh_jogador(alvo) or not alvo.get("id"):
+            return
+        efeitos = [f"{dano} de dano de ácido"]
+        if passou:
+            efeitos.append("Sucesso no teste de Reflexos: dano reduzido à metade")
+        else:
+            efeitos.extend(["Falha no teste de Reflexos: dano total", "Um equipamento equipado pode sofrer corrosão"])
+        await self.send_to(alvo["id"], {
+            "type": "acid_spit_result",
+            "tipo": "cuspe_acido",
+            "nome": "Cuspe de Ácido",
+            "icone": "🧪",
+            "dano": dano,
+            "metade": bool(passou),
+            "descricao": f"{fonte} lança uma rajada de ácido corrosivo contra você. Reflexos {total_save} vs. CD {cd}.",
+            "efeitos_extra": efeitos,
+        })
+
+    async def _enviar_resultado_falha_magia_dano(self, alvo, magia, dano, descricao, efeitos):
+        """Aviso pessoal de uma magia ofensiva cujo teste de resistência falhou."""
+        if not self._eh_jogador(alvo) or not alvo.get("id"):
+            return
+        await self.send_to(alvo["id"], {
+            "type": "magic_damage_failure_result",
+            "tipo": "falha_magia_dano",
+            "nome": magia,
+            "icone": "💥",
+            "dano": dano,
+            "descricao": descricao,
+            "efeitos_extra": [f"{dano} de dano sofrido", *efeitos],
+        })
+
+    async def _enviar_resultado_congelamento(self, alvo, nome, descricao, efeitos):
+        """Alerta pessoal para dano de gelo, congelamento ou paralisia."""
+        if not self._eh_jogador(alvo) or not alvo.get("id"):
+            return
+        await self.send_to(alvo["id"], {
+            "type": "freezing_result",
+            "tipo": "congelamento_paralisia",
+            "nome": nome,
+            "icone": "❄️",
+            "descricao": descricao,
+            "efeitos_extra": efeitos,
+        })
+
+    async def _enviar_resultado_atordoamento(self, alvo, fonte, duracao, efeitos):
+        """Alerta pessoal de atordoamento ou perda de ação causada por monstro."""
+        if not self._eh_jogador(alvo) or not alvo.get("id"):
+            return
+        await self.send_to(alvo["id"], {
+            "type": "stun_result",
+            "tipo": "atordoado",
+            "nome": "Atordoado",
+            "icone": "💫",
+            "duracao": duracao,
+            "descricao": fonte,
+            "efeitos_extra": efeitos,
+        })
+
+    async def _enviar_resultado_sono(self, alvo, duracao):
+        """Alerta pessoal quando uma magia de Sono afeta um herói."""
+        if not self._eh_jogador(alvo) or not alvo.get("id"):
+            return
+        await self.send_to(alvo["id"], {
+            "type": "sleep_result", "tipo": "sono", "nome": "Sono", "icone": "🌙",
+            "duracao": int(duracao or 0),
+            "descricao": "Uma magia de sono domina seus sentidos.",
+            "efeitos_extra": ["Não pode se mover, atacar ou usar habilidades", "O primeiro ataque recebido é crítico", "Você acorda ao sofrer dano"],
+        })
+
+    async def _enviar_resultado_veneno(self, alvo, veneno, duracao, efeitos):
+        """Aviso pessoal do veneno aplicado, no layout já conhecido das armadilhas."""
+        if not self._eh_jogador(alvo) or not alvo.get("id"):
+            return
+        await self.send_to(alvo["id"], {
+            "type": "poison_result", "tipo": "veneno", "nome": veneno.get("nome", "Veneno"),
+            "icone": veneno.get("icone", "☠️"), "duracao": int(duracao or 0),
+            "descricao": "O veneno foi aplicado. Seus efeitos persistem até a duração terminar ou serem purificados.",
+            "efeitos_extra": efeitos,
+        })
 
     async def _processar_venenos_turno(self, alvo):
         """Início do turno do alvo: tica durações, reverte efeitos expirados e
@@ -17359,14 +17578,38 @@ class GameRoom:
                 else:
                     gear[slot] = None
                 await self.gm_say(f"💥 {nome_peca} de **{p['name']}** foi **destruída permanentemente**!")
+                perdas = ["A peça foi destruída permanentemente", "Todos os bônus desta peça foram removidos"]
+                if slot == "armor" and peca.get("ac_bonus"):
+                    perdas.insert(1, f"CA -{peca['ac_bonus']} (bônus da armadura perdido)")
+                await self._enviar_resultado_equipamento_danificado(
+                    p, label, nome_peca, "destruído", perdas,
+                    arma_quebrada=(slot == "weapon"), armadura_quebrada=(slot == "armor"))
                 await self._devorador_cura(m, cura)
             elif nivel_pen <= 0:
                 await self.gm_say(f"🦷 **{label}**: {nome_peca} de **{p['name']}** resistiu ao golpe sem sofrer dano!")
             else:
                 rot = CORROSAO_NIVEL_NOME.get(nivel_pen, "muito danificado")
                 await self.gm_say(f"🦷 **{label}**: {nome_peca} de **{p['name']}** está **{rot}** (-{nivel_pen})!")
+                penalidade = (f"CA -{nivel_pen}" if slot in ("armor", "off_hand", "head")
+                               else (f"Acerto e dano -{nivel_pen}" if slot == "weapon"
+                                     else f"Movimento -{nivel_pen}"))
+                await self._enviar_resultado_equipamento_danificado(
+                    p, label, nome_peca, rot, [penalidade, "A corrosão piora se a peça for atingida novamente"])
             return
         # Nenhum equipamento do tipo certo exposto — nada a corroer.
+
+    async def _enviar_resultado_equipamento_danificado(self, alvo, fonte, peca, estado, efeitos,
+                                                        arma_quebrada=False, armadura_quebrada=False):
+        """Alerta pessoal para corrosão de equipamento equipado."""
+        if not alvo.get("id"):
+            return
+        await self.send_to(alvo["id"], {
+            "type": "equipment_damage_result", "tipo": ("arma_quebrada" if arma_quebrada else ("armadura_quebrada" if armadura_quebrada else "equipamento_danificado")),
+            "nome": ("Arma Quebrada" if arma_quebrada else ("Armadura Quebrada" if armadura_quebrada else "Equipamento Danificado")), "fonte": fonte, "peca": peca, "estado": estado,
+            "icone": "💥" if arma_quebrada else ("🛡️" if armadura_quebrada else "🛠️"), "descricao": (f"{peca} quebrou sob {fonte} e não pode mais ser usada."
+                if arma_quebrada else (f"{peca} quebrou sob {fonte}; sua proteção foi perdida." if armadura_quebrada else f"{fonte} atingiu {peca}. Estado: {estado}.")),
+            "efeitos_extra": efeitos,
+        })
 
     async def _aplicar_toque_putrefato(self, m, p):
         """Devorador Orgânico: corrói couro/manto e armas de madeira (cura 1d4)."""
@@ -17986,6 +18229,7 @@ class GameRoom:
                 "special": meta["special"], "emoji": meta["emoji"],
                 "size": self._decor_base_size(d),
                 "vscale": d.get("vscale") or [1, 1],
+                "voffset": d.get("voffset") or [0, 0],
                 "image": d.get("image"),
             })
         return out
@@ -18824,6 +19068,7 @@ class GameRoom:
                 else:
                     target["petrificado"] = True
                     target["petrificado_rodadas"] = ability.get("effect_duration", 1)
+                    await self._enviar_resultado_petrificacao(target, target["petrificado_rodadas"], ability.get("name", "Petrificação"))
                     await self.gm_say(f"🗿 **{tgt_name}** foi petrificado!")
             elif effect == "dormindo":
                 target["dormindo"] = True
@@ -20093,6 +20338,11 @@ class GameRoom:
                         alvo["turbilhao_perde_movimento"] = True
                     else:
                         alvo["turbilhao_perde_acao"] = True
+                    await self._enviar_resultado_atordoamento(
+                        alvo, "O Turbilhão do Elemental de Ar o deixa sem fôlego.", "1 turno",
+                        (["Você perde o movimento no próximo turno"] if passou
+                         else ["Você perde a próxima ação", "Duração: até o próximo turno"]),
+                    )
                     await self.gm_say(f"🌪️ **{alvo['name']}** sofre {dano} do Turbilhão " +
                                       ("e perderá o movimento." if passou else "e perderá a próxima ação."))
                     if alvo["hp"] <= 0:
@@ -20282,6 +20532,10 @@ class GameRoom:
                     await self.gm_say(f"💪 **{tgt_name}** aguenta o impacto (Fortitude d20({d20}){sbs}={stot} vs CD 10).")
                 else:
                     target["perde_turno"] = True
+                    await self._enviar_resultado_atordoamento(
+                        target, "A Força Descomunal do ogro o deixa atordoado.", "1 rodada",
+                        ["Você perde a próxima rodada", "Não pode mover, atacar ou usar habilidades durante esse turno"],
+                    )
                     await self.gm_say(f"💫 **{tgt_name}** fica **atordoado** (Fortitude {stot} vs CD 10) e perde a próxima rodada!")
         else:                                                      # ataque normal
             hit = await self._execute_one_monster_attack(m, atk, target_obj)
@@ -20333,6 +20587,7 @@ class GameRoom:
         alvo["hp"] = max(0, alvo["hp"] - dano)
         await self.gm_say(f"🧪 **{m['name']}** cospe ácido em **{alvo['name']}**: **{dano}** de dano"
                           f" (Reflexos {total} vs CD {cd}){' — metade!' if passou else '!'}")
+        await self._enviar_resultado_cuspe_acido(alvo, m["name"], dano, cd, total, passou)
         if not passou:
             await self._corroer_equipamento(m, alvo,
                 CORROSAO_ARMADURA_ORGANICA | CORROSAO_ARMADURA_METAL,
@@ -21137,6 +21392,18 @@ class GameRoom:
             await self._abrir_ultimo_esforco(p)
         p["alive"] = False
         p["hp"] = 0
+        await self.send_to(p["id"], {
+            "type": "death_result",
+            "tipo": "morte",
+            "nome": "Você morreu",
+            "icone": "💀",
+            "descricao": "Seu personagem morreu em combate.",
+            "efeitos_extra": [
+                "Você não pode mais agir nesta aventura",
+                "Torça para que seus companheiros consigam resgatá-lo",
+                "Um aliado pode trazê-lo de volta com Ressurreição",
+            ],
+        })
         await self.gm_say(f"💔 **{p['name']}** foi derrotado! Os companheiros devem continuar...")
 
         # Bardo incapacitado: a CanÃ§Ã£o Heroica cessa e os aliados perdem os buffs.

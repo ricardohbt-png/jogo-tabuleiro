@@ -511,6 +511,7 @@ input:focus { outline: none; border-color: var(--gold); }
 .tavern-npc:hover,.tavern-npc:focus-visible{filter:drop-shadow(0 0 8px #ffd36b);transform:scale(1.1);z-index:2;outline:0;}.tavern-npc:hover img.tavern-mask,.tavern-npc:focus-visible img.tavern-mask,.tavern-npc:hover span,.tavern-npc:focus-visible span{opacity:1;}
 .tavern-back{align-self:flex-start;margin:0 0 7px;padding:5px 10px;border:1px solid #8b693a;border-radius:5px;background:#21170f;color:#f0c770;font:inherit;font-size:.8rem;cursor:pointer;}.tavern-back:hover{background:#382714;}
 .tavern-hint{margin:7px 0 0;text-align:center;color:var(--text2);font-size:.75rem;}.tavern-dialogue{margin-top:9px;padding:9px 11px;border:1px solid #806037;border-radius:6px;background:#17100be8;color:#e7d8bc;font-size:.82rem;}.tavern-dialogue b{color:#f0c770;}.tavern-dialogue p{margin:4px 0 0;line-height:1.4;}.tavern-empty{padding:18px;text-align:center;color:var(--text2);}
+.tavern-dialogue-option{display:grid;gap:4px;margin-top:8px}.tavern-dialogue-text{padding:8px 10px;border:1px solid #806037;border-radius:5px;background:#2a1b10;color:#f7dfaa;text-align:left;font:inherit;line-height:1.4;cursor:pointer}.tavern-dialogue-text:hover,.tavern-dialogue-text:focus-visible{background:#422a17;border-color:#e4bd68}.tavern-dialogue-effect{color:#a99a7d;font-size:.72rem}
 .shop-items { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 7px; }
 .shop-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px;
              background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); }
@@ -577,6 +578,11 @@ input:focus { outline: none; border-color: var(--gold); }
                   color:var(--text2); padding:3px 8px; font-size:.76rem; cursor:pointer;
                   font-family:inherit; transition:all .15s; display:none; }
 #btn-cam-reset:hover  { border-color:var(--gold); color:var(--gold); }
+#btn-tile-spacing-reset { background:var(--bg3); border:1px solid var(--border2); border-radius:var(--radius);
+                           color:var(--text2); padding:3px 8px; font-size:.76rem; cursor:pointer;
+                           font-family:inherit; transition:all .15s; display:none; }
+#btn-tile-spacing-reset:hover:not(:disabled) { border-color:var(--gold); color:var(--gold); }
+#btn-tile-spacing-reset:disabled { opacity:.6; cursor:default; }
 #btn-3d-toggle  { background:var(--bg3); border:1px solid var(--border2); border-radius:var(--radius);
                   color:var(--text2); padding:3px 10px; font-size:.76rem; cursor:pointer;
                   font-family:inherit; transition:all .15s; }
@@ -944,7 +950,7 @@ input:focus { outline: none; border-color: var(--gold); }
   border:2px solid #9d7b3d;border-radius:8px;background:#0a1118;box-shadow:0 0 42px #000;}
 #worldmap-location-frame>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;user-select:none;}
 .worldmap-location-title{position:absolute;z-index:2;top:16px;left:50%;transform:translateX(-50%);padding:7px 16px;border:1px solid #b89856;border-radius:5px;background:#17120be8;color:#ffe6a1;font-family:var(--font-body);font-size:18px;}
-.worldmap-location-info{position:absolute;z-index:2;left:50%;bottom:16px;transform:translateX(-50%);min-width:290px;max-width:440px;text-align:center;padding:10px 15px;border:1px solid #ab8a49;border-radius:6px;background:#110e09eb;color:#f5dfad;box-shadow:0 2px 14px #000a;}
+.worldmap-location-info{position:absolute;z-index:2;left:50%;top:50%;bottom:auto;transform:translate(-50%,-50%);min-width:290px;max-width:440px;text-align:center;padding:10px 15px;border:1px solid #ab8a49;border-radius:6px;background:#110e09eb;color:#f5dfad;box-shadow:0 2px 14px #000a;}
 .worldmap-location-info b,.worldmap-location-info small{display:block;}.worldmap-location-info small{margin-top:4px;color:#d1c29c;}
 .worldmap-title,.worldmap-back,.worldmap-info{position:absolute;z-index:2;font-family:var(--font-body);}
 .worldmap-title{top:16px;left:50%;transform:translateX(-50%);padding:7px 16px;border:1px solid #b89856;border-radius:5px;background:#17120be8;color:#ffe6a1;font-size:18px;}
