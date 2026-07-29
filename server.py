@@ -24067,15 +24067,25 @@ def _preview_dungeon_state(defn):
                           "role": "entrance", "doors": []}]
         avisos.append("Sem salas definidas — usei o tabuleiro inteiro como sala.")
 
+    # load_authored_dungeon descarta em SILÊNCIO monstro/decoração de tipo que o
+    # servidor não conhece (catálogo do editor mais novo que o servidor em pé, por
+    # exemplo). Na prévia isso apareceria como "sumiu do mapa" sem explicação, então
+    # o descarte é detectado aqui e vira aviso.
     tipos = {d["type"] for d in MONSTER_DEFS}
     monstros = []
     for mo in (defn.get("monsters") or []):
         if isinstance(mo, dict) and mo.get("type") in tipos:
             monstros.append(mo)
         else:
-            avisos.append(f"Monstro de tipo desconhecido ignorado: "
-                          f"{(mo or {}).get('type') if isinstance(mo, dict) else mo!r}")
+            alvo = mo.get("type") if isinstance(mo, dict) else mo
+            avisos.append(f"Monstro de tipo desconhecido ignorado: {alvo!r}. "
+                          f"Se você acabou de criá-lo, reinicie o servidor.")
     defn["monsters"] = monstros
+
+    desconhecidas = {d.get("type") for d in (defn.get("decorations") or [])
+                     if isinstance(d, dict) and d.get("type") not in DECOR_TYPES}
+    for t in sorted(x for x in desconhecidas if x is not None):
+        avisos.append(f"Decoração de tipo desconhecido ignorada: {t!r}.")
 
     room = GameRoom("PREVIEW")
     room.phase = "playing"
@@ -24087,7 +24097,16 @@ def _preview_dungeon_state(defn):
     # Mapa inteiro à vista: mesma visão sem névoa do Modo Mestre, sem caminho novo.
     room.master_pid = PREVIEW_PID
     room.explored = {(x, y) for y in range(room.map_h) for x in range(room.map_w)}
-    return True, room._game_state_payload(), avisos
+    payload = room._game_state_payload()
+    # Contagem do que a prévia REALMENTE montou. Comparada com o que o autor vê no
+    # editor, denuncia na hora qualquer coisa perdida no caminho.
+    payload["preview_resumo"] = {
+        "monstros": len(payload["monsters"]),
+        "objetos": len(payload["decorations"]),
+        "baus": len(payload["chests"]),
+        "armadilhas": len(payload["armadilhas"]),
+    }
+    return True, payload, avisos
 
 
 def process_request(connection, request):

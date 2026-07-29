@@ -66,6 +66,23 @@ async def main():
     check("avisou da entrada", any("entrada" in a.lower() for a in avisos))
     check("entrada suprida", st["stairs_pos"] is not None)
 
+    print("\n[2b] resumo conta o que a prévia realmente montou")
+    ok, st, avisos = S._preview_dungeon_state(dungeon_min())
+    r = st["preview_resumo"]
+    check("1 monstro no resumo", r["monstros"] == 1)
+    check("1 objeto no resumo", r["objetos"] == 1)
+    check("resumo bate com o payload",
+          r["objetos"] == len(st["decorations"]) and r["monstros"] == len(st["monsters"]))
+
+    print("\n[3c] decoração de tipo desconhecido some — e a prévia avisa")
+    d = dungeon_min()
+    d["decorations"] = [{"type": "nao_existe", "pos": [2, 2], "facing": [0, 1]}]
+    ok, st, avisos = S._preview_dungeon_state(d)
+    check("ainda monta", ok is True)
+    check("decoração sumiu do payload", st["decorations"] == [])
+    check("avisou do tipo", any("nao_existe" in a for a in avisos))
+    check("resumo reflete a perda", st["preview_resumo"]["objetos"] == 0)
+
     print("\n[3b] monstro de tipo desconhecido é descartado com aviso")
     d = dungeon_min()
     d["monsters"] = [{"type": "nao_existe", "pos": [3, 2], "room_id": "r1"}]

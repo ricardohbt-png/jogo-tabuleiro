@@ -45,7 +45,12 @@
       if (!active) return;   // o autor fechou a prévia durante a espera
       active.frame.contentWindow.postMessage(
         { type: "preview_state", state: res.state }, "*");
-      setStatus(res.avisos.length ? "⚠️ " + res.avisos.join(" · ") : "");
+      // Contagem sempre à vista: se o número não bater com o que está no editor,
+      // alguma coisa se perdeu no caminho e o autor descobre na hora.
+      const r = res.state.preview_resumo || {};
+      const conta = `${r.monstros || 0} monstro(s) · ${r.objetos || 0} objeto(s) · ` +
+                    `${r.baus || 0} baú(s) · ${r.armadilhas || 0} armadilha(s)`;
+      setStatus(res.avisos.length ? conta + "  ⚠️ " + res.avisos.join(" · ") : conta);
     } catch (e) {
       setStatus("Falha ao montar a prévia: " + e.message +
                 " — o servidor está rodando?", true);
