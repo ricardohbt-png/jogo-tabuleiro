@@ -33,7 +33,7 @@
       sock.onmessage = (ev) => {
         let m;
         try { m = JSON.parse(ev.data); } catch (e) { return; }
-        if (m.type !== "upload_result" && m.type !== "objetos_list") return;
+        if (m.type !== "upload_result" && m.type !== "objetos_list" && m.type !== "preview_state") return;
         const p = pending.get(m.upload_id);
         if (!p) return;
         pending.delete(m.upload_id);
@@ -114,6 +114,13 @@
   function saveDungeon(defn) {
     return request("upload_dungeon", { defn: defn })
       .then((m) => ({ file: m.file, entry: m.entry }));
+  }
+
+  // Monta a prévia da masmorra atual SEM gravar nada em disco. Resolve com
+  // { state, avisos } — `state` é o game_state que o cliente do jogo renderiza.
+  function previewDungeon(defn) {
+    return request("preview_dungeon", { defn: defn })
+      .then((m) => ({ state: m.state, avisos: m.avisos || [] }));
   }
 
   // Grava a campanha em campaigns/. Resolve com { file }.
@@ -205,6 +212,6 @@
 
   window.STORY_UPLOAD = { upload: upload };
   window.PRISONER_UPLOAD = { upload: uploadPrisoner };
-  window.EDITOR_SAVE = { saveDungeon: saveDungeon, saveCampaign: saveCampaign, saveCustomMonster: saveCustomMonster, uploadMonsterArt: uploadMonsterArt, saveCustomItem: saveCustomItem, uploadItemArt: uploadItemArt, uploadTavernArt: uploadTavernArt, uploadCityArt: uploadCityArt, loadCityShops: loadCityShops, saveCityShops: saveCityShops, saveWorldCities: saveWorldCities, loadWorldAdventures: loadWorldAdventures, saveWorldAdventures: saveWorldAdventures };
+  window.EDITOR_SAVE = { saveDungeon: saveDungeon, previewDungeon: previewDungeon, saveCampaign: saveCampaign, saveCustomMonster: saveCustomMonster, uploadMonsterArt: uploadMonsterArt, saveCustomItem: saveCustomItem, uploadItemArt: uploadItemArt, uploadTavernArt: uploadTavernArt, uploadCityArt: uploadCityArt, loadCityShops: loadCityShops, saveCityShops: saveCityShops, saveWorldCities: saveWorldCities, loadWorldAdventures: loadWorldAdventures, saveWorldAdventures: saveWorldAdventures };
   window.OBJETO_UPLOAD = { upload: uploadObjeto, list: listObjetos };
 })();

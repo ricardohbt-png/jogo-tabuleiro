@@ -1307,3 +1307,16 @@ input:focus { outline: none; border-color: var(--gold); }
 #fala-popup .fala-emoji{ font-size:2rem; line-height:1; flex:0 0 auto; }
 #fala-popup .fala-nome{ font-weight:700; color:var(--gold,#d9b45a); font-size:.85rem; margin-bottom:2px; }
 #fala-popup .fala-texto{ font-size:.98rem; line-height:1.35; }
+
+/* ── Prévia do editor (index.html?preview=1): só o tabuleiro ──────────────── */
+body.preview-mode #side-panel,
+body.preview-mode #gm-log,
+body.preview-mode #dice-canvas,
+body.preview-mode #turn-badge,
+body.preview-mode #round-badge,
+body.preview-mode #turn-timer-badge,
+body.preview-mode #objectives-hud,
+body.preview-mode #btn-libertar,
+body.preview-mode #ficha-fab,
+body.preview-mode #btn-ajuda { display:none !important; }
+body.preview-mode #map-panel { width:100%; }

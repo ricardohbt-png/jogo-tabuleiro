@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Editor de Masmorras — Legends for Hire</title>
 <link rel="stylesheet" href="editor.css?v=20260726-tavern-resize">
+<!-- Sem Three.js aqui de propósito: a prévia da masmorra roda o cliente do jogo
+     num iframe (index.html?preview=1), que carrega o seu próprio Three.js. -->
 </head>
 <body>
   <header id="topbar">
@@ -39,6 +41,7 @@
       <button id="btn-load">Carregar</button>
       <input id="file-input" type="file" accept="application/json,.json" hidden>
       <button id="btn-save">Salvar</button>
+      <button id="btn-preview-3d" title="Visualiza a masmorra atual sem salvar">◈ Visualizar em 3D</button>
     </span>
     <span id="campaign-controls" style="display:none"></span>
   </header>
@@ -62,6 +65,6 @@
   <footer id="statusbar"><span id="status"></span></footer>
 
   <!-- Cache-buster (espelha index.html): evita JS/catálogo do editor servido em cache antigo. -->
-  <script>(function(){var v=Date.now();var s=["../src/difficulty.js","editor_items_logic.js","editor_items_custom.js","editor_catalog.js","editor_monsters_custom.js","editor_dungeons.js","editor.js","editor_bestiary.js","editor_monster_editor.js","story_upload.js","editor_story.js","editor_campaign.js","editor_items_editor.js","editor_city.js","editor_world.js"];for(var i=0;i<s.length;i++)document.write('<script src="'+s[i]+'?v='+v+'"><\/script>');})();</script>
+  <script>(function(){var v=Date.now();var s=["../src/difficulty.js","editor_items_logic.js","editor_items_custom.js","editor_catalog.js","editor_monsters_custom.js","editor_dungeons.js","editor.js","editor_preview_3d.js","editor_bestiary.js","editor_monster_editor.js","story_upload.js","editor_story.js","editor_campaign.js","editor_items_editor.js","editor_city.js","editor_world.js"];for(var i=0;i<s.length;i++)document.write('<script src="'+s[i]+'?v='+v+'"><\/script>');})();</script>
 </body>
 </html>

@@ -23954,3 +23954,21 @@ document.addEventListener('keydown', e => {
 document.getElementById('pause-menu')?.addEventListener('click', e => {
   if(e.target === e.currentTarget) togglePauseMenu(false);
 });
+
+// ── Modo prévia do editor (index.html?preview=1) ─────────────────────────────
+// Sem login, sem lobby e sem socket: o editor injeta um game_state por
+// postMessage e o renderer 3D normal desenha a masmorra. Como é o MESMO
+// renderer do jogo, a prévia não pode divergir do que o jogador vai ver.
+if(GS.isPreview){
+  document.body.classList.add('preview-mode');
+  mode3D = true;
+  showScreen('screen-game');
+  window.addEventListener('message', ev => {
+    const d = ev.data;
+    if(!d || d.type !== 'preview_state' || !d.state) return;
+    GS.injectPreviewState(d.state);
+  });
+  // O editor só manda o estado depois deste aviso: antes disso a tela do jogo
+  // ainda não existe e o init3D não teria onde desenhar.
+  try { window.parent.postMessage({ type: 'preview_ready' }, '*'); } catch(e) {}
+}

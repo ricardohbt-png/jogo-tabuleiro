@@ -21,6 +21,11 @@ const GS = (() => {
   const MATERIAIS_SOLIDOS = new Set(['entulho']);
   const MATERIAIS_OPACOS  = new Set(['entulho']);
 
+  // Prévia do editor (index.html?preview=1): a página roda dentro de um iframe,
+  // sem servidor e sem lobby — o estado chega por postMessage e nada sai daqui.
+  const PREVIEW = typeof location !== 'undefined' && /[?&]preview=1/.test(location.search);
+
+
   // ── Internal state ─────────────────────────────────────────────────────────
   let ws              = null;
   let myPid           = null;
@@ -996,6 +1001,7 @@ const GS = (() => {
 
   // ── WebSocket helpers ──────────────────────────────────────────────────────
   function send(obj) {
+    if (PREVIEW) return false;   // prévia é só leitura: nenhuma ação sai daqui
     if (!ws || ws.readyState !== 1) return false;
     ws.send(JSON.stringify(obj));
     return true;
@@ -1381,6 +1387,14 @@ const GS = (() => {
   function isMaster() {
     const st = lobbyState || cityState || gameState;
     return !!(st && st.master_pid && st.master_pid === myPid);
+  }
+  // Prévia do editor: injeta um game_state pelo MESMO caminho de um estado
+  // vindo do servidor, sem socket e sem duplicar normalização. Adotar o
+  // master_pid do payload liga isMaster() → mapa inteiro à vista, sem névoa.
+  function injectPreviewState(msg) {
+    myPid  = msg.master_pid;
+    myName = 'Prévia';
+    _handle(msg);
   }
   // Id do monstro atualmente na janela Manual (ou null) — só existe em gameState.
   function masterManualMid() { return (gameState && gameState.master_manual_mid) || null; }
@@ -2308,6 +2322,10 @@ const GS = (() => {
     dispararFala,
     isMaster,
     masterManualMid,
+
+    // ── Prévia do editor (index.html?preview=1) ──
+    isPreview: PREVIEW,
+    injectPreviewState,
 
     // ── Guilda dos Heróis (Fase 0) ──
     guildBuy,
