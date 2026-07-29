@@ -16452,6 +16452,18 @@ function _disposeDecorMesh(obj){
   });
 }
 const _objImg3D = {};
+// Motivo da última falha de cada GLB (caminho → texto curto). O cache só guarda
+// 'erro'; a prévia do editor precisa dizer ao autor POR QUE falhou. O servidor
+// não responde a HEAD (a lib websockets só aceita GET), então sondar por HTTP
+// não é opção — o motivo tem de vir do próprio carregador.
+const _glbErroMsg = {};
+function _glbMotivo(error){
+  if(!error) return 'erro desconhecido';
+  // O GLTFLoader embrulha falhas de rede num evento com o status HTTP.
+  if(error.target && error.target.status) return 'HTTP ' + error.target.status;
+  const m = String(error.message || error);
+  return m.length > 120 ? m.slice(0, 120) + '…' : m;
+}
 const _decorGLBCache = {};
 const _decorGLBQueue = {};
 
@@ -16476,6 +16488,7 @@ function _loadDecorGLB(T, path, cb){
     undefined,
     error => {
       console.warn(`[GLB] falha ao carregar decoração ${path}:`, error);
+      _glbErroMsg[path] = _glbMotivo(error);
       _decorGLBCache[path] = 'erro';
       _decorGLBQueue[path].forEach(fn => fn(null));
       delete _decorGLBQueue[path];
@@ -17608,6 +17621,7 @@ function _loadMonsterGLB(T, path, cb) {
     undefined,
     error => {
       console.warn(`[GLB] falha ao carregar miniatura de monstro ${path}:`, error);
+      _glbErroMsg[path] = _glbMotivo(error);
       _monsterGLBCache[path] = 'erro';
       _monsterGLBQueue[path].forEach(fn => fn(null));
       delete _monsterGLBQueue[path];
@@ -24183,5 +24197,8 @@ function _preview_reportarModelos(){
         : { caminho: null, estado: 'procedural' }),
     };
   });
+  for(const it of [...objetos, ...monstros]){
+    if(it.arte.estado === 'erro') it.arte.motivo = _glbErroMsg[it.arte.caminho] || 'erro desconhecido';
+  }
   try { window.parent.postMessage({ type: 'preview_modelos', objetos, monstros }, '*'); } catch(e) {}
 }

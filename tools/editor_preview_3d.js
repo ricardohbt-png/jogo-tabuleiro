@@ -42,11 +42,12 @@
     const linha = (it, kind) => {
       const [icone, rotulo] = ESTADO_ROTULO[it.arte.estado] || ["?", it.arte.estado];
       const alvo = it.arte.caminho ? it.arte.caminho.split("/").pop() : "—";
+      const http = it.arte.motivo ? " — " + it.arte.motivo : "";
       return '<div class="ed3d-mrow ed3d-' + it.arte.estado + '">' +
         '<span class="ed3d-mico">' + icone + '</span>' +
         '<b>' + it.nome + '</b> <span class="ed3d-mpos">(' + it.pos.join(",") + ')</span>' +
         '<span class="ed3d-marte" title="' + (it.arte.caminho || "") + '">' + alvo + '</span>' +
-        '<span class="ed3d-mest">' + rotulo + '</span></div>';
+        '<span class="ed3d-mest">' + rotulo + http + '</span></div>';
     };
     const box = active.el.querySelector(".ed3d-modelos-corpo");
     const partes = [];
