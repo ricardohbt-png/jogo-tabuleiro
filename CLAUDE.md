@@ -1572,3 +1572,19 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > Prévia = só cenário (`players: []`, `current_turn: null`) e só câmera. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-07-28-previa-3d-fiel-editor*`. Teste:
 > `tools/test_preview_editor.py`.
+
+> **`Connection: close` nas respostas estáticas (bug de rede do servidor):** a lib
+> `websockets` FECHA a conexão TCP depois que `process_request` responde, mas o `_http`
+> não declarava isso. Em HTTP/1.1 a ausência do cabeçalho significa conexão persistente:
+> o navegador guardava o socket no pool e reusava numa requisição **posterior**, que
+> morria na rede (XHR com `status 0`, sem resposta). Batia justamente nos pedidos
+> **tardios** — os `.glb` carregados sob demanda (`_loadDecorGLB`, `_loadMonsterGLB`) —
+> e não no HTML/JS/PNG do carregamento inicial. Provado com socket cru: 1ª resposta
+> `200`, 2ª na mesma conexão não existe. Afeta o **jogo**, não só a prévia do editor.
+> Defesa em profundidade no cliente: `GLB_TENTATIVAS`/`_glbVaiRetentar` dão **uma
+> tentativa extra** só para falha de conexão (`status 0` ou sem status) — 404/403
+> desistem de imediato. Sem isso a 1ª falha marcava `'erro'` no cache, que é definitivo:
+> o objeto sumia até a página ser recarregada. `_glbMotivo` traduz o `ProgressEvent`
+> (antes virava `"[object ProgressEvent]"`). O servidor **não responde a HEAD** (a lib
+> só aceita GET), então sondar status por HEAD não é opção. Teste:
+> `tools/test_preview_editor.py` seção [4b].
