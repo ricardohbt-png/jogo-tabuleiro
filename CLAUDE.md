@@ -1544,3 +1544,31 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > um overlay de tela cheia, então o jogador lê antes de ver a cidade. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-07-29-fim-da-rota*`. Teste:
 > `tools/test_masmorra_sequenciada.py` seções [19]/[19b].
+
+> **Prévia fiel do editor (`index.html?preview=1`):** o botão "◈ Visualizar em 3D" do
+> editor deixou de ter renderer próprio — `tools/editor_preview_3d.js` era uma
+> reimplementação paralela de 183 linhas que divergia do jogo (decoração `special:floor`/
+> `wall` virava caixa lisa em vez do PNG, `DECOR_GLB` incompleto, monstro sempre sprite
+> chapado em vez de `MONSTER_GLB`, iluminação fixa em vez dos presets `VC.ambientes`).
+> Agora ele só hospeda um `<iframe src="../index.html?preview=1">` — o **cliente real** — e
+> injeta nele o `game_state` que o **servidor** monta com o **mesmo `load_authored_dungeon`**
+> do jogo. Fidelidade estrutural: objeto, monstro ou material novo aparece na prévia sem
+> ninguém tocar no editor. Fluxo: `EDITOR.buildJSON()` (sem gravar) → `preview_dungeon` pelo
+> WebSocket (`EDITOR_SAVE.previewDungeon`, no `story_upload.js`) → `_preview_dungeon_state`
+> (server.py) → `preview_state` → `postMessage` no iframe → `GS.injectPreviewState`.
+> **Servidor:** `push_state` foi dividida em `_game_state_payload()` (dict puro) +
+> `push_state` (await + broadcast), espelhando `_city_state_payload`/`broadcast_city_state`;
+> `_preview_dungeon_state` monta um `GameRoom("PREVIEW")` descartável, marca todo o mapa
+> como `explored` e usa `master_pid = PREVIEW_PID` — a **visão sem névoa sai do mecanismo já
+> existente do Modo Mestre** (`isMaster()` = `master_pid == myPid`), sem caminho novo de
+> render. É **tolerante**: masmorra em construção rende avisos (entrada suprida pela 1ª casa
+> de chão, sala default do tabuleiro inteiro, monstro de tipo desconhecido descartado) em vez
+> de recusa; só grid/tiles ausentes viram erro. **Cliente:** `GS.isPreview` (regex em
+> `location.search`) faz `send()` virar no-op e expõe `injectPreviewState`, que passa pelo
+> mesmo `case 'game_state'`; `game.js` pula login/lobby, vai direto a `screen-game` com
+> `mode3D = true` e marca `body.preview-mode` (CSS esconde HUD/log/dados). O iframe avisa
+> `preview_ready` antes de receber o estado — sem isso o `init3D` não teria onde desenhar.
+> Como nada em `tools/*.js` usa mais `THREE`, o `editor.html` **deixou de carregar Three.js**.
+> Prévia = só cenário (`players: []`, `current_turn: null`) e só câmera. Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-07-28-previa-3d-fiel-editor*`. Teste:
+> `tools/test_preview_editor.py`.
