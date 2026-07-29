@@ -21618,8 +21618,10 @@ class GameRoom:
                 out.append(dict(skill, granted_origem=cls_id))
         return out
 
-    async def push_state(self):
-        await self._check_objectives()
+    def _game_state_payload(self):
+        """Dict de `game_state` desta sala. Puro: não faz await nem broadcast.
+        Espelha o par _city_state_payload/broadcast_city_state. A prévia do
+        editor consome este payload sem passar por nenhum jogador."""
         # Slots cuja rodada de recarga já chegou não devem continuar ocupando
         # espaço no estado enviado ao cliente.
         for p in self.players.values():
@@ -21693,6 +21695,11 @@ class GameRoom:
             "secret_passages": self._serializar_passagens_secretas(),
             "materiais": self._serializar_materiais(),
         }
+        return msg_state
+
+    async def push_state(self):
+        await self._check_objectives()
+        msg_state = self._game_state_payload()
         # Quem está na cidade (fora_masmorra) não recebe game_state: o cliente
         # prefere gameState a cityState e mostraria o paperdoll da masmorra.
         await self.broadcast(msg_state, skip=self._pids_fora())
