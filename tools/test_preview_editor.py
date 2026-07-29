@@ -45,6 +45,43 @@ async def main():
           len(enviados) == 1 and enviados[0].get("type") == "game_state")
     check("payload direto é igual ao enviado", r._game_state_payload() == enviados[0])
 
+    print("\n[2] prévia monta o estado a partir da masmorra do editor")
+    ok, st, avisos = S._preview_dungeon_state(dungeon_min())
+    check("ok", ok is True)
+    check("sem avisos", avisos == [])
+    check("tipo game_state", st["type"] == "game_state")
+    check("sem heróis", st["players"] == [])
+    check("sem turno", st["current_turn"] is None)
+    check("master_pid preenchido", st["master_pid"] == S.PREVIEW_PID)
+    check("mapa todo explorado", len(st["explored"]) == 6 * 5)
+    check("1 monstro", len(st["monsters"]) == 1 and st["monsters"][0]["type"] == "goblin")
+    dec = st["decorations"][0]
+    check("decoração com image do DECOR_TYPES",
+          dec.get("image") == S.DECOR_TYPES["barril"].get("image"))
+
+    print("\n[3] masmorra incompleta gera aviso, não erro")
+    d = dungeon_min(); d.pop("entrance")
+    ok, st, avisos = S._preview_dungeon_state(d)
+    check("ainda monta", ok is True)
+    check("avisou da entrada", any("entrada" in a.lower() for a in avisos))
+    check("entrada suprida", st["stairs_pos"] is not None)
+
+    print("\n[3b] monstro de tipo desconhecido é descartado com aviso")
+    d = dungeon_min()
+    d["monsters"] = [{"type": "nao_existe", "pos": [3, 2], "room_id": "r1"}]
+    ok, st, avisos = S._preview_dungeon_state(d)
+    check("ainda monta", ok is True)
+    check("sem monstros", st["monsters"] == [])
+    check("avisou do tipo", any("nao_existe" in a for a in avisos))
+
+    print("\n[4] masmorra irrecuperável devolve erro")
+    ok, res, avisos = S._preview_dungeon_state({"schema_version": 1})
+    check("não ok", ok is False)
+    check("erro é texto", isinstance(res, str) and bool(res))
+
+    print("\n[5] a prévia não deixa rastro numa sala real")
+    check("nenhuma sala criada", "PREVIEW" not in S.rooms)
+
     print(f"\n{'=' * 46}\n  {PASS} passaram, {FAIL} falharam\n{'=' * 46}")
     return 1 if FAIL else 0
 

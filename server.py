@@ -21830,6 +21830,17 @@ async def handler(ws):
                     await ws.send(json.dumps(payload))
                     continue
 
+                if t == "preview_dungeon":
+                    ok, res, avisos = _preview_dungeon_state(msg.get("defn"))
+                    payload = {"type": "preview_state", "upload_id": msg.get("upload_id"),
+                               "ok": ok, "avisos": avisos}
+                    if ok:
+                        payload["state"] = res
+                    else:
+                        payload["error"] = res
+                    await ws.send(json.dumps(payload))
+                    continue
+
                 if t == "upload_campaign":
                     ok, res = _save_campaign_upload(msg.get("defn"))
                     payload = {"type": "upload_result", "kind": "campaign",
@@ -24008,6 +24019,76 @@ def _serve_static(request):
             "application/javascript", "application/json", "image/svg+xml"):
         ctype += "; charset=utf-8"
     return _http(200, "OK", body, ctype)
+
+PREVIEW_PID = "preview"   # pid falso da prévia do editor (nunca entra numa sala real)
+
+def _preview_dungeon_state(defn):
+    """Monta o game_state da prévia do editor a partir do dict cru da masmorra.
+
+    Reusa o mesmo load_authored_dungeon do jogo, então objetos, monstros,
+    materiais e imagens saem idênticos ao que o jogador verá — a prévia não
+    pode divergir do jogo porque não tem renderer nem carregador próprio.
+    Tolerante: masmorra ainda em construção rende avisos, não recusa.
+    Retorna (ok, payload_ou_mensagem_de_erro, avisos)."""
+    if not isinstance(defn, dict):
+        return False, "Masmorra não é um objeto JSON.", []
+    defn = deepcopy(defn)
+    avisos = []
+    ok, msg = validar_dungeon(defn)
+    if not ok:
+        avisos.append(msg)
+
+    grid = defn.get("grid") or {}
+    if not (isinstance(grid.get("w"), int) and isinstance(grid.get("h"), int)):
+        return False, "Grid ausente ou inválido — nada a mostrar.", avisos
+    if not isinstance(defn.get("tiles"), list) or not defn["tiles"]:
+        return False, "Tiles ausentes — nada a mostrar.", avisos
+
+    # Entrada é obrigatória para load_authored_dungeon. Enquanto o autor desenha
+    # ela costuma faltar: supre com a primeira casa de chão.
+    ent = defn.get("entrance")
+    if not (isinstance(ent, dict) and isinstance(ent.get("x"), int)
+            and isinstance(ent.get("y"), int)):
+        achou = None
+        for y, linha in enumerate(defn["tiles"]):
+            for x, t in enumerate(linha):
+                if t != WALL:
+                    achou = {"x": x, "y": y}
+                    break
+            if achou:
+                break
+        defn["entrance"] = achou or {"x": 0, "y": 0}
+        avisos.append("Sem entrada definida — usei uma casa de chão só para a prévia.")
+
+    # Sala é obrigatória: os monstros sem room_id caem em self.rooms[0].
+    if not defn.get("rooms"):
+        defn["rooms"] = [{"id": "_preview", "x": 0, "y": 0,
+                          "w": grid["w"], "h": grid["h"],
+                          "role": "entrance", "doors": []}]
+        avisos.append("Sem salas definidas — usei o tabuleiro inteiro como sala.")
+
+    tipos = {d["type"] for d in MONSTER_DEFS}
+    monstros = []
+    for mo in (defn.get("monsters") or []):
+        if isinstance(mo, dict) and mo.get("type") in tipos:
+            monstros.append(mo)
+        else:
+            avisos.append(f"Monstro de tipo desconhecido ignorado: "
+                          f"{(mo or {}).get('type') if isinstance(mo, dict) else mo!r}")
+    defn["monsters"] = monstros
+
+    room = GameRoom("PREVIEW")
+    room.phase = "playing"
+    try:
+        room.load_authored_dungeon(defn)
+    except Exception as e:
+        return False, f"Não foi possível montar a prévia: {e}", avisos
+
+    # Mapa inteiro à vista: mesma visão sem névoa do Modo Mestre, sem caminho novo.
+    room.master_pid = PREVIEW_PID
+    room.explored = {(x, y) for y in range(room.map_h) for x in range(room.map_w)}
+    return True, room._game_state_payload(), avisos
+
 
 def process_request(connection, request):
     """Chamado a cada requisição na porta do servidor. Handshake de WebSocket
