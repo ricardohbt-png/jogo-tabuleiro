@@ -16457,6 +16457,18 @@ const _objImg3D = {};
 // não responde a HEAD (a lib websockets só aceita GET), então sondar por HTTP
 // não é opção — o motivo tem de vir do próprio carregador.
 const _glbErroMsg = {};
+// Tentativas extras por arquivo. Um GLB pedido sob demanda cai com frequência
+// num socket que o navegador guardou no pool mas o servidor já fechou: o XHR
+// morre na hora, com status 0 e sem resposta. Abrir conexão nova resolve, então
+// vale insistir antes de marcar 'erro' — que é definitivo e some com o objeto
+// até a página ser recarregada.
+const GLB_TENTATIVAS = 2;
+function _glbVaiRetentar(error, restam){
+  if(restam <= 0) return false;
+  const alvo = error && error.target;
+  // Só re-tenta falha de CONEXÃO. 404/403 não melhoram com insistência.
+  return !alvo || typeof alvo.status !== 'number' || alvo.status === 0;
+}
 function _glbMotivo(error){
   if(!error) return 'erro desconhecido';
   // O GLTFLoader entrega um ProgressEvent do XHR. String(ProgressEvent) é
@@ -16480,26 +16492,30 @@ function _loadDecorGLB(T, path, cb){
   if (_decorGLBQueue[path]) { _decorGLBQueue[path].push(cb); return; }
 
   _decorGLBQueue[path] = [cb];
-  new T.GLTFLoader().load(
-    _assetURL(path),
-    gltf => {
-      const template = gltf.scene;
-      template.traverse(o => {
-        if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
-      });
-      _decorGLBCache[path] = template;
-      _decorGLBQueue[path].forEach(fn => fn(template));
-      delete _decorGLBQueue[path];
-    },
-    undefined,
-    error => {
-      console.warn(`[GLB] falha ao carregar decoração ${path}:`, error);
-      _glbErroMsg[path] = _glbMotivo(error);
-      _decorGLBCache[path] = 'erro';
-      _decorGLBQueue[path].forEach(fn => fn(null));
-      delete _decorGLBQueue[path];
-    }
-  );
+  const tentar = (restam) => {
+    new T.GLTFLoader().load(
+      _assetURL(path),
+      gltf => {
+        const template = gltf.scene;
+        template.traverse(o => {
+          if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
+        });
+        _decorGLBCache[path] = template;
+        _decorGLBQueue[path].forEach(fn => fn(template));
+        delete _decorGLBQueue[path];
+      },
+      undefined,
+      error => {
+        if (_glbVaiRetentar(error, restam)) { setTimeout(() => tentar(restam - 1), 250); return; }
+        console.warn(`[GLB] falha ao carregar decoração ${path}:`, error);
+        _glbErroMsg[path] = _glbMotivo(error);
+        _decorGLBCache[path] = 'erro';
+        _decorGLBQueue[path].forEach(fn => fn(null));
+        delete _decorGLBQueue[path];
+      }
+    );
+  };
+  tentar(GLB_TENTATIVAS);
 }
 
 function _buildObjetoGLB(decorId, imageName, path, wCells, hCells, facing){
@@ -17615,24 +17631,28 @@ function _loadMonsterGLB(T, path, cb) {
   if (_monsterGLBQueue[path]) { _monsterGLBQueue[path].push(cb); return; }
 
   _monsterGLBQueue[path] = [cb];
-  new T.GLTFLoader().load(
-    _assetURL(path),
-    gltf => {
-      const template = gltf.scene;
-      template.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-      _monsterGLBCache[path] = template;
-      _monsterGLBQueue[path].forEach(fn => fn(template));
-      delete _monsterGLBQueue[path];
-    },
-    undefined,
-    error => {
-      console.warn(`[GLB] falha ao carregar miniatura de monstro ${path}:`, error);
-      _glbErroMsg[path] = _glbMotivo(error);
-      _monsterGLBCache[path] = 'erro';
-      _monsterGLBQueue[path].forEach(fn => fn(null));
-      delete _monsterGLBQueue[path];
-    }
-  );
+  const tentar = (restam) => {
+    new T.GLTFLoader().load(
+      _assetURL(path),
+      gltf => {
+        const template = gltf.scene;
+        template.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+        _monsterGLBCache[path] = template;
+        _monsterGLBQueue[path].forEach(fn => fn(template));
+        delete _monsterGLBQueue[path];
+      },
+      undefined,
+      error => {
+        if (_glbVaiRetentar(error, restam)) { setTimeout(() => tentar(restam - 1), 250); return; }
+        console.warn(`[GLB] falha ao carregar miniatura de monstro ${path}:`, error);
+        _glbErroMsg[path] = _glbMotivo(error);
+        _monsterGLBCache[path] = 'erro';
+        _monsterGLBQueue[path].forEach(fn => fn(null));
+        delete _monsterGLBQueue[path];
+      }
+    );
+  };
+  tentar(GLB_TENTATIVAS);
 }
 
 // Usa o GLB real quando disponível. O molde é clonado para cada criatura;
