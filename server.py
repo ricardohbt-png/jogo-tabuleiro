@@ -1018,6 +1018,15 @@ def verify_pin(pin, stored):
         return False
 
 ACCOUNTS_DIR = os.path.join(BASE_DIR, "accounts")
+GROUPS_DIR = os.path.join(BASE_DIR, "groups")
+
+# As identidades pertencem à conta, mas a ficha jogável pertence sempre a uma
+# campanha.  Esta separação impede que nível, ouro ou inventário vazem de uma
+# aventura para outra.
+HERO_IDENTITIES = {
+    "warrior": "Victor", "mage": "Pedro", "rogue": "Luccas",
+    "cleric": "Lewis", "bard": "Henrique", "paladin": "Richard",
+}
 
 def _norm_username(name):
     return (name or "").strip().lower()
@@ -1030,6 +1039,40 @@ def _username_valido(u):
 def account_path(username):
     return os.path.join(ACCOUNTS_DIR, f"{_norm_username(username)}.json")
 
+def write_account(account):
+    """Grava o perfil permanente da conta, sem dados de campanha."""
+    username = _norm_username((account or {}).get("username"))
+    if not _username_valido(username):
+        return
+    os.makedirs(ACCOUNTS_DIR, exist_ok=True)
+    _atomic_write_json(account_path(username), account)
+
+def ensure_account_profile(account):
+    """Migra contas antigas e garante os seis heróis-identidade da conta.
+
+    A identidade é deliberadamente só cosmética/histórica.  Os snapshots de
+    progressão continuam em ``savegame.characters`` (uma instância por campanha).
+    """
+    if not isinstance(account, dict):
+        return False
+    changed = False
+    if account.get("version", 1) < 2:
+        account["version"] = 2; changed = True
+    if not isinstance(account.get("profile"), dict):
+        account["profile"] = {"avatar": None, "friends": [], "settings": {}, "stats": {}, "achievements": []}; changed = True
+    heroes = account.get("heroes")
+    if not isinstance(heroes, dict):
+        heroes = {}; account["heroes"] = heroes; changed = True
+    for class_id, identity in HERO_IDENTITIES.items():
+        if class_id not in heroes:
+            heroes[class_id] = {
+                "id": f"hero_{account.get('username', 'account')}_{class_id}",
+                "class_id": class_id, "identity": identity,
+                "appearance": {}, "cosmetics": [], "history": [],
+            }
+            changed = True
+    return changed
+
 def load_account(username):
     """Lê a conta; ausente/corrompida/forma inesperada → None (sem crash)."""
     u = _norm_username(username)
@@ -1040,6 +1083,8 @@ def load_account(username):
             data = json.load(f)
         if not isinstance(data, dict) or not isinstance(data.get("pin_hash"), str):
             return None
+        if ensure_account_profile(data):
+            write_account(data)
         return data
     except FileNotFoundError:
         return None
@@ -1058,10 +1103,130 @@ def create_account(username, pin):
     if os.path.exists(account_path(u)):
         return None, "Apelido já existe."
     data = {"username": u, "pin_hash": hash_pin(pin), "created": _now_iso()}
-    _atomic_write_json(account_path(u), data)
+    ensure_account_profile(data)
+    write_account(data)
     return data, None
 
 SAVEGAMES_DIR = os.path.join(BASE_DIR, "savegames")
+
+def group_path(gid):
+    return os.path.join(GROUPS_DIR, f"{gid}.json")
+
+def _gid_valido(gid):
+    return bool(isinstance(gid, str) and re.fullmatch(r"grp_[a-z0-9]{6}", gid))
+
+def _new_group_id():
+    while True:
+        gid = "grp_" + "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
+        if not os.path.exists(group_path(gid)):
+            return gid
+
+def load_group(gid):
+    if not _gid_valido(gid):
+        return None
+    try:
+        with open(group_path(gid), "r", encoding="utf-8") as f:
+            group = json.load(f)
+        return group if isinstance(group, dict) and group.get("id") == gid else None
+    except (OSError, ValueError):
+        return None
+
+def write_group(group):
+    if not _gid_valido((group or {}).get("id")):
+        return
+    os.makedirs(GROUPS_DIR, exist_ok=True)
+    group["updated"] = _now_iso()
+    _atomic_write_json(group_path(group["id"]), group)
+
+def create_group(name, owner):
+    owner = _norm_username(owner)
+    group = {
+        "id": _new_group_id(), "name": (name or "Grupo")[:40],
+        "owner": owner, "created": _now_iso(), "updated": _now_iso(),
+        "members": {owner: {"role": "owner", "status": "active", "joined": _now_iso()}},
+        "campaign_ids": [],
+    }
+    write_group(group)
+    return group
+
+DEFAULT_CAMPAIGN_RULES = {
+    "allow_new_players": True,
+    "entry_mode": "vote",          # vote | automatic
+    "vote_timeout_hours": 72,
+    "replacement_rule": "experienced",  # new | experienced | inherit
+}
+
+def _campaign_rules(raw):
+    """Normaliza regras já gravadas e restringe os valores aceitos pelo servidor."""
+    rules = dict(DEFAULT_CAMPAIGN_RULES)
+    if isinstance(raw, dict):
+        rules["allow_new_players"] = bool(raw.get("allow_new_players", rules["allow_new_players"]))
+        if raw.get("entry_mode") in ("vote", "automatic"):
+            rules["entry_mode"] = raw["entry_mode"]
+        if raw.get("replacement_rule") in ("new", "experienced", "inherit"):
+            rules["replacement_rule"] = raw["replacement_rule"]
+        try: rules["vote_timeout_hours"] = max(1, min(168, int(raw.get("vote_timeout_hours", rules["vote_timeout_hours"]))))
+        except (TypeError, ValueError): pass
+    return rules
+
+def _campaign_slot(class_id, controller=None, status="vacant"):
+    return {"class_id": class_id, "identity": HERO_IDENTITIES.get(class_id, class_id),
+            "controller_account": controller, "status": status, "history": []}
+
+def ensure_campaign_schema(sg):
+    """Migra saves anteriores para campanha + grupo sem descartar o save atual."""
+    if not isinstance(sg, dict):
+        return False
+    changed = False
+    if not sg.get("group_id") or not load_group(sg.get("group_id")):
+        group = create_group(f"Grupo de {sg.get('owner', 'aventura')}", sg.get("owner"))
+        sg["group_id"] = group["id"]; changed = True
+    else:
+        group = load_group(sg["group_id"])
+    if isinstance(group, dict):
+        if sg.get("id") not in group.setdefault("campaign_ids", []):
+            group["campaign_ids"].append(sg.get("id")); write_group(group)
+    rules = _campaign_rules(sg.get("rules"))
+    if sg.get("rules") != rules:
+        sg["rules"] = rules; changed = True
+    slots = sg.get("slots")
+    if not isinstance(slots, dict):
+        slots = {}; sg["slots"] = slots; changed = True
+    members = sg.setdefault("members", {})
+    for class_id in HERO_IDENTITIES:
+        if class_id not in slots:
+            controller = next((account for account, member in members.items()
+                               if isinstance(member, dict) and member.get("class_id") == class_id), None)
+            slots[class_id] = _campaign_slot(class_id, controller, "active" if controller else "vacant")
+            changed = True
+    for account, member in list(members.items()):
+        if not isinstance(member, dict):
+            members[account] = {"class_id": None, "status": "active", "joined": _now_iso()}; changed = True
+            continue
+        if "status" not in member:
+            member["status"] = "active"; changed = True
+        class_id = member.get("class_id")
+        if class_id in HERO_IDENTITIES and not member.get("hero_id"):
+            member["hero_id"] = f"hero_{account}_{class_id}"; changed = True
+    if not isinstance(sg.get("journal"), list):
+        sg["journal"] = []; changed = True
+    if not isinstance(sg.get("votes"), list):
+        sg["votes"] = []; changed = True
+    if "status" not in sg:
+        sg["status"] = "active"; changed = True
+    if "parent_campaign_id" not in sg:
+        sg["parent_campaign_id"] = None; changed = True
+    return changed
+
+def register_campaign_member_in_group(sg, account):
+    """Mantém a lista social do grupo alinhada à participação na campanha."""
+    group = load_group((sg or {}).get("group_id"))
+    account = _norm_username(account)
+    if not group or not account:
+        return
+    if account not in group.setdefault("members", {}):
+        group["members"][account] = {"role": "member", "status": "active", "joined": _now_iso()}
+        write_group(group)
 
 def savegame_path(sid):
     return os.path.join(SAVEGAMES_DIR, f"{sid}.json")
@@ -1113,11 +1278,18 @@ def write_savegame(sg):
     sg["updated"] = _now_iso()
     _atomic_write_json(path, sg)
 
-def create_savegame(name, owner, mode, campaign_file, has_master):
+def create_savegame(name, owner, mode, campaign_file, has_master, group_id=None, rules=None, parent_campaign_id=None, inherited=None):
     sid = _new_savegame_id()
     is_campaign = (mode == "campaign")
+    group = load_group(group_id) if group_id else None
+    if not group:
+        group = create_group(f"Grupo de {name or 'aventura'}", owner)
+    owner = _norm_username(owner)
+    if owner not in group.setdefault("members", {}):
+        group["members"][owner] = {"role": "member", "status": "active", "joined": _now_iso()}
+        write_group(group)
     sg = {
-        "id": sid, "name": (name or "Jogo")[:40], "owner": _norm_username(owner),
+        "id": sid, "name": (name or "Jogo")[:40], "owner": owner,
         "created": _now_iso(), "updated": _now_iso(),
         "mode": "campaign" if is_campaign else "procedural",
         "campaign_file": campaign_file if is_campaign else None,
@@ -1129,9 +1301,24 @@ def create_savegame(name, owner, mode, campaign_file, has_master):
         "fatos": [],
         "tavern_conversations_done": [],
         "has_master": bool(has_master),
-        "master_account": _norm_username(owner) if has_master else None,
+        "master_account": owner if has_master else None,
         "members": {}, "characters": {},
+        "group_id": group["id"], "rules": _campaign_rules(rules), "slots": {},
+        "journal": [], "votes": [], "status": "active",
+        "parent_campaign_id": parent_campaign_id,
     }
+    if isinstance(inherited, dict):
+        # Continuação é uma cópia: jamais compartilha referências nem altera a
+        # campanha de origem.
+        for key in ("campaign_phase", "world_location", "world_adventure_progress", "renome", "fatos", "tavern_conversations_done", "members", "characters", "slots"):
+            if key in inherited:
+                sg[key] = deepcopy(inherited[key])
+    ensure_campaign_schema(sg)
+    sg["journal"].append({"at": _now_iso(), "kind": "campaign_created",
+                          "text": "Campanha criada" if not parent_campaign_id else "Campanha criada como continuação"})
+    group = load_group(sg["group_id"])
+    if group and sid not in group.setdefault("campaign_ids", []):
+        group["campaign_ids"].append(sid); write_group(group)
     write_savegame(sg)
     return sg
 
@@ -1147,6 +1334,8 @@ def list_savegames(username):
         sg = load_savegame(fn[:-5])
         if not sg:
             continue
+        if ensure_campaign_schema(sg):
+            write_savegame(sg)
         if (sg.get("owner") == u or u in (sg.get("members") or {})
                 or sg.get("master_account") == u):
             out.append({
@@ -1155,7 +1344,11 @@ def list_savegames(username):
                 "campaign_phase": sg.get("campaign_phase", 0),
                 "updated": sg.get("updated"), "owner": sg.get("owner"),
                 "has_master": sg.get("has_master", False),
+                "master_account": sg.get("master_account"),
                 "members": sg.get("members", {}),
+                "group_id": sg.get("group_id"), "rules": sg.get("rules", {}),
+                "status": sg.get("status", "active"), "parent_campaign_id": sg.get("parent_campaign_id"),
+                "slots": sg.get("slots", {}),
             })
     out.sort(key=lambda s: s.get("updated") or "", reverse=True)
     return out
@@ -1171,6 +1364,27 @@ def delete_savegame(sid, requester):
             os.remove(p)
         except OSError:
             pass
+    return True, None
+
+def abandon_master_campaign(sid, requester):
+    """Encerra a campanha quando o Mestre a abandona.
+
+    O arquivo não é apagado: ele vira histórico e só pode gerar uma continuação,
+    preservando diário e personagens daquela mesa.
+    """
+    sg = load_savegame(sid)
+    if not sg or not sg.get("has_master"):
+        return False, "Campanha com Mestre não encontrada."
+    if sg.get("master_account") != _norm_username(requester):
+        return False, "Apenas o Mestre anfitrião pode abandonar esta campanha."
+    if sid in SAVEGAMES_IN_USE:
+        return False, "Feche a sessão ativa antes de abandonar a campanha."
+    if ensure_campaign_schema(sg):
+        pass
+    sg["status"] = "ended_master_left"
+    sg.setdefault("journal", []).append({"at": _now_iso(), "kind": "master_left",
+                                          "text": "O Mestre abandonou a campanha; crie uma continuação para jogar novamente."})
+    write_savegame(sg)
     return True, None
 
 # Um savegame só roda em uma sessão ao vivo por vez; uma conta só loga em uma.
@@ -1195,9 +1409,9 @@ def try_login(pid, username, pin):
         if opid == pid and outra != u:
             del ACCOUNTS_ONLINE[outra]
     ACCOUNTS_ONLINE[u] = pid
-    return True, {"username": u}
+    return True, {"username": u, "profile": acc.get("profile", {}), "heroes": acc.get("heroes", {})}
 
-def try_create_savegame(account, name, mode, campaign_file, has_master):
+def try_create_savegame(account, name, mode, campaign_file, has_master, group_id=None, rules=None, continue_from=None):
     """Valida a criação de um savegame por uma conta logada.
     Retorna (savegame, None) ou (None, mensagem_de_erro)."""
     if not account:
@@ -1206,7 +1420,21 @@ def try_create_savegame(account, name, mode, campaign_file, has_master):
         return None, "Dê um nome ao jogo."
     if mode == "campaign" and not campaign_file:
         return None, "Escolha uma campanha."
-    sg = create_savegame(name, account, mode, campaign_file, has_master)
+    inherited = None
+    parent_campaign_id = None
+    if continue_from:
+        source = load_savegame(continue_from)
+        if not source or not _conta_participa(source, account):
+            return None, "A campanha de origem não está disponível para continuação."
+        if ensure_campaign_schema(source):
+            write_savegame(source)
+        inherited = source; parent_campaign_id = source["id"]
+        group_id = source.get("group_id")
+        # Uma continuação herda a definição de mundo, mas o criador pode trocar
+        # a campanha-base caso queira iniciar uma nova história.
+        if not campaign_file:
+            campaign_file = source.get("campaign_file")
+    sg = create_savegame(name, account, mode, campaign_file, has_master, group_id, rules, parent_campaign_id, inherited)
     return sg, None
 
 # Campos duráveis da ficha (o resto é runtime e reseta por sessão). Na cidade,
@@ -1243,6 +1471,14 @@ def try_open_savegame_room(account, sid, rooms):
     sg = load_savegame(sid)
     if not sg:
         return None, "Jogo salvo não encontrado."
+    if ensure_campaign_schema(sg):
+        write_savegame(sg)
+    if sg.get("status") != "active":
+        return None, "Campanha encerrada. Crie uma continuação para voltar a jogar."
+    if sid in SAVEGAMES_IN_USE:
+        return None, "Jogo salvo já está em uso em outra sessão."
+    if sg.get("has_master") and sg.get("master_account") != account:
+        return None, "Apenas o Mestre anfitrião pode abrir esta campanha."
     if not _conta_participa(sg, account):
         return None, "Você não faz parte deste jogo."
     if sid in SAVEGAMES_IN_USE:
@@ -6152,6 +6388,16 @@ class GameRoom:
     # â”€â”€ lobby â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def add_player(self, ws, pid, name, account=None):
+        # Em campanha com Mestre humano, somente a conta do Mestre pode abrir a
+        # sala e ela entra automaticamente no papel de Mestre/anfitrião.
+        if (self.savegame and self.savegame.get("has_master") and not self.players
+                and account == self.savegame.get("master_account")):
+            self.connections[pid] = ws; self.account_by_pid[pid] = account
+            self.players[pid] = {"id": pid, "name": name, "class_id": None, "ready": True,
+                                 "connected": True, "slot": 0, "is_master": True}
+            self.host_pid = self.master_pid = pid; self.master_name = name
+            await self.broadcast_lobby()
+            return True
         heroes = sum(1 for p in self.players.values() if not p.get("is_master"))
         if heroes >= 6:
             # Sala cheia de heróis: o 7º entrante ainda cabe — como MESTRE —
@@ -6194,6 +6440,7 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error",
                     "msg": "Faça login para escolher um personagem neste jogo."})
                 return
+            ensure_campaign_schema(self.savegame)
             membros = self.savegame.setdefault("members", {})
             ja = membros.get(conta, {}).get("class_id")
             if ja:
@@ -6201,6 +6448,28 @@ class GameRoom:
                 cls_id = ja
             else:
                 # Classe já pertence a OUTRA conta neste savegame?
+                slot = self.savegame["slots"].get(cls_id, {})
+                if not self.savegame.get("rules", {}).get("allow_new_players", True):
+                    await self.send_to(pid, {"type": "error", "msg": "Esta campanha não aceita novos jogadores."})
+                    return
+                active_accounts = [a for a, m in membros.items()
+                                   if isinstance(m, dict) and m.get("status", "active") == "active" and m.get("class_id")]
+                regras = self.savegame.get("rules", {})
+                if active_accounts and regras.get("entry_mode") == "vote":
+                    if any(v.get("status") == "open" and v.get("candidate") == conta
+                           for v in self.savegame.get("votes", [])):
+                        await self.send_to(pid, {"type": "error", "msg": "Seu pedido já está aguardando votação."})
+                        return
+                    vote_id = "vote_" + "".join(random.choices(string.ascii_lowercase + string.digits, k=8))
+                    vote = {"id": vote_id, "kind": "entry", "candidate": conta, "class_id": cls_id,
+                            "eligible": active_accounts, "yes": [], "no": [], "created": _now_iso(), "status": "open"}
+                    self.savegame.setdefault("votes", []).append(vote)
+                    self.savegame.setdefault("journal", []).append({"at": _now_iso(), "kind": "vote_opened",
+                        "text": f"{conta} pediu a vaga de {HERO_IDENTITIES.get(cls_id, cls_id)}"})
+                    write_savegame(self.savegame)
+                    await self.broadcast({"type": "campaign_vote_opened", "vote": vote, "campaign_id": self.savegame["id"]})
+                    await self.send_to(pid, {"type": "error", "msg": "Pedido enviado para votação dos membros ativos."})
+                    return
                 dono_conta = next((c for c, m in membros.items()
                                    if m.get("class_id") == cls_id and c != conta), None)
                 if dono_conta:
@@ -6208,11 +6477,16 @@ class GameRoom:
                         "msg": "Esse personagem é de outro jogador neste jogo."})
                     return
                 # 1ª escolha: grava vínculo + ficha fresca e persiste.
-                membros[conta] = {"class_id": cls_id}
+                membros[conta] = {"class_id": cls_id, "status": "active", "joined": _now_iso(),
+                                  "hero_id": f"hero_{conta}_{cls_id}"}
+                register_campaign_member_in_group(self.savegame, conta)
+                self.savegame["slots"][cls_id] = _campaign_slot(cls_id, conta, "active")
                 chars = self.savegame.setdefault("characters", {})
                 if cls_id not in chars:
                     novo = make_player(pid, self.players[pid]["name"], cls_id, self.players[pid].get("slot", 0))
                     chars[cls_id] = snapshot_character(novo)
+                self.savegame.setdefault("journal", []).append({"at": _now_iso(), "kind": "member_joined",
+                    "text": f"{conta} assumiu {HERO_IDENTITIES.get(cls_id, cls_id)}"})
                 write_savegame(self.savegame)
         # NÃ£o tomado na sala
         taken = [p["class_id"] for p in self.players.values() if p["id"] != pid]
@@ -6238,6 +6512,50 @@ class GameRoom:
         self.players[pid]["ready"] = True
         await self.broadcast_lobby()
 
+    async def handle_campaign_vote(self, pid, vote_id, approve):
+        """Registra voto de entrada; a maioria é calculada sobre a lista congelada."""
+        if not self.savegame:
+            return
+        account = self.account_by_pid.get(pid)
+        vote = next((v for v in self.savegame.get("votes", [])
+                     if v.get("id") == vote_id and v.get("status") == "open"), None)
+        if not vote or account not in vote.get("eligible", []):
+            await self.send_to(pid, {"type": "error", "msg": "Você não pode votar nesta solicitação."})
+            return
+        for key in ("yes", "no"):
+            if account in vote[key]: vote[key].remove(account)
+        vote["yes" if approve else "no"].append(account)
+        needed = len(vote["eligible"]) // 2 + 1
+        if len(vote["yes"]) >= needed:
+            candidate, class_id = vote["candidate"], vote["class_id"]
+            rule = self.savegame.get("rules", {}).get("replacement_rule", "experienced")
+            self.savegame.setdefault("members", {})[candidate] = {
+                "class_id": class_id, "status": "active", "joined": _now_iso(),
+                "hero_id": f"hero_{candidate}_{class_id}"}
+            register_campaign_member_in_group(self.savegame, candidate)
+            self.savegame["slots"][class_id] = _campaign_slot(class_id, candidate, "active")
+            if rule != "inherit" or class_id not in self.savegame.setdefault("characters", {}):
+                candidate_pid = next((p for p, a in self.account_by_pid.items() if a == candidate), pid)
+                fresh = make_player(candidate_pid, candidate, class_id, 0)
+                if rule == "experienced":
+                    levels = [int(s.get("level", 1)) for s in self.savegame["characters"].values() if isinstance(s, dict)]
+                    target = max(1, round(sum(levels) / len(levels))) if levels else 1
+                    while fresh["level"] < target:
+                        fresh["xp"] = fresh["level"] * 30
+                        await self._check_level_up(fresh)
+                self.savegame["characters"][class_id] = snapshot_character(fresh)
+            vote["status"] = "approved"
+            text = f"Entrada aprovada: {candidate} assumiu {HERO_IDENTITIES.get(class_id, class_id)}"
+        elif len(vote["no"]) >= needed:
+            vote["status"] = "rejected"; text = f"Entrada recusada para {vote['candidate']}"
+        else:
+            text = None
+        if text:
+            self.savegame.setdefault("journal", []).append({"at": _now_iso(), "kind": "vote_closed", "text": text})
+        write_savegame(self.savegame)
+        await self.broadcast({"type": "campaign_vote_updated", "vote": vote, "needed": needed})
+        await self.broadcast_lobby()
+
     async def claim_role(self, pid, role):
         """Lobby: um jogador assume ('master') ou solta ('hero') o papel de mestre."""
         if self.phase != "lobby":
@@ -6245,6 +6563,10 @@ class GameRoom:
         p = self.players.get(pid)
         if not p:
             return
+        if self.savegame and self.savegame.get("has_master"):
+            if self.account_by_pid.get(pid) != self.savegame.get("master_account") or role != "master":
+                await self.send_to(pid, {"type": "error", "msg": "O Mestre desta campanha é fixo e também é o anfitrião."})
+                return
         if role not in ("master", "hero"):
             return
         if role == "master":
@@ -22242,7 +22564,8 @@ async def handler(ws):
                 if t == "create_savegame":
                     sg, e = try_create_savegame(account["name"], msg.get("name"),
                                                 msg.get("mode"), msg.get("campaign_file"),
-                                                bool(msg.get("has_master")))
+                                                bool(msg.get("has_master")), msg.get("group_id"),
+                                                msg.get("rules"), msg.get("continue_from"))
                     if sg:
                         await ws.send(json.dumps({"type": "savegame_created", "savegame": sg}))
                     else:
@@ -22251,6 +22574,16 @@ async def handler(ws):
 
                 if t == "delete_savegame":
                     ok, e = delete_savegame(msg.get("id"), account["name"])
+                    if ok:
+                        await ws.send(json.dumps({"type": "savegames_list",
+                                                  "savegames": list_savegames(account["name"]),
+                                                  "campaigns": listar_campanhas()}))
+                    else:
+                        await err(e)
+                    continue
+
+                if t == "abandon_master_campaign":
+                    ok, e = abandon_master_campaign(msg.get("id"), account["name"])
                     if ok:
                         await ws.send(json.dumps({"type": "savegames_list",
                                                   "savegames": list_savegames(account["name"]),
@@ -22350,6 +22683,9 @@ async def handler(ws):
 
                 elif t == "select_class":
                     if room: await room.select_class(pid, msg.get("class_id"))
+
+                elif t == "campaign_vote":
+                    if room: await room.handle_campaign_vote(pid, msg.get("vote_id"), bool(msg.get("approve")))
 
                 elif t == "claim_role":
                     if room: await room.claim_role(pid, msg.get("role"))

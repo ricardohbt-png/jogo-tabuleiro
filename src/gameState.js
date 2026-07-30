@@ -1344,6 +1344,11 @@ const GS = (() => {
         _emit('savegameCreated', msg.savegame);
         break;
 
+      case 'campaign_vote_opened':
+      case 'campaign_vote_updated':
+        _emit('campaignVote', msg);
+        break;
+
       case 'error':
         _emit('serverError', msg.msg);
         break;
@@ -2189,6 +2194,8 @@ const GS = (() => {
   }
   function listSavegames()      { send({ type: 'list_savegames' }); }
   function createSavegame(opts) { send({ type: 'create_savegame', ...opts }); } // {name, mode, campaign_file, has_master}
+  function campaignVote(voteId, approve) { send({ type: 'campaign_vote', vote_id: voteId, approve: !!approve }); }
+  function abandonMasterCampaign(id) { send({ type: 'abandon_master_campaign', id }); }
   function loadSavegame(id)     { send({ type: 'load_savegame', id }); }
   function deleteSavegame(id)   { send({ type: 'delete_savegame', id }); }
   // Entra na sala de um amigo (jogo salvo dele) pela conexão JÁ LOGADA — sem
@@ -2315,7 +2322,7 @@ const GS = (() => {
     leaveSession,            // encerra a conexão sem programar reconexão
 
     // ── Contas / Jogos Salvos (Fase 3) ──
-    loginConta, criarConta, listSavegames, createSavegame, loadSavegame, deleteSavegame, joinByCode,
+    loginConta, criarConta, listSavegames, createSavegame, loadSavegame, deleteSavegame, joinByCode, campaignVote, abandonMasterCampaign,
     getAccount: () => account,
     getSavegames: () => savegames,
     getCampaigns: () => campaignsCache,

@@ -23664,6 +23664,21 @@ GS.on('savegamesList', (list) => {
     const cont = document.createElement('button'); cont.className='btn-secondary btn-sm'; cont.textContent='Continuar';
     cont.onclick = () => GS.loadSavegame(sg.id);
     btns.appendChild(cont);
+    const sequel = document.createElement('button'); sequel.className='btn-secondary btn-sm'; sequel.textContent='↗ Continuar';
+    sequel.title='Cria uma nova campanha no mesmo grupo, copiando o estado atual';
+    sequel.onclick = () => {
+      const name = prompt('Nome da nova campanha:', (sg.name || 'Campanha') + ' — continuação');
+      if (!name) return;
+      GS.createSavegame({ name, mode: sg.mode || 'campaign', campaign_file: sg.campaign_file,
+        has_master: !!sg.has_master, continue_from: sg.id, rules: sg.rules || {} });
+    };
+    btns.appendChild(sequel);
+    if (sg.has_master && sg.master_account === GS.getAccount()) {
+      const leave = document.createElement('button'); leave.className='btn-secondary btn-sm'; leave.textContent='Encerrar';
+      leave.title='Encerra esta campanha de Mestre e preserva-a como histórico';
+      leave.onclick = () => { if (confirm('Encerrar esta campanha? Ela ficará preservada e poderá gerar uma continuação.')) GS.abandonMasterCampaign(sg.id); };
+      btns.appendChild(leave);
+    }
     if (sg.owner === GS.getAccount()) {
       const del = document.createElement('button'); del.className='btn-secondary btn-sm'; del.textContent='🗑';
       del.style.marginLeft='6px';
@@ -23682,6 +23697,18 @@ GS.on('savegamesList', (list) => {
 });
 
 GS.on('savegameCreated', (sg) => { GS.loadSavegame(sg.id); });
+
+GS.on('campaignVote', (msg) => {
+  const v = msg.vote || {};
+  if (v.status !== 'open' || !(v.eligible || []).includes(GS.getAccount())) {
+    if (v.status === 'approved') toast('Entrada na campanha aprovada.', 'var(--green)');
+    if (v.status === 'rejected') toast('Entrada na campanha recusada.', 'var(--red)');
+    return;
+  }
+  const hero = v.class_id || 'herói';
+  if (confirm(`${v.candidate} pediu a vaga de ${hero}. Aprovar?`)) GS.campaignVote(v.id, true);
+  else GS.campaignVote(v.id, false);
+});
 
 GS.on('lobbyState',  msg => handleLobby(msg));
 
