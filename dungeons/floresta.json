@@ -3,6 +3,7 @@
   "id": "floresta",
   "name": "floresta",
   "ambiente": "ar_livre",
+  "saida_permitida": true,
   "grid": {
     "w": 16,
     "h": 12
@@ -254,7 +255,7 @@
       "target": false
     },
     {
-      "type": "soldado",
+      "type": "esqueleto_humano_customizado",
       "pos": [
         3,
         5

@@ -280,8 +280,8 @@
     }
   ],
   "entrance": {
-    "x": 2,
-    "y": 9
+    "x": 1,
+    "y": 10
   },
   "exit": null,
   "monsters": [
@@ -388,7 +388,7 @@
       "type": "arvore",
       "pos": [
         6,
-        2
+        1
       ],
       "facing": [
         0,
@@ -401,18 +401,26 @@
       "id": "decor_2",
       "type": "lareira",
       "pos": [
-        1,
+        2,
         10
       ],
       "facing": [
-        1,
-        0
+        0,
+        -1
       ],
       "loot": null,
       "key_objective": true,
+      "size": [
+        1,
+        1
+      ],
       "vscale": [
         1.5,
         2
+      ],
+      "voffset": [
+        0,
+        0.35
       ]
     },
     {
@@ -497,10 +505,8 @@
   "prisoner": null,
   "materiais": {
     "1,10": "pedra_negra",
-    "2,10": "pedra_negra",
     "3,10": "pedra_negra",
     "3,9": "pedra_negra",
-    "2,9": "pedra_negra",
     "1,9": "pedra_negra",
     "1,8": "pedra_negra",
     "2,8": "pedra_negra",
@@ -552,7 +558,9 @@
     "10,6": "madeira_escura",
     "11,6": "madeira_escura",
     "11,5": "madeira_escura",
-    "10,5": "madeira_escura"
+    "10,5": "madeira_escura",
+    "2,10": "pedra_negra",
+    "2,9": "pedra_negra"
   },
   "objectives": {
     "primary": {

@@ -900,7 +900,7 @@ window.EDITOR_DUNGEONS = [
       "exit": null,
       "monsters": [
         {
-          "type": "zumbi_infectado",
+          "type": "esqueleto_humano_customizado",
           "pos": [
             5,
             8
@@ -910,7 +910,7 @@ window.EDITOR_DUNGEONS = [
           "target": false,
           "vscale": [
             1,
-            2.4
+            1.9
           ]
         }
       ],
@@ -1469,11 +1469,16 @@ window.EDITOR_DUNGEONS = [
             7
           ],
           "facing": [
-            0,
-            -1
+            -1,
+            0
           ],
           "loot": null,
-          "key_objective": true
+          "key_objective": true,
+          "image": "estantedelivros.png",
+          "size": [
+            1,
+            1
+          ]
         },
         {
           "id": "decor_2",
@@ -1483,7 +1488,7 @@ window.EDITOR_DUNGEONS = [
             11
           ],
           "facing": [
-            1,
+            -1,
             0
           ],
           "loot": null,
@@ -1491,6 +1496,10 @@ window.EDITOR_DUNGEONS = [
           "size": [
             1,
             1
+          ],
+          "voffset": [
+            -0.3,
+            0
           ]
         },
         {
@@ -1520,13 +1529,17 @@ window.EDITOR_DUNGEONS = [
           ],
           "facing": [
             0,
-            1
+            -1
           ],
           "loot": null,
           "key_objective": false,
           "size": [
             1,
             1
+          ],
+          "voffset": [
+            0,
+            -0.4
           ]
         },
         {
@@ -4193,6 +4206,7 @@ window.EDITOR_DUNGEONS = [
       "id": "floresta",
       "name": "floresta",
       "ambiente": "ar_livre",
+      "saida_permitida": true,
       "grid": {
         "w": 16,
         "h": 12
@@ -4444,7 +4458,7 @@ window.EDITOR_DUNGEONS = [
           "target": false
         },
         {
-          "type": "soldado",
+          "type": "esqueleto_humano_customizado",
           "pos": [
             3,
             5
@@ -6352,8 +6366,8 @@ window.EDITOR_DUNGEONS = [
         }
       ],
       "entrance": {
-        "x": 2,
-        "y": 9
+        "x": 1,
+        "y": 10
       },
       "exit": null,
       "monsters": [
@@ -6460,7 +6474,7 @@ window.EDITOR_DUNGEONS = [
           "type": "arvore",
           "pos": [
             6,
-            2
+            1
           ],
           "facing": [
             0,
@@ -6473,18 +6487,26 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_2",
           "type": "lareira",
           "pos": [
-            1,
+            2,
             10
           ],
           "facing": [
-            1,
-            0
+            0,
+            -1
           ],
           "loot": null,
           "key_objective": true,
+          "size": [
+            1,
+            1
+          ],
           "vscale": [
             1.5,
             2
+          ],
+          "voffset": [
+            0,
+            0.35
           ]
         },
         {
@@ -6569,10 +6591,8 @@ window.EDITOR_DUNGEONS = [
       "prisoner": null,
       "materiais": {
         "1,10": "pedra_negra",
-        "2,10": "pedra_negra",
         "3,10": "pedra_negra",
         "3,9": "pedra_negra",
-        "2,9": "pedra_negra",
         "1,9": "pedra_negra",
         "1,8": "pedra_negra",
         "2,8": "pedra_negra",
@@ -6624,7 +6644,9 @@ window.EDITOR_DUNGEONS = [
         "10,6": "madeira_escura",
         "11,6": "madeira_escura",
         "11,5": "madeira_escura",
-        "10,5": "madeira_escura"
+        "10,5": "madeira_escura",
+        "2,10": "pedra_negra",
+        "2,9": "pedra_negra"
       },
       "objectives": {
         "primary": {
@@ -17829,4 +17851,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO ao salvar no editor (e por tools/export_catalog.py).
+// GERADO por tools/export_catalog.py — não editar à mão.

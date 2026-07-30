@@ -197,7 +197,7 @@
   "exit": null,
   "monsters": [
     {
-      "type": "zumbi_infectado",
+      "type": "esqueleto_humano_customizado",
       "pos": [
         5,
         8
@@ -207,7 +207,7 @@
       "target": false,
       "vscale": [
         1,
-        2.4
+        1.9
       ]
     }
   ],
