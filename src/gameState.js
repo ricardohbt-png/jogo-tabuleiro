@@ -1420,7 +1420,11 @@ const GS = (() => {
   function mestreSetAlvo(monsterIds, targetId) { send({ type: 'mestre_set_alvo', monster_ids: monsterIds, target_id: targetId }); }
   // Janela Manual: move o monstro 1 passo ortogonal.
   function mestreMoverMonstroPara(monsterId, tx, ty) { send({ type: 'mestre_mover_monstro_para', monster_id: monsterId, tx, ty }); }
-  function mestreUsarHabilidade(monsterId, abilityId, targetId) { send({ type: 'mestre_usar_habilidade', monster_id: monsterId, ability_id: abilityId, target_id: targetId }); }
+  function mestreUsarHabilidade(monsterId, abilityId, targetId, tipoEsqueleto) {
+    const msg = { type: 'mestre_usar_habilidade', monster_id: monsterId, ability_id: abilityId, target_id: targetId };
+    if (tipoEsqueleto) msg.tipo_esqueleto = tipoEsqueleto;
+    send(msg);
+  }
   function mestreUsarItem(monsterId, itemId, targetId, tx, ty) { send({ type: 'mestre_usar_item', monster_id: monsterId, item_id: itemId, target_id: targetId, tx, ty }); }
   // Janela Manual: o monstro ataca um herói.
   function mestreAtacarMonstro(monsterId, targetId) { send({ type: 'mestre_atacar_monstro', monster_id: monsterId, target_id: targetId }); }

@@ -11499,6 +11499,13 @@ function _mestreAtivarHabilidade(m, abid){
   const st = GS.gameState; if(!st) return;
   const ab = (m.special_abilities||[]).find(a=>a.id===abid);
   if(!ab) return;
+  if(abid === 'mestre_dos_mortos'){
+    openTargetModal(`${ab.name||abid} — Escolha os esqueletos`, [
+      {id:'esqueleto_humano', emoji:'💀', name:'Esqueleto Humano'},
+      {id:'esqueleto_animal', emoji:'🦴', name:'Esqueleto Animal'}
+    ], 'choice', tipo=>GS.mestreUsarHabilidade(m.id, abid, null, tipo));
+    return;
+  }
   // Habilidade de editor (herói/guilda): self-buff, ativa direto sem alvo.
   if((ab.source === 'heroi' || ab.source === 'guilda') && !(ab.save != null && ab.dc != null)){
     GS.mestreUsarHabilidade(m.id, abid, null); return;

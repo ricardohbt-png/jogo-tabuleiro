@@ -2618,10 +2618,9 @@ MONSTER_DEFS = [
              "on_hit": "veneno_escorpiao_pedra"},
         ],
         "special_abilities": [
-            {"id": "veneno_ferrao", "name": "Veneno do Ferrão",
-             "action_type": "passiva",
-             "dc": 9, "save": "fortitude",
-             "effect": "penalidade_ataque_movimento"},
+            {"id": "envenenar", "name": "Envenenar", "action_type": "passiva",
+             "attack_index": 1, "veneno_id": "veneno_escorpiao_pedra", "poison_dc": 9,
+             "descricao": "Vincula um veneno escolhido a um dos ataques da criatura."},
         ],
         "immunities": [],
         "weaknesses": [{"type": "physical", "categoria": "contundente", "bonus_flat": 2}],
@@ -2690,7 +2689,7 @@ MONSTER_DEFS = [
         ],
         "special_abilities": [
             {"id": "movimento_erratico", "name": "Movimento Errático", "action_type": "passiva",
-             "descricao": "Ignora terreno difícil — avança sem hesitar"},
+             "descricao": "Ignora penalidades de movimento de Água e Água Profunda"},
             {"id": "sem_instinto",       "name": "Sem Instinto",       "action_type": "passiva",
              "descricao": "Nunca foge nem recua — avança até ser destruído"},
             {"id": "fraqueza_magica",    "name": "Fraqueza Mágica",    "action_type": "passiva",
@@ -3118,8 +3117,8 @@ MONSTER_DEFS = [
              "damage_types": ["physical"], "num_attacks": 1, "on_hit": None},
         ],
         "special_abilities": [
-            {"id": "veneno_lanca",   "name": "Lança Envenenada",      "action_type": "acao_livre",
-             "dc": 8, "save": "fortitude", "effect": "veneno_aranha_sombria"},
+            {"id": "envenenar_arma", "name": "Envenenar Arma", "action_type": "passiva",
+             "descricao": "Usa um veneno da bolsa para envenenar a arma como ação livre"},
             {"id": "covardia_kobold","name": "Covardia Instintiva",   "action_type": "passiva",
              "dc": 10, "save": "vontade",  "effect": "medo_kobold",   "effect_duration": 2},
         ],
@@ -3191,8 +3190,9 @@ MONSTER_DEFS = [
             # Pergaminho de uso Ãºnico (NÃƒO conta no limite diÃ¡rio) â€” controle progressivo.
             {"id": "dominar_morto_vivo", "name": "Dominar Morto-Vivo",
              "action_type": "acao", "range": 4, "circulo": 3},
-            {"id": "mestre_dos_mortos", "name": "Mestre dos Mortos", "action_type": "passiva",
-             "descricao": "Inicia com 2 esqueletos; mortos-vivos próximos recebem +1 em Vontade"},
+            {"id": "mestre_dos_mortos", "name": "Mestre dos Mortos", "action_type": "acao",
+             "uses_per_combat": 1,
+             "descricao": "Na primeira ação, conjura 2 esqueletos humanos ou animais à escolha do Mestre"},
             {"id": "concentracao_sombria", "name": "Concentração Sombria", "action_type": "passiva",
              "descricao": "Ao sofrer dano: Vontade CD 10 ou perde a ação de magia no turno"},
             {"id": "essencia_profana", "name": "Essência Profana", "action_type": "passiva",
@@ -3206,9 +3206,6 @@ MONSTER_DEFS = [
         # Loot especial tratado em _necromante_loot (tabela + pergaminho se nÃ£o dominou).
         "loot_table": {"1-100": None},
         "spawn_min": 1, "spawn_max": 1,
-        "spawn_companions": [
-            {"type": "esqueleto_humano", "min": 2, "max": 2},   # Mestre dos Mortos
-        ],
         "ai_type": "necromante",
         "porte": "medio",
         "image": "necromante",
@@ -3232,7 +3229,7 @@ MONSTER_DEFS = [
              "dc": 10, "save": "fortitude",
              "descricao": "A 0 HP: Fortitude CD 10 + metade do dano excedente (arredonda para cima) → fica com 1 HP (dano sagrado/luz ignora e destrói de vez)"},
             {"id": "infeccao", "name": "Infecção", "action_type": "passiva",
-             "dc": 10, "save": "fortitude",
+             "dc": 10, "save": "fortitude", "disease_severity": "leve",
              "descricao": "Ao acertar: alvo testa Fortitude CD 10 ou contrai 1 sintoma leve"},
             {"id": "lento_incansavel", "name": "Lento e Incansável", "action_type": "passiva",
              "descricao": "Não corre nem foge — avança sem parar"},
@@ -3272,10 +3269,10 @@ MONSTER_DEFS = [
              "descricao": "Se as 2 mordidas acertarem no turno: 2 ataques de Garra imediatos"},
             {"id": "predador_oportunista", "name": "Predador Oportunista", "action_type": "passiva",
              "descricao": "+1 nas mordidas contra alvos com menos de 50% do HP"},
-            {"id": "faro_carnica", "name": "Faro de Carniça", "action_type": "passiva",
+            {"id": "faro_carnica", "name": "Faro da Presa Fácil", "action_type": "passiva",
              "descricao": "Prioriza sempre o alvo com menor HP"},
             {"id": "duas_cabecas", "name": "Duas Cabeças", "action_type": "passiva",
-             "descricao": "+1 em percepção; difícil de surpreender (flavor)"},
+             "descricao": "+2 no raio de visão; ataques furtivos contra a criatura sofrem -2 no acerto."},
         ],
         "immunities": [],
         "weaknesses": [
@@ -3476,7 +3473,7 @@ MONSTER_DEFS = [
         "special_abilities": [
             {"id": "carapaca_resistente", "name": "Carapaça Resistente", "action_type": "passiva", "descricao": "Reduz todo dano físico em 2"},
             {"id": "cauda_varredora", "name": "Cauda Varredora", "action_type": "acao", "cooldown_turns": 2, "atk_bonus": 5, "damage": "1d8+3", "save": "reflexos", "dc": 12, "descricao": "Atinge todos atrás: +5, 1d8+3; falha derruba"},
-            {"id": "cuspir_acido", "name": "Cuspir Ácido", "action_type": "acao", "cooldown_turns": 3, "range": 3, "damage": "2d6", "save": "reflexos", "dc": 13, "descricao": "Alvo único: 2d6 ácido, Reflexos metade e corrói um equipamento"},
+            {"id": "cuspir_acido", "name": "Cuspir Ácido", "action_type": "acao", "cooldown_turns": 3, "range": 3, "damage": "2d6", "save": "reflexos", "dc": 13, "descricao": "Alvo único: 2d6 ácido, Reflexos reduz à metade; na falha aplica a corrosão de itens por ácido."},
             {"id": "furia_bestial", "name": "Fúria Bestial", "action_type": "passiva", "descricao": "Mordida e ao menos uma garra acertam: +1d6 dano"},
             {"id": "ponto_vulneravel", "name": "Ponto Vulnerável", "action_type": "passiva", "nd_penalty": 0.25, "descricao": "Os dois quadrados centrais ignoram a armadura natural (CA 15 → 10; Destreza permanece) e reduções de dano; reduz o ND estimado em 0,25", "tiles": [[1, 0], [1, 1]]},
             {"id": "corpo_pesado", "name": "Corpo Pesado", "action_type": "passiva", "descricao": "Falha em Reflexos: +1 dano daquele efeito"},
@@ -3537,8 +3534,6 @@ MONSTER_DEFS = [
              "on_hit": None, "on_hit_effect": "congelamento_progressivo"},
         ],
         "special_abilities": [
-            {"id": "corpo_congelado", "name": "Corpo Congelado", "action_type": "passiva",
-             "descricao": "Ataques físicos sofrem –1 de dano."},
             {"id": "congelamento_progressivo", "name": "Congelamento Progressivo", "action_type": "passiva",
              "descricao": "Ao acertar, reduz o movimento em 1 por 2 turnos; acumula até –3 e renova a duração."},
             {"id": "nucleo_frio", "name": "Núcleo Frio", "action_type": "passiva",
@@ -3571,8 +3566,6 @@ MONSTER_DEFS = [
              "on_hit": None},
         ],
         "special_abilities": [
-            {"id": "corpo_rochoso", "name": "Corpo Rochoso", "action_type": "passiva",
-             "descricao": "Reduz dano físico em 4."},
             {"id": "impacto_devastador", "name": "Impacto Devastador", "action_type": "passiva",
              "descricao": "Se não se mover no turno, causa +4 de dano."},
             {"id": "inabalavel", "name": "Inabalável", "action_type": "passiva",
@@ -3606,7 +3599,7 @@ MONSTER_DEFS = [
              "descricao": "Pode atravessar um quadrado ocupado, causa 1d4 de eletricidade ao ocupante e termina em uma casa livre."},
             {"id": "sobrecarga", "name": "Sobrecarga", "action_type": "passiva",
              "descricao": "Ao acertar o mesmo alvo na rodada seguinte, causa +1d4 de eletricidade."},
-            {"id": "salto_eletrico", "name": "Salto Elétrico", "action_type": "passiva",
+            {"id": "salto_eletrico", "name": "Condução Elétrica", "action_type": "passiva",
              "descricao": "Ignora a CA concedida por armaduras de metal."},
         ],
         "immunities": ["lightning"],
@@ -3658,8 +3651,8 @@ MONSTER_DEFS = [
                      "on_hit": None}],
         "special_abilities": [
             {"id": "corpo_fluido", "name": "Corpo Fluido", "action_type": "passiva", "descricao": "Sofre metade do dano de armas físicas."},
-            {"id": "onda_envolvente", "name": "Onda Envolvente / Afogar", "action_type": "passiva", "damage": "1d6", "descricao": "Ao acertar, pode prender uma criatura média; presa sofre 1d6 por rodada e testa FOR para escapar."},
-            {"id": "mare_viva", "name": "Maré Viva", "action_type": "passiva", "descricao": "Perto de fonte ou piso de água, recupera 1d6 HP."},
+            {"id": "onda_envolvente", "name": "Onda Envolvente / Afogar", "action_type": "passiva", "damage": "1d6", "dc": 12, "escape_saves": ["fortitude"], "descricao": "Ao acertar, prende uma criatura média; presa sofre 1d6 de água por rodada e testa FOR CD 12 para escapar. Sobre Água/Água Profunda, sofre +1d6 por rodada."},
+            {"id": "mare_viva", "name": "Maré Viva", "action_type": "passiva", "descricao": "No início do turno, recupera 1d6 HP se estiver sobre ou adjacente a Água/Água Profunda."},
             {"id": "solidificar_frio", "name": "Solidificar", "action_type": "passiva", "descricao": "Frio em 2 rodadas consecutivas remove a resistência física por 2 rodadas."},
         ],
         "immunities": [], "resistances": [{"type": "physical", "mode": "half"}, {"type": "fire", "mode": "half"}],
@@ -5935,8 +5928,24 @@ def _aplicar_equipamentos_monstro(m):
         m["equipment_poison"] = poison
     m["equipment_consumables"] = [item for item in items if item.get("item_slot") == "bag"]
 
+def _vincular_envenenar_ataque(monstro):
+    """Aplica a configuração passiva Envenenar ao ataque escolhido da ficha."""
+    for habilidade in monstro.get("special_abilities", []):
+        if habilidade.get("id") != "envenenar":
+            continue
+        veneno_id = habilidade.get("veneno_id")
+        try:
+            indice = int(habilidade.get("attack_index", 0))
+        except (TypeError, ValueError):
+            indice = 0
+        ataques = monstro.get("attacks", [])
+        if veneno_id in VENENOS and 0 <= indice < len(ataques):
+            ataques[indice]["on_hit"] = veneno_id
+            ataques[indice]["poison_dc"] = max(1, min(40, int(habilidade.get("poison_dc", 10))))
+
 def make_monster(mdef, room):
     m = deepcopy(mdef)
+    _vincular_envenenar_ataque(m)
     # Mesmo campo usado pelo editor: os despachantes do grimÃ³rio leem `level`.
     # Mantemos ambos para compatibilidade com as fÃ³rmulas de herÃ³i.
     m["caster_level"] = max(1, int(m.get("caster_level", m.get("level", 1))))
@@ -6012,6 +6021,14 @@ def make_monster(mdef, room):
         m["veneno_arma_ativo"]  = True               # 1 dose jÃ¡ aplicada na lanÃ§a
         m["veneno_arma_id"]     = "veneno_aranha_sombria"
         m["veneno_doses_extras"] = random.randint(1, 3)   # 1â€“3 frascos extras
+        # As doses vivem na bolsa; Envenenar Arma as consome como ação livre.
+        veneno_item = next((deepcopy(i) for i in SHOP_MERCHANT
+                            if i.get("id") == "veneno_aranha_sombria"), None)
+        if veneno_item:
+            m.setdefault("equipment_consumables", []).extend(
+                deepcopy(veneno_item) for _ in range(random.randint(1, 3)))
+        m["veneno_arma_ativo"] = False
+        m["veneno_doses_extras"] = 0
         m["covardia_testada"]   = False
         m["kobold_medo"]        = False
         m["kobold_medo_rodadas"] = 0
@@ -9288,7 +9305,12 @@ class GameRoom:
         base = max(1, int(m.get("base_movement", 6)))
         bonus_visao = max(-30, min(30, int(m.get("vision_base", 0))))
         bonus_atributos = (mod(m.get("int_", 10)) + mod(m.get("dex", 10))) // 2
-        return max(1, base + bonus_atributos + bonus_visao)
+        bonus_duas_cabecas = 2 if self._tem_habilidade(m, "duas_cabecas") else 0
+        return max(1, base + bonus_atributos + bonus_visao + bonus_duas_cabecas)
+
+    def _penalidade_furtivo_duas_cabecas(self, alvo):
+        """Duas Cabeças dificulta encontrar uma abertura para um ataque furtivo."""
+        return -2 if self._tem_habilidade(alvo, "duas_cabecas") else 0
 
     def _monstro_enxerga_alvo(self, m, target_obj):
         """Determina se o alvo está no raio e na linha de visão do monstro."""
@@ -10139,6 +10161,10 @@ class GameRoom:
                        - (1 if p.get("desafinado_ate", -1) >= self.round_num else 0))  # Gaita: Desafinado (Fase 5)
             furtivo_planejado = (p.get("class_id") == "rogue"
                                  and self._verificar_ataque_furtivo(p, target))
+            penalidade_furtivo = self._penalidade_furtivo_duas_cabecas(target) if furtivo_planejado else 0
+            eff_atk += penalidade_furtivo
+            if penalidade_furtivo:
+                await self.gm_say(f"👥 **{target['name']}** antecipa o Ataque Furtivo — **-2** no acerto!")
             if preso_pen:
                 await self.gm_say(f"⛓️ **{p['name']}** ataca enquanto preso — **-2** no acerto!")
             # AmaldiÃ§oar reduz a CA do alvo (mod_magia ca negativo) â†’ mais fÃ¡cil de acertar.
@@ -11396,7 +11422,9 @@ class GameRoom:
         alvo = self.players.get(target_id)
         if not alvo or not alvo.get("alive"):
             await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
-        atk_def = (m.get("attacks") or [{}])[0]
+        atk_def = dict((m.get("attacks") or [{}])[0])
+        if m.get("veneno_arma_ativo"):
+            atk_def["on_hit"] = m.get("veneno_arma_id")
         rng = atk_def.get("range")
         if rng:
             if max(abs(m["pos"][0] - alvo["pos"][0]), abs(m["pos"][1] - alvo["pos"][1])) > rng:
@@ -11404,7 +11432,11 @@ class GameRoom:
         elif not self._is_adjacent_to_monster(alvo["pos"], m):
             await self.send_to(pid, {"type": "error", "msg": "Alvo não está adjacente."}); return
         m["_master_acted"] = True
-        await self._execute_one_monster_attack(m, atk_def, {"kind": "player", "obj": alvo})
+        m["_ja_executou_acao"] = True
+        hit = await self._execute_one_monster_attack(m, atk_def, {"kind": "player", "obj": alvo})
+        if hit and m.get("veneno_arma_ativo"):
+            m["veneno_arma_ativo"] = False
+            m.pop("equipment_poison", None)
         await self.push_state()
 
     async def handle_mestre_encerrar_monstro(self, pid, monster_id):
@@ -11699,7 +11731,9 @@ class GameRoom:
             if t:
                 if not self._cardinal_adjacent(p["pos"], t["pos"]):
                     await self.gm_say(f"⚠ **{p['name']}** tenta **Ataque Furtivo** mas o inimigo está fora de alcance!"); return
-                hit, roll, total, crit = d20_attack(p["atk_bonus"] + 2 + surv_mod + preso_pen, t["ac"])
+                furtivo_pen = self._penalidade_furtivo_duas_cabecas(t)
+                furtivo_atk = p["atk_bonus"] + 2 + surv_mod + preso_pen + furtivo_pen
+                hit, roll, total, crit = d20_attack(furtivo_atk, t["ac"])
                 await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll, "label": "Ataque Furtivo"})
                 if hit:
                     weapon = p["weapon"]
@@ -11714,7 +11748,7 @@ class GameRoom:
                         dmg = raw_wpn + raw_snk + mod(p[weapon["stat"]])
                     dmg = max(1, dmg + surv_mod)
                     t["hp"] -= dmg
-                    await self.gm_say(f"🗡️ **{p['name']}** usa **Ataque Furtivo** em **{t['name']}** (d20={roll}+{p['atk_bonus']+2}={total} vs CA {t['ac']}): **{dmg}** de dano furtivo!")
+                    await self.gm_say(f"🗡️ **{p['name']}** usa **Ataque Furtivo** em **{t['name']}** (d20={roll}+{furtivo_atk}={total} vs CA {t['ac']}): **{dmg}** de dano furtivo!")
                     if t["hp"] <= 0: await self._monster_dies(t, p["id"])
                 else:
                     await self.gm_say(f"🗡️ **{p['name']}** tenta **Ataque Furtivo** mas **ERROU** (d20={roll}={total} vs CA {t['ac']})!")
@@ -15906,6 +15940,28 @@ class GameRoom:
     def _is_deep_water_tile(self, x, y):
         return self._water_tile_kind(x, y) == "agua_profunda"
 
+    def _mare_viva_ativa(self, monstro):
+        """Maré Viva fica ativa sobre ou a até uma casa de água rasa/profunda."""
+        for tx, ty in self._monster_tiles(monstro):
+            for dy in (-1, 0, 1):
+                for dx in (-1, 0, 1):
+                    if self._is_water_tile(tx + dx, ty + dy):
+                        return True
+        return False
+
+    async def _processar_mare_viva_turno(self, monstro):
+        if not self._tem_habilidade(monstro, "mare_viva"):
+            return
+        ativa = self._mare_viva_ativa(monstro)
+        monstro["mare_viva_ativa"] = ativa
+        if not ativa or monstro.get("hp", 0) >= monstro.get("max_hp", 0):
+            return
+        cura = min(roll_dice("1d6"), monstro["max_hp"] - monstro["hp"])
+        monstro["hp"] += cura
+        await self.broadcast({"type": "dice_roll", "die": "d6", "value": cura,
+                              "label": f"🌊 Maré Viva — {monstro['name']}"})
+        await self.gm_say(f"🌊 **{monstro['name']}** é revigorado pela água e recupera **{cura} HP**.")
+
     def _armor_category_of(self, criatura):
         armor = (criatura.get("gear") or {}).get("armor") or {}
         category = armor.get("armor_category")
@@ -15936,6 +15992,12 @@ class GameRoom:
             return None                 # regra especial: somente 1 casa/rodada
         return {"leve": 2, "media": 3}.get(category, 1)
 
+    def _ignora_penalidade_agua(self, criatura):
+        """Movimento Errático preserva o movimento normal em qualquer água."""
+        return any(isinstance(habilidade, dict)
+                   and habilidade.get("id") == "movimento_erratico"
+                   for habilidade in criatura.get("special_abilities", []))
+
     def _deep_water_turn_moves(self, criatura, base_moves):
         """Movimento total permitido em Água Profunda, arredondado para baixo."""
         category = self._armor_category_of(criatura)
@@ -15950,6 +16012,8 @@ class GameRoom:
         criatura.pop("_water_penalty_applied", None)
         criatura.pop("_water_heavy_step_used", None)
         criatura.pop("_deep_water_penalty_applied", None)
+        if self._ignora_penalidade_agua(criatura):
+            return max(0, base_moves)
         pos = criatura.get("pos") or [-1, -1]
         water_kind = self._water_tile_kind(pos[0], pos[1])
         if not water_kind:
@@ -15964,6 +16028,8 @@ class GameRoom:
     def _apply_water_entry_penalty(self, criatura, nx, ny):
         """Aplica uma vez a perda de movimento quando alguém entra em água no
         meio do turno. A casa de entrada ainda custa o movimento normal."""
+        if self._ignora_penalidade_agua(criatura):
+            return
         water_kind = self._water_tile_kind(nx, ny)
         if not water_kind:
             return
@@ -18138,7 +18204,11 @@ class GameRoom:
                 total = (total + 1) // 2
         if target.get("type") == "lobisomem" and DMG_MAGIC in damage_types:
             target["regeneracao_bloqueada"] = True
-        if target.get("type") == "elemental_agua" and DMG_COLD in damage_types:
+        solidifica_com_frio = (target.get("type") == "elemental_agua"
+                                or any(w.get("type") == "solidificar_frio"
+                                       or w.get("source_ability") == "solidificar_frio"
+                                       for w in target.get("weaknesses", [])))
+        if solidifica_com_frio and DMG_COLD in damage_types:
             last = target.get("frio_ultima_rodada")
             if last == self.round_num - 1:
                 target["solido_ate_rodada"] = self.round_num + 2
@@ -18363,6 +18433,10 @@ class GameRoom:
             return False
         m["pos"] = [nx, ny]
         m["_moved_this_turn"] = True
+        if self._ignora_penalidade_agua(m):
+            m["_water_moves_left"] = max(0, m["_water_moves_left"] - 1)
+            await self._aplicar_fogueira_se_pisar(m)
+            return True
         # Monstros nÃ£o usam armadura de corpo: em Ã¡gua sofrem a penalidade
         # padrÃ£o de -1 movimento, exatamente como alguÃ©m sem armadura.
         water_kind = self._water_tile_kind(nx, ny)
@@ -18908,6 +18982,26 @@ class GameRoom:
                 elif atk_def.get("on_hit"):
                     await self._aplicar_veneno(target, atk_def["on_hit"], fonte="ataque",
                                                 dificuldade=atk_def.get("poison_dc"))
+                # Infecção é passiva: qualquer ataque que acerte pode transmitir
+                # a doença configurada na ficha da criatura.
+                infection = self._habilidade_monstro(m, "infeccao")
+                if infection and target.get("hp", 0) > 0:
+                    dc = infection.get("dc", 10)
+                    ok, _d20, _sb, total_save = self._testar_save(target, "fortitude", dc, fonte=m)
+                    if ok:
+                        await self.gm_say(f"🦠 **{target['name']}** resiste à infecção "
+                                          f"(Fortitude {total_save} vs CD {dc}).")
+                    else:
+                        severity = infection.get("disease_severity", "leve")
+                        await self.gm_say(f"🦠 **{target['name']}** é infectado! "
+                                          f"(Fortitude {total_save} vs CD {dc})")
+                        await self._aplicar_doenca(target, severity)
+                onda = self._habilidade_monstro(m, "onda_envolvente")
+                if onda and target.get("hp", 0) > 0 and not target.get("preso"):
+                    target["preso"] = True
+                    target["preso_por"] = m["id"]
+                    await self.gm_say(f"🌊 **{target['name']}** é envolvido pela onda de **{m['name']}** "
+                                      "e fica preso!")
                 if atk_def.get("on_hit_effect") == "congelamento_progressivo" \
                    and target.get("hp", 0) > 0:
                     await self._aplicar_congelamento_progressivo(target)
@@ -19163,6 +19257,22 @@ class GameRoom:
             return True
         return any(ab.get("action_type") == "magia" for ab in m.get("special_abilities", []))
 
+    async def _envenenar_arma_do_inventario(self, m):
+        """Consome uma dose de veneno da bolsa e prepara o próximo acerto da arma."""
+        if not self._tem_habilidade(m, "envenenar_arma") or m.get("veneno_arma_ativo"):
+            return False
+        bag = m.get("equipment_consumables", [])
+        item = next((i for i in bag if i.get("effect") == "coat_poison"
+                     and i.get("veneno_id") in VENENOS), None)
+        if not item or not m.get("attacks"):
+            return False
+        m["veneno_arma_ativo"] = True
+        m["veneno_arma_id"] = item["veneno_id"]
+        m["equipment_poison"] = item["veneno_id"]
+        bag.remove(item)
+        await self.gm_say(f"🧪 **{m.get('name', 'O monstro')}** usa **{item['name']}** para envenenar a arma.")
+        return True
+
     async def handle_mestre_usar_item(self, pid, monster_id, item_id, target_id, tx, ty):
         """Manual: o mestre usa um item de bolsa do monstro (equipment_consumables).
         Consumíveis de alvo-próprio = ação bônus; arremesso/pergaminho = principal.
@@ -19196,6 +19306,7 @@ class GameRoom:
             if not self._tem_linha_de_visao(m["pos"], alvo["pos"]):
                 await self.send_to(pid, {"type": "error", "msg": "Uma parede bloqueia o arremesso."}); return
             m["_master_acted"] = True
+            m["_ja_executou_acao"] = True
             await self._monster_throw_item(m, {"kind": "player", "obj": alvo}, item)
             if item in bag:
                 bag.remove(item)
@@ -19212,6 +19323,7 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error", "msg": "Magia do pergaminho não disponível."}); return
             data = {"target_id": target_id, "tx": tx, "ty": ty}
             m["_master_acted"] = True
+            m["_ja_executou_acao"] = True
             await self._executar_magia_grimorio(m, magia, data)
             if item in bag:
                 bag.remove(item)
@@ -19219,7 +19331,8 @@ class GameRoom:
 
         if effect not in self.BONUS_ACTION_EFFECTS:
             await self.send_to(pid, {"type": "error", "msg": "Item não usável pelo mestre."}); return
-        if m.get("_master_bonus_acted"):
+        veneno_livre = effect == "coat_poison" and self._tem_habilidade(m, "envenenar_arma")
+        if m.get("_master_bonus_acted") and not veneno_livre:
             await self.send_to(pid, {"type": "error", "msg": "Este monstro já usou a ação bônus."}); return
         val = int(item.get("value", 0) or 0)
         removed = True
@@ -19237,6 +19350,10 @@ class GameRoom:
         elif effect == "atk_bonus":
             m["equipment_attack_bonus"] = m.get("equipment_attack_bonus", 0) + val
             await self.gm_say(f"⚗️ **{m.get('name', 'O monstro')}** usa **{item['name']}**: +{val} de ataque.")
+        elif effect == "coat_poison" and veneno_livre:
+            if not await self._envenenar_arma_do_inventario(m):
+                await self.send_to(pid, {"type": "error", "msg": "Não foi possível envenenar a arma."}); return
+            removed = False  # a habilidade já consumiu a dose da bolsa.
         elif effect == "coat_poison":
             vid = item.get("veneno_id")
             if vid and m.get("attacks"):
@@ -19250,7 +19367,8 @@ class GameRoom:
         elif effect == "veil_shadow":
             m["oculto_item"] = True
             await self.gm_say(f"🕯️ **{m.get('name', 'O monstro')}** usa **{item['name']}** e fica oculto.")
-        m["_master_bonus_acted"] = True
+        if not veneno_livre:
+            m["_master_bonus_acted"] = True
         if removed and item in bag:
             bag.remove(item)
         await self.push_state()
@@ -19308,11 +19426,62 @@ class GameRoom:
         action_type)."""
         if not ability or ability.get("action_type") == "passiva":
             return False
+        if ability.get("id") == "mestre_dos_mortos":
+            return True
         if ability.get("save") is not None and ability.get("dc") is not None:
             return True
         return ability.get("source") in {"heroi", "guilda"}
 
-    async def handle_mestre_usar_habilidade(self, pid, monster_id, ability_id, target_id):
+    async def _conjurar_mestre_dos_mortos(self, m, tipo_esqueleto):
+        """Conjura até dois esqueletos perto do necromante, somente na 1ª ação."""
+        if (m.get("_ja_executou_acao") or m.get("_mestre_dos_mortos_usado")
+                or not self._tem_habilidade(m, "mestre_dos_mortos")):
+            return []
+        if tipo_esqueleto not in {"esqueleto_humano", "esqueleto_animal"}:
+            return []
+        definicao = next((d for d in MONSTER_DEFS if d.get("type") == tipo_esqueleto), None)
+        if not definicao:
+            return []
+        sala = (self._room_by_id(m.get("room_id"))
+                or {"id": m.get("room_id"), "cx": m["pos"][0], "cy": m["pos"][1]})
+        candidatos = []
+        mx, my = m["pos"]
+        for raio in (1, 2, 3):
+            for dy in range(-raio, raio + 1):
+                for dx in range(-raio, raio + 1):
+                    if max(abs(dx), abs(dy)) == raio:
+                        candidatos.append([mx + dx, my + dy])
+        destinos = []
+        for nx, ny in candidatos:
+            if len(destinos) >= 2:
+                break
+            esqueleto = make_monster(definicao, sala)
+            if not self._monster_can_occupy(esqueleto, nx, ny):
+                continue
+            destinos.append([nx, ny])
+        # A magia é tudo-ou-nada: sem duas casas livres, não consome a primeira ação.
+        if len(destinos) < 2:
+            return []
+        invocados = []
+        for nx, ny in destinos:
+            esqueleto = make_monster(definicao, sala)
+            esqueleto["pos"] = [nx, ny]
+            esqueleto["room_id"] = sala.get("id")
+            esqueleto["alertado"] = True
+            esqueleto["control_mode"] = m.get("control_mode", "auto")
+            esqueleto["summoned_by"] = m["id"]
+            self.monsters[esqueleto["id"]] = esqueleto
+            invocados.append(esqueleto)
+        if invocados:
+            m["_mestre_dos_mortos_usado"] = True
+            m["_ja_executou_acao"] = True
+            m.setdefault("ability_uses", {})["mestre_dos_mortos"] = 0
+            nomes = " e ".join(s["name"] for s in invocados)
+            await self.gm_say(f"💀 **{m['name']}** conjura {len(invocados)} servo(s): **{nomes}**!")
+        return invocados
+
+    async def handle_mestre_usar_habilidade(self, pid, monster_id, ability_id, target_id,
+                                             tipo_esqueleto=None):
         """Manual: o mestre ativa uma habilidade ativa do monstro num herói.
         Consome a ação do turno (como atacar). Só habilidades ativáveis (save+dc)."""
         if pid != self.master_pid or monster_id != self.master_manual_mid:
@@ -19326,10 +19495,17 @@ class GameRoom:
         if not self._habilidade_ativavel_manual(ability):
             await self.send_to(pid, {"type": "error", "msg": "Habilidade não ativável manualmente (IA apenas)."}); return
         # Ramo (b): habilidade de editor (herói/guilda) — self-buff, sem alvo.
+        if ability_id == "mestre_dos_mortos":
+            invocados = await self._conjurar_mestre_dos_mortos(m, tipo_esqueleto)
+            if not invocados:
+                await self.send_to(pid, {"type": "error", "msg": "Mestre dos Mortos só pode ser usado na primeira ação e requer espaço para invocar."}); return
+            m["_master_acted"] = True
+            await self.push_state(); return
         if not (ability.get("save") is not None and ability.get("dc") is not None):
             if not self._ativar_editor_ability(m, ability):
                 await self.send_to(pid, {"type": "error", "msg": "Habilidade sem usos ou em recarga."}); return
             m["_master_acted"] = True
+            m["_ja_executou_acao"] = True
             await self.gm_say(f"✦ **{m.get('name', 'O monstro')}** ativa **{ability.get('name', ability['id'])}**!")
             await self.push_state(); return
         alvo = self.players.get(target_id)
@@ -19346,6 +19522,7 @@ class GameRoom:
         if not used:
             await self.send_to(pid, {"type": "error", "msg": "Habilidade sem usos ou em recarga."}); return
         m["_master_acted"] = True
+        m["_ja_executou_acao"] = True
         await self.push_state()
 
     async def _use_monster_ability(self, m, ability, target_obj):
@@ -19756,6 +19933,29 @@ class GameRoom:
                         f"(d20={d20}{sb_str}={stot}).")
 
     # â”€â”€ Escape de Agarrar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    async def _processar_onda_envolvente_turno(self, m):
+        """Afogar: dano contínuo no alvo envolvido; água intensifica a corrente."""
+        onda = self._habilidade_monstro(m, "onda_envolvente")
+        if not onda:
+            return
+        for p in self.players.values():
+            if (not p.get("alive") or not p.get("preso")
+                    or p.get("preso_por") != m.get("id")):
+                continue
+            dano_base = roll_dice(onda.get("damage", "1d6"))
+            dano_extra = 0
+            x, y = p.get("pos", [0, 0])
+            if self._is_water_tile(x, y):
+                dano_extra = roll_dice("1d6")
+            dano = self._apply_damage_types(dano_base + dano_extra, [DMG_WATER], p)
+            p["hp"] = max(0, p["hp"] - dano)
+            detalhe = f" +{dano_extra} por estar na água" if dano_extra else ""
+            await self.gm_say(f"🌊 **{p['name']}** sofre **{dano}** de Afogar ({dano_base}{detalhe}).")
+            if p["hp"] <= 0:
+                p["preso"] = False
+                p.pop("preso_por", None)
+                await self._player_dies(p["id"])
+
     async def _processar_escape_agarrar(self, p):
         """Tentativa de escape no início do turno do jogador. Os saves e a CD
         vêm da habilidade de agarrão do captor (crocodilo: FOR/REF CD 12;
@@ -19768,7 +19968,7 @@ class GameRoom:
 
         # Localiza a habilidade de agarrÃ£o do captor para CD e saves de escape.
         grip = next((ab for ab in captor.get("special_abilities", [])
-                     if ab.get("id") in ("agarrar", "constricao")), None)
+                     if ab.get("id") in ("agarrar", "constricao", "onda_envolvente")), None)
         dc    = grip.get("dc", 12) if grip else 12
         saves = grip.get("escape_saves") if grip else None
         if not saves:
@@ -20089,6 +20289,8 @@ class GameRoom:
         if not self._is_adjacent_to_monster(target["pos"], m):
             return
         hit = await self._execute_one_monster_attack(m, m["attacks"][0], target_obj)
+        # Infecção é resolvida pelo executor comum, permitindo também criaturas
+        # personalizadas com esta habilidade.
         if hit and target_obj["kind"] == "player" and target.get("hp", 1) > 0:
             await self._aplicar_mordida_corrosiva(m, target)
 
@@ -20324,7 +20526,7 @@ class GameRoom:
         return obj.get("hp", 0), obj.get("max_hp", obj.get("hp", 1)) or 1
 
     async def _ai_lagarto_carniceiro(self, m, targets):
-        """Faro de Carniça: prioriza o alvo com MENOR HP. 2 mordidas (Predador
+        """Faro da Presa Fácil: prioriza o alvo com MENOR HP. 2 mordidas (Predador
         Oportunista: +1 vs alvo <50% HP); se ambas acertam → Combo Devorador (2 garras)."""
         forcado = (m.get("provocado") and m.get("provocado_turnos", 0) > 0) or bool(self.taunted) or bool(self._requiem_forca_bardo(m))
         if forcado:
@@ -20383,7 +20585,10 @@ class GameRoom:
         if not self._is_adjacent_to_monster(target["pos"], m):
             return
         hit = await self._execute_one_monster_attack(m, m["attacks"][0], target_obj)
-        if hit and target_obj["kind"] == "player" and target.get("hp", 1) > 0:
+        # Compatibilidade com fichas antigas de zumbi sem a habilidade explícita.
+        # Com Infecção na ficha, o resolvedor comum já aplicou o efeito configurado.
+        if (hit and not self._tem_habilidade(m, "infeccao")
+                and target_obj["kind"] == "player" and target.get("hp", 1) > 0):
             inf = next((ab for ab in m.get("special_abilities", []) if ab["id"] == "infeccao"), None)
             dc = inf.get("dc", 10) if inf else 10
             ok, d20, sb, tot = self._testar_save(target, "fortitude", dc, fonte=m)
@@ -20428,12 +20633,8 @@ class GameRoom:
         # Dose consumida no acerto; aÃ§Ã£o livre: aplicar prÃ³xima dose
         if m.get("veneno_arma_ativo") and hit:
             m["veneno_arma_ativo"] = False
-        if not m.get("veneno_arma_ativo") and m.get("veneno_doses_extras", 0) > 0:
-            m["veneno_doses_extras"] -= 1
-            m["veneno_arma_ativo"]   = True
-            await self.gm_say(
-                f"🧪 **{m['name']}** reaplica o veneno na lança "
-                f"({m['veneno_doses_extras']} doses restantes).")
+        if not m.get("veneno_arma_ativo"):
+            await self._envenenar_arma_do_inventario(m)
 
     # â”€â”€ IA Kobold Besteiro â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async def _ai_kobold_besteiro(self, m, targets):
@@ -20566,6 +20767,7 @@ class GameRoom:
         """Despacha para a IA específica do monstro."""
         if not targets:
             return
+        await self._processar_onda_envolvente_turno(m)
         if m.get("_personalizado") or m.get("ai_profile_explicit"):
             await self._run_profile_ai(m, targets)
             return
@@ -21062,6 +21264,12 @@ class GameRoom:
         Amaldiçoar p/ enfraquecer; rouba mortos-vivos animados (pergaminho Dominar);
         Concentração Sombria (Vontade CD 10 ao sofrer dano) e fuga sem servos."""
         # ConcentraÃ§Ã£o Sombria: snapshot de HP; se sofreu dano, Vontade CD 10 ou sem magia.
+        # Sem Mestre humano, a primeira ação usa a invocação. O tipo é sorteado;
+        # no controle Manual, o Mestre escolhe explicitamente na ficha.
+        if not m.get("_ja_executou_acao"):
+            if await self._conjurar_mestre_dos_mortos(
+                    m, random.choice(("esqueleto_humano", "esqueleto_animal"))):
+                return
         ref    = m.get("_cs_hp_ref", m.get("max_hp", m["hp"]))
         sofreu = m["hp"] < ref
         m["_cs_hp_ref"] = m["hp"]
@@ -21187,6 +21395,7 @@ class GameRoom:
             # â€” permanece imÃ³vel atÃ© a porta ser aberta / ser avistado.
             if not self._monstro_ativo_em_combate(m):
                 continue
+            await self._processar_mare_viva_turno(m)
             # Venenos: tica/expira efeitos no inÃ­cio do turno do monstro.
             await self._processar_venenos_turno(m)
             await self._processar_mods_magia_turno(m)   # AmaldiÃ§oar expira por rodada
@@ -22702,7 +22911,9 @@ async def handler(ws):
                 elif t == "mestre_atacar_monstro":
                     if room: await room.handle_mestre_atacar_monstro(pid, msg.get("monster_id"), msg.get("target_id"))
                 elif t == "mestre_usar_habilidade":
-                    if room: await room.handle_mestre_usar_habilidade(pid, msg.get("monster_id"), msg.get("ability_id"), msg.get("target_id"))
+                    if room: await room.handle_mestre_usar_habilidade(
+                        pid, msg.get("monster_id"), msg.get("ability_id"), msg.get("target_id"),
+                        msg.get("tipo_esqueleto"))
 
                 elif t == "mestre_usar_item":
                     if room: await room.handle_mestre_usar_item(pid, msg.get("monster_id"), msg.get("item_id"), msg.get("target_id"), msg.get("tx"), msg.get("ty"))

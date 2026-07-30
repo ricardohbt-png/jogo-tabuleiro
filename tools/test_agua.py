@@ -64,6 +64,20 @@ def main():
     equipped_armor_monster = {"pos": [3, 1], "natural_armor": 6,
                                "equipment_items": [{"kind": "armor", "armor_category": "pesada"}]}
     check("armadura equipada do monstro tem prioridade", room._water_turn_moves(equipped_armor_monster, 6) == 1)
+
+    # Movimento Errático ignora tanto a redução da água rasa quanto o limite
+    # total da água profunda, inclusive ao entrar nela durante o turno.
+    erratico = {"pos": [3, 1], "movement": 6, "natural_armor": 6,
+                "special_abilities": [{"id": "movimento_erratico"}]}
+    check("errático ignora água profunda", room._water_turn_moves(erratico, 6) == 6)
+    erratico["pos"] = [0, 1]
+    erratico["moves_left"] = 6
+    room._apply_water_entry_penalty(erratico, 1, 1)
+    check("errático ignora água rasa ao entrar", erratico["moves_left"] == 6)
+    erratico["_water_moves_left"] = 6
+    import asyncio
+    asyncio.run(room._commit_monster_step(erratico, 3, 1))
+    check("passo errático em profunda custa só uma casa", erratico["_water_moves_left"] == 5)
     print("\nTerreno Água: OK")
 
 

@@ -545,8 +545,13 @@ async def main():
     print("\n[16] Necromante (essência profana, magias, concentração, loot)")
     necro_def = next(m for m in MONSTER_DEFS if m["type"] == "necromante")
     check("necromante nível 2", necro_def.get("level") == 2)
-    check("inicia com 2 esqueletos humanos",
-          necro_def.get("spawn_companions") == [{"type": "esqueleto_humano", "min": 2, "max": 2}])
+    # Os 2 esqueletos deixaram de nascer junto do necromante: agora vêm de
+    # Mestre dos Mortos, gasto como AÇÃO na primeira vez (ver
+    # tools/test_mestre_dos_mortos.py).
+    check("não nasce mais com companheiros", not necro_def.get("spawn_companions"))
+    mdm = next((a for a in necro_def["special_abilities"] if a["id"] == "mestre_dos_mortos"), None)
+    check("Mestre dos Mortos é ação de 1 uso",
+          mdm and mdm.get("action_type") == "acao" and mdm.get("uses_per_combat") == 1)
     check("3 magias diárias + dominar na ficha",
           all(any(a["id"] == x for a in necro_def["special_abilities"])
               for x in ("bola_fogo", "medo", "amaldicoar", "dominar_morto_vivo")))
