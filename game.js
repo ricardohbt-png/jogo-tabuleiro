@@ -23457,7 +23457,8 @@ function handleTileClick(tx, ty){
       if(!me) return;
       if(_st.saida_permitida === false){ toast('Não há como sair desta masmorra.', 'var(--red)'); return; }
       if(!GS.isMyTurn){ toast('Só é possível sair no seu turno.', 'var(--red)'); return; }
-      if(me.pos[0]!==sx || me.pos[1]!==sy){ toast('Vá até a escada para sair.', 'var(--red)'); return; }
+      const pertoDaEscada = Math.max(Math.abs(me.pos[0]-sx), Math.abs(me.pos[1]-sy)) <= 1;
+      if(!pertoDaEscada){ toast('Aproxime-se da escada para sair.', 'var(--red)'); return; }
       const custo = _st.custo_saida || {fome:0, sede:0};
       const espera = _st.espera_saida || '0';
       if(me.fome < custo.fome || me.sede < custo.sede){

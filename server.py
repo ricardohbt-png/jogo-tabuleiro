@@ -12546,8 +12546,12 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Só é possível sair no seu turno."}); return
         if not self.saida_permitida:
             await self.send_to(pid, {"type": "error", "msg": "Não há como sair desta masmorra."}); return
-        if not self.stairs_pos or list(p["pos"]) != list(self.stairs_pos):
-            await self.send_to(pid, {"type": "error", "msg": "Vá até a escada de entrada para sair."}); return
+        # A escada é acionada de uma casa vizinha (diagonais incluídas); permanecer
+        # sobre ela também continua válido para mapas antigos.
+        if (not self.stairs_pos or
+                max(abs(p["pos"][0] - self.stairs_pos[0]),
+                    abs(p["pos"][1] - self.stairs_pos[1])) > 1):
+            await self.send_to(pid, {"type": "error", "msg": "Aproxime-se da escada de entrada para sair."}); return
         fome, sede = self._custo_viagem_saida()
         if p.get("fome", 0) < fome or p.get("sede", 0) < sede:
             await self.send_to(pid, {"type": "error",
