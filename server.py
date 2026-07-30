@@ -10373,7 +10373,7 @@ class GameRoom:
                     fogo_bruto = roll_dice(corpo_chamas.get("damage", "1d6"))
                     fogo = self._apply_damage_types(
                         fogo_bruto, corpo_chamas.get("damage_types", [DMG_FIRE]), p)
-                    await self.broadcast({"type": "dice_roll", "die": "d6", "value": fogo_bruto,
+                    await self.broadcast({"type": "dice_roll", "die": "d" + corpo_chamas.get("damage", "1d6").split("d", 1)[-1].split("+", 1)[0], "value": fogo_bruto,
                                           "label": "🔥 Corpo em Chamas"})
                     fogo_alvo, transferencia = await self._processar_dano_protetor(p["id"], fogo)
                     p["hp"] = max(0, p["hp"] - fogo_alvo)
@@ -10468,7 +10468,7 @@ class GameRoom:
                         fogo_bruto = roll_dice(corpo_chamas.get("damage", "1d6"))
                         fogo = self._apply_damage_types(
                             fogo_bruto, corpo_chamas.get("damage_types", [DMG_FIRE]), p)
-                        await self.broadcast({"type": "dice_roll", "die": "d6", "value": fogo_bruto,
+                        await self.broadcast({"type": "dice_roll", "die": "d" + corpo_chamas.get("damage", "1d6").split("d", 1)[-1].split("+", 1)[0], "value": fogo_bruto,
                                               "label": "🔥 Corpo em Chamas"})
                         fogo_alvo, transferencia = await self._processar_dano_protetor(p["id"], fogo)
                         p["hp"] = max(0, p["hp"] - fogo_alvo)
@@ -21059,24 +21059,27 @@ class GameRoom:
             hit = await self._execute_one_monster_attack(m, atk, target_obj)
             m.pop("_golpe_brutal_ativo", None)
         elif usar_fd:                                              # ForÃ§a Descomunal (atordoar)
-            cds["forca_descomunal"] = 4
+            forca = self._habilidade_monstro(m, "forca_descomunal") or {}
+            cooldown = _monster_int(forca.get("cooldown_turns", 4), 4, 0, 20)
+            dc = _monster_int(forca.get("dc", 10), 10, 1, 40)
+            cds["forca_descomunal"] = cooldown
             await self.gm_say(f"💪 **{m['name']}** ataca com **Força Descomunal**!")
             hit = await self._execute_one_monster_attack(m, atk, target_obj)
             if hit and self._alvo_vivo(target_obj):
-                passou, d20, sb, stot = self._testar_save(target, "fortitude", 10, fonte=m)
+                passou, d20, sb, stot = self._testar_save(target, "fortitude", dc, fonte=m)
                 sbs = f"+{sb}" if sb >= 0 else str(sb)
                 await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
                                        "label": f"{m['name']} — Força Descomunal", "hit": not passou})
                 tgt_name = target["name"] if target_obj["kind"] == "player" else target["nome"]
                 if passou:
-                    await self.gm_say(f"💪 **{tgt_name}** aguenta o impacto (Fortitude d20({d20}){sbs}={stot} vs CD 10).")
+                    await self.gm_say(f"💪 **{tgt_name}** aguenta o impacto (Fortitude d20({d20}){sbs}={stot} vs CD {dc}).")
                 else:
                     target["perde_turno"] = True
                     await self._enviar_resultado_atordoamento(
                         target, "A Força Descomunal do ogro o deixa atordoado.", "1 rodada",
                         ["Você perde a próxima rodada", "Não pode mover, atacar ou usar habilidades durante esse turno"],
                     )
-                    await self.gm_say(f"💫 **{tgt_name}** fica **atordoado** (Fortitude {stot} vs CD 10) e perde a próxima rodada!")
+                    await self.gm_say(f"💫 **{tgt_name}** fica **atordoado** (Fortitude {stot} vs CD {dc}) e perde a próxima rodada!")
         else:                                                      # ataque normal
             hit = await self._execute_one_monster_attack(m, atk, target_obj)
 
@@ -21181,14 +21184,15 @@ class GameRoom:
             await self._usar_cauda_varredora(m, cauda, cauda_def)
             return
 
+        acido_def = next((a for a in m.get("special_abilities", []) if a.get("id") == "cuspir_acido"), {})
+        alcance_acido = _monster_int(acido_def.get("range", 3), 3, 1, 20)
         for _ in range(m.get("movement", 5)):
-            if min(max(abs(alvo["pos"][0]-t[0]), abs(alvo["pos"][1]-t[1])) for t in self._monster_tiles(m)) <= 3:
+            if min(max(abs(alvo["pos"][0]-t[0]), abs(alvo["pos"][1]-t[1])) for t in self._monster_tiles(m)) <= alcance_acido:
                 break
             antes = list(m["pos"]); await self._monster_move_step(m, alvo["pos"])
             if m["pos"] == antes: break
         self._face_toward(m, alvo["pos"])
-        em_alcance_acido = min(max(abs(alvo["pos"][0]-t[0]), abs(alvo["pos"][1]-t[1])) for t in self._monster_tiles(m)) <= 3
-        acido_def = next((a for a in m.get("special_abilities", []) if a.get("id") == "cuspir_acido"), {})
+        em_alcance_acido = min(max(abs(alvo["pos"][0]-t[0]), abs(alvo["pos"][1]-t[1])) for t in self._monster_tiles(m)) <= alcance_acido
         if em_alcance_acido and self._ativar_habilidade_nativa(m, acido_def):
             await self._grotao_cuspir_acido(m, target_obj)
             return
@@ -21672,9 +21676,10 @@ class GameRoom:
             dano_bruto = roll_dice(explosao.get("damage", "6d6"))
             raio = int(explosao.get("radius", 1))
             cd = int(explosao.get("dc", 13))
+            dano_expr = explosao.get("damage", "6d6")
             centro = m.get("pos", [0, 0])
-            await self.broadcast({"type": "dice_roll", "die": "d6", "value": dano_bruto,
-                                  "label": "💥 Explosão Final (6d6)"})
+            await self.broadcast({"type": "dice_roll", "die": "d" + dano_expr.split("d", 1)[-1].split("+", 1)[0], "value": dano_bruto,
+                                  "label": f"💥 Explosão Final ({dano_expr})"})
             await self.gm_say(f"💥 **{m['name']}** explode em chamas! (Reflexos CD {cd}; raio {raio})")
             for p in list(self.players.values()):
                 if not p.get("alive") or max(abs(p["pos"][0] - centro[0]), abs(p["pos"][1] - centro[1])) > raio:
@@ -23273,6 +23278,8 @@ _NEGATIVE_ABILITY_WEAKNESSES = {
                        "descricao":"Corpo Pesado: ao falhar em Reflexos, recebe +1 dano daquele efeito."},
     "lento_previsivel": {"type":"ca_condicional", "bonus_flat":-2,
                            "descricao":"Lento e Previsível: ao errar um ataque, perde 2 CA até o próximo turno."},
+    "solidificar_frio": {"type":"solidificar_frio",
+                          "descricao":"Solidificar: dois acertos de frio em rodadas consecutivas removem a resistência física por 2 rodadas."},
 }
 
 AI_PROFILES = {"agressivo", "tatico", "cacador", "conjurador", "emboscador",
@@ -23367,6 +23374,16 @@ def _validate_custom_monster(raw):
         if not isinstance(config, dict):
             continue
         aid = str(config.get("id") or "")
+        if aid == "veneno_ferrao":  # fichas antigas passam ao poder unificado.
+            config = dict(config)
+            legacy_attacks = raw.get("attacks") if isinstance(raw.get("attacks"), list) else []
+            legacy_index = next((i for i, atk in enumerate(legacy_attacks)
+                                 if isinstance(atk, dict) and atk.get("on_hit") in VENENOS), 0)
+            legacy_attack = legacy_attacks[legacy_index] if legacy_attacks else {}
+            config.setdefault("attack_index", legacy_index)
+            config.setdefault("veneno_id", legacy_attack.get("on_hit", "veneno_escorpiao_pedra"))
+            config.setdefault("poison_dc", legacy_attack.get("poison_dc", config.get("dc", 10)))
+            aid = "envenenar"
         if aid in seen_abilities or aid not in ability_lib:
             continue
         seen_abilities.add(aid)
@@ -23382,10 +23399,67 @@ def _validate_custom_monster(raw):
                 damage_type = DMG_LIGHTNING
             ability["damage"] = damage
             ability["damage_types"] = [damage_type]
+        if aid == "explosao_final":
+            dice = _monster_int(config.get("damage_dice", 6), 6, 1, 20)
+            faces = _monster_int(config.get("damage_faces", 6), 6, 4, 20)
+            ability["damage"] = f"{dice}d{faces}"
+            ability["radius"] = _monster_int(config.get("radius", 1), 1, 0, 10)
+            ability["dc"] = _monster_int(config.get("dc", 13), 13, 1, 40)
+            ability["descricao"] = (f"Ao morrer, explode em raio {ability['radius']}: "
+                                    f"{ability['damage']} de fogo; Reflexos CD {ability['dc']} reduz à metade.")
+        if aid == "corpo_em_chamas":
+            dice = _monster_int(config.get("damage_dice", 1), 1, 1, 20)
+            faces = _monster_int(config.get("damage_faces", 6), 6, 4, 20)
+            ability["damage"] = f"{dice}d{faces}"
+            ability["descricao"] = (f"Quem o acerta com um ataque corpo a corpo sofre "
+                                    f"{ability['damage']} de dano de fogo.")
+        if aid == "envenenar":
+            ability["attack_index"] = _monster_int(config.get("attack_index", 0), 0, 0, 7)
+            ability["veneno_id"] = str(config.get("veneno_id") or "")
+            ability["poison_dc"] = _monster_int(config.get("poison_dc", 10), 10, 1, 40)
+        if aid == "infeccao":
+            # O motor antigo chama os degraus de pesada/grave. O editor expõe
+            # leve/moderada/pesada sem quebrar fichas salvas anteriormente.
+            severity_map = {"leve": "leve", "moderada": "pesada", "pesada": "grave", "grave": "grave"}
+            selected = str(config.get("disease_severity", config.get("severity", "leve"))).lower()
+            ability["disease_severity"] = severity_map.get(selected, "leve")
+            ability["dc"] = _monster_int(config.get("dc", ability.get("dc", 10)), 10, 1, 40)
+            display = {"leve": "leve", "pesada": "moderada", "grave": "pesada"}[ability["disease_severity"]]
+            ability["descricao"] = (f"Ao acertar: alvo testa Fortitude CD {ability['dc']} "
+                                    f"ou contrai doença {display}.")
+        if aid == "forca_descomunal":
+            ability["dc"] = _monster_int(config.get("dc", ability.get("dc", 10)), 10, 1, 40)
+            ability["descricao"] = (f"Ataque normal; se acertar, Fortitude CD {ability['dc']} "
+                                    f"ou atordoado (perde a próxima rodada). "
+                                    f"Recarga {cooldown} rodada{'s' if cooldown != 1 else ''}.")
+        if aid == "cuspir_acido":
+            dice = _monster_int(config.get("damage_dice", 2), 2, 1, 20)
+            faces = _monster_int(config.get("damage_faces", 6), 6, 4, 20)
+            ability["damage"] = f"{dice}d{faces}"
+            ability["range"] = _monster_int(config.get("range", ability.get("range", 3)), 3, 1, 20)
+            ability["dc"] = _monster_int(config.get("dc", ability.get("dc", 13)), 13, 1, 40)
+            ability["descricao"] = (f"Alvo a até {ability['range']} quadrado(s): {ability['damage']} de ácido; "
+                                    f"Reflexos CD {ability['dc']} reduz à metade. Falha corrói equipamentos "
+                                    f"conforme as regras de corrosão por ácido.")
         abilities.append(ability)
         entry = {"id": aid, "uses_per_day": uses, "cooldown_turns": cooldown}
         if aid == "corpo_energetico":
             entry.update({"damage": ability["damage"], "damage_type": ability["damage_types"][0]})
+        if aid == "explosao_final":
+            entry.update({"damage_dice": dice, "damage_faces": faces,
+                          "radius": ability["radius"], "dc": ability["dc"]})
+        if aid == "corpo_em_chamas":
+            entry.update({"damage_dice": dice, "damage_faces": faces})
+        if aid == "envenenar":
+            entry.update({"attack_index": ability["attack_index"],
+                          "veneno_id": ability["veneno_id"], "poison_dc": ability["poison_dc"]})
+        if aid == "infeccao":
+            entry.update({"disease_severity": ability["disease_severity"], "dc": ability["dc"]})
+        if aid == "forca_descomunal":
+            entry.update({"dc": ability["dc"]})
+        if aid == "cuspir_acido":
+            entry.update({"damage_dice": dice, "damage_faces": faces,
+                          "range": ability["range"], "dc": ability["dc"]})
         monster_abilities.append(entry)
     negative_ids = raw.get("negative_ability_ids", [])
     if not isinstance(negative_ids, list):
@@ -23443,6 +23517,14 @@ def _validate_custom_monster(raw):
             "extra_damage": str(attack.get("extra_damage") or "")[:24] or None,
             "extra_damage_types": extra_types,
         })
+    for ability in abilities:
+        if ability.get("id") != "envenenar":
+            continue
+        index, venom = ability.get("attack_index", 0), ability.get("veneno_id")
+        if venom not in VENENOS or not 0 <= index < len(attacks):
+            return False, "Envenenar exige um ataque e veneno válidos"
+        attacks[index]["on_hit"] = venom
+        attacks[index]["poison_dc"] = ability.get("poison_dc", 10)
     if not attacks:
         return False, "adicione pelo menos um ataque"
     weaknesses = raw.get("weaknesses", [])

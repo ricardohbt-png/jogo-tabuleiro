@@ -217,12 +217,13 @@ window.EDITOR_CATALOG = {
       ],
       "special_abilities": [
         {
-          "id": "veneno_ferrao",
-          "name": "Veneno do Ferrão",
+          "id": "envenenar",
+          "name": "Envenenar",
           "action_type": "passiva",
-          "dc": 9,
-          "save": "fortitude",
-          "effect": "penalidade_ataque_movimento"
+          "attack_index": 1,
+          "veneno_id": "veneno_escorpiao_pedra",
+          "poison_dc": 9,
+          "descricao": "Vincula um veneno escolhido a um dos ataques da criatura."
         }
       ],
       "immunities": [],
@@ -386,7 +387,7 @@ window.EDITOR_CATALOG = {
           "id": "movimento_erratico",
           "name": "Movimento Errático",
           "action_type": "passiva",
-          "descricao": "Ignora terreno difícil — avança sem hesitar"
+          "descricao": "Ignora penalidades de movimento de Água e Água Profunda"
         },
         {
           "id": "sem_instinto",
@@ -1376,12 +1377,10 @@ window.EDITOR_CATALOG = {
       ],
       "special_abilities": [
         {
-          "id": "veneno_lanca",
-          "name": "Lança Envenenada",
-          "action_type": "acao_livre",
-          "dc": 8,
-          "save": "fortitude",
-          "effect": "veneno_aranha_sombria"
+          "id": "envenenar_arma",
+          "name": "Envenenar Arma",
+          "action_type": "passiva",
+          "descricao": "Usa um veneno da bolsa para envenenar a arma como ação livre"
         },
         {
           "id": "covardia_kobold",
@@ -1557,8 +1556,9 @@ window.EDITOR_CATALOG = {
         {
           "id": "mestre_dos_mortos",
           "name": "Mestre dos Mortos",
-          "action_type": "passiva",
-          "descricao": "Inicia com 2 esqueletos; mortos-vivos próximos recebem +1 em Vontade"
+          "action_type": "acao",
+          "uses_per_combat": 1,
+          "descricao": "Na primeira ação, conjura 2 esqueletos humanos ou animais à escolha do Mestre"
         },
         {
           "id": "concentracao_sombria",
@@ -1640,6 +1640,7 @@ window.EDITOR_CATALOG = {
           "action_type": "passiva",
           "dc": 10,
           "save": "fortitude",
+          "disease_severity": "leve",
           "descricao": "Ao acertar: alvo testa Fortitude CD 10 ou contrai 1 sintoma leve"
         },
         {
@@ -1720,7 +1721,7 @@ window.EDITOR_CATALOG = {
         },
         {
           "id": "faro_carnica",
-          "name": "Faro de Carniça",
+          "name": "Faro da Presa Fácil",
           "action_type": "passiva",
           "descricao": "Prioriza sempre o alvo com menor HP"
         },
@@ -1728,7 +1729,7 @@ window.EDITOR_CATALOG = {
           "id": "duas_cabecas",
           "name": "Duas Cabeças",
           "action_type": "passiva",
-          "descricao": "+1 em percepção; difícil de surpreender (flavor)"
+          "descricao": "+2 no raio de visão; ataques furtivos contra a criatura sofrem -2 no acerto."
         }
       ],
       "immunities": [],
@@ -2217,7 +2218,7 @@ window.EDITOR_CATALOG = {
           "damage": "2d6",
           "save": "reflexos",
           "dc": 13,
-          "descricao": "Alvo único: 2d6 ácido, Reflexos metade e corrói um equipamento"
+          "descricao": "Alvo único: 2d6 ácido, Reflexos reduz à metade; na falha aplica a corrosão de itens por ácido."
         },
         {
           "id": "furia_bestial",
@@ -2432,12 +2433,6 @@ window.EDITOR_CATALOG = {
       ],
       "special_abilities": [
         {
-          "id": "corpo_congelado",
-          "name": "Corpo Congelado",
-          "action_type": "passiva",
-          "descricao": "Ataques físicos sofrem –1 de dano."
-        },
-        {
           "id": "congelamento_progressivo",
           "name": "Congelamento Progressivo",
           "action_type": "passiva",
@@ -2526,12 +2521,6 @@ window.EDITOR_CATALOG = {
         }
       ],
       "special_abilities": [
-        {
-          "id": "corpo_rochoso",
-          "name": "Corpo Rochoso",
-          "action_type": "passiva",
-          "descricao": "Reduz dano físico em 4."
-        },
         {
           "id": "impacto_devastador",
           "name": "Impacto Devastador",
@@ -2632,7 +2621,7 @@ window.EDITOR_CATALOG = {
         },
         {
           "id": "salto_eletrico",
-          "name": "Salto Elétrico",
+          "name": "Condução Elétrica",
           "action_type": "passiva",
           "descricao": "Ignora a CA concedida por armaduras de metal."
         }
@@ -2813,13 +2802,17 @@ window.EDITOR_CATALOG = {
           "name": "Onda Envolvente / Afogar",
           "action_type": "passiva",
           "damage": "1d6",
-          "descricao": "Ao acertar, pode prender uma criatura média; presa sofre 1d6 por rodada e testa FOR para escapar."
+          "dc": 12,
+          "escape_saves": [
+            "fortitude"
+          ],
+          "descricao": "Ao acertar, prende uma criatura média; presa sofre 1d6 de água por rodada e testa FOR CD 12 para escapar. Sobre Água/Água Profunda, sofre +1d6 por rodada."
         },
         {
           "id": "mare_viva",
           "name": "Maré Viva",
           "action_type": "passiva",
-          "descricao": "Perto de fonte ou piso de água, recupera 1d6 HP."
+          "descricao": "No início do turno, recupera 1d6 HP se estiver sobre ou adjacente a Água/Água Profunda."
         },
         {
           "id": "solidificar_frio",
@@ -3366,12 +3359,13 @@ window.EDITOR_CATALOG = {
       "source": "monstro"
     },
     {
-      "id": "veneno_ferrao",
-      "name": "Veneno do Ferrão",
+      "id": "envenenar",
+      "name": "Envenenar",
       "action_type": "passiva",
-      "dc": 9,
-      "save": "fortitude",
-      "effect": "penalidade_ataque_movimento",
+      "attack_index": 1,
+      "veneno_id": "veneno_escorpiao_pedra",
+      "poison_dc": 9,
+      "descricao": "Vincula um veneno escolhido a um dos ataques da criatura.",
       "source": "monstro"
     },
     {
@@ -3397,7 +3391,7 @@ window.EDITOR_CATALOG = {
       "id": "movimento_erratico",
       "name": "Movimento Errático",
       "action_type": "passiva",
-      "descricao": "Ignora terreno difícil — avança sem hesitar",
+      "descricao": "Ignora penalidades de movimento de Água e Água Profunda",
       "source": "monstro"
     },
     {
@@ -3582,12 +3576,10 @@ window.EDITOR_CATALOG = {
       "source": "monstro"
     },
     {
-      "id": "veneno_lanca",
-      "name": "Lança Envenenada",
-      "action_type": "acao_livre",
-      "dc": 8,
-      "save": "fortitude",
-      "effect": "veneno_aranha_sombria",
+      "id": "envenenar_arma",
+      "name": "Envenenar Arma",
+      "action_type": "passiva",
+      "descricao": "Usa um veneno da bolsa para envenenar a arma como ação livre",
       "source": "monstro"
     },
     {
@@ -3627,8 +3619,9 @@ window.EDITOR_CATALOG = {
     {
       "id": "mestre_dos_mortos",
       "name": "Mestre dos Mortos",
-      "action_type": "passiva",
-      "descricao": "Inicia com 2 esqueletos; mortos-vivos próximos recebem +1 em Vontade",
+      "action_type": "acao",
+      "uses_per_combat": 1,
+      "descricao": "Na primeira ação, conjura 2 esqueletos humanos ou animais à escolha do Mestre",
       "source": "monstro"
     },
     {
@@ -3660,6 +3653,7 @@ window.EDITOR_CATALOG = {
       "action_type": "passiva",
       "dc": 10,
       "save": "fortitude",
+      "disease_severity": "leve",
       "descricao": "Ao acertar: alvo testa Fortitude CD 10 ou contrai 1 sintoma leve",
       "source": "monstro"
     },
@@ -3693,7 +3687,7 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "faro_carnica",
-      "name": "Faro de Carniça",
+      "name": "Faro da Presa Fácil",
       "action_type": "passiva",
       "descricao": "Prioriza sempre o alvo com menor HP",
       "source": "monstro"
@@ -3702,7 +3696,7 @@ window.EDITOR_CATALOG = {
       "id": "duas_cabecas",
       "name": "Duas Cabeças",
       "action_type": "passiva",
-      "descricao": "+1 em percepção; difícil de surpreender (flavor)",
+      "descricao": "+2 no raio de visão; ataques furtivos contra a criatura sofrem -2 no acerto.",
       "source": "monstro"
     },
     {
@@ -3824,7 +3818,7 @@ window.EDITOR_CATALOG = {
       "damage": "2d6",
       "save": "reflexos",
       "dc": 13,
-      "descricao": "Alvo único: 2d6 ácido, Reflexos metade e corrói um equipamento",
+      "descricao": "Alvo único: 2d6 ácido, Reflexos reduz à metade; na falha aplica a corrosão de itens por ácido.",
       "source": "monstro"
     },
     {
@@ -3903,13 +3897,6 @@ window.EDITOR_CATALOG = {
       "source": "monstro"
     },
     {
-      "id": "corpo_congelado",
-      "name": "Corpo Congelado",
-      "action_type": "passiva",
-      "descricao": "Ataques físicos sofrem –1 de dano.",
-      "source": "monstro"
-    },
-    {
       "id": "congelamento_progressivo",
       "name": "Congelamento Progressivo",
       "action_type": "passiva",
@@ -3921,13 +3908,6 @@ window.EDITOR_CATALOG = {
       "name": "Núcleo Frio",
       "action_type": "passiva",
       "descricao": "Reduz em 2 todo dano recebido, exceto fogo.",
-      "source": "monstro"
-    },
-    {
-      "id": "corpo_rochoso",
-      "name": "Corpo Rochoso",
-      "action_type": "passiva",
-      "descricao": "Reduz dano físico em 4.",
       "source": "monstro"
     },
     {
@@ -3953,7 +3933,7 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "salto_eletrico",
-      "name": "Salto Elétrico",
+      "name": "Condução Elétrica",
       "action_type": "passiva",
       "descricao": "Ignora a CA concedida por armaduras de metal.",
       "source": "monstro"
@@ -4003,14 +3983,18 @@ window.EDITOR_CATALOG = {
       "name": "Onda Envolvente / Afogar",
       "action_type": "passiva",
       "damage": "1d6",
-      "descricao": "Ao acertar, pode prender uma criatura média; presa sofre 1d6 por rodada e testa FOR para escapar.",
+      "dc": 12,
+      "escape_saves": [
+        "fortitude"
+      ],
+      "descricao": "Ao acertar, prende uma criatura média; presa sofre 1d6 de água por rodada e testa FOR CD 12 para escapar. Sobre Água/Água Profunda, sofre +1d6 por rodada.",
       "source": "monstro"
     },
     {
       "id": "mare_viva",
       "name": "Maré Viva",
       "action_type": "passiva",
-      "descricao": "Perto de fonte ou piso de água, recupera 1d6 HP.",
+      "descricao": "No início do turno, recupera 1d6 HP se estiver sobre ou adjacente a Água/Água Profunda.",
       "source": "monstro"
     },
     {

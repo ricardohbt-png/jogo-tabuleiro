@@ -68,6 +68,7 @@
     covardia_kobold: {type:"moral_fragil",descricao:"Covardia instintiva: pode entrar em medo sob pressão"},
     corpo_pesado: {type:"corpo_pesado",descricao:"Corpo Pesado: ao falhar em Reflexos, recebe +1 dano daquele efeito."},
     lento_previsivel: {type:"ca_condicional",bonus_flat:-2,descricao:"Lento e Previsível: ao errar um ataque, perde 2 CA até o próximo turno."},
+    solidificar_frio: {type:"solidificar_frio",descricao:"Solidificar: dois acertos de frio em rodadas consecutivas removem a resistência física por 2 rodadas."},
   };
   const negativeAbility = id => Object.prototype.hasOwnProperty.call(NEGATIVE_ABILITY_WEAKNESSES, id);
   const mechanicsFor = ids => (ids || []).filter(negativeAbility).map(id => Object.assign({source_ability:id}, NEGATIVE_ABILITY_WEAKNESSES[id]));
@@ -181,7 +182,7 @@
     const allAbilityIds = (out.special_abilities || []).filter(a => a.action_type !== "magia").map(a => a.id).filter(Boolean);
     out.monster_abilities = Array.isArray(out.monster_abilities) ? out.monster_abilities
       : (out.special_abilities || []).filter(a => a.action_type !== "magia" && a.id)
-        .map(a => Object.assign({id:a.id, uses_per_day:Math.max(1, n(a.uses_per_day, 1)), cooldown_turns:Math.max(0, n(a.cooldown_turns, 0))}, a.id === "corpo_energetico" ? {damage:a.damage || "1d4", damage_type:(a.damage_types || ["lightning"])[0]} : {}));
+        .map(a => Object.assign({id:a.id, uses_per_day:Math.max(1, n(a.uses_per_day, 1)), cooldown_turns:Math.max(0, n(a.cooldown_turns, 0))}, a.id === "corpo_energetico" ? {damage:a.damage || "1d4", damage_type:(a.damage_types || ["lightning"])[0]} : {}, a.id === "envenenar" ? {attack_index:n(a.attack_index, 0), veneno_id:a.veneno_id || "", poison_dc:n(a.poison_dc, 10)} : {}));
     out.negative_ability_ids = (out.negative_ability_ids || allAbilityIds.filter(negativeAbility)).filter(negativeAbility);
     out.ability_ids = out.monster_abilities.map(a => a.id).filter(id => !negativeAbility(id));
     // A ficha salva traz as fraquezas mecânicas; o formulário as reconstrói a
@@ -264,6 +265,34 @@
         config.damage = card.querySelector(".me-energy-damage").value;
         config.damage_type = card.querySelector(".me-energy-type").value;
       }
+      if (el.value === "explosao_final") {
+        config.damage_dice = Math.max(1, Math.min(20, n(card.querySelector(".me-final-dice").value, 6)));
+        config.damage_faces = Math.max(4, Math.min(20, n(card.querySelector(".me-final-faces").value, 6)));
+        config.radius = Math.max(0, Math.min(10, n(card.querySelector(".me-final-radius").value, 1)));
+        config.dc = Math.max(1, Math.min(40, n(card.querySelector(".me-final-dc").value, 13)));
+      }
+      if (el.value === "corpo_em_chamas") {
+        config.damage_dice = Math.max(1, Math.min(20, n(card.querySelector(".me-flame-dice").value, 1)));
+        config.damage_faces = Math.max(4, Math.min(20, n(card.querySelector(".me-flame-faces").value, 6)));
+      }
+      if (el.value === "envenenar") {
+        config.attack_index = Math.max(0, n(card.querySelector(".me-poison-attack").value, 0));
+        config.veneno_id = card.querySelector(".me-poison-venom").value;
+        config.poison_dc = Math.max(1, Math.min(40, n(card.querySelector(".me-poison-dc").value, 10)));
+      }
+      if (el.value === "infeccao") {
+        config.disease_severity = card.querySelector(".me-infection-severity").value;
+        config.dc = Math.max(1, Math.min(40, n(card.querySelector(".me-infection-dc").value, 10)));
+      }
+      if (el.value === "forca_descomunal") {
+        config.dc = Math.max(1, Math.min(40, n(card.querySelector(".me-force-dc").value, 10)));
+      }
+      if (el.value === "cuspir_acido") {
+        config.damage_dice = Math.max(1, Math.min(20, n(card.querySelector(".me-acid-dice").value, 2)));
+        config.damage_faces = Math.max(4, Math.min(20, n(card.querySelector(".me-acid-faces").value, 6)));
+        config.range = Math.max(1, Math.min(20, n(card.querySelector(".me-acid-range").value, 3)));
+        config.dc = Math.max(1, Math.min(40, n(card.querySelector(".me-acid-dc").value, 13)));
+      }
       return config;
     });
     out.ability_ids = out.monster_abilities.map(a => a.id);
@@ -337,12 +366,23 @@
       {id:"guilda", label:"Guilda", filter:a => a.source === "guilda"},
       {id:"monstro", label:"Bestiário", filter:a => a.source !== "heroi" && a.source !== "guilda"},
     ];
+    const venomChoices = ((window.EDITOR_CATALOG || {}).venoms || [])
+      .map(v => ({id:v.id, name:v.nome || v.name || v.id})).filter(v => v.id);
     const abilityCards = abilitySources.map(source => {
       const cards = positiveAbilities.filter(source.filter).map(a => {
         const cfg = configuredAbilities.get(a.id) || {uses_per_day:1, cooldown_turns:0};
         const selected = selectedAbilities.has(a.id);
         const energyConfig = a.id === "corpo_energetico" ? `<span class="me-ability-limit">dano<select class="me-energy-damage">${["1d4","1d6","1d8","1d10","1d12"].map(v=>`<option value="${v}"${(cfg.damage || a.damage || "1d4") === v ? " selected" : ""}>${v}</option>`).join("")}</select></span><span class="me-ability-limit">elemento<select class="me-energy-type">${ATTACK_DAMAGE_TYPES.filter(t=>t.value!=="physical").map(t=>`<option value="${t.value}"${(cfg.damage_type || (a.damage_types||["lightning"])[0]) === t.value ? " selected" : ""}>${t.name}</option>`).join("")}</select></span>` : "";
-        return `<div class="me-ability-card me-tip" data-source="${source.id}" data-tip="${esc(abilityHint(a))}"><input class="me-ability" type="checkbox" value="${esc(a.id)}"${selected ? " checked" : ""}><span><b>${esc(a.icon || a.emoji || a.icone || "✦")} ${esc(a.name || a.nome || a.id)}</b><small>${esc(a.action_type || "ação")}</small></span><span class="me-ability-limit">usos/dia<input class="me-ability-uses" type="number" min="1" max="20" value="${esc(cfg.uses_per_day || 1)}"></span><span class="me-ability-limit">recarga<input class="me-ability-cooldown" type="number" min="0" max="20" value="${esc(cfg.cooldown_turns || 0)}"><small>rodadas</small></span>${energyConfig}</div>`;
+        const finalConfig = a.id === "explosao_final" ? `<span class="me-ability-limit">dados<input class="me-final-dice" type="number" min="1" max="20" value="${esc(cfg.damage_dice || 6)}"></span><span class="me-ability-limit">faces<select class="me-final-faces">${[4,6,8,10,12,20].map(v=>`<option value="${v}"${Number(cfg.damage_faces || 6)===v ? " selected" : ""}>d${v}</option>`).join("")}</select></span><span class="me-ability-limit">raio<input class="me-final-radius" type="number" min="0" max="10" value="${esc(cfg.radius || 1)}"></span><span class="me-ability-limit">CD<input class="me-final-dc" type="number" min="1" max="40" value="${esc(cfg.dc || 13)}"></span>` : "";
+        const flameConfig = a.id === "corpo_em_chamas" ? `<span class="me-ability-limit">dados<input class="me-flame-dice" type="number" min="1" max="20" value="${esc(cfg.damage_dice || 1)}"></span><span class="me-ability-limit">faces<select class="me-flame-faces">${[4,6,8,10,12,20].map(v=>`<option value="${v}"${Number(cfg.damage_faces || 6)===v ? " selected" : ""}>d${v}</option>`).join("")}</select></span>` : "";
+        const poisonConfig = a.id === "envenenar" ? `<span class="me-ability-limit">ataque<select class="me-poison-attack">${draft.attacks.map((atk,i)=>`<option value="${i}"${Number(cfg.attack_index || 0)===i ? " selected" : ""}>${esc(atk.name || `Ataque ${i+1}`)}</option>`).join("")}</select></span><span class="me-ability-limit">veneno<select class="me-poison-venom">${venomChoices.map(v=>`<option value="${esc(v.id)}"${(cfg.veneno_id || "")===v.id ? " selected" : ""}>${esc(v.name)}</option>`).join("")}</select></span><span class="me-ability-limit">CD<input class="me-poison-dc" type="number" min="1" max="40" value="${esc(cfg.poison_dc || 10)}"></span>` : "";
+        const infectionConfig = a.id === "infeccao" ? `<span class="me-ability-limit">doença<select class="me-infection-severity">${[["leve","leve"],["moderada","moderada"],["pesada","pesada"]].map(([value,label])=>`<option value="${value}"${(cfg.disease_severity || cfg.severity || "leve") === value ? " selected" : ""}>${label}</option>`).join("")}</select></span><span class="me-ability-limit">CD<input class="me-infection-dc" type="number" min="1" max="40" value="${esc(cfg.dc || a.dc || 10)}"></span>` : "";
+        const forceConfig = a.id === "forca_descomunal" ? `<span class="me-ability-limit">CD<input class="me-force-dc" type="number" min="1" max="40" value="${esc(cfg.dc || a.dc || 10)}"></span>` : "";
+        const acidConfig = a.id === "cuspir_acido" ? `<span class="me-ability-limit">dados<input class="me-acid-dice" type="number" min="1" max="20" value="${esc(cfg.damage_dice || 2)}"></span><span class="me-ability-limit">faces<select class="me-acid-faces">${[4,6,8,10,12,20].map(v=>`<option value="${v}"${Number(cfg.damage_faces || 6)===v ? " selected" : ""}>d${v}</option>`).join("")}</select></span><span class="me-ability-limit">alcance<input class="me-acid-range" type="number" min="1" max="20" value="${esc(cfg.range || a.range || 3)}"></span><span class="me-ability-limit">CD<input class="me-acid-dc" type="number" min="1" max="40" value="${esc(cfg.dc || a.dc || 13)}"></span>` : "";
+        const abilityDescription = a.id === "forca_descomunal"
+          ? `Ataque normal; se acertar, Fortitude CD ${cfg.dc || a.dc || 10} ou atordoado (perde a próxima rodada). Recarga ${cfg.cooldown_turns ?? a.cooldown_turns ?? 4} rodada(s).`
+          : abilityHint(a);
+        return `<div class="me-ability-card me-tip" data-source="${source.id}" data-tip="${esc(abilityDescription)}"><input class="me-ability" type="checkbox" value="${esc(a.id)}"${selected ? " checked" : ""}><span><b>${esc(a.icon || a.emoji || a.icone || "✦")} ${esc(a.name || a.nome || a.id)}</b><small>${esc(a.action_type || "ação")}</small></span><span class="me-ability-limit">usos/dia<input class="me-ability-uses" type="number" min="1" max="20" value="${esc(cfg.uses_per_day || 1)}"></span><span class="me-ability-limit">recarga<input class="me-ability-cooldown" type="number" min="0" max="20" value="${esc(cfg.cooldown_turns || 0)}"><small>rodadas</small></span>${energyConfig}${finalConfig}${flameConfig}${poisonConfig}${infectionConfig}${forceConfig}${acidConfig}</div>`;
       }).join("") || "Nenhuma habilidade cadastrada nesta origem.";
       return `<div class="me-ability-panel" data-source="${source.id}"><h3>${source.label}</h3><div class="me-ability-grid">${cards}</div></div>`;
     }).join("");

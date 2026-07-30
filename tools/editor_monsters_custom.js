@@ -449,12 +449,13 @@ window.EDITOR_CUSTOM_MONSTERS = [
     ],
     "special_abilities": [
       {
-        "id": "veneno_ferrao",
-        "name": "Veneno do Ferrão",
+        "id": "envenenar",
+        "name": "Envenenar",
         "action_type": "passiva",
-        "dc": 9,
-        "save": "fortitude",
-        "effect": "penalidade_ataque_movimento",
+        "attack_index": 1,
+        "veneno_id": "veneno_escorpiao_pedra",
+        "poison_dc": 10,
+        "descricao": "Vincula um veneno escolhido a um dos ataques da criatura.",
         "source": "monstro",
         "uses_per_day": 1,
         "cooldown_turns": 0
@@ -462,9 +463,12 @@ window.EDITOR_CUSTOM_MONSTERS = [
     ],
     "monster_abilities": [
       {
-        "id": "veneno_ferrao",
+        "id": "envenenar",
         "uses_per_day": 1,
-        "cooldown_turns": 0
+        "cooldown_turns": 0,
+        "attack_index": 1,
+        "veneno_id": "veneno_escorpiao_pedra",
+        "poison_dc": 10
       }
     ],
     "monster_spells": [],
@@ -687,7 +691,7 @@ window.EDITOR_CUSTOM_MONSTERS = [
         "id": "movimento_erratico",
         "name": "Movimento Errático",
         "action_type": "passiva",
-        "descricao": "Ignora terreno difícil — avança sem hesitar",
+        "descricao": "Ignora penalidades de movimento de Água e Água Profunda",
         "source": "monstro",
         "uses_per_day": 1,
         "cooldown_turns": 0
