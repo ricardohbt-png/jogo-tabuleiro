@@ -24,5 +24,8 @@ saves/
 accounts/
 savegames/
 
+# Grupos sociais (runtime, criados pelo servidor junto das campanhas)
+groups/
+
 # Worktrees isolados (superpowers)
 .worktrees/
