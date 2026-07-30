@@ -87,6 +87,16 @@ const aitemI = L.serializeArmor(Object.assign({}, adraft, {bonuses:[{effect:"ini
 check("serializeArmor mantém initiative", aitemI.bonuses.length === 1
   && aitemI.bonuses[0].effect === "initiative" && aitemI.bonuses[0].value === 3);
 
+// bônus escalar vision passa por serializeArmor/serializeAccessory
+check("BONUS_EFFECTS inclui vision", L.BONUS_EFFECTS.indexOf("vision") >= 0);
+const aitemV = L.serializeArmor(Object.assign({}, adraft, {bonuses:[{effect:"vision", value:2}]}));
+check("serializeArmor mantém vision", aitemV.bonuses.length === 1
+  && aitemV.bonuses[0].effect === "vision" && aitemV.bonuses[0].value === 2);
+const ringV = L.serializeAccessory({name:"Anel do Vigia", item_type:"ring",
+  bonuses:[{effect:"vision",value:1}], disponibilidade:{loja:false,baus:false,loot_monstro:false}, price:0});
+check("serializeAccessory mantém vision", ringV.bonuses.length === 1
+  && ringV.bonuses[0].effect === "vision" && ringV.bonuses[0].value === 1);
+
 // Fase E — acessórios (anéis + botas)
 check("BONUS_EFFECTS inclui atk_bonus", L.BONUS_EFFECTS.indexOf("atk_bonus") >= 0);
 const ring = L.serializeAccessory({name:"Anel de Vigor", item_type:"ring",

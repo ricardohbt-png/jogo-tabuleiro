@@ -1026,6 +1026,39 @@ def test_iniciativa_bonus():
         bonuses=[{"effect": "initiative", "value": 3}]))
     check("validação preserva initiative", ok and itv.get("bonuses") == [{"effect": "initiative", "value": 3}])
 
+def test_visao_bonus():
+    print("\n[M1] Bônus de visão (escalar + validação)")
+    r = _gear_room()
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    vis0 = r._get_raio_visao(p)
+    it = {"id": "v", "name": "V", "item_slot": "armor", "effect": "def_", "value": 0,
+          "bonuses": [{"effect": "vision", "value": 2}]}
+    r._apply_gear_effect(p, it, True)
+    check("equipar +2 visão", r._get_raio_visao(p) == vis0 + 2)
+    r._apply_gear_effect(p, it, True)
+    check("empilhar dois = +4", r._get_raio_visao(p) == vis0 + 4)
+    r._apply_gear_effect(p, it, False)
+    check("remover um = +2", r._get_raio_visao(p) == vis0 + 2)
+    r._apply_gear_effect(p, it, False)
+    check("remover ambos volta ao inicial", r._get_raio_visao(p) == vis0)
+    itn = {"id": "w", "name": "W", "item_slot": "armor", "effect": "def_", "value": 0,
+           "bonuses": [{"effect": "vision", "value": -2}]}
+    r._apply_gear_effect(p, itn, True)
+    check("valor negativo reduz", r._get_raio_visao(p) == max(1, vis0 - 2))
+    r._apply_gear_effect(p, itn, False)
+    itz = {"id": "z", "name": "Z", "item_slot": "armor", "effect": "def_", "value": 0,
+           "bonuses": [{"effect": "vision", "value": -99}]}
+    r._apply_gear_effect(p, itz, True)
+    check("raio nunca desce abaixo de 1", r._get_raio_visao(p) == 1)
+    r._apply_gear_effect(p, itz, False)
+    check("desfazer o piso volta ao inicial", r._get_raio_visao(p) == vis0)
+    ok, itv = S._validate_custom_item(armor_sample(id="cota_visao",
+        bonuses=[{"effect": "vision", "value": 2}]))
+    check("validação preserva vision", ok and itv.get("bonuses") == [{"effect": "vision", "value": 2}])
+    ok2, ita = S._validate_custom_item(accessory_sample(id="anel_visao",
+        bonuses=[{"effect": "vision", "value": 1}]))
+    check("aceito também em acessório", ok2 and ita.get("bonuses") == [{"effect": "vision", "value": 1}])
+
 def _item_com_habilidade(aid, **over):
     """Peça de gear mínima que concede uma habilidade."""
     base = {"id": "peca_hab", "name": "Peça Encantada", "granted_ability": aid}
@@ -1678,7 +1711,7 @@ if __name__ == "__main__":
     test_validacao_bonus_atributo()
     test_resistencia_aplica(); test_resistencia_empilha()
     test_validacao_resist()
-    test_iniciativa_bonus()
+    test_iniciativa_bonus(); test_visao_bonus()
     test_validacao_acessorio()
     test_acessorio_equip_efeitos(); test_acessorio_resist()
     test_acessorio_botas_corrosao(); test_acessorio_merge()

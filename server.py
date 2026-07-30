@@ -8949,15 +8949,17 @@ class GameRoom:
         A base é 3 (4 para o Guerreiro) e recebe metade, arredondada para
         baixo, da soma dos modificadores atuais de INT e DES. Assim, doenças
         ou quaisquer outras alterações nesses atributos afetam a visão sem
-        precisarem gravar um bônus separado. O Guerreiro da Luz continua
-        sendo somado por último, quando ativo.
+        precisarem gravar um bônus separado. O bônus de equipamento
+        (`vision_bonus`, efeito "vision" do Editor de Itens) e o Guerreiro da
+        Luz continuam sendo somados por último, quando ativos.
         """
         raio_base = max(1, int(p.get("spd", 5)))
         bonus_atributos = (mod(p.get("int_", 10)) + mod(p.get("dex", 10))) // 2
+        bonus_item = int(p.get("vision_bonus", 0) or 0)
         bonus_luz = 0
         if p.get("class_id") == "paladin" and p.get("guerreiro_luz_ativo"):
             bonus_luz = p.get("guerreiro_luz_bonus", {}).get("visao", 0)
-        return max(1, raio_base + bonus_atributos + bonus_luz)
+        return max(1, raio_base + bonus_atributos + bonus_item + bonus_luz)
 
     def _get_raio_visao_monstro(self, m):
         """Raio de visão: movimento base + bônus de visão + INT/DES."""
@@ -12700,6 +12702,9 @@ class GameRoom:
             p["spd"] += v
         elif e == "initiative":
             p["initiative_bonus"] = p.get("initiative_bonus", 0) + v
+        elif e == "vision":
+            # Quadrados extras de visão (raio de revelação da névoa).
+            p["vision_bonus"] = p.get("vision_bonus", 0) + v
         elif e == "bagslots":
             # Mochila/alforje: expande o inventÃ¡rio enquanto equipada
             p["bag_size"] = max(1, p.get("bag_size", 6) + v)
@@ -23081,7 +23086,7 @@ def _read_custom_items():
 
 _ITEM_ARMOR_CATS = {"leve", "media", "pesada"}
 _ITEM_MATERIAIS = {"organic", "metal"}
-_ITEM_BONUS_EFFECTS = {"def_", "maxhp", "spd", "atk_bonus", "str_", "dex", "con_", "int_", "resist", "initiative"}
+_ITEM_BONUS_EFFECTS = {"def_", "maxhp", "spd", "atk_bonus", "str_", "dex", "con_", "int_", "resist", "initiative", "vision"}
 
 # Efeitos válidos p/ poção custom (Fase F) — já implementados em handle_use_item.
 _ITEM_POTION_EFFECTS = {"heal", "regeneration", "atk_bonus",

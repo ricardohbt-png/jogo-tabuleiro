@@ -74,7 +74,7 @@
     return { ok: true };
   }
   var ARMOR_CATS = ["leve", "media", "pesada"];
-  var BONUS_EFFECTS = ["def_", "maxhp", "spd", "atk_bonus", "str_", "dex", "con_", "int_", "resist", "initiative"];
+  var BONUS_EFFECTS = ["def_", "maxhp", "spd", "atk_bonus", "str_", "dex", "con_", "int_", "resist", "initiative", "vision"];
   var RESIST_TYPES = ["physical", "fire", "cold", "lightning", "acid", "holy", "poison", "magic", "water"];
   var POTION_EFFECTS = ["heal", "regeneration", "atk_bonus",
                         "cure_poison", "cure_petrification", "cure_disease"];

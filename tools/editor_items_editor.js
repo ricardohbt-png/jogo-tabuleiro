@@ -309,6 +309,16 @@
     root.querySelector("#ie-abonus").appendChild(node);
   }
 
+  // Rótulos dos "bônus adicionais" (motor de multi-efeito) — compartilhado
+  // pelos previews de armadura/escudo e de anel/bota.
+  var BONUS_LBL = { def_:"CA extra", maxhp:"PV máx", spd:"velocidade", atk_bonus:"acerto",
+    str_:"Força", dex:"Destreza", con_:"CON", int_:"INT", initiative:"iniciativa",
+    vision:"visão" };
+  function bonusLabel(b) {
+    if (b.effect === "resist") return "resist " + (b.type || "");
+    return BONUS_LBL[b.effect] || b.effect;
+  }
+
   function renderArmorPreview() {
     currentArmorDraftFromForm();
     var item = L.serializeArmor(draft);
@@ -317,8 +327,7 @@
     var parts = ["+" + item.ac_bonus + " CA"];
     if (item.armor_category) parts.push(item.armor_category);
     (item.bonuses || []).forEach(function (b) {
-      var lbl = b.effect === "def_" ? "CA extra" : (b.effect === "maxhp" ? "PV máx" : "Velocidade");
-      parts.push((b.value >= 0 ? "+" : "") + b.value + " " + lbl);
+      parts.push((b.value >= 0 ? "+" : "") + b.value + " " + bonusLabel(b));
     });
     var matsLabel = (item.corrosion_materials || []).length ? item.corrosion_materials.join("+") : "nenhum";
     parts.push("🛡️ corrosão " + (item.corrosao_resistente || 0) + "+" + (item.corrosao_niveis_penalidade || 2) + " (" + matsLabel + ")");
@@ -429,12 +438,9 @@
     currentAccessoryDraftFromForm();
     var item = L.serializeAccessory(draft);
     root.querySelector("#ie-price-sug").textContent = "sugerido: " + L.suggestPriceAccessory(item) + " 🪙";
-    var LBL = { def_:"CA", maxhp:"PV máx", spd:"velocidade", atk_bonus:"acerto",
-      str_:"Força", dex:"Destreza", con_:"CON", int_:"INT", initiative:"iniciativa" };
     var parts = [];
     (item.bonuses || []).forEach(function (b) {
-      var lbl = b.effect === "resist" ? ("resist " + (b.type || "")) : (LBL[b.effect] || b.effect);
-      parts.push((b.value >= 0 ? "+" : "") + b.value + " " + lbl);
+      parts.push((b.value >= 0 ? "+" : "") + b.value + " " + bonusLabel(b));
     });
     if (item.corrosion_materials) {
       var matsLabel = item.corrosion_materials.length ? item.corrosion_materials.join("+") : "nenhum";
@@ -947,6 +953,7 @@
       '<option value="str_">Força</option><option value="dex">Destreza</option>' +
       '<option value="con_">Constituição</option><option value="int_">Inteligência</option>' +
       '<option value="initiative">Iniciativa</option>' +
+      '<option value="vision">Visão (quadrados)</option>' +
       '<option value="resist">Resistência</option></select> ' +
       '<select class="ie-abonus-type" style="display:none"><option value="physical">Físico</option>' +
       '<option value="fire">Fogo</option><option value="cold">Frio</option><option value="lightning">Elétrico</option>' +

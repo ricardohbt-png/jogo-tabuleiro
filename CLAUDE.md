@@ -1189,6 +1189,16 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > Editor de Itens. Testes: `tools/test_editor_itens.py` [D1] + node. Fases seguintes: as
 > outras sub-abas (anéis/botas/poções/arremessáveis/venenos) + habilidades ativáveis.
 
+> **Editor de Itens — bônus de visão:** efeito escalar **`vision`** no motor de multi-efeito
+> (`_apply_single_effect`, mesmo ramo de `spd`/`initiative`) → `p["vision_bonus"]`, somado em
+> `_get_raio_visao` **antes** do piso `max(1, …)`, ao lado do bônus de atributos e do Guerreiro
+> da Luz — vale para heróis (raio de revelação da névoa em quadrados). Aceita negativo. Está no
+> allow-list `_ITEM_BONUS_EFFECTS` (server) / `BONUS_EFFECTS` (`editor_items_logic.js`) e no
+> dropdown "bônus adicionais" dos 4 forms de gear (armadura/escudo/anel/bota) como "Visão
+> (quadrados)". Junto veio um fix do preview de armadura, que rotulava qualquer efeito fora de
+> `def_/maxhp/spd` como "Velocidade" — os dois previews agora compartilham `BONUS_LBL`/
+> `bonusLabel` em `editor_items_editor.js`. Testes: `tools/test_editor_itens.py` [M1] + node.
+
 > **Editor de Itens — Fase E (Anéis + Botas):** destrava as sub-abas **Anéis** e
 > **Botas** (as outras 3 seguem 🔒). Acessórios reusam o **motor de multi-efeito**
 > (`bonuses:[{effect,value}]`) — sem CA-base nem `armor_category`; todo efeito vem da
