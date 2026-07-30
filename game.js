@@ -672,8 +672,11 @@ function criarJogoSalvo() {
   const name = (document.getElementById('sg-name').value || '').trim();
   const campaign_file = document.getElementById('sg-campaign').value || null;
   const has_master = document.getElementById('sg-master').checked;
+  const entry_mode = document.getElementById('sg-entry-mode')?.value || 'vote';
+  const replacement_rule = document.getElementById('sg-replacement-rule')?.value || 'experienced';
   if (!name) { alert('Dê um nome ao jogo.'); return; }
-  GS.createSavegame({ name, mode: 'campaign', campaign_file, has_master });
+  GS.createSavegame({ name, mode: 'campaign', campaign_file, has_master,
+    rules: { allow_new_players: true, entry_mode, replacement_rule, vote_timeout_hours: 72 } });
 }
 
 // Entrar (já logado) na sala do jogo salvo de um amigo pelo código — Fase 3.
@@ -7167,6 +7170,10 @@ function drawMiniBase(ctx, cx, cy, color, active){
 // Matte plastic die colors — body color per die type (user spec)
 // Die colors and text settings come from VC (src/visualConfig.js)
 const DIE_COLORS = VC.dice.colors;
+const DIE_COLOR_VARIANTS = VC.dice.colorVariants || {};
+// Cores reservadas para rolagens com atraso de entrada. Sem isso, dois dados
+// disparados no mesmo frame escolheriam a mesma cor antes de aparecerem.
+const _pendingDiceColors = new Set();
 
 let _d3      = null;   // dice state (animFrame + cfr counter only — no separate scene)
 const _dice3 = [];    // active die objects
@@ -7502,7 +7509,7 @@ function _buildD10Geo(T){
 
 // ── Face texture — 256×256, matte-plastic body + contrasting number ──────────
 // textColor is passed in so d4 (white body) gets black ink; all others white.
-function _dieFaceTex(T, value, hexColor){
+function _dieFaceTex(T, value, hexColor, dieType){
   const SZ=256, half=128;
   const cv=document.createElement('canvas'); cv.width=cv.height=SZ;
   const c=cv.getContext('2d');
@@ -7529,10 +7536,11 @@ function _dieFaceTex(T, value, hexColor){
   // ── Number — white with black stroke for max contrast ─────────────────────
   const numStr = String(value);
   const baseFz = VC.dice.numberFontSize;
-  const fs = numStr.length > 1 ? Math.round(baseFz * 110/130) : baseFz;
+  const faceScale = (VC.dice.faceFontScale || {})[dieType] || 1;
+  const fs = Math.round((numStr.length > 1 ? baseFz * 110/130 : baseFz) * faceScale);
   c.textAlign    = 'center';
   c.textBaseline = 'middle';
-  c.font    = `bold ${fs}px 'Arial Black', Arial, sans-serif`;
+  c.font    = `900 ${fs}px 'Arial Black', Arial, sans-serif`;
   c.lineJoin   = 'round';
   c.miterLimit = 2;
 
@@ -7584,13 +7592,13 @@ function _dieFaceTexD20(T, value, hexColor){
 
   c.textAlign    = 'center';
   c.textBaseline = 'middle';
-  c.font    = `bold ${fs}px 'Arial Black', Arial, sans-serif`;
+  c.font    = `900 ${fs}px 'Arial Black', Arial, sans-serif`;
   c.lineJoin   = 'round';
   c.miterLimit = 2;
 
   // White stroke FIRST (per VISUAL_CONTRACT), black fill on top
-  c.strokeStyle = VC.dice.strokeColor;   // '#FFFFFF'
-  c.lineWidth   = VC.dice.numberStroke;  // 12px
+  c.strokeStyle = '#fff7d6';              // alto contraste sobre a resina
+  c.lineWidth   = 14;
   c.strokeText(numStr, cx, numY);
   c.fillStyle = VC.dice.numberColor;     // '#000000'
   c.fillText(numStr,   cx, numY);
@@ -7599,19 +7607,31 @@ function _dieFaceTexD20(T, value, hexColor){
   return new T.CanvasTexture(cv);
 }
 
-// ── MeshBasicMaterial (unlit) — a cor do dado é EXATAMENTE a do hex ───────────
-// Antes: Lambert + emissive 1.0 + luzes fortes → cor estourava p/ branco
-// (dados "lavados"/pálidos). Basic ignora toda a iluminação da cena: faces
-// 100% saturadas; o volume vem do vignette por-face da textura + bordas.
-// dieType selects the correct face-texture builder (d20 uses triangular canvas).
+// ── Resina física: luz revela as faces, verniz e relevo leve dos números ──────
+// MeshPhysicalMaterial deixa os dados mais próximos de peças reais sem perder
+// a leitura do resultado; o CanvasTexture preserva número e cor em cada face.
 function _buildDieMat(T, value, hexColor, dieType){
   const faceTex = dieType === 'd20'
     ? _dieFaceTexD20(T, value, hexColor)
-    : _dieFaceTex(T, value, hexColor);
-  return new T.MeshBasicMaterial({
+    : _dieFaceTex(T, value, hexColor, dieType);
+  return new T.MeshPhysicalMaterial({
     color:             0xffffff,                    // white so map texture hue shows unmodified
     map:               faceTex,
-    transparent:       false,                       // fully opaque — never translucent
+    bumpMap:           faceTex,
+    bumpScale:         0.030,
+    // Emissão fraca da própria textura: destaca a resina contra a masmorra sem
+    // apagar os números, pois as áreas de tinta preta também ficam escuras.
+    emissive:          new T.Color(hexColor),
+    emissiveMap:       faceTex,
+    emissiveIntensity: 0.16,
+    roughness:         0.26,
+    metalness:         0.03,
+    clearcoat:         0.46,
+    clearcoatRoughness:0.20,
+    // Entra na fila final de transparências com opacidade total. Assim os dados
+    // são compostos depois das áreas de movimento/alcance e nunca recebem suas
+    // cores por cima, mas continuam com aparência física de resina.
+    transparent:       true,
     opacity:           1.0,
     depthTest:         false,                       // always renders on top of all board geometry
     depthWrite:        true,                        // writes depth so dice occlude each other
@@ -7650,7 +7670,34 @@ function _getFlatNormals(geo){
     }
     if(!found) normals.push({x:nx2, y:ny2, z:nz2});
   }
-  return normals;
+  return normals.map(n => ({...n, groupIndex:_faceGroupIndex(geo, n)}));
+}
+
+function _prepareDieFaceGroups(geo){
+  const existing = geo.groups.slice();
+  geo.clearGroups();
+  if(existing.length) existing.forEach((g, i) => geo.addGroup(g.start, g.count, i));
+  else {
+    const count = geo.index ? geo.index.count : geo.attributes.position.count;
+    for(let start=0, i=0; start<count; start+=3, i++) geo.addGroup(start, 3, i);
+  }
+}
+
+function _faceGroupIndex(geo, normal){
+  const pos=geo.attributes.position, index=geo.index;
+  for(const group of geo.groups){
+    const at=i => index ? index.getX(group.start+i) : group.start+i;
+    const ia=at(0), ib=at(1), ic=at(2);
+    const ax=pos.getX(ia), ay=pos.getY(ia), az=pos.getZ(ia);
+    const bx=pos.getX(ib), by=pos.getY(ib), bz=pos.getZ(ib);
+    const cx=pos.getX(ic), cy=pos.getY(ic), cz=pos.getZ(ic);
+    const ex=bx-ax, ey=by-ay, ez=bz-az, fx=cx-ax, fy=cy-ay, fz=cz-az;
+    const nx=ey*fz-ez*fy, ny=ez*fx-ex*fz, nz=ex*fy-ey*fx;
+    const len=Math.hypot(nx,ny,nz) || 1;
+    if((nx/len)*normal.x + (ny/len)*normal.y + (nz/len)*normal.z > 0.999)
+      return group.materialIndex;
+  }
+  return 0;
 }
 
 /**
@@ -7659,7 +7706,7 @@ function _getFlatNormals(geo){
  */
 function _snapRotation(T, mesh, faceLocalNormals){
   if(!faceLocalNormals || faceLocalNormals.length===0){
-    return mesh.quaternion.clone();
+    return { quaternion:mesh.quaternion.clone(), groupIndex:0 };
   }
   const up  = new T.Vector3(0,1,0);
   const mQ  = mesh.quaternion;
@@ -7670,10 +7717,44 @@ function _snapRotation(T, mesh, faceLocalNormals){
     const d = fWorld.dot(up);
     if(d > bestDot){ bestDot=d; bestLocal=fn; }
   }
-  if(!bestLocal) return mQ.clone();
+  if(!bestLocal) return { quaternion:mQ.clone(), groupIndex:0 };
   // Quaternion that rotates local bestFace → world up
   const fromV = new T.Vector3(bestLocal.x, bestLocal.y, bestLocal.z);
-  return new T.Quaternion().setFromUnitVectors(fromV, up);
+  return { quaternion:new T.Quaternion().setFromUnitVectors(fromV, up), groupIndex:bestLocal.groupIndex };
+}
+
+function _randomDieFaceValue(dieType, avoid){
+  const max = _dieMax(dieType);
+  let value = 1 + Math.floor(Math.random() * max);
+  if(max > 1 && value === avoid) value = (value % max) + 1;
+  return value;
+}
+
+function _disposeDieMaterials(mats){
+  for(const mat of mats || []){
+    if(mat && mat.map) mat.map.dispose();
+    if(mat) mat.dispose();
+  }
+}
+
+function _makeD20TopBadge(T, value){
+  const cv=document.createElement('canvas'); cv.width=cv.height=256;
+  const c=cv.getContext('2d'), text=String(value);
+  c.textAlign='center'; c.textBaseline='middle';
+  c.font=`900 ${text.length>1 ? 122 : 152}px 'Arial Black', Arial, sans-serif`;
+  c.lineJoin='round'; c.strokeStyle='#fff7d6'; c.lineWidth=24;
+  c.strokeText(text,128,132); c.fillStyle='#080808'; c.fillText(text,128,132);
+  const map=new T.CanvasTexture(cv);
+  const mat=new T.MeshBasicMaterial({map, transparent:true, side:T.DoubleSide,
+    depthTest:false, depthWrite:false});
+  const geo=new T.PlaneGeometry(0.46,0.46);
+  return { mesh:new T.Mesh(geo,mat), geo, mat };
+}
+
+function _disposeTopBadge(badge){
+  if(!badge) return;
+  if(badge.mat.map) badge.mat.map.dispose();
+  badge.geo.dispose(); badge.mat.dispose();
 }
 
 const _tweens = [];
@@ -7707,14 +7788,23 @@ function _spawnDie3D(dieType, value, label, hexColor, flags){
   // dedicadas (eram 2 luzes a mais na cena, custo por frame sem efeito visual).
   if(_d3 && !_d3._diceGroup){
     const diceGroup = new T.Group();
+    // Luz focada e quente: dá leitura e reflexos de resina sem transformar
+    // o próprio material em um efeito luminoso de videogame.
+    const diceLight = new T.PointLight(0xfff0cf, 2.6, 7.0, 2.0);
+    diceLight.position.set(0, 2.4, 1.2);
+    diceGroup.add(diceLight);
     // Posição atualizada a cada frame em _startDiceLoop3D (segue o centro da câmera)
     g3.scene.add(diceGroup);
     _d3._diceGroup = diceGroup;
   }
 
   const geo  = _buildDieGeo(T, dieType);
-  const mat  = _buildDieMat(T, value, hexColor, dieType);
-  const mesh = new T.Mesh(geo, mat);
+  _prepareDieFaceGroups(geo);
+  // Cada face começa como um dado normal, com valor próprio aleatório. Ao parar,
+  // apenas a face voltada para cima é trocada pelo resultado do servidor.
+  const mats = geo.groups.map(() =>
+    _buildDieMat(T, _randomDieFaceValue(dieType, value), hexColor, dieType));
+  const mesh = new T.Mesh(geo, mats);
   mesh.castShadow=true; mesh.receiveShadow=true;
   mesh.scale.setScalar(VC.dice.scale);   // 30% larger for better board visibility
 
@@ -7732,21 +7822,51 @@ function _spawnDie3D(dieType, value, label, hexColor, flags){
 
   const faceNormals = _getFlatNormals(geo);
 
-  mesh.renderOrder = 999;   // flush after all board geometry (reinforces depthTest:false)
+  mesh.renderOrder = 10000; // sempre acima do tabuleiro e dos overlays de movimento
   _d3._diceGroup.add(mesh);   // filho do grupo — move junto com ele
   _dice3.push({
-    mesh, geo, mat,
+    mesh, geo, mats,
     vel:    { x:_rr(-1,1), y:-8, z:_rr(-1,1) },
     angVel: { x:_rr(-15,15), y:_rr(-15,15), z:_rr(-15,15) },
     floorY, dieRad,
     area: { x:0, z:0 },   // relativo ao grupo — scatter contido em ±3 tiles locais
     bounces:0, phase:'rolling', alpha:1.0, settleT:0,
-    value, label, dieType, faceNormals,
+    value, label, dieType, faceNormals, color:_hexCss(hexColor),
     discarded: !!flags.discarded, kept: !!flags.kept, offhand: !!flags.offhand,
   });
 
   if(!_d3.animFrame) _startDiceLoop3D();
   playRollSound();
+}
+
+function _diceVisibleColors(){
+  const used = new Set(_pendingDiceColors);
+  for(const die of _dice3) used.add(String(die.color || _hexCss(die.hexColor || DIE_COLORS[die.dieType])).toLowerCase());
+  for(const die of _dice2) used.add(String(die.color).toLowerCase());
+  return used;
+}
+
+function _nextDiceColor(dieType, msg){
+  // Estados de vantagem/desvantagem e mão secundária mantêm semântica própria,
+  // mas recebem variações para não repetir uma cor que ainda está em cena.
+  const semantic = msg.discarded ? ['#c0392b','#e74c3c','#922b21','#ff6b6b']
+    : msg.kept ? ['#27ae60','#2ecc71','#168a4b','#58d68d']
+    : msg.offhand ? ['#e67e22','#f39c12','#d35400','#ffb347']
+    : (DIE_COLOR_VARIANTS[dieType] || [DIE_COLORS[dieType] || VC.dice.colors.d20]);
+  const used = _diceVisibleColors();
+  let color = semantic.find(c => !used.has(c.toLowerCase()));
+  // Em uma rajada excepcional com mais dados que a paleta, cria outra tonalidade
+  // ainda não usada. Assim uma nova jogada nunca reutiliza a cor de peça visível.
+  if(!color){
+    const baseHue = ({d4:48,d6:0,d8:218,d10:145,d12:285,d20:25})[dieType] || 25;
+    for(let i=1; i<=36 && !color; i++){
+      const candidate = `hsl(${(baseHue + (used.size+i)*31) % 360}, 78%, 54%)`;
+      if(!used.has(candidate.toLowerCase())) color = candidate;
+    }
+  }
+  color = color || semantic[0];
+  _pendingDiceColors.add(color.toLowerCase());
+  return color;
 }
 
 function handleDiceRoll(msg){
@@ -7758,13 +7878,11 @@ function handleDiceRoll(msg){
   //   • Mantido (verde)        : dado da desvantagem que ficou (o pior)
   //   • Off-hand (laranja)     : dado da mão secundária (dual-wield Henrique)
   //   • Normal (padrão)        : dourado/azul conforme o tipo do dado
-  let hexColor = DIE_COLORS[dieType] || VC.dice.colors.d20;
-  if(msg.discarded) hexColor = 0xc0392b;        // vermelho — descartado
-  else if(msg.kept) hexColor = 0x27ae60;        // verde — dado da desvantagem que valeu
-  else if(msg.offhand) hexColor = 0xe67e22;     // laranja — mão secundária
+  const hexColor = _nextDiceColor(dieType, msg);
 
   const flags = { discarded: !!msg.discarded, kept: !!msg.kept, offhand: !!msg.offhand };
   setTimeout(()=>{
+    _pendingDiceColors.delete(_hexCss(hexColor).toLowerCase());
     // Decide 3D vs 2D no MOMENTO do spawn (o jogador pode alternar a visão).
     // Antes: sem cena 3D ativa o dado simplesmente não aparecia (só o número
     // na narração do Mestre) — agora a visão 2D tem dados animados próprios.
@@ -7904,7 +8022,8 @@ function _drawDie2D(ctx, d){
   const numStr = d.phase === 'rolling'
     ? String(1 + Math.floor(Math.random() * _dieMax(d.dieType)))
     : String(d.value);
-  const fs = Math.round(R * (numStr.length > 1 ? 0.66 : 0.85));
+  const faceScale = (VC.dice.faceFontScale || {})[d.dieType] || 1;
+  const fs = Math.round(R * (numStr.length > 1 ? 0.66 : 0.85) * faceScale);
   ctx.font = `bold ${fs}px 'Arial Black', Arial, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -7918,14 +8037,11 @@ function _drawDie2D(ctx, d){
   ctx.fillText(numStr, 0, ny);
   ctx.restore();
 
-  // label acima do dado (sem rotação) — cores iguais às do modo 3D
+  // label acima do dado (sem rotação) — acompanha a variação da peça física
   if(d.label && d.phase !== 'rolling'){
     ctx.save();
     ctx.globalAlpha = Math.min(1, d.alpha) * 0.9;
-    let color = '#e8d180';
-    if(d.flags.discarded)    color = '#e74c3c';
-    else if(d.flags.kept)    color = '#2ecc71';
-    else if(d.flags.offhand) color = '#f39c12';
+    const color = d.color || '#e8d180';
     ctx.font = "bold 13px 'Cinzel', serif";
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
@@ -7975,8 +8091,8 @@ function _tickDie3(obj, dt){
   // ── Fading out (0.5 s) ──
   if(obj.phase==='fading'){
     obj.alpha = Math.max(0, obj.alpha - dt/500);
-    mesh.material.opacity = obj.alpha;
-    mesh.material.transparent = true;
+    for(const mat of obj.mats){ mat.opacity=obj.alpha; mat.transparent=true; }
+    if(obj.topBadge) obj.topBadge.mat.opacity=obj.alpha;
     return;
   }
   // ── Resting on board for 3 s, then fade ──
@@ -8039,8 +8155,29 @@ function _tickDie3(obj, dt){
   const _assentaPorTempo = obj.t > 2800;
   if(_assentaPorVel || _assentaPorTempo){
     obj.phase='snapping';
-    const snapQ=_snapRotation(window.THREE, mesh, obj.faceNormals);
-    _addTween(mesh, mesh.quaternion.clone(), snapQ, 420, ()=>{
+    const snap=_snapRotation(window.THREE, mesh, obj.faceNormals);
+    _addTween(mesh, mesh.quaternion.clone(), snap.quaternion, 420, ()=>{
+      const topIndex = snap.groupIndex;
+      if(obj.mats[topIndex]){
+        _disposeDieMaterials([obj.mats[topIndex]]);
+        obj.mats[topIndex] = _buildDieMat(window.THREE, obj.value, obj.color, obj.dieType);
+        mesh.material = obj.mats;
+      }
+      // O d20 recebe ainda uma inscrição plana sobre a face superior. Ela usa a
+      // normal exata da face que acabou de assentar, garantindo que o resultado
+      // do servidor seja legível mesmo com o reflexo da resina.
+      if(obj.dieType === 'd20'){
+        const normal = obj.faceNormals.find(n => n.groupIndex === topIndex);
+        if(normal){
+          const badge = _makeD20TopBadge(window.THREE, obj.value);
+          badge.mesh.position.set(normal.x*0.635, normal.y*0.635, normal.z*0.635);
+          badge.mesh.quaternion.setFromUnitVectors(
+            new window.THREE.Vector3(0,0,1),
+            new window.THREE.Vector3(normal.x,normal.y,normal.z));
+          badge.mesh.renderOrder=10001;
+          mesh.add(badge.mesh); obj.topBadge=badge;
+        }
+      }
       obj.phase='settling'; obj.settleT=0;
       playSettle();
       // Gold particle burst — usa posição mundial (mesh é filho do diceGroup)
@@ -8137,12 +8274,8 @@ function _drawDiceLabels(){
     const sx = (ndc.x * 0.5 + 0.5) * cssW;
     const sy = (-ndc.y * 0.5 + 0.5) * cssH;
 
-    // Cor do label: igual à do material do dado (descartado=vermelho, kept=verde,
-    // off-hand=laranja, normal=dourado).
-    let color = '#e8d180';   // padrão dourado
-    if(obj.discarded) color = '#e74c3c';
-    else if(obj.kept) color = '#2ecc71';
-    else if(obj.offhand) color = '#f39c12';
+    // Cor do label acompanha a variação exata da peça física.
+    const color = obj.color || '#e8d180';
 
     // Sombra preta atrás para legibilidade
     ctx.globalAlpha = Math.min(1, obj.alpha) * 0.9;
@@ -8199,8 +8332,9 @@ function _startDiceLoop3D(){
         // Dispose COMPLETO: material.dispose() NÃO libera a CanvasTexture do map
         // — sem isto cada rolagem vazava uma textura 256² na GPU (lentidão
         // progressiva em sessões longas).
-        if(_dice3[i].mat.map) _dice3[i].mat.map.dispose();
-        _dice3[i].geo.dispose(); _dice3[i].mat.dispose();
+        _disposeDieMaterials(_dice3[i].mats);
+        _disposeTopBadge(_dice3[i].topBadge);
+        _dice3[i].geo.dispose();
         _dice3.splice(i, 1);
       }
     }
@@ -11422,7 +11556,8 @@ function renderFichaMonstro(m){
     return `<div class="fm-atk">⚔️ ${a.name||a.nome||'Ataque'} ${b} · ${dano}</div>`;
   };
   const ehEditor = (a) => (a.source === 'heroi' || a.source === 'guilda') && a.action_type && a.action_type !== 'passiva';
-  const ativavel = (a) => (a.action_type !== 'passiva' && a.save != null && a.dc != null) || ehEditor(a);
+  const ativavel = (a) => a.id === 'mestre_dos_mortos' ||
+    (a.action_type !== 'passiva' && a.save != null && a.dc != null) || ehEditor(a);
   const usosRest = (a) => {
     const lim = (a.uses_per_combat != null) ? a.uses_per_combat
               : (a.uses_per_day != null ? a.uses_per_day : null);
@@ -11442,7 +11577,8 @@ function renderFichaMonstro(m){
     const ok = ativavel(a);
     const cd = cdRest(a), usos = usosRest(a);
     const semUso = (usos===0 || usos==='0');
-    const podeUsar = isManual && !acted && ok && cd===0 && !semUso;
+    const primeiraAcaoOk = a.id !== 'mestre_dos_mortos' || !m._ja_executou_acao;
+    const podeUsar = isManual && !acted && ok && cd===0 && !semUso && primeiraAcaoOk;
     const meta = `<span class="fm-ab-meta">usos: ${usos} · recarga: ${cd>0?cd+'r':'—'}</span>`;
     const ctrl = ok
       ? `<button class="fm-usar" data-abid="${a.id}"${podeUsar?'':' disabled'}>Ativar</button>`
@@ -11460,6 +11596,8 @@ function renderFichaMonstro(m){
     if(FOOD.has(it.effect)) return false;
     if(it.effect === 'throwable') return isManual && !acted;
     if(it.effect === 'scroll') return isManual && !acted && _monConjurador(m);
+    if(it.effect === 'coat_poison' && (m.special_abilities||[]).some(a=>a.id==='envenenar_arma'))
+      return isManual && !m.veneno_arma_ativo;
     return isManual && !m._master_bonus_acted;   // consumível bônus
   };
   const linhaItem = (it) => {
@@ -13653,7 +13791,7 @@ function openTargetModal(title, targets, kind, callback){
     item.innerHTML=`
       <span>${t.emoji||'?'}</span>
       <span>${t.name}</span>
-      <span class="t-hp">HP ${t.hp}/${t.max_hp||t.hp}</span>`;
+      ${t.hp != null ? `<span class="t-hp">HP ${t.hp}/${t.max_hp||t.hp}</span>` : ''}`;
     item.onclick=()=>{ closeTargetModal(); callback(t.id); };
     list.appendChild(item);
   }
@@ -14267,15 +14405,29 @@ function init3D(state){
   const camera = new T.OrthographicCamera(-fH*aspect, fH*aspect, fH, -fH, -300, 300);
   camera.updateProjectionMatrix();
 
-  // Sits at y=–0.01 — the 0.07-unit gap between tiles lets it show through,
-  // creating natural grid lines without any extra geometry.
-  const tableGeo = new T.PlaneGeometry(W + 8, H + 8);
-  const tableMat = new T.MeshStandardMaterial({ color:0x0e0c15, roughness:0.98, metalness:0.0 });
+  // Mesa de madeira sob uma placa de papelão: cobre também a área além do
+  // mapa, para o tabuleiro parecer montado numa sala em vez de flutuar no preto.
+  // O fallback procedural mantém o cenário funcional se a textura não carregar.
+  let tableTex = generateTexture('wood');
+  try {
+    tableTex = new T.TextureLoader().load('assets/textures/tabletop-walnut.png');
+  } catch (_) { /* usa a textura procedural criada acima */ }
+  if(tableTex){
+    if(T.SRGBColorSpace) tableTex.colorSpace=T.SRGBColorSpace; else if(T.sRGBEncoding) tableTex.encoding=T.sRGBEncoding;
+  }
+  const tableSpan = Math.max(W, H) * 3 + 12;
+  const tableGeo = new T.BoxGeometry(tableSpan, 0.24, tableSpan);
+  const tableMat = new T.MeshStandardMaterial({ map:tableTex, color:0x5a341c, roughness:0.88, metalness:0.0 });
   const tableM   = new T.Mesh(tableGeo, tableMat);
-  tableM.rotation.x = -Math.PI / 2;
-  tableM.position.set((W-1)/2, -0.01, (H-1)/2);
-  tableM.receiveShadow = true;
+  tableM.position.set((W-1)/2, -0.20, (H-1)/2);
+  tableM.receiveShadow = true; tableM.castShadow = true;
   scene.add(tableM);
+
+  const boardMat = new T.MeshStandardMaterial({ color:0x2b211a, roughness:0.97, metalness:0.0 });
+  const boardM = new T.Mesh(new T.BoxGeometry(W + 0.55, 0.11, H + 0.55), boardMat);
+  boardM.position.set((W-1)/2, -0.065, (H-1)/2);
+  boardM.receiveShadow = true; boardM.castShadow = true;
+  scene.add(boardM);
 
   // Teste atual: 0,97 numa grade de 1,0 deixa 0,03 de fresta. Pode voltar
   // a 0,94 pelo botão do HUD, sem reiniciar a partida.
@@ -14363,6 +14515,12 @@ function init3D(state){
   showcase.shadow.camera.top    =  (H + 6);
   showcase.shadow.camera.bottom = -(H + 6);
   showcase.shadow.bias = -0.0004;
+  // O sol nunca se mexe: re-renderizar o mapa inteiro no shadow map a cada frame
+  // é desperdício (231 draw calls/frame). Congelado aqui; quem move geometria
+  // pede a atualização via _pedirSombraDirecional() — o Three.js baixa o
+  // needsUpdate sozinho depois de redesenhar uma vez.
+  showcase.shadow.autoUpdate = false;
+  showcase.shadow.needsUpdate = true;   // primeiro quadro precisa desenhar
   scene.add(showcase);
 
   // Cool fill — back-left; contrasts lit vs shadow without over-darkening
@@ -14386,11 +14544,11 @@ function init3D(state){
 
   // Player-carried torch — warm flicker, follows player each frame.
   const torch = new T.PointLight(0xff9520, 5.5, 14.0, 1.8);
-  torch.castShadow = true;
-  torch.shadow.mapSize.width  = 512;
-  torch.shadow.mapSize.height = 512;
-  torch.shadow.radius = 3;     // PCFSoft blur radius
-  torch.shadow.bias   = -0.001;
+  // SEM sombra: sombra de PointLight é um cubemap — 6 renders da cena inteira por
+  // frame — e esta luz acompanha o peão, então nada é reaproveitável entre frames.
+  // Medido no mapa 44×40 revelado: 4,8 ms/frame (21% do quadro) e 561 draw calls
+  // só nela. Os peões seguem ancorados pela sombra blob (isGroundDecal).
+  torch.castShadow = false;
   scene.add(torch);
 
   // Vision lamp — bright white-warm fill ensuring clear sight within ~3 tiles.
@@ -14542,6 +14700,24 @@ function init3D(state){
   }
 
   const tileMeshes = {};
+
+  // ── Cache de materiais de casa ───────────────────────────────────────────────
+  // Antes cada casa clonava floorBaseMat/wallBaseMat só para aplicar um jitter de
+  // cor minúsculo: 1.760 materiais distintos num mapa 44×40. Como o renderer troca
+  // de estado a cada material, isso custava ~30% do quadro (medido no mapa todo
+  // revelado: 22,6 → 15,9 ms/frame, com o MESMO número de draw calls — o custo era
+  // troca de estado, não quantidade de objetos). Agora o jitter é quantizado em
+  // JITTER_PASSOS faixas (imperceptível a olho) e casas de mesma aparência
+  // compartilham o material. Casas com textura própria têm a cor forçada a
+  // (1,1,1), então colapsam num único material por tipo de material.
+  //
+  // ATENÇÃO: material compartilhado NÃO pode ser mutado por casa. Quem precisa
+  // mutar (as paredes de passagem secreta, em renderMap3D) usa uma cópia própria
+  // guardada em userData.secretMat e volta para userData.sharedMat depois.
+  const JITTER_PASSOS = 12;
+  const _tileMatCache = {};
+  const _quantJit = (v) => Math.round(v * (JITTER_PASSOS - 1)) / (JITTER_PASSOS - 1);
+
   for(let y=0; y<H; y++){
     for(let x=0; x<W; x++){
       const key = `${x},${y}`;
@@ -14551,42 +14727,50 @@ function init3D(state){
       const vw = ((x*6271^y*4423)&0xFF) / 255;
 
       if(state.tiles[y][x] === TILE_FLOOR || state.tiles[y][x] === TILE_DOOR){
-        const mat = floorBaseMat.clone();
         // Cor base por material (default pedra_cinza); jitter por casa preserva o relevo.
         const mid3 = (state.materiais && state.materiais[key]) || 'pedra_cinza';
         const mc = (VC.materiais[mid3] || VC.materiais.pedra_cinza).color;
         // A água não recebe jitter por tile: variações independentes fariam
         // aparecer uma grade onde deveriam existir apenas ondas contínuas.
         const isWater3 = mid3==='agua' || mid3==='agua_profunda';
-        const jit = isWater3 ? 0 : vf*VC.floor.baseVariance;
-        mat.color.setRGB(mc[0]+jit, mc[1]+jit, mc[2]+jit);
         const ftex = makeMaterialTex(mid3);
-        if(ftex){
-          mat.map = ftex; mat.color.setRGB(1,1,1);
-          // Grama e terra recebem o mesmo desenho procedimental do 2D também
-          // como relevo, tornando a textura perceptível sob a luz do 3D.
-          if(mid3==='grama' || mid3==='terra'){
-            mat.bumpMap = ftex;
-            mat.bumpScale = mid3==='terra' ? 0.075 : 0.045;
-            mat.roughness = mid3==='terra' ? 0.94 : 0.98;
+        // Com textura própria ou água a cor final não depende do jitter (é fixada
+        // abaixo), então essas casas colapsam num material único por tipo.
+        const jitQ = (isWater3 || ftex) ? 0 : _quantJit(vf);
+        const fKey = `f|${mid3}|${jitQ}`;
+        let mat = _tileMatCache[fKey];
+        if(!mat){
+          mat = floorBaseMat.clone();
+          const jit = jitQ * VC.floor.baseVariance;
+          mat.color.setRGB(mc[0]+jit, mc[1]+jit, mc[2]+jit);
+          if(ftex){
+            mat.map = ftex; mat.color.setRGB(1,1,1);
+            // Grama e terra recebem o mesmo desenho procedimental do 2D também
+            // como relevo, tornando a textura perceptível sob a luz do 3D.
+            if(mid3==='grama' || mid3==='terra'){
+              mat.bumpMap = ftex;
+              mat.bumpScale = mid3==='terra' ? 0.075 : 0.045;
+              mat.roughness = mid3==='terra' ? 0.94 : 0.98;
+            }
           }
-        }
-        mat.emissive.set(VC.floor.emissive);
-        mat.emissiveIntensity = 1.0;
-        if(isWater3){
-          // Superfície azul e mais lustrosa que pedra: indica água profunda,
-          // sem transformá-la em obstáculo de navegação.
-          mat.roughness = 0.24;
-          mat.metalness = 0.12;
-          mat.emissive.set(mid3==='agua_profunda' ? 0x06173f : 0x0075bd);
-          mat.emissiveIntensity = mid3==='agua_profunda' ? 0.58 : 0.92;
-        }
-        // Auto-iluminação: a própria textura emite, deixando a cor forte e
-        // diferenciada mesmo na penumbra (grama/terra/pedra negra).
-        if(ftex && (mid3==='grama' || mid3==='terra' || mid3==='pedra_negra')){
-          mat.emissiveMap = ftex;
-          mat.emissive.set(0xffffff);
-          mat.emissiveIntensity = (mid3==='pedra_negra') ? 0.35 : 0.6;
+          mat.emissive.set(VC.floor.emissive);
+          mat.emissiveIntensity = 1.0;
+          if(isWater3){
+            // Superfície azul e mais lustrosa que pedra: indica água profunda,
+            // sem transformá-la em obstáculo de navegação.
+            mat.roughness = 0.24;
+            mat.metalness = 0.12;
+            mat.emissive.set(mid3==='agua_profunda' ? 0x06173f : 0x0075bd);
+            mat.emissiveIntensity = mid3==='agua_profunda' ? 0.58 : 0.92;
+          }
+          // Auto-iluminação: a própria textura emite, deixando a cor forte e
+          // diferenciada mesmo na penumbra (grama/terra/pedra negra).
+          if(ftex && (mid3==='grama' || mid3==='terra' || mid3==='pedra_negra')){
+            mat.emissiveMap = ftex;
+            mat.emissive.set(0xffffff);
+            mat.emissiveIntensity = (mid3==='pedra_negra') ? 0.35 : 0.6;
+          }
+          _tileMatCache[fKey] = mat;
         }
         mesh = new T.Mesh(isWater3 ? waterFloorGeo : floorGeo, mat);
         mesh.position.set(x, TH/2, y);     // bottom edge sits at y = 0
@@ -14594,15 +14778,18 @@ function init3D(state){
         mesh.userData.isFloor = true;
         mesh.userData.gridX   = x;
         mesh.userData.gridY   = y;
-        mesh.userData.baseMat = mat;        // saved for restoring after highlight
         if((state.materiais && state.materiais[key]) === 'entulho'){
           // Entulho oclui visão → bloco altura-de-parede de escombros sobre o chão.
-          const ec = VC.materiais.entulho.color;
-          const eMat = wallBaseMat.clone();
-          eMat.color.setRGB(ec[0], ec[1], ec[2]);
-          const etex = makeMaterialTex('entulho');
-          if(etex){ eMat.map = etex; eMat.color.setRGB(1,1,1); }
-          eMat.emissive.set(VC.wall.emissive); eMat.emissiveIntensity = 1.0;
+          let eMat = _tileMatCache['entulho'];
+          if(!eMat){
+            const ec = VC.materiais.entulho.color;
+            eMat = wallBaseMat.clone();
+            eMat.color.setRGB(ec[0], ec[1], ec[2]);
+            const etex = makeMaterialTex('entulho');
+            if(etex){ eMat.map = etex; eMat.color.setRGB(1,1,1); }
+            eMat.emissive.set(VC.wall.emissive); eMat.emissiveIntensity = 1.0;
+            _tileMatCache['entulho'] = eMat;
+          }
           const eMesh = new T.Mesh(wallGeo, eMat);
           eMesh.position.set(x, WH/2, y);
           eMesh.scale.y = 0.7;                 // pilha um pouco mais baixa que a parede
@@ -14615,19 +14802,29 @@ function init3D(state){
       } else {
         const matId3 = (state.materiais && state.materiais[key]) || 'pedra_normal';
         const wc = (VC.materiais[matId3] || VC.materiais.pedra_normal).color;
-        const mat = wallBaseMat.clone();
-        // Cor base por material (default pedra_normal); jitter por casa preserva o relevo.
-        const jw = vw*VC.wall.variance;
-        mat.color.setRGB(wc[0]+jw, wc[1]+jw, wc[2]+jw);
         const wtex = makeMaterialTex(matId3);
-        if(wtex){ mat.map = wtex; mat.color.setRGB(1,1,1); }
-        mat.emissive.set(VC.wall.emissive);
-        mat.emissiveIntensity = 1.0;
+        // Com textura própria a cor vira (1,1,1): jitter não muda a aparência.
+        const jwQ = wtex ? 0 : _quantJit(vw);
+        const wKey = `w|${matId3}|${jwQ}`;
+        let mat = _tileMatCache[wKey];
+        if(!mat){
+          mat = wallBaseMat.clone();
+          // Cor base por material (default pedra_normal); jitter por casa preserva o relevo.
+          const jw = jwQ*VC.wall.variance;
+          mat.color.setRGB(wc[0]+jw, wc[1]+jw, wc[2]+jw);
+          if(wtex){ mat.map = wtex; mat.color.setRGB(1,1,1); }
+          mat.emissive.set(VC.wall.emissive);
+          mat.emissiveIntensity = 1.0;
+          _tileMatCache[wKey] = mat;
+        }
         mesh = new T.Mesh(wallGeo, mat);
         mesh.position.set(x, WH/2, y);     // bottom edge sits at y = 0
         mesh.castShadow    = true;
         mesh.receiveShadow = true;
         mesh.userData.isWall = true;
+        // Guardado para a troca de material das passagens secretas (renderMap3D):
+        // o material agora é COMPARTILHADO e não pode ser mutado por casa.
+        mesh.userData.sharedMat = mat;
       }
       // Também identifica paredes no grid: necessário para que uma parede
       // ilusória possa receber clique e ser tratada como terreno atravessável.
@@ -14645,10 +14842,15 @@ function init3D(state){
     const isWall3D = (tx,ty)=> ty<0||tx<0||ty>=H||tx>=W || state.tiles[ty][tx]===TILE_WALL;
     const doorGeo  = new T.BoxGeometry(TW, WH*0.80, 0.12);
     const ironGeo  = new T.BoxGeometry(TW, 0.07, 0.14);
+    const doorTex = generateTexture('wood');
+    if(doorTex){
+      doorTex.wrapS=doorTex.wrapT=T.RepeatWrapping; doorTex.repeat.set(1,2);
+      if(T.SRGBColorSpace) doorTex.colorSpace=T.SRGBColorSpace; else if(T.sRGBEncoding) doorTex.encoding=T.sRGBEncoding;
+    }
     for(let y=0; y<H; y++){
       for(let x=0; x<W; x++){
         if(state.tiles[y][x] !== TILE_DOOR) continue;
-        const dMat = new T.MeshStandardMaterial({ color:0x6b4523, roughness:0.85, metalness:0.06,
+        const dMat = new T.MeshStandardMaterial({ map:doorTex, bumpMap:doorTex, bumpScale:0.06, color:0x8a5b32, roughness:0.78, metalness:0.06,
                                                   emissive:0x110a04, emissiveIntensity:1.0 });
         const grp = new T.Group();
         const leaf = new T.Mesh(doorGeo, dMat);
@@ -14658,6 +14860,11 @@ function init3D(state){
         for(const oy of [WH*0.22, -WH*0.22]){
           const band = new T.Mesh(ironGeo, iMat); band.position.y = oy; grp.add(band);
         }
+        // Maçaneta de latão: pequeno detalhe que deixa a porta parecer uma peça
+        // moldada e pintada, não uma textura plana no cenário.
+        const knob = new T.Mesh(new T.SphereGeometry(0.055, 10, 8),
+          new T.MeshStandardMaterial({color:0xb78938, roughness:0.35, metalness:0.72}));
+        knob.position.set(TW*0.25, 0, 0.105); knob.castShadow=true; grp.add(knob);
         // Corredor sobe/desce (paredes L+R) ⇒ folha atravessa em X (rotação 0).
         // Senão (paredes em cima/baixo) ⇒ folha ao longo de Z (gira 90°).
         const vertical = isWall3D(x-1,y) && isWall3D(x+1,y);
@@ -14797,9 +15004,21 @@ function init3D(state){
   hoverSpot.userData.isHoverLight = true;
   scene.add(hoverSpot);
 
+  // ── Halo do turno ativo — luz PERMANENTE (mesmo padrão do hoverSpot acima) ────
+  // Antes ela nascia dentro do peão da vez (build3DFig) e morria quando o turno
+  // passava aos monstros, fazendo a CONTAGEM de luzes visíveis oscilar 1↔0 a cada
+  // troca de turno — exatamente o que o pool de luzes e a dirPawn existem para
+  // evitar. Medido: a primeira oscilação congela ~3,4 s (recompila todos os
+  // materiais da cena) e as seguintes custam ~38 ms. Aqui ela é criada uma vez e
+  // só é movida/acesa; "apagada" = intensity 0, nunca visible = false.
+  const haloLight = new T.PointLight(0xf0a820, 0, 1.6);
+  haloLight.castShadow = false;
+  scene.add(haloLight);
+
   g3 = {
     T, scene, renderer, camera, controls,
     ambient, torch, visionLamp, rimLight, fillLight, sconces, lightPool,
+    showcase, haloLight,
     tileMeshes, doorMeshes, wallDetailMeshes, entityGroup, raycaster,
     wallTorches, roomOverlayMeshes,
     sceneryMeshes, groutMeshes, groutMats,
@@ -15079,8 +15298,9 @@ function dispose3D(){
   // cena nova) e nunca mais apareciam — só o rótulo flutuante era desenhado.
   if(_d3 && _d3.animFrame) cancelAnimationFrame(_d3.animFrame);
   for(const die of _dice3){
-    if(die.mat.map) die.mat.map.dispose();
-    die.geo.dispose(); die.mat.dispose();
+    _disposeDieMaterials(die.mats);
+    _disposeTopBadge(die.topBadge);
+    die.geo.dispose();
   }
   _dice3.length = 0;
   _d3 = null;
@@ -15285,8 +15505,6 @@ function startLoop3D(){
         const s = 1.0 + 0.14 * pulse;
         child.scale.set(s, 1, s);
         child.material.emissiveIntensity = 1.1 + 1.1 * pulse;
-      } else if(child.userData.isHaloLight){
-        child.intensity = 0.7 + 1.0 * pulse;
       }
     });
 
@@ -15297,8 +15515,12 @@ function startLoop3D(){
     const selP  = g3.selectedPos;
     const hspot = g3.hoverSpot;
     let hovFigY = 0.30;   // world-Y for the vitrine light (default when not hovering)
+    let curFig  = null;   // figura da vez — recebe a g3.haloLight permanente
     g3.entityGroup.children.forEach(fig => {
       if(fig.type !== 'Group') return;
+      // Antes dos returns abaixo: o peão da vez também precisa carregar o halo
+      // enquanto está andando (entityGroup fica na origem, então position é mundo).
+      if(fig.userData.isCurrentFig) curFig = fig;
       // Não interfere no peão em movimento — _animarPasso controla o Y dele.
       if(estadoMovimento.emMovimento && fig === estadoMovimento.peaoAtivo) return;
       const gx = fig.userData.gridX, gy = fig.userData.gridY;
@@ -15319,6 +15541,25 @@ function startLoop3D(){
     } else if(hspot){
       hspot.intensity *= 0.82;   // fast fade-out
     }
+
+    // ── Halo do turno ativo: move a luz permanente para o peão da vez ────────────
+    // Sem peão da vez (turno dos monstros, herói na névoa) ela só apaga por
+    // intensidade — a contagem de luzes da cena nunca muda.
+    if(g3.haloLight){
+      if(curFig){
+        g3.haloLight.position.set(curFig.position.x, curFig.position.y + 0.29, curFig.position.z);
+        g3.haloLight.intensity = 0.7 + 1.0 * pulse;
+      } else {
+        g3.haloLight.intensity = 0;
+      }
+    }
+
+    // ── Sombra direcional congelada: só redesenha o shadow map quando algo mexeu ─
+    // Enquanto a cena está parada (orbitando a câmera, lendo o HUD) o mapa de
+    // sombra anterior continua válido — é aí que a economia aparece.
+    if(g3.showcase && (estadoMovimento.emMovimento || _tweens.length
+        || g3.hoveredPos || g3.selectedPos))
+      g3.showcase.shadow.needsUpdate = true;
 
     // Portrait is HTML-only (class selection screen). Never meshes on the board.
 
@@ -16678,6 +16919,9 @@ function renderMap3D(state){
       return;
     }
   }
+  // Este render pode revelar/esconder casas, portas e decorações — a sombra
+  // direcional está congelada (autoUpdate=false), então precisa ser redesenhada.
+  if(g3.showcase) g3.showcase.shadow.needsUpdate = true;
   if(!g3) return;
 
   const { T, tileMeshes, doorMeshes, W, H, entityGroup, sconces, torch } = g3;
@@ -16770,10 +17014,20 @@ function renderMap3D(state){
   for (const [key, mesh] of Object.entries(tileMeshes)) {
     if (!mesh.userData?.isWall || !mesh.material) continue;
     const secretType = _secretWalls3D.get(key);
-    const showSecret = !!secretType;
-    mesh.material.transparent = showSecret;
-    mesh.material.opacity = showSecret ? (secretType === 'illusion' ? 0.28 : 0.55) : 1;
-    mesh.material.depthWrite = !showSecret;
+    const shared = mesh.userData.sharedMat;
+    if (secretType) {
+      // O material das paredes é COMPARTILHADO entre casas de mesma aparência:
+      // mutar transparent/opacity aqui deixaria TODAS as paredes translúcidas.
+      // Cada parede secreta ganha (uma vez) a sua própria cópia.
+      if (!mesh.userData.secretMat) mesh.userData.secretMat = shared.clone();
+      const sm = mesh.userData.secretMat;
+      sm.transparent = true;
+      sm.opacity = secretType === 'illusion' ? 0.28 : 0.55;
+      sm.depthWrite = false;
+      if (mesh.material !== sm) mesh.material = sm;
+    } else if (shared && mesh.material !== shared) {
+      mesh.material = shared;   // volta ao compartilhado (opaco) quando some o realce
+    }
   }
 
   // ── Door leaves: visible only while closed AND the door tile is visível ──────
@@ -17518,6 +17772,7 @@ const _heroGLBQueue  = {};   // classId -> [callbacks]
 const _MONSTER_GLB_MODELS = Object.freeze({
   goblinArqueiro:    'assets/models3d/monstros/goblin_arqueiro.glb',
   goblinCombatente:  'assets/models3d/monstros/goblin_combatente.glb',
+  esqueletoHumano:   'assets/models3d/monstros/esqueletoHumano.glb',
   crocodiloJovem:    'assets/models3d/monstros/crocodilo.glb',
   cobraVenenosa:     'assets/models3d/monstros/cobra_venenosa.glb',
   cobraConstritora:  'assets/models3d/monstros/cobra_constritora.glb',
@@ -17525,6 +17780,7 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   aranhasombria:     'assets/models3d/monstros/aranha.glb',
   escorpiaodepedra:  'assets/models3d/monstros/escorpiao.glb',
   devoradorOrganico: 'assets/models3d/monstros/devorador_organico.glb',
+  devoradordemetal:  'assets/models3d/monstros/devorador_de_metal.glb',
   koboldlanceiro:    'assets/models3d/monstros/kobold.glb',
   koboldbesteiro:    'assets/models3d/monstros/kobold.glb',
   grotao:            'assets/models3d/monstros/grotao.glb',
@@ -17532,9 +17788,25 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   loboCinzento:      'assets/models3d/monstros/lobo.glb',
   ursoNegro:         'assets/models3d/monstros/urso.glb',
   zumbi:             'assets/models3d/monstros/zumbi.glb',
+  ogroClava:         'assets/models3d/monstros/ogro_lanca.glb',
+  ogroLanca:         'assets/models3d/monstros/ogro_lanca.glb',
+  elemental_ar:      'assets/models3d/monstros/elemental_ar.glb',
+  lobisomem:         'assets/models3d/monstros/lobisomem.glb',
+  rato_gicante:      'assets/models3d/monstros/rato_gicante.glb',
 });
 const _monsterGLBCache = {};  // caminho -> template | 'erro'
 const _monsterGLBQueue = {};  // caminho -> [callbacks]
+
+// GLBs podem vir com brilho excessivo de render de videogame. Este ajuste único
+// preserva as cores pintadas, mas lhes dá a leitura de miniatura de plástico fosco.
+function _prepararMaterialMiniatura(material) {
+  for (const mat of (Array.isArray(material) ? material : [material])) {
+    if (!mat || !mat.isMeshStandardMaterial) continue;
+    mat.roughness = Math.max(0.66, Number(mat.roughness ?? 0.8));
+    mat.metalness = Math.min(0.12, Number(mat.metalness ?? 0));
+    mat.envMapIntensity = Math.min(0.28, Number(mat.envMapIntensity ?? 0));
+  }
+}
 
 function _loadHeroGLB(T, classId, cb) {
   const cached = _heroGLBCache[classId];
@@ -17552,8 +17824,7 @@ function _loadHeroGLB(T, classId, cb) {
       tpl.traverse(o => {
         if (o.isMesh) {
           o.castShadow = true;
-          // Mantém os materiais exatamente como foram gravados no GLB. Aplicar
-          // emissão branca aqui clareia e desbota as cores originais do modelo.
+          _prepararMaterialMiniatura(o.material);
         }
       });
       _heroGLBCache[classId] = tpl;
@@ -17643,7 +17914,9 @@ function _loadMonsterGLB(T, path, cb) {
       _assetURL(path),
       gltf => {
         const template = gltf.scene;
-        template.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+        template.traverse(o => {
+          if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; _prepararMaterialMiniatura(o.material); }
+        });
         _monsterGLBCache[path] = template;
         _monsterGLBQueue[path].forEach(fn => fn(template));
         delete _monsterGLBQueue[path];
@@ -18047,11 +18320,10 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
     ring.rotation.x  = Math.PI / 2;
     ring.userData.isPulseRing = true;
 
-    // PointLight sitting just above the tile — illuminates the figure from below
-    const haloLight = new T.PointLight(0xf0a820, 1.4, 1.6);
-    haloLight.position.set(0, TH + 0.07, 0);
-    haloLight.userData.isHaloLight = true;
-    grp.add(haloLight);
+    // A luz do halo NÃO nasce aqui: é a g3.haloLight permanente, que o laço de
+    // render posiciona sobre esta figura. Criar/destruir uma PointLight junto com
+    // o peão da vez muda a contagem de luzes visíveis e recompila os materiais.
+    grp.userData.isCurrentFig = true;
   }
 
   const Y0 = TH + 0.064;    // top of base disc; all builders start from here
@@ -23659,6 +23931,14 @@ GS.on('loginResult', (msg) => {
 
 GS.on('savegamesList', (list) => {
   const box = document.getElementById('savegames-list');
+  const master = document.getElementById('sg-master');
+  if (master && !document.getElementById('sg-entry-mode')) {
+    const options = document.createElement('div');
+    options.className = 'field';
+    options.innerHTML = '<label>Entrada de novos jogadores</label><select id="sg-entry-mode"><option value="vote">Votação dos membros ativos</option><option value="automatic">Automática</option></select>'
+      + '<label style="margin-top:7px;display:block">Substituição de herói</label><select id="sg-replacement-rule"><option value="experienced">Experiente, sem itens</option><option value="new">Nível 1</option><option value="inherit">Herda a ficha anterior</option></select>';
+    master.parentElement.insertAdjacentElement('afterend', options);
+  }
   if (!box) return;
   box.innerHTML = list.length ? '' : '<div style="color:#8ab88a;">Nenhum jogo salvo ainda.</div>';
   for (const sg of list) {

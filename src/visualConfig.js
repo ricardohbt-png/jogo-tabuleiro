@@ -105,27 +105,39 @@ window.VC = {
     borderWidth:        8,        // px black chamfer border on each face
     numberColor:      '#000000',  // black fill — maximum contrast on vivid backgrounds
     strokeColor:      '#FFFFFF',  // white stroke drawn before fill for visibility
-    scale:             1.30,      // 30% larger than geometry base — easier to see on board
+      scale:             1.495,     // +15% sobre o tamanho anterior — melhor leitura no tabuleiro
+      // Faces menores pedem algarismos menores para não atravessar suas bordas.
+      faceFontScale: { d4:0.50, d6:1.00, d8:0.64, d10:0.58, d12:0.76 },
     light: {
       main: { intensity: 6.0, distance: 4.0, yOffset:  2.0 },  // MAXIMUM key light intensity for brightest top illumination
       fill: { intensity: 3.5, distance: 3.0, yOffset: -1.0 },  // MAXIMUM fill light to eliminate all shadows
     },
-    colors: {
-      d4:  '#FFE000',   // yellow
-      d6:  '#FF1111',   // red
-      d8:  '#0055FF',   // blue
-      d10: '#00DD44',   // green
-      d12: '#CC00FF',   // purple
-      d20: '#FF5500',   // orange
-    },
+      colors: {
+        d4:  '#FFD400',   // yellow — saturado para contrastar com madeira/pedra
+        d6:  '#FF1111',   // red
+        d8:  '#0055FF',   // blue
+        d10: '#00DD44',   // green
+        d12: '#CC00FF',   // purple
+        d20: '#FF5500',   // orange
+      },
+      // Variações usadas quando mais de um dado está visível. A primeira cor
+      // de cada lista preserva a identidade clássica do tipo de dado.
+      colorVariants: {
+        d4:  ['#FFD400', '#FFC400', '#F4B400', '#FFB703', '#DDAA00', '#FFCA3A'],
+        d6:  ['#FF1111', '#E63946', '#C1121F', '#FF6B6B', '#9D0208', '#FF8FA3'],
+        d8:  ['#0055FF', '#247BFF', '#4361EE', '#00A6FB', '#3A86FF', '#4CC9F0'],
+        d10: ['#00DD44', '#2ECC71', '#06D6A0', '#52B788', '#00B894', '#80ED99'],
+        d12: ['#CC00FF', '#9D4EDD', '#7B2CBF', '#E056FD', '#C77DFF', '#B5179E'],
+        d20: ['#FF5500', '#F77F00', '#FF9F1C', '#E85D04', '#FF7B54', '#D94801'],
+      },
 
     // ── D20-specific overrides (triangular faces need separate treatment) ────
     // IcosahedronGeometry UV-maps each face as a triangle inside the canvas.
     // Numbers must be smaller and centered at the triangle's visual centroid.
     d20: {
-      fontSz1:   90,           // px — single-digit faces (1–9)
-      fontSz2:   68,           // px — two-digit faces (10–20)
-      numY:     155,           // canvas y of visual centroid (below 128 midpoint)
+        fontSz1:   82,           // px — single-digit faces (1–9), inside triangle
+        fontSz2:   62,           // px — two-digit faces (10–20), inside triangle
+        numY:     152,           // visual centroid, slightly raised for safe margins
       // Clip triangle (canvas px) keeps drawing within the visible triangular face
       clipPts: [[128, 20], [236, 210], [20, 210]],
     },
