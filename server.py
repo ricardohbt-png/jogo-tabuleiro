@@ -9815,6 +9815,8 @@ class GameRoom:
                        - self._corrosao_arma_pen(p)                          # arma de madeira corroÃ­da
                        - (4 if target.get("oculto_sombras") else 0)          # alvo oculto nas sombras (corpo a corpo)
                        - (1 if p.get("desafinado_ate", -1) >= self.round_num else 0))  # Gaita: Desafinado (Fase 5)
+            furtivo_planejado = (p.get("class_id") == "rogue"
+                                 and self._verificar_ataque_furtivo(p, target))
             if preso_pen:
                 await self.gm_say(f"⛓️ **{p['name']}** ataca enquanto preso — **-2** no acerto!")
             # AmaldiÃ§oar reduz a CA do alvo (mod_magia ca negativo) â†’ mais fÃ¡cil de acertar.
@@ -9932,6 +9934,17 @@ class GameRoom:
                                    "label": "⚔️ Ataque (Mão Principal)", "hit": hit, "crit": crit})
             if hit:
                 _bonus_extra = (2 if _mira_ranged else 0) + (2 if _investida else 0)
+                # Ataque Furtivo é dano físico da arma: entra antes das resistências
+                # para que Pele Amaldiçoada reduza o total do golpe, não só o dado.
+                furtivo_detail = ""
+                dano_furtivo = 0
+                if furtivo_planejado:
+                    nd4 = self._dados_furtivo(p.get("level", 1))
+                    dano_furtivo = sum(random.randint(1, 4) for _ in range(nd4))
+                    await self.broadcast({"type": "dice_roll", "die": "d4",
+                                           "value": dano_furtivo, "label": "Ataque Furtivo"})
+                    _bonus_extra += dano_furtivo
+                    furtivo_detail = f" +🗡️{dano_furtivo} furtivo [{nd4}d4]"
                 # A muniÃ§Ã£o de prata empresta sua propriedade ao disparo, sem
                 # transformar permanentemente a arma equipada em uma arma de prata.
                 damage_weapon = {**(p.get("weapon") or {})}
@@ -9954,6 +9967,7 @@ class GameRoom:
                                            "value": raw_dmg, "label": "Dano"})
                 # Golpe Sagrado (Richard): +1d8 sagrado, dobrado vs morto-vivo/demÃ´nio
                 holy_detail = ""
+                holy = 0
                 if p.get("golpe_sagrado_ativo"):
                     holy_roll = sum(roll_dice("1d8") for _ in range(self._ataque_sagrado_dados(p)))
                     await self.broadcast({"type": "dice_roll", "die": "d8", "value": holy_roll, "label": "Golpe Sagrado"})
@@ -9963,17 +9977,10 @@ class GameRoom:
                         holy_detail = f" +⚡{holy} sagrado (DOBRADO!)"
                     else:
                         holy_detail = f" +⚡{holy} sagrado"
-                    dmg += holy
-                # Ataque Furtivo (Luccas, passiva): +Nd4 quando hÃ¡ aliado adjacente
-                # ao alvo ou Luccas estÃ¡ invisÃ­vel. Vale 1x na mÃ£o principal.
-                furtivo_detail = ""
-                if p.get("class_id") == "rogue" and self._verificar_ataque_furtivo(p, target):
-                    nd4 = self._dados_furtivo(p.get("level", 1))
-                    dano_furtivo = sum(random.randint(1, 4) for _ in range(nd4))
-                    await self.broadcast({"type": "dice_roll", "die": "d4",
-                                           "value": dano_furtivo, "label": "Ataque Furtivo"})
-                    dmg += dano_furtivo
-                    furtivo_detail = f" +🗡️{dano_furtivo} furtivo [{nd4}d4]"
+                dmg += holy
+                # O Ataque Furtivo (Luccas, passiva) foi resolvido acima, junto
+                # do dano da arma, para que resistências e reduções incidam
+                # sobre o golpe inteiro. `furtivo_detail` já está preenchido.
                 target["hp"] -= dmg
                 await self._furtivo_reativo(p, target)
                 if _ammo_damage_bonus:
