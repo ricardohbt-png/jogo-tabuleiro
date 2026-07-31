@@ -173,6 +173,36 @@ def _rodar_verificacoes():
     check("city_state não manda mais tavern", "tavern" not in payload)
     del S.CITY_SCENES["alva_e_luz"]["provas"]
 
+    print("\n[10] handle_scene_npc")
+    S.CITY_SCENES["alva_e_luz"]["provas"] = {
+        "nome": "Provas", "background": "assets/city/x.png", "art_ratio": 1.5,
+        "mode": "individual", "mask": "", "slots": [
+            {"id": "npc_teste", "name": "Teste", "image": "assets/x.png",
+             "x": 5, "y": 5, "w": 10, "h": 10, "z": 1, "dialog": "",
+             "conversations": [
+                 {"id": "unica", "texto": "Pronto.", "requisito": {},
+                  "efeito": {"renome": 3, "fato": "pista_a", "item_id": ""}, "uma_vez": True}]}]}
+    erros = []
+    async def cap_send(pid, msg, *a, **k):
+        if isinstance(msg, dict) and msg.get("type") == "error": erros.append(msg["msg"])
+    sala.send_to = cap_send
+    sala.renome = 0; sala.fatos = set(); sala.scene_conversations_done = set()
+    asyncio.run(sala.handle_scene_npc("p1", "provas", "npc_teste", "unica"))
+    check("renome concedido", sala.renome == 3)
+    check("fato registrado", "pista_a" in sala.fatos)
+    check("chave tem 4 partes",
+          "alva_e_luz:provas:npc_teste:unica" in sala.scene_conversations_done)
+    asyncio.run(sala.handle_scene_npc("p1", "provas", "npc_teste", "unica"))
+    check("segunda vez recusada", any("já foi concluída" in e for e in erros))
+    check("renome não subiu de novo", sala.renome == 3)
+    erros.clear()
+    asyncio.run(sala.handle_scene_npc("p1", "inexistente", "npc_teste", "unica"))
+    check("cena inexistente recusada", any("Cena" in e for e in erros))
+    erros.clear()
+    asyncio.run(sala.handle_scene_npc("p1", "provas", "npc_fantasma", "unica"))
+    check("npc inexistente recusado", any("Frequentador" in e for e in erros))
+    del S.CITY_SCENES["alva_e_luz"]["provas"]
+
 def main():
     restaurar = isolar_arquivos()
     try: _rodar_verificacoes()

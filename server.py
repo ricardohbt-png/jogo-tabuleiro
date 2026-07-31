@@ -8662,10 +8662,13 @@ class GameRoom:
             return True
         return self._avaliar_requisito(adventure.get("requisito"))[0]
 
-    async def handle_tavern_npc(self, pid, npc_id, conversation_id):
+    async def handle_scene_npc(self, pid, scene_id, npc_id, conversation_id):
         if not self._em_cidade(pid) or pid not in self.players:
             return
-        scene = (CITY_SCENES.get(self.world_location) or {}).get("taverna") or {}
+        cenas = CITY_SCENES.get(self.world_location) or {}
+        scene = cenas.get(str(scene_id or ""))
+        if not scene:
+            await self.send_to(pid, {"type":"error", "msg":"Cena não encontrada."}); return
         slot = next((s for s in scene.get("slots", []) if s.get("id") == str(npc_id) and not s.get("removed")), None)
         if not slot:
             await self.send_to(pid, {"type":"error", "msg":"Frequentador não encontrado."}); return
@@ -8673,7 +8676,7 @@ class GameRoom:
         conversation = next((c for c in conversations if c["id"] == str(conversation_id)), None)
         if not conversation:
             await self.send_to(pid, {"type":"error", "msg":"Conversa não encontrada."}); return
-        key = f"{self.world_location}:{slot['id']}:{conversation['id']}"
+        key = f"{self.world_location}:{scene_id}:{slot['id']}:{conversation['id']}"
         if conversation.get("uma_vez") and key in self.scene_conversations_done:
             await self.send_to(pid, {"type":"error", "msg":"Esta conversa já foi concluída."}); return
         ok, reasons = self._avaliar_requisito(conversation.get("requisito"))
@@ -23356,8 +23359,8 @@ async def handler(ws):
                 elif t == "world_adventure":
                     if room: await room.handle_world_adventure(pid, msg.get("adventure_id"))
 
-                elif t == "tavern_npc":
-                    if room: await room.handle_tavern_npc(pid, msg.get("npc_id"), msg.get("conversation_id"))
+                elif t == "scene_npc":
+                    if room: await room.handle_scene_npc(pid, msg.get("scene_id"), msg.get("npc_id"), msg.get("conversation_id"))
 
                 elif t == "city_map_points":
                     if room: await room.handle_city_map_points(pid, msg.get("city_id"), msg.get("points"))
