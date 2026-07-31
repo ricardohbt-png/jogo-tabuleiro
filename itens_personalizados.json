@@ -61,5 +61,62 @@
     ],
     "corrosao_resistente": 0,
     "corrosao_niveis_penalidade": 2
+  },
+  {
+    "id": "dente_da_fera",
+    "name": "Dente da fera",
+    "emoji": "⚔️",
+    "item_type": "weapon",
+    "custom": true,
+    "die": "1d6",
+    "stat": "str_",
+    "categoria": "cortante",
+    "finesse": false,
+    "two_handed": true,
+    "atk_bonus": 1,
+    "damage_bonus": 1,
+    "corrosao_resistente": 0,
+    "corrosao_niveis_penalidade": 2,
+    "material": "metal",
+    "extra_damages": [],
+    "granted_ability": "guild_tecnica_contra_ataque",
+    "maldicao_id": null,
+    "allowed_classes": [],
+    "price": 1,
+    "disponibilidade": {
+      "loja": true,
+      "baus": true,
+      "loot_monstro": true
+    },
+    "throw_range": 3
+  },
+  {
+    "id": "dente_da_fera_copia",
+    "name": "Dente da fera (cópia)",
+    "emoji": "⚔️",
+    "item_type": "weapon",
+    "custom": true,
+    "die": "1d6",
+    "stat": "str_",
+    "categoria": "cortante",
+    "finesse": true,
+    "two_handed": false,
+    "atk_bonus": 0,
+    "damage_bonus": 0,
+    "corrosao_resistente": 0,
+    "corrosao_niveis_penalidade": 2,
+    "material": "metal",
+    "extra_damages": [],
+    "granted_ability": "guild_tecnica_grito_guerra",
+    "maldicao_id": null,
+    "maldicao_prende": false,
+    "allowed_classes": [],
+    "price": 0,
+    "disponibilidade": {
+      "loja": true,
+      "baus": false,
+      "loot_monstro": false
+    },
+    "throw_range": 5
   }
 ]
