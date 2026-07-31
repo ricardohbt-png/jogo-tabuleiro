@@ -215,6 +215,37 @@ def _rodar_verificacoes():
     check("lista vazia e None viram conjunto vazio",
           S._migrar_chaves_conversa([]) == set() and S._migrar_chaves_conversa(None) == set())
 
+    print("\n[12] Save do editor: cena órfã, ponto tipo cena e emoji")
+    S._sincronizar_cidades_derivadas()
+    cenas_editor = {"alva_e_luz": {"docas": {
+        "nome": "Docas", "background": "assets/city/docas.png", "mode": "individual",
+        "mask": "", "slots": [
+            {"id": "npc_pescador", "name": "Pescador", "image": "assets/tavern/slots/barman.png",
+             "x": 10, "y": 20, "w": 12, "h": 24, "z": 1, "dialog": "Olá.",
+             "conversations": [{"id": "boato", "texto": "Luzes no farol.", "requisito": {},
+                                "efeito": {"renome": 1, "fato": "farol", "item_id": ""},
+                                "uma_vez": True}]}]}}}
+    pontos_editor = {"alva_e_luz": dict(S.CITY_MAP_POINTS["alva_e_luz"], **{
+        "docas": {"x": 18, "y": 72, "type": "cena", "emoji": "🌊",
+                  "name": "Docas", "scene": "docas"}})}
+    ok, cfg = S._save_city_shops_upload(S.CITY_SHOPS, cenas_editor, pontos_editor)
+    check("save aceito", ok is True)
+    check("cena gravada", "docas" in S.CITY_SCENES["alva_e_luz"])
+    check("ponto tipo cena aceito",
+          S.CITY_MAP_POINTS["alva_e_luz"]["docas"].get("type") == "cena")
+    check("emoji preservado", S.CITY_MAP_POINTS["alva_e_luz"]["docas"].get("emoji") == "🌊")
+    check("vinculo preservado", S.CITY_MAP_POINTS["alva_e_luz"]["docas"].get("scene") == "docas")
+    # Cena ausente do envio seguinte = excluída pelo autor.
+    S.CITY_SCENES["alva_e_luz"]["orfa"] = S._cena_vazia("Órfã")
+    S.CITY_MAP_POINTS["alva_e_luz"]["docas"]["scene"] = "orfa"
+    pontos_orfa = {"alva_e_luz": dict(S.CITY_MAP_POINTS["alva_e_luz"])}
+    S._save_city_shops_upload(S.CITY_SHOPS, cenas_editor, pontos_orfa)
+    check("cena ausente do envio é excluída", "orfa" not in S.CITY_SCENES["alva_e_luz"])
+    check("ponto perde o vínculo com a cena excluída",
+          S.CITY_MAP_POINTS["alva_e_luz"]["docas"].get("scene") != "orfa")
+    S.CITY_MAP_POINTS["alva_e_luz"].pop("docas", None)
+    S.CITY_SCENES["alva_e_luz"].pop("docas", None)
+
 def main():
     restaurar = isolar_arquivos()
     try: _rodar_verificacoes()

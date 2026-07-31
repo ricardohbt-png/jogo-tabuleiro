@@ -24721,8 +24721,15 @@ def _save_city_shops_upload(raw, scenes=None, raw_city_points=None):
                     if len(alvo) >= MAX_CENAS_POR_CIDADE: continue
                     alvo[scene_id] = _cena_vazia(scene.get("nome") or scene_id)
                 _aplicar_cena_editada(alvo[scene_id], scene)
+            # Cena removida no editor some do servidor. Como o editor sempre
+            # envia o conjunto completo da cidade, ausência = exclusão.
+            for orfa in [s for s in alvo if s not in cenas]:
+                del alvo[orfa]
+                for ponto in CITY_MAP_POINTS.get(city_id, {}).values():
+                    if ponto.get("scene") == orfa: ponto.pop("scene", None)
     if isinstance(raw_city_points, dict):
-        valid_types = {"ferreiro", "mercador", "templo", "taverna", "guilda", "dungeon", "caravana"}
+        valid_types = {"ferreiro", "mercador", "templo", "taverna", "guilda",
+                       "dungeon", "caravana", "cena"}
         for city_id, points in raw_city_points.items():
             if city_id not in CITY_MAP_POINTS or not isinstance(points, dict): continue
             cleaned = {}
@@ -24737,6 +24744,11 @@ def _save_city_shops_upload(raw, scenes=None, raw_city_points=None):
                 if point_type in valid_types: item["type"] = point_type
                 name = str(point.get("name") or "").strip()
                 if name: item["name"] = name[:60]
+                emoji = str(point.get("emoji") or "").strip()
+                if emoji: item["emoji"] = emoji[:8]
+                scene_ref = str(point.get("scene") or "").strip().lower()
+                if scene_ref and scene_ref in CITY_SCENES.get(city_id, {}):
+                    item["scene"] = scene_ref
                 cleaned[point_id] = item
             if cleaned: CITY_MAP_POINTS[city_id] = cleaned
     _garantir_pontos_implicitos()
