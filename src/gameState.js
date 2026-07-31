@@ -42,6 +42,7 @@ const GS = (() => {
                                 // custo de fome/sede cobrado só na ação (ataque)
   let isMyTurn        = false;
   let activeShop      = null;   // id of the shop currently open in city UI
+  let activeScene     = null;   // id da cena aberta no modal (null = nenhuma)
   let shopTabIdx      = 0;      // active tab index inside shop modal
   let pendingShopOpen = null;   // shop to open once city_state first arrives
   let guildCatalogCache = [];   // catálogo da Guilda (vem em city_state; cacheado p/ uso na masmorra)
@@ -1054,6 +1055,7 @@ const GS = (() => {
     pendingAction = null;
     pendingThrow = null;
     activeShop = null;
+    activeScene = null;
     pendingShopOpen = null;
     if (socket && socket.readyState < 2) { try { socket.close(); } catch (e) {} }
   }
@@ -1455,7 +1457,23 @@ const GS = (() => {
   function guildBuy(itemId)           { send({ type: 'guild_buy',   item_id: itemId }); }
   function worldTravel(destination)   { send({ type: 'world_travel', destination: destination }); }
   function worldAdventure(adventureId) { send({ type: 'world_adventure', adventure_id: adventureId }); }
-  function talkTavernNpc(npcId, conversationId) { send({ type: 'tavern_npc', npc_id: npcId, conversation_id: conversationId }); }
+  function talkSceneNpc(sceneId, npcId, conversationId) {
+    send({ type: 'scene_npc', scene_id: sceneId, npc_id: npcId, conversation_id: conversationId });
+  }
+  // Cenas de conversa da cidade atual, como vieram do servidor.
+  function scenes() { return (cityState && cityState.scenes) || {}; }
+  // Pontos do mapa da cidade atual.
+  function cityPoints() {
+    const loc = cityState && cityState.world && cityState.world.location;
+    return ((cityState && cityState.city_map_points) || {})[loc] || {};
+  }
+  // Id da cena vinculada a um ponto (null se o ponto não abre cena nenhuma).
+  function sceneIdOfPoint(pointId) { return (cityPoints()[pointId] || {}).scene || null; }
+  // A cena em si, ou null.
+  function sceneOfPoint(pointId) {
+    const ref = sceneIdOfPoint(pointId);
+    return ref ? (scenes()[ref] || null) : null;
+  }
   function saveWorldMapPoints(points) { send({ type: 'world_map_points', points: points }); }
   function saveCityMapPoints(cityId, points) { send({ type: 'city_map_points', city_id: cityId, points: points }); }
   function guildEquip(slot, itemId)   { send({ type: 'guild_equip', slot: slot, item_id: itemId }); }
@@ -2263,6 +2281,7 @@ const GS = (() => {
     get pendingSkill()    { return pendingSkill; },
     get pendingThrow()    { return pendingThrow; },
     get activeShop()      { return activeShop; },
+    get activeScene()     { return activeScene; },
     get shopTabIdx()      { return shopTabIdx; },
     get pendingShopOpen() { return pendingShopOpen; },
 
@@ -2271,6 +2290,7 @@ const GS = (() => {
     set pendingThrow(v)    { pendingThrow    = v; },
     set pendingAction(v)   { pendingAction   = v; },
     set activeShop(v)      { activeShop      = v; },
+    set activeScene(v)     { activeScene     = v; },
     set shopTabIdx(v)      { shopTabIdx      = v; },
     set pendingShopOpen(v) { pendingShopOpen = v; },
 
@@ -2385,7 +2405,11 @@ const GS = (() => {
     guildBuy,
     worldTravel,
     worldAdventure,
-    talkTavernNpc,
+    talkSceneNpc,
+    scenes,
+    cityPoints,
+    sceneIdOfPoint,
+    sceneOfPoint,
     saveWorldMapPoints,
     saveCityMapPoints,
     guildEquip,
