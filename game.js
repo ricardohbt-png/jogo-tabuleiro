@@ -12758,36 +12758,20 @@ function _showTrapResult(msg){
   const trapIcon = $('trap-icon');
   // Nos ticks da armadilha incendiária, a armadilha já disparou: mostre as
   // chamas que continuam causando dano em vez da ilustração da armadilha.
+  // Imagem por TIPO de resultado. Era uma escada de ternários aninhados; virou
+  // tabela ao entrar a maldição, que seria o 15º nível.
+  const imagensPorTipo = {
+    doenca: 'doença.png', veneno: 'envenenado.png', maldicao: 'amaldicoado.png',
+    equipamento_danificado: 'equipamento_danificado.png',
+    arma_quebrada: 'arma_quebrada.png', armadura_quebrada: 'armadura_quebrada.png',
+    petrificado: 'petrificado.png', enfeiticado: 'enfeiticado.png',
+    cuspe_acido: 'cuspe_acido.png', falha_magia_dano: 'falha_magia_dano.png',
+    congelamento_paralisia: 'congelamento_ou_paralisia.png',
+    atordoado: 'atordoado.png', morte: 'morte.png', sono: 'sono.png',
+  };
   const imageName = msg.sucesso ? 'armadilha_sucesso.png'
-    : msg.tipo === 'doenca'
-      ? 'doença.png'
-      : msg.tipo === 'veneno'
-        ? 'envenenado.png'
-        : msg.tipo === 'equipamento_danificado'
-          ? 'equipamento_danificado.png'
-          : msg.tipo === 'arma_quebrada'
-            ? 'arma_quebrada.png'
-            : msg.tipo === 'armadura_quebrada'
-              ? 'armadura_quebrada.png'
-              : msg.tipo === 'petrificado'
-                ? 'petrificado.png'
-                : msg.tipo === 'enfeiticado'
-                  ? 'enfeiticado.png'
-                  : msg.tipo === 'cuspe_acido'
-                    ? 'cuspe_acido.png'
-                    : msg.tipo === 'falha_magia_dano'
-                      ? 'falha_magia_dano.png'
-                      : msg.tipo === 'congelamento_paralisia'
-                        ? 'congelamento_ou_paralisia.png'
-                        : msg.tipo === 'atordoado'
-                          ? 'atordoado.png'
-                          : msg.tipo === 'morte'
-                            ? 'morte.png'
-                            : msg.tipo === 'sono'
-                              ? 'sono.png'
-    : (msg.tick && msg.nome === 'Armadilha Incendiária')
-      ? 'em_chamas.png'
-      : trapImages[msg.nome];
+    : imagensPorTipo[msg.tipo]
+    || ((msg.tick && msg.nome === 'Armadilha Incendiária') ? 'em_chamas.png' : trapImages[msg.nome]);
   trapIcon.replaceChildren();
   if (imageName) {
     const image = new Image();
@@ -12848,6 +12832,12 @@ function _showTrapResult(msg){
   } else if(msg.tipo === 'sono'){
     statusEl.className = 'trap-status trap-status--fail';
     statusEl.textContent = `🌙 Adormecido — duração: ${msg.duracao || 0} rodada(s).`;
+  } else if(msg.tipo === 'maldicao'){
+    // Maldição não tem duração: some só na Purificação ou no Templo. O estágio
+    // só existe nas progressivas (o servidor manda null nas demais).
+    statusEl.className = 'trap-status trap-status--fail';
+    statusEl.textContent = `☠️ Amaldiçoado: ${msg.nome || 'maldição'}`
+      + (msg.estagio ? ` — estágio ${msg.estagio}` : '') + '.';
   } else if(msg.tick){
     statusEl.className = 'trap-status trap-status--tick';
     statusEl.textContent = `🔥 Dano contínuo: ${msg.dano}`;

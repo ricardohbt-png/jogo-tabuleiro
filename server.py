@@ -6972,6 +6972,7 @@ class GameRoom:
         }
 
     async def broadcast_city_state(self):
+        await self._notificar_maldicoes_pendentes()   # ver push_state
         await self.broadcast(self._city_state_payload())
 
     async def send_city_state_to(self, pid):
@@ -12709,6 +12710,10 @@ class GameRoom:
             removida = self._remover_maldicao(alvo, maldicao_alvo)
             if removida:
                 removido = True
+            elif self._maldicoes(alvo):
+                # Tem maldições, mas não a pedida — id desatualizado no cliente.
+                await self.send_to(pid, {"type": "error",
+                    "msg": f"{alvo['name']} não carrega essa maldição."}); return
             else:
                 await self.send_to(pid, {"type": "error", "msg": f"{alvo['name']} não está amaldiçoado."}); return
 
@@ -13343,6 +13348,10 @@ class GameRoom:
                 atuais.append({"id": mid, "aventuras": 0})
                 p["amaldicoado"] = True
                 p["maldicao_tipo"] = atuais[0]["id"]
+                # Esta função é SÍNCRONA e não pode narrar nem abrir o quadro.
+                # Sem a fila, vestir um item amaldiçoado acontecia em silêncio
+                # absoluto. Quem esvazia é _notificar_maldicoes_pendentes.
+                p.setdefault("_maldicoes_a_avisar", []).append(mid)
 
     def _escudo_equipado(self, p):
         """True se o jogador tem um escudo na mão esquerda (off_hand)."""
@@ -14025,18 +14034,36 @@ class GameRoom:
         """I no instante da aplicação; II/III/IV/V após 2/4/6/8 aventuras."""
         return min(5, 1 + max(0, int(entrada.get("aventuras", 0))) // 2)
 
-    async def _enviar_resultado_maldicao(self, alvo, maldicao_id):
+    _MALDICAO_ORIGEM = {"item": "Veio de um item amaldiçoado — enquanto a maldição durar, "
+                                "peças que prendem não saem do lugar.",
+                        "armadilha": "Disparada por uma armadilha.",
+                        "monstro": "Lançada por um inimigo."}
+    _MALDICAO_GRAVIDADE = {"leve": "Leve", "media": "Média", "grave": "Grave"}
+
+    async def _enviar_resultado_maldicao(self, alvo, maldicao_id, fonte=None):
+        """Quadro de resultado da maldição — o mesmo popup da armadilha/veneno.
+        Explica o efeito, a gravidade e como se livrar dela."""
         mal = MALDICOES[maldicao_id]
         entrada = next((x for x in self._maldicoes(alvo) if x["id"] == maldicao_id), {})
+        progressiva = bool(mal.get("progressiva"))
+        estagio = self._maldicao_estagio(entrada) if progressiva else None
+        extras = [f"Efeito: {mal['desc']}.",
+                  f"Gravidade {self._MALDICAO_GRAVIDADE.get(mal['categoria'], mal['categoria'])} — "
+                  f"o Templo cobra {MALDICAO_PRECOS_TEMPLO[mal['categoria']]} ouro para curá-la."]
+        if self._MALDICAO_ORIGEM.get(fonte):
+            extras.append(self._MALDICAO_ORIGEM[fonte])
+        if progressiva:
+            extras.append(f"Progressiva: está no estágio {estagio} e piora a cada 2 aventuras concluídas.")
+        extras.append("Permanece até ser purificada por um clérigo ou curada no Templo.")
         await self.send_to(alvo["id"], {
             "type": "curse_result", "tipo": "maldicao", "maldicao_id": maldicao_id,
             "nome": mal["nome"], "icone": "☠️", "categoria": mal["categoria"],
-            "estagio": self._maldicao_estagio(entrada) if mal.get("progressiva") else None,
+            "estagio": estagio,
             "descricao": mal["desc"],
-            "efeitos_extra": [mal["desc"], "Permanece até Purificação ou cura no Templo."],
+            "efeitos_extra": extras,
         })
 
-    async def _aplicar_maldicao(self, alvo, maldicao_id, fonte="uma força sombria"):
+    async def _aplicar_maldicao(self, alvo, maldicao_id, fonte="uma força sombria", origem=None):
         """Aplica uma maldição catalogada, respeitando o limite de três por herói."""
         if not self._eh_jogador(alvo) or maldicao_id not in MALDICOES:
             return False
@@ -14050,15 +14077,18 @@ class GameRoom:
         alvo["amaldicoado"] = True
         alvo["maldicao_tipo"] = atuais[0]["id"]
         mal = MALDICOES[maldicao_id]
-        await self._enviar_resultado_maldicao(alvo, maldicao_id)
+        await self._enviar_resultado_maldicao(alvo, maldicao_id, fonte=origem)
         await self.gm_say(f"☠️ **{alvo['name']}** foi amaldiçoado: **{mal['nome']}** ({fonte}).")
         return True
 
     def _remover_maldicao(self, alvo, maldicao_id=None):
-        """Remove uma única maldição (a mais antiga caso não seja escolhida)."""
+        """Remove uma única maldição. Com id explícito remove EXATAMENTE aquela,
+        ou nada — o id vem do cliente e, caindo para a primeira quando não batia,
+        a Purificação curava a maldição errada (e pelo preço da errada)."""
         atuais = self._maldicoes(alvo)
-        indice = next((i for i, x in enumerate(atuais) if x["id"] == maldicao_id), None)
-        if indice is None:
+        if maldicao_id is not None:
+            indice = next((i for i, x in enumerate(atuais) if x["id"] == maldicao_id), None)
+        else:
             indice = 0 if atuais else None
         if indice is None:
             return None
@@ -14098,6 +14128,19 @@ class GameRoom:
         if keys:
             return None if any(p["gear"].get(k) is None for k in keys) else keys[0]
         return cat if p["gear"].get(cat) else None
+
+    async def _notificar_maldicoes_pendentes(self):
+        """Esvazia a fila deixada por _apply_gear_effect (síncrona) e avisa quem
+        foi amaldiçoado por um item. Chamada nos DOIS broadcasts de estado
+        porque é por lá que passam todos os caminhos de equipar — da bolsa, do
+        resgate-equipa na compra, do baú, do chão — e assim nenhum deles
+        precisa lembrar de avisar."""
+        for p in list(self.players.values()):
+            for mid in p.pop("_maldicoes_a_avisar", None) or []:
+                if mid in MALDICOES and self._tem_maldicao(p, mid):
+                    await self._enviar_resultado_maldicao(p, mid, fonte="item")
+                    await self.gm_say(f"☠️ **{p['name']}** foi amaldiçoado por um item: "
+                                      f"**{MALDICOES[mid]['nome']}**.")
 
     async def _progredir_maldicoes_missao(self):
         """Avança apenas missões encerradas com sucesso, nunca fugas/retornos."""
@@ -16939,7 +16982,7 @@ class GameRoom:
                     opcoes = [mid for mid, dados in MALDICOES.items()
                               if dados["categoria"] == categoria and not dados.get("progressiva")]
                     mid = random.choice(opcoes) if opcoes else "maos_tremulas"
-                await self._aplicar_maldicao(alvo, mid, nome)
+                await self._aplicar_maldicao(alvo, mid, nome, origem="armadilha")
             await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=save_ok, dano=0,
                                             metade=False, descricao=tipo["descricao"], efeitos_extra=[])
             self.armadilhas = [a for a in self.armadilhas if a["id"] != arm["id"]]
@@ -19936,7 +19979,7 @@ class GameRoom:
             opcoes = [mid for mid, dados in MALDICOES.items()
                       if dados["categoria"] == categoria and not dados.get("progressiva")]
             maldicao_id = random.choice(opcoes) if opcoes else "maos_tremulas"
-        await self._aplicar_maldicao(alvo, maldicao_id, f"Amaldiçoar de {m['name']}")
+        await self._aplicar_maldicao(alvo, maldicao_id, f"Amaldiçoar de {m['name']}", origem="monstro")
         return True
 
     async def _monster_try_amaldicoar(self, m, targets):
@@ -23076,6 +23119,9 @@ class GameRoom:
         return msg_state
 
     async def push_state(self):
+        # Antes de montar o payload: além de avisar, isso tira a fila interna
+        # do dict do jogador, que é serializado cru no game_state.
+        await self._notificar_maldicoes_pendentes()
         await self._check_objectives()
         msg_state = self._game_state_payload()
         # Quem está na cidade (fora_masmorra) não recebe game_state: o cliente

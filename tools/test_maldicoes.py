@@ -162,10 +162,88 @@ def test_corrosao_destroi_mas_maldicao_fica():
     r._remover_maldicao(p, "maos_tremulas")
     check("clérigo/Templo ainda removem", not r._tem_maldicao(p, "maos_tremulas"))
 
+def test_remover_maldicao_certa():
+    print("\n[7] Purificação remove exatamente a maldição pedida")
+    r, p = sala()
+    asyncio.run(r._aplicar_maldicao(p, "maos_tremulas"))
+    asyncio.run(r._aplicar_maldicao(p, "corpo_exausto"))
+    # id que o alvo NÃO tem: antes caía no índice 0 e curava a errada.
+    removida = r._remover_maldicao(p, "licantropia")
+    check("id ausente não remove nada", removida is None)
+    check("as duas maldições continuam",
+          r._tem_maldicao(p, "maos_tremulas") and r._tem_maldicao(p, "corpo_exausto"))
+    # id presente: remove exatamente aquela, mesmo não sendo a primeira.
+    check("remove a pedida", r._remover_maldicao(p, "corpo_exausto") == "corpo_exausto")
+    check("a outra fica", r._tem_maldicao(p, "maos_tremulas"))
+    check("a pedida saiu", not r._tem_maldicao(p, "corpo_exausto"))
+    # sem id: continua removendo a mais antiga (usado quando o cliente não escolhe).
+    check("sem id remove a mais antiga", r._remover_maldicao(p) == "maos_tremulas")
+    check("sem nada para remover devolve None", r._remover_maldicao(p) is None)
+
+def test_purificacao_nao_cura_errada():
+    print("\n[8] Purificar pedindo maldição ausente não cura outra")
+    r, p = sala()
+    lewis = S.make_player("p2", "Lewis", "cleric", 1)
+    lewis["pos"] = [5, 6]; lewis["fome"] = lewis["sede"] = 50
+    # Purificar maldição exige a Purificação III da Guilda.
+    lewis["guild_owned"] = {"especializacoes": ["clerigo_purif_2", "clerigo_purif_3"]}
+    r.players["p2"] = lewis
+    r.round_num = 1
+    # _is_turn lê current_pid() → initiative_order[initiative_index]; sem
+    # initiative_active o handler sai em silêncio no topo.
+    r.initiative_active = True
+    r.initiative_order = [{"kind": "player", "id": "p2"}]
+    r.initiative_index = 0
+    asyncio.run(r._aplicar_maldicao(p, "maos_tremulas"))
+    asyncio.run(r.handle_purificacao("p2", {"tipo": "maldicao", "target_id": "p1",
+                                            "maldicao_id": "licantropia"}))
+    check("a maldição real sobreviveu", r._tem_maldicao(p, "maos_tremulas"))
+    check("o clérigo foi avisado", any("amaldiçoad" in e.lower() or "maldi" in e.lower()
+                                       for e in r.erros))
+
+def test_item_amaldicoado_avisa():
+    print("\n[9] Equipar item amaldiçoado avisa o jogador")
+    r, p = sala()
+    enviados = []
+    async def cap(pid, msg, *a, **k): enviados.append(msg)
+    r.send_to = cap
+    narrado = []
+    async def say(txt, *a, **k): narrado.append(txt)
+    r.gm_say = say
+    it = anel()
+    p["bag"].append(it)
+    asyncio.run(r._executar_equip_from_bag("p1", len(p["bag"]) - 1))
+    check("a maldição foi aplicada", r._tem_maldicao(p, "maos_tremulas"))
+    asyncio.run(r._notificar_maldicoes_pendentes())
+    curse = [m for m in enviados if m.get("type") == "curse_result"]
+    check("mandou curse_result", bool(curse))
+    check("o quadro traz o nome da maldição", bool(curse) and curse[0].get("nome") == "Mãos Trêmulas")
+    check("o quadro explica o efeito", bool(curse) and "-2" in (curse[0].get("descricao") or ""))
+    check("o quadro diz que veio do item",
+          bool(curse) and any("item" in str(x).lower() for x in curse[0].get("efeitos_extra") or []))
+    check("narrou no log", any("amaldiçoad" in t.lower() for t in narrado))
+    enviados.clear()
+    asyncio.run(r._notificar_maldicoes_pendentes())
+    check("a fila não repete o aviso",
+          not [m for m in enviados if m.get("type") == "curse_result"])
+
+def test_aviso_nao_vaza_no_payload():
+    print("\n[10] A fila de avisos não vaza no estado do jogador")
+    r, p = sala()
+    it = anel()
+    p["bag"].append(it)
+    asyncio.run(r._executar_equip_from_bag("p1", len(p["bag"]) - 1))
+    check("a fila existe antes do broadcast", p.get("_maldicoes_a_avisar"))
+    asyncio.run(r._notificar_maldicoes_pendentes())
+    check("some depois de avisar", not p.get("_maldicoes_a_avisar"))
+    check("não é campo durável", "_maldicoes_a_avisar" not in S._DURABLE_FIELDS)
+
 def main():
     test_desequipar(); test_largar(); test_vender()
     test_empurrar(); test_nao_bloqueia_demais()
     test_corrosao_destroi_mas_maldicao_fica()
+    test_remover_maldicao_certa(); test_purificacao_nao_cura_errada()
+    test_item_amaldicoado_avisa(); test_aviso_nao_vaza_no_payload()
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 
