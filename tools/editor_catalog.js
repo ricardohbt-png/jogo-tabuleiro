@@ -3344,6 +3344,19 @@ window.EDITOR_CATALOG = {
   ],
   "monster_abilities": [
     {
+      "id": "amaldicoar_monstro",
+      "source": "monstro",
+      "name": "Amaldiçoar",
+      "icon": "☠️",
+      "action_type": "acao",
+      "range": 4,
+      "save": "vontade",
+      "dc": 13,
+      "curse_mode": "aleatoria",
+      "curse_category": "leve",
+      "descricao": "Amaldiçoa um alvo: configure a maldição específica ou uma aleatória por gravidade."
+    },
+    {
       "id": "disparo_teia",
       "name": "Disparo de Teia",
       "action_type": "acao",
@@ -7087,6 +7100,17 @@ window.EDITOR_CATALOG = {
       "effect": "coat_poison",
       "value": 0,
       "veneno_id": "ensaio_sobre_a_cegueira"
+    },
+    {
+      "id": "dente_da_fera",
+      "name": "Dente da fera",
+      "emoji": "⚔️",
+      "die": "1d6",
+      "stat": "str_",
+      "categoria": "cortante",
+      "item_slot": "weapon",
+      "effect": "atk",
+      "value": 0
     }
   ],
   "traps": [
@@ -7159,6 +7183,13 @@ window.EDITOR_CATALOG = {
       "icone": "🎯",
       "cr": 0.4,
       "precisa_veneno": true
+    },
+    {
+      "tipo": "armadilha_maldicao",
+      "nome": "Armadilha de Maldição",
+      "icone": "☠️",
+      "cr": 0.75,
+      "precisa_veneno": false
     }
   ],
   "venoms": [

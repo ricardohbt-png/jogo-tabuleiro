@@ -1244,6 +1244,10 @@ const GS = (() => {
         _emit('diseaseResult', msg);
         break;
 
+      case 'curse_result':
+        _emit('curseResult', msg);
+        break;
+
       case 'poison_result':
         _emit('poisonResult', msg);
         break;

@@ -18,21 +18,21 @@
     return { name:"", emoji:"⚔️", die_qtd:1, die_faces:8, categoria:"cortante",
       stat:"str_", finesse:false, manejo:"corpo", range:4, throw_range:3, ammo:"", two_handed:false,
       atk_bonus:0, damage_bonus:0, corrosao_livres:0, corrosao_penalidade:2, material:"metal",
-      extra_damages:[], granted_ability:"", allowed_classes:[],
+      extra_damages:[], granted_ability:"", maldicao_id:"", maldicao_prende:false, allowed_classes:[],
       disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:0, id:"" };
   }
   function novoDraftArmor(kind) {
     return { name:"", emoji:"🛡️", item_type:(kind === "escudos" ? "shield" : "armor"),
       ac_bonus: 2, armor_category:"leve",
       materiais:{organic:false, metal:true}, corrosao_livres:0, corrosao_penalidade:2,
-      bonuses:[], granted_ability:"", allowed_classes:[],
+      bonuses:[], granted_ability:"", maldicao_id:"", maldicao_prende:false, allowed_classes:[],
       disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:0, id:"" };
   }
   function novoDraftAccessory(kind) {
     return { name:"", emoji:(kind === "botas" ? "👢" : "💍"),
       item_type:(kind === "botas" ? "boots" : "ring"),
       bonuses:[], materiais:{organic:false, metal:true}, corrosao_livres:0, corrosao_penalidade:2,
-      granted_ability:"", allowed_classes:[],
+      granted_ability:"", maldicao_id:"", maldicao_prende:false, allowed_classes:[],
       disponibilidade:{loja:true,baus:false,loot_monstro:false}, price:0, id:"" };
   }
   function novoDraftPotion() {
@@ -103,6 +103,12 @@
     }).join("");
     return campo("Habilidade", '<select id="ie-abil"><option value=""' +
       (draft.granted_ability ? "" : " selected") + '>— nenhuma —</option>' + grupos + '</select>');
+  }
+  function campoMaldicao() {
+    // A lista mora em editor_items_logic.js (CURSES), que é quem também valida
+    // o id na serialização — duas cópias dos mesmos 25 ids divergiriam.
+    var curses = L.CURSES;
+    return seccao("Item amaldiçoado", campo("Maldição ao equipar", '<select id="ie-maldicao"><option value="">— nenhuma —</option>' + curses.map(function(x){return '<option value="'+x[0]+'"'+(draft.maldicao_id===x[0]?' selected':'')+'>'+x[1]+'</option>';}).join('')) + '<label class="ie-field"><input id="ie-maldicao-prende" type="checkbox"'+(draft.maldicao_prende?' checked':'')+'> Prende ao equipar até a maldição ser curada <small>Purificação: +5 fome/+5 sede. Templo: +100 ouro.</small></label>');
   }
 
   function fromBase(item) {
@@ -203,6 +209,7 @@
         ' <select class="ie-elem-type">' + elemTypes + '</select>' +
         ' <button class="ie-elem-del">✕</button></span></template>'),
       seccao("Habilidade concedida (ativa ao equipar)", campoHabilidade()),
+      campoMaldicao(),
       seccao("Restrição de classe (vazio = todas)",
         CLASSES.map(function (c) { return '<label class="ie-cls">' +
           '<input type="checkbox" class="ie-class" value="' + c[0] + '"> ' + esc(c[1]) + '</label>'; }).join("")),
@@ -244,6 +251,7 @@
         '<label class="ie-field"><input type="checkbox" id="ie-mat-metal"' + (draft.materiais.metal ? " checked" : "") + '> Metal (Devorador de Metal)</label>' +
         '<span class="ie-hint">Sem material marcado, a peça não corrói. Quebra em N+M+1.</span>'),
       seccao("Habilidade concedida (ativa ao equipar)", campoHabilidade()),
+      campoMaldicao(),
       seccao("Restrição de classe (vazio = todas)",
         CLASSES.map(function (c) { return '<label class="ie-cls">' +
           '<input type="checkbox" class="ie-class" value="' + c[0] + '"> ' + esc(c[1]) + '</label>'; }).join("")),
@@ -284,6 +292,8 @@
       if (eff === "resist") { var t = r.querySelector(".ie-abonus-type"); o.type = t ? t.value : "fire"; }
       return o; });
     var ab = g("ie-abil"); if (ab) draft.granted_ability = ab.value;
+    draft.maldicao_id = g("ie-maldicao") ? g("ie-maldicao").value : "";
+    draft.maldicao_prende = !!g("ie-maldicao-prende")?.checked && !!draft.maldicao_id;
     return draft;
   }
 
@@ -391,6 +401,7 @@
         '<label class="ie-field"><input type="checkbox" id="ie-mat-metal"' + (draft.materiais.metal ? " checked" : "") + '> Metal (Devorador de Metal)</label>' +
         '<span class="ie-hint">Sem material marcado, a peça não corrói. Quebra em N+M+1.</span>') : "",
       seccao("Habilidade concedida (ativa ao equipar)", campoHabilidade()),
+      campoMaldicao(),
       seccao("Restrição de classe (vazio = todas)",
         CLASSES.map(function (c) { return '<label class="ie-cls">' +
           '<input type="checkbox" class="ie-class" value="' + c[0] + '"> ' + esc(c[1]) + '</label>'; }).join("")),
@@ -431,6 +442,8 @@
       draft.materiais = { organic: g("ie-mat-organic").checked, metal: g("ie-mat-metal").checked };
     }
     var ab = g("ie-abil"); if (ab) draft.granted_ability = ab.value;
+    draft.maldicao_id = g("ie-maldicao") ? g("ie-maldicao").value : "";
+    draft.maldicao_prende = !!g("ie-maldicao-prende")?.checked && !!draft.maldicao_id;
     return draft;
   }
 
@@ -1061,6 +1074,8 @@
     var tEl = g("ie-throw"); if (tEl) draft.throw_range = Math.max(1, +tEl.value || 3);
     var aEl = g("ie-ammo"); if (aEl) draft.ammo = aEl.value;
     draft.granted_ability = g("ie-abil").value;
+    draft.maldicao_id = g("ie-maldicao") ? g("ie-maldicao").value : "";
+    draft.maldicao_prende = !!g("ie-maldicao-prende")?.checked && !!draft.maldicao_id;
     draft.allowed_classes = Array.prototype.map.call(root.querySelectorAll(".ie-class:checked"), function (c) { return c.value; });
     draft.disponibilidade = { loja: g("ie-disp-loja").checked, baus: g("ie-disp-baus").checked, loot_monstro: g("ie-disp-loot").checked };
     draft.price = +g("ie-price").value || 0;

@@ -2222,6 +2222,11 @@ function _renderShopItems(){
   items.forEach((item, idx) => {
     if(item.effect === 'scroll' && rows[idx]) aplicarTooltipPergaminho(rows[idx], item);
   });
+  if(shopKey === 'templo' && myP && (myP.maldicoes||[]).length){
+    const nomes={maos_tremulas:'Mãos Trêmulas',olhos_escuridao:'Olhos da Escuridão',passos_pesados:'Passos Pesados',lamina_enferrujada:'Lâmina Enferrujada',fraqueza_arcana:'Fraqueza Arcana',fortuna_roubada:'Fortuna Roubada',azar_sobrenatural:'Azar Sobrenatural',marca_cacador:'Marca do Caçador',corpo_exausto:'Corpo Exausto',carne_fragil:'Carne Frágil',sangramento_profano:'Sangramento Profano',correntes_invisiveis:'Correntes Invisíveis',dor_constante:'Dor Constante',alma_quebrada:'Alma Quebrada',aura_profana:'Aura Profana',maldicao_ferrugem:'Maldição da Ferrugem',fome_eterna:'Fome Eterna',sede_infinita:'Sede Infinita',tocado_morte:'Tocado pela Morte',licantropia:'Licantropia',silencio_deuses:'Silêncio dos Deuses',voz_quebrada:'Voz Quebrada',espirito_covarde:'Espírito Covarde',eco_morte:'Eco da Morte',corrupcao_crescente:'Corrupção Crescente'};
+    const precos={leve:150,media:400,grave:800};
+    list.insertAdjacentHTML('beforeend',(myP.maldicoes||[]).map(m=>`<div class="shop-item"><span class="shop-item-emoji">☠️</span><div class="shop-item-info"><div class="shop-item-name">Remover: ${nomes[m.id]||m.id}</div><div class="shop-item-desc">Cura uma maldição; o preço depende da gravidade.</div></div><button class="btn-buy" onclick="removerMaldicaoTemplo('${m.id}')">Curar</button></div>`).join(''));
+  }
 }
 
 function _renderSellItems(mode){
@@ -2351,6 +2356,9 @@ function _itemDesc(item){
 
 function buyItem(shop, itemId){
   send({type:'shop_buy', shop, item_id:itemId});
+}
+function removerMaldicaoTemplo(maldicaoId){
+  send({type:'temple_remove_curse', maldicao_id:maldicaoId});
 }
 
 function sellItem(slot){
@@ -3433,6 +3441,11 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
     heroi.statsModificados?.constituicao || heroi.stats?.constituicao
   ) || '?'
   const raioVisao = obterRaioVisaoCliente(estadoServidor)
+  const nomesMaldicao = {maos_tremulas:'Mãos Trêmulas',olhos_escuridao:'Olhos da Escuridão',passos_pesados:'Passos Pesados',lamina_enferrujada:'Lâmina Enferrujada',fraqueza_arcana:'Fraqueza Arcana',fortuna_roubada:'Fortuna Roubada',azar_sobrenatural:'Azar Sobrenatural',marca_cacador:'Marca do Caçador',corpo_exausto:'Corpo Exausto',carne_fragil:'Carne Frágil',sangramento_profano:'Sangramento Profano',correntes_invisiveis:'Correntes Invisíveis',dor_constante:'Dor Constante',alma_quebrada:'Alma Quebrada',aura_profana:'Aura Profana',maldicao_ferrugem:'Maldição da Ferrugem',fome_eterna:'Fome Eterna',sede_infinita:'Sede Infinita',tocado_morte:'Tocado pela Morte',licantropia:'Licantropia',silencio_deuses:'Silêncio dos Deuses',voz_quebrada:'Voz Quebrada',espirito_covarde:'Espírito Covarde',eco_morte:'Eco da Morte',corrupcao_crescente:'Corrupção Crescente'}
+  const descMaldicao = {maos_tremulas:'−2 em ataques',olhos_escuridao:'−2 visão',passos_pesados:'mover custa +1 sede',lamina_enferrujada:'−2 dano físico',fraqueza_arcana:'magias causam metade do dano',fortuna_roubada:'metade do ouro adquirido',azar_sobrenatural:'primeiro 20 natural não é crítico',marca_cacador:'inimigos +1 para atacar você',corpo_exausto:'ações custam +1 fome e sede',carne_fragil:'+2 dano recebido',sangramento_profano:'1 dano no início do turno após sofrer dano',correntes_invisiveis:'−3 movimento',dor_constante:'ações causam 1 dano',alma_quebrada:'não recebe bônus de aliados',aura_profana:'aliados adjacentes −1 ataque',maldicao_ferrugem:'equipamento degrada após combate',silencio_deuses:'não lança magias',voz_quebrada:'não usa Canções',espirito_covarde:'−2 Vontade',eco_morte:'morte de aliado causa 10 dano'}
+  const maldicoes = (estadoServidor.maldicoes||[]).map(m=>`<li>☠️ <b>${nomesMaldicao[m.id]||m.id}</b> — ${descMaldicao[m.id]||'maldição ativa'}${m.aventuras!=null&&['fome_eterna','sede_infinita','tocado_morte','licantropia','corrupcao_crescente'].includes(m.id)?` (estágio ${Math.min(5,1+Math.floor(m.aventuras/2))})`:''}</li>`).join('')
+  const doenca = estadoServidor.doente ? `<li>🦠 <b>Doença ${estadoServidor.doenca_tipo||''}</b> — ${((estadoServidor.doenca||{}).sintomas||[]).join(', ')}</li>` : ''
+  const modificadores = (maldicoes||doenca) ? `<div style="margin-top:14px;padding:10px;border:1px solid #a34a4a;background:rgba(120,20,25,.14)"><div style="color:#e8a0a0;font:10px Cinzel,serif;letter-spacing:1px;margin-bottom:5px">MODIFICADORES TEMPORÁRIOS — MALES</div><ul style="margin:0;padding-left:16px;color:#e8d4d4;font-size:11px;line-height:1.5">${doenca}${maldicoes}</ul></div>` : ''
 
   return `
     <!-- VIDA -->
@@ -3564,6 +3577,7 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
         <span style="color:#8ed0ff; font-size:14px; font-weight:bold;">👁 ${raioVisao}</span>
       </div>
     </div>
+    ${modificadores}
   `
 }
 
@@ -24345,6 +24359,7 @@ GS.on('sorteReacao', msg => {
 
 GS.on('trapResult',  msg  => queueTrapResult(msg));
 GS.on('diseaseResult', msg => queueTrapResult(msg));
+GS.on('curseResult', msg => queueTrapResult(msg));
 GS.on('poisonResult', msg => queueTrapResult(msg));
 GS.on('equipmentDamageResult', msg => queueTrapResult(msg));
 GS.on('petrifyResult', msg => queueTrapResult(msg));

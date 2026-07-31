@@ -698,6 +698,43 @@ DOENCA_SINTOMA_DESC = {
     "grave": "-2 CON, -2 INT",
 }
 
+# ── Sistema de Maldições ──────────────────────────────────────────────────
+# Estado durável: p['maldicoes'] = [{id, estagio, aventuras}]. Uma fonte pode
+# aplicar uma específica ou sortear apenas dentro de uma categoria; progressivas
+# nunca entram nos sorteios aleatórios.
+MALDICOES = {
+    "maos_tremulas": {"nome":"Mãos Trêmulas","categoria":"leve","desc":"-2 em ataques"},
+    "olhos_escuridao": {"nome":"Olhos da Escuridão","categoria":"leve","desc":"-2 alcance de visão"},
+    "passos_pesados": {"nome":"Passos Pesados","categoria":"leve","desc":"mover custa +1 sede"},
+    "lamina_enferrujada": {"nome":"Lâmina Enferrujada","categoria":"leve","desc":"-2 dano físico"},
+    "fraqueza_arcana": {"nome":"Fraqueza Arcana","categoria":"leve","desc":"magias causam metade do dano"},
+    "fortuna_roubada": {"nome":"Fortuna Roubada","categoria":"leve","desc":"recebe metade do ouro"},
+    "azar_sobrenatural": {"nome":"Azar Sobrenatural","categoria":"leve","desc":"primeiro 20 natural não crita"},
+    "marca_cacador": {"nome":"Marca do Caçador","categoria":"leve","desc":"inimigos recebem +1 contra você"},
+    "corpo_exausto": {"nome":"Corpo Exausto","categoria":"media","desc":"ações custam +1 fome e sede"},
+    "carne_fragil": {"nome":"Carne Frágil","categoria":"media","desc":"+2 dano recebido"},
+    "sangramento_profano": {"nome":"Sangramento Profano","categoria":"media","desc":"1 dano no início do turno após sofrer dano"},
+    "correntes_invisiveis": {"nome":"Correntes Invisíveis","categoria":"media","desc":"-3 movimento"},
+    "dor_constante": {"nome":"Dor Constante","categoria":"media","desc":"ações causam 1 dano"},
+    "alma_quebrada": {"nome":"Alma Quebrada","categoria":"media","desc":"não recebe bônus de aliados"},
+    "aura_profana": {"nome":"Aura Profana","categoria":"media","desc":"aliados adjacentes: -1 ataque"},
+    "maldicao_ferrugem": {"nome":"Maldição da Ferrugem","categoria":"media","desc":"equipamento degrada após combate"},
+    "fome_eterna": {"nome":"Fome Eterna","categoria":"grave","progressiva":True,"desc":"consumo sobrenatural de fome"},
+    "sede_infinita": {"nome":"Sede Infinita","categoria":"grave","progressiva":True,"desc":"consumo sobrenatural de sede"},
+    "tocado_morte": {"nome":"Tocado pela Morte","categoria":"grave","progressiva":True,"desc":"recuperação cada vez menos eficaz"},
+    "licantropia": {"nome":"Licantropia","categoria":"grave","progressiva":True,"desc":"transformação bestial"},
+    "silencio_deuses": {"nome":"Silêncio dos Deuses","categoria":"grave","desc":"não lança magias"},
+    "voz_quebrada": {"nome":"Voz Quebrada","categoria":"grave","desc":"bardo não usa Canções"},
+    "espirito_covarde": {"nome":"Espírito Covarde","categoria":"grave","desc":"-2 Vontade; falha contra medo"},
+    "eco_morte": {"nome":"Eco da Morte","categoria":"grave","desc":"aliado morto causa 10 dano"},
+    "corrupcao_crescente": {"nome":"Corrupção Crescente","categoria":"grave","progressiva":True,"desc":"gera doenças e maldições"},
+}
+MALDICAO_PRECOS_TEMPLO = {"leve":150, "media":400, "grave":800}
+MALDICAO_MAX_POR_HEROI = 3
+
+def _maldicao_categoria(valor):
+    return {"moderado":"media", "média":"media", "medio":"media"}.get(str(valor).lower(), str(valor).lower())
+
 # â”€â”€â”€ CANÃ‡ÃƒO HEROICA / PROVOCAÃ‡ÃƒO (Henrique, o Bardo) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # A CanÃ§Ã£o Heroica Ã© um buff musical alternÃ¡vel (toggle). O bardo escolhe um
 # subconjunto destes 5 atributos; cada um custa 1 de fome OU 1 de sede (ver
@@ -1507,6 +1544,7 @@ _DURABLE_FIELDS = (
     "fome_max_base", "sede_max_base", "fome_max_modificadores", "sede_max_modificadores",
     "bag", "bag_size", "gear",
     "guild_owned", "guild_equip", "magias_conhecidas",
+    "maldicoes",
 )
 
 def snapshot_character(player):
@@ -4285,6 +4323,14 @@ def validar_dungeon(defn):
             destino = tr.get("saida")
             if not in_grid(destino) or tile_at(destino) != FLOOR:
                 return False, "armadilha_teletransporte exige uma saída em quadrado de chão."
+        if tr["tipo"] == "armadilha_maldicao":
+            mode = tr.get("curse_mode", "aleatoria")
+            if mode not in {"especifica", "aleatoria"}:
+                return False, "armadilha_maldicao: curse_mode inválido."
+            if mode == "especifica" and tr.get("curse_id") not in MALDICOES:
+                return False, "armadilha_maldicao específica exige curse_id válido."
+            if mode == "aleatoria" and _maldicao_categoria(tr.get("curse_category", "leve")) not in {"leve", "media", "grave"}:
+                return False, "armadilha_maldicao: curse_category inválida."
         if tr.get("image") is not None and not isinstance(tr.get("image"), str):
             return False, "trap.image deve ser uma string (nome do arquivo em assets/objetos)."
 
@@ -4555,6 +4601,12 @@ def make_authored_trap(tdef):
         arm["veneno_id"] = tdef.get("veneno_id")
     if tipo == "armadilha_teletransporte":
         arm["saida"] = list(tdef.get("saida") or [])
+    if tipo == "armadilha_maldicao":
+        arm["curse_mode"] = tdef.get("curse_mode", "aleatoria")
+        arm["curse_id"] = tdef.get("curse_id", "maos_tremulas")
+        arm["curse_category"] = _maldicao_categoria(tdef.get("curse_category", "leve"))
+        arm["save"] = tdef.get("save", meta["save"])
+        arm["dificuldade"] = _monster_int(tdef.get("dificuldade", meta["dificuldade"]), meta["dificuldade"], 1, 40)
     if tdef.get("image"):
         arm["image"] = tdef["image"]   # PNG opcional (assets/objetos) â€” sÃ³ some quando revelada
     return arm
@@ -4906,6 +4958,12 @@ ARMADILHAS = {
         "nome": "Armadilha de Dardos Envenenados", "icone": "🎯", "dificuldade": 0, "save": "fortitude",
         "persiste": False, "special": "dardos_envenenados", "precisa_veneno": True,
         "descricao": "Sofre 1d4 perfurante e testa Fortitude contra o veneno escolhido.",
+    },
+    "armadilha_maldicao": {
+        "cr": 0.75,
+        "nome": "Armadilha de Maldição", "icone": "☠️", "dificuldade": 13, "save": "vontade",
+        "persiste": False, "special": "maldicao",
+        "descricao": "Vontade CD configurada ou recebe uma maldição específica ou aleatória.",
     },
 }
 
@@ -5817,6 +5875,9 @@ def make_player(pid, name, cls_id, slot):
             "item2":    None,                  # item ativo
         },
         "status": [],
+        # Maldições são permanentes até Purificação/Templo. Cada entrada guarda
+        # o id do catálogo e quantas aventuras concluídas já a fizeram evoluir.
+        "maldicoes": [],
         "alive": True,
         "connected": True,   # False quando o jogador cai/sai â€” sai da masmorra e Ã© pulado nos turnos
         "pos": [0, 0],
@@ -8112,6 +8173,26 @@ class GameRoom:
         await self.gm_say(f"⏳ **{p['name']}** aproveita a Oportunidade para se mover mais!")
         await self.push_state()
 
+    async def handle_templo_remover_maldicao(self, pid, maldicao_id):
+        """Serviço do Templo: remove uma maldição escolhida, por gravidade."""
+        if not self._em_cidade(pid):
+            return
+        p = self.players.get(pid)
+        if not p:
+            return
+        entrada = next((x for x in self._maldicoes(p) if x["id"] == maldicao_id), None)
+        if not entrada:
+            await self.send_to(pid, {"type": "error", "msg": "Essa maldição não está ativa."}); return
+        categoria = MALDICOES[maldicao_id]["categoria"]
+        vinculante = self._cura_maldicao_vinculante(p, maldicao_id)
+        preco = MALDICAO_PRECOS_TEMPLO[categoria] + (100 if vinculante else 0)
+        if p.get("gold", 0) < preco:
+            await self.send_to(pid, {"type": "error", "msg": f"O Templo cobra {preco} ouro para curar esta maldição."}); return
+        p["gold"] -= preco
+        removida = self._remover_maldicao(p, maldicao_id)
+        await self.broadcast({"type": "shop_result", "msg": f"⛪ **{p['name']}** foi liberto de **{MALDICOES[removida]['nome']}** ({preco} ouro)."})
+        await self.broadcast_city_state()
+
     async def handle_shop_buy(self, pid, shop, item_id):
         if not self._em_cidade(pid):
             return
@@ -8176,7 +8257,7 @@ class GameRoom:
                                      "two_handed", "dmg_bonus", "corrosao_resistente",
                                      "corrosao_niveis_penalidade",
                                      "atk_bonus", "damage_bonus", "extra_damages",
-                                     "granted_ability") if k in w},
+                                     "granted_ability", "maldicao_id", "maldicao_prende") if k in w},
             }
             res = self._route_acquired_item(p, weapon_item)
             if res == "full":
@@ -8202,7 +8283,7 @@ class GameRoom:
                 gear_item["armor_category"] = item.get("armor_category")
                 gear_item["corrosion_materials"] = list(item.get("corrosion_materials", []))
             for _k in ("corrosion_materials", "corrosao_resistente", "corrosao_niveis_penalidade",
-                       "bonuses", "granted_ability", "kind"):
+                       "bonuses", "granted_ability", "maldicao_id", "maldicao_prende", "kind"):
                 if _k in item and _k not in gear_item:
                     gear_item[_k] = deepcopy(item[_k])
             res = self._route_acquired_item(p, gear_item)
@@ -8331,6 +8412,11 @@ class GameRoom:
         p = self.players.get(pid)
         if not p:
             return
+        # Um guarda só cobre os três ramos de equipamento; "bag_N" não é slot de
+        # gear e passa direto. 'acc1'/'acc2' são os nomes antigos de item1/item2.
+        _slot_venda = {"acc1": "item1", "acc2": "item2"}.get(item_slot, item_slot)
+        if _slot_venda in GEAR_SLOTS and self._slot_travado_por_maldicao(p, _slot_venda):
+            await self.send_to(pid, {"type": "error", "msg": self.MSG_ITEM_PRESO}); return
 
         log = ""
 
@@ -9546,10 +9632,11 @@ class GameRoom:
         # Caminhar custa -1 sede UMA vez por turno (na 1Âª casa andada), nÃ£o por casa.
         if not p.get("moved_this_turn"):
             p["moved_this_turn"] = True
-            extra = self._doenca_custo_extra(p)   # sintoma mÃ©dio: +1 fome/sede ao mover
-            p["sede"] = max(0, p["sede"] - 1 - extra)
-            if extra:
-                p["fome"] = max(0, p["fome"] - extra)
+            extra_fome = self._doenca_custo_extra(p) + (1 if self._tem_maldicao(p, "corpo_exausto") else 0)
+            extra_sede = extra_fome + (1 if self._tem_maldicao(p, "passos_pesados") else 0)
+            p["sede"] = max(0, p["sede"] - 1 - extra_sede)
+            if extra_fome:
+                p["fome"] = max(0, p["fome"] - extra_fome)
         self._reveal_around(nx, ny, radius=self._get_raio_visao(p))   # raio base + bÃ´nus de VisÃ£o (Guerreiro da Luz)
 
         # Check room entry
@@ -10242,12 +10329,14 @@ class GameRoom:
             gl = p.get("guerreiro_luz_bonus", {}) if p.get("guerreiro_luz_ativo") else {}
             gl_atk  = gl.get("ataque", 0)
             gl_dano = gl.get("dano", 0)
+            maldicao_atk = -2 if self._tem_maldicao(p, "maos_tremulas") else 0
             eff_atk = (p["atk_bonus"] + p.get("skill_bonus_acerto", 0) + surv_mod + preso_pen
                        + cancao_acerto + gl_atk + self._pen(p, "ataque")
                        + self._mod_magia(p, "ataque")                        # AbenÃ§oar
                        + int((p.get("weapon") or {}).get("atk_bonus", 0) or 0)  # arma custom
                        + self._lenda_atk_bonus(p, target)                    # Lenda (bardo estudou a espÃ©cie)
                        - self._corrosao_arma_pen(p)                          # arma de madeira corroÃ­da
+                       + maldicao_atk
                        - (4 if target.get("oculto_sombras") else 0)          # alvo oculto nas sombras (corpo a corpo)
                        - (1 if p.get("desafinado_ate", -1) >= self.round_num else 0))  # Gaita: Desafinado (Fase 5)
             furtivo_planejado = (p.get("class_id") == "rogue"
@@ -12101,6 +12190,8 @@ class GameRoom:
         if not p or not p["alive"]: return
         if p.get("class_id") != "bard":
             await self.send_to(pid, {"type": "error", "msg": "Apenas Henrique pode usar esta habilidade."}); return
+        if self._tem_maldicao(p, "voz_quebrada"):
+            await self.send_to(pid, {"type": "error", "msg": "Voz Quebrada impede Canções Heroicas."}); return
         if p.get("cancao_ativa"):
             await self.send_to(pid, {"type": "error", "msg": "Desative a canção atual antes de trocar os atributos."}); return
 
@@ -12163,6 +12254,10 @@ class GameRoom:
     def _custo_fome_sede_efetivo(self, p, fome, sede, contexto=None):
         """Custo apos descontos de Encore. Grande Encore zera; Encore Menor -1/-1;
         magia gratis (Mago/Clerigo, contexto='magia') zera e consome a carga."""
+        # Corpo Exausto torna toda ação mais custosa; a cobrança central cobre
+        # milagres, magias, técnicas e habilidades que usam esta via.
+        if self._tem_maldicao(p, "corpo_exausto") and (fome or sede):
+            fome += 1; sede += 1
         if p.get("grande_encore_ate", -1) >= self.round_num:
             return 0, 0
         if contexto == "magia" and p.get("encore_magia_gratis", 0) > 0 \
@@ -12564,7 +12659,7 @@ class GameRoom:
         if tipo not in self._purif_tipos(p):
             await self.send_to(pid, {"type": "error",
                 "msg": "Você ainda não aprendeu a purificar este mal — evolua a Purificação na Guilda."}); return
-        custo = self.PURIFICACAO_CUSTOS[tipo]
+        custo = dict(self.PURIFICACAO_CUSTOS[tipo])
 
         alvo = self.players.get((data or {}).get("target_id"))
         if not alvo or not alvo.get("alive"):
@@ -12578,6 +12673,17 @@ class GameRoom:
 
         nomes = {"veneno": "veneno", "doenca": "doença",
                  "maldicao": "maldição", "petrificacao": "petrificação"}
+        maldicao_alvo = None
+        if tipo == "maldicao":
+            maldicao_alvo = (data or {}).get("maldicao_id")
+            if not maldicao_alvo:
+                atuais = self._maldicoes(alvo)
+                maldicao_alvo = atuais[0]["id"] if atuais else None
+            if maldicao_alvo and self._cura_maldicao_vinculante(alvo, maldicao_alvo):
+                custo["fome"] += 5; custo["sede"] += 5
+                _ef, _es = self._custo_fome_sede_efetivo(p, custo["fome"], custo["sede"])
+                if p["fome"] < _ef or p["sede"] < _es:
+                    await self.send_to(pid, {"type": "error", "msg": "Purificar o item vinculado exige +5 de fome e +5 de sede."}); return
         removido = False
 
         if tipo == "veneno":
@@ -12600,9 +12706,8 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error", "msg": f"{alvo['name']} não está doente."}); return
 
         elif tipo == "maldicao":
-            if alvo.get("amaldicoado"):
-                alvo["amaldicoado"] = False
-                alvo["maldicao_tipo"] = None
+            removida = self._remover_maldicao(alvo, maldicao_alvo)
+            if removida:
                 removido = True
             else:
                 await self.send_to(pid, {"type": "error", "msg": f"{alvo['name']} não está amaldiçoado."}); return
@@ -13229,6 +13334,15 @@ class GameRoom:
                 self._apply_resistance(p, b, equipping)
             else:
                 self._apply_single_effect(p, b.get("effect"), int(b.get("value", 0) or 0), equipping)
+        # Itens amaldiçoados aplicam sua marca quando são vestidos/empunhados.
+        # A cura posterior remove a maldição normalmente; reequipar o item a impõe de novo.
+        mid = item.get("maldicao_id")
+        if equipping and mid in MALDICOES and not self._tem_maldicao(p, mid):
+            atuais = self._maldicoes(p)
+            if len(atuais) < MALDICAO_MAX_POR_HEROI:
+                atuais.append({"id": mid, "aventuras": 0})
+                p["amaldicoado"] = True
+                p["maldicao_tipo"] = atuais[0]["id"]
 
     def _escudo_equipado(self, p):
         """True se o jogador tem um escudo na mão esquerda (off_hand)."""
@@ -13452,6 +13566,12 @@ class GameRoom:
             await self.send_to(pid, {"type": "error",
                 "msg": f"Você empunha uma arma de 2 mãos — desequipe-a antes de usar {item['name']}."}); return False
 
+        # Equipar por cima empurra o item antigo para a bolsa — se ele estiver
+        # preso por maldição, isso seria a via mais fácil de burlar a trava.
+        _destino = self._slot_destino_equip(p, cat)
+        if _destino and self._slot_travado_por_maldicao(p, _destino):
+            await self.send_to(pid, {"type": "error", "msg": self.MSG_ITEM_PRESO}); return False
+
         # Remove do inventÃ¡rio antes de equipar
         p["bag"].pop(slot_index)
 
@@ -13538,6 +13658,8 @@ class GameRoom:
         item = p["gear"].get(slot_key)
         if not item:
             return
+        if self._item_maldicao_vinculante(p, item):
+            await self.send_to(pid, {"type": "error", "msg": self.MSG_ITEM_PRESO}); return
         if len(p["bag"]) >= p.get("bag_size", 6):
             await self.send_to(pid, {"type": "error", "msg": "Inventário cheio — não há espaço para desequipar."}); return
         p["gear"][slot_key] = None
@@ -13709,6 +13831,8 @@ class GameRoom:
         elif source == "gear":
             if slot_key not in GEAR_SLOTS or not p["gear"].get(slot_key):
                 await self.send_to(pid, {"type": "error", "msg": "Nada equipado nesse slot."}); return
+            if self._slot_travado_por_maldicao(p, slot_key):
+                await self.send_to(pid, {"type": "error", "msg": self.MSG_ITEM_PRESO}); return
             item = p["gear"][slot_key]
         else:
             return
@@ -13865,6 +13989,131 @@ class GameRoom:
         p.pop("doenca_tipo", None)
         return True
 
+    # ── Maldições persistentes ─────────────────────────────────────────────
+    def _maldicoes(self, p):
+        """Lista normalizada de maldições do herói.
+
+        Saves antigos podem não ter o campo, e a forma antiga ``amaldicoado``
+        carregava apenas uma flag. A migração é propositalmente preguiçosa para
+        não invalidar nenhuma ficha já existente.
+        """
+        raw = p.setdefault("maldicoes", [])
+        if not isinstance(raw, list):
+            raw = p["maldicoes"] = []
+        normalizadas = []
+        for entrada in raw:
+            mid = entrada.get("id") if isinstance(entrada, dict) else entrada
+            if mid not in MALDICOES or any(x["id"] == mid for x in normalizadas):
+                continue
+            aventuras = entrada.get("aventuras", 0) if isinstance(entrada, dict) else 0
+            try: aventuras = max(0, int(aventuras))
+            except (TypeError, ValueError): aventuras = 0
+            normalizadas.append({"id": mid, "aventuras": aventuras})
+        # Compatibilidade com a flag temporária usada antes deste sistema.
+        legado = p.get("maldicao_tipo") if p.get("amaldicoado") else None
+        if legado in MALDICOES and not any(x["id"] == legado for x in normalizadas):
+            normalizadas.append({"id": legado, "aventuras": 0})
+        p["maldicoes"] = normalizadas[:MALDICAO_MAX_POR_HEROI]
+        p["amaldicoado"] = bool(p["maldicoes"])
+        p["maldicao_tipo"] = p["maldicoes"][0]["id"] if p["maldicoes"] else None
+        return p["maldicoes"]
+
+    def _tem_maldicao(self, p, maldicao_id):
+        return any(m["id"] == maldicao_id for m in self._maldicoes(p))
+
+    def _maldicao_estagio(self, entrada):
+        """I no instante da aplicação; II/III/IV/V após 2/4/6/8 aventuras."""
+        return min(5, 1 + max(0, int(entrada.get("aventuras", 0))) // 2)
+
+    async def _enviar_resultado_maldicao(self, alvo, maldicao_id):
+        mal = MALDICOES[maldicao_id]
+        entrada = next((x for x in self._maldicoes(alvo) if x["id"] == maldicao_id), {})
+        await self.send_to(alvo["id"], {
+            "type": "curse_result", "tipo": "maldicao", "maldicao_id": maldicao_id,
+            "nome": mal["nome"], "icone": "☠️", "categoria": mal["categoria"],
+            "estagio": self._maldicao_estagio(entrada) if mal.get("progressiva") else None,
+            "descricao": mal["desc"],
+            "efeitos_extra": [mal["desc"], "Permanece até Purificação ou cura no Templo."],
+        })
+
+    async def _aplicar_maldicao(self, alvo, maldicao_id, fonte="uma força sombria"):
+        """Aplica uma maldição catalogada, respeitando o limite de três por herói."""
+        if not self._eh_jogador(alvo) or maldicao_id not in MALDICOES:
+            return False
+        atuais = self._maldicoes(alvo)
+        if any(x["id"] == maldicao_id for x in atuais):
+            return False
+        if len(atuais) >= MALDICAO_MAX_POR_HEROI:
+            await self.gm_say(f"☠️ **{alvo['name']}** resistiu: já carrega o máximo de 3 maldições.")
+            return False
+        atuais.append({"id": maldicao_id, "aventuras": 0})
+        alvo["amaldicoado"] = True
+        alvo["maldicao_tipo"] = atuais[0]["id"]
+        mal = MALDICOES[maldicao_id]
+        await self._enviar_resultado_maldicao(alvo, maldicao_id)
+        await self.gm_say(f"☠️ **{alvo['name']}** foi amaldiçoado: **{mal['nome']}** ({fonte}).")
+        return True
+
+    def _remover_maldicao(self, alvo, maldicao_id=None):
+        """Remove uma única maldição (a mais antiga caso não seja escolhida)."""
+        atuais = self._maldicoes(alvo)
+        indice = next((i for i, x in enumerate(atuais) if x["id"] == maldicao_id), None)
+        if indice is None:
+            indice = 0 if atuais else None
+        if indice is None:
+            return None
+        removida = atuais.pop(indice)
+        alvo["amaldicoado"] = bool(atuais)
+        alvo["maldicao_tipo"] = atuais[0]["id"] if atuais else None
+        return removida["id"]
+
+    def _item_maldicao_vinculante(self, p, item):
+        """O item só prende enquanto sua própria maldição ainda aflige o portador."""
+        mid = (item or {}).get("maldicao_id")
+        return bool((item or {}).get("maldicao_prende") and mid and self._tem_maldicao(p, mid))
+
+    def _cura_maldicao_vinculante(self, p, maldicao_id):
+        return any(self._item_maldicao_vinculante(p, item)
+                   for item in (p.get("gear") or {}).values()
+                   if item and item.get("maldicao_id") == maldicao_id)
+
+    # Um item preso não sai do slot por NENHUMA via: desequipar, largar, vender,
+    # nem sendo empurrado por outro item. Toda saída passa por estes dois
+    # helpers — foi por não existirem que a trava valia só no desequipar.
+    MSG_ITEM_PRESO = ("Este item está preso por uma maldição. Purifique a maldição "
+                      "com um clérigo ou no Templo antes de removê-lo.")
+
+    def _slot_travado_por_maldicao(self, p, slot_key):
+        """Item preso por maldição neste slot, ou None."""
+        item = (p.get("gear") or {}).get(slot_key)
+        return item if item and self._item_maldicao_vinculante(p, item) else None
+
+    _PARES_SLOT = {"ring": ("ring1", "ring2"), "item": ("item1", "item2")}
+
+    def _slot_destino_equip(self, p, cat):
+        """Slot que seria SOBRESCRITO ao equipar nesta categoria — None se há vaga.
+        Espelha a escolha de _equip_into_slot/_equip_into_pair; se as duas
+        divergirem, a trava passa a proteger o slot errado."""
+        keys = self._PARES_SLOT.get(cat)
+        if keys:
+            return None if any(p["gear"].get(k) is None for k in keys) else keys[0]
+        return cat if p["gear"].get(cat) else None
+
+    async def _progredir_maldicoes_missao(self):
+        """Avança apenas missões encerradas com sucesso, nunca fugas/retornos."""
+        for p in self.players.values():
+            if not self._eh_jogador(p):
+                continue
+            for entrada in self._maldicoes(p):
+                mal = MALDICOES[entrada["id"]]
+                if not mal.get("progressiva"):
+                    continue
+                antes = self._maldicao_estagio(entrada)
+                entrada["aventuras"] += 1
+                depois = self._maldicao_estagio(entrada)
+                if depois > antes:
+                    await self.gm_say(f"☠️ **{mal['nome']}** de **{p['name']}** avança ao estágio {depois}.")
+
     def _modificador_sobrevivencia(self, p):
         """Modificador líquido aplicado a TODOS os acertos, testes de resistência e
         dano do jogador:
@@ -13950,6 +14199,8 @@ class GameRoom:
         if p.get("dormindo"):
             await self.send_to(pid, {"type": "error", "msg": "🌙 Você está dormindo e não pode lançar magias!"}); return
         # CanalizaÃ§Ã£o Arcana (Fase 3, tÃ©cnica exclusiva): ignora SilÃªncio.
+        if self._tem_maldicao(p, "silencio_deuses"):
+            await self.send_to(pid, {"type": "error", "msg": "Silêncio dos Deuses impede lançar magias."}); return
         if self._em_silencio(p) and not p.get("tec_ex_canalizacao_armado"):
             await self.send_to(pid, {"type": "error", "msg": "🔇 Você está numa área de Silêncio e não pode lançar magias!"}); return
 
@@ -16015,9 +16266,10 @@ class GameRoom:
     def _moves_base(self, p):
         """Movimento do turno = spd + bônus de canção + Grito de Guerra + penalidade de veneno/doença (mov)
         - penalidade de botas corroídas."""
+        maldicao_mov = -3 if self._tem_maldicao(p, "correntes_invisiveis") else 0
         return max(0, p["spd"] + self._cancao_bonus(p, "bonus_mov")
                    + self._pen(p, "movimento") + self._doenca_mov_pen(p)
-                   + self._grito_mov_bonus(p) - self._corrosao_spd_pen(p))
+                   + self._grito_mov_bonus(p) - self._corrosao_spd_pen(p) + maldicao_mov)
 
     def _water_tile_kind(self, x, y):
         """Retorna o tipo de água da casa, ou ``None`` se não for água."""
@@ -16161,6 +16413,8 @@ class GameRoom:
                  + extra_mod + self._lenda_resist_bonus(alvo, fonte)
                  + self._resistencia_saves_bonus(alvo)
                  + self._alaude_runico_resist(alvo, tipo_save))
+        if tipo_save == "vontade" and self._eh_jogador(alvo) and self._tem_maldicao(alvo, "espirito_covarde"):
+            bonus -= 2
         d20   = min(random.randint(1, 20), random.randint(1, 20)) if desvantagem else random.randint(1, 20)
         total = d20 + bonus
         passou = total >= dificuldade
@@ -16667,6 +16921,27 @@ class GameRoom:
             return
         if tipo.get("special") == "dardos_envenenados":
             await self._disparar_dardos_envenenados(alvo, arm, tipo)
+            self.armadilhas = [a for a in self.armadilhas if a["id"] != arm["id"]]
+            if alvo.get("id") in self.players and alvo.get("alive"):
+                await self._conceder_xp_armadilha(arm, alvo)
+            return
+        if tipo.get("special") == "maldicao":
+            save = arm.get("save", tipo["save"])
+            cd = _monster_int(arm.get("dificuldade", tipo["dificuldade"]), tipo["dificuldade"], 1, 40)
+            save_ok, d20, sb, stot = self._testar_save(alvo, save, cd)
+            await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
+                                  "label": f"{alvo_nome} — {save}"})
+            if not save_ok and self._eh_jogador(alvo):
+                if arm.get("curse_mode") == "especifica":
+                    mid = arm.get("curse_id", "maos_tremulas")
+                else:
+                    categoria = _maldicao_categoria(arm.get("curse_category", "leve"))
+                    opcoes = [mid for mid, dados in MALDICOES.items()
+                              if dados["categoria"] == categoria and not dados.get("progressiva")]
+                    mid = random.choice(opcoes) if opcoes else "maos_tremulas"
+                await self._aplicar_maldicao(alvo, mid, nome)
+            await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=save_ok, dano=0,
+                                            metade=False, descricao=tipo["descricao"], efeitos_extra=[])
             self.armadilhas = [a for a in self.armadilhas if a["id"] != arm["id"]]
             if alvo.get("id") in self.players and alvo.get("alive"):
                 await self._conceder_xp_armadilha(arm, alvo)
@@ -19636,6 +19911,45 @@ class GameRoom:
         target = self._get_monster_primary_target(m, targets)
         return bool(target and await self._usar_sopro_dragao(m, ability, target, targets))
 
+    async def _usar_amaldicoar(self, m, ability, target_obj):
+        """Resolve Amaldiçoar como ação completa contra o alvo mais próximo."""
+        alvo = target_obj.get("obj") if target_obj else None
+        if not alvo or target_obj.get("kind") != "player" or not alvo.get("alive"):
+            return False
+        alcance = _monster_int(ability.get("range", 4), 4, 1, 20)
+        if _distancia_chebyshev(m["pos"], alvo["pos"]) > alcance:
+            return False
+        if not self._ativar_habilidade_nativa(m, ability):
+            return False
+        passou, d20, bonus, total = self._testar_save(alvo, ability.get("save", "vontade"),
+                                                        ability.get("dc", 13), fonte=m)
+        await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
+                              "label": f"{m['name']} — Amaldiçoar", "hit": not passou})
+        if passou:
+            await self.gm_say(f"☠️ **{alvo['name']}** resiste a Amaldiçoar de **{m['name']}** "
+                              f"(d20({d20}){bonus:+d}={total} vs CD {ability.get('dc', 13)}).")
+            return True
+        if ability.get("curse_mode") == "especifica":
+            maldicao_id = ability.get("curse_id", "maos_tremulas")
+        else:
+            categoria = _maldicao_categoria(ability.get("curse_category", "leve"))
+            opcoes = [mid for mid, dados in MALDICOES.items()
+                      if dados["categoria"] == categoria and not dados.get("progressiva")]
+            maldicao_id = random.choice(opcoes) if opcoes else "maos_tremulas"
+        await self._aplicar_maldicao(alvo, maldicao_id, f"Amaldiçoar de {m['name']}")
+        return True
+
+    async def _monster_try_amaldicoar(self, m, targets):
+        ability = self._habilidade_monstro(m, "amaldicoar_monstro")
+        if not ability or m.get("ability_cooldowns", {}).get("amaldicoar_monstro", 0) > 0:
+            return False
+        # A regra é explicitamente o alvo vivo mais próximo, sem preferência por feridos.
+        vivos = [t for t in targets if t.get("kind") == "player" and self._alvo_vivo(t)]
+        if not vivos:
+            return False
+        alvo = min(vivos, key=lambda t: _distancia_chebyshev(m["pos"], t["obj"]["pos"]))
+        return await self._usar_amaldicoar(m, ability, alvo)
+
     def _habilidade_ativavel_manual(self, ability):
         """O mestre ativa: (a) habilidades save+dc (via _use_monster_ability) OU
         (b) habilidades de editor herói/guilda (self-buff, via _ativar_editor_ability).
@@ -19644,7 +19958,7 @@ class GameRoom:
         action_type)."""
         if not ability or ability.get("action_type") == "passiva":
             return False
-        if ability.get("id") in {"mestre_dos_mortos", "sopro_dragao"}:
+        if ability.get("id") in {"mestre_dos_mortos", "sopro_dragao", "amaldicoar_monstro"}:
             return True
         if ability.get("save") is not None and ability.get("dc") is not None:
             return True
@@ -19727,6 +20041,14 @@ class GameRoom:
             targets += [{"kind": "animado", "obj": a} for a in self._all_animados() if a.get("vida_atual", 0) > 0 and not a.get("dominado_por_monstro")]
             if not await self._usar_sopro_dragao(m, ability, {"kind": "player", "obj": alvo}, targets):
                 await self.send_to(pid, {"type": "error", "msg": "Alvo fora da área, ou sopro sem usos/em recarga."}); return
+            m["_master_acted"] = True; m["_ja_executou_acao"] = True
+            await self.push_state(); return
+        if ability_id == "amaldicoar_monstro":
+            alvo = self.players.get(target_id)
+            if not alvo or not alvo.get("alive"):
+                await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
+            if not await self._usar_amaldicoar(m, ability, {"kind": "player", "obj": alvo}):
+                await self.send_to(pid, {"type": "error", "msg": "Alvo fora do alcance, ou maldição sem usos/em recarga."}); return
             m["_master_acted"] = True; m["_ja_executou_acao"] = True
             await self.push_state(); return
         if not (ability.get("save") is not None and ability.get("dc") is not None):
@@ -20996,6 +21318,8 @@ class GameRoom:
         if not targets:
             return
         await self._processar_onda_envolvente_turno(m)
+        if await self._monster_try_amaldicoar(m, targets):
+            return
         # Sopro é uma ação ofensiva completa e vem antes de magia, movimento ou
         # ataque. A direção é determinada pelo alvo prioritário da própria IA.
         if await self._monster_try_sopro_dragao(m, targets):
@@ -22409,6 +22733,9 @@ class GameRoom:
         if self.phase != "playing" or not self.mission_complete_pending:
             return
         self.mission_complete_pending = False
+        # A aventura só conta depois da confirmação explícita de missão concluída.
+        # Fugir pela escada, morrer ou voltar à cidade por outro caminho não passa aqui.
+        await self._progredir_maldicoes_missao()
         if self.world_adventure_id:
             adventure_id = self.world_adventure_id
             adventure = WORLD_ADVENTURES.get(adventure_id) or {}
@@ -23260,6 +23587,9 @@ async def handler(ws):
                 elif t == "purificacao":
                     if room: await room.handle_purificacao(pid, msg)
 
+                elif t == "temple_remove_curse":
+                    if room: await room.handle_templo_remover_maldicao(pid, msg.get("maldicao_id"))
+
                 elif t == "ressurreicao":
                     if room: await room.handle_ressurreicao(pid, msg)
 
@@ -23445,7 +23775,15 @@ def _base_ability_library():
     habilidades não mágicas dos heróis e da Guilda. IDs recebem um prefixo de
     origem para não colidirem com habilidades nativas de monstros.
     """
-    out = {}
+    out = {
+        "amaldicoar_monstro": {
+            "id": "amaldicoar_monstro", "source": "monstro", "name": "Amaldiçoar",
+            "icon": "☠️", "action_type": "acao", "range": 4,
+            "save": "vontade", "dc": 13, "curse_mode": "aleatoria",
+            "curse_category": "leve",
+            "descricao": "Amaldiçoa um alvo: configure a maldição específica ou uma aleatória por gravidade.",
+        },
+    }
     for monster in MONSTER_DEFS:
         for ability in monster.get("special_abilities", []):
             if ability.get("id"):
@@ -23715,6 +24053,26 @@ def _validate_custom_monster(raw):
             ability["descricao"] = (f"{ability['damage']} de {labels[damage_type]} em {area} de "
                                     f"{ability['range']} casas; {alvo}. {save.title()} CD {ability['dc']}: "
                                     f"sucesso {sucesso}.")
+        if aid == "amaldicoar_monstro":
+            mode = str(config.get("curse_mode") or "aleatoria")
+            if mode not in {"especifica", "aleatoria"}:
+                mode = "aleatoria"
+            curse_id = str(config.get("curse_id") or "maos_tremulas")
+            if curse_id not in MALDICOES:
+                curse_id = "maos_tremulas"
+            category = _maldicao_categoria(config.get("curse_category") or "leve")
+            if category not in {"leve", "media", "grave"}:
+                category = "leve"
+            save = str(config.get("save") or "vontade")
+            if save not in {"reflexos", "fortitude", "vontade"}:
+                save = "vontade"
+            ability.update({"range": _monster_int(config.get("range", 4), 4, 1, 20),
+                            "save": save, "dc": _monster_int(config.get("dc", 13), 13, 1, 40),
+                            "curse_mode": mode, "curse_id": curse_id,
+                            "curse_category": category})
+            escolha = MALDICOES[curse_id]["nome"] if mode == "especifica" else f"maldição aleatória {category}"
+            ability["descricao"] = (f"Alvo a até {ability['range']} casas testa {save.title()} CD "
+                                    f"{ability['dc']} ou sofre {escolha}.")
         abilities.append(ability)
         entry = {"id": aid, "uses_per_day": uses, "cooldown_turns": cooldown}
         if aid == "corpo_energetico":
@@ -23740,6 +24098,10 @@ def _validate_custom_monster(raw):
                           "shape": ability["shape"], "target_mode": ability["target_mode"],
                           "save": ability["save"], "dc": ability["dc"],
                           "success_effect": ability["success_effect"]})
+        if aid == "amaldicoar_monstro":
+            entry.update({"range": ability["range"], "save": ability["save"], "dc": ability["dc"],
+                          "curse_mode": ability["curse_mode"], "curse_id": ability["curse_id"],
+                          "curse_category": ability["curse_category"]})
         monster_abilities.append(entry)
     negative_ids = raw.get("negative_ability_ids", [])
     if not isinstance(negative_ids, list):
@@ -24066,6 +24428,11 @@ def _validate_custom_item(raw):
         return _validate_custom_poison(raw)
     return False, "tipo de item não suportado"
 
+def _custom_curse_id(raw):
+    """Campo opcional compartilhado por todos os equipamentos personalizados."""
+    mid = str((raw or {}).get("maldicao_id") or "")
+    return mid if mid in MALDICOES else None
+
 def _validate_custom_armor(raw):
     """Valida armadura/escudo custom (Fase 2a)."""
     kind = raw.get("item_type")
@@ -24114,6 +24481,8 @@ def _validate_custom_armor(raw):
         "bonuses": bonuses,
         "granted_ability": (str(raw["granted_ability"])
                             if _granted_ability_valida(raw.get("granted_ability")) else None),
+        "maldicao_id": _custom_curse_id(raw),
+        "maldicao_prende": bool(raw.get("maldicao_prende")) and _custom_curse_id(raw) is not None,
         "allowed_classes": classes, "price": price,
         "disponibilidade": {"loja": bool(disp.get("loja")), "baus": bool(disp.get("baus")),
                              "loot_monstro": bool(disp.get("loot_monstro"))},
@@ -24157,6 +24526,8 @@ def _validate_custom_accessory(raw):
         "bonuses": bonuses,
         "granted_ability": (str(raw["granted_ability"])
                             if _granted_ability_valida(raw.get("granted_ability")) else None),
+        "maldicao_id": _custom_curse_id(raw),
+        "maldicao_prende": bool(raw.get("maldicao_prende")) and _custom_curse_id(raw) is not None,
         "allowed_classes": classes, "price": price,
         "disponibilidade": {"loja": bool(disp.get("loja")), "baus": bool(disp.get("baus")),
                              "loot_monstro": bool(disp.get("loot_monstro"))},
@@ -24394,6 +24765,8 @@ def _validate_custom_weapon(raw):
         "extra_damages": extra,
         "granted_ability": (str(raw["granted_ability"])
                             if _granted_ability_valida(raw.get("granted_ability")) else None),
+        "maldicao_id": _custom_curse_id(raw),
+        "maldicao_prende": bool(raw.get("maldicao_prende")) and _custom_curse_id(raw) is not None,
         "allowed_classes": classes, "price": price,
         "disponibilidade": {"loja": bool(disp.get("loja")), "baus": bool(disp.get("baus")),
                              "loot_monstro": bool(disp.get("loot_monstro"))},
@@ -24410,7 +24783,7 @@ def _custom_weapon_combat_dict(item):
     out = {k: item[k] for k in ("id", "name", "die", "stat", "categoria", "finesse",
             "two_handed", "atk_bonus", "damage_bonus", "extra_damages",
             "granted_ability", "corrosao_resistente", "corrosao_niveis_penalidade",
-            "material", "ammo", "reach", "range", "throw_range") if k in item}
+            "material", "ammo", "reach", "range", "throw_range", "maldicao_id", "maldicao_prende") if k in item}
     out["custom"] = True
     return out
 
@@ -24432,7 +24805,8 @@ def _custom_armor_shop_dict(item):
            "corrosao_resistente": item["corrosao_resistente"],
            "corrosao_niveis_penalidade": item["corrosao_niveis_penalidade"],
            "bonuses": [dict(b) for b in item["bonuses"]],
-           "granted_ability": item["granted_ability"], "custom": True}
+           "granted_ability": item["granted_ability"], "maldicao_id": item.get("maldicao_id"),
+           "maldicao_prende": bool(item.get("maldicao_prende")), "custom": True}
     if item["kind"] == "armor" and item.get("armor_category"):
         out["armor_category"] = item["armor_category"]
     if item["allowed_classes"]:
@@ -24449,7 +24823,8 @@ def _custom_armor_inventory_dict(item):
            "corrosao_resistente": item["corrosao_resistente"],
            "corrosao_niveis_penalidade": item["corrosao_niveis_penalidade"],
            "bonuses": [dict(b) for b in item["bonuses"]],
-           "granted_ability": item["granted_ability"]}
+           "granted_ability": item["granted_ability"], "maldicao_id": item.get("maldicao_id"),
+           "maldicao_prende": bool(item.get("maldicao_prende"))}
     if item["kind"] == "armor" and item.get("armor_category"):
         inv["armor_category"] = item["armor_category"]
     if item["allowed_classes"]:
@@ -24462,7 +24837,8 @@ def _custom_accessory_inventory_dict(item):
     inv = {"id": item["id"], "name": item["name"], "emoji": item["emoji"],
            "item_slot": item["item_slot"], "kind": item["kind"], "custom": True,
            "price": item["price"], "bonuses": [dict(b) for b in item["bonuses"]],
-           "granted_ability": item["granted_ability"]}
+           "granted_ability": item["granted_ability"], "maldicao_id": item.get("maldicao_id"),
+           "maldicao_prende": bool(item.get("maldicao_prende"))}
     if item["kind"] == "boots":
         inv["corrosion_materials"] = list(item.get("corrosion_materials", []))
         inv["corrosao_resistente"] = item.get("corrosao_resistente", 0)
