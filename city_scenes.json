@@ -1,6 +1,7 @@
 {
   "alva_e_luz": {
     "taverna": {
+      "nome": "Taverna",
       "background": "assets/tavern/taverna.png",
       "art_ratio": 1.5,
       "mode": "individual",
@@ -280,12 +281,20 @@
           ],
           "z": 8.0
         }
-      ],
-      "nome": "Taverna"
+      ]
+    },
+    "mercado_xgmk": {
+      "nome": "Mercado",
+      "background": "assets/tavern/WhatsApp_Image_2026-04-26_at_20.43.30__4_.jpeg",
+      "art_ratio": 1.5,
+      "mode": "individual",
+      "mask": "",
+      "slots": []
     }
   },
   "vila_riacho": {
     "taverna": {
+      "nome": "Taverna",
       "background": "assets/tavern/taverna_pequena.png",
       "art_ratio": 1.5,
       "mode": "individual",
@@ -599,12 +608,12 @@
           "dialog": "",
           "conversations": []
         }
-      ],
-      "nome": "Taverna"
+      ]
     }
   },
   "vila_corvin": {
     "taverna": {
+      "nome": "Taverna",
       "background": "assets/tavern/taverna_pequena.png",
       "art_ratio": 1.5,
       "mode": "individual",
@@ -916,12 +925,12 @@
             }
           ]
         }
-      ],
-      "nome": "Taverna"
+      ]
     }
   },
   "graciero": {
     "taverna": {
+      "nome": "Taverna",
       "background": "assets/tavern/taver_luxuosa.png",
       "art_ratio": 1.5,
       "mode": "individual",
@@ -1222,12 +1231,12 @@
           "dialog": "",
           "conversations": []
         }
-      ],
-      "nome": "Taverna"
+      ]
     }
   },
   "vila_dos_charcos": {
     "taverna": {
+      "nome": "Taverna",
       "background": "assets/tavern/taverna_charco.png",
       "art_ratio": 1.5,
       "mode": "individual",
@@ -1269,8 +1278,7 @@
           "dialog": "",
           "conversations": []
         }
-      ],
-      "nome": "Taverna"
+      ]
     }
   }
 }

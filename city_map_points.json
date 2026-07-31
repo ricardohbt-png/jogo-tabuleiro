@@ -3,7 +3,8 @@
     "taverna": {
       "x": 32.0,
       "y": 46.0,
-      "type": "taverna"
+      "type": "taverna",
+      "scene": "taverna"
     },
     "templo": {
       "x": 67.0,
@@ -23,7 +24,8 @@
     "mercador": {
       "x": 50.0,
       "y": 40.0,
-      "type": "mercador"
+      "type": "mercador",
+      "scene": "mercado_xgmk"
     },
     "caravana": {
       "x": 24.54,
@@ -35,7 +37,8 @@
     "taverna": {
       "x": 31.01,
       "y": 47.69,
-      "type": "taverna"
+      "type": "taverna",
+      "scene": "taverna"
     },
     "templo": {
       "x": 32.51,
@@ -62,7 +65,8 @@
     "taverna": {
       "x": 62.67,
       "y": 39.55,
-      "type": "taverna"
+      "type": "taverna",
+      "scene": "taverna"
     },
     "templo": {
       "x": 41.78,
@@ -89,7 +93,8 @@
     "taverna": {
       "x": 32.0,
       "y": 46.0,
-      "type": "taverna"
+      "type": "taverna",
+      "scene": "taverna"
     },
     "templo": {
       "x": 59.02,
