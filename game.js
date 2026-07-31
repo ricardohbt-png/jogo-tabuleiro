@@ -1263,6 +1263,13 @@ const MAPA_IDS_LOJA = {
   mercador: 'mercado'   // corrige a divergência
 };
 
+// O raycaster dos meshes 3D conhece tipo de prédio, não ponto. Resolve para o
+// primeiro ponto daquele tipo na cidade atual.
+function _pontoDoTipo(type){
+  const pontos = GS.cityPoints();
+  return Object.keys(pontos).find(id => (pontos[id].type || id) === type) || type;
+}
+
 function _cityClick(e){
   if(!_city3) return;
   const id=_cityPickBldg(e);
@@ -1270,7 +1277,7 @@ function _cityClick(e){
   if(id==='dungeon') triggerDungeonEntrance();
   else if(id==='caravana') showWorldMap();
   else if(id==='guilda') toast('⚔ Guilda dos Heróis — Missões em breve!','var(--gold)');
-  else openShop(id);
+  else _cityHotspotClick(_pontoDoTipo(id), id);
 }
 
 function _cityShowTooltip(id,e){
@@ -1437,7 +1444,7 @@ function initCityImage(){
       '<span class="ch-glow" aria-hidden="true"></span>' +
       '<span class="ch-pin"><span class="ch-emoji">' + bd.emoji + '</span>' +
       '<span class="ch-name">' + label + '</span></span>';
-    btn.addEventListener('click', () => _cityHotspotClick(bd.id));
+    btn.addEventListener('click', () => _cityHotspotClick(bd.id, bd.id));
     hotWrap.appendChild(btn);
   }
   const caravan = document.createElement('button');
@@ -1485,13 +1492,16 @@ function initCityImage(){
   _cityImg = { stage, frame, img, life, hotWrap, raf:0 };
 }
 
-function _cityHotspotClick(id){
-  if(id === 'dungeon'){ triggerDungeonEntrance(); return; }
-  if(id === 'caravana'){ showWorldMap(); return; }
-  if(id === 'guilda'){ openGuild(); return; }
+function _cityHotspotClick(pointId, type){
+  const t = type || pointId;
+  // Destinos com tela própria despacham pelo tipo, antes da resolução de
+  // cena/loja. O editor não oferece esses pontos no vínculo de cena.
+  if(t === 'dungeon'){ triggerDungeonEntrance(); return; }
+  if(t === 'caravana'){ showWorldMap(); return; }
+  if(t === 'guilda'){ openGuild(); return; }
   // openShop espera o id do prédio cru (ex.: 'mercador'); é o que o servidor usa
   // como chave da loja. (NÃO usar MAPA_IDS_LOJA: 'mercado' aponta p/ loja vazia.)
-  openShop(id);
+  openShop(pointId, t);
 }
 
 function destroyCityImage(){
@@ -1529,8 +1539,9 @@ function _refreshCityLocation(msg){
     : Array.isArray(localShops[id]);
   _cityImg.life.style.display = isAlva ? '' : 'none';
   const cityPoints = (msg.city_map_points || {})[location.id] || {};
+  // `cena` não depende de loja alguma existir na cidade.
   const pointAllowed = type => type === 'caravana' || type === 'guilda' || type === 'dungeon'
-    || isAlva || hasShopPoint(type);
+    || type === 'cena' || isAlva || hasShopPoint(type);
   // CITY_MAP_POINTS é a fonte ÚNICA do que aparece na ilustração: o marcador
   // nativo só é exibido se existir um ponto com o mesmo id. Sem isso ele
   // duplicava o ponto equivalente criado no editor — e ficava num lugar que o
@@ -1554,7 +1565,7 @@ function _refreshCityLocation(msg){
     ferreiro:{name:'Ferreiro',emoji:'⚒'}, mercador:{name:'Mercador',emoji:'🛒'},
     templo:{name:'Templo',emoji:'⛪'}, taverna:{name:'Taverna',emoji:'🍺'},
     guilda:{name:'Guilda',emoji:'⚔'}, caravana:{name:'Caravana de Viagem',emoji:'🧭'},
-    dungeon:{name:'Entrada da masmorra',emoji:'🚪'}
+    dungeon:{name:'Entrada da masmorra',emoji:'🚪'}, cena:{name:'Local',emoji:'💬'}
   };
   Object.entries(cityPoints).forEach(([id, point]) => {
     if (_cityImg.hotWrap.querySelector('[data-city-point="' + id + '"]') || !point || !point.type) return;
@@ -1564,8 +1575,10 @@ function _refreshCityLocation(msg){
     btn.className='city-hotspot city-building city-map-point' + (point.type === 'dungeon' ? ' dungeon' : '');
     btn.dataset.cityBuilding=point.type; btn.dataset.cityPoint=id; btn.dataset.cityExtra='1'; btn.style.left=point.x+'%'; btn.style.top=point.y+'%';
     const label=point.name || meta.name; btn.title=label; btn.setAttribute('aria-label',label);
-    btn.innerHTML='<span class="ch-glow" aria-hidden="true"></span><span class="ch-pin"><span class="ch-emoji">'+meta.emoji+'</span><span class="ch-name">'+label+'</span></span>';
-    btn.addEventListener('click',()=>_cityHotspotClick(point.type)); _cityImg.hotWrap.appendChild(btn);
+    // O emoji do próprio ponto (escolhido no editor) manda sobre o do tipo.
+    const emoji = point.emoji || meta.emoji;
+    btn.innerHTML='<span class="ch-glow" aria-hidden="true"></span><span class="ch-pin"><span class="ch-emoji">'+emoji+'</span><span class="ch-name">'+label+'</span></span>';
+    btn.addEventListener('click',()=>_cityHotspotClick(id, point.type)); _cityImg.hotWrap.appendChild(btn);
   });
   const dungeonBar = document.getElementById('city-dungeon-bar');
   if(dungeonBar) dungeonBar.style.display = 'none';
@@ -1953,23 +1966,31 @@ const CITY_BUILDINGS = [
     tabs:null },
 ];
 
-function openShop(shopId){
+// Um ponto da ilustração resolve DUAS coisas independentes: uma cena (se o
+// ponto tem `scene`) e uma loja (se o tipo do ponto é uma loja que a cidade
+// tem). As abas do modal são [aba de cena] + [abas de loja].
+function openShop(pointId, type){
   if(!GS.cityState){
     // city_state not yet received — request it and retry when it arrives
-    GS.pendingShopOpen = shopId;
+    GS.pendingShopOpen = pointId;
     send({type:'get_city_state'});
     toast('Carregando loja…', 'var(--blue)');
     return;
   }
   GS.pendingShopOpen = null;
-  GS.activeShop=shopId; GS.shopTabIdx=0;
+  const shopId  = type || pointId;
+  const sceneId = GS.sceneIdOfPoint(pointId);
+  const scene   = sceneId ? GS.sceneOfPoint(pointId) : null;
+  GS.activeShop = shopId;
+  GS.activeScene = scene ? sceneId : null;
+  GS.shopTabIdx = 0;
   const modal=$('shop-modal'); if(!modal) return;
   modal.classList.toggle('shop-mercador', shopId==='mercador');
   modal.classList.toggle('shop-taverna', shopId==='taverna');
   modal.classList.add('open');
-  const b=CITY_BUILDINGS.find(b=>b.id===shopId);
   const titles={taverna:'🍺 Taverna',ferreiro:'🔨 Ferreiro',mercador:'🛒 Mercador',templo:'⛪ Templo'};
-  $('shop-title').textContent = titles[shopId]||shopId;
+  // Ponto sem loja (tipo `cena`): título/subtítulo vêm da própria cena.
+  $('shop-title').textContent = titles[shopId] || ('💬 ' + (scene ? (scene.nome || '') : ''));
   const subtitles={
     taverna:'Descanse, coma e beba antes de partir para a aventura.',
     ferreiro:'Compre e venda armas, armaduras e munição.',
@@ -1979,13 +2000,14 @@ function openShop(shopId){
   $('shop-subtitle').textContent = subtitles[shopId]||'';
   // Tabs
   const tabsEl=$('shop-tabs'); tabsEl.innerHTML='';
-  const tabDefs = shopId==='ferreiro'
+  const shopTabs = shopId==='ferreiro'
     ? ['⚔ Armas','🛡 Armaduras','🏹 Munição','💰 Vender']
     : shopId==='mercador'
     ? ['🛒 Comprar','🎵 Instrumentos','☠️ Venenos','📜 Pergaminhos','💰 Vender']
     : shopId==='taverna'
-    ? ['💬 Conversas','🍺 Alimentos']
+    ? ['🍺 Alimentos']
     : [];
+  const tabDefs = (scene ? ['💬 ' + (scene.nome || 'Conversas')] : []).concat(shopTabs);
   tabDefs.forEach((t,i)=>{
     const btn=document.createElement('button');
     btn.className='shop-tab'+(i===GS.shopTabIdx?' active':'');
@@ -2001,76 +2023,76 @@ function _updateShopTabs(){
     el.classList.toggle('active',i===GS.shopTabIdx));
 }
 
-let _openTavernNpcId = null;
-function _renderTavernConversations(){
+let _openCenaNpcId = null;
+function _renderCenaConversas(){
   const list=$('shop-items-list'); if(!list) return;
-  const tavern=GS.cityState && GS.cityState.tavern;
-  if(!tavern || !tavern.background){
-    list.innerHTML='<div class="tavern-empty">Esta taverna ainda não possui frequentadores configurados.</div>';
+  const cena = GS.scenes()[GS.activeScene];
+  if(!cena || !cena.background){
+    list.innerHTML='<div class="cena-vazia">Este local ainda não possui frequentadores configurados.</div>';
     return;
   }
-  // A conversa na taverna é a única "loja" que vira CENA: o modal ocupa a tela
+  // A conversa é a única "loja" que vira CENA: o modal ocupa a tela
   // inteira e todo o cromo (voltar, renome, dica, diálogo) flutua por cima da
   // arte, dentro do próprio palco. Sem isso o palco 3:2 disputava altura com o
   // cromo empilhado e a ilustração ficava pequena. Quem tira a classe é o
   // _renderShopItems, no topo, antes de despachar qualquer aba.
-  const modal=$('shop-modal'); if(modal) modal.classList.add('tavern-cena');
-  const scene=document.createElement('div'); scene.className='tavern-scene';
+  const modal=$('shop-modal'); if(modal) modal.classList.add('modo-cena');
+  const scene=document.createElement('div'); scene.className='cena-palco';
   // O palco é 3:2 e o fundo é `object-fit:cover`, exatamente como a prévia do
   // editor (.cityed-tavern-preview). Os slots vão em % crus, sem correção
   // alguma — qualquer transformação aqui sem contraparte no editor faz a
   // máscara/NPC cair fora do lugar em relação ao que o autor posicionou.
-  const base=document.createElement('img'); base.className='tavern-bg'; base.src=_assetURL(tavern.background); base.alt='Interior da taverna'; scene.appendChild(base);
+  const base=document.createElement('img'); base.className='cena-bg'; base.src=_assetURL(cena.background); base.alt='Cena do local'; scene.appendChild(base);
   // A máscara inteira acompanha o fundo, mantendo a composição original em
   // qualquer tamanho. Os slots seguem acima dela apenas para clique/hover.
-  if(tavern.mask && tavern.mode !== 'individual'){
+  if(cena.mask && cena.mode !== 'individual'){
     const mask=document.createElement('img');
-    mask.className='tavern-mask-layer'; mask.src=_assetURL(tavern.mask); mask.alt='';
+    mask.className='cena-mask-layer'; mask.src=_assetURL(cena.mask); mask.alt='';
     scene.appendChild(mask);
   }
-  (tavern.slots||[]).forEach(slot=>{
+  (cena.slots||[]).forEach(slot=>{
     if(slot.removed || !slot.image) return;
-    const npc=document.createElement('button'); npc.type='button'; npc.className='tavern-npc';
+    const npc=document.createElement('button'); npc.type='button'; npc.className='cena-npc';
     npc.style.left=slot.x+'%'; npc.style.top=slot.y+'%';
     npc.style.width=slot.w+'%'; npc.style.height=slot.h+'%';
     npc.style.zIndex=String(10 + Number(slot.z || 1));
     npc.title=slot.name; npc.setAttribute('aria-label','Conversar com '+slot.name);
-    if(tavern.mask && tavern.mode !== 'individual'){
+    if(cena.mask && cena.mode !== 'individual'){
       const maskStyle='width:'+(10000/slot.w)+'%;height:'+(10000/slot.h)+'%;left:'+(-slot.x*100/slot.w)+'%;top:'+(-slot.y*100/slot.h)+'%;';
-      npc.innerHTML='<img class="tavern-mask" style="'+maskStyle+'" src="'+_assetURL(tavern.mask)+'" alt=""><span>'+slot.name+'</span>';
+      npc.innerHTML='<img class="cena-mask" style="'+maskStyle+'" src="'+_assetURL(cena.mask)+'" alt=""><span>'+slot.name+'</span>';
     } else {
       npc.innerHTML='<img src="'+_assetURL(slot.image)+'" alt=""><span>'+slot.name+'</span>';
     }
-    npc.onclick=()=>_showTavernDialogue(slot, scene);
+    npc.onclick=()=>_showCenaDialogo(slot, scene);
     scene.appendChild(npc);
   });
   list.innerHTML='';
   list.appendChild(scene);
   // Barra flutuante no topo da arte: voltar à esquerda, renome à direita.
-  const hud=document.createElement('div'); hud.className='tavern-hud';
+  const hud=document.createElement('div'); hud.className='cena-hud';
   const back=document.createElement('button');
-  back.type='button'; back.className='tavern-back'; back.textContent='← Voltar à cidade';
+  back.type='button'; back.className='cena-back'; back.textContent='← Voltar à cidade';
   back.onclick=closeShop;
-  const rep=document.createElement('p'); rep.className='tavern-hint'; rep.textContent='★ Renome do grupo: '+Number(((GS.cityState||{}).reputacao||{}).renome||0);
+  const rep=document.createElement('p'); rep.className='cena-hint'; rep.textContent='★ Renome do grupo: '+Number(((GS.cityState||{}).reputacao||{}).renome||0);
   hud.appendChild(back); hud.appendChild(rep); scene.appendChild(hud);
-  const hint=document.createElement('p'); hint.className='tavern-hint'; hint.textContent='Clique em um grupo de frequentadores para conversar.'; scene.appendChild(hint);
-  const keepOpen=(tavern.slots||[]).find(slot=>slot.id===_openTavernNpcId && !slot.removed && slot.image);
-  if(keepOpen) _showTavernDialogue(keepOpen, scene);
+  const hint=document.createElement('p'); hint.className='cena-hint'; hint.textContent='Clique em um grupo de frequentadores para conversar.'; scene.appendChild(hint);
+  const keepOpen=(cena.slots||[]).find(slot=>slot.id===_openCenaNpcId && !slot.removed && slot.image);
+  if(keepOpen) _showCenaDialogo(keepOpen, scene);
 }
 
-// `host` é o palco (.tavern-scene): o painel de diálogo é uma camada sobre a
+// `host` é o palco (.cena-palco): o painel de diálogo é uma camada sobre a
 // arte, não um bloco abaixo dela.
-function _showTavernDialogue(slot, host){
-  _openTavernNpcId=slot.id;
-  let panel=host.querySelector('.tavern-dialogue');
-  if(!panel){ panel=document.createElement('div'); panel.className='tavern-dialogue'; host.appendChild(panel); }
+function _showCenaDialogo(slot, host){
+  _openCenaNpcId=slot.id;
+  let panel=host.querySelector('.cena-dialogo');
+  if(!panel){ panel=document.createElement('div'); panel.className='cena-dialogo'; host.appendChild(panel); }
   panel.innerHTML='';
   const title=document.createElement('b'); title.textContent=slot.name; panel.appendChild(title);
-  // O painel cobre parte da arte: dá para fechá-lo sem sair da taverna.
+  // O painel cobre parte da arte: dá para fechá-lo sem sair da cena.
   const fechar=document.createElement('button');
-  fechar.type='button'; fechar.className='tavern-dialogue-close'; fechar.textContent='✕';
+  fechar.type='button'; fechar.className='cena-dialogo-fechar'; fechar.textContent='✕';
   fechar.title='Fechar conversa'; fechar.setAttribute('aria-label','Fechar conversa');
-  fechar.onclick=()=>{ _openTavernNpcId=null; panel.remove(); };
+  fechar.onclick=()=>{ _openCenaNpcId=null; panel.remove(); };
   panel.appendChild(fechar);
   const reputation=(GS.cityState&&GS.cityState.reputacao)||{renome:0,fatos:[]};
   const conversations=(slot.conversations&&slot.conversations.length?slot.conversations:[{id:'inicial',texto:slot.dialog||'',requisito:{},efeito:{},uma_vez:false}]);
@@ -2083,18 +2105,20 @@ function _showTavernDialogue(slot, host){
     if(req.aventura_id) parts.push('rota concluída: '+req.aventura_id);
     return parts;
   };
-  const discovered=conversations.filter(conv=>!conv.oculta);
+  // O servidor já omite conversa bloqueada ou de uso único resolvida — o que
+  // chega aqui é exatamente o que o jogador pode escolher.
+  const discovered = conversations;
   if(!discovered.length){
     const waiting=document.createElement('p'); waiting.textContent='Esta pessoa não tem nada novo para contar por enquanto.'; panel.appendChild(waiting);
   }
   discovered.forEach(conv=>{
-    const block=document.createElement('div'); block.className='tavern-dialogue-option';
+    const block=document.createElement('div'); block.className='cena-dialogo-opcao';
     const reqs=requirementText(conv.requisito);
-    const action=document.createElement('button'); action.type='button'; action.className='tavern-dialogue-text'; action.textContent=conv.texto;
+    const action=document.createElement('button'); action.type='button'; action.className='cena-dialogo-texto'; action.textContent=conv.texto;
     action.title=reqs.length?'Requer: '+reqs.join(', '):'';
-    action.onclick=()=>{ action.disabled=true; action.textContent='Conversando…'; GS.talkTavernNpc(slot.id,conv.id); };
+    action.onclick=()=>{ action.disabled=true; action.textContent='Conversando…'; GS.talkSceneNpc(GS.activeScene,slot.id,conv.id); };
     block.appendChild(action);
-    const effect=conv.efeito||{}; if(effect.renome||effect.fato||effect.item_id){const effectEl=document.createElement('small');effectEl.className='tavern-dialogue-effect';effectEl.textContent='Ao concluir: '+[effect.renome?'renome '+(Number(effect.renome)>0?'+':'')+effect.renome:'',effect.fato?'informação: '+effect.fato:'',effect.item_id?'item: '+effect.item_id:''].filter(Boolean).join(' · ');block.appendChild(effectEl);}
+    const effect=conv.efeito||{}; if(effect.renome||effect.fato||effect.item_id){const effectEl=document.createElement('small');effectEl.className='cena-dialogo-efeito';effectEl.textContent='Ao concluir: '+[effect.renome?'renome '+(Number(effect.renome)>0?'+':'')+effect.renome:'',effect.fato?'informação: '+effect.fato:'',effect.item_id?'item: '+effect.item_id:''].filter(Boolean).join(' · ');block.appendChild(effectEl);}
     panel.appendChild(block);
   });
 }
@@ -2119,13 +2143,17 @@ function itemIconHTML(item, fallbackEmoji){
 
 function _renderShopItems(){
   if(!GS.cityState||!GS.activeShop) return;
-  // A cena em tela cheia vale só para a aba de conversas da taverna (e só
-  // quando ela tem arte); quem religa é o próprio _renderTavernConversations.
-  const shopModal=$('shop-modal'); if(shopModal) shopModal.classList.remove('tavern-cena');
-  if(GS.activeShop==='taverna'&&GS.shopTabIdx===0){ _renderTavernConversations(); return; }
+  // A cena em tela cheia vale só para a aba de conversas (e só quando ela tem
+  // arte); quem religa é o próprio _renderCenaConversas.
+  const shopModal=$('shop-modal'); if(shopModal) shopModal.classList.remove('modo-cena');
+  // A aba de cena, quando existe, ocupa o índice 0; as abas de loja vêm depois.
+  // `aba` é o índice RELATIVO à loja — use-o em toda comparação de aba de loja.
+  const temCena = !!GS.activeScene;
+  if(temCena && GS.shopTabIdx===0){ _renderCenaConversas(); return; }
+  const aba = GS.shopTabIdx - (temCena ? 1 : 0);
   // Route sell tabs
-  if(GS.activeShop==='ferreiro'&&GS.shopTabIdx===3){ _renderSellItems('gear'); return; }
-  if(GS.activeShop==='mercador'&&GS.shopTabIdx===4){ _renderSellItems('bag');  return; }
+  if(GS.activeShop==='ferreiro'&&aba===3){ _renderSellItems('gear'); return; }
+  if(GS.activeShop==='mercador'&&aba===4){ _renderSellItems('bag');  return; }
 
   const myP=GS.cityState.players.find(p=>p.id===GS.myPid);
   const gold=myP?myP.gold:0;
@@ -2134,16 +2162,16 @@ function _renderShopItems(){
   const shops=GS.cityState.shops;
   let items=[], shopKey=GS.activeShop;
   if(GS.activeShop==='ferreiro'){
-    if(GS.shopTabIdx===0)      { items=shops.ferreiro.weapons; shopKey='ferreiro_weapon'; }
-    else if(GS.shopTabIdx===1) { items=shops.ferreiro.armors;  shopKey='ferreiro_armor';  }
+    if(aba===0)      { items=shops.ferreiro.weapons; shopKey='ferreiro_weapon'; }
+    else if(aba===1) { items=shops.ferreiro.armors;  shopKey='ferreiro_armor';  }
     else                       { items=shops.ferreiro.ammo;    shopKey='ferreiro_ammo';   }
   } else if(GS.activeShop==='mercador') {
     const mercadorItems=shops.mercador||[];
-    if(GS.shopTabIdx===1) {
+    if(aba===1) {
       items=mercadorItems.filter(item=>item.tipo_item==='instrumento');
-    } else if(GS.shopTabIdx===2) {
+    } else if(aba===2) {
       items=mercadorItems.filter(item=>item.effect==='coat_poison');
-    } else if(GS.shopTabIdx===3) {
+    } else if(aba===3) {
       items=mercadorItems.filter(item=>item.effect==='scroll');
     } else {
       // Itens gerais: mantém o mercado normal sem duplicar as categorias próprias.
@@ -2321,6 +2349,7 @@ function sellItem(slot){
 
 function closeShop(){
   GS.activeShop=null;
+  GS.activeScene=null;
   const m=$('shop-modal'); if(m) m.classList.remove('open');
 }
 
