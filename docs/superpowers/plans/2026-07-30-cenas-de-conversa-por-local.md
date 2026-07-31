@@ -1216,6 +1216,18 @@ Se nada mudou, pular o commit. Nunca usar `git add -A`, `git add .` ou `git add 
 
 ## Notas para quem implementar
 
+- **Restrição consciente do vínculo implícito (descoberta na Task 2).**
+  `_garantir_pontos_implicitos` religa um ponto à cena de mesmo id sempre que o
+  ponto não tem vínculo — e ela roda no boot **e** no save do editor. Isso é o
+  que faz a taverna migrada abrir sozinha (o ponto `taverna` já existe no
+  `city_map_points.json` do usuário, então não bastaria ligar na criação). O
+  efeito colateral: um ponto cujo id casa exatamente com o de uma cena **não
+  pode ficar sem cena** — escolher "nenhum ponto" para essa cena não gruda.
+  Apontar o ponto para OUTRA cena funciona normalmente (o guard respeita
+  vínculo existente). Na prática isso só atinge o par `taverna`/`taverna`.
+  **Task 11:** o dropdown "Vinculada a" não deve oferecer a opção de desvincular
+  quando o id da cena é igual ao id do ponto atualmente vinculado — prometer uma
+  ação que não gruda é pior que não oferecê-la.
 - **A taverna fica quebrada no meio do caminho, e isso é esperado.** A Task 3 remove `city_state.tavern`, mas o render só passa a ler `city_state.scenes` na Task 10. Entre as duas, abrir a taverna no jogo mostra "não possui frequentadores". Não é regressão — não tentar consertar antes da hora. O primeiro smoke test que vale é o da Task 12.
 
 - **`deepcopy` no payload**: `_cenas_payload` copia antes de filtrar. Sem isso a filtragem apagaria conversas do `CITY_SCENES` global — bug de estado permanente que só apareceria depois da primeira conversa resolvida.
