@@ -1412,6 +1412,67 @@ def test_sincronia_editor_servidor():
     check(f"editor não deixa nenhuma de fora (faltam: {sorted(faltam)})", not faltam)
     check(f"editor não lista id inexistente (sobram: {sorted(sobram)})", not sobram)
 
+def test_item_amaldicoado_editor():
+    print("\n[N1] Item amaldiçoado sobrevive ao caminho do editor")
+    # O formulário coletava maldicao_id/maldicao_prende, mas a serialização do
+    # editor não os copiava — o item chegava aqui sem maldição nenhuma. Este
+    # teste cobre o lado do servidor; o do cliente está em
+    # tools/test_editor_items_logic.js.
+    ok, arma = S._validate_custom_item(sample(id="lamina_maldita", name="Lâmina Maldita",
+                                              maldicao_id="maos_tremulas", maldicao_prende=True))
+    check("arma amaldiçoada é aceita", ok)
+    check("guarda a maldição", ok and arma["maldicao_id"] == "maos_tremulas")
+    check("guarda a trava", ok and arma["maldicao_prende"] is True)
+
+    ok_i, invalida = S._validate_custom_item(sample(id="lamina_x", maldicao_id="nao_existe",
+                                                    maldicao_prende=True))
+    check("maldição desconhecida vira None", ok_i and invalida["maldicao_id"] is None)
+    check("trava órfã é desligada", ok_i and invalida["maldicao_prende"] is False)
+
+    anel = {"id": "anel_maldito", "name": "Anel Maldito", "emoji": "💍", "item_type": "ring",
+            "bonuses": [], "allowed_classes": [], "price": 100,
+            "maldicao_id": "correntes_invisiveis", "maldicao_prende": True,
+            "disponibilidade": {"loja": True, "baus": False, "loot_monstro": False}}
+    ok_a, acessorio = S._validate_custom_item(anel)
+    check("acessório amaldiçoado é aceito", ok_a and acessorio["maldicao_id"] == "correntes_invisiveis")
+
+    S._apply_custom_items([arma, acessorio])
+    check("a maldição chega ao catálogo de combate",
+          S.WEAPONS.get("lamina_maldita", {}).get("maldicao_id") == "maos_tremulas")
+    check("a maldição chega ao inventário do acessório",
+          S._DUNGEON_ITEM_CATALOG.get("anel_maldito", {}).get("maldicao_id") == "correntes_invisiveis"
+          or any(i.get("id") == "anel_maldito" and i.get("maldicao_id") == "correntes_invisiveis"
+                 for i in S.SHOP_MERCHANT))
+
+    # Ponta a ponta: equipar o item de verdade amaldiçoa e liga a trava.
+    r = _gear_room()
+    p = S.make_player("p1", "Victor", "warrior", 0)
+    item_anel = next((dict(i) for i in S.SHOP_MERCHANT if i.get("id") == "anel_maldito"), None)
+    check("anel amaldiçoado está à venda", item_anel is not None)
+    if item_anel:
+        mov_antes = r._moves_base(p)
+        r._apply_gear_effect(p, item_anel, True)
+        check("equipar aplica a maldição", r._tem_maldicao(p, "correntes_invisiveis"))
+        check("a maldição tem efeito real", r._moves_base(p) == mov_antes - 3)
+        p["gear"]["ring1"] = item_anel
+        check("a trava reconhece o item", r._item_maldicao_vinculante(p, item_anel))
+    S._apply_custom_items([])
+
+def test_sincronia_maldicoes_editor():
+    print("\n[N2] Lista de maldições do editor em sincronia com o servidor")
+    import re, os
+    caminho = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                           "tools", "editor_items_logic.js")
+    src = open(caminho, encoding="utf-8").read()
+    bloco = re.search(r"var CURSES\s*=\s*\[(.*?)\n  \];", src, re.S)
+    check("CURSES encontrado em editor_items_logic.js", bool(bloco))
+    ids_js = set(re.findall(r'\["([a-z_]+)",', bloco.group(1))) if bloco else set()
+    ids_py = set(S.MALDICOES.keys())
+    faltam = ids_py - ids_js
+    sobram = ids_js - ids_py
+    check(f"editor não deixa nenhuma de fora (faltam: {sorted(faltam)})", not faltam)
+    check(f"editor não lista maldição inexistente (sobram: {sorted(sobram)})", not sobram)
+
 def test_curar_status_helpers():
     print("\n[K1] Helpers de cura de status")
     r = _gear_room()
@@ -1739,5 +1800,6 @@ if __name__ == "__main__":
     test_estoque_cidade_helpers(); test_estoque_cidade_sincronia_editor()
     test_estoque_cidade_sync()
     test_estoque_cidade_persiste_no_boot()
+    test_item_amaldicoado_editor(); test_sincronia_maldicoes_editor()
     print(f"\n{PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)

@@ -33,6 +33,7 @@
     return Math.max(1, Math.round(p));
   }
   function serializeWeapon(d) {
+    var curse = curseFields(d);
     var item = {
       id: slugify(d.id || d.name), name: String(d.name || "").trim().slice(0, 60),
       emoji: d.emoji || "⚔️", item_type: "weapon", custom: true,
@@ -45,6 +46,7 @@
         return x && /^\d+d\d+$/.test(x.die) && ELEM.indexOf(x.type) >= 0;
       }).map(function (x) { return { die: x.die, type: x.type }; }),
       granted_ability: d.granted_ability || null,
+      maldicao_id: curse.maldicao_id, maldicao_prende: curse.maldicao_prende,
       allowed_classes: (d.allowed_classes || []).slice(),
       price: Math.max(0, +d.price || 0),
       // Corrosão em dois eixos: N níveis SEM penalidade (corrosao_resistente) +
@@ -84,6 +86,31 @@
   var POISON_PENS = ["ataque", "movimento", "dano", "ca", "percepcao"];
   var POISON_SAVES = ["fortitude", "reflexos", "vontade"];
   var THROW_ELEMENTS = ["fogo", "frio", "eletrico", "acido", "sagrado", "explosao"];
+  // Espelha MALDICOES (server.py). Pares [id, rótulo] — o formulário monta o
+  // seletor a partir daqui, então a lista existe UMA vez só.
+  var CURSES = [
+    ["maos_tremulas", "Mãos Trêmulas"], ["olhos_escuridao", "Olhos da Escuridão"],
+    ["passos_pesados", "Passos Pesados"], ["lamina_enferrujada", "Lâmina Enferrujada"],
+    ["fraqueza_arcana", "Fraqueza Arcana"], ["fortuna_roubada", "Fortuna Roubada"],
+    ["azar_sobrenatural", "Azar Sobrenatural"], ["marca_cacador", "Marca do Caçador"],
+    ["corpo_exausto", "Corpo Exausto"], ["carne_fragil", "Carne Frágil"],
+    ["sangramento_profano", "Sangramento Profano"], ["correntes_invisiveis", "Correntes Invisíveis"],
+    ["dor_constante", "Dor Constante"], ["alma_quebrada", "Alma Quebrada"],
+    ["aura_profana", "Aura Profana"], ["maldicao_ferrugem", "Maldição da Ferrugem"],
+    ["fome_eterna", "Fome Eterna"], ["sede_infinita", "Sede Infinita"],
+    ["tocado_morte", "Tocado pela Morte"], ["licantropia", "Licantropia"],
+    ["silencio_deuses", "Silêncio dos Deuses"], ["voz_quebrada", "Voz Quebrada"],
+    ["espirito_covarde", "Espírito Covarde"], ["eco_morte", "Eco da Morte"],
+    ["corrupcao_crescente", "Corrupção Crescente"],
+  ];
+  var CURSE_IDS = CURSES.map(function (c) { return c[0]; });
+  // Campos do item amaldiçoado, comuns a arma/armadura/acessório. "Prende"
+  // sozinho não existe: sem maldição não há o que travar, e o servidor aplica
+  // a mesma regra — manter os dois lados iguais evita item com trava órfã.
+  function curseFields(d) {
+    var mid = CURSE_IDS.indexOf(d.maldicao_id) >= 0 ? d.maldicao_id : null;
+    return { maldicao_id: mid, maldicao_prende: !!(mid && d.maldicao_prende) };
+  }
   function filterBonuses(list) {
     return (list || []).filter(function (b) {
       if (!b || BONUS_EFFECTS.indexOf(b.effect) < 0) return false;
@@ -97,6 +124,7 @@
   }
   function serializeArmor(d) {
     var kind = d.item_type === "shield" ? "shield" : "armor";
+    var curse = curseFields(d);
     var mats = [];
     var mm = d.materiais || {};
     if (mm.organic) mats.push("organic");
@@ -111,6 +139,7 @@
       corrosao_niveis_penalidade: Math.max(1, +d.corrosao_penalidade || 2),
       bonuses: filterBonuses(d.bonuses),
       granted_ability: d.granted_ability || null,
+      maldicao_id: curse.maldicao_id, maldicao_prende: curse.maldicao_prende,
       allowed_classes: (d.allowed_classes || []).slice(),
       price: Math.max(0, +d.price || 0),
       disponibilidade: {
@@ -133,12 +162,14 @@
   }
   function serializeAccessory(d) {
     var kind = d.item_type === "boots" ? "boots" : "ring";
+    var curse = curseFields(d);
     var item = {
       id: slugify(d.id || d.name), name: String(d.name || "").trim().slice(0, 60),
       emoji: d.emoji || (kind === "boots" ? "👢" : "💍"),
       item_type: kind, kind: kind, item_slot: kind, custom: true,
       bonuses: filterBonuses(d.bonuses),
       granted_ability: d.granted_ability || null,
+      maldicao_id: curse.maldicao_id, maldicao_prende: curse.maldicao_prende,
       allowed_classes: (d.allowed_classes || []).slice(),
       price: Math.max(0, +d.price || 0),
       disponibilidade: {
@@ -319,6 +350,7 @@
               suggestPricePoison: suggestPricePoison,
               POISON_OPS: POISON_OPS, POISON_ATTRS: POISON_ATTRS,
               POISON_PENS: POISON_PENS, POISON_SAVES: POISON_SAVES,
+              CURSES: CURSES, CURSE_IDS: CURSE_IDS,
               slugify: slugify, shopIdForItemType: shopIdForItemType,
               SHOP_BY_ITEM_TYPE: SHOP_BY_ITEM_TYPE };
   if (typeof module !== "undefined" && module.exports) module.exports = api;

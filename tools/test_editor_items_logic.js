@@ -276,5 +276,40 @@ check("tipo desconhecido cai no mercador", L.shopIdForItemType("xpto") === "merc
 check("sem tipo assume arma", L.shopIdForItemType() === "ferreiro_weapon");
 check("slugify exportado", L.slugify("Ensaio sobre a Cegueira") === "ensaio_sobre_a_cegueira");
 
+// ── Item amaldiçoado ──────────────────────────────────────────────────────
+// O formulário coleta maldicao_id/maldicao_prende no rascunho; se o
+// serializador não os copiar, o campo morre aqui e o servidor recebe um item
+// sem maldição nenhuma (era o bug: os três itens saíam com maldicao_id null).
+const armaMaldita = L.serializeWeapon(Object.assign({}, draft,
+  {maldicao_id:"maos_tremulas", maldicao_prende:true}));
+check("serializeWeapon leva maldicao_id", armaMaldita.maldicao_id === "maos_tremulas");
+check("serializeWeapon leva maldicao_prende", armaMaldita.maldicao_prende === true);
+
+const armaduraMaldita = L.serializeArmor({name:"Elmo Maldito", emoji:"🪖", item_type:"armor",
+  ac_bonus:2, armor_category:"leve", bonuses:[], materiais:{metal:true},
+  maldicao_id:"corpo_exausto", maldicao_prende:true,
+  allowed_classes:[], disponibilidade:{loja:true}, price:100});
+check("serializeArmor leva maldicao_id", armaduraMaldita.maldicao_id === "corpo_exausto");
+check("serializeArmor leva maldicao_prende", armaduraMaldita.maldicao_prende === true);
+
+const anelMaldito = L.serializeAccessory({name:"Anel Maldito", emoji:"💍", item_type:"ring",
+  bonuses:[], materiais:{metal:true},
+  maldicao_id:"correntes_invisiveis", maldicao_prende:true,
+  allowed_classes:[], disponibilidade:{loja:true}, price:100});
+check("serializeAccessory leva maldicao_id", anelMaldito.maldicao_id === "correntes_invisiveis");
+check("serializeAccessory leva maldicao_prende", anelMaldito.maldicao_prende === true);
+
+// Sem maldição escolhida, o item precisa sair limpo — e "prende" nunca pode
+// ficar ligado sozinho, senão o servidor guardaria uma trava sem dono.
+const semMaldicao = L.serializeWeapon(draft);
+check("sem maldicao_id o campo sai nulo", semMaldicao.maldicao_id === null);
+check("sem maldicao_id o prende sai falso", semMaldicao.maldicao_prende === false);
+const prendeOrfao = L.serializeWeapon(Object.assign({}, draft, {maldicao_prende:true}));
+check("prende sem maldicao_id e ignorado", prendeOrfao.maldicao_prende === false);
+const maldicaoInvalida = L.serializeWeapon(Object.assign({}, draft,
+  {maldicao_id:"nao_existe", maldicao_prende:true}));
+check("maldicao desconhecida e descartada", maldicaoInvalida.maldicao_id === null
+  && maldicaoInvalida.maldicao_prende === false);
+
 console.log(`\n${PASS} passaram, ${FAIL} falharam`);
 process.exit(FAIL ? 1 : 0);
