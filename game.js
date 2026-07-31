@@ -1539,9 +1539,15 @@ function _refreshCityLocation(msg){
     : Array.isArray(localShops[id]);
   _cityImg.life.style.display = isAlva ? '' : 'none';
   const cityPoints = (msg.city_map_points || {})[location.id] || {};
-  // `cena` não depende de loja alguma existir na cidade.
-  const pointAllowed = type => type === 'caravana' || type === 'guilda' || type === 'dungeon'
-    || type === 'cena' || isAlva || hasShopPoint(type);
+  const cityScenes = (msg.scenes) || GS.scenes() || {};
+  // `cena` não depende de loja alguma existir na cidade — mas depende da cena.
+  // Um ponto de cena SEM cena vinculada (a cena foi excluída no editor e o ponto
+  // ficou) abriria um modal sem nenhuma aba: nem cena, nem loja. Botão morto na
+  // ilustração — melhor não desenhar o marcador.
+  const pointAllowed = (type, point) => type === 'caravana' || type === 'guilda' || type === 'dungeon'
+    || (type === 'cena'
+      ? !!(point && point.scene && cityScenes[point.scene])
+      : (isAlva || hasShopPoint(type)));
   // CITY_MAP_POINTS é a fonte ÚNICA do que aparece na ilustração: o marcador
   // nativo só é exibido se existir um ponto com o mesmo id. Sem isso ele
   // duplicava o ponto equivalente criado no editor — e ficava num lugar que o
@@ -1554,7 +1560,7 @@ function _refreshCityLocation(msg){
       return;
     }
     const type = point.type || marker.dataset.cityBuilding || marker.dataset.cityPoint;
-    marker.style.display = pointAllowed(type) ? '' : 'none';
+    marker.style.display = pointAllowed(type, point) ? '' : 'none';
     if(Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y))){
       marker.style.left = point.x + '%'; marker.style.top = point.y + '%';
     }
@@ -1570,7 +1576,7 @@ function _refreshCityLocation(msg){
   Object.entries(cityPoints).forEach(([id, point]) => {
     if (_cityImg.hotWrap.querySelector('[data-city-point="' + id + '"]') || !point || !point.type) return;
     const meta = pointMeta[point.type]; if(!meta) return;
-    if(!pointAllowed(point.type)) return;
+    if(!pointAllowed(point.type, point)) return;
     const btn = document.createElement('button'); btn.type='button';
     btn.className='city-hotspot city-building city-map-point' + (point.type === 'dungeon' ? ' dungeon' : '');
     btn.dataset.cityBuilding=point.type; btn.dataset.cityPoint=id; btn.dataset.cityExtra='1'; btn.style.left=point.x+'%'; btn.style.top=point.y+'%';
