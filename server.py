@@ -408,10 +408,12 @@ def _save_city_map_points():
 
 _load_city_map_points()
 
-# Cena de taverna por cidade. Cada slot é uma camada PNG independente e pode
+# Cenas de conversa por cidade — várias por cidade (a taverna é a cena "taverna",
+# sem tratamento especial). Cada slot é uma camada PNG independente e pode
 # receber um NPC/diálogo próprio futuramente pelo editor de cidades.
-TAVERN_SCENES = {
-    "alva_e_luz": {
+CITY_SCENES = {
+    "alva_e_luz": {"taverna": {
+        "nome": "Taverna",
         "background": "assets/city/taverna.png",
         "art_ratio": 1.5,
         "mode": "individual",
@@ -436,14 +438,18 @@ TAVERN_SCENES = {
             {"id":"bardo", "name":"Bardo da taverna", "image":"assets/tavern/slots/bardo.png", "x":83.3,"y":24.4,"w":16.7,"h":30.3,
              "dialog":"O bardo muda a melodia ao perceber aventureiros. Talvez uma canção revele um boato."},
         ],
-    },
+    }},
 }
-def _cena_taverna_vazia():
-    """Cena editável e sem conteúdo — o estado inicial de uma cidade criada no editor."""
-    return {"background": "", "art_ratio": 1.5, "mode": "individual", "mask": "", "slots": []}
+MAX_CENAS_POR_CIDADE = 16
+CENA_ID_RE = re.compile(r"[a-z0-9_-]{1,48}")
 
-def _clean_tavern_conversations(raw, fallback=""):
-    """Conversa base + ramificações desbloqueáveis de um NPC da taverna."""
+def _cena_vazia(nome="Nova cena"):
+    """Cena editável e sem conteúdo — o estado inicial de uma cena criada no editor."""
+    return {"nome": str(nome)[:60], "background": "", "art_ratio": 1.5,
+            "mode": "individual", "mask": "", "slots": []}
+
+def _clean_scene_conversations(raw, fallback=""):
+    """Conversa base + ramificações desbloqueáveis de um NPC de uma cena."""
     rows = raw if isinstance(raw, list) else []
     cleaned = []
     for index, row in enumerate(rows[:12]):
@@ -466,67 +472,109 @@ def _clean_tavern_conversations(raw, fallback=""):
     return cleaned
 
 # As 4 cidades originais começam com a mesma composição-base de Alva e Luz; as
-# criadas no editor nascem vazias e ganham fundo e NPCs pela aba Taverna.
-for _tavern_city_id in WORLD_LOCATIONS:
-    if _tavern_city_id in TAVERN_SCENES:
+# criadas no editor nascem sem nenhuma cena e ganham fundo e NPCs pelo editor.
+for _cena_city_id in WORLD_LOCATIONS:
+    if _cena_city_id in CITY_SCENES:
         continue
-    TAVERN_SCENES[_tavern_city_id] = (deepcopy(TAVERN_SCENES["alva_e_luz"])
-                                      if _tavern_city_id in _BUILTIN_WORLD_LOCATIONS
-                                      else _cena_taverna_vazia())
-for _tavern_city_id in [c for c in TAVERN_SCENES if c not in WORLD_LOCATIONS]:
-    del TAVERN_SCENES[_tavern_city_id]
+    CITY_SCENES[_cena_city_id] = (deepcopy(CITY_SCENES["alva_e_luz"])
+                                  if _cena_city_id in _BUILTIN_WORLD_LOCATIONS else {})
+for _cena_city_id in [c for c in CITY_SCENES if c not in WORLD_LOCATIONS]:
+    del CITY_SCENES[_cena_city_id]
+
+CITY_SCENES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "city_scenes.json")
 TAVERN_SCENES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tavern_scenes.json")
 
-def _load_tavern_scenes():
+def _cena_slot_novo(slot_id):
+    return {"id": slot_id, "name": "Novo NPC", "image": "", "x": 40, "y": 40,
+            "w": 14, "h": 20, "z": 1, "dialog": ""}
+
+def _aplicar_cena_editada(current, scene):
+    """Aplica sobre `current` os campos válidos de `scene` (arquivo ou editor)."""
+    if isinstance(scene.get("nome"), str) and scene["nome"].strip():
+        current["nome"] = scene["nome"].strip()[:60]
+    for key in ("background", "mask"):
+        value = scene.get(key)
+        if value == "":
+            current[key] = ""
+        elif isinstance(value, str) and value.startswith("assets/"):
+            current[key] = value
+    if scene.get("mode") in ("individual", "mask"):
+        current["mode"] = scene["mode"]
+    by_id = {slot["id"]: slot for slot in current.get("slots", [])}
+    for edited in scene.get("slots") or []:
+        if not isinstance(edited, dict): continue
+        if edited.get("id") not in by_id:
+            new_id = str(edited.get("id") or "")
+            if not re.fullmatch(r"npc_[a-zA-Z0-9_-]{1,48}", new_id) or len(by_id) >= 32: continue
+            target = _cena_slot_novo(new_id)
+            current["slots"].append(target); by_id[new_id] = target
+        else: target = by_id[edited["id"]]
+        for key in ("name", "dialog"):
+            if isinstance(edited.get(key), str): target[key] = edited[key][:1200]
+        if isinstance(edited.get("conversations"), list):
+            target["conversations"] = _clean_scene_conversations(edited["conversations"], target.get("dialog", ""))
+        if edited.get("remove_image") is True:
+            target["image"] = ""
+        elif isinstance(edited.get("image"), str) and edited["image"].startswith("assets/"):
+            target["image"] = edited["image"]
+        if isinstance(edited.get("removed"), bool): target["removed"] = edited["removed"]
+        for key in ("x", "y", "w", "h", "z"):
+            try:
+                value = round(float(edited[key]), 2)
+                if ((-100 <= value <= 100) if key == "z" else (0 <= value <= 100)):
+                    target[key] = value
+            except (KeyError, TypeError, ValueError): pass
+
+def _migrar_tavern_scenes():
+    """tavern_scenes.json (uma cena por cidade) → city_scenes.json (cena 'taverna').
+    Roda uma única vez, quando o arquivo novo ainda não existe. O antigo fica
+    intocado como rede de segurança."""
+    if os.path.exists(CITY_SCENES_FILE) or not os.path.exists(TAVERN_SCENES_FILE):
+        return
     try:
         with open(TAVERN_SCENES_FILE, "r", encoding="utf-8") as f: raw = json.load(f)
         if not isinstance(raw, dict): return
+        convertido = {}
         for city_id, scene in raw.items():
-            current = TAVERN_SCENES.get(city_id)
-            if not current or not isinstance(scene, dict) or not isinstance(scene.get("slots"), list): continue
-            by_id = {slot["id"]: slot for slot in current.get("slots", [])}
-            for key in ("background", "mask"):
-                if isinstance(scene.get(key), str) and scene[key].startswith("assets/"):
-                    current[key] = scene[key]
-            if scene.get("mode") in ("individual", "mask"):
-                current["mode"] = scene["mode"]
-            for edited in scene["slots"]:
-                if not isinstance(edited, dict): continue
-                if edited.get("id") not in by_id:
-                    new_id = str(edited.get("id") or "")
-                    if not re.fullmatch(r"npc_[a-zA-Z0-9_-]{1,48}", new_id) or len(by_id) >= 32: continue
-                    target = {"id":new_id,"name":"Novo NPC","image":"","x":40,"y":40,"w":14,"h":20,"z":1,"dialog":""}
-                    current["slots"].append(target); by_id[new_id] = target
-                else: target = by_id[edited["id"]]
-                for key in ("name", "dialog"):
-                    if isinstance(edited.get(key), str): target[key] = edited[key][:1200]
-                if isinstance(edited.get("conversations"), list):
-                    target["conversations"] = _clean_tavern_conversations(edited["conversations"], target.get("dialog", ""))
-                if edited.get("remove_image") is True:
-                    target["image"] = ""
-                elif isinstance(edited.get("image"), str) and edited["image"].startswith("assets/"):
-                    target["image"] = edited["image"]
-                if isinstance(edited.get("removed"), bool): target["removed"] = edited["removed"]
-                for key in ("x", "y", "w", "h", "z"):
-                    try:
-                        value = round(float(edited[key]), 2)
-                        if (0 <= value <= 100) if key != "z" else (-100 <= value <= 100): target[key] = value
-                    except (KeyError, TypeError, ValueError): pass
+            if isinstance(scene, dict):
+                scene = dict(scene); scene.setdefault("nome", "Taverna")
+                convertido[city_id] = {"taverna": scene}
+        with open(CITY_SCENES_FILE, "w", encoding="utf-8") as f:
+            json.dump(convertido, f, ensure_ascii=False, indent=2)
     except (OSError, ValueError, TypeError, json.JSONDecodeError):
         pass
 
-def _save_tavern_scenes():
-    temp = TAVERN_SCENES_FILE + ".tmp"
-    with open(temp, "w", encoding="utf-8") as f: json.dump(TAVERN_SCENES, f, ensure_ascii=False, indent=2)
-    os.replace(temp, TAVERN_SCENES_FILE)
+def _load_city_scenes():
+    try:
+        with open(CITY_SCENES_FILE, "r", encoding="utf-8") as f: raw = json.load(f)
+        if not isinstance(raw, dict): return
+        for city_id, cenas in raw.items():
+            if city_id not in CITY_SCENES or not isinstance(cenas, dict): continue
+            alvo = CITY_SCENES[city_id]
+            for scene_id, scene in cenas.items():
+                scene_id = str(scene_id or "").strip().lower()
+                if not CENA_ID_RE.fullmatch(scene_id) or not isinstance(scene, dict): continue
+                if scene_id not in alvo:
+                    if len(alvo) >= MAX_CENAS_POR_CIDADE: continue
+                    alvo[scene_id] = _cena_vazia(scene.get("nome") or scene_id)
+                _aplicar_cena_editada(alvo[scene_id], scene)
+    except (OSError, ValueError, TypeError, json.JSONDecodeError):
+        pass
 
-_load_tavern_scenes()
+def _save_city_scenes():
+    temp = CITY_SCENES_FILE + ".tmp"
+    with open(temp, "w", encoding="utf-8") as f: json.dump(CITY_SCENES, f, ensure_ascii=False, indent=2)
+    os.replace(temp, CITY_SCENES_FILE)
+
+_migrar_tavern_scenes()
+_load_city_scenes()
 # Cenas antigas não tinham prioridade explícita. Preserva sua ordem visual
 # original e garante que todo slot passe a ter uma camada estável.
-for _scene in TAVERN_SCENES.values():
-    for _z_index, _slot in enumerate(_scene.get("slots", []), start=1):
-        _slot.setdefault("z", _z_index)
-        _slot["conversations"] = _clean_tavern_conversations(_slot.get("conversations"), _slot.get("dialog", ""))
+for _cenas in CITY_SCENES.values():
+    for _scene in _cenas.values():
+        for _z_index, _slot in enumerate(_scene.get("slots", []), start=1):
+            _slot.setdefault("z", _z_index)
+            _slot["conversations"] = _clean_scene_conversations(_slot.get("conversations"), _slot.get("dialog", ""))
 PRIS_HP = 7         # vida do prisioneiro (Fase 3)
 PRIS_AC = 10        # classe de armadura do prisioneiro
 PRIS_MOVE = 6       # quadrados que o prisioneiro liberto anda por turno (segue o resgatador)
@@ -5049,12 +5097,12 @@ def _sincronizar_cidades_derivadas():
         del CITY_SHOPS[cid]
     for cid in [c for c in CITY_MAP_POINTS if c not in WORLD_LOCATIONS]:
         del CITY_MAP_POINTS[cid]
-    for cid in [c for c in TAVERN_SCENES if c not in WORLD_LOCATIONS]:
-        del TAVERN_SCENES[cid]
+    for cid in [c for c in CITY_SCENES if c not in WORLD_LOCATIONS]:
+        del CITY_SCENES[cid]
     for cid in WORLD_LOCATIONS:
         CITY_SHOPS.setdefault(cid, {})
         CITY_MAP_POINTS.setdefault(cid, {})
-        TAVERN_SCENES.setdefault(cid, _cena_taverna_vazia())
+        CITY_SCENES.setdefault(cid, {})
     _garantir_pontos_implicitos()
 
 # Posição inicial de cada ponto que a cidade ganha sozinha (Caravana + o prédio
@@ -6850,7 +6898,7 @@ class GameRoom:
 
     def _tavern_payload(self):
         """Oculta falas bloqueadas, mas informa ao cliente que existe um gancho."""
-        scene = deepcopy(TAVERN_SCENES.get(self.world_location) or {})
+        scene = deepcopy((CITY_SCENES.get(self.world_location) or {}).get("taverna") or {})
         for slot in scene.get("slots", []):
             for conversation in slot.get("conversations", []):
                 available, reasons = self._avaliar_requisito(conversation.get("requisito"))
@@ -8607,11 +8655,11 @@ class GameRoom:
     async def handle_tavern_npc(self, pid, npc_id, conversation_id):
         if not self._em_cidade(pid) or pid not in self.players:
             return
-        scene = TAVERN_SCENES.get(self.world_location) or {}
+        scene = (CITY_SCENES.get(self.world_location) or {}).get("taverna") or {}
         slot = next((s for s in scene.get("slots", []) if s.get("id") == str(npc_id) and not s.get("removed")), None)
         if not slot:
             await self.send_to(pid, {"type":"error", "msg":"Frequentador não encontrado."}); return
-        conversations = _clean_tavern_conversations(slot.get("conversations"), slot.get("dialog", ""))
+        conversations = _clean_scene_conversations(slot.get("conversations"), slot.get("dialog", ""))
         conversation = next((c for c in conversations if c["id"] == str(conversation_id)), None)
         if not conversation:
             await self.send_to(pid, {"type":"error", "msg":"Conversa não encontrada."}); return
@@ -22767,7 +22815,7 @@ async def handler(ws):
                     continue
 
                 if t == "save_city_shops":
-                    ok, res = _save_city_shops_upload(msg.get("stock"), msg.get("taverns"), msg.get("city_points"))
+                    ok, res = _save_city_shops_upload(msg.get("stock"), msg.get("scenes"), msg.get("city_points"))
                     if ok:
                         await _refresh_city_states_after_editor_save()
                     payload = {"type": "upload_result", "kind": "city_shops",
@@ -24622,12 +24670,12 @@ def _city_shops_editor_payload():
                             "arremessavel": item.get("id") in ARREMESSAVEIS})
     rotas = _tabela_rotas()
     return {"cities": list(WORLD_LOCATIONS.values()), "shops": CITY_SHOP_LABELS,
-            "stock": CITY_SHOPS, "catalog": catalog, "taverns": TAVERN_SCENES,
+            "stock": CITY_SHOPS, "catalog": catalog, "scenes": CITY_SCENES,
             "city_points": CITY_MAP_POINTS, "routes": rotas,
             "custom_cities": [c["id"] for c in WORLD_CITIES.get("cities", [])],
             "city_inicial": CITY_INICIAL}
 
-def _save_city_shops_upload(raw, taverns=None, raw_city_points=None):
+def _save_city_shops_upload(raw, scenes=None, raw_city_points=None):
     if not isinstance(raw, dict): return False, "configuração inválida"
     for city_id, shops in raw.items():
         if city_id not in CITY_SHOPS or not isinstance(shops, dict): continue
@@ -24635,39 +24683,17 @@ def _save_city_shops_upload(raw, taverns=None, raw_city_points=None):
             if shop_id not in CITY_SHOP_SOURCES or not isinstance(ids, list): continue
             allowed = {item["id"] for item in CITY_SHOP_SOURCES[shop_id]}
             CITY_SHOPS[city_id][shop_id] = [str(item_id) for item_id in ids if str(item_id) in allowed]
-    if isinstance(taverns, dict):
-        for city_id, scene in taverns.items():
-            current = TAVERN_SCENES.get(city_id)
-            if not current or not isinstance(scene, dict) or not isinstance(scene.get("slots"), list): continue
-            by_id = {slot["id"]: slot for slot in current.get("slots", [])}
-            for key in ("background", "mask"):
-                if isinstance(scene.get(key), str) and scene[key].startswith("assets/"):
-                    current[key] = scene[key]
-            if scene.get("mode") in ("individual", "mask"):
-                current["mode"] = scene["mode"]
-            for edited in scene["slots"]:
-                if not isinstance(edited, dict): continue
-                if edited.get("id") not in by_id:
-                    new_id = str(edited.get("id") or "")
-                    if not re.fullmatch(r"npc_[a-zA-Z0-9_-]{1,48}", new_id) or len(by_id) >= 32: continue
-                    target = {"id":new_id,"name":"Novo NPC","image":"","x":40,"y":40,"w":14,"h":20,"z":1,"dialog":""}
-                    current["slots"].append(target); by_id[new_id] = target
-                else: target = by_id[edited["id"]]
-                for key in ("name", "dialog"):
-                    if isinstance(edited.get(key), str): target[key] = edited[key][:1200]
-                if isinstance(edited.get("conversations"), list):
-                    target["conversations"] = _clean_tavern_conversations(edited["conversations"], target.get("dialog", ""))
-                if edited.get("remove_image") is True:
-                    target["image"] = ""
-                elif isinstance(edited.get("image"), str) and edited["image"].startswith("assets/"):
-                    target["image"] = edited["image"]
-                if isinstance(edited.get("removed"), bool): target["removed"] = edited["removed"]
-                for key in ("x", "y", "w", "h", "z"):
-                    try:
-                        value = round(float(edited[key]), 2)
-                        if ((-100 <= value <= 100) if key == "z" else (0 <= value <= 100)):
-                            target[key] = value
-                    except (KeyError, TypeError, ValueError): pass
+    if isinstance(scenes, dict):
+        for city_id, cenas in scenes.items():
+            if city_id not in CITY_SCENES or not isinstance(cenas, dict): continue
+            alvo = CITY_SCENES[city_id]
+            for scene_id, scene in cenas.items():
+                scene_id = str(scene_id or "").strip().lower()
+                if not CENA_ID_RE.fullmatch(scene_id) or not isinstance(scene, dict): continue
+                if scene_id not in alvo:
+                    if len(alvo) >= MAX_CENAS_POR_CIDADE: continue
+                    alvo[scene_id] = _cena_vazia(scene.get("nome") or scene_id)
+                _aplicar_cena_editada(alvo[scene_id], scene)
     if isinstance(raw_city_points, dict):
         valid_types = {"ferreiro", "mercador", "templo", "taverna", "guilda", "dungeon", "caravana"}
         for city_id, points in raw_city_points.items():
@@ -24689,7 +24715,7 @@ def _save_city_shops_upload(raw, taverns=None, raw_city_points=None):
     _garantir_pontos_implicitos()
     try:
         _save_city_shops()
-        _save_tavern_scenes()
+        _save_city_scenes()
         _save_city_map_points()
     except OSError as e:
         return False, str(e)
@@ -24716,7 +24742,7 @@ def _save_world_cities_upload(cities, overrides, deleted, routes):
     try:
         _save_world_cities()
         _save_city_shops()
-        _save_tavern_scenes()
+        _save_city_scenes()
         _save_city_map_points()
     except OSError as e:
         return False, str(e)

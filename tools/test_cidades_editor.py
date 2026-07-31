@@ -25,19 +25,19 @@ def isolar_arquivos():
     Redireciona TODOS os arquivos para uma pasta temporária — nunca toca nos dados
     reais do usuário — e devolve um restaurador do estado inicial do processo."""
     tmpdir = tempfile.mkdtemp(prefix="cidades_teste_")
-    arquivos = ("WORLD_CITIES_FILE", "CITY_SHOPS_FILE", "TAVERN_SCENES_FILE", "CITY_MAP_POINTS_FILE")
+    arquivos = ("WORLD_CITIES_FILE", "CITY_SHOPS_FILE", "CITY_SCENES_FILE", "CITY_MAP_POINTS_FILE")
     originais = {nome: getattr(S, nome) for nome in arquivos}
     for nome in arquivos:
         setattr(S, nome, os.path.join(tmpdir, nome.lower() + ".json"))
     inicial = {"shops": deepcopy(S.CITY_SHOPS), "points": deepcopy(S.CITY_MAP_POINTS),
-               "taverns": deepcopy(S.TAVERN_SCENES), "cities": deepcopy(S.WORLD_CITIES),
+               "scenes": deepcopy(S.CITY_SCENES), "cities": deepcopy(S.WORLD_CITIES),
                "locations": deepcopy(S.WORLD_LOCATIONS), "routes": dict(S.WORLD_ROUTES)}
 
     def restaurar():
         for nome, valor in originais.items():
             setattr(S, nome, valor)
         for alvo, copia in ((S.CITY_SHOPS, inicial["shops"]), (S.CITY_MAP_POINTS, inicial["points"]),
-                            (S.TAVERN_SCENES, inicial["taverns"]), (S.WORLD_LOCATIONS, inicial["locations"]),
+                            (S.CITY_SCENES, inicial["scenes"]), (S.WORLD_LOCATIONS, inicial["locations"]),
                             (S.WORLD_ROUTES, inicial["routes"])):
             alvo.clear(); alvo.update(copia)
         S.WORLD_CITIES = inicial["cities"]
@@ -123,17 +123,16 @@ def _rodar_verificacoes():
     pontos = S.CITY_MAP_POINTS.get("porto_negro") or {}
     check("só a Caravana no mapa da cidade nova", list(pontos) == ["caravana"])
     check("Caravana implícita tem tipo", (pontos.get("caravana") or {}).get("type") == "caravana")
-    cena = S.TAVERN_SCENES.get("porto_negro") or {}
-    check("cena de taverna existe", isinstance(cena.get("slots"), list))
-    check("taverna sem NPCs copiados de Alva e Luz", cena.get("slots") == [])
-    check("taverna sem fundo", not cena.get("background"))
-    check("Alva e Luz mantém seus NPCs",
-          len((S.TAVERN_SCENES.get("alva_e_luz") or {}).get("slots") or []) >= 8)
+    # Cidade criada no editor nasce sem nenhuma cena de conversa — as cenas são
+    # criadas uma a uma na aba "Cenas e NPCs".
+    check("cidade nova nasce sem cenas", S.CITY_SCENES.get("porto_negro") == {})
+    check("Alva e Luz mantém a cena da taverna com seus NPCs",
+          len(((S.CITY_SCENES.get("alva_e_luz") or {}).get("taverna") or {}).get("slots") or []) >= 8)
     S._aplicar_estado_cidades([], {}, [], None)
     S._sincronizar_cidades_derivadas()
     check("excluir limpa lojas", "porto_negro" not in S.CITY_SHOPS)
     check("excluir limpa pontos", "porto_negro" not in S.CITY_MAP_POINTS)
-    check("excluir limpa taverna", "porto_negro" not in S.TAVERN_SCENES)
+    check("excluir limpa cenas", "porto_negro" not in S.CITY_SCENES)
 
     print("\n[7] Rota ausente = viagem grátis")
     reset_mundo()

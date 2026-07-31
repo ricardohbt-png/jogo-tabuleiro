@@ -1,0 +1,130 @@
+"""Cenas de conversa por local — várias cenas por cidade, vinculadas a pontos.
+  • CITY_SCENES[cidade][cena] substitui TAVERN_SCENES[cidade].
+  • Migração: tavern_scenes.json vira a cena de id "taverna".
+  • Conversa de uso único some do payload depois de resolvida.
+  • Conversa bloqueada por requisito não vaza texto.
+Roda da raiz: python tools/test_cenas_conversa.py"""
+import asyncio, json, os, shutil, sys, tempfile
+from copy import deepcopy
+try: sys.stdout.reconfigure(encoding="utf-8")
+except Exception: pass
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import server as S
+
+PASS = 0; FAIL = 0
+def check(name, cond):
+    global PASS, FAIL
+    if cond: PASS += 1; print(f"  ✅ {name}")
+    else:    FAIL += 1; print(f"  ❌ {name}")
+
+def isolar_arquivos():
+    """Redireciona os JSON para uma pasta temporária e devolve o restaurador."""
+    tmpdir = tempfile.mkdtemp(prefix="cenas_teste_")
+    arquivos = ("CITY_SCENES_FILE", "CITY_MAP_POINTS_FILE", "CITY_SHOPS_FILE", "WORLD_CITIES_FILE")
+    originais = {nome: getattr(S, nome) for nome in arquivos}
+    for nome in arquivos:
+        setattr(S, nome, os.path.join(tmpdir, nome.lower() + ".json"))
+    inicial = {"scenes": deepcopy(S.CITY_SCENES), "points": deepcopy(S.CITY_MAP_POINTS),
+               "shops": deepcopy(S.CITY_SHOPS)}
+    def restaurar():
+        for nome, valor in originais.items(): setattr(S, nome, valor)
+        for alvo, copia in ((S.CITY_SCENES, inicial["scenes"]),
+                            (S.CITY_MAP_POINTS, inicial["points"]),
+                            (S.CITY_SHOPS, inicial["shops"])):
+            alvo.clear(); alvo.update(copia)
+        shutil.rmtree(tmpdir, ignore_errors=True)
+    return restaurar
+
+def _rodar_verificacoes():
+    print("\n[1] Estrutura CITY_SCENES")
+    check("CITY_SCENES existe", isinstance(S.CITY_SCENES, dict))
+    check("cena da taverna sob a chave 'taverna'",
+          isinstance(S.CITY_SCENES.get("alva_e_luz", {}).get("taverna"), dict))
+    cena = S.CITY_SCENES["alva_e_luz"]["taverna"]
+    check("cena tem nome", cena.get("nome") == "Taverna")
+    # O fundo real vem do city_scenes.json do usuário e não é previsível aqui;
+    # o que importa é que a reestruturação preservou UM fundo válido.
+    fundo = cena.get("background") or ""
+    check("cena preserva um fundo válido", fundo.startswith("assets/") and fundo.endswith(".png"))
+    check("cena preserva os slots da taverna", len(cena.get("slots", [])) >= 8)
+    check("cidade sem cenas nasce dict vazio",
+          isinstance(S.CITY_SCENES.get("vila_riacho"), dict))
+
+    print("\n[2] _cena_vazia")
+    vazia = S._cena_vazia("Docas")
+    check("nome aplicado", vazia["nome"] == "Docas")
+    check("sem slots", vazia["slots"] == [])
+    check("modo padrão individual", vazia["mode"] == "individual")
+
+    print("\n[3] Loader cria cena nova vinda do arquivo")
+    with open(S.CITY_SCENES_FILE, "w", encoding="utf-8") as f:
+        json.dump({"alva_e_luz": {"docas": {
+            "nome": "Docas", "background": "assets/city/docas.png",
+            "mode": "individual", "mask": "", "slots": [
+                {"id": "npc_pescador", "name": "Pescador", "image": "assets/tavern/slots/barman.png",
+                 "x": 10, "y": 20, "w": 12, "h": 24, "z": 1, "dialog": "O mar anda estranho.",
+                 "conversations": [{"id": "boato", "texto": "Vi luzes no farol.",
+                                    "requisito": {}, "efeito": {"renome": 1, "fato": "farol", "item_id": ""},
+                                    "uma_vez": True}]}]}}}, f)
+    S._load_city_scenes()
+    docas = S.CITY_SCENES["alva_e_luz"].get("docas")
+    check("cena nova criada pelo arquivo", isinstance(docas, dict))
+    check("slot da cena nova carregado", len(docas.get("slots", [])) == 1)
+    check("conversa da cena nova carregada",
+          docas["slots"][0]["conversations"][0]["id"] == "boato")
+    check("taverna continua existindo", "taverna" in S.CITY_SCENES["alva_e_luz"])
+
+    print("\n[4] Saver grava o dicionário inteiro")
+    S._save_city_scenes()
+    with open(S.CITY_SCENES_FILE, "r", encoding="utf-8") as f: gravado = json.load(f)
+    check("arquivo tem as duas cenas de Alva e Luz",
+          set(gravado.get("alva_e_luz", {})) >= {"taverna", "docas"})
+
+    print("\n[5] Migração do tavern_scenes.json")
+    antigo = os.path.join(os.path.dirname(S.CITY_SCENES_FILE), "tavern_antigo.json")
+    novo = os.path.join(os.path.dirname(S.CITY_SCENES_FILE), "city_novo.json")
+    with open(antigo, "w", encoding="utf-8") as f:
+        json.dump({"graciero": {"background": "assets/city/g.png", "mode": "individual",
+                                "mask": "", "slots": []}}, f)
+    guarda = (S.CITY_SCENES_FILE, S.TAVERN_SCENES_FILE)
+    S.CITY_SCENES_FILE, S.TAVERN_SCENES_FILE = novo, antigo
+    S._migrar_tavern_scenes()
+    with open(novo, "r", encoding="utf-8") as f: convertido = json.load(f)
+    check("cena antiga vira a cena 'taverna'", "taverna" in convertido.get("graciero", {}))
+    check("nome padrão aplicado", convertido["graciero"]["taverna"].get("nome") == "Taverna")
+    check("arquivo antigo continua existindo", os.path.exists(antigo))
+    S._migrar_tavern_scenes()   # idempotente: não sobrescreve o que já existe
+    with open(novo, "r", encoding="utf-8") as f: check("migração é idempotente", json.load(f) == convertido)
+    S.CITY_SCENES_FILE, S.TAVERN_SCENES_FILE = guarda
+
+    print("\n[6] Teto de 16 cenas por cidade")
+    muitas = {f"cena_{i}": {"nome": f"C{i}", "background": "", "mode": "individual",
+                            "mask": "", "slots": []} for i in range(30)}
+    with open(S.CITY_SCENES_FILE, "w", encoding="utf-8") as f:
+        json.dump({"vila_riacho": muitas}, f)
+    S._load_city_scenes()
+    check("no máximo 16 cenas por cidade", len(S.CITY_SCENES["vila_riacho"]) <= 16)
+
+    print("\n[7] Ida e volta do editor não corrompe as cenas")
+    payload = S._city_shops_editor_payload()
+    check("payload do editor manda scenes", isinstance(payload.get("scenes"), dict))
+    check("payload do editor não manda mais taverns", "taverns" not in payload)
+    enviado = deepcopy(payload["scenes"])
+    enviado.setdefault("alva_e_luz", {})["taverna"]["nome"] = "Taverna do Porto"
+    ok_rt, _cfg = S._save_city_shops_upload(S.CITY_SHOPS, enviado, None)
+    check("save aceito", ok_rt is True)
+    check("nome da cena aplicado",
+          S.CITY_SCENES["alva_e_luz"]["taverna"]["nome"] == "Taverna do Porto")
+    check("nenhuma chave solta virou cena",
+          all(isinstance(v, dict) and "slots" in v for v in S.CITY_SCENES["alva_e_luz"].values()))
+    check("ids de cena continuam válidos",
+          all(S.CENA_ID_RE.fullmatch(k) for k in S.CITY_SCENES["alva_e_luz"]))
+
+def main():
+    restaurar = isolar_arquivos()
+    try: _rodar_verificacoes()
+    finally: restaurar()
+    print(f"\n===== RESULTADO: {PASS} passaram, {FAIL} falharam =====")
+    sys.exit(1 if FAIL else 0)
+
+main()
