@@ -5129,6 +5129,13 @@ def _garantir_pontos_implicitos():
                 continue
             x, y = _PONTO_PADRAO[tipo]
             pontos[tipo] = {"x": x, "y": y, "type": tipo}
+        # Vínculo implícito: um ponto cujo id casa com o id de uma cena da cidade
+        # já nasce ligado a ela. É o que faz a taverna migrada abrir sozinha,
+        # sem nenhum caso especial no runtime.
+        cenas = CITY_SCENES.get(cid, {})
+        for pid_ponto, ponto in pontos.items():
+            if not ponto.get("scene") and pid_ponto in cenas:
+                ponto["scene"] = pid_ponto
 
 _sincronizar_cidades_derivadas()
 _TAVERN_BY_ID = {i["id"]: i for i in SHOP_TAVERN}

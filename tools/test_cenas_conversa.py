@@ -120,6 +120,19 @@ def _rodar_verificacoes():
     check("ids de cena continuam válidos",
           all(S.CENA_ID_RE.fullmatch(k) for k in S.CITY_SCENES["alva_e_luz"]))
 
+    print("\n[8] Sincronia por cidade e vínculo do ponto")
+    S.CITY_SCENES.setdefault("alva_e_luz", {})
+    S._sincronizar_cidades_derivadas()
+    ponto_taverna = S.CITY_MAP_POINTS["alva_e_luz"].get("taverna")
+    check("ponto da taverna existe", isinstance(ponto_taverna, dict))
+    check("ponto da taverna aponta para a cena taverna",
+          ponto_taverna.get("scene") == "taverna")
+    check("toda cidade tem entrada em CITY_SCENES",
+          all(cid in S.CITY_SCENES for cid in S.WORLD_LOCATIONS))
+    S.CITY_SCENES["cidade_fantasma"] = {}
+    S._sincronizar_cidades_derivadas()
+    check("cidade inexistente é removida", "cidade_fantasma" not in S.CITY_SCENES)
+
 def main():
     restaurar = isolar_arquivos()
     try: _rodar_verificacoes()
