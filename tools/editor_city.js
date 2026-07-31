@@ -125,8 +125,13 @@
     if (btnNovoPonto) btnNovoPonto.onclick = () => {
       const nome = prompt('Nome do ponto na ilustração', (cena && cena.nome) || 'Novo local'); if (!nome) return;
       const emoji = prompt('Emoji do marcador', '💬') || '💬';
+      // Id PRÓPRIO, diferente do id da cena: o servidor religa sozinho um ponto à
+      // cena de mesmo id (_garantir_pontos_implicitos), e esse vínculo implícito
+      // não pode ser desfeito. Com id distinto vale o campo `scene` explícito e o
+      // autor continua podendo desvincular. (48 = limite do id no servidor.)
+      const pontoId = ('ponto_' + selectedSceneId).slice(0, 48);
       Object.values(pontos).forEach(p => { if (p.scene === selectedSceneId) delete p.scene; });
-      pontos[selectedSceneId] = { x: 50, y: 50, type: 'cena', name: nome, emoji: emoji, scene: selectedSceneId };
+      pontos[pontoId] = { x: 50, y: 50, type: 'cena', name: nome, emoji: emoji, scene: selectedSceneId };
       render();
     };
     const btnExcluir = root.querySelector('[data-scene-excluir]');
