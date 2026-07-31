@@ -2009,6 +2009,12 @@ function _renderTavernConversations(){
     list.innerHTML='<div class="tavern-empty">Esta taverna ainda não possui frequentadores configurados.</div>';
     return;
   }
+  // A conversa na taverna é a única "loja" que vira CENA: o modal ocupa a tela
+  // inteira e todo o cromo (voltar, renome, dica, diálogo) flutua por cima da
+  // arte, dentro do próprio palco. Sem isso o palco 3:2 disputava altura com o
+  // cromo empilhado e a ilustração ficava pequena. Quem tira a classe é o
+  // _renderShopItems, no topo, antes de despachar qualquer aba.
+  const modal=$('shop-modal'); if(modal) modal.classList.add('tavern-cena');
   const scene=document.createElement('div'); scene.className='tavern-scene';
   // O palco é 3:2 e o fundo é `object-fit:cover`, exatamente como a prévia do
   // editor (.cityed-tavern-preview). Os slots vão em % crus, sem correção
@@ -2035,26 +2041,37 @@ function _renderTavernConversations(){
     } else {
       npc.innerHTML='<img src="'+_assetURL(slot.image)+'" alt=""><span>'+slot.name+'</span>';
     }
-    npc.onclick=()=>_showTavernDialogue(slot, list);
+    npc.onclick=()=>_showTavernDialogue(slot, scene);
     scene.appendChild(npc);
   });
   list.innerHTML='';
+  list.appendChild(scene);
+  // Barra flutuante no topo da arte: voltar à esquerda, renome à direita.
+  const hud=document.createElement('div'); hud.className='tavern-hud';
   const back=document.createElement('button');
   back.type='button'; back.className='tavern-back'; back.textContent='← Voltar à cidade';
   back.onclick=closeShop;
-  list.appendChild(back); list.appendChild(scene);
-  const rep=document.createElement('p'); rep.className='tavern-hint'; rep.textContent='★ Renome do grupo: '+Number(((GS.cityState||{}).reputacao||{}).renome||0); list.appendChild(rep);
-  const hint=document.createElement('p'); hint.className='tavern-hint'; hint.textContent='Clique em um grupo de frequentadores para conversar.'; list.appendChild(hint);
+  const rep=document.createElement('p'); rep.className='tavern-hint'; rep.textContent='★ Renome do grupo: '+Number(((GS.cityState||{}).reputacao||{}).renome||0);
+  hud.appendChild(back); hud.appendChild(rep); scene.appendChild(hud);
+  const hint=document.createElement('p'); hint.className='tavern-hint'; hint.textContent='Clique em um grupo de frequentadores para conversar.'; scene.appendChild(hint);
   const keepOpen=(tavern.slots||[]).find(slot=>slot.id===_openTavernNpcId && !slot.removed && slot.image);
-  if(keepOpen) _showTavernDialogue(keepOpen, list);
+  if(keepOpen) _showTavernDialogue(keepOpen, scene);
 }
 
-function _showTavernDialogue(slot, list){
+// `host` é o palco (.tavern-scene): o painel de diálogo é uma camada sobre a
+// arte, não um bloco abaixo dela.
+function _showTavernDialogue(slot, host){
   _openTavernNpcId=slot.id;
-  let panel=list.querySelector('.tavern-dialogue');
-  if(!panel){ panel=document.createElement('div'); panel.className='tavern-dialogue'; list.appendChild(panel); }
+  let panel=host.querySelector('.tavern-dialogue');
+  if(!panel){ panel=document.createElement('div'); panel.className='tavern-dialogue'; host.appendChild(panel); }
   panel.innerHTML='';
   const title=document.createElement('b'); title.textContent=slot.name; panel.appendChild(title);
+  // O painel cobre parte da arte: dá para fechá-lo sem sair da taverna.
+  const fechar=document.createElement('button');
+  fechar.type='button'; fechar.className='tavern-dialogue-close'; fechar.textContent='✕';
+  fechar.title='Fechar conversa'; fechar.setAttribute('aria-label','Fechar conversa');
+  fechar.onclick=()=>{ _openTavernNpcId=null; panel.remove(); };
+  panel.appendChild(fechar);
   const reputation=(GS.cityState&&GS.cityState.reputacao)||{renome:0,fatos:[]};
   const conversations=(slot.conversations&&slot.conversations.length?slot.conversations:[{id:'inicial',texto:slot.dialog||'',requisito:{},efeito:{},uma_vez:false}]);
   const requirementText=req=>{
@@ -2080,7 +2097,6 @@ function _showTavernDialogue(slot, list){
     const effect=conv.efeito||{}; if(effect.renome||effect.fato||effect.item_id){const effectEl=document.createElement('small');effectEl.className='tavern-dialogue-effect';effectEl.textContent='Ao concluir: '+[effect.renome?'renome '+(Number(effect.renome)>0?'+':'')+effect.renome:'',effect.fato?'informação: '+effect.fato:'',effect.item_id?'item: '+effect.item_id:''].filter(Boolean).join(' · ');block.appendChild(effectEl);}
     panel.appendChild(block);
   });
-  panel.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
 // Ícone de item: PNG em assets/itens/<id>.png se existir, senão cai no emoji.
@@ -2103,6 +2119,9 @@ function itemIconHTML(item, fallbackEmoji){
 
 function _renderShopItems(){
   if(!GS.cityState||!GS.activeShop) return;
+  // A cena em tela cheia vale só para a aba de conversas da taverna (e só
+  // quando ela tem arte); quem religa é o próprio _renderTavernConversations.
+  const shopModal=$('shop-modal'); if(shopModal) shopModal.classList.remove('tavern-cena');
   if(GS.activeShop==='taverna'&&GS.shopTabIdx===0){ _renderTavernConversations(); return; }
   // Route sell tabs
   if(GS.activeShop==='ferreiro'&&GS.shopTabIdx===3){ _renderSellItems('gear'); return; }

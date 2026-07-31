@@ -498,9 +498,8 @@ input:focus { outline: none; border-color: var(--gold); }
    limitada) o encolhimento padrão esmagava a altura derivada do aspect-ratio,
    o palco virava ~2.7:1, o `object-fit:cover` recortava outra parte da arte e
    os frequentadores (posicionados em %) saíam do lugar em relação ao editor.
-   A largura é limitada pela altura disponível (94vh da .shop-box menos o cromo
-   do modal) para o palco caber inteiro sem rolagem, sempre em 3:2. */
-.tavern-scene{position:relative;flex:none;width:min(100%,calc((94vh - var(--tavern-chrome,290px)) * 3 / 2));aspect-ratio:3/2;margin:0 auto;overflow:hidden;border:1px solid #72512b;border-radius:7px;background:#140d08;box-shadow:inset 0 0 26px #000;}
+   O tamanho real vem da regra de tela cheia (.tavern-cena) mais abaixo. */
+.tavern-scene{position:relative;flex:none;width:100%;aspect-ratio:3/2;margin:0 auto;overflow:hidden;border:1px solid #72512b;border-radius:7px;background:#140d08;box-shadow:inset 0 0 26px #000;}
 .tavern-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;user-select:none;pointer-events:none;}
 .tavern-mask-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;user-select:none;pointer-events:none;}
 .tavern-npc{position:absolute;overflow:hidden;border:0;padding:0;margin:0;background:transparent;cursor:pointer;filter:drop-shadow(0 0 0 transparent);transition:filter .16s ease,transform .16s ease;}
@@ -511,6 +510,32 @@ input:focus { outline: none; border-color: var(--gold); }
 .tavern-npc:hover,.tavern-npc:focus-visible{filter:drop-shadow(0 0 8px #ffd36b);transform:scale(1.1);z-index:2;outline:0;}.tavern-npc:hover img.tavern-mask,.tavern-npc:focus-visible img.tavern-mask,.tavern-npc:hover span,.tavern-npc:focus-visible span{opacity:1;}
 .tavern-back{align-self:flex-start;margin:0 0 7px;padding:5px 10px;border:1px solid #8b693a;border-radius:5px;background:#21170f;color:#f0c770;font:inherit;font-size:.8rem;cursor:pointer;}.tavern-back:hover{background:#382714;}
 .tavern-hint{margin:7px 0 0;text-align:center;color:var(--text2);font-size:.75rem;}.tavern-dialogue{margin-top:9px;padding:9px 11px;border:1px solid #806037;border-radius:6px;background:#17100be8;color:#e7d8bc;font-size:.82rem;}.tavern-dialogue b{color:#f0c770;}.tavern-dialogue p{margin:4px 0 0;line-height:1.4;}.tavern-empty{padding:18px;text-align:center;color:var(--text2);}
+/* ── Taverna em tela cheia (aba "Conversas") ──────────────────────────────
+   A arte É a tela: a .shop-box ocupa o viewport, o cromo do modal
+   (título/subtítulo/rodapé) some e o que sobra — abas, voltar, renome, dica e
+   o painel de diálogo — flutua POR CIMA da arte, dentro do palco. Antes o
+   palco 3:2 disputava altura com esse cromo empilhado (o `--tavern-chrome`
+   nunca era definido, então descontava 290px chutados) e a ilustração ficava
+   bem menor do que a tela comportava. O palco segue 3:2 com
+   `object-fit:cover`, então os frequentadores em % continuam no lugar exato
+   que o autor posicionou no editor. */
+#shop-modal.tavern-cena .shop-box{position:relative;width:100vw;max-width:100vw;height:100vh;max-height:100vh;padding:0;gap:0;border:0;border-radius:0;background:#0a0705;}
+#shop-modal.tavern-cena #shop-title,
+#shop-modal.tavern-cena #shop-subtitle,
+#shop-modal.tavern-cena .shop-footer{display:none;}
+#shop-modal.tavern-cena .shop-tabs{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:40;}
+#shop-modal.tavern-cena .shop-items{padding:0;gap:0;overflow:hidden;align-items:center;justify-content:center;}
+/* O palco cresce até o limite do viewport, travado pelo lado que apertar
+   primeiro (largura em telas baixas, altura em telas estreitas). */
+#shop-modal.tavern-cena .tavern-scene{width:min(100vw,calc(100vh * 3 / 2));max-width:100vw;border:0;border-radius:0;box-shadow:none;}
+.tavern-hud{position:absolute;left:0;right:0;top:0;z-index:30;display:flex;align-items:center;gap:10px;padding:9px 12px;background:linear-gradient(#000000c4,#0000);pointer-events:none;}
+.tavern-hud>*{pointer-events:auto;}
+.tavern-hud .tavern-back{margin:0;}
+.tavern-hud .tavern-hint{margin:0 0 0 auto;text-shadow:0 1px 3px #000;}
+#shop-modal.tavern-cena .tavern-scene>.tavern-hint{position:absolute;left:0;right:0;bottom:7px;z-index:20;margin:0;text-shadow:0 1px 3px #000;pointer-events:none;}
+#shop-modal.tavern-cena .tavern-dialogue{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;width:min(760px,94%);max-height:46%;overflow-y:auto;z-index:35;margin:0;background:#120c08f2;box-shadow:0 10px 30px #000a;font-size:.86rem;}
+.tavern-dialogue-close{position:absolute;top:6px;right:8px;padding:1px 7px;border:1px solid #806037;border-radius:4px;background:#2a1b10;color:#f0c770;font:inherit;font-size:.8rem;line-height:1.3;cursor:pointer}
+.tavern-dialogue-close:hover{background:#422a17;border-color:#e4bd68}
 .tavern-dialogue-option{display:grid;gap:4px;margin-top:8px}.tavern-dialogue-text{padding:8px 10px;border:1px solid #806037;border-radius:5px;background:#2a1b10;color:#f7dfaa;text-align:left;font:inherit;line-height:1.4;cursor:pointer}.tavern-dialogue-text:hover,.tavern-dialogue-text:focus-visible{background:#422a17;border-color:#e4bd68}.tavern-dialogue-effect{color:#a99a7d;font-size:.72rem}
 .shop-items { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 7px; }
 .shop-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px;
