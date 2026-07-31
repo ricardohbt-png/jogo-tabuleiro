@@ -2095,7 +2095,11 @@ function _showCenaDialogo(slot, host){
   fechar.onclick=()=>{ _openCenaNpcId=null; panel.remove(); };
   panel.appendChild(fechar);
   const reputation=(GS.cityState&&GS.cityState.reputacao)||{renome:0,fatos:[]};
-  const conversations=(slot.conversations&&slot.conversations.length?slot.conversations:[{id:'inicial',texto:slot.dialog||'',requisito:{},efeito:{},uma_vez:false}]);
+  // O servidor já normaliza: um NPC que só tem `dialog` chega aqui com uma
+  // conversa "inicial" de verdade, e `conversations: []` significa que não
+  // sobrou nada que este jogador possa escolher. Sintetizar uma opção aqui
+  // ressuscitaria justamente o que o servidor omitiu — e o botão daria erro.
+  const conversations = slot.conversations || [];
   const requirementText=req=>{
     const parts=[]; req=req||{};
     if(Number(req.renome_min)>0) parts.push('renome '+req.renome_min);
