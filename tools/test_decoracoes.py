@@ -235,6 +235,20 @@ def test_serial():
     check("tiles resolvidos (2 casas, horizontal)", sorted(map(tuple, d0["tiles"])) == [(3, 3), (4, 3)])
     check("não vaza loot detalhado", "loot" not in d0)
 
+def test_armadilha_decoracao():
+    print("\n[A9b] armadilha em decoração")
+    r = _room()
+    r.traps, r.armadilhas = [], []
+    r.decorations = [{"id": "d-trap", "type": "barril", "pos": [4, 4], "facing": [0, 1],
+                      "loot": None, "tem_loot": False, "trap": {"tipo": "buraco"},
+                      "trap_triggered": False, "trap_disarmed": False, "trap_revealed": False}]
+    r._rebuild_decor_index()
+    p = make_player("p1", "Luccas", "rogue", 0); p["pos"] = [2, 4]; p["alive"] = True
+    found = r._revelar_armadilhas_raio(p, 3)
+    payload = r._serializar_decoracoes()[0]
+    check("Encontrar Armadilhas revela a decoração", found == 1 and r.decorations[0]["trap_revealed"])
+    check("cliente recebe perigo revelado, sem configuração interna", payload.get("trap") is True and payload.get("trap_revealed") is True and "veneno_id" not in payload)
+
 def _defn_base():
     return {
         "schema_version": 1, "id": "t", "name": "T",
@@ -296,6 +310,12 @@ def test_validacao():
     d8 = _defn_base()
     d8["decorations"] = [{"type": "cama", "pos": [3, 3], "facing": "xx"}]
     ok, _ = server.validar_dungeon(d8); check("rejeita facing malformado", ok is False)
+    # armadilha embutida válida e configuração obrigatória de veneno
+    d9 = _defn_base()
+    d9["decorations"] = [{"type": "barril", "pos": [5, 5], "facing": [0, 1], "trap": {"tipo": "buraco"}}]
+    ok, _ = server.validar_dungeon(d9); check("aceita armadilha em decoração", ok is True)
+    d9["decorations"][0]["trap"] = {"tipo": "fosso_envenenado"}
+    ok, _ = server.validar_dungeon(d9); check("rejeita armadilha de decoração sem veneno", ok is False)
 
 def main():
     test_catalog()
@@ -309,6 +329,7 @@ def main():
     test_container_refresh()
     test_visao()
     test_serial()
+    test_armadilha_decoracao()
     test_validacao()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)

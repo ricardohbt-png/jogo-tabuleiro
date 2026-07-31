@@ -4323,6 +4323,18 @@ def validar_dungeon(defn):
         arm_monstro = de.get("chest_trap_monster_type")
         if arm_monstro is not None and arm_monstro not in {m["type"] for m in MONSTER_DEFS}:
             return False, f"baú-armadilha com monstro desconhecido: {arm_monstro!r}."
+        decor_trap = de.get("trap")
+        if decor_trap is not None:
+            if not isinstance(decor_trap, dict) or decor_trap.get("tipo") not in ARMADILHAS:
+                return False, f"armadilha de decoração inválida: {decor_trap!r}."
+            trap_tipo = decor_trap["tipo"]
+            if trap_tipo in {"fosso_envenenado", "armadilha_dardos_envenenados"} \
+                    and decor_trap.get("veneno_id") not in VENENOS:
+                return False, f"{trap_tipo} na decoração exige veneno_id válido."
+            if trap_tipo == "armadilha_teletransporte":
+                destino = decor_trap.get("saida")
+                if not in_grid(destino) or tile_at(destino) != FLOOR:
+                    return False, "armadilha de teletransporte na decoração exige saída em chão."
         img = de.get("image")
         if img is not None:
             if not isinstance(img, str) or os.path.basename(img) != img \
@@ -8409,6 +8421,10 @@ class GameRoom:
                 "key_objective": bool(d.get("key_objective", False)),
                 "chest_trap_monster_type": d.get("chest_trap_monster_type"),
                 "chest_trap_triggered": False,
+                "trap": deepcopy(d.get("trap")) if isinstance(d.get("trap"), dict) else None,
+                "trap_triggered": False,
+                "trap_disarmed": False,
+                "trap_revealed": False,
                 "image": (d.get("image") if isinstance(d.get("image"), str) else meta.get("image")),
             }
             loot = d.get("loot")
@@ -16840,13 +16856,17 @@ class GameRoom:
         if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
+        decor_trap = None
         arm = self._armadilha_no_tile(p["pos"][0], p["pos"][1])
         if not arm:
             for dx, dy in ((0, 1), (0, -1), (1, 0), (-1, 0)):
                 arm = self._armadilha_no_tile(p["pos"][0] + dx, p["pos"][1] + dy)
                 if arm: break
         if not arm:
-            await self.send_to(pid, {"type": "error", "msg": "Nenhuma armadilha adjacente para desarmar."}); return
+            decor_trap = self._decor_com_armadilha_proxima(p["pos"], apenas_revelada=True)
+            arm = self._armadilha_da_decoracao(decor_trap) if decor_trap else None
+        if not arm:
+            await self.send_to(pid, {"type": "error", "msg": "Nenhuma armadilha revelada adjacente para desarmar."}); return
 
         tipo = ARMADILHAS.get(arm["tipo"], {})
         dif = tipo.get("dificuldade", 10)
@@ -16859,6 +16879,8 @@ class GameRoom:
                           f"d20({d20})+DES({bonus})={total} vs dif {dif}.")
         if d20 == 1:
             await self.gm_say("💀 Falha crítica! A armadilha dispara no próprio Luccas!")
+            if decor_trap:
+                decor_trap["trap_triggered"] = True
             await self._disparar_armadilha(p, arm)
         elif total >= dif:
             custo_ouro_arm = tipo.get("custo_ouro", 0)
@@ -16871,7 +16893,10 @@ class GameRoom:
                 if totalr >= dif:
                     p["gold"] += custo_ouro_arm
                     recuperou = True
-            self.armadilhas = [a for a in self.armadilhas if a["id"] != arm["id"]]
+            if decor_trap:
+                decor_trap["trap_disarmed"] = True
+            else:
+                self.armadilhas = [a for a in self.armadilhas if a["id"] != arm["id"]]
             msg_recover = f" Recuperou 🪙{custo_ouro_arm}!" if recuperou else ""
             await self.gm_say(f"✅ Armadilha desarmada com sucesso!{msg_recover}")
             await self._conceder_xp_armadilha(arm)
@@ -16912,6 +16937,15 @@ class GameRoom:
             if max(abs(a["pos"][0] - px), abs(a["pos"][1] - py)) <= raio:
                 a["visivel"] = True
                 reveladas += 1
+        # Armadilhas embutidas em objetos: a decoração continua com sua aparência
+        # normal, mas a ficha serializada passa a marcar o perigo identificado.
+        for d in self.decorations:
+            distance = min(max(abs(tx - px), abs(ty - py)) for tx, ty in self._decor_tiles(d))
+            if (not d.get("trap") or d.get("trap_triggered") or d.get("trap_disarmed")
+                    or d.get("trap_revealed") or distance > raio):
+                continue
+            d["trap_revealed"] = True
+            reveladas += 1
         return reveladas
 
     async def handle_detectar_armadilhas(self, pid, msg):
@@ -18464,6 +18498,31 @@ class GameRoom:
                 return True
         return False
 
+    def _armadilha_da_decoracao(self, d):
+        """Converte a armadilha configurada no objeto para o formato do motor."""
+        trap = d.get("trap")
+        if not isinstance(trap, dict) or trap.get("tipo") not in ARMADILHAS:
+            return None
+        meta = ARMADILHAS[trap["tipo"]]
+        arm = {
+            "id": f"decor_trap_{d['id']}", "tipo": trap["tipo"], "pos": list(d["pos"]),
+            "icone": meta["icone"], "nome": meta["nome"], "visivel": d.get("trap_revealed", False),
+            "ativada": False, "aliada": False, "so_luccas": False, "efeitos_ativos": [],
+        }
+        for key in ("veneno_id", "saida"):
+            if key in trap:
+                arm[key] = deepcopy(trap[key])
+        return arm
+
+    def _decor_com_armadilha_proxima(self, pos, apenas_revelada=True):
+        for d in self.decorations:
+            if (not d.get("trap") or d.get("trap_triggered") or d.get("trap_disarmed")
+                    or (apenas_revelada and not d.get("trap_revealed"))):
+                continue
+            if self._adjacente_a_decor(pos, d):
+                return d
+        return None
+
     async def handle_interagir_decor(self, pid, decor_id):
         """Herói adjacente interage: fonte → bebe; container → abre painel de loot."""
         p = self.players.get(pid)
@@ -18474,6 +18533,15 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Objeto não encontrado."}); return
         if not self._adjacente_a_decor(p["pos"], d):
             await self.send_to(pid, {"type": "error", "msg": "Muito longe do objeto!"}); return
+        if d.get("trap") and not d.get("trap_triggered") and not d.get("trap_disarmed"):
+            # Investigar o objeto é o gatilho: a mesma implementação das
+            # armadilhas do mapa preserva saves, dano, área e popups existentes.
+            arm = self._armadilha_da_decoracao(d)
+            if arm:
+                d["trap_triggered"] = True
+                await self._disparar_armadilha(p, arm)
+                await self.push_state()
+                return
         if d.get("chest_trap_monster_type") and not d.get("chest_trap_triggered"):
             # O primeiro clique sempre revela/dispara a armadilha. O conteÃºdo,
             # se existir, sÃ³ pode ser aberto em um clique posterior.
@@ -18635,6 +18703,8 @@ class GameRoom:
                 "tiles": self._decor_tiles(d),
                 "tem_loot": bool(d.get("tem_loot")),
                 "chest_trap": bool(d.get("chest_trap_monster_type") and not d.get("chest_trap_triggered")),
+                "trap": bool(d.get("trap") and not d.get("trap_triggered") and not d.get("trap_disarmed")),
+                "trap_revealed": bool(d.get("trap_revealed")),
                 "key_objective": bool(d.get("key_objective")),
                 "charges": d.get("charges"),
                 "alto": meta["alto"], "pisavel": meta["pisavel"],
@@ -19418,6 +19488,79 @@ class GameRoom:
                 return True
         return False
 
+    def _sopro_dragao_tiles(self, m, target_pos, ability):
+        """Casas alcançadas pelo sopro, sempre a partir da frente do monstro.
+
+        Linha aceita as oito direções. O cone abre uma casa de cada lado a cada
+        passo (1, 3, 5…), respeitando paredes, portas e objetos que bloqueiam
+        linha de visão.
+        """
+        ox, oy = m["pos"]
+        dx = 0 if target_pos[0] == ox else (1 if target_pos[0] > ox else -1)
+        dy = 0 if target_pos[1] == oy else (1 if target_pos[1] > oy else -1)
+        if dx == 0 and dy == 0:
+            return set()
+        reach = _monster_int(ability.get("range", 4), 4, 1, 20)
+        shape = ability.get("shape", "linha")
+        tiles = set()
+        px, py = -dy, dx
+        for distance in range(1, reach + 1):
+            lateral = range(0, 1) if shape == "linha" else range(-(distance - 1), distance)
+            for lane in lateral:
+                tx = ox + dx * distance + px * lane
+                ty = oy + dy * distance + py * lane
+                if not (0 <= tx < self.map_w and 0 <= ty < self.map_h):
+                    continue
+                if self._blocks_tile(tx, ty) or not self._tem_linha_de_visao([ox, oy], [tx, ty]):
+                    continue
+                tiles.add((tx, ty))
+        return tiles
+
+    async def _usar_sopro_dragao(self, m, ability, target_obj, targets):
+        """Executa o sopro configurado no editor. Retorna True se foi usado."""
+        tiles = self._sopro_dragao_tiles(m, target_obj["obj"]["pos"], ability)
+        if tuple(target_obj["obj"]["pos"]) not in tiles:
+            return False
+        victims = [item for item in targets if tuple(item["obj"].get("pos", [])) in tiles
+                   and self._alvo_vivo(item)]
+        if ability.get("target_mode", "todos") == "um":
+            victims = [target_obj]
+        if not victims or not self._ativar_habilidade_nativa(m, ability):
+            return False
+        element = (ability.get("damage_types") or [DMG_FIRE])[0]
+        labels = {DMG_FIRE: "fogo", DMG_COLD: "gelo", DMG_LIGHTNING: "eletricidade"}
+        shape = "linha" if ability.get("shape", "linha") == "linha" else "cone"
+        await self.gm_say(f"🐉 **{m['name']}** usa **Sopro de Dragão** de {labels.get(element, element)} em {shape}!")
+        for item in victims:
+            target = item["obj"]
+            passed, d20, bonus, total = self._testar_save(target, ability.get("save", "reflexos"), ability.get("dc", 13), fonte=m)
+            raw = roll_dice(ability.get("damage", "2d6"))
+            amount = 0 if (passed and ability.get("success_effect") == "nega") else (raw // 2 if passed else raw)
+            damage = self._apply_damage_types(amount, [element], target)
+            target_name = target["name"] if item["kind"] == "player" else target["nome"]
+            bonus_text = f"+{bonus}" if bonus >= 0 else str(bonus)
+            await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
+                                  "label": f"{m['name']} — Sopro de Dragão", "hit": not passed})
+            await self.gm_say(f"🐉 **{target_name}** sofre **{damage}** de {labels.get(element, element)} "
+                              f"({ability.get('save', 'reflexos').title()} d20({d20}){bonus_text}={total} vs CD {ability.get('dc', 13)})"
+                              f"{' — resistiu!' if passed else '!'}")
+            if item["kind"] == "player":
+                target["hp"] = max(0, target["hp"] - damage)
+                if target["hp"] <= 0:
+                    await self._player_dies(target["id"])
+            else:
+                target["vida_atual"] = max(0, target["vida_atual"] - damage)
+                if target["vida_atual"] <= 0:
+                    await self._animado_morre(target, m.get("id"))
+        return True
+
+    async def _monster_try_sopro_dragao(self, m, targets):
+        ability = self._habilidade_monstro(m, "sopro_dragao")
+        if not ability or m.get("ability_cooldowns", {}).get("sopro_dragao", 0) > 0:
+            return False
+        target = self._get_monster_primary_target(m, targets)
+        return bool(target and await self._usar_sopro_dragao(m, ability, target, targets))
+
     def _habilidade_ativavel_manual(self, ability):
         """O mestre ativa: (a) habilidades save+dc (via _use_monster_ability) OU
         (b) habilidades de editor herói/guilda (self-buff, via _ativar_editor_ability).
@@ -19426,7 +19569,7 @@ class GameRoom:
         action_type)."""
         if not ability or ability.get("action_type") == "passiva":
             return False
-        if ability.get("id") == "mestre_dos_mortos":
+        if ability.get("id") in {"mestre_dos_mortos", "sopro_dragao"}:
             return True
         if ability.get("save") is not None and ability.get("dc") is not None:
             return True
@@ -19500,6 +19643,16 @@ class GameRoom:
             if not invocados:
                 await self.send_to(pid, {"type": "error", "msg": "Mestre dos Mortos só pode ser usado na primeira ação e requer espaço para invocar."}); return
             m["_master_acted"] = True
+            await self.push_state(); return
+        if ability_id == "sopro_dragao":
+            alvo = self.players.get(target_id)
+            if not alvo or not alvo.get("alive"):
+                await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
+            targets = [{"kind": "player", "obj": p} for p in self.players.values() if p.get("alive")]
+            targets += [{"kind": "animado", "obj": a} for a in self._all_animados() if a.get("vida_atual", 0) > 0 and not a.get("dominado_por_monstro")]
+            if not await self._usar_sopro_dragao(m, ability, {"kind": "player", "obj": alvo}, targets):
+                await self.send_to(pid, {"type": "error", "msg": "Alvo fora da área, ou sopro sem usos/em recarga."}); return
+            m["_master_acted"] = True; m["_ja_executou_acao"] = True
             await self.push_state(); return
         if not (ability.get("save") is not None and ability.get("dc") is not None):
             if not self._ativar_editor_ability(m, ability):
@@ -20768,6 +20921,10 @@ class GameRoom:
         if not targets:
             return
         await self._processar_onda_envolvente_turno(m)
+        # Sopro é uma ação ofensiva completa e vem antes de magia, movimento ou
+        # ataque. A direção é determinada pelo alvo prioritário da própria IA.
+        if await self._monster_try_sopro_dragao(m, targets):
+            return
         if m.get("_personalizado") or m.get("ai_profile_explicit"):
             await self._run_profile_ai(m, targets)
             return
@@ -23251,6 +23408,16 @@ def _base_ability_library():
             "guild_category": entry.get("categoria", "habilidade"),
         }
         out.setdefault(item["id"], item)
+    # Habilidade configurável do editor: a ficha salva define geometria, dano,
+    # teste e como um sucesso afeta o dano. A execução continua no servidor.
+    out.setdefault("sopro_dragao", {
+        "id": "sopro_dragao", "source": "monstro", "name": "Sopro de Dragão",
+        "icon": "🐉", "action_type": "acao", "range": 4,
+        "damage": "2d6", "damage_types": [DMG_FIRE], "save": "reflexos", "dc": 13,
+        "shape": "linha", "target_mode": "todos", "success_effect": "metade",
+        "descricao": "Expele energia em linha ou cone. Configure o elemento, alcance, "
+                     "dano, teste de resistência e se o sopro atinge um ou todos os alvos da área.",
+    })
     return out
 
 # Habilidades classificadas como efeitos negativos no editor. Elas nÃ£o sÃ£o
@@ -23441,6 +23608,38 @@ def _validate_custom_monster(raw):
             ability["descricao"] = (f"Alvo a até {ability['range']} quadrado(s): {ability['damage']} de ácido; "
                                     f"Reflexos CD {ability['dc']} reduz à metade. Falha corrói equipamentos "
                                     f"conforme as regras de corrosão por ácido.")
+        if aid == "sopro_dragao":
+            dice = _monster_int(config.get("damage_dice", 2), 2, 1, 20)
+            faces = _monster_int(config.get("damage_faces", 6), 6, 4, 20)
+            damage_type = str(config.get("damage_type") or DMG_FIRE)
+            if damage_type not in {DMG_FIRE, DMG_COLD, DMG_LIGHTNING}:
+                damage_type = DMG_FIRE
+            shape = str(config.get("shape") or "linha")
+            if shape not in {"linha", "cone"}:
+                shape = "linha"
+            target_mode = str(config.get("target_mode") or "todos")
+            if target_mode not in {"um", "todos"}:
+                target_mode = "todos"
+            save = str(config.get("save") or "reflexos")
+            if save not in {"reflexos", "fortitude", "vontade"}:
+                save = "reflexos"
+            success_effect = str(config.get("success_effect") or "metade")
+            if success_effect not in {"nega", "metade"}:
+                success_effect = "metade"
+            ability.update({
+                "damage": f"{dice}d{faces}", "damage_types": [damage_type],
+                "range": _monster_int(config.get("range", 4), 4, 1, 20),
+                "shape": shape, "target_mode": target_mode, "save": save,
+                "dc": _monster_int(config.get("dc", 13), 13, 1, 40),
+                "success_effect": success_effect,
+            })
+            labels = {DMG_FIRE: "fogo", DMG_COLD: "gelo", DMG_LIGHTNING: "eletricidade"}
+            area = "linha reta" if shape == "linha" else "cone"
+            alvo = "um alvo" if target_mode == "um" else "todos na área"
+            sucesso = "nega o dano" if success_effect == "nega" else "reduz o dano à metade"
+            ability["descricao"] = (f"{ability['damage']} de {labels[damage_type]} em {area} de "
+                                    f"{ability['range']} casas; {alvo}. {save.title()} CD {ability['dc']}: "
+                                    f"sucesso {sucesso}.")
         abilities.append(ability)
         entry = {"id": aid, "uses_per_day": uses, "cooldown_turns": cooldown}
         if aid == "corpo_energetico":
@@ -23460,6 +23659,12 @@ def _validate_custom_monster(raw):
         if aid == "cuspir_acido":
             entry.update({"damage_dice": dice, "damage_faces": faces,
                           "range": ability["range"], "dc": ability["dc"]})
+        if aid == "sopro_dragao":
+            entry.update({"damage_dice": dice, "damage_faces": faces,
+                          "damage_type": ability["damage_types"][0], "range": ability["range"],
+                          "shape": ability["shape"], "target_mode": ability["target_mode"],
+                          "save": ability["save"], "dc": ability["dc"],
+                          "success_effect": ability["success_effect"]})
         monster_abilities.append(entry)
     negative_ids = raw.get("negative_ability_ids", [])
     if not isinstance(negative_ids, list):

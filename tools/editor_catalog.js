@@ -5641,6 +5641,24 @@ window.EDITOR_CATALOG = {
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
+    },
+    {
+      "id": "sopro_dragao",
+      "source": "monstro",
+      "name": "Sopro de Dragão",
+      "icon": "🐉",
+      "action_type": "acao",
+      "range": 4,
+      "damage": "2d6",
+      "damage_types": [
+        "fire"
+      ],
+      "save": "reflexos",
+      "dc": 13,
+      "shape": "linha",
+      "target_mode": "todos",
+      "success_effect": "metade",
+      "descricao": "Expele energia em linha ou cone. Configure o elemento, alcance, dano, teste de resistência e se o sopro atinge um ou todos os alvos da área."
     }
   ],
   "spells": [

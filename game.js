@@ -6406,6 +6406,12 @@ function renderMap(state){
         ctx.fillText(d.emoji || '🪑', ecx, baseY - 2);
         ctx.textBaseline = 'middle';
       }
+      // Encontrar Armadilhas revelou o mecanismo escondido no objeto.
+      if (d.trap && d.trap_revealed) {
+        ctx.font = `bold ${Math.round(CELL * 0.22)}px monospace`;
+        ctx.fillStyle = '#ff6b52';
+        ctx.fillText('⚠', ecx - CELL * 0.30, ecy - CELL * 0.29);
+      }
       // Loot indicator badge
       if (d.tem_loot) {
         ctx.font = `bold ${Math.round(CELL * 0.18)}px monospace`;
@@ -23591,7 +23597,7 @@ function on3DClick(e){
     const decsHere3D = GS.decorations.filter(d =>
       GS.decorTilesOf(d).some(t => t[0] === tx && t[1] === ty));
     if(decsHere3D.length){
-      const inter3D = decsHere3D.find(d => d.tem_loot || d.chest_trap || d.key_objective || d.special === 'fountain');
+      const inter3D = decsHere3D.find(d => d.tem_loot || d.chest_trap || d.trap || d.key_objective || d.special === 'fountain');
       if(inter3D){ GS.interagirDecor(inter3D.id); return; }
       if(decsHere3D.some(d => !d.pisavel)) return;   // objeto sólido bloqueia o caminho
       // só decoração(ões) pisável(is) → segue para o movimento
@@ -23800,7 +23806,7 @@ function handleTileClick(tx, ty){
     const decsHere = GS.decorations.filter(d =>
       GS.decorTilesOf(d).some(t => t[0] === tx && t[1] === ty));
     if(decsHere.length){
-      const inter = decsHere.find(d => d.tem_loot || d.chest_trap || d.key_objective || d.special === 'fountain');
+      const inter = decsHere.find(d => d.tem_loot || d.chest_trap || d.trap || d.key_objective || d.special === 'fountain');
       if(inter){ GS.interagirDecor(inter.id); return; }
       if(decsHere.some(d => !d.pisavel)) return;   // objeto sólido bloqueia o caminho
       // só decoração(ões) pisável(is) → segue para o movimento

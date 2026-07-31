@@ -30,7 +30,7 @@
               "fato": "pista1",
               "item_id": ""
             },
-            "uma_vez": false
+            "uma_vez": true
           },
           {
             "id": "fala_ms56fj37",
@@ -77,7 +77,7 @@
               "fato": "pista2",
               "item_id": ""
             },
-            "uma_vez": false
+            "uma_vez": true
           }
         ],
         "z": 2.0

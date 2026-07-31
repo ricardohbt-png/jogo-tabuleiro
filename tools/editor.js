@@ -1438,6 +1438,9 @@
       const m = decorMeta(ref.type) || {};
       const isWall = m.special === "wall";
       const hasLoot = !!ref.loot;
+      const decorTrap = ref.trap || null;
+      const trapOptions = (CAT.traps || []).map(t => ({ v: t.tipo, name: `${t.icone || '🪤'} ${t.nome || t.tipo}` }));
+      const venomOptions = (CAT.venoms || []).map(v => ({ v: v.id, name: v.name || v.nome || v.id }));
       const [bw, bh] = decorBaseSize(ref);
       const vs0 = Array.isArray(ref.vscale) ? ref.vscale : [1, 1];
       const vo0 = Array.isArray(ref.voffset) ? ref.voffset : [0, 0];
@@ -1451,6 +1454,11 @@
         ${m.loot_capaz ? `<label style="display:block;margin-top:8px"><input type="checkbox" id="d-haslook" ${hasLoot ? "checked" : ""}> contém loot</label>` : ""}
         <label style="display:block;margin-top:8px"><input type="checkbox" id="d-chest-trap" ${ref.chest_trap_monster_type ? "checked" : ""}> baú-armadilha</label>
         ${ref.chest_trap_monster_type ? `<label>monstro que surge</label><select id="d-chest-monster">${opt(CAT.monsters.map(x => ({v:x.type,name:x.name})), ref.chest_trap_monster_type, o => o.v + " — " + o.name)}</select><small style="color:#8a7a5a">No primeiro clique, Reflexos CD 12; o loot só abre no próximo clique.</small>` : ""}
+        <label style="display:block;margin-top:8px"><input type="checkbox" id="d-trap" ${decorTrap ? "checked" : ""}> contém armadilha</label>
+        ${decorTrap ? `<label>armadilha</label><select id="d-trap-type">${opt(trapOptions, decorTrap.tipo, o => o.name)}</select>
+          ${["fosso_envenenado", "armadilha_dardos_envenenados"].includes(decorTrap.tipo) ? `<label>veneno</label><select id="d-trap-venom">${opt(venomOptions, decorTrap.veneno_id || "", o => o.name)}</select>` : ""}
+          ${decorTrap.tipo === "armadilha_teletransporte" ? `<label>saída X <input id="d-trap-exit-x" type="number" min="0" max="${S.grid.w-1}" value="${decorTrap.saida?.[0] ?? ref.pos[0]}"></label><label>saída Y <input id="d-trap-exit-y" type="number" min="0" max="${S.grid.h-1}" value="${decorTrap.saida?.[1] ?? ref.pos[1]}"></label>` : ""}
+          <small style="color:#8a7a5a">Dispara ao investigar. Encontrar Armadilhas revela o objeto e permite desarmá-lo.</small>` : ""}
         <label style="display:block;margin-top:8px"><input type="checkbox" id="d-key" ${ref.key_objective ? "checked" : ""}> objeto-chave <small>(conclui “Abrir o baú-chave” ao interagir)</small></label>
         <div id="d-loot" style="${hasLoot ? "" : "display:none"}">
           <label>ouro <input id="d-gold" type="number" min="0" value="${hasLoot ? (ref.loot.gold | 0) : 0}"></label>
@@ -1495,6 +1503,14 @@
       document.getElementById("d-key").onchange = e => { ref.key_objective = e.target.checked; };
       document.getElementById("d-chest-trap").onchange = e => { if (e.target.checked) ref.chest_trap_monster_type = (CAT.monsters[0] || {}).type; else delete ref.chest_trap_monster_type; renderPanel(); };
       if (ref.chest_trap_monster_type) document.getElementById("d-chest-monster").onchange = e => { ref.chest_trap_monster_type = e.target.value; };
+      document.getElementById("d-trap").onchange = e => { if (e.target.checked) ref.trap = { tipo: (CAT.traps[0] || {}).tipo || "buraco" }; else delete ref.trap; renderPanel(); };
+      if (decorTrap) {
+        document.getElementById("d-trap-type").onchange = e => { ref.trap = { tipo: e.target.value }; renderPanel(); };
+        const venom = document.getElementById("d-trap-venom"); if (venom) venom.onchange = e => { ref.trap.veneno_id = e.target.value; };
+        const exitX = document.getElementById("d-trap-exit-x"), exitY = document.getElementById("d-trap-exit-y");
+        const updateExit = () => { ref.trap.saida = [Math.max(0, Number(exitX.value) | 0), Math.max(0, Number(exitY.value) | 0)]; };
+        if (exitX && exitY) { exitX.onchange = updateExit; exitY.onchange = updateExit; }
+      }
       if (m.loot_capaz) document.getElementById("d-haslook").onchange = e => {
         ref.loot = e.target.checked ? { gold: 0, items: [] } : null; renderPanel();
       };
@@ -1694,6 +1710,11 @@
         o.loot = d.loot ? { gold: d.loot.gold | 0, items: d.loot.items.map(i => ({ id: i.id })) } : null;
         o.key_objective = !!d.key_objective;
         if (d.chest_trap_monster_type) o.chest_trap_monster_type = d.chest_trap_monster_type;
+        if (d.trap?.tipo) {
+          o.trap = { tipo: d.trap.tipo };
+          if (d.trap.veneno_id) o.trap.veneno_id = d.trap.veneno_id;
+          if (Array.isArray(d.trap.saida)) o.trap.saida = d.trap.saida.slice();
+        }
         const m = decorMeta(d.type);
         if (m && m.special === "fountain") o.charges = d.charges | 0;
         if (d.image) o.image = d.image;
@@ -1793,6 +1814,11 @@
       }
       if (d.loot) for (const it of d.loot.items) if (!items.has(it.id)) e.push(`item de loot inválido: ${it.id}`);
       if (d.chest_trap_monster_type && !types.has(d.chest_trap_monster_type)) e.push("baú-armadilha com monstro inválido");
+      if (d.trap) {
+        if (!traps.has(d.trap.tipo)) e.push("armadilha de decoração inválida");
+        if (["fosso_envenenado", "armadilha_dardos_envenenados"].includes(d.trap.tipo) && !venoms.has(d.trap.veneno_id)) e.push(`${d.trap.tipo} na decoração sem veneno válido`);
+        if (d.trap.tipo === "armadilha_teletransporte" && (!Array.isArray(d.trap.saida) || S.tiles[d.trap.saida[1]]?.[d.trap.saida[0]] !== FLOOR)) e.push("armadilha de teletransporte na decoração sem saída em chão");
+      }
     }
     const decorIds = new Set(S.decorations.map(d => d.id));
     const passageIds = new Set();
@@ -1853,6 +1879,7 @@
       loot: d.loot ? { gold: d.loot.gold | 0, items: (d.loot.items || []).map(i => ({ id: i.id })) } : null,
       key_objective: !!d.key_objective,
       ...(d.chest_trap_monster_type ? { chest_trap_monster_type: d.chest_trap_monster_type } : {}),
+      ...(d.trap?.tipo ? { trap: { tipo: d.trap.tipo, ...(d.trap.veneno_id ? { veneno_id: d.trap.veneno_id } : {}), ...(Array.isArray(d.trap.saida) ? { saida: d.trap.saida.slice() } : {}) } } : {}),
       ...(d.charges !== undefined ? { charges: d.charges | 0 } : {}),
       // Decorações catalogadas de parede sempre recuperam sua arte padrão,
       // inclusive em arquivos antigos que ainda não guardavam `image`.
