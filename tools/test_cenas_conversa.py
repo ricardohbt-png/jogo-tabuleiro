@@ -133,6 +133,46 @@ def _rodar_verificacoes():
     S._sincronizar_cidades_derivadas()
     check("cidade inexistente é removida", "cidade_fantasma" not in S.CITY_SCENES)
 
+    print("\n[9] Payload das cenas")
+    sala = S.GameRoom("CENA")
+    async def noop(*a, **k): pass
+    sala.gm_say = noop; sala.broadcast = noop; sala.send_to = noop
+    sala._checkpoint_savegame = lambda *a, **k: None
+    sala.phase = "city"; sala.world_location = "alva_e_luz"
+    sala.players["p1"] = S.make_player("p1", "Victor", "warrior", 0)
+    S.CITY_SCENES["alva_e_luz"]["provas"] = {
+        "nome": "Provas", "background": "assets/city/x.png", "art_ratio": 1.5,
+        "mode": "individual", "mask": "", "slots": [
+            {"id": "npc_teste", "name": "Teste", "image": "assets/x.png",
+             "x": 5, "y": 5, "w": 10, "h": 10, "z": 1, "dialog": "",
+             "conversations": [
+                 {"id": "livre",   "texto": "SEGREDO-LIVRE",   "requisito": {},
+                  "efeito": {"renome": 0, "fato": "", "item_id": ""}, "uma_vez": False},
+                 {"id": "unica",   "texto": "SEGREDO-UNICA",   "requisito": {},
+                  "efeito": {"renome": 0, "fato": "", "item_id": ""}, "uma_vez": True},
+                 {"id": "trancada","texto": "SEGREDO-TRANCADA",
+                  "requisito": {"renome_min": 999},
+                  "efeito": {"renome": 0, "fato": "", "item_id": ""}, "uma_vez": False},
+             ]}]}
+    cenas = sala._cenas_payload()
+    check("payload traz a cena nova", "provas" in cenas)
+    ids = [c["id"] for c in cenas["provas"]["slots"][0]["conversations"]]
+    check("conversa livre aparece", "livre" in ids)
+    check("conversa de uso único ainda não usada aparece", "unica" in ids)
+    check("conversa trancada NÃO aparece", "trancada" not in ids)
+    check("texto da trancada não vaza", "SEGREDO-TRANCADA" not in json.dumps(cenas))
+    sala.scene_conversations_done.add("alva_e_luz:provas:npc_teste:unica")
+    cenas2 = sala._cenas_payload()
+    ids2 = [c["id"] for c in cenas2["provas"]["slots"][0]["conversations"]]
+    check("uso único resolvido some do payload", "unica" not in ids2)
+    check("uso repetido continua", "livre" in ids2)
+    check("CITY_SCENES não foi mutado pela filtragem",
+          len(S.CITY_SCENES["alva_e_luz"]["provas"]["slots"][0]["conversations"]) == 3)
+    payload = sala._city_state_payload()
+    check("city_state manda scenes", isinstance(payload.get("scenes"), dict))
+    check("city_state não manda mais tavern", "tavern" not in payload)
+    del S.CITY_SCENES["alva_e_luz"]["provas"]
+
 def main():
     restaurar = isolar_arquivos()
     try: _rodar_verificacoes()

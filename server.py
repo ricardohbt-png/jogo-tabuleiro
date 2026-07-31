@@ -1541,7 +1541,7 @@ def try_open_savegame_room(account, sid, rooms):
     try: room.renome = max(0, int(sg.get("renome", 0)))
     except (TypeError, ValueError): room.renome = 0
     room.fatos = {str(f)[:100] for f in (sg.get("fatos") or []) if isinstance(f, str) and str(f).strip()}
-    room.tavern_conversations_done = {str(k)[:160] for k in (sg.get("tavern_conversations_done") or []) if isinstance(k, str)}
+    room.scene_conversations_done = {str(k)[:160] for k in (sg.get("tavern_conversations_done") or []) if isinstance(k, str)}
     raw_adventure_progress = sg.get("world_adventure_progress", {})
     if isinstance(raw_adventure_progress, dict):
         for adventure_id, stage in raw_adventure_progress.items():
@@ -6347,7 +6347,7 @@ class GameRoom:
         self.world_adventure_progress = {}
         self.renome = 0
         self.fatos = set()
-        self.tavern_conversations_done = set()
+        self.scene_conversations_done = set()
         # Preset de iluminaÃ§Ã£o do 3D no cliente ("penumbra"|"masmorra"|"ar_livre").
         # Procedural usa o padrÃ£o; masmorra autorada sobrescreve em load_authored_dungeon.
         self.ambiente = "masmorra"
@@ -6876,7 +6876,7 @@ class GameRoom:
             "reputacao": {"renome": self.renome, "fatos": sorted(self.fatos)},
             "city_map_points": CITY_MAP_POINTS,
             "city_shops": CITY_SHOPS,
-            "tavern": self._tavern_payload(),
+            "scenes": self._cenas_payload(),
             "campaign": self._campaign_payload(),
             "story": self._story_encadeada,   # encerramento da etapa; de-dup por key no cliente
             "shops": {
@@ -6903,19 +6903,22 @@ class GameRoom:
         """city_state individual — para quem está na cidade com a sala em jogo."""
         await self.send_to(pid, self._city_state_payload())
 
-    def _tavern_payload(self):
-        """Oculta falas bloqueadas, mas informa ao cliente que existe um gancho."""
-        scene = deepcopy((CITY_SCENES.get(self.world_location) or {}).get("taverna") or {})
-        for slot in scene.get("slots", []):
-            for conversation in slot.get("conversations", []):
-                available, reasons = self._avaliar_requisito(conversation.get("requisito"))
-                key = f"{self.world_location}:{slot.get('id')}:{conversation.get('id')}"
-                conversation["disponivel"] = available and not (conversation.get("uma_vez") and key in self.tavern_conversations_done)
-                conversation["bloqueio"] = reasons
-                # A fala só passa a existir para o jogador depois de cumprir a
-                # descoberta; evita revelar spoilers pelo próprio painel.
-                conversation["oculta"] = not available
-        return scene
+    def _cenas_payload(self):
+        """Cenas da cidade atual. Conversa bloqueada por requisito ou de uso
+        único já resolvida NÃO entra no payload — o texto não sai do servidor,
+        e o cliente não precisa de filtro."""
+        cenas = deepcopy(CITY_SCENES.get(self.world_location) or {})
+        for scene_id, scene in cenas.items():
+            for slot in scene.get("slots", []):
+                disponiveis = []
+                for conversation in slot.get("conversations", []):
+                    available, _reasons = self._avaliar_requisito(conversation.get("requisito"))
+                    key = f"{self.world_location}:{scene_id}:{slot.get('id')}:{conversation.get('id')}"
+                    gasta = conversation.get("uma_vez") and key in self.scene_conversations_done
+                    if available and not gasta:
+                        disponiveis.append(conversation)
+                slot["conversations"] = disponiveis
+        return cenas
 
     def _gerar_loja_pergaminhos(self):
         """Renova o estoque de pergaminhos do mercador: uma MISTURA de básicos
@@ -8671,7 +8674,7 @@ class GameRoom:
         if not conversation:
             await self.send_to(pid, {"type":"error", "msg":"Conversa não encontrada."}); return
         key = f"{self.world_location}:{slot['id']}:{conversation['id']}"
-        if conversation.get("uma_vez") and key in self.tavern_conversations_done:
+        if conversation.get("uma_vez") and key in self.scene_conversations_done:
             await self.send_to(pid, {"type":"error", "msg":"Esta conversa já foi concluída."}); return
         ok, reasons = self._avaliar_requisito(conversation.get("requisito"))
         if not ok:
@@ -8689,7 +8692,7 @@ class GameRoom:
             if item:
                 route = self._route_acquired_item(self.players[pid], deepcopy(item))
                 item_note = f" {item.get('emoji', '📦')} Recebeu **{item.get('name', item_id)}**." if route != "full" else " A bolsa está cheia; o item não pôde ser recebido."
-        if conversation.get("uma_vez"): self.tavern_conversations_done.add(key)
+        if conversation.get("uma_vez"): self.scene_conversations_done.add(key)
         await self.gm_say(f"💬 **{slot.get('name', 'NPC')}**: {conversation['texto']}" + (f" (Renome {bonus:+d})" if bonus else "") + item_note)
         self._checkpoint_savegame()
         await self.push_state_or_city()
@@ -13115,7 +13118,7 @@ class GameRoom:
         self.savegame["world_adventure_progress"] = dict(self.world_adventure_progress)
         self.savegame["renome"] = self.renome
         self.savegame["fatos"] = sorted(self.fatos)
-        self.savegame["tavern_conversations_done"] = sorted(self.tavern_conversations_done)
+        self.savegame["tavern_conversations_done"] = sorted(self.scene_conversations_done)
         write_savegame(self.savegame)
 
     # â”€â”€ inventory helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
