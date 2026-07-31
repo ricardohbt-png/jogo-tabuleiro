@@ -1221,6 +1221,19 @@ def _campaign_slot(class_id, controller=None, status="vacant"):
     return {"class_id": class_id, "identity": HERO_IDENTITIES.get(class_id, class_id),
             "controller_account": controller, "status": status, "history": []}
 
+def _migrar_chaves_conversa(raw):
+    """Chaves de conversa concluída. O formato antigo tinha 3 partes
+    (cidade:npc:conversa, quando só existia a taverna); o novo tem 4
+    (cidade:cena:npc:conversa). Insere 'taverna' nas antigas para o jogador
+    não ver conversas já resolvidas voltarem."""
+    saida = set()
+    for k in raw or []:
+        if not isinstance(k, str): continue
+        partes = k[:200].split(":")
+        if len(partes) == 4: saida.add(":".join(partes))
+        elif len(partes) == 3: saida.add(f"{partes[0]}:taverna:{partes[1]}:{partes[2]}")
+    return saida
+
 def ensure_campaign_schema(sg):
     """Migra saves anteriores para campanha + grupo sem descartar o save atual."""
     if not isinstance(sg, dict):
@@ -1347,7 +1360,7 @@ def create_savegame(name, owner, mode, campaign_file, has_master, group_id=None,
         "world_adventure_progress": {},
         "renome": 0,
         "fatos": [],
-        "tavern_conversations_done": [],
+        "scene_conversations_done": [],
         "has_master": bool(has_master),
         "master_account": owner if has_master else None,
         "members": {}, "characters": {},
@@ -1358,7 +1371,7 @@ def create_savegame(name, owner, mode, campaign_file, has_master, group_id=None,
     if isinstance(inherited, dict):
         # Continuação é uma cópia: jamais compartilha referências nem altera a
         # campanha de origem.
-        for key in ("campaign_phase", "world_location", "world_adventure_progress", "renome", "fatos", "tavern_conversations_done", "members", "characters", "slots"):
+        for key in ("campaign_phase", "world_location", "world_adventure_progress", "renome", "fatos", "scene_conversations_done", "members", "characters", "slots"):
             if key in inherited:
                 sg[key] = deepcopy(inherited[key])
     ensure_campaign_schema(sg)
@@ -1541,7 +1554,8 @@ def try_open_savegame_room(account, sid, rooms):
     try: room.renome = max(0, int(sg.get("renome", 0)))
     except (TypeError, ValueError): room.renome = 0
     room.fatos = {str(f)[:100] for f in (sg.get("fatos") or []) if isinstance(f, str) and str(f).strip()}
-    room.scene_conversations_done = {str(k)[:160] for k in (sg.get("tavern_conversations_done") or []) if isinstance(k, str)}
+    room.scene_conversations_done = _migrar_chaves_conversa(
+        sg.get("scene_conversations_done") or sg.get("tavern_conversations_done") or [])
     raw_adventure_progress = sg.get("world_adventure_progress", {})
     if isinstance(raw_adventure_progress, dict):
         for adventure_id, stage in raw_adventure_progress.items():
@@ -13121,7 +13135,7 @@ class GameRoom:
         self.savegame["world_adventure_progress"] = dict(self.world_adventure_progress)
         self.savegame["renome"] = self.renome
         self.savegame["fatos"] = sorted(self.fatos)
-        self.savegame["tavern_conversations_done"] = sorted(self.scene_conversations_done)
+        self.savegame["scene_conversations_done"] = sorted(self.scene_conversations_done)
         write_savegame(self.savegame)
 
     # â”€â”€ inventory helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

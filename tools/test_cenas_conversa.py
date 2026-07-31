@@ -203,6 +203,18 @@ def _rodar_verificacoes():
     check("npc inexistente recusado", any("Frequentador" in e for e in erros))
     del S.CITY_SCENES["alva_e_luz"]["provas"]
 
+    print("\n[11] Migração das chaves de savegame")
+    check("chave antiga de 3 partes ganha 'taverna'",
+          S._migrar_chaves_conversa(["alva_e_luz:barman:inicial"])
+          == {"alva_e_luz:taverna:barman:inicial"})
+    check("chave nova de 4 partes fica intacta",
+          S._migrar_chaves_conversa(["alva_e_luz:docas:npc_x:y"])
+          == {"alva_e_luz:docas:npc_x:y"})
+    check("lixo é descartado",
+          S._migrar_chaves_conversa(["", "a:b", 42, None]) == set())
+    check("lista vazia e None viram conjunto vazio",
+          S._migrar_chaves_conversa([]) == set() and S._migrar_chaves_conversa(None) == set())
+
 def main():
     restaurar = isolar_arquivos()
     try: _rodar_verificacoes()
