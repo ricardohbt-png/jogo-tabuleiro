@@ -23,7 +23,16 @@
 | `game.css` | Renomeação `tavern-*` → `cena-*` |
 | `tools/editor_city.js` | Aba "Cenas e NPCs": lista de cenas, vínculo, ponto novo |
 | `tools/test_cenas_conversa.py` | Teste novo (criado na Task 1, cresce a cada task de servidor) |
-| `tools/test_cidades_editor.py` | Estendido: cenas nos derivados de cidade |
+| `tools/test_cidades_editor.py` | Adaptado na Task 1 (o import quebra sem isso) e verificado na Task 12 |
+
+**Armadilha de teste descoberta na Task 1:** `isolar_arquivos()` redireciona os
+JSON para uma pasta temporária, mas `CITY_SCENES` **já foi populado no import**
+a partir dos arquivos reais do usuário. Então nenhuma asserção pode comparar
+com os valores hardcoded no código — o `tavern_scenes.json` do usuário
+sobrescreve o default (o fundo dele é `assets/tavern/taverna.png`, não
+`assets/city/taverna.png`). Asserções sobre conteúdo de cena devem verificar
+**forma** (fundo começa com `assets/`, há pelo menos 8 slots), nunca valor
+exato.
 
 **Convenções do projeto que valem aqui:**
 - Testes rodam da raiz: `python tools/test_x.py`. Saem com código 1 se algo falhar.
@@ -689,8 +698,18 @@ git commit -m "feat(cenas): migra chaves de conversa concluida de 3 para 4 parte
 ## Task 6: Editor no servidor — payload, validação de cenas, ponto `cena` e emoji
 
 **Files:**
-- Modify: `server.py:24543-24558` (`_city_shops_editor_payload`), `server.py:24560-24626` (`_save_city_shops_upload`), `server.py:22700` (dispatch do save), `server.py:24620-24623` e `24647-24650` (chamadas a `_save_tavern_scenes`)
+- Modify: `server.py` — bloco de pontos de `_save_city_shops_upload`
 - Test: `tools/test_cenas_conversa.py`
+
+> **Escopo reduzido na execução.** A renomeação da chave do payload
+> (`taverns` → `scenes`), o bloco que aplica as cenas em `_save_city_shops_upload`
+> e as chamadas a `_save_city_scenes` foram **antecipados para a Task 1**. Motivo:
+> a Task 1 mudou a forma do payload sem mudar o caminho de gravação, e a revisão
+> de qualidade reproduziu um `KeyError` — e, no ramo que não estoura, a escrita de
+> `background`/`mask` soltos dentro do dicionário de cenas, corrompendo o
+> `city_scenes.json`. Cinco tasks com risco de corromper dados do usuário não é um
+> estado intermediário aceitável. Sobra para esta task: **remoção de cena órfã**,
+> **tipo de ponto `cena`**, **`emoji`** e **campo `scene` no ponto**.
 
 - [ ] **Step 1: Escrever o teste que falha**
 
@@ -715,8 +734,12 @@ git commit -m "feat(cenas): migra chaves de conversa concluida de 3 para 4 parte
           S.CITY_MAP_POINTS["alva_e_luz"]["docas"].get("type") == "cena")
     check("emoji preservado", S.CITY_MAP_POINTS["alva_e_luz"]["docas"].get("emoji") == "🌊")
     check("vinculo preservado", S.CITY_MAP_POINTS["alva_e_luz"]["docas"].get("scene") == "docas")
-    check("payload do editor manda scenes", isinstance(cfg.get("scenes"), dict))
-    check("payload do editor não manda mais taverns", "taverns" not in cfg)
+    S.CITY_SCENES["alva_e_luz"]["orfa"] = S._cena_vazia("Órfã")
+    S.CITY_MAP_POINTS["alva_e_luz"]["docas"]["scene"] = "orfa"
+    S._save_city_shops_upload(S.CITY_SHOPS, cenas_editor, pontos_editor)
+    check("cena ausente do envio é excluída", "orfa" not in S.CITY_SCENES["alva_e_luz"])
+    check("ponto perde o vínculo com a cena excluída",
+          S.CITY_MAP_POINTS["alva_e_luz"]["docas"].get("scene") != "orfa")
     S.CITY_MAP_POINTS["alva_e_luz"].pop("docas", None)
     S.CITY_SCENES["alva_e_luz"].pop("docas", None)
 ```
@@ -731,22 +754,9 @@ Esperado: falha em "cena gravada" (o parâmetro ainda é `taverns`, com o format
 
 - [ ] **Step 3: Implementar**
 
-Em `_city_shops_editor_payload`, trocar `"taverns": TAVERN_SCENES` por `"scenes": CITY_SCENES`.
-
-Em `_save_city_shops_upload`, renomear o parâmetro `taverns` → `scenes` e trocar o bloco que aplica as cenas por:
+Em `_save_city_shops_upload`, o laço de cenas já existe (Task 1). Acrescentar ao final dele, ainda dentro do `for city_id, cenas in scenes.items()`, a exclusão de cena órfã:
 
 ```python
-    if isinstance(scenes, dict):
-        for city_id, cenas in scenes.items():
-            if city_id not in CITY_SCENES or not isinstance(cenas, dict): continue
-            alvo = CITY_SCENES[city_id]
-            for scene_id, scene in cenas.items():
-                scene_id = str(scene_id or "").strip().lower()
-                if not CENA_ID_RE.fullmatch(scene_id) or not isinstance(scene, dict): continue
-                if scene_id not in alvo:
-                    if len(alvo) >= MAX_CENAS_POR_CIDADE: continue
-                    alvo[scene_id] = _cena_vazia(scene.get("nome") or scene_id)
-                _aplicar_cena_editada(alvo[scene_id], scene)
             # Cena removida no editor some do servidor. Como o editor sempre
             # envia o conjunto completo da cidade, ausência = exclusão.
             for orfa in [s for s in alvo if s not in cenas]:
@@ -771,13 +781,7 @@ No bloco de pontos, ampliar os tipos e aceitar `emoji` e `scene`:
                     item["scene"] = scene_ref
 ```
 
-Trocar as duas chamadas `_save_tavern_scenes()` (em `_save_city_shops_upload` e `_save_world_cities_upload`) por `_save_city_scenes()`.
-
-No dispatch (`server.py:22700`), trocar:
-
-```python
-                    ok, res = _save_city_shops_upload(msg.get("stock"), msg.get("scenes"), msg.get("city_points"))
-```
+As chamadas a `_save_city_scenes()` e o dispatch com `msg.get("scenes")` já foram feitos na Task 1 — conferir que continuam certos, sem mexer.
 
 - [ ] **Step 4: Rodar e confirmar que passa**
 
@@ -786,7 +790,9 @@ python tools/test_cenas_conversa.py
 python tools/test_cidades_editor.py
 ```
 
-Esperado: o primeiro com **0 falharam** (7 checks novos na seção [11]). O segundo vai falhar em `isolar_arquivos` (referencia `TAVERN_SCENES_FILE` e `S.TAVERN_SCENES`) — **corrigir agora** trocando por `CITY_SCENES_FILE` / `S.CITY_SCENES` nas linhas 28, 33 e 40 de `tools/test_cidades_editor.py`, e ajustando a checagem de "cidade nova nasce vazia" para `S.CITY_SCENES["porto_negro"] == {}`.
+Esperado: os dois com **0 falharam** (7 checks novos na seção [11]).
+
+> `tools/test_cidades_editor.py` já foi adaptado na Task 1 — remover `TAVERN_SCENES` quebrava o import dele, e deixá-lo vermelho por cinco tasks esconderia regressões de verdade. Aqui ele só precisa continuar passando.
 
 - [ ] **Step 5: Commit**
 
