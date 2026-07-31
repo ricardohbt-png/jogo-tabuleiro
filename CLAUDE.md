@@ -131,6 +131,7 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `desarmar_armadilha` | — (Luccas desarma armadilha na própria casa/adjacente; teste de DES; nat1 dispara nele) |
 | `interagir_decor` | `decor_id` — herói adjacente interage com uma decoração: fonte → recebe uma garrafa de água (consome 1 carga); container com loot → abre o painel de loot. Ação livre. |
 | `take_from_decor` | `decor_id`, `kind` (`gold`/`item`), `index` — pega ouro/item de uma decoração-container (espelha `take_from_chest`; sem restrição de turno). |
+| `scene_npc` | `scene_id`, `npc_id`, `conversation_id` — conversa com um NPC de uma **cena de conversa** da cidade (substitui `tavern_npc`). Concede renome/fato/item; conversa de uso único entra em `scene_conversations_done` (chave `cidade:cena:npc:conversa`) e some do payload. |
 | `guild_buy` | `item_id` — compra uma especialização/técnica na **Guilda dos Heróis** (id em `GUILD_CATALOG`). Só na cidade; valida classe, pré-requisito, posse e ouro; grava o save do personagem. |
 | `guild_equip` | `slot` (`tecnica`\|`tecnica_exclusiva`), `item_id` (ou `null` p/ desequipar) — equipa uma técnica possuída no 4º slot. Só na cidade. `tecnica_exclusiva` só para mago/clérigo e só técnicas `exclusiva:true`. |
 | `usar_tecnica` | `tecnica_id`, `target_id` opcional — ativa a técnica equipada na masmorra (no turno do herói). Valida equipada/fora de recarga/fome-sede; aplica efeito, debita 🍖/💧 e entra em recarga (`round_num + recarga_rodadas`). |
@@ -1417,12 +1418,12 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > (`cities`/`overrides`/`deleted`/`routes`), aplicada no boot e no save do editor pela MESMA
 > função `_aplicar_estado_cidades` — arquivo e edição ao vivo não podem divergir. Um arquivo
 > **ilegível** (≠ ausente) liga `WORLD_CITIES_OK=False` e **bloqueia salvar**, senão o save
-> gravaria a perda. Lojas (`CITY_SHOPS`), pontos (`CITY_MAP_POINTS`) e taverna (`TAVERN_SCENES`)
+> gravaria a perda. Lojas (`CITY_SHOPS`), pontos (`CITY_MAP_POINTS`) e cenas (`CITY_SCENES`)
 > são derivados: toda cidade ganha entrada vazia e as excluídas somem
 > (`_sincronizar_cidades_derivadas`; no boot cada subsistema se semeia na própria declaração,
 > **antes** do seu loader — ordem load-bearing). Cidade nova nasce **vazia** (sem lojas, sem
-> pontos, taverna sem NPCs — `_cena_taverna_vazia`), e o editor de taverna passou a mostrar o
-> upload de fundo e o "+ Adicionar NPC" também com a cena vazia. **Mudança de regra:**
+> pontos, sem cenas — `{}`), e o editor de cenas mostra o upload de fundo e o "+ Adicionar NPC"
+> também com a cena vazia. **Mudança de regra:**
 > `WORLD_ROUTES` virou tabela de **preços** — par sem entrada = viagem grátis
 > (`handle_world_travel`), e `broadcast_city_state`/`_city_shops_editor_payload` emitem uma rota
 > para TODOS os pares via `_tabela_rotas()`, então o cliente (`game.js`) **não mudou** e nunca vê
@@ -1473,7 +1474,7 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > como um desconectado, sem serem tocados (o peão vai para `[-1,-1]`, espelhando
 > `handle_disconnect_em_jogo`). Na cidade, `_em_cidade(pid)` (= sala na cidade **ou** este
 > jogador fora) substitui `phase != "city"` em `handle_shop_buy`/`handle_shop_sell`/
-> `handle_guild_buy`/`handle_guild_equip`/`handle_tavern_npc`; ficam **de fora** de propósito
+> `handle_guild_buy`/`handle_guild_equip`/`handle_scene_npc`; ficam **de fora** de propósito
 > `world_travel`, `world_adventure`, `enter_dungeon` e `city_map_points` (ações de grupo).
 > `broadcast` ganhou `skip` e `push_state` **não** manda `game_state` a quem está fora (o
 > cliente prefere `gameState` a `cityState` e mostraria o paperdoll da masmorra);
@@ -1598,3 +1599,49 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > (antes virava `"[object ProgressEvent]"`). O servidor **não responde a HEAD** (a lib
 > só aceita GET), então sondar status por HEAD não é opção. Teste:
 > `tools/test_preview_editor.py` seção [4b].
+
+> **Cenas de conversa por local:** a cena da taverna (ilustração em tela cheia com
+> frequentadores clicáveis) deixou de ser exclusiva da taverna e virou um recurso de
+> **qualquer ponto da cidade**, com **várias cenas por cidade**. `TAVERN_SCENES[cidade]`
+> (uma cena) virou **`CITY_SCENES[cidade][cena]`**, persistido em `city_scenes.json`
+> (`_load_city_scenes`/`_save_city_scenes`); `_migrar_tavern_scenes` converte o
+> `tavern_scenes.json` antigo uma única vez no boot, deixando o arquivo antigo intocado
+> como rede de segurança. Cada cena tem `nome` além de `background`/`mask`/`mode`/`slots`;
+> teto de 16 cenas/cidade (`MAX_CENAS_POR_CIDADE`), id em `CENA_ID_RE`. `CITY_SCENES` é o
+> 4º derivado por cidade, ao lado de `CITY_SHOPS`/`CITY_MAP_POINTS` (mesmo
+> `_sincronizar_cidades_derivadas`), então criar/excluir cidade continua correto de graça.
+> **O vínculo mora no ponto**, não na cena: `CITY_MAP_POINTS[cidade][ponto]` ganhou `scene`
+> (id da cena), `emoji` (livre, sobrepõe o do tipo) e o tipo novo `cena` (local que só
+> existe para conversar). A direção importa — um ponto tem **no máximo uma** cena, então
+> "duas cenas disputando o mesmo local" não é estado representável. `_garantir_pontos_implicitos`
+> religa um ponto à cena de **mesmo id** quando ele não tem vínculo: é isso que faz a
+> taverna migrada abrir sozinha, sem caso especial no runtime. **Efeito colateral aceito:**
+> esse par não pode ficar sem cena (o editor mostra a opção desabilitada em vez de prometer
+> algo que não gruda), e por isso o botão "+ Criar ponto para esta cena" cria o ponto com id
+> **próprio** (`ponto_<cena>`), mantendo o desvincular possível nas cenas novas.
+> **Conversa de uso único agora SOME do menu:** `_cenas_payload` (ex-`_tavern_payload`)
+> **omite do payload** tanto a conversa bloqueada por requisito quanto a `uma_vez` já
+> resolvida — os campos `disponivel`/`oculta`/`bloqueio` deixaram de existir. Isso fechou de
+> quebra um vazamento real: antes o texto da conversa bloqueada viajava no `city_state` e só
+> o cliente não o desenhava. Com a omissão, o filtro do cliente sumiu e o fallback que
+> sintetizava `{id:'inicial'}` de `slot.dialog` foi **removido** — ele ressuscitava justamente
+> a opção omitida e gerava um botão que respondia "Conversa não encontrada". `conversations: []`
+> hoje significa uma coisa só: não sobrou nada que este jogador possa escolher.
+> Protocolo: `city_state.tavern` → **`city_state.scenes`**; `tavern_npc` → **`scene_npc`**
+> (`handle_scene_npc`); a chave de conversa concluída passou de 3 para 4 partes
+> (`cidade:cena:npc:conversa`) e `_migrar_chaves_conversa` converte as antigas dos savegames
+> na carga (`scene_conversations_done`, com fallback de leitura para
+> `tavern_conversations_done`). **Cliente:** `openShop(pointId, type)` recebe o **id do ponto**
+> (antes o tipo do prédio) e resolve cena e loja de forma independente, montando as abas como
+> *[💬 nome da cena] + [abas da loja]* — a taverna perdeu a aba hardcoded e virou a primeira
+> cliente da regra geral. Dentro de `_renderShopItems` o índice de aba **relativo à loja**
+> (`aba = shopTabIdx - (temCena ? 1 : 0)`) é o que vale em toda comparação, senão a lista de
+> itens sai trocada. Ponto do tipo `cena` **sem** cena vinculada (ou apontando para cena
+> inexistente) **não** é desenhado — senão viraria um marcador que abre um modal sem abas.
+> `GS.scenes/cityPoints/sceneIdOfPoint/sceneOfPoint/activeScene/talkSceneNpc` em
+> `src/gameState.js`; CSS e funções renomeados de `tavern-*` para `cena-*`. **Editor:** aba
+> "💬 Cenas e NPCs" (ex-"Taverna e NPCs") com lista de cenas, "+ Nova cena", nome, "Vinculada
+> a" (o dropdown não oferece `dungeon`/`caravana`/`guilda`, que têm tela própria) e excluir —
+> cena ausente do envio = exclusão no servidor, que também limpa o vínculo do ponto.
+> Spec/plano em `docs/superpowers/{specs,plans}/2026-07-30-cenas-de-conversa-por-local*`.
+> Testes: `tools/test_cenas_conversa.py` (57 checks) + `tools/test_cidades_editor.py`.
