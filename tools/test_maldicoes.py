@@ -135,9 +135,37 @@ def test_nao_bloqueia_demais():
     asyncio.run(r4.handle_drop_item("p1", "gear", None, "ring1"))
     check("item comum é largado normalmente", p4["gear"]["ring1"] is None)
 
+def test_corrosao_destroi_mas_maldicao_fica():
+    print("\n[6] Corrosão destrói o item, mas a maldição fica com o herói")
+    # Regra de design: a maldição é do HERÓI, não do item. Perder a peça por
+    # mecânica de jogo não é o mesmo que escolher tirá-la — só Templo ou
+    # clérigo removem a maldição.
+    r, p = sala()
+    couro = {"id": "couro_maldito", "name": "Couro Maldito", "item_slot": "armor",
+             "kind": "armor", "ac_bonus": 2, "bonuses": [], "buy_price": 80,
+             "corrosion_materials": ["metal"], "corrosao_resistente": 0,
+             "corrosao_niveis_penalidade": 1,
+             "maldicao_id": "maos_tremulas", "maldicao_prende": True}
+    equipar(r, p, couro, "armor")
+    check("começa amaldiçoado", r._tem_maldicao(p, "maos_tremulas"))
+    monstro = {"id": "m1", "name": "Devorador", "hp": 10, "pos": [5, 6]}
+    # Corrói até quebrar (N=0 + M=1 → destrói no 2º golpe).
+    for _ in range(4):
+        asyncio.run(r._corroer_equipamento(monstro, p, S.CORROSAO_ARMADURA_METAL,
+                                           S.CORROSAO_ARMA_METAL))
+    check("a peça foi destruída", p["gear"]["armor"] is None)
+    check("a MALDIÇÃO permanece no herói", r._tem_maldicao(p, "maos_tremulas"))
+    check("sem item, nada mais está travado",
+          r._slot_travado_por_maldicao(p, "armor") is None)
+
+    # E ela continua curável pelas duas vias previstas.
+    r._remover_maldicao(p, "maos_tremulas")
+    check("clérigo/Templo ainda removem", not r._tem_maldicao(p, "maos_tremulas"))
+
 def main():
     test_desequipar(); test_largar(); test_vender()
     test_empurrar(); test_nao_bloqueia_demais()
+    test_corrosao_destroi_mas_maldicao_fica()
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 
