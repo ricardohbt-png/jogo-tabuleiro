@@ -152,7 +152,7 @@
     return request("upload_custom_item", msg).then((m) => m.item);
   }
   function loadCityShops() { return request("load_city_shops", {}).then((m) => m.config); }
-  function saveCityShops(stock, taverns, cityPoints) { return request("save_city_shops", { stock: stock, taverns: taverns, city_points: cityPoints }).then((m) => m.config); }
+  function saveCityShops(stock, scenes, cityPoints) { return request("save_city_shops", { stock: stock, scenes: scenes, city_points: cityPoints }).then((m) => m.config); }
   function loadWorldAdventures() { return request("load_world_adventures", {}).then((m) => m.config); }
   function saveWorldAdventures(locations, adventures) { return request("save_world_adventures", { locations: locations, adventures: adventures }).then((m) => m.config); }
   async function uploadItemArt(file, itemId) {

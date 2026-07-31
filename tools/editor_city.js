@@ -2,7 +2,7 @@
 (function () {
   "use strict";
   const root = document.getElementById("city-editor-view");
-  let config = null, cityId = null, storeId = "ferreiro", tabId = null, mode = "shops", loading = null, selectedNpcId = null, selectedCityPointId = null;
+  let config = null, cityId = null, storeId = "ferreiro", tabId = null, mode = "shops", loading = null, selectedNpcId = null, selectedCityPointId = null, selectedSceneId = null;
   let cityDraft = null;   // cidade em edição/criação no painel (null = painel fechado)
   const esc = v => String(v == null ? "" : v).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
   const isVenom = i => i.effect === "coat_poison" || !!i.veneno_id || /^veneno_/.test(i.id || "")
@@ -49,7 +49,7 @@
   function cityTabs() {
     const botao = (id, rotulo) => '<button data-city-mode="' + id + '" class="' + (mode === id ? "active" : "") + '">' + rotulo + '</button>';
     return '<div class="cityed-mode">' + botao("shops", "🛒 Lojas") + botao("map", "🗺️ Mapa da cidade")
-      + botao("tavern", "💬 Taverna e NPCs") + botao("city", "🏘️ Cidades") + '</div>';
+      + botao("scenes", "💬 Cenas e NPCs") + botao("city", "🏘️ Cidades") + '</div>';
   }
   function bindCityMode() { root.querySelectorAll('[data-city-mode]').forEach(b => b.onclick = () => { mode = b.dataset.cityMode; render(); }); }
   function conversations(slot) {
@@ -64,19 +64,83 @@
       return '<fieldset class="cityed-conversation"><legend>Conversa '+(index+1)+'</legend><label>Texto<textarea data-conv-text data-npc-id="'+esc(slot.id)+'" data-conv-id="'+esc(conv.id)+'">'+esc(conv.texto||'')+'</textarea></label><div class="cityed-coords"><label>Renome mínimo<input type="number" min="0" data-conv-req="renome_min" data-npc-id="'+esc(slot.id)+'" data-conv-id="'+esc(conv.id)+'" value="'+Number(req.renome_min||0)+'"></label><label>Nível mínimo<input type="number" min="0" data-conv-req="nivel_grupo_min" data-npc-id="'+esc(slot.id)+'" data-conv-id="'+esc(conv.id)+'" value="'+Number(req.nivel_grupo_min||0)+'"></label><label>Fato exigido<input data-conv-req="fato" data-npc-id="'+esc(slot.id)+'" data-conv-id="'+esc(conv.id)+'" value="'+esc(req.fato||'')+'"></label><label>Item exigido<input data-conv-req="item_id" data-npc-id="'+esc(slot.id)+'" data-conv-id="'+esc(conv.id)+'" value="'+esc(req.item_id||'')+'"></label></div><div class="cityed-coords"><label>Renome concedido<input type="number" data-conv-effect="renome" data-npc-id="'+esc(slot.id)+'" data-conv-id="'+esc(conv.id)+'" value="'+Number(effect.renome||0)+'"></label><label>Fato concedido<input data-conv-effect="fato" data-npc-id="'+esc(slot.id)+'" data-conv-id="'+esc(conv.id)+'" value="'+esc(effect.fato||'')+'"></label><label>Item concedido (id)<input data-conv-effect="item_id" data-npc-id="'+esc(slot.id)+'" data-conv-id="'+esc(conv.id)+'" value="'+esc(effect.item_id||'')+'"></label><label>Uso único<select data-conv-once data-npc-id="'+esc(slot.id)+'" data-conv-id="'+esc(conv.id)+'"><option value="true"'+(conv.uma_vez!==false?' selected':'')+'>Sim</option><option value="false"'+(conv.uma_vez===false?' selected':'')+'>Não</option></select></label></div><button type="button" data-remove-conv data-npc-id="'+esc(slot.id)+'" data-conv-id="'+esc(conv.id)+'">Remover conversa</button></fieldset>';
     }).join('') + '<button type="button" data-add-conv="'+esc(slot.id)+'">+ Adicionar conversa</button></div>';
   }
-  function renderTavern() {
-    const c = city(), scene = (config.taverns || {})[cityId];
+  function renderScenes() {
+    const c = city();
+    const cenas = (config.scenes || (config.scenes = {}))[cityId] || ((config.scenes[cityId]) = {});
+    if (!cenas[selectedSceneId]) selectedSceneId = Object.keys(cenas)[0] || null;
+    const pontos = (config.city_points || (config.city_points = {}))[cityId] || ((config.city_points[cityId]) = {});
+    const cena = selectedSceneId ? cenas[selectedSceneId] : null;
     const cityButtons = '<div class="cityed-cities">' + (config.cities || []).map(x => '<button data-city="' + esc(x.id) + '" class="' + (x.id === cityId ? 'active' : '') + '">' + esc(x.nome) + '<small>' + esc(x.tipo || 'cidade') + '</small></button>').join('') + '</div>';
-    const slots = (scene && scene.slots || []).filter(slot => !slot.removed); slots.forEach(conversations);
+    const abasCena = '<div class="cityed-cities">' + Object.entries(cenas).map(([id, s]) =>
+      '<button data-scene="' + esc(id) + '" class="' + (id === selectedSceneId ? 'active' : '') + '">'
+      + esc(s.nome || id) + '<small>' + esc(id) + '</small></button>').join('')
+      + '<button data-scene-new type="button">+ Nova cena</button></div>';
+    const slots = (cena && cena.slots || []).filter(slot => !slot.removed); slots.forEach(conversations);
     if (!slots.some(slot => slot.id === selectedNpcId)) selectedNpcId = slots[0] && slots[0].id;
-    const sceneConfig = scene ? '<div class="cityed-tavern-assets"><label>Imagem de fundo<input data-scene-path="background" value="' + esc(scene.background || '') + '"></label><input id="cityed-bg-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"><button data-upload-tavern="background">Enviar fundo</button><label>Máscara transparente de NPCs<input data-scene-path="mask" value="' + esc(scene.mask || '') + '"></label><input id="cityed-mask-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"><button data-upload-tavern="mask">Enviar máscara</button></div>' : '';
-    root.innerHTML = '<div class="cityed"><header><div><h1>🏘️ Cidades e Lojas</h1><p>Edite a cena, os NPCs e suas conversas desbloqueáveis por renome, nível, fatos e itens.</p></div><button id="cityed-save" class="cityed-save">Salvar alterações</button></header>' + cityTabs() + cityButtons + (slots.length ? '<section class="cityed-tavern"><h2>🍺 Taverna de ' + esc(c.nome) + '</h2><p>Configure as falas, requisitos e recompensas narrativas de cada frequentador.</p>' + sceneConfig + slots.map(slot => '<article class="cityed-npc"><img src="../' + esc(scene.mask || slot.image) + '" alt=""><div><label>Nome<input data-npc-name="' + esc(slot.id) + '" value="' + esc(slot.name) + '"></label>' + conversationEditor(slot) + '<div class="cityed-coords"><label>X %<input type="number" min="0" max="100" step="0.1" data-npc-pos="x" data-npc-id="' + esc(slot.id) + '" value="' + Number(slot.x) + '"></label><label>Y %<input type="number" min="0" max="100" step="0.1" data-npc-pos="y" data-npc-id="' + esc(slot.id) + '" value="' + Number(slot.y) + '"></label><label>Largura %<input type="number" min="1" max="100" step="0.1" data-npc-pos="w" data-npc-id="' + esc(slot.id) + '" value="' + Number(slot.w) + '"></label><label>Altura %<input type="number" min="1" max="100" step="0.1" data-npc-pos="h" data-npc-id="' + esc(slot.id) + '" value="' + Number(slot.h) + '"></label></div></div></article>').join('') + '</section>' : '<section class="cityed-tavern"><h2>🍺 Taverna de ' + esc(c.nome) + '</h2><p>Esta taverna ainda está vazia. Envie um fundo e adicione os frequentadores.</p>' + sceneConfig + '</section>') + '<div id="cityed-status"></div></div>';
-    root.querySelectorAll('[data-city]').forEach(b => b.onclick = () => { cityId = b.dataset.city; render(); });
+    // Pontos com tela própria (masmorra, caravana, guilda) despacham pelo tipo
+    // antes da resolução de cena no jogo: uma cena presa a eles nunca abriria.
+    const PONTO_PROPRIO = ["dungeon", "caravana", "guilda"];
+    const pontoAtual = Object.keys(pontos).find(pid => pontos[pid].scene === selectedSceneId) || "";
+    const opcoesPonto = Object.entries(pontos)
+      .filter(([pid, p]) => pid === pontoAtual || PONTO_PROPRIO.indexOf(String(p.type || pid)) < 0)
+      .map(([pid, p]) => '<option value="' + esc(pid) + '"' + (pid === pontoAtual ? ' selected' : '') + '>'
+        + esc(p.name || pid) + ' (' + esc(p.type || pid) + ')</option>').join('');
+    // O servidor re-liga sozinho um ponto à cena de MESMO id quando o ponto está
+    // solto (_garantir_pontos_implicitos, roda a cada save). Nesse par, desligar
+    // não pega — melhor não oferecer a ação do que oferecê-la sem efeito.
+    const fixoPorId = pontoAtual && pontoAtual === selectedSceneId;
+    const opcaoNenhum = fixoPorId
+      ? '<option value="" disabled>— fixo: o ponto tem o mesmo id da cena —</option>'
+      : '<option value=""' + (pontoAtual ? '' : ' selected') + '>— nenhum ponto —</option>';
+    const metaCena = !cena ? '' : '<div class="cityed-tavern-assets"><label>Nome da cena<input data-scene-nome value="' + esc(cena.nome || '') + '"></label><label>Vinculada a<select data-scene-ponto>' + opcaoNenhum + opcoesPonto + '</select></label><button type="button" data-scene-novo-ponto>+ Criar ponto para esta cena</button><button type="button" data-scene-excluir>Excluir cena</button></div>';
+    const sceneConfig = cena ? '<div class="cityed-tavern-assets"><label>Imagem de fundo<input data-scene-path="background" value="' + esc(cena.background || '') + '"></label><input id="cityed-bg-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"><button data-upload-tavern="background">Enviar fundo</button><label>Máscara transparente de NPCs<input data-scene-path="mask" value="' + esc(cena.mask || '') + '"></label><input id="cityed-mask-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"><button data-upload-tavern="mask">Enviar máscara</button></div>' : '';
+    const tituloCena = cena ? esc(cena.nome || selectedSceneId) + ' — ' + esc(c.nome) : esc(c.nome);
+    const painel = !cena
+      ? '<section class="cityed-tavern"><h2>💬 Cenas de ' + esc(c.nome) + '</h2><p>Esta cidade ainda não tem nenhuma cena de conversa. Crie a primeira em “+ Nova cena”.</p></section>'
+      : (slots.length
+        ? '<section class="cityed-tavern"><h2>💬 ' + tituloCena + '</h2><p>Configure as falas, requisitos e recompensas narrativas de cada personagem da cena.</p>' + metaCena + sceneConfig + slots.map(slot => '<article class="cityed-npc"><img src="../' + esc(cena.mask || slot.image) + '" alt=""><div><label>Nome<input data-npc-name="' + esc(slot.id) + '" value="' + esc(slot.name) + '"></label>' + conversationEditor(slot) + '<div class="cityed-coords"><label>X %<input type="number" min="0" max="100" step="0.1" data-npc-pos="x" data-npc-id="' + esc(slot.id) + '" value="' + Number(slot.x) + '"></label><label>Y %<input type="number" min="0" max="100" step="0.1" data-npc-pos="y" data-npc-id="' + esc(slot.id) + '" value="' + Number(slot.y) + '"></label><label>Largura %<input type="number" min="1" max="100" step="0.1" data-npc-pos="w" data-npc-id="' + esc(slot.id) + '" value="' + Number(slot.w) + '"></label><label>Altura %<input type="number" min="1" max="100" step="0.1" data-npc-pos="h" data-npc-id="' + esc(slot.id) + '" value="' + Number(slot.h) + '"></label></div></div></article>').join('') + '</section>'
+        : '<section class="cityed-tavern"><h2>💬 ' + tituloCena + '</h2><p>Esta cena ainda está vazia. Envie um fundo e adicione os personagens.</p>' + metaCena + sceneConfig + '</section>');
+    root.innerHTML = '<div class="cityed"><header><div><h1>🏘️ Cidades e Lojas</h1><p>Edite as cenas de conversa, os NPCs e suas falas desbloqueáveis por renome, nível, fatos e itens.</p></div><button id="cityed-save" class="cityed-save">Salvar alterações</button></header>' + cityTabs() + cityButtons + abasCena + painel + '<div id="cityed-status"></div></div>';
+    root.querySelectorAll('[data-city]').forEach(b => b.onclick = () => { cityId = b.dataset.city; selectedSceneId = null; render(); });
     bindCityMode();
+    root.querySelectorAll('[data-scene]').forEach(b => b.onclick = () => { selectedSceneId = b.dataset.scene; selectedNpcId = null; render(); });
+    const btnNova = root.querySelector('[data-scene-new]');
+    if (btnNova) btnNova.onclick = () => {
+      const nome = prompt('Nome da cena (ex.: Docas)'); if (!nome) return;
+      const base = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'cena';
+      const id = base + '_' + Date.now().toString(36).slice(-4);
+      cenas[id] = { nome: nome, background: '', art_ratio: 1.5, mode: 'individual', mask: '', slots: [] };
+      selectedSceneId = id; selectedNpcId = null; render();
+    };
+    const inputNome = root.querySelector('[data-scene-nome]');
+    if (inputNome) inputNome.oninput = () => { if (cena) cena.nome = inputNome.value; };
+    const selPonto = root.querySelector('[data-scene-ponto]');
+    if (selPonto) selPonto.onchange = () => {
+      Object.values(pontos).forEach(p => { if (p.scene === selectedSceneId) delete p.scene; });
+      if (selPonto.value && pontos[selPonto.value]) pontos[selPonto.value].scene = selectedSceneId;
+      render();
+    };
+    const btnNovoPonto = root.querySelector('[data-scene-novo-ponto]');
+    if (btnNovoPonto) btnNovoPonto.onclick = () => {
+      const nome = prompt('Nome do ponto na ilustração', (cena && cena.nome) || 'Novo local'); if (!nome) return;
+      const emoji = prompt('Emoji do marcador', '💬') || '💬';
+      Object.values(pontos).forEach(p => { if (p.scene === selectedSceneId) delete p.scene; });
+      pontos[selectedSceneId] = { x: 50, y: 50, type: 'cena', name: nome, emoji: emoji, scene: selectedSceneId };
+      render();
+    };
+    const btnExcluir = root.querySelector('[data-scene-excluir]');
+    if (btnExcluir) btnExcluir.onclick = () => {
+      if (!window.confirm('Excluir esta cena? Os NPCs e as conversas dela serão apagados.')) return;
+      const alvo = selectedSceneId;
+      delete cenas[alvo];
+      Object.values(pontos).forEach(p => { if (p.scene === alvo) delete p.scene; });
+      selectedSceneId = null; selectedNpcId = null; render();
+    };
     // Prévia WYSIWYG: o fundo e as camadas transparentes aparecem como no jogo.
-    if (scene && slots.length) {
+    if (cena && slots.length) {
       const preview = document.createElement('div'); preview.className = 'cityed-tavern-preview';
-      preview.innerHTML = '<img class="cityed-tavern-bg" src="../' + esc(scene.background || '') + '" alt="Fundo da taverna">'
+      preview.innerHTML = '<img class="cityed-tavern-bg" src="../' + esc(cena.background || '') + '" alt="Fundo da cena">'
         + slots.map(slot => !slot.image ? '' : '<img draggable="false" class="cityed-tavern-layer ' + (slot.id === selectedNpcId ? 'selected' : '') + '" data-preview-slot="' + esc(slot.id) + '" src="../' + esc(slot.image) + '" style="left:' + Number(slot.x) + '%;top:' + Number(slot.y) + '%;width:' + Number(slot.w) + '%;height:' + Number(slot.h) + '%;z-index:' + (10 + Number(slot.z || 1)) + '" alt="' + esc(slot.name) + '" title="Selecione e arraste: ' + esc(slot.name) + '"><button type="button" class="cityed-resize" data-resize-slot="' + esc(slot.id) + '" style="left:' + (Number(slot.x)+Number(slot.w)) + '%;top:' + (Number(slot.y)+Number(slot.h)) + '%" aria-label="Redimensionar ' + esc(slot.name) + '"></button>').join('')
         + '<span class="cityed-preview-hint">Arraste os frequentadores para posicioná-los</span>';
       const section = root.querySelector('.cityed-tavern'); section.insertBefore(preview, section.querySelector('.cityed-npc'));
@@ -103,36 +167,36 @@
     root.querySelectorAll('[data-conv-once]').forEach(input=>input.onchange=()=>{const c=getConv(input);if(c)c.uma_vez=input.value==='true';});
     root.querySelectorAll('[data-add-conv]').forEach(btn=>btn.onclick=()=>{const slot=slots.find(s=>s.id===btn.dataset.addConv);if(!slot)return;const id='fala_'+Date.now().toString(36);conversations(slot).push({id,texto:'Nova conversa',requisito:{},efeito:{renome:0,fato:'',item_id:''},uma_vez:true});render();});
     root.querySelectorAll('[data-remove-conv]').forEach(btn=>btn.onclick=()=>{const slot=slots.find(s=>s.id===btn.dataset.npcId);if(!slot)return;slot.conversations=conversations(slot).filter(c=>c.id!==btn.dataset.convId);render();});
-    root.querySelectorAll('[data-scene-path]').forEach(input => input.oninput = () => { if(scene) scene[input.dataset.scenePath]=input.value; });
+    root.querySelectorAll('[data-scene-path]').forEach(input => input.oninput = () => { if(cena) cena[input.dataset.scenePath]=input.value; });
     root.querySelectorAll('[data-npc-pos]').forEach(input => input.oninput = () => { const slot=slots.find(s => s.id === input.dataset.npcId); const n=Number(input.value); if(slot && Number.isFinite(n)) slot[input.dataset.npcPos]=n; });
     root.querySelectorAll('[data-upload-tavern]').forEach(btn => btn.onclick = async () => {
       const kind=btn.dataset.uploadTavern, file=root.querySelector(kind === 'background' ? '#cityed-bg-file' : '#cityed-mask-file').files[0];
       const status=root.querySelector('#cityed-status'); if(!file){ status.textContent='Escolha uma imagem primeiro.'; return; }
       status.textContent='Enviando imagem…';
-      try { scene[kind]=await window.EDITOR_SAVE.uploadTavernArt(file); status.textContent='Imagem enviada. Salve as alterações para aplicá-la.'; render(); }
+      try { cena[kind]=await window.EDITOR_SAVE.uploadTavernArt(file); status.textContent='Imagem enviada. Salve as alterações para aplicá-la.'; render(); }
       catch(e){ status.textContent='Erro ao enviar: '+e.message; }
     });
     root.querySelectorAll('[data-upload-npc]').forEach(btn => btn.onclick = async () => {
       const slot=slots.find(s => s.id === btn.dataset.uploadNpc), file=root.querySelector('[data-npc-file="' + btn.dataset.uploadNpc + '"]').files[0], status=root.querySelector('#cityed-status');
       if(!slot || !file){ status.textContent='Escolha uma imagem do frequentador primeiro.'; return; }
       status.textContent='Enviando imagem…';
-      try { slot.image=await window.EDITOR_SAVE.uploadTavernArt(file); delete slot.remove_image; scene.mode='individual'; render(); }
+      try { slot.image=await window.EDITOR_SAVE.uploadTavernArt(file); delete slot.remove_image; cena.mode='individual'; render(); }
       catch(e){ status.textContent='Erro ao enviar: '+e.message; }
     });
     root.querySelectorAll('[data-remove-npc]').forEach(btn => btn.onclick = () => {
       const slot=slots.find(s => s.id === btn.dataset.removeNpc); if(!slot) return;
-      slot.removed=true; selectedNpcId=null; root.querySelector('#cityed-status').textContent='NPC removido da cena. Salve a taverna para confirmar.'; render();
+      slot.removed=true; selectedNpcId=null; root.querySelector('#cityed-status').textContent='NPC removido da cena. Salve para confirmar.'; render();
     });
     root.querySelectorAll('[data-layer]').forEach(btn => btn.onclick = () => {
       const slot=slots.find(s => s.id === btn.dataset.npcId); if(!slot) return;
       const levels=slots.map(s=>Number(s.z || 1)); slot.z=btn.dataset.layer === 'front' ? Math.max(...levels)+1 : Math.min(...levels)-1;
       render();
     });
-    if (scene) {
-      if (!Array.isArray(scene.slots)) scene.slots = [];
+    if (cena) {
+      if (!Array.isArray(cena.slots)) cena.slots = [];
       const addNpc=document.createElement('button');
       addNpc.type='button'; addNpc.textContent='+ Adicionar NPC à cena';
-      addNpc.onclick=()=>{ const id='npc_'+Date.now().toString(36), z=Math.max(0,...slots.map(s=>Number(s.z || 1)))+1; scene.slots.push({id,name:'Novo NPC',image:'',x:40,y:40,w:14,h:20,z,dialog:''}); selectedNpcId=id; render(); };
+      addNpc.onclick=()=>{ const id='npc_'+Date.now().toString(36), z=Math.max(0,...slots.map(s=>Number(s.z || 1)))+1; cena.slots.push({id,name:'Novo NPC',image:'',x:40,y:40,w:14,h:20,z,dialog:''}); selectedNpcId=id; render(); };
       root.querySelector('.cityed-tavern').appendChild(addNpc);
     }
     const previewStage = root.querySelector('.cityed-tavern-preview');
@@ -230,21 +294,21 @@
       e.preventDefault(); slot.image=''; slot.remove_image=true; root.querySelector('#cityed-status').textContent='Imagem removida da cena. Salve as alterações para confirmar.'; render();
     };
     window.addEventListener('keydown', window._cityTavernDeleteHandler);
-    const tavernSave=document.createElement('button');
-    tavernSave.type='button'; tavernSave.className='cityed-save cityed-save-local';
-    tavernSave.textContent='Salvar taverna desta cidade'; tavernSave.onclick=saveAll;
-    root.querySelector('.cityed-tavern').appendChild(tavernSave);
+    const sceneSave=document.createElement('button');
+    sceneSave.type='button'; sceneSave.className='cityed-save cityed-save-local';
+    sceneSave.textContent='Salvar cenas desta cidade'; sceneSave.onclick=saveAll;
+    root.querySelector('.cityed-tavern').appendChild(sceneSave);
     root.querySelector('#cityed-save').onclick = saveAll;
   }
   async function saveAll() {
     const status = root.querySelector('#cityed-status'); status.textContent = 'Salvando…';
-    try { config = await window.EDITOR_SAVE.saveCityShops(config.stock, config.taverns, config.city_points); status.textContent = '✓ Alterações salvas.'; render(); }
+    try { config = await window.EDITOR_SAVE.saveCityShops(config.stock, config.scenes, config.city_points); status.textContent = '✓ Alterações salvas.'; render(); }
     catch (e) { status.textContent = 'Erro ao salvar: ' + e.message; }
   }
   function renderCityMap() {
     const c = city();
     const points = (config.city_points || (config.city_points = {}))[cityId] || ((config.city_points || (config.city_points = {}))[cityId] = {});
-    const types = {ferreiro:'Ferreiro', mercador:'Mercador', templo:'Templo', taverna:'Taverna', guilda:'Guilda', caravana:'Caravana de Viagem'};
+    const types = {ferreiro:'Ferreiro', mercador:'Mercador', templo:'Templo', taverna:'Taverna', guilda:'Guilda', caravana:'Caravana de Viagem', cena:'Local de conversa'};
     if (!points[selectedCityPointId]) selectedCityPointId = Object.keys(points)[0] || null;
     const selected = selectedCityPointId && points[selectedCityPointId];
     root.innerHTML = '<div class="cityed"><header><div><h1>Mapa de ' + esc(c.nome) + '</h1><p>Arraste os pontos sobre a imagem. Cada ponto pode abrir um tipo de loja.</p></div><button id="cityed-save" class="cityed-save">Salvar mapa da cidade</button></header>' + cityTabs()
@@ -262,14 +326,14 @@
     root.querySelectorAll('[data-city]').forEach(b=>b.onclick=()=>{cityId=b.dataset.city;selectedCityPointId=null;renderCityMap();}); bindCityMode();
     root.querySelector('#citymap-add').onclick=()=>{let n=1,id;do{id='ponto_'+n++;}while(points[id]);points[id]={x:50,y:50,type:'mercador',name:'Novo ponto'};selectedCityPointId=id;renderCityMap();};
     const form=root.querySelector('#citymap-form');
-    if(selected){ const typeOptions=Object.entries(types).map(([id,label])=>'<option value="'+id+'"'+((selected.type||selectedCityPointId)===id?' selected':'')+'>'+label+'</option>').join(''); form.innerHTML='<h3>Ponto</h3><label>Nome<input id="citymap-name" value="'+esc(selected.name||'')+'"></label><label>Tipo / loja vinculada<select id="citymap-type">'+typeOptions+'</select></label><div class="worlded-cost"><label>X %<input id="citymap-x" type="number" min="0" max="100" step="0.1" value="'+Number(selected.x)+'"></label><label>Y %<input id="citymap-y" type="number" min="0" max="100" step="0.1" value="'+Number(selected.y)+'"></label></div>';
-      const sync=()=>{selected.name=root.querySelector('#citymap-name').value;selected.type=root.querySelector('#citymap-type').value;selected.x=Math.max(0,Math.min(100,Number(root.querySelector('#citymap-x').value)||0));selected.y=Math.max(0,Math.min(100,Number(root.querySelector('#citymap-y').value)||0));};form.querySelectorAll('input,select').forEach(el=>el.onchange=sync);
+    if(selected){ const typeOptions=Object.entries(types).map(([id,label])=>'<option value="'+id+'"'+((selected.type||selectedCityPointId)===id?' selected':'')+'>'+label+'</option>').join(''); form.innerHTML='<h3>Ponto</h3><label>Nome<input id="citymap-name" value="'+esc(selected.name||'')+'"></label><label>Emoji do marcador<input id="citymap-emoji" maxlength="8" value="'+esc(selected.emoji||'')+'"></label><label>Tipo / loja vinculada<select id="citymap-type">'+typeOptions+'</select></label><div class="worlded-cost"><label>X %<input id="citymap-x" type="number" min="0" max="100" step="0.1" value="'+Number(selected.x)+'"></label><label>Y %<input id="citymap-y" type="number" min="0" max="100" step="0.1" value="'+Number(selected.y)+'"></label></div>';
+      const sync=()=>{selected.name=root.querySelector('#citymap-name').value;const emoji=root.querySelector('#citymap-emoji').value.trim();if(emoji)selected.emoji=emoji;else delete selected.emoji;selected.type=root.querySelector('#citymap-type').value;selected.x=Math.max(0,Math.min(100,Number(root.querySelector('#citymap-x').value)||0));selected.y=Math.max(0,Math.min(100,Number(root.querySelector('#citymap-y').value)||0));};form.querySelectorAll('input,select').forEach(el=>el.onchange=sync);
     } else form.innerHTML='<p>Crie ou selecione um ponto.</p>';
     root.querySelector('#citymap-delete').disabled=!selected;root.querySelector('#citymap-delete').onclick=()=>{if(selected){delete points[selectedCityPointId];selectedCityPointId=null;renderCityMap();}};
     root.querySelector('#cityed-save').onclick=saveAll;
     root.querySelector('#citymap-save').onclick=async()=>{
       const status=root.querySelector('#cityed-status'); status.textContent='Salvando mapa da cidade…';
-      try { config=await window.EDITOR_SAVE.saveCityShops(config.stock, config.taverns, config.city_points); status.textContent='✓ Mapa salvo e atualizado no jogo.'; renderCityMap(); }
+      try { config=await window.EDITOR_SAVE.saveCityShops(config.stock, config.scenes, config.city_points); status.textContent='✓ Mapa salvo e atualizado no jogo.'; renderCityMap(); }
       catch(e){ status.textContent='Erro ao salvar o mapa: '+e.message; }
     };
   }
@@ -423,7 +487,7 @@
       ensure().then(render).catch(e => { root.innerHTML = '<div class="cityed"><h1>🏘️ Editor de Cidades</h1><p class="cityed-error">' + esc(e.message) + '</p></div>'; });
       return;
     }
-    if (mode === "tavern") { renderTavern(); return; }
+    if (mode === "scenes") { renderScenes(); return; }
     if (mode === "map") { renderCityMap(); return; }
     if (mode === "city") { renderCidades(); return; }
     if (!STORES[storeId]) storeId = "ferreiro";
