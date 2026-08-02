@@ -41,6 +41,10 @@
   // profunda para que loot, escala, imagem e demais ajustes nunca sejam
   // compartilhados acidentalmente com o objeto de origem.
   let decorClipboard = null;
+  // O pincel só é ativado explicitamente: copiar (Ctrl+C) continua servindo
+  // para colar uma peça isolada sem transformar todo clique em preenchimento.
+  let decorBrushActive = false;
+  let decorAreaPaint = null;
   let lastPointerCell = null;
 
   function initGrid(w, h) {
@@ -140,6 +144,9 @@
       if (lastPointerCell && pasteDecorAt(lastPointerCell[0], lastPointerCell[1])) ev.preventDefault();
       return;
     }
+    if (ev.key === "Escape" && decorBrushActive) {
+      decorBrushActive = false; decorAreaPaint = null; buildToolbar(); render(); ev.preventDefault(); return;
+    }
     if (ev.key === "r" || ev.key === "R") rotateDecorPending();
   });
 
@@ -225,7 +232,7 @@
     const facing = wallPlacement ? wallPlacement.facing : S.decorFacing.slice();
     if (!wallPlacement && m && m.special === "wall") return;
     if (!decorFits(S.decorType, pos[0], pos[1], facing)) return;
-    const d = { id: "decor_" + S.nextDecorId++, type: S.decorType, pos, facing,
+    const d = { id: nextDecorId(), type: S.decorType, pos, facing,
                 loot: (m && m.loot_capaz && S.decorType === "arca_tesouros") ? { gold: 0, items: [] } : null,
                 key_objective: false };
     if (m && m.special === "fountain") d.charges = 3;
@@ -236,16 +243,32 @@
   }
 
   function cloneDecor(source) { return JSON.parse(JSON.stringify(source)); }
+  function nextDecorId() {
+    const used = new Set(S.decorations.map(d => d.id));
+    while (used.has("decor_" + S.nextDecorId)) S.nextDecorId++;
+    return "decor_" + S.nextDecorId++;
+  }
   function copySelectedDecor() {
     if (!S.sel || S.sel.kind !== "decor" || !S.sel.ref) return false;
     decorClipboard = cloneDecor(S.sel.ref);
     render();
     return true;
   }
-  function pasteDecorAt(x, y) {
+  function activateDecorBrush() {
+    // Se há uma decoração selecionada, ela sempre é a fonte mais recente do
+    // pincel; uma cópia antiga só é usada quando nada está selecionado.
+    if (S.sel && S.sel.kind === "decor") copySelectedDecor();
+    if (!decorClipboard) return false;
+    decorBrushActive = true;
+    S.tool = "decor";
+    S.decorType = decorClipboard.type;
+    S.decorFacing = Array.isArray(decorClipboard.facing) ? decorClipboard.facing.slice() : [0, 1];
+    buildToolbar(); renderPanel(); render();
+    return true;
+  }
+  function pasteDecorAt(x, y, selectCopy = true) {
     if (!decorClipboard) return false;
     const d = cloneDecor(decorClipboard);
-    d.id = "decor_" + S.nextDecorId++;
     d.facing = Array.isArray(d.facing) ? d.facing.slice() : [0, 1];
     if (isWallDecor(d)) {
       const placement = wallPlacementAt(x, y, d.facing);
@@ -255,10 +278,32 @@
     } else d.pos = [x, y];
     const size = decorBaseSize(d);
     if (!decorWouldFit(d, d.pos, size, d.facing)) return false;
+    d.id = nextDecorId();
     S.decorations.push(d);
-    S.sel = { kind: "decor", ref: d, pos: d.pos.slice() };
-    renderPanel(); render();
+    if (selectCopy) S.sel = { kind: "decor", ref: d, pos: d.pos.slice() };
+    if (selectCopy) { renderPanel(); render(); }
     return true;
+  }
+  function pasteDecorArea(area) {
+    if (!decorClipboard || !area) return 0;
+    const d = decorClipboard;
+    const [ew, eh] = decorEffSizeOf(d);
+    const minX = Math.min(area.x0, area.x1), maxX = Math.max(area.x0, area.x1);
+    const minY = Math.min(area.y0, area.y1), maxY = Math.max(area.y0, area.y1);
+    if (minX === maxX && minY === maxY) {
+      return pasteDecorAt(minX, minY, true) ? 1 : 0;
+    }
+    let placed = 0, last = null;
+    // Objetos maiores avançam pelo próprio footprint: uma caverna 2×2, por
+    // exemplo, preenche a área sem sobrepor suas cópias nem ultrapassar a seleção.
+    const dx = isWallDecor(d) ? 1 : ew, dy = isWallDecor(d) ? 1 : eh;
+    for (let y = minY; y + (isWallDecor(d) ? 0 : eh - 1) <= maxY; y += dy) {
+      for (let x = minX; x + (isWallDecor(d) ? 0 : ew - 1) <= maxX; x += dx) {
+        if (pasteDecorAt(x, y, false)) { placed++; last = S.decorations[S.decorations.length - 1]; }
+      }
+    }
+    if (last) S.sel = { kind: "decor", ref: last, pos: last.pos.slice() };
+    return placed;
   }
   function duplicateDecorAdjacent(source) {
     if (!source) return false;
@@ -268,10 +313,10 @@
     const offsets = [[ew, 0], [-ew, 0], [0, eh], [0, -eh], [ew, eh], [ew, -eh], [-ew, eh], [-ew, -eh]];
     for (const [dx, dy] of offsets) {
       const d = cloneDecor(source);
-      d.id = "decor_" + S.nextDecorId++;
       d.pos = [source.pos[0] + dx, source.pos[1] + dy];
       d.facing = Array.isArray(d.facing) ? d.facing.slice() : [0, 1];
       if (!decorWouldFit(d, d.pos, decorBaseSize(d), d.facing)) continue;
+      d.id = nextDecorId();
       S.decorations.push(d);
       S.sel = { kind: "decor", ref: d, pos: d.pos.slice() };
       return true;
@@ -283,15 +328,17 @@
   const ctx = board.getContext("2d");
   const copyMenu = document.createElement("div");
   copyMenu.id = "editor-copy-menu";
-  copyMenu.innerHTML = `<button type="button" data-action="copy">Copiar objeto <kbd>Ctrl+C</kbd></button><button type="button" data-action="paste">Colar objeto aqui <kbd>Ctrl+V</kbd></button>`;
+  copyMenu.innerHTML = `<button type="button" data-action="copy">Copiar objeto <kbd>Ctrl+C</kbd></button><button type="button" data-action="brush">Usar como pincel de área</button><button type="button" data-action="paste">Colar objeto aqui <kbd>Ctrl+V</kbd></button>`;
   document.body.appendChild(copyMenu);
   function hideCopyMenu() { copyMenu.classList.remove("open"); }
   function showCopyMenu(ev, cell) {
     const selected = entityAt(cell[0], cell[1]);
     if (selected) { S.sel = selected; renderPanel(); render(); }
     const copyButton = copyMenu.querySelector('[data-action="copy"]');
+    const brushButton = copyMenu.querySelector('[data-action="brush"]');
     const pasteButton = copyMenu.querySelector('[data-action="paste"]');
     copyButton.disabled = !(S.sel && S.sel.kind === "decor");
+    brushButton.disabled = !(S.sel && S.sel.kind === "decor") && !decorClipboard;
     pasteButton.disabled = !decorClipboard;
     copyMenu.dataset.x = String(cell[0]); copyMenu.dataset.y = String(cell[1]);
     copyMenu.style.left = `${Math.min(ev.clientX, window.innerWidth - 190)}px`;
@@ -302,6 +349,7 @@
     const button = ev.target.closest("button[data-action]"); if (!button || button.disabled) return;
     const x = Number(copyMenu.dataset.x), y = Number(copyMenu.dataset.y);
     if (button.dataset.action === "copy") copySelectedDecor();
+    else if (button.dataset.action === "brush") activateDecorBrush();
     else pasteDecorAt(x, y);
     hideCopyMenu();
   });
@@ -654,6 +702,7 @@
       ctx.strokeRect(S.sel.pos[0] * CELL + 1, S.sel.pos[1] * CELL + 1, CELL - 3, CELL - 3);
     }
     if (decorClipboard && lastPointerCell && !_drag) drawClipboardPreview();
+    if (decorAreaPaint) drawDecorAreaPreview(decorAreaPaint);
     if (_drag && _drag.candidate) drawDragPreview();
     if (document.getElementById("status")) updateStatus();
   }
@@ -671,6 +720,18 @@
       ctx.fillRect(tx * CELL + 2, ty * CELL + 2, CELL - 4, CELL - 4);
       ctx.strokeRect(tx * CELL + 2, ty * CELL + 2, CELL - 4, CELL - 4);
     }
+    ctx.setLineDash([]); ctx.restore();
+  }
+
+  function drawDecorAreaPreview(area) {
+    if (!area || !decorClipboard) return;
+    const minX = Math.min(area.x0, area.x1), minY = Math.min(area.y0, area.y1);
+    const w = Math.abs(area.x1 - area.x0) + 1, h = Math.abs(area.y1 - area.y0) + 1;
+    ctx.save();
+    ctx.setLineDash([5, 3]); ctx.lineWidth = 2; ctx.strokeStyle = "#72e6a1";
+    ctx.fillStyle = "rgba(67,180,111,.10)";
+    ctx.fillRect(minX * CELL + 1, minY * CELL + 1, w * CELL - 2, h * CELL - 2);
+    ctx.strokeRect(minX * CELL + 1, minY * CELL + 1, w * CELL - 2, h * CELL - 2);
     ctx.setLineDash([]); ctx.restore();
   }
 
@@ -737,6 +798,18 @@
       rot.textContent = "girar 90° (R)";
       rot.onclick = () => { rotateDecorPending(); };
       tb.appendChild(rot);
+      const brush = document.createElement("button");
+      brush.textContent = decorBrushActive ? "🖌️ pincel de área ativo" : "🖌️ usar cópia como pincel";
+      brush.disabled = !decorClipboard && !(S.sel && S.sel.kind === "decor");
+      brush.title = "Com o pincel ativo, arraste no mapa para preencher a área com cópias.";
+      brush.onclick = () => { activateDecorBrush(); };
+      tb.appendChild(brush);
+      if (decorBrushActive) {
+        const hint = document.createElement("small");
+        hint.textContent = "Arraste para preencher; casas inválidas são ignoradas.";
+        hint.style.color = "#b9a87f";
+        tb.appendChild(hint);
+      }
     }
     if (S.tool === "floor" || S.tool === "wall") {
       const isWall = S.tool === "wall";
@@ -1449,6 +1522,8 @@
         ${isWall ? `<div style="color:#8a7a5a;font-size:11px;margin-top:6px">Decoração de parede: clique em uma parede; girar troca a face voltada para uma área jogável.</div>` : ""}
         ${m.gira ? `<button id="d-rot">${isWall ? "trocar face" : "girar 90°"}</button>` : ""}
         ${!isWall ? `<button id="d-duplicate" style="margin-top:7px">⧉ Duplicar em casa adjacente</button>` : ""}
+        <button id="d-brush" style="margin-top:7px">🖌️ Copiar e preencher área</button>
+        <small style="display:block;color:#8a7a5a;margin-top:3px">Depois, arraste no mapa. Esc desativa o pincel.</small>
         <div id="d-duplicate-msg" style="font-size:11px;min-height:14px;color:#d8a0a0"></div>
         ${m.special === "fountain" ? `<label>cargas <input id="d-charges" type="number" min="0" value="${ref.charges ?? 0}"></label>` : ""}
         ${m.loot_capaz ? `<label style="display:block;margin-top:8px"><input type="checkbox" id="d-haslook" ${hasLoot ? "checked" : ""}> contém loot</label>` : ""}
@@ -1499,6 +1574,7 @@
         if (duplicateDecorAdjacent(ref)) { renderPanel(); render(); }
         else document.getElementById("d-duplicate-msg").textContent = "Não há uma casa adjacente livre para esta cópia.";
       };
+      document.getElementById("d-brush").onclick = () => { copySelectedDecor(); activateDecorBrush(); };
       if (m.special === "fountain") document.getElementById("d-charges").onchange = e => { ref.charges = Math.max(0, Number(e.target.value) | 0); };
       document.getElementById("d-key").onchange = e => { ref.key_objective = e.target.checked; };
       document.getElementById("d-chest-trap").onchange = e => { if (e.target.checked) ref.chest_trap_monster_type = (CAT.monsters[0] || {}).type; else delete ref.chest_trap_monster_type; renderPanel(); };
@@ -1612,7 +1688,11 @@
       renderPanel(); render(); updateStatus();
       return;
     }
-    if (["wall", "floor", "door"].includes(S.tool)) { painting = true; (S.matFill && S.tool !== "door" ? paintMaterial : paintTile)(x, y); render(); updateStatus(); }
+    if (S.tool === "decor" && decorBrushActive && decorClipboard) {
+      decorAreaPaint = { x0: x, y0: y, x1: x, y1: y };
+      render();
+    }
+    else if (["wall", "floor", "door"].includes(S.tool)) { painting = true; (S.matFill && S.tool !== "door" ? paintMaterial : paintTile)(x, y); render(); updateStatus(); }
     else if (S.tool === "room") { roomDrag = { x0: x, y0: y, x1: x, y1: y }; }
     else if (["entrance", "exit", "prisoner", "monster", "chest", "trap", "decor", "secret_mechanism", "illusion_wall", "fala"].includes(S.tool)) { placeEntity(x, y); if (S.tool !== "decor") S.sel = entityAt(x, y); renderPanel(); render(); }
     else if (S.tool === "erase") { eraseAt(x, y); S.sel = null; renderPanel(); render(); }
@@ -1636,6 +1716,9 @@
   board.addEventListener("mousemove", (ev) => {
     const c = cellFromEvent(ev); if (!c) return;
     lastPointerCell = c;
+    if (decorAreaPaint) {
+      decorAreaPaint.x1 = c[0]; decorAreaPaint.y1 = c[1]; render(); return;
+    }
     if (_drag) {
       const ax = c[0] - _drag.offX, ay = c[1] - _drag.offY;
       _drag.candidate = [ax, ay];
@@ -1668,6 +1751,12 @@
   });
   window.addEventListener("mouseup", () => {
     painting = false;
+    if (decorAreaPaint) {
+      const area = decorAreaPaint;
+      decorAreaPaint = null;
+      pasteDecorArea(area);
+      renderPanel(); render(); updateStatus();
+    }
     if (_drag) {
       if (_drag.moved && _drag.valid && _drag.candidate)
         moveSelTo(_drag.sel, _drag.candidate[0], _drag.candidate[1]);
@@ -1873,8 +1962,25 @@
     }));
     S.chests = (obj.chests || []).map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: (c.items || []).map(i => ({ id: i.id })), key_objective: !!c.key_objective }));
     S.traps = (obj.traps || []).map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; if (t.saida) o.saida = t.saida.slice(); if (t.image) o.image = t.image; return o; });
-    S.decorations = (obj.decorations || []).map((d, i) => ({
-      id: d.id || ("decor_" + i),
+    // Mapas criados por versões anteriores podiam ter IDs repetidos após
+    // apagar/colar objetos. Repara somente a identidade interna ao abrir —
+    // posição, tipo e todas as configurações da decoração são preservados.
+    const rawDecors = obj.decorations || [];
+    const usedDecorIds = new Set();
+    let loadNextDecorId = rawDecors.reduce((next, d) => {
+      const m = /^decor_(\d+)$/.exec((d && d.id) || "");
+      return m ? Math.max(next, Number(m[1]) + 1) : next;
+    }, 0);
+    const uniqueLoadedDecorId = (id) => {
+      if (typeof id === "string" && id && !usedDecorIds.has(id)) {
+        usedDecorIds.add(id); return id;
+      }
+      while (usedDecorIds.has("decor_" + loadNextDecorId)) loadNextDecorId++;
+      const generated = "decor_" + loadNextDecorId++;
+      usedDecorIds.add(generated); return generated;
+    };
+    S.decorations = rawDecors.map((d, i) => ({
+      id: uniqueLoadedDecorId(d.id || ("decor_" + i)),
       type: d.type, pos: d.pos.slice(), facing: (d.facing || [0, 1]).slice(),
       loot: d.loot ? { gold: d.loot.gold | 0, items: (d.loot.items || []).map(i => ({ id: i.id })) } : null,
       key_objective: !!d.key_objective,
@@ -1888,7 +1994,12 @@
       ...(Array.isArray(d.vscale) && d.vscale.length === 2 ? { vscale: [Number(d.vscale[0]), Number(d.vscale[1])] } : {}),
       ...(Array.isArray(d.voffset) && d.voffset.length === 2 ? { voffset: [Number(d.voffset[0]), Number(d.voffset[1])] } : {}),
     }));
-    S.nextDecorId = S.decorations.length;
+    // O maior sufixo existente, e não o tamanho da lista, define o próximo ID.
+    // Depois de apagar ou colar em um mapa antigo, os dois valores podem divergir.
+    S.nextDecorId = S.decorations.reduce((next, d) => {
+      const m = /^decor_(\d+)$/.exec(d.id || "");
+      return m ? Math.max(next, Number(m[1]) + 1) : next;
+    }, 0);
     S.secretPassages = (obj.secret_passages || []).map((p, i) => ({ id: p.id || ("passage_" + i), type: p.type === "illusion" ? "illusion" : "mechanism", pos: p.pos.slice(), key_decor_ids: (p.key_decor_ids || []).slice(), keys_mode: p.keys_mode === "all" ? "all" : "any" }));
     S.nextPassageId = S.secretPassages.length;
     S.falas = (obj.falas || []).map((f, i) => {
@@ -1991,6 +2102,7 @@
     const itemsEditor = tab === "editor_itens";
     const cityEditor = tab === "cidade";
     const worldEditor = tab === "mapa_mundi";
+    const scenesEditor = tab === "cenas";
     document.getElementById("dungeon-controls").style.display = dung ? "" : "none";
     document.getElementById("toolbar").style.display = dung ? "" : "none";
     document.getElementById("workspace").style.display = dung ? "" : "none";
@@ -2001,6 +2113,7 @@
     document.getElementById("items-editor-view").style.display = itemsEditor ? "" : "none";
     document.getElementById("city-editor-view").style.display = cityEditor ? "" : "none";
     document.getElementById("world-editor-view").style.display = worldEditor ? "" : "none";
+    document.getElementById("scenes-editor-view").style.display = scenesEditor ? "" : "none";
     document.getElementById("tab-masmorra").classList.toggle("active", dung);
     document.getElementById("tab-bestiario").classList.toggle("active", bestiary);
     document.getElementById("tab-editor-monstros").classList.toggle("active", monsterEditor);
@@ -2008,6 +2121,7 @@
     document.getElementById("tab-cidade").classList.toggle("active", cityEditor);
     document.getElementById("tab-mapa-mundi").classList.toggle("active", worldEditor);
     document.getElementById("tab-campanha").classList.toggle("active", tab === "campanha");
+    document.getElementById("tab-cenas").classList.toggle("active", scenesEditor);
     if (dung) { render(); renderPanel(); }
     else if (bestiary && window.EDITOR_BESTIARY) window.EDITOR_BESTIARY.render();
     else if (monsterEditor && window.EDITOR_MONSTER_EDITOR) window.EDITOR_MONSTER_EDITOR.render();
@@ -2015,6 +2129,7 @@
     else if (cityEditor && window.EDITOR_CITY) window.EDITOR_CITY.render();
     else if (worldEditor && window.EDITOR_WORLD) window.EDITOR_WORLD.render();
     else if (tab === "campanha" && window.EDITOR_CAMPAIGN) window.EDITOR_CAMPAIGN.renderCampaign();
+    else if (scenesEditor && window.EDITOR_SCENES) window.EDITOR_SCENES.load();
   }
   window.setTab = setTab;
   document.getElementById("tab-masmorra").onclick = () => setTab("masmorra");
@@ -2024,6 +2139,7 @@
   document.getElementById("tab-cidade").onclick = () => setTab("cidade");
   document.getElementById("tab-mapa-mundi").onclick = () => setTab("mapa_mundi");
   document.getElementById("tab-campanha").onclick = () => setTab("campanha");
+  document.getElementById("tab-cenas").onclick = () => setTab("cenas");
 
   // Expor para verificação no console / tasks seguintes.
   window.EDITOR = { S, catalog: CAT, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, deleteRoom, entityAt, doorLink, doorUnlink, validarEditor, buildJSON, loadJSON, save, updateStatus, WALL, FLOOR, DOOR, decorMeta, decorEffSize, decorTilesAt, decorTiles, rotateFacing, rotateDecorPending, decorFits, placeDecor, decorBaseSize, decorEffSizeOf, decorWouldFit, tilesFor, dropValid, moveSelTo, copySelectedDecor, pasteDecorAt, duplicateDecorAdjacent };
