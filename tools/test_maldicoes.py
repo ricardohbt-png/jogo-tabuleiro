@@ -658,6 +658,38 @@ def test_dor_constante():
     check("sem a maldição, nada", p2["hp"] == 30)
 
 
+def test_eco_da_morte():
+    print("\n[28] Eco da Morte")
+    r, p = sala()
+    aliado = S.make_player("p2", "Lewis", "cleric", 1)
+    aliado["pos"] = [6, 6]; aliado["max_hp"] = 40; aliado["hp"] = 40
+    r.players["p2"] = aliado
+    asyncio.run(r._aplicar_maldicao(aliado, "eco_morte"))
+
+    asyncio.run(r._ecoar_morte(p))
+    check("aliado amaldiçoado sofre 10", aliado["hp"] == 30)
+
+    # Quem não carrega a maldição não sofre.
+    outro = S.make_player("p3", "Luccas", "rogue", 2)
+    outro["max_hp"] = 40; outro["hp"] = 40
+    r.players["p3"] = outro
+    asyncio.run(r._ecoar_morte(p))
+    check("quem não tem a maldição não sofre", outro["hp"] == 40)
+
+    # Não mata: piso de 1.
+    aliado["hp"] = 4
+    asyncio.run(r._ecoar_morte(p))
+    check("não mata (piso de 1)", aliado["hp"] == 1)
+    check("continua vivo", aliado.get("alive") is True)
+
+    # O próprio morto não ecoa em si mesmo.
+    r2, p2 = sala()
+    asyncio.run(r2._aplicar_maldicao(p2, "eco_morte"))
+    p2["max_hp"] = 40; p2["hp"] = 40
+    asyncio.run(r2._ecoar_morte(p2))
+    check("o morto não ecoa em si mesmo", p2["hp"] == 40)
+
+
 def main():
     test_desequipar(); test_largar(); test_vender()
     test_empurrar(); test_nao_bloqueia_demais()
@@ -680,6 +712,7 @@ def main():
     test_alma_quebrada()
     test_sangramento_profano()
     test_dor_constante()
+    test_eco_da_morte()
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 

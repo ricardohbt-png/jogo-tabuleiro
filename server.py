@@ -14591,6 +14591,25 @@ class GameRoom:
         p["hp"] = max(1, p["hp"] - 1)
         await self.gm_say(f"💢 **Dor Constante** cobra seu preço de **{p['name']}** — **1** de dano.")
 
+    ECO_MORTE_DANO = 10
+
+    async def _ecoar_morte(self, morto):
+        """A morte de um herói fere quem carrega Eco da Morte. São 10 EXATOS,
+        aplicados direto — não passam por _apply_damage_types, senão Carne Frágil
+        os viraria 12 e uma resistência os reduziria, e o número que o catálogo
+        promete deixaria de ser o número real.
+
+        NÃO pode matar (piso de 1): sem isso, uma morte viraria efeito dominó
+        recursivo dentro do próprio _player_dies."""
+        for q in self.players.values():
+            if q is morto or not q.get("alive"):
+                continue
+            if not self._tem_maldicao(q, "eco_morte"):
+                continue
+            q["hp"] = max(1, q.get("hp", 1) - self.ECO_MORTE_DANO)
+            await self.gm_say(f"💀 O **Eco da Morte** atravessa **{q['name']}** — "
+                              f"**{self.ECO_MORTE_DANO}** de dano.")
+
     async def _transformar_licantropo(self, p, motivo="a maldição desperta"):
         cfg = self._licantropia_config(p)
         if not cfg or p.get("licantropia_transformado") or not p.get("alive"):
@@ -23254,6 +23273,9 @@ class GameRoom:
             await self._abrir_ultimo_esforco(p)
         p["alive"] = False
         p["hp"] = 0
+        # Depois de alive=False, de propósito: assim o próprio morto está fora do
+        # laço pela guarda `not q.get("alive")` E pela guarda `q is morto`.
+        await self._ecoar_morte(p)
         await self.send_to(p["id"], {
             "type": "death_result",
             "tipo": "morte",
