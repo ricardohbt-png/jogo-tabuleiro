@@ -436,6 +436,19 @@ def test_dreno_fome_sede():
     asyncio.run(r4._processar_dreno_maldicoes(p4))
     check("herói morto não drena", p4["fome"] == 50)
 
+def test_curar_hp_funil():
+    print("\n[20] Funil de cura — comportamento inalterado")
+    r, p = sala()
+    p["max_hp"] = 20; p["hp"] = 5
+    check("cura normal soma", r._curar_hp(p, 7) == 7 and p["hp"] == 12)
+    p["hp"] = 18
+    check("respeita o teto", r._curar_hp(p, 10) == 2 and p["hp"] == 20)
+    p["hp"] = 20
+    check("no teto cura 0", r._curar_hp(p, 5) == 0 and p["hp"] == 20)
+    p["hp"] = 10
+    check("cura 0 não muda nada", r._curar_hp(p, 0) == 0 and p["hp"] == 10)
+    check("cura negativa não tira HP", r._curar_hp(p, -5) == 0 and p["hp"] == 10)
+
 def main():
     test_desequipar(); test_largar(); test_vender()
     test_empurrar(); test_nao_bloqueia_demais()
@@ -450,6 +463,7 @@ def main():
     test_azar_sobrenatural()
     test_licantropia_caracterizacao()
     test_dreno_fome_sede()
+    test_curar_hp_funil()
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 

@@ -12363,7 +12363,7 @@ class GameRoom:
             raw_heal = roll_dice("2d6")
             await self.broadcast({"type": "dice_roll", "die": "d6", "value": raw_heal, "label": "Cura"})
             heal = raw_heal + 2
-            t["hp"] = min(t["max_hp"], t["hp"] + heal)
+            self._curar_hp(t, heal, "Cura (habilidade)")
             await self.gm_say(f"💚 **{p['name']}** cura **{t['name']}** em **{heal}** HP! (2d6+2)")
 
         elif sid == "holy_light":
@@ -12931,9 +12931,7 @@ class GameRoom:
         cura = max(1, sum(dados) + bonus_int)
         await self.broadcast({"type": "dice_roll", "die": "d8", "value": sum(dados), "label": "Cura"})
 
-        hp_antes = alvo["hp"]
-        alvo["hp"] = min(alvo["max_hp"], alvo["hp"] + cura)
-        cura_real = alvo["hp"] - hp_antes
+        cura_real = self._curar_hp(alvo, cura, "Cura")
 
         self._pagar_fome_sede(p, custo_fome, custo_sede)
         p["action_done"] = True
@@ -12979,9 +12977,7 @@ class GameRoom:
             if not self._no_raio(p, aliado, raio): continue
             # A onda curativa nÃ£o atravessa paredes â€” sÃ³ aliados visÃ­veis
             if not self._tem_linha_de_visao(p["pos"], aliado["pos"]): continue
-            hp_antes = aliado["hp"]
-            aliado["hp"] = min(aliado["max_hp"], aliado["hp"] + cura)
-            cura_real = aliado["hp"] - hp_antes
+            cura_real = self._curar_hp(aliado, cura, "Cura em Massa")
             if cura_real > 0:
                 curados.append(f"{aliado['name']}(+{cura_real})")
 
@@ -13231,9 +13227,7 @@ class GameRoom:
         raw = sum(roll_dice("1d6") for _ in range(n_dados))
         await self.broadcast({"type": "dice_roll", "die": "d6", "value": raw, "label": "Imposição das Mãos"})
         cura = max(1, raw + mod(p["str_"]))
-        hp_antes = alvo["hp"]
-        alvo["hp"] = min(alvo["max_hp"], alvo["hp"] + cura)
-        cura_efetiva = alvo["hp"] - hp_antes
+        cura_efetiva = self._curar_hp(alvo, cura, "Imposição das Mãos")
 
         self._pagar_fome_sede(p, fome_cost, sede_cost)
         p["action_done"] = True
@@ -13417,7 +13411,7 @@ class GameRoom:
                 p["regeneracao_ativa"] = False
                 await self.gm_say(f"✨ Regeneração Divina de **{p['name']}** se interrompe — recursos insuficientes.")
             else:
-                p["hp"] = min(p["max_hp"], p["hp"] + 1)
+                self._curar_hp(p, 1, "Regeneração Divina")
                 p["fome"] = max(0, p["fome"] - 1)
                 p["sede"] = max(0, p["sede"] - 1)
                 await self.gm_say(f"✨ **{p['name']}** — Regeneração Divina: +1 HP ({p['hp']}/{p['max_hp']}) 🍖-1 💧-1.")
@@ -13428,7 +13422,7 @@ class GameRoom:
                         if q is p or not q.get("alive"): continue
                         if q.get("hp", 0) >= q.get("max_hp", 0): continue
                         if max(abs(q["pos"][0]-p["pos"][0]), abs(q["pos"][1]-p["pos"][1])) <= raio_reg:
-                            q["hp"] = min(q["max_hp"], q["hp"] + 1); curados.append(q["name"])
+                            self._curar_hp(q, 1, "Regeneração Divina"); curados.append(q["name"])
                     if curados:
                         await self.gm_say(f"✨ Regeneração Divina de **{p['name']}** também cura: {', '.join(curados)} (+1 HP).")
 
@@ -14510,6 +14504,20 @@ class GameRoom:
         cfg["estagio"] = estagio
         return cfg
 
+    def _curar_hp(self, alvo, cura, fonte=""):
+        """Cura HP respeitando o teto. Ponto ÚNICO de cura de herói — é aqui
+        que Tocado pela Morte reduz a recuperação e onde qualquer regra
+        futura sobre cura vai morar. Devolve o quanto realmente curou.
+
+        NÃO passam por aqui, de propósito: top-up de max_hp ao equipar item,
+        top-up por CON, ganho de nível e Ressurreição — nenhum é cura."""
+        cura = max(0, int(cura))
+        if cura <= 0:
+            return 0
+        antes = alvo.get("hp", 0)
+        alvo["hp"] = min(alvo.get("max_hp", antes), antes + cura)
+        return alvo["hp"] - antes
+
     def _licantropia_config(self, p):
         """Parâmetros efetivos da Licantropia para o estágio atual do herói.
         As rampas moram em MALDICOES['licantropia']['estagios']."""
@@ -14524,7 +14532,7 @@ class GameRoom:
             return
         cura = min(cfg["regen"], max(0, p.get("max_hp", 0) - p.get("hp", 0)))
         if cura:
-            p["hp"] += cura
+            self._curar_hp(p, cura, "Licantropia")
             await self.gm_say(f"🐺 A Licantropia regenera **{p['name']}** em +{cura} HP ({p['hp']}/{p['max_hp']}).")
         p["licantropia_regen_proxima"] = self.round_num + cfg["intervalo_regen"]
 
@@ -16913,7 +16921,7 @@ class GameRoom:
         if alvo.get("regen_pool", 0) > 0 and alvo.get("alive"):
             if alvo["hp"] < alvo["max_hp"]:
                 cura = min(alvo.get("regen_por_rodada", 1), alvo["regen_pool"])
-                alvo["hp"] = min(alvo["max_hp"], alvo["hp"] + cura)
+                self._curar_hp(alvo, cura, "Regeneração mágica")
                 alvo["regen_pool"] -= cura
                 await self.gm_say(f"🌿 Regeneração cura **{alvo['name']}** +{cura} ({alvo['hp']}/{alvo['max_hp']}; reserva {alvo['regen_pool']}).")
             if alvo["regen_pool"] <= 0:
@@ -18276,7 +18284,7 @@ class GameRoom:
 
         remove_item = True
         if effect == "heal":
-            p["hp"] = min(p["max_hp"], p["hp"] + val)
+            self._curar_hp(p, val, "Poção de cura")
             if max_uses > 1:
                 uses_left -= 1
                 item["uses_left"] = uses_left
@@ -19103,7 +19111,7 @@ class GameRoom:
         cura = min(1, pool, p["max_hp"] - p["hp"])
         if cura <= 0:
             return
-        p["hp"] += cura
+        self._curar_hp(p, cura, "Poção de regeneração")
         pool -= cura
         if pool:
             p["potion_regen_pool"] = pool
