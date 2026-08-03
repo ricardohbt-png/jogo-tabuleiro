@@ -14578,6 +14578,19 @@ class GameRoom:
                                   f"**{p['name']}** — **1** de dano.")
         p["_hp_turno_anterior"] = p.get("hp", 0)
 
+    async def _cobrar_dor_constante(self, p):
+        """1 de dano ao encerrar o turno tendo usado a ação principal. Só a
+        principal, no máximo 1 por turno: mover e ação bônus ficam de fora, para
+        o jogador poder escolher passar o turno sem sangrar. Não mata."""
+        if not p.get("alive") or not p.get("action_done"):
+            return
+        if not self._tem_maldicao(p, "dor_constante"):
+            return
+        if p.get("hp", 0) <= 1:
+            return
+        p["hp"] = max(1, p["hp"] - 1)
+        await self.gm_say(f"💢 **Dor Constante** cobra seu preço de **{p['name']}** — **1** de dano.")
+
     async def _transformar_licantropo(self, p, motivo="a maldição desperta"):
         cfg = self._licantropia_config(p)
         if not cfg or p.get("licantropia_transformado") or not p.get("alive"):
@@ -18616,6 +18629,12 @@ class GameRoom:
         if self.active_scene:
             await self.send_to(pid, {"type":"error", "msg":"A masmorra está pausada durante uma cena."}); return
         if not self._is_turn(pid): return
+        # Dor Constante: cobra ANTES de qualquer avanço de iniciativa. Furo
+        # conhecido e aceito: o turno também termina por estouro de timer, e por
+        # esse caminho o dano não cobra.
+        p_dor = self.players.get(pid)
+        if p_dor:
+            await self._cobrar_dor_constante(p_dor)
         # Ãšltimo EsforÃ§o Ã© checado ANTES da fase dos servos (animados_phase_pid,
         # mais abaixo). As duas janelas sÃ£o mutuamente exclusivas para o mesmo
         # jogador: nada no controle da fase dos servos (mover/atacar animados,

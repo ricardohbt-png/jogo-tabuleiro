@@ -632,6 +632,32 @@ def test_sangramento_profano():
     check("herói morto não sangra", p2["hp"] == 10)
 
 
+def test_dor_constante():
+    print("\n[27] Dor Constante")
+    r, p = sala()
+    p["max_hp"] = 30; p["hp"] = 30
+    asyncio.run(r._aplicar_maldicao(p, "dor_constante"))
+
+    p["action_done"] = True
+    asyncio.run(r._cobrar_dor_constante(p))
+    check("com a ação usada, dói 1", p["hp"] == 29)
+
+    p["action_done"] = False
+    asyncio.run(r._cobrar_dor_constante(p))
+    check("sem usar a ação, não dói", p["hp"] == 29)
+
+    # Não mata.
+    p["hp"] = 1; p["action_done"] = True
+    asyncio.run(r._cobrar_dor_constante(p))
+    check("não mata", p["hp"] == 1)
+
+    # Sem a maldição, nada acontece.
+    r2, p2 = sala()
+    p2["max_hp"] = 30; p2["hp"] = 30; p2["action_done"] = True
+    asyncio.run(r2._cobrar_dor_constante(p2))
+    check("sem a maldição, nada", p2["hp"] == 30)
+
+
 def main():
     test_desequipar(); test_largar(); test_vender()
     test_empurrar(); test_nao_bloqueia_demais()
@@ -653,6 +679,7 @@ def main():
     test_fraqueza_arcana()
     test_alma_quebrada()
     test_sangramento_profano()
+    test_dor_constante()
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 
