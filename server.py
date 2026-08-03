@@ -727,7 +727,8 @@ MALDICOES = {
     "marca_cacador": {"nome":"Marca do Caçador","categoria":"leve","desc":"inimigos recebem +1 contra você",
                       "mods":{"ca":-1}},
     "corpo_exausto": {"nome":"Corpo Exausto","categoria":"media","desc":"ações custam +1 fome e sede"},
-    "carne_fragil": {"nome":"Carne Frágil","categoria":"media","desc":"+2 dano recebido"},
+    "carne_fragil": {"nome":"Carne Frágil","categoria":"media","desc":"+2 dano recebido",
+                     "mods":{"dano_recebido":2}},
     "sangramento_profano": {"nome":"Sangramento Profano","categoria":"media","desc":"1 dano no início do turno após sofrer dano"},
     "correntes_invisiveis": {"nome":"Correntes Invisíveis","categoria":"media","desc":"-3 movimento",
                              "mods":{"movimento":-3}},
@@ -767,7 +768,8 @@ MALDICAO_MAX_POR_HEROI = 3
 #   visao       → _get_raio_visao
 #   dano_fisico → _resolver_dano_ataque_basico
 #   ca          → _player_effective_ac
-MALDICAO_MOD_CHAVES = ("ataque", "movimento", "vontade", "visao", "dano_fisico", "ca")
+#   dano_recebido → _apply_damage_types
+MALDICAO_MOD_CHAVES = ("ataque", "movimento", "vontade", "visao", "dano_fisico", "ca", "dano_recebido")
 # `estagios`: rampas das maldições PROGRESSIVAS, uma tupla de 5 por parâmetro
 # (índice = estágio-1). Lido só por _maldicao_estagio_cfg. Acrescentar uma
 # progressiva nova é declarar aqui e ler o parâmetro onde ele importa.
@@ -19303,6 +19305,10 @@ class GameRoom:
                 total *= 2
             elif not magica and not ignora_resistencia_fisica:
                 total -= self._licantropia_config(target)["reducao"]
+        # Carne Frágil: +2 no dano que o herói recebe. Espelho da redução da
+        # Licantropia acima — mesmo funil, sinal oposto.
+        if self._eh_jogador(target):
+            total += self._maldicao_mod(target, "dano_recebido")
         solidifica_com_frio = (target.get("type") == "elemental_agua"
                                 or any(w.get("type") == "solidificar_frio"
                                        or w.get("source_ability") == "solidificar_frio"

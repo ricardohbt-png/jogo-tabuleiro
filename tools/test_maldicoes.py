@@ -524,6 +524,24 @@ def test_corrupcao_crescente():
     check("sem avanço de estágio, nada é gerado",
           not p5.get("doente") and len(r5._maldicoes(p5)) == 1)
 
+def test_carne_fragil():
+    print("\n[23] Carne Frágil")
+    r, p = sala()
+    alvo_monstro = {"id": "m1", "name": "Goblin", "hp": 20, "max_hp": 20, "ca": 10}
+    base_fis = r._apply_damage_types(10, [S.DMG_PHYSICAL], p)
+    base_fogo = r._apply_damage_types(10, [S.DMG_FIRE], p)
+    asyncio.run(r._aplicar_maldicao(p, "carne_fragil"))
+    check("herói recebe +2 de dano físico",
+          r._apply_damage_types(10, [S.DMG_PHYSICAL], p) == base_fis + 2)
+    check("vale para dano não-físico também",
+          r._apply_damage_types(10, [S.DMG_FIRE], p) == base_fogo + 2)
+
+    # Monstro não é afetado, e não recebe campos de maldição no dict.
+    antes = r._apply_damage_types(10, [S.DMG_PHYSICAL], alvo_monstro)
+    check("monstro não ganha +2", antes == r._apply_damage_types(10, [S.DMG_PHYSICAL], alvo_monstro))
+    check("monstro não é poluído com campos de maldição",
+          "maldicoes" not in alvo_monstro and "amaldicoado" not in alvo_monstro)
+
 def main():
     test_desequipar(); test_largar(); test_vender()
     test_empurrar(); test_nao_bloqueia_demais()
@@ -541,6 +559,7 @@ def main():
     test_curar_hp_funil()
     test_tocado_morte()
     test_corrupcao_crescente()
+    test_carne_fragil()
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 
