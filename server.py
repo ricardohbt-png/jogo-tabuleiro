@@ -10732,6 +10732,7 @@ class GameRoom:
                        + self._lenda_atk_bonus(p, target)                    # Lenda (bardo estudou a espÃ©cie)
                        - self._corrosao_arma_pen(p)                          # arma de madeira corroÃ­da
                        + maldicao_atk
+                       + self._aura_profana_pen(p)                           # Aura Profana de aliado adjacente
                        - (4 if target.get("oculto_sombras") else 0)          # alvo oculto nas sombras (corpo a corpo)
                        - (1 if p.get("desafinado_ate", -1) >= self.round_num else 0))  # Gaita: Desafinado (Fase 5)
             furtivo_planejado = (p.get("class_id") == "rogue"
@@ -14435,6 +14436,14 @@ class GameRoom:
 
     def _tem_maldicao(self, p, maldicao_id):
         return any(m["id"] == maldicao_id for m in self._maldicoes(p))
+
+    def _aura_profana_pen(self, p):
+        """-1 de ataque por aliado VIVO adjacente que carrega Aura Profana.
+        O próprio portador não é afetado — a maldição irradia para fora."""
+        return -sum(1 for outro in self.players.values()
+                    if outro is not p and self._ativo(outro)
+                    and self._no_raio(p, outro, 1)
+                    and self._tem_maldicao(outro, "aura_profana"))
 
     def _maldicao_mod(self, p, chave):
         """Soma os modificadores das maldições ativas para uma chave de

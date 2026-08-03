@@ -318,6 +318,22 @@ def test_dano_fisico():
     check("piso de 1 respeitado",
           r3._resolver_dano_ataque_basico(p3, alvo, False, 10)[0] >= 1)
 
+def test_aura_profana():
+    print("\n[15] Aura Profana")
+    r, p = sala()
+    aliado = S.make_player("p2", "Lewis", "cleric", 1)
+    aliado["pos"] = [5, 6]   # adjacente a [5,5]
+    r.players["p2"] = aliado
+    check("sem maldição, ninguém sofre", r._aura_profana_pen(aliado) == 0)
+    asyncio.run(r._aplicar_maldicao(p, "aura_profana"))
+    check("aliado adjacente leva -1", r._aura_profana_pen(aliado) == -1)
+    check("o próprio portador não sofre", r._aura_profana_pen(p) == 0)
+    aliado["pos"] = [5, 9]
+    check("aliado longe não sofre", r._aura_profana_pen(aliado) == 0)
+    aliado["pos"] = [5, 6]; aliado["alive"] = True
+    p["alive"] = False
+    check("portador morto não irradia", r._aura_profana_pen(aliado) == 0)
+
 def main():
     test_desequipar(); test_largar(); test_vender()
     test_empurrar(); test_nao_bloqueia_demais()
@@ -327,6 +343,7 @@ def main():
     test_camada_declarativa()
     test_visao_e_ca(); test_pen_veneno_no_jogador()
     test_dano_fisico()
+    test_aura_profana()
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 
