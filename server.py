@@ -14647,8 +14647,10 @@ class GameRoom:
         if p["licantropia_rodadas"] <= 0:
             await self._reverter_licantropo(p)
 
-    async def _testar_licantropia_fim_combate(self):
-        """O encontro acaba quando não resta nenhum monstro vivo no tabuleiro."""
+    async def _processar_fim_de_combate(self):
+        """O encontro acaba quando não resta nenhum monstro vivo no tabuleiro.
+        Dispara a rolagem pós-combate da Licantropia e a corrosão da Maldição
+        da Ferrugem."""
         if any(m.get("hp", 0) > 0 for m in self.monsters.values()): return
         marcador = (self.round_num, tuple(sorted(m["id"] for m in self.monsters.values() if m.get("hp", 0) <= 0)))
         if getattr(self, "_licantropia_ultimo_fim_combate", None) == marcador: return
@@ -14659,6 +14661,13 @@ class GameRoom:
             dado = random.randint(1, 4)
             await self.broadcast({"type":"dice_roll", "die":"d4", "value":dado, "label":f"Licantropia pós-combate — {p['name']}"})
             if dado == 1: await self._transformar_licantropo(p, "resultado 1 após o combate")
+        # Maldição da Ferrugem: o equipamento se degrada ao fim de cada combate.
+        for p in self.players.values():
+            if not self._ativo(p) or not self._tem_maldicao(p, "maldicao_ferrugem"):
+                continue
+            await self._corroer_equipamento(None, p, CORROSAO_ARMADURA_METAL,
+                                            CORROSAO_ARMA_METAL, cura=None,
+                                            label="Maldição da Ferrugem")
 
     async def _rolar_licantropia_inicio_masmorra(self):
         for p in self.players.values():
@@ -19094,7 +19103,11 @@ class GameRoom:
     async def _corroer_equipamento(self, m, p, armaduras_ids, armas_ids, cura="1d4", label="Corrosão"):
         """Degrada UMA peça na prioridade armadura → escudo → arma → elmo → botas.
         armaduras_ids/armas_ids: sets nativos do devorador; peças custom corroem por
-        corrosion_materials. Destruição é permanente e cura o devorador."""
+        corrosion_materials. Destruição é permanente e cura o devorador.
+
+        `m` (o monstro que corrói) pode ser None quando a corrosão não vem de um
+        Devorador — é o caso da Maldição da Ferrugem, que não tem monstro por trás;
+        nesse caso ninguém é curado pela destruição da peça."""
         c = self._corr(p)
         material = "metal" if armaduras_ids is CORROSAO_ARMADURA_METAL else "organic"
         mats = {material}
@@ -19142,7 +19155,8 @@ class GameRoom:
                 await self._enviar_resultado_equipamento_danificado(
                     p, label, nome_peca, "destruído", perdas,
                     arma_quebrada=(slot == "weapon"), armadura_quebrada=(slot == "armor"))
-                await self._devorador_cura(m, cura)
+                if m is not None:
+                    await self._devorador_cura(m, cura)
             elif nivel_pen <= 0:
                 await self.gm_say(f"🦷 **{label}**: {nome_peca} de **{p['name']}** resistiu ao golpe sem sofrer dano!")
             else:
@@ -22994,7 +23008,7 @@ class GameRoom:
                     return
                 await self.gm_say(f"🧟 **{m['name']}** finalmente tomba (Fortitude {tot} vs CD {cd}).")
 
-        await self._testar_licantropia_fim_combate()
+        await self._processar_fim_de_combate()
 
         # ExplosÃ£o Final: dispara uma Ãºnica vez, depois de confirmar que a morte
         # Ã© definitiva (por isso nÃ£o explode quando ResistÃªncia Morta salva um alvo).

@@ -690,6 +690,26 @@ def test_eco_da_morte():
     check("o morto não ecoa em si mesmo", p2["hp"] == 40)
 
 
+def test_maldicao_ferrugem():
+    print("\n[29] Maldição da Ferrugem")
+    r, p = sala()
+    couro = {"id": "couro", "name": "Couro", "item_slot": "armor", "kind": "armor",
+             "ac_bonus": 2, "bonuses": [], "buy_price": 80,
+             "corrosion_materials": ["metal"], "corrosao_resistente": 0,
+             "corrosao_niveis_penalidade": 2}
+    equipar(r, p, couro, "armor")
+    r.monsters = {}   # combate acabou: nenhum monstro vivo
+
+    # Sem a maldição, o fim de combate não corrói nada.
+    asyncio.run(r._processar_fim_de_combate())
+    check("sem a maldição, nada corrói", r._corr(p).get("armadura_lvl", 0) == 0)
+
+    asyncio.run(r._aplicar_maldicao(p, "maldicao_ferrugem"))
+    r._licantropia_ultimo_fim_combate = None   # libera o dedup para reprocessar
+    asyncio.run(r._processar_fim_de_combate())
+    check("com a maldição, a peça se degrada", r._corr(p).get("armadura_lvl", 0) >= 1)
+
+
 def main():
     test_desequipar(); test_largar(); test_vender()
     test_empurrar(); test_nao_bloqueia_demais()
@@ -713,6 +733,7 @@ def main():
     test_sangramento_profano()
     test_dor_constante()
     test_eco_da_morte()
+    test_maldicao_ferrugem()
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 
