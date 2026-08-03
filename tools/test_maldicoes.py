@@ -472,6 +472,58 @@ def test_tocado_morte():
     p["hp"] = 10
     check("cura 0 continua 0", r._curar_hp(p, 0) == 0)
 
+def test_corrupcao_crescente():
+    print("\n[22] Corrupção Crescente")
+    # O sorteio compartilhado nunca devolve progressiva. 40 tentativas por
+    # categoria: com 5 progressivas no catálogo, um filtro quebrado apareceria.
+    r, p = sala()
+    for cat in ("leve", "media", "grave"):
+        sorteadas = [r._sortear_maldicao(cat) for _ in range(40)]
+        check(f"sorteio '{cat}' nunca devolve progressiva",
+              not any(S.MALDICOES[m].get("progressiva") for m in sorteadas))
+        check(f"sorteio '{cat}' respeita a categoria",
+              all(S.MALDICOES[m]["categoria"] == cat for m in sorteadas))
+
+    # Avançar para II gera doença leve.
+    r2, p2 = sala()
+    asyncio.run(r2._aplicar_maldicao(p2, "corrupcao_crescente"))
+    p2["maldicoes"][0]["aventuras"] = 1   # próxima missão leva a 2 → estágio II
+    asyncio.run(r2._progredir_maldicoes_missao())
+    check("→ II adoece", p2.get("doente") is True)
+    check("→ II é doença leve", (p2.get("doenca") or {}).get("sintomas") == ["leve"])
+
+    # Avançar para III agrava para pesada.
+    p2["maldicoes"][0]["aventuras"] = 3
+    asyncio.run(r2._progredir_maldicoes_missao())
+    check("→ III agrava a doença",
+          (p2.get("doenca") or {}).get("sintomas") == ["leve", "medio"])
+
+    # Avançar para IV gera maldição média.
+    r3, p3 = sala()
+    asyncio.run(r3._aplicar_maldicao(p3, "corrupcao_crescente"))
+    p3["maldicoes"][0]["aventuras"] = 5
+    asyncio.run(r3._progredir_maldicoes_missao())
+    novas = [m["id"] for m in r3._maldicoes(p3) if m["id"] != "corrupcao_crescente"]
+    check("→ IV gera uma maldição", len(novas) == 1)
+    check("→ IV gera uma MÉDIA", novas and S.MALDICOES[novas[0]]["categoria"] == "media")
+
+    # Teto de 3: com a cota cheia, a geração é recusada sem quebrar.
+    r4, p4 = sala()
+    asyncio.run(r4._aplicar_maldicao(p4, "corrupcao_crescente"))
+    asyncio.run(r4._aplicar_maldicao(p4, "maos_tremulas"))
+    asyncio.run(r4._aplicar_maldicao(p4, "passos_pesados"))
+    p4["maldicoes"][0]["aventuras"] = 5
+    asyncio.run(r4._progredir_maldicoes_missao())
+    check("com 3 maldições, não estoura o teto", len(r4._maldicoes(p4)) == 3)
+
+    # Sem avanço de estágio, não gera nada.
+    r5, p5 = sala()
+    asyncio.run(r5._aplicar_maldicao(p5, "corrupcao_crescente"))
+    p5["maldicoes"][0]["aventuras"] = 0   # 0 → 1 não muda de estágio
+    asyncio.run(r5._progredir_maldicoes_missao())
+    check("sem avanço de estágio, nada é gerado",
+          not p5.get("doente") and len(r5._maldicoes(p5)) == 1)
+
 def main():
     test_desequipar(); test_largar(); test_vender()
     test_empurrar(); test_nao_bloqueia_demais()
@@ -488,6 +540,7 @@ def main():
     test_dreno_fome_sede()
     test_curar_hp_funil()
     test_tocado_morte()
+    test_corrupcao_crescente()
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 

@@ -14652,6 +14652,15 @@ class GameRoom:
             "efeitos_extra": extras,
         })
 
+    def _sortear_maldicao(self, categoria, padrao="maos_tremulas"):
+        """Sorteia uma maldição da categoria, NUNCA progressiva — progressivas
+        só entram por fonte explícita. Usado pela armadilha, pelo Amaldiçoar e
+        pela Corrupção Crescente."""
+        categoria = _maldicao_categoria(categoria)
+        opcoes = [mid for mid, dados in MALDICOES.items()
+                  if dados["categoria"] == categoria and not dados.get("progressiva")]
+        return random.choice(opcoes) if opcoes else padrao
+
     async def _aplicar_maldicao(self, alvo, maldicao_id, fonte="uma força sombria", origem=None):
         """Aplica uma maldição catalogada, respeitando o limite de três por herói."""
         if not self._eh_jogador(alvo) or maldicao_id not in MALDICOES:
@@ -14752,6 +14761,31 @@ class GameRoom:
                 depois = self._maldicao_estagio(entrada)
                 if depois > antes:
                     await self.gm_say(f"☠️ **{mal['nome']}** de **{p['name']}** avança ao estágio {depois}.")
+                    if entrada["id"] == "corrupcao_crescente":
+                        await self._corrupcao_gerar(p, depois)
+
+    # O que a Corrupção Crescente cria em cada avanço de estágio. Só há quatro
+    # avanços na vida do personagem (II a V), então a geração é GARANTIDA — uma
+    # rolagem por cima poderia fazer a maldição nunca gerar nada.
+    # Atenção: DOENCA_SEVERIDADE aceita leve/pesada/grave e cai em "leve" em
+    # silêncio se a chave estiver errada — não existe "media".
+    _CORRUPCAO_POR_ESTAGIO = {2: ("doenca", "leve"), 3: ("doenca", "pesada"),
+                              4: ("maldicao", "media"), 5: ("maldicao", "grave")}
+
+    async def _corrupcao_gerar(self, p, estagio):
+        """Corrupção Crescente cria uma doença ou uma maldição ao subir de
+        estágio. Nunca gera outra progressiva (o sorteio já as exclui), então
+        não há risco de laço."""
+        receita = self._CORRUPCAO_POR_ESTAGIO.get(estagio)
+        if not receita:
+            return
+        tipo, valor = receita
+        if tipo == "doenca":
+            await self.gm_say(f"☠️ A **Corrupção Crescente** de **{p['name']}** apodrece a carne.")
+            await self._aplicar_doenca(p, valor)
+        else:
+            await self._aplicar_maldicao(p, self._sortear_maldicao(valor),
+                                          "a Corrupção Crescente", origem="monstro")
 
     def _modificador_sobrevivencia(self, p):
         """Modificador líquido aplicado a TODOS os acertos, testes de resistência e
@@ -17599,10 +17633,7 @@ class GameRoom:
                 if arm.get("curse_mode") == "especifica":
                     mid = arm.get("curse_id", "maos_tremulas")
                 else:
-                    categoria = _maldicao_categoria(arm.get("curse_category", "leve"))
-                    opcoes = [mid for mid, dados in MALDICOES.items()
-                              if dados["categoria"] == categoria and not dados.get("progressiva")]
-                    mid = random.choice(opcoes) if opcoes else "maos_tremulas"
+                    mid = self._sortear_maldicao(arm.get("curse_category", "leve"))
                 await self._aplicar_maldicao(alvo, mid, nome, origem="armadilha")
             await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=save_ok, dano=0,
                                             metade=False, descricao=tipo["descricao"], efeitos_extra=[])
@@ -20601,10 +20632,7 @@ class GameRoom:
         if ability.get("curse_mode") == "especifica":
             maldicao_id = ability.get("curse_id", "maos_tremulas")
         else:
-            categoria = _maldicao_categoria(ability.get("curse_category", "leve"))
-            opcoes = [mid for mid, dados in MALDICOES.items()
-                      if dados["categoria"] == categoria and not dados.get("progressiva")]
-            maldicao_id = random.choice(opcoes) if opcoes else "maos_tremulas"
+            maldicao_id = self._sortear_maldicao(ability.get("curse_category", "leve"))
         await self._aplicar_maldicao(alvo, maldicao_id, f"Amaldiçoar de {m['name']}", origem="monstro")
         return True
 
