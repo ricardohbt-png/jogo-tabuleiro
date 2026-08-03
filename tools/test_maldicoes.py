@@ -287,6 +287,37 @@ def test_pen_veneno_no_jogador():
     check("penalidade de CA do veneno agora vale",
           r._player_effective_ac(p) == ca0 - 2)
 
+def test_dano_fisico():
+    print("\n[14] Lâmina Enferrujada e penalidade de dano do veneno")
+    # Dado fixo para o teste não depender de sorte.
+    r, p = sala()
+    p["weapon"] = {"id": "t", "name": "Espada", "die": "1d1", "stat": "str_"}
+    # mod +3 → dano base = 1+3 = 4, longe do piso de 1 (com mod 0 o dano já
+    # nasce no piso e a subtração de 2 fica mascarada pelo max(1, ...)).
+    p["str_"] = 16
+    alvo = {"id": "m1", "name": "Alvo", "hp": 50, "ca": 10, "pos": [5, 6]}
+    def dano():
+        d, *_ = r._resolver_dano_ataque_basico(p, alvo, False, 10)
+        return d
+    base = dano()
+    asyncio.run(r._aplicar_maldicao(p, "lamina_enferrujada"))
+    check("dano da arma cai 2", dano() == max(1, base - 2))
+
+    r2, p2 = sala()
+    p2["weapon"] = {"id": "t", "name": "Espada", "die": "1d1", "stat": "str_"}
+    p2["str_"] = 16
+    b2 = r2._resolver_dano_ataque_basico(p2, alvo, False, 10)[0]
+    p2["penalidades"] = {"dano": -2}
+    check("penalidade de dano do veneno agora vale",
+          r2._resolver_dano_ataque_basico(p2, alvo, False, 10)[0] == max(1, b2 - 2))
+
+    r3, p3 = sala()
+    p3["weapon"] = {"id": "t", "name": "Faca", "die": "1d1", "stat": "str_"}
+    p3["str_"] = 10
+    asyncio.run(r3._aplicar_maldicao(p3, "lamina_enferrujada"))
+    check("piso de 1 respeitado",
+          r3._resolver_dano_ataque_basico(p3, alvo, False, 10)[0] >= 1)
+
 def main():
     test_desequipar(); test_largar(); test_vender()
     test_empurrar(); test_nao_bloqueia_demais()
@@ -295,6 +326,7 @@ def main():
     test_item_amaldicoado_avisa(); test_aviso_nao_vaza_no_payload()
     test_camada_declarativa()
     test_visao_e_ca(); test_pen_veneno_no_jogador()
+    test_dano_fisico()
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 

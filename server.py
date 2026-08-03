@@ -719,7 +719,8 @@ MALDICOES = {
     "olhos_escuridao": {"nome":"Olhos da Escuridão","categoria":"leve","desc":"-2 alcance de visão",
                         "mods":{"visao":-2}},
     "passos_pesados": {"nome":"Passos Pesados","categoria":"leve","desc":"mover custa +1 sede"},
-    "lamina_enferrujada": {"nome":"Lâmina Enferrujada","categoria":"leve","desc":"-2 dano físico"},
+    "lamina_enferrujada": {"nome":"Lâmina Enferrujada","categoria":"leve","desc":"-2 dano físico",
+                           "mods":{"dano_fisico":-2}},
     "fraqueza_arcana": {"nome":"Fraqueza Arcana","categoria":"leve","desc":"magias causam metade do dano"},
     "fortuna_roubada": {"nome":"Fortuna Roubada","categoria":"leve","desc":"recebe metade do ouro"},
     "azar_sobrenatural": {"nome":"Azar Sobrenatural","categoria":"leve","desc":"primeiro 20 natural não crita"},
@@ -7732,7 +7733,9 @@ class GameRoom:
             dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano
                       + self._mod_magia(p, "dano") + self._tecnica_bonus_dano(p)
                       + bonus_extra + weapon.get("dmg_bonus", 0)
-                      + p.get("skill_bonus_dano", 0) - self._corrosao_arma_pen(p))
+                      + p.get("skill_bonus_dano", 0) - self._corrosao_arma_pen(p)
+                      + self._pen(p, "dano")                      # veneno (era inerte)
+                      + self._maldicao_mod(p, "dano_fisico"))     # Lâmina Enferrujada
             dmg = self._apply_damage_types(dmg, [DMG_PHYSICAL], target, weapon, p.get("pos"), target_pos)
             weapon_name = weapon.get("name", "arma")
             sb = f"+{stat_bonus}" if stat_bonus >= 0 else str(stat_bonus)
