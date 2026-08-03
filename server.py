@@ -14752,7 +14752,12 @@ class GameRoom:
         for p in self.players.values():
             if not self._eh_jogador(p):
                 continue
-            for entrada in self._maldicoes(p):
+            # Cópia da lista: a Corrupção Crescente ACRESCENTA uma maldição nesta
+            # mesma lista ao subir de estágio. Sem a cópia, a recém-nascida entra
+            # no laço e é avançada no mesmo instante — hoje isso não acontece só
+            # porque o sorteio nunca devolve progressiva, o que faz uma regra de
+            # design sustentar a correção do laço. A cópia torna isso irrelevante.
+            for entrada in list(self._maldicoes(p)):
                 mal = MALDICOES[entrada["id"]]
                 if not mal.get("progressiva"):
                     continue
