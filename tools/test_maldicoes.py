@@ -449,6 +449,29 @@ def test_curar_hp_funil():
     check("cura 0 não muda nada", r._curar_hp(p, 0) == 0 and p["hp"] == 10)
     check("cura negativa não tira HP", r._curar_hp(p, -5) == 0 and p["hp"] == 10)
 
+def test_tocado_morte():
+    print("\n[21] Tocado pela Morte")
+    r, p = sala()
+    p["max_hp"] = 100; p["hp"] = 10
+    check("sem maldição, cura cheia", r._curar_hp(p, 10) == 10)
+
+    asyncio.run(r._aplicar_maldicao(p, "tocado_morte"))
+    p["hp"] = 10
+    check("estágio I corta 20%", r._curar_hp(p, 10) == 8)
+    p["maldicoes"][0]["aventuras"] = 8   # estágio V
+    p["hp"] = 10
+    check("estágio V corta 60%", r._curar_hp(p, 10) == 4)
+    # Arredonda para baixo: estágio I corta 20% de 7 → (7*20)//100 = 1, cura 6.
+    p["maldicoes"][0]["aventuras"] = 0
+    p["hp"] = 10
+    check("arredonda para baixo", r._curar_hp(p, 7) == 6)
+    # Piso de 1: cura de 1 no estágio V não pode virar 0
+    p["maldicoes"][0]["aventuras"] = 8
+    p["hp"] = 10
+    check("piso de 1 com cura de 1", r._curar_hp(p, 1) == 1)
+    p["hp"] = 10
+    check("cura 0 continua 0", r._curar_hp(p, 0) == 0)
+
 def main():
     test_desequipar(); test_largar(); test_vender()
     test_empurrar(); test_nao_bloqueia_demais()
@@ -464,6 +487,7 @@ def main():
     test_licantropia_caracterizacao()
     test_dreno_fome_sede()
     test_curar_hp_funil()
+    test_tocado_morte()
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 

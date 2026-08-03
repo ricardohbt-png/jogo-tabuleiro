@@ -741,7 +741,9 @@ MALDICOES = {
     "sede_infinita": {"nome":"Sede Infinita","categoria":"grave","progressiva":True,
                       "desc":"consumo sobrenatural de sede",
                       "estagios": {"dreno_sede": (1, 2, 2, 3, 3)}},
-    "tocado_morte": {"nome":"Tocado pela Morte","categoria":"grave","progressiva":True,"desc":"recuperação cada vez menos eficaz"},
+    "tocado_morte": {"nome":"Tocado pela Morte","categoria":"grave","progressiva":True,
+                     "desc":"recuperação cada vez menos eficaz",
+                     "estagios": {"reducao_cura_pct": (20, 30, 40, 50, 60)}},
     "licantropia": {"nome":"Licantropia","categoria":"grave","progressiva":True,
                     "desc":"transformação bestial",
                     "estagios": {"chance": (1, 2, 3, 4, 4), "for": (2, 3, 4, 4, 4),
@@ -14514,6 +14516,11 @@ class GameRoom:
         cura = max(0, int(cura))
         if cura <= 0:
             return 0
+        cfg = self._maldicao_estagio_cfg(alvo, "tocado_morte") if self._eh_jogador(alvo) else None
+        if cfg:
+            # Piso de 1: sem ele, uma poção de 1 HP no estágio V curaria zero e
+            # o jogador acharia que está bugado.
+            cura = max(1, cura - (cura * cfg["reducao_cura_pct"]) // 100)
         antes = alvo.get("hp", 0)
         alvo["hp"] = min(alvo.get("max_hp", antes), antes + cura)
         return alvo["hp"] - antes
