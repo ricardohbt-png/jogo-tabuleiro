@@ -735,8 +735,12 @@ MALDICOES = {
     "alma_quebrada": {"nome":"Alma Quebrada","categoria":"media","desc":"não recebe bônus de aliados"},
     "aura_profana": {"nome":"Aura Profana","categoria":"media","desc":"aliados adjacentes: -1 ataque"},
     "maldicao_ferrugem": {"nome":"Maldição da Ferrugem","categoria":"media","desc":"equipamento degrada após combate"},
-    "fome_eterna": {"nome":"Fome Eterna","categoria":"grave","progressiva":True,"desc":"consumo sobrenatural de fome"},
-    "sede_infinita": {"nome":"Sede Infinita","categoria":"grave","progressiva":True,"desc":"consumo sobrenatural de sede"},
+    "fome_eterna": {"nome":"Fome Eterna","categoria":"grave","progressiva":True,
+                    "desc":"consumo sobrenatural de fome",
+                    "estagios": {"dreno_fome": (1, 2, 2, 3, 3)}},
+    "sede_infinita": {"nome":"Sede Infinita","categoria":"grave","progressiva":True,
+                      "desc":"consumo sobrenatural de sede",
+                      "estagios": {"dreno_sede": (1, 2, 2, 3, 3)}},
     "tocado_morte": {"nome":"Tocado pela Morte","categoria":"grave","progressiva":True,"desc":"recuperação cada vez menos eficaz"},
     "licantropia": {"nome":"Licantropia","categoria":"grave","progressiva":True,
                     "desc":"transformação bestial",
@@ -9465,6 +9469,7 @@ class GameRoom:
         await self._processar_corrosao_viva_turno(p)
         await self._processar_regeneracao_pocao_turno(p)
         await self._processar_regeneracao_licantropia(p)
+        await self._processar_dreno_maldicoes(p)
         await self._processar_vinho_turno(p)
         await self._processar_cerveja_turno(p)
         await self._processar_buffs_magicos_turno(p)
@@ -14522,6 +14527,24 @@ class GameRoom:
             p["hp"] += cura
             await self.gm_say(f"🐺 A Licantropia regenera **{p['name']}** em +{cura} HP ({p['hp']}/{p['max_hp']}).")
         p["licantropia_regen_proxima"] = self.round_num + cfg["intervalo_regen"]
+
+    async def _processar_dreno_maldicoes(self, p):
+        """Fome Eterna e Sede Infinita drenam por RODADA, só por existir — é o
+        que as distingue do Corpo Exausto, que sobretaxa ações. Roda no início
+        do turno do herói, ao lado da regeneração da Licantropia."""
+        if not p.get("alive"):
+            return
+        for mid, recurso, chave in (("fome_eterna", "fome", "dreno_fome"),
+                                     ("sede_infinita", "sede", "dreno_sede")):
+            cfg = self._maldicao_estagio_cfg(p, mid)
+            if not cfg:
+                continue
+            perda = min(cfg[chave], p.get(recurso, 0))
+            if perda <= 0:
+                continue
+            p[recurso] = max(0, p.get(recurso, 0) - perda)
+            await self.gm_say(f"☠️ **{MALDICOES[mid]['nome']}** consome "
+                              f"**{perda}** de {recurso} de **{p['name']}**.")
 
     async def _transformar_licantropo(self, p, motivo="a maldição desperta"):
         cfg = self._licantropia_config(p)

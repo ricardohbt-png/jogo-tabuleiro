@@ -398,6 +398,44 @@ def test_licantropia_caracterizacao():
     r2, p2 = sala()
     check("sem a maldição devolve None", r2._licantropia_config(p2) is None)
 
+def test_dreno_fome_sede():
+    print("\n[19] Fome Eterna e Sede Infinita")
+    r, p = sala()
+    p["fome"] = p["sede"] = 50
+    asyncio.run(r._processar_dreno_maldicoes(p))
+    check("sem maldição, não drena", p["fome"] == 50 and p["sede"] == 50)
+
+    asyncio.run(r._aplicar_maldicao(p, "fome_eterna"))
+    p["fome"] = p["sede"] = 50
+    asyncio.run(r._processar_dreno_maldicoes(p))
+    check("estágio I drena 1 de fome", p["fome"] == 49)
+    check("Fome Eterna não mexe na sede", p["sede"] == 50)
+
+    # estágio V: aventuras >= 8
+    p["maldicoes"][0]["aventuras"] = 8
+    p["fome"] = 50
+    asyncio.run(r._processar_dreno_maldicoes(p))
+    check("estágio V drena 3 de fome", p["fome"] == 47)
+
+    r2, p2 = sala()
+    asyncio.run(r2._aplicar_maldicao(p2, "sede_infinita"))
+    p2["fome"] = p2["sede"] = 50
+    asyncio.run(r2._processar_dreno_maldicoes(p2))
+    check("Sede Infinita drena a sede", p2["sede"] == 49)
+    check("Sede Infinita não mexe na fome", p2["fome"] == 50)
+
+    r3, p3 = sala()
+    asyncio.run(r3._aplicar_maldicao(p3, "fome_eterna"))
+    p3["fome"] = 0
+    asyncio.run(r3._processar_dreno_maldicoes(p3))
+    check("piso de 0 respeitado", p3["fome"] == 0)
+
+    r4, p4 = sala()
+    asyncio.run(r4._aplicar_maldicao(p4, "fome_eterna"))
+    p4["alive"] = False; p4["fome"] = 50
+    asyncio.run(r4._processar_dreno_maldicoes(p4))
+    check("herói morto não drena", p4["fome"] == 50)
+
 def main():
     test_desequipar(); test_largar(); test_vender()
     test_empurrar(); test_nao_bloqueia_demais()
@@ -411,6 +449,7 @@ def main():
     test_fortuna_roubada()
     test_azar_sobrenatural()
     test_licantropia_caracterizacao()
+    test_dreno_fome_sede()
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 
