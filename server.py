@@ -14478,6 +14478,11 @@ class GameRoom:
         p["azar_20_gasto"] = True
         return True
 
+    def _fraqueza_arcana_mult(self, p):
+        """Multiplicador de dano de magia da Fraqueza Arcana. Entra no mesmo
+        `dmg_mult` que a Metamagia Fortalecer já usa — os dois se multiplicam."""
+        return 0.5 if self._tem_maldicao(p, "fraqueza_arcana") else 1
+
     def _aura_profana_pen(self, p):
         """-1 de ataque por aliado VIVO adjacente que carrega Aura Profana.
         O próprio portador não é afetado — a maldição irradia para fora."""
@@ -14950,6 +14955,10 @@ class GameRoom:
         dc_bonus  += tec_dc
         dur_bonus += tec_dur
         dmg_mult  *= tec_mult
+        # Fraqueza Arcana (maldição): metade do dano. Entra DEPOIS da metamagia
+        # e das técnicas — dmg_mult só é atribuído dentro do ramo Fortalecer, e
+        # aplicar antes perderia o efeito em quem não usa Fortalecer.
+        dmg_mult  *= self._fraqueza_arcana_mult(p)
         usou_acelerada = bool(p.get("tec_ex_acelerada_armado"))
         p["_tec_save_desvantagem"] = bool(p.get("tec_ex_canalizacao_perfeita_armado"))
 

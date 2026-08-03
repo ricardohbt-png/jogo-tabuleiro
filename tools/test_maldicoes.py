@@ -542,6 +542,40 @@ def test_carne_fragil():
     check("monstro não é poluído com campos de maldição",
           "maldicoes" not in alvo_monstro and "amaldicoado" not in alvo_monstro)
 
+def test_fraqueza_arcana():
+    print("\n[24] Fraqueza Arcana")
+    r, p = sala()
+    check("sem maldição, multiplicador cheio", r._fraqueza_arcana_mult(p) == 1)
+    asyncio.run(r._aplicar_maldicao(p, "fraqueza_arcana"))
+    check("com a maldição, metade", r._fraqueza_arcana_mult(p) == 0.5)
+
+    # O dano resultante precisa ser INTEIRO. O Fortalecer já produz ×1,25 hoje,
+    # então dano fracionário é um risco pré-existente que ×0,5 torna frequente.
+    for base in (7, 9, 13):
+        dano = int(base * r._fraqueza_arcana_mult(p))
+        check(f"dano de {base} vira inteiro", isinstance(dano, int))
+
+    # Ponta a ponta: mago amaldiçoado lança uma magia de dano num monstro e o
+    # HP do alvo tem de cair por um INTEIRO (nunca virar float).
+    r2, _ = sala()
+    mago = S.make_player("p2", "Pedro", "mage", 1)
+    mago["pos"] = [5, 5]; mago["level"] = 3
+    r2.players["p2"] = mago
+    asyncio.run(r2._aplicar_maldicao(mago, "fraqueza_arcana"))
+    gdef = next(m for m in S.MONSTER_DEFS if m.get("type") == "goblin")
+    mob = S.make_monster(gdef, {"id": "r1", "cx": 6, "cy": 5})
+    mob["id"] = "m1"; mob["hp"] = mob["max_hp"] = 200; mob["pos"] = [6, 5]
+    r2.monsters["m1"] = mob
+    for mid in ("bola_fogo", "raio_congelante", "relampago"):
+        magia = dict(S.GRIMORIO[mid]); magia["id"] = mid
+        alvo = {"target_id": "m1", "tx": 6, "ty": 5, "dir": [1, 0]}
+        antes = mob["hp"]
+        asyncio.run(r2._executar_magia_grimorio(mago, magia, alvo, 0.5, 0, 0))
+        check(f"{mid}: HP do alvo continua inteiro", isinstance(mob["hp"], int))
+        check(f"{mid}: causou dano", mob["hp"] < antes or mob["hp"] <= 0)
+        mob["hp"] = mob["max_hp"]; mob["alive"] = True
+
+
 def main():
     test_desequipar(); test_largar(); test_vender()
     test_empurrar(); test_nao_bloqueia_demais()
@@ -560,6 +594,7 @@ def main():
     test_tocado_morte()
     test_corrupcao_crescente()
     test_carne_fragil()
+    test_fraqueza_arcana()
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 
