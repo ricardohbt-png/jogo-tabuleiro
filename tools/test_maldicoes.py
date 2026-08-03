@@ -334,6 +334,34 @@ def test_aura_profana():
     p["alive"] = False
     check("portador morto não irradia", r._aura_profana_pen(aliado) == 0)
 
+def test_fortuna_roubada():
+    print("\n[16] Fortuna Roubada")
+    r, p = sala()
+    p["gold"] = 0
+    asyncio.run(r._ganhar_ouro(p, 100, "do baú"))
+    check("sem maldição, recebe tudo", p["gold"] == 100)
+    asyncio.run(r._aplicar_maldicao(p, "fortuna_roubada"))
+    p["gold"] = 0
+    asyncio.run(r._ganhar_ouro(p, 100, "do baú"))
+    check("com a maldição, recebe metade", p["gold"] == 50)
+    p["gold"] = 0
+    asyncio.run(r._ganhar_ouro(p, 1, "do baú"))
+    check("arredonda para baixo", p["gold"] == 0)
+    p["gold"] = 0
+    asyncio.run(r._ganhar_ouro(p, 0, "do baú"))
+    check("zero continua zero", p["gold"] == 0)
+    # Os três sites de ouro achado precisam MESMO usar o helper — sem isto, o
+    # teste passaria com um deles esquecido. Mesma técnica do teste de
+    # sincronia [N2] em tools/test_editor_itens.py.
+    import os as _os
+    fonte = open(_os.path.join(_os.path.dirname(_os.path.dirname(
+        _os.path.abspath(__file__))), "server.py"), encoding="utf-8", errors="ignore").read()
+    check("os 3 sites de ouro achado usam o helper",
+          fonte.count("await self._ganhar_ouro(") >= 3)
+    # E a venda continua creditando direto — patrimônio próprio, não achado.
+    check("venda de item não passa pelo helper",
+          'p["gold"] += sell_price' in fonte)
+
 def main():
     test_desequipar(); test_largar(); test_vender()
     test_empurrar(); test_nao_bloqueia_demais()
@@ -344,6 +372,7 @@ def main():
     test_visao_e_ca(); test_pen_veneno_no_jogador()
     test_dano_fisico()
     test_aura_profana()
+    test_fortuna_roubada()
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 

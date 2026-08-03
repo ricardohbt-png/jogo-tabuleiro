@@ -14175,9 +14175,9 @@ class GameRoom:
             amount = chest["gold"]
             if amount <= 0:
                 await self.send_to(pid, {"type": "error", "msg": "Sem ouro neste baú."}); return
-            p["gold"] += amount
+            recebido = await self._ganhar_ouro(p, amount, "do baú")
             chest["gold"] = 0
-            await self.gm_say(f"🪙 **{p['name']}** pegou **{amount}** ouros do baú!")
+            await self.gm_say(f"🪙 **{p['name']}** pegou **{recebido}** ouros do baú!")
         elif kind == "item":
             idx = int(index)
             if idx < 0 or idx >= len(chest["items"]):
@@ -14436,6 +14436,20 @@ class GameRoom:
 
     def _tem_maldicao(self, p, maldicao_id):
         return any(m["id"] == maldicao_id for m in self._maldicoes(p))
+
+    async def _ganhar_ouro(self, p, quantia, motivo=""):
+        """Credita ouro ACHADO (baú, container, recompensa de objetivo) aplicando
+        Fortuna Roubada. Venda de item não passa por aqui de propósito: é
+        patrimônio próprio, e receber metade do preço anunciado confundiria.
+        Devolve o quanto foi realmente creditado."""
+        quantia = max(0, int(quantia))
+        if quantia and self._tem_maldicao(p, "fortuna_roubada"):
+            perdido = quantia - quantia // 2
+            quantia = quantia // 2
+            await self.gm_say(f"☠️ **Fortuna Roubada** consome **{perdido}** ouros "
+                              f"{motivo} de **{p['name']}**.")
+        p["gold"] = p.get("gold", 0) + quantia
+        return quantia
 
     def _aura_profana_pen(self, p):
         """-1 de ataque por aliado VIVO adjacente que carrega Aura Profana.
@@ -19608,9 +19622,9 @@ class GameRoom:
             amount = loot["gold"]
             if amount <= 0:
                 await self.send_to(pid, {"type": "error", "msg": "Sem ouro aqui."}); return
-            p["gold"] += amount
+            recebido = await self._ganhar_ouro(p, amount, "do objeto")
             loot["gold"] = 0
-            await self.gm_say(f"🪙 **{p['name']}** pegou **{amount}** ouros do objeto!")
+            await self.gm_say(f"🪙 **{p['name']}** pegou **{recebido}** ouros do objeto!")
         elif kind == "item":
             idx = int(index)
             if idx < 0 or idx >= len(loot["items"]):
@@ -23213,7 +23227,7 @@ class GameRoom:
         xp_share   = max(1, xp_total // n) if xp_total > 0 else 0
         ouro_share = ouro_total // n if ouro_total > 0 else 0
         for p in vivos:
-            if ouro_share: p["gold"] += ouro_share
+            if ouro_share: await self._ganhar_ouro(p, ouro_share, "da recompensa")
             if xp_share:
                 p["xp"] += xp_share
                 await self._check_level_up(p)
