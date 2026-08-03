@@ -738,7 +738,12 @@ MALDICOES = {
     "fome_eterna": {"nome":"Fome Eterna","categoria":"grave","progressiva":True,"desc":"consumo sobrenatural de fome"},
     "sede_infinita": {"nome":"Sede Infinita","categoria":"grave","progressiva":True,"desc":"consumo sobrenatural de sede"},
     "tocado_morte": {"nome":"Tocado pela Morte","categoria":"grave","progressiva":True,"desc":"recuperação cada vez menos eficaz"},
-    "licantropia": {"nome":"Licantropia","categoria":"grave","progressiva":True,"desc":"transformação bestial"},
+    "licantropia": {"nome":"Licantropia","categoria":"grave","progressiva":True,
+                    "desc":"transformação bestial",
+                    "estagios": {"chance": (1, 2, 3, 4, 4), "for": (2, 3, 4, 4, 4),
+                                 "con": (2, 3, 3, 3, 3), "des": (1, 1, 2, 2, 2),
+                                 "reducao": (1, 2, 2, 3, 3), "regen": (1, 2, 2, 3, 3),
+                                 "intervalo_regen": (3, 3, 2, 2, 2)}},
     "silencio_deuses": {"nome":"Silêncio dos Deuses","categoria":"grave","desc":"não lança magias"},
     "voz_quebrada": {"nome":"Voz Quebrada","categoria":"grave","desc":"bardo não usa Canções"},
     "espirito_covarde": {"nome":"Espírito Covarde","categoria":"grave","desc":"-2 Vontade; falha contra medo",
@@ -757,6 +762,9 @@ MALDICAO_MAX_POR_HEROI = 3
 #   dano_fisico → _resolver_dano_ataque_basico
 #   ca          → _player_effective_ac
 MALDICAO_MOD_CHAVES = ("ataque", "movimento", "vontade", "visao", "dano_fisico", "ca")
+# `estagios`: rampas das maldições PROGRESSIVAS, uma tupla de 5 por parâmetro
+# (índice = estágio-1). Lido só por _maldicao_estagio_cfg. Acrescentar uma
+# progressiva nova é declarar aqui e ler o parâmetro onde ele importa.
 
 def _maldicao_categoria(valor):
     return {"moderado":"media", "média":"media", "medio":"media"}.get(str(valor).lower(), str(valor).lower())
@@ -14485,16 +14493,22 @@ class GameRoom:
         """I no instante da aplicação; II/III/IV/V após 2/4/6/8 aventuras."""
         return min(5, 1 + max(0, int(entrada.get("aventuras", 0))) // 2)
 
-    def _licantropia_config(self, p):
-        """Parâmetros efetivos da Licantropia para o estágio atual do herói."""
-        entrada = next((m for m in self._maldicoes(p) if m["id"] == "licantropia"), None)
+    def _maldicao_estagio_cfg(self, p, maldicao_id):
+        """Parâmetros da progressiva no estágio atual do herói, ou None se ele
+        não a carrega. Único ponto que sabe ler o campo `estagios`."""
+        entrada = next((m for m in self._maldicoes(p) if m["id"] == maldicao_id), None)
         if not entrada:
             return None
         estagio = self._maldicao_estagio(entrada)
-        return {"estagio": estagio, "chance": 4 if estagio >= 4 else estagio,
-                "for": (2, 3, 4, 4, 4)[estagio - 1], "con": (2, 3, 3, 3, 3)[estagio - 1],
-                "des": (1, 1, 2, 2, 2)[estagio - 1], "reducao": (1, 2, 2, 3, 3)[estagio - 1],
-                "regen": (1, 2, 2, 3, 3)[estagio - 1], "intervalo_regen": (3, 3, 2, 2, 2)[estagio - 1]}
+        rampas = MALDICOES[maldicao_id].get("estagios", {})
+        cfg = {chave: valores[estagio - 1] for chave, valores in rampas.items()}
+        cfg["estagio"] = estagio
+        return cfg
+
+    def _licantropia_config(self, p):
+        """Parâmetros efetivos da Licantropia para o estágio atual do herói.
+        As rampas moram em MALDICOES['licantropia']['estagios']."""
+        return self._maldicao_estagio_cfg(p, "licantropia")
 
     async def _processar_regeneracao_licantropia(self, p):
         cfg = self._licantropia_config(p)

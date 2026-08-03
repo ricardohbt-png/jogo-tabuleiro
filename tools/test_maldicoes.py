@@ -373,6 +373,31 @@ def test_azar_sobrenatural():
     p.pop("azar_20_gasto", None)   # é o que enter_dungeon faz
     check("entrar de novo na masmorra rearma", r._azar_consome_critico(p, 20) is True)
 
+# Os 35 parâmetros da Licantropia (7 chaves × 5 estágios), extraídos do código
+# ANTES da migração. Se um só mudar depois, a migração quebrou.
+LICANTROPIA_ESPERADO = {
+    "chance":          (1, 2, 3, 4, 4),
+    "for":             (2, 3, 4, 4, 4),
+    "con":             (2, 3, 3, 3, 3),
+    "des":             (1, 1, 2, 2, 2),
+    "reducao":         (1, 2, 2, 3, 3),
+    "regen":           (1, 2, 2, 3, 3),
+    "intervalo_regen": (3, 3, 2, 2, 2),
+}
+
+def test_licantropia_caracterizacao():
+    print("\n[18] Licantropia — os 35 números não mudam")
+    r, p = sala()
+    p["maldicoes"] = [{"id": "licantropia", "aventuras": 0}]
+    for estagio in range(1, 6):
+        p["maldicoes"][0]["aventuras"] = (estagio - 1) * 2
+        cfg = r._licantropia_config(p)
+        check(f"estágio {estagio} reportado", cfg["estagio"] == estagio)
+        for chave, rampa in LICANTROPIA_ESPERADO.items():
+            check(f"E{estagio} {chave} = {rampa[estagio-1]}", cfg[chave] == rampa[estagio - 1])
+    r2, p2 = sala()
+    check("sem a maldição devolve None", r2._licantropia_config(p2) is None)
+
 def main():
     test_desequipar(); test_largar(); test_vender()
     test_empurrar(); test_nao_bloqueia_demais()
@@ -385,6 +410,7 @@ def main():
     test_aura_profana()
     test_fortuna_roubada()
     test_azar_sobrenatural()
+    test_licantropia_caracterizacao()
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 
