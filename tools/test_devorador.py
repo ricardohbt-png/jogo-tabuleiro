@@ -447,7 +447,13 @@ async def main():
                        {"id": 1, "cx": 6, "cy": 5}); mob["pos"] = [6, 5]
     mob["hp"] = 50; mob["max_hp"] = 50; r.monsters[mob["id"]] = mob
     mage["bag"] = [mk_scroll("bola_fogo", 1)]
+    # Rolagens no máximo: mago nível 1 rola só 1d6 de dano e a Bola de Fogo tem
+    # save de Reflexos para metade — com d6=1 e save do urso OK o dano vira
+    # 1//2 = 0 e o mob não perde HP (flaky ~1 em 6). Fixar o dado torna o
+    # resultado determinístico (d6=6, save passa → 3 de dano).
+    _o = S.random.randint; S.random.randint = lambda a, b: b
     await r.handle_use_scroll("p1", "pergaminho_bola_fogo", {"tx": 6, "ty": 5})
+    S.random.randint = _o
     check("sucesso: pergaminho consumido", not mage["bag"])
     check("sucesso: ação consumida", mage["action_done"] is True)
     check("sucesso: magia teve efeito (mob sofreu dano)", mob["hp"] < 50)
