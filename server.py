@@ -716,13 +716,15 @@ DOENCA_SINTOMA_DESC = {
 MALDICOES = {
     "maos_tremulas": {"nome":"Mãos Trêmulas","categoria":"leve","desc":"-2 em ataques",
                       "mods":{"ataque":-2}},
-    "olhos_escuridao": {"nome":"Olhos da Escuridão","categoria":"leve","desc":"-2 alcance de visão"},
+    "olhos_escuridao": {"nome":"Olhos da Escuridão","categoria":"leve","desc":"-2 alcance de visão",
+                        "mods":{"visao":-2}},
     "passos_pesados": {"nome":"Passos Pesados","categoria":"leve","desc":"mover custa +1 sede"},
     "lamina_enferrujada": {"nome":"Lâmina Enferrujada","categoria":"leve","desc":"-2 dano físico"},
     "fraqueza_arcana": {"nome":"Fraqueza Arcana","categoria":"leve","desc":"magias causam metade do dano"},
     "fortuna_roubada": {"nome":"Fortuna Roubada","categoria":"leve","desc":"recebe metade do ouro"},
     "azar_sobrenatural": {"nome":"Azar Sobrenatural","categoria":"leve","desc":"primeiro 20 natural não crita"},
-    "marca_cacador": {"nome":"Marca do Caçador","categoria":"leve","desc":"inimigos recebem +1 contra você"},
+    "marca_cacador": {"nome":"Marca do Caçador","categoria":"leve","desc":"inimigos recebem +1 contra você",
+                      "mods":{"ca":-1}},
     "corpo_exausto": {"nome":"Corpo Exausto","categoria":"media","desc":"ações custam +1 fome e sede"},
     "carne_fragil": {"nome":"Carne Frágil","categoria":"media","desc":"+2 dano recebido"},
     "sangramento_profano": {"nome":"Sangramento Profano","categoria":"media","desc":"1 dano no início do turno após sofrer dano"},
@@ -9860,7 +9862,8 @@ class GameRoom:
         bonus_luz = 0
         if p.get("class_id") == "paladin" and p.get("guerreiro_luz_ativo"):
             bonus_luz = p.get("guerreiro_luz_bonus", {}).get("visao", 0)
-        return max(1, raio_base + bonus_atributos + bonus_item + bonus_luz)
+        return max(1, raio_base + bonus_atributos + bonus_item + bonus_luz
+                   + self._maldicao_mod(p, "visao"))
 
     def _get_raio_visao_monstro(self, m):
         """Raio de visão: movimento base + bônus de visão + INT/DES."""
@@ -18733,13 +18736,16 @@ class GameRoom:
 
     def _player_effective_ac(self, p):
         """CA efetiva de um jogador ao ser atacado por um monstro (escudo/canção/
-        Guerreiro da Luz/Amaldiçoar e corrosão de armadura)."""
+        Guerreiro da Luz/corrosão de armadura/penalidade de veneno/maldição
+        Marca do Caçador)."""
         gl_ca = (p.get("guerreiro_luz_bonus", {}).get("ca", 0)
                  if p.get("guerreiro_luz_ativo") else 0)
         return (p["ac"] + self.temp_def.get(p["id"], 0)
                 + self._cancao_bonus(p, "bonus_ca")
                 + gl_ca + self._mod_magia(p, "ca")
-                - self._corrosao_ca_pen(p))
+                - self._corrosao_ca_pen(p)
+                + self._pen(p, "ca")              # penalidade de veneno (era inerte)
+                + self._maldicao_mod(p, "ca"))    # Marca do Caçador
 
     def _metal_armor_ac(self, p):
         """Parcela de CA concedida pela armadura metálica equipada."""

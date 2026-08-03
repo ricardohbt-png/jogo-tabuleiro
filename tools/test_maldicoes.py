@@ -265,6 +265,28 @@ def test_camada_declarativa():
           r3._maldicao_mod(p3, "ataque") == -2 and r3._maldicao_mod(p3, "movimento") == -3)
     check("chave sem ninguém devolve 0", r3._maldicao_mod(p3, "visao") == 0)
 
+def test_visao_e_ca():
+    print("\n[12] Olhos da Escuridão e Marca do Caçador")
+    r, p = sala()
+    v0 = r._get_raio_visao(p)
+    asyncio.run(r._aplicar_maldicao(p, "olhos_escuridao"))
+    check("visão cai 2", r._get_raio_visao(p) == v0 - 2)
+    p["spd"] = 1; p["int_"] = 10; p["dex"] = 10
+    check("piso de 1 respeitado", r._get_raio_visao(p) >= 1)
+
+    r2, p2 = sala()
+    ca0 = r2._player_effective_ac(p2)
+    asyncio.run(r2._aplicar_maldicao(p2, "marca_cacador"))
+    check("CA efetiva cai 1", r2._player_effective_ac(p2) == ca0 - 1)
+
+def test_pen_veneno_no_jogador():
+    print("\n[13] Penalidades de veneno saem do inerte")
+    r, p = sala()
+    ca0 = r._player_effective_ac(p)
+    p["penalidades"] = {"ca": -2}
+    check("penalidade de CA do veneno agora vale",
+          r._player_effective_ac(p) == ca0 - 2)
+
 def main():
     test_desequipar(); test_largar(); test_vender()
     test_empurrar(); test_nao_bloqueia_demais()
@@ -272,6 +294,7 @@ def main():
     test_remover_maldicao_certa(); test_purificacao_nao_cura_errada()
     test_item_amaldicoado_avisa(); test_aviso_nao_vaza_no_payload()
     test_camada_declarativa()
+    test_visao_e_ca(); test_pen_veneno_no_jogador()
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 
