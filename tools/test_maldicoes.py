@@ -598,6 +598,40 @@ def test_alma_quebrada():
     check("Guerreiro da Luz do próprio paladino segue valendo",
           pal["guerreiro_luz_bonus"]["ataque"] == 2 and pal.get("guerreiro_luz_ativo"))
 
+def test_sangramento_profano():
+    print("\n[26] Sangramento Profano")
+    r, p = sala()
+    p["max_hp"] = 30; p["hp"] = 30
+    asyncio.run(r._aplicar_maldicao(p, "sangramento_profano"))
+
+    # 1º turno: só grava o HP de referência, ninguém sangra ainda.
+    asyncio.run(r._processar_dreno_maldicoes(p))
+    check("primeiro turno não sangra", p["hp"] == 30)
+
+    # Sofreu dano entre os turnos → sangra 1.
+    p["hp"] = 22
+    asyncio.run(r._processar_dreno_maldicoes(p))
+    check("sofreu dano no intervalo: sangra 1", p["hp"] == 21)
+
+    # Sem dano desde o turno anterior → não sangra.
+    asyncio.run(r._processar_dreno_maldicoes(p))
+    check("sem dano no intervalo: não sangra", p["hp"] == 21)
+
+    # Curou-se acima do valor anterior → também não sangra.
+    p["hp"] = 28
+    asyncio.run(r._processar_dreno_maldicoes(p))
+    check("curou-se: não sangra", p["hp"] == 28)
+
+    # Herói morto não sangra.
+    r2, p2 = sala()
+    asyncio.run(r2._aplicar_maldicao(p2, "sangramento_profano"))
+    p2["max_hp"] = 30; p2["hp"] = 30
+    asyncio.run(r2._processar_dreno_maldicoes(p2))
+    p2["hp"] = 10; p2["alive"] = False
+    asyncio.run(r2._processar_dreno_maldicoes(p2))
+    check("herói morto não sangra", p2["hp"] == 10)
+
+
 def main():
     test_desequipar(); test_largar(); test_vender()
     test_empurrar(); test_nao_bloqueia_demais()
@@ -618,6 +652,7 @@ def main():
     test_carne_fragil()
     test_fraqueza_arcana()
     test_alma_quebrada()
+    test_sangramento_profano()
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 

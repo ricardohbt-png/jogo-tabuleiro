@@ -14568,6 +14568,16 @@ class GameRoom:
             await self.gm_say(f"☠️ **{MALDICOES[mid]['nome']}** consome "
                               f"**{perda}** de {recurso} de **{p['name']}**.")
 
+        # Sangramento Profano: em vez de instrumentar os ~67 pontos que tiram HP,
+        # compara o HP com o do turno anterior. Se caiu, houve dano no intervalo.
+        if self._tem_maldicao(p, "sangramento_profano"):
+            anterior = p.get("_hp_turno_anterior")
+            if anterior is not None and p.get("hp", 0) < anterior and p.get("hp", 0) > 0:
+                p["hp"] = max(1, p["hp"] - 1)
+                await self.gm_say(f"🩸 **Sangramento Profano** abre as feridas de "
+                                  f"**{p['name']}** — **1** de dano.")
+        p["_hp_turno_anterior"] = p.get("hp", 0)
+
     async def _transformar_licantropo(self, p, motivo="a maldição desperta"):
         cfg = self._licantropia_config(p)
         if not cfg or p.get("licantropia_transformado") or not p.get("alive"):
