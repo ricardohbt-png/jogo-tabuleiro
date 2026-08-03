@@ -576,6 +576,28 @@ def test_fraqueza_arcana():
         mob["hp"] = mob["max_hp"]; mob["alive"] = True
 
 
+def test_alma_quebrada():
+    print("\n[25] Alma Quebrada")
+    r, p = sala()
+    p["buffs_cancao"] = {"bonus_acerto": 2, "bonus_mov": 1}
+    p["mov_bonus_val"] = 2; p["mov_bonus_ate"] = r.round_num + 1
+    check("canção vale sem a maldição", r._cancao_bonus(p, "bonus_acerto") == 2)
+    check("grito vale sem a maldição", r._grito_mov_bonus(p) == 2)
+
+    asyncio.run(r._aplicar_maldicao(p, "alma_quebrada"))
+    check("canção zerada", r._cancao_bonus(p, "bonus_acerto") == 0)
+    check("grito zerado", r._grito_mov_bonus(p) == 0)
+
+    # Auto-buff do paladino NÃO é bônus de aliado e continua valendo.
+    r2, p2 = sala()
+    pal = S.make_player("p2", "Richard", "paladin", 1)
+    r2.players["p2"] = pal
+    pal["guerreiro_luz_ativo"] = True
+    pal["guerreiro_luz_bonus"] = {"ataque": 2, "ca": 1}
+    asyncio.run(r2._aplicar_maldicao(pal, "alma_quebrada"))
+    check("Guerreiro da Luz do próprio paladino segue valendo",
+          pal["guerreiro_luz_bonus"]["ataque"] == 2 and pal.get("guerreiro_luz_ativo"))
+
 def main():
     test_desequipar(); test_largar(); test_vender()
     test_empurrar(); test_nao_bloqueia_demais()
@@ -595,6 +617,7 @@ def main():
     test_corrupcao_crescente()
     test_carne_fragil()
     test_fraqueza_arcana()
+    test_alma_quebrada()
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 

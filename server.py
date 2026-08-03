@@ -16712,8 +16712,11 @@ class GameRoom:
         return any(self._em_zona_quadrada(x, y, z) for z in self._zonas_ativas("silencio"))
 
     def _cancao_bonus(self, p, chave):
-        """Bônus da Canção Heroica (bardo) — SUPRIMIDO dentro de uma área de Silêncio."""
+        """Bônus da Canção Heroica (bardo) — SUPRIMIDO dentro de uma área de
+        Silêncio e para quem carrega Alma Quebrada."""
         if self._em_silencio(p):
+            return 0
+        if self._tem_maldicao(p, "alma_quebrada"):
             return 0
         return p.get("buffs_cancao", {}).get(chave, 0)
 
@@ -16999,7 +17002,10 @@ class GameRoom:
         return alvo.get("penalidades", {}).get(chave, 0)
 
     def _grito_mov_bonus(self, p):
-        """+N de movimento transitório (Técnica Grito de Guerra) enquanto válido nesta rodada."""
+        """+N de movimento transitório (Técnica Grito de Guerra) enquanto válido
+        nesta rodada. Alma Quebrada anula — é bônus concedido por aliado."""
+        if self._tem_maldicao(p, "alma_quebrada"):
+            return 0
         return p.get("mov_bonus_val", 0) if p.get("mov_bonus_ate", 0) >= self.round_num else 0
 
     def _moves_base(self, p):
