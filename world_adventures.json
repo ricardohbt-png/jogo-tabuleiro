@@ -26,6 +26,7 @@
       "dados": ""
     },
     "oculto_ate_liberar": false,
+    "revisitavel": false,
     "outro_rota": {
       "slides": [
         {
@@ -93,6 +94,7 @@
       "dados": ""
     },
     "oculto_ate_liberar": true,
+    "revisitavel": false,
     "outro_rota": {
       "slides": [
         {
@@ -109,5 +111,45 @@
       "aventura_id": ""
     },
     "renome_recompensa": 5
+  },
+  "destino_3": {
+    "id": "destino_3",
+    "nome": "Ad´Hadal",
+    "x": 72.9,
+    "y": 50.12,
+    "fome": 0,
+    "sede": 0,
+    "dungeons": [
+      {
+        "file": "floresta.json",
+        "encadear": false,
+        "intro": {
+          "slides": [
+            {
+              "text": "Ninguem entra em Ad´Hadal por vontade própria. ",
+              "image": "assets/story/WhatsApp_Image_2026-04-02_at_22.15.40__1_.jpeg"
+            }
+          ],
+          "audio": "assets/story/a_song_of_old_stones.mp3"
+        },
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "pista5",
+      "aventura_id": ""
+    },
+    "renome_recompensa": 1
   }
 }

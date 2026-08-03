@@ -4208,8 +4208,8 @@ window.EDITOR_DUNGEONS = [
       "ambiente": "ar_livre",
       "saida_permitida": true,
       "grid": {
-        "w": 16,
-        "h": 12
+        "w": 26,
+        "h": 16
       },
       "tiles": [
         [
@@ -4228,32 +4228,6 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          1
-        ],
-        [
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1
-        ],
-        [
-          1,
-          1,
-          1,
-          1,
-          1,
           1,
           1,
           1,
@@ -4277,14 +4251,6 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1
-        ],
-        [
           1,
           1,
           1,
@@ -4318,32 +4284,6 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          1
-        ],
-        [
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1
-        ],
-        [
-          1,
-          1,
-          1,
-          1,
-          1,
           1,
           1,
           1,
@@ -4367,14 +4307,6 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1
-        ],
-        [
           1,
           1,
           1,
@@ -4408,9 +4340,309 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           1
         ],
         [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           1,
           1,
           1,
@@ -4431,10 +4663,10 @@ window.EDITOR_DUNGEONS = [
       ],
       "rooms": [
         {
-          "id": 0,
+          "id": 1,
           "x": 2,
-          "y": 8,
-          "w": 4,
+          "y": 11,
+          "w": 3,
           "h": 3,
           "role": "entrance",
           "locked": false,
@@ -4442,10 +4674,13 @@ window.EDITOR_DUNGEONS = [
         }
       ],
       "entrance": {
-        "x": 4,
-        "y": 9
+        "x": 3,
+        "y": 12
       },
-      "exit": null,
+      "exit": {
+        "x": 24,
+        "y": 2
+      },
       "monsters": [
         {
           "type": "goblin",
@@ -4466,6 +4701,60 @@ window.EDITOR_DUNGEONS = [
           "room_id": null,
           "boss": false,
           "target": false
+        },
+        {
+          "type": "goblin",
+          "pos": [
+            13,
+            3
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "goblin",
+          "pos": [
+            5,
+            10
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "goblin",
+          "pos": [
+            13,
+            10
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "goblin",
+          "pos": [
+            23,
+            12
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "devorador_metal",
+          "pos": [
+            19,
+            5
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false,
+          "vscale": [
+            1.3,
+            1.3
+          ]
         }
       ],
       "chests": [],
@@ -4543,8 +4832,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_4",
           "type": "arvore",
           "pos": [
-            8,
-            9
+            1,
+            13
           ],
           "facing": [
             0,
@@ -4557,8 +4846,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_5",
           "type": "arvore",
           "pos": [
-            8,
-            7
+            2,
+            14
           ],
           "facing": [
             0,
@@ -4571,8 +4860,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_6",
           "type": "arvore",
           "pos": [
-            8,
-            8
+            4,
+            14
           ],
           "facing": [
             0,
@@ -4585,8 +4874,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_7",
           "type": "arvore",
           "pos": [
-            9,
-            7
+            5,
+            13
           ],
           "facing": [
             0,
@@ -4599,8 +4888,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_8",
           "type": "arvore",
           "pos": [
-            9,
-            8
+            7,
+            14
           ],
           "facing": [
             0,
@@ -4641,8 +4930,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_11",
           "type": "arvore",
           "pos": [
-            5,
-            11
+            6,
+            13
           ],
           "facing": [
             0,
@@ -4659,8 +4948,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_12",
           "type": "arvore",
           "pos": [
-            4,
-            11
+            0,
+            13
           ],
           "facing": [
             0,
@@ -4677,8 +4966,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_13",
           "type": "arvore",
           "pos": [
-            2,
-            11
+            0,
+            14
           ],
           "facing": [
             0,
@@ -4695,8 +4984,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_14",
           "type": "arvore",
           "pos": [
-            1,
-            11
+            0,
+            12
           ],
           "facing": [
             0,
@@ -4713,8 +5002,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_15",
           "type": "arvore",
           "pos": [
-            3,
-            11
+            6,
+            14
           ],
           "facing": [
             0,
@@ -4750,7 +5039,7 @@ window.EDITOR_DUNGEONS = [
           "type": "arvore",
           "pos": [
             6,
-            10
+            15
           ],
           "facing": [
             0,
@@ -4767,8 +5056,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_18",
           "type": "arvore",
           "pos": [
-            7,
-            10
+            5,
+            15
           ],
           "facing": [
             0,
@@ -4786,7 +5075,7 @@ window.EDITOR_DUNGEONS = [
           "type": "arvore",
           "pos": [
             6,
-            11
+            12
           ],
           "facing": [
             0,
@@ -4875,8 +5164,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_24",
           "type": "arvore",
           "pos": [
-            11,
-            11
+            16,
+            9
           ],
           "facing": [
             0,
@@ -4893,8 +5182,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_25",
           "type": "arvore",
           "pos": [
-            12,
-            11
+            16,
+            8
           ],
           "facing": [
             0,
@@ -4911,8 +5200,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_26",
           "type": "arvore",
           "pos": [
-            13,
-            11
+            14,
+            12
           ],
           "facing": [
             0,
@@ -5613,8 +5902,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_65",
           "type": "arvore",
           "pos": [
-            7,
-            9
+            4,
+            15
           ],
           "facing": [
             0,
@@ -5631,8 +5920,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_66",
           "type": "arvore",
           "pos": [
-            7,
-            8
+            2,
+            15
           ],
           "facing": [
             0,
@@ -5649,8 +5938,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_67",
           "type": "arvore",
           "pos": [
-            7,
-            7
+            1,
+            15
           ],
           "facing": [
             0,
@@ -5667,8 +5956,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_68",
           "type": "arvore",
           "pos": [
-            7,
-            6
+            0,
+            15
           ],
           "facing": [
             0,
@@ -5685,8 +5974,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_69",
           "type": "arvore",
           "pos": [
-            8,
-            6
+            3,
+            15
           ],
           "facing": [
             0,
@@ -5703,8 +5992,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_70",
           "type": "arvore",
           "pos": [
-            9,
-            6
+            5,
+            14
           ],
           "facing": [
             0,
@@ -5721,8 +6010,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_71",
           "type": "arvore",
           "pos": [
-            10,
-            6
+            1,
+            14
           ],
           "facing": [
             0,
@@ -5739,8 +6028,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_72",
           "type": "arvore",
           "pos": [
-            10,
-            7
+            8,
+            13
           ],
           "facing": [
             0,
@@ -5811,8 +6100,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_76",
           "type": "chao",
           "pos": [
-            5,
-            8
+            6,
+            7
           ],
           "facing": [
             0,
@@ -5824,25 +6113,6 @@ window.EDITOR_DUNGEONS = [
           "size": [
             2,
             2
-          ]
-        },
-        {
-          "id": "decor_77",
-          "type": "chao",
-          "pos": [
-            12,
-            6
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false,
-          "image": "chãoagua.png",
-          "size": [
-            2,
-            3
           ]
         },
         {
@@ -5863,6 +6133,1660 @@ window.EDITOR_DUNGEONS = [
             2,
             2
           ]
+        },
+        {
+          "id": "decor_79",
+          "type": "arvore",
+          "pos": [
+            7,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_80",
+          "type": "arvore",
+          "pos": [
+            7,
+            12
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_81",
+          "type": "arvore",
+          "pos": [
+            8,
+            12
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_82",
+          "type": "arvore",
+          "pos": [
+            8,
+            14
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_83",
+          "type": "arvore",
+          "pos": [
+            8,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_84",
+          "type": "arvore",
+          "pos": [
+            7,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_86",
+          "type": "arvore",
+          "pos": [
+            9,
+            12
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_87",
+          "type": "arvore",
+          "pos": [
+            9,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_88",
+          "type": "arvore",
+          "pos": [
+            10,
+            12
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_89",
+          "type": "arvore",
+          "pos": [
+            9,
+            14
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_90",
+          "type": "arvore",
+          "pos": [
+            9,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_91",
+          "type": "arvore",
+          "pos": [
+            10,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_92",
+          "type": "arvore",
+          "pos": [
+            10,
+            14
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_93",
+          "type": "arvore",
+          "pos": [
+            10,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_95",
+          "type": "arvore",
+          "pos": [
+            15,
+            12
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_96",
+          "type": "arvore",
+          "pos": [
+            16,
+            10
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_97",
+          "type": "arvore",
+          "pos": [
+            16,
+            12
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_98",
+          "type": "arvore",
+          "pos": [
+            16,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_99",
+          "type": "arvore",
+          "pos": [
+            11,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_100",
+          "type": "arvore",
+          "pos": [
+            12,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_101",
+          "type": "arvore",
+          "pos": [
+            13,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_102",
+          "type": "arvore",
+          "pos": [
+            14,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_103",
+          "type": "arvore",
+          "pos": [
+            15,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_104",
+          "type": "arvore",
+          "pos": [
+            16,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_105",
+          "type": "arvore",
+          "pos": [
+            17,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_106",
+          "type": "arvore",
+          "pos": [
+            18,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_107",
+          "type": "arvore",
+          "pos": [
+            19,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_108",
+          "type": "arvore",
+          "pos": [
+            20,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_109",
+          "type": "arvore",
+          "pos": [
+            21,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_110",
+          "type": "arvore",
+          "pos": [
+            11,
+            14
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_111",
+          "type": "arvore",
+          "pos": [
+            11,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_112",
+          "type": "arvore",
+          "pos": [
+            11,
+            9
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_113",
+          "type": "arvore",
+          "pos": [
+            12,
+            14
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_114",
+          "type": "arvore",
+          "pos": [
+            16,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_115",
+          "type": "arvore",
+          "pos": [
+            16,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_116",
+          "type": "arvore",
+          "pos": [
+            17,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_117",
+          "type": "arvore",
+          "pos": [
+            18,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_118",
+          "type": "arvore",
+          "pos": [
+            18,
+            1
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_119",
+          "type": "arvore",
+          "pos": [
+            17,
+            1
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_120",
+          "type": "arvore",
+          "pos": [
+            16,
+            1
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_174",
+          "type": "caverna",
+          "pos": [
+            17,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": true,
+          "image": "caverna.png"
+        },
+        {
+          "id": "decor_172",
+          "type": "arvore",
+          "pos": [
+            19,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_173",
+          "type": "arvore",
+          "pos": [
+            21,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_122",
+          "type": "arvore",
+          "pos": [
+            20,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_123",
+          "type": "arvore",
+          "pos": [
+            22,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_124",
+          "type": "arvore",
+          "pos": [
+            23,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_125",
+          "type": "arvore",
+          "pos": [
+            24,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_126",
+          "type": "arvore",
+          "pos": [
+            25,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_127",
+          "type": "arvore",
+          "pos": [
+            25,
+            1
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_128",
+          "type": "arvore",
+          "pos": [
+            25,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_129",
+          "type": "arvore",
+          "pos": [
+            25,
+            3
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_130",
+          "type": "arvore",
+          "pos": [
+            22,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_131",
+          "type": "arvore",
+          "pos": [
+            23,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_132",
+          "type": "arvore",
+          "pos": [
+            24,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_133",
+          "type": "arvore",
+          "pos": [
+            25,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_134",
+          "type": "arvore",
+          "pos": [
+            25,
+            14
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_135",
+          "type": "arvore",
+          "pos": [
+            25,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_136",
+          "type": "arvore",
+          "pos": [
+            25,
+            12
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_137",
+          "type": "arvore",
+          "pos": [
+            25,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_138",
+          "type": "arvore",
+          "pos": [
+            25,
+            10
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_139",
+          "type": "arvore",
+          "pos": [
+            25,
+            9
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_140",
+          "type": "arvore",
+          "pos": [
+            25,
+            8
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_141",
+          "type": "arvore",
+          "pos": [
+            25,
+            7
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_142",
+          "type": "arvore",
+          "pos": [
+            25,
+            6
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_143",
+          "type": "arvore",
+          "pos": [
+            25,
+            5
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_144",
+          "type": "arvore",
+          "pos": [
+            25,
+            4
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_145",
+          "type": "arvore",
+          "pos": [
+            24,
+            14
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_146",
+          "type": "arvore",
+          "pos": [
+            20,
+            9
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_147",
+          "type": "arvore",
+          "pos": [
+            19,
+            10
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_148",
+          "type": "arvore",
+          "pos": [
+            20,
+            10
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_149",
+          "type": "arvore",
+          "pos": [
+            17,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_150",
+          "type": "arvore",
+          "pos": [
+            18,
+            10
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_151",
+          "type": "arvore",
+          "pos": [
+            17,
+            10
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_152",
+          "type": "arvore",
+          "pos": [
+            21,
+            10
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_153",
+          "type": "arvore",
+          "pos": [
+            21,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_154",
+          "type": "arvore",
+          "pos": [
+            20,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_155",
+          "type": "arvore",
+          "pos": [
+            24,
+            9
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_156",
+          "type": "arvore",
+          "pos": [
+            24,
+            8
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_157",
+          "type": "arvore",
+          "pos": [
+            23,
+            7
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_158",
+          "type": "arvore",
+          "pos": [
+            23,
+            6
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_159",
+          "type": "arvore",
+          "pos": [
+            22,
+            6
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_160",
+          "type": "arvore",
+          "pos": [
+            22,
+            7
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_161",
+          "type": "arvore",
+          "pos": [
+            22,
+            5
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_162",
+          "type": "arvore",
+          "pos": [
+            21,
+            5
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_163",
+          "type": "arvore",
+          "pos": [
+            24,
+            1
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_164",
+          "type": "arvore",
+          "pos": [
+            23,
+            8
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_165",
+          "type": "arvore",
+          "pos": [
+            16,
+            5
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_166",
+          "type": "arvore",
+          "pos": [
+            17,
+            5
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_167",
+          "type": "arvore",
+          "pos": [
+            16,
+            6
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            1.9
+          ]
+        },
+        {
+          "id": "decor_168",
+          "type": "arvore",
+          "pos": [
+            23,
+            1
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_169",
+          "type": "arvore",
+          "pos": [
+            22,
+            1
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_170",
+          "type": "arvore",
+          "pos": [
+            19,
+            1
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_171",
+          "type": "arvore",
+          "pos": [
+            19,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_175",
+          "type": "chao",
+          "pos": [
+            12,
+            6
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "chãoagua.png",
+          "size": [
+            2,
+            3
+          ]
         }
       ],
       "secret_passages": [],
@@ -5879,11 +7803,11 @@ window.EDITOR_DUNGEONS = [
         "1,10": "grama",
         "1,11": "grama",
         "0,11": "grama",
-        "2,11": "grama",
-        "3,11": "grama",
-        "4,11": "grama",
-        "11,6": "grama",
-        "11,5": "grama",
+        "2,11": "terra",
+        "3,11": "terra",
+        "4,11": "terra",
+        "11,6": "agua",
+        "11,5": "agua",
         "11,4": "terra",
         "11,3": "terra",
         "11,2": "grama",
@@ -5905,7 +7829,7 @@ window.EDITOR_DUNGEONS = [
         "7,8": "grama",
         "7,7": "grama",
         "7,6": "grama",
-        "7,5": "grama",
+        "7,5": "terra",
         "7,4": "terra",
         "7,3": "terra",
         "7,2": "grama",
@@ -5919,7 +7843,7 @@ window.EDITOR_DUNGEONS = [
         "5,6": "grama",
         "5,7": "grama",
         "5,8": "grama",
-        "5,9": "grama",
+        "5,9": "terra",
         "4,10": "terra",
         "3,10": "terra",
         "3,9": "terra",
@@ -5940,12 +7864,12 @@ window.EDITOR_DUNGEONS = [
         "1,9": "grama",
         "2,3": "grama",
         "2,4": "grama",
-        "2,5": "grama",
-        "2,6": "grama",
+        "2,5": "terra",
+        "2,6": "terra",
         "2,7": "grama",
         "2,8": "grama",
         "2,9": "grama",
-        "2,10": "grama",
+        "2,10": "terra",
         "4,9": "terra",
         "4,8": "terra",
         "4,7": "terra",
@@ -5966,32 +7890,32 @@ window.EDITOR_DUNGEONS = [
         "6,10": "grama",
         "10,10": "grama",
         "11,10": "grama",
-        "11,9": "grama",
-        "11,8": "grama",
+        "11,9": "terra",
+        "11,8": "agua",
         "12,8": "agua",
         "12,7": "agua",
         "13,7": "agua",
         "13,6": "agua",
-        "13,5": "terra",
+        "13,5": "agua",
         "13,4": "terra",
         "13,3": "terra",
-        "13,2": "grama",
+        "13,2": "terra",
         "13,1": "grama",
         "14,1": "grama",
         "14,2": "grama",
         "14,3": "terra",
         "14,4": "terra",
-        "14,5": "terra",
-        "14,6": "terra",
-        "14,7": "terra",
-        "14,8": "terra",
-        "14,9": "terra",
+        "14,5": "agua",
+        "14,6": "agua",
+        "14,7": "agua",
+        "14,8": "agua",
+        "14,9": "agua",
         "14,10": "terra",
-        "13,10": "terra",
-        "13,9": "terra",
+        "13,10": "agua_profunda",
+        "13,9": "agua",
         "13,8": "agua",
-        "12,9": "grama",
-        "12,10": "grama",
+        "12,9": "agua",
+        "12,10": "agua_profunda",
         "8,9": "grama",
         "10,9": "grama",
         "8,8": "grama",
@@ -5999,29 +7923,25 @@ window.EDITOR_DUNGEONS = [
         "8,7": "grama",
         "10,7": "grama",
         "8,6": "grama",
-        "8,5": "grama",
+        "8,5": "terra",
         "8,4": "terra",
         "8,3": "terra",
         "8,2": "grama",
         "8,1": "grama",
         "12,1": "grama",
         "10,2": "grama",
-        "12,2": "grama",
+        "12,2": "terra",
         "10,3": "terra",
-        "12,3": "terra",
         "10,4": "terra",
         "12,4": "terra",
         "10,5": "grama",
-        "12,5": "grama",
-        "11,7": "grama",
+        "12,5": "agua",
+        "11,7": "agua",
         "10,6": "grama",
         "12,6": "agua",
-        "5,10": "grama",
+        "5,10": "terra",
         "5,11": "grama",
         "15,3": "grama",
-        "15,2": "grama",
-        "15,1": "grama",
-        "15,0": "grama",
         "14,0": "grama",
         "13,0": "grama",
         "12,0": "grama",
@@ -6052,24 +7972,252 @@ window.EDITOR_DUNGEONS = [
         "15,4": "grama",
         "15,5": "grama",
         "15,6": "grama",
-        "15,7": "grama",
         "15,8": "grama",
         "15,9": "grama",
         "15,10": "grama",
         "15,11": "grama",
         "14,11": "grama",
-        "13,11": "grama",
-        "12,11": "grama",
+        "13,11": "agua_profunda",
+        "12,11": "agua_profunda",
         "11,11": "grama",
         "10,11": "grama",
         "9,11": "grama",
         "8,11": "grama",
         "7,11": "grama",
-        "6,11": "grama"
+        "6,11": "grama",
+        "16,0": "grama",
+        "16,1": "grama",
+        "16,2": "grama",
+        "16,3": "grama",
+        "16,4": "grama",
+        "16,5": "grama",
+        "16,6": "grama",
+        "16,7": "grama",
+        "16,9": "grama",
+        "16,10": "grama",
+        "16,11": "grama",
+        "15,2": "grama",
+        "15,1": "grama",
+        "17,0": "grama",
+        "17,1": "grama",
+        "17,2": "grama",
+        "17,3": "grama",
+        "17,4": "grama",
+        "17,5": "grama",
+        "17,6": "grama",
+        "17,7": "grama",
+        "17,8": "grama",
+        "17,9": "grama",
+        "17,10": "grama",
+        "17,11": "grama",
+        "18,11": "grama",
+        "19,11": "grama",
+        "20,11": "grama",
+        "21,11": "grama",
+        "22,11": "grama",
+        "23,11": "grama",
+        "24,11": "grama",
+        "25,11": "grama",
+        "25,10": "grama",
+        "25,9": "grama",
+        "25,8": "grama",
+        "25,7": "grama",
+        "25,6": "grama",
+        "25,5": "grama",
+        "25,4": "grama",
+        "25,3": "grama",
+        "25,2": "grama",
+        "25,1": "grama",
+        "24,0": "grama",
+        "25,0": "grama",
+        "23,0": "grama",
+        "22,0": "grama",
+        "21,0": "grama",
+        "20,0": "grama",
+        "19,0": "grama",
+        "18,0": "grama",
+        "18,1": "grama",
+        "19,1": "grama",
+        "20,1": "grama",
+        "21,1": "grama",
+        "22,1": "grama",
+        "23,1": "grama",
+        "24,1": "grama",
+        "24,2": "terra",
+        "23,2": "terra",
+        "22,2": "grama",
+        "21,2": "grama",
+        "20,2": "grama",
+        "19,2": "grama",
+        "18,2": "grama",
+        "18,3": "grama",
+        "19,3": "grama",
+        "20,3": "grama",
+        "21,3": "grama",
+        "22,3": "grama",
+        "23,3": "terra",
+        "24,3": "terra",
+        "24,4": "grama",
+        "23,4": "grama",
+        "22,4": "grama",
+        "21,4": "grama",
+        "20,4": "grama",
+        "19,4": "grama",
+        "18,4": "grama",
+        "18,7": "grama",
+        "19,7": "grama",
+        "20,7": "grama",
+        "20,6": "grama",
+        "21,6": "grama",
+        "22,6": "grama",
+        "22,5": "grama",
+        "23,5": "grama",
+        "24,5": "grama",
+        "21,5": "grama",
+        "20,5": "grama",
+        "19,5": "grama",
+        "24,6": "grama",
+        "23,6": "grama",
+        "23,7": "grama",
+        "22,7": "grama",
+        "19,6": "grama",
+        "18,8": "grama",
+        "19,8": "grama",
+        "20,8": "grama",
+        "21,8": "grama",
+        "22,8": "grama",
+        "23,8": "grama",
+        "24,8": "grama",
+        "24,7": "grama",
+        "21,7": "grama",
+        "20,9": "grama",
+        "19,9": "grama",
+        "18,9": "grama",
+        "21,9": "grama",
+        "22,9": "grama",
+        "23,9": "grama",
+        "24,9": "grama",
+        "24,10": "grama",
+        "23,10": "grama",
+        "22,10": "grama",
+        "21,10": "grama",
+        "20,10": "grama",
+        "19,10": "grama",
+        "18,10": "grama",
+        "17,12": "grama",
+        "17,13": "terra",
+        "16,12": "grama",
+        "15,12": "grama",
+        "14,12": "grama",
+        "13,12": "agua_profunda",
+        "12,12": "agua_profunda",
+        "11,12": "grama",
+        "10,12": "grama",
+        "9,12": "grama",
+        "8,12": "grama",
+        "7,12": "grama",
+        "6,12": "grama",
+        "5,12": "grama",
+        "4,12": "grama",
+        "3,12": "terra",
+        "2,12": "grama",
+        "1,12": "grama",
+        "0,12": "grama",
+        "0,13": "grama",
+        "1,13": "grama",
+        "1,14": "grama",
+        "0,14": "grama",
+        "0,15": "grama",
+        "2,14": "grama",
+        "3,15": "grama",
+        "4,15": "grama",
+        "5,15": "grama",
+        "6,15": "grama",
+        "1,15": "grama",
+        "2,15": "grama",
+        "7,15": "grama",
+        "8,15": "grama",
+        "9,15": "grama",
+        "10,15": "grama",
+        "11,15": "grama",
+        "12,15": "grama",
+        "13,15": "grama",
+        "14,15": "grama",
+        "15,15": "grama",
+        "16,15": "grama",
+        "17,15": "grama",
+        "18,15": "grama",
+        "19,15": "grama",
+        "20,15": "grama",
+        "21,15": "grama",
+        "22,15": "grama",
+        "23,15": "grama",
+        "24,15": "grama",
+        "25,15": "grama",
+        "25,14": "grama",
+        "25,13": "grama",
+        "25,12": "grama",
+        "24,12": "grama",
+        "24,13": "grama",
+        "24,14": "grama",
+        "23,14": "grama",
+        "23,13": "terra",
+        "23,12": "terra",
+        "22,13": "terra",
+        "22,14": "grama",
+        "22,12": "grama",
+        "21,12": "grama",
+        "20,12": "grama",
+        "20,13": "terra",
+        "20,14": "grama",
+        "21,13": "terra",
+        "21,14": "grama",
+        "19,13": "terra",
+        "18,13": "terra",
+        "19,12": "grama",
+        "18,12": "grama",
+        "16,13": "terra",
+        "18,14": "grama",
+        "19,14": "grama",
+        "17,14": "grama",
+        "16,14": "grama",
+        "15,13": "terra",
+        "15,14": "grama",
+        "14,13": "terra",
+        "13,13": "terra",
+        "13,14": "terra",
+        "14,14": "grama",
+        "12,13": "terra",
+        "11,13": "grama",
+        "10,13": "grama",
+        "11,14": "grama",
+        "12,14": "terra",
+        "10,14": "grama",
+        "9,14": "grama",
+        "9,13": "grama",
+        "8,14": "grama",
+        "8,13": "grama",
+        "7,13": "grama",
+        "7,14": "grama",
+        "6,14": "grama",
+        "6,13": "grama",
+        "5,13": "grama",
+        "5,14": "grama",
+        "4,14": "grama",
+        "4,13": "grama",
+        "3,13": "terra",
+        "2,13": "grama",
+        "3,14": "terra",
+        "12,3": "terra",
+        "18,5": "grama",
+        "18,6": "grama",
+        "15,7": "grama",
+        "16,8": "grama",
+        "15,0": "grama"
       },
       "objectives": {
         "primary": {
-          "type": "kill_all",
+          "type": "reach_exit",
           "xp": 0,
           "reward": {
             "gold": 0,
@@ -17851,4 +19999,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO por tools/export_catalog.py — não editar à mão.
+// GERADO ao salvar no editor (e por tools/export_catalog.py).

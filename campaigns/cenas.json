@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "scenes": {
+    "nova_cena": {
+      "id": "nova_cena",
+      "name": "Nova cena",
+      "background": "assets/cenas/fundos/alva_e_luz_fundo.png",
+      "music": "assets/cenas/audio/a_song_of_old_stones.mp3",
+      "ambience": "assets/cenas/audio/a_song_of_old_stones.mp3",
+      "start": "ev_z3lsbn",
+      "events": [
+        {
+          "id": "ev_z3lsbn",
+          "type": "dialogue",
+          "speaker": "Narrador",
+          "text": "Vamos contar uma historia ",
+          "next": "ev_axmjox",
+          "mandatory": false,
+          "data": {
+            "image": "assets/cenas/personagens/bardo3.png",
+            "x": -41.51220256526295,
+            "y": -90.24931951590025,
+            "w": 129.97560826743523,
+            "h": 278.9674704120088,
+            "transition": "fade"
+          }
+        },
+        {
+          "id": "ev_axmjox",
+          "type": "dialogue",
+          "speaker": "Narrador",
+          "text": "vamos começar ",
+          "next": "ev_pos648",
+          "mandatory": false,
+          "data": {
+            "image": "assets/cenas/personagens/bardo4.png",
+            "x": -12.24390243902439,
+            "y": -41.8590845454353,
+            "w": 80.02438428925305,
+            "h": 210.97832904598576,
+            "background": "assets/cenas/fundos/alva_e_luz_fundo.png",
+            "slot": "Center"
+          }
+        },
+        {
+          "id": "ev_pos648",
+          "type": "dialogue",
+          "speaker": "Narrador",
+          "text": "",
+          "next": "",
+          "mandatory": false,
+          "data": {
+            "background": "assets/cenas/fundos/mercado.png",
+            "image": "assets/cenas/personagens/bardo4.png",
+            "w": 90.26828672827743,
+            "h": 208.72358782181573,
+            "x": -17.02438428925305,
+            "y": -33.36044683689024
+          }
+        }
+      ]
+    },
+    "ad_hadal": {
+      "id": "ad_hadal",
+      "name": "Ad´Hadal",
+      "background": "assets/cenas/fundos/WhatsApp_Image_2026-04-02_at_22.15.40__1_.jpeg",
+      "music": "assets/cenas/audio/a_song_of_old_stones.mp3",
+      "ambience": "",
+      "start": "inicio",
+      "events": [
+        {
+          "id": "inicio",
+          "type": "wait",
+          "speaker": "Narrador",
+          "text": "Ninguém entra em Ad´Hadal por vontade própria. ",
+          "next": "",
+          "mandatory": false,
+          "data": {}
+        }
+      ]
+    }
+  }
+}

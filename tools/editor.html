@@ -19,6 +19,7 @@
       <button id="tab-cidade" class="tab">Cidade</button>
       <button id="tab-mapa-mundi" class="tab">Mapa do Mundo</button>
       <button id="tab-campanha" class="tab">Campanha</button>
+      <button id="tab-cenas" class="tab">Cenas</button>
     </span>
     <span id="dungeon-controls">
       <label>id <input id="m-id" value="nova_masmorra" size="12"></label>
@@ -52,19 +53,17 @@
     <aside id="panel"><em>Selecione uma ferramenta e desenhe.</em></aside>
   </main>
 
-  <div id="campaign-view" style="display:none">
-    <div id="campaign-add"></div>
-    <div id="campaign-list"></div>
-  </div>
+  <div id="campaign-view" style="display:none"></div>
   <div id="bestiary-view" style="display:none"></div>
   <div id="monster-editor-view" style="display:none"></div>
   <div id="items-editor-view" style="display:none"></div>
   <div id="city-editor-view" style="display:none"></div>
   <div id="world-editor-view" style="display:none"></div>
+  <div id="scenes-editor-view" style="display:none"></div>
 
   <footer id="statusbar"><span id="status"></span></footer>
 
   <!-- Cache-buster (espelha index.html): evita JS/catálogo do editor servido em cache antigo. -->
-  <script>(function(){var v=Date.now();var s=["../src/difficulty.js","editor_items_logic.js","editor_items_custom.js","editor_catalog.js","editor_monsters_custom.js","editor_dungeons.js","editor.js","editor_preview_3d.js","editor_bestiary.js","editor_monster_editor.js","story_upload.js","editor_story.js","editor_campaign.js","editor_items_editor.js","editor_city.js","editor_world.js"];for(var i=0;i<s.length;i++)document.write('<script src="'+s[i]+'?v='+v+'"><\/script>');})();</script>
+  <script>(function(){var v=Date.now();var s=["../src/difficulty.js","editor_items_logic.js","editor_items_custom.js","editor_catalog.js","editor_monsters_custom.js","editor_dungeons.js","editor.js","editor_preview_3d.js","editor_bestiary.js","editor_monster_editor.js","story_upload.js","editor_story.js","editor_campaign.js","editor_items_editor.js","editor_city.js","editor_world.js","editor_scenes.js"];for(var i=0;i<s.length;i++)document.write('<script src="'+s[i]+'?v='+v+'"><\/script>');})();</script>
 </body>
 </html>

@@ -2,9 +2,5 @@
   "schema_version": 1,
   "id": "nova_campanha",
   "name": "Nova Campanha",
-  "dungeons": [
-    {
-      "file": "amostra.json"
-    }
-  ]
+  "scene_intro": "nova_cena"
 }

@@ -7566,6 +7566,21 @@ window.EDITOR_CATALOG = {
       "image": null
     },
     {
+      "type": "caverna",
+      "nome": "Caverna",
+      "emoji": "🕳️",
+      "size": [
+        2,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "caverna.png"
+    },
+    {
       "type": "chao",
       "nome": "Chão (grama)",
       "emoji": "🌿",

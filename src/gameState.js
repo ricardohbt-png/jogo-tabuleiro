@@ -950,20 +950,42 @@ const GS = (() => {
   }
 
   // ── Pure logic: BFS — all reachable floor tiles within maxSteps ────────────
-  function bfsReachable(tiles, exploredSet, sx, sy, maxSteps, result) {
+  function terrainMoveCost(moveCtx, x, y) {
+    const kind = moveCtx?.materiais?.[`${x},${y}`];
+    if (kind !== 'agua' && kind !== 'agua_profunda') return 1;
+    const actor = moveCtx?.actor || {};
+    if ((actor.special_abilities || []).some(h => h && h.id === 'movimento_erratico')) return 1;
+    let cost = kind === 'agua_profunda' ? 3 : 2;
+    const armor = actor.gear?.armor || {};
+    const category = armor.armor_category;
+    if (category === 'media') cost += 1;
+    else if (category === 'pesada') cost += 2;
+    else if (actor.natural_armor > 0) cost += 1;
+    return Math.max(1, cost);
+  }
+
+  function bfsReachable(tiles, exploredSet, sx, sy, maxSteps, result, moveCtx=null) {
+    if (!moveCtx && gameState) moveCtx = { materiais: gameState.materiais,
+      actor: (gameState.players || []).find(p => p.pos?.[0] === sx && p.pos?.[1] === sy) || {} };
     const openDoors = doorSets(gameState).open;
     const occupied  = _occupiedSet(sx, sy);
     const q   = [[sx, sy, 0]];
-    const vis = new Set([`${sx},${sy}`]);
+    const best = new Map([[`${sx},${sy}`, 0]]);
     while (q.length) {
+      q.sort((a,b) => a[2]-b[2]);
       const [x, y, s] = q.shift();
       result.add(`${x},${y}`);
       if (s >= maxSteps) continue;
       for (const [dx, dy] of [[0,-1],[0,1],[-1,0],[1,0]]) {
         const nx = x+dx, ny = y+dy, k = `${nx},${ny}`;
-        if (!vis.has(k) && exploredSet.has(k) && _walkable(tiles, nx, ny, openDoors, occupied)) {
-          vis.add(k);
-          q.push([nx, ny, s+1]);
+        const rawCost = terrainMoveCost(moveCtx, nx, ny);
+        // Garantia de uma casa: no primeiro passo, água cara ainda pode ser
+        // atravessada mesmo se o orçamento não cobrir o custo inteiro.
+        const nextCost = (s === 0 && rawCost > maxSteps) ? maxSteps : s + rawCost;
+        if (exploredSet.has(k) && nextCost <= maxSteps && _walkable(tiles, nx, ny, openDoors, occupied)
+            && (best.get(k) === undefined || nextCost < best.get(k))) {
+          best.set(k, nextCost);
+          q.push([nx, ny, nextCost]);
         }
       }
     }
@@ -972,28 +994,34 @@ const GS = (() => {
   // ── Pure logic: BFS pathfinding — returns [[dx,dy],...] or null ────────────
   // Quando partial=true, se o alvo estiver além do orçamento ou separado por
   // uma porta fechada, retorna o trecho acessível que termina mais perto dele.
-  function findPath(tiles, exploredSet, fx, fy, tx, ty, maxSteps, partial=false) {
+  function findPath(tiles, exploredSet, fx, fy, tx, ty, maxSteps, partial=false, moveCtx=null) {
+    if (!moveCtx && gameState) moveCtx = { materiais: gameState.materiais,
+      actor: (gameState.players || []).find(p => p.pos?.[0] === fx && p.pos?.[1] === fy) || {} };
     const openDoors = doorSets(gameState).open;
     const occupied  = _occupiedSet(fx, fy);
     if (!exploredSet.has(`${tx},${ty}`)) return null;
     const targetWalkable = _walkable(tiles, tx, ty, openDoors, occupied);
     if (!partial && !targetWalkable) return null;
     if (fx === tx && fy === ty) return [];
-    const q   = [[fx, fy, []]];
-    const vis = new Set([`${fx},${fy}`]);
+    const q   = [[fx, fy, [], 0]];
+    const bestCost = new Map([[`${fx},${fy}`, 0]]);
     let best = { path: [], dist: Math.abs(fx-tx) + Math.abs(fy-ty) };
     while (q.length) {
-      const [x, y, path] = q.shift();
-      if (path.length >= maxSteps) continue;
+      q.sort((a,b) => a[3]-b[3]);
+      const [x, y, path, spent] = q.shift();
+      if (spent >= maxSteps) continue;
       for (const [dx, dy] of [[0,-1],[0,1],[-1,0],[1,0]]) {
         const nx = x+dx, ny = y+dy, k = `${nx},${ny}`;
-        if (vis.has(k) || !exploredSet.has(k) || !_walkable(tiles, nx, ny, openDoors, occupied)) continue;
+        const rawCost = terrainMoveCost(moveCtx, nx, ny);
+        const nextCost = (spent === 0 && rawCost > maxSteps) ? maxSteps : spent + rawCost;
+        if (!exploredSet.has(k) || nextCost > maxSteps || !_walkable(tiles, nx, ny, openDoors, occupied)
+            || (bestCost.get(k) !== undefined && bestCost.get(k) <= nextCost)) continue;
         const np = [...path, [dx, dy]];
         if (nx === tx && ny === ty) return np;
         const dist = Math.abs(nx-tx) + Math.abs(ny-ty);
         if (dist < best.dist) best = { path: np, dist };
-        vis.add(k);
-        q.push([nx, ny, np]);
+        bestCost.set(k, nextCost);
+        q.push([nx, ny, np, nextCost]);
       }
     }
     return partial && best.path.length ? best.path : null;
@@ -1170,6 +1198,7 @@ const GS = (() => {
         gameState = null;
         if (msg.guild && Array.isArray(msg.guild.catalog)) guildCatalogCache = msg.guild.catalog;
         _captarStory(msg);
+        if (msg.active_scene) _emit('sceneStart', msg.active_scene);
         if (!myPid) {
           const me = msg.players.find(p => p.name === myName);
           if (me) myPid = me.id;
@@ -1196,6 +1225,7 @@ const GS = (() => {
       case 'game_state':
         gameState = msg;
         _captarStory(msg);
+        if (msg.active_scene) _emit('sceneStart', msg.active_scene);
         if (!myPid) {
           const me = msg.players.find(p => p.name === myName);
           if (me) myPid = me.id;
@@ -1213,6 +1243,14 @@ const GS = (() => {
         if (warriorSelected.length && !isMyTurn) warriorSelected = [];
         _emit('gameState', msg);
         break;
+
+      case 'scene_start':
+        _emit('sceneStart', { scene: msg.scene, session: msg.session, paused: msg.paused });
+        break;
+      case 'scene_branch': _emit('sceneBranch', msg); break;
+      case 'scene_test_result': _emit('sceneTestResult', msg); break;
+      case 'scene_end_warning': _emit('sceneEndWarning', msg); break;
+      case 'scene_end': _emit('sceneEnd', msg); break;
 
       case 'gm_narration':
         _emit('gmNarration', msg.text);
@@ -1372,6 +1410,11 @@ const GS = (() => {
     clearWarriorSelected();
     return send({ type: 'end_turn' });
   }
+  function sceneChoice(sceneId, eventId, optionId) { send({ type:'scene_choice', scene_id:sceneId, event_id:eventId, option_id:optionId }); }
+  function sceneTest(sceneId, eventId) { send({ type:'scene_test', scene_id:sceneId, event_id:eventId }); }
+  function sceneEnd(force) { send({ type:'scene_end', force:!!force }); }
+  function sceneVisit(sceneId, eventId) { send({ type:'scene_visit', scene_id:sceneId, event_id:eventId }); }
+  function setTurnTimer(enabled) { send({ type:'set_turn_timer', enabled:!!enabled }); }
   function useItem(id)     { send({ type: 'use_item',       item_id: id }); }
   function throwItem(id, targetId, targetPos) { send({ type: 'throw_item', item_id: id, target_id: targetId, target_pos: targetPos }); }
   function throwItemArea(id, tx, ty) { send({ type: 'throw_item', item_id: id, tx, ty }); }
@@ -2358,6 +2401,11 @@ const GS = (() => {
     // ── Actions ──
     move,
     endTurn,
+    sceneChoice,
+    sceneTest,
+    sceneEnd,
+    sceneVisit,
+    setTurnTimer,
     useItem,
     throwItem,
     throwItemArea,

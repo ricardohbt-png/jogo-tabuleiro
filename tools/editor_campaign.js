@@ -1,192 +1,37 @@
 "use strict";
 (function () {
-  const DUN = window.EDITOR_DUNGEONS || [];
-
-  // Editor de slides: mora em tools/editor_story.js (compartilhado com o mapa-múndi).
-  // Os apelidos precisam vir ANTES de `C`, que chama emptyStory() na inicialização.
-  const ES = window.EDITOR_STORY;
-  const emptyStory        = ES.emptyStory;
-  const storyFromSaved    = ES.storyFromSaved;
-  const storyToSaved      = ES.storyToSaved;
-  const storyCount        = ES.storyCount;
-  const histButtonHTML    = ES.histButtonHTML;
-  const openHistoryEditor = ES.openHistoryEditor;
-  const previewStory      = ES.previewStory;
-
-  const C = { id: "nova_campanha", name: "Nova Campanha",
-              intro: emptyStory(), outro: emptyStory(), dungeons: [] };
-
-  function dunByFile(file) { return DUN.find(d => d.file === file) || null; }
-
-  function faseObj(item) {
-    if (typeof item === "string")
-      return { file: item, intro: emptyStory(), outro: emptyStory() };
-    if (item && item.intro && item.intro.slides)   // já normalizado em memória
-      return item;
-    return { file: item.file, intro: storyFromSaved(item.intro), outro: storyFromSaved(item.outro) };
-  }
-
-  function drawMiniMap(canvas, defn) {
-    const ctx = canvas.getContext("2d");
-    const W = (defn.grid && defn.grid.w) || 1, H = (defn.grid && defn.grid.h) || 1;
-    const cw = canvas.width / W, ch = canvas.height / H;
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-      const t = defn.tiles[y][x];
-      ctx.fillStyle = t === 0 ? "#1d1812" : (t === 2 ? "#c8841f" : "#5a4a32");
-      ctx.fillRect(x * cw, y * ch, Math.ceil(cw), Math.ceil(ch));
-    }
-    const dot = (p, col) => { if (p) { ctx.fillStyle = col; ctx.fillRect(p[0] * cw, p[1] * ch, Math.max(2, cw), Math.max(2, ch)); } };
-    if (defn.entrance) dot([defn.entrance.x, defn.entrance.y], "#7ec86a");
-    if (defn.exit) dot([defn.exit.x, defn.exit.y], "#6ab0ff");
-    (defn.monsters || []).forEach(m => dot(m.pos, "#e06a6a"));
-  }
-
-  function statusEl() { return document.getElementById("status"); }
-
-  function validarCampanhaEditor() {
-    const e = [];
-    if (!C.id.trim()) e.push("id vazio");
-    if (!C.name.trim()) e.push("nome vazio");
-    if (C.dungeons.length < 1) e.push("sem fases");
-    for (const f of C.dungeons) if (!dunByFile(faseObj(f).file)) e.push("fase não encontrada: " + faseObj(f).file);
-    return { ok: e.length === 0, erros: e };
-  }
-  function updateCampaignStatus() {
-    const v = validarCampanhaEditor(), el = statusEl();
-    if (!el) return v;
-    if (v.ok) { el.className = "status-ok"; el.textContent = "✓ campanha válida — " + C.dungeons.length + " fase(s)"; }
-    else { el.className = "status-err"; el.textContent = "✗ " + v.erros.join("; "); }
-    return v;
-  }
-
-  function addPhase(file) { if (file) { C.dungeons.push(faseObj(file)); renderCampaign(); } }
-  function removePhase(i) { C.dungeons.splice(i, 1); renderCampaign(); }
-  function movePhase(i, dir) {
-    const j = i + dir; if (j < 0 || j >= C.dungeons.length) return;
-    const t = C.dungeons[i]; C.dungeons[i] = C.dungeons[j]; C.dungeons[j] = t; renderCampaign();
-  }
-  function openInEditor(file) {
-    const d = dunByFile(file);
-    if (d && window.EDITOR && window.EDITOR.loadJSON) { window.EDITOR.loadJSON(JSON.parse(JSON.stringify(d.defn))); window.setTab("masmorra"); }
-  }
-
-  function renderControls() {
-    const host = document.getElementById("campaign-controls");
-    host.innerHTML =
-      `<label>id <input id="c-id" size="12"></label>` +
-      `<label>nome <input id="c-name" size="14"></label>` +
-      histButtonHTML("c-intro-hist", C.intro).replace("história", "abertura") +
-      histButtonHTML("c-outro-hist", C.outro).replace("história", "final") +
-      `<button id="c-load">Carregar</button><input id="c-file" type="file" accept=".json,application/json" hidden>` +
-      `<button id="c-save">Salvar</button>`;
-    host.querySelector("#c-id").value = C.id;
-    host.querySelector("#c-name").value = C.name;
-    host.querySelector("#c-id").oninput = e => { C.id = e.target.value; updateCampaignStatus(); };
-    host.querySelector("#c-name").oninput = e => { C.name = e.target.value; updateCampaignStatus(); };
-    host.querySelector(".c-intro-hist").onclick = () => openHistoryEditor(C.intro, "abertura da campanha", renderControls);
-    host.querySelector(".c-outro-hist").onclick = () => openHistoryEditor(C.outro, "final da campanha", renderControls);
-    host.querySelector("#c-save").onclick = saveCampaign;
-    host.querySelector("#c-load").onclick = () => host.querySelector("#c-file").click();
-    host.querySelector("#c-file").onchange = ev => {
-      const f = ev.target.files[0]; if (!f) return;
-      const fr = new FileReader();
-      fr.onload = () => { try { loadCampaign(JSON.parse(fr.result)); } catch (e) { alert("JSON inválido: " + e.message); } };
-      fr.readAsText(f); ev.target.value = "";
-    };
-  }
-
-  function renderAdd() {
-    const host = document.getElementById("campaign-add");
-    const opts = DUN.map(d => `<option value="${d.file}">${d.name} — ${d.file}</option>`).join("");
-    host.innerHTML = `+ adicionar fase <select id="c-add-sel">${opts}</select> <button id="c-add-btn">adicionar</button>`;
-    host.querySelector("#c-add-btn").onclick = () => addPhase(host.querySelector("#c-add-sel").value);
-  }
-
-  function renderList() {
-    const host = document.getElementById("campaign-list");
-    host.innerHTML = "";
-    C.dungeons.forEach((item, i) => {
-      const fo = faseObj(item); C.dungeons[i] = fo; const d = dunByFile(fo.file);
-      const row = document.createElement("div"); row.className = "camp-row"; row.draggable = true; row.dataset.i = i;
-      row.innerHTML =
-        `<span class="camp-grip">⠿</span><span class="camp-i">${i + 1}</span>` +
-        `<canvas class="camp-mini" width="56" height="42"></canvas>` +
-        `<div class="camp-meta"><div class="camp-name">${d ? d.name : fo.file + " (não encontrada)"}</div>` +
-        `<div class="camp-file">${fo.file}</div>` +
-        `<div class="camp-hist-row">` +
-          histButtonHTML("camp-intro-hist", fo.intro).replace("história", "abertura") +
-          histButtonHTML("camp-outro-hist", fo.outro).replace("história", "final") +
-        `</div></div>` +
-        `<button class="camp-open" title="abrir no editor">✎</button>` +
-        `<button class="camp-up">↑</button><button class="camp-down">↓</button><button class="camp-del">✕</button>`;
-      host.appendChild(row);
-      if (d) drawMiniMap(row.querySelector(".camp-mini"), d.defn);
-      row.querySelector(".camp-intro-hist").onclick = () => openHistoryEditor(fo.intro, `abertura da fase ${i + 1}`, renderList);
-      row.querySelector(".camp-outro-hist").onclick = () => openHistoryEditor(fo.outro, `final da fase ${i + 1}`, renderList);
-      row.querySelector(".camp-open").onclick = () => openInEditor(fo.file);
-      row.querySelector(".camp-up").onclick = () => movePhase(i, -1);
-      row.querySelector(".camp-down").onclick = () => movePhase(i, 1);
-      row.querySelector(".camp-del").onclick = () => removePhase(i);
-      row.addEventListener("dragstart", ev => ev.dataTransfer.setData("text/plain", String(i)));
-      row.addEventListener("dragover", ev => ev.preventDefault());
-      row.addEventListener("drop", ev => {
-        ev.preventDefault();
-        const from = Number(ev.dataTransfer.getData("text/plain")), to2 = i;
-        if (from === to2) return;
-        const moved = C.dungeons.splice(from, 1)[0];
-        C.dungeons.splice(to2, 0, moved); renderCampaign();
-      });
+  const ES=window.EDITOR_STORY, DUN=window.EDITOR_DUNGEONS||[];
+  const emptyStory=ES.emptyStory, storyFromSaved=ES.storyFromSaved, storyToSaved=ES.storyToSaved;
+  const histButtonHTML=ES.histButtonHTML, openHistoryEditor=ES.openHistoryEditor, previewStory=ES.previewStory;
+  const C={id:"nova_campanha",name:"Nova Campanha",intro:emptyStory(),outro:emptyStory(),scene_intro:"",scene_triggers:[]};
+  const esc=v=>String(v==null?"":v).replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+  const csv=v=>String(v||"").split(",").map(x=>x.trim()).filter(Boolean);
+  let sceneLibraryRequested=false;
+  const sceneList=()=>Object.entries((window.EDITOR_SCENES&&window.EDITOR_SCENES.getData&&window.EDITOR_SCENES.getData().scenes)||{}).map(([id,s])=>({id,name:(s&&s.name)||id}));
+  const sceneIds=()=>sceneList().map(s=>s.id);
+  function statusEl(){return document.getElementById("status");}
+  function validarCampanhaEditor(){const erros=[];if(!C.id.trim())erros.push("id vazio");if(!C.name.trim())erros.push("nome vazio");(C.scene_triggers||[]).forEach((t,i)=>{if(!t.scene_id)erros.push("gatilho "+(i+1)+" sem cena");if(t.when==="dungeon_enter"&&!t.dungeon_file)erros.push("gatilho "+(i+1)+" sem masmorra");if(["keyword_obtained","key_item_obtained"].includes(t.when)&&!t.trigger_value)erros.push("gatilho "+(i+1)+" sem palavra-chave/item");});return {ok:!erros.length,erros};}
+  function updateCampaignStatus(){const v=validarCampanhaEditor(),el=statusEl();if(!el)return v;el.className=v.ok?"status-ok":"status-err";el.textContent=v.ok?"✓ campanha válida — "+C.scene_triggers.length+" gatilho(s) de cena":"✕ "+v.erros.join("; ");return v;}
+  function renderTriggers(host){
+    const scenes=sceneList(),ids=scenes.map(s=>s.id),dungeons=DUN.map(d=>'<option value="'+esc(d.file)+'">'+esc(d.name||d.file)+'</option>').join('');
+    host.innerHTML='<section id="campaign-scene-triggers"><h3>Cenas e gatilhos</h3><p>Várias cenas podem usar o mesmo evento; requisitos definem qual será iniciada.</p><datalist id="campaign-scene-ids">'+scenes.map(s=>'<option value="'+esc(s.id)+'" label="'+esc(s.name)+'">').join('')+'</datalist><datalist id="campaign-dungeon-files">'+dungeons+'</datalist></section>';
+    if(!sceneLibraryRequested&&window.EDITOR_SCENES&&window.EDITOR_SCENES.load&&!scenes.length){sceneLibraryRequested=true;window.EDITOR_SCENES.load().then(()=>renderCampaign());}
+    const box=host.querySelector('#campaign-scene-triggers');
+    (C.scene_triggers||[]).forEach((t,i)=>{
+      const req=t.requires||{},row=document.createElement('div');row.className='campaign-scene-trigger';
+      row.innerHTML='<b>Gatilho '+(i+1)+'</b><label>Cena<input data-k="scene_id" list="campaign-scene-ids" value="'+esc(t.scene_id)+'"></label><label>Quando<select data-k="when"><option value="campaign_start">Início da campanha</option><option value="city_enter">Entrar na cidade</option><option value="dungeon_enter">Entrar na masmorra</option><option value="dungeon_complete">Concluir masmorra</option><option value="keyword_obtained">Obter palavra-chave</option><option value="key_item_obtained">Obter item-chave</option></select></label><label>Palavra-chave / item que aciona<input data-k="trigger_value" value="'+esc(t.trigger_value||'')+'" placeholder="id exato"></label><label>Local / masmorra<input data-k="dungeon_file" list="campaign-dungeon-files" value="'+esc(t.dungeon_file||'')+'" placeholder="necessário ao entrar"></label><label>Palavras: todas<input data-r="keywords_all" value="'+esc((req.keywords_all||[]).join(', '))+'"></label><label>Palavras: qualquer<input data-r="keywords_any" value="'+esc((req.keywords_any||[]).join(', '))+'"></label><label>Palavras: não possuir<input data-r="keywords_not" value="'+esc((req.keywords_not||[]).join(', '))+'"></label><label>Itens-chave: todos<input data-r="key_items_all" value="'+esc((req.key_items_all||[]).join(', '))+'"></label><label>Itens-chave: qualquer<input data-r="key_items_any" value="'+esc((req.key_items_any||[]).join(', '))+'"></label><label>Itens-chave: não possuir<input data-r="key_items_not" value="'+esc((req.key_items_not||[]).join(', '))+'"></label><label><input data-k="once" type="checkbox" '+(t.once!==false?'checked':'')+'> apenas uma vez</label><button data-del>Excluir</button>';
+      box.appendChild(row);row.querySelector('[data-k="when"]').value=t.when||'campaign_start';
+      row.querySelectorAll('[data-k]').forEach(el=>el.onchange=()=>{t[el.dataset.k]=el.type==='checkbox'?el.checked:el.value.trim();updateCampaignStatus();});
+      row.querySelectorAll('[data-r]').forEach(el=>el.onchange=()=>{t.requires=t.requires||{};t.requires[el.dataset.r]=csv(el.value);});
+      row.querySelector('[data-del]').onclick=()=>{C.scene_triggers.splice(i,1);renderCampaign();};
     });
+    const add=document.createElement('button');add.textContent='+ Adicionar gatilho de cena';add.onclick=()=>{C.scene_triggers.push({scene_id:ids[0]||'',when:'campaign_start',trigger_value:'',dungeon_file:'',once:true,requires:{}});renderCampaign();};box.appendChild(add);
   }
-
-  function renderCampaign() { renderControls(); renderAdd(); renderList(); updateCampaignStatus(); }
-
-  function saveCampaign() {
-    const v = updateCampaignStatus();
-    if (!v.ok) { alert("Campanha inválida:\n- " + v.erros.join("\n- ")); return; }
-    const out = { schema_version: 1, id: C.id.trim(), name: C.name.trim() };
-    const ci = storyToSaved(C.intro); if (ci !== undefined) out.intro = ci;
-    const co = storyToSaved(C.outro); if (co !== undefined) out.outro = co;
-    out.dungeons = C.dungeons.map(f => {
-      const o = faseObj(f), e = { file: o.file };
-      const i = storyToSaved(o.intro); if (i !== undefined) e.intro = i;
-      const u = storyToSaved(o.outro); if (u !== undefined) e.outro = u;
-      return e;
-    });
-    if (window.EDITOR_SAVE && window.EDITOR_SAVE.saveCampaign) {
-      setCampSaveMsg("status-ok", "Salvando em campaigns/…");
-      window.EDITOR_SAVE.saveCampaign(out).then((res) => {
-        setCampSaveMsg("status-ok", "✓ salva em campaigns/" + res.file);
-      }).catch((err) => {
-        baixarCampanha(out);
-        setCampSaveMsg("status-err", "⚠ servidor offline (" + err.message + ") — baixada em Downloads");
-      });
-    } else {
-      baixarCampanha(out);
-    }
-  }
-
-  function setCampSaveMsg(cls, msg) {
-    const el = statusEl();
-    if (el) { el.className = cls; el.textContent = msg; }
-  }
-
-  function baixarCampanha(out) {
-    const blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = (C.id.trim() || "campanha") + ".json";
-    document.body.appendChild(a); a.click(); a.remove();
-  }
-
-  function loadCampaign(obj) {
-    C.id = obj.id || "campanha"; C.name = obj.name || "Campanha";
-    C.intro = storyFromSaved(obj.intro); C.outro = storyFromSaved(obj.outro);
-    C.dungeons = (obj.dungeons || []).map(faseObj);
-    renderCampaign();
-  }
-
-  // Pré-visualização autossuficiente (o editor não carrega game.js): replica o
-  // layout A usando blobs em memória quando disponíveis, senão o caminho salvo.
-
-  window.EDITOR_CAMPAIGN = { C, renderCampaign, dunByFile, validarCampanhaEditor, saveCampaign, loadCampaign, drawMiniMap,
-                             previewStory };
+  function renderControls(){const host=document.getElementById('campaign-controls');host.innerHTML='<label>id <input id="c-id" size="12"></label><label>nome <input id="c-name" size="14"></label><label title="Escolha uma cena da Biblioteca de Cenas para executar após montar o grupo">cena inicial <input id="c-scene-intro" list="campaign-scene-ids" size="16" placeholder="opcional"></label>'+histButtonHTML('c-intro-hist',C.intro).replace('história','abertura')+histButtonHTML('c-outro-hist',C.outro).replace('história','final')+'<button id="c-load">Carregar</button><input id="c-file" type="file" accept=".json,application/json" hidden><button id="c-save">Salvar</button><div id="campaign-trigger-host"></div>';host.querySelector('#c-id').value=C.id;host.querySelector('#c-name').value=C.name;host.querySelector('#c-scene-intro').value=C.scene_intro||'';host.querySelector('#c-id').oninput=e=>{C.id=e.target.value;updateCampaignStatus();};host.querySelector('#c-name').oninput=e=>{C.name=e.target.value;updateCampaignStatus();};host.querySelector('#c-scene-intro').oninput=e=>C.scene_intro=e.target.value.trim();host.querySelector('.c-intro-hist').onclick=()=>openHistoryEditor(C.intro,'abertura da campanha',renderCampaign);host.querySelector('.c-outro-hist').onclick=()=>openHistoryEditor(C.outro,'final da campanha',renderCampaign);host.querySelector('#c-save').onclick=saveCampaign;host.querySelector('#c-load').onclick=()=>host.querySelector('#c-file').click();host.querySelector('#c-file').onchange=ev=>{const f=ev.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{try{loadCampaign(JSON.parse(fr.result));}catch(e){alert('JSON inválido: '+e.message);}};fr.readAsText(f);ev.target.value='';};renderTriggers(host.querySelector('#campaign-trigger-host'));}
+  function renderCampaign(){renderControls();updateCampaignStatus();}
+  function setMsg(cls,msg){const el=statusEl();if(el){el.className=cls;el.textContent=msg;}}
+  function baixar(out){const b=new Blob([JSON.stringify(out,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=(C.id.trim()||'campanha')+'.json';document.body.appendChild(a);a.click();a.remove();}
+  function saveCampaign(){const v=updateCampaignStatus();if(!v.ok){alert('Campanha inválida:\n- '+v.erros.join('\n- '));return;}const out={schema_version:1,id:C.id.trim(),name:C.name.trim()};const intro=storyToSaved(C.intro),outro=storyToSaved(C.outro);if(intro!==undefined)out.intro=intro;if(outro!==undefined)out.outro=outro;if(C.scene_intro)out.scene_intro=C.scene_intro;if(C.scene_triggers.length)out.scene_triggers=C.scene_triggers.map(t=>({scene_id:t.scene_id,when:t.when,trigger_value:t.trigger_value||undefined,dungeon_file:t.dungeon_file||undefined,once:t.once!==false,requires:t.requires||{}}));if(!window.EDITOR_SAVE||!window.EDITOR_SAVE.saveCampaign){baixar(out);return;}setMsg('status-ok','Salvando em campaigns/…');window.EDITOR_SAVE.saveCampaign(out).then(r=>setMsg('status-ok','✓ salva em campaigns/'+r.file)).catch(e=>{baixar(out);setMsg('status-err','⚠ servidor offline ('+e.message+') — baixada em Downloads');});}
+  function loadCampaign(obj){C.id=obj.id||'campanha';C.name=obj.name||'Campanha';C.intro=storyFromSaved(obj.intro);C.outro=storyFromSaved(obj.outro);C.scene_intro=obj.scene_intro||'';C.scene_triggers=Array.isArray(obj.scene_triggers)?obj.scene_triggers:[];renderCampaign();}
+  window.EDITOR_CAMPAIGN={C,renderCampaign,validarCampanhaEditor,saveCampaign,loadCampaign,previewStory};
 })();

@@ -128,6 +128,16 @@
     return request("upload_campaign", { defn: defn })
       .then((m) => ({ file: m.file }));
   }
+  async function uploadSceneMedia(file, kind) {
+    const imageKind = ["background", "character", "illustration"].includes(kind);
+    if ((imageKind ? IMG : AUD).indexOf(extOf(file.name)) < 0)
+      throw new Error(imageKind ? "envie uma imagem válida" : "envie um áudio válido");
+    if (file.size > MAX) throw new Error("arquivo grande demais");
+    const m = await request("upload_scene_media", { kind: kind, name: file.name, data: await toBase64(file) });
+    return m.path;
+  }
+  function loadScenes() { return request("load_scenes", {}).then((m) => m.scenes); }
+  function saveScenes(scenes) { return request("save_scenes", { scenes: scenes }).then((m) => m.scenes); }
 
   // Salva uma cópia personalizada sem tocar nas definições nativas do servidor.
   function saveCustomMonster(monster) {
@@ -212,6 +222,6 @@
 
   window.STORY_UPLOAD = { upload: upload };
   window.PRISONER_UPLOAD = { upload: uploadPrisoner };
-  window.EDITOR_SAVE = { saveDungeon: saveDungeon, previewDungeon: previewDungeon, saveCampaign: saveCampaign, saveCustomMonster: saveCustomMonster, uploadMonsterArt: uploadMonsterArt, saveCustomItem: saveCustomItem, uploadItemArt: uploadItemArt, uploadTavernArt: uploadTavernArt, uploadCityArt: uploadCityArt, loadCityShops: loadCityShops, saveCityShops: saveCityShops, saveWorldCities: saveWorldCities, loadWorldAdventures: loadWorldAdventures, saveWorldAdventures: saveWorldAdventures };
+  window.EDITOR_SAVE = { saveDungeon: saveDungeon, previewDungeon: previewDungeon, saveCampaign: saveCampaign, loadScenes: loadScenes, saveScenes: saveScenes, uploadSceneMedia: uploadSceneMedia, saveCustomMonster: saveCustomMonster, uploadMonsterArt: uploadMonsterArt, uploadItemArt: uploadItemArt, uploadTavernArt: uploadTavernArt, uploadCityArt: uploadCityArt, loadCityShops: loadCityShops, saveCityShops: saveCityShops, saveWorldCities: saveWorldCities, loadWorldAdventures: loadWorldAdventures, saveWorldAdventures: saveWorldAdventures };
   window.OBJETO_UPLOAD = { upload: uploadObjeto, list: listObjetos };
 })();

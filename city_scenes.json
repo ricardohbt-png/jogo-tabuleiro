@@ -283,13 +283,56 @@
         }
       ]
     },
-    "mercado_xgmk": {
-      "nome": "Mercado",
-      "background": "assets/tavern/WhatsApp_Image_2026-04-26_at_20.43.30__4_.jpeg",
+    "mercado_28bt": {
+      "nome": "mercado",
+      "background": "assets/tavern/mercano.png",
       "art_ratio": 1.5,
       "mode": "individual",
       "mask": "",
-      "slots": []
+      "slots": [
+        {
+          "id": "npc_msaw3rwx",
+          "name": "mercador",
+          "image": "assets/tavern/mercador.png",
+          "x": 10.9,
+          "y": 46.0,
+          "w": 17.6,
+          "h": 41.2,
+          "z": 1.0,
+          "dialog": "",
+          "conversations": [
+            {
+              "id": "inicial",
+              "texto": "Essa é a pista 5.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "pista5",
+                "item_id": ""
+              },
+              "uma_vez": true
+            }
+          ]
+        },
+        {
+          "id": "npc_msax7a03",
+          "name": "soldado",
+          "image": "assets/tavern/soldado.png",
+          "x": 64.4,
+          "y": 40.6,
+          "w": 22.0,
+          "h": 59.4,
+          "z": 2.0,
+          "dialog": "",
+          "conversations": []
+        }
+      ]
     }
   },
   "vila_riacho": {

@@ -328,11 +328,16 @@ def _save_world_adventures_upload(raw_locations, raw_adventures):
         for raw_stage in files[:20]:
             et = _etapa_obj(raw_stage)
             if et["file"] in allowed_files:
-                etapas.append({"file": et["file"], "encadear": et["encadear"],
-                               "intro": _clean_story_field(et["intro"]),
-                               "outro": _clean_story_field(et["outro"])})
-        if not etapas:
-            continue
+                etapa = {"file": et["file"], "encadear": et["encadear"],
+                         "intro": _clean_story_field(et["intro"]),
+                         "outro": _clean_story_field(et["outro"])}
+                trigger = _clean_location_scene_trigger(et.get("scene_trigger"))
+                if trigger:
+                    etapa["scene_trigger"] = trigger
+                etapas.append(etapa)
+        # Um destino recém-criado pode ser salvo antes de receber a primeira
+        # masmorra. Preservamos esse rascunho para o editor, mas ele não aparece
+        # para os jogadores até ficar jogável (ver _aventura_visivel).
         req = _clean_requirement(row.get("requisito"))
         try: renome_reward = max(0, min(9999, int(row.get("renome_recompensa", 1))))
         except (TypeError, ValueError): renome_reward = 1
@@ -340,6 +345,7 @@ def _save_world_adventures_upload(raw_locations, raw_adventures):
                         "fome": fome, "sede": sede, "dungeons": etapas,
                         "espera_retorno": _clean_espera(row.get("espera_retorno")),
                         "oculto_ate_liberar": bool(row.get("oculto_ate_liberar")),
+                        "revisitavel": bool(row.get("revisitavel")),
                         "outro_rota": _clean_story_field(row.get("outro_rota")),
                         "requisito": req, "renome_recompensa": renome_reward}
     try:
@@ -393,9 +399,14 @@ def _load_city_map_points():
                 x, y = float(point.get("x")), float(point.get("y"))
                 if 0 <= x <= 100 and 0 <= y <= 100:
                     item = {"x": x, "y": y}
-                    if str(point.get("type") or "") in {"ferreiro", "mercador", "templo", "taverna", "guilda", "dungeon", "caravana"}:
+                    if str(point.get("type") or "") in {"ferreiro", "mercador", "templo", "taverna", "guilda", "dungeon", "caravana", "cena"}:
                         item["type"] = point["type"]
                     if isinstance(point.get("name"), str): item["name"] = point["name"][:60]
+                    # O mapa é carregado antes das cenas; portanto só preserva
+                    # a referência válida aqui. A existência da cena é resolvida
+                    # depois, quando CITY_SCENES estiver disponível.
+                    scene_ref = str(point.get("scene") or "").strip().lower()
+                    if re.fullmatch(r"[a-z0-9_-]{1,48}", scene_ref): item["scene"] = scene_ref
                     CITY_MAP_POINTS[city_id][point_id] = item
     except (OSError, ValueError, TypeError, json.JSONDecodeError):
         pass
@@ -1588,12 +1599,18 @@ def try_open_savegame_room(account, sid, rooms):
     room.savegame_id = sid
     room.savegame = sg
     room.campaign_phase = sg.get("campaign_phase", 0)
+    room.turn_timer_enabled = sg.get("turn_timer_enabled", True) is not False
     room.world_location = sg.get("world_location", "alva_e_luz") if sg.get("world_location") in WORLD_LOCATIONS else "alva_e_luz"
     try: room.renome = max(0, int(sg.get("renome", 0)))
     except (TypeError, ValueError): room.renome = 0
     room.fatos = {str(f)[:100] for f in (sg.get("fatos") or []) if isinstance(f, str) and str(f).strip()}
     room.scene_conversations_done = _migrar_chaves_conversa(
         sg.get("scene_conversations_done") or sg.get("tavern_conversations_done") or [])
+    room.scene_triggers_done = {str(x) for x in (sg.get("scene_triggers_done") or []) if str(x)}
+    if isinstance(sg.get("active_scene"), dict):
+        room.active_scene = deepcopy(sg["active_scene"])
+    if isinstance(sg.get("scene_variables"), dict):
+        room.scene_variables = deepcopy(sg["scene_variables"])
     raw_adventure_progress = sg.get("world_adventure_progress", {})
     if isinstance(raw_adventure_progress, dict):
         for adventure_id, stage in raw_adventure_progress.items():
@@ -4639,6 +4656,41 @@ def listar_dungeons():
     return out
 
 CAMPAIGNS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "campaigns")
+SCENES_FILE = os.path.join(CAMPAIGNS_DIR, "cenas.json")
+
+def _cenas_vazias():
+    return {"schema_version": 1, "scenes": {}}
+
+def carregar_cenas():
+    """Biblioteca global de cinematics. Falhas de arquivo nunca impedem o jogo."""
+    try:
+        with open(SCENES_FILE, "r", encoding="utf-8") as f:
+            raw = json.load(f)
+        if not isinstance(raw, dict) or not isinstance(raw.get("scenes"), dict):
+            return _cenas_vazias()
+        return {"schema_version": 1, "scenes": raw["scenes"]}
+    except Exception:
+        return _cenas_vazias()
+
+def validar_cenas(raw):
+    if not isinstance(raw, dict) or not isinstance(raw.get("scenes"), dict):
+        return False, "biblioteca de cenas inválida"
+    for sid, scene in raw["scenes"].items():
+        if not isinstance(sid, str) or not re.fullmatch(r"[a-z0-9_]{1,80}", sid):
+            return False, "id de cena inválido"
+        if not isinstance(scene, dict) or not isinstance(scene.get("events", []), list):
+            return False, f"cena inválida: {sid}"
+        ids = set()
+        for ev in scene["events"]:
+            eid = ev.get("id") if isinstance(ev, dict) else None
+            if not isinstance(eid, str) or not eid or eid in ids:
+                return False, f"evento sem id único em {sid}"
+            ids.add(eid)
+        if scene.get("start") and scene["events"] and scene["start"] not in ids:
+            return False, f"evento inicial inexistente em {sid}"
+    return True, "ok"
+
+SCENE_LIBRARY = carregar_cenas()
 
 def carregar_campanha(file):
     """Lê e parseia um arquivo de CAMPAIGNS_DIR. Retorna dict ou None."""
@@ -4682,8 +4734,9 @@ def _etapa_obj(item):
         return {"file": item, "encadear": False, "intro": "", "outro": ""}
     if isinstance(item, dict):
         return {"file": item.get("file"), "encadear": bool(item.get("encadear")),
-                "intro": item.get("intro", ""), "outro": item.get("outro", "")}
-    return {"file": None, "encadear": False, "intro": "", "outro": ""}
+                "intro": item.get("intro", ""), "outro": item.get("outro", ""),
+                "scene_trigger": item.get("scene_trigger")}
+    return {"file": None, "encadear": False, "intro": "", "outro": "", "scene_trigger": None}
 
 def _clean_espera(raw):
     """Normaliza a espera de retorno de uma aventura para
@@ -4771,6 +4824,20 @@ def _clean_story_field(raw):
         out["audio"] = norm["audio"]
     return out
 
+def _clean_location_scene_trigger(raw):
+    """Normaliza a cena associada à entrada de uma etapa/local."""
+    if not isinstance(raw, dict):
+        return None
+    sid = str(raw.get("scene_id") or "").strip()
+    if not sid or sid not in (SCENE_LIBRARY.get("scenes") or {}):
+        return None
+    req = raw.get("requires") if isinstance(raw.get("requires"), dict) else {}
+    def values(key):
+        return [str(x).strip()[:100] for x in (req.get(key) or []) if str(x).strip()][:20]
+    return {"scene_id": sid, "once": raw.get("once") is not False,
+            "requires": {"keywords_all": values("keywords_all"),
+                         "key_items_all": values("key_items_all")}}
+
 
 def _story_beat(key, parts):
     """parts: lista de campos de história (string|objeto) na ORDEM de exibição.
@@ -4819,14 +4886,29 @@ def validar_campanha(defn):
         return False, "Campanha não é um objeto JSON."
     if defn.get("schema_version") != 1:
         return False, f"schema_version não suportado: {defn.get('schema_version')!r} (esperado 1)."
-    dungeons = defn.get("dungeons")
-    if not (isinstance(dungeons, list) and len(dungeons) >= 1):
-        return False, "campanha precisa de ao menos uma masmorra em 'dungeons'."
+    # Campanhas novas são narrativas: entradas de masmorra vivem nos destinos do
+    # mapa. Ainda aceitamos a lista antiga para campanhas já publicadas.
+    dungeons = defn.get("dungeons", [])
+    if not isinstance(dungeons, list):
+        return False, "'dungeons' precisa ser uma lista quando informado."
     for k in ("intro", "outro"):
         if k in defn:
             ok, msg = _validar_story(defn[k], f"campanha '{k}'")
             if not ok:
                 return False, msg
+    allowed_scene_triggers = {"campaign_start", "city_enter", "dungeon_enter", "dungeon_complete", "keyword_obtained", "key_item_obtained"}
+    for i, trigger in enumerate(defn.get("scene_triggers") or []):
+        if not isinstance(trigger, dict): return False, f"gatilho de cena {i+1}: formato inválido."
+        if not isinstance(trigger.get("scene_id"), str) or not trigger.get("scene_id").strip():
+            return False, f"gatilho de cena {i+1}: escolha uma cena."
+        if trigger.get("scene_id").strip() not in (SCENE_LIBRARY.get("scenes") or {}):
+            return False, f"gatilho de cena {i+1}: cena inexistente."
+        if trigger.get("when") not in allowed_scene_triggers:
+            return False, f"gatilho de cena {i+1}: evento inválido."
+        if trigger.get("when") in {"keyword_obtained", "key_item_obtained"} and not str(trigger.get("trigger_value") or "").strip():
+            return False, f"gatilho de cena {i+1}: informe o valor que aciona a cena."
+        if "requires" in trigger and not isinstance(trigger["requires"], dict):
+            return False, f"gatilho de cena {i+1}: requisitos inválidos."
     for i, item in enumerate(dungeons):
         file = _fase_file(item)
         if not isinstance(file, str) or not file:
@@ -5042,6 +5124,8 @@ DECOR_TYPES = {
     "mesa_quimica":   _decor("Mesa de química", "🧪", [1, 2], gira=True),
     "arvore":         _decor("Árvore", "🌳", [1, 1], alto=True),
     "arvore_grande":  _decor("Árvore grande", "🌲", [2, 2], alto=True),
+    "caverna":        _decor("Caverna", "🕳️", [2, 2], gira=True, alto=True,
+                              loot_capaz=False, image="caverna.png"),
     "chao":           _decor("Chão (grama)", "🌿", [1, 1], pisavel=True, loot_capaz=False, special="floor"),
     # DecoraÃ§Ãµes de parede: ficam presas a uma face de WALL, sem ocupar nem
     # bloquear o chÃ£o. A arte Ã© um decal vertical no modo 3D.
@@ -6420,9 +6504,12 @@ class GameRoom:
         self.world_adventure_id = None
         self.world_adventure_index = None
         self.world_adventure_progress = {}
+        self.world_adventure_revisit = False
         self.renome = 0
         self.fatos = set()
         self.scene_conversations_done = set()
+        self.scene_triggers_done = set()  # gatilhos narrativos da campanha já consumidos
+        self.location_scene_trigger = None # cena da entrada atual do mapa-múndi
         # Preset de iluminaÃ§Ã£o do 3D no cliente ("penumbra"|"masmorra"|"ar_livre").
         # Procedural usa o padrÃ£o; masmorra autorada sobrescreve em load_authored_dungeon.
         self.ambiente = "masmorra"
@@ -6444,6 +6531,10 @@ class GameRoom:
         self.savegame = None         # dict do savegame carregado (ou None)
         self.account_by_pid = {}     # pid -> apelido da conta logada
         self._campaign_outro = None   # beat de encerramento pendente (cidade), ou None
+        # Cinemática ativa. O conteúdo fica na biblioteca global; esta pequena
+        # sessão é autoritativa e entra no savegame para sobreviver a F5/queda.
+        self.active_scene = None
+        self.scene_variables = {}
         self.key_chest_opened = False
         self.monsters = {}      # id -> monster
         self.corpses = {}       # id -> cadÃ¡ver (monstro morto, alvo de Animar Mortos)
@@ -6467,6 +6558,7 @@ class GameRoom:
         self.initiative_task = None
         # Timer de turno (30s): tarefa asyncio + token p/ descartar timers velhos.
         self.TURN_LIMIT_S = 30
+        self.turn_timer_enabled = True   # anfitrião pode desligar o limite por partida
         self.MASTER_MANUAL_MOVE = 5       # passos por turno de um monstro em modo Manual
         self.MASTER_MANUAL_LIMIT_S = 60   # timeout anti-AFK do mestre por monstro manual
         self.turn_timer_task = None
@@ -6921,9 +7013,20 @@ class GameRoom:
         # Transition to city phase so players can shop before the dungeon
         self.phase = "city"
         self._gerar_loja_pergaminhos()
+        # Campanhas anteriores ao editor de Cenas usam `intro` (slides/história)
+        # em vez de `scene_intro`. Ela precisa aparecer logo após o grupo ser
+        # montado, antes da cidade, tal como uma cena inicial moderna.
+        if self.mode == "campaign" and self.campaign and self.campaign.get("intro") and not self.campaign.get("scene_intro"):
+            self._story_encadeada = _story_beat("campaign-start:" + str(self.selected_campaign or self.campaign.get("id", "")),
+                                                [self.campaign.get("intro")])
         await self.broadcast({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE})
         await self.broadcast_city_state()
         self._checkpoint_savegame()   # ponto seguro: fichas completas na 1ª cidade
+        # Opcional: cinemática de abertura ocorre após montar o grupo e antes da cidade.
+        if self.mode == "campaign" and self.campaign:
+            started = await self._trigger_campaign_scene("campaign_start")
+            if not started and self.campaign.get("scene_intro"):
+                await self.iniciar_cena(self.campaign.get("scene_intro"), "inicio_campanha")
 
     # â”€â”€ city phase â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -6931,8 +7034,9 @@ class GameRoom:
         return {
             "type": "city_state",
             "master_pid": self.master_pid,
-            "players": list(self.players.values()),
             "host": self.host_pid,
+            "turn_timer_enabled": self.turn_timer_enabled,
+            "players": list(self.players.values()),
             "world": {
                 "location": self.world_location,
                 "locations": list(WORLD_LOCATIONS.values()),
@@ -6953,6 +7057,9 @@ class GameRoom:
             "city_shops": CITY_SHOPS,
             "scenes": self._cenas_payload(),
             "campaign": self._campaign_payload(),
+            "active_scene": ({"session": deepcopy(self.active_scene),
+                              "scene": self._scene_def(self.active_scene.get("scene_id"))}
+                             if self.active_scene else None),
             "story": self._story_encadeada,   # encerramento da etapa; de-dup por key no cliente
             "shops": {
                 "ferreiro": {"weapons": _city_shop_items(self.world_location, "ferreiro_weapon"),
@@ -6995,6 +7102,213 @@ class GameRoom:
                         disponiveis.append(conversation)
                 slot["conversations"] = disponiveis
         return cenas
+
+    # ── Cenas/cinemáticas (biblioteca geral) ──────────────────────────────
+    def _scene_def(self, sid):
+        scene = (SCENE_LIBRARY.get("scenes") or {}).get(str(sid or ""))
+        return deepcopy(scene) if isinstance(scene, dict) else None
+
+    def _campaign_trigger_matches(self, trigger, when, trigger_value=None):
+        """Avalia condições narrativas de uma cena vinculada à campanha."""
+        if not isinstance(trigger, dict) or trigger.get("when") != when:
+            return False
+        if when in {"keyword_obtained", "key_item_obtained"} and str(trigger.get("trigger_value") or "").strip() != str(trigger_value or "").strip():
+            return False
+        req = trigger.get("requires") if isinstance(trigger.get("requires"), dict) else {}
+        all_facts = {str(x) for x in (req.get("keywords_all") or []) if str(x)}
+        any_facts = {str(x) for x in (req.get("keywords_any") or []) if str(x)}
+        no_facts = {str(x) for x in (req.get("keywords_not") or []) if str(x)}
+        if all_facts and not all_facts.issubset(self.fatos): return False
+        if any_facts and not any_facts.intersection(self.fatos): return False
+        if no_facts.intersection(self.fatos): return False
+        all_items = [str(x) for x in (req.get("key_items_all") or []) if str(x)]
+        any_items = [str(x) for x in (req.get("key_items_any") or []) if str(x)]
+        no_items = [str(x) for x in (req.get("key_items_not") or []) if str(x)]
+        if any(not self._grupo_tem_item(x) for x in all_items): return False
+        if any_items and not any(self._grupo_tem_item(x) for x in any_items): return False
+        if any(self._grupo_tem_item(x) for x in no_items): return False
+        phase = trigger.get("phase")
+        if phase not in (None, "") and str(phase) != str(self.campaign_phase + 1): return False
+        dungeon = str(trigger.get("dungeon_file") or "")
+        if dungeon:
+            active_file = str(self.selected_dungeon or "")
+            if not active_file and self.campaign:
+                stages = self.campaign.get("dungeons") or []
+                if 0 <= self.campaign_phase < len(stages):
+                    active_file = str(_fase_file(stages[self.campaign_phase]) or "")
+            if dungeon != active_file:
+                return False
+        return True
+
+    async def _trigger_campaign_scene(self, when, trigger_value=None):
+        if self.active_scene or not self.campaign:
+            return False
+        for index, trigger in enumerate(self.campaign.get("scene_triggers") or []):
+            if not self._campaign_trigger_matches(trigger, when, trigger_value): continue
+            key = str(trigger.get("id") or f"{when}:{trigger_value or ''}:{index}")
+            if trigger.get("once", True) and key in self.scene_triggers_done: continue
+            ok, _ = await self.iniciar_cena(str(trigger.get("scene_id") or ""), "gatilho:" + when)
+            if ok:
+                if trigger.get("once", True): self.scene_triggers_done.add(key)
+                self._checkpoint_savegame()
+                return True
+        return False
+
+    async def _trigger_location_scene(self, trigger, key):
+        """Inicia a cena própria do destino, se seus requisitos forem atendidos."""
+        if self.active_scene or not isinstance(trigger, dict):
+            return False
+        sid = str(trigger.get("scene_id") or "").strip()
+        if not sid:
+            return False
+        req = trigger.get("requires") if isinstance(trigger.get("requires"), dict) else {}
+        facts = {str(x) for x in (req.get("keywords_all") or []) if str(x)}
+        items = [str(x) for x in (req.get("key_items_all") or []) if str(x)]
+        if facts and not facts.issubset(self.fatos):
+            return False
+        if any(not self._grupo_tem_item(item) for item in items):
+            return False
+        if trigger.get("once", True) and key in self.scene_triggers_done:
+            return False
+        ok, _ = await self.iniciar_cena(sid, "local:" + key)
+        if ok and trigger.get("once", True):
+            self.scene_triggers_done.add(key)
+            self._checkpoint_savegame()
+        return ok
+
+    async def iniciar_cena(self, sid, fonte="evento"):
+        """Abre uma cena para a sala toda. A navegação de fala é local; escolhas
+        e testes são validados aqui e a primeira decisão fecha o ramo para todos."""
+        if self.active_scene:
+            return False, "já existe uma cena em andamento"
+        scene = self._scene_def(sid)
+        if not scene:
+            return False, "cena não encontrada"
+        self.active_scene = {"scene_id": str(sid), "fonte": fonte,
+                             "locked": False, "required_done": [], "current_event": scene.get("start") or ((scene.get("events") or [{}])[0].get("id")), "started_at": _now_iso()}
+        self._checkpoint_savegame()
+        await self.broadcast({"type": "scene_start", "scene": scene,
+                              "session": deepcopy(self.active_scene), "paused": self.phase == "playing"})
+        return True, "ok"
+
+    def _scene_event(self, sid, eid):
+        scene = self._scene_def(sid)
+        if not scene: return None, None
+        return scene, next((e for e in scene.get("events", []) if e.get("id") == eid), None)
+
+    def _scene_apply_effects(self, effects, chooser):
+        """Efeitos seguros da primeira fase. Formato: [{type,key,value,scope}].
+        Variáveis pessoais vivem na ficha; globais, em fatos/variáveis da sala."""
+        if not isinstance(effects, list): return
+        for ef in effects:
+            if not isinstance(ef, dict): continue
+            typ, scope = ef.get("type"), ef.get("scope", "group")
+            targets = list(self.players.values()) if scope in ("group", "all") else [self.players.get(chooser)]
+            targets = [p for p in targets if p and not p.get("is_master")]
+            if typ == "set_variable":
+                key = str(ef.get("key") or "")[:80]
+                if not key: continue
+                if scope == "global":
+                    if not hasattr(self, "scene_variables"): self.scene_variables = {}
+                    self.scene_variables[key] = ef.get("value", True)
+                else:
+                    for p in targets: p.setdefault("scene_variables", {})[key] = ef.get("value", True)
+            elif typ == "give_key":
+                key = str(ef.get("key") or "")[:80]
+                if scope == "global": self.fatos.add(key)
+                else:
+                    for p in targets: p.setdefault("scene_keys", []).append(key) if key not in p.setdefault("scene_keys", []) else None
+            elif typ == "give_gold":
+                try: amount = max(0, int(ef.get("value", 0)))
+                except (TypeError, ValueError): amount = 0
+                for p in targets: p["gold"] = p.get("gold", 0) + amount
+
+    async def handle_scene_choice(self, pid, scene_id, event_id, option_id):
+        if not self.active_scene or self.active_scene.get("scene_id") != str(scene_id):
+            await self.send_to(pid, {"type":"error", "msg":"Esta cena não está mais ativa."}); return
+        if self.active_scene.get("locked") or self.active_scene.get("current_event") != event_id:
+            await self.send_to(pid, {"type":"error", "msg":"Outro jogador já fez a escolha do grupo."}); return
+        _scene, event = self._scene_event(scene_id, event_id)
+        options = (event or {}).get("data") or []
+        opt = next((o for o in options if isinstance(o, dict) and str(o.get("id")) == str(option_id)), None)
+        if not opt:
+            await self.send_to(pid, {"type":"error", "msg":"Escolha inválida."}); return
+        self.active_scene["locked"] = True
+        self._scene_apply_effects(opt.get("effects"), pid)
+        next_id = opt.get("next") or event.get("next")
+        self.active_scene["current_event"] = next_id
+        self._checkpoint_savegame()
+        await self.broadcast({"type":"scene_branch", "scene_id":scene_id, "event_id":event_id,
+                              "next":next_id, "by":pid, "option_id":option_id})
+        # A trava só resolve a corrida da escolha atual; o próximo nó pode ser
+        # outra escolha/teste, portanto volta a aceitar decisão depois do salto.
+        if self.active_scene: self.active_scene["locked"] = False
+
+    async def handle_scene_test(self, pid, scene_id, event_id):
+        if not self.active_scene or self.active_scene.get("scene_id") != str(scene_id) or self.active_scene.get("locked") or self.active_scene.get("current_event") != event_id:
+            await self.send_to(pid, {"type":"error", "msg":"O teste não está mais disponível."}); return
+        _scene, event = self._scene_event(scene_id, event_id)
+        data = (event or {}).get("data") or {}
+        if not isinstance(data, dict) or (event or {}).get("type") != "test_cd":
+            await self.send_to(pid, {"type":"error", "msg":"Teste inválido."}); return
+        p = self.players.get(pid)
+        if not p: return
+        try: cd = int(data.get("cd", 10))
+        except (TypeError, ValueError): cd = 10
+        attr = str(data.get("attribute") or "int_")
+        aliases = {"forca":"str", "destreza":"dex", "constituicao":"con", "inteligencia":"int_", "sabedoria":"wis", "carisma":"cha"}
+        attr = aliases.get(attr, attr)
+        bonus = mod(p.get(attr, 10))
+        roll = random.randint(1, 20); success = roll + bonus >= cd
+        self.active_scene["locked"] = True
+        self._scene_apply_effects(data.get("success_effects" if success else "failure_effects"), pid)
+        next_id = data.get("success" if success else "failure") or event.get("next")
+        self.active_scene["current_event"] = next_id
+        self._checkpoint_savegame()
+        await self.broadcast({"type":"scene_test_result", "scene_id":scene_id, "event_id":event_id,
+                              "roll":roll, "bonus":bonus, "total":roll+bonus, "cd":cd, "success":success})
+        await self.broadcast({"type":"scene_branch", "scene_id":scene_id, "event_id":event_id,
+                              "next":next_id, "by":pid})
+        if self.active_scene: self.active_scene["locked"] = False
+
+    async def handle_scene_end(self, pid, force=False):
+        if not self.active_scene: return
+        if pid != self.host_pid:
+            await self.send_to(pid, {"type":"error", "msg":"Somente o anfitrião pode encerrar a cena."}); return
+        scene = self._scene_def(self.active_scene.get("scene_id")) or {}
+        required = {e.get("id") for e in scene.get("events", []) if e.get("mandatory")}
+        missing = sorted(required - set(self.active_scene.get("required_done") or []))
+        if missing and not force:
+            await self.send_to(pid, {"type":"scene_end_warning", "missing":missing})
+            return
+        self.active_scene = None
+        self._checkpoint_savegame()
+        await self.broadcast({"type":"scene_end"})
+        if self.phase == "playing": await self.push_state()
+        else: await self.broadcast_city_state()
+
+    async def handle_scene_visit(self, pid, scene_id, event_id):
+        if not self.active_scene or self.active_scene.get("scene_id") != str(scene_id): return
+        _scene, event = self._scene_event(scene_id, event_id)
+        # Falas avançam localmente; ao alcançar um nó interativo o cliente
+        # anuncia a visita para que o servidor aceite a próxima escolha/teste.
+        if event and not self.active_scene.get("locked"):
+            self.active_scene["current_event"] = event_id
+        if event and event.get("mandatory"):
+            done = self.active_scene.setdefault("required_done", [])
+            if event_id not in done: done.append(event_id); self._checkpoint_savegame()
+
+    async def handle_set_turn_timer(self, pid, enabled):
+        if pid != self.host_pid:
+            await self.send_to(pid, {"type":"error", "msg":"Somente o anfitrião pode alterar o limite de turno."}); return
+        self.turn_timer_enabled = bool(enabled)
+        self._cancelar_timer_turno(); self._cancelar_timer_ultimo_esforco()
+        if self.turn_timer_enabled:
+            self._iniciar_timer_turno()
+            if self.last_stand_pid: self._iniciar_timer_ultimo_esforco(self.last_stand_pid)
+        self._checkpoint_savegame()
+        if self.phase == "playing": await self.push_state()
+        else: await self.broadcast_city_state()
 
     def _gerar_loja_pergaminhos(self):
         """Renova o estoque de pergaminhos do mercador: uma MISTURA de básicos
@@ -8187,6 +8501,10 @@ class GameRoom:
         categoria = MALDICOES[maldicao_id]["categoria"]
         vinculante = self._cura_maldicao_vinculante(p, maldicao_id)
         preco = MALDICAO_PRECOS_TEMPLO[categoria] + (100 if vinculante else 0)
+        if maldicao_id == "licantropia":
+            entrada = next((m for m in self._maldicoes(p) if m["id"] == maldicao_id), None)
+            if entrada and self._maldicao_estagio(entrada) >= 4:
+                preco *= 2
         if p.get("gold", 0) < preco:
             await self.send_to(pid, {"type": "error", "msg": f"O Templo cobra {preco} ouro para curar esta maldição."}); return
         p["gold"] -= preco
@@ -8694,6 +9012,8 @@ class GameRoom:
         await self.broadcast_city_state()
 
     async def handle_world_map_points(self, pid, points):
+        await self.send_to(pid, {"type": "error", "msg": "Os pontos do mapa só podem ser ajustados no Editor."})
+        return
         """Salva as posições globais dos marcadores, exclusivamente pelo anfitrião."""
         if self.phase != "city" or pid != self.host_pid:
             await self.send_to(pid, {"type": "error", "msg": "Apenas o anfitrião pode ajustar os pontos do mapa."})
@@ -8759,6 +9079,9 @@ class GameRoom:
         o destino é sempre visível (bloqueado ou não), como sempre foi.
         Cuidado: requisito vazio passa em _avaliar_requisito — o flag sozinho,
         sem nenhum requisito, não esconde nada."""
+        # Rascunhos do editor não viram destinos clicáveis no mapa do jogo.
+        if not adventure.get("dungeons"):
+            return False
         if not adventure.get("oculto_ate_liberar"):
             return True
         return self._avaliar_requisito(adventure.get("requisito"))[0]
@@ -8791,15 +9114,22 @@ class GameRoom:
         if fact: self.fatos.add(fact)
         item_id = str(effect.get("item_id") or "").strip()
         item_note = ""
+        item_acquired = False
         if item_id:
             item = _DUNGEON_ITEM_CATALOG.get(item_id)
             if item:
                 route = self._route_acquired_item(self.players[pid], deepcopy(item))
+                item_acquired = route != "full"
                 item_note = f" {item.get('emoji', '📦')} Recebeu **{item.get('name', item_id)}**." if route != "full" else " A bolsa está cheia; o item não pôde ser recebido."
         if conversation.get("uma_vez"): self.scene_conversations_done.add(key)
         await self.gm_say(f"💬 **{slot.get('name', 'NPC')}**: {conversation['texto']}" + (f" (Renome {bonus:+d})" if bonus else "") + item_note)
         self._checkpoint_savegame()
         await self.push_state_or_city()
+        # O fato/item já foi aplicado e a cidade atualizada antes de abrir a cena.
+        if fact:
+            await self._trigger_campaign_scene("keyword_obtained", fact)
+        if item_id and item_acquired:
+            await self._trigger_campaign_scene("key_item_obtained", item_id)
 
     async def handle_world_adventure(self, pid, adventure_id):
         """Parte diretamente para uma entrada autorada marcada no mapa-múndi."""
@@ -8819,13 +9149,19 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": msg})
             return
         stages = list(adventure.get("dungeons") or [])
+        if not stages:
+            await self.send_to(pid, {"type": "error", "msg": "Este destino ainda não possui uma masmorra."})
+            return
         try:
             stage_index = max(0, int(self.world_adventure_progress.get(adventure["id"], 0)))
         except (TypeError, ValueError):
             stage_index = 0
-        if stage_index >= len(stages):
-            await self.send_to(pid, {"type": "error", "msg": "Todas as masmorras deste destino já foram concluídas."})
-            return
+        revisit = stage_index >= len(stages)
+        if revisit:
+            if not adventure.get("revisitavel"):
+                await self.send_to(pid, {"type": "error", "msg": "Todas as masmorras deste destino já foram concluídas."})
+                return
+            stage_index = len(stages) - 1
         file = _etapa_file(stages[stage_index])
         defn = carregar_dungeon(file)
         ok, reason = validar_dungeon(defn) if defn else (False, "Masmorra não encontrada.")
@@ -8840,9 +9176,12 @@ class GameRoom:
         for p in self.players.values():
             p["fome"] -= fome; p["sede"] -= sede
         self.mode = "authored"; self.selected_dungeon = file; self.dungeon_def = defn
-        self.campaign = None; self.selected_campaign = None; self.campaign_phase = 0
+        # A campanha continua ativa como contexto narrativo. A masmorra escolhida
+        # no mapa é a referência usada pelos gatilhos vinculados ao local.
         self.world_adventure_id = adventure["id"]
         self.world_adventure_index = stage_index
+        self.world_adventure_revisit = revisit
+        self.location_scene_trigger = _etapa_obj(stages[stage_index]).get("scene_trigger")
         # Abertura da etapa (slides autorados no editor de mapa-múndi). Vale para
         # toda etapa iniciada pelo mapa, não só a primeira.
         self._story_encadeada = _story_beat(
@@ -8853,6 +9192,8 @@ class GameRoom:
         await self.enter_dungeon(pid, from_world_adventure=True)
 
     async def handle_city_map_points(self, pid, city_id, points):
+        await self.send_to(pid, {"type": "error", "msg": "Os pontos da cidade só podem ser ajustados no Editor."})
+        return
         """Atualiza os marcadores da ilustração da cidade atual."""
         if self.phase != "city" or pid != self.host_pid:
             await self.send_to(pid, {"type": "error", "msg": "Apenas o anfitrião pode ajustar este ponto."})
@@ -8884,6 +9225,9 @@ class GameRoom:
         await self.broadcast_city_state()
 
     async def enter_dungeon(self, pid, from_world_adventure=False):
+        if self.active_scene:
+            await self.send_to(pid, {"type":"error", "msg":"Conclua ou pule a cena antes de entrar na masmorra."})
+            return
         if self.world_location != "alva_e_luz" and not from_world_adventure:
             await self.send_to(pid, {"type": "error", "msg": "Nesta primeira etapa, a aventura parte de Alva e Luz."})
             return
@@ -8893,6 +9237,10 @@ class GameRoom:
         # Na emenda entre etapas encadeadas a sala já está em "playing" — é o único
         # caminho que entra numa masmorra sem passar pela cidade.
         if self.phase != "city" and not self._emendando:
+            return
+        if (self.mode == "campaign" and self.campaign and not self.campaign.get("dungeons")
+                and not from_world_adventure):
+            await self.send_to(pid, {"type": "error", "msg": "Escolha um destino no mapa do mundo para iniciar uma masmorra."})
             return
 
         # Ponto seguro: fotografa o estado "cidade concluída" ANTES da aventura —
@@ -9007,7 +9355,16 @@ class GameRoom:
         self.initiative_active = True
         self._rebuild_initiative()
         await self.broadcast({"type": "enter_dungeon"})
+        # O aviso de transformação precisa ser enviado depois de entrar na tela
+        # da masmorra; antes disso o cliente limpa a fila de mensagens.
+        if nova:
+            await self._rolar_licantropia_inicio_masmorra()
         await self._activate_initiative_actor()
+        if nova:
+            trigger = self.location_scene_trigger
+            self.location_scene_trigger = None
+            await self._trigger_location_scene(trigger, f"world:{self.world_adventure_id}:{self.world_adventure_index}:enter")
+            await self._trigger_campaign_scene("dungeon_enter")
         if nova:
             await self.gm_say(gm("intro"))
             actor = self.current_actor()
@@ -9081,6 +9438,7 @@ class GameRoom:
         await self._processar_venenos_turno(p)
         await self._processar_corrosao_viva_turno(p)
         await self._processar_regeneracao_pocao_turno(p)
+        await self._processar_regeneracao_licantropia(p)
         await self._processar_vinho_turno(p)
         await self._processar_cerveja_turno(p)
         await self._processar_buffs_magicos_turno(p)
@@ -9115,6 +9473,18 @@ class GameRoom:
                 await self._start_initiative_player_turn(p)
                 await self.gm_say(f"🎲 Turno de **{p['name']}** (Iniciativa {actor['initiative']}).")
                 await self.push_state()
+                # A fera toma integralmente o turno do herói.  Executamos a IA
+                # depois do preparo normal do turno para que venenos, água e
+                # demais estados continuem funcionando como para qualquer herói.
+                if p.get("licantropia_transformado"):
+                    self._cancelar_timer_turno()
+                    async def lobo_step(pid):
+                        alvo = self.players.get(pid)
+                        if alvo and self._ativo(alvo) and alvo.get("licantropia_transformado"):
+                            await self._turno_licantropo(alvo)
+                            await self._consumir_turno_licantropia(alvo)
+                        await self._advance_initiative()
+                    self.initiative_task = asyncio.create_task(lobo_step(actor["id"]))
             else:
                 await self._advance_initiative()
             return
@@ -9198,7 +9568,7 @@ class GameRoom:
         """(Re)inicia os 30s do jogador da vez. Só na masmorra e para um jogador
         ativo. O token garante que um timer antigo não encerre um turno novo."""
         self._cancelar_timer_turno()
-        if self.phase != "playing":
+        if self.phase != "playing" or not self.turn_timer_enabled:
             return
         p = self.players.get(self.current_pid())
         if not self._ativo(p):
@@ -9233,6 +9603,8 @@ class GameRoom:
 
     def _iniciar_timer_ultimo_esforco(self, pid):
         self._cancelar_timer_ultimo_esforco()
+        if not self.turn_timer_enabled:
+            return
         self.last_stand_timer_task = asyncio.create_task(self._ultimo_esforco_timer_expira(pid))
 
     async def _ultimo_esforco_timer_expira(self, pid):
@@ -9558,6 +9930,8 @@ class GameRoom:
     # â”€â”€ turn actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def handle_move(self, pid, dx, dy):
+        if self.active_scene:
+            await self.send_to(pid, {"type":"error", "msg":"A masmorra está pausada durante uma cena."}); return
         if not self._is_turn(pid): return
         p = self.players[pid]
         if not p["alive"]: return
@@ -9579,10 +9953,6 @@ class GameRoom:
             return
         if p.get("dormindo"):
             await self.send_to(pid, {"type": "error", "msg": "🌙 Você está dormindo e não pode se mover!"})
-            return
-        if (self._is_water_tile(p["pos"][0], p["pos"][1])
-                and self._water_penalty(p) is None and p.get("_water_heavy_step_used")):
-            await self.send_to(pid, {"type": "error", "msg": "A armadura pesada permite apenas uma casa por rodada dentro da água."})
             return
         if p["moves_left"] <= 0:
             await self.send_to(pid, {"type": "error", "msg": "Sem movimentos restantes."})
@@ -9623,13 +9993,19 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Um servo animado ocupa este espaço."})
             return
 
-        was_water = self._is_water_tile(p["pos"][0], p["pos"][1])
+        step_cost = self._water_step_cost(p, nx, ny)
+        minimum_water_step = (p["moves_left"] > 0 and not p.get("moved_this_turn")
+                              and not p.get("_water_min_step_used"))
+        if p["moves_left"] < step_cost and not minimum_water_step:
+            await self.send_to(pid, {"type": "error", "msg": f"Movimento insuficiente: esta casa custa {step_cost}."})
+            return
         p["pos"] = [nx, ny]
         p["facing"] = [dx, dy]
-        self._apply_water_entry_penalty(p, nx, ny)
-        p["moves_left"] -= 1
-        if self._water_penalty(p) is None and (was_water or self._is_water_tile(nx, ny)):
-            p["_water_heavy_step_used"] = True
+        if p["moves_left"] < step_cost:
+            p["moves_left"] = 0
+            p["_water_min_step_used"] = True
+        else:
+            p["moves_left"] -= step_cost
         # Caminhar custa -1 sede UMA vez por turno (na 1Âª casa andada), nÃ£o por casa.
         if not p.get("moved_this_turn"):
             p["moved_this_turn"] = True
@@ -11736,7 +12112,7 @@ class GameRoom:
         a["pos"] = [nx, ny]
         a["facing"] = [dx, dy]
         self._apply_water_entry_penalty(a, nx, ny)
-        a["moves_left"] -= 1
+        a["moves_left"] = max(0, a["moves_left"] - 1)
         await self.push_state()
 
     async def handle_atacar_animado(self, pid, animado_id, target_id):
@@ -12685,6 +13061,13 @@ class GameRoom:
                 _ef, _es = self._custo_fome_sede_efetivo(p, custo["fome"], custo["sede"])
                 if p["fome"] < _ef or p["sede"] < _es:
                     await self.send_to(pid, {"type": "error", "msg": "Purificar o item vinculado exige +5 de fome e +5 de sede."}); return
+            if maldicao_alvo == "licantropia":
+                entrada = next((m for m in self._maldicoes(alvo) if m["id"] == maldicao_alvo), None)
+                if entrada and self._maldicao_estagio(entrada) >= 4:
+                    custo["fome"] *= 2; custo["sede"] *= 2
+                    _ef, _es = self._custo_fome_sede_efetivo(p, custo["fome"], custo["sede"])
+                    if p["fome"] < _ef or p["sede"] < _es:
+                        await self.send_to(pid, {"type": "error", "msg": "Curar Licantropia no estágio IV exige o dobro de fome e sede."}); return
         removido = False
 
         if tipo == "veneno":
@@ -13228,6 +13611,7 @@ class GameRoom:
             if pp.get("class_id") in ("mage", "cleric"):
                 self._recarregar_slots(pp)   # descanso â†’ todos os slots voltam cheios
         await self.broadcast_city_state()
+        await self._trigger_campaign_scene("city_enter")
         self._checkpoint_savegame()
 
     def _checkpoint_savegame(self):
@@ -13246,6 +13630,10 @@ class GameRoom:
         self.savegame["renome"] = self.renome
         self.savegame["fatos"] = sorted(self.fatos)
         self.savegame["scene_conversations_done"] = sorted(self.scene_conversations_done)
+        self.savegame["scene_triggers_done"] = sorted(self.scene_triggers_done)
+        self.savegame["active_scene"] = deepcopy(self.active_scene)
+        self.savegame["scene_variables"] = deepcopy(self.scene_variables)
+        self.savegame["turn_timer_enabled"] = self.turn_timer_enabled
         write_savegame(self.savegame)
 
     # â”€â”€ inventory helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -14034,6 +14422,92 @@ class GameRoom:
         """I no instante da aplicação; II/III/IV/V após 2/4/6/8 aventuras."""
         return min(5, 1 + max(0, int(entrada.get("aventuras", 0))) // 2)
 
+    def _licantropia_config(self, p):
+        """Parâmetros efetivos da Licantropia para o estágio atual do herói."""
+        entrada = next((m for m in self._maldicoes(p) if m["id"] == "licantropia"), None)
+        if not entrada:
+            return None
+        estagio = self._maldicao_estagio(entrada)
+        return {"estagio": estagio, "chance": 4 if estagio >= 4 else estagio,
+                "for": (2, 3, 4, 4, 4)[estagio - 1], "con": (2, 3, 3, 3, 3)[estagio - 1],
+                "des": (1, 1, 2, 2, 2)[estagio - 1], "reducao": (1, 2, 2, 3, 3)[estagio - 1],
+                "regen": (1, 2, 2, 3, 3)[estagio - 1], "intervalo_regen": (3, 3, 2, 2, 2)[estagio - 1]}
+
+    async def _processar_regeneracao_licantropia(self, p):
+        cfg = self._licantropia_config(p)
+        if not cfg or not p.get("alive"):
+            return
+        proxima = int(p.get("licantropia_regen_proxima", self.round_num + cfg["intervalo_regen"]))
+        if self.round_num < proxima:
+            return
+        cura = min(cfg["regen"], max(0, p.get("max_hp", 0) - p.get("hp", 0)))
+        if cura:
+            p["hp"] += cura
+            await self.gm_say(f"🐺 A Licantropia regenera **{p['name']}** em +{cura} HP ({p['hp']}/{p['max_hp']}).")
+        p["licantropia_regen_proxima"] = self.round_num + cfg["intervalo_regen"]
+
+    async def _transformar_licantropo(self, p, motivo="a maldição desperta"):
+        cfg = self._licantropia_config(p)
+        if not cfg or p.get("licantropia_transformado") or not p.get("alive"):
+            return False
+        duracao = roll_dice("2d4")
+        p["_licantropia_atributos_base"] = {k: p.get(k, 10) for k in ("str_", "con_", "dex")}
+        p["str_"] += cfg["for"]; p["con_"] += cfg["con"]; p["dex"] += cfg["des"]
+        p["licantropia_transformado"] = True; p["licantropia_rodadas"] = duracao; p["pawn_override"] = "lobisomem"
+        await self.send_to(p["id"], {"type":"curse_result", "tipo":"maldicao", "maldicao_id":"licantropia",
+            "nome":"Amaldiçoado: transformou-se em Lobisomem", "icone":"🐺",
+            "descricao":f"{motivo}. A forma lupina dura {duracao} rodadas.",
+            "efeitos_extra":[f"Estágio {cfg['estagio']}: +{cfg['for']} FOR, +{cfg['con']} CON e +{cfg['des']} DES.",
+                "A IA move e ataca a criatura mais próxima; em empate, prioriza aliados.", "Ganha Mordida e duas Garras."]})
+        await self.gm_say(f"🐺 **{p['name']}** se transforma em **Lobisomem** por {duracao} rodadas — {motivo}!")
+        return True
+
+    async def _reverter_licantropo(self, p):
+        if not p.get("licantropia_transformado"): return
+        base = p.pop("_licantropia_atributos_base", {})
+        for chave in ("str_", "con_", "dex"):
+            if chave in base: p[chave] = base[chave]
+        for chave in ("licantropia_transformado", "licantropia_rodadas", "pawn_override"): p.pop(chave, None)
+        await self.gm_say(f"🌙 **{p['name']}** retorna à forma normal.")
+
+    async def _consumir_turno_licantropia(self, p):
+        """A duração é medida em turnos da criatura transformada.
+
+        Antes ela dependia do fechamento da rodada global, que pode não ocorrer
+        enquanto há uma janela manual/pausa; isso deixava a forma ativa além do
+        número sorteado.
+        """
+        if not p.get("licantropia_transformado"):
+            return
+        p["licantropia_rodadas"] = int(p.get("licantropia_rodadas", 1)) - 1
+        if p["licantropia_rodadas"] <= 0:
+            await self._reverter_licantropo(p)
+
+    async def _testar_licantropia_fim_combate(self):
+        """O encontro acaba quando não resta nenhum monstro vivo no tabuleiro."""
+        if any(m.get("hp", 0) > 0 for m in self.monsters.values()): return
+        marcador = (self.round_num, tuple(sorted(m["id"] for m in self.monsters.values() if m.get("hp", 0) <= 0)))
+        if getattr(self, "_licantropia_ultimo_fim_combate", None) == marcador: return
+        self._licantropia_ultimo_fim_combate = marcador
+        for p in self.players.values():
+            cfg = self._licantropia_config(p)
+            if not cfg or cfg["estagio"] < 5 or p.get("licantropia_transformado") or not p.get("alive"): continue
+            dado = random.randint(1, 4)
+            await self.broadcast({"type":"dice_roll", "die":"d4", "value":dado, "label":f"Licantropia pós-combate — {p['name']}"})
+            if dado == 1: await self._transformar_licantropo(p, "resultado 1 após o combate")
+
+    async def _rolar_licantropia_inicio_masmorra(self):
+        for p in self.players.values():
+            cfg = self._licantropia_config(p)
+            if not cfg or not p.get("alive"): continue
+            p["licantropia_regen_proxima"] = self.round_num + cfg["intervalo_regen"]
+            if cfg["estagio"] >= 4:
+                await self._transformar_licantropo(p, "o estágio avançado força a transformação"); continue
+            dado = random.randint(1, 4)
+            await self.broadcast({"type":"dice_roll", "die":"d4", "value":dado, "label":f"Licantropia — {p['name']}"})
+            if dado <= cfg["chance"]: await self._transformar_licantropo(p, f"resultado {dado} no d4")
+            else: await self.gm_say(f"🐺 **{p['name']}** contém a Licantropia ({dado} no d4).")
+
     _MALDICAO_ORIGEM = {"item": "Veio de um item amaldiçoado — enquanto a maldição durar, "
                                 "peças que prendem não saem do lugar.",
                         "armadilha": "Disparada por uma armadilha.",
@@ -14093,6 +14567,13 @@ class GameRoom:
         if indice is None:
             return None
         removida = atuais.pop(indice)
+        if removida["id"] == "licantropia":
+            # A cura encerra imediatamente uma forma lupina que esteja ativa.
+            base = alvo.pop("_licantropia_atributos_base", {})
+            for chave in ("str_", "con_", "dex"):
+                if chave in base: alvo[chave] = base[chave]
+            for chave in ("licantropia_transformado", "licantropia_rodadas", "pawn_override", "licantropia_regen_proxima"):
+                alvo.pop(chave, None)
         alvo["amaldicoado"] = bool(atuais)
         alvo["maldicao_tipo"] = atuais[0]["id"] if atuais else None
         return removida["id"]
@@ -14697,6 +15178,54 @@ class GameRoom:
         await self.gm_say(f"⚔️ **{caster['name']}** abençoa a arma de **{alvo['name']}**: +1 ataque/dano e ignora resistências/imunidade física por {dur} rodada(s).")
 
     # â”€â”€ Batch 2: helpers de movimento e status de monstro â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    def _passo_livre_licantropo(self, p, nx, ny):
+        if not (0 <= nx < self.map_w and 0 <= ny < self.map_h): return False
+        if self.tiles[ny][nx] == WALL and not self._is_illusion_wall(nx, ny): return False
+        if self._is_closed_door(nx, ny) or self._blocks_tile(nx, ny): return False
+        if any(m.get("hp", 0) > 0 and [nx, ny] in self._monster_tiles(m) for m in self.monsters.values()): return False
+        if any(q.get("alive") and q["id"] != p["id"] and q.get("pos") == [nx, ny] for q in self.players.values()): return False
+        return not self._animado_em([nx, ny])
+
+    async def _turno_licantropo(self, p):
+        """IA compulsória da forma lupina: alvo mais próximo, aliado no desempate."""
+        alvos = ([{"kind":"player", "obj":q} for q in self.players.values() if self._ativo(q) and q["id"] != p["id"]]
+                 + [{"kind":"monster", "obj":m} for m in self.monsters.values() if m.get("hp", 0) > 0])
+        if not alvos:
+            await self.gm_say(f"🐺 **{p['name']}** fareja o ar, mas não encontra alvo."); return
+        def distancia(a):
+            q = a["obj"]; return max(abs(q["pos"][0]-p["pos"][0]), abs(q["pos"][1]-p["pos"][1]))
+        # A ordem da lista deixa jogadores (aliados) vencerem empates de distância.
+        alvo = min(alvos, key=distancia); obj = alvo["obj"]
+        while p.get("moves_left", 0) > 0 and distancia(alvo) > 1:
+            dx = 0 if obj["pos"][0] == p["pos"][0] else (1 if obj["pos"][0] > p["pos"][0] else -1)
+            dy = 0 if obj["pos"][1] == p["pos"][1] else (1 if obj["pos"][1] > p["pos"][1] else -1)
+            opcoes = [(dx, 0), (0, dy), (0, -dy), (-dx, 0)]
+            passo = next(((x, y) for x, y in opcoes if (x or y) and self._passo_livre_licantropo(p, p["pos"][0]+x, p["pos"][1]+y)), None)
+            if not passo: break
+            antes = list(p["pos"]); p["pos"] = [antes[0]+passo[0], antes[1]+passo[1]]; p["facing"] = list(passo)
+            p["moves_left"] -= 1; self._apply_water_entry_penalty(p, *p["pos"])
+            self._reveal_around(*p["pos"], radius=self._get_raio_visao(p))
+            await self._emit_entity_step(p["id"], antes, p["pos"], "player")
+        if distancia(alvo) > 1: return
+        base = p.get("_licantropia_atributos_base", {}).get("str_", p.get("str_", 10))
+        bonus = int(p.get("atk_bonus", 0)) + mod(p.get("str_", 10)) - mod(base)
+        for nome, expr in (("Garras", "1d4"), ("Garras", "1d4"), ("Mordida", "1d6")):
+            if not obj.get("alive", obj.get("hp", 0) > 0): break
+            dado = random.randint(1, 20); total = dado + bonus
+            ca = self._player_effective_ac(obj) if alvo["kind"] == "player" else obj.get("ac", 10)
+            if dado != 20 and total < ca:
+                await self.gm_say(f"🐺 **{p['name']}** erra {nome} contra **{obj['name']}** ({total} vs CA {ca})."); continue
+            bruto = roll_dice(expr) + mod(p.get("str_", 10))
+            dano = self._apply_damage_types(bruto * (2 if dado == 20 else 1), [DMG_PHYSICAL], obj)
+            if alvo["kind"] == "player":
+                dano, _ = await self._processar_dano_protetor(obj["id"], dano)
+                obj["hp"] = max(0, obj["hp"] - dano)
+                if obj["hp"] <= 0: await self._player_dies(obj["id"])
+            else:
+                obj["hp"] -= dano
+                if obj["hp"] <= 0: await self._monster_dies(obj, p["id"])
+            await self.gm_say(f"🐺 **{p['name']}** acerta {nome} em **{obj['name']}**: **{dano} dano**.")
+
     def _passo_livre(self, m, nx, ny):
         """True se o monstro m pode pisar em (nx,ny) — footprint multi-tile inteiro
         livre de parede/porta fechada e de qualquer outra entidade viva."""
@@ -15249,6 +15778,8 @@ class GameRoom:
         """True se p não pode fazer outra ação principal. Velocidade e a técnica
         Oportunidade concedem 1 ação extra: ao tentar agir já tendo agido, consomem
         o crédito disponível e liberam a ação."""
+        if self.active_scene:
+            return True
         if p.get("perde_turno"):
             return True  # Imobilizado (teia, etc.) â€” perde o turno inteiro
         if not p.get("action_done"):
@@ -16366,17 +16897,7 @@ class GameRoom:
             category = item.get("armor_category") or ARMOR_CATALOG.get(item.get("id"), {}).get("armor_category")
             if category:
                 return category
-        # Sem equipamento, armadura natural conta como leve; os demais
-        # monstros (e servos) são tratados como sem armadura.
-        if criatura.get("natural_armor", 0) > 0:
-            return "leve"
         return None
-
-    def _water_penalty(self, criatura):
-        category = self._armor_category_of(criatura)
-        if category == "pesada":
-            return None                 # regra especial: somente 1 casa/rodada
-        return {"leve": 2, "media": 3}.get(category, 1)
 
     def _ignora_penalidade_agua(self, criatura):
         """Movimento Errático preserva o movimento normal em qualquer água."""
@@ -16384,56 +16905,41 @@ class GameRoom:
                    and habilidade.get("id") == "movimento_erratico"
                    for habilidade in criatura.get("special_abilities", []))
 
-    def _deep_water_turn_moves(self, criatura, base_moves):
-        """Movimento total permitido em Água Profunda, arredondado para baixo."""
-        category = self._armor_category_of(criatura)
-        if category == "pesada":
+    def _water_step_cost(self, criatura, x, y):
+        """Custo para ENTRAR na casa: 2 água, 3 água profunda.
+
+        Armadura média/pesada acrescenta +1/+2. Em monstros sem armadura
+        equipada, armadura natural acrescenta +1. Movimento Errático ignora
+        qualquer custo especial e permanece em 1 por casa.
+        """
+        kind = self._water_tile_kind(x, y)
+        if not kind or self._ignora_penalidade_agua(criatura):
             return 1
-        divisor = {"leve": 3, "media": 4}.get(category, 2)
-        return max(0, int(base_moves) // divisor)
+        cost = 3 if kind == "agua_profunda" else 2
+        category = self._armor_category_of(criatura)
+        if category == "media":
+            cost += 1
+        elif category == "pesada":
+            cost += 2
+        elif criatura.get("natural_armor", 0) > 0:
+            cost += 1
+        return max(1, cost)
 
     def _water_turn_moves(self, criatura, base_moves):
-        """Orçamento inicial do turno em água. Marca a penalidade para ela não
-        ser cobrada de novo ao continuar na mesma água."""
+        """Orçamento normal do turno; água agora é cobrada a cada casa.
+        O mínimo de movimento disponível é sempre 1."""
         criatura.pop("_water_penalty_applied", None)
         criatura.pop("_water_heavy_step_used", None)
         criatura.pop("_deep_water_penalty_applied", None)
-        if self._ignora_penalidade_agua(criatura):
-            return max(0, base_moves)
-        pos = criatura.get("pos") or [-1, -1]
-        water_kind = self._water_tile_kind(pos[0], pos[1])
-        if not water_kind:
-            return max(0, base_moves)
-        if water_kind == "agua_profunda":
-            criatura["_deep_water_penalty_applied"] = True
-            return self._deep_water_turn_moves(criatura, base_moves)
-        criatura["_water_penalty_applied"] = True
-        penalty = self._water_penalty(criatura)
-        return 1 if penalty is None else max(0, base_moves - penalty)
+        criatura.pop("_water_min_step_used", None)
+        return max(1, int(base_moves or 0))
 
     def _apply_water_entry_penalty(self, criatura, nx, ny):
-        """Aplica uma vez a perda de movimento quando alguém entra em água no
-        meio do turno. A casa de entrada ainda custa o movimento normal."""
-        if self._ignora_penalidade_agua(criatura):
-            return
-        water_kind = self._water_tile_kind(nx, ny)
-        if not water_kind:
-            return
-        if water_kind == "agua_profunda":
-            if criatura.get("_deep_water_penalty_applied"):
-                return
-            criatura["_deep_water_penalty_applied"] = True
-            base_moves = criatura.get("spd", criatura.get("movimento", criatura.get("movement", criatura.get("moves_left", 0))))
-            criatura["moves_left"] = min(criatura.get("moves_left", 0), self._deep_water_turn_moves(criatura, base_moves))
-            return
-        if criatura.get("_water_penalty_applied"):
-            return
-        criatura["_water_penalty_applied"] = True
-        penalty = self._water_penalty(criatura)
-        if penalty is None:
-            criatura["moves_left"] = min(criatura.get("moves_left", 0), 1)
-        else:
-            criatura["moves_left"] = max(0, criatura.get("moves_left", 0) - penalty)
+        """Compatibilidade dos chamadores legados: eles ainda descontam 1 após
+        esta chamada, portanto debitamos aqui somente o excedente do terreno."""
+        extra = self._water_step_cost(criatura, nx, ny) - 1
+        if extra:
+            criatura["moves_left"] = max(0, criatura.get("moves_left", 0) - extra)
 
     def _veneno_save_bonus(self, alvo, tipo_save):
         """Bônus de save. Jogador e monstros novos usam saves individuais;
@@ -17929,6 +18435,8 @@ class GameRoom:
         await self.push_state()
 
     async def handle_end_turn(self, pid):
+        if self.active_scene:
+            await self.send_to(pid, {"type":"error", "msg":"A masmorra está pausada durante uma cena."}); return
         if not self._is_turn(pid): return
         # Ãšltimo EsforÃ§o Ã© checado ANTES da fase dos servos (animados_phase_pid,
         # mais abaixo). As duas janelas sÃ£o mutuamente exclusivas para o mesmo
@@ -18631,6 +19139,16 @@ class GameRoom:
                 total = (total + 1) // 2
         if target.get("type") == "lobisomem" and DMG_MAGIC in damage_types:
             target["regeneracao_bloqueada"] = True
+        # Licantropia em heróis: prata dobra o dano físico; magia e prata passam
+        # pela redução. A redução é fixa (não "metade") e cresce por estágio.
+        if self._eh_jogador(target) and self._tem_maldicao(target, "licantropia") and DMG_PHYSICAL in damage_types:
+            prata = (bool((weapon or {}).get("silver"))
+                     or (weapon or {}).get("material") in {"prata", "silver"})
+            magica = bool((weapon or {}).get("magical")) or "magic" in str((weapon or {}).get("id", ""))
+            if prata:
+                total *= 2
+            elif not magica and not ignora_resistencia_fisica:
+                total -= self._licantropia_config(target)["reducao"]
         solidifica_com_frio = (target.get("type") == "elemental_agua"
                                 or any(w.get("type") == "solidificar_frio"
                                        or w.get("source_ability") == "solidificar_frio"
@@ -18856,28 +19374,18 @@ class GameRoom:
         """Move o monstro 1 passo e aplica efeitos de pisar (fogueira)."""
         if "_water_moves_left" not in m:
             m["_water_moves_left"] = self._water_turn_moves(m, m.get("movement", 4))
-        if m["_water_moves_left"] <= 0:
+        step_cost = self._water_step_cost(m, nx, ny)
+        minimum_water_step = (m["_water_moves_left"] > 0 and not m.get("_moved_this_turn")
+                              and not m.get("_water_min_step_used"))
+        if m["_water_moves_left"] < step_cost and not minimum_water_step:
             return False
         m["pos"] = [nx, ny]
         m["_moved_this_turn"] = True
-        if self._ignora_penalidade_agua(m):
-            m["_water_moves_left"] = max(0, m["_water_moves_left"] - 1)
-            await self._aplicar_fogueira_se_pisar(m)
-            return True
-        # Monstros nÃ£o usam armadura de corpo: em Ã¡gua sofrem a penalidade
-        # padrÃ£o de -1 movimento, exatamente como alguÃ©m sem armadura.
-        water_kind = self._water_tile_kind(nx, ny)
-        if water_kind == "agua_profunda" and not m.get("_deep_water_penalty_applied"):
-            m["_deep_water_penalty_applied"] = True
-            m["_water_moves_left"] = min(m["_water_moves_left"], self._deep_water_turn_moves(m, m.get("movement", 4)))
-        elif water_kind == "agua" and not m.get("_water_penalty_applied"):
-            m["_water_penalty_applied"] = True
-            penalty = self._water_penalty(m)
-            if penalty is None:
-                m["_water_moves_left"] = min(m["_water_moves_left"], 1)
-            else:
-                m["_water_moves_left"] = max(0, m["_water_moves_left"] - penalty)
-        m["_water_moves_left"] = max(0, m["_water_moves_left"] - 1)
+        if m["_water_moves_left"] < step_cost:
+            m["_water_moves_left"] = 0
+            m["_water_min_step_used"] = True
+        else:
+            m["_water_moves_left"] = max(0, m["_water_moves_left"] - step_cost)
         await self._aplicar_fogueira_se_pisar(m)
         return True
 
@@ -22266,6 +22774,8 @@ class GameRoom:
                     return
                 await self.gm_say(f"🧟 **{m['name']}** finalmente tomba (Fortitude {tot} vs CD {cd}).")
 
+        await self._testar_licantropia_fim_combate()
+
         # ExplosÃ£o Final: dispara uma Ãºnica vez, depois de confirmar que a morte
         # Ã© definitiva (por isso nÃ£o explode quando ResistÃªncia Morta salva um alvo).
         explosao = next((ab for ab in m.get("special_abilities", [])
@@ -22779,15 +23289,18 @@ class GameRoom:
         # A aventura só conta depois da confirmação explícita de missão concluída.
         # Fugir pela escada, morrer ou voltar à cidade por outro caminho não passa aqui.
         await self._progredir_maldicoes_missao()
+        await self._trigger_campaign_scene("dungeon_complete")
         if self.world_adventure_id:
             adventure_id = self.world_adventure_id
             adventure = WORLD_ADVENTURES.get(adventure_id) or {}
             adventure_name = adventure.get("nome", "aventura")
             stages = list(adventure.get("dungeons") or [])
             completed_index = self.world_adventure_index if isinstance(self.world_adventure_index, int) else 0
-            self.world_adventure_progress[adventure_id] = max(
-                int(self.world_adventure_progress.get(adventure_id, 0) or 0), completed_index + 1)
-            reward = int(adventure.get("renome_recompensa", 1) or 0)
+            was_revisit = self.world_adventure_revisit
+            if not was_revisit:
+                self.world_adventure_progress[adventure_id] = max(
+                    int(self.world_adventure_progress.get(adventure_id, 0) or 0), completed_index + 1)
+            reward = 0 if was_revisit else int(adventure.get("renome_recompensa", 1) or 0)
             if reward:
                 self.renome = max(0, self.renome + reward)
             # Etapa marcada como encadeada: emenda direto na próxima, sem cidade.
@@ -22799,12 +23312,13 @@ class GameRoom:
             # encadeamento): nos dois casos o grupo volta à cidade e vê este beat.
             # A última etapa fecha a rota: o encerramento dela e o fim da rota saem
             # no mesmo slideshow, nessa ordem. _story_beat descarta as partes vazias.
-            partes = [etapa.get("outro")]
-            if completed_index + 1 >= len(stages):
+            partes = [] if was_revisit else [etapa.get("outro")]
+            if not was_revisit and completed_index + 1 >= len(stages):
                 partes.append(adventure.get("outro_rota"))
             fim = _story_beat(f"fim:{adventure_id}:{completed_index}", partes)
             self.world_adventure_id = None
             self.world_adventure_index = None
+            self.world_adventure_revisit = False
             self.dungeon_generated = False
             self._objetivo_concluido = False
             await self.gm_say(f"🏁 **{adventure_name}** concluída! O grupo retorna gratuitamente à cidade." + (f" Renome {reward:+d}." if reward else ""))
@@ -22895,7 +23409,7 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Caminho bloqueado para o prisioneiro."}); return
         pr["pos"] = [nx, ny]
         self._apply_water_entry_penalty(pr, nx, ny)
-        pr["moves_left"] -= 1
+        pr["moves_left"] = max(0, pr["moves_left"] - 1)
         # Pisou numa armadilha colocÃ¡vel? Dispara sobre o prisioneiro (igual ao herÃ³i).
         arm = self._armadilha_no_tile(nx, ny)
         if arm and pr.get("alive"):
@@ -22983,12 +23497,16 @@ class GameRoom:
     def _campaign_payload(self):
         if not (self.mode == "campaign" and self.campaign):
             return None
+        stages = self.campaign.get("dungeons") or []
         pay = {"name": self.campaign.get("name"),
                "phase": self.campaign_phase + 1,
-               "total": len(self.campaign["dungeons"]),
+               # Campanhas atuais não carregam uma lista própria de masmorras:
+               # elas usam os destinos do Mapa do Mundo. O acesso indexado
+               # anterior abortava o game_start antes da cena inicial.
+               "total": len(stages),
                "story": None}
-        if self.phase == "playing":
-            fase = _fase_obj(self.campaign["dungeons"][self.campaign_phase])
+        if self.phase == "playing" and 0 <= self.campaign_phase < len(stages):
+            fase = _fase_obj(stages[self.campaign_phase])
             parts = []
             if self.campaign_phase == 0:
                 parts.append(self.campaign.get("intro"))
@@ -23059,6 +23577,8 @@ class GameRoom:
         msg_state = {
             "type": "game_state",
             "master_pid": self.master_pid,
+            "host": self.host_pid,
+            "turn_timer_enabled": self.turn_timer_enabled,
             "master_manual_mid": self.master_manual_mid,
             "master_manual_reach": (
                 self._master_monster_reach(self.monsters[self.master_manual_mid])
@@ -23094,6 +23614,9 @@ class GameRoom:
             "espera_saida": (lambda e: e["dados"] if e["modo"] == "dados" else str(e["rodadas"]))(
                 _clean_espera((WORLD_ADVENTURES.get(self.world_adventure_id) or {}).get("espera_retorno"))),
             "campaign": self._campaign_payload(),
+            "active_scene": ({"session": deepcopy(self.active_scene),
+                              "scene": self._scene_def(self.active_scene.get("scene_id"))}
+                             if self.active_scene else None),
             "story": self._story_encadeada,   # beat da emenda; cliente faz de-dup por key
             "objectives": self.objective_status,
             "mission_complete_pending": self.mission_complete_pending,
@@ -23150,6 +23673,7 @@ def _delta(v):
 
 
 async def handler(ws):
+    global SCENE_LIBRARY
     pid = new_id()
     room = None
     account = {"name": None}   # conta autenticada nesta conexão (via login)
@@ -23175,6 +23699,35 @@ async def handler(ws):
                         payload["name"] = res
                     else:
                         payload["error"] = res
+                    await ws.send(json.dumps(payload))
+                    continue
+
+                if t == "upload_scene_media":
+                    ok, res = _save_scene_media_upload(msg.get("kind"), msg.get("name"), msg.get("data"))
+                    payload = {"type":"upload_result", "kind":"scene_media", "upload_id":msg.get("upload_id"), "ok":ok}
+                    if ok: payload["path"] = res
+                    else: payload["error"] = res
+                    await ws.send(json.dumps(payload))
+                    continue
+
+                # Biblioteca de Cenas: canal do editor, independente de salas.
+                if t == "load_scenes":
+                    await ws.send(json.dumps({"type": "upload_result", "kind": "scenes",
+                                              "upload_id": msg.get("upload_id"), "ok": True,
+                                              "scenes": SCENE_LIBRARY}))
+                    continue
+
+                if t == "save_scenes":
+                    raw_scenes = msg.get("scenes")
+                    ok, res = validar_cenas(raw_scenes)
+                    if ok:
+                        ok, res = _gravar_def(raw_scenes, CAMPAIGNS_DIR, "cenas.json")
+                        if ok:
+                            SCENE_LIBRARY = carregar_cenas()
+                            res = SCENE_LIBRARY
+                    payload = {"type": "upload_result", "kind": "scenes", "upload_id": msg.get("upload_id"), "ok": ok}
+                    if ok: payload["scenes"] = res
+                    else: payload["error"] = res
                     await ws.send(json.dumps(payload))
                     continue
 
@@ -23751,6 +24304,28 @@ async def handler(ws):
 
                 elif t == "scene_npc":
                     if room: await room.handle_scene_npc(pid, msg.get("scene_id"), msg.get("npc_id"), msg.get("conversation_id"))
+
+                elif t == "scene_choice":
+                    if room: await room.handle_scene_choice(pid, msg.get("scene_id"), msg.get("event_id"), msg.get("option_id"))
+
+                elif t == "scene_test":
+                    if room: await room.handle_scene_test(pid, msg.get("scene_id"), msg.get("event_id"))
+
+                elif t == "scene_end":
+                    if room: await room.handle_scene_end(pid, bool(msg.get("force")))
+
+                elif t == "scene_visit":
+                    if room: await room.handle_scene_visit(pid, msg.get("scene_id"), msg.get("event_id"))
+
+                elif t == "set_turn_timer":
+                    if room: await room.handle_set_turn_timer(pid, msg.get("enabled"))
+
+                # Atalho de teste para o Mestre/autor. Gatilhos do editor usam
+                # internamente iniciar_cena e não dependem deste protocolo.
+                elif t == "start_scene":
+                    if room and pid == room.host_pid:
+                        ok, why = await room.iniciar_cena(msg.get("scene_id"), "manual")
+                        if not ok: await room.send_to(pid, {"type":"error", "msg":why})
 
                 elif t == "city_map_points":
                     if room: await room.handle_city_map_points(pid, msg.get("city_id"), msg.get("points"))
@@ -25308,6 +25883,7 @@ def _http(status, reason, body, ctype="text/plain; charset=utf-8"):
 
 # â”€â”€â”€ Upload de mÃ­dia da histÃ³ria (editor â†’ assets/story/) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 STORY_DIR = os.path.join(BASE_DIR, "assets", "story")
+SCENES_ASSET_DIR = os.path.join(BASE_DIR, "assets", "cenas")
 STORY_UPLOAD_MAX = 25 * 1024 * 1024            # 25 MB por arquivo
 _STORY_IMG_EXT = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 _STORY_AUDIO_EXT = {".mp3", ".ogg", ".wav", ".m4a"}
@@ -25342,6 +25918,28 @@ def _save_story_upload(name, data_b64):
     except OSError:
         return False, "falha ao gravar"
     return True, base
+
+def _save_scene_media_upload(kind, name, data_b64):
+    """Recebe mídia escolhida no Editor de Cenas e a organiza por categoria."""
+    folders = {"background": "fundos", "character": "personagens", "illustration": "ilustracoes",
+               "music": "audio", "ambience": "audio", "sound": "audio"}
+    folder = folders.get(kind)
+    base = os.path.basename(name or "")
+    ext = os.path.splitext(base)[1].lower()
+    allowed = _STORY_IMG_EXT if kind in ("background", "character", "illustration") else _STORY_AUDIO_EXT
+    if not folder or not base or "\x00" in base or ext not in allowed:
+        return False, "tipo ou arquivo inválido"
+    if not isinstance(data_b64, str) or not data_b64 or (len(data_b64) * 3) // 4 > STORY_UPLOAD_MAX:
+        return False, "arquivo inválido ou grande demais"
+    try: raw = base64.b64decode(data_b64, validate=True)
+    except Exception: return False, "dados inválidos"
+    if len(raw) > STORY_UPLOAD_MAX: return False, "arquivo grande demais"
+    safe = re.sub(r"[^a-zA-Z0-9._-]", "_", base)
+    try:
+        dest = os.path.join(SCENES_ASSET_DIR, folder); os.makedirs(dest, exist_ok=True)
+        with open(os.path.join(dest, safe), "wb") as f: f.write(raw)
+    except OSError: return False, "falha ao gravar"
+    return True, "assets/cenas/" + folder + "/" + safe
 
 TAVERN_ASSET_DIR = os.path.join(BASE_DIR, "assets", "tavern")
 def _save_tavern_art_upload(name, data_b64):

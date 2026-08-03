@@ -2,9 +2,21 @@
   "schema_version": 1,
   "id": "resgate de elara",
   "name": "Resgate de Elara",
-  "dungeons": [
+  "scene_triggers": [
     {
-      "file": "resgate de elara.json"
+      "scene_id": "nova_cena",
+      "when": "campaign_start",
+      "once": true,
+      "requires": {}
+    },
+    {
+      "scene_id": "ad_hadal",
+      "when": "keyword_obtained",
+      "trigger_value": "pista5",
+      "once": true,
+      "requires": {
+        "keywords_any": []
+      }
     }
   ]
 }

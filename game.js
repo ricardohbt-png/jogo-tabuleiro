@@ -512,6 +512,8 @@ const DECOR_GLB_TYPES = {
   coluna: 'assets/objetos/coluna.glb',
   arvore: 'assets/objetos/arvore.glb',
   arvore_grande: 'assets/objetos/arvore.glb',
+  // Entrada de caverna: arte 2D no editor e modelo GLB no tabuleiro 3D.
+  caverna: 'assets/objetos/caverna.glb',
 };
 // A superfície dos tiles 3D fica em y=0.22; um pequeno acréscimo evita que a
 // base dos modelos atravesse o piso por arredondamento de geometria.
@@ -1629,7 +1631,9 @@ function _refreshCityLocation(msg){
     cityHost.appendChild(caravanEdit);
   }
   caravanEdit.textContent = _cityPointDraft ? '✕ Cancelar ajuste' : '📍 Ajustar pontos';
-  caravanEdit.style.display = '';
+  // O posicionamento dos pontos é autoral e ocorre somente no Editor.
+  // Remove também qualquer botão deixado por uma versão anterior.
+  caravanEdit.remove();
   const seal = document.getElementById('city-seal');
   if(seal) seal.textContent = location.nome;
 }
@@ -1723,7 +1727,9 @@ function showWorldAdventurePreview(world, adventure){
 function showWorldMap(){
   const world = _worldOfCityState();
   if(!world) return;
-  const editing = !!_worldMapEditPoints;
+  // Marcadores do mapa-múndi só podem ser reposicionados no Editor.
+  _worldMapEditPoints = null;
+  const editing = false;
   if(!_worldMapEl){
     _worldMapEl = document.createElement('div'); _worldMapEl.id = 'worldmap-overlay';
     document.getElementById('screen-city').appendChild(_worldMapEl);
@@ -1736,7 +1742,7 @@ function showWorldMap(){
   frame.appendChild(img);
   const title = document.createElement('div'); title.className = 'worldmap-title'; title.textContent = '🧭 Varlúzia — escolha um destino'; frame.appendChild(title);
   const back = document.createElement('button'); back.className = 'worldmap-back'; back.textContent = '← Voltar à cidade'; back.onclick = hideWorldMap; frame.appendChild(back);
-  if(GS.myPid === GS.cityState.host){
+  if(false && GS.myPid === GS.cityState.host){
     const edit = document.createElement('button'); edit.className = 'worldmap-edit';
     edit.textContent = editing ? 'Cancelar ajuste' : 'Ajustar pontos';
     edit.onclick = () => {
@@ -1906,6 +1912,85 @@ function renderStory() {
   ov.style.display = 'block';
   _storyPaint();
 }
+
+// ── Cenas da campanha (Visual Novel) ──────────────────────────────────────
+// A timeline é reproduzida localmente para cada jogador ler no próprio ritmo.
+// Somente escolhas/ramificações vão ao servidor, que aceita a primeira decisão.
+let _sceneRun = null;
+function _sceneEvent(id){ return _sceneRun && (_sceneRun.scene.events||[]).find(e=>e.id===id); }
+function _sceneStart(payload){
+  if(!payload || !payload.scene) return;
+  const s=payload.scene;
+  // game_state/city_state repetem a cena ativa para reconexão. Não reiniciar a
+  // timeline de quem já está assistindo cada vez que chega uma atualização.
+  if(_sceneRun && _sceneRun.scene && _sceneRun.scene.id===s.id) return;
+  _sceneRun={scene:s, id:s.start || ((s.events||[])[0]||{}).id, chars:{}};
+  let ov=document.getElementById('campaign-scene-overlay');
+  if(!ov){ ov=document.createElement('div'); ov.id='campaign-scene-overlay'; document.body.appendChild(ov); }
+  ov.style.display='flex'; _scenePaint();
+}
+function _sceneApplyVisual(ev){
+  if(!ev) return;
+  // Cada evento pode ter seu próprio fundo. Ele permanece até outro slide
+  // escolher um novo, permitindo cenários diferentes na mesma cena.
+  if(ev.data && ev.data.background) _sceneRun.scene.background=ev.data.background;
+  if(ev.type==='show_character' && ev.data && ev.data.slot) _sceneRun.chars[ev.data.slot]=ev.data;
+  if(ev.type==='hide_character' && ev.data && ev.data.slot) delete _sceneRun.chars[ev.data.slot];
+  // Compatibilidade com as primeiras cenas criadas: uma imagem de personagem
+  // adicionada por engano a um evento de fundo (mas com slot) não troca o fundo.
+  if(ev.type==='background' && ev.data && ev.data.image){
+    if(ev.data.slot && /assets\/cenas\/personagens\//.test(ev.data.image)) _sceneRun.chars[ev.data.slot]=ev.data;
+    else _sceneRun.scene.background=ev.data.image;
+  }
+  // Também é permitido associar uma imagem à própria fala; ela entra no slot
+  // escolhido (Centro é o padrão), sem apagar o fundo.
+  if(ev.type==='dialogue' && ev.data && ev.data.image) _sceneRun.chars[ev.data.slot||'Center']=ev.data;
+}
+function _sceneAdvance(){
+  if(!_sceneRun)return;
+  let ev=_sceneEvent(_sceneRun.id), guard=0;
+  // Eventos visuais também são slides: não os pule apenas por não serem um
+  // diálogo. Assim uma troca de fundo ou imagem aparece antes do próximo.
+  while(ev && guard++<40 && !['dialogue','choice','test_cd','end'].includes(ev.type)
+    && !(ev.data && (ev.data.image || ev.data.background))){
+    _sceneApplyVisual(ev); _sceneRun.id=ev.next; ev=_sceneEvent(_sceneRun.id);
+  }
+  _scenePaint();
+}
+function _scenePaint(){
+  const ov=document.getElementById('campaign-scene-overlay'); if(!_sceneRun||!ov)return;
+  let ev=_sceneEvent(_sceneRun.id);
+  // Um diálogo sem "Próximo" também é um fim válido. Antes ele apenas sumia
+  // localmente e deixava a sessão autoritativa pausando a masmorra.
+  if(!ev){
+    ov.innerHTML='<div class="cscene-shade"></div><div class="cscene-dialog"><div class="cscene-name">Fim da cena</div><div class="cscene-text">A cena foi concluída.</div><div class="cscene-actions"><button class="cscene-finish">Concluir e voltar ao jogo</button></div></div>';
+    ov.querySelector('.cscene-finish').onclick=()=>GS.sceneEnd(false);
+    ov.style.display='flex'; return;
+  }
+  GS.sceneVisit(_sceneRun.scene.id, ev.id);
+  _sceneApplyVisual(ev);
+  const sceneTransition=['fade','slide_left','slide_right','slide_up','slide_down','zoom','dissolve'].includes((ev.data||{}).transition) ? ev.data.transition : 'fade';
+  ov.className='scene-transition-'+sceneTransition;
+  ov.innerHTML='<div class="cscene-bg"><img alt=""></div><div class="cscene-shade"></div><div class="cscene-slots"></div><div class="cscene-dialog"><div class="cscene-name"></div><div class="cscene-text"></div><div class="cscene-actions"></div></div><button class="cscene-skip">Pular cena</button>';
+  // Imagem real, em vez de somente background-image: é mais confiável no
+  // início da cena e torna falhas de carregamento visíveis no navegador.
+  const bg=ov.querySelector('.cscene-bg img'); if(_sceneRun.scene.background) bg.src=_sceneRun.scene.background;
+  const slots=ov.querySelector('.cscene-slots'); Object.entries(_sceneRun.chars).forEach(([slot,c])=>{const im=document.createElement('img');im.className='cscene-char '+slot+((c.x!=null||c.y!=null||c.w!=null||c.h!=null)?' manual':'');im.src=c.image||'';im.alt=c.name||'';const scale=Math.max(.2,Math.min(2,Number(c.scale)||100)/100);im.style.transform='scale('+scale+')'+(c.flipped?' scaleX(-1)':'');im.style.opacity=Math.max(0,Math.min(1,Number(c.opacity??100)/100));if(c.x!=null)im.style.left=Number(c.x)+'%';if(c.y!=null)im.style.top=Number(c.y)+'%';if(c.w!=null)im.style.width=Number(c.w)+'%';if(c.h!=null)im.style.height=Number(c.h)+'%';if(c.x!=null||c.y!=null){im.style.bottom='auto';im.style.right='auto';}slots.appendChild(im);});
+  const name=ov.querySelector('.cscene-name'),text=ov.querySelector('.cscene-text'),actions=ov.querySelector('.cscene-actions');
+  name.textContent=ev.speaker||(_sceneRun.scene.name||'Narrador'); text.textContent=ev.text||'';
+  if(ev.type==='choice'){
+    (ev.data||[]).forEach(o=>{const b=document.createElement('button');b.textContent=o.text||o.id;b.onclick=()=>GS.sceneChoice(_sceneRun.scene.id,ev.id,o.id);actions.appendChild(b);});
+  }else if(ev.type==='test_cd'){
+    const b=document.createElement('button');b.textContent='Realizar teste';b.onclick=()=>GS.sceneTest(_sceneRun.scene.id,ev.id);actions.appendChild(b);
+  }else if(ev.type==='end'){
+    const b=document.createElement('button');b.textContent='Concluir';b.onclick=()=>GS.sceneEnd(false);actions.appendChild(b);
+  }else{
+    const b=document.createElement('button');b.textContent=ev.next?'Continuar ›':'Concluir cena';b.onclick=()=>{if(ev.next){_sceneRun.id=ev.next;_sceneAdvance();}else GS.sceneEnd(false);};actions.appendChild(b);
+  }
+  ov.querySelector('.cscene-skip').onclick=()=>{if(confirm('Pular a cena? Os efeitos obrigatórios serão mantidos.'))GS.sceneEnd(true);};
+}
+function _sceneBranch(msg){ if(!_sceneRun || msg.scene_id!==_sceneRun.scene.id)return; _sceneRun.id=msg.next; _sceneAdvance(); }
+function _sceneEnd(){ const ov=document.getElementById('campaign-scene-overlay');if(ov)ov.style.display='none';_sceneRun=null; }
 
 function handleCityState(msg){
   // O HUD do Mestre (#hud-mestre) só faz sentido dentro da masmorra — some ao
@@ -4372,7 +4457,7 @@ function _ttRender(){
 }
 function updateTurnTimer(msg){
   const b = document.getElementById('turn-timer-badge'); if(!b) return;
-  const active = msg.phase === 'playing' && msg.current_turn && msg.turn_timer_started;
+  const active = msg.turn_timer_enabled !== false && msg.phase === 'playing' && msg.current_turn && msg.turn_timer_started;
   if(!active){ _ttClear(); _ttState.key=null; b.style.display='none'; return; }
   const limit = msg.turn_timer_limit || 30;
   if(msg.turn_timer_started !== _ttState.key){   // turno novo → reinicia a contagem
@@ -6672,7 +6757,13 @@ function renderMap(state){
     const X=px*CELL, Y=py*CELL, cx=X+CELL/2, cy=Y+CELL/2;
     const isCur=p.id===state.current_turn, isMe=p.id===GS.myPid;
     drawMiniBase(ctx, cx, cy, p.color, isCur||isMe);
-    drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur);
+    if(p.pawn_override){
+      const wolf = _getMonster2DImg(p.pawn_override);
+      if(wolf && wolf.complete && wolf.naturalWidth){
+        const h=CELL*1.42, w=Math.min(CELL*1.20,h*(wolf.naturalWidth/wolf.naturalHeight));
+        ctx.drawImage(wolf,cx-w/2,cy-3+(CELL*.41)-h,w,h);
+      } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur);
+    } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur);
     _drawStatusIcons2D(ctx, X, Y, p);
     if(isMe||isCur){
       const label=p.name.slice(0,9);
@@ -14267,6 +14358,10 @@ function _audioPanelEnsure(){
     +   '<div style="display:flex;justify-content:space-between;margin:12px 0 5px;">'
     +     '<span>🔊 Sons</span><span id="aud-sfx-val">' + pct(_sfxVol) + '%</span></div>'
     +   '<input id="aud-sfx" type="range" min="0" max="100" value="' + pct(_sfxVol) + '" style="width:100%;">'
+    +   '<div id="cfg-turn-timer" style="border-top:1px solid #2a4a2a;margin-top:12px;padding-top:10px;display:none;">'
+    +     '<button id="cfg-turn-timer-btn" style="width:100%;padding:8px;background:rgba(30,48,62,.7);border:1px solid #6da7bd88;border-radius:6px;color:#d7f0f8;font-family:inherit;font-size:.8rem;cursor:pointer;"></button>'
+    +     '<small id="cfg-turn-timer-note" style="display:block;margin-top:5px;opacity:.72;"></small>'
+    +   '</div>'
     // Menu de saída unificado (antes era o menu de pausa separado, aberto por Esc).
     +   '<div id="cfg-saida" style="display:none;border-top:1px solid #2a4a2a;margin-top:12px;padding-top:10px;">'
     +     '<button id="cfg-voltar-inicio" style="width:100%;padding:8px;margin-bottom:6px;background:rgba(40,32,10,.6);'
@@ -14285,16 +14380,33 @@ function _audioPanelEnsure(){
       .includes((document.querySelector('.screen.active')||{}).id);
     const saida = wrap.querySelector('#cfg-saida');
     if(saida) saida.style.display = emJogo ? 'block' : 'none';
+    _refreshTurnTimerOption();
     pop.style.display = abrir ? 'block' : 'none';
   };
   wrap.querySelector('#cfg-voltar-inicio').onclick = () => { pop.style.display='none'; returnToInitialMenu(); };
   wrap.querySelector('#cfg-sair').onclick = () => { pop.style.display='none'; exitGameWindow(); };
+  wrap.querySelector('#cfg-turn-timer-btn').onclick = () => {
+    const state=GS.gameState||GS.cityState;
+    if(!state || state.host!==GS.myPid){ toast('Somente o anfitrião pode alterar o limite de turno.','var(--red)'); return; }
+    GS.setTurnTimer(state.turn_timer_enabled===false);
+  };
   document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) pop.style.display = 'none'; });
   const mSl = wrap.querySelector('#aud-music'), mVal = wrap.querySelector('#aud-music-val');
   mSl.oninput = () => { mVal.textContent = mSl.value + '%'; _setMusicVol(mSl.value / 100); };
   const sSl = wrap.querySelector('#aud-sfx'), sVal = wrap.querySelector('#aud-sfx-val');
   sSl.oninput = () => { sVal.textContent = sSl.value + '%'; _setSfxVol(sSl.value / 100); };
   return wrap;
+}
+
+function _refreshTurnTimerOption(){
+  const box=document.getElementById('cfg-turn-timer'), btn=document.getElementById('cfg-turn-timer-btn'), note=document.getElementById('cfg-turn-timer-note');
+  if(!box||!btn||!note)return;
+  const state=GS.gameState||GS.cityState;
+  const emJogo=['screen-game','screen-city','screen-class-select'].includes((document.querySelector('.screen.active')||{}).id);
+  box.style.display=emJogo&&state?'block':'none'; if(!state)return;
+  const host=state.host===GS.myPid, ativo=state.turn_timer_enabled!==false;
+  btn.textContent=ativo?'⏳ Limite de turno: ATIVO — desativar':'⏳ Limite de turno: DESATIVADO — ativar';
+  btn.disabled=!host; btn.style.opacity=host?'1':'.55'; note.textContent=host?'Vale para toda a partida.':'Apenas o anfitrião pode alterar esta opção.';
 }
 
 // Abre/fecha o painel ⚙️ por programa (usado pelo Esc, que unifica o antigo
@@ -14308,6 +14420,7 @@ function _toggleConfigPop(force){
   const emJogo = ['screen-game','screen-city','screen-class-select']
     .includes((document.querySelector('.screen.active')||{}).id);
   if(saida) saida.style.display = emJogo ? 'block' : 'none';
+  _refreshTurnTimerOption();
   pop.style.display = abrir ? 'block' : 'none';
 }
 window._toggleConfigPop = _toggleConfigPop;
@@ -17381,7 +17494,7 @@ function renderMap3D(state){
   // geometrias, materiais, texturas e PointLights — e a variação na contagem de
   // luzes força o Three.js a recompilar shaders (travadas perceptíveis).
   const entitySig = JSON.stringify([
-    state.players.map(p => [p.id, p.pos, p.alive, p.color, p.class_id, p.em_chamas_rodadas > 0,
+    state.players.map(p => [p.id, p.pos, p.alive, p.color, p.class_id, p.pawn_override, p.em_chamas_rodadas > 0,
       p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0,
       (p.animados||[]).map(a => [a.id, a.pos, a.vida_atual, a.tipo, a.image, a.porte, a.oriented, a.facing])]),
     state.monsters.map(m => [m.type, m.pos, m.hp, m.image, m.vscale, m.em_chamas_rodadas > 0,
@@ -17424,15 +17537,17 @@ function renderMap3D(state){
       fig.position.z = y;
       fig.userData.gridX = x;
       fig.userData.gridY = y;
-      // Água profunda: afunda cada miniatura em 35% da própria altura. O
-      // deslocamento fica no grupo-raiz e serve para todos os tipos de peão.
-      if(fig.userData._waterSinkY === undefined){
+      // Água rasa/profunda: afunda cada miniatura em 25%/45% da própria altura.
+      // O deslocamento fica no grupo-raiz e serve para heróis e monstros.
+      if(fig.userData._waterSinkDeepY === undefined){
         const bounds = new T.Box3().setFromObject(fig);
         const h = bounds.getSize(new T.Vector3()).y;
-        fig.userData._waterSinkY = -Math.max(0.10, h) * 0.35;
+        fig.userData._waterSinkShallowY = -Math.max(0.10, h) * 0.25;
+        fig.userData._waterSinkDeepY = -Math.max(0.10, h) * 0.45;
       }
-      const inWater = state.materiais && state.materiais[`${x},${y}`] === 'agua_profunda';
-      fig.userData.baseY = inWater ? fig.userData._waterSinkY : 0;
+      const waterKind = state.materiais && state.materiais[`${x},${y}`];
+      fig.userData.baseY = waterKind === 'agua_profunda' ? fig.userData._waterSinkDeepY
+        : waterKind === 'agua' ? fig.userData._waterSinkShallowY : 0;
       fig.position.y = fig.userData.baseY;
       fig.userData._stepBaseY = fig.userData.baseY;
     }
@@ -17450,11 +17565,12 @@ function renderMap3D(state){
     const pSel = g3.selectedPos && g3.selectedPos[0]===px && g3.selectedPos[1]===py;
     const isCur = p.id===state.current_turn;
     obterFig(`pl:${p.id}`,
-      JSON.stringify([p.color, p.class_id, p.id===GS.myPid, isCur, !!pSel, p.facing, p.em_chamas_rodadas > 0,
+      JSON.stringify([p.color, p.class_id, p.pawn_override, p.id===GS.myPid, isCur, !!pSel, p.facing, p.em_chamas_rodadas > 0,
         p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0]),
       () => {
-        const f = build3DFig(p.color, false, p.id===GS.myPid, isCur, px, py, p.class_id, null, pSel,
-          undefined, undefined, undefined, p.facing, p.em_chamas_rodadas > 0,
+        const f = build3DFig(p.color, !!p.pawn_override, p.id===GS.myPid, isCur, px, py, p.class_id,
+          p.pawn_override ? 'lobisomem' : null, pSel, p.pawn_override,
+          undefined, undefined, p.facing, p.em_chamas_rodadas > 0,
           p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0);
         f.userData.pid = p.id;          // permite getPeaoMesh(pid) p/ animação
         return f;
@@ -24097,15 +24213,26 @@ function _renderBannerForaMasmorra(){
   el.appendChild(btn);
 }
 
+GS.on('sceneStart', _sceneStart);
+GS.on('sceneBranch', _sceneBranch);
+GS.on('sceneTestResult', msg => { toast((msg.success?'Sucesso':'Falha')+' no teste: '+msg.total+' contra CD '+msg.cd+'.', msg.success?'var(--green)':'var(--red)'); });
+GS.on('sceneEndWarning', msg => { if(confirm('Há '+msg.missing.length+' evento(s) obrigatório(s) não alcançado(s). Encerrar mesmo assim?')) GS.sceneEnd(true); });
+GS.on('sceneEnd', _sceneEnd);
 GS.on('cityState', msg => {
   fecharQuadrosFlutuantes();
   _hpSnapshot.clear();   // de volta à cidade: zera HP base p/ a próxima masmorra
-  _resetTrapPopup();     // sai da masmorra: descarta popup/fila de armadilha pendente
+  // Não limpe a fila em toda atualização da cidade: ao equipar um item
+  // amaldiçoado, o servidor envia curse_result e logo depois city_state. A
+  // limpeza incondicional descartava o aviso antes de ele aparecer. Só há uma
+  // fila antiga para descartar quando estamos realmente deixando a masmorra.
+  const vindoDaMasmorra = document.getElementById('screen-game')?.classList.contains('active');
+  if(vindoDaMasmorra) _resetTrapPopup();
   // If returning from dungeon to city, tear down the 3D renderer first
   if(g3){ dispose3D(); mode3D = false; }
   // Ensure city screen is visible (covers both initial arrival and return from dungeon)
   showScreen('screen-city');
   handleCityState(msg);
+  _refreshTurnTimerOption();
   _renderBannerForaMasmorra();
   // ── Sincroniza o herói do overlay com o estado autoritativo do servidor ──
   const meSrv = (msg.players || []).find(p => p.id === GS.myPid);
@@ -24244,6 +24371,7 @@ function _atualizarFichaFab(){
 GS.on('gameState', msg => {
   _detectHpChanges(msg);   // som de dano/cura por variação de HP entre estados
   handleGameState(msg);
+  _refreshTurnTimerOption();
   _atualizarFichaFab();    // mantém o Mapa de CR disponível apenas ao mestre
   // Sincroniza os animados autoritativos do servidor no registro do Pedro,
   // para a ficha refletir HP/pó durante o combate.
