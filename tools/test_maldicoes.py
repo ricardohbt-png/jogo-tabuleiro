@@ -238,12 +238,40 @@ def test_aviso_nao_vaza_no_payload():
     check("some depois de avisar", not p.get("_maldicoes_a_avisar"))
     check("não é campo durável", "_maldicoes_a_avisar" not in S._DURABLE_FIELDS)
 
+def test_camada_declarativa():
+    print("\n[11] Camada declarativa — os três números não mudam")
+    # Caracterização: estes valores valem hoje (checagens hardcoded) e têm de
+    # continuar valendo depois da migração para MALDICOES[...]["mods"].
+    r, p = sala()
+    r.round_num = 1
+    mov0 = r._moves_base(p)
+    asyncio.run(r._aplicar_maldicao(p, "correntes_invisiveis"))
+    check("Correntes Invisíveis: -3 de movimento", r._moves_base(p) == mov0 - 3)
+
+    # Vontade: _testar_save devolve (passou, d20, bonus, total) — compara o
+    # `bonus`, que é determinístico, em vez do d20.
+    r2, p2 = sala()
+    base = r2._testar_save(p2, "vontade", 99)[2]
+    asyncio.run(r2._aplicar_maldicao(p2, "espirito_covarde"))
+    check("Espírito Covarde: -2 em Vontade",
+          r2._testar_save(p2, "vontade", 99)[2] == base - 2)
+
+    r3, p3 = sala()
+    check("sem maldição, o modificador é 0", r3._maldicao_mod(p3, "ataque") == 0)
+    asyncio.run(r3._aplicar_maldicao(p3, "maos_tremulas"))
+    check("Mãos Trêmulas: -2 de ataque", r3._maldicao_mod(p3, "ataque") == -2)
+    asyncio.run(r3._aplicar_maldicao(p3, "correntes_invisiveis"))
+    check("chaves diferentes não se misturam",
+          r3._maldicao_mod(p3, "ataque") == -2 and r3._maldicao_mod(p3, "movimento") == -3)
+    check("chave sem ninguém devolve 0", r3._maldicao_mod(p3, "visao") == 0)
+
 def main():
     test_desequipar(); test_largar(); test_vender()
     test_empurrar(); test_nao_bloqueia_demais()
     test_corrosao_destroi_mas_maldicao_fica()
     test_remover_maldicao_certa(); test_purificacao_nao_cura_errada()
     test_item_amaldicoado_avisa(); test_aviso_nao_vaza_no_payload()
+    test_camada_declarativa()
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 

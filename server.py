@@ -714,7 +714,8 @@ DOENCA_SINTOMA_DESC = {
 # aplicar uma específica ou sortear apenas dentro de uma categoria; progressivas
 # nunca entram nos sorteios aleatórios.
 MALDICOES = {
-    "maos_tremulas": {"nome":"Mãos Trêmulas","categoria":"leve","desc":"-2 em ataques"},
+    "maos_tremulas": {"nome":"Mãos Trêmulas","categoria":"leve","desc":"-2 em ataques",
+                      "mods":{"ataque":-2}},
     "olhos_escuridao": {"nome":"Olhos da Escuridão","categoria":"leve","desc":"-2 alcance de visão"},
     "passos_pesados": {"nome":"Passos Pesados","categoria":"leve","desc":"mover custa +1 sede"},
     "lamina_enferrujada": {"nome":"Lâmina Enferrujada","categoria":"leve","desc":"-2 dano físico"},
@@ -725,7 +726,8 @@ MALDICOES = {
     "corpo_exausto": {"nome":"Corpo Exausto","categoria":"media","desc":"ações custam +1 fome e sede"},
     "carne_fragil": {"nome":"Carne Frágil","categoria":"media","desc":"+2 dano recebido"},
     "sangramento_profano": {"nome":"Sangramento Profano","categoria":"media","desc":"1 dano no início do turno após sofrer dano"},
-    "correntes_invisiveis": {"nome":"Correntes Invisíveis","categoria":"media","desc":"-3 movimento"},
+    "correntes_invisiveis": {"nome":"Correntes Invisíveis","categoria":"media","desc":"-3 movimento",
+                             "mods":{"movimento":-3}},
     "dor_constante": {"nome":"Dor Constante","categoria":"media","desc":"ações causam 1 dano"},
     "alma_quebrada": {"nome":"Alma Quebrada","categoria":"media","desc":"não recebe bônus de aliados"},
     "aura_profana": {"nome":"Aura Profana","categoria":"media","desc":"aliados adjacentes: -1 ataque"},
@@ -736,12 +738,22 @@ MALDICOES = {
     "licantropia": {"nome":"Licantropia","categoria":"grave","progressiva":True,"desc":"transformação bestial"},
     "silencio_deuses": {"nome":"Silêncio dos Deuses","categoria":"grave","desc":"não lança magias"},
     "voz_quebrada": {"nome":"Voz Quebrada","categoria":"grave","desc":"bardo não usa Canções"},
-    "espirito_covarde": {"nome":"Espírito Covarde","categoria":"grave","desc":"-2 Vontade; falha contra medo"},
+    "espirito_covarde": {"nome":"Espírito Covarde","categoria":"grave","desc":"-2 Vontade; falha contra medo",
+                         "mods":{"vontade":-2}},
     "eco_morte": {"nome":"Eco da Morte","categoria":"grave","desc":"aliado morto causa 10 dano"},
     "corrupcao_crescente": {"nome":"Corrupção Crescente","categoria":"grave","progressiva":True,"desc":"gera doenças e maldições"},
 }
 MALDICAO_PRECOS_TEMPLO = {"leve":150, "media":400, "grave":800}
 MALDICAO_MAX_POR_HEROI = 3
+# Chaves de `mods` lidas pelo motor. Acrescentar uma maldição numérica nova é
+# só declarar aqui — nenhum código novo. Quem lê cada chave:
+#   ataque      → eff_atk em handle_attack
+#   movimento   → _moves_base
+#   vontade     → _testar_save
+#   visao       → _get_raio_visao
+#   dano_fisico → _resolver_dano_ataque_basico
+#   ca          → _player_effective_ac
+MALDICAO_MOD_CHAVES = ("ataque", "movimento", "vontade", "visao", "dano_fisico", "ca")
 
 def _maldicao_categoria(valor):
     return {"moderado":"media", "média":"media", "medio":"media"}.get(str(valor).lower(), str(valor).lower())
@@ -10706,7 +10718,7 @@ class GameRoom:
             gl = p.get("guerreiro_luz_bonus", {}) if p.get("guerreiro_luz_ativo") else {}
             gl_atk  = gl.get("ataque", 0)
             gl_dano = gl.get("dano", 0)
-            maldicao_atk = -2 if self._tem_maldicao(p, "maos_tremulas") else 0
+            maldicao_atk = self._maldicao_mod(p, "ataque")
             eff_atk = (p["atk_bonus"] + p.get("skill_bonus_acerto", 0) + surv_mod + preso_pen
                        + cancao_acerto + gl_atk + self._pen(p, "ataque")
                        + self._mod_magia(p, "ataque")                        # AbenÃ§oar
@@ -14418,6 +14430,12 @@ class GameRoom:
     def _tem_maldicao(self, p, maldicao_id):
         return any(m["id"] == maldicao_id for m in self._maldicoes(p))
 
+    def _maldicao_mod(self, p, chave):
+        """Soma os modificadores das maldições ativas para uma chave de
+        MALDICAO_MOD_CHAVES. É o único ponto que sabe ler o campo `mods`."""
+        return sum(MALDICOES[m["id"]].get("mods", {}).get(chave, 0)
+                   for m in self._maldicoes(p))
+
     def _maldicao_estagio(self, entrada):
         """I no instante da aplicação; II/III/IV/V após 2/4/6/8 aventuras."""
         return min(5, 1 + max(0, int(entrada.get("aventuras", 0))) // 2)
@@ -16840,7 +16858,7 @@ class GameRoom:
     def _moves_base(self, p):
         """Movimento do turno = spd + bônus de canção + Grito de Guerra + penalidade de veneno/doença (mov)
         - penalidade de botas corroídas."""
-        maldicao_mov = -3 if self._tem_maldicao(p, "correntes_invisiveis") else 0
+        maldicao_mov = self._maldicao_mod(p, "movimento")
         return max(0, p["spd"] + self._cancao_bonus(p, "bonus_mov")
                    + self._pen(p, "movimento") + self._doenca_mov_pen(p)
                    + self._grito_mov_bonus(p) - self._corrosao_spd_pen(p) + maldicao_mov)
@@ -16962,8 +16980,8 @@ class GameRoom:
                  + extra_mod + self._lenda_resist_bonus(alvo, fonte)
                  + self._resistencia_saves_bonus(alvo)
                  + self._alaude_runico_resist(alvo, tipo_save))
-        if tipo_save == "vontade" and self._eh_jogador(alvo) and self._tem_maldicao(alvo, "espirito_covarde"):
-            bonus -= 2
+        if tipo_save == "vontade" and self._eh_jogador(alvo):
+            bonus += self._maldicao_mod(alvo, "vontade")
         d20   = min(random.randint(1, 20), random.randint(1, 20)) if desvantagem else random.randint(1, 20)
         total = d20 + bonus
         passou = total >= dificuldade
