@@ -362,6 +362,17 @@ def test_fortuna_roubada():
     check("venda de item não passa pelo helper",
           'p["gold"] += sell_price' in fonte)
 
+def test_azar_sobrenatural():
+    print("\n[17] Azar Sobrenatural")
+    r, p = sala()
+    check("sem maldição, o 20 crita", r._azar_consome_critico(p, 20) is False)
+    asyncio.run(r._aplicar_maldicao(p, "azar_sobrenatural"))
+    check("o primeiro 20 da masmorra não crita", r._azar_consome_critico(p, 20) is True)
+    check("o segundo 20 crita", r._azar_consome_critico(p, 20) is False)
+    check("um 19 nunca consome a flag", r._azar_consome_critico(p, 19) is False)
+    p.pop("azar_20_gasto", None)   # é o que enter_dungeon faz
+    check("entrar de novo na masmorra rearma", r._azar_consome_critico(p, 20) is True)
+
 def main():
     test_desequipar(); test_largar(); test_vender()
     test_empurrar(); test_nao_bloqueia_demais()
@@ -373,6 +384,7 @@ def main():
     test_dano_fisico()
     test_aura_profana()
     test_fortuna_roubada()
+    test_azar_sobrenatural()
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 

@@ -9341,6 +9341,7 @@ class GameRoom:
                 self.players[pid2].pop("visao_escuro_missao", None)
                 self.players[pid2].pop("visao_escuro_rodadas", None)
                 self.players[pid2]["visao_escuro"] = False
+                self.players[pid2].pop("azar_20_gasto", None)  # Azar Sobrenatural rearma por masmorra
 
         if nova:
             if not autorada:
@@ -10791,6 +10792,10 @@ class GameRoom:
                                       "label": "🎲 Sorte (+2 no ataque)", "hit": hit, "crit": crit})
             if hit and _forca_critico:
                 crit = True
+            if crit and self._azar_consome_critico(p, roll):
+                crit = False
+                await self.gm_say(f"☠️ **Azar Sobrenatural** rouba o crítico de **{p['name']}** — "
+                                  f"o golpe acerta, mas sem a força que prometia.")
             if p.get("tecnica_golpe_decisivo_armado"):
                 p["tecnica_golpe_decisivo_armado"] = False   # consumida no prÃ³ximo ataque, acerte ou erre
             if _mira_ranged:
@@ -14450,6 +14455,17 @@ class GameRoom:
                               f"{motivo} de **{p['name']}**.")
         p["gold"] = p.get("gold", 0) + quantia
         return quantia
+
+    def _azar_consome_critico(self, p, roll):
+        """True quando Azar Sobrenatural rouba ESTE crítico. Só o primeiro 20
+        natural de cada masmorra é consumido; a flag é zerada em enter_dungeon.
+        Efeito colateral: marca a flag quando devolve True."""
+        if roll != 20 or not self._tem_maldicao(p, "azar_sobrenatural"):
+            return False
+        if p.get("azar_20_gasto"):
+            return False
+        p["azar_20_gasto"] = True
+        return True
 
     def _aura_profana_pen(self, p):
         """-1 de ataque por aliado VIVO adjacente que carrega Aura Profana.
