@@ -103,7 +103,24 @@ maldição com três nomes.
 
 ### O funil de cura
 
-Não existe funil: são **29 pontos** repetindo `hp = min(max_hp, hp + cura)`.
+Não existe funil. Classificando site a site (o rascunho deste spec dizia "29",
+número de um grep largo demais que contava cura de monstro e mudança de
+`max_hp`), são **10 curas reais de herói**:
+
+`_apply_skill`, `handle_cura`, `handle_cura_area`, `handle_imposicao_maos`,
+`_processar_manutencao_richard` (dois: próprio e aliados),
+`_processar_regeneracao_licantropia`, `_processar_buffs_magicos_turno`,
+`handle_use_item` (poção) e `_processar_regeneracao_pocao_turno`.
+
+**Três sites parecidos que NÃO podem entrar no funil:** o top-up de HP ao
+equipar item de `maxhp` (`_apply_single_effect`), o top-up por CON
+(`_apply_attribute_delta`) e o ganho de nível. Não são cura — são ajuste de
+teto — e os dois primeiros já carregam a trava do Último Esforço.
+
+**Ressurreição também fica de fora:** ela define o HP para um valor fixo (1,
+metade ou cheio), não soma cura. Reduzi-la poderia levar o herói a menos de 1 HP
+ao voltar.
+
 Aplicar a redução só nas fontes principais deixaria buracos silenciosos — cura
 por item, técnica ou magia nova continuaria em 100% e ninguém notaria.
 
@@ -116,14 +133,15 @@ Extrair:
         morar. Devolve o quanto realmente curou."""
 ```
 
-e migrar os 29 sites.
+e migrar os 10 sites.
 
-Custo: refatoração larga em código que funciona. Mitigação: o diff é mecânico e
-conferível, e cada **família** de cura ganha caracterização antes — poção, Cura
-do clérigo, Imposição das Mãos, Regeneração Divina, cura em área, ressurreição.
+Custo: refatoração em código que funciona. Mitigação: o diff é mecânico e
+conferível, e cada família de cura ganha caracterização antes — poção, Cura do
+clérigo, Cura em Massa, Imposição das Mãos, Regeneração Divina, regeneração de
+poção.
 
 Ganho além da maldição: hoje qualquer regra nova sobre cura precisaria ser
-escrita 29 vezes, e ninguém saberia disso até esquecer uma.
+escrita 10 vezes, e ninguém saberia disso até esquecer uma.
 
 ## 4. Corrupção Crescente
 
