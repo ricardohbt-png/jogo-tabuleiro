@@ -1450,6 +1450,33 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > vez de substituir o dict — antes o ajuste apagava `type`/`name` do ponto autoral. Teste:
 > `tools/test_cidades_editor.py` seção [12].
 
+> **Ponto da cidade vinculado a uma masmorra:** um ponto da ilustração pode ser uma **entrada
+> de masmorra** — `type:"dungeon"` (que já existia na allow-list, sem nunca ser oferecido pelo
+> editor) mais o campo novo **`aventura`**, o id de um destino do mapa-múndi (`WORLD_ADVENTURES`).
+> **Nenhuma mensagem nova:** o clique confirma via `world_adventure`, o mesmo handler do
+> mapa-múndi, então requisito, custo 🍖/💧, etapa encadeada, revisita, história e a trava de
+> anfitrião vêm de graça. **Validação assimétrica de propósito:** `_save_city_shops_upload`
+> (save do editor) só preserva `aventura` se o destino **existir** — id órfão perde o campo e o
+> ponto continua salvo; `_load_city_map_points` (boot) checa **só o formato**, como já faz com
+> `scene`, porque um `world_adventures.json` ausente/corrompido zeraria `WORLD_ADVENTURES` e uma
+> checagem de existência ali apagaria todos os vínculos da memória — que o próximo save do
+> editor gravaria em disco. **Spoiler:** `city_map_points` viaja inteiro no payload, então
+> `GameRoom._city_points_payload()` (cópia rasa, usada em `_city_state_payload`) remove os pontos
+> de masmorra cujo destino não passa em `_aventura_visivel` — nem o id do destino oculto chega ao
+> cliente; destino visível porém bloqueado permanece e o clique explica o que falta. O payload do
+> editor (`_city_shops_editor_payload`) **não** filtra e ganhou `adventures:[{id,nome,dungeons}]`
+> para o `<select>`. Cliente: `pointAllowed` ganhou o ramo `dungeon` (só desenha com destino em
+> `world.adventures`), `_cityHotspotClick` abre `abrirEntradaMasmorra` (overlay
+> `#city-dungeon-entry`) em vez do legado `triggerDungeonEntrance` (que segue no arquivo, servindo
+> o botão oculto); as regras de custo/etapa/requisito/anfitrião saíram do painel do mapa-múndi
+> para `_adventureInfo`/`_adventureGoButton`, compartilhados pelas duas telas. Editor
+> (`tools/editor_city.js`): **dois botões** de criar — "+ Adicionar ponto (loja/local)" e
+> "+ Adicionar entrada de masmorra" —, `dungeon` **fora** do dropdown de tipo (o tipo só se obtém
+> pelo botão dedicado) e formulário próprio com "Destino vinculado" + aviso quando falta destino
+> ou o destino não tem masmorra. Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-08-04-ponto-de-cidade-vinculado-a-masmorra*`. Teste:
+> `tools/test_cidades_editor.py` seções [13]-[15].
+
 > **Masmorra sequenciada + saída individual pela escada:** duas mudanças no fluxo de
 > expedição. **(1) Etapas encadeadas:** cada etapa de uma aventura do mapa-múndi
 > (`WORLD_ADVENTURES[...]["dungeons"]`) aceita **string (legado) ou objeto
