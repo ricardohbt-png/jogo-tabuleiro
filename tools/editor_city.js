@@ -365,13 +365,16 @@
           if(dest)selected.aventura=dest;else delete selected.aventura;
         } else {
           selected.type=root.querySelector('#citymap-type').value;
+          // Só limpa um vínculo que este ponto nunca poderia usar: o tipo é fixado
+          // na criação, então um ponto comum não vira entrada de masmorra por aqui.
           delete selected.aventura;
         }
         selected.x=Math.max(0,Math.min(100,Number(root.querySelector('#citymap-x').value)||0));
         selected.y=Math.max(0,Math.min(100,Number(root.querySelector('#citymap-y').value)||0));
       };
       form.querySelectorAll('input,select').forEach(el=>el.onchange=sync);
-      root.querySelector('#citymap-aventura') && (root.querySelector('#citymap-aventura').onchange=()=>{sync();renderCityMap();});
+      const elAventura=root.querySelector('#citymap-aventura');
+      if(elAventura)elAventura.onchange=()=>{sync();renderCityMap();};
     } else form.innerHTML='<p>Crie ou selecione um ponto.</p>';
     root.querySelector('#citymap-delete').disabled=!selected;root.querySelector('#citymap-delete').onclick=()=>{if(selected){delete points[selectedCityPointId];selectedCityPointId=null;renderCityMap();}};
     root.querySelector('#cityed-save').onclick=saveAll;

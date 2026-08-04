@@ -1362,3 +1362,6 @@ body.preview-mode #map-panel { width:100%; }
 #city-dungeon-entry .cde-box{width:min(92vw,420px);padding:18px 20px;border-radius:14px;text-align:center;background:rgba(18,14,10,.96);border:1px solid rgba(var(--gold-rgb),.5);box-shadow:0 18px 48px rgba(0,0,0,.6)}
 #city-dungeon-entry h3{margin:0 0 12px;color:var(--gold)}
 #city-dungeon-entry .btn-cancel{margin-top:12px}
+/* No mapa-múndi este painel é um overlay absoluto sobre o mapa; aqui ele é
+   conteúdo do quadro, então volta para o fluxo normal. */
+#city-dungeon-entry .worldmap-location-info{position:static;transform:none;left:auto;top:auto;bottom:auto;right:auto;margin:0 auto}

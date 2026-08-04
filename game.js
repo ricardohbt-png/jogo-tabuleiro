@@ -1515,11 +1515,22 @@ function _cityHotspotClick(pointId, type){
   openShop(pointId, t);
 }
 
+let _cdeFechar = null; // fecha (e limpa o listener de Esc) do quadro atualmente aberto, se houver
+
+// Ponto único de fechamento: usado tanto pelo próprio quadro (botão/backdrop/Esc)
+// quanto por quem precisa fechá-lo de fora (novo city_state, entrar na masmorra).
+// Sempre passar por aqui em vez de remover o elemento direto — senão o listener
+// de Esc do quadro fica pendurado no documento até a próxima reabertura.
+function _fecharEntradaMasmorra(){
+  if(_cdeFechar) _cdeFechar();
+  else document.getElementById('city-dungeon-entry')?.remove();
+}
+
 // Quadro de confirmação da entrada de masmorra colocada na ilustração da cidade.
 // Mostra o mesmo conteúdo do painel do mapa-múndi (custo, etapa, requisito) sem
 // precisar abrir o mapa; o "Entrar" é o mesmo botão, restrito ao anfitrião.
 function abrirEntradaMasmorra(adventure, titulo){
-  document.getElementById('city-dungeon-entry')?.remove();
+  _fecharEntradaMasmorra();
   const info = _adventureInfo(adventure);
   const wrap = document.createElement('div'); wrap.id = 'city-dungeon-entry';
   const box = document.createElement('div'); box.className = 'cde-box';
@@ -1530,11 +1541,16 @@ function abrirEntradaMasmorra(adventure, titulo){
   if(!info.completed) panel.appendChild(_adventureGoButton(adventure));
   box.appendChild(panel);
   const back = document.createElement('button'); back.className = 'btn-cancel';
-  back.textContent = '← Voltar'; back.onclick = () => wrap.remove();
+  back.textContent = '← Voltar';
   box.appendChild(back);
   wrap.appendChild(box);
-  wrap.addEventListener('click', e => { if(e.target === wrap) wrap.remove(); });
   document.body.appendChild(wrap);
+  const fechar = () => { document.removeEventListener('keydown', onKey); wrap.remove(); if(_cdeFechar === fechar) _cdeFechar = null; };
+  const onKey = e => { if(e.key === 'Escape') fechar(); };
+  document.addEventListener('keydown', onKey);
+  back.onclick = fechar;
+  wrap.addEventListener('click', e => { if(e.target === wrap) fechar(); });
+  _cdeFechar = fechar;
 }
 
 function destroyCityImage(){
@@ -1561,6 +1577,10 @@ function _refreshCityLocation(msg){
   const world = msg && msg.world;
   const location = world && (world.locations || []).find(l => l.id === world.location);
   if(!location) return;
+  // O quadro da entrada de masmorra é montado a partir de um snapshot do
+  // destino; um city_state novo pode mudar progresso, requisito ou anfitrião,
+  // então ele fecha e o jogador reabre com os dados frescos.
+  _fecharEntradaMasmorra();
   const isAlva = location.id === 'alva_e_luz';
   if(_worldMapEl && _worldMapEl.dataset.location && _worldMapEl.dataset.location !== location.id) hideWorldMap();
   _cityImg.img.src = location.imagem + '?v=' + (window.ASSET_VER || '1');
@@ -24308,6 +24328,10 @@ GS.on('enterDungeon', () => {
   // Entrar numa aventura não muda a cidade, então sem isto o jogador voltaria da
   // masmorra para o mapa-múndi em vez da ilustração da cidade.
   hideWorldMap();
+  // O quadro de entrada de masmorra é anexado direto no body (position:fixed,
+  // inset:0, z-index:60) — destroyCityImage()/showScreen() não o alcançam, e
+  // sem removê-lo aqui ele fica cobrindo a masmorra e engolindo todo clique.
+  _fecharEntradaMasmorra();
   _hpSnapshot.clear();   // novo cenário: zera HP base (1º game_state não dispara som)
   _resetTrapPopup();     // masmorra nova: descarta popup/fila de armadilha da anterior
   if(CITY_MODE==='image') destroyCityImage(); else destroyCity3D();
