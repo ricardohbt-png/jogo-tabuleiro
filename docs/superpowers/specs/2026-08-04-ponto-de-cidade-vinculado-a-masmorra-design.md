@@ -39,10 +39,16 @@ oferecido pelo editor. Passa a ser o tipo do ponto de masmorra.
 
 **Regra de integridade:** um ponto `dungeon` sem `aventura` válida não é
 desenhado no jogo — espelha o que já vale para o ponto de `cena` sem cena
-vinculada (botão morto na ilustração é pior que marcador ausente). A validação
-preserva `aventura` apenas quando o id existe em `WORLD_ADVENTURES`; caso
-contrário o campo é descartado (o ponto continua salvo, para o autor poder
-corrigir no editor).
+vinculada (botão morto na ilustração é pior que marcador ausente).
+
+A checagem de **existência** do destino acontece no save do editor
+(`_save_city_shops_upload`): id inexistente perde o campo `aventura`, e o ponto
+continua salvo para o autor corrigir. No **boot** (`_load_city_map_points`) só
+há checagem de formato do id, exatamente como já é feito com `scene`: se
+`world_adventures.json` estiver ausente ou corrompido, `WORLD_ADVENTURES` fica
+vazio e uma checagem de existência aqui apagaria todos os vínculos da memória —
+que o próximo save do editor gravaria em disco. Formato no boot, existência no
+save, e o filtro de payload cobre o resto.
 
 `_garantir_pontos_implicitos` não cria pontos de masmorra: eles são sempre
 autorais.
