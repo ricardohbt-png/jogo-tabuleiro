@@ -314,14 +314,18 @@
     const c = city();
     const points = (config.city_points || (config.city_points = {}))[cityId] || ((config.city_points || (config.city_points = {}))[cityId] = {});
     const types = {ferreiro:'Ferreiro', mercador:'Mercador', templo:'Templo', taverna:'Taverna', guilda:'Guilda', caravana:'Caravana de Viagem', cena:'Local de conversa'};
+    // `dungeon` NÃO entra no dropdown: o tipo só se obtém pelo botão dedicado,
+    // que é o que mantém as duas opções de criação realmente separadas.
+    const rotulos = Object.assign({dungeon:'Entrada de masmorra'}, types);
+    const adventures = config.adventures || [];
     if (!points[selectedCityPointId]) selectedCityPointId = Object.keys(points)[0] || null;
     const selected = selectedCityPointId && points[selectedCityPointId];
     root.innerHTML = '<div class="cityed"><header><div><h1>Mapa de ' + esc(c.nome) + '</h1><p>Arraste os pontos sobre a imagem. Cada ponto pode abrir um tipo de loja.</p></div><button id="cityed-save" class="cityed-save">Salvar mapa da cidade</button></header>' + cityTabs()
       + '<div class="cityed-cities">' + (config.cities || []).map(x => '<button data-city="' + esc(x.id) + '" class="' + (x.id === cityId ? 'active' : '') + '">' + esc(x.nome) + '</button>').join('') + '</div>'
-      + '<div class="worlded-layout"><div id="citymap-editor" class="worlded-map citymap-editor"><img src="../' + esc(c.imagem || '') + '" alt="' + esc(c.nome) + '"></div><aside class="worlded-panel"><button id="citymap-add" type="button">+ Adicionar ponto</button><div id="citymap-form"></div><button id="citymap-delete" type="button">Excluir ponto</button><button id="citymap-save" type="button">Salvar edição deste mapa</button><div id="cityed-status"></div></aside></div></div>';
+      + '<div class="worlded-layout"><div id="citymap-editor" class="worlded-map citymap-editor"><img src="../' + esc(c.imagem || '') + '" alt="' + esc(c.nome) + '"></div><aside class="worlded-panel"><button id="citymap-add" type="button">+ Adicionar ponto (loja/local)</button><button id="citymap-add-dungeon" type="button">+ Adicionar entrada de masmorra</button><div id="citymap-form"></div><button id="citymap-delete" type="button">Excluir ponto</button><button id="citymap-save" type="button">Salvar edição deste mapa</button><div id="cityed-status"></div></aside></div></div>';
     const map = root.querySelector('#citymap-editor'); let dragging = null;
     const marker = (id, point) => {
-      const type = point.type || id, name = point.name || types[type] || id;
+      const type = point.type || id, name = point.name || rotulos[type] || id;
       const b = document.createElement('button'); b.type='button'; b.className='worlded-marker city ' + (id === selectedCityPointId ? 'selected' : ''); b.style.left=point.x+'%'; b.style.top=point.y+'%'; b.innerHTML='<span>✦</span><small>'+esc(name)+'</small>'; b.title=name;
       b.onpointerdown=e=>{dragging={id:id,point:point,el:b};b.setPointerCapture&&b.setPointerCapture(e.pointerId);e.preventDefault();}; b.onclick=()=>{selectedCityPointId=id;renderCityMap();}; map.appendChild(b);
     };
@@ -330,9 +334,44 @@
     map.onpointerup=map.onpointercancel=()=>dragging=null;
     root.querySelectorAll('[data-city]').forEach(b=>b.onclick=()=>{cityId=b.dataset.city;selectedCityPointId=null;renderCityMap();}); bindCityMode();
     root.querySelector('#citymap-add').onclick=()=>{let n=1,id;do{id='ponto_'+n++;}while(points[id]);points[id]={x:50,y:50,type:'mercador',name:'Novo ponto'};selectedCityPointId=id;renderCityMap();};
+    root.querySelector('#citymap-add-dungeon').onclick=()=>{let n=1,id;do{id='masmorra_'+n++;}while(points[id]);points[id]={x:50,y:50,type:'dungeon',name:'Entrada de masmorra',emoji:'🚪'};selectedCityPointId=id;renderCityMap();};
     const form=root.querySelector('#citymap-form');
-    if(selected){ const typeOptions=Object.entries(types).map(([id,label])=>'<option value="'+id+'"'+((selected.type||selectedCityPointId)===id?' selected':'')+'>'+label+'</option>').join(''); form.innerHTML='<h3>Ponto</h3><label>Nome<input id="citymap-name" value="'+esc(selected.name||'')+'"></label><label>Emoji do marcador<input id="citymap-emoji" maxlength="8" value="'+esc(selected.emoji||'')+'"></label><label>Tipo / loja vinculada<select id="citymap-type">'+typeOptions+'</select></label><div class="worlded-cost"><label>X %<input id="citymap-x" type="number" min="0" max="100" step="0.1" value="'+Number(selected.x)+'"></label><label>Y %<input id="citymap-y" type="number" min="0" max="100" step="0.1" value="'+Number(selected.y)+'"></label></div>';
-      const sync=()=>{selected.name=root.querySelector('#citymap-name').value;const emoji=root.querySelector('#citymap-emoji').value.trim();if(emoji)selected.emoji=emoji;else delete selected.emoji;selected.type=root.querySelector('#citymap-type').value;selected.x=Math.max(0,Math.min(100,Number(root.querySelector('#citymap-x').value)||0));selected.y=Math.max(0,Math.min(100,Number(root.querySelector('#citymap-y').value)||0));};form.querySelectorAll('input,select').forEach(el=>el.onchange=sync);
+    if(selected){
+      const isDungeon = (selected.type || selectedCityPointId) === 'dungeon';
+      let campo;
+      if(isDungeon){
+        const escolhido = adventures.find(a => a.id === selected.aventura);
+        const opts = ['<option value="">— nenhum destino —</option>'].concat(adventures.map(a =>
+          '<option value="'+esc(a.id)+'"'+(selected.aventura===a.id?' selected':'')+'>'+esc(a.nome||a.id)+(a.dungeons?'':' (sem masmorra)')+'</option>')).join('');
+        const aviso = !selected.aventura
+          ? '<small class="cityed-warn">⚠ Sem destino vinculado: o marcador não aparece no jogo.</small>'
+          : !escolhido
+            ? '<small class="cityed-warn">⚠ O destino vinculado não existe mais.</small>'
+            : !escolhido.dungeons
+              ? '<small class="cityed-warn">⚠ Este destino ainda não tem masmorra.</small>' : '';
+        campo = '<label>Destino vinculado<select id="citymap-aventura">'+opts+'</select></label>'+aviso;
+      } else {
+        const typeOptions=Object.entries(types).map(([id,label])=>'<option value="'+id+'"'+((selected.type||selectedCityPointId)===id?' selected':'')+'>'+label+'</option>').join('');
+        campo = '<label>Tipo / loja vinculada<select id="citymap-type">'+typeOptions+'</select></label>';
+      }
+      form.innerHTML='<h3>'+(isDungeon?'Entrada de masmorra':'Ponto')+'</h3><label>Nome<input id="citymap-name" value="'+esc(selected.name||'')+'"></label><label>Emoji do marcador<input id="citymap-emoji" maxlength="8" value="'+esc(selected.emoji||'')+'"></label>'+campo+'<div class="worlded-cost"><label>X %<input id="citymap-x" type="number" min="0" max="100" step="0.1" value="'+Number(selected.x)+'"></label><label>Y %<input id="citymap-y" type="number" min="0" max="100" step="0.1" value="'+Number(selected.y)+'"></label></div>';
+      const sync=()=>{
+        selected.name=root.querySelector('#citymap-name').value;
+        const emoji=root.querySelector('#citymap-emoji').value.trim();
+        if(emoji)selected.emoji=emoji;else delete selected.emoji;
+        if(isDungeon){
+          const dest=root.querySelector('#citymap-aventura').value;
+          selected.type='dungeon';
+          if(dest)selected.aventura=dest;else delete selected.aventura;
+        } else {
+          selected.type=root.querySelector('#citymap-type').value;
+          delete selected.aventura;
+        }
+        selected.x=Math.max(0,Math.min(100,Number(root.querySelector('#citymap-x').value)||0));
+        selected.y=Math.max(0,Math.min(100,Number(root.querySelector('#citymap-y').value)||0));
+      };
+      form.querySelectorAll('input,select').forEach(el=>el.onchange=sync);
+      root.querySelector('#citymap-aventura') && (root.querySelector('#citymap-aventura').onchange=()=>{sync();renderCityMap();});
     } else form.innerHTML='<p>Crie ou selecione um ponto.</p>';
     root.querySelector('#citymap-delete').disabled=!selected;root.querySelector('#citymap-delete').onclick=()=>{if(selected){delete points[selectedCityPointId];selectedCityPointId=null;renderCityMap();}};
     root.querySelector('#cityed-save').onclick=saveAll;

@@ -1498,12 +1498,43 @@ function _cityHotspotClick(pointId, type){
   const t = type || pointId;
   // Destinos com tela própria despacham pelo tipo, antes da resolução de
   // cena/loja. O editor não oferece esses pontos no vínculo de cena.
-  if(t === 'dungeon'){ triggerDungeonEntrance(); return; }
+  if(t === 'dungeon'){
+    const st = GS.cityState;
+    const loc = st && st.world && st.world.location;
+    const ponto = ((st && st.city_map_points || {})[loc] || {})[pointId];
+    const adventure = (((st && st.world && st.world.adventures) || [])
+      .find(a => ponto && a.id === ponto.aventura));
+    if(!adventure){ toast('⚠ Esta entrada não está vinculada a nenhum destino.','var(--red)'); return; }
+    abrirEntradaMasmorra(adventure, (ponto && ponto.name) || adventure.nome);
+    return;
+  }
   if(t === 'caravana'){ showWorldMap(); return; }
   if(t === 'guilda'){ openGuild(); return; }
   // openShop espera o id do prédio cru (ex.: 'mercador'); é o que o servidor usa
   // como chave da loja. (NÃO usar MAPA_IDS_LOJA: 'mercado' aponta p/ loja vazia.)
   openShop(pointId, t);
+}
+
+// Quadro de confirmação da entrada de masmorra colocada na ilustração da cidade.
+// Mostra o mesmo conteúdo do painel do mapa-múndi (custo, etapa, requisito) sem
+// precisar abrir o mapa; o "Entrar" é o mesmo botão, restrito ao anfitrião.
+function abrirEntradaMasmorra(adventure, titulo){
+  document.getElementById('city-dungeon-entry')?.remove();
+  const info = _adventureInfo(adventure);
+  const wrap = document.createElement('div'); wrap.id = 'city-dungeon-entry';
+  const box = document.createElement('div'); box.className = 'cde-box';
+  const h = document.createElement('h3'); h.textContent = '🚪 ' + (titulo || adventure.nome);
+  box.appendChild(h);
+  const panel = document.createElement('div'); panel.className = 'worldmap-location-info';
+  panel.innerHTML = info.html;
+  if(!info.completed) panel.appendChild(_adventureGoButton(adventure));
+  box.appendChild(panel);
+  const back = document.createElement('button'); back.className = 'btn-cancel';
+  back.textContent = '← Voltar'; back.onclick = () => wrap.remove();
+  box.appendChild(back);
+  wrap.appendChild(box);
+  wrap.addEventListener('click', e => { if(e.target === wrap) wrap.remove(); });
+  document.body.appendChild(wrap);
 }
 
 function destroyCityImage(){
@@ -1546,10 +1577,15 @@ function _refreshCityLocation(msg){
   // Um ponto de cena SEM cena vinculada (a cena foi excluída no editor e o ponto
   // ficou) abriria um modal sem nenhuma aba: nem cena, nem loja. Botão morto na
   // ilustração — melhor não desenhar o marcador.
-  const pointAllowed = (type, point) => type === 'caravana' || type === 'guilda' || type === 'dungeon'
-    || (type === 'cena'
-      ? !!(point && point.scene && cityScenes[point.scene])
-      : (isAlva || hasShopPoint(type)));
+  // O ponto de masmorra depende do destino vinculado — o servidor já omite do
+  // payload o destino oculto/inexistente, então aqui é só a checagem final.
+  const worldAdventures = (world.adventures || []);
+  const pointAllowed = (type, point) => type === 'caravana' || type === 'guilda'
+    || (type === 'dungeon'
+      ? !!(point && point.aventura && worldAdventures.some(a => a.id === point.aventura))
+      : type === 'cena'
+        ? !!(point && point.scene && cityScenes[point.scene])
+        : (isAlva || hasShopPoint(type)));
   // CITY_MAP_POINTS é a fonte ÚNICA do que aparece na ilustração: o marcador
   // nativo só é exibido se existir um ponto com o mesmo id. Sem isso ele
   // duplicava o ponto equivalente criado no editor — e ficava num lugar que o
@@ -1695,6 +1731,34 @@ function showWorldLocationPreview(world, loc){
   _worldMapEl.appendChild(frame);
 }
 
+// Regras de exibição de um destino de masmorra — compartilhadas pelo painel do
+// mapa-múndi e pelo quadro da entrada colocada na ilustração da cidade. As duas
+// telas leem daqui para nunca divergirem em custo/etapa/requisito.
+function _adventureInfo(adventure){
+  const count = (adventure.dungeons || []).length;
+  const progress = Math.max(0, Number(adventure.progresso || 0));
+  const completed = count > 0 && progress >= count;
+  const req = adventure.requisito || {};
+  const reqText = [Number(req.renome_min)>0 ? 'renome '+req.renome_min : '', Number(req.nivel_grupo_min)>0 ? 'nível de grupo '+req.nivel_grupo_min : '', req.item_id ? 'item: '+req.item_id : '', req.fato ? 'informação: '+req.fato : '', req.aventura_id ? 'rota concluída: '+req.aventura_id : ''].filter(Boolean);
+  const html = completed
+    ? `<b>Rota concluída</b><small>O grupo já concluiu as ${count} masmorras deste destino.</small>`
+    : `<b>Entrada de masmorra</b><small>Expedição: 🍖 -${adventure.fome || 0} e 💧 -${adventure.sede || 0} para cada herói.${count > 1 ? ' Próxima etapa: ' + (progress + 1) + ' de ' + count + '. As demais liberam após concluir a anterior.' : ''}${reqText.length ? ' Requisito: ' + reqText.join(' · ') + '.' : ''}</small>`;
+  return {count, progress, completed, html};
+}
+
+function _adventureGoButton(adventure){
+  const go = document.createElement('button');
+  go.className = 'worldmap-travel';
+  go.textContent = 'Entrar em ' + adventure.nome;
+  go.disabled = GS.myPid !== GS.cityState.host;
+  go.title = go.disabled ? 'Apenas o anfitrião inicia a expedição.' : '';
+  go.onclick = () => {
+    go.disabled = true; go.textContent = 'Iniciando expedição…';
+    GS.worldAdventure(adventure.id);
+  };
+  return go;
+}
+
 function showWorldAdventurePreview(world, adventure){
   if(!_worldMapEl) return;
   _worldMapEl.innerHTML = '';
@@ -1703,24 +1767,9 @@ function showWorldAdventurePreview(world, adventure){
   const title = document.createElement('div'); title.className = 'worldmap-location-title'; title.textContent = '⚔ ' + adventure.nome; frame.appendChild(title);
   const back = document.createElement('button'); back.className = 'worldmap-back'; back.textContent = '← Voltar ao mapa-múndi'; back.onclick = showWorldMap; frame.appendChild(back);
   const panel = document.createElement('div'); panel.className = 'worldmap-location-info';
-  const count = (adventure.dungeons || []).length;
-  const progress = Math.max(0, Number(adventure.progresso || 0));
-  const completed = count > 0 && progress >= count;
-  const req = adventure.requisito || {};
-  const reqText = [Number(req.renome_min)>0 ? 'renome '+req.renome_min : '', Number(req.nivel_grupo_min)>0 ? 'nível de grupo '+req.nivel_grupo_min : '', req.item_id ? 'item: '+req.item_id : '', req.fato ? 'informação: '+req.fato : '', req.aventura_id ? 'rota concluída: '+req.aventura_id : ''].filter(Boolean);
-  panel.innerHTML = completed
-    ? `<b>Rota concluída</b><small>O grupo já concluiu as ${count} masmorras deste destino.</small>`
-    : `<b>Entrada de masmorra</b><small>Expedição: 🍖 -${adventure.fome || 0} e 💧 -${adventure.sede || 0} para cada herói.${count > 1 ? ' Próxima etapa: ' + (progress + 1) + ' de ' + count + '. As demais liberam após concluir a anterior.' : ''}${reqText.length ? ' Requisito: ' + reqText.join(' · ') + '.' : ''}</small>`;
-  if(!completed){
-  const go = document.createElement('button'); go.className = 'worldmap-travel'; go.textContent = 'Entrar em ' + adventure.nome;
-  go.disabled = GS.myPid !== GS.cityState.host;
-  go.title = go.disabled ? 'Apenas o anfitrião inicia a expedição.' : '';
-  go.onclick = () => {
-    go.disabled = true; go.textContent = 'Iniciando expedição…';
-    GS.worldAdventure(adventure.id);
-  };
-  panel.appendChild(go);
-  }
+  const info = _adventureInfo(adventure);
+  panel.innerHTML = info.html;
+  if(!info.completed) panel.appendChild(_adventureGoButton(adventure));
   frame.appendChild(panel); _worldMapEl.appendChild(frame);
 }
 

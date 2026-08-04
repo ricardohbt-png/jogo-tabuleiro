@@ -407,6 +407,13 @@ def _load_city_map_points():
                     # depois, quando CITY_SCENES estiver disponível.
                     scene_ref = str(point.get("scene") or "").strip().lower()
                     if re.fullmatch(r"[a-z0-9_-]{1,48}", scene_ref): item["scene"] = scene_ref
+                    # Só formato, como o `scene` acima: se WORLD_ADVENTURES ainda
+                    # não estiver carregado (ou o arquivo estiver corrompido), uma
+                    # checagem de existência aqui apagaria todos os vínculos da
+                    # memória — e o próximo save do editor gravaria a perda.
+                    aventura_ref = str(point.get("aventura") or "").strip().lower()
+                    if re.fullmatch(r"[a-z0-9_-]{1,48}", aventura_ref):
+                        item["aventura"] = aventura_ref
                     CITY_MAP_POINTS[city_id][point_id] = item
     except (OSError, ValueError, TypeError, json.JSONDecodeError):
         pass
@@ -7084,7 +7091,7 @@ class GameRoom:
                                if self._aventura_visivel(adventure)],
             },
             "reputacao": {"renome": self.renome, "fatos": sorted(self.fatos)},
-            "city_map_points": CITY_MAP_POINTS,
+            "city_map_points": self._city_points_payload(),
             "city_shops": CITY_SHOPS,
             "scenes": self._cenas_payload(),
             "campaign": self._campaign_payload(),
@@ -9118,6 +9125,26 @@ class GameRoom:
         if not adventure.get("oculto_ate_liberar"):
             return True
         return self._avaliar_requisito(adventure.get("requisito"))[0]
+
+    def _city_points_payload(self):
+        """Cópia RASA de CITY_MAP_POINTS (só os dois níveis externos; os dicts
+        de ponto continuam compartilhados por referência — o resultado só é
+        serializado em JSON, então copiar fundo seria desperdício) sem os
+        pontos de masmorra cujo destino não está visível para esta sala.
+        `city_map_points` vai inteiro no payload, então sem isto o id de um
+        destino oculto viajaria até o cliente — e o ponto de um destino que
+        não existe mais viraria um marcador morto."""
+        saida = {}
+        for city_id, pontos in CITY_MAP_POINTS.items():
+            limpos = {}
+            for point_id, ponto in pontos.items():
+                if str(ponto.get("type") or "") == "dungeon":
+                    adventure = WORLD_ADVENTURES.get(str(ponto.get("aventura") or ""))
+                    if not adventure or not self._aventura_visivel(adventure):
+                        continue
+                limpos[point_id] = ponto
+            saida[city_id] = limpos
+        return saida
 
     async def handle_scene_npc(self, pid, scene_id, npc_id, conversation_id):
         if not self._em_cidade(pid) or pid not in self.players:
@@ -25933,6 +25960,11 @@ def _city_shops_editor_payload():
     return {"cities": list(WORLD_LOCATIONS.values()), "shops": CITY_SHOP_LABELS,
             "stock": CITY_SHOPS, "catalog": catalog, "scenes": CITY_SCENES,
             "city_points": CITY_MAP_POINTS, "routes": rotas,
+            # Lista enxuta para o <select> de destino do ponto de masmorra. NÃO
+            # filtra ocultos: no editor o autor precisa ver o que criou.
+            "adventures": [{"id": aid, "nome": a.get("nome", aid),
+                            "dungeons": len(a.get("dungeons") or [])}
+                           for aid, a in WORLD_ADVENTURES.items()],
             "custom_cities": [c["id"] for c in WORLD_CITIES.get("cities", [])],
             "city_inicial": CITY_INICIAL}
 
@@ -25983,6 +26015,12 @@ def _save_city_shops_upload(raw, scenes=None, raw_city_points=None):
                 scene_ref = str(point.get("scene") or "").strip().lower()
                 if scene_ref and scene_ref in CITY_SCENES.get(city_id, {}):
                     item["scene"] = scene_ref
+                # Vínculo do ponto de masmorra. A existência do destino é checada
+                # AQUI (o autor está no editor e vê o resultado); um id que não
+                # existe mais perde só o campo, o ponto continua salvo.
+                aventura_ref = str(point.get("aventura") or "").strip().lower()
+                if aventura_ref in WORLD_ADVENTURES:
+                    item["aventura"] = aventura_ref
                 cleaned[point_id] = item
             if cleaned: CITY_MAP_POINTS[city_id] = cleaned
     _garantir_pontos_implicitos()

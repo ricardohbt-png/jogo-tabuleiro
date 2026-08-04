@@ -256,6 +256,151 @@ def _rodar_verificacoes():
           movido.get("type") == "mercador" and movido.get("name") == "Feira")
     reset_mundo()
 
+    print("\n[13] Ponto de masmorra vinculado a um destino")
+    reset_mundo()
+    S.WORLD_ADVENTURES["destino_teste"] = {
+        "id": "destino_teste", "nome": "Cripta de Teste", "x": 50.0, "y": 50.0,
+        "fome": 2, "sede": 2, "dungeons": [{"file": "a.json"}],
+        "oculto_ate_liberar": False, "revisitavel": False,
+        "requisito": {"renome_min": 0, "nivel_grupo_min": 0, "item_id": "",
+                      "fato": "", "aventura_id": ""},
+    }
+    # _save_city_shops_upload SUBSTITUI o dict inteiro de pontos de alva_e_luz;
+    # reset_mundo() não desfaz isso (só poda cidades que deixaram de existir).
+    # Sem restaurar aqui, "cripta"/"fantasma" vazariam para as seções seguintes.
+    antes_pontos = deepcopy(S.CITY_MAP_POINTS["alva_e_luz"])
+    try:
+        enviados = {"alva_e_luz": {
+            "cripta": {"x": 40.0, "y": 55.0, "type": "dungeon", "name": "Cripta",
+                       "emoji": "🚪", "aventura": "destino_teste"},
+            "fantasma": {"x": 10.0, "y": 10.0, "type": "dungeon", "name": "Sem destino",
+                         "aventura": "nao_existe"},
+        }}
+        ok_save, _ = S._save_city_shops_upload({}, None, enviados)
+        salvos = S.CITY_MAP_POINTS["alva_e_luz"]
+        check("save do editor aceito", ok_save is True)
+        check("tipo dungeon preservado", salvos["cripta"].get("type") == "dungeon")
+        check("vínculo válido preservado", salvos["cripta"].get("aventura") == "destino_teste")
+        check("emoji do ponto preservado", salvos["cripta"].get("emoji") == "🚪")
+        check("vínculo inexistente é descartado", "aventura" not in salvos["fantasma"])
+        check("ponto sem vínculo continua salvo", "fantasma" in salvos)
+        # Round-trip pelo arquivo: o vínculo tem de sobreviver ao boot.
+        S._save_city_map_points()
+        S.CITY_MAP_POINTS["alva_e_luz"].pop("cripta")
+        S._load_city_map_points()
+        check("vínculo sobrevive ao boot",
+              S.CITY_MAP_POINTS["alva_e_luz"].get("cripta", {}).get("aventura") == "destino_teste")
+        # O boot só checa FORMATO: sem WORLD_ADVENTURES carregado (arquivo ausente
+        # ou corrompido) o vínculo não pode ser apagado da memória, senão o próximo
+        # save do editor gravaria a perda em disco.
+        guardado = dict(S.WORLD_ADVENTURES)
+        S.WORLD_ADVENTURES.clear()
+        S.CITY_MAP_POINTS["alva_e_luz"].pop("cripta")
+        S._load_city_map_points()
+        check("boot sem catálogo de destinos não apaga o vínculo",
+              S.CITY_MAP_POINTS["alva_e_luz"].get("cripta", {}).get("aventura") == "destino_teste")
+        S.WORLD_ADVENTURES.update(guardado)
+        # Formato inválido (caractere fora do padrão, ou acima de 48) é descartado
+        # no boot mesmo com WORLD_ADVENTURES carregado — cobre o regex em si.
+        S.CITY_MAP_POINTS["alva_e_luz"]["invalido1"] = {"x": 5.0, "y": 5.0, "type": "dungeon",
+                                                          "aventura": "NÃO VALE!"}
+        S.CITY_MAP_POINTS["alva_e_luz"]["invalido2"] = {"x": 6.0, "y": 6.0, "type": "dungeon",
+                                                          "aventura": "a" * 60}
+        S._save_city_map_points()
+        S._load_city_map_points()
+        check("aventura com caractere inválido é descartada no boot",
+              "aventura" not in S.CITY_MAP_POINTS["alva_e_luz"].get("invalido1", {}))
+        check("aventura acima de 48 chars (teto real dos ids) é descartada no boot",
+              "aventura" not in S.CITY_MAP_POINTS["alva_e_luz"].get("invalido2", {}))
+    finally:
+        S.WORLD_ADVENTURES.pop("destino_teste", None)
+        S.CITY_MAP_POINTS["alva_e_luz"] = antes_pontos
+    reset_mundo()
+
+    print("\n[14] Destino oculto não vaza no payload da cidade")
+    reset_mundo()
+    base_req = {"renome_min": 0, "nivel_grupo_min": 0, "item_id": "", "fato": "", "aventura_id": ""}
+    S.WORLD_ADVENTURES["oculto_teste"] = {
+        "id": "oculto_teste", "nome": "Cripta Secreta", "x": 10.0, "y": 10.0,
+        "fome": 0, "sede": 0, "dungeons": [{"file": "a.json"}],
+        "oculto_ate_liberar": True, "revisitavel": False,
+        "requisito": dict(base_req, renome_min=50)}
+    S.WORLD_ADVENTURES["bloqueado_teste"] = {
+        "id": "bloqueado_teste", "nome": "Torre Fechada", "x": 20.0, "y": 20.0,
+        "fome": 0, "sede": 0, "dungeons": [{"file": "a.json"}],
+        "oculto_ate_liberar": False, "revisitavel": False,
+        "requisito": dict(base_req, renome_min=50)}
+    # Mutação direta no dict global (não passa por _save_city_shops_upload) —
+    # também precisa ser restaurada, senão vaza para as seções seguintes.
+    antes_pontos = deepcopy(S.CITY_MAP_POINTS["alva_e_luz"])
+    try:
+        pontos_cidade = S.CITY_MAP_POINTS["alva_e_luz"]
+        pontos_cidade["cripta_secreta"] = {"x": 40.0, "y": 55.0, "type": "dungeon",
+                                           "aventura": "oculto_teste"}
+        pontos_cidade["torre"] = {"x": 45.0, "y": 55.0, "type": "dungeon",
+                                  "aventura": "bloqueado_teste"}
+        pontos_cidade["solto"] = {"x": 46.0, "y": 56.0, "type": "dungeon"}
+        pontos_cidade["sem_tipo"] = {"x": 47.0, "y": 57.0, "aventura": "bloqueado_teste"}
+        sala = S.GameRoom("PAYLOAD")
+        sala.phase = "city"; sala.world_location = "alva_e_luz"; sala.renome = 0
+        visiveis = sala._city_points_payload()["alva_e_luz"]
+        check("ponto de destino oculto some do payload", "cripta_secreta" not in visiveis)
+        check("ponto de destino bloqueado (visível) permanece", "torre" in visiveis)
+        check("ponto de masmorra sem vínculo some do payload", "solto" not in visiveis)
+        check("ponto de loja não é afetado", "mercador" in visiveis)
+        check("ponto sem type não é filtrado (filtro só vale para type=dungeon)",
+              "sem_tipo" in visiveis)
+        sala.renome = 99
+        check("ponto aparece quando o requisito é cumprido",
+              "cripta_secreta" in sala._city_points_payload()["alva_e_luz"])
+        check("dicionário global não é mutado",
+              "cripta_secreta" in S.CITY_MAP_POINTS["alva_e_luz"])
+        check("outras cidades continuam no payload",
+              "vila_riacho" in sala._city_points_payload())
+    finally:
+        S.WORLD_ADVENTURES.pop("oculto_teste", None)
+        S.WORLD_ADVENTURES.pop("bloqueado_teste", None)
+        S.CITY_MAP_POINTS["alva_e_luz"] = antes_pontos
+    reset_mundo()
+
+    print("\n[15] Editor recebe os destinos para vincular")
+    reset_mundo()
+    S.WORLD_ADVENTURES["destino_editor"] = {
+        "id": "destino_editor", "nome": "Cripta do Editor", "x": 1.0, "y": 1.0,
+        "fome": 0, "sede": 0, "dungeons": [{"file": "a.json"}, {"file": "b.json"}],
+        "oculto_ate_liberar": True, "revisitavel": False,
+        "requisito": {"renome_min": 99, "nivel_grupo_min": 0, "item_id": "",
+                      "fato": "", "aventura_id": ""}}
+    S.WORLD_ADVENTURES["destino_vazio"] = {
+        "id": "destino_vazio", "nome": "Rascunho", "x": 2.0, "y": 2.0,
+        "fome": 0, "sede": 0, "dungeons": [], "oculto_ate_liberar": False,
+        "revisitavel": False, "requisito": {}}
+    antes_pontos = deepcopy(S.CITY_MAP_POINTS["alva_e_luz"])
+    try:
+        payload = S._city_shops_editor_payload()
+        destinos = {a["id"]: a for a in payload.get("adventures", [])}
+        check("destino chega ao editor", "destino_editor" in destinos)
+        check("nome do destino", destinos.get("destino_editor", {}).get("nome") == "Cripta do Editor")
+        check("nº de masmorras do destino", destinos.get("destino_editor", {}).get("dungeons") == 2)
+        check("destino sem masmorra aparece com contagem 0",
+              destinos.get("destino_vazio", {}).get("dungeons") == 0)
+        # Contraste real: o payload do EDITOR não filtra ocultos (o autor precisa
+        # ver o que criou), mas o payload de JOGO (_city_points_payload) filtra —
+        # a mesma checagem que a asserção duplicada acima só fingia fazer.
+        S.CITY_MAP_POINTS["alva_e_luz"]["ponto_editor"] = {"x": 15.0, "y": 15.0,
+                                                             "type": "dungeon", "aventura": "destino_editor"}
+        sala = S.GameRoom("PAYLOAD2")
+        sala.phase = "city"; sala.world_location = "alva_e_luz"; sala.renome = 0
+        check("destino oculto aparece para o autor no payload do editor (não filtrado)",
+              "destino_editor" in destinos)
+        check("mesmo destino oculto some do payload de jogo (filtrado)",
+              "ponto_editor" not in sala._city_points_payload()["alva_e_luz"])
+    finally:
+        S.WORLD_ADVENTURES.pop("destino_editor", None)
+        S.WORLD_ADVENTURES.pop("destino_vazio", None)
+        S.CITY_MAP_POINTS["alva_e_luz"] = antes_pontos
+    reset_mundo()
+
     print("\n[11] Regressões apontadas na revisão")
     reset_mundo()
     # x/y de cidade criada é editável (o painel do editor expõe o campo)
