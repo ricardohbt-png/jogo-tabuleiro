@@ -983,6 +983,40 @@ async def main():
     check("alvo hostil inválido não debita uso", m4["spell_uses"]["silencio"] == 1)
     check("alvo hostil inválido não gasta ação", m4["_master_acted"] is False)
 
+    print("\n[34d] teto permissivo de alcance (alcance_base/escala) — silencio")
+    r = playing_room_com_mestre()
+    lancadas34d = []
+    async def fake_grim_34d(mm, magia, data, *a, **k):
+        lancadas34d.append((magia["id"], data.get("target_id")))
+    r._executar_magia_grimorio = fake_grim_34d
+    # silencio: alcance_base 5, alcance_escala 1 — teto a nível 1 (default) = 5.
+    ab_silencio = {"id": "silencio", "name": "Silêncio", "action_type": "magia"}
+    m5 = {"id": "g5", "name": "Xamã", "hp": 14, "pos": [0, 0], "size": [1, 1],
+          "control_mode": "manual", "_master_acted": False, "_master_bonus_acted": False,
+          "_master_acao_tipo": None, "attacks": [{"name": "cajado", "num_attacks": 1}],
+          "master_attack_charges": {0: 1}, "special_abilities": [ab_silencio],
+          "monster_spells": [{"id": "silencio", "limit_mode": "encounter", "uses_per_combat": 2}],
+          "spell_uses": {"silencio": 2}, "spell_cooldowns": {}}
+    r.monsters = {"g5": m5}; r.master_manual_mid = "g5"
+    r.players = {"hLonge": {"id": "hLonge", "name": "Longe", "pos": [50, 50], "alive": True},
+                 "hPerto": {"id": "hPerto", "name": "Perto", "pos": [1, 0], "alive": True}}
+    await r.handle_mestre_usar_habilidade("m1", "g5", "silencio", "hLonge")
+    check("fora do teto é recusado sem gastar", lancadas34d == [])
+    check("fora do teto não debita uso", m5["spell_uses"]["silencio"] == 2)
+    check("fora do teto não gasta ação", m5["_master_acted"] is False)
+
+    await r.handle_mestre_usar_habilidade("m1", "g5", "silencio", "hPerto")
+    check("dentro do teto lança", lancadas34d == [("silencio", "hPerto")])
+    check("dentro do teto debita uso", m5["spell_uses"]["silencio"] == 1)
+
+    print("\n[34e] _alcance_magia_teto nunca é mais estrito que os executores")
+    magia_teste = {"alcance_base": 4, "alcance_escala": 1}
+    teto = r._alcance_magia_teto(magia_teste, 5)
+    formula_necro = 4 + 1 * (5 - 1)
+    formula_silencio = 4 + (5 // 2) * 1
+    check("teto >= fórmula do necro/genérico", teto >= formula_necro)
+    check("teto >= fórmula do _executar_silencio", teto >= formula_silencio)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

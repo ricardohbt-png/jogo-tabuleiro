@@ -20983,14 +20983,16 @@ class GameRoom:
             data["tx"] = alvo["pos"][0]; data["ty"] = alvo["pos"][1]
             data["dir"] = [0 if dx == 0 else (1 if dx > 0 else -1),
                            0 if dy == 0 else (1 if dy > 0 else -1)]
-            alc = magia.get("alcance")
+            alc = self._alcance_magia_teto(magia, m.get("level", 1))
             if alc is not None:
                 if max(abs(m["pos"][0] - alvo["pos"][0]), abs(m["pos"][1] - alvo["pos"][1])) > alc:
                     await self.send_to(pid, {"type": "error", "msg": "Alvo fora de alcance."}); return
             # _lancar_magia_monstro debita uso/recarga ANTES de executar a
             # magia (mesma ordem da IA em _monster_try_spell — invariante de
-            # extração comportamento-preservada); por isso o alvo já foi
-            # validado acima, para não gastar carga num alvo inválido.
+            # extração comportamento-preservada); por isso o alvo é validado
+            # acima — existência, lado e um TETO permissivo de alcance — antes
+            # de lançar, para não gastar carga num alvo claramente inválido.
+            # A checagem exata de alcance continua sendo a do executor.
             await self._lancar_magia_monstro(m, sid, data)
             self._debitar_acao_mestre(m, custo, "habilidade")
             m["_ja_executou_acao"] = True
@@ -22242,6 +22244,24 @@ class GameRoom:
         if cfg.get("limit_mode", "encounter") == "cooldown":
             return self.round_num >= m.get("spell_cooldowns", {}).get(sid, 0)
         return m.get("spell_uses", {}).get(sid, max(1, int(cfg.get("uses_per_combat", 1)))) > 0
+
+    def _alcance_magia_teto(self, magia, nivel):
+        """Maior alcance plausível de uma magia, para uma checagem PERMISSIVA.
+
+        Os executores não usam uma fórmula única (`alcance_base + escala*(n-1)`
+        em uns, `alcance_base + (n//2)*escala` noutros, `alcance_base` puro em
+        outros). Este teto é o máximo entre elas: serve para recusar cedo o que
+        está claramente longe demais, sem NUNCA barrar um lançamento que o
+        executor aceitaria. A checagem exata continua sendo a do executor."""
+        alc = magia.get("alcance")
+        if alc is not None:
+            return alc
+        if "alcance_base" not in magia:
+            return None
+        base = magia["alcance_base"]
+        escala = magia.get("alcance_escala", 0)
+        n = max(1, int(nivel or 1))
+        return base + max(escala * (n - 1), (n // 2) * escala, 0)
 
     async def _lancar_magia_monstro(self, m, sid, data, cfg=None):
         """Debita uso/recarga e executa a magia. Ponto único usado pela IA
