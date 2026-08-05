@@ -91,8 +91,17 @@ Uma caixa flutuante à direita, ~300px, substituindo `#hud-mestre` e
 
 ### Economia de ação
 
-`_master_acted` (bool) → `master_acao`: `None` | `"ataque"` | `"habilidade"` |
-`"item"`. `_master_bonus_acted` → `master_bonus` (bool).
+`_master_acted` (bool, "a ação principal foi gasta") e `_master_bonus_acted`
+(bool) **permanecem como estão**. Some-se a eles `_master_acao_tipo`
+(`None` | `"ataque"` | `"habilidade"` | `"item"`), que registra *no que* a ação
+foi gasta.
+
+Motivo de não renomear: quatro seções já existentes de `test_modo_mestre.py`
+(`[26]`, `[26b]`, `[27]`, `[28]`) afirmam `_master_acted is True`. Manter o
+booleano faz habilidades e itens continuarem bloqueados após um ataque sem
+tocar em nenhum desses testes; o campo novo serve só para o caso especial dos
+ataques, que precisam saber que a ação já está comprometida *com ataques* para
+liberar as cargas restantes.
 
 Helper novo `_custo_acao_ability(ab)`:
 
@@ -166,22 +175,25 @@ duplicadas.
 
 ## Testes
 
-Servidor, em `tools/test_modo_mestre.py` (hoje vai até a seção `[28]`):
+Servidor, em `tools/test_modo_mestre.py` (hoje vai até a seção `[29]`):
 
-- **`[29]` Ataques granulares** — `attacks[]` de duas entradas com `num_attacks`
-  2 e 1: confirma 3 cargas, débito por ataque, golpes em heróis diferentes,
-  recusa da 4ª tentativa.
-- **`[30]` Economia por `action_type`** — magia após atacar recusada; item
-  `acao_bonus` após atacar aceito; `acao_livre` não gasta; atacar após magia
-  recusado.
-- **`[31]` Magias do mestre** — Silêncio no alvo escolhido; débito de
-  `spell_uses`; recarga bloqueia o segundo lançamento; alvo fora de alcance
-  recusa sem gastar.
-- **`[32]` Extrações** — `_ativar_golpe_brutal` e `_ativar_desaparecer_sombras`
-  com efeito idêntico via IA e via mestre; monstro `auto` sem mestre
-  byte-idêntico.
-- **`[33]` Relógio** — cada ação empurra o `deadline`; timeout sem ação chama a
-  IA; timeout **com** ação do mestre apenas fecha a janela.
+- **`[30]`** `_custo_acao_ability` traduz cada `action_type`.
+- **`[31]`/`[31b]`** Cargas montadas na abertura da janela, inclusive o
+  fallback de ficha legada sem `attacks[]`.
+- **`[32]`/`[32b]`** Ataques granulares: 3 cargas, débito por golpe, alvos
+  diferentes, recusa da 4ª tentativa, `attack_index` ausente = índice 0.
+- **`[33]`/`[33b]`** Economia por `action_type`: `acao_livre` não gasta,
+  `acao_bonus` gasta só a bônus, ataque após habilidade de ação recusado.
+- **`[34]`/`[34b]`** Magias do mestre: lança no alvo escolhido, debita
+  `spell_uses`, recusa sem usos; `encantar_*` segue barrado.
+- **`[35]`/`[35b]`** `_ativar_golpe_brutal` — recarga, bônus armado e consumo
+  pelo golpe seguinte.
+- **`[36]`/`[36b]`** `_ativar_desaparecer_sombras` — recarga, exigência de
+  escuridão e custo livre.
+- **`[37]`** Invariante: sem mestre, nenhum handler do Manual age.
+- **`[38]`/`[38b]`** Relógio: timeout sem ação chama a IA, timeout após ação do
+  mestre apenas fecha a janela (turno duplo), `deadline` empurrado a cada ação.
+- **`[39]`** Bloco `master_manual` no payload.
 
 Cliente: sem harness no projeto. Verificação é smoke in-app com dois
 navegadores (um herói, um mestre), como nas camadas anteriores do Modo Mestre.
