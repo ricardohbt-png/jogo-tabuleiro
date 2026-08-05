@@ -12094,8 +12094,11 @@ class GameRoom:
         """Fúria Bestial no controle Manual. A IA (_monster_execute_attacks) dá
         +1d6 quando o PRIMEIRO grupo de ataque e ao menos um outro acertam o
         mesmo alvo. Como o mestre gasta os golpes um a um e pode dividi-los
-        entre heróis, acumulamos por alvo os grupos que acertaram no turno e
-        concedemos o bônus uma única vez para cada um."""
+        entre heróis, os grupos que acertaram são acumulados POR ALVO
+        (_master_furia_hits) — é isso que impede golpes espalhados entre
+        heróis diferentes de se combinarem. Mas a concessão do bônus em si é
+        POR TURNO, não por alvo: a IA resolve o turno inteiro contra um único
+        target_obj, então seu teto é 1 proc/turno — nunca 1 por herói."""
         if not acertou or not self._tem_habilidade(m, "furia_bestial"):
             return
         if len(m.get("attacks") or []) < 2:
@@ -12104,12 +12107,11 @@ class GameRoom:
         acertos.add(idx)
         if 0 not in acertos or len(acertos) < 2:
             return
-        dados = m.setdefault("_master_furia_dada", set())
-        if alvo["id"] in dados:
+        if m.get("_master_furia_dada"):
             return
         if not alvo.get("alive") or alvo.get("hp", 0) <= 0:
             return
-        dados.add(alvo["id"])
+        m["_master_furia_dada"] = True
         extra = roll_dice("1d6")
         alvo["hp"] = max(0, alvo["hp"] - extra)
         await self.gm_say(f"🦷 **Fúria Bestial**: **{alvo['name']}** sofre +**{extra}** de dano!")
@@ -12202,7 +12204,7 @@ class GameRoom:
         m["_master_acao_tipo"] = None
         m["master_attack_charges"] = self._montar_cargas_ataque(m)
         m["_master_furia_hits"] = {}
-        m["_master_furia_dada"] = set()
+        m["_master_furia_dada"] = False
         m.pop("_master_touched", None)
         self.master_manual_event = asyncio.Event()
         await self.push_state()

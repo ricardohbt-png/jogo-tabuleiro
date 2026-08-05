@@ -841,6 +841,29 @@ async def main():
     check("carga intacta após recusa", m["master_attack_charges"] == {0: 2})
     check("ação principal não marcada após recusa", m["_master_acted"] is False)
 
+    print("\n[32c-5] Fúria Bestial: teto de 1 proc por TURNO, não por herói")
+    r = playing_room_com_mestre()
+    r._execute_one_monster_attack = fake_atk_no_dano
+    m = {"id": "g1", "name": "Grotão", "hp": 30, "max_hp": 30, "pos": [2, 2],
+         "size": [1, 1], "movement": 4, "control_mode": "manual",
+         "_master_acted": False, "_master_acao_tipo": None,
+         "master_attack_charges": {0: 2, 1: 2},
+         "attacks": [{"name": "Mordida", "num_attacks": 2},
+                     {"name": "Garras", "num_attacks": 2}],
+         "special_abilities": [{"id": "furia_bestial", "action_type": "passiva"}]}
+    r.monsters = {"g1": m}; r.master_manual_mid = "g1"
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [2, 3], "alive": True, "hp": 20, "max_hp": 20},
+                 "hB": {"id": "hB", "name": "Bea", "pos": [3, 2], "alive": True, "hp": 20, "max_hp": 20}}
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hA", 0)
+    m["_master_acted"] = False; m["_master_acao_tipo"] = None
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hA", 1)
+    check("1º proc do turno em hA", r.players["hA"]["hp"] < 20)
+    m["_master_acted"] = False; m["_master_acao_tipo"] = None
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hB", 0)
+    m["_master_acted"] = False; m["_master_acao_tipo"] = None
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hB", 1)
+    check("2º proc do turno em hB é suprimido", r.players["hB"]["hp"] == 20)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
