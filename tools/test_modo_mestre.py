@@ -721,6 +721,52 @@ async def main():
     r.master_manual_event.set()
     await task
 
+    print("\n[32] ataques granulares — cargas, alvos distintos, recusa da 4ª")
+    r = playing_room_com_mestre()
+    golpes = []
+    async def fake_atk(mm, atk_def, target_obj):
+        golpes.append((atk_def.get("name"), target_obj["obj"]["id"])); return True
+    r._execute_one_monster_attack = fake_atk
+    m = {"id": "g1", "name": "Lobisomem", "hp": 30, "max_hp": 30, "pos": [2, 2],
+         "size": [1, 1], "movement": 4, "control_mode": "manual",
+         "_master_acted": False, "_master_bonus_acted": False, "_master_acao_tipo": None,
+         "master_attack_charges": {0: 2, 1: 1},
+         "attacks": [{"name": "Garras", "num_attacks": 2},
+                     {"name": "Mordida", "num_attacks": 1}]}
+    r.monsters = {"g1": m}; r.master_manual_mid = "g1"
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [2, 3], "alive": True},
+                 "hB": {"id": "hB", "name": "Bea", "pos": [3, 2], "alive": True}}
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hA", 0)
+    check("1ª garra saiu", golpes == [("Garras", "hA")])
+    check("carga 0 debitada", m["master_attack_charges"][0] == 1)
+    check("ação comprometida com ataque", m["_master_acao_tipo"] == "ataque")
+    check("ação principal marcada", m["_master_acted"] is True)
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hB", 0)
+    check("2ª garra em outro herói", golpes[-1] == ("Garras", "hB"))
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hA", 1)
+    check("mordida saiu", golpes[-1] == ("Mordida", "hA"))
+    check("todas as cargas gastas", m["master_attack_charges"] == {0: 0, 1: 0})
+    r._errs.clear()
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hA", 0)
+    check("4ª tentativa recusada", len(golpes) == 3)
+    check("erro explica as cargas", any("golpe" in e.lower() for e in r._errs))
+
+    print("\n[32b] attack_index ausente = índice 0 (cliente antigo)")
+    r = playing_room_com_mestre()
+    golpes2 = []
+    async def fake_atk2(mm, atk_def, target_obj):
+        golpes2.append(atk_def.get("name")); return True
+    r._execute_one_monster_attack = fake_atk2
+    m = {"id": "g1", "name": "Orc", "hp": 12, "max_hp": 12, "pos": [2, 2],
+         "size": [1, 1], "control_mode": "manual",
+         "_master_acted": False, "_master_acao_tipo": None,
+         "master_attack_charges": {0: 1},
+         "attacks": [{"name": "Machado", "num_attacks": 1}]}
+    r.monsters = {"g1": m}; r.master_manual_mid = "g1"
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [2, 3], "alive": True}}
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hA")
+    check("sem attack_index usa o 0", golpes2 == ["Machado"])
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

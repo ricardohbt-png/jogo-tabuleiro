@@ -12041,33 +12041,52 @@ class GameRoom:
             m["master_moves_left"] -= 1
         await self.push_state()
 
-    async def handle_mestre_atacar_monstro(self, pid, monster_id, target_id):
-        """Manual: o monstro da janela ataca um herói (1 ataque/turno)."""
+    async def handle_mestre_atacar_monstro(self, pid, monster_id, target_id, attack_index=None):
+        """Manual: o monstro da janela desfere UM golpe do índice pedido.
+        As cargas vêm de num_attacks (master_attack_charges) e podem ser
+        distribuídas entre alvos diferentes — mesmo total que a IA rola em
+        _monster_execute_attacks. Todos os golpes pertencem à mesma ação
+        principal: comprometê-la com ataques bloqueia habilidades de ação, e
+        vice-versa."""
         if pid != self.master_pid or monster_id != self.master_manual_mid:
             return
         m = self.monsters.get(monster_id)
         if not m or m["hp"] <= 0:
             return
-        if m.get("_master_acted"):
-            await self.send_to(pid, {"type": "error", "msg": "Este monstro já atacou neste turno."}); return
+        if m.get("_master_acted") and m.get("_master_acao_tipo") != "ataque":
+            await self.send_to(pid, {"type": "error", "msg": "Este monstro já usou a ação principal."}); return
+        try:
+            idx = 0 if attack_index is None else int(attack_index)
+        except (TypeError, ValueError):
+            idx = 0
+        cargas = m.setdefault("master_attack_charges", self._montar_cargas_ataque(m))
+        if cargas.get(idx, 0) <= 0:
+            await self.send_to(pid, {"type": "error", "msg": "Este golpe não tem mais cargas neste turno."}); return
+        ataques = m.get("attacks") or []
+        base = ataques[idx] if 0 <= idx < len(ataques) else {}
+        atk_def = dict(base)
+        if m.get("veneno_arma_ativo"):
+            atk_def["on_hit"] = m.get("veneno_arma_id")
         alvo = self.players.get(target_id)
         if not alvo or not alvo.get("alive"):
             await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
-        atk_def = dict((m.get("attacks") or [{}])[0])
-        if m.get("veneno_arma_ativo"):
-            atk_def["on_hit"] = m.get("veneno_arma_id")
         rng = atk_def.get("range")
         if rng:
             if max(abs(m["pos"][0] - alvo["pos"][0]), abs(m["pos"][1] - alvo["pos"][1])) > rng:
                 await self.send_to(pid, {"type": "error", "msg": "Alvo fora de alcance."}); return
         elif not self._is_adjacent_to_monster(alvo["pos"], m):
             await self.send_to(pid, {"type": "error", "msg": "Alvo não está adjacente."}); return
+        cargas[idx] = cargas.get(idx, 0) - 1
         m["_master_acted"] = True
+        m["_master_acao_tipo"] = "ataque"
         m["_ja_executou_acao"] = True
+        m["_master_touched"] = True
         hit = await self._execute_one_monster_attack(m, atk_def, {"kind": "player", "obj": alvo})
+        m.pop("_golpe_brutal_ativo", None)   # Golpe Brutal vale para um golpe só
         if hit and m.get("veneno_arma_ativo"):
             m["veneno_arma_ativo"] = False
             m.pop("equipment_poison", None)
+        self._reiniciar_timer_manual()
         await self.push_state()
 
     async def handle_mestre_encerrar_monstro(self, pid, monster_id):
@@ -24418,7 +24437,7 @@ async def handler(ws):
                     if room: await room.handle_mestre_mover_monstro_para(pid, msg.get("monster_id"), msg.get("tx"), msg.get("ty"))
 
                 elif t == "mestre_atacar_monstro":
-                    if room: await room.handle_mestre_atacar_monstro(pid, msg.get("monster_id"), msg.get("target_id"))
+                    if room: await room.handle_mestre_atacar_monstro(pid, msg.get("monster_id"), msg.get("target_id"), msg.get("attack_index"))
                 elif t == "mestre_usar_habilidade":
                     if room: await room.handle_mestre_usar_habilidade(
                         pid, msg.get("monster_id"), msg.get("ability_id"), msg.get("target_id"),
