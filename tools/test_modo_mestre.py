@@ -684,6 +684,17 @@ async def main():
     check("andou nos 3 turnos (não trava após o 1º)", andou_por_turno == [mv, mv, mv])
     check("percorreu movement × 3 casas no total", m["pos"][0] == 1 + mv * 3)
 
+    print("\n[30] _custo_acao_ability — traduz action_type em custo")
+    r = playing_room_com_mestre()
+    check("acao → principal",      r._custo_acao_ability({"action_type": "acao"}) == "principal")
+    check("magia → principal",     r._custo_acao_ability({"action_type": "magia"}) == "principal")
+    check("ataque → principal",    r._custo_acao_ability({"action_type": "ataque"}) == "principal")
+    check("acao_bonus → bonus",    r._custo_acao_ability({"action_type": "acao_bonus"}) == "bonus")
+    check("acao_livre → livre",    r._custo_acao_ability({"action_type": "acao_livre"}) == "livre")
+    check("desconhecido → principal", r._custo_acao_ability({"action_type": "xyz"}) == "principal")
+    check("sem action_type → principal", r._custo_acao_ability({}) == "principal")
+    check("None → principal",      r._custo_acao_ability(None) == "principal")
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

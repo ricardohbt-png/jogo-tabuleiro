@@ -20775,6 +20775,22 @@ class GameRoom:
         alvo = min(vivos, key=lambda t: _distancia_chebyshev(m["pos"], t["obj"]["pos"]))
         return await self._usar_amaldicoar(m, ability, alvo)
 
+    # Custo de ação de uma habilidade, derivado do action_type da própria ficha.
+    # "principal" é o default seguro: uma habilidade sem classificação nunca sai
+    # de graça.
+    _CUSTO_POR_ACTION_TYPE = {
+        "acao":       "principal",
+        "magia":      "principal",
+        "ataque":     "principal",
+        "acao_bonus": "bonus",
+        "acao_livre": "livre",
+    }
+
+    def _custo_acao_ability(self, ability):
+        """'principal' | 'bonus' | 'livre' — o que esta habilidade consome."""
+        at = (ability or {}).get("action_type")
+        return self._CUSTO_POR_ACTION_TYPE.get(at, "principal")
+
     def _habilidade_ativavel_manual(self, ability):
         """O mestre ativa: (a) habilidades save+dc (via _use_monster_ability) OU
         (b) habilidades de editor herói/guilda (self-buff, via _ativar_editor_ability).
