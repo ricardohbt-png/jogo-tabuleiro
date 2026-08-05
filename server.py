@@ -402,6 +402,7 @@ def _load_city_map_points():
                     if str(point.get("type") or "") in {"ferreiro", "mercador", "templo", "taverna", "guilda", "dungeon", "caravana", "cena"}:
                         item["type"] = point["type"]
                     if isinstance(point.get("name"), str): item["name"] = point["name"][:60]
+                    if isinstance(point.get("emoji"), str): item["emoji"] = point["emoji"][:8]
                     # O mapa é carregado antes das cenas; portanto só preserva
                     # a referência válida aqui. A existência da cena é resolvida
                     # depois, quando CITY_SCENES estiver disponível.
