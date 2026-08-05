@@ -1309,21 +1309,37 @@ async def main():
     r = playing_room_com_mestre()
     r.connections.pop("m1", None)          # mestre desconectado
     check("_mestre_ativo() falso", r._mestre_ativo() is False)
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [2, 3], "alive": True, "hp": 10}}
     m = {"id": "g1", "name": "Ogro", "hp": 25, "pos": [2, 2], "size": [1, 1],
-         "control_mode": "auto", "special_abilities": [], "ability_cooldowns": {}}
+         "control_mode": "auto", "master_moves_left": 6,
+         # ability real (save+dc → ativável) p/ que só a guarda impeça o efeito
+         "special_abilities": [{"id": "petrificar", "name": "Petrificar",
+                                 "action_type": "acao", "save": "fort", "dc": 13}],
+         "ability_cooldowns": {}}
     r.monsters = {"g1": m}
     r.master_manual_mid = None
     r._errs.clear()
     await r.handle_mestre_atacar_monstro("m1", "g1", "hA", 0)
-    await r.handle_mestre_usar_habilidade("m1", "g1", "golpe_brutal", None)
+    check("atacar_monstro não age fora da janela",
+          "master_attack_charges" not in m and m.get("_master_acted") is None)
+    # "petrificar" é save+dc (_habilidade_ativavel_manual aceita) e hA está viva
+    # e adjacente ([2,3]×[2,2]) — só a guarda (monster_id != master_manual_mid)
+    # impede o efeito; sem isso _master_acted seria setado.
+    await r.handle_mestre_usar_habilidade("m1", "g1", "petrificar", "hA")
+    check("usar_habilidade (ability ativável de verdade) não age fora da janela",
+          m.get("_master_acted") is None)
+    # master_moves_left=6 garante que o orçamento (budget<=0) não mascare a guarda.
     await r.handle_mestre_mover_monstro_para("m1", "g1", 3, 2)
-    check("nenhum handler do mestre age fora da janela",
-          m["pos"] == [2, 2] and "master_attack_charges" not in m
-          and m.get("_master_acted") is None)
+    check("mover_monstro_para (com orçamento de verdade) não move fora da janela",
+          m["pos"] == [2, 2] and m["master_moves_left"] == 6)
 
-    print("\n[40b] invariante — mesmo, para usar_item/encerrar/set_modo/implantar_reforco")
-    # handle_mestre_usar_item: guarda `monster_id != master_manual_mid` (None aqui) —
-    # mesmo padrão de atacar/mover/usar_habilidade acima.
+    print("\n[40b] invariante — mesmo, para usar_item/set_modo/set_alvo/implantar_reforco")
+    # Nuance sobre os handlers guardados por `monster_id != master_manual_mid`
+    # (usar_item aqui, e atacar/mover/usar_habilidade acima): quem realmente
+    # barra o mestre OFFLINE é _on_master_disconnect, que fecha a janela
+    # (master_manual_mid vira None) — a guarda em si só recusa um monstro que
+    # não é o da janela aberta. Isso fica explícito no subteste dedicado de
+    # encerrar_monstro logo abaixo: janela aberta em g1, pedido de encerrar g2.
     r = playing_room_com_mestre()
     r.connections.pop("m1", None)
     m = {"id": "g1", "name": "Ogro", "hp": 25, "pos": [2, 2], "size": [1, 1],
@@ -1336,12 +1352,17 @@ async def main():
           m["hp"] == 25 and len(m["equipment_consumables"]) == 1
           and m.get("_master_acted") is None)
 
-    # handle_mestre_encerrar_monstro: mesma guarda `monster_id != master_manual_mid`.
-    # master_manual_mid já é None; a chamada não deve setar mais nada nem lançar.
-    r.master_manual_event = None
-    await r.handle_mestre_encerrar_monstro("m1", "g1")
-    check("encerrar_monstro não alterou master_manual_mid (já None)",
-          r.master_manual_mid is None)
+    # handle_mestre_encerrar_monstro: contrato real da guarda é recusar um
+    # monstro que NÃO é o da janela aberta (não "recusar mestre offline" —
+    # isso é papel de _on_master_disconnect). Janela aberta em g1; pedimos
+    # para encerrar g2 — precisa ser recusado (evento intocado, mid intocado).
+    r2 = playing_room_com_mestre()
+    r2.master_manual_mid = "g1"
+    r2.master_manual_event = asyncio.Event()
+    r2.monsters = {"g1": {"id": "g1", "hp": 10}, "g2": {"id": "g2", "hp": 10}}
+    await r2.handle_mestre_encerrar_monstro("m1", "g2")
+    check("encerrar_monstro recusa monstro fora da janela aberta",
+          r2.master_manual_mid == "g1" and not r2.master_manual_event.is_set())
 
     # handle_mestre_set_modo: guarda `pid != master_pid or not _mestre_ativo()`.
     # master_pid sobrevive à queda do mestre durante a partida (só
@@ -1360,11 +1381,12 @@ async def main():
 
     # handle_mestre_implantar_reforco: guarda `pid != master_pid or not
     # self._mestre_ativo()` — bloqueia mesmo com pid == master_pid, pois
-    # _mestre_ativo() é falso.
-    antes = dict(r.monsters)
+    # _mestre_ativo() é falso. Reserva com estoque real (>0) garante que a
+    # falta de reforço não mascare a guarda.
+    r.master_reserve = {"goblin": 2}
     await r.handle_mestre_implantar_reforco("m1", "goblin", 4, 4)
-    check("implantar_reforco não criou monstro (guarda _mestre_ativo)",
-          set(r.monsters.keys()) == set(antes.keys()))
+    check("implantar_reforco não criou monstro nem gastou reserva",
+          len(r.monsters) == 1 and r.master_reserve["goblin"] == 2)
 
     print("\n[40c] contraprova — com mestre CONECTADO, set_modo/set_alvo agem de verdade")
     # Sem isto, uma guarda futura que rejeitasse TUDO ainda deixaria [40b] verde.
