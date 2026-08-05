@@ -864,6 +864,40 @@ async def main():
     await r.handle_mestre_atacar_monstro("m1", "g1", "hB", 1)
     check("2º proc do turno em hB é suprimido", r.players["hB"]["hp"] == 20)
 
+    print("\n[33] economia por action_type — bônus e livre não gastam a principal")
+    r = playing_room_com_mestre()
+    async def fake_use(mm, ability, target_obj): return True
+    r._use_monster_ability = fake_use
+    ab_bonus = {"id": "grito", "name": "Grito", "action_type": "acao_bonus", "save": "vontade", "dc": 10}
+    ab_livre = {"id": "farejar", "name": "Farejar", "action_type": "acao_livre", "save": "fort", "dc": 10}
+    ab_acao  = {"id": "petrificar", "name": "Petrificar", "action_type": "acao", "save": "fort", "dc": 13}
+    m = {"id": "g1", "name": "Coisa", "hp": 20, "pos": [2, 2], "size": [1, 1],
+         "control_mode": "manual", "_master_acted": False, "_master_bonus_acted": False,
+         "_master_acao_tipo": None, "attacks": [{"name": "garra", "num_attacks": 1}],
+         "master_attack_charges": {0: 1},
+         "special_abilities": [ab_bonus, ab_livre, ab_acao]}
+    r.monsters = {"g1": m}; r.master_manual_mid = "g1"
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [2, 3], "alive": True}}
+    await r.handle_mestre_usar_habilidade("m1", "g1", "farejar", "hA")
+    check("acao_livre não gasta nada", m["_master_acted"] is False and m["_master_bonus_acted"] is False)
+    await r.handle_mestre_usar_habilidade("m1", "g1", "grito", "hA")
+    check("acao_bonus gasta só a bônus", m["_master_bonus_acted"] is True and m["_master_acted"] is False)
+    r._errs.clear()
+    await r.handle_mestre_usar_habilidade("m1", "g1", "grito", "hA")
+    check("2ª bônus recusada", any("bônus" in e.lower() or "bonus" in e.lower() for e in r._errs))
+    await r.handle_mestre_usar_habilidade("m1", "g1", "petrificar", "hA")
+    check("acao gasta a principal", m["_master_acted"] is True)
+    check("tipo registrado", m["_master_acao_tipo"] == "habilidade")
+
+    print("\n[33b] atacar depois de habilidade de ação é recusado")
+    r._errs.clear()
+    golpes = []
+    async def fake_atk(mm, atk_def, target_obj): golpes.append(1); return True
+    r._execute_one_monster_attack = fake_atk
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hA", 0)
+    check("ataque após magia recusado", golpes == [])
+    check("carga preservada", m["master_attack_charges"][0] == 1)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

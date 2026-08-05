@@ -20620,7 +20620,7 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error", "msg": "Alvo fora de alcance."}); return
             if not self._tem_linha_de_visao(m["pos"], alvo["pos"]):
                 await self.send_to(pid, {"type": "error", "msg": "Uma parede bloqueia o arremesso."}); return
-            m["_master_acted"] = True
+            self._debitar_acao_mestre(m, "principal", "item")
             m["_ja_executou_acao"] = True
             await self._monster_throw_item(m, {"kind": "player", "obj": alvo}, item)
             if item in bag:
@@ -20637,7 +20637,7 @@ class GameRoom:
             if not magia or sid not in GRIMORIO_IMPLEMENTADAS:
                 await self.send_to(pid, {"type": "error", "msg": "Magia do pergaminho não disponível."}); return
             data = {"target_id": target_id, "tx": tx, "ty": ty}
-            m["_master_acted"] = True
+            self._debitar_acao_mestre(m, "principal", "item")
             m["_ja_executou_acao"] = True
             await self._executar_magia_grimorio(m, magia, data)
             if item in bag:
@@ -20683,7 +20683,7 @@ class GameRoom:
             m["oculto_item"] = True
             await self.gm_say(f"🕯️ **{m.get('name', 'O monstro')}** usa **{item['name']}** e fica oculto.")
         if not veneno_livre:
-            m["_master_bonus_acted"] = True
+            self._debitar_acao_mestre(m, "bonus", "item")
         if removed and item in bag:
             bag.remove(item)
         await self.push_state()
@@ -20858,6 +20858,18 @@ class GameRoom:
         at = (ability or {}).get("action_type")
         return self._CUSTO_POR_ACTION_TYPE.get(at, "principal")
 
+    def _debitar_acao_mestre(self, m, custo, tipo):
+        """Debita o custo de uma ação do mestre e registra em que ela foi gasta.
+        'livre' não debita nada. Marca _master_touched, que o relógio e o
+        timeout usam para saber que o mestre realmente agiu neste turno."""
+        m["_master_touched"] = True
+        if custo == "principal":
+            m["_master_acted"] = True
+            m["_master_acao_tipo"] = tipo
+        elif custo == "bonus":
+            m["_master_bonus_acted"] = True
+        self._reiniciar_timer_manual()
+
     def _habilidade_ativavel_manual(self, ability):
         """O mestre ativa: (a) habilidades save+dc (via _use_monster_ability) OU
         (b) habilidades de editor herói/guilda (self-buff, via _ativar_editor_ability).
@@ -20929,17 +20941,20 @@ class GameRoom:
         m = self.monsters.get(monster_id)
         if not m or m["hp"] <= 0:
             return
-        if m.get("_master_acted"):
-            await self.send_to(pid, {"type": "error", "msg": "Este monstro já agiu neste turno."}); return
         ability = next((a for a in m.get("special_abilities", []) if a.get("id") == ability_id), None)
         if not self._habilidade_ativavel_manual(ability):
             await self.send_to(pid, {"type": "error", "msg": "Habilidade não ativável manualmente (IA apenas)."}); return
+        custo = self._custo_acao_ability(ability)
+        if custo == "principal" and m.get("_master_acted"):
+            await self.send_to(pid, {"type": "error", "msg": "Este monstro já agiu neste turno."}); return
+        if custo == "bonus" and m.get("_master_bonus_acted"):
+            await self.send_to(pid, {"type": "error", "msg": "Este monstro já usou a ação bônus."}); return
         # Ramo (b): habilidade de editor (herói/guilda) — self-buff, sem alvo.
         if ability_id == "mestre_dos_mortos":
             invocados = await self._conjurar_mestre_dos_mortos(m, tipo_esqueleto)
             if not invocados:
                 await self.send_to(pid, {"type": "error", "msg": "Mestre dos Mortos só pode ser usado na primeira ação e requer espaço para invocar."}); return
-            m["_master_acted"] = True
+            self._debitar_acao_mestre(m, custo, "habilidade")
             await self.push_state(); return
         if ability_id == "sopro_dragao":
             alvo = self.players.get(target_id)
@@ -20949,7 +20964,7 @@ class GameRoom:
             targets += [{"kind": "animado", "obj": a} for a in self._all_animados() if a.get("vida_atual", 0) > 0 and not a.get("dominado_por_monstro")]
             if not await self._usar_sopro_dragao(m, ability, {"kind": "player", "obj": alvo}, targets):
                 await self.send_to(pid, {"type": "error", "msg": "Alvo fora da área, ou sopro sem usos/em recarga."}); return
-            m["_master_acted"] = True; m["_ja_executou_acao"] = True
+            self._debitar_acao_mestre(m, custo, "habilidade"); m["_ja_executou_acao"] = True
             await self.push_state(); return
         if ability_id == "amaldicoar_monstro":
             alvo = self.players.get(target_id)
@@ -20957,12 +20972,12 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
             if not await self._usar_amaldicoar(m, ability, {"kind": "player", "obj": alvo}):
                 await self.send_to(pid, {"type": "error", "msg": "Alvo fora do alcance, ou maldição sem usos/em recarga."}); return
-            m["_master_acted"] = True; m["_ja_executou_acao"] = True
+            self._debitar_acao_mestre(m, custo, "habilidade"); m["_ja_executou_acao"] = True
             await self.push_state(); return
         if not (ability.get("save") is not None and ability.get("dc") is not None):
             if not self._ativar_editor_ability(m, ability):
                 await self.send_to(pid, {"type": "error", "msg": "Habilidade sem usos ou em recarga."}); return
-            m["_master_acted"] = True
+            self._debitar_acao_mestre(m, custo, "habilidade")
             m["_ja_executou_acao"] = True
             await self.gm_say(f"✦ **{m.get('name', 'O monstro')}** ativa **{ability.get('name', ability['id'])}**!")
             await self.push_state(); return
@@ -20979,7 +20994,7 @@ class GameRoom:
         used = await self._use_monster_ability(m, ability, {"kind": "player", "obj": alvo})
         if not used:
             await self.send_to(pid, {"type": "error", "msg": "Habilidade sem usos ou em recarga."}); return
-        m["_master_acted"] = True
+        self._debitar_acao_mestre(m, custo, "habilidade")
         m["_ja_executou_acao"] = True
         await self.push_state()
 
