@@ -1060,7 +1060,11 @@ async def main():
     r.master_manual_event.set()
     await task
     check("bônus não consumido some ao abrir nova janela", not m3.get("_golpe_brutal_ativo"))
-    check("recarga do armamento anterior é preservada", m3["ability_cooldowns"]["golpe_brutal"] == cd_antes)
+    # A janela seguinte roda o upkeep de início de turno (Task 8): a recarga
+    # anda 1 normalmente (não é resetada nem congelada) — não seria mais
+    # "preservada" byte-a-byte, e sim decrementada como o tempo real exige.
+    check("recarga anda 1 (upkeep de início de turno)",
+          m3["ability_cooldowns"]["golpe_brutal"] == cd_antes - 1)
 
     print("\n[36] Desaparecer nas Sombras — extração compartilhada")
     r = playing_room_com_mestre()
@@ -1090,6 +1094,57 @@ async def main():
     await r.handle_mestre_usar_habilidade("m1", "g1", "desaparecer_nas_sombras", None)
     check("oculto de novo", m.get("oculto_sombras") is True)
     check("ação principal intacta", m["_master_acted"] is False)
+
+    print("\n[36c] Upkeep de início de turno no Manual (recarga + oculto)")
+    r = playing_room_com_mestre()
+    m = {"id": "g1", "name": "Bugbear", "hp": 20, "pos": [2, 2], "size": [1, 1],
+         "control_mode": "manual",
+         "ability_cooldowns": {"golpe_brutal": 3, "desaparecer_nas_sombras": 5},
+         "monster_ability_cooldowns": {"algo": 2}}
+    r.monsters = {"g1": m}
+    task = asyncio.create_task(r._master_manual_window(m))
+    await asyncio.sleep(0)
+    r.master_manual_event.set()
+    await task
+    check("golpe_brutal andou p/ 2", m["ability_cooldowns"]["golpe_brutal"] == 2)
+    check("desaparecer_nas_sombras andou p/ 4", m["ability_cooldowns"]["desaparecer_nas_sombras"] == 4)
+    check("monster_ability_cooldowns também andou", m["monster_ability_cooldowns"]["algo"] == 1)
+    task = asyncio.create_task(r._master_manual_window(m))
+    await asyncio.sleep(0)
+    r.master_manual_event.set()
+    await task
+    check("golpe_brutal andou p/ 1", m["ability_cooldowns"]["golpe_brutal"] == 1)
+    check("desaparecer_nas_sombras andou p/ 3", m["ability_cooldowns"]["desaparecer_nas_sombras"] == 3)
+
+    m2 = {"id": "g2", "name": "Bug2", "hp": 20, "pos": [3, 3], "size": [1, 1],
+          "control_mode": "manual", "ability_cooldowns": {"golpe_brutal": 0}}
+    r.monsters = {"g2": m2}
+    task = asyncio.create_task(r._master_manual_window(m2))
+    await asyncio.sleep(0)
+    r.master_manual_event.set()
+    await task
+    check("recarga não fica negativa", m2["ability_cooldowns"]["golpe_brutal"] == 0)
+
+    m3 = {"id": "g3", "name": "Bug3", "hp": 20, "pos": [4, 4], "size": [1, 1],
+          "control_mode": "manual", "special_abilities": [ab_ds], "ability_cooldowns": {}}
+    r.monsters = {"g3": m3}
+    r._em_escuridao = lambda mm: True
+    check("ativou p/ testar expiração", await r._ativar_desaparecer_sombras(m3) is True)
+    check("oculto setado", m3.get("oculto_sombras") is True)
+    task = asyncio.create_task(r._master_manual_window(m3))
+    await asyncio.sleep(0)
+    r.master_manual_event.set()
+    await task
+    check("oculto_sombras expira na janela seguinte", "oculto_sombras" not in m3)
+
+    print("\n[36c] _expirar_oculto_sombras — comportamento da IA preservado")
+    m4 = {"id": "g4", "name": "Bug4"}
+    m4["oculto_sombras"] = True
+    await r._expirar_oculto_sombras(m4)
+    check("flag some quando presente", "oculto_sombras" not in m4)
+    m5 = {"id": "g5", "name": "Bug5"}
+    await r._expirar_oculto_sombras(m5)
+    check("sem flag não quebra", "oculto_sombras" not in m5)
 
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)

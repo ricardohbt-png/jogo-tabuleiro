@@ -12211,6 +12211,7 @@ class GameRoom:
         # pra um golpe futuro, possivelmente sob a IA. A recarga só bloqueia
         # REarmar, não a consumação; por isso a limpeza é aqui, não lá.
         m.pop("_golpe_brutal_ativo", None)
+        await self._upkeep_inicio_turno_manual(m)
         self.master_manual_event = asyncio.Event()
         await self.push_state()
         self.master_manual_timer = asyncio.create_task(self._master_manual_timeout(m["id"]))
@@ -22566,6 +22567,24 @@ class GameRoom:
             f"distância e difícil de acertar (corpo a corpo: -4) até seu próximo turno!")
         return True
 
+    async def _expirar_oculto_sombras(self, m):
+        """O ocultamento dura até o próximo turno do monstro. Chamado no início
+        do turno pelos dois caminhos: a IA do bugbear e a janela do Manual."""
+        if m.pop("oculto_sombras", False):
+            await self.gm_say(f"👁️ **{m['name']}** reaparece das sombras.")
+
+    async def _upkeep_inicio_turno_manual(self, m):
+        """Upkeep de início de turno que o monstro em Manual pularia por não
+        passar pela gm_phase: expira o ocultamento e faz as recargas andarem.
+        Um monstro passa por gm_phase OU por esta janela num turno, nunca pelos
+        dois, então a recarga anda exatamente uma vez por turno em qualquer modo."""
+        await self._expirar_oculto_sombras(m)
+        for chave in ("ability_cooldowns", "monster_ability_cooldowns"):
+            cds = m.get(chave)
+            if cds:
+                for k in list(cds):
+                    cds[k] = max(0, cds[k] - 1)
+
     async def _tentar_desaparecer_sombras(self, m, target):
         """Ação livre da IA após o Manto: ativa e avança até 3 quadrados no alvo."""
         if not await self._ativar_desaparecer_sombras(m):
@@ -22582,8 +22601,7 @@ class GameRoom:
         (ação livre). Nos turnos seguintes ataca da escuridão, ganhando o ataque extra
         do Caçador das Trevas e o bônus do Ataque das Sombras."""
         # InÃ­cio do turno: o oculto de Desaparecer expira e o cooldown decrementa.
-        if m.pop("oculto_sombras", False):
-            await self.gm_say(f"👁️ **{m['name']}** reaparece das sombras.")
+        await self._expirar_oculto_sombras(m)
         cds = m.get("ability_cooldowns")
         if cds:
             for k in list(cds):
