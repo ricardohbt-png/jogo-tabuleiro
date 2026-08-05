@@ -12206,6 +12206,11 @@ class GameRoom:
         m["_master_furia_hits"] = {}
         m["_master_furia_dada"] = False
         m.pop("_master_touched", None)
+        # Um Golpe Brutal armado (_ativar_golpe_brutal) e NÃO consumido por um
+        # golpe não pode sobreviver à janela que o armou — senão o bônus vaza
+        # pra um golpe futuro, possivelmente sob a IA. A recarga só bloqueia
+        # REarmar, não a consumação; por isso a limpeza é aqui, não lá.
+        m.pop("_golpe_brutal_ativo", None)
         self.master_manual_event = asyncio.Event()
         await self.push_state()
         self.master_manual_timer = asyncio.create_task(self._master_manual_timeout(m["id"]))

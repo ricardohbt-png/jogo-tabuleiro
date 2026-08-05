@@ -1046,6 +1046,22 @@ async def main():
     check("golpe saiu com o bônus ativo", golpes == [True])
     check("bônus limpo após o golpe", m.get("_golpe_brutal_ativo") is None)
 
+    print("\n[35c] Golpe Brutal armado e NÃO consumido não sobrevive à janela")
+    m3 = {"id": "g3", "name": "Ogro3", "hp": 25, "pos": [3, 3], "size": [1, 1],
+          "control_mode": "manual", "attacks": [{"name": "Clava", "num_attacks": 1}],
+          "special_abilities": [ab_gb], "ability_cooldowns": {}}
+    r.monsters = {"g3": m3}
+    ok = await r._ativar_golpe_brutal(m3)
+    check("ativou", ok is True)
+    check("armou o bônus", m3.get("_golpe_brutal_ativo") is True)
+    cd_antes = m3["ability_cooldowns"]["golpe_brutal"]
+    task = asyncio.create_task(r._master_manual_window(m3))
+    await asyncio.sleep(0)
+    r.master_manual_event.set()
+    await task
+    check("bônus não consumido some ao abrir nova janela", not m3.get("_golpe_brutal_ativo"))
+    check("recarga do armamento anterior é preservada", m3["ability_cooldowns"]["golpe_brutal"] == cd_antes)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
