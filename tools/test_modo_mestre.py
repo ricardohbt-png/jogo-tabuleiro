@@ -1243,6 +1243,67 @@ async def main():
     r.master_manual_event.set()
     await task
 
+    print("\n[39] veneno e Réquiem alcançam o monstro do mestre")
+    r = playing_room_com_mestre()
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [5, 5], "alive": True, "hp": 10}}
+    ticou = {"veneno": 0, "requiem": 0}
+    async def fake_veneno(mm): ticou["veneno"] += 1
+    async def fake_requiem(mm): ticou["requiem"] += 1
+    r._processar_venenos_turno = fake_veneno
+    r._processar_requiem_turno = fake_requiem
+    m = {"id": "g1", "name": "Orc", "type": "goblin", "hp": 10, "max_hp": 10,
+         "pos": [2, 2], "size": [1, 1], "movement": 4, "control_mode": "manual",
+         "attacks": [{"name": "Machado", "num_attacks": 1}]}
+    r.monsters = {"g1": m}
+    task = asyncio.create_task(r._master_manual_window(m))
+    await asyncio.sleep(0)
+    check("veneno ticou no Manual", ticou["veneno"] == 1)
+    check("Réquiem ticou no Manual", ticou["requiem"] == 1)
+    r.master_manual_event.set()
+    await task
+
+    print("\n[39b] paridade: recarga NÃO anda no turno perdido")
+    r = playing_room_com_mestre()
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [5, 5], "alive": True, "hp": 10}}
+    m = {"id": "g1", "name": "Estátua", "type": "goblin", "hp": 10, "max_hp": 10,
+         "pos": [2, 2], "size": [1, 1], "movement": 4, "control_mode": "manual",
+         "petrificado": True, "petrificado_rodadas": 2,
+         "ability_cooldowns": {"golpe_brutal": 3},
+         "monster_ability_cooldowns": {"hero_warrior_mira_certeira": 2}}
+    r.monsters = {"g1": m}
+    await r._master_manual_window(m)
+    check("ability_cooldowns intacto no turno perdido", m["ability_cooldowns"]["golpe_brutal"] == 3)
+    check("monster_ability_cooldowns intacto", m["monster_ability_cooldowns"]["hero_warrior_mira_certeira"] == 2)
+
+    print("\n[39c] recarga anda no turno normal (não regrediu)")
+    r = playing_room_com_mestre()
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [5, 5], "alive": True, "hp": 10}}
+    m = {"id": "g1", "name": "Orc", "type": "goblin", "hp": 10, "max_hp": 10,
+         "pos": [2, 2], "size": [1, 1], "movement": 4, "control_mode": "manual",
+         "attacks": [{"name": "Machado", "num_attacks": 1}],
+         "ability_cooldowns": {"golpe_brutal": 3}}
+    r.monsters = {"g1": m}
+    task = asyncio.create_task(r._master_manual_window(m))
+    await asyncio.sleep(0)
+    check("recarga andou no turno normal", m["ability_cooldowns"]["golpe_brutal"] == 2)
+    r.master_manual_event.set()
+    await task
+
+    print("\n[39d] paridade: rede (perde_turno) também fecha a janela do Manual")
+    r = playing_room_com_mestre()
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [5, 5], "alive": True, "hp": 10}}
+    # Ao contrário do petrificado ([38]/[39b]), o `perde_turno` não é tocado por
+    # nenhum processador do prólogo (_processar_venenos_turno só mexe em
+    # petrificado_rodadas/cego_rodadas) — então o dict mínimo de [38b]/[39c]
+    # já basta, sem campo extra.
+    m = {"id": "g1", "name": "Preso na rede", "type": "goblin", "hp": 10, "max_hp": 10,
+         "pos": [2, 2], "size": [1, 1], "movement": 4, "control_mode": "manual",
+         "perde_turno": True}
+    r.monsters = {"g1": m}
+    await r._master_manual_window(m)              # não bloqueia: o turno foi consumido
+    check("não setou master_manual_mid (rede)", r.master_manual_mid is None)
+    check("flag perde_turno consumido", m["perde_turno"] is False)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
