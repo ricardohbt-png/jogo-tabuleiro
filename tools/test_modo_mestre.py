@@ -1343,18 +1343,20 @@ async def main():
     check("encerrar_monstro não alterou master_manual_mid (já None)",
           r.master_manual_mid is None)
 
-    # handle_mestre_set_modo: guarda SÓ `pid != master_pid` — NÃO checa
-    # _mestre_ativo() nem master_manual_mid. Como o mestre desconectado mantém
-    # master_pid setado (só é limpo em disconnect na fase 'lobby' — ver
-    # `finally` do handler de conexão, linha ~24955), pid=="m1"==master_pid
-    # ainda bate aqui mesmo com o mestre offline: este handler NÃO tem defesa
-    # equivalente a `_mestre_ativo()` (ao contrário de implantar_reforco, que
-    # explicitamente faz `not self._mestre_ativo()`). Documentamos o achado:
-    # se este check falhar, é o defeito real (guarda ausente), não erro de teste.
+    # handle_mestre_set_modo: guarda `pid != master_pid or not _mestre_ativo()`.
+    # master_pid sobrevive à queda do mestre durante a partida (só
+    # self.connections perde a entrada), então sem o `_mestre_ativo()` a
+    # checagem de pid sozinha não bastaria — é essa checagem que bloqueia aqui.
     r.monsters["g1"]["control_mode"] = "auto"
     await r.handle_mestre_set_modo("m1", ["g1"], "manual")
-    check("set_modo não muda control_mode sem mestre ativo (defesa ausente — ver comentário)",
+    check("set_modo não muda control_mode sem mestre ativo",
           r.monsters["g1"]["control_mode"] == "auto")
+
+    # handle_mestre_set_alvo: mesma guarda; escreve master_target_id no monstro.
+    r.monsters["g1"].pop("master_target_id", None)
+    await r.handle_mestre_set_alvo("m1", ["g1"], "hA")
+    check("set_alvo não seta master_target_id sem mestre ativo",
+          "master_target_id" not in r.monsters["g1"])
 
     # handle_mestre_implantar_reforco: guarda `pid != master_pid or not
     # self._mestre_ativo()` — bloqueia mesmo com pid == master_pid, pois
@@ -1363,6 +1365,18 @@ async def main():
     await r.handle_mestre_implantar_reforco("m1", "goblin", 4, 4)
     check("implantar_reforco não criou monstro (guarda _mestre_ativo)",
           set(r.monsters.keys()) == set(antes.keys()))
+
+    print("\n[40c] contraprova — com mestre CONECTADO, set_modo/set_alvo agem de verdade")
+    # Sem isto, uma guarda futura que rejeitasse TUDO ainda deixaria [40b] verde.
+    r = playing_room_com_mestre()          # mestre "m1" conectado (r.connections["m1"] setado)
+    check("_mestre_ativo() verdadeiro", r._mestre_ativo() is True)
+    m = {"id": "g1", "name": "Ogro", "hp": 25, "pos": [2, 2], "size": [1, 1],
+         "control_mode": "auto"}
+    r.monsters = {"g1": m}
+    await r.handle_mestre_set_modo("m1", ["g1"], "manual")
+    check("set_modo muda control_mode com mestre ativo", m["control_mode"] == "manual")
+    await r.handle_mestre_set_alvo("m1", ["g1"], "hA")
+    check("set_alvo seta master_target_id com mestre ativo", m.get("master_target_id") == "hA")
 
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)

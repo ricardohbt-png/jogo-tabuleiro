@@ -11985,8 +11985,11 @@ class GameRoom:
         return {"heroes": 4, "level": 1}
 
     async def handle_mestre_set_modo(self, pid, monster_ids, modo):
-        """Mestre troca o modo de controle de 1+ monstros (Seleção em Lote)."""
-        if pid != self.master_pid:
+        """Mestre troca o modo de controle de 1+ monstros (Seleção em Lote).
+        master_pid sobrevive à queda do mestre durante a partida — só
+        self.connections perde a entrada — por isso a guarda pareia o pid com
+        _mestre_ativo(), como fazem os demais pontos de entrada do mestre."""
+        if pid != self.master_pid or not self._mestre_ativo():
             return
         if self.phase != "playing":
             return
@@ -12002,7 +12005,7 @@ class GameRoom:
 
     async def handle_mestre_set_alvo(self, pid, monster_ids, target_id):
         """Mestre atribui um alvo (herói) a 1+ monstros em modo Semi."""
-        if pid != self.master_pid:
+        if pid != self.master_pid or not self._mestre_ativo():
             return
         if self.phase != "playing":
             return
