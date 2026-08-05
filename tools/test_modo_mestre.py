@@ -1152,7 +1152,8 @@ async def main():
     # Os processadores de efeito são neutralizados aqui de propósito: esta seção
     # testa a RAMIFICAÇÃO do prólogo (age × perde o turno), não o que cada efeito
     # faz. Sem os stubs, um dict de monstro mínimo pode estourar dentro deles por
-    # falta de campos. A seção [39] prova que eles são de fato chamados.
+    # falta de campos. A seção [39] prova que veneno e Réquiem são de fato
+    # chamados pela janela do Manual.
     async def _noop(*a, **k): pass
     r._processar_mare_viva_turno = _noop
     r._processar_venenos_turno = _noop
