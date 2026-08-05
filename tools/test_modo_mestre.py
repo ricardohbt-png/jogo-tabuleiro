@@ -1305,6 +1305,65 @@ async def main():
     check("não setou master_manual_mid (rede)", r.master_manual_mid is None)
     check("flag perde_turno consumido", m["perde_turno"] is False)
 
+    print("\n[40] invariante — sem mestre, monstro auto não vê nada do Manual")
+    r = playing_room_com_mestre()
+    r.connections.pop("m1", None)          # mestre desconectado
+    check("_mestre_ativo() falso", r._mestre_ativo() is False)
+    m = {"id": "g1", "name": "Ogro", "hp": 25, "pos": [2, 2], "size": [1, 1],
+         "control_mode": "auto", "special_abilities": [], "ability_cooldowns": {}}
+    r.monsters = {"g1": m}
+    r.master_manual_mid = None
+    r._errs.clear()
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hA", 0)
+    await r.handle_mestre_usar_habilidade("m1", "g1", "golpe_brutal", None)
+    await r.handle_mestre_mover_monstro_para("m1", "g1", 3, 2)
+    check("nenhum handler do mestre age fora da janela",
+          m["pos"] == [2, 2] and "master_attack_charges" not in m
+          and m.get("_master_acted") is None)
+
+    print("\n[40b] invariante — mesmo, para usar_item/encerrar/set_modo/implantar_reforco")
+    # handle_mestre_usar_item: guarda `monster_id != master_manual_mid` (None aqui) —
+    # mesmo padrão de atacar/mover/usar_habilidade acima.
+    r = playing_room_com_mestre()
+    r.connections.pop("m1", None)
+    m = {"id": "g1", "name": "Ogro", "hp": 25, "pos": [2, 2], "size": [1, 1],
+         "control_mode": "auto", "equipment_consumables": [{"id": "pocao1", "effect": "heal"}]}
+    r.monsters = {"g1": m}
+    r.master_manual_mid = None
+    r._errs.clear()
+    await r.handle_mestre_usar_item("m1", "g1", "pocao1", None, None, None)
+    check("usar_item não mexeu no monstro (guarda master_manual_mid)",
+          m["hp"] == 25 and len(m["equipment_consumables"]) == 1
+          and m.get("_master_acted") is None)
+
+    # handle_mestre_encerrar_monstro: mesma guarda `monster_id != master_manual_mid`.
+    # master_manual_mid já é None; a chamada não deve setar mais nada nem lançar.
+    r.master_manual_event = None
+    await r.handle_mestre_encerrar_monstro("m1", "g1")
+    check("encerrar_monstro não alterou master_manual_mid (já None)",
+          r.master_manual_mid is None)
+
+    # handle_mestre_set_modo: guarda SÓ `pid != master_pid` — NÃO checa
+    # _mestre_ativo() nem master_manual_mid. Como o mestre desconectado mantém
+    # master_pid setado (só é limpo em disconnect na fase 'lobby' — ver
+    # `finally` do handler de conexão, linha ~24955), pid=="m1"==master_pid
+    # ainda bate aqui mesmo com o mestre offline: este handler NÃO tem defesa
+    # equivalente a `_mestre_ativo()` (ao contrário de implantar_reforco, que
+    # explicitamente faz `not self._mestre_ativo()`). Documentamos o achado:
+    # se este check falhar, é o defeito real (guarda ausente), não erro de teste.
+    r.monsters["g1"]["control_mode"] = "auto"
+    await r.handle_mestre_set_modo("m1", ["g1"], "manual")
+    check("set_modo não muda control_mode sem mestre ativo (defesa ausente — ver comentário)",
+          r.monsters["g1"]["control_mode"] == "auto")
+
+    # handle_mestre_implantar_reforco: guarda `pid != master_pid or not
+    # self._mestre_ativo()` — bloqueia mesmo com pid == master_pid, pois
+    # _mestre_ativo() é falso.
+    antes = dict(r.monsters)
+    await r.handle_mestre_implantar_reforco("m1", "goblin", 4, 4)
+    check("implantar_reforco não criou monstro (guarda _mestre_ativo)",
+          set(r.monsters.keys()) == set(antes.keys()))
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
