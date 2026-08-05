@@ -1462,6 +1462,19 @@ async def main():
     await r.handle_mestre_usar_item("m1", "g1", "v1", None, None, None)
     check("veneno_livre marca _master_touched", m.get("_master_touched") is True)
 
+    print("\n[41d] _master_touched marcado mesmo com 0 casas andadas (1º passo bloqueado)")
+    r = playing_room_com_mestre()
+    m = {"id": "g1", "name": "Orc", "type": "goblin", "hp": 12, "max_hp": 12,
+         "pos": [1, 1], "size": [1, 1], "movement": 3, "control_mode": "manual",
+         "master_moves_left": 3, "attacks": [{"name": "Machado", "num_attacks": 1}]}
+    r.monsters = {"g1": m}
+    r.master_manual_mid = "g1"
+    async def fake_commit_step(mm, nx, ny): return False
+    r._commit_monster_step = fake_commit_step
+    await r.handle_mestre_mover_monstro_para("m1", "g1", 2, 1)
+    check("_master_touched setado mesmo sem andar", m.get("_master_touched") is True)
+    check("posição não mudou (0 casas andadas)", m["pos"] == [1, 1])
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

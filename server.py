@@ -12035,6 +12035,13 @@ class GameRoom:
         path = self._master_path_to(m, tx, ty, budget)
         if not path:
             await self.send_to(pid, {"type": "error", "msg": "Destino inalcançável."}); return
+        # Marca ANTES do laço: o laço faz `await` a cada passo, e se o timeout
+        # acordar num desses `await`s internos (deadline vencendo em pleno
+        # meio do movimento), ele precisa ver o monstro já "tocado" — senão
+        # dispara a IA concorrente com um movimento ainda em andamento (turno
+        # duplo). Vale mesmo que o 1º passo seja bloqueado (0 casas andadas):
+        # o mestre já comprometeu a ação, como no ataque que erra mas conta.
+        m["_master_touched"] = True
         for nx, ny in path:
             if m.get("master_moves_left", 0) <= 0:
                 break
@@ -12043,7 +12050,6 @@ class GameRoom:
             if not await self._commit_monster_step(m, nx, ny):
                 break
             m["master_moves_left"] -= 1
-        m["_master_touched"] = True
         self._reiniciar_timer_manual()
         await self.push_state()
 
