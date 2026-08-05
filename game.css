@@ -929,24 +929,27 @@ input:focus { outline: none; border-color: var(--gold); }
                         background:rgba(18,14,9,.72); color:#f0e6d2;
                         border:1px solid rgba(240,230,210,.4);
                         font-size:13px; line-height:1; white-space:nowrap;
-                        transition:transform .15s ease, box-shadow .15s ease, background .15s ease, color .15s ease; }
+                        /* O alvo de clique NÃO muda de tamanho nem de lugar: sem escala
+                           e sem abrir/fechar rótulo — o hover só troca cor. */
+                        transition:box-shadow .08s linear, background .08s linear, color .08s linear; }
 .city-hotspot .ch-emoji { font-size:15px; }
 .city-hotspot .ch-glow { position:absolute; top:50%; left:50%; width:120px; height:60px;
                          transform:translate(-50%,-30%); border-radius:50%;
                          background:radial-gradient(closest-side, rgba(255,225,150,.55), rgba(255,225,150,0));
                          opacity:0; transition:opacity .18s ease; pointer-events:none; }
+/* Rótulos podem se sobrepor: o que está sob o cursor vai por cima. */
+.city-hotspot:hover, .city-hotspot:focus-visible { z-index:6; }
 .city-hotspot:hover .ch-pin,
-.city-hotspot:focus-visible .ch-pin { transform:scale(1.12);
-                        background:rgba(58,44,18,.92); color:#ffe79a;
-                        border-color:#ffe79a; box-shadow:0 0 14px 3px rgba(255,225,150,.5); }
+.city-hotspot:focus-visible .ch-pin { background:rgba(58,44,18,.92); color:#ffe79a;
+                        border-color:#ffe79a; box-shadow:0 0 12px 2px rgba(255,225,150,.45); }
+/* Feedback imediato do clique (sem mexer no layout). */
+.city-hotspot:active .ch-pin { background:rgba(96,73,26,.98); color:#fff6cf;
+                        border-color:#fff6cf; box-shadow:0 0 14px 3px rgba(255,235,175,.6); }
 .city-hotspot:hover .ch-glow,
 .city-hotspot:focus-visible .ch-glow { opacity:1; }
 
-/* Todos os marcadores: rótulo só aparece no hover/foco (ícone fica sempre). */
-.city-hotspot .ch-name { max-width:0; overflow:hidden; opacity:0;
-                        transition:max-width .2s ease, opacity .2s ease; }
-.city-hotspot:hover .ch-name,
-.city-hotspot:focus-visible .ch-name { max-width:160px; opacity:1; }
+/* O rótulo fica SEMPRE visível: alvo de clique estático, sem animação de abrir. */
+.city-hotspot .ch-name { opacity:.92; }
 
 #city-world-nav{position:absolute;right:18px;top:62px;z-index:25;padding:9px 14px;
   border:1px solid #d8b96a;border-radius:5px;background:rgba(20,15,8,.86);color:#ffe8a2;
@@ -986,7 +989,12 @@ input:focus { outline: none; border-color: var(--gold); }
 .worldmap-marker{position:absolute;z-index:3;transform:translate(-18px,-50%);border:0;background:transparent;color:#f8e3a4;cursor:pointer;text-shadow:0 2px 3px #000;display:flex;align-items:center;gap:5px;padding:4px;}
 .worldmap-marker .wm-rose{display:inline-grid;place-items:center;width:28px;height:28px;border:1px solid #e4c77d;border-radius:50%;background:#21180ce8;font-size:20px;box-shadow:0 0 10px #d7ab3a88;}
 .worldmap-marker.editing{cursor:grab;touch-action:none;}.worldmap-marker.editing:active{cursor:grabbing;}.worldmap-marker.editing .wm-rose{border-color:#76d9ff;box-shadow:0 0 14px #4eb8df;}
-.worldmap-marker .wm-name{font-family:var(--font-body);font-size:15px;white-space:nowrap;opacity:.88;}.worldmap-marker:hover .wm-rose{transform:scale(1.18);background:#5b431b;box-shadow:0 0 17px #ffe487;}.worldmap-marker.current .wm-rose{color:#fff;border-color:#fff1ae;background:#6f4e16;}.worldmap-marker.locked{opacity:.35;filter:grayscale(1);cursor:pointer;}.worldmap-travel{margin-top:8px;padding:6px 10px;border:1px solid #e0c474;border-radius:4px;background:#5b4218;color:#fff1bf;font-family:var(--font-body);cursor:pointer;}.worldmap-travel:disabled{opacity:.45;cursor:not-allowed;}
+.worldmap-marker .wm-name{font-family:var(--font-body);font-size:15px;white-space:nowrap;opacity:.88;}.worldmap-marker:hover{z-index:5;}
+/* Destaque só de cor: o alvo de clique não muda de tamanho nem de posição. */
+.worldmap-marker:hover .wm-rose{background:#5b431b;border-color:#ffe487;box-shadow:0 0 17px #ffe487;}
+.worldmap-marker:hover .wm-name{opacity:1;color:#fff3c4;text-shadow:0 2px 4px #000,0 0 10px #d7ab3a99;}
+.worldmap-marker:active .wm-rose{background:#7d5c1e;border-color:#fff6cf;box-shadow:0 0 20px #fff0b0;}
+.worldmap-marker:active .wm-name{color:#fff6cf;}.worldmap-marker.current .wm-rose{color:#fff;border-color:#fff1ae;background:#6f4e16;}.worldmap-marker.locked{opacity:.35;filter:grayscale(1);cursor:pointer;}.worldmap-travel{margin-top:8px;padding:6px 10px;border:1px solid #e0c474;border-radius:4px;background:#5b4218;color:#fff1bf;font-family:var(--font-body);cursor:pointer;}.worldmap-travel:disabled{opacity:.45;cursor:not-allowed;}
 /* Brilho de silhueta dos hero: glow grande sobre o prédio. */
 .city-hotspot.hero .ch-glow { width:160px; height:130px; transform:translate(-50%,-50%); }
 
@@ -1017,8 +1025,7 @@ input:focus { outline: none; border-color: var(--gold); }
 }
 @media (max-width:820px) {
   .city-hotspot .ch-pin { font-size:14px; padding:6px 12px; }   /* alvo de toque maior */
-  .city-hotspot:hover .ch-name,
-  .city-hotspot:focus-visible .ch-name { max-width:130px; }
+  .city-hotspot .ch-name { max-width:130px; overflow:hidden; text-overflow:ellipsis; }
 }
 
 /* ════════════════════ MOBILE / TOUCH ════════════════════ */
