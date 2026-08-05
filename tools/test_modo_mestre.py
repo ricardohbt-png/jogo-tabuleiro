@@ -1146,6 +1146,54 @@ async def main():
     await r._expirar_oculto_sombras(m5)
     check("sem flag não quebra", "oculto_sombras" not in m5)
 
+    print("\n[37] _upkeep_inicio_turno_monstro — devolve se o monstro pode agir")
+    r = playing_room_com_mestre()
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [5, 5], "alive": True, "hp": 10}}
+    # Os processadores de efeito são neutralizados aqui de propósito: esta seção
+    # testa a RAMIFICAÇÃO do prólogo (age × perde o turno), não o que cada efeito
+    # faz. Sem os stubs, um dict de monstro mínimo pode estourar dentro deles por
+    # falta de campos. A seção [39] prova que eles são de fato chamados.
+    async def _noop(*a, **k): pass
+    r._processar_mare_viva_turno = _noop
+    r._processar_venenos_turno = _noop
+    r._processar_mods_magia_turno = _noop
+    r._processar_requiem_turno = _noop
+    async def _sem_status(mm, vivos): return None
+    r._status_monstro_turno = _sem_status
+    async def _sem_enredo(mm): return False
+    r._processar_enredado_turno = _sem_enredo
+    def _mon(**kw):
+        base = {"id": "g1", "name": "Coisa", "type": "goblin", "hp": 10, "max_hp": 10,
+                "pos": [2, 2], "size": [1, 1], "movement": 4}
+        base.update(kw); return base
+    # saudável → pode agir
+    m = _mon()
+    check("monstro saudável pode agir", await r._upkeep_inicio_turno_monstro(m, [m]) is True)
+    # petrificado → perde o turno
+    m = _mon(petrificado=True)
+    check("petrificado perde o turno", await r._upkeep_inicio_turno_monstro(m, [m]) is False)
+    # preso em rede → perde o turno e o flag é consumido
+    m = _mon(perde_turno=True)
+    check("rede perde o turno", await r._upkeep_inicio_turno_monstro(m, [m]) is False)
+    check("rede consome o flag", m["perde_turno"] is False)
+    # inabalavel ignora a rede
+    m = _mon(perde_turno=True, special_abilities=[{"id": "inabalavel", "action_type": "passiva"}])
+    check("inabalavel ignora a rede", await r._upkeep_inicio_turno_monstro(m, [m]) is True)
+    check("inabalavel limpa o flag", "perde_turno" not in m)
+    # morto durante o upkeep → não age
+    m = _mon(hp=0)
+    check("monstro morto não age", await r._upkeep_inicio_turno_monstro(m, [m]) is False)
+
+    print("\n[37b] lobisomem regenera dentro do prólogo")
+    # Mesmos stubs de [37] seguem valendo: a regeneração é inline no prólogo.
+    m = _mon(type="lobisomem", hp=8, max_hp=30)
+    check("regenerou +2", (await r._upkeep_inicio_turno_monstro(m, [m])) is True and m["hp"] == 10)
+    check("fúria abaixo de 12 PV", m.get("furia_lobisomem") is True)
+    m = _mon(type="lobisomem", hp=8, max_hp=30, regeneracao_bloqueada=True)
+    await r._upkeep_inicio_turno_monstro(m, [m])
+    check("regeneração bloqueada não cura", m["hp"] == 8)
+    check("bloqueio é consumido", "regeneracao_bloqueada" not in m)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

@@ -23004,6 +23004,58 @@ class GameRoom:
 
     # â”€â”€ GM phase (monsters act) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+    async def _upkeep_inicio_turno_monstro(self, m, alive_monsters):
+        """Prólogo de início de turno do monstro: efeitos que ticam/expiram e os
+        estados que fazem PERDER o turno. Retorna True se o monstro ainda pode
+        agir, False se o turno foi consumido.
+
+        Ponto único usado pela gm_phase (IA) e pela janela do Manual (mestre) —
+        sem isso o monstro do mestre ficava imune a veneno, Réquiem e a todo o
+        controle de multidão, por não passar pela gm_phase.
+
+        A ordem é a mesma de sempre; era um bloco inline com `continue`, que
+        virou `return False`."""
+        await self._processar_mare_viva_turno(m)
+        # Venenos: tica/expira efeitos no início do turno do monstro.
+        await self._processar_venenos_turno(m)
+        await self._processar_mods_magia_turno(m)   # Amaldiçoar expira por rodada
+        if m.get("type") == "lobisomem":
+            if not m.pop("regeneracao_bloqueada", False):
+                m["hp"] = min(m.get("max_hp", m["hp"]), m["hp"] + 2)
+            if m.get("hp", 0) <= 12:
+                m["furia_lobisomem"] = True
+        if m["hp"] <= 0:
+            return False
+        # Réquiem Final (Violino): dano crescente no início do turno do alvo.
+        await self._processar_requiem_turno(m)
+        if m["hp"] <= 0:
+            return False
+        # Petrificado: perde o turno (não move nem ataca).
+        if m.get("petrificado"):
+            await self.gm_say(f"🗿 **{m['name']}** está petrificado e perde o turno!")
+            return False
+        # Paralisado (Raio Congelante): novo Fortitude; se falhar, perde o turno.
+        if m.get("paralisado"):
+            if await self._processar_paralisacao_turno(m):
+                return False
+        if m.get("perde_turno"):
+            if self._tem_habilidade(m, "inabalavel"):
+                m.pop("perde_turno", None)
+            else:
+                m["perde_turno"] = False
+                await self.gm_say(f"🕸️ **{m['name']}** está preso (rede) e perde o turno!")
+                return False
+        # Enredado (Rede): gasta o turno tentando escapar. (Enquanto preso, o
+        # tick de mov_reduzido/Cola fica em pausa — o monstro nem se move.)
+        if m.get("enredado") and self._tem_habilidade(m, "inabalavel"):
+            m.pop("enredado", None); m.pop("enredado_save", None); m.pop("enredado_cd", None)
+        elif await self._processar_enredado_turno(m):
+            return False
+        # Status de magia (Sono/Comando/Dominar/Medo/Lentidão): pode consumir o turno.
+        if await self._status_monstro_turno(m, alive_monsters) == "pulou":
+            return False
+        return True
+
     async def gm_phase(self, only_monster=None):
         """Executa todos os monstros (modo legado) ou somente um, para iniciativa."""
         alive_monsters = ([only_monster] if only_monster is not None else
@@ -23035,44 +23087,7 @@ class GameRoom:
             # â€” permanece imÃ³vel atÃ© a porta ser aberta / ser avistado.
             if not self._monstro_ativo_em_combate(m):
                 continue
-            await self._processar_mare_viva_turno(m)
-            # Venenos: tica/expira efeitos no inÃ­cio do turno do monstro.
-            await self._processar_venenos_turno(m)
-            await self._processar_mods_magia_turno(m)   # AmaldiÃ§oar expira por rodada
-            if m.get("type") == "lobisomem":
-                if not m.pop("regeneracao_bloqueada", False):
-                    m["hp"] = min(m.get("max_hp", m["hp"]), m["hp"] + 2)
-                if m.get("hp", 0) <= 12:
-                    m["furia_lobisomem"] = True
-            if m["hp"] <= 0:
-                continue
-            # RÃ©quiem Final (Violino): dano crescente no inÃ­cio do turno do alvo.
-            await self._processar_requiem_turno(m)
-            if m["hp"] <= 0:
-                continue
-            # Petrificado: perde o turno (nÃ£o move nem ataca).
-            if m.get("petrificado"):
-                await self.gm_say(f"🗿 **{m['name']}** está petrificado e perde o turno!")
-                continue
-            # Paralisado (Raio Congelante): novo Fortitude; se falhar, perde o turno.
-            if m.get("paralisado"):
-                if await self._processar_paralisacao_turno(m):
-                    continue
-            if m.get("perde_turno"):
-                if self._tem_habilidade(m, "inabalavel"):
-                    m.pop("perde_turno", None)
-                else:
-                    m["perde_turno"] = False
-                    await self.gm_say(f"🕸️ **{m['name']}** está preso (rede) e perde o turno!")
-                    continue
-            # Enredado (Rede): gasta o turno tentando escapar. (Enquanto preso, o
-            # tick de mov_reduzido/Cola fica em pausa â€” o monstro nem se move.)
-            if m.get("enredado") and self._tem_habilidade(m, "inabalavel"):
-                m.pop("enredado", None); m.pop("enredado_save", None); m.pop("enredado_cd", None)
-            elif await self._processar_enredado_turno(m):
-                continue
-            # Status de magia (Sono/Comando/Dominar/Medo/LentidÃ£o): pode consumir o turno.
-            if await self._status_monstro_turno(m, alive_monsters) == "pulou":
+            if not await self._upkeep_inicio_turno_monstro(m, alive_monsters):
                 continue
             targets = self._alvos_visiveis_para_monstro(m, _targets())
             if not targets:
