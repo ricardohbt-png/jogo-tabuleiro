@@ -229,6 +229,28 @@ Adicionar antes da linha de totais:
 > `await` do passo anterior travaria o teste — o próprio fato de o teste terminar
 > já é parte da prova.
 
+Acrescente também esta checagem ao fim de `[38b]`, provando o argumento `[m]`:
+
+```python
+    print("\n[38c] a janela passa [m] como alive_monsters, igual à gm_phase(monster)")
+    r = playing_room_com_mestre()
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [5, 5], "alive": True, "hp": 10}}
+    visto = {}
+    async def espiao(mm, vivos): visto["vivos"] = vivos; return None
+    r._status_monstro_turno = espiao
+    m = {"id": "g1", "name": "Orc", "type": "goblin", "hp": 10, "max_hp": 10,
+         "pos": [2, 2], "size": [1, 1], "movement": 4, "control_mode": "manual",
+         "attacks": [{"name": "Machado", "num_attacks": 1}]}
+    outro = {"id": "g2", "name": "Outro", "type": "goblin", "hp": 10, "max_hp": 10,
+             "pos": [8, 8], "size": [1, 1], "movement": 4}
+    r.monsters = {"g1": m, "g2": outro}
+    task = asyncio.create_task(r._master_manual_window(m))
+    await asyncio.sleep(0)
+    check("recebeu só o próprio monstro", visto.get("vivos") == [m])
+    r.master_manual_event.set()
+    await task
+```
+
 - [ ] **Step 2: Rodar o teste e ver falhar**
 
 Run: `python tools/test_modo_mestre.py`
@@ -243,8 +265,11 @@ Em `server.py`, em `_master_manual_window`, inserir no **topo do método**, ante
         # veneno, Réquiem, petrificação, paralisia, rede, enredado, sono/medo.
         # Se o turno foi consumido, não abre janela — `monster_step` chama
         # `_advance_initiative()` logo depois, então a iniciativa segue sozinha.
-        vivos = [x for x in self.monsters.values() if x.get("hp", 0) > 0]
-        if not await self._upkeep_inicio_turno_monstro(m, vivos):
+        # O 2º argumento é `[m]` de propósito: no laço de iniciativa a IA entra
+        # por `gm_phase(monster)`, que monta `alive_monsters = [monster]`. Passar
+        # a lista inteira daria ao Manual um comportamento diferente no caso do
+        # monstro Dominado, que usa essa lista para escolher em quem bater.
+        if not await self._upkeep_inicio_turno_monstro(m, [m]):
             return
 ```
 
@@ -253,7 +278,7 @@ Nada mais no método muda. Repare que `_upkeep_inicio_turno_manual(m)` — expir
 - [ ] **Step 4: Rodar o teste e ver passar**
 
 Run: `python tools/test_modo_mestre.py`
-Expected: `[38]`/`[38b]` verdes, total 283 → 288 passaram, 0 falharam.
+Expected: `[38]`/`[38b]`/`[38c]` verdes, total 283 → 289 passaram, 0 falharam.
 
 - [ ] **Step 5: Commit**
 
