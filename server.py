@@ -9359,18 +9359,23 @@ class GameRoom:
 
         # Place players at entrance (reentram pela mesma escada que usaram p/ sair).
         entrance = next((r for r in self.rooms if r["role"] == "entrance"), self.rooms[0])
+        # O BFS de `_spawn_tiles_near` só devolve CHÃO, então vale para os dois
+        # modos: no procedural os offsets fixos ignoravam o mapa e podiam pousar
+        # um herói DENTRO de uma parede quando a sala de entrada era estreita.
         if autorada:
             ent_pt = [self.dungeon_def["entrance"]["x"], self.dungeon_def["entrance"]["y"]]
-            spawn_tiles = self._spawn_tiles_near(ent_pt, len(pids))
         else:
-            spawn_tiles = None
+            ent_pt = [entrance["cx"], entrance["cy"]]
+        spawn_tiles = self._spawn_tiles_near(ent_pt, len(pids))
         offsets = [(0,0),(1,0),(-1,0),(0,1),(1,1),(-1,1)]
         for i, pid2 in enumerate(pids):
-            if spawn_tiles is not None:
+            if spawn_tiles:
                 self.players[pid2]["pos"] = list(spawn_tiles[i % len(spawn_tiles)])
             else:
+                # Entrada sem nenhuma casa de chão alcançável (masmorra malformada):
+                # cai nos offsets antigos em vez de estourar no `i % 0`.
                 ox, oy = offsets[i % len(offsets)]
-                self.players[pid2]["pos"] = [entrance["cx"] + ox, entrance["cy"] + oy]
+                self.players[pid2]["pos"] = [ent_pt[0] + ox, ent_pt[1] + oy]
             self.players[pid2].pop("facing", None)
             self.players[pid2]["moves_left"]       = self._water_turn_moves(self.players[pid2], self.players[pid2]["spd"])
             self.players[pid2]["action_done"]      = False
