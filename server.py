@@ -17018,6 +17018,22 @@ class GameRoom:
             return self._lanca_no_alcance(m, alvo_pos)
         return self._is_adjacent_to_monster(alvo_pos, m)
 
+    async def _ativar_golpe_brutal(self, m):
+        """Arma o Golpe Brutal (+2 de dano no próximo golpe) e entra em recarga.
+        Compartilhado: a IA do Ogro chama e ataca em seguida; o mestre chama e
+        o próximo handle_mestre_atacar_monstro consome o bônus (que é limpo
+        logo após o golpe). Não narra — cada chamador narra a própria linha,
+        pois a IA mantém o texto "para finalizar" que só faz sentido nela
+        (preserva a narração exata da IA, invariante deste plano)."""
+        if not self._tem_habilidade(m, "golpe_brutal"):
+            return False
+        cds = m.setdefault("ability_cooldowns", {})
+        if cds.get("golpe_brutal", 0) > 0:
+            return False
+        cds["golpe_brutal"] = 3
+        m["_golpe_brutal_ativo"] = True
+        return True
+
     def _golpe_brutal_bonus(self, m):
         """Golpe Brutal: +2 de dano no ataque marcado (flag consumida pela IA)."""
         return 2 if m.get("_golpe_brutal_ativo") else 0
@@ -20997,6 +21013,12 @@ class GameRoom:
             self._debitar_acao_mestre(m, custo, "habilidade")
             m["_ja_executou_acao"] = True
             await self.push_state(); return
+        if ability_id == "golpe_brutal":
+            if not await self._ativar_golpe_brutal(m):
+                await self.send_to(pid, {"type": "error", "msg": "Golpe Brutal em recarga."}); return
+            await self.gm_say(f"💥 **{m['name']}** desfere um **Golpe Brutal** (+2 dano)!")
+            self._debitar_acao_mestre(m, "livre", "habilidade")
+            await self.push_state(); return
         # Ramo (b): habilidade de editor (herói/guilda) — self-buff, sem alvo.
         if ability_id == "mestre_dos_mortos":
             invocados = await self._conjurar_mestre_dos_mortos(m, tipo_esqueleto)
@@ -22623,8 +22645,7 @@ class GameRoom:
         usar_fd = (self._tem_habilidade(m, "forca_descomunal") and cds.get("forca_descomunal", 0) <= 0)
 
         if usar_gb:                                                 # Golpe Brutal (finalizar)
-            cds["golpe_brutal"] = 3
-            m["_golpe_brutal_ativo"] = True
+            await self._ativar_golpe_brutal(m)
             await self.gm_say(f"💥 **{m['name']}** desfere um **Golpe Brutal** para finalizar (+2 dano)!")
             hit = await self._execute_one_monster_attack(m, atk, target_obj)
             m.pop("_golpe_brutal_ativo", None)

@@ -1017,6 +1017,35 @@ async def main():
     check("teto >= fórmula do necro/genérico", teto >= formula_necro)
     check("teto >= fórmula do _executar_silencio", teto >= formula_silencio)
 
+    print("\n[35] Golpe Brutal — mesma extração para IA e mestre")
+    r = playing_room_com_mestre()
+    ab_gb = {"id": "golpe_brutal", "name": "Golpe Brutal", "action_type": "ataque"}
+    m = {"id": "g1", "name": "Ogro", "hp": 25, "pos": [2, 2], "size": [1, 1],
+         "control_mode": "manual", "_master_acted": False, "_master_bonus_acted": False,
+         "_master_acao_tipo": None, "attacks": [{"name": "Clava", "num_attacks": 1}],
+         "master_attack_charges": {0: 1}, "special_abilities": [ab_gb],
+         "ability_cooldowns": {}}
+    r.monsters = {"g1": m}; r.master_manual_mid = "g1"
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [2, 3], "alive": True}}
+    ok = await r._ativar_golpe_brutal(m)
+    check("ativou", ok is True)
+    check("armou o bônus", m.get("_golpe_brutal_ativo") is True)
+    check("entrou em recarga 3", m["ability_cooldowns"]["golpe_brutal"] == 3)
+    check("bônus de dano é +2", r._golpe_brutal_bonus(m) == 2)
+    check("2ª ativação recusada (recarga)", await r._ativar_golpe_brutal(m) is False)
+    m2 = {"id": "g2", "name": "Ogro2", "hp": 25, "pos": [5, 5], "size": [1, 1],
+          "special_abilities": [], "ability_cooldowns": {}}
+    check("sem a habilidade não ativa", await r._ativar_golpe_brutal(m2) is False)
+
+    print("\n[35b] o golpe seguinte consome o bônus armado")
+    golpes = []
+    async def fake_atk(mm, atk_def, target_obj):
+        golpes.append(mm.get("_golpe_brutal_ativo")); return True
+    r._execute_one_monster_attack = fake_atk
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hA", 0)
+    check("golpe saiu com o bônus ativo", golpes == [True])
+    check("bônus limpo após o golpe", m.get("_golpe_brutal_ativo") is None)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
