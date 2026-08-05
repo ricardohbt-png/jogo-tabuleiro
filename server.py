@@ -22577,7 +22577,17 @@ class GameRoom:
         """Upkeep de início de turno que o monstro em Manual pularia por não
         passar pela gm_phase: expira o ocultamento e faz as recargas andarem.
         Um monstro passa por gm_phase OU por esta janela num turno, nunca pelos
-        dois, então a recarga anda exatamente uma vez por turno em qualquer modo."""
+        dois, então a recarga anda exatamente uma vez por turno em qualquer modo.
+
+        ATENÇÃO — cobertura PARCIAL de propósito. A gm_phase faz muito mais no
+        início do turno, e nada disso chega ao monstro em Manual: tique de
+        veneno, expiração de Amaldiçoar, regeneração do lobisomem, dano do
+        Réquiem, e os estados que fazem PERDER o turno (petrificado, paralisado,
+        perde_turno, enredado, sono/comando/dominar/medo/lentidão), além da
+        contagem da Provocação. Ou seja, hoje o monstro do mestre é imune a
+        controle de multidão. Fechar isso mexe no laço de iniciativa (um turno
+        que não deveria acontecer) e merece trabalho próprio — não acrescente
+        aqui sem esse cuidado."""
         await self._expirar_oculto_sombras(m)
         for chave in ("ability_cooldowns", "monster_ability_cooldowns"):
             cds = m.get(chave)
