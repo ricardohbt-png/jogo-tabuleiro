@@ -12082,12 +12082,39 @@ class GameRoom:
         m["_ja_executou_acao"] = True
         m["_master_touched"] = True
         hit = await self._execute_one_monster_attack(m, atk_def, {"kind": "player", "obj": alvo})
+        await self._furia_bestial_mestre(m, alvo, idx, hit)
         m.pop("_golpe_brutal_ativo", None)   # Golpe Brutal vale para um golpe só
         if hit and m.get("veneno_arma_ativo"):
             m["veneno_arma_ativo"] = False
             m.pop("equipment_poison", None)
         self._reiniciar_timer_manual()
         await self.push_state()
+
+    async def _furia_bestial_mestre(self, m, alvo, idx, acertou):
+        """Fúria Bestial no controle Manual. A IA (_monster_execute_attacks) dá
+        +1d6 quando o PRIMEIRO grupo de ataque e ao menos um outro acertam o
+        mesmo alvo. Como o mestre gasta os golpes um a um e pode dividi-los
+        entre heróis, acumulamos por alvo os grupos que acertaram no turno e
+        concedemos o bônus uma única vez para cada um."""
+        if not acertou or not self._tem_habilidade(m, "furia_bestial"):
+            return
+        if len(m.get("attacks") or []) < 2:
+            return
+        acertos = m.setdefault("_master_furia_hits", {}).setdefault(alvo["id"], set())
+        acertos.add(idx)
+        if 0 not in acertos or len(acertos) < 2:
+            return
+        dados = m.setdefault("_master_furia_dada", set())
+        if alvo["id"] in dados:
+            return
+        if not alvo.get("alive") or alvo.get("hp", 0) <= 0:
+            return
+        dados.add(alvo["id"])
+        extra = roll_dice("1d6")
+        alvo["hp"] = max(0, alvo["hp"] - extra)
+        await self.gm_say(f"🦷 **Fúria Bestial**: **{alvo['name']}** sofre +**{extra}** de dano!")
+        if alvo["hp"] <= 0:
+            await self._player_dies(alvo["id"])
 
     async def handle_mestre_encerrar_monstro(self, pid, monster_id):
         """Manual: encerra a vez do monstro; libera o laço de iniciativa."""
@@ -12174,6 +12201,8 @@ class GameRoom:
         m["_master_bonus_acted"] = False
         m["_master_acao_tipo"] = None
         m["master_attack_charges"] = self._montar_cargas_ataque(m)
+        m["_master_furia_hits"] = {}
+        m["_master_furia_dada"] = set()
         m.pop("_master_touched", None)
         self.master_manual_event = asyncio.Event()
         await self.push_state()

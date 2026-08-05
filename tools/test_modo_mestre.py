@@ -767,6 +767,80 @@ async def main():
     await r.handle_mestre_atacar_monstro("m1", "g1", "hA")
     check("sem attack_index usa o 0", golpes2 == ["Machado"])
 
+    print("\n[32c] Fúria Bestial sob controle Manual")
+    r = playing_room_com_mestre()
+    async def fake_atk_no_dano(mm, atk_def, target_obj):
+        return True
+    r._execute_one_monster_attack = fake_atk_no_dano
+    m = {"id": "g1", "name": "Grotão", "hp": 30, "max_hp": 30, "pos": [2, 2],
+         "size": [1, 1], "movement": 4, "control_mode": "manual",
+         "_master_acted": False, "_master_acao_tipo": None,
+         "master_attack_charges": {0: 1, 1: 2},
+         "attacks": [{"name": "Mordida", "num_attacks": 1},
+                     {"name": "Garras", "num_attacks": 2}],
+         "special_abilities": [{"id": "furia_bestial", "action_type": "passiva"}]}
+    r.monsters = {"g1": m}; r.master_manual_mid = "g1"
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [2, 3], "alive": True, "hp": 20, "max_hp": 20},
+                 "hB": {"id": "hB", "name": "Bea", "pos": [3, 2], "alive": True, "hp": 20, "max_hp": 20}}
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hA", 0)
+    check("grupo 0 sozinho não dá Fúria", r.players["hA"]["hp"] == 20)
+    m["_master_acted"] = False; m["_master_acao_tipo"] = None
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hA", 1)
+    check("Fúria disparou no 2º grupo do mesmo alvo", r.players["hA"]["hp"] < 20)
+    hp_apos_furia = r.players["hA"]["hp"]
+    m["_master_acted"] = False; m["_master_acao_tipo"] = None
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hA", 1)
+    check("Fúria não repete no mesmo alvo", r.players["hA"]["hp"] == hp_apos_furia)
+
+    print("\n[32c-2] só o grupo 0 não basta")
+    r = playing_room_com_mestre()
+    r._execute_one_monster_attack = fake_atk_no_dano
+    m = {"id": "g1", "name": "Grotão", "hp": 30, "max_hp": 30, "pos": [2, 2],
+         "size": [1, 1], "movement": 4, "control_mode": "manual",
+         "_master_acted": False, "_master_acao_tipo": None,
+         "master_attack_charges": {0: 1, 1: 2},
+         "attacks": [{"name": "Mordida", "num_attacks": 1},
+                     {"name": "Garras", "num_attacks": 2}],
+         "special_abilities": [{"id": "furia_bestial", "action_type": "passiva"}]}
+    r.monsters = {"g1": m}; r.master_manual_mid = "g1"
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [2, 3], "alive": True, "hp": 20, "max_hp": 20}}
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hA", 0)
+    check("só grupo 0: sem Fúria", r.players["hA"]["hp"] == 20)
+
+    print("\n[32c-3] grupos em alvos diferentes não combinam")
+    r = playing_room_com_mestre()
+    r._execute_one_monster_attack = fake_atk_no_dano
+    m = {"id": "g1", "name": "Grotão", "hp": 30, "max_hp": 30, "pos": [2, 2],
+         "size": [1, 1], "movement": 4, "control_mode": "manual",
+         "_master_acted": False, "_master_acao_tipo": None,
+         "master_attack_charges": {0: 1, 1: 2},
+         "attacks": [{"name": "Mordida", "num_attacks": 1},
+                     {"name": "Garras", "num_attacks": 2}],
+         "special_abilities": [{"id": "furia_bestial", "action_type": "passiva"}]}
+    r.monsters = {"g1": m}; r.master_manual_mid = "g1"
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [2, 3], "alive": True, "hp": 20, "max_hp": 20},
+                 "hB": {"id": "hB", "name": "Bea", "pos": [3, 2], "alive": True, "hp": 20, "max_hp": 20}}
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hA", 0)
+    m["_master_acted"] = False; m["_master_acao_tipo"] = None
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hB", 1)
+    check("alvos diferentes: hA sem Fúria", r.players["hA"]["hp"] == 20)
+    check("alvos diferentes: hB sem Fúria", r.players["hB"]["hp"] == 20)
+
+    print("\n[32c-4] ataque recusado não gasta carga nem marca ação")
+    r = playing_room_com_mestre()
+    m = {"id": "g1", "name": "Lobisomem", "hp": 30, "max_hp": 30, "pos": [2, 2],
+         "size": [1, 1], "movement": 4, "control_mode": "manual",
+         "_master_acted": False, "_master_acao_tipo": None,
+         "master_attack_charges": {0: 2},
+         "attacks": [{"name": "Garras", "num_attacks": 2}]}
+    r.monsters = {"g1": m}; r.master_manual_mid = "g1"
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [10, 10], "alive": True, "hp": 20, "max_hp": 20}}
+    r._errs.clear()
+    await r.handle_mestre_atacar_monstro("m1", "g1", "hA", 0)
+    check("recusado por distância", any(("adjacente" in e.lower() or "alcanc" in e.lower()) for e in r._errs))
+    check("carga intacta após recusa", m["master_attack_charges"] == {0: 2})
+    check("ação principal não marcada após recusa", m["_master_acted"] is False)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
