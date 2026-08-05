@@ -7347,7 +7347,7 @@ class GameRoom:
             if self.last_stand_pid: self._iniciar_timer_ultimo_esforco(self.last_stand_pid)
         self._checkpoint_savegame()
         if self.phase == "playing": await self.push_state()
-        else: await self.broadcast_city_state()
+        elif self.phase == "city": await self.broadcast_city_state()   # no lobby nao ha ficha p/ montar o city_state
 
     def _gerar_loja_pergaminhos(self):
         """Renova o estoque de pergaminhos do mercador: uma MISTURA de básicos
@@ -11265,7 +11265,7 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        data = data or {}
+        if not isinstance(data, dict): return
         item_id = data.get("item_id")
         item = next((i for i in p["bag"] if i["id"] == item_id), None)
         if not item:
@@ -13359,7 +13359,8 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        habilidade_id = data.get("habilidade_id") if data else None
+        if not isinstance(data, dict): return
+        habilidade_id = data.get("habilidade_id")
         if habilidade_id not in ("regeneracao_divina", "guerreiro_luz"):
             await self.send_to(pid, {"type": "error", "msg": "Habilidade livre inválida."}); return
         if not _pode_hab_heroi(p, "paladin", f"hero_paladin_{habilidade_id}"):
@@ -13984,7 +13985,7 @@ class GameRoom:
         """Reordena a bolsa do jogador (organização por arrastar-e-soltar).
         Clampa índices fora do intervalo; from inválido é no-op."""
         p = self.players.get(pid)
-        if not p:
+        if not p or "bag" not in p:   # ainda no lobby: ficha incompleta
             return
         bag = p["bag"]
         if from_index < 0 or from_index >= len(bag):
@@ -14000,7 +14001,7 @@ class GameRoom:
         equipar fica em _executar_equip_from_bag (só falha por restrição de classe
         ou conflito de 2 mãos)."""
         p = self.players.get(pid)
-        if not p:
+        if not p or "bag" not in p:   # ainda no lobby: ficha incompleta
             return
         if not await self._executar_equip_from_bag(pid, slot_index):
             return                                   # validaÃ§Ã£o falhou (erro jÃ¡ enviado)
@@ -14096,7 +14097,7 @@ class GameRoom:
         """Equipa uma ADAGA do inventário na mão esquerda (off_hand) como 2ª arma
         (dual-wield). AÇÃO LIVRE — sem custo e sem limite por turno."""
         p = self.players.get(pid)
-        if not p:
+        if not p or "bag" not in p:   # ainda no lobby: ficha incompleta
             return
         if slot_index < 0 or slot_index >= len(p["bag"]):
             await self.send_to(pid, {"type": "error", "msg": "Slot de inventário inválido."}); return
@@ -23948,6 +23949,27 @@ def _delta(v):
     return max(-1, min(1, v))
 
 
+def _num(v, padrao=-1):
+    """Campo numérico vindo do cliente. `int(msg.get(...))` cru levantava
+    ValueError/TypeError com qualquer coisa que não fosse número (string, dict,
+    lista) — o erro caía no catch-all e o jogador só via 'Erro interno'."""
+    try:
+        return int(v)
+    except (TypeError, ValueError):
+        return padrao
+
+
+def _key(v):
+    """Id vindo do cliente que será usado como CHAVE de dict. Sem isto, um
+    `{"target_id": {}}` estourava com 'unhashable type' no `x in self.monsters`.
+    Devolve None (hashable, nunca casa com um id real) quando não serve."""
+    try:
+        hash(v)
+    except TypeError:
+        return None
+    return v
+
+
 async def handler(ws):
     global SCENE_LIBRARY
     pid = new_id()
@@ -23962,6 +23984,11 @@ async def handler(ws):
             try:
                 msg = json.loads(raw)
             except Exception:
+                continue
+            # JSON válido mas que não é um OBJETO (5, [], "x", null) faria o
+            # msg.get abaixo levantar AttributeError FORA do try interno —
+            # escapando do catch-all e derrubando a conexão deste cliente.
+            if not isinstance(msg, dict):
                 continue
 
             t = msg.get("type")
@@ -24244,22 +24271,32 @@ async def handler(ws):
                     novo, e = try_open_savegame_room(account["name"], msg.get("id"), rooms)
                     if novo:
                         room = novo
-                        nome = account["name"] or (msg.get("name") or "Herói")[:20]
+                        nome = account["name"] or str(msg.get("name") or "Herói")[:20]
                         await room.add_player(ws, pid, nome, account["name"])
                     else:
                         await err(e)
                     continue
 
+                # Trocar de sala na MESMA conexão vazava a trava do personagem:
+                # a limpeza do `finally` só conhece a sala apontada por `room`, e
+                # sobrescrevê-la deixava CHARACTERS_IN_USE preso à sala antiga —
+                # o herói ficava indisponível para TODOS até reiniciar o servidor.
+                # O cliente oficial fecha o socket antes (leaveSession), então
+                # ninguém precisa disso; recusamos para não corromper o estado.
+                if t in ("create_room", "join_room") and room and pid in room.players:
+                    await err("Você já está em uma sala. Saia dela antes de entrar em outra.")
+                    continue
+
                 if t == "create_room":
-                    name = (msg.get("name") or "Herói")[:20]
+                    name = str(msg.get("name") or "Herói")[:20]
                     code = make_code()
                     room = GameRoom(code)
                     rooms[code] = room
                     await room.add_player(ws, pid, name, account["name"])
 
                 elif t == "join_room":
-                    code = (msg.get("code") or "").upper()
-                    name = (msg.get("name") or "Herói")[:20]
+                    code = str(msg.get("code") or "").upper()
+                    name = str(msg.get("name") or "Herói")[:20]
                     room = rooms.get(code)
                     if not room:
                         await err("Sala não encontrada.")
@@ -24275,8 +24312,8 @@ async def handler(ws):
                     # ReconexÃ£o: religa este WebSocket a um jogador que caiu no
                     # meio da partida (fora do lobby o jogador permanece em
                     # room.players â€” sÃ³ a conexÃ£o Ã© descartada no disconnect).
-                    code = (msg.get("code") or "").upper()
-                    name = (msg.get("name") or "")[:20]
+                    code = str(msg.get("code") or "").upper()
+                    name = str(msg.get("name") or "")[:20]
                     alvo_room = rooms.get(code)
                     if not alvo_room:
                         await err("Sala não encontrada para reconexão.")
@@ -24330,7 +24367,7 @@ async def handler(ws):
                         await room.gm_say(f"🔌 **{name}** reconectou-se e voltou à masmorra!")
 
                 elif t == "select_class":
-                    if room: await room.select_class(pid, msg.get("class_id"))
+                    if room: await room.select_class(pid, _key(msg.get("class_id")))
 
                 elif t == "campaign_vote":
                     if room: await room.handle_campaign_vote(pid, msg.get("vote_id"), bool(msg.get("approve")))
@@ -24409,7 +24446,7 @@ async def handler(ws):
                         await room.handle_move(pid, dx, dy)
 
                 elif t == "open_door":
-                    if room: await room.handle_open_door(pid, int(msg.get("tx", -1)), int(msg.get("ty", -1)))
+                    if room: await room.handle_open_door(pid, _num(msg.get("tx")), _num(msg.get("ty")))
 
                 elif t == "libertar_prisioneiro":
                     if room: await room.handle_libertar_prisioneiro(pid)
@@ -24418,7 +24455,7 @@ async def handler(ws):
                     if room: await room.handle_encerrar_missao(pid)
 
                 elif t == "attack":
-                    if room: await room.handle_attack(pid, msg.get("target_id"), msg.get("buffs"), msg.get("target_pos"))
+                    if room: await room.handle_attack(pid, _key(msg.get("target_id")), msg.get("buffs"), msg.get("target_pos"))
 
                 elif t == "throw":
                     if room: await room.handle_throw(pid, msg.get("target_id"), msg.get("slot"))
@@ -24539,24 +24576,24 @@ async def handler(ws):
                     if room: await room.handle_drop_item(pid, msg.get("source"), msg.get("index"), msg.get("slot_key"))
 
                 elif t == "pickup_item":
-                    if room: await room.handle_pickup_item(pid, msg.get("ground_id"))
+                    if room: await room.handle_pickup_item(pid, _key(msg.get("ground_id")))
 
                 elif t == "equip_from_bag":
-                    if room: await room.handle_equip_from_bag(pid, int(msg.get("slot_index", -1)))
+                    if room: await room.handle_equip_from_bag(pid, _num(msg.get("slot_index")))
 
                 elif t == "equip_offhand":
-                    if room: await room.handle_equip_offhand(pid, int(msg.get("slot_index", -1)))
+                    if room: await room.handle_equip_offhand(pid, _num(msg.get("slot_index")))
 
                 elif t == "unequip":
                     if room: await room.handle_unequip(pid, msg.get("slot_key"))
 
                 elif t == "reorder_bag":
                     if room: await room.handle_reorder_bag(
-                        pid, int(msg.get("from_index", -1)), int(msg.get("to_index", 0)))
+                        pid, _num(msg.get("from_index")), _num(msg.get("to_index"), 0))
 
                 elif t == "take_from_chest":
                     if room: await room.handle_take_from_chest(
-                        pid, msg.get("chest_id"), msg.get("kind"), msg.get("index", 0)
+                        pid, _key(msg.get("chest_id")), msg.get("kind"), _num(msg.get("index"), 0)
                     )
 
                 elif t == "interagir_decor":
@@ -26179,7 +26216,7 @@ _STORY_OK_EXT = _STORY_IMG_EXT | _STORY_AUDIO_EXT
 def _save_story_upload(name, data_b64):
     """Grava uma mídia de história em assets/story/. Sobrescreve se já existir.
     Retorna (ok: bool, basename_salvo | mensagem_de_erro)."""
-    base = os.path.basename(name or "")        # bloqueia ../ e caminhos absolutos
+    base = os.path.basename(str(name or ""))        # bloqueia ../ e caminhos absolutos
     if not base:
         return False, "nome inválido"
     if "\x00" in base:
@@ -26210,8 +26247,8 @@ def _save_scene_media_upload(kind, name, data_b64):
     """Recebe mídia escolhida no Editor de Cenas e a organiza por categoria."""
     folders = {"background": "fundos", "character": "personagens", "illustration": "ilustracoes",
                "music": "audio", "ambience": "audio", "sound": "audio"}
-    folder = folders.get(kind)
-    base = os.path.basename(name or "")
+    folder = folders.get(kind) if isinstance(kind, str) else None
+    base = os.path.basename(str(name or ""))
     ext = os.path.splitext(base)[1].lower()
     allowed = _STORY_IMG_EXT if kind in ("background", "character", "illustration") else _STORY_AUDIO_EXT
     if not folder or not base or "\x00" in base or ext not in allowed:
@@ -26230,7 +26267,7 @@ def _save_scene_media_upload(kind, name, data_b64):
 
 TAVERN_ASSET_DIR = os.path.join(BASE_DIR, "assets", "tavern")
 def _save_tavern_art_upload(name, data_b64):
-    base = os.path.basename(name or "")
+    base = os.path.basename(str(name or ""))
     if not base or "\x00" in base or os.path.splitext(base)[1].lower() not in _STORY_IMG_EXT:
         return False, "imagem inválida"
     if not isinstance(data_b64, str) or not data_b64 or (len(data_b64) * 3) // 4 > STORY_UPLOAD_MAX:
@@ -26250,7 +26287,7 @@ CITY_ASSET_DIR = os.path.join(BASE_DIR, "assets", "city")
 def _save_city_art_upload(name, data_b64):
     """Grava a ilustração de uma cidade em assets/city/. Mesmas proteções do
     _save_tavern_art_upload (extensão, tamanho e path traversal)."""
-    base = os.path.basename(name or "")
+    base = os.path.basename(str(name or ""))
     if not base or "\x00" in base or os.path.splitext(base)[1].lower() not in _STORY_IMG_EXT:
         return False, "imagem inválida"
     if not isinstance(data_b64, str) or not data_b64 or (len(data_b64) * 3) // 4 > STORY_UPLOAD_MAX:
@@ -26271,7 +26308,7 @@ def _save_prisoner_upload(name, data_b64):
     """Grava uma imagem de prisioneiro em assets/pawns/prisioneiros/. Só imagens.
     Mesma proteção (path-traversal, tamanho) do _save_story_upload.
     Retorna (ok: bool, basename_salvo | mensagem_de_erro)."""
-    base = os.path.basename(name or "")
+    base = os.path.basename(str(name or ""))
     if not base or "\x00" in base:
         return False, "nome inválido"
     ext = os.path.splitext(base)[1].lower()
@@ -26302,16 +26339,16 @@ MONSTER_PAWNS_DIR = os.path.join(BASE_DIR, "assets", "pawns", "monstros")
 MONSTER_PORTRAITS_DIR = os.path.join(BASE_DIR, "assets", "retratos", "monstros")
 
 def _monster_art_key(name):
-    stem = os.path.splitext(os.path.basename(name or ""))[0]
+    stem = os.path.splitext(os.path.basename(str(name or "")))[0]
     stem = unicodedata.normalize("NFD", stem).encode("ascii", "ignore").decode("ascii")
     stem = re.sub(r"[^a-zA-Z0-9_-]+", "_", stem).strip("_-").lower()
     return stem[:64]
 
 def _save_monster_art(kind, name, data_b64):
     """Salva PNG selecionado no editor e retorna sua chave de referência."""
-    if kind not in {"miniature", "portrait"}:
+    if not isinstance(kind, str) or kind not in {"miniature", "portrait"}:
         return False, "tipo de arte inválido"
-    if os.path.splitext(os.path.basename(name or ""))[1].lower() != ".png":
+    if os.path.splitext(os.path.basename(str(name or "")))[1].lower() != ".png":
         return False, "envie um arquivo .png"
     key = _monster_art_key(name)
     if not key or not isinstance(data_b64, str) or not data_b64:
@@ -26340,7 +26377,7 @@ ITENS_DIR = os.path.join(BASE_DIR, "assets", "itens")
 def _save_item_art(name, data_b64):
     """Grava o PNG de um item custom em assets/itens/<basename>. Só .png; valida a
     assinatura PNG (mesma proteção de _save_monster_art)."""
-    base = os.path.basename(name or "")
+    base = os.path.basename(str(name or ""))
     if not base or "\x00" in base or os.path.splitext(base)[1].lower() != ".png":
         return False, "envie um arquivo .png"
     if not isinstance(data_b64, str) or not data_b64:
@@ -26369,7 +26406,7 @@ def _save_objeto_upload(name, data_b64):
     """Grava um PNG de objeto em assets/objetos/. Só .png. Mesma proteção
     (path-traversal via basename, tamanho) do _save_story_upload.
     Retorna (ok: bool, basename_salvo | mensagem_de_erro)."""
-    base = os.path.basename(name or "")
+    base = os.path.basename(str(name or ""))
     if not base or "\x00" in base:
         return False, "nome inválido"
     ext = os.path.splitext(base)[1].lower()
