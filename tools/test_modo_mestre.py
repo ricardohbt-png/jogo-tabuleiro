@@ -695,6 +695,32 @@ async def main():
     check("sem action_type → principal", r._custo_acao_ability({}) == "principal")
     check("None → principal",      r._custo_acao_ability(None) == "principal")
 
+    print("\n[31] cargas de ataque montadas na abertura da janela")
+    r = playing_room_com_mestre()
+    m = {"id": "g1", "name": "Lobisomem", "hp": 30, "max_hp": 30, "pos": [1, 1],
+         "size": [1, 1], "movement": 4, "control_mode": "manual",
+         "attacks": [{"name": "Garras", "atk_bonus": 5, "damage": "1d4", "num_attacks": 2},
+                     {"name": "Mordida", "atk_bonus": 4, "damage": "1d6", "num_attacks": 1}]}
+    r.monsters = {"g1": m}
+    task = asyncio.create_task(r._master_manual_window(m))
+    await asyncio.sleep(0)
+    check("cargas por índice", m["master_attack_charges"] == {0: 2, 1: 1})
+    check("tipo de ação zerado", m.get("_master_acao_tipo") is None)
+    r.master_manual_event.set()
+    await task
+
+    print("\n[31b] monstro legado (sem attacks[]) ganha 1 carga")
+    r = playing_room_com_mestre()
+    m2 = {"id": "g2", "name": "Goblin", "hp": 6, "max_hp": 6, "pos": [1, 1],
+          "size": [1, 1], "movement": 4, "control_mode": "manual",
+          "atk_bonus": 2, "damage": "1d6"}
+    r.monsters = {"g2": m2}
+    task = asyncio.create_task(r._master_manual_window(m2))
+    await asyncio.sleep(0)
+    check("legado tem 1 carga no índice 0", m2["master_attack_charges"] == {0: 1})
+    r.master_manual_event.set()
+    await task
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

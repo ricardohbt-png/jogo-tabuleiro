@@ -12126,6 +12126,20 @@ class GameRoom:
         await self.gm_say("🔌 O mestre caiu — os monstros voltam ao controle da IA.")
         await self.push_state()
 
+    def _montar_cargas_ataque(self, m):
+        """{índice de attacks[]: num_attacks} — as rolagens disponíveis no turno.
+        Espelha o que _monster_execute_attacks faz de uma vez na IA. Monstro de
+        ficha legada (sem attacks[]) recebe uma única carga no índice 0."""
+        ataques = m.get("attacks") or []
+        if not ataques:
+            return {0: 1}
+        return {i: max(1, int(a.get("num_attacks", 1) or 1))
+                for i, a in enumerate(ataques)}
+
+    def _reiniciar_timer_manual(self):
+        """Stub — implementado na Task 9 (relógio de inatividade)."""
+        return
+
     async def _master_manual_window(self, m):
         """Abre a janela interativa do modo Manual e aguarda o mestre agir.
         Retorna quando o mestre encerra OU o timeout resolve via IA auto."""
@@ -12139,6 +12153,9 @@ class GameRoom:
         m["_moved_this_turn"] = False
         m["_master_acted"] = False
         m["_master_bonus_acted"] = False
+        m["_master_acao_tipo"] = None
+        m["master_attack_charges"] = self._montar_cargas_ataque(m)
+        m.pop("_master_touched", None)
         self.master_manual_event = asyncio.Event()
         await self.push_state()
         self.master_manual_timer = asyncio.create_task(self._master_manual_timeout(m["id"]))
