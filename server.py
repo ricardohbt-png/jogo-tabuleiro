@@ -6515,6 +6515,7 @@ class GameRoom:
         self.master_manual_mid = None       # id do monstro na janela Manual (ou None)
         self.master_manual_event = None     # asyncio.Event que fecha a janela
         self.master_manual_timer = None     # tarefa do timeout anti-AFK
+        self.master_manual_deadline = 0.0   # time.monotonic() do corte anti-AFK
         self.master_reserve = {}   # Camada B: typeâ†’count restante de reforÃ§os do mestre
         self.expected_party = {"heroes": 4, "level": 1}   # Camada C: grupo esperado (referÃªncia)
         self.saida_permitida = True   # masmorra permite sair pela escada de entrada
@@ -12042,6 +12043,8 @@ class GameRoom:
             if not await self._commit_monster_step(m, nx, ny):
                 break
             m["master_moves_left"] -= 1
+        m["_master_touched"] = True
+        self._reiniciar_timer_manual()
         await self.push_state()
 
     async def handle_mestre_atacar_monstro(self, pid, monster_id, target_id, attack_index=None):
@@ -12169,10 +12172,10 @@ class GameRoom:
         if mid and self.master_manual_event and not self.master_manual_event.is_set():
             self.master_manual_mid = None   # fecha a janela ANTES de resolver (evita aÃ§Ã£o dupla)
             m = self.monsters.get(mid)
-            if m and m["hp"] > 0:
+            if m and m["hp"] > 0 and not m.get("_master_touched"):
                 alive_players = [p for p in self.players.values() if self._ativo(p)]
                 if alive_players:
-                    await self.gm_phase(m)   # o monstro interrompido ainda age via IA
+                    await self.gm_phase(m)   # só resolve via IA se o mestre não tinha agido
             self.master_manual_event.set()   # libera _master_manual_window â†’ o turno avanÃ§a
         await self.gm_say("🔌 O mestre caiu — os monstros voltam ao controle da IA.")
         await self.push_state()
@@ -12188,8 +12191,11 @@ class GameRoom:
                 for i, a in enumerate(ataques)}
 
     def _reiniciar_timer_manual(self):
-        """Stub — implementado na Task 9 (relógio de inatividade)."""
-        return
+        """Empurra o fim do relógio anti-AFK. Chamado ao fim de cada ação do
+        mestre: o corte só acontece após MASTER_MANUAL_LIMIT_S de imobilidade
+        real, não a partir da abertura da janela."""
+        if self.master_manual_mid:
+            self.master_manual_deadline = time.monotonic() + self.MASTER_MANUAL_LIMIT_S
 
     async def _master_manual_window(self, m):
         """Abre a janela interativa do modo Manual e aguarda o mestre agir.
@@ -12226,6 +12232,7 @@ class GameRoom:
         m.pop("_golpe_brutal_ativo", None)
         await self._upkeep_inicio_turno_manual(m)
         self.master_manual_event = asyncio.Event()
+        self.master_manual_deadline = time.monotonic() + self.MASTER_MANUAL_LIMIT_S
         await self.push_state()
         self.master_manual_timer = asyncio.create_task(self._master_manual_timeout(m["id"]))
         try:
@@ -12237,17 +12244,23 @@ class GameRoom:
             self.master_manual_mid = None
 
     async def _master_manual_timeout(self, mid):
-        """Anti-AFK: se o mestre não encerrar em MASTER_MANUAL_LIMIT_S, o monstro
-        age via IA auto e a janela fecha."""
+        """Anti-AFK por inatividade: dorme até o deadline; se o mestre agiu, o
+        deadline foi empurrado e a espera recomeça. Ao estourar de verdade, só
+        chama a IA se o monstro NÃO fez nada — se o mestre já moveu ou agiu, a
+        janela apenas fecha (senão o monstro ganhava um turno duplo)."""
         try:
-            await asyncio.sleep(self.MASTER_MANUAL_LIMIT_S)
+            while True:
+                restante = self.master_manual_deadline - time.monotonic()
+                if restante <= 0:
+                    break
+                await asyncio.sleep(restante)
         except asyncio.CancelledError:
             return
         if self.master_manual_mid != mid:
             return
-        self.master_manual_mid = None   # fecha a janela ANTES da IA resolver (evita aÃ§Ã£o dupla)
+        self.master_manual_mid = None   # fecha a janela ANTES de resolver
         m = self.monsters.get(mid)
-        if m and m["hp"] > 0:
+        if m and m["hp"] > 0 and not m.get("_master_touched"):
             alive_players = [p for p in self.players.values() if self._ativo(p)]
             if alive_players:
                 await self.gm_phase(m)
@@ -20704,6 +20717,7 @@ class GameRoom:
             if not await self._envenenar_arma_do_inventario(m):
                 await self.send_to(pid, {"type": "error", "msg": "Não foi possível envenenar a arma."}); return
             removed = False  # a habilidade já consumiu a dose da bolsa.
+            self._debitar_acao_mestre(m, "livre", "item")  # não gasta ação, mas marca _master_touched
         elif effect == "coat_poison":
             vid = item.get("veneno_id")
             if vid and m.get("attacks"):

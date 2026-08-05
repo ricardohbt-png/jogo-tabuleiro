@@ -1400,6 +1400,68 @@ async def main():
     await r.handle_mestre_set_alvo("m1", ["g1"], "hA")
     check("set_alvo seta master_target_id com mestre ativo", m.get("master_target_id") == "hA")
 
+    print("\n[41] relógio de inatividade e ausência de turno duplo")
+    r = playing_room_com_mestre()
+    r.MASTER_MANUAL_LIMIT_S = 0.05
+    ia_calls = {"n": 0}
+    async def fake_gm_phase(mm): ia_calls["n"] += 1
+    r.gm_phase = fake_gm_phase
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [9, 9], "alive": True,
+                        "connected": True, "hp": 10}}
+    m = {"id": "g1", "name": "Orc", "type": "goblin", "hp": 12, "max_hp": 12,
+         "pos": [1, 1], "size": [1, 1], "movement": 3, "control_mode": "manual",
+         "attacks": [{"name": "Machado", "num_attacks": 1}]}
+    r.monsters = {"g1": m}
+    # (a) mestre não faz nada → IA resolve
+    task = asyncio.create_task(r._master_manual_window(m))
+    await asyncio.sleep(0.15)
+    await task
+    check("(a) timeout sem ação chama a IA", ia_calls["n"] == 1)
+    # (b) mestre agiu → timeout apenas fecha, sem turno duplo
+    ia_calls["n"] = 0
+    task = asyncio.create_task(r._master_manual_window(m))
+    await asyncio.sleep(0)
+    r.master_manual_mid = "g1"
+    await r.handle_mestre_mover_monstro_para("m1", "g1", 2, 1)
+    await asyncio.sleep(0.15)
+    await task
+    check("(b) timeout após ação do mestre NÃO chama a IA", ia_calls["n"] == 0)
+    check("(b) o monstro andou", m["pos"] == [2, 1])
+
+    print("\n[41b] deadline é empurrado a cada ação")
+    r = playing_room_com_mestre()
+    r.MASTER_MANUAL_LIMIT_S = 60
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [9, 9], "alive": True,
+                        "connected": True, "hp": 10}}
+    m = {"id": "g1", "name": "Orc", "type": "goblin", "hp": 12, "max_hp": 12,
+         "pos": [1, 1], "size": [1, 1], "movement": 3, "control_mode": "manual",
+         "attacks": [{"name": "Machado", "num_attacks": 1}]}
+    r.monsters = {"g1": m}
+    task = asyncio.create_task(r._master_manual_window(m))
+    await asyncio.sleep(0)
+    d1 = r.master_manual_deadline
+    await asyncio.sleep(0.02)
+    r.master_manual_mid = "g1"
+    await r.handle_mestre_mover_monstro_para("m1", "g1", 2, 1)
+    check("deadline empurrado para frente", r.master_manual_deadline > d1)
+    r.master_manual_event.set()
+    await task
+
+    print("\n[41c] envenenar a arma de graça também conta como o mestre ter agido")
+    r = playing_room_com_mestre()
+    m = {"id": "g1", "name": "Aranha", "hp": 12, "max_hp": 12, "pos": [1, 1],
+         "size": [1, 1], "special_abilities": [{"id": "envenenar_arma"}],
+         "attacks": [{"name": "Ferrão", "num_attacks": 1}],
+         "equipment_consumables": [{"id": "v1", "effect": "coat_poison",
+                                     "veneno_id": "veneno_fraco", "name": "Veneno"}]}
+    r.monsters = {"g1": m}
+    r.master_manual_mid = "g1"
+    async def fake_envenenar(mm): return True
+    r._envenenar_arma_do_inventario = fake_envenenar
+    m.pop("_master_touched", None)
+    await r.handle_mestre_usar_item("m1", "g1", "v1", None, None, None)
+    check("veneno_livre marca _master_touched", m.get("_master_touched") is True)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
