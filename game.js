@@ -12929,8 +12929,10 @@ function _showTrapResult(msg){
     congelamento_paralisia: 'congelamento_ou_paralisia.png',
     atordoado: 'atordoado.png', morte: 'morte.png', sono: 'sono.png',
   };
+  // A transformação por Licantropia mantém o popup de maldição, mas usa a
+  // ilustração própria do lobisomem em vez do ícone genérico de amaldiçoado.
   const imageName = msg.sucesso ? 'armadilha_sucesso.png'
-    : imagensPorTipo[msg.tipo]
+    : (msg.tipo === 'maldicao' && msg.maldicao_id === 'licantropia' ? 'lobisomem.png' : imagensPorTipo[msg.tipo])
     || ((msg.tick && msg.nome === 'Armadilha Incendiária') ? 'em_chamas.png' : trapImages[msg.nome]);
   trapIcon.replaceChildren();
   if (imageName) {
