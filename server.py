@@ -20883,7 +20883,9 @@ class GameRoom:
                    "golpe_brutal", "desaparecer_nas_sombras"}:
             return True
         if ability.get("action_type") == "magia":
-            return aid in GRIMORIO and aid in GRIMORIO_IMPLEMENTADAS
+            if aid not in GRIMORIO or aid not in GRIMORIO_IMPLEMENTADAS:
+                return False
+            return GRIMORIO[aid].get("tipo") not in {"utilidade", "reacao"}
         if ability.get("save") is not None and ability.get("dc") is not None:
             return True
         return ability.get("source") in {"heroi", "guilda"}
@@ -20957,18 +20959,38 @@ class GameRoom:
             sid = ability_id
             if not self._magia_monstro_disponivel(m, sid):
                 await self.send_to(pid, {"type": "error", "msg": "Magia sem usos ou em recarga."}); return
-            alvo = self.players.get(target_id)
             magia = GRIMORIO.get(sid, {})
-            data = {"target_id": target_id}
-            if alvo:
-                dx = alvo["pos"][0] - m["pos"][0]; dy = alvo["pos"][1] - m["pos"][1]
-                data["tx"] = alvo["pos"][0]; data["ty"] = alvo["pos"][1]
-                data["dir"] = [0 if dx == 0 else (1 if dx > 0 else -1),
-                               0 if dy == 0 else (1 if dy > 0 else -1)]
+            tipo = magia.get("tipo")
+            if tipo in {"utilidade", "reacao"}:
+                await self.send_to(pid, {"type": "error", "msg": "Esta magia não tem uso manual."}); return
+            if tipo in {"alvo_aliado", "buff_aliado"}:
+                # Magia de aliado: o alvo é outro MONSTRO. Aceita o id enviado
+                # pelo mestre; sem um válido, cai no aliado vivo mais próximo,
+                # como a IA faz em _monster_try_spell.
+                aliado = self.monsters.get(target_id)
+                if not aliado or aliado.get("hp", 0) <= 0:
+                    aliado = min((o for o in self.monsters.values() if o.get("hp", 0) > 0),
+                                 key=lambda o: max(abs(o["pos"][0] - m["pos"][0]),
+                                                   abs(o["pos"][1] - m["pos"][1])),
+                                 default=m)
+                alvo = aliado
+            else:
+                alvo = self.players.get(target_id)
+                if not alvo or not alvo.get("alive"):
+                    await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
+            data = {"target_id": alvo["id"]}
+            dx = alvo["pos"][0] - m["pos"][0]; dy = alvo["pos"][1] - m["pos"][1]
+            data["tx"] = alvo["pos"][0]; data["ty"] = alvo["pos"][1]
+            data["dir"] = [0 if dx == 0 else (1 if dx > 0 else -1),
+                           0 if dy == 0 else (1 if dy > 0 else -1)]
             alc = magia.get("alcance")
-            if alc is not None and alvo:
+            if alc is not None:
                 if max(abs(m["pos"][0] - alvo["pos"][0]), abs(m["pos"][1] - alvo["pos"][1])) > alc:
                     await self.send_to(pid, {"type": "error", "msg": "Alvo fora de alcance."}); return
+            # _lancar_magia_monstro debita uso/recarga ANTES de executar a
+            # magia (mesma ordem da IA em _monster_try_spell — invariante de
+            # extração comportamento-preservada); por isso o alvo já foi
+            # validado acima, para não gastar carga num alvo inválido.
             await self._lancar_magia_monstro(m, sid, data)
             self._debitar_acao_mestre(m, custo, "habilidade")
             m["_ja_executou_acao"] = True

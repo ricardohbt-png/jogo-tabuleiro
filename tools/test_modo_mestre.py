@@ -928,6 +928,61 @@ async def main():
           r._habilidade_ativavel_manual({"id": "encantar_vampirico", "action_type": "acao",
                                          "dc": 12}) is False)
 
+    print("\n[34c] magia de aliado não mira herói; utilidade/reação segue barrada")
+    r = playing_room_com_mestre()
+    lancadas34c = []
+    async def fake_grim_34c(mm, magia, data, *a, **k):
+        lancadas34c.append((magia["id"], data.get("target_id")))
+    r._executar_magia_grimorio = fake_grim_34c
+    # abencoar_arma: tipo "alvo_aliado", em GRIMORIO_IMPLEMENTADAS.
+    ab_aliado = {"id": "abencoar_arma", "name": "Abençoar Arma", "action_type": "magia"}
+    m1 = {"id": "g1", "name": "Clérigo Sombrio", "hp": 14, "pos": [2, 2], "size": [1, 1],
+          "control_mode": "manual", "_master_acted": False, "_master_bonus_acted": False,
+          "_master_acao_tipo": None, "attacks": [{"name": "cajado", "num_attacks": 1}],
+          "master_attack_charges": {0: 1}, "special_abilities": [ab_aliado],
+          "monster_spells": [{"id": "abencoar_arma", "limit_mode": "encounter", "uses_per_combat": 2}],
+          "spell_uses": {"abencoar_arma": 2}, "spell_cooldowns": {}}
+    m2 = {"id": "g2", "name": "Goblin Aliado", "hp": 8, "pos": [3, 2], "size": [1, 1]}
+    r.monsters = {"g1": m1, "g2": m2}; r.master_manual_mid = "g1"
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [2, 3], "alive": True}}
+    await r.handle_mestre_usar_habilidade("m1", "g1", "abencoar_arma", "hA")
+    check("magia de aliado não mira herói", lancadas34c and lancadas34c[-1][1] != "hA")
+    check("magia de aliado mira um monstro", lancadas34c and lancadas34c[-1][1] in {"g1", "g2"})
+
+    m1["_master_acted"] = False; m1["_master_acao_tipo"] = None
+    await r.handle_mestre_usar_habilidade("m1", "g1", "abencoar_arma", "g2")
+    check("magia de aliado aceita o monstro escolhido", lancadas34c[-1] == ("abencoar_arma", "g2"))
+
+    # contramagica: tipo "reacao", em GRIMORIO_IMPLEMENTADAS — sem uso manual.
+    ab_reacao = {"id": "contramagica", "name": "Contramágica", "action_type": "magia"}
+    check("reação barrada no predicado", r._habilidade_ativavel_manual(ab_reacao) is False)
+    m3 = {"id": "g3", "name": "Arcanista", "hp": 10, "pos": [4, 2], "size": [1, 1],
+          "control_mode": "manual", "_master_acted": False, "_master_bonus_acted": False,
+          "_master_acao_tipo": None, "attacks": [{"name": "cajado", "num_attacks": 1}],
+          "master_attack_charges": {0: 1}, "special_abilities": [ab_reacao],
+          "monster_spells": [{"id": "contramagica", "limit_mode": "encounter", "uses_per_combat": 1}],
+          "spell_uses": {"contramagica": 1}, "spell_cooldowns": {}}
+    r.monsters["g3"] = m3; r.master_manual_mid = "g3"; r._errs.clear()
+    lancadas34c.clear()
+    await r.handle_mestre_usar_habilidade("m1", "g3", "contramagica", "hA")
+    check("reação recusada sem lançar", lancadas34c == [])
+    check("reação recusada sem gastar ação", m3["_master_acted"] is False)
+
+    # silencio: tipo "area_fixa" (hostil) — alvo inválido é recusado antes de gastar.
+    ab_hostil = {"id": "silencio", "name": "Silêncio", "action_type": "magia"}
+    m4 = {"id": "g4", "name": "Xamã", "hp": 14, "pos": [2, 2], "size": [1, 1],
+          "control_mode": "manual", "_master_acted": False, "_master_bonus_acted": False,
+          "_master_acao_tipo": None, "attacks": [{"name": "cajado", "num_attacks": 1}],
+          "master_attack_charges": {0: 1}, "special_abilities": [ab_hostil],
+          "monster_spells": [{"id": "silencio", "limit_mode": "encounter", "uses_per_combat": 1}],
+          "spell_uses": {"silencio": 1}, "spell_cooldowns": {}}
+    r.monsters["g4"] = m4; r.master_manual_mid = "g4"; r._errs.clear()
+    lancadas34c.clear()
+    await r.handle_mestre_usar_habilidade("m1", "g4", "silencio", "hZ_inexistente")
+    check("alvo hostil inválido não lança", lancadas34c == [])
+    check("alvo hostil inválido não debita uso", m4["spell_uses"]["silencio"] == 1)
+    check("alvo hostil inválido não gasta ação", m4["_master_acted"] is False)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
