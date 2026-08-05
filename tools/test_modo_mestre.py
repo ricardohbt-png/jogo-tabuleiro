@@ -646,6 +646,44 @@ async def main():
     await r.handle_mestre_usar_habilidade("m1", "g1", "hero_warrior_mira_certeira", None)
     check("sem usos recusado", m["_master_acted"] is False)
 
+    print("\n[29] janela Manual renova o orçamento de passo a cada turno")
+    # `_commit_monster_step` debita `_water_moves_left` a cada casa (custo 1 em
+    # chão seco). Só `gm_phase` o renovava, e o Manual não passa por lá — sem o
+    # reset na janela o gasto acumulava entre turnos e o monstro do mestre
+    # travava de vez depois de andar `movement` casas NO TOTAL da partida.
+    r = playing_room_com_mestre()
+    r.map_w = r.map_h = 20    # espaço para os 3 turnos de caminhada sem bater na borda
+    r.tiles = [[S.FLOOR]*r.map_w for _ in range(r.map_h)]
+    r.materiais = {}          # mapa 100% seco: cada casa custa 1
+    r.decorations = []
+    r.players = {}
+    mv = 3
+    m = {"id": "g1", "type": "goblin", "name": "Goblin", "pos": [1, 1], "hp": 10,
+         "max_hp": 10, "ac": 12, "movement": mv, "size": [1, 1], "control_mode": "manual"}
+    r.monsters = {"g1": m}
+
+    async def abrir_janela_manual(sala, monstro):
+        """Abre a janela Manual e a fecha em seguida — espelha um turno do mestre."""
+        task = asyncio.create_task(sala._master_manual_window(monstro))
+        await asyncio.sleep(0)               # deixa a janela chegar no await do Event
+        sala.master_manual_event.set()
+        await task
+
+    andou_por_turno = []
+    for _turno in range(3):
+        await abrir_janela_manual(r, m)
+        check(f"turno {_turno+1}: orçamento de passo renovado", m.get("_water_moves_left") == mv)
+        check(f"turno {_turno+1}: _moved_this_turn resetado", m.get("_moved_this_turn") is False)
+        r.master_manual_mid = "g1"           # a janela zera o ponteiro ao fechar
+        passos = 0
+        for _ in range(mv):
+            await r.handle_mestre_mover_monstro_para("m1", "g1", m["pos"][0] + 1, m["pos"][1])
+            passos = mv - m["master_moves_left"]
+        andou_por_turno.append(passos)
+
+    check("andou nos 3 turnos (não trava após o 1º)", andou_por_turno == [mv, mv, mv])
+    check("percorreu movement × 3 casas no total", m["pos"][0] == 1 + mv * 3)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

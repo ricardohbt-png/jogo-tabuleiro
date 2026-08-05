@@ -12130,6 +12130,12 @@ class GameRoom:
         Retorna quando o mestre encerra OU o timeout resolve via IA auto."""
         self.master_manual_mid = m["id"]
         m["master_moves_left"] = int(m.get("movement", self.MASTER_MANUAL_MOVE) or self.MASTER_MANUAL_MOVE)
+        # Orçamento por casa do terreno (custo 1 em chão seco, 2/3 na água):
+        # `_commit_monster_step` debita dele a cada passo, mas só `gm_phase` o
+        # renova — e o Manual não passa por lá. Sem este reset o monstro do
+        # mestre acumularia o gasto entre turnos e travaria de vez.
+        m["_water_moves_left"] = self._water_turn_moves(m, m.get("movement", 4))
+        m["_moved_this_turn"] = False
         m["_master_acted"] = False
         m["_master_bonus_acted"] = False
         self.master_manual_event = asyncio.Event()
