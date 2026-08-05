@@ -1194,6 +1194,55 @@ async def main():
     check("regeneração bloqueada não cura", m["hp"] == 8)
     check("bloqueio é consumido", "regeneracao_bloqueada" not in m)
 
+    print("\n[38] turno perdido não abre a janela do Manual")
+    r = playing_room_com_mestre()
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [5, 5], "alive": True, "hp": 10}}
+    # petrificado_rodadas > 0: todo call site real (ex.: linha ~17495 e a
+    # habilidade de monstro em ~21148) sempre grava os dois campos juntos —
+    # sem isso, `_processar_venenos_turno` (chamado dentro do prólogo, ANTES
+    # da checagem de petrificado) decrementa o default 0 pra -1, zera pra 0 e
+    # já desfaz a petrificação no mesmo upkeep.
+    m = {"id": "g1", "name": "Estátua", "type": "goblin", "hp": 10, "max_hp": 10,
+         "pos": [2, 2], "size": [1, 1], "movement": 4, "control_mode": "manual",
+         "petrificado": True, "petrificado_rodadas": 2}
+    r.monsters = {"g1": m}
+    await r._master_manual_window(m)          # não bloqueia: o turno foi consumido
+    check("não setou master_manual_mid", r.master_manual_mid is None)
+    check("não criou a janela", r.master_manual_event is None)
+    check("não montou cargas de ataque", "master_attack_charges" not in m)
+
+    print("\n[38b] monstro são abre a janela normalmente")
+    r = playing_room_com_mestre()
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [5, 5], "alive": True, "hp": 10}}
+    m = {"id": "g1", "name": "Orc", "type": "goblin", "hp": 10, "max_hp": 10,
+         "pos": [2, 2], "size": [1, 1], "movement": 4, "control_mode": "manual",
+         "attacks": [{"name": "Machado", "num_attacks": 1}]}
+    r.monsters = {"g1": m}
+    task = asyncio.create_task(r._master_manual_window(m))
+    await asyncio.sleep(0)
+    check("abriu a janela", r.master_manual_mid == "g1")
+    check("montou cargas", m.get("master_attack_charges") == {0: 1})
+    r.master_manual_event.set()
+    await task
+
+    print("\n[38c] a janela passa [m] como alive_monsters, igual à gm_phase(monster)")
+    r = playing_room_com_mestre()
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [5, 5], "alive": True, "hp": 10}}
+    visto = {}
+    async def espiao(mm, vivos): visto["vivos"] = vivos; return None
+    r._status_monstro_turno = espiao
+    m = {"id": "g1", "name": "Orc", "type": "goblin", "hp": 10, "max_hp": 10,
+         "pos": [2, 2], "size": [1, 1], "movement": 4, "control_mode": "manual",
+         "attacks": [{"name": "Machado", "num_attacks": 1}]}
+    outro = {"id": "g2", "name": "Outro", "type": "goblin", "hp": 10, "max_hp": 10,
+             "pos": [8, 8], "size": [1, 1], "movement": 4}
+    r.monsters = {"g1": m, "g2": outro}
+    task = asyncio.create_task(r._master_manual_window(m))
+    await asyncio.sleep(0)
+    check("recebeu só o próprio monstro", visto.get("vivos") == [m])
+    r.master_manual_event.set()
+    await task
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

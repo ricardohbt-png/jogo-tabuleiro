@@ -12191,6 +12191,16 @@ class GameRoom:
     async def _master_manual_window(self, m):
         """Abre a janela interativa do modo Manual e aguarda o mestre agir.
         Retorna quando o mestre encerra OU o timeout resolve via IA auto."""
+        # O monstro do mestre passa pelo MESMO prólogo de início de turno da IA:
+        # veneno, Réquiem, petrificação, paralisia, rede, enredado, sono/medo.
+        # Se o turno foi consumido, não abre janela — `monster_step` chama
+        # `_advance_initiative()` logo depois, então a iniciativa segue sozinha.
+        # O 2º argumento é `[m]` de propósito: no laço de iniciativa a IA entra
+        # por `gm_phase(monster)`, que monta `alive_monsters = [monster]`. Passar
+        # a lista inteira daria ao Manual um comportamento diferente no caso do
+        # monstro Dominado, que usa essa lista para escolher em quem bater.
+        if not await self._upkeep_inicio_turno_monstro(m, [m]):
+            return
         self.master_manual_mid = m["id"]
         m["master_moves_left"] = int(m.get("movement", self.MASTER_MANUAL_MOVE) or self.MASTER_MANUAL_MOVE)
         # Orçamento por casa do terreno (custo 1 em chão seco, 2/3 na água):
