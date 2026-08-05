@@ -20871,15 +20871,19 @@ class GameRoom:
         self._reiniciar_timer_manual()
 
     def _habilidade_ativavel_manual(self, ability):
-        """O mestre ativa: (a) habilidades save+dc (via _use_monster_ability) OU
-        (b) habilidades de editor herói/guilda (self-buff, via _ativar_editor_ability).
-        As demais (bespoke hardcoded, action_type 'magia') aparecem na ficha como
-        'IA apenas'. Ponto único de plugagem para lotes futuros (dispatch por id/
-        action_type)."""
+        """O mestre ativa: (a) habilidades save+dc (via _use_monster_ability),
+        (b) habilidades de editor herói/guilda (via _ativar_editor_ability),
+        (c) magias implementadas do grimório (via _lancar_magia_monstro) e
+        (d) as extraídas da IA (Golpe Brutal, Desaparecer nas Sombras).
+        O resto aparece na ficha como 'IA apenas' ou 'não implementada'."""
         if not ability or ability.get("action_type") == "passiva":
             return False
-        if ability.get("id") in {"mestre_dos_mortos", "sopro_dragao", "amaldicoar_monstro"}:
+        aid = ability.get("id")
+        if aid in {"mestre_dos_mortos", "sopro_dragao", "amaldicoar_monstro",
+                   "golpe_brutal", "desaparecer_nas_sombras"}:
             return True
+        if ability.get("action_type") == "magia":
+            return aid in GRIMORIO and aid in GRIMORIO_IMPLEMENTADAS
         if ability.get("save") is not None and ability.get("dc") is not None:
             return True
         return ability.get("source") in {"heroi", "guilda"}
@@ -20949,6 +20953,26 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": "Este monstro já agiu neste turno."}); return
         if custo == "bonus" and m.get("_master_bonus_acted"):
             await self.send_to(pid, {"type": "error", "msg": "Este monstro já usou a ação bônus."}); return
+        if ability.get("action_type") == "magia":
+            sid = ability_id
+            if not self._magia_monstro_disponivel(m, sid):
+                await self.send_to(pid, {"type": "error", "msg": "Magia sem usos ou em recarga."}); return
+            alvo = self.players.get(target_id)
+            magia = GRIMORIO.get(sid, {})
+            data = {"target_id": target_id}
+            if alvo:
+                dx = alvo["pos"][0] - m["pos"][0]; dy = alvo["pos"][1] - m["pos"][1]
+                data["tx"] = alvo["pos"][0]; data["ty"] = alvo["pos"][1]
+                data["dir"] = [0 if dx == 0 else (1 if dx > 0 else -1),
+                               0 if dy == 0 else (1 if dy > 0 else -1)]
+            alc = magia.get("alcance")
+            if alc is not None and alvo:
+                if max(abs(m["pos"][0] - alvo["pos"][0]), abs(m["pos"][1] - alvo["pos"][1])) > alc:
+                    await self.send_to(pid, {"type": "error", "msg": "Alvo fora de alcance."}); return
+            await self._lancar_magia_monstro(m, sid, data)
+            self._debitar_acao_mestre(m, custo, "habilidade")
+            m["_ja_executou_acao"] = True
+            await self.push_state(); return
         # Ramo (b): habilidade de editor (herói/guilda) — self-buff, sem alvo.
         if ability_id == "mestre_dos_mortos":
             invocados = await self._conjurar_mestre_dos_mortos(m, tipo_esqueleto)
@@ -22183,6 +22207,36 @@ class GameRoom:
         await self._execute_one_monster_attack(m, atk, target_obj)
         m["virotes"] = max(0, m.get("virotes", 1) - 1)
 
+    def _spell_cfg(self, m, sid):
+        """Config de magia do monstro pelo id, ou None."""
+        return next((c for c in m.get("monster_spells", []) if c.get("id") == sid), None)
+
+    def _magia_monstro_disponivel(self, m, sid):
+        """True se o monstro pode lançar sid agora (implementada, com usos e
+        fora de recarga). Mesmos limites que _monster_try_spell aplica."""
+        cfg = self._spell_cfg(m, sid)
+        if not cfg or sid not in GRIMORIO or sid not in GRIMORIO_IMPLEMENTADAS:
+            return False
+        if cfg.get("limit_mode", "encounter") == "cooldown":
+            return self.round_num >= m.get("spell_cooldowns", {}).get(sid, 0)
+        return m.get("spell_uses", {}).get(sid, max(1, int(cfg.get("uses_per_combat", 1)))) > 0
+
+    async def _lancar_magia_monstro(self, m, sid, data, cfg=None):
+        """Debita uso/recarga e executa a magia. Ponto único usado pela IA
+        (_monster_try_spell, que escolhe o alvo) e pelo mestre no Manual (que
+        escolhe o alvo)."""
+        cfg = cfg or self._spell_cfg(m, sid) or {}
+        magia = GRIMORIO.get(sid)
+        if not magia:
+            return False
+        if cfg.get("limit_mode", "encounter") == "cooldown":
+            m.setdefault("spell_cooldowns", {})[sid] = self.round_num + max(1, int(cfg.get("cooldown_turns", 1)))
+        else:
+            uses = m.setdefault("spell_uses", {}).get(sid, max(1, int(cfg.get("uses_per_combat", 1))))
+            m["spell_uses"][sid] = max(0, uses - 1)
+        await self._executar_magia_grimorio(m, magia, data)
+        return True
+
     async def _monster_try_spell(self, m, targets):
         """Escolhe e lança uma magia configurada no editor.
 
@@ -22228,12 +22282,7 @@ class GameRoom:
                 "dir": [0 if dx == 0 else (1 if dx > 0 else -1), 0 if dy == 0 else (1 if dy > 0 else -1)]}
         if magia.get("tipo") in {"alvo_aliado", "buff_aliado"}:
             data["target_id"] = ally["id"]
-        if cfg.get("limit_mode", "encounter") == "cooldown":
-            m.setdefault("spell_cooldowns", {})[sid] = self.round_num + max(1, int(cfg.get("cooldown_turns", 1)))
-        else:
-            uses = m.setdefault("spell_uses", {}).get(sid, max(1, int(cfg.get("uses_per_combat", 1))))
-            m["spell_uses"][sid] = max(0, uses - 1)
-        await self._executar_magia_grimorio(m, magia, data)
+        await self._lancar_magia_monstro(m, sid, data, cfg)
         return True
 
     async def _run_monster_ai(self, m, targets):

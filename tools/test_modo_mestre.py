@@ -898,6 +898,36 @@ async def main():
     check("ataque após magia recusado", golpes == [])
     check("carga preservada", m["master_attack_charges"][0] == 1)
 
+    print("\n[34] magias do mestre — lança, debita usos, respeita recarga")
+    r = playing_room_com_mestre()
+    lancadas = []
+    async def fake_grim(mm, magia, data, *a, **k):
+        lancadas.append((magia["id"], data.get("target_id")))
+    r._executar_magia_grimorio = fake_grim
+    ab_magia = {"id": "silencio", "name": "Silêncio", "action_type": "magia"}
+    m = {"id": "g1", "name": "Xamã", "hp": 14, "pos": [2, 2], "size": [1, 1],
+         "control_mode": "manual", "_master_acted": False, "_master_bonus_acted": False,
+         "_master_acao_tipo": None, "attacks": [{"name": "cajado", "num_attacks": 1}],
+         "master_attack_charges": {0: 1}, "special_abilities": [ab_magia],
+         "monster_spells": [{"id": "silencio", "limit_mode": "encounter", "uses_per_combat": 1}],
+         "spell_uses": {"silencio": 1}, "spell_cooldowns": {}}
+    r.monsters = {"g1": m}; r.master_manual_mid = "g1"
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [2, 3], "alive": True}}
+    check("predicado aceita magia implementada", r._habilidade_ativavel_manual(ab_magia) is True)
+    await r.handle_mestre_usar_habilidade("m1", "g1", "silencio", "hA")
+    check("magia lançada no alvo do mestre", lancadas == [("silencio", "hA")])
+    check("uso debitado", m["spell_uses"]["silencio"] == 0)
+    check("gastou a ação principal", m["_master_acted"] is True)
+    m["_master_acted"] = False; m["_master_acao_tipo"] = None; r._errs.clear()
+    await r.handle_mestre_usar_habilidade("m1", "g1", "silencio", "hA")
+    check("sem usos não lança de novo", len(lancadas) == 1)
+    check("ação preservada na recusa", m["_master_acted"] is False)
+
+    print("\n[34b] encantar_* segue não-ativável (não implementada)")
+    check("encantar_vampirico barrado",
+          r._habilidade_ativavel_manual({"id": "encantar_vampirico", "action_type": "acao",
+                                         "dc": 12}) is False)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
