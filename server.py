@@ -21024,6 +21024,11 @@ class GameRoom:
             await self.gm_say(f"💥 **{m['name']}** desfere um **Golpe Brutal** (+2 dano)!")
             self._debitar_acao_mestre(m, "livre", "habilidade")
             await self.push_state(); return
+        if ability_id == "desaparecer_nas_sombras":
+            if not await self._ativar_desaparecer_sombras(m):
+                await self.send_to(pid, {"type": "error", "msg": "Só nas sombras e fora de recarga."}); return
+            self._debitar_acao_mestre(m, custo, "habilidade")
+            await self.push_state(); return
         # Ramo (b): habilidade de editor (herói/guilda) — self-buff, sem alvo.
         if ability_id == "mestre_dos_mortos":
             invocados = await self._conjurar_mestre_dos_mortos(m, tipo_esqueleto)
@@ -22543,21 +22548,28 @@ class GameRoom:
             return o.get("alive") and o.get("hp", 0) > 0
         return o.get("vida_atual", 0) > 0
 
-    async def _tentar_desaparecer_sombras(self, m, target):
-        """Ação livre após o Manto: se na escuridão e fora de cooldown (5 turnos),
-        o bugbear fica oculto (imune a ataques à distância; corpo a corpo -4) até o
-        início do próximo turno e move até 3 quadrados em direção ao alvo."""
+    async def _ativar_desaparecer_sombras(self, m):
+        """Fica oculto nas sombras (imune a ataques à distância; corpo a corpo -4)
+        até o início do próximo turno, com recarga de 5 turnos. Não move — quem
+        move é quem chamou: a IA no loop de _tentar_desaparecer_sombras, o mestre
+        com o próprio orçamento de passos."""
         if not self._tem_habilidade(m, "desaparecer_nas_sombras"):
-            return
+            return False
         if m.get("ability_cooldowns", {}).get("desaparecer_nas_sombras", 0) > 0:
-            return
+            return False
         if not self._em_escuridao(m):
-            return
+            return False
         m.setdefault("ability_cooldowns", {})["desaparecer_nas_sombras"] = 5
         m["oculto_sombras"] = True
         await self.gm_say(
             f"🌫️ **{m['name']}** **desaparece nas sombras** — imune a ataques à "
             f"distância e difícil de acertar (corpo a corpo: -4) até seu próximo turno!")
+        return True
+
+    async def _tentar_desaparecer_sombras(self, m, target):
+        """Ação livre da IA após o Manto: ativa e avança até 3 quadrados no alvo."""
+        if not await self._ativar_desaparecer_sombras(m):
+            return
         for _ in range(3):
             antes = list(m["pos"])
             await self._monster_move_step(m, target["pos"])

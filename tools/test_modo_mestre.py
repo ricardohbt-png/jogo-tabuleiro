@@ -1062,6 +1062,35 @@ async def main():
     check("bônus não consumido some ao abrir nova janela", not m3.get("_golpe_brutal_ativo"))
     check("recarga do armamento anterior é preservada", m3["ability_cooldowns"]["golpe_brutal"] == cd_antes)
 
+    print("\n[36] Desaparecer nas Sombras — extração compartilhada")
+    r = playing_room_com_mestre()
+    r._em_escuridao = lambda mm: True
+    ab_ds = {"id": "desaparecer_nas_sombras", "name": "Desaparecer nas Sombras",
+             "action_type": "acao_livre"}
+    m = {"id": "g1", "name": "Bugbear", "hp": 20, "pos": [2, 2], "size": [1, 1],
+         "control_mode": "manual", "_master_acted": False, "_master_bonus_acted": False,
+         "_master_acao_tipo": None, "attacks": [{"name": "maça", "num_attacks": 1}],
+         "master_attack_charges": {0: 1}, "special_abilities": [ab_ds],
+         "ability_cooldowns": {}}
+    r.monsters = {"g1": m}; r.master_manual_mid = "g1"
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [2, 3], "alive": True}}
+    check("ativou", await r._ativar_desaparecer_sombras(m) is True)
+    check("ficou oculto", m.get("oculto_sombras") is True)
+    check("recarga 5", m["ability_cooldowns"]["desaparecer_nas_sombras"] == 5)
+    check("2ª ativação recusada", await r._ativar_desaparecer_sombras(m) is False)
+    r._em_escuridao = lambda mm: False
+    m3 = {"id": "g3", "name": "Bug2", "hp": 20, "pos": [7, 7], "size": [1, 1],
+          "special_abilities": [ab_ds], "ability_cooldowns": {}}
+    check("fora da escuridão não ativa", await r._ativar_desaparecer_sombras(m3) is False)
+
+    print("\n[36b] pelo mestre é ação livre — a principal segue disponível")
+    r._em_escuridao = lambda mm: True
+    m["ability_cooldowns"]["desaparecer_nas_sombras"] = 0
+    m.pop("oculto_sombras", None)
+    await r.handle_mestre_usar_habilidade("m1", "g1", "desaparecer_nas_sombras", None)
+    check("oculto de novo", m.get("oculto_sombras") is True)
+    check("ação principal intacta", m["_master_acted"] is False)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
