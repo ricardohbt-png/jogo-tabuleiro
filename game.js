@@ -11676,7 +11676,7 @@ window.renderElementaisLewis    = renderElementaisLewis;
 let _masterSel = new Set();
 function _esc(s){ return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
-function renderMasterHud(state){
+function renderMasterPanel(state){
   if(!state) return;
   let host = document.getElementById('hud-mestre');
   if(!host){
@@ -11684,112 +11684,38 @@ function renderMasterHud(state){
     host.id = 'hud-mestre';
     document.body.appendChild(host);
   }
-  host.style.display = 'block';
+  host.classList.add('aberto');
 
-  const manualMid = state.master_manual_mid;
-  const rows = (state.monsters || []).map(m => {
-    const sel = _masterSel.has(m.id) ? ' sel' : '';
-    const manualAtivo = m.id === manualMid ? ' manual-ativo' : '';
-    const modo = m.control_mode || 'auto';
-    return `<div class="mestre-row${sel}${manualAtivo}" data-mid="${m.id}">
-      <span class="nome">${m.name || m.type || '?'}</span>
-      <span class="hp">${m.hp}/${m.max_hp != null ? m.max_hp : m.hp}</span>
-      <span class="modo modo-${modo}">${modo}</span>
-    </div>`;
-  }).join('');
+  const mm = GS.masterManual();
+  // A aba Ativo só é o default enquanto existe monstro na janela Manual.
+  if(mm && window._masterTabAuto !== mm.mid){ window._masterTab = 'ativo'; window._masterTabAuto = mm.mid; }
+  if(!mm) window._masterTabAuto = null;
+  const aba = window._masterTab || 'monstros';
 
-  const heroOpts = (state.players || []).filter(p => p.alive)
-    .map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+  const nMon = (state.monsters || []).length;
+  const corpo = aba === 'ativo'    ? _mpAbaAtivo(state)
+              : aba === 'monstros' ? _mpAbaMonstros(state)
+              :                      _mpAbaMestre(state);
 
-  const reserva = state.master_reserve || [];
-  const reforcoHtml = reserva.length ? (
-    '<div class="mestre-reforcos"><div class="mestre-sec">⚠️ Reforços</div>' +
-    reserva.map(r =>
-      `<button class="mestre-reforco-btn${window._modoImplantarReforco === r.type ? ' armado' : ''}" data-rtype="${r.type}">` +
-      `${r.emoji || '👾'} ${r.name || r.type} <b>×${r.count}</b></button>`
-    ).join('') +
-    (window._modoImplantarReforco ? '<div class="mestre-reforco-dica">Clique numa casa livre para implantar (Esc cancela)</div>' : '') +
-    '</div>'
-  ) : '';
+  host.innerHTML =
+    `<div class="mp-abas">
+       <button class="mp-aba${aba==='ativo'?' on':''}"    data-aba="ativo">🎯 Ativo</button>
+       <button class="mp-aba${aba==='monstros'?' on':''}" data-aba="monstros">📋 Monstros <span style="opacity:.6">${nMon}</span></button>
+       <button class="mp-aba${aba==='mestre'?' on':''}"   data-aba="mestre">⚠️ Mestre</button>
+     </div>
+     <div class="mp-corpo">${corpo}</div>` +
+    (mm ? `<div class="mp-rodape"><button class="mp-encerrar">Encerrar monstro</button></div>` : '');
 
-  const falas = state.falas || [];
-  const falasHtml = falas.length ? (
-    '<div class="mestre-falas"><div class="mestre-sec">💬 Falas</div>' +
-    falas.map(f =>
-      `<button class="mestre-fala-btn" data-fid="${_esc(f.id)}">` +
-      `${_esc((f.falante && f.falante.emoji) || '💬')} ${_esc((f.falante && f.falante.nome) || 'NPC')}: ` +
-      `<i>${_esc((f.texto || '').slice(0, 40))}${(f.texto || '').length > 40 ? '…' : ''}</i></button>`
-    ).join('') +
-    '</div>'
-  ) : '';
-
-  host.innerHTML = `
-    <div class="mestre-titulo">🎭 Mestre</div>
-    <div class="mestre-lista">${rows || '<div class="mestre-vazio">Nenhum monstro na masmorra.</div>'}</div>
-    <div class="mestre-modos">
-      <button data-modo="auto">Auto</button>
-      <button data-modo="semi">Semi</button>
-      <button data-modo="manual">Manual</button>
-    </div>
-    <select class="mestre-alvo">
-      <option value="">— alvo (Semi) —</option>
-      ${heroOpts}
-    </select>
-    ${manualMid ? `
-    <div class="mestre-manual">
-      <div class="mestre-manual-dica">Clique numa casa azul para mover · num herói no alcance para atacar.</div>
-      <button class="mestre-atacar">⚔️ Atacar (alvo do seletor)</button>
-      <button class="mestre-encerrar">Encerrar monstro</button>
-    </div>` : ''}
-    ${reforcoHtml}
-    ${falasHtml}
-  `;
-
-  // ── Wiring (delegado a cada render — o HUD inteiro é substituído acima) ──
-  host.querySelectorAll('.mestre-row').forEach(row => {
-    row.onclick = () => {
-      const mid = row.dataset.mid;
-      if(_masterSel.has(mid)) _masterSel.delete(mid); else _masterSel.add(mid);
-      const _mon = (GS.gameState.monsters||[]).find(x=>x.id===mid);
-      if(_mon) renderFichaMonstro(_mon);
-      renderMasterHud(GS.gameState);
-    };
+  host.querySelectorAll('.mp-aba').forEach(b => {
+    b.onclick = () => { window._masterTab = b.dataset.aba; renderMasterPanel(GS.gameState); };
   });
-  host.querySelectorAll('.mestre-modos button').forEach(b => {
-    b.onclick = () => {
-      if(_masterSel.size) GS.mestreSetModo([..._masterSel], b.dataset.modo);
-    };
-  });
-  const selAlvo = host.querySelector('.mestre-alvo');
-  if(selAlvo) selAlvo.onchange = () => {
-    if(selAlvo.value && _masterSel.size) GS.mestreSetAlvo([..._masterSel], selAlvo.value);
-  };
-  if(manualMid){
-    const atkBtn = host.querySelector('.mestre-atacar');
-    if(atkBtn) atkBtn.onclick = () => {
-      if(selAlvo && selAlvo.value) GS.mestreAtacarMonstro(manualMid, selAlvo.value);
-      else toast('Escolha um alvo (herói) antes de atacar.', 'var(--orange)');
-    };
-    const fimBtn = host.querySelector('.mestre-encerrar');
-    if(fimBtn) fimBtn.onclick = () => GS.mestreEncerrarMonstro(manualMid);
-  }
-  host.querySelectorAll('.mestre-reforco-btn').forEach(btn => {
-    btn.onclick = () => {
-      const t = btn.dataset.rtype;
-      window._modoImplantarReforco = (window._modoImplantarReforco === t) ? null : t;
-      renderMasterHud(GS.gameState);
-    };
-  });
-  host.querySelectorAll('.mestre-fala-btn').forEach(btn => {
-    btn.onclick = () => { GS.dispararFala(btn.dataset.fid); };
-  });
-  // Auto-abre a ficha do monstro quando ele entra na janela Manual (muda de mid).
-  if(manualMid && window._lastManualFichaMid !== manualMid){
-    const mm = (state.monsters||[]).find(x=>x.id===manualMid);
-    if(mm) renderFichaMonstro(mm);
-    window._lastManualFichaMid = manualMid;
-  }
-  if(!manualMid) window._lastManualFichaMid = null;
+  const fim = host.querySelector('.mp-encerrar');
+  if(fim && mm) fim.onclick = () => GS.mestreEncerrarMonstro(mm.mid);
+
+  if(aba === 'ativo')    _mpWireAtivo(host, state);
+  if(aba === 'monstros') _mpWireMonstros(host, state);
+  if(aba === 'mestre')   _mpWireMestre(host, state);
+  _mpTickRelogio(host);
 }
 
 // ── Ficha do monstro (só o mestre; painel à direita, abaixo do HUD do mestre) ──
@@ -12053,14 +11979,14 @@ function renderMyPanel(state){
   // Mestre: sem ficha de personagem — mostra o HUD de controle de monstros
   // em vez da ficha normal (ele não está em state.players).
   if(GS.isMaster()){
-    renderMasterHud(state);
+    renderMasterPanel(state);
     const mp = document.getElementById('my-panel');
     if(mp) mp.style.display = 'none';
     const _pf = document.getElementById('player-fabs'); if(_pf) _pf.style.display = 'none';
     return;
   }
   const hudM = document.getElementById('hud-mestre');
-  if(hudM) hudM.style.display = 'none';
+  if(hudM) hudM.classList.remove('aberto');
   const _fm = document.getElementById('ficha-monstro'); if(_fm) _fm.style.display='none';
   const mp2 = document.getElementById('my-panel');
   if(mp2) mp2.style.display = '';
@@ -14077,7 +14003,7 @@ document.addEventListener('keydown', e=>{
   // ESC cancela o modo de implantar reforço (mestre)
   if(e.key==='Escape' && window._modoImplantarReforco){
     window._modoImplantarReforco = null;
-    if(GS.isMaster()) renderMasterHud(GS.gameState);
+    if(GS.isMaster()) renderMasterPanel(GS.gameState);
     toast('Implantação cancelada.', 'var(--text2)');
     e.preventDefault(); return;
   }
