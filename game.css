@@ -1317,6 +1317,11 @@ input:focus { outline: none; border-color: var(--gold); }
 .mestre-row .modo-auto   { color: #8ab88a; border-color: rgba(50,200,100,.35); }
 .mestre-row .modo-semi   { color: #e6c35a; border-color: rgba(230,195,90,.35); }
 .mestre-row .modo-manual { color: #ff8a5a; border-color: rgba(255,138,90,.45); }
+.mestre-modos button { background: var(--bg2); color: var(--text); border: 1px solid var(--border);
+  border-radius: 4px; padding: 5px 0; font-size: .68rem; }
+.mestre-modos button:hover { border-color: var(--gold); }
+.mestre-alvo { width: 100%; background: var(--bg2); color: var(--text); border: 1px solid var(--border);
+  border-radius: 4px; padding: 5px 6px; font-size: .7rem; }
 
 /* Balão de fala de NPC — leve, canto inferior-central, distinto do log/story */
 #fala-popup{ position:fixed; left:50%; bottom:96px; transform:translateX(-50%) translateY(12px);

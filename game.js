@@ -580,8 +580,6 @@ function showScreen(id){
   if(id !== 'screen-game'){
     const hudM = document.getElementById('hud-mestre');
     if(hudM) hudM.style.display = 'none';
-    const fm = document.getElementById('ficha-monstro');
-    if(fm) fm.style.display = 'none';
     const mm = document.getElementById('minimapa-cr');
     if(mm) mm.style.display = 'none';
   }
@@ -11903,6 +11901,95 @@ function _mpTickRelogio(host){
   window._mpRelogioTimer = setInterval(() => { n = Math.max(0, n-1); pinta(); }, 1000);
 }
 
+// Aba Monstros: lista de todos os monstros da masmorra, seleção em lote e
+// mudança de modo (auto/semi/manual) + alvo do Semi.
+function _mpAbaMonstros(state){
+  const mm = GS.masterManual();
+  const rows = (state.monsters || []).map(m => {
+    const dormente = !m.alertado;
+    const sel = _masterSel.has(m.id) ? ' sel' : '';
+    const ativo = (mm && m.id === mm.mid) ? ' manual-ativo' : '';
+    const modo = m.control_mode || 'auto';
+    const pct = Math.max(0, Math.min(100, Math.round(100 * m.hp / (m.max_hp || m.hp || 1))));
+    if(dormente){
+      return `<div class="mestre-row dormente"><span class="nome">${_esc(m.name || m.type || '?')}</span>
+              <span style="font-size:.6rem">dormente</span></div>`;
+    }
+    return `<div class="mestre-row${sel}${ativo}" data-mid="${_esc(m.id)}">
+        <span>${m.emoji || '👾'}</span>
+        <span class="nome">${_esc(m.name || m.type || '?')}</span>
+        <span class="mp-hpbar" style="max-width:34px"><i style="width:${pct}%"></i></span>
+        <span class="modo modo-${modo}">${modo}</span>
+      </div>`;
+  }).join('');
+  const heroOpts = (state.players || []).filter(p => p.alive)
+    .map(p => `<option value="${_esc(p.id)}">${_esc(p.name)}</option>`).join('');
+  return `<div class="mestre-lista">${rows || '<div class="mestre-vazio">Nenhum monstro na masmorra.</div>'}</div>
+    <div style="font-size:.6rem;color:var(--text2);margin-bottom:3px">${_masterSel.size} selecionado(s) — aplicar a todos:</div>
+    <div class="mestre-modos" style="display:flex;gap:4px;margin-bottom:6px">
+      <button data-modo="auto" style="flex:1">Auto</button>
+      <button data-modo="semi" style="flex:1">Semi</button>
+      <button data-modo="manual" style="flex:1">Manual</button>
+    </div>
+    <select class="mestre-alvo" style="width:100%">
+      <option value="">— alvo (Semi) —</option>${heroOpts}
+    </select>`;
+}
+
+function _mpWireMonstros(host, state){
+  host.querySelectorAll('.mestre-row[data-mid]').forEach(row => {
+    row.onclick = () => {
+      const mid = row.dataset.mid;
+      if(_masterSel.has(mid)) _masterSel.delete(mid); else _masterSel.add(mid);
+      window._mpFocoMid = mid;
+      renderMasterPanel(GS.gameState);
+    };
+  });
+  host.querySelectorAll('.mestre-modos button').forEach(b => {
+    b.onclick = () => { if(_masterSel.size) GS.mestreSetModo([..._masterSel], b.dataset.modo); };
+  });
+  const selAlvo = host.querySelector('.mestre-alvo');
+  if(selAlvo) selAlvo.onchange = () => {
+    if(selAlvo.value && _masterSel.size) GS.mestreSetAlvo([..._masterSel], selAlvo.value);
+  };
+}
+
+// Aba Mestre: reforços da reserva (implantar em casa livre) + falas de NPC manuais.
+function _mpAbaMestre(state){
+  const reserva = state.master_reserve || [];
+  const falas = state.falas || [];
+  let h = '';
+  if(reserva.length){
+    h += `<div class="mp-sec">REFORÇOS</div>` + reserva.map(r =>
+      `<button class="mestre-reforco-btn mp-linha ${window._modoImplantarReforco === r.type ? 'atk armado' : 'atk'}" data-rtype="${_esc(r.type)}">
+         <span class="txt"><b>${r.emoji || '👾'} ${_esc(r.name || r.type)}</b> ×${r.count}</span>
+       </button>`).join('');
+    if(window._modoImplantarReforco)
+      h += `<div style="font-size:.6rem;color:var(--text2)">Clique numa casa livre para implantar (Esc cancela)</div>`;
+  }
+  if(falas.length){
+    h += `<div class="mp-sec">FALAS</div>` + falas.map(f =>
+      `<button class="mestre-fala-btn mp-linha hab" data-fid="${_esc(f.id)}">
+         <span class="txt">${_esc((f.falante && f.falante.emoji) || '💬')} ${_esc((f.falante && f.falante.nome) || 'NPC')}:
+         <i>${_esc((f.texto || '').slice(0, 40))}${(f.texto || '').length > 40 ? '…' : ''}</i></span>
+       </button>`).join('');
+  }
+  return h || '<div class="mestre-vazio">Sem reforços nem falas nesta masmorra.</div>';
+}
+
+function _mpWireMestre(host, state){
+  host.querySelectorAll('.mestre-reforco-btn').forEach(btn => {
+    btn.onclick = () => {
+      const t = btn.dataset.rtype;
+      window._modoImplantarReforco = (window._modoImplantarReforco === t) ? null : t;
+      renderMasterPanel(GS.gameState);
+    };
+  });
+  host.querySelectorAll('.mestre-fala-btn').forEach(btn => {
+    btn.onclick = () => GS.dispararFala(btn.dataset.fid);
+  });
+}
+
 // Ativar (mestre): mira um herói no alcance e envia mestre_usar_habilidade.
 function _mestreAtivarHabilidade(m, abid){
   const st = GS.gameState; if(!st) return;
@@ -12081,7 +12168,6 @@ function renderMyPanel(state){
   }
   const hudM = document.getElementById('hud-mestre');
   if(hudM) hudM.classList.remove('aberto');
-  const _fm = document.getElementById('ficha-monstro'); if(_fm) _fm.style.display='none';
   const mp2 = document.getElementById('my-panel');
   if(mp2) mp2.style.display = '';
 
