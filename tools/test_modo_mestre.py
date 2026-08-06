@@ -1475,6 +1475,29 @@ async def main():
     check("_master_touched setado mesmo sem andar", m.get("_master_touched") is True)
     check("posição não mudou (0 casas andadas)", m["pos"] == [1, 1])
 
+    print("\n[42] payload master_manual")
+    r = playing_room_com_mestre()
+    r.MASTER_MANUAL_LIMIT_S = 60
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [9, 9], "alive": True,
+                        "connected": True, "hp": 10}}
+    m = {"id": "g1", "name": "Lobisomem", "type": "goblin", "hp": 30, "max_hp": 30,
+         "pos": [1, 1], "size": [1, 1], "movement": 4, "control_mode": "manual",
+         "attacks": [{"name": "Garras", "num_attacks": 2},
+                     {"name": "Mordida", "num_attacks": 1}]}
+    r.monsters = {"g1": m}
+    check("sem janela, bloco é None", r._master_manual_payload() is None)
+    task = asyncio.create_task(r._master_manual_window(m))
+    await asyncio.sleep(0)
+    bloco = r._master_manual_payload()
+    check("mid",           bloco["mid"] == "g1")
+    check("moves",         bloco["moves_left"] == 4 and bloco["moves_max"] == 4)
+    check("acao livre",    bloco["acao"] is None and bloco["bonus"] is False)
+    check("cargas",        bloco["attack_charges"] == {"0": 2, "1": 1})
+    check("restante > 0",  bloco["restante"] > 0)
+    r.master_manual_event.set()
+    await task
+    check("janela fechada, bloco volta a None", r._master_manual_payload() is None)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

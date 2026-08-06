@@ -20104,6 +20104,25 @@ class GameRoom:
         sx, sy = m["pos"]
         return [[x, y] for (x, y) in prev if (x, y) != (sx, sy)]
 
+    def _master_manual_payload(self):
+        """Bloco de estado da janela Manual para o HUD do mestre, ou None.
+        Aditivo: master_manual_mid e master_manual_reach seguem no payload."""
+        mid = self.master_manual_mid
+        if not mid:
+            return None
+        m = self.monsters.get(mid)
+        if not m or m.get("hp", 0) <= 0:
+            return None
+        return {
+            "mid": mid,
+            "moves_left": int(m.get("master_moves_left", 0) or 0),
+            "moves_max": int(m.get("movement", self.MASTER_MANUAL_MOVE) or self.MASTER_MANUAL_MOVE),
+            "acao": m.get("_master_acao_tipo") if m.get("_master_acted") else None,
+            "bonus": bool(m.get("_master_bonus_acted")),
+            "restante": max(0, round(self.master_manual_deadline - time.monotonic())),
+            "attack_charges": {str(k): v for k, v in (m.get("master_attack_charges") or {}).items()},
+        }
+
     def _master_path_to(self, m, tx, ty, budget):
         """Menor caminho (lista de âncoras, exclui a casa inicial, inclui o destino)
         de m até (tx,ty) em ≤ budget passos. [] se inalcançável."""
@@ -24171,6 +24190,7 @@ class GameRoom:
                 if self.master_manual_mid and self.master_manual_mid in self.monsters
                 and self.monsters[self.master_manual_mid]["hp"] > 0 else []
             ),
+            "master_manual": self._master_manual_payload(),
             "master_reserve": [
                 {"type": t, "count": c,
                  "name":  next((d.get("name", t)  for d in MONSTER_DEFS if d["type"] == t), t),
