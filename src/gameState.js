@@ -1458,7 +1458,11 @@ const GS = (() => {
     if (venenoId) msg.veneno_id = venenoId;
     send(msg);
   }
-  function desarmarArmadilha() { send({ type: 'desarmar_armadilha' }); }
+  function desarmarArmadilha(tx, ty) {
+    const msg = { type: 'desarmar_armadilha' };
+    if (tx !== undefined && ty !== undefined) { msg.tx = tx; msg.ty = ty; }
+    send(msg);
+  }
 
   // ── Modo Mestre Jogador (Fase A) ────────────────────────────────────────
   // Assento no lobby: role = 'master' | 'hero'.
@@ -2158,6 +2162,11 @@ const GS = (() => {
     // ── Pending-skill targeting ──────────────────────────────────────────────
     if (pendingSkill) {
       const sk    = pendingSkill;
+      if (sk.id === 'desarmar_armadilha') {
+        const dx = Math.abs(myP.pos[0] - tx), dy = Math.abs(myP.pos[1] - ty);
+        if (Math.max(dx, dy) <= 1) return { type: 'disarm_trap', tx, ty };
+        return { type: 'skill_blocked', reason: 'trap_adjacent' };
+      }
       const MELEE = ['heavy_blow', 'backstab', 'smite'];
       if (sk.target === 'enemy') {
         const m = gameState.monsters.find(m => m.hp > 0 &&

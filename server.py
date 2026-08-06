@@ -2513,6 +2513,16 @@ CLASSES = {
                 "fome_cost": 2,
                 "sede_cost": 1,
             },
+            {
+                "id": "desarmar_armadilha",
+                "name": "Desarmar Armadilha",
+                "description": "Ação principal. Selecione uma casa adjacente para tentar desarmar a armadilha. Falha crítica a dispara em você.",
+                "icon": "🔧",
+                "tipo": "acao_principal",
+                "target": "tile",
+                "fome_cost": 1,
+                "sede_cost": 1,
+            },
         ],
     },
     "cleric": {
@@ -18138,26 +18148,39 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
+        if not _pode_hab_heroi(p, "rogue", "hero_rogue_desarmar_armadilha"):
+            await self.send_to(pid, {"type": "error", "msg": "Você não sabe desarmar armadilhas (habilidade do Ladino)."}); return
         if self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
 
+        # O alvo é escolhido no mapa. A própria casa continua válida para
+        # preservar o comportamento anterior; as oito casas adjacentes também.
+        tx, ty = msg.get("tx"), msg.get("ty")
+        if tx is not None or ty is not None:
+            if not isinstance(tx, int) or not isinstance(ty, int) or max(abs(tx - p["pos"][0]), abs(ty - p["pos"][1])) > 1:
+                await self.send_to(pid, {"type": "error", "msg": "Selecione uma casa adjacente para desarmar."}); return
+        else:
+            tx, ty = p["pos"]
+
         decor_trap = None
-        arm = self._armadilha_no_tile(p["pos"][0], p["pos"][1])
+        arm = self._armadilha_no_tile(tx, ty)
         if not arm:
-            for dx, dy in ((0, 1), (0, -1), (1, 0), (-1, 0)):
-                arm = self._armadilha_no_tile(p["pos"][0] + dx, p["pos"][1] + dy)
-                if arm: break
-        if not arm:
-            decor_trap = self._decor_com_armadilha_proxima(p["pos"], apenas_revelada=True)
+            decor_trap = self._decor_com_armadilha_proxima([tx, ty], apenas_revelada=True)
+            if decor_trap and not self._adjacente_a_decor(p["pos"], decor_trap):
+                decor_trap = None
             arm = self._armadilha_da_decoracao(decor_trap) if decor_trap else None
         if not arm:
             await self.send_to(pid, {"type": "error", "msg": "Nenhuma armadilha revelada adjacente para desarmar."}); return
+
+        if p.get("fome", 0) < 1 or p.get("sede", 0) < 1:
+            await self.send_to(pid, {"type": "error", "msg": "Você precisa de 🍖1 e 💧1 para desarmar a armadilha."}); return
 
         tipo = ARMADILHAS.get(arm["tipo"], {})
         dif = tipo.get("dificuldade", 10)
         d20 = random.randint(1, 20)
         bonus = mod(p.get("dex", 10))
         total = d20 + bonus + self._desarme_bonus(p)
+        p["fome"] -= 1; p["sede"] -= 1
         p["action_done"] = True
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20, "label": f"{p['name']} — Desarmar"})
         await self.gm_say(f"🔧 **{p['name']}** tenta desarmar **{tipo.get('nome', arm['tipo'])}**: "
@@ -24135,6 +24158,7 @@ class GameRoom:
         "hero_cleric_ressurreicao":       ("cleric", "ressurreicao"),
         # Fase J — ladino
         "hero_rogue_criar_armadilha":     ("rogue", "criar_armadilha"),
+        "hero_rogue_desarmar_armadilha":  ("rogue", "desarmar_armadilha"),
         "hero_rogue_veneno_rapido":       ("rogue", "veneno_rapido"),
         # Fase J — paladino
         "hero_paladin_golpe_sagrado":     ("paladin", "golpe_sagrado"),

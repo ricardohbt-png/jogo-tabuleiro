@@ -4248,6 +4248,17 @@ window.EDITOR_CATALOG = {
       "monster_effect": "vantagem_combate"
     },
     {
+      "id": "hero_rogue_desarmar_armadilha",
+      "source": "heroi",
+      "source_id": "desarmar_armadilha",
+      "source_class": "rogue",
+      "name": "Desarmar Armadilha",
+      "icon": "🔧",
+      "descricao": "Ação principal. Selecione uma casa adjacente para tentar desarmar a armadilha. Falha crítica a dispara em você.",
+      "action_type": "acao",
+      "monster_effect": "vantagem_combate"
+    },
+    {
       "id": "hero_cleric_cura",
       "source": "heroi",
       "source_id": "cura",
@@ -7100,17 +7111,6 @@ window.EDITOR_CATALOG = {
       "effect": "coat_poison",
       "value": 0,
       "veneno_id": "ensaio_sobre_a_cegueira"
-    },
-    {
-      "id": "dente_da_fera",
-      "name": "Dente da fera",
-      "emoji": "⚔️",
-      "die": "1d6",
-      "stat": "str_",
-      "categoria": "cortante",
-      "item_slot": "weapon",
-      "effect": "atk",
-      "value": 0
     }
   ],
   "traps": [

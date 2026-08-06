@@ -80,7 +80,7 @@
                           "hero_rogue_criar_armadilha", "hero_rogue_veneno_rapido",
                           "hero_paladin_golpe_sagrado", "hero_paladin_protetor",
                           "hero_paladin_regeneracao_divina", "hero_paladin_guerreiro_luz",
-                          "hero_bard_provocacao"];
+                          "hero_bard_provocacao", "hero_rogue_desarmar_armadilha"];
   function abilityGroups() {
     var libs = (window.EDITOR_CATALOG || {}).monster_abilities || [];
     var tec = [], esp = [], her = [];

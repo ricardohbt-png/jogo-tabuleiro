@@ -22,6 +22,7 @@ const ABILITY_ICON_ASSETS = Object.freeze({
   esconder_sombras: 'assets/habilidades/esconder-se.png',
   veneno_rapido: 'assets/habilidades/veneno_rapido.png',
   criar_armadilha: 'assets/habilidades/preparar_armadilhas.png',
+  desarmar_armadilha: 'assets/habilidades/detectar_armadilhas.png',
   cura: 'assets/habilidades/cura.png',
   cura_area: 'assets/habilidades/cura_em_massa.png',
   purificacao: 'assets/habilidades/purificar.png',
@@ -9980,6 +9981,18 @@ function _rogueSkillBtn(me, sk){
     setBtn(`🪤 ${sk.name}${aviso}`, sk.description || sk.desc || '', costStr, !pode,
            () => abrirPainelCriarArmadilha(), false);
 
+  } else if(sk.id === 'desarmar_armadilha'){
+    const ativo = GS.pendingSkill && GS.pendingSkill.id === sk.id;
+    const pode = myTurnPlay && !me.action_done && (me.fome ?? 0) >= 1 && (me.sede ?? 0) >= 1;
+    const bonusDes = GS.ladinoDesarmeBonus ? GS.ladinoDesarmeBonus() : 0;
+    const recupera = GS.ladinoDesarmeRecupera ? GS.ladinoDesarmeRecupera() : false;
+    const desc = `Selecione uma casa adjacente. Teste de DES${bonusDes ? ` (+${bonusDes})` : ''}; 1 natural dispara a armadilha em você.${recupera ? ' Pode recuperar o ouro.' : ''}`;
+    setBtn(`🔧 ${sk.name}${ativo ? ' <small style="color:var(--gold);font-size:.65rem;">● selecione a casa</small>' : ''}`,
+           desc, '🍖1 💧1', !(pode || ativo), () => {
+             if (ativo) { GS.pendingSkill = null; renderMyPanel(GS.gameState); toast('Habilidade cancelada.', 'var(--text2)'); }
+             else { GS.pendingSkill = { ...sk, target: 'tile' }; renderMyPanel(GS.gameState); toast('Selecione uma casa adjacente para desarmar.', 'var(--gold)'); }
+           }, false);
+
   } else {
     setBtn(`${sk.icon || ''} ${sk.name}`, sk.description || sk.desc || '', costStr, !myTurnPlay, null, false);
   }
@@ -12531,12 +12544,6 @@ function renderMyPanel(state){
     sl.appendChild(btn);
   }
 
-  // Ladino (Luccas): botão de Desarmar Armadilha quando há uma na casa/adjacente.
-  if (me.class_id === 'rogue') {
-    const db = _rogueDesarmarBtn(me);
-    if (db) sl.appendChild(db);
-  }
-
   // Bardo (Henrique): botão do instrumento equipado (Fase 1 — instrumento não é
   // uma "sk" de me.skills, vive em me.gear.off_hand / mão do escudo). Ver _bardInstrumentoBtn.
   if (me.class_id === 'bard') {
@@ -13781,6 +13788,11 @@ function ativarHabilidadeDoMenu(skillId){
     esconder_sombras:    () => send({type:'esconder_sombras'}),
     veneno_rapido:       () => abrirPainelVenenoRapido(),
     criar_armadilha:     () => abrirPainelCriarArmadilha(),
+    desarmar_armadilha:  () => {
+      GS.pendingSkill = {id: 'desarmar_armadilha', target: 'tile'};
+      renderMyPanel(state);
+      toast('Selecione uma casa adjacente para desarmar.', 'var(--gold)');
+    },
     cura:                () => abrirPainelCura(),
     cura_area:           () => abrirPainelCuraArea(),
     purificacao:         () => iniciarModoPurificacao(),
@@ -13876,7 +13888,7 @@ function abrirMenuHabilidades(pid){
     clerigo_purif:'purificacao', clerigo_ressur:'ressurreicao', paladino_regen:'regeneracao_divina',
     paladino_ataque_sagrado:'golpe_sagrado', paladino_cura_maos:'imposicao_maos', paladino_luz:'guerreiro_luz',
     paladino_defensor:'protetor', ladino_furtivo:'ataque_furtivo', ladino_esconder:'esconder_sombras',
-    ladino_veneno:'veneno_rapido', ladino_desarme:'detectar_armadilhas', ladino_armadilha:'criar_armadilha',
+    ladino_veneno:'veneno_rapido', ladino_desarme:'desarmar_armadilha', ladino_armadilha:'criar_armadilha',
   };
   const upgradesPorBase = new Map();
   especializacoes.forEach(item => {
@@ -24112,7 +24124,12 @@ function handleTileClick(tx, ty){
       toast('🧱 Uma parede bloqueia a linha de tiro!', 'var(--orange)');
       break;
     case 'skill_blocked':
-      toast('⚠ Este ataque requer inimigo cardinalmente adjacente!', 'var(--orange)');
+      toast(action.reason === 'trap_adjacent' ? '⚠ Selecione uma casa adjacente ao Luccas.' : '⚠ Este ataque requer inimigo cardinalmente adjacente!', 'var(--orange)');
+      break;
+    case 'disarm_trap':
+      GS.desarmarArmadilha(action.tx, action.ty);
+      GS.pendingSkill = null;
+      renderMyPanel(GS.gameState);
       break;
     case 'skill':
       GS.notifySkill();

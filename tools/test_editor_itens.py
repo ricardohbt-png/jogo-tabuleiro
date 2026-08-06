@@ -1242,7 +1242,7 @@ def test_helpers_hab_heroi():
 def test_mapa_14_habilidades():
     print("\n[J0b] Mapa GRANTED_HERO_SKILLS com 14 habilidades")
     m = S.GameRoom.GRANTED_HERO_SKILLS
-    check("14 entradas", len(m) == 14)
+    check("15 entradas", len(m) == 15)
     esperados = {
         "hero_rogue_detectar_armadilhas", "hero_rogue_esconder_sombras",
         "hero_paladin_imposicao_maos",
@@ -1251,7 +1251,7 @@ def test_mapa_14_habilidades():
         "hero_rogue_criar_armadilha", "hero_rogue_veneno_rapido",
         "hero_paladin_golpe_sagrado", "hero_paladin_protetor",
         "hero_paladin_regeneracao_divina", "hero_paladin_guerreiro_luz",
-        "hero_bard_provocacao",
+        "hero_bard_provocacao", "hero_rogue_desarmar_armadilha",
     }
     check("ids esperados", set(m.keys()) == esperados)
     check("todos validam", all(S._granted_ability_valida(a) for a in esperados))
