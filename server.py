@@ -12041,6 +12041,12 @@ class GameRoom:
         # dispara a IA concorrente com um movimento ainda em andamento (turno
         # duplo). Vale mesmo que o 1º passo seja bloqueado (0 casas andadas):
         # o mestre já comprometeu a ação, como no ataque que erra mas conta.
+        #
+        # Isto fecha a METADE da corrida que duplicava o turno. A outra metade
+        # continua aberta e é anterior a este trabalho: o timeout pode fechar a
+        # janela (e a iniciativa avançar) com o laço abaixo ainda em voo, já que
+        # o deadline só é empurrado no fim. Inalcançável na prática com o limite
+        # de 60 s, mas não é airtight — não presuma que é ao mexer aqui.
         m["_master_touched"] = True
         for nx, ny in path:
             if m.get("master_moves_left", 0) <= 0:
