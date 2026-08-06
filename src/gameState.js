@@ -1480,7 +1480,10 @@ const GS = (() => {
   }
   function mestreUsarItem(monsterId, itemId, targetId, tx, ty) { send({ type: 'mestre_usar_item', monster_id: monsterId, item_id: itemId, target_id: targetId, tx, ty }); }
   // Janela Manual: o monstro ataca um herói.
-  function mestreAtacarMonstro(monsterId, targetId) { send({ type: 'mestre_atacar_monstro', monster_id: monsterId, target_id: targetId }); }
+  function mestreAtacarMonstro(monsterId, targetId, attackIndex) {
+    send({ type: 'mestre_atacar_monstro', monster_id: monsterId, target_id: targetId,
+           attack_index: (attackIndex == null ? 0 : attackIndex) });
+  }
   // Janela Manual: encerra a vez do monstro.
   function mestreEncerrarMonstro(monsterId) { send({ type: 'mestre_encerrar_monstro', monster_id: monsterId }); }
   // Camada B: implanta um reforço da reserva do mestre numa casa livre.
@@ -1503,6 +1506,22 @@ const GS = (() => {
   }
   // Id do monstro atualmente na janela Manual (ou null) — só existe em gameState.
   function masterManualMid() { return (gameState && gameState.master_manual_mid) || null; }
+  // Bloco da janela Manual (null fora dela). Ver _master_manual_payload no servidor.
+  function masterManual() { return (gameState && gameState.master_manual) || null; }
+  // Cargas restantes de um golpe pelo índice em attacks[]. O payload vem com
+  // chaves string (JSON não tem chave inteira), por isso o String(idx).
+  function masterAttackCharges(idx) {
+    const mm = masterManual();
+    if (!mm) return 0;
+    return (mm.attack_charges || {})[String(idx)] || 0;
+  }
+  // true se a ação principal ainda pode virar ataque neste turno: ou está livre,
+  // ou já foi comprometida com ataques e ainda restam cargas.
+  function masterPodeAtacar() {
+    const mm = masterManual();
+    if (!mm) return false;
+    return mm.acao == null || mm.acao === 'ataque';
+  }
 
   // ── Guilda dos Heróis (Fase 0) ──────────────────────────────────────────
   function guildBuy(itemId)           { send({ type: 'guild_buy',   item_id: itemId }); }
@@ -2457,6 +2476,9 @@ const GS = (() => {
     dispararFala,
     isMaster,
     masterManualMid,
+    masterManual,
+    masterAttackCharges,
+    masterPodeAtacar,
 
     // ── Prévia do editor (index.html?preview=1) ──
     isPreview: PREVIEW,
