@@ -579,7 +579,8 @@ function showScreen(id){
   // próximo renderMyPanel, então sem isto ficaria flutuando por cima).
   if(id !== 'screen-game'){
     const hudM = document.getElementById('hud-mestre');
-    if(hudM) hudM.style.display = 'none';
+    if(hudM) hudM.classList.remove('aberto');
+    if(window._mpRelogioTimer){ clearInterval(window._mpRelogioTimer); window._mpRelogioTimer = null; }
     const mm = document.getElementById('minimapa-cr');
     if(mm) mm.style.display = 'none';
   }
@@ -2065,7 +2066,8 @@ function handleCityState(msg){
   // voltar pra cidade (senão fica flutuando por cima da tela da cidade, já
   // que o elemento persiste no DOM entre telas até o próximo renderMyPanel).
   const hudM = document.getElementById('hud-mestre');
-  if(hudM) hudM.style.display = 'none';
+  if(hudM) hudM.classList.remove('aberto');
+  if(window._mpRelogioTimer){ clearInterval(window._mpRelogioTimer); window._mpRelogioTimer = null; }
   _updateCityHeroBar(msg);
   // Legacy player bar (used by shop modal gold display)
   const lbar=$('city-players-bar');
@@ -12051,9 +12053,18 @@ function _masterReachSet(state){
 function _masterAttackSet(state){
   const s = new Set();
   if(!(GS.isMaster() && state && state.master_manual_mid)) return s;
+  if(!GS.masterPodeAtacar()) return s;
   const mm = (state.monsters||[]).find(x=>x.id===state.master_manual_mid);
-  if(!mm || mm._master_acted) return s;
-  const atk = (mm.attacks||[{}])[0]; const rng = atk.range || null;
+  if(!mm) return s;
+  // Mesma escolha de índice do clique (handleTileClick): golpe armado na
+  // ficha manda; sem golpe armado, o primeiro com carga — nunca diverge.
+  let idx = window._mpGolpeArmado;
+  if(idx == null){
+    const n = ((mm.attacks||[]).length) || 1;
+    for(let i=0;i<n;i++){ if(GS.masterAttackCharges(i) > 0){ idx = i; break; } }
+  }
+  if(idx == null || !(GS.masterAttackCharges(idx) > 0)) return s;
+  const atk = (mm.attacks||[{}])[idx] || {}; const rng = atk.range || null;
   for(const p of (state.players||[])){
     if(!p.alive) continue;
     const dx=Math.abs(mm.pos[0]-p.pos[0]), dy=Math.abs(mm.pos[1]-p.pos[1]);
