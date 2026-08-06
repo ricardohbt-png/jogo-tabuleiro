@@ -11718,95 +11718,189 @@ function renderMasterPanel(state){
   _mpTickRelogio(host);
 }
 
-// ── Ficha do monstro (só o mestre; painel à direita, abaixo do HUD do mestre) ──
-function renderFichaMonstro(m){
-  if(!m){ return; }
-  let host = document.getElementById('ficha-monstro');
-  if(!host){ host = document.createElement('div'); host.id = 'ficha-monstro'; document.body.appendChild(host); }
-  host.style.display = 'block';
-  const st = GS.gameState;
-  const isManual = !!(st && st.master_manual_mid === m.id);
-  const acted = !!m._master_acted;
-  const linhaAtaque = (a) => {
-    const dano = a.damage || a.dano || '';
-    const b = (a.atk_bonus!=null) ? (a.atk_bonus>=0?'+':'')+a.atk_bonus : '';
-    return `<div class="fm-atk">⚔️ ${a.name||a.nome||'Ataque'} ${b} · ${dano}</div>`;
-  };
-  const ehEditor = (a) => (a.source === 'heroi' || a.source === 'guilda') && a.action_type && a.action_type !== 'passiva';
-  const ativavel = (a) => a.id === 'mestre_dos_mortos' ||
-    (a.action_type !== 'passiva' && a.save != null && a.dc != null) || ehEditor(a);
-  const usosRest = (a) => {
-    const lim = (a.uses_per_combat != null) ? a.uses_per_combat
-              : (a.uses_per_day != null ? a.uses_per_day : null);
-    if (lim == null) return '∞';
-    const dict = ehEditor(a) ? (m.monster_ability_uses || {}) : (m.ability_uses || {});
-    const u = dict[a.id];
-    return (u != null ? u : lim);
-  };
-  const cdRest = (a) => {
-    const dict = ehEditor(a) ? (m.monster_ability_cooldowns || {}) : (m.ability_cooldowns || {});
-    return dict[a.id] || 0;
-  };
-  const abis = m.special_abilities||[];
-  const ativas   = abis.filter(a => a.action_type && a.action_type!=='passiva');
-  const passivas = abis.filter(a => !a.action_type || a.action_type==='passiva');
-  const linhaAcao = (a) => {
-    const ok = ativavel(a);
-    const cd = cdRest(a), usos = usosRest(a);
-    const semUso = (usos===0 || usos==='0');
-    const primeiraAcaoOk = a.id !== 'mestre_dos_mortos' || !m._ja_executou_acao;
-    const podeUsar = isManual && !acted && ok && cd===0 && !semUso && primeiraAcaoOk;
-    const meta = `<span class="fm-ab-meta">usos: ${usos} · recarga: ${cd>0?cd+'r':'—'}</span>`;
-    const ctrl = ok
-      ? `<button class="fm-usar" data-abid="${a.id}"${podeUsar?'':' disabled'}>Ativar</button>`
-      : `<span class="fm-ia">IA apenas</span>`;
-    return `<div class="fm-hab fm-acao"><div class="fm-ab-top"><b>${a.name||a.nome||a.id}</b> ${ctrl}</div>`+
-           `<div class="fm-ab-desc">${a.descricao||a.desc||''}</div>${meta}</div>`;
-  };
-  const linhaHab = (h) => `<div class="fm-hab"><b>${h.name||h.nome||h.id}</b> — ${h.descricao||h.desc||''}</div>`;
-  const ataques = (m.attacks||[]).map(linhaAtaque).join('') ||
-                  (m.atk_bonus!=null ? linhaAtaque({name:'Ataque', atk_bonus:m.atk_bonus, damage:m.damage}) : '');
-  const stat = (lbl,v)=> (v!=null? `<span class="fm-stat">${lbl} ${v}</span>` : '');
+// Monstro exibido na aba Ativo: o da janela Manual, ou o que o mestre clicou.
+function _mpMonstroAtivo(state){
+  const mm = GS.masterManual();
+  const id = (mm && mm.mid) || window._mpFocoMid;
+  return (state.monsters || []).find(x => x.id === id) || null;
+}
+
+const _MP_CUSTO_LBL = { principal: 'AÇÃO', bonus: 'BÔNUS', livre: 'LIVRE' };
+function _mpCustoDe(a){
+  const at = a && a.action_type;
+  if(at === 'acao_bonus') return 'bonus';
+  if(at === 'acao_livre') return 'livre';
+  return 'principal';
+}
+// Espelha _habilidade_ativavel_manual no servidor. O servidor é a autoridade;
+// isto só decide o que fica clicável.
+const _MP_HAB_EXTRAIDAS = ['mestre_dos_mortos','sopro_dragao','amaldicoar_monstro',
+                           'golpe_brutal','desaparecer_nas_sombras'];
+const _MP_NAO_IMPLEMENTADAS = ['encantar_vampirico','encantar_area_vampirico',
+                               'encantar_supremo_vampirico'];
+function _mpAtivavel(a){
+  if(!a || a.action_type === 'passiva') return false;
+  if(_MP_NAO_IMPLEMENTADAS.includes(a.id)) return false;
+  if(_MP_HAB_EXTRAIDAS.includes(a.id)) return true;
+  if(a.action_type === 'magia') return true;   // servidor recusa as não implementadas
+  if(a.save != null && a.dc != null) return true;
+  return a.source === 'heroi' || a.source === 'guilda';
+}
+
+function _mpCondicoes(m){
+  const c = [];
+  if(m.com_medo || m.medo_rodadas > 0) c.push('😰 amedrontado');
+  if(m.perde_turno)                    c.push('💫 atordoado');
+  if((m.efeitos_veneno || []).length)  c.push('🧪 envenenado');
+  if(m.mov_reduzido_rodadas > 0)       c.push('🐌 movimento reduzido');
+  if(m.oculto_sombras)                 c.push('🌫️ oculto');
+  if(m.em_chamas_rodadas > 0)          c.push('🔥 em chamas');
+  return c;
+}
+
+function _mpAbaAtivo(state){
+  const m = _mpMonstroAtivo(state);
+  if(!m) return '<div class="mestre-vazio">Nenhum monstro em foco.<br>Clique num monstro no tabuleiro ou na aba Monstros.</div>';
+  const mm = GS.masterManual();
+  const manual = !!(mm && mm.mid === m.id);
+  const hpPct = Math.max(0, Math.min(100, Math.round(100 * m.hp / (m.max_hp || m.hp || 1))));
+
+  let h = `<div class="mp-head">
+      <span class="emoji">${m.emoji || '👾'}</span>
+      <div style="flex:1">
+        <div class="nome">${_esc(m.name || m.type || 'Monstro')}</div>
+        <div class="sub">${m.room_id != null ? 'sala '+_esc(String(m.room_id))+' · ' : ''}ND ${m.cr != null ? m.cr : '—'}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="mp-selo${manual?' manual':''}">${_esc(m.control_mode || 'auto')}</div>
+        ${manual ? '<div class="mp-relogio" data-restante="'+(mm.restante||0)+'">⏱ —</div>' : ''}
+      </div>
+    </div>`;
+
+  if(manual){
+    const acao  = mm.acao ? `<b class="gasta">${_esc(mm.acao)}</b>` : '<b class="livre">livre</b>';
+    const bonus = mm.bonus ? '<b class="gasta">usada</b>' : '<b class="livre">livre</b>';
+    h += `<div class="mp-recursos">
+        <div>👣 MOVIMENTO<b class="mov">${mm.moves_left}<span style="font-size:.6rem;opacity:.6">/${mm.moves_max}</span></b></div>
+        <div>⚡ AÇÃO${acao}</div>
+        <div>✨ BÔNUS${bonus}</div>
+      </div>`;
+  }
+
+  h += `<div class="mp-vitais"><div class="mp-hpbar"><i style="width:${hpPct}%"></i></div><span>${m.hp}/${m.max_hp || m.hp}</span></div>
+    <div style="font-size:.68rem;color:var(--text2)">🛡️ CA ${m.ac != null ? m.ac : '—'} · 👣 ${m.movement != null ? m.movement : '—'}</div>`;
+
+  const cond = _mpCondicoes(m);
+  if(cond.length) h += `<div class="mp-cond">${cond.map(c=>`<span>${c}</span>`).join('')}</div>`;
+
+  h += `<div class="mp-attrs">FOR ${m.str_ ?? '—'} · DES ${m.dex ?? '—'} · CON ${m.con_ ?? '—'} · INT ${m.int_ ?? '—'}
+        &nbsp;|&nbsp; Fort ${m.fort ?? '—'} · Ref ${m.ref_ ?? '—'} · Von ${m.will ?? '—'}</div>`;
+
+  // ── Ataques ──
+  const ataques = (m.attacks && m.attacks.length) ? m.attacks
+                : (m.atk_bonus != null ? [{name:'Ataque', atk_bonus:m.atk_bonus, damage:m.damage, num_attacks:1}] : []);
+  if(ataques.length){
+    h += `<div class="mp-sec">ATAQUES <span style="color:var(--text2);letter-spacing:0">— gastam a ação</span></div>`;
+    ataques.forEach((a, i) => {
+      const cargas = manual ? GS.masterAttackCharges(i) : (a.num_attacks || 1);
+      const pode = manual && cargas > 0 && GS.masterPodeAtacar();
+      const b = (a.atk_bonus != null) ? ((a.atk_bonus >= 0 ? '+' : '') + a.atk_bonus) : '';
+      const alc = a.range ? `alcance ${a.range}q` : 'corpo a corpo';
+      const armado = window._mpGolpeArmado === i ? ' armado' : '';
+      h += `<div class="mp-linha ${pode ? 'atk'+armado : 'off'}" data-atk="${i}">
+          <span style="font-size:1rem">${a.range ? '🎯' : '⚔️'}</span>
+          <div class="txt"><b>${_esc(a.name || 'Ataque')}</b><div class="meta">${b} · ${_esc(a.damage || '')} · ${alc}</div></div>
+          <span class="mp-cargas">${'●'.repeat(cargas) || '—'}</span>
+        </div>`;
+    });
+  }
+
+  // ── Magias e habilidades ──
+  const abis = (m.special_abilities || []).filter(a => a.action_type && a.action_type !== 'passiva');
+  if(abis.length){
+    h += `<div class="mp-sec">MAGIAS E HABILIDADES</div>`;
+    abis.forEach(a => {
+      const naoImpl = _MP_NAO_IMPLEMENTADAS.includes(a.id);
+      const ativavel = _mpAtivavel(a);
+      const custo = _mpCustoDe(a);
+      const bloqueado = custo === 'principal' ? !!(mm && mm.acao) : custo === 'bonus' ? !!(mm && mm.bonus) : false;
+      const pode = manual && ativavel && !bloqueado;
+      const motivo = naoImpl ? 'não implementada'
+                   : !ativavel ? 'IA apenas'
+                   : bloqueado ? 'ação já gasta' : '';
+      h += `<div class="mp-linha ${pode ? 'hab' : 'off'}" data-hab="${_esc(a.id)}">
+          <span style="font-size:1rem">✦</span>
+          <div class="txt"><b>${_esc(a.name || a.id)}</b> <span class="mp-custo">${_MP_CUSTO_LBL[custo]}</span>
+            <div class="meta">${_esc(a.descricao || a.desc || '')}${motivo ? ' · '+motivo : ''}</div></div>
+        </div>`;
+    });
+  }
+
+  // ── Itens ──
   const cons = m.equipment_consumables || [];
-  const FOOD = new Set(['food','ration','wine','ale']);
-  const itemUsavel = (it) => {
-    if(FOOD.has(it.effect)) return false;
-    if(it.effect === 'throwable') return isManual && !acted;
-    if(it.effect === 'scroll') return isManual && !acted && _monConjurador(m);
-    if(it.effect === 'coat_poison' && (m.special_abilities||[]).some(a=>a.id==='envenenar_arma'))
-      return isManual && !m.veneno_arma_ativo;
-    return isManual && !m._master_bonus_acted;   // consumível bônus
-  };
-  const linhaItem = (it) => {
-    const podeUsar = itemUsavel(it);
-    const motivo = FOOD.has(it.effect) ? '<span class="fm-ia">sem efeito</span>'
-                 : (it.effect === 'scroll' && !_monConjurador(m)) ? '<span class="fm-ia">só conjurador</span>'
-                 : `<button class="fm-usar-item" data-iid="${it.id}"${podeUsar?'':' disabled'}>Usar</button>`;
-    return `<div class="fm-hab fm-item"><div class="fm-ab-top"><b>${it.emoji||'🎒'} ${it.name||it.id}</b> ${motivo}</div>`+
-           `<div class="fm-ab-desc">${it.descricao||it.desc||''}</div></div>`;
-  };
-  const eqW = m.equipped_weapon ? `<div class="fm-eq">🗡️ ${m.equipped_weapon.name}</div>` : '';
-  const eqA = (m.equipment_items||[]).filter(i=>i.ac_bonus||i.effect==='def_')
-              .map(i=>`<div class="fm-eq">🛡️ ${i.name}</div>`).join('');
-  host.innerHTML =
-    `<div class="fm-head"><span class="fm-emoji">${m.emoji||'👾'}</span>`+
-    `<span class="fm-nome">${m.name||m.type||'Monstro'}</span>`+
-    `<button class="fm-close" title="Fechar">✕</button></div>`+
-    `<div class="fm-vitais">❤️ ${m.hp}/${m.max_hp||m.hp} · 🛡️ CA ${m.ac??'—'} · 👣 ${m.movement??'—'}</div>`+
-    `<div class="fm-stats">${stat('FOR',m.str_)}${stat('DES',m.dex)}${stat('CON',m.con_)}${stat('INT',m.int_)}`+
-    `${stat('Fort',m.fort)}${stat('Ref',m.ref_)}${stat('Von',m.will)}</div>`+
-    (ataques? `<div class="fm-sec">Ataques</div>${ataques}`:'')+
-    (ativas.length? `<div class="fm-sec">Ações</div>${ativas.map(linhaAcao).join('')}`:'')+
-    (passivas.length? `<div class="fm-sec">Passivas</div>${passivas.map(linhaHab).join('')}`:'')+
-    (cons.length? `<div class="fm-sec">Itens</div>${cons.map(linhaItem).join('')}`:'')+
-    ((eqW||eqA)? `<div class="fm-sec">Equipado</div>${eqW}${eqA}`:'');
-  host.querySelector('.fm-close').onclick = () => { host.style.display='none'; };
-  host.querySelectorAll('.fm-usar').forEach(btn => {
-    btn.onclick = () => _mestreAtivarHabilidade(m, btn.dataset.abid);
+  if(cons.length){
+    h += `<div class="mp-sec">ITENS (bolsa)</div>`;
+    cons.forEach(it => {
+      const principal = it.effect === 'throwable' || it.effect === 'scroll';
+      const inutil = ['food','ration','wine','ale'].includes(it.effect);
+      const bloqueado = principal ? !!(mm && mm.acao) : !!(mm && mm.bonus);
+      const pode = manual && !inutil && !bloqueado;
+      h += `<div class="mp-linha ${pode ? 'item' : 'off'}" data-item="${_esc(it.id)}">
+          <span style="font-size:1rem">${it.emoji || '🎒'}</span>
+          <div class="txt"><b>${_esc(it.name || it.id)}</b> <span class="mp-custo">${principal?'AÇÃO':'BÔNUS'}</span>
+            <div class="meta">${inutil ? 'sem efeito em monstros' : _esc(it.descricao || it.desc || '')}</div></div>
+        </div>`;
+    });
+  }
+
+  // ── Equipado e passivas ──
+  const eq = [];
+  if(m.equipped_weapon) eq.push('🗡️ ' + _esc(m.equipped_weapon.name));
+  (m.equipment_items || []).filter(i => i.ac_bonus || i.effect === 'def_')
+    .forEach(i => eq.push('🛡️ ' + _esc(i.name)));
+  const passivas = (m.special_abilities || []).filter(a => !a.action_type || a.action_type === 'passiva');
+  if(eq.length || passivas.length){
+    h += `<details><summary class="mp-sec" style="cursor:pointer">EQUIPADO (${eq.length}) · PASSIVAS (${passivas.length})</summary>
+      ${eq.map(e=>`<div class="meta">${e}</div>`).join('')}
+      ${passivas.map(p=>`<div class="meta"><b>${_esc(p.name||p.id)}</b> — ${_esc(p.descricao||p.desc||'')}</div>`).join('')}
+    </details>`;
+  }
+  return h;
+}
+
+function _mpWireAtivo(host, state){
+  const m = _mpMonstroAtivo(state);
+  if(!m) return;
+  host.querySelectorAll('.mp-linha.atk').forEach(el => {
+    el.onclick = () => {
+      const i = parseInt(el.dataset.atk, 10);
+      window._mpGolpeArmado = (window._mpGolpeArmado === i) ? null : i;
+      toast(window._mpGolpeArmado != null ? 'Golpe armado — clique num herói.' : 'Golpe desarmado.',
+            'var(--gold)');
+      renderMasterPanel(GS.gameState);
+    };
   });
-  host.querySelectorAll('.fm-usar-item').forEach(btn => {
-    btn.onclick = () => _mestreUsarItemFicha(m, btn.dataset.iid);
+  host.querySelectorAll('.mp-linha.hab').forEach(el => {
+    el.onclick = () => _mestreAtivarHabilidade(m, el.dataset.hab);
   });
+  host.querySelectorAll('.mp-linha.item').forEach(el => {
+    el.onclick = () => _mestreUsarItemFicha(m, el.dataset.item);
+  });
+}
+
+// Contador local: o servidor manda os segundos restantes a cada push_state e o
+// cliente decrementa entre um estado e outro.
+function _mpTickRelogio(host){
+  if(window._mpRelogioTimer) clearInterval(window._mpRelogioTimer);
+  const el = host.querySelector('.mp-relogio');
+  if(!el) return;
+  let n = parseInt(el.dataset.restante, 10) || 0;
+  const pinta = () => {
+    el.textContent = '⏱ ' + Math.floor(n/60) + ':' + String(n%60).padStart(2,'0');
+    el.classList.toggle('urgente', n <= 15);
+  };
+  pinta();
+  window._mpRelogioTimer = setInterval(() => { n = Math.max(0, n-1); pinta(); }, 1000);
 }
 
 // Ativar (mestre): mira um herói no alcance e envia mestre_usar_habilidade.
@@ -23893,24 +23987,32 @@ function handleTileClick(tx, ty){
       return;
     }
     const st = GS.gameState;
-    const manualMid = st && st.master_manual_mid;
-    if(manualMid){
-      const mm = (st.monsters||[]).find(x=>x.id===manualMid);
-      // 1) herói no alcance → ataca
+    const mm = GS.masterManual();
+    if(mm){
+      const monM = (st.monsters||[]).find(x=>x.id===mm.mid);
       const alvo = (st.players||[]).find(p=>p.alive && p.pos[0]===tx && p.pos[1]===ty);
-      if(mm && alvo && !mm._master_acted){
-        const atk=(mm.attacks||[{}])[0]; const rng=atk.range||null;
-        const dx=Math.abs(mm.pos[0]-tx), dy=Math.abs(mm.pos[1]-ty);
-        const inR = rng!=null ? Math.max(dx,dy)<=rng : ((dx===1&&dy===0)||(dx===0&&dy===1));
-        if(inR){ GS.mestreAtacarMonstro(manualMid, alvo.id); return; }
+      if(monM && alvo && GS.masterPodeAtacar()){
+        // Golpe armado na ficha manda; sem golpe armado, o primeiro com carga.
+        let idx = window._mpGolpeArmado;
+        if(idx == null){
+          const n = ((monM.attacks||[]).length) || 1;
+          for(let i=0;i<n;i++){ if(GS.masterAttackCharges(i) > 0){ idx = i; break; } }
+        }
+        if(idx != null && GS.masterAttackCharges(idx) > 0){
+          const atk = (monM.attacks||[{}])[idx] || {};
+          const rng = atk.range || null;
+          const dx = Math.abs(monM.pos[0]-tx), dy = Math.abs(monM.pos[1]-ty);
+          const inR = rng != null ? Math.max(dx,dy) <= rng : ((dx===1&&dy===0)||(dx===0&&dy===1));
+          if(inR){ GS.mestreAtacarMonstro(mm.mid, alvo.id, idx); window._mpGolpeArmado = null; return; }
+          toast('Alvo fora do alcance deste golpe.', 'var(--orange)'); return;
+        }
       }
-      // 2) casa azul → move
       if((st.master_manual_reach||[]).some(([x,y])=>x===tx&&y===ty)){
-        GS.mestreMoverMonstroPara(manualMid, tx, ty); return;
+        GS.mestreMoverMonstroPara(mm.mid, tx, ty); return;
       }
     }
     const mon = _monstroEmCasa(tx, ty);
-    if(mon) renderFichaMonstro(mon);
+    if(mon){ window._mpFocoMid = mon.id; window._masterTab = 'ativo'; renderMasterPanel(GS.gameState); }
     return;
   }
   // ── Mira de MAGIA (2D e 3D): resolve alvo/casa e envia `magia` ─────────────
