@@ -174,74 +174,74 @@ document.body.innerHTML = `
 <div id="screen-connect" class="screen active">
   <!-- Capa do jogo: aparece em tela cheia no boot; após o 1º clique recua para fundo sutil (ver .dismissed em game.css) -->
   <div id="cover-splash">
-    <div id="cover-hint">Clique para começar</div>
+    <div id="cover-hint" data-i18n="ui.connect.cover_hint">Clique para começar</div>
   </div>
   <div class="logo">
     <h1>LEGENDS FOR HIRE</h1>
-    <p>RPG de Tabuleiro Online — até 6 jogadores</p>
+    <p data-i18n="ui.connect.subtitulo">RPG de Tabuleiro Online — até 6 jogadores</p>
   </div>
   <div class="connect-panel">
-    <h2>Entrar na Aventura</h2>
+    <h2 data-i18n="ui.connect.titulo">Entrar na Aventura</h2>
     <div id="hint-host" style="background:#0d1a0d;border:1px solid #2a4a2a;border-radius:6px;padding:8px 12px;font-size:.75rem;color:#8ab88a;line-height:1.5;">
       ⚙️ <b style="color:#6fc96f;">Como jogar:</b> Clique duas vezes em <code style="background:#1a2a1a;padding:1px 5px;border-radius:3px;color:#a0e0a0;">iniciar.bat</code> para iniciar o servidor e abrir o jogo automaticamente.
     </div>
     <div class="field">
-      <label>Seu nome de herói</label>
-      <input id="input-name" type="text" maxlength="20" placeholder="Ex: Thorin" value="">
+      <label data-i18n="ui.connect.nome_label">Seu nome de herói</label>
+      <input id="input-name" type="text" maxlength="20" data-i18n-ph="ui.connect.nome_ph" placeholder="Ex: Thorin" value="">
     </div>
     <div class="field" id="field-server">
-      <label>Endereço do servidor</label>
+      <label data-i18n="ui.connect.servidor_label">Endereço do servidor</label>
       <input id="input-server" type="text" placeholder="ws://localhost:8765" value="ws://localhost:8765">
     </div>
     <div class="field">
-      <label>PIN (4 dígitos) — para jogos salvos</label>
+      <label data-i18n="ui.connect.pin_label">PIN (4 dígitos) — para jogos salvos</label>
       <input id="input-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
     </div>
-    <button class="btn-primary" onclick="entrarComConta()">🎲 Entrar com minha conta</button>
-    <div style="font-size:.7rem;color:#8ab88a;margin-top:4px;">
+    <button class="btn-primary" data-i18n="ui.connect.btn_conta" onclick="entrarComConta()">🎲 Entrar com minha conta</button>
+    <div style="font-size:.7rem;color:#8ab88a;margin-top:4px;" data-i18n="ui.connect.ajuda_conta">
       Primeira vez? O apelido acima vira sua conta. Use o mesmo apelido + PIN para voltar aos seus jogos.
     </div>
-    <div class="divider">ou jogo rápido (sem salvar)</div>
-    <button class="btn-primary" onclick="createRoom()">⚔ Criar Nova Sala</button>
-    <div class="divider">ou</div>
+    <div class="divider" data-i18n="ui.connect.div_rapido">ou jogo rápido (sem salvar)</div>
+    <button class="btn-primary" data-i18n="ui.connect.btn_criar" onclick="createRoom()">⚔ Criar Nova Sala</button>
+    <div class="divider" data-i18n="ui.connect.div_ou">ou</div>
     <div class="field">
-      <label>Código da sala</label>
+      <label data-i18n="ui.connect.codigo_label">Código da sala</label>
       <div class="join-row">
         <input id="input-code" type="text" maxlength="4" placeholder="ABCD">
-        <button class="btn-secondary btn-sm" onclick="joinRoom()">Entrar</button>
+        <button class="btn-secondary btn-sm" data-i18n="ui.connect.btn_entrar" onclick="joinRoom()">Entrar</button>
       </div>
     </div>
     <!-- Reaparece (via JS) quando há uma sessão salva — volta à partida após F5/queda -->
     <button id="btn-rejoin" class="btn-secondary" style="display:none;margin-top:10px;width:100%;"
-            onclick="rejoinSaved()">🔌 Reconectar à última partida</button>
+            data-i18n="ui.connect.btn_reconectar" onclick="rejoinSaved()">🔌 Reconectar à última partida</button>
   </div>
 </div>
 
 <!-- ══ MEUS JOGOS (Fase 3 — Jogos Salvos) ══ -->
 <div id="screen-savegames" class="screen">
   <div class="connect-panel">
-    <h2>Meus Jogos</h2>
+    <h2 data-i18n="ui.savegames.titulo">Meus Jogos</h2>
     <div id="savegames-list" style="display:flex;flex-direction:column;gap:8px;max-height:40vh;overflow:auto;"></div>
-    <div class="divider">entrar no jogo de um amigo</div>
-    <div class="field"><label>Código da sala do amigo</label>
+    <div class="divider" data-i18n="ui.savegames.div_amigo">entrar no jogo de um amigo</div>
+    <div class="field"><label data-i18n="ui.savegames.codigo_label">Código da sala do amigo</label>
       <div class="join-row">
         <input id="sg-join-code" type="text" maxlength="4" placeholder="ABCD">
-        <button class="btn-secondary btn-sm" onclick="entrarPorCodigoLogado()">Entrar</button>
+        <button class="btn-secondary btn-sm" data-i18n="ui.savegames.btn_entrar" onclick="entrarPorCodigoLogado()">Entrar</button>
       </div>
     </div>
-    <div style="font-size:.7rem;color:#8ab88a;margin-top:2px;">
+    <div style="font-size:.7rem;color:#8ab88a;margin-top:2px;" data-i18n="ui.savegames.ajuda">
       Peça o código que aparece no topo do lobby de quem criou o jogo. Você escolhe seu
       personagem lá e ele fica vinculado à sua conta.
     </div>
-    <div class="divider">criar novo</div>
-    <div class="field"><label>Nome do jogo</label>
-      <input id="sg-name" type="text" maxlength="40" placeholder="Ex: A Sociedade do Anel"></div>
-    <div class="field"><label>Campanha</label>
+    <div class="divider" data-i18n="ui.savegames.div_criar">criar novo</div>
+    <div class="field"><label data-i18n="ui.savegames.nome_label">Nome do jogo</label>
+      <input id="sg-name" type="text" maxlength="40" data-i18n-ph="ui.savegames.nome_ph" placeholder="Ex: A Sociedade do Anel"></div>
+    <div class="field"><label data-i18n="ui.savegames.campanha_label">Campanha</label>
       <select id="sg-campaign"></select></div>
     <label style="display:flex;gap:6px;align-items:center;font-size:.8rem;">
-      <input id="sg-master" type="checkbox"> Este jogo terá um Mestre humano</label>
-    <button class="btn-primary" onclick="criarJogoSalvo()">➕ Criar jogo</button>
-    <button class="btn-secondary" onclick="showScreen('screen-connect')" style="margin-top:8px;">← Voltar</button>
+      <input id="sg-master" type="checkbox"> <span data-i18n="ui.savegames.mestre_label">Este jogo terá um Mestre humano</span></label>
+    <button class="btn-primary" data-i18n="ui.savegames.btn_criar" onclick="criarJogoSalvo()">➕ Criar jogo</button>
+    <button class="btn-secondary" data-i18n="ui.savegames.btn_voltar" onclick="showScreen('screen-connect')" style="margin-top:8px;">← Voltar</button>
   </div>
 </div>
 
