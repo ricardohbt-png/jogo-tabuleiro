@@ -1214,6 +1214,11 @@ def _lang_de(pid):
     lang = LANG_BY_PID.get(pid, LANG_DEFAULT)
     return lang if lang in LANG_SUPORTADOS else LANG_DEFAULT
 
+def _lang_valido(valor):
+    """Normaliza o que veio do cliente. Qualquer coisa fora da lista vira o
+    padrão — a mensagem vem da rede e não é confiável."""
+    return valor if valor in LANG_SUPORTADOS else LANG_DEFAULT
+
 def _now_iso():
     """Timestamp UTC no formato 2026-07-18T14:00:00Z."""
     return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -25302,6 +25307,18 @@ async def handler(ws):
             t = msg.get("type")
 
             try:
+                # Idioma desta conexão. Vem antes de qualquer sala: vale já na
+                # tela de login e nas mensagens de erro do lobby.
+                if t == "set_lang":
+                    LANG_BY_PID[pid] = _lang_valido(msg.get("lang"))
+                    # Reenvia o estado para que o log de narração já impresso
+                    # reapareça traduzido, sem função de re-render nova no cliente.
+                    if room:
+                        if   room.phase == "playing": await room.push_state()
+                        elif room.phase == "city":    await room.broadcast_city_state()
+                        else:                         await room.broadcast_lobby()
+                    continue
+
                 if t == "upload_story":
                     ok, res = _save_story_upload(msg.get("name"), msg.get("data"))
                     payload = {"type": "upload_result",
@@ -26027,6 +26044,7 @@ async def handler(ws):
     except websockets.exceptions.ConnectionClosed:
         pass
     finally:
+        LANG_BY_PID.pop(pid, None)
         if account["name"] and ACCOUNTS_ONLINE.get(account["name"]) == pid:
             del ACCOUNTS_ONLINE[account["name"]]
         if room:

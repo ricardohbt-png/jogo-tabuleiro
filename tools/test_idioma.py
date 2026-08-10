@@ -117,6 +117,12 @@ def _rodar_verificacoes():
     check("string crua sai idêntica em en", json.loads(ws_en.sent[-1])["text"] == "texto legado sem chave")
     _limpar_idiomas()
 
+    print("\n[9] Validação do idioma recebido")
+    check("idioma suportado é aceito", S._lang_valido("en") == "en")
+    check("idioma desconhecido vira português", S._lang_valido("klingon") == "pt")
+    check("valor não-string vira português", S._lang_valido(42) == "pt")
+    check("None vira português", S._lang_valido(None) == "pt")
+
 
 if __name__ == "__main__":
     print("=" * 62); print("  TESTE — Motor de idioma (PT/EN)"); print("=" * 62)

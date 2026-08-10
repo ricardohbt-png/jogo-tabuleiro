@@ -145,6 +145,7 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `mestre_encerrar_monstro` | `monster_id` — Manual: encerra a vez do monstro e libera o laço de iniciativa. |
 | `mestre_implantar_reforco` | `monster_type`, `tx`, `ty` — o mestre implanta um monstro da **reserva de reforços** (`master_reinforcements` da masmorra) numa casa livre. Ação livre, a qualquer momento; nasce `alertado`+`manual` e entra na iniciativa da próxima rodada. Só com mestre ativo. |
 | `disparar_fala` | `fala_id` — o mestre dispara manualmente uma **fala de NPC** de gatilho `manual` (marcador autorado no editor). Só com mestre ativo; recusa falas não-manuais ou já disparadas. As falas `proximidade`/`sala` disparam sozinhas no `handle_move` (sem/com mestre). |
+| `set_lang` | `lang` (`"pt"`\|`"en"`) — idioma desta conexão. Enviada no `onopen` e a cada troca no painel ⚙️. Guardada em `LANG_BY_PID` (módulo, chaveada pelo `pid` do `new_id()`), não na sala — vale antes de entrar em qualquer sala e cobre o Mestre, que sai de `self.players` no `start_game`. O servidor reenvia o estado ao recebê-la, para o log de narração reaparecer traduzido. Valor fora da lista cai em `pt`. |
 
 ### Server → Client
 `lobby_state`, `game_start`, `city_state`, `shop_result`, `enter_dungeon`,
