@@ -14923,6 +14923,14 @@ function _mmHideHint(){                       // esconde a dica da capa ao tocar
 const _LANG_KEY = 'lfh_lang';
 const t = (chave, params) => I18N.t(chave, params);
 
+// Ponto ÚNICO de propagação para o servidor. Qualquer troca de idioma passa por
+// aqui — inclusive a que vem do localStorage no boot, que não nasce de um clique.
+// Sem este ouvinte, quem tinha inglês salvo abria o jogo com a interface em
+// inglês e a narração do servidor em português: o gameState continuava achando
+// que o idioma era o padrão, porque só o clique no seletor o avisava.
+// Registrado no carregamento do módulo, antes de _langLoadPref() rodar.
+I18N.on(code => GS.setLang(code));
+
 function _langLoadPref(){
   try {
     const salvo = localStorage.getItem(_LANG_KEY);
@@ -14945,10 +14953,10 @@ function _setLang(code){
   try { localStorage.setItem(_LANG_KEY, code); } catch (e) {}
   _i18nApply(document.body);
   _refreshTurnTimerOption();          // rótulos montados em JS, não por data-i18n
-  // O servidor responde ao set_lang reenviando o estado, e esse reenvio cai no
-  // caminho normal de render (GS.on('gameState')) — o log de narração reaparece
-  // traduzido sem precisar de nenhuma função de re-render nova aqui.
-  GS.setLang(code);
+  // Avisar o servidor NÃO é feito aqui: o ouvinte de I18N acima cobre esta troca
+  // e a do boot com um caminho só. O servidor responde ao set_lang reenviando o
+  // estado, e esse reenvio cai no caminho normal de render (GS.on('gameState')),
+  // então o log de narração reaparece traduzido sem re-render novo aqui.
 }
 window._setLang = _setLang;
 

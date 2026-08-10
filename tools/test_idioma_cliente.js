@@ -53,6 +53,19 @@ const orfas = [...usadas].filter(k => !DICT[k]);
 check(`nenhuma chave data-i18n órfã (usadas: ${usadas.size})`, orfas.length === 0);
 if (orfas.length) console.log("     órfãs:", orfas.join(", "));
 
+console.log("\n[6] O idioma salvo é propagado ao servidor (regressão)");
+// Bug real, achado só na verificação dentro do jogo: _langLoadPref restaurava o
+// idioma direto no I18N e o gameState continuava achando que era português —
+// então quem tinha inglês salvo abria a interface em inglês e recebia narração e
+// erros do servidor em português. A correção é propagar por um OUVINTE do I18N,
+// que cobre de uma vez o clique no seletor e a restauração do boot.
+// Checagem estática: o teste não consegue carregar o game.js (ele monta o DOM
+// inteiro no load), então verificamos a fiação no fonte.
+check("game.js liga I18N.on a GS.setLang",
+      /I18N\.on\(\s*code\s*=>\s*GS\.setLang\(code\)\s*\)/.test(gamejs));
+check("propagação tem um caminho só (uma única chamada a GS.setLang)",
+      (gamejs.match(/GS\.setLang\(/g) || []).length === 1);
+
 console.log("\n" + "=".repeat(62));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);
 console.log("=".repeat(62));
