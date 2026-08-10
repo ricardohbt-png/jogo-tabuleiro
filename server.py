@@ -1135,6 +1135,77 @@ RANGED_AMMO = {
 # ─── Persistência de contas e jogos salvos ────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# ─── IDIOMA (i18n) ────────────────────────────────────────────────────────
+# Dicionário único, compartilhado com o cliente: src/lang/strings.js guarda
+# {chave: {pt, en}} e é lido pelos DOIS lados — impossível divergirem.
+#
+# Como usar: envolva a frase em T("chave", param=valor) no lugar da string.
+# A tradução acontece só na saída (broadcast/send_to), no idioma de cada
+# conexão. String crua continua string crua e sai em português para todos,
+# o que permite migrar as frases em lotes sem quebrar nada no caminho.
+LANG_FILE = os.path.join(BASE_DIR, "src", "lang", "strings.js")
+LANG_DEFAULT = "pt"
+LANG_SUPORTADOS = ("pt", "en")
+LANG_BY_PID = {}          # pid -> "pt"|"en". Fora da sala de propósito: o pid vem
+                          # de new_id() (contador global), então o idioma vale
+                          # antes de entrar em qualquer sala e o Mestre — que sai
+                          # de self.players no start_game — não fica de fora.
+
+def _load_lang():
+    """Lê src/lang/strings.js e devolve o dicionário. O arquivo é JS por causa
+    do cliente (carrega por <script>, sem fetch); aqui pegamos o objeto entre a
+    primeira { e a última } e fazemos json.loads. Mesmo padrão que
+    tools/editor_catalog.js já usa. Falha nunca impede o servidor de subir."""
+    try:
+        with open(LANG_FILE, encoding="utf-8") as f:
+            raw = f.read()
+        return json.loads(raw[raw.index("{"):raw.rindex("}") + 1])
+    except Exception as e:
+        print(f"⚠️  i18n: não foi possível ler {LANG_FILE} ({type(e).__name__}: {e}) — "
+              f"o jogo segue em português.")
+        return {}
+
+LANG_STRINGS = _load_lang()
+
+_LANG_PARAM_RE = re.compile(r"\{(\w+)\}")
+
+def t(key, lang=LANG_DEFAULT, **params):
+    """Traduz uma chave. Sem tradução no idioma pedido → português. Sem a chave
+    → devolve a própria chave (aparece na tela, mas nada quebra)."""
+    entry = LANG_STRINGS.get(key)
+    if not isinstance(entry, dict):
+        return key
+    text = entry.get(lang) or entry.get(LANG_DEFAULT) or key
+    if params:
+        # Substituição por nome (e não .format) para que uma chave sem o
+        # parâmetro — ou uma chave { solta no texto — nunca levante exceção.
+        text = _LANG_PARAM_RE.sub(lambda m: str(params.get(m.group(1), m.group(0))), text)
+    return text
+
+class T:
+    """Texto ainda não traduzido: guarda a chave e os parâmetros, e só vira
+    string na hora do envio, no idioma daquele jogador."""
+    __slots__ = ("key", "params")
+
+    def __init__(self, key, **params):
+        self.key = key
+        self.params = params
+
+    def __repr__(self):
+        return f"T({self.key!r}, {self.params!r})"
+
+def _t_render(o, lang):
+    """Usado como `default` do json.dumps: chamado para cada objeto que o json
+    não sabe serializar. Resolve T no idioma da conexão; qualquer outra coisa
+    continua sendo um erro de serialização de verdade."""
+    if isinstance(o, T):
+        return t(o.key, lang, **o.params)
+    raise TypeError(f"Object of type {type(o).__name__} is not JSON serializable")
+
+def _lang_de(pid):
+    lang = LANG_BY_PID.get(pid, LANG_DEFAULT)
+    return lang if lang in LANG_SUPORTADOS else LANG_DEFAULT
+
 def _now_iso():
     """Timestamp UTC no formato 2026-07-18T14:00:00Z."""
     return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
