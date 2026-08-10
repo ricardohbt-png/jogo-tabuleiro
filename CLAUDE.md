@@ -1728,3 +1728,39 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > cena ausente do envio = exclusão no servidor, que também limpa o vínculo do ponto.
 > Spec/plano em `docs/superpowers/{specs,plans}/2026-07-30-cenas-de-conversa-por-local*`.
 > Testes: `tools/test_cenas_conversa.py` (57 checks) + `tools/test_cidades_editor.py`.
+
+> **Idioma (i18n) — motor PT/EN:** o painel ⚙️ (o "menu geral", canto superior direito, em
+> todas as telas, também por Esc) ganhou a linha **🌐 Idioma** (`<select>` Português/English)
+> que troca o idioma **por jogador** — dois jogadores na mesma sala podem estar em idiomas
+> diferentes. Dicionário ÚNICO em `src/lang/strings.js` (`{chave: {pt, en}}`), lido pelo
+> cliente via `<script>` (síncrono: sem piscar português antes do inglês e sem depender de
+> `fetch`) e pelo servidor via `json.loads` — mesmo padrão de `tools/editor_catalog.js`. Mora
+> em `src/` porque a allow-list de estáticos é `("src","assets")`; na raiz daria 404. O
+> recorte do objeto é ancorado por regex no **início da linha** `window.LANG_STRINGS =`, e não
+> na primeira `{` do arquivo, para que comentários de seção possam conter chaves à vontade.
+> **Cliente:** `src/i18n.js` é motor PURO (`I18N.t/setLang/on/lang`, zero DOM); `game.js` tem
+> o atalho `t()`, a persistência (`lfh_lang` no localStorage) e `_i18nApply(root)`, que varre
+> `[data-i18n]`/`[data-i18n-ph]`/`[data-i18n-title]`. **Cuidado:** só marque com `data-i18n`
+> elemento cujo conteúdo INTEIRO seja o texto — `textContent` apaga filhos (por isso o rótulo
+> do checkbox de Mestre em `screen-savegames` tem o texto num `<span>`). A propagação do
+> idioma ao servidor é por **um ouvinte só** (`I18N.on(code => GS.setLang(code))`), que cobre
+> tanto o clique no seletor quanto a restauração do localStorage no boot — fazer isso só no
+> clique é um bug real já cometido: a interface ficava em inglês e a narração em português.
+> **Servidor:** `T("chave", **params)` marca "texto ainda não traduzido"; `broadcast`/
+> `send_to`/`err` resolvem pelo parâmetro `default` do `json.dumps`, no idioma da conexão,
+> agrupando por idioma (um `json.dumps` por idioma presente na sala). Isso cobre de graça o
+> `gm_log` dentro do `game_state` (que passa a guardar `T` — seguro, o log nunca vai a disco).
+> **Regra de migração:** string crua continua string crua e sai em português para todos;
+> migrar uma frase é envolvê-la em `T(...)` e acrescentar a chave. Sem `en` → cai no `pt`; sem
+> a chave → devolve a própria chave. Idioma por conexão em `LANG_BY_PID` (dict de módulo,
+> chaveado pelo `pid` do contador global `new_id()`), não na sala: vale antes de entrar em sala
+> e cobre o Mestre, que sai de `self.players` no `start_game`; limpo no `finally` do `handler`.
+> Ao receber `set_lang` o servidor reenvia o estado, e esse reenvio cai no caminho normal de
+> render do cliente — não há função de re-render nova. **Amostra traduzida nesta etapa:** painel
+> ⚙️, `screen-connect`, `screen-savegames`, a narração de abrir porta e o erro de porta
+> distante. O resto (~546 `gm_say` + ~470 erros + a interface) é a etapa 2; o bloco `#hint-host`
+> (que mistura `<b>`/`<code>`) e o conteúdo autoral (masmorras, campanhas, falas de NPC,
+> itens/monstros custom) estão FORA de escopo. Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-08-10-idioma-i18n*`. Testes: `tools/test_idioma.py` (31)
+> e `tools/test_idioma_cliente.js` (16, node) — os dois têm varredura estática que aponta chave
+> órfã, e é ela que diz, na etapa 2, o que ainda falta.
