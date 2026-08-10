@@ -13,6 +13,26 @@ def check(name, cond):
     else:    FAIL += 1; print(f"  ❌ {name}")
 
 
+class RecWS:
+    """WebSocket falso que guarda o JSON cru enviado — é ele que prova que os
+    dois jogadores receberam a MESMA mensagem em idiomas diferentes."""
+    def __init__(self): self.sent = []
+    async def send(self, data): self.sent.append(data)
+
+def _sala_dois_idiomas():
+    """Sala com dois jogadores conectados: p1 em português, p2 em inglês."""
+    r = S.GameRoom("TEST")
+    ws_pt, ws_en = RecWS(), RecWS()
+    r.connections = {"pid_pt": ws_pt, "pid_en": ws_en}
+    S.LANG_BY_PID["pid_pt"] = "pt"
+    S.LANG_BY_PID["pid_en"] = "en"
+    return r, ws_pt, ws_en
+
+def _limpar_idiomas():
+    for pid in ("pid_pt", "pid_en"):
+        S.LANG_BY_PID.pop(pid, None)
+
+
 def _rodar_verificacoes():
     print("\n[1] Carregamento do dicionário")
     check("LANG_STRINGS carregou do disco", isinstance(S.LANG_STRINGS, dict) and len(S.LANG_STRINGS) > 0)
@@ -68,6 +88,34 @@ def _rodar_verificacoes():
     check("T guarda a chave", marcado.key == "narracao.abre_porta")
     check("T guarda os parâmetros", marcado.params == {"nome": "Lyra"})
     check("T rende no idioma pedido", S._t_render(marcado, "en") == "🚪 **Lyra** opens a door!")
+
+    print("\n[5] broadcast traduz por conexão")
+    sala, ws_pt, ws_en = _sala_dois_idiomas()
+    asyncio.run(sala.gm_say(S.T("narracao.abre_porta", nome="Thorin")))
+    texto_pt = json.loads(ws_pt.sent[-1])["text"]
+    texto_en = json.loads(ws_en.sent[-1])["text"]
+    check("jogador em pt recebe português", texto_pt == "🚪 **Thorin** abre uma porta!")
+    check("jogador em en recebe inglês",   texto_en == "🚪 **Thorin** opens a door!")
+    check("a MESMA narração chegou nos dois idiomas", texto_pt != texto_en)
+
+    print("\n[6] send_to traduz para um jogador só")
+    asyncio.run(sala.send_to("pid_en", {"type": "error", "msg": S.T("erro.porta_longe")}))
+    check("erro sai em inglês para quem está em inglês",
+          json.loads(ws_en.sent[-1])["msg"] == "Get closer to the door to open it.")
+
+    print("\n[7] Sem set_lang → português")
+    sala2 = S.GameRoom("TEST2")
+    ws_mudo = RecWS()
+    sala2.connections = {"pid_sem_lang": ws_mudo}
+    asyncio.run(sala2.gm_say(S.T("narracao.abre_porta", nome="Anon")))
+    check("conexão que nunca mandou set_lang recebe português",
+          json.loads(ws_mudo.sent[-1])["text"] == "🚪 **Anon** abre uma porta!")
+
+    print("\n[8] String crua continua saindo igual")
+    asyncio.run(sala.gm_say("texto legado sem chave"))
+    check("string crua sai idêntica em pt", json.loads(ws_pt.sent[-1])["text"] == "texto legado sem chave")
+    check("string crua sai idêntica em en", json.loads(ws_en.sent[-1])["text"] == "texto legado sem chave")
+    _limpar_idiomas()
 
 
 if __name__ == "__main__":

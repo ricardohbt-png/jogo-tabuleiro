@@ -6818,11 +6818,16 @@ class GameRoom:
         """Envia a todos os conectados. `skip` (set de pids) exclui destinatários —
         usado para não mandar game_state a quem está na cidade (fora_masmorra)."""
         dead = []
-        data = json.dumps(msg)
         skip = skip or ()
+        por_idioma = {}   # lang -> JSON já serializado (um dumps por idioma na sala)
         for pid, ws in list(self.connections.items()):
             if pid in skip:
                 continue
+            lang = _lang_de(pid)
+            data = por_idioma.get(lang)
+            if data is None:
+                data = por_idioma[lang] = json.dumps(
+                    msg, default=lambda o, _l=lang: _t_render(o, _l))
             try:
                 await ws.send(data)
             except Exception:
@@ -6833,8 +6838,9 @@ class GameRoom:
     async def send_to(self, pid, msg):
         ws = self.connections.get(pid)
         if ws:
+            lang = _lang_de(pid)
             try:
-                await ws.send(json.dumps(msg))
+                await ws.send(json.dumps(msg, default=lambda o: _t_render(o, lang)))
             except Exception:
                 pass
 
@@ -25278,7 +25284,8 @@ async def handler(ws):
     account = {"name": None}   # conta autenticada nesta conexão (via login)
 
     async def err(msg):
-        await ws.send(json.dumps({"type": "error", "msg": msg}))
+        await ws.send(json.dumps({"type": "error", "msg": msg},
+                                 default=lambda o: _t_render(o, _lang_de(pid))))
 
     try:
         async for raw in ws:
