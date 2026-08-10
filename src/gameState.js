@@ -1035,6 +1035,16 @@ const GS = (() => {
     return true;
   }
 
+  // ── Idioma ────────────────────────────────────────────────────────────────
+  // O servidor traduz narração e erros no idioma de cada conexão; esta é a
+  // única coisa que ele precisa saber. Guardado aqui para ser reenviado em toda
+  // (re)conexão — inclusive no rejoin automático depois de uma queda.
+  let myLang = 'pt';
+  function setLang(code) {
+    myLang = code;
+    send({ type: 'set_lang', lang: code });
+  }
+
   // ── Sessão para reconexão ────────────────────────────────────────────────
   // Guardada quando o lobby confirma a sala; persiste em localStorage para o
   // jogador voltar à partida mesmo após F5/queda (mensagem `rejoin` no servidor).
@@ -1131,7 +1141,10 @@ const GS = (() => {
     // city_state/game_state (`if (!myPid) ...`) nunca o encontraria sozinho.
     if (s.pid) myPid = s.pid;
     ws = new WebSocket(s.url);
-    ws.onopen = () => send({ type: 'rejoin', code: s.code, name: s.name });
+    ws.onopen = () => {
+      send({ type: 'set_lang', lang: myLang });   // antes do rejoin: erros já chegam traduzidos
+      send({ type: 'rejoin', code: s.code, name: s.name });
+    };
     _wireWs();
     return true;
   }
@@ -1155,6 +1168,7 @@ const GS = (() => {
     ws = new WebSocket(url);
 
     ws.onopen = () => {
+      send({ type: 'set_lang', lang: myLang });   // antes de entrar: erros já chegam traduzidos
       if      (mode === 'create') send({ type: 'create_room', name });
       else if (mode === 'join')   send({ type: 'join_room',   name, code });
       else if (mode === 'test')   send({ type: 'join_test_dungeon', token: code });
@@ -2527,6 +2541,7 @@ const GS = (() => {
     // ── Prévia do editor (index.html?preview=1) ──
     isPreview: PREVIEW,
     injectPreviewState,
+    setLang,
 
     // ── Guilda dos Heróis (Fase 0) ──
     guildBuy,

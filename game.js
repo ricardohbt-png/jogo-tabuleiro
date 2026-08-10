@@ -14917,6 +14917,41 @@ function _mmHideHint(){                       // esconde a dica da capa ao tocar
   if (h) h.style.opacity = '0';
 }
 
+// ── Idioma: persistência e aplicação no DOM ─────────────────────────────────
+// O motor puro está em src/i18n.js. Aqui fica o que toca navegador e tela:
+// gravar a escolha e reescrever os textos marcados com data-i18n.
+const _LANG_KEY = 'lfh_lang';
+const t = (chave, params) => I18N.t(chave, params);
+
+function _langLoadPref(){
+  try {
+    const salvo = localStorage.getItem(_LANG_KEY);
+    if (salvo) I18N.setLang(salvo);
+  } catch (e) {}
+}
+
+// Só marque com data-i18n elementos cujo conteúdo INTEIRO é aquele texto —
+// textContent apaga filhos (um <label> com <input> dentro perderia o input;
+// nesses casos, envolva o texto num <span>).
+function _i18nApply(root){
+  const alvo = root || document.body;
+  alvo.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  alvo.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  alvo.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
+}
+
+function _setLang(code){
+  I18N.setLang(code);
+  try { localStorage.setItem(_LANG_KEY, code); } catch (e) {}
+  _i18nApply(document.body);
+  _refreshTurnTimerOption();          // rótulos montados em JS, não por data-i18n
+  // O servidor responde ao set_lang reenviando o estado, e esse reenvio cai no
+  // caminho normal de render (GS.on('gameState')) — o log de narração reaparece
+  // traduzido sem precisar de nenhuma função de re-render nova aqui.
+  GS.setLang(code);
+}
+window._setLang = _setLang;
+
 // ── Painel ⚙️ de áudio (global, em todas as telas) ───────────────────────────
 function _audioPanelEnsure(){
   let wrap = document.getElementById('audio-settings');
@@ -14926,17 +14961,25 @@ function _audioPanelEnsure(){
   wrap.id = 'audio-settings';
   wrap.style.cssText = 'position:fixed;right:14px;top:14px;z-index:61;font-family:inherit;';
   wrap.innerHTML =
-    '<button id="audio-gear" title="Áudio (música e sons)" style="width:42px;height:42px;'
+    '<button id="audio-gear" data-i18n-title="ui.menu.audio_title" title="Áudio, idioma e opções" style="width:42px;height:42px;'
     + 'border-radius:50%;border:1px solid #2a4a2a;background:rgba(13,26,13,.82);color:#a0e0a0;'
     + 'font-size:20px;cursor:pointer;line-height:1;padding:0;box-shadow:0 2px 8px rgba(0,0,0,.5);">⚙️</button>'
     + '<div id="audio-pop" style="display:none;position:absolute;right:0;top:50px;width:210px;'
     + 'background:rgba(13,20,13,.96);border:1px solid #2a4a2a;border-radius:10px;padding:12px 14px;'
     + 'box-shadow:0 6px 20px rgba(0,0,0,.6);color:#cfe9cf;font-size:.8rem;">'
+    // Idioma vem primeiro: é a opção que muda todo o resto do painel.
+    +   '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">'
+    +     '<span data-i18n="ui.menu.idioma">🌐 Idioma</span>'
+    +     '<select id="cfg-lang" style="background:rgba(13,26,13,.9);color:#cfe9cf;border:1px solid #2a4a2a;'
+    +       'border-radius:5px;padding:3px 5px;font-family:inherit;font-size:.78rem;cursor:pointer;">'
+    // Nomes de idioma ficam SEMPRE no próprio idioma — nunca traduzidos.
+    +       '<option value="pt">Português</option><option value="en">English</option>'
+    +     '</select></div>'
     +   '<div style="display:flex;justify-content:space-between;margin-bottom:5px;">'
-    +     '<span>🎵 Música</span><span id="aud-music-val">' + pct(_mmVol) + '%</span></div>'
+    +     '<span data-i18n="ui.menu.musica">🎵 Música</span><span id="aud-music-val">' + pct(_mmVol) + '%</span></div>'
     +   '<input id="aud-music" type="range" min="0" max="100" value="' + pct(_mmVol) + '" style="width:100%;">'
     +   '<div style="display:flex;justify-content:space-between;margin:12px 0 5px;">'
-    +     '<span>🔊 Sons</span><span id="aud-sfx-val">' + pct(_sfxVol) + '%</span></div>'
+    +     '<span data-i18n="ui.menu.sons">🔊 Sons</span><span id="aud-sfx-val">' + pct(_sfxVol) + '%</span></div>'
     +   '<input id="aud-sfx" type="range" min="0" max="100" value="' + pct(_sfxVol) + '" style="width:100%;">'
     +   '<div id="cfg-turn-timer" style="border-top:1px solid #2a4a2a;margin-top:12px;padding-top:10px;display:none;">'
     +     '<button id="cfg-turn-timer-btn" style="width:100%;padding:8px;background:rgba(30,48,62,.7);border:1px solid #6da7bd88;border-radius:6px;color:#d7f0f8;font-family:inherit;font-size:.8rem;cursor:pointer;"></button>'
@@ -14944,9 +14987,9 @@ function _audioPanelEnsure(){
     +   '</div>'
     // Menu de saída unificado (antes era o menu de pausa separado, aberto por Esc).
     +   '<div id="cfg-saida" style="display:none;border-top:1px solid #2a4a2a;margin-top:12px;padding-top:10px;">'
-    +     '<button id="cfg-voltar-inicio" style="width:100%;padding:8px;margin-bottom:6px;background:rgba(40,32,10,.6);'
+    +     '<button id="cfg-voltar-inicio" data-i18n="ui.menu.voltar_inicio" style="width:100%;padding:8px;margin-bottom:6px;background:rgba(40,32,10,.6);'
     +       'border:1px solid #c8a95155;border-radius:6px;color:#e8d9a8;font-family:inherit;font-size:.8rem;cursor:pointer;">⌂ Voltar ao menu inicial</button>'
-    +     '<button id="cfg-sair" style="width:100%;padding:8px;background:rgba(60,20,20,.6);'
+    +     '<button id="cfg-sair" data-i18n="ui.menu.sair" style="width:100%;padding:8px;background:rgba(60,20,20,.6);'
     +       'border:1px solid #a0505055;border-radius:6px;color:#e8b0a8;font-family:inherit;font-size:.8rem;cursor:pointer;">⏻ Sair do jogo</button>'
     +   '</div>'
     + '</div>';
@@ -14967,7 +15010,7 @@ function _audioPanelEnsure(){
   wrap.querySelector('#cfg-sair').onclick = () => { pop.style.display='none'; exitGameWindow(); };
   wrap.querySelector('#cfg-turn-timer-btn').onclick = () => {
     const state=GS.gameState||GS.cityState;
-    if(!state || state.host!==GS.myPid){ toast('Somente o anfitrião pode alterar o limite de turno.','var(--red)'); return; }
+    if(!state || state.host!==GS.myPid){ toast(t('ui.menu.timer_so_host'),'var(--red)'); return; }
     GS.setTurnTimer(state.turn_timer_enabled===false);
   };
   document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) pop.style.display = 'none'; });
@@ -14975,6 +15018,12 @@ function _audioPanelEnsure(){
   mSl.oninput = () => { mVal.textContent = mSl.value + '%'; _setMusicVol(mSl.value / 100); };
   const sSl = wrap.querySelector('#aud-sfx'), sVal = wrap.querySelector('#aud-sfx-val');
   sSl.oninput = () => { sVal.textContent = sSl.value + '%'; _setSfxVol(sSl.value / 100); };
+  const langSel = wrap.querySelector('#cfg-lang');
+  langSel.value = I18N.lang;
+  langSel.onchange = () => _setLang(langSel.value);
+  // O painel é montado uma vez só e reaproveitado: aplica o idioma atual nele
+  // agora, senão abrir o menu depois de trocar mostraria os rótulos antigos.
+  _i18nApply(wrap);
   return wrap;
 }
 
@@ -14985,8 +15034,8 @@ function _refreshTurnTimerOption(){
   const emJogo=['screen-game','screen-city','screen-class-select'].includes((document.querySelector('.screen.active')||{}).id);
   box.style.display=emJogo&&state?'block':'none'; if(!state)return;
   const host=state.host===GS.myPid, ativo=state.turn_timer_enabled!==false;
-  btn.textContent=ativo?'⏳ Limite de turno: ATIVO — desativar':'⏳ Limite de turno: DESATIVADO — ativar';
-  btn.disabled=!host; btn.style.opacity=host?'1':'.55'; note.textContent=host?'Vale para toda a partida.':'Apenas o anfitrião pode alterar esta opção.';
+  btn.textContent=t(ativo?'ui.menu.timer_ativo':'ui.menu.timer_inativo');
+  btn.disabled=!host; btn.style.opacity=host?'1':'.55'; note.textContent=t(host?'ui.menu.timer_nota_host':'ui.menu.timer_nota_outro');
 }
 
 // Abre/fecha o painel ⚙️ por programa (usado pelo Esc, que unifica o antigo
@@ -15030,8 +15079,10 @@ function _mmHookFirstGesture(){
 }
 
 (function _audioInit(){
+  _langLoadPref();       // antes do painel: ele já nasce no idioma salvo
   _audioLoadPrefs();
   _audioPanelEnsure();
+  _i18nApply(document.body);
   const active = document.querySelector('.screen.active');
   if (!active || active.id !== 'screen-connect') return;  // boot sempre na abertura
   const a = _mmEl('abertura');
