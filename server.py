@@ -1153,13 +1153,21 @@ LANG_BY_PID = {}          # pid -> "pt"|"en". Fora da sala de propósito: o pid 
 
 def _load_lang():
     """Lê src/lang/strings.js e devolve o dicionário. O arquivo é JS por causa
-    do cliente (carrega por <script>, sem fetch); aqui pegamos o objeto entre a
-    primeira { e a última } e fazemos json.loads. Mesmo padrão que
-    tools/editor_catalog.js já usa. Falha nunca impede o servidor de subir."""
+    do cliente (carrega por <script>, sem fetch); aqui achamos a linha de
+    atribuição "window.LANG_STRINGS =" e pegamos da sua { até a última } do
+    arquivo, e fazemos json.loads. Mesmo padrão que tools/editor_catalog.js
+    já usa. Falha nunca impede o servidor de subir."""
     try:
         with open(LANG_FILE, encoding="utf-8") as f:
             raw = f.read()
-        return json.loads(raw[raw.index("{"):raw.rindex("}") + 1])
+        # Ancorado no INÍCIO da linha de atribuição (window.LANG_STRINGS =),
+        # não em qualquer menção a "LANG_STRINGS" no arquivo: um comentário
+        # (sempre prefixado por //) nunca casa com esse padrão, então o
+        # cabeçalho e os comentários de seção podem citar "LANG_STRINGS" ou
+        # conter chaves à vontade sem confundir o recorte.
+        m = re.search(r"^\s*window\.LANG_STRINGS\s*=", raw, re.MULTILINE)
+        ini = raw.index("{", m.end())
+        return json.loads(raw[ini:raw.rindex("}") + 1])
     except Exception as e:
         print(f"⚠️  i18n: não foi possível ler {LANG_FILE} ({type(e).__name__}: {e}) — "
               f"o jogo segue em português.")

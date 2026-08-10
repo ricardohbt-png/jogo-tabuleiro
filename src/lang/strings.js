@@ -3,10 +3,10 @@
 //
 // REGRAS DO ARQUIVO:
 //   • É JSON estrito dentro das chaves: aspas duplas, sem vírgula sobrando,
-//     sem comentários DENTRO do objeto (este cabeçalho pode ter comentários,
-//     desde que não use chaves de abertura ou fechamento).
-//   • Parâmetros são marcados com o nome entre chaves (ex.: nome) e são
-//     substituídos por nome, nunca por posição.
+//     sem comentários DENTRO do objeto. Fora dele, comentários são livres —
+//     o servidor ancora o recorte na LINHA "window.LANG_STRINGS =" (início
+//     de linha, nunca dentro de comentário), não na primeira chave do arquivo.
+//   • Parâmetros são {nome} e são substituídos por nome, nunca por posição.
 //   • Falta a chave "en"? Cai no "pt". É isso que permite traduzir em lotes.
 window.LANG_STRINGS = {
   "narracao.abre_porta": {

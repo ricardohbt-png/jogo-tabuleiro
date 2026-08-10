@@ -31,6 +31,21 @@ def _rodar_verificacoes():
     check("recarregar do arquivo real volta a funcionar",
           "narracao.abre_porta" in S._load_lang())
 
+    # Comentário com chaves literais antes da atribuição não pode confundir o
+    # recorte — na etapa 2 este arquivo ganha comentários de seção.
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        falso = os.path.join(tmp, "strings.js")
+        with open(falso, "w", encoding="utf-8") as f:
+            f.write('// cabeçalho com { e } literais\nwindow.LANG_STRINGS = {"a.b": {"pt": "ok"}};\n')
+        original2 = S.LANG_FILE
+        S.LANG_FILE = falso
+        try:
+            check("chave literal no comentário não confunde o recorte",
+                  S._load_lang() == {"a.b": {"pt": "ok"}})
+        finally:
+            S.LANG_FILE = original2
+
     print("\n[2] t() — tradução, fallback e chave ausente")
     check("t() devolve português", S.t("erro.porta_longe", "pt") == "Aproxime-se da porta para abri-la.")
     check("t() devolve inglês", S.t("erro.porta_longe", "en") == "Get closer to the door to open it.")
