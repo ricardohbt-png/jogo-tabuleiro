@@ -1139,8 +1139,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Dicionário único, compartilhado com o cliente: src/lang/strings.js guarda
 # {chave: {pt, en}} e é lido pelos DOIS lados — impossível divergirem.
 #
-# Como usar: envolva a frase em T("chave", param=valor) no lugar da string.
-# A tradução acontece só na saída (broadcast/send_to), no idioma de cada
+# Como usar: envolva a frase em T("narracao.abre_porta", nome=...) no lugar da
+# string. A tradução acontece só na saída (broadcast/send_to), no idioma de cada
 # conexão. String crua continua string crua e sai em português para todos,
 # o que permite migrar as frases em lotes sem quebrar nada no caminho.
 LANG_FILE = os.path.join(BASE_DIR, "src", "lang", "strings.js")
@@ -10590,7 +10590,7 @@ class GameRoom:
         # precisa estar adjacente Ã  porta (inclui diagonais)
         if max(abs(p["pos"][0] - tx), abs(p["pos"][1] - ty)) > 1:
             await self.send_to(pid, {"type": "error",
-                "msg": "Aproxime-se da porta para abri-la."})
+                "msg": T("erro.porta_longe")})
             return
 
         owners = self._door_owner_rooms(tx, ty)
@@ -10600,12 +10600,12 @@ class GameRoom:
                 return  # porta de sala já aberta, ou porta avulsa já aberta
             self.opened_doors.add((tx, ty))
             self.explored.add((tx, ty))
-            await self.gm_say(f"🚪 **{p['name']}** abre uma porta!")
+            await self.gm_say(T("narracao.abre_porta", nome=p["name"]))
             await self.push_state()
             return
 
         self.explored.add((tx, ty))
-        await self.gm_say(f"🚪 **{p['name']}** abre uma porta!")
+        await self.gm_say(T("narracao.abre_porta", nome=p["name"]))
         for r in locked_owners:
             r["locked"] = False
             self._reveal_room(r)

@@ -123,6 +123,18 @@ def _rodar_verificacoes():
     check("valor não-string vira português", S._lang_valido(42) == "pt")
     check("None vira português", S._lang_valido(None) == "pt")
 
+    print("\n[10] Varredura estática: toda chave usada em T(...) existe no dicionário")
+    fonte = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                              "server.py"), encoding="utf-8").read()
+    usadas = set(re.findall(r'\bT\(\s*"([^"]+)"', fonte))
+    faltando = sorted(k for k in usadas if k not in S.LANG_STRINGS)
+    check(f"nenhuma chave órfã em server.py (usadas: {len(usadas)})", not faltando)
+    if faltando: print("     órfãs:", ", ".join(faltando))
+
+    print("\n[11] Amostra migrada de verdade")
+    check("a narração da porta usa T", 'T("narracao.abre_porta"' in fonte)
+    check("o erro da porta usa T", 'T("erro.porta_longe")' in fonte)
+
 
 if __name__ == "__main__":
     print("=" * 62); print("  TESTE — Motor de idioma (PT/EN)"); print("=" * 62)
