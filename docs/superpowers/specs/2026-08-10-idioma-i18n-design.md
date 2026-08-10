@@ -53,7 +53,7 @@ Justificativa das duas mais relevantes:
 
 ### Dicionário: um arquivo, os dois idiomas
 
-Fonte única em `lang/strings.js`:
+Fonte única em `src/lang/strings.js` (dentro de `src/` porque a allow-list de arquivos estáticos do servidor é `("src", "assets")` — uma pasta `lang/` na raiz daria 404 no navegador):
 
 ```js
 window.LANG_STRINGS = {
@@ -76,7 +76,7 @@ tradução da etapa 2 revisável, e torna impossível o dicionário do cliente
 divergir do dicionário do servidor.
 
 Dividir em vários arquivos por assunto depois é barato: o servidor lê e funde
-todos os `.js` da pasta `lang/`, e o cliente ganha uma tag `<script>` a mais em
+todos os `.js` da pasta `src/lang/`, e o cliente ganha uma tag `<script>` a mais em
 `index.html` (cada arquivo acrescenta as suas chaves a `window.LANG_STRINGS`).
 Começamos com um arquivo só.
 
@@ -89,7 +89,7 @@ Respeitando a separação estrita do CLAUDE.md (lógica sem DOM × renderizaçã
 
 | Arquivo | Responsabilidade |
 |---|---|
-| `lang/strings.js` | Dados: o dicionário. |
+| `src/lang/strings.js` | Dados: o dicionário. |
 | `src/i18n.js` (novo) | Motor **puro**: `I18N.lang`, `I18N.t(chave, params)`, `I18N.setLang(código)`, `I18N.on(fn)`. **Zero** referência a `document`. |
 | `game.js` | Aplica no DOM (`_i18nApply(root)`), monta o seletor no painel ⚙️ e re-renderiza a tela ativa ao trocar. |
 
@@ -124,9 +124,13 @@ Uma mensagem nova, cliente → servidor:
 |---|---|
 | `set_lang` | `lang` (`"pt"` \| `"en"`) — enviada ao conectar e a cada troca no menu. |
 
-O servidor guarda em `self.lang_by_pid` — um dicionário à parte, **não** dentro
-de `self.players`, porque o Mestre é extraído de `players` no `start_game` e
-ficaria sem idioma. Espelha o `self.account_by_pid` que já existe.
+O servidor guarda num dicionário `LANG_BY_PID` de **módulo**, não em
+`self.players` nem na sala. Duas razões: o Mestre é extraído de `players` no
+`start_game` e ficaria sem idioma; e o `pid` vem de `new_id()`, um contador
+global, portanto é único entre todas as conexões. Guardar fora da sala faz o
+idioma valer **antes** de entrar em qualquer sala e dispensa plumbing nos quatro
+caminhos de entrada (`create_room`, `join_room`, `rejoin`, `join_test_dungeon`).
+A entrada é removida no `finally` do `handler`, junto da limpeza que já existe.
 
 Ao receber `set_lang`, o servidor reenvia o estado àquele jogador, então o log de
 narração já impresso reaparece retraduzido na hora.
@@ -147,8 +151,9 @@ Um `<select>` com Português / English. Escolher aplica imediatamente:
 1. `I18N.setLang(código)`
 2. salva em `localStorage` na chave `lfh_lang` (espelhando `lfh_audio`)
 3. `_i18nApply(document.body)` retraduz o DOM
-4. re-renderiza a tela ativa
-5. envia `set_lang` ao servidor, se conectado
+4. envia `set_lang` ao servidor, se conectado — o reenvio de estado que o
+   servidor dispara em resposta cai no caminho normal de render (`GS.on('gameState')`),
+   então a tela se redesenha traduzida sem nenhuma função de re-render nova
 
 Sem recarregar a página e sem diálogo de confirmação.
 
@@ -196,7 +201,7 @@ sala, um em cada idioma, e ver a mesma narração chegar traduzida para cada um.
 | Entradas antigas do `gm_log` (strings cruas) | Continuam em português para todos. |
 | Reconexão (`rejoin`) | O cliente reenvia `set_lang` ao conectar, sempre. |
 | Troca de idioma no meio da partida | Aplica na hora; o `push_state` disparado pelo `set_lang` retraduz o log. |
-| `lang/strings.js` ausente ou ilegível no servidor | O servidor sobe e todo `T` resolve para a chave; registra o erro no log de boot. Não impede jogar. |
+| `src/lang/strings.js` ausente ou ilegível no servidor | O servidor sobe e todo `T` resolve para a chave; registra o erro no log de boot. Não impede jogar. |
 
 ## Testes
 
@@ -204,7 +209,7 @@ Seguindo a convenção `tools/test_*.py` do projeto.
 
 `tools/test_idioma.py`:
 
-1. O servidor consegue ler e parsear `lang/strings.js`.
+1. O servidor consegue ler e parsear `src/lang/strings.js`.
 2. `t()` devolve inglês quando existe e cai no português quando falta o `en`.
 3. `T` com parâmetros formata corretamente nos dois idiomas.
 4. **Dois jogadores com idiomas diferentes recebem a mesma narração, cada um no
