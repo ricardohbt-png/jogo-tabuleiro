@@ -98,7 +98,11 @@
       '<span class="ed3d-hint">Mesma aparência do jogo · esq: orbitar · roda: zoom · dir: mover</span>' +
       '<button type="button" id="ed3d-close">← Voltar ao editor</button></div>' +
       '<div class="ed3d-status"></div>' +
-      '<div class="ed3d-view"><iframe class="ed3d-frame" src="../index.html?preview=1"></iframe>' +
+      // Endereço pelo servidor quando o editor está aberto como arquivo local:
+      // em file:// o GLTFLoader (XHR) é bloqueado e NENHUM .glb carrega.
+      '<div class="ed3d-view"><iframe class="ed3d-frame" src="' +
+        (window.EDITOR_CLIENTE ? window.EDITOR_CLIENTE.url("?preview=1")
+                               : "../index.html?preview=1") + '"></iframe>' +
       '<details class="ed3d-modelos"><summary>🧩 Arte 3D de cada objeto</summary>' +
       '<div class="ed3d-modelos-corpo"><em>Aguardando a prévia…</em></div></details></div>';
     document.body.appendChild(el);

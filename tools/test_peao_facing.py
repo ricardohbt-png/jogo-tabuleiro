@@ -13,6 +13,20 @@ def check(name, cond):
     if cond: PASS += 1; print(f"  ✅ {name}")
     else:    FAIL += 1; print(f"  ❌ {name}")
 
+def forcar_turno(r, pid):
+    """Posiciona a INICIATIVA no herói `pid` (sistema atual). Os turnos são
+    regidos por `initiative_order`/`initiative_index` desde o Modo Mestre Fase A,
+    e a iniciativa intercala MONSTROS — logo após `enter_dungeon` o `current_pid()`
+    costuma ser um monstro, e `handle_move` recusaria o passo."""
+    r.initiative_active = True
+    if not r.initiative_order:
+        r._rebuild_initiative()
+    idx = next((i for i, e in enumerate(r.initiative_order)
+                if e["kind"] == "player" and e["id"] == pid), None)
+    if idx is not None:
+        r.initiative_index = idx
+    return idx
+
 def fixture():
     base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     with open(os.path.join(base, "dungeons", "test_fase3.json"), encoding="utf-8") as f:
@@ -35,11 +49,13 @@ async def main():
     print("\n[1] handle_move grava facing = [dx,dy] a cada passo")
     r = setup_authored()
     await r.enter_dungeon("p1")
+    forcar_turno(r, "p1")
     p = r.players["p1"]
     check("facing ausente antes do 1º passo", "facing" not in p)
 
     # Posição/tiles controlados: independe do layout real da fixture.
     p["pos"] = [5, 5]
+    p["moves_left"] = 6
     r.tiles[5][5] = S.FLOOR
     r.tiles[5][6] = S.FLOOR
     await r.handle_move("p1", 1, 0)

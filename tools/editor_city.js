@@ -312,8 +312,9 @@
   }
   function renderCityMap() {
     const c = city();
+    const cityScenes = (config.scenes || {})[cityId] || {};
     const points = (config.city_points || (config.city_points = {}))[cityId] || ((config.city_points || (config.city_points = {}))[cityId] = {});
-    const types = {ferreiro:'Ferreiro', mercador:'Mercador', templo:'Templo', taverna:'Taverna', guilda:'Guilda', caravana:'Caravana de Viagem', cena:'Local de conversa'};
+    const types = {ferreiro:'Ferreiro', mercador:'Mercador', templo:'Templo', taverna:'Taverna', guilda:'Guilda', caravana:'Caravana de Viagem', cena:'Local de conversa', refugio:'Refúgio dos Heróis'};
     // `dungeon` NÃO entra no dropdown: o tipo só se obtém pelo botão dedicado,
     // que é o que mantém as duas opções de criação realmente separadas.
     const rotulos = Object.assign({dungeon:'Entrada de masmorra'}, types);
@@ -354,7 +355,18 @@
         const typeOptions=Object.entries(types).map(([id,label])=>'<option value="'+id+'"'+((selected.type||selectedCityPointId)===id?' selected':'')+'>'+label+'</option>').join('');
         campo = '<label>Tipo / loja vinculada<select id="citymap-type">'+typeOptions+'</select></label>';
       }
-      form.innerHTML='<h3>'+(isDungeon?'Entrada de masmorra':'Ponto')+'</h3><label>Nome<input id="citymap-name" value="'+esc(selected.name||'')+'"></label><label>Emoji do marcador<input id="citymap-emoji" maxlength="8" value="'+esc(selected.emoji||'')+'"></label>'+campo+'<div class="worlded-cost"><label>X %<input id="citymap-x" type="number" min="0" max="100" step="0.1" value="'+Number(selected.x)+'"></label><label>Y %<input id="citymap-y" type="number" min="0" max="100" step="0.1" value="'+Number(selected.y)+'"></label></div>';
+      const isRefugio = (selected.type || selectedCityPointId) === 'refugio';
+      if(isRefugio){ selected.fundo_basico = selected.fundo_basico || 'assets/city/refugio_basico.svg'; if(!Array.isArray(selected.fundos_disponiveis)) selected.fundos_disponiveis=[]; }
+      const req = selected.requisito || {};
+      const sceneOpts = '<option value="">— nenhuma cena —</option>' + Object.entries(cityScenes).map(([id,s])=>'<option value="'+esc(id)+'">'+esc(s.nome||id)+'</option>').join('');
+      const refFields = isRefugio ? '<fieldset><legend>Desbloqueio</legend><label>Renome mínimo<input id="citymap-req-renome" type="number" min="0" value="'+Number(req.renome_min||0)+'"></label><label>Palavra-chave / fato<input id="citymap-req-fato" value="'+esc(req.fato||'')+'"></label><label>Item-chave (id)<input id="citymap-req-item" value="'+esc(req.item_id||'')+'"></label><label>Missão concluída (id)<input id="citymap-req-aventura" value="'+esc(req.aventura_id||'')+'"></label><label><input id="citymap-req-hide" type="checkbox"'+(selected.oculto_ate_liberar?' checked':'')+'> ocultar até desbloquear</label></fieldset>' : '';
+      form.innerHTML='<h3>'+(isDungeon?'Entrada de masmorra':'Ponto')+'</h3><label>Nome<input id="citymap-name" value="'+esc(selected.name||'')+'"></label><label>Emoji do marcador<input id="citymap-emoji" maxlength="8" value="'+esc(selected.emoji||'')+'"></label>'+campo+refFields+'<div class="worlded-cost"><label>X %<input id="citymap-x" type="number" min="0" max="100" step="0.1" value="'+Number(selected.x)+'"></label><label>Y %<input id="citymap-y" type="number" min="0" max="100" step="0.1" value="'+Number(selected.y)+'"></label></div>';
+      if(isRefugio){
+        const cenasVinc=document.createElement('fieldset'); const mk=(key,label)=>'<label>'+label+'<select data-ref-scene="'+key+'">'+sceneOpts.replace('value="'+esc('')+'"','value=""')+'</select></label>'; cenasVinc.innerHTML='<legend>Cenas vinculadas ao Refúgio</legend>'+mk('scene_externo','Cena externa')+mk('scene_comum','Cena da área compartilhada')+mk('scene_quarto','Cena do quarto do herói'); form.appendChild(cenasVinc); ['scene_externo','scene_comum','scene_quarto'].forEach(k=>{const el=cenasVinc.querySelector('[data-ref-scene="'+k+'"]'); if(el) el.value=selected[k]||'';});
+        const uploads=document.createElement('fieldset'); uploads.innerHTML='<legend>Enviar imagens do computador</legend><label>Externa<input id="citymap-file-ext" type="file" accept="image/png,image/jpeg,image/webp,image/gif"><button type="button" data-ref-upload="fundo_externo">Enviar</button></label><label>Área comum<input id="citymap-file-common" type="file" accept="image/png,image/jpeg,image/webp,image/gif"><button type="button" data-ref-upload="fundo_comum">Enviar</button></label><label>Quarto<input id="citymap-file-room" type="file" accept="image/png,image/jpeg,image/webp,image/gif"><button type="button" data-ref-upload="fundo_quarto">Enviar</button></label><small>Escolha o arquivo e clique em Enviar. O caminho será preenchido automaticamente.</small>'; form.appendChild(uploads);
+        const cenas=document.createElement('fieldset'); cenas.innerHTML='<legend>Cenas do refÃºgio</legend><label>Imagem externa<input id="citymap-ref-ext" value="'+esc(selected.fundo_externo||'assets/city/refugio_basico.svg')+'"></label><label>Imagem da Ã¡rea comum<input id="citymap-ref-common" value="'+esc(selected.fundo_comum||'assets/city/refugio_basico.svg')+'"></label><label>Imagem bÃ¡sica dos quartos<input id="citymap-ref-room" value="'+esc(selected.fundo_quarto||selected.fundo_basico||'assets/city/refugio_basico.svg')+'"></label>'; form.appendChild(cenas);
+        const box=document.createElement('fieldset'); box.innerHTML='<legend>Quarto dos aventureiros</legend><label>Fundo bÃ¡sico<input id="citymap-room-bg" value="'+esc(selected.fundo_basico||'assets/city/refugio_basico.svg')+'"></label><label>Fundos disponÃ­veis (um caminho por linha)<textarea id="citymap-room-bgs" rows="3">'+esc((selected.fundos_disponiveis||[]).join('\n'))+'</textarea></label><small>O jogador poderÃ¡ escolher entre os fundos liberados.</small>'; form.appendChild(box);
+      }
       const sync=()=>{
         selected.name=root.querySelector('#citymap-name').value;
         const emoji=root.querySelector('#citymap-emoji').value.trim();
@@ -369,10 +381,25 @@
           // na criação, então um ponto comum não vira entrada de masmorra por aqui.
           delete selected.aventura;
         }
+        if((selected.type||'') === 'refugio') {
+          selected.requisito={renome_min:Math.max(0,Number(root.querySelector('#citymap-req-renome')?.value)||0),fato:root.querySelector('#citymap-req-fato')?.value||'',item_id:root.querySelector('#citymap-req-item')?.value||'',aventura_id:root.querySelector('#citymap-req-aventura')?.value||''};
+          selected.oculto_ate_liberar=!!root.querySelector('#citymap-req-hide')?.checked;
+          selected.fundo_basico=(root.querySelector('#citymap-room-bg')?.value||'').trim();
+          selected.fundo_externo=(root.querySelector('#citymap-ref-ext')?.value||'').trim();
+          selected.fundo_comum=(root.querySelector('#citymap-ref-common')?.value||'').trim();
+          selected.fundo_quarto=(root.querySelector('#citymap-ref-room')?.value||'').trim();
+          root.querySelectorAll('[data-ref-scene]').forEach(el=>{ if(el.value) selected[el.dataset.refScene]=el.value; else delete selected[el.dataset.refScene]; });
+          selected.fundos_disponiveis=(root.querySelector('#citymap-room-bgs')?.value||'').split(/\r?\n/).map(v=>v.trim()).filter(Boolean);
+        } else { delete selected.requisito; delete selected.oculto_ate_liberar; }
         selected.x=Math.max(0,Math.min(100,Number(root.querySelector('#citymap-x').value)||0));
         selected.y=Math.max(0,Math.min(100,Number(root.querySelector('#citymap-y').value)||0));
       };
       form.querySelectorAll('input,select').forEach(el=>el.onchange=sync);
+      form.querySelectorAll('[data-ref-upload]').forEach(btn=>btn.onclick=async()=>{
+        const key=btn.dataset.refUpload, file=form.querySelector(key==='fundo_externo'?'#citymap-file-ext':key==='fundo_comum'?'#citymap-file-common':'#citymap-file-room')?.files?.[0];
+        const status=root.querySelector('#cityed-status'); if(!file){status.textContent='Escolha uma imagem primeiro.';return;}
+        try { const path=await window.EDITOR_SAVE.uploadRefugioArt(file); selected[key]=path; if(key==='fundo_externo')root.querySelector('#citymap-ref-ext').value=path; else if(key==='fundo_comum')root.querySelector('#citymap-ref-common').value=path; else root.querySelector('#citymap-ref-room').value=path; sync(); status.textContent='Imagem enviada. Salve o mapa para aplicar.'; } catch(e){ status.textContent='Erro ao enviar imagem: '+e.message; }
+      });
       const elAventura=root.querySelector('#citymap-aventura');
       if(elAventura)elAventura.onchange=()=>{sync();renderCityMap();};
     } else form.innerHTML='<p>Crie ou selecione um ponto.</p>';

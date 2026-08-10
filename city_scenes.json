@@ -333,6 +333,30 @@
           "conversations": []
         }
       ]
+    },
+    "refugio_dos_herois_y09i": {
+      "nome": "Refugio dos Heróis",
+      "background": "assets/tavern/fazenda_do_leste.png",
+      "art_ratio": 1.5,
+      "mode": "individual",
+      "mask": "",
+      "slots": []
+    },
+    "area_compartilhada_48uz": {
+      "nome": "Area compartilhada",
+      "background": "assets/tavern/area_compartilhada.png",
+      "art_ratio": 1.5,
+      "mode": "individual",
+      "mask": "",
+      "slots": []
+    },
+    "quarto_do_heroi_a7kb": {
+      "nome": "Quarto do herói",
+      "background": "assets/tavern/quarto_heroi.png",
+      "art_ratio": 1.5,
+      "mode": "individual",
+      "mask": "",
+      "slots": []
     }
   },
   "vila_riacho": {

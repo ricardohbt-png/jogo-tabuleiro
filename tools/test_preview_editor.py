@@ -108,6 +108,59 @@ async def main():
     print("\n[5] a prévia não deixa rastro numa sala real")
     check("nenhuma sala criada", "PREVIEW" not in S.rooms)
 
+    # ── Ciclo de vida da sessão de teste ("🧪 Testar como Mestre") ────────────
+    # Sessão de teste não tem `players`; sem recolhimento próprio, cada clique
+    # no editor deixava um GameRoom inteiro (mapa + monstros) na memória.
+    rooms_orig = dict(S.rooms); tokens_orig = dict(S.TEST_DUNGEON_TOKENS)
+    S.rooms.clear(); S.TEST_DUNGEON_TOKENS.clear()
+    try:
+        print("\n[6] sessão de teste é recolhida quando o último participante sai")
+        sala, erro, token = S._criar_sala_teste_masmorra(dungeon_min())
+        check("sessão criada", sala is not None and erro is None)
+        check("está em rooms", S.rooms.get(sala.code) is sala)
+        check("token aponta para a sala", S.TEST_DUNGEON_TOKENS.get(token) == sala.code)
+        check("nasce como não-aberta", sala.test_joined is False)
+        # abre (o que o ramo join_test_dungeon faz) com dois participantes
+        sala.test_joined = True
+        sala.connections["p1"] = object(); sala.connections["p2"] = object()
+        sala.connections.pop("p1")
+        check("com gente dentro, não recolhe", S._encerrar_sala_teste_se_vazia(sala) is False)
+        check("sala continua em rooms", sala.code in S.rooms)
+        sala.connections.pop("p2")
+        check("último a sair recolhe", S._encerrar_sala_teste_se_vazia(sala) is True)
+        check("sala saiu de rooms", sala.code not in S.rooms)
+        check("token invalidado", token not in S.TEST_DUNGEON_TOKENS)
+
+        print("\n[6b] sessão criada e nunca aberta expira pelo TTL")
+        S.rooms.clear(); S.TEST_DUNGEON_TOKENS.clear()
+        sala, _, token = S._criar_sala_teste_masmorra(dungeon_min())
+        S._limpar_salas_teste_ociosas()
+        check("recém-criada sobrevive à varredura", sala.code in S.rooms)
+        sala.test_criada_em -= S.TEST_DUNGEON_TTL_S + 1
+        S._limpar_salas_teste_ociosas()
+        check("envelhecida é varrida", sala.code not in S.rooms)
+        check("token da envelhecida some", token not in S.TEST_DUNGEON_TOKENS)
+
+        print("\n[6c] varredura não toca em sala de jogo de verdade")
+        S.rooms.clear(); S.TEST_DUNGEON_TOKENS.clear()
+        real = GameRoom("REAL"); real.phase = "playing"
+        S.rooms["REAL"] = real
+        S._limpar_salas_teste_ociosas()
+        check("sala normal sem conexões permanece", "REAL" in S.rooms)
+        check("recolhimento ignora sala normal", S._encerrar_sala_teste_se_vazia(real) is False)
+
+        print("\n[6d] criar uma sessão nova varre a anterior já abandonada")
+        S.rooms.clear(); S.TEST_DUNGEON_TOKENS.clear()
+        velha, _, tk_velho = S._criar_sala_teste_masmorra(dungeon_min())
+        velha.test_joined = True          # foi aberta e o autor fechou a aba
+        nova, _, _ = S._criar_sala_teste_masmorra(dungeon_min())
+        check("abandonada foi varrida", velha.code not in S.rooms)
+        check("token da abandonada some", tk_velho not in S.TEST_DUNGEON_TOKENS)
+        check("a nova sobrevive", nova.code in S.rooms)
+    finally:
+        S.rooms.clear(); S.rooms.update(rooms_orig)
+        S.TEST_DUNGEON_TOKENS.clear(); S.TEST_DUNGEON_TOKENS.update(tokens_orig)
+
     print(f"\n{'=' * 46}\n  {PASS} passaram, {FAIL} falharam\n{'=' * 46}")
     return 1 if FAIL else 0
 

@@ -32,8 +32,20 @@ def main():
           all(i["id"] in ids_srv for i in cat["items"]))
     lojas = (server.SHOP_WEAPONS + server.SHOP_ARMORS + server.SHOP_AMMO + server.SHOP_MERCHANT
              + server.SHOP_TAVERN + server.SHOP_TEMPLE)
-    check("itens portáteis das lojas entram no loot",
-          all(i["id"] in ids_srv for i in lojas if i.get("item_slot") or i.get("die") or i.get("kind")))
+    # Itens CUSTOM (Editor de Itens) têm disponibilidade por item: quem está com
+    # `disponibilidade.baus` desmarcado é vendido na loja mas NÃO entra no loot —
+    # por isso a invariante vale só para os nativos.
+    custom_ids = {r.get("id") for r in server._read_custom_items() if isinstance(r, dict)}
+    portateis_nativos = [i for i in lojas
+                         if (i.get("item_slot") or i.get("die") or i.get("kind"))
+                         and i["id"] not in custom_ids]
+    check("itens portáteis nativos das lojas entram no loot",
+          all(i["id"] in ids_srv for i in portateis_nativos))
+    # E o custom com `baus` desmarcado fica mesmo de fora do catálogo de loot.
+    fora = [r for r in server._read_custom_items()
+            if isinstance(r, dict) and not (r.get("disponibilidade") or {}).get("baus")]
+    check("custom sem 'baus' não entra no loot",
+          all(r.get("id") not in ids_srv for r in fora))
     check("toda armadilha exportada existe no servidor",
           all(t["tipo"] in server.ARMADILHAS for t in cat["traps"]))
     check("fosso_envenenado precisa_veneno=True",

@@ -3,6 +3,7 @@
   "id": "Arena",
   "name": "Arena",
   "ambiente": "masmorra",
+  "saida_permitida": true,
   "grid": {
     "w": 16,
     "h": 16
@@ -334,6 +335,66 @@
       "room_id": 1,
       "boss": false,
       "target": false
+    },
+    {
+      "type": "lobo_cinzento",
+      "pos": [
+        9,
+        3
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "crocodilo_jovem",
+      "pos": [
+        11,
+        6
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "grotao",
+      "pos": [
+        5,
+        8
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "elemental_fogo",
+      "pos": [
+        9,
+        8
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "lagarto_carniceiro",
+      "pos": [
+        2,
+        6
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "goblin_xama",
+      "pos": [
+        13,
+        10
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
     }
   ],
   "chests": [],
@@ -401,8 +462,8 @@
     {
       "id": "fala_2",
       "pos": [
-        7,
-        5
+        5,
+        3
       ],
       "falante": {
         "nome": "Claudionor",

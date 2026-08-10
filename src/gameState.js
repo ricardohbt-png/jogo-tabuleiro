@@ -1157,6 +1157,7 @@ const GS = (() => {
     ws.onopen = () => {
       if      (mode === 'create') send({ type: 'create_room', name });
       else if (mode === 'join')   send({ type: 'join_room',   name, code });
+      else if (mode === 'test')   send({ type: 'join_test_dungeon', token: code });
       // mode 'login': não cria/entra em sala aqui; a UI dispara login/create_account.
     };
 
@@ -1210,6 +1211,14 @@ const GS = (() => {
         _emit('shopResult', msg);
         break;
 
+      case 'refugio_state':
+        _emit('refugioState', msg);
+        break;
+
+      case 'quarto_state':
+        _emit('quartoState', msg);
+        break;
+
       case 'enter_dungeon':
         _resetSurvivalAll(true);    // pós-taverna/cidade → fome/sede = 100
         cityState = null;           // (após reset, p/ ler o roster da cidade)
@@ -1226,11 +1235,16 @@ const GS = (() => {
         gameState = msg;
         _captarStory(msg);
         if (msg.active_scene) _emit('sceneStart', msg.active_scene);
+        // A sessão de teste não passa pelo lobby, onde normalmente o Mestre
+        // aprende seu pid. Sem isto ele era tratado como espectador: aguardava
+        // jogadores e o render ocultava os monstros pela névoa.
+        if (!myPid && msg.test_mode && msg.master_pid) myPid = msg.master_pid;
         if (!myPid) {
           const me = msg.players.find(p => p.name === myName);
           if (me) myPid = me.id;
         }
-        isMyTurn = msg.current_turn === myPid || msg.last_stand_pid === myPid;
+        isMyTurn = msg.test_mode ? msg.master_pid === myPid
+          : msg.current_turn === myPid || msg.last_stand_pid === myPid;
         // (Sobrevivência cliente 0–100 desativada — fome/sede são autoritativos do
         // servidor, escala 0–100. Sem consumo/colapso fantasma no cliente.)
         // Auto-clear pending skill when turn ends or action was processed
@@ -1478,6 +1492,12 @@ const GS = (() => {
     if (tipoEsqueleto) msg.tipo_esqueleto = tipoEsqueleto;
     send(msg);
   }
+  function mestreUsarMagia(monsterId, spellId, targetId, tx, ty, dir) {
+    const msg = { type: 'mestre_usar_magia', monster_id: monsterId, spell_id: spellId, target_id: targetId };
+    if (tx !== undefined && ty !== undefined) { msg.tx = tx; msg.ty = ty; }
+    if (Array.isArray(dir)) msg.dir = dir;
+    send(msg);
+  }
   function mestreUsarItem(monsterId, itemId, targetId, tx, ty) { send({ type: 'mestre_usar_item', monster_id: monsterId, item_id: itemId, target_id: targetId, tx, ty }); }
   // Janela Manual: o monstro ataca um herói.
   function mestreAtacarMonstro(monsterId, targetId, attackIndex) {
@@ -1486,6 +1506,7 @@ const GS = (() => {
   }
   // Janela Manual: encerra a vez do monstro.
   function mestreEncerrarMonstro(monsterId) { send({ type: 'mestre_encerrar_monstro', monster_id: monsterId }); }
+  function mestreSelecionarTeste(monsterId) { send({ type: 'mestre_selecionar_teste', monster_id: monsterId }); }
   // Camada B: implanta um reforço da reserva do mestre numa casa livre.
   function mestreImplantarReforco(monsterType, tx, ty) { send({ type: 'mestre_implantar_reforco', monster_type: monsterType, tx, ty }); }
   // Falas de NPC: o mestre dispara uma fala com gatilho manual.
@@ -1496,6 +1517,13 @@ const GS = (() => {
     const st = lobbyState || cityState || gameState;
     return !!(st && st.master_pid && st.master_pid === myPid);
   }
+  function isCommandController() {
+    return !!(gameState && (
+      (gameState.command_control_pid === myPid && gameState.command_control) ||
+      (gameState.mind_control_pid === myPid && gameState.mind_control)
+    ));
+  }
+  function canControlMonster() { return isMaster() || isCommandController(); }
   // Prévia do editor: injeta um game_state pelo MESMO caminho de um estado
   // vindo do servidor, sem socket e sem duplicar normalização. Adotar o
   // master_pid do payload liga isMaster() → mapa inteiro à vista, sem névoa.
@@ -1507,7 +1535,9 @@ const GS = (() => {
   // Id do monstro atualmente na janela Manual (ou null) — só existe em gameState.
   function masterManualMid() { return (gameState && gameState.master_manual_mid) || null; }
   // Bloco da janela Manual (null fora dela). Ver _master_manual_payload no servidor.
-  function masterManual() { return (gameState && gameState.master_manual) || null; }
+  function masterManual() {
+    return (gameState && (gameState.master_manual || gameState.command_control || gameState.mind_control)) || null;
+  }
   // Cargas restantes de um golpe pelo índice em attacks[]. O payload vem com
   // chaves string (JSON não tem chave inteira), por isso o String(idx).
   function masterAttackCharges(idx) {
@@ -1546,6 +1576,16 @@ const GS = (() => {
   }
   function saveWorldMapPoints(points) { send({ type: 'world_map_points', points: points }); }
   function saveCityMapPoints(cityId, points) { send({ type: 'city_map_points', city_id: cityId, points: points }); }
+  function openRefugio() { send({ type: 'open_refugio' }); }
+  function openQuarto(owner) { send({ type: 'open_quarto', owner: owner || null }); }
+  function refugioStore(scope, source, ref) {
+    const msg = { type:'refugio_store', scope, source };
+    if(source === 'bag') msg.index = ref; else msg.slot_key = ref;
+    send(msg);
+  }
+  function refugioTake(scope, index) { send({ type:'refugio_take', scope, index }); }
+  function refugioGold(scope, action, amount) { send({ type:'refugio_gold', scope, action, amount }); }
+  function quartoCustomize(background, trophies) { send({ type:'quarto_customize', background, trophies }); }
   function guildEquip(slot, itemId)   { send({ type: 'guild_equip', slot: slot, item_id: itemId }); }
   function usarTecnica(tid, targetId) { send({ type: 'usar_tecnica', tecnica_id: tid, target_id: targetId != null ? targetId : null }); }
   function responderSorteReacao(usar) { send({ type: 'sorte_reacao', usar: !!usar }); }
@@ -2469,12 +2509,16 @@ const GS = (() => {
     mestreSetAlvo,
     mestreMoverMonstroPara,
     mestreUsarHabilidade,
+    mestreUsarMagia,
     mestreUsarItem,
     mestreAtacarMonstro,
     mestreEncerrarMonstro,
+    mestreSelecionarTeste,
     mestreImplantarReforco,
     dispararFala,
     isMaster,
+    isCommandController,
+    canControlMonster,
     masterManualMid,
     masterManual,
     masterAttackCharges,
@@ -2495,6 +2539,12 @@ const GS = (() => {
     sceneOfPoint,
     saveWorldMapPoints,
     saveCityMapPoints,
+    openRefugio,
+    openQuarto,
+    refugioStore,
+    refugioTake,
+    refugioGold,
+    quartoCustomize,
     guildEquip,
     usarTecnica,
     responderSorteReacao,

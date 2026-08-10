@@ -17,6 +17,7 @@
 const InventoryModal = (() => {
   let _openPid  = null;   // pid cujo inventário está aberto (null = fechado)
   let _readOnly = false;
+  let _storageCtx = null;
   let _selected = null;   // item selecionado (tap-to-select): {kind:'bag',index} | {kind:'gear',slotKey}
 
   // Layout do paperdoll (3×3): posição visual de cada um dos 9 slots.
@@ -42,7 +43,7 @@ const InventoryModal = (() => {
     '.5,92 0,84 .75,76 0,68 .5,60 0,52 .6,44 0,36 .4,28 0,20 .75,12 0,4 0,0 Z';
 
   const CSS_TEXT = `
-#inv-modal-overlay{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;
+#inv-modal-overlay{position:fixed;inset:0;z-index:1100;display:flex;align-items:center;justify-content:center;
   background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .18s ease;}
 #inv-modal-overlay.open{opacity:1;pointer-events:auto;}
 .inv-frame{position:relative;width:460px;max-width:92vw;}
@@ -113,6 +114,43 @@ const InventoryModal = (() => {
 
   // Ícone do item: delega ao helper global de game.js (assets/itens/<id>.png,
   // com fallback pro emoji se o PNG não existir).
+  // Baú do Refúgio: duas metades lado a lado — herói à ESQUERDA, baú à DIREITA.
+  const STORAGE_CSS = `
+.storage-modal{width:min(1080px,96vw)!important;max-width:96vw!important;}
+.storage-modal .inv-modal{box-sizing:border-box;max-width:100%;}
+.storage-modal .inv-header{margin-top:14px;}
+.storage-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start;}
+.storage-column{min-width:0;display:flex;flex-direction:column;}
+.storage-column h3{color:#f4ecd8;font-family:Georgia,serif;font-size:.85rem;letter-spacing:1px;text-align:center;margin:0 0 10px;}
+.storage-column .inv-grid{width:100%;max-width:100%;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px;}
+.storage-column .inv-slot{width:100%;max-width:72px;box-sizing:border-box;}
+.storage-column .inv-bagbar{max-width:100%;justify-content:center;}
+.storage-hint{color:#9c8a68;font-size:10px;text-align:center;margin:12px 0 0;line-height:1.4;}
+.storage-room-link{margin-left:auto;margin-right:14px;padding:4px 10px;font-size:11px;cursor:pointer;
+  color:#ffe5a4;background:#2a1a0d;border:1px solid #9c783a;border-radius:4px;font-family:Georgia,serif;}
+.storage-room-link:hover{background:#543516;}
+.storage-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:10px;
+  background:#110d0acc;border:1px solid #9c783a;border-radius:8px;max-height:52vh;overflow-y:auto;}
+.storage-slot{position:relative;box-sizing:border-box;min-height:74px;padding:4px;border-radius:6px;
+  border:1px solid #74572e;background:#291b0e;color:#f4ecd8;cursor:pointer;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;}
+.storage-slot.empty{opacity:.5;}
+.storage-slot:hover{border-color:#ffe08a;background:#4a3218;}
+.storage-slot.selected{outline:2px solid #ffe08a;outline-offset:2px;}
+.storage-slot.drop-hover{outline:2px dashed #8fe08a;outline-offset:2px;}
+.storage-slot small{font-size:9px;line-height:1.1;text-align:center;overflow-wrap:anywhere;opacity:.85;}
+.storage-slot-icon{display:flex;align-items:center;justify-content:center;width:30px;height:30px;font-size:1.3rem;}
+.storage-slot-icon img{width:100%;height:100%;object-fit:contain;display:block;}
+.storage-slot-plus{font-size:1.1rem;opacity:.45;}
+.storage-gold{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:12px;
+  color:#ffcf7a;font-family:Georgia,serif;}
+.storage-gold input{width:76px;padding:3px 6px;background:#1a1208;color:#ffe5a4;
+  border:1px solid #9c783a;border-radius:4px;}
+.storage-gold button{padding:4px 9px;font-size:11px;cursor:pointer;color:#ffe5a4;
+  background:#2a1a0d;border:1px solid #9c783a;border-radius:4px;}
+.storage-gold button:hover{background:#543516;}
+@media(max-width:760px){.storage-columns{grid-template-columns:minmax(0,1fr);}}
+`;
   function _itemIconHTML(item, fallbackEmoji){
     return (typeof itemIconHTML === 'function') ? itemIconHTML(item, fallbackEmoji)
          : (item && item.emoji) || fallbackEmoji || '';
@@ -128,7 +166,7 @@ const InventoryModal = (() => {
     if(document.getElementById('inventory-modal-styles')) return;
     const style = document.createElement('style');
     style.id = 'inventory-modal-styles';
-    style.textContent = CSS_TEXT;
+    style.textContent = CSS_TEXT + STORAGE_CSS;
     document.head.appendChild(style);
   }
 
@@ -169,19 +207,24 @@ const InventoryModal = (() => {
 
   function close(){
     _openPid  = null;
+    _storageCtx = null;
     _selected = null;
     const overlay = document.getElementById('inv-modal-overlay');
     if(overlay) overlay.classList.remove('open');
   }
 
   function toggle(pid, opts){
-    if(_openPid != null) close(); else open(pid, opts);
+    if(isOpen()) close(); else open(pid, opts);
   }
 
-  function isOpen(){ return _openPid != null; }
+  function isOpen(){ return _openPid != null || !!_storageCtx; }
 
   function refresh(){
-    if(_openPid != null) _render();
+    // Vale nos dois modos. No modo baú o conteúdo do baú vem SEMPRE de
+    // `_storageCtx.payload` (só `updateStorage` o troca), então um `city_state`
+    // que chegue no meio repinta a metade do herói sem poder ressuscitar uma
+    // cópia velha do baú.
+    if(_openPid != null || _storageCtx) _render();
   }
 
   function _currentPlayer(){
@@ -233,7 +276,7 @@ const InventoryModal = (() => {
           slot.draggable = true;
           slot.addEventListener('dragstart', (e) => {
             _selected = { kind: 'gear', slotKey: cfg.key };
-            e.dataTransfer.setData('text/plain', '');
+            e.dataTransfer.setData('text/plain', JSON.stringify({kind:'gear',slotKey:cfg.key}));
             e.dataTransfer.effectAllowed = 'move';
           });
         }
@@ -312,7 +355,7 @@ const InventoryModal = (() => {
           slot.draggable = true;
           slot.addEventListener('dragstart', (e) => {
             _selected = { kind: 'bag', index: i };
-            e.dataTransfer.setData('text/plain', '');
+            e.dataTransfer.setData('text/plain', JSON.stringify({kind:'bag',index:i}));
             e.dataTransfer.effectAllowed = 'move';
           });
         }
@@ -333,6 +376,7 @@ const InventoryModal = (() => {
     if(!overlay) return;
     const player = _currentPlayer();
     if(!player){ close(); return; }
+    if(_storageCtx){ _renderStorage(overlay, player); return; }
     overlay.innerHTML = `
       <div class="inv-frame">
         <div class="inv-modal">
@@ -386,6 +430,11 @@ const InventoryModal = (() => {
   function _attemptMoveToGear(slotKey){
     const sel = _selected; _selected = null;
     if(!sel || sel.kind === 'gear'){ refresh(); return; }   // gear→gear: sem suporte, ignora
+    // Soltar um item do baú no paperdoll é a mesma retirada de sempre: quem escolhe
+    // o encaixe é o servidor, que já manda o item para o slot livre compatível.
+    // (Cuidado: `sel.index` é índice DO BAÚ — tratá-lo como índice da bolsa
+    // equiparia outro item.)
+    if(sel.kind === 'stash'){ GS.refugioTake(_storageCtx.scope, sel.index); return; }
     const player = _currentPlayer();
     const item = player && player.bag ? player.bag[sel.index] : null;
     if(!item || !GS.canPlaceItem(item, slotKey, player.gear || {})){ refresh(); return; }
@@ -397,6 +446,7 @@ const InventoryModal = (() => {
   function _attemptMoveToBag(toIndex){
     const sel = _selected; _selected = null;
     if(!sel){ refresh(); return; }
+    if(sel.kind === 'stash'){ GS.refugioTake(_storageCtx.scope, sel.index); return; }
     if(sel.kind === 'bag'){
       if(sel.index !== toIndex) GS.reorderBag(sel.index, toIndex);
       else refresh();
@@ -407,7 +457,13 @@ const InventoryModal = (() => {
 
   function _updateDropFeedback(slot, slotKey){
     const player = _currentPlayer();
-    if(!player || !_selected || _selected.kind !== 'bag'){ slot.classList.add('drop-invalid'); return; }
+    if(!player || !_selected){ slot.classList.add('drop-invalid'); return; }
+    if(_selected.kind === 'stash'){
+      const doBau = _storageStash().items[_selected.index];
+      slot.classList.toggle('drop-invalid', !doBau || !GS.canPlaceItem(doBau, slotKey, player.gear || {}));
+      return;
+    }
+    if(_selected.kind !== 'bag'){ slot.classList.add('drop-invalid'); return; }
     const item = (player.bag || [])[_selected.index];
     const ok = !!item && GS.canPlaceItem(item, slotKey, player.gear || {});
     slot.classList.toggle('drop-invalid', !ok);
@@ -512,5 +568,181 @@ const InventoryModal = (() => {
     });
   }
 
-  return { open, close, toggle, isOpen, refresh };
+  // ─────────────────────────────────────────────────────────────────────────
+  // Baú do Refúgio dos Heróis (compartilhado ou do quarto privado).
+  //
+  // Mesma janela do inventário, em duas metades: à ESQUERDA o inventário do
+  // herói (o MESMO paperdoll + bolsa do modo normal, via _renderGear/_renderBag)
+  // e à DIREITA os espaços do baú. Transferir é o gesto principal — clicar num
+  // item do baú manda pra bolsa; selecionar um item da bolsa/paperdoll e clicar
+  // num espaço do baú guarda. Arrastar faz o mesmo nos dois sentidos.
+  //
+  // O renderer é PURO: quem move item é o servidor (refugio_store/refugio_take),
+  // e a janela só se redesenha quando o novo estado do baú volta em
+  // `updateStorage`. Por isso `_openPid` é preenchido com o próprio jogador —
+  // `_currentPlayer()`, os cliques e o `refresh()` da metade esquerda dependem
+  // dele (com `_openPid = null` a metade do herói fica inerte).
+
+  function _storageStash(){
+    const scope = _storageCtx.scope, payload = _storageCtx.payload || {};
+    const s = (scope === 'shared') ? (payload.shared || {}) : payload;
+    return {
+      items: s.items || [],
+      gold : Number(s.gold || 0),
+      limit: Math.max(1, Number(s.slot_limit) || (scope === 'shared' ? 10 : 3)),
+    };
+  }
+
+  function _storageStore(sel){
+    if(!sel || !_storageCtx) return;
+    if(sel.kind === 'bag') GS.refugioStore(_storageCtx.scope, 'bag',  sel.index);
+    else                   GS.refugioStore(_storageCtx.scope, 'gear', sel.slotKey);
+  }
+
+  function _renderStashGrid(overlay){
+    const grid  = overlay.querySelector('[data-storage="stash"]');
+    const stash = _storageStash();
+    grid.innerHTML = '';
+    for(let i = 0; i < stash.limit; i++){
+      const item = stash.items[i];
+      const slot = document.createElement('div');
+      slot.className = 'storage-slot' + (item ? ' filled' : ' empty');
+      slot.dataset.index = String(i);
+      slot.title = item ? (item.name || item.id || 'Item') : 'Espaço vazio';
+      slot.innerHTML = item
+        ? `<span class="storage-slot-icon">${_itemIconHTML(item, '📦')}</span>${_ammoCountBadgeHTML(item)}<small></small>`
+        : '<span class="storage-slot-plus">+</span>';
+      if(item){
+        slot.querySelector('small').textContent = item.name || item.id || 'Item';
+        _wireTooltip(slot, item.id, null, item);
+        slot.draggable = true;
+        slot.addEventListener('dragstart', (e) => {
+          _selected = { kind: 'stash', index: i };
+          e.dataTransfer.setData('text/plain', JSON.stringify({kind:'stash',index:i}));
+          e.dataTransfer.effectAllowed = 'move';
+        });
+      }
+      if(_selected && _selected.kind === 'stash' && _selected.index === i) slot.classList.add('selected');
+      slot.onclick = () => {
+        const sel = _selected;
+        if(sel && sel.kind !== 'stash'){ _selected = null; _storageStore(sel); return; }
+        if(sel && sel.kind === 'stash'){ _selected = null; refresh(); return; }
+        if(item) GS.refugioTake(_storageCtx.scope, i);
+      };
+      // Espaço vazio TAMBÉM é alvo de drop (é o caso comum: baú vazio). Por isso
+      // o slot é uma div e não um <button disabled>, que não dispara drag.
+      slot.addEventListener('dragover', (e) => {
+        if(!_selected || _selected.kind === 'stash') return;
+        e.preventDefault();
+        slot.classList.add('drop-hover');
+      });
+      slot.addEventListener('dragleave', () => slot.classList.remove('drop-hover'));
+      slot.addEventListener('drop', (e) => {
+        e.preventDefault();
+        slot.classList.remove('drop-hover');
+        const sel = _selected; _selected = null;
+        if(!sel || sel.kind === 'stash'){ refresh(); return; }
+        _storageStore(sel);
+      });
+      grid.appendChild(slot);
+    }
+  }
+
+  function _renderStorage(overlay, player){
+    const scope  = _storageCtx.scope;
+    const shared = scope === 'shared';
+    const stash  = _storageStash();
+    overlay.innerHTML = `
+      <div class="inv-frame storage-modal">
+        <div class="inv-modal">
+          <svg class="inv-edge" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path class="glow" d="${EDGE_D}"/>
+            <path class="char" d="${EDGE_D}"/>
+            <path class="gold" d="${EDGE_D}"/>
+          </svg>
+          <div class="inv-body">
+            <div class="inv-header">
+              <div class="inv-title">🧰 ${shared ? 'BAÚ COMPARTILHADO' : 'BAÚ DO HERÓI'}</div>
+              ${shared ? '' : '<button type="button" class="storage-room-link">🛏️ Decorar quarto</button>'}
+              <div class="inv-close" title="Fechar">✕</div>
+            </div>
+            <div class="storage-columns">
+              <section class="storage-column storage-stash">
+                <h3>${shared ? 'Baú compartilhado' : 'Baú do herói'} (${stash.items.length}/${stash.limit})</h3>
+                <div class="storage-grid" data-storage="stash"></div>
+                <div class="storage-gold">
+                  🪙 <b class="storage-gold-total"></b>
+                  <input class="storage-gold-input" type="number" min="0" step="1" value="0" aria-label="Quantidade de ouro">
+                  <button type="button" data-gold="deposit">Depositar</button>
+                  <button type="button" data-gold="withdraw">Retirar</button>
+                </div>
+                <p class="storage-hint">Clique num item do baú para mandá-lo para a bolsa.</p>
+              </section>
+              <section class="storage-column storage-hero">
+                <h3>Inventário — <span class="storage-hero-name"></span></h3>
+                <div class="inv-grid"></div>
+                <div class="inv-gold">🪙 <span></span></div>
+                <div class="inv-bagbar"></div>
+                <p class="storage-hint">Clique num item para selecionar e clique num espaço do baú para guardar — ou arraste.</p>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    overlay.querySelector('.storage-hero-name').textContent = player.name || '';
+    overlay.querySelector('.inv-gold span').textContent     = player.gold ?? 0;
+    overlay.querySelector('.storage-gold-total').textContent = stash.gold;
+    overlay.querySelector('.inv-close').onclick = close;
+    // Troféus e fundo do quarto seguem no painel próprio. Fechar ANTES de pedir
+    // é o que faz o estado voltar como painel em vez de repintar este baú.
+    const linkQuarto = overlay.querySelector('.storage-room-link');
+    if(linkQuarto) linkQuarto.onclick = () => { close(); GS.openQuarto(); };
+    _renderGear(overlay, player);
+    _renderBag(overlay, player);
+    _renderStashGrid(overlay);
+    // Soltar em qualquer ponto vazio da metade do herói também retira do baú.
+    // Os slots da bolsa já tratam o próprio drop (e zeram `_selected`), então
+    // o evento que borbulha até aqui não repete a retirada.
+    const hero = overlay.querySelector('.storage-hero');
+    hero.addEventListener('dragover', (e) => { if(_selected && _selected.kind === 'stash') e.preventDefault(); });
+    hero.addEventListener('drop', (e) => {
+      const sel = _selected;
+      if(!sel || sel.kind !== 'stash') return;
+      e.preventDefault();
+      _selected = null;
+      GS.refugioTake(scope, sel.index);
+    });
+    overlay.querySelectorAll('[data-gold]').forEach(btn => btn.onclick = () => {
+      const n = Math.max(0, Number(overlay.querySelector('.storage-gold-input').value) || 0);
+      if(n > 0) GS.refugioGold(scope, btn.dataset.gold, n);
+    });
+  }
+
+  function openStorage(scope, payload){
+    _injectStyles();
+    _ensureDom();
+    _storageCtx = { scope, payload: payload || {} };
+    _openPid  = (typeof GS !== 'undefined') ? GS.myPid : null;
+    _readOnly = false;
+    _selected = null;
+    _render();
+    requestAnimationFrame(() => {
+      const overlay = document.getElementById('inv-modal-overlay');
+      if(overlay) overlay.classList.add('open');
+    });
+  }
+
+  // Só o estado do MESMO baú que está aberto repinta a janela — um
+  // `quarto_state` que chegue com o baú compartilhado aberto (ou vice-versa)
+  // trocaria o baú debaixo da mão do jogador.
+  function updateStorage(scope, payload){
+    if(!_storageCtx || _storageCtx.scope !== scope) return;
+    _storageCtx = { scope, payload: payload || {} };
+    _selected = null;
+    _render();
+  }
+
+  function storageScope(){ return _storageCtx ? _storageCtx.scope : null; }
+
+  return { open, close, toggle, isOpen, refresh, openStorage, updateStorage, storageScope };
 })();

@@ -4,33 +4,62 @@
       "x": 32.0,
       "y": 46.0,
       "type": "taverna",
-      "scene": "taverna"
+      "scene": "taverna",
+      "oculto_ate_liberar": false
     },
     "templo": {
       "x": 67.0,
       "y": 35.0,
-      "type": "templo"
+      "type": "templo",
+      "oculto_ate_liberar": false
     },
     "ferreiro": {
       "x": 83.0,
       "y": 38.0,
-      "type": "ferreiro"
+      "type": "ferreiro",
+      "oculto_ate_liberar": false
     },
     "guilda": {
       "x": 52.0,
       "y": 21.0,
-      "type": "guilda"
+      "type": "guilda",
+      "oculto_ate_liberar": false
     },
     "mercador": {
       "x": 50.0,
       "y": 40.0,
       "type": "mercador",
-      "scene": "mercado_28bt"
+      "scene": "mercado_28bt",
+      "oculto_ate_liberar": false
     },
     "caravana": {
       "x": 24.54,
       "y": 84.01,
-      "type": "caravana"
+      "type": "caravana",
+      "oculto_ate_liberar": false
+    },
+    "ponto_1": {
+      "x": 14.97,
+      "y": 13.07,
+      "type": "refugio",
+      "name": "Fazenda do Leste",
+      "scene": "refugio_dos_herois_y09i",
+      "scene_externo": "refugio_dos_herois_y09i",
+      "scene_comum": "area_compartilhada_48uz",
+      "scene_quarto": "quarto_do_heroi_a7kb",
+      "requisito": {
+        "renome_min": 0,
+        "nivel_grupo_min": 0,
+        "item_id": "",
+        "fato": "",
+        "aventura_id": ""
+      },
+      "fundo_basico": "assets/city/refugio_basico.svg",
+      "fundos_disponiveis": [],
+      "fundo_externo": "assets/city/refugio_fazenda_do_leste.png",
+      "fundo_comum": "assets/city/refugio_area_compartilhada.png",
+      "fundo_quarto": "assets/city/refugio_quarto_heroi.png",
+      "oculto_ate_liberar": false
     }
   },
   "vila_riacho": {
@@ -38,27 +67,32 @@
       "x": 31.01,
       "y": 47.69,
       "type": "taverna",
-      "scene": "taverna"
+      "scene": "taverna",
+      "oculto_ate_liberar": false
     },
     "templo": {
       "x": 32.51,
       "y": 34.64,
-      "type": "templo"
+      "type": "templo",
+      "oculto_ate_liberar": false
     },
     "ferreiro": {
       "x": 64.73,
       "y": 49.23,
-      "type": "ferreiro"
+      "type": "ferreiro",
+      "oculto_ate_liberar": false
     },
     "mercador": {
       "x": 44.59,
       "y": 36.33,
-      "type": "mercador"
+      "type": "mercador",
+      "oculto_ate_liberar": false
     },
     "caravana": {
       "x": 24.5,
       "y": 67.98,
-      "type": "caravana"
+      "type": "caravana",
+      "oculto_ate_liberar": false
     }
   },
   "vila_corvin": {
@@ -66,27 +100,32 @@
       "x": 62.67,
       "y": 39.55,
       "type": "taverna",
-      "scene": "taverna"
+      "scene": "taverna",
+      "oculto_ate_liberar": false
     },
     "templo": {
       "x": 41.78,
       "y": 28.89,
-      "type": "templo"
+      "type": "templo",
+      "oculto_ate_liberar": false
     },
     "ferreiro": {
       "x": 10.96,
       "y": 51.89,
-      "type": "ferreiro"
+      "type": "ferreiro",
+      "oculto_ate_liberar": false
     },
     "mercador": {
       "x": 45.34,
       "y": 38.85,
-      "type": "mercador"
+      "type": "mercador",
+      "oculto_ate_liberar": false
     },
     "caravana": {
       "x": 55.74,
       "y": 71.39,
-      "type": "caravana"
+      "type": "caravana",
+      "oculto_ate_liberar": false
     }
   },
   "graciero": {
@@ -94,27 +133,32 @@
       "x": 32.0,
       "y": 46.0,
       "type": "taverna",
-      "scene": "taverna"
+      "scene": "taverna",
+      "oculto_ate_liberar": false
     },
     "templo": {
       "x": 59.02,
       "y": 42.36,
-      "type": "templo"
+      "type": "templo",
+      "oculto_ate_liberar": false
     },
     "ferreiro": {
       "x": 68.95,
       "y": 39.13,
-      "type": "ferreiro"
+      "type": "ferreiro",
+      "oculto_ate_liberar": false
     },
     "mercador": {
       "x": 43.37,
       "y": 47.41,
-      "type": "mercador"
+      "type": "mercador",
+      "oculto_ate_liberar": false
     },
     "caravana": {
       "x": 20.13,
       "y": 68.52,
-      "type": "caravana"
+      "type": "caravana",
+      "oculto_ate_liberar": false
     }
   },
   "vila_dos_charcos": {
@@ -122,13 +166,15 @@
       "x": 58.08,
       "y": 75.04,
       "type": "caravana",
-      "name": "Caravana de Viajem"
+      "name": "Caravana de Viajem",
+      "oculto_ate_liberar": false
     },
     "ponto_2": {
       "x": 30.44,
       "y": 52.45,
       "type": "taverna",
-      "name": "Taverna"
+      "name": "Taverna",
+      "oculto_ate_liberar": false
     }
   }
 }

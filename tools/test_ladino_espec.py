@@ -162,10 +162,12 @@ async def main():
     try:
         r = setup(); luccas = rogue(esp=["ladino_desarme_2","ladino_desarme_3"])
         luccas["pos"] = [0,0]; luccas["gold"] = 0; luccas["dex"] = 10; r.players["l"] = luccas
-        r.armadilhas = [{"id":"arm1","tipo":"armadilha_urso","pos":[0,0],"visivel":True,"ativada":False}]
+        fome_ini, sede_ini = luccas["fome"], luccas["sede"]
+        r.armadilhas = [{"id":"arm1","tipo":"armadilha_urso","pos":[1,1],"visivel":True,"ativada":False}]
         r._armadilha_no_tile = lambda x,y: next((a for a in r.armadilhas if a["pos"]==[x,y]), None)
-        await r.handle_desarmar_armadilha("l", {})
-        check("desarmou com sucesso", len(r.armadilhas) == 0)
+        await r.handle_desarmar_armadilha("l", {"tx": 1, "ty": 1})
+        check("desarmou diagonal adjacente com sucesso", len(r.armadilhas) == 0)
+        check("desarme custa 1 de fome e sede", luccas["fome"] == fome_ini - 1 and luccas["sede"] == sede_ini - 1)
         check("recuperou o ouro (custo_ouro da armadilha_urso=1)", luccas["gold"] == 1)
     finally:
         S.random.randint = _orig_rand

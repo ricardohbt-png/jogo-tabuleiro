@@ -1498,6 +1498,56 @@ async def main():
     await task
     check("janela fechada, bloco volta a None", r._master_manual_payload() is None)
 
+    print("\n[43] teste livre: re-selecionar o mesmo monstro devolve o movimento DE VERDADE")
+    # Há DOIS contadores de passo: master_moves_left (o que a UI mostra) e
+    # _water_moves_left (o que _commit_monster_step debita). Renovar só o
+    # primeiro trava o monstro em silêncio — sem erro, com casas azuis na tela.
+    r = playing_room_com_mestre()
+    r.test_mode = True
+    m = {"id": "g1", "name": "Escorpião", "type": "goblin", "hp": 20, "max_hp": 20,
+         "pos": [1, 1], "size": [1, 1], "movement": 3, "control_mode": "manual",
+         "attacks": [{"name": "Ferrão", "num_attacks": 1}]}
+    r.monsters = {"g1": m}
+    await r.handle_mestre_selecionar_teste("m1", "g1")
+    check("1ª seleção dá movimento", m["master_moves_left"] == 3)
+    await r.handle_mestre_mover_monstro_para("m1", "g1", 4, 1)
+    check("andou as 3 casas", m["pos"] == [4, 1])
+    check("orçamento por terreno zerado", m.get("_water_moves_left") == 0)
+    await r.handle_mestre_selecionar_teste("m1", "g1")
+    check("2ª seleção devolve master_moves_left", m["master_moves_left"] == 3)
+    check("2ª seleção renova _water_moves_left", m.get("_water_moves_left", 0) > 0)
+    check("2ª seleção limpa _moved_this_turn", m.get("_moved_this_turn") is False)
+    await r.handle_mestre_mover_monstro_para("m1", "g1", 7, 1)
+    check("anda de novo após re-selecionar", m["pos"] == [7, 1])
+
+    print("\n[43b] seleção livre também rearma ação, bônus e cargas")
+    r = playing_room_com_mestre()
+    r.test_mode = True
+    m = {"id": "g1", "name": "Lobo", "type": "goblin", "hp": 20, "max_hp": 20,
+         "pos": [1, 1], "size": [1, 1], "movement": 4, "control_mode": "manual",
+         "attacks": [{"name": "Garras", "num_attacks": 2}]}
+    r.monsters = {"g1": m}
+    m["_master_acted"] = True; m["_master_bonus_acted"] = True
+    m["_master_acao_tipo"] = "ataque"; m["_ja_executou_acao"] = True
+    m["master_attack_charges"] = {0: 0}
+    await r.handle_mestre_selecionar_teste("m1", "g1")
+    check("ação principal liberada",  m.get("_master_acted") is False)
+    check("ação bônus liberada",      m.get("_master_bonus_acted") is False)
+    check("tipo de ação limpo",       m.get("_master_acao_tipo") is None)
+    check("_ja_executou_acao limpo",  not m.get("_ja_executou_acao"))
+    check("cargas remontadas",        m["master_attack_charges"] == {0: 2})
+
+    print("\n[43c] selecionar exige mestre e sessão de teste")
+    r = playing_room_com_mestre()   # sem test_mode
+    m = {"id": "g1", "name": "Orc", "type": "goblin", "hp": 9, "max_hp": 9,
+         "pos": [1, 1], "size": [1, 1], "movement": 3, "control_mode": "auto"}
+    r.monsters = {"g1": m}
+    await r.handle_mestre_selecionar_teste("m1", "g1")
+    check("fora do teste livre não abre janela", r.master_manual_mid is None)
+    r.test_mode = True
+    await r.handle_mestre_selecionar_teste("h1", "g1")
+    check("não-mestre não abre janela", r.master_manual_mid is None)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

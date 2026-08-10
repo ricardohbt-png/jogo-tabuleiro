@@ -1084,6 +1084,61 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > plano em `docs/superpowers/{specs,plans}/2026-07-17-modo-mestre-inventario-monstro-sp2*`.
 > Teste: `tools/test_modo_mestre.py` (seções [27]/[28]).
 
+> **Agarrão de criatura (crocodilo/cobra) — efeito NO ACERTO mora no pipeline de
+> ataque:** `agarrar` (Crocodilo, Fort CD 12) e `constricao` (Cobra, Fort CD 11)
+> disparavam só dentro de `_ai_crocodilo_jovem`/`_ai_cobra_constritora`, depois da
+> chamada de ataque — então sob **controle Manual** (Mestre, Comando, Dominar Mente),
+> que ataca por `handle_mestre_atacar_monstro` → `_execute_one_monster_attack`, a
+> mordida acertava e nada acontecia. O teste passou para `_agarrao_no_acerto`, chamado
+> de dentro de `_execute_one_monster_attack` ao lado de `onda_envolvente`/`infeccao`
+> (que sempre funcionaram justamente por estarem lá); a tabela `_AGARRAO_ON_HIT`
+> (id → emoji/narração) é o ponto de extensão para novas espécies que agarrem, e a
+> CD/save vêm da própria ficha. O dano automático em quem já está preso saiu das duas
+> IAs para `_esmagar_preso` + `_preso_adjacente` (tabela `_ESMAGAR_PRESO`: dado padrão
+> + narração), agora também **ativável pelo mestre** — `atq_mandibula`/`esmagar` passam
+> na frente do corte de `action_type:"passiva"` em `_habilidade_ativavel_manual` e têm
+> ramo próprio em `handle_mestre_usar_habilidade` (sem mira: o alvo é sempre o preso;
+> custa a ação principal). **Arrastar** virou `_arrastar_preso`, chamado no fim de
+> `_commit_monster_step` (comum a IA e Manual): quem está agarrado acompanha o monstro
+> mantendo-se adjacente (`_casa_livre_ao_lado`, que prefere a casa recém-liberada e é
+> footprint-aware); sem casa livre o agarrão se rompe, em vez de travar o preso. Isso
+> substituiu o bloco da IA que teleportava o herói para CIMA do crocodilo. Cliente:
+> `_MP_ESMAGAR_PRESO` em `game.js` espelha a exceção nas 3 pontas (filtro de
+> `special_abilities` da ficha, `_mpAtivavel` e `_mestreAtivarHabilidade`).
+> **O agarrão também prende MONSTRO, não só herói** — o gancho fica fora do ramo
+> `is_player` (animados seguem de fora: usam `vida_atual`). Isso era obrigatório
+> para a **mesa livre do editor** ("🧪 Testar como Mestre"), que nasce com
+> `players = {}` e onde o único alvo possível é outra criatura — ali nenhum efeito
+> no acerto contra herói (veneno, infecção, Onda Envolvente) é observável. Também
+> cobre Comando/Dominar Mente, os outros dois casos em que `_alvo_manual_mestre`
+> aceita alvo-monstro. O estado da criatura agarrada espelha o do herói:
+> `_agarrados_por`/`_preso_adjacente` varrem heróis **e** monstros;
+> `_commit_monster_step` recusa o passo de quem está preso (guarda `_captor_ativo`,
+> que também zera as casas azuis em `_master_monster_reach`); a tentativa de escape
+> entra no prólogo compartilhado `_upkeep_inicio_turno_monstro` reusando
+> `_processar_escape_agarrar` (que já era genérico), e a falha zera o movimento sem
+> tirar o ataque; `_monster_dies` solta heróis e criaturas. Teste:
+> `tools/test_agarrao.py` (39 checks, cobre IA, Manual e mesa livre).
+
+> **`ai_type` de espécie vale em ficha personalizada:** `_run_monster_ai` mandava
+> TODA ficha com `_personalizado` para `_run_profile_ai`, o que tornava o campo
+> `ai_type` inerte nelas — embora `_validate_custom_monster` valide esse campo
+> justamente contra os `ai_type` existentes em `MONSTER_DEFS`. Consequência: salvar
+> um nativo por cima dele mesmo no Editor de criaturas (`overwrite_native`) trocava
+> a IA da espécie por "agressivo" em silêncio (o crocodilo perdia Mandíbula
+> automática, arrasto e perseguição; o grotão, a Cauda Varredora; o lagarto, o Combo
+> Devorador). Agora o desvio para o perfil genérico só acontece quando o `ai_type`
+> é um dos **`AI_PROFILES`** (agressivo/tatico/cacador/conjurador/emboscador/
+> protetor/covarde/irracional/sentinela); um `ai_type` de espécie cai na IA nativa
+> daquela criatura. Inerte para as fichas existentes, que gravam `ai_type:
+> "agressivo"`. **Armadilhas conhecidas do mesmo import** (dados, não código): o
+> editor zera `resistances`, reescreve `weaknesses`, perde `garra_attack`/
+> `loot_table`, zera `spawn_min/max`, normaliza `size` e — por ligar
+> `apply_attribute_damage` mantendo o modificador embutido em `damage` — **dobra o
+> bônus de atributo no dano** (o `damage` do editor é só o dado: "1d8", e o motor
+> soma o modificador). Além disso `_apply_custom_monsters` força `m["movement"] = 6`
+> em toda ficha personalizada, ignorando o valor do arquivo.
+
 > **Editor de Itens — Fase 1 (Armas):** nova aba "Editor de itens" no editor de
 > masmorras (`tools/editor.html` + `tools/editor_items_editor.js`); sub-aba
 > **Armas** funcional, as outras 7 (armaduras/escudos/anéis/botas/poções/

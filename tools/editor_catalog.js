@@ -506,80 +506,6 @@ window.EDITOR_CATALOG = {
       "subtipo": "animal"
     },
     {
-      "type": "crocodilo_jovem",
-      "name": "Crocodilo Jovem",
-      "emoji": "🐊",
-      "boss": false,
-      "tier": 1,
-      "cr": 1,
-      "hp": 16,
-      "ac": 13,
-      "movement": 6,
-      "vision_base": 0,
-      "size": [
-        2,
-        1
-      ],
-      "porte": "medio",
-      "image": "crocodiloJovem",
-      "str_": 16,
-      "dex": 10,
-      "con_": 14,
-      "int_": 2,
-      "fort": 5,
-      "ref_": 2,
-      "will": 1,
-      "attacks": [
-        {
-          "name": "Mordida",
-          "atk_bonus": 5,
-          "damage": "1d8+3",
-          "damage_types": [
-            "physical"
-          ],
-          "num_attacks": 1,
-          "on_hit": null,
-          "categoria": "perfurante"
-        }
-      ],
-      "special_abilities": [
-        {
-          "id": "agarrar",
-          "name": "Agarrar",
-          "action_type": "passiva",
-          "dc": 12,
-          "save": "fortitude",
-          "descricao": "Ao acertar, alvo testa FOR ou REF CD 12 — falha: preso"
-        },
-        {
-          "id": "atq_mandibula",
-          "name": "Ataque de Mandíbula",
-          "action_type": "passiva",
-          "descricao": "Se alvo preso e adjacente: 1d8+3 dano direto (sem rolagem de acerto)"
-        },
-        {
-          "id": "arrastar",
-          "name": "Arrastar",
-          "action_type": "passiva",
-          "descricao": "Move alvo preso junto ao se deslocar"
-        }
-      ],
-      "immunities": [],
-      "weaknesses": [
-        {
-          "type": "lightning",
-          "multiplier": 1.5,
-          "descricao": "+50% dano elétrico (dobrado na água)"
-        }
-      ],
-      "loot_table": {
-        "1-100": null
-      },
-      "ai_type": "crocodilo_jovem",
-      "undead": false,
-      "subtipo": "animal"
-    },
-    {
       "type": "cobra_constritora",
       "name": "Cobra Constritora",
       "emoji": "🐍",
@@ -1670,83 +1596,6 @@ window.EDITOR_CATALOG = {
       "darkvision_range": 8
     },
     {
-      "type": "lagarto_carniceiro",
-      "name": "Lagarto Carniceiro",
-      "emoji": "🦎",
-      "boss": false,
-      "tier": 2,
-      "cr": 2,
-      "hp": 24,
-      "ac": 14,
-      "movement": 6,
-      "vision_base": 0,
-      "size": [
-        2,
-        1
-      ],
-      "porte": "grande",
-      "image": "lagartoCarniceiro",
-      "str_": 16,
-      "dex": 14,
-      "con_": 14,
-      "int_": 6,
-      "fort": 4,
-      "ref_": 4,
-      "will": 1,
-      "attacks": [
-        {
-          "name": "Mordida",
-          "atk_bonus": 6,
-          "damage": "1d8+3",
-          "damage_types": [
-            "physical"
-          ],
-          "num_attacks": 2,
-          "on_hit": null,
-          "categoria": "perfurante"
-        }
-      ],
-      "special_abilities": [
-        {
-          "id": "combo_devorador",
-          "name": "Combo Devorador",
-          "action_type": "passiva",
-          "descricao": "Se as 2 mordidas acertarem no turno: 2 ataques de Garra imediatos"
-        },
-        {
-          "id": "predador_oportunista",
-          "name": "Predador Oportunista",
-          "action_type": "passiva",
-          "descricao": "+1 nas mordidas contra alvos com menos de 50% do HP"
-        },
-        {
-          "id": "faro_carnica",
-          "name": "Faro da Presa Fácil",
-          "action_type": "passiva",
-          "descricao": "Prioriza sempre o alvo com menor HP"
-        },
-        {
-          "id": "duas_cabecas",
-          "name": "Duas Cabeças",
-          "action_type": "passiva",
-          "descricao": "+2 no raio de visão; ataques furtivos contra a criatura sofrem -2 no acerto."
-        }
-      ],
-      "immunities": [],
-      "weaknesses": [
-        {
-          "type": "veneno_dobrado",
-          "descricao": "Sensível a venenos: todos os efeitos dobrados"
-        }
-      ],
-      "loot_table": {
-        "1-100": null
-      },
-      "ai_type": "lagarto_carniceiro",
-      "undead": false,
-      "subtipo": "animal"
-    },
-    {
       "type": "devorador_metal",
       "name": "Devorador de Metal",
       "emoji": "🔩",
@@ -2139,148 +1988,6 @@ window.EDITOR_CATALOG = {
         }
       },
       "ai_type": "ogro",
-      "undead": false,
-      "subtipo": "raca_padrao"
-    },
-    {
-      "type": "grotao",
-      "name": "Grotão",
-      "emoji": "🦂",
-      "boss": false,
-      "tier": 3,
-      "cr": 3,
-      "hp": 36,
-      "ac": 15,
-      "natural_armor": 5,
-      "movement": 6,
-      "vision_base": 0,
-      "size": [
-        2,
-        3
-      ],
-      "porte": "grande",
-      "image": "grotao",
-      "str_": 18,
-      "dex": 10,
-      "con_": 16,
-      "int_": 3,
-      "fort": 6,
-      "ref_": 3,
-      "will": 2,
-      "attacks": [
-        {
-          "name": "Mordida",
-          "atk_bonus": 6,
-          "damage": "1d10+4",
-          "damage_types": [
-            "physical"
-          ],
-          "num_attacks": 1,
-          "on_hit": null,
-          "categoria": "perfurante"
-        },
-        {
-          "name": "Garras",
-          "atk_bonus": 6,
-          "damage": "1d8+4",
-          "damage_types": [
-            "physical"
-          ],
-          "num_attacks": 2,
-          "on_hit": null,
-          "categoria": "cortante"
-        }
-      ],
-      "special_abilities": [
-        {
-          "id": "carapaca_resistente",
-          "name": "Carapaça Resistente",
-          "action_type": "passiva",
-          "descricao": "Reduz todo dano físico em 2"
-        },
-        {
-          "id": "cauda_varredora",
-          "name": "Cauda Varredora",
-          "action_type": "acao",
-          "cooldown_turns": 2,
-          "atk_bonus": 5,
-          "damage": "1d8+3",
-          "save": "reflexos",
-          "dc": 12,
-          "descricao": "Atinge todos atrás: +5, 1d8+3; falha derruba"
-        },
-        {
-          "id": "cuspir_acido",
-          "name": "Cuspir Ácido",
-          "action_type": "acao",
-          "cooldown_turns": 3,
-          "range": 3,
-          "damage": "2d6",
-          "save": "reflexos",
-          "dc": 13,
-          "descricao": "Alvo único: 2d6 ácido, Reflexos reduz à metade; na falha aplica a corrosão de itens por ácido."
-        },
-        {
-          "id": "furia_bestial",
-          "name": "Fúria Bestial",
-          "action_type": "passiva",
-          "descricao": "Mordida e ao menos uma garra acertam: +1d6 dano"
-        },
-        {
-          "id": "ponto_vulneravel",
-          "name": "Ponto Vulnerável",
-          "action_type": "passiva",
-          "nd_penalty": 0.25,
-          "descricao": "Os dois quadrados centrais ignoram a armadura natural (CA 15 → 10; Destreza permanece) e reduções de dano; reduz o ND estimado em 0,25",
-          "tiles": [
-            [
-              1,
-              0
-            ],
-            [
-              1,
-              1
-            ]
-          ]
-        },
-        {
-          "id": "corpo_pesado",
-          "name": "Corpo Pesado",
-          "action_type": "passiva",
-          "descricao": "Falha em Reflexos: +1 dano daquele efeito"
-        }
-      ],
-      "immunities": [],
-      "weaknesses": [
-        {
-          "type": "ponto_vulneravel",
-          "nd_penalty": 0.25,
-          "tiles": [
-            [
-              1,
-              0
-            ],
-            [
-              1,
-              1
-            ]
-          ],
-          "descricao": "Ponto Vulnerável: os dois quadrados centrais ignoram a armadura natural (CA 15 → 10; Destreza permanece) e reduções de dano (–0,25 ND estimado)"
-        }
-      ],
-      "resistances": [
-        {
-          "type": "physical",
-          "reduction": 2
-        }
-      ],
-      "loot_table": {
-        "1-100": {
-          "tipo": "gold",
-          "valor": "2d6"
-        }
-      },
-      "ai_type": "grotao",
       "undead": false,
       "subtipo": "raca_padrao"
     },
@@ -3254,7 +2961,7 @@ window.EDITOR_CATALOG = {
         1
       ],
       "porte": "medio",
-      "image": "lorde_vampirico",
+      "image": "lorde_vampiro",
       "str_": 20,
       "dex": 22,
       "con_": 10,
@@ -3426,29 +3133,6 @@ window.EDITOR_CATALOG = {
       "action_type": "passiva",
       "dc": 11,
       "save": "reflexos",
-      "source": "monstro"
-    },
-    {
-      "id": "agarrar",
-      "name": "Agarrar",
-      "action_type": "passiva",
-      "dc": 12,
-      "save": "fortitude",
-      "descricao": "Ao acertar, alvo testa FOR ou REF CD 12 — falha: preso",
-      "source": "monstro"
-    },
-    {
-      "id": "atq_mandibula",
-      "name": "Ataque de Mandíbula",
-      "action_type": "passiva",
-      "descricao": "Se alvo preso e adjacente: 1d8+3 dano direto (sem rolagem de acerto)",
-      "source": "monstro"
-    },
-    {
-      "id": "arrastar",
-      "name": "Arrastar",
-      "action_type": "passiva",
-      "descricao": "Move alvo preso junto ao se deslocar",
       "source": "monstro"
     },
     {
@@ -3685,34 +3369,6 @@ window.EDITOR_CATALOG = {
       "source": "monstro"
     },
     {
-      "id": "combo_devorador",
-      "name": "Combo Devorador",
-      "action_type": "passiva",
-      "descricao": "Se as 2 mordidas acertarem no turno: 2 ataques de Garra imediatos",
-      "source": "monstro"
-    },
-    {
-      "id": "predador_oportunista",
-      "name": "Predador Oportunista",
-      "action_type": "passiva",
-      "descricao": "+1 nas mordidas contra alvos com menos de 50% do HP",
-      "source": "monstro"
-    },
-    {
-      "id": "faro_carnica",
-      "name": "Faro da Presa Fácil",
-      "action_type": "passiva",
-      "descricao": "Prioriza sempre o alvo com menor HP",
-      "source": "monstro"
-    },
-    {
-      "id": "duas_cabecas",
-      "name": "Duas Cabeças",
-      "action_type": "passiva",
-      "descricao": "+2 no raio de visão; ataques furtivos contra a criatura sofrem -2 no acerto.",
-      "source": "monstro"
-    },
-    {
       "id": "mordida_corrosiva",
       "name": "Mordida Corrosiva",
       "action_type": "passiva",
@@ -3801,69 +3457,6 @@ window.EDITOR_CATALOG = {
       "name": "Lento e Previsível",
       "action_type": "passiva",
       "descricao": "Se errar um ataque: -2 de CA até o próximo turno",
-      "source": "monstro"
-    },
-    {
-      "id": "carapaca_resistente",
-      "name": "Carapaça Resistente",
-      "action_type": "passiva",
-      "descricao": "Reduz todo dano físico em 2",
-      "source": "monstro"
-    },
-    {
-      "id": "cauda_varredora",
-      "name": "Cauda Varredora",
-      "action_type": "acao",
-      "cooldown_turns": 2,
-      "atk_bonus": 5,
-      "damage": "1d8+3",
-      "save": "reflexos",
-      "dc": 12,
-      "descricao": "Atinge todos atrás: +5, 1d8+3; falha derruba",
-      "source": "monstro"
-    },
-    {
-      "id": "cuspir_acido",
-      "name": "Cuspir Ácido",
-      "action_type": "acao",
-      "cooldown_turns": 3,
-      "range": 3,
-      "damage": "2d6",
-      "save": "reflexos",
-      "dc": 13,
-      "descricao": "Alvo único: 2d6 ácido, Reflexos reduz à metade; na falha aplica a corrosão de itens por ácido.",
-      "source": "monstro"
-    },
-    {
-      "id": "furia_bestial",
-      "name": "Fúria Bestial",
-      "action_type": "passiva",
-      "descricao": "Mordida e ao menos uma garra acertam: +1d6 dano",
-      "source": "monstro"
-    },
-    {
-      "id": "ponto_vulneravel",
-      "name": "Ponto Vulnerável",
-      "action_type": "passiva",
-      "nd_penalty": 0.25,
-      "descricao": "Os dois quadrados centrais ignoram a armadura natural (CA 15 → 10; Destreza permanece) e reduções de dano; reduz o ND estimado em 0,25",
-      "tiles": [
-        [
-          1,
-          0
-        ],
-        [
-          1,
-          1
-        ]
-      ],
-      "source": "monstro"
-    },
-    {
-      "id": "corpo_pesado",
-      "name": "Corpo Pesado",
-      "action_type": "passiva",
-      "descricao": "Falha em Reflexos: +1 dano daquele efeito",
       "source": "monstro"
     },
     {
@@ -4134,6 +3727,109 @@ window.EDITOR_CATALOG = {
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica",
+      "uses_per_day": 1,
+      "cooldown_turns": 0
+    },
+    {
+      "id": "predador_oportunista",
+      "name": "Predador Oportunista",
+      "action_type": "passiva",
+      "descricao": "+1 nas mordidas contra alvos com menos de 50% do HP",
+      "source": "monstro",
+      "uses_per_day": 1,
+      "cooldown_turns": 0
+    },
+    {
+      "id": "carapaca_resistente",
+      "name": "Carapaça Resistente",
+      "action_type": "passiva",
+      "descricao": "Reduz todo dano físico em 2",
+      "source": "monstro",
+      "uses_per_day": 1,
+      "cooldown_turns": 0
+    },
+    {
+      "id": "cauda_varredora",
+      "name": "Cauda Varredora",
+      "action_type": "acao",
+      "cooldown_turns": 2,
+      "atk_bonus": 5,
+      "damage": "1d8+3",
+      "save": "reflexos",
+      "dc": 12,
+      "descricao": "Atinge todos atrás: +5, 1d8+3; falha derruba",
+      "source": "monstro",
+      "uses_per_day": 1
+    },
+    {
+      "id": "cuspir_acido",
+      "name": "Cuspir Ácido",
+      "action_type": "acao",
+      "cooldown_turns": 3,
+      "range": 3,
+      "damage": "2d6",
+      "save": "reflexos",
+      "dc": 13,
+      "descricao": "Alvo a até 3 quadrado(s): 2d6 de ácido; Reflexos CD 13 reduz à metade. Falha corrói equipamentos conforme as regras de corrosão por ácido.",
+      "source": "monstro",
+      "uses_per_day": 1
+    },
+    {
+      "id": "furia_bestial",
+      "name": "Fúria Bestial",
+      "action_type": "passiva",
+      "descricao": "Mordida e ao menos uma garra acertam: +1d6 dano",
+      "source": "monstro",
+      "uses_per_day": 1,
+      "cooldown_turns": 0
+    },
+    {
+      "id": "agarrar",
+      "name": "Agarrar",
+      "action_type": "passiva",
+      "dc": 12,
+      "save": "fortitude",
+      "descricao": "Ao acertar, alvo testa FOR ou REF CD 12 — falha: preso",
+      "source": "monstro"
+    },
+    {
+      "id": "atq_mandibula",
+      "name": "Ataque de Mandíbula",
+      "action_type": "passiva",
+      "descricao": "Se alvo preso e adjacente: 1d8+3 dano direto (sem rolagem de acerto)",
+      "source": "monstro"
+    },
+    {
+      "id": "arrastar",
+      "name": "Arrastar",
+      "action_type": "passiva",
+      "descricao": "Move alvo preso junto ao se deslocar",
+      "source": "monstro"
+    },
+    {
+      "id": "combo_devorador",
+      "name": "Combo Devorador",
+      "action_type": "passiva",
+      "descricao": "Se as 2 mordidas acertarem no turno: 2 ataques de Garra imediatos",
+      "source": "monstro",
+      "uses_per_day": 1,
+      "cooldown_turns": 0
+    },
+    {
+      "id": "faro_carnica",
+      "name": "Faro da Presa Fácil",
+      "action_type": "passiva",
+      "descricao": "Prioriza sempre o alvo com menor HP",
+      "source": "monstro",
+      "uses_per_day": 1,
+      "cooldown_turns": 0
+    },
+    {
+      "id": "duas_cabecas",
+      "name": "Duas Cabeças",
+      "action_type": "passiva",
+      "descricao": "+2 no raio de visão; ataques furtivos contra a criatura sofrem -2 no acerto.",
+      "source": "monstro",
       "uses_per_day": 1,
       "cooldown_turns": 0
     },
@@ -5754,7 +5450,7 @@ window.EDITOR_CATALOG = {
       ],
       "icone": "🗣️",
       "tipo": "alvo",
-      "descricao": "Vontade ou controla 1 ação do alvo. Sem habilidades especiais.",
+      "descricao": "Só em monstros. Vontade ou o conjurador dirige o próximo turno do alvo — movimento, ação principal, habilidades e itens.",
       "save": "vontade",
       "alcance": 4,
       "duracao": 1
@@ -6023,10 +5719,10 @@ window.EDITOR_CATALOG = {
       ],
       "icone": "🧠",
       "tipo": "alvo",
-      "descricao": "Vontade ou dominado 1d4 rodadas. Novo teste ao sofrer dano.",
+      "descricao": "Vontade ou o conjurador dirige o alvo a cada turno dele por 1d4+1 rodadas. A cada dano sofrido, faz novo teste de Vontade com +2 cumulativo; passar rompe o controle.",
       "save": "vontade",
       "alcance": 5,
-      "duracao": "1d4"
+      "duracao": "1d4+1"
     },
     {
       "id": "dominar_morto_vivo",
@@ -7564,6 +7260,21 @@ window.EDITOR_CATALOG = {
       "loot_capaz": true,
       "special": null,
       "image": null
+    },
+    {
+      "type": "arvore_seca",
+      "nome": "Árvore seca",
+      "emoji": "🪵",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": true,
+      "special": null,
+      "image": "arvore_seca.png"
     },
     {
       "type": "caverna",

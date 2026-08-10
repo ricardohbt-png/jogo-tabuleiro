@@ -2079,6 +2079,31 @@
   }
 
   document.getElementById("btn-save").onclick = save;
+  document.getElementById("btn-test-dungeon").onclick = async () => {
+    if (!window.EDITOR_SAVE || !window.EDITOR_SAVE.createTestDungeon) {
+      alert("Inicie o servidor para testar a masmorra."); return;
+    }
+    const valid = updateStatus();
+    if (!valid.ok) { alert("Corrija a masmorra antes de testar:\n- " + valid.erros.join("\n- ")); return; }
+    // Abre durante o gesto de clique; abrir só depois do await é bloqueado como
+    // popup pela maioria dos navegadores.
+    const abaTeste = window.open("about:blank", "_blank");
+    const btn = document.getElementById("btn-test-dungeon"); btn.disabled = true; btn.textContent = "🧪 Abrindo teste…";
+    try {
+      const test = await window.EDITOR_SAVE.createTestDungeon(buildJSON());
+      // Mesmo motivo da prévia: em file:// o cliente não consegue baixar .glb
+      // (XHR bloqueado) e todo monstro vira peão genérico.
+      const query = "?teste_masmorra=" + encodeURIComponent(test.token);
+      const destino = window.EDITOR_CLIENTE ? window.EDITOR_CLIENTE.url(query)
+                                            : "../index.html" + query;
+      if (abaTeste) abaTeste.location.href = destino;
+      else window.location.assign(destino);
+    } catch (err) {
+      if (abaTeste) abaTeste.close();
+      alert("Não foi possível iniciar o teste: " + err.message);
+    }
+    finally { btn.disabled = false; btn.textContent = "🧪 Testar como Mestre"; }
+  };
   document.getElementById("btn-load").onclick = () => document.getElementById("file-input").click();
   document.getElementById("file-input").onchange = (ev) => {
     const f = ev.target.files[0]; if (!f) return;

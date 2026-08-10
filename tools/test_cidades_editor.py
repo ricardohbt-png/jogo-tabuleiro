@@ -244,15 +244,23 @@ def _rodar_verificacoes():
     tipos = [p.get("type") for p in (S.CITY_MAP_POINTS.get("porto_negro") or {}).values()]
     check("sem ponto duplicado do mesmo tipo", tipos.count("mercador") == 1)
     check("ponto autoral preservado", S.CITY_MAP_POINTS["porto_negro"]["ponto_1"]["x"] == 10.0)
-    # Ajustar em jogo só move: tipo e nome do ponto autoral sobrevivem.
+    # O posicionamento dos pontos virou EXCLUSIVO do Editor: `handle_city_map_points`
+    # recusa qualquer ajuste em jogo (o cliente também não desenha mais o botão
+    # "📍 Ajustar pontos"). O ponto autoral tem de sair intacto da tentativa.
     S.CITY_MAP_POINTS["porto_negro"]["ponto_1"]["name"] = "Feira"
     sala = S.GameRoom("PONTO")
     sala.phase = "city"; sala.host_pid = "h1"; sala.world_location = "porto_negro"
     sala.connections = {}
+    recusas = []
+    async def _cap(pid, msg, *a, **k):
+        if isinstance(msg, dict) and msg.get("type") == "error": recusas.append(msg.get("msg", ""))
+    sala.send_to = _cap
     asyncio.run(sala.handle_city_map_points("h1", "porto_negro", {"ponto_1": {"x": 70.0, "y": 30.0}}))
     movido = S.CITY_MAP_POINTS["porto_negro"]["ponto_1"]
-    check("ajuste em jogo move o ponto", (movido["x"], movido["y"]) == (70.0, 30.0))
-    check("ajuste em jogo preserva tipo e nome",
+    check("ajuste em jogo é recusado (só o Editor posiciona)",
+          any("Editor" in m for m in recusas))
+    check("ponto não se move pela tentativa em jogo", (movido["x"], movido["y"]) == (10.0, 20.0))
+    check("tipo e nome preservados",
           movido.get("type") == "mercador" and movido.get("name") == "Feira")
     reset_mundo()
 
@@ -290,6 +298,8 @@ def _rodar_verificacoes():
         S._load_city_map_points()
         check("vínculo sobrevive ao boot",
               S.CITY_MAP_POINTS["alva_e_luz"].get("cripta", {}).get("aventura") == "destino_teste")
+        check("emoji sobrevive ao boot",
+              S.CITY_MAP_POINTS["alva_e_luz"].get("cripta", {}).get("emoji") == "🚪")
         # O boot só checa FORMATO: sem WORLD_ADVENTURES carregado (arquivo ausente
         # ou corrompido) o vínculo não pode ser apagado da memória, senão o próximo
         # save do editor gravaria a perda em disco.

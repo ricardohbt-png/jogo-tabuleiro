@@ -41,6 +41,32 @@ def monstros_em_parede(r):
     return [m for m in r.monsters.values()
             if r.tiles[m["pos"][1]][m["pos"][0]] == WALL]
 
+def herois_em_parede(r):
+    return [(pid, p["pos"]) for pid, p in r.players.items()
+            if r.tiles[p["pos"][1]][p["pos"][0]] == WALL]
+
+async def sala_com_grupo(n_herois, seed, dungeon=None):
+    """Entra numa masmorra com `n_herois` e a semente dada, para inspecionar o
+    posicionamento inicial do grupo."""
+    import random
+    random.seed(seed)
+    r = GameRoom("SPAWN")
+    async def noop(*a, **k): pass
+    r.gm_say = noop; r.broadcast = noop; r.push_state = noop; r.send_to = noop
+    r.broadcast_city_state = noop; r.broadcast_lobby = noop
+    classes = ["warrior", "mage", "cleric", "rogue", "bard", "paladin"]
+    for i in range(n_herois):
+        pid = f"p{i+1}"
+        r.players[pid] = make_player(pid, f"H{i}", classes[i], i)
+    r.player_order = list(r.players.keys()); r.host_pid = "p1"
+    if dungeon:
+        r.mode = "authored"; r.dungeon_def = server.carregar_dungeon(dungeon)
+    else:
+        r.mode = "procedural"
+    r.phase = "city"
+    await r.enter_dungeon("p1")
+    return r
+
 async def main():
     print("\n[1] Primeira entrada gera a masmorra")
     r = setup()
@@ -98,6 +124,34 @@ async def main():
     await r.enter_dungeon("p1")
     check("nova masmorra é gerada após concluída", r.tiles != tiles_antigo or len(r.monsters) > 0)
     check("nenhum monstro em parede na nova masmorra", monstros_em_parede(r) == [])
+
+    print("\n[N] Nenhum herói nasce dentro de parede")
+    # O procedural posicionava o grupo em offsets fixos ao redor do centro da sala
+    # de entrada, SEM olhar o mapa: numa sala estreita o 4º herói (offset (0,1))
+    # pousava dentro de uma parede. Hoje os dois modos usam `_spawn_tiles_near`,
+    # que faz BFS só por casas de chão. Semente 1 com 4+ heróis reproduzia o caso.
+    r = await sala_com_grupo(4, 1)
+    check("caso conhecido (seed 1, 4 heróis): ninguém em parede", herois_em_parede(r) == [])
+    ruins = []
+    for n in range(1, 7):
+        for seed in range(25):
+            rr = await sala_com_grupo(n, seed)
+            if herois_em_parede(rr):
+                ruins.append((n, seed, herois_em_parede(rr)))
+    check(f"varredura procedural 1-6 heróis × 25 sementes ({6*25} partidas)",
+          ruins == [])
+    if ruins:
+        print(f"      exemplos: {ruins[:3]}")
+    # E o mesmo vale para as masmorras autoradas do repositório.
+    ruins_aut = []
+    for f in [x for x in sorted(os.listdir("dungeons")) if x.endswith(".json")][:8]:
+        for n in (1, 4, 6):
+            rr = await sala_com_grupo(n, 1, f)
+            if herois_em_parede(rr):
+                ruins_aut.append((f, n, herois_em_parede(rr)))
+    check("masmorras autoradas: ninguém em parede", ruins_aut == [])
+    if ruins_aut:
+        print(f"      exemplos: {ruins_aut[:3]}")
 
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)

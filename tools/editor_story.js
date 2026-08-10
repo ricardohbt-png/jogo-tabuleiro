@@ -115,7 +115,7 @@
            <textarea class="hist-text" placeholder="texto do slide">${s.text || ""}</textarea>
          </div>
          <div class="hist-ops">
-           <span class="op-up">▲</span><span class="op-down">▼</span><span class="op-del">✕</span>
+           <span class="op-up">▲</span><span class="op-down">▼</span><span class="op-dup" title="Duplicar como próximo slide">⧉</span><span class="op-del">✕</span>
          </div>`;
       card.querySelector(".hist-img-pick").onclick = () => pickFile("image/*", f => {
         if (s._url) URL.revokeObjectURL(s._url);
@@ -130,6 +130,16 @@
       card.querySelector(".hist-text").oninput = e => { s.text = e.target.value; };
       card.querySelector(".op-up").onclick = () => { if (i > 0) { st.slides.splice(i - 1, 0, st.slides.splice(i, 1)[0]); render(); } };
       card.querySelector(".op-down").onclick = () => { if (i < st.slides.length - 1) { st.slides.splice(i + 1, 0, st.slides.splice(i, 1)[0]); render(); } };
+      card.querySelector(".op-dup").onclick = () => {
+        // A cópia usa o mesmo arquivo de imagem, sem novo upload. Não copiamos
+        // _url (Object URL temporária), pois ele pertence ao card original e
+        // poderia ser revogado ao excluir um dos dois slides.
+        st.slides.splice(i + 1, 0, {
+          text: s.text || "", image: s.image || "", fit: s.fit === "contain" ? "contain" : "cover",
+          _url: "", _imgFile: s._imgFile || ""
+        });
+        render();
+      };
       card.querySelector(".op-del").onclick = () => { if (s._url) URL.revokeObjectURL(s._url); st.slides.splice(i, 1); render(); };
       return card;
     }

@@ -10,6 +10,8 @@ button { background:#33291c; color:#e8dcc0; border:1px solid #5a4830; border-rad
 .ndprev.on { outline:2px solid #d9b45a; }
 button:hover { background:#4a3c28; }
 button.active { background:#d9b061; color:#1d1812; border-color:#d9b061; }
+#btn-test-dungeon { background:#31513a; border-color:#7fc98c; color:#efffea; font-weight:700; }
+#btn-test-dungeon:hover { background:#3f6a4b; }
 #toolbar { display:flex; gap:5px; padding:8px 12px; background:#241d14; border-bottom:1px solid #4a3c28; flex-wrap:wrap; align-items:center; }
 #toolbar .group-label { font-size:11px; color:#8a7a5a; margin:0 2px; }
 #toolbar .sep { width:1px; align-self:stretch; background:#4a3c28; margin:0 4px; }

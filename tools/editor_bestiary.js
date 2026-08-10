@@ -184,6 +184,10 @@
       </section></article>`;
   }
   function render() {
+    // A lista é recriada ao selecionar uma criatura. Preserve a posição antes
+    // de substituir o HTML; sem isso, cada clique devolve o bestiário ao topo.
+    const previousList = root.querySelector(".best-list");
+    const listScrollTop = previousList ? previousList.scrollTop : 0;
     const monsters = list();
     if (!selected && monsters.length) selected = monsters[0].type;
     const q = filter.trim().toLocaleLowerCase("pt-BR");
@@ -191,6 +195,8 @@
     const current = monsters.find(m => m.type === selected) || shown[0] || monsters[0];
     if (current) selected = current.type;
     root.innerHTML = `<div class="best-layout"><aside class="best-list"><label>Buscar criatura<input id="best-search" value="${esc(filter)}" placeholder="nome, tipo ou IA"></label><div class="best-count">${shown.length} criatura${shown.length === 1 ? "" : "s"}</div>${shown.map(m => `<button class="best-row ${m.type === selected ? "selected" : ""}" data-type="${esc(m.type)}"><span>${esc(m.emoji || "◈")}</span><span><b>${esc(m.name)}</b><small>ND ${esc(nd(m.cr != null ? m.cr : m.tier || "—"))} · ${esc(pretty(m.ai_type))}</small></span></button>`).join("") || "<p class=\"best-none\">Nenhuma criatura encontrada.</p>"}</aside><main class="best-detail">${current ? details(current) : ""}</main></div>`;
+    const nextList = root.querySelector(".best-list");
+    if (nextList) nextList.scrollTop = listScrollTop;
     const search = document.getElementById("best-search");
     search.oninput = () => { filter = search.value; render(); };
     root.querySelectorAll(".best-row").forEach(btn => btn.onclick = () => { selected = btn.dataset.type; render(); });

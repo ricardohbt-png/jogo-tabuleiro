@@ -462,7 +462,17 @@ const SPR_SCALE=CELL/48; // sprite scale factor (sprites designed for CELL=48)
 // Cache-buster das texturas de peão (frente.png): garante que imagens trocadas
 // no disco apareçam (uma busca fresca por sessão; cacheado dentro da sessão).
 const _ASSET_VER = Date.now();
-function _assetURL(path){ return path + (path.includes('?') ? '&' : '?') + 'v=' + _ASSET_VER; }
+// Arte binária pesada (modelos e texturas) NÃO leva o cache-buster: com um `?v`
+// novo a cada sessão a URL muda sempre e o navegador rebaixa dezenas de MB toda
+// vez — é essa rajada que derruba carregamentos no teste do editor, que revela o
+// mapa inteiro de uma vez. O servidor manda `no-cache` + ETag/Last-Modified,
+// então o arquivo é revalidado a cada abertura: trocou no disco, vem de novo;
+// não trocou, custa um 304 vazio. O resto (JS, JSON, áudio) segue com o buster.
+const _ASSET_SEM_BUSTER = /\.(glb|gltf|png|jpe?g|webp)(\?|$)/i;
+function _assetURL(path){
+  if(_ASSET_SEM_BUSTER.test(path)) return path;
+  return path + (path.includes('?') ? '&' : '?') + 'v=' + _ASSET_VER;
+}
 
 // Tamanho da miniatura PNG extrudada por casa de footprint (maior = miniatura
 // maior/mais alta no 3D). 1 casa de árvore → ~1.8 unidades de largura.
@@ -513,6 +523,7 @@ const DECOR_GLB_TYPES = {
   coluna: 'assets/objetos/coluna.glb',
   arvore: 'assets/objetos/arvore.glb',
   arvore_grande: 'assets/objetos/arvore.glb',
+  arvore_seca: 'assets/objetos/arvore_seca.glb',
   // Entrada de caverna: arte 2D no editor e modelo GLB no tabuleiro 3D.
   caverna: 'assets/objetos/caverna.glb',
 };
@@ -731,6 +742,16 @@ function joinRoom(){
   const url=$('input-server').value.trim()||defaultServerUrl();
   GS.connect(url, name, 'join', code);
 }
+
+// Sessão temporária aberta pelo Editor de Masmorras. Não usa lobby, conta nem
+// save: o token só serve para entregar o controle de Mestre desta aba ao teste.
+(function abrirTesteDoEditor(){
+  const token = new URLSearchParams(window.location.search).get('teste_masmorra');
+  if (!token) return;
+  const nome = 'Mestre de Teste';
+  const input = $('input-name'); if (input) input.value = nome;
+  GS.connect(defaultServerUrl(), nome, 'test', token);
+})();
 
 function copyCode(){
   const code=($('cs-room-code')||{}).textContent||'';
@@ -1510,9 +1531,81 @@ function _cityHotspotClick(pointId, type){
   }
   if(t === 'caravana'){ showWorldMap(); return; }
   if(t === 'guilda'){ openGuild(); return; }
+  if(t === 'refugio'){
+    const st=GS.cityState, loc=st && st.world && st.world.location;
+    const ponto=((st && st.city_map_points || {})[loc] || {})[pointId];
+    if(ponto && ponto.locked){ toast('🔒 O Refúgio dos Heróis ainda está bloqueado.','var(--gold)'); return; }
+    const cenaExterna=ponto && (ponto.scene_externo || ponto.scene);
+    if(cenaExterna && GS.scenes()[cenaExterna]){ openShop(pointId, t, cenaExterna); return; }
+    GS.openRefugio(); return;
+  }
   // openShop espera o id do prédio cru (ex.: 'mercador'); é o que o servidor usa
   // como chave da loja. (NÃO usar MAPA_IDS_LOJA: 'mercado' aponta p/ loja vazia.)
   openShop(pointId, t);
+}
+
+let _refugioState = null, _quartoState = null;
+// Qual baú abrir direto na janela dividida quando o estado chegar do servidor.
+// O painel-lista (`_renderRefugioPainel`) continua sendo o hub de quartos/ouro
+// para quem chega ao Refúgio sem pedir um baú específico.
+let _bauDireto = null;
+function _abrirBauDireto(scope){
+  _bauDireto = scope;
+  if(scope === 'room') GS.openQuarto(); else GS.openRefugio();
+}
+function _fecharRefugio(){ document.getElementById('refugio-overlay')?.remove(); document.getElementById('quarto-overlay')?.remove(); }
+function _heroCityMe(){ const st=GS.cityState||{}; return (st.players||[]).find(p=>p.id===GS.myPid) || null; }
+function _itemLabel(it){ return `${it?.emoji||'📦'} ${it?.name||it?.id||'Item'}${it?.ammo_count!=null?' ×'+it.ammo_count:''}`; }
+function _renderBauSlots(container, items, limit, action){
+  if(!container) return;
+  container.classList.add('bau-slot-grid'); container.innerHTML='';
+  const total=Math.max(1,Number(limit)||10);
+  for(let i=0;i<total;i++){
+    const slot=document.createElement('button'); slot.type='button'; slot.className='bau-slot'+(items[i]?' occupied':'');
+    if(items[i]){ slot.innerHTML='<span class="bau-slot-item">'+_esc(_itemLabel(items[i]))+'</span>'; slot.title=action==='take'?'Retirar do baú':'Guardar no baú'; slot.onclick=()=>action==='take'?GS.refugioTake(container.dataset.bauScope,i):GS.refugioStore(container.dataset.bauScope,'bag',i); }
+    else { slot.disabled=true; slot.innerHTML='<span class="bau-slot-empty">+</span>'; }
+    container.appendChild(slot);
+  }
+}
+function _renderRefugioPainel(msg){
+  _refugioState=msg; _quartoState=null; _fecharRefugio();
+  const ov=document.createElement('div'); ov.id='refugio-overlay'; ov.className='refugio-overlay';
+  const sh=msg.shared||{}, me=_heroCityMe(), bag=me?.bag||[], gear=me?.gear||{};
+  const rooms=(msg.rooms||[]).map(r=>`<button class="ref-room" data-ref-room="${_esc(r.owner)}"${r.can_edit?' data-ref-mine="1"':''}>🛏️ ${_esc(r.class_id||r.owner)}${r.can_edit?' (seu quarto)':''}</button>`).join('')||'<small>Nenhum quarto cadastrado ainda.</small>';
+  ov.innerHTML=`<section class="refugio-box"><header><div><h2>🏰 Refúgio dos Heróis</h2><small>Baú compartilhado da campanha · ${sh.items?.length||0}/${sh.slot_limit||10} espaços · 💰 ${sh.gold||0}</small></div><button data-ref-close>✕</button></header><div class="refugio-grid"><div><h3>Baú compartilhado</h3><div class="ref-list">${(sh.items||[]).map((it,i)=>`<div class="ref-item"><span>${_esc(_itemLabel(it))}</span><button data-ref-take="${i}">Retirar</button></div>`).join('')||'<small>Vazio.</small>'}</div><div class="ref-gold"><input id="ref-shared-gold" type="number" min="0" value="0"><button data-ref-gold="deposit">Depositar ouro</button><button data-ref-gold="withdraw">Retirar ouro</button></div></div><div><h3>Guardar itens</h3><div class="ref-list">${bag.map((it,i)=>`<div class="ref-item"><span>${_esc(_itemLabel(it))}</span><button data-ref-store="${i}">Guardar</button></div>`).join('')||'<small>Bolsa vazia.</small>'}</div><h3>Quartos privados</h3><div class="ref-rooms">${rooms}</div></div></div><footer><button data-ref-close>Voltar à cidade</button></footer></section>`;
+  document.body.appendChild(ov);
+  // Os dois baús entram como botão no topo: o pessoal só pela lista de quartos era
+  // fácil demais de ler como "visitar o quarto de alguém" em vez de "abrir meu baú".
+  if(typeof InventoryModal!=='undefined'){
+    const box=ov.querySelector('.refugio-box'), antes=ov.querySelector('.refugio-grid');
+    const botao=(txt,fn)=>{const b=document.createElement('button');b.className='ref-chest-open';b.textContent=txt;b.onclick=fn;box?.insertBefore(b,antes);};
+    botao('🧰 Abrir baú compartilhado',()=>InventoryModal.openStorage('shared',msg));
+    if((msg.rooms||[]).some(r=>r.can_edit)) botao('🛏️ Abrir baú do herói',()=>_abrirBauDireto('room'));
+  }
+  ov.querySelectorAll('[data-ref-close]').forEach(b=>b.onclick=_fecharRefugio);
+  const lists=ov.querySelectorAll('.ref-list'); if(lists[0]){lists[0].dataset.bauScope='shared';_renderBauSlots(lists[0],sh.items||[],Number(sh.slot_limit)||10,'take');} if(lists[1]){lists[1].dataset.bauScope='shared';_renderBauSlots(lists[1],bag,Math.max(6,bag.length),'store');}
+  const refBox=ov.querySelector('.refugio-box'); if(refBox && (msg.shared?.background_external || msg.shared?.background_common)){ refBox.style.backgroundImage=`linear-gradient(#0005,#0008),url('${_assetURL(msg.shared.background_external || msg.shared.background_common)}')`; const common=refBox.querySelector('.refugio-grid > div:first-child'); if(common && msg.shared.background_common) common.style.backgroundImage=`linear-gradient(#0005,#0008),url('${_assetURL(msg.shared.background_common)}')`; }
+  const refTitle=ov.querySelector('h2'); if(refTitle) refTitle.textContent='🧰 Baú compartilhado';
+  ov.querySelectorAll('[data-ref-store]').forEach(b=>b.onclick=()=>GS.refugioStore('shared','bag',Number(b.dataset.refStore)));
+  ov.querySelectorAll('[data-ref-take]').forEach(b=>b.onclick=()=>GS.refugioTake('shared',Number(b.dataset.refTake)));
+  ov.querySelectorAll('.ref-item').forEach(row=>row.onclick=e=>{if(e.target.closest('button'))return; const take=row.querySelector('[data-ref-take]'), store=row.querySelector('[data-ref-store]'); if(take)GS.refugioTake('shared',Number(take.dataset.refTake)); else if(store)GS.refugioStore('shared','bag',Number(store.dataset.refStore));});
+  // O SEU quarto abre direto o baú pessoal (mesma janela dividida do compartilhado);
+  // o quarto alheio abre o painel de visita, que não traz os itens.
+  ov.querySelectorAll('[data-ref-room]').forEach(b=>b.onclick=()=>b.dataset.refMine?_abrirBauDireto('room'):GS.openQuarto(b.dataset.refRoom));
+  ov.querySelectorAll('[data-ref-gold]').forEach(b=>b.onclick=()=>{const n=Number(ov.querySelector('#ref-shared-gold')?.value||0);GS.refugioGold('shared',b.dataset.refGold,n);});
+}
+function _renderQuartoPainel(msg){
+  _quartoState=msg; document.getElementById('quarto-overlay')?.remove();
+  const ov=document.createElement('div'); ov.id='quarto-overlay'; ov.className='refugio-overlay';
+  const editable=!!msg.can_edit, items=msg.items||[];
+  const options=(msg.backgrounds||[]).map(x=>`<option value="${_esc(x)}"${x===msg.background?' selected':''}>${_esc(x)}</option>`).join('');
+  ov.innerHTML=`<section class="refugio-box quarto-box" style="${msg.background?`background-image:linear-gradient(#0005,#0008),url('${_assetURL(msg.background)}')`:''}"><header><div><h2>🛏️ Quarto de ${_esc(msg.class_id||msg.owner||'aventureiro')}</h2><small>${editable?'Seu espaço privado':'Somente visualização'} · Renome individual: ${msg.renome_individual||0}</small></div><button data-q-close>✕</button></header><div class="refugio-grid"><div><h3>Baú privado ${editable?`(${items.length}/${msg.slot_limit||3})`:''}</h3>${editable?`<small>Seus ${msg.slot_limit||3} espaços (💰 ${msg.gold||0}) ficam na janela do baú, ao lado do seu inventário.</small>`:'<small>O baú privado não pode ser acessado por outro jogador.</small>'}</div><div><h3>Troféus</h3><div class="ref-trophies">${(msg.trophies||[]).map(t=>`<span title="${_esc(t.id||'troféu')}">${_esc(t.emoji||'🏆')}</span>`).join('')||'<small>Nenhum troféu alocado.</small>'}</div>${editable&&options?`<label>Fundo do quarto<select id="q-bg">${options}</select></label><button data-q-bg>Aplicar fundo</button>`:''}</div></div><footer><button data-q-close>Voltar ao refúgio</button></footer></section>`;
+  document.body.appendChild(ov);
+  if(typeof InventoryModal!=='undefined' && editable){ const chest=document.createElement('button'); chest.className='ref-chest-open'; chest.textContent='🧰 Abrir baú do herói'; chest.onclick=()=>InventoryModal.openStorage('room',msg); ov.querySelector('.refugio-box')?.insertBefore(chest,ov.querySelector('.refugio-grid')); }
+  // O baú pessoal (itens + ouro) mora na janela dividida — aqui ficam só troféus
+  // e o fundo do quarto. Duas telas para os mesmos 3 espaços era o que confundia.
+  ov.querySelectorAll('[data-q-close]').forEach(b=>b.onclick=()=>{ov.remove(); if(_refugioState)_renderRefugioPainel(_refugioState);});
+  if(editable){ const bg=ov.querySelector('[data-q-bg]'); if(bg)bg.onclick=()=>GS.quartoCustomize(ov.querySelector('#q-bg').value,msg.trophies); }
 }
 
 let _cdeFechar = null; // fecha (e limpa o listener de Esc) do quadro atualmente aberto, se houver
@@ -1600,7 +1693,7 @@ function _refreshCityLocation(msg){
   // O ponto de masmorra depende do destino vinculado — o servidor já omite do
   // payload o destino oculto/inexistente, então aqui é só a checagem final.
   const worldAdventures = (world.adventures || []);
-  const pointAllowed = (type, point) => type === 'caravana' || type === 'guilda'
+  const pointAllowed = (type, point) => type === 'caravana' || type === 'guilda' || type === 'refugio'
     || (type === 'dungeon'
       ? !!(point && point.aventura && worldAdventures.some(a => a.id === point.aventura))
       : type === 'cena'
@@ -1629,7 +1722,8 @@ function _refreshCityLocation(msg){
     ferreiro:{name:'Ferreiro',emoji:'⚒'}, mercador:{name:'Mercador',emoji:'🛒'},
     templo:{name:'Templo',emoji:'⛪'}, taverna:{name:'Taverna',emoji:'🍺'},
     guilda:{name:'Guilda',emoji:'⚔'}, caravana:{name:'Caravana de Viagem',emoji:'🧭'},
-    dungeon:{name:'Entrada da masmorra',emoji:'🚪'}, cena:{name:'Local',emoji:'💬'}
+    dungeon:{name:'Entrada da masmorra',emoji:'🚪'}, cena:{name:'Local',emoji:'💬'},
+    refugio:{name:'Refúgio dos Heróis',emoji:'🏰'}
   };
   Object.entries(cityPoints).forEach(([id, point]) => {
     if (_cityImg.hotWrap.querySelector('[data-city-point="' + id + '"]') || !point || !point.type) return;
@@ -2130,7 +2224,7 @@ const CITY_BUILDINGS = [
 // Um ponto da ilustração resolve DUAS coisas independentes: uma cena (se o
 // ponto tem `scene`) e uma loja (se o tipo do ponto é uma loja que a cidade
 // tem). As abas do modal são [aba de cena] + [abas de loja].
-function openShop(pointId, type){
+function openShop(pointId, type, sceneOverride){
   if(!GS.cityState){
     // city_state not yet received — request it and retry when it arrives
     GS.pendingShopOpen = pointId;
@@ -2140,8 +2234,8 @@ function openShop(pointId, type){
   }
   GS.pendingShopOpen = null;
   const shopId  = type || pointId;
-  const sceneId = GS.sceneIdOfPoint(pointId);
-  const scene   = sceneId ? GS.sceneOfPoint(pointId) : null;
+  const sceneId = sceneOverride || GS.sceneIdOfPoint(pointId);
+  const scene   = sceneId ? (GS.scenes()[sceneId] || null) : null;
   GS.activeShop = shopId;
   GS.activeScene = scene ? sceneId : null;
   GS.shopTabIdx = 0;
@@ -2188,7 +2282,7 @@ let _openCenaNpcId = null;
 function _renderCenaConversas(){
   const list=$('shop-items-list'); if(!list) return;
   const cena = GS.scenes()[GS.activeScene];
-  if(!cena || !cena.background){
+  if(!cena){
     list.innerHTML='<div class="cena-vazia">Este local ainda não possui frequentadores configurados.</div>';
     return;
   }
@@ -2236,6 +2330,26 @@ function _renderCenaConversas(){
   back.onclick=closeShop;
   const rep=document.createElement('p'); rep.className='cena-hint'; rep.textContent='★ Renome do grupo: '+Number(((GS.cityState||{}).reputacao||{}).renome||0);
   hud.appendChild(back); hud.appendChild(rep); scene.appendChild(hud);
+  // Refúgio: as cenas formam um caminho — externa → área comum → quarto do herói.
+  // Cada cena mostra o baú que existe nela MAIS a porta para a próxima; sem isso a
+  // área comum era um beco (só o baú coletivo, nenhuma forma de chegar ao quarto).
+  // Cena não vinculada no editor nunca deixa o botão sem resposta: o baú abre direto.
+  if(GS.activeShop==='refugio'){
+    const refugePoint=Object.values(GS.cityPoints()||{}).find(p=>p.type==='refugio')||{};
+    const cenaDe=key=>{const sid=refugePoint[key]; return (sid && GS.scenes()[sid]) ? sid : null;};
+    const irPara=(key,semCena)=>{const sid=cenaDe(key); if(sid) openShop('refugio','refugio',sid); else semCena();};
+    const isCommon=GS.activeScene===refugePoint.scene_comum, isRoom=GS.activeScene===refugePoint.scene_quarto;
+    const acoes=isRoom
+      ? [['🧰 Abrir baú do herói', ()=>_abrirBauDireto('room')],
+         ...(cenaDe('scene_comum') ? [['🚪 Voltar à área comum', ()=>irPara('scene_comum',GS.openRefugio)]] : [])]
+      : isCommon
+        ? [['🧰 Abrir baú compartilhado', ()=>_abrirBauDireto('shared')],
+           ['🛏️ Entrar no quarto do herói', ()=>irPara('scene_quarto',()=>_abrirBauDireto('room'))]]
+        : [['🚪 Entrar no Refúgio', ()=>irPara('scene_comum',GS.openRefugio)]];
+    const baus=document.createElement('div'); baus.className='refugio-scene-baus';
+    acoes.forEach(([txt,fn])=>{const b=document.createElement('button'); b.type='button'; b.textContent=txt; b.onclick=fn; baus.appendChild(b);});
+    scene.appendChild(baus);
+  }
   const hint=document.createElement('p'); hint.className='cena-hint'; hint.textContent='Clique em um grupo de frequentadores para conversar.'; scene.appendChild(hint);
   const keepOpen=(cena.slots||[]).find(slot=>slot.id===_openCenaNpcId && !slot.removed && slot.image);
   if(keepOpen) _showCenaDialogo(keepOpen, scene);
@@ -4490,6 +4604,13 @@ function _start2DHighlightLoop(){
 
 function updateTurnBadge(msg){
   $('round-badge').textContent = `Rodada ${msg.round}`;
+  if(msg.test_mode){
+    $('turn-badge').textContent = '🧪 TESTE LIVRE — selecione qualquer monstro';
+    $('turn-badge').style.background = '#237a4b';
+    $('turn-badge').style.color = '#fff';
+    updateTurnTimer(msg);
+    return;
+  }
   // Turno dos servos (logo após o mago): destaca em roxo.
   if(msg.animados_turn){
     const owner = msg.players.find(p=>p.id===msg.animados_turn);
@@ -5790,12 +5911,19 @@ function drawDragon(ctx){
 // usava as PNGs. Agora usa as mesmas imagens do 3D. Carrega lazy; enquanto não
 // carrega, drawHeroSprite cai no sprite procedural. Ao carregar, redesenha.
 const _hero2DImg = {};
+function _rerender2DAfterAssetLoad(){
+  // GS é um `const` global lexical vindo de gameState.js, não window.GS. No
+  // teste livre não há broadcasts contínuos para redesenhar PNGs recém-carregados.
+  if(!mode3D && GS.gameState){
+    try { renderMap(GS.gameState); } catch(_) {}
+  }
+}
 function _getHero2DImg(classId){
   if(!classId) return null;
   let img = _hero2DImg[classId];
   if(img === undefined){
     img = new Image();
-    img.onload = () => { if(!mode3D && window.GS && GS.gameState){ try{ renderMap(GS.gameState); }catch(_){} } };
+    img.onload = _rerender2DAfterAssetLoad;
     img.src = _assetURL(`assets/pawns/${classId}/frente.png`);
     _hero2DImg[classId] = img;
   }
@@ -5804,12 +5932,21 @@ function _getHero2DImg(classId){
 
 // Mesma ideia para os monstros: usa assets/pawns/monstros/<image>/<image>.png.
 const _mon2DImg = {};
+const _MONSTER_TYPE_DEFAULT_IMAGE = Object.freeze({
+  goblin: 'goblinCombatente',
+  skeleton: 'esqueletoHumano',
+  orc: 'orcGuerreiro',
+  dark_mage: 'necromante',
+});
+function _monsterImageName(monster){
+  return monster && (monster.image || _MONSTER_TYPE_DEFAULT_IMAGE[monster.type]) || null;
+}
 function _getMonster2DImg(imageName){
   if(!imageName) return null;
   let img = _mon2DImg[imageName];
   if(img === undefined){
     img = new Image();
-    img.onload = () => { if(!mode3D && window.GS && GS.gameState){ try{ renderMap(GS.gameState); }catch(_){} } };
+    img.onload = _rerender2DAfterAssetLoad;
     img.src = _assetURL(`assets/pawns/monstros/${imageName}/${imageName}.png`);
     _mon2DImg[imageName] = img;
   }
@@ -5823,7 +5960,7 @@ function _getPrisoner2DImg(imageName){
   let img = _pris2DImg[imageName];
   if(img === undefined){
     img = new Image();
-    img.onload = () => { if(!mode3D && window.GS && GS.gameState){ try{ renderMap(GS.gameState); }catch(_){} } };
+    img.onload = _rerender2DAfterAssetLoad;
     img.src = _assetURL(`assets/pawns/prisioneiros/${imageName}`);
     _pris2DImg[imageName] = img;
   }
@@ -5837,7 +5974,7 @@ function _getObjeto2DImg(imageName){
   let img = _obj2DImg[imageName];
   if(img === undefined){
     img = new Image();
-    img.onload = () => { if(!mode3D && window.GS && GS.gameState){ try{ renderMap(GS.gameState); }catch(_){} } };
+    img.onload = _rerender2DAfterAssetLoad;
     img.src = _assetURL(`assets/objetos/${imageName}`);
     _obj2DImg[imageName] = img;
   }
@@ -5981,7 +6118,8 @@ function drawOrientedMonster2D(ctx, m, hcx, hcy){
   ctx.strokeStyle='rgba(0,0,0,0.55)'; ctx.lineWidth=1.5; ctx.stroke();
   ctx.restore();
   // Criatura EM PÉ (billboard): orientação natural da arte; espelha para leste.
-  const img = m.image ? _getMonster2DImg(m.image) : null;
+  const imageName = _monsterImageName(m);
+  const img = imageName ? _getMonster2DImg(imageName) : null;
   ctx.save(); ctx.translate(mcx, mcy);
   if(f[0]===1) ctx.scale(-1, 1);   // encara leste → espelha (cabeça da arte é à esquerda)
   if(img && img.complete && img.naturalWidth){
@@ -6047,10 +6185,11 @@ function drawMonsterSprite(ctx, cx, cy, m){
 
   // Billboard PNG (assets/pawns/monstros/<image>) — igual aos heróis: alto, pés
   // na base, SEM recorte circular. Sem imagem (ex.: servos animados) → procedural.
-  const mImg = m.image ? _getMonster2DImg(m.image) : null;
+  const imageName = _monsterImageName(m);
+  const mImg = imageName ? _getMonster2DImg(imageName) : null;
   if(mImg && mImg.complete && mImg.naturalWidth){
     const ar = mImg.naturalWidth / mImg.naturalHeight;
-    if(_FIT_TILE_PAWNS.has(m.image)){
+    if(_FIT_TILE_PAWNS.has(imageName)){
       // Cobra + pedestal cabem INTEIROS no quadrado: largura e altura ≤ tile.
       // Ancorada na base (perto da sombra), sem ultrapassar o topo do tile.
       const alvo = CELL*_FIT_TILE_FRAC;
@@ -6058,7 +6197,7 @@ function drawMonsterSprite(ctx, cx, cy, m){
       if(ar >= 1) h = alvo/ar; else w = alvo*ar;
       const bottomY = CELL*0.47;            // base assenta perto da borda inferior
       ctx.drawImage(mImg, -w/2, bottomY - h, w, h);
-    } else if(_FILL_WIDTH_PAWNS.has(m.image)){
+    } else if(_FILL_WIDTH_PAWNS.has(imageName)){
       // Ogro: preenche a LARGURA do quadrado (sem invadir vizinhos); a altura
       // segue a proporção (mini imponente). Ancorado na base, como os demais.
       const feetY = r*0.82;
@@ -6124,7 +6263,7 @@ function computeVisionSet(state, me){
   // Mestre não tem `me` (não é um herói em state.players), então sem este
   // ramo cairia no `if(!me) return set` logo abaixo e ficaria com a mesma
   // névoa total de um herói recém-chegado.
-  if(GS.isMaster()){
+  if(GS.isMaster() || (state && state.test_mode)){
     if(state && state.explored) for(const [ex,ey] of state.explored) set.add(`${ex},${ey}`);
     if(state && state.monsters) for(const m of state.monsters) if(m && m.pos) set.add(`${m.pos[0]},${m.pos[1]}`);
     return set;
@@ -6193,14 +6332,15 @@ function renderMap(state){
   // também libera de graça baús/armadilhas/escadas/marcadores de sala (todos
   // gateados por exploredSet mais abaixo). BFS/alcance não usam isto para o
   // Mestre pois `me` é undefined (ele não é um herói em state.players).
-  if(GS.isMaster()){
+  if(GS.isMaster() || state.test_mode){
     const full = new Set();
     for(let y=0;y<H;y++) for(let x=0;x<W;x++) full.add(`${x},${y}`);
     exploredSet = full;
     terrainSet  = full;
   }
   const me=state.players.find(p=>p.id===GS.myPid&&p.alive);
-  const visionSet=computeVisionSet(state, me);
+  let visionSet=computeVisionSet(state, me);
+  if(GS.isMaster() || state.test_mode) visionSet = new Set(exploredSet);
   const {closed:doorClosed} = GS.doorSets(state);
 
   const isAnimadosTurn2D = state.animados_turn === GS.myPid;
@@ -6253,7 +6393,7 @@ function renderMap(state){
     ? _computeWeaponRangeTiles(state, me) : new Set();
 
   // Durante a mira de magia/arremesso, oculta realces de movimento/ataque (mostra alcance/área).
-  if(window._modoMagia || window._modoThrowItem || window._modoAnimarMortos){ reachable.clear(); attackable.clear(); }
+  if(window._modoMagia || window._modoMestreMira || window._modoThrowItem || window._modoAnimarMortos){ reachable.clear(); attackable.clear(); }
 
   // ── PASS 0: Void background — near-black with deep dungeon darkness
   ctx.fillStyle='#040308';
@@ -10401,10 +10541,11 @@ const GRIMORIO_CLIENT = {
     circulo:'primeiro', classe:['mage','cleric'],
     tipo:'alvo', alcance:4,
     custo:'🍖-1 💧-1',
-    resumo:'Vontade ou controla 1 ação.',
+    resumo:'Vontade ou você dirige o próximo turno do monstro.',
     descricao:`<b>Save:</b> Vontade<br>
-               <b>Falha:</b> caster controla próxima ação<br>
-               <b>Limitação:</b> sem habilidades especiais<br>
+               <b>Alvo:</b> 1 monstro (construtos, mortos-vivos e imunes a encantamento resistem)<br>
+               <b>Falha:</b> no próximo turno dele, VOCÊ dirige o monstro — movimento, ação principal, habilidades e itens<br>
+               <b>Duração:</b> 1 turno<br>
                <b>Custo:</b> 🍖-1 💧-1 + 1 slot`
   },
   medo: {
@@ -10615,10 +10756,11 @@ const GRIMORIO_CLIENT = {
     circulo:'terceiro', classe:['mage','cleric'],
     tipo:'alvo', alcance:5,
     custo:'🍖-1 💧-1',
-    resumo:'Vontade ou dominado 1d4 rodadas.',
+    resumo:'Vontade ou você dirige o monstro por 1d4+1 rodadas.',
     descricao:`<b>Save:</b> Vontade<br>
-               <b>Falha:</b> dominado 1d4 rodadas<br>
-               <b>Novo teste:</b> ao sofrer dano (mesma dificuldade)<br>
+               <b>Alvo:</b> 1 monstro (construtos, mortos-vivos e imunes a encantamento resistem)<br>
+               <b>Falha:</b> VOCÊ dirige o monstro a cada turno dele por 1d4+1 rodadas<br>
+               <b>Novo teste:</b> cada dano sofrido dá +2 cumulativo na próxima Vontade; passar rompe o controle<br>
                <b>Custo:</b> 🍖-1 💧-1 + 1 slot`
   },
   dominar_morto_vivo: {
@@ -11687,23 +11829,27 @@ function renderMasterPanel(state){
   host.classList.add('aberto');
 
   const mm = GS.masterManual();
+  const commandControl = GS.isCommandController();
   // A aba Ativo só é o default enquanto existe monstro na janela Manual.
   if(mm && window._masterTabAuto !== mm.mid){ window._masterTab = 'ativo'; window._masterTabAuto = mm.mid; }
   if(!mm) window._masterTabAuto = null;
-  const aba = window._masterTab || 'monstros';
+  const aba = commandControl ? 'ativo' : (window._masterTab || 'monstros');
 
   const nMon = (state.monsters || []).length;
   const corpo = aba === 'ativo'    ? _mpAbaAtivo(state)
               : aba === 'monstros' ? _mpAbaMonstros(state)
               :                      _mpAbaMestre(state);
 
-  host.innerHTML =
-    `<div class="mp-abas">
+  const abas = commandControl
+    ? `<div class="mp-abas"><button class="mp-aba on" data-aba="ativo">🗣️ Comando</button></div>`
+    : `<div class="mp-abas">
        <button class="mp-aba${aba==='ativo'?' on':''}"    data-aba="ativo">🎯 Ativo</button>
        <button class="mp-aba${aba==='monstros'?' on':''}" data-aba="monstros">📋 Monstros <span style="opacity:.6">${nMon}</span></button>
        <button class="mp-aba${aba==='mestre'?' on':''}"   data-aba="mestre">⚠️ Mestre</button>
-     </div>
-     <div class="mp-corpo">${corpo}</div>` +
+     </div>`;
+  host.innerHTML =
+    abas +
+     `<div class="mp-corpo">${corpo}</div>` +
     (mm ? `<div class="mp-rodape"><button class="mp-encerrar">Encerrar monstro</button></div>` : '');
 
   host.querySelectorAll('.mp-aba').forEach(b => {
@@ -11736,12 +11882,16 @@ function _mpCustoDe(a){
 // isto só decide o que fica clicável.
 const _MP_HAB_EXTRAIDAS = ['mestre_dos_mortos','sopro_dragao','amaldicoar_monstro',
                            'golpe_brutal','desaparecer_nas_sombras'];
+// Dano automático em quem já está agarrado. A ficha as declara 'passiva', mas
+// são A ação do turno da criatura — por isso passam na frente do corte abaixo.
+const _MP_ESMAGAR_PRESO = ['atq_mandibula','esmagar'];
 const _MP_NAO_IMPLEMENTADAS = ['encantar_vampirico','encantar_area_vampirico',
                                'encantar_supremo_vampirico'];
 function _mpAtivavel(a){
-  if(!a || a.action_type === 'passiva') return false;
+  if(!a) return false;
   if(_MP_NAO_IMPLEMENTADAS.includes(a.id)) return false;
-  if(_MP_HAB_EXTRAIDAS.includes(a.id)) return true;
+  if(_MP_HAB_EXTRAIDAS.includes(a.id) || _MP_ESMAGAR_PRESO.includes(a.id)) return true;
+  if(a.action_type === 'passiva') return false;
   if(a.action_type === 'magia') return true;   // servidor recusa as não implementadas
   if(a.save != null && a.dc != null) return true;
   return a.source === 'heroi' || a.source === 'guilda';
@@ -11763,6 +11913,7 @@ function _mpAbaAtivo(state){
   if(!m) return '<div class="mestre-vazio">Nenhum monstro em foco.<br>Clique num monstro no tabuleiro ou na aba Monstros.</div>';
   const mm = GS.masterManual();
   const manual = !!(mm && mm.mid === m.id);
+  const commandControl = GS.isCommandController();
   const hpPct = Math.max(0, Math.min(100, Math.round(100 * m.hp / (m.max_hp || m.hp || 1))));
 
   let h = `<div class="mp-head">
@@ -11816,7 +11967,8 @@ function _mpAbaAtivo(state){
   }
 
   // ── Magias e habilidades ──
-  const abis = (m.special_abilities || []).filter(a => a.action_type && a.action_type !== 'passiva');
+  const abis = (m.special_abilities || []).filter(
+    a => _MP_ESMAGAR_PRESO.includes(a.id) || (a.action_type && a.action_type !== 'passiva'));
   if(abis.length){
     h += `<div class="mp-sec">MAGIAS E HABILIDADES</div>`;
     abis.forEach(a => {
@@ -11875,9 +12027,13 @@ function _mpWireAtivo(host, state){
     el.onclick = () => {
       const i = parseInt(el.dataset.atk, 10);
       window._mpGolpeArmado = (window._mpGolpeArmado === i) ? null : i;
-      toast(window._mpGolpeArmado != null ? 'Golpe armado — clique num herói.' : 'Golpe desarmado.',
-            'var(--gold)');
-      renderMasterPanel(GS.gameState);
+      if(window._mpGolpeArmado == null){ _limparMiraMestre(); toast('Golpe desarmado.', 'var(--gold)'); }
+      else {
+        const atk=(m.attacks||[{}])[i]||{};
+        _iniciarMiraMestre({kind:'attack',caster:m,attackIndex:i,
+          range:atk.range ?? 1, icon:'⚔️',label:atk.name||'Golpe'});
+        toast('Golpe armado — clique numa casa vermelha.', 'var(--gold)');
+      }
     };
   });
   host.querySelectorAll('.mp-linha.hab').forEach(el => {
@@ -11942,6 +12098,11 @@ function _mpWireMonstros(host, state){
   host.querySelectorAll('.mestre-row[data-mid]').forEach(row => {
     row.onclick = () => {
       const mid = row.dataset.mid;
+      if (state.test_mode) {
+        window._mpFocoMid = mid;
+        GS.mestreSelecionarTeste(mid);
+        return;
+      }
       if(_masterSel.has(mid)) _masterSel.delete(mid); else _masterSel.add(mid);
       window._mpFocoMid = mid;
       renderMasterPanel(GS.gameState);
@@ -11976,10 +12137,20 @@ function _mpAbaMestre(state){
          <i>${_esc((f.texto || '').slice(0, 40))}${(f.texto || '').length > 40 ? '…' : ''}</i></span>
        </button>`).join('');
   }
+  // Só no teste do editor: é lá que o autor precisa saber por que uma criatura
+  // ou um objeto não apareceu com a arte certa.
+  if(state.test_mode){
+    h += `<div class="mp-sec">DIAGNÓSTICO</div>
+      <button class="mestre-diag-btn mp-linha hab">
+        <span class="txt">🔎 Arte 3D (modelos e imagens)</span>
+      </button>`;
+  }
   return h || '<div class="mestre-vazio">Sem reforços nem falas nesta masmorra.</div>';
 }
 
 function _mpWireMestre(host, state){
+  const diag = host.querySelector('.mestre-diag-btn');
+  if(diag) diag.onclick = () => abrirDiagnosticoArte3D();
   host.querySelectorAll('.mestre-reforco-btn').forEach(btn => {
     btn.onclick = () => {
       const t = btn.dataset.rtype;
@@ -11993,10 +12164,60 @@ function _mpWireMestre(host, state){
 }
 
 // Ativar (mestre): mira um herói no alcance e envia mestre_usar_habilidade.
+function _limparMiraMestre(){
+  window._modoMestreMira = null;
+  window._spellHL.range = new Set(); window._spellHL.area = new Set(); window._spellHL.double = new Set();
+  _aplicarSpellHL();
+  const leg=document.getElementById('legenda-mestre-mira'); if(leg) leg.remove();
+  if(typeof g3!=='undefined' && g3 && g3.renderer) g3.renderer.domElement.style.cursor='default';
+  document.removeEventListener('keydown', _keyMestreMira);
+}
+function _keyMestreMira(e){ if(e.key==='Escape'){ _limparMiraMestre(); toast('Mira cancelada.', '#888'); e.preventDefault(); } }
+function _iniciarMiraMestre(spec){
+  _limparMiraMestre();
+  const [x,y]=spec.caster.pos, range=Math.max(0,Number(spec.range ?? 1));
+  window._modoMestreMira=Object.assign({},spec,{range});
+  const alcance=new Set(); if(range>0) _addCheb(x,y,range,alcance);
+  window._spellHL.range=alcance; window._spellHL.area=new Set(); _aplicarSpellHL();
+  if(typeof g3!=='undefined' && g3 && g3.renderer) g3.renderer.domElement.style.cursor='crosshair';
+  const leg=document.createElement('div'); leg.id='legenda-mestre-mira';
+  leg.style.cssText='position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:rgba(10,8,5,.94);border:1px solid #ff4422;color:#ff8c66;font-family:Cinzel,serif;font-size:11px;letter-spacing:2px;padding:8px 20px;pointer-events:none;z-index:1000;';
+  leg.textContent=`${spec.icon||'🎯'} ${spec.label||'AÇÃO'} — clique numa casa vermelha | ESC cancela`;
+  document.body.appendChild(leg); document.addEventListener('keydown',_keyMestreMira);
+}
+function _atualizarMiraMestre(tx,ty){
+  const mode=window._modoMestreMira; if(!mode) return;
+  if(tx == null || ty == null){ window._spellHL.area=new Set(); _aplicarSpellHL(); return; }
+  const area=new Set(); if(mode.areaRadius>0) _addCheb(tx,ty,mode.areaRadius,area);
+  else if(mode.areaLado) _addQuadrado(tx,ty,mode.areaLado,area);
+  window._spellHL.area=area; _aplicarSpellHL();
+}
+function _clickMiraMestre(tx,ty){
+  const mode=window._modoMestreMira, st=GS.gameState; if(!mode||!st) return;
+  const d=Math.max(Math.abs(mode.caster.pos[0]-tx),Math.abs(mode.caster.pos[1]-ty));
+  if(mode.range>0 && d>mode.range){ toast('Casa fora do alcance.', 'var(--orange)'); return; }
+  const alvo=(st.players||[]).find(p=>p.alive&&p.pos[0]===tx&&p.pos[1]===ty)
+    || ((st.test_mode || GS.isCommandController())&&(st.monsters||[]).find(o=>o.id!==mode.caster.id&&o.hp>0&&o.pos[0]===tx&&o.pos[1]===ty))
+    || (mode.allowEmpty ? {id:null} : null);
+  if(!alvo){ toast('Clique numa criatura vÃ¡lida dentro dos quadrados vermelhos.', 'var(--orange)'); return; }
+  if(mode.kind==='attack') GS.mestreAtacarMonstro(mode.caster.id,alvo.id,mode.attackIndex);
+  else if(mode.kind==='ability') GS.mestreUsarHabilidade(mode.caster.id,mode.id,alvo.id);
+  else GS.mestreUsarMagia(mode.caster.id,mode.id,alvo.id,tx,ty,mode.dir);
+  _limparMiraMestre();
+}
+
 function _mestreAtivarHabilidade(m, abid){
   const st = GS.gameState; if(!st) return;
   const ab = (m.special_abilities||[]).find(a=>a.id===abid);
   if(!ab) return;
+  // Fichas legadas do Necromante/Xamã guardam magias em
+  // special_abilities. Elas precisam usar o catálogo GRIMORIO_CLIENT, que
+  // contém alcance, área e escala corretos; o fallback de habilidade entende
+  // ausência de `range` como corpo a corpo (1 casa).
+  if(ab.action_type === 'magia' && GRIMORIO_CLIENT[abid]){
+    _mestreAtivarMagia(m, abid);
+    return;
+  }
   if(abid === 'mestre_dos_mortos'){
     openTargetModal(`${ab.name||abid} — Escolha os esqueletos`, [
       {id:'esqueleto_humano', emoji:'💀', name:'Esqueleto Humano'},
@@ -12004,24 +12225,176 @@ function _mestreAtivarHabilidade(m, abid){
     ], 'choice', tipo=>GS.mestreUsarHabilidade(m.id, abid, null, tipo));
     return;
   }
+  // Esmagar/Mandíbula: o alvo é sempre quem já está agarrado — o servidor o
+  // resolve sozinho, então não há mira a fazer aqui.
+  if(_MP_ESMAGAR_PRESO.includes(abid)){
+    GS.mestreUsarHabilidade(m.id, abid, null); return;
+  }
   // Habilidade de editor (herói/guilda): self-buff, ativa direto sem alvo.
   if((ab.source === 'heroi' || ab.source === 'guilda') && !(ab.save != null && ab.dc != null)){
     GS.mestreUsarHabilidade(m.id, abid, null); return;
   }
   const rng = ab.range || null;
-  const alvos = (st.players||[]).filter(p => {
-    if(!p.alive) return false;
-    const dx=Math.abs(m.pos[0]-p.pos[0]), dy=Math.abs(m.pos[1]-p.pos[1]);
-    return rng!=null ? Math.max(dx,dy)<=rng : ((dx===1&&dy===0)||(dx===0&&dy===1));
-  });
-  if(!alvos.length){ toast(`Nenhum herói ${rng?('a até '+rng+'q'):'adjacente'}.`, 'var(--orange)'); return; }
-  openTargetModal(`${ab.name||abid} — Escolha o alvo`, alvos, 'player',
+  _iniciarMiraMestre({kind:'ability',caster:m,id:abid,range:rng ?? 1,
+    areaRadius:Number(ab.area_raio ?? ab.area_radius ?? (typeof ab.area==='number'?ab.area:0))||0,
+    icon:ab.icon||ab.icone,label:ab.name||abid});
+  return;
+  if(!alvos.length){ toast(`Nenhum alvo ${rng?('a até '+rng+'q'):'adjacente'}.`, 'var(--orange)'); return; }
+  openTargetModal(`${ab.name||abid} — Escolha o alvo`, alvos, st.test_mode ? 'monster' : 'player',
     (alvoId)=> GS.mestreUsarHabilidade(m.id, abid, alvoId));
 }
 function _monConjurador(m){
   return (m.monster_spells && m.monster_spells.length > 0) ||
          (m.special_abilities||[]).some(a => a.action_type === 'magia');
 }
+
+function _monstroSelecionadoTeste(){
+  const st = GS.gameState;
+  if(!st || !st.test_mode || !GS.isMaster()) return null;
+  return _mpMonstroAtivo(st);
+}
+
+function _fmtFichaMonstroLista(lista){
+  if(!Array.isArray(lista) || !lista.length) return 'Nenhuma';
+  return lista.map(v => {
+    if(typeof v === 'string') return v.replaceAll('_', ' ');
+    if(!v || typeof v !== 'object') return String(v);
+    const tipo = v.type || v.tipo || v.categoria || v.id || 'efeito';
+    const valor = v.bonus_flat ?? v.multiplier ?? v.valor ?? v.damage ?? '';
+    const desc = v.descricao || v.description || '';
+    return `${String(tipo).replaceAll('_',' ')}${valor !== '' ? ` (${valor})` : ''}${desc ? ` — ${desc}` : ''}`;
+  }).join(', ');
+}
+
+function fecharFichaMonstro(){
+  document.getElementById('ficha-monstro-overlay')?.remove();
+}
+
+function abrirFichaMonstro(m){
+  if(!m){ toast('Selecione um monstro primeiro.', 'var(--gold)'); return; }
+  fecharMenuHabilidades();
+  fecharMenuMagias();
+  fecharFichaMonstro();
+  const overlay = document.createElement('div');
+  overlay.id = 'ficha-monstro-overlay';
+  const ataques = (m.attacks && m.attacks.length) ? m.attacks
+    : (m.atk_bonus != null ? [{name:'Ataque', atk_bonus:m.atk_bonus, damage:m.damage}] : []);
+  const habilidades = m.special_abilities || [];
+  const magias = (m.monster_spells || []).map(cfg => {
+    const magia = GRIMORIO_CLIENT[cfg.id] || {nome:cfg.id};
+    return `${magia.icone || '✦'} ${magia.nome || cfg.id}`;
+  });
+  const imageName = _monsterImageName(m);
+  const imageSrc = imageName ? _assetURL(`assets/pawns/monstros/${imageName}/${imageName}.png`) : '';
+  const atributo = (rotulo, valor) => `<div><span>${rotulo}</span><b>${valor ?? '—'}</b></div>`;
+  overlay.innerHTML = `<article class="ficha-monstro" role="dialog" aria-modal="true" aria-label="Ficha de ${_esc(m.name||m.type)}">
+    <header class="fm-header">
+      ${imageSrc ? `<img src="${imageSrc}" alt="" onerror="this.style.display='none'">` : `<span class="fm-emoji">${m.emoji||'👾'}</span>`}
+      <div><h2>${_esc(m.name || m.type || 'Monstro')}</h2><p>${_esc(m.type || '')} · ND ${m.cr ?? '—'} · nível ${m.level ?? m.tier ?? 1}</p></div>
+      <button onclick="fecharFichaMonstro()" aria-label="Fechar">✕</button>
+    </header>
+    <div class="fm-body">
+      <div class="fm-vitais"><b>❤ ${m.hp}/${m.max_hp || m.hp}</b><b>🛡 CA ${m.ac ?? '—'}</b><b>👣 ${m.movement ?? '—'}</b><b>👁 ${m.vision_radius ?? '—'}</b></div>
+      <section><h3>ATRIBUTOS E RESISTÊNCIAS</h3><div class="fm-grid">
+        ${atributo('FOR',m.str_)}${atributo('DES',m.dex)}${atributo('CON',m.con_)}${atributo('INT',m.int_)}
+        ${atributo('FORT',m.fort)}${atributo('REF',m.ref_)}${atributo('VON',m.will)}${atributo('PORTE',m.porte||'médio')}
+      </div></section>
+      <section><h3>ATAQUES</h3>${ataques.length ? ataques.map(a => `<div class="fm-linha"><b>${_esc(a.name||'Ataque')}</b><span>${a.atk_bonus>=0?'+':''}${a.atk_bonus ?? '—'} · ${_esc(a.damage||'—')} · ${a.range ? `alcance ${a.range}` : 'corpo a corpo'} · ${a.num_attacks||1}×</span></div>`).join('') : '<p>Nenhum ataque cadastrado.</p>'}</section>
+      <section><h3>HABILIDADES</h3>${habilidades.length ? habilidades.map(a => `<div class="fm-linha"><b>${_esc(a.name||a.id)}</b><span>${_esc(a.descricao||a.description||a.desc||a.action_type||'')}</span></div>`).join('') : '<p>Nenhuma habilidade.</p>'}</section>
+      <section><h3>MAGIAS</h3><p>${magias.length ? _esc(magias.join(' · ')) : 'Nenhuma magia.'}</p></section>
+      <section><h3>DEFESAS DO BESTIÁRIO</h3><div class="fm-linha"><b>Imunidades</b><span>${_esc(_fmtFichaMonstroLista(m.immunities))}</span></div><div class="fm-linha"><b>Fraquezas</b><span>${_esc(_fmtFichaMonstroLista(m.weaknesses))}</span></div></section>
+      <section><h3>CARACTERÍSTICAS</h3><p>IA: ${_esc(m.ai_type||m.ai_profile||'padrão')} · tamanho ${_esc((m.size||[1,1]).join('×'))} · XP ${m.xp ?? '—'} · ouro ${m.gold ?? '—'}</p></section>
+    </div>
+    <footer><span>C ficha · H habilidades · M magias</span><button onclick="fecharFichaMonstro()">FECHAR</button></footer>
+  </article>`;
+  overlay.onclick = e => { if(e.target === overlay) fecharFichaMonstro(); };
+  document.body.appendChild(overlay);
+}
+
+function abrirMenuHabilidadesMonstro(m){
+  const habilidades = m && (m.special_abilities || []);
+  if(!m || !habilidades.length){ toast('Este monstro não possui habilidades.', 'var(--gold)'); return; }
+  fecharFichaMonstro();
+  fecharMenuMagias();
+  let overlay = document.getElementById('menu-habilidades-overlay');
+  if(!overlay){ overlay=document.createElement('div'); overlay.id='menu-habilidades-overlay'; document.body.appendChild(overlay); }
+  overlay.onclick = e => { if(e.target === overlay) fecharMenuHabilidades(); };
+  const mm = GS.masterManual();
+  const manual = !!(mm && mm.mid === m.id);
+  const ativas = habilidades.filter(a => a.action_type && a.action_type !== 'passiva' && a.action_type !== 'magia');
+  const passivas = habilidades.filter(a => !a.action_type || a.action_type === 'passiva');
+  window._menuHabilidadesDados = Object.fromEntries(habilidades.map(a => [a.id,a]));
+  const card = (a, ativa) => {
+    const custo = _mpCustoDe(a), bloqueada = custo==='principal' ? !!mm?.acao : custo==='bonus' ? !!mm?.bonus : false;
+    const usosMax = a.uses_per_day ?? a.uses_per_combat;
+    const usos = usosMax == null ? null : (m.ability_uses?.[a.id] ?? usosMax);
+    const recarga = m.ability_cooldowns?.[a.id] || 0;
+    const pode = ativa && manual && _mpAtivavel(a) && !bloqueada && (!recarga) && (usos == null || usos > 0);
+    return `<div class="mh-card${pode?' mh-acionavel':''}${recarga?' mh-cooldown':''}" data-monster-ability="${_esc(a.id)}"
+      onmouseenter="mostrarTooltipMenuHabilidade(event,'${_esc(a.id)}')" onmouseleave="ocultarTooltipMagia()">
+      ${recarga ? `<strong class="mh-cooldown-badge">⏳ ${recarga} R</strong>` : ''}
+      <span class="mh-icon">${abilityIconHtml(a,a.icon||a.icone||'✦')}</span><span class="mh-info"><b>${_esc(a.name||a.id)}</b><small>${_esc(a.descricao||a.description||a.desc||'')}</small><em>${ativa ? `${_MP_CUSTO_LBL[custo]}${usos!=null?` · ${usos}/${usosMax} usos`:''}` : 'PASSIVA'}</em></span>
+    </div>`;
+  };
+  overlay.innerHTML = `<section class="menu-habilidades" role="dialog" aria-modal="true"><header class="mh-header"><div><b>✦ HABILIDADES DO MONSTRO</b><small>${_esc(m.name||m.type)} · tecla H</small></div><button onclick="fecharMenuHabilidades()">✕</button></header><div class="mh-body">
+    <section class="mh-section"><h3>HABILIDADES ATIVAS</h3><div class="mh-list">${ativas.length?ativas.map(a=>card(a,true)).join(''):'<p class="mh-empty">Nenhuma habilidade ativa.</p>'}</div></section>
+    <section class="mh-section"><h3>PASSIVAS</h3><div class="mh-list">${passivas.length?passivas.map(a=>card(a,false)).join(''):'<p class="mh-empty">Nenhuma passiva.</p>'}</div></section>
+  </div></section>`;
+  overlay.querySelectorAll('.mh-card.mh-acionavel[data-monster-ability]').forEach(el => el.onclick=()=>{ fecharMenuHabilidades(); _mestreAtivarHabilidade(m,el.dataset.monsterAbility); });
+  requestAnimationFrame(()=>overlay.classList.add('open'));
+}
+
+function _mestreAtivarMagia(m, sid){
+  const magia = GRIMORIO_CLIENT[sid] || {};
+  const tipo = magia.tipo;
+  if(['buff_self','area_centrada'].includes(tipo)) return GS.mestreUsarMagia(m.id,sid,m.id);
+  const alcance = _alcanceMagiaCli(magia, m.level || m.tier || 1);
+  const raio = magia.area_raio != null ? magia.area_raio
+    : (magia.area != null ? magia.area : (['area','area_persistente','area_fixa'].includes(tipo) ? 2 : 0));
+  _iniciarMiraMestre({kind:'spell',caster:m,id:sid,range:alcance,
+    allowEmpty:['area','area_persistente','area_fixa'].includes(tipo),
+    areaRadius:Number(raio)||0, areaLado:magia.area_lado,
+    icon:magia.icone,label:magia.nome||sid});
+  return;
+  const st=GS.gameState;
+  const incluirSelf=['alvo_aliado','buff_aliado'].includes(tipo);
+  const noTeste = !!st.test_mode;
+  const suporteMonstro = incluirSelf;
+  const fonte = noTeste || suporteMonstro
+    ? (st.monsters||[]).filter(o=>o.hp>0 && (incluirSelf || o.id!==m.id))
+    : (st.players||[]).filter(o=>o.alive);
+  const alcanceLegacy = _alcanceMagiaCli(magia, m.level || m.tier || 1);
+  const alvos=fonte.filter(o=>{
+    const d=Math.max(Math.abs(m.pos[0]-o.pos[0]),Math.abs(m.pos[1]-o.pos[1]));
+    return alcanceLegacy <= 0 || d <= alcanceLegacy;
+  });
+  if(!alvos.length){ toast('Nenhum monstro disponível como alvo.', 'var(--orange)'); return; }
+  openTargetModal(`${magia.icone||'✦'} ${magia.nome||sid} — escolha o alvo`,alvos,'monster',id=>GS.mestreUsarMagia(m.id,sid,id));
+}
+
+function abrirMenuMagiasMonstro(m){
+  const configs=m && (m.monster_spells||[]);
+  if(!m || !configs.length){ toast('Este monstro não possui magias.', 'var(--gold)'); return; }
+  fecharFichaMonstro();
+  fecharMenuHabilidades();
+  let overlay=document.getElementById('menu-magias-overlay');
+  if(!overlay){ overlay=document.createElement('div'); overlay.id='menu-magias-overlay'; document.body.appendChild(overlay); }
+  overlay.onclick=e=>{if(e.target===overlay)fecharMenuMagias();};
+  const mm=GS.masterManual(), manual=!!(mm&&mm.mid===m.id), round=GS.gameState?.round||0;
+  const cards=configs.map(cfg=>{
+    const magia=GRIMORIO_CLIENT[cfg.id]||{id:cfg.id,nome:cfg.id};
+    const restante=cfg.limit_mode==='cooldown' ? Math.max(0,(m.spell_cooldowns?.[cfg.id]||0)-round) : 0;
+    const usosMax=Math.max(1,Number(cfg.uses_per_combat||1));
+    const usos=cfg.limit_mode==='cooldown' ? null : (m.spell_uses?.[cfg.id]??usosMax);
+    const bloqueada=!manual||!!mm?.acao||restante>0||(usos!=null&&usos<=0)||['utilidade','reacao'].includes(magia.tipo);
+    return `<div class="mm-magia${bloqueada?'':' mm-acionavel'}" data-monster-spell="${_esc(cfg.id)}" onmouseenter="mostrarTooltipMagia('${_esc(cfg.id)}', event)" onmouseleave="ocultarTooltipMagia()"><span class="mm-magia-icon">${magiaIconHTML(magia,34)}</span><span><b>${_esc(magia.nome||cfg.id)}</b><small>${_LABEL_CIRCULO[magia.circulo]||''}${usos!=null?` · ${usos}/${usosMax} usos`:''}${restante?` · recarga ${restante}r`:''}</small></span></div>`;
+  }).join('');
+  overlay.innerHTML=`<section class="menu-magias" role="dialog" aria-modal="true"><header class="mm-header"><div><b>✦ MAGIAS DO MONSTRO</b><small>${_esc(m.name||m.type)} · tecla M</small></div><button onclick="fecharMenuMagias()">✕</button></header><div class="mm-body"><section><h3>MAGIAS DISPONÍVEIS</h3><div class="mm-list">${cards}</div></section></div></section>`;
+  overlay.querySelectorAll('.mm-magia.mm-acionavel[data-monster-spell]').forEach(el=>el.onclick=()=>{fecharMenuMagias();_mestreAtivarMagia(m,el.dataset.monsterSpell);});
+  requestAnimationFrame(()=>overlay.classList.add('open'));
+}
+
+window.fecharFichaMonstro=fecharFichaMonstro;
 function _mestreUsarItemFicha(m, iid){
   const st = GS.gameState; if(!st) return;
   const it = (m.equipment_consumables||[]).find(i=>i.id===iid);
@@ -12045,14 +12418,14 @@ function _monstroEmCasa(tx, ty){
 // Casas alcançáveis pelo monstro Manual (autoritativo — vem do servidor).
 function _masterReachSet(state){
   const s = new Set();
-  if(GS.isMaster() && state && Array.isArray(state.master_manual_reach))
+  if(GS.canControlMonster() && state && Array.isArray(state.master_manual_reach))
     state.master_manual_reach.forEach(([x,y]) => s.add(`${x},${y}`));
   return s;
 }
 // Heróis no alcance de ataque do monstro Manual (realce vermelho + clique-atacar).
 function _masterAttackSet(state){
   const s = new Set();
-  if(!(GS.isMaster() && state && state.master_manual_mid)) return s;
+  if(!(GS.canControlMonster() && state && state.master_manual_mid)) return s;
   if(!GS.masterPodeAtacar()) return s;
   const mm = (state.monsters||[]).find(x=>x.id===state.master_manual_mid);
   if(!mm) return s;
@@ -12070,6 +12443,12 @@ function _masterAttackSet(state){
     const dx=Math.abs(mm.pos[0]-p.pos[0]), dy=Math.abs(mm.pos[1]-p.pos[1]);
     const inR = rng!=null ? Math.max(dx,dy)<=rng : ((dx===1&&dy===0)||(dx===0&&dy===1));
     if(inR) s.add(`${p.pos[0]},${p.pos[1]}`);
+  }
+  if(GS.isCommandController()) for(const o of (state.monsters||[])){
+    if(o.id === mm.id || o.hp <= 0) continue;
+    const dx=Math.abs(mm.pos[0]-o.pos[0]), dy=Math.abs(mm.pos[1]-o.pos[1]);
+    const inR = rng!=null ? Math.max(dx,dy)<=rng : ((dx===1&&dy===0)||(dx===0&&dy===1));
+    if(inR) s.add(`${o.pos[0]},${o.pos[1]}`);
   }
   return s;
 }
@@ -12170,7 +12549,7 @@ function renderMinimapaCR(){
 function renderMyPanel(state){
   // Mestre: sem ficha de personagem — mostra o HUD de controle de monstros
   // em vez da ficha normal (ele não está em state.players).
-  if(GS.isMaster()){
+  if(GS.canControlMonster()){
     renderMasterPanel(state);
     const mp = document.getElementById('my-panel');
     if(mp) mp.style.display = 'none';
@@ -14298,6 +14677,7 @@ function _setup2DTouch(){
 $('dungeon-canvas').addEventListener('mousemove', e=>{
   if(!GS.gameState) return;
   const [tx,ty]=canvasTile(e);
+  if(window._modoMestreMira){ _atualizarMiraMestre(tx,ty); return; }
   // Mira de MAGIA (2D): a área verde segue o cursor.
   if(window._modoMagia){ _recomputarAreaMagia(tx, ty); return; }
   // Mira de ARREMESSO DE ÁREA (2D): a área verde segue o cursor (irmã da magia).
@@ -14763,7 +15143,7 @@ function init3D(state){
   scene.background = new T.Color(AMB.scene.bgColor);
   // Subtle fog — keeps depth cue without hiding explored areas.
   // Mestre: sem fog — enxerga tiles distantes com nitidez total (visão sem névoa).
-  scene.fog = GS.isMaster() ? null : new T.FogExp2(AMB.scene.fogColor, AMB.scene.fogDensity);
+  scene.fog = (GS.isMaster() || state.test_mode) ? null : new T.FogExp2(AMB.scene.fogColor, AMB.scene.fogDensity);
 
   // ── Renderer
   const renderer = new T.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
@@ -17091,7 +17471,83 @@ const _glbErroMsg = {};
 // morre na hora, com status 0 e sem resposta. Abrir conexão nova resolve, então
 // vale insistir antes de marcar 'erro' — que é definitivo e some com o objeto
 // até a página ser recarregada.
-const GLB_TENTATIVAS = 2;
+const GLB_TENTATIVAS = 3;
+
+// ── Auto-recuperação de arte que falhou por REDE ─────────────────────────────
+// Marcar um arquivo como 'erro' é DEFINITIVO: ele some (ou vira miniatura
+// genérica) até a página ser recarregada. Isso está certo para 404, mas é ruim
+// para falha de conexão — que acontece em rajada quando o mapa inteiro é
+// revelado de uma vez (teste do editor / visão do Mestre) e pede dezenas de
+// arquivos ao mesmo tempo. Aqui a falha de rede agenda uma nova tentativa:
+// limpa a marca de erro e redesenha, para o modelo real substituir o fallback.
+const _ASSET_RETRY_MS      = 2000;
+const _ASSET_MAX_RECARGAS  = 3;
+const _assetRecargas = {};     // chave -> nº de recargas já agendadas
+// Muda a cada recarga: entra na assinatura da figura do monstro para forçar a
+// reconstrução do peão (senão obterFig reusaria o que já está na cena).
+let _arteGen = 0;
+
+// Descobre o status HTTP de um arquivo que acabou de falhar. Existe porque o
+// carregador de textura usa uma <img>, e o evento de erro dela não diz se o
+// arquivo não existe (404) ou se a conexão caiu — distinção que decide entre
+// insistir e desistir. Só é chamado NA FALHA, então não custa nada no caminho
+// feliz. Devolve 0 quando nem a conexão foi feita.
+function _statusDoArquivo(url){
+  if(!window.fetch) return Promise.resolve(0);
+  return fetch(url, { method: 'GET' }).then(r => r.status).catch(() => 0);
+}
+
+// Erro com status HTTP (404/403) é definitivo; sem status = falha de conexão.
+function _erroDefinitivoArte(error){
+  const alvo = error && error.target;
+  return !!(alvo && typeof alvo.status === 'number' && alvo.status > 0);
+}
+
+function _agendarRecargaArte(chave, error, limpar){
+  if(_erroDefinitivoArte(error)) return;
+  const n = _assetRecargas[chave] || 0;
+  if(n >= _ASSET_MAX_RECARGAS) return;
+  _assetRecargas[chave] = n + 1;
+  setTimeout(() => {
+    limpar();
+    _arteGen++;
+    if(GS.gameState){ try { renderMap(GS.gameState); } catch(_){} }
+  }, _ASSET_RETRY_MS * (n + 1));
+}
+
+// ── Fila de carregamento de arte ─────────────────────────────────────────────
+// Ao entrar numa masmorra (e principalmente no teste do editor, que revela o
+// mapa inteiro de uma vez) o cliente pede TODOS os modelos e texturas no mesmo
+// instante. O servidor é um laço asyncio só: uma dezena de .glb de vários MB
+// disputando a vez é exatamente o cenário em que pedidos morrem na rede. A fila
+// mantém no máximo _ASSET_PARALELO downloads em voo; o resto espera a sua vez.
+const _ASSET_PARALELO = 4;
+let _assetEmVoo = 0;
+const _assetFila = [];
+
+function _enfileirarArte(iniciar){
+  _assetFila.push(iniciar);
+  _bombearFilaArte();
+}
+
+function _bombearFilaArte(){
+  while(_assetEmVoo < _ASSET_PARALELO && _assetFila.length){
+    const iniciar = _assetFila.shift();
+    _assetEmVoo++;
+    // `terminou` é chamado UMA vez por download (sucesso ou falha); a guarda
+    // impede que um carregador distraído libere duas vagas e estoure o teto.
+    let fechado = false;
+    const terminou = () => {
+      if(fechado) return;
+      fechado = true;
+      _assetEmVoo--;
+      _bombearFilaArte();
+    };
+    try { iniciar(terminou); }
+    catch(e){ console.warn('[arte] falha ao iniciar download:', e); terminou(); }
+  }
+}
+
 function _glbVaiRetentar(error, restam){
   if(restam <= 0) return false;
   const alvo = error && error.target;
@@ -17121,10 +17577,11 @@ function _loadDecorGLB(T, path, cb){
   if (_decorGLBQueue[path]) { _decorGLBQueue[path].push(cb); return; }
 
   _decorGLBQueue[path] = [cb];
-  const tentar = (restam) => {
+  const tentar = (restam, liberarVaga) => {
     new T.GLTFLoader().load(
       _assetURL(path),
       gltf => {
+        liberarVaga();
         const template = gltf.scene;
         template.traverse(o => {
           if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
@@ -17135,16 +17592,26 @@ function _loadDecorGLB(T, path, cb){
       },
       undefined,
       error => {
-        if (_glbVaiRetentar(error, restam)) { setTimeout(() => tentar(restam - 1), 250); return; }
-        console.warn(`[GLB] falha ao carregar decoração ${path}:`, error);
+        // A retentativa reentra na FILA: sem isso ela furaria o teto de paralelismo
+        // justamente quando a rede já está congestionada.
+        if (_glbVaiRetentar(error, restam)) {
+          liberarVaga();
+          setTimeout(() => _enfileirarArte(v => tentar(restam - 1, v)), 250);
+          return;
+        }
+        liberarVaga();
+        console.warn(`[GLB] falha ao carregar decoração ${path}: ${_glbMotivo(error)}`);
         _glbErroMsg[path] = _glbMotivo(error);
         _decorGLBCache[path] = 'erro';
         _decorGLBQueue[path].forEach(fn => fn(null));
         delete _decorGLBQueue[path];
+        // Falha de rede: tenta de novo mais tarde — o renderMap3D reconstrói a
+        // decoração com o GLB assim que a marca de erro sai do cache.
+        _agendarRecargaArte('decor:' + path, error, () => { delete _decorGLBCache[path]; });
       }
     );
   };
-  tentar(GLB_TENTATIVAS);
+  _enfileirarArte(liberarVaga => tentar(GLB_TENTATIVAS, liberarVaga));
 }
 
 function _buildObjetoGLB(decorId, imageName, path, wCells, hCells, facing){
@@ -17315,7 +17782,7 @@ function renderMap3D(state){
   // Mestre: sem névoa — todos os meshes de tile/porta/decoração ficam visíveis
   // (mesma lógica-espelho do renderMap 2D). `me` continua undefined (Mestre
   // não é herói), então BFS/alcance abaixo não usam isto.
-  if(GS.isMaster()){
+  if(GS.isMaster() || state.test_mode){
     const full = new Set();
     for(let y=0;y<H;y++) for(let x=0;x<W;x++) full.add(`${x},${y}`);
     exploredSet = full;
@@ -17323,7 +17790,8 @@ function renderMap3D(state){
   }
   const { closed:doorClosed3D } = GS.doorSets(state);
   const me = state.players.find(p => p.id===GS.myPid && p.alive);
-  const visionSet = computeVisionSet(state, me);
+  let visionSet = computeVisionSet(state, me);
+  if(GS.isMaster() || state.test_mode) visionSet = new Set(exploredSet);
 
   // Reachable tiles (movement highlight)
   const isAnimadosTurn3D = state.animados_turn === GS.myPid;
@@ -17373,7 +17841,7 @@ function renderMap3D(state){
   }
 
   // Durante a mira de magia, oculta realces de movimento/ataque (mostra alcance/área).
-  if(window._modoMagia || window._modoThrowItem || window._modoAnimarMortos){ reachable.clear(); attackable3d.clear(); }
+  if(window._modoMagia || window._modoMestreMira || window._modoThrowItem || window._modoAnimarMortos){ reachable.clear(); attackable3d.clear(); }
 
   // ── Tile visibility
   for(let y=0; y<H; y++){
@@ -17601,7 +18069,7 @@ function renderMap3D(state){
         continue;
       }
 
-      const glbPath = (d.image && DECOR_GLB_MODELS[d.image]) || DECOR_GLB_TYPES[d.type];
+      const glbPath = d.model3d || (d.image && DECOR_GLB_MODELS[d.image]) || DECOR_GLB_TYPES[d.type];
       if (glbPath && _decorGLBCache[glbPath] !== 'erro') {
         // ── Modelo 3D real (GLB) ──
         if (!mesh || mesh.userData.glbPath !== glbPath) {
@@ -17706,6 +18174,10 @@ function renderMap3D(state){
     state.current_turn, state.animados_turn, GS.myPid,
     g3.selectedPos, _animadoSel,
     state.explored.length, [...visionSet].sort().join('|'),
+    // Arte liberada para nova tentativa depois de falhar por rede. Sem isto o
+    // bloco inteiro de entidades é pulado (nada no estado mudou) e o peão fica
+    // com a miniatura genérica para sempre, mesmo com o arquivo já disponível.
+    _arteGen,
   ]);
   if(entitySig !== g3._entitySig){
   g3._entitySig = entitySig;
@@ -17801,12 +18273,16 @@ function renderMap3D(state){
     const [mx,my] = m.pos;
     if(!visionSet.has(`${mx},${my}`)) continue;
     const mSel = g3.selectedPos && g3.selectedPos[0]===mx && g3.selectedPos[1]===my;
+    const imageName = _monsterImageName(m);
     obterFig(`mon:${m.id}`,
-      JSON.stringify([m.type, m.image, !!mSel, m.porte, m.vscale, !!m.oriented, m.facing, m.em_chamas_rodadas > 0,
-        m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, m.vision_radius, GS.sorrateiroAtivo()]),
+      // _arteGen: muda quando uma arte que falhou por rede é liberada para nova
+      // tentativa — sem ele o peão continuaria com a miniatura genérica, porque
+      // a assinatura seria idêntica e obterFig reusaria a figura já construída.
+      JSON.stringify([m.type, imageName, m.model3d, !!mSel, m.porte, m.vscale, !!m.oriented, m.facing, m.em_chamas_rodadas > 0,
+        m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, m.vision_radius, GS.sorrateiroAtivo(), _arteGen]),
       () => {
-        const f = build3DFig('#c82020', true, false, false, mx, my, null, m.type, mSel, m.image, m.porte, m.oriented, m.facing, m.em_chamas_rodadas > 0,
-          m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, m.vision_radius);
+        const f = build3DFig('#c82020', true, false, false, mx, my, null, m.type, mSel, imageName, m.porte, m.oriented, m.facing, m.em_chamas_rodadas > 0,
+          m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, m.vision_radius, m.model3d);
         const vs = Array.isArray(m.vscale) ? m.vscale : [1, 1];
         const sx = Math.max(.2, Math.min(4, Number(vs[0]) || 1));
         const sy = Math.max(.2, Math.min(4, Number(vs[1]) || 1));
@@ -18154,13 +18630,17 @@ const _heroGLBQueue  = {};   // classId -> [callbacks]
 // ficha, a IA e a arte 2D continuam usando exatamente os mesmos identificadores.
 // O PNG existente permanece como fallback na visão 3D e como miniatura da visão 2D.
 const _MONSTER_GLB_MODELS = Object.freeze({
+  // Identificadores de `image` do bestiário.
   goblinArqueiro:    'assets/models3d/monstros/goblin_arqueiro.glb',
   goblinCombatente:  'assets/models3d/monstros/goblin_combatente.glb',
+  goblinDual:        'assets/models3d/monstros/goblin_combatente.glb',
+  xamaGoblin:        'assets/models3d/monstros/xama_goblin.glb',
   esqueletoHumano:   'assets/models3d/monstros/esqueletoHumano.glb',
   crocodiloJovem:    'assets/models3d/monstros/crocodilo.glb',
   cobraVenenosa:     'assets/models3d/monstros/cobra_venenosa.glb',
   cobraConstritora:  'assets/models3d/monstros/cobra_constritora.glb',
   bugbear:           'assets/models3d/monstros/bugbear.glb',
+  bugber:            'assets/models3d/monstros/bugber.glb',
   aranhasombria:     'assets/models3d/monstros/aranha.glb',
   escorpiaodepedra:  'assets/models3d/monstros/escorpiao.glb',
   devoradorOrganico: 'assets/models3d/monstros/devorador_organico.glb',
@@ -18175,9 +18655,51 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   ogroClava:         'assets/models3d/monstros/ogro_lanca.glb',
   ogroLanca:         'assets/models3d/monstros/ogro_lanca.glb',
   elemental_ar:      'assets/models3d/monstros/elemental_ar.glb',
+  elemental_fogo:    'assets/models3d/monstros/elemental_fogo.glb',
+  elemental_gelo:    'assets/models3d/monstros/elemental_gelo.glb',
   lobisomem:         'assets/models3d/monstros/lobisomem.glb',
+  cria_vampirica:    'assets/models3d/monstros/cria_vampirica.glb',
   rato_gicante:      'assets/models3d/monstros/rato_gicante.glb',
+  escorpiaodepedra_original: 'assets/models3d/monstros/escorpiao.glb',
+  estrangulador:     'assets/models3d/monstros/estrangulador.glb',
+  ferrao_dos_charcos:'assets/models3d/monstros/ferrao_dos_charcos.glb',
+  garalux:           'assets/models3d/monstros/garalux.glb',
+  lacralion:         'assets/models3d/monstros/lacralion.glb',
+  molochos:          'assets/models3d/monstros/molochos.glb',
+
+  // Fallback por `type`: importante para monstros antigos/autorados que não
+  // possuem `image` (por exemplo, os Goblins comuns da dungeon Floresta).
+  goblin:             'assets/models3d/monstros/goblin_combatente.glb',
+  goblin_arqueiro:    'assets/models3d/monstros/goblin_arqueiro.glb',
+  goblin_combatente:  'assets/models3d/monstros/goblin_combatente.glb',
+  goblin_dual:        'assets/models3d/monstros/goblin_combatente.glb',
+  goblin_xama:        'assets/models3d/monstros/xama_goblin.glb',
+  esqueleto_humano:   'assets/models3d/monstros/esqueletoHumano.glb',
+  esqueleto_humano_customizado: 'assets/models3d/monstros/esqueletoHumano.glb',
+  crocodilo_jovem:    'assets/models3d/monstros/crocodilo.glb',
+  cobra_venenosa:     'assets/models3d/monstros/cobra_venenosa.glb',
+  cobra_constritora:  'assets/models3d/monstros/cobra_constritora.glb',
+  aranha_sombria:     'assets/models3d/monstros/aranha.glb',
+  escorpiao_pedra:    'assets/models3d/monstros/escorpiao.glb',
+  escorpiao_de_pedra_customizado: 'assets/models3d/monstros/escorpiao.glb',
+  escorpiao_pequeno:  'assets/models3d/monstros/escorpiao.glb',
+  devorador_organico: 'assets/models3d/monstros/devorador_organico.glb',
+  devorador_metal:    'assets/models3d/monstros/devorador_de_metal.glb',
+  kobold_lanceiro:    'assets/models3d/monstros/kobold.glb',
+  kobold_besteiro:    'assets/models3d/monstros/kobold.glb',
+  lagarto_carniceiro: 'assets/models3d/monstros/lagarto_carniceiro.glb',
+  lobo_cinzento:      'assets/models3d/monstros/lobo.glb',
+  urso_negro:         'assets/models3d/monstros/urso.glb',
+  urso_negro_customizado: 'assets/models3d/monstros/urso.glb',
+  zumbi_infectado:    'assets/models3d/monstros/zumbi.glb',
+  ogro_clava:         'assets/models3d/monstros/ogro_lanca.glb',
+  ogro_lanca:         'assets/models3d/monstros/ogro_lanca.glb',
+  escravo_vampirico:  'assets/models3d/monstros/cria_vampirica.glb',
+  rato_gigante:       'assets/models3d/monstros/rato_gicante.glb',
 });
+function _monsterGLBPath(imageName, monsterType){
+  return _MONSTER_GLB_MODELS[imageName] || _MONSTER_GLB_MODELS[monsterType] || null;
+}
 const _monsterGLBCache = {};  // caminho -> template | 'erro'
 const _monsterGLBQueue = {};  // caminho -> [callbacks]
 
@@ -18293,10 +18815,11 @@ function _loadMonsterGLB(T, path, cb) {
   if (_monsterGLBQueue[path]) { _monsterGLBQueue[path].push(cb); return; }
 
   _monsterGLBQueue[path] = [cb];
-  const tentar = (restam) => {
+  const tentar = (restam, liberarVaga) => {
     new T.GLTFLoader().load(
       _assetURL(path),
       gltf => {
+        liberarVaga();
         const template = gltf.scene;
         template.traverse(o => {
           if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; _prepararMaterialMiniatura(o.material); }
@@ -18307,30 +18830,44 @@ function _loadMonsterGLB(T, path, cb) {
       },
       undefined,
       error => {
-        if (_glbVaiRetentar(error, restam)) { setTimeout(() => tentar(restam - 1), 250); return; }
-        console.warn(`[GLB] falha ao carregar miniatura de monstro ${path}:`, error);
+        if (_glbVaiRetentar(error, restam)) {
+          liberarVaga();
+          setTimeout(() => _enfileirarArte(v => tentar(restam - 1, v)), 250);
+          return;
+        }
+        liberarVaga();
+        console.warn(`[GLB] falha ao carregar miniatura de monstro ${path}: ${_glbMotivo(error)}`);
         _glbErroMsg[path] = _glbMotivo(error);
         _monsterGLBCache[path] = 'erro';
         _monsterGLBQueue[path].forEach(fn => fn(null));
         delete _monsterGLBQueue[path];
+        _agendarRecargaArte('mon:' + path, error, () => { delete _monsterGLBCache[path]; });
       }
     );
   };
-  tentar(GLB_TENTATIVAS);
+  _enfileirarArte(liberarVaga => tentar(GLB_TENTATIVAS, liberarVaga));
 }
 
 // Usa o GLB real quando disponível. O molde é clonado para cada criatura;
 // recursos gráficos ficam em cache e nunca são liberados ao remover um peão.
-function _makeMonsterPawn3D(T, grp, imageName, Y0, facing, oriented, onMissing) {
-  const path = _MONSTER_GLB_MODELS[imageName];
+// `glbPath` vem JÁ RESOLVIDO de build3DFig (que considera o `model3d` gravado na
+// criatura). Sem esse parâmetro esta função recalculava o caminho só pelas
+// tabelas e descartava o `model3d`: build3DFig entrava no ramo "tem GLB" e aqui
+// dava `path = null` → onMissing → peão genérico, justamente nas criaturas cujo
+// modelo foi escolhido no editor.
+function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented, onMissing, glbPath) {
+  const path = glbPath || _monsterGLBPath(imageName, monsterType);
   if (!path) { if (onMissing) onMissing(); return false; }
   const montar = template => {
     if (!template) { if (onMissing) onMissing(); return; }
     const inst = template.clone();
     const box = new T.Box3().setFromObject(inst);
     const size = box.getSize(new T.Vector3());
-    // Crocodilos ocupam duas casas; os demais cabem inteiros em sua própria casa.
-    const footprint = oriented ? 1.86 : 0.94;
+    // No enquadramento geral do modo de teste, o limite antigo de 0,94 deixava
+    // modelos quase cúbicos (Goblins, esqueletos e devoradores) com menos de uma
+    // casa de altura, parecendo pontos brancos. O mesmo limite visual usado pelos
+    // billboards mantém a miniatura reconhecível sem ocupar duas casas inteiras.
+    const footprint = oriented ? 1.86 : 1.45;
     const scale = Math.min(
       2.05 / Math.max(size.y, 1e-3),
       footprint / Math.max(size.x, size.z, 1e-3)
@@ -18343,7 +18880,10 @@ function _makeMonsterPawn3D(T, grp, imageName, Y0, facing, oriented, onMissing) 
     const wrap = new T.Group();
     wrap.add(inst);
     wrap.scale.setScalar(scale);
-    wrap.rotation.y = _facingToRotY(facing);
+    // Os GLBs dos monstros foram exportados com a frente 90° deslocada em
+    // relação ao eixo calibrado dos heróis. Mantemos a convenção de movimento
+    // compartilhada e aplicamos o offset somente neste grupo de monstros.
+    wrap.rotation.y = _monsterFacingToRotY(facing, imageName, monsterType, glbPath);
     wrap.position.y = Y0;
     inst.traverse(o => { if (o.isMesh) { o.userData.isGroundDecal = true; o.userData.noOL = true; o.userData.isGLB = true; } });
     grp.add(wrap);
@@ -18379,6 +18919,50 @@ function _facingToRotY(facing) {
   // giros laterais para a frente visual acompanhar a casa de destino.
   if (fx > 0) return Math.PI / 2;       // Leste (+gx)
   return -Math.PI / 2;                  // Oeste (-gx)
+}
+
+function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
+  // Estes três GLBs têm a frente alinhada com a convenção antiga. Mantêm
+  // exatamente a orientação anterior; todos os demais usam o offset novo.
+  const legacyFront = new Set([
+    'xamaGoblin', 'goblin_xama',
+    'elemental_fogo',
+    'escorpiaodepedra', 'escorpiao_pedra', 'escorpiaodepedra_original',
+  ]);
+  const extraQuarterTurn = new Set([
+    'lobisomem',
+    'goblin', 'goblinCombatente', 'goblin_combatente',
+    'zumbi', 'zumbi_infectado',
+  ]);
+  const leftQuarterTurn = new Set([
+    'koboldlanceiro', 'kobold_lanceiro',
+    'koboldbesteiro', 'kobold_besteiro',
+    'ogroClava', 'ogro_clava',
+    'ogroLanca', 'ogro_lanca',
+    'devoradorOrganico', 'devorador_organico',
+    'esqueletoHumano', 'esqueleto_humano',
+    'devoradordemetal', 'devorador_metal',
+    'ursoNegro', 'urso_negro',
+    'bugbear',
+  ]);
+  if (leftQuarterTurn.has(imageName) || leftQuarterTurn.has(monsterType)
+      || /(?:kobold|ogro_lanca|devorador_organico)\.glb$/i.test(glbPath || '')) {
+    // O padrão geral usa +90°. Voltar ao eixo-base equivale a girar 90° para
+    // a esquerda somente nestes modelos.
+    return _facingToRotY(facing);
+  }
+  if (extraQuarterTurn.has(imageName) || extraQuarterTurn.has(monsterType)
+      || /(?:lobisomem|goblin_combatente|zumbi)\.glb$/i.test(glbPath || '')) {
+    // O giro anterior de 180° deixava estes três modelos de costas. O novo
+    // giro de 180° corrige exclusivamente esse grupo e os alinha à frente do
+    // movimento; nenhuma outra miniatura muda.
+    return _facingToRotY(facing);
+  }
+  if (legacyFront.has(imageName) || legacyFront.has(monsterType)
+      || /(?:xama_goblin|elemental_fogo|escorpiao)\.glb$/i.test(glbPath || '')) {
+    return _facingToRotY(facing);
+  }
+  return _facingToRotY(facing) + Math.PI / 2;
 }
 
 function _makeCharacterPawn(T, grp, classId, clr, Y0, rotY) {
@@ -18454,8 +19038,18 @@ function _bbScaleFromImg(img, sf, mode){
   if (w > _BB_W_MAX){ w = _BB_W_MAX; h = _BB_W_MAX / ar; }
   return [w * sf, h * sf];
 }
-function _makeBillboardSprite(T, grp, texUrl, cacheKey, Y0, sizeFactor, mode) {
+// Arte de peão que NÃO carregou (404, nome de pasta errado, conexão morta) e os
+// callbacks que esperam por ela. Sem isto o sprite fica com um `map` vazio: ele
+// existe, é invisível, e a criatura aparece no tabuleiro como uma BASE SOLTA —
+// sem nada no console explicando o motivo.
+const _pawnTexErro   = {};   // cacheKey -> true
+const _pawnTexEspera = {};   // cacheKey -> [fn]  (avisados só em caso de falha)
+
+// `onErro` é chamado quando a textura não carrega, para que quem constrói o peão
+// possa cair numa miniatura procedural em vez de deixar a base sozinha.
+function _makeBillboardSprite(T, grp, texUrl, cacheKey, Y0, sizeFactor, mode, onErro) {
   const sf = sizeFactor || 1;
+  if (_pawnTexErro[cacheKey]) { if (onErro) onErro(); return null; }
   let tex = _pawnTexCache[cacheKey];
   // depthTest:false + renderOrder alto → o peão NUNCA é ocultado pelas paredes 3D
   // (fica sempre em evidência, como pedido). alphaTest mantém as bordas nítidas.
@@ -18478,25 +19072,83 @@ function _makeBillboardSprite(T, grp, texUrl, cacheKey, Y0, sizeFactor, mode) {
     const [w, h] = _bbScaleFromImg(texture.image, sf, mode);
     sp.scale.set(w, h, 1);
   };
+  // Enquanto a textura não chega, este sprite fica na fila: se ela falhar, ele
+  // se remove do grupo e o chamador desenha o que puder no lugar.
+  const esperarFalha = () => {
+    (_pawnTexEspera[cacheKey] = _pawnTexEspera[cacheKey] || []).push(() => {
+      grp.remove(sp);
+      if (onErro) onErro();
+    });
+  };
   if (tex) {
     mat.map = tex;
     if (tex.image && tex.image.width) aplicar(tex);   // já em cache e pronta
+    else esperarFalha();                              // ainda em voo (outro peão pediu)
   } else {
-    tex = new T.TextureLoader().load(_assetURL(texUrl), aplicar);
+    // Mesma insistência dos GLB: com o mapa inteiro revelado de uma vez, as
+    // texturas saem em rajada e algumas caem na rede. Uma falha dessas não pode
+    // ser definitiva — senão o peão fica com a miniatura genérica para sempre.
+    const tentar = (restam, liberarVaga) => {
+      new T.TextureLoader().load(
+        _assetURL(texUrl),
+        texture => {
+          liberarVaga();
+          delete _pawnTexEspera[cacheKey];
+          // Copia a imagem PARA DENTRO da textura cacheada em vez de trocar o
+          // objeto: os outros peões do mesmo tipo já apontam o material para
+          // ela, e substituí-la deixaria todos eles com uma textura vazia.
+          tex.image = texture.image;
+          tex.needsUpdate = true;
+          mat.needsUpdate = true;
+          aplicar(tex);
+        },
+        undefined,
+        () => {
+          liberarVaga();
+          // O TextureLoader entrega um ErrorEvent da <img>, que NÃO carrega o
+          // status HTTP — sem descobri-lo, um 404 vira "pode ter sido a rede" e
+          // o arquivo inexistente é pedido de novo a cada retentativa e a cada
+          // recarga (foram 11 pedidos do mesmo PNG ausente antes deste ajuste).
+          _statusDoArquivo(_assetURL(texUrl)).then(status => {
+            const falhaDeRede = status === 0;
+            if (falhaDeRede && restam > 0) {
+              setTimeout(() => _enfileirarArte(v => tentar(restam - 1, v)), 250);
+              return;
+            }
+            _pawnTexErro[cacheKey] = true;
+            delete _pawnTexCache[cacheKey];
+            console.warn(`[peão] arte não carregada: ${texUrl} — `
+              + (falhaDeRede
+                  ? 'falha de conexão; nova tentativa em instantes.'
+                  : `HTTP ${status}; confira o campo "image" e a pasta em assets/pawns/.`)
+              + ' Enquanto isso a criatura usa a miniatura genérica.');
+            (_pawnTexEspera[cacheKey] || []).forEach(fn => fn());
+            delete _pawnTexEspera[cacheKey];
+            // `_agendarRecargaArte` decide pelo status: 404 não se resolve com
+            // insistência, então só a falha de rede agenda nova tentativa.
+            _agendarRecargaArte('tex:' + cacheKey, { target: { status } },
+                                () => { delete _pawnTexErro[cacheKey]; });
+          });
+        }
+      );
+    };
+    tex = new T.Texture();          // placeholder até a 1ª tentativa responder
     _pawnTexCache[cacheKey] = tex;
     mat.map = tex;
+    _enfileirarArte(liberarVaga => tentar(GLB_TENTATIVAS - 1, liberarVaga));
+    esperarFalha();
   }
   grp.add(sp);
   return sp;
 }
 
 // Billboard PNG para monstros com campo `image` (apenas frente.png).
-function _makeMonsterBillboard(T, grp, imageName, Y0, porte) {
+function _makeMonsterBillboard(T, grp, imageName, Y0, porte, onErro) {
   const mode = _FIT_TILE_PAWNS.has(imageName)   ? 'box'
              : _FILL_WIDTH_PAWNS.has(imageName) ? 'width'
              : null;
   _makeBillboardSprite(T, grp, `assets/pawns/monstros/${imageName}/${imageName}.png`,
-                       '__mon_' + imageName, Y0, _pawnScaleFactor(porte), mode);
+                       '__mon_' + imageName, Y0, _pawnScaleFactor(porte), mode, onErro);
 }
 
 // Monstros ORIENTADOS (croc/lagarto): no 3D a criatura fica EM PÉ (billboard)
@@ -18601,9 +19253,13 @@ function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected, emCh
 // mOriented/mFacing — monstro de 2 casas em pé cobrindo as 2 casas (croc/lagarto).
 // mFacing também é reaproveitado pro peão GLB de herói (direção do último passo).
 
-function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType, isSelected, mImage, mPorte, mOriented, mFacing, emChamas, acidoResidual, envenenado, monsterVisionRadius){
+function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType, isSelected, mImage, mPorte, mOriented, mFacing, emChamas, acidoResidual, envenenado, monsterVisionRadius, mModel3D){
   const T   = g3.T;
-  if (isMonster && mOriented && mImage && !_MONSTER_GLB_MODELS[mImage]) {
+  const monsterGLBPath = isMonster ? (mModel3D || _monsterGLBPath(mImage, mType)) : null;
+  // No mapa 3D, inclusive no teste livre do Mestre, a miniatura deve ser o GLB
+  // correspondente em assets/models3d/monstros. O PNG continua apenas como
+  // fallback quando o arquivo 3D não existe ou falha ao carregar.
+  if (isMonster && mOriented && mImage && !monsterGLBPath) {
     // emChamas vai PARA DENTRO do helper (posiciona o 🔥 no centro midX/midZ do
     // billboard, não no tile-âncora — senão flutuaria sobre a casa vizinha).
     return _buildOrientedCreature3D(T, gx, gy, mImage, mFacing, isSelected, emChamas);
@@ -18714,11 +19370,17 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
   // Booster de resolução: silhuetas suaves (menos poligonal) em todos os peões
   _withSmoothGeo(T, () => {
   if(isMonster){
-    if(mImage && _MONSTER_GLB_MODELS[mImage]){
-      _makeMonsterPawn3D(T, grp, mImage, Y0, mFacing, mOriented,
-        () => _makeMonsterBillboard(T, grp, mImage, Y0, mPorte));
+    // Cadeia de fallback: GLB → billboard PNG → miniatura procedural. O último
+    // elo é o que garante que a criatura NUNCA vire uma base vazia no tabuleiro
+    // quando a arte estiver faltando (nome de pasta errado, PNG não enviado).
+    const semArte = () => _miniGenericMonster(grp, clr, Y0);
+    if(monsterGLBPath){
+      _makeMonsterPawn3D(T, grp, mImage, mType, Y0, mFacing, mOriented,
+        () => mImage ? _makeMonsterBillboard(T, grp, mImage, Y0, mPorte, semArte)
+                     : semArte(),
+        monsterGLBPath);
     } else if(mImage){
-      _makeMonsterBillboard(T, grp, mImage, Y0, mPorte);
+      _makeMonsterBillboard(T, grp, mImage, Y0, mPorte, semArte);
     } else {
       switch(mType){
         case 'goblin':    _miniGoblin(grp, clr, Y0);    break;
@@ -23866,6 +24528,26 @@ function get3DTile(e){
   return [obj.userData.gridX, obj.userData.gridY];
 }
 
+function get3DMonsterAtPointer(e){
+  if(!g3 || !g3.entityGroup) return null;
+  const {T,renderer,raycaster,camera,entityGroup}=g3;
+  const rect=renderer.domElement.getBoundingClientRect();
+  const mx=((e.clientX-rect.left)/rect.width)*2-1;
+  const my=((e.clientY-rect.top)/rect.height)*-2+1;
+  raycaster.setFromCamera(new T.Vector2(mx,my),camera);
+  const hits=raycaster.intersectObjects(entityGroup.children,true);
+  for(const hit of hits){
+    let obj=hit.object;
+    while(obj && obj!==entityGroup){
+      if(obj.userData && obj.userData.monId){
+        return (GS.gameState?.monsters||[]).find(m=>m.id===obj.userData.monId)||null;
+      }
+      obj=obj.parent;
+    }
+  }
+  return null;
+}
+
 // Mira LIVRE no 3D: intersecta um plano matemático na altura do chão e converte
 // para coordenadas de grade. Funciona em QUALQUER casa do mapa — inclusive sob
 // névoa (meshes invisíveis são ignorados pelo raycaster). Usado pela
@@ -23910,6 +24592,11 @@ function on3DClick(e){
     if(tThr) _clickTileThrow(tThr[0], tThr[1]);
     return;
   }
+  if(window._modoMestreMira){
+    const tMestre = get3DTile(e);
+    if(tMestre) _clickMiraMestre(tMestre[0],tMestre[1]);
+    return;
+  }
   // Modo posicionamento de ARMADILHA (Luccas): clique numa casa para criar.
   if(window._modoPlacementArmadilha){
     const tArm = get3DTile(e);
@@ -23936,6 +24623,12 @@ function on3DClick(e){
     if(tArr) onClickTileArremesso(tArr);
     if(!_highlightArremesso.ativo) window._modoArremessoAtivo = false;  // arremessou → sai do modo
     return;
+  }
+  // No teste livre, a própria miniatura é clicável. O raycast anterior usava
+  // somente o piso e podia selecionar a casa que aparecia atrás de uma figura alta.
+  if(GS.isMaster() && GS.gameState?.test_mode){
+    const monDireto=get3DMonsterAtPointer(e);
+    if(monDireto){ handleTileClick(monDireto.pos[0],monDireto.pos[1]); return; }
   }
   const tile = get3DTile(e);
   if(!tile) return;
@@ -23979,6 +24672,12 @@ function on3DClick(e){
 
 function on3DMouseMove(e){
   if(!GS.gameState || !g3) return;
+  if(window._modoMestreMira){
+    const tMestre=get3DTile(e);
+    _atualizarMiraMestre(tMestre ? tMestre[0] : null, tMestre ? tMestre[1] : null);
+    g3.renderer.domElement.style.cursor='crosshair';
+    return;
+  }
   // Mira de MAGIA: a área verde (efeito) segue o cursor enquanto você mira.
   if(window._modoMagia){
     const tMag = window._modoMagia.alvoLivre ? get3DTilePlane(e) : get3DTile(e);
@@ -24074,11 +24773,13 @@ function on3DMouseMove(e){
 // Pure decision is delegated to GS.resolveTileClick(); this function handles
 // the DOM-side effects (toast, renderMyPanel, send).
 function handleTileClick(tx, ty){
+  if(window._modoMestreMira){ _clickMiraMestre(tx,ty); return; }
   getAudioContext();
   if(!podeReceberInput()) return;   // bloqueia input durante a animação de movimento
   // ── Mestre: clicar num monstro abre a ficha; o mestre não faz ações de herói ──
-  if(GS.isMaster()){
-    if(window._modoImplantarReforco){
+  if(GS.canControlMonster()){
+    const commandControl = GS.isCommandController();
+    if(!commandControl && window._modoImplantarReforco){
       GS.mestreImplantarReforco(window._modoImplantarReforco, tx, ty);
       window._modoImplantarReforco = null;
       return;
@@ -24087,7 +24788,8 @@ function handleTileClick(tx, ty){
     const mm = GS.masterManual();
     if(mm){
       const monM = (st.monsters||[]).find(x=>x.id===mm.mid);
-      const alvo = (st.players||[]).find(p=>p.alive && p.pos[0]===tx && p.pos[1]===ty);
+      const alvo = (st.players||[]).find(p=>p.alive && p.pos[0]===tx && p.pos[1]===ty)
+        || ((st.test_mode || commandControl) && (st.monsters||[]).find(m=>m.id!==mm.mid && m.hp>0 && m.pos[0]===tx && m.pos[1]===ty));
       if(monM && alvo && GS.masterPodeAtacar()){
         // Golpe armado na ficha manda; sem golpe armado, o primeiro com carga.
         let idx = window._mpGolpeArmado;
@@ -24108,8 +24810,13 @@ function handleTileClick(tx, ty){
         GS.mestreMoverMonstroPara(mm.mid, tx, ty); return;
       }
     }
+    if(commandControl) return;
     const mon = _monstroEmCasa(tx, ty);
-    if(mon){ window._mpFocoMid = mon.id; window._masterTab = 'ativo'; renderMasterPanel(GS.gameState); }
+    if(mon){
+      window._mpFocoMid = mon.id; window._masterTab = 'ativo';
+      if(st.test_mode) GS.mestreSelecionarTeste(mon.id);
+      else renderMasterPanel(GS.gameState);
+    }
     return;
   }
   // ── Mira de MAGIA (2D e 3D): resolve alvo/casa e envia `magia` ─────────────
@@ -24462,6 +25169,22 @@ GS.on('cityState', msg => {
   const _gm = $('guild-modal');
   if(_gm && _gm.classList.contains('open')) _renderGuild();
 });
+// `isOpen()` também é verdadeiro com o inventário NORMAL aberto — usar ele aqui
+// engolia o estado do Refúgio (o `updateStorage` não faz nada fora do modo baú)
+// e o painel nunca aparecia. O que importa é qual BAÚ está aberto.
+function _recebeuEstadoRefugio(scope, msg, renderPainel){
+  if(scope === 'shared') _refugioState = msg;
+  const modal = (typeof InventoryModal !== 'undefined') ? InventoryModal : null;
+  if(modal && modal.storageScope() === scope){ modal.updateStorage(scope, msg); return; }
+  // Baú de OUTRO herói não abre a janela dividida: o servidor não manda os itens.
+  if(modal && _bauDireto === scope && (scope !== 'room' || msg.can_edit)){
+    _bauDireto = null; _fecharRefugio(); modal.openStorage(scope, msg); return;
+  }
+  _bauDireto = null;
+  renderPainel(msg);
+}
+GS.on('refugioState', msg => _recebeuEstadoRefugio('shared', msg, _renderRefugioPainel));
+GS.on('quartoState',  msg => _recebeuEstadoRefugio('room',  msg, _renderQuartoPainel));
 
 GS.on('shopResult',  msg =>
   toast(msg.msg.replace(/\*\*(.+?)\*\*/g,'$1'), 'var(--green)'));
@@ -24511,6 +25234,12 @@ document.addEventListener('keydown', (e) => {
   const naMasmorra = document.getElementById('screen-game')?.classList.contains('active');
   if(!GS.myPid || (!naCidade && !naMasmorra)) return;
 
+  if(naMasmorra && GS.gameState?.test_mode && GS.isMaster()){
+    if(document.getElementById('ficha-monstro-overlay')) fecharFichaMonstro();
+    else abrirFichaMonstro(_monstroSelecionadoTeste());
+    e.preventDefault(); return;
+  }
+
   const fichaAberta = document.getElementById('ficha-cidade-panel')?.classList.contains('open');
   if(fichaAberta) fecharFichaCidade();
   else abrirFichaCidade(GS.myPid);
@@ -24526,6 +25255,12 @@ document.addEventListener('keydown', (e) => {
   const naMasmorra = document.getElementById('screen-game')?.classList.contains('active');
   if(!GS.myPid || (!naCidade && !naMasmorra)) return;
 
+  if(naMasmorra && GS.gameState?.test_mode && GS.isMaster()){
+    if(document.getElementById('menu-magias-overlay')?.classList.contains('open')) fecharMenuMagias();
+    else abrirMenuMagiasMonstro(_monstroSelecionadoTeste());
+    e.preventDefault(); return;
+  }
+
   if(document.getElementById('menu-magias-overlay')?.classList.contains('open')) fecharMenuMagias();
   else abrirMenuMagias(GS.myPid);
   e.preventDefault();
@@ -24539,6 +25274,12 @@ document.addEventListener('keydown', (e) => {
   const naCidade = document.getElementById('screen-city')?.classList.contains('active');
   const naMasmorra = document.getElementById('screen-game')?.classList.contains('active');
   if(!GS.myPid || (!naCidade && !naMasmorra)) return;
+
+  if(naMasmorra && GS.gameState?.test_mode && GS.isMaster()){
+    if(document.getElementById('menu-habilidades-overlay')?.classList.contains('open')) fecharMenuHabilidades();
+    else abrirMenuHabilidadesMonstro(_monstroSelecionadoTeste());
+    e.preventDefault(); return;
+  }
 
   if(document.getElementById('menu-habilidades-overlay')?.classList.contains('open')) fecharMenuHabilidades();
   else abrirMenuHabilidades(GS.myPid);
@@ -24926,34 +25667,144 @@ if(GS.isPreview){
 // modelo que não existe, ou um tipo sem entrada na tabela, some do mapa sem
 // explicação e o autor não tem como saber se o problema é dele ou do arquivo.
 function _preview_reportarModelos(){
-  const st = GS.gameState;
-  if(!st) return;
-  const fonte = (caminho, cache) => {
-    if(!caminho) return null;
-    const c = cache[caminho];
-    return { caminho, estado: c === 'erro' ? 'erro' : (c ? 'carregado' : 'carregando') };
-  };
-  const objetos = (st.decorations || []).map(d => {
-    const glb = (d.image && DECOR_GLB_MODELS[d.image]) || DECOR_GLB_TYPES[d.type];
-    const arte = fonte(glb, _decorGLBCache);
-    return {
-      nome: d.type, pos: d.pos, emoji: d.emoji || '📦',
-      arte: arte || (d.image
-        ? { caminho: `assets/objetos/${d.image}`, estado: 'imagem' }
-        : { caminho: null, estado: 'procedural' }),
-    };
-  });
-  const monstros = (st.monsters || []).map(m => {
-    const arte = fonte(_MONSTER_GLB_MODELS[m.image], _monsterGLBCache);
-    return {
-      nome: m.type, pos: m.pos, emoji: m.emoji || '👹',
-      arte: arte || (m.image
-        ? { caminho: `assets/pawns/monstros/${m.image}/${m.image}.png`, estado: 'imagem' }
-        : { caminho: null, estado: 'procedural' }),
-    };
-  });
-  for(const it of [...objetos, ...monstros]){
-    if(it.arte.estado === 'erro') it.arte.motivo = _glbErroMsg[it.arte.caminho] || 'erro desconhecido';
-  }
+  const { objetos, monstros } = _relatorioArte3D();
+  if(!objetos && !monstros) return;
   try { window.parent.postMessage({ type: 'preview_modelos', objetos, monstros }, '*'); } catch(e) {}
 }
+
+// ── Relatório de arte 3D (fonte única) ───────────────────────────────────────
+// Resolve, para cada monstro e cada objeto do estado atual, QUAL arte o renderer
+// vai usar e em que pé ela está. Usa exatamente as mesmas tabelas e caches do
+// renderer — se divergisse, o relatório mentiria justamente quando fosse útil.
+// Consumido pela prévia do editor e pelo painel de diagnóstico do modo teste.
+function _relatorioArte3D(){
+  const st = GS.gameState;
+  if(!st) return { objetos: null, monstros: null };
+
+  const estadoGLB = (caminho, cache) => {
+    if(!caminho) return null;
+    const c = cache[caminho];
+    const estado = c === 'erro' ? 'erro' : (c ? 'carregado' : 'carregando');
+    const out = { tipo: 'GLB', caminho, estado };
+    if(estado === 'erro') out.motivo = _glbErroMsg[caminho] || 'erro desconhecido';
+    return out;
+  };
+  // Billboard PNG: o estado mora no cache de texturas, não no de GLB.
+  const estadoPNG = (caminho, cacheKey) => {
+    if(_pawnTexErro[cacheKey]) return { tipo: 'PNG', caminho, estado: 'erro',
+                                        motivo: 'arquivo não carregou (404 ou rede)' };
+    const tex = _pawnTexCache[cacheKey];
+    const pronta = !!(tex && tex.image && tex.image.width);
+    return { tipo: 'PNG', caminho, estado: pronta ? 'carregado' : 'carregando' };
+  };
+
+  const objetos = (st.decorations || []).map(d => {
+    const glb = d.model3d || (d.image && DECOR_GLB_MODELS[d.image]) || DECOR_GLB_TYPES[d.type];
+    const arte = estadoGLB(glb, _decorGLBCache);
+    // GLB ausente OU com erro → o renderer cai na miniatura extrudada do PNG.
+    if(!arte || arte.estado === 'erro'){
+      const img = d.image ? _objImg3D[d.image] : null;
+      const alt = d.image
+        ? { tipo: 'PNG', caminho: `assets/objetos/${d.image}`,
+            estado: (img && img.complete && img.naturalWidth) ? 'carregado' : 'carregando' }
+        : { tipo: 'procedural', caminho: null, estado: 'ok' };
+      return { nome: d.type, pos: d.pos, emoji: d.emoji || '📦', arte: arte || alt,
+               emUso: arte ? alt : null };
+    }
+    return { nome: d.type, pos: d.pos, emoji: d.emoji || '📦', arte };
+  });
+
+  const monstros = (st.monsters || []).map(m => {
+    const imageName = _monsterImageName(m);
+    const arte = estadoGLB(m.model3d || _monsterGLBPath(imageName, m.type), _monsterGLBCache);
+    if(!arte || arte.estado === 'erro'){
+      const alt = imageName
+        ? estadoPNG(`assets/pawns/monstros/${imageName}/${imageName}.png`, '__mon_' + imageName)
+        : { tipo: 'procedural', caminho: null, estado: 'ok' };
+      return { nome: m.type, pos: m.pos, emoji: m.emoji || '👹', arte: arte || alt,
+               emUso: arte ? alt : null };
+    }
+    return { nome: m.type, pos: m.pos, emoji: m.emoji || '👹', arte };
+  });
+
+  return { objetos, monstros };
+}
+
+// Texto puro do relatório — é isto que o autor copia e cola quando algo some do
+// tabuleiro. Sem ele, "não apareceu" continua sendo um relato sem dado nenhum.
+function _relatorioArte3DTexto(){
+  const { objetos, monstros } = _relatorioArte3D();
+  if(!objetos) return 'Sem masmorra carregada.';
+  const linha = it => {
+    const a = it.arte, u = it.emUso;
+    const base = `${it.emoji} ${it.nome} @${(it.pos||[]).join(',')} — ${a.tipo}`
+               + `${a.caminho ? ' ' + a.caminho : ''} [${a.estado}${a.motivo ? ': ' + a.motivo : ''}]`;
+    return u ? `${base} → usando ${u.tipo}${u.caminho ? ' ' + u.caminho : ''} [${u.estado}]` : base;
+  };
+  const conta = arr => {
+    const c = { GLB: 0, PNG: 0, procedural: 0, erro: 0 };
+    for(const it of arr){ c[it.arte.tipo]++; if(it.arte.estado === 'erro') c.erro++; }
+    return `${arr.length} itens — ${c.GLB} GLB, ${c.PNG} PNG, ${c.procedural} procedural, ${c.erro} com erro`;
+  };
+  return [
+    `DIAGNÓSTICO DE ARTE 3D — ${new Date().toLocaleString()}`,
+    `cliente: ${typeof _arteGen === 'number' ? 'atual' : 'ANTIGO (recarregue com Ctrl+Shift+R)'}`,
+    ``, `MONSTROS (${conta(monstros)})`, ...monstros.map(linha),
+    ``, `OBJETOS (${conta(objetos)})`, ...objetos.map(linha),
+  ].join('\n');
+}
+
+function fecharDiagnosticoArte3D(){ document.getElementById('diag-arte3d')?.remove(); }
+
+// Painel só-mestre do modo teste: mostra, item a item, qual arte o renderer
+// escolheu e se ela carregou. É a resposta direta para "o monstro virou um peão
+// genérico" / "o objeto não apareceu" — sem precisar abrir o console.
+function abrirDiagnosticoArte3D(){
+  fecharDiagnosticoArte3D();
+  const { objetos, monstros } = _relatorioArte3D();
+  if(!objetos){ toast('Nenhuma masmorra carregada.', 'var(--gold)'); return; }
+  const cor = e => e === 'erro' ? '#ff6b6b' : e === 'carregando' ? '#ffd166' : '#8ce99a';
+  const linha = it => {
+    const a = it.arte, u = it.emUso;
+    return `<tr>
+      <td style="padding:2px 6px">${it.emoji} ${_esc(it.nome)}</td>
+      <td style="padding:2px 6px;opacity:.6">${(it.pos||[]).join(',')}</td>
+      <td style="padding:2px 6px"><b>${a.tipo}</b></td>
+      <td style="padding:2px 6px;opacity:.75;word-break:break-all">${_esc(a.caminho || '—')}</td>
+      <td style="padding:2px 6px;color:${cor(a.estado)}">${a.estado}${a.motivo ? ' · ' + _esc(a.motivo) : ''}${
+        u ? ` <span style="opacity:.6">→ usando ${u.tipo} [${u.estado}]</span>` : ''}</td>
+    </tr>`;
+  };
+  const tabela = (titulo, arr) => `<h3 style="margin:10px 0 4px;font-size:.8rem;letter-spacing:.08em">${titulo} (${arr.length})</h3>`
+    + `<table style="width:100%;border-collapse:collapse;font-size:.68rem">${arr.map(linha).join('')}</table>`;
+  const el = document.createElement('div');
+  el.id = 'diag-arte3d';
+  el.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.72);'
+                   + 'display:flex;align-items:center;justify-content:center';
+  el.innerHTML = `<div style="background:#141420;border:1px solid #3a3a55;border-radius:10px;
+      max-width:min(920px,92vw);max-height:84vh;overflow:auto;padding:14px 16px;color:#e8e8f0">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <b style="font-size:.9rem">🔎 Diagnóstico de arte 3D</b>
+      <span style="flex:1"></span>
+      <button id="diag-copiar" style="cursor:pointer">Copiar relatório</button>
+      <button id="diag-fechar" style="cursor:pointer">✕</button>
+    </div>
+    ${typeof _arteGen === 'number' ? '' :
+      '<div style="color:#ff6b6b">Cliente ANTIGO em cache — recarregue com Ctrl+Shift+R.</div>'}
+    ${tabela('MONSTROS', monstros)}
+    ${tabela('OBJETOS', objetos)}
+  </div>`;
+  el.onclick = e => { if(e.target === el) fecharDiagnosticoArte3D(); };
+  document.body.appendChild(el);
+  el.querySelector('#diag-fechar').onclick = fecharDiagnosticoArte3D;
+  el.querySelector('#diag-copiar').onclick = () => {
+    const txt = _relatorioArte3DTexto();
+    navigator.clipboard?.writeText(txt).then(
+      () => toast('Relatório copiado.', 'var(--green)'),
+      () => console.log(txt));
+    console.log(txt);
+  };
+}
+window.abrirDiagnosticoArte3D = abrirDiagnosticoArte3D;
+window.fecharDiagnosticoArte3D = fecharDiagnosticoArte3D;
+window.diagnosticoArte3D = () => { console.log(_relatorioArte3DTexto()); };

@@ -257,6 +257,44 @@
         0,
         -0.35
       ]
+    },
+    {
+      "id": "decor_3",
+      "type": "arca_tesouros",
+      "pos": [
+        5,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": {
+        "gold": 0,
+        "items": []
+      },
+      "key_objective": false,
+      "chest_trap_monster_type": "lobisomem"
+    },
+    {
+      "id": "decor_4",
+      "type": "arca_tesouros",
+      "pos": [
+        5,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": {
+        "gold": 0,
+        "items": []
+      },
+      "key_objective": false,
+      "trap": {
+        "tipo": "nuvem_gas"
+      }
     }
   ],
   "secret_passages": [],

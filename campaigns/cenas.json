@@ -78,6 +78,232 @@
           "data": {}
         }
       ]
+    },
+    "introdocao": {
+      "id": "introdocao",
+      "name": "introdoção",
+      "background": "",
+      "music": "assets/cenas/audio/below_the_threshold.mp3",
+      "ambience": "assets/cenas/audio/the_door_behind_you.mp3",
+      "start": "prologo",
+      "events": [
+        {
+          "id": "1",
+          "type": "dialogue",
+          "speaker": "Desconhecido",
+          "text": "- Tudo perfeito com o plano.",
+          "next": "2",
+          "mandatory": false,
+          "data": {
+            "image": "assets/cenas/personagens/WhatsApp_Image_2026-08-04_at_21.56.31__3_.jpeg",
+            "background": "assets/cenas/fundos/WhatsApp_Image_2026-08-04_at_21.56.32.jpeg"
+          }
+        },
+        {
+          "id": "5",
+          "type": "dialogue",
+          "speaker": "Gatuno",
+          "text": "- Se quiserem essas mulheres vivas, não venham atrás de nós !",
+          "next": "",
+          "mandatory": false,
+          "data": {
+            "background": "assets/cenas/fundos/WhatsApp_Image_2026-08-04_at_21.56.31__1_.jpeg"
+          }
+        },
+        {
+          "id": "2",
+          "type": "dialogue",
+          "speaker": "Gatuno",
+          "text": "- O que foi esse som? Cuidado !",
+          "next": "3",
+          "mandatory": false,
+          "data": {
+            "background": "assets/cenas/fundos/WhatsApp_Image_2026-08-04_at_21.56.32.jpeg"
+          }
+        },
+        {
+          "id": "4",
+          "type": "dialogue",
+          "speaker": "Gatuno",
+          "text": "- Para a enfermaria! Peguem as moças como reféns!",
+          "next": "5",
+          "mandatory": false,
+          "data": {
+            "image": "assets/cenas/personagens/WhatsApp_Image_2026-08-04_at_21.56.31__1_.jpeg",
+            "background": "assets/cenas/fundos/WhatsApp_Image_2026-08-04_at_21.56.31__2_.jpeg"
+          }
+        },
+        {
+          "id": "3",
+          "type": "dialogue",
+          "speaker": "Homem desconhecido",
+          "text": "- Os guardas ! Vamos embora rápido!",
+          "next": "4",
+          "mandatory": false,
+          "data": {
+            "image": "assets/cenas/personagens/WhatsApp_Image_2026-08-04_at_21.56.31__2_.jpeg",
+            "background": "assets/cenas/fundos/WhatsApp_Image_2026-08-04_at_21.56.31__3_.jpeg"
+          }
+        },
+        {
+          "id": "prologo",
+          "type": "dialogue",
+          "speaker": "Narrador",
+          "text": "A noite cai no templo de Alva e Luz... tudo parece quieto",
+          "next": "1",
+          "mandatory": false,
+          "data": {}
+        }
+      ]
+    },
+    "patio": {
+      "id": "patio",
+      "name": "patio do templo ",
+      "background": "",
+      "music": "assets/cenas/audio/sunlight_on_stone.mp3",
+      "ambience": "",
+      "start": "inicio",
+      "events": [
+        {
+          "id": "inicio",
+          "type": "dialogue",
+          "speaker": "Narrador",
+          "text": "",
+          "next": "2",
+          "mandatory": false,
+          "data": {}
+        },
+        {
+          "id": "2",
+          "type": "dialogue",
+          "speaker": "Narrador",
+          "text": "",
+          "next": "3",
+          "mandatory": false,
+          "data": {
+            "background": "assets/cenas/fundos/WhatsApp_Image_2026-08-04_at_21.56.31.jpeg"
+          }
+        },
+        {
+          "id": "3",
+          "type": "dialogue",
+          "speaker": "Narrador",
+          "text": "",
+          "next": "4",
+          "mandatory": false,
+          "data": {
+            "background": "assets/cenas/fundos/WhatsApp_Image_2026-08-05_at_20.25.53__1_.jpeg"
+          }
+        },
+        {
+          "id": "4",
+          "type": "dialogue",
+          "speaker": "Narrador",
+          "text": "",
+          "next": "5",
+          "mandatory": false,
+          "data": {
+            "background": "assets/cenas/fundos/WhatsApp_Image_2026-08-04_at_21.56.30__2_.jpeg"
+          }
+        },
+        {
+          "id": "5",
+          "type": "dialogue",
+          "speaker": "Narrador",
+          "text": "",
+          "next": "6",
+          "mandatory": false,
+          "data": {
+            "background": "assets/cenas/fundos/WhatsApp_Image_2026-08-04_at_21.56.30.jpeg"
+          }
+        },
+        {
+          "id": "6",
+          "type": "dialogue",
+          "speaker": "Narrador",
+          "text": "",
+          "next": "7",
+          "mandatory": false,
+          "data": {
+            "background": "assets/cenas/fundos/WhatsApp_Image_2026-08-04_at_21.56.29__4_.jpeg"
+          }
+        },
+        {
+          "id": "7",
+          "type": "dialogue",
+          "speaker": "Narrador",
+          "text": "",
+          "next": "8",
+          "mandatory": false,
+          "data": {
+            "background": "assets/cenas/fundos/WhatsApp_Image_2026-08-04_at_21.56.29__3_.jpeg"
+          }
+        },
+        {
+          "id": "8",
+          "type": "dialogue",
+          "speaker": "Narrador",
+          "text": "",
+          "next": "9",
+          "mandatory": false,
+          "data": {
+            "background": "assets/cenas/fundos/WhatsApp_Image_2026-08-04_at_21.56.29__2_.jpeg"
+          }
+        },
+        {
+          "id": "9",
+          "type": "dialogue",
+          "speaker": "Narrador",
+          "text": "",
+          "next": "10",
+          "mandatory": false,
+          "data": {
+            "background": "assets/cenas/fundos/WhatsApp_Image_2026-08-04_at_21.56.28__1_.jpeg"
+          }
+        },
+        {
+          "id": "10",
+          "type": "dialogue",
+          "speaker": "Narrador",
+          "text": "",
+          "next": "11",
+          "mandatory": false,
+          "data": {
+            "background": "assets/cenas/fundos/WhatsApp_Image_2026-08-04_at_21.56.29__1_.jpeg"
+          }
+        },
+        {
+          "id": "11",
+          "type": "dialogue",
+          "speaker": "Narrador",
+          "text": "",
+          "next": "12",
+          "mandatory": false,
+          "data": {
+            "background": "assets/cenas/fundos/WhatsApp_Image_2026-08-04_at_21.56.29.jpeg"
+          }
+        },
+        {
+          "id": "12",
+          "type": "dialogue",
+          "speaker": "Narrador",
+          "text": "",
+          "next": "",
+          "mandatory": false,
+          "data": {
+            "background": "assets/cenas/fundos/WhatsApp_Image_2026-08-05_at_21.29.23.jpeg"
+          }
+        },
+        {
+          "id": "ev_9w2xdk",
+          "type": "dialogue",
+          "speaker": "Narrador",
+          "text": "",
+          "next": "",
+          "mandatory": false,
+          "data": {}
+        }
+      ]
     }
   }
 }

@@ -27,13 +27,20 @@ def setup_room():
 
 def test_validacao():
     print("\n[1] validar/listar campanha")
-    defn = carregar_campanha("test_campanha.json")
+    defn = carregar_campanha("test_campanha_fases.json")
     check("carrega o arquivo", defn is not None)
     ok, msg = validar_campanha(defn)
     check(f"campanha válida ({msg})", ok is True)
     check("aparece em listar_campanhas",
-          any(c["file"] == "test_campanha.json" for c in listar_campanhas()))
-    check("lista vazia recusa", validar_campanha({"schema_version": 1, "dungeons": []})[0] is False)
+          any(c["file"] == "test_campanha_fases.json" for c in listar_campanhas()))
+    # Campanha SEM fases é válida de propósito: as campanhas novas são narrativas
+    # e as entradas de masmorra vêm dos destinos do mapa-múndi. Quem barra a
+    # entrada nesse caso é `enter_dungeon` ("Escolha um destino no mapa"), não o
+    # validador. A lista antiga continua aceita para campanhas já publicadas.
+    check("lista vazia é aceita (campanha narrativa)",
+          validar_campanha({"schema_version": 1, "dungeons": []})[0] is True)
+    check("campanha sem a chave 'dungeons' também é aceita",
+          validar_campanha({"schema_version": 1})[0] is True)
     check("fase inexistente recusa",
           validar_campanha({"schema_version": 1, "dungeons": ["nao_existe.json"]})[0] is False)
     check("path traversal recusado", carregar_campanha("../server.py") is None)
@@ -43,9 +50,9 @@ async def test_selecao():
     r = setup_room(); r.phase = "lobby"
     check("defaults: campaign None, phase 0",
           getattr(r, "campaign", "x") is None and getattr(r, "campaign_phase", -1) == 0)
-    await r.handle_select_campaign("p1", "test_campanha.json")
+    await r.handle_select_campaign("p1", "test_campanha_fases.json")
     check("modo vira campaign", r.mode == "campaign")
-    check("campaign carregado", r.campaign and r.campaign["id"] == "test_campanha")
+    check("campaign carregado", r.campaign and r.campaign["id"] == "test_campanha_fases")
     check("campaign_phase = 0", r.campaign_phase == 0)
     # inválida não muda estado
     await r.handle_select_campaign("p1", "nao_existe.json")
@@ -54,18 +61,18 @@ async def test_selecao():
     await r.handle_select_campaign("p1", None)
     check("None volta para procedural", r.mode == "procedural" and r.campaign is None)
     # selecionar masmorra avulsa limpa a campanha
-    await r.handle_select_campaign("p1", "test_campanha.json")
+    await r.handle_select_campaign("p1", "test_campanha_fases.json")
     await r.handle_select_dungeon("p1", "test_camp_a.json")
     check("select_dungeon limpa a campanha", r.campaign is None and r.mode == "authored")
     # não-host é ignorado
     r.mode = "procedural"
-    await r.handle_select_campaign("p2", "test_campanha.json")
+    await r.handle_select_campaign("p2", "test_campanha_fases.json")
     check("não-host ignorado", r.mode == "procedural")
 
 async def test_entrada_fase0():
     print("\n[3] enter_dungeon carrega a fase atual da campanha")
     r = setup_room(); r.phase = "lobby"
-    await r.handle_select_campaign("p1", "test_campanha.json")
+    await r.handle_select_campaign("p1", "test_campanha_fases.json")
     r.phase = "city"
     await r.enter_dungeon("p1")
     check("carregou a fase 0 (grid 10×8 de camp_a)", r.map_w == 10 and r.map_h == 8)
@@ -79,7 +86,7 @@ async def test_entrada_fase0():
 async def test_avanco_e_vitoria():
     print("\n[4] avanço de fase, preservação e vitória final")
     r = setup_room(); r.phase = "lobby"
-    await r.handle_select_campaign("p1", "test_campanha.json")
+    await r.handle_select_campaign("p1", "test_campanha_fases.json")
     r.phase = "city"
     await r.enter_dungeon("p1")
     p1 = r.players["p1"]
@@ -112,7 +119,7 @@ async def test_avanco_e_vitoria():
 async def test_retomar_mesma_fase():
     print("\n[5] sair sem concluir retoma a mesma fase")
     r = setup_room(); r.phase = "lobby"
-    await r.handle_select_campaign("p1", "test_campanha.json")
+    await r.handle_select_campaign("p1", "test_campanha_fases.json")
     r.phase = "city"
     await r.enter_dungeon("p1")
     await r._voltar_para_cidade()         # grupo abandona a masmorra sem concluir
@@ -124,7 +131,7 @@ async def test_retomar_mesma_fase():
 async def test_serializacao():
     print("\n[6] push_state expõe campaign")
     r = setup_room(); r.phase = "lobby"
-    await r.handle_select_campaign("p1", "test_campanha.json")
+    await r.handle_select_campaign("p1", "test_campanha_fases.json")
     cap = {}
     async def capb(msg, skip=None):
         if msg.get("type") == "game_state": cap.update(msg)

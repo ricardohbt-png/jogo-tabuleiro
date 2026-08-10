@@ -190,8 +190,20 @@ async def main():
         f0, s0 = p["fome"], p["sede"]
         await r.handle_usar_tecnica("h", tid)
         check(f"{tid}: flag {flag} armada", p[flag] is True)
-        check(f"{tid}: custo {custo}", p["fome"] == f0 - custo[0] and p["sede"] == s0 - custo[1])
-        check(f"{tid}: recarga setada", r.tecnica_restante(p, tid) > 0)
+        # Estas 7 técnicas só ARMAM a próxima magia: entram em `efeitos_adiados`,
+        # então custo e recarga só começam quando o efeito é realmente aplicado
+        # (em handle_magia, via _consumir_tecnica_apos_efeito). Ativar e não
+        # lançar não deve cobrar nada.
+        check(f"{tid}: ativar não cobra fome/sede ainda",
+              p["fome"] == f0 and p["sede"] == s0)
+        check(f"{tid}: ativar não inicia a recarga ainda",
+              r.tecnica_restante(p, tid) == 0)
+        check(f"{tid}: fica pendente até o efeito",
+              p.get("technique_pending", {}).get(tid) is True)
+        # E o custo/recarga do catálogo é o esperado quando a hora chegar.
+        _it = S.guild_item(tid)
+        check(f"{tid}: catálogo declara custo {custo}",
+              (_it["custo_fome"], _it["custo_sede"]) == custo)
 
     print("\n[6b] Magia Geminada — validação de alvo na ativação")
     r = setup(); r.current_pid = lambda: "h"
@@ -243,15 +255,25 @@ async def main():
     await rr2.handle_magia("h", {"magia_id": "raio_congelante", "target_id": "m1"})
     check("aprimorar: empilha com Metamagia do 1f (1+1=2)", dc_vistos2 and dc_vistos2[0] == 2)
 
-    # [7b] Estender Magia — caminho de duração (Visão no Escuro, círculo 2 → nível 3)
+    # [7b] Estender Magia — caminho de duração (Manto de Escuridão, círculo 2 → nível 3)
+    # Usa o Manto e NÃO a Visão no Escuro: esta última passou a durar a missão
+    # inteira (`visao_escuro_missao`) e nem declara `duracao`, então cai no ramo
+    # de ALCANCE do Estender — quem exercita o ramo de duração é o Manto.
     rr3, pp3 = _mk_caster_room("tec_ex_estender_magia")
     pp3["level"] = 3
-    ally = make_player("a", "Ana", "cleric", 1); ally["alive"] = True; ally["pos"] = [1, 0]
-    rr3.players["a"] = ally
     rr3._rolar_dado = lambda spec: 5
     await rr3.handle_usar_tecnica("h", "tec_ex_estender_magia")
-    await rr3.handle_magia("h", {"magia_id": "visao_escuro", "target_id": "a"})
-    check("estender: duração 5(base)+1(técnica)=6", ally["visao_escuro_rodadas"] == 6)
+    await rr3.handle_magia("h", {"magia_id": "manto_escuridao"})
+    check("estender: duração 5(base)+1(técnica)=6", pp3["visao_escuro_rodadas"] == 6)
+
+    # Visão no Escuro dura a missão inteira e ignora bônus de duração.
+    rr3b, pp3b = _mk_caster_room("tec_ex_estender_magia")
+    pp3b["level"] = 3                      # círculo 2 precisa de nível 3
+    ally = make_player("a", "Ana", "cleric", 1); ally["alive"] = True; ally["pos"] = [1, 0]
+    rr3b.players["a"] = ally
+    await rr3b.handle_magia("h", {"magia_id": "visao_escuro", "target_id": "a"})
+    check("visão no escuro: vale a missão toda", ally.get("visao_escuro_missao") is True)
+    check("visão no escuro: sem contador de rodadas", "visao_escuro_rodadas" not in ally)
 
     # [7c] Estender Magia — caminho de alcance (Raio Congelante 1 casa além do alcance base)
     rr4, pp4 = _mk_caster_room("tec_ex_estender_magia")

@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "id": "test_campanha_fases",
+  "name": "Campanha de Teste (fases) - fixture automatizada",
+  "dungeons": [
+    "test_camp_a.json",
+    "test_camp_b.json"
+  ]
+}

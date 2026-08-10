@@ -691,7 +691,7 @@ window.EDITOR_CUSTOM_MONSTERS = [
         "id": "movimento_erratico",
         "name": "Movimento Errático",
         "action_type": "passiva",
-        "descricao": "Ignora penalidades de movimento de Água e Água Profunda",
+        "descricao": "Ignora terreno difícil — avança sem hesitar",
         "source": "monstro",
         "uses_per_day": 1,
         "cooldown_turns": 0
@@ -1001,6 +1001,675 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "undead": true,
     "subtipo": "morto_vivo",
     "boss": false
+  },
+  {
+    "type": "grotao_customizado",
+    "name": "Grotão",
+    "emoji": "🦂",
+    "overwrite_native": false,
+    "tier": 1,
+    "cr": 3.0,
+    "base_hp": 33,
+    "hp": 36,
+    "natural_armor": 5,
+    "ac": 15,
+    "movement": 6,
+    "vision_base": 0,
+    "visao_escuro": false,
+    "base_attack_bonus": 2,
+    "caster_level": 1,
+    "str_": 18,
+    "dex": 10,
+    "con_": 16,
+    "int_": 3,
+    "fort_base": 3,
+    "ref_base": 3,
+    "will_base": 6,
+    "fort": 6,
+    "ref_": 3,
+    "will": 2,
+    "attacks": [
+      {
+        "name": "Mordida",
+        "damage": "1d10+4",
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 1,
+        "attack_attribute": "str_",
+        "damage_attribute": "str_",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 4,
+        "base_attack_bonus": 2,
+        "atk_bonus": 6,
+        "range": null,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "extra_damage": null,
+        "extra_damage_types": []
+      },
+      {
+        "name": "Garras",
+        "damage": "1d8+4",
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 2,
+        "attack_attribute": "str_",
+        "damage_attribute": "str_",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 4,
+        "base_attack_bonus": 2,
+        "atk_bonus": 6,
+        "range": null,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "extra_damage": null,
+        "extra_damage_types": []
+      }
+    ],
+    "special_abilities": [
+      {
+        "id": "carapaca_resistente",
+        "name": "Carapaça Resistente",
+        "action_type": "passiva",
+        "descricao": "Reduz todo dano físico em 2",
+        "source": "monstro",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "cauda_varredora",
+        "name": "Cauda Varredora",
+        "action_type": "acao",
+        "cooldown_turns": 2,
+        "atk_bonus": 5,
+        "damage": "1d8+3",
+        "save": "reflexos",
+        "dc": 12,
+        "descricao": "Atinge todos atrás: +5, 1d8+3; falha derruba",
+        "source": "monstro",
+        "uses_per_day": 1
+      },
+      {
+        "id": "cuspir_acido",
+        "name": "Cuspir Ácido",
+        "action_type": "acao",
+        "cooldown_turns": 3,
+        "range": 3,
+        "damage": "2d6",
+        "save": "reflexos",
+        "dc": 13,
+        "descricao": "Alvo a até 3 quadrado(s): 2d6 de ácido; Reflexos CD 13 reduz à metade. Falha corrói equipamentos conforme as regras de corrosão por ácido.",
+        "source": "monstro",
+        "uses_per_day": 1
+      },
+      {
+        "id": "furia_bestial",
+        "name": "Fúria Bestial",
+        "action_type": "passiva",
+        "descricao": "Mordida e ao menos uma garra acertam: +1d6 dano",
+        "source": "monstro",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      }
+    ],
+    "monster_abilities": [
+      {
+        "id": "carapaca_resistente",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "cauda_varredora",
+        "uses_per_day": 1,
+        "cooldown_turns": 2
+      },
+      {
+        "id": "cuspir_acido",
+        "uses_per_day": 1,
+        "cooldown_turns": 3,
+        "damage_dice": 2,
+        "damage_faces": 6,
+        "range": 3,
+        "dc": 13
+      },
+      {
+        "id": "furia_bestial",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      }
+    ],
+    "monster_spells": [],
+    "negative_ability_ids": [
+      "corpo_pesado"
+    ],
+    "immunities": [],
+    "resistances": [],
+    "weaknesses": [
+      {
+        "source_ability": "corpo_pesado",
+        "type": "corpo_pesado",
+        "descricao": "Corpo Pesado: ao falhar em Reflexos, recebe +1 dano daquele efeito."
+      },
+      {
+        "type": "ponto_vulneravel",
+        "nd_penalty": 0.25,
+        "tiles": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "descricao": "Ponto Vulnerável: ataques nos quadrados selecionados ignoram a armadura natural (Destreza permanece) e reduções de dano (–0,25 ND estimado)"
+      }
+    ],
+    "equipment_enabled": false,
+    "equipped_items": [],
+    "equipment": [],
+    "guaranteed_loot": [],
+    "loot_table": {},
+    "loot_drops": [],
+    "gold": 0,
+    "xp": 0,
+    "ai_type": "agressivo",
+    "ai_profile": "agressivo",
+    "ai_tactics": [],
+    "image": "grotao",
+    "portrait": "grotao_customizado",
+    "size": [
+      2,
+      2
+    ],
+    "oriented": false,
+    "porte": "grande",
+    "spawn_min": 0,
+    "spawn_max": 0,
+    "undead": false,
+    "subtipo": "raca_padrao",
+    "boss": false
+  },
+  {
+    "type": "crocodilo_jovem",
+    "name": "Crocodilo Jovem",
+    "emoji": "🐊",
+    "overwrite_native": true,
+    "tier": 1,
+    "cr": 1.0,
+    "base_hp": 14,
+    "hp": 16,
+    "natural_armor": 3,
+    "ac": 13,
+    "movement": 6,
+    "vision_base": 0,
+    "visao_escuro": false,
+    "base_attack_bonus": 2,
+    "caster_level": 1,
+    "str_": 16,
+    "dex": 10,
+    "con_": 14,
+    "int_": 2,
+    "fort_base": 3,
+    "ref_base": 2,
+    "will_base": 5,
+    "fort": 5,
+    "ref_": 2,
+    "will": 1,
+    "attacks": [
+      {
+        "name": "Mordida",
+        "damage": "1d8",
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 1,
+        "attack_attribute": "str_",
+        "damage_attribute": "str_",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 3,
+        "base_attack_bonus": 2,
+        "atk_bonus": 5,
+        "range": null,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "extra_damage": null,
+        "extra_damage_types": []
+      }
+    ],
+    "special_abilities": [
+      {
+        "id": "agarrar",
+        "name": "Agarrar",
+        "action_type": "passiva",
+        "dc": 12,
+        "save": "fortitude",
+        "descricao": "Ao acertar, alvo testa FOR ou REF CD 12 — falha: preso",
+        "source": "monstro"
+      },
+      {
+        "id": "atq_mandibula",
+        "name": "Ataque de Mandíbula",
+        "action_type": "passiva",
+        "descricao": "Se alvo preso e adjacente: 1d8+3 dano direto (sem rolagem de acerto)",
+        "source": "monstro"
+      },
+      {
+        "id": "arrastar",
+        "name": "Arrastar",
+        "action_type": "passiva",
+        "descricao": "Move alvo preso junto ao se deslocar",
+        "source": "monstro"
+      }
+    ],
+    "monster_abilities": [
+      {
+        "id": "agarrar"
+      },
+      {
+        "id": "atq_mandibula"
+      },
+      {
+        "id": "arrastar"
+      }
+    ],
+    "monster_spells": [],
+    "negative_ability_ids": [],
+    "immunities": [],
+    "resistances": [],
+    "weaknesses": [
+      {
+        "type": "lightning",
+        "multiplier": 1.5,
+        "descricao": "+50% dano elétrico (dobrado na água)"
+      }
+    ],
+    "equipment_enabled": false,
+    "equipped_items": [],
+    "equipment": [],
+    "guaranteed_loot": [],
+    "loot_table": {
+      "1-100": null
+    },
+    "loot_drops": [],
+    "gold": 0,
+    "xp": 0,
+    "ai_type": "crocodilo_jovem",
+    "ai_profile": "agressivo",
+    "ai_tactics": [],
+    "image": "crocodiloJovem",
+    "portrait": "crocodilo_jovem",
+    "size": [
+      2,
+      2
+    ],
+    "oriented": true,
+    "porte": "medio",
+    "spawn_min": 1,
+    "spawn_max": 2,
+    "undead": false,
+    "subtipo": "animal",
+    "boss": false
+  },
+  {
+    "type": "grotao",
+    "name": "Grotão",
+    "emoji": "🦂",
+    "overwrite_native": true,
+    "tier": 1,
+    "cr": 3.0,
+    "base_hp": 33,
+    "hp": 36,
+    "natural_armor": 5,
+    "ac": 15,
+    "movement": 6,
+    "vision_base": 0,
+    "visao_escuro": false,
+    "base_attack_bonus": 2,
+    "caster_level": 1,
+    "str_": 18,
+    "dex": 10,
+    "con_": 16,
+    "int_": 3,
+    "fort_base": 3,
+    "ref_base": 3,
+    "will_base": 6,
+    "fort": 6,
+    "ref_": 3,
+    "will": 2,
+    "attacks": [
+      {
+        "name": "Mordida",
+        "damage": "1d10",
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 1,
+        "attack_attribute": "str_",
+        "damage_attribute": "str_",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 4,
+        "base_attack_bonus": 2,
+        "atk_bonus": 6,
+        "range": null,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "extra_damage": null,
+        "extra_damage_types": []
+      },
+      {
+        "name": "Garras",
+        "damage": "1d8",
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 2,
+        "attack_attribute": "str_",
+        "damage_attribute": "str_",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 4,
+        "base_attack_bonus": 2,
+        "atk_bonus": 6,
+        "range": null,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "extra_damage": null,
+        "extra_damage_types": []
+      }
+    ],
+    "special_abilities": [
+      {
+        "id": "carapaca_resistente",
+        "name": "Carapaça Resistente",
+        "action_type": "passiva",
+        "descricao": "Reduz todo dano físico em 2",
+        "source": "monstro",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "cauda_varredora",
+        "name": "Cauda Varredora",
+        "action_type": "acao",
+        "cooldown_turns": 2,
+        "atk_bonus": 5,
+        "damage": "1d8+3",
+        "save": "reflexos",
+        "dc": 12,
+        "descricao": "Atinge todos atrás: +5, 1d8+3; falha derruba",
+        "source": "monstro",
+        "uses_per_day": 1
+      },
+      {
+        "id": "cuspir_acido",
+        "name": "Cuspir Ácido",
+        "action_type": "acao",
+        "cooldown_turns": 3,
+        "range": 3,
+        "damage": "2d6",
+        "save": "reflexos",
+        "dc": 13,
+        "descricao": "Alvo a até 3 quadrado(s): 2d6 de ácido; Reflexos CD 13 reduz à metade. Falha corrói equipamentos conforme as regras de corrosão por ácido.",
+        "source": "monstro",
+        "uses_per_day": 1
+      },
+      {
+        "id": "furia_bestial",
+        "name": "Fúria Bestial",
+        "action_type": "passiva",
+        "descricao": "Mordida e ao menos uma garra acertam: +1d6 dano",
+        "source": "monstro",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      }
+    ],
+    "monster_abilities": [
+      {
+        "id": "carapaca_resistente",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "cauda_varredora",
+        "uses_per_day": 1,
+        "cooldown_turns": 2
+      },
+      {
+        "id": "cuspir_acido",
+        "uses_per_day": 1,
+        "cooldown_turns": 3,
+        "damage_dice": 2,
+        "damage_faces": 6,
+        "range": 3,
+        "dc": 13
+      },
+      {
+        "id": "furia_bestial",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      }
+    ],
+    "monster_spells": [],
+    "negative_ability_ids": [
+      "corpo_pesado"
+    ],
+    "immunities": [],
+    "resistances": [
+      {
+        "type": "physical",
+        "reduction": 2
+      }
+    ],
+    "weaknesses": [
+      {
+        "type": "ponto_vulneravel",
+        "nd_penalty": 0.25,
+        "tiles": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "descricao": "Ponto Vulnerável: os dois quadrados centrais ignoram a armadura natural (CA 15 → 10; Destreza permanece) e reduções de dano (–0,25 ND estimado)"
+      }
+    ],
+    "equipment_enabled": false,
+    "equipped_items": [],
+    "equipment": [],
+    "guaranteed_loot": [],
+    "loot_table": {
+      "1-100": {
+        "tipo": "gold",
+        "valor": "2d6"
+      }
+    },
+    "loot_drops": [],
+    "gold": 0,
+    "xp": 0,
+    "ai_type": "grotao",
+    "ai_profile": "agressivo",
+    "ai_tactics": [],
+    "image": "grotao",
+    "portrait": "grotao",
+    "size": [
+      2,
+      2
+    ],
+    "oriented": true,
+    "porte": "grande",
+    "spawn_min": 1,
+    "spawn_max": 1,
+    "undead": false,
+    "subtipo": "raca_padrao",
+    "boss": false
+  },
+  {
+    "type": "lagarto_carniceiro",
+    "name": "Lagarto Carniceiro",
+    "emoji": "🦎",
+    "overwrite_native": true,
+    "tier": 1,
+    "cr": 2.0,
+    "base_hp": 22,
+    "hp": 24,
+    "natural_armor": 2,
+    "ac": 14,
+    "movement": 6,
+    "vision_base": 0,
+    "visao_escuro": false,
+    "base_attack_bonus": 3,
+    "caster_level": 1,
+    "str_": 16,
+    "dex": 14,
+    "con_": 14,
+    "int_": 6,
+    "fort_base": 2,
+    "ref_base": 2,
+    "will_base": 3,
+    "fort": 4,
+    "ref_": 4,
+    "will": 1,
+    "attacks": [
+      {
+        "name": "Mordida",
+        "damage": "1d8",
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 2,
+        "attack_attribute": "str_",
+        "damage_attribute": "str_",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 3,
+        "base_attack_bonus": 3,
+        "atk_bonus": 6,
+        "range": null,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "extra_damage": null,
+        "extra_damage_types": []
+      }
+    ],
+    "special_abilities": [
+      {
+        "id": "combo_devorador",
+        "name": "Combo Devorador",
+        "action_type": "passiva",
+        "descricao": "Se as 2 mordidas acertarem no turno: 2 ataques de Garra imediatos",
+        "source": "monstro",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "predador_oportunista",
+        "name": "Predador Oportunista",
+        "action_type": "passiva",
+        "descricao": "+1 nas mordidas contra alvos com menos de 50% do HP",
+        "source": "monstro",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "faro_carnica",
+        "name": "Faro da Presa Fácil",
+        "action_type": "passiva",
+        "descricao": "Prioriza sempre o alvo com menor HP",
+        "source": "monstro",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "duas_cabecas",
+        "name": "Duas Cabeças",
+        "action_type": "passiva",
+        "descricao": "+2 no raio de visão; ataques furtivos contra a criatura sofrem -2 no acerto.",
+        "source": "monstro",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      }
+    ],
+    "monster_abilities": [
+      {
+        "id": "combo_devorador",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "predador_oportunista",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "faro_carnica",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "duas_cabecas",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      }
+    ],
+    "monster_spells": [],
+    "negative_ability_ids": [],
+    "immunities": [],
+    "resistances": [],
+    "weaknesses": [
+      {
+        "type": "veneno_dobrado",
+        "descricao": "Sensível a venenos: todos os efeitos dobrados"
+      }
+    ],
+    "equipment_enabled": false,
+    "equipped_items": [],
+    "equipment": [],
+    "guaranteed_loot": [],
+    "loot_table": {
+      "1-100": null
+    },
+    "loot_drops": [],
+    "gold": 0,
+    "xp": 0,
+    "ai_type": "lagarto_carniceiro",
+    "ai_profile": "agressivo",
+    "ai_tactics": [],
+    "image": "lagartoCarniceiro",
+    "portrait": "lagarto_carniceiro",
+    "size": [
+      2,
+      2
+    ],
+    "oriented": true,
+    "porte": "grande",
+    "spawn_min": 1,
+    "spawn_max": 1,
+    "undead": false,
+    "subtipo": "animal",
+    "boss": false,
+    "garra_attack": {
+      "name": "Garra",
+      "atk_bonus": 5,
+      "damage": "1d6+3",
+      "damage_types": [
+        "physical"
+      ],
+      "num_attacks": 1,
+      "on_hit": null,
+      "categoria": "cortante"
+    }
   }
 ];
 // GERADO pelo servidor ao salvar no Editor de criaturas.

@@ -19,6 +19,21 @@
 
   function serverUrl() { return "ws://localhost:8765"; }
 
+  // Endereço do CLIENTE DO JOGO (prévia 3D e teste como mestre) visto do editor.
+  //
+  // Com o editor aberto como arquivo local (file://), um caminho relativo faz o
+  // jogo abrir também em file:// — e aí o GLTFLoader, que usa XHR, é bloqueado
+  // pelo navegador em TODA requisição de arquivo local: os .glb falham com
+  // status 0 ("conexão falhou") e cada criatura cai no peão genérico, cada
+  // objeto na caixa procedural. Como a WebSocket é absoluta, o resto do editor
+  // parece funcionar e o defeito fica parecendo bug de render. Apontando para o
+  // servidor HTTP, a prévia e o teste carregam a arte igual ao jogo.
+  function clienteURL(query) {
+    const base = (location.protocol === "file:") ? "http://localhost:8765/" : "../";
+    return base + "index.html" + (query || "");
+  }
+  function editorEmArquivoLocal() { return location.protocol === "file:"; }
+
   function connect() {
     if (ws && ws.readyState === WebSocket.OPEN) return Promise.resolve(ws);
     if (connecting) return connecting;
@@ -33,7 +48,7 @@
       sock.onmessage = (ev) => {
         let m;
         try { m = JSON.parse(ev.data); } catch (e) { return; }
-        if (m.type !== "upload_result" && m.type !== "objetos_list" && m.type !== "preview_state") return;
+        if (m.type !== "upload_result" && m.type !== "objetos_list" && m.type !== "preview_state" && m.type !== "test_dungeon_created") return;
         const p = pending.get(m.upload_id);
         if (!p) return;
         pending.delete(m.upload_id);
@@ -128,6 +143,10 @@
     return request("upload_campaign", { defn: defn })
       .then((m) => ({ file: m.file }));
   }
+  function createTestDungeon(defn) {
+    return request("create_test_dungeon", { defn: defn })
+      .then((m) => ({ code: m.code, token: m.token }));
+  }
   async function uploadSceneMedia(file, kind) {
     const imageKind = ["background", "character", "illustration"].includes(kind);
     if ((imageKind ? IMG : AUD).indexOf(extOf(file.name)) < 0)
@@ -185,6 +204,12 @@
     const m = await request("upload_city_art", { name: file.name, data: await toBase64(file) });
     return m.path;
   }
+  async function uploadRefugioArt(file) {
+    if (IMG.indexOf(extOf(file.name)) < 0) throw new Error("envie uma imagem PNG, JPG, WebP ou GIF");
+    if (file.size > MAX) throw new Error("arquivo grande demais");
+    const m = await request("upload_refugio_art", { name: file.name, data: await toBase64(file) });
+    return m.path;
+  }
 
   // Envia o conjunto completo de cidades: criadas, edições nas originais,
   // exclusões e a tabela de custos de viagem. Resolve com a config atualizada.
@@ -222,6 +247,29 @@
 
   window.STORY_UPLOAD = { upload: upload };
   window.PRISONER_UPLOAD = { upload: uploadPrisoner };
-  window.EDITOR_SAVE = { saveDungeon: saveDungeon, previewDungeon: previewDungeon, saveCampaign: saveCampaign, loadScenes: loadScenes, saveScenes: saveScenes, uploadSceneMedia: uploadSceneMedia, saveCustomMonster: saveCustomMonster, uploadMonsterArt: uploadMonsterArt, uploadItemArt: uploadItemArt, uploadTavernArt: uploadTavernArt, uploadCityArt: uploadCityArt, loadCityShops: loadCityShops, saveCityShops: saveCityShops, saveWorldCities: saveWorldCities, loadWorldAdventures: loadWorldAdventures, saveWorldAdventures: saveWorldAdventures };
+  window.EDITOR_SAVE = { saveDungeon: saveDungeon, previewDungeon: previewDungeon, createTestDungeon: createTestDungeon, saveCampaign: saveCampaign, loadScenes: loadScenes, saveScenes: saveScenes, uploadSceneMedia: uploadSceneMedia, saveCustomMonster: saveCustomMonster, uploadMonsterArt: uploadMonsterArt, uploadItemArt: uploadItemArt, uploadTavernArt: uploadTavernArt, uploadCityArt: uploadCityArt, uploadRefugioArt: uploadRefugioArt, loadCityShops: loadCityShops, saveCityShops: saveCityShops, saveWorldCities: saveWorldCities, loadWorldAdventures: loadWorldAdventures, saveWorldAdventures: saveWorldAdventures };
+  window.EDITOR_CLIENTE = { url: clienteURL, emArquivoLocal: editorEmArquivoLocal };
+
+  // Aviso fixo quando o editor foi aberto por duplo clique no arquivo. A prévia
+  // e o teste já são redirecionados para o servidor, mas em file:// o navegador
+  // bloqueia leitura de arquivo local em geral — é melhor o autor saber do que
+  // descobrir por um sintoma torto mais adiante.
+  if (editorEmArquivoLocal()) {
+    const mostrar = () => {
+      if (!document.body || document.getElementById("editor-aviso-file")) return;
+      const a = document.createElement("div");
+      a.id = "editor-aviso-file";
+      a.style.cssText = "position:fixed;left:0;right:0;bottom:0;z-index:99999;padding:8px 14px;"
+        + "background:#7a2020;color:#fff;font:600 12px/1.4 system-ui,sans-serif;text-align:center";
+      a.innerHTML = 'Editor aberto como arquivo local (file://) — o navegador bloqueia a leitura '
+        + 'de modelos 3D. Prefira abrir por '
+        + '<a href="http://localhost:8765/tools/editor.html" style="color:#ffd166">'
+        + 'http://localhost:8765/tools/editor.html</a> com o servidor no ar.';
+      document.body.appendChild(a);
+    };
+    if (document.readyState === "loading")
+      document.addEventListener("DOMContentLoaded", mostrar);
+    else mostrar();
+  }
   window.OBJETO_UPLOAD = { upload: uploadObjeto, list: listObjetos };
 })();

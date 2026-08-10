@@ -103,7 +103,11 @@ async def main():
     p = hero("warrior", "tecnica_mira_perfeita"); r.players["h"] = p
     await r.handle_usar_tecnica("h", "tecnica_mira_perfeita")
     check("mira: flag armada", p.get("tecnica_mira_perfeita") is True)
-    check("mira: recarga setada", r.tecnica_restante(p, "tecnica_mira_perfeita") > 0)
+    # Mira Perfeita entra em `efeitos_adiados`: custo e recarga só começam quando
+    # o ataque à distância realmente consome a flag (em handle_attack).
+    check("mira: fica pendente, sem recarga na ativação",
+          r.tecnica_restante(p, "tecnica_mira_perfeita") == 0
+          and p.get("technique_pending", {}).get("tecnica_mira_perfeita") is True)
     # Integração: um ataque à distância consome a flag e passa vantagem ao rolar;
     # um ataque corpo a corpo NÃO consome (aguarda um ataque à distância).
     def _mk_attack_room(w_range):
@@ -536,7 +540,10 @@ async def main():
     p = hero("warrior", "tecnica_golpe_decisivo"); r.players["h"] = p
     await r.handle_usar_tecnica("h", "tecnica_golpe_decisivo")
     check("golpe: flag armada", p.get("tecnica_golpe_decisivo_armado") is True)
-    check("golpe: recarga setada", r.tecnica_restante(p, "tecnica_golpe_decisivo") == 10)
+    # Golpe Decisivo também é adiado: a recarga 10 só começa no ataque que o usa.
+    check("golpe: fica pendente, sem recarga na ativação",
+          r.tecnica_restante(p, "tecnica_golpe_decisivo") == 0
+          and p.get("technique_pending", {}).get("tecnica_golpe_decisivo") is True)
 
     # Integração: acerto SEM nat20 vira crítico (×2); acerto COM nat20 vira ×3.
     def _mk_room_golpe(natural20):
@@ -601,78 +608,106 @@ async def main():
     await r4.handle_end_turn("h")
     check("golpe: expira no fim do turno sem uso", p4.get("tecnica_golpe_decisivo_armado") is False)
 
-    # [26] Sorte
-    print("\n[26] Sorte")
-    r = setup(); r.current_pid = lambda: "h"; r.round_num = 1; r._is_turn = lambda pid: True
-    p = hero("warrior", "tecnica_sorte"); p["pos"] = [0, 0]
-    p["atk_bonus"] = 0
-    p["weapon"] = {"id": "machado_basico", "name": "Machado", "die": "1d6", "stat": "str_"}
-    r.players["h"] = p
-    r.monsters = {"m1": {"id": "m1", "name": "Alvo", "nome": "Alvo", "pos": [0, 1],
-                         "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
-    r._rolar_ataque = lambda atk, ac, v=False, d=False: (False, 2, 2, False, None)   # erra
-    await r.handle_attack("h", "m1")
-    check("sorte: erro guarda ultimo_ataque_perdido", p.get("ultimo_ataque_perdido") is not None)
-    check("sorte: alvo guardado é o m1", p["ultimo_ataque_perdido"]["target_id"] == "m1")
+    # [26] Sorte — REAÇÃO por prompt (não é mais ativação manual)
+    # A Sorte deixou de ser uma técnica que o jogador dispara: hoje ela é uma
+    # reação passiva. Quando uma rolagem do jogador falha, `_oferecer_sorte`
+    # manda um `sorte_reacao` ao cliente e ESPERA a resposta
+    # (`handle_sorte_reacao`); só se ele aceitar é que paga custo, entra em
+    # recarga e a rolagem é refeita. Hooks: erro de ataque, falha de save
+    # (`_testar_save_com_sorte`) e acerto de monstro contra o jogador.
+    print("\n[26] Sorte — reação por prompt")
 
+    def sala_sorte(responder=None):
+        """Sala onde o 'cliente' responde ao prompt de Sorte na hora em que ele
+        chega — assim `_oferecer_sorte` não fica esperando o timeout de 12 s."""
+        rr = setup(); rr.current_pid = lambda: "h"; rr.round_num = 1
+        rr._is_turn = lambda pid: True
+        prompts = []
+        async def send(pid, msg, *a, **k):
+            if isinstance(msg, dict) and msg.get("type") == "error":
+                rr._errs.append(msg.get("msg", ""))
+            elif isinstance(msg, dict) and msg.get("type") == "sorte_reacao":
+                prompts.append(msg)
+                if responder is not None:
+                    await rr.handle_sorte_reacao(pid, responder)
+        rr.send_to = send
+        rr._prompts = prompts
+        return rr
+
+    def heroi_sorte(rr):
+        pp = hero("warrior", "tecnica_sorte")
+        pp["pos"] = [0, 0]; pp["atk_bonus"] = 0; pp["connected"] = True
+        pp["weapon"] = {"id": "machado_basico", "name": "Machado", "die": "1d6", "stat": "str_"}
+        rr.players["h"] = pp
+        rr.monsters = {"m1": {"id": "m1", "name": "Alvo", "nome": "Alvo", "pos": [0, 1],
+                              "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
+        return pp
+
+    # Ativação manual é recusada — a técnica é passiva.
+    rm = setup(); rm.current_pid = lambda: "h"; rm._is_turn = lambda pid: True
+    pm = hero("warrior", "tecnica_sorte"); rm.players["h"] = pm
+    await rm.handle_usar_tecnica("h", "tecnica_sorte")
+    check("sorte: ativação manual recusada (é passiva)",
+          any("passiva" in e.lower() for e in rm._errs))
+    check("sorte: recusa não gasta recarga", rm.tecnica_restante(pm, "tecnica_sorte") == 0)
+
+    # Aceitar: paga o custo e entra em recarga 10.
+    ra = sala_sorte(responder=True)
+    pa = heroi_sorte(ra)
+    f0, s0 = pa["fome"], pa["sede"]
+    usou = await ra._oferecer_sorte(pa, {"kind": "attack", "texto": "?"})
+    item_sorte = S.guild_item("tecnica_sorte")
+    check("sorte: aceitar devolve True", usou is True)
+    check("sorte: prompt sorte_reacao enviado", len(ra._prompts) == 1)
+    check("sorte: cobra o custo ao aceitar",
+          pa["fome"] == f0 - item_sorte["custo_fome"] and pa["sede"] == s0 - item_sorte["custo_sede"])
+    check("sorte: recarga 10 ao aceitar", ra.tecnica_restante(pa, "tecnica_sorte") == 10)
+
+    # Recusar: nada é cobrado.
+    rd = sala_sorte(responder=False)
+    pd = heroi_sorte(rd)
+    f0, s0 = pd["fome"], pd["sede"]
+    usou = await rd._oferecer_sorte(pd, {"kind": "attack", "texto": "?"})
+    check("sorte: recusar devolve False", usou is False)
+    check("sorte: recusar não cobra nada", pd["fome"] == f0 and pd["sede"] == s0)
+    check("sorte: recusar não inicia recarga", rd.tecnica_restante(pd, "tecnica_sorte") == 0)
+
+    # Sem a técnica equipada não há oferta; em recarga também não.
+    rn = sala_sorte(responder=True)
+    pn = hero("warrior"); pn["connected"] = True; rn.players["h"] = pn
+    check("sorte: sem a técnica não oferece",
+          await rn._oferecer_sorte(pn, {"kind": "attack", "texto": "?"}) is False)
+    rc = sala_sorte(responder=True)
+    pc = heroi_sorte(rc)
+    pc["technique_cooldowns"]["tecnica_sorte"] = rc.round_num + 5
+    check("sorte: em recarga não oferece",
+          await rc._oferecer_sorte(pc, {"kind": "attack", "texto": "?"}) is False)
+
+    # Integração: erro de ataque abre a oferta e o reroll pode acertar.
+    ri = sala_sorte(responder=True)
+    pi = heroi_sorte(ri)
     async def _mdies(*a, **k): return None
-    r._monster_dies = _mdies
-    r._golpe_raw = lambda p_, raw: raw
-    r._rolar_ataque = lambda atk, ac, v=False, d=False: (True, 15, 15, False, None)   # reroll acerta
-    hp0 = r.monsters["m1"]["hp"]
-    await r.handle_usar_tecnica("h", "tecnica_sorte")
-    check("sorte: reroll acerta e aplica dano", r.monsters["m1"]["hp"] < hp0)
-    check("sorte: limpa ultimo_ataque_perdido após usar", p.get("ultimo_ataque_perdido") is None)
-    check("sorte: recarga setada", r.tecnica_restante(p, "tecnica_sorte") == 10)
+    ri._monster_dies = _mdies
+    ri._golpe_raw = lambda p_, raw: raw
+    rolagens = iter([(False, 2, 2, False, None), (True, 18, 18, False, None)])
+    ri._rolar_ataque = lambda atk, ac, v=False, d=False: next(rolagens)
+    hp0 = ri.monsters["m1"]["hp"]
+    await ri.handle_attack("h", "m1")
+    check("sorte: erro de ataque oferece a reação", len(ri._prompts) == 1)
+    check("sorte: reroll acerta e aplica dano", ri.monsters["m1"]["hp"] < hp0)
 
-    # Prova stored-vs-live: o reroll TEM que usar o eff_atk CONGELADO no momento
-    # do erro original, e não recomputar a partir do atk_bonus atual do jogador.
-    # Fluxo: erra um ataque de verdade via handle_attack (eff_atk calculado com
-    # atk_bonus=0 → guardado em ultimo_ataque_perdido["eff_atk"]); DEPOIS mudamos
-    # p["atk_bonus"] para um valor bem diferente (99) — se o código relesse o
-    # estado ao vivo em vez do dict congelado, o reroll enxergaria esse 99. Em
-    # vez de mockar _rolar_ataque com um valor de retorno fixo (o que mascararia
-    # a diferença), capturamos o argumento `atk` recebido e comparamos com o
-    # eff_atk que foi de fato gravado no dict — provando que usar_tecnica lê
-    # perdido["eff_atk"] (congelado) e não toca p["atk_bonus"] de novo.
-    rs = setup(); rs.current_pid = lambda: "h"; rs.round_num = 1; rs._is_turn = lambda pid: True
-    ps = hero("warrior", "tecnica_sorte"); ps["pos"] = [0, 0]
-    ps["atk_bonus"] = 0
-    ps["weapon"] = {"id": "machado_basico", "name": "Machado", "die": "1d6", "stat": "str_"}
-    rs.players["h"] = ps
-    rs.monsters = {"m1": {"id": "m1", "name": "Alvo", "nome": "Alvo", "pos": [0, 1],
-                          "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
-    rs._rolar_ataque = lambda atk, ac, v=False, d=False: (False, 2, 2 + atk, False, None)   # erra
-    await rs.handle_attack("h", "m1")
-    eff_atk_congelado = ps["ultimo_ataque_perdido"]["eff_atk"]
-    check("sorte(stored-vs-live): eff_atk foi congelado no miss", eff_atk_congelado == 0)
-
-    # Muda o stat AO VIVO depois do erro — se o reroll recomputasse, usaria 99.
-    ps["atk_bonus"] = 99
-
-    atk_capturado = {}
-    def _rolar_captura(atk, ac, v=False, d=False):
-        atk_capturado["atk"] = atk
-        return (True, 15, 15 + atk, False, None)
-    rs._rolar_ataque = _rolar_captura
-    rs._monster_dies = _mdies
-    rs._golpe_raw = lambda p_, raw: raw
-    await rs.handle_usar_tecnica("h", "tecnica_sorte")
-    check("sorte(stored-vs-live): reroll usa o eff_atk CONGELADO, não o atk_bonus ao vivo",
-          atk_capturado.get("atk") == eff_atk_congelado and atk_capturado.get("atk") != 99)
-
-    # Sem erro recente: recusa educadamente.
-    r2 = setup(); r2.current_pid = lambda: "h"; r2._is_turn = lambda pid: True
-    p2 = hero("warrior", "tecnica_sorte"); r2.players["h"] = p2
-    await r2.handle_usar_tecnica("h", "tecnica_sorte")
-    check("sorte: recusa sem ataque recente", "Nenhum ataque recente" in (r2._errs[-1] if r2._errs else ""))
-
-    # Limpo no fim do turno.
-    r3 = setup(); r3.current_pid = lambda: "h"
-    p3 = hero("warrior"); p3["ultimo_ataque_perdido"] = {"target_id": "m1"}; p3["moves_left"] = p3["spd"]
-    r3.players["h"] = p3; r3.player_order = ["h"]; r3.turn_index = 0
-    await r3.handle_end_turn("h")
-    check("sorte: ultimo_ataque_perdido limpo no fim do turno", p3.get("ultimo_ataque_perdido") is None)
+    # Integração: falha de save é refeita com +2 via _testar_save_com_sorte.
+    rsv = sala_sorte(responder=True)
+    psv = heroi_sorte(rsv)
+    vistos = []
+    def _save_fake(alvo, tipo, cd, extra_mod=0, fonte=None, desvantagem=False):
+        vistos.append(extra_mod)
+        return (len(vistos) > 1, 10, 0, 10)      # falha na 1ª, passa na 2ª
+    rsv._testar_save = _save_fake
+    passou, _d20, _b, _t = await rsv._testar_save_com_sorte(psv, "reflexos", 15)
+    check("sorte: save falho oferece a reação", len(rsv._prompts) == 1)
+    check("sorte: reroll do save soma +2", vistos == [0, 2])
+    check("sorte: save refeito passa", passou is True)
 
     # [27] Último Esforço — abertura da sub-fase
     print("\n[27] Último Esforço — abertura")
