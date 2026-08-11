@@ -719,563 +719,563 @@ window.LANG_CATALOGO = {
     "pt": "Violino"
   },
   "cat.item.agua_benta.nome": {
-    "en": "",
+    "en": "Holy Water",
     "pt": "Água Benta"
   },
   "cat.item.alabarda.nome": {
-    "en": "",
+    "en": "Halberd",
     "pt": "Alabarda"
   },
   "cat.item.alabarda_prata.nome": {
-    "en": "",
+    "en": "Silver Halberd",
     "pt": "Alabarda de Prata"
   },
   "cat.item.amulet.nome": {
-    "en": "",
+    "en": "Amulet of Luck",
     "pt": "Amuleto da Sorte"
   },
   "cat.item.antidote.nome": {
-    "en": "",
+    "en": "Antidote",
     "pt": "Antídoto"
   },
   "cat.item.arco_curto.nome": {
-    "en": "",
+    "en": "Short Bow",
     "pt": "Arco Curto"
   },
   "cat.item.backpack.nome": {
-    "en": "",
+    "en": "Leather Backpack",
     "pt": "Mochila de Couro"
   },
   "cat.item.banquete.nome": {
-    "en": "",
+    "en": "Feast",
     "pt": "Banquete"
   },
   "cat.item.bastsword.nome": {
-    "en": "",
+    "en": "Bastard Sword",
     "pt": "Espada Bastarda"
   },
   "cat.item.bastsword_prata.nome": {
-    "en": "",
+    "en": "Silver Bastard Sword",
     "pt": "Espada Bastarda de Prata"
   },
   "cat.item.besta.nome": {
-    "en": "",
+    "en": "Crossbow",
     "pt": "Besta"
   },
   "cat.item.bless.nome": {
-    "en": "",
+    "en": "Divine Blessing",
     "pt": "Bênção Divina"
   },
   "cat.item.bomba_fumaca.nome": {
-    "en": "",
+    "en": "Smoke Bomb",
     "pt": "Bomba de Fumaça"
   },
   "cat.item.bomba_incendiaria.nome": {
-    "en": "",
+    "en": "Incendiary Bomb",
     "pt": "Bomba Incendiária"
   },
   "cat.item.boots.nome": {
-    "en": "",
+    "en": "Swift Boots",
     "pt": "Botas Velozes"
   },
   "cat.item.bordao.nome": {
-    "en": "",
+    "en": "Quarterstaff",
     "pt": "Bordão"
   },
   "cat.item.bordao_prata.nome": {
-    "en": "",
+    "en": "Silver Quarterstaff",
     "pt": "Bordão de Prata"
   },
   "cat.item.bota_dos_passos_largos.nome": {
-    "en": "",
+    "en": "Boots of the Long Stride",
     "pt": "Bota dos passos largos"
   },
   "cat.item.bronze_armor.nome": {
-    "en": "",
+    "en": "Bronze Armor",
     "pt": "Armadura de Bronze"
   },
   "cat.item.cajado_madeira.nome": {
-    "en": "",
+    "en": "Wooden Staff",
     "pt": "Cajado de Madeira"
   },
   "cat.item.caneca_cerveja.nome": {
-    "en": "",
+    "en": "Mug of Beer",
     "pt": "Caneca de Cerveja"
   },
   "cat.item.cantil_agua.nome": {
-    "en": "",
+    "en": "Water Canteen",
     "pt": "Cantil de Água"
   },
   "cat.item.chainmail.nome": {
-    "en": "",
+    "en": "Chainmail",
     "pt": "Cota de Malha"
   },
   "cat.item.chicote.nome": {
-    "en": "",
+    "en": "Whip",
     "pt": "Chicote"
   },
   "cat.item.chicote_prata.nome": {
-    "en": "",
+    "en": "Silver Whip",
     "pt": "Chicote de Prata"
   },
   "cat.item.circlet.nome": {
-    "en": "",
+    "en": "Arcane Circlet",
     "pt": "Tiara Arcana"
   },
   "cat.item.cleanse.nome": {
-    "en": "",
+    "en": "Purification",
     "pt": "Purificação"
   },
   "cat.item.cloak.nome": {
-    "en": "",
+    "en": "Cloak",
     "pt": "Manto"
   },
   "cat.item.cola_alquimica.nome": {
-    "en": "",
+    "en": "Alchemical Glue",
     "pt": "Cola Alquímica"
   },
   "cat.item.dagger.nome": {
-    "en": "",
+    "en": "Dagger",
     "pt": "Adaga"
   },
   "cat.item.dagger_prata.nome": {
-    "en": "",
+    "en": "Silver Dagger",
     "pt": "Adaga de Prata"
   },
   "cat.item.dente_da_fera.nome": {
-    "en": "",
+    "en": "Beast Fang",
     "pt": "Dente da fera"
   },
   "cat.item.dente_da_fera_copia.nome": {
-    "en": "",
+    "en": "Beast Fang (Copy)",
     "pt": "Dente da fera (cópia)"
   },
   "cat.item.elixir.nome": {
-    "en": "",
+    "en": "Elixir of Strength",
     "pt": "Elixir da Força"
   },
   "cat.item.elixir_depurativo.nome": {
-    "en": "",
+    "en": "Purifying Elixir",
     "pt": "Elixir Depurativo"
   },
   "cat.item.ensaio_sobre_a_cegueira.nome": {
-    "en": "",
+    "en": "Essay on Blindness",
     "pt": "Ensaio sobre a Cegueira"
   },
   "cat.item.escudo_g.nome": {
-    "en": "",
+    "en": "Large Shield",
     "pt": "Escudo Grande"
   },
   "cat.item.escudo_p.nome": {
-    "en": "",
+    "en": "Small Shield",
     "pt": "Escudo Pequeno"
   },
   "cat.item.espada2m.nome": {
-    "en": "",
+    "en": "Two-Handed Sword",
     "pt": "Espada de 2 Mãos"
   },
   "cat.item.espada2m_prata.nome": {
-    "en": "",
+    "en": "Silver Two-Handed Sword",
     "pt": "Espada de 2 Mãos de Prata"
   },
   "cat.item.fogo_grego.nome": {
-    "en": "",
+    "en": "Greek Fire",
     "pt": "Fogo Grego"
   },
   "cat.item.frasco_acido.nome": {
-    "en": "",
+    "en": "Vial of Acid",
     "pt": "Frasco de Ácido"
   },
   "cat.item.frasco_oleo.nome": {
-    "en": "",
+    "en": "Vial of Incendiary Oil",
     "pt": "Frasco de Óleo Incendiário"
   },
   "cat.item.full_heal.nome": {
-    "en": "",
+    "en": "Full Heal",
     "pt": "Cura Completa"
   },
   "cat.item.fullplate.nome": {
-    "en": "",
+    "en": "Full Plate Armor",
     "pt": "Armadura Completa"
   },
   "cat.item.garrafa_agua.nome": {
-    "en": "",
+    "en": "Water Bottle",
     "pt": "Garrafa de Água"
   },
   "cat.item.garrafa_vinho.nome": {
-    "en": "",
+    "en": "Bottle of Wine",
     "pt": "Garrafa de Vinho"
   },
   "cat.item.granada.nome": {
-    "en": "",
+    "en": "Explosive Grenade",
     "pt": "Granada Explosiva"
   },
   "cat.item.granada_superior.nome": {
-    "en": "",
+    "en": "Greater Grenade",
     "pt": "Granada Superior"
   },
   "cat.item.hand_crossbow.nome": {
-    "en": "",
+    "en": "Hand Crossbow",
     "pt": "Besta de Mão"
   },
   "cat.item.health_potion.nome": {
-    "en": "",
+    "en": "Healing Potion",
     "pt": "Poção de Cura"
   },
   "cat.item.health_potion_concentrated.nome": {
-    "en": "",
+    "en": "Concentrated Healing Potion",
     "pt": "Poção de Cura Concentrada"
   },
   "cat.item.health_potion_improved.nome": {
-    "en": "",
+    "en": "Improved Healing Potion",
     "pt": "Poção de Cura Aprimorada"
   },
   "cat.item.health_potion_small.nome": {
-    "en": "",
+    "en": "Small Healing Potion",
     "pt": "Poção de Cura Pequena"
   },
   "cat.item.helm_iron.nome": {
-    "en": "",
+    "en": "Iron Helm",
     "pt": "Elmo de Ferro"
   },
   "cat.item.instrumento.nome": {
-    "en": "",
+    "en": "Musical Instrument",
     "pt": "Instrumento Musical"
   },
   "cat.item.instrumento_alaude_padrao.nome": {
-    "en": "",
+    "en": "Standard Lute",
     "pt": "Alaúde Padrão"
   },
   "cat.item.instrumento_alaude_rustico.nome": {
-    "en": "",
+    "en": "Rustic Lute",
     "pt": "Alaúde Rústico"
   },
   "cat.item.instrumento_flauta_padrao.nome": {
-    "en": "",
+    "en": "Standard Flute",
     "pt": "Flauta Padrão"
   },
   "cat.item.instrumento_flauta_padrao_runico.nome": {
-    "en": "",
+    "en": "Standard Runic Flute",
     "pt": "Flauta Padrão Rúnica"
   },
   "cat.item.instrumento_flauta_rustico.nome": {
-    "en": "",
+    "en": "Rustic Flute",
     "pt": "Flauta Rústica"
   },
   "cat.item.instrumento_gaita_padrao.nome": {
-    "en": "",
+    "en": "Standard Bagpipes",
     "pt": "Gaita Padrão"
   },
   "cat.item.instrumento_gaita_padrao_runico.nome": {
-    "en": "",
+    "en": "Standard Runic Bagpipes",
     "pt": "Gaita Padrão Rúnica"
   },
   "cat.item.instrumento_gaita_refinado.nome": {
-    "en": "",
+    "en": "Refined Bagpipes",
     "pt": "Gaita Refinada"
   },
   "cat.item.instrumento_gaita_refinado_ana_runico.nome": {
-    "en": "",
+    "en": "Legendary Dwarven Bagpipes",
     "pt": "Gaita Lendária Anã"
   },
   "cat.item.instrumento_gaita_rustico.nome": {
-    "en": "",
+    "en": "Rustic Bagpipes",
     "pt": "Gaita Rústica"
   },
   "cat.item.instrumento_gaita_velho.nome": {
-    "en": "",
+    "en": "Old Bagpipes",
     "pt": "Gaita Velha"
   },
   "cat.item.instrumento_harpa_padrao.nome": {
-    "en": "",
+    "en": "Standard Harp",
     "pt": "Harpa Padrão"
   },
   "cat.item.instrumento_harpa_padrao_elfica.nome": {
-    "en": "",
+    "en": "Standard Elven Harp",
     "pt": "Harpa Padrão Élfica"
   },
   "cat.item.instrumento_harpa_refinado.nome": {
-    "en": "",
+    "en": "Refined Harp",
     "pt": "Harpa Refinada"
   },
   "cat.item.instrumento_harpa_refinado_elfica_runico.nome": {
-    "en": "",
+    "en": "Legendary Elven Harp",
     "pt": "Harpa Lendária Élfica"
   },
   "cat.item.instrumento_harpa_rustico.nome": {
-    "en": "",
+    "en": "Rustic Harp",
     "pt": "Harpa Rústica"
   },
   "cat.item.instrumento_harpa_velho.nome": {
-    "en": "",
+    "en": "Old Harp",
     "pt": "Harpa Velha"
   },
   "cat.item.instrumento_lira_padrao.nome": {
-    "en": "",
+    "en": "Standard Lyre",
     "pt": "Lira Padrão"
   },
   "cat.item.instrumento_lira_padrao_ana.nome": {
-    "en": "",
+    "en": "Standard Dwarven Lyre",
     "pt": "Lira Padrão Anã"
   },
   "cat.item.instrumento_lira_padrao_runico.nome": {
-    "en": "",
+    "en": "Standard Runic Lyre",
     "pt": "Lira Padrão Rúnica"
   },
   "cat.item.instrumento_lira_rustico.nome": {
-    "en": "",
+    "en": "Rustic Lyre",
     "pt": "Lira Rústica"
   },
   "cat.item.instrumento_sino_padrao.nome": {
-    "en": "",
+    "en": "Standard Bell",
     "pt": "Sino Padrão"
   },
   "cat.item.instrumento_sino_padrao_elfica.nome": {
-    "en": "",
+    "en": "Standard Elven Bell",
     "pt": "Sino Padrão Élfico"
   },
   "cat.item.instrumento_sino_padrao_runico.nome": {
-    "en": "",
+    "en": "Standard Runic Bell",
     "pt": "Sino Padrão Rúnico"
   },
   "cat.item.instrumento_sino_rustico.nome": {
-    "en": "",
+    "en": "Rustic Bell",
     "pt": "Sino Rústico"
   },
   "cat.item.instrumento_tambor_padrao.nome": {
-    "en": "",
+    "en": "Standard War Drum",
     "pt": "Tambor de Guerra Padrão"
   },
   "cat.item.instrumento_tambor_padrao_ana.nome": {
-    "en": "",
+    "en": "Standard Dwarven War Drum",
     "pt": "Tambor de Guerra Padrão Anão"
   },
   "cat.item.instrumento_tambor_rustico.nome": {
-    "en": "",
+    "en": "Rustic War Drum",
     "pt": "Tambor de Guerra Rústico"
   },
   "cat.item.instrumento_trompa_padrao.nome": {
-    "en": "",
+    "en": "Standard War Horn",
     "pt": "Trompa de Guerra Padrão"
   },
   "cat.item.instrumento_trompa_padrao_elfica.nome": {
-    "en": "",
+    "en": "Standard Elven War Horn",
     "pt": "Trompa de Guerra Padrão Élfica"
   },
   "cat.item.instrumento_trompa_padrao_runico.nome": {
-    "en": "",
+    "en": "Standard Runic War Horn",
     "pt": "Trompa de Guerra Padrão Rúnica"
   },
   "cat.item.instrumento_trompa_rustico.nome": {
-    "en": "",
+    "en": "Rustic War Horn",
     "pt": "Trompa de Guerra Rústica"
   },
   "cat.item.instrumento_violino_padrao.nome": {
-    "en": "",
+    "en": "Standard Violin",
     "pt": "Violino Padrão"
   },
   "cat.item.instrumento_violino_padrao_ana.nome": {
-    "en": "",
+    "en": "Standard Dwarven Violin",
     "pt": "Violino Padrão Anão"
   },
   "cat.item.instrumento_violino_padrao_runico.nome": {
-    "en": "",
+    "en": "Standard Runic Violin",
     "pt": "Violino Padrão Rúnico"
   },
   "cat.item.instrumento_violino_rustico.nome": {
-    "en": "",
+    "en": "Rustic Violin",
     "pt": "Violino Rústico"
   },
   "cat.item.lanca.nome": {
-    "en": "",
+    "en": "Spear",
     "pt": "Lança"
   },
   "cat.item.lanca_curta.nome": {
-    "en": "",
+    "en": "Short Spear",
     "pt": "Lança Curta"
   },
   "cat.item.lanca_curta_prata.nome": {
-    "en": "",
+    "en": "Silver Short Spear",
     "pt": "Lança Curta de Prata"
   },
   "cat.item.lanca_prata.nome": {
-    "en": "",
+    "en": "Silver Spear",
     "pt": "Lança de Prata"
   },
   "cat.item.leather.nome": {
-    "en": "",
+    "en": "Leather Armor",
     "pt": "Armadura de Couro"
   },
   "cat.item.leather_mail.nome": {
-    "en": "",
+    "en": "Leather Armor Reinforced with Chainmail",
     "pt": "Armadura de Couro Revestido com Malha"
   },
   "cat.item.leather_plate.nome": {
-    "en": "",
+    "en": "Leather and Plate Armor",
     "pt": "Armadura de Couro e Placas"
   },
   "cat.item.longbow.nome": {
-    "en": "",
+    "en": "Long Bow",
     "pt": "Arco Longo"
   },
   "cat.item.longsword.nome": {
-    "en": "",
+    "en": "Long Sword",
     "pt": "Espada Longa"
   },
   "cat.item.longsword_prata.nome": {
-    "en": "",
+    "en": "Silver Long Sword",
     "pt": "Espada Longa de Prata"
   },
   "cat.item.maca.nome": {
-    "en": "",
+    "en": "Mace",
     "pt": "Maça"
   },
   "cat.item.maca_prata.nome": {
-    "en": "",
+    "en": "Silver Mace",
     "pt": "Maça de Prata"
   },
   "cat.item.machado_basico.nome": {
-    "en": "",
+    "en": "Iron Axe",
     "pt": "Machado de Ferro"
   },
   "cat.item.machado_basico_prata.nome": {
-    "en": "",
+    "en": "Silver Iron Axe",
     "pt": "Machado de Ferro de Prata"
   },
   "cat.item.machado_duplo.nome": {
-    "en": "",
+    "en": "Double Axe",
     "pt": "Machado Duplo"
   },
   "cat.item.machado_duplo_prata.nome": {
-    "en": "",
+    "en": "Silver Double Axe",
     "pt": "Machado Duplo de Prata"
   },
   "cat.item.machado_orc.nome": {
-    "en": "",
+    "en": "Orcish War Axe",
     "pt": "Machado de Guerra Órquico"
   },
   "cat.item.machado_orc_prata.nome": {
-    "en": "",
+    "en": "Silver Orcish War Axe",
     "pt": "Machado de Guerra Órquico de Prata"
   },
   "cat.item.mangual.nome": {
-    "en": "",
+    "en": "Flail",
     "pt": "Mangual"
   },
   "cat.item.mangual_prata.nome": {
-    "en": "",
+    "en": "Silver Flail",
     "pt": "Mangual de Prata"
   },
   "cat.item.monster_leather_plate.nome": {
-    "en": "",
+    "en": "Monster Leather and Plate Armor",
     "pt": "Armadura de Couro de Monstro e Placas"
   },
   "cat.item.oleo_dissolvente.nome": {
-    "en": "",
+    "en": "Dissolving Oil",
     "pt": "Óleo Dissolvente"
   },
   "cat.item.pao.nome": {
-    "en": "",
+    "en": "Bread",
     "pt": "Pão"
   },
   "cat.item.plate.nome": {
-    "en": "",
+    "en": "Plate Armor",
     "pt": "Armadura de Placas"
   },
   "cat.item.racao_viagem.nome": {
-    "en": "",
+    "en": "Travel Rations",
     "pt": "Ração de Viagem"
   },
   "cat.item.rede_arremesso.nome": {
-    "en": "",
+    "en": "Net",
     "pt": "Rede"
   },
   "cat.item.refeicao_simples.nome": {
-    "en": "",
+    "en": "Simple Meal",
     "pt": "Refeição Simples"
   },
   "cat.item.regeneration_potion.nome": {
-    "en": "",
+    "en": "Regeneration Potion",
     "pt": "Poção de Regeneração"
   },
   "cat.item.ring_str.nome": {
-    "en": "",
+    "en": "Ring of Strength",
     "pt": "Anel de Força"
   },
   "cat.item.ring_vita.nome": {
-    "en": "",
+    "en": "Ring of Vitality",
     "pt": "Anel da Vitalidade"
   },
   "cat.item.shortsword.nome": {
-    "en": "",
+    "en": "Short Sword",
     "pt": "Espada Curta"
   },
   "cat.item.shortsword_prata.nome": {
-    "en": "",
+    "en": "Silver Short Sword",
     "pt": "Espada Curta de Prata"
   },
   "cat.item.staff.nome": {
-    "en": "",
+    "en": "Arcane Staff",
     "pt": "Cajado Arcano"
   },
   "cat.item.suco_fruta.nome": {
-    "en": "",
+    "en": "Fruit Juice",
     "pt": "Suco de Fruta"
   },
   "cat.item.unarmed.nome": {
-    "en": "",
+    "en": "Unarmed",
     "pt": "Desarmado"
   },
   "cat.item.vela_escuridao.nome": {
-    "en": "",
+    "en": "Candle of Darkness",
     "pt": "Vela da Escuridão"
   },
   "cat.item.veneno_agonia_sufocante.nome": {
-    "en": "",
+    "en": "Suffocating Agony",
     "pt": "Agonia Sufocante"
   },
   "cat.item.veneno_aranha_sombria.nome": {
-    "en": "",
+    "en": "Shadow Spider Venom",
     "pt": "Veneno da Aranha Sombria"
   },
   "cat.item.veneno_ardonia_negra.nome": {
-    "en": "",
+    "en": "Black Ardonia",
     "pt": "Ardonia Negra"
   },
   "cat.item.veneno_basilisco.nome": {
-    "en": "",
+    "en": "Basilisk Venom",
     "pt": "Peçonha do Basilisco"
   },
   "cat.item.veneno_cobra_cuspidora.nome": {
-    "en": "",
+    "en": "Spitting Cobra Venom",
     "pt": "Veneno de Cobra Cuspidora"
   },
   "cat.item.veneno_dor_escarlate.nome": {
-    "en": "",
+    "en": "Scarlet Pain",
     "pt": "Dor Escarlate"
   },
   "cat.item.veneno_escorpiao_pedra.nome": {
-    "en": "",
+    "en": "Stone Scorpion Venom",
     "pt": "Veneno do Escorpião Pedra"
   },
   "cat.item.veneno_fungo_acre.nome": {
-    "en": "",
+    "en": "Acrid Fungus",
     "pt": "Fungo Acre"
   },
   "cat.item.veneno_polvo_abissal.nome": {
-    "en": "",
+    "en": "Abyssal Octopus Ink",
     "pt": "Tinta do Polvo Abissal"
   },
   "cat.item.vidro_acido_grande.nome": {
-    "en": "",
+    "en": "Large Acid Vial",
     "pt": "Vidro de Ácido Grande"
   },
   "cat.item.warhammer.nome": {
-    "en": "",
+    "en": "Warhammer",
     "pt": "Martelo de Guerra"
   },
   "cat.item.warhammer_prata.nome": {
-    "en": "",
+    "en": "Silver Warhammer",
     "pt": "Martelo de Guerra de Prata"
   },
   "cat.magia.abencoar.nome": {
