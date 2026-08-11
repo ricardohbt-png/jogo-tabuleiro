@@ -271,6 +271,11 @@ NÃO toca nas mensagens com f-string: cada uma exige batizar o parâmetro, e é
 onde um script erraria em silêncio. Elas são migradas à mão depois.
 """
 import io, json, os, re, sys, unicodedata
+# Sem isto o script escreve os arquivos e SÓ DEPOIS estoura no print (o
+# console do Windows é cp1252 e a saída tem →): a migração fica aplicada
+# enquanto o operador vê um traceback e acha que nada aconteceu.
+try: sys.stdout.reconfigure(encoding="utf-8")
+except Exception: pass
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FONTE = os.path.join(RAIZ, "server.py")
@@ -383,7 +388,13 @@ parêntese de fechamento original continua no fonte logo depois do literal.
 python tools/migrar_erros.py
 ```
 
-Esperado: `389 ocorrências de texto fixo → 305 chaves distintas.` (o da "Sala cheia" já saiu na Task 1) e o mesmo número sem tradução. Se aparecer aviso de colisão, **pare e reporte** — a resolução é escolha humana.
+Esperado: `389 ocorrências de texto fixo → 305 chaves distintas.` Duas colisões de slug
+são **esperadas e corretas** — o jogo tem "Ouro insuficiente." e "Ouro insuficiente!", e
+duas variantes de "abra espaço". O script sufixa `_2` e relata; **não unifique**, porque
+rever o conteúdo das mensagens está fora do escopo desta etapa e unificar mudaria o texto
+em português. O relatório é informativo.
+
+Esperado ainda: (o da "Sala cheia" já saiu na Task 1) e o mesmo número sem tradução. Se aparecer aviso de colisão, **pare e reporte** — a resolução é escolha humana.
 
 - [ ] **Passo 5: Conferir o diff antes de confiar**
 
