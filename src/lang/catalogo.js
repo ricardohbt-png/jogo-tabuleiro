@@ -267,7 +267,7 @@ window.LANG_CATALOGO = {
     "pt": "Tumba"
   },
   "cat.guilda.bardo_cancao_acerto.desc": {
-    "en": "",
+    "en": "The Heroic Song's Accuracy bonus rises from +1 to +2.",
     "pt": "O bônus de Acerto da Canção Heroica sobe de +1 para +2."
   },
   "cat.guilda.bardo_cancao_acerto.nome": {
@@ -275,7 +275,7 @@ window.LANG_CATALOGO = {
     "pt": "Canção: Acerto +1"
   },
   "cat.guilda.bardo_cancao_ca.desc": {
-    "en": "",
+    "en": "The Heroic Song's Armor bonus rises from +1 to +2.",
     "pt": "O bônus de Armadura da Canção Heroica sobe de +1 para +2."
   },
   "cat.guilda.bardo_cancao_ca.nome": {
@@ -283,7 +283,7 @@ window.LANG_CATALOGO = {
     "pt": "Canção: Armadura +1"
   },
   "cat.guilda.bardo_cancao_dano.desc": {
-    "en": "",
+    "en": "The Heroic Song's Damage bonus rises from +1 to +2.",
     "pt": "O bônus de Dano da Canção Heroica sobe de +1 para +2."
   },
   "cat.guilda.bardo_cancao_dano.nome": {
@@ -291,7 +291,7 @@ window.LANG_CATALOGO = {
     "pt": "Canção: Dano +1"
   },
   "cat.guilda.bardo_cancao_movimento.desc": {
-    "en": "",
+    "en": "The Heroic Song's Movement bonus rises from +1 to +2.",
     "pt": "O bônus de Movimento da Canção Heroica sobe de +1 para +2."
   },
   "cat.guilda.bardo_cancao_movimento.nome": {
@@ -299,7 +299,7 @@ window.LANG_CATALOGO = {
     "pt": "Canção: Movimento +1"
   },
   "cat.guilda.bardo_cancao_resistencia.desc": {
-    "en": "",
+    "en": "The Heroic Song's Resistance bonus rises from +1 to +2.",
     "pt": "O bônus de Resistência da Canção Heroica sobe de +1 para +2."
   },
   "cat.guilda.bardo_cancao_resistencia.nome": {
@@ -307,7 +307,7 @@ window.LANG_CATALOGO = {
     "pt": "Canção: Resistência +1"
   },
   "cat.guilda.bardo_cancao_suprema.desc": {
-    "en": "",
+    "en": "Maintaining the Heroic Song costs -1🍖 and -1💧 (minimum 0).",
     "pt": "A manutenção da Canção Heroica custa -1🍖 e -1💧 (mínimo 0)."
   },
   "cat.guilda.bardo_cancao_suprema.nome": {
@@ -315,7 +315,7 @@ window.LANG_CATALOGO = {
     "pt": "Canção Heroica Suprema"
   },
   "cat.guilda.bardo_lendas_supremas.desc": {
-    "en": "",
+    "en": "All Lore bonuses now benefit the whole party (while Henrique is alive).",
     "pt": "Todos os bônus de Lenda passam a beneficiar o grupo inteiro (enquanto Henrique vivo)."
   },
   "cat.guilda.bardo_lendas_supremas.nome": {
@@ -323,7 +323,7 @@ window.LANG_CATALOGO = {
     "pt": "Lendas Supremas"
   },
   "cat.guilda.bardo_provocacao_2.desc": {
-    "en": "",
+    "en": "The disadvantage lasts for the whole taunt; Henrique gains +2 AC and attacks the target with advantage.",
     "pt": "A desvantagem dura toda a provocação; Henrique ganha +2 CA e ataca o alvo com vantagem."
   },
   "cat.guilda.bardo_provocacao_2.nome": {
@@ -331,7 +331,7 @@ window.LANG_CATALOGO = {
     "pt": "Provocação II"
   },
   "cat.guilda.bardo_provocacao_3.desc": {
-    "en": "",
+    "en": "All allies attack the taunted target with advantage for 1 round.",
     "pt": "Todos os aliados atacam o alvo provocado com vantagem por 1 rodada."
   },
   "cat.guilda.bardo_provocacao_3.nome": {
@@ -339,7 +339,7 @@ window.LANG_CATALOGO = {
     "pt": "Provocação III"
   },
   "cat.guilda.brutalidade.desc": {
-    "en": "",
+    "en": "Until the end of the turn, physical weapon attacks deal +2 damage.",
     "pt": "Até o fim do turno, ataques físicos com arma causam +2 de dano."
   },
   "cat.guilda.brutalidade.nome": {
@@ -347,7 +347,7 @@ window.LANG_CATALOGO = {
     "pt": "Brutalidade"
   },
   "cat.guilda.clerigo_cura_2.desc": {
-    "en": "",
+    "en": "Heal can use up to 2d8 + INT.",
     "pt": "Cura pode usar até 2d8 + INT."
   },
   "cat.guilda.clerigo_cura_2.nome": {
@@ -355,7 +355,7 @@ window.LANG_CATALOGO = {
     "pt": "Cura II"
   },
   "cat.guilda.clerigo_cura_3.desc": {
-    "en": "",
+    "en": "Heal can use up to 3d8 + INT.",
     "pt": "Cura pode usar até 3d8 + INT."
   },
   "cat.guilda.clerigo_cura_3.nome": {
@@ -363,7 +363,7 @@ window.LANG_CATALOGO = {
     "pt": "Cura III"
   },
   "cat.guilda.clerigo_massa_2.desc": {
-    "en": "",
+    "en": "Mass Heal: up to 2d8 + INT, radius 4.",
     "pt": "Cura em Massa: até 2d8 + INT, raio 4."
   },
   "cat.guilda.clerigo_massa_2.nome": {
@@ -371,7 +371,7 @@ window.LANG_CATALOGO = {
     "pt": "Cura em Massa II"
   },
   "cat.guilda.clerigo_massa_3.desc": {
-    "en": "",
+    "en": "Mass Heal: up to 3d8 + INT, radius 6.",
     "pt": "Cura em Massa: até 3d8 + INT, raio 6."
   },
   "cat.guilda.clerigo_massa_3.nome": {
@@ -379,7 +379,7 @@ window.LANG_CATALOGO = {
     "pt": "Cura em Massa III"
   },
   "cat.guilda.clerigo_purif_2.desc": {
-    "en": "",
+    "en": "Purification also removes diseases.",
     "pt": "Purificação também remove doenças."
   },
   "cat.guilda.clerigo_purif_2.nome": {
@@ -387,7 +387,7 @@ window.LANG_CATALOGO = {
     "pt": "Purificação II"
   },
   "cat.guilda.clerigo_purif_3.desc": {
-    "en": "",
+    "en": "Purification also removes curses and petrification.",
     "pt": "Purificação também remove maldições e petrificação."
   },
   "cat.guilda.clerigo_purif_3.nome": {
@@ -395,7 +395,7 @@ window.LANG_CATALOGO = {
     "pt": "Purificação III"
   },
   "cat.guilda.clerigo_ressur_2.desc": {
-    "en": "",
+    "en": "Resurrection brings the ally back with half HP (🍖15 💧15).",
     "pt": "Ressurreição traz o aliado com metade dos PV (🍖15 💧15)."
   },
   "cat.guilda.clerigo_ressur_2.nome": {
@@ -403,7 +403,7 @@ window.LANG_CATALOGO = {
     "pt": "Ressurreição II"
   },
   "cat.guilda.clerigo_ressur_3.desc": {
-    "en": "",
+    "en": "Resurrection brings the ally back with full HP (🍖20 💧20).",
     "pt": "Ressurreição traz o aliado com PV cheio (🍖20 💧20)."
   },
   "cat.guilda.clerigo_ressur_3.nome": {
@@ -411,7 +411,7 @@ window.LANG_CATALOGO = {
     "pt": "Ressurreição III"
   },
   "cat.guilda.guerreiro_combinar_2.desc": {
-    "en": "",
+    "en": "Lets you arm TWO abilities in the same turn.",
     "pt": "Permite armar DUAS habilidades no mesmo turno."
   },
   "cat.guilda.guerreiro_combinar_2.nome": {
@@ -419,7 +419,7 @@ window.LANG_CATALOGO = {
     "pt": "Combinar Duas"
   },
   "cat.guilda.guerreiro_furia_3.desc": {
-    "en": "",
+    "en": "Berserker Rage grants 2 extra attacks (3 attacks total).",
     "pt": "Fúria Berserker concede 2 ataques extras (3 ataques no total)."
   },
   "cat.guilda.guerreiro_furia_3.nome": {
@@ -427,7 +427,7 @@ window.LANG_CATALOGO = {
     "pt": "Fúria Berserker III"
   },
   "cat.guilda.guerreiro_golpe_3.desc": {
-    "en": "",
+    "en": "Devastating Strike now multiplies the damage dice by ×2 (was ×1.5).",
     "pt": "Golpe Devastador passa a multiplicar os dados de dano por 2 (era ×1,5)."
   },
   "cat.guilda.guerreiro_golpe_3.nome": {
@@ -435,7 +435,7 @@ window.LANG_CATALOGO = {
     "pt": "Golpe Devastador III"
   },
   "cat.guilda.guerreiro_mestre_combate.desc": {
-    "en": "",
+    "en": "Lets you arm all THREE abilities in the same turn.",
     "pt": "Permite armar as TRÊS habilidades no mesmo turno."
   },
   "cat.guilda.guerreiro_mestre_combate.nome": {
@@ -443,7 +443,7 @@ window.LANG_CATALOGO = {
     "pt": "Mestre de Combate"
   },
   "cat.guilda.guerreiro_mira_3.desc": {
-    "en": "",
+    "en": "Sure Aim also grants +2 damage (in addition to the +2 to hit).",
     "pt": "Mira Certeira também concede +2 de dano (além do +2 de acerto)."
   },
   "cat.guilda.guerreiro_mira_3.nome": {
@@ -451,7 +451,7 @@ window.LANG_CATALOGO = {
     "pt": "Mira Certeira III"
   },
   "cat.guilda.ladino_armadilha_incendiaria.desc": {
-    "en": "",
+    "en": "Permanently unlocks crafting the Incendiary Trap.",
     "pt": "Desbloqueia permanentemente a fabricação de Armadilha Incendiária."
   },
   "cat.guilda.ladino_armadilha_incendiaria.nome": {
@@ -459,7 +459,7 @@ window.LANG_CATALOGO = {
     "pt": "Fórmula: Armadilha Incendiária"
   },
   "cat.guilda.ladino_armadilha_urso.desc": {
-    "en": "",
+    "en": "Permanently unlocks crafting the Bear Trap.",
     "pt": "Desbloqueia permanentemente a fabricação de Armadilha de Urso."
   },
   "cat.guilda.ladino_armadilha_urso.nome": {
@@ -467,7 +467,7 @@ window.LANG_CATALOGO = {
     "pt": "Fórmula: Armadilha de Urso"
   },
   "cat.guilda.ladino_desarme_2.desc": {
-    "en": "",
+    "en": "+2 to the chance of disarming traps.",
     "pt": "+2 na chance de desarmar armadilhas."
   },
   "cat.guilda.ladino_desarme_2.nome": {
@@ -475,7 +475,7 @@ window.LANG_CATALOGO = {
     "pt": "Desarme II"
   },
   "cat.guilda.ladino_desarme_3.desc": {
-    "en": "",
+    "en": "Extra chance to recover the gold from a disarmed trap.",
     "pt": "Chance extra de recuperar o ouro da armadilha desarmada."
   },
   "cat.guilda.ladino_desarme_3.nome": {
@@ -483,7 +483,7 @@ window.LANG_CATALOGO = {
     "pt": "Desarme III"
   },
   "cat.guilda.ladino_esconder_2.desc": {
-    "en": "",
+    "en": "+2 to the chance of hiding in the shadows.",
     "pt": "+2 na chance de se esconder nas sombras."
   },
   "cat.guilda.ladino_esconder_2.nome": {
@@ -491,7 +491,7 @@ window.LANG_CATALOGO = {
     "pt": "Esconder nas Sombras II"
   },
   "cat.guilda.ladino_esconder_3.desc": {
-    "en": "",
+    "en": "Activating no longer costs the bonus action. When revealed, +2 AC for 1 round.",
     "pt": "Ativar não gasta mais a ação bônus. Ao ser revelado, +2 de CA por 1 rodada."
   },
   "cat.guilda.ladino_esconder_3.nome": {
@@ -499,7 +499,7 @@ window.LANG_CATALOGO = {
     "pt": "Esconder nas Sombras III"
   },
   "cat.guilda.ladino_fosso_envenenado.desc": {
-    "en": "",
+    "en": "Permanently unlocks crafting the Poisoned Spike Pit.",
     "pt": "Desbloqueia permanentemente a fabricação de Fosso com Estacas Envenenadas."
   },
   "cat.guilda.ladino_fosso_envenenado.nome": {
@@ -507,7 +507,7 @@ window.LANG_CATALOGO = {
     "pt": "Fórmula: Fosso com Estacas Envenenadas"
   },
   "cat.guilda.ladino_fosso_estacas.desc": {
-    "en": "",
+    "en": "Permanently unlocks crafting the Spike Pit.",
     "pt": "Desbloqueia permanentemente a fabricação de Fosso com Estacas."
   },
   "cat.guilda.ladino_fosso_estacas.nome": {
@@ -515,7 +515,7 @@ window.LANG_CATALOGO = {
     "pt": "Fórmula: Fosso com Estacas"
   },
   "cat.guilda.ladino_furtivo_2.desc": {
-    "en": "",
+    "en": "Sneak Attack also triggers when an ally is adjacent to the target.",
     "pt": "Ataque Furtivo também dispara se há aliado adjacente ao alvo."
   },
   "cat.guilda.ladino_furtivo_2.nome": {
@@ -523,7 +523,7 @@ window.LANG_CATALOGO = {
     "pt": "Ataque Furtivo II"
   },
   "cat.guilda.ladino_furtivo_3.desc": {
-    "en": "",
+    "en": "1×/enemy/round: when an ally hits an enemy, Luccas reacts with a Sneak Attack against it.",
     "pt": "1×/inimigo/rodada: quando um aliado acerta um inimigo, Luccas reage com um Ataque Furtivo nele."
   },
   "cat.guilda.ladino_furtivo_3.nome": {
@@ -531,23 +531,23 @@ window.LANG_CATALOGO = {
     "pt": "Ataque Furtivo Supremo"
   },
   "cat.guilda.ladino_lamina_escondida.desc": {
-    "en": "",
+    "en": "Permanently unlocks crafting the Hidden Blade.",
     "pt": "Desbloqueia permanentemente a fabricação de Lâmina Escondida."
   },
   "cat.guilda.ladino_lamina_escondida.nome": {
-    "en": "",
+    "en": "Formula: Hidden Blade",
     "pt": "Fórmula: Lâmina Escondida"
   },
   "cat.guilda.ladino_lamina_pendulo.desc": {
-    "en": "",
+    "en": "Permanently unlocks crafting the Pendulum Blade.",
     "pt": "Desbloqueia permanentemente a fabricação de Lâmina Pêndulo."
   },
   "cat.guilda.ladino_lamina_pendulo.nome": {
-    "en": "",
+    "en": "Formula: Pendulum Blade",
     "pt": "Fórmula: Lâmina Pêndulo"
   },
   "cat.guilda.ladino_mina_terrestre.desc": {
-    "en": "",
+    "en": "Permanently unlocks crafting the Land Mine.",
     "pt": "Desbloqueia permanentemente a fabricação de Mina Terrestre."
   },
   "cat.guilda.ladino_mina_terrestre.nome": {
@@ -555,7 +555,7 @@ window.LANG_CATALOGO = {
     "pt": "Fórmula: Mina Terrestre"
   },
   "cat.guilda.ladino_nuvem_gas.desc": {
-    "en": "",
+    "en": "Permanently unlocks crafting the Gas Cloud.",
     "pt": "Desbloqueia permanentemente a fabricação de Nuvem de Gás."
   },
   "cat.guilda.ladino_nuvem_gas.nome": {
@@ -563,7 +563,7 @@ window.LANG_CATALOGO = {
     "pt": "Fórmula: Nuvem de Gás"
   },
   "cat.guilda.ladino_rede.desc": {
-    "en": "",
+    "en": "Permanently unlocks crafting the Net.",
     "pt": "Desbloqueia permanentemente a fabricação de Rede."
   },
   "cat.guilda.ladino_rede.nome": {
@@ -571,7 +571,7 @@ window.LANG_CATALOGO = {
     "pt": "Fórmula: Rede"
   },
   "cat.guilda.ladino_veneno_2.desc": {
-    "en": "",
+    "en": "Weapon poison (melee) now lasts 2 successful hits.",
     "pt": "O veneno na arma (corpo a corpo) dura 2 golpes certeiros."
   },
   "cat.guilda.ladino_veneno_2.nome": {
@@ -579,7 +579,7 @@ window.LANG_CATALOGO = {
     "pt": "Veneno Rápido II"
   },
   "cat.guilda.ladino_veneno_3.desc": {
-    "en": "",
+    "en": "Can keep 2 different poisons on the weapon at the same time.",
     "pt": "Pode manter 2 venenos diferentes na arma ao mesmo tempo."
   },
   "cat.guilda.ladino_veneno_3.nome": {
@@ -587,7 +587,7 @@ window.LANG_CATALOGO = {
     "pt": "Veneno Rápido III"
   },
   "cat.guilda.lenda_aranha_sombria.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Shadow Spider.",
     "pt": "+1 de ataque e +1 nos saves contra Aranha Sombria."
   },
   "cat.guilda.lenda_aranha_sombria.nome": {
@@ -595,7 +595,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Aranha Sombria"
   },
   "cat.guilda.lenda_bugbear_sombras.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Bugbear — Boogeyman of the Shadows.",
     "pt": "+1 de ataque e +1 nos saves contra Bugbear — Bicho-Papão das Sombras."
   },
   "cat.guilda.lenda_bugbear_sombras.nome": {
@@ -603,7 +603,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Bugbear — Bicho-Papão das Sombras"
   },
   "cat.guilda.lenda_cobra_constritora.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Constrictor Snake.",
     "pt": "+1 de ataque e +1 nos saves contra Cobra Constritora."
   },
   "cat.guilda.lenda_cobra_constritora.nome": {
@@ -611,7 +611,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Cobra Constritora"
   },
   "cat.guilda.lenda_cobra_venenosa.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Venomous Snake.",
     "pt": "+1 de ataque e +1 nos saves contra Cobra Venenosa."
   },
   "cat.guilda.lenda_cobra_venenosa.nome": {
@@ -619,7 +619,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Cobra Venenosa"
   },
   "cat.guilda.lenda_crocodilo_jovem.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Young Crocodile.",
     "pt": "+1 de ataque e +1 nos saves contra Crocodilo Jovem."
   },
   "cat.guilda.lenda_crocodilo_jovem.nome": {
@@ -627,7 +627,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Crocodilo Jovem"
   },
   "cat.guilda.lenda_dark_mage.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Dark Mage.",
     "pt": "+1 de ataque e +1 nos saves contra Mago das Trevas."
   },
   "cat.guilda.lenda_dark_mage.nome": {
@@ -635,7 +635,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Mago das Trevas"
   },
   "cat.guilda.lenda_devorador_metal.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Metal Devourer.",
     "pt": "+1 de ataque e +1 nos saves contra Devorador de Metal."
   },
   "cat.guilda.lenda_devorador_metal.nome": {
@@ -643,7 +643,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Devorador de Metal"
   },
   "cat.guilda.lenda_devorador_organico.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Organic Devourer.",
     "pt": "+1 de ataque e +1 nos saves contra Devorador Orgânico."
   },
   "cat.guilda.lenda_devorador_organico.nome": {
@@ -651,7 +651,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Devorador Orgânico"
   },
   "cat.guilda.lenda_dragon.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Ancient Dragon.",
     "pt": "+1 de ataque e +1 nos saves contra Dragão Ancião."
   },
   "cat.guilda.lenda_dragon.nome": {
@@ -659,7 +659,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Dragão Ancião"
   },
   "cat.guilda.lenda_elemental_agua.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Water Elemental.",
     "pt": "+1 de ataque e +1 nos saves contra Elemental de Água."
   },
   "cat.guilda.lenda_elemental_agua.nome": {
@@ -667,7 +667,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Elemental de Água"
   },
   "cat.guilda.lenda_elemental_ar.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Air Elemental.",
     "pt": "+1 de ataque e +1 nos saves contra Elemental de Ar."
   },
   "cat.guilda.lenda_elemental_ar.nome": {
@@ -675,7 +675,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Elemental de Ar"
   },
   "cat.guilda.lenda_elemental_eletrico.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Electric Elemental.",
     "pt": "+1 de ataque e +1 nos saves contra Elemental Elétrico."
   },
   "cat.guilda.lenda_elemental_eletrico.nome": {
@@ -683,7 +683,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Elemental Elétrico"
   },
   "cat.guilda.lenda_elemental_fogo.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Fire Elemental.",
     "pt": "+1 de ataque e +1 nos saves contra Elemental de Fogo."
   },
   "cat.guilda.lenda_elemental_fogo.nome": {
@@ -691,7 +691,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Elemental de Fogo"
   },
   "cat.guilda.lenda_elemental_gelo.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Ice Elemental.",
     "pt": "+1 de ataque e +1 nos saves contra Elemental de Gelo."
   },
   "cat.guilda.lenda_elemental_gelo.nome": {
@@ -699,7 +699,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Elemental de Gelo"
   },
   "cat.guilda.lenda_elemental_pedra.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Stone Elemental.",
     "pt": "+1 de ataque e +1 nos saves contra Elemental de Pedra."
   },
   "cat.guilda.lenda_elemental_pedra.nome": {
@@ -707,7 +707,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Elemental de Pedra"
   },
   "cat.guilda.lenda_escorpiao_pedra.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Stone Scorpion.",
     "pt": "+1 de ataque e +1 nos saves contra Escorpião de Pedra."
   },
   "cat.guilda.lenda_escorpiao_pedra.nome": {
@@ -715,7 +715,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Escorpião de Pedra"
   },
   "cat.guilda.lenda_escravo_vampirico.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Vampiric Thrall.",
     "pt": "+1 de ataque e +1 nos saves contra Escravo Vampírico."
   },
   "cat.guilda.lenda_escravo_vampirico.nome": {
@@ -723,7 +723,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Escravo Vampírico"
   },
   "cat.guilda.lenda_esqueleto_animal.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Animal Skeleton.",
     "pt": "+1 de ataque e +1 nos saves contra Esqueleto Animal."
   },
   "cat.guilda.lenda_esqueleto_animal.nome": {
@@ -731,7 +731,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Esqueleto Animal"
   },
   "cat.guilda.lenda_esqueleto_humano.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Human Skeleton.",
     "pt": "+1 de ataque e +1 nos saves contra Esqueleto Humano."
   },
   "cat.guilda.lenda_esqueleto_humano.nome": {
@@ -739,7 +739,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Esqueleto Humano"
   },
   "cat.guilda.lenda_goblin.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Goblin.",
     "pt": "+1 de ataque e +1 nos saves contra Goblin."
   },
   "cat.guilda.lenda_goblin.nome": {
@@ -747,7 +747,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Goblin"
   },
   "cat.guilda.lenda_goblin_arqueiro.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Goblin Archer.",
     "pt": "+1 de ataque e +1 nos saves contra Goblin Arqueiro."
   },
   "cat.guilda.lenda_goblin_arqueiro.nome": {
@@ -755,7 +755,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Goblin Arqueiro"
   },
   "cat.guilda.lenda_goblin_combatente.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Goblin Fighter.",
     "pt": "+1 de ataque e +1 nos saves contra Goblin Combatente."
   },
   "cat.guilda.lenda_goblin_combatente.nome": {
@@ -763,7 +763,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Goblin Combatente"
   },
   "cat.guilda.lenda_goblin_dual.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Goblin Dual-Wielder.",
     "pt": "+1 de ataque e +1 nos saves contra Goblin Dual."
   },
   "cat.guilda.lenda_goblin_dual.nome": {
@@ -771,7 +771,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Goblin Dual"
   },
   "cat.guilda.lenda_goblin_xama.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Goblin Shaman.",
     "pt": "+1 de ataque e +1 nos saves contra Xamã Goblin."
   },
   "cat.guilda.lenda_goblin_xama.nome": {
@@ -779,7 +779,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Xamã Goblin"
   },
   "cat.guilda.lenda_grotao.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Grotão.",
     "pt": "+1 de ataque e +1 nos saves contra Grotão."
   },
   "cat.guilda.lenda_grotao.nome": {
@@ -787,7 +787,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Grotão"
   },
   "cat.guilda.lenda_kobold_besteiro.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Kobold Crossbowman.",
     "pt": "+1 de ataque e +1 nos saves contra Kobold Besteiro."
   },
   "cat.guilda.lenda_kobold_besteiro.nome": {
@@ -795,7 +795,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Kobold Besteiro"
   },
   "cat.guilda.lenda_kobold_lanceiro.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Kobold Spearman.",
     "pt": "+1 de ataque e +1 nos saves contra Kobold Lanceiro."
   },
   "cat.guilda.lenda_kobold_lanceiro.nome": {
@@ -803,7 +803,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Kobold Lanceiro"
   },
   "cat.guilda.lenda_lagarto_carniceiro.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Carrion Lizard.",
     "pt": "+1 de ataque e +1 nos saves contra Lagarto Carniceiro."
   },
   "cat.guilda.lenda_lagarto_carniceiro.nome": {
@@ -811,7 +811,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Lagarto Carniceiro"
   },
   "cat.guilda.lenda_lobisomem.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Werewolf.",
     "pt": "+1 de ataque e +1 nos saves contra Lobisomem."
   },
   "cat.guilda.lenda_lobisomem.nome": {
@@ -819,7 +819,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Lobisomem"
   },
   "cat.guilda.lenda_lobo_cinzento.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Grey Wolf.",
     "pt": "+1 de ataque e +1 nos saves contra Lobo Cinzento."
   },
   "cat.guilda.lenda_lobo_cinzento.nome": {
@@ -827,7 +827,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Lobo Cinzento"
   },
   "cat.guilda.lenda_lorde_vampiro.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Vampire Lord.",
     "pt": "+1 de ataque e +1 nos saves contra Lorde Vampiro."
   },
   "cat.guilda.lenda_lorde_vampiro.nome": {
@@ -835,7 +835,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Lorde Vampiro"
   },
   "cat.guilda.lenda_necromante.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Necromancer.",
     "pt": "+1 de ataque e +1 nos saves contra Necromante."
   },
   "cat.guilda.lenda_necromante.nome": {
@@ -843,7 +843,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Necromante"
   },
   "cat.guilda.lenda_ogro_clava.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Club Ogre.",
     "pt": "+1 de ataque e +1 nos saves contra Ogro de Clava."
   },
   "cat.guilda.lenda_ogro_clava.nome": {
@@ -851,7 +851,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Ogro de Clava"
   },
   "cat.guilda.lenda_ogro_lanca.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Spear Ogre.",
     "pt": "+1 de ataque e +1 nos saves contra Ogro de Lança."
   },
   "cat.guilda.lenda_ogro_lanca.nome": {
@@ -859,7 +859,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Ogro de Lança"
   },
   "cat.guilda.lenda_orc.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Orc.",
     "pt": "+1 de ataque e +1 nos saves contra Orc."
   },
   "cat.guilda.lenda_orc.nome": {
@@ -867,7 +867,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Orc"
   },
   "cat.guilda.lenda_orc_guerreiro.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Orc Warrior.",
     "pt": "+1 de ataque e +1 nos saves contra Orc Guerreiro."
   },
   "cat.guilda.lenda_orc_guerreiro.nome": {
@@ -875,7 +875,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Orc Guerreiro"
   },
   "cat.guilda.lenda_skeleton.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Skeleton.",
     "pt": "+1 de ataque e +1 nos saves contra Esqueleto."
   },
   "cat.guilda.lenda_skeleton.nome": {
@@ -883,7 +883,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Esqueleto"
   },
   "cat.guilda.lenda_troll.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Troll.",
     "pt": "+1 de ataque e +1 nos saves contra Troll."
   },
   "cat.guilda.lenda_troll.nome": {
@@ -891,7 +891,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Troll"
   },
   "cat.guilda.lenda_urso_negro.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Black Bear.",
     "pt": "+1 de ataque e +1 nos saves contra Urso Negro."
   },
   "cat.guilda.lenda_urso_negro.nome": {
@@ -899,7 +899,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Urso Negro"
   },
   "cat.guilda.lenda_vampiro_anciao.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Ancient Vampire.",
     "pt": "+1 de ataque e +1 nos saves contra Vampiro Ancião."
   },
   "cat.guilda.lenda_vampiro_anciao.nome": {
@@ -907,7 +907,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Vampiro Ancião"
   },
   "cat.guilda.lenda_vampiro_jovem.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Young Vampire.",
     "pt": "+1 de ataque e +1 nos saves contra Vampiro Jovem."
   },
   "cat.guilda.lenda_vampiro_jovem.nome": {
@@ -915,7 +915,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Vampiro Jovem"
   },
   "cat.guilda.lenda_zumbi_infectado.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Infected Zombie.",
     "pt": "+1 de ataque e +1 nos saves contra Zumbi Infectado."
   },
   "cat.guilda.lenda_zumbi_infectado.nome": {
@@ -923,7 +923,7 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Zumbi Infectado"
   },
   "cat.guilda.mago_aprimorar_2.desc": {
-    "en": "",
+    "en": "Enhance Spell now gives +2 to the save DC (was +1).",
     "pt": "Aprimorar Magia dá +2 na CD do save (era +1)."
   },
   "cat.guilda.mago_aprimorar_2.nome": {
@@ -931,7 +931,7 @@ window.LANG_CATALOGO = {
     "pt": "Aprimorar II"
   },
   "cat.guilda.mago_aprimorar_3.desc": {
-    "en": "",
+    "en": "Enhance Spell gives +3 to the save DC.",
     "pt": "Aprimorar Magia dá +3 na CD do save."
   },
   "cat.guilda.mago_aprimorar_3.nome": {
@@ -939,7 +939,7 @@ window.LANG_CATALOGO = {
     "pt": "Aprimorar III"
   },
   "cat.guilda.mago_estender_2.desc": {
-    "en": "",
+    "en": "Extend Spell now gives +2 rounds of duration (was +1).",
     "pt": "Estender Magia dá +2 rodadas de duração (era +1)."
   },
   "cat.guilda.mago_estender_2.nome": {
@@ -947,7 +947,7 @@ window.LANG_CATALOGO = {
     "pt": "Estender II"
   },
   "cat.guilda.mago_estender_3.desc": {
-    "en": "",
+    "en": "Extend Spell gives +3 rounds of duration.",
     "pt": "Estender Magia dá +3 rodadas de duração."
   },
   "cat.guilda.mago_estender_3.nome": {
@@ -955,7 +955,7 @@ window.LANG_CATALOGO = {
     "pt": "Estender III"
   },
   "cat.guilda.mago_fortalecer_2.desc": {
-    "en": "",
+    "en": "Amplify Spell now multiplies damage by ×1.5 (was ×1.25).",
     "pt": "Fortalecer Magia multiplica o dano por 1,5 (era ×1,25)."
   },
   "cat.guilda.mago_fortalecer_2.nome": {
@@ -963,7 +963,7 @@ window.LANG_CATALOGO = {
     "pt": "Fortalecer II"
   },
   "cat.guilda.mago_fortalecer_3.desc": {
-    "en": "",
+    "en": "Amplify Spell multiplies damage by ×2.",
     "pt": "Fortalecer Magia multiplica o dano por 2."
   },
   "cat.guilda.mago_fortalecer_3.nome": {
@@ -971,7 +971,7 @@ window.LANG_CATALOGO = {
     "pt": "Fortalecer III"
   },
   "cat.guilda.mago_reviver_2.desc": {
-    "en": "",
+    "en": "Creatures now occupy Control Slots equal to their CR (fractional included). Success chance: 100% − CR×15%.",
     "pt": "Criaturas passam a ocupar Slots de Controle iguais ao ND (fracionário incluso). Chance de sucesso: 100% − ND×15%."
   },
   "cat.guilda.mago_reviver_2.nome": {
@@ -979,7 +979,7 @@ window.LANG_CATALOGO = {
     "pt": "Reviver os Mortos II"
   },
   "cat.guilda.mago_reviver_3.desc": {
-    "en": "",
+    "en": "+2 Control Slots. Success chance: 100% − CR×10%.",
     "pt": "+2 Slots de Controle. Chance de sucesso: 100% − ND×10%."
   },
   "cat.guilda.mago_reviver_3.nome": {
@@ -987,7 +987,7 @@ window.LANG_CATALOGO = {
     "pt": "Reviver os Mortos III"
   },
   "cat.guilda.mago_tecelagem_2.desc": {
-    "en": "",
+    "en": "Lets you stack 2 metamagics on the same cast.",
     "pt": "Permite empilhar 2 metamagias no mesmo lançamento."
   },
   "cat.guilda.mago_tecelagem_2.nome": {
@@ -995,7 +995,7 @@ window.LANG_CATALOGO = {
     "pt": "Tecelagem Arcana II"
   },
   "cat.guilda.mago_tecelagem_3.desc": {
-    "en": "",
+    "en": "Lets you stack all 3 metamagics on the same cast.",
     "pt": "Permite empilhar as 3 metamagias no mesmo lançamento."
   },
   "cat.guilda.mago_tecelagem_3.nome": {
@@ -1003,7 +1003,7 @@ window.LANG_CATALOGO = {
     "pt": "Tecelagem Arcana III"
   },
   "cat.guilda.paladino_ataque_sagrado_2.desc": {
-    "en": "",
+    "en": "Holy Strike deals +2d8 holy damage per attack.",
     "pt": "Golpe Sagrado causa +2d8 de dano sagrado por ataque."
   },
   "cat.guilda.paladino_ataque_sagrado_2.nome": {
@@ -1011,7 +1011,7 @@ window.LANG_CATALOGO = {
     "pt": "Ataque Sagrado II"
   },
   "cat.guilda.paladino_cura_maos_2.desc": {
-    "en": "",
+    "en": "Lay on Hands heals 2d6 + STR.",
     "pt": "Imposição das Mãos cura 2d6 + FOR."
   },
   "cat.guilda.paladino_cura_maos_2.nome": {
@@ -1019,7 +1019,7 @@ window.LANG_CATALOGO = {
     "pt": "Cura pelas Mãos II"
   },
   "cat.guilda.paladino_cura_maos_3.desc": {
-    "en": "",
+    "en": "Can spend +2🍖/+2💧 for +1d6 healing (up to 3×).",
     "pt": "Pode gastar +2🍖/+2💧 por +1d6 de cura (até 3×)."
   },
   "cat.guilda.paladino_cura_maos_3.nome": {
@@ -1027,7 +1027,7 @@ window.LANG_CATALOGO = {
     "pt": "Cura pelas Mãos III"
   },
   "cat.guilda.paladino_defensor_2.desc": {
-    "en": "",
+    "en": "The protection range increases to 5 squares.",
     "pt": "O alcance da proteção aumenta para 5 quadrados."
   },
   "cat.guilda.paladino_defensor_2.nome": {
@@ -1035,7 +1035,7 @@ window.LANG_CATALOGO = {
     "pt": "Defensor II"
   },
   "cat.guilda.paladino_defensor_3.desc": {
-    "en": "",
+    "en": "The split damage drops to 40%/40% (20% is mitigated).",
     "pt": "O dano dividido cai para 40%/40% (20% é mitigado)."
   },
   "cat.guilda.paladino_defensor_3.nome": {
@@ -1043,7 +1043,7 @@ window.LANG_CATALOGO = {
     "pt": "Defensor III"
   },
   "cat.guilda.paladino_luz_2.desc": {
-    "en": "",
+    "en": "Keeps 3 attributes active; with Vision, detects traps within radius 2.",
     "pt": "Mantém 3 atributos ativos; com Visão, detecta armadilhas em raio 2."
   },
   "cat.guilda.paladino_luz_2.nome": {
@@ -1051,7 +1051,7 @@ window.LANG_CATALOGO = {
     "pt": "Guerreiro da Luz II"
   },
   "cat.guilda.paladino_luz_3.desc": {
-    "en": "",
+    "en": "Keeps 4 attributes active; with Vision, detects traps within radius 3.",
     "pt": "Mantém 4 atributos ativos; com Visão, detecta armadilhas em raio 3."
   },
   "cat.guilda.paladino_luz_3.nome": {
@@ -1059,7 +1059,7 @@ window.LANG_CATALOGO = {
     "pt": "Guerreiro da Luz III"
   },
   "cat.guilda.paladino_regen_2.desc": {
-    "en": "",
+    "en": "Divine Regeneration also heals adjacent allies for +1 HP.",
     "pt": "Regeneração Divina também cura +1 HP dos aliados adjacentes."
   },
   "cat.guilda.paladino_regen_2.nome": {
@@ -1067,7 +1067,7 @@ window.LANG_CATALOGO = {
     "pt": "Regeneração II"
   },
   "cat.guilda.paladino_regen_3.desc": {
-    "en": "",
+    "en": "Divine Regeneration now reaches allies within radius 2.",
     "pt": "A Regeneração Divina alcança aliados em raio 2."
   },
   "cat.guilda.paladino_regen_3.nome": {
@@ -1075,7 +1075,7 @@ window.LANG_CATALOGO = {
     "pt": "Regeneração III"
   },
   "cat.guilda.sorrateiro.desc": {
-    "en": "",
+    "en": "While equipped, reveals the vision range circle of every visible monster.",
     "pt": "Enquanto equipada, revela o círculo de alcance da visão de cada monstro visível."
   },
   "cat.guilda.sorrateiro.nome": {
@@ -1083,7 +1083,7 @@ window.LANG_CATALOGO = {
     "pt": "Sorrateiro"
   },
   "cat.guilda.tec_ex_aprimorar_magia.desc": {
-    "en": "",
+    "en": "The next spell gets +1 to its saving throw DC (also applies to area spells).",
     "pt": "A próxima magia recebe +1 na CD do teste de resistência (vale p/ magias de área também)."
   },
   "cat.guilda.tec_ex_aprimorar_magia.nome": {
@@ -1091,7 +1091,7 @@ window.LANG_CATALOGO = {
     "pt": "Aprimorar Magia"
   },
   "cat.guilda.tec_ex_canalizacao_arcana.desc": {
-    "en": "",
+    "en": "The next spell ignores the effects of Silence.",
     "pt": "A próxima magia ignora os efeitos de Silêncio."
   },
   "cat.guilda.tec_ex_canalizacao_arcana.nome": {
@@ -1099,7 +1099,7 @@ window.LANG_CATALOGO = {
     "pt": "Canalização Arcana"
   },
   "cat.guilda.tec_ex_canalizacao_perfeita.desc": {
-    "en": "",
+    "en": "On the next single-target spell, the target's saving throw is rolled with disadvantage.",
     "pt": "Na próxima magia de alvo único, o alvo testa resistência com desvantagem."
   },
   "cat.guilda.tec_ex_canalizacao_perfeita.nome": {
@@ -1107,7 +1107,7 @@ window.LANG_CATALOGO = {
     "pt": "Canalização Perfeita"
   },
   "cat.guilda.tec_ex_empoderar_magia.desc": {
-    "en": "",
+    "en": "The next offensive spell deals 50% more damage (×1.5).",
     "pt": "A próxima magia ofensiva causa 50% a mais de dano (×1,5)."
   },
   "cat.guilda.tec_ex_empoderar_magia.nome": {
@@ -1115,7 +1115,7 @@ window.LANG_CATALOGO = {
     "pt": "Empoderar Magia"
   },
   "cat.guilda.tec_ex_estender_magia.desc": {
-    "en": "",
+    "en": "The next spell gets +1 round of duration, or +1 square of range if it has no duration.",
     "pt": "A próxima magia tem +1 rodada de duração, ou +1 quadrado de alcance se não tiver duração."
   },
   "cat.guilda.tec_ex_estender_magia.nome": {
@@ -1123,7 +1123,7 @@ window.LANG_CATALOGO = {
     "pt": "Estender Magia"
   },
   "cat.guilda.tec_ex_magia_acelerada.desc": {
-    "en": "",
+    "en": "The next spell is cast as a Bonus Action — it doesn't use your main action.",
     "pt": "A próxima magia é lançada como Ação Bônus — não gasta sua ação principal."
   },
   "cat.guilda.tec_ex_magia_acelerada.nome": {
@@ -1131,7 +1131,7 @@ window.LANG_CATALOGO = {
     "pt": "Magia Acelerada"
   },
   "cat.guilda.tec_ex_magia_geminada.desc": {
-    "en": "",
+    "en": "Choose a 2nd target now; the next single-target spell also affects it, if within the spell's range. Doesn't work on area spells.",
     "pt": "Escolha um 2º alvo agora; a próxima magia de alvo único também o afeta, se estiver no alcance da magia. Não funciona em magias de área."
   },
   "cat.guilda.tec_ex_magia_geminada.nome": {
@@ -1139,7 +1139,7 @@ window.LANG_CATALOGO = {
     "pt": "Magia Geminada"
   },
   "cat.guilda.tecnica_ataque_coordenado.desc": {
-    "en": "",
+    "en": "Choose an ally; this turn, when you attack an enemy, the ally also attacks it.",
     "pt": "Escolha um aliado; neste turno, quando você atacar um inimigo, o aliado também o ataca."
   },
   "cat.guilda.tecnica_ataque_coordenado.nome": {
@@ -1147,7 +1147,7 @@ window.LANG_CATALOGO = {
     "pt": "Ataque Coordenado"
   },
   "cat.guilda.tecnica_contra_ataque.desc": {
-    "en": "",
+    "en": "Until your next turn, whenever an enemy misses you (with a melee/reach weapon or hand crossbow, and it's within range), you strike back.",
     "pt": "Até o próximo turno, quando um inimigo errar você (arma corpo a corpo/alcance ou besta de mão, e ele no alcance), você o ataca de volta."
   },
   "cat.guilda.tecnica_contra_ataque.nome": {
@@ -1155,7 +1155,7 @@ window.LANG_CATALOGO = {
     "pt": "Contra-Ataque"
   },
   "cat.guilda.tecnica_defesa_impecavel.desc": {
-    "en": "",
+    "en": "Until your next turn, attacks against you have disadvantage and you're immune to Sneak Attack.",
     "pt": "Até o próximo turno, ataques contra você têm desvantagem e você fica imune a Ataque Furtivo."
   },
   "cat.guilda.tecnica_defesa_impecavel.nome": {
@@ -1163,7 +1163,7 @@ window.LANG_CATALOGO = {
     "pt": "Defesa Impecável"
   },
   "cat.guilda.tecnica_espirito_indomavel.desc": {
-    "en": "",
+    "en": "Free action. Removes Fear, Stun, and Slow; 1 round immune to Silence.",
     "pt": "Ação livre. Remove Medo, Atordoamento e Lentidão; 1 rodada imune a Silêncio."
   },
   "cat.guilda.tecnica_espirito_indomavel.nome": {
@@ -1171,7 +1171,7 @@ window.LANG_CATALOGO = {
     "pt": "Espírito Indomável"
   },
   "cat.guilda.tecnica_golpe_decisivo.desc": {
-    "en": "",
+    "en": "Arms your next basic attack (melee or ranged): if it hits, it's an automatic critical (damage doubled); on a natural 20 while armed, damage is TRIPLED. Consumed on the next attack, hit or miss.",
     "pt": "Arma o próximo ataque básico (corpo a corpo ou à distância): se acertar, é crítico automático (dano dobrado); num natural 20 enquanto armado, o dano é TRIPLICADO. Consumida no próximo ataque, acerte ou erre."
   },
   "cat.guilda.tecnica_golpe_decisivo.nome": {
@@ -1179,7 +1179,7 @@ window.LANG_CATALOGO = {
     "pt": "Golpe Decisivo"
   },
   "cat.guilda.tecnica_grito_guerra.desc": {
-    "en": "",
+    "en": "All allies gain +2 movement for 1 round.",
     "pt": "Todos os aliados recebem +2 de movimento por 1 rodada."
   },
   "cat.guilda.tecnica_grito_guerra.nome": {
@@ -1187,7 +1187,7 @@ window.LANG_CATALOGO = {
     "pt": "Grito de Guerra"
   },
   "cat.guilda.tecnica_instinto_sobrevivencia.desc": {
-    "en": "",
+    "en": "Automatic. If damage would drop your HP to 0, you're left with 1 instead of dying. It then goes on cooldown.",
     "pt": "Automática. Se um dano zeraria seu HP, você fica com 1 em vez de morrer. Depois disso, entra em recarga."
   },
   "cat.guilda.tecnica_instinto_sobrevivencia.nome": {
@@ -1195,7 +1195,7 @@ window.LANG_CATALOGO = {
     "pt": "Instinto de Sobrevivência"
   },
   "cat.guilda.tecnica_investida.desc": {
-    "en": "",
+    "en": "Doubles your movement; if you move ≥2 squares in a straight line, your next melee attack gets advantage and +2 damage.",
     "pt": "Dobra o movimento; se andar ≥2 casas em linha reta, o próximo ataque corpo a corpo tem vantagem +2 dano."
   },
   "cat.guilda.tecnica_investida.nome": {
@@ -1203,7 +1203,7 @@ window.LANG_CATALOGO = {
     "pt": "Investida Heroica"
   },
   "cat.guilda.tecnica_mira_perfeita.desc": {
-    "en": "",
+    "en": "Your next ranged attack gains advantage; if it hits, +2 damage.",
     "pt": "Próximo ataque à distância recebe vantagem; se acertar, +2 de dano."
   },
   "cat.guilda.tecnica_mira_perfeita.nome": {
@@ -1211,7 +1211,7 @@ window.LANG_CATALOGO = {
     "pt": "Mira Perfeita"
   },
   "cat.guilda.tecnica_oportunidade.desc": {
-    "en": "",
+    "en": "Choose an ally (can't be yourself); on THEIR OWN turn, they gain an extra action — move more, attack again, use their class ability again, or cast another spell. Expires at the end of this round if unused.",
     "pt": "Escolha um aliado (não pode ser você); no PRÓPRIO turno dele, ganha uma ação extra — mover mais, atacar de novo, usar a habilidade de classe de novo, ou lançar mais uma magia. Expira no fim desta rodada se não for usada."
   },
   "cat.guilda.tecnica_oportunidade.nome": {
@@ -1219,7 +1219,7 @@ window.LANG_CATALOGO = {
     "pt": "Oportunidade"
   },
   "cat.guilda.tecnica_passo_fantasma.desc": {
-    "en": "",
+    "en": "For 1d4 rounds: +2 movement and you pass through squares occupied by objects (not walls or creatures).",
     "pt": "Por 1d4 rodadas: +2 de movimento e você atravessa casas ocupadas por objetos (não paredes nem criaturas)."
   },
   "cat.guilda.tecnica_passo_fantasma.nome": {
@@ -1227,7 +1227,7 @@ window.LANG_CATALOGO = {
     "pt": "Passo Fantasma"
   },
   "cat.guilda.tecnica_pressa.desc": {
-    "en": "",
+    "en": "Your movement is doubled this round.",
     "pt": "O seu movimento é dobrado nesta rodada."
   },
   "cat.guilda.tecnica_pressa.nome": {
@@ -1235,7 +1235,7 @@ window.LANG_CATALOGO = {
     "pt": "Pressa"
   },
   "cat.guilda.tecnica_pressao_constante.desc": {
-    "en": "",
+    "en": "An adjacent enemy suffers -2 AC for 2 rounds.",
     "pt": "Um inimigo adjacente sofre -2 de CA por 2 rodadas."
   },
   "cat.guilda.tecnica_pressao_constante.nome": {
@@ -1243,7 +1243,7 @@ window.LANG_CATALOGO = {
     "pt": "Pressão Constante"
   },
   "cat.guilda.tecnica_resistencia_absoluta.desc": {
-    "en": "",
+    "en": "Gain +2 to all saving throws for 2 rounds.",
     "pt": "Recebe +2 em todos os testes de resistência por 2 rodadas."
   },
   "cat.guilda.tecnica_resistencia_absoluta.nome": {
@@ -1251,7 +1251,7 @@ window.LANG_CATALOGO = {
     "pt": "Resistência Absoluta"
   },
   "cat.guilda.tecnica_sangue_frio.desc": {
-    "en": "",
+    "en": "The first time you miss an attack, you may reroll it.",
     "pt": "A primeira vez que errar um ataque, você pode rolá-lo novamente."
   },
   "cat.guilda.tecnica_sangue_frio.nome": {
@@ -1259,7 +1259,7 @@ window.LANG_CATALOGO = {
     "pt": "Sangue Frio"
   },
   "cat.guilda.tecnica_sorte.desc": {
-    "en": "",
+    "en": "After missing an attack, you may spend this technique to reroll it against the same target. Independent of Cold Blood.",
     "pt": "Depois de errar um ataque, você pode gastar esta técnica para rolá-lo novamente contra o mesmo alvo. Independente do Sangue Frio."
   },
   "cat.guilda.tecnica_sorte.nome": {
@@ -1267,7 +1267,7 @@ window.LANG_CATALOGO = {
     "pt": "Sorte"
   },
   "cat.guilda.tecnica_tatica_defensiva.desc": {
-    "en": "",
+    "en": "Choose an ally within 4 squares; for 1d4 rounds, half their damage is transferred to you.",
     "pt": "Escolha um aliado em até 4 casas; por 1d4 rodadas, metade do dano dele é transferida a você."
   },
   "cat.guilda.tecnica_tatica_defensiva.nome": {
@@ -1275,7 +1275,7 @@ window.LANG_CATALOGO = {
     "pt": "Tática Defensiva"
   },
   "cat.guilda.tecnica_ultimo_esforco.desc": {
-    "en": "",
+    "en": "Automatic. If damage would drop your HP to 0, you're left with 1 and gain 2 consecutive turns: every attack has advantage and every hit is a critical (nat 20 → damage TRIPLED). You can't heal yourself. At the end, you fall as if you had died normally (can be revived by Resurrection).",
     "pt": "Automática. Se um dano zeraria seu HP, você fica com 1 e ganha 2 turnos seguidos: todo ataque tem vantagem e todo acerto é crítico (nat20 → dano TRIPLICADO). Não pode se curar. Ao final, cai como se tivesse morrido normalmente (pode ser reerguido por Ressurreição)."
   },
   "cat.guilda.tecnica_ultimo_esforco.nome": {
