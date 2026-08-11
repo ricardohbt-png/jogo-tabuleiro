@@ -88,6 +88,34 @@ def _rodar_verificacoes():
     if sem_uso:
         print("     sem uso:", ", ".join(sem_uso[:8]))
 
+    print("\n[7] Um erro migrado chega traduzido, pelo send_to real")
+    import asyncio
+
+    class RecWS:
+        """WebSocket falso que guarda o JSON cru — prova que dois jogadores
+        receberam a MESMA recusa em idiomas diferentes."""
+        def __init__(self): self.sent = []
+        async def send(self, data): self.sent.append(data)
+
+    chave = next((k for k, v in S.LANG_STRINGS.items()
+                  if k.startswith("erro.") and v.get("en")), None)
+    if not chave:
+        check("há ao menos uma mensagem de erro traduzida para provar", False)
+    else:
+        sala = S.GameRoom("TESTE_ERRO")
+        ws_pt, ws_en = RecWS(), RecWS()
+        sala.connections = {"e_pt": ws_pt, "e_en": ws_en}
+        S.LANG_BY_PID["e_pt"] = "pt"
+        S.LANG_BY_PID["e_en"] = "en"
+        asyncio.run(sala.send_to("e_pt", {"type": "error", "msg": S.T(chave)}))
+        asyncio.run(sala.send_to("e_en", {"type": "error", "msg": S.T(chave)}))
+        pt = json.loads(ws_pt.sent[-1])["msg"]
+        en = json.loads(ws_en.sent[-1])["msg"]
+        check("sai em português para quem está em pt", pt == S.LANG_STRINGS[chave]["pt"])
+        check("sai em inglês para quem está em en", en == S.LANG_STRINGS[chave]["en"])
+        for pid in ("e_pt", "e_en"):
+            S.LANG_BY_PID.pop(pid, None)
+
 
 if __name__ == "__main__":
     print("=" * 62); print("  TESTE — Mensagens de erro (etapa 4a)"); print("=" * 62)

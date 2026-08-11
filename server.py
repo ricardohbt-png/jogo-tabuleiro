@@ -7071,7 +7071,7 @@ class GameRoom:
             dono = CHARACTERS_IN_USE.get(cls_id)
             if dono and dono != self.code:
                 await self.send_to(pid, {"type": "error",
-                    "msg": f"{CLASSES[cls_id]['name']} já está em uso em outra sala."})
+                    "msg": T("erro.classe_em_uso_em_outra_sala", classe=CLASSES[cls_id]["name"])})
                 return
             # Libera o personagem anterior deste jogador (se trocou de classe)
             prev = self.players[pid].get("class_id")
@@ -7253,7 +7253,7 @@ class GameRoom:
             defn = carregar_dungeon(file)
             ok, msg = (False, "Masmorra não encontrada.") if defn is None else validar_dungeon(defn)
             if not ok:
-                await self.send_to(pid, {"type": "error", "msg": f"Masmorra inválida: {msg}"})
+                await self.send_to(pid, {"type": "error", "msg": T("erro.masmorra_invalida", motivo=msg)})
                 return
             # Guarda o dict jÃ¡ carregado/validado para enter_dungeon usar
             # (autorada = mode=="authored" and self.dungeon_def is not None).
@@ -7275,7 +7275,7 @@ class GameRoom:
             defn = carregar_campanha(file)
             ok, msg = (False, "Campanha não encontrada.") if defn is None else validar_campanha(defn)
             if not ok:
-                await self.send_to(pid, {"type": "error", "msg": f"Campanha inválida: {msg}"})
+                await self.send_to(pid, {"type": "error", "msg": T("erro.campanha_invalida", motivo=msg)})
                 return
             self.mode = "campaign"; self.campaign = defn; self.campaign_phase = 0
             self.selected_campaign = file
@@ -7687,7 +7687,7 @@ class GameRoom:
         req = item.get("requer")
         if req and req not in owned:
             nome_req = (guild_item(req) or {}).get("nome", req)
-            await self.send_to(pid, {"type": "error", "msg": f"Requer antes: {nome_req}."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.requer_antes", requisito=nome_req)})
             return
         # Ouro
         if p.get("gold", 0) < item["preco"]:
@@ -8121,15 +8121,16 @@ class GameRoom:
             return
         if item.get("automatica"):
             await self.send_to(pid, {"type": "error",
-                "msg": f"{item['nome']} é automática — não pode ser ativada manualmente."})
+                "msg": T("erro.tecnica_e_automatica", tecnica=nome_de("guilda", tecnica_id))})
             return
         if self.tecnica_restante(p, tecnica_id) > 0:
             await self.send_to(pid, {"type": "error",
-                "msg": f"{item['nome']} em recarga ({self.tecnica_restante(p, tecnica_id)} rodadas)."})
+                "msg": T("erro.tecnica_em_recarga", tecnica=nome_de("guilda", tecnica_id),
+                          rodadas=self.tecnica_restante(p, tecnica_id))})
             return
         if p.get("technique_pending", {}).get(tecnica_id):
             await self.send_to(pid, {"type": "error",
-                "msg": f"{item['nome']} já está preparada para o próximo efeito."})
+                "msg": T("erro.tecnica_ja_preparada", tecnica=nome_de("guilda", tecnica_id))})
             return
         _ef, _es = self._custo_fome_sede_efetivo(p, item["custo_fome"], item["custo_sede"])
         if p.get("fome", 0) < _ef or p.get("sede", 0) < _es:
@@ -8335,7 +8336,7 @@ class GameRoom:
         base = INSTRUMENTOS_BASE[inst["base"]]
         if base["modo"] != "ativada":
             await self.send_to(pid, {"type": "error",
-                "msg": f"{base['habilidade_nome']} é passiva — não precisa ativar."}); return
+                "msg": T("erro.habilidade_passiva", habilidade=base["habilidade_nome"])}); return
         # RÃ©quiem Final: clicar de novo com o RÃ©quiem ativo DESLIGA (grÃ¡tis, sempre disponÃ­vel).
         if base["efeito"]["tipo"] == "requiem_final" and p.get("requiem_alvo") \
            and not (data or {}).get("target_id"):
@@ -8393,7 +8394,7 @@ class GameRoom:
             await self.send_to(p["id"], {"type": "error", "msg": T("erro.alvo_invalido")}); return False
         if not self._no_raio(p, m, st["alcance"]):
             await self.send_to(p["id"], {"type": "error",
-                "msg": f"Alvo fora do alcance ({st['alcance']} casas)."}); return False
+                "msg": T("erro.alvo_fora_do_alcance_casas", alcance=st["alcance"])}); return False
         await self.gm_say(f"🎵 **{p['name']}** dispara **Nota Cortante** em **{m['name']}**!")
         dano = await self._rolar_dano_mostrado(*_ndfaces(st["dano"]), "🎵 Dano sonoro")
         save_ok, *_ = await self._save_mostrado(m, "reflexos", self._instrumento_cd(p, inst))
@@ -8552,7 +8553,7 @@ class GameRoom:
             await self.send_to(p["id"], {"type": "error", "msg": T("erro.alvo_invalido")}); return False
         if not self._no_raio(p, m, st["alcance"]):
             await self.send_to(p["id"], {"type": "error",
-                "msg": f"Alvo fora do alcance ({st['alcance']} casas)."}); return False
+                "msg": T("erro.alvo_fora_do_alcance_casas", alcance=st["alcance"])}); return False
         if not self._tem_linha_de_visao(p["pos"], m["pos"]):
             await self.send_to(p["id"], {"type": "error",
                 "msg": T("erro.sem_linha_de_visao_para_o_alvo")}); return False
@@ -8827,10 +8828,11 @@ class GameRoom:
             if entrada and self._maldicao_estagio(entrada) >= 4:
                 preco *= 2
         if p.get("gold", 0) < preco:
-            await self.send_to(pid, {"type": "error", "msg": f"O Templo cobra {preco} ouro para curar esta maldição."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.templo_cobra_ouro_cura_maldicao", preco=preco)}); return
         p["gold"] -= preco
         removida = self._remover_maldicao(p, maldicao_id)
-        await self.broadcast({"type": "shop_result", "msg": f"⛪ **{p['name']}** foi liberto de **{MALDICOES[removida]['nome']}** ({preco} ouro)."})
+        await self.broadcast({"type": "shop_result", "msg": T("erro.templo_liberta_de_maldicao",
+            personagem=p["name"], maldicao=MALDICOES[removida]["nome"], preco=preco)})
         await self.broadcast_city_state()
 
     async def handle_shop_buy(self, pid, shop, item_id):
@@ -8864,7 +8866,7 @@ class GameRoom:
         allowed = item.get("allowed_classes")
         if allowed and p.get("class_id") not in allowed:
             await self.send_to(pid, {"type": "error",
-                "msg": f"Sua classe não pode usar {item['name']}!"})
+                "msg": T("erro.sua_classe_nao_pode_usar_item", item=nome_de("item", item_id))})
             return
 
         # â”€â”€ Arma de 2 mÃ£os Ã— escudo/2Âª arma â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -8976,7 +8978,7 @@ class GameRoom:
                 # ConsumÃ­vel â€” sÃ³ a bolsa (categoria 'bag' nÃ£o tem slot de resgate).
                 if self._route_acquired_item(p, {**item, "buy_price": price}) == "full":
                     p["gold"] += price
-                    await self.send_to(pid, {"type": "error", "msg": f"Inventário cheio (máx {p.get('bag_size', 6)} itens)!"})
+                    await self.send_to(pid, {"type": "error", "msg": T("erro.inventario_cheio_max_itens", max_itens=p.get("bag_size", 6))})
                     return
                 log = f"{loja_emoji} **{p['name']}** comprou **{item['name']}**!"
             else:
@@ -8998,7 +9000,7 @@ class GameRoom:
                 if self._route_acquired_item(p, {**item, "buy_price": price}) == "full":
                     p["gold"] += price
                     await self.send_to(pid, {"type": "error",
-                        "msg": f"Inventário cheio (máx {p.get('bag_size', 6)} itens)!"})
+                        "msg": T("erro.inventario_cheio_max_itens", max_itens=p.get("bag_size", 6))})
                     return
                 log = f"⛪ **{p['name']}** recebeu **{item['name']}** do Templo!"
                 await self.broadcast({"type": "shop_result", "msg": log})
@@ -9025,7 +9027,7 @@ class GameRoom:
                 if item_id in p.get("taverna_refeicoes", []):
                     p["gold"] += price  # estorna â€” compra recusada
                     await self.send_to(pid, {"type": "error",
-                        "msg": f"Você já pediu {item['name']} nesta visita à cidade."})
+                        "msg": T("erro.item_ja_pedido_nesta_visita", item=nome_de("item", item_id))})
                     return
                 fome = item.get("fome", 0)
                 sede = item.get("sede", 0)
@@ -9037,7 +9039,7 @@ class GameRoom:
                 if self._route_acquired_item(p, {**item, "buy_price": price}) == "full":
                     p["gold"] += price
                     await self.send_to(pid, {"type": "error",
-                        "msg": f"Inventário cheio (máx {p.get('bag_size', 6)} itens)!"})
+                        "msg": T("erro.inventario_cheio_max_itens", max_itens=p.get("bag_size", 6))})
                     return
                 log = f"🍺 **{p['name']}** comprou **{item['name']}**!"
 
@@ -10520,7 +10522,7 @@ class GameRoom:
             captor = self.monsters.get(p.get("preso_por"))
             if captor and captor["hp"] > 0:
                 await self.send_to(pid, {"type": "error",
-                    "msg": f"⛓️ Você está preso por **{captor['name']}**! Impossível se mover (tente escapar no próximo turno)."})
+                    "msg": T("erro.preso_por_captor_impossivel_mover", captor=captor["name"])})
                 return
             p["preso"] = False; p.pop("preso_por", None)
         if p.get("perde_turno"):
@@ -10578,7 +10580,7 @@ class GameRoom:
         minimum_water_step = (p["moves_left"] > 0 and not p.get("moved_this_turn")
                               and not p.get("_water_min_step_used"))
         if p["moves_left"] < step_cost and not minimum_water_step:
-            await self.send_to(pid, {"type": "error", "msg": f"Movimento insuficiente: esta casa custa {step_cost}."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.movimento_insuficiente_casa_custa", custo=step_cost)})
             return
         p["pos"] = [nx, ny]
         p["facing"] = [dx, dy]
@@ -11167,17 +11169,17 @@ class GameRoom:
                 elif _off and _off_type in _valid_ammo and _off.get("ammo_count", 0) > 0:
                     _ammo_source = ("off_hand", _off)
                 if not _ammo_source:
-                    nome_proj = "flechas" if _valid_ammo[0] == "flechas" else "virotes"
-                    onde = "na bolsa ou na mão esquerda" if _is_crossbow else "na mão esquerda"
+                    nome_proj = T("erro._municao_flechas") if _valid_ammo[0] == "flechas" else T("erro._municao_virotes")
+                    onde = T("erro._local_bolsa_ou_mao_esquerda") if _is_crossbow else T("erro._local_mao_esquerda")
                     await self.send_to(pid, {"type": "error",
-                        "msg": f"🏹 Sem {nome_proj} (básicos, incendiários ou de prata) {onde}!"})
+                        "msg": T("erro.sem_municao_no_local", municao=nome_proj, local=onde)})
                     return
 
             if w_range is not None:
                 # Desaparecer nas Sombras: imune a ataques Ã  distÃ¢ncia enquanto oculto.
                 if target.get("oculto_sombras"):
                     await self.send_to(pid, {"type": "error",
-                        "msg": f"🌫️ {target['name']} desapareceu nas sombras — imune a ataques à distância!"})
+                        "msg": T("erro.alvo_desapareceu_nas_sombras", alvo=target["name"])})
                     return
                 eff_range = self._alcance_escuridao(p, target, w_range)   # escuridÃ£o limita a 2q
                 # Multi-tile: vale a casa do corpo mais prÃ³xima com linha de visÃ£o.
@@ -11185,26 +11187,27 @@ class GameRoom:
                 in_range = [t for t in body
                             if self._tile_no_alcance_arma_distancia(p, t, eff_range)]
                 if not in_range:
-                    extra = " (escuridão limita o alcance a 2q — use Visão no Escuro)" if eff_range < w_range else ""
+                    extra = T("erro._extra_escuridao_limita_alcance") if eff_range < w_range else ""
                     weapon_id = (weapon_here or {}).get("id")
-                    regra = (" em linha reta" if weapon_id in ("besta", "hand_crossbow")
-                              else f"; diagonal até {(eff_range + 1) // 2}" if weapon_id in ("arco_curto", "longbow")
+                    regra = (T("erro._regra_em_linha_reta") if weapon_id in ("besta", "hand_crossbow")
+                              else T("erro._regra_diagonal_ate", diagonal=(eff_range + 1) // 2) if weapon_id in ("arco_curto", "longbow")
                               else "")
                     await self.send_to(pid, {
                         "type": "error",
-                        "msg": f"⚠ {target['name']} está fora de alcance! (máximo {eff_range} quadrados{regra}){extra}"
+                        "msg": T("erro.alvo_fora_de_alcance_maximo_quadrados",
+                                  alvo=target["name"], alcance=eff_range, regra=regra, extra=extra)
                     })
                     return
                 if not any(self._tem_linha_de_visao(p["pos"], t) for t in in_range):
                     await self.send_to(pid, {"type": "error",
-                        "msg": f"🧱 Uma parede bloqueia a linha de tiro até {target['name']}!"})
+                        "msg": T("erro.parede_bloqueia_linha_de_tiro", alvo=target["name"])})
                     return
             elif (weapon_here or {}).get("reach") == "lanca":
                 # LanÃ§a: alcance estendido (2 retos ortogonais / 1 diagonal).
                 if not self._lanca_no_alcance_jogador(p["pos"], target):
                     await self.send_to(pid, {
                         "type": "error",
-                        "msg": f"⚠ {target['name']} está fora do alcance da lança! (2 casas em linha reta ou 1 na diagonal)"
+                        "msg": T("erro.alvo_fora_do_alcance_da_lanca", alvo=target["name"])
                     })
                     return
             elif (weapon_here or {}).get("reach") == "cajado":
@@ -11212,7 +11215,7 @@ class GameRoom:
                 if not self._cajado_no_alcance_jogador(p["pos"], target):
                     await self.send_to(pid, {
                         "type": "error",
-                        "msg": f"⚠ {target['name']} está fora de alcance! Aproxime-se (1 quadrado, inclusive diagonal)."
+                        "msg": T("erro.alvo_fora_de_alcance_aproxime_diagonal", alvo=target["name"])
                     })
                     return
             else:
@@ -11220,7 +11223,7 @@ class GameRoom:
                 if not self._is_adjacent_to_monster(p["pos"], target):
                     await self.send_to(pid, {
                         "type": "error",
-                        "msg": f"⚠ {target['name']} está fora de alcance! Aproxime-se (1 quadrado ortogonal)."
+                        "msg": T("erro.alvo_fora_de_alcance_aproxime_ortogonal", alvo=target["name"])
                     })
                     return
 
@@ -11233,7 +11236,7 @@ class GameRoom:
                 custo_extra_fome, custo_extra_sede = 2, 1
                 if p["fome"] < custo_extra_fome or p["sede"] < custo_extra_sede:
                     await self.send_to(pid, {"type": "error",
-                        "msg": f"Sem fôlego para atacar sob a canção — precisa 🍖{custo_extra_fome} 💧{custo_extra_sede} (ou desative a canção)."})
+                        "msg": T("erro.sem_folego_atacar_sob_cancao", fome=custo_extra_fome, sede=custo_extra_sede)})
                     return
                 p["fome"] = max(0, p["fome"] - custo_extra_fome)
                 p["sede"] = max(0, p["sede"] - custo_extra_sede)
@@ -11707,10 +11710,10 @@ class GameRoom:
         dx = abs(p["pos"][0] - target["pos"][0]); dy = abs(p["pos"][1] - target["pos"][1])
         if max(dx, dy) > rng:
             await self.send_to(pid, {"type": "error",
-                "msg": f"⚠ {target['name']} fora de alcance de arremesso (máx {rng} quadrados)."}); return False
+                "msg": T("erro.alvo_fora_de_alcance_de_arremesso", alvo=target["name"], alcance=rng)}); return False
         if not self._tem_linha_de_visao(p["pos"], target["pos"]):
             await self.send_to(pid, {"type": "error",
-                "msg": f"🧱 Uma parede bloqueia o arremesso até {target['name']}!"}); return False
+                "msg": T("erro.parede_bloqueia_arremesso", alvo=target["name"])}); return False
 
         # Rolagem por DESTREZA (1 natural = falha crÃ­tica; 20 = crÃ­tico)
         dex_mod = mod(p.get("dex", 12))
@@ -11811,10 +11814,10 @@ class GameRoom:
         dx = abs(p["pos"][0] - target["pos"][0]); dy = abs(p["pos"][1] - target["pos"][1])
         if max(dx, dy) > rng:
             await self.send_to(pid, {"type": "error",
-                "msg": f"⚠ {target['name']} fora de alcance (máx {rng} quadrados)."}); return
+                "msg": T("erro.alvo_fora_de_alcance_max", alvo=target["name"], alcance=rng)}); return
         if not self._tem_linha_de_visao(p["pos"], target["pos"]):
             await self.send_to(pid, {"type": "error",
-                "msg": f"🧱 Uma parede bloqueia o arremesso até {target['name']}!"}); return
+                "msg": T("erro.parede_bloqueia_arremesso", alvo=target["name"])}); return
 
         # Rolagem por DESTREZA (1 natural = falha; 20 = crÃ­tico).
         dex_mod = mod(p.get("dex", 12))
@@ -11891,7 +11894,7 @@ class GameRoom:
         rng = defn["alcance"]
         if max(abs(p["pos"][0] - cx), abs(p["pos"][1] - cy)) > rng:
             await self.send_to(pid, {"type": "error",
-                "msg": f"⚠ Centro fora de alcance (máx {rng} quadrados)."}); return
+                "msg": T("erro.centro_fora_de_alcance_max", alcance=rng)}); return
         if not self._tem_linha_de_visao(p["pos"], [cx, cy]):
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.uma_parede_bloqueia_a_trajetoria_do_arre")}); return
@@ -12234,8 +12237,8 @@ class GameRoom:
         if slots_usados + slots_monstro > slots_max:
             await self.send_to(pid, {
                 "type": "error",
-                "msg": f"Slots insuficientes — {slots_monstro} necessários, "
-                       f"{slots_max - slots_usados} disponíveis."
+                "msg": T("erro.slots_insuficientes_necessarios_disponiv",
+                          necessarios=slots_monstro, disponiveis=slots_max - slots_usados)
             })
             return
 
@@ -12543,7 +12546,7 @@ class GameRoom:
         if m.get("preso") and self._captor_ativo(m):
             captor = self._captor_ativo(m)
             await self.send_to(pid, {"type": "error",
-                "msg": f"Agarrado por {captor['name']} — não pode se mover."}); return
+                "msg": T("erro.agarrado_por_captor_nao_pode_se_mover", captor=captor["name"])}); return
         budget = int(m.get("master_moves_left", 0) or 0)
         if budget <= 0:
             await self.send_to(pid, {"type": "error", "msg": T("erro.monstro_sem_movimento_neste_turno")}); return
@@ -13171,7 +13174,7 @@ class GameRoom:
             if t:
                 if not self._tem_linha_de_visao(p["pos"], t["pos"]):
                     await self.send_to(p["id"], {"type": "error",
-                        "msg": f"🧱 Uma parede bloqueia a Lança de Gelo até {t['name']}!"}); return
+                        "msg": T("erro.parede_bloqueia_lanca_de_gelo", alvo=t["name"])}); return
                 raw_dmg = roll_dice("3d6")
                 await self.broadcast({"type": "dice_roll", "die": "d6", "value": raw_dmg, "label": "Lança de Gelo"})
                 dmg = max(1, (raw_dmg + mod(p["int_"]) + surv_mod) * dmg_mult)
@@ -13258,7 +13261,7 @@ class GameRoom:
             if t:
                 if not self._tem_linha_de_visao(p["pos"], t["pos"]):
                     await self.send_to(p["id"], {"type": "error",
-                        "msg": f"🧱 Uma parede bloqueia a linha de tiro até {t['name']}!"}); return
+                        "msg": T("erro.parede_bloqueia_linha_de_tiro", alvo=t["name"])}); return
                 total_dmg = 0
                 hits = 0
                 for _ in range(2):
@@ -13297,7 +13300,7 @@ class GameRoom:
             if t:
                 if not self._tem_linha_de_visao(p["pos"], t["pos"]):
                     await self.send_to(p["id"], {"type": "error",
-                        "msg": f"🧱 Uma parede bloqueia a linha de tiro até {t['name']}!"}); return
+                        "msg": T("erro.parede_bloqueia_linha_de_tiro", alvo=t["name"])}); return
                 weapon = p["weapon"]
                 raw_dmg = roll_dice(weapon["die"])
                 die_type = "d" + weapon["die"].split("d")[1]
@@ -13360,7 +13363,7 @@ class GameRoom:
         p = self.players.get(pid)
         if not p or not p["alive"]: return
         if p.get("class_id") != "mage":
-            await self.send_to(pid, {"type": "error", "msg": f"Apenas Pedro pode usar {nome}."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_pedro_pode_usar_habilidade", habilidade=nome)}); return
         novo = not p.get(flag)
         p[flag] = novo
         await self.gm_say(f"{icone} **{p['name']}** {'arma' if novo else 'desarma'} **{nome}**"
@@ -13491,7 +13494,7 @@ class GameRoom:
                  "sede": max(0, custo_bruto["sede"] - red)}
         if p["fome"] < custo["fome"] or p["sede"] < custo["sede"]:
             await self.send_to(pid, {"type": "error",
-                "msg": f"Recursos insuficientes — precisa 🍖{custo['fome']} 💧{custo['sede']}."}); return
+                "msg": T("erro.recursos_insuficientes_precisa_fome_sede", fome=custo["fome"], sede=custo["sede"])}); return
 
         p["fome"] = max(0, p["fome"] - custo["fome"])
         p["sede"] = max(0, p["sede"] - custo["sede"])
@@ -13647,14 +13650,14 @@ class GameRoom:
         fome_cost, sede_cost = 3, 3
         if p["fome"] < fome_cost or p["sede"] < sede_cost:
             await self.send_to(pid, {"type": "error",
-                "msg": f"Recursos insuficientes — precisa 🍖{fome_cost} 💧{sede_cost}."}); return
+                "msg": T("erro.recursos_insuficientes_precisa_fome_sede", fome=fome_cost, sede=sede_cost)}); return
 
         alvo = self.monsters.get(data.get("target_id")) if data else None
         if not alvo or alvo["hp"] <= 0:
             await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_nao_encontrado")}); return
         if not self._no_raio(p, alvo, PROVOCACAO_RAIO):
             await self.send_to(pid, {"type": "error",
-                "msg": f"Alvo fora do alcance — máximo {PROVOCACAO_RAIO} quadrados."}); return
+                "msg": T("erro.alvo_fora_do_alcance_maximo_quadrados_prov", alcance=PROVOCACAO_RAIO)}); return
         if alvo.get("provocado_turnos", 0) > 0:
             await self.send_to(pid, {"type": "error", "msg": T("erro.este_inimigo_ja_esta_provocado")}); return
 
@@ -13780,9 +13783,9 @@ class GameRoom:
 
         _ef, _es = self._custo_fome_sede_efetivo(p, custo_fome, custo_sede)
         if p["sede"] < _es:
-            await self.send_to(pid, {"type": "error", "msg": f"Sede insuficiente — precisa 💧{custo_sede}."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.sede_insuficiente_precisa", sede=custo_sede)}); return
         if p["fome"] < _ef:
-            await self.send_to(pid, {"type": "error", "msg": f"Fome insuficiente — precisa 🍖{custo_fome}."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.fome_insuficiente_precisa", fome=custo_fome)}); return
 
         alvo = self.players.get((data or {}).get("target_id"))
         if p.get("ultimo_esforco_ativo") and (data or {}).get("target_id") == pid:
@@ -13791,7 +13794,7 @@ class GameRoom:
         if not alvo or not alvo.get("alive"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_invalido")}); return
         if not self._no_raio(p, alvo, alcance_tiles):
-            await self.send_to(pid, {"type": "error", "msg": f"Alvo fora do alcance — máximo {alcance_tiles}q."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_do_alcance_maximo_q", alcance=alcance_tiles)}); return
         if not self._tem_linha_de_visao(p["pos"], alvo["pos"]):
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.uma_parede_bloqueia_a_energia_curativa_p")}); return
@@ -13833,7 +13836,7 @@ class GameRoom:
         _ef, _es = self._custo_fome_sede_efetivo(p, custo_fome, custo_sede)
         if p["fome"] < _ef or p["sede"] < _es:
             await self.send_to(pid, {"type": "error",
-                "msg": f"Recursos insuficientes — precisa 🍖{custo_fome} 💧{custo_sede}."}); return
+                "msg": T("erro.recursos_insuficientes_precisa_fome_sede", fome=custo_fome, sede=custo_sede)}); return
 
         dados = [random.randint(1, 8) for _ in range(num_dados)]
         bonus_int = mod(p["int_"])
@@ -13949,7 +13952,7 @@ class GameRoom:
         _ef, _es = self._custo_fome_sede_efetivo(p, custo["fome"], custo["sede"])
         if p["fome"] < _ef or p["sede"] < _es:
             await self.send_to(pid, {"type": "error",
-                "msg": f"Recursos insuficientes — precisa 🍖{custo['fome']} 💧{custo['sede']}."}); return
+                "msg": T("erro.recursos_insuficientes_precisa_fome_sede", fome=custo["fome"], sede=custo["sede"])}); return
 
         nomes = {"veneno": "veneno", "doenca": "doença",
                  "maldicao": "maldição", "petrificacao": "petrificação"}
@@ -13977,20 +13980,20 @@ class GameRoom:
             if self._curar_veneno_status(alvo):
                 removido = True
             else:
-                await self.send_to(pid, {"type": "error", "msg": f"{alvo['name']} não está envenenado."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_nao_esta_envenenado", aliado=alvo["name"])}); return
 
         elif tipo == "petrificacao":
             if self._curar_petrificacao(alvo):
                 removido = True
             else:
-                await self.send_to(pid, {"type": "error", "msg": f"{alvo['name']} não está petrificado."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_nao_esta_petrificado", aliado=alvo["name"])}); return
 
         elif tipo == "doenca":
             if alvo.get("doente"):
                 self._curar_doenca(alvo)   # remove a doenÃ§a inteira e reverte os atributos
                 removido = True
             else:
-                await self.send_to(pid, {"type": "error", "msg": f"{alvo['name']} não está doente."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_nao_esta_doente", aliado=alvo["name"])}); return
 
         elif tipo == "maldicao":
             removida = self._remover_maldicao(alvo, maldicao_alvo)
@@ -13999,9 +14002,9 @@ class GameRoom:
             elif self._maldicoes(alvo):
                 # Tem maldições, mas não a pedida — id desatualizado no cliente.
                 await self.send_to(pid, {"type": "error",
-                    "msg": f"{alvo['name']} não carrega essa maldição."}); return
+                    "msg": T("erro.aliado_nao_carrega_essa_maldicao", aliado=alvo["name"])}); return
             else:
-                await self.send_to(pid, {"type": "error", "msg": f"{alvo['name']} não está amaldiçoado."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_nao_esta_amaldicoado", aliado=alvo["name"])}); return
 
         if removido:
             self._pagar_fome_sede(p, custo["fome"], custo["sede"])
@@ -14028,13 +14031,13 @@ class GameRoom:
         _ef, _es = self._custo_fome_sede_efetivo(p, custo_fome, custo_sede)
         if p["fome"] < _ef or p["sede"] < _es:
             await self.send_to(pid, {"type": "error",
-                "msg": f"Recursos insuficientes — precisa 🍖{custo_fome} 💧{custo_sede}."}); return
+                "msg": T("erro.recursos_insuficientes_precisa_fome_sede", fome=custo_fome, sede=custo_sede)}); return
 
         alvo = self.players.get((data or {}).get("target_id"))
         if not alvo:
             await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_nao_encontrado")}); return
         if alvo.get("alive"):
-            await self.send_to(pid, {"type": "error", "msg": f"{alvo['name']} ainda está vivo."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_ainda_esta_vivo", aliado=alvo["name"])}); return
         if not self._no_raio(p, alvo, 1):
             await self.send_to(pid, {"type": "error", "msg": T("erro.ressurreicao_requer_contato_adjacente_co")}); return
 
@@ -14080,7 +14083,7 @@ class GameRoom:
         fome_cost, sede_cost = 3 + 2 * extra_d6, 2 + 2 * extra_d6
         _ef, _es = self._custo_fome_sede_efetivo(p, fome_cost, sede_cost)
         if p["fome"] < _ef or p["sede"] < _es:
-            await self.send_to(pid, {"type": "error", "msg": f"Recursos insuficientes 🍖{fome_cost} 💧{sede_cost}."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.recursos_insuficientes_fome_sede", fome=fome_cost, sede=sede_cost)}); return
 
         alvo_id = data.get("target_id") if data else None
         if alvo_id == pid:
@@ -14120,7 +14123,7 @@ class GameRoom:
 
         fome_cost, sede_cost = 3, 3
         if p["fome"] < fome_cost or p["sede"] < sede_cost:
-            await self.send_to(pid, {"type": "error", "msg": f"Recursos insuficientes 🍖{fome_cost} 💧{sede_cost}."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.recursos_insuficientes_fome_sede", fome=fome_cost, sede=sede_cost)}); return
 
         p["fome"] = max(0, p["fome"] - fome_cost)
         p["sede"] = max(0, p["sede"] - sede_cost)
@@ -14151,7 +14154,7 @@ class GameRoom:
 
         fome_cost, sede_cost = 2, 2
         if p["fome"] < fome_cost or p["sede"] < sede_cost:
-            await self.send_to(pid, {"type": "error", "msg": f"Recursos insuficientes 🍖{fome_cost} 💧{sede_cost}."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.recursos_insuficientes_fome_sede", fome=fome_cost, sede=sede_cost)}); return
 
         alvo_id = data.get("target_id") if data else None
         if alvo_id == pid:
@@ -14160,7 +14163,7 @@ class GameRoom:
         if not alvo or not alvo.get("alive"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_invalido")}); return
         if not self._no_raio(p, alvo, self._defensor_raio(p)):
-            await self.send_to(pid, {"type": "error", "msg": f"Aliado fora do raio de {self._defensor_raio(p)} quadrados."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_fora_do_raio_de_quadrados", raio=self._defensor_raio(p))}); return
 
         p["fome"] = max(0, p["fome"] - fome_cost)
         p["sede"] = max(0, p["sede"] - sede_cost)
@@ -14212,7 +14215,7 @@ class GameRoom:
 
         fome_cost, sede_cost = 2, 1
         if p["fome"] < fome_cost or p["sede"] < sede_cost:
-            await self.send_to(pid, {"type": "error", "msg": f"Recursos insuficientes 🍖{fome_cost} 💧{sede_cost}."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.recursos_insuficientes_fome_sede", fome=fome_cost, sede=sede_cost)}); return
 
         p["fome"] = max(0, p["fome"] - fome_cost)
         p["sede"] = max(0, p["sede"] - sede_cost)
@@ -14238,14 +14241,14 @@ class GameRoom:
         n_ativos = sum(1 for v in bonus_validos.values() if v > 0)
         if n_ativos > self._gdl_max_atributos(p):
             await self.send_to(pid, {"type": "error",
-                "msg": f"Guerreiro da Luz permite {self._gdl_max_atributos(p)} atributo(s) ativo(s) — evolua na Guilda."}); return
+                "msg": T("erro.guerreiro_da_luz_permite_atributos_ativos", max_atributos=self._gdl_max_atributos(p))}); return
 
         custo_fome = bonus_validos["dano"] + bonus_validos["ca"]
         custo_sede = bonus_validos["visao"] + bonus_validos["ataque"]
         if custo_fome == 0 and custo_sede == 0:
             await self.send_to(pid, {"type": "error", "msg": T("erro.escolha_pelo_menos_um_bonus")}); return
         if p["fome"] < custo_fome or p["sede"] < custo_sede:
-            await self.send_to(pid, {"type": "error", "msg": f"Recursos insuficientes 🍖{custo_fome} 💧{custo_sede}."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.recursos_insuficientes_fome_sede", fome=custo_fome, sede=custo_sede)}); return
 
         p["fome"] = max(0, p["fome"] - custo_fome)
         p["sede"] = max(0, p["sede"] - custo_sede)
@@ -14404,7 +14407,7 @@ class GameRoom:
         fome, sede = self._custo_viagem_saida()
         if p.get("fome", 0) < fome or p.get("sede", 0) < sede:
             await self.send_to(pid, {"type": "error",
-                "msg": f"Provisões insuficientes para ir e voltar (precisa de 🍖{fome} e 💧{sede})."}); return
+                "msg": T("erro.provisoes_insuficientes_ir_e_voltar", fome=fome, sede=sede)}); return
         p["fome"] -= fome; p["sede"] -= sede
         espera = _rolar_espera((WORLD_ADVENTURES.get(self.world_adventure_id) or {}).get("espera_retorno"))
         # `ignorar_primeiro_fecho`: sair encerra o turno, o que pode fechar a
@@ -14472,7 +14475,7 @@ class GameRoom:
             return
         if fora.get("rodadas_restantes", 0) > 0:
             await self.send_to(pid, {"type": "error",
-                "msg": f"A viagem ainda leva {fora['rodadas_restantes']} rodada(s)."}); return
+                "msg": T("erro.a_viagem_ainda_leva_rodadas", rodadas=fora["rodadas_restantes"])}); return
         await self._reentrar_masmorra(pid)
 
     async def _checar_masmorra_vazia(self):
@@ -14870,16 +14873,16 @@ class GameRoom:
         allowed = item.get("allowed_classes")
         if allowed and p.get("class_id") not in allowed:
             await self.send_to(pid, {"type": "error",
-                "msg": f"Sua classe não pode usar {item['name']}!"}); return False
+                "msg": T("erro.sua_classe_nao_pode_usar_item", item=nome_de("item", item["id"]))}); return False
 
         # â”€â”€ Arma de 2 mÃ£os Ã— escudo/2Âª arma: nÃ£o podem coexistir (bloquear) â”€â”€
         if cat == "weapon" and item.get("two_handed") and self._off_hand_ocupa_mao(p):
             await self.send_to(pid, {"type": "error",
-                "msg": f"{item['name']} é arma de 2 mãos — desequipe o escudo ou a 2ª arma primeiro."}); return False
+                "msg": T("erro.item_e_arma_de_2_maos_desequipe_escudo", item=nome_de("item", item["id"]))}); return False
         if cat == "off_hand" and (item.get("kind") == "shield" or item.get("item_slot") == "shield") \
                 and (p.get("weapon") or {}).get("two_handed"):
             await self.send_to(pid, {"type": "error",
-                "msg": f"Você empunha uma arma de 2 mãos — desequipe-a antes de usar {item['name']}."}); return False
+                "msg": T("erro.arma_de_2_maos_desequipe_antes_de_usar_item", item=nome_de("item", item["id"]))}); return False
 
         # Equipar por cima empurra o item antigo para a bolsa — se ele estiver
         # preso por maldição, isso seria a via mais fácil de burlar a trava.
@@ -14946,7 +14949,7 @@ class GameRoom:
         allowed = item.get("allowed_classes")
         if allowed and p.get("class_id") not in allowed:
             await self.send_to(pid, {"type": "error",
-                "msg": f"Sua classe não pode usar {item['name']}!"}); return
+                "msg": T("erro.sua_classe_nao_pode_usar_item", item=nome_de("item", item["id"]))}); return
         # Arma de 2 mÃ£os na mÃ£o principal impede o uso de 2Âª arma (como o escudo).
         if (p.get("weapon") or {}).get("two_handed"):
             await self.send_to(pid, {"type": "error",
@@ -15828,10 +15831,11 @@ class GameRoom:
         if not magia:
             await self.send_to(pid, {"type": "error", "msg": T("erro.magia_desconhecida")}); return
         if magia_id not in p.get("magias_conhecidas", []):
-            await self.send_to(pid, {"type": "error", "msg": f"{p['name']} não conhece {magia['nome']}."}); return
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.personagem_nao_conhece_magia", personagem=p["name"], magia=nome_de("magia", magia_id))}); return
         if magia_id not in GRIMORIO_IMPLEMENTADAS:
             await self.send_to(pid, {"type": "error",
-                "msg": f"{magia['icone']} {magia['nome']} ainda está em desenvolvimento."}); return
+                "msg": T("erro.magia_ainda_em_desenvolvimento", icone=magia["icone"], magia=nome_de("magia", magia_id))}); return
 
         # Custo do cÃ­rculo: 1 SLOT do mesmo cÃ­rculo (estrito). NinguÃ©m usa MP.
         # Criar Alimentos materializa um baú numa casa adjacente livre. Validar
@@ -15849,9 +15853,17 @@ class GameRoom:
         circulo = magia.get("circulo", "primeiro")
         if self._slots_disponiveis(p, circulo) <= 0:
             falta = self._proximo_slot_rodadas(p, circulo)
-            extra = f" (volta em {falta} rodada{'s' if (falta or 0) != 1 else ''})" if falta is not None else ""
+            if falta is None:
+                extra = ""
+            elif falta == 1:
+                extra = T("erro._volta_em_1_rodada", falta=falta)
+            else:
+                extra = T("erro._volta_em_n_rodadas", falta=falta)
+            circulo_txt = {"primeiro": T("erro._circulo_primeiro"),
+                           "segundo": T("erro._circulo_segundo"),
+                           "terceiro": T("erro._circulo_terceiro")}.get(circulo, circulo)
             await self.send_to(pid, {"type": "error",
-                "msg": f"Sem slot de magia de {circulo} círculo{extra}."}); return
+                "msg": T("erro.sem_slot_de_magia_de_circulo", circulo=circulo_txt, extra=extra)}); return
 
         # â”€â”€ Metamagia (Pedro): Aprimorar (+1 CD do save) / Estender (+1 turno) /
         # Fortalecer (dano Ã—1,5). EMPILHÃVEIS; o custo em ðŸ–/ðŸ’§ Ã© pago AGORA e SÃ“ se
@@ -15867,7 +15879,7 @@ class GameRoom:
                 _ef, _es = self._custo_fome_sede_efetivo(p, mm_fome, mm_sede)
                 if p["fome"] < _ef or p["sede"] < _es:
                     await self.send_to(pid, {"type": "error",
-                        "msg": f"Recursos insuficientes p/ metamagia 🍖-{mm_fome} 💧-{mm_sede}."}); return
+                        "msg": T("erro.recursos_insuficientes_metamagia", fome=mm_fome, sede=mm_sede)}); return
                 self._pagar_fome_sede(p, mm_fome, mm_sede)
             if partes:
                 custo_txt = (f" | 🍖-{mm_fome}" + (f" 💧-{mm_sede}" if mm_sede else "")) if (mm_fome or mm_sede) else ""
@@ -16204,7 +16216,7 @@ class GameRoom:
             await self.send_to(caster["id"], {"type": "error", "msg": T("erro.alvo_invalido")}); return
         dist = max(abs(caster["pos"][0]-alvo["pos"][0]), abs(caster["pos"][1]-alvo["pos"][1]))
         if dist > alcance:
-            await self.send_to(caster["id"], {"type": "error", "msg": f"Alvo fora do alcance ({dist} > {alcance})."}); return
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.alvo_fora_do_alcance_dist_maior_que", dist=dist, alcance=alcance)}); return
 
         dano = int((((await self._rolar_dano_mostrado(nivel, 6, "✨ Dano")) + nivel) * dmg_mult) + 0.5)
         save_ok, *_ = await self._save_mostrado(alvo, "reflexos", self._dif_magia(caster, magia))
@@ -16562,7 +16574,7 @@ class GameRoom:
         dist = max(abs(caster["pos"][0] - tx), abs(caster["pos"][1] - ty))
         if dist > alc:
             await self.send_to(caster["id"], {"type": "error",
-                "msg": f"Centro da magia fora do alcance ({dist} > {alc})."})
+                "msg": T("erro.centro_da_magia_fora_do_alcance", dist=dist, alcance=alc)})
             return False
         return True
 
@@ -16948,7 +16960,7 @@ class GameRoom:
         dist = max(abs(caster["pos"][0]-tx), abs(caster["pos"][1]-ty))
         if dist > alcance:
             await self.send_to(caster["id"], {"type": "error",
-                "msg": f"Centro fora do alcance ({dist} > {alcance})."}); return
+                "msg": T("erro.centro_fora_do_alcance_dist_maior_que", dist=dist, alcance=alcance)}); return
         dur = self._rolar_dado(magia.get("duracao", "1d4")) + dur_bonus
         self.zonas_especiais.append({
             "id":      f"silencio_{caster['id']}_{self.round_num}",
@@ -17322,7 +17334,7 @@ class GameRoom:
         dist_centro = max(abs(caster["pos"][0] - cx), abs(caster["pos"][1] - cy))
         if dist_centro > alcance:
             await self.send_to(caster["id"], {"type": "error",
-                "msg": f"Centro da Bola de Fogo fora do alcance ({dist_centro} > {alcance})."}); return
+                "msg": T("erro.centro_da_bola_de_fogo_fora_do_alcance", dist=dist_centro, alcance=alcance)}); return
         if not self._tem_linha_de_visao(caster["pos"], [cx, cy]):
             await self.send_to(caster["id"], {"type": "error",
                 "msg": T("erro.uma_parede_bloqueia_a_trajetoria_da_bola")}); return
@@ -17505,7 +17517,7 @@ class GameRoom:
 
         dist = max(abs(caster["pos"][0]-alvo["pos"][0]), abs(caster["pos"][1]-alvo["pos"][1]))
         if dist > alcance:
-            await self.send_to(caster["id"], {"type": "error", "msg": f"Alvo fora do alcance ({dist} > {alcance})."}); return
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.alvo_fora_do_alcance_dist_maior_que", dist=dist, alcance=alcance)}); return
         if not self._tem_linha_de_visao(caster["pos"], alvo["pos"]):
             await self.send_to(caster["id"], {"type": "error",
                 "msg": T("erro.uma_parede_bloqueia_o_raio_congelante")}); return
@@ -18507,15 +18519,15 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": T("erro.armadilha_invalida")}); return
         if tipo_id not in self._armadilhas_desbloqueadas(p):
             await self.send_to(pid, {"type": "error",
-                "msg": f"Você ainda não aprendeu a fórmula de {tipo['nome']} — compre na Guilda."}); return
+                "msg": T("erro.voce_nao_aprendeu_a_formula_de_armadilha", armadilha=nome_de("armadilha", tipo_id))}); return
 
         custo_ouro = tipo.get("custo_ouro", 0)
         if p["gold"] < custo_ouro:
-            await self.send_to(pid, {"type": "error", "msg": f"Ouro insuficiente — precisa {custo_ouro}🪙."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.ouro_insuficiente_precisa", ouro=custo_ouro)}); return
         _ef, _es = self._custo_fome_sede_efetivo(p, ARMADILHA_CUSTO_FOME, ARMADILHA_CUSTO_SEDE)
         if p["fome"] < _ef or p["sede"] < _es:
             await self.send_to(pid, {"type": "error",
-                "msg": f"Recursos insuficientes (🍖-{ARMADILHA_CUSTO_FOME} 💧-{ARMADILHA_CUSTO_SEDE})."}); return
+                "msg": T("erro.recursos_insuficientes_parenteses_fome_sede", fome=ARMADILHA_CUSTO_FOME, sede=ARMADILHA_CUSTO_SEDE)}); return
 
         # PosiÃ§Ã£o: casa atual ou cardinalmente adjacente.
         tx = int(msg.get("tx", p["pos"][0]))
@@ -19061,7 +19073,7 @@ class GameRoom:
         custo_fome, custo_sede = 2, 1
         if p["fome"] < custo_fome or p["sede"] < custo_sede:
             await self.send_to(pid, {"type": "error",
-                "msg": f"Recursos insuficientes (🍖-{custo_fome} 💧-{custo_sede})."}); return
+                "msg": T("erro.recursos_insuficientes_parenteses_fome_sede", fome=custo_fome, sede=custo_sede)}); return
 
         # Dificuldade = percepÃ§Ã£o do monstro mais atento + nÂº de monstros na sala.
         monstros = [m for m in self.monsters.values() if m["hp"] > 0]
@@ -19118,7 +19130,7 @@ class GameRoom:
 
         custo_sede = 1
         if p["sede"] < custo_sede:
-            await self.send_to(pid, {"type": "error", "msg": f"Sede insuficiente (💧-{custo_sede})."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.sede_insuficiente_parenteses", sede=custo_sede)}); return
 
         veneno_id = msg.get("veneno_id")
         frasco = next((i for i in p["bag"]
@@ -26139,7 +26151,7 @@ async def handler(ws):
             except Exception as e:
                 # Never crash the connection on a handler error â€” report to client
                 try:
-                    await err(f"Erro interno: {type(e).__name__}")
+                    await err(T("erro.erro_interno", tipo=type(e).__name__))
                 except Exception:
                     pass
 

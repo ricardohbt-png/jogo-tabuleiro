@@ -5,6 +5,54 @@
 // o slug do texto original, o que garante que a mesma recusa use sempre a
 // mesma frase.
 window.LANG_ERROS = {
+  "erro._circulo_primeiro": {
+    "en": "first",
+    "pt": "primeiro"
+  },
+  "erro._circulo_segundo": {
+    "en": "second",
+    "pt": "segundo"
+  },
+  "erro._circulo_terceiro": {
+    "en": "third",
+    "pt": "terceiro"
+  },
+  "erro._extra_escuridao_limita_alcance": {
+    "en": " (darkness limits range to 2 squares — use Darkvision)",
+    "pt": " (escuridão limita o alcance a 2q — use Visão no Escuro)"
+  },
+  "erro._local_bolsa_ou_mao_esquerda": {
+    "en": "in the bag or off hand",
+    "pt": "na bolsa ou na mão esquerda"
+  },
+  "erro._local_mao_esquerda": {
+    "en": "in the off hand",
+    "pt": "na mão esquerda"
+  },
+  "erro._municao_flechas": {
+    "en": "arrows",
+    "pt": "flechas"
+  },
+  "erro._municao_virotes": {
+    "en": "bolts",
+    "pt": "virotes"
+  },
+  "erro._regra_diagonal_ate": {
+    "en": "; diagonal up to {diagonal}",
+    "pt": "; diagonal até {diagonal}"
+  },
+  "erro._regra_em_linha_reta": {
+    "en": " in a straight line",
+    "pt": " em linha reta"
+  },
+  "erro._volta_em_1_rodada": {
+    "en": " (returns in {falta} round)",
+    "pt": " (volta em {falta} rodada)"
+  },
+  "erro._volta_em_n_rodadas": {
+    "en": " (returns in {falta} rounds)",
+    "pt": " (volta em {falta} rodadas)"
+  },
   "erro.a_fonte_esta_seca": {
     "en": "",
     "pt": "💧 A fonte está seca."
@@ -17,6 +65,10 @@ window.LANG_ERROS = {
     "en": "",
     "pt": "🚪 A porta está fechada. Clique nela para abri-la."
   },
+  "erro.a_viagem_ainda_leva_rodadas": {
+    "en": "The trip still takes {rodadas} round(s).",
+    "pt": "A viagem ainda leva {rodadas} rodada(s)."
+  },
   "erro.acao_bonus_ja_usada_neste_turno": {
     "en": "",
     "pt": "Ação bônus já usada neste turno."
@@ -24,6 +76,14 @@ window.LANG_ERROS = {
   "erro.acao_principal_ja_usada_neste_turno": {
     "en": "",
     "pt": "Ação principal já usada neste turno."
+  },
+  "erro.agarrado_por_captor_nao_pode_se_mover": {
+    "en": "Grappled by {captor} — can't move.",
+    "pt": "Agarrado por {captor} — não pode se mover."
+  },
+  "erro.aliado_ainda_esta_vivo": {
+    "en": "{aliado} is still alive.",
+    "pt": "{aliado} ainda está vivo."
   },
   "erro.aliado_fora_do_alcance": {
     "en": "",
@@ -33,17 +93,45 @@ window.LANG_ERROS = {
     "en": "",
     "pt": "Aliado fora do alcance (4 casas)."
   },
+  "erro.aliado_fora_do_raio_de_quadrados": {
+    "en": "Ally out of the {raio}-square radius.",
+    "pt": "Aliado fora do raio de {raio} quadrados."
+  },
   "erro.aliado_invalido": {
     "en": "",
     "pt": "Aliado inválido."
+  },
+  "erro.aliado_nao_carrega_essa_maldicao": {
+    "en": "{aliado} doesn't carry that curse.",
+    "pt": "{aliado} não carrega essa maldição."
   },
   "erro.aliado_nao_encontrado": {
     "en": "",
     "pt": "Aliado não encontrado."
   },
+  "erro.aliado_nao_esta_amaldicoado": {
+    "en": "{aliado} is not cursed.",
+    "pt": "{aliado} não está amaldiçoado."
+  },
+  "erro.aliado_nao_esta_doente": {
+    "en": "{aliado} is not sick.",
+    "pt": "{aliado} não está doente."
+  },
+  "erro.aliado_nao_esta_envenenado": {
+    "en": "{aliado} is not poisoned.",
+    "pt": "{aliado} não está envenenado."
+  },
+  "erro.aliado_nao_esta_petrificado": {
+    "en": "{aliado} is not petrified.",
+    "pt": "{aliado} não está petrificado."
+  },
   "erro.alvo_de_area_invalido": {
     "en": "",
     "pt": "Alvo de área inválido."
+  },
+  "erro.alvo_desapareceu_nas_sombras": {
+    "en": "🌫️ {alvo} vanished into the shadows — immune to ranged attacks!",
+    "pt": "🌫️ {alvo} desapareceu nas sombras — imune a ataques à distância!"
   },
   "erro.alvo_do_requiem_invalido": {
     "en": "",
@@ -57,13 +145,53 @@ window.LANG_ERROS = {
     "en": "",
     "pt": "Alvo fora de alcance."
   },
+  "erro.alvo_fora_de_alcance_aproxime_diagonal": {
+    "en": "⚠ {alvo} is out of range! Get closer (1 square, diagonals included).",
+    "pt": "⚠ {alvo} está fora de alcance! Aproxime-se (1 quadrado, inclusive diagonal)."
+  },
+  "erro.alvo_fora_de_alcance_aproxime_ortogonal": {
+    "en": "⚠ {alvo} is out of range! Get closer (1 orthogonal square).",
+    "pt": "⚠ {alvo} está fora de alcance! Aproxime-se (1 quadrado ortogonal)."
+  },
+  "erro.alvo_fora_de_alcance_de_arremesso": {
+    "en": "⚠ {alvo} out of throwing range (max {alcance} squares).",
+    "pt": "⚠ {alvo} fora de alcance de arremesso (máx {alcance} quadrados)."
+  },
+  "erro.alvo_fora_de_alcance_max": {
+    "en": "⚠ {alvo} out of range (max {alcance} squares).",
+    "pt": "⚠ {alvo} fora de alcance (máx {alcance} quadrados)."
+  },
+  "erro.alvo_fora_de_alcance_maximo_quadrados": {
+    "en": "⚠ {alvo} is out of range! (maximum {alcance} squares{regra}){extra}",
+    "pt": "⚠ {alvo} está fora de alcance! (máximo {alcance} quadrados{regra}){extra}"
+  },
   "erro.alvo_fora_do_alcance": {
     "en": "",
     "pt": "Alvo fora do alcance."
   },
+  "erro.alvo_fora_do_alcance_casas": {
+    "en": "Target out of range ({alcance} squares).",
+    "pt": "Alvo fora do alcance ({alcance} casas)."
+  },
+  "erro.alvo_fora_do_alcance_da_lanca": {
+    "en": "⚠ {alvo} is out of the spear's reach! (2 squares in a straight line or 1 diagonally)",
+    "pt": "⚠ {alvo} está fora do alcance da lança! (2 casas em linha reta ou 1 na diagonal)"
+  },
   "erro.alvo_fora_do_alcance_da_magia": {
     "en": "",
     "pt": "Alvo fora do alcance da magia."
+  },
+  "erro.alvo_fora_do_alcance_dist_maior_que": {
+    "en": "Target out of range ({dist} > {alcance}).",
+    "pt": "Alvo fora do alcance ({dist} > {alcance})."
+  },
+  "erro.alvo_fora_do_alcance_maximo_q": {
+    "en": "Target out of range — maximum {alcance} squares.",
+    "pt": "Alvo fora do alcance — máximo {alcance}q."
+  },
+  "erro.alvo_fora_do_alcance_maximo_quadrados_prov": {
+    "en": "Target out of range — maximum {alcance} squares.",
+    "pt": "Alvo fora do alcance — máximo {alcance} quadrados."
   },
   "erro.alvo_fora_do_alcance_ou_maldicao_sem_uso": {
     "en": "",
@@ -137,6 +265,10 @@ window.LANG_ERROS = {
     "en": "",
     "pt": "Apenas Pedro pode usar Animar Mortos."
   },
+  "erro.apenas_pedro_pode_usar_habilidade": {
+    "en": "Only Pedro can use {habilidade}.",
+    "pt": "Apenas Pedro pode usar {habilidade}."
+  },
   "erro.aproxime_se_da_escada_de_entrada_para_sa": {
     "en": "",
     "pt": "Aproxime-se da escada de entrada para sair."
@@ -144,6 +276,10 @@ window.LANG_ERROS = {
   "erro.aproxime_se_do_prisioneiro": {
     "en": "",
     "pt": "Aproxime-se do prisioneiro."
+  },
+  "erro.arma_de_2_maos_desequipe_antes_de_usar_item": {
+    "en": "You're wielding a two-handed weapon — unequip it before using {item}.",
+    "pt": "Você empunha uma arma de 2 mãos — desequipe-a antes de usar {item}."
   },
   "erro.armadilha_invalida": {
     "en": "",
@@ -169,6 +305,10 @@ window.LANG_ERROS = {
     "en": "",
     "pt": "Caminho bloqueado para o servo."
   },
+  "erro.campanha_invalida": {
+    "en": "Invalid campaign: {motivo}",
+    "pt": "Campanha inválida: {motivo}"
+  },
   "erro.casa_ocupada_ou_invalida_para_implantar": {
     "en": "",
     "pt": "Casa ocupada ou inválida para implantar."
@@ -181,9 +321,29 @@ window.LANG_ERROS = {
     "en": "",
     "pt": "Cena não encontrada."
   },
+  "erro.centro_da_bola_de_fogo_fora_do_alcance": {
+    "en": "Fireball's center out of range ({dist} > {alcance}).",
+    "pt": "Centro da Bola de Fogo fora do alcance ({dist} > {alcance})."
+  },
+  "erro.centro_da_magia_fora_do_alcance": {
+    "en": "Spell's center out of range ({dist} > {alcance}).",
+    "pt": "Centro da magia fora do alcance ({dist} > {alcance})."
+  },
   "erro.centro_de_area_invalido": {
     "en": "",
     "pt": "Centro de área inválido."
+  },
+  "erro.centro_fora_de_alcance_max": {
+    "en": "⚠ Center out of range (max {alcance} squares).",
+    "pt": "⚠ Centro fora de alcance (máx {alcance} quadrados)."
+  },
+  "erro.centro_fora_do_alcance_dist_maior_que": {
+    "en": "Center out of range ({dist} > {alcance}).",
+    "pt": "Centro fora do alcance ({dist} > {alcance})."
+  },
+  "erro.classe_em_uso_em_outra_sala": {
+    "en": "{classe} is already in use in another room.",
+    "pt": "{classe} já está em uso em outra sala."
   },
   "erro.classe_ja_escolhida_por_outro_jogador": {
     "en": "",
@@ -268,6 +428,10 @@ window.LANG_ERROS = {
   "erro.encerre_seu_turno_primeiro_para_mover_os": {
     "en": "",
     "pt": "Encerre seu turno primeiro para mover os servos."
+  },
+  "erro.erro_interno": {
+    "en": "Internal error: {tipo}",
+    "pt": "Erro interno: {tipo}"
   },
   "erro.escolha_exatamente_2_magias_de_1o_circul": {
     "en": "",
@@ -425,6 +589,10 @@ window.LANG_ERROS = {
     "en": "",
     "pt": "Faça login para escolher um personagem neste jogo."
   },
+  "erro.fome_insuficiente_precisa": {
+    "en": "Not enough food — needs 🍖{fome}.",
+    "pt": "Fome insuficiente — precisa 🍖{fome}."
+  },
   "erro.fome_sede_insuficientes": {
     "en": "",
     "pt": "Fome/sede insuficientes."
@@ -441,6 +609,10 @@ window.LANG_ERROS = {
     "en": "",
     "pt": "Golpe Sagrado já está ativo."
   },
+  "erro.guerreiro_da_luz_permite_atributos_ativos": {
+    "en": "Warrior of Light allows {max_atributos} active attribute(s) — upgrade at the Guild.",
+    "pt": "Guerreiro da Luz permite {max_atributos} atributo(s) ativo(s) — evolua na Guilda."
+  },
   "erro.ha_um_objeto_bloqueando_o_caminho": {
     "en": "",
     "pt": "Há um objeto bloqueando o caminho."
@@ -456,6 +628,10 @@ window.LANG_ERROS = {
   "erro.habilidade_nao_ativavel_manualmente_ia_a": {
     "en": "",
     "pt": "Habilidade não ativável manualmente (IA apenas)."
+  },
+  "erro.habilidade_passiva": {
+    "en": "{habilidade} is passive — no need to activate.",
+    "pt": "{habilidade} é passiva — não precisa ativar."
   },
   "erro.habilidade_sem_usos_ou_em_recarga": {
     "en": "",
@@ -489,6 +665,10 @@ window.LANG_ERROS = {
     "en": "",
     "pt": "Inventário cheio e slot ocupado — abra espaço primeiro."
   },
+  "erro.inventario_cheio_max_itens": {
+    "en": "Inventory full (max {max_itens} items)!",
+    "pt": "Inventário cheio (máx {max_itens} itens)!"
+  },
   "erro.inventario_cheio_nao_ha_espaco_para_dese": {
     "en": "",
     "pt": "Inventário cheio — não há espaço para desequipar."
@@ -497,9 +677,17 @@ window.LANG_ERROS = {
     "en": "",
     "pt": "Item da guilda desconhecido."
   },
+  "erro.item_e_arma_de_2_maos_desequipe_escudo": {
+    "en": "{item} is a two-handed weapon — unequip the shield or 2nd weapon first.",
+    "pt": "{item} é arma de 2 mãos — desequipe o escudo ou a 2ª arma primeiro."
+  },
   "erro.item_invalido": {
     "en": "",
     "pt": "Item inválido."
+  },
+  "erro.item_ja_pedido_nesta_visita": {
+    "en": "You already ordered {item} on this visit to the city.",
+    "pt": "Você já pediu {item} nesta visita à cidade."
   },
   "erro.item_nao_arremessavel": {
     "en": "",
@@ -545,6 +733,10 @@ window.LANG_ERROS = {
     "en": "",
     "pt": "⚡ Linha de descarga bloqueada por parede."
   },
+  "erro.magia_ainda_em_desenvolvimento": {
+    "en": "{icone} {magia} is still in development.",
+    "pt": "{icone} {magia} ainda está em desenvolvimento."
+  },
   "erro.magia_desconhecida": {
     "en": "",
     "pt": "Magia desconhecida."
@@ -581,6 +773,10 @@ window.LANG_ERROS = {
     "en": "",
     "pt": "Mão esquerda ocupada e inventário cheio!"
   },
+  "erro.masmorra_invalida": {
+    "en": "Invalid dungeon: {motivo}",
+    "pt": "Masmorra inválida: {motivo}"
+  },
   "erro.mestre_dos_mortos_so_pode_ser_usado_na_p": {
     "en": "",
     "pt": "Mestre dos Mortos só pode ser usado na primeira ação e requer espaço para invocar."
@@ -592,6 +788,10 @@ window.LANG_ERROS = {
   "erro.monstro_sem_movimento_neste_turno": {
     "en": "",
     "pt": "Monstro sem movimento neste turno."
+  },
+  "erro.movimento_insuficiente_casa_custa": {
+    "en": "Not enough movement: this tile costs {custo}.",
+    "pt": "Movimento insuficiente: esta casa custa {custo}."
   },
   "erro.mp_insuficiente": {
     "en": "",
@@ -797,6 +997,10 @@ window.LANG_ERROS = {
     "en": "",
     "pt": "Ouro insuficiente!"
   },
+  "erro.ouro_insuficiente_precisa": {
+    "en": "Not enough gold — needs {ouro}🪙.",
+    "pt": "Ouro insuficiente — precisa {ouro}🪙."
+  },
   "erro.outro_aventureiro_esta_neste_espaco": {
     "en": "",
     "pt": "Outro aventureiro está neste espaço."
@@ -804,6 +1008,18 @@ window.LANG_ERROS = {
   "erro.outro_jogador_ja_fez_a_escolha_do_grupo": {
     "en": "",
     "pt": "Outro jogador já fez a escolha do grupo."
+  },
+  "erro.parede_bloqueia_arremesso": {
+    "en": "🧱 A wall blocks the throw to {alvo}!",
+    "pt": "🧱 Uma parede bloqueia o arremesso até {alvo}!"
+  },
+  "erro.parede_bloqueia_lanca_de_gelo": {
+    "en": "🧱 A wall blocks Ice Lance's path to {alvo}!",
+    "pt": "🧱 Uma parede bloqueia a Lança de Gelo até {alvo}!"
+  },
+  "erro.parede_bloqueia_linha_de_tiro": {
+    "en": "🧱 A wall blocks the line of fire to {alvo}!",
+    "pt": "🧱 Uma parede bloqueia a linha de tiro até {alvo}!"
   },
   "erro.pedido_enviado_para_votacao_dos_membros": {
     "en": "",
@@ -813,6 +1029,10 @@ window.LANG_ERROS = {
     "en": "",
     "pt": "Pergaminho não encontrado."
   },
+  "erro.personagem_nao_conhece_magia": {
+    "en": "{personagem} doesn't know {magia}.",
+    "pt": "{personagem} não conhece {magia}."
+  },
   "erro.ponto_da_cidade_invalido": {
     "en": "",
     "pt": "Ponto da cidade inválido."
@@ -821,9 +1041,17 @@ window.LANG_ERROS = {
     "en": "",
     "pt": "Posição inválida para a armadilha."
   },
+  "erro.preso_por_captor_impossivel_mover": {
+    "en": "⛓️ You are grappled by **{captor}**! You can't move (try to escape on your next turn).",
+    "pt": "⛓️ Você está preso por **{captor}**! Impossível se mover (tente escapar no próximo turno)."
+  },
   "erro.prisioneiro_sem_movimento_neste_turno": {
     "en": "",
     "pt": "Prisioneiro sem movimento neste turno."
+  },
+  "erro.provisoes_insuficientes_ir_e_voltar": {
+    "en": "Not enough provisions for the round trip (needs 🍖{fome} and 💧{sede}).",
+    "pt": "Provisões insuficientes para ir e voltar (precisa de 🍖{fome} e 💧{sede})."
   },
   "erro.purificacao_requer_contato_adjacente": {
     "en": "",
@@ -833,6 +1061,14 @@ window.LANG_ERROS = {
     "en": "",
     "pt": "Purificar o item vinculado exige +5 de fome e +5 de sede."
   },
+  "erro.recursos_insuficientes_fome_sede": {
+    "en": "Not enough resources 🍖{fome} 💧{sede}.",
+    "pt": "Recursos insuficientes 🍖{fome} 💧{sede}."
+  },
+  "erro.recursos_insuficientes_metamagia": {
+    "en": "Not enough resources for metamagic 🍖-{fome} 💧-{sede}.",
+    "pt": "Recursos insuficientes p/ metamagia 🍖-{fome} 💧-{sede}."
+  },
   "erro.recursos_insuficientes_para_a_expedicao": {
     "en": "",
     "pt": "Recursos insuficientes para a expedição: "
@@ -840,6 +1076,18 @@ window.LANG_ERROS = {
   "erro.recursos_insuficientes_para_viajar": {
     "en": "",
     "pt": "Recursos insuficientes para viajar: "
+  },
+  "erro.recursos_insuficientes_parenteses_fome_sede": {
+    "en": "Not enough resources (🍖-{fome} 💧-{sede}).",
+    "pt": "Recursos insuficientes (🍖-{fome} 💧-{sede})."
+  },
+  "erro.recursos_insuficientes_precisa_fome_sede": {
+    "en": "Not enough resources — needs 🍖{fome} 💧{sede}.",
+    "pt": "Recursos insuficientes — precisa 🍖{fome} 💧{sede}."
+  },
+  "erro.requer_antes": {
+    "en": "Requires first: {requisito}.",
+    "pt": "Requer antes: {requisito}."
   },
   "erro.ressurreicao_requer_contato_adjacente_co": {
     "en": "",
@@ -865,6 +1113,14 @@ window.LANG_ERROS = {
     "en": "",
     "pt": "Sala não encontrada para reconexão."
   },
+  "erro.sede_insuficiente_parenteses": {
+    "en": "Not enough water (💧-{sede}).",
+    "pt": "Sede insuficiente (💧-{sede})."
+  },
+  "erro.sede_insuficiente_precisa": {
+    "en": "Not enough water — needs 💧{sede}.",
+    "pt": "Sede insuficiente — precisa 💧{sede}."
+  },
   "erro.selecione_uma_casa_adjacente_para_desarm": {
     "en": "",
     "pt": "Selecione uma casa adjacente para desarmar."
@@ -877,6 +1133,10 @@ window.LANG_ERROS = {
     "en": "",
     "pt": "Sem espaço adjacente para largar."
   },
+  "erro.sem_folego_atacar_sob_cancao": {
+    "en": "Not enough stamina to attack while singing — needs 🍖{fome} 💧{sede} (or deactivate the song).",
+    "pt": "Sem fôlego para atacar sob a canção — precisa 🍖{fome} 💧{sede} (ou desative a canção)."
+  },
   "erro.sem_linha_de_visao_para_o_alvo": {
     "en": "",
     "pt": "🧱 Sem linha de visão para o alvo."
@@ -884,6 +1144,10 @@ window.LANG_ERROS = {
   "erro.sem_movimentos_restantes": {
     "en": "",
     "pt": "Sem movimentos restantes."
+  },
+  "erro.sem_municao_no_local": {
+    "en": "🏹 No {municao} (basic, fire, or silver) {local}!",
+    "pt": "🏹 Sem {municao} (básicos, incendiários ou de prata) {local}!"
   },
   "erro.sem_ouro_aqui": {
     "en": "",
@@ -896,6 +1160,10 @@ window.LANG_ERROS = {
   "erro.sem_reforcos_desse_tipo_na_reserva": {
     "en": "",
     "pt": "Sem reforços desse tipo na reserva."
+  },
+  "erro.sem_slot_de_magia_de_circulo": {
+    "en": "No {circulo}-circle spell slot{extra}.",
+    "pt": "Sem slot de magia de {circulo} círculo{extra}."
   },
   "erro.servo_ja_atacou_neste_turno": {
     "en": "",
@@ -932,6 +1200,10 @@ window.LANG_ERROS = {
   "erro.slot_invalido": {
     "en": "",
     "pt": "Slot inválido."
+  },
+  "erro.slots_insuficientes_necessarios_disponiv": {
+    "en": "Not enough slots — {necessarios} needed, {disponiveis} available.",
+    "pt": "Slots insuficientes — {necessarios} necessários, {disponiveis} disponíveis."
   },
   "erro.so_e_possivel_equipar_tecnicas_na_cidade": {
     "en": "",
@@ -973,6 +1245,10 @@ window.LANG_ERROS = {
     "en": "",
     "pt": "Sua classe não lança magias do grimório."
   },
+  "erro.sua_classe_nao_pode_usar_item": {
+    "en": "Your class can't use {item}!",
+    "pt": "Sua classe não pode usar {item}!"
+  },
   "erro.sua_classe_nao_tem_slot_de_tecnica_exclu": {
     "en": "",
     "pt": "Sua classe não tem slot de técnica exclusiva."
@@ -981,13 +1257,33 @@ window.LANG_ERROS = {
     "en": "",
     "pt": "Técnica desconhecida."
   },
+  "erro.tecnica_e_automatica": {
+    "en": "{tecnica} is automatic — it can't be activated manually.",
+    "pt": "{tecnica} é automática — não pode ser ativada manualmente."
+  },
+  "erro.tecnica_em_recarga": {
+    "en": "{tecnica} is on cooldown ({rodadas} rounds).",
+    "pt": "{tecnica} em recarga ({rodadas} rodadas)."
+  },
   "erro.tecnica_exclusiva_vai_no_slot_exclusivo": {
     "en": "",
     "pt": "Técnica exclusiva vai no slot exclusivo."
   },
+  "erro.tecnica_ja_preparada": {
+    "en": "{tecnica} is already primed for the next effect.",
+    "pt": "{tecnica} já está preparada para o próximo efeito."
+  },
   "erro.tecnica_nao_equipada": {
     "en": "",
     "pt": "Técnica não equipada."
+  },
+  "erro.templo_cobra_ouro_cura_maldicao": {
+    "en": "The Temple charges {preco} gold to cure this curse.",
+    "pt": "O Templo cobra {preco} ouro para curar esta maldição."
+  },
+  "erro.templo_liberta_de_maldicao": {
+    "en": "⛪ **{personagem}** was freed from **{maldicao}** ({preco} gold).",
+    "pt": "⛪ **{personagem}** foi liberto de **{maldicao}** ({preco} ouro)."
   },
   "erro.teste_invalido": {
     "en": "",
@@ -1132,6 +1428,10 @@ window.LANG_ERROS = {
   "erro.voce_ja_tocou_um_instrumento_neste_turno": {
     "en": "",
     "pt": "Você já tocou um instrumento neste turno."
+  },
+  "erro.voce_nao_aprendeu_a_formula_de_armadilha": {
+    "en": "You haven't learned the {armadilha} formula yet — buy it at the Guild.",
+    "pt": "Você ainda não aprendeu a fórmula de {armadilha} — compre na Guilda."
   },
   "erro.voce_nao_consegue_conjurar_agora": {
     "en": "",
