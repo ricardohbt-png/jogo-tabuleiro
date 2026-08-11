@@ -183,503 +183,503 @@ window.LANG_CATALOGO = {
     "pt": "Tumba"
   },
   "cat.guilda.bardo_cancao_acerto.nome": {
-    "en": "",
+    "en": "Song: Accuracy +1",
     "pt": "Canção: Acerto +1"
   },
   "cat.guilda.bardo_cancao_ca.nome": {
-    "en": "",
+    "en": "Song: Armor +1",
     "pt": "Canção: Armadura +1"
   },
   "cat.guilda.bardo_cancao_dano.nome": {
-    "en": "",
+    "en": "Song: Damage +1",
     "pt": "Canção: Dano +1"
   },
   "cat.guilda.bardo_cancao_movimento.nome": {
-    "en": "",
+    "en": "Song: Movement +1",
     "pt": "Canção: Movimento +1"
   },
   "cat.guilda.bardo_cancao_resistencia.nome": {
-    "en": "",
+    "en": "Song: Resistance +1",
     "pt": "Canção: Resistência +1"
   },
   "cat.guilda.bardo_cancao_suprema.nome": {
-    "en": "",
+    "en": "Supreme Heroic Song",
     "pt": "Canção Heroica Suprema"
   },
   "cat.guilda.bardo_lendas_supremas.nome": {
-    "en": "",
+    "en": "Supreme Lore",
     "pt": "Lendas Supremas"
   },
   "cat.guilda.bardo_provocacao_2.nome": {
-    "en": "",
+    "en": "Taunt II",
     "pt": "Provocação II"
   },
   "cat.guilda.bardo_provocacao_3.nome": {
-    "en": "",
+    "en": "Taunt III",
     "pt": "Provocação III"
   },
   "cat.guilda.brutalidade.nome": {
-    "en": "",
+    "en": "Brutality",
     "pt": "Brutalidade"
   },
   "cat.guilda.clerigo_cura_2.nome": {
-    "en": "",
+    "en": "Heal II",
     "pt": "Cura II"
   },
   "cat.guilda.clerigo_cura_3.nome": {
-    "en": "",
+    "en": "Heal III",
     "pt": "Cura III"
   },
   "cat.guilda.clerigo_massa_2.nome": {
-    "en": "",
+    "en": "Mass Heal II",
     "pt": "Cura em Massa II"
   },
   "cat.guilda.clerigo_massa_3.nome": {
-    "en": "",
+    "en": "Mass Heal III",
     "pt": "Cura em Massa III"
   },
   "cat.guilda.clerigo_purif_2.nome": {
-    "en": "",
+    "en": "Purification II",
     "pt": "Purificação II"
   },
   "cat.guilda.clerigo_purif_3.nome": {
-    "en": "",
+    "en": "Purification III",
     "pt": "Purificação III"
   },
   "cat.guilda.clerigo_ressur_2.nome": {
-    "en": "",
+    "en": "Resurrection II",
     "pt": "Ressurreição II"
   },
   "cat.guilda.clerigo_ressur_3.nome": {
-    "en": "",
+    "en": "Resurrection III",
     "pt": "Ressurreição III"
   },
   "cat.guilda.guerreiro_combinar_2.nome": {
-    "en": "",
+    "en": "Combine Two",
     "pt": "Combinar Duas"
   },
   "cat.guilda.guerreiro_furia_3.nome": {
-    "en": "",
+    "en": "Berserker Rage III",
     "pt": "Fúria Berserker III"
   },
   "cat.guilda.guerreiro_golpe_3.nome": {
-    "en": "",
+    "en": "Devastating Strike III",
     "pt": "Golpe Devastador III"
   },
   "cat.guilda.guerreiro_mestre_combate.nome": {
-    "en": "",
+    "en": "Combat Master",
     "pt": "Mestre de Combate"
   },
   "cat.guilda.guerreiro_mira_3.nome": {
-    "en": "",
+    "en": "Sure Aim III",
     "pt": "Mira Certeira III"
   },
   "cat.guilda.ladino_armadilha_incendiaria.nome": {
-    "en": "",
+    "en": "Formula: Incendiary Trap",
     "pt": "Fórmula: Armadilha Incendiária"
   },
   "cat.guilda.ladino_armadilha_urso.nome": {
-    "en": "",
+    "en": "Formula: Bear Trap",
     "pt": "Fórmula: Armadilha de Urso"
   },
   "cat.guilda.ladino_desarme_2.nome": {
-    "en": "",
+    "en": "Disarm II",
     "pt": "Desarme II"
   },
   "cat.guilda.ladino_desarme_3.nome": {
-    "en": "",
+    "en": "Disarm III",
     "pt": "Desarme III"
   },
   "cat.guilda.ladino_esconder_2.nome": {
-    "en": "",
+    "en": "Hide in Shadows II",
     "pt": "Esconder nas Sombras II"
   },
   "cat.guilda.ladino_esconder_3.nome": {
-    "en": "",
+    "en": "Hide in Shadows III",
     "pt": "Esconder nas Sombras III"
   },
   "cat.guilda.ladino_fosso_envenenado.nome": {
-    "en": "",
+    "en": "Formula: Poisoned Spike Pit",
     "pt": "Fórmula: Fosso com Estacas Envenenadas"
   },
   "cat.guilda.ladino_fosso_estacas.nome": {
-    "en": "",
+    "en": "Formula: Spike Pit",
     "pt": "Fórmula: Fosso com Estacas"
   },
   "cat.guilda.ladino_furtivo_2.nome": {
-    "en": "",
+    "en": "Sneak Attack II",
     "pt": "Ataque Furtivo II"
   },
   "cat.guilda.ladino_furtivo_3.nome": {
-    "en": "",
+    "en": "Supreme Sneak Attack",
     "pt": "Ataque Furtivo Supremo"
   },
   "cat.guilda.ladino_mina_terrestre.nome": {
-    "en": "",
+    "en": "Formula: Land Mine",
     "pt": "Fórmula: Mina Terrestre"
   },
   "cat.guilda.ladino_nuvem_gas.nome": {
-    "en": "",
+    "en": "Formula: Gas Cloud",
     "pt": "Fórmula: Nuvem de Gás"
   },
   "cat.guilda.ladino_rede.nome": {
-    "en": "",
+    "en": "Formula: Net",
     "pt": "Fórmula: Rede"
   },
   "cat.guilda.ladino_veneno_2.nome": {
-    "en": "",
+    "en": "Quick Poison II",
     "pt": "Veneno Rápido II"
   },
   "cat.guilda.ladino_veneno_3.nome": {
-    "en": "",
+    "en": "Quick Poison III",
     "pt": "Veneno Rápido III"
   },
   "cat.guilda.lenda_aranha_sombria.nome": {
-    "en": "",
+    "en": "Lore: Shadow Spider",
     "pt": "Lenda: Aranha Sombria"
   },
   "cat.guilda.lenda_bugbear_sombras.nome": {
-    "en": "",
+    "en": "Lore: Bugbear — Boogeyman of the Shadows",
     "pt": "Lenda: Bugbear — Bicho-Papão das Sombras"
   },
   "cat.guilda.lenda_cobra_constritora.nome": {
-    "en": "",
+    "en": "Lore: Constrictor Snake",
     "pt": "Lenda: Cobra Constritora"
   },
   "cat.guilda.lenda_cobra_venenosa.nome": {
-    "en": "",
+    "en": "Lore: Venomous Snake",
     "pt": "Lenda: Cobra Venenosa"
   },
   "cat.guilda.lenda_crocodilo_jovem.nome": {
-    "en": "",
+    "en": "Lore: Young Crocodile",
     "pt": "Lenda: Crocodilo Jovem"
   },
   "cat.guilda.lenda_dark_mage.nome": {
-    "en": "",
+    "en": "Lore: Dark Mage",
     "pt": "Lenda: Mago das Trevas"
   },
   "cat.guilda.lenda_devorador_metal.nome": {
-    "en": "",
+    "en": "Lore: Metal Devourer",
     "pt": "Lenda: Devorador de Metal"
   },
   "cat.guilda.lenda_devorador_organico.nome": {
-    "en": "",
+    "en": "Lore: Organic Devourer",
     "pt": "Lenda: Devorador Orgânico"
   },
   "cat.guilda.lenda_dragon.nome": {
-    "en": "",
+    "en": "Lore: Ancient Dragon",
     "pt": "Lenda: Dragão Ancião"
   },
   "cat.guilda.lenda_elemental_agua.nome": {
-    "en": "",
+    "en": "Lore: Water Elemental",
     "pt": "Lenda: Elemental de Água"
   },
   "cat.guilda.lenda_elemental_ar.nome": {
-    "en": "",
+    "en": "Lore: Air Elemental",
     "pt": "Lenda: Elemental de Ar"
   },
   "cat.guilda.lenda_elemental_eletrico.nome": {
-    "en": "",
+    "en": "Lore: Electric Elemental",
     "pt": "Lenda: Elemental Elétrico"
   },
   "cat.guilda.lenda_elemental_fogo.nome": {
-    "en": "",
+    "en": "Lore: Fire Elemental",
     "pt": "Lenda: Elemental de Fogo"
   },
   "cat.guilda.lenda_elemental_gelo.nome": {
-    "en": "",
+    "en": "Lore: Ice Elemental",
     "pt": "Lenda: Elemental de Gelo"
   },
   "cat.guilda.lenda_elemental_pedra.nome": {
-    "en": "",
+    "en": "Lore: Stone Elemental",
     "pt": "Lenda: Elemental de Pedra"
   },
   "cat.guilda.lenda_escorpiao_pedra.nome": {
-    "en": "",
+    "en": "Lore: Stone Scorpion",
     "pt": "Lenda: Escorpião de Pedra"
   },
   "cat.guilda.lenda_escravo_vampirico.nome": {
-    "en": "",
+    "en": "Lore: Vampiric Thrall",
     "pt": "Lenda: Escravo Vampírico"
   },
   "cat.guilda.lenda_esqueleto_animal.nome": {
-    "en": "",
+    "en": "Lore: Animal Skeleton",
     "pt": "Lenda: Esqueleto Animal"
   },
   "cat.guilda.lenda_esqueleto_humano.nome": {
-    "en": "",
+    "en": "Lore: Human Skeleton",
     "pt": "Lenda: Esqueleto Humano"
   },
   "cat.guilda.lenda_goblin.nome": {
-    "en": "",
+    "en": "Lore: Goblin",
     "pt": "Lenda: Goblin"
   },
   "cat.guilda.lenda_goblin_arqueiro.nome": {
-    "en": "",
+    "en": "Lore: Goblin Archer",
     "pt": "Lenda: Goblin Arqueiro"
   },
   "cat.guilda.lenda_goblin_combatente.nome": {
-    "en": "",
+    "en": "Lore: Goblin Fighter",
     "pt": "Lenda: Goblin Combatente"
   },
   "cat.guilda.lenda_goblin_dual.nome": {
-    "en": "",
+    "en": "Lore: Goblin Dual-Wielder",
     "pt": "Lenda: Goblin Dual"
   },
   "cat.guilda.lenda_goblin_xama.nome": {
-    "en": "",
+    "en": "Lore: Goblin Shaman",
     "pt": "Lenda: Xamã Goblin"
   },
   "cat.guilda.lenda_grotao.nome": {
-    "en": "",
+    "en": "Lore: Grotão",
     "pt": "Lenda: Grotão"
   },
   "cat.guilda.lenda_kobold_besteiro.nome": {
-    "en": "",
+    "en": "Lore: Kobold Crossbowman",
     "pt": "Lenda: Kobold Besteiro"
   },
   "cat.guilda.lenda_kobold_lanceiro.nome": {
-    "en": "",
+    "en": "Lore: Kobold Spearman",
     "pt": "Lenda: Kobold Lanceiro"
   },
   "cat.guilda.lenda_lagarto_carniceiro.nome": {
-    "en": "",
+    "en": "Lore: Carrion Lizard",
     "pt": "Lenda: Lagarto Carniceiro"
   },
   "cat.guilda.lenda_lobisomem.nome": {
-    "en": "",
+    "en": "Lore: Werewolf",
     "pt": "Lenda: Lobisomem"
   },
   "cat.guilda.lenda_lobo_cinzento.nome": {
-    "en": "",
+    "en": "Lore: Grey Wolf",
     "pt": "Lenda: Lobo Cinzento"
   },
   "cat.guilda.lenda_lorde_vampiro.nome": {
-    "en": "",
+    "en": "Lore: Vampire Lord",
     "pt": "Lenda: Lorde Vampiro"
   },
   "cat.guilda.lenda_necromante.nome": {
-    "en": "",
+    "en": "Lore: Necromancer",
     "pt": "Lenda: Necromante"
   },
   "cat.guilda.lenda_ogro_clava.nome": {
-    "en": "",
+    "en": "Lore: Club Ogre",
     "pt": "Lenda: Ogro de Clava"
   },
   "cat.guilda.lenda_ogro_lanca.nome": {
-    "en": "",
+    "en": "Lore: Spear Ogre",
     "pt": "Lenda: Ogro de Lança"
   },
   "cat.guilda.lenda_orc.nome": {
-    "en": "",
+    "en": "Lore: Orc",
     "pt": "Lenda: Orc"
   },
   "cat.guilda.lenda_orc_guerreiro.nome": {
-    "en": "",
+    "en": "Lore: Orc Warrior",
     "pt": "Lenda: Orc Guerreiro"
   },
   "cat.guilda.lenda_skeleton.nome": {
-    "en": "",
+    "en": "Lore: Skeleton",
     "pt": "Lenda: Esqueleto"
   },
   "cat.guilda.lenda_troll.nome": {
-    "en": "",
+    "en": "Lore: Troll",
     "pt": "Lenda: Troll"
   },
   "cat.guilda.lenda_urso_negro.nome": {
-    "en": "",
+    "en": "Lore: Black Bear",
     "pt": "Lenda: Urso Negro"
   },
   "cat.guilda.lenda_vampiro_anciao.nome": {
-    "en": "",
+    "en": "Lore: Ancient Vampire",
     "pt": "Lenda: Vampiro Ancião"
   },
   "cat.guilda.lenda_vampiro_jovem.nome": {
-    "en": "",
+    "en": "Lore: Young Vampire",
     "pt": "Lenda: Vampiro Jovem"
   },
   "cat.guilda.lenda_zumbi_infectado.nome": {
-    "en": "",
+    "en": "Lore: Infected Zombie",
     "pt": "Lenda: Zumbi Infectado"
   },
   "cat.guilda.mago_aprimorar_2.nome": {
-    "en": "",
+    "en": "Enhance II",
     "pt": "Aprimorar II"
   },
   "cat.guilda.mago_aprimorar_3.nome": {
-    "en": "",
+    "en": "Enhance III",
     "pt": "Aprimorar III"
   },
   "cat.guilda.mago_estender_2.nome": {
-    "en": "",
+    "en": "Extend II",
     "pt": "Estender II"
   },
   "cat.guilda.mago_estender_3.nome": {
-    "en": "",
+    "en": "Extend III",
     "pt": "Estender III"
   },
   "cat.guilda.mago_fortalecer_2.nome": {
-    "en": "",
+    "en": "Amplify II",
     "pt": "Fortalecer II"
   },
   "cat.guilda.mago_fortalecer_3.nome": {
-    "en": "",
+    "en": "Amplify III",
     "pt": "Fortalecer III"
   },
   "cat.guilda.mago_reviver_2.nome": {
-    "en": "",
+    "en": "Animate Dead II",
     "pt": "Reviver os Mortos II"
   },
   "cat.guilda.mago_reviver_3.nome": {
-    "en": "",
+    "en": "Animate Dead III",
     "pt": "Reviver os Mortos III"
   },
   "cat.guilda.mago_tecelagem_2.nome": {
-    "en": "",
+    "en": "Arcane Weaving II",
     "pt": "Tecelagem Arcana II"
   },
   "cat.guilda.mago_tecelagem_3.nome": {
-    "en": "",
+    "en": "Arcane Weaving III",
     "pt": "Tecelagem Arcana III"
   },
   "cat.guilda.paladino_ataque_sagrado_2.nome": {
-    "en": "",
+    "en": "Holy Strike II",
     "pt": "Ataque Sagrado II"
   },
   "cat.guilda.paladino_cura_maos_2.nome": {
-    "en": "",
+    "en": "Lay on Hands II",
     "pt": "Cura pelas Mãos II"
   },
   "cat.guilda.paladino_cura_maos_3.nome": {
-    "en": "",
+    "en": "Lay on Hands III",
     "pt": "Cura pelas Mãos III"
   },
   "cat.guilda.paladino_defensor_2.nome": {
-    "en": "",
+    "en": "Defender II",
     "pt": "Defensor II"
   },
   "cat.guilda.paladino_defensor_3.nome": {
-    "en": "",
+    "en": "Defender III",
     "pt": "Defensor III"
   },
   "cat.guilda.paladino_luz_2.nome": {
-    "en": "",
+    "en": "Warrior of Light II",
     "pt": "Guerreiro da Luz II"
   },
   "cat.guilda.paladino_luz_3.nome": {
-    "en": "",
+    "en": "Warrior of Light III",
     "pt": "Guerreiro da Luz III"
   },
   "cat.guilda.paladino_regen_2.nome": {
-    "en": "",
+    "en": "Regeneration II",
     "pt": "Regeneração II"
   },
   "cat.guilda.paladino_regen_3.nome": {
-    "en": "",
+    "en": "Regeneration III",
     "pt": "Regeneração III"
   },
   "cat.guilda.sorrateiro.nome": {
-    "en": "",
+    "en": "Sneaky",
     "pt": "Sorrateiro"
   },
   "cat.guilda.tec_ex_aprimorar_magia.nome": {
-    "en": "",
+    "en": "Enhance Spell",
     "pt": "Aprimorar Magia"
   },
   "cat.guilda.tec_ex_canalizacao_arcana.nome": {
-    "en": "",
+    "en": "Arcane Channeling",
     "pt": "Canalização Arcana"
   },
   "cat.guilda.tec_ex_canalizacao_perfeita.nome": {
-    "en": "",
+    "en": "Perfect Channeling",
     "pt": "Canalização Perfeita"
   },
   "cat.guilda.tec_ex_empoderar_magia.nome": {
-    "en": "",
+    "en": "Empower Spell",
     "pt": "Empoderar Magia"
   },
   "cat.guilda.tec_ex_estender_magia.nome": {
-    "en": "",
+    "en": "Extend Spell",
     "pt": "Estender Magia"
   },
   "cat.guilda.tec_ex_magia_acelerada.nome": {
-    "en": "",
+    "en": "Quickened Spell",
     "pt": "Magia Acelerada"
   },
   "cat.guilda.tec_ex_magia_geminada.nome": {
-    "en": "",
+    "en": "Twinned Spell",
     "pt": "Magia Geminada"
   },
   "cat.guilda.tecnica_ataque_coordenado.nome": {
-    "en": "",
+    "en": "Coordinated Attack",
     "pt": "Ataque Coordenado"
   },
   "cat.guilda.tecnica_contra_ataque.nome": {
-    "en": "",
+    "en": "Counterattack",
     "pt": "Contra-Ataque"
   },
   "cat.guilda.tecnica_defesa_impecavel.nome": {
-    "en": "",
+    "en": "Impeccable Defense",
     "pt": "Defesa Impecável"
   },
   "cat.guilda.tecnica_espirito_indomavel.nome": {
-    "en": "",
+    "en": "Indomitable Spirit",
     "pt": "Espírito Indomável"
   },
   "cat.guilda.tecnica_golpe_decisivo.nome": {
-    "en": "",
+    "en": "Decisive Strike",
     "pt": "Golpe Decisivo"
   },
   "cat.guilda.tecnica_grito_guerra.nome": {
-    "en": "",
+    "en": "War Cry",
     "pt": "Grito de Guerra"
   },
   "cat.guilda.tecnica_instinto_sobrevivencia.nome": {
-    "en": "",
+    "en": "Survival Instinct",
     "pt": "Instinto de Sobrevivência"
   },
   "cat.guilda.tecnica_investida.nome": {
-    "en": "",
+    "en": "Heroic Charge",
     "pt": "Investida Heroica"
   },
   "cat.guilda.tecnica_mira_perfeita.nome": {
-    "en": "",
+    "en": "Perfect Aim",
     "pt": "Mira Perfeita"
   },
   "cat.guilda.tecnica_oportunidade.nome": {
-    "en": "",
+    "en": "Opportunity",
     "pt": "Oportunidade"
   },
   "cat.guilda.tecnica_passo_fantasma.nome": {
-    "en": "",
+    "en": "Phantom Step",
     "pt": "Passo Fantasma"
   },
   "cat.guilda.tecnica_pressa.nome": {
-    "en": "",
+    "en": "Fleet Foot",
     "pt": "Pressa"
   },
   "cat.guilda.tecnica_pressao_constante.nome": {
-    "en": "",
+    "en": "Constant Pressure",
     "pt": "Pressão Constante"
   },
   "cat.guilda.tecnica_resistencia_absoluta.nome": {
-    "en": "",
+    "en": "Absolute Resistance",
     "pt": "Resistência Absoluta"
   },
   "cat.guilda.tecnica_sangue_frio.nome": {
-    "en": "",
+    "en": "Cold Blood",
     "pt": "Sangue Frio"
   },
   "cat.guilda.tecnica_sorte.nome": {
-    "en": "",
+    "en": "Luck",
     "pt": "Sorte"
   },
   "cat.guilda.tecnica_tatica_defensiva.nome": {
-    "en": "",
+    "en": "Defensive Tactics",
     "pt": "Tática Defensiva"
   },
   "cat.guilda.tecnica_ultimo_esforco.nome": {
-    "en": "",
+    "en": "Last Stand",
     "pt": "Último Esforço"
   },
   "cat.instrumento.alaude.nome": {
@@ -1279,111 +1279,111 @@ window.LANG_CATALOGO = {
     "pt": "Martelo de Guerra de Prata"
   },
   "cat.magia.abencoar.nome": {
-    "en": "",
+    "en": "Bless",
     "pt": "Abençoar"
   },
   "cat.magia.abencoar_arma.nome": {
-    "en": "",
+    "en": "Bless Weapon",
     "pt": "Abençoar Arma"
   },
   "cat.magia.amaldicoar.nome": {
-    "en": "",
+    "en": "Curse",
     "pt": "Amaldiçoar"
   },
   "cat.magia.barreira_arcana.nome": {
-    "en": "",
+    "en": "Arcane Barrier",
     "pt": "Barreira Arcana"
   },
   "cat.magia.bola_fogo.nome": {
-    "en": "",
+    "en": "Fireball",
     "pt": "Bola de Fogo"
   },
   "cat.magia.clarividencia.nome": {
-    "en": "",
+    "en": "Clairvoyance",
     "pt": "Clarividência"
   },
   "cat.magia.comando.nome": {
-    "en": "",
+    "en": "Command",
     "pt": "Comando"
   },
   "cat.magia.conjurar_elemental.nome": {
-    "en": "",
+    "en": "Conjure Elemental",
     "pt": "Conjurar Elemental"
   },
   "cat.magia.contramagica.nome": {
-    "en": "",
+    "en": "Counterspell",
     "pt": "Contramágica"
   },
   "cat.magia.criar_alimentos.nome": {
-    "en": "",
+    "en": "Create Food",
     "pt": "Criar Alimentos"
   },
   "cat.magia.dominar_mente.nome": {
-    "en": "",
+    "en": "Dominate Mind",
     "pt": "Dominar Mente"
   },
   "cat.magia.dominar_morto_vivo.nome": {
-    "en": "",
+    "en": "Dominate Undead",
     "pt": "Dominar Morto-Vivo"
   },
   "cat.magia.invisibilidade.nome": {
-    "en": "",
+    "en": "Invisibility",
     "pt": "Invisibilidade"
   },
   "cat.magia.jato_ar.nome": {
-    "en": "",
+    "en": "Gust of Wind",
     "pt": "Jato de Ar"
   },
   "cat.magia.lentidao.nome": {
-    "en": "",
+    "en": "Slow",
     "pt": "Lentidão"
   },
   "cat.magia.manto_escuridao.nome": {
-    "en": "",
+    "en": "Cloak of Darkness",
     "pt": "Manto de Escuridão"
   },
   "cat.magia.medo.nome": {
-    "en": "",
+    "en": "Fear",
     "pt": "Medo"
   },
   "cat.magia.protecao_energia.nome": {
-    "en": "",
+    "en": "Protection from Energy",
     "pt": "Proteção contra Energia"
   },
   "cat.magia.raio_congelante.nome": {
-    "en": "",
+    "en": "Ray of Frost",
     "pt": "Raio Congelante"
   },
   "cat.magia.raio_divino.nome": {
-    "en": "",
+    "en": "Divine Ray",
     "pt": "Raio Divino"
   },
   "cat.magia.regeneracao_magica.nome": {
-    "en": "",
+    "en": "Regeneration",
     "pt": "Regeneração"
   },
   "cat.magia.relampago.nome": {
-    "en": "",
+    "en": "Lightning Bolt",
     "pt": "Relâmpago"
   },
   "cat.magia.saciar.nome": {
-    "en": "",
+    "en": "Satiate",
     "pt": "Saciar"
   },
   "cat.magia.silencio.nome": {
-    "en": "",
+    "en": "Silence",
     "pt": "Silêncio"
   },
   "cat.magia.sono.nome": {
-    "en": "",
+    "en": "Sleep",
     "pt": "Sono"
   },
   "cat.magia.velocidade.nome": {
-    "en": "",
+    "en": "Haste",
     "pt": "Velocidade"
   },
   "cat.magia.visao_escuro.nome": {
-    "en": "",
+    "en": "Darkvision",
     "pt": "Visão no Escuro"
   },
   "cat.monstro.aranha_sombria.nome": {
