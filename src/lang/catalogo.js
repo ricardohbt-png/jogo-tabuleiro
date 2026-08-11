@@ -3,183 +3,183 @@
 // você já traduziu e acrescenta o que for novo.
 window.LANG_CATALOGO = {
   "cat.armadilha.armadilha_dardos_envenenados.nome": {
-    "en": "",
+    "en": "Poisoned Dart Trap",
     "pt": "Armadilha de Dardos Envenenados"
   },
   "cat.armadilha.armadilha_incendiaria.nome": {
-    "en": "",
+    "en": "Incendiary Trap",
     "pt": "Armadilha Incendiária"
   },
   "cat.armadilha.armadilha_maldicao.nome": {
-    "en": "",
+    "en": "Curse Trap",
     "pt": "Armadilha de Maldição"
   },
   "cat.armadilha.armadilha_teletransporte.nome": {
-    "en": "",
+    "en": "Teleportation Trap",
     "pt": "Armadilha de Teletransporte"
   },
   "cat.armadilha.armadilha_urso.nome": {
-    "en": "",
+    "en": "Bear Trap",
     "pt": "Armadilha de Urso"
   },
   "cat.armadilha.buraco.nome": {
-    "en": "",
+    "en": "Pit",
     "pt": "Buraco"
   },
   "cat.armadilha.fosso_envenenado.nome": {
-    "en": "",
+    "en": "Poisoned Spike Pit",
     "pt": "Fosso com Estacas Envenenadas"
   },
   "cat.armadilha.fosso_estacas.nome": {
-    "en": "",
+    "en": "Spike Pit",
     "pt": "Fosso com Estacas"
   },
   "cat.armadilha.mina_terrestre.nome": {
-    "en": "",
+    "en": "Land Mine",
     "pt": "Mina Terrestre"
   },
   "cat.armadilha.nuvem_gas.nome": {
-    "en": "",
+    "en": "Gas Cloud",
     "pt": "Nuvem de Gás"
   },
   "cat.armadilha.rede.nome": {
-    "en": "",
+    "en": "Net",
     "pt": "Rede"
   },
   "cat.classe.bard.nome": {
-    "en": "",
+    "en": "Henrique the Bard",
     "pt": "Henrique, o Bardo"
   },
   "cat.classe.cleric.nome": {
-    "en": "",
+    "en": "Friar Lewis",
     "pt": "Frade Lewis"
   },
   "cat.classe.mage.nome": {
-    "en": "",
+    "en": "Pedro the Timid",
     "pt": "Pedro, o Tímido"
   },
   "cat.classe.paladin.nome": {
-    "en": "",
+    "en": "Richard the Knight",
     "pt": "Richard, o Cavaleiro"
   },
   "cat.classe.rogue.nome": {
-    "en": "",
+    "en": "Luccas the Cunning",
     "pt": "Luccas, o Astuto"
   },
   "cat.classe.warrior.nome": {
-    "en": "",
+    "en": "Dwarf Warrior",
     "pt": "Guerreiro Anão"
   },
   "cat.decor.altar.nome": {
-    "en": "",
+    "en": "Ritual Altar",
     "pt": "Altar ritualístico"
   },
   "cat.decor.arca_tesouros.nome": {
-    "en": "",
+    "en": "Treasure Chest",
     "pt": "Arca de tesouros"
   },
   "cat.decor.arvore.nome": {
-    "en": "",
+    "en": "Tree",
     "pt": "Árvore"
   },
   "cat.decor.arvore_grande.nome": {
-    "en": "",
+    "en": "Large Tree",
     "pt": "Árvore grande"
   },
   "cat.decor.arvore_seca.nome": {
-    "en": "",
+    "en": "Dead Tree",
     "pt": "Árvore seca"
   },
   "cat.decor.barril.nome": {
-    "en": "",
+    "en": "Barrel",
     "pt": "Barril"
   },
   "cat.decor.brasao_leao.nome": {
-    "en": "",
+    "en": "Lion Crest",
     "pt": "Brasão do Leão"
   },
   "cat.decor.cama.nome": {
-    "en": "",
+    "en": "Bed",
     "pt": "Cama"
   },
   "cat.decor.cama_casal.nome": {
-    "en": "",
+    "en": "Double Bed",
     "pt": "Cama de casal"
   },
   "cat.decor.carroca.nome": {
-    "en": "",
+    "en": "Cart",
     "pt": "Carroça"
   },
   "cat.decor.caverna.nome": {
-    "en": "",
+    "en": "Cave",
     "pt": "Caverna"
   },
   "cat.decor.chao.nome": {
-    "en": "",
+    "en": "Ground (Grass)",
     "pt": "Chão (grama)"
   },
   "cat.decor.coluna.nome": {
-    "en": "",
+    "en": "Stone Column",
     "pt": "Coluna de pedra"
   },
   "cat.decor.cortina_branca.nome": {
-    "en": "",
+    "en": "White Curtain",
     "pt": "Cortina branca"
   },
   "cat.decor.cortina_vermelha.nome": {
-    "en": "",
+    "en": "Red Curtain",
     "pt": "Cortina vermelha"
   },
   "cat.decor.estante.nome": {
-    "en": "",
+    "en": "Shelf",
     "pt": "Estante"
   },
   "cat.decor.estante_armas.nome": {
-    "en": "",
+    "en": "Weapon Rack",
     "pt": "Estante de armas"
   },
   "cat.decor.estante_livros.nome": {
-    "en": "",
+    "en": "Bookshelf",
     "pt": "Estante de livros"
   },
   "cat.decor.fogueira.nome": {
-    "en": "",
+    "en": "Campfire",
     "pt": "Fogueira"
   },
   "cat.decor.fonte.nome": {
-    "en": "",
+    "en": "Fountain",
     "pt": "Fonte"
   },
   "cat.decor.gaiola.nome": {
-    "en": "",
+    "en": "Cage with Skeleton",
     "pt": "Gaiola com esqueleto"
   },
   "cat.decor.grades_prisao.nome": {
-    "en": "",
+    "en": "Prison Bars",
     "pt": "Grades de prisão"
   },
   "cat.decor.lareira.nome": {
-    "en": "",
+    "en": "Fireplace",
     "pt": "Lareira"
   },
   "cat.decor.mesa_cadeiras.nome": {
-    "en": "",
+    "en": "Table with Chairs",
     "pt": "Mesa com cadeiras"
   },
   "cat.decor.mesa_quimica.nome": {
-    "en": "",
+    "en": "Chemistry Table",
     "pt": "Mesa de química"
   },
   "cat.decor.mesa_tortura.nome": {
-    "en": "",
+    "en": "Torture Table",
     "pt": "Mesa de tortura"
   },
   "cat.decor.trono.nome": {
-    "en": "",
+    "en": "King's Throne",
     "pt": "Trono de rei"
   },
   "cat.decor.tumba.nome": {
-    "en": "",
+    "en": "Tomb",
     "pt": "Tumba"
   },
   "cat.guilda.bardo_cancao_acerto.nome": {
@@ -683,39 +683,39 @@ window.LANG_CATALOGO = {
     "pt": "Último Esforço"
   },
   "cat.instrumento.alaude.nome": {
-    "en": "",
+    "en": "Lute",
     "pt": "Alaúde"
   },
   "cat.instrumento.flauta.nome": {
-    "en": "",
+    "en": "Flute",
     "pt": "Flauta"
   },
   "cat.instrumento.gaita.nome": {
-    "en": "",
+    "en": "Bagpipes",
     "pt": "Gaita"
   },
   "cat.instrumento.harpa.nome": {
-    "en": "",
+    "en": "Harp",
     "pt": "Harpa"
   },
   "cat.instrumento.lira.nome": {
-    "en": "",
+    "en": "Lyre",
     "pt": "Lira"
   },
   "cat.instrumento.sino.nome": {
-    "en": "",
+    "en": "Bell",
     "pt": "Sino"
   },
   "cat.instrumento.tambor.nome": {
-    "en": "",
+    "en": "War Drum",
     "pt": "Tambor de Guerra"
   },
   "cat.instrumento.trompa.nome": {
-    "en": "",
+    "en": "War Horn",
     "pt": "Trompa de Guerra"
   },
   "cat.instrumento.violino.nome": {
-    "en": "",
+    "en": "Violin",
     "pt": "Violino"
   },
   "cat.item.agua_benta.nome": {
@@ -1387,207 +1387,207 @@ window.LANG_CATALOGO = {
     "pt": "Visão no Escuro"
   },
   "cat.monstro.aranha_sombria.nome": {
-    "en": "",
+    "en": "Shadow Spider",
     "pt": "Aranha Sombria"
   },
   "cat.monstro.bugbear_sombras.nome": {
-    "en": "",
+    "en": "Bugbear — Shadow Boogeyman",
     "pt": "Bugbear — Bicho-Papão das Sombras"
   },
   "cat.monstro.cobra_constritora.nome": {
-    "en": "",
+    "en": "Constrictor Snake",
     "pt": "Cobra Constritora"
   },
   "cat.monstro.cobra_venenosa.nome": {
-    "en": "",
+    "en": "Venomous Snake",
     "pt": "Cobra Venenosa"
   },
   "cat.monstro.crocodilo_jovem.nome": {
-    "en": "",
+    "en": "Young Crocodile",
     "pt": "Crocodilo Jovem"
   },
   "cat.monstro.dark_mage.nome": {
-    "en": "",
+    "en": "Dark Mage",
     "pt": "Mago das Trevas"
   },
   "cat.monstro.devorador_metal.nome": {
-    "en": "",
+    "en": "Metal Devourer",
     "pt": "Devorador de Metal"
   },
   "cat.monstro.devorador_organico.nome": {
-    "en": "",
+    "en": "Organic Devourer",
     "pt": "Devorador Orgânico"
   },
   "cat.monstro.dragon.nome": {
-    "en": "",
+    "en": "Ancient Dragon",
     "pt": "Dragão Ancião"
   },
   "cat.monstro.elemental_agua.nome": {
-    "en": "",
+    "en": "Water Elemental",
     "pt": "Elemental de Água"
   },
   "cat.monstro.elemental_ar.nome": {
-    "en": "",
+    "en": "Air Elemental",
     "pt": "Elemental de Ar"
   },
   "cat.monstro.elemental_eletrico.nome": {
-    "en": "",
+    "en": "Electric Elemental",
     "pt": "Elemental Elétrico"
   },
   "cat.monstro.elemental_fogo.nome": {
-    "en": "",
+    "en": "Fire Elemental",
     "pt": "Elemental de Fogo"
   },
   "cat.monstro.elemental_gelo.nome": {
-    "en": "",
+    "en": "Ice Elemental",
     "pt": "Elemental de Gelo"
   },
   "cat.monstro.elemental_pedra.nome": {
-    "en": "",
+    "en": "Stone Elemental",
     "pt": "Elemental de Pedra"
   },
   "cat.monstro.escorpiao_de_pedra_customizado.nome": {
-    "en": "",
+    "en": "Stone Scorpion",
     "pt": "Escorpião de Pedra"
   },
   "cat.monstro.escorpiao_pedra.nome": {
-    "en": "",
+    "en": "Stone Scorpion",
     "pt": "Escorpião de Pedra"
   },
   "cat.monstro.escorpiao_pequeno.nome": {
-    "en": "",
+    "en": "Small Scorpion",
     "pt": "escorpiao pequeno"
   },
   "cat.monstro.escravo_vampirico.nome": {
-    "en": "",
+    "en": "Vampiric Thrall",
     "pt": "Escravo Vampírico"
   },
   "cat.monstro.esqueleto_animal.nome": {
-    "en": "",
+    "en": "Animal Skeleton",
     "pt": "Esqueleto Animal"
   },
   "cat.monstro.esqueleto_animal_customizado.nome": {
-    "en": "",
+    "en": "Animal Skeleton",
     "pt": "Esqueleto Animal"
   },
   "cat.monstro.esqueleto_humano.nome": {
-    "en": "",
+    "en": "Human Skeleton",
     "pt": "Esqueleto Humano"
   },
   "cat.monstro.esqueleto_humano_customizado.nome": {
-    "en": "",
+    "en": "Human Skeleton",
     "pt": "Esqueleto Humano"
   },
   "cat.monstro.goblin.nome": {
-    "en": "",
+    "en": "Goblin",
     "pt": "Goblin"
   },
   "cat.monstro.goblin_arqueiro.nome": {
-    "en": "",
+    "en": "Goblin Archer",
     "pt": "Goblin Arqueiro"
   },
   "cat.monstro.goblin_combatente.nome": {
-    "en": "",
+    "en": "Goblin Fighter",
     "pt": "Goblin Combatente"
   },
   "cat.monstro.goblin_dual.nome": {
-    "en": "",
+    "en": "Goblin Dual-Wielder",
     "pt": "Goblin Dual"
   },
   "cat.monstro.goblin_xama.nome": {
-    "en": "",
+    "en": "Goblin Shaman",
     "pt": "Xamã Goblin"
   },
   "cat.monstro.grotao.nome": {
-    "en": "",
+    "en": "Grotão",
     "pt": "Grotão"
   },
   "cat.monstro.grotao_customizado.nome": {
-    "en": "",
+    "en": "Grotão",
     "pt": "Grotão"
   },
   "cat.monstro.kobold_besteiro.nome": {
-    "en": "",
+    "en": "Kobold Crossbowman",
     "pt": "Kobold Besteiro"
   },
   "cat.monstro.kobold_lanceiro.nome": {
-    "en": "",
+    "en": "Kobold Spearman",
     "pt": "Kobold Lanceiro"
   },
   "cat.monstro.lagarto_carniceiro.nome": {
-    "en": "",
+    "en": "Carrion Lizard",
     "pt": "Lagarto Carniceiro"
   },
   "cat.monstro.lobisomem.nome": {
-    "en": "",
+    "en": "Werewolf",
     "pt": "Lobisomem"
   },
   "cat.monstro.lobo_cinzento.nome": {
-    "en": "",
+    "en": "Grey Wolf",
     "pt": "Lobo Cinzento"
   },
   "cat.monstro.lorde_vampiro.nome": {
-    "en": "",
+    "en": "Vampire Lord",
     "pt": "Lorde Vampiro"
   },
   "cat.monstro.necromante.nome": {
-    "en": "",
+    "en": "Necromancer",
     "pt": "Necromante"
   },
   "cat.monstro.ogro_clava.nome": {
-    "en": "",
+    "en": "Club Ogre",
     "pt": "Ogro de Clava"
   },
   "cat.monstro.ogro_lanca.nome": {
-    "en": "",
+    "en": "Spear Ogre",
     "pt": "Ogro de Lança"
   },
   "cat.monstro.orc.nome": {
-    "en": "",
+    "en": "Orc",
     "pt": "Orc"
   },
   "cat.monstro.orc_guerreiro.nome": {
-    "en": "",
+    "en": "Orc Warrior",
     "pt": "Orc Guerreiro"
   },
   "cat.monstro.rato_gigante.nome": {
-    "en": "",
+    "en": "Giant Rat",
     "pt": "Rato Gigante"
   },
   "cat.monstro.sentinela_teste.nome": {
-    "en": "",
+    "en": "Test Sentinel",
     "pt": "Sentinela de Teste"
   },
   "cat.monstro.skeleton.nome": {
-    "en": "",
+    "en": "Skeleton",
     "pt": "Esqueleto"
   },
   "cat.monstro.soldado.nome": {
-    "en": "",
+    "en": "Soldier",
     "pt": "soldado"
   },
   "cat.monstro.troll.nome": {
-    "en": "",
+    "en": "Troll",
     "pt": "Troll"
   },
   "cat.monstro.urso_negro.nome": {
-    "en": "",
+    "en": "Black Bear",
     "pt": "Urso Negro"
   },
   "cat.monstro.urso_negro_customizado.nome": {
-    "en": "",
+    "en": "Black Bear",
     "pt": "Urso Negro"
   },
   "cat.monstro.vampiro_anciao.nome": {
-    "en": "",
+    "en": "Ancient Vampire",
     "pt": "Vampiro Ancião"
   },
   "cat.monstro.vampiro_jovem.nome": {
-    "en": "",
+    "en": "Young Vampire",
     "pt": "Vampiro Jovem"
   },
   "cat.monstro.zumbi_infectado.nome": {
-    "en": "",
+    "en": "Infected Zombie",
     "pt": "Zumbi Infectado"
   }
 };
