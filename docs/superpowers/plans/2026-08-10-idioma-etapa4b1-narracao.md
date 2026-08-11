@@ -359,26 +359,57 @@ Esperado: `390 sites migrados → N chaves distintas.` com N em torno de 350–3
 
 - [ ] **Passo 4: Conferir o diff estruturalmente, não por amostragem**
 
+O conferidor recorta a chamada `gm_say(...)` **inteira** dos dois lados do diff e compara o
+resto da linha. Ele conta parênteses e ignora os que estão dentro de aspas — sem isso,
+expressões como `.get('name', x)` ou `', '.join(...)` produzem falso positivo, porque uma
+regex preguiçosa para no primeiro `))` e deixa o fecha-parêntese do `gm_say` de fora.
+
 ```bash
 python -c "
-import subprocess, re, sys
+import subprocess, sys
 sys.stdout.reconfigure(encoding='utf-8')
+
+def corta_chamada(linha):
+    i = linha.find('gm_say(')
+    if i < 0: return linha
+    k = i + len('gm_say(') - 1
+    prof = 0; aspas = None
+    while k < len(linha):
+        c = linha[k]
+        if aspas:
+            if c == '\\': k += 2; continue
+            if c == aspas: aspas = None
+        elif c in '\'\"':
+            aspas = c
+        elif c == '(':
+            prof += 1
+        elif c == ')':
+            prof -= 1
+            if prof == 0:
+                return linha[:i] + '§' + linha[k+1:]
+        k += 1
+    return linha
+
 d = subprocess.run(['git','diff','-U0','--','server.py'], capture_output=True, text=True, encoding='utf-8').stdout
-rem = [l[1:] for l in d.split('\n') if l.startswith('-') and not l.startswith('---')]
-add = [l[1:] for l in d.split('\n') if l.startswith('+') and not l.startswith('+++')]
+rem = [l[1:] for l in d.split('
+') if l.startswith('-') and not l.startswith('---')]
+add = [l[1:] for l in d.split('
+') if l.startswith('+') and not l.startswith('+++')]
 print('linhas removidas:', len(rem), '| adicionadas:', len(add))
-RE_OLD = re.compile(r'gm_say\(f?\"[^\"]*\"\)')
-RE_NEW = re.compile(r'gm_say\(T\(\"narracao\.[^\"]+\"(, .*?)?\)\)')
 anom = 0
 for a, b in zip(rem, add):
-    if RE_OLD.sub('§', a) != RE_NEW.sub('§', b):
+    if corta_chamada(a) != corta_chamada(b):
         anom += 1
-        if anom <= 5: print('  ANOMALIA:\n    -', a.strip()[:90], '\n    +', b.strip()[:90])
+        if anom <= 5:
+            print('  ANOMALIA:'); print('    -', a.strip()[:100]); print('    +', b.strip()[:100])
 print('anomalias:', anom, '(0 = so trocas de narracao)')
 "
 ```
 
-Esperado: mesmo número de linhas removidas e adicionadas, e **0 anomalias**. Se houver qualquer anomalia, **pare e reverta** (`git checkout server.py src/lang/narracao.js`) e reporte o que viu — o script é reexecutável, nada se perde.
+Esperado: mesmo número de linhas removidas e adicionadas, e **0 anomalias**. Com este
+conferidor, qualquer anomalia é anomalia de verdade — **pare e reverta**
+(`git checkout server.py src/lang/narracao.js`) e reporte o que viu. O script é
+reexecutável, nada se perde.
 
 - [ ] **Passo 5: Verificar que o servidor importa e a regressão está verde**
 
