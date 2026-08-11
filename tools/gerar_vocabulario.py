@@ -21,27 +21,33 @@ class ColisaoDeId(Exception):
     alto em vez de escolher um em silêncio."""
 
 
-def chave(familia, ident):
-    return f"cat.{familia}.{ident}.nome"
+def chave(familia, ident, sufixo="nome"):
+    """Sufixo "nome" ou "desc". O padrão mantém as chamadas antigas válidas."""
+    return f"cat.{familia}.{ident}.{sufixo}"
 
 
-def _nome(entrada):
+def _texto(entrada, tipo):
+    """O jogo escreve o mesmo campo de duas formas conforme o catálogo:
+    name/nome e desc/descricao. Aceitamos as duas em cada tipo."""
+    if tipo == "desc":
+        return entrada.get("desc") or entrada.get("descricao")
     return entrada.get("name") or entrada.get("nome")
 
 
-def _entradas(catalogo, campo_id):
-    """Devolve {id: nome} de um catálogo (lista ou dict). Quando o campo de id
+def _entradas(catalogo, campo_id, tipo="nome"):
+    """Devolve {id: texto} de um catálogo (lista ou dict). Quando o campo de id
     não existe na entrada, cai para a chave do dict — vários catálogos do jogo
-    identificam o item pela chave, não por um campo."""
+    identificam o item pela chave, não por um campo. Entrada sem o texto pedido
+    é omitida: é o que evita gerar chave .desc para quem não tem descrição."""
     itens = catalogo.items() if isinstance(catalogo, dict) else ((None, e) for e in catalogo)
     out = {}
     for chave_dict, entrada in itens:
         if not isinstance(entrada, dict):
             continue
-        nome = _nome(entrada)
+        texto = _texto(entrada, tipo)
         ident = entrada.get(campo_id) or chave_dict
-        if ident and nome:
-            out[str(ident)] = nome
+        if ident and texto:
+            out[str(ident)] = texto
     return out
 
 
@@ -56,30 +62,35 @@ def fundir_item(destino, novos, origem):
     return destino
 
 
-def coletar():
-    """Devolve {familia: {id: nome_pt}} a partir dos catálogos do server.py."""
+def coletar(tipo="nome"):
+    """Devolve {familia: {id: texto_pt}} a partir dos catálogos do server.py.
+    `tipo` é "nome" ou "desc" — a mesma varredura serve para os dois."""
     item = {}
     for nome_cat, campo in (("WEAPONS", "id"), ("SHOP_WEAPONS", "id"), ("SHOP_ARMORS", "id"),
                             ("SHOP_MERCHANT", "id"), ("SHOP_TEMPLE", "id"), ("SHOP_TAVERN", "id"),
                             ("ARREMESSAVEIS", "id"), ("VENENOS", "id")):
-        fundir_item(item, _entradas(getattr(S, nome_cat), campo), nome_cat)
+        fundir_item(item, _entradas(getattr(S, nome_cat), campo, tipo), nome_cat)
     return {
         "item":        item,
-        "guilda":      _entradas(S.GUILD_CATALOG, "id"),
-        "monstro":     _entradas(S.MONSTER_DEFS, "type"),
-        "decor":       _entradas(S.DECOR_TYPES, "id"),
-        "magia":       _entradas(S.GRIMORIO, "id"),
-        "armadilha":   _entradas(S.ARMADILHAS, "id"),
-        "instrumento": _entradas(S.INSTRUMENTOS_BASE, "id"),
-        "classe":      _entradas(S.CLASSES, "id"),
+        "guilda":      _entradas(S.GUILD_CATALOG, "id", tipo),
+        "monstro":     _entradas(S.MONSTER_DEFS, "type", tipo),
+        "decor":       _entradas(S.DECOR_TYPES, "id", tipo),
+        "magia":       _entradas(S.GRIMORIO, "id", tipo),
+        "armadilha":   _entradas(S.ARMADILHAS, "id", tipo),
+        "instrumento": _entradas(S.INSTRUMENTOS_BASE, "id", tipo),
+        "classe":      _entradas(S.CLASSES, "id", tipo),
     }
 
 
-def achatar(vocab):
-    """{familia: {id: nome}} → {chave: nome_pt}."""
-    return {chave(fam, ident): nome
-            for fam, entradas in vocab.items()
-            for ident, nome in entradas.items()}
+def achatar(vocab, vocab_desc=None):
+    """{familia: {id: texto}} → {chave: texto_pt}, juntando nomes e descrições."""
+    out = {chave(fam, ident, "nome"): texto
+           for fam, entradas in vocab.items()
+           for ident, texto in entradas.items()}
+    for fam, entradas in (vocab_desc or {}).items():
+        for ident, texto in entradas.items():
+            out[chave(fam, ident, "desc")] = texto
+    return out
 
 
 def ler_existente(caminho):
@@ -121,7 +132,7 @@ def escrever(caminho, dicionario):
 
 
 def main():
-    plano = achatar(coletar())
+    plano = achatar(coletar(), coletar("desc"))
     novo, orfas = mesclar(ler_existente(DESTINO), plano)
     escrever(DESTINO, novo)
     faltando = sorted(k for k, v in novo.items() if not v.get("en"))

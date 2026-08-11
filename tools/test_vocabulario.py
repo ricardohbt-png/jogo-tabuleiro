@@ -20,11 +20,16 @@ import gerar_vocabulario as G   # tools/ entra no sys.path abaixo
 def _rodar_verificacoes():
     print("\n[1] Coleta das famílias")
     vocab = G.coletar()
-    esperado = {"item": 140, "guilda": 125, "monstro": 51, "decor": 28,
-                "magia": 27, "armadilha": 11, "instrumento": 9, "classe": 6}
-    for fam, n in esperado.items():
-        check(f"{fam}: {n} chaves", len(vocab.get(fam, {})) == n)
-    check("total de 397 chaves", sum(len(d) for d in vocab.values()) == 397)
+    # Sem contagem cravada: o catálogo é VIVO — o usuário acrescenta itens,
+    # monstros e técnicas o tempo todo, e um número fixo aqui deixaria a suíte
+    # vermelha por motivo falso a cada conteúdo novo. O que se verifica é a
+    # RELAÇÃO entre o catálogo e as chaves geradas, que não depende do tamanho.
+    check("as 8 famílias existem e nenhuma está vazia",
+          sorted(vocab) == ["armadilha", "classe", "decor", "guilda",
+                            "instrumento", "item", "magia", "monstro"]
+          and all(vocab.values()))
+    check("todo id coletado vira exatamente uma chave de nome",
+          len(G.achatar(vocab)) == sum(len(d) for d in vocab.values()))
 
     print("\n[2] Formato da chave")
     check("chave de item usa o id", "dagger" in vocab["item"])
@@ -86,7 +91,7 @@ def _rodar_verificacoes():
           S.t("cat.monstro.goblin.nome", "pt") == "Goblin")
     # Nenhuma chave do arquivo pode apontar para item que saiu do catálogo: se
     # apontasse, o jogo mostraria em inglês um nome que não existe mais.
-    plano = G.achatar(G.coletar())
+    plano = G.achatar(G.coletar(), G.coletar("desc"))
     no_arquivo = G.ler_existente(G.DESTINO)
     check("nenhuma chave órfã no catalogo.js gerado",
           sorted(k for k in no_arquivo if k not in plano) == [])
@@ -110,6 +115,33 @@ def _rodar_verificacoes():
     check("nome_de devolve T", isinstance(marcado, S.T))
     check("nome_de monta a chave", marcado.key == "cat.monstro.goblin.nome")
     check("nome_de rende o nome", S._t_render(marcado, "pt") == "Goblin")
+
+    print("\n[12] Descrições")
+    desc = G.coletar("desc")
+    check("as seis famílias com descrição têm entradas",
+          all(desc.get(f) for f in ("guilda", "magia", "armadilha",
+                                    "instrumento", "classe", "item")))
+    check("chave de descrição usa o sufixo .desc",
+          G.chave("guilda", "brutalidade", "desc") == "cat.guilda.brutalidade.desc")
+    check("chave de nome continua com .nome por padrão",
+          G.chave("guilda", "brutalidade") == "cat.guilda.brutalidade.nome")
+    nomes = G.coletar()
+    check("achatar soma nomes e descrições, sem perder nem duplicar",
+          len(G.achatar(nomes, desc))
+          == sum(len(d) for d in nomes.values()) + sum(len(d) for d in desc.values()))
+    # Unitário, com dados sintéticos: robusto a qualquer conteúdo que o usuário
+    # acrescente ao jogo.
+    check("entrada sem descrição não gera chave .desc",
+          G.achatar({"x": {"a": "Nome"}}, {"x": {}}) == {"cat.x.a.nome": "Nome"})
+    check("o arquivo gerado contém tudo que o catálogo manda",
+          set(G.ler_existente(G.DESTINO)) >= set(G.achatar(nomes, desc)))
+    # Idempotência com as DUAS famílias de chave: o que importa é que uma
+    # descrição traduzida à mão sobreviva à próxima execução do gerador.
+    novo, _ = G.mesclar({"cat.guilda.x.desc": {"pt": "Antigo", "en": "Old"}},
+                        {"cat.guilda.x.desc": "Novo"})
+    check("descrição traduzida à mão sobrevive", novo["cat.guilda.x.desc"]["en"] == "Old")
+    check("o pt da descrição é atualizado do catálogo",
+          novo["cat.guilda.x.desc"]["pt"] == "Novo")
 
 
 if __name__ == "__main__":
