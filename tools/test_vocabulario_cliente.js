@@ -65,6 +65,50 @@ let travou = false;
 try { I18N.traduzirNomes(ciclo); } catch (e) { travou = true; }
 check("estrutura com referência circular não estoura", !travou);
 
+console.log("\n[9] Descrições");
+DICT["cat.guilda.brutalidade.nome"] = { pt: "Brutalidade", en: "Brutality" };
+DICT["cat.guilda.brutalidade.desc"] = { pt: "+2 de dano", en: "+2 damage" };
+DICT["cat.classe.warrior.nome"]     = { pt: "Guerreiro", en: "Warrior" };
+DICT["cat.classe.warrior.desc"]     = { pt: "Tanque", en: "Tank" };
+I18N.setLang("en");
+const comDesc = I18N.traduzirNomes({
+  guild: [{ id: "brutalidade", nome: "Brutalidade", desc: "+2 de dano" }],
+  outro: [{ id: "brutalidade", nome: "Brutalidade", descricao: "+2 de dano" }],
+});
+check("troca o campo desc", comDesc.guild[0].desc === "+2 damage");
+check("troca o campo descricao", comDesc.outro[0].descricao === "+2 damage");
+check("o nome continua sendo trocado", comDesc.guild[0].nome === "Brutality");
+const semDesc = I18N.traduzirNomes({ a: [{ id: "dagger", name: "Adaga", desc: "texto autoral" }] });
+check("sem chave .desc no dicionário, a descrição fica intacta",
+      semDesc.a[0].desc === "texto autoral");
+
+console.log("\n[10] Id na chave do dicionário pai");
+const porChave = I18N.traduzirNomes({
+  classes: { warrior: { name: "Guerreiro", desc: "Tanque", color: "#f00" } },
+});
+check("dicionário chaveado por id traduz o nome",
+      porChave.classes.warrior.name === "Warrior");
+check("dicionário chaveado por id traduz a descrição",
+      porChave.classes.warrior.desc === "Tank");
+check("campo que não é id não vira tradução por acidente",
+      porChave.classes.warrior.color === "#f00");
+
+console.log("\n[11] aplicarCatalogo — catálogos estáticos");
+const estatico = { bola_fogo: { id: "bola_fogo", nome: "Bola de Fogo", descricao: "<b>HTML</b>" } };
+DICT["cat.magia.bola_fogo.nome"] = { pt: "Bola de Fogo", en: "Fireball" };
+DICT["cat.magia.bola_fogo.desc"] = { pt: "Frase curta", en: "Short line" };
+I18N.aplicarCatalogo(estatico, true);
+check("aplicarCatalogo(true) troca o nome", estatico.bola_fogo.nome === "Fireball");
+check("aplicarCatalogo(true) NÃO toca na descrição do cliente",
+      estatico.bola_fogo.descricao === "<b>HTML</b>");
+// A volta ao português é o motivo de aplicarCatalogo não ter a saída antecipada.
+I18N.setLang("pt");
+I18N.aplicarCatalogo(estatico, true);
+check("aplicar em português restaura o original", estatico.bola_fogo.nome === "Bola de Fogo");
+I18N.setLang("en");
+I18N.aplicarCatalogo(estatico, true);
+check("aplicar de novo em inglês volta a traduzir", estatico.bola_fogo.nome === "Fireball");
+
 console.log("\n[8] A fiação com o gameState existe");
 // Checagem estática: o teste não consegue carregar game.js nem gameState.js
 // (o primeiro monta o DOM inteiro no load), então verificamos a fiação no fonte.

@@ -47,50 +47,87 @@
     id:   ['item', 'guilda', 'magia', 'instrumento', 'armadilha', 'classe'],
   };
   const CAMPOS_NOME = ['name', 'nome'];
+  const CAMPOS_DESC = ['desc', 'descricao'];
+  // Usada quando o id vem da CHAVE do dicionário pai, caso em que não há campo
+  // interno indicando de que família ele é.
+  const TODAS_FAMILIAS = ['monstro', 'decor', 'item', 'guilda', 'magia',
+                          'instrumento', 'armadilha', 'classe'];
 
   function tem(key) {
     return Object.prototype.hasOwnProperty.call(DICT, key);
   }
 
-  // Devolve a chave de nome que serve para este objeto, ou null.
-  function _chaveDeNome(o) {
-    for (const campoId in FAMILIAS_POR_CAMPO) {
-      const id = o[campoId];
-      if (typeof id !== 'string' || !id) continue;
-      for (const fam of FAMILIAS_POR_CAMPO[campoId]) {
-        const key = 'cat.' + fam + '.' + id + '.nome';
-        if (tem(key)) return key;
-      }
+  // Primeiro prefixo cat.<família>.<id> que tenha nome OU descrição no
+  // dicionário. Aceitar qualquer um dos dois importa: há entradas com descrição
+  // traduzida e sem nome, e o contrário.
+  function _tentaFamilias(familias, id) {
+    for (const fam of familias) {
+      const base = 'cat.' + fam + '.' + id;
+      if (tem(base + '.nome') || tem(base + '.desc')) return base;
     }
     return null;
   }
 
-  // Percorre a mensagem recebida e troca os nomes de catálogo pelo idioma atual.
-  // Muta o objeto de propósito: ele é JSON recém-parseado, ninguém mais o vê.
-  // Objeto sem tradução para o seu id fica intacto — é assim que item e monstro
-  // criados no editor mantêm o nome autoral.
-  function traduzirNomes(msg) {
-    if (lang === PADRAO) return msg;   // em português não há o que trocar
+  // `idPai` é a chave sob a qual este objeto estava no dicionário pai. Vários
+  // payloads (lobby_state.classes, game_start.instrumentos_base) são dicionários
+  // chaveados pelo id, com o valor sem nenhum campo de id dentro.
+  function _chaveBase(o, idPai) {
+    for (const campoId in FAMILIAS_POR_CAMPO) {
+      const id = o[campoId];
+      if (typeof id !== 'string' || !id) continue;
+      const base = _tentaFamilias(FAMILIAS_POR_CAMPO[campoId], id);
+      if (base) return base;
+    }
+    if (typeof idPai === 'string' && idPai) {
+      const base = _tentaFamilias(TODAS_FAMILIAS, idPai);
+      if (base) return base;
+    }
+    return null;
+  }
+
+  // Percorre a estrutura e troca nome (e descrição, se soNome for falso) pelo
+  // idioma ATUAL. Muta o objeto de propósito. Objeto sem chave no dicionário
+  // fica intacto — é assim que item e monstro criados no editor mantêm o nome
+  // autoral. Sem saída antecipada em português: os catálogos estáticos do
+  // cliente precisam ser reescritos na volta ao português para restaurar o
+  // texto original. A troca é por id, nunca por texto, então reaplicar noutro
+  // idioma sempre parte da chave e nunca do texto já trocado.
+  function aplicarCatalogo(obj, soNome) {
     const vistos = new Set();
-    (function anda(o) {
+    (function anda(o, idPai) {
       if (!o || typeof o !== 'object' || vistos.has(o)) return;
       vistos.add(o);
-      if (Array.isArray(o)) { for (const v of o) anda(v); return; }
-      const key = _chaveDeNome(o);
-      if (key) {
-        for (const campo of CAMPOS_NOME) {
-          if (typeof o[campo] === 'string') { o[campo] = t(key); break; }
+      if (Array.isArray(o)) { for (const v of o) anda(v, null); return; }
+      const base = _chaveBase(o, idPai);
+      if (base) {
+        if (tem(base + '.nome')) {
+          for (const campo of CAMPOS_NOME) {
+            if (typeof o[campo] === 'string') { o[campo] = t(base + '.nome'); break; }
+          }
+        }
+        if (!soNome && tem(base + '.desc')) {
+          for (const campo of CAMPOS_DESC) {
+            if (typeof o[campo] === 'string') { o[campo] = t(base + '.desc'); break; }
+          }
         }
       }
-      for (const k in o) anda(o[k]);
-    })(msg);
-    return msg;
+      for (const k in o) anda(o[k], k);
+    })(obj, null);
+    return obj;
+  }
+
+  // Caminho das mensagens: em português não há o que trocar, e sair aqui deixa
+  // o custo em zero no idioma padrão.
+  function traduzirNomes(msg) {
+    if (lang === PADRAO) return msg;
+    return aplicarCatalogo(msg, false);
   }
 
   window.I18N = {
     t: t,
     tem: tem,
     traduzirNomes: traduzirNomes,
+    aplicarCatalogo: aplicarCatalogo,
     setLang: setLang,
     on: function (fn) { if (typeof fn === 'function') ouvintes.push(fn); },
     get lang() { return lang; },
