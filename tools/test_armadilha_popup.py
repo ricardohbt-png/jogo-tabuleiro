@@ -121,6 +121,48 @@ async def main():
           msgs[0]["efeitos_extra"] == ["🦵 Perdeu o movimento"])
 
     # ── [3] Armadilha de área com save_reduz (Mina Terrestre) ───────────────────
+    # [2c] Lâmina Escondida: Reflexos CD 15 + dano + veneno.
+    print("\n[2c] Lâmina Escondida — falha aplica 1d8 e veneno")
+    r = setup()
+    p = make_player("p1", "Victor", "warrior", 0); p["ref_"] = 0; r.players["p1"] = p
+    arm = {"id": "a_lamina", "tipo": "lamina_escondida", "pos": [5, 5],
+           "ativada": False, "veneno_id": "veneno_aranha_sombria"}
+    r.armadilhas = [arm]
+    _o = server.random.randint; server.random.randint = fake_rng(1)
+    await r._disparar_armadilha(p, arm)
+    server.random.randint = _o
+    msgs = trap_msgs(r, "p1")
+    check("armadilha existe no catálogo", "lamina_escondida" in ARMADILHAS)
+    check("popup da lâmina enviado", len(msgs) == 1)
+    check("CD 15 falhou com dano 1d8 fixo em 3", msgs and msgs[0]["sucesso"] is False and msgs[0]["dano"] == 3)
+    check("efeitos_extra menciona o veneno", msgs and any("Envenenado" in t for t in msgs[0]["efeitos_extra"]))
+
+    print("\n[2d] Lâmina Pêndulo — CD 14, 2d6 e duração de 3 rodadas")
+    r = setup()
+    p = make_player("p1", "Victor", "warrior", 0); p["ref_"] = 0; r.players["p1"] = p
+    arm = {"id": "a_pendulo", "tipo": "lamina_pendulo", "pos": [5, 5], "ativada": False}
+    r.armadilhas = [arm]
+    rodada_ativacao = r.round_num
+    _o = server.random.randint; server.random.randint = fake_rng(1)
+    await r._disparar_armadilha(p, arm)
+    server.random.randint = _o
+    msgs = trap_msgs(r, "p1")
+    check("popup da lâmina pêndulo enviado", len(msgs) == 1)
+    check("CD 14 falhou e causou 2d6 fixo em 6", msgs and msgs[0]["sucesso"] is False and msgs[0]["dano"] == 6)
+    check("armadilha fica ativa por 3 rodadas", arm.get("ativa_ate") == rodada_ativacao + 2)
+
+    r.sent = []
+    p["hp"] = p["max_hp"]; p["alive"] = True
+    r.round_num = rodada_ativacao + 1
+    _o = server.random.randint; server.random.randint = fake_rng(1)
+    await r._disparar_armadilha(p, arm)
+    server.random.randint = _o
+    check("novo alvo no mesmo quadrado sofre o efeito na rodada seguinte",
+          trap_msgs(r, "p1") and trap_msgs(r, "p1")[0]["dano"] == 6)
+    r.round_num = rodada_ativacao + 3
+    r._expirar_armadilhas_duracao()
+    check("armadilha expira após a terceira rodada", arm not in r.armadilhas)
+
     print("\n[3] Mina Terrestre (área) — 1 alvo falha, 1 resiste com metade")
     r = setup()
     p1 = make_player("p1", "A", "warrior", 0); p1["ref_"] = 0; p1["pos"] = [5, 5]

@@ -4543,10 +4543,10 @@ def validar_dungeon(defn):
             return False, f"armadilha tipo desconhecido: {tr.get('tipo')!r}."
         if not in_grid(tr.get("pos")) or tile_at(tr["pos"]) == WALL:
             return False, f"armadilha em casa inválida: {tr.get('pos')}."
-        if tr["tipo"] == "fosso_envenenado" and tr.get("veneno_id") not in VENENOS:
-            return False, f"fosso_envenenado exige veneno_id válido: {tr.get('veneno_id')!r}."
-        if tr["tipo"] == "armadilha_dardos_envenenados" and tr.get("veneno_id") not in VENENOS:
-            return False, f"armadilha_dardos_envenenados exige veneno_id válido: {tr.get('veneno_id')!r}."
+        if ARMADILHAS[tr["tipo"]].get("custo_veneno") and tr.get("veneno_id") not in VENENOS:
+            return False, f"{tr['tipo']} exige veneno_id válido: {tr.get('veneno_id')!r}."
+        if tr.get("veneno_id") is not None and tr.get("veneno_id") not in VENENOS:
+            return False, f"{tr['tipo']} recebeu veneno_id inválido: {tr.get('veneno_id')!r}."
         if tr["tipo"] == "armadilha_teletransporte":
             destino = tr.get("saida")
             if not in_grid(destino) or tile_at(destino) != FLOOR:
@@ -4664,9 +4664,11 @@ def validar_dungeon(defn):
             if not isinstance(decor_trap, dict) or decor_trap.get("tipo") not in ARMADILHAS:
                 return False, f"armadilha de decoração inválida: {decor_trap!r}."
             trap_tipo = decor_trap["tipo"]
-            if trap_tipo in {"fosso_envenenado", "armadilha_dardos_envenenados"} \
+            if ARMADILHAS[trap_tipo].get("custo_veneno") \
                     and decor_trap.get("veneno_id") not in VENENOS:
                 return False, f"{trap_tipo} na decoração exige veneno_id válido."
+            if decor_trap.get("veneno_id") is not None and decor_trap.get("veneno_id") not in VENENOS:
+                return False, f"{trap_tipo} na decoração recebeu veneno_id inválido."
             if trap_tipo == "armadilha_teletransporte":
                 destino = decor_trap.get("saida")
                 if not in_grid(destino) or tile_at(destino) != FLOOR:
@@ -4823,9 +4825,7 @@ def make_authored_trap(tdef):
         "so_luccas":     False,
         "efeitos_ativos": [],
     }
-    if tipo == "fosso_envenenado":
-        arm["veneno_id"] = tdef.get("veneno_id")
-    if tipo == "armadilha_dardos_envenenados":
+    if meta.get("custo_veneno") or meta.get("permite_veneno"):
         arm["veneno_id"] = tdef.get("veneno_id")
     if tipo == "armadilha_teletransporte":
         arm["saida"] = list(tdef.get("saida") or [])
@@ -5231,6 +5231,24 @@ ARMADILHAS = {
                     {"tipo": "veneno"}],
         "descricao": "1d6 de dano + efeito do veneno usado. Fica visível após ativar.",
         "formula_guild_id": "ladino_fosso_envenenado", "formula_preco": 130,
+    },
+    "lamina_escondida": {
+        "cr": 0.55,
+        "nome": "Lâmina Escondida", "icone": "🗡️", "dificuldade": 15, "save": "reflexos",
+        "custo_ouro": 8, "permite_veneno": True,
+        "persiste": False,
+        "efeitos": [{"tipo": "dano", "valor": "1d8", "elemento": "fisico"},
+                    {"tipo": "veneno"}],
+        "descricao": "Reflexos CD 15 evita a lâmina. Na falha, sofre 1d8 de dano e o veneno combinado.",
+        "formula_guild_id": "ladino_lamina_escondida", "formula_preco": 160,
+    },
+    "lamina_pendulo": {
+        "cr": 0.7,
+        "nome": "Lâmina Pêndulo", "icone": "🗡️", "dificuldade": 14, "save": "reflexos",
+        "custo_ouro": 12, "persiste": True, "visivel_apos": True, "duracao_rodadas": 3,
+        "efeitos": [{"tipo": "dano", "valor": "2d6", "elemento": "fisico"}],
+        "descricao": "Reflexos CD 14 evita a lâmina. Na falha, sofre 2d6 de dano. Após ativar, permanece perigosa por 3 rodadas.",
+        "formula_guild_id": "ladino_lamina_pendulo", "formula_preco": 200,
     },
     "nuvem_gas": {
         "cr": 0.4,
@@ -10040,6 +10058,7 @@ class GameRoom:
         if self.initiative_index >= len(self.initiative_order):
             self.round_num += 1
             self.magic_reveal = {k:v for k,v in self.magic_reveal.items() if v > self.round_num}
+            self._expirar_armadilhas_duracao()
             await self._processar_efeitos_armadilha_turno()
             await self._processar_em_chamas_turno()
             await self._processar_acido_residual_turno()
@@ -18431,7 +18450,8 @@ class GameRoom:
         """Armadilha ARMÁVEL nessa casa (ignora as já gastas/desativadas)."""
         return next((a for a in self.armadilhas
                      if a["pos"] == [x, y]
-                     and not a.get("desativada") and not a.get("esgotada")), None)
+                     and not a.get("desativada") and not a.get("esgotada")
+                     and (a.get("ativa_ate") is None or self.round_num <= a["ativa_ate"])), None)
 
     async def handle_criar_armadilha(self, pid, msg):
         """Luccas (rogue) prepara uma armadilha na própria casa ou adjacente."""
@@ -18471,16 +18491,20 @@ class GameRoom:
         if self._armadilha_no_tile(tx, ty) or any(t["pos"] == [tx, ty] and not t["triggered"] for t in self.traps):
             await self.send_to(pid, {"type": "error", "msg": "Já existe uma armadilha nessa casa."}); return
 
-        # Fosso envenenado: consome 1 frasco de veneno da bolsa.
+        # Veneno obrigatório (fosso) ou opcional (lâmina): consome 1 frasco
+        # somente quando um veneno foi efetivamente escolhido.
         veneno_id = None
-        if tipo.get("custo_veneno"):
+        if tipo.get("custo_veneno") or tipo.get("permite_veneno"):
             veneno_id = msg.get("veneno_id")
-            if not veneno_id or veneno_id not in VENENOS:
-                await self.send_to(pid, {"type": "error", "msg": "Escolha um veneno para o fosso."}); return
-            frasco = next((i for i in p["bag"] if i.get("id") == veneno_id), None)
-            if not frasco:
-                await self.send_to(pid, {"type": "error", "msg": "Veneno não encontrado na bolsa."}); return
-            p["bag"].remove(frasco)
+            if tipo.get("custo_veneno") and (not veneno_id or veneno_id not in VENENOS):
+                await self.send_to(pid, {"type": "error", "msg": "Escolha um veneno para a armadilha."}); return
+            if veneno_id:
+                if veneno_id not in VENENOS:
+                    await self.send_to(pid, {"type": "error", "msg": "Veneno inválido."}); return
+                frasco = next((i for i in p["bag"] if i.get("id") == veneno_id), None)
+                if not frasco:
+                    await self.send_to(pid, {"type": "error", "msg": "Veneno não encontrado na bolsa."}); return
+                p["bag"].remove(frasco)
 
         p["gold"] -= custo_ouro
         self._pagar_fome_sede(p, ARMADILHA_CUSTO_FOME, ARMADILHA_CUSTO_SEDE)
@@ -18595,6 +18619,11 @@ class GameRoom:
             arm["ativada"] = True
             if tipo.get("visivel_apos"):
                 arm["visivel"] = True
+            duracao = tipo.get("duracao_rodadas")
+            if duracao and arm.get("ativa_ate") is None:
+                # A rodada do primeiro disparo conta como a primeira das N
+                # rodadas de atividade da armadilha.
+                arm["ativa_ate"] = self.round_num + int(duracao) - 1
         elif arm.get("efeitos_ativos"):
             arm["esgotada"] = True   # jÃ¡ disparou; mantÃ©m sÃ³ p/ dano residual (incendiÃ¡ria)
         else:
@@ -19082,6 +19111,11 @@ class GameRoom:
             return
         await self._cobrar_manutencao_detectar(p)
         await self._cobrar_manutencao_sombras(p)
+
+    def _expirar_armadilhas_duracao(self):
+        """Remove armadilhas persistentes cuja janela de atividade terminou."""
+        self.armadilhas = [a for a in self.armadilhas
+                           if a.get("ativa_ate") is None or self.round_num <= a["ativa_ate"]]
 
     async def _processar_efeitos_armadilha_turno(self):
         """Tica o dano progressivo (incendiária) uma vez por rodada."""
@@ -19679,6 +19713,7 @@ class GameRoom:
             self.magic_reveal = {k: v for k, v in self.magic_reveal.items()
                                  if v > self.round_num}
             await self.gm_phase()
+            self._expirar_armadilhas_duracao()
             await self._processar_efeitos_armadilha_turno()   # dano progressivo (incendiÃ¡ria)
             await self._processar_em_chamas_turno()            # tick do status "em chamas"
             await self._processar_acido_residual_turno()       # tick do dano residual de Ã¡cido

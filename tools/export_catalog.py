@@ -103,11 +103,14 @@ def build_catalog():
              for i in server._DUNGEON_ITEM_CATALOG.values()]
     traps = []
     for tipo, meta in server.ARMADILHAS.items():
-        traps.append({
+        entry = {
             "tipo": tipo, "nome": meta["nome"], "icone": meta.get("icone", ""),
             "cr": server.trap_cr(meta),
             "precisa_veneno": bool(meta.get("precisa_veneno") or meta.get("custo_veneno")),
-        })
+        }
+        if meta.get("permite_veneno"):
+            entry["permite_veneno"] = True
+        traps.append(entry)
     venoms = [{"id": vid, "name": meta["nome"]} for vid, meta in server.VENENOS.items()]
     decorations = []
     for dtype, meta in server.DECOR_TYPES.items():

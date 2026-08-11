@@ -1167,6 +1167,22 @@ input:focus { outline: none; border-color: var(--gold); }
 .menu-magias{width:510px;max-width:96vw;max-height:88vh;display:flex;flex-direction:column;
   background:linear-gradient(145deg,#10091b,#08060e);border:1px solid #9e63c8;border-radius:8px;
   box-shadow:0 18px 55px rgba(0,0,0,.8),0 0 24px rgba(145,63,200,.25);font-family:'Cinzel',serif;}
+.menu-magias-layout{display:flex;align-items:stretch;justify-content:center;gap:10px;max-width:96vw;max-height:88vh;}
+.menu-magias-layout>.menu-magias{flex:1 1 510px;min-width:0;}
+.menu-magias-slots{width:148px;flex:0 0 148px;align-self:center;padding:12px 10px;background:linear-gradient(145deg,#0d1717,#080b0d);
+  border:1px solid #4b9b8a;border-radius:8px;box-shadow:0 12px 35px rgba(0,0,0,.72),0 0 18px rgba(68,204,136,.13);font-family:'Cinzel',serif;}
+.mm-slots-header{padding-bottom:9px;margin-bottom:10px;border-bottom:1px solid #4b9b8a55;color:#9de8c4;text-align:center;letter-spacing:1.5px;font-size:10px;line-height:1.25;}
+.mm-slots-header small{display:block;margin-top:4px;color:#78968d;font-size:8px;letter-spacing:.5px;}
+.mm-slot-circle{padding:8px 7px;margin-top:8px;border:1px solid rgba(141,174,255,.25);border-radius:5px;background:rgba(255,255,255,.025);}
+.mm-slot-circle:first-of-type{margin-top:0;}
+.mm-slot-circle h4{margin:0 0 5px;color:#8daeff;font-size:9px;letter-spacing:1px;}
+.mm-slot-count{display:block;margin-bottom:7px;color:#44cc88;font-size:9px;line-height:1.2;}
+.mm-slot-count.empty{color:#ff7066;}
+.mm-slot-pips{display:flex;flex-wrap:wrap;gap:5px;}
+.mm-slot-pip{width:21px;height:21px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:9px;font-weight:700;box-sizing:border-box;}
+.mm-slot-pip.ready{background:#173b2b;border:1px solid #44cc88;color:#8dffc2;box-shadow:0 0 6px rgba(68,204,136,.22);}
+.mm-slot-pip.cooldown{background:#171719;border:1px solid #505056;color:#ffb347;box-shadow:inset 0 0 5px rgba(0,0,0,.7);}
+.mm-slot-locked{color:#68656d;font-size:8px;line-height:1.3;}
 .mm-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #9e63c855;color:#e9c7ff;letter-spacing:2px;}
 .mm-header b{font-size:14px;}.mm-header small{display:block;color:#8a7a5a;font-size:9px;letter-spacing:1px;margin-top:3px;}
 .mm-header button{background:transparent;border:1px solid #6e5180;color:#d8b6ec;border-radius:3px;cursor:pointer;padding:3px 8px;font-size:13px;}
@@ -1175,10 +1191,11 @@ input:focus { outline: none; border-color: var(--gold); }
 .mm-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;}
 .mm-magia,.mm-modificador{min-height:53px;display:flex;align-items:center;gap:8px;padding:7px;background:rgba(255,255,255,.035);border:1px solid rgba(200,169,81,.25);border-radius:4px;}
 .mm-magia{cursor:help;}.mm-magia:hover{border-color:#c8a951;}.mm-magia.mm-acionavel{cursor:pointer;}.mm-magia.mm-acionavel:hover{background:rgba(200,169,81,.13);box-shadow:0 0 9px rgba(200,169,81,.20);}.mm-modificador{border-color:rgba(174,105,220,.34);}.mm-modificador.mm-acionavel{cursor:pointer;}.mm-modificador.mm-acionavel:hover{background:rgba(174,105,220,.13);border-color:#b982e0;}.mm-modificador.mm-selecionada{background:rgba(185,130,224,.22);border-color:#e0b1ff;box-shadow:0 0 11px rgba(202,126,255,.65) inset,0 0 10px rgba(202,126,255,.35);}
+.mm-magia.mm-sem-slot{filter:grayscale(.75);opacity:.52;background:rgba(70,70,75,.12);border-color:#55515b;cursor:not-allowed;}
 .mm-magia-icon,.mm-mod-icon{width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden;border-radius:3px;}
 .mm-mod-icon .ability-icon{width:32px;height:32px;margin:0;border-radius:3px;}.mm-magia b,.mm-modificador b{display:block;color:#e3dacd;font-size:10px;line-height:1.2;}
 .mm-magia small,.mm-modificador small{display:block;color:#958878;font-size:8px;line-height:1.35;margin-top:3px;}.mm-empty{margin:0;color:#71665b;font-size:10px;padding:8px 0;}
-@media(max-width:520px){.mm-list{grid-template-columns:1fr;}.menu-magias{max-height:92vh;}.mm-body{padding:12px;}}
+@media(max-width:520px){.mm-list{grid-template-columns:1fr;}.menu-magias-layout{flex-direction:column;align-items:stretch;max-height:92vh;overflow-y:auto;gap:8px;}.menu-magias-slots{width:auto;max-width:none;flex:0 0 auto;align-self:stretch;}.menu-magias{width:100%;max-width:none;max-height:none;}.mm-body{padding:12px;}}
 
 /* ── Compêndio de habilidades ─────────────────────────────────────────────── */
 #menu-habilidades-overlay{position:fixed;inset:0;z-index:510;display:flex;align-items:center;justify-content:center;

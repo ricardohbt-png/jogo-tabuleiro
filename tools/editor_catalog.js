@@ -4890,6 +4890,28 @@ window.EDITOR_CATALOG = {
       "guild_category": "especializacao"
     },
     {
+      "id": "guild_ladino_lamina_escondida",
+      "source": "guilda",
+      "source_id": "ladino_lamina_escondida",
+      "name": "Fórmula: Lâmina Escondida",
+      "icon": "✦",
+      "descricao": "Desbloqueia permanentemente a fabricação de Lâmina Escondida.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_ladino_lamina_pendulo",
+      "source": "guilda",
+      "source_id": "ladino_lamina_pendulo",
+      "name": "Fórmula: Lâmina Pêndulo",
+      "icon": "✦",
+      "descricao": "Desbloqueia permanentemente a fabricação de Lâmina Pêndulo.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
       "id": "guild_ladino_nuvem_gas",
       "source": "guilda",
       "source_id": "ladino_nuvem_gas",
@@ -6858,6 +6880,21 @@ window.EDITOR_CATALOG = {
       "icone": "☠️",
       "cr": 0.5,
       "precisa_veneno": true
+    },
+    {
+      "tipo": "lamina_escondida",
+      "nome": "Lâmina Escondida",
+      "icone": "🗡️",
+      "cr": 0.55,
+      "precisa_veneno": false,
+      "permite_veneno": true
+    },
+    {
+      "tipo": "lamina_pendulo",
+      "nome": "Lâmina Pêndulo",
+      "icone": "🗡️",
+      "cr": 0.7,
+      "precisa_veneno": false
     },
     {
       "tipo": "nuvem_gas",

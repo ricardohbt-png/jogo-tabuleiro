@@ -9855,6 +9855,8 @@ const ARMADILHAS_LUCCAS = [
   { id:'armadilha_incendiaria',  nome:'Armadilha Incendiária', icone:'🔥', custo_ouro:10, desc:'1d6+1d4+1 fogo em 3 rodadas. Some após ativar.' },
   { id:'mina_terrestre',         nome:'Mina Terrestre',        icone:'💣', custo_ouro:20, desc:'2d6 em área (1 quad). Save reduz à metade. Some após ativar.' },
   { id:'fosso_envenenado',       nome:'Fosso Envenenado',      icone:'☠️', custo_ouro:2,  requer_veneno:true, desc:'1d6 dano + veneno escolhido. Fica visível após ativar.' },
+  { id:'lamina_escondida',       nome:'Lâmina Escondida',      icone:'🗡️', custo_ouro:8,  permite_veneno:true, desc:'Reflexos dif 15 ou sofre 1d8. Veneno opcional. Some após ativar.' },
+  { id:'lamina_pendulo',         nome:'Lâmina Pêndulo',        icone:'🗡️', custo_ouro:12, desc:'Reflexos dif 14 ou sofre 2d6. Permanece ativa por 3 rodadas.' },
   { id:'nuvem_gas',              nome:'Nuvem de Gás',          icone:'🌫️', custo_ouro:25, desc:'-1d6 CON por 3 rodadas em área. Save Fortitude dif 13.' },
 ];
 const ARMADILHA_FOME = 2, ARMADILHA_SEDE = 1;
@@ -9920,6 +9922,7 @@ function abrirPainelCriarArmadilha(){
       ${ARMADILHAS_LUCCAS.map(arm => {
         const desbloqueada = (GS.ladinoArmadilhasDesbloqueadas ? GS.ladinoArmadilhasDesbloqueadas() : ['buraco']).includes(arm.id);
         const podeComprar = ouro >= arm.custo_ouro;
+        const escolheVeneno = arm.requer_veneno || arm.permite_veneno;
         const temVeneno   = arm.requer_veneno ? venenos.length > 0 : true;
         const pode        = desbloqueada && podeComprar && temVeneno;
         const sel         = selecionada === arm.id;
@@ -9935,10 +9938,10 @@ function abrirPainelCriarArmadilha(){
             </div>
             <div style="color:#8a7a5a; font-size:9px; line-height:1.5;">${arm.desc}</div>
             ${!desbloqueada ? `<div style="color:#ff851b; font-size:9px; margin-top:3px;">🔒 Compre a fórmula na Guilda dos Heróis</div>` : ''}
-            ${desbloqueada && arm.requer_veneno ? `<div style="color:${venenos.length>0?'#9900cc':'#ff4136'}; font-size:9px; margin-top:3px;">${venenos.length>0?'☠️ Requer veneno — disponível':'⚠️ Sem veneno no inventário'}</div>` : ''}
+            ${desbloqueada && escolheVeneno ? `<div style="color:${arm.requer_veneno && !venenos.length ? '#ff4136' : '#9900cc'}; font-size:9px; margin-top:3px;">${arm.requer_veneno ? (venenos.length>0?'☠️ Requer veneno — disponível':'⚠️ Sem veneno no inventário') : '☠️ Veneno opcional'}</div>` : ''}
           </div>`;
       }).join('')}
-      ${selecionada && ARMADILHAS_LUCCAS.find(a=>a.id===selecionada)?.requer_veneno ? `
+      ${selecionada && ((ARMADILHAS_LUCCAS.find(a=>a.id===selecionada)?.requer_veneno) || (ARMADILHAS_LUCCAS.find(a=>a.id===selecionada)?.permite_veneno)) ? `
         <div style="margin-top:10px;">
           <div style="color:#9900cc; font-size:9px; letter-spacing:2px; margin-bottom:6px;">ESCOLHA O VENENO:</div>
           ${venenos.map(v => `
@@ -9966,7 +9969,7 @@ function abrirPainelCriarArmadilha(){
   window.confirmarCriarArmadilha = function(){
     if(!selecionada) return;
     const arm = ARMADILHAS_LUCCAS.find(a => a.id === selecionada);
-    if(arm?.requer_veneno && !veneno_id){ GS.adicionarLog('⚠️ Escolha um veneno para o fosso'); return; }
+    if(arm?.requer_veneno && !veneno_id){ GS.adicionarLog('⚠️ Escolha um veneno para a armadilha'); return; }
     document.getElementById('painel-armadilha')?.remove();
     _ativarModoPlacementArmadilha(selecionada, veneno_id);
   };
@@ -13410,6 +13413,8 @@ function _showTrapResult(msg){
     'Fosso com Estacas': 'armadilha_fosso_estacas.png',
     'Fosso com Estacas Envenenadas': 'armadilha_fosso_estacas.png',
     'Estacas Envenenadas': 'armadilha_fosso_estacas.png',
+    'Lâmina Escondida': 'armadilha_lamina.png',
+    'Lâmina Pêndulo': 'armadilha_pendulo.png',
     'Rede': 'armadilha_rede.png',
     'Armadilha Incendiária': 'armadilha_incendiaria.png',
     'Mina Terrestre': 'armadilha_explosiva.png',
@@ -13976,6 +13981,50 @@ function fecharMenuMagias(){
   ocultarTooltipMagia();
 }
 
+// Estado visual dos slots do mesmo modo que a ficha de magias em jogo:
+// `slots_cooldown` traz as rodadas absolutas em que cada slot volta a ficar
+// disponível. O servidor continua sendo a autoridade; isto é apenas leitura.
+function _slotsMenuMagias(heroi){
+  const nivel = Math.min(Math.max(Number(heroi?.level || heroi?.nivel || 1), 1), 5);
+  const limites = SLOTS_POR_NIVEL_CLIENT[nivel] || SLOTS_POR_NIVEL_CLIENT[1];
+  const cooldown = heroi?.slots_cooldown || {primeiro:[], segundo:[], terceiro:[]};
+  const naMasmorra = !!GS.gameState;
+  const round = naMasmorra ? Number(GS.gameState.round || 0) : 0;
+  const status = {};
+  ['primeiro','segundo','terceiro'].forEach(circulo => {
+    const total = Number(limites[circulo] || 0);
+    const espera = naMasmorra
+      ? (cooldown[circulo] || []).filter(r => Number(r) > round)
+          .map(r => Math.max(0, Number(r) - round)).sort((a,b) => a - b)
+      : [];
+    const livres = Math.max(0, total - espera.length);
+    status[circulo] = { total, livres, espera };
+  });
+  return status;
+}
+
+function renderSlotsMenuMagias(heroi){
+  const status = _slotsMenuMagias(heroi);
+  const circulos = ['primeiro','segundo','terceiro'];
+  const grupos = circulos.map(circulo => {
+    const s = status[circulo];
+    if(!s.total) return `<div class="mm-slot-circle"><h4>${_LABEL_CIRCULO[circulo]}</h4><span class="mm-slot-locked">Disponível em nível maior</span></div>`;
+    const pips = Array.from({length:s.total}, (_, i) => {
+      if(i < s.livres) return '<span class="mm-slot-pip ready" title="Slot disponível">✓</span>';
+      const falta = s.espera[i - s.livres] || 0;
+      return `<span class="mm-slot-pip cooldown" title="Volta em ${falta} rodada(s)">${falta}</span>`;
+    }).join('');
+    return `<div class="mm-slot-circle"><h4>${_LABEL_CIRCULO[circulo]}</h4><span class="mm-slot-count${s.livres === 0 ? ' empty' : ''}">${s.livres}/${s.total} disponíveis</span><div class="mm-slot-pips">${pips}</div></div>`;
+  }).join('');
+  return `<aside class="menu-magias-slots" aria-label="Slots de magias"><div class="mm-slots-header">SLOTS DE MAGIAS<small>Recarga por círculo</small></div>${grupos}</aside>`;
+}
+
+function _atualizarMenuMagiasSeAberto(){
+  const overlay = document.getElementById('menu-magias-overlay');
+  if(!_menuMagiasPid || !overlay?.classList.contains('open')) return;
+  if(_playerMenuMagias(_menuMagiasPid)) abrirMenuMagias(_menuMagiasPid);
+}
+
 function ativarMagiaDoMenu(magiaId){
   const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid);
   if(!me || GS.gameState.phase !== 'playing') { toast('Magias só podem ser usadas na masmorra.'); return; }
@@ -14015,11 +14064,12 @@ function abrirMenuMagias(pid){
     .map(id => GRIMORIO_CLIENT[id]).filter(Boolean);
   const porCirculo = ['primeiro', 'segundo', 'terceiro'];
   const podeAgir = document.getElementById('screen-game')?.classList.contains('active') && pid === GS.myPid;
+  const slots = _slotsMenuMagias(player);
   const renderMagia = m => `
-    <div class="mm-magia${podeAgir ? ' mm-acionavel' : ''}" ${podeAgir ? `onclick="ativarMagiaDoMenu('${m.id}')"` : ''}
+    <div class="mm-magia${podeAgir && slots[m.circulo]?.livres > 0 ? ' mm-acionavel' : ''}${podeAgir && !(slots[m.circulo]?.livres > 0) ? ' mm-sem-slot' : ''}" ${podeAgir && slots[m.circulo]?.livres > 0 ? `onclick="ativarMagiaDoMenu('${m.id}')"` : ''}
       onmouseenter="mostrarTooltipMagia('${m.id}', event)" onmouseleave="ocultarTooltipMagia()">
       <span class="mm-magia-icon">${magiaIconHTML(m, 34)}</span>
-      <span><b>${m.nome}</b><small>${_LABEL_CIRCULO[m.circulo] || ''} · ${m.custo || ''}</small></span>
+      <span><b>${m.nome}</b><small>${_LABEL_CIRCULO[m.circulo] || ''} · ${m.custo || ''}${podeAgir && !(slots[m.circulo]?.livres > 0) ? ' · sem slot disponível' : ''}</small></span>
     </div>`;
   const renderMod = m => {
     const pendente = m.categoria === 'tecnica' && !!GS.tecnicaPendente?.(player, m.id);
@@ -14034,21 +14084,24 @@ function abrirMenuMagias(pid){
   };
 
   overlay.innerHTML = `
-    <section class="menu-magias" role="dialog" aria-modal="true" aria-label="Menu de magias">
-      <header class="mm-header"><div><b><img class="menu-magias-icone" src="assets/magias.png" alt="" aria-hidden="true"> GRIMÓRIO</b><small>${player.name || 'Herói'} · tecla M</small></div><button onclick="fecharMenuMagias()" aria-label="Fechar">✕</button></header>
-      <div class="mm-body">
-        <section><h3>MODIFICADORES DE MAGIA</h3>
-          ${modificadores.length ? `<div class="mm-list">${modificadores.map(renderMod).join('')}</div>`
-            : '<p class="mm-empty">Nenhum modificador de magia disponível.</p>'}
-        </section>
-        <section><h3>MAGIAS CONHECIDAS</h3>
-          ${conhecidos.length ? porCirculo.map(c => {
-            const magias = conhecidos.filter(m => m.circulo === c);
-            return magias.length ? `<div class="mm-circle"><h4>${_LABEL_CIRCULO[c]}</h4><div class="mm-list">${magias.map(renderMagia).join('')}</div></div>` : '';
-          }).join('') : '<p class="mm-empty">Nenhuma magia conhecida.</p>'}
-        </section>
-      </div>
-    </section>`;
+    <div class="menu-magias-layout">
+      ${renderSlotsMenuMagias(player)}
+      <section class="menu-magias" role="dialog" aria-modal="true" aria-label="Menu de magias">
+        <header class="mm-header"><div><b><img class="menu-magias-icone" src="assets/magias.png" alt="" aria-hidden="true"> GRIMÓRIO</b><small>${player.name || 'Herói'} · tecla M</small></div><button onclick="fecharMenuMagias()" aria-label="Fechar">✕</button></header>
+        <div class="mm-body">
+          <section><h3>MODIFICADORES DE MAGIA</h3>
+            ${modificadores.length ? `<div class="mm-list">${modificadores.map(renderMod).join('')}</div>`
+              : '<p class="mm-empty">Nenhum modificador de magia disponível.</p>'}
+          </section>
+          <section><h3>MAGIAS CONHECIDAS</h3>
+            ${conhecidos.length ? porCirculo.map(c => {
+              const magias = conhecidos.filter(m => m.circulo === c);
+              return magias.length ? `<div class="mm-circle"><h4>${_LABEL_CIRCULO[c]}</h4><div class="mm-list">${magias.map(renderMagia).join('')}</div></div>` : '';
+            }).join('') : '<p class="mm-empty">Nenhuma magia conhecida.</p>'}
+          </section>
+        </div>
+      </section>
+    </div>`;
   requestAnimationFrame(() => overlay.classList.add('open'));
 }
 
@@ -25216,6 +25269,7 @@ GS.on('cityState', msg => {
   // Ensure city screen is visible (covers both initial arrival and return from dungeon)
   showScreen('screen-city');
   handleCityState(msg);
+  _atualizarMenuMagiasSeAberto();
   _refreshTurnTimerOption();
   _renderBannerForaMasmorra();
   // ── Sincroniza o herói do overlay com o estado autoritativo do servidor ──
@@ -25393,6 +25447,7 @@ function _atualizarFichaFab(){
 GS.on('gameState', msg => {
   _detectHpChanges(msg);   // som de dano/cura por variação de HP entre estados
   handleGameState(msg);
+  _atualizarMenuMagiasSeAberto();
   _refreshTurnTimerOption();
   _atualizarFichaFab();    // mantém o Mapa de CR disponível apenas ao mestre
   // Sincroniza os animados autoritativos do servidor no registro do Pedro,

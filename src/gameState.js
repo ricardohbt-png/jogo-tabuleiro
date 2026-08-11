@@ -2139,6 +2139,7 @@ const GS = (() => {
       armadilha_urso: 'ladino_armadilha_urso', fosso_estacas: 'ladino_fosso_estacas',
       fosso_envenenado: 'ladino_fosso_envenenado', rede: 'ladino_rede',
       armadilha_incendiaria: 'ladino_armadilha_incendiaria', mina_terrestre: 'ladino_mina_terrestre',
+      lamina_escondida: 'ladino_lamina_escondida', lamina_pendulo: 'ladino_lamina_pendulo',
       nuvem_gas: 'ladino_nuvem_gas',
     };
     const tipos = ['buraco'];
