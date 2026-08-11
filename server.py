@@ -1190,6 +1190,15 @@ LANG_STRINGS = _load_lang()
 
 _LANG_PARAM_RE = re.compile(r"\{(\w+)\}")
 
+def _param_texto(valor, lang):
+    """Um parâmetro pode ser ele próprio traduzível — é o caso de todo nome de
+    monstro, item ou habilidade que aparece dentro de uma frase. Sem isto, o
+    str() de um T devolveria o repr e a frase em inglês sairia com o nome em
+    português cravado."""
+    if isinstance(valor, T):
+        return t(valor.key, lang, **valor.params)
+    return str(valor)
+
 def t(key, lang=LANG_DEFAULT, **params):
     """Traduz uma chave. Sem tradução no idioma pedido → português. Sem a chave
     → devolve a própria chave (aparece na tela, mas nada quebra)."""
@@ -1200,7 +1209,9 @@ def t(key, lang=LANG_DEFAULT, **params):
     if params:
         # Substituição por nome (e não .format) para que uma chave sem o
         # parâmetro — ou uma chave { solta no texto — nunca levante exceção.
-        text = _LANG_PARAM_RE.sub(lambda m: str(params.get(m.group(1), m.group(0))), text)
+        text = _LANG_PARAM_RE.sub(
+            lambda m: _param_texto(params[m.group(1)], lang) if m.group(1) in params
+            else m.group(0), text)
     return text
 
 class T:
@@ -1231,6 +1242,13 @@ def _lang_valido(valor):
     """Normaliza o que veio do cliente. Qualquer coisa fora da lista vira o
     padrão — a mensagem vem da rede e não é confiável."""
     return valor if valor in LANG_SUPORTADOS else LANG_DEFAULT
+
+def nome_de(familia, ident):
+    """Nome de catálogo como texto TARDIO, para entrar numa frase e ser resolvido
+    no idioma de quem vai ler. Famílias: item, guilda, monstro, decor, magia,
+    armadilha, instrumento, classe. Id sem tradução cai na própria chave, então
+    prefira montar a frase com o nome já em mãos quando o item for autoral."""
+    return T(f"cat.{familia}.{ident}.nome")
 
 def _now_iso():
     """Timestamp UTC no formato 2026-07-18T14:00:00Z."""

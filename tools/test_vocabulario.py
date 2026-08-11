@@ -91,6 +91,26 @@ def _rodar_verificacoes():
     check("nenhuma chave órfã no catalogo.js gerado",
           sorted(k for k in no_arquivo if k not in plano) == [])
 
+    print("\n[8] Parâmetro que é ele próprio traduzível")
+    S.LANG_STRINGS["_teste.frase"] = {"pt": "{quem} atacou!", "en": "{quem} attacked!"}
+    check("resolve o T aninhado em inglês",
+          S.t("_teste.frase", "en", quem=S.T("cat.monstro.goblin.nome"))
+          == S.t("cat.monstro.goblin.nome", "en") + " attacked!")
+    check("resolve o T aninhado em português",
+          S.t("_teste.frase", "pt", quem=S.T("cat.monstro.goblin.nome")) == "Goblin atacou!")
+    check("parâmetro comum continua funcionando",
+          S.t("_teste.frase", "pt", quem="Thorin") == "Thorin atacou!")
+    check("T aninhado com parâmetro próprio também resolve",
+          S.t("_teste.frase", "pt", quem=S.T("narracao.abre_porta", nome="Lyra"))
+          == "🚪 **Lyra** abre uma porta! atacou!")
+    S.LANG_STRINGS.pop("_teste.frase", None)
+
+    print("\n[9] nome_de devolve um T com a chave certa")
+    marcado = S.nome_de("monstro", "goblin")
+    check("nome_de devolve T", isinstance(marcado, S.T))
+    check("nome_de monta a chave", marcado.key == "cat.monstro.goblin.nome")
+    check("nome_de rende o nome", S._t_render(marcado, "pt") == "Goblin")
+
 
 if __name__ == "__main__":
     print("=" * 62); print("  TESTE — Vocabulário (nomes de catálogo)"); print("=" * 62)
