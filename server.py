@@ -1093,11 +1093,11 @@ WEAPONS = {
     # 'forcaOuDestreza' da spec).
     "dagger":        {"id": "dagger",        "name": "Adaga",                "die": "1d4",  "stat": "str_", "finesse": True, "throw_range": 3, "categoria": "perfurante"},
     # â”€â”€ Armas iniciais da spec (EQUIPAMENTOS_INICIAIS) â”€â”€
-    "machado_basico":{"id": "machado_basico","name": "Machado de Ferro",     "die": "1d6",  "stat": "str_", "categoria": "cortante"},
+    "machado_basico":{"id": "machado_basico","name": "Machado de Ferro",     "die": "1d6",  "stat": "str_", "throw_range": 2, "categoria": "cortante"},
     "cajado_madeira":{"id": "cajado_madeira","name": "Cajado de Madeira",    "die": "1d6",  "stat": "str_", "reach": "cajado", "categoria": "contundente"},
     "instrumento":   {"id": "instrumento",   "name": "Instrumento Musical",  "die": None,   "stat": "dex"},
     "bordao":        {"id": "bordao",        "name": "Bordão",               "die": "1d6",  "stat": "str_", "categoria": "contundente"},
-    "lanca_curta":   {"id": "lanca_curta",   "name": "Lança Curta",          "die": "1d6",  "stat": "str_", "throw_range": 5, "categoria": "perfurante"},
+    "lanca_curta":   {"id": "lanca_curta",   "name": "Lança Curta",          "die": "1d6",  "stat": "str_", "throw_range": 4, "categoria": "perfurante"},
     # LanÃ§a: arma de ALCANCE corpo-a-corpo (reach="lanca" â†’ 2 retos / 1 diagonal,
     # ver _lanca_no_alcance). NÃƒO Ã© arma de duas mÃ£os â€” pode usar escudo.
     "lanca":         {"id": "lanca",         "name": "Lança",                "die": "1d8",  "stat": "str_", "reach": "lanca", "categoria": "perfurante"},
@@ -4101,7 +4101,7 @@ SHOP_WEAPONS = [
      "allowed_classes": ["mage", "bard", "rogue", "paladin", "warrior"]},
     {"id": "hand_crossbow", "name": "Besta de Mão",       "emoji": "🏹",  "die": "1d4",  "stat": "dex",  "price": 10, "range": 4, "categoria": "perfurante"},
     # â”€â”€â”€ MÃ©dias (1d6) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    {"id": "lanca_curta",   "name": "Lança Curta",        "emoji": "🔱",  "die": "1d6",  "stat": "str_", "price": 7,  "throw_range": 5, "categoria": "perfurante",
+    {"id": "lanca_curta",   "name": "Lança Curta",        "emoji": "🔱",  "die": "1d6",  "stat": "str_", "price": 7,  "throw_range": 4, "categoria": "perfurante",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     {"id": "bordao",        "name": "Bordão",             "emoji": "🪄",  "die": "1d6",  "stat": "str_", "price": 8,  "categoria": "contundente",
      "allowed_classes": ["cleric", "bard", "rogue", "paladin", "warrior"]},
@@ -4112,7 +4112,7 @@ SHOP_WEAPONS = [
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     {"id": "shortsword",    "name": "Espada Curta",       "emoji": "⚔️",  "die": "1d6",  "stat": "str_", "price": 12, "categoria": "cortante",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
-    {"id": "machado_basico","name": "Machado de Ferro",   "emoji": "🪓",  "die": "1d6",  "stat": "str_", "price": 12, "categoria": "cortante"},
+    {"id": "machado_basico","name": "Machado de Ferro",   "emoji": "🪓",  "die": "1d6",  "stat": "str_", "price": 12, "throw_range": 2, "categoria": "cortante"},
     {"id": "arco_curto",    "name": "Arco Curto",         "emoji": "🏹",  "die": "1d6",  "stat": "dex",  "price": 12, "range": 6, "categoria": "perfurante",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     # â”€â”€â”€ Pesadas (1d8) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -4499,11 +4499,37 @@ def validar_dungeon(defn):
     def tile_at(p):
         return tiles[p[1]][p[0]]
 
+    start_mode = defn.get("start_mode", "entrance")
+    if start_mode not in ("entrance", "hero_spawns"):
+        return False, "start_mode invalido (use entrance ou hero_spawns)."
+
     ent = defn.get("entrance")
-    if not (isinstance(ent, dict) and in_grid([ent.get("x"), ent.get("y")])):
-        return False, "entrance ausente ou fora do grid."
-    if tile_at([ent["x"], ent["y"]]) != FLOOR:
-        return False, "entrance precisa estar em FLOOR (1)."
+    if start_mode == "entrance":
+        if not (isinstance(ent, dict) and in_grid([ent.get("x"), ent.get("y")])):
+            return False, "entrance ausente ou fora do grid."
+        if tile_at([ent["x"], ent["y"]]) != FLOOR:
+            return False, "entrance precisa estar em FLOOR (1)."
+    else:
+        spawns = defn.get("hero_spawns")
+        if not isinstance(spawns, list) or not spawns:
+            return False, "hero_spawns deve ter ao menos uma posicao."
+        if len(spawns) > 6:
+            return False, "hero_spawns pode ter no maximo 6 posicoes."
+        usados = set()
+        for spawn in spawns:
+            if not isinstance(spawn, dict):
+                return False, "cada hero_spawn deve ser um objeto JSON."
+            cls_id = spawn.get("class_id")
+            if cls_id not in set(CLASSES):
+                return False, f"hero_spawn com class_id desconhecido: {cls_id!r}."
+            if cls_id in usados:
+                return False, f"ha mais de uma posicao inicial para {cls_id!r}."
+            usados.add(cls_id)
+            pos = spawn.get("pos")
+            if not in_grid(pos):
+                return False, f"hero_spawn de {cls_id!r} fora do grid: {pos!r}."
+            if tile_at(pos) != FLOOR:
+                return False, f"hero_spawn de {cls_id!r} precisa estar em FLOOR (1)."
 
     def _as_list(key):
         """defn[key] como lista (ausente/None → []); levanta sentinela se tipo errado."""
@@ -4517,16 +4543,30 @@ def validar_dungeon(defn):
         if not isinstance(r, dict):
             return False, "cada sala deve ser um objeto JSON."
     # Precisa de â‰¥1 sala e de uma sala de entrada â€” enter_dungeon usa a sala
-    # role=="entrance" (e cairia em IndexError com rooms vazio).
+    # role=="entrance" no modo tradicional; hero_spawns pode iniciar em salas comuns.
     if not rooms:
         return False, "a masmorra precisa de ao menos uma sala."
-    if not any(r.get("role") == "entrance" for r in rooms):
+    if start_mode == "entrance" and not any(r.get("role") == "entrance" for r in rooms):
         return False, "nenhuma sala com role 'entrance'."
     room_ids = {r.get("id") for r in rooms}
+    if start_mode == "hero_spawns":
+        for spawn in defn.get("hero_spawns", []):
+            room_id = spawn.get("room_id")
+            if room_id is not None and room_id not in room_ids:
+                return False, f"hero_spawn com room_id inexistente: {room_id!r}."
     for r in rooms:
         for d in (r.get("doors") or []):
             if not in_grid(d) or tile_at(d) != DOOR:
                 return False, f"porta {d} da sala {r.get('id')} não é um tile DOOR (2)."
+        orientations = r.get("door_orientations") or {}
+        if not isinstance(orientations, dict):
+            return False, f"door_orientations da sala {r.get('id')} deve ser um objeto."
+        declared = {f"{d[0]},{d[1]}" for d in (r.get("doors") or []) if isinstance(d, (list, tuple)) and len(d) >= 2}
+        for key, value in orientations.items():
+            if key not in declared:
+                return False, f"orientação de porta não declarada na sala {r.get('id')}: {key}."
+            if not isinstance(value, int) or isinstance(value, bool) or value not in (0, 1, 2, 3):
+                return False, f"orientação de porta inválida em {key}: {value!r}."
 
     monsters = _as_list("monsters")
     if not isinstance(monsters, list):
@@ -4609,8 +4649,13 @@ def validar_dungeon(defn):
     if ex is not None and not in_grid([ex.get("x"), ex.get("y")]):
         return False, "exit fora do grid."
 
-    if _contar_chao_alcancavel(tiles, w, h, [ent["x"], ent["y"]], limite=6) < 6:
-        return False, "menos de 6 casas de chão alcançáveis a partir da entrada."
+    if start_mode == "entrance":
+        if _contar_chao_alcancavel(tiles, w, h, [ent["x"], ent["y"]], limite=6) < 6:
+            return False, "menos de 6 casas de chão alcançáveis a partir da entrada."
+    else:
+        for spawn in defn.get("hero_spawns", []):
+            if _contar_chao_alcancavel(tiles, w, h, spawn["pos"], limite=1) < 1:
+                return False, f"hero_spawn de {spawn['class_id']!r} não está em uma casa caminhável."
 
     decors = defn.get("decorations", [])
     if not isinstance(decors, list):
@@ -4705,6 +4750,14 @@ def validar_dungeon(defn):
                 destino = decor_trap.get("saida")
                 if not in_grid(destino) or tile_at(destino) != FLOOR:
                     return False, "armadilha de teletransporte na decoração exige saída em chão."
+            if trap_tipo == "armadilha_maldicao":
+                mode = decor_trap.get("curse_mode", "aleatoria")
+                if mode not in {"especifica", "aleatoria"}:
+                    return False, "armadilha_maldicao na decoracao: curse_mode invalido."
+                if mode == "especifica" and decor_trap.get("curse_id") not in MALDICOES:
+                    return False, "armadilha_maldicao na decoracao exige curse_id valido."
+                if mode == "aleatoria" and _maldicao_categoria(decor_trap.get("curse_category", "leve")) not in {"leve", "media", "grave"}:
+                    return False, "armadilha_maldicao na decoracao: curse_category invalida."
         img = de.get("image")
         if img is not None:
             if not isinstance(img, str) or os.path.basename(img) != img \
@@ -4748,9 +4801,17 @@ def validar_dungeon(defn):
     _o = defn.get("objectives") or {}
     if _o.get("primary"): _objs.append(_o["primary"])
     _objs.extend(_o.get("secondary") or [])
+    ex = defn.get("exit")
+    if ex is not None:
+        if not (isinstance(ex, dict) and in_grid([ex.get("x"), ex.get("y")])):
+            return False, "exit ausente ou fora do grid."
+        if tile_at([ex["x"], ex["y"]]) != FLOOR:
+            return False, "exit precisa estar em FLOOR (1)."
     for _ob in _objs:
         if isinstance(_ob, dict) and _ob.get("type") == "salas_obrigatorias" and not _rooms_req:
             return False, "objetivo salas_obrigatorias sem salas marcadas como obrigatórias."
+        if isinstance(_ob, dict) and _ob.get("type") == "all_heroes_at_exit" and ex is None:
+            return False, "objetivo all_heroes_at_exit exige uma saída (exit)."
 
     for _f in (defn.get("falas") or []):
         if not isinstance(_f, dict):
@@ -6879,6 +6940,8 @@ class GameRoom:
         self.opened_doors = set()  # portas avulsas abertas nesta expedição
         self.magic_reveal = {}  # (x,y) -> rodada de expiraÃ§Ã£o (ClarividÃªncia revela interior)
         self.stairs_pos = None  # [x, y] â€” entrance staircase tile
+        self.start_mode = "entrance"
+        self.hero_spawns = []
         self.temp_def = {}      # pid -> bonus_def (lasts 1 turn)
         self.temp_def_turnos = {}  # pid -> turnos restantes (>1 = duraÃ§Ã£o estendida; Aprimorar Magia do mago)
         self.smoke = {}         # mid -> True (monsters miss next attack)
@@ -8392,6 +8455,8 @@ class GameRoom:
         m = self.monsters.get(alvo_id)
         if not m or m.get("hp", 0) <= 0:
             await self.send_to(p["id"], {"type": "error", "msg": T("erro.alvo_invalido")}); return False
+        if not self._tem_linha_de_visao(p["pos"], m["pos"]):
+            await self.send_to(p["id"], {"type": "error", "msg": "🧱 Uma parede ou porta fechada bloqueia a Nota Cortante."}); return False
         if not self._no_raio(p, m, st["alcance"]):
             await self.send_to(p["id"], {"type": "error",
                 "msg": T("erro.alvo_fora_do_alcance_casas", alcance=st["alcance"])}); return False
@@ -9166,6 +9231,12 @@ class GameRoom:
                 "looted": False,
                 "locked": bool(r.get("locked", role != "entrance")),
                 "doors": [list(d) for d in r.get("doors", [])],
+                # Rotação relativa à orientação inferida pelas paredes. Campo
+                # ausente mantém o comportamento dos mapas antigos.
+                "door_orientations": {
+                    str(k): int(v) for k, v in (r.get("door_orientations") or {}).items()
+                    if isinstance(k, str) and isinstance(v, int) and not isinstance(v, bool) and v in (0, 1, 2, 3)
+                },
             })
 
         # Mapa porta -> salas que ela destranca.
@@ -9173,6 +9244,14 @@ class GameRoom:
         for room in self.rooms:
             for dx, dy in room.get("doors", []):
                 self.door_rooms.setdefault((dx, dy), []).append(room["id"])
+
+        self.start_mode = defn.get("start_mode", "entrance")
+        self.hero_spawns = [
+            {"class_id": s["class_id"], "pos": list(s["pos"]),
+             "room_id": s.get("room_id")}
+            for s in (defn.get("hero_spawns") or [])
+            if isinstance(s, dict) and s.get("class_id") and isinstance(s.get("pos"), list)
+        ]
 
         # Monstros em casa exata (sem distribuiÃ§Ã£o/companheiros automÃ¡ticos).
         self.monsters = {}
@@ -9271,9 +9350,11 @@ class GameRoom:
 
         self.falas = [dict(f, disparada=False) for f in (defn.get("falas") or [])]
 
-        # Stairs = ponto de entrada.
-        ent = defn["entrance"]
-        self.stairs_pos = [ent["x"], ent["y"]]
+        # Mapas tradicionais têm uma escada única. O modo hero_spawns não tem
+        # escada física de entrada/saída; a saída autorada continua sendo exit.
+        ent = defn.get("entrance")
+        self.stairs_pos = ([ent["x"], ent["y"]]
+                           if self.start_mode == "entrance" and ent else None)
 
         # Fase 3: instancia o que estava inerte.
         ex = defn.get("exit")
@@ -9791,6 +9872,23 @@ class GameRoom:
             return
         await self.broadcast_city_state()
 
+    def _hero_spawn_by_class(self):
+        """Posições iniciais autoradas indexadas pela classe do herói."""
+        return {s.get("class_id"): list(s.get("pos"))
+                for s in self.hero_spawns
+                if s.get("class_id") and isinstance(s.get("pos"), list)}
+
+    def _room_containing_point(self, pos):
+        if not isinstance(pos, (list, tuple)) or len(pos) != 2:
+            return None
+        return next((r for r in self.rooms if room_contains(r, pos[0], pos[1])), None)
+
+    def _start_point_for_player(self, player, fallback=None):
+        """Retorna a âncora inicial/reentrada de um herói."""
+        if self.start_mode == "hero_spawns":
+            return self._hero_spawn_by_class().get(player.get("class_id"))
+        return list(fallback or self.stairs_pos or [0, 0])
+
     async def enter_dungeon(self, pid, from_world_adventure=False):
         if self.active_scene:
             await self.send_to(pid, {"type":"error", "msg": T("erro.conclua_ou_pule_a_cena_antes_de_entrar_n")})
@@ -9823,12 +9921,24 @@ class GameRoom:
         # limpo, entÃ£o mapa/monstros/baÃºs/portas/nÃ©voa/armadilhas ficam exatamente
         # como o herÃ³i deixou. Ver self.dungeon_generated.
         nova = not self.dungeon_generated
-        pids = list(self.players.keys())
+        pids = [pid2 for pid2, player in self.players.items()
+                if not player.get("is_master") and player.get("class_id")]
         # Campanha: a 1Âª entrada de cada fase carrega a masmorra da fase atual.
         if self.mode == "campaign" and self.campaign and nova:
             self.dungeon_def = carregar_dungeon(_fase_file(self.campaign["dungeons"][self.campaign_phase]))
             self._campaign_outro = None   # a nova fase nÃ£o mostra o encerramento da anterior
         autorada = self.mode in ("authored", "campaign") and self.dungeon_def is not None
+        start_mode = self.dungeon_def.get("start_mode", "entrance") if autorada else "entrance"
+        if start_mode == "hero_spawns":
+            configured = {s.get("class_id") for s in (self.dungeon_def.get("hero_spawns") or [])
+                          if isinstance(s, dict)}
+            missing = [self.players[pid2].get("class_id") for pid2 in pids
+                       if self.players[pid2].get("class_id") not in configured]
+            if missing:
+                self.phase = "city"
+                await self.send_to(pid, {"type": "error",
+                    "msg": "Esta masmorra não possui posição inicial para: " + ", ".join(missing)})
+                return
 
         if nova:
             self.corpses = {}        # cadÃ¡veres nÃ£o persistem entre masmorras distintas
@@ -9855,9 +9965,12 @@ class GameRoom:
                 self.tiles, self.rooms = generate_dungeon()
 
             # Saída pela escada: autorável por masmorra; procedural sempre permite.
-            self.saida_permitida = bool(self.dungeon_def.get("saida_permitida", True)) if autorada else True
+            self.saida_permitida = (bool(self.dungeon_def.get("saida_permitida", True))
+                                    and start_mode != "hero_spawns") if autorada else True
 
             if not autorada:
+                self.start_mode = "entrance"
+                self.hero_spawns = []
                 # Mapa porta -> salas que ela destranca (uma porta pode servir 2 salas)
                 self.door_rooms = {}
                 for room in self.rooms:
@@ -9869,14 +9982,19 @@ class GameRoom:
         # O BFS de `_spawn_tiles_near` só devolve CHÃO, então vale para os dois
         # modos: no procedural os offsets fixos ignoravam o mapa e podiam pousar
         # um herói DENTRO de uma parede quando a sala de entrada era estreita.
-        if autorada:
+        if autorada and self.start_mode != "hero_spawns":
             ent_pt = [self.dungeon_def["entrance"]["x"], self.dungeon_def["entrance"]["y"]]
-        else:
+        elif self.start_mode != "hero_spawns":
             ent_pt = [entrance["cx"], entrance["cy"]]
-        spawn_tiles = self._spawn_tiles_near(ent_pt, len(pids))
+        else:
+            ent_pt = [0, 0]
+        spawn_tiles = self._spawn_tiles_near(ent_pt, len(pids)) if self.start_mode != "hero_spawns" else []
         offsets = [(0,0),(1,0),(-1,0),(0,1),(1,1),(-1,1)]
         for i, pid2 in enumerate(pids):
-            if spawn_tiles:
+            hero_start = self._start_point_for_player(self.players[pid2])
+            if self.start_mode == "hero_spawns":
+                self.players[pid2]["pos"] = list(hero_start)
+            elif spawn_tiles:
                 self.players[pid2]["pos"] = list(spawn_tiles[i % len(spawn_tiles)])
             else:
                 # Entrada sem nenhuma casa de chão alcançável (masmorra malformada):
@@ -9922,8 +10040,20 @@ class GameRoom:
         if not autorada:
             self.stairs_pos = [entrance["cx"], entrance["cy"]]
 
-        # Reveal entrance (room + 1-tile border so surrounding walls are visible)
-        self._reveal_room(entrance)
+        # Reveal a sala inicial por herói; no modo tradicional há uma única sala.
+        if self.start_mode == "hero_spawns":
+            revealed_rooms = set()
+            for pid2 in pids:
+                pos = self.players[pid2]["pos"]
+                room = self._room_containing_point(pos)
+                if room and room["id"] not in revealed_rooms:
+                    self._reveal_room(room)
+                    revealed_rooms.add(room["id"])
+                elif not room:
+                    self._reveal_around(pos[0], pos[1], radius=1)
+        else:
+            # Reveal entrance (room + 1-tile border so surrounding walls are visible)
+            self._reveal_room(entrance)
 
         self.initiative_active = True
         self._rebuild_initiative()
@@ -10359,10 +10489,14 @@ class GameRoom:
         for dy in range(-radius, radius+1):
             for dx in range(-radius, radius+1):
                 x, y = px+dx, py+dy
+                if not (0 <= x < self.map_w and 0 <= y < self.map_h):
+                    continue
                 # NÃ£o revela o interior de uma sala trancada (porta fechada
                 # esconde o conteÃºdo). A prÃ³pria porta, no anel externo, Ã©
                 # revelada normalmente.
                 if self._tile_in_locked_room(x, y):
+                    continue
+                if not self._tem_linha_de_visao([px, py], [x, y]):
                     continue
                 if self._tall_oclui_caminho(px, py, x, y):
                     continue
@@ -11071,6 +11205,8 @@ class GameRoom:
             return self._lanca_no_alcance_jogador(p["pos"], target)
         if w.get("reach") == "cajado":
             return self._cajado_no_alcance_jogador(p["pos"], target)
+        if w.get("id") == "lanca_curta":
+            return self._lanca_curta_no_alcance_jogador(p["pos"], target)
         return self._is_adjacent_to_monster(p["pos"], target)
 
     def _tile_no_alcance_arma_distancia(self, p, tile, alcance):
@@ -11215,6 +11351,12 @@ class GameRoom:
                 if not self._cajado_no_alcance_jogador(p["pos"], target):
                     await self.send_to(pid, {
                         "type": "error",
+                        "msg": T("erro.alvo_fora_de_alcance_aproxime_diagonal", alvo=target["name"])
+                    })
+                    return
+            elif (weapon_here or {}).get("id") == "lanca_curta":
+                if not self._lanca_curta_no_alcance_jogador(p["pos"], target):
+                    await self.send_to(pid, {"type": "error",
                         "msg": T("erro.alvo_fora_de_alcance_aproxime_diagonal", alvo=target["name"])
                     })
                     return
@@ -14454,7 +14596,7 @@ class GameRoom:
         if self.phase != "playing":
             return   # a sala já voltou à cidade — não há masmorra para reentrar
         # Reaparece NA escada; se ela estiver ocupada, numa casa livre ao lado.
-        escada = list(self.stairs_pos or [0, 0])
+        escada = list(self._start_point_for_player(p) or self.stairs_pos or [0, 0])
         ocupada = any(list(q["pos"]) == escada for q in self.players.values()
                       if q["id"] != pid and self._ativo(q)) or \
                   any(list(m["pos"]) == escada for m in self.monsters.values() if m["hp"] > 0)
@@ -15126,6 +15268,57 @@ class GameRoom:
             await self.gm_say("🔲 O baú está vazio e desaparece.")
 
         await self.push_state()
+
+    async def handle_take_all_from_chest(self, pid, chest_id):
+        """Tenta coletar todo o conteúdo possível de um baú em uma única ação."""
+        p = self.players.get(pid)
+        chest = self.chests.get(chest_id)
+        if not p or not p.get("alive"):
+            return
+        if not chest:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.bau_nao_encontrado")}); return
+
+        cx, cy = chest["pos"]
+        px, py = p["pos"]
+        if max(abs(px - cx), abs(py - cy)) > 2:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.muito_longe_do_bau")}); return
+        if chest.get("key_objective"):
+            self.key_chest_opened = True
+
+        # Ouro não ocupa espaço e sempre pode ser recolhido.
+        if chest.get("gold", 0) > 0:
+            amount = chest["gold"]
+            recebido = await self._ganhar_ouro(p, amount, "do baú")
+            chest["gold"] = 0
+            await self.gm_say(f"🪙 **{p['name']}** pegou **{recebido}** ouros do baú!")
+
+        # Recomeça a varredura depois de cada sucesso: a lista muda de índice.
+        # Se um item não couber, tenta os demais antes de desistir.
+        while True:
+            chest = self.chests.get(chest_id)
+            if not chest or not chest.get("items"):
+                break
+            progresso = False
+            for idx in range(len(chest["items"])):
+                antes = len(chest["items"])
+                await self.handle_take_from_chest(pid, chest_id, "item", idx)
+                chest = self.chests.get(chest_id)
+                if not chest:
+                    return
+                if len(chest["items"]) < antes:
+                    progresso = True
+                    break
+            if not progresso:
+                break
+
+        # handle_take_from_chest já transmite estados após cada item; trate aqui
+        # o caso em que o baú continha somente ouro e ficou vazio.
+        chest = self.chests.get(chest_id)
+        if chest and chest.get("gold", 0) <= 0 and not chest.get("items"):
+            del self.chests[chest_id]
+            await self.gm_say("🔲 O baú está vazio e desaparece.")
+        if chest_id in self.chests:
+            await self.push_state()
 
     async def handle_drop_item(self, pid, source, index=None, slot_key=None):
         """Larga um item no chão (1ª casa adjacente livre). Ação LIVRE, a qualquer
@@ -17802,6 +17995,12 @@ class GameRoom:
             if max(abs(tx - px), abs(ty - py)) == 1:
                 return True
         return False
+
+    def _lanca_curta_no_alcance_jogador(self, pos, m):
+        """A Lança Curta atinge qualquer uma das 8 casas adjacentes."""
+        px, py = pos
+        return any(max(abs(tx - px), abs(ty - py)) == 1
+                   for tx, ty in self._monster_tiles(m))
 
     def _em_alcance_ogro(self, m, alvo_pos):
         """True se o alvo está ao alcance de ataque do ogro (lança = alcance estendido)."""
@@ -20607,7 +20806,7 @@ class GameRoom:
             "icone": meta["icone"], "nome": meta["nome"], "visivel": d.get("trap_revealed", False),
             "ativada": False, "aliada": False, "so_luccas": False, "efeitos_ativos": [],
         }
-        for key in ("veneno_id", "saida"):
+        for key in ("veneno_id", "saida", "curse_mode", "curse_id", "curse_category"):
             if key in trap:
                 arm[key] = deepcopy(trap[key])
         return arm
@@ -20789,6 +20988,42 @@ class GameRoom:
         await self.send_to(pid, {"type": "decor_loot", "decor_id": d["id"],
                                   "gold": loot["gold"], "items": loot["items"]})
         await self.push_state()
+
+    async def handle_take_all_from_decor(self, pid, decor_id):
+        """Tenta coletar todo o loot possível de um container decorativo."""
+        p = self.players.get(pid)
+        d = self._decor_by_id(decor_id)
+        if not p or not p.get("alive"):
+            return
+        if not d or not d.get("loot"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.objeto_sem_loot")}); return
+        if not self._adjacente_a_decor(p["pos"], d):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.muito_longe_do_objeto")}); return
+
+        while True:
+            d = self._decor_by_id(decor_id)
+            loot = d.get("loot") if d else None
+            if not loot:
+                break
+            progresso = False
+            if loot.get("gold", 0) > 0:
+                await self.handle_take_from_decor(pid, decor_id, "gold", 0)
+                progresso = True
+                continue
+            if not loot.get("items"):
+                break
+            for idx in range(len(loot["items"])):
+                antes = len(loot["items"])
+                await self.handle_take_from_decor(pid, decor_id, "item", idx)
+                d = self._decor_by_id(decor_id)
+                loot = d.get("loot") if d else None
+                if not loot:
+                    return
+                if len(loot["items"]) < antes:
+                    progresso = True
+                    break
+            if not progresso:
+                break
 
     def _serializar_decoracoes(self):
         """Payload de render do cliente (sem vazar o conteúdo do loot)."""
@@ -24839,6 +25074,14 @@ class GameRoom:
         if t == "reach_exit":
             return self.exit_pos is not None and any(
                 p["pos"] == self.exit_pos for p in self.players.values() if p.get("alive"))
+        if t == "all_heroes_at_exit":
+            heroes = [p for p in self.players.values()
+                      if not p.get("is_master") and p.get("alive") and not p.get("fora_masmorra")]
+            if not self.exit_pos or not heroes:
+                return False
+            return all(max(abs(p["pos"][0] - self.exit_pos[0]),
+                           abs(p["pos"][1] - self.exit_pos[1])) <= 1
+                       for p in heroes)
         if t == "open_key_chest":
             return bool(getattr(self, "key_chest_opened", False))
         if t == "rescue_prisoner":
@@ -25098,7 +25341,9 @@ class GameRoom:
     def _is_turn(self, pid):
         if self.phase != "playing":
             return False
-        return self.current_pid() == pid or self.last_stand_pid == pid
+        return (self.current_pid() == pid
+                or self.last_stand_pid == pid
+                or self.animados_phase_pid == pid)
 
     # Raio (Chebyshev) de visÃ£o AO VIVO ao redor de cada minion (animado/elemental).
     # Recomputado a cada broadcast: revela Ã¡rea + monstros enquanto o minion estÃ¡ lÃ¡
@@ -25121,6 +25366,8 @@ class GameRoom:
                         continue
                     # Mesma regra do herÃ³i: nÃ£o revela o interior de sala trancada.
                     if self._tile_in_locked_room(x, y):
+                        continue
+                    if not self._tem_linha_de_visao([ax, ay], [x, y]):
                         continue
                     tiles.add((x, y))
         return tiles
@@ -25247,6 +25494,8 @@ class GameRoom:
             "explored": [list(e) for e in self.explored],
             "revealed": [list(k) for k in self._live_reveal_tiles()],   # ClarividÃªncia + visÃ£o ao vivo dos minions
             "stairs_pos": self.stairs_pos,
+            "start_mode": self.start_mode,
+            "hero_spawns": [dict(s, pos=list(s["pos"])) for s in self.hero_spawns],
             # Saída individual: o cliente confirma o custo antes de enviar exit_dungeon.
             "saida_permitida": self.saida_permitida,
             "custo_saida": dict(zip(("fome", "sede"), self._custo_viagem_saida())),
@@ -25829,11 +26078,16 @@ async def handler(ws):
                         await room.broadcast_city_state()
                         await room.gm_say(f"🔌 **{name}** reconectou-se à aventura.")
                     else:   # playing â€” o personagem REENTRA pela escada de entrada
-                        ent = next((r for r in room.rooms if r["role"] == "entrance"),
-                                   (room.rooms[0] if room.rooms else None))
-                        if ent:
-                            alvo["pos"] = [ent["cx"], ent["cy"]]
-                            alvo.pop("facing", None)
+                        if room.start_mode == "hero_spawns":
+                            start = room._start_point_for_player(alvo)
+                            if start:
+                                alvo["pos"] = list(start)
+                        else:
+                            ent = next((r for r in room.rooms if r["role"] == "entrance"),
+                                       (room.rooms[0] if room.rooms else None))
+                            if ent:
+                                alvo["pos"] = [ent["cx"], ent["cy"]]
+                        alvo.pop("facing", None)
                         await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
                         await ws.send(json.dumps({"type": "enter_dungeon"}))
                         room._iniciar_timer_turno()   # reativa o timer caso estivesse parado
@@ -26075,6 +26329,8 @@ async def handler(ws):
                     if room: await room.handle_take_from_chest(
                         pid, _key(msg.get("chest_id")), msg.get("kind"), _num(msg.get("index"), 0)
                     )
+                elif t == "take_all_from_chest":
+                    if room: await room.handle_take_all_from_chest(pid, _key(msg.get("chest_id")))
 
                 elif t == "interagir_decor":
                     if room: await room.handle_interagir_decor(pid, msg.get("decor_id"))
@@ -26085,6 +26341,8 @@ async def handler(ws):
                 elif t == "take_from_decor":
                     if room: await room.handle_take_from_decor(
                         pid, msg.get("decor_id"), msg.get("kind"), msg.get("index", 0))
+                elif t == "take_all_from_decor":
+                    if room: await room.handle_take_all_from_decor(pid, msg.get("decor_id"))
 
                 elif t == "world_travel":
                     if room: await room.handle_world_travel(pid, msg.get("destination"))
@@ -28150,21 +28408,22 @@ def _preview_dungeon_state(defn):
     if not isinstance(defn.get("tiles"), list) or not defn["tiles"]:
         return False, "Tiles ausentes — nada a mostrar.", avisos
 
-    # Entrada é obrigatória para load_authored_dungeon. Enquanto o autor desenha
-    # ela costuma faltar: supre com a primeira casa de chão.
-    ent = defn.get("entrance")
-    if not (isinstance(ent, dict) and isinstance(ent.get("x"), int)
-            and isinstance(ent.get("y"), int)):
-        achou = None
-        for y, linha in enumerate(defn["tiles"]):
-            for x, t in enumerate(linha):
-                if t != WALL:
-                    achou = {"x": x, "y": y}
+    # Entrada é obrigatória para o modo tradicional. No modo hero_spawns a
+    # prévia pode carregar sem escada, mesmo durante a construção do mapa.
+    if defn.get("start_mode", "entrance") != "hero_spawns":
+        ent = defn.get("entrance")
+        if not (isinstance(ent, dict) and isinstance(ent.get("x"), int)
+                and isinstance(ent.get("y"), int)):
+            achou = None
+            for y, linha in enumerate(defn["tiles"]):
+                for x, t in enumerate(linha):
+                    if t != WALL:
+                        achou = {"x": x, "y": y}
+                        break
+                if achou:
                     break
-            if achou:
-                break
-        defn["entrance"] = achou or {"x": 0, "y": 0}
-        avisos.append("Sem entrada definida — usei uma casa de chão só para a prévia.")
+            defn["entrance"] = achou or {"x": 0, "y": 0}
+            avisos.append("Sem entrada definida — usei uma casa de chão só para a prévia.")
 
     # Sala é obrigatória: os monstros sem room_id caem em self.rooms[0].
     if not defn.get("rooms"):

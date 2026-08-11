@@ -6967,6 +6967,183 @@ window.EDITOR_CATALOG = {
       "name": "Ensaio sobre a Cegueira"
     }
   ],
+  "curses": [
+    {
+      "id": "maos_tremulas",
+      "name": "Mãos Trêmulas",
+      "category": "leve",
+      "description": "-2 em ataques",
+      "progressive": false
+    },
+    {
+      "id": "olhos_escuridao",
+      "name": "Olhos da Escuridão",
+      "category": "leve",
+      "description": "-2 alcance de visão",
+      "progressive": false
+    },
+    {
+      "id": "passos_pesados",
+      "name": "Passos Pesados",
+      "category": "leve",
+      "description": "mover custa +1 sede",
+      "progressive": false
+    },
+    {
+      "id": "lamina_enferrujada",
+      "name": "Lâmina Enferrujada",
+      "category": "leve",
+      "description": "-2 dano físico",
+      "progressive": false
+    },
+    {
+      "id": "fraqueza_arcana",
+      "name": "Fraqueza Arcana",
+      "category": "leve",
+      "description": "magias causam metade do dano",
+      "progressive": false
+    },
+    {
+      "id": "fortuna_roubada",
+      "name": "Fortuna Roubada",
+      "category": "leve",
+      "description": "recebe metade do ouro",
+      "progressive": false
+    },
+    {
+      "id": "azar_sobrenatural",
+      "name": "Azar Sobrenatural",
+      "category": "leve",
+      "description": "primeiro 20 natural não crita",
+      "progressive": false
+    },
+    {
+      "id": "marca_cacador",
+      "name": "Marca do Caçador",
+      "category": "leve",
+      "description": "inimigos recebem +1 contra você",
+      "progressive": false
+    },
+    {
+      "id": "corpo_exausto",
+      "name": "Corpo Exausto",
+      "category": "media",
+      "description": "ações custam +1 fome e sede",
+      "progressive": false
+    },
+    {
+      "id": "carne_fragil",
+      "name": "Carne Frágil",
+      "category": "media",
+      "description": "+2 dano recebido",
+      "progressive": false
+    },
+    {
+      "id": "sangramento_profano",
+      "name": "Sangramento Profano",
+      "category": "media",
+      "description": "1 dano no início do turno após sofrer dano",
+      "progressive": false
+    },
+    {
+      "id": "correntes_invisiveis",
+      "name": "Correntes Invisíveis",
+      "category": "media",
+      "description": "-3 movimento",
+      "progressive": false
+    },
+    {
+      "id": "dor_constante",
+      "name": "Dor Constante",
+      "category": "media",
+      "description": "ações causam 1 dano",
+      "progressive": false
+    },
+    {
+      "id": "alma_quebrada",
+      "name": "Alma Quebrada",
+      "category": "media",
+      "description": "não recebe bônus de aliados",
+      "progressive": false
+    },
+    {
+      "id": "aura_profana",
+      "name": "Aura Profana",
+      "category": "media",
+      "description": "aliados adjacentes: -1 ataque",
+      "progressive": false
+    },
+    {
+      "id": "maldicao_ferrugem",
+      "name": "Maldição da Ferrugem",
+      "category": "media",
+      "description": "equipamento degrada após combate",
+      "progressive": false
+    },
+    {
+      "id": "fome_eterna",
+      "name": "Fome Eterna",
+      "category": "grave",
+      "description": "consumo sobrenatural de fome",
+      "progressive": true
+    },
+    {
+      "id": "sede_infinita",
+      "name": "Sede Infinita",
+      "category": "grave",
+      "description": "consumo sobrenatural de sede",
+      "progressive": true
+    },
+    {
+      "id": "tocado_morte",
+      "name": "Tocado pela Morte",
+      "category": "grave",
+      "description": "recuperação cada vez menos eficaz",
+      "progressive": true
+    },
+    {
+      "id": "licantropia",
+      "name": "Licantropia",
+      "category": "grave",
+      "description": "transformação bestial",
+      "progressive": true
+    },
+    {
+      "id": "silencio_deuses",
+      "name": "Silêncio dos Deuses",
+      "category": "grave",
+      "description": "não lança magias",
+      "progressive": false
+    },
+    {
+      "id": "voz_quebrada",
+      "name": "Voz Quebrada",
+      "category": "grave",
+      "description": "bardo não usa Canções",
+      "progressive": false
+    },
+    {
+      "id": "espirito_covarde",
+      "name": "Espírito Covarde",
+      "category": "grave",
+      "description": "-2 Vontade; falha contra medo",
+      "progressive": false
+    },
+    {
+      "id": "eco_morte",
+      "name": "Eco da Morte",
+      "category": "grave",
+      "description": "aliado morto causa 10 dano",
+      "progressive": false
+    },
+    {
+      "id": "corrupcao_crescente",
+      "name": "Corrupção Crescente",
+      "category": "grave",
+      "description": "gera doenças e maldições",
+      "progressive": true
+    }
+  ],
   "decorations": [
     {
       "type": "cama",

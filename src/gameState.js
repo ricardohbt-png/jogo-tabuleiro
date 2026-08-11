@@ -37,6 +37,7 @@ const GS = (() => {
   let cityState       = null;   // latest city_state message from server
   let pendingAction   = null;   // reserved for future use
   let pendingSkill    = null;   // skill waiting for map-click target
+  let pendingInstrumento = null; // instrumento aguardando alvo no mapa: {id, base, alcance}
   let pendingThrow    = null;   // arremessável aguardando alvo no mapa: {id, alcance}
   let warriorSelected = [];     // warrior: ids de habilidades ARMADAS (toggle) —
                                 // custo de fome/sede cobrado só na ação (ataque)
@@ -366,7 +367,7 @@ const GS = (() => {
     victorCoiceBravo: {
       moedas: 20,
       equipado: {
-        arma: { id: 'machado_basico', nome: 'Machado de Ferro', dano: '1d6', atributo: 'forca', escudo: true, arremesso: false, preco: 0 },
+        arma: { id: 'machado_basico', nome: 'Machado de Ferro', dano: '1d6', atributo: 'forca', escudo: true, arremesso: true, alcanceArremesso: 2, preco: 0 },
         armadura: null, cabeca: null, secundario: null, magico1: null, magico2: null
       },
       inventario: [null, null, null, null, null, null]
@@ -525,7 +526,8 @@ const GS = (() => {
     martelo:         { id:'martelo',         nome:'Martelo',              tipo:'arma', loja:'ferreiro', preco:10, dano:'1d6', atributo:'forca', escudo:true,  arremesso:false, duasMaos:false, permitidoPara:['victorCoiceBravo','richardCavaleiro','lewis'] },
     cajado:          { id:'cajado',          nome:'Cajado',               tipo:'arma', loja:'ferreiro', preco:10, dano:'1d6', atributo:'inteligencia', escudo:false, arremesso:false, duasMaos:false, permitidoPara:['lewis','pedro'] },
     espada_curta:    { id:'espada_curta',    nome:'Espada Curta',         tipo:'arma', loja:'ferreiro', preco:15, dano:'1d6', atributo:'forca', escudo:true,  arremesso:false, duasMaos:false, permitidoPara:['victorCoiceBravo','richardCavaleiro','lewis','luccas','henrique'] },
-    lanca_curta:     { id:'lanca_curta',     nome:'Lança Curta',          tipo:'arma', loja:'ferreiro', preco:20, dano:'1d6', atributo:'forca', escudo:true,  arremesso:true,  alcanceArremesso:3, duasMaos:false, alcanceEspecial:{ descricao:'Adjacente + casas laterais' }, permitidoPara:['victorCoiceBravo','richardCavaleiro','lewis','luccas','henrique'] },
+    machado_basico:  { id:'machado_basico',  nome:'Machado de Ferro',      tipo:'arma', loja:'ferreiro', preco:0,  dano:'1d6', atributo:'forca', escudo:true,  arremesso:true,  alcanceArremesso:2, duasMaos:false, permitidoPara:['victorCoiceBravo'] },
+    lanca_curta:     { id:'lanca_curta',     nome:'Lança Curta',          tipo:'arma', loja:'ferreiro', preco:20, dano:'1d6', atributo:'forca', escudo:true,  arremesso:true,  alcanceArremesso:4, duasMaos:false, alcanceEspecial:{ descricao:'Todos os 8 quadrados adjacentes' }, permitidoPara:['victorCoiceBravo','richardCavaleiro','lewis','luccas','henrique'] },
     besta_mao:       { id:'besta_mao',       nome:'Besta de Mão',         tipo:'armaDistancia', loja:'ferreiro', preco:20, dano:'1d4', atributo:'destreza', bonusDano:'destreza', alcance:4, linhaVisao:true, slotSecundario:'livre',   duasMaos:false, permitidoPara:['todos'] },
     espada_longa:    { id:'espada_longa',    nome:'Espada Longa',         tipo:'arma', loja:'ferreiro', preco:25, dano:'1d8', atributo:'forca', escudo:true,  arremesso:false, duasMaos:false, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
     arco_curto:      { id:'arco_curto',      nome:'Arco Curto',           tipo:'armaDistancia', loja:'ferreiro', preco:30, dano:'1d6', atributo:'destreza', bonusDano:'destreza', alcance:6, linhaVisao:true, slotSecundario:'flechas', duasMaos:true,  permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
@@ -849,6 +851,27 @@ const GS = (() => {
     return { open, closed };
   }
 
+  // Retorna os giros de 90° gravados pelo editor. O valor é relativo à
+  // orientação inferida pelas paredes; null significa mapa antigo/procedural,
+  // para que o renderer preserve seu fallback geométrico.
+  function doorOrientation(state, x, y) {
+    const key = `${x},${y}`;
+    const top = state && state.door_orientations;
+    if (top && Object.prototype.hasOwnProperty.call(top, key)) {
+      const n = Number(top[key]);
+      return Number.isFinite(n) ? ((Math.round(n) % 4) + 4) % 4 : null;
+    }
+    for (const room of (state && state.rooms) || []) {
+      if (!(room.doors || []).some(d => d[0] === x && d[1] === y)) continue;
+      const map = room.door_orientations;
+      if (map && Object.prototype.hasOwnProperty.call(map, key)) {
+        const n = Number(map[key]);
+        return Number.isFinite(n) ? ((Math.round(n) % 4) + 4) % 4 : null;
+      }
+    }
+    return null;
+  }
+
   // Tile transponível por pathfinding: chão, ou porta de sala ABERTA.
   // Material sólido/opaco na casa (x,y), lido do game_state mais recente.
   function _matSolido(x, y) {
@@ -944,7 +967,7 @@ const GS = (() => {
       }
       if (x === x1 && y === y1) break;
       if (y < 0 || x < 0 || y >= tiles.length || x >= tiles[0].length) return false;
-      if (tiles[y][x] === TILE_WALL || closed.has(`${x},${y}`)) return false;
+      if (_losBlocks(tiles, closed, x, y)) return false;
     }
     return true;
   }
@@ -1102,6 +1125,7 @@ const GS = (() => {
     pendingSkill = null;
     pendingAction = null;
     pendingThrow = null;
+    pendingInstrumento = null;
     activeShop = null;
     activeScene = null;
     pendingShopOpen = null;
@@ -1275,13 +1299,18 @@ const GS = (() => {
           if (me) myPid = me.id;
         }
         isMyTurn = msg.test_mode ? msg.master_pid === myPid
-          : msg.current_turn === myPid || msg.last_stand_pid === myPid;
+          : msg.current_turn === myPid || msg.last_stand_pid === myPid
+            || msg.animados_turn === myPid;
         // (Sobrevivência cliente 0–100 desativada — fome/sede são autoritativos do
         // servidor, escala 0–100. Sem consumo/colapso fantasma no cliente.)
         // Auto-clear pending skill when turn ends or action was processed
         if (pendingSkill && myPid) {
           const sme = msg.players.find(p => p.id === myPid);
           if (!isMyTurn || (sme && sme.action_done)) pendingSkill = null;
+        }
+        if (pendingInstrumento && myPid) {
+          const sme = msg.players.find(p => p.id === myPid);
+          if (!isMyTurn || (sme && sme.action_done)) pendingInstrumento = null;
         }
         // Warrior: ao deixar de ser meu turno, descarta habilidades armadas
         // (no próximo turno ficam selecionáveis de novo).
@@ -1899,12 +1928,15 @@ const GS = (() => {
   // Senders: interação com decoração (fonte/loot) e retirada de item de decoração.
   function interagirDecor(decorId) { send({ type: 'interagir_decor', decor_id: decorId }); }
   function takeFromDecor(decorId, kind, index) { send({ type: 'take_from_decor', decor_id: decorId, kind, index }); }
+  function takeAllFromDecor(decorId) { send({ type: 'take_all_from_decor', decor_id: decorId }); }
   function activateDecorMechanism(decorId) { send({ type: 'activate_decor_mechanism', decor_id: decorId }); }
 
   // ── Fase 3 (editor de masmorras): objetivos / saída / prisioneiro ─────────────
   // Getters dos campos servidos no game_state (null no procedural).
   function getObjectives() { return (gameState && gameState.objectives) || null; }
   function getExitPos()    { return (gameState && gameState.exit_pos) || null; }
+  function getStartMode()  { return (gameState && gameState.start_mode) || 'entrance'; }
+  function getHeroSpawns() { return (gameState && gameState.hero_spawns) || []; }
   function getPrisoner()   { return (gameState && gameState.prisoner) || null; }
   // Decisor puro: há prisioneiro cativo (vivo, não libertado) adjacente (Chebyshev ≤1)
   // ao herói local, e é o turno dele? Usado pelo renderer para habilitar o botão.
@@ -1989,6 +2021,7 @@ const GS = (() => {
       }
       return distancia <= range;
     }
+    if (weapon.id === 'lanca_curta') return Math.max(dx, dy) === 1;
     return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
   }
 
@@ -2005,11 +2038,9 @@ const GS = (() => {
         return tiles.some(([tx, ty]) => _alvoNoAlcanceArma(myP, tx, ty)
           && hasLineOfSight(gameState, myP.pos[0], myP.pos[1], tx, ty));
       }
-      // Corpo a corpo: adjacente (ortogonal) a alguma casa do corpo.
-      return tiles.some(([tx, ty]) => {
-        const dx = Math.abs(myP.pos[0] - tx), dy = Math.abs(myP.pos[1] - ty);
-        return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
-      });
+      // Corpo a corpo: adjacente a alguma casa do corpo. A lança curta inclui
+      // as diagonais; as demais armas mantêm a regra ortogonal.
+      return tiles.some(([tx, ty]) => _alvoNoAlcanceArma(myP, tx, ty));
     });
     if (!adj.length) {
       const reason = wRange != null
@@ -2251,6 +2282,19 @@ const GS = (() => {
     if (!myP) return null;
 
     // ── Pending-skill targeting ──────────────────────────────────────────────
+    if (pendingInstrumento) {
+      const inst = pendingInstrumento;
+      const m = gameState.monsters.find(mm => mm.hp > 0 && mm.pos[0] === tx && mm.pos[1] === ty);
+      if (m) {
+        const distancia = Math.max(Math.abs(myP.pos[0] - tx), Math.abs(myP.pos[1] - ty));
+        if (distancia > (inst.alcance || 0)) return { type: 'instrumento_blocked', reason: 'range' };
+        if (!hasLineOfSight(gameState, myP.pos[0], myP.pos[1], tx, ty))
+          return { type: 'instrumento_blocked', reason: 'wall' };
+        return { type: 'instrumento', targetId: m.id };
+      }
+      return null;
+    }
+
     if (pendingSkill) {
       const sk    = pendingSkill;
       if (sk.id === 'desarmar_armadilha') {
@@ -2387,6 +2431,7 @@ const GS = (() => {
 
     // ── Portas ──
     doorSets,
+    doorOrientation,
 
     // ── Linha de visão (paredes/portas barram ataques/magias à distância) ──
     hasLineOfSight,
@@ -2416,6 +2461,8 @@ const GS = (() => {
     // Fase 3: objetivos / saída / prisioneiro (property getters — acessados sem parênteses).
     get objectives()            { return getObjectives(); },
     get exitPos()               { return getExitPos(); },
+    get startMode()             { return getStartMode(); },
+    get heroSpawns()            { return getHeroSpawns(); },
     get prisoner()              { return getPrisoner(); },
     get prisioneiroLibertavel() { return prisioneiroLibertavel(); },
     get missionCompletePending() { return missionCompletePending(); },
@@ -2427,6 +2474,7 @@ const GS = (() => {
     get pendingAction()   { return pendingAction; },
     get pendingSkill()    { return pendingSkill; },
     get pendingThrow()    { return pendingThrow; },
+    get pendingInstrumento() { return pendingInstrumento; },
     get activeShop()      { return activeShop; },
     get activeScene()     { return activeScene; },
     get shopTabIdx()      { return shopTabIdx; },
@@ -2435,6 +2483,7 @@ const GS = (() => {
     // ── State setters (renderer may mutate these directly) ──
     set pendingSkill(v)    { pendingSkill    = v; },
     set pendingThrow(v)    { pendingThrow    = v; },
+    set pendingInstrumento(v) { pendingInstrumento = v; },
     set pendingAction(v)   { pendingAction   = v; },
     set activeShop(v)      { activeShop      = v; },
     set activeScene(v)     { activeScene     = v; },
@@ -2517,6 +2566,7 @@ const GS = (() => {
     dropItem,
     interagirDecor,
     takeFromDecor,
+    takeAllFromDecor,
     activateDecorMechanism,
     pickupItem,
     groundItemPickable,

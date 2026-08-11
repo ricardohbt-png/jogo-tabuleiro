@@ -759,6 +759,1032 @@ window.EDITOR_DUNGEONS = [
     }
   },
   {
+    "file": "Introducao.json",
+    "id": "Introducao",
+    "name": "introducao",
+    "defn": {
+      "schema_version": 1,
+      "id": "Introducao",
+      "name": "introducao",
+      "ambiente": "masmorra",
+      "saida_permitida": true,
+      "grid": {
+        "w": 24,
+        "h": 19
+      },
+      "tiles": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          2,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          1,
+          2,
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          2,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          2,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          2,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          1,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          2,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          2,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          2,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "rooms": [
+        {
+          "id": 0,
+          "x": 1,
+          "y": 15,
+          "w": 2,
+          "h": 2,
+          "role": "entrance",
+          "locked": false,
+          "doors": [
+            [
+              3,
+              15
+            ]
+          ]
+        },
+        {
+          "id": 1,
+          "x": 1,
+          "y": 1,
+          "w": 2,
+          "h": 2,
+          "role": "monster",
+          "locked": true,
+          "doors": [
+            [
+              3,
+              1
+            ]
+          ]
+        },
+        {
+          "id": 2,
+          "x": 9,
+          "y": 4,
+          "w": 2,
+          "h": 2,
+          "role": "monster",
+          "locked": true,
+          "doors": [
+            [
+              8,
+              4
+            ]
+          ]
+        },
+        {
+          "id": 3,
+          "x": 21,
+          "y": 1,
+          "w": 2,
+          "h": 2,
+          "role": "monster",
+          "locked": true,
+          "doors": [
+            [
+              20,
+              2
+            ]
+          ]
+        },
+        {
+          "id": 4,
+          "x": 21,
+          "y": 16,
+          "w": 2,
+          "h": 2,
+          "role": "monster",
+          "locked": true,
+          "doors": []
+        },
+        {
+          "id": 5,
+          "x": 21,
+          "y": 8,
+          "w": 2,
+          "h": 2,
+          "role": "monster",
+          "locked": true,
+          "doors": [
+            [
+              20,
+              8
+            ]
+          ]
+        },
+        {
+          "id": 6,
+          "x": 9,
+          "y": 7,
+          "w": 5,
+          "h": 3,
+          "role": "monster",
+          "locked": true,
+          "doors": [
+            [
+              8,
+              8
+            ],
+            [
+              13,
+              10
+            ]
+          ]
+        },
+        {
+          "id": 8,
+          "x": 7,
+          "y": 14,
+          "w": 2,
+          "h": 2,
+          "role": "monster",
+          "locked": true,
+          "doors": [
+            [
+              9,
+              14
+            ]
+          ]
+        },
+        {
+          "id": 9,
+          "x": 17,
+          "y": 15,
+          "w": 2,
+          "h": 2,
+          "role": "monster",
+          "locked": true,
+          "doors": [
+            [
+              19,
+              16
+            ]
+          ]
+        },
+        {
+          "id": 10,
+          "x": 11,
+          "y": 13,
+          "w": 4,
+          "h": 3,
+          "role": "monster",
+          "locked": true,
+          "doors": [
+            [
+              15,
+              15
+            ]
+          ]
+        },
+        {
+          "id": 11,
+          "x": 3,
+          "y": 5,
+          "w": 2,
+          "h": 2,
+          "role": "monster",
+          "locked": true,
+          "doors": [
+            [
+              2,
+              6
+            ]
+          ]
+        },
+        {
+          "id": 13,
+          "x": 18,
+          "y": 6,
+          "w": 2,
+          "h": 2,
+          "role": "monster",
+          "locked": true,
+          "doors": []
+        },
+        {
+          "id": 15,
+          "x": 18,
+          "y": 3,
+          "w": 2,
+          "h": 2,
+          "role": "monster",
+          "locked": true,
+          "doors": []
+        },
+        {
+          "id": 16,
+          "x": 15,
+          "y": 4,
+          "w": 2,
+          "h": 3,
+          "role": "monster",
+          "locked": true,
+          "doors": [
+            [
+              17,
+              5
+            ],
+            [
+              15,
+              3
+            ],
+            [
+              14,
+              5
+            ]
+          ]
+        },
+        {
+          "id": 17,
+          "x": 4,
+          "y": 9,
+          "w": 3,
+          "h": 3,
+          "role": "monster",
+          "locked": true,
+          "doors": [
+            [
+              6,
+              12
+            ]
+          ]
+        },
+        {
+          "id": 18,
+          "x": 16,
+          "y": 10,
+          "w": 3,
+          "h": 3,
+          "role": "monster",
+          "locked": true,
+          "doors": [
+            [
+              16,
+              9
+            ]
+          ]
+        }
+      ],
+      "entrance": {
+        "x": 10,
+        "y": 8
+      },
+      "exit": null,
+      "monsters": [],
+      "chests": [
+        {
+          "pos": [
+            1,
+            11
+          ],
+          "gold": 10,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            15,
+            17
+          ],
+          "gold": 10,
+          "items": [],
+          "key_objective": false
+        }
+      ],
+      "traps": [
+        {
+          "tipo": "lamina_escondida",
+          "pos": [
+            5,
+            15
+          ]
+        },
+        {
+          "tipo": "buraco",
+          "pos": [
+            2,
+            15
+          ]
+        },
+        {
+          "tipo": "lamina_pendulo",
+          "pos": [
+            9,
+            12
+          ]
+        },
+        {
+          "tipo": "rede",
+          "pos": [
+            14,
+            15
+          ]
+        },
+        {
+          "tipo": "armadilha_urso",
+          "pos": [
+            11,
+            14
+          ]
+        },
+        {
+          "tipo": "armadilha_teletransporte",
+          "pos": [
+            8,
+            14
+          ],
+          "saida": [
+            1,
+            15
+          ]
+        }
+      ],
+      "decorations": [
+        {
+          "id": "decor_0",
+          "type": "arca_tesouros",
+          "pos": [
+            14,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": true
+        }
+      ],
+      "secret_passages": [
+        {
+          "id": "passage_0",
+          "type": "illusion",
+          "pos": [
+            1,
+            14
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_1",
+          "type": "illusion",
+          "pos": [
+            2,
+            17
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_2",
+          "type": "illusion",
+          "pos": [
+            3,
+            17
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_3",
+          "type": "illusion",
+          "pos": [
+            4,
+            17
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_4",
+          "type": "illusion",
+          "pos": [
+            5,
+            17
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_5",
+          "type": "illusion",
+          "pos": [
+            6,
+            17
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_6",
+          "type": "illusion",
+          "pos": [
+            7,
+            17
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_7",
+          "type": "illusion",
+          "pos": [
+            8,
+            17
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_8",
+          "type": "illusion",
+          "pos": [
+            9,
+            17
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_9",
+          "type": "illusion",
+          "pos": [
+            10,
+            17
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_10",
+          "type": "illusion",
+          "pos": [
+            11,
+            17
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_11",
+          "type": "illusion",
+          "pos": [
+            11,
+            16
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_12",
+          "type": "illusion",
+          "pos": [
+            1,
+            13
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_13",
+          "type": "illusion",
+          "pos": [
+            1,
+            12
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_14",
+          "type": "mechanism",
+          "pos": [
+            14,
+            16
+          ],
+          "key_decor_ids": [
+            "decor_0"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_15",
+          "type": "mechanism",
+          "pos": [
+            14,
+            17
+          ],
+          "key_decor_ids": [
+            "decor_0"
+          ],
+          "keys_mode": "any"
+        }
+      ],
+      "falas": [],
+      "master_reinforcements": [],
+      "expected_party": {
+        "heroes": 4,
+        "level": 1
+      },
+      "prisoner": null,
+      "materiais": {},
+      "objectives": {
+        "primary": {
+          "type": "kill_all",
+          "xp": 0,
+          "reward": {
+            "gold": 0,
+            "items": []
+          }
+        },
+        "secondary": []
+      }
+    }
+  },
+  {
     "file": "_teste_materiais.json",
     "id": "_teste_materiais",
     "name": "Teste Materiais",

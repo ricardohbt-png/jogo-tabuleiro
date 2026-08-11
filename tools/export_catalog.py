@@ -112,6 +112,9 @@ def build_catalog():
             entry["permite_veneno"] = True
         traps.append(entry)
     venoms = [{"id": vid, "name": meta["nome"]} for vid, meta in server.VENENOS.items()]
+    curses = [{"id": mid, "name": meta["nome"], "category": meta.get("categoria", "leve"),
+               "description": meta.get("desc", ""), "progressive": bool(meta.get("progressiva"))}
+              for mid, meta in server.MALDICOES.items()]
     decorations = []
     for dtype, meta in server.DECOR_TYPES.items():
         decorations.append({
@@ -138,7 +141,8 @@ def build_catalog():
     monster_abilities = list(server._base_ability_library().values())
     return {"monsters": monsters, "monster_abilities": monster_abilities,
             "spells": spells, "items": items, "traps": traps,
-            "venoms": venoms, "decorations": decorations, "materiais": materiais}
+            "venoms": venoms, "curses": curses,
+            "decorations": decorations, "materiais": materiais}
 
 def write_catalog_js(destino):
     """Escreve o catálogo como atribuição JS (carregável via <script> em file://)."""

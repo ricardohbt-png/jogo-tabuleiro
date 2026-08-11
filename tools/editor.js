@@ -1,7 +1,7 @@
 "use strict";
 (function () {
   const WALL = 0, FLOOR = 1, DOOR = 2, CELL = 28;
-  const BASE_CAT = window.EDITOR_CATALOG || { monsters: [], items: [], traps: [], venoms: [], decorations: [], materiais: [] };
+  const BASE_CAT = window.EDITOR_CATALOG || { monsters: [], items: [], traps: [], venoms: [], curses: [], decorations: [], materiais: [] };
   // Itens customizados (arma/armadura/escudo/…) marcados disponibilidade.baus=true
   // entram no seletor de baús/recompensas ao lado dos itens base. Forma mínima
   // genérica (id/name/emoji/item_type) — o seletor só usa id/name/emoji.
@@ -17,13 +17,23 @@
   // Default por categoria: pintar o default limpa a casa (mantém JSON esparso e
   // serve de borracha de material). Espelha MATERIAIS_*_DEFAULT do servidor.
   const MAT_DEFAULT = { piso: "pedra_cinza", parede: "pedra_normal" };
+  const HERO_SPAWN_META = [
+    { id: "warrior", name: "Guerreiro", emoji: "⚔️", mark: "G" },
+    { id: "mage", name: "Mago", emoji: "🔮", mark: "M" },
+    { id: "rogue", name: "Ladino", emoji: "🗡️", mark: "L" },
+    { id: "cleric", name: "Clérigo", emoji: "✚", mark: "C" },
+    { id: "bard", name: "Bardo", emoji: "🎻", mark: "B" },
+    { id: "paladin", name: "Paladino", emoji: "🛡️", mark: "P" },
+  ];
+  const heroSpawnMeta = (id) => HERO_SPAWN_META.find(h => h.id === id) || { name: id, emoji: "⚔️", mark: "H" };
 
   const S = {
     meta: { schema_version: 1, id: "nova_masmorra", name: "Nova Masmorra", ambiente: "masmorra", saida_permitida: true },
     grid: { w: 16, h: 12 },
     tiles: [],
     rooms: [], nextRoomId: 0,
-    entrance: null, exit: null, prisoner: null,
+    startMode: "entrance", entrance: null, heroSpawns: [], exit: null, prisoner: null,
+    heroSpawnClass: "warrior",
     monsters: [], chests: [], traps: [], decorations: [], secretPassages: [], falas: [], nextDecorId: 0, nextPassageId: 0, nextFalaId: 0,
     masterReinforcements: [],
     expectedParty: { heroes: 4, level: 1 },
@@ -33,6 +43,7 @@
     decorType: (CAT.decorations[0] || {}).type || "cama",
     decorFacing: [0, 1],
     materiais: {},                 // {"x,y": id}
+    doorRotations: {},              // {"x,y": giros de 90° relativos à orientação da parede}
     matFloor: "pedra_cinza",       // material atual da ferramenta "chão"
     matWall: "pedra_normal",       // material atual da ferramenta "parede"
     matFill: false,                // false = pincel; true = balde (preenchimento)
@@ -50,6 +61,7 @@
   function initGrid(w, h) {
     S.grid = { w, h };
     S.tiles = [];
+    S.doorRotations = {};
     for (let y = 0; y < h; y++) S.tiles.push(new Array(w).fill(WALL));
   }
 
@@ -99,6 +111,29 @@
     const i = order.findIndex(o => o[0] === f[0] && o[1] === f[1]);
     return order[(i < 0 ? 0 : i + 1) % 4];
   }
+  function doorKey(x, y) { return x + "," + y; }
+  function doorRotationAt(x, y) {
+    const n = Number(S.doorRotations[doorKey(x, y)]);
+    return Number.isFinite(n) ? ((Math.round(n) % 4) + 4) % 4 : 0;
+  }
+  // Giro zero preserva o alinhamento automático existente. Assim, mapas
+  // antigos continuam iguais e o editor só grava a diferença escolhida.
+  function doorBaseAngle(x, y) {
+    const isWall = (tx, ty) => ty < 0 || tx < 0 || ty >= S.grid.h || tx >= S.grid.w || S.tiles[ty][tx] === WALL;
+    return isWall(x - 1, y) && isWall(x + 1, y) ? 0 : Math.PI / 2;
+  }
+  function doorFrontLabel(x, y) {
+    const quarter = ((Math.round((doorBaseAngle(x, y) + doorRotationAt(x, y) * Math.PI / 2) / (Math.PI / 2)) % 4) + 4) % 4;
+    return ["↑ norte", "→ leste", "↓ sul", "← oeste"][quarter];
+  }
+  function rotateDoorAt(x, y) {
+    const k = doorKey(x, y);
+    S.doorRotations[k] = (doorRotationAt(x, y) + 1) % 4;
+    renderPanel(); render();
+  }
+  function rotateDoorSelected() {
+    if (S.sel && S.sel.kind === "door" && S.sel.ref) rotateDoorAt(S.sel.ref.x, S.sel.ref.y);
+  }
   // Para paredes, algumas faces não são válidas. Ainda assim, procura a próxima
   // face disponível seguindo a mesma ordem horária, nunca a ordem acidental da lista.
   function nextWallFaceClockwise(current, validFaces) {
@@ -147,7 +182,10 @@
     if (ev.key === "Escape" && decorBrushActive) {
       decorBrushActive = false; decorAreaPaint = null; buildToolbar(); render(); ev.preventDefault(); return;
     }
-    if (ev.key === "r" || ev.key === "R") rotateDecorPending();
+    if (ev.key === "r" || ev.key === "R") {
+      if (S.sel && S.sel.kind === "door") rotateDoorSelected();
+      else rotateDecorPending();
+    }
   });
 
   // Chão (special:floor) é camada de PISO: sobrepõe qualquer objeto e é ignorado
@@ -397,6 +435,8 @@
   function emojiForCell(x, y) {
     const at = (arr) => arr.find(e => e.pos && e.pos[0] === x && e.pos[1] === y);
     if (S.entrance && S.entrance.x === x && S.entrance.y === y) return "🚪";
+    const hs = S.heroSpawns.find(e => e.pos && e.pos[0] === x && e.pos[1] === y);
+    if (hs) return heroSpawnMeta(hs.class_id).emoji;
     if (S.exit && S.exit.x === x && S.exit.y === y) return "🏁";
     if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) return "🧍";
     const mo = at(S.monsters);
@@ -436,6 +476,10 @@
       byCell.get(key).push({ label, color });
     };
     if (S.entrance) add(S.entrance.x, S.entrance.y, "↑", "#468fc6");
+    for (const hs of S.heroSpawns) {
+      const meta = heroSpawnMeta(hs.class_id);
+      add(hs.pos[0], hs.pos[1], meta.mark, "#7c65c9");
+    }
     if (S.exit) add(S.exit.x, S.exit.y, "↓", "#c99a3c");
     for (const m of S.monsters) add(m.pos[0], m.pos[1], "M", "#bc4a5a");
     for (const c of S.chests) add(c.pos[0], c.pos[1], "$", "#bd9130");
@@ -527,20 +571,22 @@
         ctx.fillStyle = mm ? mm.cor : (t === WALL ? "#1d1812" : (t === DOOR ? "#c8841f" : "#5a4a32"));
         ctx.fillRect(x * CELL, y * CELL, CELL - 1, CELL - 1);
         if (t === DOOR) {
-          // Porta visível no editor, em vez de parecer apenas piso laranja.
+          // A folha e a seta dourada giram sobre o centro. A seta indica a
+          // frente da imagem e continua clara nas quatro orientações.
           const px = x * CELL, py = y * CELL, s = CELL - 1;
-          ctx.fillStyle = "#5c3319";
-          ctx.fillRect(px + s * .16, py + s * .06, s * .68, s * .88);
-          ctx.strokeStyle = "#d7a34b";
-          ctx.lineWidth = Math.max(1, s * .055);
-          ctx.strokeRect(px + s * .16, py + s * .06, s * .68, s * .88);
-          ctx.beginPath();
-          ctx.moveTo(px + s * .5, py + s * .08); ctx.lineTo(px + s * .5, py + s * .92);
-          ctx.stroke();
-          ctx.fillStyle = "#f0c867";
-          ctx.beginPath();
-          ctx.arc(px + s * .42, py + s * .52, Math.max(1, s * .055), 0, Math.PI * 2);
-          ctx.fill();
+          const angle = doorBaseAngle(x, y) + doorRotationAt(x, y) * Math.PI / 2;
+          ctx.save();
+          ctx.translate(px + s / 2, py + s / 2); ctx.rotate(angle);
+          const dw = s * .68, dh = s * .88;
+          ctx.fillStyle = "#5c3319"; ctx.fillRect(-dw / 2, -dh / 2, dw, dh);
+          ctx.strokeStyle = "#d7a34b"; ctx.lineWidth = Math.max(1, s * .055);
+          ctx.strokeRect(-dw / 2, -dh / 2, dw, dh);
+          ctx.beginPath(); ctx.moveTo(-dw / 2, -dh * .18); ctx.lineTo(dw / 2, -dh * .18); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(-dw / 2, dh * .18); ctx.lineTo(dw / 2, dh * .18); ctx.stroke();
+          ctx.fillStyle = "#f0c867"; ctx.beginPath(); ctx.arc(dw * .24, 0, Math.max(1, s * .055), 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#ffe27a"; ctx.strokeStyle = "#3a2405"; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(0, -s * .43); ctx.lineTo(-s * .12, -s * .25); ctx.lineTo(s * .12, -s * .25); ctx.closePath(); ctx.fill(); ctx.stroke();
+          ctx.restore();
         }
         if (mid === "entulho") {            // marca de obstáculo
           ctx.fillStyle = "rgba(0,0,0,0.45)";
@@ -633,6 +679,11 @@
     ctx.fillStyle = "#78d9ff"; ctx.font = "bold 15px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     for (const t of S.traps) {
       if (t.tipo !== "armadilha_teletransporte" || !Array.isArray(t.saida)) continue;
+      ctx.fillText("⇱", t.saida[0] * CELL + CELL / 2, t.saida[1] * CELL + CELL / 2);
+    }
+    for (const d of S.decorations) {
+      const t = d.trap;
+      if (!t || t.tipo !== "armadilha_teletransporte" || !Array.isArray(t.saida)) continue;
       ctx.fillText("⇱", t.saida[0] * CELL + CELL / 2, t.saida[1] * CELL + CELL / 2);
     }
     ctx.textAlign = "start";
@@ -754,6 +805,7 @@
     { id: "floor", label: "chão", group: "tiles" },
     { id: "door", label: "porta", group: "tiles" },
     { id: "entrance", label: "entrada", group: "entidades" },
+    { id: "hero_spawn", label: "início herói", group: "entidades" },
     { id: "exit", label: "saída", group: "entidades" },
     { id: "monster", label: "monstro", group: "entidades" },
     { id: "chest", label: "baú", group: "entidades" },
@@ -772,7 +824,8 @@
     const tb = document.getElementById("toolbar");
     tb.innerHTML = "";
     let lastGroup = null;
-    for (const t of TOOLS) {
+    const visibleTools = TOOLS.filter(t => !(S.startMode === "hero_spawns" && t.id === "entrance"));
+    for (const t of visibleTools) {
       if (t.group !== lastGroup) {
         if (lastGroup) { const s = document.createElement("span"); s.className = "sep"; tb.appendChild(s); }
         const g = document.createElement("span"); g.className = "group-label"; g.textContent = t.group; tb.appendChild(g);
@@ -781,8 +834,26 @@
       const b = document.createElement("button");
       b.textContent = t.label; b.dataset.tool = t.id;
       if (t.id === S.tool) b.classList.add("active");
-      b.onclick = () => { S.tool = t.id; buildToolbar(); };
+      b.onclick = () => {
+        S.tool = t.id;
+        if (t.id === "hero_spawn") { S.startMode = "hero_spawns"; S.entrance = null; }
+        if (t.id === "entrance") S.startMode = "entrance";
+        buildToolbar(); renderPanel(); render(); updateStatus();
+      };
       tb.appendChild(b);
+    }
+    if (S.tool === "hero_spawn") {
+      const sel = document.createElement("select");
+      sel.id = "hero-spawn-class";
+      sel.innerHTML = HERO_SPAWN_META.map(h =>
+        `<option value="${h.id}"${h.id === S.heroSpawnClass ? " selected" : ""}>${h.emoji} ${h.name}</option>`).join("");
+      sel.onchange = e => { S.heroSpawnClass = e.target.value; renderPanel(); };
+      tb.appendChild(sel);
+      const hint = document.createElement("small");
+      hint.textContent = "Clique no mapa para posicionar ou mover este herói.";
+      hint.style.color = "#b9a87f";
+      hint.style.marginLeft = "6px";
+      tb.appendChild(hint);
     }
     if (S.tool === "decor") {
       const sel = document.createElement("select");
@@ -810,6 +881,13 @@
         hint.style.color = "#b9a87f";
         tb.appendChild(hint);
       }
+    }
+    if (S.sel && S.sel.kind === "door") {
+      const rot = document.createElement("button");
+      rot.textContent = "↻ porta 90° (R)";
+      rot.title = "Girar a imagem da porta selecionada";
+      rot.onclick = rotateDoorSelected;
+      tb.appendChild(rot);
     }
     if (S.tool === "floor" || S.tool === "wall") {
       const isWall = S.tool === "wall";
@@ -858,14 +936,17 @@
   }
   function doorUnlink(x, y) {
     for (const r of S.rooms) r.doors = r.doors.filter(d => !(d[0] === x && d[1] === y));
+    delete S.doorRotations[doorKey(x, y)];
   }
 
   function paintTile(x, y) {
     if (S.tool === "wall") {
+      if (S.tiles[y][x] === DOOR) doorUnlink(x, y);
       if (S.matWall === "entulho") { S.tiles[y][x] = FLOOR; S.materiais[x + "," + y] = "entulho"; return; }
       S.tiles[y][x] = WALL;
       _applyMat(x, y, S.matWall, "parede");
     } else if (S.tool === "floor") {
+      if (S.tiles[y][x] === DOOR) doorUnlink(x, y);
       S.tiles[y][x] = FLOOR;
       _applyMat(x, y, S.matFloor, "piso");
     } else if (S.tool === "door") {
@@ -923,6 +1004,7 @@
   function moveSelTo(sel, nx, ny) {
     const k = sel.kind;
     if (k === "entrance") { S.entrance.x = nx; S.entrance.y = ny; }
+    else if (k === "hero_spawn" && sel.ref) { sel.ref.pos = [nx, ny]; sel.ref.room_id = roomIdAt(nx, ny); }
     else if (k === "exit") { S.exit.x = nx; S.exit.y = ny; }
     else if (sel.ref) {
       if (k === "decor" && isWallDecor(sel.ref)) {
@@ -936,7 +1018,10 @@
   }
 
   function legacyEntityAt(x, y) {
+    if (S.tiles[y]?.[x] === DOOR) return { kind: "door", ref: { x, y }, pos: [x, y] };
     if (S.entrance && S.entrance.x === x && S.entrance.y === y) return { kind: "entrance", pos: [x, y] };
+    const hs = S.heroSpawns.find(e => e.pos[0] === x && e.pos[1] === y);
+    if (hs) return { kind: "hero_spawn", ref: hs, pos: hs.pos.slice() };
     if (S.exit && S.exit.x === x && S.exit.y === y) return { kind: "exit", pos: [x, y] };
     if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) return { kind: "prisoner", ref: S.prisoner, pos: [x, y] };
     const secret = S.secretPassages.find(p => p.pos[0] === x && p.pos[1] === y);
@@ -953,7 +1038,10 @@
   // primeira e escondia as demais quando havia sobreposição.
   function entitiesAt(x, y) {
     const found = [];
+    if (S.tiles[y]?.[x] === DOOR) found.push({ kind: "door", ref: { x, y }, pos: [x, y] });
     if (S.entrance && S.entrance.x === x && S.entrance.y === y) found.push({ kind: "entrance", pos: [x, y] });
+    for (const hs of S.heroSpawns) if (hs.pos[0] === x && hs.pos[1] === y)
+      found.push({ kind: "hero_spawn", ref: hs, pos: hs.pos.slice() });
     if (S.exit && S.exit.x === x && S.exit.y === y) found.push({ kind: "exit", pos: [x, y] });
     if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) found.push({ kind: "prisoner", ref: S.prisoner, pos: S.prisoner.pos.slice() });
     for (const p of S.secretPassages) if (p.pos[0] === x && p.pos[1] === y)
@@ -992,6 +1080,12 @@
     const rid = roomIdAt(x, y);
     switch (S.tool) {
       case "entrance": S.entrance = { x, y }; break;
+      case "hero_spawn": {
+        const existing = S.heroSpawns.find(s => s.class_id === S.heroSpawnClass);
+        if (existing) { existing.pos = [x, y]; existing.room_id = rid; }
+        else S.heroSpawns.push({ class_id: S.heroSpawnClass, pos: [x, y], room_id: rid });
+        break;
+      }
       case "exit": S.exit = { x, y }; break;
       case "prisoner": S.prisoner = { pos: [x, y], room_id: rid }; break;
       case "monster": S.monsters.push({ type: (CAT.monsters[0] || {}).type || "goblin", pos: [x, y], room_id: rid, boss: false, target: false }); break;
@@ -1013,6 +1107,7 @@
   function eraseAt(x, y) {
     if (S.tiles[y][x] === DOOR) doorUnlink(x, y);
     if (S.entrance && S.entrance.x === x && S.entrance.y === y) S.entrance = null;
+    S.heroSpawns = S.heroSpawns.filter(s => !(s.pos[0] === x && s.pos[1] === y));
     if (S.exit && S.exit.x === x && S.exit.y === y) S.exit = null;
     if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) S.prisoner = null;
     S.monsters = S.monsters.filter(e => !(e.pos[0] === x && e.pos[1] === y));
@@ -1028,6 +1123,10 @@
   function deleteRoom(room, clearFloor) {
     const idx = S.rooms.indexOf(room);
     if (idx >= 0) S.rooms.splice(idx, 1);
+    for (const d of (room.doors || [])) {
+      if (!S.rooms.some(r => (r.doors || []).some(other => other[0] === d[0] && other[1] === d[1])))
+        delete S.doorRotations[doorKey(d[0], d[1])];
+    }
     if (clearFloor) {
       for (let j = room.y; j < room.y + room.h; j++) {
         for (let i = room.x; i < room.x + room.w; i++) {
@@ -1041,11 +1140,64 @@
     // Entidades que apontavam para esta sala ficam sem sala (não são apagadas).
     for (const m of S.monsters) if (m.room_id === room.id) m.room_id = null;
     if (S.prisoner && S.prisoner.room_id === room.id) S.prisoner.room_id = null;
+    for (const s of S.heroSpawns) if (s.room_id === room.id) s.room_id = null;
     S.sel = null; renderPanel(); render();
   }
 
   const panel = document.getElementById("panel");
   function opt(list, val, fmt) { return list.map(o => `<option value="${o.v}"${o.v === val ? " selected" : ""}>${fmt(o)}</option>`).join(""); }
+
+  const CURSE_CATEGORIES = [
+    { v: "leve", name: "Leve" },
+    { v: "media", name: "Média" },
+    { v: "grave", name: "Grave" },
+  ];
+  function curseCatalog() { return CAT.curses || []; }
+  function curseFieldsHTML(trap, prefix) {
+    if (!trap || trap.tipo !== "armadilha_maldicao") return "";
+    const curses = curseCatalog();
+    const mode = trap.curse_mode || "aleatoria";
+    const firstId = (curses[0] && curses[0].id) || "maos_tremulas";
+    const curseId = trap.curse_id || firstId;
+    const selected = curses.find(c => c.id === curseId);
+    return `<div style="margin-top:8px;border-top:1px solid #4a3a2a;padding-top:8px">
+      <label>maldição aplicada</label>
+      <select id="${prefix}-curse-mode">
+        <option value="especifica"${mode === "especifica" ? " selected" : ""}>Maldição escolhida</option>
+        <option value="aleatoria"${mode !== "especifica" ? " selected" : ""}>Aleatória por gravidade</option>
+      </select>
+      ${mode === "especifica"
+        ? `<select id="${prefix}-curse-id">${opt(curses.map(c => ({ v: c.id, name: c.name })), curseId, o => o.name)}</select>
+           <small id="${prefix}-curse-desc" style="display:block;color:#b9a87f">${selected ? (selected.description || "") : ""}</small>`
+        : `<select id="${prefix}-curse-category">${opt(CURSE_CATEGORIES, trap.curse_category || "leve", o => o.name)}</select>
+           <small style="display:block;color:#b9a87f">Escolhe uma maldição não progressiva desta gravidade.</small>`}
+    </div>`;
+  }
+  function prepareCurseTrap(trap, fresh) {
+    if (!trap || trap.tipo !== "armadilha_maldicao") {
+      if (trap) { delete trap.curse_mode; delete trap.curse_id; delete trap.curse_category; }
+      return;
+    }
+    if (fresh) {
+      trap.curse_mode = "especifica";
+      trap.curse_id = (curseCatalog()[0] && curseCatalog()[0].id) || "maos_tremulas";
+      trap.curse_category = "leve";
+    }
+  }
+  function wireCurseFields(trap, prefix, rerender) {
+    if (!trap || trap.tipo !== "armadilha_maldicao") return;
+    const mode = document.getElementById(`${prefix}-curse-mode`);
+    if (mode) mode.onchange = e => {
+      trap.curse_mode = e.target.value;
+      if (trap.curse_mode === "especifica" && !trap.curse_id)
+        trap.curse_id = (curseCatalog()[0] && curseCatalog()[0].id) || "maos_tremulas";
+      rerender();
+    };
+    const id = document.getElementById(`${prefix}-curse-id`);
+    if (id) id.onchange = e => { trap.curse_id = e.target.value; rerender(); };
+    const category = document.getElementById(`${prefix}-curse-category`);
+    if (category) category.onchange = e => { trap.curse_category = e.target.value; };
+  }
 
   function objDefaults(isPrimary) {
     return { xp: isPrimary ? 0 : 50, reward: { gold: isPrimary ? 0 : 25, items: [] } };
@@ -1147,6 +1299,14 @@
     var W = S.grid.w, H = S.grid.h;
     var floor = function (x, y) { return x >= 0 && y >= 0 && x < W && y < H && S.tiles[y][x] !== WALL; };
     var entradaSala = (S.rooms || []).find(function (r) { return r.role === "entrance"; });
+    if (!entradaSala && S.startMode === "hero_spawns" && S.heroSpawns.length) {
+      var firstSpawn = S.heroSpawns[0];
+      entradaSala = (S.rooms || []).find(function (r) { return r.id === firstSpawn.room_id; }) ||
+        (S.rooms || []).find(function (r) {
+          return firstSpawn.pos[0] >= r.x && firstSpawn.pos[0] < r.x + r.w &&
+                 firstSpawn.pos[1] >= r.y && firstSpawn.pos[1] < r.y + r.h;
+        });
+    }
     var bossSala = (S.rooms || []).find(function (r) { return r.role === "boss"; });
     var adj = {};
     (S.rooms || []).forEach(function (r) {
@@ -1265,13 +1425,27 @@
 
   function renderPanel() {
     if (!S.sel) {
-      const OBJ = ["kill_target", "kill_all", "reach_exit", "open_key_chest", "rescue_prisoner", "salas_obrigatorias"];
+      const OBJ = ["kill_target", "kill_all", "reach_exit", "all_heroes_at_exit", "open_key_chest", "rescue_prisoner", "salas_obrigatorias"];
       const o = S.objectives;
       normalizeObjective(o.primary, true);
       o.secondary.forEach(s => normalizeObjective(s, false));
+      const spawnList = S.heroSpawns.map((s, i) => {
+        const h = heroSpawnMeta(s.class_id);
+        return `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+          <span>${h.emoji} ${h.name} <small>(${s.pos[0]},${s.pos[1]})</small></span>
+          <button class="hero-spawn-rm" data-i="${i}">×</button>
+        </div>`;
+      }).join("") || '<small style="color:#8a7a5a">Nenhuma posição inicial definida.</small>';
       panel.innerHTML = `<b>🗺️ Masmorra</b>
+        <label>modo de início</label>
+        <select id="start-mode">
+          <option value="entrance"${S.startMode === "entrance" ? " selected" : ""}>Entrada tradicional</option>
+          <option value="hero_spawns"${S.startMode === "hero_spawns" ? " selected" : ""}>Heróis separados</option>
+        </select>
+        ${S.startMode === "hero_spawns" ? `<div style="margin-top:6px;color:#b9a87f;font-size:11px">Posicione cada classe com a ferramenta <b>início herói</b>. A masmorra não terá escada de entrada.</div><div id="hero-spawn-list">${spawnList}</div>` : ""}
+        <hr style="border-color:#3a3022;margin:10px 0">
         <label>objetivo principal</label>
-        <select id="o-prim">${OBJ.map(t => `<option value="${t}"${o.primary.type === t ? " selected" : ""}>${t}</option>`).join("")}</select>
+        <select id="o-prim">${OBJ.map(t => `<option value="${t}"${o.primary.type === t ? " selected" : ""}>${t === "all_heroes_at_exit" ? "todos os heróis na saída" : t}</option>`).join("")}</select>
         ${rewardFieldsHTML(o.primary, "o-prim-rw")}
         <hr style="border-color:#3a3022;margin:10px 0">
         <label>objetivos secundários</label>
@@ -1303,6 +1477,20 @@
         </div>
         ${_termometroHTML()}
         ${_avisosDesignHTML()}`;
+      document.getElementById("start-mode").onchange = e => {
+        S.startMode = e.target.value;
+        if (S.startMode === "hero_spawns") { S.entrance = null; S.meta.saida_permitida = false; }
+        else if (S.tool === "hero_spawn") S.tool = "select";
+        buildToolbar(); renderPanel(); render(); updateStatus();
+      };
+      const exitToggle = document.getElementById("m-saida");
+      if (exitToggle) {
+        exitToggle.disabled = S.startMode === "hero_spawns";
+        exitToggle.checked = S.startMode === "hero_spawns" ? false : S.meta.saida_permitida !== false;
+      }
+      panel.querySelectorAll(".hero-spawn-rm").forEach(b => b.onclick = () => {
+        S.heroSpawns.splice(Number(b.dataset.i), 1); renderPanel(); render(); updateStatus();
+      });
       document.getElementById("o-prim").onchange = e => { o.primary.type = e.target.value; };
       wireRewardFields(o.primary, "o-prim-rw");
       document.getElementById("o-add").onclick = () => { o.secondary.push({ type: "rescue_prisoner", ...objDefaults(false) }); renderPanel(); };
@@ -1332,7 +1520,21 @@
       return;
     }
     const k = S.sel.kind, ref = S.sel.ref;
-    if (k === "monster") {
+    if (k === "door") {
+      const rot = doorRotationAt(ref.x, ref.y);
+      panel.innerHTML = `<b>🚪 Porta</b>
+        <div style="margin-top:6px;color:#b9a87f">Posição: (${ref.x},${ref.y})</div>
+        <div style="margin-top:6px;color:#f0c867"><b>Frente da imagem: ${doorFrontLabel(ref.x, ref.y)}</b></div>
+        <div style="font-size:11px;color:#8a7a5a;margin-top:4px">Giros aplicados: ${rot} × 90°</div>
+        <button id="door-rotate" style="margin-top:8px">↻ Girar 90° (R)</button>
+        <small style="display:block;color:#8a7a5a;margin-top:6px">A seta dourada no mapa mostra a frente. A orientação é salva nesta porta.</small>`;
+      document.getElementById("door-rotate").onclick = rotateDoorSelected;
+    } else if (k === "hero_spawn") {
+      const h = heroSpawnMeta(ref.class_id);
+      panel.innerHTML = `<b>${h.emoji} Início: ${h.name}</b>
+        <div style="margin-top:6px;color:#b9a87f">Posição: (${ref.pos[0]},${ref.pos[1]})</div>
+        <small>Para trocar de herói, selecione a ferramenta "início herói" e escolha outra classe.</small>`;
+    } else if (k === "monster") {
       const vs = Array.isArray(ref.vscale) ? ref.vscale : [1, 1];
       panel.innerHTML = `<b>👹 Monstro</b>
         <label>tipo</label><select id="p-type">${opt(CAT.monsters.map(m => ({ v: m.type, name: m.name })), ref.type, o => o.v + " — " + o.name)}</select>
@@ -1374,6 +1576,7 @@
       panel.innerHTML = `<b>⚠️ Armadilha</b>
         <label>tipo</label><select id="p-tt">${opt(CAT.traps.map(t => ({ v: t.tipo, name: t.nome })), ref.tipo, o => o.v + " — " + o.name)}</select>
         ${meta.precisa_veneno || meta.permite_veneno ? `<label>veneno${meta.permite_veneno && !meta.precisa_veneno ? " (opcional)" : ""}</label><select id="p-ven">${opt(CAT.venoms.map(v => ({ v: v.id, name: v.name })), ref.veneno_id || "", o => o.v + " — " + o.name)}</select>` : ""}
+        ${curseFieldsHTML(ref, "p")}
         ${ref.tipo === "armadilha_teletransporte" ? `<label>ponto de saída (x, y)</label><div style="display:flex;gap:4px"><input id="p-out-x" type="number" min="0" max="${S.grid.w - 1}" value="${ref.saida ? ref.saida[0] : ref.pos[0]}"><input id="p-out-y" type="number" min="0" max="${S.grid.h - 1}" value="${ref.saida ? ref.saida[1] : ref.pos[1]}"></div><button id="p-pick-out" style="margin-top:5px">📍 Selecionar saída no mapa</button><small id="p-out-help" style="color:#8a7a5a">Casa de chão; se ocupada no jogo, usa a adjacente livre mais próxima.</small>` : ""}
         <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
           <b>Imagem</b>
@@ -1387,8 +1590,16 @@
             <span id="t-img-st" style="font-size:11px;color:#8a7a5a"></span>
           </div>
         </div>`;
-      document.getElementById("p-tt").onchange = e => { ref.tipo = e.target.value; const nextMeta = CAT.traps.find(t => t.tipo === ref.tipo) || {}; if (!(nextMeta.precisa_veneno || nextMeta.permite_veneno)) delete ref.veneno_id; if (ref.tipo !== "armadilha_teletransporte") delete ref.saida; renderPanel(); render(); };
+      document.getElementById("p-tt").onchange = e => {
+        ref.tipo = e.target.value;
+        const nextMeta = CAT.traps.find(t => t.tipo === ref.tipo) || {};
+        if (!(nextMeta.precisa_veneno || nextMeta.permite_veneno)) delete ref.veneno_id;
+        if (ref.tipo !== "armadilha_teletransporte") delete ref.saida;
+        prepareCurseTrap(ref, true);
+        renderPanel(); render();
+      };
       if (meta.precisa_veneno || meta.permite_veneno) document.getElementById("p-ven").onchange = e => { ref.veneno_id = e.target.value || null; };
+      wireCurseFields(ref, "p", () => { renderPanel(); render(); });
       if (ref.tipo === "armadilha_teletransporte") {
         const setSaida = () => { ref.saida = [Number(document.getElementById("p-out-x").value) | 0, Number(document.getElementById("p-out-y").value) | 0]; render(); };
         document.getElementById("p-out-x").onchange = setSaida;
@@ -1532,7 +1743,8 @@
         <label style="display:block;margin-top:8px"><input type="checkbox" id="d-trap" ${decorTrap ? "checked" : ""}> contém armadilha</label>
         ${decorTrap ? `<label>armadilha</label><select id="d-trap-type">${opt(trapOptions, decorTrap.tipo, o => o.name)}</select>
           ${((CAT.traps.find(t => t.tipo === decorTrap.tipo) || {}).precisa_veneno || (CAT.traps.find(t => t.tipo === decorTrap.tipo) || {}).permite_veneno) ? `<label>veneno${(CAT.traps.find(t => t.tipo === decorTrap.tipo) || {}).permite_veneno && !(CAT.traps.find(t => t.tipo === decorTrap.tipo) || {}).precisa_veneno ? " (opcional)" : ""}</label><select id="d-trap-venom">${opt(venomOptions, decorTrap.veneno_id || "", o => o.name)}</select>` : ""}
-          ${decorTrap.tipo === "armadilha_teletransporte" ? `<label>saída X <input id="d-trap-exit-x" type="number" min="0" max="${S.grid.w-1}" value="${decorTrap.saida?.[0] ?? ref.pos[0]}"></label><label>saída Y <input id="d-trap-exit-y" type="number" min="0" max="${S.grid.h-1}" value="${decorTrap.saida?.[1] ?? ref.pos[1]}"></label>` : ""}
+          ${curseFieldsHTML(decorTrap, "d")}
+          ${decorTrap.tipo === "armadilha_teletransporte" ? `<label>local de saída</label><div style="display:flex;gap:4px"><input id="d-trap-exit-x" type="number" min="0" max="${S.grid.w-1}" value="${decorTrap.saida?.[0] ?? ref.pos[0]}"><input id="d-trap-exit-y" type="number" min="0" max="${S.grid.h-1}" value="${decorTrap.saida?.[1] ?? ref.pos[1]}"></div><button id="d-pick-trap-out" style="margin-top:5px">📍 Selecionar saída no mapa</button><small id="d-trap-out-help" style="color:#8a7a5a">Escolha uma casa de chão no mapa.</small>` : ""}
           <small style="color:#8a7a5a">Dispara ao investigar. Encontrar Armadilhas revela o objeto e permite desarmá-lo.</small>` : ""}
         <label style="display:block;margin-top:8px"><input type="checkbox" id="d-key" ${ref.key_objective ? "checked" : ""}> objeto-chave <small>(conclui “Abrir o baú-chave” ao interagir)</small></label>
         <div id="d-loot" style="${hasLoot ? "" : "display:none"}">
@@ -1579,13 +1791,28 @@
       document.getElementById("d-key").onchange = e => { ref.key_objective = e.target.checked; };
       document.getElementById("d-chest-trap").onchange = e => { if (e.target.checked) ref.chest_trap_monster_type = (CAT.monsters[0] || {}).type; else delete ref.chest_trap_monster_type; renderPanel(); };
       if (ref.chest_trap_monster_type) document.getElementById("d-chest-monster").onchange = e => { ref.chest_trap_monster_type = e.target.value; };
-      document.getElementById("d-trap").onchange = e => { if (e.target.checked) ref.trap = { tipo: (CAT.traps[0] || {}).tipo || "buraco" }; else delete ref.trap; renderPanel(); };
+      document.getElementById("d-trap").onchange = e => {
+        if (e.target.checked) ref.trap = { tipo: (CAT.traps[0] || {}).tipo || "buraco" };
+        else delete ref.trap;
+        renderPanel();
+      };
       if (decorTrap) {
-        document.getElementById("d-trap-type").onchange = e => { ref.trap = { tipo: e.target.value }; renderPanel(); };
+        document.getElementById("d-trap-type").onchange = e => {
+          ref.trap = { tipo: e.target.value };
+          prepareCurseTrap(ref.trap, true);
+          renderPanel();
+        };
         const venom = document.getElementById("d-trap-venom"); if (venom) venom.onchange = e => { ref.trap.veneno_id = e.target.value; };
+        wireCurseFields(ref.trap, "d", () => { renderPanel(); render(); });
         const exitX = document.getElementById("d-trap-exit-x"), exitY = document.getElementById("d-trap-exit-y");
         const updateExit = () => { ref.trap.saida = [Math.max(0, Number(exitX.value) | 0), Math.max(0, Number(exitY.value) | 0)]; };
         if (exitX && exitY) { exitX.onchange = updateExit; exitY.onchange = updateExit; }
+        const pickTrapExit = document.getElementById("d-pick-trap-out");
+        if (pickTrapExit) pickTrapExit.onclick = () => {
+          S.teleportExitPick = ref.trap;
+          const help = document.getElementById("d-trap-out-help");
+          if (help) help.textContent = "Clique agora em uma casa de chão no mapa para definir a saída.";
+        };
       }
       if (m.loot_capaz) document.getElementById("d-haslook").onchange = e => {
         ref.loot = e.target.checked ? { gold: 0, items: [] } : null; renderPanel();
@@ -1679,7 +1906,7 @@
     const [x, y] = c;
     if (S.teleportExitPick) {
       if (S.tiles[y][x] !== FLOOR) {
-        const help = document.getElementById("p-out-help");
+        const help = document.getElementById("p-out-help") || document.getElementById("d-trap-out-help");
         if (help) help.textContent = "A saída precisa ser escolhida em uma casa de chão.";
         return;
       }
@@ -1694,18 +1921,18 @@
     }
     else if (["wall", "floor", "door"].includes(S.tool)) { painting = true; (S.matFill && S.tool !== "door" ? paintMaterial : paintTile)(x, y); render(); updateStatus(); }
     else if (S.tool === "room") { roomDrag = { x0: x, y0: y, x1: x, y1: y }; }
-    else if (["entrance", "exit", "prisoner", "monster", "chest", "trap", "decor", "secret_mechanism", "illusion_wall", "fala"].includes(S.tool)) { placeEntity(x, y); if (S.tool !== "decor") S.sel = entityAt(x, y); renderPanel(); render(); }
+    else if (["entrance", "hero_spawn", "exit", "prisoner", "monster", "chest", "trap", "decor", "secret_mechanism", "illusion_wall", "fala"].includes(S.tool)) { placeEntity(x, y); if (S.tool !== "decor") S.sel = entityAt(x, y); renderPanel(); render(); updateStatus(); }
     else if (S.tool === "erase") { eraseAt(x, y); S.sel = null; renderPanel(); render(); }
     else if (S.tool === "select") {
       // Clique repetido na mesma casa alterna entre as entidades empilhadas.
       S.sel = entityAt(x, y, true) || roomSel(x, y);
       // Entidades pontuais/decorações entram em modo arrasto (sala não).
-      if (S.sel && S.sel.kind !== "room" && S.sel.pos) {
+       if (S.sel && S.sel.kind !== "room" && S.sel.kind !== "door" && S.sel.pos) {
         const anchor = S.sel.pos;
         _drag = { sel: S.sel, offX: x - anchor[0], offY: y - anchor[1],
                   origin: anchor.slice(), candidate: null, valid: true, moved: false };
       } else { _drag = null; }
-      renderPanel(); render();
+      buildToolbar(); renderPanel(); render();
     }
   });
 
@@ -1781,11 +2008,23 @@
     S.objectives.secondary.forEach(s => normalizeObjective(s, false));
     return {
       schema_version: 1, id: S.meta.id, name: S.meta.name, ambiente: S.meta.ambiente || "masmorra",
-      saida_permitida: S.meta.saida_permitida !== false,
+      saida_permitida: S.startMode !== "hero_spawns" && S.meta.saida_permitida !== false,
+      start_mode: S.startMode,
       grid: { w: S.grid.w, h: S.grid.h },
       tiles: S.tiles.map(row => row.slice()),
-      rooms: S.rooms.map(r => Object.assign({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, role: r.role, locked: r.locked, doors: r.doors.map(d => d.slice()) }, r.required ? { required: true, required_mode: r.required_mode || "clear" } : {})),
-      entrance: S.entrance ? { x: S.entrance.x, y: S.entrance.y } : null,
+      rooms: S.rooms.map(r => {
+        const out = Object.assign({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, role: r.role, locked: r.locked, doors: r.doors.map(d => d.slice()) }, r.required ? { required: true, required_mode: r.required_mode || "clear" } : {});
+        const orientations = {};
+        for (const d of r.doors) {
+          const rot = doorRotationAt(d[0], d[1]);
+          if (rot) orientations[doorKey(d[0], d[1])] = rot;
+        }
+        if (Object.keys(orientations).length) out.door_orientations = orientations;
+        else delete out.door_orientations;
+        return out;
+      }),
+      entrance: S.startMode === "entrance" && S.entrance ? { x: S.entrance.x, y: S.entrance.y } : null,
+      hero_spawns: S.heroSpawns.map(s => ({ class_id: s.class_id, pos: s.pos.slice(), room_id: s.room_id ?? null })),
       exit: S.exit ? { x: S.exit.x, y: S.exit.y } : null,
       monsters: S.monsters.map(m => {
         const o = { type: m.type, pos: m.pos.slice(), room_id: m.room_id, boss: !!m.boss, target: !!m.target };
@@ -1793,7 +2032,18 @@
         return o;
       }),
       chests: S.chests.map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: c.items.map(i => ({ id: i.id })), key_objective: !!c.key_objective })),
-      traps: S.traps.map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; if (t.saida) o.saida = t.saida.slice(); if (t.image) o.image = t.image; return o; }),
+      traps: S.traps.map(t => {
+        const o = { tipo: t.tipo, pos: t.pos.slice() };
+        if (t.veneno_id) o.veneno_id = t.veneno_id;
+        if (t.saida) o.saida = t.saida.slice();
+        if (t.tipo === "armadilha_maldicao") {
+          o.curse_mode = t.curse_mode || "aleatoria";
+          if (o.curse_mode === "especifica" && t.curse_id) o.curse_id = t.curse_id;
+          if (o.curse_mode === "aleatoria") o.curse_category = t.curse_category || "leve";
+        }
+        if (t.image) o.image = t.image;
+        return o;
+      }),
       decorations: S.decorations.map(d => {
         const o = { id: d.id, type: d.type, pos: d.pos.slice(), facing: d.facing.slice() };
         o.loot = d.loot ? { gold: d.loot.gold | 0, items: d.loot.items.map(i => ({ id: i.id })) } : null;
@@ -1803,6 +2053,11 @@
           o.trap = { tipo: d.trap.tipo };
           if (d.trap.veneno_id) o.trap.veneno_id = d.trap.veneno_id;
           if (Array.isArray(d.trap.saida)) o.trap.saida = d.trap.saida.slice();
+          if (d.trap.tipo === "armadilha_maldicao") {
+            o.trap.curse_mode = d.trap.curse_mode || "aleatoria";
+            if (o.trap.curse_mode === "especifica" && d.trap.curse_id) o.trap.curse_id = d.trap.curse_id;
+            if (o.trap.curse_mode === "aleatoria") o.trap.curse_category = d.trap.curse_category || "leve";
+          }
         }
         const m = decorMeta(d.type);
         if (m && m.special === "fountain") o.charges = d.charges | 0;
@@ -1833,9 +2088,10 @@
     };
   }
 
-  function reachableFloors(limit) {
-    if (!S.entrance) return 0;
-    const { x, y } = S.entrance;
+  function reachableFloors(limit, start) {
+    const origin = start || (S.entrance && [S.entrance.x, S.entrance.y]);
+    if (!origin) return 0;
+    const [x, y] = origin;
     if (S.tiles[y][x] === WALL) return 0;
     const seen = new Set([x + "," + y]); const st = [[x, y]]; let n = 0;
     while (st.length) {
@@ -1853,13 +2109,25 @@
     const types = new Set(CAT.monsters.map(m => m.type));
     const items = new Set(CAT.items.map(i => i.id));
     const traps = new Set(CAT.traps.map(t => t.tipo));
+    const curses = new Set((CAT.curses || []).map(c => c.id));
     const venoms = new Set(CAT.venoms.map(v => v.id));
     const roomIds = new Set(S.rooms.map(r => r.id));
     const isWall = (p) => !p || S.tiles[p[1]]?.[p[0]] === WALL || S.tiles[p[1]]?.[p[0]] === undefined;
-    if (!S.entrance) e.push("falta a entrada");
-    else if (S.tiles[S.entrance.y][S.entrance.x] !== FLOOR) e.push("entrada precisa estar em chão");
+    if (S.startMode === "entrance") {
+      if (!S.entrance) e.push("falta a entrada");
+      else if (S.tiles[S.entrance.y][S.entrance.x] !== FLOOR) e.push("entrada precisa estar em chão");
+    } else {
+      if (!S.heroSpawns.length) e.push("falta ao menos uma posição inicial de herói");
+      const classes = new Set();
+      for (const s of S.heroSpawns) {
+        if (!HERO_SPAWN_META.some(h => h.id === s.class_id)) e.push(`classe inicial inválida: ${s.class_id}`);
+        if (classes.has(s.class_id)) e.push(`classe inicial duplicada: ${s.class_id}`);
+        classes.add(s.class_id);
+        if (isWall(s.pos)) e.push(`posição inicial em parede: ${s.pos}`);
+      }
+    }
     if (S.rooms.length === 0) e.push("precisa de ao menos uma sala");
-    if (!S.rooms.some(r => r.role === "entrance")) e.push("nenhuma sala com role 'entrance'");
+    if (S.startMode === "entrance" && !S.rooms.some(r => r.role === "entrance")) e.push("nenhuma sala com role 'entrance'");
     for (const m of S.monsters) {
       if (!types.has(m.type)) e.push(`monstro tipo inválido: ${m.type}`);
       if (isWall(m.pos)) e.push(`monstro em parede: ${m.pos}`);
@@ -1874,10 +2142,22 @@
       if (isWall(t.pos)) e.push(`armadilha em parede: ${t.pos}`);
       if ((t.tipo === "fosso_envenenado" || t.tipo === "armadilha_dardos_envenenados") && !venoms.has(t.veneno_id)) e.push(`${t.tipo} sem veneno válido`);
       if (t.tipo === "armadilha_teletransporte" && (!Array.isArray(t.saida) || S.tiles[t.saida[1]]?.[t.saida[0]] !== FLOOR)) e.push("armadilha de teletransporte sem saída em chão");
+      if (t.tipo === "armadilha_maldicao") {
+        const mode = t.curse_mode || "aleatoria";
+        if (!["especifica", "aleatoria"].includes(mode)) e.push("armadilha_maldicao com modo inválido");
+        if (mode === "especifica" && !curses.has(t.curse_id)) e.push("armadilha_maldicao sem maldição válida");
+        if (mode === "aleatoria" && !["leve", "media", "grave"].includes(t.curse_category || "leve")) e.push("armadilha_maldicao com gravidade inválida");
+      }
     }
     if (S.prisoner && isWall(S.prisoner.pos)) e.push("prisioneiro em parede");
     for (const r of S.rooms) for (const d of r.doors) if (S.tiles[d[1]]?.[d[0]] !== DOOR) e.push(`porta declarada não é tile DOOR: ${d}`);
-    if (reachableFloors(6) < 6) e.push("menos de 6 casas de chão alcançáveis da entrada");
+    if (S.startMode === "entrance") {
+      if (reachableFloors(6) < 6) e.push("menos de 6 casas de chão alcançáveis da entrada");
+    } else {
+      for (const s of S.heroSpawns) if (reachableFloors(1, s.pos) < 1) e.push(`posição inicial inacessível: ${s.class_id}`);
+    }
+    if (S.objectives.primary.type === "all_heroes_at_exit" && !S.exit)
+      e.push("o objetivo all_heroes_at_exit exige uma saída");
     const decTypes = new Set(CAT.decorations.map(d => d.type));
     const decOcc = new Set();
     const wallDecOcc = new Set();
@@ -1907,6 +2187,12 @@
         if (!traps.has(d.trap.tipo)) e.push("armadilha de decoração inválida");
         if (["fosso_envenenado", "armadilha_dardos_envenenados"].includes(d.trap.tipo) && !venoms.has(d.trap.veneno_id)) e.push(`${d.trap.tipo} na decoração sem veneno válido`);
         if (d.trap.tipo === "armadilha_teletransporte" && (!Array.isArray(d.trap.saida) || S.tiles[d.trap.saida[1]]?.[d.trap.saida[0]] !== FLOOR)) e.push("armadilha de teletransporte na decoração sem saída em chão");
+        if (d.trap.tipo === "armadilha_maldicao") {
+          const mode = d.trap.curse_mode || "aleatoria";
+          if (!["especifica", "aleatoria"].includes(mode)) e.push("armadilha de decoração com modo de maldição inválido");
+          if (mode === "especifica" && !curses.has(d.trap.curse_id)) e.push("armadilha de decoração sem maldição válida");
+          if (mode === "aleatoria" && !["leve", "media", "grave"].includes(d.trap.curse_category || "leve")) e.push("armadilha de decoração com gravidade inválida");
+        }
       }
     }
     const decorIds = new Set(S.decorations.map(d => d.id));
@@ -1952,8 +2238,24 @@
     S.grid = { w: obj.grid.w, h: obj.grid.h };
     S.tiles = obj.tiles.map(row => row.slice());
     S.rooms = (obj.rooms || []).map(r => Object.assign({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, role: r.role, locked: !!r.locked, doors: (r.doors || []).map(d => d.slice()) }, r.required ? { required: true, required_mode: r.required_mode === "visit" ? "visit" : "clear" } : {}));
+    S.doorRotations = {};
+    const loadDoorRotations = (source) => {
+      if (!source || typeof source !== "object") return;
+      for (const [key, value] of Object.entries(source)) {
+        const n = Number(value);
+        if (/^\d+,\d+$/.test(key) && Number.isFinite(n)) S.doorRotations[key] = ((Math.round(n) % 4) + 4) % 4;
+      }
+    };
+    loadDoorRotations(obj.door_orientations);
+    for (const r of (obj.rooms || [])) loadDoorRotations(r.door_orientations);
     S.nextRoomId = S.rooms.reduce((m, r) => Math.max(m, r.id + 1), 0);
+    S.startMode = obj.start_mode === "hero_spawns" || (!obj.entrance && Array.isArray(obj.hero_spawns) && obj.hero_spawns.length)
+      ? "hero_spawns" : "entrance";
     S.entrance = obj.entrance || null;
+    S.heroSpawns = (obj.hero_spawns || []).map(s => ({
+      class_id: s.class_id, pos: Array.isArray(s.pos) ? s.pos.slice() : [0, 0], room_id: s.room_id ?? null,
+    }));
+    if (S.startMode === "hero_spawns") S.entrance = null;
     S.exit = obj.exit || null;
     S.prisoner = obj.prisoner || null;
     S.monsters = (obj.monsters || []).map(m => ({
@@ -1961,7 +2263,18 @@
       ...(Array.isArray(m.vscale) && m.vscale.length === 2 ? { vscale: [Number(m.vscale[0]), Number(m.vscale[1])] } : {}),
     }));
     S.chests = (obj.chests || []).map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: (c.items || []).map(i => ({ id: i.id })), key_objective: !!c.key_objective }));
-    S.traps = (obj.traps || []).map(t => { const o = { tipo: t.tipo, pos: t.pos.slice() }; if (t.veneno_id) o.veneno_id = t.veneno_id; if (t.saida) o.saida = t.saida.slice(); if (t.image) o.image = t.image; return o; });
+    S.traps = (obj.traps || []).map(t => {
+      const o = { tipo: t.tipo, pos: t.pos.slice() };
+      if (t.veneno_id) o.veneno_id = t.veneno_id;
+      if (t.saida) o.saida = t.saida.slice();
+      if (t.tipo === "armadilha_maldicao") {
+        o.curse_mode = t.curse_mode || "aleatoria";
+        if (t.curse_id) o.curse_id = t.curse_id;
+        if (t.curse_category) o.curse_category = t.curse_category;
+      }
+      if (t.image) o.image = t.image;
+      return o;
+    });
     // Mapas criados por versões anteriores podiam ter IDs repetidos após
     // apagar/colar objetos. Repara somente a identidade interna ao abrir —
     // posição, tipo e todas as configurações da decoração são preservados.
@@ -1985,7 +2298,16 @@
       loot: d.loot ? { gold: d.loot.gold | 0, items: (d.loot.items || []).map(i => ({ id: i.id })) } : null,
       key_objective: !!d.key_objective,
       ...(d.chest_trap_monster_type ? { chest_trap_monster_type: d.chest_trap_monster_type } : {}),
-      ...(d.trap?.tipo ? { trap: { tipo: d.trap.tipo, ...(d.trap.veneno_id ? { veneno_id: d.trap.veneno_id } : {}), ...(Array.isArray(d.trap.saida) ? { saida: d.trap.saida.slice() } : {}) } } : {}),
+      ...(d.trap?.tipo ? { trap: {
+        tipo: d.trap.tipo,
+        ...(d.trap.veneno_id ? { veneno_id: d.trap.veneno_id } : {}),
+        ...(Array.isArray(d.trap.saida) ? { saida: d.trap.saida.slice() } : {}),
+        ...(d.trap.tipo === "armadilha_maldicao" ? {
+          curse_mode: d.trap.curse_mode || "aleatoria",
+          ...(d.trap.curse_id ? { curse_id: d.trap.curse_id } : {}),
+          ...(d.trap.curse_category ? { curse_category: d.trap.curse_category } : {}),
+        } : {}),
+      } } : {}),
       ...(d.charges !== undefined ? { charges: d.charges | 0 } : {}),
       // Decorações catalogadas de parede sempre recuperam sua arte padrão,
       // inclusive em arquivos antigos que ainda não guardavam `image`.
@@ -2167,7 +2489,7 @@
   document.getElementById("tab-cenas").onclick = () => setTab("cenas");
 
   // Expor para verificação no console / tasks seguintes.
-  window.EDITOR = { S, catalog: CAT, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, deleteRoom, entityAt, doorLink, doorUnlink, validarEditor, buildJSON, loadJSON, save, updateStatus, WALL, FLOOR, DOOR, decorMeta, decorEffSize, decorTilesAt, decorTiles, rotateFacing, rotateDecorPending, decorFits, placeDecor, decorBaseSize, decorEffSizeOf, decorWouldFit, tilesFor, dropValid, moveSelTo, copySelectedDecor, pasteDecorAt, duplicateDecorAdjacent };
+  window.EDITOR = { S, catalog: CAT, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, deleteRoom, entityAt, doorLink, doorUnlink, validarEditor, buildJSON, loadJSON, save, updateStatus, WALL, FLOOR, DOOR, decorMeta, decorEffSize, decorTilesAt, decorTiles, rotateFacing, rotateDecorPending, doorRotationAt, rotateDoorAt, rotateDoorSelected, decorFits, placeDecor, decorBaseSize, decorEffSizeOf, decorWouldFit, tilesFor, dropValid, moveSelTo, copySelectedDecor, pasteDecorAt, duplicateDecorAdjacent };
 
   initGrid(S.grid.w, S.grid.h);
   buildToolbar();

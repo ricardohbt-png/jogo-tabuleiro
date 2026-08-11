@@ -2,19 +2,13 @@
   "destino_2": {
     "id": "destino_2",
     "nome": "esconderijo de Leonel",
-    "x": 57.01,
-    "y": 38.66,
+    "x": 57.44,
+    "y": 38.93,
     "fome": 0,
     "sede": 0,
     "dungeons": [
       {
-        "file": "_teste_materiais.json",
-        "encadear": true,
-        "intro": "",
-        "outro": ""
-      },
-      {
-        "file": "mapaga_grande.json",
+        "file": "Introducao.json",
         "encadear": false,
         "intro": "",
         "outro": ""
