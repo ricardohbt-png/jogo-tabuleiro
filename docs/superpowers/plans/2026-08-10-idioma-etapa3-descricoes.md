@@ -17,24 +17,24 @@
 - **`CLAUDE.md` na raiz** — regras obrigatórias. `src/gameState.js` **nunca** referencia `document`, `canvas`, `THREE` ou `window`. `src/i18n.js` pode usar `window`, mas **não** `document`.
 - **Nunca edite `game.js` por PowerShell/`sed`.** Use a ferramenta Edit. São ~25.900 linhas com todo o HTML do jogo numa template string.
 - **O usuário edita `game.js`, `game.css` e `.glb` em paralelo, e sobe/derruba um servidor na porta 8765.** Antes de cada commit rode `git status` e use só os caminhos listados no passo — nunca `git add -A` nem `git add .`. Não mate processo nenhum.
-- **Etapas 1 e 2 (prontas):** motor `src/i18n.js` (`window.I18N` com `t/tem/traduzirNomes/setLang/on/lang`); dicionário em `src/lang/strings.js` (à mão) + `src/lang/catalogo.js` (gerado, 397 chaves `.nome`); `gameState.js` com `setMessageFilter(fn)` aplicado no `ws.onmessage`; `game.js` registra `GS.setMessageFilter(I18N.traduzirNomes)`. Testes: `tools/test_idioma.py` (32), `tools/test_vocabulario.py` (36), `tools/test_idioma_cliente.js` (16), `tools/test_vocabulario_cliente.js` (16).
+- **Etapas 1 e 2 (prontas):** motor `src/i18n.js` (`window.I18N` com `t/tem/traduzirNomes/setLang/on/lang`); dicionário em `src/lang/strings.js` (à mão) + `src/lang/catalogo.js` (gerado, uma chave `.nome` por entrada de catálogo); `gameState.js` com `setMessageFilter(fn)` aplicado no `ws.onmessage`; `game.js` registra `GS.setMessageFilter(I18N.traduzirNomes)`. Testes: `tools/test_idioma.py` (32), `tools/test_vocabulario.py` (36, hoje **3 vermelhas** por contagem cravada — ver Passo 1a), `tools/test_idioma_cliente.js` (16), `tools/test_vocabulario_cliente.js` (16).
 
 ### Fatos já verificados (não precisa re-verificar)
 
 - `lobby_state.classes` e `game_start.instrumentos_base` são dicionários chaveados pelo id, **sem campo `id` interno** — daí a extensão (b).
 - `GRIMORIO_CLIENT` (`game.js:10487`), `ARMADILHAS_LUCCAS` (`game.js:9850`) e `CATALOGO_ITENS` (`src/gameState.js:519`) **têm `id` interno** em cada entrada, então o filtro atual já os alcança sem a extensão (b).
 - Dos 72 itens de `CATALOGO_ITENS`, 28 ids coincidem com os do servidor, e **os 28 têm nome em português idêntico** nos dois lados. Por isso aplicar o filtro em português é inócuo para nomes.
-- Descrições por família: guilda 127, magia 27, armadilha 13, instrumento 9, classe 6, item 7 = **189**. Com elas o `catalogo.js` vai de 397 para **586** chaves.
+- Descrições por família: guilda 127, magia 27, armadilha 13, instrumento 9, classe 6, item 7 = **189**. Esses números mudam quando o usuário acrescenta conteúdo (já mudaram durante o planejamento), então **não os crave em teste** — use-os só para conferir a ordem de grandeza.
 
 ### Mapa de arquivos
 
 | Arquivo | O que muda |
 |---|---|
 | `tools/gerar_vocabulario.py` | `chave()` ganha sufixo; `_entradas`/`coletar` parametrizados por tipo de texto; `achatar` emite `.nome` e `.desc`. |
-| `src/lang/catalogo.js` | Regenerado com 586 chaves; a coluna `en` das 189 descrições é preenchida na Task 4. |
+| `src/lang/catalogo.js` | Regenerado com as chaves `.desc`; a coluna `en` delas é preenchida na Task 4. |
 | `src/i18n.js` | `_chaveDeNome`→`_chaveBase`; troca descrição; id na chave do pai; `aplicarCatalogo(obj, soNome)` exportado. |
 | `game.js` | Aplica `aplicarCatalogo` nos 3 catálogos estáticos (boot + troca de idioma); corrige a precedência em `_converterBagParaInventario`. |
-| `tools/test_vocabulario.py` | +15 checagens (36 → 51). |
+| `tools/test_vocabulario.py` | Contagens cravadas viram asserções de relação (−9/+2) e +8 de descrição: 36 → **37**, e volta ao verde. |
 | `tools/test_vocabulario_cliente.js` | +13 checagens (16 → 29). |
 
 ---
@@ -46,31 +46,73 @@
 - Modificar: `tools/test_vocabulario.py`
 - Regenerar: `src/lang/catalogo.js`
 
-- [ ] **Passo 1: Escrever o teste que falha**
+- [ ] **Passo 1a: Tirar as contagens cravadas da suíte (ela está vermelha por isso)**
+
+`tools/test_vocabulario.py` está **falhando agora**, antes de você tocar em nada: a seção
+`[1]` crava `guilda: 125`, `armadilha: 11` e `total 397`, e o usuário acrescentou conteúdo
+novo ao catálogo (hoje são 127, 13 e 401). Isso é defeito do teste, não do produto —
+**número cravado sobre um catálogo vivo quebra por motivo falso a cada item novo.**
+Rode primeiro para ver:
+
+```bash
+python tools/test_vocabulario.py
+```
+
+Esperado: `33 passaram, 3 falharam`, com as três vermelhas sendo exatamente essas.
+
+Em `tools/test_vocabulario.py`, na seção `[1]`, substituir:
+
+```python
+    vocab = G.coletar()
+    esperado = {"item": 140, "guilda": 125, "monstro": 51, "decor": 28,
+                "magia": 27, "armadilha": 11, "instrumento": 9, "classe": 6}
+    for fam, n in esperado.items():
+        check(f"{fam}: {n} chaves", len(vocab.get(fam, {})) == n)
+    check("total de 397 chaves", sum(len(d) for d in vocab.values()) == 397)
+```
+
+por:
+
+```python
+    vocab = G.coletar()
+    # Sem contagem cravada: o catálogo é VIVO — o usuário acrescenta itens,
+    # monstros e técnicas o tempo todo, e um número fixo aqui deixaria a suíte
+    # vermelha por motivo falso a cada conteúdo novo. O que se verifica é a
+    # RELAÇÃO entre o catálogo e as chaves geradas, que não depende do tamanho.
+    check("as 8 famílias existem e nenhuma está vazia",
+          sorted(vocab) == ["armadilha", "classe", "decor", "guilda",
+                            "instrumento", "item", "magia", "monstro"]
+          and all(vocab.values()))
+    check("todo id coletado vira exatamente uma chave de nome",
+          len(G.achatar(vocab)) == sum(len(d) for d in vocab.values()))
+```
+
+São 9 checagens trocadas por 2, então a suíte cai de 36 para **29** — e volta ao verde.
+
+- [ ] **Passo 1b: Escrever o teste das descrições, que falha**
 
 Acrescentar ao fim de `_rodar_verificacoes()` em `tools/test_vocabulario.py`:
 
 ```python
     print("\n[12] Descrições")
     desc = G.coletar("desc")
-    esperado_desc = {"guilda": 127, "magia": 27, "armadilha": 13,
-                     "instrumento": 9, "classe": 6, "item": 7}
-    for fam, n in esperado_desc.items():
-        check(f"{fam}: {n} descrições", len(desc.get(fam, {})) == n)
-    check("total de 189 descrições", sum(len(d) for d in desc.values()) == 189)
-    check("monstro e decor não têm descrição",
-          not desc.get("monstro") and not desc.get("decor"))
+    check("as seis famílias com descrição têm entradas",
+          all(desc.get(f) for f in ("guilda", "magia", "armadilha",
+                                    "instrumento", "classe", "item")))
     check("chave de descrição usa o sufixo .desc",
           G.chave("guilda", "brutalidade", "desc") == "cat.guilda.brutalidade.desc")
     check("chave de nome continua com .nome por padrão",
           G.chave("guilda", "brutalidade") == "cat.guilda.brutalidade.nome")
-
-    plano = G.achatar(G.coletar(), G.coletar("desc"))
-    check("achatar emite as 586 chaves", len(plano) == 586)
-    check("item sem descrição não ganha chave .desc",
-          "cat.monstro.goblin.desc" not in plano)
-    check("o arquivo gerado tem 586 chaves",
-          len(G.ler_existente(G.DESTINO)) == 586)
+    nomes = G.coletar()
+    check("achatar soma nomes e descrições, sem perder nem duplicar",
+          len(G.achatar(nomes, desc))
+          == sum(len(d) for d in nomes.values()) + sum(len(d) for d in desc.values()))
+    # Unitário, com dados sintéticos: robusto a qualquer conteúdo que o usuário
+    # acrescente ao jogo.
+    check("entrada sem descrição não gera chave .desc",
+          G.achatar({"x": {"a": "Nome"}}, {"x": {}}) == {"cat.x.a.nome": "Nome"})
+    check("o arquivo gerado contém tudo que o catálogo manda",
+          set(G.ler_existente(G.DESTINO)) >= set(G.achatar(nomes, desc)))
     # Idempotência com as DUAS famílias de chave: o que importa é que uma
     # descrição traduzida à mão sobreviva à próxima execução do gerador.
     novo, _ = G.mesclar({"cat.guilda.x.desc": {"pt": "Antigo", "en": "Old"}},
@@ -198,7 +240,7 @@ por:
 python tools/gerar_vocabulario.py
 ```
 
-Esperado: `586 chaves no catálogo, 586 no arquivo.` e `189 sem tradução para o inglês.` (as 397 de nome já estão traduzidas), sem nenhuma órfã.
+Esperado: a contagem de chaves sobe (as `.desc` entram) e o "sem tradução" passa a ser exatamente o número de descrições, porque os nomes já estão traduzidos. Não confira contra um número fixo — o catálogo é vivo; confira que **nenhuma órfã** apareceu e que o total bate com `nomes + descrições` do passo seguinte.
 
 Se aparecer `ColisaoDeId`, **pare e reporte**: significa que dois catálogos dão descrições diferentes ao mesmo id de item, e a decisão de qual vale é do autor do jogo, não sua.
 
@@ -208,7 +250,7 @@ Se aparecer `ColisaoDeId`, **pare e reporte**: significa que dois catálogos dã
 python tools/test_vocabulario.py && python tools/test_idioma.py
 ```
 
-Esperado: `51 passaram, 0 falharam` e `32 passaram, 0 falharam`.
+Esperado: `37 passaram, 0 falharam` e `32 passaram, 0 falharam`.
 
 - [ ] **Passo 6: Confirmar que as 397 traduções de nome sobreviveram**
 
@@ -216,7 +258,7 @@ Esperado: `51 passaram, 0 falharam` e `32 passaram, 0 falharam`.
 python -c "import json,io; raw=io.open('src/lang/catalogo.js',encoding='utf-8').read(); d=json.loads(raw[raw.index('{'):raw.rindex('}')+1]); n=[k for k in d if k.endswith('.nome')]; print(len(n),'nomes,',sum(1 for k in n if d[k]['en']),'traduzidos')"
 ```
 
-Esperado: `397 nomes, 397 traduzidos`.
+Esperado: os dois números iguais (todo nome segue traduzido). O valor em si depende de quanto conteúdo existe no jogo hoje.
 
 - [ ] **Passo 7: Commit**
 
@@ -625,7 +667,7 @@ Esperado: `0 chaves sem traducao no arquivo inteiro`.
 python tools/gerar_vocabulario.py && git diff --stat src/lang/catalogo.js
 ```
 
-Esperado: `586 chaves no catálogo, 586 no arquivo.`, `0 sem tradução para o inglês.`, nenhuma órfã e — depois do commit do passo 5 — **nenhuma diferença** no `git diff`.
+Esperado: `0 sem tradução para o inglês.`, nenhuma órfã e — depois do commit do passo 5 — **nenhuma diferença** no `git diff`.
 
 - [ ] **Passo 5: Commit**
 
@@ -647,7 +689,7 @@ git commit -m "feat(i18n): traduz as descricoes de magia, armadilha, instrumento
 python tools/test_idioma.py && python tools/test_vocabulario.py && node tools/test_idioma_cliente.js && node tools/test_vocabulario_cliente.js
 ```
 
-Esperado: `32`, `51`, `16` e `29` passando, zero falhando.
+Esperado: `32`, `37`, `16` e `29` passando, zero falhando.
 
 - [ ] **Passo 2: Rodar as suítes de regressão**
 
@@ -743,7 +785,7 @@ Em `CLAUDE.md`, acrescentar ao fim:
 ```markdown
 > **Idioma — alcance e descrições (etapa 3 de 5):** fecha três lacunas de alcance da etapa
 > 2 (53 nomes traduzidos que não chegavam à tela) e acrescenta as **189 descrições** de
-> catálogo — `catalogo.js` vai a **586 chaves** (`cat.<família>.<id>.desc` ao lado de
+> catálogo — `catalogo.js` ganha as chaves `.desc` (`cat.<família>.<id>.desc` ao lado de
 > `.nome`; o gerador emite `.desc` só para quem tem descrição). **(1) Id na chave do pai:**
 > `lobby_state.classes` e `game_start.instrumentos_base` são dicionários chaveados pelo id,
 > com o valor sem campo `id` dentro; o filtro passa a tentar a chave do dicionário pai como
@@ -765,7 +807,7 @@ Em `CLAUDE.md`, acrescentar ao fim:
 > `CATALOGO_ITENS`, o `resumo`/`descricao` HTML das magias e o `desc` próprio das armadilhas
 > no cliente — todos etapa 5. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-08-10-idioma-etapa3-descricoes*`. Testes:
-> `tools/test_vocabulario.py` (51) e `tools/test_vocabulario_cliente.js` (29).
+> `tools/test_vocabulario.py` (37) e `tools/test_vocabulario_cliente.js` (29).
 ```
 
 - [ ] **Passo 6: Commit final**
