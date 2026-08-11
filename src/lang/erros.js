@@ -818,183 +818,183 @@ window.LANG_ERROS = {
     "pt": "Não é o seu turno."
   },
   "erro.nao_e_possivel_ativar_este_mecanismo": {
-    "en": "",
+    "en": "Can't activate this mechanism.",
     "pt": "Não é possível ativar este mecanismo."
   },
   "erro.nao_foi_possivel_envenenar_a_arma": {
-    "en": "",
+    "en": "Couldn't poison the weapon.",
     "pt": "Não foi possível envenenar a arma."
   },
   "erro.nao_foi_possivel_salvar_o_ponto_da_cidad": {
-    "en": "",
+    "en": "Couldn't save the town point.",
     "pt": "Não foi possível salvar o ponto da cidade."
   },
   "erro.nao_foi_possivel_salvar_os_pontos_do_map": {
-    "en": "",
+    "en": "Couldn't save the map points.",
     "pt": "Não foi possível salvar os pontos do mapa."
   },
   "erro.nao_ha_como_sair_desta_masmorra": {
-    "en": "",
+    "en": "There's no way out of this dungeon.",
     "pt": "Não há como sair desta masmorra."
   },
   "erro.nao_ha_espaco_livre_ao_lado_para_a_armad": {
-    "en": "",
+    "en": "No free space nearby for the trap to trigger.",
     "pt": "Não há espaço livre ao lado para a armadilha disparar."
   },
   "erro.nao_ha_prisioneiro_para_libertar": {
-    "en": "",
+    "en": "No prisoner to free.",
     "pt": "Não há prisioneiro para libertar."
   },
   "erro.nao_ha_prisioneiro_para_mover": {
-    "en": "",
+    "en": "No prisoner to move.",
     "pt": "Não há prisioneiro para mover."
   },
   "erro.nenhum_ataque_recente_para_rerolar": {
-    "en": "",
+    "en": "No recent attack to reroll.",
     "pt": "Nenhum ataque recente para rerolar."
   },
   "erro.nenhum_inimigo_na_linha": {
-    "en": "",
+    "en": "No enemy in the line.",
     "pt": "Nenhum inimigo na linha."
   },
   "erro.nenhum_inimigo_no_alcance": {
-    "en": "",
+    "en": "No enemy in range.",
     "pt": "Nenhum inimigo no alcance."
   },
   "erro.nenhum_inimigo_no_cone": {
-    "en": "",
+    "en": "No enemy in the cone.",
     "pt": "Nenhum inimigo no cone."
   },
   "erro.nenhum_inimigo_para_os_animados_atacarem": {
-    "en": "",
+    "en": "No enemy for the minions to attack.",
     "pt": "Nenhum inimigo para os animados atacarem."
   },
   "erro.nenhum_instrumento_equipado_mao_do_escud": {
-    "en": "",
+    "en": "No instrument equipped (off hand).",
     "pt": "Nenhum instrumento equipado (mão do escudo)."
   },
   "erro.nenhum_item_neste_slot": {
-    "en": "",
+    "en": "No item in this slot.",
     "pt": "Nenhum item neste slot."
   },
   "erro.nenhum_ponto_valido_foi_informado": {
-    "en": "",
+    "en": "No valid point was given.",
     "pt": "Nenhum ponto válido foi informado."
   },
   "erro.nenhuma_arma_para_vender": {
-    "en": "",
+    "en": "No weapon to sell.",
     "pt": "Nenhuma arma para vender."
   },
   "erro.nenhuma_armadilha_revelada_adjacente_par": {
-    "en": "",
+    "en": "No revealed trap adjacent to disarm.",
     "pt": "Nenhuma armadilha revelada adjacente para desarmar."
   },
   "erro.nenhuma_armadura_para_vender": {
-    "en": "",
+    "en": "No armor to sell.",
     "pt": "Nenhuma armadura para vender."
   },
   "erro.nenhuma_coordenada_valida_foi_informada": {
-    "en": "",
+    "en": "No valid coordinate was given.",
     "pt": "Nenhuma coordenada válida foi informada."
   },
   "erro.nenhuma_escolha_de_magia_pendente": {
-    "en": "",
+    "en": "No pending spell choice.",
     "pt": "Nenhuma escolha de magia pendente."
   },
   "erro.nesta_primeira_etapa_a_aventura_parte_de": {
-    "en": "",
+    "en": "In this first stage, the adventure departs from Alva e Luz.",
     "pt": "Nesta primeira etapa, a aventura parte de Alva e Luz."
   },
   "erro.ninguem_agarrado_e_adjacente_para_esta_a": {
-    "en": "",
+    "en": "No one grappled and adjacent for this action.",
     "pt": "Ninguém agarrado e adjacente para esta ação."
   },
   "erro.o_aliado_deve_estar_adjacente_a_voce": {
-    "en": "",
+    "en": "The ally must be adjacent to you.",
     "pt": "O aliado deve estar adjacente a você."
   },
   "erro.o_aliado_precisa_estar_adjacente": {
-    "en": "",
+    "en": "The ally needs to be adjacent.",
     "pt": "O aliado precisa estar adjacente."
   },
   "erro.o_alvo_nao_e_um_morto_vivo": {
-    "en": "",
+    "en": "The target isn't undead.",
     "pt": "O alvo não é um morto-vivo."
   },
   "erro.o_alvo_nao_esta_mais_disponivel": {
-    "en": "",
+    "en": "The target is no longer available.",
     "pt": "O alvo não está mais disponível."
   },
   "erro.o_bau_deve_ser_criado_em_uma_casa_adjace": {
-    "en": "",
+    "en": "The chest must be created on an adjacent tile.",
     "pt": "O baú deve ser criado em uma casa adjacente."
   },
   "erro.o_bau_esta_cheio": {
-    "en": "",
+    "en": "The chest is full.",
     "pt": "O baú está cheio."
   },
   "erro.o_cadaver_deve_estar_a_ate_3_casas_de_pe": {
-    "en": "",
+    "en": "The corpse must be within 3 tiles of Pedro.",
     "pt": "O cadáver deve estar a até 3 casas de Pedro."
   },
   "erro.o_centro_da_area_precisa_estar_em_uma_ca": {
-    "en": "",
+    "en": "The area's center must be on a valid tile.",
     "pt": "O centro da área precisa estar em uma casa válida."
   },
   "erro.o_elemental_eletrico_ataca_em_linha_reta": {
-    "en": "",
+    "en": "⚡ The electric elemental attacks in a straight line (max 3 tiles).",
     "pt": "⚡ O elemental elétrico ataca em linha reta (máx 3 casas)."
   },
   "erro.o_inimigo_precisa_estar_adjacente": {
-    "en": "",
+    "en": "The enemy needs to be adjacent.",
     "pt": "O inimigo precisa estar adjacente."
   },
   "erro.o_mestre_ainda_esta_conectado": {
-    "en": "",
+    "en": "The game master is still connected.",
     "pt": "O mestre ainda está conectado."
   },
   "erro.o_mestre_desta_campanha_e_fixo_e_tambem": {
-    "en": "",
+    "en": "This campaign's Game Master is fixed and is also the host.",
     "pt": "O Mestre desta campanha é fixo e também é o anfitrião."
   },
   "erro.o_mestre_nao_escolhe_classe_solte_o_pape": {
-    "en": "",
+    "en": "The game master doesn't choose a class. Drop the game master role first.",
     "pt": "O mestre não escolhe classe. Solte o papel de mestre primeiro."
   },
   "erro.o_objeto_esta_vazio": {
-    "en": "",
+    "en": "The object is empty.",
     "pt": "O objeto está vazio."
   },
   "erro.o_refugio_dos_herois_ainda_esta_bloquead": {
-    "en": "",
+    "en": "The Heroes' Refuge is still locked.",
     "pt": "O Refúgio dos Heróis ainda está bloqueado."
   },
   "erro.o_teste_nao_esta_mais_disponivel": {
-    "en": "",
+    "en": "The test is no longer available.",
     "pt": "O teste não está mais disponível."
   },
   "erro.objeto_nao_encontrado": {
-    "en": "",
+    "en": "Object not found.",
     "pt": "Objeto não encontrado."
   },
   "erro.objeto_sem_loot": {
-    "en": "",
+    "en": "Object has no loot.",
     "pt": "Objeto sem loot."
   },
   "erro.os_pontos_da_cidade_so_podem_ser_ajustad": {
-    "en": "",
+    "en": "Town points can only be adjusted in the Editor.",
     "pt": "Os pontos da cidade só podem ser ajustados no Editor."
   },
   "erro.os_pontos_do_mapa_so_podem_ser_ajustados": {
-    "en": "",
+    "en": "Map points can only be adjusted in the Editor.",
     "pt": "Os pontos do mapa só podem ser ajustados no Editor."
   },
   "erro.ouro_insuficiente": {
-    "en": "",
+    "en": "Not enough gold.",
     "pt": "Ouro insuficiente."
   },
   "erro.ouro_insuficiente_2": {
-    "en": "",
+    "en": "Not enough gold!",
     "pt": "Ouro insuficiente!"
   },
   "erro.ouro_insuficiente_precisa": {
@@ -1002,11 +1002,11 @@ window.LANG_ERROS = {
     "pt": "Ouro insuficiente — precisa {ouro}🪙."
   },
   "erro.outro_aventureiro_esta_neste_espaco": {
-    "en": "",
+    "en": "Another adventurer is in this space.",
     "pt": "Outro aventureiro está neste espaço."
   },
   "erro.outro_jogador_ja_fez_a_escolha_do_grupo": {
-    "en": "",
+    "en": "Another player already made the group's choice.",
     "pt": "Outro jogador já fez a escolha do grupo."
   },
   "erro.parede_bloqueia_arremesso": {
@@ -1022,11 +1022,11 @@ window.LANG_ERROS = {
     "pt": "🧱 Uma parede bloqueia a linha de tiro até {alvo}!"
   },
   "erro.pedido_enviado_para_votacao_dos_membros": {
-    "en": "",
+    "en": "Request sent for a vote among active members.",
     "pt": "Pedido enviado para votação dos membros ativos."
   },
   "erro.pergaminho_nao_encontrado": {
-    "en": "",
+    "en": "Scroll not found.",
     "pt": "Pergaminho não encontrado."
   },
   "erro.personagem_nao_conhece_magia": {
@@ -1034,11 +1034,11 @@ window.LANG_ERROS = {
     "pt": "{personagem} não conhece {magia}."
   },
   "erro.ponto_da_cidade_invalido": {
-    "en": "",
+    "en": "Invalid town point.",
     "pt": "Ponto da cidade inválido."
   },
   "erro.posicao_invalida_para_a_armadilha": {
-    "en": "",
+    "en": "Invalid position for the trap.",
     "pt": "Posição inválida para a armadilha."
   },
   "erro.preso_por_captor_impossivel_mover": {
@@ -1046,7 +1046,7 @@ window.LANG_ERROS = {
     "pt": "⛓️ Você está preso por **{captor}**! Impossível se mover (tente escapar no próximo turno)."
   },
   "erro.prisioneiro_sem_movimento_neste_turno": {
-    "en": "",
+    "en": "Prisoner has no movement this turn.",
     "pt": "Prisioneiro sem movimento neste turno."
   },
   "erro.provisoes_insuficientes_ir_e_voltar": {
@@ -1054,11 +1054,11 @@ window.LANG_ERROS = {
     "pt": "Provisões insuficientes para ir e voltar (precisa de 🍖{fome} e 💧{sede})."
   },
   "erro.purificacao_requer_contato_adjacente": {
-    "en": "",
+    "en": "Purification requires adjacent contact.",
     "pt": "Purificação requer contato adjacente."
   },
   "erro.purificar_o_item_vinculado_exige_5_de_fo": {
-    "en": "",
+    "en": "Purifying the bound item requires +5 hunger and +5 thirst.",
     "pt": "Purificar o item vinculado exige +5 de fome e +5 de sede."
   },
   "erro.recursos_insuficientes_fome_sede": {
@@ -1070,11 +1070,11 @@ window.LANG_ERROS = {
     "pt": "Recursos insuficientes p/ metamagia 🍖-{fome} 💧-{sede}."
   },
   "erro.recursos_insuficientes_para_a_expedicao": {
-    "en": "",
+    "en": "Not enough resources for the expedition: ",
     "pt": "Recursos insuficientes para a expedição: "
   },
   "erro.recursos_insuficientes_para_viajar": {
-    "en": "",
+    "en": "Not enough resources to travel: ",
     "pt": "Recursos insuficientes para viajar: "
   },
   "erro.recursos_insuficientes_parenteses_fome_sede": {
@@ -1090,15 +1090,15 @@ window.LANG_ERROS = {
     "pt": "Requer antes: {requisito}."
   },
   "erro.ressurreicao_requer_contato_adjacente_co": {
-    "en": "",
+    "en": "Resurrection requires adjacent contact with the ally.",
     "pt": "Ressurreição requer contato adjacente com o aliado."
   },
   "erro.richard_nao_pode_se_proteger_com_esta_ha": {
-    "en": "",
+    "en": "Richard can't protect himself with this ability.",
     "pt": "Richard não pode se proteger com esta habilidade."
   },
   "erro.sala_cheia_6_herois_nao_ha_vaga_de_heroi": {
-    "en": "",
+    "en": "Room full (6 heroes) — no hero slot available for you.",
     "pt": "Sala cheia (6 heróis) — não há vaga de herói para você."
   },
   "erro.sala_cheia_maximo_6_herois_1_mestre": {
@@ -1106,11 +1106,11 @@ window.LANG_ERROS = {
     "pt": "Sala cheia (máximo 6 heróis + 1 mestre)."
   },
   "erro.sala_nao_encontrada": {
-    "en": "",
+    "en": "Room not found.",
     "pt": "Sala não encontrada."
   },
   "erro.sala_nao_encontrada_para_reconexao": {
-    "en": "",
+    "en": "Room not found for reconnection.",
     "pt": "Sala não encontrada para reconexão."
   },
   "erro.sede_insuficiente_parenteses": {
@@ -1122,15 +1122,15 @@ window.LANG_ERROS = {
     "pt": "Sede insuficiente — precisa 💧{sede}."
   },
   "erro.selecione_uma_casa_adjacente_para_desarm": {
-    "en": "",
+    "en": "Select an adjacent tile to disarm.",
     "pt": "Selecione uma casa adjacente para desarmar."
   },
   "erro.sem_credito_de_oportunidade_disponivel": {
-    "en": "",
+    "en": "No Opportunity credit available.",
     "pt": "Sem crédito de Oportunidade disponível."
   },
   "erro.sem_espaco_adjacente_para_largar": {
-    "en": "",
+    "en": "No adjacent space to drop it.",
     "pt": "Sem espaço adjacente para largar."
   },
   "erro.sem_folego_atacar_sob_cancao": {
@@ -1138,11 +1138,11 @@ window.LANG_ERROS = {
     "pt": "Sem fôlego para atacar sob a canção — precisa 🍖{fome} 💧{sede} (ou desative a canção)."
   },
   "erro.sem_linha_de_visao_para_o_alvo": {
-    "en": "",
+    "en": "🧱 No line of sight to the target.",
     "pt": "🧱 Sem linha de visão para o alvo."
   },
   "erro.sem_movimentos_restantes": {
-    "en": "",
+    "en": "No movement left.",
     "pt": "Sem movimentos restantes."
   },
   "erro.sem_municao_no_local": {
@@ -1150,15 +1150,15 @@ window.LANG_ERROS = {
     "pt": "🏹 Sem {municao} (básicos, incendiários ou de prata) {local}!"
   },
   "erro.sem_ouro_aqui": {
-    "en": "",
+    "en": "No gold here.",
     "pt": "Sem ouro aqui."
   },
   "erro.sem_ouro_neste_bau": {
-    "en": "",
+    "en": "No gold in this chest.",
     "pt": "Sem ouro neste baú."
   },
   "erro.sem_reforcos_desse_tipo_na_reserva": {
-    "en": "",
+    "en": "No reinforcements of that type in reserve.",
     "pt": "Sem reforços desse tipo na reserva."
   },
   "erro.sem_slot_de_magia_de_circulo": {
@@ -1166,39 +1166,39 @@ window.LANG_ERROS = {
     "pt": "Sem slot de magia de {circulo} círculo{extra}."
   },
   "erro.servo_ja_atacou_neste_turno": {
-    "en": "",
+    "en": "Minion already attacked this turn.",
     "pt": "Servo já atacou neste turno."
   },
   "erro.servo_nao_esta_adjacente_ao_alvo": {
-    "en": "",
+    "en": "Minion isn't adjacent to the target.",
     "pt": "Servo não está adjacente ao alvo."
   },
   "erro.servo_sem_movimento_neste_turno": {
-    "en": "",
+    "en": "Minion has no movement this turn.",
     "pt": "Servo sem movimento neste turno."
   },
   "erro.sessao_de_teste_nao_encontrada_ou_expira": {
-    "en": "",
+    "en": "Test session not found or expired.",
     "pt": "Sessão de teste não encontrada ou expirada."
   },
   "erro.seu_pedido_ja_esta_aguardando_votacao": {
-    "en": "",
+    "en": "Your request is already awaiting a vote.",
     "pt": "Seu pedido já está aguardando votação."
   },
   "erro.silencio_dos_deuses_impede_lancar_magias": {
-    "en": "",
+    "en": "Silence of the Gods prevents casting spells.",
     "pt": "Silêncio dos Deuses impede lançar magias."
   },
   "erro.slot_de_inventario_invalido": {
-    "en": "",
+    "en": "Invalid inventory slot.",
     "pt": "Slot de inventário inválido."
   },
   "erro.slot_de_tecnica_invalido": {
-    "en": "",
+    "en": "Invalid technique slot.",
     "pt": "Slot de técnica inválido."
   },
   "erro.slot_invalido": {
-    "en": "",
+    "en": "Invalid slot.",
     "pt": "Slot inválido."
   },
   "erro.slots_insuficientes_necessarios_disponiv": {
@@ -1206,43 +1206,43 @@ window.LANG_ERROS = {
     "pt": "Slots insuficientes — {necessarios} necessários, {disponiveis} disponíveis."
   },
   "erro.so_e_possivel_equipar_tecnicas_na_cidade": {
-    "en": "",
+    "en": "Techniques can only be equipped in town.",
     "pt": "Só é possível equipar técnicas na cidade."
   },
   "erro.so_e_possivel_sair_no_seu_turno": {
-    "en": "",
+    "en": "You can only leave on your turn.",
     "pt": "Só é possível sair no seu turno."
   },
   "erro.so_monstros_conjuradores_podem_usar_perg": {
-    "en": "",
+    "en": "Only spellcasting monsters can use scrolls.",
     "pt": "Só monstros conjuradores podem usar pergaminhos."
   },
   "erro.so_nas_sombras_e_fora_de_recarga": {
-    "en": "",
+    "en": "Only while in the shadows and off cooldown.",
     "pt": "Só nas sombras e fora de recarga."
   },
   "erro.so_uma_adaga_pode_ser_empunhada_como_2a": {
-    "en": "",
+    "en": "Only a dagger can be wielded as a 2nd weapon in the off hand.",
     "pt": "Só uma adaga pode ser empunhada como 2ª arma na mão esquerda."
   },
   "erro.somente_o_anfitriao_pode_alterar_o_limit": {
-    "en": "",
+    "en": "Only the host can change the turn limit.",
     "pt": "Somente o anfitrião pode alterar o limite de turno."
   },
   "erro.somente_o_anfitriao_pode_encerrar_a_cena": {
-    "en": "",
+    "en": "Only the host can end the scene.",
     "pt": "Somente o anfitrião pode encerrar a cena."
   },
   "erro.sorte_e_passiva_e_reage_automaticamente": {
-    "en": "",
+    "en": "Luck is passive and triggers automatically when a roll fails.",
     "pt": "Sorte é passiva e reage automaticamente quando uma rolagem falha."
   },
   "erro.sua_classe_nao_escolhe_magias": {
-    "en": "",
+    "en": "Your class doesn't choose spells.",
     "pt": "Sua classe não escolhe magias."
   },
   "erro.sua_classe_nao_lanca_magias_do_grimorio": {
-    "en": "",
+    "en": "Your class doesn't cast spells from the grimoire.",
     "pt": "Sua classe não lança magias do grimório."
   },
   "erro.sua_classe_nao_pode_usar_item": {
@@ -1250,11 +1250,11 @@ window.LANG_ERROS = {
     "pt": "Sua classe não pode usar {item}!"
   },
   "erro.sua_classe_nao_tem_slot_de_tecnica_exclu": {
-    "en": "",
+    "en": "Your class doesn't have an exclusive technique slot.",
     "pt": "Sua classe não tem slot de técnica exclusiva."
   },
   "erro.tecnica_desconhecida": {
-    "en": "",
+    "en": "Unknown technique.",
     "pt": "Técnica desconhecida."
   },
   "erro.tecnica_e_automatica": {
@@ -1266,7 +1266,7 @@ window.LANG_ERROS = {
     "pt": "{tecnica} em recarga ({rodadas} rodadas)."
   },
   "erro.tecnica_exclusiva_vai_no_slot_exclusivo": {
-    "en": "",
+    "en": "Exclusive techniques go in the exclusive slot.",
     "pt": "Técnica exclusiva vai no slot exclusivo."
   },
   "erro.tecnica_ja_preparada": {
@@ -1274,7 +1274,7 @@ window.LANG_ERROS = {
     "pt": "{tecnica} já está preparada para o próximo efeito."
   },
   "erro.tecnica_nao_equipada": {
-    "en": "",
+    "en": "Technique not equipped.",
     "pt": "Técnica não equipada."
   },
   "erro.templo_cobra_ouro_cura_maldicao": {
@@ -1286,147 +1286,147 @@ window.LANG_ERROS = {
     "pt": "⛪ **{personagem}** foi liberto de **{maldicao}** ({preco} ouro)."
   },
   "erro.teste_invalido": {
-    "en": "",
+    "en": "Invalid test.",
     "pt": "Teste inválido."
   },
   "erro.tipo_de_monstro_invalido": {
-    "en": "",
+    "en": "Invalid monster type.",
     "pt": "Tipo de monstro inválido."
   },
   "erro.tipo_de_purificacao_invalido": {
-    "en": "",
+    "en": "Invalid purification type.",
     "pt": "Tipo de purificação inválido."
   },
   "erro.todas_as_masmorras_deste_destino_ja_fora": {
-    "en": "",
+    "en": "All dungeons for this destination have already been completed.",
     "pt": "Todas as masmorras deste destino já foram concluídas."
   },
   "erro.todos_os_herois_devem_escolher_uma_class": {
-    "en": "",
+    "en": "All heroes must choose a class.",
     "pt": "Todos os heróis devem escolher uma classe."
   },
   "erro.um_inimigo_bloqueia_o_caminho": {
-    "en": "",
+    "en": "An enemy blocks the way!",
     "pt": "Um inimigo bloqueia o caminho!"
   },
   "erro.um_servo_animado_ocupa_este_espaco": {
-    "en": "",
+    "en": "An animated minion occupies this space.",
     "pt": "Um servo animado ocupa este espaço."
   },
   "erro.uma_parede_bloqueia_a_energia_curativa_p": {
-    "en": "",
+    "en": "🧱 A wall blocks the healing energy — you need to see the ally!",
     "pt": "🧱 Uma parede bloqueia a energia curativa — precisa ver o aliado!"
   },
   "erro.uma_parede_bloqueia_a_trajetoria_da_bola": {
-    "en": "",
+    "en": "🧱 A wall blocks Fireball's path!",
     "pt": "🧱 Uma parede bloqueia a trajetória da Bola de Fogo!"
   },
   "erro.uma_parede_bloqueia_a_trajetoria_do_arre": {
-    "en": "",
+    "en": "🧱 A wall blocks the throw's path!",
     "pt": "🧱 Uma parede bloqueia a trajetória do arremesso!"
   },
   "erro.uma_parede_bloqueia_o_arremesso": {
-    "en": "",
+    "en": "A wall blocks the throw.",
     "pt": "Uma parede bloqueia o arremesso."
   },
   "erro.uma_parede_bloqueia_o_raio_congelante": {
-    "en": "",
+    "en": "🧱 A wall blocks Ray of Frost!",
     "pt": "🧱 Uma parede bloqueia o Raio Congelante!"
   },
   "erro.use_o_clique_direito_para_arremessar_est": {
-    "en": "",
+    "en": "Use right-click to throw this item.",
     "pt": "Use o clique direito para arremessar este item."
   },
   "erro.veneno_desconhecido": {
-    "en": "",
+    "en": "Unknown poison.",
     "pt": "Veneno desconhecido."
   },
   "erro.veneno_invalido": {
-    "en": "",
+    "en": "Invalid poison.",
     "pt": "Veneno inválido."
   },
   "erro.veneno_nao_encontrado_na_bolsa": {
-    "en": "",
+    "en": "Poison not found in bag.",
     "pt": "Veneno não encontrado na bolsa."
   },
   "erro.voce_ainda_nao_aprendeu_a_purificar_este": {
-    "en": "",
+    "en": "You haven't learned to purify this affliction yet — upgrade Purification at the Guild.",
     "pt": "Você ainda não aprendeu a purificar este mal — evolua a Purificação na Guilda."
   },
   "erro.voce_empunha_uma_arma_de_2_maos_nao_pode": {
-    "en": "",
+    "en": "You're wielding a 2-handed weapon — you can't use a 2nd weapon.",
     "pt": "Você empunha uma arma de 2 mãos — não pode usar uma 2ª arma."
   },
   "erro.voce_esta_dormindo_e_nao_pode_agir": {
-    "en": "",
+    "en": "🌙 You're asleep and can't act!",
     "pt": "🌙 Você está dormindo e não pode agir!"
   },
   "erro.voce_esta_dormindo_e_nao_pode_lancar_mag": {
-    "en": "",
+    "en": "🌙 You're asleep and can't cast spells!",
     "pt": "🌙 Você está dormindo e não pode lançar magias!"
   },
   "erro.voce_esta_dormindo_e_nao_pode_se_mover": {
-    "en": "",
+    "en": "🌙 You're asleep and can't move!",
     "pt": "🌙 Você está dormindo e não pode se mover!"
   },
   "erro.voce_esta_em_area_de_silencio_nao_pode_c": {
-    "en": "",
+    "en": "🔇 You're in a Silence area — you can't cast!",
     "pt": "🔇 Você está em área de Silêncio — não pode conjurar!"
   },
   "erro.voce_esta_imobilizado_e_nao_pode_se_move": {
-    "en": "",
+    "en": "🕸️ You're immobilized and can't move! End your turn.",
     "pt": "🕸️ Você está imobilizado e não pode se mover! Encerre o turno."
   },
   "erro.voce_esta_numa_area_de_silencio_e_nao_po": {
-    "en": "",
+    "en": "🔇 You're in a Silence area and can't cast spells!",
     "pt": "🔇 Você está numa área de Silêncio e não pode lançar magias!"
   },
   "erro.voce_esta_paralisado_e_nao_pode_agir": {
-    "en": "",
+    "en": "❄️ You're paralyzed and can't act!",
     "pt": "❄️ Você está paralisado e não pode agir!"
   },
   "erro.voce_esta_paralisado_e_nao_pode_lancar_m": {
-    "en": "",
+    "en": "❄️ You're paralyzed and can't cast spells!",
     "pt": "❄️ Você está paralisado e não pode lançar magias!"
   },
   "erro.voce_esta_paralisado_e_nao_pode_se_mover": {
-    "en": "",
+    "en": "❄️ You're paralyzed and can't move!",
     "pt": "❄️ Você está paralisado e não pode se mover!"
   },
   "erro.voce_esta_petrificado_e_nao_pode_agir": {
-    "en": "",
+    "en": "🗿 You're petrified and can't act!",
     "pt": "🗿 Você está petrificado e não pode agir!"
   },
   "erro.voce_esta_petrificado_e_nao_pode_lancar": {
-    "en": "",
+    "en": "🗿 You're petrified and can't cast spells!",
     "pt": "🗿 Você está petrificado e não pode lançar magias!"
   },
   "erro.voce_esta_petrificado_e_nao_pode_se_move": {
-    "en": "",
+    "en": "🗿 You're petrified and can't move!",
     "pt": "🗿 Você está petrificado e não pode se mover!"
   },
   "erro.voce_ja_conhece_essa_magia": {
-    "en": "",
+    "en": "You already know that spell.",
     "pt": "Você já conhece essa magia."
   },
   "erro.voce_ja_esta_em_uma_sala_saia_dela_antes": {
-    "en": "",
+    "en": "You're already in a room. Leave it before entering another.",
     "pt": "Você já está em uma sala. Saia dela antes de entrar em outra."
   },
   "erro.voce_ja_esta_furtivo_a_vela_nao_acumula": {
-    "en": "",
+    "en": "You're already stealthed — the Candle of Darkness doesn't stack with another stealth effect.",
     "pt": "Você já está furtivo — a vela não acumula com outro efeito de furtividade."
   },
   "erro.voce_ja_pode_voltar_a_masmorra": {
-    "en": "",
+    "en": "You can already return to the dungeon.",
     "pt": "Você já pode voltar à masmorra."
   },
   "erro.voce_ja_possui_isto": {
-    "en": "",
+    "en": "You already own this.",
     "pt": "Você já possui isto."
   },
   "erro.voce_ja_tocou_um_instrumento_neste_turno": {
-    "en": "",
+    "en": "You already played an instrument this turn.",
     "pt": "Você já tocou um instrumento neste turno."
   },
   "erro.voce_nao_aprendeu_a_formula_de_armadilha": {
@@ -1434,99 +1434,99 @@ window.LANG_ERROS = {
     "pt": "Você ainda não aprendeu a fórmula de {armadilha} — compre na Guilda."
   },
   "erro.voce_nao_consegue_conjurar_agora": {
-    "en": "",
+    "en": "You can't cast right now.",
     "pt": "Você não consegue conjurar agora."
   },
   "erro.voce_nao_controla_este_prisioneiro": {
-    "en": "",
+    "en": "You don't control this prisoner.",
     "pt": "Você não controla este prisioneiro."
   },
   "erro.voce_nao_esta_em_chamas": {
-    "en": "",
+    "en": "You're not on fire.",
     "pt": "Você não está em chamas."
   },
   "erro.voce_nao_pode_curar_a_si_mesmo_com_esta": {
-    "en": "",
+    "en": "You can't heal yourself with this ability.",
     "pt": "Você não pode curar a si mesmo com esta habilidade."
   },
   "erro.voce_nao_pode_votar_nesta_solicitacao": {
-    "en": "",
+    "en": "You can't vote on this request.",
     "pt": "Você não pode votar nesta solicitação."
   },
   "erro.voce_nao_possui_esta_tecnica": {
-    "en": "",
+    "en": "You don't own this technique.",
     "pt": "Você não possui esta técnica."
   },
   "erro.voce_nao_sabe_criar_armadilhas": {
-    "en": "",
+    "en": "You don't know how to create traps.",
     "pt": "Você não sabe criar armadilhas."
   },
   "erro.voce_nao_sabe_desarmar_armadilhas_habili": {
-    "en": "",
+    "en": "You don't know how to disarm traps (Rogue ability).",
     "pt": "Você não sabe desarmar armadilhas (habilidade do Ladino)."
   },
   "erro.voce_nao_sabe_detectar_armadilhas_habili": {
-    "en": "",
+    "en": "You don't know how to detect traps (Rogue ability).",
     "pt": "Você não sabe detectar armadilhas (habilidade do Ladino)."
   },
   "erro.voce_nao_sabe_se_esconder_nas_sombras_ha": {
-    "en": "",
+    "en": "You don't know how to hide in the shadows (Rogue ability).",
     "pt": "Você não sabe se esconder nas sombras (habilidade do Ladino)."
   },
   "erro.voce_nao_sabe_usar_cura": {
-    "en": "",
+    "en": "You don't know how to use Heal.",
     "pt": "Você não sabe usar Cura."
   },
   "erro.voce_nao_sabe_usar_cura_em_area": {
-    "en": "",
+    "en": "You don't know how to use Area Heal.",
     "pt": "Você não sabe usar Cura em Área."
   },
   "erro.voce_nao_sabe_usar_esta_habilidade": {
-    "en": "",
+    "en": "You don't know how to use this ability.",
     "pt": "Você não sabe usar esta habilidade."
   },
   "erro.voce_nao_sabe_usar_golpe_sagrado": {
-    "en": "",
+    "en": "You don't know how to use Holy Strike.",
     "pt": "Você não sabe usar Golpe Sagrado."
   },
   "erro.voce_nao_sabe_usar_imposicao_das_maos_ha": {
-    "en": "",
+    "en": "You don't know how to use Lay on Hands (Paladin ability).",
     "pt": "Você não sabe usar Imposição das Mãos (habilidade do Paladino)."
   },
   "erro.voce_nao_sabe_usar_protetor": {
-    "en": "",
+    "en": "You don't know how to use Protector.",
     "pt": "Você não sabe usar Protetor."
   },
   "erro.voce_nao_sabe_usar_provocacao": {
-    "en": "",
+    "en": "You don't know how to use Taunt.",
     "pt": "Você não sabe usar Provocação."
   },
   "erro.voce_nao_sabe_usar_purificacao": {
-    "en": "",
+    "en": "You don't know how to use Purification.",
     "pt": "Você não sabe usar Purificação."
   },
   "erro.voce_nao_sabe_usar_ressurreicao": {
-    "en": "",
+    "en": "You don't know how to use Resurrection.",
     "pt": "Você não sabe usar Ressurreição."
   },
   "erro.voce_nao_sabe_usar_veneno_rapido": {
-    "en": "",
+    "en": "You don't know how to use Quick Poison.",
     "pt": "Você não sabe usar Veneno Rápido."
   },
   "erro.voce_nao_tem_servos": {
-    "en": "",
+    "en": "You have no minions.",
     "pt": "Você não tem servos."
   },
   "erro.voce_nao_tem_uma_adaga_equipada_para_arr": {
-    "en": "",
+    "en": "You don't have a dagger equipped to throw.",
     "pt": "Você não tem uma adaga equipada para arremessar."
   },
   "erro.voce_precisa_de_1_e_1_para_desarmar_a_ar": {
-    "en": "",
+    "en": "You need 🍖1 and 💧1 to disarm the trap.",
     "pt": "Você precisa de 🍖1 e 💧1 para desarmar a armadilha."
   },
   "erro.voz_quebrada_impede_cancoes_heroicas": {
-    "en": "",
+    "en": "Broken Voice prevents Heroic Songs.",
     "pt": "Voz Quebrada impede Canções Heroicas."
   }
 };
