@@ -564,7 +564,14 @@ git commit -m "feat(i18n): traduz os catalogos estaticos do cliente e corrige a 
 **Arquivos:**
 - Modificar: `src/lang/catalogo.js` (só a coluna `en` das chaves `.desc`)
 
-São frases de regra, média de 69 caracteres. **Não toque no campo `pt` nem nas chaves `.nome`**, que já estão traduzidas.
+São frases de regra, média de 69 caracteres. **Não toque no campo `pt`.**
+
+**Além das descrições, traduza também os nomes que estiverem sem `en`.** O gerador da
+Task 1 acrescentou chaves para o conteúdo que o usuário criou em paralelo — hoje são
+quatro (`cat.armadilha.lamina_escondida.nome`, `cat.armadilha.lamina_pendulo.nome` e as
+duas fórmulas correspondentes em `cat.guilda.*`), mas pode haver mais quando você chegar
+aqui. O comando de conferência do último passo é a autoridade: ele só passa com **zero**
+chaves sem tradução, de qualquer sufixo.
 
 **Duas exigências acima do normal.** *Precisão mecânica*: números, dados (`2d6`), durações e condições têm de sobreviver intactos — um "+2" que vira "+3" muda a regra que o jogador lê. *Consistência com os nomes*: uma descrição que cita "Canção Heroica" usa o mesmo "Heroic Song" que a chave `cat.guilda.*.nome` recebeu na etapa 2; consulte o próprio arquivo para conferir o termo já escolhido.
 
