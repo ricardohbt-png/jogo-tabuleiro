@@ -6938,7 +6938,11 @@ class GameRoom:
             # se ninguém tiver assumido o papel (Modo Mestre Jogador).
             tem_mestre = any(p.get("is_master") for p in self.players.values())
             if tem_mestre:
-                await ws.send(json.dumps({"type": "error", "msg": "Sala cheia (máximo 6 heróis + 1 mestre)."}))
+                # Este site manda direto pelo ws, sem passar por send_to/err —
+                # então precisa do mesmo encoder, senão o T não é resolvido.
+                await ws.send(json.dumps(
+                    {"type": "error", "msg": T("erro.sala_cheia_maximo_6_herois_1_mestre")},
+                    default=lambda o: _t_render(o, _lang_de(pid))))
                 return False
             self.connections[pid] = ws
             if account:
