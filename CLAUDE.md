@@ -1819,3 +1819,38 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > no cliente — todos etapa 5. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-08-10-idioma-etapa3-descricoes*`. Testes:
 > `tools/test_vocabulario.py` (37) e `tools/test_vocabulario_cliente.js` (29).
+
+> **Idioma — erros do servidor (etapa 4a de 5):** as **471 mensagens de recusa** migradas para
+> `T(...)` e traduzidas (382 chaves). A chave é o **slug do texto em português**
+> (`erro.alvo_invalido`), o que **deduplica por construção**: as 390 ocorrências de texto fixo
+> viraram 305 chaves, e a mesma recusa passa a sair sempre com a mesma frase — o que o jogo
+> não garantia nem em português ("Alvo inválido." aparecia 18× no fonte). Dicionário em
+> `src/lang/erros.js`, **mantido à mão**: depois da migração o `server.py` não tem mais o
+> texto, só a chave, então não há de onde gerar de novo (ao contrário do `catalogo.js`).
+> `tools/migrar_erros.py` é de uso único e fica no repositório como registro do método.
+> **Duas formas de chamada** precisaram ser reconhecidas: `{"type":"error","msg":…}` e o
+> atalho local `await err(…)`. **Um site serializava cru** (`ws.send(json.dumps(...))` em
+> `add_player`, sem passar por `send_to`/`err`) e teria estourado `TypeError` com um `T`
+> dentro — ganhou o mesmo `default=`.
+>
+> **A mudança estrutural desta etapa: `T` agora se comporta como o texto em português.**
+> Ganhou `__str__`, `__eq__`, `__hash__`, `__contains__`, `__len__` e um `__getattr__` que
+> delega ao texto. Motivo: **24 arquivos de teste** mockam `send_to` capturando
+> `msg.get("msg","")` **cru**, sem passar pelo `json.dumps(default=_t_render)` real — com um
+> `T` ali, `.lower()` estourava `AttributeError`. Nove suítes quebraram na hora e as outras 15
+> quebrariam na migração seguinte. Fazer o `T` se disfarçar de string resolveu a família
+> inteira **sem tocar em nenhum teste**, e é coerente com o fallback do projeto ("na dúvida,
+> português"). **O `T` NÃO pode virar subclasse de `str`**: se virasse, o `json.dumps` pararia
+> de chamar o `default` e a tradução morreria em silêncio — há teste cobrindo isso. O
+> `__getattr__` precisa da guarda contra `__`/slots, senão um acesso a `key` antes do
+> `__init__` recursa infinitamente. Custo aceito: o `T` esconde uso indevido em vez de falhar
+> alto.
+>
+> **Teste novo que vale para todas as etapas:** paridade de `{parâmetros}` entre `pt` e `en`
+> em TODAS as chaves de TODOS os arquivos de idioma (hoje 1.011) — é a falha mais provável
+> numa tradução em lote e a mais visível para o jogador, porque o `{nome}` aparece cru na
+> tela. **Detalhe que salvou duas mensagens:** algumas terminam com espaço ou `": "` porque o
+> servidor concatena o motivo depois; o `en` tem de preservar isso. Testes:
+> `tools/test_erros.py` (9). **Falta:** narração do servidor (544, etapa 4b) e interface do
+> cliente (~1.000, etapa 5). Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-08-10-idioma-etapa4a-erros*`.
