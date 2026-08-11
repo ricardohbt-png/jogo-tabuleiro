@@ -599,7 +599,7 @@ window.LANG_CATALOGO = {
     "pt": "+1 de ataque e +1 nos saves contra Bugbear — Bicho-Papão das Sombras."
   },
   "cat.guilda.lenda_bugbear_sombras.nome": {
-    "en": "Lore: Bugbear — Boogeyman of the Shadows",
+    "en": "Lore: Bugbear — Shadow Boogeyman",
     "pt": "Lenda: Bugbear — Bicho-Papão das Sombras"
   },
   "cat.guilda.lenda_cobra_constritora.desc": {
