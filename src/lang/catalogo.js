@@ -3,7 +3,7 @@
 // você já traduziu e acrescenta o que for novo.
 window.LANG_CATALOGO = {
   "cat.armadilha.armadilha_dardos_envenenados.desc": {
-    "en": "",
+    "en": "Takes 1d4 piercing damage and makes a Fortitude save against the chosen poison.",
     "pt": "Sofre 1d4 perfurante e testa Fortitude contra o veneno escolhido."
   },
   "cat.armadilha.armadilha_dardos_envenenados.nome": {
@@ -11,7 +11,7 @@ window.LANG_CATALOGO = {
     "pt": "Armadilha de Dardos Envenenados"
   },
   "cat.armadilha.armadilha_incendiaria.desc": {
-    "en": "",
+    "en": "Progressive fire damage: 1d6 + 1d4 + 1 over 3 rounds.",
     "pt": "Dano de fogo progressivo: 1d6 + 1d4 + 1 em 3 rodadas."
   },
   "cat.armadilha.armadilha_incendiaria.nome": {
@@ -19,7 +19,7 @@ window.LANG_CATALOGO = {
     "pt": "Armadilha Incendiária"
   },
   "cat.armadilha.armadilha_maldicao.desc": {
-    "en": "",
+    "en": "Will save (configured DC) or receives a specific or random curse.",
     "pt": "Vontade CD configurada ou recebe uma maldição específica ou aleatória."
   },
   "cat.armadilha.armadilha_maldicao.nome": {
@@ -27,7 +27,7 @@ window.LANG_CATALOGO = {
     "pt": "Armadilha de Maldição"
   },
   "cat.armadilha.armadilha_teletransporte.desc": {
-    "en": "",
+    "en": "Will DC 12 or is teleported to the configured exit.",
     "pt": "Vontade CD 12 ou é teleportado para a saída configurada."
   },
   "cat.armadilha.armadilha_teletransporte.nome": {
@@ -35,7 +35,7 @@ window.LANG_CATALOGO = {
     "pt": "Armadilha de Teletransporte"
   },
   "cat.armadilha.armadilha_urso.desc": {
-    "en": "",
+    "en": "1d4 damage + loses movement. Disappears after triggering.",
     "pt": "1d4 de dano + perde movimento. Some após ativar."
   },
   "cat.armadilha.armadilha_urso.nome": {
@@ -43,7 +43,7 @@ window.LANG_CATALOGO = {
     "pt": "Armadilha de Urso"
   },
   "cat.armadilha.buraco.desc": {
-    "en": "",
+    "en": "Reflex DC 10 or loses movement. Remains active.",
     "pt": "Reflexos dif 10 ou perde o movimento. Permanece ativa."
   },
   "cat.armadilha.buraco.nome": {
@@ -51,7 +51,7 @@ window.LANG_CATALOGO = {
     "pt": "Buraco"
   },
   "cat.armadilha.fosso_envenenado.desc": {
-    "en": "",
+    "en": "1d6 damage + effect of the poison used. Becomes visible after triggering.",
     "pt": "1d6 de dano + efeito do veneno usado. Fica visível após ativar."
   },
   "cat.armadilha.fosso_envenenado.nome": {
@@ -59,7 +59,7 @@ window.LANG_CATALOGO = {
     "pt": "Fosso com Estacas Envenenadas"
   },
   "cat.armadilha.fosso_estacas.desc": {
-    "en": "",
+    "en": "1d6 damage + loses movement. Becomes visible after triggering.",
     "pt": "1d6 de dano + perde movimento. Fica visível após ativar."
   },
   "cat.armadilha.fosso_estacas.nome": {
@@ -67,23 +67,23 @@ window.LANG_CATALOGO = {
     "pt": "Fosso com Estacas"
   },
   "cat.armadilha.lamina_escondida.desc": {
-    "en": "",
+    "en": "Reflex DC 15 avoids the blade. On failure, takes 1d8 damage plus the combined poison.",
     "pt": "Reflexos CD 15 evita a lâmina. Na falha, sofre 1d8 de dano e o veneno combinado."
   },
   "cat.armadilha.lamina_escondida.nome": {
-    "en": "",
+    "en": "Hidden Blade",
     "pt": "Lâmina Escondida"
   },
   "cat.armadilha.lamina_pendulo.desc": {
-    "en": "",
+    "en": "Reflex DC 14 avoids the blade. On failure, takes 2d6 damage. After triggering, remains dangerous for 3 rounds.",
     "pt": "Reflexos CD 14 evita a lâmina. Na falha, sofre 2d6 de dano. Após ativar, permanece perigosa por 3 rodadas."
   },
   "cat.armadilha.lamina_pendulo.nome": {
-    "en": "",
+    "en": "Pendulum Blade",
     "pt": "Lâmina Pêndulo"
   },
   "cat.armadilha.mina_terrestre.desc": {
-    "en": "",
+    "en": "2d6 damage in a 1-square area. A save halves it.",
     "pt": "2d6 de dano em área de 1 quadrado. Save reduz à metade."
   },
   "cat.armadilha.mina_terrestre.nome": {
@@ -91,7 +91,7 @@ window.LANG_CATALOGO = {
     "pt": "Mina Terrestre"
   },
   "cat.armadilha.nuvem_gas.desc": {
-    "en": "",
+    "en": "-1d6 CON for 3 rounds in an area. Recalculates HP.",
     "pt": "-1d6 CON por 3 rodadas em área. Recalcula HP."
   },
   "cat.armadilha.nuvem_gas.nome": {
@@ -99,7 +99,7 @@ window.LANG_CATALOGO = {
     "pt": "Nuvem de Gás"
   },
   "cat.armadilha.rede.desc": {
-    "en": "",
+    "en": "Loses the entire round. Disappears after triggering.",
     "pt": "Perde a rodada inteira. Some após ativar."
   },
   "cat.armadilha.rede.nome": {
@@ -107,7 +107,7 @@ window.LANG_CATALOGO = {
     "pt": "Rede"
   },
   "cat.classe.bard.desc": {
-    "en": "",
+    "en": "Musician who inspires allies with songs and taunts enemies",
     "pt": "Músico que inspira aliados com canções e provoca inimigos"
   },
   "cat.classe.bard.nome": {
@@ -115,7 +115,7 @@ window.LANG_CATALOGO = {
     "pt": "Henrique, o Bardo"
   },
   "cat.classe.cleric.desc": {
-    "en": "",
+    "en": "Friar who channels miracles — heals, purifies, and resurrects allies",
     "pt": "Frade que canaliza milagres — cura, purifica e ressuscita aliados"
   },
   "cat.classe.cleric.nome": {
@@ -123,7 +123,7 @@ window.LANG_CATALOGO = {
     "pt": "Frade Lewis"
   },
   "cat.classe.mage.desc": {
-    "en": "",
+    "en": "Devastating with magic, but fragile",
     "pt": "Devastador com magia, mas frágil"
   },
   "cat.classe.mage.nome": {
@@ -131,7 +131,7 @@ window.LANG_CATALOGO = {
     "pt": "Pedro, o Tímido"
   },
   "cat.classe.paladin.desc": {
-    "en": "",
+    "en": "Steel and honor forged on the same anvil. Knows no retreat.",
     "pt": "Aço e honra forjados na mesma bigorna. Não conhece recuo."
   },
   "cat.classe.paladin.nome": {
@@ -139,7 +139,7 @@ window.LANG_CATALOGO = {
     "pt": "Richard, o Cavaleiro"
   },
   "cat.classe.rogue.desc": {
-    "en": "",
+    "en": "Fast, detects traps, sneak attack",
     "pt": "Veloz, detecta armadilhas, golpe furtivo"
   },
   "cat.classe.rogue.nome": {
@@ -147,7 +147,7 @@ window.LANG_CATALOGO = {
     "pt": "Luccas, o Astuto"
   },
   "cat.classe.warrior.desc": {
-    "en": "",
+    "en": "Sturdy tank with powerful blows",
     "pt": "Tanque resistente com golpes poderosos"
   },
   "cat.classe.warrior.nome": {
@@ -1283,7 +1283,7 @@ window.LANG_CATALOGO = {
     "pt": "Último Esforço"
   },
   "cat.instrumento.alaude.desc": {
-    "en": "",
+    "en": "Passive: while the Heroic Song is playing, it boosts its bonuses (+1 to the covered attributes, based on the Lute's quality). Doesn't need to be activated.",
     "pt": "Passiva: enquanto a Canção Heroica toca, reforça seus bônus (+1 nos atributos cobertos, conforme a qualidade do Alaúde). Não precisa ser ativada."
   },
   "cat.instrumento.alaude.nome": {
@@ -1291,7 +1291,7 @@ window.LANG_CATALOGO = {
     "pt": "Alaúde"
   },
   "cat.instrumento.flauta.desc": {
-    "en": "",
+    "en": "Summons an illusion for a few rounds. Each of your basic attacks that hits is echoed by the illusion on the same target, dealing a fraction of the damage.",
     "pt": "Invoca uma ilusão por algumas rodadas. Cada ataque básico seu que acerta é repetido pela ilusão no mesmo alvo, causando uma fração do dano."
   },
   "cat.instrumento.flauta.nome": {
@@ -1299,7 +1299,7 @@ window.LANG_CATALOGO = {
     "pt": "Flauta"
   },
   "cat.instrumento.gaita.desc": {
-    "en": "",
+    "en": "Rolls 2d6 and improvises the ability of another instrument (at the Bagpipes' tier). 12 = Encore: plays again twice. The Runic Bagpipes can escalate all the way to the Great Encore.",
     "pt": "Rola 2d6 e improvisa a habilidade de outro instrumento (no tier da Gaita). 12 = Encore: toca de novo duas vezes. A Gaita Rúnica pode escalar até o Grande Encore."
   },
   "cat.instrumento.gaita.nome": {
@@ -1307,7 +1307,7 @@ window.LANG_CATALOGO = {
     "pt": "Gaita"
   },
   "cat.instrumento.harpa.desc": {
-    "en": "",
+    "en": "Fires a blade of sonic energy at a target from range. The target makes a Reflex save: on success, takes half damage.",
     "pt": "Dispara uma lâmina de energia sonora contra um alvo à distância. O alvo faz um teste de Reflexos: em caso de sucesso, sofre metade do dano."
   },
   "cat.instrumento.harpa.nome": {
@@ -1315,7 +1315,7 @@ window.LANG_CATALOGO = {
     "pt": "Harpa"
   },
   "cat.instrumento.lira.desc": {
-    "en": "",
+    "en": "For a few rounds, when an ally adjacent to you attacks an enemy also adjacent to you, you land a free melee attack on it.",
     "pt": "Por algumas rodadas, quando um aliado adjacente a você ataca um inimigo também adjacente a você, você desfere um ataque corpo a corpo grátis nele."
   },
   "cat.instrumento.lira.nome": {
@@ -1323,7 +1323,7 @@ window.LANG_CATALOGO = {
     "pt": "Lira"
   },
   "cat.instrumento.sino.desc": {
-    "en": "",
+    "en": "Activates an aura for a few rounds: while it lasts, every enemy that hits the bard in melee takes sonic damage back.",
     "pt": "Ativa uma aura por algumas rodadas: enquanto dura, todo inimigo que acertar o bardo em corpo a corpo sofre dano sonoro de volta."
   },
   "cat.instrumento.sino.nome": {
@@ -1331,7 +1331,7 @@ window.LANG_CATALOGO = {
     "pt": "Sino"
   },
   "cat.instrumento.tambor.desc": {
-    "en": "",
+    "en": "Sound wave in a radius around the bard. Enemies make a Reflex save: on failure they take full damage and are pushed back; on success they take half and aren't pushed.",
     "pt": "Onda sonora num raio ao redor do bardo. Inimigos fazem Reflexos: falha sofre o dano cheio e é empurrada; sucesso sofre metade e não é empurrada."
   },
   "cat.instrumento.tambor.nome": {
@@ -1339,7 +1339,7 @@ window.LANG_CATALOGO = {
     "pt": "Tambor de Guerra"
   },
   "cat.instrumento.trompa.desc": {
-    "en": "",
+    "en": "Blows the horn in a cone ahead. Enemies make a Will save: failure = Feared (flee) + lose movement; success = lose less movement.",
     "pt": "Sopra a trompa num cone à frente. Inimigos fazem Vontade: falha = Amedrontados (fogem) + perdem movimento; sucesso = perdem menos movimento."
   },
   "cat.instrumento.trompa.nome": {
@@ -1347,7 +1347,7 @@ window.LANG_CATALOGO = {
     "pt": "Trompa de Guerra"
   },
   "cat.instrumento.violino.desc": {
-    "en": "",
+    "en": "Starts a deadly melody on a target. On each of its turns, it makes a Will save or takes rising damage (1d, 2d, 3d…). While it plays, the target and enemies within 3 squares of the bard are forced to attack him, and the bard tests concentration when taking damage. Upkeep -2🍖/-2💧 per round.",
     "pt": "Inicia uma melodia mortal sobre um alvo. A cada turno dele, faz Vontade ou sofre dano crescente (1d, 2d, 3d…). Enquanto toca, o alvo e inimigos a ≤3 do bardo são forçados a atacá-lo, e o bardo testa concentração ao sofrer dano. Manutenção -2🍖/-2💧 por rodada."
   },
   "cat.instrumento.violino.nome": {
@@ -1371,7 +1371,7 @@ window.LANG_CATALOGO = {
     "pt": "Amuleto da Sorte"
   },
   "cat.item.antidote.desc": {
-    "en": "",
+    "en": "Neutralizes poisons and protects against new ones for 1d4 rounds.",
     "pt": "Neutraliza venenos e protege contra novos por 1d4 rodadas."
   },
   "cat.item.antidote.nome": {
@@ -1495,7 +1495,7 @@ window.LANG_CATALOGO = {
     "pt": "Elixir da Força"
   },
   "cat.item.elixir_depurativo.desc": {
-    "en": "",
+    "en": "Purges diseases from the body and protects for 1d4 rounds.",
     "pt": "Purga doenças do corpo e protege por 1d4 rodadas."
   },
   "cat.item.elixir_depurativo.nome": {
@@ -1503,7 +1503,7 @@ window.LANG_CATALOGO = {
     "pt": "Elixir Depurativo"
   },
   "cat.item.ensaio_sobre_a_cegueira.desc": {
-    "en": "",
+    "en": "Potent poison made from the milky sap of poisonous plants causes blindness.",
     "pt": "Forte veneno a base da seiva leitosa de plantas venenosas provoca cegueira."
   },
   "cat.item.ensaio_sobre_a_cegueira.nome": {
@@ -1819,7 +1819,7 @@ window.LANG_CATALOGO = {
     "pt": "Armadura de Couro de Monstro e Placas"
   },
   "cat.item.oleo_dissolvente.desc": {
-    "en": "",
+    "en": "Dissolves stone: cures petrification and protects for 1d4 rounds.",
     "pt": "Dissolve a pedra: cura petrificação e protege por 1d4 rodadas."
   },
   "cat.item.oleo_dissolvente.nome": {
@@ -1891,7 +1891,7 @@ window.LANG_CATALOGO = {
     "pt": "Veneno da Aranha Sombria"
   },
   "cat.item.veneno_ardonia_negra.desc": {
-    "en": "",
+    "en": "Fortitude DC 14 negates. On failure: 1 damage per round for 2d4 rounds.",
     "pt": "Fortitude CD 14 anula. Se falhar: 1 dano por rodada durante 2d4 rodadas."
   },
   "cat.item.veneno_ardonia_negra.nome": {
@@ -1907,7 +1907,7 @@ window.LANG_CATALOGO = {
     "pt": "Veneno de Cobra Cuspidora"
   },
   "cat.item.veneno_dor_escarlate.desc": {
-    "en": "",
+    "en": "Fortitude DC 12 negates. On failure: 1 damage per round for 1d6 rounds.",
     "pt": "Fortitude CD 12 anula. Se falhar: 1 dano por rodada durante 1d6 rodadas."
   },
   "cat.item.veneno_dor_escarlate.nome": {
@@ -1919,7 +1919,7 @@ window.LANG_CATALOGO = {
     "pt": "Veneno do Escorpião Pedra"
   },
   "cat.item.veneno_fungo_acre.desc": {
-    "en": "",
+    "en": "Fortitude DC 10 negates. On failure: 1 damage per round for 1d4 rounds.",
     "pt": "Fortitude CD 10 anula. Se falhar: 1 dano por rodada durante 1d4 rodadas."
   },
   "cat.item.veneno_fungo_acre.nome": {
@@ -1943,7 +1943,7 @@ window.LANG_CATALOGO = {
     "pt": "Martelo de Guerra de Prata"
   },
   "cat.magia.abencoar.desc": {
-    "en": "",
+    "en": "6x6 area. +1 attack/damage/AC/saves. Lasts 1d4+1 rounds.",
     "pt": "Área 6x6. +1 ataque/dano/CA/resistência. Dura 1d4+1 rodadas."
   },
   "cat.magia.abencoar.nome": {
@@ -1951,7 +1951,7 @@ window.LANG_CATALOGO = {
     "pt": "Abençoar"
   },
   "cat.magia.abencoar_arma.desc": {
-    "en": "",
+    "en": "+1 attack and damage to an ally's weapon. Lasts 1d6+2 rounds.",
     "pt": "+1 ataque e dano na arma de aliado. Dura 1d6+2 rodadas."
   },
   "cat.magia.abencoar_arma.nome": {
@@ -1959,7 +1959,7 @@ window.LANG_CATALOGO = {
     "pt": "Abençoar Arma"
   },
   "cat.magia.amaldicoar.desc": {
-    "en": "",
+    "en": "3x3 area. -1 attack/damage/AC/saves. Lasts 1d4+1 rounds.",
     "pt": "Área 3x3. -1 ataque/dano/CA/resistência. Dura 1d4+1 rodadas."
   },
   "cat.magia.amaldicoar.nome": {
@@ -1967,7 +1967,7 @@ window.LANG_CATALOGO = {
     "pt": "Amaldiçoar"
   },
   "cat.magia.barreira_arcana.desc": {
-    "en": "",
+    "en": "Reduces all damage taken by 5 for 1d6 + 1 round per level. Extend Spell increases the duration; Empower Spell reduces it by 7.",
     "pt": "Reduz 5 de todo dano recebido por 1d6 + 1 rodada por nível. Estender aumenta a duração; Fortalecer reduz 7."
   },
   "cat.magia.barreira_arcana.nome": {
@@ -1975,7 +1975,7 @@ window.LANG_CATALOGO = {
     "pt": "Barreira Arcana"
   },
   "cat.magia.bola_fogo.desc": {
-    "en": "",
+    "en": "Range 5. 3x3 area; 1d6/level plus residual fire that decreases over 3 rounds.",
     "pt": "Alcance 5. Área 3x3; 1d6/nível e fogo residual decrescente por 3 rodadas."
   },
   "cat.magia.bola_fogo.nome": {
@@ -1983,7 +1983,7 @@ window.LANG_CATALOGO = {
     "pt": "Bola de Fogo"
   },
   "cat.magia.clarividencia.desc": {
-    "en": "",
+    "en": "Clears fog of war in a 4x4 area (+scales by level). Lasts 2 rounds.",
     "pt": "Remove névoa em área 4x4 (+escala por nível). Dura 2 rodadas."
   },
   "cat.magia.clarividencia.nome": {
@@ -1991,7 +1991,7 @@ window.LANG_CATALOGO = {
     "pt": "Clarividência"
   },
   "cat.magia.comando.desc": {
-    "en": "",
+    "en": "Monsters only. Will save or the caster controls the target's next turn — movement, main action, abilities, and items.",
     "pt": "Só em monstros. Vontade ou o conjurador dirige o próximo turno do alvo — movimento, ação principal, habilidades e itens."
   },
   "cat.magia.comando.nome": {
@@ -1999,7 +1999,7 @@ window.LANG_CATALOGO = {
     "pt": "Comando"
   },
   "cat.magia.conjurar_elemental.desc": {
-    "en": "",
+    "en": "Summons a controlled elemental. Acts after Lewis. Movement 6 squares.",
     "pt": "Invoca elemental controlado. Age após Lewis. Movimento 6q."
   },
   "cat.magia.conjurar_elemental.nome": {
@@ -2007,7 +2007,7 @@ window.LANG_CATALOGO = {
     "pt": "Conjurar Elemental"
   },
   "cat.magia.contramagica.desc": {
-    "en": "",
+    "en": "Reaction. Opposed check vs. the enemy spell. Success: cancels it + the enemy loses its action.",
     "pt": "Reação. Teste oposto vs magia inimiga. Sucesso: cancela + inimigo perde ação."
   },
   "cat.magia.contramagica.nome": {
@@ -2015,7 +2015,7 @@ window.LANG_CATALOGO = {
     "pt": "Contramágica"
   },
   "cat.magia.criar_alimentos.desc": {
-    "en": "",
+    "en": "Creates a chest in an adjacent square with 1d4+2 random tavern food items.",
     "pt": "Cria em uma casa adjacente um baú com 1d4+2 alimentos aleatórios da taverna."
   },
   "cat.magia.criar_alimentos.nome": {
@@ -2023,7 +2023,7 @@ window.LANG_CATALOGO = {
     "pt": "Criar Alimentos"
   },
   "cat.magia.dominar_mente.desc": {
-    "en": "",
+    "en": "Will save or the caster controls the target on each of its turns for 1d4+1 rounds. Each time it takes damage, it makes a new Will save with a cumulative +2; passing breaks the control.",
     "pt": "Vontade ou o conjurador dirige o alvo a cada turno dele por 1d4+1 rodadas. A cada dano sofrido, faz novo teste de Vontade com +2 cumulativo; passar rompe o controle."
   },
   "cat.magia.dominar_mente.nome": {
@@ -2031,7 +2031,7 @@ window.LANG_CATALOGO = {
     "pt": "Dominar Mente"
   },
   "cat.magia.dominar_morto_vivo.desc": {
-    "en": "",
+    "en": "The undead makes a Will save (bonus = CR) when cast and each round during the minions' phase. Passing breaks the control (turns hostile again); 3 failures in a row = permanent control. Single slot. Doesn't count toward Animate Dead.",
     "pt": "Morto-vivo testa Vontade (bônus = ND) ao ser lançada e a cada rodada na fase dos servos. Passar quebra o controle (volta hostil); 3 falhas seguidas = controle permanente. Slot único. Não conta para Animar Mortos."
   },
   "cat.magia.dominar_morto_vivo.nome": {
@@ -2039,7 +2039,7 @@ window.LANG_CATALOGO = {
     "pt": "Dominar Morto-Vivo"
   },
   "cat.magia.invisibilidade.desc": {
-    "en": "",
+    "en": "Enemies won't attack you. Attacks are made with advantage plus sneak attack. Breaks when you attack or cast a spell.",
     "pt": "Inimigos não atacam. Ataque com vantagem + furtivo. Quebra ao atacar/lançar."
   },
   "cat.magia.invisibilidade.nome": {
@@ -2047,7 +2047,7 @@ window.LANG_CATALOGO = {
     "pt": "Invisibilidade"
   },
   "cat.magia.jato_ar.desc": {
-    "en": "",
+    "en": "4-square cone. 1d6 per level. Failure: pushes back 1d6 squares. Collision with a wall: +1d4.",
     "pt": "Cone 4q. 1d6 por nível. Falha: empurra 1d6q. Colisão com parede: +1d4."
   },
   "cat.magia.jato_ar.nome": {
@@ -2055,7 +2055,7 @@ window.LANG_CATALOGO = {
     "pt": "Jato de Ar"
   },
   "cat.magia.lentidao.desc": {
-    "en": "",
+    "en": "3x3 area. Failure: 1 action/round, -1 AC, no reaction. Success: movement halved, -1 attack.",
     "pt": "Área 3x3. Falha: 1 ação/rodada, -1 CA, sem reação. Sucesso: mov/2, -1 ataque."
   },
   "cat.magia.lentidao.nome": {
@@ -2063,7 +2063,7 @@ window.LANG_CATALOGO = {
     "pt": "Lentidão"
   },
   "cat.magia.manto_escuridao.desc": {
-    "en": "",
+    "en": "Radius 3. Darkness — without darkvision: disadvantage. With darkvision: advantage.",
     "pt": "Raio 3. Escuridão — sem visão noturna: desvantagem. Com visão noturna: vantagem."
   },
   "cat.magia.manto_escuridao.nome": {
@@ -2071,7 +2071,7 @@ window.LANG_CATALOGO = {
     "pt": "Manto de Escuridão"
   },
   "cat.magia.medo.desc": {
-    "en": "",
+    "en": "Area effect. Will save or flees for 1d4+1 rounds. -1 attack. Won't approach.",
     "pt": "Área. Vontade ou foge 1d4+1 rodadas. -1 ataque. Não se aproxima."
   },
   "cat.magia.medo.nome": {
@@ -2079,7 +2079,7 @@ window.LANG_CATALOGO = {
     "pt": "Medo"
   },
   "cat.magia.protecao_energia.desc": {
-    "en": "",
+    "en": "Absorbs 10 damage/round from fire, cold, electricity, acid, water, or holy. Lasts 1d6+1 rounds.",
     "pt": "Absorve 10 dano/rodada de fogo, gelo, eletricidade, ácido, água ou sagrado. Dura 1d6+1."
   },
   "cat.magia.protecao_energia.nome": {
@@ -2087,7 +2087,7 @@ window.LANG_CATALOGO = {
     "pt": "Proteção contra Energia"
   },
   "cat.magia.raio_congelante.desc": {
-    "en": "",
+    "en": "3d4+2d4/2 levels, no save. Fortitude save or paralyzed for 1-2 rounds.",
     "pt": "3d4+2d4/2níveis sem save. Fortitude ou paralisado 1-2 rodadas."
   },
   "cat.magia.raio_congelante.nome": {
@@ -2095,7 +2095,7 @@ window.LANG_CATALOGO = {
     "pt": "Raio Congelante"
   },
   "cat.magia.raio_divino.desc": {
-    "en": "",
+    "en": "1d6+1 per level. Reflex save: half damage. Doubled vs. undead and demons.",
     "pt": "1d6+1 por nível. Reflexos: metade. Dobrado vs mortos-vivos e demônios."
   },
   "cat.magia.raio_divino.nome": {
@@ -2103,7 +2103,7 @@ window.LANG_CATALOGO = {
     "pt": "Raio Divino"
   },
   "cat.magia.regeneracao_magica.desc": {
-    "en": "",
+    "en": "Pool of 2d6+2. +1 HP/round. If it would die: returns with 1 HP instead, -3 hunger/thirst.",
     "pt": "Pool 2d6+2. +1 HP/rodada. Se morrer: volta com 1 HP -3 fome/sede."
   },
   "cat.magia.regeneracao_magica.nome": {
@@ -2111,7 +2111,7 @@ window.LANG_CATALOGO = {
     "pt": "Regeneração"
   },
   "cat.magia.relampago.desc": {
-    "en": "",
+    "en": "1d6/level per hit. Straight line of 4 squares (+1/level) plus a ricochet back (squares hit twice). Pedro is only hurt on the way back.",
     "pt": "1d6/nível por impacto. Linha reta de 4 casas (+1/nível) + ricochete de volta (casas atingidas 2x). Pedro só é ferido na volta."
   },
   "cat.magia.relampago.nome": {
@@ -2119,7 +2119,7 @@ window.LANG_CATALOGO = {
     "pt": "Relâmpago"
   },
   "cat.magia.saciar.desc": {
-    "en": "",
+    "en": "Touch. +20 hunger +20 thirst to 1 ally.",
     "pt": "Toque. +20 fome +20 sede em 1 aliado."
   },
   "cat.magia.saciar.nome": {
@@ -2127,7 +2127,7 @@ window.LANG_CATALOGO = {
     "pt": "Saciar"
   },
   "cat.magia.silencio.desc": {
-    "en": "",
+    "en": "4x4 area. No spells or Heroic Song bonuses inside. Lasts 1d4 rounds.",
     "pt": "Área 4x4. Sem magias nem bônus de Canção Heroica dentro. Dura 1d4 rodadas."
   },
   "cat.magia.silencio.nome": {
@@ -2135,7 +2135,7 @@ window.LANG_CATALOGO = {
     "pt": "Silêncio"
   },
   "cat.magia.sono.desc": {
-    "en": "",
+    "en": "Area effect. Will save or falls asleep for 1d4+1 rounds. First attack against it is a critical hit. Wakes up when damaged.",
     "pt": "Área. Vontade ou dorme 1d4+1. Primeiro ataque = crítico. Acorda com dano."
   },
   "cat.magia.sono.nome": {
@@ -2143,7 +2143,7 @@ window.LANG_CATALOGO = {
     "pt": "Sono"
   },
   "cat.magia.velocidade.desc": {
-    "en": "",
+    "en": "Doubles all actions on the turn. Normal cost per action. Lasts 1d4 rounds.",
     "pt": "Dobra todas as ações no turno. Custo normal por ação. Dura 1d4 rodadas."
   },
   "cat.magia.velocidade.nome": {
@@ -2151,7 +2151,7 @@ window.LANG_CATALOGO = {
     "pt": "Velocidade"
   },
   "cat.magia.visao_escuro.desc": {
-    "en": "",
+    "en": "Ally completely ignores darkness until the end of the mission.",
     "pt": "Aliado ignora escuridão completamente até o fim da missão."
   },
   "cat.magia.visao_escuro.nome": {
