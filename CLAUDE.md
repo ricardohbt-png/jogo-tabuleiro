@@ -1764,3 +1764,29 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `docs/superpowers/{specs,plans}/2026-08-10-idioma-i18n*`. Testes: `tools/test_idioma.py` (31)
 > e `tools/test_idioma_cliente.js` (16, node) — os dois têm varredura estática que aponta chave
 > órfã, e é ela que diz, na etapa 2, o que ainda falta.
+
+> **Idioma — vocabulário (etapa 2 de 5):** os **397 nomes** de catálogo traduzidos —
+> `item` 140, `guilda` 125, `monstro` 51, `decor` 28, `magia` 27, `armadilha` 11,
+> `instrumento` 9, `classe` 6. As chaves seguem `cat.<família>.<id>.nome` e são **geradas**
+> por `tools/gerar_vocabulario.py` a partir dos catálogos do `server.py` para
+> `src/lang/catalogo.js` — arquivo separado do `strings.js` escrito à mão, para o gerador
+> nunca sobrescrever tradução manual. O gerador é idempotente (preserva o `en`, acrescenta
+> chave nova, **relata sem apagar** as órfãs) e **falha alto** se dois catálogos derem nomes
+> diferentes ao mesmo id. **Rode-o depois de criar item ou monstro novo** — a saída diz o que
+> falta traduzir. `_load_lang()` agora funde TODOS os `.js` de `src/lang/` (leitura de um
+> arquivo isolada em `_load_lang_arquivo`); um arquivo quebrado perde só as chaves dele.
+> **Cliente:** `I18N.traduzirNomes(msg)` (puro, em `src/i18n.js`) percorre cada mensagem
+> recebida e troca `name`/`nome` quando o `type` ou o `id` do objeto tem chave no dicionário;
+> `gameState.js` ganhou `setMessageFilter(fn)`, aplicado no `ws.onmessage` antes do `_handle`
+> — ele não conhece o I18N (regra do CLAUDE.md), só chama a função que o `game.js` registrou,
+> dentro de um `try` para que filtro com defeito não derrube a partida. Isso deixa os **405
+> pontos de render que leem `.name` intocados**, e faz item/monstro criados no editor
+> manterem o nome autoral de graça (sem chave → sem troca). Em português a função retorna na
+> primeira linha: custo zero. **Servidor:** `t()` resolve parâmetro que é ele próprio um `T`
+> (sem isso, frase em inglês sairia com o nome em português cravado — era o bloqueio da etapa
+> de narração), e `nome_de(familia, id)` devolve esse `T`. **Nenhum payload mudou** — eles
+> seguem mandando o nome em português, que é o fallback de que o filtro depende. **Etapas
+> restantes:** descrições de catálogo (185), erros (470) e narração (544) do servidor,
+> interface do cliente (~1.000). Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-08-10-idioma-etapa2-vocabulario*`. Testes:
+> `tools/test_vocabulario.py` (36) e `tools/test_vocabulario_cliente.js` (16).
