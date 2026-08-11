@@ -777,6 +777,10 @@ window.LANG_ERROS = {
     "en": "Invalid dungeon: {motivo}",
     "pt": "Masmorra inválida: {motivo}"
   },
+  "erro.masmorra_sem_posicao_inicial_para": {
+    "en": "This dungeon has no starting position for: {classes}",
+    "pt": "Esta masmorra não possui posição inicial para: {classes}"
+  },
   "erro.mestre_dos_mortos_so_pode_ser_usado_na_p": {
     "en": "Master of the Dead can only be used on the first action and requires room to summon.",
     "pt": "Mestre dos Mortos só pode ser usado na primeira ação e requer espaço para invocar."
@@ -1020,6 +1024,10 @@ window.LANG_ERROS = {
   "erro.parede_bloqueia_linha_de_tiro": {
     "en": "🧱 A wall blocks the line of fire to {alvo}!",
     "pt": "🧱 Uma parede bloqueia a linha de tiro até {alvo}!"
+  },
+  "erro.parede_bloqueia_nota_cortante": {
+    "en": "🧱 A wall or closed door blocks the Cutting Note.",
+    "pt": "🧱 Uma parede ou porta fechada bloqueia a Nota Cortante."
   },
   "erro.pedido_enviado_para_votacao_dos_membros": {
     "en": "Request sent for a vote among active members.",

@@ -8456,7 +8456,7 @@ class GameRoom:
         if not m or m.get("hp", 0) <= 0:
             await self.send_to(p["id"], {"type": "error", "msg": T("erro.alvo_invalido")}); return False
         if not self._tem_linha_de_visao(p["pos"], m["pos"]):
-            await self.send_to(p["id"], {"type": "error", "msg": "🧱 Uma parede ou porta fechada bloqueia a Nota Cortante."}); return False
+            await self.send_to(p["id"], {"type": "error", "msg": T("erro.parede_bloqueia_nota_cortante")}); return False
         if not self._no_raio(p, m, st["alcance"]):
             await self.send_to(p["id"], {"type": "error",
                 "msg": T("erro.alvo_fora_do_alcance_casas", alcance=st["alcance"])}); return False
@@ -9937,7 +9937,8 @@ class GameRoom:
             if missing:
                 self.phase = "city"
                 await self.send_to(pid, {"type": "error",
-                    "msg": "Esta masmorra não possui posição inicial para: " + ", ".join(missing)})
+                    "msg": T("erro.masmorra_sem_posicao_inicial_para",
+                             classes=", ".join(missing))})
                 return
 
         if nova:
