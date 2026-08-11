@@ -1143,7 +1143,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # string. A tradução acontece só na saída (broadcast/send_to), no idioma de cada
 # conexão. String crua continua string crua e sai em português para todos,
 # o que permite migrar as frases em lotes sem quebrar nada no caminho.
-LANG_FILE = os.path.join(BASE_DIR, "src", "lang", "strings.js")
+LANG_DIR = os.path.join(BASE_DIR, "src", "lang")
+LANG_FILE = os.path.join(LANG_DIR, "strings.js")   # mantido: o teste da etapa 1 aponta para cá
 LANG_DEFAULT = "pt"
 LANG_SUPORTADOS = ("pt", "en")
 LANG_BY_PID = {}          # pid -> "pt"|"en". Fora da sala de propósito: o pid vem
@@ -1151,27 +1152,39 @@ LANG_BY_PID = {}          # pid -> "pt"|"en". Fora da sala de propósito: o pid 
                           # antes de entrar em qualquer sala e o Mestre — que sai
                           # de self.players no start_game — não fica de fora.
 
+def _load_lang_arquivo(caminho):
+    """Extrai o dicionário de UM arquivo de idioma. O formato é JS por causa do
+    cliente (carrega por <script>, sem fetch); aqui achamos a linha de atribuição
+    `window.LANG_<algo> =` e pegamos da sua { até a última } do arquivo.
+    Ancorado no INÍCIO da linha: um comentário (sempre prefixado por //) nunca
+    casa, então cabeçalhos e comentários de seção podem citar "LANG_STRINGS" ou
+    conter chaves à vontade sem confundir o recorte."""
+    with open(caminho, encoding="utf-8") as f:
+        raw = f.read()
+    m = re.search(r"^\s*window\.LANG_\w+\s*=", raw, re.MULTILINE)
+    ini = raw.index("{", m.end())
+    return json.loads(raw[ini:raw.rindex("}") + 1])
+
 def _load_lang():
-    """Lê src/lang/strings.js e devolve o dicionário. O arquivo é JS por causa
-    do cliente (carrega por <script>, sem fetch); aqui achamos a linha de
-    atribuição "window.LANG_STRINGS =" e pegamos da sua { até a última } do
-    arquivo, e fazemos json.loads. Mesmo padrão que tools/editor_catalog.js
-    já usa. Falha nunca impede o servidor de subir."""
+    """Funde TODOS os .js de src/lang/. São dois hoje: o strings.js escrito à mão
+    e o catalogo.js gerado por tools/gerar_vocabulario.py — separados justamente
+    para o gerador nunca sobrescrever tradução feita à mão. Falha em um arquivo
+    não impede o servidor de subir nem descarta os outros."""
+    out = {}
     try:
-        with open(LANG_FILE, encoding="utf-8") as f:
-            raw = f.read()
-        # Ancorado no INÍCIO da linha de atribuição (window.LANG_STRINGS =),
-        # não em qualquer menção a "LANG_STRINGS" no arquivo: um comentário
-        # (sempre prefixado por //) nunca casa com esse padrão, então o
-        # cabeçalho e os comentários de seção podem citar "LANG_STRINGS" ou
-        # conter chaves à vontade sem confundir o recorte.
-        m = re.search(r"^\s*window\.LANG_STRINGS\s*=", raw, re.MULTILINE)
-        ini = raw.index("{", m.end())
-        return json.loads(raw[ini:raw.rindex("}") + 1])
+        arquivos = sorted(f for f in os.listdir(LANG_DIR) if f.endswith(".js"))
     except Exception as e:
-        print(f"⚠️  i18n: não foi possível ler {LANG_FILE} ({type(e).__name__}: {e}) — "
+        print(f"⚠️  i18n: não foi possível listar {LANG_DIR} ({type(e).__name__}: {e}) — "
               f"o jogo segue em português.")
-        return {}
+        return out
+    for nome in arquivos:
+        caminho = os.path.join(LANG_DIR, nome)
+        try:
+            out.update(_load_lang_arquivo(caminho))
+        except Exception as e:
+            print(f"⚠️  i18n: não foi possível ler {caminho} ({type(e).__name__}: {e}) — "
+                  f"as chaves deste arquivo ficam em português.")
+    return out
 
 LANG_STRINGS = _load_lang()
 

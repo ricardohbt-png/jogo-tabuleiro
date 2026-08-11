@@ -39,32 +39,38 @@ def _rodar_verificacoes():
     check("chave da amostra existe", "narracao.abre_porta" in S.LANG_STRINGS)
     check("chave tem pt e en",
           set(S.LANG_STRINGS["narracao.abre_porta"]) >= {"pt", "en"})
-    # Dicionário ilegível não pode impedir o servidor de subir: o jogo segue
-    # inteiro em português, que é exatamente o estado de hoje.
-    original = S.LANG_FILE
-    S.LANG_FILE = os.path.join(os.path.dirname(original), "_nao_existe_.js")
+    # A leitura de UM arquivo vive em _load_lang_arquivo (leitor cru, pode
+    # levantar); _load_lang funde a pasta inteira e é quem precisa ser resiliente.
+    ausente = os.path.join(os.path.dirname(S.LANG_FILE), "_nao_existe_.js")
+    estourou = False
     try:
-        vazio = S._load_lang()
-        check("arquivo ausente devolve dicionário vazio em vez de estourar", vazio == {})
-    finally:
-        S.LANG_FILE = original
-    check("recarregar do arquivo real volta a funcionar",
+        S._load_lang_arquivo(ausente)
+    except Exception:
+        estourou = True
+    check("ler arquivo ausente levanta (é o leitor cru)", estourou)
+    check("recarregar da pasta real volta a funcionar",
           "narracao.abre_porta" in S._load_lang())
-
     # Comentário com chaves literais antes da atribuição não pode confundir o
-    # recorte — na etapa 2 este arquivo ganha comentários de seção.
+    # recorte — estes arquivos ganham comentários de seção com o tempo.
     import tempfile
     with tempfile.TemporaryDirectory() as tmp:
         falso = os.path.join(tmp, "strings.js")
         with open(falso, "w", encoding="utf-8") as f:
             f.write('// cabeçalho com { e } literais\nwindow.LANG_STRINGS = {"a.b": {"pt": "ok"}};\n')
-        original2 = S.LANG_FILE
-        S.LANG_FILE = falso
+        check("chave literal no comentário não confunde o recorte",
+              S._load_lang_arquivo(falso) == {"a.b": {"pt": "ok"}})
+        # Resiliência de verdade no desenho novo: um arquivo quebrado na pasta
+        # faz perder as chaves DAQUELE arquivo, nunca as dos outros.
+        quebrado = os.path.join(tmp, "quebrado.js")
+        with open(quebrado, "w", encoding="utf-8") as f:
+            f.write("isto nao e um arquivo de idioma\n")
+        original_dir = S.LANG_DIR
+        S.LANG_DIR = tmp
         try:
-            check("chave literal no comentário não confunde o recorte",
+            check("arquivo quebrado na pasta não descarta os bons",
                   S._load_lang() == {"a.b": {"pt": "ok"}})
         finally:
-            S.LANG_FILE = original2
+            S.LANG_DIR = original_dir
 
     print("\n[2] t() — tradução, fallback e chave ausente")
     check("t() devolve português", S.t("erro.porta_longe", "pt") == "Aproxime-se da porta para abri-la.")

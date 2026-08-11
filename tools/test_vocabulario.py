@@ -77,6 +77,20 @@ def _rodar_verificacoes():
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
+    print("\n[7] O servidor funde todos os .js de src/lang/")
+    check("o dicionário do servidor tem chave do strings.js",
+          "erro.porta_longe" in S.LANG_STRINGS)
+    check("o dicionário do servidor tem chave do catalogo.js",
+          "cat.monstro.goblin.nome" in S.LANG_STRINGS)
+    check("o nome em pt veio do catálogo",
+          S.t("cat.monstro.goblin.nome", "pt") == "Goblin")
+    # Nenhuma chave do arquivo pode apontar para item que saiu do catálogo: se
+    # apontasse, o jogo mostraria em inglês um nome que não existe mais.
+    plano = G.achatar(G.coletar())
+    no_arquivo = G.ler_existente(G.DESTINO)
+    check("nenhuma chave órfã no catalogo.js gerado",
+          sorted(k for k in no_arquivo if k not in plano) == [])
+
 
 if __name__ == "__main__":
     print("=" * 62); print("  TESTE — Vocabulário (nomes de catálogo)"); print("=" * 62)
