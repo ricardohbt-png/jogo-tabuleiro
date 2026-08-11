@@ -65,6 +65,17 @@ let travou = false;
 try { I18N.traduzirNomes(ciclo); } catch (e) { travou = true; }
 check("estrutura com referência circular não estoura", !travou);
 
+console.log("\n[8] A fiação com o gameState existe");
+// Checagem estática: o teste não consegue carregar game.js nem gameState.js
+// (o primeiro monta o DOM inteiro no load), então verificamos a fiação no fonte.
+const gamejs = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
+const gs = fs.readFileSync(path.join(raiz, "src", "gameState.js"), "utf8");
+check("gameState expõe setMessageFilter", /setMessageFilter/.test(gs));
+check("o filtro é aplicado antes do _handle",
+      /_messageFilter[\s\S]{0,400}?_handle\(/.test(gs));
+check("game.js registra I18N.traduzirNomes como filtro",
+      /GS\.setMessageFilter\(\s*I18N\.traduzirNomes\s*\)/.test(gamejs));
+
 console.log("\n" + "=".repeat(62));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);
 console.log("=".repeat(62));

@@ -1045,6 +1045,16 @@ const GS = (() => {
     send({ type: 'set_lang', lang: code });
   }
 
+  // ── Filtro de mensagens ───────────────────────────────────────────────────
+  // O renderer registra aqui uma função aplicada a TODA mensagem que chega,
+  // antes do despacho — hoje é a tradução dos nomes de catálogo. Este módulo
+  // não conhece o I18N nem o dicionário (regra do CLAUDE.md: nada de window
+  // aqui); ele só chama o que recebeu.
+  let _messageFilter = null;
+  function setMessageFilter(fn) {
+    _messageFilter = (typeof fn === 'function') ? fn : null;
+  }
+
   // ── Sessão para reconexão ────────────────────────────────────────────────
   // Guardada quando o lobby confirma a sala; persiste em localStorage para o
   // jogador voltar à partida mesmo após F5/queda (mensagem `rejoin` no servidor).
@@ -1103,7 +1113,14 @@ const GS = (() => {
     ws.onmessage = e => {
       try {
         _rejoinTries = 0;   // qualquer mensagem válida = conexão saudável
-        _handle(JSON.parse(e.data));
+        let msg = JSON.parse(e.data);
+        if (_messageFilter) {
+          // Um filtro com defeito não pode derrubar a partida: se ele estourar,
+          // a mensagem segue crua (em português) em vez de se perder.
+          try { msg = _messageFilter(msg) || msg; }
+          catch (err) { console.error('filtro de mensagem falhou:', err); }
+        }
+        _handle(msg);
       }
       catch (err) { console.error('WS parse/handle error:', err, e.data?.slice?.(0, 200)); }
     };
@@ -2542,6 +2559,7 @@ const GS = (() => {
     isPreview: PREVIEW,
     injectPreviewState,
     setLang,
+    setMessageFilter,
 
     // ── Guilda dos Heróis (Fase 0) ──
     guildBuy,

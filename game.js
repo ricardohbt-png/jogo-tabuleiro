@@ -14931,6 +14931,11 @@ const t = (chave, params) => I18N.t(chave, params);
 // Registrado no carregamento do módulo, antes de _langLoadPref() rodar.
 I18N.on(code => GS.setLang(code));
 
+// Nomes de item e monstro chegam do servidor em português; o filtro os troca
+// pelo idioma atual assim que a mensagem entra, então os pontos de render
+// continuam lendo .name sem saber que existe tradução.
+GS.setMessageFilter(I18N.traduzirNomes);
+
 function _langLoadPref(){
   try {
     const salvo = localStorage.getItem(_LANG_KEY);
