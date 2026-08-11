@@ -1216,7 +1216,15 @@ def t(key, lang=LANG_DEFAULT, **params):
 
 class T:
     """Texto ainda não traduzido: guarda a chave e os parâmetros, e só vira
-    string na hora do envio, no idioma daquele jogador."""
+    string na hora do envio, no idioma daquele jogador.
+
+    Também SE COMPORTA como o texto em português para quem o trate como string
+    — testes, logs, comparações, f-strings legadas. Isso é deliberado: o
+    servidor tem centenas de lugares que leem uma mensagem como texto, e o
+    fallback do projeto inteiro é "na dúvida, português". Quem serializa
+    continua recebendo a TRADUÇÃO, porque T não é subclasse de str e o
+    json.dumps chama o `default` (é justamente isso que uma subclasse de str
+    quebraria)."""
     __slots__ = ("key", "params")
 
     def __init__(self, key, **params):
@@ -1225,6 +1233,30 @@ class T:
 
     def __repr__(self):
         return f"T({self.key!r}, {self.params!r})"
+
+    def __str__(self):
+        return t(self.key, LANG_DEFAULT, **self.params)
+
+    def __eq__(self, outro):
+        return str(self) == outro if isinstance(outro, str) else NotImplemented
+
+    def __hash__(self):
+        return hash(str(self))
+
+    def __contains__(self, parte):
+        return parte in str(self)
+
+    def __len__(self):
+        return len(str(self))
+
+    def __getattr__(self, nome):
+        # Só é chamado quando o atributo NÃO existe no T. A guarda evita
+        # recursão infinita: sem ela, um acesso a "key" antes do __init__ (ou
+        # um __deepcopy__ procurado pelo copy) cairia aqui, chamaria str(self),
+        # que lê self.key, que cairia aqui de novo.
+        if nome.startswith("__") or nome in T.__slots__:
+            raise AttributeError(nome)
+        return getattr(str(self), nome)
 
 def _t_render(o, lang):
     """Usado como `default` do json.dumps: chamado para cada objeto que o json
@@ -6967,7 +6999,7 @@ class GameRoom:
     async def select_class(self, pid, cls_id):
         if self.players.get(pid, {}).get("is_master"):
             await self.send_to(pid, {"type": "error",
-                "msg": "O mestre não escolhe classe. Solte o papel de mestre primeiro."})
+                "msg": T("erro.o_mestre_nao_escolhe_classe_solte_o_pape")})
             return
         if cls_id not in CLASSES:
             return
@@ -6976,7 +7008,7 @@ class GameRoom:
             conta = self.account_by_pid.get(pid)
             if not conta:
                 await self.send_to(pid, {"type": "error",
-                    "msg": "Faça login para escolher um personagem neste jogo."})
+                    "msg": T("erro.faca_login_para_escolher_um_personagem_n")})
                 return
             ensure_campaign_schema(self.savegame)
             membros = self.savegame.setdefault("members", {})
@@ -6988,7 +7020,7 @@ class GameRoom:
                 # Classe já pertence a OUTRA conta neste savegame?
                 slot = self.savegame["slots"].get(cls_id, {})
                 if not self.savegame.get("rules", {}).get("allow_new_players", True):
-                    await self.send_to(pid, {"type": "error", "msg": "Esta campanha não aceita novos jogadores."})
+                    await self.send_to(pid, {"type": "error", "msg": T("erro.esta_campanha_nao_aceita_novos_jogadores")})
                     return
                 active_accounts = [a for a, m in membros.items()
                                    if isinstance(m, dict) and m.get("status", "active") == "active" and m.get("class_id")]
@@ -6996,7 +7028,7 @@ class GameRoom:
                 if active_accounts and regras.get("entry_mode") == "vote":
                     if any(v.get("status") == "open" and v.get("candidate") == conta
                            for v in self.savegame.get("votes", [])):
-                        await self.send_to(pid, {"type": "error", "msg": "Seu pedido já está aguardando votação."})
+                        await self.send_to(pid, {"type": "error", "msg": T("erro.seu_pedido_ja_esta_aguardando_votacao")})
                         return
                     vote_id = "vote_" + "".join(random.choices(string.ascii_lowercase + string.digits, k=8))
                     vote = {"id": vote_id, "kind": "entry", "candidate": conta, "class_id": cls_id,
@@ -7006,13 +7038,13 @@ class GameRoom:
                         "text": f"{conta} pediu a vaga de {HERO_IDENTITIES.get(cls_id, cls_id)}"})
                     write_savegame(self.savegame)
                     await self.broadcast({"type": "campaign_vote_opened", "vote": vote, "campaign_id": self.savegame["id"]})
-                    await self.send_to(pid, {"type": "error", "msg": "Pedido enviado para votação dos membros ativos."})
+                    await self.send_to(pid, {"type": "error", "msg": T("erro.pedido_enviado_para_votacao_dos_membros")})
                     return
                 dono_conta = next((c for c, m in membros.items()
                                    if m.get("class_id") == cls_id and c != conta), None)
                 if dono_conta:
                     await self.send_to(pid, {"type": "error",
-                        "msg": "Esse personagem é de outro jogador neste jogo."})
+                        "msg": T("erro.esse_personagem_e_de_outro_jogador_neste")})
                     return
                 # 1ª escolha: grava vínculo + ficha fresca e persiste.
                 membros[conta] = {"class_id": cls_id, "status": "active", "joined": _now_iso(),
@@ -7029,7 +7061,7 @@ class GameRoom:
         # NÃ£o tomado na sala
         taken = [p["class_id"] for p in self.players.values() if p["id"] != pid]
         if cls_id in taken:
-            await self.send_to(pid, {"type": "error", "msg": "Classe já escolhida por outro jogador."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.classe_ja_escolhida_por_outro_jogador")})
             return
         # Trava global de personagem por sala SÓ vale sem jogo salvo: com savegame
         # a ficha é por-jogo (e SAVEGAMES_IN_USE já impede a mesma partida rodar
@@ -7058,7 +7090,7 @@ class GameRoom:
         vote = next((v for v in self.savegame.get("votes", [])
                      if v.get("id") == vote_id and v.get("status") == "open"), None)
         if not vote or account not in vote.get("eligible", []):
-            await self.send_to(pid, {"type": "error", "msg": "Você não pode votar nesta solicitação."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_pode_votar_nesta_solicitacao")})
             return
         for key in ("yes", "no"):
             if account in vote[key]: vote[key].remove(account)
@@ -7103,7 +7135,7 @@ class GameRoom:
             return
         if self.savegame and self.savegame.get("has_master"):
             if self.account_by_pid.get(pid) != self.savegame.get("master_account") or role != "master":
-                await self.send_to(pid, {"type": "error", "msg": "O Mestre desta campanha é fixo e também é o anfitrião."})
+                await self.send_to(pid, {"type": "error", "msg": T("erro.o_mestre_desta_campanha_e_fixo_e_tambem")})
                 return
         if role not in ("master", "hero"):
             return
@@ -7112,7 +7144,7 @@ class GameRoom:
                           if q.get("is_master") and q["id"] != pid), None)
             if outro:
                 await self.send_to(pid, {"type": "error",
-                    "msg": "Já existe um mestre nesta sala."})
+                    "msg": T("erro.ja_existe_um_mestre_nesta_sala")})
                 return
             prev = p.get("class_id")
             if prev and CHARACTERS_IN_USE.get(prev) == self.code:
@@ -7130,7 +7162,7 @@ class GameRoom:
             heroes = sum(1 for q in self.players.values() if not q.get("is_master"))
             if heroes >= 6:
                 await self.send_to(pid, {"type": "error",
-                    "msg": "Sala cheia (6 heróis) — não há vaga de herói para você."})
+                    "msg": T("erro.sala_cheia_6_herois_nao_ha_vaga_de_heroi")})
                 return
             p["is_master"] = False
             p["ready"] = False
@@ -7145,14 +7177,14 @@ class GameRoom:
         if not p or self.phase != "lobby":
             return
         if p.get("class_id") not in ("mage", "cleric"):
-            await self.send_to(pid, {"type": "error", "msg": "Sua classe não escolhe magias."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.sua_classe_nao_escolhe_magias")}); return
         ids = list(dict.fromkeys(ids or []))   # remove duplicatas, preserva ordem
         if len(ids) != 2:
-            await self.send_to(pid, {"type": "error", "msg": "Escolha exatamente 2 magias de 1º círculo."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.escolha_exatamente_2_magias_de_1o_circul")}); return
         for mid in ids:
             m = GRIMORIO.get(mid)
             if not m or p["class_id"] not in m.get("classe", []) or m.get("circulo") != "primeiro":
-                await self.send_to(pid, {"type": "error", "msg": "Magia inválida para sua classe/círculo."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.magia_invalida_para_sua_classe_circulo")}); return
         p["magias_conhecidas"] = ids
         await self.broadcast_lobby()
 
@@ -7163,13 +7195,13 @@ class GameRoom:
             return
         fila = p.get("pending_spell_pick") or []
         if not fila:
-            await self.send_to(pid, {"type": "error", "msg": "Nenhuma escolha de magia pendente."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nenhuma_escolha_de_magia_pendente")}); return
         circ = fila[0]
         m = GRIMORIO.get(magia_id)
         if not m or p["class_id"] not in m.get("classe", []) or m.get("circulo") != circ:
-            await self.send_to(pid, {"type": "error", "msg": "Magia inválida para este círculo/classe."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.magia_invalida_para_este_circulo_classe")}); return
         if magia_id in p.get("magias_conhecidas", []):
-            await self.send_to(pid, {"type": "error", "msg": "Você já conhece essa magia."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_ja_conhece_essa_magia")}); return
         p.setdefault("magias_conhecidas", []).append(magia_id)
         fila.pop(0)
         await self.gm_say(f"📖 **{p['name']}** aprendeu **{m['nome']}**!")
@@ -7254,20 +7286,20 @@ class GameRoom:
 
     async def start_game(self, pid):
         if pid != self.host_pid:
-            await self.send_to(pid, {"type": "error", "msg": "Apenas o anfitrião pode iniciar."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_o_anfitriao_pode_iniciar")})
             return
         heroes = {pid2: p for pid2, p in self.players.items() if not p.get("is_master")}
         master_entry = next((p for p in self.players.values() if p.get("is_master")), None)
         if not heroes:
-            await self.send_to(pid, {"type": "error", "msg": "É preciso pelo menos 1 herói para iniciar."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.e_preciso_pelo_menos_1_heroi_para_inicia")})
             return
         if not all(p["class_id"] for p in heroes.values()):
-            await self.send_to(pid, {"type": "error", "msg": "Todos os heróis devem escolher uma classe."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.todos_os_herois_devem_escolher_uma_class")})
             return
         for pp in heroes.values():
             if pp["class_id"] in ("mage", "cleric") and len(pp.get("magias_conhecidas", [])) < 2:
                 await self.send_to(pid, {"type": "error",
-                    "msg": "Magos e clérigos devem escolher 2 magias antes de iniciar."}); return
+                    "msg": T("erro.magos_e_clerigos_devem_escolher_2_magias")}); return
 
         # Build full player states â€” SOMENTE herÃ³is; o mestre nÃ£o vira peÃ£o.
         full_players = {}
@@ -7512,14 +7544,14 @@ class GameRoom:
 
     async def handle_scene_choice(self, pid, scene_id, event_id, option_id):
         if not self.active_scene or self.active_scene.get("scene_id") != str(scene_id):
-            await self.send_to(pid, {"type":"error", "msg":"Esta cena não está mais ativa."}); return
+            await self.send_to(pid, {"type":"error", "msg": T("erro.esta_cena_nao_esta_mais_ativa")}); return
         if self.active_scene.get("locked") or self.active_scene.get("current_event") != event_id:
-            await self.send_to(pid, {"type":"error", "msg":"Outro jogador já fez a escolha do grupo."}); return
+            await self.send_to(pid, {"type":"error", "msg": T("erro.outro_jogador_ja_fez_a_escolha_do_grupo")}); return
         _scene, event = self._scene_event(scene_id, event_id)
         options = (event or {}).get("data") or []
         opt = next((o for o in options if isinstance(o, dict) and str(o.get("id")) == str(option_id)), None)
         if not opt:
-            await self.send_to(pid, {"type":"error", "msg":"Escolha inválida."}); return
+            await self.send_to(pid, {"type":"error", "msg": T("erro.escolha_invalida")}); return
         self.active_scene["locked"] = True
         self._scene_apply_effects(opt.get("effects"), pid)
         next_id = opt.get("next") or event.get("next")
@@ -7533,11 +7565,11 @@ class GameRoom:
 
     async def handle_scene_test(self, pid, scene_id, event_id):
         if not self.active_scene or self.active_scene.get("scene_id") != str(scene_id) or self.active_scene.get("locked") or self.active_scene.get("current_event") != event_id:
-            await self.send_to(pid, {"type":"error", "msg":"O teste não está mais disponível."}); return
+            await self.send_to(pid, {"type":"error", "msg": T("erro.o_teste_nao_esta_mais_disponivel")}); return
         _scene, event = self._scene_event(scene_id, event_id)
         data = (event or {}).get("data") or {}
         if not isinstance(data, dict) or (event or {}).get("type") != "test_cd":
-            await self.send_to(pid, {"type":"error", "msg":"Teste inválido."}); return
+            await self.send_to(pid, {"type":"error", "msg": T("erro.teste_invalido")}); return
         p = self.players.get(pid)
         if not p: return
         try: cd = int(data.get("cd", 10))
@@ -7561,7 +7593,7 @@ class GameRoom:
     async def handle_scene_end(self, pid, force=False):
         if not self.active_scene: return
         if pid != self.host_pid:
-            await self.send_to(pid, {"type":"error", "msg":"Somente o anfitrião pode encerrar a cena."}); return
+            await self.send_to(pid, {"type":"error", "msg": T("erro.somente_o_anfitriao_pode_encerrar_a_cena")}); return
         scene = self._scene_def(self.active_scene.get("scene_id")) or {}
         required = {e.get("id") for e in scene.get("events", []) if e.get("mandatory")}
         missing = sorted(required - set(self.active_scene.get("required_done") or []))
@@ -7587,7 +7619,7 @@ class GameRoom:
 
     async def handle_set_turn_timer(self, pid, enabled):
         if pid != self.host_pid:
-            await self.send_to(pid, {"type":"error", "msg":"Somente o anfitrião pode alterar o limite de turno."}); return
+            await self.send_to(pid, {"type":"error", "msg": T("erro.somente_o_anfitriao_pode_alterar_o_limit")}); return
         self.turn_timer_enabled = bool(enabled)
         self._cancelar_timer_turno(); self._cancelar_timer_ultimo_esforco()
         if self.turn_timer_enabled:
@@ -7640,16 +7672,16 @@ class GameRoom:
             return
         item = guild_item(item_id)
         if not item:
-            await self.send_to(pid, {"type": "error", "msg": "Item da guilda desconhecido."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.item_da_guilda_desconhecido")})
             return
         # Classe compatÃ­vel (classe pode ser None, 1 class_id, ou lista de class_ids)
         if not _guild_classe_ok(item["classe"], p.get("class_id")):
-            await self.send_to(pid, {"type": "error", "msg": "Este aprimoramento não é da sua classe."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.este_aprimoramento_nao_e_da_sua_classe")})
             return
         cat = item["categoria"]   # "tecnica" | "especializacao"
         owned = p["guild_owned"]["tecnicas"] if cat == "tecnica" else p["guild_owned"]["especializacoes"]
         if item_id in owned:
-            await self.send_to(pid, {"type": "error", "msg": "Você já possui isto."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_ja_possui_isto")})
             return
         # PrÃ©-requisito
         req = item.get("requer")
@@ -7659,7 +7691,7 @@ class GameRoom:
             return
         # Ouro
         if p.get("gold", 0) < item["preco"]:
-            await self.send_to(pid, {"type": "error", "msg": "Ouro insuficiente."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.ouro_insuficiente")})
             return
         p["gold"] -= item["preco"]
         owned.append(item_id)
@@ -7671,7 +7703,7 @@ class GameRoom:
         'tecnica' é genérico (todas as classes); 'tecnica_exclusiva' só mago/clérigo
         e só aceita item com exclusiva=True."""
         if not self._em_cidade(pid):
-            await self.send_to(pid, {"type": "error", "msg": "Só é possível equipar técnicas na cidade."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.so_e_possivel_equipar_tecnicas_na_cidade")})
             return
         p = self.players.get(pid)
         if not p:
@@ -7679,11 +7711,11 @@ class GameRoom:
         slot = _indice_slot_guilda(slot)
         slots = _garantir_slots_guilda(p)
         if slot is None or slot < 0 or slot >= len(slots):
-            await self.send_to(pid, {"type": "error", "msg": "Slot de técnica inválido."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.slot_de_tecnica_invalido")})
             return
         # Slot exclusivo sÃ³ para mago/clÃ©rigo
         if False and slot == "tecnica_exclusiva" and p.get("class_id") not in ("mage", "cleric"):
-            await self.send_to(pid, {"type": "error", "msg": "Sua classe não tem slot de técnica exclusiva."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.sua_classe_nao_tem_slot_de_tecnica_exclu")})
             return
         if item_id is None:   # desequipar
             slots[slot] = None
@@ -7693,17 +7725,17 @@ class GameRoom:
             return
         item = guild_item(item_id)
         if not item or item["categoria"] != "tecnica":
-            await self.send_to(pid, {"type": "error", "msg": "Técnica desconhecida."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.tecnica_desconhecida")})
             return
         if item_id not in p["guild_owned"]["tecnicas"]:
-            await self.send_to(pid, {"type": "error", "msg": "Você não possui esta técnica."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_possui_esta_tecnica")})
             return
         # CoerÃªncia exclusiva â†” slot
         if False and slot == "tecnica_exclusiva" and not item.get("exclusiva"):
-            await self.send_to(pid, {"type": "error", "msg": "Esta técnica não é exclusiva."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.esta_tecnica_nao_e_exclusiva")})
             return
         if False and slot == "tecnica" and item.get("exclusiva"):
-            await self.send_to(pid, {"type": "error", "msg": "Técnica exclusiva vai no slot exclusivo."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.tecnica_exclusiva_vai_no_slot_exclusivo")})
             return
         slots[slot] = item_id
         p["guild_equip"]["tecnica"] = slots[0] if slots else None
@@ -8078,11 +8110,11 @@ class GameRoom:
             return
         p = self.players.get(pid)
         if not p or not self._is_turn(pid):
-            await self.send_to(pid, {"type": "error", "msg": "Não é o seu turno."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nao_e_o_seu_turno")})
             return
         eq = p["guild_equip"]
         if not tem_tecnica_equipada(p, tecnica_id):
-            await self.send_to(pid, {"type": "error", "msg": "Técnica não equipada."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.tecnica_nao_equipada")})
             return
         item = guild_item(tecnica_id)
         if not item:
@@ -8101,11 +8133,11 @@ class GameRoom:
             return
         _ef, _es = self._custo_fome_sede_efetivo(p, item["custo_fome"], item["custo_sede"])
         if p.get("fome", 0) < _ef or p.get("sede", 0) < _es:
-            await self.send_to(pid, {"type": "error", "msg": "Fome/sede insuficientes."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.fome_sede_insuficientes")})
             return
         ef = item.get("efeito", {})
         if ef.get("tipo") == "sorte":
-            await self.send_to(pid, {"type": "error", "msg": "Sorte é passiva e reage automaticamente quando uma rolagem falha."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.sorte_e_passiva_e_reage_automaticamente")})
             return
         if ef.get("tipo") == "buff_turno":
             p["tecnica_buff_dano_arma"] = p.get("tecnica_buff_dano_arma", 0) + ef.get("bonus_dano_arma", 0)
@@ -8131,9 +8163,9 @@ class GameRoom:
         elif ef.get("tipo") == "debuff_ca_alvo":
             alvo = self.monsters.get(target_id) if target_id else None
             if not alvo or alvo.get("hp", 0) <= 0:
-                await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")}); return
             if max(abs(alvo["pos"][0]-p["pos"][0]), abs(alvo["pos"][1]-p["pos"][1])) > 1:
-                await self.send_to(pid, {"type": "error", "msg": "O inimigo precisa estar adjacente."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.o_inimigo_precisa_estar_adjacente")}); return
             alvo["pressao_ca_val"] = ef.get("ca", 2)
             alvo["pressao_ca_ate"] = self.round_num + ef.get("rodadas", 2)
         elif ef.get("tipo") == "defesa_impecavel":
@@ -8141,9 +8173,9 @@ class GameRoom:
         elif ef.get("tipo") == "tatica_defensiva":
             alvo = self.players.get(target_id) if target_id else None
             if not alvo or not alvo.get("alive") or alvo["id"] == pid:
-                await self.send_to(pid, {"type": "error", "msg": "Escolha um aliado vivo."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.escolha_um_aliado_vivo")}); return
             if not self._no_raio(p, alvo, ef.get("raio", 4)):
-                await self.send_to(pid, {"type": "error", "msg": "Aliado fora do alcance (4 casas)."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_fora_do_alcance_4_casas")}); return
             p["tatica_alvo"] = alvo["id"]
             p["tatica_ate"] = self.round_num + roll_dice("1d4")
         elif ef.get("tipo") == "passo_fantasma":
@@ -8164,7 +8196,7 @@ class GameRoom:
         elif ef.get("tipo") == "ataque_coordenado":
             alvo = self.players.get(target_id) if target_id else None
             if not alvo or not alvo.get("alive") or alvo["id"] == pid:
-                await self.send_to(pid, {"type": "error", "msg": "Escolha um aliado vivo."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.escolha_um_aliado_vivo")}); return
             p["coordenado_alvo"] = alvo["id"]
             p["coordenado_turno"] = self.turn_index
         elif ef.get("tipo") == "contra_ataque":
@@ -8173,7 +8205,7 @@ class GameRoom:
             alvo = self.players.get(target_id) if target_id else None
             if not alvo or not alvo.get("alive") or alvo["id"] == pid:
                 await self.send_to(pid, {"type": "error",
-                    "msg": "Escolha um aliado vivo (não pode ser você)."}); return
+                    "msg": T("erro.escolha_um_aliado_vivo_nao_pode_ser_voce")}); return
             alvo["oportunidade_credito"] = True
             alvo["oportunidade_round"] = self.round_num
         elif ef.get("tipo") == "golpe_decisivo":
@@ -8181,11 +8213,11 @@ class GameRoom:
         elif ef.get("tipo") == "sorte":
             perdido = p.get("ultimo_ataque_perdido")
             if not perdido:
-                await self.send_to(pid, {"type": "error", "msg": "Nenhum ataque recente para rerolar."})
+                await self.send_to(pid, {"type": "error", "msg": T("erro.nenhum_ataque_recente_para_rerolar")})
                 return
             alvo = self.monsters.get(perdido["target_id"])
             if not alvo or alvo.get("hp", 0) <= 0:
-                await self.send_to(pid, {"type": "error", "msg": "O alvo não está mais disponível."})
+                await self.send_to(pid, {"type": "error", "msg": T("erro.o_alvo_nao_esta_mais_disponivel")})
                 return
             hit, roll, total, crit, _desc = self._rolar_ataque(
                 perdido["eff_atk"], perdido["eff_target_ac"], perdido["vantagem"], perdido["desvantagem"])
@@ -8220,7 +8252,7 @@ class GameRoom:
             vivo2 = alvo2 and (alvo2["alive"] if self._eh_jogador(alvo2) else alvo2.get("hp", 0) > 0)
             if not alvo2 or not vivo2 or target_id == pid:
                 await self.send_to(pid, {"type": "error",
-                    "msg": "Escolha um alvo vivo (não pode ser você)."}); return
+                    "msg": T("erro.escolha_um_alvo_vivo_nao_pode_ser_voce")}); return
             p["tec_ex_geminada_alvo2_id"] = target_id
         elif ef.get("tipo") == "tec_ex_canalizacao_perfeita":
             p["tec_ex_canalizacao_perfeita_armado"] = True
@@ -8294,12 +8326,12 @@ class GameRoom:
             return
         p = self.players.get(pid)
         if not p or not p.get("alive") or not self._is_turn(pid):
-            await self.send_to(pid, {"type": "error", "msg": "Não é o seu turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nao_e_o_seu_turno")}); return
         if p.get("class_id") != "bard":
-            await self.send_to(pid, {"type": "error", "msg": "Apenas o bardo usa instrumentos."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_o_bardo_usa_instrumentos")}); return
         inst = p["gear"].get("off_hand")
         if not inst or inst.get("tipo_item") != "instrumento":
-            await self.send_to(pid, {"type": "error", "msg": "Nenhum instrumento equipado (mão do escudo)."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nenhum_instrumento_equipado_mao_do_escud")}); return
         base = INSTRUMENTOS_BASE[inst["base"]]
         if base["modo"] != "ativada":
             await self.send_to(pid, {"type": "error",
@@ -8313,14 +8345,14 @@ class GameRoom:
         duas_maos = base["maos"] == 2
         if p.get("instrumento_usado"):
             await self.send_to(pid, {"type": "error",
-                "msg": "Você já tocou um instrumento neste turno."}); return
+                "msg": T("erro.voce_ja_tocou_um_instrumento_neste_turno")}); return
         if duas_maos and p.get("action_done"):
             await self.send_to(pid, {"type": "error",
-                "msg": "Instrumento de 2 mãos exige concentração — você já usou sua ação."}); return
+                "msg": T("erro.instrumento_de_2_maos_exige_concentracao")}); return
         st = self._instrumento_stats(inst)
         _ef, _es = self._custo_fome_sede_efetivo(p, st["custo_fome"], st["custo_sede"])
         if p.get("fome", 0) < _ef or p.get("sede", 0) < _es:
-            await self.send_to(pid, {"type": "error", "msg": "Fome/sede insuficientes."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.fome_sede_insuficientes")}); return
 
         tipo = base["efeito"]["tipo"]
         ok = False
@@ -8341,7 +8373,7 @@ class GameRoom:
         elif tipo == "improviso":
             ok = await self._instr_improviso(p, inst, st, data)
         else:
-            await self.send_to(pid, {"type": "error", "msg": "Instrumento em desenvolvimento."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.instrumento_em_desenvolvimento")}); return
         if not ok:
             return
 
@@ -8358,7 +8390,7 @@ class GameRoom:
         alvo_id = (data or {}).get("target_id")
         m = self.monsters.get(alvo_id)
         if not m or m.get("hp", 0) <= 0:
-            await self.send_to(p["id"], {"type": "error", "msg": "Alvo inválido."}); return False
+            await self.send_to(p["id"], {"type": "error", "msg": T("erro.alvo_invalido")}); return False
         if not self._no_raio(p, m, st["alcance"]):
             await self.send_to(p["id"], {"type": "error",
                 "msg": f"Alvo fora do alcance ({st['alcance']} casas)."}); return False
@@ -8380,12 +8412,12 @@ class GameRoom:
         dx = 1 if dirv[0] > 0 else -1 if dirv[0] < 0 else 0
         dy = 1 if dirv[1] > 0 else -1 if dirv[1] < 0 else 0
         if dx == 0 and dy == 0:
-            await self.send_to(p["id"], {"type": "error", "msg": "Escolha uma direção para a Nota Cortante rúnica."}); return False
+            await self.send_to(p["id"], {"type": "error", "msg": T("erro.escolha_uma_direcao_para_a_nota_cortante")}); return False
         tiles = {tuple(t) for t in self._caminho_relampago(p["pos"], dx, dy, st["alcance"])}
         alvos = [m for m in self.monsters.values()
                  if m.get("hp", 0) > 0 and tuple(m["pos"]) in tiles]
         if not alvos:
-            await self.send_to(p["id"], {"type": "error", "msg": "Nenhum inimigo na linha."}); return False
+            await self.send_to(p["id"], {"type": "error", "msg": T("erro.nenhum_inimigo_na_linha")}); return False
         await self.gm_say(f"🎵 **{p['name']}** dispara **Nota Cortante** numa linha reta!")
         cd = self._instrumento_cd(p, inst)
         for m in alvos:
@@ -8418,7 +8450,7 @@ class GameRoom:
         alvos = [m for m in self.monsters.values()
                  if m.get("hp", 0) > 0 and self._no_raio(p, m, st["raio"])]
         if not alvos:
-            await self.send_to(p["id"], {"type": "error", "msg": "Nenhum inimigo no alcance."}); return False
+            await self.send_to(p["id"], {"type": "error", "msg": T("erro.nenhum_inimigo_no_alcance")}); return False
         await self.gm_say(f"🥁 **{p['name']}** golpeia o **Tambor de Guerra** — onda sonora (raio {st['raio']})!")
         cd = self._instrumento_cd(p, inst)
         for m in alvos:
@@ -8479,13 +8511,13 @@ class GameRoom:
         dx = 1 if dirv[0] > 0 else -1 if dirv[0] < 0 else 0
         dy = 1 if dirv[1] > 0 else -1 if dirv[1] < 0 else 0
         if dx == 0 and dy == 0:
-            await self.send_to(p["id"], {"type": "error", "msg": "Escolha uma direção para o Chamado."}); return False
+            await self.send_to(p["id"], {"type": "error", "msg": T("erro.escolha_uma_direcao_para_o_chamado")}); return False
         comp = st["cone"]
         tiles = self._cone_tiles(p["pos"][0], p["pos"][1], dx, dy, comp, comp)
         alvos = [m for m in self.monsters.values()
                  if m.get("hp", 0) > 0 and tuple(m["pos"]) in tiles]
         if not alvos:
-            await self.send_to(p["id"], {"type": "error", "msg": "Nenhum inimigo no cone."}); return False
+            await self.send_to(p["id"], {"type": "error", "msg": T("erro.nenhum_inimigo_no_cone")}); return False
         await self.gm_say(f"📯 **{p['name']}** sopra o **Chamado do General** (cone {comp})!")
         cd = self._instrumento_cd(p, inst)
         for m in alvos:
@@ -8517,13 +8549,13 @@ class GameRoom:
         alvo_id = (data or {}).get("target_id")
         m = self.monsters.get(alvo_id)
         if not m or m.get("hp", 0) <= 0:
-            await self.send_to(p["id"], {"type": "error", "msg": "Alvo inválido."}); return False
+            await self.send_to(p["id"], {"type": "error", "msg": T("erro.alvo_invalido")}); return False
         if not self._no_raio(p, m, st["alcance"]):
             await self.send_to(p["id"], {"type": "error",
                 "msg": f"Alvo fora do alcance ({st['alcance']} casas)."}); return False
         if not self._tem_linha_de_visao(p["pos"], m["pos"]):
             await self.send_to(p["id"], {"type": "error",
-                "msg": "🧱 Sem linha de visão para o alvo."}); return False
+                "msg": T("erro.sem_linha_de_visao_para_o_alvo")}); return False
         if p.get("requiem_alvo"):
             await self._encerrar_requiem(p, "recomeça em novo alvo")
         p["requiem_alvo"] = m["id"]
@@ -8653,7 +8685,7 @@ class GameRoom:
             if m and self._no_raio(p, m, vst.get("alcance", 6)):
                 await self._improviso_requiem_tick(p, virt, vst, m)
             else:
-                await self.send_to(pid, {"type": "error", "msg": "Alvo do Réquiem inválido."})
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_do_requiem_invalido")})
         elif passo["res"] == 11:
             await self._instr_chamado_general(p, virt, vst, {"dir": (data or {}).get("dir")})
         await self.push_state()
@@ -8770,7 +8802,7 @@ class GameRoom:
             return
         if not (p.get("oportunidade_credito") and p.get("oportunidade_round") == self.round_num):
             await self.send_to(pid, {"type": "error",
-                "msg": "Sem crédito de Oportunidade disponível."})
+                "msg": T("erro.sem_credito_de_oportunidade_disponivel")})
             return
         p["oportunidade_credito"] = False
         p["moves_left"] = p.get("moves_left", 0) + p.get("spd", 0)
@@ -8786,7 +8818,7 @@ class GameRoom:
             return
         entrada = next((x for x in self._maldicoes(p) if x["id"] == maldicao_id), None)
         if not entrada:
-            await self.send_to(pid, {"type": "error", "msg": "Essa maldição não está ativa."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.essa_maldicao_nao_esta_ativa")}); return
         categoria = MALDICOES[maldicao_id]["categoria"]
         vinculante = self._cura_maldicao_vinculante(p, maldicao_id)
         preco = MALDICAO_PRECOS_TEMPLO[categoria] + (100 if vinculante else 0)
@@ -8825,7 +8857,7 @@ class GameRoom:
             item = next((i for i in _city_shop_items(self.world_location, "taverna") if i["id"] == item_id), None)
 
         if not item:
-            await self.send_to(pid, {"type": "error", "msg": "Item não encontrado."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado")})
             return
 
         # â”€â”€ RestriÃ§Ã£o de classe (allowed_classes) â€” vale tambÃ©m na compra â”€â”€â”€â”€â”€â”€
@@ -8844,7 +8876,7 @@ class GameRoom:
 
         price = item["price"]
         if p["gold"] < price:
-            await self.send_to(pid, {"type": "error", "msg": "Ouro insuficiente!"})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.ouro_insuficiente_2")})
             return
 
         p["gold"] -= price
@@ -8871,7 +8903,7 @@ class GameRoom:
             if res == "full":
                 p["gold"] += price
                 await self.send_to(pid, {"type": "error",
-                    "msg": "Inventário cheio e mão(s) ocupada(s) — abra espaço para comprar."})
+                    "msg": T("erro.inventario_cheio_e_mao_s_ocupada_s_abra")})
                 return
             log = (f"🔨 **{p['name']}** comprou **{item['name']}** (equipada — bolsa cheia)!"
                    if res == "equipped"
@@ -8898,7 +8930,7 @@ class GameRoom:
             if res == "full":
                 p["gold"] += price
                 await self.send_to(pid, {"type": "error",
-                    "msg": "Inventário cheio e slot ocupado — abra espaço para comprar."})
+                    "msg": T("erro.inventario_cheio_e_slot_ocupado_abra_esp")})
                 return
             log = (f"🔨 **{p['name']}** comprou **{item['name']}** (equipada — bolsa cheia)!"
                    if res == "equipped"
@@ -8935,7 +8967,7 @@ class GameRoom:
                         log = f"{loja_emoji} **{p['name']}** guardou **{item['name']}** na bolsa ({existing_bag['ammo_count']} total)."
                     elif len(p["bag"]) >= p.get("bag_size", 6):
                         p["gold"] += price
-                        await self.send_to(pid, {"type": "error", "msg": "Mão esquerda ocupada e inventário cheio!"})
+                        await self.send_to(pid, {"type": "error", "msg": T("erro.mao_esquerda_ocupada_e_inventario_cheio")})
                         return
                     else:
                         p["bag"].append({**item, "buy_price": price})
@@ -8953,7 +8985,7 @@ class GameRoom:
                 if res == "full":
                     p["gold"] += price
                     await self.send_to(pid, {"type": "error",
-                        "msg": "Inventário cheio e slot ocupado — abra espaço para comprar."})
+                        "msg": T("erro.inventario_cheio_e_slot_ocupado_abra_esp")})
                     return
                 log = (f"{loja_emoji} **{p['name']}** comprou **{item['name']}** (equipado — bolsa cheia)!"
                        if res == "equipped"
@@ -9031,7 +9063,7 @@ class GameRoom:
         if item_slot == "weapon":
             item = p["gear"].get("weapon")
             if not item or item.get("id") == "unarmed":
-                await self.send_to(pid, {"type": "error", "msg": "Nenhuma arma para vender."})
+                await self.send_to(pid, {"type": "error", "msg": T("erro.nenhuma_arma_para_vender")})
                 return
             sell_price = max(1, item.get("buy_price", 0) // 3)
             p["gold"] += sell_price
@@ -9046,7 +9078,7 @@ class GameRoom:
         elif item_slot == "armor":
             item = p["gear"].get("armor")
             if not item:
-                await self.send_to(pid, {"type": "error", "msg": "Nenhuma armadura para vender."})
+                await self.send_to(pid, {"type": "error", "msg": T("erro.nenhuma_armadura_para_vender")})
                 return
             sell_price = max(1, item.get("buy_price", 0) // 3)
             p["gold"] += sell_price
@@ -9063,7 +9095,7 @@ class GameRoom:
             key = {"acc1": "item1", "acc2": "item2"}.get(item_slot, item_slot)
             item = p["gear"].get(key)
             if not item:
-                await self.send_to(pid, {"type": "error", "msg": "Nenhum item neste slot."})
+                await self.send_to(pid, {"type": "error", "msg": T("erro.nenhum_item_neste_slot")})
                 return
             sell_price = max(1, item.get("buy_price", 0) // 3)
             p["gold"] += sell_price
@@ -9081,10 +9113,10 @@ class GameRoom:
                 p["gold"] += sell_price
                 log = f"💰 **{p['name']}** vendeu **{item['name']}** por {sell_price} ouro!"
             except (ValueError, IndexError):
-                await self.send_to(pid, {"type": "error", "msg": "Item não encontrado na mochila."})
+                await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado_na_mochila")})
                 return
         else:
-            await self.send_to(pid, {"type": "error", "msg": "Slot inválido."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.slot_invalido")})
             return
 
         if log:
@@ -9283,11 +9315,11 @@ class GameRoom:
         if self.phase != "city":
             return
         if pid != self.host_pid:
-            await self.send_to(pid, {"type": "error", "msg": "Apenas o anfitrião pode escolher o destino da viagem."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_o_anfitriao_pode_escolher_o_desti")})
             return
         destination = str(destination or "")
         if destination not in WORLD_LOCATIONS or destination == self.world_location:
-            await self.send_to(pid, {"type": "error", "msg": "Destino inválido."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.destino_invalido")})
             return
         # Sem custo cadastrado a viagem é gratuita: a tabela guarda preços, não
         # a lista de trajetos existentes.
@@ -9295,7 +9327,7 @@ class GameRoom:
         sem_recursos = [p["name"] for p in self.players.values()
                          if p.get("fome", 0) < cost["fome"] or p.get("sede", 0) < cost["sede"]]
         if sem_recursos:
-            await self.send_to(pid, {"type": "error", "msg": "Recursos insuficientes para viajar: " + ", ".join(sem_recursos) + "."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.recursos_insuficientes_para_viajar") + ", ".join(sem_recursos) + "."})
             return
         for p in self.players.values():
             p["fome"] -= cost["fome"]
@@ -9307,14 +9339,14 @@ class GameRoom:
         await self.broadcast_city_state()
 
     async def handle_world_map_points(self, pid, points):
-        await self.send_to(pid, {"type": "error", "msg": "Os pontos do mapa só podem ser ajustados no Editor."})
+        await self.send_to(pid, {"type": "error", "msg": T("erro.os_pontos_do_mapa_so_podem_ser_ajustados")})
         return
         """Salva as posições globais dos marcadores, exclusivamente pelo anfitrião."""
         if self.phase != "city" or pid != self.host_pid:
-            await self.send_to(pid, {"type": "error", "msg": "Apenas o anfitrião pode ajustar os pontos do mapa."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_o_anfitriao_pode_ajustar_os_ponto")})
             return
         if not isinstance(points, dict):
-            await self.send_to(pid, {"type": "error", "msg": "Coordenadas do mapa inválidas."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.coordenadas_do_mapa_invalidas")})
             return
         updated = 0
         for location_id, point in points.items():
@@ -9330,12 +9362,12 @@ class GameRoom:
             WORLD_LOCATIONS[location_id]["y"] = y
             updated += 1
         if not updated:
-            await self.send_to(pid, {"type": "error", "msg": "Nenhum ponto válido foi informado."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nenhum_ponto_valido_foi_informado")})
             return
         try:
             _save_world_map_points()
         except OSError:
-            await self.send_to(pid, {"type": "error", "msg": "Não foi possível salvar os pontos do mapa."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nao_foi_possivel_salvar_os_pontos_do_map")})
             return
         await self.gm_say("🧭 As coordenadas do mapa-múndi foram atualizadas.")
         await self.broadcast_city_state()
@@ -9534,7 +9566,7 @@ class GameRoom:
         p = self.players.get(pid)
         if not p or not self._em_cidade(pid): return
         if not self._refugio_unlocked():
-            await self.send_to(pid, {"type": "error", "msg": "O Refúgio dos Heróis ainda está bloqueado."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.o_refugio_dos_herois_ainda_esta_bloquead")}); return
         await self.send_to(pid, {"type": "refugio_state", **self._refugio_payload(p)})
 
     async def handle_open_quarto(self, pid, owner=None):
@@ -9563,14 +9595,14 @@ class GameRoom:
         if source == "bag":
             if index is None or index < 0 or index >= len(p.get("bag", [])): return
             item = p["bag"][index]
-            if not self._stash_add(container, item): await self.send_to(pid, {"type":"error", "msg":"O baú está cheio."}); return
+            if not self._stash_add(container, item): await self.send_to(pid, {"type":"error", "msg": T("erro.o_bau_esta_cheio")}); return
             p["bag"].pop(index)
         elif source == "gear":
             if slot_key not in GEAR_SLOTS or not p.get("gear", {}).get(slot_key): return
             if self._slot_travado_por_maldicao(p, slot_key):
                 await self.send_to(pid, {"type":"error", "msg":self.MSG_ITEM_PRESO}); return
             item = p["gear"][slot_key]
-            if not self._stash_add(container, item): await self.send_to(pid, {"type":"error", "msg":"O baú está cheio."}); return
+            if not self._stash_add(container, item): await self.send_to(pid, {"type":"error", "msg": T("erro.o_bau_esta_cheio")}); return
             p["gear"][slot_key] = None; self._apply_gear_effect(p, item, False)
             if slot_key == "weapon": p["weapon"] = {**WEAPONS["unarmed"]}
         else: return
@@ -9601,7 +9633,7 @@ class GameRoom:
         try: amount = max(0, int(amount))
         except (TypeError, ValueError): return
         if action == "deposit":
-            if p.get("gold", 0) < amount: await self.send_to(pid, {"type":"error", "msg":"Ouro insuficiente."}); return
+            if p.get("gold", 0) < amount: await self.send_to(pid, {"type":"error", "msg": T("erro.ouro_insuficiente")}); return
             p["gold"] -= amount; container["gold"] = int(container.get("gold", 0) or 0) + amount
         elif action == "withdraw":
             amount = min(amount, int(container.get("gold", 0) or 0)); container["gold"] -= amount; p["gold"] += amount
@@ -9625,20 +9657,20 @@ class GameRoom:
         cenas = CITY_SCENES.get(self.world_location) or {}
         scene = cenas.get(str(scene_id or ""))
         if not scene:
-            await self.send_to(pid, {"type":"error", "msg":"Cena não encontrada."}); return
+            await self.send_to(pid, {"type":"error", "msg": T("erro.cena_nao_encontrada")}); return
         slot = next((s for s in scene.get("slots", []) if s.get("id") == str(npc_id) and not s.get("removed")), None)
         if not slot:
-            await self.send_to(pid, {"type":"error", "msg":"Frequentador não encontrado."}); return
+            await self.send_to(pid, {"type":"error", "msg": T("erro.frequentador_nao_encontrado")}); return
         conversations = _clean_scene_conversations(slot.get("conversations"), slot.get("dialog", ""))
         conversation = next((c for c in conversations if c["id"] == str(conversation_id)), None)
         if not conversation:
-            await self.send_to(pid, {"type":"error", "msg":"Conversa não encontrada."}); return
+            await self.send_to(pid, {"type":"error", "msg": T("erro.conversa_nao_encontrada")}); return
         key = f"{self.world_location}:{scene_id}:{slot['id']}:{conversation['id']}"
         if conversation.get("uma_vez") and key in self.scene_conversations_done:
-            await self.send_to(pid, {"type":"error", "msg":"Esta conversa já foi concluída."}); return
+            await self.send_to(pid, {"type":"error", "msg": T("erro.esta_conversa_ja_foi_concluida")}); return
         ok, reasons = self._avaliar_requisito(conversation.get("requisito"))
         if not ok:
-            await self.send_to(pid, {"type":"error", "msg":"Conversa bloqueada: requer " + ", ".join(reasons) + "."}); return
+            await self.send_to(pid, {"type":"error", "msg": T("erro.conversa_bloqueada_requer") + ", ".join(reasons) + "."}); return
         effect = conversation.get("efeito") or {}
         bonus = int(effect.get("renome", 0) or 0)
         if bonus:
@@ -9667,11 +9699,11 @@ class GameRoom:
     async def handle_world_adventure(self, pid, adventure_id):
         """Parte diretamente para uma entrada autorada marcada no mapa-múndi."""
         if self.phase != "city" or pid != self.host_pid:
-            await self.send_to(pid, {"type": "error", "msg": "Apenas o anfitrião pode iniciar uma expedição."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_o_anfitriao_pode_iniciar_uma_expe")})
             return
         adventure = WORLD_ADVENTURES.get(str(adventure_id or ""))
         if not adventure:
-            await self.send_to(pid, {"type": "error", "msg": "Destino de aventura inválido."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.destino_de_aventura_invalido")})
             return
         allowed, reasons = self._avaliar_requisito(adventure.get("requisito"))
         if not allowed:
@@ -9683,7 +9715,7 @@ class GameRoom:
             return
         stages = list(adventure.get("dungeons") or [])
         if not stages:
-            await self.send_to(pid, {"type": "error", "msg": "Este destino ainda não possui uma masmorra."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.este_destino_ainda_nao_possui_uma_masmor")})
             return
         try:
             stage_index = max(0, int(self.world_adventure_progress.get(adventure["id"], 0)))
@@ -9692,19 +9724,19 @@ class GameRoom:
         revisit = stage_index >= len(stages)
         if revisit:
             if not adventure.get("revisitavel"):
-                await self.send_to(pid, {"type": "error", "msg": "Todas as masmorras deste destino já foram concluídas."})
+                await self.send_to(pid, {"type": "error", "msg": T("erro.todas_as_masmorras_deste_destino_ja_fora")})
                 return
             stage_index = len(stages) - 1
         file = _etapa_file(stages[stage_index])
         defn = carregar_dungeon(file)
         ok, reason = validar_dungeon(defn) if defn else (False, "Masmorra não encontrada.")
         if not ok:
-            await self.send_to(pid, {"type": "error", "msg": "Destino indisponível: " + reason})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.destino_indisponivel") + reason})
             return
         fome, sede = int(adventure.get("fome", 0)), int(adventure.get("sede", 0))
         sem_recursos = [p["name"] for p in self.players.values() if p.get("fome", 0) < fome or p.get("sede", 0) < sede]
         if sem_recursos:
-            await self.send_to(pid, {"type": "error", "msg": "Recursos insuficientes para a expedição: " + ", ".join(sem_recursos) + "."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.recursos_insuficientes_para_a_expedicao") + ", ".join(sem_recursos) + "."})
             return
         for p in self.players.values():
             p["fome"] -= fome; p["sede"] -= sede
@@ -9725,14 +9757,14 @@ class GameRoom:
         await self.enter_dungeon(pid, from_world_adventure=True)
 
     async def handle_city_map_points(self, pid, city_id, points):
-        await self.send_to(pid, {"type": "error", "msg": "Os pontos da cidade só podem ser ajustados no Editor."})
+        await self.send_to(pid, {"type": "error", "msg": T("erro.os_pontos_da_cidade_so_podem_ser_ajustad")})
         return
         """Atualiza os marcadores da ilustração da cidade atual."""
         if self.phase != "city" or pid != self.host_pid:
-            await self.send_to(pid, {"type": "error", "msg": "Apenas o anfitrião pode ajustar este ponto."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_o_anfitriao_pode_ajustar_este_pon")})
             return
         if city_id != self.world_location or city_id not in CITY_MAP_POINTS or not isinstance(points, dict):
-            await self.send_to(pid, {"type": "error", "msg": "Ponto da cidade inválido."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.ponto_da_cidade_invalido")})
             return
         updated = 0
         for point_id, point in points.items():
@@ -9748,24 +9780,24 @@ class GameRoom:
             CITY_MAP_POINTS[city_id][point_id].update({"x": x, "y": y})
             updated += 1
         if not updated:
-            await self.send_to(pid, {"type": "error", "msg": "Nenhuma coordenada válida foi informada."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nenhuma_coordenada_valida_foi_informada")})
             return
         try:
             _save_city_map_points()
         except OSError:
-            await self.send_to(pid, {"type": "error", "msg": "Não foi possível salvar o ponto da cidade."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nao_foi_possivel_salvar_o_ponto_da_cidad")})
             return
         await self.broadcast_city_state()
 
     async def enter_dungeon(self, pid, from_world_adventure=False):
         if self.active_scene:
-            await self.send_to(pid, {"type":"error", "msg":"Conclua ou pule a cena antes de entrar na masmorra."})
+            await self.send_to(pid, {"type":"error", "msg": T("erro.conclua_ou_pule_a_cena_antes_de_entrar_n")})
             return
         if self.world_location != "alva_e_luz" and not from_world_adventure:
-            await self.send_to(pid, {"type": "error", "msg": "Nesta primeira etapa, a aventura parte de Alva e Luz."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nesta_primeira_etapa_a_aventura_parte_de")})
             return
         if pid != self.host_pid:
-            await self.send_to(pid, {"type": "error", "msg": "Apenas o anfitrião pode entrar na masmorra."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_o_anfitriao_pode_entrar_na_masmor")})
             return
         # Na emenda entre etapas encadeadas a sala já está em "playing" — é o único
         # caminho que entra numa masmorra sem passar pela cidade.
@@ -9773,7 +9805,7 @@ class GameRoom:
             return
         if (self.mode == "campaign" and self.campaign and not self.campaign.get("dungeons")
                 and not from_world_adventure):
-            await self.send_to(pid, {"type": "error", "msg": "Escolha um destino no mapa do mundo para iniciar uma masmorra."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.escolha_um_destino_no_mapa_do_mundo_para")})
             return
 
         # Ponto seguro: fotografa o estado "cidade concluída" ANTES da aventura —
@@ -10480,7 +10512,7 @@ class GameRoom:
 
     async def handle_move(self, pid, dx, dy):
         if self.active_scene:
-            await self.send_to(pid, {"type":"error", "msg":"A masmorra está pausada durante uma cena."}); return
+            await self.send_to(pid, {"type":"error", "msg": T("erro.a_masmorra_esta_pausada_durante_uma_cena")}); return
         if not self._is_turn(pid): return
         p = self.players[pid]
         if not p["alive"]: return
@@ -10492,54 +10524,54 @@ class GameRoom:
                 return
             p["preso"] = False; p.pop("preso_por", None)
         if p.get("perde_turno"):
-            await self.send_to(pid, {"type": "error", "msg": "🕸️ Você está imobilizado e não pode se mover! Encerre o turno."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_imobilizado_e_nao_pode_se_move")})
             return
         if p.get("petrificado"):
-            await self.send_to(pid, {"type": "error", "msg": "🗿 Você está petrificado e não pode se mover!"})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_petrificado_e_nao_pode_se_move")})
             return
         if p.get("paralisado"):
-            await self.send_to(pid, {"type": "error", "msg": "❄️ Você está paralisado e não pode se mover!"})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_paralisado_e_nao_pode_se_mover")})
             return
         if p.get("dormindo"):
-            await self.send_to(pid, {"type": "error", "msg": "🌙 Você está dormindo e não pode se mover!"})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_dormindo_e_nao_pode_se_mover")})
             return
         if p["moves_left"] <= 0:
-            await self.send_to(pid, {"type": "error", "msg": "Sem movimentos restantes."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.sem_movimentos_restantes")})
             return
 
         nx, ny = p["pos"][0] + dx, p["pos"][1] + dy
         if not (0 <= nx < self.map_w and 0 <= ny < self.map_h):
             return
         if self.tiles[ny][nx] == WALL and not self._is_illusion_wall(nx, ny):
-            await self.send_to(pid, {"type": "error", "msg": "Caminho bloqueado."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado")})
             return
         if self._is_closed_door(nx, ny):
             await self.send_to(pid, {"type": "error",
-                "msg": "🚪 A porta está fechada. Clique nela para abri-la."})
+                "msg": T("erro.a_porta_esta_fechada_clique_nela_para_ab")})
             return
         _passo = self._passo_fantasma_ativo(p)
         if not _passo and (nx, ny) in self._decor_block_tiles:
-            await self.send_to(pid, {"type": "error", "msg": "Há um objeto bloqueando o caminho."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.ha_um_objeto_bloqueando_o_caminho")})
             return
         if not _passo and (nx, ny) in self._mat_solid_tiles:
-            await self.send_to(pid, {"type": "error", "msg": "Escombros bloqueiam o caminho."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.escombros_bloqueiam_o_caminho")})
             return
 
         # Block movement into a tile occupied by a living monster (footprint multi-tile incluso)
         for m in self.monsters.values():
             if m["hp"] > 0 and [nx, ny] in self._monster_tiles(m):
-                await self.send_to(pid, {"type": "error", "msg": "Um inimigo bloqueia o caminho!"})
+                await self.send_to(pid, {"type": "error", "msg": T("erro.um_inimigo_bloqueia_o_caminho")})
                 return
 
         # Block movement into a tile occupied by another player
         for other_pid, other_p in self.players.items():
             if other_pid != pid and other_p["alive"] and other_p["pos"] == [nx, ny]:
-                await self.send_to(pid, {"type": "error", "msg": "Outro aventureiro está neste espaço."})
+                await self.send_to(pid, {"type": "error", "msg": T("erro.outro_aventureiro_esta_neste_espaco")})
                 return
 
         # Block movement into a tile occupied by an animated servant
         if self._animado_em([nx, ny]):
-            await self.send_to(pid, {"type": "error", "msg": "Um servo animado ocupa este espaço."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.um_servo_animado_ocupa_este_espaco")})
             return
 
         step_cost = self._water_step_cost(p, nx, ny)
@@ -11086,16 +11118,16 @@ class GameRoom:
 
         # â”€â”€ Status de veneno: petrificado nÃ£o age; cego nÃ£o usa ataque Ã  distÃ¢ncia â”€â”€
         if p.get("petrificado"):
-            await self.send_to(pid, {"type": "error", "msg": "🗿 Você está petrificado e não pode agir!"})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_petrificado_e_nao_pode_agir")})
             return
         if p.get("paralisado"):
-            await self.send_to(pid, {"type": "error", "msg": "❄️ Você está paralisado e não pode agir!"})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_paralisado_e_nao_pode_agir")})
             return
         if p.get("dormindo"):
-            await self.send_to(pid, {"type": "error", "msg": "🌙 Você está dormindo e não pode agir!"})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_dormindo_e_nao_pode_agir")})
             return
         if p.get("cego") and p.get("bloqueia_distancia") and (p.get("weapon") or {}).get("range") is not None:
-            await self.send_to(pid, {"type": "error", "msg": "🙈 Cego — não pode usar ataques à distância!"})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.cego_nao_pode_usar_ataques_a_distancia")})
             return
 
         if target_id in self.monsters:
@@ -11525,7 +11557,7 @@ class GameRoom:
             if p.get("class_id") == "rogue":
                 await self._quebrar_invisibilidade(p, "ao atacar")
         else:
-            await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")})
             return
 
         # â”€â”€ Custo de sobrevivÃªncia do ATAQUE BÃSICO: -1 fome por aÃ§Ã£o de ataque â”€
@@ -11626,7 +11658,7 @@ class GameRoom:
             # â”€â”€ Arremesso como AÃ‡ÃƒO BÃ”NUS â”€â”€
             if p.get("bonus_action_used", False):
                 await self.send_to(pid, {"type": "error",
-                    "msg": "Ação bônus já usada neste turno."}); return
+                    "msg": T("erro.acao_bonus_ja_usada_neste_turno")}); return
             if not await self._executar_arremesso(pid, target_id, slot):
                 return                                   # validaÃ§Ã£o falhou (erro jÃ¡ enviado)
             p["bonus_action_used"] = True
@@ -11665,10 +11697,10 @@ class GameRoom:
                 break
         if not dagger:
             await self.send_to(pid, {"type": "error",
-                "msg": "Você não tem uma adaga equipada para arremessar."}); return False
+                "msg": T("erro.voce_nao_tem_uma_adaga_equipada_para_arr")}); return False
 
         if target_id not in self.monsters:
-            await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return False
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")}); return False
         target = self.monsters[target_id]
 
         rng = throw_range
@@ -11749,12 +11781,12 @@ class GameRoom:
         item_id = data.get("item_id")
         item = next((i for i in p["bag"] if i["id"] == item_id), None)
         if not item:
-            await self.send_to(pid, {"type": "error", "msg": "Item não encontrado na bolsa."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado_na_bolsa")}); return
         defn = ARREMESSAVEIS.get(item_id)
         if not defn:
-            await self.send_to(pid, {"type": "error", "msg": "Item não arremessável."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_arremessavel")}); return
         if self._acao_bloqueada(p):
-            await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")}); return
 
         alvo_tipo = defn.get("alvo")
         if alvo_tipo == "ataque_alvo":
@@ -11762,18 +11794,18 @@ class GameRoom:
         elif alvo_tipo == "area":
             await self._throw_item_area(p, defn, item, data.get("tx"), data.get("ty"))
         else:
-            await self.send_to(pid, {"type": "error", "msg": "Item não arremessável."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_arremessavel")}); return
 
     async def _throw_item_alvo(self, p, defn, item, target_id, target_pos=None):
         """Arremesso single-target: teste de ataque por DES vs CA (espelha
         _executar_arremesso). Consome o item em acerto E erro."""
         pid = p["id"]
         if target_id not in self.monsters:
-            await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")}); return
         target = self.monsters[target_id]
         target_tile = self._target_tile(target, target_pos)
         if target.get("hp", 0) <= 0:
-            await self.send_to(pid, {"type": "error", "msg": "Alvo já está morto."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_ja_esta_morto")}); return
 
         rng = defn["alcance"]
         dx = abs(p["pos"][0] - target["pos"][0]); dy = abs(p["pos"][1] - target["pos"][1])
@@ -11854,7 +11886,7 @@ class GameRoom:
         opcionalmente aplica 'em chamas' e/ou cria uma zona (fumaça=escuridão)."""
         pid = p["id"]
         if tx is None or ty is None:
-            await self.send_to(pid, {"type": "error", "msg": "Alvo de área inválido."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_de_area_invalido")}); return
         cx, cy = int(tx), int(ty)
         rng = defn["alcance"]
         if max(abs(p["pos"][0] - cx), abs(p["pos"][1] - cy)) > rng:
@@ -11862,7 +11894,7 @@ class GameRoom:
                 "msg": f"⚠ Centro fora de alcance (máx {rng} quadrados)."}); return
         if not self._tem_linha_de_visao(p["pos"], [cx, cy]):
             await self.send_to(pid, {"type": "error",
-                "msg": "🧱 Uma parede bloqueia a trajetória do arremesso!"}); return
+                "msg": T("erro.uma_parede_bloqueia_a_trajetoria_do_arre")}); return
 
         # Consome o item + gasta a aÃ§Ã£o principal.
         p["bag"].remove(item)
@@ -11914,9 +11946,9 @@ class GameRoom:
         p = self.players.get(pid)
         if not p or not p["alive"]: return
         if p.get("em_chamas_rodadas", 0) <= 0:
-            await self.send_to(pid, {"type": "error", "msg": "Você não está em chamas."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_esta_em_chamas")}); return
         if self._acao_bloqueada(p):
-            await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")}); return
         p["em_chamas_rodadas"] = 0
         p["action_done"] = True
         self._consumir_recursos(p, 'apenas_acao')
@@ -12170,23 +12202,23 @@ class GameRoom:
             return
         # Apenas Pedro (classe 'mage')
         if p.get("class_id") != "mage":
-            await self.send_to(pid, {"type": "error", "msg": "Apenas Pedro pode usar Animar Mortos."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_pedro_pode_usar_animar_mortos")})
             return
         if self._acao_bloqueada(p):
-            await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")})
             return
 
         cadaver_id = data.get("cadaver_id")
         corpse = self.corpses.get(cadaver_id)
         if not corpse:
-            await self.send_to(pid, {"type": "error", "msg": "Cadáver inválido ou já consumido."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.cadaver_invalido_ou_ja_consumido")})
             return
 
         # AdjacÃªncia (Chebyshev â‰¤ 1 â€” inclui diagonais)
         dx = abs(p["pos"][0] - corpse["pos"][0])
         dy = abs(p["pos"][1] - corpse["pos"][1])
         if max(dx, dy) > 3:
-            await self.send_to(pid, {"type": "error", "msg": "O cadáver deve estar a até 3 casas de Pedro."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.o_cadaver_deve_estar_a_ate_3_casas_de_pe")})
             return
 
         nivel_pedro   = p.get("level", 1)
@@ -12337,16 +12369,16 @@ class GameRoom:
         ao monstro vivo mais próximo e ataca se ficar adjacente."""
         if not self._is_turn(pid): return
         if self.animados_phase_pid != pid:
-            await self.send_to(pid, {"type": "error", "msg": "Encerre seu turno primeiro para abrir o turno dos servos."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.encerre_seu_turno_primeiro_para_abrir_o")}); return
         p = self.players[pid]
         if not p["alive"]: return
         if p.get("class_id") not in ("mage", "cleric"):
-            await self.send_to(pid, {"type": "error", "msg": "Apenas o mago ou clérigo comanda servos."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_o_mago_ou_clerigo_comanda_servos")}); return
         animados = p.get("animados", [])
         if not animados:
-            await self.send_to(pid, {"type": "error", "msg": "Você não tem servos."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_tem_servos")}); return
         if not any(m["hp"] > 0 for m in self.monsters.values()):
-            await self.send_to(pid, {"type": "error", "msg": "Nenhum inimigo para os animados atacarem."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nenhum_inimigo_para_os_animados_atacarem")}); return
 
         # Atalho "comandar todos": auto-resolve os servos que ainda tÃªm aÃ§Ã£o nesta
         # janela (respeita moves_left/acted; sem custo de aÃ§Ã£o bÃ´nus â€” o upkeep jÃ¡
@@ -12514,10 +12546,10 @@ class GameRoom:
                 "msg": f"Agarrado por {captor['name']} — não pode se mover."}); return
         budget = int(m.get("master_moves_left", 0) or 0)
         if budget <= 0:
-            await self.send_to(pid, {"type": "error", "msg": "Monstro sem movimento neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.monstro_sem_movimento_neste_turno")}); return
         path = self._master_path_to(m, tx, ty, budget)
         if not path:
-            await self.send_to(pid, {"type": "error", "msg": "Destino inalcançável."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.destino_inalcancavel")}); return
         # Marca ANTES do laço: o laço faz `await` a cada passo, e se o timeout
         # acordar num desses `await`s internos (deadline vencendo em pleno
         # meio do movimento), ele precisa ver o monstro já "tocado" — senão
@@ -12575,14 +12607,14 @@ class GameRoom:
         if not m or m["hp"] <= 0:
             return
         if m.get("_master_acted") and m.get("_master_acao_tipo") != "ataque":
-            await self.send_to(pid, {"type": "error", "msg": "Este monstro já usou a ação principal."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.este_monstro_ja_usou_a_acao_principal")}); return
         try:
             idx = 0 if attack_index is None else int(attack_index)
         except (TypeError, ValueError):
             idx = 0
         cargas = m.setdefault("master_attack_charges", self._montar_cargas_ataque(m))
         if cargas.get(idx, 0) <= 0:
-            await self.send_to(pid, {"type": "error", "msg": "Este golpe não tem mais cargas neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.este_golpe_nao_tem_mais_cargas_neste_tur")}); return
         ataques = m.get("attacks") or []
         base = ataques[idx] if 0 <= idx < len(ataques) else {}
         atk_def = dict(base) if base else {
@@ -12594,13 +12626,13 @@ class GameRoom:
             atk_def["on_hit"] = m.get("veneno_arma_id")
         alvo, alvo_kind = self._alvo_manual_mestre(target_id)
         if not alvo or alvo is m:
-            await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")}); return
         rng = atk_def.get("range")
         if rng:
             if max(abs(m["pos"][0] - alvo["pos"][0]), abs(m["pos"][1] - alvo["pos"][1])) > rng:
-                await self.send_to(pid, {"type": "error", "msg": "Alvo fora de alcance."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_de_alcance")}); return
         elif not self._is_adjacent_to_monster(alvo["pos"], m):
-            await self.send_to(pid, {"type": "error", "msg": "Alvo não está adjacente."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_nao_esta_adjacente")}); return
         cargas[idx] = cargas.get(idx, 0) - 1
         m["_master_acted"] = True
         m["_master_acao_tipo"] = "ataque"
@@ -12678,16 +12710,16 @@ class GameRoom:
         if self.phase != "playing":
             return
         if self.master_reserve.get(monster_type, 0) <= 0:
-            await self.send_to(pid, {"type": "error", "msg": "Sem reforços desse tipo na reserva."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.sem_reforcos_desse_tipo_na_reserva")}); return
         mdef = next((d for d in MONSTER_DEFS if d["type"] == monster_type), None)
         if not mdef:
-            await self.send_to(pid, {"type": "error", "msg": "Tipo de monstro inválido."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.tipo_de_monstro_invalido")}); return
         try:
             tx = int(tx); ty = int(ty)
         except (TypeError, ValueError):
             return
         if not self._tile_livre_para_reforco(tx, ty):
-            await self.send_to(pid, {"type": "error", "msg": "Casa ocupada ou inválida para implantar."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.casa_ocupada_ou_invalida_para_implantar")}); return
         sala = {"id": None, "cx": tx, "cy": ty}   # reforÃ§o nÃ£o pertence a sala autorada
         m = make_monster(mdef, sala)
         m["pos"] = [tx, ty]
@@ -12967,23 +12999,23 @@ class GameRoom:
         """Controle manual: move UM animado uma casa (gasta 1 de movimento)."""
         if not self._is_turn(pid): return
         if self.animados_phase_pid != pid:
-            await self.send_to(pid, {"type": "error", "msg": "Encerre seu turno primeiro para mover os servos."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.encerre_seu_turno_primeiro_para_mover_os")}); return
         p = self.players[pid]
         if not p["alive"]: return
         a = next((x for x in p.get("animados", []) if x.get("id") == animado_id), None)
         if not a or a.get("vida_atual", 0) <= 0:
-            await self.send_to(pid, {"type": "error", "msg": "Animado inválido."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.animado_invalido")}); return
         if a.get("dominado_por_monstro"):
-            await self.send_to(pid, {"type": "error", "msg": "💀 Este servo está sob controle de um necromante!"}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.este_servo_esta_sob_controle_de_um_necro")}); return
         if a.get("dormindo"):
-            await self.send_to(pid, {"type": "error", "msg": "🌙 Este servo está dormindo."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.este_servo_esta_dormindo")}); return
         if a.get("moves_left", 0) <= 0:
-            await self.send_to(pid, {"type": "error", "msg": "Servo sem movimento neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.servo_sem_movimento_neste_turno")}); return
         if abs(dx) > 1 or abs(dy) > 1 or (dx == 0 and dy == 0):
             return
         nx, ny = a["pos"][0] + dx, a["pos"][1] + dy
         if not self._tile_livre_para_animado(nx, ny, a["id"]):
-            await self.send_to(pid, {"type": "error", "msg": "Caminho bloqueado para o servo."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado_para_o_servo")}); return
         a["pos"] = [nx, ny]
         a["facing"] = [dx, dy]
         self._apply_water_entry_penalty(a, nx, ny)
@@ -12994,34 +13026,34 @@ class GameRoom:
         """Controle manual: UM animado ataca um monstro adjacente (1 ataque/rodada)."""
         if not self._is_turn(pid): return
         if self.animados_phase_pid != pid:
-            await self.send_to(pid, {"type": "error", "msg": "Encerre seu turno primeiro para atacar com os servos."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.encerre_seu_turno_primeiro_para_atacar_c")}); return
         p = self.players[pid]
         if not p["alive"]: return
         a = next((x for x in p.get("animados", []) if x.get("id") == animado_id), None)
         if not a or a.get("vida_atual", 0) <= 0:
-            await self.send_to(pid, {"type": "error", "msg": "Animado inválido."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.animado_invalido")}); return
         if a.get("dominado_por_monstro"):
-            await self.send_to(pid, {"type": "error", "msg": "💀 Este servo está sob controle de um necromante!"}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.este_servo_esta_sob_controle_de_um_necro")}); return
         if a.get("dormindo"):
-            await self.send_to(pid, {"type": "error", "msg": "🌙 Este servo está dormindo."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.este_servo_esta_dormindo")}); return
         if a.get("acted"):
-            await self.send_to(pid, {"type": "error", "msg": "Servo já atacou neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.servo_ja_atacou_neste_turno")}); return
         m = self.monsters.get(target_id)
         if not m or m["hp"] <= 0:
-            await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")}); return
         # Elemental ElÃ©trico ataca em linha cardinal de atÃ© 3 casas; demais requerem adjacÃªncia.
         eh_eletrico = a.get("especial") == "linha_3q"
         if eh_eletrico:
             if not self._em_linha_cardinal(a["pos"], m["pos"], 3):
                 await self.send_to(pid, {"type": "error",
-                    "msg": "⚡ O elemental elétrico ataca em linha reta (máx 3 casas)."}); return
+                    "msg": T("erro.o_elemental_eletrico_ataca_em_linha_reta")}); return
             if self._linha_bloqueada_por_parede(a["pos"], m["pos"]):
                 await self.send_to(pid, {"type": "error",
-                    "msg": "⚡ Linha de descarga bloqueada por parede."}); return
+                    "msg": T("erro.linha_de_descarga_bloqueada_por_parede")}); return
         else:
             if not self._cardinal_adjacent(a["pos"], m["pos"]):
                 await self.send_to(pid, {"type": "error",
-                    "msg": "Servo não está adjacente ao alvo."}); return
+                    "msg": T("erro.servo_nao_esta_adjacente_ao_alvo")}); return
 
         a["acted"] = True
         roll, _esc = self._rolar_d20_escuridao(a, m)   # escuridÃ£o: desvantagem/vantagem
@@ -13053,7 +13085,7 @@ class GameRoom:
 
         skill = next((s for s in p["skills"] if s["id"] == skill_id), None)
         if not skill:
-            await self.send_to(pid, {"type": "error", "msg": "Habilidade inválida."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_invalida")}); return
 
         # â”€â”€ Habilidades de custo Fome/Sede (warrior) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         # NOVO MODELO: o warrior ARMA as habilidades no cliente (toggle) e o custo
@@ -13070,7 +13102,7 @@ class GameRoom:
             return
         custo_mp = skill["mp"]
         if p["mp"] < custo_mp:
-            await self.send_to(pid, {"type": "error", "msg": "MP insuficiente."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.mp_insuficiente")}); return
 
         p["mp"]  -= custo_mp
         p["fome"] = max(0, p["fome"] - 1)   # custo de sobrevivÃªncia da AÃ‡ÃƒO (igual ao ataque bÃ¡sico)
@@ -13441,17 +13473,17 @@ class GameRoom:
         p = self.players.get(pid)
         if not p or not p["alive"]: return
         if p.get("class_id") != "bard":
-            await self.send_to(pid, {"type": "error", "msg": "Apenas Henrique pode usar esta habilidade."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_henrique_pode_usar_esta_habilidad")}); return
         if self._tem_maldicao(p, "voz_quebrada"):
-            await self.send_to(pid, {"type": "error", "msg": "Voz Quebrada impede Canções Heroicas."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voz_quebrada_impede_cancoes_heroicas")}); return
         if p.get("cancao_ativa"):
-            await self.send_to(pid, {"type": "error", "msg": "Desative a canção atual antes de trocar os atributos."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.desative_a_cancao_atual_antes_de_trocar")}); return
 
         atributos = data.get("atributos", []) if data else []
         ids_validos = [a["id"] for a in CANCAO_ATRIBUTOS]
         atrib_validos = [a for a in atributos if a in ids_validos]
         if not atrib_validos:
-            await self.send_to(pid, {"type": "error", "msg": "Escolha pelo menos um atributo para a canção."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.escolha_pelo_menos_um_atributo_para_a_ca")}); return
 
         custo_bruto = _calcular_custo_cancao(atrib_validos)
         red = self._cancao_custo_reducao(p)
@@ -13608,9 +13640,9 @@ class GameRoom:
         p = self.players.get(pid)
         if not p or not p["alive"]: return
         if not _pode_hab_heroi(p, "bard", "hero_bard_provocacao"):
-            await self.send_to(pid, {"type": "error", "msg": "Você não sabe usar Provocação."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_sabe_usar_provocacao")}); return
         if p.get("bonus_action_used"):
-            await self.send_to(pid, {"type": "error", "msg": "Ação bônus já usada neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_bonus_ja_usada_neste_turno")}); return
 
         fome_cost, sede_cost = 3, 3
         if p["fome"] < fome_cost or p["sede"] < sede_cost:
@@ -13619,12 +13651,12 @@ class GameRoom:
 
         alvo = self.monsters.get(data.get("target_id")) if data else None
         if not alvo or alvo["hp"] <= 0:
-            await self.send_to(pid, {"type": "error", "msg": "Alvo não encontrado."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_nao_encontrado")}); return
         if not self._no_raio(p, alvo, PROVOCACAO_RAIO):
             await self.send_to(pid, {"type": "error",
                 "msg": f"Alvo fora do alcance — máximo {PROVOCACAO_RAIO} quadrados."}); return
         if alvo.get("provocado_turnos", 0) > 0:
-            await self.send_to(pid, {"type": "error", "msg": "Este inimigo já está provocado."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.este_inimigo_ja_esta_provocado")}); return
 
         p["fome"] = max(0, p["fome"] - fome_cost)
         p["sede"] = max(0, p["sede"] - sede_cost)
@@ -13736,9 +13768,9 @@ class GameRoom:
         p = self.players.get(pid)
         if not p or not p["alive"]: return
         if not _pode_hab_heroi(p, "cleric", "hero_cleric_cura"):
-            await self.send_to(pid, {"type": "error", "msg": "Você não sabe usar Cura."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_sabe_usar_cura")}); return
         if self._acao_bloqueada(p):
-            await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")}); return
 
         num_dados = max(1, min(self._cura_teto(p), int((data or {}).get("num_dados", 1))))
         alcance   = max(0, min(2, int((data or {}).get("alcance_extra", 0))))
@@ -13755,14 +13787,14 @@ class GameRoom:
         alvo = self.players.get((data or {}).get("target_id"))
         if p.get("ultimo_esforco_ativo") and (data or {}).get("target_id") == pid:
             await self.send_to(pid, {"type": "error",
-                "msg": "🔥 Em Último Esforço você não pode se curar!"}); return
+                "msg": T("erro.em_ultimo_esforco_voce_nao_pode_se_curar")}); return
         if not alvo or not alvo.get("alive"):
-            await self.send_to(pid, {"type": "error", "msg": "Aliado inválido."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_invalido")}); return
         if not self._no_raio(p, alvo, alcance_tiles):
             await self.send_to(pid, {"type": "error", "msg": f"Alvo fora do alcance — máximo {alcance_tiles}q."}); return
         if not self._tem_linha_de_visao(p["pos"], alvo["pos"]):
             await self.send_to(pid, {"type": "error",
-                "msg": "🧱 Uma parede bloqueia a energia curativa — precisa ver o aliado!"}); return
+                "msg": T("erro.uma_parede_bloqueia_a_energia_curativa_p")}); return
 
         dados = [random.randint(1, 8) for _ in range(num_dados)]
         bonus_int = mod(p["int_"])
@@ -13788,9 +13820,9 @@ class GameRoom:
         p = self.players.get(pid)
         if not p or not p["alive"]: return
         if not _pode_hab_heroi(p, "cleric", "hero_cleric_cura_area"):
-            await self.send_to(pid, {"type": "error", "msg": "Você não sabe usar Cura em Área."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_sabe_usar_cura_em_area")}); return
         if self._acao_bloqueada(p):
-            await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")}); return
 
         nivel = self._massa_nivel(p)
         num_dados = max(1, min(nivel, int((data or {}).get("num_dados", 1))))
@@ -13897,23 +13929,23 @@ class GameRoom:
         p = self.players.get(pid)
         if not p or not p["alive"]: return
         if not _pode_hab_heroi(p, "cleric", "hero_cleric_purificacao"):
-            await self.send_to(pid, {"type": "error", "msg": "Você não sabe usar Purificação."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_sabe_usar_purificacao")}); return
         if self._acao_bloqueada(p):
-            await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")}); return
 
         tipo = (data or {}).get("tipo")
         if tipo not in self.PURIFICACAO_CUSTOS:
-            await self.send_to(pid, {"type": "error", "msg": "Tipo de purificação inválido."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.tipo_de_purificacao_invalido")}); return
         if tipo not in self._purif_tipos(p):
             await self.send_to(pid, {"type": "error",
-                "msg": "Você ainda não aprendeu a purificar este mal — evolua a Purificação na Guilda."}); return
+                "msg": T("erro.voce_ainda_nao_aprendeu_a_purificar_este")}); return
         custo = dict(self.PURIFICACAO_CUSTOS[tipo])
 
         alvo = self.players.get((data or {}).get("target_id"))
         if not alvo or not alvo.get("alive"):
-            await self.send_to(pid, {"type": "error", "msg": "Aliado inválido."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_invalido")}); return
         if not self._no_raio(p, alvo, 1):
-            await self.send_to(pid, {"type": "error", "msg": "Purificação requer contato adjacente."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.purificacao_requer_contato_adjacente")}); return
         _ef, _es = self._custo_fome_sede_efetivo(p, custo["fome"], custo["sede"])
         if p["fome"] < _ef or p["sede"] < _es:
             await self.send_to(pid, {"type": "error",
@@ -13931,14 +13963,14 @@ class GameRoom:
                 custo["fome"] += 5; custo["sede"] += 5
                 _ef, _es = self._custo_fome_sede_efetivo(p, custo["fome"], custo["sede"])
                 if p["fome"] < _ef or p["sede"] < _es:
-                    await self.send_to(pid, {"type": "error", "msg": "Purificar o item vinculado exige +5 de fome e +5 de sede."}); return
+                    await self.send_to(pid, {"type": "error", "msg": T("erro.purificar_o_item_vinculado_exige_5_de_fo")}); return
             if maldicao_alvo == "licantropia":
                 entrada = next((m for m in self._maldicoes(alvo) if m["id"] == maldicao_alvo), None)
                 if entrada and self._maldicao_estagio(entrada) >= 4:
                     custo["fome"] *= 2; custo["sede"] *= 2
                     _ef, _es = self._custo_fome_sede_efetivo(p, custo["fome"], custo["sede"])
                     if p["fome"] < _ef or p["sede"] < _es:
-                        await self.send_to(pid, {"type": "error", "msg": "Curar Licantropia no estágio IV exige o dobro de fome e sede."}); return
+                        await self.send_to(pid, {"type": "error", "msg": T("erro.curar_licantropia_no_estagio_iv_exige_o")}); return
         removido = False
 
         if tipo == "veneno":
@@ -13987,9 +14019,9 @@ class GameRoom:
         p = self.players.get(pid)
         if not p or not p["alive"]: return
         if not _pode_hab_heroi(p, "cleric", "hero_cleric_ressurreicao"):
-            await self.send_to(pid, {"type": "error", "msg": "Você não sabe usar Ressurreição."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_sabe_usar_ressurreicao")}); return
         if self._acao_bloqueada(p):
-            await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")}); return
 
         nivel = self._ressur_nivel(p)
         custo_fome = custo_sede = {1: 10, 2: 15, 3: 20}[nivel]
@@ -14000,11 +14032,11 @@ class GameRoom:
 
         alvo = self.players.get((data or {}).get("target_id"))
         if not alvo:
-            await self.send_to(pid, {"type": "error", "msg": "Aliado não encontrado."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_nao_encontrado")}); return
         if alvo.get("alive"):
             await self.send_to(pid, {"type": "error", "msg": f"{alvo['name']} ainda está vivo."}); return
         if not self._no_raio(p, alvo, 1):
-            await self.send_to(pid, {"type": "error", "msg": "Ressurreição requer contato adjacente com o aliado."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.ressurreicao_requer_contato_adjacente_co")}); return
 
         alvo["alive"] = True
         alvo["hp"] = {1: 1, 2: max(1, alvo["max_hp"] // 2), 3: alvo["max_hp"]}[nivel]
@@ -14040,9 +14072,9 @@ class GameRoom:
         if not p or not p["alive"]: return
         if not _pode_hab_heroi(p, "paladin", "hero_paladin_imposicao_maos"):
             await self.send_to(pid, {"type": "error",
-                "msg": "Você não sabe usar Imposição das Mãos (habilidade do Paladino)."}); return
+                "msg": T("erro.voce_nao_sabe_usar_imposicao_das_maos_ha")}); return
         if self._acao_bloqueada(p):
-            await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")}); return
 
         extra_d6 = max(0, min(3, int((data or {}).get("extra_d6", 0)))) if tem_espec(p, "paladino_cura_maos_3") else 0
         fome_cost, sede_cost = 3 + 2 * extra_d6, 2 + 2 * extra_d6
@@ -14053,13 +14085,13 @@ class GameRoom:
         alvo_id = data.get("target_id") if data else None
         if alvo_id == pid:
             await self.send_to(pid, {"type": "error",
-                "msg": "Você não pode curar a si mesmo com esta habilidade."}); return
+                "msg": T("erro.voce_nao_pode_curar_a_si_mesmo_com_esta")}); return
         alvo = self.players.get(alvo_id)
         if not alvo or not alvo.get("alive"):
-            await self.send_to(pid, {"type": "error", "msg": "Aliado inválido."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_invalido")}); return
         if not self._no_raio(p, alvo, 1):
             await self.send_to(pid, {"type": "error",
-                "msg": "O aliado deve estar adjacente a você."}); return
+                "msg": T("erro.o_aliado_deve_estar_adjacente_a_voce")}); return
 
         n_dados = self._cura_maos_dados(p) + extra_d6
         raw = sum(roll_dice("1d6") for _ in range(n_dados))
@@ -14080,11 +14112,11 @@ class GameRoom:
         p = self.players.get(pid)
         if not p or not p["alive"]: return
         if not _pode_hab_heroi(p, "paladin", "hero_paladin_golpe_sagrado"):
-            await self.send_to(pid, {"type": "error", "msg": "Você não sabe usar Golpe Sagrado."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_sabe_usar_golpe_sagrado")}); return
         if p.get("golpe_sagrado_ativo"):
-            await self.send_to(pid, {"type": "error", "msg": "Golpe Sagrado já está ativo."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.golpe_sagrado_ja_esta_ativo")}); return
         if p.get("bonus_action_used"):
-            await self.send_to(pid, {"type": "error", "msg": "Ação bônus já usada neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_bonus_ja_usada_neste_turno")}); return
 
         fome_cost, sede_cost = 3, 3
         if p["fome"] < fome_cost or p["sede"] < sede_cost:
@@ -14113,9 +14145,9 @@ class GameRoom:
         p = self.players.get(pid)
         if not p or not p["alive"]: return
         if not _pode_hab_heroi(p, "paladin", "hero_paladin_protetor"):
-            await self.send_to(pid, {"type": "error", "msg": "Você não sabe usar Protetor."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_sabe_usar_protetor")}); return
         if p.get("bonus_action_used"):
-            await self.send_to(pid, {"type": "error", "msg": "Ação bônus já usada neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_bonus_ja_usada_neste_turno")}); return
 
         fome_cost, sede_cost = 2, 2
         if p["fome"] < fome_cost or p["sede"] < sede_cost:
@@ -14123,10 +14155,10 @@ class GameRoom:
 
         alvo_id = data.get("target_id") if data else None
         if alvo_id == pid:
-            await self.send_to(pid, {"type": "error", "msg": "Richard não pode se proteger com esta habilidade."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.richard_nao_pode_se_proteger_com_esta_ha")}); return
         alvo = self.players.get(alvo_id)
         if not alvo or not alvo.get("alive"):
-            await self.send_to(pid, {"type": "error", "msg": "Aliado inválido."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_invalido")}); return
         if not self._no_raio(p, alvo, self._defensor_raio(p)):
             await self.send_to(pid, {"type": "error", "msg": f"Aliado fora do raio de {self._defensor_raio(p)} quadrados."}); return
 
@@ -14157,16 +14189,16 @@ class GameRoom:
         if not isinstance(data, dict): return
         habilidade_id = data.get("habilidade_id")
         if habilidade_id not in ("regeneracao_divina", "guerreiro_luz"):
-            await self.send_to(pid, {"type": "error", "msg": "Habilidade livre inválida."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_livre_invalida")}); return
         if not _pode_hab_heroi(p, "paladin", f"hero_paladin_{habilidade_id}"):
-            await self.send_to(pid, {"type": "error", "msg": "Você não sabe usar esta habilidade."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_sabe_usar_esta_habilidade")}); return
 
         if habilidade_id == "regeneracao_divina":
             await self._ativar_regeneracao_divina(p, pid)
         elif habilidade_id == "guerreiro_luz":
             await self._ativar_guerreiro_luz(p, pid, data)
         else:
-            await self.send_to(pid, {"type": "error", "msg": "Habilidade livre inválida."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_livre_invalida")}); return
         await self.push_state()
 
     async def _ativar_regeneracao_divina(self, p, pid):
@@ -14176,7 +14208,7 @@ class GameRoom:
             await self.gm_say(f"✨ **{p['name']}** encerra a Regeneração Divina.")
             return
         if p.get("hp", 0) >= p.get("max_hp", 1):
-            await self.send_to(pid, {"type": "error", "msg": "HP já está no máximo."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.hp_ja_esta_no_maximo")}); return
 
         fome_cost, sede_cost = 2, 1
         if p["fome"] < fome_cost or p["sede"] < sede_cost:
@@ -14211,7 +14243,7 @@ class GameRoom:
         custo_fome = bonus_validos["dano"] + bonus_validos["ca"]
         custo_sede = bonus_validos["visao"] + bonus_validos["ataque"]
         if custo_fome == 0 and custo_sede == 0:
-            await self.send_to(pid, {"type": "error", "msg": "Escolha pelo menos um bônus."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.escolha_pelo_menos_um_bonus")}); return
         if p["fome"] < custo_fome or p["sede"] < custo_sede:
             await self.send_to(pid, {"type": "error", "msg": f"Recursos insuficientes 🍖{custo_fome} 💧{custo_sede}."}); return
 
@@ -14360,15 +14392,15 @@ class GameRoom:
         if not p or not p.get("alive") or p.get("fora_masmorra"):
             return
         if not self._is_turn(pid):
-            await self.send_to(pid, {"type": "error", "msg": "Só é possível sair no seu turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.so_e_possivel_sair_no_seu_turno")}); return
         if not self.saida_permitida:
-            await self.send_to(pid, {"type": "error", "msg": "Não há como sair desta masmorra."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nao_ha_como_sair_desta_masmorra")}); return
         # A escada é acionada de uma casa vizinha (diagonais incluídas); permanecer
         # sobre ela também continua válido para mapas antigos.
         if (not self.stairs_pos or
                 max(abs(p["pos"][0] - self.stairs_pos[0]),
                     abs(p["pos"][1] - self.stairs_pos[1])) > 1):
-            await self.send_to(pid, {"type": "error", "msg": "Aproxime-se da escada de entrada para sair."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.aproxime_se_da_escada_de_entrada_para_sa")}); return
         fome, sede = self._custo_viagem_saida()
         if p.get("fome", 0) < fome or p.get("sede", 0) < sede:
             await self.send_to(pid, {"type": "error",
@@ -14405,7 +14437,7 @@ class GameRoom:
                 fora["rodadas_restantes"] -= 1
                 if fora["rodadas_restantes"] == 0:
                     await self.send_to(pid, {"type": "error",
-                        "msg": "Você já pode voltar à masmorra."})
+                        "msg": T("erro.voce_ja_pode_voltar_a_masmorra")})
             else:
                 await self._reentrar_masmorra(pid)
 
@@ -14826,13 +14858,13 @@ class GameRoom:
         if not p:
             return False
         if slot_index < 0 or slot_index >= len(p["bag"]):
-            await self.send_to(pid, {"type": "error", "msg": "Slot de inventário inválido."}); return False
+            await self.send_to(pid, {"type": "error", "msg": T("erro.slot_de_inventario_invalido")}); return False
 
         item = p["bag"][slot_index]
         cat  = self._slot_category_for_item(item)
 
         if cat == "bag":
-            await self.send_to(pid, {"type": "error", "msg": "Este item é consumível — use-o durante o combate!"}); return False
+            await self.send_to(pid, {"type": "error", "msg": T("erro.este_item_e_consumivel_use_o_durante_o_c")}); return False
 
         # RestriÃ§Ã£o de classe (allowed_classes)
         allowed = item.get("allowed_classes")
@@ -14904,12 +14936,12 @@ class GameRoom:
         if not p or "bag" not in p:   # ainda no lobby: ficha incompleta
             return
         if slot_index < 0 or slot_index >= len(p["bag"]):
-            await self.send_to(pid, {"type": "error", "msg": "Slot de inventário inválido."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.slot_de_inventario_invalido")}); return
 
         item = p["bag"][slot_index]
         if not self._eh_adaga(item) or not item.get("die"):
             await self.send_to(pid, {"type": "error",
-                "msg": "Só uma adaga pode ser empunhada como 2ª arma na mão esquerda."}); return
+                "msg": T("erro.so_uma_adaga_pode_ser_empunhada_como_2a")}); return
         # RestriÃ§Ã£o de classe (allowed_classes) â€” adaga nÃ£o tem, mas respeita se houver
         allowed = item.get("allowed_classes")
         if allowed and p.get("class_id") not in allowed:
@@ -14918,7 +14950,7 @@ class GameRoom:
         # Arma de 2 mÃ£os na mÃ£o principal impede o uso de 2Âª arma (como o escudo).
         if (p.get("weapon") or {}).get("two_handed"):
             await self.send_to(pid, {"type": "error",
-                "msg": "Você empunha uma arma de 2 mãos — não pode usar uma 2ª arma."}); return
+                "msg": T("erro.voce_empunha_uma_arma_de_2_maos_nao_pode")}); return
 
         p["bag"].pop(slot_index)
         log = self._equip_into_slot(p, item, "off_hand", "🗡️")
@@ -14937,7 +14969,7 @@ class GameRoom:
         if self._item_maldicao_vinculante(p, item):
             await self.send_to(pid, {"type": "error", "msg": self.MSG_ITEM_PRESO}); return
         if len(p["bag"]) >= p.get("bag_size", 6):
-            await self.send_to(pid, {"type": "error", "msg": "Inventário cheio — não há espaço para desequipar."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.inventario_cheio_nao_ha_espaco_para_dese")}); return
         p["gear"][slot_key] = None
         self._apply_gear_effect(p, item, False)
         if slot_key == "weapon":
@@ -15020,13 +15052,13 @@ class GameRoom:
             return
         chest = self.chests.get(chest_id)
         if not chest:
-            await self.send_to(pid, {"type": "error", "msg": "Baú não encontrado."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.bau_nao_encontrado")}); return
 
         # Distance check â€” must be within 2 tiles (Chebyshev)
         cx, cy = chest["pos"]
         px, py = p["pos"]
         if max(abs(px - cx), abs(py - cy)) > 2:
-            await self.send_to(pid, {"type": "error", "msg": "Muito longe do baú!"}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.muito_longe_do_bau")}); return
 
         if chest.get("key_objective"):
             self.key_chest_opened = True
@@ -15034,14 +15066,14 @@ class GameRoom:
         if kind == "gold":
             amount = chest["gold"]
             if amount <= 0:
-                await self.send_to(pid, {"type": "error", "msg": "Sem ouro neste baú."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.sem_ouro_neste_bau")}); return
             recebido = await self._ganhar_ouro(p, amount, "do baú")
             chest["gold"] = 0
             await self.gm_say(f"🪙 **{p['name']}** pegou **{recebido}** ouros do baú!")
         elif kind == "item":
             idx = int(index)
             if idx < 0 or idx >= len(chest["items"]):
-                await self.send_to(pid, {"type": "error", "msg": "Item inválido."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.item_invalido")}); return
             item = chest["items"][idx]
 
             # MuniÃ§Ã£o: tenta empilhar em off_hand ou em slot de bag do mesmo tipo
@@ -15070,7 +15102,7 @@ class GameRoom:
                     else:
                         result = self._add_to_inventory(p, item)
                         if result == "full":
-                            await self.send_to(pid, {"type": "error", "msg": "Inventário cheio!"}); return
+                            await self.send_to(pid, {"type": "error", "msg": T("erro.inventario_cheio")}); return
                         chest["items"].pop(idx)
                         await self.gm_say(
                             f"📦 **{p['name']}** pegou **{item['emoji']} {item['name']}** do baú!")
@@ -15078,7 +15110,7 @@ class GameRoom:
                 result = self._route_acquired_item(p, item)
                 if result == "full":
                     await self.send_to(pid, {"type": "error",
-                        "msg": "Inventário cheio e slot ocupado — abra espaço primeiro."}); return
+                        "msg": T("erro.inventario_cheio_e_slot_ocupado_abra_esp_2")}); return
                 chest["items"].pop(idx)
                 extra = " (equipado — bolsa cheia)" if result == "equipped" else ""
                 await self.gm_say(f"📦 **{p['name']}** pegou **{item.get('emoji','📦')} {item['name']}** do baú{extra}!")
@@ -15102,11 +15134,11 @@ class GameRoom:
         # localiza o item sem removÃª-lo ainda (sÃ³ remove se houver casa)
         if source == "bag":
             if index is None or index < 0 or index >= len(p["bag"]):
-                await self.send_to(pid, {"type": "error", "msg": "Slot de inventário inválido."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.slot_de_inventario_invalido")}); return
             item = p["bag"][index]
         elif source == "gear":
             if slot_key not in GEAR_SLOTS or not p["gear"].get(slot_key):
-                await self.send_to(pid, {"type": "error", "msg": "Nada equipado nesse slot."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.nada_equipado_nesse_slot")}); return
             if self._slot_travado_por_maldicao(p, slot_key):
                 await self.send_to(pid, {"type": "error", "msg": self.MSG_ITEM_PRESO}); return
             item = p["gear"][slot_key]
@@ -15114,7 +15146,7 @@ class GameRoom:
             return
         tile = self._free_drop_tile_near(p["pos"])
         if tile is None:
-            await self.send_to(pid, {"type": "error", "msg": "Sem espaço adjacente para largar."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.sem_espaco_adjacente_para_largar")}); return
         # remove da origem
         if source == "bag":
             p["bag"].pop(index)
@@ -15136,14 +15168,14 @@ class GameRoom:
             return
         gi = self.ground_items.get(ground_id)
         if not gi:
-            await self.send_to(pid, {"type": "error", "msg": "Item não encontrado."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado")}); return
         gx, gy = gi["pos"]; px, py = p["pos"]
         if max(abs(px - gx), abs(py - gy)) > 1:
-            await self.send_to(pid, {"type": "error", "msg": "Muito longe do item!"}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.muito_longe_do_item")}); return
         res = self._route_acquired_item(p, gi["item"])
         if res == "full":
             await self.send_to(pid, {"type": "error",
-                "msg": "Inventário cheio e slot ocupado — abra espaço primeiro."}); return
+                "msg": T("erro.inventario_cheio_e_slot_ocupado_abra_esp_2")}); return
         del self.ground_items[ground_id]
         extra = " (equipado — bolsa cheia)" if res == "equipped" else ""
         await self.gm_say(f"🎒 **{p['name']}** pegou **{gi['item']['name']}** do chão{extra}!")
@@ -15771,30 +15803,30 @@ class GameRoom:
         if not p or not p["alive"]:
             return
         if p.get("class_id") not in ("mage", "cleric"):
-            await self.send_to(pid, {"type": "error", "msg": "Sua classe não lança magias do grimório."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.sua_classe_nao_lanca_magias_do_grimorio")}); return
         if p.get("petrificado"):
-            await self.send_to(pid, {"type": "error", "msg": "🗿 Você está petrificado e não pode lançar magias!"}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_petrificado_e_nao_pode_lancar")}); return
         if p.get("paralisado"):
-            await self.send_to(pid, {"type": "error", "msg": "❄️ Você está paralisado e não pode lançar magias!"}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_paralisado_e_nao_pode_lancar_m")}); return
         if p.get("dormindo"):
-            await self.send_to(pid, {"type": "error", "msg": "🌙 Você está dormindo e não pode lançar magias!"}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_dormindo_e_nao_pode_lancar_mag")}); return
         # CanalizaÃ§Ã£o Arcana (Fase 3, tÃ©cnica exclusiva): ignora SilÃªncio.
         if self._tem_maldicao(p, "silencio_deuses"):
-            await self.send_to(pid, {"type": "error", "msg": "Silêncio dos Deuses impede lançar magias."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.silencio_dos_deuses_impede_lancar_magias")}); return
         if self._em_silencio(p) and not p.get("tec_ex_canalizacao_armado"):
-            await self.send_to(pid, {"type": "error", "msg": "🔇 Você está numa área de Silêncio e não pode lançar magias!"}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_numa_area_de_silencio_e_nao_po")}); return
 
         # â”€â”€ Metamagia do mago (Pedro): Reflexa / Acelerar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         is_mage = p.get("class_id") == "mage"
 
         # AÃ§Ã£o principal (1 por turno).
         if self._acao_bloqueada(p):
-            await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")}); return
 
         magia_id = (data or {}).get("magia_id")
         magia = GRIMORIO.get(magia_id)
         if not magia:
-            await self.send_to(pid, {"type": "error", "msg": "Magia desconhecida."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.magia_desconhecida")}); return
         if magia_id not in p.get("magias_conhecidas", []):
             await self.send_to(pid, {"type": "error", "msg": f"{p['name']} não conhece {magia['nome']}."}); return
         if magia_id not in GRIMORIO_IMPLEMENTADAS:
@@ -15808,11 +15840,11 @@ class GameRoom:
             try:
                 tx, ty = int(data.get("tx")), int(data.get("ty"))
             except (AttributeError, TypeError, ValueError):
-                await self.send_to(pid, {"type": "error", "msg": "Escolha uma casa adjacente para o baú."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.escolha_uma_casa_adjacente_para_o_bau")}); return
             if max(abs(tx - p["pos"][0]), abs(ty - p["pos"][1])) != 1:
-                await self.send_to(pid, {"type": "error", "msg": "O baú deve ser criado em uma casa adjacente."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.o_bau_deve_ser_criado_em_uma_casa_adjace")}); return
             if not self._tile_livre_para_reforco(tx, ty):
-                await self.send_to(pid, {"type": "error", "msg": "Essa casa está ocupada ou bloqueada para o baú."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.essa_casa_esta_ocupada_ou_bloqueada_para")}); return
 
         circulo = magia.get("circulo", "primeiro")
         if self._slots_disponiveis(p, circulo) <= 0:
@@ -16007,7 +16039,7 @@ class GameRoom:
         elif mid == "visao_escuro":
             alvo = self._alvo_entidade(data.get("target_id")) or caster
             if not self._entidade_viva(alvo):
-                await self.send_to(caster["id"], {"type": "error", "msg": "Aliado inválido."}); return
+                await self.send_to(caster["id"], {"type": "error", "msg": T("erro.aliado_invalido")}); return
             alvo["visao_escuro"] = True
             alvo["visao_escuro_missao"] = True
             await self.gm_say(f"👁️ **{alvo['name']}** recebe Visão no Escuro até o fim da missão.")
@@ -16056,10 +16088,10 @@ class GameRoom:
         """Toque: +fome/+sede num aliado adjacente."""
         alvo = self._alvo_entidade((data or {}).get("target_id"))
         if not self._entidade_viva(alvo):
-            await self.send_to(caster["id"], {"type": "error", "msg": "Aliado inválido."}); return
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.aliado_invalido")}); return
         dist = max(abs(caster["pos"][0]-alvo["pos"][0]), abs(caster["pos"][1]-alvo["pos"][1]))
         if dist > magia.get("alcance", 1):
-            await self.send_to(caster["id"], {"type": "error", "msg": "O aliado precisa estar adjacente."}); return
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.o_aliado_precisa_estar_adjacente")}); return
         fb, sb = magia.get("fome_bonus", 10), magia.get("sede_bonus", 10)
         _restaurar_sobrevivencia(alvo, fb, sb)
         self._verificar_estado_sobrevivencia(alvo)
@@ -16169,7 +16201,7 @@ class GameRoom:
             (m for m in self.monsters.values() if m.get("id") == alvo_id), None)
         vivo = alvo and (alvo["alive"] if self._eh_jogador(alvo) else alvo["hp"] > 0)
         if not vivo:
-            await self.send_to(caster["id"], {"type": "error", "msg": "Alvo inválido."}); return
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.alvo_invalido")}); return
         dist = max(abs(caster["pos"][0]-alvo["pos"][0]), abs(caster["pos"][1]-alvo["pos"][1]))
         if dist > alcance:
             await self.send_to(caster["id"], {"type": "error", "msg": f"Alvo fora do alcance ({dist} > {alcance})."}); return
@@ -16228,10 +16260,10 @@ class GameRoom:
         """Aliado à distância: +1 ataque e dano na arma por algumas rodadas."""
         alvo = self._alvo_entidade((data or {}).get("target_id"))
         if not self._entidade_viva(alvo):
-            await self.send_to(caster["id"], {"type": "error", "msg": "Aliado inválido."}); return
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.aliado_invalido")}); return
         dist = max(abs(caster["pos"][0]-alvo["pos"][0]), abs(caster["pos"][1]-alvo["pos"][1]))
         if dist > magia.get("alcance", 6):
-            await self.send_to(caster["id"], {"type": "error", "msg": "Aliado fora do alcance."}); return
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.aliado_fora_do_alcance")}); return
         dur  = self._rolar_dado(magia.get("duracao", "1d6+2")) + dur_bonus
         buff = magia.get("buff", {"ataque": 1, "dano": 1, "arma_ignora_resistencia": True})
         self._set_mod_magia(alvo, buff, dur)
@@ -16577,12 +16609,12 @@ class GameRoom:
         bonus_int = mod(caster.get("int_", 10))
         alvo = self._alvo_entidade((data or {}).get("target_id"))
         if not self._entidade_viva(alvo) or alvo.get("id") not in self.monsters:
-            await self.send_to(caster["id"], {"type": "error", "msg": "Alvo inválido."}); return
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.alvo_invalido")}); return
         if not alvo.get("id") or alvo.get("id") not in self.monsters:
-            await self.send_to(caster["id"], {"type": "error", "msg": "Comando só pode ter um monstro como alvo."}); return
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.comando_so_pode_ter_um_monstro_como_alvo")}); return
         dist = max(abs(caster["pos"][0]-alvo["pos"][0]), abs(caster["pos"][1]-alvo["pos"][1]))
         if dist > magia.get("alcance", 4):
-            await self.send_to(caster["id"], {"type": "error", "msg": "Alvo fora do alcance."}); return
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.alvo_fora_do_alcance")}); return
         if self._tem_imunidade(alvo, "encantamento") or alvo.get("subtipo", _subtipo_padrao_monstro(alvo)) in ("construto", "morto_vivo"):
             await self.gm_say(f"🛡️ **{alvo['name']}** é imune a encantamentos."); return
         save_ok, *_ = await self._save_mostrado(alvo, "vontade", self._dif_magia(caster, magia))
@@ -16604,10 +16636,10 @@ class GameRoom:
         bonus_int = mod(caster.get("int_", 10))
         alvo = self._alvo_entidade((data or {}).get("target_id"))
         if not self._entidade_viva(alvo):
-            await self.send_to(caster["id"], {"type": "error", "msg": "Alvo inválido."}); return
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.alvo_invalido")}); return
         dist = max(abs(caster["pos"][0]-alvo["pos"][0]), abs(caster["pos"][1]-alvo["pos"][1]))
         if dist > magia.get("alcance", 5):
-            await self.send_to(caster["id"], {"type": "error", "msg": "Alvo fora do alcance."}); return
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.alvo_fora_do_alcance")}); return
         if self._tem_imunidade(alvo, "encantamento") or alvo.get("subtipo", _subtipo_padrao_monstro(alvo)) in ("construto", "morto_vivo"):
             await self.gm_say(f"🛡️ **{alvo['name']}** é imune a controle mental."); return
         save_ok, *_ = await self._save_mostrado(alvo, "vontade", self._dif_magia(caster, magia))
@@ -16693,12 +16725,12 @@ class GameRoom:
     async def _executar_dominar_morto_vivo(self, caster, magia, data):
         alvo = self._alvo_monstro((data or {}).get("target_id"))
         if not alvo or alvo["hp"] <= 0:
-            await self.send_to(caster["id"], {"type": "error", "msg": "Alvo inválido."}); return
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.alvo_invalido")}); return
         if not self._eh_morto_vivo_ou_demonio(alvo):
-            await self.send_to(caster["id"], {"type": "error", "msg": "O alvo não é um morto-vivo."}); return
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.o_alvo_nao_e_um_morto_vivo")}); return
         dist = max(abs(caster["pos"][0]-alvo["pos"][0]), abs(caster["pos"][1]-alvo["pos"][1]))
         if dist > magia.get("alcance", 4):
-            await self.send_to(caster["id"], {"type": "error", "msg": "Alvo fora do alcance."}); return
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.alvo_fora_do_alcance")}); return
 
         # Slot Ãºnico: libera/destrÃ³i o morto-vivo dominado anteriormente por este caster.
         await self._liberar_dominacao_anterior(caster)
@@ -17151,10 +17183,10 @@ class GameRoom:
     async def _executar_regeneracao(self, caster, magia, data):
         alvo = self.players.get((data or {}).get("target_id"))
         if not alvo or not alvo["alive"]:
-            await self.send_to(caster["id"], {"type": "error", "msg": "Aliado inválido."}); return
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.aliado_invalido")}); return
         dist = max(abs(caster["pos"][0]-alvo["pos"][0]), abs(caster["pos"][1]-alvo["pos"][1]))
         if dist > magia.get("alcance", 6):
-            await self.send_to(caster["id"], {"type": "error", "msg": "Aliado fora do alcance."}); return
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.aliado_fora_do_alcance")}); return
         pool = self._rolar_dado(magia.get("pool", "2d6+2"))
         alvo["regen_pool"]     = pool
         alvo["regen_ressurge"] = bool(magia.get("resurrect_com_pool", True))
@@ -17196,7 +17228,7 @@ class GameRoom:
         dx = 1 if dirv[0] > 0 else -1 if dirv[0] < 0 else 0
         dy = 1 if dirv[1] > 0 else -1 if dirv[1] < 0 else 0
         if dx == 0 and dy == 0:
-            await self.send_to(caster["id"], {"type": "error", "msg": "Direção inválida para o Jato de Ar."}); return
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.direcao_invalida_para_o_jato_de_ar")}); return
 
         tiles = self._cone_tiles(caster["pos"][0], caster["pos"][1], dx, dy,
                                  magia.get("comprimento", 4), magia.get("base_largura", 4))
@@ -17293,7 +17325,7 @@ class GameRoom:
                 "msg": f"Centro da Bola de Fogo fora do alcance ({dist_centro} > {alcance})."}); return
         if not self._tem_linha_de_visao(caster["pos"], [cx, cy]):
             await self.send_to(caster["id"], {"type": "error",
-                "msg": "🧱 Uma parede bloqueia a trajetória da Bola de Fogo!"}); return
+                "msg": T("erro.uma_parede_bloqueia_a_trajetoria_da_bola")}); return
 
         # R1 = 1d6 por nível; cada rodada residual vale metade da anterior.
         # Estender acrescenta rodada(s) residual(is) mantendo essa progressão.
@@ -17417,7 +17449,7 @@ class GameRoom:
         dx = 1 if dirv[0] > 0 else -1 if dirv[0] < 0 else 0
         dy = 1 if dirv[1] > 0 else -1 if dirv[1] < 0 else 0
         if dx == 0 and dy == 0:
-            await self.send_to(caster["id"], {"type": "error", "msg": "Direção inválida para o Relâmpago."}); return
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.direcao_invalida_para_o_relampago")}); return
 
         sequencia = self._caminho_relampago(caster["pos"], dx, dy, alcance)
 
@@ -17469,14 +17501,14 @@ class GameRoom:
             (m for m in self.monsters.values() if m.get("id") == alvo_id), None)
         vivo = alvo and (alvo["alive"] if self._eh_jogador(alvo) else alvo["hp"] > 0)
         if not vivo:
-            await self.send_to(caster["id"], {"type": "error", "msg": "Alvo inválido."}); return
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.alvo_invalido")}); return
 
         dist = max(abs(caster["pos"][0]-alvo["pos"][0]), abs(caster["pos"][1]-alvo["pos"][1]))
         if dist > alcance:
             await self.send_to(caster["id"], {"type": "error", "msg": f"Alvo fora do alcance ({dist} > {alcance})."}); return
         if not self._tem_linha_de_visao(caster["pos"], alvo["pos"]):
             await self.send_to(caster["id"], {"type": "error",
-                "msg": "🧱 Uma parede bloqueia o Raio Congelante!"}); return
+                "msg": T("erro.uma_parede_bloqueia_o_raio_congelante")}); return
 
         # Dano: 3d4 + 2d4 a cada 2 nÃ­veis â€” SEM save de Reflexos. (anima cada d4)
         nd   = 3 + ((nivel - 1) // 2) * 2
@@ -18463,16 +18495,16 @@ class GameRoom:
         p = self.players.get(pid)
         if not p or not p["alive"]: return
         if not _pode_hab_heroi(p, "rogue", "hero_rogue_criar_armadilha"):
-            await self.send_to(pid, {"type": "error", "msg": "Você não sabe criar armadilhas."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_sabe_criar_armadilhas")}); return
         if p.get("petrificado"):
-            await self.send_to(pid, {"type": "error", "msg": "🗿 Você está petrificado e não pode agir!"}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_petrificado_e_nao_pode_agir")}); return
         if self._acao_bloqueada(p):
-            await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")}); return
 
         tipo_id = msg.get("tipo")
         tipo = ARMADILHAS.get(tipo_id)
         if not tipo:
-            await self.send_to(pid, {"type": "error", "msg": "Armadilha inválida."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.armadilha_invalida")}); return
         if tipo_id not in self._armadilhas_desbloqueadas(p):
             await self.send_to(pid, {"type": "error",
                 "msg": f"Você ainda não aprendeu a fórmula de {tipo['nome']} — compre na Guilda."}); return
@@ -18489,11 +18521,11 @@ class GameRoom:
         tx = int(msg.get("tx", p["pos"][0]))
         ty = int(msg.get("ty", p["pos"][1]))
         if not (0 <= tx < self.map_w and 0 <= ty < self.map_h) or self.tiles[ty][tx] == WALL:
-            await self.send_to(pid, {"type": "error", "msg": "Posição inválida para a armadilha."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.posicao_invalida_para_a_armadilha")}); return
         if abs(tx - p["pos"][0]) + abs(ty - p["pos"][1]) > 1:
-            await self.send_to(pid, {"type": "error", "msg": "Coloque a armadilha na sua casa ou casa adjacente."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.coloque_a_armadilha_na_sua_casa_ou_casa")}); return
         if self._armadilha_no_tile(tx, ty) or any(t["pos"] == [tx, ty] and not t["triggered"] for t in self.traps):
-            await self.send_to(pid, {"type": "error", "msg": "Já existe uma armadilha nessa casa."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.ja_existe_uma_armadilha_nessa_casa")}); return
 
         # Veneno obrigatório (fosso) ou opcional (lâmina): consome 1 frasco
         # somente quando um veneno foi efetivamente escolhido.
@@ -18501,13 +18533,13 @@ class GameRoom:
         if tipo.get("custo_veneno") or tipo.get("permite_veneno"):
             veneno_id = msg.get("veneno_id")
             if tipo.get("custo_veneno") and (not veneno_id or veneno_id not in VENENOS):
-                await self.send_to(pid, {"type": "error", "msg": "Escolha um veneno para a armadilha."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.escolha_um_veneno_para_a_armadilha")}); return
             if veneno_id:
                 if veneno_id not in VENENOS:
-                    await self.send_to(pid, {"type": "error", "msg": "Veneno inválido."}); return
+                    await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_invalido")}); return
                 frasco = next((i for i in p["bag"] if i.get("id") == veneno_id), None)
                 if not frasco:
-                    await self.send_to(pid, {"type": "error", "msg": "Veneno não encontrado na bolsa."}); return
+                    await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_nao_encontrado_na_bolsa")}); return
                 p["bag"].remove(frasco)
 
         p["gold"] -= custo_ouro
@@ -18852,16 +18884,16 @@ class GameRoom:
         p = self.players.get(pid)
         if not p or not p["alive"]: return
         if not _pode_hab_heroi(p, "rogue", "hero_rogue_desarmar_armadilha"):
-            await self.send_to(pid, {"type": "error", "msg": "Você não sabe desarmar armadilhas (habilidade do Ladino)."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_sabe_desarmar_armadilhas_habili")}); return
         if self._acao_bloqueada(p):
-            await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")}); return
 
         # O alvo é escolhido no mapa. A própria casa continua válida para
         # preservar o comportamento anterior; as oito casas adjacentes também.
         tx, ty = msg.get("tx"), msg.get("ty")
         if tx is not None or ty is not None:
             if not isinstance(tx, int) or not isinstance(ty, int) or max(abs(tx - p["pos"][0]), abs(ty - p["pos"][1])) > 1:
-                await self.send_to(pid, {"type": "error", "msg": "Selecione uma casa adjacente para desarmar."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.selecione_uma_casa_adjacente_para_desarm")}); return
         else:
             tx, ty = p["pos"]
 
@@ -18873,10 +18905,10 @@ class GameRoom:
                 decor_trap = None
             arm = self._armadilha_da_decoracao(decor_trap) if decor_trap else None
         if not arm:
-            await self.send_to(pid, {"type": "error", "msg": "Nenhuma armadilha revelada adjacente para desarmar."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nenhuma_armadilha_revelada_adjacente_par")}); return
 
         if p.get("fome", 0) < 1 or p.get("sede", 0) < 1:
-            await self.send_to(pid, {"type": "error", "msg": "Você precisa de 🍖1 e 💧1 para desarmar a armadilha."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_precisa_de_1_e_1_para_desarmar_a_ar")}); return
 
         tipo = ARMADILHAS.get(arm["tipo"], {})
         dif = tipo.get("dificuldade", 10)
@@ -18967,9 +18999,9 @@ class GameRoom:
         if not p or not p["alive"]: return
         if not _pode_hab_heroi(p, "rogue", "hero_rogue_detectar_armadilhas"):
             await self.send_to(pid, {"type": "error",
-                "msg": "Você não sabe detectar armadilhas (habilidade do Ladino)."}); return
+                "msg": T("erro.voce_nao_sabe_detectar_armadilhas_habili")}); return
         if p.get("petrificado"):
-            await self.send_to(pid, {"type": "error", "msg": "🗿 Você está petrificado e não pode agir!"}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_petrificado_e_nao_pode_agir")}); return
 
         # Alternar OFF (gratuito) â€” encerra a detecÃ§Ã£o.
         if p.get("detectar_ativo"):
@@ -18981,7 +19013,7 @@ class GameRoom:
 
         # Alternar ON â€” consome a aÃ§Ã£o bÃ´nus do turno (sem custo de recurso na ativaÃ§Ã£o).
         if p.get("bonus_action_used"):
-            await self.send_to(pid, {"type": "error", "msg": "Ação bônus já usada neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_bonus_ja_usada_neste_turno")}); return
         p["bonus_action_used"] = True
         p["detectar_ativo"] = True
         if "detect_trap" not in p.setdefault("status", []):
@@ -19014,9 +19046,9 @@ class GameRoom:
         if not p or not p["alive"]: return
         if not _pode_hab_heroi(p, "rogue", "hero_rogue_esconder_sombras"):
             await self.send_to(pid, {"type": "error",
-                "msg": "Você não sabe se esconder nas sombras (habilidade do Ladino)."}); return
+                "msg": T("erro.voce_nao_sabe_se_esconder_nas_sombras_ha")}); return
         if p.get("petrificado"):
-            await self.send_to(pid, {"type": "error", "msg": "🗿 Você está petrificado e não pode agir!"}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_petrificado_e_nao_pode_agir")}); return
 
         # Alternar OFF (gratuito) â€” sai das sombras.
         if p.get("invisivel_sombras"):
@@ -19025,7 +19057,7 @@ class GameRoom:
             await self.push_state(); return
 
         if p.get("bonus_action_used"):
-            await self.send_to(pid, {"type": "error", "msg": "Ação bônus já usada neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_bonus_ja_usada_neste_turno")}); return
         custo_fome, custo_sede = 2, 1
         if p["fome"] < custo_fome or p["sede"] < custo_sede:
             await self.send_to(pid, {"type": "error",
@@ -19080,9 +19112,9 @@ class GameRoom:
         p = self.players.get(pid)
         if not p or not p["alive"]: return
         if not _pode_hab_heroi(p, "rogue", "hero_rogue_veneno_rapido"):
-            await self.send_to(pid, {"type": "error", "msg": "Você não sabe usar Veneno Rápido."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_sabe_usar_veneno_rapido")}); return
         if p.get("petrificado"):
-            await self.send_to(pid, {"type": "error", "msg": "🗿 Você está petrificado e não pode agir!"}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_petrificado_e_nao_pode_agir")}); return
 
         custo_sede = 1
         if p["sede"] < custo_sede:
@@ -19093,7 +19125,7 @@ class GameRoom:
                        if (i.get("veneno_id") == veneno_id or i.get("id") == veneno_id)
                        and i.get("veneno_id") in VENENOS), None)
         if not frasco:
-            await self.send_to(pid, {"type": "error", "msg": "Veneno não encontrado na bolsa."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_nao_encontrado_na_bolsa")}); return
 
         vid = frasco["veneno_id"]
         p["bag"].remove(frasco)
@@ -19216,7 +19248,7 @@ class GameRoom:
         p = self.players[pid]
         item = next((i for i in p["bag"] if i["id"] == item_id), None)
         if not item:
-            await self.send_to(pid, {"type": "error", "msg": "Item não encontrado."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado")}); return
 
         effect, val = item["effect"], item.get("value", 0)
 
@@ -19225,7 +19257,7 @@ class GameRoom:
         # (p["bag"].remove) apagaria o frasco sem efeito nenhum.
         if effect == "throwable":
             await self.send_to(pid, {"type": "error",
-                "msg": "Use o clique direito para arremessar este item."}); return
+                "msg": T("erro.use_o_clique_direito_para_arremessar_est")}); return
 
         # â”€â”€ Apagar "em chamas" bebendo Ã¡gua (aÃ§Ã£o LIVRE) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         # SÃ³ Ã¡gua (effect food com sede>0) e sÃ³ se as chamas forem apagÃ¡veis por
@@ -19233,7 +19265,7 @@ class GameRoom:
         if effect == "food" and item.get("sede", 0) > 0 and p.get("em_chamas_rodadas", 0) > 0:
             if not p.get("chamas_agua_apaga", True):
                 await self.send_to(pid, {"type": "error",
-                    "msg": "🟢 Estas chamas (Fogo Grego) não se apagam com água — gaste sua ação para apagá-las!"})
+                    "msg": T("erro.estas_chamas_fogo_grego_nao_se_apagam_co")})
                 return
             p["em_chamas_rodadas"] = 0
             p["bag"].remove(item)
@@ -19251,7 +19283,7 @@ class GameRoom:
         if effect == "veil_shadow" and (p.get("invisivel_sombras") or
                                         p.get("invisivel_magico") or p.get("oculto_vela")):
             await self.send_to(pid, {"type": "error",
-                "msg": "Você já está furtivo — a vela não acumula com outro efeito de furtividade."})
+                "msg": T("erro.voce_ja_esta_furtivo_a_vela_nao_acumula")})
             return
 
         # Ãšltimo EsforÃ§o bloqueia poÃ§Ãµes de cura â€” valida ANTES de gastar a aÃ§Ã£o
@@ -19259,7 +19291,7 @@ class GameRoom:
         # que sempre seria recusada; espelha a checagem de veil_shadow acima).
         if effect == "heal" and p.get("ultimo_esforco_ativo"):
             await self.send_to(pid, {"type": "error",
-                "msg": "🔥 Em Último Esforço você não pode se curar!"}); return
+                "msg": T("erro.em_ultimo_esforco_voce_nao_pode_se_curar")}); return
 
         # Itens com doses (hoje, a PoÃ§Ã£o de Cura Concentrada) sÃ³ podem ser
         # ativados enquanto ainda houver uma dose. A guarda vem antes da aÃ§Ã£o
@@ -19273,16 +19305,16 @@ class GameRoom:
             if target_id and target_id != pid:
                 alvo_cura = self.players.get(target_id)
                 if not alvo_cura or not alvo_cura.get("alive"):
-                    await self.send_to(pid, {"type": "error", "msg": "Aliado inválido."}); return
+                    await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_invalido")}); return
                 if not self._no_raio(p, alvo_cura, 1):
                     await self.send_to(pid, {"type": "error",
-                        "msg": "O aliado precisa estar adjacente."}); return
+                        "msg": T("erro.o_aliado_precisa_estar_adjacente")}); return
 
         max_uses = int(item.get("max_uses", 1) or 1)
         uses_left = int(item.get("uses_left", max_uses) or 0)
         if effect == "heal" and max_uses > 1 and uses_left <= 0:
             await self.send_to(pid, {"type": "error",
-                "msg": "Esta poção já não possui doses."})
+                "msg": T("erro.esta_pocao_ja_nao_possui_doses")})
             return
 
         # Itens consumÃ­veis de bolsa sÃ£o aÃ§Ãµes bÃ´nus â€” verificar antes de aplicar
@@ -19336,7 +19368,7 @@ class GameRoom:
         elif effect == "coat_poison":
             vid = item.get("veneno_id")
             if vid not in VENENOS:
-                await self.send_to(pid, {"type": "error", "msg": "Veneno desconhecido."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_desconhecido")}); return
             _is_ranged, cargas = self._aplicar_veneno_na_arma(p, vid)
             desc = (f"{VENENO_CARGAS} disparos (acerto ou erro) envenenam o alvo"
                     if _is_ranged else "1 golpe certeiro envenena o alvo")
@@ -19488,20 +19520,20 @@ class GameRoom:
             return
         if p.get("class_id") not in ("mage", "cleric"):
             await self.send_to(pid, {"type": "error",
-                "msg": "Apenas mago ou clérigo conseguem usar pergaminhos mágicos."}); return
+                "msg": T("erro.apenas_mago_ou_clerigo_conseguem_usar_pe")}); return
         scroll = next((i for i in p["bag"]
                        if i.get("id") == item_id and i.get("effect") == "scroll"), None)
         if not scroll:
-            await self.send_to(pid, {"type": "error", "msg": "Pergaminho não encontrado."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.pergaminho_nao_encontrado")}); return
         if self._acao_bloqueada(p):
-            await self.send_to(pid, {"type": "error", "msg": "Ação principal já usada neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")}); return
         if p.get("petrificado") or p.get("paralisado") or p.get("dormindo"):
-            await self.send_to(pid, {"type": "error", "msg": "Você não consegue conjurar agora."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_consegue_conjurar_agora")}); return
         if self._em_silencio(p):
-            await self.send_to(pid, {"type": "error", "msg": "🔇 Você está em área de Silêncio — não pode conjurar!"}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_em_area_de_silencio_nao_pode_c")}); return
         magia = GRIMORIO.get(scroll.get("magia_id"))
         if not magia:
-            await self.send_to(pid, {"type": "error", "msg": "Magia do pergaminho desconhecida."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.magia_do_pergaminho_desconhecida")}); return
 
         nivel = scroll.get("nivel_conjurador", 1)
         int_b = scroll.get("int_bonus", 0)
@@ -19553,7 +19585,7 @@ class GameRoom:
 
     async def handle_end_turn(self, pid):
         if self.active_scene:
-            await self.send_to(pid, {"type":"error", "msg":"A masmorra está pausada durante uma cena."}); return
+            await self.send_to(pid, {"type":"error", "msg": T("erro.a_masmorra_esta_pausada_durante_uma_cena")}); return
         if not self._is_turn(pid): return
         # Dor Constante: cobra ANTES de qualquer avanço de iniciativa. Furo
         # conhecido e aceito: o turno também termina por estouro de timer, e por
@@ -19576,7 +19608,7 @@ class GameRoom:
         p = self.players[pid]
         if p.get("pending_spell_pick"):
             await self.send_to(pid, {"type": "error",
-                "msg": "Escolha sua nova magia antes de encerrar o turno."}); return
+                "msg": T("erro.escolha_sua_nova_magia_antes_de_encerrar")}); return
         # Limpa imobilizaÃ§Ã£o (teia/rede) â€” o jogador encerrou o turno bloqueado
         p.pop("perde_turno", None)
         p.pop("oculto_vela", None)   # Vela da EscuridÃ£o: oculto dura sÃ³ atÃ© o fim do turno
@@ -20584,9 +20616,9 @@ class GameRoom:
             return
         d = self._decor_by_id(decor_id)
         if not d:
-            await self.send_to(pid, {"type": "error", "msg": "Objeto não encontrado."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.objeto_nao_encontrado")}); return
         if not self._adjacente_a_decor(p["pos"], d):
-            await self.send_to(pid, {"type": "error", "msg": "Muito longe do objeto!"}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.muito_longe_do_objeto")}); return
         if d.get("trap") and not d.get("trap_triggered") and not d.get("trap_disarmed"):
             # Investigar o objeto é o gatilho: a mesma implementação das
             # armadilhas do mapa preserva saves, dano, área e popups existentes.
@@ -20618,10 +20650,10 @@ class GameRoom:
         meta = DECOR_TYPES[d["type"]]
         if meta["special"] == "fountain":
             if d.get("charges", 0) <= 0:
-                await self.send_to(pid, {"type": "error", "msg": "💧 A fonte está seca."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.a_fonte_esta_seca")}); return
             item = deepcopy(_TAVERN_BY_ID["garrafa_agua"])
             if self._add_to_inventory(p, item) == "full":
-                await self.send_to(pid, {"type": "error", "msg": "Inventário cheio!"}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.inventario_cheio")}); return
             d["charges"] -= 1
             await self.gm_say(f"💧 **{p['name']}** encheu uma **Garrafa de Água** na fonte ({d['charges']} restantes).")
             await self.push_state()
@@ -20636,7 +20668,7 @@ class GameRoom:
         tipo_monstro = d.get("chest_trap_monster_type")
         mdef = next((m for m in MONSTER_DEFS if m["type"] == tipo_monstro), None)
         if not mdef:
-            await self.send_to(pid, {"type": "error", "msg": "Monstro do baú-armadilha inválido."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.monstro_do_bau_armadilha_invalido")})
             return
         px, py = p["pos"]
         sala = player_room(self.rooms, px, py) or (self.rooms[0] if self.rooms else {"id": None, "cx": px, "cy": py})
@@ -20647,7 +20679,7 @@ class GameRoom:
         # surgir se TODAS as casas que ocupa forem livres e acessÃ­veis.
         destino = next((q for q in candidatos if self._monster_can_occupy(monstro, q[0], q[1])), None)
         if destino is None:
-            await self.send_to(pid, {"type": "error", "msg": "Não há espaço livre ao lado para a armadilha disparar."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nao_ha_espaco_livre_ao_lado_para_a_armad")})
             return
         d["chest_trap_triggered"] = True
         monstro["pos"] = destino
@@ -20675,10 +20707,10 @@ class GameRoom:
         p = self.players.get(pid)
         d = self._decor_by_id(decor_id)
         if not p or not p.get("alive") or not d or not self._adjacente_a_decor(p["pos"], d):
-            await self.send_to(pid, {"type": "error", "msg": "Não é possível ativar este mecanismo."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nao_e_possivel_ativar_este_mecanismo")}); return
         linked = [sp for sp in self.secret_passages if not sp["opened"] and d["id"] in sp["key_decor_ids"]]
         if not d.get("key_objective") and not linked:
-            await self.send_to(pid, {"type": "error", "msg": "Este objeto não possui mecanismo."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.este_objeto_nao_possui_mecanismo")}); return
         opened = []
         for sp in linked:
             if d["id"] not in sp["activated_decor_ids"]:
@@ -20702,7 +20734,7 @@ class GameRoom:
     async def _abrir_decor_loot(self, pid, d):
         """Abre o painel de loot da decoração (reusa o painel de baú no cliente)."""
         if not d.get("loot") or not d.get("tem_loot"):
-            await self.send_to(pid, {"type": "error", "msg": "O objeto está vazio."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.o_objeto_esta_vazio")}); return
         await self.send_to(pid, {"type": "decor_loot", "decor_id": d["id"],
                                   "gold": d["loot"]["gold"], "items": d["loot"]["items"]})
 
@@ -20717,26 +20749,26 @@ class GameRoom:
             return
         d = self._decor_by_id(decor_id)
         if not d or not d.get("loot"):
-            await self.send_to(pid, {"type": "error", "msg": "Objeto sem loot."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.objeto_sem_loot")}); return
         if not self._adjacente_a_decor(p["pos"], d):
-            await self.send_to(pid, {"type": "error", "msg": "Muito longe do objeto!"}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.muito_longe_do_objeto")}); return
         loot = d["loot"]
         if kind == "gold":
             amount = loot["gold"]
             if amount <= 0:
-                await self.send_to(pid, {"type": "error", "msg": "Sem ouro aqui."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.sem_ouro_aqui")}); return
             recebido = await self._ganhar_ouro(p, amount, "do objeto")
             loot["gold"] = 0
             await self.gm_say(f"🪙 **{p['name']}** pegou **{recebido}** ouros do objeto!")
         elif kind == "item":
             idx = int(index)
             if idx < 0 or idx >= len(loot["items"]):
-                await self.send_to(pid, {"type": "error", "msg": "Item inválido."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.item_invalido")}); return
             item = loot["items"][idx]
             res = self._route_acquired_item(p, item)
             if res == "full":
                 await self.send_to(pid, {"type": "error",
-                    "msg": "Inventário cheio e slot ocupado — abra espaço primeiro."}); return
+                    "msg": T("erro.inventario_cheio_e_slot_ocupado_abra_esp_2")}); return
             loot["items"].pop(idx)
             extra = " (equipado — bolsa cheia)" if res == "equipped" else ""
             await self.gm_say(f"🎒 **{p['name']}** pegou **{item['name']}** do objeto{extra}!")
@@ -21489,26 +21521,26 @@ class GameRoom:
         bag = m.get("equipment_consumables", [])
         item = next((i for i in bag if i.get("id") == item_id), None)
         if not item:
-            await self.send_to(pid, {"type": "error", "msg": "Item não encontrado no inventário."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado_no_inventario")}); return
         effect = item.get("effect")
 
         if effect in {"food", "ration", "wine", "ale"}:
-            await self.send_to(pid, {"type": "error", "msg": "Este item não tem efeito em monstros."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.este_item_nao_tem_efeito_em_monstros")}); return
 
         if effect == "throwable":
             if m.get("_master_acted"):
-                await self.send_to(pid, {"type": "error", "msg": "Este monstro já usou a ação principal."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.este_monstro_ja_usou_a_acao_principal")}); return
             defn = ARREMESSAVEIS.get(item_id)
             if not defn:
-                await self.send_to(pid, {"type": "error", "msg": "Item não arremessável."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_arremessavel")}); return
             alvo = self.players.get(target_id)
             if not alvo or not alvo.get("alive"):
-                await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")}); return
             rng = defn.get("alcance", 0)
             if max(abs(m["pos"][0] - alvo["pos"][0]), abs(m["pos"][1] - alvo["pos"][1])) > rng:
-                await self.send_to(pid, {"type": "error", "msg": "Alvo fora de alcance."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_de_alcance")}); return
             if not self._tem_linha_de_visao(m["pos"], alvo["pos"]):
-                await self.send_to(pid, {"type": "error", "msg": "Uma parede bloqueia o arremesso."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.uma_parede_bloqueia_o_arremesso")}); return
             self._debitar_acao_mestre(m, "principal", "item")
             m["_ja_executou_acao"] = True
             await self._monster_throw_item(m, {"kind": "player", "obj": alvo}, item)
@@ -21518,13 +21550,13 @@ class GameRoom:
 
         if effect == "scroll":
             if m.get("_master_acted"):
-                await self.send_to(pid, {"type": "error", "msg": "Este monstro já usou a ação principal."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.este_monstro_ja_usou_a_acao_principal")}); return
             if not self._monster_e_conjurador(m):
-                await self.send_to(pid, {"type": "error", "msg": "Só monstros conjuradores podem usar pergaminhos."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.so_monstros_conjuradores_podem_usar_perg")}); return
             sid = item.get("magia_id")
             magia = GRIMORIO.get(sid)
             if not magia or sid not in GRIMORIO_IMPLEMENTADAS:
-                await self.send_to(pid, {"type": "error", "msg": "Magia do pergaminho não disponível."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.magia_do_pergaminho_nao_disponivel")}); return
             data = {"target_id": target_id, "tx": tx, "ty": ty}
             self._debitar_acao_mestre(m, "principal", "item")
             m["_ja_executou_acao"] = True
@@ -21534,10 +21566,10 @@ class GameRoom:
             await self.push_state(); return
 
         if effect not in self.BONUS_ACTION_EFFECTS:
-            await self.send_to(pid, {"type": "error", "msg": "Item não usável pelo mestre."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_usavel_pelo_mestre")}); return
         veneno_livre = effect == "coat_poison" and self._tem_habilidade(m, "envenenar_arma")
         if m.get("_master_bonus_acted") and not veneno_livre:
-            await self.send_to(pid, {"type": "error", "msg": "Este monstro já usou a ação bônus."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.este_monstro_ja_usou_a_acao_bonus")}); return
         val = int(item.get("value", 0) or 0)
         removed = True
         if effect == "heal":
@@ -21556,7 +21588,7 @@ class GameRoom:
             await self.gm_say(f"⚗️ **{m.get('name', 'O monstro')}** usa **{item['name']}**: +{val} de ataque.")
         elif effect == "coat_poison" and veneno_livre:
             if not await self._envenenar_arma_do_inventario(m):
-                await self.send_to(pid, {"type": "error", "msg": "Não foi possível envenenar a arma."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.nao_foi_possivel_envenenar_a_arma")}); return
             removed = False  # a habilidade já consumiu a dose da bolsa.
             self._debitar_acao_mestre(m, "livre", "item")  # não gasta ação, mas marca _master_touched
         elif effect == "coat_poison":
@@ -21843,20 +21875,20 @@ class GameRoom:
             return
         ability = next((a for a in m.get("special_abilities", []) if a.get("id") == ability_id), None)
         if not self._habilidade_ativavel_manual(ability):
-            await self.send_to(pid, {"type": "error", "msg": "Habilidade não ativável manualmente (IA apenas)."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_nao_ativavel_manualmente_ia_a")}); return
         custo = self._custo_acao_ability(ability)
         if custo == "principal" and m.get("_master_acted"):
-            await self.send_to(pid, {"type": "error", "msg": "Este monstro já agiu neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.este_monstro_ja_agiu_neste_turno")}); return
         if custo == "bonus" and m.get("_master_bonus_acted"):
-            await self.send_to(pid, {"type": "error", "msg": "Este monstro já usou a ação bônus."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.este_monstro_ja_usou_a_acao_bonus")}); return
         if ability.get("action_type") == "magia":
             sid = ability_id
             if not self._magia_monstro_disponivel(m, sid):
-                await self.send_to(pid, {"type": "error", "msg": "Magia sem usos ou em recarga."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.magia_sem_usos_ou_em_recarga")}); return
             magia = GRIMORIO.get(sid, {})
             tipo = magia.get("tipo")
             if tipo in {"utilidade", "reacao"}:
-                await self.send_to(pid, {"type": "error", "msg": "Esta magia não tem uso manual."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.esta_magia_nao_tem_uso_manual")}); return
             if tipo in {"alvo_aliado", "buff_aliado"}:
                 # Magia de aliado: o alvo é outro MONSTRO. Aceita o id enviado
                 # pelo mestre; sem um válido, cai no aliado vivo mais próximo,
@@ -21871,7 +21903,7 @@ class GameRoom:
             else:
                 alvo, _ = self._alvo_manual_mestre(target_id)
                 if not alvo or alvo is m:
-                    await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
+                    await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")}); return
             data = {"target_id": alvo["id"]}
             dx = alvo["pos"][0] - m["pos"][0]; dy = alvo["pos"][1] - m["pos"][1]
             data["tx"] = alvo["pos"][0]; data["ty"] = alvo["pos"][1]
@@ -21880,7 +21912,7 @@ class GameRoom:
             alc = self._alcance_magia_teto(magia, self._nivel_conjurador(m))
             if alc is not None:
                 if max(abs(m["pos"][0] - alvo["pos"][0]), abs(m["pos"][1] - alvo["pos"][1])) > alc:
-                    await self.send_to(pid, {"type": "error", "msg": "Alvo fora de alcance."}); return
+                    await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_de_alcance")}); return
             # _lancar_magia_monstro debita uso/recarga ANTES de executar a
             # magia (mesma ordem da IA em _monster_try_spell — invariante de
             # extração comportamento-preservada); por isso o alvo é validado
@@ -21893,41 +21925,41 @@ class GameRoom:
             await self.push_state(); return
         if ability_id == "golpe_brutal":
             if not await self._ativar_golpe_brutal(m):
-                await self.send_to(pid, {"type": "error", "msg": "Golpe Brutal em recarga."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.golpe_brutal_em_recarga")}); return
             await self.gm_say(f"💥 **{m['name']}** desfere um **Golpe Brutal** (+2 dano)!")
             self._debitar_acao_mestre(m, "livre", "habilidade")
             await self.push_state(); return
         if ability_id == "desaparecer_nas_sombras":
             if not await self._ativar_desaparecer_sombras(m):
-                await self.send_to(pid, {"type": "error", "msg": "Só nas sombras e fora de recarga."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.so_nas_sombras_e_fora_de_recarga")}); return
             self._debitar_acao_mestre(m, custo, "habilidade")
             await self.push_state(); return
         # Ramo (b): habilidade de editor (herói/guilda) — self-buff, sem alvo.
         if ability_id == "mestre_dos_mortos":
             invocados = await self._conjurar_mestre_dos_mortos(m, tipo_esqueleto)
             if not invocados:
-                await self.send_to(pid, {"type": "error", "msg": "Mestre dos Mortos só pode ser usado na primeira ação e requer espaço para invocar."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.mestre_dos_mortos_so_pode_ser_usado_na_p")}); return
             self._debitar_acao_mestre(m, custo, "habilidade")
             await self.push_state(); return
         if ability_id == "sopro_dragao":
             alvo, alvo_kind = self._alvo_manual_mestre(target_id)
             if not alvo or alvo is m:
-                await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")}); return
             targets = [{"kind": "player", "obj": p} for p in self.players.values() if p.get("alive")]
             targets += [{"kind": "animado", "obj": a} for a in self._all_animados() if a.get("vida_atual", 0) > 0 and not a.get("dominado_por_monstro")]
             if getattr(self, "test_mode", False):
                 targets += [{"kind": "monster", "obj": o} for o in self.monsters.values()
                             if o is not m and o.get("hp", 0) > 0]
             if not await self._usar_sopro_dragao(m, ability, {"kind": alvo_kind, "obj": alvo}, targets):
-                await self.send_to(pid, {"type": "error", "msg": "Alvo fora da área, ou sopro sem usos/em recarga."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_da_area_ou_sopro_sem_usos_em_r")}); return
             self._debitar_acao_mestre(m, custo, "habilidade"); m["_ja_executou_acao"] = True
             await self.push_state(); return
         if ability_id == "amaldicoar_monstro":
             alvo = self.players.get(target_id)
             if not alvo or not alvo.get("alive"):
-                await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")}); return
             if not await self._usar_amaldicoar(m, ability, {"kind": "player", "obj": alvo}):
-                await self.send_to(pid, {"type": "error", "msg": "Alvo fora do alcance, ou maldição sem usos/em recarga."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_do_alcance_ou_maldicao_sem_uso")}); return
             self._debitar_acao_mestre(m, custo, "habilidade"); m["_ja_executou_acao"] = True
             await self.push_state(); return
         # Dano automático em quem já está agarrado: dispensa alvo (é sempre o
@@ -21936,31 +21968,31 @@ class GameRoom:
             preso = self._preso_adjacente(m)
             if not preso:
                 await self.send_to(pid, {"type": "error",
-                    "msg": "Ninguém agarrado e adjacente para esta ação."}); return
+                    "msg": T("erro.ninguem_agarrado_e_adjacente_para_esta_a")}); return
             await self._esmagar_preso(m, ability_id, preso)
             self._debitar_acao_mestre(m, custo, "habilidade")
             m["_ja_executou_acao"] = True
             await self.push_state(); return
         if not (ability.get("save") is not None and ability.get("dc") is not None):
             if not self._ativar_editor_ability(m, ability):
-                await self.send_to(pid, {"type": "error", "msg": "Habilidade sem usos ou em recarga."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_sem_usos_ou_em_recarga")}); return
             self._debitar_acao_mestre(m, custo, "habilidade")
             m["_ja_executou_acao"] = True
             await self.gm_say(f"✦ **{m.get('name', 'O monstro')}** ativa **{ability.get('name', ability['id'])}**!")
             await self.push_state(); return
         alvo, alvo_kind = self._alvo_manual_mestre(target_id)
         if not alvo or alvo is m:
-            await self.send_to(pid, {"type": "error", "msg": "Alvo inválido."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")}); return
         rng = ability.get("range")
         dist = max(abs(m["pos"][0] - alvo["pos"][0]), abs(m["pos"][1] - alvo["pos"][1]))
         if rng:
             if dist > rng:
-                await self.send_to(pid, {"type": "error", "msg": "Alvo fora de alcance."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_de_alcance")}); return
         elif not self._is_adjacent_to_monster(alvo["pos"], m):
-            await self.send_to(pid, {"type": "error", "msg": "Alvo não está adjacente."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_nao_esta_adjacente")}); return
         used = await self._use_monster_ability(m, ability, {"kind": alvo_kind, "obj": alvo})
         if not used:
-            await self.send_to(pid, {"type": "error", "msg": "Habilidade sem usos ou em recarga."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_sem_usos_ou_em_recarga")}); return
         self._debitar_acao_mestre(m, custo, "habilidade")
         m["_ja_executou_acao"] = True
         await self.push_state()
@@ -21979,31 +22011,31 @@ class GameRoom:
         cfg = self._spell_cfg(m, spell_id) if m else None
         magia = GRIMORIO.get(spell_id)
         if not m or m.get("hp", 0) <= 0 or not cfg or not magia:
-            await self.send_to(pid, {"type": "error", "msg": "Magia indisponível para este monstro."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.magia_indisponivel_para_este_monstro")}); return
         if m.get("_master_acted"):
-            await self.send_to(pid, {"type": "error", "msg": "Este monstro já usou a ação principal."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.este_monstro_ja_usou_a_acao_principal")}); return
         if not self._magia_monstro_disponivel(m, spell_id):
-            await self.send_to(pid, {"type": "error", "msg": "Magia sem usos ou em recarga."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.magia_sem_usos_ou_em_recarga")}); return
 
         tipo = magia.get("tipo")
         # Para magias de area, tx/ty representa o centro e pode estar vazio.
         tipos_area = {"area", "area_persistente", "area_fixa"}
         centro_area = tipo in tipos_area and tx is not None and ty is not None
         if tipo in {"utilidade", "reacao"}:
-            await self.send_to(pid, {"type": "error", "msg": "Esta magia não possui uso manual neste teste."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.esta_magia_nao_possui_uso_manual_neste_t")}); return
         if tipo in {"buff_self", "area_centrada"}:
             alvo = m
         elif tipo in {"alvo_aliado", "buff_aliado"}:
             alvo = self.monsters.get(target_id) or m
             if alvo.get("hp", 0) <= 0:
-                await self.send_to(pid, {"type": "error", "msg": "Aliado inválido."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_invalido")}); return
         elif centro_area:
             try:
                 tx, ty = int(tx), int(ty)
             except (TypeError, ValueError):
-                await self.send_to(pid, {"type": "error", "msg": "Centro de área inválido."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.centro_de_area_invalido")}); return
             if not (0 <= tx < self.map_w and 0 <= ty < self.map_h) or self.tiles[ty][tx] == WALL:
-                await self.send_to(pid, {"type": "error", "msg": "O centro da área precisa estar em uma casa válida."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.o_centro_da_area_precisa_estar_em_uma_ca")}); return
             alvo = next((p for p in self.players.values()
                          if p.get("alive") and p.get("pos") == [tx, ty]), None)
             if alvo is None:
@@ -22013,7 +22045,7 @@ class GameRoom:
         else:
             alvo, _ = self._alvo_manual_mestre(target_id)
             if not alvo or alvo is m:
-                await self.send_to(pid, {"type": "error", "msg": "Alvo inválido para esta magia."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido_para_esta_magia")}); return
 
         # O cliente normalmente envia uma entidade-alvo. Mantemos também
         # coordenadas/direção explícitas para áreas e linhas, de modo que o
@@ -22038,7 +22070,7 @@ class GameRoom:
         }
         alcance = self._alcance_magia_teto(magia, self._nivel_conjurador(m))
         if alcance is not None and max(abs(dx), abs(dy)) > alcance:
-            await self.send_to(pid, {"type": "error", "msg": "Alvo fora do alcance da magia."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_do_alcance_da_magia")}); return
 
         await self._lancar_magia_monstro(m, spell_id, data, cfg)
         self._debitar_acao_mestre(m, "principal", "magia")
@@ -24966,10 +24998,10 @@ class GameRoom:
         if not p or not p.get("alive") or self._acao_bloqueada(p):
             return
         if not self.prisoner or not self.prisoner.get("alive") or self.prisoner.get("freed"):
-            await self.send_to(pid, {"type": "error", "msg": "Não há prisioneiro para libertar."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nao_ha_prisioneiro_para_libertar")}); return
         px, py = p["pos"]; bx, by = self.prisoner["pos"]
         if max(abs(px - bx), abs(py - by)) > 1:
-            await self.send_to(pid, {"type": "error", "msg": "Aproxime-se do prisioneiro."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.aproxime_se_do_prisioneiro")}); return
         self.prisoner["freed"] = True
         self.prisoner["rescuer_pid"] = pid
         p["action_done"] = True
@@ -24981,19 +25013,19 @@ class GameRoom:
         janela pós-turno (gasta 1 de movimento). Não ataca."""
         if not self._is_turn(pid): return
         if self.animados_phase_pid != pid:
-            await self.send_to(pid, {"type": "error", "msg": "Encerre seu turno primeiro para mover o prisioneiro."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.encerre_seu_turno_primeiro_para_mover_o")}); return
         pr = self.prisoner
         if not pr or not pr.get("freed") or not pr.get("alive"):
-            await self.send_to(pid, {"type": "error", "msg": "Não há prisioneiro para mover."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nao_ha_prisioneiro_para_mover")}); return
         if pr.get("rescuer_pid") != pid:
-            await self.send_to(pid, {"type": "error", "msg": "Você não controla este prisioneiro."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_controla_este_prisioneiro")}); return
         if pr.get("moves_left", 0) <= 0:
-            await self.send_to(pid, {"type": "error", "msg": "Prisioneiro sem movimento neste turno."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.prisioneiro_sem_movimento_neste_turno")}); return
         if abs(dx) > 1 or abs(dy) > 1 or (dx == 0 and dy == 0):
             return
         nx, ny = pr["pos"][0] + dx, pr["pos"][1] + dy
         if not self._tile_livre_para_animado(nx, ny, None):
-            await self.send_to(pid, {"type": "error", "msg": "Caminho bloqueado para o prisioneiro."}); return
+            await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado_para_o_prisioneiro")}); return
         pr["pos"] = [nx, ny]
         self._apply_water_entry_penalty(pr, nx, ny)
         pr["moves_left"] = max(0, pr["moves_left"] - 1)
@@ -25541,7 +25573,7 @@ async def handler(ws):
                     code = TEST_DUNGEON_TOKENS.get(token)
                     room = rooms.get(code) if code else None
                     if not room or not getattr(room, "test_mode", False):
-                        await err("Sessão de teste não encontrada ou expirada."); continue
+                        await err(T("erro.sessao_de_teste_nao_encontrada_ou_expira")); continue
                     TEST_DUNGEON_TOKENS.pop(token, None)
                     room.test_joined = True   # a partir daqui, sair encerra a sessão
                     room.connections[pid] = ws
@@ -25714,7 +25746,7 @@ async def handler(ws):
                 # O cliente oficial fecha o socket antes (leaveSession), então
                 # ninguém precisa disso; recusamos para não corromper o estado.
                 if t in ("create_room", "join_room") and room and pid in room.players:
-                    await err("Você já está em uma sala. Saia dela antes de entrar em outra.")
+                    await err(T("erro.voce_ja_esta_em_uma_sala_saia_dela_antes"))
                     continue
 
                 if t == "create_room":
@@ -25729,10 +25761,10 @@ async def handler(ws):
                     name = str(msg.get("name") or "Herói")[:20]
                     room = rooms.get(code)
                     if not room:
-                        await err("Sala não encontrada.")
+                        await err(T("erro.sala_nao_encontrada"))
                         continue
                     if room.phase != "lobby":
-                        await err("Jogo já iniciado.")
+                        await err(T("erro.jogo_ja_iniciado"))
                         continue
                     ok = await room.add_player(ws, pid, name, account["name"])
                     if not ok:
@@ -25746,12 +25778,12 @@ async def handler(ws):
                     name = str(msg.get("name") or "")[:20]
                     alvo_room = rooms.get(code)
                     if not alvo_room:
-                        await err("Sala não encontrada para reconexão.")
+                        await err(T("erro.sala_nao_encontrada_para_reconexao"))
                         continue
                     # ReconexÃ£o do MESTRE (nÃ£o estÃ¡ em players; casado por master_name).
                     if alvo_room.master_pid and name == (alvo_room.master_name or ""):
                         if alvo_room.master_pid in alvo_room.connections:
-                            await err("O mestre ainda está conectado.")
+                            await err(T("erro.o_mestre_ainda_esta_conectado"))
                             continue
                         pid = alvo_room.master_pid
                         room = alvo_room
@@ -25767,10 +25799,10 @@ async def handler(ws):
                     alvo = next((p for p in alvo_room.players.values()
                                  if p["name"] == name), None)
                     if not alvo:
-                        await err("Jogador não encontrado nesta sala.")
+                        await err(T("erro.jogador_nao_encontrado_nesta_sala"))
                         continue
                     if alvo["id"] in alvo_room.connections:
-                        await err("Esse jogador ainda está conectado.")
+                        await err(T("erro.esse_jogador_ainda_esta_conectado"))
                         continue
                     pid  = alvo["id"]          # religa identidade antiga
                     room = alvo_room

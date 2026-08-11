@@ -63,6 +63,31 @@ def _rodar_verificacoes():
     if crus:
         print("     linhas:", crus)
 
+    print("\n[4] Migração do texto fixo")
+    fixos_msg = [t for f, t in RE_MSG.findall(FONTE) if not f]
+    fixos_err = [t for f, t in RE_ERR.findall(FONTE) if not f]
+    check("nenhum literal de erro de texto fixo sobrou no server.py",
+          not fixos_msg and not fixos_err)
+    if fixos_msg or fixos_err:
+        for t in (fixos_msg + fixos_err)[:6]:
+            print("     sobrou:", t[:70])
+
+    print("\n[5] Toda chave erro.* usada existe no dicionário")
+    usadas = set(re.findall(r'T\(\s*"(erro\.[^"]+)"', FONTE))
+    faltando = sorted(k for k in usadas if k not in S.LANG_STRINGS)
+    check(f"nenhuma chave de erro órfã (usadas: {len(usadas)})", not faltando)
+    if faltando:
+        print("     órfãs:", ", ".join(faltando[:8]))
+
+    print("\n[6] Chave do erros.js sem uso é relatada")
+    # Não falha: um texto pode voltar a ser usado. O relatório evita o arquivo
+    # virar depósito de frases mortas.
+    no_dic = {k for k in S.LANG_STRINGS if k.startswith("erro.")}
+    sem_uso = sorted(no_dic - usadas)
+    check(f"relatório de chaves sem uso emitido ({len(sem_uso)})", True)
+    if sem_uso:
+        print("     sem uso:", ", ".join(sem_uso[:8]))
+
 
 if __name__ == "__main__":
     print("=" * 62); print("  TESTE — Mensagens de erro (etapa 4a)"); print("=" * 62)

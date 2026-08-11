@@ -95,6 +95,19 @@ def _rodar_verificacoes():
     check("T guarda os parâmetros", marcado.params == {"nome": "Lyra"})
     check("T rende no idioma pedido", S._t_render(marcado, "en") == "🚪 **Lyra** opens a door!")
 
+    S.LANG_STRINGS["_teste.comporta"] = {"pt": "Alvo inválido.", "en": "Invalid target."}
+    como_texto = S.T("_teste.comporta")
+    check("T compara igual ao texto em português", como_texto == "Alvo inválido.")
+    check("T aceita método de string", como_texto.lower() == "alvo inválido.")
+    check("T aceita substring", "alvo" in str(como_texto).lower())
+    # O que NÃO pode mudar: quem serializa ainda recebe a tradução, porque o
+    # json.dumps continua chamando o default (T não é subclasse de str).
+    import json as _json
+    check("serializar ainda traduz",
+          _json.loads(_json.dumps({"m": como_texto},
+                                  default=lambda o: S._t_render(o, "en")))["m"] == "Invalid target.")
+    S.LANG_STRINGS.pop("_teste.comporta", None)
+
     print("\n[5] broadcast traduz por conexão")
     sala, ws_pt, ws_en = _sala_dois_idiomas()
     asyncio.run(sala.gm_say(S.T("narracao.abre_porta", nome="Thorin")))
