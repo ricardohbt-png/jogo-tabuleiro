@@ -4,7 +4,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-08-10-idioma-etapa4b1-narracao-design.md`
 
-**Objetivo:** Migrar para `T(...)` e traduzir os 416 `gm_say` mecânicos — 17 literais e 399 f-strings de uma linha.
+**Objetivo:** Migrar para `T(...)` e traduzir os 390 `gm_say` mecânicos — os que cabem inteiros numa linha, no formato `gm_say("…")` ou `gm_say(f"…")`.
 
 **Arquitetura:** Um script determinístico faz a migração inteira, inclusive o batismo dos parâmetros: identificador simples vira ele mesmo, `X['name']` vira `X`, o resto vira slug da expressão, com uma tabela mínima de apelidos (`p`→`heroi`, `m`→`monstro`). A chave é o slug do texto **sem** as interpolações, então a dedup cai de graça. O dicionário vive em `src/lang/narracao.js`, mantido à mão depois da migração.
 
@@ -24,9 +24,9 @@
 
 | Forma | Sites | Neste escopo? |
 |---|---:|---|
-| `gm_say(f"…")` numa linha | 399 | **sim** |
-| `gm_say("…")` literal | 17 | **sim** |
-| `gm_say(` multilinha | 109 | não — 4b-ii |
+| `gm_say(f"…")` ou `gm_say("…")` fechando na MESMA linha | 390 | **sim** |
+| f-string que **começa** na linha do `gm_say(` e continua na seguinte | 28 | não — 4b-ii |
+| `gm_say(` com o texto começando na linha seguinte | 109 | não — 4b-ii |
 | `gm_say(prefix + f"…")` | 3 | não |
 | `gm_say(variavel)` | 7 | não |
 | `gm_say(gm("chave"))` — pool de 30 variantes | 6 | não |
@@ -39,7 +39,7 @@
 |---|---|
 | `src/lang/narracao.js` | **Criar.** Dicionário da narração, `window.LANG_NARRACAO`. |
 | `index.html` | Carrega `src/lang/narracao.js` depois de `erros.js`. |
-| `server.py` | 416 `gm_say` viram `T(...)`. |
+| `server.py` | 390 `gm_say` viram `T(...)`. |
 | `tools/migrar_narracao.py` | **Criar.** Script de uso único. |
 | `tools/test_narracao.py` | **Criar.** Os 5 testes do spec. |
 
@@ -132,7 +132,7 @@ if __name__ == "__main__":
 python tools/test_narracao.py
 ```
 
-Esperado: `4 passaram, 2 falharam` — falta o arquivo `narracao.js` e sobram os 416 literais. (A chave `narracao.abre_porta` já existe no `strings.js` desde a etapa 1, então a segunda checagem de `[1]` já passa.)
+Esperado: `4 passaram, 2 falharam` — falta o arquivo `narracao.js` e sobram os 390 literais. (A chave `narracao.abre_porta` já existe no `strings.js` desde a etapa 1, então a segunda checagem de `[1]` já passa.)
 
 - [ ] **Passo 3: Criar o dicionário**
 
@@ -355,7 +355,7 @@ Se algum desses não bater, **pare e reporte** — a regra de batismo é o cora�
 python tools/migrar_narracao.py
 ```
 
-Esperado: `416 sites migrados → N chaves distintas.` com N em torno de 380–410 (há repetição, mas menos que nos erros). Colisões de parâmetro ou de chave são **relatadas**; se aparecerem, leia-as antes de seguir e reporte se alguma parecer errada — o script já resolve com sufixo, o relatório é para revisão.
+Esperado: `390 sites migrados → N chaves distintas.` com N em torno de 350–385 (há repetição, mas menos que nos erros). Colisões de parâmetro ou de chave são **relatadas**; se aparecerem, leia-as antes de seguir e reporte se alguma parecer errada — o script já resolve com sufixo, o relatório é para revisão.
 
 - [ ] **Passo 4: Conferir o diff estruturalmente, não por amostragem**
 
@@ -618,8 +618,8 @@ Esperado: as mesmas narrações, uma lista em português e outra em inglês. Se 
 Em `CLAUDE.md`, acrescentar ao fim:
 
 ```markdown
-> **Idioma — narração do servidor, lote mecânico (etapa 4b-i de 5):** os **416 `gm_say`
-> mecânicos** (17 literais + 399 f-strings de uma linha) migrados para `T(...)` e
+> **Idioma — narração do servidor, lote mecânico (etapa 4b-i de 5):** os **390 `gm_say`
+> mecânicos** (os que fecham numa linha só) migrados para `T(...)` e
 > traduzidos, em `src/lang/narracao.js`. A chave é o slug do texto **sem** as
 > interpolações (`narracao.abre_uma_porta`), o que a mantém legível. **Batismo
 > determinístico dos parâmetros**, em três degraus: identificador simples vira ele mesmo,
