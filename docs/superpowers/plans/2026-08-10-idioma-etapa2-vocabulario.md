@@ -438,7 +438,54 @@ def _load_lang():
 python tools/test_vocabulario.py && python tools/test_idioma.py
 ```
 
-Esperado: `29 passaram, 0 falharam` no primeiro e `31 passaram, 0 falharam` no segundo. O teste da etapa 1 tem uma checagem que troca `S.LANG_FILE` por um caminho inexistente e espera `{}` — ela continua válida porque `_load_lang_arquivo` é quem lê um arquivo só; se ela quebrar, **pare e reporte**, não a altere.
+Esperado: `29 passaram, 0 falharam` no primeiro e `32 passaram, 0 falharam` no segundo.
+
+**Atenção — o teste da etapa 1 precisa ser atualizado nesta tarefa.** A seção `[1]` de
+`tools/test_idioma.py` troca `S.LANG_FILE` por um caminho inexistente e chama `S._load_lang()`
+esperando `{}`. Com a fusão da pasta, `LANG_FILE` deixou de influenciar `_load_lang()`, então
+essas checagens quebram. **A intenção delas continua válida e não pode ser descartada** — ela
+apenas mudou de lugar: o leitor cru (`_load_lang_arquivo`) pode levantar à vontade, e a
+resiliência passa a ser propriedade do `_load_lang()`, que não pode deixar um arquivo quebrado
+derrubar os bons. Substitua o trecho que vai de `original = S.LANG_FILE` até o fim do bloco
+`with tempfile.TemporaryDirectory() as tmp:` por:
+
+```python
+    # A leitura de UM arquivo vive em _load_lang_arquivo (leitor cru, pode
+    # levantar); _load_lang funde a pasta inteira e é quem precisa ser resiliente.
+    ausente = os.path.join(os.path.dirname(S.LANG_FILE), "_nao_existe_.js")
+    estourou = False
+    try:
+        S._load_lang_arquivo(ausente)
+    except Exception:
+        estourou = True
+    check("ler arquivo ausente levanta (é o leitor cru)", estourou)
+    check("recarregar da pasta real volta a funcionar",
+          "narracao.abre_porta" in S._load_lang())
+    # Comentário com chaves literais antes da atribuição não pode confundir o
+    # recorte — estes arquivos ganham comentários de seção com o tempo.
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        falso = os.path.join(tmp, "strings.js")
+        with open(falso, "w", encoding="utf-8") as f:
+            f.write('// cabeçalho com { e } literais\nwindow.LANG_STRINGS = {"a.b": {"pt": "ok"}};\n')
+        check("chave literal no comentário não confunde o recorte",
+              S._load_lang_arquivo(falso) == {"a.b": {"pt": "ok"}})
+        # Resiliência de verdade no desenho novo: um arquivo quebrado na pasta
+        # faz perder as chaves DAQUELE arquivo, nunca as dos outros.
+        quebrado = os.path.join(tmp, "quebrado.js")
+        with open(quebrado, "w", encoding="utf-8") as f:
+            f.write("isto nao e um arquivo de idioma\n")
+        original_dir = S.LANG_DIR
+        S.LANG_DIR = tmp
+        try:
+            check("arquivo quebrado na pasta não descarta os bons",
+                  S._load_lang() == {"a.b": {"pt": "ok"}})
+        finally:
+            S.LANG_DIR = original_dir
+```
+
+São 3 checagens trocadas por 4, então `tools/test_idioma.py` passa de 31 para **32** — e é esse
+o número esperado daqui em diante.
 
 - [ ] **Passo 5: Carregar o catálogo no `index.html`**
 
@@ -552,7 +599,7 @@ def nome_de(familia, ident):
 python tools/test_vocabulario.py && python tools/test_idioma.py && python tools/test_modo_mestre.py
 ```
 
-Esperado: `36 passaram, 0 falharam` (vocabulário), `31 passaram, 0 falharam` (idioma) e `336 passaram, 0 falharam` (modo mestre). A última é a linha de base de regressão — se ficar vermelha, **pare e reporte BLOCKED**.
+Esperado: `36 passaram, 0 falharam` (vocabulário), `32 passaram, 0 falharam` (idioma) e `336 passaram, 0 falharam` (modo mestre). A última é a linha de base de regressão — se ficar vermelha, **pare e reporte BLOCKED**.
 
 - [ ] **Passo 5: Commit**
 
@@ -955,7 +1002,7 @@ git commit -m "feat(i18n): traduz monstros, decoracoes, armadilhas, instrumentos
 python tools/test_idioma.py && python tools/test_vocabulario.py && node tools/test_idioma_cliente.js && node tools/test_vocabulario_cliente.js
 ```
 
-Esperado: `31` (idioma), `36` (vocabulário), `16` (idioma cliente) e `16` (vocabulário cliente) passando, zero falhando.
+Esperado: `32` (idioma), `36` (vocabulário), `16` (idioma cliente) e `16` (vocabulário cliente) passando, zero falhando.
 
 - [ ] **Passo 2: Rodar as suítes de regressão**
 
