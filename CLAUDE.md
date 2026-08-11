@@ -1790,3 +1790,32 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > interface do cliente (~1.000). Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-08-10-idioma-etapa2-vocabulario*`. Testes:
 > `tools/test_vocabulario.py` (36) e `tools/test_vocabulario_cliente.js` (16).
+
+> **Idioma — alcance e descrições (etapa 3 de 5):** fecha três lacunas de alcance da etapa 2
+> (53 nomes traduzidos que não chegavam à tela) e acrescenta as **189 descrições** de
+> catálogo (`cat.<família>.<id>.desc` ao lado de `.nome`; o gerador emite `.desc` só para
+> quem tem descrição). **(1) Id na chave do pai:** `lobby_state.classes` e
+> `game_start.instrumentos_base` são dicionários chaveados pelo id, com o valor sem campo
+> `id` dentro; o filtro passa a tentar a chave do dicionário pai como id, além dos campos
+> internos. **(2) Catálogos estáticos do cliente:** `GRIMORIO_CLIENT` e `ARMADILHAS_LUCCAS`
+> (`game.js`) e `CATALOGO_ITENS` (`src/gameState.js`) não vêm de payload — são reescritos
+> por `I18N.aplicarCatalogo(obj, true)` no boot e a cada troca de idioma, num ouvinte
+> SEPARADO do que avisa o servidor (manter aquela linha intacta preserva a checagem de
+> fiação da etapa 2). O `true` é **só o nome**: a descrição que esses catálogos guardam é
+> conteúdo próprio já divergente do servidor — a das magias é um card HTML com alcance e
+> efeito por rodada, contra uma frase curta no servidor —, e trocá-la apagaria informação;
+> esse texto é da etapa 5. `aplicarCatalogo` **não tem** a saída antecipada em português que
+> o `traduzirNomes` tem, porque a volta ao português é justamente o que restaura o texto
+> original; a troca é sempre por id, nunca por texto, o que a torna idempotente.
+> **(3) Precedência do inventário:** `_converterBagParaInventario` fazia `cat ? {...cat}` e
+> descartava o item do servidor inteiro quando o id existia nos dois catálogos (28 casos),
+> devolvendo o nome ao português; virou `{ ...cat, nome: it.name || cat.nome }` — só o nome
+> é sobreposto, os demais campos do catálogo do cliente seguem valendo.
+> **Lição de teste:** a suíte da etapa 2 cravava contagens (`guilda: 125`, `total 397`) sobre
+> um catálogo VIVO e ficou vermelha sozinha quando o autor criou duas armadilhas. As
+> asserções passaram a ser de **relação** (toda entrada vira exatamente uma chave) — não
+> crave tamanho de catálogo em teste. **Fora de escopo:** os 44 itens que só existem em
+> `CATALOGO_ITENS`, o `resumo`/`descricao` HTML das magias e o `desc` próprio das armadilhas
+> no cliente — todos etapa 5. Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-08-10-idioma-etapa3-descricoes*`. Testes:
+> `tools/test_vocabulario.py` (37) e `tools/test_vocabulario_cliente.js` (29).
