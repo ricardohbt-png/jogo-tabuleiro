@@ -4024,7 +4024,12 @@ function _converterBagParaInventario(bag, bagSize){
   (bag || []).forEach((it, i) => {
     if(i >= size || !it) return;
     const cat = GS.CATALOGO_ITENS[it.id];
-    inv[i] = cat ? { ...cat }
+    // O dado do servidor é a autoridade sobre o NOME (mesma regra que
+    // normalizarItemTooltip já usa). Sem isto, um id que exista também no
+    // catálogo do cliente descartava o item do servidor inteiro e o nome
+    // voltava ao português. Só o nome é sobreposto de propósito: `tipo`,
+    // `preco` e os demais campos do catálogo do cliente seguem valendo.
+    inv[i] = cat ? { ...cat, nome: it.name || cat.nome }
                  : { id: it.id, nome: it.name || it.id, tipo: it.tipo || it.type || 'item', ...it };
   });
   return inv;
@@ -14989,6 +14994,24 @@ I18N.on(code => GS.setLang(code));
 // continuam lendo .name sem saber que existe tradução.
 GS.setMessageFilter(I18N.traduzirNomes);
 
+// Três catálogos vivem dentro do cliente e não vêm de payload nenhum, então o
+// filtro de mensagens não os alcança: o painel de magias lê GRIMORIO_CLIENT, o
+// de armadilhas lê ARMADILHAS_LUCCAS, e a loja/tooltip leem CATALOGO_ITENS.
+// São reescritos aqui, no boot e a cada troca de idioma.
+//
+// SÓ O NOME (segundo argumento true): a descrição que esses catálogos guardam é
+// conteúdo próprio do cliente, já divergente do servidor — a das magias é um
+// card HTML com alcance e efeito por rodada, contra uma frase curta no servidor.
+// Trocá-la pela tradução da frase do servidor apagaria informação.
+function _aplicarCatalogosEstaticos(){
+  if (typeof GRIMORIO_CLIENT   !== 'undefined') I18N.aplicarCatalogo(GRIMORIO_CLIENT, true);
+  if (typeof ARMADILHAS_LUCCAS !== 'undefined') I18N.aplicarCatalogo(ARMADILHAS_LUCCAS, true);
+  if (GS.CATALOGO_ITENS)                        I18N.aplicarCatalogo(GS.CATALOGO_ITENS, true);
+}
+// Ouvinte SEPARADO do que avisa o servidor: manter aquele intacto preserva a
+// checagem de fiação da etapa 2, que casa com a forma exata daquela linha.
+I18N.on(() => _aplicarCatalogosEstaticos());
+
 function _langLoadPref(){
   try {
     const salvo = localStorage.getItem(_LANG_KEY);
@@ -15146,6 +15169,7 @@ function _mmHookFirstGesture(){
 
 (function _audioInit(){
   _langLoadPref();       // antes do painel: ele já nasce no idioma salvo
+  _aplicarCatalogosEstaticos();   // idioma salvo já vale para os catálogos do cliente
   _audioLoadPrefs();
   _audioPanelEnsure();
   _i18nApply(document.body);

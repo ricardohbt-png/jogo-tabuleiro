@@ -119,6 +119,12 @@ check("o filtro é aplicado antes do _handle",
       /_messageFilter[\s\S]{0,400}?_handle\(/.test(gs));
 check("game.js registra I18N.traduzirNomes como filtro",
       /GS\.setMessageFilter\(\s*I18N\.traduzirNomes\s*\)/.test(gamejs));
+check("game.js aplica o catálogo nos 3 estáticos",
+      /aplicarCatalogo\(\s*GRIMORIO_CLIENT/.test(gamejs)
+      && /aplicarCatalogo\(\s*ARMADILHAS_LUCCAS/.test(gamejs)
+      && /aplicarCatalogo\(\s*GS\.CATALOGO_ITENS/.test(gamejs));
+check("a conversão do inventário prefere o nome do servidor",
+      /\{\s*\.\.\.cat,\s*nome:\s*it\.name\s*\|\|\s*cat\.nome\s*\}/.test(gamejs));
 
 console.log("\n" + "=".repeat(62));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);
