@@ -2991,6 +2991,100 @@ MONSTER_DEFS = [
         "image": "escorpiaodepedra",
         "undead": False, "boss": False,
     },
+    # ── Lacralion ─────────────────────────────────────────────────────────────
+    # As três idades são entradas independentes do bestiário. Compartilham o
+    # mesmo GLB, mas possuem ND, ataques e limites de habilidades próprios.
+    {
+        "type": "lacralion_filhote", "name": "Lacralion Filhote", "emoji": "🦂",
+        "tier": 2, "cr": 2, "hp": 28, "ac": 16, "natural_armor": 4,
+        "size": [1, 1], "movement": 6,
+        "str_": 14, "dex": 14, "con_": 14, "int_": 2,
+        "fort": 4, "ref_": 4, "will": -4,
+        "attacks": [
+            {"name": "Pinça", "atk_bonus": 5, "damage": "1d6+2",
+             "damage_types": ["physical"], "num_attacks": 1},
+            {"name": "Mordida", "atk_bonus": 5, "damage": "1d4+2",
+             "damage_types": ["physical"], "num_attacks": 1},
+            {"name": "Ferrão", "atk_bonus": 4, "damage": "1d6",
+             "damage_types": ["physical"], "num_attacks": 1},
+        ],
+        "special_abilities": [
+            {"id": "veneno_lacralion", "name": "Veneno do Lacralion",
+             "action_type": "passiva", "attack_index": 2, "poison_dc": 14,
+             "extra_damage": "1d4", "slow_duration": 1,
+             "descricao": "Ao acertar o Ferrão, Fortitude CD 14; falha: 1d4 de dano adicional e Lento até o próximo turno."},
+        ],
+        "immunities": [], "loot_table": {"1-100": None},
+        "spawn_min": 1, "spawn_max": 1, "ai_type": "agressivo",
+        "porte": "grande", "image": "lacralion", "subtipo": "animal",
+        "undead": False, "boss": False,
+    },
+    {
+        "type": "lacralion_adulto", "name": "Lacralion Adulto", "emoji": "🦂",
+        "tier": 4, "cr": 4, "hp": 58, "ac": 19, "natural_armor": 7,
+        "size": [1, 1], "movement": 5, "movement_exception": True,
+        "str_": 18, "dex": 14, "con_": 16, "int_": 2,
+        "fort": 7, "ref_": 4, "will": -4,
+        "attacks": [
+            {"name": "Pinça", "atk_bonus": 8, "damage": "1d8+5",
+             "damage_types": ["physical"], "num_attacks": 1},
+            {"name": "Mordida", "atk_bonus": 8, "damage": "1d6+3",
+             "damage_types": ["physical"], "num_attacks": 1},
+            {"name": "Ferrão", "atk_bonus": 8, "damage": "1d8+3",
+             "damage_types": ["physical"], "num_attacks": 1},
+        ],
+        "special_abilities": [
+            {"id": "agarrar_lacralion", "name": "Agarrão", "action_type": "passiva",
+             "attack_index": 0, "dc": 16, "save": "fortitude",
+             "escape_saves": ["fortitude"], "max_targets": 1,
+             "descricao": "Quando a Pinça acerta, o alvo fica Imobilizado. Escape: Fortitude CD 16."},
+            {"id": "veneno_lacralion", "name": "Veneno do Lacralion",
+             "action_type": "passiva", "attack_index": 2, "poison_dc": 16,
+             "extra_damage": "1d6", "slow_duration": 1,
+             "descricao": "Ao acertar o Ferrão, Fortitude CD 16; falha: 1d6 de dano adicional e Lento até o próximo turno."},
+            {"id": "carapaca_espinhosa", "name": "Carapaça Espinhosa",
+             "action_type": "passiva", "damage": "1d4",
+             "descricao": "Quem acertar o Lacralion com um ataque corpo a corpo sofre 1d4 de dano."},
+        ],
+        "immunities": [], "loot_table": {"1-100": None},
+        "spawn_min": 1, "spawn_max": 1, "ai_type": "agressivo",
+        "porte": "grande", "image": "lacralion", "subtipo": "animal",
+        "undead": False, "boss": False,
+    },
+    {
+        "type": "lacralion_anciao", "name": "Lacralion Ancião", "emoji": "🦂",
+        "tier": 7, "cr": 7, "hp": 102, "ac": 23, "natural_armor": 10,
+        "size": [1, 1], "movement": 6,
+        "str_": 22, "dex": 16, "con_": 20, "int_": 2,
+        "fort": 10, "ref_": 6, "will": -4,
+        "attacks": [
+            {"name": "Pinça", "atk_bonus": 11, "damage": "2d6+7",
+             "damage_types": ["physical"], "num_attacks": 1},
+            {"name": "Mordida", "atk_bonus": 11, "damage": "2d6+4",
+             "damage_types": ["physical"], "num_attacks": 1},
+            {"name": "Ferrão", "atk_bonus": 11, "damage": "2d6+5",
+             "damage_types": ["physical"], "num_attacks": 1},
+        ],
+        "special_abilities": [
+            {"id": "agarrar_lacralion", "name": "Agarrão", "action_type": "passiva",
+             "attack_index": 0, "dc": 16, "save": "fortitude",
+             "escape_saves": ["fortitude"], "max_targets": 2,
+             "descricao": "Quando a Pinça acerta, o alvo fica Imobilizado. Escape: Fortitude CD 16."},
+            {"id": "veneno_lacralion", "name": "Veneno do Lacralion",
+             "action_type": "passiva", "attack_index": 2, "poison_dc": 16,
+             "extra_damage": "1d6", "slow_duration": 1,
+             "descricao": "Ao acertar o Ferrão, Fortitude CD 16; falha: 1d6 de dano adicional e Lento até o próximo turno."},
+            {"id": "carapaca_espinhosa", "name": "Carapaça Espinhosa",
+             "action_type": "passiva", "damage": "1d6",
+             "descricao": "Quem acertar o Lacralion com um ataque corpo a corpo sofre 1d6 de dano."},
+            {"id": "predador_implacavel", "name": "Predador Implacável", "action_type": "passiva",
+             "descricao": "Pode manter dois inimigos Imobilizados ao mesmo tempo."},
+        ],
+        "immunities": [], "loot_table": {"1-100": None},
+        "spawn_min": 1, "spawn_max": 1, "ai_type": "agressivo",
+        "porte": "grande", "image": "lacralion", "subtipo": "animal",
+        "undead": False, "boss": False,
+    },
     # â”€â”€ Esqueleto Humano â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     {
         "type": "esqueleto_humano", "name": "Esqueleto Humano", "emoji": "💀",
@@ -4038,6 +4132,316 @@ MONSTER_DEFS = [
 # doenÃ§a, sono etc.) sÃ£o consultadas pelos respectivos efeitos.
 # Regra global de deslocamento e visÃ£o dos monstros. O bÃ´nus de visÃ£o comeÃ§a
 # neutro e pode ser ajustado individualmente pelo editor.
+MONSTER_DEFS.extend([
+    {
+        "type": "ferrao_charcos_jovem", "name": "Ferrão dos Charcos Jovem", "emoji": "🦂",
+        "tier": 3, "cr": 3, "hp": 46, "ac": 18, "natural_armor": 5, "size": [1, 1], "movement": 6,
+        "str_": 16, "dex": 16, "con_": 16, "int_": 2, "fort": 6, "ref_": 5, "will": -4,
+        "attacks": [
+            {"name": "Garras", "atk_bonus": 6, "damage": "1d6+4", "damage_types": ["physical"], "num_attacks": 2},
+            {"name": "Tentáculos", "atk_bonus": 6, "damage": "1d4+2", "damage_types": ["physical"], "num_attacks": 2},
+            {"name": "Mordida", "atk_bonus": 6, "damage": "1d8+4", "damage_types": ["physical"], "num_attacks": 1},
+            {"name": "Ferrão", "atk_bonus": 5, "damage": "1d6", "damage_types": ["physical"], "num_attacks": 1},
+        ],
+        "special_abilities": [
+            {"id": "movimento_aquatico", "name": "Movimento Aquático", "action_type": "passiva", "descricao": "Move 6 quadrados normalmente em terra, água e água profunda."},
+            {"id": "veneno_charcos", "name": "Veneno", "action_type": "passiva", "attack_index": 3, "poison_dc": 15, "effect": "perde_movimento", "descricao": "Ao acertar o Ferrão, Fortitude CD 15; falha: perde a ação de movimento no próximo turno."},
+        ],
+        "immunities": [], "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1, "ai_type": "agressivo",
+        "porte": "grande", "image": "ferrao_do_lamacal", "subtipo": "aberracao", "undead": False, "boss": False,
+    },
+    {
+        "type": "ferrao_charcos_adulto", "name": "Ferrão dos Charcos Adulto", "emoji": "🦂",
+        "tier": 5, "cr": 5, "hp": 74, "ac": 20, "natural_armor": 7, "size": [1, 1], "movement": 6,
+        "str_": 18, "dex": 16, "con_": 18, "int_": 2, "fort": 8, "ref_": 5, "will": -4,
+        "attacks": [
+            {"name": "Garras", "atk_bonus": 9, "damage": "1d8+5", "damage_types": ["physical"], "num_attacks": 2},
+            {"name": "Tentáculos", "atk_bonus": 9, "damage": "1d6+2", "damage_types": ["physical"], "num_attacks": 4},
+            {"name": "Mordida", "atk_bonus": 9, "damage": "2d6+5", "damage_types": ["physical"], "num_attacks": 1},
+            {"name": "Ferrão", "atk_bonus": 9, "damage": "1d6+2", "damage_types": ["physical"], "num_attacks": 1},
+        ],
+        "special_abilities": [
+            {"id": "movimento_aquatico", "name": "Movimento Aquático", "action_type": "passiva", "descricao": "Move 6 quadrados normalmente em terra, água e água profunda."},
+            {"id": "tentaculos_imobilizar", "name": "Tentáculos", "action_type": "passiva", "attack_index": 1, "hits_needed": 2, "dc": 17, "save": "fortitude", "escape_saves": ["fortitude"], "max_targets": 1, "descricao": "Se dois Tentáculos acertarem o mesmo alvo, ele fica Imobilizado. Escape: Fortitude CD 17."},
+            {"id": "constricao_charcos", "name": "Constrição", "action_type": "passiva", "damage": "1d6+5", "damage_types": ["physical"], "descricao": "No início do turno, criaturas Imobilizadas sofrem 1d6+5. Enquanto presas, não podem se afastar."},
+            {"id": "ferrao_paralitico", "name": "Ferrão Paralítico", "action_type": "passiva", "attack_index": 3, "dc": 17, "save": "fortitude", "effect": "perde_movimento", "descricao": "Ao acertar o Ferrão, Fortitude CD 17; falha: perde a ação de movimento no próximo turno."},
+            {"id": "nuvem_acida", "name": "Nuvem Ácida", "action_type": "acao", "cooldown_turns": 4, "range": 4, "radius": 1, "duration": 2, "initial_damage": "2d6", "tick_damage": "1d6", "damage_types": ["acid"], "descricao": "Recarga 4 rodadas. Centro no alvo; raio 1. Causa 2d6 ao surgir e 1d6 no turno de cada criatura dentro da área."},
+        ],
+        "immunities": [], "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1, "ai_type": "agressivo",
+        "porte": "grande", "image": "ferrao_do_lamacal", "subtipo": "aberracao", "undead": False, "boss": False,
+    },
+    {
+        "type": "ferrao_charcos_anciao", "name": "Ferrão dos Charcos Ancião", "emoji": "🦂",
+        "tier": 8, "cr": 8, "hp": 130, "ac": 24, "natural_armor": 10, "size": [1, 1], "movement": 6,
+        "str_": 22, "dex": 18, "con_": 22, "int_": 2, "fort": 11, "ref_": 7, "will": -4,
+        "attacks": [
+            {"name": "Garras", "atk_bonus": 12, "damage": "2d6+6", "damage_types": ["physical"], "num_attacks": 2},
+            {"name": "Tentáculos", "atk_bonus": 12, "damage": "1d8+3", "damage_types": ["physical"], "num_attacks": 6},
+            {"name": "Mordida", "atk_bonus": 12, "damage": "3d6+6", "damage_types": ["physical"], "num_attacks": 1},
+            {"name": "Ferrões", "atk_bonus": 12, "damage": "2d6+4", "damage_types": ["physical"], "num_attacks": 2},
+        ],
+        "special_abilities": [
+            {"id": "movimento_aquatico", "name": "Movimento Aquático", "action_type": "passiva", "descricao": "Move 6 quadrados normalmente em terra, água e água profunda."},
+            {"id": "tentaculos_imobilizar", "name": "Tentáculos", "action_type": "passiva", "attack_index": 1, "hits_needed": 2, "dc": 17, "save": "fortitude", "escape_saves": ["fortitude"], "max_targets": 2, "descricao": "Se dois Tentáculos acertarem o mesmo alvo, ele fica Imobilizado. Pode manter dois alvos. Escape: Fortitude CD 17."},
+            {"id": "constricao_charcos", "name": "Constrição", "action_type": "passiva", "damage": "2d6+8", "damage_types": ["physical"], "descricao": "No início do turno, criaturas Imobilizadas sofrem 2d6+8. Enquanto presas, não podem se afastar."},
+            {"id": "ferrao_paralitico", "name": "Ferrão Paralítico", "action_type": "passiva", "attack_index": 3, "dc": 17, "save": "fortitude", "effect": "perde_movimento", "descricao": "Ao acertar o Ferrão, Fortitude CD 17; falha: perde a ação de movimento no próximo turno."},
+            {"id": "nuvem_acida", "name": "Nuvem Ácida", "action_type": "acao", "cooldown_turns": 4, "range": 4, "radius": 1, "duration": 2, "initial_damage": "4d6", "tick_damage": "1d6", "damage_types": ["acid"], "descricao": "Recarga 4 rodadas. Centro no alvo; raio 1. Causa 4d6 ao surgir e 1d6 no turno de cada criatura dentro da área."},
+            {"id": "predador_charcos", "name": "Predador dos Charcos", "action_type": "passiva", "max_targets": 2, "descricao": "Pode manter dois inimigos Imobilizados simultaneamente."},
+        ],
+        "immunities": [], "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1, "ai_type": "agressivo",
+        "porte": "grande", "image": "ferrao_do_lamacal", "subtipo": "aberracao", "undead": False, "boss": False,
+    },
+])
+
+# Tiranos da Mata: duas fichas independentes. A RD marcada como
+# ``common_weapon_only`` vale somente para armas mundanas; magia, habilidades,
+# monstros e armas mágicas atravessam a redução.
+MONSTER_DEFS.extend([
+    {
+        "type": "tirano_da_mata", "name": "Tirano da Mata", "emoji": "🦖",
+        "tier": 7, "cr": 7, "hp": 120, "ac": 22, "natural_armor": 9,
+        "size": [1, 1], "movement": 6,
+        "str_": 24, "dex": 16, "con_": 22, "int_": 3,
+        "fort": 11, "ref_": 5, "will": -2,
+        "attacks": [
+            {"name": "Mordida", "atk_bonus": 14, "damage": "2d10+10", "damage_types": ["physical"], "num_attacks": 1},
+            {"name": "Garras", "atk_bonus": 14, "damage": "2d6+6", "damage_types": ["physical"], "num_attacks": 2},
+            {"name": "Cauda", "atk_bonus": 14, "damage": "2d6+6", "damage_types": ["physical"], "num_attacks": 1},
+        ],
+        "special_abilities": [
+            {"id": "mandibulas_colossais", "name": "Mandíbulas Colossais", "action_type": "passiva",
+             "attack_index": 0, "dc": 18, "save": "fortitude", "escape_saves": ["forca", "fortitude"],
+             "automatic_damage": "2d10+10", "max_targets": 1,
+             "descricao": "Ao acertar a Mordida, Fortitude CD 18 ou fica Preso. O alvo acompanha o Tirano e sofre a Mordida no início do turno dele."},
+            {"id": "arrastar", "name": "Arrastar", "action_type": "passiva",
+             "descricao": "Uma criatura Presa acompanha todos os movimentos do Tirano, permanecendo adjacente."},
+            {"id": "sacudida_brutal", "name": "Sacudida Brutal", "action_type": "acao", "cooldown_turns": 5,
+             "damage": "4d6", "damage_types": ["physical"], "throw_distance": 2,
+             "descricao": "Recarga fixa de 5 rodadas. Uma criatura Presa sofre 4d6 e é arremessada 2 quadrados; depois deixa de estar Presa."},
+            {"id": "investida_brutal", "name": "Investida Brutal", "action_type": "passiva", "attack_index": 0,
+             "move_required": 3, "damage": "2d6", "damage_types": ["physical"], "push": 1,
+             "descricao": "Se mover pelo menos 3 quadrados antes da Mordida, causa +2d6 e empurra 1 quadrado."},
+            {"id": "couro_espesso", "name": "Couro Espesso", "action_type": "passiva",
+             "descricao": "RD 4 contra armas comuns."},
+            {"id": "metabolismo_vulneravel", "name": "Metabolismo Vulnerável", "action_type": "passiva",
+             "poison_save_penalty": -2, "poison_multiplier": 2,
+             "descricao": "-2 em Fortitude contra venenos; dano de veneno dobrado; veneno ignora a RD."},
+        ],
+        "resistances": [{"type": "physical", "reduction": 4, "common_weapon_only": True}],
+        "immunities": [],
+        "weaknesses": [{"type": "poison", "multiplier": 2, "descricao": "Metabolismo Vulnerável: dano de veneno dobrado."}],
+        "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1,
+        "ai_type": "tirano_da_mata", "porte": "grande", "image": "tirano_da_mata",
+        "subtipo": "besta_magica", "undead": False, "boss": False,
+    },
+    {
+        "type": "tirano_ancestral", "name": "Tirano Ancestral", "emoji": "🦖",
+        "tier": 10, "cr": 10, "hp": 200, "ac": 26, "natural_armor": 12,
+        "size": [1, 1], "movement": 7, "movement_exception": True,
+        "str_": 28, "dex": 18, "con_": 26, "int_": 3,
+        "fort": 15, "ref_": 7, "will": -2,
+        "attacks": [
+            {"name": "Mordida", "atk_bonus": 17, "damage": "3d10+12", "damage_types": ["physical"], "num_attacks": 1},
+            {"name": "Garras", "atk_bonus": 17, "damage": "2d8+8", "damage_types": ["physical"], "num_attacks": 2},
+            {"name": "Cauda", "atk_bonus": 17, "damage": "3d6+8", "damage_types": ["physical"], "num_attacks": 1},
+        ],
+        "special_abilities": [
+            {"id": "mandibulas_colossais", "name": "Mandíbulas Colossais", "action_type": "passiva",
+             "attack_index": 0, "dc": 22, "save": "fortitude", "escape_saves": ["forca", "fortitude"],
+             "automatic_damage": "3d10+12", "max_targets": 1,
+             "descricao": "Ao acertar a Mordida, Fortitude CD 22 ou fica Preso e sofre 3d10+12 no início do turno do Tirano."},
+            {"id": "arrastar", "name": "Arrastar", "action_type": "passiva",
+             "descricao": "Uma criatura Presa acompanha todos os movimentos do Tirano, permanecendo adjacente."},
+            {"id": "sacudida_brutal", "name": "Sacudida Brutal", "action_type": "acao", "cooldown_turns": 4,
+             "damage": "6d6", "damage_types": ["physical"], "throw_distance": 3,
+             "descricao": "Recarga fixa de 4 rodadas. Uma criatura Presa sofre 6d6 e é arremessada 3 quadrados; depois deixa de estar Presa."},
+            {"id": "investida_brutal", "name": "Investida Brutal", "action_type": "passiva", "attack_index": 0,
+             "move_required": 3, "damage": "2d6", "damage_types": ["physical"], "push": 1,
+             "descricao": "Se mover pelo menos 3 quadrados antes da Mordida, causa +2d6 e empurra 1 quadrado."},
+            {"id": "engolir", "name": "Engolir", "action_type": "acao", "dc": 22, "save": "fortitude",
+             "acid_damage": "3d6", "stomach_hp": 20, "escape_dc": 22,
+             "descricao": "No início do turno, tenta engolir uma criatura Presa. Fortitude CD 22; falha: Engolida. O alvo sofre 3d6 ácido por turno e fica invisível para o exterior."},
+            {"id": "abrir_caminho", "name": "Abrir Caminho", "action_type": "passiva",
+             "damage_threshold": 20, "internal_damage": "2d6", "uses_per_combat": 1,
+             "descricao": "A criatura Engolida pode atacar o estômago. Ao causar 20 dano interno, é cuspida; o Tirano sofre 2d6 e perde o próximo ataque."},
+            {"id": "passo_devastador", "name": "Passo Devastador", "action_type": "passiva",
+             "move_required": 4, "damage": "3d6", "damage_types": ["physical"], "push": 1,
+             "descricao": "Após mover 4 ou mais quadrados, todas as criaturas adjacentes ao destino sofrem 3d6 e são empurradas 1 quadrado, inclusive aliados."},
+            {"id": "couro_titanico", "name": "Couro Titânico", "action_type": "passiva",
+             "descricao": "RD 7 contra armas comuns."},
+            {"id": "metabolismo_instavel", "name": "Metabolismo Instável", "action_type": "passiva",
+             "poison_save_penalty": -2, "poison_multiplier": 2,
+             "descricao": "-2 em Fortitude contra venenos; dano de veneno dobrado; falha contra veneno também causa Lento por 1 rodada."},
+        ],
+        "resistances": [{"type": "physical", "reduction": 7, "common_weapon_only": True}],
+        "immunities": [],
+        "weaknesses": [{"type": "poison", "multiplier": 2, "descricao": "Metabolismo Instável: dano de veneno dobrado."}],
+        "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1,
+        "ai_type": "tirano_ancestral", "porte": "grande", "image": "tirano_da_mata",
+        "subtipo": "besta_magica", "undead": False, "boss": False,
+    },
+])
+
+# Garaloux: as três categorias usam movimento 7 e compartilham o ataque
+# especial de Salto. O salto é resolvido no pipeline de ataques para funcionar
+# tanto na IA quanto no controle manual do mestre.
+MONSTER_DEFS.extend([
+    {
+        "type": "garaloux_jovem", "name": "Garaloux Jovem", "emoji": "🦁",
+        "tier": 3, "cr": 3, "hp": 50, "ac": 18, "natural_armor": 5,
+        "size": [1, 1], "movement": 7, "movement_exception": True,
+        "str_": 16, "dex": 16, "con_": 16, "int_": 4, "fort": 6, "ref_": 5, "will": -2,
+        "attacks": [
+            {"name": "Mordida", "atk_bonus": 6, "damage": "1d8+4", "damage_types": ["physical"], "num_attacks": 1},
+            {"name": "Garras", "atk_bonus": 6, "damage": "1d6+3", "damage_types": ["physical"], "num_attacks": 2},
+            {"name": "Chifres", "atk_bonus": 6, "damage": "1d6+3", "damage_types": ["physical"], "num_attacks": 1},
+        ],
+        "special_abilities": [
+            {"id": "salto_selvagem", "name": "Salto Selvagem", "action_type": "passiva", "attack_index": 2,
+             "move_required": 3, "reflex_dc": 14, "escape_dc": 14, "save": "reflexos",
+             "escape_saves": ["forca"], "effect": "imobilizado", "collision_damage": "1d6",
+             "descricao": "Se mover 3 quadrados antes da Chifrada, o alvo testa Reflexos CD 14 ou fica Imobilizado; escapa com Força CD 14. Se estiver contra uma parede, sofre +1d6 de colisão."},
+        ],
+        "immunities": [], "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1,
+        "ai_type": "agressivo", "porte": "grande", "image": "garaloux", "subtipo": "besta_magica", "undead": False, "boss": False,
+    },
+    {
+        "type": "garaloux_adulto", "name": "Garaloux Adulto", "emoji": "🦁",
+        "tier": 5, "cr": 5, "hp": 82, "ac": 21, "natural_armor": 8,
+        "size": [1, 1], "movement": 7, "movement_exception": True,
+        "str_": 18, "dex": 16, "con_": 18, "int_": 4, "fort": 8, "ref_": 5, "will": -2,
+        "attacks": [
+            {"name": "Mordida", "atk_bonus": 9, "damage": "2d6+7", "damage_types": ["physical"], "num_attacks": 1},
+            {"name": "Garras", "atk_bonus": 9, "damage": "1d8+5", "damage_types": ["physical"], "num_attacks": 2},
+            {"name": "Chifres", "atk_bonus": 9, "damage": "1d8+5", "damage_types": ["physical"], "num_attacks": 1},
+        ],
+        "special_abilities": [
+            {"id": "salto_selvagem", "name": "Salto Selvagem", "action_type": "passiva", "attack_index": 2,
+             "move_required": 3, "reflex_dc": 16, "escape_dc": 16, "save": "reflexos",
+             "escape_saves": ["forca"], "effect": "imobilizado", "collision_damage": "1d6",
+             "descricao": "Se mover 3 quadrados antes da Chifrada, o alvo testa Reflexos CD 16 ou fica Imobilizado; escapa com Força CD 16. Se estiver contra uma parede, sofre +1d6 de colisão."},
+            {"id": "dilacerar", "name": "Dilacerar", "action_type": "passiva", "attack_index": 1, "hits_needed": 2, "damage": "2d6", "damage_types": ["physical"],
+             "descricao": "Se as duas Garras acertarem o mesmo alvo no turno, ele sofre 2d6 de dano extra uma vez."},
+            {"id": "investida_brutal", "name": "Investida Brutal", "action_type": "passiva", "attack_index": 2, "move_required": 3, "damage": "2d6", "push": 1,
+             "descricao": "Se mover 3 quadrados antes da Chifrada, causa +2d6 e empurra o alvo 1 quadrado."},
+            {"id": "furia_garaloux", "name": "Frenesi", "action_type": "passiva", "threshold": 0.5, "attack_bonus": 2, "damage_bonus": 2,
+             "descricao": "Ao atingir metade da Vida ou menos, recebe +2 no ataque e +2 no dano."},
+        ],
+        "immunities": [], "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1,
+        "ai_type": "agressivo", "porte": "grande", "image": "garaloux", "subtipo": "besta_magica", "undead": False, "boss": False,
+    },
+    {
+        "type": "garaloux_alfa", "name": "Garaloux Alfa", "emoji": "🦁",
+        "tier": 8, "cr": 8, "hp": 145, "ac": 25, "natural_armor": 11,
+        "size": [1, 1], "movement": 7, "movement_exception": True,
+        "str_": 22, "dex": 18, "con_": 22, "int_": 4, "fort": 11, "ref_": 7, "will": -2,
+        "attacks": [
+            {"name": "Mordida", "atk_bonus": 12, "damage": "3d6+9", "damage_types": ["physical"], "num_attacks": 1},
+            {"name": "Garras", "atk_bonus": 12, "damage": "2d6+6", "damage_types": ["physical"], "num_attacks": 2},
+            {"name": "Chifres", "atk_bonus": 12, "damage": "2d6+6", "damage_types": ["physical"], "num_attacks": 1},
+        ],
+        "special_abilities": [
+            {"id": "salto_selvagem", "name": "Salto Selvagem", "action_type": "passiva", "attack_index": 2,
+             "move_required": 3, "reflex_dc": 18, "escape_dc": 18, "save": "reflexos",
+             "escape_saves": ["forca"], "effect": "imobilizado", "collision_damage": "1d6",
+             "descricao": "Se mover 3 quadrados antes da Chifrada, o alvo testa Reflexos CD 18 ou fica Imobilizado; escapa com Força CD 18. Se estiver contra uma parede, sofre +1d6 de colisão."},
+            {"id": "dilacerar", "name": "Dilacerar", "action_type": "passiva", "attack_index": 1, "hits_needed": 2, "damage": "2d6", "damage_types": ["physical"],
+             "descricao": "Se as duas Garras acertarem o mesmo alvo no turno, ele sofre 2d6 de dano extra uma vez."},
+            {"id": "investida_brutal", "name": "Investida Brutal", "action_type": "passiva", "attack_index": 2, "move_required": 3, "damage": "4d6", "push": 1,
+             "descricao": "Se mover 3 quadrados antes da Chifrada, causa +4d6 e empurra o alvo 1 quadrado."},
+            {"id": "furia_garaloux", "name": "Frenesi", "action_type": "passiva", "threshold": 0.5, "attack_bonus": 2, "damage_bonus": 2,
+             "descricao": "Ao atingir metade da Vida ou menos, recebe +2 no ataque e +2 no dano."},
+            {"id": "predador_supremo", "name": "Predador Supremo", "action_type": "passiva", "trigger": "kill", "attack_index": 0, "chain": False,
+             "descricao": "Sempre que eliminar uma criatura, realiza imediatamente uma Mordida adicional. A Mordida adicional não gera outra reação."},
+        ],
+        "immunities": [], "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1,
+        "ai_type": "agressivo", "porte": "grande", "image": "garaloux", "subtipo": "besta_magica", "undead": False, "boss": False,
+    },
+])
+
+# Molochus: criatura de fogo com imunidade total a fogo e vulnerabilidade
+# dobrada a gelo/água. As três categorias compartilham movimento 6.
+MONSTER_DEFS.extend([
+    {
+        "type": "molochus_jovem", "name": "Molochus Jovem", "emoji": "🔥",
+        "tier": 4, "cr": 4, "hp": 64, "ac": 20, "natural_armor": 7,
+        "size": [1, 1], "movement": 6,
+        "str_": 18, "dex": 16, "con_": 18, "int_": 4, "fort": 8, "ref_": 5, "will": -2,
+        "attacks": [
+            {"name": "Mordida", "atk_bonus": 8, "damage": "2d6+5", "damage_types": ["physical"], "fire_damage": "1d4", "num_attacks": 1},
+            {"name": "Garras", "atk_bonus": 8, "damage": "1d6+3", "damage_types": ["physical"], "fire_damage": "1d4", "num_attacks": 2},
+            {"name": "Chifrada", "atk_bonus": 8, "damage": "1d8+3", "damage_types": ["physical"], "num_attacks": 1},
+        ],
+        "special_abilities": [
+            {"id": "aura_escaldante", "name": "Aura Escaldante", "action_type": "passiva", "radius": 1, "damage": "1d4", "damage_types": ["fire"],
+             "descricao": "Criaturas adjacentes sofrem 1d4 de fogo no início do próprio turno."},
+            {"id": "sangue_em_ebulicao", "name": "Sangue em Ebulição", "action_type": "passiva", "damage": "1d4", "damage_types": ["fire"],
+             "descricao": "Quem acerta o Molochus com um ataque corpo a corpo sofre 1d4 de fogo."},
+        ],
+        "immunities": ["fire"], "weaknesses": [
+            {"type": "cold", "multiplier": 2, "descricao": "Gelo causa dano dobrado."},
+            {"type": "water", "multiplier": 2, "descricao": "Água causa dano dobrado."},
+        ], "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1,
+        "ai_type": "agressivo", "porte": "grande", "image": "molochos", "subtipo": "besta_magica", "undead": False, "boss": False,
+    },
+    {
+        "type": "molochus_adulto", "name": "Molochus Adulto", "emoji": "🔥",
+        "tier": 6, "cr": 6, "hp": 96, "ac": 22, "natural_armor": 9,
+        "size": [1, 1], "movement": 6,
+        "str_": 20, "dex": 16, "con_": 20, "int_": 4, "fort": 10, "ref_": 5, "will": -2,
+        "attacks": [
+            {"name": "Mordida", "atk_bonus": 11, "damage": "2d8+8", "damage_types": ["physical"], "fire_damage": "1d6", "num_attacks": 1},
+            {"name": "Garras", "atk_bonus": 11, "damage": "1d8+5", "damage_types": ["physical"], "fire_damage": "1d6", "num_attacks": 2},
+            {"name": "Chifrada", "atk_bonus": 11, "damage": "2d6+5", "damage_types": ["physical"], "num_attacks": 1},
+        ],
+        "special_abilities": [
+            {"id": "aura_escaldante", "name": "Aura Escaldante", "action_type": "passiva", "radius": 1, "damage": "1d6", "damage_types": ["fire"],
+             "descricao": "Criaturas adjacentes sofrem 1d6 de fogo no início do próprio turno."},
+            {"id": "sangue_em_ebulicao", "name": "Sangue em Ebulição", "action_type": "passiva", "damage": "1d6", "damage_types": ["fire"],
+             "descricao": "Cada ataque corpo a corpo que acerta o Molochus faz o atacante sofrer 1d6 de fogo."},
+            {"id": "investida_flamejante", "name": "Investida Flamejante", "action_type": "passiva", "attack_index": 2, "move_required": 3, "damage": "2d6", "damage_types": ["fire"],
+             "descricao": "Após mover 3 quadrados, a Chifrada causa +2d6 de fogo."},
+            {"id": "explosao_vapor", "name": "Explosão de Vapor", "action_type": "acao", "cooldown_turns": 6, "range": 3, "shape": "cone", "damage": "4d6", "damage_types": ["fire"], "save": "reflexos", "dc": 16, "success_effect": "metade",
+             "descricao": "Recarga fixa de 6 rodadas. Cone de 3 quadrados; Reflexos CD 16 reduz 4d6 de fogo à metade."},
+            {"id": "morte_explosiva", "name": "Morte Explosiva", "action_type": "passiva", "radius": 2, "damage": "4d6", "damage_types": ["fire"], "save": "reflexos", "dc": 16, "duration": 2, "tick_damage": "1d6",
+             "descricao": "Ao morrer, explode em raio 2. Reflexos CD 16 reduz 4d6 à metade; o chão fica em chamas por 2 rodadas."},
+        ],
+        "immunities": ["fire"], "weaknesses": [
+            {"type": "cold", "multiplier": 2, "descricao": "Gelo causa dano dobrado."},
+            {"type": "water", "multiplier": 2, "descricao": "Água causa dano dobrado."},
+        ], "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1,
+        "ai_type": "agressivo", "porte": "grande", "image": "molochos", "subtipo": "besta_magica", "undead": False, "boss": False,
+    },
+    {
+        "type": "molochus_anciao", "name": "Molochus Ancião", "emoji": "🔥",
+        "tier": 10, "cr": 10, "hp": 170, "ac": 26, "natural_armor": 12,
+        "size": [1, 1], "movement": 6,
+        "str_": 24, "dex": 18, "con_": 24, "int_": 4, "fort": 13, "ref_": 7, "will": -2,
+        "attacks": [
+            {"name": "Mordida", "atk_bonus": 15, "damage": "3d8+10", "damage_types": ["physical"], "fire_damage": "2d6", "num_attacks": 1},
+            {"name": "Garras", "atk_bonus": 15, "damage": "2d6+6", "damage_types": ["physical"], "fire_damage": "2d6", "num_attacks": 2},
+            {"name": "Chifrada", "atk_bonus": 15, "damage": "3d6+6", "damage_types": ["physical"], "num_attacks": 1},
+        ],
+        "special_abilities": [
+            {"id": "aura_escaldante", "name": "Aura Escaldante", "action_type": "passiva", "radius": 1, "damage": "2d6", "damage_types": ["fire"],
+             "descricao": "Criaturas adjacentes sofrem 2d6 de fogo no início do próprio turno."},
+            {"id": "sangue_em_ebulicao", "name": "Sangue em Ebulição", "action_type": "passiva", "damage": "2d6", "damage_types": ["fire"],
+             "descricao": "Cada ataque corpo a corpo que acerta o Molochus faz o atacante sofrer 2d6 de fogo."},
+            {"id": "investida_flamejante", "name": "Investida Flamejante", "action_type": "passiva", "attack_index": 2, "move_required": 3, "damage": "2d6", "damage_types": ["fire"],
+             "descricao": "Após mover 3 quadrados, a Chifrada causa +2d6 de fogo."},
+            {"id": "explosao_vapor", "name": "Explosão de Vapor", "action_type": "acao", "cooldown_turns": 6, "range": 3, "shape": "cone", "damage": "8d6", "damage_types": ["fire"], "save": "reflexos", "dc": 18, "success_effect": "metade",
+             "descricao": "Recarga fixa de 6 rodadas. Cone de 3 quadrados; Reflexos CD 18 reduz 8d6 de fogo à metade."},
+            {"id": "morte_explosiva", "name": "Morte Explosiva", "action_type": "passiva", "radius": 3, "damage": "8d6", "damage_types": ["fire"], "save": "reflexos", "dc": 18, "duration": 3, "tick_damage": "1d6",
+             "descricao": "Ao morrer, explode em raio 3. Reflexos CD 18 reduz 8d6 à metade; o chão fica em chamas por 3 rodadas."},
+        ],
+        "immunities": ["fire"], "weaknesses": [
+            {"type": "cold", "multiplier": 2, "descricao": "Gelo causa dano dobrado."},
+            {"type": "water", "multiplier": 2, "descricao": "Água causa dano dobrado."},
+        ], "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1,
+        "ai_type": "agressivo", "porte": "grande", "image": "molochos", "subtipo": "besta_magica", "undead": False, "boss": False,
+    },
+])
+
 for _monster_def in MONSTER_DEFS:
     if not _monster_def.get("movement_exception"):
         _monster_def["movement"] = 6
@@ -4047,6 +4451,8 @@ SUBTIPOS_MONSTRO = {
     "construto": {"nome": "Construto", "imunidades": ["paralisia", "petrificacao", "encantamento", "controle_mental", "medo", "necrótico", "veneno", "gases", "doenca", "sono"], "descricao": "Imune a paralisia, petrificação, encantamento, controle mental, medo, necrótico, venenos, gases, doença e sono."},
     "morto_vivo": {"nome": "Morto-Vivo", "imunidades": ["veneno", "gases", "necrótico", "doenca", "sono", "encantamento", "medo"], "descricao": "Imune a veneno, gases, necrótico, doença, sono, encantamento e medo; sofre dano sagrado dobrado."},
     "animal": {"nome": "Animal", "imunidades": [], "descricao": "Sem particularidades gerais."},
+    "aberracao": {"nome": "Aberração", "imunidades": [], "descricao": "Criatura aberrante; sem imunidades gerais adicionais."},
+    "besta_magica": {"nome": "Besta Mágica", "imunidades": [], "descricao": "Besta mágica; sem imunidades gerais adicionais."},
     "abissal": {"nome": "Abissal", "imunidades": ["veneno"], "descricao": "Imune a veneno; sofre metade de fogo, frio e eletricidade; dano sagrado dobrado."},
     "vegetal": {"nome": "Vegetal", "imunidades": [], "descricao": "Sofre 1,5× dano de fogo."},
     "raca_padrao": {"nome": "Raça Padrão", "imunidades": [], "descricao": "Sem particularidades gerais."},
@@ -10134,6 +10540,14 @@ class GameRoom:
 
     async def _start_initiative_player_turn(self, p):
         """Preparação comum de um turno de herói iniciado pela fila individual."""
+        await self._processar_aura_escaldante_inicio(p)
+        await self._processar_zona_molochus_inicio_turno(p)
+        if not p.get("alive"):
+            return
+        for animado in list(p.get("animados", [])):
+            if animado.get("vida_atual", 0) > 0:
+                await self._processar_aura_escaldante_inicio(animado)
+                await self._processar_zona_molochus_inicio_turno(animado)
         if p.get("class_id") == "bard" and p.get("cancao_ativa"):
             await self._cobrar_manutencao_cancao(p)
         if p.get("class_id") == "bard": await self._cobrar_manutencao_requiem(p)
@@ -10150,6 +10564,7 @@ class GameRoom:
         if p.get("paralisado"): await self._processar_paralisacao_turno(p)
         await self._processar_status_jogador_turno(p)
         await self._processar_mods_magia_turno(p)
+        await self._processar_nuvem_acida_inicio_turno(p)
         if p.get("preso"): await self._processar_escape_agarrar(p)
         congelamento_pen = await self._processar_congelamento_progressivo_turno(p)
         p["moves_left"] = self._water_turn_moves(p, max(0, self._moves_base(p) - congelamento_pen))
@@ -10585,6 +11000,8 @@ class GameRoom:
         alvo = target_obj.get("obj") if isinstance(target_obj, dict) else None
         if not alvo or not alvo.get("pos"):
             return False
+        if alvo.get("engolido"):
+            return False
         if max(abs(m["pos"][0] - alvo["pos"][0]), abs(m["pos"][1] - alvo["pos"][1])) > self._get_raio_visao_monstro(m):
             return False
         escuro = bool(m.get("visao_escuro"))
@@ -10653,6 +11070,9 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players[pid]
         if not p["alive"]: return
+        if p.get("engolido"):
+            await self.send_to(pid, {"type": "error", "msg": "Você está Engolido e não pode se mover."})
+            return
         if p.get("preso"):
             captor = self.monsters.get(p.get("preso_por"))
             if captor and captor["hp"] > 0:
@@ -10758,6 +11178,9 @@ class GameRoom:
         # Pisar numa zona de Bola de Fogo ativa causa dano (entrar sofre dano).
         if p["alive"]:
             await self._verificar_entrada_zona_fogo(p, nx, ny)
+
+        if p["alive"]:
+            await self._verificar_entrada_zona_molochus(p, nx, ny)
 
         # Fogueira: 1d4 de fogo ao entrar.
         if p["alive"]:
@@ -11269,6 +11692,10 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": T("erro.cego_nao_pode_usar_ataques_a_distancia")})
             return
 
+        if p.get("engolido") and target_id != p.get("engolido_por"):
+            await self.send_to(pid, {"type": "error", "msg": "Enquanto Engolido, você só pode atacar o interior do Tirano."})
+            return
+
         if target_id in self.monsters:
             target = self.monsters[target_id]
             target_tile = self._target_tile(target, target_pos)
@@ -11618,7 +12045,11 @@ class GameRoom:
                 # O Ataque Furtivo (Luccas, passiva) foi resolvido acima, junto
                 # do dano da arma, para que resistências e reduções incidam
                 # sobre o golpe inteiro. `furtivo_detail` já está preenchido.
-                target["hp"] -= dmg
+                dano_interno = bool(p.get("engolido") and p.get("engolido_por") == target.get("id"))
+                if dano_interno:
+                    await self._tirano_dano_interno(p, target, dmg)
+                else:
+                    target["hp"] -= dmg
                 await self._furtivo_reativo(p, target)
                 if _ammo_damage_bonus:
                     dmg_detail += f" +{_ammo_damage_bonus} prata"
@@ -11628,6 +12059,10 @@ class GameRoom:
                     f" (d20={roll}+{eff_atk}={total} vs CA {target['ac']}):"
                     f"{crit_str} dano {dmg_detail}{holy_detail}{furtivo_detail} = **{dmg}**!")
                 # â”€â”€ Dano extra de projÃ©til incendiÃ¡rio â”€â”€
+                if w_range is None and p.get("alive"):
+                    await self._carapaca_espinhosa_retalia(target, p)
+                if p.get("alive"):
+                    await self._molochus_sangue_em_ebulicao(target, p, w_range is None, dmg)
                 if _ammo_extra_dmg and target.get("hp", 1) > 0:
                     xdmg = roll_dice(_ammo_extra_dmg)
                     xdmg = self._apply_damage_types(xdmg, _ammo_extra_types, target)
@@ -11676,6 +12111,10 @@ class GameRoom:
                             await self._player_dies(protetor["id"])
                     if p["hp"] <= 0:
                         await self._player_dies(p["id"])
+                if dano_interno:
+                    p["fome"] = max(0, p.get("fome", 0) - 1)
+                    await self.push_state()
+                    return
                 if target["hp"] <= 0:
                     await self._monster_dies(target, pid)
                 else:
@@ -11751,6 +12190,8 @@ class GameRoom:
                         f"🗡️ **{p['name']}** desfere golpe de mão secundária com **{off['name']}** (ação bônus)"
                         f" (d20={oroll}+{offhand_atk}={ototal} vs CA {tgt['ac']}):"
                         f"{ocrit_str} dano [{off['die']}={oraw}{osb} DES] = **{odmg}**!")
+                    await self._carapaca_espinhosa_retalia(tgt, p)
+                    await self._molochus_sangue_em_ebulicao(tgt, p, True, odmg)
                     corpo_chamas = next((ab for ab in tgt.get("special_abilities", [])
                                           if ab.get("id") == "corpo_em_chamas"), None)
                     if corpo_chamas and p.get("alive"):
@@ -11992,7 +12433,10 @@ class GameRoom:
                     f"{defn['emoji']} **{p['name']}** arremessa **{defn['name']}** em "
                     f"**{target['name']}** (d20={roll}+{p['atk_bonus']}={total} vs CA {target['ac']}):"
                     f"{crit_str} **{dmg}** de {defn['elemento']}!")
-                await self._aplicar_dano_alvo(target, dmg, defn["elemento"], pid)
+                if p.get("engolido") and target.get("id") == p.get("engolido_por"):
+                    await self._tirano_dano_interno(p, target, dmg)
+                else:
+                    await self._aplicar_dano_alvo(target, dmg, defn["elemento"], pid)
                 if defn.get("holy_water"):
                     target["regeneracao_bloqueada"] = True
                     self.zonas_especiais.append({"tipo":"solo_sagrado","pos":list(target_tile),"duracao":2,"ativa":True})
@@ -12099,6 +12543,17 @@ class GameRoom:
         p["action_done"] = True
         self._consumir_recursos(p, 'apenas_acao')
         await self.gm_say(T("narracao.se_joga_no_chao_e_apaga_as_chamas", heroi=p['name']))
+        await self.push_state()
+
+    async def handle_escapar_estomago(self, pid):
+        """Ação do herói Engolido para tentar sair pela força."""
+        if not self._is_turn(pid):
+            return
+        p = self.players.get(pid)
+        if not p or not p.get("alive") or not p.get("engolido"):
+            await self.send_to(pid, {"type": "error", "msg": "Você não está Engolido."})
+            return
+        await self._tirano_escapar_estomago(p)
         await self.push_state()
 
     # â”€â”€ cÃ¡lculo de ataque com adaga por Destreza (scaffolding) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -12786,6 +13241,7 @@ class GameRoom:
         m["_master_touched"] = True
         hit = await self._execute_one_monster_attack(m, atk_def, {"kind": alvo_kind, "obj": alvo})
         await self._furia_bestial_mestre(m, alvo, idx, hit)
+        await self._dilacerar_mestre(m, alvo, idx, hit)
         m.pop("_golpe_brutal_ativo", None)   # Golpe Brutal vale para um golpe só
         if hit and m.get("veneno_arma_ativo"):
             m["veneno_arma_ativo"] = False
@@ -12829,6 +13285,24 @@ class GameRoom:
         extra = roll_dice("1d6")
         alvo["hp"] = max(0, alvo["hp"] - extra)
         await self.gm_say(T("narracao.furia_bestial_sofre_de_dano", alvo=alvo['name'], extra=extra))
+        if alvo["hp"] <= 0:
+            await self._player_dies(alvo["id"])
+
+    async def _dilacerar_mestre(self, m, alvo, idx, acertou):
+        ability = self._garaloux_ability(m, "dilacerar")
+        if not ability or not acertou or idx != int(ability.get("attack_index", 1) or 1):
+            return
+        if not alvo.get("alive", alvo.get("hp", 0) > 0) or alvo.get("hp", 0) <= 0:
+            return
+        hits = m.setdefault("_master_dilacerar_hits", {}).setdefault(alvo["id"], 0) + 1
+        m["_master_dilacerar_hits"][alvo["id"]] = hits
+        done = m.setdefault("_master_dilacerar_done", [])
+        if hits < int(ability.get("hits_needed", 2) or 2) or alvo["id"] in done:
+            return
+        done.append(alvo["id"])
+        extra = roll_dice(str(ability.get("damage", "2d6")))
+        alvo["hp"] = max(0, alvo["hp"] - extra)
+        await self.gm_say(f"🦁 **{m['name']}** Dilacera **{alvo.get('name', 'Alvo')}** e causa **{extra}** de dano extra!")
         if alvo["hp"] <= 0:
             await self._player_dies(alvo["id"])
 
@@ -12935,13 +13409,23 @@ class GameRoom:
         """Prepara o mesmo conjunto de ações usado pelo Mestre."""
         m["master_moves_left"] = int(m.get("movement", self.MASTER_MANUAL_MOVE) or self.MASTER_MANUAL_MOVE)
         m["_water_moves_left"] = self._water_turn_moves(m, m.get("movement", 4))
+        if m.pop("turbilhao_perde_movimento", False):
+            m["master_moves_left"] = 0
+            m["_water_moves_left"] = 0
         m["_moved_this_turn"] = False
+        m["_garaloux_move_count"] = 0
+        m["_garaloux_charge_consumed"] = False
+        m["_molochus_move_count"] = 0
+        m["_tirano_move_count"] = 0
+        m["_tirano_passo_disparado"] = False
         m["_master_acted"] = False
         m["_master_bonus_acted"] = False
         m["_master_acao_tipo"] = None
         m["master_attack_charges"] = self._montar_cargas_ataque(m)
         m["_master_furia_hits"] = {}
         m["_master_furia_dada"] = False
+        m["_master_dilacerar_hits"] = {}
+        m["_master_dilacerar_done"] = []
         m.pop("_master_touched", None)
         m.pop("_golpe_brutal_ativo", None)
 
@@ -13091,13 +13575,23 @@ class GameRoom:
         # renova — e o Manual não passa por lá. Sem este reset o monstro do
         # mestre acumularia o gasto entre turnos e travaria de vez.
         m["_water_moves_left"] = self._water_turn_moves(m, m.get("movement", 4))
+        if m.pop("turbilhao_perde_movimento", False):
+            m["master_moves_left"] = 0
+            m["_water_moves_left"] = 0
         m["_moved_this_turn"] = False
+        m["_garaloux_move_count"] = 0
+        m["_garaloux_charge_consumed"] = False
+        m["_molochus_move_count"] = 0
+        m["_tirano_move_count"] = 0
+        m["_tirano_passo_disparado"] = False
         m["_master_acted"] = False
         m["_master_bonus_acted"] = False
         m["_master_acao_tipo"] = None
         m["master_attack_charges"] = self._montar_cargas_ataque(m)
         m["_master_furia_hits"] = {}
         m["_master_furia_dada"] = False
+        m["_master_dilacerar_hits"] = {}
+        m["_master_dilacerar_done"] = []
         m.pop("_master_touched", None)
         # Um Golpe Brutal armado (_ativar_golpe_brutal) e NÃO consumido por um
         # golpe não pode sobreviver à janela que o armou — senão o bônus vaza
@@ -13166,6 +13660,8 @@ class GameRoom:
         a["facing"] = [dx, dy]
         self._apply_water_entry_penalty(a, nx, ny)
         a["moves_left"] = max(0, a["moves_left"] - 1)
+        if a.get("vida_atual", 0) > 0:
+            await self._verificar_entrada_zona_molochus(a, nx, ny)
         await self.push_state()
 
     async def handle_atacar_animado(self, pid, animado_id, target_id):
@@ -13212,6 +13708,7 @@ class GameRoom:
         if hit:
             dmg = max(1, roll_dice(ataque.get("damage", a.get("dano", "1d4"))) * (2 if roll == 20 else 1))
             m["hp"] -= dmg
+            await self._molochus_sangue_em_ebulicao(m, a, True, dmg)
             await self.gm_say(
                 f"⚔️ **{a['nome']}** ataca **{m['name']}** "
                 f"(d20={roll}+{bonus_ataque}={total} vs CA {m['ac']}): **{dmg}** de dano!")
@@ -13228,6 +13725,9 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players[pid]
         if not p["alive"]: return
+        if p.get("engolido") and target_id not in {None, p.get("engolido_por"), p.get("id")}: 
+            await self.send_to(pid, {"type": "error", "msg": "Engolido, você só pode mirar no interior do Tirano ou em si mesmo."})
+            return
 
         skill = next((s for s in p["skills"] if s["id"] == skill_id), None)
         if not skill:
@@ -13269,7 +13769,7 @@ class GameRoom:
         if sid == "heavy_blow":
             t = self.monsters.get(target_id)
             if t:
-                if not self._cardinal_adjacent(p["pos"], t["pos"]):
+                if not (p.get("engolido") and p.get("engolido_por") == t.get("id")) and not self._cardinal_adjacent(p["pos"], t["pos"]):
                     await self.gm_say(T("narracao.tenta_golpe_pesado_mas_o_inimigo_esta_fo", heroi=p['name'])); return
                 hit, roll, total, crit = d20_attack(p["atk_bonus"] + surv_mod + preso_pen, t["ac"])
                 await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll, "label": "Golpe Pesado"})
@@ -13281,7 +13781,8 @@ class GameRoom:
                     dmg = (raw_dmg + mod(p[weapon["stat"]])) * 2
                     if crit: dmg *= 2
                     dmg = max(1, dmg + surv_mod)
-                    t["hp"] -= dmg
+                    if not await self._tirano_dano_interno(p, t, dmg):
+                        t["hp"] -= dmg
                     await self.gm_say(T("narracao.usa_golpe_pesado_em_d20_vs_ca_de_dano", heroi=p['name'], t=t['name'], roll=roll, p_atk_bonus=p['atk_bonus'], total=total, t_ac=t['ac'], dmg=dmg))
                     if t["hp"] <= 0: await self._monster_dies(t, p["id"])
                 else:
@@ -13321,7 +13822,8 @@ class GameRoom:
                 raw_dmg = roll_dice("3d6")
                 await self.broadcast({"type": "dice_roll", "die": "d6", "value": raw_dmg, "label": "Lança de Gelo"})
                 dmg = max(1, (raw_dmg + mod(p["int_"]) + surv_mod) * dmg_mult)
-                t["hp"] -= dmg
+                if not await self._tirano_dano_interno(p, t, dmg):
+                    t["hp"] -= dmg
                 extra = " ⚡(Aprimorada x2)" if dmg_mult > 1 else ""
                 await self.gm_say(T("narracao.usa_lanca_de_gelo_em_de_dano_de_frio", heroi=p['name'], extra=extra, t=t['name'], dmg=dmg))
                 if t["hp"] <= 0: await self._monster_dies(t, p["id"])
@@ -13339,7 +13841,7 @@ class GameRoom:
         elif sid == "backstab":
             t = self.monsters.get(target_id)
             if t:
-                if not self._cardinal_adjacent(p["pos"], t["pos"]):
+                if not (p.get("engolido") and p.get("engolido_por") == t.get("id")) and not self._cardinal_adjacent(p["pos"], t["pos"]):
                     await self.gm_say(T("narracao.tenta_ataque_furtivo_mas_o_inimigo_esta", heroi=p['name'])); return
                 furtivo_pen = self._penalidade_furtivo_duas_cabecas(t)
                 furtivo_atk = p["atk_bonus"] + 2 + surv_mod + preso_pen + furtivo_pen
@@ -13357,7 +13859,8 @@ class GameRoom:
                     else:
                         dmg = raw_wpn + raw_snk + mod(p[weapon["stat"]])
                     dmg = max(1, dmg + surv_mod)
-                    t["hp"] -= dmg
+                    if not await self._tirano_dano_interno(p, t, dmg):
+                        t["hp"] -= dmg
                     await self.gm_say(T("narracao.usa_ataque_furtivo_em_d20_vs_ca_de_dano", heroi=p['name'], t=t['name'], roll=roll, furtivo_atk=furtivo_atk, total=total, t_ac=t['ac'], dmg=dmg))
                     if t["hp"] <= 0: await self._monster_dies(t, p["id"])
                 else:
@@ -13419,7 +13922,8 @@ class GameRoom:
                         total_dmg += max(1, raw_dmg + mod(p[weapon["stat"]]) + surv_mod)
                         hits += 1
                 if hits:
-                    t["hp"] -= total_dmg
+                    if not await self._tirano_dano_interno(p, t, total_dmg):
+                        t["hp"] -= total_dmg
                     await self.gm_say(T("narracao.usa_tiro_duplo_em_acerto_s_de_dano_total", heroi=p['name'], t=t['name'], hits=hits, total_dmg=total_dmg))
                     if t["hp"] <= 0: await self._monster_dies(t, p["id"])
                 else:
@@ -13449,7 +13953,8 @@ class GameRoom:
                 die_type = "d" + weapon["die"].split("d")[1]
                 await self.broadcast({"type": "dice_roll", "die": die_type, "value": raw_dmg, "label": "Tiro Perfurante"})
                 dmg = max(1, raw_dmg * 2 + mod(p[weapon["stat"]]) + surv_mod)
-                t["hp"] -= dmg
+                if not await self._tirano_dano_interno(p, t, dmg):
+                    t["hp"] -= dmg
                 await self.gm_say(T("narracao.usa_tiro_perfurante_em_de_dano_acerto_au", heroi=p['name'], t=t['name'], dmg=dmg))
                 if t["hp"] <= 0: await self._monster_dies(t, p["id"])
 
@@ -13471,7 +13976,8 @@ class GameRoom:
                     holy = raw_holy
                     if crit: base *= 2; holy *= 2
                     dmg = max(1, base + holy + surv_mod)
-                    t["hp"] -= dmg
+                    if not await self._tirano_dano_interno(p, t, dmg):
+                        t["hp"] -= dmg
                     await self.gm_say(T("narracao.usa_golpe_divino_em_d20_vs_ca_de_dano_sa", heroi=p['name'], t=t['name'], roll=roll, p_atk_bonus=p['atk_bonus'], total=total, t_ac=t['ac'], dmg=dmg))
                     if t["hp"] <= 0: await self._monster_dies(t, p["id"])
                 else:
@@ -16703,7 +17209,8 @@ class GameRoom:
         de área não discriminam aliados, minions ou inimigos. Paredes bloqueiam:
         só é atingido quem tem linha de visão a partir do centro da área."""
         out = [m for m in self.monsters.values() if m["hp"] > 0 and self._na_area(m, tx, ty, raio)]
-        out += [p for p in self.players.values() if p["alive"] and self._na_area(p, tx, ty, raio)]
+        out += [p for p in self.players.values()
+                if p["alive"] and not p.get("engolido") and self._na_area(p, tx, ty, raio)]
         out += [a for a in self._all_animados() if self._na_area(a, tx, ty, raio)]
         return out
 
@@ -17905,6 +18412,198 @@ class GameRoom:
         """Retorna a configuração efetiva de uma habilidade da ficha."""
         return next((a for a in m.get("special_abilities", []) if a.get("id") == ab_id), None)
 
+    def _indice_ataque_monstro(self, m, atk_def):
+        """Localiza o ataque original mesmo quando a IA passa uma cópia parcial."""
+        for i, ataque in enumerate(m.get("attacks", [])):
+            if ataque is atk_def:
+                return i
+        nome = (atk_def or {}).get("name")
+        if nome:
+            for i, ataque in enumerate(m.get("attacks", [])):
+                if ataque.get("name") == nome and ataque.get("damage") == atk_def.get("damage"):
+                    return i
+        return -1
+
+    def _veneno_lacralion_do_ataque(self, m, atk_def):
+        indice = self._indice_ataque_monstro(m, atk_def)
+        return next((ab for ab in m.get("special_abilities", [])
+                     if ab.get("id") == "veneno_lacralion"
+                     and int(ab.get("attack_index", 0) or 0) == indice), None)
+
+    def _bonus_ferrao_lacralion(self, m, alvo, atk_def):
+        """+2 do Ferrão somente contra uma criatura presa pelo próprio Lacralion."""
+        if (not alvo.get("preso") or alvo.get("preso_por") != m.get("id")
+                or str((atk_def or {}).get("name", "")).casefold() != "ferrão"):
+            return 0
+        agarrar = self._habilidade_monstro(m, "agarrar_lacralion")
+        return int((agarrar or {}).get("ferrao_bonus", 2) or 0)
+
+    async def _aplicar_veneno_lacralion(self, m, alvo, ability):
+        """Veneno do Lacralion: save único, dano imediato e Lentidão temporária."""
+        if not ability or not alvo or alvo.get("hp", alvo.get("vida_atual", 0)) <= 0:
+            return
+        if (ability.get("id") == "veneno_charcos"
+                and ((not self._eh_jogador(alvo) and self._tem_imunidade(alvo, "poison"))
+                     or (self._eh_jogador(alvo) and self._imune_a_status(alvo, "veneno")))):
+            await self.gm_say(f"☠️ **{alvo.get('name', 'Alvo')}** é imune ao Veneno do Lacralion.")
+            return
+        dc = max(1, min(40, int(ability.get("poison_dc", 14) or 14)))
+        ok, d20, sb, total = self._testar_save(alvo, "fortitude", dc, fonte=m, poison_effect=True)
+        alvo_nome = alvo.get("name", "Alvo")
+        sb_txt = f"+{sb}" if sb >= 0 else str(sb)
+        await self.gm_say(f"☠️ **{alvo_nome}** — Fortitude d20={d20}{sb_txt}={total} vs CD {dc} "
+                          f"→ {'resistiu' if ok else 'falhou'} ao Veneno do Lacralion.")
+        if ok:
+            return
+        dano_str = str(ability.get("extra_damage") or "1d4")
+        dano_bruto = roll_dice(dano_str)
+        dano = self._apply_damage_types(dano_bruto, [DMG_POISON], alvo)
+        await self.broadcast({"type": "dice_roll", "die": "d" + dano_str.split("d", 1)[-1].split("+", 1)[0],
+                              "value": dano_bruto, "label": "Veneno do Lacralion"})
+        alvo["hp"] = max(0, alvo.get("hp", 0) - dano)
+        await self.gm_say(f"☠️ **{alvo_nome}** sofre **{dano}** de dano adicional do veneno.")
+        if alvo.get("hp", 0) <= 0:
+            if self._eh_jogador(alvo):
+                await self._player_dies(alvo["id"])
+            else:
+                await self._monster_dies(alvo, m.get("id"))
+            return
+        duracao = max(1, min(10, int(ability.get("slow_duration", 1) or 1)))
+        alvo["lento"] = True
+        alvo["lento_rodadas"] = max(int(alvo.get("lento_rodadas", 0) or 0), duracao)
+        alvo["lento_pulou"] = False
+        if self._eh_jogador(alvo):
+            # É a mesma aplicação usada pela Lentidão mágica em falha grave:
+            # -1 em ataques e CA, sem criar um segundo tipo de status.
+            self._set_mod_magia(alvo, {"ataque": -1, "ca": -1}, duracao)
+        await self.gm_say(f"🐌 **{alvo_nome}** fica Lento por {duracao} rodada(s).")
+
+    def _habilidade_charcos_no_ataque(self, m, atk_def, ability_id):
+        indice = self._indice_ataque_monstro(m, atk_def)
+        return next((ab for ab in m.get("special_abilities", [])
+                     if ab.get("id") == ability_id
+                     and int(ab.get("attack_index", 0) or 0) == indice), None)
+
+    async def _aplicar_efeito_movimento_charcos(self, m, alvo, ability, nome):
+        """Veneno/Ferrão Paralítico: somente o movimento do próximo turno."""
+        if not ability or not alvo or alvo.get("hp", alvo.get("vida_atual", 0)) <= 0:
+            return
+        if ((not self._eh_jogador(alvo) and self._tem_imunidade(alvo, "poison"))
+                or (self._eh_jogador(alvo) and self._imune_a_status(alvo, "veneno"))):
+            await self.gm_say(f"☠️ **{alvo.get('name') or alvo.get('nome', 'Alvo')}** é imune a {nome}.")
+            return
+        dc = max(1, min(40, int(ability.get("poison_dc", ability.get("dc", 15)) or 15)))
+        save = ability.get("save", "fortitude")
+        ok, d20, sb, total = self._testar_save(alvo, save, dc, fonte=m, poison_effect=(save == "fortitude"))
+        alvo_nome = alvo.get("name") or alvo.get("nome", "Alvo")
+        await self.gm_say(f"🦂 **{alvo_nome}** — {save.title()} d20={d20}{'+' if sb >= 0 else ''}{sb}={total} vs CD {dc} "
+                          f"→ {'resistiu' if ok else 'falhou'} a {nome}.")
+        if not ok:
+            alvo["turbilhao_perde_movimento"] = True
+            await self.gm_say(f"🦂 **{alvo_nome}** perderá apenas o movimento no próximo turno.")
+
+    async def _registrar_tentaculo_charcos(self, m, alvo, atk_def):
+        ability = self._habilidade_charcos_no_ataque(m, atk_def, "tentaculos_imobilizar")
+        if not ability or not alvo or alvo.get("hp", alvo.get("vida_atual", 0)) <= 0:
+            return
+        if alvo.get("preso") or alvo.get("id") is None:
+            return
+        if m.get("_tentaculos_round") != self.round_num:
+            m["_tentaculos_round"] = self.round_num
+            m["_tentaculos_acertos"] = {}
+        acertos = m.setdefault("_tentaculos_acertos", {})
+        alvo_id = alvo["id"]
+        acertos[alvo_id] = int(acertos.get(alvo_id, 0) or 0) + 1
+        if acertos[alvo_id] < max(1, int(ability.get("hits_needed", 2) or 2)):
+            return
+        max_targets = max(1, int(ability.get("max_targets", 1) or 1))
+        if self._tem_habilidade(m, "predador_charcos"):
+            max_targets = max(max_targets, 2)
+        if len(self._agarrados_por(m)) >= max_targets:
+            return
+        alvo["preso"] = True
+        alvo["preso_por"] = m["id"]
+        alvo["preso_tipo"] = "constricao_charcos"
+        nome = alvo.get("name") or alvo.get("nome", "Alvo")
+        await self.gm_say(f"🦂 **{nome}** fica Imobilizado pelos Tentáculos de **{m['name']}** "
+                          f"(escape: Fortitude CD {int(ability.get('dc', 17) or 17)}).")
+
+    async def _processar_constricao_charcos_inicio(self, m):
+        ability = self._habilidade_monstro(m, "constricao_charcos")
+        if not ability:
+            return
+        for alvo in list(self._agarrados_por(m)):
+            if alvo.get("hp", alvo.get("vida_atual", 0)) <= 0:
+                continue
+            dano_expr = str(ability.get("damage", "1d6+5"))
+            dano = roll_dice(dano_expr)
+            await self.broadcast({"type": "dice_roll", "die": "d6", "value": dano,
+                                  "label": f"Constrição — {m['name']}"})
+            await self._aplicar_dano_alvo(alvo, dano, (ability.get("damage_types") or ["physical"])[0], m.get("id"))
+            nome = alvo.get("name") or alvo.get("nome", "Alvo")
+            await self.gm_say(f"🦂 **{m['name']}** causa **{dano}** de Constrição em **{nome}**.")
+
+    async def _criar_nuvem_acida(self, m, centro, ability):
+        raio = max(0, int(ability.get("radius", 1) or 1))
+        zona = {
+            "id": f"nuvem_acida_{m['id']}_{self.round_num}_{len(self.zonas_especiais)}",
+            "tipo": "nuvem_acida", "cx": int(centro[0]), "cy": int(centro[1]),
+            "raio": raio, "duracao": max(1, int(ability.get("duration", 2) or 2)),
+            "ativa": True, "caster": m.get("id"), "created_round": self.round_num, "acid_ticks": {},
+        }
+        self.zonas_especiais.append(zona)
+        dano_expr = str(ability.get("initial_damage", "2d6"))
+        for alvo in list(self._alvos_na_area(zona["cx"], zona["cy"], raio)):
+            if alvo.get("id") == m.get("id"):
+                # O criador também pode estar no raio; a área não discrimina aliados.
+                pass
+            dano = roll_dice(dano_expr)
+            await self._aplicar_dano_alvo(alvo, dano, (ability.get("damage_types") or ["acid"])[0], m.get("id"))
+            nome = alvo.get("name") or alvo.get("nome", "Alvo")
+            await self.gm_say(f"🧪 **{nome}** sofre **{dano}** da Nuvem Ácida de **{m['name']}**.")
+        await self.gm_say(f"🧪 **{m['name']}** cria uma Nuvem Ácida de raio {raio} por {zona['duracao']} rodada(s).")
+        return zona
+
+    async def _processar_nuvem_acida_inicio_turno(self, alvo):
+        if not alvo or alvo.get("hp", alvo.get("vida_atual", 0)) <= 0:
+            return
+        alvo_id = alvo.get("id")
+        for zona in list(self.zonas_especiais):
+            if not zona.get("ativa") or zona.get("tipo") != "nuvem_acida":
+                continue
+            # A explosão inicial representa a primeira rodada. O 1d6 residual
+            # começa na rodada seguinte e ocorre uma vez no turno de cada alvo,
+            # completando exatamente uma rodada de dano contínuo.
+            if self.round_num <= int(zona.get("created_round", self.round_num) or self.round_num):
+                continue
+            if not self._na_area(alvo, zona["cx"], zona["cy"], zona.get("raio", 1)):
+                continue
+            ticks = zona.setdefault("acid_ticks", {})
+            if ticks.get(alvo_id) == self.round_num:
+                continue
+            ticks[alvo_id] = self.round_num
+            expr = str(zona.get("tick_damage", "1d6"))
+            bruto = roll_dice(expr)
+            dano = bruto
+            await self._aplicar_dano_alvo(alvo, dano, DMG_ACID, zona.get("caster"))
+            nome = alvo.get("name") or alvo.get("nome", "Alvo")
+            await self.gm_say(f"🧪 **{nome}** sofre **{dano}** ao iniciar o turno dentro da Nuvem Ácida.")
+
+    async def _carapaca_espinhosa_retalia(self, criatura, atacante):
+        """Dano reativo da Carapaça, somente após acerto corpo a corpo."""
+        ability = self._habilidade_monstro(criatura, "carapaca_espinhosa")
+        if not ability or not atacante or not atacante.get("alive", True):
+            return
+        dano_str = str(ability.get("damage") or "1d4")
+        bruto = roll_dice(dano_str)
+        dano = self._apply_damage_types(bruto, [DMG_PHYSICAL], atacante)
+        await self.broadcast({"type": "dice_roll", "die": "d" + dano_str.split("d", 1)[-1].split("+", 1)[0],
+                              "value": bruto, "label": "Carapaça Espinhosa"})
+        atacante["hp"] = max(0, atacante.get("hp", 0) - dano)
+        await self.gm_say(f"🦂 **{atacante.get('name', 'Atacante')}** sofre **{dano}** da Carapaça Espinhosa de **{criatura.get('name', 'criatura')}**.")
+        if atacante.get("hp", 0) <= 0 and self._eh_jogador(atacante):
+            await self._player_dies(atacante["id"])
+
     def _sob_luz_direta(self, m):
         """True se o monstro está sob luz direta (zona 'luz'). Hoje não há fonte de
         luz no jogo — fica dormente até um efeito de luz ser adicionado (decisão do
@@ -18086,6 +18785,16 @@ class GameRoom:
             if z.get("tipo") == "bola_fogo":
                 # Zona de fogo: aplica dano da rodada (R2/R3) e avanÃ§a a contagem.
                 await self._processar_zona_bola_fogo(z)
+            elif z.get("tipo") == "nuvem_acida":
+                z["duracao"] = max(0, int(z.get("duracao", 0) or 0) - 1)
+                if z["duracao"] <= 0:
+                    z["ativa"] = False
+                    await self.gm_say("🧪 A Nuvem Ácida se dissipou.")
+            elif z.get("tipo") == "molochus_chamas":
+                z["duracao"] = max(0, int(z.get("duracao", 0) or 0) - 1)
+                if z["duracao"] <= 0:
+                    z["ativa"] = False
+                    await self.gm_say("🔥 As chamas deixadas pelo Molochus se apagam.")
             elif z.get("tipo") == "solo_sagrado":
                 x, y = z.get("pos", [-1, -1])
                 for m in self.monsters.values():
@@ -18238,7 +18947,7 @@ class GameRoom:
     def _ignora_penalidade_agua(self, criatura):
         """Movimento Errático preserva o movimento normal em qualquer água."""
         return any(isinstance(habilidade, dict)
-                   and habilidade.get("id") == "movimento_erratico"
+                   and habilidade.get("id") in {"movimento_erratico", "movimento_aquatico"}
                    for habilidade in criatura.get("special_abilities", []))
 
     def _water_step_cost(self, criatura, x, y):
@@ -18280,7 +18989,8 @@ class GameRoom:
     def _veneno_save_bonus(self, alvo, tipo_save):
         """Bônus de save. Jogador e monstros novos usam saves individuais;
         monstros legados derivam do tier."""
-        chave = {"fortitude": "fort", "reflexos": "ref_", "vontade": "will"}.get(tipo_save, "fort")
+        chave = {"fortitude": "fort", "reflexos": "ref_", "vontade": "will",
+                 "forca": "str_", "força": "str_", "strength": "str_"}.get(tipo_save, "fort")
         if self._eh_jogador(alvo):
             return alvo.get(chave, 0)
         # Monstros novos tÃªm saves explÃ­citos (fort / ref_ / will)
@@ -18289,7 +18999,8 @@ class GameRoom:
         # Fallback legado: tier + 1
         return alvo.get("tier", 1) + 1
 
-    def _testar_save(self, alvo, tipo_save, dificuldade, extra_mod=0, fonte=None, desvantagem=False):
+    def _testar_save(self, alvo, tipo_save, dificuldade, extra_mod=0, fonte=None,
+                     desvantagem=False, poison_effect=False):
         """Retorna (passou, d20, bonus, total). extra_mod: bônus/penalidade adicional.
         fonte: monstro-origem do efeito (habilidade de criatura) — habilita o +1 de
         resistência da Lenda do Bardo contra aquela espécie (só p/ jogadores).
@@ -18298,11 +19009,19 @@ class GameRoom:
                  + extra_mod + self._lenda_resist_bonus(alvo, fonte)
                  + self._resistencia_saves_bonus(alvo)
                  + self._alaude_runico_resist(alvo, tipo_save))
+        if poison_effect and tipo_save == "fortitude" and (
+                self._tem_habilidade(alvo, "metabolismo_vulneravel")
+                or self._tem_habilidade(alvo, "metabolismo_instavel")):
+            bonus -= 2
         if tipo_save == "vontade" and self._eh_jogador(alvo):
             bonus += self._maldicao_mod(alvo, "vontade")
         d20   = min(random.randint(1, 20), random.randint(1, 20)) if desvantagem else random.randint(1, 20)
         total = d20 + bonus
         passou = total >= dificuldade
+        if poison_effect and not passou and self._tem_habilidade(alvo, "metabolismo_instavel"):
+            alvo["lento"] = True
+            alvo["lento_rodadas"] = max(1, int(alvo.get("lento_rodadas", 0) or 0))
+            alvo["lento_pulou"] = False
         if not passou and tipo_save == "reflexos" and alvo.get("type") == "grotao":
             alvo["_grotao_reflexos_falhou"] = True
         return passou, d20, bonus, total
@@ -18347,7 +19066,8 @@ class GameRoom:
                     if w.get("type") == "save_penalty" and w.get("save") == veneno.get("save", "fortitude")
                 )
                 save_ok, d20, sb, stot = self._testar_save(
-                    alvo, veneno.get("save", "fortitude"), veneno.get("dificuldade", 10), extra_mod=_save_pen)
+                    alvo, veneno.get("save", "fortitude"), veneno.get("dificuldade", 10), extra_mod=_save_pen,
+                    poison_effect=(veneno.get("save", "fortitude") == "fortitude"))
                 sb_str = f"+{sb}" if sb >= 0 else str(sb)
                 await self.gm_say(
                     f"🎲 **{alvo_nome}** — Fortitude: d20({d20}){sb_str}={stot} vs CD "
@@ -18383,7 +19103,8 @@ class GameRoom:
             if _w.get("type") == "save_penalty" and _w.get("save") == veneno.get("save", "fortitude"):
                 _save_pen += _w.get("bonus_flat", 0)
         save_ok, d20, sb, stot = self._testar_save(
-            alvo, veneno.get("save", "fortitude"), veneno.get("dificuldade", 10), extra_mod=_save_pen)
+            alvo, veneno.get("save", "fortitude"), veneno.get("dificuldade", 10), extra_mod=_save_pen,
+            poison_effect=(veneno.get("save", "fortitude") == "fortitude"))
         sb_str = f"+{sb}" if sb >= 0 else str(sb)
         pen_str = f" (fraqueza a venenos: {_save_pen:+d})" if _save_pen else ""
         await self.gm_say(
@@ -20018,6 +20739,8 @@ class GameRoom:
             captor = self.monsters.get(cur_p.get("preso_por"))
             if captor and captor["hp"] > 0:
                 cur_p["moves_left"] = 0
+        if cur_p.get("engolido"):
+            cur_p["moves_left"] = 0
         # Velocidade: movimento dobrado enquanto ativa.
         if cur_p.get("velocidade_rodadas", 0) > 0:
             cur_p["moves_left"] *= 2
@@ -20045,9 +20768,194 @@ class GameRoom:
 
     def _furia_bonus(self, m):
         """Fúria: +2 de dano enquanto o monstro está com HP < 50% (ex.: Urso Negro)."""
+        if any(ab.get("id") == "furia_garaloux" for ab in m.get("special_abilities", [])):
+            ab = self._habilidade_monstro(m, "furia_garaloux") or {}
+            limiar = float(ab.get("threshold", 0.5) or 0.5)
+            return int(ab.get("damage_bonus", 2) or 2) if m.get("hp", 0) <= m.get("max_hp", m.get("hp", 1)) * limiar else 0
         if not any(ab.get("id") == "furia" for ab in m.get("special_abilities", [])):
             return 0
         return 2 if m.get("hp", 0) < m.get("max_hp", m.get("hp", 1)) / 2 else 0
+
+    def _furia_ataque_bonus(self, m):
+        if not self._tem_habilidade(m, "furia_garaloux"):
+            return 0
+        ab = self._habilidade_monstro(m, "furia_garaloux") or {}
+        limiar = float(ab.get("threshold", 0.5) or 0.5)
+        return int(ab.get("attack_bonus", 2) or 2) if m.get("hp", 0) <= m.get("max_hp", m.get("hp", 1)) * limiar else 0
+
+    def _garaloux_ability(self, m, aid):
+        return self._habilidade_monstro(m, aid)
+
+    def _molochus_ability(self, m, aid):
+        if not m or not str(m.get("type", "")).startswith("molochus_"):
+            return None
+        return self._habilidade_monstro(m, aid)
+
+    async def _molochus_aplicar_fogo(self, alvo, expressao, fonte=None, motivo="fogo"):
+        """Aplica fogo do Molochus passando pelo funil de imunidades/fraquezas."""
+        bruto = roll_dice(str(expressao or "1d4"))
+        ajustado = self._apply_damage_types(bruto, [DMG_FIRE], alvo)
+        await self.broadcast({"type": "dice_roll", "die": "d" + str(expressao).split("d", 1)[-1].split("+", 1)[0],
+                              "value": bruto, "label": motivo})
+        if ajustado > 0:
+            await self._dano_em_alvo(alvo, ajustado, DMG_FIRE, fonte)
+        return ajustado
+
+    async def _processar_aura_escaldante_inicio(self, alvo):
+        """Tica a aura de cada Molochus adjacente no início do turno do alvo."""
+        if not self._vivo(alvo):
+            return
+        fontes = [m for m in self.monsters.values() if m.get("hp", 0) > 0
+                  and m is not alvo and self._molochus_ability(m, "aura_escaldante")]
+        for m in fontes:
+            ability = self._molochus_ability(m, "aura_escaldante")
+            if max(abs(m["pos"][0] - alvo["pos"][0]), abs(m["pos"][1] - alvo["pos"][1])) > int(ability.get("radius", 1) or 1):
+                continue
+            if not self._tem_linha_de_visao(m["pos"], alvo["pos"]):
+                continue
+            dano = await self._molochus_aplicar_fogo(alvo, ability.get("damage", "1d4"), m,
+                                                      f"Aura Escaldante — {m.get('name', 'Molochus')}")
+            if dano > 0:
+                await self.gm_say(f"🔥 **{alvo.get('name') or alvo.get('nome', 'Alvo')}** sofre **{dano}** da Aura Escaldante de **{m['name']}**.")
+            if not self._vivo(alvo):
+                break
+
+    async def _molochus_sangue_em_ebulicao(self, molochus, atacante, melee, dano_sofrido):
+        """Retalia cada acerto melee que realmente causou dano ao Molochus."""
+        ability = self._molochus_ability(molochus, "sangue_em_ebulicao")
+        if not ability or not melee or dano_sofrido <= 0 or not atacante or not self._vivo(atacante):
+            return
+        if max(abs(molochus["pos"][0] - atacante["pos"][0]), abs(molochus["pos"][1] - atacante["pos"][1])) > 1:
+            return
+        dano = await self._molochus_aplicar_fogo(atacante, ability.get("damage", "1d4"), molochus,
+                                                  f"Sangue em Ebulição — {molochus.get('name', 'Molochus')}")
+        if dano > 0:
+            await self.gm_say(f"🌋 **{atacante.get('name') or atacante.get('nome', 'Atacante')}** sofre **{dano}** do Sangue em Ebulição de **{molochus['name']}**.")
+
+    async def _molochus_zona_fogo_aplicar(self, alvo, zona, motivo):
+        if not self._vivo(alvo) or not zona.get("ativa"):
+            return
+        if max(abs(alvo["pos"][0] - zona["cx"]), abs(alvo["pos"][1] - zona["cy"])) > int(zona.get("raio", 1) or 1):
+            return
+        if not self._tem_linha_de_visao([zona["cx"], zona["cy"]], alvo["pos"]):
+            return
+        dano = await self._molochus_aplicar_fogo(alvo, zona.get("dano_turno", "1d6"), zona.get("caster"), motivo)
+        if dano > 0:
+            await self.gm_say(f"🔥 **{alvo.get('name') or alvo.get('nome', 'Alvo')}** sofre **{dano}** das chamas persistentes.")
+
+    async def _processar_zona_molochus_inicio_turno(self, alvo):
+        for zona in self.zonas_especiais:
+            if zona.get("tipo") == "molochus_chamas" and zona.get("ativa"):
+                await self._molochus_zona_fogo_aplicar(alvo, zona, "Chamas do Molochus")
+                if not self._vivo(alvo):
+                    break
+
+    async def _verificar_entrada_zona_molochus(self, alvo, nx, ny):
+        for zona in self.zonas_especiais:
+            if zona.get("tipo") != "molochus_chamas" or not zona.get("ativa"):
+                continue
+            if max(abs(nx - zona["cx"]), abs(ny - zona["cy"])) > int(zona.get("raio", 1) or 1):
+                continue
+            if not self._vivo(alvo):
+                break
+            await self._molochus_zona_fogo_aplicar(alvo, zona, "Entrada nas chamas do Molochus")
+            break
+
+    def _molochus_investida_fogo(self, m, atk_def):
+        ability = self._molochus_ability(m, "investida_flamejante")
+        if not ability or self._indice_ataque_monstro(m, atk_def) != int(ability.get("attack_index", 2) or 2):
+            return None
+        if m.get("_molochus_move_count", 0) < int(ability.get("move_required", 3) or 3):
+            return None
+        return ability
+
+    def _garaloux_charge(self, m, atk_def, target):
+        """Retorna a carga especial disponível para a Chifrada deste turno."""
+        if m.get("_garaloux_charge_consumed"):
+            return None
+        salto = self._garaloux_ability(m, "salto_selvagem")
+        investida = self._garaloux_ability(m, "investida_brutal")
+        if not salto and not investida:
+            return None
+        index = self._indice_ataque_monstro(m, atk_def)
+        salto_idx = int((salto or {}).get("attack_index", 2) or 2)
+        investida_idx = int((investida or {}).get("attack_index", 2) or 2)
+        required = int((salto or investida).get("move_required", 3) or 3)
+        if index not in {salto_idx, investida_idx} or m.get("_garaloux_move_count", 0) < required:
+            return None
+        return {"salto": salto, "investida": investida}
+
+    def _garaloux_alvo_contra_parede(self, m, target):
+        dx = target["pos"][0] - m["pos"][0]
+        dy = target["pos"][1] - m["pos"][1]
+        sx = 0 if dx == 0 else (1 if dx > 0 else -1)
+        sy = 0 if dy == 0 else (1 if dy > 0 else -1)
+        if not sx and not sy:
+            return False
+        tx, ty = target["pos"][0] + sx, target["pos"][1] + sy
+        return self._blocks_tile(tx, ty)
+
+    async def _garaloux_salto_no_acerto(self, m, target, charge):
+        salto = charge.get("salto") if charge else None
+        if not salto or target.get("preso"):
+            return
+        dc = int(salto.get("reflex_dc", salto.get("dc", 14)) or 14)
+        save_ok, d20, bonus, total = self._testar_save(target, salto.get("save", "reflexos"), dc, fonte=m)
+        bonus_txt = f"+{bonus}" if bonus >= 0 else str(bonus)
+        if save_ok:
+            await self.gm_say(f"🦁 **{target.get('name') or target.get('nome', 'Alvo')}** evita o Salto Selvagem de **{m['name']}** "
+                              f"(Reflexos {d20}{bonus_txt}={total} vs CD {dc}).")
+            return
+        target["preso"] = True
+        target["preso_por"] = m["id"]
+        target["preso_tipo"] = "salto_selvagem"
+        escape_dc = int(salto.get("escape_dc", dc) or dc)
+        await self.gm_say(f"🦁 **{target.get('name') or target.get('nome', 'Alvo')}** fica Imobilizado pelo Salto Selvagem de **{m['name']}** "
+                          f"(Reflexos {d20}{bonus_txt}={total} vs CD {dc}; escape: Força CD {escape_dc}).")
+
+    async def _garaloux_dilacerar(self, m, target_obj, claw_hits):
+        ability = self._garaloux_ability(m, "dilacerar")
+        if not ability or claw_hits < int(ability.get("hits_needed", 2) or 2) or not self._alvo_vivo(target_obj):
+            return
+        target = target_obj["obj"]
+        expr = str(ability.get("damage", "2d6"))
+        extra = self._apply_damage_types(roll_dice(expr), ability.get("damage_types", ["physical"]), target)
+        if target_obj["kind"] == "player":
+            target["hp"] = max(0, target["hp"] - extra)
+        elif target_obj["kind"] == "monster":
+            target["hp"] = max(0, target["hp"] - extra)
+        else:
+            target["vida_atual"] = max(0, target["vida_atual"] - extra)
+        await self.gm_say(f"🦁 **{m['name']}** Dilacera **{target.get('name') or target.get('nome', 'Alvo')}** e causa **{extra}** de dano extra!")
+        if not self._alvo_vivo(target_obj):
+            if target_obj["kind"] == "player":
+                await self._player_dies(target["id"])
+            elif target_obj["kind"] == "monster":
+                await self._monster_dies(target, m.get("id"))
+            else:
+                await self._animado_morre(target, m.get("id"))
+
+    async def _garaloux_predador_supremo(self, m):
+        ability = self._garaloux_ability(m, "predador_supremo")
+        if not ability or m.get("_predador_supremo_reacao"):
+            return
+        candidatos = []
+        candidatos.extend({"kind": "player", "obj": p} for p in self.players.values()
+                          if p.get("alive") and p.get("hp", 0) > 0 and self._is_adjacent_to_monster(p["pos"], m))
+        candidatos.extend({"kind": "monster", "obj": o} for o in self.monsters.values()
+                          if o is not m and o.get("hp", 0) > 0 and self._is_adjacent_to_monster(o["pos"], m))
+        candidatos.extend({"kind": "animado", "obj": a} for a in self._all_animados()
+                          if a.get("vida_atual", 0) > 0 and self._is_adjacent_to_monster(a["pos"], m))
+        if not candidatos:
+            return
+        alvo_obj = min(candidatos, key=lambda x: max(abs(x["obj"]["pos"][0] - m["pos"][0]), abs(x["obj"]["pos"][1] - m["pos"][1])))
+        ataque = (m.get("attacks") or [])[int(ability.get("attack_index", 0) or 0)]
+        m["_predador_supremo_reacao"] = True
+        try:
+            await self.gm_say(f"🦁 **{m['name']}** abateu uma criatura e desfere uma Mordida adicional!")
+            await self._execute_one_monster_attack(m, ataque, alvo_obj)
+        finally:
+            m.pop("_predador_supremo_reacao", None)
 
     def _investida_bonus(self, m):
         """Investida Brutal: +2 de dano se o monstro se moveu antes de atacar
@@ -20545,6 +21453,12 @@ class GameRoom:
         for resistance in target.get("resistances", []):
             if ignora_resistencia_fisica:
                 continue
+            # A RD de Tirano cobre somente armas comuns. Magias, habilidades,
+            # dano de monstros e armas mágicas entram no funil sem a redução.
+            if resistance.get("common_weapon_only"):
+                if not weapon or bool(weapon.get("magical")) \
+                        or "magic" in str(weapon.get("id", "")).lower():
+                    continue
             rtype = resistance.get("type")
             if rtype == "all_except":
                 excluded = set(resistance.get("exclude", []))
@@ -20775,6 +21689,13 @@ class GameRoom:
             return False
         m["pos"] = [nx, ny]
         m["_moved_this_turn"] = True
+        if any(ab.get("id") in {"salto_selvagem", "investida_brutal"}
+               for ab in m.get("special_abilities", [])):
+            m["_garaloux_move_count"] = m.get("_garaloux_move_count", 0) + 1
+        if m.get("type") in {"tirano_da_mata", "tirano_ancestral"}:
+            m["_tirano_move_count"] = m.get("_tirano_move_count", 0) + 1
+        if self._molochus_ability(m, "investida_flamejante"):
+            m["_molochus_move_count"] = m.get("_molochus_move_count", 0) + 1
         if m["_water_moves_left"] < step_cost:
             m["_water_moves_left"] = 0
             m["_water_min_step_used"] = True
@@ -20783,7 +21704,11 @@ class GameRoom:
         if step_facing in ([1, 0], [-1, 0], [0, 1], [0, -1]):
             m["facing"] = step_facing
         await self._aplicar_fogueira_se_pisar(m)
+        if m.get("hp", 0) > 0:
+            await self._verificar_entrada_zona_molochus(m, nx, ny)
         await self._arrastar_preso(m, [old_x, old_y])
+        if m.get("type") in {"tirano_da_mata", "tirano_ancestral"}:
+            await self._tirano_passo_devastador(m)
         return True
 
     def _decor_by_id(self, decor_id):
@@ -21308,6 +22233,9 @@ class GameRoom:
                         await self._corpo_energetico_atravessar(m, nx, ny)
                     m["pos"] = [bx, by]
                     m["_moved_this_turn"] = True
+                    if any(ab.get("id") in {"salto_selvagem", "investida_brutal"}
+                           for ab in m.get("special_abilities", [])):
+                        m["_garaloux_move_count"] = m.get("_garaloux_move_count", 0) + 2
                     m["_water_moves_left"] = max(0, m.get("_water_moves_left", 0) - 2)
                     await self._aplicar_fogueira_se_pisar(m)
                     m["facing"] = cand_facing
@@ -21352,9 +22280,11 @@ class GameRoom:
         m_atk = (atk_def["atk_bonus"] + dynamic_attr + self._pen(m, "ataque") + self._mod_magia(m, "ataque")
                  + (2 if m.get("furia_lobisomem") else 0)
                  + m.get("equipment_attack_bonus", 0)
+                 + self._bonus_ferrao_lacralion(m, target, atk_def)
                  + self._sombras_atk_bonus(m, target)               # Ataque das Sombras (+2)
                  + self._luz_atk_pen(m)                             # Fraqueza de Luz (-2 sob luz direta)
                  + self._acorde_atk_pen(m)                          # Tambor RÃºnico: -1 (sucesso no Acorde)
+                 + self._furia_ataque_bonus(m)
                  + self._monster_editor_passive_bonus(m))
         esc = self._verificar_escuridao(m, target)
         prov = bool(m.get("provocado_turno_efeito"))
@@ -21390,6 +22320,10 @@ class GameRoom:
             await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
                                   "label": f"🎲 Sorte — {m['name']} rerrola (−2)", "hit": hit, "crit": crit})
 
+        charge = self._garaloux_charge(m, atk_def, target) if hit else None
+        if charge:
+            m["_garaloux_charge_consumed"] = True
+
         if hit:
             raw_dmg = roll_dice(atk_def["damage"])
             if crit:
@@ -21399,7 +22333,28 @@ class GameRoom:
                 await self.broadcast({"type": "dice_roll", "die": "d6",
                                        "value": sombra_dano, "label": "Ataque das Sombras"})
             attr_dmg = attr_mod if atk_def.get("apply_attribute_damage") else 0
-            dmg = max(1, raw_dmg + attr_dmg + self._pen(m, "dano") + self._mod_magia(m, "dano")
+            charge_bonus = 0
+            if charge and charge.get("investida"):
+                investida_expr = str(charge["investida"].get("damage", "2d6"))
+                investida_roll = roll_dice(investida_expr)
+                charge_bonus += investida_roll
+                await self.broadcast({"type": "dice_roll", "die": "d6", "value": investida_roll,
+                                      "label": f"Investida Brutal - {m['name']}"})
+            if charge and charge.get("salto") and self._garaloux_alvo_contra_parede(m, target):
+                collision_expr = str(charge["salto"].get("collision_damage", "1d6"))
+                collision = roll_dice(collision_expr)
+                charge_bonus += collision
+                await self.broadcast({"type": "dice_roll", "die": "d6", "value": collision,
+                                      "label": f"Colisao contra a parede - {m['name']}"})
+            flame_charge = self._molochus_investida_fogo(m, atk_def)
+            if flame_charge:
+                flame_expr = str(flame_charge.get("damage", "2d6"))
+                flame_roll = roll_dice(flame_expr)
+                flame_damage = self._apply_damage_types(flame_roll, [DMG_FIRE], target)
+                charge_bonus += flame_damage
+                await self.broadcast({"type": "dice_roll", "die": "d6", "value": flame_roll,
+                                      "label": f"Investida Flamejante - {m['name']}"})
+            dmg = max(1, raw_dmg + attr_dmg + charge_bonus + self._pen(m, "dano") + self._mod_magia(m, "dano")
                       + self._furia_bonus(m)                         # FÃºria (HP < 50%)
                       + self._investida_bonus(m)                     # Investida Brutal (moveu)
                       + self._impacto_devastador_bonus(m)            # Elemental de Pedra: parado
@@ -21413,6 +22368,13 @@ class GameRoom:
             if self._tem_habilidade(m, "intensidade"):
                 damage_context = dict(atk_def, ignora_resistencia_leve_fogo=True)
             dmg = self._apply_damage_types(dmg, atk_def.get("damage_types", ["physical"]), target, damage_context)
+            if atk_def.get("fire_damage"):
+                fire_expr = str(atk_def["fire_damage"])
+                fire_roll = roll_dice(fire_expr)
+                fire_damage = self._apply_damage_types(fire_roll, [DMG_FIRE], target)
+                dmg += fire_damage
+                await self.broadcast({"type": "dice_roll", "die": "d6", "value": fire_roll,
+                                      "label": f"Fogo da arma - {m['name']}"})
             if (self._tem_habilidade(m, "sobrecarga")
                     and m.get("sobrecarga_target_id") == target.get("id")
                     and m.get("sobrecarga_round") == self.round_num - 1):
@@ -21427,6 +22389,7 @@ class GameRoom:
             await self.broadcast({"type": "dice_roll", "die": die_type, "value": raw_dmg, "label": "Dano"})
             crit_str = " **CRÍTICO!**" if crit else ""
             atk_name = atk_def.get("name", "Ataque")
+            dano_sofrido = 0
             if is_player:
                 dmg_alvo, transfer = await self._processar_dano_protetor(target["id"], dmg)
                 tipos_energia = {DMG_FIRE, DMG_COLD, DMG_LIGHTNING, DMG_ACID, DMG_WATER, DMG_HOLY}
@@ -21435,6 +22398,7 @@ class GameRoom:
                     dmg_alvo = await self._absorver_energia(target, dmg_alvo, tipo_energia)
                 dmg_alvo = self._reduzir_dano_barreira_arcana(target, dmg_alvo)
                 target["hp"] = max(0, target["hp"] - dmg_alvo)
+                dano_sofrido = dmg_alvo
                 await self.gm_say(
                     f"💢 **{m['name']}** · {atk_name} em **{tgt_name}**"
                     f" (d20={roll}+{m_atk}={total} vs CA {effective_ac}):"
@@ -21450,6 +22414,9 @@ class GameRoom:
                 elif atk_def.get("on_hit"):
                     await self._aplicar_veneno(target, atk_def["on_hit"], fonte="ataque",
                                                 dificuldade=atk_def.get("poison_dc"))
+                lacralion_poison = self._veneno_lacralion_do_ataque(m, atk_def)
+                if lacralion_poison and target.get("hp", 0) > 0:
+                    await self._aplicar_veneno_lacralion(m, target, lacralion_poison)
                 # Infecção é passiva: qualquer ataque que acerte pode transmitir
                 # a doença configurada na ficha da criatura.
                 infection = self._habilidade_monstro(m, "infeccao")
@@ -21500,21 +22467,40 @@ class GameRoom:
                     await self._concentracao_requiem(target, dmg_alvo)
             elif is_monster:
                 target["hp"] = max(0, target["hp"] - dmg)
+                dano_sofrido = dmg
                 await self.gm_say(
                     f"💢 **{m['name']}** · {atk_name} em **{tgt_name}**"
                     f" (d20={roll}+{m_atk}={total} vs CA {effective_ac}):"
                     f"{crit_str} **{dmg}** de dano! ({target['hp']}/{target['max_hp']} HP)")
                 if target["hp"] <= 0:
                     await self._monster_dies(target, m.get("id"))
+                else:
+                    lacralion_poison = self._veneno_lacralion_do_ataque(m, atk_def)
+                    if lacralion_poison:
+                        await self._aplicar_veneno_lacralion(m, target, lacralion_poison)
             else:
                 dmg_ef = self._ajustar_dano_elemental(target, dmg, "fisico")
                 target["vida_atual"] = max(0, target["vida_atual"] - dmg_ef)
+                dano_sofrido = dmg_ef
                 await self.gm_say(
                     f"💢 **{m['name']}** · {atk_name} em **{tgt_name}**"
                     f" (d20={roll}+{m_atk}={total} vs CA {effective_ac}):"
                     f"{crit_str} **{dmg_ef}** de dano! ({target['vida_atual']}/{target['vida_max']} HP)")
                 if target["vida_atual"] <= 0:
                     await self._animado_morre(target, m.get("id"))
+            if (self._molochus_ability(target, "sangue_em_ebulicao")
+                    and not str(m.get("type", "")).startswith("molochus_")
+                    and not atk_def.get("range")):
+                await self._molochus_sangue_em_ebulicao(target, m, True, dano_sofrido)
+            if not self._alvo_vivo(target_obj) and not m.get("_predador_supremo_reacao"):
+                await self._garaloux_predador_supremo(m)
+            if target.get("hp", target.get("vida_atual", 0)) > 0 and charge:
+                await self._garaloux_salto_no_acerto(m, target, charge)
+                if charge.get("investida") and target.get("hp", target.get("vida_atual", 0)) > 0:
+                    dx = 0 if target["pos"][0] == m["pos"][0] else (1 if target["pos"][0] > m["pos"][0] else -1)
+                    dy = 0 if target["pos"][1] == m["pos"][1] else (1 if target["pos"][1] > m["pos"][1] else -1)
+                    if dx or dy:
+                        self._empurrar(target, dx, dy, int(charge["investida"].get("push", 1) or 1))
             # Agarrão com teste de resistência (crocodilo, cobra). Fica FORA do
             # ramo de herói por dois motivos: vale no controle Manual (que ataca
             # por aqui, não pela IA da espécie) e prende criatura contra
@@ -21522,7 +22508,15 @@ class GameRoom:
             # tem heróis. Animados ficam de fora (usam `vida_atual`).
             if (target_obj["kind"] in ("player", "monster")
                     and target.get("hp", 0) > 0):
-                await self._agarrao_no_acerto(m, target)
+                await self._agarrao_no_acerto(m, target, atk_def)
+                venom_charcos = self._habilidade_charcos_no_ataque(m, atk_def, "veneno_charcos")
+                if venom_charcos and target.get("hp", 0) > 0:
+                    await self._aplicar_efeito_movimento_charcos(m, target, venom_charcos, "o Veneno dos Charcos")
+                paralitico = self._habilidade_charcos_no_ataque(m, atk_def, "ferrao_paralitico")
+                if paralitico and target.get("hp", 0) > 0:
+                    await self._aplicar_efeito_movimento_charcos(m, target, paralitico, "o Ferrão Paralítico")
+                if target.get("hp", 0) > 0:
+                    await self._registrar_tentaculo_charcos(m, target, atk_def)
             if m.get("editor_ability_advantage", 0):
                 m["editor_ability_advantage"] = max(0, m["editor_ability_advantage"] - 1)
                 m["editor_ability_damage"] = 0
@@ -21546,6 +22540,7 @@ class GameRoom:
         if await self._monster_try_equipment_item(m, target_obj):
             return
         hits_by_group = []
+        claw_hits = 0
         for atk_def in m.get("attacks", []):
             group_hit = False
             for _ in range(atk_def.get("num_attacks", 1)):
@@ -21553,8 +22548,13 @@ class GameRoom:
                     return
                 if not is_player and target.get("vida_atual", 0) <= 0:
                     return
-                group_hit = (await self._execute_one_monster_attack(m, atk_def, target_obj)) or group_hit
+                one_hit = await self._execute_one_monster_attack(m, atk_def, target_obj)
+                group_hit = one_hit or group_hit
+                if one_hit and self._garaloux_ability(m, "dilacerar") \
+                        and self._indice_ataque_monstro(m, atk_def) == int(self._garaloux_ability(m, "dilacerar").get("attack_index", 1) or 1):
+                    claw_hits += 1
             hits_by_group.append(group_hit)
+        await self._garaloux_dilacerar(m, target_obj, claw_hits)
         if (self._tem_habilidade(m, "furia_bestial") and len(hits_by_group) >= 2
                 and hits_by_group[0] and any(hits_by_group[1:]) and self._alvo_vivo(target_obj)):
             extra = roll_dice("1d6")
@@ -21975,6 +22975,36 @@ class GameRoom:
         target = self._get_monster_primary_target(m, targets)
         return bool(target and await self._usar_sopro_dragao(m, ability, target, targets))
 
+    async def _usar_explosao_vapor(self, m, ability, target_obj, targets):
+        tiles = self._sopro_dragao_tiles(m, target_obj["obj"]["pos"], ability)
+        if tuple(target_obj["obj"]["pos"]) not in tiles:
+            return False
+        victims = [item for item in targets if tuple(item["obj"].get("pos", [])) in tiles
+                   and self._alvo_vivo(item)]
+        if not victims or not self._ativar_habilidade_nativa(m, ability):
+            return False
+        cd = int(ability.get("dc", 16) or 16)
+        expressao = str(ability.get("damage", "4d6"))
+        await self.gm_say(f"🌋 **{m['name']}** usa **Explosão de Vapor** em cone de {ability.get('range', 3)} quadrados.")
+        for item in victims:
+            alvo = item["obj"]
+            passou, d20, bonus, total = self._testar_save(alvo, "reflexos", cd, fonte=m)
+            bruto = roll_dice(expressao)
+            dano = self._apply_damage_types((bruto + 1) // 2 if passou else bruto, [DMG_FIRE], alvo)
+            await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
+                                  "label": f"Reflexos — Explosão de Vapor", "hit": not passou})
+            await self._dano_em_alvo(alvo, dano, DMG_FIRE, m.get("id"))
+            nome = alvo.get("name") or alvo.get("nome", "Alvo")
+            await self.gm_say(f"🔥 **{nome}** {'passa' if passou else 'falha'} em Reflexos ({total} vs CD {cd}) e sofre **{dano}** de fogo.")
+        return True
+
+    async def _monster_try_explosao_vapor(self, m, targets):
+        ability = self._molochus_ability(m, "explosao_vapor")
+        if not ability or m.get("ability_cooldowns", {}).get("explosao_vapor", 0) > 0:
+            return False
+        target = self._get_monster_primary_target(m, targets)
+        return bool(target and await self._usar_explosao_vapor(m, ability, target, targets))
+
     async def _usar_amaldicoar(self, m, ability, target_obj):
         """Resolve Amaldiçoar como ação completa contra o alvo mais próximo."""
         alvo = target_obj.get("obj") if target_obj else None
@@ -22051,8 +23081,10 @@ class GameRoom:
         if not ability:
             return False
         aid = ability.get("id")
-        if aid in {"mestre_dos_mortos", "sopro_dragao", "amaldicoar_monstro",
+        if aid in {"mestre_dos_mortos", "sopro_dragao", "explosao_vapor", "amaldicoar_monstro",
                    "golpe_brutal", "desaparecer_nas_sombras"} or aid in self._ESMAGAR_PRESO:
+            return True
+        if aid in {"nuvem_acida", "sacudida_brutal", "engolir"}:
             return True
         if ability.get("action_type") == "passiva":
             return False
@@ -22202,6 +23234,19 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_da_area_ou_sopro_sem_usos_em_r")}); return
             self._debitar_acao_mestre(m, custo, "habilidade"); m["_ja_executou_acao"] = True
             await self.push_state(); return
+        if ability_id == "explosao_vapor":
+            alvo, alvo_kind = self._alvo_manual_mestre(target_id)
+            if not alvo or alvo is m:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")}); return
+            targets = [{"kind": "player", "obj": p} for p in self.players.values() if p.get("alive")]
+            targets += [{"kind": "animado", "obj": a} for a in self._all_animados() if a.get("vida_atual", 0) > 0 and not a.get("dominado_por_monstro")]
+            if getattr(self, "test_mode", False):
+                targets += [{"kind": "monster", "obj": o} for o in self.monsters.values()
+                            if o is not m and o.get("hp", 0) > 0]
+            if not await self._usar_explosao_vapor(m, ability, {"kind": alvo_kind, "obj": alvo}, targets):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_da_area_ou_habilidade_sem_usos_em_r")}); return
+            self._debitar_acao_mestre(m, custo, "habilidade"); m["_ja_executou_acao"] = True
+            await self.push_state(); return
         if ability_id == "amaldicoar_monstro":
             alvo = self.players.get(target_id)
             if not alvo or not alvo.get("alive"):
@@ -22218,6 +23263,33 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error",
                     "msg": T("erro.ninguem_agarrado_e_adjacente_para_esta_a")}); return
             await self._esmagar_preso(m, ability_id, preso)
+            self._debitar_acao_mestre(m, custo, "habilidade")
+            m["_ja_executou_acao"] = True
+            await self.push_state(); return
+        if ability_id == "nuvem_acida":
+            alvo, _ = self._alvo_manual_mestre(target_id)
+            if not alvo or alvo is m:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")}); return
+            rng = max(1, int(ability.get("range", 4) or 4))
+            if max(abs(m["pos"][0] - alvo["pos"][0]), abs(m["pos"][1] - alvo["pos"][1])) > rng:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_de_alcance")}); return
+            if not self._tem_linha_de_visao(m["pos"], alvo["pos"]):
+                await self.send_to(pid, {"type": "error", "msg": "Uma parede bloqueia a Nuvem Acida."}); return
+            if not self._ativar_habilidade_nativa(m, ability):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_sem_usos_ou_em_recarga")}); return
+            await self._criar_nuvem_acida(m, alvo["pos"], ability)
+            self._debitar_acao_mestre(m, custo, "habilidade")
+            m["_ja_executou_acao"] = True
+            await self.push_state(); return
+        if ability_id == "sacudida_brutal":
+            if not await self._tirano_sacudida(m):
+                await self.send_to(pid, {"type": "error", "msg": "Não há criatura Presa adjacente ou a habilidade está em recarga."}); return
+            self._debitar_acao_mestre(m, custo, "habilidade")
+            m["_ja_executou_acao"] = True
+            await self.push_state(); return
+        if ability_id == "engolir":
+            if not await self._tirano_engolir(m):
+                await self.send_to(pid, {"type": "error", "msg": "Engolir exige uma criatura Presa adjacente e um estômago vazio."}); return
             self._debitar_acao_mestre(m, custo, "habilidade")
             m["_ja_executou_acao"] = True
             await self.push_state(); return
@@ -22765,6 +23837,8 @@ class GameRoom:
     _AGARRAO_ON_HIT = {
         "agarrar":    ("🐊", "está preso nas mandíbulas do", "resistiu ao agarrar"),
         "constricao": ("🐍", "foi enrolado pela",            "escapou dos anéis"),
+        "agarrar_lacralion": ("🦂", "fica imobilizado pelas pinças de", "escapou do agarrão"),
+        "mandibulas_colossais": ("🦖", "fica preso nas mandíbulas de", "escapou das mandíbulas"),
     }
     # Ação de dano automático contra quem JÁ está agarrado por este monstro.
     # id → (dado padrão, narração; {m}=monstro {a}=alvo {d}=dano)
@@ -22780,10 +23854,30 @@ class GameRoom:
         return next((ab for ab in m.get("special_abilities", [])
                      if ab.get("id") in self._AGARRAO_ON_HIT), None)
 
-    async def _agarrao_no_acerto(self, m, target):
+    async def _agarrao_no_acerto(self, m, target, atk_def=None):
         """Testa o agarrão da ficha contra um jogador recém-atingido."""
         ab = self._habilidade_agarrao(m)
         if not ab or target.get("preso"):
+            return
+        if ab.get("id") == "mandibulas_colossais":
+            attack_index = int(ab.get("attack_index", 0) or 0)
+            if self._indice_ataque_monstro(m, atk_def) != attack_index:
+                return
+            if len(self._agarrados_por(m)) >= int(ab.get("max_targets", 1) or 1):
+                return
+        if ab.get("id") == "agarrar_lacralion":
+            attack_index = int(ab.get("attack_index", 0) or 0)
+            if self._indice_ataque_monstro(m, atk_def) != attack_index:
+                return
+            max_targets = int(ab.get("max_targets", 1) or 1)
+            if self._tem_habilidade(m, "predador_implacavel"):
+                max_targets = max(max_targets, 2)
+            if len(self._agarrados_por(m)) >= max_targets:
+                return
+            target["preso"] = True
+            target["preso_por"] = m["id"]
+            await self.gm_say(f"🦂 **{target['name']}** fica imobilizado pelas pinças de **{m['name']}**! "
+                              f"(escape: Fortitude CD {int(ab.get('dc', 16) or 16)})")
             return
         emoji, txt_preso, txt_livre = self._AGARRAO_ON_HIT[ab["id"]]
         dc   = int(ab.get("dc", 12) or 12)
@@ -22888,13 +23982,13 @@ class GameRoom:
 
         # Localiza a habilidade de agarrÃ£o do captor para CD e saves de escape.
         grip = next((ab for ab in captor.get("special_abilities", [])
-                     if ab.get("id") in ("agarrar", "constricao", "onda_envolvente")), None)
-        dc    = grip.get("dc", 12) if grip else 12
+                     if ab.get("id") in ("agarrar", "constricao", "agarrar_lacralion", "mandibulas_colossais", "tentaculos_imobilizar", "constricao_charcos", "onda_envolvente", "salto_selvagem")), None)
+        dc    = (grip.get("escape_dc", grip.get("dc", 12)) if grip else 12)
         saves = grip.get("escape_saves") if grip else None
         if not saves:
             saves = ["fortitude", "reflexos"]   # padrÃ£o (compat. crocodilo)
 
-        SAVE_LBL = {"fortitude": "FOR", "reflexos": "REF", "vontade": "VON"}
+        SAVE_LBL = {"fortitude": "FOR", "forca": "FOR", "força": "FOR", "reflexos": "REF", "vontade": "VON"}
         sucesso = False
         partes  = []
         for s in saves:
@@ -22916,6 +24010,160 @@ class GameRoom:
                 f"({detalhe} vs CD {dc}) — perde o movimento!")
 
     # â”€â”€ IA Crocodilo Jovem â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    def _tirano_ability(self, m, aid):
+        if not m or m.get("type") not in {"tirano_da_mata", "tirano_ancestral"}:
+            return None
+        return self._habilidade_monstro(m, aid)
+
+    async def _tirano_inicio_turno(self, m):
+        for preso in list(self._agarrados_por(m)):
+            if self._is_adjacent_to_monster(preso.get("pos", []), m):
+                ab = self._tirano_ability(m, "mandibulas_colossais") or {}
+                bruto = roll_dice(ab.get("automatic_damage", "2d10+10"))
+                dano = self._apply_damage_types(bruto, [DMG_PHYSICAL], preso)
+                await self._dano_em_alvo(preso, dano, DMG_PHYSICAL, m.get("id"))
+        engolido = next((c for c in self.players.values()
+                         if c.get("engolido_por") == m.get("id") and c.get("alive") and c.get("hp", 0) > 0), None)
+        if engolido:
+            ab = self._tirano_ability(m, "engolir") or {}
+            bruto = roll_dice(ab.get("acid_damage", "3d6"))
+            dano = self._apply_damage_types(bruto, [DMG_ACID], engolido)
+            await self._dano_em_alvo(engolido, dano, DMG_ACID, m.get("id"))
+
+    async def _tirano_sacudida(self, m):
+        ab = self._tirano_ability(m, "sacudida_brutal")
+        preso = self._preso_adjacente(m)
+        if not ab or not preso or not self._ativar_habilidade_nativa(m, ab):
+            return False
+        bruto = roll_dice(ab.get("damage", "4d6"))
+        dano = self._apply_damage_types(bruto, [DMG_PHYSICAL], preso)
+        await self._dano_em_alvo(preso, dano, DMG_PHYSICAL, m.get("id"))
+        if self._vivo(preso):
+            await self._soltar_agarrado(preso)
+            dx = 0 if preso["pos"][0] == m["pos"][0] else (1 if preso["pos"][0] > m["pos"][0] else -1)
+            dy = 0 if preso["pos"][1] == m["pos"][1] else (1 if preso["pos"][1] > m["pos"][1] else -1)
+            self._empurrar(preso, dx, dy, int(ab.get("throw_distance", 2) or 2))
+        return True
+
+    async def _tirano_engolir(self, m):
+        if m.get("type") != "tirano_ancestral" or any(c.get("engolido_por") == m.get("id") for c in self.players.values()):
+            return False
+        ab = self._tirano_ability(m, "engolir")
+        preso = self._preso_adjacente(m)
+        if not ab or not preso or not self._ativar_habilidade_nativa(m, ab):
+            return False
+        dc = int(ab.get("dc", 22) or 22)
+        passou, _d20, _bonus, total = self._testar_save(preso, "fortitude", dc, fonte=m)
+        if passou:
+            await self.gm_say(f"🦖 **{preso.get('name') or preso.get('nome', 'Alvo')}** resiste a Engolir de **{m['name']}** (Fortitude {total} vs CD {dc}).")
+            return True
+        preso["engolido"] = True
+        preso["engolido_por"] = m["id"]
+        preso["engolido_dano"] = 0
+        preso["engolido_limite"] = int(ab.get("stomach_hp", 20) or 20)
+        preso["preso"] = False
+        preso.pop("preso_por", None)
+        preso["pos"] = list(m.get("pos", preso.get("pos", [0, 0])))
+        await self.gm_say(f"🦖 **{m['name']}** engole **{preso.get('name') or preso.get('nome', 'Alvo')}**!")
+        return True
+
+    async def _tirano_escapar_estomago(self, p):
+        """Ação do herói engolido: Força CD da ficha para sair pela boca."""
+        if not p or not p.get("engolido"):
+            return False
+        captor = self.monsters.get(p.get("engolido_por"))
+        if not captor or not self._vivo(captor):
+            for key in ("engolido", "engolido_por", "engolido_dano", "engolido_limite"):
+                p.pop(key, None)
+            return False
+        if self._acao_bloqueada(p):
+            await self.send_to(p["id"], {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")})
+            return False
+        ab = self._tirano_ability(captor, "engolir") or {}
+        dc = int(ab.get("escape_dc", ab.get("dc", 22)) or 22)
+        passou, _d20, _bonus, total = self._testar_save(p, "forca", dc, fonte=captor)
+        p["action_done"] = True
+        self._consumir_recursos(p, "apenas_acao")
+        if passou:
+            await self._tirano_cuspir(captor, p, f"escapou com Força {total} vs CD {dc}")
+        else:
+            await self.gm_say(f"⛓️ **{p['name']}** falha ao forçar a saída do estômago de **{captor['name']}** (Força {total} vs CD {dc}).")
+        return True
+
+    async def _tirano_dano_interno(self, p, captor, dano):
+        """Registra dano no estômago, sem reduzir os PV externos do Tirano."""
+        if not p or not p.get("engolido") or not captor or p.get("engolido_por") != captor.get("id"):
+            return False
+        p["engolido_dano"] = p.get("engolido_dano", 0) + max(0, int(dano or 0))
+        ab = self._tirano_ability(captor, "abrir_caminho") or {}
+        limite = int(p.get("engolido_limite", ab.get("threshold", 20)) or 20)
+        await self.gm_say(f"🫀 **{p['name']}** causa **{dano}** de dano no estômago de **{captor['name']}** ({p['engolido_dano']}/{limite}).")
+        if p["engolido_dano"] >= limite and not captor.get("_estomago_aberto_usado"):
+            captor["_estomago_aberto_usado"] = True
+            captor["_tirano_perde_proximo_ataque"] = True
+            interno = roll_dice(ab.get("internal_damage", "2d6"))
+            interno = self._apply_damage_types(interno, [DMG_PHYSICAL], captor, None)
+            captor["hp"] = max(0, captor.get("hp", 0) - interno)
+            await self.gm_say(f"💥 O estômago é rompido por dentro: **{captor['name']}** sofre **{interno}** de dano interno e fica cambaleante.")
+            await self._tirano_cuspir(captor, p, "o estômago foi aberto por dentro")
+        return True
+
+    async def _tirano_cuspir(self, m, alvo, motivo="escapou"):
+        if not alvo:
+            return
+        alvo.pop("engolido", None)
+        alvo.pop("engolido_por", None)
+        alvo.pop("engolido_dano", None)
+        alvo.pop("engolido_limite", None)
+        destino = self._casa_livre_ao_lado(m, alvo)
+        if destino is not None:
+            alvo["pos"] = list(destino)
+        else:
+            alvo["pos"] = list(m.get("pos", alvo.get("pos", [0, 0])))
+        await self.gm_say(f"🦖 **{m['name']}** cospe **{alvo.get('name') or alvo.get('nome', 'Alvo')}**: {motivo}.")
+
+    async def _tirano_passo_devastador(self, m):
+        ab = self._tirano_ability(m, "passo_devastador")
+        if not ab or m.get("_tirano_passo_disparado") or m.get("_tirano_move_count", 0) < int(ab.get("move_required", 4) or 4):
+            return
+        m["_tirano_passo_disparado"] = True
+        for alvo in list(self._alvos_na_area(m["pos"][0], m["pos"][1], 1)):
+            if alvo is m or not self._vivo(alvo):
+                continue
+            bruto = roll_dice(ab.get("damage", "3d6"))
+            dano = self._apply_damage_types(bruto, [DMG_PHYSICAL], alvo)
+            await self._dano_em_alvo(alvo, dano, DMG_PHYSICAL, m.get("id"))
+            if self._vivo(alvo):
+                dx = 0 if alvo["pos"][0] == m["pos"][0] else (1 if alvo["pos"][0] > m["pos"][0] else -1)
+                dy = 0 if alvo["pos"][1] == m["pos"][1] else (1 if alvo["pos"][1] > m["pos"][1] else -1)
+                self._empurrar(alvo, dx, dy, int(ab.get("push", 1) or 1))
+
+    async def _ai_tirano(self, m, targets):
+        target_obj = self._get_monster_primary_target(m, targets)
+        if not target_obj:
+            return
+        target = target_obj["obj"]
+        if m.pop("_tirano_perde_proximo_ataque", False):
+            await self.gm_say(f"🦖 **{m['name']}** fica cambaleante e perde sua ação de ataque.")
+            return
+        if await self._tirano_sacudida(m) or await self._tirano_engolir(m):
+            return
+        preso = self._preso_adjacente(m)
+        if not preso and not self._is_adjacent_to_monster(target["pos"], m):
+            for _ in range(m.get("movement", 6)):
+                antes = list(m["pos"])
+                await self._monster_move_step(m, target["pos"])
+                if m["pos"] == antes or self._is_adjacent_to_monster(target["pos"], m):
+                    break
+        await self._tirano_passo_devastador(m)
+        if preso:
+            for atk in m.get("attacks", [])[1:]:
+                for _ in range(int(atk.get("num_attacks", 1) or 1)):
+                    await self._execute_one_monster_attack(m, atk, target_obj)
+            return
+        if self._is_adjacent_to_monster(target["pos"], m):
+            await self._monster_execute_attacks(m, target_obj)
+
     async def _ai_crocodilo_jovem(self, m, targets):
         """
         Agarrar: mordida acerta → FOR CD 12 ou fica preso.
@@ -23671,6 +24919,8 @@ class GameRoom:
         await self._processar_onda_envolvente_turno(m)
         if await self._monster_try_amaldicoar(m, targets):
             return
+        if await self._monster_try_explosao_vapor(m, targets):
+            return
         # Sopro é uma ação ofensiva completa e vem antes de magia, movimento ou
         # ataque. A direção é determinada pelo alvo prioritário da própria IA.
         if await self._monster_try_sopro_dragao(m, targets):
@@ -23705,6 +24955,8 @@ class GameRoom:
             await self._ai_esqueleto_animal(m, targets)
         elif ai == "crocodilo_jovem":
             await self._ai_crocodilo_jovem(m, targets)
+        elif ai in {"tirano_da_mata", "tirano_ancestral"}:
+            await self._ai_tirano(m, targets)
         elif ai == "cobra_constritora":
             await self._ai_cobra_constritora(m, targets)
         elif ai == "cobra_venenosa":
@@ -23828,6 +25080,15 @@ class GameRoom:
 
         # Soldado abre o turno com a granada quando ainda está à distância,
         # antes de avançar para o combate corpo a corpo.
+        nuvem = next((a for a in m.get("special_abilities", []) if a.get("id") == "nuvem_acida"), None)
+        alcance_nuvem = int((nuvem or {}).get("range", 4) or 4)
+        distancia_nuvem = max(abs(target["pos"][0] - m["pos"][0]), abs(target["pos"][1] - m["pos"][1]))
+        if (nuvem and cds.get("nuvem_acida", 0) <= 0 and distancia_nuvem <= alcance_nuvem
+                and self._tem_linha_de_visao(m["pos"], target["pos"])
+                and self._ativar_habilidade_nativa(m, nuvem)):
+            await self._criar_nuvem_acida(m, target["pos"], nuvem)
+            return
+
         if await self._soldado_try_granada(m):
             return
 
@@ -23857,8 +25118,10 @@ class GameRoom:
     def _alvo_vivo(self, target_obj):
         """True se o alvo (jogador ou animado) ainda está vivo."""
         o = target_obj["obj"]
-        if target_obj["kind"] in {"player", "monster"}:
+        if target_obj["kind"] == "player":
             return o.get("alive") and o.get("hp", 0) > 0
+        if target_obj["kind"] == "monster":
+            return o.get("hp", 0) > 0
         return o.get("vida_atual", 0) > 0
 
     async def _ativar_desaparecer_sombras(self, m):
@@ -24327,9 +25590,24 @@ class GameRoom:
 
         A ordem é a mesma de sempre; era um bloco inline com `continue`, que
         virou `return False`."""
+        await self._processar_aura_escaldante_inicio(m)
+        await self._processar_zona_molochus_inicio_turno(m)
+        if m.get("hp", 0) <= 0:
+            return False
+        if self._molochus_ability(m, "explosao_vapor"):
+            cds = m.setdefault("ability_cooldowns", {})
+            cds["explosao_vapor"] = max(0, int(cds.get("explosao_vapor", 0) or 0) - 1)
         await self._processar_mare_viva_turno(m)
         # Venenos: tica/expira efeitos no início do turno do monstro.
         await self._processar_venenos_turno(m)
+        await self._processar_nuvem_acida_inicio_turno(m)
+        await self._processar_constricao_charcos_inicio(m)
+        if m.get("type") in {"tirano_da_mata", "tirano_ancestral"}:
+            for aid in list(m.get("ability_cooldowns", {})):
+                m["ability_cooldowns"][aid] = max(0, int(m["ability_cooldowns"].get(aid, 0) or 0) - 1)
+            await self._tirano_inicio_turno(m)
+        if m.get("hp", 0) <= 0:
+            return False
         await self._processar_mods_magia_turno(m)   # Amaldiçoar expira por rodada
         if m.get("type") == "lobisomem":
             if not m.pop("regeneracao_bloqueada", False):
@@ -24351,6 +25629,9 @@ class GameRoom:
                 m["master_moves_left"] = 0
             else:
                 await self._soltar_agarrado(m)
+        if m.get("turbilhao_perde_movimento", False):
+            m["_water_moves_left"] = 0
+            m["master_moves_left"] = 0
         # Petrificado: perde o turno (não move nem ataca).
         if m.get("petrificado"):
             await self.gm_say(T("narracao.esta_petrificado_e_perde_o_turno", monstro=m['name']))
@@ -24391,7 +25672,8 @@ class GameRoom:
         def _targets():
             # Luccas invisÃ­vel nas sombras nÃ£o Ã© escolhido como alvo pelos monstros.
             ts = [{"kind": "player", "obj": p} for p in self.players.values()
-                  if self._ativo(p) and not p.get("invisivel_sombras") and not p.get("invisivel_magico")]
+                  if self._ativo(p) and not p.get("engolido")
+                  and not p.get("invisivel_sombras") and not p.get("invisivel_magico")]
             for a in self._all_animados():
                 if a.get("dominado_por_monstro"):   # aliado dos monstros â€” nÃ£o Ã© alvo deles
                     continue
@@ -24403,6 +25685,11 @@ class GameRoom:
                 continue
             m["_water_moves_left"] = self._water_turn_moves(m, m.get("movement", 4))
             m["_moved_this_turn"] = False
+            m["_garaloux_move_count"] = 0
+            m["_garaloux_charge_consumed"] = False
+            m["_molochus_move_count"] = 0
+            m["_tirano_move_count"] = 0
+            m["_tirano_passo_disparado"] = False
             # Monstro dormente: sala ainda trancada (porta fechada, ou â€” com
             # mestre â€” ainda nÃ£o avistado). NÃ£o percebe nem persegue os herÃ³is
             # â€” permanece imÃ³vel atÃ© a porta ser aberta / ser avistado.
@@ -24412,6 +25699,7 @@ class GameRoom:
                 continue
             targets = self._alvos_visiveis_para_monstro(m, _targets())
             if not targets:
+                m.pop("turbilhao_perde_movimento", None)
                 continue
             editor_cds = m.get("monster_ability_cooldowns", {})
             for aid in list(editor_cds):
@@ -24427,6 +25715,7 @@ class GameRoom:
                         m["provocado"] = False
                         m["provocado_turno_efeito"] = False
                         m["provocado_por"] = None
+                m.pop("turbilhao_perde_movimento", None)
                 continue
 
             # O caminho legado segue a mesma prioridade, porÃ©m apenas entre
@@ -24616,6 +25905,37 @@ class GameRoom:
 
     # â”€â”€ death & XP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+    async def _molochus_morte_explosiva(self, m, ability):
+        if m.get("_morte_explosiva_disparada"):
+            return
+        m["_morte_explosiva_disparada"] = True
+        expressao = str(ability.get("damage", "4d6"))
+        bruto = roll_dice(expressao)
+        raio = int(ability.get("radius", 2) or 2)
+        cd = int(ability.get("dc", 16) or 16)
+        centro = list(m.get("pos", [0, 0]))
+        await self.broadcast({"type": "dice_roll", "die": "d" + expressao.split("d", 1)[-1].split("+", 1)[0],
+                              "value": bruto, "label": f"Morte Explosiva — {m.get('name', 'Molochus')}"})
+        await self.gm_say(f"💥 **{m['name']}** explode ao morrer: {expressao} de fogo em raio {raio}! Reflexos CD {cd} reduz à metade.")
+        for alvo in list(self._alvos_na_area(centro[0], centro[1], raio)):
+            if alvo is m or not self._vivo(alvo):
+                continue
+            passou, d20, bonus, total = self._testar_save(alvo, "reflexos", cd, fonte=m)
+            valor = (bruto + 1) // 2 if passou else bruto
+            dano = self._apply_damage_types(valor, [DMG_FIRE], alvo)
+            await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
+                                  "label": "Reflexos — Morte Explosiva", "hit": not passou})
+            await self._dano_em_alvo(alvo, dano, DMG_FIRE, m.get("id"))
+            nome = alvo.get("name") or alvo.get("nome", "Alvo")
+            await self.gm_say(f"🔥 **{nome}** {'passa' if passou else 'falha'} em Reflexos ({total} vs CD {cd}) e sofre **{dano}** de fogo.")
+        self.zonas_especiais.append({
+            "id": f"molochus_chamas_{m.get('id', 'm')}_{self.round_num}",
+            "tipo": "molochus_chamas", "cx": centro[0], "cy": centro[1], "raio": raio,
+            "duracao": int(ability.get("duration", 2) or 2), "dano_turno": ability.get("tick_damage", "1d6"),
+            "ativa": True, "caster": m.get("id"),
+        })
+        await self.gm_say(f"🔥 O chão permanece em chamas por {ability.get('duration', 2)} rodada(s). Entrar ou iniciar o turno na área causa 1d6 de fogo.")
+
     async def _monster_dies(self, m, killer_pid):
         if m["hp"] > 0: return
 
@@ -24640,6 +25960,10 @@ class GameRoom:
                 await self.gm_say(T("narracao.finalmente_tomba_fortitude_vs_cd", monstro=m['name'], tot=tot, cd=cd))
 
         await self._processar_fim_de_combate()
+
+        morte = self._molochus_ability(m, "morte_explosiva")
+        if morte:
+            await self._molochus_morte_explosiva(m, morte)
 
         # ExplosÃ£o Final: dispara uma Ãºnica vez, depois de confirmar que a morte
         # Ã© definitiva (por isso nÃ£o explode quando ResistÃªncia Morta salva um alvo).
@@ -24694,6 +26018,13 @@ class GameRoom:
             if c is not m and c.get("preso_por") == m["id"]:
                 await self._soltar_agarrado(c)
                 await self.gm_say(T("narracao.se_soltou_o_predador_foi_abatido", c=c['name']))
+            if c is not m and c.get("engolido_por") == m["id"]:
+                c.pop("engolido", None)
+                c.pop("engolido_por", None)
+                c.pop("engolido_dano", None)
+                c.pop("engolido_limite", None)
+                c["pos"] = list(m.get("pos", c.get("pos", [0, 0])))
+                await self.gm_say(f"🦖 O corpo do **{m['name']}** deixa **{c.get('name') or c.get('nome', 'Alvo')}** escapar.")
 
         # NÃ­vel para Animar Mortos: CR fracionÃ¡rio â‰¤ 0.5 â†’ 1 slot; CR inteiro = round(CR)
         cr = m.get("cr", m.get("tier", 1))
@@ -25306,6 +26637,10 @@ class GameRoom:
         manual, pelo resgatador, em handle_mover_prisioneiro (janela pós-turno)."""
         pr = self.prisoner
         if not pr or not pr.get("freed") or not pr.get("alive"):
+            return
+        await self._processar_aura_escaldante_inicio(pr)
+        await self._processar_zona_molochus_inicio_turno(pr)
+        if not pr.get("alive"):
             return
         # Tica venenos/efeitos por rodada (ex.: fosso_envenenado): conta duraÃ§Ãµes e
         # reverte o que expirou â€” igual a herÃ³is/monstros.
@@ -26201,6 +27536,9 @@ async def handler(ws):
                 elif t == "apagar_chamas":
                     if room: await room.handle_apagar_chamas(pid)
 
+                elif t == "escapar_estomago":
+                    if room: await room.handle_escapar_estomago(pid)
+
                 elif t == "skill":
                     if room: await room.handle_skill(pid, msg.get("skill_id"), msg.get("target_id"))
 
@@ -26580,7 +27918,7 @@ def _apply_custom_monsters(records):
             if item.get("overwrite_native"):
                 MONSTER_DEFS[:] = [m for m in MONSTER_DEFS if m.get("type") != item["type"]]
             m = deepcopy(item)
-            m["movement"] = 6
+            m["movement"] = int(m.get("movement", 6)) if m.get("movement_exception") else 6
             # Migra o antigo raio-base 3 para o novo bÃ´nus neutro.
             m["vision_base"] = 0 if m.get("vision_base", 0) == 3 else int(m.get("vision_base", 0) or 0)
             m["_personalizado"] = True
@@ -26686,6 +28024,146 @@ def _validate_custom_monster(raw):
             ability["attack_index"] = _monster_int(config.get("attack_index", 0), 0, 0, 7)
             ability["veneno_id"] = str(config.get("veneno_id") or "")
             ability["poison_dc"] = _monster_int(config.get("poison_dc", 10), 10, 1, 40)
+        if aid == "veneno_lacralion":
+            ability["attack_index"] = _monster_int(config.get("attack_index", 0), 0, 0, 7)
+            dice = _monster_int(config.get("damage_dice", 1), 1, 1, 20)
+            faces = _monster_int(config.get("damage_faces", 4), 4, 4, 20)
+            ability["extra_damage"] = f"{dice}d{faces}"
+            ability["poison_dc"] = _monster_int(config.get("poison_dc", 14), 14, 1, 40)
+            ability["slow_duration"] = _monster_int(config.get("slow_duration", 1), 1, 1, 10)
+            ability["descricao"] = (f"Ao acertar o ataque selecionado, Fortitude CD {ability['poison_dc']}; "
+                                     f"falha: {ability['extra_damage']} de dano adicional e Lento por "
+                                     f"{ability['slow_duration']} rodada(s).")
+        if aid == "veneno_charcos":
+            ability["attack_index"] = _monster_int(config.get("attack_index", 0), 0, 0, 7)
+            ability["poison_dc"] = _monster_int(config.get("poison_dc", 15), 15, 1, 40)
+            ability["save"] = "fortitude"
+            ability["effect"] = "perde_movimento"
+            ability["descricao"] = (f"Ao acertar o ataque selecionado, Fortitude CD {ability['poison_dc']}; "
+                                     "falha: perde somente o movimento do próximo turno.")
+        if aid == "tentaculos_imobilizar":
+            ability["attack_index"] = _monster_int(config.get("attack_index", 1), 1, 0, 7)
+            ability["hits_needed"] = _monster_int(config.get("hits_needed", 2), 2, 2, 6)
+            ability["dc"] = _monster_int(config.get("dc", 17), 17, 1, 40)
+            ability["save"] = "fortitude"
+            ability["escape_saves"] = ["fortitude"]
+            ability["max_targets"] = _monster_int(config.get("max_targets", 1), 1, 1, 2)
+            ability["descricao"] = (f"{ability['hits_needed']} acertos do ataque selecionado no mesmo alvo o Imobilizam; "
+                                     f"escape: Fortitude CD {ability['dc']}.")
+        if aid == "constricao_charcos":
+            dice_count = _monster_int(config.get("damage_dice", 1), 1, 1, 20)
+            dice_faces = _monster_int(config.get("damage_faces", 6), 6, 4, 20)
+            bonus = _monster_int(config.get("damage_bonus", 5), 5, 0, 40)
+            ability["damage"] = f"{dice_count}d{dice_faces}+{bonus}"
+            ability["damage_types"] = [DMG_PHYSICAL]
+            ability["descricao"] = f"No início do turno dos alvos presos: {ability['damage']} de dano físico."
+        if aid == "ferrao_paralitico":
+            ability["attack_index"] = _monster_int(config.get("attack_index", 3), 3, 0, 7)
+            ability["dc"] = _monster_int(config.get("dc", 17), 17, 1, 40)
+            ability["save"] = "fortitude"
+            ability["effect"] = "perde_movimento"
+            ability["descricao"] = (f"Ao acertar o ataque selecionado, Fortitude CD {ability['dc']}; "
+                                     "falha: perde somente o movimento do próximo turno.")
+        if aid == "nuvem_acida":
+            initial_dice = _monster_int(config.get("initial_dice", 2), 2, 1, 20)
+            initial_faces = _monster_int(config.get("initial_faces", 6), 6, 4, 20)
+            tick_dice = _monster_int(config.get("tick_dice", 1), 1, 1, 20)
+            tick_faces = _monster_int(config.get("tick_faces", 6), 6, 4, 20)
+            ability.update({
+                "cooldown_turns": 4,
+                "range": _monster_int(config.get("range", 4), 4, 1, 20),
+                "radius": _monster_int(config.get("radius", 1), 1, 1, 4),
+                "duration": _monster_int(config.get("duration", 2), 2, 1, 10),
+                "initial_damage": f"{initial_dice}d{initial_faces}",
+                "tick_damage": f"{tick_dice}d{tick_faces}",
+                "damage_types": [DMG_ACID],
+            })
+            ability["descricao"] = (f"Raio {ability['radius']}, alcance {ability['range']}: "
+                                     f"{ability['initial_damage']} ao surgir e {ability['tick_damage']} no turno de cada criatura.")
+        if aid == "agarrar_lacralion":
+            ability["attack_index"] = _monster_int(config.get("attack_index", 0), 0, 0, 7)
+            ability["dc"] = _monster_int(config.get("dc", 16), 16, 1, 40)
+            ability["save"] = "fortitude"
+            ability["escape_saves"] = ["fortitude"]
+            ability["max_targets"] = _monster_int(config.get("max_targets", 1), 1, 1, 2)
+            ability["descricao"] = (f"Ao acertar o ataque selecionado, o alvo fica Imobilizado. "
+                                     f"Escape: Fortitude CD {ability['dc']}. Máximo de "
+                                     f"{ability['max_targets']} alvo(s) simultâneo(s).")
+        if aid == "carapaca_espinhosa":
+            dice = _monster_int(config.get("damage_dice", 1), 1, 1, 20)
+            faces = _monster_int(config.get("damage_faces", 4), 4, 4, 20)
+            ability["damage"] = f"{dice}d{faces}"
+            ability["descricao"] = (f"Quem acertar a criatura com um ataque corpo a corpo sofre "
+                                     f"{ability['damage']} de dano.")
+        if aid == "salto_selvagem":
+            ability["attack_index"] = _monster_int(config.get("attack_index", 2), 2, 0, 7)
+            ability["move_required"] = _monster_int(config.get("move_required", 3), 3, 1, 20)
+            ability["reflex_dc"] = _monster_int(config.get("reflex_dc", 14), 14, 1, 40)
+            ability["escape_dc"] = _monster_int(config.get("escape_dc", ability["reflex_dc"]), ability["reflex_dc"], 1, 40)
+            ability["collision_damage"] = "1d6"
+            ability["save"] = "reflexos"
+            ability["escape_saves"] = ["forca"]
+            ability["descricao"] = (f"Após mover {ability['move_required']} quadrados, a Chifrada exige Reflexos CD "
+                                     f"{ability['reflex_dc']} ou Imobiliza; escape com Força CD {ability['escape_dc']}. "
+                                     "Contra uma parede, causa +1d6 de colisão.")
+        if aid == "dilacerar":
+            ability["attack_index"] = _monster_int(config.get("attack_index", 1), 1, 0, 7)
+            ability["hits_needed"] = _monster_int(config.get("hits_needed", 2), 2, 2, 6)
+            dice = _monster_int(config.get("damage_dice", 2), 2, 1, 20)
+            faces = _monster_int(config.get("damage_faces", 6), 6, 4, 20)
+            ability["damage"] = f"{dice}d{faces}"
+            ability["damage_types"] = [DMG_PHYSICAL]
+            ability["descricao"] = f"{ability['hits_needed']} acertos das Garras no mesmo alvo causam {ability['damage']} extra uma vez."
+        if aid == "investida_brutal":
+            ability["attack_index"] = _monster_int(config.get("attack_index", 2), 2, 0, 7)
+            ability["move_required"] = _monster_int(config.get("move_required", 3), 3, 1, 20)
+            dice = _monster_int(config.get("damage_dice", 2), 2, 1, 20)
+            faces = _monster_int(config.get("damage_faces", 6), 6, 4, 20)
+            ability["damage"] = f"{dice}d{faces}"
+            ability["push"] = 1
+            ability["descricao"] = f"Após mover {ability['move_required']} quadrados, a Chifrada causa +{ability['damage']} e empurra 1 quadrado."
+        if aid == "mandibulas_colossais":
+            ability["attack_index"] = _monster_int(config.get("attack_index", 0), 0, 0, 7)
+            ability["dc"] = _monster_int(config.get("dc", 18), 18, 1, 40)
+            ability["save"] = "fortitude"
+            ability["escape_saves"] = ["forca", "fortitude"]
+            ability["max_targets"] = 1
+            ability["automatic_damage"] = str(config.get("automatic_damage") or ability.get("automatic_damage") or "2d10+10")[:24]
+            ability["descricao"] = f"Ao acertar o ataque selecionado, Fortitude CD {ability['dc']} ou fica Preso; o alvo sofre a Mordida automaticamente no início do turno do Tirano."
+        if aid == "sacudida_brutal":
+            dice = _monster_int(config.get("damage_dice", 4), 4, 1, 20)
+            faces = _monster_int(config.get("damage_faces", 6), 6, 4, 20)
+            ability["damage"] = f"{dice}d{faces}"
+            ability["damage_types"] = [DMG_PHYSICAL]
+            ability["throw_distance"] = _monster_int(config.get("throw_distance", 2), 2, 1, 8)
+            ability["descricao"] = f"Recarga fixa conforme a ficha: causa {ability['damage']} e arremessa o alvo {ability['throw_distance']} quadrado(s)."
+        if aid == "engolir":
+            dice = _monster_int(config.get("acid_dice", 3), 3, 1, 20)
+            faces = _monster_int(config.get("acid_faces", 6), 6, 4, 20)
+            ability["dc"] = _monster_int(config.get("dc", 22), 22, 1, 40)
+            ability["save"] = "fortitude"
+            ability["acid_damage"] = f"{dice}d{faces}"
+            ability["stomach_hp"] = _monster_int(config.get("stomach_hp", 20), 20, 1, 100)
+            ability["escape_dc"] = 22
+            ability["descricao"] = f"Alvo Preso testa Fortitude CD {ability['dc']} ou é Engolido; sofre {ability['acid_damage']} de ácido por turno."
+        if aid == "passo_devastador":
+            dice = _monster_int(config.get("damage_dice", 3), 3, 1, 20)
+            faces = _monster_int(config.get("damage_faces", 6), 6, 4, 20)
+            ability["move_required"] = _monster_int(config.get("move_required", 4), 4, 1, 20)
+            ability["damage"] = f"{dice}d{faces}"
+            ability["damage_types"] = [DMG_PHYSICAL]
+            ability["push"] = 1
+            ability["descricao"] = f"Após mover {ability['move_required']} quadrados, todas as criaturas adjacentes sofrem {ability['damage']} e são empurradas 1 quadrado."
+        if aid == "furia_garaloux":
+            ability["threshold"] = max(0.1, min(1.0, float(config.get("threshold", 0.5) or 0.5)))
+            ability["attack_bonus"] = _monster_int(config.get("attack_bonus", 2), 2, 0, 10)
+            ability["damage_bonus"] = _monster_int(config.get("damage_bonus", 2), 2, 0, 10)
+            ability["descricao"] = (f"Com até {int(ability['threshold'] * 100)}% da Vida: +{ability['attack_bonus']} no ataque "
+                                     f"e +{ability['damage_bonus']} no dano.")
+        if aid == "predador_supremo":
+            ability["attack_index"] = _monster_int(config.get("attack_index", 0), 0, 0, 7)
+            ability["chain"] = False
+            ability["descricao"] = "Ao eliminar uma criatura, faz uma Mordida adicional sem gerar outra reação."
         if aid == "infeccao":
             # O motor antigo chama os degraus de pesada/grave. O editor expõe
             # leve/moderada/pesada sem quebrar fichas salvas anteriormente.
@@ -26742,6 +28220,45 @@ def _validate_custom_monster(raw):
             ability["descricao"] = (f"{ability['damage']} de {labels[damage_type]} em {area} de "
                                     f"{ability['range']} casas; {alvo}. {save.title()} CD {ability['dc']}: "
                                     f"sucesso {sucesso}.")
+        if aid in {"aura_escaldante", "sangue_em_ebulicao"}:
+            base_damage = str(ability.get("damage", "1d4"))
+            dice = _monster_int(config.get("damage_dice", base_damage.split("d", 1)[0]), 1, 1, 20)
+            faces = _monster_int(config.get("damage_faces", base_damage.split("d", 1)[-1]), 4, 4, 20)
+            ability["damage"] = f"{dice}d{faces}"
+            ability["damage_types"] = [DMG_FIRE]
+            if aid == "aura_escaldante":
+                ability["radius"] = _monster_int(config.get("radius", ability.get("radius", 1)), 1, 1, 3)
+                ability["descricao"] = f"Criaturas a até {ability['radius']} quadrado(s) sofrem {ability['damage']} de fogo no início do turno."
+            else:
+                ability["descricao"] = f"Cada ataque corpo a corpo que acerta causa {ability['damage']} de fogo ao atacante."
+        if aid == "investida_flamejante":
+            ability["attack_index"] = _monster_int(config.get("attack_index", 2), 2, 0, 7)
+            ability["move_required"] = _monster_int(config.get("move_required", 3), 3, 1, 20)
+            dice = _monster_int(config.get("damage_dice", 2), 2, 1, 20)
+            faces = _monster_int(config.get("damage_faces", 6), 6, 4, 20)
+            ability["damage"] = f"{dice}d{faces}"
+            ability["damage_types"] = [DMG_FIRE]
+            ability["descricao"] = f"Após mover {ability['move_required']} quadrados, a Chifrada causa +{ability['damage']} de fogo."
+        if aid == "explosao_vapor":
+            base_damage = str(ability.get("damage", "4d6"))
+            dice = _monster_int(config.get("damage_dice", base_damage.split("d", 1)[0]), 4, 1, 20)
+            faces = _monster_int(config.get("damage_faces", base_damage.split("d", 1)[-1]), 6, 4, 20)
+            ability.update({"damage": f"{dice}d{faces}", "damage_types": [DMG_FIRE], "range": 3,
+                            "shape": "cone", "save": "reflexos", "dc": _monster_int(config.get("dc", ability.get("dc", 16)), 16, 1, 40),
+                            "success_effect": "metade"})
+            ability["descricao"] = f"Recarga fixa de 6 rodadas. Cone de 3 quadrados; Reflexos CD {ability['dc']} reduz {ability['damage']} de fogo à metade."
+            cooldown = 6
+            ability["cooldown_turns"] = 6
+        if aid == "morte_explosiva":
+            base_damage = str(ability.get("damage", "4d6"))
+            dice = _monster_int(config.get("damage_dice", base_damage.split("d", 1)[0]), 4, 1, 20)
+            faces = _monster_int(config.get("damage_faces", base_damage.split("d", 1)[-1]), 6, 4, 20)
+            ability.update({"damage": f"{dice}d{faces}", "damage_types": [DMG_FIRE],
+                            "radius": _monster_int(config.get("radius", ability.get("radius", 2)), 2, 1, 10),
+                            "dc": _monster_int(config.get("dc", ability.get("dc", 16)), 16, 1, 40),
+                            "duration": _monster_int(config.get("duration", ability.get("duration", 2)), 2, 1, 10),
+                            "tick_damage": "1d6", "save": "reflexos"})
+            ability["descricao"] = f"Ao morrer, explode em raio {ability['radius']}: {ability['damage']} de fogo; Reflexos CD {ability['dc']} reduz à metade. Chamas por {ability['duration']} rodada(s)."
         if aid == "amaldicoar_monstro":
             mode = str(config.get("curse_mode") or "aleatoria")
             if mode not in {"especifica", "aleatoria"}:
@@ -26774,6 +28291,62 @@ def _validate_custom_monster(raw):
         if aid == "envenenar":
             entry.update({"attack_index": ability["attack_index"],
                           "veneno_id": ability["veneno_id"], "poison_dc": ability["poison_dc"]})
+        if aid == "veneno_lacralion":
+            entry.update({"attack_index": ability["attack_index"],
+                          "damage_dice": dice, "damage_faces": faces,
+                          "poison_dc": ability["poison_dc"],
+                          "slow_duration": ability["slow_duration"]})
+        if aid == "veneno_charcos":
+            entry.update({"attack_index": ability["attack_index"], "poison_dc": ability["poison_dc"]})
+        if aid == "tentaculos_imobilizar":
+            entry.update({"attack_index": ability["attack_index"], "hits_needed": ability["hits_needed"],
+                          "dc": ability["dc"], "max_targets": ability["max_targets"]})
+        if aid == "constricao_charcos":
+            parts = str(ability["damage"]).replace("+", "d").split("d")
+            entry.update({"damage_dice": _monster_int(config.get("damage_dice", 1), 1, 1, 20),
+                          "damage_faces": _monster_int(config.get("damage_faces", 6), 6, 4, 20),
+                          "damage_bonus": _monster_int(config.get("damage_bonus", 5), 5, 0, 40)})
+        if aid == "ferrao_paralitico":
+            entry.update({"attack_index": ability["attack_index"], "dc": ability["dc"]})
+        if aid == "nuvem_acida":
+            entry.update({"initial_dice": initial_dice, "initial_faces": initial_faces,
+                          "tick_dice": tick_dice, "tick_faces": tick_faces,
+                          "range": ability["range"], "radius": ability["radius"],
+                          "duration": ability["duration"], "cooldown_turns": 4})
+        if aid == "agarrar_lacralion":
+            entry.update({"attack_index": ability["attack_index"],
+                          "dc": ability["dc"], "max_targets": ability["max_targets"]})
+        if aid == "carapaca_espinhosa":
+            entry.update({"damage_dice": dice, "damage_faces": faces})
+        if aid == "salto_selvagem":
+            entry.update({"attack_index": ability["attack_index"], "move_required": ability["move_required"],
+                          "reflex_dc": ability["reflex_dc"], "escape_dc": ability["escape_dc"]})
+        if aid == "dilacerar":
+            entry.update({"attack_index": ability["attack_index"], "hits_needed": ability["hits_needed"],
+                          "damage_dice": dice, "damage_faces": faces})
+        if aid == "investida_brutal":
+            entry.update({"attack_index": ability["attack_index"], "move_required": ability["move_required"],
+                          "damage_dice": dice, "damage_faces": faces})
+        if aid == "mandibulas_colossais":
+            entry.update({"attack_index": ability["attack_index"], "dc": ability["dc"],
+                          "automatic_damage": ability["automatic_damage"]})
+        if aid == "sacudida_brutal":
+            entry.update({"damage_dice": _monster_int(config.get("damage_dice", 4), 4, 1, 20),
+                          "damage_faces": _monster_int(config.get("damage_faces", 6), 6, 4, 20),
+                          "throw_distance": ability["throw_distance"]})
+        if aid == "engolir":
+            entry.update({"dc": ability["dc"], "acid_dice": _monster_int(config.get("acid_dice", 3), 3, 1, 20),
+                          "acid_faces": _monster_int(config.get("acid_faces", 6), 6, 4, 20),
+                          "stomach_hp": ability["stomach_hp"]})
+        if aid == "passo_devastador":
+            entry.update({"move_required": ability["move_required"],
+                          "damage_dice": _monster_int(config.get("damage_dice", 3), 3, 1, 20),
+                          "damage_faces": _monster_int(config.get("damage_faces", 6), 6, 4, 20), "push": 1})
+        if aid == "furia_garaloux":
+            entry.update({"threshold": ability["threshold"], "attack_bonus": ability["attack_bonus"],
+                          "damage_bonus": ability["damage_bonus"]})
+        if aid == "predador_supremo":
+            entry.update({"attack_index": ability["attack_index"], "chain": False})
         if aid == "infeccao":
             entry.update({"disease_severity": ability["disease_severity"], "dc": ability["dc"]})
         if aid == "forca_descomunal":
@@ -26787,6 +28360,19 @@ def _validate_custom_monster(raw):
                           "shape": ability["shape"], "target_mode": ability["target_mode"],
                           "save": ability["save"], "dc": ability["dc"],
                           "success_effect": ability["success_effect"]})
+        if aid in {"aura_escaldante", "sangue_em_ebulicao"}:
+            entry.update({"damage_dice": dice, "damage_faces": faces})
+            if aid == "aura_escaldante":
+                entry["radius"] = ability["radius"]
+        if aid == "investida_flamejante":
+            entry.update({"attack_index": ability["attack_index"], "move_required": ability["move_required"],
+                          "damage_dice": dice, "damage_faces": faces})
+        if aid == "explosao_vapor":
+            entry.update({"damage_dice": dice, "damage_faces": faces, "range": 3, "shape": "cone",
+                          "save": "reflexos", "dc": ability["dc"], "cooldown_turns": 6})
+        if aid == "morte_explosiva":
+            entry.update({"damage_dice": dice, "damage_faces": faces, "radius": ability["radius"],
+                          "dc": ability["dc"], "duration": ability["duration"]})
         if aid == "amaldicoar_monstro":
             entry.update({"range": ability["range"], "save": ability["save"], "dc": ability["dc"],
                           "curse_mode": ability["curse_mode"], "curse_id": ability["curse_id"],
@@ -26833,6 +28419,7 @@ def _validate_custom_monster(raw):
         attacks.append({
             "name": str(attack.get("name") or "Ataque")[:40],
             "damage": str(attack.get("damage") or "1d4")[:24],
+            "fire_damage": str(attack.get("fire_damage") or "")[:24] or None,
             "damage_types": damage_types or [DMG_PHYSICAL],
             "num_attacks": _monster_int(attack.get("num_attacks", 1), 1, 1, 8),
             "attack_attribute": attr,
@@ -26905,7 +28492,18 @@ def _validate_custom_monster(raw):
             item["mode"] = "half"
         else:
             item["reduction"] = _monster_int(resistance.get("reduction", 1), 1, 1, 20)
+        if resistance.get("common_weapon_only"):
+            item["common_weapon_only"] = True
         clean_resistances.append(item)
+    if any(a.get("id") == "couro_espesso" for a in abilities):
+        clean_resistances = [r for r in clean_resistances if r.get("type") != DMG_PHYSICAL]
+        clean_resistances.append({"type": DMG_PHYSICAL, "reduction": 4, "common_weapon_only": True})
+    if any(a.get("id") == "couro_titanico" for a in abilities):
+        clean_resistances = [r for r in clean_resistances if r.get("type") != DMG_PHYSICAL]
+        clean_resistances.append({"type": DMG_PHYSICAL, "reduction": 7, "common_weapon_only": True})
+    if any(a.get("id") in {"metabolismo_vulneravel", "metabolismo_instavel"} for a in abilities):
+        if not any(w.get("type") == DMG_POISON and w.get("multiplier") == 2 for w in weaknesses):
+            weaknesses.append({"type": DMG_POISON, "multiplier": 2, "descricao": "Dano de veneno dobrado."})
     raw_spells = raw.get("monster_spells", [])
     if not isinstance(raw_spells, list):
         raw_spells = []
@@ -26982,7 +28580,8 @@ def _validate_custom_monster(raw):
         "base_hp": base_hp, "hp": max(1, min(999, base_hp + con_mod)),
         "natural_armor": natural_armor,
         "ac": max(1, min(99, 10 + dex_mod + natural_armor)),
-        "movement": 6,
+        "movement": _monster_int(raw.get("movement", 6), 6, 1, 20) if raw.get("movement_exception") else 6,
+        "movement_exception": bool(raw.get("movement_exception")),
         "vision_base": vision_base,
         "visao_escuro": bool(raw.get("visao_escuro")),
         "base_attack_bonus": _monster_int(raw.get("base_attack_bonus", 0), 0, -20, 30),

@@ -246,6 +246,275 @@ window.EDITOR_CATALOG = {
       "subtipo": "animal"
     },
     {
+      "type": "lacralion_filhote",
+      "name": "Lacralion Filhote",
+      "emoji": "🦂",
+      "boss": false,
+      "tier": 2,
+      "cr": 2,
+      "hp": 28,
+      "ac": 16,
+      "natural_armor": 4,
+      "movement": 6,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "grande",
+      "image": "lacralion",
+      "str_": 14,
+      "dex": 14,
+      "con_": 14,
+      "int_": 2,
+      "fort": 4,
+      "ref_": 4,
+      "will": -4,
+      "attacks": [
+        {
+          "name": "Pinça",
+          "atk_bonus": 5,
+          "damage": "1d6+2",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        },
+        {
+          "name": "Mordida",
+          "atk_bonus": 5,
+          "damage": "1d4+2",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        },
+        {
+          "name": "Ferrão",
+          "atk_bonus": 4,
+          "damage": "1d6",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "veneno_lacralion",
+          "name": "Veneno do Lacralion",
+          "action_type": "passiva",
+          "attack_index": 2,
+          "poison_dc": 14,
+          "extra_damage": "1d4",
+          "slow_duration": 1,
+          "descricao": "Ao acertar o Ferrão, Fortitude CD 14; falha: 1d4 de dano adicional e Lento até o próximo turno."
+        }
+      ],
+      "immunities": [],
+      "loot_table": {
+        "1-100": null
+      },
+      "ai_type": "agressivo",
+      "undead": false,
+      "subtipo": "animal"
+    },
+    {
+      "type": "lacralion_adulto",
+      "name": "Lacralion Adulto",
+      "emoji": "🦂",
+      "boss": false,
+      "tier": 4,
+      "cr": 4,
+      "hp": 58,
+      "ac": 19,
+      "natural_armor": 7,
+      "movement": 5,
+      "movement_exception": true,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "grande",
+      "image": "lacralion",
+      "str_": 18,
+      "dex": 14,
+      "con_": 16,
+      "int_": 2,
+      "fort": 7,
+      "ref_": 4,
+      "will": -4,
+      "attacks": [
+        {
+          "name": "Pinça",
+          "atk_bonus": 8,
+          "damage": "1d8+5",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        },
+        {
+          "name": "Mordida",
+          "atk_bonus": 8,
+          "damage": "1d6+3",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        },
+        {
+          "name": "Ferrão",
+          "atk_bonus": 8,
+          "damage": "1d8+3",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "agarrar_lacralion",
+          "name": "Agarrão",
+          "action_type": "passiva",
+          "attack_index": 0,
+          "dc": 16,
+          "save": "fortitude",
+          "escape_saves": [
+            "fortitude"
+          ],
+          "max_targets": 1,
+          "descricao": "Quando a Pinça acerta, o alvo fica Imobilizado. Escape: Fortitude CD 16."
+        },
+        {
+          "id": "veneno_lacralion",
+          "name": "Veneno do Lacralion",
+          "action_type": "passiva",
+          "attack_index": 2,
+          "poison_dc": 16,
+          "extra_damage": "1d6",
+          "slow_duration": 1,
+          "descricao": "Ao acertar o Ferrão, Fortitude CD 16; falha: 1d6 de dano adicional e Lento até o próximo turno."
+        },
+        {
+          "id": "carapaca_espinhosa",
+          "name": "Carapaça Espinhosa",
+          "action_type": "passiva",
+          "damage": "1d4",
+          "descricao": "Quem acertar o Lacralion com um ataque corpo a corpo sofre 1d4 de dano."
+        }
+      ],
+      "immunities": [],
+      "loot_table": {
+        "1-100": null
+      },
+      "ai_type": "agressivo",
+      "undead": false,
+      "subtipo": "animal"
+    },
+    {
+      "type": "lacralion_anciao",
+      "name": "Lacralion Ancião",
+      "emoji": "🦂",
+      "boss": false,
+      "tier": 7,
+      "cr": 7,
+      "hp": 102,
+      "ac": 23,
+      "natural_armor": 10,
+      "movement": 6,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "grande",
+      "image": "lacralion",
+      "str_": 22,
+      "dex": 16,
+      "con_": 20,
+      "int_": 2,
+      "fort": 10,
+      "ref_": 6,
+      "will": -4,
+      "attacks": [
+        {
+          "name": "Pinça",
+          "atk_bonus": 11,
+          "damage": "2d6+7",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        },
+        {
+          "name": "Mordida",
+          "atk_bonus": 11,
+          "damage": "2d6+4",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        },
+        {
+          "name": "Ferrão",
+          "atk_bonus": 11,
+          "damage": "2d6+5",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "agarrar_lacralion",
+          "name": "Agarrão",
+          "action_type": "passiva",
+          "attack_index": 0,
+          "dc": 16,
+          "save": "fortitude",
+          "escape_saves": [
+            "fortitude"
+          ],
+          "max_targets": 2,
+          "descricao": "Quando a Pinça acerta, o alvo fica Imobilizado. Escape: Fortitude CD 16."
+        },
+        {
+          "id": "veneno_lacralion",
+          "name": "Veneno do Lacralion",
+          "action_type": "passiva",
+          "attack_index": 2,
+          "poison_dc": 16,
+          "extra_damage": "1d6",
+          "slow_duration": 1,
+          "descricao": "Ao acertar o Ferrão, Fortitude CD 16; falha: 1d6 de dano adicional e Lento até o próximo turno."
+        },
+        {
+          "id": "carapaca_espinhosa",
+          "name": "Carapaça Espinhosa",
+          "action_type": "passiva",
+          "damage": "1d6",
+          "descricao": "Quem acertar o Lacralion com um ataque corpo a corpo sofre 1d6 de dano."
+        },
+        {
+          "id": "predador_implacavel",
+          "name": "Predador Implacável",
+          "action_type": "passiva",
+          "descricao": "Pode manter dois inimigos Imobilizados ao mesmo tempo."
+        }
+      ],
+      "immunities": [],
+      "loot_table": {
+        "1-100": null
+      },
+      "ai_type": "agressivo",
+      "undead": false,
+      "subtipo": "animal"
+    },
+    {
       "type": "esqueleto_humano",
       "name": "Esqueleto Humano",
       "emoji": "💀",
@@ -3047,6 +3316,1369 @@ window.EDITOR_CATALOG = {
       "ai_type": "agressivo",
       "undead": true,
       "subtipo": "morto_vivo"
+    },
+    {
+      "type": "ferrao_charcos_jovem",
+      "name": "Ferrão dos Charcos Jovem",
+      "emoji": "🦂",
+      "boss": false,
+      "tier": 3,
+      "cr": 3,
+      "hp": 46,
+      "ac": 18,
+      "natural_armor": 5,
+      "movement": 6,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "grande",
+      "image": "ferrao_do_lamacal",
+      "str_": 16,
+      "dex": 16,
+      "con_": 16,
+      "int_": 2,
+      "fort": 6,
+      "ref_": 5,
+      "will": -4,
+      "attacks": [
+        {
+          "name": "Garras",
+          "atk_bonus": 6,
+          "damage": "1d6+4",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 2
+        },
+        {
+          "name": "Tentáculos",
+          "atk_bonus": 6,
+          "damage": "1d4+2",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 2
+        },
+        {
+          "name": "Mordida",
+          "atk_bonus": 6,
+          "damage": "1d8+4",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        },
+        {
+          "name": "Ferrão",
+          "atk_bonus": 5,
+          "damage": "1d6",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "movimento_aquatico",
+          "name": "Movimento Aquático",
+          "action_type": "passiva",
+          "descricao": "Move 6 quadrados normalmente em terra, água e água profunda."
+        },
+        {
+          "id": "veneno_charcos",
+          "name": "Veneno",
+          "action_type": "passiva",
+          "attack_index": 3,
+          "poison_dc": 15,
+          "effect": "perde_movimento",
+          "descricao": "Ao acertar o Ferrão, Fortitude CD 15; falha: perde a ação de movimento no próximo turno."
+        }
+      ],
+      "immunities": [],
+      "loot_table": {
+        "1-100": null
+      },
+      "ai_type": "agressivo",
+      "undead": false,
+      "subtipo": "aberracao"
+    },
+    {
+      "type": "ferrao_charcos_adulto",
+      "name": "Ferrão dos Charcos Adulto",
+      "emoji": "🦂",
+      "boss": false,
+      "tier": 5,
+      "cr": 5,
+      "hp": 74,
+      "ac": 20,
+      "natural_armor": 7,
+      "movement": 6,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "grande",
+      "image": "ferrao_do_lamacal",
+      "str_": 18,
+      "dex": 16,
+      "con_": 18,
+      "int_": 2,
+      "fort": 8,
+      "ref_": 5,
+      "will": -4,
+      "attacks": [
+        {
+          "name": "Garras",
+          "atk_bonus": 9,
+          "damage": "1d8+5",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 2
+        },
+        {
+          "name": "Tentáculos",
+          "atk_bonus": 9,
+          "damage": "1d6+2",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 4
+        },
+        {
+          "name": "Mordida",
+          "atk_bonus": 9,
+          "damage": "2d6+5",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        },
+        {
+          "name": "Ferrão",
+          "atk_bonus": 9,
+          "damage": "1d6+2",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "movimento_aquatico",
+          "name": "Movimento Aquático",
+          "action_type": "passiva",
+          "descricao": "Move 6 quadrados normalmente em terra, água e água profunda."
+        },
+        {
+          "id": "tentaculos_imobilizar",
+          "name": "Tentáculos",
+          "action_type": "passiva",
+          "attack_index": 1,
+          "hits_needed": 2,
+          "dc": 17,
+          "save": "fortitude",
+          "escape_saves": [
+            "fortitude"
+          ],
+          "max_targets": 1,
+          "descricao": "Se dois Tentáculos acertarem o mesmo alvo, ele fica Imobilizado. Escape: Fortitude CD 17."
+        },
+        {
+          "id": "constricao_charcos",
+          "name": "Constrição",
+          "action_type": "passiva",
+          "damage": "1d6+5",
+          "damage_types": [
+            "physical"
+          ],
+          "descricao": "No início do turno, criaturas Imobilizadas sofrem 1d6+5. Enquanto presas, não podem se afastar."
+        },
+        {
+          "id": "ferrao_paralitico",
+          "name": "Ferrão Paralítico",
+          "action_type": "passiva",
+          "attack_index": 3,
+          "dc": 17,
+          "save": "fortitude",
+          "effect": "perde_movimento",
+          "descricao": "Ao acertar o Ferrão, Fortitude CD 17; falha: perde a ação de movimento no próximo turno."
+        },
+        {
+          "id": "nuvem_acida",
+          "name": "Nuvem Ácida",
+          "action_type": "acao",
+          "cooldown_turns": 4,
+          "range": 4,
+          "radius": 1,
+          "duration": 2,
+          "initial_damage": "2d6",
+          "tick_damage": "1d6",
+          "damage_types": [
+            "acid"
+          ],
+          "descricao": "Recarga 4 rodadas. Centro no alvo; raio 1. Causa 2d6 ao surgir e 1d6 no turno de cada criatura dentro da área."
+        }
+      ],
+      "immunities": [],
+      "loot_table": {
+        "1-100": null
+      },
+      "ai_type": "agressivo",
+      "undead": false,
+      "subtipo": "aberracao"
+    },
+    {
+      "type": "ferrao_charcos_anciao",
+      "name": "Ferrão dos Charcos Ancião",
+      "emoji": "🦂",
+      "boss": false,
+      "tier": 8,
+      "cr": 8,
+      "hp": 130,
+      "ac": 24,
+      "natural_armor": 10,
+      "movement": 6,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "grande",
+      "image": "ferrao_do_lamacal",
+      "str_": 22,
+      "dex": 18,
+      "con_": 22,
+      "int_": 2,
+      "fort": 11,
+      "ref_": 7,
+      "will": -4,
+      "attacks": [
+        {
+          "name": "Garras",
+          "atk_bonus": 12,
+          "damage": "2d6+6",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 2
+        },
+        {
+          "name": "Tentáculos",
+          "atk_bonus": 12,
+          "damage": "1d8+3",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 6
+        },
+        {
+          "name": "Mordida",
+          "atk_bonus": 12,
+          "damage": "3d6+6",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        },
+        {
+          "name": "Ferrões",
+          "atk_bonus": 12,
+          "damage": "2d6+4",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 2
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "movimento_aquatico",
+          "name": "Movimento Aquático",
+          "action_type": "passiva",
+          "descricao": "Move 6 quadrados normalmente em terra, água e água profunda."
+        },
+        {
+          "id": "tentaculos_imobilizar",
+          "name": "Tentáculos",
+          "action_type": "passiva",
+          "attack_index": 1,
+          "hits_needed": 2,
+          "dc": 17,
+          "save": "fortitude",
+          "escape_saves": [
+            "fortitude"
+          ],
+          "max_targets": 2,
+          "descricao": "Se dois Tentáculos acertarem o mesmo alvo, ele fica Imobilizado. Pode manter dois alvos. Escape: Fortitude CD 17."
+        },
+        {
+          "id": "constricao_charcos",
+          "name": "Constrição",
+          "action_type": "passiva",
+          "damage": "2d6+8",
+          "damage_types": [
+            "physical"
+          ],
+          "descricao": "No início do turno, criaturas Imobilizadas sofrem 2d6+8. Enquanto presas, não podem se afastar."
+        },
+        {
+          "id": "ferrao_paralitico",
+          "name": "Ferrão Paralítico",
+          "action_type": "passiva",
+          "attack_index": 3,
+          "dc": 17,
+          "save": "fortitude",
+          "effect": "perde_movimento",
+          "descricao": "Ao acertar o Ferrão, Fortitude CD 17; falha: perde a ação de movimento no próximo turno."
+        },
+        {
+          "id": "nuvem_acida",
+          "name": "Nuvem Ácida",
+          "action_type": "acao",
+          "cooldown_turns": 4,
+          "range": 4,
+          "radius": 1,
+          "duration": 2,
+          "initial_damage": "4d6",
+          "tick_damage": "1d6",
+          "damage_types": [
+            "acid"
+          ],
+          "descricao": "Recarga 4 rodadas. Centro no alvo; raio 1. Causa 4d6 ao surgir e 1d6 no turno de cada criatura dentro da área."
+        },
+        {
+          "id": "predador_charcos",
+          "name": "Predador dos Charcos",
+          "action_type": "passiva",
+          "max_targets": 2,
+          "descricao": "Pode manter dois inimigos Imobilizados simultaneamente."
+        }
+      ],
+      "immunities": [],
+      "loot_table": {
+        "1-100": null
+      },
+      "ai_type": "agressivo",
+      "undead": false,
+      "subtipo": "aberracao"
+    },
+    {
+      "type": "tirano_da_mata",
+      "name": "Tirano da Mata",
+      "emoji": "🦖",
+      "boss": false,
+      "tier": 7,
+      "cr": 7,
+      "hp": 120,
+      "ac": 22,
+      "natural_armor": 9,
+      "movement": 6,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "grande",
+      "image": "tirano_da_mata",
+      "str_": 24,
+      "dex": 16,
+      "con_": 22,
+      "int_": 3,
+      "fort": 11,
+      "ref_": 5,
+      "will": -2,
+      "attacks": [
+        {
+          "name": "Mordida",
+          "atk_bonus": 14,
+          "damage": "2d10+10",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        },
+        {
+          "name": "Garras",
+          "atk_bonus": 14,
+          "damage": "2d6+6",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 2
+        },
+        {
+          "name": "Cauda",
+          "atk_bonus": 14,
+          "damage": "2d6+6",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "mandibulas_colossais",
+          "name": "Mandíbulas Colossais",
+          "action_type": "passiva",
+          "attack_index": 0,
+          "dc": 18,
+          "save": "fortitude",
+          "escape_saves": [
+            "forca",
+            "fortitude"
+          ],
+          "automatic_damage": "2d10+10",
+          "max_targets": 1,
+          "descricao": "Ao acertar a Mordida, Fortitude CD 18 ou fica Preso. O alvo acompanha o Tirano e sofre a Mordida no início do turno dele."
+        },
+        {
+          "id": "arrastar",
+          "name": "Arrastar",
+          "action_type": "passiva",
+          "descricao": "Uma criatura Presa acompanha todos os movimentos do Tirano, permanecendo adjacente."
+        },
+        {
+          "id": "sacudida_brutal",
+          "name": "Sacudida Brutal",
+          "action_type": "acao",
+          "cooldown_turns": 5,
+          "damage": "4d6",
+          "damage_types": [
+            "physical"
+          ],
+          "throw_distance": 2,
+          "descricao": "Recarga fixa de 5 rodadas. Uma criatura Presa sofre 4d6 e é arremessada 2 quadrados; depois deixa de estar Presa."
+        },
+        {
+          "id": "investida_brutal",
+          "name": "Investida Brutal",
+          "action_type": "passiva",
+          "attack_index": 0,
+          "move_required": 3,
+          "damage": "2d6",
+          "damage_types": [
+            "physical"
+          ],
+          "push": 1,
+          "descricao": "Se mover pelo menos 3 quadrados antes da Mordida, causa +2d6 e empurra 1 quadrado."
+        },
+        {
+          "id": "couro_espesso",
+          "name": "Couro Espesso",
+          "action_type": "passiva",
+          "descricao": "RD 4 contra armas comuns."
+        },
+        {
+          "id": "metabolismo_vulneravel",
+          "name": "Metabolismo Vulnerável",
+          "action_type": "passiva",
+          "poison_save_penalty": -2,
+          "poison_multiplier": 2,
+          "descricao": "-2 em Fortitude contra venenos; dano de veneno dobrado; veneno ignora a RD."
+        }
+      ],
+      "immunities": [],
+      "weaknesses": [
+        {
+          "type": "poison",
+          "multiplier": 2,
+          "descricao": "Metabolismo Vulnerável: dano de veneno dobrado."
+        }
+      ],
+      "resistances": [
+        {
+          "type": "physical",
+          "reduction": 4,
+          "common_weapon_only": true
+        }
+      ],
+      "loot_table": {
+        "1-100": null
+      },
+      "ai_type": "tirano_da_mata",
+      "undead": false,
+      "subtipo": "besta_magica"
+    },
+    {
+      "type": "tirano_ancestral",
+      "name": "Tirano Ancestral",
+      "emoji": "🦖",
+      "boss": false,
+      "tier": 10,
+      "cr": 10,
+      "hp": 200,
+      "ac": 26,
+      "natural_armor": 12,
+      "movement": 7,
+      "movement_exception": true,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "grande",
+      "image": "tirano_da_mata",
+      "str_": 28,
+      "dex": 18,
+      "con_": 26,
+      "int_": 3,
+      "fort": 15,
+      "ref_": 7,
+      "will": -2,
+      "attacks": [
+        {
+          "name": "Mordida",
+          "atk_bonus": 17,
+          "damage": "3d10+12",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        },
+        {
+          "name": "Garras",
+          "atk_bonus": 17,
+          "damage": "2d8+8",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 2
+        },
+        {
+          "name": "Cauda",
+          "atk_bonus": 17,
+          "damage": "3d6+8",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "mandibulas_colossais",
+          "name": "Mandíbulas Colossais",
+          "action_type": "passiva",
+          "attack_index": 0,
+          "dc": 22,
+          "save": "fortitude",
+          "escape_saves": [
+            "forca",
+            "fortitude"
+          ],
+          "automatic_damage": "3d10+12",
+          "max_targets": 1,
+          "descricao": "Ao acertar a Mordida, Fortitude CD 22 ou fica Preso e sofre 3d10+12 no início do turno do Tirano."
+        },
+        {
+          "id": "arrastar",
+          "name": "Arrastar",
+          "action_type": "passiva",
+          "descricao": "Uma criatura Presa acompanha todos os movimentos do Tirano, permanecendo adjacente."
+        },
+        {
+          "id": "sacudida_brutal",
+          "name": "Sacudida Brutal",
+          "action_type": "acao",
+          "cooldown_turns": 4,
+          "damage": "6d6",
+          "damage_types": [
+            "physical"
+          ],
+          "throw_distance": 3,
+          "descricao": "Recarga fixa de 4 rodadas. Uma criatura Presa sofre 6d6 e é arremessada 3 quadrados; depois deixa de estar Presa."
+        },
+        {
+          "id": "investida_brutal",
+          "name": "Investida Brutal",
+          "action_type": "passiva",
+          "attack_index": 0,
+          "move_required": 3,
+          "damage": "2d6",
+          "damage_types": [
+            "physical"
+          ],
+          "push": 1,
+          "descricao": "Se mover pelo menos 3 quadrados antes da Mordida, causa +2d6 e empurra 1 quadrado."
+        },
+        {
+          "id": "engolir",
+          "name": "Engolir",
+          "action_type": "acao",
+          "dc": 22,
+          "save": "fortitude",
+          "acid_damage": "3d6",
+          "stomach_hp": 20,
+          "escape_dc": 22,
+          "descricao": "No início do turno, tenta engolir uma criatura Presa. Fortitude CD 22; falha: Engolida. O alvo sofre 3d6 ácido por turno e fica invisível para o exterior."
+        },
+        {
+          "id": "abrir_caminho",
+          "name": "Abrir Caminho",
+          "action_type": "passiva",
+          "damage_threshold": 20,
+          "internal_damage": "2d6",
+          "uses_per_combat": 1,
+          "descricao": "A criatura Engolida pode atacar o estômago. Ao causar 20 dano interno, é cuspida; o Tirano sofre 2d6 e perde o próximo ataque."
+        },
+        {
+          "id": "passo_devastador",
+          "name": "Passo Devastador",
+          "action_type": "passiva",
+          "move_required": 4,
+          "damage": "3d6",
+          "damage_types": [
+            "physical"
+          ],
+          "push": 1,
+          "descricao": "Após mover 4 ou mais quadrados, todas as criaturas adjacentes ao destino sofrem 3d6 e são empurradas 1 quadrado, inclusive aliados."
+        },
+        {
+          "id": "couro_titanico",
+          "name": "Couro Titânico",
+          "action_type": "passiva",
+          "descricao": "RD 7 contra armas comuns."
+        },
+        {
+          "id": "metabolismo_instavel",
+          "name": "Metabolismo Instável",
+          "action_type": "passiva",
+          "poison_save_penalty": -2,
+          "poison_multiplier": 2,
+          "descricao": "-2 em Fortitude contra venenos; dano de veneno dobrado; falha contra veneno também causa Lento por 1 rodada."
+        }
+      ],
+      "immunities": [],
+      "weaknesses": [
+        {
+          "type": "poison",
+          "multiplier": 2,
+          "descricao": "Metabolismo Instável: dano de veneno dobrado."
+        }
+      ],
+      "resistances": [
+        {
+          "type": "physical",
+          "reduction": 7,
+          "common_weapon_only": true
+        }
+      ],
+      "loot_table": {
+        "1-100": null
+      },
+      "ai_type": "tirano_ancestral",
+      "undead": false,
+      "subtipo": "besta_magica"
+    },
+    {
+      "type": "garaloux_jovem",
+      "name": "Garaloux Jovem",
+      "emoji": "🦁",
+      "boss": false,
+      "tier": 3,
+      "cr": 3,
+      "hp": 50,
+      "ac": 18,
+      "natural_armor": 5,
+      "movement": 7,
+      "movement_exception": true,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "grande",
+      "image": "garaloux",
+      "str_": 16,
+      "dex": 16,
+      "con_": 16,
+      "int_": 4,
+      "fort": 6,
+      "ref_": 5,
+      "will": -2,
+      "attacks": [
+        {
+          "name": "Mordida",
+          "atk_bonus": 6,
+          "damage": "1d8+4",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        },
+        {
+          "name": "Garras",
+          "atk_bonus": 6,
+          "damage": "1d6+3",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 2
+        },
+        {
+          "name": "Chifres",
+          "atk_bonus": 6,
+          "damage": "1d6+3",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "salto_selvagem",
+          "name": "Salto Selvagem",
+          "action_type": "passiva",
+          "attack_index": 2,
+          "move_required": 3,
+          "reflex_dc": 14,
+          "escape_dc": 14,
+          "save": "reflexos",
+          "escape_saves": [
+            "forca"
+          ],
+          "effect": "imobilizado",
+          "collision_damage": "1d6",
+          "descricao": "Se mover 3 quadrados antes da Chifrada, o alvo testa Reflexos CD 14 ou fica Imobilizado; escapa com Força CD 14. Se estiver contra uma parede, sofre +1d6 de colisão."
+        }
+      ],
+      "immunities": [],
+      "loot_table": {
+        "1-100": null
+      },
+      "ai_type": "agressivo",
+      "undead": false,
+      "subtipo": "besta_magica"
+    },
+    {
+      "type": "garaloux_adulto",
+      "name": "Garaloux Adulto",
+      "emoji": "🦁",
+      "boss": false,
+      "tier": 5,
+      "cr": 5,
+      "hp": 82,
+      "ac": 21,
+      "natural_armor": 8,
+      "movement": 7,
+      "movement_exception": true,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "grande",
+      "image": "garaloux",
+      "str_": 18,
+      "dex": 16,
+      "con_": 18,
+      "int_": 4,
+      "fort": 8,
+      "ref_": 5,
+      "will": -2,
+      "attacks": [
+        {
+          "name": "Mordida",
+          "atk_bonus": 9,
+          "damage": "2d6+7",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        },
+        {
+          "name": "Garras",
+          "atk_bonus": 9,
+          "damage": "1d8+5",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 2
+        },
+        {
+          "name": "Chifres",
+          "atk_bonus": 9,
+          "damage": "1d8+5",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "salto_selvagem",
+          "name": "Salto Selvagem",
+          "action_type": "passiva",
+          "attack_index": 2,
+          "move_required": 3,
+          "reflex_dc": 16,
+          "escape_dc": 16,
+          "save": "reflexos",
+          "escape_saves": [
+            "forca"
+          ],
+          "effect": "imobilizado",
+          "collision_damage": "1d6",
+          "descricao": "Se mover 3 quadrados antes da Chifrada, o alvo testa Reflexos CD 16 ou fica Imobilizado; escapa com Força CD 16. Se estiver contra uma parede, sofre +1d6 de colisão."
+        },
+        {
+          "id": "dilacerar",
+          "name": "Dilacerar",
+          "action_type": "passiva",
+          "attack_index": 1,
+          "hits_needed": 2,
+          "damage": "2d6",
+          "damage_types": [
+            "physical"
+          ],
+          "descricao": "Se as duas Garras acertarem o mesmo alvo no turno, ele sofre 2d6 de dano extra uma vez."
+        },
+        {
+          "id": "investida_brutal",
+          "name": "Investida Brutal",
+          "action_type": "passiva",
+          "attack_index": 2,
+          "move_required": 3,
+          "damage": "2d6",
+          "push": 1,
+          "descricao": "Se mover 3 quadrados antes da Chifrada, causa +2d6 e empurra o alvo 1 quadrado."
+        },
+        {
+          "id": "furia_garaloux",
+          "name": "Frenesi",
+          "action_type": "passiva",
+          "threshold": 0.5,
+          "attack_bonus": 2,
+          "damage_bonus": 2,
+          "descricao": "Ao atingir metade da Vida ou menos, recebe +2 no ataque e +2 no dano."
+        }
+      ],
+      "immunities": [],
+      "loot_table": {
+        "1-100": null
+      },
+      "ai_type": "agressivo",
+      "undead": false,
+      "subtipo": "besta_magica"
+    },
+    {
+      "type": "garaloux_alfa",
+      "name": "Garaloux Alfa",
+      "emoji": "🦁",
+      "boss": false,
+      "tier": 8,
+      "cr": 8,
+      "hp": 145,
+      "ac": 25,
+      "natural_armor": 11,
+      "movement": 7,
+      "movement_exception": true,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "grande",
+      "image": "garaloux",
+      "str_": 22,
+      "dex": 18,
+      "con_": 22,
+      "int_": 4,
+      "fort": 11,
+      "ref_": 7,
+      "will": -2,
+      "attacks": [
+        {
+          "name": "Mordida",
+          "atk_bonus": 12,
+          "damage": "3d6+9",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        },
+        {
+          "name": "Garras",
+          "atk_bonus": 12,
+          "damage": "2d6+6",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 2
+        },
+        {
+          "name": "Chifres",
+          "atk_bonus": 12,
+          "damage": "2d6+6",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "salto_selvagem",
+          "name": "Salto Selvagem",
+          "action_type": "passiva",
+          "attack_index": 2,
+          "move_required": 3,
+          "reflex_dc": 18,
+          "escape_dc": 18,
+          "save": "reflexos",
+          "escape_saves": [
+            "forca"
+          ],
+          "effect": "imobilizado",
+          "collision_damage": "1d6",
+          "descricao": "Se mover 3 quadrados antes da Chifrada, o alvo testa Reflexos CD 18 ou fica Imobilizado; escapa com Força CD 18. Se estiver contra uma parede, sofre +1d6 de colisão."
+        },
+        {
+          "id": "dilacerar",
+          "name": "Dilacerar",
+          "action_type": "passiva",
+          "attack_index": 1,
+          "hits_needed": 2,
+          "damage": "2d6",
+          "damage_types": [
+            "physical"
+          ],
+          "descricao": "Se as duas Garras acertarem o mesmo alvo no turno, ele sofre 2d6 de dano extra uma vez."
+        },
+        {
+          "id": "investida_brutal",
+          "name": "Investida Brutal",
+          "action_type": "passiva",
+          "attack_index": 2,
+          "move_required": 3,
+          "damage": "4d6",
+          "push": 1,
+          "descricao": "Se mover 3 quadrados antes da Chifrada, causa +4d6 e empurra o alvo 1 quadrado."
+        },
+        {
+          "id": "furia_garaloux",
+          "name": "Frenesi",
+          "action_type": "passiva",
+          "threshold": 0.5,
+          "attack_bonus": 2,
+          "damage_bonus": 2,
+          "descricao": "Ao atingir metade da Vida ou menos, recebe +2 no ataque e +2 no dano."
+        },
+        {
+          "id": "predador_supremo",
+          "name": "Predador Supremo",
+          "action_type": "passiva",
+          "trigger": "kill",
+          "attack_index": 0,
+          "chain": false,
+          "descricao": "Sempre que eliminar uma criatura, realiza imediatamente uma Mordida adicional. A Mordida adicional não gera outra reação."
+        }
+      ],
+      "immunities": [],
+      "loot_table": {
+        "1-100": null
+      },
+      "ai_type": "agressivo",
+      "undead": false,
+      "subtipo": "besta_magica"
+    },
+    {
+      "type": "molochus_jovem",
+      "name": "Molochus Jovem",
+      "emoji": "🔥",
+      "boss": false,
+      "tier": 4,
+      "cr": 4,
+      "hp": 64,
+      "ac": 20,
+      "natural_armor": 7,
+      "movement": 6,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "grande",
+      "image": "molochos",
+      "str_": 18,
+      "dex": 16,
+      "con_": 18,
+      "int_": 4,
+      "fort": 8,
+      "ref_": 5,
+      "will": -2,
+      "attacks": [
+        {
+          "name": "Mordida",
+          "atk_bonus": 8,
+          "damage": "2d6+5",
+          "damage_types": [
+            "physical"
+          ],
+          "fire_damage": "1d4",
+          "num_attacks": 1
+        },
+        {
+          "name": "Garras",
+          "atk_bonus": 8,
+          "damage": "1d6+3",
+          "damage_types": [
+            "physical"
+          ],
+          "fire_damage": "1d4",
+          "num_attacks": 2
+        },
+        {
+          "name": "Chifrada",
+          "atk_bonus": 8,
+          "damage": "1d8+3",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "aura_escaldante",
+          "name": "Aura Escaldante",
+          "action_type": "passiva",
+          "radius": 1,
+          "damage": "1d4",
+          "damage_types": [
+            "fire"
+          ],
+          "descricao": "Criaturas adjacentes sofrem 1d4 de fogo no início do próprio turno."
+        },
+        {
+          "id": "sangue_em_ebulicao",
+          "name": "Sangue em Ebulição",
+          "action_type": "passiva",
+          "damage": "1d4",
+          "damage_types": [
+            "fire"
+          ],
+          "descricao": "Quem acerta o Molochus com um ataque corpo a corpo sofre 1d4 de fogo."
+        }
+      ],
+      "immunities": [
+        "fire"
+      ],
+      "weaknesses": [
+        {
+          "type": "cold",
+          "multiplier": 2,
+          "descricao": "Gelo causa dano dobrado."
+        },
+        {
+          "type": "water",
+          "multiplier": 2,
+          "descricao": "Água causa dano dobrado."
+        }
+      ],
+      "loot_table": {
+        "1-100": null
+      },
+      "ai_type": "agressivo",
+      "undead": false,
+      "subtipo": "besta_magica"
+    },
+    {
+      "type": "molochus_adulto",
+      "name": "Molochus Adulto",
+      "emoji": "🔥",
+      "boss": false,
+      "tier": 6,
+      "cr": 6,
+      "hp": 96,
+      "ac": 22,
+      "natural_armor": 9,
+      "movement": 6,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "grande",
+      "image": "molochos",
+      "str_": 20,
+      "dex": 16,
+      "con_": 20,
+      "int_": 4,
+      "fort": 10,
+      "ref_": 5,
+      "will": -2,
+      "attacks": [
+        {
+          "name": "Mordida",
+          "atk_bonus": 11,
+          "damage": "2d8+8",
+          "damage_types": [
+            "physical"
+          ],
+          "fire_damage": "1d6",
+          "num_attacks": 1
+        },
+        {
+          "name": "Garras",
+          "atk_bonus": 11,
+          "damage": "1d8+5",
+          "damage_types": [
+            "physical"
+          ],
+          "fire_damage": "1d6",
+          "num_attacks": 2
+        },
+        {
+          "name": "Chifrada",
+          "atk_bonus": 11,
+          "damage": "2d6+5",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "aura_escaldante",
+          "name": "Aura Escaldante",
+          "action_type": "passiva",
+          "radius": 1,
+          "damage": "1d6",
+          "damage_types": [
+            "fire"
+          ],
+          "descricao": "Criaturas adjacentes sofrem 1d6 de fogo no início do próprio turno."
+        },
+        {
+          "id": "sangue_em_ebulicao",
+          "name": "Sangue em Ebulição",
+          "action_type": "passiva",
+          "damage": "1d6",
+          "damage_types": [
+            "fire"
+          ],
+          "descricao": "Cada ataque corpo a corpo que acerta o Molochus faz o atacante sofrer 1d6 de fogo."
+        },
+        {
+          "id": "investida_flamejante",
+          "name": "Investida Flamejante",
+          "action_type": "passiva",
+          "attack_index": 2,
+          "move_required": 3,
+          "damage": "2d6",
+          "damage_types": [
+            "fire"
+          ],
+          "descricao": "Após mover 3 quadrados, a Chifrada causa +2d6 de fogo."
+        },
+        {
+          "id": "explosao_vapor",
+          "name": "Explosão de Vapor",
+          "action_type": "acao",
+          "cooldown_turns": 6,
+          "range": 3,
+          "shape": "cone",
+          "damage": "4d6",
+          "damage_types": [
+            "fire"
+          ],
+          "save": "reflexos",
+          "dc": 16,
+          "success_effect": "metade",
+          "descricao": "Recarga fixa de 6 rodadas. Cone de 3 quadrados; Reflexos CD 16 reduz 4d6 de fogo à metade."
+        },
+        {
+          "id": "morte_explosiva",
+          "name": "Morte Explosiva",
+          "action_type": "passiva",
+          "radius": 2,
+          "damage": "4d6",
+          "damage_types": [
+            "fire"
+          ],
+          "save": "reflexos",
+          "dc": 16,
+          "duration": 2,
+          "tick_damage": "1d6",
+          "descricao": "Ao morrer, explode em raio 2. Reflexos CD 16 reduz 4d6 à metade; o chão fica em chamas por 2 rodadas."
+        }
+      ],
+      "immunities": [
+        "fire"
+      ],
+      "weaknesses": [
+        {
+          "type": "cold",
+          "multiplier": 2,
+          "descricao": "Gelo causa dano dobrado."
+        },
+        {
+          "type": "water",
+          "multiplier": 2,
+          "descricao": "Água causa dano dobrado."
+        }
+      ],
+      "loot_table": {
+        "1-100": null
+      },
+      "ai_type": "agressivo",
+      "undead": false,
+      "subtipo": "besta_magica"
+    },
+    {
+      "type": "molochus_anciao",
+      "name": "Molochus Ancião",
+      "emoji": "🔥",
+      "boss": false,
+      "tier": 10,
+      "cr": 10,
+      "hp": 170,
+      "ac": 26,
+      "natural_armor": 12,
+      "movement": 6,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "grande",
+      "image": "molochos",
+      "str_": 24,
+      "dex": 18,
+      "con_": 24,
+      "int_": 4,
+      "fort": 13,
+      "ref_": 7,
+      "will": -2,
+      "attacks": [
+        {
+          "name": "Mordida",
+          "atk_bonus": 15,
+          "damage": "3d8+10",
+          "damage_types": [
+            "physical"
+          ],
+          "fire_damage": "2d6",
+          "num_attacks": 1
+        },
+        {
+          "name": "Garras",
+          "atk_bonus": 15,
+          "damage": "2d6+6",
+          "damage_types": [
+            "physical"
+          ],
+          "fire_damage": "2d6",
+          "num_attacks": 2
+        },
+        {
+          "name": "Chifrada",
+          "atk_bonus": 15,
+          "damage": "3d6+6",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "aura_escaldante",
+          "name": "Aura Escaldante",
+          "action_type": "passiva",
+          "radius": 1,
+          "damage": "2d6",
+          "damage_types": [
+            "fire"
+          ],
+          "descricao": "Criaturas adjacentes sofrem 2d6 de fogo no início do próprio turno."
+        },
+        {
+          "id": "sangue_em_ebulicao",
+          "name": "Sangue em Ebulição",
+          "action_type": "passiva",
+          "damage": "2d6",
+          "damage_types": [
+            "fire"
+          ],
+          "descricao": "Cada ataque corpo a corpo que acerta o Molochus faz o atacante sofrer 2d6 de fogo."
+        },
+        {
+          "id": "investida_flamejante",
+          "name": "Investida Flamejante",
+          "action_type": "passiva",
+          "attack_index": 2,
+          "move_required": 3,
+          "damage": "2d6",
+          "damage_types": [
+            "fire"
+          ],
+          "descricao": "Após mover 3 quadrados, a Chifrada causa +2d6 de fogo."
+        },
+        {
+          "id": "explosao_vapor",
+          "name": "Explosão de Vapor",
+          "action_type": "acao",
+          "cooldown_turns": 6,
+          "range": 3,
+          "shape": "cone",
+          "damage": "8d6",
+          "damage_types": [
+            "fire"
+          ],
+          "save": "reflexos",
+          "dc": 18,
+          "success_effect": "metade",
+          "descricao": "Recarga fixa de 6 rodadas. Cone de 3 quadrados; Reflexos CD 18 reduz 8d6 de fogo à metade."
+        },
+        {
+          "id": "morte_explosiva",
+          "name": "Morte Explosiva",
+          "action_type": "passiva",
+          "radius": 3,
+          "damage": "8d6",
+          "damage_types": [
+            "fire"
+          ],
+          "save": "reflexos",
+          "dc": 18,
+          "duration": 3,
+          "tick_damage": "1d6",
+          "descricao": "Ao morrer, explode em raio 3. Reflexos CD 18 reduz 8d6 à metade; o chão fica em chamas por 3 rodadas."
+        }
+      ],
+      "immunities": [
+        "fire"
+      ],
+      "weaknesses": [
+        {
+          "type": "cold",
+          "multiplier": 2,
+          "descricao": "Gelo causa dano dobrado."
+        },
+        {
+          "type": "water",
+          "multiplier": 2,
+          "descricao": "Água causa dano dobrado."
+        }
+      ],
+      "loot_table": {
+        "1-100": null
+      },
+      "ai_type": "agressivo",
+      "undead": false,
+      "subtipo": "besta_magica"
     }
   ],
   "monster_abilities": [
@@ -3086,6 +4718,46 @@ window.EDITOR_CATALOG = {
       "veneno_id": "veneno_escorpiao_pedra",
       "poison_dc": 9,
       "descricao": "Vincula um veneno escolhido a um dos ataques da criatura.",
+      "source": "monstro"
+    },
+    {
+      "id": "veneno_lacralion",
+      "name": "Veneno do Lacralion",
+      "action_type": "passiva",
+      "attack_index": 2,
+      "poison_dc": 14,
+      "extra_damage": "1d4",
+      "slow_duration": 1,
+      "descricao": "Ao acertar o Ferrão, Fortitude CD 14; falha: 1d4 de dano adicional e Lento até o próximo turno.",
+      "source": "monstro"
+    },
+    {
+      "id": "agarrar_lacralion",
+      "name": "Agarrão",
+      "action_type": "passiva",
+      "attack_index": 0,
+      "dc": 16,
+      "save": "fortitude",
+      "escape_saves": [
+        "fortitude"
+      ],
+      "max_targets": 1,
+      "descricao": "Quando a Pinça acerta, o alvo fica Imobilizado. Escape: Fortitude CD 16.",
+      "source": "monstro"
+    },
+    {
+      "id": "carapaca_espinhosa",
+      "name": "Carapaça Espinhosa",
+      "action_type": "passiva",
+      "damage": "1d4",
+      "descricao": "Quem acertar o Lacralion com um ataque corpo a corpo sofre 1d4 de dano.",
+      "source": "monstro"
+    },
+    {
+      "id": "predador_implacavel",
+      "name": "Predador Implacável",
+      "action_type": "passiva",
+      "descricao": "Pode manter dois inimigos Imobilizados ao mesmo tempo.",
       "source": "monstro"
     },
     {
@@ -3705,6 +5377,306 @@ window.EDITOR_CATALOG = {
       "source": "monstro"
     },
     {
+      "id": "movimento_aquatico",
+      "name": "Movimento Aquático",
+      "action_type": "passiva",
+      "descricao": "Move 6 quadrados normalmente em terra, água e água profunda.",
+      "source": "monstro"
+    },
+    {
+      "id": "veneno_charcos",
+      "name": "Veneno",
+      "action_type": "passiva",
+      "attack_index": 3,
+      "poison_dc": 15,
+      "effect": "perde_movimento",
+      "descricao": "Ao acertar o Ferrão, Fortitude CD 15; falha: perde a ação de movimento no próximo turno.",
+      "source": "monstro"
+    },
+    {
+      "id": "tentaculos_imobilizar",
+      "name": "Tentáculos",
+      "action_type": "passiva",
+      "attack_index": 1,
+      "hits_needed": 2,
+      "dc": 17,
+      "save": "fortitude",
+      "escape_saves": [
+        "fortitude"
+      ],
+      "max_targets": 1,
+      "descricao": "Se dois Tentáculos acertarem o mesmo alvo, ele fica Imobilizado. Escape: Fortitude CD 17.",
+      "source": "monstro"
+    },
+    {
+      "id": "constricao_charcos",
+      "name": "Constrição",
+      "action_type": "passiva",
+      "damage": "1d6+5",
+      "damage_types": [
+        "physical"
+      ],
+      "descricao": "No início do turno, criaturas Imobilizadas sofrem 1d6+5. Enquanto presas, não podem se afastar.",
+      "source": "monstro"
+    },
+    {
+      "id": "ferrao_paralitico",
+      "name": "Ferrão Paralítico",
+      "action_type": "passiva",
+      "attack_index": 3,
+      "dc": 17,
+      "save": "fortitude",
+      "effect": "perde_movimento",
+      "descricao": "Ao acertar o Ferrão, Fortitude CD 17; falha: perde a ação de movimento no próximo turno.",
+      "source": "monstro"
+    },
+    {
+      "id": "nuvem_acida",
+      "name": "Nuvem Ácida",
+      "action_type": "acao",
+      "cooldown_turns": 4,
+      "range": 4,
+      "radius": 1,
+      "duration": 2,
+      "initial_damage": "2d6",
+      "tick_damage": "1d6",
+      "damage_types": [
+        "acid"
+      ],
+      "descricao": "Recarga 4 rodadas. Centro no alvo; raio 1. Causa 2d6 ao surgir e 1d6 no turno de cada criatura dentro da área.",
+      "source": "monstro"
+    },
+    {
+      "id": "predador_charcos",
+      "name": "Predador dos Charcos",
+      "action_type": "passiva",
+      "max_targets": 2,
+      "descricao": "Pode manter dois inimigos Imobilizados simultaneamente.",
+      "source": "monstro"
+    },
+    {
+      "id": "mandibulas_colossais",
+      "name": "Mandíbulas Colossais",
+      "action_type": "passiva",
+      "attack_index": 0,
+      "dc": 18,
+      "save": "fortitude",
+      "escape_saves": [
+        "forca",
+        "fortitude"
+      ],
+      "automatic_damage": "2d10+10",
+      "max_targets": 1,
+      "descricao": "Ao acertar a Mordida, Fortitude CD 18 ou fica Preso. O alvo acompanha o Tirano e sofre a Mordida no início do turno dele.",
+      "source": "monstro"
+    },
+    {
+      "id": "arrastar",
+      "name": "Arrastar",
+      "action_type": "passiva",
+      "descricao": "Uma criatura Presa acompanha todos os movimentos do Tirano, permanecendo adjacente.",
+      "source": "monstro"
+    },
+    {
+      "id": "sacudida_brutal",
+      "name": "Sacudida Brutal",
+      "action_type": "acao",
+      "cooldown_turns": 5,
+      "damage": "4d6",
+      "damage_types": [
+        "physical"
+      ],
+      "throw_distance": 2,
+      "descricao": "Recarga fixa de 5 rodadas. Uma criatura Presa sofre 4d6 e é arremessada 2 quadrados; depois deixa de estar Presa.",
+      "source": "monstro"
+    },
+    {
+      "id": "couro_espesso",
+      "name": "Couro Espesso",
+      "action_type": "passiva",
+      "descricao": "RD 4 contra armas comuns.",
+      "source": "monstro"
+    },
+    {
+      "id": "metabolismo_vulneravel",
+      "name": "Metabolismo Vulnerável",
+      "action_type": "passiva",
+      "poison_save_penalty": -2,
+      "poison_multiplier": 2,
+      "descricao": "-2 em Fortitude contra venenos; dano de veneno dobrado; veneno ignora a RD.",
+      "source": "monstro"
+    },
+    {
+      "id": "engolir",
+      "name": "Engolir",
+      "action_type": "acao",
+      "dc": 22,
+      "save": "fortitude",
+      "acid_damage": "3d6",
+      "stomach_hp": 20,
+      "escape_dc": 22,
+      "descricao": "No início do turno, tenta engolir uma criatura Presa. Fortitude CD 22; falha: Engolida. O alvo sofre 3d6 ácido por turno e fica invisível para o exterior.",
+      "source": "monstro"
+    },
+    {
+      "id": "abrir_caminho",
+      "name": "Abrir Caminho",
+      "action_type": "passiva",
+      "damage_threshold": 20,
+      "internal_damage": "2d6",
+      "uses_per_combat": 1,
+      "descricao": "A criatura Engolida pode atacar o estômago. Ao causar 20 dano interno, é cuspida; o Tirano sofre 2d6 e perde o próximo ataque.",
+      "source": "monstro"
+    },
+    {
+      "id": "passo_devastador",
+      "name": "Passo Devastador",
+      "action_type": "passiva",
+      "move_required": 4,
+      "damage": "3d6",
+      "damage_types": [
+        "physical"
+      ],
+      "push": 1,
+      "descricao": "Após mover 4 ou mais quadrados, todas as criaturas adjacentes ao destino sofrem 3d6 e são empurradas 1 quadrado, inclusive aliados.",
+      "source": "monstro"
+    },
+    {
+      "id": "couro_titanico",
+      "name": "Couro Titânico",
+      "action_type": "passiva",
+      "descricao": "RD 7 contra armas comuns.",
+      "source": "monstro"
+    },
+    {
+      "id": "metabolismo_instavel",
+      "name": "Metabolismo Instável",
+      "action_type": "passiva",
+      "poison_save_penalty": -2,
+      "poison_multiplier": 2,
+      "descricao": "-2 em Fortitude contra venenos; dano de veneno dobrado; falha contra veneno também causa Lento por 1 rodada.",
+      "source": "monstro"
+    },
+    {
+      "id": "salto_selvagem",
+      "name": "Salto Selvagem",
+      "action_type": "passiva",
+      "attack_index": 2,
+      "move_required": 3,
+      "reflex_dc": 14,
+      "escape_dc": 14,
+      "save": "reflexos",
+      "escape_saves": [
+        "forca"
+      ],
+      "effect": "imobilizado",
+      "collision_damage": "1d6",
+      "descricao": "Se mover 3 quadrados antes da Chifrada, o alvo testa Reflexos CD 14 ou fica Imobilizado; escapa com Força CD 14. Se estiver contra uma parede, sofre +1d6 de colisão.",
+      "source": "monstro"
+    },
+    {
+      "id": "dilacerar",
+      "name": "Dilacerar",
+      "action_type": "passiva",
+      "attack_index": 1,
+      "hits_needed": 2,
+      "damage": "2d6",
+      "damage_types": [
+        "physical"
+      ],
+      "descricao": "Se as duas Garras acertarem o mesmo alvo no turno, ele sofre 2d6 de dano extra uma vez.",
+      "source": "monstro"
+    },
+    {
+      "id": "furia_garaloux",
+      "name": "Frenesi",
+      "action_type": "passiva",
+      "threshold": 0.5,
+      "attack_bonus": 2,
+      "damage_bonus": 2,
+      "descricao": "Ao atingir metade da Vida ou menos, recebe +2 no ataque e +2 no dano.",
+      "source": "monstro"
+    },
+    {
+      "id": "predador_supremo",
+      "name": "Predador Supremo",
+      "action_type": "passiva",
+      "trigger": "kill",
+      "attack_index": 0,
+      "chain": false,
+      "descricao": "Sempre que eliminar uma criatura, realiza imediatamente uma Mordida adicional. A Mordida adicional não gera outra reação.",
+      "source": "monstro"
+    },
+    {
+      "id": "aura_escaldante",
+      "name": "Aura Escaldante",
+      "action_type": "passiva",
+      "radius": 1,
+      "damage": "1d4",
+      "damage_types": [
+        "fire"
+      ],
+      "descricao": "Criaturas adjacentes sofrem 1d4 de fogo no início do próprio turno.",
+      "source": "monstro"
+    },
+    {
+      "id": "sangue_em_ebulicao",
+      "name": "Sangue em Ebulição",
+      "action_type": "passiva",
+      "damage": "1d4",
+      "damage_types": [
+        "fire"
+      ],
+      "descricao": "Quem acerta o Molochus com um ataque corpo a corpo sofre 1d4 de fogo.",
+      "source": "monstro"
+    },
+    {
+      "id": "investida_flamejante",
+      "name": "Investida Flamejante",
+      "action_type": "passiva",
+      "attack_index": 2,
+      "move_required": 3,
+      "damage": "2d6",
+      "damage_types": [
+        "fire"
+      ],
+      "descricao": "Após mover 3 quadrados, a Chifrada causa +2d6 de fogo.",
+      "source": "monstro"
+    },
+    {
+      "id": "explosao_vapor",
+      "name": "Explosão de Vapor",
+      "action_type": "acao",
+      "cooldown_turns": 6,
+      "range": 3,
+      "shape": "cone",
+      "damage": "4d6",
+      "damage_types": [
+        "fire"
+      ],
+      "save": "reflexos",
+      "dc": 16,
+      "success_effect": "metade",
+      "descricao": "Recarga fixa de 6 rodadas. Cone de 3 quadrados; Reflexos CD 16 reduz 4d6 de fogo à metade.",
+      "source": "monstro"
+    },
+    {
+      "id": "morte_explosiva",
+      "name": "Morte Explosiva",
+      "action_type": "passiva",
+      "radius": 2,
+      "damage": "4d6",
+      "damage_types": [
+        "fire"
+      ],
+      "save": "reflexos",
+      "dc": 16,
+      "duration": 2,
+      "tick_damage": "1d6",
+      "descricao": "Ao morrer, explode em raio 2. Reflexos CD 16 reduz 4d6 à metade; o chão fica em chamas por 2 rodadas.",
+      "source": "monstro"
+    },
+    {
       "id": "hero_warrior_mira_certeira",
       "source": "heroi",
       "source_id": "mira_certeira",
@@ -3797,13 +5769,6 @@ window.EDITOR_CATALOG = {
       "name": "Ataque de Mandíbula",
       "action_type": "passiva",
       "descricao": "Se alvo preso e adjacente: 1d8+3 dano direto (sem rolagem de acerto)",
-      "source": "monstro"
-    },
-    {
-      "id": "arrastar",
-      "name": "Arrastar",
-      "action_type": "passiva",
-      "descricao": "Move alvo preso junto ao se deslocar",
       "source": "monstro"
     },
     {
@@ -5011,6 +6976,39 @@ window.EDITOR_CATALOG = {
       "guild_category": "especializacao"
     },
     {
+      "id": "guild_lenda_lacralion_filhote",
+      "source": "guilda",
+      "source_id": "lenda_lacralion_filhote",
+      "name": "Lenda: Lacralion Filhote",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Lacralion Filhote.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_lacralion_adulto",
+      "source": "guilda",
+      "source_id": "lenda_lacralion_adulto",
+      "name": "Lenda: Lacralion Adulto",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Lacralion Adulto.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_lacralion_anciao",
+      "source": "guilda",
+      "source_id": "lenda_lacralion_anciao",
+      "name": "Lenda: Lacralion Ancião",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Lacralion Ancião.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
       "id": "guild_lenda_esqueleto_humano",
       "source": "guilda",
       "source_id": "lenda_esqueleto_humano",
@@ -5380,6 +7378,127 @@ window.EDITOR_CATALOG = {
       "name": "Lenda: Lorde Vampiro",
       "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Lorde Vampiro.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_ferrao_charcos_jovem",
+      "source": "guilda",
+      "source_id": "lenda_ferrao_charcos_jovem",
+      "name": "Lenda: Ferrão dos Charcos Jovem",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Ferrão dos Charcos Jovem.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_ferrao_charcos_adulto",
+      "source": "guilda",
+      "source_id": "lenda_ferrao_charcos_adulto",
+      "name": "Lenda: Ferrão dos Charcos Adulto",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Ferrão dos Charcos Adulto.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_ferrao_charcos_anciao",
+      "source": "guilda",
+      "source_id": "lenda_ferrao_charcos_anciao",
+      "name": "Lenda: Ferrão dos Charcos Ancião",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Ferrão dos Charcos Ancião.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_tirano_da_mata",
+      "source": "guilda",
+      "source_id": "lenda_tirano_da_mata",
+      "name": "Lenda: Tirano da Mata",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Tirano da Mata.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_tirano_ancestral",
+      "source": "guilda",
+      "source_id": "lenda_tirano_ancestral",
+      "name": "Lenda: Tirano Ancestral",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Tirano Ancestral.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_garaloux_jovem",
+      "source": "guilda",
+      "source_id": "lenda_garaloux_jovem",
+      "name": "Lenda: Garaloux Jovem",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Garaloux Jovem.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_garaloux_adulto",
+      "source": "guilda",
+      "source_id": "lenda_garaloux_adulto",
+      "name": "Lenda: Garaloux Adulto",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Garaloux Adulto.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_garaloux_alfa",
+      "source": "guilda",
+      "source_id": "lenda_garaloux_alfa",
+      "name": "Lenda: Garaloux Alfa",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Garaloux Alfa.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_molochus_jovem",
+      "source": "guilda",
+      "source_id": "lenda_molochus_jovem",
+      "name": "Lenda: Molochus Jovem",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Molochus Jovem.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_molochus_adulto",
+      "source": "guilda",
+      "source_id": "lenda_molochus_adulto",
+      "name": "Lenda: Molochus Adulto",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Molochus Adulto.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_molochus_anciao",
+      "source": "guilda",
+      "source_id": "lenda_molochus_anciao",
+      "name": "Lenda: Molochus Ancião",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Molochus Ancião.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
