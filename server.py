@@ -7267,7 +7267,7 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": T("erro.voce_ja_conhece_essa_magia")}); return
         p.setdefault("magias_conhecidas", []).append(magia_id)
         fila.pop(0)
-        await self.gm_say(f"📖 **{p['name']}** aprendeu **{m['nome']}**!")
+        await self.gm_say(T("narracao.aprendeu", heroi=p['name'], m_nome=m['nome']))
         if fila:
             await self._enviar_spell_pick_prompt(p)   # prÃ³xima da fila
         await self.push_state()
@@ -8296,11 +8296,11 @@ class GameRoom:
                     p, alvo, crit, roll, surv_mod=perdido.get("surv_mod", 0),
                     cancao_dano=perdido.get("cancao_dano", 0), gl_dano=perdido.get("gl_dano", 0))
                 alvo["hp"] -= dmg
-                await self.gm_say(f"🎲 **{p['name']}** força a Sorte e acerta **{alvo['name']}** com {weapon_name} {dmg_detail} = **{dmg}**!")
+                await self.gm_say(T("narracao.forca_a_sorte_e_acerta_com", heroi=p['name'], alvo=alvo['name'], weapon_name=weapon_name, dmg_detail=dmg_detail, dmg=dmg))
                 if alvo["hp"] <= 0:
                     await self._monster_dies(alvo, pid)
             else:
-                await self.gm_say(f"🎲 **{p['name']}** tenta a Sorte de novo, mas erra outra vez!")
+                await self.gm_say(T("narracao.tenta_a_sorte_de_novo_mas_erra_outra_vez", heroi=p['name']))
             p["ultimo_ataque_perdido"] = None
         # â”€â”€ TÃ©cnicas Exclusivas da Guilda (Fase 3, Mago/ClÃ©rigo) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         elif ef.get("tipo") == "tec_ex_aprimorar":
@@ -8333,11 +8333,11 @@ class GameRoom:
         }
         if ef.get("tipo") in efeitos_adiados:
             p.setdefault("technique_pending", {})[tecnica_id] = True
-            await self.gm_say(f"⚔️ **{p['name']}** prepara **{item['nome']}** — custo e recarga após o efeito.")
+            await self.gm_say(T("narracao.prepara_custo_e_recarga_apos_o_efeito", heroi=p['name'], item_nome=item['nome']))
         else:
             self._pagar_fome_sede(p, item["custo_fome"], item["custo_sede"])
             p["technique_cooldowns"][tecnica_id] = self.round_num + item["recarga_rodadas"]
-            await self.gm_say(f"⚔️ **{p['name']}** ativa **{item['nome']}**!")
+            await self.gm_say(T("narracao.ativa", heroi=p['name'], item_nome=item['nome']))
         await self.push_state()
 
     def _rolar_2d6(self):
@@ -8460,7 +8460,7 @@ class GameRoom:
         if not self._no_raio(p, m, st["alcance"]):
             await self.send_to(p["id"], {"type": "error",
                 "msg": T("erro.alvo_fora_do_alcance_casas", alcance=st["alcance"])}); return False
-        await self.gm_say(f"🎵 **{p['name']}** dispara **Nota Cortante** em **{m['name']}**!")
+        await self.gm_say(T("narracao.dispara_nota_cortante_em", heroi=p['name'], monstro=m['name']))
         dano = await self._rolar_dano_mostrado(*_ndfaces(st["dano"]), "🎵 Dano sonoro")
         save_ok, *_ = await self._save_mostrado(m, "reflexos", self._instrumento_cd(p, inst))
         if save_ok:
@@ -8484,7 +8484,7 @@ class GameRoom:
                  if m.get("hp", 0) > 0 and tuple(m["pos"]) in tiles]
         if not alvos:
             await self.send_to(p["id"], {"type": "error", "msg": T("erro.nenhum_inimigo_na_linha")}); return False
-        await self.gm_say(f"🎵 **{p['name']}** dispara **Nota Cortante** numa linha reta!")
+        await self.gm_say(T("narracao.dispara_nota_cortante_numa_linha_reta", heroi=p['name']))
         cd = self._instrumento_cd(p, inst)
         for m in alvos:
             dano = await self._rolar_dano_mostrado(*_ndfaces(st["dano"]), "🎵 Dano sonoro")
@@ -8492,7 +8492,7 @@ class GameRoom:
             if save_ok:
                 dano = dano // 2
             m["hp"] = max(0, m["hp"] - dano)
-            await self.gm_say(f"🎵 **{m['name']}** sofre **{dano}**{' (metade)' if save_ok else ''}.")
+            await self.gm_say(T("narracao.sofre", monstro=m['name'], dano=dano, metade_if_save_ok_else=' (metade)' if save_ok else ''))
             if m["hp"] <= 0:
                 await self._monster_dies(m, p["id"])
         return True
@@ -8517,7 +8517,7 @@ class GameRoom:
                  if m.get("hp", 0) > 0 and self._no_raio(p, m, st["raio"])]
         if not alvos:
             await self.send_to(p["id"], {"type": "error", "msg": T("erro.nenhum_inimigo_no_alcance")}); return False
-        await self.gm_say(f"🥁 **{p['name']}** golpeia o **Tambor de Guerra** — onda sonora (raio {st['raio']})!")
+        await self.gm_say(T("narracao.golpeia_o_tambor_de_guerra_onda_sonora_r", heroi=p['name'], st_raio=st['raio']))
         cd = self._instrumento_cd(p, inst)
         for m in alvos:
             dano = await self._rolar_dano_mostrado(*_ndfaces(st["dano"]), "🥁 Dano sonoro")
@@ -8566,7 +8566,7 @@ class GameRoom:
             return
         dano = await self._rolar_dano_mostrado(*_ndfaces(p.get("ecos_dano", "1d4")), "🔔 Ecos")
         m["hp"] = max(0, m["hp"] - dano)
-        await self.gm_say(f"🔔 Os Ecos Dolorosos ferem **{m['name']}** em **{dano}**!")
+        await self.gm_say(T("narracao.os_ecos_dolorosos_ferem_em", monstro=m['name'], dano=dano))
         if m["hp"] <= 0:
             await self._monster_dies(m, p["id"])
 
@@ -8584,7 +8584,7 @@ class GameRoom:
                  if m.get("hp", 0) > 0 and tuple(m["pos"]) in tiles]
         if not alvos:
             await self.send_to(p["id"], {"type": "error", "msg": T("erro.nenhum_inimigo_no_cone")}); return False
-        await self.gm_say(f"📯 **{p['name']}** sopra o **Chamado do General** (cone {comp})!")
+        await self.gm_say(T("narracao.sopra_o_chamado_do_general_cone", heroi=p['name'], comp=comp))
         cd = self._instrumento_cd(p, inst)
         for m in alvos:
             save_ok, *_ = await self._save_mostrado(m, "vontade", cd)
@@ -8593,22 +8593,22 @@ class GameRoom:
                 m["medo_rodadas"] = st["medo"]
                 if st.get("pen_falha", 0) > 0:
                     self._reduzir_mov_monstro(m, st["pen_falha"], 1)
-                await self.gm_say(f"📯 **{m['name']}** entra em pânico (Amedrontado {st['medo']}r)!")
+                await self.gm_say(T("narracao.entra_em_panico_amedrontado_r", monstro=m['name'], st_medo=st['medo']))
             else:
                 if st.get("pen_sucesso", 0) > 0:
                     self._reduzir_mov_monstro(m, st["pen_sucesso"], 1)
-                await self.gm_say(f"📯 **{m['name']}** resiste, mas hesita.")
+                await self.gm_say(T("narracao.resiste_mas_hesita", monstro=m['name']))
         return True
 
     async def _instr_dueto_marcial(self, p, inst, st, data):
         p["dueto_marcial_ate"] = self.round_num + st["duracao"]
-        await self.gm_say(f"🎼 **{p['name']}** entoa o **Dueto Marcial** por {st['duracao']} rodada(s)!")
+        await self.gm_say(T("narracao.entoa_o_dueto_marcial_por_rodada_s", heroi=p['name'], st_duracao=st['duracao']))
         return True
 
     async def _instr_dueto_fantasma(self, p, inst, st, data):
         p["dueto_fantasma_ate"] = self.round_num + st["duracao"]
         p["dueto_fantasma_fracao"] = st["fracao"]
-        await self.gm_say(f"🎶 **{p['name']}** conjura o **Dueto Fantasma** por {st['duracao']} rodada(s)!")
+        await self.gm_say(T("narracao.conjura_o_dueto_fantasma_por_rodada_s", heroi=p['name'], st_duracao=st['duracao']))
         return True
 
     async def _instr_requiem_final(self, p, inst, st, data):
@@ -8627,7 +8627,7 @@ class GameRoom:
         p["requiem_alvo"] = m["id"]
         p["requiem_contador"] = 0
         m["requiem_por"] = p["id"]
-        await self.gm_say(f"🎻 **{p['name']}** inicia o **Réquiem Final** sobre **{m['name']}**!")
+        await self.gm_say(T("narracao.inicia_o_requiem_final_sobre", heroi=p['name'], monstro=m['name']))
         return True
 
     # â”€â”€ Improviso (Gaita â€” Fase 5) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -8689,17 +8689,17 @@ class GameRoom:
     async def _improviso_aplicar_passo(self, p, inst, res):
         """Aplica um passo sem-alvo (2,3,4,5,6,8,10)."""
         if res == 3:
-            await self.gm_say(f"🪗 **{p['name']}** improvisa… e desafina de leve (nada acontece).")
+            await self.gm_say(T("narracao.improvisa_e_desafina_de_leve_nada_aconte", heroi=p['name']))
             return
         if res == 2:
             p["desafinado_ate"] = self.round_num + 1
-            await self.gm_say(f"🪗 **{p['name']}** improvisa e **desafina** — -1 em ataques e CDs até o próximo turno.")
+            await self.gm_say(T("narracao.improvisa_e_desafina_1_em_ataques_e_cds", heroi=p['name']))
             return
         if res == 10:
             _virt, vst = self._improviso_virt_st(inst, "alaude")
             p["sinfonia_temp_ate"] = self.round_num + 1
             p["sinfonia_temp_atributos"] = list(vst.get("atributos", []))
-            await self.gm_say(f"🪗 **{p['name']}** improvisa a **Sinfonia Heroica** por 1 rodada!")
+            await self.gm_say(T("narracao.improvisa_a_sinfonia_heroica_por_1_rodad", heroi=p['name']))
             return
         base, forca_dur = self._IMPROVISO_AUTO[res]
         virt, vst = self._improviso_virt_st(inst, base)
@@ -8720,11 +8720,11 @@ class GameRoom:
             return
         save_ok, *_ = await self._save_mostrado(m, "vontade", self._instrumento_cd(p, virt))
         if save_ok:
-            await self.gm_say(f"🎻 **{m['name']}** resiste ao lamento improvisado.")
+            await self.gm_say(T("narracao.resiste_ao_lamento_improvisado", monstro=m['name']))
             return
         dano = roll_dice(st["dado"])
         m["hp"] = max(0, m["hp"] - dano)
-        await self.gm_say(f"🎻 O Réquiem improvisado fere **{m['name']}** em **{dano}**!")
+        await self.gm_say(T("narracao.o_requiem_improvisado_fere_em", monstro=m['name'], dano=dano))
         if m["hp"] <= 0:
             await self._monster_dies(m, p["id"])
 
@@ -8770,7 +8770,7 @@ class GameRoom:
             m.pop("requiem_por", None)
         bardo["requiem_alvo"] = None
         bardo["requiem_contador"] = 0
-        await self.gm_say(f"🎻 O Réquiem Final de **{bardo['name']}** se encerra — {motivo}.")
+        await self.gm_say(T("narracao.o_requiem_final_de_se_encerra", bardo=bardo['name'], motivo=motivo))
 
     async def _concentracao_requiem(self, bardo, dano):
         """Bardo sob Réquiem testa Vontade (CD 8+dano) ao sofrer dano; falha encerra.
@@ -8845,7 +8845,7 @@ class GameRoom:
             eco = (dmg * atacante.get("dueto_fantasma_fracao", 0)) // 100
             if eco > 0:
                 alvo["hp"] = max(0, alvo["hp"] - eco)
-                await self.gm_say(f"🎶 A ilusão do **Dueto Fantasma** repete o golpe em **{alvo['name']}**: **{eco}** de dano!")
+                await self.gm_say(T("narracao.a_ilusao_do_dueto_fantasma_repete_o_golp", alvo=alvo['name'], eco=eco))
                 if alvo["hp"] <= 0:
                     await self._monster_dies(alvo, atacante.get("id"))
                     return   # alvo morto â€” encerra
@@ -8872,7 +8872,7 @@ class GameRoom:
             return
         p["oportunidade_credito"] = False
         p["moves_left"] = p.get("moves_left", 0) + p.get("spd", 0)
-        await self.gm_say(f"⏳ **{p['name']}** aproveita a Oportunidade para se mover mais!")
+        await self.gm_say(T("narracao.aproveita_a_oportunidade_para_se_mover_m", heroi=p['name']))
         await self.push_state()
 
     async def handle_templo_remover_maldicao(self, pid, maldicao_id):
@@ -9417,7 +9417,7 @@ class GameRoom:
             p["sede"] -= cost["sede"]
         origem = WORLD_LOCATIONS[self.world_location]["nome"]
         self.world_location = destination
-        await self.gm_say(f"🧭 O grupo viajou de **{origem}** para **{WORLD_LOCATIONS[destination]['nome']}** (🍖-{cost['fome']} 💧-{cost['sede']} por herói).")
+        await self.gm_say(T("narracao.o_grupo_viajou_de_para_por_heroi", origem=origem, world_locations_destinat=WORLD_LOCATIONS[destination]['nome'], cost_fome=cost['fome'], cost_sede=cost['sede']))
         self._checkpoint_savegame()
         await self.broadcast_city_state()
 
@@ -9452,7 +9452,7 @@ class GameRoom:
         except OSError:
             await self.send_to(pid, {"type": "error", "msg": T("erro.nao_foi_possivel_salvar_os_pontos_do_map")})
             return
-        await self.gm_say("🧭 As coordenadas do mapa-múndi foram atualizadas.")
+        await self.gm_say(T("narracao.as_coordenadas_do_mapa_mundi_foram_atual"))
         await self.broadcast_city_state()
 
     def _grupo_tem_item(self, item_id):
@@ -9836,7 +9836,7 @@ class GameRoom:
             f"aventura:{adventure['id']}:{stage_index}",
             [_etapa_obj(stages[stage_index]).get("intro")])
         self.dungeon_generated = False
-        await self.gm_say(f"O grupo parte para **{adventure['nome']}** — etapa {stage_index + 1}/{len(stages)} (fome -{fome}, sede -{sede} por herói).")
+        await self.gm_say(T("narracao.o_grupo_parte_para_etapa_fome_sede_por_h", adventure_nome=adventure['nome'], stage_index_1=stage_index + 1, len_stages=len(stages), fome=fome, sede=sede))
         await self.enter_dungeon(pid, from_world_adventure=True)
 
     async def handle_city_map_points(self, pid, city_id, points):
@@ -10074,9 +10074,9 @@ class GameRoom:
             actor = self.current_actor()
             nome = (self.players.get(actor["id"], {}).get("name") if actor and actor["kind"] == "player"
                     else self.monsters.get(actor["id"], {}).get("name") if actor else "?")
-            await self.gm_say(f"Os aventureiros partem da cidade e adentram a masmorra. Rodada 1 — iniciativa de **{nome}**.")
+            await self.gm_say(T("narracao.os_aventureiros_partem_da_cidade_e_adent", nome=nome))
         else:
-            await self.gm_say("🚪 Os aventureiros descem novamente as escadas — a masmorra permanece exatamente como a deixaram.")
+            await self.gm_say(T("narracao.os_aventureiros_descem_novamente_as_esca"))
 
     def _initiative_attribute(self, entity, key):
         """Atributo efetivo para iniciativa. Modificadores temporários ou
@@ -10163,7 +10163,7 @@ class GameRoom:
             p["action_done"] = True
         if p.pop("derrubado_sem_movimento", False):
             p["moves_left"] = 0
-            await self.gm_say(f"🦵 **{p['name']}** está derrubado e perde o movimento deste turno!")
+            await self.gm_say(T("narracao.esta_derrubado_e_perde_o_movimento_deste", heroi=p['name']))
         if p.get("perde_turno"):
             p["action_done"] = p["bonus_action_used"] = True; p["moves_left"] = 0
         self._iniciar_timer_turno()
@@ -10176,7 +10176,7 @@ class GameRoom:
             p = self.players.get(actor["id"])
             if p and self._ativo(p):
                 await self._start_initiative_player_turn(p)
-                await self.gm_say(f"🎲 Turno de **{p['name']}** (Iniciativa {actor['initiative']}).")
+                await self.gm_say(T("narracao.turno_de_iniciativa", heroi=p['name'], actor_initiative=actor['initiative']))
                 await self.push_state()
                 # A fera toma integralmente o turno do herói.  Executamos a IA
                 # depois do preparo normal do turno para que venenos, água e
@@ -10337,7 +10337,7 @@ class GameRoom:
         p["action_done"] = False
         self.last_stand_pid = pid
         self.last_stand_event = asyncio.Event()
-        await self.gm_say(f"🔥 **{p['name']}** recusa a morte — **ÚLTIMO ESFORÇO**! Dois turnos de fúria antes de cair.")
+        await self.gm_say(T("narracao.recusa_a_morte_ultimo_esforco_dois_turno", heroi=p['name']))
         await self.push_state()
         self._iniciar_timer_ultimo_esforco(pid)
         await self.last_stand_event.wait()
@@ -10353,7 +10353,7 @@ class GameRoom:
         if p["ultimo_esforco_turnos_restantes"] > 0:
             p["moves_left"] = self._water_turn_moves(p, p.get("spd", 0))
             p["action_done"] = False
-            await self.gm_say(f"⚔️ **{p['name']}** continua o Último Esforço — mais um turno!")
+            await self.gm_say(T("narracao.continua_o_ultimo_esforco_mais_um_turno", heroi=p['name']))
             await self.push_state()
             self._iniciar_timer_ultimo_esforco(pid)
         else:
@@ -10407,9 +10407,9 @@ class GameRoom:
         era_turno = (self.phase == "playing" and self.current_pid() == pid)
         if self.phase == "playing":
             p["pos"] = [-1, -1]   # fora do tabuleiro: monstros ignoram, nÃ£o ocupa casa
-            await self.gm_say(f"🔌 **{p['name']}** perdeu a conexão e deixou a masmorra. O grupo segue em frente!")
+            await self.gm_say(T("narracao.perdeu_a_conexao_e_deixou_a_masmorra_o_g", heroi=p['name']))
         else:
-            await self.gm_say(f"🔌 **{p['name']}** desconectou-se.")
+            await self.gm_say(T("narracao.desconectou_se", heroi=p['name']))
         if era_turno:
             await self._forcar_fim_turno(pid)   # avanÃ§a o turno (jÃ¡ reinicia o timer)
         elif self.phase == "playing":
@@ -10643,7 +10643,7 @@ class GameRoom:
             chave = rid if rid is not None else id(m)
             if chave not in salas_narradas:
                 salas_narradas.add(chave)
-                await self.gm_say("⚔️ **Combate!** Os monstros perceberam os heróis!")
+                await self.gm_say(T("narracao.combate_os_monstros_perceberam_os_herois"))
 
     # â”€â”€ turn actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -11167,7 +11167,7 @@ class GameRoom:
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
                                "label": f"{atacante['name']} — reação", "hit": hit, "crit": crit})
         if not hit:
-            await self.gm_say(f"↩️ **{atacante['name']}** reage mas **erra** **{alvo['name']}**.")
+            await self.gm_say(T("narracao.reage_mas_erra", atacante=atacante['name'], alvo=alvo['name']))
             return
         die = w.get("die")
         base = roll_dice(die) if die else 1
@@ -11244,10 +11244,10 @@ class GameRoom:
         if not p.get("invisivel_sombras"):
             return False
         p["invisivel_sombras"] = False
-        await self.gm_say(f"🌑 **{p['name']}** revela-se ({motivo}).")
+        await self.gm_say(T("narracao.revela_se", heroi=p['name'], motivo=motivo))
         if tem_espec(p, "ladino_esconder_3"):
             self.temp_def[p["id"]] = self.temp_def.get(p["id"], 0) + 2
-            await self.gm_say(f"🌀 **{p['name']}** ganha +2 de CA por 1 rodada ao se revelar!")
+            await self.gm_say(T("narracao.ganha_2_de_ca_por_1_rodada_ao_se_revelar", heroi=p['name']))
         return True
 
     async def handle_attack(self, pid, target_id, buffs=None, target_pos=None):
@@ -11384,7 +11384,7 @@ class GameRoom:
                 p["fome"] = max(0, p["fome"] - custo_extra_fome)
                 p["sede"] = max(0, p["sede"] - custo_extra_sede)
                 p["cancao_atacou_apos"] = True
-                await self.gm_say(f"🎵⚔️ **{p['name']}** ataca sustentando a canção (🍖-{custo_extra_fome} 💧-{custo_extra_sede}).")
+                await self.gm_say(T("narracao.ataca_sustentando_a_cancao", heroi=p['name'], custo_extra_fome=custo_extra_fome, custo_extra_sede=custo_extra_sede))
 
             # â”€â”€ Habilidades ARMADAS do warrior (buffs) â€” cobra fome/sede AGORA â”€â”€
             # As skills sÃ£o armadas no cliente (toggle, sem custo); o custo sÃ³ Ã©
@@ -11399,7 +11399,7 @@ class GameRoom:
                 teto = self._teto_combinacao(p)
                 if len(sel) > teto:
                     sel = sel[:teto]
-                    await self.gm_say(f"**{p['name']}** só pode combinar {teto} habilidade(s) por turno — as demais foram ignoradas.")
+                    await self.gm_say(T("narracao.so_pode_combinar_habilidade_s_por_turno", heroi=p['name'], teto=teto))
                 total_fome = sum(s.get("fome_cost", 0) for s in sel)
                 total_sede = sum(s.get("sede_cost", 0) for s in sel)
                 # SEM teto: o jogador pode sempre gastar â€” pode esgotar fome/sede
@@ -11449,9 +11449,9 @@ class GameRoom:
             penalidade_furtivo = self._penalidade_furtivo_duas_cabecas(target) if furtivo_planejado else 0
             eff_atk += penalidade_furtivo
             if penalidade_furtivo:
-                await self.gm_say(f"👥 **{target['name']}** antecipa o Ataque Furtivo — **-2** no acerto!")
+                await self.gm_say(T("narracao.antecipa_o_ataque_furtivo_2_no_acerto", target=target['name']))
             if preso_pen:
-                await self.gm_say(f"⛓️ **{p['name']}** ataca enquanto preso — **-2** no acerto!")
+                await self.gm_say(T("narracao.ataca_enquanto_preso_2_no_acerto", heroi=p['name']))
             # AmaldiÃ§oar reduz a CA do alvo (mod_magia ca negativo) â†’ mais fÃ¡cil de acertar.
             # Camuflagem Natural (cobra venenosa): +2 CA contra o PRIMEIRO ataque.
             # FÃºria Cega (orc): -1 CA enquanto enfurecido.
@@ -11491,7 +11491,7 @@ class GameRoom:
             desvantagem = esc == "desvantagem"
             hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
             if not hit and self._sangue_frio_consumir(p):
-                await self.gm_say(f"🧊 **{p['name']}** mantém o sangue frio e rola novamente!")
+                await self.gm_say(T("narracao.mantem_o_sangue_frio_e_rola_novamente", heroi=p['name']))
                 hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
             if not hit and await self._oferecer_sorte(p, {
                     "kind": "attack", "texto": "Você errou o ataque. Usar Sorte para rerrolar com +2?"}):
@@ -11541,7 +11541,7 @@ class GameRoom:
                         p["gear"]["off_hand"] = None
                     else:
                         p["bag"].remove(_ammo_item)
-                    await self.gm_say(f"🏹 **{p['name']}** usou o último projétil!")
+                    await self.gm_say(T("narracao.usou_o_ultimo_projetil", heroi=p['name']))
 
             # â”€â”€ Consumo de veneno (ranged: por disparo; melee: sÃ³ no acerto) â”€â”€
             # A carga Ã© da arma equipada. Assim, trocar de arma nÃ£o transfere o
@@ -11555,16 +11555,16 @@ class GameRoom:
 
             if p.get("invisivel_magico"):
                 p["invisivel_magico"] = False; p.pop("invisivel_magico_rodadas", None)
-                await self.gm_say(f"🫥 **{p['name']}** ataca com vantagem e revela-se!")
+                await self.gm_say(T("narracao.ataca_com_vantagem_e_revela_se", heroi=p['name']))
             if esc == "desvantagem":
-                await self.gm_say(f"🌑 **{p['name']}** ataca às cegas na escuridão — **desvantagem** (2d20, usa {roll}).")
+                await self.gm_say(T("narracao.ataca_as_cegas_na_escuridao_desvantagem", heroi=p['name'], roll=roll))
             elif esc == "vantagem":
-                await self.gm_say(f"🌑 **{p['name']}** enxerga na escuridão e ataca com **vantagem** (2d20, usa {roll}).")
+                await self.gm_say(T("narracao.enxerga_na_escuridao_e_ataca_com_vantage", heroi=p['name'], roll=roll))
             # Sono: o primeiro ataque contra um alvo dormindo Ã© crÃ­tico e o acorda.
             if target.get("dormindo"):
                 hit, crit = True, True
                 target.pop("dormindo", None); target.pop("dormindo_rodadas", None)
-                await self.gm_say(f"🌙 **{target['name']}** é atacado dormindo — golpe **CRÍTICO** e desperta!")
+                await self.gm_say(T("narracao.e_atacado_dormindo_golpe_critico_e_despe", target=target['name']))
             # Label distingue claramente da MÃ£o SecundÃ¡ria â€” evita confusÃ£o visual
             # com "rolagem de desvantagem" quando o jogador Ã© dual-wielder (Henrique).
             await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
@@ -11632,7 +11632,7 @@ class GameRoom:
                     xdmg = roll_dice(_ammo_extra_dmg)
                     xdmg = self._apply_damage_types(xdmg, _ammo_extra_types, target)
                     target["hp"] = max(0, target["hp"] - xdmg)
-                    await self.gm_say(f"🔥 Projétil incendiário: +{xdmg} de dano de fogo!")
+                    await self.gm_say(T("narracao.projetil_incendiario_de_dano_de_fogo", xdmg=xdmg))
                 # ── Dano elemental adicional da arma (Editor de Itens) ──
                 for _xd in (p.get("weapon") or {}).get("extra_damages", []) or []:
                     if not isinstance(_xd, dict) or target.get("hp", 1) <= 0:
@@ -11644,7 +11644,7 @@ class GameRoom:
                     target["hp"] = max(0, target["hp"] - _xr)
                     _elem_pt = {DMG_FIRE: "fogo", DMG_COLD: "frio", DMG_LIGHTNING: "relâmpago",
                                 DMG_ACID: "ácido", DMG_HOLY: "sagrado"}.get(_xd.get("type"), _xd.get("type"))
-                    await self.gm_say(f"✨ Dano elemental: +{_xr} de {_elem_pt}!")
+                    await self.gm_say(T("narracao.dano_elemental_de", _xr=_xr, _elem_pt=_elem_pt))
                 # Corpo a corpo: gastar o Ãºnico marcador em qualquer acerto,
                 # inclusive se este golpe jÃ¡ derrotar o alvo. O efeito do veneno
                 # sÃ³ precisa ser aplicado enquanto o alvo ainda estÃ¡ vivo.
@@ -11689,7 +11689,7 @@ class GameRoom:
                         await self._aplicar_veneno(target, _melee_poison_vid, fonte="ataque")
                 await self._reacoes_instrumento_apos_ataque(p, target, dmg)
                 if _melee_poison_vid and not self._weapon_poison_slots(p):
-                    await self.gm_say(f"🧴 O veneno da arma de **{p['name']}** acabou.")
+                    await self.gm_say(T("narracao.o_veneno_da_arma_de_acabou", heroi=p['name']))
             else:
                 await self.gm_say(
                     f"⚔️ **{p['name']}** ataca **{target['name']}**"
@@ -11697,7 +11697,7 @@ class GameRoom:
 
             # Fim de veneno ranged: anuncia ao esgotar cargas (mesmo em erros).
             if _ranged_poison_vid and not self._weapon_poison_slots(p):
-                await self.gm_say(f"🧴 O veneno do projétil de **{p['name']}** acabou.")
+                await self.gm_say(T("narracao.o_veneno_do_projetil_de_acabou", heroi=p['name']))
 
             # Atacar quebra a invisibilidade das sombras (o furtivo jÃ¡ foi aplicado).
             if p.get("class_id") == "rogue":
@@ -11761,7 +11761,7 @@ class GameRoom:
                                               "label": "🔥 Corpo em Chamas"})
                         fogo_alvo, transferencia = await self._processar_dano_protetor(p["id"], fogo)
                         p["hp"] = max(0, p["hp"] - fogo_alvo)
-                        await self.gm_say(f"🔥 **{p['name']}** é queimado pelo Corpo em Chamas: **{fogo_alvo}** de dano!")
+                        await self.gm_say(T("narracao.e_queimado_pelo_corpo_em_chamas_de_dano", heroi=p['name'], fogo_alvo=fogo_alvo))
                         if transferencia:
                             protetor, dano_protetor = transferencia
                             protetor["hp"] = max(0, protetor["hp"] - dano_protetor)
@@ -11784,7 +11784,7 @@ class GameRoom:
         # 2 c/ FÃºria III); ao zerar cai no else e encerra a aÃ§Ã£o. No prÃ³ximo turno tudo reabre.
         if p.get("skill_ataques_extras", 0) > 0:
             p["skill_ataques_extras"] -= 1
-            await self.gm_say(f"🔥 **{p['name']}** — Fúria Berserker: ataque extra disponível! Ataque novamente.")
+            await self.gm_say(T("narracao.furia_berserker_ataque_extra_disponivel", heroi=p['name']))
         else:
             p["action_done"] = True
         await self.push_state()
@@ -12004,7 +12004,7 @@ class GameRoom:
             if defn.get("em_chamas") and target.get("hp", 0) > 0:
                 dur = self._rolar_dado(defn.get("chamas_dur", "1d4"))
                 self._aplicar_em_chamas(target, dur, defn.get("chamas_agua_apaga", True))
-                await self.gm_say(f"🔥 **{target['name']}** pega fogo por {dur} rodada(s)!")
+                await self.gm_say(T("narracao.pega_fogo_por_rodada_s", target=target['name'], dur=dur))
             if defn.get("residual") and target.get("hp", 0) > 0:
                 target["acido_residual"] = max(target.get("acido_residual", 0), dmg // 2)
                 await self.gm_say(
@@ -12047,7 +12047,7 @@ class GameRoom:
         p["action_done"] = True
         self._consumir_recursos(p, 'apenas_acao')
         raio = defn.get("area_raio", 1)
-        await self.gm_say(f"{defn['emoji']} **{p['name']}** arremessa **{defn['name']}** em ({cx},{cy})!")
+        await self.gm_say(T("narracao.arremessa_em", defn_emoji=defn['emoji'], heroi=p['name'], defn=defn['name'], cx=cx, cy=cy))
 
         # Dano de Ã¡rea com save de Reflexos (metade no sucesso).
         if defn.get("dano"):
@@ -12071,12 +12071,12 @@ class GameRoom:
                 if d <= 0:
                     continue
                 nome = alvo.get("name") or alvo.get("nome", "Alvo")
-                await self.gm_say(f"{defn['emoji']} **{nome}** sofre {d} de {defn['elemento']}.")
+                await self.gm_say(T("narracao.sofre_de", defn_emoji=defn['emoji'], nome=nome, d=d, defn_elemento=defn['elemento']))
                 await self._aplicar_dano_alvo(alvo, d, defn["elemento"], pid)   # aplica fraquezas elementais
                 if defn.get("em_chamas") and self._vivo(alvo):
                     dur = self._rolar_dado(defn.get("chamas_dur", "1d4"))
                     self._aplicar_em_chamas(alvo, dur, defn.get("chamas_agua_apaga", True))
-                    await self.gm_say(f"🔥 **{nome}** pega fogo por {dur} rodada(s)!")
+                    await self.gm_say(T("narracao.pega_fogo_por_rodada_s_2", nome=nome, dur=dur))
 
         # Zona (Bomba de FumaÃ§a = escuridÃ£o centrada no tile).
         zona = defn.get("zona")
@@ -12098,7 +12098,7 @@ class GameRoom:
         p["em_chamas_rodadas"] = 0
         p["action_done"] = True
         self._consumir_recursos(p, 'apenas_acao')
-        await self.gm_say(f"🔥 **{p['name']}** se joga no chão e apaga as chamas!")
+        await self.gm_say(T("narracao.se_joga_no_chao_e_apaga_as_chamas", heroi=p['name']))
         await self.push_state()
 
     # â”€â”€ cÃ¡lculo de ataque com adaga por Destreza (scaffolding) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -12529,7 +12529,7 @@ class GameRoom:
         # Atalho "comandar todos": auto-resolve os servos que ainda tÃªm aÃ§Ã£o nesta
         # janela (respeita moves_left/acted; sem custo de aÃ§Ã£o bÃ´nus â€” o upkeep jÃ¡
         # Ã© cobrado por turno). Ãštil durante o turno dos servos.
-        await self.gm_say(f"💀 **{p['name']}** comanda seus servos mortos-vivos!")
+        await self.gm_say(T("narracao.comanda_seus_servos_mortos_vivos", heroi=p['name']))
 
         for a in list(animados):
             if a.get("vida_atual", 0) <= 0 or a.get("acted") or a.get("dormindo"):
@@ -12828,7 +12828,7 @@ class GameRoom:
         m["_master_furia_dada"] = True
         extra = roll_dice("1d6")
         alvo["hp"] = max(0, alvo["hp"] - extra)
-        await self.gm_say(f"🦷 **Fúria Bestial**: **{alvo['name']}** sofre +**{extra}** de dano!")
+        await self.gm_say(T("narracao.furia_bestial_sofre_de_dano", alvo=alvo['name'], extra=extra))
         if alvo["hp"] <= 0:
             await self._player_dies(alvo["id"])
 
@@ -12875,7 +12875,7 @@ class GameRoom:
         self.master_reserve[monster_type] -= 1
         if self.master_reserve[monster_type] <= 0:
             del self.master_reserve[monster_type]
-        await self.gm_say(f"⚠️ **Reforços!** Um(a) **{mdef.get('name', monster_type)}** entra na masmorra!")
+        await self.gm_say(T("narracao.reforcos_um_a_entra_na_masmorra", mdef_get_name_monster_ty=mdef.get('name', monster_type)))
         await self.push_state()
 
     async def _on_master_disconnect(self):
@@ -12892,7 +12892,7 @@ class GameRoom:
                 if alive_players:
                     await self.gm_phase(m)   # só resolve via IA se o mestre não tinha agido
             self.master_manual_event.set()   # libera _master_manual_window â†’ o turno avanÃ§a
-        await self.gm_say("🔌 O mestre caiu — os monstros voltam ao controle da IA.")
+        await self.gm_say(T("narracao.o_mestre_caiu_os_monstros_voltam_ao_cont"))
         await self.push_state()
 
     def _montar_cargas_ataque(self, m):
@@ -13015,7 +13015,7 @@ class GameRoom:
             save_ok, *_ = await self._save_mostrado(
                 m, "vontade", m.get("dominio_mente_cd", 0), extra_mod=save_bonus)
             if save_ok:
-                await self.gm_say(f"🧠 **{m['name']}** rompeu Dominar Mente após o dano recebido.")
+                await self.gm_say(T("narracao.rompeu_dominar_mente_apos_o_dano_recebid", monstro=m['name']))
                 self._limpar_controle_mente(m)
                 return
         m.pop("dominio_mente_pendente_pid", None)
@@ -13270,7 +13270,7 @@ class GameRoom:
             t = self.monsters.get(target_id)
             if t:
                 if not self._cardinal_adjacent(p["pos"], t["pos"]):
-                    await self.gm_say(f"⚠ **{p['name']}** tenta **Golpe Pesado** mas o inimigo está fora de alcance!"); return
+                    await self.gm_say(T("narracao.tenta_golpe_pesado_mas_o_inimigo_esta_fo", heroi=p['name'])); return
                 hit, roll, total, crit = d20_attack(p["atk_bonus"] + surv_mod + preso_pen, t["ac"])
                 await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll, "label": "Golpe Pesado"})
                 if hit:
@@ -13282,18 +13282,18 @@ class GameRoom:
                     if crit: dmg *= 2
                     dmg = max(1, dmg + surv_mod)
                     t["hp"] -= dmg
-                    await self.gm_say(f"💥 **{p['name']}** usa **Golpe Pesado** em **{t['name']}** (d20={roll}+{p['atk_bonus']}={total} vs CA {t['ac']}): **{dmg}** de dano!")
+                    await self.gm_say(T("narracao.usa_golpe_pesado_em_d20_vs_ca_de_dano", heroi=p['name'], t=t['name'], roll=roll, p_atk_bonus=p['atk_bonus'], total=total, t_ac=t['ac'], dmg=dmg))
                     if t["hp"] <= 0: await self._monster_dies(t, p["id"])
                 else:
-                    await self.gm_say(f"💥 **{p['name']}** tenta **Golpe Pesado** mas **ERROU** (d20={roll}={total} vs CA {t['ac']})!")
+                    await self.gm_say(T("narracao.tenta_golpe_pesado_mas_errou_d20_vs_ca", heroi=p['name'], roll=roll, total=total, t_ac=t['ac']))
 
         elif sid == "taunt":
             self.taunted = p["id"]
-            await self.gm_say(f"😤 **{p['name']}** usa **Provocar** — todos os monstros agora focam nele!")
+            await self.gm_say(T("narracao.usa_provocar_todos_os_monstros_agora_foc", heroi=p['name']))
 
         elif sid == "shield_bash":
             self.temp_def[p["id"]] = self.temp_def.get(p["id"], 0) + 3
-            await self.gm_say(f"🛡️ **{p['name']}** ergue o escudo! +3 CA até o próximo turno.")
+            await self.gm_say(T("narracao.ergue_o_escudo_3_ca_ate_o_proximo_turno", heroi=p['name']))
 
         elif sid == "fireball":
             showcase = roll_dice("4d6")
@@ -13308,7 +13308,7 @@ class GameRoom:
                 total_dmg_list.append(dmg)
             avg = sum(total_dmg_list) // max(1, len(total_dmg_list)) if total_dmg_list else 0
             extra = " ⚡(Aprimorada x2)" if dmg_mult > 1 else ""
-            await self.gm_say(f"🔥 **{p['name']}** lança **Bola de Fogo**{extra}! {len(alive_monsters)} inimigo(s) sofrem ~**{avg}** de dano (4d6+INT)!")
+            await self.gm_say(T("narracao.lanca_bola_de_fogo_inimigo_s_sofrem_de_d", heroi=p['name'], extra=extra, len_alive_monsters=len(alive_monsters), avg=avg))
             for m in list(alive_monsters):
                 if m["hp"] <= 0: await self._monster_dies(m, p["id"])
 
@@ -13323,7 +13323,7 @@ class GameRoom:
                 dmg = max(1, (raw_dmg + mod(p["int_"]) + surv_mod) * dmg_mult)
                 t["hp"] -= dmg
                 extra = " ⚡(Aprimorada x2)" if dmg_mult > 1 else ""
-                await self.gm_say(f"🧊 **{p['name']}** usa **Lança de Gelo**{extra} em **{t['name']}**: **{dmg}** de dano de frio!")
+                await self.gm_say(T("narracao.usa_lanca_de_gelo_em_de_dano_de_frio", heroi=p['name'], extra=extra, t=t['name'], dmg=dmg))
                 if t["hp"] <= 0: await self._monster_dies(t, p["id"])
 
         elif sid == "magic_shield":
@@ -13332,15 +13332,15 @@ class GameRoom:
             self.temp_def[p["id"]] = self.temp_def.get(p["id"], 0) + 4
             if dur_bonus > 1:
                 self.temp_def_turnos[p["id"]] = max(self.temp_def_turnos.get(p["id"], 0), 2)
-                await self.gm_say(f"✨ **{p['name']}** ativa **Escudo Mágico** ⚡(Aprimorado)! +4 CA por 2 turnos.")
+                await self.gm_say(T("narracao.ativa_escudo_magico_aprimorado_4_ca_por", heroi=p['name']))
             else:
-                await self.gm_say(f"✨ **{p['name']}** ativa **Escudo Mágico**! +4 CA até o próximo turno.")
+                await self.gm_say(T("narracao.ativa_escudo_magico_4_ca_ate_o_proximo_t", heroi=p['name']))
 
         elif sid == "backstab":
             t = self.monsters.get(target_id)
             if t:
                 if not self._cardinal_adjacent(p["pos"], t["pos"]):
-                    await self.gm_say(f"⚠ **{p['name']}** tenta **Ataque Furtivo** mas o inimigo está fora de alcance!"); return
+                    await self.gm_say(T("narracao.tenta_ataque_furtivo_mas_o_inimigo_esta", heroi=p['name'])); return
                 furtivo_pen = self._penalidade_furtivo_duas_cabecas(t)
                 furtivo_atk = p["atk_bonus"] + 2 + surv_mod + preso_pen + furtivo_pen
                 hit, roll, total, crit = d20_attack(furtivo_atk, t["ac"])
@@ -13358,21 +13358,21 @@ class GameRoom:
                         dmg = raw_wpn + raw_snk + mod(p[weapon["stat"]])
                     dmg = max(1, dmg + surv_mod)
                     t["hp"] -= dmg
-                    await self.gm_say(f"🗡️ **{p['name']}** usa **Ataque Furtivo** em **{t['name']}** (d20={roll}+{furtivo_atk}={total} vs CA {t['ac']}): **{dmg}** de dano furtivo!")
+                    await self.gm_say(T("narracao.usa_ataque_furtivo_em_d20_vs_ca_de_dano", heroi=p['name'], t=t['name'], roll=roll, furtivo_atk=furtivo_atk, total=total, t_ac=t['ac'], dmg=dmg))
                     if t["hp"] <= 0: await self._monster_dies(t, p["id"])
                 else:
-                    await self.gm_say(f"🗡️ **{p['name']}** tenta **Ataque Furtivo** mas **ERROU** (d20={roll}={total} vs CA {t['ac']})!")
+                    await self.gm_say(T("narracao.tenta_ataque_furtivo_mas_errou_d20_vs_ca", heroi=p['name'], roll=roll, total=total, t_ac=t['ac']))
 
         elif sid == "detect_trap":
             if "detect_trap" not in p["status"]: p["status"].append("detect_trap")
             revealed = [tr for tr in self.traps if not tr["triggered"]]
             for tr in revealed: self.explored.add(tuple(tr["pos"]))
-            await self.gm_say(f"👁️ **{p['name']}** detecta armadilhas! {len(revealed)} armadilha(s) revelada(s).")
+            await self.gm_say(T("narracao.detecta_armadilhas_armadilha_s_revelada", heroi=p['name'], len_revealed=len(revealed)))
 
         elif sid == "smoke_bomb":
             for m in alive_monsters:
                 self.smoke[m["id"]] = True
-            await self.gm_say(f"💨 **{p['name']}** lança **Bomba de Fumaça**! Os inimigos errarão o próximo ataque.")
+            await self.gm_say(T("narracao.lanca_bomba_de_fumaca_os_inimigos_errara", heroi=p['name']))
 
         elif sid == "heal":
             t = self.players.get(target_id, p)
@@ -13380,7 +13380,7 @@ class GameRoom:
             await self.broadcast({"type": "dice_roll", "die": "d6", "value": raw_heal, "label": "Cura"})
             heal = raw_heal + 2
             self._curar_hp(t, heal, "Cura (habilidade)")
-            await self.gm_say(f"💚 **{p['name']}** cura **{t['name']}** em **{heal}** HP! (2d6+2)")
+            await self.gm_say(T("narracao.cura_em_hp_2d6_2", heroi=p['name'], t=t['name'], heal=heal))
 
         elif sid == "holy_light":
             showcase = roll_dice("2d6")
@@ -13388,7 +13388,7 @@ class GameRoom:
             for m in alive_monsters:
                 dmg = max(1, roll_dice("2d6") + mod(p["int_"]) + surv_mod)
                 m["hp"] -= dmg
-            await self.gm_say(f"☀️ **{p['name']}** invoca **Luz Sagrada**! 2d6+INT dano sagrado em todos os inimigos!")
+            await self.gm_say(T("narracao.invoca_luz_sagrada_2d6_int_dano_sagrado", heroi=p['name']))
             for m in list(alive_monsters):
                 if m["hp"] <= 0: await self._monster_dies(m, p["id"])
 
@@ -13397,7 +13397,7 @@ class GameRoom:
                 if p2["alive"]:
                     p2["atk_bonus"] += 2
                     self.blessed[p2["id"]] = self.blessed.get(p2["id"], 0) + 2
-            await self.gm_say(f"🙏 **{p['name']}** abençoa o grupo! +2 Bônus de Ataque para todos por 1 turno.")
+            await self.gm_say(T("narracao.abencoa_o_grupo_2_bonus_de_ataque_para_t", heroi=p['name']))
 
         elif sid == "double_shot":
             t = self.monsters.get(target_id)
@@ -13420,10 +13420,10 @@ class GameRoom:
                         hits += 1
                 if hits:
                     t["hp"] -= total_dmg
-                    await self.gm_say(f"🏹 **{p['name']}** usa **Tiro Duplo** em **{t['name']}**: {hits} acerto(s), **{total_dmg}** de dano total!")
+                    await self.gm_say(T("narracao.usa_tiro_duplo_em_acerto_s_de_dano_total", heroi=p['name'], t=t['name'], hits=hits, total_dmg=total_dmg))
                     if t["hp"] <= 0: await self._monster_dies(t, p["id"])
                 else:
-                    await self.gm_say(f"🏹 **{p['name']}** usa **Tiro Duplo** mas ambos os tiros **ERRARAM**!")
+                    await self.gm_say(T("narracao.usa_tiro_duplo_mas_ambos_os_tiros_errara", heroi=p['name']))
 
         elif sid == "arrow_rain":
             showcase = roll_dice("1d8")
@@ -13434,7 +13434,7 @@ class GameRoom:
             for m in alive_monsters:
                 dmg = max(1, roll_dice("1d8") + mod(p["dex"]) + surv_mod)
                 m["hp"] -= dmg
-            await self.gm_say(f"🏹 **{p['name']}** usa **Chuva de Flechas**! 1d8+DES em todos os inimigos!")
+            await self.gm_say(T("narracao.usa_chuva_de_flechas_1d8_des_em_todos_os", heroi=p['name']))
             for m in list(alive_monsters):
                 if m["hp"] <= 0: await self._monster_dies(m, p["id"])
 
@@ -13450,14 +13450,14 @@ class GameRoom:
                 await self.broadcast({"type": "dice_roll", "die": die_type, "value": raw_dmg, "label": "Tiro Perfurante"})
                 dmg = max(1, raw_dmg * 2 + mod(p[weapon["stat"]]) + surv_mod)
                 t["hp"] -= dmg
-                await self.gm_say(f"🎯 **{p['name']}** usa **Tiro Perfurante** em **{t['name']}**: **{dmg}** de dano (acerto automático, ignora CA)!")
+                await self.gm_say(T("narracao.usa_tiro_perfurante_em_de_dano_acerto_au", heroi=p['name'], t=t['name'], dmg=dmg))
                 if t["hp"] <= 0: await self._monster_dies(t, p["id"])
 
         elif sid == "smite":
             t = self.monsters.get(target_id)
             if t:
                 if not self._cardinal_adjacent(p["pos"], t["pos"]):
-                    await self.gm_say(f"⚠ **{p['name']}** tenta **Golpe Divino** mas o inimigo está fora de alcance!"); return
+                    await self.gm_say(T("narracao.tenta_golpe_divino_mas_o_inimigo_esta_fo", heroi=p['name'])); return
                 hit, roll, total, crit = d20_attack(p["atk_bonus"] + surv_mod + preso_pen, t["ac"])
                 await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll, "label": "Golpe Divino"})
                 if hit:
@@ -13472,21 +13472,21 @@ class GameRoom:
                     if crit: base *= 2; holy *= 2
                     dmg = max(1, base + holy + surv_mod)
                     t["hp"] -= dmg
-                    await self.gm_say(f"⚡ **{p['name']}** usa **Golpe Divino** em **{t['name']}** (d20={roll}+{p['atk_bonus']}={total} vs CA {t['ac']}): **{dmg}** de dano sagrado!")
+                    await self.gm_say(T("narracao.usa_golpe_divino_em_d20_vs_ca_de_dano_sa", heroi=p['name'], t=t['name'], roll=roll, p_atk_bonus=p['atk_bonus'], total=total, t_ac=t['ac'], dmg=dmg))
                     if t["hp"] <= 0: await self._monster_dies(t, p["id"])
                 else:
-                    await self.gm_say(f"⚡ **{p['name']}** tenta **Golpe Divino** mas **ERROU** (d20={roll}={total} vs CA {t['ac']})!")
+                    await self.gm_say(T("narracao.tenta_golpe_divino_mas_errou_d20_vs_ca", heroi=p['name'], roll=roll, total=total, t_ac=t['ac']))
 
         elif sid == "divine_shield":
             t = self.players.get(target_id, p)
             self.immune[t["id"]] = 1
-            await self.gm_say(f"🛡️ **{p['name']}** protege **{t['name']}** com **Escudo Divino**! Imune a dano por 1 turno.")
+            await self.gm_say(T("narracao.protege_com_escudo_divino_imune_a_dano_p", heroi=p['name'], t=t['name']))
 
         elif sid == "holy_aura":
             for p2 in self.players.values():
                 if p2["alive"]:
                     self.temp_def[p2["id"]] = self.temp_def.get(p2["id"], 0) + 2
-            await self.gm_say(f"✨ **{p['name']}** ativa **Aura Sagrada**! +2 CA para todos por 2 turnos.")
+            await self.gm_say(T("narracao.ativa_aura_sagrada_2_ca_para_todos_por_2", heroi=p['name']))
 
         # â”€â”€ Bard (Henrique) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         # As habilidades do bardo (CanÃ§Ã£o Heroica e ProvocaÃ§Ã£o) NÃƒO passam por
@@ -13661,7 +13661,7 @@ class GameRoom:
         p["cancao_ativa"]     = False
         p["cancao_atributos"] = []
         p["cancao_custo"]     = {"fome": 0, "sede": 0}
-        await self.gm_say(f"🔇 **{p['name']}** encerra a Canção Heroica.")
+        await self.gm_say(T("narracao.encerra_a_cancao_heroica", heroi=p['name']))
         await self.push_state()
 
     async def _aplicar_buffs_cancao(self, bardo):
@@ -13741,13 +13741,13 @@ class GameRoom:
             p["cancao_ativa"]     = False
             p["cancao_atributos"] = []
             p["cancao_custo"]     = {"fome": 0, "sede": 0}
-            await self.gm_say(f"🔇 A Canção Heroica de **{p['name']}** se cala — recursos insuficientes.")
+            await self.gm_say(T("narracao.a_cancao_heroica_de_se_cala_recursos_ins", heroi=p['name']))
             return
         self._pagar_fome_sede(p, custo["fome"], custo["sede"])
         await self._remover_buffs_cancao(p)
         await self._aplicar_buffs_cancao(p)
         labels = ", ".join(next(a["label"] for a in CANCAO_ATRIBUTOS if a["id"] == x) for x in p.get("cancao_atributos", []))
-        await self.gm_say(f"🎵 Canção Heroica de **{p['name']}** [{labels}] — manutenção 🍖-{custo['fome']} 💧-{custo['sede']}.")
+        await self.gm_say(T("narracao.cancao_heroica_de_manutencao", heroi=p['name'], labels=labels, custo_fome=custo['fome'], custo_sede=custo['sede']))
 
     async def _cobrar_manutencao_requiem(self, p):
         """Upkeep do Réquiem Final, cobrado no início do turno do bardo. Sem
@@ -13766,7 +13766,7 @@ class GameRoom:
             await self._encerrar_requiem(p, "recursos insuficientes")
             return
         self._pagar_fome_sede(p, mf, ms)
-        await self.gm_say(f"🎻 Réquiem Final de **{p['name']}** — manutenção 🍖-{mf} 💧-{ms}.")
+        await self.gm_say(T("narracao.requiem_final_de_manutencao", heroi=p['name'], mf=mf, ms=ms))
 
     def _interromper_cancao(self, p, motivo):
         """Cancela a canção sem push (chamado de contextos síncronos, ex.: morte).
@@ -14283,7 +14283,7 @@ class GameRoom:
         if not p or not _pode_hab_heroi(p, "paladin", "hero_paladin_golpe_sagrado") \
                 or not p.get("golpe_sagrado_ativo"): return
         p["golpe_sagrado_ativo"] = False
-        await self.gm_say(f"⚔️ **{p['name']}** baixa a lâmina sagrada — Golpe Sagrado desativado.")
+        await self.gm_say(T("narracao.baixa_a_lamina_sagrada_golpe_sagrado_des", heroi=p['name']))
         await self.push_state()
 
     async def handle_protetor(self, pid, data):
@@ -14325,7 +14325,7 @@ class GameRoom:
                 or not p.get("protetor_ativo"): return
         p["protetor_ativo"] = False
         p["protetor_alvo"] = None
-        await self.gm_say(f"🛡️ **{p['name']}** encerra a proteção — Protetor desativado.")
+        await self.gm_say(T("narracao.encerra_a_protecao_protetor_desativado", heroi=p['name']))
         await self.push_state()
 
     async def handle_acao_livre_richard(self, pid, data):
@@ -14351,7 +14351,7 @@ class GameRoom:
         if p.get("regeneracao_ativa"):
             # Toggle: re-invocar enquanto ativa desliga (botÃ£o PARAR no cliente)
             p["regeneracao_ativa"] = False
-            await self.gm_say(f"✨ **{p['name']}** encerra a Regeneração Divina.")
+            await self.gm_say(T("narracao.encerra_a_regeneracao_divina", heroi=p['name']))
             return
         if p.get("hp", 0) >= p.get("max_hp", 1):
             await self.send_to(pid, {"type": "error", "msg": T("erro.hp_ja_esta_no_maximo")}); return
@@ -14363,7 +14363,7 @@ class GameRoom:
         p["fome"] = max(0, p["fome"] - fome_cost)
         p["sede"] = max(0, p["sede"] - sede_cost)
         p["regeneracao_ativa"] = True
-        await self.gm_say(f"✨ **{p['name']}** ativa **Regeneração Divina** — +1 HP por turno. (🍖-{fome_cost} 💧-{sede_cost})")
+        await self.gm_say(T("narracao.ativa_regeneracao_divina_1_hp_por_turno", heroi=p['name'], fome_cost=fome_cost, sede_cost=sede_cost))
 
     async def _ativar_guerreiro_luz(self, p, pid, data):
         if p.get("guerreiro_luz_ativo"):
@@ -14371,7 +14371,7 @@ class GameRoom:
             p["guerreiro_luz_ativo"] = False
             p["guerreiro_luz_bonus"] = {}
             p["guerreiro_luz_custo"] = {"fome": 0, "sede": 0}
-            await self.gm_say(f"💡 **{p['name']}** dissipa o Guerreiro da Luz.")
+            await self.gm_say(T("narracao.dissipa_o_guerreiro_da_luz", heroi=p['name']))
             return
 
         bonus = (data.get("bonus") or {}) if data else {}
@@ -14408,7 +14408,7 @@ class GameRoom:
         if bonus_validos["visao"] > 0 and p.get("pos"):
             raio = self._get_raio_visao(p)
             self._reveal_around(p["pos"][0], p["pos"][1], radius=raio)
-            await self.gm_say(f"👁️ Visão de **{p['name']}** expandida para raio {raio}.")
+            await self.gm_say(T("narracao.visao_de_expandida_para_raio", heroi=p['name'], raio=raio))
             self._revelar_armadilhas_raio(p, self._gdl_trap_raio(p))
 
     async def _processar_manutencao_richard(self, p):
@@ -14423,15 +14423,15 @@ class GameRoom:
         if p.get("regeneracao_ativa"):
             if p["hp"] >= p["max_hp"]:
                 p["regeneracao_ativa"] = False
-                await self.gm_say(f"✨ Regeneração Divina de **{p['name']}** se encerra — HP máximo atingido.")
+                await self.gm_say(T("narracao.regeneracao_divina_de_se_encerra_hp_maxi", heroi=p['name']))
             elif p["fome"] < 1 or p["sede"] < 1:
                 p["regeneracao_ativa"] = False
-                await self.gm_say(f"✨ Regeneração Divina de **{p['name']}** se interrompe — recursos insuficientes.")
+                await self.gm_say(T("narracao.regeneracao_divina_de_se_interrompe_recu", heroi=p['name']))
             else:
                 self._curar_hp(p, 1, "Regeneração Divina")
                 p["fome"] = max(0, p["fome"] - 1)
                 p["sede"] = max(0, p["sede"] - 1)
-                await self.gm_say(f"✨ **{p['name']}** — Regeneração Divina: +1 HP ({p['hp']}/{p['max_hp']}) 🍖-1 💧-1.")
+                await self.gm_say(T("narracao.regeneracao_divina_1_hp_1_1", heroi=p['name'], p_hp=p['hp'], p_max_hp=p['max_hp']))
                 raio_reg = self._regen_raio(p)
                 if raio_reg > 0:
                     curados = []
@@ -14441,17 +14441,17 @@ class GameRoom:
                         if max(abs(q["pos"][0]-p["pos"][0]), abs(q["pos"][1]-p["pos"][1])) <= raio_reg:
                             self._curar_hp(q, 1, "Regeneração Divina"); curados.append(q["name"])
                     if curados:
-                        await self.gm_say(f"✨ Regeneração Divina de **{p['name']}** também cura: {', '.join(curados)} (+1 HP).")
+                        await self.gm_say(T("narracao.regeneracao_divina_de_tambem_cura_1_hp", heroi=p['name'], join_curados=', '.join(curados)))
 
         # Golpe Sagrado â€” manutenÃ§Ã£o ðŸ–-1 ðŸ’§-1
         if p.get("golpe_sagrado_ativo"):
             if p["fome"] < 1 or p["sede"] < 1:
                 p["golpe_sagrado_ativo"] = False
-                await self.gm_say(f"⚔️ Golpe Sagrado de **{p['name']}** se desfaz — recursos insuficientes.")
+                await self.gm_say(T("narracao.golpe_sagrado_de_se_desfaz_recursos_insu", heroi=p['name']))
             else:
                 p["fome"] = max(0, p["fome"] - 1)
                 p["sede"] = max(0, p["sede"] - 1)
-                await self.gm_say(f"⚔️ Golpe Sagrado de **{p['name']}** sustentado 🍖-1 💧-1.")
+                await self.gm_say(T("narracao.golpe_sagrado_de_sustentado_1_1", heroi=p['name']))
 
         # Protetor â€” manutenÃ§Ã£o ðŸ–-1; cai se aliado morrer/sair do raio
         if p.get("protetor_ativo"):
@@ -14459,14 +14459,14 @@ class GameRoom:
             if p["fome"] < 1:
                 p["protetor_ativo"] = False
                 p["protetor_alvo"] = None
-                await self.gm_say(f"🛡️ Protetor de **{p['name']}** se interrompe — fome insuficiente.")
+                await self.gm_say(T("narracao.protetor_de_se_interrompe_fome_insuficie", heroi=p['name']))
             elif not alvo or not alvo.get("alive") or not self._no_raio(p, alvo, self._defensor_raio(p)):
                 p["protetor_ativo"] = False
                 p["protetor_alvo"] = None
-                await self.gm_say(f"🛡️ Protetor de **{p['name']}** se desfaz — aliado fora do raio.")
+                await self.gm_say(T("narracao.protetor_de_se_desfaz_aliado_fora_do_rai", heroi=p['name']))
             else:
                 p["fome"] = max(0, p["fome"] - 1)
-                await self.gm_say(f"🛡️ **{p['name']}** mantém Protetor sobre **{alvo['name']}** 🍖-1.")
+                await self.gm_say(T("narracao.mantem_protetor_sobre_1", heroi=p['name'], alvo=alvo['name']))
 
         # Guerreiro da Luz â€” manutenÃ§Ã£o conforme os bÃ´nus escolhidos
         if p.get("guerreiro_luz_ativo"):
@@ -14474,11 +14474,11 @@ class GameRoom:
             if p["fome"] < custo["fome"] or p["sede"] < custo["sede"]:
                 p["guerreiro_luz_ativo"] = False
                 p["guerreiro_luz_bonus"] = {}
-                await self.gm_say(f"💡 Guerreiro da Luz de **{p['name']}** se apaga — recursos insuficientes.")
+                await self.gm_say(T("narracao.guerreiro_da_luz_de_se_apaga_recursos_in", heroi=p['name']))
             else:
                 p["fome"] = max(0, p["fome"] - custo["fome"])
                 p["sede"] = max(0, p["sede"] - custo["sede"])
-                await self.gm_say(f"💡 Guerreiro da Luz de **{p['name']}** sustentado 🍖-{custo['fome']} 💧-{custo['sede']}.")
+                await self.gm_say(T("narracao.guerreiro_da_luz_de_sustentado", heroi=p['name'], custo_fome=custo['fome'], custo_sede=custo['sede']))
                 if p.get("guerreiro_luz_bonus", {}).get("visao", 0) > 0:
                     self._revelar_armadilhas_raio(p, self._gdl_trap_raio(p))
 
@@ -14513,7 +14513,7 @@ class GameRoom:
         if not alvo or not self._no_raio(richard, alvo, self._defensor_raio(richard)):
             richard["protetor_ativo"] = False
             richard["protetor_alvo"] = None
-            await self.gm_say(f"🛡️ Protetor de **{richard['name']}** se desfaz — aliado saiu do raio.")
+            await self.gm_say(T("narracao.protetor_de_se_desfaz_aliado_saiu_do_rai", richard=richard['name']))
             return dano_original, None
         dano_aliado, dano_richard = self._defensor_split(richard, dano_original)
         await self.gm_say(
@@ -14607,7 +14607,7 @@ class GameRoom:
         p["action_done"]       = False
         p["bonus_action_used"] = False
         await self.send_to(pid, {"type": "enter_dungeon"})
-        await self.gm_say(f"🚪 **{p['name']}** desce as escadas e retorna à masmorra!")
+        await self.gm_say(T("narracao.desce_as_escadas_e_retorna_a_masmorra", heroi=p['name']))
         await self.push_state()
 
     async def handle_voltar_masmorra(self, pid):
@@ -14633,7 +14633,7 @@ class GameRoom:
             return False   # TPK de verdade — quem trata é o fluxo de game over
         for p in self.players.values():
             p.pop("fora_masmorra", None)
-        await self.gm_say("🏙️ Sem heróis na masmorra, a expedição é interrompida — o grupo se reúne na cidade.")
+        await self.gm_say(T("narracao.sem_herois_na_masmorra_a_expedicao_e_int"))
         await self._voltar_para_cidade()
         return True
 
@@ -15123,7 +15123,7 @@ class GameRoom:
             # jogador continuaria batendo com o dado/bÃ´nus da arma "desequipada".
             p["weapon"] = {**WEAPONS["unarmed"]}
         p["bag"].append(item)
-        await self.gm_say(f"📤 **{p['name']}** desequipou **{item['name']}**.")
+        await self.gm_say(T("narracao.desequipou", heroi=p['name'], item=item['name']))
         await self.push_state_or_city()
 
     # â”€â”€ validaÃ§Ã£o de slot secundÃ¡rio (scaffolding â€” ver SECUNDARIO_PERMITIDO) â”€â”€â”€â”€
@@ -15189,7 +15189,7 @@ class GameRoom:
             if extra["id"] != items[0]["id"]:
                 items.append(extra)
         self._spawn_chest([room["cx"], room["cy"]], gold, items)
-        await self.gm_say("🎁 Um **baú** apareceu no centro da sala! Aproxime-se e clique nele para coletar.")
+        await self.gm_say(T("narracao.um_bau_apareceu_no_centro_da_sala_aproxi"))
 
     async def handle_take_from_chest(self, pid, chest_id, kind, index):
         """Player takes gold or an item from a chest (no turn restriction)."""
@@ -15215,7 +15215,7 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error", "msg": T("erro.sem_ouro_neste_bau")}); return
             recebido = await self._ganhar_ouro(p, amount, "do baú")
             chest["gold"] = 0
-            await self.gm_say(f"🪙 **{p['name']}** pegou **{recebido}** ouros do baú!")
+            await self.gm_say(T("narracao.pegou_ouros_do_bau", heroi=p['name'], recebido=recebido))
         elif kind == "item":
             idx = int(index)
             if idx < 0 or idx >= len(chest["items"]):
@@ -15259,14 +15259,14 @@ class GameRoom:
                         "msg": T("erro.inventario_cheio_e_slot_ocupado_abra_esp_2")}); return
                 chest["items"].pop(idx)
                 extra = " (equipado — bolsa cheia)" if result == "equipped" else ""
-                await self.gm_say(f"📦 **{p['name']}** pegou **{item.get('emoji','📦')} {item['name']}** do baú{extra}!")
+                await self.gm_say(T("narracao.pegou_do_bau", heroi=p['name'], item_get_emoji=item.get('emoji','📦'), item=item['name'], extra=extra))
         else:
             return
 
         # Remove chest if empty
         if chest["gold"] <= 0 and not chest["items"]:
             del self.chests[chest_id]
-            await self.gm_say("🔲 O baú está vazio e desaparece.")
+            await self.gm_say(T("narracao.o_bau_esta_vazio_e_desaparece"))
 
         await self.push_state()
 
@@ -15291,7 +15291,7 @@ class GameRoom:
             amount = chest["gold"]
             recebido = await self._ganhar_ouro(p, amount, "do baú")
             chest["gold"] = 0
-            await self.gm_say(f"🪙 **{p['name']}** pegou **{recebido}** ouros do baú!")
+            await self.gm_say(T("narracao.pegou_ouros_do_bau", heroi=p['name'], recebido=recebido))
 
         # Recomeça a varredura depois de cada sucesso: a lista muda de índice.
         # Se um item não couber, tenta os demais antes de desistir.
@@ -15317,7 +15317,7 @@ class GameRoom:
         chest = self.chests.get(chest_id)
         if chest and chest.get("gold", 0) <= 0 and not chest.get("items"):
             del self.chests[chest_id]
-            await self.gm_say("🔲 O baú está vazio e desaparece.")
+            await self.gm_say(T("narracao.o_bau_esta_vazio_e_desaparece"))
         if chest_id in self.chests:
             await self.push_state()
 
@@ -15354,7 +15354,7 @@ class GameRoom:
                 p["weapon"] = {**WEAPONS["unarmed"]}
         gid = new_id()   # UM id sÃ³ â€” usado como chave e como campo "id"
         self.ground_items[gid] = {"id": gid, "item": item, "pos": tile}
-        await self.gm_say(f"🎒 **{p['name']}** largou **{item['name']}** no chão.")
+        await self.gm_say(T("narracao.largou_no_chao", heroi=p['name'], item=item['name']))
         await self.push_state()
 
     async def handle_pickup_item(self, pid, ground_id):
@@ -15375,7 +15375,7 @@ class GameRoom:
                 "msg": T("erro.inventario_cheio_e_slot_ocupado_abra_esp_2")}); return
         del self.ground_items[ground_id]
         extra = " (equipado — bolsa cheia)" if res == "equipped" else ""
-        await self.gm_say(f"🎒 **{p['name']}** pegou **{gi['item']['name']}** do chão{extra}!")
+        await self.gm_say(T("narracao.pegou_do_chao", heroi=p['name'], gi_item_name=gi['item']['name'], extra=extra))
         await self.push_state()
 
     # â”€â”€ AÃ§Ã£o BÃ´nus â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -15445,7 +15445,7 @@ class GameRoom:
         if not self._eh_jogador(p):
             return False
         if self._imune_a_status(p, "doenca"):
-            await self.gm_say(f"🛡️ **{p.get('name','O herói')}** está imunizado contra doenças.")
+            await self.gm_say(T("narracao.esta_imunizado_contra_doencas", p_get_name_o_heroi=p.get('name','O herói')))
             return False
         novos = DOENCA_SEVERIDADE.get(severidade, ["leve"])
         d = p.get("doenca") if p.get("doente") else None
@@ -15620,7 +15620,7 @@ class GameRoom:
         cura = min(cfg["regen"], max(0, p.get("max_hp", 0) - p.get("hp", 0)))
         if cura:
             self._curar_hp(p, cura, "Licantropia")
-            await self.gm_say(f"🐺 A Licantropia regenera **{p['name']}** em +{cura} HP ({p['hp']}/{p['max_hp']}).")
+            await self.gm_say(T("narracao.a_licantropia_regenera_em_hp", heroi=p['name'], cura=cura, p_hp=p['hp'], p_max_hp=p['max_hp']))
         p["licantropia_regen_proxima"] = self.round_num + cfg["intervalo_regen"]
 
     async def _processar_dreno_maldicoes(self, p):
@@ -15662,7 +15662,7 @@ class GameRoom:
         if p.get("hp", 0) <= 1:
             return
         p["hp"] = max(1, p["hp"] - 1)
-        await self.gm_say(f"💢 **Dor Constante** cobra seu preço de **{p['name']}** — **1** de dano.")
+        await self.gm_say(T("narracao.dor_constante_cobra_seu_preco_de_1_de_da", heroi=p['name']))
 
     ECO_MORTE_DANO = 10
 
@@ -15696,7 +15696,7 @@ class GameRoom:
             "descricao":f"{motivo}. A forma lupina dura {duracao} rodadas.",
             "efeitos_extra":[f"Estágio {cfg['estagio']}: +{cfg['for']} FOR, +{cfg['con']} CON e +{cfg['des']} DES.",
                 "A IA move e ataca a criatura mais próxima; em empate, prioriza aliados.", "Ganha Mordida e duas Garras."]})
-        await self.gm_say(f"🐺 **{p['name']}** se transforma em **Lobisomem** por {duracao} rodadas — {motivo}!")
+        await self.gm_say(T("narracao.se_transforma_em_lobisomem_por_rodadas", heroi=p['name'], duracao=duracao, motivo=motivo))
         return True
 
     async def _reverter_licantropo(self, p):
@@ -15705,7 +15705,7 @@ class GameRoom:
         for chave in ("str_", "con_", "dex"):
             if chave in base: p[chave] = base[chave]
         for chave in ("licantropia_transformado", "licantropia_rodadas", "pawn_override"): p.pop(chave, None)
-        await self.gm_say(f"🌙 **{p['name']}** retorna à forma normal.")
+        await self.gm_say(T("narracao.retorna_a_forma_normal", heroi=p['name']))
 
     async def _consumir_turno_licantropia(self, p):
         """A duração é medida em turnos da criatura transformada.
@@ -15752,7 +15752,7 @@ class GameRoom:
             dado = random.randint(1, 4)
             await self.broadcast({"type":"dice_roll", "die":"d4", "value":dado, "label":f"Licantropia — {p['name']}"})
             if dado <= cfg["chance"]: await self._transformar_licantropo(p, f"resultado {dado} no d4")
-            else: await self.gm_say(f"🐺 **{p['name']}** contém a Licantropia ({dado} no d4).")
+            else: await self.gm_say(T("narracao.contem_a_licantropia_no_d4", heroi=p['name'], dado=dado))
 
     _MALDICAO_ORIGEM = {"item": "Veio de um item amaldiçoado — enquanto a maldição durar, "
                                 "peças que prendem não saem do lugar.",
@@ -15800,14 +15800,14 @@ class GameRoom:
         if any(x["id"] == maldicao_id for x in atuais):
             return False
         if len(atuais) >= MALDICAO_MAX_POR_HEROI:
-            await self.gm_say(f"☠️ **{alvo['name']}** resistiu: já carrega o máximo de 3 maldições.")
+            await self.gm_say(T("narracao.resistiu_ja_carrega_o_maximo_de_3_maldic", alvo=alvo['name']))
             return False
         atuais.append({"id": maldicao_id, "aventuras": 0})
         alvo["amaldicoado"] = True
         alvo["maldicao_tipo"] = atuais[0]["id"]
         mal = MALDICOES[maldicao_id]
         await self._enviar_resultado_maldicao(alvo, maldicao_id, fonte=origem)
-        await self.gm_say(f"☠️ **{alvo['name']}** foi amaldiçoado: **{mal['nome']}** ({fonte}).")
+        await self.gm_say(T("narracao.foi_amaldicoado", alvo=alvo['name'], mal_nome=mal['nome'], fonte=fonte))
         return True
 
     def _remover_maldicao(self, alvo, maldicao_id=None):
@@ -15896,7 +15896,7 @@ class GameRoom:
                 entrada["aventuras"] += 1
                 depois = self._maldicao_estagio(entrada)
                 if depois > antes:
-                    await self.gm_say(f"☠️ **{mal['nome']}** de **{p['name']}** avança ao estágio {depois}.")
+                    await self.gm_say(T("narracao.de_avanca_ao_estagio", mal_nome=mal['nome'], heroi=p['name'], depois=depois))
                     if entrada["id"] == "corrupcao_crescente":
                         await self._corrupcao_gerar(p, depois)
 
@@ -15917,7 +15917,7 @@ class GameRoom:
             return
         tipo, valor = receita
         if tipo == "doenca":
-            await self.gm_say(f"☠️ A **Corrupção Crescente** de **{p['name']}** apodrece a carne.")
+            await self.gm_say(T("narracao.a_corrupcao_crescente_de_apodrece_a_carn", heroi=p['name']))
             await self._aplicar_doenca(p, valor)
         else:
             await self._aplicar_maldicao(p, self._sortear_maldicao(valor),
@@ -15938,7 +15938,7 @@ class GameRoom:
         Consumo via tabela central (_consumir_recursos, 'acao_bonus').
         """
         if p.get("bonus_action_used"):
-            await self.gm_say(f"⚠️ **{p['name']}** já usou sua ação bônus neste turno.")
+            await self.gm_say(T("narracao.ja_usou_sua_acao_bonus_neste_turno", heroi=p['name']))
             return False
 
         p["bonus_action_used"] = True
@@ -16077,7 +16077,7 @@ class GameRoom:
                 self._pagar_fome_sede(p, mm_fome, mm_sede)
             if partes:
                 custo_txt = (f" | 🍖-{mm_fome}" + (f" 💧-{mm_sede}" if mm_sede else "")) if (mm_fome or mm_sede) else ""
-                await self.gm_say(f"🔮 **{p['name']}** — metamagia: {', '.join(partes)}{custo_txt}.")
+                await self.gm_say(T("narracao.metamagia", heroi=p['name'], join_partes=', '.join(partes), custo_txt=custo_txt))
 
         # â”€â”€ TÃ©cnicas Exclusivas da Guilda (Fase 3, Mago/ClÃ©rigo) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         # Independentes da Metamagia acima: os bÃ´nus SE SOMAM/multiplicam se
@@ -16150,7 +16150,7 @@ class GameRoom:
         # Invisibilidade quebra ao lanÃ§ar (a menos que a prÃ³pria magia a tenha concedido agora).
         if p.get("invisivel_magico") and magia_id != "invisibilidade":
             p["invisivel_magico"] = False; p.pop("invisivel_magico_rodadas", None)
-            await self.gm_say(f"🫥 **{p['name']}** revela-se ao lançar magia.")
+            await self.gm_say(T("narracao.revela_se_ao_lancar_magia", heroi=p['name']))
 
         # Magia Acelerada (Fase 3): nÃ£o gasta a aÃ§Ã£o principal deste turno.
         if not usou_acelerada:
@@ -16239,7 +16239,7 @@ class GameRoom:
             # O próprio conjurador enxerga na escuridão que criou pela mesma duração.
             caster["visao_escuro"] = True
             caster["visao_escuro_rodadas"] = max(caster.get("visao_escuro_rodadas", 0), dur)
-            await self.gm_say(f"👁️ **{caster['name']}** recebe Visão no Escuro enquanto o Manto de Escuridão durar.")
+            await self.gm_say(T("narracao.recebe_visao_no_escuro_enquanto_o_manto", caster=caster['name']))
 
         # â”€â”€ VisÃ£o no Escuro: concede a um aliado (ou ao caster) visÃ£o noturna â”€â”€â”€
         elif mid == "visao_escuro":
@@ -16248,7 +16248,7 @@ class GameRoom:
                 await self.send_to(caster["id"], {"type": "error", "msg": T("erro.aliado_invalido")}); return
             alvo["visao_escuro"] = True
             alvo["visao_escuro_missao"] = True
-            await self.gm_say(f"👁️ **{alvo['name']}** recebe Visão no Escuro até o fim da missão.")
+            await self.gm_say(T("narracao.recebe_visao_no_escuro_ate_o_fim_da_miss", alvo=alvo['name']))
 
         else:
             await self._magia_nao_implementada(caster, magia)
@@ -16287,7 +16287,7 @@ class GameRoom:
         m["rodadas"] = m.get("rodadas", 0) - 1
         if m["rodadas"] <= 0:
             alvo.pop("mods_magia", None)
-            await self.gm_say(f"✨ Os efeitos mágicos em **{alvo.get('name','alvo')}** se dissipam.")
+            await self.gm_say(T("narracao.os_efeitos_magicos_em_se_dissipam", alvo_get_name_alvo=alvo.get('name','alvo')))
 
     # â”€â”€ Batch 1: utilidades e dano direto â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async def _executar_saciar(self, caster, magia, data):
@@ -16301,7 +16301,7 @@ class GameRoom:
         fb, sb = magia.get("fome_bonus", 10), magia.get("sede_bonus", 10)
         _restaurar_sobrevivencia(alvo, fb, sb)
         self._verificar_estado_sobrevivencia(alvo)
-        await self.gm_say(f"💧 **{caster['name']}** sacia **{alvo['name']}** (+{fb} fome, +{sb} sede).")
+        await self.gm_say(T("narracao.sacia_fome_sede", caster=caster['name'], alvo=alvo['name'], fb=fb, sb=sb))
 
     async def _executar_criar_alimentos(self, caster, magia, data, dmg_mult=1):
         """Materializa um baú adjacente com provisões aleatórias da taverna."""
@@ -16418,9 +16418,9 @@ class GameRoom:
             dano //= 2
         if self._eh_morto_vivo_ou_demonio(alvo):
             dano *= 2
-            await self.gm_say(f"✨ Raio Divino DOBRADO contra **{alvo['name']}** (morto-vivo/demônio)!")
+            await self.gm_say(T("narracao.raio_divino_dobrado_contra_morto_vivo_de", alvo=alvo['name']))
         alvo["hp"] = max(0, alvo["hp"] - dano)
-        await self.gm_say(f"✨ **{caster['name']}** atinge **{alvo['name']}** com Raio Divino: {dano} de dano sagrado.")
+        await self.gm_say(T("narracao.atinge_com_raio_divino_de_dano_sagrado", caster=caster['name'], alvo=alvo['name'], dano=dano))
         if not save_ok:
             await self._enviar_resultado_falha_magia_dano(
                 alvo, "Raio Divino", dano,
@@ -16446,7 +16446,7 @@ class GameRoom:
             if max(abs(p["pos"][0]-cx), abs(p["pos"][1]-cy)) > raio: continue
             self._set_mod_magia(p, buff, dur)
             n += 1
-        await self.gm_say(f"✨ **{caster['name']}** abençoa {n} aliado(s): +1 ataque/dano/CA/resistência por {dur} rodada(s).")
+        await self.gm_say(T("narracao.abencoa_aliado_s_1_ataque_dano_ca_resist", caster=caster['name'], n=n, dur=dur))
 
     async def _executar_amaldicoar(self, caster, magia, data, dur_bonus):
         """Área centrada na casa escolhida: -1 ataque/dano/CA/resistência aos inimigos no raio."""
@@ -16460,7 +16460,7 @@ class GameRoom:
         for alvo in self._alvos_na_area(tx, ty, raio):
             self._set_mod_magia(alvo, debuff, dur)
             n += 1
-        await self.gm_say(f"☠️ **{caster['name']}** amaldiçoa {n} alvo(s): -1 ataque/dano/CA/resistência por {dur} rodada(s) (afeta aliados/minions).")
+        await self.gm_say(T("narracao.amaldicoa_alvo_s_1_ataque_dano_ca_resist", caster=caster['name'], n=n, dur=dur))
 
     async def _executar_abencoar_arma(self, caster, magia, data, dur_bonus):
         """Aliado à distância: +1 ataque e dano na arma por algumas rodadas."""
@@ -16473,7 +16473,7 @@ class GameRoom:
         dur  = self._rolar_dado(magia.get("duracao", "1d6+2")) + dur_bonus
         buff = magia.get("buff", {"ataque": 1, "dano": 1, "arma_ignora_resistencia": True})
         self._set_mod_magia(alvo, buff, dur)
-        await self.gm_say(f"⚔️ **{caster['name']}** abençoa a arma de **{alvo['name']}**: +1 ataque/dano e ignora resistências/imunidade física por {dur} rodada(s).")
+        await self.gm_say(T("narracao.abencoa_a_arma_de_1_ataque_dano_e_ignora", caster=caster['name'], alvo=alvo['name'], dur=dur))
 
     # â”€â”€ Batch 2: helpers de movimento e status de monstro â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def _passo_livre_licantropo(self, p, nx, ny):
@@ -16489,7 +16489,7 @@ class GameRoom:
         alvos = ([{"kind":"player", "obj":q} for q in self.players.values() if self._ativo(q) and q["id"] != p["id"]]
                  + [{"kind":"monster", "obj":m} for m in self.monsters.values() if m.get("hp", 0) > 0])
         if not alvos:
-            await self.gm_say(f"🐺 **{p['name']}** fareja o ar, mas não encontra alvo."); return
+            await self.gm_say(T("narracao.fareja_o_ar_mas_nao_encontra_alvo", heroi=p['name'])); return
         def distancia(a):
             q = a["obj"]; return max(abs(q["pos"][0]-p["pos"][0]), abs(q["pos"][1]-p["pos"][1]))
         # A ordem da lista deixa jogadores (aliados) vencerem empates de distância.
@@ -16512,7 +16512,7 @@ class GameRoom:
             dado = random.randint(1, 20); total = dado + bonus
             ca = self._player_effective_ac(obj) if alvo["kind"] == "player" else obj.get("ac", 10)
             if dado != 20 and total < ca:
-                await self.gm_say(f"🐺 **{p['name']}** erra {nome} contra **{obj['name']}** ({total} vs CA {ca})."); continue
+                await self.gm_say(T("narracao.erra_contra_vs_ca", heroi=p['name'], nome=nome, obj=obj['name'], total=total, ca=ca)); continue
             bruto = roll_dice(expr) + mod(p.get("str_", 10))
             dano = self._apply_damage_types(bruto * (2 if dado == 20 else 1), [DMG_PHYSICAL], obj)
             if alvo["kind"] == "player":
@@ -16522,7 +16522,7 @@ class GameRoom:
             else:
                 obj["hp"] -= dano
                 if obj["hp"] <= 0: await self._monster_dies(obj, p["id"])
-            await self.gm_say(f"🐺 **{p['name']}** acerta {nome} em **{obj['name']}**: **{dano} dano**.")
+            await self.gm_say(T("narracao.acerta_em_dano", heroi=p['name'], nome=nome, obj=obj['name'], dano=dano))
 
     def _passo_livre(self, m, nx, ny, facing=None):
         """True se o monstro m pode pisar em (nx,ny) — footprint multi-tile inteiro
@@ -16558,7 +16558,7 @@ class GameRoom:
         """Monstro dominado age como aliado: ataca/avança contra o monstro mais próximo."""
         outros = [o for o in alive_monsters if o["id"] != m["id"] and o["hp"] > 0 and not o.get("dominado")]
         if not outros:
-            await self.gm_say(f"🧠 **{m['name']}** (dominado) não encontra outro inimigo.")
+            await self.gm_say(T("narracao.dominado_nao_encontra_outro_inimigo", monstro=m['name']))
             return
         alvo = min(outros, key=lambda o: abs(o["pos"][0]-m["pos"][0]) + abs(o["pos"][1]-m["pos"][1]))
         if self._cardinal_adjacent(m["pos"], alvo["pos"]):
@@ -16571,15 +16571,15 @@ class GameRoom:
                 if crit: raw *= 2
                 dmg = max(1, raw + self._pen(m, "dano") + self._mod_magia(m, "dano"))
                 alvo["hp"] = max(0, alvo["hp"] - dmg)
-                await self.gm_say(f"🧠 **{m['name']}** (dominado) ataca **{alvo['name']}**: {dmg} de dano!")
+                await self.gm_say(T("narracao.dominado_ataca_de_dano", monstro=m['name'], alvo=alvo['name'], dmg=dmg))
                 if alvo["hp"] <= 0:
                     await self._monster_dies(alvo, m.get("dominado_por", ""))
             else:
-                await self.gm_say(f"🧠 **{m['name']}** (dominado) ataca **{alvo['name']}** e erra!")
+                await self.gm_say(T("narracao.dominado_ataca_e_erra", monstro=m['name'], alvo=alvo['name']))
         else:
             self._passo_monstro(m, alvo["pos"][0], alvo["pos"][1])
             await self._aplicar_fogueira_se_pisar(m)
-            await self.gm_say(f"🧠 **{m['name']}** (dominado) avança contra **{alvo['name']}**.")
+            await self.gm_say(T("narracao.dominado_avanca_contra", monstro=m['name'], alvo=alvo['name']))
 
     async def _aplicar_congelamento_progressivo(self, alvo):
         """Acertos congelantes reduzem o movimento por dois turnos, até -3."""
@@ -16609,7 +16609,7 @@ class GameRoom:
         if p["congelamento_progressivo_rodadas"] <= 0:
             p.pop("congelamento_progressivo_pilhas", None)
             p.pop("congelamento_progressivo_rodadas", None)
-            await self.gm_say(f"🧊 **{p['name']}** se livra do congelamento progressivo.")
+            await self.gm_say(T("narracao.se_livra_do_congelamento_progressivo", heroi=p['name']))
         return pilhas
 
     async def _processar_status_jogador_turno(self, p):
@@ -16623,9 +16623,9 @@ class GameRoom:
                 p[rod] = p.get(rod, 1) - 1
                 if p[rod] <= 0:
                     p.pop(flag, None); p.pop(rod, None)
-                    await self.gm_say(f"✨ **{p['name']}** se livra de {nome}.")
+                    await self.gm_say(T("narracao.se_livra_de", heroi=p['name'], nome=nome))
         if p.get("dormindo"):
-            await self.gm_say(f"🌙 **{p['name']}** está dormindo — não pode agir neste turno.")
+            await self.gm_say(T("narracao.esta_dormindo_nao_pode_agir_neste_turno", heroi=p['name']))
 
     async def _status_monstro_turno(self, m, alive_monsters):
         """Resolve status de controle no turno do monstro. Retorna 'pulou' se o
@@ -16634,22 +16634,22 @@ class GameRoom:
         if m.get("dormindo"):
             if m.get("dormindo_rodadas", 0) <= 0:
                 m.pop("dormindo", None); m.pop("dormindo_rodadas", None)
-                await self.gm_say(f"🌙 **{m['name']}** desperta.")
+                await self.gm_say(T("narracao.desperta", monstro=m['name']))
                 return None
             m["dormindo_rodadas"] -= 1
-            await self.gm_say(f"🌙 **{m['name']}** está dormindo e perde o turno.")
+            await self.gm_say(T("narracao.esta_dormindo_e_perde_o_turno", monstro=m['name']))
             return "pulou"
         # Comando: perde o turno uma vez.
         if m.get("comandado"):
             m.pop("comandado", None)
-            await self.gm_say(f"🗣️ **{m['name']}** está sob Comando e perde a ação.")
+            await self.gm_say(T("narracao.esta_sob_comando_e_perde_a_acao", monstro=m['name']))
             return "pulou"
         # Dominado: age contra os prÃ³prios aliados.
         if m.get("dominado"):
             if not m.get("dominado_permanente"):
                 if m.get("dominado_rodadas", 0) <= 0:
                     m.pop("dominado", None); m.pop("dominado_rodadas", None); m.pop("dominado_por", None)
-                    await self.gm_say(f"🧠 **{m['name']}** se liberta do domínio.")
+                    await self.gm_say(T("narracao.se_liberta_do_dominio", monstro=m['name']))
                     return None
                 m["dominado_rodadas"] -= 1
             await self._acao_dominado(m, alive_monsters)
@@ -16658,7 +16658,7 @@ class GameRoom:
         if m.get("com_medo"):
             if m.get("medo_rodadas", 0) <= 0:
                 m.pop("com_medo", None); m.pop("medo_rodadas", None)
-                await self.gm_say(f"😱 **{m['name']}** recupera a coragem.")
+                await self.gm_say(T("narracao.recupera_a_coragem", monstro=m['name']))
                 return None
             m["medo_rodadas"] -= 1
             await self._fugir_monstro(m)
@@ -16671,7 +16671,7 @@ class GameRoom:
                 m["lento_rodadas"] -= 1
                 m["lento_pulou"] = not m.get("lento_pulou", False)
                 if m["lento_pulou"]:
-                    await self.gm_say(f"🐌 **{m['name']}** está lento e perde o turno.")
+                    await self.gm_say(T("narracao.esta_lento_e_perde_o_turno", monstro=m['name']))
                     return "pulou"
         # Movimento reduzido (Cola): NÃƒO pula o turno â€” sÃ³ reduz o passo. Conta
         # ANTES de decrementar (como o Sono) para garantir `duracao` turnos
@@ -16682,7 +16682,7 @@ class GameRoom:
             else:
                 m["movement"] = m.pop("mov_reduzido_orig")
                 m.pop("mov_reduzido_rodadas", None)
-                await self.gm_say(f"🟢 **{m['name']}** recupera o movimento normal.")
+                await self.gm_say(T("narracao.recupera_o_movimento_normal", monstro=m['name']))
         return None
 
     # â”€â”€ Batch 2: magias de status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -16744,7 +16744,7 @@ class GameRoom:
     async def _acordar_se_dormindo(self, alvo):
         if alvo.get("dormindo"):
             alvo.pop("dormindo", None); alvo.pop("dormindo_rodadas", None)
-            await self.gm_say(f"🌙 **{alvo.get('name') or alvo.get('nome','Alvo')}** acorda com o dano!")
+            await self.gm_say(T("narracao.acorda_com_o_dano", alvo_get_name_or_alvo_ge=alvo.get('name') or alvo.get('nome','Alvo')))
 
     def _alvo_monstro(self, alvo_id):
         return next((m for m in self.monsters.values() if m.get("id") == alvo_id), None)
@@ -16789,7 +16789,7 @@ class GameRoom:
                     "Uma magia de sono domina seus sentidos.",
                     ["Não pode se mover, atacar ou usar habilidades", "O primeiro ataque recebido é crítico", "Você acorda ao sofrer dano"],
                 )
-        await self.gm_say(f"🌙 **{caster['name']}** lança Sono — {n} alvo(s) adormecem por até {dur} rodada(s) (afeta aliados/minions também).")
+        await self.gm_say(T("narracao.lanca_sono_alvo_s_adormecem_por_ate_roda", caster=caster['name'], n=n, dur=dur))
 
     async def _executar_medo(self, caster, magia, data, dur_bonus):
         bonus_int = mod(caster.get("int_", 10))
@@ -16809,7 +16809,7 @@ class GameRoom:
                     "O medo mágico toma conta de você.",
                     ["Não pode se aproximar da fonte do medo", "Deve fugir sempre que possível", "-1 em ataques"],
                 )
-        await self.gm_say(f"😱 **{caster['name']}** lança Medo — {n} alvo(s) afetado(s) por {dur} rodada(s) (-1 ataque; afeta aliados/minions).")
+        await self.gm_say(T("narracao.lanca_medo_alvo_s_afetado_s_por_rodada_s", caster=caster['name'], n=n, dur=dur))
 
     async def _executar_comando(self, caster, magia, data):
         bonus_int = mod(caster.get("int_", 10))
@@ -16822,7 +16822,7 @@ class GameRoom:
         if dist > magia.get("alcance", 4):
             await self.send_to(caster["id"], {"type": "error", "msg": T("erro.alvo_fora_do_alcance")}); return
         if self._tem_imunidade(alvo, "encantamento") or alvo.get("subtipo", _subtipo_padrao_monstro(alvo)) in ("construto", "morto_vivo"):
-            await self.gm_say(f"🛡️ **{alvo['name']}** é imune a encantamentos."); return
+            await self.gm_say(T("narracao.e_imune_a_encantamentos", alvo=alvo['name'])); return
         save_ok, *_ = await self._save_mostrado(alvo, "vontade", self._dif_magia(caster, magia))
         if not save_ok:
             # O controle não começa durante o turno do herói que conjurou:
@@ -16834,9 +16834,9 @@ class GameRoom:
                 ["No próximo turno, o conjurador controlará seu movimento",
                  "O conjurador também controlará sua ação principal e habilidades"],
             )
-            await self.gm_say(f"🗣️ **{caster['name']}** comanda **{alvo['name']}** — o jogador controlará seu próximo turno!")
+            await self.gm_say(T("narracao.comanda_o_jogador_controlara_seu_proximo", caster=caster['name'], alvo=alvo['name']))
         else:
-            await self.gm_say(f"🗣️ **{alvo['name']}** resiste ao Comando.")
+            await self.gm_say(T("narracao.resiste_ao_comando", alvo=alvo['name']))
 
     async def _executar_dominar_mente(self, caster, magia, data, dur_bonus):
         bonus_int = mod(caster.get("int_", 10))
@@ -16847,7 +16847,7 @@ class GameRoom:
         if dist > magia.get("alcance", 5):
             await self.send_to(caster["id"], {"type": "error", "msg": T("erro.alvo_fora_do_alcance")}); return
         if self._tem_imunidade(alvo, "encantamento") or alvo.get("subtipo", _subtipo_padrao_monstro(alvo)) in ("construto", "morto_vivo"):
-            await self.gm_say(f"🛡️ **{alvo['name']}** é imune a controle mental."); return
+            await self.gm_say(T("narracao.e_imune_a_controle_mental", alvo=alvo['name'])); return
         save_ok, *_ = await self._save_mostrado(alvo, "vontade", self._dif_magia(caster, magia))
         if not save_ok:
             dur = self._rolar_dado(magia.get("duracao", "1d4")) + dur_bonus
@@ -16861,9 +16861,9 @@ class GameRoom:
                 "Sua vontade foi subjugada por uma força arcana.",
                 ["Age sob o controle do conjurador a partir do próximo turno", "Cada dano sofrido concede +2 cumulativo no próximo teste de Vontade"],
             )
-            await self.gm_say(f"🧠 **{caster['name']}** domina a mente de **{alvo['name']}** por {dur} rodada(s)!")
+            await self.gm_say(T("narracao.domina_a_mente_de_por_rodada_s", caster=caster['name'], alvo=alvo['name'], dur=dur))
         else:
-            await self.gm_say(f"🧠 **{alvo['name']}** resiste a Dominar Mente.")
+            await self.gm_say(T("narracao.resiste_a_dominar_mente", alvo=alvo['name']))
 
     # â”€â”€ Dominar Morto-Vivo: CONTROLE PROGRESSIVO (3 rodadas de Vontade) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     #   LanÃ§amento (rodada 1): morto-vivo testa Vontade (bÃ´nus = ND). Passa â†’ falha.
@@ -16920,13 +16920,13 @@ class GameRoom:
             if not a.get("por_dominacao") or a.get("dominado_por_monstro"):
                 continue
             if a.get("dominacao", {}).get("permanente"):
-                await self.gm_say(f"💀 **{a['nome']}** se desfaz em pó para abrir caminho ao novo domínio.")
+                await self.gm_say(T("narracao.se_desfaz_em_po_para_abrir_caminho_ao_no", a_nome=a['nome']))
                 self._remover_animado(a["id"])
             else:
                 m = self._restaurar_monstro_dominado(a)
                 self._remover_animado(a["id"])
                 if m:
-                    await self.gm_say(f"💀 O controle sobre **{m['name']}** se rompe — volta a ser hostil.")
+                    await self.gm_say(T("narracao.o_controle_sobre_se_rompe_volta_a_ser_ho", monstro=m['name']))
 
     async def _executar_dominar_morto_vivo(self, caster, magia, data):
         alvo = self._alvo_monstro((data or {}).get("target_id"))
@@ -16945,7 +16945,7 @@ class GameRoom:
         nd  = self._nd_criatura(alvo)
         save_ok, *_ = await self._save_mostrado(alvo, "vontade", dif, extra_mod=nd)
         if save_ok:
-            await self.gm_say(f"💀 **{alvo['name']}** resiste ao domínio (Vontade vs CD {dif}, ND +{nd}).")
+            await self.gm_say(T("narracao.resiste_ao_dominio_vontade_vs_cd_nd", alvo=alvo['name'], dif=dif, nd=nd))
             return
         # Falha: vira servo temporÃ¡rio e jÃ¡ age nesta fase dos servos.
         animado = self._monstro_para_animado(alvo, caster["id"], dif)
@@ -16972,15 +16972,15 @@ class GameRoom:
                 m = self._restaurar_monstro_dominado(a)
                 self._remover_animado(a["id"])
                 nome = m["name"] if m else a["nome"]
-                await self.gm_say(f"💀 **{nome}** rompe o domínio e volta a ser HOSTIL!")
+                await self.gm_say(T("narracao.rompe_o_dominio_e_volta_a_ser_hostil", nome=nome))
             else:
                 rod = dom.get("rodada", 2)
                 if rod >= 3:
                     dom["permanente"] = True
-                    await self.gm_say(f"💀 O domínio de **{p['name']}** sobre **{a['nome']}** torna-se PERMANENTE!")
+                    await self.gm_say(T("narracao.o_dominio_de_sobre_torna_se_permanente", heroi=p['name'], a_nome=a['nome']))
                 else:
                     dom["rodada"] = rod + 1
-                    await self.gm_say(f"💀 **{a['nome']}** continua dominado (falha {rod}/3).")
+                    await self.gm_say(T("narracao.continua_dominado_falha_3", a_nome=a['nome'], rod=rod))
 
     async def _agir_animados_dominados_por_monstro(self):
         """Fase dos monstros: animados roubados por um necromante re-testam Vontade; se
@@ -16998,7 +16998,7 @@ class GameRoom:
                 # Necromante morto: o controle se desfaz, volta ao dono.
                 if necro is None or necro["hp"] <= 0:
                     a.pop("dominado_por_monstro", None); a.pop("dominacao", None); a.pop("dono_original", None)
-                    await self.gm_say(f"💀 Sem o necromante, **{a['nome']}** volta a obedecer **{dono_nome}**.")
+                    await self.gm_say(T("narracao.sem_o_necromante_volta_a_obedecer", a_nome=a['nome'], dono_nome=dono_nome))
                     continue
                 # Re-teste de Vontade (enquanto nÃ£o for permanente).
                 if not dom.get("permanente"):
@@ -17007,12 +17007,12 @@ class GameRoom:
                     save_ok, *_ = await self._save_mostrado(a, "vontade", cd, extra_mod=nd)
                     if save_ok:
                         a.pop("dominado_por_monstro", None); a.pop("dominacao", None); a.pop("dono_original", None)
-                        await self.gm_say(f"💀 **{a['nome']}** rompe o controle do necromante e volta a obedecer **{dono_nome}**!")
+                        await self.gm_say(T("narracao.rompe_o_controle_do_necromante_e_volta_a", a_nome=a['nome'], dono_nome=dono_nome))
                         continue
                     rod = dom.get("rodada", 2)
                     if rod >= 3:
                         dom["permanente"] = True
-                        await self.gm_say(f"💀 O necromante domina **{a['nome']}** PERMANENTEMENTE!")
+                        await self.gm_say(T("narracao.o_necromante_domina_permanentemente", a_nome=a['nome']))
                     else:
                         dom["rodada"] = rod + 1
                 await self._animado_ataca_jogador(a)
@@ -17049,11 +17049,11 @@ class GameRoom:
         if hit:
             dmg = max(1, roll_dice(a.get("dano", "1d4")) * (2 if roll == 20 else 1))
             target["hp"] = max(0, target["hp"] - dmg)
-            await self.gm_say(f"⚔️ **{a['nome']}** (dominado) ataca **{target['name']}**: **{dmg}** de dano!")
+            await self.gm_say(T("narracao.dominado_ataca_de_dano_2", a_nome=a['nome'], target=target['name'], dmg=dmg))
             if target["hp"] <= 0:
                 await self._player_dies(target["id"])
         else:
-            await self.gm_say(f"⚔️ **{a['nome']}** (dominado) ataca **{target['name']}** e erra.")
+            await self.gm_say(T("narracao.dominado_ataca_e_erra_2", a_nome=a['nome'], target=target['name']))
 
     async def _executar_lentidao(self, caster, magia, data, dur_bonus):
         bonus_int = mod(caster.get("int_", 10))
@@ -17079,7 +17079,7 @@ class GameRoom:
                     ["-1 em ataques"],
                 )
             n += 1
-        await self.gm_say(f"🐌 **{caster['name']}** lança Lentidão — {n} alvo(s) afetado(s) por {dur} rodada(s) (afeta aliados/minions).")
+        await self.gm_say(T("narracao.lanca_lentidao_alvo_s_afetado_s_por_roda", caster=caster['name'], n=n, dur=dur))
 
     # â”€â”€ Batch 3: buffs sustentados (Invisibilidade, RegeneraÃ§Ã£o) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def _acao_bloqueada(self, p):
@@ -17106,7 +17106,7 @@ class GameRoom:
         dur = self._rolar_dado(magia.get("duracao", "1d4")) + dur_bonus
         caster["velocidade_rodadas"]      = dur
         caster["velocidade_extra_usada"]  = False   # aÃ§Ã£o extra disponÃ­vel jÃ¡ neste turno
-        await self.gm_say(f"⚡ **{caster['name']}** acelera — ações dobradas e movimento dobrado por {dur} rodada(s)!")
+        await self.gm_say(T("narracao.acelera_acoes_dobradas_e_movimento_dobra", caster=caster['name'], dur=dur))
 
     async def _executar_barreira_arcana(self, caster, magia, dmg_mult, dur_bonus):
         """Barreira temporal: redução fixa de todo dano recebido pelo mago."""
@@ -17127,9 +17127,9 @@ class GameRoom:
             meu = random.randint(1, 20) + mod(alvo.get("int_", 10))
             op  = random.randint(1, 20) + (mod(fonte.get("int_", 10)) if fonte else 2)
             if meu >= op:
-                await self.gm_say(f"🛑 **Contramágica** de **{alvo.get('name','alvo')}** vence o teste oposto ({meu} vs {op}) e cancela a magia!")
+                await self.gm_say(T("narracao.contramagica_de_vence_o_teste_oposto_vs", alvo_get_name_alvo=alvo.get('name','alvo'), meu=meu, op=op))
                 return True
-            await self.gm_say(f"🛑 **Contramágica** de **{alvo.get('name','alvo')}** falha no teste oposto ({meu} vs {op}).")
+            await self.gm_say(T("narracao.contramagica_de_falha_no_teste_oposto_vs", alvo_get_name_alvo=alvo.get('name','alvo'), meu=meu, op=op))
             return False
         return False
 
@@ -17264,10 +17264,10 @@ class GameRoom:
         """Morte de um animado/elemental: dispara a explosão (fogo) e o remove."""
         if animado.get("especial") == "explosao_6d6" and not animado.get("_explodiu"):
             animado["_explodiu"] = True
-            await self.gm_say(f"💥 **{animado.get('nome','Elemental')}** é destruído e EXPLODE!")
+            await self.gm_say(T("narracao.e_destruido_e_explode", animado_get_nome_element=animado.get('nome','Elemental')))
             await self._explosao_elemental(animado, killer_pid)
         else:
-            await self.gm_say(f"💨 **{animado.get('nome','Servo')}** foi destruído!")
+            await self.gm_say(T("narracao.foi_destruido", animado_get_nome_servo=animado.get('nome','Servo')))
         self._remover_animado(animado["id"])
 
     async def _explosao_elemental(self, elem, killer_pid=None):
@@ -17348,7 +17348,7 @@ class GameRoom:
                 d2 = max(1, roll_dice(a.get("dano", "1d8")))
                 await self.broadcast({"type": "dice_roll", "die": f"d{faces}", "value": d2, "label": "⚡ Linha"})
                 extra["hp"] = max(0, extra["hp"] - d2)
-                await self.gm_say(f"⚡ A linha elétrica do **{a['nome']}** atinge **{extra['name']}**: {d2} de dano!")
+                await self.gm_say(T("narracao.a_linha_eletrica_do_atinge_de_dano", a_nome=a['nome'], extra=extra['name'], d2=d2))
                 if extra["hp"] <= 0:
                     await self._monster_dies(extra, pid)
 
@@ -17359,7 +17359,7 @@ class GameRoom:
         caster["protecao_max"]      = reducao
         caster["protecao_restante"] = reducao
         caster["protecao_tipos"]    = list(magia.get("tipos", ["fogo", "gelo", "eletricidade", "acido", "agua", "sagrado"]))
-        await self.gm_say(f"🛡️ **{caster['name']}** fica protegido: absorve até {reducao} de dano elemental por rodada ({dur} rodada(s)).")
+        await self.gm_say(T("narracao.fica_protegido_absorve_ate_de_dano_eleme", caster=caster['name'], reducao=reducao, dur=dur))
 
     async def _absorver_energia(self, alvo, dano, tipo):
         """Reduz dano do tipo elemental se o alvo tiver Proteção contra Energia (até o restante da rodada)."""
@@ -17377,14 +17377,14 @@ class GameRoom:
             return dano
         absorvido = min(restante, dano)
         alvo["protecao_restante"] = restante - absorvido
-        await self.gm_say(f"🛡️ Proteção de **{alvo['name']}** absorve {absorvido} de {tipo} (resta {alvo['protecao_restante']}).")
+        await self.gm_say(T("narracao.protecao_de_absorve_de_resta", alvo=alvo['name'], absorvido=absorvido, tipo=tipo, alvo_protecao_restante=alvo['protecao_restante']))
         return dano - absorvido
 
     async def _executar_invisibilidade(self, caster, magia, dur_bonus):
         dur = self._rolar_dado(magia.get("duracao", "1d6+1")) + dur_bonus
         caster["invisivel_magico"] = True
         caster["invisivel_magico_rodadas"] = dur
-        await self.gm_say(f"🫥 **{caster['name']}** fica invisível por {dur} rodada(s) — inimigos não o atacam; ataca com vantagem; quebra ao atacar/lançar.")
+        await self.gm_say(T("narracao.fica_invisivel_por_rodada_s_inimigos_nao", caster=caster['name'], dur=dur))
 
     async def _executar_regeneracao(self, caster, magia, data):
         alvo = self.players.get((data or {}).get("target_id"))
@@ -17396,7 +17396,7 @@ class GameRoom:
         pool = self._rolar_dado(magia.get("pool", "2d6+2"))
         alvo["regen_pool"]     = pool
         alvo["regen_ressurge"] = bool(magia.get("resurrect_com_pool", True))
-        await self.gm_say(f"🌿 **{caster['name']}** regenera **{alvo['name']}** — reserva {pool} (+1 HP/rodada; revive uma vez com 1 HP).")
+        await self.gm_say(T("narracao.regenera_reserva_1_hp_rodada_revive_uma", caster=caster['name'], alvo=alvo['name'], pool=pool))
 
     # â”€â”€ Jato de Ar (cone na direÃ§Ã£o; dano + empurrÃ£o + colisÃ£o na parede) â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def _cone_tiles(self, ox, oy, dx, dy, comp, base):
@@ -17460,8 +17460,8 @@ class GameRoom:
             if self._empurrar(alvo, dx, dy, push):
                 col = self._rolar_dado(magia.get("dano_colisao", "1d4"))
                 dano += col
-                await self.gm_say(f"🌪️ **{nome}** é arremessado contra a parede (+{col} de colisão).")
-            await self.gm_say(f"🌪️ **{nome}** sofre {dano} (empurrado {push}q).")
+                await self.gm_say(T("narracao.e_arremessado_contra_a_parede_de_colisao", nome=nome, col=col))
+            await self.gm_say(T("narracao.sofre_empurrado_q", nome=nome, dano=dano, push=push))
             if self._eh_jogador(alvo) and not save_ok:
                 efeitos = [f"Empurrado {push} quadrado(s)"]
                 if col:
@@ -17470,7 +17470,7 @@ class GameRoom:
                     alvo, "Jato de Ar", dano,
                     "A rajada violenta o atinge e o arremessa para trás.", efeitos)
             await self._aplicar_dano_alvo(alvo, dano, None, caster["id"]); n += 1
-        await self.gm_say(f"🌪️ **{caster['name']}** lança Jato de Ar — {n} alvo(s) no cone.")
+        await self.gm_say(T("narracao.lanca_jato_de_ar_alvo_s_no_cone", caster=caster['name'], n=n))
 
     # â”€â”€ Dados de magia exibidos no cliente (anima cada dado via handleDiceRoll) â”€â”€
     async def _broadcast_dado(self, die, value, label):
@@ -17576,7 +17576,7 @@ class GameRoom:
             if ehjog:
                 d = await self._absorver_energia(alvo, d, "fogo")   # ProteÃ§Ã£o contra Energia
             nome = alvo.get("name") or alvo.get("nome", "Alvo")
-            await self.gm_say(f"🔥 {rotulo}: **{nome}** sofre {d}{extra}.")
+            await self.gm_say(T("narracao.sofre_2", rotulo=rotulo, nome=nome, d=d, extra=extra))
             if ehjog and com_save and not save_ok:
                 await self._enviar_resultado_falha_magia_dano(
                     alvo, "Bola de Fogo", d,
@@ -17600,7 +17600,7 @@ class GameRoom:
         zona["rodada_atual"] = rodada + 1
         if zona["rodada_atual"] > zona.get("rodadas_max", 3):
             zona["ativa"] = False
-            await self.gm_say("🔥 A zona de Bola de Fogo se extingue.")
+            await self.gm_say(T("narracao.a_zona_de_bola_de_fogo_se_extingue"))
 
     async def _verificar_entrada_zona_fogo(self, ator, nx, ny):
         """Pisar numa zona de Bola de Fogo ativa causa o dano da rodada atual (entrar sofre dano)."""
@@ -17613,7 +17613,7 @@ class GameRoom:
             d = await self._absorver_energia(ator, d, "fogo")   # ProteÃ§Ã£o contra Energia
             d = self._reduzir_dano_barreira_arcana(ator, d)
             ator["hp"] = max(0, ator["hp"] - d)
-            await self.gm_say(f"🔥 **{ator['name']}** entrou na zona de fogo e sofre {d}!")
+            await self.gm_say(T("narracao.entrou_na_zona_de_fogo_e_sofre", ator=ator['name'], d=d))
             if ator["hp"] <= 0:
                 if self._eh_jogador(ator):
                     await self._player_dies(ator["id"])
@@ -17720,13 +17720,13 @@ class GameRoom:
         nd   = 3 + ((nivel - 1) // 2) * 2
         dano = int((await self._rolar_dano_mostrado(nd, 4, "❄️ Dano")) * dmg_mult + 0.5)
         alvo["hp"] = max(0, alvo["hp"] - dano)
-        await self.gm_say(f"❄️ **{caster['name']}** lança **Raio Congelante**: {nd}d4 = {dano} (sem save) em **{alvo['name']}**.")
+        await self.gm_say(T("narracao.lanca_raio_congelante_d4_sem_save_em", caster=caster['name'], nd=nd, dano=dano, alvo=alvo['name']))
 
         # Fortitude evita a paralisaÃ§Ã£o (nÃ£o o dano). desvantagem: CanalizaÃ§Ã£o
         # Perfeita (Fase 3) â€” prÃ³ximos executores de alvo Ãºnico devem seguir o
         # mesmo padrÃ£o ao chamar _save_mostrado.
         if self._tem_imunidade(alvo, "paralisia"):
-            await self.gm_say(f"🛡️ **{alvo['name']}** é imune à paralisia.")
+            await self.gm_say(T("narracao.e_imune_a_paralisia", alvo=alvo['name']))
             save_ok = True
         else:
             save_ok, *_ = await self._save_mostrado(alvo, "fortitude", self._dif_magia(caster, magia),
@@ -17737,9 +17737,9 @@ class GameRoom:
             alvo["paralisado_save"]        = "fortitude"
             alvo["paralisado_dificuldade"] = self._dif_magia(caster, magia)
             alvo["paralisado_rodada_max"]  = magia.get("paralisado_rodadas_max", 2)
-            await self.gm_say(f"❄️ **{alvo['name']}** está **paralisado**! (novo Fortitude por rodada, máx {alvo['paralisado_rodada_max']})")
+            await self.gm_say(T("narracao.esta_paralisado_novo_fortitude_por_rodad", alvo=alvo['name'], alvo_paralisado_rodada_m=alvo['paralisado_rodada_max']))
         else:
-            await self.gm_say(f"❄️ **{alvo['name']}** resistiu à paralisação.")
+            await self.gm_say(T("narracao.resistiu_a_paralisacao", alvo=alvo['name']))
 
         if self._eh_jogador(alvo):
             efeitos = [f"{dano} de dano de gelo"]
@@ -17765,14 +17765,14 @@ class GameRoom:
         save_ok, *_ = self._testar_save(alvo, alvo.get("paralisado_save", "fortitude"), dif)
         if save_ok:
             alvo["paralisado"] = False; alvo["paralisado_rodadas"] = 0
-            await self.gm_say(f"✅ **{alvo['name']}** se libertou da paralisação!")
+            await self.gm_say(T("narracao.se_libertou_da_paralisacao", alvo=alvo['name']))
             return False
         alvo["paralisado_rodadas"] = alvo.get("paralisado_rodadas", 0) + 1
         if alvo["paralisado_rodadas"] >= max_r:
             alvo["paralisado"] = False; alvo["paralisado_rodadas"] = 0
-            await self.gm_say(f"✅ A paralisação de **{alvo['name']}** terminou.")
+            await self.gm_say(T("narracao.a_paralisacao_de_terminou", alvo=alvo['name']))
             return False
-        await self.gm_say(f"❄️ **{alvo['name']}** continua paralisado ({alvo['paralisado_rodadas']}/{max_r}).")
+        await self.gm_say(T("narracao.continua_paralisado", alvo=alvo['name'], alvo_paralisado_rodadas=alvo['paralisado_rodadas'], max_r=max_r))
         return True
 
     async def _processar_requiem_turno(self, m):
@@ -17797,11 +17797,11 @@ class GameRoom:
         extra = -1 if off.get("encantamento") == "runico" else 0   # Violino RÃºnico: -1 Vontade do alvo (Fase 4b)
         save_ok, *_ = await self._save_mostrado(m, "vontade", self._instrumento_cd(bardo, off), extra_mod=extra)
         if save_ok:
-            await self.gm_say(f"🎻 **{m['name']}** resiste ao Réquiem nesta rodada.")
+            await self.gm_say(T("narracao.resiste_ao_requiem_nesta_rodada", monstro=m['name']))
             return
         dano = roll_dice(f"{n}{st['dado']}")
         m["hp"] = max(0, m["hp"] - dano)
-        await self.gm_say(f"🎻 O Réquiem Final dilacera **{m['name']}**: {n}{st['dado']} = **{dano}**!")
+        await self.gm_say(T("narracao.o_requiem_final_dilacera", monstro=m['name'], n=n, st_dado=st['dado'], dano=dano))
         if m["hp"] <= 0:
             await self._monster_dies(m, bid)
             if m["hp"] <= 0:
@@ -17821,9 +17821,9 @@ class GameRoom:
         if passou:
             m["enredado"] = False
             m.pop("enredado_save", None); m.pop("enredado_cd", None)
-            await self.gm_say(f"🕸️ **{m['name']}** se solta da rede!")
+            await self.gm_say(T("narracao.se_solta_da_rede", monstro=m['name']))
         else:
-            await self.gm_say(f"🕸️ **{m['name']}** continua preso na rede e perde o turno!")
+            await self.gm_say(T("narracao.continua_preso_na_rede_e_perde_o_turno", monstro=m['name']))
         return True
 
     # â”€â”€ Sistema de zonas mÃ¡gicas / escuridÃ£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -18074,7 +18074,7 @@ class GameRoom:
             "duracao": duracao, "ativa": True,
             "caster":  caster["id"],
         })
-        await self.gm_say(f"🌑 **Escuridão** criada — raio {raio}, {duracao} rodada(s).")
+        await self.gm_say(T("narracao.escuridao_criada_raio_rodada_s", raio=raio, duracao=duracao))
 
     async def _processar_zonas_turno(self):
         """Decrementa a duração das zonas a cada rodada; remove e anuncia expiradas."""
@@ -18092,7 +18092,7 @@ class GameRoom:
                     if m.get("hp", 0) > 0 and m.get("pos") == [x, y] and m.get("subtipo") in {"morto_vivo", "abissal"}:
                         dano = roll_dice("1d4")
                         m["hp"] = max(0, m["hp"] - dano); m["regeneracao_bloqueada"] = True
-                        await self.gm_say(f"✝️ Solo sagrado fere **{m['name']}** em {dano} de dano sagrado.")
+                        await self.gm_say(T("narracao.solo_sagrado_fere_em_de_dano_sagrado", monstro=m['name'], dano=dano))
                         if m["hp"] <= 0: await self._monster_dies(m, None)
                 z["duracao"] -= 1
                 if z["duracao"] <= 0: z["ativa"] = False
@@ -18100,7 +18100,7 @@ class GameRoom:
                 z["duracao"] -= 1
                 if z["duracao"] <= 0:
                     z["ativa"] = False
-                    await self.gm_say(f"🌫️ A zona de {z.get('tipo','?')} se dissipou.")
+                    await self.gm_say(T("narracao.a_zona_de_se_dissipou", z_get_tipo=z.get('tipo','?')))
         self.zonas_especiais = [z for z in self.zonas_especiais if z.get("ativa")]
 
     async def _processar_buffs_magicos_turno(self, alvo):
@@ -18111,14 +18111,14 @@ class GameRoom:
                 alvo.pop("visao_escuro_rodadas", None)
                 if not alvo.get("visao_escuro_missao"):
                     alvo["visao_escuro"] = False
-                    await self.gm_say(f"👁️ A Visão no Escuro de **{alvo['name']}** se esvai.")
+                    await self.gm_say(T("narracao.a_visao_no_escuro_de_se_esvai", alvo=alvo['name']))
         # Invisibilidade: expira por duraÃ§Ã£o.
         if alvo.get("invisivel_magico_rodadas", 0) > 0:
             alvo["invisivel_magico_rodadas"] -= 1
             if alvo["invisivel_magico_rodadas"] <= 0:
                 alvo["invisivel_magico"] = False
                 alvo.pop("invisivel_magico_rodadas", None)
-                await self.gm_say(f"🫥 A Invisibilidade de **{alvo['name']}** termina.")
+                await self.gm_say(T("narracao.a_invisibilidade_de_termina", alvo=alvo['name']))
         # ProteÃ§Ã£o contra Energia: renova a absorÃ§Ã£o da rodada; expira por duraÃ§Ã£o.
         if alvo.get("protecao_rodadas", 0) > 0:
             alvo["protecao_restante"] = alvo.get("protecao_max", 10)
@@ -18126,14 +18126,14 @@ class GameRoom:
             if alvo["protecao_rodadas"] <= 0:
                 for _k in ("protecao_rodadas", "protecao_restante", "protecao_max", "protecao_tipos"):
                     alvo.pop(_k, None)
-                await self.gm_say(f"🛡️ A Proteção contra Energia de **{alvo['name']}** termina.")
+                await self.gm_say(T("narracao.a_protecao_contra_energia_de_termina", alvo=alvo['name']))
         # Barreira Arcana: redução fixa a cada dano durante sua duração.
         if alvo.get("barreira_arcana_rodadas", 0) > 0:
             alvo["barreira_arcana_rodadas"] -= 1
             if alvo["barreira_arcana_rodadas"] <= 0:
                 alvo.pop("barreira_arcana_rodadas", None)
                 alvo.pop("barreira_arcana_reducao", None)
-                await self.gm_say(f"🛡️ A Barreira Arcana de **{alvo['name']}** termina.")
+                await self.gm_say(T("narracao.a_barreira_arcana_de_termina", alvo=alvo['name']))
         # Velocidade: a cada turno renova a aÃ§Ã£o extra; expira por duraÃ§Ã£o.
         if alvo.get("velocidade_rodadas", 0) > 0:
             alvo["velocidade_extra_usada"] = False
@@ -18141,14 +18141,14 @@ class GameRoom:
             if alvo["velocidade_rodadas"] <= 0:
                 alvo.pop("velocidade_rodadas", None)
                 alvo.pop("velocidade_extra_usada", None)
-                await self.gm_say(f"⚡ A Velocidade de **{alvo['name']}** termina.")
+                await self.gm_say(T("narracao.a_velocidade_de_termina", alvo=alvo['name']))
         # RegeneraÃ§Ã£o: cura +1 HP/rodada da reserva.
         if alvo.get("regen_pool", 0) > 0 and alvo.get("alive"):
             if alvo["hp"] < alvo["max_hp"]:
                 cura = min(alvo.get("regen_por_rodada", 1), alvo["regen_pool"])
                 self._curar_hp(alvo, cura, "Regeneração mágica")
                 alvo["regen_pool"] -= cura
-                await self.gm_say(f"🌿 Regeneração cura **{alvo['name']}** +{cura} ({alvo['hp']}/{alvo['max_hp']}; reserva {alvo['regen_pool']}).")
+                await self.gm_say(T("narracao.regeneracao_cura_reserva", alvo=alvo['name'], cura=cura, alvo_hp=alvo['hp'], alvo_max_hp=alvo['max_hp'], alvo_regen_pool=alvo['regen_pool']))
             if alvo["regen_pool"] <= 0:
                 alvo.pop("regen_pool", None); alvo.pop("regen_ressurge", None)
 
@@ -18213,7 +18213,7 @@ class GameRoom:
         monstro["hp"] += cura
         await self.broadcast({"type": "dice_roll", "die": "d6", "value": cura,
                               "label": f"🌊 Maré Viva — {monstro['name']}"})
-        await self.gm_say(f"🌊 **{monstro['name']}** é revigorado pela água e recupera **{cura} HP**.")
+        await self.gm_say(T("narracao.e_revigorado_pela_agua_e_recupera_hp", monstro=monstro['name'], cura=cura))
 
     def _armor_category_of(self, criatura):
         armor = (criatura.get("gear") or {}).get("armor") or {}
@@ -18327,11 +18327,11 @@ class GameRoom:
         if (not self._eh_jogador(alvo) and (
             alvo.get("subtipo", _subtipo_padrao_monstro(alvo)) in ("morto_vivo", "construto", "abissal")
         )) or self._tem_imunidade(alvo, "poison"):
-            await self.gm_say(f"🧪 **{nome}** não afeta **{alvo_nome}** (imune a venenos).")
+            await self.gm_say(T("narracao.nao_afeta_imune_a_venenos", nome=nome, alvo_nome=alvo_nome))
             return
 
         if self._eh_jogador(alvo) and self._imune_a_status(alvo, "veneno"):
-            await self.gm_say(f"🛡️ **{alvo_nome}** está imunizado — **{nome}** não faz efeito.")
+            await self.gm_say(T("narracao.esta_imunizado_nao_faz_efeito", alvo_nome=alvo_nome, nome=nome))
             return
 
         # Veneno de DANO (ex.: Agonia Sufocante): sem save de aplicaÃ§Ã£o â€” o jogo Ã©
@@ -18353,13 +18353,13 @@ class GameRoom:
                     f"🎲 **{alvo_nome}** — Fortitude: d20({d20}){sb_str}={stot} vs CD "
                     f"{veneno.get('dificuldade', 10)} → {'resistiu' if save_ok else 'falhou'}.")
                 if save_ok and veneno.get("anula"):
-                    await self.gm_say(f"☑️ **{alvo_nome}** resistiu ao **{nome}**!")
+                    await self.gm_say(T("narracao.resistiu_ao", alvo_nome=alvo_nome, nome=nome))
                     return
             alvo.setdefault("efeitos_veneno", [])
             dur = self._rolar_dado(veneno.get("duracao", "1d4"))
             if any(w.get("type") == "veneno_dobrado" for w in alvo.get("weaknesses", [])):
                 dur *= 2
-                await self.gm_say(f"🧪 **{alvo_nome}** é sensível a venenos — duração dobrada!")
+                await self.gm_say(T("narracao.e_sensivel_a_venenos_duracao_dobrada", alvo_nome=alvo_nome))
             alvo["efeitos_veneno"].append({
                 "nome": nome, "operacao": "dano", "dano": veneno.get("dano", "1d4"),
                 "duracao": dur, "save": veneno.get("save", "fortitude"),
@@ -18392,7 +18392,7 @@ class GameRoom:
             f"{'resistiu' if save_ok else 'falhou'}.")
 
         if save_ok and veneno.get("anula"):
-            await self.gm_say(f"☑️ **{alvo_nome}** resistiu ao **{nome}**!")
+            await self.gm_say(T("narracao.resistiu_ao", alvo_nome=alvo_nome, nome=nome))
             return
 
         op      = veneno.get("operacao")
@@ -18400,7 +18400,7 @@ class GameRoom:
         dobro   = 2 if any(w.get("type") == "veneno_dobrado"
                            for w in alvo.get("weaknesses", [])) else 1
         if dobro > 1:
-            await self.gm_say(f"🧪 **{alvo_nome}** é **sensível a venenos** — efeitos dobrados!")
+            await self.gm_say(T("narracao.e_sensivel_a_venenos_efeitos_dobrados", alvo_nome=alvo_nome))
         duracao = self._rolar_dado(veneno.get("duracao", 1)) * dobro
         alvo.setdefault("efeitos_veneno", [])
         alvo.setdefault("penalidades", {})
@@ -18439,7 +18439,7 @@ class GameRoom:
                     alvo["penalidades"]["dano"] = alvo["penalidades"].get("dano", 0) - 1
                     efeito["pen_dano"] = 1
             alvo["efeitos_veneno"].append(efeito)
-            await self.gm_say(f"☠️ **{nome}**: -{valor} de {attr} em **{alvo_nome}** por {duracao} rodada(s).")
+            await self.gm_say(T("narracao.de_em_por_rodada_s", nome=nome, valor=valor, attr=attr, alvo_nome=alvo_nome, duracao=duracao))
 
         elif op == "penalidade":
             atribs = [(attr, val * dobro) for attr, val in veneno.get("atributos", [])]
@@ -18449,7 +18449,7 @@ class GameRoom:
                 alvo["penalidades"][attr] = alvo["penalidades"].get(attr, 0) + val
             alvo["efeitos_veneno"].append(efeito)
             _txt = ", ".join(f"{val:+d} {attr}" for attr, val in atribs) or "sem efeito"
-            await self.gm_say(f"☠️ **{nome}**: {_txt} em **{alvo_nome}** por {duracao} rodada(s).")
+            await self.gm_say(T("narracao.em_por_rodada_s", nome=nome, _txt=_txt, alvo_nome=alvo_nome, duracao=duracao))
 
         elif op == "petrificar":
             if save_ok:
@@ -18460,21 +18460,21 @@ class GameRoom:
                 alvo["efeitos_veneno"].append({
                     "veneno_id": veneno_id, "nome": nome, "operacao": "penalidade",
                     "atributos": list(veneno.get("penalidade_falha", [])), "duracao": dur_falha})
-                await self.gm_say(f"⚠️ **{nome}**: save parcial — **{alvo_nome}** -1 movimento por {dur_falha} rodada(s).")
+                await self.gm_say(T("narracao.save_parcial_1_movimento_por_rodada_s", nome=nome, alvo_nome=alvo_nome, dur_falha=dur_falha))
             else:
                 if self._eh_jogador(alvo) and self._imune_a_status(alvo, "petrificacao"):
-                    await self.gm_say(f"🛡️ **{alvo_nome}** resiste à petrificação (imunizado)!")
+                    await self.gm_say(T("narracao.resiste_a_petrificacao_imunizado", alvo_nome=alvo_nome))
                     await self.push_state()
                     return
                 pet_dur = self._rolar_dado(veneno.get("duracao", 1)) * dobro
                 alvo["petrificado"]         = True
                 alvo["petrificado_rodadas"] = pet_dur
                 await self._enviar_resultado_petrificacao(alvo, pet_dur, nome)
-                await self.gm_say(f"🗿 **{nome}**: **{alvo_nome}** petrificado por {pet_dur} rodada(s)!")
+                await self.gm_say(T("narracao.petrificado_por_rodada_s", nome=nome, alvo_nome=alvo_nome, pet_dur=pet_dur))
 
         elif op == "cegar":
             if not self._eh_jogador(alvo) and "cegueira" in alvo.get("immunities", []):
-                await self.gm_say(f"🛡️ **{alvo_nome}** é **imune a cegueira**!")
+                await self.gm_say(T("narracao.e_imune_a_cegueira", alvo_nome=alvo_nome))
                 return
             if save_ok:
                 dur_falha = self._rolar_dado(veneno.get("duracao_falha", 1))
@@ -18483,7 +18483,7 @@ class GameRoom:
                 alvo["efeitos_veneno"].append({
                     "veneno_id": veneno_id, "nome": nome, "operacao": "penalidade",
                     "atributos": list(veneno.get("penalidade_falha", [])), "duracao": dur_falha})
-                await self.gm_say(f"⚠️ **{nome}**: save parcial — percepção de **{alvo_nome}** reduzida por {dur_falha} rodada(s).")
+                await self.gm_say(T("narracao.save_parcial_percepcao_de_reduzida_por_r", nome=nome, alvo_nome=alvo_nome, dur_falha=dur_falha))
             else:
                 pen = veneno.get("penalidade_ataque", -4)
                 alvo["cego"]               = True
@@ -18491,7 +18491,7 @@ class GameRoom:
                 alvo["cego_pen_ataque"]    = pen
                 alvo["bloqueia_distancia"] = veneno.get("bloqueia_distancia", False)
                 alvo["penalidades"]["ataque"] = alvo["penalidades"].get("ataque", 0) + pen
-                await self.gm_say(f"🙈 **{nome}**: **{alvo_nome}** cego por {duracao} rodada(s) ({pen} em ataques)!")
+                await self.gm_say(T("narracao.cego_por_rodada_s_em_ataques", nome=nome, alvo_nome=alvo_nome, duracao=duracao, pen=pen))
 
         if self._eh_jogador(alvo):
             if op == "reduzir":
@@ -18672,14 +18672,14 @@ class GameRoom:
             elif op == "penalidade":
                 for attr, val in efeito.get("atributos", []):
                     alvo["penalidades"][attr] = alvo["penalidades"].get(attr, 0) - val
-            await self.gm_say(f"✅ Efeito de **{efeito.get('nome','veneno')}** expirou em **{alvo_nome}**.")
+            await self.gm_say(T("narracao.efeito_de_expirou_em", efeito_get_nome_veneno=efeito.get('nome','veneno'), alvo_nome=alvo_nome))
         alvo["efeitos_veneno"] = restantes
 
         if alvo.get("petrificado"):
             alvo["petrificado_rodadas"] = max(0, alvo.get("petrificado_rodadas", 0) - 1)
             if alvo["petrificado_rodadas"] <= 0:
                 alvo["petrificado"] = False
-                await self.gm_say(f"✅ **{alvo_nome}** não está mais petrificado.")
+                await self.gm_say(T("narracao.nao_esta_mais_petrificado", alvo_nome=alvo_nome))
         if alvo.get("cego"):
             alvo["cego_rodadas"] = max(0, alvo.get("cego_rodadas", 0) - 1)
             if alvo["cego_rodadas"] <= 0:
@@ -18687,7 +18687,7 @@ class GameRoom:
                 pen = alvo.pop("cego_pen_ataque", -4)
                 alvo["penalidades"]["ataque"] = alvo["penalidades"].get("ataque", 0) - pen
                 alvo["bloqueia_distancia"] = False
-                await self.gm_say(f"✅ Cegueira expirou em **{alvo_nome}**.")
+                await self.gm_say(T("narracao.cegueira_expirou_em", alvo_nome=alvo_nome))
 
     # â”€â”€ ARMADILHAS (colocÃ¡veis) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # Foundation do Passo 2: criar / disparar / desarmar armadilhas. Reusa os
@@ -18769,7 +18769,7 @@ class GameRoom:
             "veneno_id": veneno_id,
             "efeitos_ativos": [],         # dano progressivo agendado (incendiÃ¡ria)
         })
-        await self.gm_say(f"🪤 **{p['name']}** prepara **{tipo['nome']}** em ({tx},{ty}).")
+        await self.gm_say(T("narracao.prepara_em", heroi=p['name'], tipo_nome=tipo['nome'], tx=tx, ty=ty))
         await self.push_state()
 
     async def _enviar_trap_result(self, alvo, nome, icone, sucesso, dano, metade,
@@ -18798,7 +18798,7 @@ class GameRoom:
             return
         nome = tipo["nome"]
         alvo_nome = alvo.get("name") or alvo.get("nome", "Alvo")
-        await self.gm_say(f"⚠️ **{alvo_nome}** ativou **{nome}**!")
+        await self.gm_say(T("narracao.ativou", alvo_nome=alvo_nome, nome=nome))
 
         # Armadilhas autoradas com comportamento prÃ³prio (a seleÃ§Ã£o de saÃ­da e
         # veneno fica gravada no JSON da masmorra, nÃ£o no catÃ¡logo global).
@@ -18857,7 +18857,7 @@ class GameRoom:
                                                 dano=dano_total, metade=False,
                                                 descricao=tipo["descricao"], efeitos_extra=efeitos_extra)
             else:
-                await self.gm_say(f"✅ **{alvo_nome}** evitou **{nome}** sem dano!")
+                await self.gm_say(T("narracao.evitou_sem_dano", alvo_nome=alvo_nome, nome=nome))
                 await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=True,
                                                 dano=0, metade=False,
                                                 descricao=tipo["descricao"], efeitos_extra=[])
@@ -18906,13 +18906,13 @@ class GameRoom:
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
                               "label": f"{alvo.get('name', 'Alvo')} — vontade"})
         if save_ok:
-            await self.gm_say(f"✅ **{alvo.get('name', 'Alvo')}** resistiu ao teletransporte!")
+            await self.gm_say(T("narracao.resistiu_ao_teletransporte", alvo_get_name_alvo=alvo.get('name', 'Alvo')))
             await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=True, dano=0, metade=False,
                                             descricao=tipo["descricao"], efeitos_extra=[])
             return False  # sucesso mantÃ©m a armadilha ativa
         destino = self._saida_teletransporte_livre(alvo, arm.get("saida"))
         if destino is None:
-            await self.gm_say(f"✅ O teletransporte de **{alvo.get('name', 'Alvo')}** falha: saída bloqueada.")
+            await self.gm_say(T("narracao.o_teletransporte_de_falha_saida_bloquead", alvo_get_name_alvo=alvo.get('name', 'Alvo')))
             await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=True, dano=0, metade=False,
                                             descricao="A saída está bloqueada; o portal não consegue se abrir.", efeitos_extra=[])
             return False
@@ -18920,7 +18920,7 @@ class GameRoom:
         alvo["pos"] = destino
         if self._eh_jogador(alvo):
             self._reveal_around(destino[0], destino[1], radius=self._get_raio_visao(alvo))
-        await self.gm_say(f"🌀 **{alvo.get('name', 'Alvo')}** desaparece de {origem} e surge em {destino}!")
+        await self.gm_say(T("narracao.desaparece_de_e_surge_em", alvo_get_name_alvo=alvo.get('name', 'Alvo'), origem=origem, destino=destino))
         await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=False, dano=0, metade=False,
                                         descricao=tipo["descricao"], efeitos_extra=[f"🌀 Teleportado para {destino[0]},{destino[1]}"])
         return True
@@ -18954,7 +18954,7 @@ class GameRoom:
             await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
                                   "label": f"{alvo_nome} — {tipo['save']}"})
             if save_ok and not tipo.get("save_reduz"):
-                await self.gm_say(f"✅ **{alvo_nome}** evitou **{tipo['nome']}**!")
+                await self.gm_say(T("narracao.evitou", alvo_nome=alvo_nome, tipo_nome=tipo['nome']))
                 await self._enviar_trap_result(alvo, tipo["nome"], tipo["icone"], sucesso=True,
                                                 dano=0, metade=False, descricao=tipo["descricao"],
                                                 efeitos_extra=[])
@@ -19000,7 +19000,7 @@ class GameRoom:
         elif tipo_ef == "perder_movimento":
             alvo["moves_left"] = 0
             alvo["movimento_perdido"] = True
-            await self.gm_say(f"🦵 **{alvo_nome}** perde o movimento!")
+            await self.gm_say(T("narracao.perde_o_movimento", alvo_nome=alvo_nome))
             return 0, "🦵 Perdeu o movimento"
 
         elif tipo_ef == "perder_rodada":
@@ -19010,7 +19010,7 @@ class GameRoom:
                 alvo["bonus_action_used"] = True
             else:
                 alvo["perde_turno"] = True
-            await self.gm_say(f"⏸️ **{alvo_nome}** perde a rodada inteira!")
+            await self.gm_say(T("narracao.perde_a_rodada_inteira", alvo_nome=alvo_nome))
             return 0, "⏸️ Perdeu a rodada inteira"
 
         elif tipo_ef == "veneno":
@@ -19036,7 +19036,7 @@ class GameRoom:
         if "vida_atual" in alvo:    # animado (servo do mago / elemental)
             dano = self._ajustar_dano_elemental(alvo, dano, elemento)   # resistÃªncias do elemental
             alvo["vida_atual"] = max(0, alvo["vida_atual"] - dano)
-            await self.gm_say(f"💥 **{alvo_nome}** sofre **{dano}** de dano ({elemento}).")
+            await self.gm_say(T("narracao.sofre_de_dano", alvo_nome=alvo_nome, dano=dano, elemento=elemento))
             if alvo["vida_atual"] <= 0:
                 await self._animado_morre(alvo, killer_pid)
             return
@@ -19088,7 +19088,7 @@ class GameRoom:
             alvo["hp"] = min(alvo.get("hp", 1), alvo["max_hp"])
             efeito["hp_perdido"] = valor
         alvo["efeitos_veneno"].append(efeito)
-        await self.gm_say(f"🌫️ **{alvo_nome}**: -{valor} de CON por {duracao} rodada(s).")
+        await self.gm_say(T("narracao.de_con_por_rodada_s", alvo_nome=alvo_nome, valor=valor, duracao=duracao))
 
     async def handle_desarmar_armadilha(self, pid, msg):
         """Luccas desarma uma armadilha na própria casa ou adjacente (teste de DES)."""
@@ -19133,7 +19133,7 @@ class GameRoom:
         await self.gm_say(f"🔧 **{p['name']}** tenta desarmar **{tipo.get('nome', arm['tipo'])}**: "
                           f"d20({d20})+DES({bonus})={total} vs dif {dif}.")
         if d20 == 1:
-            await self.gm_say("💀 Falha crítica! A armadilha dispara no próprio Luccas!")
+            await self.gm_say(T("narracao.falha_critica_a_armadilha_dispara_no_pro"))
             if decor_trap:
                 decor_trap["trap_triggered"] = True
             await self._disparar_armadilha(p, arm)
@@ -19153,10 +19153,10 @@ class GameRoom:
             else:
                 self.armadilhas = [a for a in self.armadilhas if a["id"] != arm["id"]]
             msg_recover = f" Recuperou 🪙{custo_ouro_arm}!" if recuperou else ""
-            await self.gm_say(f"✅ Armadilha desarmada com sucesso!{msg_recover}")
+            await self.gm_say(T("narracao.armadilha_desarmada_com_sucesso", msg_recover=msg_recover))
             await self._conceder_xp_armadilha(arm)
         else:
-            await self.gm_say(f"❌ Falha no desarme ({total} vs {dif}) — tente de novo no próximo turno.")
+            await self.gm_say(T("narracao.falha_no_desarme_vs_tente_de_novo_no_pro", total=total, dif=dif))
         await self.push_state()
 
     # â”€â”€ HABILIDADES DO LADINO (Luccas) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -19220,7 +19220,7 @@ class GameRoom:
             p["detectar_ativo"] = False
             if "detect_trap" in p.get("status", []):
                 p["status"].remove("detect_trap")
-            await self.gm_say(f"🔍 **{p['name']}** desativa a detecção de armadilhas.")
+            await self.gm_say(T("narracao.desativa_a_deteccao_de_armadilhas", heroi=p['name']))
             await self.push_state(); return
 
         # Alternar ON â€” consome a aÃ§Ã£o bÃ´nus do turno (sem custo de recurso na ativaÃ§Ã£o).
@@ -19244,7 +19244,7 @@ class GameRoom:
             p["detectar_ativo"] = False
             if "detect_trap" in p.get("status", []):
                 p["status"].remove("detect_trap")
-            await self.gm_say(f"🔍 Detecção de **{p['name']}** cessa — sede insuficiente.")
+            await self.gm_say(T("narracao.deteccao_de_cessa_sede_insuficiente", heroi=p['name']))
             return
         p["sede"] = max(0, p["sede"] - 1)
         self._revelar_armadilhas_luccas(p)
@@ -19265,7 +19265,7 @@ class GameRoom:
         # Alternar OFF (gratuito) â€” sai das sombras.
         if p.get("invisivel_sombras"):
             p["invisivel_sombras"] = False
-            await self.gm_say(f"🌑 **{p['name']}** sai das sombras.")
+            await self.gm_say(T("narracao.sai_das_sombras", heroi=p['name']))
             await self.push_state(); return
 
         if p.get("bonus_action_used"):
@@ -19311,7 +19311,7 @@ class GameRoom:
             return
         if p["fome"] < 1 or p["sede"] < 1:
             p["invisivel_sombras"] = False
-            await self.gm_say(f"🌑 **{p['name']}** sai das sombras — sem fôlego para se manter oculto.")
+            await self.gm_say(T("narracao.sai_das_sombras_sem_folego_para_se_mante", heroi=p['name']))
             return
         p["fome"] = max(0, p["fome"] - 1)
         p["sede"] = max(0, p["sede"] - 1)
@@ -19481,7 +19481,7 @@ class GameRoom:
                 return
             p["em_chamas_rodadas"] = 0
             p["bag"].remove(item)
-            await self.gm_say(f"💧 **{p['name']}** joga **{item['name']}** sobre si e apaga as chamas!")
+            await self.gm_say(T("narracao.joga_sobre_si_e_apaga_as_chamas", heroi=p['name'], item=item['name']))
             await self.push_state()
             return
 
@@ -19559,7 +19559,7 @@ class GameRoom:
         elif effect == "atk_bonus":
             self.blessed[pid] = self.blessed.get(pid, 0) + val
             p["atk_bonus"] += val
-            await self.gm_say(f"{item['emoji']} **{p['name']}** usa **{item['name']}**! +{val} Bônus de Ataque neste turno!")
+            await self.gm_say(T("narracao.usa_bonus_de_ataque_neste_turno", item_emoji=item['emoji'], heroi=p['name'], item=item['name'], val=val))
         elif effect in _CURA_STATUS:
             status = _CURA_STATUS[effect]
             curou = (self._curar_veneno_status(alvo_cura) if status == "veneno" else
@@ -19576,7 +19576,7 @@ class GameRoom:
             else:
                 txt = f"não havia {nome_status}{quem} para curar"
             extra = f" — imune a {nome_status} por **{rod}** rodada(s)!" if rod else "."
-            await self.gm_say(f"{item['emoji']} **{p['name']}** usa **{item['name']}**: {txt}{extra}")
+            await self.gm_say(T("narracao.usa", item_emoji=item['emoji'], heroi=p['name'], item=item['name'], txt=txt, extra=extra))
         elif effect == "coat_poison":
             vid = item.get("veneno_id")
             if vid not in VENENOS:
@@ -19691,12 +19691,12 @@ class GameRoom:
                     {"id": p.get("room_id"), "cx": p["pos"][0], "cy": p["pos"][1]})
         comp_def = next((d for d in MONSTER_DEFS if d["type"] == "aranha_sombria"), None)
         if not comp_def:
-            await self.gm_say("🌫️ A invocação falha sem se materializar."); return
+            await self.gm_say(T("narracao.a_invocacao_falha_sem_se_materializar")); return
         m = make_monster(comp_def, sala)
         m["pos"] = list(p["pos"])
         m["name"] = "Elemental Descontrolado"
         self.monsters[m["id"]] = m
-        await self.gm_say(f"😈 A invocação do pergaminho surge **HOSTIL** perto de **{p['name']}**!")
+        await self.gm_say(T("narracao.a_invocacao_do_pergaminho_surge_hostil_p", heroi=p['name']))
 
     async def _pergaminho_efeito_nocivo(self, p, magia, data, nivel, int_bonus, talentos=None):
         """Efeito nocivo genérico (decisão do projeto): dano/debuff/zona miram o
@@ -19706,7 +19706,7 @@ class GameRoom:
         px, py = p["pos"]
         if tipo in ("dano", "debuff", "zona"):
             d = {"tx": px, "ty": py, "target_id": p["id"], "dir": [0, 1]}
-            await self.gm_say(f"☠️ **{magia['nome']}** se volta contra **{p['name']}**!")
+            await self.gm_say(T("narracao.se_volta_contra", magia_nome=magia['nome'], heroi=p['name']))
             await self._pergaminho_conjurar(p, magia, d, nivel, int_bonus, talentos)
         elif tipo == "buff":
             inimigo = self._inimigo_mais_proximo(p)
@@ -19716,11 +19716,11 @@ class GameRoom:
                 await self.gm_say(
                     f"😈 **{magia['nome']}** beneficia o inimigo **{inimigo['name']}** por engano!")
             else:
-                await self.gm_say(f"🌫️ **{magia['nome']}** se dissipa sem alvo.")
+                await self.gm_say(T("narracao.se_dissipa_sem_alvo", magia_nome=magia['nome']))
         elif tipo == "invocacao":
             await self._pergaminho_invocar_hostil(p)
         else:
-            await self.gm_say(f"🌫️ **{magia['nome']}** falha e a energia se perde inutilmente.")
+            await self.gm_say(T("narracao.falha_e_a_energia_se_perde_inutilmente", magia_nome=magia['nome']))
 
     async def handle_use_scroll(self, pid, item_id, data=None):
         """Usa um pergaminho: rola falha (classe + nível), conjura no sucesso ou
@@ -19758,7 +19758,7 @@ class GameRoom:
         except ValueError:
             pass
 
-        await self.gm_say(f"📜 **{p['name']}** usa **{scroll['name']}**...")
+        await self.gm_say(T("narracao.usa_2", heroi=p['name'], scroll=scroll['name']))
 
         falhou, motivos = False, []
         # 1) Falha de classe (50%) â€” magia exclusiva da OUTRA classe.
@@ -19780,7 +19780,7 @@ class GameRoom:
 
         if not falhou:
             extra = f" ({'; '.join(motivos)})" if motivos else ""
-            await self.gm_say(f"✨ Conjuração **bem-sucedida**!{extra}")
+            await self.gm_say(T("narracao.conjuracao_bem_sucedida", extra=extra))
             await self._pergaminho_conjurar(p, magia, data or {}, nivel, int_b, talentos)
         else:
             harm = min(PERGAMINHO_FALHA_MAX, diff * 5)
@@ -19791,7 +19791,7 @@ class GameRoom:
                     f"({'; '.join(motivos)}; nocivo d100={rh}≤{harm}%)")
                 await self._pergaminho_efeito_nocivo(p, magia, data or {}, nivel, int_b, talentos)
             else:
-                await self.gm_say(f"🌫️ O pergaminho **falha** e a energia se dissipa. ({'; '.join(motivos)})")
+                await self.gm_say(T("narracao.o_pergaminho_falha_e_a_energia_se_dissip", join_motivos='; '.join(motivos)))
 
         await self.push_state()
 
@@ -19974,9 +19974,9 @@ class GameRoom:
                 next_p["action_done"]       = True
                 next_p["bonus_action_used"] = True
                 next_p["moves_left"]        = 0
-                await self.gm_say(f"🕸️ Turno de **{next_p['name']}** — imobilizado! Encerre o turno para continuar.")
+                await self.gm_say(T("narracao.turno_de_imobilizado_encerre_o_turno_par", next_p=next_p['name']))
             else:
-                await self.gm_say(f"🎲 Turno de **{next_p['name']}**!")
+                await self.gm_say(T("narracao.turno_de", next_p=next_p['name']))
 
         # â”€â”€ InÃ­cio do turno do novo jogador â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         # Upkeep da CanÃ§Ã£o Heroica (cobra manutenÃ§Ã£o / interrompe se faltar
@@ -20174,7 +20174,7 @@ class GameRoom:
         m["hp"] = min(m.get("max_hp", m["hp"]), m["hp"] + cura)
         ganho = m["hp"] - antes
         if ganho > 0:
-            await self.gm_say(f"🍖 **{m['name']}** devora o material destruído e recupera **{ganho}** HP!")
+            await self.gm_say(T("narracao.devora_o_material_destruido_e_recupera_h", monstro=m['name'], ganho=ganho))
 
     async def _acido_corroer(self, alvo, pontos):
         """Corrói a defesa do alvo. Ramo ATIVO: reduz a CA do monstro (piso
@@ -20188,9 +20188,9 @@ class GameRoom:
         if novo < base:
             alvo["ac"] = novo
             alvo["ac_corroida"] = alvo.get("ac_corroida", 0) + (base - novo)
-            await self.gm_say(f"🧪 O ácido corrói a defesa de **{nome}**: CA {base} → {novo}!")
+            await self.gm_say(T("narracao.o_acido_corroi_a_defesa_de_ca", nome=nome, base=base, novo=novo))
         else:
-            await self.gm_say(f"🧪 A defesa de **{nome}** já está corroída ao máximo (CA {base}).")
+            await self.gm_say(T("narracao.a_defesa_de_ja_esta_corroida_ao_maximo_c", nome=nome, base=base))
 
     async def _aplicar_controle_arremesso(self, alvo, ctrl):
         """Aplica o efeito de controle de um arremessável tático a um monstro.
@@ -20198,14 +20198,14 @@ class GameRoom:
         nome = alvo.get("name") or alvo.get("nome", "alvo")
         tipo = ctrl.get("tipo")
         if self._tem_habilidade(alvo, "inabalavel") and tipo in {"mov_reduzido", "enredado"}:
-            await self.gm_say(f"🪨 **{nome}** é Inabalável e ignora a imobilização!")
+            await self.gm_say(T("narracao.e_inabalavel_e_ignora_a_imobilizacao", nome=nome))
             return
         if tipo == "mov_reduzido":
             rs = ctrl.get("resist_save")
             if rs:
                 ok, *_ = await self._save_mostrado(alvo, rs["tipo"], rs["cd"])
                 if ok:
-                    await self.gm_say(f"🟢 **{nome}** se esquiva da cola — sem efeito!")
+                    await self.gm_say(T("narracao.se_esquiva_da_cola_sem_efeito", nome=nome))
                     return
             dur = ctrl.get("duracao", 2)
             # Passa pelo mecanismo unificado (_reduzir_mov_monstro) para coexistir
@@ -20291,7 +20291,7 @@ class GameRoom:
                     p["weapon"] = {**WEAPONS["unarmed"]}; gear["weapon"] = None
                 else:
                     gear[slot] = None
-                await self.gm_say(f"💥 {nome_peca} de **{p['name']}** foi **destruída permanentemente**!")
+                await self.gm_say(T("narracao.de_foi_destruida_permanentemente", nome_peca=nome_peca, heroi=p['name']))
                 perdas = ["A peça foi destruída permanentemente", "Todos os bônus desta peça foram removidos"]
                 if slot == "armor" and peca.get("ac_bonus"):
                     perdas.insert(1, f"CA -{peca['ac_bonus']} (bônus da armadura perdido)")
@@ -20301,10 +20301,10 @@ class GameRoom:
                 if m is not None:
                     await self._devorador_cura(m, cura)
             elif nivel_pen <= 0:
-                await self.gm_say(f"🦷 **{label}**: {nome_peca} de **{p['name']}** resistiu ao golpe sem sofrer dano!")
+                await self.gm_say(T("narracao.de_resistiu_ao_golpe_sem_sofrer_dano", label=label, nome_peca=nome_peca, heroi=p['name']))
             else:
                 rot = CORROSAO_NIVEL_NOME.get(nivel_pen, "muito danificado")
-                await self.gm_say(f"🦷 **{label}**: {nome_peca} de **{p['name']}** está **{rot}** (-{nivel_pen})!")
+                await self.gm_say(T("narracao.de_esta", label=label, nome_peca=nome_peca, heroi=p['name'], rot=rot, nivel_pen=nivel_pen))
                 penalidade = (f"CA -{nivel_pen}" if slot in ("armor", "off_hand", "head")
                                else (f"Acerto e dano -{nivel_pen}" if slot == "weapon"
                                      else f"Movimento -{nivel_pen}"))
@@ -20395,7 +20395,7 @@ class GameRoom:
             p["vinho_ativo"] = False
             p["atk_bonus"]  += 1
             p["ref_"]       += 1
-            await self.gm_say(f"🍷 **{p['name']}** se recupera da embriaguez (penalidade do vinho acabou).")
+            await self.gm_say(T("narracao.se_recupera_da_embriaguez_penalidade_do", heroi=p['name']))
 
     def _resetar_vinho(self, p):
         """Reset por dungeon: cancela a embriaguez restaurando os atributos."""
@@ -20413,7 +20413,7 @@ class GameRoom:
         if p["cerveja_rodadas"] <= 0 and p.get("cerveja_ativo"):
             p["cerveja_ativo"] = False
             p["atk_bonus"]    += 1
-            await self.gm_say(f"🍺 **{p['name']}** recupera a pontaria (penalidade da cerveja acabou).")
+            await self.gm_say(T("narracao.recupera_a_pontaria_penalidade_da_cervej", heroi=p['name']))
 
     def _resetar_cerveja(self, p):
         """Reset por dungeon: cancela a embriaguez da cerveja restaurando o ataque."""
@@ -20645,7 +20645,7 @@ class GameRoom:
         for p in vivos:
             p["xp"] = p.get("xp", 0) + share
             await self._check_level_up(p)
-        await self.gm_say(f"✨ Armadilha superada — +{share} XP para o grupo!")
+        await self.gm_say(T("narracao.armadilha_superada_xp_para_o_grupo", share=share))
 
     def _roll_monster_loot(self, m):
         """Rola a tabela de loot do monstro. Retorna dict de item ou None."""
@@ -20751,7 +20751,7 @@ class GameRoom:
         dano = roll_dice("1d4")
         nome = criatura.get("name") or criatura.get("nome", "Alguém")
         await self.broadcast({"type": "dice_roll", "die": "d4", "value": dano, "label": "Fogueira"})
-        await self.gm_say(f"🔥 **{nome}** pisou na fogueira e sofre **{dano}** de fogo!")
+        await self.gm_say(T("narracao.pisou_na_fogueira_e_sofre_de_fogo", nome=nome, dano=dano))
         await self._dano_em_alvo(criatura, dano, "fogo")
 
     async def _commit_monster_step(self, m, nx, ny):
@@ -20857,7 +20857,7 @@ class GameRoom:
         # esteja ligada a nenhuma passagem.
         if d.get("key_objective") and not self.key_chest_opened:
             self.key_chest_opened = True
-            await self.gm_say(f"🔑 **{p['name']}** encontrou o objeto-chave!")
+            await self.gm_say(T("narracao.encontrou_o_objeto_chave", heroi=p['name']))
             await self.push_state()
         meta = DECOR_TYPES[d["type"]]
         if meta["special"] == "fountain":
@@ -20867,7 +20867,7 @@ class GameRoom:
             if self._add_to_inventory(p, item) == "full":
                 await self.send_to(pid, {"type": "error", "msg": T("erro.inventario_cheio")}); return
             d["charges"] -= 1
-            await self.gm_say(f"💧 **{p['name']}** encheu uma **Garrafa de Água** na fonte ({d['charges']} restantes).")
+            await self.gm_say(T("narracao.encheu_uma_garrafa_de_agua_na_fonte_rest", heroi=p['name'], d_charges=d['charges']))
             await self.push_state()
             return
         if d.get("key_objective") and not d.get("tem_loot"):
@@ -20901,7 +20901,7 @@ class GameRoom:
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
                               "label": f"{p['name']} — reflexos"})
         extras = [f"👹 {monstro['name']} salta do objeto em {destino[0]},{destino[1]}!"]
-        await self.gm_say(f"📦 **{p['name']}** ativa um **Baú-Armadilha**: **{monstro['name']}** surge!")
+        await self.gm_say(T("narracao.ativa_um_bau_armadilha_surge", heroi=p['name'], monstro=monstro['name']))
         if not save_ok:
             extras.append("⚔️ Falhou nos Reflexos: o monstro ataca imediatamente!")
             await self._enviar_trap_result(p, "Baú-Armadilha", "📦", sucesso=False, dano=0, metade=False,
@@ -20936,11 +20936,11 @@ class GameRoom:
                 opened.append(sp)
         if d.get("key_objective") and not self.key_chest_opened:
             self.key_chest_opened = True
-            await self.gm_say(f"🔑 **{p['name']}** ativou o objeto-chave!")
+            await self.gm_say(T("narracao.ativou_o_objeto_chave", heroi=p['name']))
         for sp in opened:
-            await self.gm_say(f"🧱 Uma passagem secreta se abriu em {sp['pos'][0]},{sp['pos'][1]}!")
+            await self.gm_say(T("narracao.uma_passagem_secreta_se_abriu_em", sp_pos_0=sp['pos'][0], sp_pos_1=sp['pos'][1]))
         if linked and not opened:
-            await self.gm_say(f"⚙️ **{p['name']}** ativou um mecanismo; outras chaves ainda são necessárias.")
+            await self.gm_say(T("narracao.ativou_um_mecanismo_outras_chaves_ainda", heroi=p['name']))
         await self.push_state()
 
     async def _abrir_decor_loot(self, pid, d):
@@ -20971,7 +20971,7 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error", "msg": T("erro.sem_ouro_aqui")}); return
             recebido = await self._ganhar_ouro(p, amount, "do objeto")
             loot["gold"] = 0
-            await self.gm_say(f"🪙 **{p['name']}** pegou **{recebido}** ouros do objeto!")
+            await self.gm_say(T("narracao.pegou_ouros_do_objeto", heroi=p['name'], recebido=recebido))
         elif kind == "item":
             idx = int(index)
             if idx < 0 or idx >= len(loot["items"]):
@@ -20983,7 +20983,7 @@ class GameRoom:
                     "msg": T("erro.inventario_cheio_e_slot_ocupado_abra_esp_2")}); return
             loot["items"].pop(idx)
             extra = " (equipado — bolsa cheia)" if res == "equipped" else ""
-            await self.gm_say(f"🎒 **{p['name']}** pegou **{item['name']}** do objeto{extra}!")
+            await self.gm_say(T("narracao.pegou_do_objeto", heroi=p['name'], item=item['name'], extra=extra))
         self._decor_atualiza_tem_loot(d)
         # Re-send updated loot so the open panel refreshes live
         await self.send_to(pid, {"type": "decor_loot", "decor_id": d["id"],
@@ -21333,10 +21333,10 @@ class GameRoom:
 
         if self.smoke.get(m["id"]):
             self.smoke.pop(m["id"])
-            await self.gm_say(f"💨 **{m['name']}** tenta atacar **{tgt_name}** mas a fumaça confunde!")
+            await self.gm_say(T("narracao.tenta_atacar_mas_a_fumaca_confunde", monstro=m['name'], tgt_name=tgt_name))
             return
         if is_player and self.immune.get(target["id"], 0) > 0:
-            await self.gm_say(f"🛡️ **{m['name']}** ataca **{tgt_name}** mas o Escudo Divino bloqueia!")
+            await self.gm_say(T("narracao.ataca_mas_o_escudo_divino_bloqueia", monstro=m['name'], tgt_name=tgt_name))
             return
 
         effective_ac = self._player_effective_ac(target) if is_player else target.get("ac", target.get("ca", 10))
@@ -21382,7 +21382,7 @@ class GameRoom:
         if target.get("dormindo"):
             hit, crit = True, True
             target.pop("dormindo", None); target.pop("dormindo_rodadas", None)
-            await self.gm_say(f"🌙 **{tgt_name}** é atacado dormindo — golpe **CRÍTICO** e desperta!")
+            await self.gm_say(T("narracao.e_atacado_dormindo_golpe_critico_e_despe_2", tgt_name=tgt_name))
 
         if hit and is_player and await self._oferecer_sorte(target, {
                 "kind": "monster_attack", "texto": f"{m['name']} acertou você. Usar Sorte para forçá-lo a rerrolar com −2?"}):
@@ -21478,13 +21478,13 @@ class GameRoom:
                     dy = 0 if target["pos"][1] == m["pos"][1] else (1 if target["pos"][1] > m["pos"][1] else -1)
                     if dx or dy:
                         self._empurrar(target, dx, dy, 1)
-                        await self.gm_say(f"💨 **{tgt_name}** é empurrado 1 quadrado pelo Golpe de Vento!")
+                        await self.gm_say(T("narracao.e_empurrado_1_quadrado_pelo_golpe_de_ven", tgt_name=tgt_name))
                 # Extra damage (ex: virote incendiÃ¡rio do kobold besteiro)
                 if atk_def.get("extra_damage") and target.get("hp", 1) > 0:
                     xdmg = roll_dice(atk_def["extra_damage"])
                     xdmg = self._apply_damage_types(xdmg, atk_def.get("extra_damage_types", []), target)
                     target["hp"] = max(0, target["hp"] - xdmg)
-                    await self.gm_say(f"🔥 Virote incendiário: +{xdmg} de dano de fogo!")
+                    await self.gm_say(T("narracao.virote_incendiario_de_dano_de_fogo", xdmg=xdmg))
                     if target["hp"] <= 0:
                         await self._player_dies(target["id"])
                 # Ecos Dolorosos (Sino, bardo): retalia dano sonoro em quem
@@ -21563,7 +21563,7 @@ class GameRoom:
             else:
                 target["vida_atual"] = max(0, target["vida_atual"] - extra)
             nome = target["name"] if is_player else target["nome"]
-            await self.gm_say(f"🦷 **Fúria Bestial**: **{nome}** sofre +**{extra}** de dano!")
+            await self.gm_say(T("narracao.furia_bestial_sofre_de_dano_2", nome=nome, extra=extra))
             if is_player and target["hp"] <= 0:
                 await self._player_dies(target["id"])
             elif not is_player and target["vida_atual"] <= 0:
@@ -21599,7 +21599,7 @@ class GameRoom:
             m["equipment_elixir_used"] = True
             m["equipment_attack_bonus"] = m.get("equipment_attack_bonus", 0) + int(elixir.get("value", 0) or 0)
             bag.remove(elixir)
-            await self.gm_say(f"⚗️ **{m['name']}** usa **{elixir['name']}** e recebe +{elixir.get('value', 0)} no ataque!")
+            await self.gm_say(T("narracao.usa_e_recebe_no_ataque", monstro=m['name'], elixir=elixir['name'], elixir_get_value_0=elixir.get('value', 0)))
             return False   # aÃ§Ã£o bÃ´nus: ainda pode atacar
         if m.get("hp", 0) * 2 > m.get("max_hp", 1):
             return False
@@ -21613,7 +21613,7 @@ class GameRoom:
             potion["uses_left"] = uses_left
         else:
             bag.remove(potion)
-        await self.gm_say(f"🧪 **{m['name']}** usa **{potion['name']}** e recupera **{cura} HP**.")
+        await self.gm_say(T("narracao.usa_e_recupera_hp", monstro=m['name'], potion=potion['name'], cura=cura))
         return False       # aÃ§Ã£o bÃ´nus: ainda pode atacar
 
     async def _soldado_try_granada(self, m):
@@ -21673,7 +21673,7 @@ class GameRoom:
         is_player = target_obj["kind"] == "player"
         elemento = defn.get("elemento", "physical")
         damage_type = {"fogo": DMG_FIRE, "acido": DMG_ACID}.get(elemento, DMG_PHYSICAL)
-        await self.gm_say(f"{defn.get('emoji', '🧪')} **{m['name']}** usa **{defn['name']}**!")
+        await self.gm_say(T("narracao.usa_3", defn_get_emoji=defn.get('emoji', '🧪'), monstro=m['name'], defn=defn['name']))
         if defn.get("alvo") == "ataque_alvo":
             roll = random.randint(1, 20)
             atk = int(m.get("base_attack_bonus", 0)) + mod(m.get("dex", 10)) + m.get("equipment_attack_bonus", 0)
@@ -21682,7 +21682,7 @@ class GameRoom:
             await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
                                   "label": f"{m['name']} — {defn['name']}", "hit": hit, "crit": roll == 20})
             if not hit:
-                await self.gm_say(f"{defn.get('emoji', '🧪')} **{m['name']}** erra o arremesso em **{target.get('name', target.get('nome'))}**.")
+                await self.gm_say(T("narracao.erra_o_arremesso_em", defn_get_emoji=defn.get('emoji', '🧪'), monstro=m['name'], target_get_name_target_g=target.get('name', target.get('nome'))))
                 return
             raw = roll_dice(defn.get("dano", "0")) if defn.get("dano") else 0
             dmg = self._apply_damage_types((raw + mod(m.get("dex", 10))) * (2 if roll == 20 else 1), [damage_type], target)
@@ -21690,7 +21690,7 @@ class GameRoom:
                 target["hp"] = max(0, target["hp"] - dmg)
             else:
                 target["vida_atual"] = max(0, target["vida_atual"] - dmg)
-            await self.gm_say(f"{defn.get('emoji', '🧪')} **{target.get('name', target.get('nome'))}** sofre **{dmg}** de dano.")
+            await self.gm_say(T("narracao.sofre_de_dano_2", defn_get_emoji=defn.get('emoji', '🧪'), target_get_name_target_g=target.get('name', target.get('nome')), dmg=dmg))
             if defn.get("em_chamas") and dmg >= 0:
                 self._aplicar_em_chamas(target, self._rolar_dado(defn.get("chamas_dur", "1d4")), defn.get("chamas_agua_apaga", True))
             if defn.get("controle"):
@@ -21729,7 +21729,7 @@ class GameRoom:
                 alvo["hp"] = max(0, alvo["hp"] - dmg)
                 if alvo["hp"] <= 0:
                     await self._monster_dies(alvo, None)
-            await self.gm_say(f"{defn.get('emoji', '💥')} **{alvo.get('name', alvo.get('nome'))}** sofre **{dmg}** de dano.")
+            await self.gm_say(T("narracao.sofre_de_dano_3", defn_get_emoji=defn.get('emoji', '💥'), alvo_get_name_alvo_get_n=alvo.get('name', alvo.get('nome')), dmg=dmg))
         zona = defn.get("zona")
         if zona and zona.get("tipo") == "escuridao":
             await self._aplicar_escuridao(m, raio=raio, duracao=zona.get("duracao", 2), pos=target["pos"])
@@ -21754,7 +21754,7 @@ class GameRoom:
         m["veneno_arma_id"] = item["veneno_id"]
         m["equipment_poison"] = item["veneno_id"]
         bag.remove(item)
-        await self.gm_say(f"🧪 **{m.get('name', 'O monstro')}** usa **{item['name']}** para envenenar a arma.")
+        await self.gm_say(T("narracao.usa_para_envenenar_a_arma", m_get_name_o_monstro=m.get('name', 'O monstro'), item=item['name']))
         return True
 
     async def handle_mestre_usar_item(self, pid, monster_id, item_id, target_id, tx, ty):
@@ -21827,13 +21827,13 @@ class GameRoom:
                 uses_left = int(item.get("uses_left", max_uses) or 1) - 1
                 item["uses_left"] = uses_left
                 removed = uses_left <= 0
-            await self.gm_say(f"🧪 **{m.get('name', 'O monstro')}** usa **{item['name']}** e recupera **{val}** HP.")
+            await self.gm_say(T("narracao.usa_e_recupera_hp_2", m_get_name_o_monstro=m.get('name', 'O monstro'), item=item['name'], val=val))
         elif effect == "regeneration":
             m["potion_regen_pool"] = m.get("potion_regen_pool", 0) + val
-            await self.gm_say(f"🌿 **{m.get('name', 'O monstro')}** bebe **{item['name']}** — regeneração +{val}.")
+            await self.gm_say(T("narracao.bebe_regeneracao", m_get_name_o_monstro=m.get('name', 'O monstro'), item=item['name'], val=val))
         elif effect == "atk_bonus":
             m["equipment_attack_bonus"] = m.get("equipment_attack_bonus", 0) + val
-            await self.gm_say(f"⚗️ **{m.get('name', 'O monstro')}** usa **{item['name']}**: +{val} de ataque.")
+            await self.gm_say(T("narracao.usa_de_ataque", m_get_name_o_monstro=m.get('name', 'O monstro'), item=item['name'], val=val))
         elif effect == "coat_poison" and veneno_livre:
             if not await self._envenenar_arma_do_inventario(m):
                 await self.send_to(pid, {"type": "error", "msg": T("erro.nao_foi_possivel_envenenar_a_arma")}); return
@@ -21844,14 +21844,14 @@ class GameRoom:
             if vid and m.get("attacks"):
                 m["attacks"][0]["on_hit"] = vid
                 m["equipment_poison"] = vid
-            await self.gm_say(f"🧪 **{m.get('name', 'O monstro')}** unta **{item['name']}** na arma.")
+            await self.gm_say(T("narracao.unta_na_arma", m_get_name_o_monstro=m.get('name', 'O monstro'), item=item['name']))
         elif effect == "antidote":
             for k in ("veneno", "veneno_dano", "veneno_rodadas", "envenenado"):
                 m.pop(k, None)
-            await self.gm_say(f"🟢 **{m.get('name', 'O monstro')}** usa **{item['name']}** e neutraliza o veneno.")
+            await self.gm_say(T("narracao.usa_e_neutraliza_o_veneno", m_get_name_o_monstro=m.get('name', 'O monstro'), item=item['name']))
         elif effect == "veil_shadow":
             m["oculto_item"] = True
-            await self.gm_say(f"🕯️ **{m.get('name', 'O monstro')}** usa **{item['name']}** e fica oculto.")
+            await self.gm_say(T("narracao.usa_e_fica_oculto", m_get_name_o_monstro=m.get('name', 'O monstro'), item=item['name']))
         if not veneno_livre:
             self._debitar_acao_mestre(m, "bonus", "item")
         if removed and item in bag:
@@ -21899,7 +21899,7 @@ class GameRoom:
             if ab.get("source") not in {"heroi", "guilda"} or ab.get("action_type") == "passiva":
                 continue
             if self._ativar_editor_ability(m, ab):
-                await self.gm_say(f"✦ **{m.get('name', 'O monstro')}** ativa **{ab.get('name', ab.get('id'))}** para ganhar vantagem no combate!")
+                await self.gm_say(T("narracao.ativa_para_ganhar_vantagem_no_combate", m_get_name_o_monstro=m.get('name', 'O monstro'), ab_get_name_ab_get_id=ab.get('name', ab.get('id'))))
                 return True
         return False
 
@@ -21945,7 +21945,7 @@ class GameRoom:
         element = (ability.get("damage_types") or [DMG_FIRE])[0]
         labels = {DMG_FIRE: "fogo", DMG_COLD: "gelo", DMG_LIGHTNING: "eletricidade"}
         shape = "linha" if ability.get("shape", "linha") == "linha" else "cone"
-        await self.gm_say(f"🐉 **{m['name']}** usa **Sopro de Dragão** de {labels.get(element, element)} em {shape}!")
+        await self.gm_say(T("narracao.usa_sopro_de_dragao_de_em", monstro=m['name'], labels_get_element_eleme=labels.get(element, element), shape=shape))
         for item in victims:
             target = item["obj"]
             passed, d20, bonus, total = self._testar_save(target, ability.get("save", "reflexos"), ability.get("dc", 13), fonte=m)
@@ -22109,7 +22109,7 @@ class GameRoom:
             m["_ja_executou_acao"] = True
             m.setdefault("ability_uses", {})["mestre_dos_mortos"] = 0
             nomes = " e ".join(s["name"] for s in invocados)
-            await self.gm_say(f"💀 **{m['name']}** conjura {len(invocados)} servo(s): **{nomes}**!")
+            await self.gm_say(T("narracao.conjura_servo_s", monstro=m['name'], len_invocados=len(invocados), nomes=nomes))
         return invocados
 
     async def handle_mestre_usar_habilidade(self, pid, monster_id, ability_id, target_id,
@@ -22174,7 +22174,7 @@ class GameRoom:
         if ability_id == "golpe_brutal":
             if not await self._ativar_golpe_brutal(m):
                 await self.send_to(pid, {"type": "error", "msg": T("erro.golpe_brutal_em_recarga")}); return
-            await self.gm_say(f"💥 **{m['name']}** desfere um **Golpe Brutal** (+2 dano)!")
+            await self.gm_say(T("narracao.desfere_um_golpe_brutal_2_dano", monstro=m['name']))
             self._debitar_acao_mestre(m, "livre", "habilidade")
             await self.push_state(); return
         if ability_id == "desaparecer_nas_sombras":
@@ -22226,7 +22226,7 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_sem_usos_ou_em_recarga")}); return
             self._debitar_acao_mestre(m, custo, "habilidade")
             m["_ja_executou_acao"] = True
-            await self.gm_say(f"✦ **{m.get('name', 'O monstro')}** ativa **{ability.get('name', ability['id'])}**!")
+            await self.gm_say(T("narracao.ativa_2", m_get_name_o_monstro=m.get('name', 'O monstro'), ability_get_name_ability=ability.get('name', ability['id'])))
             await self.push_state(); return
         alvo, alvo_kind = self._alvo_manual_mestre(target_id)
         if not alvo or alvo is m:
@@ -22376,27 +22376,27 @@ class GameRoom:
             effect = ability.get("effect")
             if effect == "perde_turno":
                 target["perde_turno"] = True
-                await self.gm_say(f"🕸️ **{tgt_name}** está imobilizado e perderá o próximo turno!")
+                await self.gm_say(T("narracao.esta_imobilizado_e_perdera_o_proximo_tur", tgt_name=tgt_name))
             elif effect == "petrificado":
                 if self._eh_jogador(target) and self._imune_a_status(target, "petrificacao"):
-                    await self.gm_say(f"🛡️ **{tgt_name}** resiste à petrificação (imunizado)!")
+                    await self.gm_say(T("narracao.resiste_a_petrificacao_imunizado_2", tgt_name=tgt_name))
                 else:
                     target["petrificado"] = True
                     target["petrificado_rodadas"] = ability.get("effect_duration", 1)
                     await self._enviar_resultado_petrificacao(target, target["petrificado_rodadas"], ability.get("name", "Petrificação"))
-                    await self.gm_say(f"🗿 **{tgt_name}** foi petrificado!")
+                    await self.gm_say(T("narracao.foi_petrificado", tgt_name=tgt_name))
             elif effect == "dormindo":
                 target["dormindo"] = True
                 target["dormindo_rodadas"] = ability.get("effect_duration", 1)
-                await self.gm_say(f"😴 **{tgt_name}** adormeceu!")
+                await self.gm_say(T("narracao.adormeceu", tgt_name=tgt_name))
             elif effect == "lento":
                 target["lento"] = True
                 target["lento_rodadas"] = ability.get("effect_duration", 1)
-                await self.gm_say(f"🐌 **{tgt_name}** ficou lento!")
+                await self.gm_say(T("narracao.ficou_lento", tgt_name=tgt_name))
             elif effect == "cego":
                 target["cego"] = True
                 target["cego_rodadas"] = ability.get("effect_duration", 1)
-                await self.gm_say(f"👁️ **{tgt_name}** foi cegado!")
+                await self.gm_say(T("narracao.foi_cegado", tgt_name=tgt_name))
         return True
 
     # â”€â”€ Armadilhas de sala â€” kobolds â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -22462,7 +22462,7 @@ class GameRoom:
             for p in self.players.values():
                 if p["alive"]:
                     p["gold"] = p.get("gold", 0) + gold
-            await self.gm_say(f"💰 **{m['name']}** deixou {gold} moeda(s).")
+            await self.gm_say(T("narracao.deixou_moeda_s", monstro=m['name'], gold=gold))
 
     # â”€â”€ Loot Kobold â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async def _kobold_loot(self, m):
@@ -22545,12 +22545,12 @@ class GameRoom:
             for p in self.players.values():
                 if p["alive"]:
                     p["gold"] = p.get("gold", 0) + gold_total
-            await self.gm_say(f"💰 **{m['name']}** deixou {gold_total} moeda(s).")
+            await self.gm_say(T("narracao.deixou_moeda_s_2", monstro=m['name'], gold_total=gold_total))
 
         # Spawna baÃº com itens fÃ­sicos (se houver)
         if items_sempre:
             self._spawn_chest(list(m["pos"]), 0, items_sempre)
-            await self.gm_say(f"🎒 Loot de **{m['name']}** deixado no chão!")
+            await self.gm_say(T("narracao.loot_de_deixado_no_chao", monstro=m['name']))
 
     async def _necromante_loot(self, m):
         """Tesouro do Necromante (1d100): ouro / vinho / ração / pergaminho 1º círculo.
@@ -22578,7 +22578,7 @@ class GameRoom:
             if dom: itens.append(dom)
         if gold > 0 or itens:
             self._spawn_chest(list(m["pos"]), gold, itens)
-            await self.gm_say("🎒 Um **baú de saque** apareceu!")
+            await self.gm_say(T("narracao.um_bau_de_saque_apareceu"))
 
     # â”€â”€ Covardia Instintiva (kobolds) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async def _verificar_covardia_kobold(self, m):
@@ -22609,7 +22609,7 @@ class GameRoom:
         m["kobold_medo_rodadas"] = max(0, m["kobold_medo_rodadas"] - 1)
         if m["kobold_medo_rodadas"] <= 0:
             m["kobold_medo"] = False
-            await self.gm_say(f"😤 **{m['name']}** recuperou a coragem!")
+            await self.gm_say(T("narracao.recuperou_a_coragem", monstro=m['name']))
             return
 
         if not targets:
@@ -22636,7 +22636,7 @@ class GameRoom:
             if m["pos"] == pos_antes:
                 break
 
-        await self.gm_say(f"😱 **{m['name']}** foge em pânico!")
+        await self.gm_say(T("narracao.foge_em_panico", monstro=m['name']))
 
     # â”€â”€ IA Esqueleto Animal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async def _ai_esqueleto_animal(self, m, targets):
@@ -22710,7 +22710,7 @@ class GameRoom:
         atk = dict(m["attacks"][0])
         if bando_bonus:
             atk = {**atk, "atk_bonus": atk["atk_bonus"] + bando_bonus}
-            await self.gm_say(f"🐺 **{m['name']}** ataca em bando! (+2 acerto)")
+            await self.gm_say(T("narracao.ataca_em_bando_2_acerto", monstro=m['name']))
 
         hit = await self._execute_one_monster_attack(m, atk, target_obj)
 
@@ -22750,7 +22750,7 @@ class GameRoom:
             dano = self._apply_damage_types(dano_base + dano_extra, [DMG_WATER], p)
             p["hp"] = max(0, p["hp"] - dano)
             detalhe = f" +{dano_extra} por estar na água" if dano_extra else ""
-            await self.gm_say(f"🌊 **{p['name']}** sofre **{dano}** de Afogar ({dano_base}{detalhe}).")
+            await self.gm_say(T("narracao.sofre_de_afogar", heroi=p['name'], dano=dano, dano_base=dano_base, detalhe=detalhe))
             if p["hp"] <= 0:
                 p["preso"] = False
                 p.pop("preso_por", None)
@@ -22792,7 +22792,7 @@ class GameRoom:
         sb_str  = f"+{sb}" if sb >= 0 else str(sb)
         rolagem = f"(d20={d20}{sb_str}={stot} vs CD {dc})"
         if save_ok:
-            await self.gm_say(f"{emoji} **{target['name']}** {txt_livre} {rolagem}.")
+            await self.gm_say(T("narracao.mensagem", emoji=emoji, target=target['name'], txt_livre=txt_livre, rolagem=rolagem))
             return
         target["preso"]     = True
         target["preso_por"] = m["id"]
@@ -22871,10 +22871,10 @@ class GameRoom:
             destino = self._casa_livre_ao_lado(m, c, preferida=casa_liberada)
             if destino is None:
                 await self._soltar_agarrado(c)
-                await self.gm_say(f"💨 **{c['name']}** escapa ao ser arrastado por **{m['name']}**!")
+                await self.gm_say(T("narracao.escapa_ao_ser_arrastado_por", c=c['name'], monstro=m['name']))
                 continue
             c["pos"] = list(destino)
-            await self.gm_say(f"🐊 **{m['name']}** arrasta **{c['name']}**!")
+            await self.gm_say(T("narracao.arrasta", monstro=m['name'], c=c['name']))
 
     async def _processar_escape_agarrar(self, p):
         """Tentativa de escape no início do turno do jogador. Os saves e a CD
@@ -23015,7 +23015,7 @@ class GameRoom:
         if m["hp"] > 0:
             if self._passo_monstro(m, target["pos"][0], target["pos"][1], away=True):
                 await self._aplicar_fogueira_se_pisar(m)
-                await self.gm_say(f"🐍 **{m['name']}** recua para as sombras após morder.")
+                await self.gm_say(T("narracao.recua_para_as_sombras_apos_morder", monstro=m['name']))
 
     # â”€â”€ IA Devorador OrgÃ¢nico â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def _em_zona_fogo(self, pos):
@@ -23060,7 +23060,7 @@ class GameRoom:
                 if self._em_zona_fogo(m["pos"]):
                     self._passo_monstro(m, target["pos"][0], target["pos"][1], away=True)
                     await self._aplicar_fogueira_se_pisar(m)
-                    await self.gm_say(f"🟢 **{m['name']}** recua das chamas!")
+                    await self.gm_say(T("narracao.recua_das_chamas", monstro=m['name']))
                     break
                 if self._is_adjacent_to_monster(target["pos"], m):
                     break
@@ -23103,7 +23103,7 @@ class GameRoom:
                 ch["items"].remove(it)
                 if not ch.get("items") and not ch.get("gold"):
                     self.chests.pop(ch["id"], None)
-                await self.gm_say(f"🍖 **{m['name']}** devora **{it.get('name','metal')}** do chão!")
+                await self.gm_say(T("narracao.devora_do_chao", monstro=m['name'], it_get_name_metal=it.get('name','metal')))
                 await self._devorador_cura(m, "1d6")
                 return
 
@@ -23148,7 +23148,7 @@ class GameRoom:
         ref = m.get("_furia_cega_hp_ref", m.get("max_hp", m["hp"]))
         enfurecido = m["hp"] < ref
         if enfurecido and not m.get("furia_cega"):
-            await self.gm_say(f"😡 **{m['name']}** entra em **Fúria Cega**! +1 de dano, mas -1 CA.")
+            await self.gm_say(T("narracao.entra_em_furia_cega_1_de_dano_mas_1_ca", monstro=m['name']))
         m["furia_cega"] = enfurecido
         m["_furia_cega_hp_ref"] = m["hp"]
 
@@ -23174,7 +23174,7 @@ class GameRoom:
 
         if moveu:
             m["_investiu"] = True   # Investida Brutal armada para este ataque
-            await self.gm_say(f"🐗 **{m['name']}** parte para a **Investida Brutal** (+2 de dano)!")
+            await self.gm_say(T("narracao.parte_para_a_investida_brutal_2_de_dano", monstro=m['name']))
         await self._monster_execute_attacks(m, target_obj)
         m["_investiu"] = False      # consome apÃ³s atacar
 
@@ -23199,7 +23199,7 @@ class GameRoom:
         if d20 == 1:   # 1 natural â†’ a arma quebra
             m["pode_arremessar"] = False
             m["guaranteed_loot"] = [g for g in m.get("guaranteed_loot", []) if g != "dagger"]
-            await self.gm_say(f"💥 **{m['name']}** tira **1** no arremesso — a adaga **se quebra**!")
+            await self.gm_say(T("narracao.tira_1_no_arremesso_a_adaga_se_quebra", monstro=m['name']))
             return
         eff_ac = self._player_effective_ac(target)
         total  = d20 + 4
@@ -23239,7 +23239,7 @@ class GameRoom:
         if m.get("flechas", 0) <= 0:
             if not m.get("sem_municao_avisado"):
                 m["sem_municao_avisado"] = True
-                await self.gm_say(f"🏹 **{m['name']}** ficou sem flechas e recua!")
+                await self.gm_say(T("narracao.ficou_sem_flechas_e_recua", monstro=m['name']))
             if targets:
                 alvo = min(targets, key=lambda t: max(abs(m["pos"][0] - t["obj"]["pos"][0]),
                                                       abs(m["pos"][1] - t["obj"]["pos"][1])))["obj"]
@@ -23349,7 +23349,7 @@ class GameRoom:
 
         pode_magia = not sofreu and not self._em_silencio(m)
         if sofreu:
-            await self.gm_say(f"🤕 **{m['name']}** sofreu dano e perde a concentração — sem magia neste turno!")
+            await self.gm_say(T("narracao.sofreu_dano_e_perde_a_concentracao_sem_m", monstro=m['name']))
 
         if pode_magia and await self._xama_tentar_magia(m, targets):
             return   # gastou a aÃ§Ã£o com a magia
@@ -23397,7 +23397,7 @@ class GameRoom:
         hp, hpmax = self._hp_alvo(target)
         if hp < hpmax * 0.5:
             bite["atk_bonus"] = bite.get("atk_bonus", 0) + 1
-            await self.gm_say(f"🦎 **{m['name']}** fareja a presa ferida — **+1** nas mordidas!")
+            await self.gm_say(T("narracao.fareja_a_presa_ferida_1_nas_mordidas", monstro=m['name']))
         acertos = 0
         for _ in range(2):
             if self._hp_alvo(target)[0] <= 0:
@@ -23408,7 +23408,7 @@ class GameRoom:
         if acertos >= 2 and self._hp_alvo(target)[0] > 0:
             garra = m.get("garra_attack")
             if garra:
-                await self.gm_say(f"🦎 **Combo Devorador**! **{m['name']}** crava 2 garras!")
+                await self.gm_say(T("narracao.combo_devorador_crava_2_garras", monstro=m['name']))
                 for _ in range(2):
                     if self._hp_alvo(target)[0] <= 0:
                         break
@@ -23439,9 +23439,9 @@ class GameRoom:
             dc = inf.get("dc", 10) if inf else 10
             ok, d20, sb, tot = self._testar_save(target, "fortitude", dc, fonte=m)
             if ok:
-                await self.gm_say(f"🦠 **{target['name']}** resiste à infecção (Fortitude {tot} vs CD {dc}).")
+                await self.gm_say(T("narracao.resiste_a_infeccao_fortitude_vs_cd", target=target['name'], tot=tot, dc=dc))
             else:
-                await self.gm_say(f"🦠 **{target['name']}** é infectado! (Fortitude {tot} vs CD {dc})")
+                await self.gm_say(T("narracao.e_infectado_fortitude_vs_cd", target=target['name'], tot=tot, dc=dc))
                 await self._aplicar_doenca(target, "leve")   # zumbis sÃ³ aplicam 1 sintoma leve
 
     # â”€â”€ IA Kobold Lanceiro â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -23491,7 +23491,7 @@ class GameRoom:
         if m.get("virotes", 0) <= 0:
             if not m.get("sem_municao_avisado"):
                 m["sem_municao_avisado"] = True
-                await self.gm_say(f"🏹 **{m['name']}** ficou sem virotes e tenta fugir!")
+                await self.gm_say(T("narracao.ficou_sem_virotes_e_tenta_fugir", monstro=m['name']))
             # Fuga: afasta-se do inimigo mais prÃ³ximo
             if not targets:
                 return
@@ -23883,7 +23883,7 @@ class GameRoom:
         """O ocultamento dura até o próximo turno do monstro. Chamado no início
         do turno pelos dois caminhos: a IA do bugbear e a janela do Manual."""
         if m.pop("oculto_sombras", False):
-            await self.gm_say(f"👁️ **{m['name']}** reaparece das sombras.")
+            await self.gm_say(T("narracao.reaparece_das_sombras", monstro=m['name']))
 
     async def _upkeep_inicio_turno_manual(self, m):
         """Upkeep de início de turno que o monstro em Manual pularia por não
@@ -23950,7 +23950,7 @@ class GameRoom:
         if (perto and not self._em_escuridao(m)
                 and m.get("ability_uses", {}).get("manto_escuridao", 0) > 0):
             m["ability_uses"]["manto_escuridao"] -= 1
-            await self.gm_say(f"🌑 **{m['name']}** conjura **Manto de Escuridão**!")
+            await self.gm_say(T("narracao.conjura_manto_de_escuridao", monstro=m['name']))
             # Alcance/duraÃ§Ã£o idÃªnticos Ã  magia (GRIMORIO), conjurada como nÃ­vel 3.
             magia = GRIMORIO.get("manto_escuridao", {})
             raio  = magia.get("area_raio", 3)
@@ -23964,7 +23964,7 @@ class GameRoom:
             await self._monster_execute_attacks(m, target_obj)
             if self._cacador_trevas_ca_bonus(m) and self._alvo_vivo(target_obj):
                 garra = next((a for a in m["attacks"] if a["name"] == "Garras"), m["attacks"][0])
-                await self.gm_say("🌑 **Caçador das Trevas** — ataque extra das garras!")
+                await self.gm_say(T("narracao.cacador_das_trevas_ataque_extra_das_garr"))
                 await self._execute_one_monster_attack(m, garra, target_obj)
 
     async def _ai_ogro(self, m, targets):
@@ -24003,7 +24003,7 @@ class GameRoom:
 
         if usar_gb:                                                 # Golpe Brutal (finalizar)
             await self._ativar_golpe_brutal(m)
-            await self.gm_say(f"💥 **{m['name']}** desfere um **Golpe Brutal** para finalizar (+2 dano)!")
+            await self.gm_say(T("narracao.desfere_um_golpe_brutal_para_finalizar_2", monstro=m['name']))
             hit = await self._execute_one_monster_attack(m, atk, target_obj)
             m.pop("_golpe_brutal_ativo", None)
         elif usar_fd:                                              # ForÃ§a Descomunal (atordoar)
@@ -24011,7 +24011,7 @@ class GameRoom:
             cooldown = _monster_int(forca.get("cooldown_turns", 4), 4, 0, 20)
             dc = _monster_int(forca.get("dc", 10), 10, 1, 40)
             cds["forca_descomunal"] = cooldown
-            await self.gm_say(f"💪 **{m['name']}** ataca com **Força Descomunal**!")
+            await self.gm_say(T("narracao.ataca_com_forca_descomunal", monstro=m['name']))
             hit = await self._execute_one_monster_attack(m, atk, target_obj)
             if hit and self._alvo_vivo(target_obj):
                 passou, d20, sb, stot = self._testar_save(target, "fortitude", dc, fonte=m)
@@ -24020,21 +24020,21 @@ class GameRoom:
                                        "label": f"{m['name']} — Força Descomunal", "hit": not passou})
                 tgt_name = target["name"] if target_obj["kind"] == "player" else target["nome"]
                 if passou:
-                    await self.gm_say(f"💪 **{tgt_name}** aguenta o impacto (Fortitude d20({d20}){sbs}={stot} vs CD {dc}).")
+                    await self.gm_say(T("narracao.aguenta_o_impacto_fortitude_d20_vs_cd", tgt_name=tgt_name, d20=d20, sbs=sbs, stot=stot, dc=dc))
                 else:
                     target["perde_turno"] = True
                     await self._enviar_resultado_atordoamento(
                         target, "A Força Descomunal do ogro o deixa atordoado.", "1 rodada",
                         ["Você perde a próxima rodada", "Não pode mover, atacar ou usar habilidades durante esse turno"],
                     )
-                    await self.gm_say(f"💫 **{tgt_name}** fica **atordoado** (Fortitude {stot} vs CD {dc}) e perde a próxima rodada!")
+                    await self.gm_say(T("narracao.fica_atordoado_fortitude_vs_cd_e_perde_a", tgt_name=tgt_name, stot=stot, dc=dc))
         else:                                                      # ataque normal
             hit = await self._execute_one_monster_attack(m, atk, target_obj)
 
         # Lento e PrevisÃ­vel: errou o ataque â†’ -2 CA atÃ© o prÃ³ximo turno.
         if not hit and self._tem_habilidade(m, "lento_previsivel"):
             m["lento_previsivel_ativo"] = True
-            await self.gm_say(f"🐢 **{m['name']}** erra e fica desequilibrado — **-2 CA** até o próximo turno!")
+            await self.gm_say(T("narracao.erra_e_fica_desequilibrado_2_ca_ate_o_pr", monstro=m['name']))
 
     def _grotao_alvos_cauda(self, m, targets):
         """Inimigos vivos adjacentes à metade traseira (arco de 180°)."""
@@ -24096,7 +24096,7 @@ class GameRoom:
         atk = int(ability.get("atk_bonus", 5) or 5)
         dano_expr = ability.get("damage", "1d8+3")
         cd = int(ability.get("dc", 12) or 12)
-        await self.gm_say(f"🦂 **{m['name']}** varre a cauda pela retaguarda!")
+        await self.gm_say(T("narracao.varre_a_cauda_pela_retaguarda", monstro=m['name']))
         for tobj in alvos:
             vitima = tobj["obj"]
             hit, roll, total, crit = d20_attack(atk, self._player_effective_ac(vitima))
@@ -24168,10 +24168,10 @@ class GameRoom:
         dc   = 8 + ability.get("circulo", 3) + mod(m.get("int_", 10))
         nd   = self._nd_criatura(alvo)
         m["usou_dominar"] = True   # pergaminho consumido (nÃ£o dropa no loot)
-        await self.gm_say(f"🧙 **{m['name']}** usa o **Pergaminho de Dominar Morto-Vivo** em **{alvo['nome']}**!")
+        await self.gm_say(T("narracao.usa_o_pergaminho_de_dominar_morto_vivo_e", monstro=m['name'], alvo_nome=alvo['nome']))
         save_ok, *_ = await self._save_mostrado(alvo, "vontade", dc, extra_mod=nd)
         if save_ok:
-            await self.gm_say(f"💀 **{alvo['nome']}** resiste (Vontade vs CD {dc}, ND +{nd}).")
+            await self.gm_say(T("narracao.resiste_vontade_vs_cd_nd", alvo_nome=alvo['nome'], dc=dc, nd=nd))
         else:
             alvo["dominado_por_monstro"] = m["id"]
             alvo["dono_original"]        = alvo.get("owner")
@@ -24230,10 +24230,10 @@ class GameRoom:
                        or any(w.get("type") == "concentracao_fragil" for w in m.get("weaknesses", []))):
             ok, d20, sb, tot = self._testar_save(m, "vontade", 10)
             if ok:
-                await self.gm_say(f"🧙 **{m['name']}** mantém a concentração (Vontade {tot} vs CD 10).")
+                await self.gm_say(T("narracao.mantem_a_concentracao_vontade_vs_cd_10", monstro=m['name'], tot=tot))
             else:
                 pode_magia = False
-                await self.gm_say(f"💥 **{m['name']}** perde a concentração — sem magia neste turno! (Vontade {tot} vs CD 10)")
+                await self.gm_say(T("narracao.perde_a_concentracao_sem_magia_neste_tur", monstro=m['name'], tot=tot))
 
         heroes = [p for p in self.players.values() if self._ativo(p)]
         uses   = m.get("ability_uses", {})
@@ -24353,7 +24353,7 @@ class GameRoom:
                 await self._soltar_agarrado(m)
         # Petrificado: perde o turno (não move nem ataca).
         if m.get("petrificado"):
-            await self.gm_say(f"🗿 **{m['name']}** está petrificado e perde o turno!")
+            await self.gm_say(T("narracao.esta_petrificado_e_perde_o_turno", monstro=m['name']))
             return False
         # Paralisado (Raio Congelante): novo Fortitude; se falhar, perde o turno.
         if m.get("paralisado"):
@@ -24364,7 +24364,7 @@ class GameRoom:
                 m.pop("perde_turno", None)
             else:
                 m["perde_turno"] = False
-                await self.gm_say(f"🕸️ **{m['name']}** está preso (rede) e perde o turno!")
+                await self.gm_say(T("narracao.esta_preso_rede_e_perde_o_turno", monstro=m['name']))
                 return False
         # Enredado (Rede): gasta o turno tentando escapar. (Enquanto preso, o
         # tick de mov_reduzido/Cola fica em pausa — o monstro nem se move.)
@@ -24442,10 +24442,10 @@ class GameRoom:
             if self._cardinal_adjacent(m["pos"], target["pos"]):
                 if self.smoke.get(m["id"]):
                     self.smoke.pop(m["id"])
-                    await self.gm_say(f"💨 **{m['name']}** tenta atacar **{tgt_name}** mas a fumaça confunde!")
+                    await self.gm_say(T("narracao.tenta_atacar_mas_a_fumaca_confunde", monstro=m['name'], tgt_name=tgt_name))
                     continue
                 if is_player and self.immune.get(target["id"], 0) > 0:
-                    await self.gm_say(f"🛡️ **{m['name']}** ataca **{tgt_name}** mas o Escudo Divino bloqueia!")
+                    await self.gm_say(T("narracao.ataca_mas_o_escudo_divino_bloqueia", monstro=m['name'], tgt_name=tgt_name))
                     continue
 
                 if is_player:
@@ -24497,7 +24497,7 @@ class GameRoom:
                 if target.get("dormindo"):
                     hit, crit = True, True
                     target.pop("dormindo", None); target.pop("dormindo_rodadas", None)
-                    await self.gm_say(f"🌙 **{tgt_name}** é atacado dormindo — golpe **CRÍTICO** e desperta!")
+                    await self.gm_say(T("narracao.e_atacado_dormindo_golpe_critico_e_despe_2", tgt_name=tgt_name))
                 if hit:
                     raw_dmg = roll_dice(m["damage"])
                     if crit: raw_dmg *= 2
@@ -24625,7 +24625,7 @@ class GameRoom:
                    if ab["id"] == "resistencia_morta"), None)
         if rm:
             if m.get("_dano_sagrado_recente"):
-                await self.gm_say(f"✨ **{m['name']}** é **destruído pela luz sagrada** — não há retorno!")
+                await self.gm_say(T("narracao.e_destruido_pela_luz_sagrada_nao_ha_reto", monstro=m['name']))
             else:
                 # `hp` negativo é o dano que excedeu o 0 HP. A metade usa teto:
                 # 1 ponto excedente já adiciona 1 à CD, 3 adicionam 2, e assim por diante.
@@ -24637,7 +24637,7 @@ class GameRoom:
                     await self.gm_say(
                         f"🧟 **{m['name']}** recusa-se a tombar! (Fortitude {tot} vs CD {cd}) — fica com **1 HP**.")
                     return
-                await self.gm_say(f"🧟 **{m['name']}** finalmente tomba (Fortitude {tot} vs CD {cd}).")
+                await self.gm_say(T("narracao.finalmente_tomba_fortitude_vs_cd", monstro=m['name'], tot=tot, cd=cd))
 
         await self._processar_fim_de_combate()
 
@@ -24654,7 +24654,7 @@ class GameRoom:
             centro = m.get("pos", [0, 0])
             await self.broadcast({"type": "dice_roll", "die": "d" + dano_expr.split("d", 1)[-1].split("+", 1)[0], "value": dano_bruto,
                                   "label": f"💥 Explosão Final ({dano_expr})"})
-            await self.gm_say(f"💥 **{m['name']}** explode em chamas! (Reflexos CD {cd}; raio {raio})")
+            await self.gm_say(T("narracao.explode_em_chamas_reflexos_cd_raio", monstro=m['name'], cd=cd, raio=raio))
             for p in list(self.players.values()):
                 if not p.get("alive") or max(abs(p["pos"][0] - centro[0]), abs(p["pos"][1] - centro[1])) > raio:
                     continue
@@ -24687,13 +24687,13 @@ class GameRoom:
                for z in self.zonas_especiais):
             self.zonas_especiais = [z for z in self.zonas_especiais
                                     if not (z.get("tipo") == "silencio" and z.get("caster") == m["id"])]
-            await self.gm_say(f"🔇 O Silêncio de **{m['name']}** se dissipa com sua morte.")
+            await self.gm_say(T("narracao.o_silencio_de_se_dissipa_com_sua_morte", monstro=m['name']))
 
         # Libera quem este monstro mantinha agarrado (heróis e criaturas)
         for c in list(self.players.values()) + list(self.monsters.values()):
             if c is not m and c.get("preso_por") == m["id"]:
                 await self._soltar_agarrado(c)
-                await self.gm_say(f"🔓 **{c['name']}** se soltou — o predador foi abatido!")
+                await self.gm_say(T("narracao.se_soltou_o_predador_foi_abatido", c=c['name']))
 
         # NÃ­vel para Animar Mortos: CR fracionÃ¡rio â‰¤ 0.5 â†’ 1 slot; CR inteiro = round(CR)
         cr = m.get("cr", m.get("tier", 1))
@@ -24743,7 +24743,7 @@ class GameRoom:
 
         # â”€â”€ Loot especial: kobolds â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         if m.get("type", "").startswith("kobold_"):
-            await self.gm_say(f"💀 **{m['name']}** foi derrotado! +{share_xp} XP!")
+            await self.gm_say(T("narracao.foi_derrotado_xp", monstro=m['name'], share_xp=share_xp))
             await self._kobold_loot(m)
             if m.get("boss"):
                 await self.end_game(victory=True)
@@ -24751,7 +24751,7 @@ class GameRoom:
 
         # â”€â”€ Loot especial: necromante â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         if m.get("type") == "necromante":
-            await self.gm_say(f"💀 **{m['name']}** foi derrotado! +{share_xp} XP!")
+            await self.gm_say(T("narracao.foi_derrotado_xp", monstro=m['name'], share_xp=share_xp))
             await self._necromante_loot(m)
             return
 
@@ -24860,7 +24860,7 @@ class GameRoom:
             if loot_items or gold > 0:
                 self._spawn_chest(list(m["pos"]), gold, loot_items)
                 chest_msg = " Um **baú de saque** apareceu!"
-            await self.gm_say(f"💀 **{m['name']}** foi derrotado! +{share_xp} XP!{chest_msg}")
+            await self.gm_say(T("narracao.foi_derrotado_xp_2", monstro=m['name'], share_xp=share_xp, chest_msg=chest_msg))
         else:
             # Sistema legado: baÃº sÃ³ quando a sala toda Ã© limpa
             gold = m.get("gold", 0)
@@ -24874,13 +24874,13 @@ class GameRoom:
                         loot_items.append(deepcopy(random.choice(CHEST_ITEMS)))
                     if loot_items or gold > 0:
                         self._spawn_chest(list(m["pos"]), gold, loot_items)
-                        await self.gm_say(f"💀 **{m['name']}** foi derrotado! +{share_xp} XP! Um **baú de saque** apareceu!")
+                        await self.gm_say(T("narracao.foi_derrotado_xp_um_bau_de_saque_aparece", monstro=m['name'], share_xp=share_xp))
                     else:
-                        await self.gm_say(f"💀 **{m['name']}** foi derrotado! +{share_xp} XP!")
+                        await self.gm_say(T("narracao.foi_derrotado_xp", monstro=m['name'], share_xp=share_xp))
                 else:
-                    await self.gm_say(f"💀 **{m['name']}** foi derrotado! +{share_xp} XP!")
+                    await self.gm_say(T("narracao.foi_derrotado_xp", monstro=m['name'], share_xp=share_xp))
             else:
-                await self.gm_say(f"💀 **{m['name']}** foi derrotado! +{share_xp} XP!")
+                await self.gm_say(T("narracao.foi_derrotado_xp", monstro=m['name'], share_xp=share_xp))
 
         if m.get("boss"):
             await self.end_game(victory=True)
@@ -24894,14 +24894,14 @@ class GameRoom:
             p["fome"] = max(0, p.get("fome", 0) - 3)
             p["sede"] = max(0, p.get("sede", 0) - 3)
             p.pop("regen_pool", None); p.pop("regen_ressurge", None)
-            await self.gm_say(f"🌿 **{p['name']}** seria derrotado, mas a **Regeneração** o reergue com 1 HP! (-3 fome/sede)")
+            await self.gm_say(T("narracao.seria_derrotado_mas_a_regeneracao_o_reer", heroi=p['name']))
             return
         # Instinto de SobrevivÃªncia: tÃ©cnica genÃ©rica de recarga longa â€” sobrevive com 1 HP.
         if (tem_tecnica_equipada(p, "tecnica_instinto_sobrevivencia")
                 and self.tecnica_restante(p, "tecnica_instinto_sobrevivencia") == 0):
             p["hp"] = 1
             p["technique_cooldowns"]["tecnica_instinto_sobrevivencia"] = self.round_num + 10
-            await self.gm_say(f"🍀 **{p['name']}** recorre ao **Instinto de Sobrevivência** e resiste com 1 HP!")
+            await self.gm_say(T("narracao.recorre_ao_instinto_de_sobrevivencia_e_r", heroi=p['name']))
             return
         # Ãšltimo EsforÃ§o: tÃ©cnica genÃ©rica de recarga longa â€” antes de cair de vez,
         # abre uma sub-fase de 2 mini-turnos com 1 HP. NÃƒO retorna cedo: quando a
@@ -24932,7 +24932,7 @@ class GameRoom:
                 "Um aliado pode trazê-lo de volta com Ressurreição",
             ],
         })
-        await self.gm_say(f"💔 **{p['name']}** foi derrotado! Os companheiros devem continuar...")
+        await self.gm_say(T("narracao.foi_derrotado_os_companheiros_devem_cont", heroi=p['name']))
 
         # Bardo incapacitado: a CanÃ§Ã£o Heroica cessa e os aliados perdem os buffs.
         if p.get("cancao_ativa"):
@@ -24952,12 +24952,12 @@ class GameRoom:
             p["guerreiro_luz_ativo"] = False
             p["guerreiro_luz_bonus"] = {}
             p["guerreiro_luz_custo"] = {"fome": 0, "sede": 0}
-            await self.gm_say(f"💫 **{p['name']}** é incapacitado — todas as habilidades sagradas se desfazem.")
+            await self.gm_say(T("narracao.e_incapacitado_todas_as_habilidades_sagr", heroi=p['name']))
 
         # Se o mestre morre, seus animados viram pÃ³ imediatamente.
         if p.get("animados"):
             p["animados"] = []
-            await self.gm_say("💨 Sem seu mestre, os servos mortos-vivos desfazem-se em pó!")
+            await self.gm_say(T("narracao.sem_seu_mestre_os_servos_mortos_vivos_de"))
 
         if not any(p["alive"] for p in self.players.values()):
             await self.end_game(victory=False)
@@ -25003,7 +25003,7 @@ class GameRoom:
             p["fome"] = min(p["fome_max"], p["fome"] + regra["fome"])
             p["sede"] = min(p["sede_max"], p["sede"] + regra["sede"])
             _garantir_slots_guilda(p)
-            await self.gm_say(f"⭐ **{p['name']}** subiu para o nível **{p['level']}**! +{ganho_hp} PV e +1 em Ataque. Ganhos de resistência e sobrevivência aplicados conforme a classe.")
+            await self.gm_say(T("narracao.subiu_para_o_nivel_pv_e_1_em_ataque_ganh", heroi=p['name'], p_level=p['level'], ganho_hp=ganho_hp))
             if p.get("class_id") in ("mage", "cleric"):
                 # Slot novo do nÃ­vel jÃ¡ entra cheio (slots_max_para usa o novo level).
                 circ = NIVEL_NOVA_MAGIA.get(p["level"])
@@ -25151,7 +25151,7 @@ class GameRoom:
                 pos = self._free_tile_near(base)
                 self._spawn_chest(pos, 0, loot)
             self.mission_complete_pending = True
-            await self.gm_say("🏁 Objetivo principal cumprido! Recolham a recompensa e cliquem em **Encerrar missão** quando estiverem prontos.")
+            await self.gm_say(T("narracao.objetivo_principal_cumprido_recolham_a_r"))
 
     async def handle_encerrar_missao(self, pid):
         """Encerramento manual da fase apos o objetivo principal cumprido.
@@ -25206,7 +25206,7 @@ class GameRoom:
             self.campaign_phase += 1
             self.dungeon_generated = False
             self._objetivo_concluido = False
-            await self.gm_say("🏆 Fase concluída! Retornem à cidade antes da próxima masmorra.")
+            await self.gm_say(T("narracao.fase_concluida_retornem_a_cidade_antes_d"))
             await self._voltar_para_cidade()
         else:
             story = None
@@ -25228,7 +25228,7 @@ class GameRoom:
         ok, motivo = validar_dungeon(defn) if defn else (False, "masmorra não encontrada")
         if not ok:
             # Etapa quebrada não pode prender o grupo na masmorra concluída.
-            await self.gm_say(f"⚠️ A próxima etapa está indisponível ({motivo}). O grupo retorna à cidade.")
+            await self.gm_say(T("narracao.a_proxima_etapa_esta_indisponivel_o_grup", motivo=motivo))
             self.world_adventure_id = None; self.world_adventure_index = None
             self.dungeon_generated = False; self._objetivo_concluido = False
             await self._voltar_para_cidade()
@@ -25241,7 +25241,7 @@ class GameRoom:
         self.dungeon_generated = False
         self._objetivo_concluido = False
         self._emendando = True    # suprime os resets "por masmorra nova" (ver enter_dungeon)
-        await self.gm_say(f"⛓️ Sem descanso: o grupo avança direto para a etapa {indice + 1}/{len(stages)} de **{adventure.get('nome', 'aventura')}**.")
+        await self.gm_say(T("narracao.sem_descanso_o_grupo_avanca_direto_para", indice_1=indice + 1, len_stages=len(stages), adventure_get_nome_avent=adventure.get('nome', 'aventura')))
         try:
             await self.enter_dungeon(self.host_pid, from_world_adventure=True)
         finally:
@@ -25261,7 +25261,7 @@ class GameRoom:
         self.prisoner["freed"] = True
         self.prisoner["rescuer_pid"] = pid
         p["action_done"] = True
-        await self.gm_say(f"🔓 **{p['name']}** libertou o prisioneiro!")
+        await self.gm_say(T("narracao.libertou_o_prisioneiro", heroi=p['name']))
         await self.push_state()
 
     async def handle_mover_prisioneiro(self, pid, dx, dy):
@@ -25299,7 +25299,7 @@ class GameRoom:
             return
         pr["alive"] = False
         self.rescue_failed = True
-        await self.gm_say("☠️ O prisioneiro foi morto! O resgate falhou.")
+        await self.gm_say(T("narracao.o_prisioneiro_foi_morto_o_resgate_falhou"))
 
     async def _processar_prisioneiro_turno(self):
         """Prisioneiro libertado: cada monstro adjacente o fere. O MOVIMENTO é
@@ -25318,11 +25318,11 @@ class GameRoom:
             if max(abs(m["pos"][0] - pr["pos"][0]), abs(m["pos"][1] - pr["pos"][1])) <= 1:
                 hit, _roll, _total, _crit = d20_attack(m.get("atk_bonus", 0), pr.get("ac", PRIS_AC))
                 if not hit:
-                    await self.gm_say("🛡️ O prisioneiro esquiva de um monstro!")
+                    await self.gm_say(T("narracao.o_prisioneiro_esquiva_de_um_monstro"))
                     continue
                 dano = roll_dice(m.get("damage", "1d4"))
                 pr["hp"] -= dano
-                await self.gm_say(f"⚔️ Um monstro fere o prisioneiro ({dano})!")
+                await self.gm_say(T("narracao.um_monstro_fere_o_prisioneiro", dano=dano))
                 if pr["hp"] <= 0:
                     await self._prisioneiro_morre()
                     break
@@ -26056,7 +26056,7 @@ async def handler(ws):
                         else:
                             await ws.send(json.dumps({"type": "enter_dungeon"}))
                             await room.push_state()
-                        await room.gm_say(f"🔌 O mestre **{name}** reconectou-se.")
+                        await room.gm_say(T("narracao.o_mestre_reconectou_se", name=name))
                         continue
                     alvo = next((p for p in alvo_room.players.values()
                                  if p["name"] == name), None)
@@ -26077,7 +26077,7 @@ async def handler(ws):
                     elif room.phase == "city":
                         await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
                         await room.broadcast_city_state()
-                        await room.gm_say(f"🔌 **{name}** reconectou-se à aventura.")
+                        await room.gm_say(T("narracao.reconectou_se_a_aventura", name=name))
                     else:   # playing â€” o personagem REENTRA pela escada de entrada
                         if room.start_mode == "hero_spawns":
                             start = room._start_point_for_player(alvo)
@@ -26093,7 +26093,7 @@ async def handler(ws):
                         await ws.send(json.dumps({"type": "enter_dungeon"}))
                         room._iniciar_timer_turno()   # reativa o timer caso estivesse parado
                         await room.push_state()
-                        await room.gm_say(f"🔌 **{name}** reconectou-se e voltou à masmorra!")
+                        await room.gm_say(T("narracao.reconectou_se_e_voltou_a_masmorra", name=name))
 
                 elif t == "select_class":
                     if room: await room.select_class(pid, _key(msg.get("class_id")))

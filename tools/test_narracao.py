@@ -58,6 +58,31 @@ def _rodar_verificacoes():
     if sem_uso:
         print("     sem uso:", ", ".join(sem_uso[:8]))
 
+    print("\n[5] Uma narração migrada chega em dois idiomas, pelo broadcast real")
+    import asyncio
+
+    class RecWS:
+        def __init__(self): self.sent = []
+        async def send(self, data): self.sent.append(data)
+
+    chave = next((k for k, v in S.LANG_STRINGS.items()
+                  if k.startswith("narracao.") and v.get("en")), None)
+    if not chave:
+        check("há ao menos uma narração traduzida para provar", False)
+    else:
+        sala = S.GameRoom("TESTE_NARR")
+        ws_pt, ws_en = RecWS(), RecWS()
+        sala.connections = {"n_pt": ws_pt, "n_en": ws_en}
+        S.LANG_BY_PID["n_pt"] = "pt"
+        S.LANG_BY_PID["n_en"] = "en"
+        asyncio.run(sala.gm_say(S.T(chave)))
+        pt = json.loads(ws_pt.sent[-1])["text"]
+        en = json.loads(ws_en.sent[-1])["text"]
+        check("sai em português para quem está em pt", pt == S.LANG_STRINGS[chave]["pt"])
+        check("sai em inglês para quem está em en", en == S.LANG_STRINGS[chave]["en"])
+        for pid in ("n_pt", "n_en"):
+            S.LANG_BY_PID.pop(pid, None)
+
 
 if __name__ == "__main__":
     print("=" * 62); print("  TESTE — Narração do servidor (etapa 4b-i)"); print("=" * 62)
