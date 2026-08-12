@@ -767,7 +767,8 @@ window.EDITOR_DUNGEONS = [
       "id": "Introducao",
       "name": "introducao",
       "ambiente": "masmorra",
-      "saida_permitida": true,
+      "saida_permitida": false,
+      "start_mode": "hero_spawns",
       "grid": {
         "w": 24,
         "h": 19
@@ -879,7 +880,7 @@ window.EDITOR_DUNGEONS = [
         ],
         [
           0,
-          0,
+          1,
           0,
           0,
           0,
@@ -926,7 +927,7 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
-          0,
+          1,
           0
         ],
         [
@@ -1291,13 +1292,16 @@ window.EDITOR_DUNGEONS = [
           "w": 2,
           "h": 2,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               3,
               1
             ]
-          ]
+          ],
+          "door_orientations": {
+            "3,1": 1
+          }
         },
         {
           "id": 2,
@@ -1306,7 +1310,7 @@ window.EDITOR_DUNGEONS = [
           "w": 2,
           "h": 2,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               8,
@@ -1321,7 +1325,7 @@ window.EDITOR_DUNGEONS = [
           "w": 2,
           "h": 2,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               20,
@@ -1336,7 +1340,7 @@ window.EDITOR_DUNGEONS = [
           "w": 2,
           "h": 2,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": []
         },
         {
@@ -1346,7 +1350,7 @@ window.EDITOR_DUNGEONS = [
           "w": 2,
           "h": 2,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               20,
@@ -1360,8 +1364,8 @@ window.EDITOR_DUNGEONS = [
           "y": 7,
           "w": 5,
           "h": 3,
-          "role": "monster",
-          "locked": true,
+          "role": "boss",
+          "locked": false,
           "doors": [
             [
               8,
@@ -1380,7 +1384,7 @@ window.EDITOR_DUNGEONS = [
           "w": 2,
           "h": 2,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               9,
@@ -1395,7 +1399,7 @@ window.EDITOR_DUNGEONS = [
           "w": 2,
           "h": 2,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               19,
@@ -1410,7 +1414,7 @@ window.EDITOR_DUNGEONS = [
           "w": 4,
           "h": 3,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               15,
@@ -1425,7 +1429,7 @@ window.EDITOR_DUNGEONS = [
           "w": 2,
           "h": 2,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               2,
@@ -1440,7 +1444,7 @@ window.EDITOR_DUNGEONS = [
           "w": 2,
           "h": 2,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": []
         },
         {
@@ -1450,7 +1454,7 @@ window.EDITOR_DUNGEONS = [
           "w": 2,
           "h": 2,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": []
         },
         {
@@ -1460,7 +1464,7 @@ window.EDITOR_DUNGEONS = [
           "w": 2,
           "h": 3,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               17,
@@ -1483,7 +1487,7 @@ window.EDITOR_DUNGEONS = [
           "w": 3,
           "h": 3,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               6,
@@ -1498,21 +1502,313 @@ window.EDITOR_DUNGEONS = [
           "w": 3,
           "h": 3,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               16,
               9
             ]
           ]
+        },
+        {
+          "id": 19,
+          "x": 6,
+          "y": 1,
+          "w": 2,
+          "h": 2,
+          "role": "monster",
+          "locked": false,
+          "doors": []
+        },
+        {
+          "id": 20,
+          "x": 12,
+          "y": 1,
+          "w": 4,
+          "h": 2,
+          "role": "monster",
+          "locked": false,
+          "doors": []
         }
       ],
-      "entrance": {
-        "x": 10,
-        "y": 8
-      },
+      "entrance": null,
+      "hero_spawns": [
+        {
+          "class_id": "warrior",
+          "pos": [
+            1,
+            8
+          ],
+          "room_id": null
+        },
+        {
+          "class_id": "rogue",
+          "pos": [
+            1,
+            16
+          ],
+          "room_id": 0
+        },
+        {
+          "class_id": "cleric",
+          "pos": [
+            22,
+            17
+          ],
+          "room_id": 4
+        },
+        {
+          "class_id": "paladin",
+          "pos": [
+            22,
+            1
+          ],
+          "room_id": 3
+        },
+        {
+          "class_id": "mage",
+          "pos": [
+            1,
+            2
+          ],
+          "room_id": 1
+        },
+        {
+          "class_id": "bard",
+          "pos": [
+            22,
+            9
+          ],
+          "room_id": 5
+        }
+      ],
       "exit": null,
-      "monsters": [],
+      "monsters": [
+        {
+          "type": "esqueleto_animal",
+          "pos": [
+            18,
+            4
+          ],
+          "room_id": 15,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "skeleton",
+          "pos": [
+            18,
+            6
+          ],
+          "room_id": 13,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "kobold_besteiro",
+          "pos": [
+            7,
+            15
+          ],
+          "room_id": 8,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "escorpiao_pequeno",
+          "pos": [
+            7,
+            1
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "cobra_venenosa",
+          "pos": [
+            4,
+            5
+          ],
+          "room_id": 11,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "cobra_constritora",
+          "pos": [
+            10,
+            5
+          ],
+          "room_id": 2,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "aranha_sombria",
+          "pos": [
+            14,
+            1
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "goblin_xama",
+          "pos": [
+            16,
+            12
+          ],
+          "room_id": 18,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "goblin_arqueiro",
+          "pos": [
+            18,
+            12
+          ],
+          "room_id": 18,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "goblin_combatente",
+          "pos": [
+            18,
+            10
+          ],
+          "room_id": 18,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "necromante",
+          "pos": [
+            4,
+            9
+          ],
+          "room_id": 17,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "orc_guerreiro",
+          "pos": [
+            6,
+            9
+          ],
+          "room_id": 17,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "necromante",
+          "pos": [
+            4,
+            11
+          ],
+          "room_id": 17,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "elemental_pedra",
+          "pos": [
+            11,
+            8
+          ],
+          "room_id": 6,
+          "boss": true,
+          "target": true,
+          "vscale": [
+            1.2,
+            1.2
+          ]
+        },
+        {
+          "type": "rato_gigante",
+          "pos": [
+            17,
+            15
+          ],
+          "room_id": 9,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "goblin",
+          "pos": [
+            7,
+            15
+          ],
+          "room_id": 8,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "goblin",
+          "pos": [
+            18,
+            10
+          ],
+          "room_id": 18,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "goblin",
+          "pos": [
+            18,
+            12
+          ],
+          "room_id": 18,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "goblin",
+          "pos": [
+            7,
+            1
+          ],
+          "room_id": 19,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "zumbi_infectado",
+          "pos": [
+            15,
+            6
+          ],
+          "room_id": 13,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "aranha_sombria",
+          "pos": [
+            11,
+            13
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "escorpiao_de_pedra_customizado",
+          "pos": [
+            13,
+            13
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false
+        }
+      ],
       "chests": [
         {
           "pos": [
@@ -1529,7 +1825,49 @@ window.EDITOR_DUNGEONS = [
             17
           ],
           "gold": 10,
-          "items": [],
+          "items": [
+            {
+              "id": "agua_benta"
+            },
+            {
+              "id": "agua_benta"
+            },
+            {
+              "id": "escudo_p"
+            }
+          ],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            1,
+            4
+          ],
+          "gold": 10,
+          "items": [
+            {
+              "id": "hand_crossbow"
+            }
+          ],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            22,
+            5
+          ],
+          "gold": 10,
+          "items": [
+            {
+              "id": "instrumento_harpa_rustico"
+            },
+            {
+              "id": "escudo_p"
+            },
+            {
+              "id": "agua_benta"
+            }
+          ],
           "key_objective": false
         }
       ],
@@ -1595,19 +1933,49 @@ window.EDITOR_DUNGEONS = [
           ],
           "loot": null,
           "key_objective": true
+        },
+        {
+          "id": "decor_1",
+          "type": "brasao_leao",
+          "pos": [
+            21,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "trap": {
+            "tipo": "armadilha_teletransporte",
+            "saida": [
+              21,
+              8
+            ]
+          },
+          "image": "brasao_leao.png"
+        },
+        {
+          "id": "decor_2",
+          "type": "brasao_leao",
+          "pos": [
+            0,
+            9
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "trap": {
+            "tipo": "buraco"
+          },
+          "image": "brasao_leao.png"
         }
       ],
       "secret_passages": [
-        {
-          "id": "passage_0",
-          "type": "illusion",
-          "pos": [
-            1,
-            14
-          ],
-          "key_decor_ids": [],
-          "keys_mode": "any"
-        },
         {
           "id": "passage_1",
           "type": "illusion",
@@ -1719,26 +2087,6 @@ window.EDITOR_DUNGEONS = [
           "keys_mode": "any"
         },
         {
-          "id": "passage_12",
-          "type": "illusion",
-          "pos": [
-            1,
-            13
-          ],
-          "key_decor_ids": [],
-          "keys_mode": "any"
-        },
-        {
-          "id": "passage_13",
-          "type": "illusion",
-          "pos": [
-            1,
-            12
-          ],
-          "key_decor_ids": [],
-          "keys_mode": "any"
-        },
-        {
           "id": "passage_14",
           "type": "mechanism",
           "pos": [
@@ -1761,6 +2109,106 @@ window.EDITOR_DUNGEONS = [
             "decor_0"
           ],
           "keys_mode": "any"
+        },
+        {
+          "id": "passage_16",
+          "type": "illusion",
+          "pos": [
+            1,
+            3
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_17",
+          "type": "illusion",
+          "pos": [
+            23,
+            8
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_18",
+          "type": "illusion",
+          "pos": [
+            23,
+            7
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_19",
+          "type": "illusion",
+          "pos": [
+            23,
+            6
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_20",
+          "type": "illusion",
+          "pos": [
+            23,
+            5
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_21",
+          "type": "illusion",
+          "pos": [
+            0,
+            15
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_22",
+          "type": "illusion",
+          "pos": [
+            0,
+            14
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_23",
+          "type": "illusion",
+          "pos": [
+            0,
+            13
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_24",
+          "type": "illusion",
+          "pos": [
+            0,
+            12
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_25",
+          "type": "illusion",
+          "pos": [
+            0,
+            11
+          ],
+          "key_decor_ids": [],
+          "keys_mode": "any"
         }
       ],
       "falas": [],
@@ -1773,7 +2221,7 @@ window.EDITOR_DUNGEONS = [
       "materiais": {},
       "objectives": {
         "primary": {
-          "type": "kill_all",
+          "type": "kill_target",
           "xp": 0,
           "reward": {
             "gold": 0,

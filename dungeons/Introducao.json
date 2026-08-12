@@ -534,7 +534,10 @@
           3,
           1
         ]
-      ]
+      ],
+      "door_orientations": {
+        "3,1": 1
+      }
     },
     {
       "id": 2,
@@ -1012,7 +1015,7 @@
       "target": false
     },
     {
-      "type": "devorador_metal",
+      "type": "zumbi_infectado",
       "pos": [
         15,
         6
