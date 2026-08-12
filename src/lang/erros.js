@@ -137,6 +137,10 @@ window.LANG_ERROS = {
     "en": "Invalid Requiem target.",
     "pt": "Alvo do Réquiem inválido."
   },
+  "erro.alvo_fora_da_area_ou_habilidade_sem_usos_em_r": {
+    "en": "Target out of range, or the ability has no uses left / is on cooldown.",
+    "pt": "Alvo fora da área, ou a habilidade está sem usos/em recarga."
+  },
   "erro.alvo_fora_da_area_ou_sopro_sem_usos_em_r": {
     "en": "Target outside the area, or the breath weapon has no uses left/is on cooldown.",
     "pt": "Alvo fora da área, ou sopro sem usos/em recarga."
@@ -428,6 +432,18 @@ window.LANG_ERROS = {
   "erro.encerre_seu_turno_primeiro_para_mover_os": {
     "en": "End your turn first to move the minions.",
     "pt": "Encerre seu turno primeiro para mover os servos."
+  },
+  "erro.engolido_voce_so_pode_mirar_no_interior": {
+    "en": "Swallowed, you can only target the Tyrant's insides or yourself.",
+    "pt": "Engolido, você só pode mirar no interior do Tirano ou em si mesmo."
+  },
+  "erro.engolir_exige_uma_criatura_presa_adjacen": {
+    "en": "Swallow requires a Grappled creature adjacent and an empty stomach.",
+    "pt": "Engolir exige uma criatura Presa adjacente e um estômago vazio."
+  },
+  "erro.enquanto_engolido_voce_so_pode_atacar_o": {
+    "en": "While Swallowed, you can only attack the Tyrant's insides.",
+    "pt": "Enquanto Engolido, você só pode atacar o interior do Tirano."
   },
   "erro.erro_interno": {
     "en": "Internal error: {tipo}",
@@ -840,6 +856,10 @@ window.LANG_ERROS = {
   "erro.nao_ha_como_sair_desta_masmorra": {
     "en": "There's no way out of this dungeon.",
     "pt": "Não há como sair desta masmorra."
+  },
+  "erro.nao_ha_criatura_presa_adjacente_ou_a_hab": {
+    "en": "There is no Grappled creature adjacent, or the ability is on cooldown.",
+    "pt": "Não há criatura Presa adjacente ou a habilidade está em recarga."
   },
   "erro.nao_ha_espaco_livre_ao_lado_para_a_armad": {
     "en": "No free space nearby for the trap to trigger.",
@@ -1325,6 +1345,10 @@ window.LANG_ERROS = {
     "en": "🧱 A wall blocks the healing energy — you need to see the ally!",
     "pt": "🧱 Uma parede bloqueia a energia curativa — precisa ver o aliado!"
   },
+  "erro.uma_parede_bloqueia_a_nuvem_acida": {
+    "en": "A wall blocks the Acid Cloud.",
+    "pt": "Uma parede bloqueia a Nuvem Acida."
+  },
   "erro.uma_parede_bloqueia_a_trajetoria_da_bola": {
     "en": "🧱 A wall blocks Fireball's path!",
     "pt": "🧱 Uma parede bloqueia a trajetória da Bola de Fogo!"
@@ -1380,6 +1404,10 @@ window.LANG_ERROS = {
   "erro.voce_esta_em_area_de_silencio_nao_pode_c": {
     "en": "🔇 You're in a Silence area — you can't cast!",
     "pt": "🔇 Você está em área de Silêncio — não pode conjurar!"
+  },
+  "erro.voce_esta_engolido_e_nao_pode_se_mover": {
+    "en": "You are Swallowed and cannot move.",
+    "pt": "Você está Engolido e não pode se mover."
   },
   "erro.voce_esta_imobilizado_e_nao_pode_se_move": {
     "en": "🕸️ You're immobilized and can't move! End your turn.",
@@ -1452,6 +1480,10 @@ window.LANG_ERROS = {
   "erro.voce_nao_esta_em_chamas": {
     "en": "You're not on fire.",
     "pt": "Você não está em chamas."
+  },
+  "erro.voce_nao_esta_engolido": {
+    "en": "You are not Swallowed.",
+    "pt": "Você não está Engolido."
   },
   "erro.voce_nao_pode_curar_a_si_mesmo_com_esta": {
     "en": "You can't heal yourself with this ability.",

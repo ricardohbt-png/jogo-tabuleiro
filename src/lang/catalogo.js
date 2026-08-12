@@ -738,6 +738,54 @@ window.LANG_CATALOGO = {
     "en": "Lore: Human Skeleton",
     "pt": "Lenda: Esqueleto Humano"
   },
+  "cat.guilda.lenda_ferrao_charcos_adulto.desc": {
+    "en": "+1 to attack and +1 to saving throws against Adult Marsh Stinger.",
+    "pt": "+1 de ataque e +1 nos saves contra Ferrão dos Charcos Adulto."
+  },
+  "cat.guilda.lenda_ferrao_charcos_adulto.nome": {
+    "en": "Lore: Adult Marsh Stinger",
+    "pt": "Lenda: Ferrão dos Charcos Adulto"
+  },
+  "cat.guilda.lenda_ferrao_charcos_anciao.desc": {
+    "en": "+1 to attack and +1 to saving throws against Elder Marsh Stinger.",
+    "pt": "+1 de ataque e +1 nos saves contra Ferrão dos Charcos Ancião."
+  },
+  "cat.guilda.lenda_ferrao_charcos_anciao.nome": {
+    "en": "Lore: Elder Marsh Stinger",
+    "pt": "Lenda: Ferrão dos Charcos Ancião"
+  },
+  "cat.guilda.lenda_ferrao_charcos_jovem.desc": {
+    "en": "+1 to attack and +1 to saving throws against Young Marsh Stinger.",
+    "pt": "+1 de ataque e +1 nos saves contra Ferrão dos Charcos Jovem."
+  },
+  "cat.guilda.lenda_ferrao_charcos_jovem.nome": {
+    "en": "Lore: Young Marsh Stinger",
+    "pt": "Lenda: Ferrão dos Charcos Jovem"
+  },
+  "cat.guilda.lenda_garaloux_adulto.desc": {
+    "en": "+1 to attack and +1 to saving throws against Adult Garaloux.",
+    "pt": "+1 de ataque e +1 nos saves contra Garaloux Adulto."
+  },
+  "cat.guilda.lenda_garaloux_adulto.nome": {
+    "en": "Lore: Adult Garaloux",
+    "pt": "Lenda: Garaloux Adulto"
+  },
+  "cat.guilda.lenda_garaloux_alfa.desc": {
+    "en": "+1 to attack and +1 to saving throws against Alpha Garaloux.",
+    "pt": "+1 de ataque e +1 nos saves contra Garaloux Alfa."
+  },
+  "cat.guilda.lenda_garaloux_alfa.nome": {
+    "en": "Lore: Alpha Garaloux",
+    "pt": "Lenda: Garaloux Alfa"
+  },
+  "cat.guilda.lenda_garaloux_jovem.desc": {
+    "en": "+1 to attack and +1 to saving throws against Young Garaloux.",
+    "pt": "+1 de ataque e +1 nos saves contra Garaloux Jovem."
+  },
+  "cat.guilda.lenda_garaloux_jovem.nome": {
+    "en": "Lore: Young Garaloux",
+    "pt": "Lenda: Garaloux Jovem"
+  },
   "cat.guilda.lenda_goblin.desc": {
     "en": "+1 to attack and +1 to saving throws against Goblin.",
     "pt": "+1 de ataque e +1 nos saves contra Goblin."
@@ -802,6 +850,30 @@ window.LANG_CATALOGO = {
     "en": "Lore: Kobold Spearman",
     "pt": "Lenda: Kobold Lanceiro"
   },
+  "cat.guilda.lenda_lacralion_adulto.desc": {
+    "en": "+1 to attack and +1 to saving throws against Adult Lacralion.",
+    "pt": "+1 de ataque e +1 nos saves contra Lacralion Adulto."
+  },
+  "cat.guilda.lenda_lacralion_adulto.nome": {
+    "en": "Lore: Adult Lacralion",
+    "pt": "Lenda: Lacralion Adulto"
+  },
+  "cat.guilda.lenda_lacralion_anciao.desc": {
+    "en": "+1 to attack and +1 to saving throws against Elder Lacralion.",
+    "pt": "+1 de ataque e +1 nos saves contra Lacralion Ancião."
+  },
+  "cat.guilda.lenda_lacralion_anciao.nome": {
+    "en": "Lore: Elder Lacralion",
+    "pt": "Lenda: Lacralion Ancião"
+  },
+  "cat.guilda.lenda_lacralion_filhote.desc": {
+    "en": "+1 to attack and +1 to saving throws against Lacralion Hatchling.",
+    "pt": "+1 de ataque e +1 nos saves contra Lacralion Filhote."
+  },
+  "cat.guilda.lenda_lacralion_filhote.nome": {
+    "en": "Lore: Lacralion Hatchling",
+    "pt": "Lenda: Lacralion Filhote"
+  },
   "cat.guilda.lenda_lagarto_carniceiro.desc": {
     "en": "+1 to attack and +1 to saving throws against Carrion Lizard.",
     "pt": "+1 de ataque e +1 nos saves contra Lagarto Carniceiro."
@@ -833,6 +905,30 @@ window.LANG_CATALOGO = {
   "cat.guilda.lenda_lorde_vampiro.nome": {
     "en": "Lore: Vampire Lord",
     "pt": "Lenda: Lorde Vampiro"
+  },
+  "cat.guilda.lenda_molochus_adulto.desc": {
+    "en": "+1 to attack and +1 to saving throws against Adult Molochus.",
+    "pt": "+1 de ataque e +1 nos saves contra Molochus Adulto."
+  },
+  "cat.guilda.lenda_molochus_adulto.nome": {
+    "en": "Lore: Adult Molochus",
+    "pt": "Lenda: Molochus Adulto"
+  },
+  "cat.guilda.lenda_molochus_anciao.desc": {
+    "en": "+1 to attack and +1 to saving throws against Elder Molochus.",
+    "pt": "+1 de ataque e +1 nos saves contra Molochus Ancião."
+  },
+  "cat.guilda.lenda_molochus_anciao.nome": {
+    "en": "Lore: Elder Molochus",
+    "pt": "Lenda: Molochus Ancião"
+  },
+  "cat.guilda.lenda_molochus_jovem.desc": {
+    "en": "+1 to attack and +1 to saving throws against Young Molochus.",
+    "pt": "+1 de ataque e +1 nos saves contra Molochus Jovem."
+  },
+  "cat.guilda.lenda_molochus_jovem.nome": {
+    "en": "Lore: Young Molochus",
+    "pt": "Lenda: Molochus Jovem"
   },
   "cat.guilda.lenda_necromante.desc": {
     "en": "+1 to attack and +1 to saving throws against Necromancer.",
@@ -881,6 +977,22 @@ window.LANG_CATALOGO = {
   "cat.guilda.lenda_skeleton.nome": {
     "en": "Lore: Skeleton",
     "pt": "Lenda: Esqueleto"
+  },
+  "cat.guilda.lenda_tirano_ancestral.desc": {
+    "en": "+1 to attack and +1 to saving throws against Ancestral Tyrant.",
+    "pt": "+1 de ataque e +1 nos saves contra Tirano Ancestral."
+  },
+  "cat.guilda.lenda_tirano_ancestral.nome": {
+    "en": "Lore: Ancestral Tyrant",
+    "pt": "Lenda: Tirano Ancestral"
+  },
+  "cat.guilda.lenda_tirano_da_mata.desc": {
+    "en": "+1 to attack and +1 to saving throws against Forest Tyrant.",
+    "pt": "+1 de ataque e +1 nos saves contra Tirano da Mata."
+  },
+  "cat.guilda.lenda_tirano_da_mata.nome": {
+    "en": "Lore: Forest Tyrant",
+    "pt": "Lenda: Tirano da Mata"
   },
   "cat.guilda.lenda_troll.desc": {
     "en": "+1 to attack and +1 to saving throws against Troll.",
@@ -2250,6 +2362,30 @@ window.LANG_CATALOGO = {
     "en": "Human Skeleton",
     "pt": "Esqueleto Humano"
   },
+  "cat.monstro.ferrao_charcos_adulto.nome": {
+    "en": "Adult Marsh Stinger",
+    "pt": "Ferrão dos Charcos Adulto"
+  },
+  "cat.monstro.ferrao_charcos_anciao.nome": {
+    "en": "Elder Marsh Stinger",
+    "pt": "Ferrão dos Charcos Ancião"
+  },
+  "cat.monstro.ferrao_charcos_jovem.nome": {
+    "en": "Young Marsh Stinger",
+    "pt": "Ferrão dos Charcos Jovem"
+  },
+  "cat.monstro.garaloux_adulto.nome": {
+    "en": "Adult Garaloux",
+    "pt": "Garaloux Adulto"
+  },
+  "cat.monstro.garaloux_alfa.nome": {
+    "en": "Alpha Garaloux",
+    "pt": "Garaloux Alfa"
+  },
+  "cat.monstro.garaloux_jovem.nome": {
+    "en": "Young Garaloux",
+    "pt": "Garaloux Jovem"
+  },
   "cat.monstro.goblin.nome": {
     "en": "Goblin",
     "pt": "Goblin"
@@ -2286,6 +2422,18 @@ window.LANG_CATALOGO = {
     "en": "Kobold Spearman",
     "pt": "Kobold Lanceiro"
   },
+  "cat.monstro.lacralion_adulto.nome": {
+    "en": "Adult Lacralion",
+    "pt": "Lacralion Adulto"
+  },
+  "cat.monstro.lacralion_anciao.nome": {
+    "en": "Elder Lacralion",
+    "pt": "Lacralion Ancião"
+  },
+  "cat.monstro.lacralion_filhote.nome": {
+    "en": "Lacralion Hatchling",
+    "pt": "Lacralion Filhote"
+  },
   "cat.monstro.lagarto_carniceiro.nome": {
     "en": "Carrion Lizard",
     "pt": "Lagarto Carniceiro"
@@ -2301,6 +2449,18 @@ window.LANG_CATALOGO = {
   "cat.monstro.lorde_vampiro.nome": {
     "en": "Vampire Lord",
     "pt": "Lorde Vampiro"
+  },
+  "cat.monstro.molochus_adulto.nome": {
+    "en": "Adult Molochus",
+    "pt": "Molochus Adulto"
+  },
+  "cat.monstro.molochus_anciao.nome": {
+    "en": "Elder Molochus",
+    "pt": "Molochus Ancião"
+  },
+  "cat.monstro.molochus_jovem.nome": {
+    "en": "Young Molochus",
+    "pt": "Molochus Jovem"
   },
   "cat.monstro.necromante.nome": {
     "en": "Necromancer",
@@ -2337,6 +2497,14 @@ window.LANG_CATALOGO = {
   "cat.monstro.soldado.nome": {
     "en": "Soldier",
     "pt": "soldado"
+  },
+  "cat.monstro.tirano_ancestral.nome": {
+    "en": "Ancestral Tyrant",
+    "pt": "Tirano Ancestral"
+  },
+  "cat.monstro.tirano_da_mata.nome": {
+    "en": "Forest Tyrant",
+    "pt": "Tirano da Mata"
   },
   "cat.monstro.troll.nome": {
     "en": "Troll",

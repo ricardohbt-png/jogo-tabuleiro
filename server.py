@@ -1282,6 +1282,65 @@ def nome_de(familia, ident):
     prefira montar a frase com o nome já em mãos quando o item for autoral."""
     return T(f"cat.{familia}.{ident}.nome")
 
+def nome_cat(familia, ident, cru):
+    """Nome de catálogo como texto TARDIO, mas SÓ quando o nome cru ainda é o do
+    catálogo.
+
+    A guarda de igualdade é o que torna a etapa 4c segura por construção: monstro
+    ou item criado no editor não tem entrada e sai cru; um nativo renomeado por
+    `overwrite_native` tem entrada, mas com outro texto, e também sai cru,
+    preservando o nome que o autor escolheu. Sem lista de exceções para manter.
+
+    Diferente do `nome_de`, que confia no id e devolve a própria chave quando ela
+    não existe — use `nome_de` só quando o id vier de um catálogo fechado."""
+    if isinstance(cru, T):
+        return cru                      # já resolvido — não reembrulha
+    ent = LANG_STRINGS.get(f"cat.{familia}.{ident}.nome")
+    if isinstance(ent, dict) and ent.get("pt") == cru:
+        return T(f"cat.{familia}.{ident}.nome")
+    return cru
+
+def nome_criatura(x):
+    """Nome de criatura resolvido no idioma de quem lê.
+
+    `alvo` e `target` são ora herói, ora monstro, ora servo animado — o MESMO
+    parâmetro, em ~45 sites de narração. A informação só existe em runtime, na
+    forma do dict, e é por isso que o despacho mora aqui e não no ponto da
+    frase."""
+    if not isinstance(x, dict):
+        return x
+    nome = x.get("name") or x.get("nome") or ""
+    if "class_id" in x:                                 # herói: nome do jogador
+        return nome
+    # Saída explícita para nome trocado em runtime, que por definição não casa a
+    # guarda de igualdade (o Elemental Descontrolado é o caso de hoje).
+    if x.get("name_key") in LANG_STRINGS:
+        return T(x["name_key"])
+    if "vida_atual" in x and x.get("tipo"):             # servo animado do Pedro
+        return T("cat.monstro.animado",
+                 nome=nome_cat("monstro", x["tipo"], x.get("nome_base") or nome))
+    if x.get("type"):                                   # monstro
+        return nome_cat("monstro", x["type"], nome)
+    return nome
+
+def nome_item(it):
+    """Nome de item resolvido no idioma de quem lê, com os sufixos compostos a
+    partir dos campos que o item já carrega — nunca reparseando a string pronta."""
+    if not isinstance(it, dict):
+        return it
+    nome = it.get("name") or it.get("nome") or ""
+    ident = it.get("id")
+    if not ident:
+        return nome
+    if it.get("ammo_count"):
+        curto = f"cat.item.{ident}.nome_curto"
+        base = T(curto) if curto in LANG_STRINGS else nome
+        return T("cat.item.municao_x", nome=base, n=it["ammo_count"])
+    base = nome_cat("item", ident, nome)
+    if it.get("corrosao_inicial"):
+        return T("cat.item.corroido", nome=base)
+    return base
+
 def _now_iso():
     """Timestamp UTC no formato 2026-07-18T14:00:00Z."""
     return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -11071,7 +11130,7 @@ class GameRoom:
         p = self.players[pid]
         if not p["alive"]: return
         if p.get("engolido"):
-            await self.send_to(pid, {"type": "error", "msg": "Você está Engolido e não pode se mover."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_engolido_e_nao_pode_se_mover")})
             return
         if p.get("preso"):
             captor = self.monsters.get(p.get("preso_por"))
@@ -11693,7 +11752,7 @@ class GameRoom:
             return
 
         if p.get("engolido") and target_id != p.get("engolido_por"):
-            await self.send_to(pid, {"type": "error", "msg": "Enquanto Engolido, você só pode atacar o interior do Tirano."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.enquanto_engolido_voce_so_pode_atacar_o")})
             return
 
         if target_id in self.monsters:
@@ -12551,7 +12610,7 @@ class GameRoom:
             return
         p = self.players.get(pid)
         if not p or not p.get("alive") or not p.get("engolido"):
-            await self.send_to(pid, {"type": "error", "msg": "Você não está Engolido."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_esta_engolido")})
             return
         await self._tirano_escapar_estomago(p)
         await self.push_state()
@@ -13302,7 +13361,7 @@ class GameRoom:
         done.append(alvo["id"])
         extra = roll_dice(str(ability.get("damage", "2d6")))
         alvo["hp"] = max(0, alvo["hp"] - extra)
-        await self.gm_say(f"🦁 **{m['name']}** Dilacera **{alvo.get('name', 'Alvo')}** e causa **{extra}** de dano extra!")
+        await self.gm_say(T("narracao.dilacera_e_causa_de_dano_extra", monstro=m['name'], alvo_get_name_alvo=alvo.get('name', 'Alvo'), extra=extra))
         if alvo["hp"] <= 0:
             await self._player_dies(alvo["id"])
 
@@ -13726,7 +13785,7 @@ class GameRoom:
         p = self.players[pid]
         if not p["alive"]: return
         if p.get("engolido") and target_id not in {None, p.get("engolido_por"), p.get("id")}: 
-            await self.send_to(pid, {"type": "error", "msg": "Engolido, você só pode mirar no interior do Tirano ou em si mesmo."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.engolido_voce_so_pode_mirar_no_interior")})
             return
 
         skill = next((s for s in p["skills"] if s["id"] == skill_id), None)
@@ -18445,7 +18504,7 @@ class GameRoom:
         if (ability.get("id") == "veneno_charcos"
                 and ((not self._eh_jogador(alvo) and self._tem_imunidade(alvo, "poison"))
                      or (self._eh_jogador(alvo) and self._imune_a_status(alvo, "veneno")))):
-            await self.gm_say(f"☠️ **{alvo.get('name', 'Alvo')}** é imune ao Veneno do Lacralion.")
+            await self.gm_say(T("narracao.e_imune_ao_veneno_do_lacralion", alvo_get_name_alvo=alvo.get('name', 'Alvo')))
             return
         dc = max(1, min(40, int(ability.get("poison_dc", 14) or 14)))
         ok, d20, sb, total = self._testar_save(alvo, "fortitude", dc, fonte=m, poison_effect=True)
@@ -18461,7 +18520,7 @@ class GameRoom:
         await self.broadcast({"type": "dice_roll", "die": "d" + dano_str.split("d", 1)[-1].split("+", 1)[0],
                               "value": dano_bruto, "label": "Veneno do Lacralion"})
         alvo["hp"] = max(0, alvo.get("hp", 0) - dano)
-        await self.gm_say(f"☠️ **{alvo_nome}** sofre **{dano}** de dano adicional do veneno.")
+        await self.gm_say(T("narracao.sofre_de_dano_adicional_do_veneno", alvo_nome=alvo_nome, dano=dano))
         if alvo.get("hp", 0) <= 0:
             if self._eh_jogador(alvo):
                 await self._player_dies(alvo["id"])
@@ -18476,7 +18535,7 @@ class GameRoom:
             # É a mesma aplicação usada pela Lentidão mágica em falha grave:
             # -1 em ataques e CA, sem criar um segundo tipo de status.
             self._set_mod_magia(alvo, {"ataque": -1, "ca": -1}, duracao)
-        await self.gm_say(f"🐌 **{alvo_nome}** fica Lento por {duracao} rodada(s).")
+        await self.gm_say(T("narracao.fica_lento_por_rodada_s", alvo_nome=alvo_nome, duracao=duracao))
 
     def _habilidade_charcos_no_ataque(self, m, atk_def, ability_id):
         indice = self._indice_ataque_monstro(m, atk_def)
@@ -18490,7 +18549,7 @@ class GameRoom:
             return
         if ((not self._eh_jogador(alvo) and self._tem_imunidade(alvo, "poison"))
                 or (self._eh_jogador(alvo) and self._imune_a_status(alvo, "veneno"))):
-            await self.gm_say(f"☠️ **{alvo.get('name') or alvo.get('nome', 'Alvo')}** é imune a {nome}.")
+            await self.gm_say(T("narracao.e_imune_a", alvo_get_name_or_alvo_ge=alvo.get('name') or alvo.get('nome', 'Alvo'), nome=nome))
             return
         dc = max(1, min(40, int(ability.get("poison_dc", ability.get("dc", 15)) or 15)))
         save = ability.get("save", "fortitude")
@@ -18500,7 +18559,7 @@ class GameRoom:
                           f"→ {'resistiu' if ok else 'falhou'} a {nome}.")
         if not ok:
             alvo["turbilhao_perde_movimento"] = True
-            await self.gm_say(f"🦂 **{alvo_nome}** perderá apenas o movimento no próximo turno.")
+            await self.gm_say(T("narracao.perdera_apenas_o_movimento_no_proximo_tu", alvo_nome=alvo_nome))
 
     async def _registrar_tentaculo_charcos(self, m, alvo, atk_def):
         ability = self._habilidade_charcos_no_ataque(m, atk_def, "tentaculos_imobilizar")
@@ -18541,7 +18600,7 @@ class GameRoom:
                                   "label": f"Constrição — {m['name']}"})
             await self._aplicar_dano_alvo(alvo, dano, (ability.get("damage_types") or ["physical"])[0], m.get("id"))
             nome = alvo.get("name") or alvo.get("nome", "Alvo")
-            await self.gm_say(f"🦂 **{m['name']}** causa **{dano}** de Constrição em **{nome}**.")
+            await self.gm_say(T("narracao.causa_de_constricao_em", monstro=m['name'], dano=dano, nome=nome))
 
     async def _criar_nuvem_acida(self, m, centro, ability):
         raio = max(0, int(ability.get("radius", 1) or 1))
@@ -18560,8 +18619,8 @@ class GameRoom:
             dano = roll_dice(dano_expr)
             await self._aplicar_dano_alvo(alvo, dano, (ability.get("damage_types") or ["acid"])[0], m.get("id"))
             nome = alvo.get("name") or alvo.get("nome", "Alvo")
-            await self.gm_say(f"🧪 **{nome}** sofre **{dano}** da Nuvem Ácida de **{m['name']}**.")
-        await self.gm_say(f"🧪 **{m['name']}** cria uma Nuvem Ácida de raio {raio} por {zona['duracao']} rodada(s).")
+            await self.gm_say(T("narracao.sofre_da_nuvem_acida_de", nome=nome, dano=dano, monstro=m['name']))
+        await self.gm_say(T("narracao.cria_uma_nuvem_acida_de_raio_por_rodada", monstro=m['name'], raio=raio, zona_duracao=zona['duracao']))
         return zona
 
     async def _processar_nuvem_acida_inicio_turno(self, alvo):
@@ -18587,7 +18646,7 @@ class GameRoom:
             dano = bruto
             await self._aplicar_dano_alvo(alvo, dano, DMG_ACID, zona.get("caster"))
             nome = alvo.get("name") or alvo.get("nome", "Alvo")
-            await self.gm_say(f"🧪 **{nome}** sofre **{dano}** ao iniciar o turno dentro da Nuvem Ácida.")
+            await self.gm_say(T("narracao.sofre_ao_iniciar_o_turno_dentro_da_nuvem", nome=nome, dano=dano))
 
     async def _carapaca_espinhosa_retalia(self, criatura, atacante):
         """Dano reativo da Carapaça, somente após acerto corpo a corpo."""
@@ -18600,7 +18659,7 @@ class GameRoom:
         await self.broadcast({"type": "dice_roll", "die": "d" + dano_str.split("d", 1)[-1].split("+", 1)[0],
                               "value": bruto, "label": "Carapaça Espinhosa"})
         atacante["hp"] = max(0, atacante.get("hp", 0) - dano)
-        await self.gm_say(f"🦂 **{atacante.get('name', 'Atacante')}** sofre **{dano}** da Carapaça Espinhosa de **{criatura.get('name', 'criatura')}**.")
+        await self.gm_say(T("narracao.sofre_da_carapaca_espinhosa_de", atacante_get_name_atacan=atacante.get('name', 'Atacante'), dano=dano, criatura_get_name_criatu=criatura.get('name', 'criatura')))
         if atacante.get("hp", 0) <= 0 and self._eh_jogador(atacante):
             await self._player_dies(atacante["id"])
 
@@ -18789,12 +18848,12 @@ class GameRoom:
                 z["duracao"] = max(0, int(z.get("duracao", 0) or 0) - 1)
                 if z["duracao"] <= 0:
                     z["ativa"] = False
-                    await self.gm_say("🧪 A Nuvem Ácida se dissipou.")
+                    await self.gm_say(T("narracao.a_nuvem_acida_se_dissipou"))
             elif z.get("tipo") == "molochus_chamas":
                 z["duracao"] = max(0, int(z.get("duracao", 0) or 0) - 1)
                 if z["duracao"] <= 0:
                     z["ativa"] = False
-                    await self.gm_say("🔥 As chamas deixadas pelo Molochus se apagam.")
+                    await self.gm_say(T("narracao.as_chamas_deixadas_pelo_molochus_se_apag"))
             elif z.get("tipo") == "solo_sagrado":
                 x, y = z.get("pos", [-1, -1])
                 for m in self.monsters.values():
@@ -20816,7 +20875,7 @@ class GameRoom:
             dano = await self._molochus_aplicar_fogo(alvo, ability.get("damage", "1d4"), m,
                                                       f"Aura Escaldante — {m.get('name', 'Molochus')}")
             if dano > 0:
-                await self.gm_say(f"🔥 **{alvo.get('name') or alvo.get('nome', 'Alvo')}** sofre **{dano}** da Aura Escaldante de **{m['name']}**.")
+                await self.gm_say(T("narracao.sofre_da_aura_escaldante_de", alvo_get_name_or_alvo_ge=alvo.get('name') or alvo.get('nome', 'Alvo'), dano=dano, monstro=m['name']))
             if not self._vivo(alvo):
                 break
 
@@ -20830,7 +20889,7 @@ class GameRoom:
         dano = await self._molochus_aplicar_fogo(atacante, ability.get("damage", "1d4"), molochus,
                                                   f"Sangue em Ebulição — {molochus.get('name', 'Molochus')}")
         if dano > 0:
-            await self.gm_say(f"🌋 **{atacante.get('name') or atacante.get('nome', 'Atacante')}** sofre **{dano}** do Sangue em Ebulição de **{molochus['name']}**.")
+            await self.gm_say(T("narracao.sofre_do_sangue_em_ebulicao_de", atacante_get_name_or_ata=atacante.get('name') or atacante.get('nome', 'Atacante'), dano=dano, molochus=molochus['name']))
 
     async def _molochus_zona_fogo_aplicar(self, alvo, zona, motivo):
         if not self._vivo(alvo) or not zona.get("ativa"):
@@ -20841,7 +20900,7 @@ class GameRoom:
             return
         dano = await self._molochus_aplicar_fogo(alvo, zona.get("dano_turno", "1d6"), zona.get("caster"), motivo)
         if dano > 0:
-            await self.gm_say(f"🔥 **{alvo.get('name') or alvo.get('nome', 'Alvo')}** sofre **{dano}** das chamas persistentes.")
+            await self.gm_say(T("narracao.sofre_das_chamas_persistentes", alvo_get_name_or_alvo_ge=alvo.get('name') or alvo.get('nome', 'Alvo'), dano=dano))
 
     async def _processar_zona_molochus_inicio_turno(self, alvo):
         for zona in self.zonas_especiais:
@@ -20926,7 +20985,7 @@ class GameRoom:
             target["hp"] = max(0, target["hp"] - extra)
         else:
             target["vida_atual"] = max(0, target["vida_atual"] - extra)
-        await self.gm_say(f"🦁 **{m['name']}** Dilacera **{target.get('name') or target.get('nome', 'Alvo')}** e causa **{extra}** de dano extra!")
+        await self.gm_say(T("narracao.dilacera_e_causa_de_dano_extra_2", monstro=m['name'], target_get_name_or_targe=target.get('name') or target.get('nome', 'Alvo'), extra=extra))
         if not self._alvo_vivo(target_obj):
             if target_obj["kind"] == "player":
                 await self._player_dies(target["id"])
@@ -20952,7 +21011,7 @@ class GameRoom:
         ataque = (m.get("attacks") or [])[int(ability.get("attack_index", 0) or 0)]
         m["_predador_supremo_reacao"] = True
         try:
-            await self.gm_say(f"🦁 **{m['name']}** abateu uma criatura e desfere uma Mordida adicional!")
+            await self.gm_say(T("narracao.abateu_uma_criatura_e_desfere_uma_mordid", monstro=m['name']))
             await self._execute_one_monster_attack(m, ataque, alvo_obj)
         finally:
             m.pop("_predador_supremo_reacao", None)
@@ -22985,7 +23044,7 @@ class GameRoom:
             return False
         cd = int(ability.get("dc", 16) or 16)
         expressao = str(ability.get("damage", "4d6"))
-        await self.gm_say(f"🌋 **{m['name']}** usa **Explosão de Vapor** em cone de {ability.get('range', 3)} quadrados.")
+        await self.gm_say(T("narracao.usa_explosao_de_vapor_em_cone_de_quadrad", monstro=m['name'], ability_get_range_3=ability.get('range', 3)))
         for item in victims:
             alvo = item["obj"]
             passou, d20, bonus, total = self._testar_save(alvo, "reflexos", cd, fonte=m)
@@ -22995,7 +23054,7 @@ class GameRoom:
                                   "label": f"Reflexos — Explosão de Vapor", "hit": not passou})
             await self._dano_em_alvo(alvo, dano, DMG_FIRE, m.get("id"))
             nome = alvo.get("name") or alvo.get("nome", "Alvo")
-            await self.gm_say(f"🔥 **{nome}** {'passa' if passou else 'falha'} em Reflexos ({total} vs CD {cd}) e sofre **{dano}** de fogo.")
+            await self.gm_say(T("narracao.em_reflexos_vs_cd_e_sofre_de_fogo", nome=nome, passa_if_passou_else_fal='passa' if passou else 'falha', total=total, cd=cd, dano=dano))
         return True
 
     async def _monster_try_explosao_vapor(self, m, targets):
@@ -23274,7 +23333,7 @@ class GameRoom:
             if max(abs(m["pos"][0] - alvo["pos"][0]), abs(m["pos"][1] - alvo["pos"][1])) > rng:
                 await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_de_alcance")}); return
             if not self._tem_linha_de_visao(m["pos"], alvo["pos"]):
-                await self.send_to(pid, {"type": "error", "msg": "Uma parede bloqueia a Nuvem Acida."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.uma_parede_bloqueia_a_nuvem_acida")}); return
             if not self._ativar_habilidade_nativa(m, ability):
                 await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_sem_usos_ou_em_recarga")}); return
             await self._criar_nuvem_acida(m, alvo["pos"], ability)
@@ -23283,13 +23342,13 @@ class GameRoom:
             await self.push_state(); return
         if ability_id == "sacudida_brutal":
             if not await self._tirano_sacudida(m):
-                await self.send_to(pid, {"type": "error", "msg": "Não há criatura Presa adjacente ou a habilidade está em recarga."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.nao_ha_criatura_presa_adjacente_ou_a_hab")}); return
             self._debitar_acao_mestre(m, custo, "habilidade")
             m["_ja_executou_acao"] = True
             await self.push_state(); return
         if ability_id == "engolir":
             if not await self._tirano_engolir(m):
-                await self.send_to(pid, {"type": "error", "msg": "Engolir exige uma criatura Presa adjacente e um estômago vazio."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.engolir_exige_uma_criatura_presa_adjacen")}); return
             self._debitar_acao_mestre(m, custo, "habilidade")
             m["_ja_executou_acao"] = True
             await self.push_state(); return
@@ -24055,7 +24114,7 @@ class GameRoom:
         dc = int(ab.get("dc", 22) or 22)
         passou, _d20, _bonus, total = self._testar_save(preso, "fortitude", dc, fonte=m)
         if passou:
-            await self.gm_say(f"🦖 **{preso.get('name') or preso.get('nome', 'Alvo')}** resiste a Engolir de **{m['name']}** (Fortitude {total} vs CD {dc}).")
+            await self.gm_say(T("narracao.resiste_a_engolir_de_fortitude_vs_cd", preso_get_name_or_preso=preso.get('name') or preso.get('nome', 'Alvo'), monstro=m['name'], total=total, dc=dc))
             return True
         preso["engolido"] = True
         preso["engolido_por"] = m["id"]
@@ -24064,7 +24123,7 @@ class GameRoom:
         preso["preso"] = False
         preso.pop("preso_por", None)
         preso["pos"] = list(m.get("pos", preso.get("pos", [0, 0])))
-        await self.gm_say(f"🦖 **{m['name']}** engole **{preso.get('name') or preso.get('nome', 'Alvo')}**!")
+        await self.gm_say(T("narracao.engole", monstro=m['name'], preso_get_name_or_preso=preso.get('name') or preso.get('nome', 'Alvo')))
         return True
 
     async def _tirano_escapar_estomago(self, p):
@@ -24087,7 +24146,7 @@ class GameRoom:
         if passou:
             await self._tirano_cuspir(captor, p, f"escapou com Força {total} vs CD {dc}")
         else:
-            await self.gm_say(f"⛓️ **{p['name']}** falha ao forçar a saída do estômago de **{captor['name']}** (Força {total} vs CD {dc}).")
+            await self.gm_say(T("narracao.falha_ao_forcar_a_saida_do_estomago_de_f", heroi=p['name'], captor=captor['name'], total=total, dc=dc))
         return True
 
     async def _tirano_dano_interno(self, p, captor, dano):
@@ -24097,14 +24156,14 @@ class GameRoom:
         p["engolido_dano"] = p.get("engolido_dano", 0) + max(0, int(dano or 0))
         ab = self._tirano_ability(captor, "abrir_caminho") or {}
         limite = int(p.get("engolido_limite", ab.get("threshold", 20)) or 20)
-        await self.gm_say(f"🫀 **{p['name']}** causa **{dano}** de dano no estômago de **{captor['name']}** ({p['engolido_dano']}/{limite}).")
+        await self.gm_say(T("narracao.causa_de_dano_no_estomago_de", heroi=p['name'], dano=dano, captor=captor['name'], p_engolido_dano=p['engolido_dano'], limite=limite))
         if p["engolido_dano"] >= limite and not captor.get("_estomago_aberto_usado"):
             captor["_estomago_aberto_usado"] = True
             captor["_tirano_perde_proximo_ataque"] = True
             interno = roll_dice(ab.get("internal_damage", "2d6"))
             interno = self._apply_damage_types(interno, [DMG_PHYSICAL], captor, None)
             captor["hp"] = max(0, captor.get("hp", 0) - interno)
-            await self.gm_say(f"💥 O estômago é rompido por dentro: **{captor['name']}** sofre **{interno}** de dano interno e fica cambaleante.")
+            await self.gm_say(T("narracao.o_estomago_e_rompido_por_dentro_sofre_de", captor=captor['name'], interno=interno))
             await self._tirano_cuspir(captor, p, "o estômago foi aberto por dentro")
         return True
 
@@ -24120,7 +24179,7 @@ class GameRoom:
             alvo["pos"] = list(destino)
         else:
             alvo["pos"] = list(m.get("pos", alvo.get("pos", [0, 0])))
-        await self.gm_say(f"🦖 **{m['name']}** cospe **{alvo.get('name') or alvo.get('nome', 'Alvo')}**: {motivo}.")
+        await self.gm_say(T("narracao.cospe", monstro=m['name'], alvo_get_name_or_alvo_ge=alvo.get('name') or alvo.get('nome', 'Alvo'), motivo=motivo))
 
     async def _tirano_passo_devastador(self, m):
         ab = self._tirano_ability(m, "passo_devastador")
@@ -24144,7 +24203,7 @@ class GameRoom:
             return
         target = target_obj["obj"]
         if m.pop("_tirano_perde_proximo_ataque", False):
-            await self.gm_say(f"🦖 **{m['name']}** fica cambaleante e perde sua ação de ataque.")
+            await self.gm_say(T("narracao.fica_cambaleante_e_perde_sua_acao_de_ata", monstro=m['name']))
             return
         if await self._tirano_sacudida(m) or await self._tirano_engolir(m):
             return
@@ -25916,7 +25975,7 @@ class GameRoom:
         centro = list(m.get("pos", [0, 0]))
         await self.broadcast({"type": "dice_roll", "die": "d" + expressao.split("d", 1)[-1].split("+", 1)[0],
                               "value": bruto, "label": f"Morte Explosiva — {m.get('name', 'Molochus')}"})
-        await self.gm_say(f"💥 **{m['name']}** explode ao morrer: {expressao} de fogo em raio {raio}! Reflexos CD {cd} reduz à metade.")
+        await self.gm_say(T("narracao.explode_ao_morrer_de_fogo_em_raio_reflex", monstro=m['name'], expressao=expressao, raio=raio, cd=cd))
         for alvo in list(self._alvos_na_area(centro[0], centro[1], raio)):
             if alvo is m or not self._vivo(alvo):
                 continue
@@ -25927,14 +25986,14 @@ class GameRoom:
                                   "label": "Reflexos — Morte Explosiva", "hit": not passou})
             await self._dano_em_alvo(alvo, dano, DMG_FIRE, m.get("id"))
             nome = alvo.get("name") or alvo.get("nome", "Alvo")
-            await self.gm_say(f"🔥 **{nome}** {'passa' if passou else 'falha'} em Reflexos ({total} vs CD {cd}) e sofre **{dano}** de fogo.")
+            await self.gm_say(T("narracao.em_reflexos_vs_cd_e_sofre_de_fogo", nome=nome, passa_if_passou_else_fal='passa' if passou else 'falha', total=total, cd=cd, dano=dano))
         self.zonas_especiais.append({
             "id": f"molochus_chamas_{m.get('id', 'm')}_{self.round_num}",
             "tipo": "molochus_chamas", "cx": centro[0], "cy": centro[1], "raio": raio,
             "duracao": int(ability.get("duration", 2) or 2), "dano_turno": ability.get("tick_damage", "1d6"),
             "ativa": True, "caster": m.get("id"),
         })
-        await self.gm_say(f"🔥 O chão permanece em chamas por {ability.get('duration', 2)} rodada(s). Entrar ou iniciar o turno na área causa 1d6 de fogo.")
+        await self.gm_say(T("narracao.o_chao_permanece_em_chamas_por_rodada_s", ability_get_duration_2=ability.get('duration', 2)))
 
     async def _monster_dies(self, m, killer_pid):
         if m["hp"] > 0: return
@@ -26024,7 +26083,7 @@ class GameRoom:
                 c.pop("engolido_dano", None)
                 c.pop("engolido_limite", None)
                 c["pos"] = list(m.get("pos", c.get("pos", [0, 0])))
-                await self.gm_say(f"🦖 O corpo do **{m['name']}** deixa **{c.get('name') or c.get('nome', 'Alvo')}** escapar.")
+                await self.gm_say(T("narracao.o_corpo_do_deixa_escapar", monstro=m['name'], c_get_name_or_c_get_nome=c.get('name') or c.get('nome', 'Alvo')))
 
         # NÃ­vel para Animar Mortos: CR fracionÃ¡rio â‰¤ 0.5 â†’ 1 slot; CR inteiro = round(CR)
         cr = m.get("cr", m.get("tier", 1))

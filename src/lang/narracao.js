@@ -44,6 +44,10 @@ window.LANG_NARRACAO = {
     "en": "⚡ **{a_nome}**'s electric line hits **{extra}**: {d2} damage!",
     "pt": "⚡ A linha elétrica do **{a_nome}** atinge **{extra}**: {d2} de dano!"
   },
+  "narracao.a_nuvem_acida_se_dissipou": {
+    "en": "🧪 The Acid Cloud has dissipated.",
+    "pt": "🧪 A Nuvem Ácida se dissipou."
+  },
   "narracao.a_paralisacao_de_terminou": {
     "en": "✅ **{alvo}**'s paralysis has ended.",
     "pt": "✅ A paralisação de **{alvo}** terminou."
@@ -71,6 +75,10 @@ window.LANG_NARRACAO = {
   "narracao.a_zona_de_se_dissipou": {
     "en": "🌫️ The {z_get_tipo} zone has dissipated.",
     "pt": "🌫️ A zona de {z_get_tipo} se dissipou."
+  },
+  "narracao.abateu_uma_criatura_e_desfere_uma_mordid": {
+    "en": "🦁 **{monstro}** brought down a creature and lands an extra Bite!",
+    "pt": "🦁 **{monstro}** abateu uma criatura e desfere uma Mordida adicional!"
   },
   "narracao.abencoa_a_arma_de_1_ataque_dano_e_ignora": {
     "en": "⚔️ **{caster}** blesses **{alvo}**'s weapon: +1 attack/damage and bypasses physical resistance/immunity for {dur} round(s).",
@@ -135,6 +143,10 @@ window.LANG_NARRACAO = {
   "narracao.arremessa_em": {
     "en": "{defn_emoji} **{heroi}** throws **{defn}** at ({cx},{cy})!",
     "pt": "{defn_emoji} **{heroi}** arremessa **{defn}** em ({cx},{cy})!"
+  },
+  "narracao.as_chamas_deixadas_pelo_molochus_se_apag": {
+    "en": "🔥 The flames left by the Molochus burn out.",
+    "pt": "🔥 As chamas deixadas pelo Molochus se apagam."
   },
   "narracao.as_coordenadas_do_mapa_mundi_foram_atual": {
     "en": "🧭 The world map coordinates have been updated.",
@@ -232,6 +244,14 @@ window.LANG_NARRACAO = {
     "en": "🎵 **{heroi}**'s Heroic Song [{labels}] — upkeep 🍖-{custo_fome} 💧-{custo_sede}.",
     "pt": "🎵 Canção Heroica de **{heroi}** [{labels}] — manutenção 🍖-{custo_fome} 💧-{custo_sede}."
   },
+  "narracao.causa_de_constricao_em": {
+    "en": "🦂 **{monstro}** deals **{dano}** Constriction damage to **{nome}**.",
+    "pt": "🦂 **{monstro}** causa **{dano}** de Constrição em **{nome}**."
+  },
+  "narracao.causa_de_dano_no_estomago_de": {
+    "en": "🫀 **{heroi}** deals **{dano}** damage to **{captor}**'s stomach ({p_engolido_dano}/{limite}).",
+    "pt": "🫀 **{heroi}** causa **{dano}** de dano no estômago de **{captor}** ({p_engolido_dano}/{limite})."
+  },
   "narracao.cego_por_rodada_s_em_ataques": {
     "en": "🙈 **{nome}**: **{alvo_nome}** blinded for {duracao} round(s) ({pen} to attacks)!",
     "pt": "🙈 **{nome}**: **{alvo_nome}** cego por {duracao} rodada(s) ({pen} em ataques)!"
@@ -299,6 +319,14 @@ window.LANG_NARRACAO = {
   "narracao.contramagica_de_vence_o_teste_oposto_vs": {
     "en": "🛑 **{alvo_get_name_alvo}**'s **Counterspell** wins the opposed check ({meu} vs {op}) and cancels the spell!",
     "pt": "🛑 **Contramágica** de **{alvo_get_name_alvo}** vence o teste oposto ({meu} vs {op}) e cancela a magia!"
+  },
+  "narracao.cospe": {
+    "en": "🦖 **{monstro}** spits **{alvo_get_name_or_alvo_ge}** back out: {motivo}.",
+    "pt": "🦖 **{monstro}** cospe **{alvo_get_name_or_alvo_ge}**: {motivo}."
+  },
+  "narracao.cria_uma_nuvem_acida_de_raio_por_rodada": {
+    "en": "🧪 **{monstro}** creates an Acid Cloud of radius {raio} for {zona_duracao} round(s).",
+    "pt": "🧪 **{monstro}** cria uma Nuvem Ácida de raio {raio} por {zona_duracao} rodada(s)."
   },
   "narracao.cura_em_hp_2d6_2": {
     "en": "💚 **{heroi}** heals **{t}** for **{heal}** HP! (2d6+2)",
@@ -388,6 +416,14 @@ window.LANG_NARRACAO = {
     "en": "🍖 **{monstro}** devours the destroyed material and recovers **{ganho}** HP!",
     "pt": "🍖 **{monstro}** devora o material destruído e recupera **{ganho}** HP!"
   },
+  "narracao.dilacera_e_causa_de_dano_extra": {
+    "en": "🦁 **{monstro}** Mauls **{alvo_get_name_alvo}** for **{extra}** extra damage!",
+    "pt": "🦁 **{monstro}** Dilacera **{alvo_get_name_alvo}** e causa **{extra}** de dano extra!"
+  },
+  "narracao.dilacera_e_causa_de_dano_extra_2": {
+    "en": "🦁 **{monstro}** Mauls **{target_get_name_or_targe}** for **{extra}** extra damage!",
+    "pt": "🦁 **{monstro}** Dilacera **{target_get_name_or_targe}** e causa **{extra}** de dano extra!"
+  },
   "narracao.dispara_nota_cortante_em": {
     "en": "🎵 **{heroi}** fires **Cutting Note** at **{monstro}**!",
     "pt": "🎵 **{heroi}** dispara **Nota Cortante** em **{monstro}**!"
@@ -456,6 +492,10 @@ window.LANG_NARRACAO = {
     "en": "💨 **{tgt_name}** is pushed 1 square by the Gust of Wind!",
     "pt": "💨 **{tgt_name}** é empurrado 1 quadrado pelo Golpe de Vento!"
   },
+  "narracao.e_imune_a": {
+    "en": "☠️ **{alvo_get_name_or_alvo_ge}** is immune to {nome}.",
+    "pt": "☠️ **{alvo_get_name_or_alvo_ge}** é imune a {nome}."
+  },
   "narracao.e_imune_a_cegueira": {
     "en": "🛡️ **{alvo_nome}** is **immune to blindness**!",
     "pt": "🛡️ **{alvo_nome}** é **imune a cegueira**!"
@@ -471,6 +511,10 @@ window.LANG_NARRACAO = {
   "narracao.e_imune_a_paralisia": {
     "en": "🛡️ **{alvo}** is immune to paralysis.",
     "pt": "🛡️ **{alvo}** é imune à paralisia."
+  },
+  "narracao.e_imune_ao_veneno_do_lacralion": {
+    "en": "☠️ **{alvo_get_name_alvo}** is immune to the Lacralion's Venom.",
+    "pt": "☠️ **{alvo_get_name_alvo}** é imune ao Veneno do Lacralion."
   },
   "narracao.e_inabalavel_e_ignora_a_imobilizacao": {
     "en": "🪨 **{nome}** is Unshakable and ignores the immobilization!",
@@ -508,6 +552,10 @@ window.LANG_NARRACAO = {
     "en": "☠️ **{nome}**: {_txt} on **{alvo_nome}** for {duracao} round(s).",
     "pt": "☠️ **{nome}**: {_txt} em **{alvo_nome}** por {duracao} rodada(s)."
   },
+  "narracao.em_reflexos_vs_cd_e_sofre_de_fogo": {
+    "en": "🔥 **{nome}** {passa_if_passou_else_fal} the Reflex save ({total} vs DC {cd}) and takes **{dano}** fire damage.",
+    "pt": "🔥 **{nome}** {passa_if_passou_else_fal} em Reflexos ({total} vs CD {cd}) e sofre **{dano}** de fogo."
+  },
   "narracao.encerra_a_cancao_heroica": {
     "en": "🔇 **{heroi}** ends the Heroic Song.",
     "pt": "🔇 **{heroi}** encerra a Canção Heroica."
@@ -527,6 +575,10 @@ window.LANG_NARRACAO = {
   "narracao.encontrou_o_objeto_chave": {
     "en": "🔑 **{heroi}** found the key object!",
     "pt": "🔑 **{heroi}** encontrou o objeto-chave!"
+  },
+  "narracao.engole": {
+    "en": "🦖 **{monstro}** swallows **{preso_get_name_or_preso}** whole!",
+    "pt": "🦖 **{monstro}** engole **{preso_get_name_or_preso}**!"
   },
   "narracao.entoa_o_dueto_marcial_por_rodada_s": {
     "en": "🎼 **{heroi}** sings the **Martial Duet** for {st_duracao} round(s)!",
@@ -624,9 +676,17 @@ window.LANG_NARRACAO = {
     "en": "✅ **{alvo_nome}** avoided **{nome}** without damage!",
     "pt": "✅ **{alvo_nome}** evitou **{nome}** sem dano!"
   },
+  "narracao.explode_ao_morrer_de_fogo_em_raio_reflex": {
+    "en": "💥 **{monstro}** explodes on death: {expressao} fire damage in radius {raio}! Reflex DC {cd} halves it.",
+    "pt": "💥 **{monstro}** explode ao morrer: {expressao} de fogo em raio {raio}! Reflexos CD {cd} reduz à metade."
+  },
   "narracao.explode_em_chamas_reflexos_cd_raio": {
     "en": "💥 **{monstro}** explodes in flames! (Reflex DC {cd}; radius {raio})",
     "pt": "💥 **{monstro}** explode em chamas! (Reflexos CD {cd}; raio {raio})"
+  },
+  "narracao.falha_ao_forcar_a_saida_do_estomago_de_f": {
+    "en": "⛓️ **{heroi}** fails to force a way out of **{captor}**'s stomach (Strength {total} vs DC {dc}).",
+    "pt": "⛓️ **{heroi}** falha ao forçar a saída do estômago de **{captor}** (Força {total} vs CD {dc})."
   },
   "narracao.falha_critica_a_armadilha_dispara_no_pro": {
     "en": "💀 Critical failure! The trap goes off on Luccas himself!",
@@ -656,9 +716,17 @@ window.LANG_NARRACAO = {
     "en": "💫 **{tgt_name}** becomes **stunned** (Fortitude {stot} vs DC {dc}) and loses the next round!",
     "pt": "💫 **{tgt_name}** fica **atordoado** (Fortitude {stot} vs CD {dc}) e perde a próxima rodada!"
   },
+  "narracao.fica_cambaleante_e_perde_sua_acao_de_ata": {
+    "en": "🦖 **{monstro}** is left reeling and loses its attack action.",
+    "pt": "🦖 **{monstro}** fica cambaleante e perde sua ação de ataque."
+  },
   "narracao.fica_invisivel_por_rodada_s_inimigos_nao": {
     "en": "🫥 **{caster}** turns invisible for {dur} round(s) — enemies can't target them; attacks with advantage; breaks on attacking/casting.",
     "pt": "🫥 **{caster}** fica invisível por {dur} rodada(s) — inimigos não o atacam; ataca com vantagem; quebra ao atacar/lançar."
+  },
+  "narracao.fica_lento_por_rodada_s": {
+    "en": "🐌 **{alvo_nome}** is Slowed for {duracao} round(s).",
+    "pt": "🐌 **{alvo_nome}** fica Lento por {duracao} rodada(s)."
   },
   "narracao.fica_protegido_absorve_ate_de_dano_eleme": {
     "en": "🛡️ **{caster}** becomes protected: absorbs up to {reducao} elemental damage per round ({dur} round(s)).",
@@ -860,13 +928,25 @@ window.LANG_NARRACAO = {
     "en": "🔲 The chest is empty and disappears.",
     "pt": "🔲 O baú está vazio e desaparece."
   },
+  "narracao.o_chao_permanece_em_chamas_por_rodada_s": {
+    "en": "🔥 The ground stays ablaze for {ability_get_duration_2} round(s). Entering or starting your turn in the area deals 1d6 fire damage.",
+    "pt": "🔥 O chão permanece em chamas por {ability_get_duration_2} rodada(s). Entrar ou iniciar o turno na área causa 1d6 de fogo."
+  },
   "narracao.o_controle_sobre_se_rompe_volta_a_ser_ho": {
     "en": "💀 Control over **{monstro}** breaks — it turns hostile again.",
     "pt": "💀 O controle sobre **{monstro}** se rompe — volta a ser hostil."
   },
+  "narracao.o_corpo_do_deixa_escapar": {
+    "en": "🦖 The body of **{monstro}** lets **{c_get_name_or_c_get_nome}** escape.",
+    "pt": "🦖 O corpo do **{monstro}** deixa **{c_get_name_or_c_get_nome}** escapar."
+  },
   "narracao.o_dominio_de_sobre_torna_se_permanente": {
     "en": "💀 **{heroi}**'s control over **{a_nome}** becomes PERMANENT!",
     "pt": "💀 O domínio de **{heroi}** sobre **{a_nome}** torna-se PERMANENTE!"
+  },
+  "narracao.o_estomago_e_rompido_por_dentro_sofre_de": {
+    "en": "💥 The stomach bursts from the inside: **{captor}** takes **{interno}** internal damage and is left reeling.",
+    "pt": "💥 O estômago é rompido por dentro: **{captor}** sofre **{interno}** de dano interno e fica cambaleante."
   },
   "narracao.o_grupo_parte_para_etapa_fome_sede_por_h": {
     "en": "The group sets out for **{adventure_nome}** — stage {stage_index_1}/{len_stages} (hunger -{fome}, thirst -{sede} per hero).",
@@ -991,6 +1071,10 @@ window.LANG_NARRACAO = {
   "narracao.perde_o_movimento": {
     "en": "🦵 **{alvo_nome}** loses their movement!",
     "pt": "🦵 **{alvo_nome}** perde o movimento!"
+  },
+  "narracao.perdera_apenas_o_movimento_no_proximo_tu": {
+    "en": "🦂 **{alvo_nome}** will only lose movement on the next turn.",
+    "pt": "🦂 **{alvo_nome}** perderá apenas o movimento no próximo turno."
   },
   "narracao.perdeu_a_conexao_e_deixou_a_masmorra_o_g": {
     "en": "🔌 **{heroi}** lost connection and left the dungeon. The group presses on!",
@@ -1131,6 +1215,10 @@ window.LANG_NARRACAO = {
   "narracao.resiste_a_dominar_mente": {
     "en": "🧠 **{alvo}** resists Dominate Mind.",
     "pt": "🧠 **{alvo}** resiste a Dominar Mente."
+  },
+  "narracao.resiste_a_engolir_de_fortitude_vs_cd": {
+    "en": "🦖 **{preso_get_name_or_preso}** resists **{monstro}**'s Swallow (Fortitude {total} vs DC {dc}).",
+    "pt": "🦖 **{preso_get_name_or_preso}** resiste a Engolir de **{monstro}** (Fortitude {total} vs CD {dc})."
   },
   "narracao.resiste_a_infeccao_fortitude_vs_cd": {
     "en": "🦠 **{target}** resists the infection (Fortitude {tot} vs DC {dc}).",
@@ -1312,6 +1400,26 @@ window.LANG_NARRACAO = {
     "en": "🔥 {rotulo}: **{nome}** takes {d}{extra}.",
     "pt": "🔥 {rotulo}: **{nome}** sofre {d}{extra}."
   },
+  "narracao.sofre_ao_iniciar_o_turno_dentro_da_nuvem": {
+    "en": "🧪 **{nome}** takes **{dano}** for starting the turn inside the Acid Cloud.",
+    "pt": "🧪 **{nome}** sofre **{dano}** ao iniciar o turno dentro da Nuvem Ácida."
+  },
+  "narracao.sofre_da_aura_escaldante_de": {
+    "en": "🔥 **{alvo_get_name_or_alvo_ge}** takes **{dano}** from **{monstro}**'s Scalding Aura.",
+    "pt": "🔥 **{alvo_get_name_or_alvo_ge}** sofre **{dano}** da Aura Escaldante de **{monstro}**."
+  },
+  "narracao.sofre_da_carapaca_espinhosa_de": {
+    "en": "🦂 **{atacante_get_name_atacan}** takes **{dano}** from **{criatura_get_name_criatu}**'s Spiked Carapace.",
+    "pt": "🦂 **{atacante_get_name_atacan}** sofre **{dano}** da Carapaça Espinhosa de **{criatura_get_name_criatu}**."
+  },
+  "narracao.sofre_da_nuvem_acida_de": {
+    "en": "🧪 **{nome}** takes **{dano}** from **{monstro}**'s Acid Cloud.",
+    "pt": "🧪 **{nome}** sofre **{dano}** da Nuvem Ácida de **{monstro}**."
+  },
+  "narracao.sofre_das_chamas_persistentes": {
+    "en": "🔥 **{alvo_get_name_or_alvo_ge}** takes **{dano}** from the lingering flames.",
+    "pt": "🔥 **{alvo_get_name_or_alvo_ge}** sofre **{dano}** das chamas persistentes."
+  },
   "narracao.sofre_de": {
     "en": "{defn_emoji} **{nome}** takes {d} {defn_elemento} damage.",
     "pt": "{defn_emoji} **{nome}** sofre {d} de {defn_elemento}."
@@ -1331,6 +1439,14 @@ window.LANG_NARRACAO = {
   "narracao.sofre_de_dano_3": {
     "en": "{defn_get_emoji} **{alvo_get_name_alvo_get_n}** takes **{dmg}** damage.",
     "pt": "{defn_get_emoji} **{alvo_get_name_alvo_get_n}** sofre **{dmg}** de dano."
+  },
+  "narracao.sofre_de_dano_adicional_do_veneno": {
+    "en": "☠️ **{alvo_nome}** takes **{dano}** extra poison damage.",
+    "pt": "☠️ **{alvo_nome}** sofre **{dano}** de dano adicional do veneno."
+  },
+  "narracao.sofre_do_sangue_em_ebulicao_de": {
+    "en": "🌋 **{atacante_get_name_or_ata}** takes **{dano}** from **{molochus}**'s Boiling Blood.",
+    "pt": "🌋 **{atacante_get_name_or_ata}** sofre **{dano}** do Sangue em Ebulição de **{molochus}**."
   },
   "narracao.sofre_empurrado_q": {
     "en": "🌪️ **{nome}** takes {dano} (pushed {push} square(s)).",
@@ -1467,6 +1583,10 @@ window.LANG_NARRACAO = {
   "narracao.usa_e_recupera_hp_2": {
     "en": "🧪 **{m_get_name_o_monstro}** uses **{item}** and recovers **{val}** HP.",
     "pt": "🧪 **{m_get_name_o_monstro}** usa **{item}** e recupera **{val}** HP."
+  },
+  "narracao.usa_explosao_de_vapor_em_cone_de_quadrad": {
+    "en": "🌋 **{monstro}** uses **Steam Burst** in a {ability_get_range_3}-square cone.",
+    "pt": "🌋 **{monstro}** usa **Explosão de Vapor** em cone de {ability_get_range_3} quadrados."
   },
   "narracao.usa_golpe_divino_em_d20_vs_ca_de_dano_sa": {
     "en": "⚡ **{heroi}** uses **Divine Strike** on **{t}** (d20={roll}+{p_atk_bonus}={total} vs AC {t_ac}): **{dmg}** holy damage!",

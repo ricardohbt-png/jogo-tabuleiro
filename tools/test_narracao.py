@@ -83,6 +83,42 @@ def _rodar_verificacoes():
         for pid in ("n_pt", "n_en"):
             S.LANG_BY_PID.pop(pid, None)
 
+    print("\n[6] Nomes de catálogo dentro da frase")
+
+    def _r(x, lang):
+        """Renderiza como o json.dumps faria para uma conexão naquele idioma."""
+        return S.t(x.key, lang, **x.params) if isinstance(x, S.T) else str(x)
+
+    # Monstro NATIVO: traduz.
+    orc_pt = S.LANG_STRINGS["cat.monstro.orc.nome"]["pt"]
+    orc = {"type": "orc", "name": orc_pt}
+    check("monstro nativo usa o en do catálogo",
+          _r(S.nome_criatura(orc), "en") == S.LANG_STRINGS["cat.monstro.orc.nome"]["en"])
+    check("monstro nativo em pt continua igual", _r(S.nome_criatura(orc), "pt") == orc_pt)
+
+    # Monstro AUTORAL: sem chave → sai cru, nos dois idiomas.
+    autoral = {"type": "soldado_do_autor", "name": "Soldado do Autor"}
+    check("monstro autoral sai cru", _r(S.nome_criatura(autoral), "en") == "Soldado do Autor")
+
+    # Nativo RENOMEADO no editor: tem chave, mas o nome não bate → sai cru.
+    renomeado = {"type": "orc", "name": "Orc Veterano de Khaz"}
+    check("nativo renomeado preserva o nome do autor",
+          _r(S.nome_criatura(renomeado), "en") == "Orc Veterano de Khaz")
+
+    # Jogador: nunca traduz, mesmo com nome igual ao de um monstro.
+    check("nome de jogador nunca é traduzido",
+          _r(S.nome_criatura({"class_id": "warrior", "name": orc_pt}), "en") == orc_pt)
+
+    # Item nativo. Sem `if`: se o id sumir do catálogo, o teste tem de ficar
+    # vermelho — um `if item:` silencioso já deixou esta checagem sem rodar.
+    antid = next(i for i in S.SHOP_MERCHANT if i["id"] == "antidote")
+    check("item nativo traduz",
+          _r(S.nome_item(dict(antid)), "en") == S.LANG_STRINGS["cat.item.antidote.nome"]["en"])
+    # Item autoral (id que não existe no catálogo) sai cru.
+    check("item autoral sai cru",
+          _r(S.nome_item({"id": "espada_do_autor", "name": "Espada do Autor"}), "en")
+          == "Espada do Autor")
+
 
 if __name__ == "__main__":
     print("=" * 62); print("  TESTE — Narração do servidor (etapa 4b-i)"); print("=" * 62)
