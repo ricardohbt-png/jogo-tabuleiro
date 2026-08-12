@@ -765,763 +765,763 @@ window.LANG_NARRACAO = {
     "pt": "🪗 **{heroi}** improvisa e **desafina** — -1 em ataques e CDs até o próximo turno."
   },
   "narracao.improvisa_e_desafina_de_leve_nada_aconte": {
-    "en": "",
+    "en": "🪗 **{heroi}** improvises… and goes slightly off-key (nothing happens).",
     "pt": "🪗 **{heroi}** improvisa… e desafina de leve (nada acontece)."
   },
   "narracao.inicia_o_requiem_final_sobre": {
-    "en": "",
+    "en": "🎻 **{heroi}** begins the **Final Requiem** on **{monstro}**!",
     "pt": "🎻 **{heroi}** inicia o **Réquiem Final** sobre **{monstro}**!"
   },
   "narracao.invoca_luz_sagrada_2d6_int_dano_sagrado": {
-    "en": "",
+    "en": "☀️ **{heroi}** invokes **Holy Light**! 2d6+INT holy damage to all enemies!",
     "pt": "☀️ **{heroi}** invoca **Luz Sagrada**! 2d6+INT dano sagrado em todos os inimigos!"
   },
   "narracao.ja_usou_sua_acao_bonus_neste_turno": {
-    "en": "",
+    "en": "⚠️ **{heroi}** already used their bonus action this turn.",
     "pt": "⚠️ **{heroi}** já usou sua ação bônus neste turno."
   },
   "narracao.joga_sobre_si_e_apaga_as_chamas": {
-    "en": "",
+    "en": "💧 **{heroi}** pours **{item}** over themself and puts out the flames!",
     "pt": "💧 **{heroi}** joga **{item}** sobre si e apaga as chamas!"
   },
   "narracao.lanca_bola_de_fogo_inimigo_s_sofrem_de_d": {
-    "en": "",
+    "en": "🔥 **{heroi}** casts **Fireball**{extra}! {len_alive_monsters} enemy(ies) take ~**{avg}** damage (4d6+INT)!",
     "pt": "🔥 **{heroi}** lança **Bola de Fogo**{extra}! {len_alive_monsters} inimigo(s) sofrem ~**{avg}** de dano (4d6+INT)!"
   },
   "narracao.lanca_bomba_de_fumaca_os_inimigos_errara": {
-    "en": "",
+    "en": "💨 **{heroi}** throws a **Smoke Bomb**! Enemies will miss their next attack.",
     "pt": "💨 **{heroi}** lança **Bomba de Fumaça**! Os inimigos errarão o próximo ataque."
   },
   "narracao.lanca_jato_de_ar_alvo_s_no_cone": {
-    "en": "",
+    "en": "🌪️ **{caster}** casts Gust of Wind — {n} target(s) in the cone.",
     "pt": "🌪️ **{caster}** lança Jato de Ar — {n} alvo(s) no cone."
   },
   "narracao.lanca_lentidao_alvo_s_afetado_s_por_roda": {
-    "en": "",
+    "en": "🐌 **{caster}** casts Slow — {n} target(s) affected for {dur} round(s) (affects allies/minions).",
     "pt": "🐌 **{caster}** lança Lentidão — {n} alvo(s) afetado(s) por {dur} rodada(s) (afeta aliados/minions)."
   },
   "narracao.lanca_medo_alvo_s_afetado_s_por_rodada_s": {
-    "en": "",
+    "en": "😱 **{caster}** casts Fear — {n} target(s) affected for {dur} round(s) (-1 attack; affects allies/minions).",
     "pt": "😱 **{caster}** lança Medo — {n} alvo(s) afetado(s) por {dur} rodada(s) (-1 ataque; afeta aliados/minions)."
   },
   "narracao.lanca_raio_congelante_d4_sem_save_em": {
-    "en": "",
+    "en": "❄️ **{caster}** casts **Ray of Frost**: {nd}d4 = {dano} (no save) on **{alvo}**.",
     "pt": "❄️ **{caster}** lança **Raio Congelante**: {nd}d4 = {dano} (sem save) em **{alvo}**."
   },
   "narracao.lanca_sono_alvo_s_adormecem_por_ate_roda": {
-    "en": "",
+    "en": "🌙 **{caster}** casts Sleep — {n} target(s) fall asleep for up to {dur} round(s) (also affects allies/minions).",
     "pt": "🌙 **{caster}** lança Sono — {n} alvo(s) adormecem por até {dur} rodada(s) (afeta aliados/minions também)."
   },
   "narracao.largou_no_chao": {
-    "en": "",
+    "en": "🎒 **{heroi}** dropped **{item}** on the ground.",
     "pt": "🎒 **{heroi}** largou **{item}** no chão."
   },
   "narracao.libertou_o_prisioneiro": {
-    "en": "",
+    "en": "🔓 **{heroi}** freed the prisoner!",
     "pt": "🔓 **{heroi}** libertou o prisioneiro!"
   },
   "narracao.loot_de_deixado_no_chao": {
-    "en": "",
+    "en": "🎒 **{monstro}**'s loot was left on the ground!",
     "pt": "🎒 Loot de **{monstro}** deixado no chão!"
   },
   "narracao.mantem_a_concentracao_vontade_vs_cd_10": {
-    "en": "",
+    "en": "🧙 **{monstro}** maintains concentration (Will {tot} vs DC 10).",
     "pt": "🧙 **{monstro}** mantém a concentração (Vontade {tot} vs CD 10)."
   },
   "narracao.mantem_o_sangue_frio_e_rola_novamente": {
-    "en": "",
+    "en": "🧊 **{heroi}** keeps a cool head and rolls again!",
     "pt": "🧊 **{heroi}** mantém o sangue frio e rola novamente!"
   },
   "narracao.mantem_protetor_sobre_1": {
-    "en": "",
+    "en": "🛡️ **{heroi}** maintains Protector over **{alvo}** 🍖-1.",
     "pt": "🛡️ **{heroi}** mantém Protetor sobre **{alvo}** 🍖-1."
   },
   "narracao.mensagem": {
-    "en": "",
+    "en": "{emoji} **{target}** {txt_livre} {rolagem}.",
     "pt": "{emoji} **{target}** {txt_livre} {rolagem}."
   },
   "narracao.metamagia": {
-    "en": "",
+    "en": "🔮 **{heroi}** — metamagic: {join_partes}{custo_txt}.",
     "pt": "🔮 **{heroi}** — metamagia: {join_partes}{custo_txt}."
   },
   "narracao.nao_afeta_imune_a_venenos": {
-    "en": "",
+    "en": "🧪 **{nome}** doesn't affect **{alvo_nome}** (immune to poisons).",
     "pt": "🧪 **{nome}** não afeta **{alvo_nome}** (imune a venenos)."
   },
   "narracao.nao_esta_mais_petrificado": {
-    "en": "",
+    "en": "✅ **{alvo_nome}** is no longer petrified.",
     "pt": "✅ **{alvo_nome}** não está mais petrificado."
   },
   "narracao.o_acido_corroi_a_defesa_de_ca": {
-    "en": "",
+    "en": "🧪 The acid corrodes **{nome}**'s defense: AC {base} → {novo}!",
     "pt": "🧪 O ácido corrói a defesa de **{nome}**: CA {base} → {novo}!"
   },
   "narracao.o_bau_esta_vazio_e_desaparece": {
-    "en": "",
+    "en": "🔲 The chest is empty and disappears.",
     "pt": "🔲 O baú está vazio e desaparece."
   },
   "narracao.o_controle_sobre_se_rompe_volta_a_ser_ho": {
-    "en": "",
+    "en": "💀 Control over **{monstro}** breaks — it turns hostile again.",
     "pt": "💀 O controle sobre **{monstro}** se rompe — volta a ser hostil."
   },
   "narracao.o_dominio_de_sobre_torna_se_permanente": {
-    "en": "",
+    "en": "💀 **{heroi}**'s control over **{a_nome}** becomes PERMANENT!",
     "pt": "💀 O domínio de **{heroi}** sobre **{a_nome}** torna-se PERMANENTE!"
   },
   "narracao.o_grupo_parte_para_etapa_fome_sede_por_h": {
-    "en": "",
+    "en": "The group sets out for **{adventure_nome}** — stage {stage_index_1}/{len_stages} (hunger -{fome}, thirst -{sede} per hero).",
     "pt": "O grupo parte para **{adventure_nome}** — etapa {stage_index_1}/{len_stages} (fome -{fome}, sede -{sede} por herói)."
   },
   "narracao.o_grupo_viajou_de_para_por_heroi": {
-    "en": "",
+    "en": "🧭 The group traveled from **{origem}** to **{world_locations_destinat}** (🍖-{cost_fome} 💧-{cost_sede} per hero).",
     "pt": "🧭 O grupo viajou de **{origem}** para **{world_locations_destinat}** (🍖-{cost_fome} 💧-{cost_sede} por herói)."
   },
   "narracao.o_mestre_caiu_os_monstros_voltam_ao_cont": {
-    "en": "",
+    "en": "🔌 The Game Master disconnected — monsters return to AI control.",
     "pt": "🔌 O mestre caiu — os monstros voltam ao controle da IA."
   },
   "narracao.o_mestre_reconectou_se": {
-    "en": "",
+    "en": "🔌 The Game Master **{name}** reconnected.",
     "pt": "🔌 O mestre **{name}** reconectou-se."
   },
   "narracao.o_necromante_domina_permanentemente": {
-    "en": "",
+    "en": "💀 The necromancer dominates **{a_nome}** PERMANENTLY!",
     "pt": "💀 O necromante domina **{a_nome}** PERMANENTEMENTE!"
   },
   "narracao.o_pergaminho_falha_e_a_energia_se_dissip": {
-    "en": "",
+    "en": "🌫️ The scroll **fails** and the energy dissipates. ({join_motivos})",
     "pt": "🌫️ O pergaminho **falha** e a energia se dissipa. ({join_motivos})"
   },
   "narracao.o_prisioneiro_esquiva_de_um_monstro": {
-    "en": "",
+    "en": "🛡️ The prisoner dodges a monster!",
     "pt": "🛡️ O prisioneiro esquiva de um monstro!"
   },
   "narracao.o_prisioneiro_foi_morto_o_resgate_falhou": {
-    "en": "",
+    "en": "☠️ The prisoner was killed! The rescue failed.",
     "pt": "☠️ O prisioneiro foi morto! O resgate falhou."
   },
   "narracao.o_requiem_final_de_se_encerra": {
-    "en": "",
+    "en": "🎻 **{bardo}**'s Final Requiem ends — {motivo}.",
     "pt": "🎻 O Réquiem Final de **{bardo}** se encerra — {motivo}."
   },
   "narracao.o_requiem_final_dilacera": {
-    "en": "",
+    "en": "🎻 The Final Requiem tears into **{monstro}**: {n}{st_dado} = **{dano}**!",
     "pt": "🎻 O Réquiem Final dilacera **{monstro}**: {n}{st_dado} = **{dano}**!"
   },
   "narracao.o_requiem_improvisado_fere_em": {
-    "en": "",
+    "en": "🎻 The Improvised Requiem wounds **{monstro}** for **{dano}**!",
     "pt": "🎻 O Réquiem improvisado fere **{monstro}** em **{dano}**!"
   },
   "narracao.o_silencio_de_se_dissipa_com_sua_morte": {
-    "en": "",
+    "en": "🔇 **{monstro}**'s Silence dissipates with its death.",
     "pt": "🔇 O Silêncio de **{monstro}** se dissipa com sua morte."
   },
   "narracao.o_teletransporte_de_falha_saida_bloquead": {
-    "en": "",
+    "en": "✅ **{alvo_get_name_alvo}**'s teleport fails: exit blocked.",
     "pt": "✅ O teletransporte de **{alvo_get_name_alvo}** falha: saída bloqueada."
   },
   "narracao.o_veneno_da_arma_de_acabou": {
-    "en": "",
+    "en": "🧴 **{heroi}**'s weapon poison ran out.",
     "pt": "🧴 O veneno da arma de **{heroi}** acabou."
   },
   "narracao.o_veneno_do_projetil_de_acabou": {
-    "en": "",
+    "en": "🧴 **{heroi}**'s projectile poison ran out.",
     "pt": "🧴 O veneno do projétil de **{heroi}** acabou."
   },
   "narracao.objetivo_principal_cumprido_recolham_a_r": {
-    "en": "",
+    "en": "🏁 Main objective complete! Collect your reward and click **End Mission** when you're ready.",
     "pt": "🏁 Objetivo principal cumprido! Recolham a recompensa e cliquem em **Encerrar missão** quando estiverem prontos."
   },
   "narracao.os_aventureiros_descem_novamente_as_esca": {
-    "en": "",
+    "en": "🚪 The adventurers descend the stairs once more — the dungeon remains exactly as they left it.",
     "pt": "🚪 Os aventureiros descem novamente as escadas — a masmorra permanece exatamente como a deixaram."
   },
   "narracao.os_aventureiros_partem_da_cidade_e_adent": {
-    "en": "",
+    "en": "The adventurers leave town and enter the dungeon. Round 1 — **{nome}**'s initiative.",
     "pt": "Os aventureiros partem da cidade e adentram a masmorra. Rodada 1 — iniciativa de **{nome}**."
   },
   "narracao.os_ecos_dolorosos_ferem_em": {
-    "en": "",
+    "en": "🔔 The Aching Echoes wound **{monstro}** for **{dano}**!",
     "pt": "🔔 Os Ecos Dolorosos ferem **{monstro}** em **{dano}**!"
   },
   "narracao.os_efeitos_magicos_em_se_dissipam": {
-    "en": "",
+    "en": "✨ The magical effects on **{alvo_get_name_alvo}** dissipate.",
     "pt": "✨ Os efeitos mágicos em **{alvo_get_name_alvo}** se dissipam."
   },
   "narracao.parte_para_a_investida_brutal_2_de_dano": {
-    "en": "",
+    "en": "🐗 **{monstro}** charges into a **Brutal Charge** (+2 damage)!",
     "pt": "🐗 **{monstro}** parte para a **Investida Brutal** (+2 de dano)!"
   },
   "narracao.pega_fogo_por_rodada_s": {
-    "en": "",
+    "en": "🔥 **{target}** catches fire for {dur} round(s)!",
     "pt": "🔥 **{target}** pega fogo por {dur} rodada(s)!"
   },
   "narracao.pega_fogo_por_rodada_s_2": {
-    "en": "",
+    "en": "🔥 **{nome}** catches fire for {dur} round(s)!",
     "pt": "🔥 **{nome}** pega fogo por {dur} rodada(s)!"
   },
   "narracao.pegou_do_bau": {
-    "en": "",
+    "en": "📦 **{heroi}** picked up **{item_get_emoji} {item}** from the chest{extra}!",
     "pt": "📦 **{heroi}** pegou **{item_get_emoji} {item}** do baú{extra}!"
   },
   "narracao.pegou_do_chao": {
-    "en": "",
+    "en": "🎒 **{heroi}** picked up **{gi_item_name}** from the ground{extra}!",
     "pt": "🎒 **{heroi}** pegou **{gi_item_name}** do chão{extra}!"
   },
   "narracao.pegou_do_objeto": {
-    "en": "",
+    "en": "🎒 **{heroi}** picked up **{item}** from the object{extra}!",
     "pt": "🎒 **{heroi}** pegou **{item}** do objeto{extra}!"
   },
   "narracao.pegou_ouros_do_bau": {
-    "en": "",
+    "en": "🪙 **{heroi}** picked up **{recebido}** gold from the chest!",
     "pt": "🪙 **{heroi}** pegou **{recebido}** ouros do baú!"
   },
   "narracao.pegou_ouros_do_objeto": {
-    "en": "",
+    "en": "🪙 **{heroi}** picked up **{recebido}** gold from the object!",
     "pt": "🪙 **{heroi}** pegou **{recebido}** ouros do objeto!"
   },
   "narracao.perde_a_concentracao_sem_magia_neste_tur": {
-    "en": "",
+    "en": "💥 **{monstro}** loses concentration — no spell this turn! (Will {tot} vs DC 10)",
     "pt": "💥 **{monstro}** perde a concentração — sem magia neste turno! (Vontade {tot} vs CD 10)"
   },
   "narracao.perde_a_rodada_inteira": {
-    "en": "",
+    "en": "⏸️ **{alvo_nome}** loses the entire round!",
     "pt": "⏸️ **{alvo_nome}** perde a rodada inteira!"
   },
   "narracao.perde_o_movimento": {
-    "en": "",
+    "en": "🦵 **{alvo_nome}** loses their movement!",
     "pt": "🦵 **{alvo_nome}** perde o movimento!"
   },
   "narracao.perdeu_a_conexao_e_deixou_a_masmorra_o_g": {
-    "en": "",
+    "en": "🔌 **{heroi}** lost connection and left the dungeon. The group presses on!",
     "pt": "🔌 **{heroi}** perdeu a conexão e deixou a masmorra. O grupo segue em frente!"
   },
   "narracao.petrificado_por_rodada_s": {
-    "en": "",
+    "en": "🗿 **{nome}**: **{alvo_nome}** petrified for {pet_dur} round(s)!",
     "pt": "🗿 **{nome}**: **{alvo_nome}** petrificado por {pet_dur} rodada(s)!"
   },
   "narracao.pisou_na_fogueira_e_sofre_de_fogo": {
-    "en": "",
+    "en": "🔥 **{nome}** stepped into the campfire and takes **{dano}** fire damage!",
     "pt": "🔥 **{nome}** pisou na fogueira e sofre **{dano}** de fogo!"
   },
   "narracao.prepara_custo_e_recarga_apos_o_efeito": {
-    "en": "",
+    "en": "⚔️ **{heroi}** readies **{item_nome}** — cost and cooldown apply after the effect.",
     "pt": "⚔️ **{heroi}** prepara **{item_nome}** — custo e recarga após o efeito."
   },
   "narracao.prepara_em": {
-    "en": "",
+    "en": "🪤 **{heroi}** sets **{tipo_nome}** at ({tx},{ty}).",
     "pt": "🪤 **{heroi}** prepara **{tipo_nome}** em ({tx},{ty})."
   },
   "narracao.projetil_incendiario_de_dano_de_fogo": {
-    "en": "",
+    "en": "🔥 Incendiary projectile: +{xdmg} fire damage!",
     "pt": "🔥 Projétil incendiário: +{xdmg} de dano de fogo!"
   },
   "narracao.protecao_de_absorve_de_resta": {
-    "en": "",
+    "en": "🛡️ **{alvo}**'s protection absorbs {absorvido} of {tipo} ({alvo_protecao_restante} remaining).",
     "pt": "🛡️ Proteção de **{alvo}** absorve {absorvido} de {tipo} (resta {alvo_protecao_restante})."
   },
   "narracao.protege_com_escudo_divino_imune_a_dano_p": {
-    "en": "",
+    "en": "🛡️ **{heroi}** protects **{t}** with **Divine Shield**! Immune to damage for 1 turn.",
     "pt": "🛡️ **{heroi}** protege **{t}** com **Escudo Divino**! Imune a dano por 1 turno."
   },
   "narracao.protetor_de_se_desfaz_aliado_fora_do_rai": {
-    "en": "",
+    "en": "🛡️ **{heroi}**'s Protector unravels — ally out of range.",
     "pt": "🛡️ Protetor de **{heroi}** se desfaz — aliado fora do raio."
   },
   "narracao.protetor_de_se_desfaz_aliado_saiu_do_rai": {
-    "en": "",
+    "en": "🛡️ **{richard}**'s Protector unravels — ally left the range.",
     "pt": "🛡️ Protetor de **{richard}** se desfaz — aliado saiu do raio."
   },
   "narracao.protetor_de_se_interrompe_fome_insuficie": {
-    "en": "",
+    "en": "🛡️ **{heroi}**'s Protector is interrupted — insufficient hunger.",
     "pt": "🛡️ Protetor de **{heroi}** se interrompe — fome insuficiente."
   },
   "narracao.raio_divino_dobrado_contra_morto_vivo_de": {
-    "en": "",
+    "en": "✨ Divine Ray DOUBLED against **{alvo}** (undead/demon)!",
     "pt": "✨ Raio Divino DOBRADO contra **{alvo}** (morto-vivo/demônio)!"
   },
   "narracao.reage_mas_erra": {
-    "en": "",
+    "en": "↩️ **{atacante}** reacts but **misses** **{alvo}**.",
     "pt": "↩️ **{atacante}** reage mas **erra** **{alvo}**."
   },
   "narracao.reaparece_das_sombras": {
-    "en": "",
+    "en": "👁️ **{monstro}** reappears from the shadows.",
     "pt": "👁️ **{monstro}** reaparece das sombras."
   },
   "narracao.recebe_visao_no_escuro_ate_o_fim_da_miss": {
-    "en": "",
+    "en": "👁️ **{alvo}** gains Darkvision until the end of the mission.",
     "pt": "👁️ **{alvo}** recebe Visão no Escuro até o fim da missão."
   },
   "narracao.recebe_visao_no_escuro_enquanto_o_manto": {
-    "en": "",
+    "en": "👁️ **{caster}** gains Darkvision while Cloak of Darkness lasts.",
     "pt": "👁️ **{caster}** recebe Visão no Escuro enquanto o Manto de Escuridão durar."
   },
   "narracao.reconectou_se_a_aventura": {
-    "en": "",
+    "en": "🔌 **{name}** reconnected to the adventure.",
     "pt": "🔌 **{name}** reconectou-se à aventura."
   },
   "narracao.reconectou_se_e_voltou_a_masmorra": {
-    "en": "",
+    "en": "🔌 **{name}** reconnected and returned to the dungeon!",
     "pt": "🔌 **{name}** reconectou-se e voltou à masmorra!"
   },
   "narracao.recorre_ao_instinto_de_sobrevivencia_e_r": {
-    "en": "",
+    "en": "🍀 **{heroi}** falls back on **Survival Instinct** and holds on with 1 HP!",
     "pt": "🍀 **{heroi}** recorre ao **Instinto de Sobrevivência** e resiste com 1 HP!"
   },
   "narracao.recua_das_chamas": {
-    "en": "",
+    "en": "🟢 **{monstro}** backs away from the flames!",
     "pt": "🟢 **{monstro}** recua das chamas!"
   },
   "narracao.recua_para_as_sombras_apos_morder": {
-    "en": "",
+    "en": "🐍 **{monstro}** retreats into the shadows after biting.",
     "pt": "🐍 **{monstro}** recua para as sombras após morder."
   },
   "narracao.recupera_a_coragem": {
-    "en": "",
+    "en": "😱 **{monstro}** regains its courage.",
     "pt": "😱 **{monstro}** recupera a coragem."
   },
   "narracao.recupera_a_pontaria_penalidade_da_cervej": {
-    "en": "",
+    "en": "🍺 **{heroi}** regains their aim (the beer penalty wore off).",
     "pt": "🍺 **{heroi}** recupera a pontaria (penalidade da cerveja acabou)."
   },
   "narracao.recupera_o_movimento_normal": {
-    "en": "",
+    "en": "🟢 **{monstro}** regains normal movement.",
     "pt": "🟢 **{monstro}** recupera o movimento normal."
   },
   "narracao.recuperou_a_coragem": {
-    "en": "",
+    "en": "😤 **{monstro}** regained its courage!",
     "pt": "😤 **{monstro}** recuperou a coragem!"
   },
   "narracao.recusa_a_morte_ultimo_esforco_dois_turno": {
-    "en": "",
+    "en": "🔥 **{heroi}** refuses to die — **LAST STAND**! Two turns of fury before falling.",
     "pt": "🔥 **{heroi}** recusa a morte — **ÚLTIMO ESFORÇO**! Dois turnos de fúria antes de cair."
   },
   "narracao.reforcos_um_a_entra_na_masmorra": {
-    "en": "",
+    "en": "⚠️ **Reinforcements!** A **{mdef_get_name_monster_ty}** enters the dungeon!",
     "pt": "⚠️ **Reforços!** Um(a) **{mdef_get_name_monster_ty}** entra na masmorra!"
   },
   "narracao.regenera_reserva_1_hp_rodada_revive_uma": {
-    "en": "",
+    "en": "🌿 **{caster}** regenerates **{alvo}** — pool {pool} (+1 HP/round; revives once with 1 HP).",
     "pt": "🌿 **{caster}** regenera **{alvo}** — reserva {pool} (+1 HP/rodada; revive uma vez com 1 HP)."
   },
   "narracao.regeneracao_cura_reserva": {
-    "en": "",
+    "en": "🌿 Regeneration heals **{alvo}** +{cura} ({alvo_hp}/{alvo_max_hp}; pool {alvo_regen_pool}).",
     "pt": "🌿 Regeneração cura **{alvo}** +{cura} ({alvo_hp}/{alvo_max_hp}; reserva {alvo_regen_pool})."
   },
   "narracao.regeneracao_divina_1_hp_1_1": {
-    "en": "",
+    "en": "✨ **{heroi}** — Divine Regeneration: +1 HP ({p_hp}/{p_max_hp}) 🍖-1 💧-1.",
     "pt": "✨ **{heroi}** — Regeneração Divina: +1 HP ({p_hp}/{p_max_hp}) 🍖-1 💧-1."
   },
   "narracao.regeneracao_divina_de_se_encerra_hp_maxi": {
-    "en": "",
+    "en": "✨ **{heroi}**'s Divine Regeneration ends — max HP reached.",
     "pt": "✨ Regeneração Divina de **{heroi}** se encerra — HP máximo atingido."
   },
   "narracao.regeneracao_divina_de_se_interrompe_recu": {
-    "en": "",
+    "en": "✨ **{heroi}**'s Divine Regeneration is interrupted — insufficient resources.",
     "pt": "✨ Regeneração Divina de **{heroi}** se interrompe — recursos insuficientes."
   },
   "narracao.regeneracao_divina_de_tambem_cura_1_hp": {
-    "en": "",
+    "en": "✨ **{heroi}**'s Divine Regeneration also heals: {join_curados} (+1 HP).",
     "pt": "✨ Regeneração Divina de **{heroi}** também cura: {join_curados} (+1 HP)."
   },
   "narracao.requiem_final_de_manutencao": {
-    "en": "",
+    "en": "🎻 **{heroi}**'s Final Requiem — upkeep 🍖-{mf} 💧-{ms}.",
     "pt": "🎻 Réquiem Final de **{heroi}** — manutenção 🍖-{mf} 💧-{ms}."
   },
   "narracao.resiste_a_dominar_mente": {
-    "en": "",
+    "en": "🧠 **{alvo}** resists Dominate Mind.",
     "pt": "🧠 **{alvo}** resiste a Dominar Mente."
   },
   "narracao.resiste_a_infeccao_fortitude_vs_cd": {
-    "en": "",
+    "en": "🦠 **{target}** resists the infection (Fortitude {tot} vs DC {dc}).",
     "pt": "🦠 **{target}** resiste à infecção (Fortitude {tot} vs CD {dc})."
   },
   "narracao.resiste_a_petrificacao_imunizado": {
-    "en": "",
+    "en": "🛡️ **{alvo_nome}** resists petrification (immune)!",
     "pt": "🛡️ **{alvo_nome}** resiste à petrificação (imunizado)!"
   },
   "narracao.resiste_a_petrificacao_imunizado_2": {
-    "en": "",
+    "en": "🛡️ **{tgt_name}** resists petrification (immune)!",
     "pt": "🛡️ **{tgt_name}** resiste à petrificação (imunizado)!"
   },
   "narracao.resiste_ao_comando": {
-    "en": "",
+    "en": "🗣️ **{alvo}** resists Command.",
     "pt": "🗣️ **{alvo}** resiste ao Comando."
   },
   "narracao.resiste_ao_dominio_vontade_vs_cd_nd": {
-    "en": "",
+    "en": "💀 **{alvo}** resists the control (Will vs DC {dif}, CR +{nd}).",
     "pt": "💀 **{alvo}** resiste ao domínio (Vontade vs CD {dif}, ND +{nd})."
   },
   "narracao.resiste_ao_lamento_improvisado": {
-    "en": "",
+    "en": "🎻 **{monstro}** resists the improvised lament.",
     "pt": "🎻 **{monstro}** resiste ao lamento improvisado."
   },
   "narracao.resiste_ao_requiem_nesta_rodada": {
-    "en": "",
+    "en": "🎻 **{monstro}** resists the Requiem this round.",
     "pt": "🎻 **{monstro}** resiste ao Réquiem nesta rodada."
   },
   "narracao.resiste_mas_hesita": {
-    "en": "",
+    "en": "📯 **{monstro}** resists, but hesitates.",
     "pt": "📯 **{monstro}** resiste, mas hesita."
   },
   "narracao.resiste_vontade_vs_cd_nd": {
-    "en": "",
+    "en": "💀 **{alvo_nome}** resists (Will vs DC {dc}, CR +{nd}).",
     "pt": "💀 **{alvo_nome}** resiste (Vontade vs CD {dc}, ND +{nd})."
   },
   "narracao.resistiu_a_paralisacao": {
-    "en": "",
+    "en": "❄️ **{alvo}** resisted paralysis.",
     "pt": "❄️ **{alvo}** resistiu à paralisação."
   },
   "narracao.resistiu_ao": {
-    "en": "",
+    "en": "☑️ **{alvo_nome}** resisted **{nome}**!",
     "pt": "☑️ **{alvo_nome}** resistiu ao **{nome}**!"
   },
   "narracao.resistiu_ao_teletransporte": {
-    "en": "",
+    "en": "✅ **{alvo_get_name_alvo}** resisted the teleport!",
     "pt": "✅ **{alvo_get_name_alvo}** resistiu ao teletransporte!"
   },
   "narracao.resistiu_ja_carrega_o_maximo_de_3_maldic": {
-    "en": "",
+    "en": "☠️ **{alvo}** resisted: already carries the maximum of 3 curses.",
     "pt": "☠️ **{alvo}** resistiu: já carrega o máximo de 3 maldições."
   },
   "narracao.retorna_a_forma_normal": {
-    "en": "",
+    "en": "🌙 **{heroi}** returns to their normal form.",
     "pt": "🌙 **{heroi}** retorna à forma normal."
   },
   "narracao.revela_se": {
-    "en": "",
+    "en": "🌑 **{heroi}** reveals themself ({motivo}).",
     "pt": "🌑 **{heroi}** revela-se ({motivo})."
   },
   "narracao.revela_se_ao_lancar_magia": {
-    "en": "",
+    "en": "🫥 **{heroi}** reveals themself by casting a spell.",
     "pt": "🫥 **{heroi}** revela-se ao lançar magia."
   },
   "narracao.rompe_o_controle_do_necromante_e_volta_a": {
-    "en": "",
+    "en": "💀 **{a_nome}** breaks the necromancer's control and obeys **{dono_nome}** again!",
     "pt": "💀 **{a_nome}** rompe o controle do necromante e volta a obedecer **{dono_nome}**!"
   },
   "narracao.rompe_o_dominio_e_volta_a_ser_hostil": {
-    "en": "",
+    "en": "💀 **{nome}** breaks free of the control and turns HOSTILE again!",
     "pt": "💀 **{nome}** rompe o domínio e volta a ser HOSTIL!"
   },
   "narracao.rompeu_dominar_mente_apos_o_dano_recebid": {
-    "en": "",
+    "en": "🧠 **{monstro}** broke free of Dominate Mind after taking damage.",
     "pt": "🧠 **{monstro}** rompeu Dominar Mente após o dano recebido."
   },
   "narracao.sacia_fome_sede": {
-    "en": "",
+    "en": "💧 **{caster}** sates **{alvo}** (+{fb} hunger, +{sb} thirst).",
     "pt": "💧 **{caster}** sacia **{alvo}** (+{fb} fome, +{sb} sede)."
   },
   "narracao.sai_das_sombras": {
-    "en": "",
+    "en": "🌑 **{heroi}** steps out of the shadows.",
     "pt": "🌑 **{heroi}** sai das sombras."
   },
   "narracao.sai_das_sombras_sem_folego_para_se_mante": {
-    "en": "",
+    "en": "🌑 **{heroi}** steps out of the shadows — out of breath to stay hidden.",
     "pt": "🌑 **{heroi}** sai das sombras — sem fôlego para se manter oculto."
   },
   "narracao.save_parcial_1_movimento_por_rodada_s": {
-    "en": "",
+    "en": "⚠️ **{nome}**: partial save — **{alvo_nome}** -1 movement for {dur_falha} round(s).",
     "pt": "⚠️ **{nome}**: save parcial — **{alvo_nome}** -1 movimento por {dur_falha} rodada(s)."
   },
   "narracao.save_parcial_percepcao_de_reduzida_por_r": {
-    "en": "",
+    "en": "⚠️ **{nome}**: partial save — **{alvo_nome}**'s perception reduced for {dur_falha} round(s).",
     "pt": "⚠️ **{nome}**: save parcial — percepção de **{alvo_nome}** reduzida por {dur_falha} rodada(s)."
   },
   "narracao.se_desfaz_em_po_para_abrir_caminho_ao_no": {
-    "en": "",
+    "en": "💀 **{a_nome}** crumbles to dust to make way for the new control.",
     "pt": "💀 **{a_nome}** se desfaz em pó para abrir caminho ao novo domínio."
   },
   "narracao.se_dissipa_sem_alvo": {
-    "en": "",
+    "en": "🌫️ **{magia_nome}** dissipates without a target.",
     "pt": "🌫️ **{magia_nome}** se dissipa sem alvo."
   },
   "narracao.se_esquiva_da_cola_sem_efeito": {
-    "en": "",
+    "en": "🟢 **{nome}** dodges the glue — no effect!",
     "pt": "🟢 **{nome}** se esquiva da cola — sem efeito!"
   },
   "narracao.se_joga_no_chao_e_apaga_as_chamas": {
-    "en": "",
+    "en": "🔥 **{heroi}** drops to the ground and puts out the flames!",
     "pt": "🔥 **{heroi}** se joga no chão e apaga as chamas!"
   },
   "narracao.se_liberta_do_dominio": {
-    "en": "",
+    "en": "🧠 **{monstro}** breaks free of the control.",
     "pt": "🧠 **{monstro}** se liberta do domínio."
   },
   "narracao.se_libertou_da_paralisacao": {
-    "en": "",
+    "en": "✅ **{alvo}** broke free of paralysis!",
     "pt": "✅ **{alvo}** se libertou da paralisação!"
   },
   "narracao.se_livra_de": {
-    "en": "",
+    "en": "✨ **{heroi}** gets rid of {nome}.",
     "pt": "✨ **{heroi}** se livra de {nome}."
   },
   "narracao.se_livra_do_congelamento_progressivo": {
-    "en": "",
+    "en": "🧊 **{heroi}** gets rid of the progressive freezing.",
     "pt": "🧊 **{heroi}** se livra do congelamento progressivo."
   },
   "narracao.se_recupera_da_embriaguez_penalidade_do": {
-    "en": "",
+    "en": "🍷 **{heroi}** recovers from the drunkenness (the wine penalty wore off).",
     "pt": "🍷 **{heroi}** se recupera da embriaguez (penalidade do vinho acabou)."
   },
   "narracao.se_solta_da_rede": {
-    "en": "",
+    "en": "🕸️ **{monstro}** breaks free of the net!",
     "pt": "🕸️ **{monstro}** se solta da rede!"
   },
   "narracao.se_soltou_o_predador_foi_abatido": {
-    "en": "",
+    "en": "🔓 **{c}** broke free — the predator was slain!",
     "pt": "🔓 **{c}** se soltou — o predador foi abatido!"
   },
   "narracao.se_transforma_em_lobisomem_por_rodadas": {
-    "en": "",
+    "en": "🐺 **{heroi}** transforms into a **Werewolf** for {duracao} rounds — {motivo}!",
     "pt": "🐺 **{heroi}** se transforma em **Lobisomem** por {duracao} rodadas — {motivo}!"
   },
   "narracao.se_volta_contra": {
-    "en": "",
+    "en": "☠️ **{magia_nome}** turns against **{heroi}**!",
     "pt": "☠️ **{magia_nome}** se volta contra **{heroi}**!"
   },
   "narracao.sem_descanso_o_grupo_avanca_direto_para": {
-    "en": "",
+    "en": "⛓️ No rest: the group presses straight on to stage {indice_1}/{len_stages} of **{adventure_get_nome_avent}**.",
     "pt": "⛓️ Sem descanso: o grupo avança direto para a etapa {indice_1}/{len_stages} de **{adventure_get_nome_avent}**."
   },
   "narracao.sem_herois_na_masmorra_a_expedicao_e_int": {
-    "en": "",
+    "en": "🏙️ With no heroes left in the dungeon, the expedition is interrupted — the group regroups in town.",
     "pt": "🏙️ Sem heróis na masmorra, a expedição é interrompida — o grupo se reúne na cidade."
   },
   "narracao.sem_o_necromante_volta_a_obedecer": {
-    "en": "",
+    "en": "💀 Without the necromancer, **{a_nome}** obeys **{dono_nome}** again.",
     "pt": "💀 Sem o necromante, **{a_nome}** volta a obedecer **{dono_nome}**."
   },
   "narracao.sem_seu_mestre_os_servos_mortos_vivos_de": {
-    "en": "",
+    "en": "💨 Without their master, the undead minions crumble to dust!",
     "pt": "💨 Sem seu mestre, os servos mortos-vivos desfazem-se em pó!"
   },
   "narracao.seria_derrotado_mas_a_regeneracao_o_reer": {
-    "en": "",
+    "en": "🌿 **{heroi}** would have been defeated, but **Regeneration** brings them back up with 1 HP! (-3 hunger/thirst)",
     "pt": "🌿 **{heroi}** seria derrotado, mas a **Regeneração** o reergue com 1 HP! (-3 fome/sede)"
   },
   "narracao.so_pode_combinar_habilidade_s_por_turno": {
-    "en": "",
+    "en": "**{heroi}** can only combine {teto} ability(ies) per turn — the rest were ignored.",
     "pt": "**{heroi}** só pode combinar {teto} habilidade(s) por turno — as demais foram ignoradas."
   },
   "narracao.sofre": {
-    "en": "",
+    "en": "🎵 **{monstro}** takes **{dano}**{metade_if_save_ok_else}.",
     "pt": "🎵 **{monstro}** sofre **{dano}**{metade_if_save_ok_else}."
   },
   "narracao.sofre_2": {
-    "en": "",
+    "en": "🔥 {rotulo}: **{nome}** takes {d}{extra}.",
     "pt": "🔥 {rotulo}: **{nome}** sofre {d}{extra}."
   },
   "narracao.sofre_de": {
-    "en": "",
+    "en": "{defn_emoji} **{nome}** takes {d} {defn_elemento} damage.",
     "pt": "{defn_emoji} **{nome}** sofre {d} de {defn_elemento}."
   },
   "narracao.sofre_de_afogar": {
-    "en": "",
+    "en": "🌊 **{heroi}** takes **{dano}** damage from Drowning ({dano_base}{detalhe}).",
     "pt": "🌊 **{heroi}** sofre **{dano}** de Afogar ({dano_base}{detalhe})."
   },
   "narracao.sofre_de_dano": {
-    "en": "",
+    "en": "💥 **{alvo_nome}** takes **{dano}** damage ({elemento}).",
     "pt": "💥 **{alvo_nome}** sofre **{dano}** de dano ({elemento})."
   },
   "narracao.sofre_de_dano_2": {
-    "en": "",
+    "en": "{defn_get_emoji} **{target_get_name_target_g}** takes **{dmg}** damage.",
     "pt": "{defn_get_emoji} **{target_get_name_target_g}** sofre **{dmg}** de dano."
   },
   "narracao.sofre_de_dano_3": {
-    "en": "",
+    "en": "{defn_get_emoji} **{alvo_get_name_alvo_get_n}** takes **{dmg}** damage.",
     "pt": "{defn_get_emoji} **{alvo_get_name_alvo_get_n}** sofre **{dmg}** de dano."
   },
   "narracao.sofre_empurrado_q": {
-    "en": "",
+    "en": "🌪️ **{nome}** takes {dano} (pushed {push} square(s)).",
     "pt": "🌪️ **{nome}** sofre {dano} (empurrado {push}q)."
   },
   "narracao.sofreu_dano_e_perde_a_concentracao_sem_m": {
-    "en": "",
+    "en": "🤕 **{monstro}** took damage and loses concentration — no spell this turn!",
     "pt": "🤕 **{monstro}** sofreu dano e perde a concentração — sem magia neste turno!"
   },
   "narracao.solo_sagrado_fere_em_de_dano_sagrado": {
-    "en": "",
+    "en": "✝️ Holy ground wounds **{monstro}** for {dano} holy damage.",
     "pt": "✝️ Solo sagrado fere **{monstro}** em {dano} de dano sagrado."
   },
   "narracao.sopra_o_chamado_do_general_cone": {
-    "en": "",
+    "en": "📯 **{heroi}** blows the **General's Call** (cone {comp})!",
     "pt": "📯 **{heroi}** sopra o **Chamado do General** (cone {comp})!"
   },
   "narracao.subiu_para_o_nivel_pv_e_1_em_ataque_ganh": {
-    "en": "",
+    "en": "⭐ **{heroi}** leveled up to **{p_level}**! +{ganho_hp} HP and +1 Attack. Resistance and survival gains applied according to class.",
     "pt": "⭐ **{heroi}** subiu para o nível **{p_level}**! +{ganho_hp} PV e +1 em Ataque. Ganhos de resistência e sobrevivência aplicados conforme a classe."
   },
   "narracao.tenta_a_sorte_de_novo_mas_erra_outra_vez": {
-    "en": "",
+    "en": "🎲 **{heroi}** tries Luck again, but misses once more!",
     "pt": "🎲 **{heroi}** tenta a Sorte de novo, mas erra outra vez!"
   },
   "narracao.tenta_atacar_mas_a_fumaca_confunde": {
-    "en": "",
+    "en": "💨 **{monstro}** tries to attack **{tgt_name}** but the smoke confuses it!",
     "pt": "💨 **{monstro}** tenta atacar **{tgt_name}** mas a fumaça confunde!"
   },
   "narracao.tenta_ataque_furtivo_mas_errou_d20_vs_ca": {
-    "en": "",
+    "en": "🗡️ **{heroi}** attempts **Sneak Attack** but **MISSED** (d20={roll}={total} vs AC {t_ac})!",
     "pt": "🗡️ **{heroi}** tenta **Ataque Furtivo** mas **ERROU** (d20={roll}={total} vs CA {t_ac})!"
   },
   "narracao.tenta_ataque_furtivo_mas_o_inimigo_esta": {
-    "en": "",
+    "en": "⚠ **{heroi}** attempts **Sneak Attack** but the enemy is out of range!",
     "pt": "⚠ **{heroi}** tenta **Ataque Furtivo** mas o inimigo está fora de alcance!"
   },
   "narracao.tenta_golpe_divino_mas_errou_d20_vs_ca": {
-    "en": "",
+    "en": "⚡ **{heroi}** attempts **Divine Strike** but **MISSED** (d20={roll}={total} vs AC {t_ac})!",
     "pt": "⚡ **{heroi}** tenta **Golpe Divino** mas **ERROU** (d20={roll}={total} vs CA {t_ac})!"
   },
   "narracao.tenta_golpe_divino_mas_o_inimigo_esta_fo": {
-    "en": "",
+    "en": "⚠ **{heroi}** attempts **Divine Strike** but the enemy is out of range!",
     "pt": "⚠ **{heroi}** tenta **Golpe Divino** mas o inimigo está fora de alcance!"
   },
   "narracao.tenta_golpe_pesado_mas_errou_d20_vs_ca": {
-    "en": "",
+    "en": "💥 **{heroi}** attempts **Heavy Strike** but **MISSED** (d20={roll}={total} vs AC {t_ac})!",
     "pt": "💥 **{heroi}** tenta **Golpe Pesado** mas **ERROU** (d20={roll}={total} vs CA {t_ac})!"
   },
   "narracao.tenta_golpe_pesado_mas_o_inimigo_esta_fo": {
-    "en": "",
+    "en": "⚠ **{heroi}** attempts **Heavy Strike** but the enemy is out of range!",
     "pt": "⚠ **{heroi}** tenta **Golpe Pesado** mas o inimigo está fora de alcance!"
   },
   "narracao.tira_1_no_arremesso_a_adaga_se_quebra": {
-    "en": "",
+    "en": "💥 **{monstro}** rolls a **1** on the throw — the dagger **breaks**!",
     "pt": "💥 **{monstro}** tira **1** no arremesso — a adaga **se quebra**!"
   },
   "narracao.turno_de": {
-    "en": "",
+    "en": "🎲 **{next_p}**'s turn!",
     "pt": "🎲 Turno de **{next_p}**!"
   },
   "narracao.turno_de_imobilizado_encerre_o_turno_par": {
-    "en": "",
+    "en": "🕸️ **{next_p}**'s turn — immobilized! End the turn to continue.",
     "pt": "🕸️ Turno de **{next_p}** — imobilizado! Encerre o turno para continuar."
   },
   "narracao.turno_de_iniciativa": {
-    "en": "",
+    "en": "🎲 **{heroi}**'s turn (Initiative {actor_initiative}).",
     "pt": "🎲 Turno de **{heroi}** (Iniciativa {actor_initiative})."
   },
   "narracao.um_bau_apareceu_no_centro_da_sala_aproxi": {
-    "en": "",
+    "en": "🎁 A **chest** appeared in the center of the room! Approach it and click to collect.",
     "pt": "🎁 Um **baú** apareceu no centro da sala! Aproxime-se e clique nele para coletar."
   },
   "narracao.um_bau_de_saque_apareceu": {
-    "en": "",
+    "en": "🎒 A **loot chest** appeared!",
     "pt": "🎒 Um **baú de saque** apareceu!"
   },
   "narracao.um_monstro_fere_o_prisioneiro": {
-    "en": "",
+    "en": "⚔️ A monster wounds the prisoner ({dano})!",
     "pt": "⚔️ Um monstro fere o prisioneiro ({dano})!"
   },
   "narracao.uma_passagem_secreta_se_abriu_em": {
-    "en": "",
+    "en": "🧱 A secret passage has opened at {sp_pos_0},{sp_pos_1}!",
     "pt": "🧱 Uma passagem secreta se abriu em {sp_pos_0},{sp_pos_1}!"
   },
   "narracao.unta_na_arma": {
-    "en": "",
+    "en": "🧪 **{m_get_name_o_monstro}** smears **{item}** on their weapon.",
     "pt": "🧪 **{m_get_name_o_monstro}** unta **{item}** na arma."
   },
   "narracao.usa": {
-    "en": "",
+    "en": "{item_emoji} **{heroi}** uses **{item}**: {txt}{extra}",
     "pt": "{item_emoji} **{heroi}** usa **{item}**: {txt}{extra}"
   },
   "narracao.usa_2": {
-    "en": "",
+    "en": "📜 **{heroi}** uses **{scroll}**...",
     "pt": "📜 **{heroi}** usa **{scroll}**..."
   },
   "narracao.usa_3": {
-    "en": "",
+    "en": "{defn_get_emoji} **{monstro}** uses **{defn}**!",
     "pt": "{defn_get_emoji} **{monstro}** usa **{defn}**!"
   },
   "narracao.usa_ataque_furtivo_em_d20_vs_ca_de_dano": {
-    "en": "",
+    "en": "🗡️ **{heroi}** uses **Sneak Attack** on **{t}** (d20={roll}+{furtivo_atk}={total} vs AC {t_ac}): **{dmg}** sneak damage!",
     "pt": "🗡️ **{heroi}** usa **Ataque Furtivo** em **{t}** (d20={roll}+{furtivo_atk}={total} vs CA {t_ac}): **{dmg}** de dano furtivo!"
   },
   "narracao.usa_bonus_de_ataque_neste_turno": {
-    "en": "",
+    "en": "{item_emoji} **{heroi}** uses **{item}**! +{val} Attack Bonus this turn!",
     "pt": "{item_emoji} **{heroi}** usa **{item}**! +{val} Bônus de Ataque neste turno!"
   },
   "narracao.usa_chuva_de_flechas_1d8_des_em_todos_os": {
-    "en": "",
+    "en": "🏹 **{heroi}** uses **Arrow Rain**! 1d8+DES on all enemies!",
     "pt": "🏹 **{heroi}** usa **Chuva de Flechas**! 1d8+DES em todos os inimigos!"
   },
   "narracao.usa_de_ataque": {
-    "en": "",
+    "en": "⚗️ **{m_get_name_o_monstro}** uses **{item}**: +{val} attack.",
     "pt": "⚗️ **{m_get_name_o_monstro}** usa **{item}**: +{val} de ataque."
   },
   "narracao.usa_e_fica_oculto": {
-    "en": "",
+    "en": "🕯️ **{m_get_name_o_monstro}** uses **{item}** and becomes hidden.",
     "pt": "🕯️ **{m_get_name_o_monstro}** usa **{item}** e fica oculto."
   },
   "narracao.usa_e_neutraliza_o_veneno": {
-    "en": "",
+    "en": "🟢 **{m_get_name_o_monstro}** uses **{item}** and neutralizes the poison.",
     "pt": "🟢 **{m_get_name_o_monstro}** usa **{item}** e neutraliza o veneno."
   },
   "narracao.usa_e_recebe_no_ataque": {
-    "en": "",
+    "en": "⚗️ **{monstro}** uses **{elixir}** and gains +{elixir_get_value_0} to attack!",
     "pt": "⚗️ **{monstro}** usa **{elixir}** e recebe +{elixir_get_value_0} no ataque!"
   },
   "narracao.usa_e_recupera_hp": {
-    "en": "",
+    "en": "🧪 **{monstro}** uses **{potion}** and recovers **{cura} HP**.",
     "pt": "🧪 **{monstro}** usa **{potion}** e recupera **{cura} HP**."
   },
   "narracao.usa_e_recupera_hp_2": {
-    "en": "",
+    "en": "🧪 **{m_get_name_o_monstro}** uses **{item}** and recovers **{val}** HP.",
     "pt": "🧪 **{m_get_name_o_monstro}** usa **{item}** e recupera **{val}** HP."
   },
   "narracao.usa_golpe_divino_em_d20_vs_ca_de_dano_sa": {
-    "en": "",
+    "en": "⚡ **{heroi}** uses **Divine Strike** on **{t}** (d20={roll}+{p_atk_bonus}={total} vs AC {t_ac}): **{dmg}** holy damage!",
     "pt": "⚡ **{heroi}** usa **Golpe Divino** em **{t}** (d20={roll}+{p_atk_bonus}={total} vs CA {t_ac}): **{dmg}** de dano sagrado!"
   },
   "narracao.usa_golpe_pesado_em_d20_vs_ca_de_dano": {
-    "en": "",
+    "en": "💥 **{heroi}** uses **Heavy Strike** on **{t}** (d20={roll}+{p_atk_bonus}={total} vs AC {t_ac}): **{dmg}** damage!",
     "pt": "💥 **{heroi}** usa **Golpe Pesado** em **{t}** (d20={roll}+{p_atk_bonus}={total} vs CA {t_ac}): **{dmg}** de dano!"
   },
   "narracao.usa_lanca_de_gelo_em_de_dano_de_frio": {
-    "en": "",
+    "en": "🧊 **{heroi}** uses **Ice Lance**{extra} on **{t}**: **{dmg}** cold damage!",
     "pt": "🧊 **{heroi}** usa **Lança de Gelo**{extra} em **{t}**: **{dmg}** de dano de frio!"
   },
   "narracao.usa_o_pergaminho_de_dominar_morto_vivo_e": {
-    "en": "",
+    "en": "🧙 **{monstro}** uses the **Scroll of Dominate Undead** on **{alvo_nome}**!",
     "pt": "🧙 **{monstro}** usa o **Pergaminho de Dominar Morto-Vivo** em **{alvo_nome}**!"
   },
   "narracao.usa_para_envenenar_a_arma": {
-    "en": "",
+    "en": "🧪 **{m_get_name_o_monstro}** uses **{item}** to poison their weapon.",
     "pt": "🧪 **{m_get_name_o_monstro}** usa **{item}** para envenenar a arma."
   },
   "narracao.usa_provocar_todos_os_monstros_agora_foc": {
-    "en": "",
+    "en": "😤 **{heroi}** uses **Taunt** — all monsters now focus on them!",
     "pt": "😤 **{heroi}** usa **Provocar** — todos os monstros agora focam nele!"
   },
   "narracao.usa_sopro_de_dragao_de_em": {
-    "en": "",
+    "en": "🐉 **{monstro}** uses **Dragon's Breath** of {labels_get_element_eleme} in a {shape}!",
     "pt": "🐉 **{monstro}** usa **Sopro de Dragão** de {labels_get_element_eleme} em {shape}!"
   },
   "narracao.usa_tiro_duplo_em_acerto_s_de_dano_total": {
-    "en": "",
+    "en": "🏹 **{heroi}** uses **Double Shot** on **{t}**: {hits} hit(s), **{total_dmg}** total damage!",
     "pt": "🏹 **{heroi}** usa **Tiro Duplo** em **{t}**: {hits} acerto(s), **{total_dmg}** de dano total!"
   },
   "narracao.usa_tiro_duplo_mas_ambos_os_tiros_errara": {
-    "en": "",
+    "en": "🏹 **{heroi}** uses **Double Shot** but both shots **MISSED**!",
     "pt": "🏹 **{heroi}** usa **Tiro Duplo** mas ambos os tiros **ERRARAM**!"
   },
   "narracao.usa_tiro_perfurante_em_de_dano_acerto_au": {
-    "en": "",
+    "en": "🎯 **{heroi}** uses **Piercing Shot** on **{t}**: **{dmg}** damage (automatic hit, ignores AC)!",
     "pt": "🎯 **{heroi}** usa **Tiro Perfurante** em **{t}**: **{dmg}** de dano (acerto automático, ignora CA)!"
   },
   "narracao.usou_o_ultimo_projetil": {
-    "en": "",
+    "en": "🏹 **{heroi}** used their last projectile!",
     "pt": "🏹 **{heroi}** usou o último projétil!"
   },
   "narracao.varre_a_cauda_pela_retaguarda": {
-    "en": "",
+    "en": "🦂 **{monstro}** sweeps its tail through the back ranks!",
     "pt": "🦂 **{monstro}** varre a cauda pela retaguarda!"
   },
   "narracao.virote_incendiario_de_dano_de_fogo": {
-    "en": "",
+    "en": "🔥 Incendiary bolt: +{xdmg} fire damage!",
     "pt": "🔥 Virote incendiário: +{xdmg} de dano de fogo!"
   },
   "narracao.visao_de_expandida_para_raio": {
-    "en": "",
+    "en": "👁️ **{heroi}**'s vision expanded to radius {raio}.",
     "pt": "👁️ Visão de **{heroi}** expandida para raio {raio}."
   }
 };
