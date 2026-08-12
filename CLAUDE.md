@@ -1854,3 +1854,37 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `tools/test_erros.py` (9). **Falta:** narração do servidor (544, etapa 4b) e interface do
 > cliente (~1.000, etapa 5). Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-08-10-idioma-etapa4a-erros*`.
+
+> **Idioma — narração do servidor, lote mecânico (etapa 4b-i de 5):** os **390 `gm_say` que
+> cabem inteiros numa linha** migrados para `T(...)` e traduzidos — 380 chaves em
+> `src/lang/narracao.js`. A chave é o slug do texto **sem** as interpolações
+> (`narracao.abre_uma_porta`), o que a mantém legível. **Batismo determinístico dos
+> parâmetros** pelo script, em três degraus: identificador simples vira ele mesmo,
+> `X['name']` vira `X`, o resto vira slug da expressão — mais uma tabela mínima de apelidos
+> (`p`→`heroi`, `m`→`monstro`, 30% das 764 interpolações). Difere da 4a de propósito: lá as
+> 81 foram batizadas à mão pelo papel na frase; aqui, com 390 sites automáticos,
+> determinismo vale mais que elegância. `tools/migrar_narracao.py` é de uso único e reusa o
+> `slug()` do `migrar_erros.py`.
+>
+> **LACUNA CONHECIDA — nome de catálogo cru dentro da frase traduzida.** Das 325 passagens
+> de `X["name"]` como parâmetro, ~140 são `p['name']` (nome de jogador, correto passar cru);
+> as outras ~185 são monstro, alvo e item, cujo nome vem do catálogo. O script passou a
+> expressão verbatim, então em inglês o log diz *"The adventurers leave town… Round 1 —
+> **Elemental Elétrico**'s initiative"* — frase em inglês, nome em português. O
+> `nome_de(familia, id)` existe desde a etapa 2 exatamente para isso (devolve o nome como
+> texto TARDIO, resolvido no idioma de quem lê) e o `t()` resolve parâmetro aninhado desde
+> então. Trocar esses ~185 sites é trabalho da etapa 4b-ii.
+>
+> **Fora de escopo (4b-ii):** 109 chamadas com o texto na linha seguinte, 28 f-strings que
+> começam na linha do `gm_say(` e continuam depois, 3 concatenações com `prefix +`, 7 sites
+> que recebem variável, e 6 que puxam do pool `gm(...)` — um catálogo de 30 variantes
+> aleatórias de narração ambiente ("As criaturas avançam nas sombras…"), que continuam em
+> português. O `tools/test_narracao.py` **conta e relata** esses restantes em vez de
+> cobrá-los, para a suíte não ficar vermelha por trabalho não combinado — e o relatório é o
+> placar da 4b-ii.
+>
+> **Armadilha de verificação:** um servidor já rodando na porta 8765 pode ser de ANTES da
+> migração; a prova de dois idiomas saiu toda em português até o processo ser reiniciado.
+> Sempre reinicie o servidor antes de provar mudança de servidor. Testes:
+> `tools/test_narracao.py` (8). Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-08-10-idioma-etapa4b1-narracao*`.
