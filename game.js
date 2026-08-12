@@ -7006,6 +7006,7 @@ function renderMap(state){
   ctx.textAlign='center'; ctx.textBaseline='middle';
   for(const p of state.players){
     if(!p.alive) continue;
+    if(p.engolido) continue;
     if(p.connected === false) continue;   // desconectado: deixou a masmorra, não desenha
     const [px,py]=p.pos;
     if(p.id !== GS.myPid && !visionSet.has(`${px},${py}`)) continue;
@@ -11642,7 +11643,7 @@ window._fecharPickerElemental = _fecharPickerElemental;
 // Estado global lido pelos dois renderers. range/area = Set de "x,y"; zonas =
 // lista persistente {cx,cy,raio} (de game_state.zonas_especiais — Bola de Fogo).
 // range=alcance(vermelho), area=efeito(verde), double=atingido 2x(verde escuro), zonas=fogo persistente.
-window._spellHL = { range: new Set(), area: new Set(), double: new Set(), zonas: [], escuridao: [], silencio: [] };
+window._spellHL = { range: new Set(), area: new Set(), double: new Set(), zonas: [], nuvensAcidas: [], escuridao: [], silencio: [] };
 
 function _alcanceMagiaCli(m, level) {
   if (m.alcance_base != null) {
@@ -11798,8 +11799,10 @@ function _recomputarAreaThrow(hx, hy) {
 // Apenas dados (sem redraw) — chamado de dentro de renderMap/renderMap3D.
 function _atualizarZonasMagia(state) {
   const zz = ((state && state.zonas_especiais) || []);
-  window._spellHL.zonas     = zz.filter(z => z.ativa && z.tipo === 'bola_fogo')
+  window._spellHL.zonas     = zz.filter(z => z.ativa && (z.tipo === 'bola_fogo' || z.tipo === 'molochus_chamas'))
                                 .map(z => ({ cx: z.cx, cy: z.cy, raio: z.raio || 2 }));
+  window._spellHL.nuvensAcidas = zz.filter(z => z.ativa && z.tipo === 'nuvem_acida')
+                                  .map(z => ({ cx: z.cx, cy: z.cy, raio: z.raio || 1 }));
   window._spellHL.escuridao = zz.filter(z => z.ativa && z.tipo === 'escuridao')
                                 .map(z => ({ cx: z.cx, cy: z.cy, raio: z.raio || 3 }));
   window._spellHL.silencio  = zz.filter(z => z.ativa && z.tipo === 'silencio')
@@ -11816,6 +11819,7 @@ function _aplicarSpellHL3D() {
   const hl = window._spellHL || { range: new Set(), area: new Set(), zonas: [] };
   const zonaSet = new Set();
   for (const z of hl.zonas) _addCheb(z.cx, z.cy, z.raio, zonaSet);
+  for (const z of (hl.nuvensAcidas || [])) _addCheb(z.cx, z.cy, z.raio, zonaSet);
   const escSet = new Set();
   for (const z of (hl.escuridao || [])) _addCheb(z.cx, z.cy, z.raio, escSet);
   const silSet = new Set();
@@ -11857,6 +11861,9 @@ function _desenharSpellHL2D(ctx, exploredSet) {
   const zonaSet = new Set();                                     // zona de fogo persistente — laranja
   for (const z of hl.zonas) _addCheb(z.cx, z.cy, z.raio, zonaSet);
   for (const k of zonaSet) draw(k, 'rgba(255,110,0,0.32)');
+  const acidSet = new Set();
+  for (const z of (hl.nuvensAcidas || [])) _addCheb(z.cx, z.cy, z.raio, acidSet);
+  for (const k of acidSet) draw(k, 'rgba(150,235,60,0.38)');
   for (const k of (hl.double || [])) draw(k, 'rgba(8,90,25,0.62)'); // atingido 2x — verde escuro
   for (const k of hl.area) draw(k, 'rgba(40,230,70,0.34)');      // área de efeito — verde (por cima)
 }
@@ -12905,6 +12912,7 @@ function renderMyPanel(state){
   // ── Check for attackable monsters using the same range rules as the board ──
   const _adjMonsters = (GS.gameState ? GS.gameState.monsters : []).filter(m=>{
     if(!m || m.hp <= 0) return false;
+    if(me.engolido && m.id === me.engolido_por) return true;
     return _alvoNoAlcanceArmaClient(me, m.pos[0], m.pos[1]);
   });
   const canAttack = canAct && _adjMonsters.length > 0;
@@ -12946,6 +12954,12 @@ function renderMyPanel(state){
   // do cliente (ex.: BFS de alcance). Sem esta definição, renderMyPanel lançava
   // ReferenceError: _wRange is not defined e abortava ANTES de habilitar o botão
   // de encerrar turno (e o resto das ações/habilidades).
+  const _escaparBtn = (me.engolido && canAct) ? `
+    <button class="btn-action" onclick="GS.escaparEstomago()"
+      style="display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 6px;border-color:#a66b45;">
+      <span style="color:#e7a36c;">🫀 Forçar saída</span>
+      <small style="color:var(--gold);font-size:.7rem;font-weight:bold;">Força contra o estômago</small>
+    </button>` : '';
   const _wRange = me.weapon?.range ?? null;
   const _rangeHint = _wRange != null ? `alcance ${_wRange}` : 'corpo a corpo';
   const _adjHint = canAct && !canAttack
@@ -12961,6 +12975,7 @@ function renderMyPanel(state){
     </button>
     ${_throwBtns}
     ${_apagarBtn}
+    ${_escaparBtn}
   `;
 
   const sl = $('skills-list'); sl.innerHTML = '';
@@ -14092,7 +14107,7 @@ function _modificadoresTemporariosStatus(p){
   if(p.em_chamas_rodadas) add('Em chamas', `Sofre dano por ${p.em_chamas_rodadas} rodada(s)`);
   if(p.veneno_rodadas || p.envenenado_rodadas) add('Envenenado', `Penalidade ativa · ${p.veneno_rodadas || p.envenenado_rodadas} rodada(s)`);
   if(p.com_medo || p.medo_rodadas) add('Medo', 'Penalidade de combate', p.medo_rodadas);
-  if(p.lento || p.lento_rodadas) add('Lentidão', 'Movimento reduzido', p.lento_rodadas);
+  if(p.lento || p.lento_rodadas) add('Lentidão', '-1 ataque · -1 CA', p.lento_rodadas);
   if(p.paralisado) add('Paralisado', 'Não pode agir');
   if(p.cego) add('Cego', 'Penalidade em ataques à distância');
   return out;
@@ -18107,7 +18122,13 @@ function _buildWallDecor3D(d){
     const mesh = new T.Mesh(new T.PlaneGeometry(w, h), mat);
     mesh.userData = {isDecor:true, decorId:d.id, wallImage:d.image, wallFace:face.join(','), wallScale:vs.join(',')};
     mesh.rotation.y = _wallDecorRotation(face);
-    mesh.position.set(d.pos[0] + face[0]*0.451, isCurtain ? 0.84 : 1.05, d.pos[1] + face[1]*0.451);
+    // A parede 3D ocupa ±0,5 da casa. O valor antigo (0,451) deixava o
+    // decal parcialmente dentro do bloco; como o depthTest continua ativo,
+    // brasões e cortinas desapareciam atrás da própria parede. Coloque a arte
+    // alguns milímetros para o lado jogável da face, evitando z-fighting.
+    const WALL_DECOR_SURFACE = 0.516;
+    mesh.position.set(d.pos[0] + face[0]*WALL_DECOR_SURFACE, isCurtain ? 0.84 : 1.05,
+      d.pos[1] + face[1]*WALL_DECOR_SURFACE);
     mesh.visible = slot.visible;
     g3.scene.remove(slot); _disposeDecorMesh(slot);
     g3.scene.add(mesh); g3.decorMeshes[d.id] = mesh;
@@ -18602,6 +18623,7 @@ function renderMap3D(state){
   // Players
   for(const p of state.players){
     if(!p.alive) continue;
+    if(p.engolido) continue;
     if(p.connected === false) continue;   // desconectado: fora da masmorra, não desenha
     const [px,py] = p.pos;
     if(p.id !== GS.myPid && !visionSet.has(`${px},${py}`)) continue;
@@ -19007,11 +19029,13 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   goblinDual:        'assets/models3d/monstros/goblin_combatente.glb',
   xamaGoblin:        'assets/models3d/monstros/xama_goblin.glb',
   esqueletoHumano:   'assets/models3d/monstros/esqueletoHumano.glb',
+  esqueletoAnimal:   'assets/models3d/monstros/esqueleto_animal.glb',
   crocodiloJovem:    'assets/models3d/monstros/crocodilo.glb',
   cobraVenenosa:     'assets/models3d/monstros/cobra_venenosa.glb',
   cobraConstritora:  'assets/models3d/monstros/cobra_constritora.glb',
   bugbear:           'assets/models3d/monstros/bugbear.glb',
-  bugber:            'assets/models3d/monstros/bugber.glb',
+  // Alias legado com erro de digitação: o arquivo real é bugbear.glb.
+  bugber:            'assets/models3d/monstros/bugbear.glb',
   aranhasombria:     'assets/models3d/monstros/aranha.glb',
   escorpiaodepedra:  'assets/models3d/monstros/escorpiao.glb',
   devoradorOrganico: 'assets/models3d/monstros/devorador_organico.glb',
@@ -19028,15 +19052,26 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   elemental_ar:      'assets/models3d/monstros/elemental_ar.glb',
   elemental_fogo:    'assets/models3d/monstros/elemental_fogo.glb',
   elemental_gelo:    'assets/models3d/monstros/elemental_gelo.glb',
+  elemental_pedra:   'assets/models3d/monstros/elemental_pedra.glb',
   lobisomem:         'assets/models3d/monstros/lobisomem.glb',
   cria_vampirica:    'assets/models3d/monstros/cria_vampirica.glb',
   rato_gicante:      'assets/models3d/monstros/rato_gicante.glb',
   escorpiaodepedra_original: 'assets/models3d/monstros/escorpiao.glb',
   estrangulador:     'assets/models3d/monstros/estrangulador.glb',
   ferrao_dos_charcos:'assets/models3d/monstros/ferrao_dos_charcos.glb',
+  ferrao_do_lamacal: 'assets/models3d/monstros/ferrao_dos_charcos.glb',
+  ferrao_charcos_jovem: 'assets/models3d/monstros/ferrao_dos_charcos.glb',
+  ferrao_charcos_adulto: 'assets/models3d/monstros/ferrao_dos_charcos.glb',
+  ferrao_charcos_anciao: 'assets/models3d/monstros/ferrao_dos_charcos.glb',
+  garaloux:            'assets/models3d/monstros/garalux.glb',
+  garaloux_jovem:      'assets/models3d/monstros/garalux.glb',
+  garaloux_adulto:     'assets/models3d/monstros/garalux.glb',
+  garaloux_alfa:       'assets/models3d/monstros/garalux.glb',
   garalux:           'assets/models3d/monstros/garalux.glb',
   lacralion:         'assets/models3d/monstros/lacralion.glb',
   molochos:          'assets/models3d/monstros/molochos.glb',
+  tirano_da_mata:    'assets/models3d/monstros/tirano_da_mata.glb',
+  tirano_ancestral:  'assets/models3d/monstros/tirano_da_mata.glb',
 
   // Fallback por `type`: importante para monstros antigos/autorados que não
   // possuem `image` (por exemplo, os Goblins comuns da dungeon Floresta).
@@ -19047,6 +19082,8 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   goblin_xama:        'assets/models3d/monstros/xama_goblin.glb',
   esqueleto_humano:   'assets/models3d/monstros/esqueletoHumano.glb',
   esqueleto_humano_customizado: 'assets/models3d/monstros/esqueletoHumano.glb',
+  esqueleto_animal:   'assets/models3d/monstros/esqueleto_animal.glb',
+  esqueleto_animal_customizado: 'assets/models3d/monstros/esqueleto_animal.glb',
   crocodilo_jovem:    'assets/models3d/monstros/crocodilo.glb',
   cobra_venenosa:     'assets/models3d/monstros/cobra_venenosa.glb',
   cobra_constritora:  'assets/models3d/monstros/cobra_constritora.glb',

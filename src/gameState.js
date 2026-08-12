@@ -1493,6 +1493,7 @@ const GS = (() => {
   function throwItem(id, targetId, targetPos) { send({ type: 'throw_item', item_id: id, target_id: targetId, target_pos: targetPos }); }
   function throwItemArea(id, tx, ty) { send({ type: 'throw_item', item_id: id, tx, ty }); }
   function apagarChamas()          { send({ type: 'apagar_chamas' }); }
+  function escaparEstomago()       { send({ type: 'escapar_estomago' }); }
   function equipFromBag(i) { send({ type: 'equip_from_bag', slot_index: i }); }
   function unequip(key)    { send({ type: 'unequip',        slot_key: key }); }
   // Largar/pegar itens no chão (masmorra). Largar: source 'bag' → ref = index;
@@ -2032,6 +2033,7 @@ const GS = (() => {
     const wRange = myP.weapon?.range ?? null;
     const adj = gameState.monsters.filter(m => {
       if (!m || m.hp <= 0) return false;
+      if (myP.engolido && m.id === myP.engolido_por) return true;
       const tiles = monsterTiles(m);   // atacável em qualquer casa do corpo
       if (wRange != null) {
         // À distância: alguma casa do corpo no alcance E com linha de visão.
@@ -2364,6 +2366,8 @@ const GS = (() => {
     const monster = gameState.monsters.find(m => m.hp > 0 &&
       monsterTiles(m).some(([bx, by]) => bx === tx && by === ty));
     if (monster && !myP.action_done) {
+      if (myP.engolido && monster.id === myP.engolido_por)
+        return { type: 'attack', targetId: monster.id, targetPos: [tx, ty] };
       const ddx  = Math.abs(myP.pos[0] - tx);
       const ddy  = Math.abs(myP.pos[1] - ty);
       const wRng = myP.weapon?.range ?? null;
@@ -2559,6 +2563,7 @@ const GS = (() => {
     throwItem,
     throwItemArea,
     apagarChamas,
+    escaparEstomago,
     equipFromBag,
     unequip,
     reorderBag,
