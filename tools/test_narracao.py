@@ -120,6 +120,10 @@ def _rodar_verificacoes():
           == "Espada do Autor")
 
     print("\n[7] Nome composto do instrumento")
+    # Esta tabela é A MESMA da seção [N] de tools/test_vocabulario_cliente.js, de
+    # propósito: a composição tem DUAS implementações (_instrumento_nome_T aqui e
+    # _instrumentoComposto no src/i18n.js) e nada além destes dois testes impede
+    # que elas divirjam. Mexeu numa, confira a outra.
     # (base, qualidade, origem, encantamento, pt esperado, en esperado)
     casos = [
         ("harpa",  "padrao",   "humana", "nenhum", "Harpa Padrão",           "Standard Harp"),

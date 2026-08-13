@@ -85,6 +85,50 @@
     return null;
   }
 
+  // ── Nomes compostos (etapa 4c) ─────────────────────────────────────────────
+  // Gêmeo de nome_item / _instrumento_nome_T do server.py, lendo AS MESMAS
+  // chaves (src/lang/composto.js). Existe porque o nome composto não está em
+  // catálogo nenhum: o instrumento tem id único por combinação, e o sufixo de
+  // corroído/contagem é derivado de CAMPO, não do nome — o servidor parou de
+  // colar esses sufixos na string justamente para o nome poder ser traduzido.
+  const GENERO_FEM = ['harpa', 'trompa', 'lira', 'flauta', 'gaita'];
+  const COM_ORIGEM = ['elfica', 'ana'];
+
+  function _instrumentoComposto(o) {
+    if (o.tipo_item !== 'instrumento' || typeof o.base !== 'string') return null;
+    const g = GENERO_FEM.indexOf(o.base) >= 0 ? 'f' : 'm';
+    const adj = (n) => t('cat.instrumento.adj.' + n + '.' + g);
+    const orig = o.origem || 'humana';
+    const runico = o.encantamento === 'runico';
+    const base = tem('cat.instrumento.' + o.base + '.nome')
+      ? t('cat.instrumento.' + o.base + '.nome') : (o.name || o.nome || '');
+    // Lendário: 3 eixos no máximo → substitui a qualidade E o sufixo Rúnico.
+    if (o.qualidade === 'refinado' && COM_ORIGEM.indexOf(orig) >= 0 && runico) {
+      return t('cat.instrumento.nome_composto',
+               { base: base, ql: adj('lendario'), orig: adj(orig), run: '' });
+    }
+    return t('cat.instrumento.nome_composto', {
+      base: base,
+      ql:   adj(o.qualidade || 'padrao'),
+      orig: COM_ORIGEM.indexOf(orig) >= 0 ? adj(orig) : '',
+      run:  runico ? adj('runico') : '',
+    });
+  }
+
+  // Recebe o nome JÁ traduzido pelo caminho normal e recoloca o que o filtro
+  // comeria. Idempotente para item de catálogo (parte sempre do nome do
+  // catálogo); para item autoral parte do nome cru, então não reaplique no
+  // mesmo objeto — cada mensagem que chega é um objeto novo.
+  function _comSufixos(o, nome) {
+    if (o.ammo_count) {
+      const curto = 'cat.item.' + o.id + '.nome_curto';
+      return t('cat.item.municao_x',
+               { nome: tem(curto) ? t(curto) : nome, n: o.ammo_count });
+    }
+    if (o.corrosao_inicial) return t('cat.item.corroido', { nome: nome });
+    return nome;
+  }
+
   // Percorre a estrutura e troca nome (e descrição, se soNome for falso) pelo
   // idioma ATUAL. Muta o objeto de propósito. Objeto sem chave no dicionário
   // fica intacto — é assim que item e monstro criados no editor mantêm o nome
@@ -99,16 +143,27 @@
       vistos.add(o);
       if (Array.isArray(o)) { for (const v of o) anda(v, null); return; }
       const base = _chaveBase(o, idPai);
-      if (base) {
-        if (tem(base + '.nome')) {
-          for (const campo of CAMPOS_NOME) {
-            if (typeof o[campo] === 'string') { o[campo] = t(base + '.nome'); break; }
+      const composto = _instrumentoComposto(o);
+      if (composto !== null) {
+        for (const campo of CAMPOS_NOME) {
+          if (typeof o[campo] === 'string') { o[campo] = composto; break; }
+        }
+      } else if (base && tem(base + '.nome')) {
+        for (const campo of CAMPOS_NOME) {
+          if (typeof o[campo] === 'string') {
+            o[campo] = _comSufixos(o, t(base + '.nome')); break;
           }
         }
-        if (!soNome && tem(base + '.desc')) {
-          for (const campo of CAMPOS_DESC) {
-            if (typeof o[campo] === 'string') { o[campo] = t(base + '.desc'); break; }
-          }
+      } else if (typeof o.id === 'string' && (o.ammo_count || o.corrosao_inicial)) {
+        // Item AUTORAL: sem chave de catálogo, o nome fica o do autor — mas o
+        // sufixo ainda vale, senão o jogador não vê que a peça está corroída.
+        for (const campo of CAMPOS_NOME) {
+          if (typeof o[campo] === 'string') { o[campo] = _comSufixos(o, o[campo]); break; }
+        }
+      }
+      if (base && !soNome && tem(base + '.desc')) {
+        for (const campo of CAMPOS_DESC) {
+          if (typeof o[campo] === 'string') { o[campo] = t(base + '.desc'); break; }
         }
       }
       for (const k in o) anda(o[k], k);

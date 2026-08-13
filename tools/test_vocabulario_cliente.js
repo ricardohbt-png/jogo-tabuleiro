@@ -10,6 +10,7 @@ const check = (name, cond) => { if (cond) { PASS++; console.log("  ✅ " + name)
 global.window = {};
 eval(fs.readFileSync(path.join(raiz, "src", "lang", "strings.js"), "utf8"));
 eval(fs.readFileSync(path.join(raiz, "src", "lang", "catalogo.js"), "utf8"));
+eval(fs.readFileSync(path.join(raiz, "src", "lang", "composto.js"), "utf8"));
 eval(fs.readFileSync(path.join(raiz, "src", "i18n.js"), "utf8"));
 const DICT = global.window.LANG_STRINGS;
 const I18N = global.window.I18N;
@@ -125,6 +126,57 @@ check("game.js aplica o catálogo nos 3 estáticos",
       && /aplicarCatalogo\(\s*GS\.CATALOGO_ITENS/.test(gamejs));
 check("a conversão do inventário prefere o nome do servidor",
       /\{\s*\.\.\.cat,\s*nome:\s*it\.name\s*\|\|\s*cat\.nome\s*\}/.test(gamejs));
+
+console.log("\n[N] Nomes compostos no cliente (etapa 4c)");
+I18N.setLang("en");
+
+// Sufixo de corroído: o filtro trocaria o nome pelo do catálogo e comeria o
+// "(corroído)". O sufixo mora num CAMPO, então sobrevive à troca.
+const corroido = { id: "alabarda_prata", name: "Alabarda de Prata", corrosao_inicial: 1 };
+I18N.traduzirNomes(corroido);
+check("item corroído mantém o sufixo em inglês",
+      corroido.name === "Silver Halberd (corroded)");
+
+// Munição: a contagem sai do ammo_count, não do nome.
+const municao = { id: "virotes", name: "Virotes (×10)", ammo_count: 7 };
+I18N.traduzirNomes(municao);
+check("munição compõe a contagem", municao.name === "Bolts (×7)");
+
+// Instrumento: id único por combinação, que NÃO existe no catálogo — sem o
+// compositor, ficaria em português na bolsa.
+//
+// Esta tabela é A MESMA da seção [7] de tools/test_narracao.py, de propósito: a
+// composição tem DUAS implementações (servidor e cliente) e nada além destes
+// dois testes impede que elas divirjam. Mexeu numa, confira a outra.
+const ARRANJOS = [
+  ["harpa",  "padrao",   "humana", "nenhum", "Standard Harp"],
+  ["harpa",  "velho",    "humana", "nenhum", "Old Harp"],
+  ["tambor", "velho",    "humana", "nenhum", "Old War Drum"],
+  ["harpa",  "rustico",  "elfica", "nenhum", "Rustic Elven Harp"],
+  ["harpa",  "padrao",   "humana", "runico", "Standard Runic Harp"],
+  ["harpa",  "refinado", "elfica", "runico", "Legendary Elven Harp"],
+  ["alaude", "refinado", "ana",    "runico", "Legendary Dwarven Lute"],
+];
+for (const [base, qualidade, origem, encantamento, esperado] of ARRANJOS) {
+  const inst = { id: "instrumento_" + base + "_" + qualidade, tipo_item: "instrumento",
+                 name: "(português)", base, qualidade, origem, encantamento };
+  I18N.traduzirNomes(inst);
+  check(`instrumento ${base}/${qualidade}/${origem}/${encantamento}`,
+        inst.name === esperado);
+}
+
+// Item autoral com sufixo: sem chave de catálogo, mas o sufixo ainda vale.
+const autoralCorr = { id: "espada_do_autor", name: "Espada do Autor", corrosao_inicial: 1 };
+I18N.traduzirNomes(autoralCorr);
+check("item autoral corroído mantém nome autoral + sufixo",
+      autoralCorr.name === "Espada do Autor (corroded)");
+
+// Em português nada muda — o filtro sai cedo.
+I18N.setLang("pt");
+const corroidoPt = { id: "alabarda_prata", name: "Alabarda de Prata", corrosao_inicial: 1 };
+I18N.traduzirNomes(corroidoPt);
+check("em português o filtro não mexe", corroidoPt.name === "Alabarda de Prata");
+
 
 console.log("\n" + "=".repeat(62));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);
