@@ -141,6 +141,39 @@ def _rodar_verificacoes():
         check(f"{rot} — T em pt", _r(tt, "pt") == esp_pt)
         check(f"{rot} — T em en", _r(tt, "en") == esp_en)
 
+    print("\n[8] Sufixos compostos, derivados de campo e não de mutação de nome")
+
+    alab = next(i for i in S.SHOP_WEAPONS if i["id"] == "alabarda_prata")
+    corroido = dict(alab, corrosao_inicial=1)
+    check("item corroído — pt",
+          _r(S.nome_item(corroido), "pt") == f"{alab['name']} (corroído)")
+    check("item corroído — en",
+          _r(S.nome_item(corroido), "en") == "Silver Halberd (corroded)")
+
+    virotes = next(i for i in S.SHOP_AMMO if i["id"] == "virotes")
+    loot = dict(virotes, ammo_count=7)
+    check("munição — pt", _r(S.nome_item(loot), "pt") == "Virotes (×7)")
+    check("munição — en", _r(S.nome_item(loot), "en") == "Bolts (×7)")
+
+    animado = {"tipo": "goblin", "nome": "Goblin Animado",
+               "nome_base": "Goblin", "vida_atual": 5}
+    check("servo animado — pt", _r(S.nome_criatura(animado), "pt") == "Goblin Animado")
+    check("servo animado — en", _r(S.nome_criatura(animado), "en") == "Animated Goblin")
+
+    # As mutações de nome têm de ter sumido do fonte: se voltarem, o sufixo
+    # apareceria DUAS vezes (uma na string, outra composta pelo nome_item).
+    # Procura a ATRIBUIÇÃO, não a palavra: o comentário que explica a regra
+    # também contém "(corroído)".
+    check("server.py não muta mais o nome com (corroído)",
+          not re.search(r'\["name"\]\s*=.*corroído', FONTE))
+    # Só a MUTAÇÃO some; o SKU de loja "Virotes (×10)" continua no SHOP_AMMO.
+    check("server.py não muta mais o nome dos virotes",
+          'virote_loot["name"]' not in FONTE)
+    # Tem de ser o SITE DE CRIAÇÃO do animado — `"nome_base" in FONTE` sozinho
+    # passa por causa do próprio helper `nome_criatura`, que lê o campo.
+    check("handle_animar_mortos grava nome_base",
+          bool(re.search(r'"nome_base"\s*:\s*corpse\[', FONTE)))
+
 
 if __name__ == "__main__":
     print("=" * 62); print("  TESTE — Narração do servidor (etapa 4b-i)"); print("=" * 62)

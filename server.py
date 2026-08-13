@@ -13038,6 +13038,9 @@ class GameRoom:
                 "id":         cadaver_id,
                 "owner":      pid,                       # dono (Pedro) â€” vira pÃ³ se ele morrer
                 "nome":       f"{corpse['nome']} Animado",
+                # Guarda a parte, para o nome ser composto no idioma de quem lê
+                # (nome_criatura) em vez de reparsear " Animado" da string.
+                "nome_base":  corpse["nome"],
                 "icone":      corpse.get("icone", "💀"),
                 "tipo":       corpse.get("tipo", "skeleton"),  # sprite original do monstro
                 "image":      corpse.get("image"),
@@ -23763,8 +23766,9 @@ class GameRoom:
                 virote_base = next((i for i in SHOP_AMMO if i["id"] == "virotes"), None)
                 if virote_base:
                     virote_loot = deepcopy(virote_base)
+                    # A contagem sai do ammo_count na hora de exibir, não do
+                    # nome — ver nome_item / _comSufixos.
                     virote_loot["ammo_count"] = virotes_rest
-                    virote_loot["name"] = f"Virotes (×{virotes_rest})"
                     items_sempre.append(virote_loot)
 
             # Virotes especiais restantes
@@ -26295,8 +26299,12 @@ class GameRoom:
                 if fontes:
                     item = deepcopy(random.choice(fontes))
                     if roll > 10:
+                        # O sufixo "(corroído)" NÃO entra no nome: quem exibe
+                        # compõe a partir deste campo (nome_item no servidor,
+                        # _comSufixos no cliente). Colar no nome perderia o
+                        # sufixo em inglês, porque o nome é trocado pelo do
+                        # catálogo na hora de traduzir.
                         item["corrosao_inicial"] = 1
-                        item["name"] = f"{item['name']} (corroído)"
                     itens.append(item)
             self._spawn_chest(list(m["pos"]), gold, itens)
             detalhe = " Um item intacto estava preso na carapaça!" if roll <= 10 else (
