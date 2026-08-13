@@ -619,6 +619,19 @@ OBJ_BONUS_OURO = 25 # ouro concedido por objetivo secundÃ¡rio cumprido (Fase 3
 
 def mod(score): return (score - 10) // 2
 
+def monster_default_perception(monster):
+    """Percepção base para fichas legadas sem campo explícito."""
+    base = int(monster.get("movement", 6)) if monster.get("movement_exception") else 6
+    vision_base = max(-30, min(30, int(monster.get("vision_base", 0) or 0)))
+    dex_mod = mod(int(monster.get("dex", 10) or 10))
+    int_mod = mod(int(monster.get("int_", 10) or 10))
+    two_heads = any(a.get("id") == "duas_cabecas"
+                    for a in (monster.get("special_abilities") or [])
+                    if isinstance(a, dict))
+    vision = max(1, base + vision_base + (dex_mod + int_mod) // 2
+                 + (2 if two_heads else 0))
+    return max(1, 10 + vision // 2)
+
 def get_bonus_constituicao(constituicao):
     """Bônus de HP/Fortitude baseado na Constituição (tabela D20 expandida 0–25)."""
     tabela = {
@@ -7054,6 +7067,10 @@ def make_monster(mdef, room):
     m["movement"] = m["base_movement"]
     m["vision_base"] = max(-30, min(30, int(m.get("vision_base", 0))))
     m["visao_escuro"] = bool(m.get("visao_escuro") or m.get("darkvision_range"))
+    if m.get("percepcao") is None:
+        m["percepcao"] = monster_default_perception(m)
+    else:
+        m["percepcao"] = max(1, int(m["percepcao"]))
     m["id"] = new_id()
     m["max_hp"] = m["hp"]
     m["pos"] = [room["cx"], room["cy"]]
@@ -7926,12 +7943,16 @@ class GameRoom:
     # â”€â”€ city phase â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _city_state_payload(self):
+        players_city = [dict(p,
+                            vision_radius=self._get_raio_visao(p),
+                            percepcao=self._get_percepcao_heroi(p))
+                        for p in self.players.values()]
         return {
             "type": "city_state",
             "master_pid": self.master_pid,
             "host": self.host_pid,
             "turn_timer_enabled": self.turn_timer_enabled,
-            "players": list(self.players.values()),
+            "players": players_city,
             "world": {
                 "location": self.world_location,
                 "locations": list(WORLD_LOCATIONS.values()),
@@ -11106,6 +11127,32 @@ class GameRoom:
         bonus_atributos = (mod(m.get("int_", 10)) + mod(m.get("dex", 10))) // 2
         bonus_duas_cabecas = 2 if self._tem_habilidade(m, "duas_cabecas") else 0
         return max(1, base + bonus_atributos + bonus_visao + bonus_duas_cabecas)
+
+    def _get_percepcao_heroi(self, p):
+        """Percepção individual da ficha: 10 + metade do raio de visão."""
+        return max(1, 10 + self._get_raio_visao(p) // 2)
+
+    def _get_percepcao_monstro(self, m):
+        """Percepção base declarada na ficha, com fallback para fichas antigas."""
+        try:
+            return max(1, int(m.get("percepcao")))
+        except (TypeError, ValueError):
+            return monster_default_perception(m)
+
+    def _get_percepcao_efetiva_monstro(self, m, monstros=None):
+        """Percepção durante furtividade, incluindo aliados próximos."""
+        grupo = monstros if monstros is not None else list(self.monsters.values())
+        if not m.get("pos"):
+            return self._get_percepcao_monstro(m)
+        proximos = 0
+        for aliado in grupo:
+            if aliado is m or aliado.get("hp", 0) <= 0 or not aliado.get("pos"):
+                continue
+            distancia = max(abs(m["pos"][0] - aliado["pos"][0]),
+                            abs(m["pos"][1] - aliado["pos"][1]))
+            if distancia <= 3 and self._tem_linha_de_visao(m["pos"], aliado["pos"]):
+                proximos += 1
+        return self._get_percepcao_monstro(m) + proximos
 
     def _penalidade_furtivo_duas_cabecas(self, alvo):
         """Duas Cabeças dificulta encontrar uma abertura para um ataque furtivo."""
@@ -20191,9 +20238,12 @@ class GameRoom:
                 "msg": T("erro.recursos_insuficientes_parenteses_fome_sede", fome=custo_fome, sede=custo_sede)}); return
 
         # Dificuldade = percepÃ§Ã£o do monstro mais atento + nÂº de monstros na sala.
-        monstros = [m for m in self.monsters.values() if m["hp"] > 0]
-        percepcao = max((m.get("percepcao", 10) for m in monstros), default=8)
-        dificuldade = percepcao + len(monstros)
+        monstros = [m for m in self.monsters.values() if m.get("hp", 0) > 0]
+        observadores = [m for m in monstros
+                        if self._monstro_enxerga_alvo(m, {"obj": p})]
+        percepcao = max((self._get_percepcao_efetiva_monstro(m, monstros)
+                         for m in observadores), default=8)
+        dificuldade = percepcao
 
         d20 = random.randint(1, 20)
         bonus_dex = mod(p.get("dex", 10))
@@ -26986,10 +27036,12 @@ class GameRoom:
                 self._slot_prune(p, circulo)
         players_state = [dict(p, initiative=self.initiative_value(p),
                               vision_radius=self._get_raio_visao(p),
+                              percepcao=self._get_percepcao_heroi(p),
                               granted_hero_skills=self._granted_hero_skills(p))
                          for p in self.players.values()]
         monsters_state = [dict(m, initiative=self.initiative_value(m),
-                               vision_radius=self._get_raio_visao_monstro(m))
+                               vision_radius=self._get_raio_visao_monstro(m),
+                               percepcao=self._get_percepcao_monstro(m))
                           for m in self.monsters.values() if m["hp"] > 0]
         actor = self.current_actor()
         msg_state = {

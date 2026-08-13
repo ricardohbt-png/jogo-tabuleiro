@@ -14,7 +14,8 @@ window.EDITOR_CATALOG = {
       "damage": "1d4",
       "gold": 5,
       "xp": 10,
-      "subtipo": "raca_padrao"
+      "subtipo": "raca_padrao",
+      "percepcao": 13
     },
     {
       "type": "skeleton",
@@ -31,7 +32,8 @@ window.EDITOR_CATALOG = {
       "gold": 8,
       "xp": 15,
       "undead": true,
-      "subtipo": "morto_vivo"
+      "subtipo": "morto_vivo",
+      "percepcao": 13
     },
     {
       "type": "orc",
@@ -47,7 +49,8 @@ window.EDITOR_CATALOG = {
       "damage": "1d8",
       "gold": 12,
       "xp": 25,
-      "subtipo": "raca_padrao"
+      "subtipo": "raca_padrao",
+      "percepcao": 13
     },
     {
       "type": "dark_mage",
@@ -63,7 +66,8 @@ window.EDITOR_CATALOG = {
       "damage": "1d6",
       "gold": 20,
       "xp": 30,
-      "subtipo": "raca_padrao"
+      "subtipo": "raca_padrao",
+      "percepcao": 13
     },
     {
       "type": "troll",
@@ -79,7 +83,8 @@ window.EDITOR_CATALOG = {
       "damage": "1d10",
       "gold": 25,
       "xp": 40,
-      "subtipo": "raca_padrao"
+      "subtipo": "raca_padrao",
+      "percepcao": 13
     },
     {
       "type": "dragon",
@@ -96,7 +101,8 @@ window.EDITOR_CATALOG = {
       "damage": "2d8",
       "gold": 100,
       "xp": 200,
-      "subtipo": "raca_padrao"
+      "subtipo": "raca_padrao",
+      "percepcao": 13
     },
     {
       "type": "aranha_sombria",
@@ -167,7 +173,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "emboscador",
       "undead": false,
-      "subtipo": "animal"
+      "subtipo": "animal",
+      "percepcao": 12
     },
     {
       "type": "escorpiao_pedra",
@@ -243,7 +250,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "agressivo",
       "undead": false,
-      "subtipo": "animal"
+      "subtipo": "animal",
+      "percepcao": 12
     },
     {
       "type": "lacralion_filhote",
@@ -317,7 +325,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "agressivo",
       "undead": false,
-      "subtipo": "animal"
+      "subtipo": "animal",
+      "percepcao": 12
     },
     {
       "type": "lacralion_adulto",
@@ -412,7 +421,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "agressivo",
       "undead": false,
-      "subtipo": "animal"
+      "subtipo": "animal",
+      "percepcao": 12
     },
     {
       "type": "lacralion_anciao",
@@ -512,7 +522,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "agressivo",
       "undead": false,
-      "subtipo": "animal"
+      "subtipo": "animal",
+      "percepcao": 12
     },
     {
       "type": "esqueleto_humano",
@@ -612,7 +623,8 @@ window.EDITOR_CATALOG = {
       "ai_type": "esqueleto_humano",
       "undead": true,
       "subtipo": "morto_vivo",
-      "darkvision_range": 4
+      "darkvision_range": 4,
+      "percepcao": 12
     },
     {
       "type": "esqueleto_animal",
@@ -706,7 +718,8 @@ window.EDITOR_CATALOG = {
       "ai_type": "esqueleto_animal",
       "undead": true,
       "subtipo": "morto_vivo",
-      "darkvision_range": 8
+      "darkvision_range": 8,
+      "percepcao": 12
     },
     {
       "type": "lobo_cinzento",
@@ -772,7 +785,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "lobo_cinzento",
       "undead": false,
-      "subtipo": "animal"
+      "subtipo": "animal",
+      "percepcao": 12
     },
     {
       "type": "cobra_constritora",
@@ -844,7 +858,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "cobra_constritora",
       "undead": false,
-      "subtipo": "animal"
+      "subtipo": "animal",
+      "percepcao": 12
     },
     {
       "type": "cobra_venenosa",
@@ -921,7 +936,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "cobra_venenosa",
       "undead": false,
-      "subtipo": "animal"
+      "subtipo": "animal",
+      "percepcao": 12
     },
     {
       "type": "devorador_organico",
@@ -1004,7 +1020,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "devorador_organico",
       "undead": false,
-      "subtipo": "raca_padrao"
+      "subtipo": "raca_padrao",
+      "percepcao": 12
     },
     {
       "type": "urso_negro",
@@ -1082,7 +1099,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "agressivo",
       "undead": false,
-      "subtipo": "animal"
+      "subtipo": "animal",
+      "percepcao": 12
     },
     {
       "type": "orc_guerreiro",
@@ -1171,7 +1189,8 @@ window.EDITOR_CATALOG = {
       ],
       "ai_type": "orc_guerreiro",
       "undead": false,
-      "subtipo": "raca_padrao"
+      "subtipo": "raca_padrao",
+      "percepcao": 13
     },
     {
       "type": "goblin_arqueiro",
@@ -1249,7 +1268,8 @@ window.EDITOR_CATALOG = {
       ],
       "ai_type": "goblin_arqueiro",
       "undead": false,
-      "subtipo": "raca_padrao"
+      "subtipo": "raca_padrao",
+      "percepcao": 13
     },
     {
       "type": "goblin_combatente",
@@ -1332,7 +1352,8 @@ window.EDITOR_CATALOG = {
       ],
       "ai_type": "goblin_melee",
       "undead": false,
-      "subtipo": "vegetal"
+      "subtipo": "vegetal",
+      "percepcao": 13
     },
     {
       "type": "goblin_dual",
@@ -1427,7 +1448,8 @@ window.EDITOR_CATALOG = {
       ],
       "ai_type": "goblin_melee",
       "undead": false,
-      "subtipo": "raca_padrao"
+      "subtipo": "raca_padrao",
+      "percepcao": 13
     },
     {
       "type": "goblin_xama",
@@ -1532,7 +1554,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "goblin_xama",
       "undead": false,
-      "subtipo": "raca_padrao"
+      "subtipo": "raca_padrao",
+      "percepcao": 13
     },
     {
       "type": "kobold_lanceiro",
@@ -1606,7 +1629,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "kobold_lanceiro",
       "undead": false,
-      "subtipo": "raca_padrao"
+      "subtipo": "raca_padrao",
+      "percepcao": 13
     },
     {
       "type": "kobold_besteiro",
@@ -1680,7 +1704,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "kobold_besteiro",
       "undead": false,
-      "subtipo": "raca_padrao"
+      "subtipo": "raca_padrao",
+      "percepcao": 13
     },
     {
       "type": "necromante",
@@ -1781,7 +1806,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "necromante",
       "undead": false,
-      "subtipo": "raca_padrao"
+      "subtipo": "raca_padrao",
+      "percepcao": 14
     },
     {
       "type": "zumbi_infectado",
@@ -1862,7 +1888,8 @@ window.EDITOR_CATALOG = {
       "ai_type": "zumbi",
       "undead": true,
       "subtipo": "morto_vivo",
-      "darkvision_range": 8
+      "darkvision_range": 8,
+      "percepcao": 11
     },
     {
       "type": "devorador_metal",
@@ -1940,7 +1967,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "devorador_metal",
       "undead": false,
-      "subtipo": "raca_padrao"
+      "subtipo": "raca_padrao",
+      "percepcao": 12
     },
     {
       "type": "bugbear_sombras",
@@ -2068,7 +2096,8 @@ window.EDITOR_CATALOG = {
       "ai_type": "bugbear_sombras",
       "undead": false,
       "subtipo": "raca_padrao",
-      "darkvision_range": 99
+      "darkvision_range": 99,
+      "percepcao": 13
     },
     {
       "type": "ogro_clava",
@@ -2163,7 +2192,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "ogro",
       "undead": false,
-      "subtipo": "raca_padrao"
+      "subtipo": "raca_padrao",
+      "percepcao": 12
     },
     {
       "type": "ogro_lanca",
@@ -2258,7 +2288,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "ogro",
       "undead": false,
-      "subtipo": "raca_padrao"
+      "subtipo": "raca_padrao",
+      "percepcao": 12
     },
     {
       "type": "elemental_fogo",
@@ -2362,7 +2393,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "agressivo",
       "undead": false,
-      "subtipo": "construto"
+      "subtipo": "construto",
+      "percepcao": 12
     },
     {
       "type": "elemental_gelo",
@@ -2452,7 +2484,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "agressivo",
       "undead": false,
-      "subtipo": "construto"
+      "subtipo": "construto",
+      "percepcao": 11
     },
     {
       "type": "elemental_pedra",
@@ -2534,7 +2567,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "agressivo",
       "undead": false,
-      "subtipo": "construto"
+      "subtipo": "construto",
+      "percepcao": 10
     },
     {
       "type": "elemental_eletrico",
@@ -2626,7 +2660,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "agressivo",
       "undead": false,
-      "subtipo": "construto"
+      "subtipo": "construto",
+      "percepcao": 13
     },
     {
       "type": "elemental_ar",
@@ -2723,7 +2758,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "agressivo",
       "undead": false,
-      "subtipo": "construto"
+      "subtipo": "construto",
+      "percepcao": 13
     },
     {
       "type": "elemental_agua",
@@ -2823,7 +2859,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "agressivo",
       "undead": false,
-      "subtipo": "construto"
+      "subtipo": "construto",
+      "percepcao": 12
     },
     {
       "type": "lobisomem",
@@ -2918,7 +2955,8 @@ window.EDITOR_CATALOG = {
       "loot_table": {},
       "ai_type": "agressivo",
       "undead": false,
-      "subtipo": "raca_padrao"
+      "subtipo": "raca_padrao",
+      "percepcao": 13
     },
     {
       "type": "escravo_vampirico",
@@ -3012,7 +3050,8 @@ window.EDITOR_CATALOG = {
       ],
       "ai_type": "agressivo",
       "undead": true,
-      "subtipo": "morto_vivo"
+      "subtipo": "morto_vivo",
+      "percepcao": 13
     },
     {
       "type": "vampiro_jovem",
@@ -3109,7 +3148,8 @@ window.EDITOR_CATALOG = {
       ],
       "ai_type": "agressivo",
       "undead": true,
-      "subtipo": "morto_vivo"
+      "subtipo": "morto_vivo",
+      "percepcao": 14
     },
     {
       "type": "vampiro_anciao",
@@ -3212,7 +3252,8 @@ window.EDITOR_CATALOG = {
       ],
       "ai_type": "agressivo",
       "undead": true,
-      "subtipo": "morto_vivo"
+      "subtipo": "morto_vivo",
+      "percepcao": 15
     },
     {
       "type": "lorde_vampiro",
@@ -3315,7 +3356,8 @@ window.EDITOR_CATALOG = {
       ],
       "ai_type": "agressivo",
       "undead": true,
-      "subtipo": "morto_vivo"
+      "subtipo": "morto_vivo",
+      "percepcao": 15
     },
     {
       "type": "ferrao_charcos_jovem",
@@ -3403,7 +3445,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "agressivo",
       "undead": false,
-      "subtipo": "aberracao"
+      "subtipo": "aberracao",
+      "percepcao": 12
     },
     {
       "type": "ferrao_charcos_adulto",
@@ -3531,7 +3574,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "agressivo",
       "undead": false,
-      "subtipo": "aberracao"
+      "subtipo": "aberracao",
+      "percepcao": 12
     },
     {
       "type": "ferrao_charcos_anciao",
@@ -3666,7 +3710,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "agressivo",
       "undead": false,
-      "subtipo": "aberracao"
+      "subtipo": "aberracao",
+      "percepcao": 13
     },
     {
       "type": "tirano_da_mata",
@@ -3804,7 +3849,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "tirano_da_mata",
       "undead": false,
-      "subtipo": "besta_magica"
+      "subtipo": "besta_magica",
+      "percepcao": 12
     },
     {
       "type": "tirano_ancestral",
@@ -3975,7 +4021,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "tirano_ancestral",
       "undead": false,
-      "subtipo": "besta_magica"
+      "subtipo": "besta_magica",
+      "percepcao": 13
     },
     {
       "type": "garaloux_jovem",
@@ -4056,7 +4103,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "agressivo",
       "undead": false,
-      "subtipo": "besta_magica"
+      "subtipo": "besta_magica",
+      "percepcao": 13
     },
     {
       "type": "garaloux_adulto",
@@ -4168,7 +4216,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "agressivo",
       "undead": false,
-      "subtipo": "besta_magica"
+      "subtipo": "besta_magica",
+      "percepcao": 13
     },
     {
       "type": "garaloux_alfa",
@@ -4289,7 +4338,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "agressivo",
       "undead": false,
-      "subtipo": "besta_magica"
+      "subtipo": "besta_magica",
+      "percepcao": 13
     },
     {
       "type": "molochus_jovem",
@@ -4390,7 +4440,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "agressivo",
       "undead": false,
-      "subtipo": "besta_magica"
+      "subtipo": "besta_magica",
+      "percepcao": 13
     },
     {
       "type": "molochus_adulto",
@@ -4534,7 +4585,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "agressivo",
       "undead": false,
-      "subtipo": "besta_magica"
+      "subtipo": "besta_magica",
+      "percepcao": 13
     },
     {
       "type": "molochus_anciao",
@@ -4678,7 +4730,8 @@ window.EDITOR_CATALOG = {
       },
       "ai_type": "agressivo",
       "undead": false,
-      "subtipo": "besta_magica"
+      "subtipo": "besta_magica",
+      "percepcao": 13
     }
   ],
   "monster_abilities": [

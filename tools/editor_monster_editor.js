@@ -128,7 +128,8 @@
     const bonus = a.apply_attribute_damage === false ? 0 : mod(m[attr]);
     return `${a.damage || "1d4"}${bonus ? (bonus > 0 ? "+" : "") + bonus : ""}`;
   }
-  const visionRadius = m => Math.max(1, 6 + n(m.vision_base, 0) + Math.floor((mod(m.dex) + mod(m.int_)) / 2));
+  const visionRadius = m => Math.max(1, (m.movement_exception ? n(m.movement, 6) : 6)
+    + n(m.vision_base, 0) + Math.floor((mod(m.dex) + mod(m.int_)) / 2));
   function equipmentPreview(monster) {
     const m = copy(monster);
     if (!m.equipment_enabled) return m;
@@ -161,6 +162,7 @@
     out.str_ = n(out.str_, 10); out.dex = n(out.dex, 10); out.con_ = n(out.con_, 10); out.int_ = n(out.int_, 10);
     out.movement = out.movement_exception ? n(out.movement, 6) : 6;
     out.vision_base = Math.max(-30, Math.min(30, n(out.vision_base, 0)));
+    out.percepcao = Math.max(1, n(out.percepcao, 10 + Math.floor(visionRadius(out) / 2)));
     out.visao_escuro = !!(out.visao_escuro || out.darkvision_range);
     out.caster_level = Math.max(1, n(out.caster_level, 1));
     out.natural_armor = Math.max(0, n(out.natural_armor, n(out.ac, 10) - 10 - mod(out.dex)));
@@ -210,13 +212,13 @@
     out.ai_type = out.ai_type || "agressivo";
     return out;
   }
-  function blank() { const m = normalize({ name:"Nova Criatura", hp:10, ac:10, movement:6, tier:1, cr:1, str_:10, dex:10, con_:10, int_:10, base_attack_bonus:0, attacks:[{name:"Ataque", damage:"1d4", num_attacks:1, attack_attribute:"str_", base_attack_bonus:0}] }, false); m.type = "nova_criatura"; m.original_type = ""; return m; }
+  function blank() { const m = normalize({ name:"Nova Criatura", hp:10, ac:10, movement:6, tier:1, cr:1, str_:10, dex:10, con_:10, int_:10, percepcao:13, base_attack_bonus:0, attacks:[{name:"Ataque", damage:"1d4", num_attacks:1, attack_attribute:"str_", base_attack_bonus:0}] }, false); m.type = "nova_criatura"; m.original_type = ""; return m; }
   function weaknessText(list) { return (list || []).map(w => `${w.type || "physical"}|${w.categoria || ""}|${w.bonus_flat || ""}|${w.multiplier || ""}|${w.descricao || ""}`).join("\n"); }
   function parseWeaknesses(text) { return String(text || "").split("\n").map(row => row.trim()).filter(Boolean).map(row => { const [type,categoria,flat,mult,descricao] = row.split("|").map(x => x.trim()); const w={type:type || "physical"}; if(categoria) w.categoria=categoria; if(flat !== "" && Number.isFinite(Number(flat))) w.bonus_flat=Number(flat); if(mult !== "" && Number.isFinite(Number(mult))) w.multiplier=Number(mult); if(descricao) w.descricao=descricao; return w; }); }
   function read() {
     const get = id => document.getElementById(id);
     const val = id => get(id).value;
-    const nums = ["tier","cr","base_hp","natural_armor","movement","vision_base","base_attack_bonus","caster_level","str_","dex","con_","int_","fort_base","ref_base","will_base","gold","xp"];
+    const nums = ["tier","cr","base_hp","natural_armor","movement","vision_base","percepcao","base_attack_bonus","caster_level","str_","dex","con_","int_","fort_base","ref_base","will_base","gold","xp"];
     const out = Object.assign({}, draft);
     ["name","type","emoji","image","portrait","porte"].forEach(k => out[k] = val("me-" + k).trim());
     // Na primeira montagem o resumo é calculado antes de o seletor visual de
@@ -586,7 +588,8 @@
       <section><h2>Fraquezas especiais</h2><div class="me-abilities me-negative-abilities">${negativeAbilities.map(a => `<label class="me-tip" data-tip="${esc(abilityHint(a) + " Ao selecionar, incorpora automaticamente a mecânica correspondente.")}"><input class="me-negative-ability" type="checkbox" value="${esc(a.id)}"${selectedNegativeAbilities.has(a.id) ? " checked" : ""}><b>${esc(a.name)}</b><small>Reduz o ND · mecânica automática</small></label>`).join("") || "Nenhuma fraqueza especial cadastrada."}</div><p class="me-hint">Efeitos mistos ficam aqui e causam apenas uma redução moderada no ND.</p></section>
       <section><h2>Comportamento, defesas e tesouro</h2><div class="me-fields cols-3"><label>IA<select id="me-ai_type">${options(ai.map(v => ({value:v})), draft.ai_type, x => x.value.replace(/_/g," "))}</select></label><label>Imagem da miniatura<input id="me-image" value="${esc(draft.image || draft.type)}"></label><label>Porte<select id="me-porte">${options(["minusculo","pequeno","medio","grande","enorme"].map(value=>({value})), draft.porte || "medio", x=>x.value)}</select></label><label>Imunidades (separadas por vírgula)<input id="me-immunities" value="${esc(draft.immunities.join(", "))}"></label><label>Loot garantido (IDs, vírgula)<input id="me-guaranteed-loot" value="${esc(draft.guaranteed_loot.join(", "))}"></label><label>Ouro<input id="me-gold" type="number" min="0" value="${esc(draft.gold || 0)}"></label><label>XP<input id="me-xp" type="number" min="0" value="${esc(draft.xp || 0)}"></label><label>Tier<input id="me-tier" type="number" min="1" value="${esc(draft.tier || 1)}"></label></div><label>Loot variável (JSON opcional)<textarea id="me-loot-table">${esc(JSON.stringify(draft.loot_table || {}, null, 2))}</textarea></label><div class="me-checks"><label><input id="me-undead" type="checkbox"${draft.undead ? " checked" : ""}> morto-vivo</label><label><input id="me-boss" type="checkbox"${draft.boss ? " checked" : ""}> chefe</label></div></section>
       <footer><span id="me-status">O ID é gerado pelo nome e pode ser alterado.</span><button id="me-save" class="me-save">Salvar criatura personalizada</button></footer></main></div>`;
-    const movementReadout = [...root.querySelectorAll(".me-calculated")].find(el => /Movimento/.test(el.textContent));
+     const movementReadout = [...root.querySelectorAll(".me-calculated")].find(el => /Movimento/.test(el.textContent));
+     if (movementReadout) movementReadout.insertAdjacentHTML("afterend", `<label>Percepção<input id="me-percepcao" type="number" min="1" value="${esc(draft.percepcao)}"><small>base da ficha; aliados próximos dão +1 durante furtividade</small></label>`);
     if (movementReadout?.querySelector("span")) movementReadout.querySelector("span").textContent = String(draft.movement || 6);
     const sidebar = root.querySelector(".me-sidebar");
     const templateSelect = document.getElementById("me-template");

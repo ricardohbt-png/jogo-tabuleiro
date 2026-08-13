@@ -9,7 +9,7 @@
   const list = () => (((window.EDITOR_CATALOG && window.EDITOR_CATALOG.monsters) || []).concat(window.EDITOR_CUSTOM_MONSTERS || []));
   const spellLibrary = () => (window.EDITOR_CATALOG && window.EDITOR_CATALOG.spells) || [];
   const mod = (score) => Math.floor((Number(score || 10) - 10) / 2);
-  const visionRadius = m => Math.max(1, Number(m.movement != null ? m.movement : 6)
+  const visionRadius = m => Math.max(1, Number(m.movement_exception ? (m.movement != null ? m.movement : 6) : 6)
     + Number(m.vision_base != null ? m.vision_base : 0)
     + Math.floor((mod(m.dex) + mod(m.int_)) / 2));
   // Habilidades já presentes em monstros nativos que descrevem uma limitação.
@@ -373,7 +373,7 @@
     const spellsById = new Map(spellLibrary().map(s => [s.id, s]));
     const spells = monsterSpells(m).map(cfg => Object.assign({}, spellsById.get(cfg.id), cfg)).filter(s => s.id);
     const weaknesses = (m.weaknesses || []).map(w => w.descricao || `${pretty(w.categoria || w.type)} ${w.multiplier ? "×" + w.multiplier : (w.bonus_flat > 0 ? "+" : "") + (w.bonus_flat || "")}`).join(" · ") || "Nenhuma definida";
-    return `<article class="best-card">
+    return `<article class="best-card"><div class="best-perception-note"><b>Percepção:</b> ${esc(m.percepcao != null ? m.percepcao : 10 + Math.floor(visionRadius(m) / 2))} <small>base da ficha; aliados vivos a até 3 casas podem conceder +1 durante furtividade.</small></div>
       <section class="best-media">${imageBox(`../assets/retratos/monstros/${m.portrait || m.type}.png`, "best-portrait", "Retrato\na adicionar", m.image && m.image !== (m.portrait || m.type) ? `../assets/retratos/monstros/${m.image}.png` : "")}${imageBox(`../assets/pawns/monstros/${m.image || m.type}/${m.image || m.type}.png`, "best-mini", "Miniatura\nindisponível")}</section>
       <section class="best-sheet"><header class="best-head"><div><h1>${esc(m.emoji || "") } ${esc(m.name)}</h1><p><strong>Subtipo: ${esc(({construto:"Construto",morto_vivo:"Morto-Vivo",animal:"Animal",abissal:"Abissal",vegetal:"Vegetal",raca_padrao:"Raça Padrão"})[m.subtipo || (m.undead ? "morto_vivo" : "raca_padrao")] || "Raça Padrão")}</strong></p><p>${esc(m.type)} · IA: <strong>${esc(pretty(m.ai_type))}</strong></p></div><div class="nd-pair"><span>ND definido <b>${esc(nd(m.cr != null ? m.cr : m.tier || "—"))}</b></span><span title="Estimativa contra grupos de 2, 4 e 6 heróis, considerando habilidades.">ND estimado (6 heróis) <b>${esc(nd(ndProfiles[0].groups[6].abilities))}</b><small>${esc(profileText)}</small><small title="Grupo sem habilidades próprias, mas contando as habilidades do monstro">Sem habilidades dos heróis: ${esc(baseProfileText)}</small></span></div></header>
       <div class="best-stats"><div><b>PV</b><span>${esc(m.hp || "—")}</span></div><div><b>CA total</b><span>${esc(m.ac || "—")}</span></div><div><b>Armadura natural</b><span>${esc(m.natural_armor != null ? m.natural_armor : Math.max(0, Number(m.ac || 10) - 10 - mod(m.dex)))}</span></div><div><b>Movimento</b><span>${esc(m.movement || "—")}</span></div><div><b>Raio de visão</b><span title="${m.visao_escuro || m.darkvision_range ? "Visão no escuro: objetos não bloqueiam, apenas paredes." : "Objetos altos e paredes bloqueiam a visão."}">${esc(visionRadius(m))}${m.visao_escuro || m.darkvision_range ? " 👁️" : ""}</span></div><div><b>Ataques</b><span>${attacks.reduce((n,a) => n + Number(a.num_attacks || 1), 0)}</span></div><div><b>Iniciativa</b><span>${esc(Number(m.dex || 10) + mod(m.int_))}</span></div></div>

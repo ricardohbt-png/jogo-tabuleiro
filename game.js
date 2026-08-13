@@ -3707,6 +3707,12 @@ function obterRaioVisaoCliente(personagem){
   return Math.max(1, base + Math.floor((modInt + modDex) / 2) + bonusLuz);
 }
 
+function obterPercepcaoCliente(personagem, raioVisao){
+  const recebido = Number(personagem && personagem.percepcao);
+  if(Number.isFinite(recebido)) return recebido;
+  return Math.max(1, 10 + Math.floor(Number(raioVisao || 1) / 2));
+}
+
 // Renderiza atributos usando dados do servidor quando disponíveis
 function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
   const ATRIBUTOS = [
@@ -3724,6 +3730,7 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
     heroi.statsModificados?.constituicao || heroi.stats?.constituicao
   ) || '?'
   const raioVisao = obterRaioVisaoCliente(estadoServidor)
+  const percepcao = obterPercepcaoCliente(estadoServidor, raioVisao)
   const nomesMaldicao = {maos_tremulas:'Mãos Trêmulas',olhos_escuridao:'Olhos da Escuridão',passos_pesados:'Passos Pesados',lamina_enferrujada:'Lâmina Enferrujada',fraqueza_arcana:'Fraqueza Arcana',fortuna_roubada:'Fortuna Roubada',azar_sobrenatural:'Azar Sobrenatural',marca_cacador:'Marca do Caçador',corpo_exausto:'Corpo Exausto',carne_fragil:'Carne Frágil',sangramento_profano:'Sangramento Profano',correntes_invisiveis:'Correntes Invisíveis',dor_constante:'Dor Constante',alma_quebrada:'Alma Quebrada',aura_profana:'Aura Profana',maldicao_ferrugem:'Maldição da Ferrugem',fome_eterna:'Fome Eterna',sede_infinita:'Sede Infinita',tocado_morte:'Tocado pela Morte',licantropia:'Licantropia',silencio_deuses:'Silêncio dos Deuses',voz_quebrada:'Voz Quebrada',espirito_covarde:'Espírito Covarde',eco_morte:'Eco da Morte',corrupcao_crescente:'Corrupção Crescente'}
   const descMaldicao = {maos_tremulas:'−2 em ataques',olhos_escuridao:'−2 visão',passos_pesados:'mover custa +1 sede',lamina_enferrujada:'−2 dano físico',fraqueza_arcana:'magias causam metade do dano',fortuna_roubada:'metade do ouro adquirido',azar_sobrenatural:'primeiro 20 natural não é crítico',marca_cacador:'inimigos +1 para atacar você',corpo_exausto:'ações custam +1 fome e sede',carne_fragil:'+2 dano recebido',sangramento_profano:'1 dano no início do turno após sofrer dano',correntes_invisiveis:'−3 movimento',dor_constante:'ações causam 1 dano',alma_quebrada:'não recebe bônus de aliados',aura_profana:'aliados adjacentes −1 ataque',maldicao_ferrugem:'equipamento degrada após combate',silencio_deuses:'não lança magias',voz_quebrada:'não usa Canções',espirito_covarde:'−2 Vontade',eco_morte:'morte de aliado causa 10 dano'}
   const maldicoes = (estadoServidor.maldicoes||[]).map(m=>`<li>☠️ <b>${nomesMaldicao[m.id]||m.id}</b> — ${descMaldicao[m.id]||'maldição ativa'}${m.aventuras!=null&&['fome_eterna','sede_infinita','tocado_morte','licantropia','corrupcao_crescente'].includes(m.id)?` (estágio ${Math.min(5,1+Math.floor(m.aventuras/2))})`:''}</li>`).join('')
@@ -3859,6 +3866,10 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
         <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">RAIO DE VISÃO</span>
         <span style="color:#8ed0ff; font-size:14px; font-weight:bold;">👁 ${raioVisao}</span>
       </div>
+    </div>
+    <div style="margin-top:8px; padding:8px 12px; background:rgba(170,130,255,0.06); border:1px solid #aa82ff44; display:flex; justify-content:space-between;">
+      <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">PERCEPÇÃO</span>
+      <span style="color:#c4a7ff; font-size:14px; font-weight:bold;">👁‍🗨 ${percepcao}</span>
     </div>
     ${modificadores}
   `
@@ -12463,7 +12474,7 @@ function abrirFichaMonstro(m){
   const imageName = _monsterImageName(m);
   const imageSrc = imageName ? _assetURL(`assets/pawns/monstros/${imageName}/${imageName}.png`) : '';
   const atributo = (rotulo, valor) => `<div><span>${rotulo}</span><b>${valor ?? '—'}</b></div>`;
-  overlay.innerHTML = `<article class="ficha-monstro" role="dialog" aria-modal="true" aria-label="Ficha de ${_esc(m.name||m.type)}">
+  overlay.innerHTML = `<article class="ficha-monstro" role="dialog" aria-modal="true" aria-label="Ficha de ${_esc(m.name||m.type)}"><div class="fm-perception-line"><b>Percepção</b><span>${m.percepcao ?? (10 + Math.floor(Number(m.vision_radius || 1) / 2))}</span><small>base da ficha · +1 por aliado vivo a até 3 casas durante furtividade</small></div>
     <header class="fm-header">
       ${imageSrc ? `<img src="${imageSrc}" alt="" onerror="this.style.display='none'">` : `<span class="fm-emoji">${m.emoji||'👾'}</span>`}
       <div><h2>${_esc(m.name || m.type || 'Monstro')}</h2><p>${_esc(m.type || '')} · ND ${m.cr ?? '—'} · nível ${m.level ?? m.tier ?? 1}</p></div>
@@ -24187,11 +24198,16 @@ function _csfShowPanel(classId, animate){
   // da soma dos modificadores de INT e DES.
   const raioVisao = Math.max(1, (d.spd || 5)
     + Math.floor((modVisao(d.stats.inteligencia) + modVisao(d.stats.destreza)) / 2));
+  const percepcao = Math.max(1, 10 + Math.floor(raioVisao / 2));
   document.getElementById('cs-stats').innerHTML = renderStats(d.stats) + `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; padding:8px 10px; background:rgba(100,180,255,.08); border:1px solid rgba(100,180,255,.30);">
       <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">👁 RAIO DE VISÃO</span>
       <strong style="color:#8ed0ff; font-size:16px;">${raioVisao}</strong>
-    </div>`;
+     </div>
+     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; padding:8px 10px; background:rgba(170,130,255,.08); border:1px solid rgba(170,130,255,.30);">
+       <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">👁‍🗨 PERCEPÇÃO</span>
+       <strong style="color:#c4a7ff; font-size:16px;">${percepcao}</strong>
+     </div>`;
 
   // Animate stat bars (escala 1–25, mapeada para 0–100%)
   requestAnimationFrame(()=>{

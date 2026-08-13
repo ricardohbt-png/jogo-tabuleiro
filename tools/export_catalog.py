@@ -85,7 +85,7 @@ def build_catalog():
         # já definidos no servidor. Mantemos o catálogo em JSON, sem estado de jogo.
         fields = (
             "type", "name", "emoji", "boss", "tier", "cr", "hp", "ac", "natural_armor",
-            "movement", "movement_exception", "vision_base", "size", "porte", "image", "atk_bonus", "damage",
+            "movement", "movement_exception", "vision_base", "percepcao", "size", "porte", "image", "atk_bonus", "damage",
             "base_attack_bonus", "base_hp", "caster_level", "str_", "dex", "con_", "int_",
             "fort", "ref_", "will", "fort_base", "ref_base", "will_base",
             "attacks", "special_abilities", "monster_spells", "immunities", "weaknesses",
@@ -94,6 +94,8 @@ def build_catalog():
             "ai_type", "undead", "subtipo", "darkvision_range",
         )
         entry = {key: m[key] for key in fields if key in m}
+        if "percepcao" not in entry:
+            entry["percepcao"] = server.monster_default_perception(m)
         monsters.append(entry)
     items = [{key: i[key] for key in (
                 "id", "name", "emoji", "die", "stat", "finesse", "off_hand_weapon", "crit_nat20_multiplier", "crit_min_nat_roll", "extra_attack_on_crit_min_nat", "range", "reach", "categoria",
