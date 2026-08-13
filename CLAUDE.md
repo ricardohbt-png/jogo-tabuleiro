@@ -1888,3 +1888,56 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > Sempre reinicie o servidor antes de provar mudança de servidor. Testes:
 > `tools/test_narracao.py` (8). Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-08-10-idioma-etapa4b1-narracao*`.
+
+> **Idioma — nomes de catálogo dentro da frase (etapa 4c de 5):** fecha a lacuna que a
+> 4b-i deixou registrada — a frase traduzia mas o nome saía cru (*"Round 1 — **Elemental
+> Elétrico**'s initiative"*). Dos **295 parâmetros** de nome de catálogo nas 390 narrações
+> já migradas, **288 foram resolvidos**; os 158+ de nome de JOGADOR seguem crus, que é o
+> certo. Três helpers novos, ao lado do `nome_de`: **`nome_cat(familia, ident, cru)`** —
+> devolve `T` só quando o nome cru **ainda é o do catálogo**, e é essa **guarda de
+> igualdade** que torna a etapa segura por construção para conteúdo autoral (monstro/item
+> do editor não tem chave; nativo renomeado por `overwrite_native` tem chave com outro
+> texto — os dois saem crus, preservando o nome do autor, sem lista de exceções para
+> manter); **`nome_criatura(x)`** — despacha pela **forma do dict** (`class_id`→herói cru,
+> `name_key`→nome trocado em runtime, `vida_atual`+`tipo`→servo animado, `type`→monstro),
+> porque `alvo`/`target` são ora herói, ora monstro, ora servo **no mesmo parâmetro**, em
+> ~45 sites, e a informação só existe em runtime; **`nome_item(it)`**.
+>
+> **Nomes compostos — princípio único: carregar as partes, nunca reparsear a string
+> pronta.** Três mutações de `name` foram REMOVIDAS e viraram composição na hora de
+> render, a partir de campo que o objeto já tinha: `(corroído)` ← `corrosao_inicial`,
+> `Virotes (×N)` ← `ammo_count`, servo animado ← `tipo` + `nome_base` (campo novo). O
+> **instrumento** ganhou `_instrumento_nome_T`, irmã tardia de `_instrumento_nome` (que
+> segue devolvendo português puro — é ela que grava `inst["name"]`, e isso vai a disco no
+> savegame): a ordem das partes é do **template** (`cat.instrumento.nome_composto`),
+> porque em inglês o adjetivo vem ANTES do substantivo, e o **espaço vem embutido no lado
+> certo de cada idioma** em cada adjetivo (`" Velha"` × `"Old "`), que é o que faz parte
+> ausente não deixar espaço solto. O gênero só existe no `pt`. `Harpa Lendária Élfica` →
+> `Legendary Elven Harp`. Chaves escritas à mão em **`src/lang/composto.js`** (o gerador
+> só emite `.nome`/`.desc`, então nada disso poderia nascer dele). Para nome trocado em
+> runtime, que por definição não casa a guarda, a saída é o campo **`name_key`** (hoje só
+> o Elemental Descontrolado).
+>
+> **O cliente ganhou um compositor gêmeo** em `src/i18n.js` (`_instrumentoComposto` +
+> `_comSufixos`), lendo AS MESMAS chaves: o instrumento tem id único por combinação, que
+> não existe no catálogo, então o filtro não o tocava. **Atenção:** a composição tem duas
+> implementações e nada além dos testes impede que divirjam — `test_narracao.py` [7] e
+> `test_vocabulario_cliente.js` [N] cravam a MESMA tabela de 7 arranjos e se citam.
+>
+> **Três bugs pré-existentes fechados de quebra:** (1) `SHOP_AMMO` estava fora das fontes
+> do `gerar_vocabulario.py` desde a etapa 2 — 6 munições sem chave nenhuma; (2) o filtro
+> `traduzirNomes` do cliente comia o `(corroído)` da bolsa em inglês, e o jogador não via
+> que a peça estava corroída; (3) `test_editor_itens` estava VERMELHO desde `8b5fb13`
+> porque fazia `" ".join(falas)` — o `T` se disfarça de string em `__contains__`, `__len__`
+> e `__getattr__`, mas **não** em `str.join`, que exige `str` de verdade.
+>
+> **Continua em português de propósito:** monstro/item autoral, nome de jogador, e 7
+> passagens que **não são das 8 famílias** de catálogo — nome de ataque em tupla literal
+> (`"Garras"`, `"Mordida"`), rótulo de status, nome de habilidade passado como parâmetro,
+> `weapon_name` (já chega como string do `_resolver_dano_ataque_basico`), nome de cidade, e
+> um `nomes` já unido por `" e ".join` (juntar `T`s exigiria um `T` que saiba concatenar,
+> que o motor não tem). **Maldições, habilidades de monstro e nomes de aventura** também
+> ficam: não são famílias de catálogo. **Falta:** a etapa **4b-ii** (153 `gm_say` ainda não
+> migrados) e a etapa **5** (interface do cliente, ~1.000). Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-08-11-idioma-etapa4c-nomes-na-narracao*`. Testes:
+> `tools/test_narracao.py` (48), `tools/test_vocabulario_cliente.js` (40).
