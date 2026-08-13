@@ -178,6 +178,18 @@ def _rodar_verificacoes():
     check("handle_animar_mortos grava nome_base",
           bool(re.search(r'"nome_base"\s*:\s*corpse\[', FONTE)))
 
+    print("\n[9] Nome trocado em runtime")
+    # Nome trocado em runtime nunca casa a guarda de igualdade — sairia cru para
+    # sempre. O campo `name_key` é a saída explícita.
+    elem = {"type": "elemental_eletrico", "name": "Elemental Descontrolado",
+            "name_key": "cat.monstro.elemental_descontrolado"}
+    check("name_key vence a guarda de igualdade — pt",
+          _r(S.nome_criatura(elem), "pt") == "Elemental Descontrolado")
+    check("name_key vence a guarda de igualdade — en",
+          _r(S.nome_criatura(elem), "en") == "Uncontrolled Elemental")
+    check("o pergaminho marca a chave no elemental",
+          bool(re.search(r'"name_key"\]\s*=\s*"cat\.monstro\.elemental_descontrolado"', FONTE)))
+
 
 if __name__ == "__main__":
     print("=" * 62); print("  TESTE — Narração do servidor (etapa 4b-i)"); print("=" * 62)

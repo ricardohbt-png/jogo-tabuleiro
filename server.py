@@ -20610,6 +20610,9 @@ class GameRoom:
         m = make_monster(comp_def, sala)
         m["pos"] = list(p["pos"])
         m["name"] = "Elemental Descontrolado"
+        # O nome trocado em runtime nunca casa a guarda de igualdade do
+        # nome_cat, então sairia cru para sempre; o name_key é a saída.
+        m["name_key"] = "cat.monstro.elemental_descontrolado"
         self.monsters[m["id"]] = m
         await self.gm_say(T("narracao.a_invocacao_do_pergaminho_surge_hostil_p", heroi=p['name']))
 
