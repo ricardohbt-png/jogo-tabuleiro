@@ -1253,6 +1253,10 @@ window.LANG_ERROS = {
     "en": "Only a dagger can be wielded as a 2nd weapon in the off hand.",
     "pt": "Só uma adaga pode ser empunhada como 2ª arma na mão esquerda."
   },
+  "erro.somente_armas_compativeis_podem_ser_empunhadas_como_2a": {
+    "en": "Only compatible weapons can be wielded as a 2nd weapon in the off hand.",
+    "pt": "Somente armas compatíveis podem ser empunhadas como 2ª arma na mão esquerda."
+  },
   "erro.somente_o_anfitriao_pode_alterar_o_limit": {
     "en": "Only the host can change the turn limit.",
     "pt": "Somente o anfitrião pode alterar o limite de turno."

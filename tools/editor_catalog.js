@@ -7520,6 +7520,14 @@ window.EDITOR_CATALOG = {
       "target_mode": "todos",
       "success_effect": "metade",
       "descricao": "Expele energia em linha ou cone. Configure o elemento, alcance, dano, teste de resistência e se o sopro atinge um ou todos os alvos da área."
+    },
+    {
+      "id": "arremesso_bruto",
+      "source": "arma",
+      "name": "Arremesso Bruto",
+      "icon": "🪓",
+      "action_type": "passiva",
+      "descricao": "O arremesso desta arma usa o modificador de Força no acerto e no dano."
     }
   ],
   "spells": [
@@ -7920,6 +7928,8 @@ window.EDITOR_CATALOG = {
       "emoji": "🗡️",
       "die": "1d4",
       "stat": "str_",
+      "finesse": true,
+      "off_hand_weapon": true,
       "categoria": "perfurante"
     },
     {
@@ -7928,6 +7938,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🪢",
       "die": "1d4",
       "stat": "dex",
+      "off_hand_weapon": true,
       "range": 2,
       "categoria": "cortante"
     },
@@ -7954,6 +7965,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🪄",
       "die": "1d6",
       "stat": "str_",
+      "finesse": true,
       "categoria": "contundente"
     },
     {
@@ -7962,6 +7974,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🪄",
       "die": "1d6",
       "stat": "str_",
+      "finesse": true,
       "reach": "cajado",
       "categoria": "contundente"
     },
@@ -7971,6 +7984,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🪄",
       "die": "1d6",
       "stat": "str_",
+      "finesse": true,
       "reach": "cajado",
       "categoria": "contundente"
     },
@@ -7980,6 +7994,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🔨",
       "die": "1d6",
       "stat": "str_",
+      "crit_nat20_multiplier": 3,
       "categoria": "contundente"
     },
     {
@@ -7988,6 +8003,7 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "1d6",
       "stat": "str_",
+      "crit_min_nat_roll": 19,
       "categoria": "cortante"
     },
     {
@@ -7996,7 +8012,8 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d6",
       "stat": "str_",
-      "categoria": "cortante"
+      "categoria": "cortante",
+      "granted_ability": "arremesso_bruto"
     },
     {
       "id": "arco_curto",
@@ -8022,6 +8039,7 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "1d8",
       "stat": "str_",
+      "crit_min_nat_roll": 19,
       "categoria": "cortante"
     },
     {
@@ -8039,6 +8057,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🔨",
       "die": "1d8",
       "stat": "str_",
+      "crit_nat20_multiplier": 3,
       "categoria": "contundente"
     },
     {
@@ -8056,6 +8075,8 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "1d8",
       "stat": "str_",
+      "crit_nat20_multiplier": 2.5,
+      "reach": "mangual",
       "categoria": "contundente"
     },
     {
@@ -8064,6 +8085,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d8",
       "stat": "str_",
+      "extra_attack_on_crit_min_nat": 19,
       "categoria": "cortante"
     },
     {
@@ -8072,6 +8094,7 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "1d10",
       "stat": "str_",
+      "crit_min_nat_roll": 19,
       "categoria": "cortante"
     },
     {
@@ -8080,6 +8103,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d10",
       "stat": "str_",
+      "crit_nat20_multiplier": 3,
       "categoria": "cortante"
     },
     {
@@ -8097,6 +8121,7 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "2d6",
       "stat": "str_",
+      "crit_min_nat_roll": 19,
       "categoria": "cortante"
     },
     {
@@ -8105,6 +8130,8 @@ window.EDITOR_CATALOG = {
       "emoji": "🗡️",
       "die": "1d4",
       "stat": "str_",
+      "finesse": true,
+      "off_hand_weapon": true,
       "categoria": "perfurante"
     },
     {
@@ -8113,6 +8140,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🪢",
       "die": "1d4",
       "stat": "dex",
+      "off_hand_weapon": true,
       "range": 2,
       "categoria": "cortante"
     },
@@ -8130,6 +8158,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🪄",
       "die": "1d6",
       "stat": "str_",
+      "finesse": true,
       "categoria": "contundente"
     },
     {
@@ -8138,6 +8167,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🔨",
       "die": "1d6",
       "stat": "str_",
+      "crit_nat20_multiplier": 3,
       "categoria": "contundente"
     },
     {
@@ -8146,6 +8176,7 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "1d6",
       "stat": "str_",
+      "crit_min_nat_roll": 19,
       "categoria": "cortante"
     },
     {
@@ -8154,7 +8185,8 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d6",
       "stat": "str_",
-      "categoria": "cortante"
+      "categoria": "cortante",
+      "granted_ability": "arremesso_bruto"
     },
     {
       "id": "lanca_prata",
@@ -8171,6 +8203,7 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "1d8",
       "stat": "str_",
+      "crit_min_nat_roll": 19,
       "categoria": "cortante"
     },
     {
@@ -8179,6 +8212,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🔨",
       "die": "1d8",
       "stat": "str_",
+      "crit_nat20_multiplier": 3,
       "categoria": "contundente"
     },
     {
@@ -8187,6 +8221,8 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "1d8",
       "stat": "str_",
+      "crit_nat20_multiplier": 2.5,
+      "reach": "mangual",
       "categoria": "contundente"
     },
     {
@@ -8195,6 +8231,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d8",
       "stat": "str_",
+      "extra_attack_on_crit_min_nat": 19,
       "categoria": "cortante"
     },
     {
@@ -8203,6 +8240,7 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "1d10",
       "stat": "str_",
+      "crit_min_nat_roll": 19,
       "categoria": "cortante"
     },
     {
@@ -8211,6 +8249,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d10",
       "stat": "str_",
+      "crit_nat20_multiplier": 3,
       "categoria": "cortante"
     },
     {
@@ -8228,6 +8267,7 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "2d6",
       "stat": "str_",
+      "crit_min_nat_roll": 19,
       "categoria": "cortante"
     },
     {

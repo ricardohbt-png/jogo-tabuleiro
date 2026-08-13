@@ -27,7 +27,7 @@ const InventoryModal = (() => {
     { key: 'item2',    small: true,  magic: true,  label: 'Item Mágico 2', empty: '📦' },
     { key: 'weapon',   small: false, magic: false, label: 'Arma',         empty: '✊' },
     { key: 'armor',    small: false, magic: false, label: 'Armadura',     empty: '👕' },
-    { key: 'off_hand', small: false, magic: false, label: 'Escudo',       empty: '🤚' },
+    { key: 'off_hand', small: false, magic: false, label: 'Mão esquerda / escudo', empty: '🤚' },
     { key: 'ring1',    small: true,  magic: false, label: 'Anel 1',       empty: '💍' },
     { key: 'boots',    small: false, magic: false, label: 'Bota',         empty: '👢' },
     { key: 'ring2',    small: true,  magic: false, label: 'Anel 2',       empty: '💍' },
@@ -438,7 +438,7 @@ const InventoryModal = (() => {
     const player = _currentPlayer();
     const item = player && player.bag ? player.bag[sel.index] : null;
     if(!item || !GS.canPlaceItem(item, slotKey, player.gear || {})){ refresh(); return; }
-    const ehOffhand = slotKey === 'off_hand' && GS.isDagger(item);
+    const ehOffhand = slotKey === 'off_hand' && GS.isOffhandWeapon(item);
     if(ehOffhand) GS.equipOffhand(sel.index);
     else          GS.equipFromBag(sel.index);
   }

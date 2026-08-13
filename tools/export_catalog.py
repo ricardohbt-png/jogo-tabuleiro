@@ -96,7 +96,8 @@ def build_catalog():
         entry = {key: m[key] for key in fields if key in m}
         monsters.append(entry)
     items = [{key: i[key] for key in (
-                "id", "name", "emoji", "die", "stat", "range", "reach", "categoria",
+                "id", "name", "emoji", "die", "stat", "finesse", "off_hand_weapon", "crit_nat20_multiplier", "crit_min_nat_roll", "extra_attack_on_crit_min_nat", "range", "reach", "categoria",
+                "granted_ability",
                 "kind", "ac_bonus", "item_slot", "effect", "value", "veneno_id",
                 "ammo_type", "ammo_count", "extra_damage", "extra_damage_types"
              ) if key in i}

@@ -1828,7 +1828,7 @@ const GS = (() => {
     return 'bag';
   }
 
-  // Adaga usável como 2ª arma (dual-wield) — mesma heurística já usada 2x em
+  // Adaga/chicote usáveis como 2ª arma (dual-wield) — mesma heurística já usada 2x em
   // game.js (_fcEhAdaga/ehAdaga), centralizada aqui p/ o modal novo não duplicar.
   function isDagger(item){
     if(!item) return false;
@@ -1836,7 +1836,14 @@ const GS = (() => {
     const nm  = (item.name || '').toLowerCase();
     // Casa exatamente server._eh_adaga (server.py): startswith, não ===, p/
     // cobrir futuras variantes tipo "dagger_ferro".
-    return (iid.startsWith('dagger') || nm.includes('adaga')) && !!item.die;
+    return (iid.startsWith('dagger') || nm.includes('adaga')) && !!(item.die || item.dano);
+  }
+
+  function isOffhandWeapon(item){
+    if(!item || !(item.die || item.dano)) return false;
+    const iid = (item.id || '').toLowerCase();
+    const nm = (item.name || '').toLowerCase();
+    return !!item.off_hand_weapon || isDagger(item) || iid === 'chicote' || nm.includes('chicote');
   }
 
   // Fonte única: a mão secundária fica bloqueada quando a arma principal é de
@@ -1864,7 +1871,7 @@ const GS = (() => {
     }
     if(slotKey === 'off_hand'){
       const isOffhandCat = cat === 'off_hand';
-      if(!isOffhandCat && !isDagger(item)) return false;
+      if(!isOffhandCat && !isOffhandWeapon(item)) return false;
       if(offHandBlockedByTwoHanded(gear)) return false;
       return true;
     }
@@ -2022,7 +2029,8 @@ const GS = (() => {
       }
       return distancia <= range;
     }
-    if (weapon.id === 'lanca_curta') return Math.max(dx, dy) === 1;
+    if (weapon.id === 'lanca_curta' || weapon.reach === 'mangual' || weapon.reach === 'cajado')
+      return Math.max(dx, dy) === 1;
     return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
   }
 
@@ -2579,6 +2587,7 @@ const GS = (() => {
     offHandBlockedByTwoHanded,
     compareItemStats,
     isDagger,
+    isOffhandWeapon,
     setKnownSpells,
     escolherMagiaNivel,
     animarMortos,

@@ -83,14 +83,15 @@
                           "hero_bard_provocacao", "hero_rogue_desarmar_armadilha"];
   function abilityGroups() {
     var libs = (window.EDITOR_CATALOG || {}).monster_abilities || [];
-    var tec = [], esp = [], her = [];
+    var tec = [], esp = [], her = [], armas = [];
     libs.forEach(function (a) {
       if (a.source === "guilda" && a.guild_category === "tecnica") tec.push(a);
       else if (a.source === "guilda" && a.guild_category === "especializacao") esp.push(a);
       else if (a.source === "heroi" && GRANTED_HERO_IDS.indexOf(a.id) >= 0) her.push(a);
+      else if (a.source === "arma") armas.push(a);
     });
     return [["Técnicas da Guilda", tec], ["Especializações da Guilda", esp],
-            ["Habilidades de Herói", her]];
+            ["Habilidades de Herói", her], ["Habilidades de Armas", armas]];
   }
   // Campo reusado pelos 5 formulários de item equipável.
   function campoHabilidade() {
@@ -122,6 +123,8 @@
     d.categoria = item.categoria || "cortante";
     d.stat = item.stat === "dex" ? "dex" : "str_";
     d.finesse = !!item.finesse; d.two_handed = !!item.two_handed;
+    d.granted_ability = item.granted_ability || "";
+    if (item.throw_range) { d.manejo = "arremessavel"; d.throw_range = item.throw_range; }
     if (item.reach === "lanca" || item.reach === "cajado") d.manejo = item.reach;
     else if (item.range) { d.manejo = "distancia"; d.range = item.range; }
     d.corrosao_livres = item.corrosao_resistente || 0;
@@ -186,7 +189,7 @@
         campo("Categoria", selectOpts("ie-cat", L.CATS, draft.categoria))),
       seccao("Atributo / manejo / alcance",
         campo("Atributo", selectOpts("ie-stat", ["str_","dex"], draft.stat)) +
-        campo("Acuidade (usa Força ou Destreza no dano)", chk("ie-finesse", draft.finesse)) +
+        campo("Acuidade (usa Força ou Destreza no acerto e dano)", chk("ie-finesse", draft.finesse)) +
         campo("Manejo", selectOpts("ie-manejo",
           ["corpo","lanca","cajado","distancia","arremessavel"], draft.manejo)) +
         campo("Duas mãos", chk("ie-2m", draft.two_handed)) +

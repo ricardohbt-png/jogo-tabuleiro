@@ -1091,29 +1091,29 @@ WEAPONS = {
     "unarmed":       {"id": "unarmed",       "name": "Desarmado",            "die": None,   "stat": "str_"},
     # finesse=True â†’ dano usa o melhor modificador entre FOR e DES (atributo
     # 'forcaOuDestreza' da spec).
-    "dagger":        {"id": "dagger",        "name": "Adaga",                "die": "1d4",  "stat": "str_", "finesse": True, "throw_range": 3, "categoria": "perfurante"},
+    "dagger":        {"id": "dagger",        "name": "Adaga",                "die": "1d4",  "stat": "str_", "finesse": True, "off_hand_weapon": True, "throw_range": 3, "categoria": "perfurante"},
     # â”€â”€ Armas iniciais da spec (EQUIPAMENTOS_INICIAIS) â”€â”€
-    "machado_basico":{"id": "machado_basico","name": "Machado de Ferro",     "die": "1d6",  "stat": "str_", "throw_range": 2, "categoria": "cortante"},
-    "cajado_madeira":{"id": "cajado_madeira","name": "Cajado de Madeira",    "die": "1d6",  "stat": "str_", "reach": "cajado", "categoria": "contundente"},
+    "machado_basico":{"id": "machado_basico","name": "Machado de Ferro",     "die": "1d6",  "stat": "str_", "throw_range": 2, "granted_ability": "arremesso_bruto", "categoria": "cortante"},
+    "cajado_madeira":{"id": "cajado_madeira","name": "Cajado de Madeira",    "die": "1d6",  "stat": "str_", "finesse": True, "reach": "cajado", "categoria": "contundente"},
     "instrumento":   {"id": "instrumento",   "name": "Instrumento Musical",  "die": None,   "stat": "dex"},
-    "bordao":        {"id": "bordao",        "name": "Bordão",               "die": "1d6",  "stat": "str_", "categoria": "contundente"},
+    "bordao":        {"id": "bordao",        "name": "Bordão",               "die": "1d6",  "stat": "str_", "finesse": True, "categoria": "contundente"},
     "lanca_curta":   {"id": "lanca_curta",   "name": "Lança Curta",          "die": "1d6",  "stat": "str_", "throw_range": 4, "categoria": "perfurante"},
     # LanÃ§a: arma de ALCANCE corpo-a-corpo (reach="lanca" â†’ 2 retos / 1 diagonal,
     # ver _lanca_no_alcance). NÃƒO Ã© arma de duas mÃ£os â€” pode usar escudo.
     "lanca":         {"id": "lanca",         "name": "Lança",                "die": "1d8",  "stat": "str_", "reach": "lanca", "categoria": "perfurante"},
-    "maca":          {"id": "maca",          "name": "Maça",                 "die": "1d6",  "stat": "str_", "categoria": "contundente"},
-    "chicote":       {"id": "chicote",       "name": "Chicote",              "die": "1d4",  "stat": "dex",  "range": 2, "categoria": "cortante"},
-    "staff":         {"id": "staff",         "name": "Cajado Arcano",        "die": "1d6",  "stat": "str_", "reach": "cajado", "categoria": "contundente"},
-    "shortsword":    {"id": "shortsword",    "name": "Espada Curta",         "die": "1d6",  "stat": "str_", "categoria": "cortante"},
-    "longsword":     {"id": "longsword",     "name": "Espada Longa",         "die": "1d8",  "stat": "str_", "categoria": "cortante"},
-    "warhammer":     {"id": "warhammer",     "name": "Martelo de Guerra",    "die": "1d8",  "stat": "str_", "categoria": "contundente"},
-    "mangual":       {"id": "mangual",       "name": "Mangual",              "die": "1d8",  "stat": "str_", "categoria": "contundente"},
-    "machado_duplo": {"id": "machado_duplo", "name": "Machado Duplo",        "die": "1d8",  "stat": "str_", "categoria": "cortante"},
-    "bastsword":     {"id": "bastsword",     "name": "Espada Bastarda",      "die": "1d10", "stat": "str_", "categoria": "cortante"},
+    "maca":          {"id": "maca",          "name": "Maça",                 "die": "1d6",  "stat": "str_", "crit_nat20_multiplier": 3, "categoria": "contundente"},
+    "chicote":       {"id": "chicote",       "name": "Chicote",              "die": "1d4",  "stat": "dex",  "range": 2, "off_hand_weapon": True, "categoria": "cortante"},
+    "staff":         {"id": "staff",         "name": "Cajado Arcano",        "die": "1d6",  "stat": "str_", "finesse": True, "reach": "cajado", "categoria": "contundente"},
+    "shortsword":    {"id": "shortsword",    "name": "Espada Curta",         "die": "1d6",  "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante"},
+    "longsword":     {"id": "longsword",     "name": "Espada Longa",         "die": "1d8",  "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante"},
+    "warhammer":     {"id": "warhammer",     "name": "Martelo de Guerra",    "die": "1d8",  "stat": "str_", "crit_nat20_multiplier": 3, "categoria": "contundente"},
+    "mangual":       {"id": "mangual",       "name": "Mangual",              "die": "1d8",  "stat": "str_", "reach": "mangual", "crit_nat20_multiplier": 2.5, "categoria": "contundente"},
+    "machado_duplo": {"id": "machado_duplo", "name": "Machado Duplo",        "die": "1d8",  "stat": "str_", "extra_attack_on_crit_min_nat": 19, "categoria": "cortante"},
+    "bastsword":     {"id": "bastsword",     "name": "Espada Bastarda",      "die": "1d10", "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante"},
     # two_handed=True â†’ nÃ£o pode ser empunhada junto com escudo (ver _conflito_duas_maos).
-    "machado_orc":   {"id": "machado_orc",   "name": "Machado de Guerra Órquico", "die": "1d10", "stat": "str_", "categoria": "cortante", "two_handed": True},
+    "machado_orc":   {"id": "machado_orc",   "name": "Machado de Guerra Órquico", "die": "1d10", "stat": "str_", "crit_nat20_multiplier": 3, "categoria": "cortante", "two_handed": True},
     "alabarda":      {"id": "alabarda",      "name": "Alabarda",             "die": "1d10", "stat": "str_", "range": 2, "categoria": "perfurante", "two_handed": True},
-    "espada2m":      {"id": "espada2m",      "name": "Espada de 2 Mãos",    "die": "2d6",  "stat": "str_", "categoria": "cortante", "two_handed": True},
+    "espada2m":      {"id": "espada2m",      "name": "Espada de 2 Mãos",    "die": "2d6",  "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "two_handed": True},
     # â”€â”€ Ã€ DistÃ¢ncia â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "arco_curto":    {"id": "arco_curto",    "name": "Arco Curto",           "die": "1d6",  "stat": "dex",  "range": 6,  "categoria": "perfurante"},
     "hand_crossbow": {"id": "hand_crossbow", "name": "Besta de Mão",         "die": "1d4",  "stat": "dex",  "range": 4,  "categoria": "perfurante"},
@@ -1858,6 +1858,10 @@ def restore_character(player, snap):
     for k in _DURABLE_FIELDS:
         if k in snap:
             player[k] = deepcopy(snap[k])
+    # Migra fichas antigas e garante que a CA seja derivada do equipamento
+    # atual, em vez de reutilizar um valor previamente embutido na classe.
+    if player.get("gear"):
+        _recalculate_ac(player)
 
 def _conta_participa(sg, conta):
     return bool(sg) and (sg.get("owner") == conta
@@ -4561,48 +4565,48 @@ LOOT_POOL_PROCEDURAL = [
 # two_handed = True â†’ nÃ£o empunha junto com escudo (ver _conflito_duas_maos).
 SHOP_WEAPONS = [
     # â”€â”€â”€ Leves (1d4) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    {"id": "dagger",        "name": "Adaga",              "emoji": "🗡️",  "die": "1d4",  "stat": "str_", "price": 5,  "throw_range": 3, "finesse": True, "categoria": "perfurante"},
-    {"id": "chicote",       "name": "Chicote",            "emoji": "🪢",  "die": "1d4",  "stat": "dex",  "price": 8,  "range": 2, "categoria": "cortante",
+    {"id": "dagger",        "name": "Adaga",              "emoji": "🗡️",  "die": "1d4",  "stat": "str_", "price": 5,  "off_hand_weapon": True, "throw_range": 3, "finesse": True, "categoria": "perfurante"},
+    {"id": "chicote",       "name": "Chicote",            "emoji": "🪢",  "die": "1d4",  "stat": "dex",  "price": 8,  "range": 2, "off_hand_weapon": True, "categoria": "cortante",
      "allowed_classes": ["mage", "bard", "rogue", "paladin", "warrior"]},
     {"id": "hand_crossbow", "name": "Besta de Mão",       "emoji": "🏹",  "die": "1d4",  "stat": "dex",  "price": 10, "range": 4, "categoria": "perfurante"},
     # â”€â”€â”€ MÃ©dias (1d6) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     {"id": "lanca_curta",   "name": "Lança Curta",        "emoji": "🔱",  "die": "1d6",  "stat": "str_", "price": 7,  "throw_range": 4, "categoria": "perfurante",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
-    {"id": "bordao",        "name": "Bordão",             "emoji": "🪄",  "die": "1d6",  "stat": "str_", "price": 8,  "categoria": "contundente",
+    {"id": "bordao",        "name": "Bordão",             "emoji": "🪄",  "die": "1d6",  "stat": "str_", "finesse": True, "price": 8,  "categoria": "contundente",
      "allowed_classes": ["cleric", "bard", "rogue", "paladin", "warrior"]},
-    {"id": "cajado_madeira","name": "Cajado de Madeira",  "emoji": "🪄",  "die": "1d6",  "stat": "str_", "price": 10, "reach": "cajado", "categoria": "contundente"},
-    {"id": "staff",         "name": "Cajado Arcano",      "emoji": "🪄",  "die": "1d6",  "stat": "str_", "price": 10, "reach": "cajado", "categoria": "contundente",
+    {"id": "cajado_madeira","name": "Cajado de Madeira",  "emoji": "🪄",  "die": "1d6",  "stat": "str_", "finesse": True, "price": 10, "reach": "cajado", "categoria": "contundente"},
+    {"id": "staff",         "name": "Cajado Arcano",      "emoji": "🪄",  "die": "1d6",  "stat": "str_", "finesse": True, "price": 10, "reach": "cajado", "categoria": "contundente",
      "allowed_classes": ["mage", "bard", "rogue", "paladin", "warrior"]},
-    {"id": "maca",          "name": "Maça",               "emoji": "🔨",  "die": "1d6",  "stat": "str_", "price": 10, "categoria": "contundente",
+    {"id": "maca",          "name": "Maça",               "emoji": "🔨",  "die": "1d6",  "stat": "str_", "price": 10, "crit_nat20_multiplier": 3, "categoria": "contundente",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
-    {"id": "shortsword",    "name": "Espada Curta",       "emoji": "⚔️",  "die": "1d6",  "stat": "str_", "price": 12, "categoria": "cortante",
+    {"id": "shortsword",    "name": "Espada Curta",       "emoji": "⚔️",  "die": "1d6",  "stat": "str_", "price": 12, "crit_min_nat_roll": 19, "categoria": "cortante",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
-    {"id": "machado_basico","name": "Machado de Ferro",   "emoji": "🪓",  "die": "1d6",  "stat": "str_", "price": 12, "throw_range": 2, "categoria": "cortante"},
+    {"id": "machado_basico","name": "Machado de Ferro",   "emoji": "🪓",  "die": "1d6",  "stat": "str_", "price": 12, "throw_range": 2, "granted_ability": "arremesso_bruto", "categoria": "cortante"},
     {"id": "arco_curto",    "name": "Arco Curto",         "emoji": "🏹",  "die": "1d6",  "stat": "dex",  "price": 12, "range": 6, "categoria": "perfurante",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     # â”€â”€â”€ Pesadas (1d8) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     {"id": "lanca",         "name": "Lança",              "emoji": "🔱",  "die": "1d8",  "stat": "str_", "price": 14, "reach": "lanca", "categoria": "perfurante",
      "allowed_classes": ["paladin", "warrior"]},
-    {"id": "longsword",     "name": "Espada Longa",       "emoji": "⚔️",  "die": "1d8",  "stat": "str_", "price": 16, "categoria": "cortante",
+    {"id": "longsword",     "name": "Espada Longa",       "emoji": "⚔️",  "die": "1d8",  "stat": "str_", "price": 16, "crit_min_nat_roll": 19, "categoria": "cortante",
      "allowed_classes": ["paladin", "warrior"]},
     {"id": "longbow",       "name": "Arco Longo",         "emoji": "🏹",  "die": "1d8",  "stat": "dex",  "price": 16, "range": 10, "categoria": "perfurante",
      "allowed_classes": ["paladin", "warrior"]},
-    {"id": "warhammer",     "name": "Martelo de Guerra",  "emoji": "🔨",  "die": "1d8",  "stat": "str_", "price": 18, "categoria": "contundente",
+    {"id": "warhammer",     "name": "Martelo de Guerra",  "emoji": "🔨",  "die": "1d8",  "stat": "str_", "price": 18, "crit_nat20_multiplier": 3, "categoria": "contundente",
      "allowed_classes": ["paladin", "warrior"]},
     {"id": "besta",         "name": "Besta",              "emoji": "🏹",  "die": "1d8",  "stat": "dex",  "price": 18, "range": 8, "categoria": "perfurante",
      "allowed_classes": ["cleric", "rogue", "paladin", "warrior"]},
-    {"id": "mangual",       "name": "Mangual",            "emoji": "⚔️",  "die": "1d8",  "stat": "str_", "price": 20, "categoria": "contundente",
+    {"id": "mangual",       "name": "Mangual",            "emoji": "⚔️",  "die": "1d8",  "stat": "str_", "price": 20, "reach": "mangual", "crit_nat20_multiplier": 2.5, "categoria": "contundente",
      "allowed_classes": ["cleric", "paladin", "warrior"]},
-    {"id": "machado_duplo", "name": "Machado Duplo",      "emoji": "🪓",  "die": "1d8",  "stat": "str_", "price": 22, "categoria": "cortante",
+    {"id": "machado_duplo", "name": "Machado Duplo",      "emoji": "🪓",  "die": "1d8",  "stat": "str_", "price": 22, "extra_attack_on_crit_min_nat": 19, "categoria": "cortante",
      "allowed_classes": ["paladin", "warrior"]},
     # â”€â”€â”€ Muito Pesadas (1d10 / 2d6) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    {"id": "bastsword",     "name": "Espada Bastarda",    "emoji": "⚔️",  "die": "1d10", "stat": "str_", "price": 25, "categoria": "cortante",
+    {"id": "bastsword",     "name": "Espada Bastarda",    "emoji": "⚔️",  "die": "1d10", "stat": "str_", "price": 25, "crit_min_nat_roll": 19, "categoria": "cortante",
      "allowed_classes": ["paladin", "warrior"]},
-    {"id": "machado_orc",   "name": "Machado de Guerra Órquico", "emoji": "🪓", "die": "1d10", "stat": "str_", "price": 26, "categoria": "cortante", "two_handed": True,
+    {"id": "machado_orc",   "name": "Machado de Guerra Órquico", "emoji": "🪓", "die": "1d10", "stat": "str_", "price": 26, "crit_nat20_multiplier": 3, "categoria": "cortante", "two_handed": True,
      "allowed_classes": ["paladin", "warrior"]},
     {"id": "alabarda",      "name": "Alabarda",           "emoji": "🪓",  "die": "1d10", "stat": "str_", "price": 28, "range": 2, "categoria": "perfurante", "two_handed": True,
      "allowed_classes": ["paladin", "warrior"]},
-    {"id": "espada2m",      "name": "Espada de 2 Mãos",  "emoji": "⚔️",  "die": "2d6",  "stat": "str_", "price": 35, "categoria": "cortante", "two_handed": True,
+    {"id": "espada2m",      "name": "Espada de 2 Mãos",  "emoji": "⚔️",  "die": "2d6",  "stat": "str_", "price": 35, "crit_min_nat_roll": 19, "categoria": "cortante", "two_handed": True,
      "allowed_classes": ["paladin", "warrior"]},
 ]
 
@@ -6633,21 +6637,20 @@ def new_id():
     return f"id_{_id_counter}"
 
 # â”€â”€â”€ STARTING ARMOR ITEMS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# value=0 because the AC bonus is already baked into ac_base; these items are
-# purely for display in the character sheet gear slots.
+# A armadura inicial carrega seu bônus real; a CA não fica embutida na classe.
 _STARTING_ARMOR = {
     "warrior": {"id": "leather", "name": "Armadura de Couro", "emoji": "🥋",
-                "item_slot": "armor", "effect": "def_", "value": 0},
+                "item_slot": "armor", "effect": "def_", "value": 2, "ac_bonus": 2},
     "mage":    {"id": "cloak",   "name": "Manto",             "emoji": "🧣",
-                "item_slot": "armor", "effect": "def_", "value": 0},
+                "item_slot": "armor", "effect": "def_", "value": 1, "ac_bonus": 1},
     "rogue":   {"id": "leather", "name": "Armadura de Couro", "emoji": "🥋",
-                "item_slot": "armor", "effect": "def_", "value": 0},
+                "item_slot": "armor", "effect": "def_", "value": 2, "ac_bonus": 2},
     "cleric":  {"id": "leather", "name": "Armadura de Couro", "emoji": "🥋",
-                "item_slot": "armor", "effect": "def_", "value": 0},
+                "item_slot": "armor", "effect": "def_", "value": 2, "ac_bonus": 2},
     "bard":    {"id": "cloak",   "name": "Manto",             "emoji": "🧣",
-                "item_slot": "armor", "effect": "def_", "value": 0},
+                "item_slot": "armor", "effect": "def_", "value": 1, "ac_bonus": 1},
     "paladin": {"id": "chainmail","name": "Cota de Malha",    "emoji": "🪖",
-                "item_slot": "armor", "effect": "def_", "value": 0},
+                "item_slot": "armor", "effect": "def_", "value": 4, "ac_bonus": 4},
 }
 
 # MÃ£o secundÃ¡ria inicial (dual-wield) por classe â€” EQUIPAMENTOS_INICIAIS.
@@ -6696,10 +6699,22 @@ SECUNDARIO_PERMITIDO = {
                          'varinha_arcana', 'grimorio', 'tocha'],
 }
 
+def _armor_ac_bonus(item):
+    """Retorna o bÃ´nus da armadura corporal, inclusive para saves legados."""
+    if not item:
+        return 0
+    if item.get("ac_bonus") is not None:
+        return int(item.get("ac_bonus", 0) or 0)
+    meta = ARMOR_CATALOG.get(item.get("id"))
+    if meta is not None:
+        return int(meta.get("ac_bonus", 0) or 0)
+    return int(item.get("value", 0) or 0)
+
+
 def _recalculate_ac(p):
     """Recalcula CA a partir da armadura do corpo + bônus de def_ dos demais slots."""
     armor = p["gear"].get("armor")
-    armor_val = armor.get("value", 0) if armor else 0
+    armor_val = _armor_ac_bonus(armor)
     bonus = 0
     for slot in GEAR_BONUS_SLOTS:
         g = p["gear"].get(slot)
@@ -6714,8 +6729,9 @@ def make_player(pid, name, cls_id, slot):
     weapon = {**WEAPONS[w_id]}
     s, d, c, i_ = cls["str_"], cls["dex"], cls["con_"], cls["int_"]
     sb = cls["saves_base"]
-    # AC = armor_base (includes armor bonus) + DEX modifier
-    ac_start = cls["ac_base"] + mod(d)
+    starting_armor_item = deepcopy(_STARTING_ARMOR.get(cls_id))
+    # Fórmula universal: base 10 + modificador de DES + armadura corporal.
+    ac_start = 10 + mod(d) + _armor_ac_bonus(starting_armor_item)
     level_bonus = 1  # +1 per level to attacks and saves; starts at +1 (level 1)
 
     # HP final jÃ¡ estÃ¡ em cls["hp"] (base + bÃ´nus CON calculados nas fichas).
@@ -6731,7 +6747,6 @@ def make_player(pid, name, cls_id, slot):
         # As cargas pertencem a esta arma, e nÃ£o ao personagem/slot equipado.
         "poison_slots": [],
     }
-    starting_armor_item = deepcopy(_STARTING_ARMOR.get(cls_id))
     if starting_armor_item:
         # MantÃ©m categoria e materiais tambÃ©m no item equipado inicial, nÃ£o sÃ³
         # nas compras. Isso deixa todos os personagens prontos para as futuras
@@ -6829,6 +6844,7 @@ def make_player(pid, name, cls_id, slot):
         "skill_dobrar_dano":  False,
         "skill_ataques_extras": 0,    # FÃºria: nÂº de ataques extras restantes neste turno (1 base / 2 c/ III)
         # CanÃ§Ã£o Heroica do bardo (toggle) â€” estado prÃ³prio; inerte para outras classes
+        "machado_duplo_ataque_extra": False,
         "cancao_ativa":       False,
         "cancao_atributos":   [],
         "cancao_custo":       {"fome": 0, "sede": 0},
@@ -8555,13 +8571,19 @@ class GameRoom:
         if die_str:
             raw_dmg = roll_dice(die_str)
             raw_dmg = self._golpe_raw(p, raw_dmg)
-            if weapon.get("finesse"):
+            if _weapon_uses_finesse(weapon):
                 stat_bonus = max(mod(p.get("str_", 12)), mod(p.get("dex", 12)))
             else:
                 stat_bonus = mod(p.get(weapon["stat"], 12))
             dmg = raw_dmg + stat_bonus
             if crit:
-                dmg *= 3 if (forca_critico and roll == 20) else 2
+                crit_multiplier = weapon.get("crit_nat20_multiplier", 0) if roll == 20 else 0
+                if crit_multiplier:
+                    # Dano permanece inteiro; multiplicadores fracionarios
+                    # arredondam para baixo para evitar pontos de vida decimais.
+                    dmg = int(dmg * float(crit_multiplier))
+                else:
+                    dmg *= (3 if (forca_critico and roll == 20) else 2)
             dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano
                       + self._mod_magia(p, "dano") + self._tecnica_bonus_dano(p)
                       + bonus_extra + weapon.get("dmg_bonus", 0)
@@ -9425,7 +9447,7 @@ class GameRoom:
                 "item_slot": "weapon", "effect": "atk", "value": 0,
                 "buy_price": price,
                 **{k: w[k] for k in ("die", "stat", "range", "reach",
-                                     "finesse", "throw_range", "categoria",
+                                     "finesse", "off_hand_weapon", "throw_range", "crit_nat20_multiplier", "crit_min_nat_roll", "extra_attack_on_crit_min_nat", "categoria",
                                      "two_handed", "dmg_bonus", "corrosao_resistente",
                                      "corrosao_niveis_penalidade",
                                      "atk_bonus", "damage_bonus", "extra_damages",
@@ -11688,6 +11710,8 @@ class GameRoom:
             return self._lanca_no_alcance_jogador(p["pos"], target)
         if w.get("reach") == "cajado":
             return self._cajado_no_alcance_jogador(p["pos"], target)
+        if w.get("reach") == "mangual":
+            return self._mangual_no_alcance_jogador(p["pos"], target)
         if w.get("id") == "lanca_curta":
             return self._lanca_curta_no_alcance_jogador(p["pos"], target)
         return self._is_adjacent_to_monster(p["pos"], target)
@@ -11736,6 +11760,7 @@ class GameRoom:
         if not self._is_turn(pid): return
         p = self.players[pid]
         if not p["alive"] or self._acao_bloqueada(p): return
+        machado_duplo_extra_attack = bool(p.get("machado_duplo_ataque_extra"))
 
         # â”€â”€ Status de veneno: petrificado nÃ£o age; cego nÃ£o usa ataque Ã  distÃ¢ncia â”€â”€
         if p.get("petrificado"):
@@ -11841,6 +11866,14 @@ class GameRoom:
                         "msg": T("erro.alvo_fora_de_alcance_aproxime_diagonal", alvo=target["name"])
                     })
                     return
+            elif (weapon_here or {}).get("reach") == "mangual":
+                # Mangual: alcance circular de todas as 8 casas adjacentes.
+                if not self._mangual_no_alcance_jogador(p["pos"], target):
+                    await self.send_to(pid, {
+                        "type": "error",
+                        "msg": T("erro.alvo_fora_de_alcance_aproxime_diagonal", alvo=target["name"])
+                    })
+                    return
             elif (weapon_here or {}).get("id") == "lanca_curta":
                 if not self._lanca_curta_no_alcance_jogador(p["pos"], target):
                     await self.send_to(pid, {"type": "error",
@@ -11920,7 +11953,8 @@ class GameRoom:
             gl_atk  = gl.get("ataque", 0)
             gl_dano = gl.get("dano", 0)
             maldicao_atk = self._maldicao_mod(p, "ataque")
-            eff_atk = (p["atk_bonus"] + p.get("skill_bonus_acerto", 0) + surv_mod + preso_pen
+            main_attack_base = _hero_attack_bonus_with_weapon(p, p.get("weapon"))
+            eff_atk = (main_attack_base + p.get("skill_bonus_acerto", 0) + surv_mod + preso_pen
                        + cancao_acerto + gl_atk + self._pen(p, "ataque")
                        + self._mod_magia(p, "ataque")                        # AbenÃ§oar
                        + int((p.get("weapon") or {}).get("atk_bonus", 0) or 0)  # arma custom
@@ -11985,6 +12019,11 @@ class GameRoom:
                 await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
                                       "label": "🎲 Sorte (+2 no ataque)", "hit": hit, "crit": crit})
             if hit and _forca_critico:
+                crit = True
+            # Espadas têm faixa ampliada: 19 ou 20 natural também é crítico.
+            # A comparação usa o resultado natural do d20, sem contar bônus.
+            crit_min_nat = (weapon_here or {}).get("crit_min_nat_roll")
+            if hit and crit_min_nat is not None and roll >= int(crit_min_nat):
                 crit = True
             if crit and self._azar_consome_critico(p, roll):
                 crit = False
@@ -12224,13 +12263,22 @@ class GameRoom:
             tgt = self.monsters[target_id]
             # Golpe corpo a corpo da 2Âª arma: SÃ“ casas ortogonais adjacentes
             # (nÃ£o usa throw_range como alcance â€” arremessar Ã© aÃ§Ã£o separada).
-            if self._cardinal_adjacent(p["pos"], tgt["pos"]):
+            off_reach_ok = self._cardinal_adjacent(p["pos"], tgt["pos"])
+            # O alcance tambem vale para variantes do chicote, como versoes
+            # de prata, que mantem a marca off_hand_weapon.
+            if off.get("off_hand_weapon") and off.get("range"):
+                off_view = dict(p, weapon=off)
+                off_reach_ok = self._alvo_no_alcance_arma(off_view, tgt)
+            if off_reach_ok:
                 # consome a aÃ§Ã£o bÃ´nus do turno (consumo via tabela central)
                 p["bonus_action_used"] = True
                 self._consumir_recursos(p, 'acao_bonus')
                 odex = mod(p.get("dex", 12))
+                off_finesse = _weapon_uses_finesse(off)
+                off_stat_mod = (max(mod(p.get("str_", 10)), odex)
+                                if off_finesse else odex)
                 _mainhand_atk_bonus = int((p.get("weapon") or {}).get("atk_bonus", 0) or 0)
-                offhand_atk = odex + p.get("level_bonus", 1) + (eff_atk - p["atk_bonus"] - _mainhand_atk_bonus)
+                offhand_atk = off_stat_mod + p.get("level_bonus", 1) + (eff_atk - main_attack_base - _mainhand_atk_bonus)
                 ohit, oroll, ototal, ocrit = d20_attack(offhand_atk, tgt["ac"] + self._mod_magia(tgt, "ca"))
                 await self.broadcast({"type": "dice_roll", "die": "d20", "value": oroll,
                                        "label": "🗡️ Ataque (Mão Secundária)", "hit": ohit, "crit": ocrit,
@@ -12238,17 +12286,18 @@ class GameRoom:
                 if ohit:
                     oraw = roll_dice(off["die"])
                     oraw = self._golpe_raw(p, oraw)   # Golpe tambÃ©m vale na mÃ£o secundÃ¡ria
-                    odmg = max(1, (oraw + odex) * (2 if ocrit else 1) + surv_mod)
+                    odmg = max(1, (oraw + off_stat_mod) * (2 if ocrit else 1) + surv_mod)
                     odie_type = "d" + off["die"].split("d")[1]
                     await self.broadcast({"type": "dice_roll", "die": odie_type,
                                            "value": oraw, "label": "Dano (2ª mão)"})
                     tgt["hp"] -= odmg
                     ocrit_str = " **CRÍTICO!**" if ocrit else ""
-                    osb = f"+{odex}" if odex >= 0 else str(odex)
+                    osb = f"+{off_stat_mod}" if off_stat_mod >= 0 else str(off_stat_mod)
+                    ostat = "FOR/DES" if off_finesse else "DES"
                     await self.gm_say(
                         f"🗡️ **{p['name']}** desfere golpe de mão secundária com **{off['name']}** (ação bônus)"
                         f" (d20={oroll}+{offhand_atk}={ototal} vs CA {tgt['ac']}):"
-                        f"{ocrit_str} dano [{off['die']}={oraw}{osb} DES] = **{odmg}**!")
+                        f"{ocrit_str} dano [{off['die']}={oraw}{osb} {ostat}] = **{odmg}**!")
                     await self._carapaca_espinhosa_retalia(tgt, p)
                     await self._molochus_sangue_em_ebulicao(tgt, p, True, odmg)
                     corpo_chamas = next((ab for ab in tgt.get("special_abilities", [])
@@ -12282,9 +12331,23 @@ class GameRoom:
         # turno (o jogador clica atacar de novo; pode rearmar habilidades, pagando
         # mais fome/sede). skill_ataques_extras conta quantos extras restam (1 base /
         # 2 c/ FÃºria III); ao zerar cai no else e encerra a aÃ§Ã£o. No prÃ³ximo turno tudo reabre.
+        # Machado Duplo: um 19/20 natural concede um segundo ataque manual.
+        # O ataque extra consumido por esta habilidade não gera uma cadeia infinita.
+        machado_duplo_min_nat = (weapon_here or {}).get("extra_attack_on_crit_min_nat")
+        if machado_duplo_extra_attack:
+            p["machado_duplo_ataque_extra"] = False
+        if (not machado_duplo_extra_attack and machado_duplo_min_nat is not None
+                and roll >= int(machado_duplo_min_nat)):
+            p["machado_duplo_ataque_extra"] = True
+            await self.gm_say(
+                f"🪓 **{p['name']}** obtém um 19/20 natural com o Machado Duplo — "
+                "um segundo ataque está disponível neste turno.")
+
         if p.get("skill_ataques_extras", 0) > 0:
             p["skill_ataques_extras"] -= 1
             await self.gm_say(T("narracao.furia_berserker_ataque_extra_disponivel", heroi=p['name']))
+        elif p.get("machado_duplo_ataque_extra"):
+            p["action_done"] = False
         else:
             p["action_done"] = True
         await self.push_state()
@@ -12360,8 +12423,16 @@ class GameRoom:
 
         # Rolagem por DESTREZA (1 natural = falha crÃ­tica; 20 = crÃ­tico)
         dex_mod = mod(p.get("dex", 12))
+        throw_weapon = (p.get("weapon") or dagger) if slot_key == "weapon" else dagger
+        throw_brutal = _weapon_uses_brutal_throw(throw_weapon)
+        throw_atk = (_hero_attack_bonus_with_stat(p, "str_")
+                     if throw_brutal else _hero_attack_bonus_with_weapon(p, throw_weapon))
+        throw_finesse = _weapon_uses_finesse(throw_weapon)
+        throw_stat_mod = (mod(p.get("str_", 10)) if throw_brutal
+                          else max(mod(p.get("str_", 10)), dex_mod) if throw_finesse
+                          else dex_mod)
         roll = random.randint(1, 20)
-        total = roll + p["atk_bonus"]
+        total = roll + throw_atk
         nat1 = (roll == 1)
         crit = (roll == 20)
         hit = (not nat1) and (crit or total >= target["ac"])
@@ -12378,18 +12449,19 @@ class GameRoom:
         if hit:
             die_str = throw_die
             raw = roll_dice(die_str)
-            dmg = max(1, (raw + dex_mod) * (2 if crit else 1))
+            dmg = max(1, (raw + throw_stat_mod) * (2 if crit else 1))
             die_type = "d" + die_str.split("d")[1]
             await self.broadcast({"type": "dice_roll", "die": die_type,
                                    "value": raw, "label": "Dano (arremesso)"})
             target["hp"] -= dmg
             await self._furtivo_reativo(p, target)
-            sb = f"+{dex_mod}" if dex_mod >= 0 else str(dex_mod)
+            sb = f"+{throw_stat_mod}" if throw_stat_mod >= 0 else str(throw_stat_mod)
+            throw_stat_name = "FOR (Arremesso Bruto)" if throw_brutal else "FOR/DES" if throw_finesse else "DES"
             crit_str = " **CRÍTICO!**" if crit else ""
             await self.gm_say(
                 f"🎯 **{p['name']}** arremessa **{dagger['name']}** em **{target['name']}**"
-                f" (d20={roll}+{p['atk_bonus']}={total} vs CA {target['ac']}):"
-                f"{crit_str} dano [{die_str}={raw}{sb} DES] = **{dmg}**!")
+                f" (d20={roll}+{throw_atk}={total} vs CA {target['ac']}):"
+                f"{crit_str} dano [{die_str}={raw}{sb} {throw_stat_name}] = **{dmg}**!")
             if target["hp"] <= 0:
                 await self._monster_dies(target, pid)
         elif nat1:
@@ -12399,7 +12471,7 @@ class GameRoom:
         else:
             await self.gm_say(
                 f"🎯 **{p['name']}** arremessa **{dagger['name']}** em **{target['name']}**"
-                f" (d20={roll}+{p['atk_bonus']}={total} vs CA {target['ac']}): **ERROU!**")
+                f" (d20={roll}+{throw_atk}={total} vs CA {target['ac']}): **ERROU!**")
 
         # RecuperaÃ§Ã£o: 1 natural = perdida; qualquer outro valor = cai no chÃ£o.
         # O item caÃ­do Ã© uma adaga funcional (carrega die/throw_range p/ reuso).
@@ -15334,7 +15406,13 @@ class GameRoom:
                     break
 
     def _apply_gear_effect(self, p, item, equipping):
-        self._apply_single_effect(p, item.get("effect"), item.get("value", 0), equipping)
+        value = item.get("value", 0)
+        # Armaduras iniciais de saves antigos tinham value=0 porque o bônus
+        # estava embutido na CA. Use o catálogo para manter equipar/desequipar
+        # consistente após a migração para a fórmula universal.
+        if item.get("item_slot") == "armor":
+            value = _armor_ac_bonus(item)
+        self._apply_single_effect(p, item.get("effect"), value, equipping)
         for b in item.get("bonuses", []) or []:
             if not isinstance(b, dict):
                 continue
@@ -15447,7 +15525,7 @@ class GameRoom:
         vale para a bolsa e para o baú do Refúgio. O catálogo `WEAPONS` fecha essa
         lacuna pelo id; arma com campos próprios (loja/loot/editor) segue por eles."""
         combat_fields = ("id", "name", "die", "stat", "range", "reach",
-                         "finesse", "throw_range", "categoria", "two_handed",
+                         "finesse", "off_hand_weapon", "throw_range", "crit_nat20_multiplier", "crit_min_nat_roll", "extra_attack_on_crit_min_nat", "categoria", "two_handed",
                          "dmg_bonus", "corrosao_resistente", "corrosao_niveis_penalidade",
                          "atk_bonus", "damage_bonus", "extra_damages", "granted_ability")
         base = item if (item.get("die") and item.get("stat")) else WEAPONS.get(item.get("id"))
@@ -15632,8 +15710,20 @@ class GameRoom:
         return True
 
     @staticmethod
+    def _eh_arma_offhand(item):
+        """True se a arma pode ocupar a mão esquerda e gerar ataque extra."""
+        if not item:
+            return False
+        iid = (item.get("id") or "").lower()
+        nm  = (item.get("name") or "").lower()
+        native = WEAPONS.get(iid, {})
+        return bool(item.get("off_hand_weapon") or native.get("off_hand_weapon")
+                    or iid.startswith("dagger") or "adaga" in nm
+                    or iid == "chicote" or "chicote" in nm) and bool(item.get("die"))
+
+    @staticmethod
     def _eh_adaga(item):
-        """True se o item é uma adaga (pode ser usada como 2ª arma / dual-wield)."""
+        """Compatibilidade com chamadores antigos que verificam apenas adagas."""
         if not item:
             return False
         iid = (item.get("id") or "").lower()
@@ -15641,8 +15731,8 @@ class GameRoom:
         return iid.startswith("dagger") or "adaga" in nm
 
     async def handle_equip_offhand(self, pid, slot_index):
-        """Equipa uma ADAGA do inventário na mão esquerda (off_hand) como 2ª arma
-        (dual-wield). AÇÃO LIVRE — sem custo e sem limite por turno."""
+        """Equipa uma arma compatível na mão esquerda como 2ª arma (dual-wield).
+        AÇÃO LIVRE — sem custo e sem limite por turno."""
         p = self.players.get(pid)
         if not p or "bag" not in p:   # ainda no lobby: ficha incompleta
             return
@@ -15650,9 +15740,9 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": T("erro.slot_de_inventario_invalido")}); return
 
         item = p["bag"][slot_index]
-        if not self._eh_adaga(item) or not item.get("die"):
+        if not self._eh_arma_offhand(item):
             await self.send_to(pid, {"type": "error",
-                "msg": T("erro.so_uma_adaga_pode_ser_empunhada_como_2a")}); return
+                "msg": T("erro.somente_armas_compativeis_podem_ser_empunhadas_como_2a")}); return
         # RestriÃ§Ã£o de classe (allowed_classes) â€” adaga nÃ£o tem, mas respeita se houver
         allowed = item.get("allowed_classes")
         if allowed and p.get("class_id") not in allowed:
@@ -15664,7 +15754,7 @@ class GameRoom:
                 "msg": T("erro.voce_empunha_uma_arma_de_2_maos_nao_pode")}); return
 
         p["bag"].pop(slot_index)
-        log = self._equip_into_slot(p, item, "off_hand", "🗡️")
+        log = self._equip_into_slot(p, item, "off_hand", "🗡️" if self._eh_adaga(item) else "🪢")
         if log:
             await self.gm_say(log + " (2ª arma — mão esquerda)")
         await self.push_state_or_city()
@@ -18755,6 +18845,12 @@ class GameRoom:
                 return True
         return False
 
+    def _mangual_no_alcance_jogador(self, pos, m):
+        """O Mangual atinge qualquer uma das 8 casas ao redor do jogador."""
+        px, py = pos
+        return any(max(abs(tx - px), abs(ty - py)) == 1
+                   for tx, ty in self._monster_tiles(m))
+
     def _lanca_curta_no_alcance_jogador(self, pos, m):
         """A Lança Curta atinge qualquer uma das 8 casas adjacentes."""
         px, py = pos
@@ -20678,6 +20774,7 @@ class GameRoom:
         p["skill_bonus_dano"]   = 0
         p["skill_dobrar_dano"]  = False
         p["skill_ataques_extras"] = 0
+        p["machado_duplo_ataque_extra"] = False
         p["tecnica_buff_dano_arma"] = 0   # buff de tÃ©cnica de turno (Brutalidade) expira
         p["tecnica_mira_perfeita"] = False   # Mira Perfeita nÃ£o usada expira no fim do turno
         p["tecnica_golpe_decisivo_armado"] = False   # Golpe Decisivo nÃ£o usado expira no fim do turno
@@ -21066,7 +21163,7 @@ class GameRoom:
         armor = p.get("gear", {}).get("armor") or {}
         if "metal" not in armor.get("corrosion_materials", []):
             return 0
-        return max(0, int(armor.get("ac_bonus", 0) or 0))
+        return max(0, _armor_ac_bonus(armor))
 
     # â”€â”€ CorrosÃ£o de equipamentos (Devorador OrgÃ¢nico) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def _corr(self, p):
@@ -27917,6 +28014,11 @@ def _base_ability_library():
         "descricao": "Expele energia em linha ou cone. Configure o elemento, alcance, "
                      "dano, teste de resistência e se o sopro atinge um ou todos os alvos da área.",
     })
+    out.setdefault("arremesso_bruto", {
+        "id": "arremesso_bruto", "source": "arma", "name": "Arremesso Bruto",
+        "icon": "🪓", "action_type": "passiva",
+        "descricao": "O arremesso desta arma usa o modificador de Força no acerto e no dano.",
+    })
     return out
 
 # Habilidades classificadas como efeitos negativos no editor. Elas nÃ£o sÃ£o
@@ -28743,6 +28845,40 @@ _RESIST_TYPES = {DMG_PHYSICAL, DMG_FIRE, DMG_COLD, DMG_LIGHTNING, DMG_ACID,
 _CLASS_ATK_ATTR = {"warrior": "str_", "mage": "str_", "cleric": "str_", "paladin": "str_",
                    "rogue": "dex", "bard": "dex", "ranger": "dex"}
 
+def _hero_attack_bonus_with_weapon(p, weapon=None):
+    """Retorna o bônus de ataque respeitando a propriedade finesse."""
+    weapon = weapon or p.get("weapon") or {}
+    base = int(p.get("atk_bonus", 0) or 0)
+    if not _weapon_uses_finesse(weapon):
+        return base
+    class_attr = _CLASS_ATK_ATTR.get(p.get("class_id"), "str_")
+    class_mod = mod(p.get(class_attr, 10))
+    finesse_mod = max(mod(p.get("str_", 10)), mod(p.get("dex", 10)))
+    return base - class_mod + finesse_mod
+
+def _weapon_uses_finesse(weapon):
+    """Aceita a propriedade do item e também corrige equipamentos legados."""
+    if not weapon:
+        return False
+    native = WEAPONS.get(weapon.get("id"), {})
+    return bool(weapon.get("finesse") or native.get("finesse"))
+
+def _hero_attack_bonus_with_stat(p, attr):
+    """Troca o atributo de ataque da classe pelo atributo indicado."""
+    base = int(p.get("atk_bonus", 0) or 0)
+    class_attr = _CLASS_ATK_ATTR.get(p.get("class_id"), "str_")
+    return base - mod(p.get(class_attr, 10)) + mod(p.get(attr, 10))
+
+def _weapon_uses_brutal_throw(weapon):
+    """True para armas cujo arremesso usa Força no acerto e no dano."""
+    if not weapon:
+        return False
+    native = WEAPONS.get(weapon.get("id"), {})
+    return bool(weapon.get("granted_ability") == "arremesso_bruto"
+                or native.get("granted_ability") == "arremesso_bruto")
+
+WEAPON_GRANTED_ABILITIES = {"arremesso_bruto"}
+
 def _granted_ability_valida(aid):
     """True se o id de granted_ability é suportado pela Fase I: técnica ou
     especialização da Guilda (prefixo guild_), ou uma das habilidades de herói da
@@ -28750,6 +28886,8 @@ def _granted_ability_valida(aid):
     if not aid or not isinstance(aid, str):
         return False
     if aid in GameRoom.GRANTED_HERO_SKILLS:
+        return True
+    if aid in WEAPON_GRANTED_ABILITIES:
         return True
     if aid.startswith("guild_"):
         entry = GUILD_CATALOG.get(aid[len("guild_"):])

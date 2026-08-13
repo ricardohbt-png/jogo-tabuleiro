@@ -2563,7 +2563,7 @@ function _itemDesc(item){
   if(item.die){
     const SUBTIPO={cortante:'Cortante',perfurante:'Perfurante',contundente:'Contusão'};
     const range=item.reach==='lanca' ? ' • Alcance 2 (reto) / 1 (diag)'
-              : item.reach==='cajado' ? ' • Alcance: adjacentes + diagonais'
+              : item.reach==='cajado' || item.reach==='mangual' ? ' • Alcance: todos os quadrados adjacentes'
               : ['besta','hand_crossbow'].includes(item.id) ? ` • Alcance ${item.range} em linha reta`
               : ['arco_curto','longbow'].includes(item.id) ? ` • Alcance ${item.range} reto / ${Math.ceil(item.range / 2)} diagonal`
               : item.range ? ` • Alcance ${item.range}` : '';
@@ -2573,10 +2573,24 @@ function _itemDesc(item){
     const municao=['besta','hand_crossbow'].includes(item.id) ? ' • Virotes: bolsa ou mão esquerda'
       : ['arco_curto','longbow'].includes(item.id) ? ' • Flechas: mão esquerda' : '';
     const ehAdaga=item.id==='dagger'||/adaga/i.test(item.name||'');
-    const segMao=ehAdaga?' • 2ª mão: usa DES':'';
+    const ehChicote=item.id==='chicote'||/chicote/i.test(item.name||'');
+    const ehMarteloGuerra=item.id==='warhammer'||item.id==='martelo'||/martelo de guerra/i.test(item.name||'');
+    const ehMachadoOrc=item.id==='machado_orc'||/machado de guerra [óo]rquico/i.test(item.name||'');
+    const ehMaca=item.id==='maca'||/maça/i.test(item.name||'');
+    const ehMangual=item.id==='mangual'||/mangual/i.test(item.name||'');
+    const ehEspadaCritica=['shortsword','longsword','bastsword','espada2m'].includes(item.id)
+      || /espada curta|espada longa|espada bastarda|espada de 2/i.test(item.name||'');
+    const ehMachadoDuplo=item.id==='machado_duplo'||/machado duplo/i.test(item.name||'');
+    const finesse=item.finesse?'FOR/DES':(item.stat==='dex'?'DES':'FOR');
+    const segMao=ehAdaga?' • 2ª mão: ataque extra; substitui o escudo'
+      :ehChicote?' • 2ª mão: ataque extra; substitui o escudo':'';
+    const critico=ehMarteloGuerra||ehMaca||ehMachadoOrc?' • 20 natural: dano triplicado'
+      :ehMangual?' • 20 natural: dano ×2,5'
+      :ehEspadaCritica?' • crítico natural: 19–20'
+      :ehMachadoDuplo?' • 19/20 natural: segundo ataque':'';
     const bonus=item.dmg_bonus?` • +${item.dmg_bonus} dano`:'';
     const resistente=item.corrosao_resistente?' • ⚙️ resiste +1 golpe de corrosão':'';
-    return `${item.die} dano (${item.stat==='dex'?'DES':'FOR'})${sub}${bonus}${range}${municao}${duas}${arr}${segMao}${resistente}`;
+    return `${item.die} dano (${finesse})${sub}${bonus}${range}${municao}${duas}${arr}${segMao}${critico}${resistente}`;
   }
   if(item.effect==='ammo'){
     const detalhes=[`×${item.ammo_count ?? 0}`];
@@ -4079,7 +4093,7 @@ function _initItemTooltip(){
     tooltip = document.createElement('div');
     tooltip.id = 'item-tooltip';
     tooltip.style.cssText = `
-      position: fixed; z-index: 999; width: 240px;
+      position: fixed; z-index: 1200; width: 240px;
       background: rgba(8, 6, 4, 0.97);
       border: 1px solid #c8a951;
       font-family: 'Cinzel', serif;
@@ -4253,6 +4267,19 @@ function gerarHabilidadesEspeciais(item){
     especiais.push(L(`🎯 <strong style="color:#c8a951">Arremesso:</strong> Pode ser arremessada ${item.alcanceArremesso} quadrados em qualquer direção incluindo diagonais. Usa Destreza para acerto e dano. Resultado 1 no d20 = arma destruída permanentemente.`));
   if(item.id === 'chicote')
     especiais.push(L(`🔄 <strong style="color:#c8a951">Alcance Estendido:</strong> Atinge 2 quadrados adjacentes e 1 quadrado diagonal adjacente sem precisar se mover até o alvo.`));
+  if(item.id === 'warhammer' || item.id === 'martelo' || /martelo de guerra/i.test(item.name || ''))
+    especiais.push(L(`💥 <strong style="color:#c8a951">Impacto Devastador:</strong> Quando o ataque obtém 20 natural no d20, o dano do Martelo de Guerra é triplicado.`));
+  if(item.id === 'machado_orc' || /machado de guerra [óo]rquico/i.test(item.name || ''))
+    especiais.push(L(`💥 <strong style="color:#c8a951">Impacto Devastador:</strong> Quando o ataque obtém 20 natural no d20, o dano do Machado de Guerra Órquico é triplicado.`));
+  if(item.id === 'maca' || /maça/i.test(item.name || ''))
+    especiais.push(L(`💥 <strong style="color:#c8a951">Impacto Devastador:</strong> Quando o ataque obtém 20 natural no d20, o dano da Maça é triplicado.`));
+  if(item.id === 'mangual' || /mangual/i.test(item.name || ''))
+    especiais.push(L(`💥 <strong style="color:#c8a951">Impacto Devastador:</strong> Quando o ataque obtém 20 natural no d20, o dano do Mangual é multiplicado por 2,5.`));
+  if(['shortsword','longsword','bastsword','espada2m'].includes(item.id)
+      || /espada curta|espada longa|espada bastarda|espada de 2/i.test(item.name || ''))
+    especiais.push(L(`⚔️ <strong style="color:#c8a951">Crítico Aprimorado:</strong> Um resultado natural de 19 ou 20 no d20 é crítico quando o ataque acerta.`));
+  if(item.id === 'machado_duplo' || /machado duplo/i.test(item.name || ''))
+    especiais.push(L(`🪓 <strong style="color:#c8a951">Ataque Duplo:</strong> Ao obter 19 ou 20 natural no d20, ganha um segundo ataque manual no mesmo turno.`));
   if(item.id === 'lanca_curta'){
     especiais.push(`
       <div style="color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;">
@@ -4312,8 +4339,8 @@ function gerarHabilidadesEspeciais(item){
       <div style="color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;">
         ⚔️ <strong style="color:#c8a951">Ataque Bônus (mão secundária):</strong>
         Equipada na mão esquerda, dá um ataque extra
-        adjacente como ação bônus. Usa Destreza para
-        acerto e dano (1d4 + DEX). Sem penalidade.
+        adjacente como ação bônus. Usa o melhor bônus entre
+        Força e Destreza para acerto e dano (1d4 + FOR/DES).
       </div>
       <div style="color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;">
         🎯 <strong style="color:#c8a951">Arremesso:</strong>
@@ -4325,6 +4352,17 @@ function gerarHabilidadesEspeciais(item){
         🛡️ <strong style="color:#ff4136">Atenção:</strong>
         Ocupa o slot da mão esquerda — incompatível com
         armas de duas mãos.
+      </div>
+    `)
+  }
+  if (typeof GS !== 'undefined' && GS.isOffhandWeapon && GS.isOffhandWeapon(item)
+      && !(GS.isDagger && GS.isDagger(item))) {
+    especiais.push(`
+      <div style="color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;">
+        ⚔️ <strong style="color:#c8a951">Ataque Extra (mão secundária):</strong>
+        O chicote pode ser equipado na mão esquerda no lugar do escudo e realiza
+        um ataque extra como ação bônus, preservando alcance de até 2 quadrados.
+        Usa Destreza para acerto e dano (1d4 + DES).
       </div>
     `)
   }
@@ -6313,7 +6351,8 @@ function _alvoNoAlcanceArmaClient(me, tx, ty) {
       return distancia <= ((dx === 0 || dy === 0) ? range : Math.ceil(range / 2));
     return distancia <= range;
   }
-  if (weapon.id === 'lanca_curta') return Math.max(dx, dy) === 1;
+  if (weapon.id === 'lanca_curta' || weapon.reach === 'mangual' || weapon.reach === 'cajado')
+    return Math.max(dx, dy) === 1;
   return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
 }
 
