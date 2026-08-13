@@ -19,6 +19,122 @@
     concentracao_fragil:.08, concentracao_sombria:.08, essencia_profana:.22,
     furia_cega:.06, covardia_kobold:.06, lento_previsivel:.08,
   };
+
+  // Calibração do ND contra os seis heróis iniciais reais do servidor. Os
+  // números abaixo espelham make_player + _check_level_up: equipamentos
+  // iniciais, CA corrigida, Finesse, segunda adaga do Ladino e crítico 19–20
+  // da espada curta do Paladino. O editor não importa server.py, portanto esta
+  // é a representação declarativa compartilhada pela estimativa visual.
+  const HERO_LEVELS = [1, 3, 5];
+  const HERO_POWER = {
+    warrior: {hp:[14,42,70], ac:12, attack:[6,8,10], die:"1d6", damage_mod:4},
+    mage:    {hp:[7,21,35],   ac:12, attack:[2,4,6],   die:"1d6", damage_mod:1},
+    rogue:   {hp:[9,27,45],   ac:16, attack:[5,7,9],   die:"1d4", damage_mod:4, offhand:true},
+    cleric:  {hp:[10,30,50],  ac:12, attack:[1,3,5],   die:"1d6", damage_mod:0},
+    bard:    {hp:[9,27,45],   ac:14, attack:[4,6,8],   die:"1d4", damage_mod:3},
+    paladin: {hp:[12,36,60],  ac:14, attack:[5,7,9],   die:"1d6", damage_mod:3, crit_min:19},
+  };
+  const HERO_ORDER = ["warrior", "mage", "rogue", "cleric", "bard", "paladin"];
+  const HERO_GROUPS = {
+    2: ["warrior", "cleric"],
+    4: ["warrior", "rogue", "mage", "cleric"],
+    6: HERO_ORDER,
+  };
+  const ENCOUNTER_ROUNDS = 3;
+
+  function levelIndex(level) {
+    const value = Number(level || 1);
+    let index = 0;
+    HERO_LEVELS.forEach((known, i) => { if (value >= known) index = i; });
+    return index;
+  }
+
+  function diceParts(dice) {
+    const match = String(dice || "").replace(/\s/g, "").match(/(\d*)d(\d+)([+-]\d+)?/i);
+    return match ? {count:Number(match[1] || 1), faces:Number(match[2]), flat:Number(match[3] || 0)} : null;
+  }
+  function diceAverage(dice) {
+    const p = diceParts(dice);
+    return p ? p.count * (p.faces + 1) / 2 + p.flat : 0;
+  }
+  function expectedAttack(attack, ac, damage, critMin = 20, nat20Multiplier = 2) {
+    let expected = 0;
+    let hitProbability = 0;
+    for (let roll = 1; roll <= 20; roll++) {
+      const hit = roll === 20 || (roll !== 1 && roll + Number(attack || 0) >= ac);
+      if (!hit) continue;
+      hitProbability += 0.05;
+      const critical = roll === 20 || (roll >= critMin && roll !== 1);
+      const multiplier = critical ? (roll === 20 ? nat20Multiplier : 2) : 1;
+      expected += damage * multiplier * 0.05;
+    }
+    return {dpr:expected, hitProbability};
+  }
+  function heroAttack(hero, level, ac, bonusAttack = 0, bonusDamage = 0) {
+    const damage = diceAverage(hero.die) + hero.damage_mod + bonusDamage;
+    const attack = (hero.attack[levelIndex(level)] || hero.attack[0]) + Number(bonusAttack || 0);
+    return expectedAttack(attack, ac,
+      damage, hero.crit_min || 20, hero.nat20_multiplier || 2);
+  }
+  function heroStats(id, level) {
+    const hero = HERO_POWER[id];
+    const index = levelIndex(level);
+    const main = heroAttack(hero, level, 10);
+    return {id, hero, hp:hero.hp[index] || hero.hp[0], ac:hero.ac,
+      attack:hero.attack[index] || hero.attack[0], main};
+  }
+  function partyMetrics(level, monsterAC, includeHeroAbilities = true, groupSize = 6) {
+    const group = HERO_GROUPS[groupSize] || HERO_GROUPS[6];
+    const heroes = group.map(id => heroStats(id, level));
+    let baseDpr = 0;
+    let songDpr = 0;
+    let burstBonus = 0;
+    let totalHp = 0;
+    let averageAC = 0;
+
+    heroes.forEach(({id, hero, hp, ac, attack}) => {
+      const main = heroAttack(hero, level, monsterAC);
+      let base = main.dpr;
+      const songMain = heroAttack(hero, level, monsterAC, 1, 1);
+      let song = songMain.dpr;
+      if (hero.offhand) {
+        // A segunda adaga usa o mesmo bônus de DES/Finesse e também recebe o
+        // bônus de nível. No grupo inicial, só o Ladino tem arma secundária;
+        // o Bardo começa com o Alaúde na mão do escudo.
+        const off = expectedAttack(attack, monsterAC, diceAverage("1d4") + 4);
+        base += off.dpr;
+        song += expectedAttack(attack + 1, monsterAC, diceAverage("1d4") + 5).dpr;
+      }
+      baseDpr += base;
+      songDpr += song;
+      totalHp += hp;
+      averageAC += ac;
+
+      if (id === "warrior") {
+        // Fúria concede um ataque principal extra por uma rodada.
+        burstBonus += songMain.dpr;
+      } else if (id === "rogue") {
+        const sneakDice = level >= 5 ? 4 : (level >= 3 ? 3 : 2);
+        burstBonus += songMain.hitProbability * sneakDice * 2.5;
+      } else if (id === "paladin") {
+        // Golpe Sagrado fica ativo após a ação bônus e adiciona +1d8 em cada
+        // ataque enquanto houver manutenção; portanto é dano sustentado.
+        if (includeHeroAbilities) song += songMain.hitProbability * 4.5;
+      } else if (id === "mage") {
+        // Raio Congelante é a referência de alvo único e não permite save
+        // contra o dano: 3d4 + 2d4 a cada dois níveis.
+        const spellDice = 3 + 2 * Math.floor(level / 2);
+        burstBonus += Math.max(0, spellDice * 2.5 - songMain.dpr);
+      }
+    });
+
+    // A Canção Heroica com Acerto + Dano permanece ativa durante o encontro.
+    // O Bardo não soma uma segunda arma porque o Alaúde ocupa a mão esquerda.
+    const songDelta = Math.max(0, songDpr - baseDpr);
+    const activeDpr = songDpr + burstBonus / ENCOUNTER_ROUNDS;
+    return {heroes, baseDpr, songDpr, songDelta, burstBonus, activeDpr,
+      totalHp, averageAC:averageAC / heroes.length};
+  }
   function attackBonus(m, a) {
     if (a.base_attack_bonus != null || m.base_attack_bonus != null)
       return Number(a.base_attack_bonus != null ? a.base_attack_bonus : m.base_attack_bonus || 0) + mod(m[(a.attack_attribute || (a.range ? "dex" : "str_"))]) + Number(m.equipment_attack_bonus || 0);
@@ -26,7 +142,8 @@
   }
   function attackDamageAverage(m, a) {
     const attr = a.attack_attribute || (a.range ? "dex" : "str_");
-    return average(a.damage) + (a.apply_attribute_damage ? mod(m[attr]) : 0);
+    return average(a.damage) + average(a.extra_damage) + average(a.fire_damage)
+      + (a.apply_attribute_damage ? mod(m[attr]) : 0);
   }
   function attackDamageText(m, a) {
     const attr = a.attack_attribute || (a.range ? "dex" : "str_");
@@ -81,7 +198,7 @@
     // grimório (dano, alcance e duração), sem afetar criaturas sem magias.
     return base * (1 + (casterLevel - 1) * .16);
   }
-  function ndEstimate(m) {
+  function ndEstimateLegacy(m) {
     // Four level-1 heroes: warrior, rogue, cleric and mage, basic equipment.
     // An equal-ND encounter should take roughly 3–4 rounds and consume resources.
     const PARTY_AC = 12;
@@ -133,6 +250,85 @@
     const spellImpact = spellPower(m) * .38;
     return Math.max(.25, Math.round((durability + offense + specials + spellImpact + defenses + initiativeImpact) * 4) / 4);
   }
+  // Recalibração: usa a composição real de seis heróis e permite comparar
+  // apenas os números básicos contra a ficha completa com habilidades.
+  function monsterDprAgainstParty(m, metrics) {
+    const attacks = m.attacks && m.attacks.length ? m.attacks : [{damage:m.damage, atk_bonus:m.atk_bonus, num_attacks:1}];
+    return metrics.heroes.reduce((sum, hero) => {
+      const targetDpr = attacks.reduce((subtotal, a) => subtotal
+        + expectedAttack(attackBonus(m, a), hero.ac, attackDamageAverage(m, a)).dpr
+          * Number(a.num_attacks || 1), 0);
+      return sum + targetDpr;
+    }, 0) / Math.max(1, metrics.heroes.length);
+  }
+  function specialImpact(m) {
+    const specialList = m.special_abilities || [];
+    return specialList.filter(a => a.action_type !== "magia" && !Object.prototype.hasOwnProperty.call(NEGATIVE_ABILITIES, a.id))
+      .reduce((sum, a) => {
+        const uses = Math.max(1, Number(a.uses_per_day != null ? a.uses_per_day : a.uses_per_combat || 1));
+        const cooldown = Math.max(0, Number(a.cooldown_turns || 0));
+        const availability = Math.min(1.3, .55 + uses * .14 + (cooldown ? .18 / cooldown : .12));
+        const description = `${a.name || ""} ${a.descricao || ""} ${a.effect || ""}`.toLowerCase();
+        const control = /imobil|preso|engol|paralis|lento|empurr|agarr|constr|medo|cego|petrif/.test(description);
+        const area = a.radius || a.area || a.cone || a.shape || /área|cone|adjacente|todos/.test(description);
+        const damage = a.damage || a.extra_damage || a.initial_dice || a.automatic_damage || /dano|d\d+/.test(description);
+        const relevantPassive = a.dc || damage || control || a.effect || a.source === "heroi" || a.source === "guilda"
+          || ["ataque_das_sombras","cacador_das_trevas","combo_devorador","furia","investida_brutal","resistencia_morta","agarrar","constricao","derrubar","atq_mandibula","esmagar"].includes(a.id);
+        const base = a.action_type === "passiva" ? (relevantPassive ? .12 : 0) : .20;
+        return sum + (base + (a.dc || a.poison_dc ? .08 : 0) + (damage ? .10 : 0)
+          + (control ? .08 : 0) + (area ? .06 : 0)) * availability;
+      }, 0);
+  }
+  function weaknessImpact(m) {
+    return (m.weaknesses || []).reduce((sum, w) => {
+      if (w.type === "ponto_vulneravel") return sum + Math.max(0, Number(w.nd_penalty != null ? w.nd_penalty : .25));
+      if (Number(w.multiplier) > 1) return sum + .16 * (Number(w.multiplier) - 1);
+      if (Number(w.bonus_flat) > 0) return sum + Math.min(.14, .04 + Number(w.bonus_flat) * .025);
+      if (w.type === "save_penalty") return sum + .07;
+      return sum + .04;
+    }, 0);
+  }
+  function defenseImpact(m) {
+    const resistanceBonus = (m.resistances || []).reduce((sum, r) => sum + (r.mode === "half" ? .32 : .07 * Math.max(1, Number(r.reduction || 1))), 0);
+    const explicitTypes = new Set((m.weaknesses || []).map(w => w.type));
+    const negativePenalty = (m.special_abilities || []).reduce((sum, a) => {
+      const alreadyExplicit = (a.id === "essencia_profana" && explicitTypes.has("holy"))
+        || (["fraqueza_magica", "mente_limitada", "mente_fraca", "mente_bruta"].includes(a.id) && explicitTypes.has("save_penalty"));
+      return sum + (!alreadyExplicit && NEGATIVE_ABILITIES[a.id] ? NEGATIVE_ABILITIES[a.id] * .6 : 0);
+    }, 0);
+    return ((m.immunities || []).length * .07) + resistanceBonus - weaknessImpact(m) - negativePenalty;
+  }
+  function ndEstimateAtLevel(rawMonster, level = 1, mode = "abilities", groupSize = 6) {
+    const m = equipmentPreview(rawMonster || {});
+    const monsterAC = Number(m.ac || 10);
+    const metrics = partyMetrics(level, monsterAC, mode !== "base", groupSize);
+    const partyDpr = mode === "base" ? metrics.baseDpr : metrics.activeDpr;
+    const roundsToDefeat = Number(m.hp || 0) / Math.max(1, partyDpr);
+    const monsterDpr = monsterDprAgainstParty(m, metrics);
+    // ND 1 representa aproximadamente três rodadas contra o grupo escolhido.
+    const durability = roundsToDefeat / ENCOUNTER_ROUNDS;
+    const offense = monsterDpr * ENCOUNTER_ROUNDS / Math.max(1, metrics.totalHp);
+    const initiativeImpact = Math.max(-.12, Math.min(.12, (Number(m.dex || 10) + mod(m.int_)) * .03));
+    // O modo Base remove apenas as habilidades dos heróis. As habilidades e
+    // magias do próprio monstro continuam contando para o ND da criatura.
+    const specials = specialImpact(m);
+    const defenses = defenseImpact(m);
+    const spellImpact = spellPower(m) * .38;
+    const raw = .25 + durability * .60 + offense * .40 + specials + spellImpact + defenses + initiativeImpact;
+    return Math.max(.25, Math.round(raw * 4) / 4);
+  }
+  function ndEstimate(m) {
+    return ndEstimateAtLevel(m, 1, "abilities");
+  }
+  function estimateNDProfiles(m) {
+    return HERO_LEVELS.map(level => ({
+      level,
+      groups: Object.fromEntries([2, 4, 6].map(groupSize => [groupSize, {
+        base: ndEstimateAtLevel(m, level, "base", groupSize),
+        abilities: ndEstimateAtLevel(m, level, "abilities", groupSize),
+      }])),
+    }));
+  }
   function nd(v) {
     const n = Number(v);
     if (!Number.isFinite(n)) return String(v || "—");
@@ -163,7 +359,15 @@
     return rows.length ? rows.map(esc).join("<br>") : "Nenhum tesouro definido.";
   }
   function details(m) {
+    const rawMonster = m;
     m = equipmentPreview(m);
+    const ndProfiles = estimateNDProfiles(rawMonster);
+    const groupProfileText = mode => [2, 4, 6].map(groupSize => {
+      const values = ndProfiles.map(p => `N${p.level}: ${nd(p.groups[groupSize][mode])}`).join(" · ");
+      return `${groupSize} heróis: ${values}`;
+    }).join(" | ");
+    const profileText = groupProfileText("abilities");
+    const baseProfileText = groupProfileText("base");
     const attacks = m.attacks && m.attacks.length ? m.attacks : [{name:"Ataque", atk_bonus:m.atk_bonus, damage:m.damage, num_attacks:1}];
     const abilities = (m.special_abilities || []).filter(a => a.action_type !== "magia");
     const spellsById = new Map(spellLibrary().map(s => [s.id, s]));
@@ -171,7 +375,7 @@
     const weaknesses = (m.weaknesses || []).map(w => w.descricao || `${pretty(w.categoria || w.type)} ${w.multiplier ? "×" + w.multiplier : (w.bonus_flat > 0 ? "+" : "") + (w.bonus_flat || "")}`).join(" · ") || "Nenhuma definida";
     return `<article class="best-card">
       <section class="best-media">${imageBox(`../assets/retratos/monstros/${m.portrait || m.type}.png`, "best-portrait", "Retrato\na adicionar", m.image && m.image !== (m.portrait || m.type) ? `../assets/retratos/monstros/${m.image}.png` : "")}${imageBox(`../assets/pawns/monstros/${m.image || m.type}/${m.image || m.type}.png`, "best-mini", "Miniatura\nindisponível")}</section>
-      <section class="best-sheet"><header class="best-head"><div><h1>${esc(m.emoji || "") } ${esc(m.name)}</h1><p><strong>Subtipo: ${esc(({construto:"Construto",morto_vivo:"Morto-Vivo",animal:"Animal",abissal:"Abissal",vegetal:"Vegetal",raca_padrao:"Raça Padrão"})[m.subtipo || (m.undead ? "morto_vivo" : "raca_padrao")] || "Raça Padrão")}</strong></p><p>${esc(m.type)} · IA: <strong>${esc(pretty(m.ai_type))}</strong></p></div><div class="nd-pair"><span>ND definido <b>${esc(nd(m.cr != null ? m.cr : m.tier || "—"))}</b></span><span title="Estimativa de consulta baseada em defesa, dano, ataques e habilidades.">ND estimado <b>${esc(nd(ndEstimate(m)))}</b></span></div></header>
+      <section class="best-sheet"><header class="best-head"><div><h1>${esc(m.emoji || "") } ${esc(m.name)}</h1><p><strong>Subtipo: ${esc(({construto:"Construto",morto_vivo:"Morto-Vivo",animal:"Animal",abissal:"Abissal",vegetal:"Vegetal",raca_padrao:"Raça Padrão"})[m.subtipo || (m.undead ? "morto_vivo" : "raca_padrao")] || "Raça Padrão")}</strong></p><p>${esc(m.type)} · IA: <strong>${esc(pretty(m.ai_type))}</strong></p></div><div class="nd-pair"><span>ND definido <b>${esc(nd(m.cr != null ? m.cr : m.tier || "—"))}</b></span><span title="Estimativa contra grupos de 2, 4 e 6 heróis, considerando habilidades.">ND estimado (6 heróis) <b>${esc(nd(ndProfiles[0].groups[6].abilities))}</b><small>${esc(profileText)}</small><small title="Grupo sem habilidades próprias, mas contando as habilidades do monstro">Sem habilidades dos heróis: ${esc(baseProfileText)}</small></span></div></header>
       <div class="best-stats"><div><b>PV</b><span>${esc(m.hp || "—")}</span></div><div><b>CA total</b><span>${esc(m.ac || "—")}</span></div><div><b>Armadura natural</b><span>${esc(m.natural_armor != null ? m.natural_armor : Math.max(0, Number(m.ac || 10) - 10 - mod(m.dex)))}</span></div><div><b>Movimento</b><span>${esc(m.movement || "—")}</span></div><div><b>Raio de visão</b><span title="${m.visao_escuro || m.darkvision_range ? "Visão no escuro: objetos não bloqueiam, apenas paredes." : "Objetos altos e paredes bloqueiam a visão."}">${esc(visionRadius(m))}${m.visao_escuro || m.darkvision_range ? " 👁️" : ""}</span></div><div><b>Ataques</b><span>${attacks.reduce((n,a) => n + Number(a.num_attacks || 1), 0)}</span></div><div><b>Iniciativa</b><span>${esc(Number(m.dex || 10) + mod(m.int_))}</span></div></div>
       <div class="best-attributes"><div><b>FOR</b>${esc(m.str_ != null ? m.str_ : "—")} <small>${m.str_ != null ? (mod(m.str_) >= 0 ? "+" : "") + mod(m.str_) : ""}</small></div><div><b>DES</b>${esc(m.dex != null ? m.dex : "—")} <small>${m.dex != null ? (mod(m.dex) >= 0 ? "+" : "") + mod(m.dex) : ""}</small></div><div><b>CON</b>${esc(m.con_ != null ? m.con_ : "—")} <small>${m.con_ != null ? (mod(m.con_) >= 0 ? "+" : "") + mod(m.con_) : ""}</small></div><div><b>INT</b>${esc(m.int_ != null ? m.int_ : "—")} <small>${m.int_ != null ? (mod(m.int_) >= 0 ? "+" : "") + mod(m.int_) : ""}</small></div></div>
       <div class="best-saves"><div><b>Fortitude</b><span>${esc(m.fort != null ? (m.fort >= 0 ? "+" : "") + m.fort : "—")}</span><small>CON</small></div><div><b>Reflexos</b><span>${esc(m.ref_ != null ? (m.ref_ >= 0 ? "+" : "") + m.ref_ : "—")}</span><small>DES</small></div><div><b>Vontade</b><span>${esc(m.will != null ? (m.will >= 0 ? "+" : "") + m.will : "—")}</span><small>INT</small></div></div>
@@ -180,7 +384,7 @@
       <section><h2>Magias</h2><p><b>Nível de conjurador:</b> ${esc(m.caster_level || m.level || 1)}</p><div class="best-abilities">${spells.length ? spells.map(s => `<div><strong>${esc(s.icone || "✦")} ${esc(s.nome || pretty(s.id))}</strong><small>${esc(pretty(s.circulo))} círculo · ${s.limit_mode === "cooldown" ? `recarga: ${esc(s.cooldown_turns || 1)} rodada(s)` : `${esc(s.uses_per_combat || 1)}× por encontro`}</small>${s.descricao ? `<p>${esc(s.descricao)}</p>` : ""}</div>`).join("") : "<p>Não conhece magias.</p>"}</div></section>
       <section><h2>Defesas e fraquezas</h2><p><b>Imunidades:</b> ${esc((m.immunities || []).map(pretty).join(", ") || "Nenhuma definida")}</p><p><b>Resistências:</b> ${esc((m.resistances || []).map(r => `${pretty(r.categoria || r.type)} ${r.mode === "half" ? "(metade do dano)" : "(-" + (r.reduction || 1) + ")"}`).join(", ") || "Nenhuma definida")}</p><p><b>Fraquezas:</b> ${esc(weaknesses)}</p></section>
       <section><h2>Equipamento e tesouro</h2><p>${loot(m)}</p><p class="best-note">Recompensa base: ${esc(m.xp != null ? m.xp + " XP" : "não definida")}</p></section></div>
-      <footer class="best-method">ND estimado: calibrado contra um grupo inicial de quatro heróis. Mede sobrevivência contra o grupo, dano esperado, controle, magias, habilidades e defesas; grupos de monstros devem ser avaliados como encontro combinado.</footer>
+      <footer class="best-method">ND estimado: calculado separadamente para grupos de 2, 4 e 6 heróis, nos níveis 1, 3 e 5. A primeira linha inclui as habilidades dos heróis; a segunda remove apenas essas habilidades, mantendo as habilidades e magias do monstro. Grupos de monstros devem ser avaliados como encontro combinado.</footer>
       </section></article>`;
   }
   function render() {
@@ -201,5 +405,12 @@
     search.oninput = () => { filter = search.value; render(); };
     root.querySelectorAll(".best-row").forEach(btn => btn.onclick = () => { selected = btn.dataset.type; render(); });
   }
-  window.EDITOR_BESTIARY = { render, estimateND: ndEstimate, details };
+  window.EDITOR_BESTIARY = {
+    render,
+    estimateND: ndEstimate,
+    estimateNDAtLevel: ndEstimateAtLevel,
+    estimateNDProfiles,
+    formatND: nd,
+    details,
+  };
 })();
