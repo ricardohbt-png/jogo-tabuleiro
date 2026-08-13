@@ -1080,6 +1080,38 @@ def _instrumento_nome(inst):
         nome += " " + _RUNICO_LABEL[1 if fem else 0]
     return nome
 
+def _instrumento_nome_T(inst):
+    """Irmã TARDIA de `_instrumento_nome`: mesmas regras, mas devolve um T para a
+    frase ser montada no idioma de quem lê.
+
+    `_instrumento_nome` continua devolvendo português puro — é ela que grava
+    `inst["name"]`, e isso vai a disco no savegame. Esta aqui só entra na
+    narração.
+
+    A ORDEM das partes é do template (`cat.instrumento.nome_composto`), porque em
+    inglês o adjetivo vem ANTES do substantivo; e o espaço vem embutido em cada
+    adjetivo, no lado certo de cada idioma (" Velha" × "Old "), que é o que faz
+    uma parte ausente não deixar espaço solto. O gênero só existe no `pt`.
+
+    Gêmea do `_instrumentoComposto` em `src/i18n.js`, que lê as MESMAS chaves —
+    o instrumento tem id único por combinação e não existe em catálogo nenhum."""
+    b = INSTRUMENTOS_BASE[inst["base"]]
+    g = "f" if inst["base"] in _INSTRUMENTO_GENERO_FEM else "m"
+    orig = inst.get("origem", "humana")
+    runico = inst.get("encantamento") == "runico"
+    base = nome_cat("instrumento", inst["base"], b["nome"])
+    adj = lambda nome: T(f"cat.instrumento.adj.{nome}.{g}")
+    # Lendário: 3 eixos no máximo (Refinado + Origem ≠ Humana + Rúnico) →
+    # substitui a qualidade E o sufixo Rúnico; a origem permanece.
+    if inst.get("qualidade") == "refinado" and orig in _ORIGEM_LABEL and runico:
+        return T("cat.instrumento.nome_composto", base=base, ql=adj("lendario"),
+                 orig=adj(orig), run="")
+    return T("cat.instrumento.nome_composto", base=base,
+             ql=adj(inst.get("qualidade") if inst.get("qualidade") in _QUALIDADE_LABEL
+                    else "padrao"),
+             orig=adj(orig) if orig in _ORIGEM_LABEL else "",
+             run=adj("runico") if runico else "")
+
 def _distancia_chebyshev(pos1, pos2):
     """Distância de rei (Chebyshev) entre dois pontos [x, y]."""
     return max(abs(pos1[0] - pos2[0]), abs(pos1[1] - pos2[1]))

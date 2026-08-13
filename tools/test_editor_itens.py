@@ -405,7 +405,10 @@ def test_veneno_msg_penalidade():
     alvo = r.monsters["m1"]
     alvo["penalidades"] = {}
     asyncio.run(r._aplicar_veneno(alvo, "veneno_pen2"))
-    txt = " ".join(falas)
+    # str() explícito: o T se disfarça de string em quase tudo (__contains__,
+    # __len__, __getattr__), mas NÃO em str.join, que exige str de verdade.
+    # str(T) devolve o português, que é o que as checagens abaixo procuram.
+    txt = " ".join(str(f) for f in falas)
     check("mensagem cita -3 ataque", "-3 ataque" in txt)
     check("mensagem cita -2 ca", "-2 ca" in txt)
     check("mensagem nao usa o texto fixo antigo", "-1 ataque e -1 movimento" not in txt)

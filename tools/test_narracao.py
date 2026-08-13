@@ -119,6 +119,28 @@ def _rodar_verificacoes():
           _r(S.nome_item({"id": "espada_do_autor", "name": "Espada do Autor"}), "en")
           == "Espada do Autor")
 
+    print("\n[7] Nome composto do instrumento")
+    # (base, qualidade, origem, encantamento, pt esperado, en esperado)
+    casos = [
+        ("harpa",  "padrao",   "humana", "nenhum", "Harpa Padrão",           "Standard Harp"),
+        ("harpa",  "velho",    "humana", "nenhum", "Harpa Velha",            "Old Harp"),
+        ("tambor", "velho",    "humana", "nenhum", "Tambor de Guerra Velho", "Old War Drum"),
+        ("harpa",  "rustico",  "elfica", "nenhum", "Harpa Rústica Élfica",   "Rustic Elven Harp"),
+        ("harpa",  "padrao",   "humana", "runico", "Harpa Padrão Rúnica",    "Standard Runic Harp"),
+        ("harpa",  "refinado", "elfica", "runico", "Harpa Lendária Élfica",  "Legendary Elven Harp"),
+        ("alaude", "refinado", "ana",    "runico", "Alaúde Lendário Anão",   "Legendary Dwarven Lute"),
+    ]
+    for base, ql, orig, enc, esp_pt, esp_en in casos:
+        inst = S.criar_instrumento(base, ql, origem=orig, encantamento=enc)
+        rot = f"{base}/{ql}/{orig}/{enc}"
+        # O nome GRAVADO no estado continua sendo português puro — é ele que vai
+        # a disco no savegame. Estas 7 checagens são a rede que garante que a
+        # etapa 4c não mexeu no `_instrumento_nome`.
+        check(f"{rot} — name gravado em pt", inst["name"] == esp_pt)
+        tt = S._instrumento_nome_T(inst)
+        check(f"{rot} — T em pt", _r(tt, "pt") == esp_pt)
+        check(f"{rot} — T em en", _r(tt, "en") == esp_en)
+
 
 if __name__ == "__main__":
     print("=" * 62); print("  TESTE — Narração do servidor (etapa 4b-i)"); print("=" * 62)
