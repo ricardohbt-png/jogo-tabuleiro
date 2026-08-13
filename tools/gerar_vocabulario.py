@@ -68,6 +68,7 @@ def coletar(tipo="nome"):
     item = {}
     for nome_cat, campo in (("WEAPONS", "id"), ("SHOP_WEAPONS", "id"), ("SHOP_ARMORS", "id"),
                             ("SHOP_MERCHANT", "id"), ("SHOP_TEMPLE", "id"), ("SHOP_TAVERN", "id"),
+                            ("SHOP_AMMO", "id"),
                             ("ARREMESSAVEIS", "id"), ("VENENOS", "id")):
         fundir_item(item, _entradas(getattr(S, nome_cat), campo, tipo), nome_cat)
     return {

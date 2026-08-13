@@ -1638,6 +1638,18 @@ window.LANG_CATALOGO = {
     "en": "Silver Two-Handed Sword",
     "pt": "Espada de 2 Mãos de Prata"
   },
+  "cat.item.flecha_incendiaria.nome": {
+    "en": "Incendiary Arrow",
+    "pt": "Flecha Incendiária"
+  },
+  "cat.item.flechas.nome": {
+    "en": "Arrows (×10)",
+    "pt": "Flechas (×10)"
+  },
+  "cat.item.flechas_prata.nome": {
+    "en": "Silver Arrows (×10)",
+    "pt": "Flechas de Prata (×10)"
+  },
   "cat.item.fogo_grego.nome": {
     "en": "Greek Fire",
     "pt": "Fogo Grego"
@@ -2045,6 +2057,18 @@ window.LANG_CATALOGO = {
   "cat.item.vidro_acido_grande.nome": {
     "en": "Large Acid Vial",
     "pt": "Vidro de Ácido Grande"
+  },
+  "cat.item.virote_incendiario.nome": {
+    "en": "Incendiary Bolt",
+    "pt": "Virote Incendiário"
+  },
+  "cat.item.virotes.nome": {
+    "en": "Bolts (×10)",
+    "pt": "Virotes (×10)"
+  },
+  "cat.item.virotes_prata.nome": {
+    "en": "Silver Bolts (×10)",
+    "pt": "Virotes de Prata (×10)"
   },
   "cat.item.warhammer.nome": {
     "en": "Warhammer",
