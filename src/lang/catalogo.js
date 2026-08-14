@@ -602,6 +602,14 @@ window.LANG_CATALOGO = {
     "en": "Lore: Bugbear — Shadow Boogeyman",
     "pt": "Lenda: Bugbear — Bicho-Papão das Sombras"
   },
+  "cat.guilda.lenda_ciclope.desc": {
+    "en": "+1 to attack and +1 to saving throws against Cyclops.",
+    "pt": "+1 de ataque e +1 nos saves contra Ciclope."
+  },
+  "cat.guilda.lenda_ciclope.nome": {
+    "en": "Lore: Cyclops",
+    "pt": "Lenda: Ciclope"
+  },
   "cat.guilda.lenda_cobra_constritora.desc": {
     "en": "+1 to attack and +1 to saving throws against Constrictor Snake.",
     "pt": "+1 de ataque e +1 nos saves contra Cobra Constritora."
@@ -785,6 +793,22 @@ window.LANG_CATALOGO = {
   "cat.guilda.lenda_garaloux_jovem.nome": {
     "en": "Lore: Young Garaloux",
     "pt": "Lenda: Garaloux Jovem"
+  },
+  "cat.guilda.lenda_gigante_guerra.desc": {
+    "en": "+1 to attack and +1 to saving throws against War Giant.",
+    "pt": "+1 de ataque e +1 nos saves contra Gigante da Guerra."
+  },
+  "cat.guilda.lenda_gigante_guerra.nome": {
+    "en": "Lore: War Giant",
+    "pt": "Lenda: Gigante da Guerra"
+  },
+  "cat.guilda.lenda_gigante_runico.desc": {
+    "en": "+1 to attack and +1 to saving throws against Runic Giant.",
+    "pt": "+1 de ataque e +1 nos saves contra Gigante Rúnico."
+  },
+  "cat.guilda.lenda_gigante_runico.nome": {
+    "en": "Lore: Runic Giant",
+    "pt": "Lenda: Gigante Rúnico"
   },
   "cat.guilda.lenda_goblin.desc": {
     "en": "+1 to attack and +1 to saving throws against Goblin.",
@@ -2086,6 +2110,22 @@ window.LANG_CATALOGO = {
     "en": "Silver Warhammer",
     "pt": "Martelo de Guerra de Prata"
   },
+  "cat.local.alva_e_luz.nome": {
+    "en": "Alva e Luz",
+    "pt": "Alva e Luz"
+  },
+  "cat.local.graciero.nome": {
+    "en": "Graciero",
+    "pt": "Graciero"
+  },
+  "cat.local.vila_corvin.nome": {
+    "en": "Corvin Village",
+    "pt": "Vila de Corvin"
+  },
+  "cat.local.vila_riacho.nome": {
+    "en": "Brook Village",
+    "pt": "Vila do Riacho"
+  },
   "cat.magia.abencoar.desc": {
     "en": "6x6 area. +1 attack/damage/AC/saves. Lasts 1d4+1 rounds.",
     "pt": "Área 6x6. +1 ataque/dano/CA/resistência. Dura 1d4+1 rodadas."
@@ -2310,6 +2350,10 @@ window.LANG_CATALOGO = {
     "en": "Bugbear — Shadow Boogeyman",
     "pt": "Bugbear — Bicho-Papão das Sombras"
   },
+  "cat.monstro.ciclope.nome": {
+    "en": "Cyclops",
+    "pt": "Ciclope"
+  },
   "cat.monstro.cobra_constritora.nome": {
     "en": "Constrictor Snake",
     "pt": "Cobra Constritora"
@@ -2417,6 +2461,14 @@ window.LANG_CATALOGO = {
   "cat.monstro.garaloux_jovem.nome": {
     "en": "Young Garaloux",
     "pt": "Garaloux Jovem"
+  },
+  "cat.monstro.gigante_guerra.nome": {
+    "en": "War Giant",
+    "pt": "Gigante da Guerra"
+  },
+  "cat.monstro.gigante_runico.nome": {
+    "en": "Runic Giant",
+    "pt": "Gigante Rúnico"
   },
   "cat.monstro.goblin.nome": {
     "en": "Goblin",

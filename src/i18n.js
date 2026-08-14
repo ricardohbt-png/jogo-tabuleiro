@@ -57,14 +57,14 @@
   // entre famílias hoje, e o gerador falha alto se aparecer uma.
   const FAMILIAS_POR_CAMPO = {
     type: ['monstro', 'decor'],
-    id:   ['item', 'guilda', 'magia', 'instrumento', 'armadilha', 'classe'],
+    id:   ['item', 'guilda', 'magia', 'instrumento', 'armadilha', 'classe', 'local'],
   };
   const CAMPOS_NOME = ['name', 'nome'];
   const CAMPOS_DESC = ['desc', 'descricao'];
   // Usada quando o id vem da CHAVE do dicionário pai, caso em que não há campo
   // interno indicando de que família ele é.
   const TODAS_FAMILIAS = ['monstro', 'decor', 'item', 'guilda', 'magia',
-                          'instrumento', 'armadilha', 'classe'];
+                          'instrumento', 'armadilha', 'classe', 'local'];
 
   function tem(key) {
     return Object.prototype.hasOwnProperty.call(DICT, key);

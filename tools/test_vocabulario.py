@@ -24,10 +24,15 @@ def _rodar_verificacoes():
     # monstros e técnicas o tempo todo, e um número fixo aqui deixaria a suíte
     # vermelha por motivo falso a cada conteúdo novo. O que se verifica é a
     # RELAÇÃO entre o catálogo e as chaves geradas, que não depende do tamanho.
-    check("as 8 famílias existem e nenhuma está vazia",
-          sorted(vocab) == ["armadilha", "classe", "decor", "guilda",
-                            "instrumento", "item", "magia", "monstro"]
-          and all(vocab.values()))
+    # A LISTA de famílias também é viva — a `local` entrou depois das 8
+    # originais. O que importa é que as conhecidas continuem lá e que nenhuma
+    # família declarada venha vazia (isso sim seria fonte quebrada).
+    ESPERADAS = {"armadilha", "classe", "decor", "guilda",
+                 "instrumento", "item", "magia", "monstro"}
+    check(f"as famílias conhecidas existem ({len(vocab)} no total)",
+          ESPERADAS <= set(vocab))
+    vazias = [f for f, v in vocab.items() if not v]
+    check(f"nenhuma família declarada está vazia ({vazias})", not vazias)
     check("todo id coletado vira exatamente uma chave de nome",
           len(G.achatar(vocab)) == sum(len(d) for d in vocab.values()))
 

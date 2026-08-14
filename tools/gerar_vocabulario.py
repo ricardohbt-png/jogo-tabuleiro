@@ -80,6 +80,11 @@ def coletar(tipo="nome"):
         "armadilha":   _entradas(S.ARMADILHAS, "id", tipo),
         "instrumento": _entradas(S.INSTRUMENTOS_BASE, "id", tipo),
         "classe":      _entradas(S.CLASSES, "id", tipo),
+        # _BUILTIN_WORLD_LOCATIONS e NÃO WORLD_LOCATIONS, de propósito: o
+        # segundo inclui as cidades criadas no editor, que não devem ganhar
+        # chave nenhuma — sem chave, o nome do autor sai intacto. É a mesma
+        # proteção da guarda de igualdade da etapa 4c, aplicada na fonte.
+        "local":       _entradas(S._BUILTIN_WORLD_LOCATIONS, "id", tipo),
     }
 
 
