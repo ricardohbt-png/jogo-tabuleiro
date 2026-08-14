@@ -97,13 +97,21 @@ def build_catalog():
         if "percepcao" not in entry:
             entry["percepcao"] = server.monster_default_perception(m)
         monsters.append(entry)
-    items = [{key: i[key] for key in (
-                "id", "name", "emoji", "die", "stat", "finesse", "off_hand_weapon", "crit_nat20_multiplier", "crit_min_nat_roll", "extra_attack_on_crit_min_nat", "range", "reach", "categoria",
-                "granted_ability",
-                "kind", "ac_bonus", "item_slot", "effect", "value", "veneno_id",
-                "ammo_type", "ammo_count", "extra_damage", "extra_damage_types"
-             ) if key in i}
-             for i in server._DUNGEON_ITEM_CATALOG.values()]
+    item_fields = (
+        "id", "name", "emoji", "die", "stat", "finesse", "off_hand_weapon",
+        "crit_nat20_multiplier", "crit_min_nat_roll", "extra_attack_on_crit_min_nat",
+        "range", "reach", "categoria", "granted_ability", "kind", "ac_bonus",
+        "damage_reduction", "item_slot", "effect", "value", "veneno_id",
+        "ammo_type", "ammo_count", "extra_damage", "extra_damage_types"
+    )
+    items = []
+    for i in server._DUNGEON_ITEM_CATALOG.values():
+        entry = {key: i[key] for key in item_fields if key in i}
+        # A descrição só é necessária para itens que têm uma regra própria
+        # de redução de dano; não expandir o payload dos demais itens.
+        if i.get("damage_reduction") is not None and i.get("descricao"):
+            entry["descricao"] = i["descricao"]
+        items.append(entry)
     traps = []
     for tipo, meta in server.ARMADILHAS.items():
         entry = {

@@ -8328,14 +8328,18 @@ window.EDITOR_CATALOG = {
       "name": "Escudo Pequeno",
       "emoji": "🛡️",
       "kind": "shield",
-      "ac_bonus": 1
+      "ac_bonus": 1,
+      "damage_reduction": 1,
+      "descricao": "Bônus de CA +1. Reduz em 1 o dano de cada ataque ou efeito de dano recebido, sem limite por rodada. Também reduz dano de magias e armadilhas; quando um sucesso em Reflexos reduzir o dano à metade, aplique primeiro a metade e depois esta redução."
     },
     {
       "id": "escudo_g",
       "name": "Escudo Grande",
       "emoji": "🛡️",
       "kind": "shield",
-      "ac_bonus": 2
+      "ac_bonus": 2,
+      "damage_reduction": 2,
+      "descricao": "Bônus de CA +2. Reduz em 2 o dano de cada ataque ou efeito de dano recebido, sem limite por rodada. Também reduz dano de magias e armadilhas; quando um sucesso em Reflexos reduzir o dano à metade, aplique primeiro a metade e depois esta redução."
     },
     {
       "id": "cloak",

@@ -4612,7 +4612,7 @@ SHOP_WEAPONS = [
     # â”€â”€â”€ Leves (1d4) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     {"id": "dagger",        "name": "Adaga",              "emoji": "🗡️",  "die": "1d4",  "stat": "str_", "price": 5,  "off_hand_weapon": True, "throw_range": 3, "finesse": True, "categoria": "perfurante"},
     {"id": "chicote",       "name": "Chicote",            "emoji": "🪢",  "die": "1d4",  "stat": "dex",  "price": 8,  "range": 2, "off_hand_weapon": True, "categoria": "cortante",
-     "allowed_classes": ["mage", "bard", "rogue", "paladin", "warrior"]},
+     "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     {"id": "hand_crossbow", "name": "Besta de Mão",       "emoji": "🏹",  "die": "1d4",  "stat": "dex",  "price": 10, "range": 4, "categoria": "perfurante"},
     # â”€â”€â”€ MÃ©dias (1d6) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     {"id": "lanca_curta",   "name": "Lança Curta",        "emoji": "🔱",  "die": "1d6",  "stat": "str_", "price": 7,  "throw_range": 4, "categoria": "perfurante",
@@ -4674,9 +4674,11 @@ for _weapon in list(SHOP_WEAPONS):
 
 SHOP_ARMORS = [
     # â”€â”€ ProteÃ§Ãµes / Escudos (slot acessÃ³rio â€” somam com armadura) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    {"id": "escudo_p",     "name": "Escudo Pequeno",     "emoji": "🛡️", "ac_bonus": 1, "price": 15, "kind": "shield",
+    {"id": "escudo_p",     "name": "Escudo Pequeno",     "emoji": "🛡️", "ac_bonus": 1, "damage_reduction": 1, "price": 15, "kind": "shield",
+     "descricao": "Bônus de CA +1. Reduz em 1 o dano de cada ataque ou efeito de dano recebido, sem limite por rodada. Também reduz dano de magias e armadilhas; quando um sucesso em Reflexos reduzir o dano à metade, aplique primeiro a metade e depois esta redução.",
      "allowed_classes": ["cleric", "paladin", "warrior"]},
-    {"id": "escudo_g",     "name": "Escudo Grande",      "emoji": "🛡️", "ac_bonus": 2, "price": 25, "kind": "shield",
+    {"id": "escudo_g",     "name": "Escudo Grande",      "emoji": "🛡️", "ac_bonus": 2, "damage_reduction": 2, "price": 25, "kind": "shield",
+     "descricao": "Bônus de CA +2. Reduz em 2 o dano de cada ataque ou efeito de dano recebido, sem limite por rodada. Também reduz dano de magias e armadilhas; quando um sucesso em Reflexos reduzir o dano à metade, aplique primeiro a metade e depois esta redução.",
      "allowed_classes": ["paladin", "warrior"]},
     # â”€â”€ Armaduras (slot armadura) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # `armor_category` prepara as futuras penalidades de movimento. Materiais
@@ -9527,7 +9529,8 @@ class GameRoom:
                 gear_item["armor_category"] = item.get("armor_category")
                 gear_item["corrosion_materials"] = list(item.get("corrosion_materials", []))
             for _k in ("corrosion_materials", "corrosao_resistente", "corrosao_niveis_penalidade",
-                       "bonuses", "granted_ability", "maldicao_id", "maldicao_prende", "kind"):
+                       "bonuses", "granted_ability", "maldicao_id", "maldicao_prende", "kind",
+                       "damage_reduction", "descricao"):
                 if _k in item and _k not in gear_item:
                     gear_item[_k] = deepcopy(item[_k])
             res = self._route_acquired_item(p, gear_item)
@@ -11371,12 +11374,13 @@ class GameRoom:
                         descricao="Um buraco disfarçado se abre sob seus pés.",
                         efeitos_extra=[])
                 else:
-                    p["hp"] = max(0, p["hp"] - trap["damage"])
-                    await self.gm_say(prefix + f" **{p['name']}** falhou em **Reflexos** (CD 13) e sofre **{trap['damage']}** de dano!")
+                    dano_trap = self._reduzir_dano_escudo(p, trap["damage"])
+                    p["hp"] = max(0, p["hp"] - dano_trap)
+                    await self.gm_say(prefix + f" **{p['name']}** falhou em **Reflexos** (CD 13) e sofre **{dano_trap}** de dano após a redução do escudo!")
                     await self._enviar_trap_result(
-                        p, "Buraco Escondido", "🕳️", sucesso=False, dano=trap["damage"], metade=False,
+                        p, "Buraco Escondido", "🕳️", sucesso=False, dano=dano_trap, metade=False,
                         descricao="Um buraco disfarçado se abre sob seus pés.",
-                        efeitos_extra=[f"💥 Sofreu {trap['damage']} de dano"])
+                        efeitos_extra=[f"💥 Sofreu {dano_trap} de dano"])
                     if p["hp"] <= 0:
                         await self._player_dies(pid)
 
@@ -12271,11 +12275,13 @@ class GameRoom:
                     await self.broadcast({"type": "dice_roll", "die": "d" + corpo_chamas.get("damage", "1d6").split("d", 1)[-1].split("+", 1)[0], "value": fogo_bruto,
                                           "label": "🔥 Corpo em Chamas"})
                     fogo_alvo, transferencia = await self._processar_dano_protetor(p["id"], fogo)
+                    fogo_alvo = self._reduzir_dano_escudo(p, fogo_alvo)
                     p["hp"] = max(0, p["hp"] - fogo_alvo)
                     await self.gm_say(
                         T("narracao.e_queimado_pelo_corpo_em_chamas_de_de_da", heroi=p['name'], target=target['name'], fogo_alvo=fogo_alvo))
                     if transferencia:
                         protetor, dano_protetor = transferencia
+                        dano_protetor = self._reduzir_dano_escudo(protetor, dano_protetor)
                         protetor["hp"] = max(0, protetor["hp"] - dano_protetor)
                         if protetor["hp"] <= 0:
                             await self._player_dies(protetor["id"])
@@ -12378,10 +12384,12 @@ class GameRoom:
                         await self.broadcast({"type": "dice_roll", "die": "d" + corpo_chamas.get("damage", "1d6").split("d", 1)[-1].split("+", 1)[0], "value": fogo_bruto,
                                               "label": "🔥 Corpo em Chamas"})
                         fogo_alvo, transferencia = await self._processar_dano_protetor(p["id"], fogo)
+                        fogo_alvo = self._reduzir_dano_escudo(p, fogo_alvo)
                         p["hp"] = max(0, p["hp"] - fogo_alvo)
                         await self.gm_say(T("narracao.e_queimado_pelo_corpo_em_chamas_de_dano", heroi=p['name'], fogo_alvo=fogo_alvo))
                         if transferencia:
                             protetor, dano_protetor = transferencia
+                            dano_protetor = self._reduzir_dano_escudo(protetor, dano_protetor)
                             protetor["hp"] = max(0, protetor["hp"] - dano_protetor)
                             if protetor["hp"] <= 0:
                                 await self._player_dies(protetor["id"])
@@ -15475,6 +15483,30 @@ class GameRoom:
         off = p.get("gear", {}).get("off_hand")
         return bool(off) and (off.get("kind") == "shield" or off.get("item_slot") == "shield")
 
+    def _reducao_dano_escudo(self, p):
+        """Retorna a redução plana do escudo equipado.
+
+        O fallback por id mantém a regra válida para escudos adquiridos antes
+        deste campo existir nos saves.
+        """
+        if not self._escudo_equipado(p):
+            return 0
+        off = p.get("gear", {}).get("off_hand") or {}
+        if off.get("damage_reduction") is not None:
+            return max(0, int(off.get("damage_reduction", 0) or 0))
+        return {"escudo_p": 1, "escudo_g": 2}.get(off.get("id"), 0)
+
+    def _reduzir_dano_escudo(self, alvo, dano):
+        """Reduz cada instância de dano recebida por um herói com escudo.
+
+        A redução é ilimitada por rodada e ocorre depois de resistências e
+        depois da metade concedida por um teste de Reflexos bem-sucedido.
+        """
+        if dano <= 0 or not self._eh_jogador(alvo):
+            return dano
+        reducao = self._reducao_dano_escudo(alvo)
+        return max(0, int(dano) - reducao) if reducao else dano
+
     def _off_hand_ocupa_mao(self, p):
         """True se a mão esquerda está ocupada por algo que exige uma mão livre:
         escudo OU 2ª arma (dual-wield). Munição (flechas/virotes) não ocupa a mão."""
@@ -17100,6 +17132,8 @@ class GameRoom:
         if self._eh_morto_vivo_ou_demonio(alvo):
             dano *= 2
             await self.gm_say(T("narracao.raio_divino_dobrado_contra_morto_vivo_de", alvo=nome_criatura(alvo)))
+        if self._eh_jogador(alvo):
+            dano = self._reduzir_dano_escudo(alvo, dano)
         alvo["hp"] = max(0, alvo["hp"] - dano)
         await self.gm_say(T("narracao.atinge_com_raio_divino_de_dano_sagrado", caster=caster['name'], alvo=nome_criatura(alvo), dano=dano))
         if not save_ok:
@@ -17409,6 +17443,7 @@ class GameRoom:
                 await self._animado_morre(alvo, killer_pid)
         elif self._eh_jogador(alvo):
             dano = await self._absorver_energia(alvo, dano, elemento)
+            dano = self._reduzir_dano_escudo(alvo, dano)
             dano = self._reduzir_dano_barreira_arcana(alvo, dano)
             alvo["hp"] = max(0, alvo["hp"] - dano)
             await self._acordar_se_dormindo(alvo)      # dano acorda quem dorme
@@ -17993,6 +18028,7 @@ class GameRoom:
                     await self.gm_say(
                         T("narracao.e_atingido_em_cheio_d20_12_de_dano", pl=pl['name'], d20=d20, bonus=bonus, total=total, dano_final=dano_final))
                 d = await self._absorver_energia(pl, dano_final, "fogo")
+                d = self._reduzir_dano_escudo(pl, d)
                 pl["hp"] = max(0, pl["hp"] - d)
                 if pl["hp"] <= 0:
                     await self._player_dies(pid)
@@ -18285,6 +18321,7 @@ class GameRoom:
             if dano <= 0: continue
             d = dano   # zona = R2/R3 â†’ sem teste de resistÃªncia
             d = await self._absorver_energia(ator, d, "fogo")   # ProteÃ§Ã£o contra Energia
+            d = self._reduzir_dano_escudo(ator, d)
             d = self._reduzir_dano_barreira_arcana(ator, d)
             ator["hp"] = max(0, ator["hp"] - d)
             await self.gm_say(T("narracao.entrou_na_zona_de_fogo_e_sofre", ator=nome_criatura(ator), d=d))
@@ -19928,6 +19965,7 @@ class GameRoom:
             return
         if self._eh_jogador(alvo):
             dano = await self._absorver_energia(alvo, dano, elemento)
+            dano = self._reduzir_dano_escudo(alvo, dano)
             dano = self._reduzir_dano_barreira_arcana(alvo, dano)
         alvo["hp"] = max(0, alvo.get("hp", 0) - dano)
         await self.gm_say(T("narracao.sofre_de_dano_hp", alvo_nome=alvo_nome, dano=dano, elemento=elemento, alvo_hp=alvo['hp'], alvo_get_max_hp=alvo.get('max_hp', '?')))
@@ -22550,6 +22588,7 @@ class GameRoom:
                 tipo_energia = next((t for t in atk_def.get("damage_types", []) if t in tipos_energia), None)
                 if tipo_energia:
                     dmg_alvo = await self._absorver_energia(target, dmg_alvo, tipo_energia)
+                dmg_alvo = self._reduzir_dano_escudo(target, dmg_alvo)
                 dmg_alvo = self._reduzir_dano_barreira_arcana(target, dmg_alvo)
                 target["hp"] = max(0, target["hp"] - dmg_alvo)
                 dano_sofrido = dmg_alvo
@@ -22557,6 +22596,7 @@ class GameRoom:
                     T("narracao.em_d20_vs_ca_de_dano_hp", monstro=m['name'], atk_name=atk_name, tgt_name=tgt_name, roll=roll, m_atk=m_atk, total=total, effective_ac=effective_ac, crit_str=crit_str, dmg_alvo=dmg_alvo, target_hp=target['hp'], target_max_hp=target['max_hp']))
                 if transfer:
                     richard, dano_r = transfer
+                    dano_r = self._reduzir_dano_escudo(richard, dano_r)
                     richard["hp"] = max(0, richard["hp"] - dano_r)
                     if richard["hp"] <= 0:
                         await self._player_dies(richard["id"])
@@ -22831,6 +22871,7 @@ class GameRoom:
             raw = roll_dice(defn.get("dano", "0")) if defn.get("dano") else 0
             dmg = self._apply_damage_types((raw + mod(m.get("dex", 10))) * (2 if roll == 20 else 1), [damage_type], target)
             if is_player:
+                dmg = self._reduzir_dano_escudo(target, dmg)
                 target["hp"] = max(0, target["hp"] - dmg)
             else:
                 target["vida_atual"] = max(0, target["vida_atual"] - dmg)
@@ -25921,12 +25962,14 @@ class GameRoom:
                     if is_player:
                         # Protetor (Richard): divide o dano com o paladino, se ativo
                         dmg_alvo, transfer = await self._processar_dano_protetor(target["id"], dmg)
+                        dmg_alvo = self._reduzir_dano_escudo(target, dmg_alvo)
                         dmg_alvo = self._reduzir_dano_barreira_arcana(target, dmg_alvo)
                         target["hp"] = max(0, target["hp"] - dmg_alvo)
                         await self.gm_say(
                             T("narracao.ataca_d20_vs_ca_de_dano_hp", monstro=m['name'], tgt_name=tgt_name, roll=roll, m_atk=m_atk, total=total, effective_ac=effective_ac, crit_str=crit_str, dmg_alvo=dmg_alvo, target_hp=target['hp'], target_max_hp=target['max_hp']))
                         if transfer:
                             richard, dano_richard = transfer
+                            dano_richard = self._reduzir_dano_escudo(richard, dano_richard)
                             dano_richard = self._reduzir_dano_barreira_arcana(richard, dano_richard)
                             richard["hp"] = max(0, richard["hp"] - dano_richard)
                             if richard["hp"] <= 0:
@@ -26104,12 +26147,14 @@ class GameRoom:
                     (dano_bruto + 1) // 2 if passou else dano_bruto,
                     explosao.get("damage_types", [DMG_FIRE]), p)
                 dano_alvo, transferencia = await self._processar_dano_protetor(p["id"], dano)
+                dano_alvo = self._reduzir_dano_escudo(p, dano_alvo)
                 p["hp"] = max(0, p["hp"] - dano_alvo)
                 resultado = "passou — metade" if passou else "falhou"
                 await self.gm_say(
                     T("narracao.em_reflexos_vs_cd_e_sofre_de_fogo_2", heroi=p['name'], resultado=resultado, total_save=total_save, cd=cd, dano_alvo=dano_alvo))
                 if transferencia:
                     protetor, dano_protetor = transferencia
+                    dano_protetor = self._reduzir_dano_escudo(protetor, dano_protetor)
                     protetor["hp"] = max(0, protetor["hp"] - dano_protetor)
                     if protetor["hp"] <= 0:
                         await self._player_dies(protetor["id"])

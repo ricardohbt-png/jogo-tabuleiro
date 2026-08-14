@@ -4177,6 +4177,7 @@ function normalizarItemTooltip(item){
     dano: bruto.dano || bruto.die || catalogado.dano,
     alcance: bruto.alcance ?? bruto.range ?? catalogado.alcance,
     bonusCA: bruto.bonusCA ?? bruto.ac_bonus ?? (bruto.effect === 'def_' ? bruto.value : catalogado.bonusCA),
+    reducaoDano: bruto.reducaoDano ?? bruto.damage_reduction ?? catalogado.reducaoDano,
     quantidade: bruto.ammo_count ?? bruto.quantidade ?? catalogado.quantidade,
     danoExtra: bruto.danoExtra ?? bruto.damage_bonus ?? bruto.extra_damage ?? catalogado.danoExtra,
     tipoDano: bruto.tipoDano || (bruto.extra_damage_types || []).join(', ') || catalogado.tipoDano,
@@ -4210,6 +4211,7 @@ function gerarConteudoTooltip(item){
   const labelsAtributo = { forca:'Força', destreza:'Destreza', inteligencia:'Inteligência', carisma:'Carisma', forcaOuDestreza:'Força ou Destreza' };
   if(item.atributo) linhas.push(renderLinhaTooltip('📊','Atributo',labelsAtributo[item.atributo] || item.atributo));
   if(item.bonusCA) linhas.push(renderLinhaTooltip('🛡️','Bônus CA',`+${item.bonusCA}`));
+  if(item.reducaoDano) linhas.push(renderLinhaTooltip('🛡️','Redução de dano',`−${item.reducaoDano} por ataque/efeito, sem limite por rodada`));
   if(item.alcance) linhas.push(renderLinhaTooltip('📏','Alcance',`${item.alcance} quadrados`));
   if(item.alcanceEspecial) linhas.push(renderLinhaTooltip('📏','Alcance',item.alcanceEspecial.descricao));
   if(item.alcanceArremesso) linhas.push(renderLinhaTooltip('🎯','Arremesso',`${item.alcanceArremesso} quad. (diagonais incluídas)`));
