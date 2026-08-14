@@ -4619,20 +4619,11 @@ function handleGameState(msg){
 
 // ── Fase 3: HUD de objetivos + botão "Libertar" (só em masmorra autorada) ─────
 // Lê GS.objectives / GS.prisioneiroLibertavel (decisores em gameState.js).
-const _OBJ_LABELS = {
-  kill_all:        'Eliminar todos os monstros',
-  kill_target:     'Derrotar o alvo',
-  reach_exit:      'Chegar à saída',
-  all_heroes_at_exit: 'Todos os heróis na saída',
-  open_key_chest:  'Abrir o baú-chave',
-  rescue_prisoner: 'Resgatar o prisioneiro',
-  salas_obrigatorias: 'Salas obrigatórias',
-};
 function _objIcon(status){
   return status === 'done' ? '✅' : status === 'failed' ? '❌' : '⬜';
 }
 function _objRow(o){
-  let label = _OBJ_LABELS[(o && o.type)] || (o && o.type) || 'Objetivo';
+  let label = _rotulo(o && o.type, 'ui.objetivo', (o && o.type) || 'Objetivo');
   if(o && o.progresso) label += ` (${o.progresso.feitas}/${o.progresso.total} salas)`;
   return `<div class="obj-row"><span class="obj-ic">${_objIcon(o && o.status)}</span><span class="obj-lbl">${label}</span></div>`;
 }
@@ -12100,7 +12091,6 @@ function _mpMonstroAtivo(state){
   return (state.monsters || []).find(x => x.id === id) || null;
 }
 
-const _MP_CUSTO_LBL = { principal: 'AÇÃO', bonus: 'BÔNUS', livre: 'LIVRE' };
 function _mpCustoDe(a){
   const at = a && a.action_type;
   if(at === 'acao_bonus') return 'bonus';
@@ -12211,7 +12201,7 @@ function _mpAbaAtivo(state){
                    : bloqueado ? 'ação já gasta' : '';
       h += `<div class="mp-linha ${pode ? 'hab' : 'off'}" data-hab="${_esc(a.id)}">
           <span style="font-size:1rem">✦</span>
-          <div class="txt"><b>${_esc(a.name || a.id)}</b> <span class="mp-custo">${_MP_CUSTO_LBL[custo]}</span>
+          <div class="txt"><b>${_esc(a.name || a.id)}</b> <span class="mp-custo">${_rotulo(custo, 'ui.mestre.custo', 'AÇÃO')}</span>
             <div class="meta">${_esc(a.descricao || a.desc || '')}${motivo ? ' · '+motivo : ''}</div></div>
         </div>`;
     });
@@ -12562,7 +12552,7 @@ function abrirMenuHabilidadesMonstro(m){
     return `<div class="mh-card${pode?' mh-acionavel':''}${recarga?' mh-cooldown':''}" data-monster-ability="${_esc(a.id)}"
       onmouseenter="mostrarTooltipMenuHabilidade(event,'${_esc(a.id)}')" onmouseleave="ocultarTooltipMagia()">
       ${recarga ? `<strong class="mh-cooldown-badge">⏳ ${recarga} R</strong>` : ''}
-      <span class="mh-icon">${abilityIconHtml(a,a.icon||a.icone||'✦')}</span><span class="mh-info"><b>${_esc(a.name||a.id)}</b><small>${_esc(a.descricao||a.description||a.desc||'')}</small><em>${ativa ? `${_MP_CUSTO_LBL[custo]}${usos!=null?` · ${usos}/${usosMax} usos`:''}` : 'PASSIVA'}</em></span>
+      <span class="mh-icon">${abilityIconHtml(a,a.icon||a.icone||'✦')}</span><span class="mh-info"><b>${_esc(a.name||a.id)}</b><small>${_esc(a.descricao||a.description||a.desc||'')}</small><em>${ativa ? `${_rotulo(custo, 'ui.mestre.custo', 'AÇÃO')}${usos!=null?` · ${usos}/${usosMax} usos`:''}` : 'PASSIVA'}</em></span>
     </div>`;
   };
   overlay.innerHTML = `<section class="menu-habilidades" role="dialog" aria-modal="true"><header class="mh-header"><div><b>✦ HABILIDADES DO MONSTRO</b><small>${_esc(m.name||m.type)} · tecla H</small></div><button onclick="fecharMenuHabilidades()">✕</button></header><div class="mh-body">
@@ -13297,11 +13287,6 @@ const _TIPO_ITEM_EMOJI = {
   arma:'⚔️', armaDistancia:'🏹', armadura:'🛡️', escudo:'🛡️',
   secundario:'🔦', consumivel:'🍖', municao:'🎯', varinha:'✨', itemMagico:'🎒'
 };
-const _TIPO_ITEM_LABEL = {
-  arma:'⚔ Arma', armaDistancia:'🏹 Distância', armadura:'🛡 Armadura', escudo:'🛡 Escudo',
-  secundario:'🔦 Acessório', consumivel:'🍖 Consumível', municao:'🎯 Munição',
-  varinha:'✨ Varinha', itemMagico:'🎒 Item Mágico'
-};
 
 const _EQUIPADO_SLOTS = [
   {key:'arma',      label:'Arma'},
@@ -13366,7 +13351,7 @@ function renderPurchasedItems(inv){
     slot.innerHTML = `
       <div class="bag-slot-emoji">${_TIPO_ITEM_EMOJI[it.tipo] || '📦'}</div>
       <div class="bag-slot-name">${it.nome}</div>
-      <div class="bag-slot-type">${_TIPO_ITEM_LABEL[it.tipo] || '📦 Item'}</div>`;
+      <div class="bag-slot-type">${_rotulo(it.tipo, 'ui.item.tipo', '📦 Item')}</div>`;
     aplicarTooltipAoItem(slot, it.id);
     if(it.tipo === 'consumivel'){
       const btn = document.createElement('button');
@@ -15341,6 +15326,19 @@ function _i18nApply(root){
   alvo.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   alvo.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
   alvo.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
+}
+
+// Rótulo de um id, pela chave ui.<prefixo>.<id>.
+//
+// Substitui os mapas {id: 'texto em português'} que existiam para tipo de item,
+// objetivo e custo de ação do mestre. Eles não podiam passar pelo
+// aplicarCatalogo — ele troca CAMPOS DE OBJETO, e o valor ali era uma string —,
+// e mantê-los como fallback deixaria o português no arquivo para sempre, cego
+// para o placar da etapa 5. O t() já cai no pt quando falta o en, então a chave
+// basta; `padrao` cobre só o id desconhecido.
+function _rotulo(id, prefixo, padrao) {
+  const k = prefixo + '.' + id;
+  return I18N.tem(k) ? t(k) : (padrao || '');
 }
 
 function _setLang(code){
