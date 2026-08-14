@@ -23454,15 +23454,16 @@ const HERO_DATA = {
     efeitos: [],
 
     // HABILIDADE DE CLASSE — sempre disponível
+    // nome/alcance/descricao NÃO ficam aqui: nenhum leitor os consultava (só as
+    // funções calcular* deste objeto são chamadas), e o tooltip que mostra essa
+    // informação tem a sua própria cópia do texto. Português sem leitor é texto
+    // morto, e o placar da etapa 5 não o distingue de trabalho pendente.
     habilidadeClasse: {
       id:          'animar_mortos',
-      nome:        'Animar Mortos',
       tipo:        'habilidade_classe',
       icone:       '💀',
       acao:        'principal',
-      alcance:     'adjacente ao cadáver',
       custo:       { fome: 20, sede: 20 },
-      descricao:   'Pedro concentra energia sombria sobre o cadáver de uma criatura derrotada, arrancando sua essência vital e aprisionando-a num corpo sem vida para servir eternamente.',
 
       // Calcula slots disponíveis (base + Nível III da Guilda "Reviver os Mortos")
       calcularSlots(nivelPedro, inteligencia) {

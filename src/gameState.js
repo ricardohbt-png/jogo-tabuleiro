@@ -316,15 +316,14 @@ const GS = (() => {
       // NOTA: calcularSlots usa getBonusAtributo, definido em game.js (escopo
       // global). Resolvido em runtime via cadeia de escopo — ambos os scripts já
       // carregaram antes de qualquer chamada. Mantido assim para espelhar a spec.
+      // nome/alcance/descricao saíram das DUAS cópias: não tinham leitor nenhum
+      // (ver a nota gêmea em game.js).
       habilidadeClasse: {
         id:        'animar_mortos',
-        nome:      'Animar Mortos',
         tipo:      'habilidade_classe',
         icone:     '💀',
         acao:      'principal',
-        alcance:   'adjacente ao cadáver',
         custo:     { fome: 20, sede: 20 },
-        descricao: 'Pedro concentra energia sombria sobre o cadáver de uma criatura derrotada, arrancando sua essência vital e aprisionando-a num corpo sem vida para servir eternamente.',
 
         calcularSlots(nivelPedro, inteligencia) {
           const bonus      = getBonusAtributo(inteligencia)
