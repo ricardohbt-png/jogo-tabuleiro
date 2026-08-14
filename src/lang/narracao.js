@@ -156,6 +156,10 @@ window.LANG_NARRACAO = {
     "en": "👥 **{target}** anticipates the Sneak Attack — **-2** to hit!",
     "pt": "👥 **{target}** antecipa o Ataque Furtivo — **-2** no acerto!"
   },
+  "narracao.aperta_seus_aneis_em": {
+    "en": "🐍 **{m}** tightens its coils around **{a}**! {d} constriction damage (automatic)!",
+    "pt": "🐍 **{m}** aperta seus anéis em **{a}**! {d} de dano por constrição (automático)!"
+  },
   "narracao.aplica_na_arma_acao_livre": {
     "en": "",
     "pt": "☠️ **{heroi}** aplica **{venenos_vid_nome}** na arma (ação livre) — {desc_veneno}! 💧-{custo_sede}"
@@ -167,6 +171,10 @@ window.LANG_NARRACAO = {
   "narracao.aproveita_a_oportunidade_para_se_mover_m": {
     "en": "⏳ **{heroi}** uses Opportunity to move further!",
     "pt": "⏳ **{heroi}** aproveita a Oportunidade para se mover mais!"
+  },
+  "narracao.arma_a_armadilha": {
+    "en": "{icone} **{heroi}** arms **{nome}** (cost on cast).",
+    "pt": "{icone} **{heroi}** arma **{nome}** (custo ao lançar)."
   },
   "narracao.armadilha_desarmada_com_sucesso": {
     "en": "✅ Trap disarmed successfully!{msg_recover}",
@@ -348,6 +356,14 @@ window.LANG_NARRACAO = {
     "en": "⚙️ **{heroi}** activated a mechanism; more keys are still needed.",
     "pt": "⚙️ **{heroi}** ativou um mecanismo; outras chaves ainda são necessárias."
   },
+  "narracao.aventura_concluida_retorna_gratuitamente": {
+    "en": "🏁 **{aventura}** complete! The party returns to the city free of charge.{renome}",
+    "pt": "🏁 **{aventura}** concluída! O grupo retorna gratuitamente à cidade.{renome}"
+  },
+  "narracao.aventura_renome": {
+    "en": " Renown {bonus}.",
+    "pt": " Renome {bonus}."
+  },
   "narracao.azar_sobrenatural_rouba_o_critico_de_o_g": {
     "en": "",
     "pt": "☠️ **Azar Sobrenatural** rouba o crítico de **{heroi}** — o golpe acerta, mas sem a força que prometia."
@@ -415,6 +431,14 @@ window.LANG_NARRACAO = {
   "narracao.come_a_fome_e_sede": {
     "en": "",
     "pt": "{item_emoji} **{heroi}** come a **{item}**: +{val} fome e +{val} sede."
+  },
+  "narracao.con_hp_max": {
+    "en": " (max HP -{n})",
+    "pt": " (HP máx -{n})"
+  },
+  "narracao.con_reduzida": {
+    "en": "💉 **{alvo_nome}**: CON {antes}→{depois}{hp}.",
+    "pt": "💉 **{alvo_nome}**: CON {antes}→{depois}{hp}."
   },
   "narracao.conjura_manto_de_escuridao": {
     "en": "🌑 **{monstro}** casts **Cloak of Darkness**!",
@@ -567,6 +591,10 @@ window.LANG_NARRACAO = {
   "narracao.desaparece_nas_sombras_imune_a_ataques_a": {
     "en": "",
     "pt": "🌫️ **{monstro}** **desaparece nas sombras** — imune a ataques à distância e difícil de acertar (corpo a corpo: -4) até seu próximo turno!"
+  },
+  "narracao.desarma_a_armadilha": {
+    "en": "{icone} **{heroi}** disarms **{nome}**.",
+    "pt": "{icone} **{heroi}** desarma **{nome}**."
   },
   "narracao.desativa_a_deteccao_de_armadilhas": {
     "en": "🔍 **{heroi}** deactivates trap detection.",
@@ -892,6 +920,10 @@ window.LANG_NARRACAO = {
     "en": "🌑 **Darkness** created — radius {raio}, {duracao} round(s).",
     "pt": "🌑 **Escuridão** criada — raio {raio}, {duracao} rodada(s)."
   },
+  "narracao.esmaga_nas_mandibulas": {
+    "en": "🦷 **{m}** crushes **{a}** in its jaws! {d} piercing damage (automatic)!",
+    "pt": "🦷 **{m}** esmaga **{a}** nas mandíbulas! {d} de dano perfurante (automático)!"
+  },
   "narracao.esquiva_da_explosao_d20_12_de_dano": {
     "en": "",
     "pt": "✅ **{pl}** esquiva da explosão (d20={d20}+{bonus}={total} ≥ 12) — {dano_final} de dano."
@@ -899,6 +931,14 @@ window.LANG_NARRACAO = {
   "narracao.esquiva_parcial_d20_12_de_dano": {
     "en": "",
     "pt": "🎲 **{monstro}** esquiva parcial (d20={d20}+{bonus}={total} ≥ 12) — {d} de dano."
+  },
+  "narracao.esta_apavorado_e_foge": {
+    "en": "😱 **{monstro}** is terrified and flees!",
+    "pt": "😱 **{monstro}** está apavorado e foge!"
+  },
+  "narracao.esta_apavorado_e_foge_encurralado": {
+    "en": "😱 **{monstro}** is terrified and flees (cornered)!",
+    "pt": "😱 **{monstro}** está apavorado e foge (encurralado)!"
   },
   "narracao.esta_derrubado_e_perde_o_movimento_deste": {
     "en": "🦵 **{heroi}** is knocked down and loses this turn's movement!",
@@ -991,6 +1031,10 @@ window.LANG_NARRACAO = {
   "narracao.falha_no_desarme_vs_tente_de_novo_no_pro": {
     "en": "❌ Disarm failed ({total} vs {dif}) — try again next turn.",
     "pt": "❌ Falha no desarme ({total} vs {dif}) — tente de novo no próximo turno."
+  },
+  "narracao.falhou_em_reflexos_e_sofre_de_dano": {
+    "en": "{prefix} **{heroi}** failed the **Reflex** save (DC 13) and takes **{dano}** damage after the shield's reduction!",
+    "pt": "{prefix} **{heroi}** falhou em **Reflexos** (CD 13) e sofre **{dano}** de dano após a redução do escudo!"
   },
   "narracao.fareja_a_presa_ferida_1_nas_mordidas": {
     "en": "🦎 **{monstro}** smells the wounded prey — **+1** to bites!",
@@ -1356,6 +1400,10 @@ window.LANG_NARRACAO = {
     "en": "💨 **{heroi}** throws a **Smoke Bomb**! Enemies will miss their next attack.",
     "pt": "💨 **{heroi}** lança **Bomba de Fumaça**! Os inimigos errarão o próximo ataque."
   },
+  "narracao.lanca_clarividencia": {
+    "en": "🔮 **{caster}** casts Clairvoyance — {partes} ({dur} round(s)).",
+    "pt": "🔮 **{caster}** lança Clarividência — {partes} ({dur} rodada(s))."
+  },
   "narracao.lanca_jato_de_ar_alvo_s_no_cone": {
     "en": "🌪️ **{caster}** casts Gust of Wind — {n} target(s) in the cone.",
     "pt": "🌪️ **{caster}** lança Jato de Ar — {n} alvo(s) no cone."
@@ -1371,6 +1419,10 @@ window.LANG_NARRACAO = {
   "narracao.lanca_raio_congelante_d4_sem_save_em": {
     "en": "❄️ **{caster}** casts **Ray of Frost**: {nd}d4 = {dano} (no save) on **{alvo}**.",
     "pt": "❄️ **{caster}** lança **Raio Congelante**: {nd}d4 = {dano} (sem save) em **{alvo}**."
+  },
+  "narracao.lanca_relampago": {
+    "en": "⚡ **{caster}** casts **Lightning Bolt** (level {nivel}, range {alcance}sq w/ ricochet) — hits: {impactos}{multi}{caster_ferido}",
+    "pt": "⚡ **{caster}** lança **Relâmpago** (nível {nivel}, alcance {alcance}q c/ ricochete) — impactos: {impactos}{multi}{caster_ferido}"
   },
   "narracao.lanca_sono_alvo_s_adormecem_por_ate_roda": {
     "en": "🌙 **{caster}** casts Sleep — {n} target(s) fall asleep for up to {dur} round(s) (also affects allies/minions).",
@@ -1428,9 +1480,21 @@ window.LANG_NARRACAO = {
     "en": "",
     "pt": "{emoji} **{target}** {txt_preso} **{monstro}**! {rolagem} — não pode se mover!"
   },
+  "narracao.nenhum_impacto": {
+    "en": "none",
+    "pt": "nenhum"
+  },
   "narracao.neutraliza": {
     "en": "",
     "pt": "☑️ **{alvo_nome}** neutraliza **{efeito_get_nome_veneno}**!"
+  },
+  "narracao.npc_fala": {
+    "en": "💬 **{npc}**: {texto}{renome}{item_note}",
+    "pt": "💬 **{npc}**: {texto}{renome}{item_note}"
+  },
+  "narracao.npc_renome": {
+    "en": " (Renown {bonus})",
+    "pt": " (Renome {bonus})"
   },
   "narracao.o_acido_corroi_a_defesa_de_ca": {
     "en": "🧪 The acid corrodes **{nome}**'s defense: AC {base} → {novo}!",
@@ -1583,6 +1647,10 @@ window.LANG_NARRACAO = {
   "narracao.parte_para_a_investida_brutal_2_de_dano": {
     "en": "🐗 **{monstro}** charges into a **Brutal Charge** (+2 damage)!",
     "pt": "🐗 **{monstro}** parte para a **Investida Brutal** (+2 de dano)!"
+  },
+  "narracao.passou_no_teste_de_reflexos_e_se_esquivou": {
+    "en": "{prefix} **{heroi}** made the **Reflex** save (DC 13) and dodged!",
+    "pt": "{prefix} **{heroi}** passou no teste de **Reflexos** (CD 13) e se esquivou!"
   },
   "narracao.pega_fogo_por_rodada_s": {
     "en": "🔥 **{target}** catches fire for {dur} round(s)!",
@@ -1800,9 +1868,21 @@ window.LANG_NARRACAO = {
     "en": "✨ **{heroi}**'s Divine Regeneration also heals: {join_curados} (+1 HP).",
     "pt": "✨ Regeneração Divina de **{heroi}** também cura: {join_curados} (+1 HP)."
   },
+  "narracao.relampago_feriu_caster": {
+    "en": " | ⚠️ struck Pedro himself on the way back!",
+    "pt": " | ⚠️ atingiu o próprio Pedro na volta!"
+  },
+  "narracao.relampago_multi": {
+    "en": " | {n} target(s) hit twice",
+    "pt": " | {n} alvo(s) atingido(s) 2x"
+  },
   "narracao.requiem_final_de_manutencao": {
     "en": "🎻 **{heroi}**'s Final Requiem — upkeep 🍖-{mf} 💧-{ms}.",
     "pt": "🎻 Réquiem Final de **{heroi}** — manutenção 🍖-{mf} 💧-{ms}."
+  },
+  "narracao.resiste_a_amaldicoar_de": {
+    "en": "☠️ **{alvo}** resists **{monstro}**'s Curse (d20({d20}){bonus}={total} vs DC {dc}).",
+    "pt": "☠️ **{alvo}** resiste a Amaldiçoar de **{monstro}** (d20({d20}){bonus}={total} vs CD {dc})."
   },
   "narracao.resiste_a_dominar_mente": {
     "en": "🧠 **{alvo}** resists Dominate Mind.",
@@ -2104,6 +2184,14 @@ window.LANG_NARRACAO = {
     "en": "🌋 **{atacante_get_name_or_ata}** takes **{dano}** from **{molochus}**'s Boiling Blood.",
     "pt": "🌋 **{atacante_get_name_or_ata}** sofre **{dano}** do Sangue em Ebulição de **{molochus}**."
   },
+  "narracao.sofre_do_turbilhao_e_perdera": {
+    "en": "🌪️ **{alvo}** takes {dano} from the Whirlwind and will lose its movement.",
+    "pt": "🌪️ **{alvo}** sofre {dano} do Turbilhão e perderá o movimento."
+  },
+  "narracao.sofre_do_turbilhao_e_perdera_acao": {
+    "en": "🌪️ **{alvo}** takes {dano} from the Whirlwind and will lose its next action.",
+    "pt": "🌪️ **{alvo}** sofre {dano} do Turbilhão e perderá a próxima ação."
+  },
   "narracao.sofre_empurrado_q": {
     "en": "🌪️ **{nome}** takes {dano} (pushed {push} square(s)).",
     "pt": "🌪️ **{nome}** sofre {dano} (empurrado {push}q)."
@@ -2331,6 +2419,10 @@ window.LANG_NARRACAO = {
   "narracao.usa_tiro_perfurante_em_de_dano_acerto_au": {
     "en": "🎯 **{heroi}** uses **Piercing Shot** on **{t}**: **{dmg}** damage (automatic hit, ignores AC)!",
     "pt": "🎯 **{heroi}** usa **Tiro Perfurante** em **{t}**: **{dmg}** de dano (acerto automático, ignora CA)!"
+  },
+  "narracao.usou_acao_bonus_fome_sede": {
+    "en": "🎯 **{heroi}** used a bonus action! 🍖 Hunger: {fome}/10 | 💧 Thirst: {sede}/10",
+    "pt": "🎯 **{heroi}** usou ação bônus! 🍖 Fome: {fome}/10 | 💧 Sede: {sede}/10"
   },
   "narracao.usou_o_ultimo_projetil": {
     "en": "🏹 **{heroi}** used their last projectile!",

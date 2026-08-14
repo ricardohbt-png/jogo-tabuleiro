@@ -10328,7 +10328,9 @@ class GameRoom:
                 item_acquired = route != "full"
                 item_note = f" {item.get('emoji', '📦')} Recebeu **{item.get('name', item_id)}**." if route != "full" else " A bolsa está cheia; o item não pôde ser recebido."
         if conversation.get("uma_vez"): self.scene_conversations_done.add(key)
-        await self.gm_say(f"💬 **{slot.get('name', 'NPC')}**: {conversation['texto']}" + (f" (Renome {bonus:+d})" if bonus else "") + item_note)
+        await self.gm_say(T("narracao.npc_fala", npc=slot.get("name", "NPC"), texto=conversation["texto"],
+              renome=T("narracao.npc_renome", bonus=f"{bonus:+d}") if bonus else "",
+              item_note=item_note))
         self._checkpoint_savegame()
         await self.push_state_or_city()
         # O fato/item já foi aplicado e a cidade atualizada antes de abrir a cena.
@@ -11379,14 +11381,15 @@ class GameRoom:
                 if "detect_trap" in [s for s in p.get("status", [])]:
                     continue
                 trap["triggered"] = True
-                prefix = random.choice(GM["room_trap"])
+                prefix = gm("room_trap")   # T: resolvido no idioma de quem lê
                 save_roll = random.randint(1, 20)
                 cancao_res = self._cancao_bonus(p, "bonus_res")
                 passed = save_roll + p["ref_"] + self._modificador_sobrevivencia(p) + cancao_res >= 13
                 await self.broadcast({"type": "dice_roll", "die": "d20",
                                        "value": save_roll, "label": "Reflexos"})
                 if passed:
-                    await self.gm_say(prefix + f" **{p['name']}** passou no teste de **Reflexos** (CD 13) e se esquivou!")
+                    await self.gm_say(T("narracao.passou_no_teste_de_reflexos_e_se_esquivou",
+                                        prefix=prefix, heroi=p["name"]))
                     await self._enviar_trap_result(
                         p, "Buraco Escondido", "🕳️", sucesso=True, dano=0, metade=False,
                         descricao="Um buraco disfarçado se abre sob seus pés.",
@@ -11394,7 +11397,8 @@ class GameRoom:
                 else:
                     dano_trap = self._reduzir_dano_escudo(p, trap["damage"])
                     p["hp"] = max(0, p["hp"] - dano_trap)
-                    await self.gm_say(prefix + f" **{p['name']}** falhou em **Reflexos** (CD 13) e sofre **{dano_trap}** de dano após a redução do escudo!")
+                    await self.gm_say(T("narracao.falhou_em_reflexos_e_sofre_de_dano",
+                                        prefix=prefix, heroi=p["name"], dano=dano_trap))
                     await self._enviar_trap_result(
                         p, "Buraco Escondido", "🕳️", sucesso=False, dano=dano_trap, metade=False,
                         descricao="Um buraco disfarçado se abre sob seus pés.",
@@ -14228,8 +14232,8 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_pedro_pode_usar_habilidade", habilidade=nome)}); return
         novo = not p.get(flag)
         p[flag] = novo
-        await self.gm_say(f"{icone} **{p['name']}** {'arma' if novo else 'desarma'} **{nome}**"
-                          + (" (custo ao lançar)." if novo else "."))
+        await self.gm_say(T("narracao.arma_a_armadilha" if novo else "narracao.desarma_a_armadilha",
+                            icone=icone, heroi=p["name"], nome=nome))
         await self.push_state()
 
     async def handle_aprimorar_magia(self, pid, data=None):
@@ -16686,8 +16690,8 @@ class GameRoom:
         p["bonus_action_used"] = True
         self._consumir_recursos(p, 'acao_bonus')
         await self.gm_say(
-            f"🎯 **{p['name']}** usou ação bônus! "
-            f"🍖 Fome: {p['fome']:.1f}/10 | 💧 Sede: {p['sede']:.1f}/10"
+            T("narracao.usou_acao_bonus_fome_sede", heroi=p["name"],
+              fome=f"{p['fome']:.1f}", sede=f"{p['sede']:.1f}")
         )
         return True
 
@@ -17132,8 +17136,7 @@ class GameRoom:
         if segredos:        partes.append(f"{segredos} segredo(s) revelado(s)")
         if salas_reveladas: partes.append("interior de sala trancada exposto")
         await self.gm_say(
-            f"🔮 **{caster['name']}** lança Clarividência — " + ", ".join(partes) +
-            f" ({dur} rodada(s)).")
+            T("narracao.lanca_clarividencia", caster=caster["name"], partes=partes, dur=dur))
 
     async def _executar_raio_divino(self, caster, magia, data, dmg_mult):
         """1d6+1 por nível; Reflexos = metade; dobrado vs mortos-vivos/demônios."""
@@ -17292,7 +17295,9 @@ class GameRoom:
         alvo = min(vivos, key=lambda p: abs(p["pos"][0]-m["pos"][0]) + abs(p["pos"][1]-m["pos"][1]))
         moveu = self._passo_monstro(m, alvo["pos"][0], alvo["pos"][1], away=True)
         await self._aplicar_fogueira_se_pisar(m)
-        await self.gm_say(f"😱 **{m['name']}** está apavorado e foge" + ("!" if moveu else " (encurralado)!"))
+        await self.gm_say(T("narracao.esta_apavorado_e_foge" if moveu
+                          else "narracao.esta_apavorado_e_foge_encurralado",
+                          monstro=nome_criatura(m)))
 
     async def _acao_dominado(self, m, alive_monsters):
         """Monstro dominado age como aliado: ataca/avança contra o monstro mais próximo."""
@@ -18428,10 +18433,10 @@ class GameRoom:
 
         multi = sum(1 for v in impactos.values() if v > 1)
         await self.gm_say(
-            f"⚡ **{caster['name']}** lança **Relâmpago** (nível {nivel}, alcance {alcance}q c/ ricochete) — "
-            f"impactos: {', '.join(logs) or 'nenhum'}"
-            + (f" | {multi} alvo(s) atingido(s) 2x" if multi else "")
-            + (" | ⚠️ atingiu o próprio Pedro na volta!" if feriu_caster else ""))
+            T("narracao.lanca_relampago", caster=caster["name"], nivel=nivel, alcance=alcance,
+              impactos=logs or [T("narracao.nenhum_impacto")],
+              multi=T("narracao.relampago_multi", n=multi) if multi else "",
+              caster_ferido=T("narracao.relampago_feriu_caster") if feriu_caster else ""))
 
     # â”€â”€ Raio Congelante (dano sem save + paralisaÃ§Ã£o por Fortitude) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async def _executar_raio_congelante(self, caster, magia, data, dmg_mult, dur_bonus, alcance_bonus=0):
@@ -19376,8 +19381,10 @@ class GameRoom:
                         alvo["fort"] = alvo.get("fort", 0) - fort_delta
                         efeito["fort_delta"] = fort_delta
                     await self.gm_say(
-                        f"💉 **{alvo_nome}**: CON {antes}→{alvo[attr_key]}"
-                        + (f" (HP máx -{efeito['hp_delta']})" if efeito.get("hp_delta") else "") + ".")
+                        T("narracao.con_reduzida", alvo_nome=alvo_nome, antes=antes,
+                          depois=alvo[attr_key],
+                          hp=T("narracao.con_hp_max", n=efeito["hp_delta"])
+                             if efeito.get("hp_delta") else ""))
             else:
                 # Monstro: traduz FORâ†’menos dano, CONâ†’menos HP mÃ¡ximo.
                 if attr == "constituicao":
@@ -23230,8 +23237,9 @@ class GameRoom:
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
                               "label": f"{m['name']} — Amaldiçoar", "hit": not passou})
         if passou:
-            await self.gm_say(f"☠️ **{alvo['name']}** resiste a Amaldiçoar de **{m['name']}** "
-                              f"(d20({d20}){bonus:+d}={total} vs CD {ability.get('dc', 13)}).")
+            await self.gm_say(T("narracao.resiste_a_amaldicoar_de", alvo=nome_criatura(alvo),
+                                monstro=nome_criatura(m), d20=d20, bonus=f"{bonus:+d}",
+                                total=total, dc=ability.get("dc", 13)))
             return True
         if ability.get("curse_mode") == "especifica":
             maldicao_id = ability.get("curse_id", "maos_tremulas")
@@ -24050,10 +24058,10 @@ class GameRoom:
     # Ação de dano automático contra quem JÁ está agarrado por este monstro.
     # id → (dado padrão, narração; {m}=monstro {a}=alvo {d}=dano)
     _ESMAGAR_PRESO = {
-        "atq_mandibula": ("1d8+3", "🦷 **{m}** esmaga **{a}** nas mandíbulas! "
-                                   "{d} de dano perfurante (automático)!"),
-        "esmagar":       ("1d6",   "🐍 **{m}** aperta seus anéis em **{a}**! "
-                                   "{d} de dano por constrição (automático)!"),
+        # O 2º item é a CHAVE da narração, não o texto: assim a frase é
+        # resolvida no idioma de quem lê (etapa 4b-ii).
+        "atq_mandibula": ("1d8+3", "narracao.esmaga_nas_mandibulas"),
+        "esmagar":       ("1d6",   "narracao.aperta_seus_aneis_em"),
     }
 
     def _habilidade_agarrao(self, m):
@@ -24129,7 +24137,7 @@ class GameRoom:
         dmg = roll_dice(ab.get("damage") or dado)
         dmg = self._apply_damage_types(dmg, ["physical"], preso)
         preso["hp"] = max(0, preso["hp"] - dmg)
-        await self.gm_say(narracao.format(m=m["name"], a=preso["name"], d=dmg))
+        await self.gm_say(T(narracao, m=nome_criatura(m), a=nome_criatura(preso), d=dmg))
         if preso["hp"] <= 0:
             await self._soltar_agarrado(preso)
             if self._eh_jogador(preso):
@@ -25248,8 +25256,9 @@ class GameRoom:
                         (["Você perde o movimento no próximo turno"] if passou
                          else ["Você perde a próxima ação", "Duração: até o próximo turno"]),
                     )
-                    await self.gm_say(f"🌪️ **{alvo['name']}** sofre {dano} do Turbilhão " +
-                                      ("e perderá o movimento." if passou else "e perderá a próxima ação."))
+                    await self.gm_say(T("narracao.sofre_do_turbilhao_e_perdera" if passou
+                                        else "narracao.sofre_do_turbilhao_e_perdera_acao",
+                                        alvo=nome_criatura(alvo), dano=dano))
                     if alvo["hp"] <= 0:
                         await self._player_dies(alvo["id"])
                 return
@@ -26722,7 +26731,8 @@ class GameRoom:
             self.world_adventure_revisit = False
             self.dungeon_generated = False
             self._objetivo_concluido = False
-            await self.gm_say(f"🏁 **{adventure_name}** concluída! O grupo retorna gratuitamente à cidade." + (f" Renome {reward:+d}." if reward else ""))
+            await self.gm_say(T("narracao.aventura_concluida_retorna_gratuitamente", aventura=adventure_name,
+              renome=T("narracao.aventura_renome", bonus=f"{reward:+d}") if reward else ""))
             await self._voltar_para_cidade(story=fim)
             return
         if (self.mode == "campaign" and self.campaign

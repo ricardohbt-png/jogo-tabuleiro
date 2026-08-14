@@ -1622,9 +1622,17 @@ window.LANG_CATALOGO = {
     "en": "Essay on Blindness",
     "pt": "Ensaio sobre a Cegueira"
   },
+  "cat.item.escudo_g.desc": {
+    "en": "AC bonus +2. Reduces the damage of every attack or damage effect you take by 2, with no cap per round. It also reduces spell and trap damage; when a successful Reflex save halves the damage, apply the halving first and this reduction after.",
+    "pt": "Bônus de CA +2. Reduz em 2 o dano de cada ataque ou efeito de dano recebido, sem limite por rodada. Também reduz dano de magias e armadilhas; quando um sucesso em Reflexos reduzir o dano à metade, aplique primeiro a metade e depois esta redução."
+  },
   "cat.item.escudo_g.nome": {
     "en": "Large Shield",
     "pt": "Escudo Grande"
+  },
+  "cat.item.escudo_p.desc": {
+    "en": "AC bonus +1. Reduces the damage of every attack or damage effect you take by 1, with no cap per round. It also reduces spell and trap damage; when a successful Reflex save halves the damage, apply the halving first and this reduction after.",
+    "pt": "Bônus de CA +1. Reduz em 1 o dano de cada ataque ou efeito de dano recebido, sem limite por rodada. Também reduz dano de magias e armadilhas; quando um sucesso em Reflexos reduzir o dano à metade, aplique primeiro a metade e depois esta redução."
   },
   "cat.item.escudo_p.nome": {
     "en": "Small Shield",
