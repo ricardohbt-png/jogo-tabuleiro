@@ -1,11 +1,19 @@
-"""Interface do cliente (etapa 5) — placar por área.
+"""Interface do cliente (etapa 5) — placar por função.
 Roda da raiz: python tools/test_interface.py
 
-Enquanto uma área não fecha, este teste RELATA quanto falta. Quando a sub-etapa
-dela fecha, mova o nome para COBRADAS e ele passa a falhar se algo voltar. É o
-mesmo padrão da seção [3] do test_narracao.py, que começou como relatório e virou
-cobrança quando a 4b-ii terminou."""
-import io, os, re, sys
+Enquanto uma função não é traduzida, este teste RELATA quantos literais em
+português ela ainda tem. Quando um lote fecha, acrescente os nomes das funções
+a FECHADAS e o teste passa a falhar se algum literal voltar. É o mesmo padrão da
+seção [3] do test_narracao.py, que começou como relatório e virou cobrança.
+
+POR QUE POR FUNÇÃO, E NÃO POR TELA: a primeira versão deste arquivo classificava
+por FAIXA DE LINHAS entre marcos de render, assumindo que o game.js fosse
+organizado por tela. Não é — são 26 mil linhas e 172 funções com literais, e as
+funções de telas diferentes se intercalam. Pior: as maiores são COMPARTILHADAS
+(`_itemDesc` descreve item na ficha, na loja e no baú; `gerarConteudoTooltip`
+serve qualquer tela), então os literais não particionam por tela. A medição por
+faixa dizia "seleção de herói: 58" quando o número real é 5."""
+import io, os, re, sys, collections
 try: sys.stdout.reconfigure(encoding="utf-8")
 except Exception: pass
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,58 +29,48 @@ LINHAS = GAME.split("\n")
 ACENTO = re.compile(r"[ãáàâçéêíóõôúÃÁÀÂÇÉÊÍÓÕÔÚ]")
 # Caminho de arquivo e seletor CSS não são texto de interface.
 IGNORAR = re.compile(r"\.(js|png|jpe?g|glb|css|html)|assets/|^#[\w-]+$")
+RE_FN = re.compile(
+    r"^\s*(?:async\s+)?function\s+(\w+)"
+    r"|^\s*(?:const|let)\s+(\w+)\s*=\s*(?:async\s*)?\(?[\w,\s]*\)?\s*=>")
 
-# Início de cada área, pela definição das funções de render que a compõem.
-MARCOS = [
-    ("selecao_heroi",  r"function (renderClassSelect|_csApply|selectClass)"),
-    ("hud_acoes",      r"function (renderMyPanel|renderPlayers|renderActions|_warriorSkill)"),
-    ("ficha",          r"function (renderFicha|abrirFicha|renderConteudoAtributos)"),
-    ("cidade",         r"function (openShop|_renderShop|openGuild|_renderGuild|_updateCity)"),
-    ("modais",         r"function (openTargetModal|aplicarTooltip|_tooltip|abrirPainelLoot)"),
-    ("mestre",         r"function (renderMasterHud|renderFichaMonstro|renderMinimapaCR)"),
-    ("render3d",       r"function (init3D|build3DFig|startLoop3D|draw2D)"),
-]
-# Áreas cuja sub-etapa já fechou. Mova o nome para cá ao terminar cada uma.
-COBRADAS = set()
+# Funções cujo lote já fechou. Acrescente os nomes ao terminar cada lote.
+FECHADAS = set()
 
 
-def _areas():
-    """{area: n_literais_em_portugues}, por intervalo de linhas."""
-    inicio = {}
-    for nome, pat in MARCOS:
-        ms = [i for i, l in enumerate(LINHAS) if re.search(pat, l)]
-        if ms: inicio[nome] = min(ms)
-    ordem = sorted(inicio.items(), key=lambda kv: kv[1])
-    cont = {nome: 0 for nome, _ in MARCOS}
-    cont["topo"] = 0
+def _por_funcao():
+    """{nome_da_funcao: n_literais_em_portugues}."""
+    dono, atual = [None] * len(LINHAS), None
+    for i, l in enumerate(LINHAS):
+        m = RE_FN.match(l)
+        if m: atual = m.group(1) or m.group(2)
+        dono[i] = atual
+    cont = collections.Counter()
     for i, l in enumerate(LINHAS):
         if not ACENTO.search(l): continue
         n = len([t for t in re.findall(r"""["'`]([^"'`\n]{4,140})["'`]""", l)
                  if ACENTO.search(t) and not IGNORAR.search(t)])
-        if not n: continue
-        reg = "topo"
-        for nome, ini in ordem:
-            if i >= ini: reg = nome
-        cont[reg] += n
+        if n: cont[dono[i] or "@topo_do_arquivo"] += n
     return cont
 
 
 def _rodar_verificacoes():
-    print("\n[1] Placar por área")
-    cont = _areas()
+    print("\n[1] Placar por função")
+    cont = _por_funcao()
     total = sum(cont.values())
-    for nome, n in sorted(cont.items(), key=lambda kv: -kv[1]):
-        marca = "COBRADA" if nome in COBRADAS else "pendente"
-        print(f"     {n:>4}  {nome:<16} ({marca})")
-    print(f"     ----  total: {total}")
+    print(f"     {len(cont)} funções com literal em português | total {total}")
+    print("     as 15 maiores:")
+    for fn, n in cont.most_common(15):
+        marca = " (FECHADA)" if fn in FECHADAS else ""
+        print(f"       {n:>4}  {fn}{marca}")
     check("placar emitido", True)
 
-    print("\n[2] Áreas já fechadas continuam limpas")
-    if not COBRADAS:
-        check("nenhuma área cobrada ainda (fundação)", True)
-    for nome in sorted(COBRADAS):
-        check(f"{nome} sem literal em português ({cont.get(nome, 0)})",
-              cont.get(nome, 0) == 0)
+    print("\n[2] Funções já traduzidas continuam limpas")
+    if not FECHADAS:
+        check("nenhum lote fechado ainda (fundação)", True)
+    sujas = sorted((fn, cont[fn]) for fn in FECHADAS if cont.get(fn))
+    check(f"nenhuma função fechada regrediu ({len(FECHADAS)} fechadas)", not sujas)
+    for fn, n in sujas[:8]:
+        print(f"     REGREDIU: {fn} tem {n} literal(is)")
 
     print("\n[3] A fiação da fundação existe")
     # `MutationObserver in GAME` sozinho passa pelo motivo ERRADO: já havia um
@@ -80,10 +78,10 @@ def _rodar_verificacoes():
     # verifica é que ele também aplica o i18n.
     check("o observador do body também aplica _i18nApply",
           bool(re.search(r"new MutationObserver\([\s\S]{0,600}?_i18nApply", GAME)))
-    check("ele só trabalha quando o nó traz data-i18n",
-          bool(re.search(r"\[data-i18n", GAME)))
+    check("continua havendo UM observador do body, não dois",
+          len(re.findall(r"observe\(\s*document\.body", GAME)) == 1)
     check("o ícone de habilidade é achado por data-ability-id",
-          "data-ability-id" in GAME and "abilityId" in GAME)
+          "data-ability-id" in GAME and "dataset.abilityId" in GAME)
 
 
 if __name__ == "__main__":

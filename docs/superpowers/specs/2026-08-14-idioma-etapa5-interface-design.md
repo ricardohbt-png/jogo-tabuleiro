@@ -36,18 +36,34 @@ Só `screen-connect` e `screen-savegames` estão traduzidos — o que a etapa 1 
 | atributo (`title=`, `placeholder=`) | 20 | `data-i18n-title` / `data-i18n-ph` |
 | **português como chave de LÓGICA** | ~10 | **não traduzir** — migrar a busca para id |
 
-### Por área
+### Por função — a medição que vale
 
-| área | literais | sub-etapa |
-|---|---:|---|
-| seleção de herói | 58 | 5a |
-| HUD / ações | 153 | 5b |
-| ficha / inventário | 86 | 5c |
-| cidade / loja / guilda | 97 | 5d |
-| modais / tooltips | 29 | 5e |
-| mestre / minimapa | 135 | 5f |
-| 3D / render | 50 | 5g |
-| topo do arquivo | 28 | distribuído |
+**CORREÇÃO.** A primeira medição desta etapa classificava por **faixa de linhas** entre
+marcos de render, assumindo que o `game.js` fosse organizado por tela. Não é: são 26 mil
+linhas e **172 funções** com literal, e as de telas diferentes se intercalam. A medição
+por faixa dizia *"seleção de herói: 58"* quando o número real é **5** — os outros 53 eram
+código de arremesso, baú, conexão e diagnóstico 3D que só por acaso moravam naquele
+intervalo.
+
+Pior que a imprecisão: **os literais não particionam por tela.** As funções maiores são
+compartilhadas — `_itemDesc` (17) descreve item na ficha, na loja *e* no baú;
+`gerarConteudoTooltip` (28) serve tooltip de qualquer tela; `setBtn` (18) monta botão do
+HUD e da ficha. Uma sub-etapa "seleção de herói" traduziria 5 strings e deixaria a tela
+ainda meio em português.
+
+Distribuição real, por função:
+
+| função | literais |
+|---|---:|
+| `_mageSkillBtn` | 43 |
+| `gerarConteudoTooltip` | 28 |
+| `renderConteudoAtributosFichaJogo` | 27 |
+| `calcularVidaMaxima` | 27 |
+| `_showTrapResult` | 26 |
+| `handleTileClick` | 21 |
+| `setBtn` | 18 |
+| `_itemDesc` | 17 |
+| … cauda de 164 funções | ~429 |
 
 O editor (`tools/*.js`) fica **fora**: é ferramenta do autor, não do jogador.
 
@@ -97,32 +113,29 @@ const ABILITY_NAME_TO_ID = Object.freeze({
 
 É tabela de **lógica**, não de interface: o nome exibido é usado para achar o ícone da
 habilidade. Traduzir o nome sem mexer nisso faz os ícones sumirem. Passa a resolver pelo
-id que o servidor já manda. **É pré-requisito de 5b**, não item opcional.
+id que o servidor já manda. **É pré-requisito de qualquer lote que traduza nome de
+habilidade**, não item opcional. Fechado na 5.0.
 
 **Convenção de chave: `ui.<área>.<slug>`** — `ui.hud.encerrar_turno`,
-`ui.ficha.atributos`. Espelha `narracao.<slug>` e `erro.<slug>`, e o prefixo por área
-torna óbvio a que sub-etapa cada chave pertence. As 38 chaves `ui.*` da etapa 1 já
-seguem isso.
+`ui.ficha.atributos`. Espelha `narracao.<slug>` e `erro.<slug>`. A `<área>` aqui é a
+TELA em que o texto aparece — ela nomeia a chave, mas **não** recorta o trabalho (o
+recorte é por função, ver seção B). As 38 chaves `ui.*` da etapa 1 já seguem isso.
 
-### B. As 7 sub-etapas
+### B. Os lotes, por tamanho de função
 
-**Um spec (este), oito planos.** A fundação (5.0) e cada sub-etapa recebem seu próprio
-plano de implementação, executado e commitado isoladamente. Isso segue o que as etapas
-4a–4c fizeram e mantém cada lote pequeno o bastante para o conferidor de diff ser útil.
-Não haverá spec novo por sub-etapa: o desenho é o mesmo para as sete, só muda a área.
+**Um spec (este), N planos.** A fundação (5.0) já fechou. O trabalho restante é recortado
+por **função, em lotes de tamanho decrescente** — não por tela, pelo motivo da seção
+anterior:
 
-Ordem pela sequência em que o jogador encontra as telas: **5a** seleção de herói →
-**5b** HUD/ações → **5c** ficha/inventário → **5d** cidade/loja/guilda → **5e**
-modais/tooltips → **5f** mestre/minimapa → **5g** 3D/render.
+- **Lote 1:** as ~15 maiores (~250 literais, 40% do total).
+- **Lote 2:** as de porte médio.
+- **Lote 3:** a cauda de funções pequenas.
 
-Cada uma entrega uma tela **inteira** utilizável em inglês. Cada uma termina com
-verificação **no jogo de verdade**: subir o servidor, trocar o idioma, ler aquela tela.
-Foi assim que o problema reportado hoje apareceu, e nenhum teste automatizado o teria
-pego.
-
-**5f e 5g são revisáveis:** a interface do Mestre (135) só aparece para quem assume o
-papel, e o 3D (50) é majoritariamente rótulo interno. Ao chegar em 5e, decidir com o
-usuário se valem o esforço.
+Cada lote é mensurável (o placar cai visivelmente) e pequeno o bastante para o conferidor
+de diff ser útil. **A verificação continua sendo jogar e olhar** — só que cada lote cobre
+várias telas de uma vez, porque as funções são compartilhadas. Ao fechar um lote,
+acrescente os nomes das funções ao conjunto `FECHADAS` do `tools/test_interface.py`: é
+isso que impede a regressão.
 
 ### C. Mecanismo por forma
 
@@ -156,10 +169,11 @@ normal. O efeito para o jogador é o mesmo; só o mecanismo difere.
 
 ## Como se prova
 
-**Teste novo `tools/test_interface.py`** — varredura estática por área: dado o intervalo
-de linhas de cada uma, nenhum literal com acento fora de `t()` / `data-i18n`. Segue o
-padrão da seção `[3]` do `test_narracao.py`: começa **relatando** as 7 áreas e passa a
-**cobrar** cada uma conforme sua sub-etapa fecha. O placar fica visível o tempo todo.
+**`tools/test_interface.py`** — varredura estática **por função**: para cada função do
+`game.js`, quantos literais com acento ela ainda tem fora de `t()` / `data-i18n`. Segue o
+padrão da seção `[3]` do `test_narracao.py`: **relata** o placar inteiro e **cobra** as
+funções já fechadas, listadas no conjunto `FECHADAS` do topo do arquivo. Ao terminar um
+lote, acrescente os nomes ali — é isso que impede a regressão.
 
 **No cliente:** teste do `MutationObserver` (nó inserido com `data-i18n` é traduzido
 sozinho) e do `ABILITY_NAME_TO_ID` migrado (o ícone continua sendo achado com o nome
