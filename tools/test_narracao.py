@@ -213,6 +213,41 @@ def _rodar_verificacoes():
           == "Controls " + S.LANG_STRINGS["cat.monstro.orc.nome"]["en"] + ".")
     S.LANG_STRINGS.pop("narracao._teste_lista", None)
 
+    print("\n[11] O pool gm() sorteia uma vez e resolve por idioma")
+    v = S.gm("intro")
+    check("gm() devolve T", isinstance(v, S.T))
+    check("a chave do pool existe no dicionário", v.key in S.LANG_STRINGS)
+    check("a chave aponta para uma variante do GM",
+          S.LANG_STRINGS.get(v.key, {}).get("pt") in S.GM["intro"])
+    check("há uma chave para cada variante de cada pool",
+          all(f"narracao.gm.{k}.{i}" in S.LANG_STRINGS
+              for k, vs in S.GM.items() for i in range(len(vs))))
+
+    # A regressão que mais importa: o sorteio é UM só. Dois jogadores em idiomas
+    # diferentes têm de ler a MESMA variante — um sorteio por idioma seria
+    # invisível num teste de uma conexão só.
+    import asyncio as _aio
+
+    class _RecWS:
+        def __init__(self): self.sent = []
+        async def send(self, data): self.sent.append(data)
+
+    sala_p = S.GameRoom("TESTE_POOL")
+    wa, wb = _RecWS(), _RecWS()
+    sala_p.connections = {"g_pt": wa, "g_en": wb}
+    S.LANG_BY_PID["g_pt"] = "pt"; S.LANG_BY_PID["g_en"] = "en"
+    escolhido = S.gm("intro")
+    _aio.run(sala_p.gm_say(escolhido))
+    txt_pt = json.loads(wa.sent[-1])["text"]
+    txt_en = json.loads(wb.sent[-1])["text"]
+    check("quem está em pt lê o pt daquela variante",
+          txt_pt == S.LANG_STRINGS[escolhido.key]["pt"])
+    check("quem está em en lê o en da MESMA variante",
+          txt_en == (S.LANG_STRINGS[escolhido.key].get("en")
+                     or S.LANG_STRINGS[escolhido.key]["pt"]))
+    for pid in ("g_pt", "g_en"):
+        S.LANG_BY_PID.pop(pid, None)
+
 
 if __name__ == "__main__":
     print("=" * 62); print("  TESTE — Narração do servidor (etapa 4b-i)"); print("=" * 62)

@@ -6207,7 +6207,13 @@ GM = {
     "defeat":       ["A escuridão venceu... A masmorra permanece perigosa.", "O mal triunfou desta vez. Mas as lendas dos heróis caídos viverão eternamente...", "A masmorra reivindica mais vítimas. Que encontrem paz além..."],
 }
 
-def gm(key): return random.choice(GM[key])
+def gm(key):
+    """Uma variante sorteada do pool de narração de ambiente, como texto TARDIO.
+
+    O sorteio acontece UMA vez e o idioma é resolvido no envio — senão dois
+    jogadores na mesma sala leriam variantes DIFERENTES do mesmo evento. O `GM`
+    continua sendo a fonte do português; as chaves moram no narracao.js."""
+    return T(f"narracao.gm.{key}.{random.randrange(len(GM[key]))}")
 
 # â”€â”€â”€ MAP GENERATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 

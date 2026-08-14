@@ -1140,6 +1140,126 @@ window.LANG_NARRACAO = {
     "en": "",
     "pt": "👯 **{heroi}** gemina **{magia_nome}** em **{alvo2_get_name_or_alvo2}**!"
   },
+  "narracao.gm.combat_start.0": {
+    "en": "",
+    "pt": "O combate começa! Mostrem do que são capazes!"
+  },
+  "narracao.gm.combat_start.1": {
+    "en": "",
+    "pt": "Espadas em punho! O inimigo não dará trégua!"
+  },
+  "narracao.gm.combat_start.2": {
+    "en": "",
+    "pt": "Batalha declarada! Lutem com tudo!"
+  },
+  "narracao.gm.defeat.0": {
+    "en": "",
+    "pt": "A escuridão venceu... A masmorra permanece perigosa."
+  },
+  "narracao.gm.defeat.1": {
+    "en": "",
+    "pt": "O mal triunfou desta vez. Mas as lendas dos heróis caídos viverão eternamente..."
+  },
+  "narracao.gm.defeat.2": {
+    "en": "",
+    "pt": "A masmorra reivindica mais vítimas. Que encontrem paz além..."
+  },
+  "narracao.gm.intro.0": {
+    "en": "",
+    "pt": "Aventureiros... A Fortaleza das Trevas vos aguarda. Monstros, armadilhas e segredos sombrios residem em seus corredores. Apenas os mais corajosos sobreviverão. Que a sorte os acompanhe."
+  },
+  "narracao.gm.intro.1": {
+    "en": "",
+    "pt": "A lenda fala de um dragão ancião que guarda tesouros imensuráveis nas profundezas. Inúmeros heróis tentaram — nenhum voltou. Serão vocês os primeiros a mudar esse destino?"
+  },
+  "narracao.gm.intro.2": {
+    "en": "",
+    "pt": "Uma escuridão antiga tomou conta da masmorra. Os aldeões dependem de vocês. Entre com cautela... o mal os observa."
+  },
+  "narracao.gm.monster_moves.0": {
+    "en": "",
+    "pt": "As criaturas avançam nas sombras..."
+  },
+  "narracao.gm.monster_moves.1": {
+    "en": "",
+    "pt": "Passos pesados ecoam pelos corredores. Os monstros se aproximam."
+  },
+  "narracao.gm.monster_moves.2": {
+    "en": "",
+    "pt": "Os inimigos avançam! Estejam preparados!"
+  },
+  "narracao.gm.room_boss.0": {
+    "en": "",
+    "pt": "Um frio sobrenatural toma conta do ambiente. Uma presença maligna aguarda..."
+  },
+  "narracao.gm.room_boss.1": {
+    "en": "",
+    "pt": "Rugidos profundos ecoam. O senhor das trevas os aguarda!"
+  },
+  "narracao.gm.room_boss.2": {
+    "en": "",
+    "pt": "A escuridão se adensa. Este é o desafio final. Tudo ou nada!"
+  },
+  "narracao.gm.room_chest.0": {
+    "en": "",
+    "pt": "Um baú antigo repousa no centro. Será que há tesouros?"
+  },
+  "narracao.gm.room_chest.1": {
+    "en": "",
+    "pt": "Um cofre ornamentado que não era aberto há séculos..."
+  },
+  "narracao.gm.room_chest.2": {
+    "en": "",
+    "pt": "Entre os destroços, um baú reluzente!"
+  },
+  "narracao.gm.room_empty.0": {
+    "en": "",
+    "pt": "A câmara parece vazia... por enquanto."
+  },
+  "narracao.gm.room_empty.1": {
+    "en": "",
+    "pt": "Silêncio pesado. Apenas poeira e sombras."
+  },
+  "narracao.gm.room_empty.2": {
+    "en": "",
+    "pt": "Nada de óbvio aqui. Mas fiquem alertas."
+  },
+  "narracao.gm.room_monster.0": {
+    "en": "",
+    "pt": "Cuidado! Criaturas emergem das sombras!"
+  },
+  "narracao.gm.room_monster.1": {
+    "en": "",
+    "pt": "Um rugido ecoa pelas paredes. Inimigos à vista!"
+  },
+  "narracao.gm.room_monster.2": {
+    "en": "",
+    "pt": "Olhos brilham na escuridão. Preparem-se para lutar!"
+  },
+  "narracao.gm.room_trap.0": {
+    "en": "",
+    "pt": "O chão soa estranho. Pisem com muito cuidado..."
+  },
+  "narracao.gm.room_trap.1": {
+    "en": "",
+    "pt": "Marcas nas paredes revelam combates passados. Alguém já sofreu aqui."
+  },
+  "narracao.gm.room_trap.2": {
+    "en": "",
+    "pt": "Algo parece errado nesta sala..."
+  },
+  "narracao.gm.victory.0": {
+    "en": "",
+    "pt": "VITÓRIA! Os heróis derrotaram o dragão e salvaram o reino! Sua lenda será contada por gerações!"
+  },
+  "narracao.gm.victory.1": {
+    "en": "",
+    "pt": "O mal foi banido! O reino está salvo graças à coragem de todos!"
+  },
+  "narracao.gm.victory.2": {
+    "en": "",
+    "pt": "GLÓRIA AOS AVENTUREIROS! A escuridão recuou!"
+  },
   "narracao.golpe_sagrado_de_se_desfaz_recursos_insu": {
     "en": "⚔️ **{heroi}**'s Holy Strike unravels — insufficient resources.",
     "pt": "⚔️ Golpe Sagrado de **{heroi}** se desfaz — recursos insuficientes."
