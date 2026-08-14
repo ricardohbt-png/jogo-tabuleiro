@@ -19162,6 +19162,10 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   garalux:           'assets/models3d/monstros/garalux.glb',
   lacralion:         'assets/models3d/monstros/lacralion.glb',
   molochos:          'assets/models3d/monstros/molochos.glb',
+  vampiro:           'assets/models3d/monstros/vampiro.glb',
+  vampiro_jovem:     'assets/models3d/monstros/vampiro.glb',
+  mestre_vampiro:    'assets/models3d/monstros/mestre_vampiro.glb',
+  vampiro_anciao:    'assets/models3d/monstros/mestre_vampiro.glb',
   tirano_da_mata:    'assets/models3d/monstros/tirano_da_mata.glb',
   tirano_ancestral:  'assets/models3d/monstros/tirano_da_mata.glb',
   ciclope:            'assets/models3d/monstros/ciclope.glb',
@@ -19426,7 +19430,7 @@ function _facingToRotY(facing) {
 }
 
 function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
-  // Estes três GLBs têm a frente alinhada com a convenção antiga. Mantêm
+  // Alguns GLBs têm a frente alinhada com a convenção antiga. Mantêm
   // exatamente a orientação anterior; todos os demais usam o offset novo.
   const legacyFront = new Set([
     'xamaGoblin', 'goblin_xama',
@@ -19453,9 +19457,17 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
     'ciclope',
     'gigante_guerreiro', 'gigante_guerra',
     'gigante_runas', 'gigante_runico',
+    'molochos', 'molochus_jovem', 'molochus_adulto', 'molochus_anciao',
+    'ferrao_dos_charcos', 'ferrao_do_lamacal',
+    'ferrao_charcos_jovem', 'ferrao_charcos_adulto', 'ferrao_charcos_anciao',
+    'cria_vampirica', 'escravo_vampirico',
+    'vampiro', 'vampiro_jovem',
+    'mestre_vampiro', 'vampiro_anciao',
+    'lorde_vampiro',
+    'garaloux', 'garaloux_jovem', 'garaloux_adulto', 'garaloux_alfa',
   ]);
   if (movementFront.has(imageName) || movementFront.has(monsterType)
-      || /(?:ciclope|gigante_guerreiro|gigante_runas)\.glb$/i.test(glbPath || '')) {
+      || /(?:ciclope|gigante_guerreiro|gigante_runas|molochos|ferrao_dos_charcos|vampiro|cria_vampirica|mestre_vampiro|lorde_vampiro|garalux)\.glb$/i.test(glbPath || '')) {
     // Estes modelos foram exportados 90° de lado em relação ao eixo padrão.
     // Usar a orientação-base faz a frente acompanhar o sentido do movimento.
     return _facingToRotY(facing);
