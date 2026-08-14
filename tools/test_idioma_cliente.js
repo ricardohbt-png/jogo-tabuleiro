@@ -80,6 +80,21 @@ check("so trabalha quando o no traz data-i18n",
 check("continua havendo UM observador do body, nao dois",
       (gjObs.match(/observe\(\s*document\.body/g) || []).length === 1);
 
+console.log("");
+console.log("[A] O icone de habilidade nao depende do nome em portugues");
+const gjAb = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
+check("replaceAbilityEmoji prefere o data-ability-id ao texto",
+      /dataset\.abilityId/.test(gjAb));
+// indexOf de algo AUSENTE devolve -1, que e menor que qualquer indice — sem o
+// teste de presenca, esta checagem passaria justamente quando o id nao existe.
+check("o caminho por id vem ANTES do scan por texto",
+      gjAb.includes("dataset.abilityId")
+      && gjAb.indexOf("dataset.abilityId") < gjAb.indexOf("ABILITY_NAME_TO_ID).find"));
+check("o scan por texto continua como retaguarda",
+      /ABILITY_NAME_TO_ID\)\.find/.test(gjAb));
+check("abilityIconHtml marca o id no img (para depurar e evitar reaplicar)",
+      /data-ability-id/.test(gjAb));
+
 console.log("\n" + "=".repeat(62));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);
 console.log("=".repeat(62));

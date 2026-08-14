@@ -125,7 +125,10 @@ const ABILITY_NAME_TO_ID = Object.freeze({
 function abilityIconHtml(ability, fallback = '') {
   const id = typeof ability === 'string' ? ability : ability?.id || ABILITY_NAME_TO_ID[ability?.name || ability?.nome];
   const src = ABILITY_ICON_ASSETS[id];
-  return src ? `<img class="ability-icon" src="${src}" alt="" aria-hidden="true">` : fallback;
+  // O id vai no markup para depuração e para o `.ability-icon` já inserido ser
+  // reconhecível. Quem decide o ícone é o `data-ability-id` do ELEMENTO pai,
+  // emitido pelo render — ver replaceAbilityEmoji.
+  return src ? `<img class="ability-icon" src="${src}" data-ability-id="${id}" alt="" aria-hidden="true">` : fallback;
 }
 
 // Alguns botões de classe têm estados próprios e montam seu texto diretamente.
@@ -137,6 +140,23 @@ function replaceAbilityEmoji(root) {
   root?.querySelectorAll?.('.skill-name, .cs-skill-icon, .gi-icon').forEach(el => elements.push(el));
   for (const element of elements) {
     if (element.dataset.abilityIconApplied || element.querySelector('.ability-icon')) continue;
+
+    // 1º caminho: o id, quando o render o emitiu. É o único que sobrevive à
+    // tradução do nome — o scan abaixo procura o texto em PORTUGUÊS, e com a
+    // interface em inglês ele deixaria de casar e o ícone sumiria, em silêncio.
+    // Cada sub-etapa da etapa 5 migra os seus renders para emitir o atributo.
+    const idDireto = element.dataset.abilityId;
+    if (idDireto && ABILITY_ICON_ASSETS[idDireto]) {
+      // Sem aparar o texto: quem emite o id controla o markup e já põe o nome
+      // limpo. O aparo abaixo existe só para o caminho legado, que precisa
+      // remover o emoji que vem antes do nome.
+      element.insertAdjacentHTML('afterbegin', abilityIconHtml(idDireto));
+      element.dataset.abilityIconApplied = 'true';
+      continue;
+    }
+
+    // 2º caminho (retaguarda): acha pelo nome em português e apara o emoji.
+    // Some sozinho conforme os renders passam a emitir o id.
     const match = Object.entries(ABILITY_NAME_TO_ID).find(([name]) => element.textContent.includes(name));
     if (!match || !ABILITY_ICON_ASSETS[match[1]]) continue;
     const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
