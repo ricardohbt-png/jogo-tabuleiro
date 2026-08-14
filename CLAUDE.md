@@ -1988,3 +1988,43 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > das 8 famílias de catálogo. **Falta só a etapa 5** — a interface do cliente (~1.000).
 > Spec/plano em `docs/superpowers/{specs,plans}/2026-08-13-idioma-etapa4b2-narracao-restante*`.
 > Testes: `tools/test_narracao.py` (67), `tools/test_vocabulario_cliente.js` (45).
+
+> **Idioma — fundação da interface (etapa 5.0 de 5):** prepara o terreno para traduzir as
+> 7 telas do cliente; **nenhuma string é traduzida aqui**. O servidor já está 100%
+> traduzido; restam **636 literais** no `game.js`.
+>
+> **A tradução do markup gerado virou responsabilidade do observador que já existia.** O
+> cliente monta HTML por template string e o insere com `innerHTML` em **163 lugares**,
+> contra 4 chamadas de `_i18nApply` — sem isso, cada tela traduzida dependeria de alguém
+> lembrar de aplicar, e a dívida já aparecia nos 9 `_refreshX()` que o `_setLang`
+> carregava. O plano mandava criar um `MutationObserver` novo; ao escrever o teste
+> descobriu-se que **já havia um** observando `document.body` com `childList`+`subtree`,
+> para injetar o ícone de habilidade (`game.js:153`). Estendido em vez de duplicado — um
+> observador, duas tarefas —, e o teste **exige que continue havendo um só**. O nó só é
+> tocado quando realmente traz `[data-i18n]`. **Medido:** 1.000 nós com marcador custam
+> 8,1 ms contra 2,8 ms dos mesmos sem marcador, ou seja **5,3 ms**, com zero nós sem
+> traduzir; o teto do spec era 300 ms.
+>
+> **O ícone de habilidade deixou de ser achado por TEXTO.** O `replaceAbilityEmoji` varria
+> o texto renderizado procurando o nome em `ABILITY_NAME_TO_ID`, tabela chaveada em
+> **português**: traduzir o nome faria os ícones sumirem, em silêncio, porque nenhum teste
+> olha ícone. Agora o elemento `.skill-name` traz `data-ability-id`, emitido pelo render, e
+> o scan por texto é retaguarda que some sozinha conforme cada sub-etapa migra os seus
+> renders. **Cada sub-etapa da 5 tem de emitir o atributo nos renders que tocar** — provado
+> em navegador que nome traduzido SEM o id fica sem ícone.
+>
+> **Convenção de chave da interface: `ui.<área>.<slug>`** (`ui.hud.encerrar_turno`),
+> espelhando `narracao.<slug>` e `erro.<slug>`. As 38 chaves `ui.*` da etapa 1 já seguem.
+>
+> **`tools/test_interface.py` é o placar** das 7 sub-etapas: relata quantos literais em
+> português restam por área e **cobra** as que já fecharam. Ao terminar uma sub-etapa, mova
+> o nome da área para o conjunto `COBRADAS` no topo do arquivo — é isso que impede a área
+> de regredir. Placar inicial: hud_acoes 153, mestre 135, cidade 97, ficha 86,
+> selecao_heroi 58, render3d 50, modais 29, topo 28.
+>
+> **ARMADILHA DE VERIFICAÇÃO, irmã da que a 4b-i registrou:** ao provar mudança de
+> CLIENTE, o navegador serve o `game.js` do **cache** e a prova sai falsa — a primeira
+> medição do observador deu "não funciona" por isso. Recarregue com cache-buster
+> (`?v=algo`) e cheque no próprio script que a versão nova está carregada, antes de
+> concluir qualquer coisa. Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-08-14-idioma-etapa5*`.
