@@ -17,6 +17,8 @@ import io, os, re, sys, collections
 try: sys.stdout.reconfigure(encoding="utf-8")
 except Exception: pass
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(RAIZ, "tools"))
+from js_strings import texto_de_interface
 
 PASS = 0; FAIL = 0
 def check(name, cond):
@@ -26,9 +28,6 @@ def check(name, cond):
 
 GAME = io.open(os.path.join(RAIZ, "game.js"), encoding="utf-8").read()
 LINHAS = GAME.split("\n")
-ACENTO = re.compile(r"[ãáàâçéêíóõôúÃÁÀÂÇÉÊÍÓÕÔÚ]")
-# Caminho de arquivo e seletor CSS não são texto de interface.
-IGNORAR = re.compile(r"\.(js|png|jpe?g|glb|css|html)|assets/|^#[\w-]+$")
 RE_FN = re.compile(
     r"^\s*(?:async\s+)?function\s+(\w+)"
     r"|^\s*(?:const|let)\s+(\w+)\s*=\s*(?:async\s*)?\(?[\w,\s]*\)?\s*=>")
@@ -38,18 +37,19 @@ FECHADAS = set()
 
 
 def _por_funcao():
-    """{nome_da_funcao: n_literais_em_portugues}."""
-    dono, atual = [None] * len(LINHAS), None
+    """{nome_da_funcao: n_textos_em_portugues}.
+
+    A contagem vem do tokenizador (tools/js_strings.py), NÃO de regex por linha:
+    regex ignora template literal multilinha, e são 75 deles no game.js — um com
+    13 KB. A medição por linha dizia 636 quando o número real é 707."""
+    dono, atual = {}, None
     for i, l in enumerate(LINHAS):
         m = RE_FN.match(l)
         if m: atual = m.group(1) or m.group(2)
-        dono[i] = atual
+        dono[i + 1] = atual
     cont = collections.Counter()
-    for i, l in enumerate(LINHAS):
-        if not ACENTO.search(l): continue
-        n = len([t for t in re.findall(r"""["'`]([^"'`\n]{4,140})["'`]""", l)
-                 if ACENTO.search(t) and not IGNORAR.search(t)])
-        if n: cont[dono[i] or "@topo_do_arquivo"] += n
+    for linha, _txt in texto_de_interface(GAME):
+        cont[dono.get(linha) or "@topo_do_arquivo"] += 1
     return cont
 
 
