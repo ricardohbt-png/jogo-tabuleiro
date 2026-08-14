@@ -16,6 +16,10 @@ window.LANG_NARRACAO = {
     "en": "🔇 **{heroi}**'s Heroic Song falls silent — insufficient resources.",
     "pt": "🔇 A Canção Heroica de **{heroi}** se cala — recursos insuficientes."
   },
+  "narracao.a_cancao_heroica_e_interrompida": {
+    "en": "🔇 **{heroi}**'s Heroic Song is cut short — {motivo}.",
+    "pt": "🔇 A Canção Heroica de **{heroi}** é interrompida — {motivo}."
+  },
   "narracao.a_corrosao_consome_de_dano_hp": {
     "en": "",
     "pt": "☣️ A corrosão consome **{heroi}**: **{dano}** de dano! ({p_hp}/{p_max_hp} HP)"
@@ -848,6 +852,14 @@ window.LANG_NARRACAO = {
     "en": "🌑 **{heroi}** sees in the dark and attacks with **advantage** (2d20, uses {roll}).",
     "pt": "🌑 **{heroi}** enxerga na escuridão e ataca com **vantagem** (2d20, usa {roll})."
   },
+  "narracao.equipou": {
+    "en": "{log_emoji} **{heroi}** equipped **{item}**!",
+    "pt": "{log_emoji} **{heroi}** equipou **{item}**!"
+  },
+  "narracao.equipou_2a_arma_mao_esquerda": {
+    "en": "{frase} (2nd weapon — off hand)",
+    "pt": "{frase} (2ª arma — mão esquerda)"
+  },
   "narracao.ergue_o_escudo_3_ca_ate_o_proximo_turno": {
     "en": "🛡️ **{heroi}** raises the shield! +3 AC until the next turn.",
     "pt": "🛡️ **{heroi}** ergue o escudo! +3 CA até o próximo turno."
@@ -1284,6 +1296,10 @@ window.LANG_NARRACAO = {
     "en": "💡 **{heroi}**'s Warrior of Light sustained 🍖-{custo_fome} 💧-{custo_sede}.",
     "pt": "💡 Guerreiro da Luz de **{heroi}** sustentado 🍖-{custo_fome} 💧-{custo_sede}."
   },
+  "narracao.henrique_foi_incapacitado": {
+    "en": "Henrique was incapacitated",
+    "pt": "Henrique foi incapacitado"
+  },
   "narracao.improvisa_a_sinfonia_heroica_por_1_rodad": {
     "en": "🪗 **{heroi}** improvises the **Heroic Symphony** for 1 round!",
     "pt": "🪗 **{heroi}** improvisa a **Sinfonia Heroica** por 1 rodada!"
@@ -1392,6 +1408,14 @@ window.LANG_NARRACAO = {
     "en": "🔮 **{heroi}** — metamagic: {join_partes}{custo_txt}.",
     "pt": "🔮 **{heroi}** — metamagia: {join_partes}{custo_txt}."
   },
+  "narracao.n_animado": {
+    "en": "{n} minion",
+    "pt": "{n} animado"
+  },
+  "narracao.n_animados": {
+    "en": "{n} minions",
+    "pt": "{n} animados"
+  },
   "narracao.nao_afeta_imune_a_venenos": {
     "en": "🧪 **{nome}** doesn't affect **{alvo_nome}** (immune to poisons).",
     "pt": "🧪 **{nome}** não afeta **{alvo_nome}** (imune a venenos)."
@@ -1472,6 +1496,10 @@ window.LANG_NARRACAO = {
     "en": "🌫️ The scroll **fails** and the energy dissipates. ({join_motivos})",
     "pt": "🌫️ O pergaminho **falha** e a energia se dissipa. ({join_motivos})"
   },
+  "narracao.o_prisioneiro": {
+    "en": "the prisoner",
+    "pt": "o prisioneiro"
+  },
   "narracao.o_prisioneiro_esquiva_de_um_monstro": {
     "en": "🛡️ The prisoner dodges a monster!",
     "pt": "🛡️ O prisioneiro esquiva de um monstro!"
@@ -1507,6 +1535,26 @@ window.LANG_NARRACAO = {
   "narracao.o_veneno_do_projetil_de_acabou": {
     "en": "🧴 **{heroi}**'s projectile poison ran out.",
     "pt": "🧴 O veneno do projétil de **{heroi}** acabou."
+  },
+  "narracao.obj_ganhos": {
+    "en": " {lista} each.",
+    "pt": " {lista} a cada herói."
+  },
+  "narracao.obj_itens": {
+    "en": " 🎁 Reward dropped: {lista}.",
+    "pt": " 🎁 Recompensa largada: {lista}."
+  },
+  "narracao.obj_ouro": {
+    "en": "+{n} gold",
+    "pt": "+{n} ouro"
+  },
+  "narracao.obj_xp": {
+    "en": "+{n} XP",
+    "pt": "+{n} XP"
+  },
+  "narracao.objetivo_cumprido": {
+    "en": "⭐ Objective **{nome}** complete!{ganhos}{itens}",
+    "pt": "⭐ Objetivo **{nome}** cumprido!{ganhos}{itens}"
   },
   "narracao.objetivo_principal_cumprido_recolham_a_r": {
     "en": "🏁 Main objective complete! Collect your reward and click **End Mission** when you're ready.",
@@ -2080,6 +2128,10 @@ window.LANG_NARRACAO = {
     "en": "",
     "pt": "🤝 **Tática Defensiva**: **{tatico}** assume {dano_tatico} do dano de **{alvo_nome}** (que sofre {dano_aliado})."
   },
+  "narracao.tempo_esgotado_o_turno_foi_encerrado": {
+    "en": "⏳ Time's up! **{heroi}**'s turn ended automatically.",
+    "pt": "⏳ Tempo esgotado! O turno de **{heroi}** foi encerrado automaticamente."
+  },
   "narracao.tenta_a_sorte_de_novo_mas_erra_outra_vez": {
     "en": "🎲 **{heroi}** tries Luck again, but misses once more!",
     "pt": "🎲 **{heroi}** tenta a Sorte de novo, mas erra outra vez!"
@@ -2132,9 +2184,17 @@ window.LANG_NARRACAO = {
     "en": "",
     "pt": "🛡️ **{heroi}** torna-se **Protetor** de **{alvo}** — metade do dano recebido será transferido a Richard! (🍖-{fome_cost} 💧-{sede_cost})"
   },
+  "narracao.turno_controle_recursos": {
+    "en": " 🍖 {fome}/10 💧 {sede}/10",
+    "pt": " 🍖 {fome}/10 💧 {sede}/10"
+  },
   "narracao.turno_de": {
     "en": "🎲 **{next_p}**'s turn!",
     "pt": "🎲 Turno de **{next_p}**!"
+  },
+  "narracao.turno_de_controle_de_mova_e_encerre": {
+    "en": "💀 **{heroi}**'s control turn ({partes}) — move and end the turn again.{recursos}",
+    "pt": "💀 Turno de controle de **{heroi}** ({partes}) — mova e encerre o turno novamente.{recursos}"
   },
   "narracao.turno_de_imobilizado_encerre_o_turno_par": {
     "en": "🕸️ **{next_p}**'s turn — immobilized! End the turn to continue.",

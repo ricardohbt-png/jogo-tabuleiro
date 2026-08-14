@@ -248,6 +248,35 @@ def _rodar_verificacoes():
     for pid in ("g_pt", "g_en"):
         S.LANG_BY_PID.pop(pid, None)
 
+    print("\n[12] Produtores devolvem T — e T não concatena, de propósito")
+    sala_e = S.GameRoom("TESTE_PROD")
+    p_fake = {"name": "Thorin", "class_id": "warrior", "gear": {}, "bag": [],
+              "bag_size": 6}
+    log = sala_e._equip_into_slot(p_fake, {"id": "dagger", "name": "Adaga"},
+                                  "main_hand", "🗡️")
+    check("_equip_into_slot devolve T", isinstance(log, S.T))
+    # O `if log:` dos chamadores continua valendo porque T tem __len__.
+    check("a frase é truthy", bool(log))
+    check("sai traduzida", "equipped" in S.t(log.key, "en", **log.params))
+
+    # T NÃO tem __add__ de propósito: operadores são buscados no TIPO e não
+    # passam pelo __getattr__, então `T + str` estoura alto em vez de perder a
+    # tradução em silêncio. Foi assim que o site da 2ª arma foi pego — nenhuma
+    # suíte exercitava aquele caminho.
+    estourou = False
+    try:
+        log + " sufixo"
+    except TypeError:
+        estourou = True
+    check("T + str estoura em vez de perder a tradução", estourou)
+    check("nenhum gm_say concatena com o T de um produtor",
+          "log + " not in FONTE)
+
+    env = S.T("narracao.equipou_2a_arma_mao_esquerda", frase=log)
+    check("a frase envolvida resolve o T aninhado",
+          "(2nd weapon" in S.t(env.key, "en", **env.params)
+          and "equipped" in S.t(env.key, "en", **env.params))
+
 
 if __name__ == "__main__":
     print("=" * 62); print("  TESTE — Narração do servidor (etapa 4b-i)"); print("=" * 62)

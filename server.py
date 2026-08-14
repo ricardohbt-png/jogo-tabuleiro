@@ -10872,7 +10872,7 @@ class GameRoom:
         p = self.players.get(pid)
         nome = p["name"] if p else "?"
         await self._forcar_fim_turno(
-            pid, f"⏳ Tempo esgotado! O turno de **{nome}** foi encerrado automaticamente.")
+            pid, T("narracao.tempo_esgotado_o_turno_foi_encerrado", heroi=nome))
 
     def _cancelar_timer_ultimo_esforco(self):
         t = self.last_stand_timer_task
@@ -14495,7 +14495,8 @@ class GameRoom:
         p["cancao_ativa"]     = False
         p["cancao_atributos"] = []
         p["cancao_custo"]     = {"fome": 0, "sede": 0}
-        return f"🔇 A Canção Heroica de **{p['name']}** é interrompida — {motivo}."
+        return T("narracao.a_cancao_heroica_e_interrompida", heroi=p["name"],
+                 motivo=motivo)
 
     # â”€â”€ Bardo: ProvocaÃ§Ã£o (aÃ§Ã£o bÃ´nus de controle) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -15676,7 +15677,8 @@ class GameRoom:
             self._apply_gear_effect(p, old, False)
             if len(p["bag"]) < p.get("bag_size", 6):
                 p["bag"].append(old)
-        return f"{log_emoji} **{p['name']}** equipou **{item['name']}**!"
+        return T("narracao.equipou", log_emoji=log_emoji, heroi=p["name"],
+                 item=nome_item(item))
 
     def _equip_into_pair(self, p, item, keys, log_emoji="💍"):
         """Equipa em par de slots (anéis/itens): 1º vazio, senão troca o primeiro."""
@@ -15685,7 +15687,8 @@ class GameRoom:
             if gear.get(k) is None:
                 gear[k] = item
                 self._apply_gear_effect(p, item, True)
-                return f"{log_emoji} **{p['name']}** equipou **{item['name']}**!"
+                return T("narracao.equipou", log_emoji=log_emoji, heroi=p["name"],
+                         item=nome_item(item))
         return self._equip_into_slot(p, item, keys[0], log_emoji)
 
     async def push_state_or_city(self):
@@ -15842,7 +15845,11 @@ class GameRoom:
         p["bag"].pop(slot_index)
         log = self._equip_into_slot(p, item, "off_hand", "🗡️" if self._eh_adaga(item) else "🪢")
         if log:
-            await self.gm_say(log + " (2ª arma — mão esquerda)")
+            # Envolve em vez de concatenar: `log` é um T, e T não tem __add__
+            # de propósito — operadores são buscados no tipo e não passam pelo
+            # __getattr__, então `T + str` estoura alto em vez de perder a
+            # tradução em silêncio.
+            await self.gm_say(T("narracao.equipou_2a_arma_mao_esquerda", frase=log))
         await self.push_state_or_city()
 
     async def handle_unequip(self, pid, slot_key):
@@ -20807,16 +20814,18 @@ class GameRoom:
                             a[rod] = a.get(rod, 1) - 1
                             if a[rod] <= 0:
                                 a.pop(flag, None); a.pop(rod, None)
-                plural = "s" if custo > 1 else ""
-                partes.append(f"{custo} animado{plural}")
+                partes.append(T("narracao.n_animados" if custo > 1
+                                else "narracao.n_animado", n=custo))
             if controla_prisioneiro:
                 pr["moves_left"] = self._water_turn_moves(pr, PRIS_MOVE)
-                partes.append("o prisioneiro")
-            msg = (f"💀 Turno de controle de **{p['name']}** ({' e '.join(partes)}) — "
-                   f"mova e encerre o turno novamente.")
-            if animados_vivos:
-                msg += f" 🍖 {p['fome']:.0f}/10 💧 {p['sede']:.0f}/10"
-            await self.gm_say(msg)
+                partes.append(T("narracao.o_prisioneiro"))
+            # LISTA, não string pronta: o motor junta com o separador do idioma
+            # de quem lê, e cada fragmento é ele próprio um T.
+            recursos = (T("narracao.turno_controle_recursos",
+                          fome=f"{p['fome']:.0f}", sede=f"{p['sede']:.0f}")
+                        if animados_vivos else "")
+            await self.gm_say(T("narracao.turno_de_controle_de_mova_e_encerre",
+                                heroi=p["name"], partes=partes, recursos=recursos))
             await self.push_state()
             return
         self.animados_phase_pid = None
@@ -26450,7 +26459,8 @@ class GameRoom:
 
         # Bardo incapacitado: a CanÃ§Ã£o Heroica cessa e os aliados perdem os buffs.
         if p.get("cancao_ativa"):
-            msg = self._interromper_cancao(p, "Henrique foi incapacitado")
+            msg = self._interromper_cancao(
+                p, T("narracao.henrique_foi_incapacitado"))
             if msg: await self.gm_say(msg)
 
         # Bardo incapacitado: o RÃ©quiem Final tambÃ©m se encerra.
@@ -26567,15 +26577,17 @@ class GameRoom:
             idef = self._resolve_reward_item(it.get("id"))
             if idef:
                 loot_acc.append(idef)
-                itens_nomes.append(idef.get("name", idef.get("id", "item")))
+                # O DICT, não o nome pronto: assim o nome_item o resolve no
+                # idioma de quem lê, em vez de cravar o português na frase.
+                itens_nomes.append(nome_item(idef))
         nome = obj.get("type", "objetivo")
-        partes = [f"⭐ Objetivo **{nome}** cumprido!"]
-        if xp_share:   partes.append(f"+{xp_share} XP")
-        if ouro_share: partes.append(f"+{ouro_share} ouro")
-        partes_txt = " ".join(partes[:1]) + (" " + ", ".join(partes[1:]) + " a cada heroi." if len(partes) > 1 else "")
-        if itens_nomes:
-            partes_txt += " 🎁 Recompensa largada: " + ", ".join(itens_nomes) + "."
-        await self.gm_say(partes_txt)
+        ganhos = []
+        if xp_share:   ganhos.append(T("narracao.obj_xp", n=xp_share))
+        if ouro_share: ganhos.append(T("narracao.obj_ouro", n=ouro_share))
+        await self.gm_say(T(
+            "narracao.objetivo_cumprido", nome=nome,
+            ganhos=T("narracao.obj_ganhos", lista=ganhos) if ganhos else "",
+            itens=T("narracao.obj_itens", lista=itens_nomes) if itens_nomes else ""))
 
     def _objetivo_cumprido(self, obj):
         """True se o objetivo `obj` está cumprido no estado atual (só autorado)."""
