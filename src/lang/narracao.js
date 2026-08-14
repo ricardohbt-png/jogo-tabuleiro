@@ -156,6 +156,10 @@ window.LANG_NARRACAO = {
     "en": "👥 **{target}** anticipates the Sneak Attack — **-2** to hit!",
     "pt": "👥 **{target}** antecipa o Ataque Furtivo — **-2** no acerto!"
   },
+  "narracao.ao_golpe_esmagador_de_fortitude_vs_cd": {
+    "en": "🪨 {alvo} {resultado} **{monstro}**'s Crushing Blow (Fortitude {total} vs DC {int_ab_get_dc_17_or_17}).",
+    "pt": "{alvo} {resultado} ao Golpe Esmagador de {monstro} (Fortitude {total} vs CD {int_ab_get_dc_17_or_17})."
+  },
   "narracao.aperta_seus_aneis_em": {
     "en": "🐍 **{m}** tightens its coils around **{a}**! {d} constriction damage (automatic)!",
     "pt": "🐍 **{m}** aperta seus anéis em **{a}**! {d} de dano por constrição (automático)!"
@@ -300,6 +304,10 @@ window.LANG_NARRACAO = {
     "en": "🎵⚔️ **{heroi}** attacks while sustaining the song (🍖-{custo_extra_fome} 💧-{custo_extra_sede}).",
     "pt": "🎵⚔️ **{heroi}** ataca sustentando a canção (🍖-{custo_extra_fome} 💧-{custo_extra_sede})."
   },
+  "narracao.atinge_com_pisoteio_colossal_e_causa_de": {
+    "en": "🦶 {monstro} hits {alvo} with **Colossal Stomp** for {dano} damage.",
+    "pt": "{monstro} atinge {alvo} com Pisoteio Colossal e causa {dano} de dano."
+  },
   "narracao.atinge_com_raio_divino_de_dano_sagrado": {
     "en": "✨ **{caster}** strikes **{alvo}** with Divine Ray: {dano} holy damage.",
     "pt": "✨ **{caster}** atinge **{alvo}** com Raio Divino: {dano} de dano sagrado."
@@ -319,6 +327,10 @@ window.LANG_NARRACAO = {
   "narracao.ativa_a_deteccao_de_armadilhas_armadilha": {
     "en": "🔍 **{heroi}** activates Trap Detection — {reveladas} trap(s) revealed. (upkeep 💧-1/turn)",
     "pt": "🔍 **{heroi}** ativa a Detecção de Armadilhas — {reveladas} armadilha(s) revelada(s). (manutenção 💧-1/turno)"
+  },
+  "narracao.ativa_a_regeneracao_runica_por_rodadas": {
+    "en": "🔷 {monstro} activates **Runic Regeneration** for {m_runico_regen_rounds} rounds.",
+    "pt": "{monstro} ativa a Regeneração Rúnica por {m_runico_regen_rounds} rodadas."
   },
   "narracao.ativa_aura_sagrada_2_ca_para_todos_por_2": {
     "en": "✨ **{heroi}** activates **Holy Aura**! +2 AC for everyone for 2 turns.",
@@ -860,6 +872,10 @@ window.LANG_NARRACAO = {
     "en": "🎼 **{heroi}** sings the **Martial Duet** for {st_duracao} round(s)!",
     "pt": "🎼 **{heroi}** entoa o **Dueto Marcial** por {st_duracao} rodada(s)!"
   },
+  "narracao.entra_em_furia_berserker_e_desfere_um_at": {
+    "en": "🔥 {monstro} flies into **Berserker Rage** and lands an extra attack.",
+    "pt": "{monstro} entra em Fúria Berserker e desfere um ataque adicional."
+  },
   "narracao.entra_em_furia_cega_1_de_dano_mas_1_ca": {
     "en": "😡 **{monstro}** flies into **Blind Rage**! +1 damage, but -1 AC.",
     "pt": "😡 **{monstro}** entra em **Fúria Cega**! +1 de dano, mas -1 CA."
@@ -1019,6 +1035,10 @@ window.LANG_NARRACAO = {
   "narracao.falha_e_a_energia_se_perde_inutilmente": {
     "en": "🌫️ **{magia_nome}** fails and the energy is wasted.",
     "pt": "🌫️ **{magia_nome}** falha e a energia se perde inutilmente."
+  },
+  "narracao.falha_e_sofre_pen_ataque_1a_rodada": {
+    "en": "fails and takes -1 on attack rolls for the first round",
+    "pt": "falha e sofre -1 nas jogadas de ataque na primeira rodada"
   },
   "narracao.falha_em_animar_o_cadaver_permanece_iner": {
     "en": "💨 **{heroi}** fails to animate **{corpse_nome}** — the corpse stays inert. (d100={rolagem})",
@@ -1688,6 +1708,10 @@ window.LANG_NARRACAO = {
     "en": "💥 **{monstro}** loses concentration — no spell this turn! (Will {tot} vs DC 10)",
     "pt": "💥 **{monstro}** perde a concentração — sem magia neste turno! (Vontade {tot} vs CD 10)"
   },
+  "narracao.perde_a_proxima_acao_de_movimento": {
+    "en": "loses its next movement action",
+    "pt": "perde a próxima ação de movimento"
+  },
   "narracao.perde_a_rodada_inteira": {
     "en": "⏸️ **{alvo_nome}** loses the entire round!",
     "pt": "⏸️ **{alvo_nome}** perde a rodada inteira!"
@@ -1711,6 +1735,10 @@ window.LANG_NARRACAO = {
   "narracao.pisou_na_fogueira_e_sofre_de_fogo": {
     "en": "🔥 **{nome}** stepped into the campfire and takes **{dano}** fire damage!",
     "pt": "🔥 **{nome}** pisou na fogueira e sofre **{dano}** de fogo!"
+  },
+  "narracao.prepara_a_mira_certeira_para_o_proximo_a": {
+    "en": "🎯 {monstro} lines up **Sure Aim** for the next attack.",
+    "pt": "{monstro} prepara a Mira Certeira para o próximo ataque."
   },
   "narracao.prepara_contramagica_teste_oposto_para_c": {
     "en": "🛑 **{caster}** readies **Counterspell** — an opposed check to cancel the next incoming spell (consumes the reaction when used).",
@@ -1759,6 +1787,10 @@ window.LANG_NARRACAO = {
   "narracao.provoca_desvantagem_no_proximo_ataque_e": {
     "en": "😤 **{heroi}** taunts **{alvo}**! Disadvantage on its next attack, and it is forced to target him for 3 turns (🍖-{fome_cost} 💧-{sede_cost}).",
     "pt": "😤 **{heroi}** provoca **{alvo}**! Desvantagem no próximo ataque e alvo forçado por 3 turnos (🍖-{fome_cost} 💧-{sede_cost})."
+  },
+  "narracao.provoca_ele_deve_enfrenta_lo_por_rodadas": {
+    "en": "😤 {monstro} taunts {alvo}: it must face him for {int_ability_get_duration} rounds.",
+    "pt": "{monstro} provoca {alvo}: ele deve enfrentá-lo por {int_ability_get_duration} rodadas."
   },
   "narracao.purifica_livre_de": {
     "en": "✨ **{heroi}** purifies **{alvo}** — free of {nomes_tipo}! (🍖-{custo_fome} 💧-{custo_sede})",
@@ -1824,6 +1856,10 @@ window.LANG_NARRACAO = {
     "en": "🍺 **{heroi}** regains their aim (the beer penalty wore off).",
     "pt": "🍺 **{heroi}** recupera a pontaria (penalidade da cerveja acabou)."
   },
+  "narracao.recupera_hp_com_a_regeneracao_runica_rod": {
+    "en": "🔷 {monstro} recovers {cura} HP from **Runic Regeneration** ({max_0_restantes_1} rounds left).",
+    "pt": "{monstro} recupera {cura} HP com a Regeneração Rúnica ({max_0_restantes_1} rodadas restantes)."
+  },
   "narracao.recupera_o_movimento_normal": {
     "en": "🟢 **{monstro}** regains normal movement.",
     "pt": "🟢 **{monstro}** recupera o movimento normal."
@@ -1879,6 +1915,10 @@ window.LANG_NARRACAO = {
   "narracao.requiem_final_de_manutencao": {
     "en": "🎻 **{heroi}**'s Final Requiem — upkeep 🍖-{mf} 💧-{ms}.",
     "pt": "🎻 Réquiem Final de **{heroi}** — manutenção 🍖-{mf} 💧-{ms}."
+  },
+  "narracao.resiste": {
+    "en": "resists",
+    "pt": "resiste"
   },
   "narracao.resiste_a_amaldicoar_de": {
     "en": "☠️ **{alvo}** resists **{monstro}**'s Curse (d20({d20}){bonus}={total} vs DC {dc}).",
@@ -2388,6 +2428,10 @@ window.LANG_NARRACAO = {
     "en": "🙏 **{heroi}** uses **Lay on Hands** on **{alvo}** — heals **{cura_efetiva}** HP ({alvo_hp}/{alvo_max_hp})! (🍖-{fome_cost} 💧-{sede_cost})",
     "pt": "🙏 **{heroi}** usa **Imposição das Mãos** em **{alvo}** — cura **{cura_efetiva}** HP ({alvo_hp}/{alvo_max_hp})! (🍖-{fome_cost} 💧-{sede_cost})"
   },
+  "narracao.usa_investida_heroica_e_dobra_seu_desloc": {
+    "en": "🐗 {monstro} uses **Heroic Charge** and doubles its movement this round.",
+    "pt": "{monstro} usa Investida Heroica e dobra seu deslocamento nesta rodada."
+  },
   "narracao.usa_lanca_de_gelo_em_de_dano_de_frio": {
     "en": "🧊 **{heroi}** uses **Ice Lance**{extra} on **{t}**: **{dmg}** cold damage!",
     "pt": "🧊 **{heroi}** usa **Lança de Gelo**{extra} em **{t}**: **{dmg}** de dano de frio!"
@@ -2399,6 +2443,14 @@ window.LANG_NARRACAO = {
   "narracao.usa_para_envenenar_a_arma": {
     "en": "🧪 **{m_get_name_o_monstro}** uses **{item}** to poison their weapon.",
     "pt": "🧪 **{m_get_name_o_monstro}** usa **{item}** para envenenar a arma."
+  },
+  "narracao.usa_passo_fantasma_e_recebe_movimento_ne": {
+    "en": "👻 {monstro} uses **Ghost Step** and gains +{bonus} movement this round.",
+    "pt": "{monstro} usa Passo Fantasma e recebe +{bonus} movimento nesta rodada."
+  },
+  "narracao.usa_presenca_aterradora_contra_vontade_v": {
+    "en": "😱 {monstro} uses **Terrifying Presence** against {heroi}: {resultado} (Will {total} vs DC {dc}).",
+    "pt": "{monstro} usa Presença Aterradora contra {heroi}: {resultado} (Vontade {total} vs CD {dc})."
   },
   "narracao.usa_provocar_todos_os_monstros_agora_foc": {
     "en": "😤 **{heroi}** uses **Taunt** — all monsters now focus on them!",

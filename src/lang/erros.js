@@ -65,6 +65,10 @@ window.LANG_ERROS = {
     "en": "🚪 The door is closed. Click it to open.",
     "pt": "🚪 A porta está fechada. Clique nela para abri-la."
   },
+  "erro.a_provocacao_do_gigante_runico_obriga_vo": {
+    "en": "The Runic Giant's Taunt forces you to attack it for as long as the effect lasts.",
+    "pt": "A Provocação do Gigante Rúnico obriga você a atacá-lo enquanto o efeito durar."
+  },
   "erro.a_viagem_ainda_leva_rodadas": {
     "en": "The trip still takes {rodadas} round(s).",
     "pt": "A viagem ainda leva {rodadas} rodada(s)."
