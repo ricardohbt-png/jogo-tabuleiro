@@ -34,7 +34,7 @@ JOGADOR = {"p", "caster", "next_p", "bardo", "richard", "jogador", "rescuer",
            "dono", "curador", "heroi"}
 # Variáveis que guardam um ITEM.
 ITEM = {"item", "defn", "scroll", "elixir", "potion", "it", "gi", "arma",
-        "weapon", "off", "peca", "pot"}
+        "weapon", "off", "peca", "pot", "dagger", "lanca", "municao"}
 # O resto de quem tem ['name']/['nome'] é criatura: m, alvo, target, t, c,
 # monstro, atacante, ator, extra, obj, tgt, a, animado, criatura, preso…
 # O `nome_criatura` despacha pela FORMA do dict, então monstro, servo animado e
