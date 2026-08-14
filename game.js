@@ -3614,7 +3614,7 @@ function abrirFichaEmJogo(heroiKey) {
       <div style="
         color:#8a7a5a; font-size:10px;
         letter-spacing:3px; margin-top:2px;
-      ">${heroi.class || heroi.classeSelecao || ''}</div>
+      ">${_rotulo(heroiKey, 'ui.heroi.classe', '')}</div>
       <div style="
         color:#c8b89a; font-size:10px; margin-top:4px;
       ">NÍVEL ${estadoServidor.level || heroi.nivel || 1}</div>
@@ -11960,11 +11960,13 @@ function renderAbaMagiasLewis(me){
 
 // Habilidades especiais de cada elemental (espelha o campo `especial` em
 // _executar_conjurar_elemental, server.py). Exibidas na ficha do elemental.
-const _ELEMENTAL_HABILIDADES_LEWIS = {
-  fogo:     { cor:'#ff6b3d', label:'Explosão Ígnea',    desc:'Ao detonar, causa 6d6 de fogo em área (atinge aliados também).' },
-  eletrico: { cor:'#5db8ff', label:'Descarga em Linha', desc:'Seu ataque atinge todos numa linha reta de 3 quadrados.' },
-  gelo:     { cor:'#7fe0ff', label:'Corpo Glacial',     desc:'Recebe -2 de dano físico, porém +2 de dano de fogo.' },
-  pedra:    { cor:'#caa472', label:'Pele de Pedra',     desc:'Reduz à metade todo o dano físico que recebe.' },
+// Só a COR fica aqui: o rótulo e a descrição de cada elemental vêm das chaves
+// ui.elemental.label.<tipo> / ui.elemental.desc.<tipo>, resolvidas por _rotulo no
+// ponto de uso. Este mapa é {id: {objeto}}, mas os campos se chamam label/desc e
+// não há cat.* correspondente no servidor, então o aplicarCatalogo não o alcança
+// (ele casa CAMPOS name/nome e desc/descricao a partir de uma chave cat.*).
+const _ELEMENTAL_CORES_LEWIS = {
+  fogo: '#ff6b3d', eletrico: '#5db8ff', gelo: '#7fe0ff', pedra: '#caa472',
 };
 
 // Ficha dos elementais conjurados pelo Lewis (mesmo padrão da ficha do Pedro:
@@ -11991,7 +11993,9 @@ function renderElementaisLewis(me){
       ` : ''}
       ${elementais.map(a => {
         const tipo = a.tipo_elemental || 'pedra';
-        const hab  = _ELEMENTAL_HABILIDADES_LEWIS[tipo] || { cor:'#44cc88', label:'Elemental', desc:'' };
+        const hab  = { cor:   _ELEMENTAL_CORES_LEWIS[tipo] || '#44cc88',
+                       label: _rotulo(tipo, 'ui.elemental.label', t('ui.elemental.label.padrao')),
+                       desc:  _rotulo(tipo, 'ui.elemental.desc', '') };
         const pct  = Math.max(0, Math.min(100, (a.vida_atual / Math.max(1, a.vida_max)) * 100));
         const corVida = pct > 60 ? '#2ecc40' : pct > 30 ? '#ff851b' : '#ff4136';
         return `
@@ -23420,10 +23424,13 @@ const HERO_HP_CONFIG = {
 // ── Dados completos dos heróis — fonte canônica client-side ──────────────────
 // Espelha server.py CLASSES. Para alterar stats, edite AQUI e no CLASSES.
 // statsModificados começa igual a stats; efeitos de itens/habilidades o alteram em runtime.
+// O rótulo de classe ("GUERREIRO ANÃO") saiu daqui e virou a chave
+// ui.heroi.classe.<heroKey>, resolvida por _rotulo em abrirFichaEmJogo — que é o
+// único lugar que o mostrava. Guardá-lo aqui deixaria o português no arquivo
+// sem ninguém para traduzi-lo, já que este mapa não passa pelo aplicarCatalogo.
 const HERO_DATA = {
   victorCoiceBravo: {
     name: 'Victor, o Coice Bravo',
-    class: 'GUERREIRO ANÃO',
     portrait: 'assets/portraits/victor.jpeg',
     hp: 14,
     stats: { forca: 18, destreza: 10, inteligencia: 8,  constituicao: 14 },
@@ -23432,7 +23439,6 @@ const HERO_DATA = {
   },
   richardCavaleiro: {
     name: 'Richard, o Cavaleiro',
-    class: 'PALADINO',
     portrait: 'assets/portraits/richard.jpeg',
     hp: 12,
     stats: { forca: 16, destreza: 10, inteligencia: 10, constituicao: 14 },
@@ -23441,7 +23447,6 @@ const HERO_DATA = {
   },
   pedro: {
     name: 'Pedro',
-    class: 'MAGO NEGRO',
     portrait: 'assets/portraits/pedro.jpeg',
     hp: 7,
     stats: { forca: 8,  destreza: 12, inteligencia: 18, constituicao: 12 },
@@ -23510,7 +23515,6 @@ const HERO_DATA = {
   },
   luccas: {
     name: 'Luccas',
-    class: 'LADRÃO',
     portrait: 'assets/portraits/luccas.jpeg',
     hp: 9,
     stats: { forca: 10, destreza: 18, inteligencia: 10, constituicao: 12 },
@@ -23519,7 +23523,6 @@ const HERO_DATA = {
   },
   henrique: {
     name: 'Henrique',
-    class: 'BARDO',
     portrait: 'assets/portraits/henrique.jpeg',
     hp: 9,
     stats: { forca: 10, destreza: 16, inteligencia: 12, constituicao: 12 },
@@ -23528,7 +23531,6 @@ const HERO_DATA = {
   },
   lewis: {
     name: 'Lewis',
-    class: 'CLÉRIGO',
     portrait: 'assets/portraits/lewis.jpeg',
     hp: 10,
     stats: { forca: 10, destreza: 10, inteligencia: 16, constituicao: 14 },

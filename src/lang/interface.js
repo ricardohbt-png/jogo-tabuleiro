@@ -15,6 +15,66 @@
 // os catálogos do cliente guardam descrição mais rica (card HTML com alcance e
 // efeito por rodada) que a frase curta do servidor. Ver aplicarCatalogo.
 window.LANG_INTERFACE = {
+  "ui.elemental.desc.eletrico": {
+    "en": "Its attack hits everyone in a straight 3-square line.",
+    "pt": "Seu ataque atinge todos numa linha reta de 3 quadrados."
+  },
+  "ui.elemental.desc.fogo": {
+    "en": "On detonating, deals 6d6 fire damage in an area (hits allies too).",
+    "pt": "Ao detonar, causa 6d6 de fogo em área (atinge aliados também)."
+  },
+  "ui.elemental.desc.gelo": {
+    "en": "Takes -2 physical damage, but +2 fire damage.",
+    "pt": "Recebe -2 de dano físico, porém +2 de dano de fogo."
+  },
+  "ui.elemental.desc.pedra": {
+    "en": "Halves all physical damage it takes.",
+    "pt": "Reduz à metade todo o dano físico que recebe."
+  },
+  "ui.elemental.label.eletrico": {
+    "en": "Line Discharge",
+    "pt": "Descarga em Linha"
+  },
+  "ui.elemental.label.fogo": {
+    "en": "Fiery Blast",
+    "pt": "Explosão Ígnea"
+  },
+  "ui.elemental.label.gelo": {
+    "en": "Glacial Body",
+    "pt": "Corpo Glacial"
+  },
+  "ui.elemental.label.padrao": {
+    "en": "Elemental",
+    "pt": "Elemental"
+  },
+  "ui.elemental.label.pedra": {
+    "en": "Stone Skin",
+    "pt": "Pele de Pedra"
+  },
+  "ui.heroi.classe.henrique": {
+    "en": "BARD",
+    "pt": "BARDO"
+  },
+  "ui.heroi.classe.lewis": {
+    "en": "CLERIC",
+    "pt": "CLÉRIGO"
+  },
+  "ui.heroi.classe.luccas": {
+    "en": "THIEF",
+    "pt": "LADRÃO"
+  },
+  "ui.heroi.classe.pedro": {
+    "en": "BLACK MAGE",
+    "pt": "MAGO NEGRO"
+  },
+  "ui.heroi.classe.richardCavaleiro": {
+    "en": "PALADIN",
+    "pt": "PALADINO"
+  },
+  "ui.heroi.classe.victorCoiceBravo": {
+    "en": "DWARF WARRIOR",
+    "pt": "GUERREIRO ANÃO"
+  },
   "ui.item.tipo.arma": {
     "en": "⚔ Weapon",
     "pt": "⚔ Arma"
