@@ -9,7 +9,7 @@ window.LANG_NARRACAO = {
     "pt": "🛡️ A Barreira Arcana de **{alvo}** termina."
   },
   "narracao.a_caiu_no_chao_perto_do_alvo_aproxime_se": {
-    "en": "",
+    "en": "🗡️ The **{dagger}** fell to the ground near the target — get closer to retrieve it.",
     "pt": "🗡️ A **{dagger}** caiu no chão perto do alvo — aproxime-se para recuperá-la."
   },
   "narracao.a_cancao_heroica_de_se_cala_recursos_ins": {
@@ -21,7 +21,7 @@ window.LANG_NARRACAO = {
     "pt": "🔇 A Canção Heroica de **{heroi}** é interrompida — {motivo}."
   },
   "narracao.a_corrosao_consome_de_dano_hp": {
-    "en": "",
+    "en": "☣️ The corrosion eats away at **{heroi}**: **{dano}** damage! ({p_hp}/{p_max_hp} HP)",
     "pt": "☣️ A corrosão consome **{heroi}**: **{dano}** de dano! ({p_hp}/{p_max_hp} HP)"
   },
   "narracao.a_corrupcao_crescente_de_apodrece_a_carn": {
@@ -33,7 +33,7 @@ window.LANG_NARRACAO = {
     "pt": "🧪 A defesa de **{nome}** já está corroída ao máximo (CA {base})."
   },
   "narracao.a_explosao_causa_ate_de_dano_em_chamas_r": {
-    "en": "",
+    "en": "💥 The blast deals up to **{dano_total}** fire damage (radius {raio}) — DC 12 Reflex for half! It hits allies too!",
     "pt": "💥 A explosão causa até **{dano_total}** de dano em chamas (raio {raio}) — CD 12 Reflexos para metade! Atinge aliados também!"
   },
   "narracao.a_ilusao_do_dueto_fantasma_repete_o_golp": {
@@ -61,7 +61,7 @@ window.LANG_NARRACAO = {
     "pt": "⚡ A linha elétrica do **{a_nome}** atinge **{extra}**: {d2} de dano!"
   },
   "narracao.a_magia_falha_e_provoca_um_efeito_nocivo": {
-    "en": "",
+    "en": "💥 The spell **fails** and causes a **harmful effect**! ({join_motivos}; harm d100={rh}≤{harm}%)",
     "pt": "💥 A magia **falha** e provoca um **efeito nocivo**! ({join_motivos}; nocivo d100={rh}≤{harm}%)"
   },
   "narracao.a_nuvem_acida_se_dissipou": {
@@ -73,7 +73,7 @@ window.LANG_NARRACAO = {
     "pt": "✅ A paralisação de **{alvo}** terminou."
   },
   "narracao.a_pocao_de_regeneracao_cura_hp_reserva": {
-    "en": "",
+    "en": "🌿 The **Regeneration Potion** heals **{heroi}** +{cura} HP ({p_hp}/{p_max_hp}; pool {pool}).",
     "pt": "🌿 A **Poção de Regeneração** cura **{heroi}** +{cura} HP ({p_hp}/{p_max_hp}; reserva {pool})."
   },
   "narracao.a_protecao_contra_energia_de_termina": {
@@ -121,11 +121,11 @@ window.LANG_NARRACAO = {
     "pt": "⚡ **{caster}** acelera — ações dobradas e movimento dobrado por {dur} rodada(s)!"
   },
   "narracao.acende_a_e_a_luz_em_volta_e_sugada_fica": {
-    "en": "",
+    "en": "{item_emoji} **{heroi}** lights the **{item}**, and the light around it is swallowed: **hidden** until the end of the turn{extra}",
     "pt": "{item_emoji} **{heroi}** acende a **{item}**, e a luz em volta é sugada: fica **oculto** até o fim do turno{extra}"
   },
   "narracao.acerta_em_d20_vs_ca": {
-    "en": "",
+    "en": "{defn_emoji} **{heroi}** hits **{target}** with **{defn}** (d20={roll}+{p_atk_bonus}={total} vs AC {target_ac})!",
     "pt": "{defn_emoji} **{heroi}** acerta **{defn}** em **{target}** (d20={roll}+{p_atk_bonus}={total} vs CA {target_ac})!"
   },
   "narracao.acerta_em_dano": {
@@ -149,7 +149,7 @@ window.LANG_NARRACAO = {
     "pt": "☠️ **{caster}** amaldiçoa {n} alvo(s): -1 ataque/dano/CA/resistência por {dur} rodada(s) (afeta aliados/minions)."
   },
   "narracao.anima_um_novo_servo_ergue_se_d100": {
-    "en": "",
+    "en": "💀 **{heroi}** animates **{corpse_nome}** — a new minion rises! (d100={rolagem})",
     "pt": "💀 **{heroi}** anima **{corpse_nome}** — um novo servo ergue-se! (d100={rolagem})"
   },
   "narracao.antecipa_o_ataque_furtivo_2_no_acerto": {
@@ -161,7 +161,7 @@ window.LANG_NARRACAO = {
     "pt": "🐍 **{m}** aperta seus anéis em **{a}**! {d} de dano por constrição (automático)!"
   },
   "narracao.aplica_na_arma_acao_livre": {
-    "en": "",
+    "en": "☠️ **{heroi}** applies **{venenos_vid_nome}** to the weapon (free action) — {desc_veneno}! 💧-{custo_sede}",
     "pt": "☠️ **{heroi}** aplica **{venenos_vid_nome}** na arma (ação livre) — {desc_veneno}! 💧-{custo_sede}"
   },
   "narracao.aprendeu": {
@@ -189,11 +189,11 @@ window.LANG_NARRACAO = {
     "pt": "🐊 **{monstro}** arrasta **{c}**!"
   },
   "narracao.arremessa_a_adaga_em_d20_4_vs_ca_de_dano": {
-    "en": "",
+    "en": "🗡️ **{monstro}** throws the dagger at **{target}** (d20={d20}+4={total} vs AC {eff_ac}): **{dmg}** damage!",
     "pt": "🗡️ **{monstro}** arremessa a adaga em **{target}** (d20={d20}+4={total} vs CA {eff_ac}): **{dmg}** de dano!"
   },
   "narracao.arremessa_a_adaga_em_mas_erra_d20_4_vs_c": {
-    "en": "",
+    "en": "🗡️ **{monstro}** throws the dagger at **{target}** but **misses** (d20={d20}+4={total} vs AC {eff_ac}).",
     "pt": "🗡️ **{monstro}** arremessa a adaga em **{target}** mas **erra** (d20={d20}+4={total} vs CA {eff_ac})."
   },
   "narracao.arremessa_em": {
@@ -201,27 +201,27 @@ window.LANG_NARRACAO = {
     "pt": "{defn_emoji} **{heroi}** arremessa **{defn}** em ({cx},{cy})!"
   },
   "narracao.arremessa_em_d20_vs_ca_dano": {
-    "en": "",
+    "en": "🎯 **{heroi}** throws **{dagger}** at **{target}** (d20={roll}+{throw_atk}={total} vs AC {target_ac}):{crit_str} damage [{die_str}={raw}{sb} {throw_stat_name}] = **{dmg}**!",
     "pt": "🎯 **{heroi}** arremessa **{dagger}** em **{target}** (d20={roll}+{throw_atk}={total} vs CA {target_ac}):{crit_str} dano [{die_str}={raw}{sb} {throw_stat_name}] = **{dmg}**!"
   },
   "narracao.arremessa_em_d20_vs_ca_de": {
-    "en": "",
+    "en": "{defn_emoji} **{heroi}** throws **{defn}** at **{target}** (d20={roll}+{p_atk_bonus}={total} vs AC {target_ac}):{crit_str} **{dmg}** {defn_elemento}!",
     "pt": "{defn_emoji} **{heroi}** arremessa **{defn}** em **{target}** (d20={roll}+{p_atk_bonus}={total} vs CA {target_ac}):{crit_str} **{dmg}** de {defn_elemento}!"
   },
   "narracao.arremessa_em_d20_vs_ca_errou": {
-    "en": "",
+    "en": "🎯 **{heroi}** throws **{dagger}** at **{target}** (d20={roll}+{throw_atk}={total} vs AC {target_ac}): **MISS!**",
     "pt": "🎯 **{heroi}** arremessa **{dagger}** em **{target}** (d20={roll}+{throw_atk}={total} vs CA {target_ac}): **ERROU!**"
   },
   "narracao.arremessa_em_d20_vs_ca_errou_2": {
-    "en": "",
+    "en": "{defn_emoji} **{heroi}** throws **{defn}** at **{target}** (d20={roll}+{p_atk_bonus}={total} vs AC {target_ac}): **MISS!**",
     "pt": "{defn_emoji} **{heroi}** arremessa **{defn}** em **{target}** (d20={roll}+{p_atk_bonus}={total} vs CA {target_ac}): **ERROU!**"
   },
   "narracao.arremessa_mas_rola_1_natural_a_adaga_se": {
-    "en": "",
+    "en": "💥 **{heroi}** throws **{dagger}** but rolls a **natural 1** — the dagger is lost forever!",
     "pt": "💥 **{heroi}** arremessa **{dagger}** mas rola **1 natural** — a adaga se perde para sempre!"
   },
   "narracao.arremessa_mas_rola_1_natural_o_frasco_se": {
-    "en": "",
+    "en": "{defn_emoji} **{heroi}** throws **{defn}** but rolls a **natural 1** — the flask shatters far from the target!",
     "pt": "{defn_emoji} **{heroi}** arremessa **{defn}** mas rola **1 natural** — o frasco se espatifa longe do alvo!"
   },
   "narracao.as_chamas_deixadas_pelo_molochus_se_apag": {
@@ -237,11 +237,11 @@ window.LANG_NARRACAO = {
     "pt": "🌑 **{heroi}** ataca às cegas na escuridão — **desvantagem** (2d20, usa {roll})."
   },
   "narracao.ataca_com_d20_usado_descartado": {
-    "en": "",
+    "en": "⚠️ **{monstro}** attacks with **{modo}** ({join_motivos}) — d20 **{roll}** used, ~~{discarded}~~ discarded.",
     "pt": "⚠️ **{monstro}** ataca com **{modo}** ({join_motivos}) — d20 **{roll}** usado, ~~{discarded}~~ descartado."
   },
   "narracao.ataca_com_d20_vs_ca_dano": {
-    "en": "",
+    "en": "⚔️ **{heroi}** attacks **{target}** with {weapon_name} (d20={roll}+{eff_atk}={total} vs AC {target_ac}):{crit_str} damage {dmg_detail}{holy_detail}{furtivo_detail} = **{dmg}**!",
     "pt": "⚔️ **{heroi}** ataca **{target}** com {weapon_name} (d20={roll}+{eff_atk}={total} vs CA {target_ac}):{crit_str} dano {dmg_detail}{holy_detail}{furtivo_detail} = **{dmg}**!"
   },
   "narracao.ataca_com_forca_descomunal": {
@@ -253,35 +253,35 @@ window.LANG_NARRACAO = {
     "pt": "🫥 **{heroi}** ataca com vantagem e revela-se!"
   },
   "narracao.ataca_d20_vs_ca_de_dano": {
-    "en": "",
+    "en": "⚔️ **{a_nome}** attacks **{monstro}** (d20={roll}+{bonus_ataque}={total} vs AC {m_ac}): **{dmg}** damage!",
     "pt": "⚔️ **{a_nome}** ataca **{monstro}** (d20={roll}+{bonus_ataque}={total} vs CA {m_ac}): **{dmg}** de dano!"
   },
   "narracao.ataca_d20_vs_ca_de_dano_2": {
-    "en": "",
+    "en": "⚔️ **{a_nome}** attacks **{target}** (d20={roll}+{bonus_ataque}={total} vs AC {target_ac}): **{dmg}** damage!",
     "pt": "⚔️ **{a_nome}** ataca **{target}** (d20={roll}+{bonus_ataque}={total} vs CA {target_ac}): **{dmg}** de dano!"
   },
   "narracao.ataca_d20_vs_ca_de_dano_hp": {
-    "en": "",
+    "en": "💢 **{monstro}** attacks **{tgt_name}** (d20={roll}+{m_atk}={total} vs AC {effective_ac}):{crit_str} **{dmg_alvo}** damage! ({target_hp}/{target_max_hp} HP)",
     "pt": "💢 **{monstro}** ataca **{tgt_name}** (d20={roll}+{m_atk}={total} vs CA {effective_ac}):{crit_str} **{dmg_alvo}** de dano! ({target_hp}/{target_max_hp} HP)"
   },
   "narracao.ataca_d20_vs_ca_de_dano_hp_2": {
-    "en": "",
+    "en": "💢 **{monstro}** attacks **{tgt_name}** (d20={roll}+{m_atk}={total} vs AC {effective_ac}):{crit_str} **{dmg_ef}** damage! ({target_vida_atual}/{target_vida_max} HP)",
     "pt": "💢 **{monstro}** ataca **{tgt_name}** (d20={roll}+{m_atk}={total} vs CA {effective_ac}):{crit_str} **{dmg_ef}** de dano! ({target_vida_atual}/{target_vida_max} HP)"
   },
   "narracao.ataca_d20_vs_ca_errou": {
-    "en": "",
+    "en": "⚔️ **{heroi}** attacks **{target}** (d20={roll}+{eff_atk}={total} vs AC {target_ac}): **MISS!**",
     "pt": "⚔️ **{heroi}** ataca **{target}** (d20={roll}+{eff_atk}={total} vs CA {target_ac}): **ERROU!**"
   },
   "narracao.ataca_d20_vs_ca_errou_2": {
-    "en": "",
+    "en": "💢 **{monstro}** attacks **{tgt_name}** (d20={roll}+{m_atk}={total} vs AC {effective_ac}): **MISS!**",
     "pt": "💢 **{monstro}** ataca **{tgt_name}** (d20={roll}+{m_atk}={total} vs CA {effective_ac}): **ERROU!**"
   },
   "narracao.ataca_e_erra_d20_vs_ca": {
-    "en": "",
+    "en": "⚔️ **{a_nome}** attacks **{monstro}** and misses (d20={roll}+{bonus_ataque}={total} vs AC {m_ac}).",
     "pt": "⚔️ **{a_nome}** ataca **{monstro}** e erra (d20={roll}+{bonus_ataque}={total} vs CA {m_ac})."
   },
   "narracao.ataca_e_erra_d20_vs_ca_2": {
-    "en": "",
+    "en": "⚔️ **{a_nome}** attacks **{target}** and misses (d20={roll}+{bonus_ataque}={total} vs AC {target_ac}).",
     "pt": "⚔️ **{a_nome}** ataca **{target}** e erra (d20={roll}+{bonus_ataque}={total} vs CA {target_ac})."
   },
   "narracao.ataca_em_bando_2_acerto": {
@@ -313,11 +313,11 @@ window.LANG_NARRACAO = {
     "pt": "✦ **{m_get_name_o_monstro}** ativa **{ability_get_name_ability}**!"
   },
   "narracao.ativa_3": {
-    "en": "",
+    "en": "**{heroi}** activates {join_nomes} (🍖-{total_fome}{f_total_sede_if_total_se}).",
     "pt": "**{heroi}** ativa {join_nomes} (🍖-{total_fome}{f_total_sede_if_total_se})."
   },
   "narracao.ativa_a_deteccao_de_armadilhas_armadilha": {
-    "en": "",
+    "en": "🔍 **{heroi}** activates Trap Detection — {reveladas} trap(s) revealed. (upkeep 💧-1/turn)",
     "pt": "🔍 **{heroi}** ativa a Detecção de Armadilhas — {reveladas} armadilha(s) revelada(s). (manutenção 💧-1/turno)"
   },
   "narracao.ativa_aura_sagrada_2_ca_para_todos_por_2": {
@@ -365,7 +365,7 @@ window.LANG_NARRACAO = {
     "pt": " Renome {bonus}."
   },
   "narracao.azar_sobrenatural_rouba_o_critico_de_o_g": {
-    "en": "",
+    "en": "☠️ **Uncanny Misfortune** steals **{heroi}**'s critical — the blow lands, but without the force it promised.",
     "pt": "☠️ **Azar Sobrenatural** rouba o crítico de **{heroi}** — o golpe acerta, mas sem a força que prometia."
   },
   "narracao.baixa_a_lamina_sagrada_golpe_sagrado_des": {
@@ -377,11 +377,11 @@ window.LANG_NARRACAO = {
     "pt": "🌿 **{m_get_name_o_monstro}** bebe **{item}** — regeneração +{val}."
   },
   "narracao.bebe_reserva_de_regeneracao_hp_1_hp_por": {
-    "en": "",
+    "en": "🌿 **{heroi}** drinks **{item}** — regeneration pool **{p_potion_regen_pool}** HP (+1 HP per round).",
     "pt": "🌿 **{heroi}** bebe **{item}** — reserva de regeneração **{p_potion_regen_pool}** HP (+1 HP por rodada)."
   },
   "narracao.beneficia_o_inimigo_por_engano": {
-    "en": "",
+    "en": "😈 **{magia_nome}** benefits the enemy **{inimigo}** by mistake!",
     "pt": "😈 **{magia_nome}** beneficia o inimigo **{inimigo}** por engano!"
   },
   "narracao.cacador_das_trevas_ataque_extra_das_garr": {
@@ -393,7 +393,7 @@ window.LANG_NARRACAO = {
     "pt": "🎵 Canção Heroica de **{heroi}** [{labels}] — manutenção 🍖-{custo_fome} 💧-{custo_sede}."
   },
   "narracao.cauda_em_de_dano_reflexos_vs_cd": {
-    "en": "",
+    "en": "🦂 Tail on **{vitima}**: **{dano}** damage{e_derrubado_if_not_passo}! (Reflex {st} vs DC {cd})",
     "pt": "🦂 Cauda em **{vitima}**: **{dano}** de dano{e_derrubado_if_not_passo}! (Reflexos {st} vs CD {cd})"
   },
   "narracao.causa_de_constricao_em": {
@@ -429,7 +429,7 @@ window.LANG_NARRACAO = {
     "pt": "🦎 **Combo Devorador**! **{monstro}** crava 2 garras!"
   },
   "narracao.come_a_fome_e_sede": {
-    "en": "",
+    "en": "{item_emoji} **{heroi}** eats the **{item}**: +{val} hunger and +{val} thirst.",
     "pt": "{item_emoji} **{heroi}** come a **{item}**: +{val} fome e +{val} sede."
   },
   "narracao.con_hp_max": {
@@ -453,11 +453,11 @@ window.LANG_NARRACAO = {
     "pt": "💀 **{monstro}** conjura {len_invocados} servo(s): **{nomes}**!"
   },
   "narracao.conjura_silencio_4x4_em_por_rodada_s_sem": {
-    "en": "",
+    "en": "🔇 **{monstro}** casts **Silence** 4x4 at ({centro_0},{centro_1}) for {dur} round(s) — no spells inside!",
     "pt": "🔇 **{monstro}** conjura **Silêncio** 4x4 em ({centro_0},{centro_1}) por {dur} rodada(s) — sem magias dentro!"
   },
   "narracao.conjura_um_elemental_de_hp_dano_mov_cont": {
-    "en": "",
+    "en": "🌪️ **{caster}** conjures a **{tipo_capitalize} Elemental** (HP {hpv}, damage {stats_get_dano_1d6}, move {mov}). Control it like the minions — end your turn to open the elementals' window.",
     "pt": "🌪️ **{caster}** conjura um **Elemental de {tipo_capitalize}** (HP {hpv}, dano {stats_get_dano_1d6}, mov {mov}). Controle-o como os servos — encerre o turno para abrir a janela dos elementais."
   },
   "narracao.conjuracao_bem_sucedida": {
@@ -465,11 +465,11 @@ window.LANG_NARRACAO = {
     "pt": "✨ Conjuração **bem-sucedida**!{extra}"
   },
   "narracao.consome": {
-    "en": "",
+    "en": "{item_emoji} **{heroi}** consumes **{item}**: {e_join_partes}.",
     "pt": "{item_emoji} **{heroi}** consome **{item}**: {e_join_partes}."
   },
   "narracao.consome_de_de": {
-    "en": "",
+    "en": "☠️ **{maldicoes_mid_nome}** consumes **{perda}** {recurso} from **{heroi}**.",
     "pt": "☠️ **{maldicoes_mid_nome}** consome **{perda}** de {recurso} de **{heroi}**."
   },
   "narracao.contem_a_licantropia_no_d4": {
@@ -493,7 +493,7 @@ window.LANG_NARRACAO = {
     "pt": "🕸️ **{monstro}** continua preso na rede e perde o turno!"
   },
   "narracao.contrai_uma_doenca_sintomas_curavel_por": {
-    "en": "",
+    "en": "🦠 **{heroi}** contracts a **{d_severidade_capitalize} Disease**! Symptoms: {sint}. (curable by a cleric or at the temple)",
     "pt": "🦠 **{heroi}** contrai uma **Doença {d_severidade_capitalize}**! Sintomas: {sint}. (curável por clérigo ou templo)"
   },
   "narracao.contramagica_de_falha_no_teste_oposto_vs": {
@@ -505,7 +505,7 @@ window.LANG_NARRACAO = {
     "pt": "🛑 **Contramágica** de **{alvo_get_name_alvo}** vence o teste oposto ({meu} vs {op}) e cancela a magia!"
   },
   "narracao.corrosao_viva_em_agora_de_dano_por_turno": {
-    "en": "",
+    "en": "☣️ **Living Corrosion** on **{heroi}** — now **{n}** damage per turn (2 rounds)!",
     "pt": "☣️ **Corrosão Viva** em **{heroi}** — agora **{n}** de dano por turno (2 rodadas)!"
   },
   "narracao.cospe": {
@@ -513,15 +513,15 @@ window.LANG_NARRACAO = {
     "pt": "🦖 **{monstro}** cospe **{alvo_get_name_or_alvo_ge}**: {motivo}."
   },
   "narracao.cospe_acido_em_de_dano_reflexos_vs_cd": {
-    "en": "",
+    "en": "🧪 **{monstro}** spits acid at **{alvo}**: **{dano}** damage (Reflex {total} vs DC {cd}){metade_if_passou_else}",
     "pt": "🧪 **{monstro}** cospe ácido em **{alvo}**: **{dano}** de dano (Reflexos {total} vs CD {cd}){metade_if_passou_else}"
   },
   "narracao.cria_um_bau_de_provisoes_em_com_alimento": {
-    "en": "",
+    "en": "🍞 **{caster}** creates a **Supply Chest** at ({tx}, {ty}) with **{quantidade}** random food item(s){extra}!",
     "pt": "🍞 **{caster}** cria um **Baú de Provisões** em ({tx}, {ty}) com **{quantidade}** alimento(s) aleatório(s){extra}!"
   },
   "narracao.cria_uma_area_de_silencio_x_em_por_rodad": {
-    "en": "",
+    "en": "🔇 **{caster}** creates a **Silence** area {lado}x{lado} at ({tx},{ty}) for {dur} round(s) — no spells and no Heroic Song bonuses inside (range {alcance}sq).",
     "pt": "🔇 **{caster}** cria uma área de **Silêncio** {lado}x{lado} em ({tx},{ty}) por {dur} rodada(s) — sem magias nem bônus de Canção Heroica dentro (alcance {alcance}q)."
   },
   "narracao.cria_uma_nuvem_acida_de_raio_por_rodada": {
@@ -529,7 +529,7 @@ window.LANG_NARRACAO = {
     "pt": "🧪 **{monstro}** cria uma Nuvem Ácida de raio {raio} por {zona_duracao} rodada(s)."
   },
   "narracao.cura_d8_hp_alcance_q": {
-    "en": "",
+    "en": "🙌 **{heroi}** heals **{alvo}** — {num_dados}d8({dados_str}){if_bonus_int_0_else}{bonus_int} = **{cura_real}** HP ({alvo_hp}/{alvo_max_hp}) | range {alcance_tiles}sq (🍖-{custo_fome} 💧-{custo_sede})",
     "pt": "🙌 **{heroi}** cura **{alvo}** — {num_dados}d8({dados_str}){if_bonus_int_0_else}{bonus_int} = **{cura_real}** HP ({alvo_hp}/{alvo_max_hp}) | alcance {alcance_tiles}q (🍖-{custo_fome} 💧-{custo_sede})"
   },
   "narracao.cura_em_hp_2d6_2": {
@@ -537,11 +537,11 @@ window.LANG_NARRACAO = {
     "pt": "💚 **{heroi}** cura **{t}** em **{heal}** HP! (2d6+2)"
   },
   "narracao.d20_vs_cd_a": {
-    "en": "",
+    "en": "🦂 **{alvo_nome}** — {save_title} d20={d20}{if_sb_0_else}{sb}={total} vs DC {dc} → {resistiu_if_ok_else_falh} {nome}.",
     "pt": "🦂 **{alvo_nome}** — {save_title} d20={d20}{if_sb_0_else}{sb}={total} vs CD {dc} → {resistiu_if_ok_else_falh} a {nome}."
   },
   "narracao.da_o_bote_imovel_ataque_rapido_1_no_acer": {
-    "en": "",
+    "en": "🐍 **{monstro}** strikes from stillness — **Quick Attack** (+1 to hit)!",
     "pt": "🐍 **{monstro}** dá o bote imóvel — **Ataque Rápido** (+1 no acerto)!"
   },
   "narracao.dano_elemental_de": {
@@ -585,11 +585,11 @@ window.LANG_NARRACAO = {
     "pt": "🌀 **{alvo_get_name_alvo}** desaparece de {origem} e surge em {destino}!"
   },
   "narracao.desaparece_nas_sombras_d20_vs_invisivel": {
-    "en": "",
+    "en": "🌑 **{heroi}** vanishes into the shadows! (d20={d20}+{bonus_dex}={total} vs {dificuldade}) — invisible until acting. Upkeep 🍖-1 💧-1/turn.",
     "pt": "🌑 **{heroi}** desaparece nas sombras! (d20={d20}+{bonus_dex}={total} vs {dificuldade}) — invisível até agir. Manutenção 🍖-1 💧-1/turno."
   },
   "narracao.desaparece_nas_sombras_imune_a_ataques_a": {
-    "en": "",
+    "en": "🌫️ **{monstro}** **vanishes into the shadows** — immune to ranged attacks and hard to hit (melee: -4) until its next turn!",
     "pt": "🌫️ **{monstro}** **desaparece nas sombras** — imune a ataques à distância e difícil de acertar (corpo a corpo: -4) até seu próximo turno!"
   },
   "narracao.desarma_a_armadilha": {
@@ -613,7 +613,7 @@ window.LANG_NARRACAO = {
     "pt": "📤 **{heroi}** desequipou **{item}**."
   },
   "narracao.desfere_golpe_de_mao_secundaria_com_acao": {
-    "en": "",
+    "en": "🗡️ **{heroi}** lands an off-hand blow with **{off}** (bonus action) (d20={oroll}+{offhand_atk}={ototal} vs AC {tgt_ac}):{ocrit_str} damage [{off_die}={oraw}{osb} {ostat}] = **{odmg}**!",
     "pt": "🗡️ **{heroi}** desfere golpe de mão secundária com **{off}** (ação bônus) (d20={oroll}+{offhand_atk}={ototal} vs CA {tgt_ac}):{ocrit_str} dano [{off_die}={oraw}{osb} {ostat}] = **{odmg}**!"
   },
   "narracao.desfere_um_golpe_brutal_2_dano": {
@@ -669,7 +669,7 @@ window.LANG_NARRACAO = {
     "pt": "🧠 **{caster}** domina a mente de **{alvo}** por {dur} rodada(s)!"
   },
   "narracao.domina_controle_temporario_o_morto_vivo": {
-    "en": "",
+    "en": "💀 **{caster}** dominates **{alvo}**! Temporary control — the undead will make a Will save (DC {dif}) each round; 3 failures in a row = PERMANENT control.",
     "pt": "💀 **{caster}** domina **{alvo}**! Controle temporário — o morto-vivo testará Vontade (CD {dif}) a cada rodada; 3 falhas seguidas = controle PERMANENTE."
   },
   "narracao.dominado_ataca_de_dano": {
@@ -713,7 +713,7 @@ window.LANG_NARRACAO = {
     "pt": "🌙 **{tgt_name}** é atacado dormindo — golpe **CRÍTICO** e desperta!"
   },
   "narracao.e_atingido_em_cheio_d20_12_de_dano": {
-    "en": "",
+    "en": "❌ **{pl}** is hit square on (d20={d20}+{bonus}={total} < 12) — {dano_final} damage.",
     "pt": "❌ **{pl}** é atingido em cheio (d20={d20}+{bonus}={total} < 12) — {dano_final} de dano."
   },
   "narracao.e_destruido_e_explode": {
@@ -729,11 +729,11 @@ window.LANG_NARRACAO = {
     "pt": "💨 **{tgt_name}** é empurrado 1 quadrado pelo Golpe de Vento!"
   },
   "narracao.e_envenenado_por_de_dano_por_rodada_ate": {
-    "en": "",
+    "en": "💀 **{alvo_nome}** is poisoned by **{nome}** — {dano_txt} damage per round (up to {dur} round(s); {regra_save})!",
     "pt": "💀 **{alvo_nome}** é envenenado por **{nome}** — {dano_txt} de dano por rodada (até {dur} rodada(s); {regra_save})!"
   },
   "narracao.e_envolvido_pela_onda_de_e_fica_preso": {
-    "en": "",
+    "en": "🌊 **{target}** is engulfed by **{monstro}**'s wave and is trapped!",
     "pt": "🌊 **{target}** é envolvido pela onda de **{monstro}** e fica preso!"
   },
   "narracao.e_imune_a": {
@@ -773,7 +773,7 @@ window.LANG_NARRACAO = {
     "pt": "🦠 **{target}** é infectado! (Fortitude {tot} vs CD {dc})"
   },
   "narracao.e_infectado_fortitude_vs_cd_2": {
-    "en": "",
+    "en": "🦠 **{target}** is infected! (Fortitude {total_save} vs DC {dc})",
     "pt": "🦠 **{target}** é infectado! (Fortitude {total_save} vs CD {dc})"
   },
   "narracao.e_queimado_pelo_corpo_em_chamas_de_dano": {
@@ -781,7 +781,7 @@ window.LANG_NARRACAO = {
     "pt": "🔥 **{heroi}** é queimado pelo Corpo em Chamas: **{fogo_alvo}** de dano!"
   },
   "narracao.e_queimado_pelo_corpo_em_chamas_de_de_da": {
-    "en": "",
+    "en": "🔥 **{heroi}** is burned by **{target}**'s Body of Flames: **{fogo_alvo}** damage!",
     "pt": "🔥 **{heroi}** é queimado pelo Corpo em Chamas de **{target}**: **{fogo_alvo}** de dano!"
   },
   "narracao.e_revigorado_pela_agua_e_recupera_hp": {
@@ -801,19 +801,19 @@ window.LANG_NARRACAO = {
     "pt": "✅ Efeito de **{efeito_get_nome_veneno}** expirou em **{alvo_nome}**."
   },
   "narracao.em_d20_vs_ca_de_dano_hp": {
-    "en": "",
+    "en": "💢 **{monstro}** · {atk_name} on **{tgt_name}** (d20={roll}+{m_atk}={total} vs AC {effective_ac}):{crit_str} **{dmg_alvo}** damage! ({target_hp}/{target_max_hp} HP)",
     "pt": "💢 **{monstro}** · {atk_name} em **{tgt_name}** (d20={roll}+{m_atk}={total} vs CA {effective_ac}):{crit_str} **{dmg_alvo}** de dano! ({target_hp}/{target_max_hp} HP)"
   },
   "narracao.em_d20_vs_ca_de_dano_hp_2": {
-    "en": "",
+    "en": "💢 **{monstro}** · {atk_name} on **{tgt_name}** (d20={roll}+{m_atk}={total} vs AC {effective_ac}):{crit_str} **{dmg}** damage! ({target_hp}/{target_max_hp} HP)",
     "pt": "💢 **{monstro}** · {atk_name} em **{tgt_name}** (d20={roll}+{m_atk}={total} vs CA {effective_ac}):{crit_str} **{dmg}** de dano! ({target_hp}/{target_max_hp} HP)"
   },
   "narracao.em_d20_vs_ca_de_dano_hp_3": {
-    "en": "",
+    "en": "💢 **{monstro}** · {atk_name} on **{tgt_name}** (d20={roll}+{m_atk}={total} vs AC {effective_ac}):{crit_str} **{dmg_ef}** damage! ({target_vida_atual}/{target_vida_max} HP)",
     "pt": "💢 **{monstro}** · {atk_name} em **{tgt_name}** (d20={roll}+{m_atk}={total} vs CA {effective_ac}):{crit_str} **{dmg_ef}** de dano! ({target_vida_atual}/{target_vida_max} HP)"
   },
   "narracao.em_d20_vs_ca_errou": {
-    "en": "",
+    "en": "💢 **{monstro}** · {atk_def_get_name_ataque} on **{tgt_name}** (d20={roll}+{m_atk}={total} vs AC {effective_ac}): **MISS!**",
     "pt": "💢 **{monstro}** · {atk_def_get_name_ataque} em **{tgt_name}** (d20={roll}+{m_atk}={total} vs CA {effective_ac}): **ERROU!**"
   },
   "narracao.em_por_rodada_s": {
@@ -825,7 +825,7 @@ window.LANG_NARRACAO = {
     "pt": "🔥 **{nome}** {passa_if_passou_else_fal} em Reflexos ({total} vs CD {cd}) e sofre **{dano}** de fogo."
   },
   "narracao.em_reflexos_vs_cd_e_sofre_de_fogo_2": {
-    "en": "",
+    "en": "🔥 **{heroi}** {resultado} the Reflex save ({total_save} vs DC {cd}) and takes **{dano_alvo}** fire damage.",
     "pt": "🔥 **{heroi}** {resultado} em Reflexos ({total_save} vs CD {cd}) e sofre **{dano_alvo}** de fogo."
   },
   "narracao.encerra_a_cancao_heroica": {
@@ -853,7 +853,7 @@ window.LANG_NARRACAO = {
     "pt": "🦖 **{monstro}** engole **{preso_get_name_or_preso}**!"
   },
   "narracao.entoa_a_cancao_heroica_aliados_em_quadra": {
-    "en": "",
+    "en": "🎵 **{heroi}** strikes up the **Heroic Song** [{labels}]! Allies within {CANCAO_RAIO} squares are inspired (🍖-{custo_fome} 💧-{custo_sede}).",
     "pt": "🎵 **{heroi}** entoa a **Canção Heroica** [{labels}]! Aliados em {CANCAO_RAIO} quadrados são inspirados (🍖-{custo_fome} 💧-{custo_sede})."
   },
   "narracao.entoa_o_dueto_marcial_por_rodada_s": {
@@ -869,7 +869,7 @@ window.LANG_NARRACAO = {
     "pt": "📯 **{monstro}** entra em pânico (Amedrontado {st_medo}r)!"
   },
   "narracao.entrou_em_panico_vai_fugir_por_2_rodadas": {
-    "en": "",
+    "en": "😱 **{monstro}** panicked! It will flee for 2 rounds. (d20={d20}{sb_str}={stot})",
     "pt": "😱 **{monstro}** entrou em pânico! Vai fugir por 2 rodadas. (d20={d20}{sb_str}={stot})"
   },
   "narracao.entrou_na_zona_de_fogo_e_sofre": {
@@ -893,7 +893,7 @@ window.LANG_NARRACAO = {
     "pt": "🛡️ **{heroi}** ergue o escudo! +3 CA até o próximo turno."
   },
   "narracao.ergue_uma_barreira_arcana_reduz_de_todo": {
-    "en": "",
+    "en": "🛡️ **{caster}** raises an **Arcane Barrier** — reduces **{reducao}** of all damage taken for **{dur} round(s)**.",
     "pt": "🛡️ **{caster}** ergue uma **Barreira Arcana** — reduz **{reducao}** de todo dano recebido por **{dur} rodada(s)**."
   },
   "narracao.erra_contra_vs_ca": {
@@ -909,7 +909,7 @@ window.LANG_NARRACAO = {
     "pt": "{defn_get_emoji} **{monstro}** erra o arremesso em **{target_get_name_target_g}**."
   },
   "narracao.erra_o_golpe_de_mao_secundaria_d20_vs_ca": {
-    "en": "",
+    "en": "🗡️ **{heroi}** misses the off-hand blow (d20={oroll}+{offhand_atk}={ototal} vs AC {tgt_ac}).",
     "pt": "🗡️ **{heroi}** erra o golpe de mão secundária (d20={oroll}+{offhand_atk}={ototal} vs CA {tgt_ac})."
   },
   "narracao.escapa_ao_ser_arrastado_por": {
@@ -925,11 +925,11 @@ window.LANG_NARRACAO = {
     "pt": "🦷 **{m}** esmaga **{a}** nas mandíbulas! {d} de dano perfurante (automático)!"
   },
   "narracao.esquiva_da_explosao_d20_12_de_dano": {
-    "en": "",
+    "en": "✅ **{pl}** dodges the blast (d20={d20}+{bonus}={total} ≥ 12) — {dano_final} damage.",
     "pt": "✅ **{pl}** esquiva da explosão (d20={d20}+{bonus}={total} ≥ 12) — {dano_final} de dano."
   },
   "narracao.esquiva_parcial_d20_12_de_dano": {
-    "en": "",
+    "en": "🎲 **{monstro}** partially dodges (d20={d20}+{bonus}={total} ≥ 12) — {d} damage.",
     "pt": "🎲 **{monstro}** esquiva parcial (d20={d20}+{bonus}={total} ≥ 12) — {d} de dano."
   },
   "narracao.esta_apavorado_e_foge": {
