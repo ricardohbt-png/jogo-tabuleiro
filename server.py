@@ -1242,6 +1242,16 @@ def _param_texto(valor, lang):
     português cravado."""
     if isinstance(valor, T):
         return t(valor.key, lang, **valor.params)
+    if isinstance(valor, (list, tuple)):
+        # Lista de fragmentos: junta com separador do PRÓPRIO idioma (" e " ×
+        # " and "). Cada elemento pode ser um T — é o caso de nome de catálogo.
+        itens = [_param_texto(v, lang) for v in valor]
+        if not itens:
+            return ""
+        if len(itens) == 1:
+            return itens[0]
+        return (t("lista.separador", lang).join(itens[:-1])
+                + t("lista.ultimo", lang) + itens[-1])
     return str(valor)
 
 def t(key, lang=LANG_DEFAULT, **params):
@@ -23325,7 +23335,9 @@ class GameRoom:
             m["_mestre_dos_mortos_usado"] = True
             m["_ja_executou_acao"] = True
             m.setdefault("ability_uses", {})["mestre_dos_mortos"] = 0
-            nomes = " e ".join(s["name"] for s in invocados)
+            # LISTA, não string pronta: o motor junta com o separador do idioma
+            # de quem lê (" e " × " and ") e resolve cada nome pelo catálogo.
+            nomes = [nome_criatura(s) for s in invocados]
             await self.gm_say(T("narracao.conjura_servo_s", monstro=nome_criatura(m), len_invocados=len(invocados), nomes=nomes))
         return invocados
 

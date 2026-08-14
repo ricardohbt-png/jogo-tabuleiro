@@ -8,6 +8,10 @@
 //     de linha, nunca dentro de comentário), não na primeira chave do arquivo.
 //   • Parâmetros são {nome} e são substituídos por nome, nunca por posição.
 //   • Falta a chave "en"? Cai no "pt". É isso que permite traduzir em lotes.
+//   • As chaves "lista.separador" e "lista.ultimo" são do MOTOR, não de
+//     conteúdo: um parâmetro pode ser uma LISTA de fragmentos, e o t() a junta
+//     com elas (" e " × " and "). NÃO dê parâmetros a essas duas — o _valor()
+//     do cliente chama t() para lê-las, e um parâmetro criaria recursão.
 window.LANG_STRINGS = {
   "narracao.abre_porta": {
     "pt": "🚪 **{nome}** abre uma porta!",
@@ -65,5 +69,7 @@ window.LANG_STRINGS = {
   "ui.savegames.mestre_label": { "pt": "Este jogo terá um Mestre humano",
                                  "en": "This game will have a human Game Master" },
   "ui.savegames.btn_criar": { "pt": "➕ Criar jogo", "en": "➕ Create game" },
-  "ui.savegames.btn_voltar": { "pt": "← Voltar", "en": "← Back" }
+  "ui.savegames.btn_voltar": { "pt": "← Voltar", "en": "← Back" },
+  "lista.separador": { "pt": ", ",  "en": ", " },
+  "lista.ultimo":    { "pt": " e ", "en": " and " }
 };

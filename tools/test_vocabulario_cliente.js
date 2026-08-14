@@ -178,6 +178,24 @@ I18N.traduzirNomes(corroidoPt);
 check("em português o filtro não mexe", corroidoPt.name === "Alabarda de Prata");
 
 
+console.log("\n[L] O t() do cliente junta listas");
+DICT["teste.lista"] = { pt: "Controla {quem}.", en: "Controls {quem}." };
+I18N.setLang("pt");
+check("dois itens em pt",
+      I18N.t("teste.lista", { quem: ["os animados", "o prisioneiro"] })
+      === "Controla os animados e o prisioneiro.");
+check("tres itens em pt",
+      I18N.t("teste.lista", { quem: ["a", "b", "c"] }) === "Controla a, b e c.");
+I18N.setLang("en");
+check("dois itens em en",
+      I18N.t("teste.lista", { quem: ["the minions", "the prisoner"] })
+      === "Controls the minions and the prisoner.");
+check("tres itens em en",
+      I18N.t("teste.lista", { quem: ["a", "b", "c"] }) === "Controls a, b and c.");
+check("lista vazia nao deixa separador solto",
+      I18N.t("teste.lista", { quem: [] }) === "Controls .");
+I18N.setLang("pt");
+
 console.log("\n" + "=".repeat(62));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);
 console.log("=".repeat(62));

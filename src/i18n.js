@@ -14,6 +14,19 @@
   let lang = PADRAO;
   const ouvintes = [];
 
+  // Gêmeo do _param_texto do server.py: um parâmetro pode ser uma LISTA de
+  // fragmentos, que se junta com separador do próprio idioma (" e " × " and ").
+  // A recursão com t() termina porque `lista.separador` e `lista.ultimo` não
+  // têm parâmetros — não dê parâmetros a elas.
+  function _valor(v) {
+    if (!Array.isArray(v)) return String(v);
+    const itens = v.map(_valor);
+    if (!itens.length)      return '';
+    if (itens.length === 1) return itens[0];
+    return itens.slice(0, -1).join(t('lista.separador'))
+           + t('lista.ultimo') + itens[itens.length - 1];
+  }
+
   // Sem tradução no idioma pedido → português. Sem a chave → devolve a própria
   // chave: aparece na tela (fica óbvio o que falta traduzir) e nada quebra.
   function t(key, params) {
@@ -24,7 +37,7 @@
     }
     let text = entry[lang] || entry[PADRAO] || key;
     if (params) {
-      text = text.replace(PARAM, (m, k) => (k in params ? String(params[k]) : m));
+      text = text.replace(PARAM, (m, k) => (k in params ? _valor(params[k]) : m));
     }
     return text;
   }

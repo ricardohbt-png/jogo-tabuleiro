@@ -190,6 +190,29 @@ def _rodar_verificacoes():
     check("o pergaminho marca a chave no elemental",
           bool(re.search(r'"name_key"\]\s*=\s*"cat\.monstro\.elemental_descontrolado"', FONTE)))
 
+    print("\n[10] O motor junta listas com separador do idioma")
+    S.LANG_STRINGS["narracao._teste_lista"] = {
+        "pt": "Controla {quem}.", "en": "Controls {quem}."}
+
+    def _lista(itens, lang):
+        return S.t("narracao._teste_lista", lang, quem=itens)
+
+    check("lista vazia não deixa separador solto", _lista([], "pt") == "Controla .")
+    check("um item", _lista(["os animados"], "pt") == "Controla os animados.")
+    check("dois itens em pt",
+          _lista(["os animados", "o prisioneiro"], "pt")
+          == "Controla os animados e o prisioneiro.")
+    check("dois itens em en",
+          _lista(["the minions", "the prisoner"], "en")
+          == "Controls the minions and the prisoner.")
+    check("três itens em pt", _lista(["a", "b", "c"], "pt") == "Controla a, b e c.")
+    check("três itens em en", _lista(["a", "b", "c"], "en") == "Controls a, b and c.")
+    # O elemento pode ser ele próprio um T — é o caso de nome de catálogo.
+    check("elemento T é resolvido no idioma do leitor",
+          _lista([S.T("cat.monstro.orc.nome")], "en")
+          == "Controls " + S.LANG_STRINGS["cat.monstro.orc.nome"]["en"] + ".")
+    S.LANG_STRINGS.pop("narracao._teste_lista", None)
+
 
 if __name__ == "__main__":
     print("=" * 62); print("  TESTE — Narração do servidor (etapa 4b-i)"); print("=" * 62)
