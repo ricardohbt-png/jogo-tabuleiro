@@ -2953,6 +2953,33 @@ window.EDITOR_CATALOG = {
       ],
       "resistances": [],
       "loot_table": {},
+      "loot_drops": [
+        {
+          "kind": "gold",
+          "amount": 10,
+          "chance": 30
+        },
+        {
+          "kind": "gold",
+          "amount": 15,
+          "chance": 30
+        },
+        {
+          "kind": "gold",
+          "amount": 20,
+          "chance": 25
+        },
+        {
+          "kind": "gold",
+          "amount": 35,
+          "chance": 15
+        },
+        {
+          "kind": "gold",
+          "amount": 50,
+          "chance": 5
+        }
+      ],
       "ai_type": "agressivo",
       "undead": false,
       "subtipo": "raca_padrao",
@@ -3046,6 +3073,13 @@ window.EDITOR_CATALOG = {
         {
           "type": "physical",
           "reduction": 5
+        }
+      ],
+      "loot_drops": [
+        {
+          "kind": "item",
+          "item_id": "pocao_cura",
+          "chance": 25
         }
       ],
       "ai_type": "agressivo",
@@ -4023,6 +4057,588 @@ window.EDITOR_CATALOG = {
       "undead": false,
       "subtipo": "besta_magica",
       "percepcao": 13
+    },
+    {
+      "type": "ciclope",
+      "name": "Ciclope",
+      "emoji": "👁️",
+      "boss": false,
+      "tier": 5,
+      "cr": 5,
+      "hp": 48,
+      "ac": 15,
+      "natural_armor": 5,
+      "movement": 6,
+      "movement_exception": true,
+      "vision_base": 0,
+      "percepcao": 12,
+      "size": [
+        2,
+        2
+      ],
+      "porte": "enorme",
+      "image": "ciclope",
+      "str_": 24,
+      "dex": 10,
+      "con_": 18,
+      "int_": 6,
+      "fort": 8,
+      "ref_": 0,
+      "will": 3,
+      "save_bonuses": {
+        "fortitude": 3
+      },
+      "save_penalties": {
+        "reflexos": -2
+      },
+      "crit_vulnerability_min_nat_roll": 19,
+      "attacks": [
+        {
+          "name": "Clava Gigante",
+          "atk_bonus": 8,
+          "damage": "2d6+7",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "melee": true,
+          "reach": 2,
+          "ciclope_melee": true
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "alcance_enorme",
+          "name": "Alcance Enorme",
+          "action_type": "passiva",
+          "reach": 2,
+          "descricao": "Ataques corpo a corpo atingem alvos a até 2 quadrados."
+        },
+        {
+          "id": "arremesso_colossal",
+          "name": "Arremesso Colossal",
+          "action_type": "acao",
+          "range": 8,
+          "attack_bonus": 1,
+          "attack_attribute": "dex",
+          "damage": "2d6",
+          "damage_attribute": "str_",
+          "apply_attribute_damage": true,
+          "attribute_mod_base": 0,
+          "descricao": "Arremessa um objeto a até 8 quadrados; usa DES no ataque e o bônus de FOR no dano."
+        },
+        {
+          "id": "golpe_esmagador",
+          "name": "Golpe Esmagador",
+          "action_type": "passiva",
+          "attack_index": 0,
+          "dc": 17,
+          "save": "fortitude",
+          "effect": "perde_movimento",
+          "descricao": "Ao acertar a Clava Gigante, Fortitude CD 17; falha: perde a próxima ação de movimento."
+        },
+        {
+          "id": "investida_colossal",
+          "name": "Investida Colossal",
+          "action_type": "passiva",
+          "attack_index": 0,
+          "move_required": 3,
+          "straight": true,
+          "attack_bonus": 2,
+          "damage_bonus": 4,
+          "descricao": "Após mover 3 ou mais quadrados em linha reta antes da Clava: +2 no ataque e +4 no dano."
+        },
+        {
+          "id": "pisoteio_colossal",
+          "name": "Pisoteio Colossal",
+          "action_type": "passiva",
+          "move_required": 4,
+          "straight": true,
+          "damage": "2d6",
+          "damage_attribute": "str_",
+          "descricao": "Após mover 4 ou mais quadrados em linha reta, personagens atravessados sofrem 2d6 + FOR."
+        },
+        {
+          "id": "vigor_colossal",
+          "name": "Vigor Colossal",
+          "action_type": "passiva",
+          "save_bonus": {
+            "fortitude": 3
+          },
+          "descricao": "+3 em todos os testes de Fortitude."
+        },
+        {
+          "id": "presenca_aterradora",
+          "name": "Presença Aterradora",
+          "action_type": "passiva",
+          "radius": 4,
+          "dc": 13,
+          "save": "vontade",
+          "attack_penalty": -1,
+          "duration_rounds": 1,
+          "descricao": "No início do combate, heróis em até 4 quadrados testam Vontade; falha: -1 no ataque na primeira rodada."
+        },
+        {
+          "id": "furia_selvagem_ciclope",
+          "name": "Fúria Selvagem",
+          "action_type": "passiva",
+          "threshold": 0.5,
+          "attack_bonus": 2,
+          "damage_bonus": 4,
+          "ac_penalty": -4,
+          "descricao": "Com metade dos PV ou menos: +2 no ataque, +4 no dano e -4 na CA."
+        },
+        {
+          "id": "visao_limitada_ciclope",
+          "name": "Visão Limitada",
+          "action_type": "passiva",
+          "hide_bonus": 2,
+          "descricao": "Personagens usando Esconder-se recebem +2 no teste contra o Ciclope."
+        },
+        {
+          "id": "ponto_cego_ciclope",
+          "name": "Ponto Cego",
+          "action_type": "passiva",
+          "crit_min_nat_roll": 19,
+          "descricao": "Resultados naturais 19 ou 20 contra o Ciclope são ameaças de crítico."
+        },
+        {
+          "id": "cercado_ciclope",
+          "name": "Cercado",
+          "action_type": "passiva",
+          "attack_bonus": 2,
+          "min_attackers": 2,
+          "descricao": "Quando dois ou mais heróis o atacam, todos recebem +2 no ataque contra ele."
+        },
+        {
+          "id": "reflexos_lentos_ciclope",
+          "name": "Reflexos Lentos",
+          "action_type": "passiva",
+          "save_penalty": {
+            "reflexos": -2
+          },
+          "descricao": "Sofre -2 em todos os testes de Reflexos."
+        }
+      ],
+      "immunities": [],
+      "weaknesses": [
+        {
+          "type": "ciclope_olho_unico",
+          "nd_penalty": 0.28,
+          "descricao": "Olho Único: furtividade +2, críticos naturais 19–20, Reflexos -2 e vulnerável quando cercado."
+        }
+      ],
+      "resistances": [],
+      "loot_table": {
+        "1-50": {
+          "tipo": "item",
+          "id": "espada2m"
+        },
+        "51-75": {
+          "tipo": "item",
+          "id": "joia"
+        },
+        "76-100": null
+      },
+      "ai_type": "ciclope",
+      "undead": false,
+      "subtipo": "besta_magica"
+    },
+    {
+      "type": "gigante_guerra",
+      "name": "Gigante da Guerra",
+      "emoji": "🗿",
+      "boss": false,
+      "tier": 7,
+      "cr": 7,
+      "hp": 60,
+      "ac": 17,
+      "natural_armor": 5,
+      "movement": 6,
+      "movement_exception": true,
+      "vision_base": 0,
+      "percepcao": 13,
+      "size": [
+        2,
+        2
+      ],
+      "porte": "enorme",
+      "image": "gigante_guerreiro",
+      "str_": 22,
+      "dex": 14,
+      "con_": 20,
+      "int_": 12,
+      "fort": 10,
+      "ref_": 4,
+      "will": 5,
+      "save_bonuses": {
+        "fortitude": 3
+      },
+      "weapon_options": [
+        {
+          "id": "espada_longa_colossal",
+          "name": "Espada Longa Colossal",
+          "damage": "2d8+6",
+          "reach": 2,
+          "two_handed": false,
+          "shield_compatible": true
+        },
+        {
+          "id": "machado_orc_colossal",
+          "name": "Machado Orc Colossal",
+          "damage": "2d10+6",
+          "reach": 2,
+          "two_handed": true,
+          "shield_compatible": false
+        },
+        {
+          "id": "lanca_longa_colossal",
+          "name": "Lança Longa Colossal",
+          "damage": "2d8+6",
+          "reach_straight": 4,
+          "reach_diagonal": 2,
+          "adjacent": true,
+          "two_handed": false,
+          "shield_compatible": true
+        },
+        {
+          "id": "alabarda_colossal",
+          "name": "Alabarda Colossal",
+          "damage": "2d10+6",
+          "reach_straight": 4,
+          "reach_diagonal": 2,
+          "two_handed": true,
+          "shield_compatible": false
+        }
+      ],
+      "shield_option": {
+        "id": "escudo_gigante",
+        "name": "Escudo Gigante",
+        "ac_bonus": 2,
+        "equipped_by_default": false
+      },
+      "attacks": [
+        {
+          "name": "Espada Longa Colossal",
+          "atk_bonus": 9,
+          "damage": "2d8+6",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "attack_attribute": "str_",
+          "apply_attribute_damage": false,
+          "melee": true,
+          "reach": 2,
+          "ciclope_melee": true
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "alcance_enorme",
+          "name": "Alcance Enorme",
+          "action_type": "passiva",
+          "reach": 2,
+          "descricao": "Ataques corpo a corpo atingem alvos a até 2 quadrados."
+        },
+        {
+          "id": "arremesso_colossal",
+          "name": "Arremesso Colossal",
+          "action_type": "acao",
+          "range": 8,
+          "attack_bonus": 7,
+          "attack_attribute": "dex",
+          "damage": "2d6",
+          "damage_attribute": "str_",
+          "apply_attribute_damage": true,
+          "descricao": "Arremessa um objeto a até 8 quadrados; usa DES no ataque e FOR no dano."
+        },
+        {
+          "id": "investida_colossal",
+          "name": "Investida Colossal",
+          "action_type": "passiva",
+          "move_required": 3,
+          "straight": true,
+          "attack_bonus": 2,
+          "damage_bonus": 4,
+          "descricao": "Após mover 3 ou mais quadrados em linha reta antes do ataque: +2 no ataque e +4 no dano."
+        },
+        {
+          "id": "pisoteio_colossal",
+          "name": "Pisoteio Colossal",
+          "action_type": "passiva",
+          "move_required": 4,
+          "straight": true,
+          "damage": "2d6",
+          "damage_attribute": "str_",
+          "descricao": "Após mover 4 ou mais quadrados em linha reta, personagens atravessados sofrem 2d6 + FOR."
+        },
+        {
+          "id": "vigor_colossal",
+          "name": "Vigor Colossal",
+          "action_type": "passiva",
+          "save_bonus": {
+            "fortitude": 3
+          },
+          "descricao": "+3 em todos os testes de Fortitude."
+        },
+        {
+          "id": "presenca_aterradora",
+          "name": "Presença Aterradora",
+          "action_type": "passiva",
+          "radius": 4,
+          "dc": 13,
+          "save": "vontade",
+          "attack_penalty": -1,
+          "duration_rounds": 1,
+          "descricao": "No início do combate, heróis em até 4 quadrados testam Vontade; falha: -1 no ataque na primeira rodada."
+        },
+        {
+          "id": "mira_certeira",
+          "name": "Mira Certeira",
+          "action_type": "acao_bonus",
+          "cooldown_turns": 3,
+          "attack_bonus": 2,
+          "descricao": "Recarga 3 rodadas. Recebe +2 na próxima jogada de ataque."
+        },
+        {
+          "id": "furia_berserker",
+          "name": "Fúria Berserker",
+          "action_type": "acao",
+          "cooldown_turns": 8,
+          "extra_attacks": 1,
+          "descricao": "Recarga 8 rodadas. Realiza um ataque adicional nesta rodada."
+        },
+        {
+          "id": "investida_heroica",
+          "name": "Investida Heroica",
+          "action_type": "acao_bonus",
+          "cooldown_turns": 5,
+          "movement_multiplier": 2,
+          "damage_bonus": 2,
+          "descricao": "Recarga 5 rodadas. Dobra o deslocamento nesta rodada e recebe +2 no dano do próximo ataque. Pode combinar com Investida e Pisoteio Colossais."
+        },
+        {
+          "id": "arsenal_colossal",
+          "name": "Arsenal Colossal",
+          "action_type": "passiva",
+          "descricao": "Pode usar Espada Longa Colossal, Machado Orc Colossal, Lança Longa Colossal ou Alabarda Colossal. Armas de duas mãos não podem usar o Escudo Gigante."
+        }
+      ],
+      "immunities": [],
+      "weaknesses": [],
+      "resistances": [],
+      "loot_table": {
+        "1-25": {
+          "tipo": "item",
+          "id": "espada_longa_colossal"
+        },
+        "26-50": {
+          "tipo": "item",
+          "id": "machado_orc_colossal"
+        },
+        "51-75": {
+          "tipo": "item",
+          "id": "lanca_longa_colossal"
+        },
+        "76-100": {
+          "tipo": "item",
+          "id": "alabarda_colossal"
+        }
+      },
+      "loot_drops": [
+        {
+          "kind": "item",
+          "item_id": "armadura_pesada_gigante",
+          "chance": 50
+        },
+        {
+          "kind": "item",
+          "item_id": "joia",
+          "chance": 25
+        }
+      ],
+      "ai_type": "gigante_guerra",
+      "undead": false,
+      "subtipo": "raca_padrao"
+    },
+    {
+      "type": "gigante_runico",
+      "name": "Gigante Rúnico",
+      "emoji": "🗿",
+      "boss": false,
+      "tier": 8,
+      "cr": 8,
+      "hp": 70,
+      "ac": 19,
+      "natural_armor": 8,
+      "movement": 6,
+      "movement_exception": true,
+      "vision_base": 0,
+      "percepcao": 13,
+      "size": [
+        2,
+        2
+      ],
+      "porte": "enorme",
+      "image": "gigante_runas",
+      "caster_level": 6,
+      "str_": 20,
+      "dex": 12,
+      "con_": 22,
+      "int_": 15,
+      "fort": 11,
+      "ref_": 3,
+      "will": 8,
+      "attacks": [
+        {
+          "name": "Martelo Rúnico Colossal",
+          "atk_bonus": 10,
+          "damage": "2d8+5",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "attack_attribute": "str_",
+          "apply_attribute_damage": false,
+          "melee": true,
+          "reach": 2,
+          "ciclope_melee": true
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "alcance_enorme",
+          "name": "Alcance Enorme",
+          "action_type": "passiva",
+          "reach": 2,
+          "descricao": "Ataques corpo a corpo atingem alvos a até 2 quadrados."
+        },
+        {
+          "id": "investida_colossal",
+          "name": "Investida Colossal",
+          "action_type": "passiva",
+          "move_required": 3,
+          "straight": true,
+          "attack_bonus": 2,
+          "damage_bonus": 4,
+          "descricao": "Após mover 3 ou mais quadrados em linha reta antes do ataque: +2 no ataque e +4 no dano."
+        },
+        {
+          "id": "vigor_colossal",
+          "name": "Vigor Colossal",
+          "action_type": "passiva",
+          "save_bonus": {
+            "fortitude": 3
+          },
+          "descricao": "+3 em todos os testes de Fortitude."
+        },
+        {
+          "id": "presenca_aterradora",
+          "name": "Presença Aterradora",
+          "action_type": "passiva",
+          "radius": 4,
+          "dc": 16,
+          "save": "vontade",
+          "attack_penalty": -1,
+          "duration_rounds": 1,
+          "descricao": "No início do combate, heróis em até 4 quadrados testam Vontade; falha: -1 no ataque na primeira rodada."
+        },
+        {
+          "id": "regeneracao_runica",
+          "name": "Regeneração Rúnica",
+          "action_type": "acao_bonus",
+          "cooldown_turns": 6,
+          "heal": 2,
+          "duration_dice": "1d4+2",
+          "descricao": "Recarga 6 rodadas. Recupera 2 HP no início de cada turno durante 1d4+2 rodadas."
+        },
+        {
+          "id": "passo_fantasma_runico",
+          "name": "Passo Fantasma",
+          "action_type": "acao_bonus",
+          "cooldown_turns": 5,
+          "bonus_mov": 2,
+          "duration_dice": "1d4",
+          "descricao": "Recarga 5 rodadas. Como o Passo Fantasma do Guerreiro: +2 movimento nesta rodada e atravessa obstáculos baixos durante a janela."
+        },
+        {
+          "id": "provocacao_runica",
+          "name": "Provocação",
+          "action_type": "acao_bonus",
+          "cooldown_turns": 6,
+          "range": 4,
+          "duration_rounds": 3,
+          "descricao": "Recarga 6 rodadas. Provoca um herói a até 4 quadrados, forçando-o a enfrentar o Gigante Rúnico por 3 rodadas."
+        },
+        {
+          "id": "medo",
+          "name": "Medo",
+          "action_type": "magia",
+          "uses_per_combat": 1,
+          "descricao": "Igual à magia Medo; 1 vez por encontro."
+        },
+        {
+          "id": "amaldicoar",
+          "name": "Amaldiçoar",
+          "action_type": "magia",
+          "uses_per_combat": 1,
+          "descricao": "Igual à magia Amaldiçoar; 1 vez por encontro."
+        },
+        {
+          "id": "bola_fogo",
+          "name": "Bola de Fogo",
+          "action_type": "magia",
+          "uses_per_combat": 1,
+          "descricao": "Igual à magia Bola de Fogo, conjurador de 6º nível; 1 vez por encontro."
+        }
+      ],
+      "monster_spells": [
+        {
+          "id": "medo",
+          "limit_mode": "encounter",
+          "uses_per_combat": 1
+        },
+        {
+          "id": "amaldicoar",
+          "limit_mode": "encounter",
+          "uses_per_combat": 1
+        },
+        {
+          "id": "bola_fogo",
+          "limit_mode": "encounter",
+          "uses_per_combat": 1
+        }
+      ],
+      "immunities": [],
+      "weaknesses": [],
+      "resistances": [],
+      "loot_table": {
+        "1-100": {
+          "tipo": "item",
+          "id": "martelo_runico_colossal"
+        }
+      },
+      "loot_drops": [
+        {
+          "kind": "item",
+          "item_id": "armadura_runica",
+          "chance": 50
+        },
+        {
+          "kind": "item",
+          "item_id": "runa_ancestral",
+          "chance": 50
+        },
+        {
+          "kind": "item",
+          "item_id": "joia",
+          "chance": 25
+        }
+      ],
+      "ai_type": "gigante_runico",
+      "undead": false,
+      "subtipo": "besta_magica"
     },
     {
       "type": "garaloux_jovem",
@@ -5608,6 +6224,195 @@ window.EDITOR_CATALOG = {
       "poison_save_penalty": -2,
       "poison_multiplier": 2,
       "descricao": "-2 em Fortitude contra venenos; dano de veneno dobrado; falha contra veneno também causa Lento por 1 rodada.",
+      "source": "monstro"
+    },
+    {
+      "id": "alcance_enorme",
+      "name": "Alcance Enorme",
+      "action_type": "passiva",
+      "reach": 2,
+      "descricao": "Ataques corpo a corpo atingem alvos a até 2 quadrados.",
+      "source": "monstro"
+    },
+    {
+      "id": "arremesso_colossal",
+      "name": "Arremesso Colossal",
+      "action_type": "acao",
+      "range": 8,
+      "attack_bonus": 1,
+      "attack_attribute": "dex",
+      "damage": "2d6",
+      "damage_attribute": "str_",
+      "apply_attribute_damage": true,
+      "attribute_mod_base": 0,
+      "descricao": "Arremessa um objeto a até 8 quadrados; usa DES no ataque e o bônus de FOR no dano.",
+      "source": "monstro"
+    },
+    {
+      "id": "golpe_esmagador",
+      "name": "Golpe Esmagador",
+      "action_type": "passiva",
+      "attack_index": 0,
+      "dc": 17,
+      "save": "fortitude",
+      "effect": "perde_movimento",
+      "descricao": "Ao acertar a Clava Gigante, Fortitude CD 17; falha: perde a próxima ação de movimento.",
+      "source": "monstro"
+    },
+    {
+      "id": "investida_colossal",
+      "name": "Investida Colossal",
+      "action_type": "passiva",
+      "attack_index": 0,
+      "move_required": 3,
+      "straight": true,
+      "attack_bonus": 2,
+      "damage_bonus": 4,
+      "descricao": "Após mover 3 ou mais quadrados em linha reta antes da Clava: +2 no ataque e +4 no dano.",
+      "source": "monstro"
+    },
+    {
+      "id": "pisoteio_colossal",
+      "name": "Pisoteio Colossal",
+      "action_type": "passiva",
+      "move_required": 4,
+      "straight": true,
+      "damage": "2d6",
+      "damage_attribute": "str_",
+      "descricao": "Após mover 4 ou mais quadrados em linha reta, personagens atravessados sofrem 2d6 + FOR.",
+      "source": "monstro"
+    },
+    {
+      "id": "vigor_colossal",
+      "name": "Vigor Colossal",
+      "action_type": "passiva",
+      "save_bonus": {
+        "fortitude": 3
+      },
+      "descricao": "+3 em todos os testes de Fortitude.",
+      "source": "monstro"
+    },
+    {
+      "id": "presenca_aterradora",
+      "name": "Presença Aterradora",
+      "action_type": "passiva",
+      "radius": 4,
+      "dc": 13,
+      "save": "vontade",
+      "attack_penalty": -1,
+      "duration_rounds": 1,
+      "descricao": "No início do combate, heróis em até 4 quadrados testam Vontade; falha: -1 no ataque na primeira rodada.",
+      "source": "monstro"
+    },
+    {
+      "id": "furia_selvagem_ciclope",
+      "name": "Fúria Selvagem",
+      "action_type": "passiva",
+      "threshold": 0.5,
+      "attack_bonus": 2,
+      "damage_bonus": 4,
+      "ac_penalty": -4,
+      "descricao": "Com metade dos PV ou menos: +2 no ataque, +4 no dano e -4 na CA.",
+      "source": "monstro"
+    },
+    {
+      "id": "visao_limitada_ciclope",
+      "name": "Visão Limitada",
+      "action_type": "passiva",
+      "hide_bonus": 2,
+      "descricao": "Personagens usando Esconder-se recebem +2 no teste contra o Ciclope.",
+      "source": "monstro"
+    },
+    {
+      "id": "ponto_cego_ciclope",
+      "name": "Ponto Cego",
+      "action_type": "passiva",
+      "crit_min_nat_roll": 19,
+      "descricao": "Resultados naturais 19 ou 20 contra o Ciclope são ameaças de crítico.",
+      "source": "monstro"
+    },
+    {
+      "id": "cercado_ciclope",
+      "name": "Cercado",
+      "action_type": "passiva",
+      "attack_bonus": 2,
+      "min_attackers": 2,
+      "descricao": "Quando dois ou mais heróis o atacam, todos recebem +2 no ataque contra ele.",
+      "source": "monstro"
+    },
+    {
+      "id": "reflexos_lentos_ciclope",
+      "name": "Reflexos Lentos",
+      "action_type": "passiva",
+      "save_penalty": {
+        "reflexos": -2
+      },
+      "descricao": "Sofre -2 em todos os testes de Reflexos.",
+      "source": "monstro"
+    },
+    {
+      "id": "mira_certeira",
+      "name": "Mira Certeira",
+      "action_type": "acao_bonus",
+      "cooldown_turns": 3,
+      "attack_bonus": 2,
+      "descricao": "Recarga 3 rodadas. Recebe +2 na próxima jogada de ataque.",
+      "source": "monstro"
+    },
+    {
+      "id": "furia_berserker",
+      "name": "Fúria Berserker",
+      "action_type": "acao",
+      "cooldown_turns": 8,
+      "extra_attacks": 1,
+      "descricao": "Recarga 8 rodadas. Realiza um ataque adicional nesta rodada.",
+      "source": "monstro"
+    },
+    {
+      "id": "investida_heroica",
+      "name": "Investida Heroica",
+      "action_type": "acao_bonus",
+      "cooldown_turns": 5,
+      "movement_multiplier": 2,
+      "damage_bonus": 2,
+      "descricao": "Recarga 5 rodadas. Dobra o deslocamento nesta rodada e recebe +2 no dano do próximo ataque. Pode combinar com Investida e Pisoteio Colossais.",
+      "source": "monstro"
+    },
+    {
+      "id": "arsenal_colossal",
+      "name": "Arsenal Colossal",
+      "action_type": "passiva",
+      "descricao": "Pode usar Espada Longa Colossal, Machado Orc Colossal, Lança Longa Colossal ou Alabarda Colossal. Armas de duas mãos não podem usar o Escudo Gigante.",
+      "source": "monstro"
+    },
+    {
+      "id": "regeneracao_runica",
+      "name": "Regeneração Rúnica",
+      "action_type": "acao_bonus",
+      "cooldown_turns": 6,
+      "heal": 2,
+      "duration_dice": "1d4+2",
+      "descricao": "Recarga 6 rodadas. Recupera 2 HP no início de cada turno durante 1d4+2 rodadas.",
+      "source": "monstro"
+    },
+    {
+      "id": "passo_fantasma_runico",
+      "name": "Passo Fantasma",
+      "action_type": "acao_bonus",
+      "cooldown_turns": 5,
+      "bonus_mov": 2,
+      "duration_dice": "1d4",
+      "descricao": "Recarga 5 rodadas. Como o Passo Fantasma do Guerreiro: +2 movimento nesta rodada e atravessa obstáculos baixos durante a janela.",
+      "source": "monstro"
+    },
+    {
+      "id": "provocacao_runica",
+      "name": "Provocação",
+      "action_type": "acao_bonus",
+      "cooldown_turns": 6,
+      "range": 4,
+      "duration_rounds": 3,
+      "descricao": "Recarga 6 rodadas. Provoca um herói a até 4 quadrados, forçando-o a enfrentar o Gigante Rúnico por 3 rodadas.",
       "source": "monstro"
     },
     {
@@ -7491,6 +8296,39 @@ window.EDITOR_CATALOG = {
       "guild_category": "especializacao"
     },
     {
+      "id": "guild_lenda_ciclope",
+      "source": "guilda",
+      "source_id": "lenda_ciclope",
+      "name": "Lenda: Ciclope",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Ciclope.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_gigante_guerra",
+      "source": "guilda",
+      "source_id": "lenda_gigante_guerra",
+      "name": "Lenda: Gigante da Guerra",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Gigante da Guerra.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_gigante_runico",
+      "source": "guilda",
+      "source_id": "lenda_gigante_runico",
+      "name": "Lenda: Gigante Rúnico",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Gigante Rúnico.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
       "id": "guild_lenda_garaloux_jovem",
       "source": "guilda",
       "source_id": "lenda_garaloux_jovem",
@@ -7974,6 +8812,94 @@ window.EDITOR_CATALOG = {
       "stat": "str_",
       "categoria": "cortante",
       "item_slot": "weapon"
+    },
+    {
+      "id": "espada_longa_colossal",
+      "name": "Espada Longa Colossal",
+      "emoji": "⚔️",
+      "item_slot": "bag",
+      "effect": "treasure",
+      "value": 0,
+      "loot_only": true,
+      "descricao": "Arma de proporções gigantescas: 2d8+6, alcance de 2 quadrados."
+    },
+    {
+      "id": "machado_orc_colossal",
+      "name": "Machado Orc Colossal",
+      "emoji": "🪓",
+      "item_slot": "bag",
+      "effect": "treasure",
+      "value": 0,
+      "loot_only": true,
+      "descricao": "Arma de duas mãos: 2d10+6, alcance de 2 quadrados."
+    },
+    {
+      "id": "lanca_longa_colossal",
+      "name": "Lança Longa Colossal",
+      "emoji": "🔱",
+      "item_slot": "bag",
+      "effect": "treasure",
+      "value": 0,
+      "loot_only": true,
+      "descricao": "Alcance de 4 quadrados em linha reta, 2 na diagonal e ataques adjacentes; dano 2d8+6."
+    },
+    {
+      "id": "alabarda_colossal",
+      "name": "Alabarda Colossal",
+      "emoji": "🪓",
+      "item_slot": "bag",
+      "effect": "treasure",
+      "value": 0,
+      "loot_only": true,
+      "descricao": "Arma de duas mãos: alcance de 4 quadrados em linha reta e 2 na diagonal; dano 2d10+6."
+    },
+    {
+      "id": "armadura_pesada_gigante",
+      "name": "Armadura Pesada de Gigante",
+      "emoji": "🛡️",
+      "item_slot": "bag",
+      "effect": "treasure",
+      "value": 0,
+      "loot_only": true,
+      "descricao": "Armadura pesada de proporções gigantescas."
+    },
+    {
+      "id": "martelo_runico_colossal",
+      "name": "Martelo Rúnico Colossal",
+      "emoji": "🔨",
+      "item_slot": "bag",
+      "effect": "treasure",
+      "value": 0,
+      "loot_only": true,
+      "descricao": "Martelo colossal gravado com runas: dano 2d8+5 e alcance de 2 quadrados."
+    },
+    {
+      "id": "armadura_runica",
+      "name": "Armadura Rúnica",
+      "emoji": "🛡️",
+      "item_slot": "bag",
+      "effect": "treasure",
+      "value": 0,
+      "loot_only": true,
+      "descricao": "Armadura rúnica obtida do Gigante Rúnico; item especial para uso futuro."
+    },
+    {
+      "id": "runa_ancestral",
+      "name": "Runa Ancestral",
+      "emoji": "✨",
+      "item_slot": "bag",
+      "effect": "treasure",
+      "value": 0,
+      "loot_only": true,
+      "descricao": "Runa ancestral de poder mágico; item especial para uso futuro."
+    },
+    {
+      "id": "joia",
+      "name": "Joia",
+      "emoji": "💎",
+      "item_slot": "bag",
+      "effect": "treasure",
+      "value": 0
     },
     {
       "id": "dagger",
@@ -8473,7 +9399,8 @@ window.EDITOR_CATALOG = {
       "item_slot": "bag",
       "effect": "coat_poison",
       "value": 0,
-      "veneno_id": "veneno_fungo_acre"
+      "veneno_id": "veneno_fungo_acre",
+      "descricao": "Fortitude CD 10 anula. Se falhar: 1 dano por rodada durante 1d4 rodadas."
     },
     {
       "id": "veneno_dor_escarlate",
@@ -8482,7 +9409,8 @@ window.EDITOR_CATALOG = {
       "item_slot": "bag",
       "effect": "coat_poison",
       "value": 0,
-      "veneno_id": "veneno_dor_escarlate"
+      "veneno_id": "veneno_dor_escarlate",
+      "descricao": "Fortitude CD 12 anula. Se falhar: 1 dano por rodada durante 1d6 rodadas."
     },
     {
       "id": "veneno_ardonia_negra",
@@ -8491,7 +9419,8 @@ window.EDITOR_CATALOG = {
       "item_slot": "bag",
       "effect": "coat_poison",
       "value": 0,
-      "veneno_id": "veneno_ardonia_negra"
+      "veneno_id": "veneno_ardonia_negra",
+      "descricao": "Fortitude CD 14 anula. Se falhar: 1 dano por rodada durante 2d4 rodadas."
     },
     {
       "id": "elixir",
@@ -8507,7 +9436,8 @@ window.EDITOR_CATALOG = {
       "emoji": "💚",
       "item_slot": "bag",
       "effect": "cure_poison",
-      "value": 0
+      "value": 0,
+      "descricao": "Neutraliza venenos e protege contra novos por 1d4 rodadas."
     },
     {
       "id": "oleo_dissolvente",
@@ -8515,7 +9445,8 @@ window.EDITOR_CATALOG = {
       "emoji": "🫗",
       "item_slot": "bag",
       "effect": "cure_petrification",
-      "value": 0
+      "value": 0,
+      "descricao": "Dissolve a pedra: cura petrificação e protege por 1d4 rodadas."
     },
     {
       "id": "elixir_depurativo",
@@ -8523,7 +9454,8 @@ window.EDITOR_CATALOG = {
       "emoji": "🧴",
       "item_slot": "bag",
       "effect": "cure_disease",
-      "value": 0
+      "value": 0,
+      "descricao": "Purga doenças do corpo e protege por 1d4 rodadas."
     },
     {
       "id": "vela_escuridao",
@@ -9044,7 +9976,8 @@ window.EDITOR_CATALOG = {
       "item_slot": "bag",
       "effect": "coat_poison",
       "value": 0,
-      "veneno_id": "ensaio_sobre_a_cegueira"
+      "veneno_id": "ensaio_sobre_a_cegueira",
+      "descricao": "Forte veneno a base da seiva leitosa de plantas venenosas provoca cegueira."
     }
   ],
   "traps": [

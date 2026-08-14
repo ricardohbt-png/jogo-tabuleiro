@@ -18,6 +18,8 @@
     fraqueza_magica:.12, mente_limitada:.10, mente_fraca:.12, mente_bruta:.12,
     concentracao_fragil:.08, concentracao_sombria:.08, essencia_profana:.22,
     furia_cega:.06, covardia_kobold:.06, lento_previsivel:.08,
+    visao_limitada_ciclope:.06, ponto_cego_ciclope:.08,
+    cercado_ciclope:.07, reflexos_lentos_ciclope:.08,
   };
 
   // Calibração do ND contra os seis heróis iniciais reais do servidor. Os
@@ -30,7 +32,7 @@
     warrior: {hp:[14,42,70], ac:12, attack:[6,8,10], die:"1d6", damage_mod:4},
     mage:    {hp:[7,21,35],   ac:12, attack:[2,4,6],   die:"1d6", damage_mod:1},
     rogue:   {hp:[9,27,45],   ac:16, attack:[5,7,9],   die:"1d4", damage_mod:4, offhand:true},
-    cleric:  {hp:[10,30,50],  ac:12, attack:[1,3,5],   die:"1d6", damage_mod:0},
+    cleric:  {hp:[10,30,50],  ac:13, attack:[1,3,5],   die:"1d6", damage_mod:0, damage_reduction:1},
     bard:    {hp:[9,27,45],   ac:14, attack:[4,6,8],   die:"1d4", damage_mod:3},
     paladin: {hp:[12,36,60],  ac:14, attack:[5,7,9],   die:"1d6", damage_mod:3, crit_min:19},
   };
@@ -41,6 +43,29 @@
     6: HERO_ORDER,
   };
   const ENCOUNTER_ROUNDS = 3;
+  // Perfil mecânico usado pelo estimador para que os vampiros não dependam
+  // apenas de PV/CA. A ficha de jogo declara as mesmas regras, mas algumas
+  // habilidades não possuem números no catálogo exportado.
+  const VAMPIRE_PROFILES = {
+    escravo_vampirico: {rd:5, regen:5, resurrection_factor:.50},
+    vampiro_jovem:     {rd:5, regen:5, resurrection_factor:.50, charm_area_impact:0},
+    vampiro_anciao:    {rd:5, regen:5, resurrection_factor:.50, charm_area_impact:.12, command_impact:.04},
+    lorde_vampiro:     {rd:5, regen:5, resurrection_factor:.50, charm_area_impact:.16, command_impact:.06},
+  };
+
+  function vampireProfile(monster) {
+    return monster && VAMPIRE_PROFILES[monster.type] || null;
+  }
+  function vampireWeaponReduction(monster) {
+    const profile = vampireProfile(monster);
+    return profile ? Number(profile.rd || 0) : 0;
+  }
+  function heroWeaponMitigation(monster) {
+    const vampire = vampireProfile(monster);
+    if (vampire) return {reduction:Number(vampire.rd || 0), multiplier:1};
+    if (monster && monster.type === "lobisomem") return {reduction:0, multiplier:.5};
+    return {reduction:0, multiplier:1};
+  }
 
   function levelIndex(level) {
     const value = Number(level || 1);
@@ -70,11 +95,37 @@
     }
     return {dpr:expected, hitProbability};
   }
+  function expectedAttackAfterReduction(attack, ac, damage, reduction = 0, critMin = 20, nat20Multiplier = 2) {
+    return expectedAttackAfterMitigation(attack, ac, damage, reduction, 1, critMin, nat20Multiplier);
+  }
+  function expectedAttackAfterMitigation(attack, ac, damage, reduction = 0, damageMultiplier = 1, critMin = 20, nat20Multiplier = 2) {
+    let expected = 0;
+    let hitProbability = 0;
+    const flatReduction = Math.max(0, Number(reduction || 0));
+    const multiplierDamage = Math.max(0, Number(damageMultiplier || 1));
+    for (let roll = 1; roll <= 20; roll++) {
+      const hit = roll === 20 || (roll !== 1 && roll + Number(attack || 0) >= ac);
+      if (!hit) continue;
+      hitProbability += 0.05;
+      const critical = roll === 20 || (roll >= critMin && roll !== 1);
+      const multiplier = critical ? (roll === 20 ? nat20Multiplier : 2) : 1;
+      expected += Math.max(0, damage * multiplierDamage * multiplier - flatReduction) * 0.05;
+    }
+    return {dpr:expected, hitProbability};
+  }
   function heroAttack(hero, level, ac, bonusAttack = 0, bonusDamage = 0) {
     const damage = diceAverage(hero.die) + hero.damage_mod + bonusDamage;
     const attack = (hero.attack[levelIndex(level)] || hero.attack[0]) + Number(bonusAttack || 0);
     return expectedAttack(attack, ac,
       damage, hero.crit_min || 20, hero.nat20_multiplier || 2);
+  }
+  function heroWeaponAttack(hero, level, ac, monster, bonusAttack = 0, bonusDamage = 0) {
+    const damage = diceAverage(hero.die) + hero.damage_mod + bonusDamage;
+    const attack = (hero.attack[levelIndex(level)] || hero.attack[0]) + Number(bonusAttack || 0);
+    const mitigation = heroWeaponMitigation(monster);
+    const critMin = Number(monster && monster.crit_vulnerability_min_nat_roll) || hero.crit_min || 20;
+    return expectedAttackAfterMitigation(attack, ac, damage, mitigation.reduction, mitigation.multiplier,
+      critMin, hero.nat20_multiplier || 2);
   }
   function heroStats(id, level) {
     const hero = HERO_POWER[id];
@@ -83,9 +134,20 @@
     return {id, hero, hp:hero.hp[index] || hero.hp[0], ac:hero.ac,
       attack:hero.attack[index] || hero.attack[0], main};
   }
-  function partyMetrics(level, monsterAC, includeHeroAbilities = true, groupSize = 6) {
+  function expectedReanimatedServants(level, groupSize) {
+    // Reanimar os Mortos depende de haver cadáveres no mapa. Para não transformar
+    // a habilidade em quatro ataques garantidos, usamos uma expectativa de
+    // oportunidades por encontro e limitamos pelos slots disponíveis do mago.
+    const corpseOpportunities = ({2:.5, 4:1, 6:1.25})[groupSize] || 1;
+    const lowCrSaveChance = Math.min(.99, Math.max(.01,
+      1 - (.25 * .20) + Math.max(1, Number(level || 1)) * .05));
+    const controlSlots = 4 + Math.floor(Math.max(1, Number(level || 1)) / 2);
+    return Math.min(controlSlots, corpseOpportunities * lowCrSaveChance);
+  }
+  function partyMetrics(level, monsterAC, includeHeroAbilities = true, groupSize = 6, monster = null) {
     const group = HERO_GROUPS[groupSize] || HERO_GROUPS[6];
     const heroes = group.map(id => heroStats(id, level));
+    const songActive = includeHeroAbilities && group.includes("bard");
     let baseDpr = 0;
     let songDpr = 0;
     let burstBonus = 0;
@@ -93,38 +155,56 @@
     let averageAC = 0;
 
     heroes.forEach(({id, hero, hp, ac, attack}) => {
-      const main = heroAttack(hero, level, monsterAC);
+      const main = heroWeaponAttack(hero, level, monsterAC, monster);
       let base = main.dpr;
-      const songMain = heroAttack(hero, level, monsterAC, 1, 1);
-      let song = songMain.dpr;
+      const songMain = heroWeaponAttack(hero, level, monsterAC, monster, 1, 1);
+      let song = songActive ? songMain.dpr : base;
       if (hero.offhand) {
         // A segunda adaga usa o mesmo bônus de DES/Finesse e também recebe o
         // bônus de nível. No grupo inicial, só o Ladino tem arma secundária;
         // o Bardo começa com o Alaúde na mão do escudo.
-        const off = expectedAttack(attack, monsterAC, diceAverage("1d4") + 4);
+        const mitigation = heroWeaponMitigation(monster);
+        const off = expectedAttackAfterMitigation(attack, monsterAC, diceAverage("1d4") + 4,
+          mitigation.reduction, mitigation.multiplier);
         base += off.dpr;
-        song += expectedAttack(attack + 1, monsterAC, diceAverage("1d4") + 5).dpr;
+        const offSong = expectedAttackAfterMitigation(attack + 1, monsterAC, diceAverage("1d4") + 5,
+          mitigation.reduction, mitigation.multiplier).dpr;
+        song += songActive ? offSong : off.dpr;
       }
       baseDpr += base;
       songDpr += song;
       totalHp += hp;
       averageAC += ac;
 
-      if (id === "warrior") {
+      if (includeHeroAbilities && id === "warrior") {
         // Fúria concede um ataque principal extra por uma rodada.
         burstBonus += songMain.dpr;
-      } else if (id === "rogue") {
+      } else if (includeHeroAbilities && id === "rogue") {
         const sneakDice = level >= 5 ? 4 : (level >= 3 ? 3 : 2);
         burstBonus += songMain.hitProbability * sneakDice * 2.5;
       } else if (id === "paladin") {
         // Golpe Sagrado fica ativo após a ação bônus e adiciona +1d8 em cada
         // ataque enquanto houver manutenção; portanto é dano sustentado.
-        if (includeHeroAbilities) song += songMain.hitProbability * 4.5;
-      } else if (id === "mage") {
+        if (includeHeroAbilities) {
+          const holyMultiplier = vampireProfile(monster) ? 2 : 1;
+          song += songMain.hitProbability * 4.5 * holyMultiplier;
+        }
+      } else if (includeHeroAbilities && id === "mage") {
         // Raio Congelante é a referência de alvo único e não permite save
         // contra o dano: 3d4 + 2d4 a cada dois níveis.
         const spellDice = 3 + 2 * Math.floor(level / 2);
         burstBonus += Math.max(0, spellDice * 2.5 - songMain.dpr);
+
+        // Reanimar os Mortos: o estimador usa uma contribuição provável, não o
+        // teto de quatro servos. Consideramos uma oportunidade média de cadáver
+        // de baixo ND por encontro (0,5 / 1 / 1,25 para grupos de 2 / 4 / 6),
+        // sucesso praticamente garantido contra esse alvo e o ataque simples
+        // atualmente usado pelos servos. O mago perde um ataque na preparação.
+        const expectedServants = expectedReanimatedServants(level, group.length);
+        const mitigation = heroWeaponMitigation(monster);
+        const servantDpr = expectedAttackAfterMitigation(2, monsterAC, diceAverage("1d4"),
+          mitigation.reduction, mitigation.multiplier).dpr;
+        burstBonus += Math.max(0, expectedServants * servantDpr * ENCOUNTER_ROUNDS - songMain.dpr);
       }
     });
 
@@ -135,6 +215,44 @@
     return {heroes, baseDpr, songDpr, songDelta, burstBonus, activeDpr,
       totalHp, averageAC:averageAC / heroes.length};
   }
+  function monsterEffectiveHp(m, metrics) {
+    const profile = vampireProfile(m);
+    if (!profile && m.type !== "lobisomem") return Number(m.hp || 0);
+    if (m.type === "lobisomem") {
+      // A magia do Mago bloqueia a regeneração depois do primeiro impacto;
+      // sem uma fonte mágica no grupo, a regeneração funciona nas três rodadas.
+      const regenRounds = metrics && metrics.heroes.some(h => h.id === "mage") ? 1 : ENCOUNTER_ROUNDS;
+      return Number(m.hp || 0) + 2 * regenRounds;
+    }
+    let effectiveHp = Number(m.hp || 0);
+    // A Cura Acelerada de 5 PV ocorre no início dos turnos; três rodadas é a
+    // janela-base do estimador. Fogo/sagrado podem bloquear a cura, mas não
+    // são garantidos no grupo de referência de quatro heróis.
+    effectiveHp += Number(profile.regen || 0) * ENCOUNTER_ROUNDS;
+    // Drenar Vida transforma a Mordida em sustentação. Estimamos a cura pela
+    // média do ataque contra a CA média do grupo, sem criar dano adicional.
+    const bite = (m.attacks || []).find(a => /mordida/i.test(String(a.name || "")));
+    if (bite && metrics) {
+      effectiveHp += expectedAttack(attackBonus(m, bite), metrics.averageAC,
+        attackDamageAverage(m, bite)).dpr * ENCOUNTER_ROUNDS;
+    }
+    // A Ressurreição Vampírica acontece uma vez. O fator representa a chance
+    // conservadora de a volta ocorrer dentro do encontro e não ser bloqueada
+    // por fogo/luz/sagrado.
+    effectiveHp += Number(m.hp || 0) * Number(profile.resurrection_factor || 0);
+    return effectiveHp;
+  }
+  function vampireAbilityImpact(m) {
+    const profile = vampireProfile(m);
+    if (!profile) return 0;
+    // Encantar em Área e Comandar Vampiros/Escravos são controle/suporte. A
+    // ação de Encantar de alvo único já é reconhecida por specialImpact().
+    return Number(profile.charm_area_impact || 0) + Number(profile.command_impact || 0);
+  }
+  function monsterAbilityImpact(m) {
+    if (m.type === "lobisomem") return .03; // Olfato reduz o valor da furtividade do Ladino.
+    return vampireAbilityImpact(m);
+  }
   function attackBonus(m, a) {
     if (a.base_attack_bonus != null || m.base_attack_bonus != null)
       return Number(a.base_attack_bonus != null ? a.base_attack_bonus : m.base_attack_bonus || 0) + mod(m[(a.attack_attribute || (a.range ? "dex" : "str_"))]) + Number(m.equipment_attack_bonus || 0);
@@ -142,12 +260,13 @@
   }
   function attackDamageAverage(m, a) {
     const attr = a.attack_attribute || (a.range ? "dex" : "str_");
+    const damageAttr = a.damage_attribute || attr;
     return average(a.damage) + average(a.extra_damage) + average(a.fire_damage)
-      + (a.apply_attribute_damage ? mod(m[attr]) : 0);
+      + (a.apply_attribute_damage ? mod(m[damageAttr]) : 0);
   }
   function attackDamageText(m, a) {
     const attr = a.attack_attribute || (a.range ? "dex" : "str_");
-    const bonus = a.apply_attribute_damage ? mod(m[attr]) : 0;
+    const bonus = a.apply_attribute_damage ? mod(m[a.damage_attribute || attr]) : 0;
     return `${a.damage || m.damage || "—"}${bonus ? (bonus > 0 ? "+" : "") + bonus : ""}`;
   }
   const pretty = (v) => String(v || "—").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
@@ -252,18 +371,29 @@
   }
   // Recalibração: usa a composição real de seis heróis e permite comparar
   // apenas os números básicos contra a ficha completa com habilidades.
-  function monsterDprAgainstParty(m, metrics) {
+  function monsterDprForState(m, metrics, bonusAttack = 0, bonusDamage = 0) {
     const attacks = m.attacks && m.attacks.length ? m.attacks : [{damage:m.damage, atk_bonus:m.atk_bonus, num_attacks:1}];
     return metrics.heroes.reduce((sum, hero) => {
       const targetDpr = attacks.reduce((subtotal, a) => subtotal
-        + expectedAttack(attackBonus(m, a), hero.ac, attackDamageAverage(m, a)).dpr
+        + expectedAttackAfterReduction(attackBonus(m, a) + bonusAttack, hero.ac,
+          attackDamageAverage(m, a) + bonusDamage, hero.hero.damage_reduction || 0).dpr
           * Number(a.num_attacks || 1), 0);
       return sum + targetDpr;
     }, 0) / Math.max(1, metrics.heroes.length);
   }
+  function monsterDprAgainstParty(m, metrics) {
+    const normal = monsterDprForState(m, metrics);
+    if (m.type !== "lobisomem") return normal;
+    // A parte final da luta ocorre com a Fúria ativa quando o monstro cai a
+    // 12 PV. Uma rodada em três é uma expectativa conservadora.
+    const furia = monsterDprForState(m, metrics, 2, 2);
+    return normal * (2 / 3) + furia / 3;
+  }
   function specialImpact(m) {
     const specialList = m.special_abilities || [];
     return specialList.filter(a => a.action_type !== "magia" && !Object.prototype.hasOwnProperty.call(NEGATIVE_ABILITIES, a.id))
+      .filter(a => !(vampireProfile(m) && a.id === "reducao_vampirica"))
+      .filter(a => !(m.type === "lobisomem" && ["pele_amaldicoada", "regeneracao_lobisomem", "furia_bestial_lobisomem"].includes(a.id)))
       .reduce((sum, a) => {
         const uses = Math.max(1, Number(a.uses_per_day != null ? a.uses_per_day : a.uses_per_combat || 1));
         const cooldown = Math.max(0, Number(a.cooldown_turns || 0));
@@ -281,6 +411,10 @@
   }
   function weaknessImpact(m) {
     return (m.weaknesses || []).reduce((sum, w) => {
+      // A prata não faz parte do equipamento inicial; não conceda ao grupo
+      // uma exploração que ele ainda não possui.
+      if (m.type === "lobisomem" && w.type === "silver") return sum;
+      if (m.type === "ciclope" && w.type === "ciclope_olho_unico") return sum + .28;
       if (w.type === "ponto_vulneravel") return sum + Math.max(0, Number(w.nd_penalty != null ? w.nd_penalty : .25));
       if (Number(w.multiplier) > 1) return sum + .16 * (Number(w.multiplier) - 1);
       if (Number(w.bonus_flat) > 0) return sum + Math.min(.14, .04 + Number(w.bonus_flat) * .025);
@@ -289,7 +423,12 @@
     }, 0);
   }
   function defenseImpact(m) {
-    const resistanceBonus = (m.resistances || []).reduce((sum, r) => sum + (r.mode === "half" ? .32 : .07 * Math.max(1, Number(r.reduction || 1))), 0);
+    // A RD física vampírica já é aplicada diretamente ao dano das armas na
+    // partyMetrics(). Não a conte novamente como bônus abstrato de defesa.
+    const resistanceBonus = (m.resistances || []).reduce((sum, r) => {
+      if (vampireProfile(m) && r.type === "physical") return sum;
+      return sum + (r.mode === "half" ? .32 : .07 * Math.max(1, Number(r.reduction || 1)));
+    }, 0);
     const explicitTypes = new Set((m.weaknesses || []).map(w => w.type));
     const negativePenalty = (m.special_abilities || []).reduce((sum, a) => {
       const alreadyExplicit = (a.id === "essencia_profana" && explicitTypes.has("holy"))
@@ -301,9 +440,9 @@
   function ndEstimateAtLevel(rawMonster, level = 1, mode = "abilities", groupSize = 6) {
     const m = equipmentPreview(rawMonster || {});
     const monsterAC = Number(m.ac || 10);
-    const metrics = partyMetrics(level, monsterAC, mode !== "base", groupSize);
+    const metrics = partyMetrics(level, monsterAC, mode !== "base", groupSize, m);
     const partyDpr = mode === "base" ? metrics.baseDpr : metrics.activeDpr;
-    const roundsToDefeat = Number(m.hp || 0) / Math.max(1, partyDpr);
+    const roundsToDefeat = monsterEffectiveHp(m, metrics) / Math.max(1, partyDpr);
     const monsterDpr = monsterDprAgainstParty(m, metrics);
     // ND 1 representa aproximadamente três rodadas contra o grupo escolhido.
     const durability = roundsToDefeat / ENCOUNTER_ROUNDS;
@@ -311,7 +450,7 @@
     const initiativeImpact = Math.max(-.12, Math.min(.12, (Number(m.dex || 10) + mod(m.int_)) * .03));
     // O modo Base remove apenas as habilidades dos heróis. As habilidades e
     // magias do próprio monstro continuam contando para o ND da criatura.
-    const specials = specialImpact(m);
+    const specials = specialImpact(m) + monsterAbilityImpact(m);
     const defenses = defenseImpact(m);
     const spellImpact = spellPower(m) * .38;
     const raw = .25 + durability * .60 + offense * .40 + specials + spellImpact + defenses + initiativeImpact;
@@ -350,6 +489,12 @@
   }
   function loot(m) {
     const rows = [];
+    if (Array.isArray(m.weapon_options) && m.weapon_options.length) {
+      rows.push(`Armas disponíveis: ${m.weapon_options.map(w => `${w.name || w.id} (${w.damage || "dano não definido"})`).join(", ")}`);
+    }
+    if (m.shield_option) {
+      rows.push(`${m.shield_option.name || "Escudo opcional"}: +${Number(m.shield_option.ac_bonus || 0)} CA${m.shield_option.equipped_by_default ? " (equipado)" : " (opcional)"}`);
+    }
     const equipped = m.equipped_items || m.equipment;
     if (equipped && (Array.isArray(equipped) ? equipped.length : true)) rows.push(`${m.equipment_enabled ? "Equipado e ativo" : "Equipamento"}: ${Array.isArray(equipped) ? equipped.map(pretty).join(", ") : pretty(equipped)}`);
     if (m.guaranteed_loot) rows.push(`Garantido: ${Array.isArray(m.guaranteed_loot) ? m.guaranteed_loot.map(x => pretty(x.name || x.id || x)).join(", ") : pretty(m.guaranteed_loot.name || m.guaranteed_loot.id || m.guaranteed_loot)}`);

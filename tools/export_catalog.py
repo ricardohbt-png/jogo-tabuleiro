@@ -87,10 +87,12 @@ def build_catalog():
             "type", "name", "emoji", "boss", "tier", "cr", "hp", "ac", "natural_armor",
             "movement", "movement_exception", "vision_base", "percepcao", "size", "porte", "image", "atk_bonus", "damage",
             "base_attack_bonus", "base_hp", "caster_level", "str_", "dex", "con_", "int_",
-            "fort", "ref_", "will", "fort_base", "ref_base", "will_base",
+            "fort", "ref_", "will", "fort_base", "ref_base", "will_base", "save_bonuses", "save_penalties",
+            "crit_vulnerability_min_nat_roll",
+            "weapon_options", "shield_option",
             "attacks", "special_abilities", "monster_spells", "immunities", "weaknesses",
             "resistances",
-            "loot_table", "guaranteed_loot", "equipment", "equipment_enabled", "equipped_items", "gold", "xp",
+            "loot_table", "loot_drops", "guaranteed_loot", "equipment", "equipment_enabled", "equipped_items", "gold", "xp",
             "ai_type", "undead", "subtipo", "darkvision_range",
         )
         entry = {key: m[key] for key in fields if key in m}
@@ -102,7 +104,7 @@ def build_catalog():
         "crit_nat20_multiplier", "crit_min_nat_roll", "extra_attack_on_crit_min_nat",
         "range", "reach", "categoria", "granted_ability", "kind", "ac_bonus",
         "damage_reduction", "item_slot", "effect", "value", "veneno_id",
-        "ammo_type", "ammo_count", "extra_damage", "extra_damage_types"
+        "ammo_type", "ammo_count", "extra_damage", "extra_damage_types", "loot_only", "descricao"
     )
     items = []
     for i in server._DUNGEON_ITEM_CATALOG.values():
