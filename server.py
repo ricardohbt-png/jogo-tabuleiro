@@ -2997,6 +2997,10 @@ CLASSES = {
 # â”€â”€â”€ DAMAGE TYPES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Usado em ataques de herÃ³is/monstros e habilidades especiais.
 # Armas brancas = "physical". Magias tÃªm subtipo: ("magic", "fire"), etc.
+# Regra global de deslocamento: todos os heróis começam com 6 casas.
+for _class_id in ("mage", "rogue", "cleric"):
+    CLASSES[_class_id]["spd"] = 6
+
 DMG_PHYSICAL  = "physical"
 DMG_WATER     = "water"
 DMG_FIRE      = "fire"
@@ -4402,6 +4406,216 @@ MONSTER_DEFS.extend([
     },
 ])
 
+# Ciclope: criatura enorme com alcance, arremesso e investida. É de categoria
+# de tamanho 3 (Enorme), mas ocupa um footprint de
+# 2x2 casas no tabuleiro, conforme a ficha e a regra de posicionamento.
+MONSTER_DEFS.extend([
+    {
+        "type": "ciclope", "name": "Ciclope", "emoji": "👁️",
+        "tier": 5, "cr": 5, "hp": 48, "ac": 15, "natural_armor": 5,
+        "size": [2, 2], "movement": 6, "movement_exception": True,
+        "str_": 24, "dex": 10, "con_": 18, "int_": 6,
+        "percepcao": 12,
+        "fort": 8, "ref_": 0, "will": 3,
+        "save_bonuses": {"fortitude": 3},
+        "save_penalties": {"reflexos": -2},
+        "crit_vulnerability_min_nat_roll": 19,
+        "attacks": [
+            {"name": "Clava Gigante", "atk_bonus": 8, "damage": "2d6+7",
+             "damage_types": ["physical"], "num_attacks": 1,
+             "melee": True, "reach": 2, "ciclope_melee": True},
+        ],
+        "special_abilities": [
+            {"id": "alcance_enorme", "name": "Alcance Enorme", "action_type": "passiva",
+             "reach": 2, "descricao": "Ataques corpo a corpo atingem alvos a até 2 quadrados."},
+            {"id": "arremesso_colossal", "name": "Arremesso Colossal", "action_type": "acao",
+             "range": 8, "attack_bonus": 1, "attack_attribute": "dex",
+             "damage": "2d6", "damage_attribute": "str_", "apply_attribute_damage": True,
+             "attribute_mod_base": 0,
+             "descricao": "Arremessa um objeto a até 8 quadrados; usa DES no ataque e o bônus de FOR no dano."},
+            {"id": "golpe_esmagador", "name": "Golpe Esmagador", "action_type": "passiva",
+             "attack_index": 0, "dc": 17, "save": "fortitude", "effect": "perde_movimento",
+             "descricao": "Ao acertar a Clava Gigante, Fortitude CD 17; falha: perde a próxima ação de movimento."},
+            {"id": "investida_colossal", "name": "Investida Colossal", "action_type": "passiva",
+             "attack_index": 0, "move_required": 3, "straight": True, "attack_bonus": 2,
+             "damage_bonus": 4,
+             "descricao": "Após mover 3 ou mais quadrados em linha reta antes da Clava: +2 no ataque e +4 no dano."},
+            {"id": "pisoteio_colossal", "name": "Pisoteio Colossal", "action_type": "passiva",
+             "move_required": 4, "straight": True, "damage": "2d6", "damage_attribute": "str_",
+             "descricao": "Após mover 4 ou mais quadrados em linha reta, personagens atravessados sofrem 2d6 + FOR."},
+            {"id": "vigor_colossal", "name": "Vigor Colossal", "action_type": "passiva",
+             "save_bonus": {"fortitude": 3}, "descricao": "+3 em todos os testes de Fortitude."},
+            {"id": "presenca_aterradora", "name": "Presença Aterradora", "action_type": "passiva",
+             "radius": 4, "dc": 13, "save": "vontade", "attack_penalty": -1,
+             "duration_rounds": 1,
+             "descricao": "No início do combate, heróis em até 4 quadrados testam Vontade; falha: -1 no ataque na primeira rodada."},
+            {"id": "furia_selvagem_ciclope", "name": "Fúria Selvagem", "action_type": "passiva",
+             "threshold": 0.5, "attack_bonus": 2, "damage_bonus": 4, "ac_penalty": -4,
+             "descricao": "Com metade dos PV ou menos: +2 no ataque, +4 no dano e -4 na CA."},
+            {"id": "visao_limitada_ciclope", "name": "Visão Limitada", "action_type": "passiva",
+             "hide_bonus": 2, "descricao": "Personagens usando Esconder-se recebem +2 no teste contra o Ciclope."},
+            {"id": "ponto_cego_ciclope", "name": "Ponto Cego", "action_type": "passiva",
+             "crit_min_nat_roll": 19, "descricao": "Resultados naturais 19 ou 20 contra o Ciclope são ameaças de crítico."},
+            {"id": "cercado_ciclope", "name": "Cercado", "action_type": "passiva",
+             "attack_bonus": 2, "min_attackers": 2,
+             "descricao": "Quando dois ou mais heróis o atacam, todos recebem +2 no ataque contra ele."},
+            {"id": "reflexos_lentos_ciclope", "name": "Reflexos Lentos", "action_type": "passiva",
+             "save_penalty": {"reflexos": -2}, "descricao": "Sofre -2 em todos os testes de Reflexos."},
+        ],
+        "immunities": [], "resistances": [],
+        "weaknesses": [{"type": "ciclope_olho_unico", "nd_penalty": 0.28,
+                        "descricao": "Olho Único: furtividade +2, críticos naturais 19–20, Reflexos -2 e vulnerável quando cercado."}],
+        "loot_table": {"1-50": {"tipo": "item", "id": "espada2m"}, "51-75": {"tipo": "item", "id": "joia"}, "76-100": None},
+        "spawn_min": 1, "spawn_max": 1, "ai_type": "ciclope", "porte": "enorme",
+        "image": "ciclope", "portrait": "ciclope", "subtipo": "besta_magica", "undead": False, "boss": False,
+    },
+])
+
+# Gigante da Guerra: categoria de tamanho 3 (Enorme), com footprint de 2x2
+# casas, seguindo a mesma convenção visual do Ciclope. A ficha usa a Espada
+# Longa Colossal sem escudo como configuração padrão; as demais armas e o
+# Escudo Gigante ficam declarados em ``weapon_options``/``shield_option`` para
+# consulta no editor e futuras escolhas de armamento.
+MONSTER_DEFS.extend([
+    {
+        "type": "gigante_guerra", "name": "Gigante da Guerra", "emoji": "🗿",
+        "tier": 7, "cr": 7, "hp": 60, "ac": 17, "natural_armor": 5,
+        "size": [2, 2], "movement": 6, "movement_exception": True,
+        "str_": 22, "dex": 14, "con_": 20, "int_": 12,
+        "percepcao": 13,
+        "fort": 10, "ref_": 4, "will": 5,
+        "save_bonuses": {"fortitude": 3},
+        "attacks": [
+            {"name": "Espada Longa Colossal", "atk_bonus": 9, "damage": "2d8+6",
+             "damage_types": ["physical"], "num_attacks": 1, "attack_attribute": "str_",
+             "apply_attribute_damage": False, "melee": True, "reach": 2,
+             "ciclope_melee": True},
+        ],
+        "weapon_options": [
+            {"id": "espada_longa_colossal", "name": "Espada Longa Colossal", "damage": "2d8+6",
+             "reach": 2, "two_handed": False, "shield_compatible": True},
+            {"id": "machado_orc_colossal", "name": "Machado Orc Colossal", "damage": "2d10+6",
+             "reach": 2, "two_handed": True, "shield_compatible": False},
+            {"id": "lanca_longa_colossal", "name": "Lança Longa Colossal", "damage": "2d8+6",
+             "reach_straight": 4, "reach_diagonal": 2, "adjacent": True,
+             "two_handed": False, "shield_compatible": True},
+            {"id": "alabarda_colossal", "name": "Alabarda Colossal", "damage": "2d10+6",
+             "reach_straight": 4, "reach_diagonal": 2, "two_handed": True,
+             "shield_compatible": False},
+        ],
+        "shield_option": {"id": "escudo_gigante", "name": "Escudo Gigante", "ac_bonus": 2,
+                           "equipped_by_default": False},
+        "special_abilities": [
+            {"id": "alcance_enorme", "name": "Alcance Enorme", "action_type": "passiva",
+             "reach": 2, "descricao": "Ataques corpo a corpo atingem alvos a até 2 quadrados."},
+            {"id": "arremesso_colossal", "name": "Arremesso Colossal", "action_type": "acao",
+             "range": 8, "attack_bonus": 7, "attack_attribute": "dex", "damage": "2d6",
+             "damage_attribute": "str_", "apply_attribute_damage": True,
+             "descricao": "Arremessa um objeto a até 8 quadrados; usa DES no ataque e FOR no dano."},
+            {"id": "investida_colossal", "name": "Investida Colossal", "action_type": "passiva",
+             "move_required": 3, "straight": True, "attack_bonus": 2, "damage_bonus": 4,
+             "descricao": "Após mover 3 ou mais quadrados em linha reta antes do ataque: +2 no ataque e +4 no dano."},
+            {"id": "pisoteio_colossal", "name": "Pisoteio Colossal", "action_type": "passiva",
+             "move_required": 4, "straight": True, "damage": "2d6", "damage_attribute": "str_",
+             "descricao": "Após mover 4 ou mais quadrados em linha reta, personagens atravessados sofrem 2d6 + FOR."},
+            {"id": "vigor_colossal", "name": "Vigor Colossal", "action_type": "passiva",
+             "save_bonus": {"fortitude": 3}, "descricao": "+3 em todos os testes de Fortitude."},
+            {"id": "presenca_aterradora", "name": "Presença Aterradora", "action_type": "passiva",
+             "radius": 4, "dc": 13, "save": "vontade", "attack_penalty": -1, "duration_rounds": 1,
+             "descricao": "No início do combate, heróis em até 4 quadrados testam Vontade; falha: -1 no ataque na primeira rodada."},
+            {"id": "mira_certeira", "name": "Mira Certeira", "action_type": "acao_bonus",
+             "cooldown_turns": 3, "attack_bonus": 2,
+             "descricao": "Recarga 3 rodadas. Recebe +2 na próxima jogada de ataque."},
+            {"id": "furia_berserker", "name": "Fúria Berserker", "action_type": "acao",
+             "cooldown_turns": 8, "extra_attacks": 1,
+             "descricao": "Recarga 8 rodadas. Realiza um ataque adicional nesta rodada."},
+            {"id": "investida_heroica", "name": "Investida Heroica", "action_type": "acao_bonus",
+             "cooldown_turns": 5, "movement_multiplier": 2, "damage_bonus": 2,
+             "descricao": "Recarga 5 rodadas. Dobra o deslocamento nesta rodada e recebe +2 no dano do próximo ataque. Pode combinar com Investida e Pisoteio Colossais."},
+            {"id": "arsenal_colossal", "name": "Arsenal Colossal", "action_type": "passiva",
+             "descricao": "Pode usar Espada Longa Colossal, Machado Orc Colossal, Lança Longa Colossal ou Alabarda Colossal. Armas de duas mãos não podem usar o Escudo Gigante."},
+        ],
+        "immunities": [], "resistances": [], "weaknesses": [],
+        "loot_table": {
+            "1-25": {"tipo": "item", "id": "espada_longa_colossal"},
+            "26-50": {"tipo": "item", "id": "machado_orc_colossal"},
+            "51-75": {"tipo": "item", "id": "lanca_longa_colossal"},
+            "76-100": {"tipo": "item", "id": "alabarda_colossal"},
+        },
+        "loot_drops": [
+            {"kind": "item", "item_id": "armadura_pesada_gigante", "chance": 50},
+            {"kind": "item", "item_id": "joia", "chance": 25},
+        ],
+        "spawn_min": 1, "spawn_max": 1, "ai_type": "gigante_guerra", "porte": "enorme",
+        "image": "gigante_guerreiro", "portrait": "gigante_guerreiro", "subtipo": "raca_padrao",
+        "undead": False, "boss": False,
+    },
+])
+
+# Gigante Rúnico: gigante 2x2 com martelo colossal e um conjunto de poderes
+# rúnicos. As magias reutilizam o mesmo executor do grimório dos heróis; cada
+# uma fica limitada a um lançamento por encontro (o equivalente operacional a
+# "1 vez por dia" dentro de uma cena de combate).
+MONSTER_DEFS.extend([
+    {
+        "type": "gigante_runico", "name": "Gigante Rúnico", "emoji": "🗿",
+        "tier": 8, "cr": 8, "hp": 70, "ac": 19, "natural_armor": 8,
+        "size": [2, 2], "movement": 6, "movement_exception": True,
+        "str_": 20, "dex": 12, "con_": 22, "int_": 15,
+        "percepcao": 13,
+        "fort": 11, "ref_": 3, "will": 8,
+        "caster_level": 6,
+        "attacks": [
+            {"name": "Martelo Rúnico Colossal", "atk_bonus": 10, "damage": "2d8+5",
+             "damage_types": ["physical"], "num_attacks": 1, "attack_attribute": "str_",
+             "apply_attribute_damage": False, "melee": True, "reach": 2,
+             "ciclope_melee": True},
+        ],
+        "special_abilities": [
+            {"id": "alcance_enorme", "name": "Alcance Enorme", "action_type": "passiva",
+             "reach": 2, "descricao": "Ataques corpo a corpo atingem alvos a até 2 quadrados."},
+            {"id": "investida_colossal", "name": "Investida Colossal", "action_type": "passiva",
+             "move_required": 3, "straight": True, "attack_bonus": 2, "damage_bonus": 4,
+             "descricao": "Após mover 3 ou mais quadrados em linha reta antes do ataque: +2 no ataque e +4 no dano."},
+            {"id": "vigor_colossal", "name": "Vigor Colossal", "action_type": "passiva",
+             "save_bonus": {"fortitude": 3}, "descricao": "+3 em todos os testes de Fortitude."},
+            {"id": "presenca_aterradora", "name": "Presença Aterradora", "action_type": "passiva",
+             "radius": 4, "dc": 16, "save": "vontade", "attack_penalty": -1, "duration_rounds": 1,
+             "descricao": "No início do combate, heróis em até 4 quadrados testam Vontade; falha: -1 no ataque na primeira rodada."},
+            {"id": "regeneracao_runica", "name": "Regeneração Rúnica", "action_type": "acao_bonus",
+             "cooldown_turns": 6, "heal": 2, "duration_dice": "1d4+2",
+             "descricao": "Recarga 6 rodadas. Recupera 2 HP no início de cada turno durante 1d4+2 rodadas."},
+            {"id": "passo_fantasma_runico", "name": "Passo Fantasma", "action_type": "acao_bonus",
+             "cooldown_turns": 5, "bonus_mov": 2, "duration_dice": "1d4",
+             "descricao": "Recarga 5 rodadas. Como o Passo Fantasma do Guerreiro: +2 movimento nesta rodada e atravessa obstáculos baixos durante a janela."},
+            {"id": "provocacao_runica", "name": "Provocação", "action_type": "acao_bonus",
+             "cooldown_turns": 6, "range": 4, "duration_rounds": 3,
+             "descricao": "Recarga 6 rodadas. Provoca um herói a até 4 quadrados, forçando-o a enfrentar o Gigante Rúnico por 3 rodadas."},
+            {"id": "medo", "name": "Medo", "action_type": "magia", "uses_per_combat": 1,
+             "descricao": "Igual à magia Medo; 1 vez por encontro."},
+            {"id": "amaldicoar", "name": "Amaldiçoar", "action_type": "magia", "uses_per_combat": 1,
+             "descricao": "Igual à magia Amaldiçoar; 1 vez por encontro."},
+            {"id": "bola_fogo", "name": "Bola de Fogo", "action_type": "magia", "uses_per_combat": 1,
+             "descricao": "Igual à magia Bola de Fogo, conjurador de 6º nível; 1 vez por encontro."},
+        ],
+        "monster_spells": [
+            {"id": "medo", "limit_mode": "encounter", "uses_per_combat": 1},
+            {"id": "amaldicoar", "limit_mode": "encounter", "uses_per_combat": 1},
+            {"id": "bola_fogo", "limit_mode": "encounter", "uses_per_combat": 1},
+        ],
+        "immunities": [], "resistances": [], "weaknesses": [],
+        "loot_table": {"1-100": {"tipo": "item", "id": "martelo_runico_colossal"}},
+        "loot_drops": [
+            {"kind": "item", "item_id": "armadura_runica", "chance": 50},
+            {"kind": "item", "item_id": "runa_ancestral", "chance": 50},
+            {"kind": "item", "item_id": "joia", "chance": 25},
+        ],
+        "spawn_min": 1, "spawn_max": 1, "ai_type": "gigante_runico", "porte": "enorme",
+        "image": "gigante_runas", "portrait": "gigante_runas", "subtipo": "besta_magica",
+        "undead": False, "boss": False,
+    },
+])
+
 # Garaloux: as três categorias usam movimento 7 e compartilham o ataque
 # especial de Salto. O salto é resolvido no pipeline de ataques para funcionar
 # tanto na IA quanto no controle manual do mestre.
@@ -4603,6 +4817,32 @@ CHEST_ITEMS = [
     {"id": "sword", "name": "Espada Curta de Ferro Serrilhado", "emoji": "⚔️",
      "item_slot": "weapon", "die": "1d6", "stat": "str_", "categoria": "cortante",
      "dmg_bonus": 2, "corrosao_resistente": 1, "price": 32},   # Espada Curta (12) + 20
+    {"id": "espada_longa_colossal", "name": "Espada Longa Colossal", "emoji": "⚔️",
+     "item_slot": "bag", "effect": "treasure", "value": 0, "price": 0, "loot_only": True,
+     "descricao": "Arma de proporções gigantescas: 2d8+6, alcance de 2 quadrados."},
+    {"id": "machado_orc_colossal", "name": "Machado Orc Colossal", "emoji": "🪓",
+     "item_slot": "bag", "effect": "treasure", "value": 0, "price": 0, "loot_only": True,
+     "descricao": "Arma de duas mãos: 2d10+6, alcance de 2 quadrados."},
+    {"id": "lanca_longa_colossal", "name": "Lança Longa Colossal", "emoji": "🔱",
+     "item_slot": "bag", "effect": "treasure", "value": 0, "price": 0, "loot_only": True,
+     "descricao": "Alcance de 4 quadrados em linha reta, 2 na diagonal e ataques adjacentes; dano 2d8+6."},
+    {"id": "alabarda_colossal", "name": "Alabarda Colossal", "emoji": "🪓",
+     "item_slot": "bag", "effect": "treasure", "value": 0, "price": 0, "loot_only": True,
+     "descricao": "Arma de duas mãos: alcance de 4 quadrados em linha reta e 2 na diagonal; dano 2d10+6."},
+    {"id": "armadura_pesada_gigante", "name": "Armadura Pesada de Gigante", "emoji": "🛡️",
+     "item_slot": "bag", "effect": "treasure", "value": 0, "price": 0, "loot_only": True,
+     "descricao": "Armadura pesada de proporções gigantescas."},
+    {"id": "martelo_runico_colossal", "name": "Martelo Rúnico Colossal", "emoji": "🔨",
+     "item_slot": "bag", "effect": "treasure", "value": 0, "price": 0, "loot_only": True,
+     "descricao": "Martelo colossal gravado com runas: dano 2d8+5 e alcance de 2 quadrados."},
+    {"id": "armadura_runica", "name": "Armadura Rúnica", "emoji": "🛡️",
+     "item_slot": "bag", "effect": "treasure", "value": 0, "price": 0, "loot_only": True,
+     "descricao": "Armadura rúnica obtida do Gigante Rúnico; item especial para uso futuro."},
+    {"id": "runa_ancestral", "name": "Runa Ancestral", "emoji": "✨",
+     "item_slot": "bag", "effect": "treasure", "value": 0, "price": 0, "loot_only": True,
+     "descricao": "Runa ancestral de poder mágico; item especial para uso futuro."},
+    {"id": "joia", "name": "Joia", "emoji": "💎", "item_slot": "bag",
+     "effect": "treasure", "value": 0, "price": 100},
 ]
 
 # IDs sorteados em baús PROCEDURAIS (os que surgem ao limpar salas). Fonte única:
@@ -6722,6 +6962,10 @@ _STARTING_ARMOR = {
 # Item de off_hand com `die`/`stat` â†’ habilita o ataque de mÃ£o secundÃ¡ria no
 # combate. effect "none"/value 0 â†’ nÃ£o altera CA/atributos.
 _STARTING_OFFHAND = {
+    "cleric": {"id": "escudo_p", "name": "Escudo Pequeno", "emoji": "🛡️",
+               "item_slot": "off_hand", "kind": "shield", "effect": "def_", "value": 1,
+               "ac_bonus": 1, "damage_reduction": 1,
+               "descricao": "+1 CA. Reduz em 1 o dano de cada ataque recebido, sem limite. Também reduz dano de magias e armadilhas após um Reflexos bem-sucedido."},
     "rogue": {"id": "dagger", "name": "Adaga", "emoji": "🗡️",
               "item_slot": "off_hand", "kind": "weapon", "die": "1d4", "stat": "str_",
               "finesse": True, "throw_range": 3, "effect": "none", "value": 0},
@@ -6795,8 +7039,11 @@ def make_player(pid, name, cls_id, slot):
     s, d, c, i_ = cls["str_"], cls["dex"], cls["con_"], cls["int_"]
     sb = cls["saves_base"]
     starting_armor_item = deepcopy(_STARTING_ARMOR.get(cls_id))
+    starting_offhand_item = deepcopy(_STARTING_OFFHAND.get(cls_id))
     # Fórmula universal: base 10 + modificador de DES + armadura corporal.
-    ac_start = 10 + mod(d) + _armor_ac_bonus(starting_armor_item)
+    ac_base_start = 10 + mod(d) + _armor_ac_bonus(starting_armor_item)
+    offhand_ac = int((starting_offhand_item or {}).get("value", 0) or 0) if (starting_offhand_item or {}).get("effect") == "def_" else 0
+    ac_start = ac_base_start + offhand_ac
     level_bonus = 1  # +1 per level to attacks and saves; starts at +1 (level 1)
 
     # HP final jÃ¡ estÃ¡ em cls["hp"] (base + bÃ´nus CON calculados nas fichas).
@@ -6829,7 +7076,7 @@ def make_player(pid, name, cls_id, slot):
         "str_": s, "dex": d, "con_": c, "int_": i_,
         # Combat stats â€” AC = armor_base + DEX mod
         "ac": ac_start,
-        "ac_base": ac_start,          # stored so gear deltas work
+        "ac_base": ac_base_start,     # base sem bônus de slots; _recalculate_ac soma o off_hand
         "atk_bonus": cls["atk_bonus"] + level_bonus,
         "base_atk_bonus": cls["atk_bonus"] + level_bonus,
         "weapon": weapon,
@@ -9973,9 +10220,10 @@ class GameRoom:
         for p in self.players.values():
             p["fome"] -= cost["fome"]
             p["sede"] -= cost["sede"]
-        origem = WORLD_LOCATIONS[self.world_location]["nome"]
+        origem = nome_cat("local", self.world_location,
+                          WORLD_LOCATIONS[self.world_location]["nome"])
         self.world_location = destination
-        await self.gm_say(T("narracao.o_grupo_viajou_de_para_por_heroi", origem=origem, world_locations_destinat=WORLD_LOCATIONS[destination]['nome'], cost_fome=cost['fome'], cost_sede=cost['sede']))
+        await self.gm_say(T("narracao.o_grupo_viajou_de_para_por_heroi", origem=origem, world_locations_destinat=nome_cat("local", destination, WORLD_LOCATIONS[destination]['nome']), cost_fome=cost['fome'], cost_sede=cost['sede']))
         self._checkpoint_savegame()
         await self.broadcast_city_state()
 
@@ -10730,6 +10978,8 @@ class GameRoom:
             if captor and captor["hp"] > 0: p["moves_left"] = 0
         if p.get("velocidade_rodadas", 0) > 0: p["moves_left"] *= 2
         if p.pop("turbilhao_perde_movimento", False):
+            p["moves_left"] = 0
+        if p.pop("ciclope_perde_movimento", False):
             p["moves_left"] = 0
         if p.pop("turbilhao_perde_acao", False):
             p["action_done"] = True
@@ -11885,6 +12135,12 @@ class GameRoom:
 
         if target_id in self.monsters:
             target = self.monsters[target_id]
+            provocado_id = p.get("runico_provocado_por")
+            if (provocado_id and p.get("runico_provocacao_ate", 0) >= self.round_num
+                    and target_id != provocado_id):
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.a_provocacao_do_gigante_runico_obriga_vo")})
+                return
             target_tile = self._target_tile(target, target_pos)
 
             # â”€â”€ Range check: ranged weapons use Chebyshev distance; melee cardinal-only â”€â”€
@@ -12060,12 +12316,15 @@ class GameRoom:
                        + cancao_acerto + gl_atk + self._pen(p, "ataque")
                        + self._mod_magia(p, "ataque")                        # AbenÃ§oar
                        + int((p.get("weapon") or {}).get("atk_bonus", 0) or 0)  # arma custom
+                       + self._ciclope_cercado_bonus(target)
                        + self._lenda_atk_bonus(p, target)                    # Lenda (bardo estudou a espÃ©cie)
                        - self._corrosao_arma_pen(p)                          # arma de madeira corroÃ­da
                        + maldicao_atk
                        + self._aura_profana_pen(p)                           # Aura Profana de aliado adjacente
                        - (4 if target.get("oculto_sombras") else 0)          # alvo oculto nas sombras (corpo a corpo)
                        - (1 if p.get("desafinado_ate", -1) >= self.round_num else 0))  # Gaita: Desafinado (Fase 5)
+            if p.get("ciclope_ataque_penalty_ate", 0) >= self.round_num:
+                eff_atk -= 1
             furtivo_planejado = (p.get("class_id") == "rogue"
                                  and self._verificar_ataque_furtivo(p, target))
             penalidade_furtivo = self._penalidade_furtivo_duas_cabecas(target) if furtivo_planejado else 0
@@ -12077,7 +12336,7 @@ class GameRoom:
             # AmaldiÃ§oar reduz a CA do alvo (mod_magia ca negativo) â†’ mais fÃ¡cil de acertar.
             # Camuflagem Natural (cobra venenosa): +2 CA contra o PRIMEIRO ataque.
             # FÃºria Cega (orc): -1 CA enquanto enfurecido.
-            eff_target_ac = (target["ac"] + self._mod_magia(target, "ca")
+            eff_target_ac = (target["ac"] + self._ciclope_furia_ca(target) + self._mod_magia(target, "ca")
                              + self._camuflagem_bonus(target)
                              + self._cacador_trevas_ca_bonus(target)        # CaÃ§ador das Trevas: +2 CA em Ã¡rea escura
                              - self._pressao_ca_pen(target)                 # PressÃ£o Constante: -2 CA
@@ -12110,7 +12369,10 @@ class GameRoom:
                            # sozinho NÃƒO dÃ¡ vantagem, apenas forÃ§a o multiplicador de crÃ­tico
                            # via _forca_critico (ver acima).
                            or _mira_ranged or _investida or bool(p.get("ultimo_esforco_ativo")))
-            desvantagem = esc == "desvantagem"
+            runico_provocacao_ataque = bool(p.get("runico_provocacao_efeito"))
+            desvantagem = esc == "desvantagem" or runico_provocacao_ataque
+            if runico_provocacao_ataque:
+                p.pop("runico_provocacao_efeito", None)
             hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
             if not hit and self._sangue_frio_consumir(p):
                 await self.gm_say(T("narracao.mantem_o_sangue_frio_e_rola_novamente", heroi=p['name']))
@@ -12126,6 +12388,8 @@ class GameRoom:
             # A comparação usa o resultado natural do d20, sem contar bônus.
             crit_min_nat = (weapon_here or {}).get("crit_min_nat_roll")
             if hit and crit_min_nat is not None and roll >= int(crit_min_nat):
+                crit = True
+            if hit and target.get("type") == "ciclope" and roll >= 19:
                 crit = True
             if crit and self._azar_consome_critico(p, roll):
                 crit = False
@@ -12379,6 +12643,8 @@ class GameRoom:
                 _mainhand_atk_bonus = int((p.get("weapon") or {}).get("atk_bonus", 0) or 0)
                 offhand_atk = off_stat_mod + p.get("level_bonus", 1) + (eff_atk - main_attack_base - _mainhand_atk_bonus)
                 ohit, oroll, ototal, ocrit = d20_attack(offhand_atk, tgt["ac"] + self._mod_magia(tgt, "ca"))
+                if ohit and tgt.get("type") == "ciclope" and oroll >= 19:
+                    ocrit = True
                 await self.broadcast({"type": "dice_roll", "die": "d20", "value": oroll,
                                        "label": "🗡️ Ataque (Mão Secundária)", "hit": ohit, "crit": ocrit,
                                        "offhand": True})
@@ -19232,7 +19498,10 @@ class GameRoom:
             return alvo.get(chave, 0)
         # Monstros novos tÃªm saves explÃ­citos (fort / ref_ / will)
         if chave in alvo:
-            return alvo[chave]
+            tipo = {"fort": "fortitude", "ref_": "reflexos", "will": "vontade"}.get(chave, chave)
+            return (alvo[chave]
+                    + int((alvo.get("save_bonuses") or {}).get(tipo, 0) or 0)
+                    + int((alvo.get("save_penalties") or {}).get(tipo, 0) or 0))
         # Fallback legado: tier + 1
         return alvo.get("tier", 1) + 1
 
@@ -20233,6 +20502,8 @@ class GameRoom:
         observadores = [m for m in monstros
                         if self._monstro_enxerga_alvo(m, {"obj": p})]
         percepcao = max((self._get_percepcao_efetiva_monstro(m, monstros)
+                         - (int((self._habilidade_monstro(m, "visao_limitada_ciclope") or {}).get("hide_bonus", 2) or 2)
+                            if self._tem_habilidade(m, "visao_limitada_ciclope") else 0)
                          for m in observadores), default=8)
         dificuldade = percepcao
 
@@ -20977,6 +21248,8 @@ class GameRoom:
             cur_p["moves_left"] *= 2
         if cur_p.pop("turbilhao_perde_movimento", False):
             cur_p["moves_left"] = 0
+        if cur_p.pop("ciclope_perde_movimento", False):
+            cur_p["moves_left"] = 0
         if cur_p.pop("turbilhao_perde_acao", False):
             cur_p["action_done"] = True
 
@@ -21099,6 +21372,322 @@ class GameRoom:
         if m.get("_molochus_move_count", 0) < int(ability.get("move_required", 3) or 3):
             return None
         return ability
+
+    def _ciclope_ability(self, m, aid):
+        if not m or m.get("type") not in {"ciclope", "gigante_guerra", "gigante_runico"}:
+            return None
+        return self._habilidade_monstro(m, aid)
+
+    def _ciclope_furioso(self, m):
+        ab = self._ciclope_ability(m, "furia_selvagem_ciclope")
+        return bool(ab and m.get("hp", 0) <= m.get("max_hp", m.get("hp", 1)) * float(ab.get("threshold", .5) or .5))
+
+    def _ciclope_furia_ataque(self, m):
+        ab = self._ciclope_ability(m, "furia_selvagem_ciclope")
+        return int(ab.get("attack_bonus", 2) or 2) if ab and self._ciclope_furioso(m) else 0
+
+    def _ciclope_furia_dano(self, m):
+        ab = self._ciclope_ability(m, "furia_selvagem_ciclope")
+        return int(ab.get("damage_bonus", 4) or 4) if ab and self._ciclope_furioso(m) else 0
+
+    def _ciclope_furia_ca(self, m):
+        ab = self._ciclope_ability(m, "furia_selvagem_ciclope")
+        return int(ab.get("ac_penalty", -4) or -4) if ab and self._ciclope_furioso(m) else 0
+
+    def _ciclope_cercado_bonus(self, m):
+        ab = self._ciclope_ability(m, "cercado_ciclope")
+        if not ab:
+            return 0
+        proximos = sum(1 for p in self.players.values()
+                       if p.get("alive") and self._is_adjacent_to_monster(p.get("pos", []), m))
+        return int(ab.get("attack_bonus", 2) or 2) if proximos >= int(ab.get("min_attackers", 2) or 2) else 0
+
+    def _ciclope_attack_in_range(self, m, target, atk_def):
+        """Valida alcance de qualquer ataque do Ciclope a partir do footprint."""
+        alcance = atk_def.get("range") or atk_def.get("reach")
+        if not alcance:
+            return self._is_adjacent_to_monster(target["pos"], m)
+        distancia = min(max(abs(target["pos"][0] - tx), abs(target["pos"][1] - ty))
+                         for tx, ty in self._monster_tiles(m))
+        return distancia <= int(alcance)
+
+    def _ciclope_carga(self, m, atk_def):
+        ab = self._ciclope_ability(m, "investida_colossal")
+        if not ab or not atk_def.get("ciclope_melee"):
+            return None
+        if m.get("_ciclope_move_count", 0) < int(ab.get("move_required", 3) or 3):
+            return None
+        if not m.get("_ciclope_straight", True):
+            return None
+        return ab
+
+    async def _ciclope_presenca_aterradora(self, m):
+        ab = self._ciclope_ability(m, "presenca_aterradora")
+        if not ab or m.get("_ciclope_presenca_usada"):
+            return
+        m["_ciclope_presenca_usada"] = True
+        raio = int(ab.get("radius", 4) or 4)
+        dc = int(ab.get("dc", 13) or 13)
+        for p in self.players.values():
+            if not p.get("alive") or max(abs(p["pos"][0] - m["pos"][0]), abs(p["pos"][1] - m["pos"][1])) > raio:
+                continue
+            if not self._tem_linha_de_visao(m["pos"], p["pos"]):
+                continue
+            passou, d20, bonus, total = self._testar_save(p, ab.get("save", "vontade"), dc, fonte=m)
+            if not passou:
+                p["ciclope_ataque_penalty_ate"] = self.round_num + int(ab.get("duration_rounds", 1) or 1)
+            resultado = T("narracao.resiste" if passou
+                          else "narracao.falha_e_sofre_pen_ataque_1a_rodada")
+            await self.gm_say(T("narracao.usa_presenca_aterradora_contra_vontade_v", monstro=nome_criatura(m), heroi=nome_criatura(p), resultado=resultado, total=total, dc=dc))
+
+    async def _ciclope_pisoteio(self, m):
+        ab = self._ciclope_ability(m, "pisoteio_colossal")
+        if not ab or m.get("_ciclope_pisoteio_usado"):
+            return
+        if m.get("_ciclope_move_count", 0) < int(ab.get("move_required", 4) or 4) or not m.get("_ciclope_straight", True):
+            return
+        m["_ciclope_pisoteio_usado"] = True
+        footprint_path = set()
+        for pos in m.get("_ciclope_path", []):
+            footprint_path.update(self._monster_tiles_at(m, pos[0], pos[1]))
+        alvos = []
+        candidatos = list(self.players.values()) + list(self.monsters.values()) + list(self._all_animados())
+        for alvo in candidatos:
+            if alvo is m or alvo in alvos or not self._vivo(alvo) or tuple(alvo.get("pos", [])) not in footprint_path:
+                continue
+            alvos.append(alvo)
+        expr = str(ab.get("damage", "2d6"))
+        for alvo in alvos:
+            bruto = roll_dice(expr) + mod(m.get("str_", 10))
+            dano = self._apply_damage_types(bruto, [DMG_PHYSICAL], alvo)
+            await self._dano_em_alvo(alvo, dano, DMG_PHYSICAL, m.get("id"))
+            await self.gm_say(T("narracao.atinge_com_pisoteio_colossal_e_causa_de", monstro=nome_criatura(m), alvo=nome_criatura(alvo), dano=dano))
+
+    async def _ciclope_golpe_esmagador(self, m, target, atk_def):
+        ab = self._ciclope_ability(m, "golpe_esmagador")
+        if not ab or not atk_def.get("ciclope_melee") or not self._vivo(target):
+            return
+        passou, d20, bonus, total = self._testar_save(target, ab.get("save", "fortitude"), int(ab.get("dc", 17) or 17), fonte=m)
+        if not passou and self._eh_jogador(target):
+            target["ciclope_perde_movimento"] = True
+        resultado = T("narracao.resiste" if passou
+                      else "narracao.perde_a_proxima_acao_de_movimento")
+        await self.gm_say(T("narracao.ao_golpe_esmagador_de_fortitude_vs_cd", alvo=nome_criatura(target), resultado=resultado, monstro=nome_criatura(m), total=total, int_ab_get_dc_17_or_17=int(ab.get('dc', 17) or 17)))
+
+    async def _ai_ciclope(self, m, targets):
+        await self._ciclope_presenca_aterradora(m)
+        target_obj = self._get_monster_primary_target(m, targets)
+        if not target_obj:
+            return
+        target = target_obj["obj"]
+        clava = (m.get("attacks") or [None])[0]
+        if clava and self._ciclope_attack_in_range(m, target, clava):
+            await self._monster_execute_attacks(m, target_obj)
+            return
+        # Arremesso Colossal é uma ação alternativa, não um segundo ataque da
+        # mesma rodada: só é usado enquanto a Clava não estiver no alcance.
+        ab = self._ciclope_ability(m, "arremesso_colossal")
+        if ab:
+            distancia = min(max(abs(target["pos"][0] - tx), abs(target["pos"][1] - ty))
+                            for tx, ty in self._monster_tiles(m))
+            arremesso = {"name": ab.get("name", "Arremesso Colossal"), "atk_bonus": int(ab.get("attack_bonus", 1) or 1),
+                         "damage": ab.get("damage", "2d6"), "damage_types": [DMG_PHYSICAL], "num_attacks": 1,
+                         "range": int(ab.get("range", 8) or 8), "attack_attribute": "dex",
+                         "damage_attribute": "str_", "apply_attribute_damage": True, "attribute_mod_base": 0}
+            if distancia > int(m.get("movement", 6) or 6) + 2 and self._ciclope_attack_in_range(m, target, arremesso) and self._tem_linha_de_visao(m["pos"], target["pos"]):
+                await self._execute_one_monster_attack(m, arremesso, target_obj)
+                return
+        for _ in range(m.get("movement", 6)):
+            antes = list(m["pos"])
+            await self._monster_move_step(m, target["pos"])
+            if m["pos"] == antes:
+                break
+            if self._ciclope_attack_in_range(m, target, clava or {}):
+                break
+        await self._ciclope_pisoteio(m)
+        if clava and self._ciclope_attack_in_range(m, target, clava):
+            await self._monster_execute_attacks(m, target_obj)
+        elif ab and self._ciclope_attack_in_range(m, target, {"range": 8}) and self._tem_linha_de_visao(m["pos"], target["pos"]):
+            await self._execute_one_monster_attack(m, arremesso, target_obj)
+
+    def _gigante_ability(self, m, aid):
+        if not m or m.get("type") != "gigante_guerra":
+            return None
+        return self._habilidade_monstro(m, aid)
+
+    def _gigante_mira_bonus(self, m):
+        return int(m.get("_gigante_mira_bonus", 0) or 0) if m.get("type") == "gigante_guerra" else 0
+
+    def _gigante_heroic_damage_bonus(self, m):
+        return int(m.get("_gigante_heroic_damage_bonus", 0) or 0) if m.get("type") == "gigante_guerra" else 0
+
+    async def _gigante_ativar_mira(self, m):
+        ability = self._gigante_ability(m, "mira_certeira")
+        if not ability or not self._ativar_habilidade_nativa(m, ability):
+            return False
+        m["_gigante_mira_bonus"] = int(ability.get("attack_bonus", 2) or 2)
+        await self.gm_say(T("narracao.prepara_a_mira_certeira_para_o_proximo_a", monstro=nome_criatura(m)))
+        return True
+
+    async def _gigante_ativar_investida_heroica(self, m):
+        ability = self._gigante_ability(m, "investida_heroica")
+        if not ability or not self._ativar_habilidade_nativa(m, ability):
+            return False
+        mult = max(1, int(ability.get("movement_multiplier", 2) or 2))
+        m["_gigante_movement_multiplier"] = mult
+        m["_gigante_heroic_damage_bonus"] = int(ability.get("damage_bonus", 2) or 2)
+        m["_water_moves_left"] = max(m.get("_water_moves_left", 0), int(m.get("movement", 6) or 6) * mult)
+        await self.gm_say(T("narracao.usa_investida_heroica_e_dobra_seu_desloc", monstro=nome_criatura(m)))
+        return True
+
+    async def _gigante_ativar_furia(self, m, target_obj):
+        ability = self._gigante_ability(m, "furia_berserker")
+        if not ability or not self._ativar_habilidade_nativa(m, ability):
+            return False
+        await self.gm_say(T("narracao.entra_em_furia_berserker_e_desfere_um_at", monstro=nome_criatura(m)))
+        await self._monster_execute_attacks(m, target_obj)
+        return True
+
+    async def _ai_gigante(self, m, targets):
+        await self._ciclope_presenca_aterradora(m)
+        target_obj = self._get_monster_primary_target(m, targets)
+        if not target_obj:
+            return
+        target = target_obj["obj"]
+        attack = (m.get("attacks") or [None])[0]
+        if not attack:
+            return
+
+        distance = min(max(abs(target["pos"][0] - tx), abs(target["pos"][1] - ty))
+                        for tx, ty in self._monster_tiles(m))
+        if distance > 2:
+            await self._gigante_ativar_investida_heroica(m)
+        # Mira Certeira é preparada antes do deslocamento para beneficiar o
+        # primeiro ataque da rodada, inclusive o Arremesso Colossal.
+        if distance <= 8 and self._gigante_mira_bonus(m) <= 0:
+            await self._gigante_ativar_mira(m)
+
+        if distance > 2:
+            movement = int(m.get("movement", 6) or 6) * int(m.get("_gigante_movement_multiplier", 1) or 1)
+            for _ in range(movement):
+                antes = list(m["pos"])
+                await self._monster_move_step(m, target["pos"])
+                if m["pos"] == antes:
+                    break
+                if self._ciclope_attack_in_range(m, target, attack):
+                    break
+
+        if self._gigante_mira_bonus(m) <= 0:
+            distance = min(max(abs(target["pos"][0] - tx), abs(target["pos"][1] - ty))
+                           for tx, ty in self._monster_tiles(m))
+            if distance <= 8:
+                await self._gigante_ativar_mira(m)
+        await self._ciclope_pisoteio(m)
+        if self._ciclope_attack_in_range(m, target, attack):
+            await self._monster_execute_attacks(m, target_obj)
+            if self._alvo_vivo(target_obj):
+                await self._gigante_ativar_furia(m, target_obj)
+            return
+
+        arremesso_ab = self._gigante_ability(m, "arremesso_colossal")
+        distance = min(max(abs(target["pos"][0] - tx), abs(target["pos"][1] - ty))
+                       for tx, ty in self._monster_tiles(m))
+        if arremesso_ab and distance <= int(arremesso_ab.get("range", 8) or 8) \
+                and self._tem_linha_de_visao(m["pos"], target["pos"]):
+            arremesso = {"name": arremesso_ab.get("name", "Arremesso Colossal"),
+                         "atk_bonus": int(arremesso_ab.get("attack_bonus", 7) or 7),
+                         "damage": arremesso_ab.get("damage", "2d6"), "damage_types": [DMG_PHYSICAL],
+                         "num_attacks": 1, "range": int(arremesso_ab.get("range", 8) or 8),
+                         "attack_attribute": "dex", "damage_attribute": "str_",
+                         "apply_attribute_damage": True}
+            await self._execute_one_monster_attack(m, arremesso, target_obj)
+
+    def _runico_ability(self, m, aid):
+        if not m or m.get("type") != "gigante_runico":
+            return None
+        return self._habilidade_monstro(m, aid)
+
+    def _runico_pode_acao_bonus(self, m):
+        return not m.get("_runico_bonus_used")
+
+    async def _runico_ativar_regeneracao(self, m):
+        ability = self._runico_ability(m, "regeneracao_runica")
+        if (not ability or not self._runico_pode_acao_bonus(m)
+                or m.get("hp", 0) >= m.get("max_hp", m.get("hp", 0))):
+            return False
+        if not self._ativar_habilidade_nativa(m, ability):
+            return False
+        m["_runico_bonus_used"] = True
+        m["_runico_regen_rounds"] = max(1, roll_dice(ability.get("duration_dice", "1d4+2")))
+        m["_runico_regen_amount"] = int(ability.get("heal", 2) or 2)
+        await self.gm_say(T("narracao.ativa_a_regeneracao_runica_por_rodadas", monstro=nome_criatura(m), m_runico_regen_rounds=m['_runico_regen_rounds']))
+        return True
+
+    async def _runico_ativar_passo_fantasma(self, m):
+        ability = self._runico_ability(m, "passo_fantasma_runico")
+        if not ability or not self._runico_pode_acao_bonus(m):
+            return False
+        if not self._ativar_habilidade_nativa(m, ability):
+            return False
+        m["_runico_bonus_used"] = True
+        m["_runico_passo_ate"] = self.round_num + max(1, roll_dice(ability.get("duration_dice", "1d4")))
+        bonus = int(ability.get("bonus_mov", 2) or 2)
+        m["_water_moves_left"] = max(0, m.get("_water_moves_left", 0)) + bonus
+        m["_runico_passo_ativo"] = True
+        await self.gm_say(T("narracao.usa_passo_fantasma_e_recebe_movimento_ne", monstro=nome_criatura(m), bonus=bonus))
+        return True
+
+    async def _runico_ativar_provocacao(self, m, target_obj):
+        ability = self._runico_ability(m, "provocacao_runica")
+        target = target_obj.get("obj") if target_obj else None
+        if (not ability or not self._runico_pode_acao_bonus(m) or not target
+                or target_obj.get("kind") != "player" or not target.get("alive")):
+            return False
+        alcance = int(ability.get("range", 4) or 4)
+        if _distancia_chebyshev(m["pos"], target["pos"]) > alcance:
+            return False
+        if not self._ativar_habilidade_nativa(m, ability):
+            return False
+        m["_runico_bonus_used"] = True
+        target["runico_provocado_por"] = m["id"]
+        target["runico_provocacao_ate"] = self.round_num + int(ability.get("duration_rounds", 3) or 3)
+        target["runico_provocacao_efeito"] = True
+        await self.gm_say(T("narracao.provoca_ele_deve_enfrenta_lo_por_rodadas", monstro=nome_criatura(m), alvo=nome_criatura(target), int_ability_get_duration=int(ability.get('duration_rounds', 3) or 3)))
+        return True
+
+    async def _ai_gigante_runico(self, m, targets):
+        await self._ciclope_presenca_aterradora(m)
+        target_obj = self._get_monster_primary_target(m, targets)
+        if not target_obj:
+            return
+        target = target_obj["obj"]
+        attack = (m.get("attacks") or [None])[0]
+        if not attack:
+            return
+
+        # A regeneração usa a ação bônus quando o gigante está ferido;
+        # caso contrário, o Passo Fantasma ou a Provocação ocupam esse slot.
+        if m.get("hp", 0) <= m.get("max_hp", m.get("hp", 1)) / 2:
+            await self._runico_ativar_regeneracao(m)
+        distance = min(max(abs(target["pos"][0] - tx), abs(target["pos"][1] - ty))
+                        for tx, ty in self._monster_tiles(m))
+        if distance > 2:
+            await self._runico_ativar_passo_fantasma(m)
+        elif distance <= 4 and not target.get("runico_provocado_por"):
+            await self._runico_ativar_provocacao(m, target_obj)
+
+        if distance > 2:
+            for _ in range(max(0, int(m.get("_water_moves_left", m.get("movement", 6)) or 0))):
+                antes = list(m["pos"])
+                await self._monster_move_step(m, target["pos"])
+                if m["pos"] == antes:
+                    break
+                distance = min(max(abs(target["pos"][0] - tx), abs(target["pos"][1] - ty))
+                                for tx, ty in self._monster_tiles(m))
+                if distance <= 2:
+                    break
+        if self._ciclope_attack_in_range(m, target, attack):
+            await self._monster_execute_attacks(m, target_obj)
 
     def _garaloux_charge(self, m, atk_def, target):
         """Retorna a carga especial disponível para a Chifrada deste turno."""
@@ -21915,6 +22504,13 @@ class GameRoom:
             return False
         m["pos"] = [nx, ny]
         m["_moved_this_turn"] = True
+        if m.get("type") in {"ciclope", "gigante_guerra", "gigante_runico"}:
+            anterior = m.get("_ciclope_last_step_dir")
+            if anterior is not None and anterior != step_facing:
+                m["_ciclope_straight"] = False
+            m["_ciclope_last_step_dir"] = list(step_facing)
+            m["_ciclope_move_count"] = m.get("_ciclope_move_count", 0) + 1
+            m.setdefault("_ciclope_path", []).append([nx, ny])
         if any(ab.get("id") in {"salto_selvagem", "investida_brutal"}
                for ab in m.get("special_abilities", [])):
             m["_garaloux_move_count"] = m.get("_garaloux_move_count", 0) + 1
@@ -22248,7 +22844,12 @@ class GameRoom:
         de um monstro orientado (footprint recalculado com essa direção)."""
         for tx, ty in self._monster_tiles_at(m, ax, ay, facing):
             if self._blocks_tile(tx, ty):          # fora do mapa, parede ou porta fechada
-                return False
+                ghost = (m.get("type") == "gigante_runico"
+                         and m.get("_runico_passo_ativo"))
+                low_obstacle = ((tx, ty) in self._decor_block_tiles
+                                or (tx, ty) in self._mat_solid_tiles)
+                if not (ghost and low_obstacle and self.tiles[ty][tx] not in {WALL, DOOR}):
+                    return False
             if self._entity_blocks(tx, ty, exclude_mid=m["id"]):
                 return False
         return True
@@ -22503,6 +23104,9 @@ class GameRoom:
         attr_mod = mod(m.get(attr_key, 10))
         dynamic_attr = (attr_mod - int(atk_def.get("attribute_mod_base", attr_mod))
                         if atk_def.get("apply_attribute_damage") else 0)
+        ciclope_charge_active = self._ciclope_carga(m, atk_def)
+        gigante_mira_bonus = self._gigante_mira_bonus(m)
+        gigante_heroic_damage_bonus = self._gigante_heroic_damage_bonus(m)
         m_atk = (atk_def["atk_bonus"] + dynamic_attr + self._pen(m, "ataque") + self._mod_magia(m, "ataque")
                  + (2 if m.get("furia_lobisomem") else 0)
                  + m.get("equipment_attack_bonus", 0)
@@ -22511,7 +23115,11 @@ class GameRoom:
                  + self._luz_atk_pen(m)                             # Fraqueza de Luz (-2 sob luz direta)
                  + self._acorde_atk_pen(m)                          # Tambor RÃºnico: -1 (sucesso no Acorde)
                  + self._furia_ataque_bonus(m)
-                 + self._monster_editor_passive_bonus(m))
+                  + self._ciclope_furia_ataque(m)
+                  + self._ciclope_cercado_bonus(m)
+                  + (int(ciclope_charge_active.get("attack_bonus", 2) or 2) if ciclope_charge_active else 0)
+                  + gigante_mira_bonus
+                  + self._monster_editor_passive_bonus(m))
         esc = self._verificar_escuridao(m, target)
         prov = bool(m.get("provocado_turno_efeito"))
         desvantagem = (prov or esc == "desvantagem"
@@ -22535,6 +23143,13 @@ class GameRoom:
             await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
                                    "label": m["name"], "hit": hit, "crit": crit})
 
+        # Mira Certeira e o bônus de dano da Investida Heroica valem para o
+        # próximo ataque tentado, independentemente de acerto ou erro.
+        if gigante_mira_bonus:
+            m.pop("_gigante_mira_bonus", None)
+        if gigante_heroic_damage_bonus:
+            m.pop("_gigante_heroic_damage_bonus", None)
+
         if target.get("dormindo"):
             hit, crit = True, True
             target.pop("dormindo", None); target.pop("dormindo_rodadas", None)
@@ -22547,6 +23162,7 @@ class GameRoom:
                                   "label": f"🎲 Sorte — {m['name']} rerrola (−2)", "hit": hit, "crit": crit})
 
         charge = self._garaloux_charge(m, atk_def, target) if hit else None
+        ciclope_charge = ciclope_charge_active if hit else None
         if charge:
             m["_garaloux_charge_consumed"] = True
 
@@ -22558,7 +23174,9 @@ class GameRoom:
             if sombra_dano:
                 await self.broadcast({"type": "dice_roll", "die": "d6",
                                        "value": sombra_dano, "label": "Ataque das Sombras"})
-            attr_dmg = attr_mod if atk_def.get("apply_attribute_damage") else 0
+            damage_attr_key = atk_def.get("damage_attribute") or attr_key
+            damage_attr_mod = mod(m.get(damage_attr_key, 10))
+            attr_dmg = damage_attr_mod if atk_def.get("apply_attribute_damage") else 0
             charge_bonus = 0
             if charge and charge.get("investida"):
                 investida_expr = str(charge["investida"].get("damage", "2d6"))
@@ -22580,6 +23198,11 @@ class GameRoom:
                 charge_bonus += flame_damage
                 await self.broadcast({"type": "dice_roll", "die": "d6", "value": flame_roll,
                                       "label": f"Investida Flamejante - {m['name']}"})
+            if ciclope_charge:
+                charge_damage = int(ciclope_charge.get("damage_bonus", 4) or 4)
+                # O bônus de acerto já foi incluído em ``m_atk`` antes da
+                # rolagem; aqui entra somente o bônus fixo de dano.
+                charge_bonus += charge_damage
             dmg = max(1, raw_dmg + attr_dmg + charge_bonus + self._pen(m, "dano") + self._mod_magia(m, "dano")
                       + self._furia_bonus(m)                         # FÃºria (HP < 50%)
                       + self._investida_bonus(m)                     # Investida Brutal (moveu)
@@ -22587,6 +23210,8 @@ class GameRoom:
                       + (2 if m.get("furia_lobisomem") else 0)
                       + self._furia_cega_dano_bonus(m)               # FÃºria Cega (dano na rodada anterior)
                       + self._golpe_brutal_bonus(m)                  # Ogro: Golpe Brutal (+2)
+                      + self._ciclope_furia_dano(m)
+                      + gigante_heroic_damage_bonus
                       + self._monster_editor_passive_bonus(m)
                       + m.get("editor_ability_damage", 0)
                       + sombra_dano)                                 # Ataque das Sombras (+1d6)
@@ -22720,6 +23345,8 @@ class GameRoom:
                     dy = 0 if target["pos"][1] == m["pos"][1] else (1 if target["pos"][1] > m["pos"][1] else -1)
                     if dx or dy:
                         self._empurrar(target, dx, dy, int(charge["investida"].get("push", 1) or 1))
+            if target.get("hp", target.get("vida_atual", 0)) > 0:
+                await self._ciclope_golpe_esmagador(m, target, atk_def)
             # Agarrão com teste de resistência (crocodilo, cobra). Fica FORA do
             # ramo de herói por dois motivos: vale no controle Manual (que ataca
             # por aqui, não pela IA da espécie) e prende criatura contra
@@ -23300,7 +23927,9 @@ class GameRoom:
             return False
         aid = ability.get("id")
         if aid in {"mestre_dos_mortos", "sopro_dragao", "explosao_vapor", "amaldicoar_monstro",
-                   "golpe_brutal", "desaparecer_nas_sombras"} or aid in self._ESMAGAR_PRESO:
+                   "golpe_brutal", "desaparecer_nas_sombras", "mira_certeira",
+                   "furia_berserker", "investida_heroica", "regeneracao_runica",
+                   "passo_fantasma_runico", "provocacao_runica"} or aid in self._ESMAGAR_PRESO:
             return True
         if aid in {"nuvem_acida", "sacudida_brutal", "engolir"}:
             return True
@@ -23423,6 +24052,20 @@ class GameRoom:
             self._debitar_acao_mestre(m, custo, "habilidade")
             m["_ja_executou_acao"] = True
             await self.push_state(); return
+        if (ability_id in {"regeneracao_runica", "passo_fantasma_runico", "provocacao_runica"}
+                and m.get("type") == "gigante_runico"):
+            if ability_id == "regeneracao_runica":
+                used = await self._runico_ativar_regeneracao(m)
+            elif ability_id == "passo_fantasma_runico":
+                used = await self._runico_ativar_passo_fantasma(m)
+            else:
+                alvo = self.players.get(target_id)
+                used = await self._runico_ativar_provocacao(
+                    m, {"kind": "player", "obj": alvo} if alvo else None)
+            if not used:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_sem_usos_ou_em_recarga")}); return
+            self._debitar_acao_mestre(m, custo, "habilidade")
+            await self.push_state(); return
         if ability_id == "golpe_brutal":
             if not await self._ativar_golpe_brutal(m):
                 await self.send_to(pid, {"type": "error", "msg": T("erro.golpe_brutal_em_recarga")}); return
@@ -23466,6 +24109,25 @@ class GameRoom:
             if not await self._usar_explosao_vapor(m, ability, {"kind": alvo_kind, "obj": alvo}, targets):
                 await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_da_area_ou_habilidade_sem_usos_em_r")}); return
             self._debitar_acao_mestre(m, custo, "habilidade"); m["_ja_executou_acao"] = True
+            await self.push_state(); return
+        if ability_id in {"mira_certeira", "investida_heroica", "furia_berserker"} \
+                and m.get("type") == "gigante_guerra":
+            if ability_id == "mira_certeira":
+                used = await self._gigante_ativar_mira(m)
+            elif ability_id == "investida_heroica":
+                used = await self._gigante_ativar_investida_heroica(m)
+            else:
+                alvo, alvo_kind = self._alvo_manual_mestre(target_id)
+                ataque = (m.get("attacks") or [None])[0]
+                if not alvo or alvo_kind != "player" or not ataque \
+                        or not self._ciclope_attack_in_range(m, alvo, ataque):
+                    await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_do_alcance")}); return
+                used = await self._gigante_ativar_furia(m, {"kind": alvo_kind, "obj": alvo})
+            if not used:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_sem_usos_ou_em_recarga")}); return
+            self._debitar_acao_mestre(m, custo, "habilidade")
+            if custo == "principal":
+                m["_ja_executou_acao"] = True
             await self.push_state(); return
         if ability_id == "amaldicoar_monstro":
             alvo = self.players.get(target_id)
@@ -25163,6 +25825,12 @@ class GameRoom:
             await self._ai_crocodilo_jovem(m, targets)
         elif ai in {"tirano_da_mata", "tirano_ancestral"}:
             await self._ai_tirano(m, targets)
+        elif ai == "ciclope":
+            await self._ai_ciclope(m, targets)
+        elif ai == "gigante_guerra":
+            await self._ai_gigante(m, targets)
+        elif ai == "gigante_runico":
+            await self._ai_gigante_runico(m, targets)
         elif ai == "cobra_constritora":
             await self._ai_cobra_constritora(m, targets)
         elif ai == "cobra_venenosa":
@@ -25782,6 +26450,24 @@ class GameRoom:
 
     # â”€â”€ GM phase (monsters act) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+    async def _processar_regeneracao_runica_inicio(self, m):
+        restantes = int(m.get("_runico_regen_rounds", 0) or 0)
+        if m.get("type") != "gigante_runico" or restantes <= 0 or m.get("hp", 0) <= 0:
+            return
+        max_hp = int(m.get("max_hp", m.get("hp", 0)) or 0)
+        cura = min(int(m.get("_runico_regen_amount", 2) or 2), max(0, max_hp - int(m.get("hp", 0))))
+        m["hp"] = min(max_hp, int(m.get("hp", 0)) + cura)
+        m["_runico_regen_rounds"] = restantes - 1
+        if cura:
+            await self.gm_say(T("narracao.recupera_hp_com_a_regeneracao_runica_rod", monstro=nome_criatura(m), cura=cura, max_0_restantes_1=max(0, restantes - 1)))
+
+    def _limpar_provocacao_runica_expirada(self):
+        for p in self.players.values():
+            if p.get("runico_provocado_por") and p.get("runico_provocacao_ate", 0) < self.round_num:
+                p.pop("runico_provocado_por", None)
+                p.pop("runico_provocacao_ate", None)
+                p.pop("runico_provocacao_efeito", None)
+
     async def _upkeep_inicio_turno_monstro(self, m, alive_monsters):
         """Prólogo de início de turno do monstro: efeitos que ticam/expiram e os
         estados que fazem PERDER o turno. Retorna True se o monstro ainda pode
@@ -25793,6 +26479,8 @@ class GameRoom:
 
         A ordem é a mesma de sempre; era um bloco inline com `continue`, que
         virou `return False`."""
+        self._limpar_provocacao_runica_expirada()
+        await self._processar_regeneracao_runica_inicio(m)
         await self._processar_aura_escaldante_inicio(m)
         await self._processar_zona_molochus_inicio_turno(m)
         if m.get("hp", 0) <= 0:
@@ -25809,6 +26497,9 @@ class GameRoom:
             for aid in list(m.get("ability_cooldowns", {})):
                 m["ability_cooldowns"][aid] = max(0, int(m["ability_cooldowns"].get(aid, 0) or 0) - 1)
             await self._tirano_inicio_turno(m)
+        if m.get("type") == "gigante_runico":
+            for aid in list(m.get("ability_cooldowns", {})):
+                m["ability_cooldowns"][aid] = max(0, int(m["ability_cooldowns"].get(aid, 0) or 0) - 1)
         if m.get("hp", 0) <= 0:
             return False
         await self._processar_mods_magia_turno(m)   # Amaldiçoar expira por rodada
@@ -25887,12 +26578,19 @@ class GameRoom:
             if m["hp"] <= 0:
                 continue
             m["_water_moves_left"] = self._water_turn_moves(m, m.get("movement", 4))
+            m["_runico_bonus_used"] = False
+            m["_runico_passo_ativo"] = False
             m["_moved_this_turn"] = False
             m["_garaloux_move_count"] = 0
             m["_garaloux_charge_consumed"] = False
             m["_molochus_move_count"] = 0
             m["_tirano_move_count"] = 0
             m["_tirano_passo_disparado"] = False
+            m["_ciclope_move_count"] = 0
+            m["_ciclope_straight"] = True
+            m["_ciclope_last_step_dir"] = None
+            m["_ciclope_path"] = []
+            m["_ciclope_pisoteio_usado"] = False
             # Monstro dormente: sala ainda trancada (porta fechada, ou â€” com
             # mestre â€” ainda nÃ£o avistado). NÃ£o percebe nem persegue os herÃ³is
             # â€” permanece imÃ³vel atÃ© a porta ser aberta / ser avistado.
@@ -26158,6 +26856,13 @@ class GameRoom:
                 await self.gm_say(T("narracao.finalmente_tomba_fortitude_vs_cd", monstro=nome_criatura(m), tot=tot, cd=cd))
 
         await self._processar_fim_de_combate()
+
+        # Uma Provocação Rúnica não pode deixar o herói preso a um alvo morto.
+        for p in self.players.values():
+            if p.get("runico_provocado_por") == m.get("id"):
+                p.pop("runico_provocado_por", None)
+                p.pop("runico_provocacao_ate", None)
+                p.pop("runico_provocacao_efeito", None)
 
         morte = self._molochus_ability(m, "morte_explosiva")
         if morte:

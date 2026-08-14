@@ -12488,7 +12488,7 @@ function abrirFichaMonstro(m){
         ${atributo('FOR',m.str_)}${atributo('DES',m.dex)}${atributo('CON',m.con_)}${atributo('INT',m.int_)}
         ${atributo('FORT',m.fort)}${atributo('REF',m.ref_)}${atributo('VON',m.will)}${atributo('PORTE',m.porte||'médio')}
       </div></section>
-      <section><h3>ATAQUES</h3>${ataques.length ? ataques.map(a => `<div class="fm-linha"><b>${_esc(a.name||'Ataque')}</b><span>${a.atk_bonus>=0?'+':''}${a.atk_bonus ?? '—'} · ${_esc(a.damage||'—')} · ${a.range ? `alcance ${a.range}` : 'corpo a corpo'} · ${a.num_attacks||1}×</span></div>`).join('') : '<p>Nenhum ataque cadastrado.</p>'}</section>
+      <section><h3>ATAQUES</h3>${ataques.length ? ataques.map(a => `<div class="fm-linha"><b>${_esc(a.name||'Ataque')}</b><span>${a.atk_bonus>=0?'+':''}${a.atk_bonus ?? '—'} · ${_esc(a.damage||'—')} · ${a.range ? `alcance ${a.range}` : a.reach ? `corpo a corpo · alcance ${a.reach}` : 'corpo a corpo'} · ${a.num_attacks||1}×</span></div>`).join('') : '<p>Nenhum ataque cadastrado.</p>'}</section>
       <section><h3>HABILIDADES</h3>${habilidades.length ? habilidades.map(a => `<div class="fm-linha"><b>${_esc(a.name||a.id)}</b><span>${_esc(a.descricao||a.description||a.desc||a.action_type||'')}</span></div>`).join('') : '<p>Nenhuma habilidade.</p>'}</section>
       <section><h3>MAGIAS</h3><p>${magias.length ? _esc(magias.join(' · ')) : 'Nenhuma magia.'}</p></section>
       <section><h3>DEFESAS DO BESTIÁRIO</h3><div class="fm-linha"><b>Imunidades</b><span>${_esc(_fmtFichaMonstroLista(m.immunities))}</span></div><div class="fm-linha"><b>Fraquezas</b><span>${_esc(_fmtFichaMonstroLista(m.weaknesses))}</span></div></section>
@@ -19124,6 +19124,10 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   molochos:          'assets/models3d/monstros/molochos.glb',
   tirano_da_mata:    'assets/models3d/monstros/tirano_da_mata.glb',
   tirano_ancestral:  'assets/models3d/monstros/tirano_da_mata.glb',
+  ciclope:            'assets/models3d/monstros/ciclope.glb',
+  gigante_guerreiro:  'assets/models3d/monstros/gigante_guerreiro.glb',
+  gigante_guerra:    'assets/models3d/monstros/gigante_guerreiro.glb',
+  gigante_runico:     'assets/models3d/monstros/gigante_runas.glb',
 
   // Fallback por `type`: importante para monstros antigos/autorados que não
   // possuem `image` (por exemplo, os Goblins comuns da dungeon Floresta).
@@ -23536,7 +23540,7 @@ const _CSD = {
        desc:'Concede um ataque extra (2º ataque manual) neste turno.',
        fome_cost:5, sede_cost:5},
     ]},
-  mage:{ name:'PEDRO, O TÍMIDO', cls:'PEDRO', skyHex:'#0a0020', lightHex:0x8833ff, spd:5,
+  mage:{ name:'PEDRO, O TÍMIDO', cls:'PEDRO', skyHex:'#0a0020', lightHex:0x8833ff, spd:6,
     portrait:'assets/portraits/pedro.jpeg',
     hp:7, stats:{forca:8,destreza:12,inteligencia:18,constituicao:12},
     desc:'Domina os arcanos proibidos. Devasta grupos de inimigos com magia de área letal.',
@@ -23558,7 +23562,7 @@ const _CSD = {
       { icon:'💥', name:'Fortalecer Magia', desc:'Ação livre. Multiplica por 1,5 o dano da próxima magia.' },
       { icon:'🎯', name:'Aprimorar Magia', desc:'Ação livre. Aumenta em +1 a CD do teste de resistência da próxima magia.' },
     ]},
-  rogue:{ name:'LUCCAS, O ASTUTO', cls:'LUCCAS', skyHex:'#040800', lightHex:0x44cc44, spd:7,
+  rogue:{ name:'LUCCAS, O ASTUTO', cls:'LUCCAS', skyHex:'#040800', lightHex:0x44cc44, spd:6,
     portrait:'assets/portraits/luccas.jpeg',
     hp:9, stats:{forca:10,destreza:18,inteligencia:10,constituicao:12},
     desc:'Morte silenciosa nas sombras. Dano crítico devastador e mobilidade inigualável.',
@@ -23580,7 +23584,7 @@ const _CSD = {
        desc:'Ação principal. 8 tipos de armadilha na casa/adjacente. 🍖-2 💧-1 + custo em ouro.',
        fome_cost:2, sede_cost:1},
     ]},
-  cleric:{ name:'FRADE LEWIS', cls:'FRADE LEWIS', skyHex:'#140c00', lightHex:0xffdd44, spd:5,
+  cleric:{ name:'FRADE LEWIS', cls:'FRADE LEWIS', skyHex:'#140c00', lightHex:0xffdd44, spd:6,
     portrait:'assets/portraits/lewis.jpeg',
     hp:10, stats:{forca:10,destreza:10,inteligencia:16,constituicao:14},
     desc:'Frade que canaliza milagres. Cura, purifica e ressuscita aliados. Não usa mana — seus milagres custam fome/sede.',
