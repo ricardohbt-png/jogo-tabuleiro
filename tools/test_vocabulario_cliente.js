@@ -196,6 +196,37 @@ check("lista vazia nao deixa separador solto",
       I18N.t("teste.lista", { quem: [] }) === "Controls .");
 I18N.setLang("pt");
 
+console.log("");
+console.log("[U] A chave ui.* tem prioridade sobre a cat.* do servidor");
+DICT["cat.magia.bola_fogo.nome"] = { pt: "Bola de Fogo", en: "Fireball" };
+DICT["cat.magia.bola_fogo.desc"] = { pt: "Frase curta do servidor",
+                                     en: "Server short line" };
+DICT["ui.magia.bola_fogo.desc"]  = { pt: "<b>Card rico do cliente</b>",
+                                     en: "<b>Rich client card</b>" };
+const cliente = { bola_fogo: { id: "bola_fogo", nome: "Bola de Fogo",
+                               descricao: "<b>Card rico do cliente</b>" } };
+I18N.setLang("en");
+I18N.aplicarCatalogo(cliente, false);
+check("a descricao usa a chave ui.*, nao a cat.*",
+      cliente.bola_fogo.descricao === "<b>Rich client card</b>");
+check("o nome continua vindo da cat.* quando nao ha ui.*",
+      cliente.bola_fogo.nome === "Fireball");
+I18N.setLang("pt");
+I18N.aplicarCatalogo(cliente, false);
+check("voltar ao portugues restaura o card do cliente",
+      cliente.bola_fogo.descricao === "<b>Card rico do cliente</b>");
+
+// Sem chave ui.*, a cat.* ainda vale — e e isso que torna seguro trocar as
+// chamadas para soNome=false ANTES de escrever todas as chaves.
+DICT["cat.magia.relampago.desc"] = { pt: "Curta", en: "Short" };
+const semUi = { relampago: { id: "relampago", nome: "Relampago",
+                             descricao: "<b>Card sem chave ui</b>" } };
+I18N.setLang("en");
+I18N.aplicarCatalogo(semUi, false);
+check("sem ui.*, cai na cat.* (comportamento antigo)",
+      semUi.relampago.descricao === "Short");
+I18N.setLang("pt");
+
 console.log("\n" + "=".repeat(62));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);
 console.log("=".repeat(62));

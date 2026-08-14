@@ -156,15 +156,27 @@
       vistos.add(o);
       if (Array.isArray(o)) { for (const v of o) anda(v, null); return; }
       const base = _chaveBase(o, idPai);
+      // A chave ui.* (do CLIENTE) vence a cat.* (do servidor) quando as duas
+      // existem: os catálogos do cliente guardam um card HTML com alcance e
+      // efeito por rodada, contra uma frase curta no servidor. A etapa 3 evitou
+      // o choque passando soNome=true e deixando a descrição de fora; a chave
+      // própria resolve sem perder informação. Sem ui.*, tudo segue como antes —
+      // e é isso que torna seguro ligar soNome=false antes de escrever todas as
+      // chaves.
+      const baseUi = base && base.replace(/^cat\./, 'ui.');
+      const kNome = (baseUi && tem(baseUi + '.nome')) ? baseUi + '.nome'
+                  : (base && tem(base + '.nome'))     ? base + '.nome' : null;
+      const kDesc = (baseUi && tem(baseUi + '.desc')) ? baseUi + '.desc'
+                  : (base && tem(base + '.desc'))     ? base + '.desc' : null;
       const composto = _instrumentoComposto(o);
       if (composto !== null) {
         for (const campo of CAMPOS_NOME) {
           if (typeof o[campo] === 'string') { o[campo] = composto; break; }
         }
-      } else if (base && tem(base + '.nome')) {
+      } else if (kNome) {
         for (const campo of CAMPOS_NOME) {
           if (typeof o[campo] === 'string') {
-            o[campo] = _comSufixos(o, t(base + '.nome')); break;
+            o[campo] = _comSufixos(o, t(kNome)); break;
           }
         }
       } else if (typeof o.id === 'string' && (o.ammo_count || o.corrosao_inicial)) {
@@ -174,9 +186,9 @@
           if (typeof o[campo] === 'string') { o[campo] = _comSufixos(o, o[campo]); break; }
         }
       }
-      if (base && !soNome && tem(base + '.desc')) {
+      if (kDesc && !soNome) {
         for (const campo of CAMPOS_DESC) {
-          if (typeof o[campo] === 'string') { o[campo] = t(base + '.desc'); break; }
+          if (typeof o[campo] === 'string') { o[campo] = t(kDesc); break; }
         }
       }
       for (const k in o) anda(o[k], k);
