@@ -1197,123 +1197,123 @@ window.LANG_NARRACAO = {
     "pt": "👯 **{heroi}** gemina **{magia_nome}** em **{alvo2_get_name_or_alvo2}**!"
   },
   "narracao.gm.combat_start.0": {
-    "en": "",
+    "en": "The battle begins! Show them what you are made of!",
     "pt": "O combate começa! Mostrem do que são capazes!"
   },
   "narracao.gm.combat_start.1": {
-    "en": "",
+    "en": "Blades drawn! The enemy will give no quarter!",
     "pt": "Espadas em punho! O inimigo não dará trégua!"
   },
   "narracao.gm.combat_start.2": {
-    "en": "",
+    "en": "Battle is joined! Fight with everything you have!",
     "pt": "Batalha declarada! Lutem com tudo!"
   },
   "narracao.gm.defeat.0": {
-    "en": "",
+    "en": "The darkness has won... The dungeon remains perilous.",
     "pt": "A escuridão venceu... A masmorra permanece perigosa."
   },
   "narracao.gm.defeat.1": {
-    "en": "",
+    "en": "Evil triumphed this time. But the legends of the fallen heroes will live on forever...",
     "pt": "O mal triunfou desta vez. Mas as lendas dos heróis caídos viverão eternamente..."
   },
   "narracao.gm.defeat.2": {
-    "en": "",
+    "en": "The dungeon claims more victims. May they find peace beyond...",
     "pt": "A masmorra reivindica mais vítimas. Que encontrem paz além..."
   },
   "narracao.gm.intro.0": {
-    "en": "",
+    "en": "Adventurers... The Fortress of Darkness awaits you. Monsters, traps and grim secrets dwell in its corridors. Only the bravest will survive. May fortune walk with you.",
     "pt": "Aventureiros... A Fortaleza das Trevas vos aguarda. Monstros, armadilhas e segredos sombrios residem em seus corredores. Apenas os mais corajosos sobreviverão. Que a sorte os acompanhe."
   },
   "narracao.gm.intro.1": {
-    "en": "",
+    "en": "Legend tells of an ancient dragon guarding immeasurable treasure in the depths. Countless heroes have tried — none returned. Will you be the first to change that fate?",
     "pt": "A lenda fala de um dragão ancião que guarda tesouros imensuráveis nas profundezas. Inúmeros heróis tentaram — nenhum voltou. Serão vocês os primeiros a mudar esse destino?"
   },
   "narracao.gm.intro.2": {
-    "en": "",
+    "en": "An ancient darkness has taken the dungeon. The villagers are counting on you. Enter with caution... evil is watching.",
     "pt": "Uma escuridão antiga tomou conta da masmorra. Os aldeões dependem de vocês. Entre com cautela... o mal os observa."
   },
   "narracao.gm.monster_moves.0": {
-    "en": "",
+    "en": "The creatures advance through the shadows...",
     "pt": "As criaturas avançam nas sombras..."
   },
   "narracao.gm.monster_moves.1": {
-    "en": "",
+    "en": "Heavy footsteps echo down the corridors. The monsters draw near.",
     "pt": "Passos pesados ecoam pelos corredores. Os monstros se aproximam."
   },
   "narracao.gm.monster_moves.2": {
-    "en": "",
+    "en": "The enemy advances! Be ready!",
     "pt": "Os inimigos avançam! Estejam preparados!"
   },
   "narracao.gm.room_boss.0": {
-    "en": "",
+    "en": "An unnatural cold fills the air. A malevolent presence waits...",
     "pt": "Um frio sobrenatural toma conta do ambiente. Uma presença maligna aguarda..."
   },
   "narracao.gm.room_boss.1": {
-    "en": "",
+    "en": "Deep roars echo. The lord of darkness awaits you!",
     "pt": "Rugidos profundos ecoam. O senhor das trevas os aguarda!"
   },
   "narracao.gm.room_boss.2": {
-    "en": "",
+    "en": "The darkness thickens. This is the final trial. All or nothing!",
     "pt": "A escuridão se adensa. Este é o desafio final. Tudo ou nada!"
   },
   "narracao.gm.room_chest.0": {
-    "en": "",
+    "en": "An ancient chest rests at the centre. Could there be treasure?",
     "pt": "Um baú antigo repousa no centro. Será que há tesouros?"
   },
   "narracao.gm.room_chest.1": {
-    "en": "",
+    "en": "An ornate coffer, unopened for centuries...",
     "pt": "Um cofre ornamentado que não era aberto há séculos..."
   },
   "narracao.gm.room_chest.2": {
-    "en": "",
+    "en": "Among the rubble, a gleaming chest!",
     "pt": "Entre os destroços, um baú reluzente!"
   },
   "narracao.gm.room_empty.0": {
-    "en": "",
+    "en": "The chamber seems empty... for now.",
     "pt": "A câmara parece vazia... por enquanto."
   },
   "narracao.gm.room_empty.1": {
-    "en": "",
+    "en": "A heavy silence. Only dust and shadows.",
     "pt": "Silêncio pesado. Apenas poeira e sombras."
   },
   "narracao.gm.room_empty.2": {
-    "en": "",
+    "en": "Nothing obvious here. But stay alert.",
     "pt": "Nada de óbvio aqui. Mas fiquem alertas."
   },
   "narracao.gm.room_monster.0": {
-    "en": "",
+    "en": "Beware! Creatures emerge from the shadows!",
     "pt": "Cuidado! Criaturas emergem das sombras!"
   },
   "narracao.gm.room_monster.1": {
-    "en": "",
+    "en": "A roar echoes off the walls. Enemies in sight!",
     "pt": "Um rugido ecoa pelas paredes. Inimigos à vista!"
   },
   "narracao.gm.room_monster.2": {
-    "en": "",
+    "en": "Eyes gleam in the darkness. Ready yourselves for a fight!",
     "pt": "Olhos brilham na escuridão. Preparem-se para lutar!"
   },
   "narracao.gm.room_trap.0": {
-    "en": "",
+    "en": "The floor sounds wrong. Tread very carefully...",
     "pt": "O chão soa estranho. Pisem com muito cuidado..."
   },
   "narracao.gm.room_trap.1": {
-    "en": "",
+    "en": "Marks on the walls speak of battles past. Someone suffered here.",
     "pt": "Marcas nas paredes revelam combates passados. Alguém já sofreu aqui."
   },
   "narracao.gm.room_trap.2": {
-    "en": "",
+    "en": "Something feels wrong about this room...",
     "pt": "Algo parece errado nesta sala..."
   },
   "narracao.gm.victory.0": {
-    "en": "",
+    "en": "VICTORY! The heroes have slain the dragon and saved the realm! Your legend will be told for generations!",
     "pt": "VITÓRIA! Os heróis derrotaram o dragão e salvaram o reino! Sua lenda será contada por gerações!"
   },
   "narracao.gm.victory.1": {
-    "en": "",
+    "en": "Evil is banished! The realm is safe, thanks to the courage of all of you!",
     "pt": "O mal foi banido! O reino está salvo graças à coragem de todos!"
   },
   "narracao.gm.victory.2": {
-    "en": "",
+    "en": "GLORY TO THE ADVENTURERS! The darkness has retreated!",
     "pt": "GLÓRIA AOS AVENTUREIROS! A escuridão recuou!"
   },
   "narracao.golpe_sagrado_de_se_desfaz_recursos_insu": {
