@@ -34,17 +34,32 @@ def _rodar_verificacoes():
     for _, t in restantes[:6]:
         print("     sobrou:", t[:70])
 
-    print("\n[3] Fora de escopo — contagem, não cobrança")
-    # Estes seguem em português de propósito; são a etapa 4b-ii. O teste os
-    # RELATA para o placar ficar visível, e nunca falha por causa deles.
-    linhas = FONTE.split("\n")
-    multi = sum(1 for l in linhas
-                if l.strip().endswith("gm_say(") and "async def" not in l)
-    pool = len(re.findall(r"gm_say\(gm\(", FONTE))
-    conc = sum(1 for l in linhas if "gm_say(" in l and "+" in l
-               and not re.search(r'gm_say\((f?"|T\()', l) and "async def" not in l)
-    print(f"     multilinha: {multi} | pool gm(): {pool} | concatenação: {conc}")
-    check("relatório de fora-de-escopo emitido", True)
+    print("\n[3] Nenhuma narração em português sobrou no servidor")
+    # Até a etapa 4b-i isto era só um RELATÓRIO — as formas difíceis seguiam em
+    # português de propósito e o teste não podia cobrá-las. A 4b-ii as migrou
+    # todas, então o placar virou cobrança: se alguma voltar, fica vermelho.
+    #
+    # A varredura é por `ast`, não por linha: multilinha, concatenação e
+    # f-string que atravessa a linha são a MESMA árvore para o parser, e uma
+    # heurística de texto erraria justamente nelas.
+    import ast as _ast
+    cruas = []
+    for _no in _ast.walk(_ast.parse(FONTE)):
+        if not (isinstance(_no, _ast.Call) and isinstance(_no.func, _ast.Attribute)
+                and _no.func.attr == "gm_say" and len(_no.args) == 1):
+            continue
+        _a = _no.args[0]
+        # T(...) e gm(...) já devolvem texto tardio; Name é variável que guarda um.
+        if isinstance(_a, _ast.Name):
+            continue
+        if isinstance(_a, _ast.Call) and isinstance(_a.func, _ast.Name) \
+                and _a.func.id in ("T", "gm"):
+            continue
+        cruas.append((_no.lineno, (_ast.get_source_segment(FONTE, _a) or "?")
+                      .replace("\n", " ")[:70]))
+    check(f"nenhum gm_say com texto em português ({len(cruas)})", not cruas)
+    for _l, _s in cruas[:6]:
+        print(f"     L{_l}: {_s}")
 
     print("\n[4] Chaves usadas e chaves sem uso")
     usadas = set(re.findall(r'T\(\s*"(narracao\.[^"]+)"', FONTE))

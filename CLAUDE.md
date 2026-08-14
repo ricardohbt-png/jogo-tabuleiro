@@ -1941,3 +1941,50 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > migrados) e a etapa **5** (interface do cliente, ~1.000). Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-08-11-idioma-etapa4c-nomes-na-narracao*`. Testes:
 > `tools/test_narracao.py` (48), `tools/test_vocabulario_cliente.js` (40).
+
+> **Idioma — a narração que sobrou (etapa 4b-ii de 5):** fecha a narração do servidor.
+> **Não há mais nenhum `gm_say` com texto em português no `server.py`** — a varredura por
+> `ast` da seção `[3]` do `test_narracao.py`, que até a 4b-i só *relatava*, agora **cobra**.
+> 134 sites migrados + as 30 frases do pool + os 6 que recebiam string pronta.
+>
+> **Migrador por `ast`, não por regex** (`tools/migrar_gm_say_ast.py`, uso único): para o
+> `ast`, f-string multilinha, f-string de uma linha e concatenação implícita são a MESMA
+> árvore (`JoinedStr`), então as três formas saem pela mesma máquina, sem adivinhar onde a
+> string começa nem como os fragmentos se juntam. **Armadilha corrigida antes de rodar:** o
+> `ast` reporta `col_offset` em **bytes UTF-8**, não em caracteres — e o `server.py` é cheio
+> de emoji e acento, então fatiar por índice de caractere corromperia o arquivo em silêncio.
+> Todo o corte é em bytes, de trás para frente. Três travas: forma não reconhecida é
+> **pulada e relatada**; `ast.parse` **antes** de gravar; conferidor de diff estrutural.
+>
+> **O pool `gm(key)`** sorteia o ÍNDICE e devolve `T("narracao.gm.<pool>.<i>")`. A ordem é o
+> ponto: se o idioma fosse escolhido antes do sorteio, dois jogadores na mesma sala leriam
+> **variantes diferentes do mesmo evento** — e isso seria invisível num teste de uma conexão
+> só. O teste abre duas conexões em idiomas diferentes e exige a mesma variante. O `GM`
+> continua no `server.py` como fonte do português; as 30 chaves moram no `narracao.js`.
+>
+> **O motor aprendeu a juntar listas:** um parâmetro pode ser uma LISTA, e o `t()` a junta
+> com `lista.separador`/`lista.ultimo` (`" e "` × `" and "`), no servidor (`_param_texto`) e
+> no cliente (`_valor` em `src/i18n.js`). Cada elemento pode ser ele próprio um `T`. Isso
+> fechou a limitação do `nomes = " e ".join(...)` que a 4c havia registrado.
+>
+> **BUG PEGO NA REVISÃO, não por teste:** ao fazer `_equip_into_slot` devolver `T`, o site da
+> 2ª arma virou `gm_say(log + " (2ª arma…)")` — e **`T` não tem `__add__`**, porque
+> operadores são buscados no TIPO e não passam pelo `__getattr__` que faz o `T` se disfarçar
+> de string. Equipar uma 2ª arma na mão esquerda quebraria com `TypeError`, e **as 17 suítes
+> passaram verdes com o bug no lugar**: nenhuma exercitava aquele caminho. A ausência de
+> `__add__` é uma **feature** — transformou perda silenciosa de tradução em erro alto. Hoje
+> há teste exigindo que `T + str` estoure, e uma varredura contra o padrão voltar.
+>
+> **As formas irregulares** (13) foram à mão, por três motivos distintos: **ternário com
+> string literal dentro** (`{'arma' if novo else 'desarma'}`) vira DUAS chaves escolhidas
+> pelo mesmo booleano — a ordem das palavras muda entre idiomas; **`format_spec`**
+> (`{fome:.1f}`) é pré-formatado; **concatenação com sobra** vira `T` aninhado (vazio quando
+> ausente) ou lista. Duas se revelaram melhores: o `prefix` das armadilhas procedurais era
+> `random.choice(GM["room_trap"])` — o pool —, e o `_ESMAGAR_PRESO` guardava o TEXTO na
+> tabela, que passou a guardar a CHAVE.
+>
+> **Continua em português de propósito:** conteúdo autoral (masmorras, campanhas, falas de
+> NPC, itens e monstros do editor) e as ~6 passagens de nome que a 4c documentou como fora
+> das 8 famílias de catálogo. **Falta só a etapa 5** — a interface do cliente (~1.000).
+> Spec/plano em `docs/superpowers/{specs,plans}/2026-08-13-idioma-etapa4b2-narracao-restante*`.
+> Testes: `tools/test_narracao.py` (67), `tools/test_vocabulario_cliente.js` (45).
