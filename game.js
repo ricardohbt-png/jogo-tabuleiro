@@ -150,8 +150,28 @@ function replaceAbilityEmoji(root) {
   }
 }
 
+// Um observador só, duas tarefas: injetar o ícone de habilidade e traduzir o
+// markup recém-inserido.
+//
+// A tradução mora aqui porque o cliente monta HTML por template string e o
+// insere com innerHTML em 163 lugares, contra 4 chamadas de _i18nApply — sem
+// isto, cada tela traduzida dependeria de alguém lembrar de aplicar, e a dívida
+// já aparecia nos 9 _refreshX() que o _setLang carregava. O custo é baixo
+// porque o nó só é tocado quando REALMENTE traz [data-i18n]; nas demais
+// inserções é um matches/querySelector e sai.
+//
+// _i18nApply é declaração de função, então o hoisting a torna visível aqui
+// mesmo estando definida bem mais abaixo no arquivo.
+const I18N_MARCADORES = '[data-i18n],[data-i18n-ph],[data-i18n-title]';
+
 const abilityIconObserver = new MutationObserver(records => {
-  records.forEach(record => record.addedNodes.forEach(node => replaceAbilityEmoji(node)));
+  records.forEach(record => record.addedNodes.forEach(node => {
+    replaceAbilityEmoji(node);
+    if (node.nodeType !== 1) return;
+    if (node.matches?.(I18N_MARCADORES) || node.querySelector?.(I18N_MARCADORES)) {
+      _i18nApply(node);
+    }
+  }));
 });
 abilityIconObserver.observe(document.body, { childList: true, subtree: true });
 // ===========================================================================
@@ -19409,6 +19429,17 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
     'ursoNegro', 'urso_negro',
     'bugbear',
   ]);
+  const movementFront = new Set([
+    'ciclope',
+    'gigante_guerreiro', 'gigante_guerra',
+    'gigante_runas', 'gigante_runico',
+  ]);
+  if (movementFront.has(imageName) || movementFront.has(monsterType)
+      || /(?:ciclope|gigante_guerreiro|gigante_runas)\.glb$/i.test(glbPath || '')) {
+    // Estes modelos foram exportados 90° de lado em relação ao eixo padrão.
+    // Usar a orientação-base faz a frente acompanhar o sentido do movimento.
+    return _facingToRotY(facing);
+  }
   if (leftQuarterTurn.has(imageName) || leftQuarterTurn.has(monsterType)
       || /(?:kobold|ogro_lanca|devorador_organico)\.glb$/i.test(glbPath || '')) {
     // O padrão geral usa +90°. Voltar ao eixo-base equivale a girar 90° para

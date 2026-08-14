@@ -66,6 +66,20 @@ check("game.js liga I18N.on a GS.setLang",
 check("propagação tem um caminho só (uma única chamada a GS.setLang)",
       (gamejs.match(/GS\.setLang\(/g) || []).length === 1);
 
+console.log("");
+console.log("[O] O markup inserido depois tambem e traduzido");
+// Checagem estatica: o teste nao carrega o game.js (ele monta o DOM inteiro no
+// load), entao verificamos a fiacao no fonte — mesmo padrao das outras secoes.
+const gjObs = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
+check("o observador do body aplica _i18nApply",
+      /new MutationObserver\([\s\S]{0,600}?_i18nApply/.test(gjObs));
+check("ele escuta o body com subtree",
+      /observe\(\s*document\.body\s*,\s*\{[^}]*subtree\s*:\s*true/.test(gjObs));
+check("so trabalha quando o no traz data-i18n",
+      /\[data-i18n/.test(gjObs));
+check("continua havendo UM observador do body, nao dois",
+      (gjObs.match(/observe\(\s*document\.body/g) || []).length === 1);
+
 console.log("\n" + "=".repeat(62));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);
 console.log("=".repeat(62));
