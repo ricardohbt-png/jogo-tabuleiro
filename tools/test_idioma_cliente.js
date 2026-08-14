@@ -95,6 +95,16 @@ check("o scan por texto continua como retaguarda",
 check("abilityIconHtml marca o id no img (para depurar e evitar reaplicar)",
       /data-ability-id/.test(gjAb));
 
+console.log("");
+console.log("[I] O dicionario da interface existe e foi carregado");
+check("src/lang/interface.js existe",
+      fs.existsSync(path.join(raiz, "src", "lang", "interface.js")));
+const idxHtml = fs.readFileSync(path.join(raiz, "index.html"), "utf8");
+check("o index.html carrega o interface.js",
+      /src\/lang\/interface\.js/.test(idxHtml));
+check("as chaves da interface entraram no dicionario",
+      Object.keys(DICT).some(k => k.startsWith("ui.")));
+
 console.log("\n" + "=".repeat(62));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);
 console.log("=".repeat(62));
