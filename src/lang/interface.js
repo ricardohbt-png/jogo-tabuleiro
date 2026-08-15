@@ -111,6 +111,114 @@ window.LANG_INTERFACE = {
     "en": "✨ Wand",
     "pt": "✨ Varinha"
   },
+  "ui.magia.abencoar.desc": {
+    "en": "",
+    "pt": "<b>Área:</b> 6x6 centrado em Lewis<br>\n               <b>Buff:</b> +1 ataque, dano, CA, resistência<br>\n               <b>Duração:</b> 1d4+1 rodadas<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
+  },
+  "ui.magia.abencoar_arma.desc": {
+    "en": "",
+    "pt": "<b>Alcance:</b> 6 quadrados<br>\n               <b>Buff:</b> +1 ataque e dano na arma<br>\n               <b>Arma abençoada:</b> ignora reduções, dano pela metade e imunidade física<br>\n               <b>Duração:</b> 1d6+2 rodadas<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
+  },
+  "ui.magia.amaldicoar.desc": {
+    "en": "",
+    "pt": "<b>Área:</b> 3x3 centrado no alvo<br>\n               <b>Debuff:</b> -1 ataque, dano, CA, resistência<br>\n               <b>Duração:</b> 1d4+1 rodadas<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
+  },
+  "ui.magia.barreira_arcana.desc": {
+    "en": "",
+    "pt": "<b>Efeito:</b> reduz 5 de todo dano recebido<br>\n               <b>Duração:</b> 1d6 + 1 rodada por nível do mago + 1 rodada fixa<br>\n               <b>Estender:</b> +1 rodada<br>\n               <b>Fortalecer:</b> redução passa a 7<br>\n               <b>Aprimorar:</b> não se aplica (sem teste de resistência)"
+  },
+  "ui.magia.bola_fogo.desc": {
+    "en": "",
+    "pt": "<b>Alcance:</b> 5 casas<br>\n               <b>Área:</b> 3×3, centrada no ponto escolhido<br>\n               <b>R1:</b> 1d6 por nível | Reflexos: metade<br>\n               <b>R2:</b> metade do dano R1<br>\n               <b>R3:</b> metade do dano R2 (Estender: +1 rodada residual)<br>\n               <b>Área persiste:</b> entrar sofre dano, sair evita futuro<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
+  },
+  "ui.magia.clarividencia.desc": {
+    "en": "",
+    "pt": "<b>Alcance:</b> o mapa inteiro (mire em qualquer lugar)<br>\n               <b>Área:</b> 4x4 (escala com nível)<br>\n               <b>Efeito:</b> revela a névoa, os monstros e as armadilhas do local<br>\n               <b>Duração:</b> 2 rodadas<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
+  },
+  "ui.magia.comando.desc": {
+    "en": "",
+    "pt": "<b>Save:</b> Vontade<br>\n               <b>Alvo:</b> 1 monstro (construtos, mortos-vivos e imunes a encantamento resistem)<br>\n               <b>Falha:</b> no próximo turno dele, VOCÊ dirige o monstro — movimento, ação principal, habilidades e itens<br>\n               <b>Duração:</b> 1 turno<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
+  },
+  "ui.magia.conjurar_elemental.desc": {
+    "en": "",
+    "pt": "<b>Tipos:</b> Fogo (HP18 2d6), Elétrico (HP20 linha),\n               Gelo (HP22 -2fís), Pedra (HP26 ½fís)<br>\n               <b>Controle:</b> age após Lewis, 6 quad. movimento<br>\n               <b>⚠️ Explosão afeta aliados"
+  },
+  "ui.magia.contramagica.desc": {
+    "en": "",
+    "pt": "<b>Tipo:</b> Reação (fora do turno)<br>\n               <b>Mecânica:</b> d20+INT vs inimigo d20+bônus<br>\n               <b>Sucesso:</b> magia cancelada + inimigo perde ação<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot ao usar"
+  },
+  "ui.magia.criar_alimentos.desc": {
+    "en": "",
+    "pt": "<b>Cria:</b> baú em uma casa adjacente livre<br>\n               <b>Conteúdo:</b> 1d4+2 alimentos aleatórios da taverna<br>\n               <b>Fortalecer:</b> multiplica a quantidade final de itens<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
+  },
+  "ui.magia.dominar_mente.desc": {
+    "en": "",
+    "pt": "<b>Save:</b> Vontade<br>\n               <b>Alvo:</b> 1 monstro (construtos, mortos-vivos e imunes a encantamento resistem)<br>\n               <b>Falha:</b> VOCÊ dirige o monstro a cada turno dele por 1d4+1 rodadas<br>\n               <b>Novo teste:</b> cada dano sofrido dá +2 cumulativo na próxima Vontade; passar rompe o controle<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
+  },
+  "ui.magia.dominar_morto_vivo.desc": {
+    "en": "",
+    "pt": "<b>Requer:</b> alvo do tipo morto-vivo<br>\n               <b>Save:</b> Vontade (bônus = ND) ao lançar e a cada rodada<br>\n               <b>Falha:</b> vira servo temporário (age na fase dos servos)<br>\n               <b>3 falhas seguidas:</b> controle PERMANENTE<br>\n               <b>Passar:</b> quebra o controle (volta hostil) — relançar<br>\n               <b>Slot único</b> · não conta para Animar Mortos"
+  },
+  "ui.magia.invisibilidade.desc": {
+    "en": "",
+    "pt": "<b>Efeito:</b> inimigos não podem atacar<br>\n               <b>Ataque:</b> com vantagem (2d20 maior) + furtivo<br>\n               <b>Quebra:</b> ao atacar ou lançar magia<br>\n               <b>Duração:</b> 1d6+1 rodadas"
+  },
+  "ui.magia.jato_ar.desc": {
+    "en": "",
+    "pt": "<b>Cone:</b> 4 quadrados comp., 4 base<br>\n               <b>Dano:</b> 1d6 por nível<br>\n               <b>Falha Reflexos:</b> empurra 1d6 quadrados<br>\n               <b>Sucesso:</b> empurra 2 quadrados<br>\n               <b>Colisão parede:</b> +1d4 dano"
+  },
+  "ui.magia.lentidao.desc": {
+    "en": "",
+    "pt": "<b>Save:</b> Vontade<br>\n               <b>Falha:</b> 1 ação/rodada, sem reação, -1 CA<br>\n               <b>Sucesso:</b> movimento ÷2, -1 ataque<br>\n               <b>Duração:</b> 1d4 rodadas"
+  },
+  "ui.magia.manto_escuridao.desc": {
+    "en": "",
+    "pt": "<b>Raio:</b> 3 quadrados centrado no caster<br>\n               <b>Sem visão noturna:</b> 2d20 usa menor nos ataques<br>\n               <b>Com visão noturna:</b> 2d20 usa maior vs cegos<br>\n               <b>Conjurador:</b> recebe visão no escuro pela duração do manto<br>\n               <b>Distância máxima à distância:</b> 2 quadrados<br>\n               <b>Duração:</b> 1d4 rodadas"
+  },
+  "ui.magia.medo.desc": {
+    "en": "",
+    "pt": "<b>Save:</b> Vontade<br>\n               <b>Falha:</b> foge 1d4+1 rodadas<br>\n               <b>Efeitos:</b> -1 ataque, não se aproxima<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
+  },
+  "ui.magia.protecao_energia.desc": {
+    "en": "",
+    "pt": "<b>Proteção:</b> 10 pontos/rodada de dano elemental<br>\n               <b>Tipos:</b> fogo, gelo, eletricidade, ácido, água ou sagrado<br>\n               <b>Duração:</b> 1d6+1 rodadas<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
+  },
+  "ui.magia.raio_congelante.desc": {
+    "en": "",
+    "pt": "<b>Alcance:</b> 3 +1 por nível<br>\n               <b>Dano:</b> 3d4 +2d4 a cada 2 níveis<br>\n               <b>⚠️ Sem Reflexos:</b> dano sempre total<br>\n               <b>Fortitude:</b> falha → paralisado 1 rodada<br>\n               <b>Rodada seguinte:</b> novo Fortitude<br>\n               <b>Sucesso:</b> age normalmente<br>\n               <b>Falha:</b> mais 1 rodada (máx 2)"
+  },
+  "ui.magia.raio_divino.desc": {
+    "en": "",
+    "pt": "<b>Dano:</b> 1d6+1 por nível do personagem<br>\n               <b>Save:</b> Reflexos → metade<br>\n               <b>Vs mortos-vivos/demônios:</b> dano dobrado<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
+  },
+  "ui.magia.regeneracao_magica.desc": {
+    "en": "",
+    "pt": "<b>Pool:</b> 2d6+2 pontos de regeneração<br>\n               <b>Cura:</b> +1 HP no início do turno do alvo<br>\n               <b>Se morrer:</b> volta com 1 HP (-3 fome/sede)<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
+  },
+  "ui.magia.relampago.desc": {
+    "en": "",
+    "pt": "<b>Alcance:</b> 4 casas em linha reta (+1 por nível)<br>\n               <b>Dano:</b> 1d6 por nível por impacto<br>\n               <b>Ricochete:</b> volta pelo mesmo trajeto — casas atingidas 2x (verde escuro)<br>\n               <b>Save:</b> Reflexos → metade por impacto<br>\n               <b>⚠️ Pedro só é ferido na volta; pode ferir aliados</b><br>\n               <b>Estender Magia:</b> não se aplica (efeito instantâneo)"
+  },
+  "ui.magia.saciar.desc": {
+    "en": "",
+    "pt": "<b>Alcance:</b> adjacente<br>\n               <b>Efeito:</b> +20 fome e +20 sede<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
+  },
+  "ui.magia.silencio.desc": {
+    "en": "",
+    "pt": "<b>Área:</b> 4x4 centrado no ponto<br>\n               <b>Efeito:</b> magias não funcionam na área<br>\n               <b>Duração:</b> 1d4+1 rodadas<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
+  },
+  "ui.magia.sono.desc": {
+    "en": "",
+    "pt": "<b>Save:</b> Vontade<br>\n               <b>Falha:</b> dorme 1d4+1 rodadas<br>\n               <b>Bônus:</b> 1º ataque contra dormindo = crítico<br>\n               <b>Acorda:</b> ao receber qualquer dano<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
+  },
+  "ui.magia.velocidade.desc": {
+    "en": "",
+    "pt": "<b>Efeito:</b> todas as ações são dobradas<br>\n               <b>Custo:</b> cada ação ainda custa fome/sede<br>\n               <b>Duração:</b> 1d4 rodadas"
+  },
+  "ui.magia.visao_escuro.desc": {
+    "en": "",
+    "pt": "<b>Efeito:</b> ignora completamente o sistema de escuridão<br>\n               <b>Duração:</b> até sair da masmorra<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
+  },
   "ui.mestre.custo.bonus": {
     "en": "BONUS",
     "pt": "BÔNUS"

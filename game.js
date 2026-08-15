@@ -10702,7 +10702,6 @@ const GRIMORIO_CLIENT = {
     circulo:'primeiro', classe:['mage'],
     tipo:'area_persistente', alcance_base:5, alcance_escala:0, area_raio:1,
     custo:'🍖-1 💧-1',
-    resumo:'Alcance 5. Área 3x3; fogo persiste e decai.',
     descricao:`<b>Alcance:</b> 5 casas<br>
                <b>Área:</b> 3×3, centrada no ponto escolhido<br>
                <b>R1:</b> 1d6 por nível | Reflexos: metade<br>
@@ -10716,7 +10715,6 @@ const GRIMORIO_CLIENT = {
     circulo:'primeiro', classe:['mage'],
     tipo:'linha_reflexiva', alcance_base:4, alcance_escala:1,
     custo:'🍖-1 💧-1',
-    resumo:'1d6/nível por impacto. Linha de 4 + ricochete.',
     descricao:`<b>Alcance:</b> 4 casas em linha reta (+1 por nível)<br>
                <b>Dano:</b> 1d6 por nível por impacto<br>
                <b>Ricochete:</b> volta pelo mesmo trajeto — casas atingidas 2x (verde escuro)<br>
@@ -10729,7 +10727,6 @@ const GRIMORIO_CLIENT = {
     circulo:'primeiro', classe:['mage'],
     tipo:'alvo', alcance_base:3, alcance_escala:1,
     custo:'🍖-1 💧-1',
-    resumo:'3d4+2d4/2níveis sem save. Fortitude ou paralisado.',
     descricao:`<b>Alcance:</b> 3 +1 por nível<br>
                <b>Dano:</b> 3d4 +2d4 a cada 2 níveis<br>
                <b>⚠️ Sem Reflexos:</b> dano sempre total<br>
@@ -10743,7 +10740,6 @@ const GRIMORIO_CLIENT = {
     circulo:'primeiro', classe:['mage'],
     tipo:'area', alcance:5, area:2,
     custo:'🍖-1 💧-1',
-    resumo:'Área. Vontade ou dorme 1d4+1.',
     descricao:`<b>Save:</b> Vontade<br>
                <b>Falha:</b> dorme 1d4+1 rodadas<br>
                <b>Bônus:</b> 1º ataque contra dormindo = crítico<br>
@@ -10755,7 +10751,6 @@ const GRIMORIO_CLIENT = {
     circulo:'primeiro', classe:['mage','cleric'],
     tipo:'alvo', alcance:4,
     custo:'🍖-1 💧-1',
-    resumo:'Vontade ou você dirige o próximo turno do monstro.',
     descricao:`<b>Save:</b> Vontade<br>
                <b>Alvo:</b> 1 monstro (construtos, mortos-vivos e imunes a encantamento resistem)<br>
                <b>Falha:</b> no próximo turno dele, VOCÊ dirige o monstro — movimento, ação principal, habilidades e itens<br>
@@ -10767,7 +10762,6 @@ const GRIMORIO_CLIENT = {
     circulo:'primeiro', classe:['mage','cleric'],
     tipo:'area', alcance:5, area:2,
     custo:'🍖-1 💧-1',
-    resumo:'Área. Vontade ou foge 1d4+1.',
     descricao:`<b>Save:</b> Vontade<br>
                <b>Falha:</b> foge 1d4+1 rodadas<br>
                <b>Efeitos:</b> -1 ataque, não se aproxima<br>
@@ -10778,7 +10772,6 @@ const GRIMORIO_CLIENT = {
     circulo:'primeiro', classe:['mage','cleric'],
     tipo:'area_fixa', alcance:8, alvoLivre:true,   // alvoLivre: mira em QUALQUER casa do mapa (até na névoa)
     custo:'🍖-1 💧-1',
-    resumo:'Revela área (monstros + armadilhas) em qualquer ponto do mapa. Dura 2 rodadas.',
     descricao:`<b>Alcance:</b> o mapa inteiro (mire em qualquer lugar)<br>
                <b>Área:</b> 4x4 (escala com nível)<br>
                <b>Efeito:</b> revela a névoa, os monstros e as armadilhas do local<br>
@@ -10790,7 +10783,6 @@ const GRIMORIO_CLIENT = {
     circulo:'primeiro', classe:['mage'],
     tipo:'buff_self', alcance:0,
     custo:'🍖-1 💧-1 + 1 slot',
-    resumo:'Reduz 5 de dano por 1d6 + nível + 1 rodadas.',
     descricao:`<b>Efeito:</b> reduz 5 de todo dano recebido<br>
                <b>Duração:</b> 1d6 + 1 rodada por nível do mago + 1 rodada fixa<br>
                <b>Estender:</b> +1 rodada<br>
@@ -10802,7 +10794,6 @@ const GRIMORIO_CLIENT = {
     circulo:'primeiro', classe:['mage'],
     tipo:'reacao', alcance:0,
     custo:'🍖-1 💧-1 + 1 slot',
-    resumo:'Reação. Teste oposto cancela magia.',
     descricao:`<b>Tipo:</b> Reação (fora do turno)<br>
                <b>Mecânica:</b> d20+INT vs inimigo d20+bônus<br>
                <b>Sucesso:</b> magia cancelada + inimigo perde ação<br>
@@ -10813,7 +10804,6 @@ const GRIMORIO_CLIENT = {
     circulo:'primeiro', classe:['cleric'],
     tipo:'area', alcance:0, area:3,
     custo:'🍖-1 💧-1',
-    resumo:'Área 6x6. +1 ataque/dano/CA/res.',
     descricao:`<b>Área:</b> 6x6 centrado em Lewis<br>
                <b>Buff:</b> +1 ataque, dano, CA, resistência<br>
                <b>Duração:</b> 1d4+1 rodadas<br>
@@ -10824,7 +10814,6 @@ const GRIMORIO_CLIENT = {
     circulo:'primeiro', classe:['cleric'],
     tipo:'area', alcance:5, area:1,
     custo:'🍖-1 💧-1',
-    resumo:'Área 3x3. -1 ataque/dano/CA/res.',
     descricao:`<b>Área:</b> 3x3 centrado no alvo<br>
                <b>Debuff:</b> -1 ataque, dano, CA, resistência<br>
                <b>Duração:</b> 1d4+1 rodadas<br>
@@ -10835,7 +10824,6 @@ const GRIMORIO_CLIENT = {
     circulo:'primeiro', classe:['cleric'],
     tipo:'alvo_aliado', alcance:6,
     custo:'🍖-1 💧-1',
-    resumo:'Arma de aliado +1 ataque/dano e ignora resistências físicas.',
     descricao:`<b>Alcance:</b> 6 quadrados<br>
                <b>Buff:</b> +1 ataque e dano na arma<br>
                <b>Arma abençoada:</b> ignora reduções, dano pela metade e imunidade física<br>
@@ -10847,7 +10835,6 @@ const GRIMORIO_CLIENT = {
     circulo:'primeiro', classe:['cleric'],
     tipo:'toque', alcance:1,
     custo:'🍖-1 💧-1',
-    resumo:'Toque. +20 fome +20 sede.',
     descricao:`<b>Alcance:</b> adjacente<br>
                <b>Efeito:</b> +20 fome e +20 sede<br>
                <b>Custo:</b> 🍖-1 💧-1 + 1 slot`
@@ -10858,7 +10845,6 @@ const GRIMORIO_CLIENT = {
     circulo:'segundo', classe:['mage','cleric'],
     tipo:'area_fixa', alcance_base:5, alcance_escala:1, area_lado:4,
     custo:'🍖-1 💧-1',
-    resumo:'Área 4x4. Sem magias nem Canção dentro.',
     descricao:`<b>Área:</b> 4x4 centrado no ponto<br>
                <b>Efeito:</b> magias não funcionam na área<br>
                <b>Duração:</b> 1d4+1 rodadas<br>
@@ -10869,7 +10855,6 @@ const GRIMORIO_CLIENT = {
     circulo:'segundo', classe:['mage','cleric'],
     tipo:'area_centrada', alcance:0, area:3,
     custo:'🍖-1 💧-1',
-    resumo:'Raio 3. Escuridão; o conjurador recebe visão no escuro.',
     descricao:`<b>Raio:</b> 3 quadrados centrado no caster<br>
                <b>Sem visão noturna:</b> 2d20 usa menor nos ataques<br>
                <b>Com visão noturna:</b> 2d20 usa maior vs cegos<br>
@@ -10882,7 +10867,6 @@ const GRIMORIO_CLIENT = {
     circulo:'segundo', classe:['cleric'],
     tipo:'posicionar_bau', alcance:1,
     custo:'🍖-1 💧-1',
-    resumo:'Cria um baú adjacente com 1d4+2 provisões aleatórias.',
     descricao:`<b>Cria:</b> baú em uma casa adjacente livre<br>
                <b>Conteúdo:</b> 1d4+2 alimentos aleatórios da taverna<br>
                <b>Fortalecer:</b> multiplica a quantidade final de itens<br>
@@ -10893,7 +10877,6 @@ const GRIMORIO_CLIENT = {
     circulo:'segundo', classe:['cleric'],
     tipo:'buff_aliado', alcance:6,
     custo:'🍖-1 💧-1',
-    resumo:'Pool 2d6+2. +1 HP/rodada.',
     descricao:`<b>Pool:</b> 2d6+2 pontos de regeneração<br>
                <b>Cura:</b> +1 HP no início do turno do alvo<br>
                <b>Se morrer:</b> volta com 1 HP (-3 fome/sede)<br>
@@ -10904,7 +10887,6 @@ const GRIMORIO_CLIENT = {
     circulo:'segundo', classe:['mage','cleric'],
     tipo:'buff_self', alcance:0,
     custo:'🍖-1 💧-1',
-    resumo:'Absorve 10 dano/rodada de fogo, gelo, eletricidade, ácido, água ou sagrado.',
     descricao:`<b>Proteção:</b> 10 pontos/rodada de dano elemental<br>
                <b>Tipos:</b> fogo, gelo, eletricidade, ácido, água ou sagrado<br>
                <b>Duração:</b> 1d6+1 rodadas<br>
@@ -10915,7 +10897,6 @@ const GRIMORIO_CLIENT = {
     circulo:'segundo', classe:['mage'],
     tipo:'buff_self', alcance:0,
     custo:'🍖-1 💧-1',
-    resumo:'Inimigos não atacam. Vantagem + furtivo.',
     descricao:`<b>Efeito:</b> inimigos não podem atacar<br>
                <b>Ataque:</b> com vantagem (2d20 maior) + furtivo<br>
                <b>Quebra:</b> ao atacar ou lançar magia<br>
@@ -10926,7 +10907,6 @@ const GRIMORIO_CLIENT = {
     circulo:'segundo', classe:['mage','cleric'],
     tipo:'buff_aliado', alcance:6,
     custo:'🍖-1 💧-1',
-    resumo:'Aliado ignora escuridão até o fim da missão.',
     descricao:`<b>Efeito:</b> ignora completamente o sistema de escuridão<br>
                <b>Duração:</b> até sair da masmorra<br>
                <b>Custo:</b> 🍖-1 💧-1 + 1 slot`
@@ -10936,7 +10916,6 @@ const GRIMORIO_CLIENT = {
     circulo:'segundo', classe:['mage'],
     tipo:'cone', comprimento:4, base:4,
     custo:'🍖-1 💧-1',
-    resumo:'Cone. 1d6 por nível + empurrão.',
     descricao:`<b>Cone:</b> 4 quadrados comp., 4 base<br>
                <b>Dano:</b> 1d6 por nível<br>
                <b>Falha Reflexos:</b> empurra 1d6 quadrados<br>
@@ -10949,7 +10928,6 @@ const GRIMORIO_CLIENT = {
     circulo:'terceiro', classe:['mage'],
     tipo:'buff_self', alcance:0,
     custo:'🍖-1 💧-1',
-    resumo:'Dobra ações no turno. 1d4 rodadas.',
     descricao:`<b>Efeito:</b> todas as ações são dobradas<br>
                <b>Custo:</b> cada ação ainda custa fome/sede<br>
                <b>Duração:</b> 1d4 rodadas`
@@ -10959,7 +10937,6 @@ const GRIMORIO_CLIENT = {
     circulo:'terceiro', classe:['mage'],
     tipo:'area', alcance:5, area:1,
     custo:'🍖-1 💧-1',
-    resumo:'Área 3x3. Falha: 1 ação/turno, -1 CA.',
     descricao:`<b>Save:</b> Vontade<br>
                <b>Falha:</b> 1 ação/rodada, sem reação, -1 CA<br>
                <b>Sucesso:</b> movimento ÷2, -1 ataque<br>
@@ -10970,7 +10947,6 @@ const GRIMORIO_CLIENT = {
     circulo:'terceiro', classe:['mage','cleric'],
     tipo:'alvo', alcance:5,
     custo:'🍖-1 💧-1',
-    resumo:'Vontade ou você dirige o monstro por 1d4+1 rodadas.',
     descricao:`<b>Save:</b> Vontade<br>
                <b>Alvo:</b> 1 monstro (construtos, mortos-vivos e imunes a encantamento resistem)<br>
                <b>Falha:</b> VOCÊ dirige o monstro a cada turno dele por 1d4+1 rodadas<br>
@@ -10982,7 +10958,6 @@ const GRIMORIO_CLIENT = {
     circulo:'terceiro', classe:['mage'],
     tipo:'alvo', alcance:4,
     custo:'🍖-1 💧-1',
-    resumo:'Controle progressivo de morto-vivo (3 rodadas).',
     descricao:`<b>Requer:</b> alvo do tipo morto-vivo<br>
                <b>Save:</b> Vontade (bônus = ND) ao lançar e a cada rodada<br>
                <b>Falha:</b> vira servo temporário (age na fase dos servos)<br>
@@ -10995,7 +10970,6 @@ const GRIMORIO_CLIENT = {
     circulo:'terceiro', classe:['cleric'],
     tipo:'invocacao', alcance:0,
     custo:'🍖-1 💧-1',
-    resumo:'Invoca elemental controlado. 6 quad./turno.',
     descricao:`<b>Tipos:</b> Fogo (HP18 2d6), Elétrico (HP20 linha),
                Gelo (HP22 -2fís), Pedra (HP26 ½fís)<br>
                <b>Controle:</b> age após Lewis, 6 quad. movimento<br>
@@ -11006,7 +10980,6 @@ const GRIMORIO_CLIENT = {
     circulo:'terceiro', classe:['cleric'],
     tipo:'alvo', alcance:6,
     custo:'🍖-1 💧-1',
-    resumo:'1d6+1 por nível. Dobrado vs mortos.',
     descricao:`<b>Dano:</b> 1d6+1 por nível do personagem<br>
                <b>Save:</b> Reflexos → metade<br>
                <b>Vs mortos-vivos/demônios:</b> dano dobrado<br>
@@ -15307,7 +15280,11 @@ GS.setMessageFilter(I18N.traduzirNomes);
 // card HTML com alcance e efeito por rodada, contra uma frase curta no servidor.
 // Trocá-la pela tradução da frase do servidor apagaria informação.
 function _aplicarCatalogosEstaticos(){
-  if (typeof GRIMORIO_CLIENT   !== 'undefined') I18N.aplicarCatalogo(GRIMORIO_CLIENT, true);
+  // O grimório já vai com soNome=false: as 27 magias têm ui.magia.<id>.desc, e a
+  // ui.* vence a cat.* — então o card HTML sobrevive. A ORDEM é o ponto crítico:
+  // as 27 também têm cat.magia.<id>.desc (a frase curta do servidor), que
+  // substituiria o card se esta linha virasse antes das chaves existirem.
+  if (typeof GRIMORIO_CLIENT   !== 'undefined') I18N.aplicarCatalogo(GRIMORIO_CLIENT, false);
   if (typeof ARMADILHAS_LUCCAS !== 'undefined') I18N.aplicarCatalogo(ARMADILHAS_LUCCAS, true);
   if (GS.CATALOGO_ITENS)                        I18N.aplicarCatalogo(GS.CATALOGO_ITENS, true);
 }

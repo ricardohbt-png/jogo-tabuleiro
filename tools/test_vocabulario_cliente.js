@@ -219,8 +219,11 @@ check("voltar ao portugues restaura o card do cliente",
 
 // Sem chave ui.*, a cat.* ainda vale — e e isso que torna seguro trocar as
 // chamadas para soNome=false ANTES de escrever todas as chaves.
-DICT["cat.magia.relampago.desc"] = { pt: "Curta", en: "Short" };
-const semUi = { relampago: { id: "relampago", nome: "Relampago",
+// Id SINTETICO de proposito: desde a Task 5 as 27 magias reais tem chave
+// ui.magia.<id>.desc, entao usar uma delas aqui testaria o contrario do que a
+// secao diz. Este id nao existe em catalogo nenhum.
+DICT["cat.magia.magia_so_no_servidor.desc"] = { pt: "Curta", en: "Short" };
+const semUi = { relampago: { id: "magia_so_no_servidor", nome: "Relampago",
                              descricao: "<b>Card sem chave ui</b>" } };
 I18N.setLang("en");
 I18N.aplicarCatalogo(semUi, false);
