@@ -199,6 +199,51 @@ def _rodar_verificacoes():
         n = sum(c for (l, _t), c in excluidos.items() if a <= l <= b)
         check(f"a faixa de {nome} exclui {n} literal(is)", n > 0)
 
+    print("\n[5] As estruturas do Lote 1 continuam sem texto")
+    # POR QUE NÃO É `FECHADAS`: aquele conjunto guarda FUNÇÕES, e funcionava
+    # enquanto um lote fechasse funções inteiras. O Lote 1 foi escopado por
+    # ESTRUTURA — tirado o texto dos catálogos, o que sobra nos mesmos buckets é
+    # render dos lotes 2 e 3 (`_mageSkillBtn` ainda tem 7, `_csfShowPanel` 3).
+    # A invariante que este lote de fato estabeleceu é estrutural, e é essa que
+    # se guarda aqui.
+    for mapa in ("_OBJ_LABELS", "_TIPO_ITEM_LABEL", "_MP_CUSTO_LBL",
+                 "_ELEMENTAL_HABILIDADES_LEWIS"):
+        check(f"o mapa {mapa} não voltou", ("const " + mapa) not in GAME)
+
+    def _bloco(nome):
+        i = GAME.find("const " + nome)
+        if i < 0:
+            return ""
+        cand = [p for p in (GAME.find("{", i), GAME.find("[", i)) if p >= 0]
+        a = min(cand)
+        abre, fecha = ("[", "]") if GAME[a] == "[" else ("{", "}")
+        prof, k = 0, a
+        while k < len(GAME):
+            if GAME[k] == abre:
+                prof += 1
+            elif GAME[k] == fecha:
+                prof -= 1
+                if prof == 0:
+                    break
+            k += 1
+        return GAME[a:k + 1]
+
+    csd = _bloco("_CSD")
+    check("o _CSD não tem texto solto",
+          bool(csd) and not re.search(r"(?:name|nome|cls|desc):\s*'", csd))
+    # O `bool(bloco)` em cada uma NÃO é decoração: sem ele, um _bloco() que não
+    # achasse a estrutura devolveria "" e a checagem passaria À TOA — a mesma
+    # armadilha do `indexOf` de algo ausente ser -1.
+    grim = _bloco("GRIMORIO_CLIENT")
+    check("o GRIMORIO_CLIENT não tem `resumo` (campo morto)",
+          bool(grim) and "resumo:" not in grim)
+    hero = _bloco("HERO_DATA")
+    check("o HERO_DATA não tem `class` nem texto em habilidadeClasse",
+          bool(hero) and "class:" not in hero
+          and not re.search(r"(?:alcance|descricao):\s*'", hero))
+    check("a chamada do GRIMORIO_CLIENT usa soNome=false",
+          bool(re.search(r"aplicarCatalogo\(GRIMORIO_CLIENT,\s*false\)", GAME)))
+
 
 if __name__ == "__main__":
     print("=" * 62); print("  TESTE — Interface do cliente (etapa 5)"); print("=" * 62)

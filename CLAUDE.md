@@ -2028,3 +2028,52 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > (`?v=algo`) e cheque no próprio script que a versão nova está carregada, antes de
 > concluir qualquer coisa. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-08-14-idioma-etapa5*`.
+
+> **Idioma — Lote 1 da etapa 5: os catálogos estáticos do cliente.** Traduz os **131
+> textos que moram em ESTRUTURA DE DADOS** do `game.js` (não em template de render).
+> Placar **707 → 562**. Dicionário novo `src/lang/interface.js` (à mão, como o
+> `erros.js`/`narracao.js`), convenção `ui.<área>.<slug>`.
+>
+> **HÁ DOIS CAMINHOS DE TRADUÇÃO NO CLIENTE, e quem decide é o servidor.** Este é o
+> fato central do lote, e o que mais custou a descobrir:
+> **(1) `I18N.aplicarCatalogo(obj, soNome)`** — quando existe `cat.<família>.<id>` no
+> dicionário do servidor. Ele **muta o objeto**, trocando `name`/`nome` e (com
+> `soNome=false`) `desc`/`descricao`. Usado pelo `GRIMORIO_CLIENT`, `ARMADILHAS_LUCCAS`
+> e `CATALOGO_ITENS`.
+> **(2) `_rotulo(id, prefixo, padrao)`** (`game.js`) — resolve `ui.<prefixo>.<id>` no
+> **ponto de render**. É o caminho para tudo que o (1) não alcança.
+> Uma chave `ui.*` **sozinha nunca é encontrada**: `_chaveBase` só fixa a base quando
+> existe uma `cat.*`. Por isso `_CSD`, `_ELEMENTAL_HABILIDADES_LEWIS` e os mapas de
+> rótulo foram para o `_rotulo` — inclusive os que são `{id:{objeto}}`, forma que
+> *parece* servir para o `aplicarCatalogo` e não serve.
+>
+> **A chave `ui.*` vence a `cat.*`** quando as duas existem (`aplicarCatalogo`). Os
+> catálogos do cliente guardam um card HTML com alcance e efeito por rodada, contra uma
+> frase curta no servidor; a etapa 3 evitava o choque com `soNome=true`, e a chave própria
+> resolve sem perder informação. As **27 magias têm `cat.magia.<id>.desc`**, então virar
+> `soNome=false` ANTES de escrever as chaves `ui.magia.*.desc` substituiria os 27 cards
+> pela frase curta — a ordem é load-bearing.
+>
+> **`_CSD` (tela de seleção):** cada skill ganhou `id` (de `ABILITY_NAME_TO_ID`, que tem
+> **24** entradas) e o objeto ficou só com o que não é texto. Isso consertou o ícone na
+> raiz: `abilityIconHtml` resolve por `ability?.id` e só cai no `ABILITY_NAME_TO_ID[name]`
+> como retaguarda — sem `id`, a arte dependia do nome em PORTUGUÊS e sumiria em inglês.
+>
+> **Texto sem leitor foi REMOVIDO, não mantido como fallback** (4 casos achados por grep:
+> `HERO_DATA[*].class`, os 3 campos de `habilidadeClasse`, o `resumo` das 27 magias, o
+> array `skills` do mago sombreado por `selectionSkills`). Português que ninguém lê não
+> tem onde chamar `t()`, e o placar não o distingue de trabalho pendente. **Grepe os
+> leitores antes de traduzir qualquer estrutura.**
+>
+> **O placar aprendeu a não contar o `pt` load-bearing** (`tools/test_interface.py`): o
+> `aplicarCatalogo` traduz mutando, então a string em português TEM de continuar no
+> arquivo — ela é a fonte. A regra é **dupla**: o literal precisa ser o `pt` de uma chave
+> `cat.*`/`ui.*` **e** estar em `BLOCOS_NAO_PENDENTES` (`GRIMORIO_CLIENT`,
+> `ARMADILHAS_LUCCAS`, `ABILITY_NAME_TO_ID`). Só o casamento de texto produziu ~13
+> exclusões indevidas, medidas — `cat.item.cleanse.nome` ("Purificação") apagava a
+> HABILIDADE de mesmo nome. A anti-regressão deste lote **não é o `FECHADAS`** (que guarda
+> FUNÇÕES, e aqui o escopo foi por ESTRUTURA): é a seção `[5]`, que exige que as
+> estruturas continuem sem texto. Testes: `tools/test_interface.py` (22),
+> `tools/test_vocabulario_cliente.js` (55). Plano em
+> `docs/superpowers/plans/2026-08-14-idioma-etapa5-lote1-catalogos.md`, com a revisão de
+> meio-caminho e os quatro fatos medidos que a motivaram.
