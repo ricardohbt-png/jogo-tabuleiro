@@ -26,6 +26,9 @@ def check(name, cond):
     if cond: PASS += 1; print(f"  ✅ {name}")
     else:    FAIL += 1; print(f"  ❌ {name}")
 
+sys.path.insert(0, RAIZ)
+import server as S   # só pelo LANG_STRINGS: é ele que sabe fundir os src/lang/*.js
+
 GAME = io.open(os.path.join(RAIZ, "game.js"), encoding="utf-8").read()
 LINHAS = GAME.split("\n")
 RE_FN = re.compile(
@@ -34,6 +37,89 @@ RE_FN = re.compile(
 
 # Funções cujo lote já fechou. Acrescente os nomes ao terminar cada lote.
 FECHADAS = set()
+
+
+# Blocos cujo literal em português NÃO é trabalho pendente:
+#   • GRIMORIO_CLIENT / ARMADILHAS_LUCCAS — catálogos ESTÁTICOS do cliente,
+#     traduzidos EM CIMA pelo I18N.aplicarCatalogo (que muta o objeto). A string
+#     em português tem de continuar aqui para haver o que trocar: é a FONTE.
+#   • ABILITY_NAME_TO_ID — chave de LÓGICA, que o plano registra como
+#     intraduzível; a etapa 5.0 já a tornou dispensável para o ícone.
+BLOCOS_NAO_PENDENTES = ("GRIMORIO_CLIENT", "ARMADILHAS_LUCCAS", "ABILITY_NAME_TO_ID")
+
+
+def _faixas_nao_pendentes():
+    """[(linha_ini, linha_fim)] dos blocos acima, por casamento de chaves."""
+    faixas = []
+    for nome in BLOCOS_NAO_PENDENTES:
+        i = GAME.find("const " + nome)
+        if i < 0:
+            continue
+        # ARMADILHAS_LUCCAS é um ARRAY e os outros dois são objetos: casar só
+        # `{` pegava o primeiro elemento do array e fechava na mesma linha.
+        cand = [p for p in (GAME.find("{", i), GAME.find("[", i)) if p >= 0]
+        a = min(cand)
+        abre, fecha = ("[", "]") if GAME[a] == "[" else ("{", "}")
+        prof, k = 0, a
+        while k < len(GAME):
+            if GAME[k] == abre:
+                prof += 1
+            elif GAME[k] == fecha:
+                prof -= 1
+                if prof == 0:
+                    break
+            k += 1
+        faixas.append((GAME[:a].count("\n") + 1, GAME[:k].count("\n") + 1))
+    return faixas
+
+
+FAIXAS_NAO_PENDENTES = _faixas_nao_pendentes()
+
+
+def _pt_dicionarizado():
+    """Os `pt` das chaves cat.* e ui.* — o texto que JÁ tem tradução.
+
+    POR QUE ISTO EXISTE: o aplicarCatalogo traduz MUTANDO o objeto, então a
+    string em português precisa continuar no game.js para haver o que trocar.
+    Ela é a FONTE, não é dívida — mas o tokenizador não distingue as duas
+    coisas, e contava 38 textos do GRIMORIO_CLIENT já traduzidos desde a etapa
+    3. Sem isto, o lote 1 tem um teto que nada fura.
+
+    RESTRITO A `cat.` E `ui.` de propósito — as duas famílias que o
+    aplicarCatalogo e o _rotulo usam. Incluir `erro.`/`narracao.` faria uma
+    frase do cliente que por acaso coincida com uma do servidor sumir do placar,
+    mascarando trabalho real dos lotes 2 e 3.
+
+    E NÃO BASTA o texto estar no dicionário: ele também precisa estar num dos
+    BLOCOS_NAO_PENDENTES. A primeira versão desta regra exigia só o casamento de
+    texto e produziu falsos positivos MEDIDOS — o item `cat.item.cleanse.nome`
+    ("Purificação") apagava do placar a HABILIDADE de mesmo nome, e as chaves
+    ui.selecao.skill.* apagavam ocorrências fora do _CSD que são trabalho dos
+    lotes 2 e 3. Exigir os dois é o que separa "já traduzido" de "coincidência".
+
+    A exigência dupla também protege o futuro: um campo novo, ainda sem chave,
+    acrescentado DENTRO de um desses blocos continua contando."""
+    out = set()
+    for chave, val in S.LANG_STRINGS.items():
+        if not (chave.startswith("cat.") or chave.startswith("ui.")):
+            continue
+        pt = (val or {}).get("pt")
+        if isinstance(pt, str) and pt:
+            out.add(pt)
+            out.add(pt.strip())
+    return out
+
+
+_PT_DICIONARIZADO = _pt_dicionarizado()
+
+
+def _literais_pendentes():
+    """(linha, texto) de cada literal em português que AINDA não tem tradução."""
+    for linha, txt in texto_de_interface(GAME):
+        dentro = any(a <= linha <= b for a, b in FAIXAS_NAO_PENDENTES)
+        if dentro and (txt in _PT_DICIONARIZADO or txt.strip() in _PT_DICIONARIZADO):
+            continue
+        yield linha, txt
 
 
 def _por_funcao():
@@ -48,7 +134,7 @@ def _por_funcao():
         if m: atual = m.group(1) or m.group(2)
         dono[i + 1] = atual
     cont = collections.Counter()
-    for linha, _txt in texto_de_interface(GAME):
+    for linha, _txt in _literais_pendentes():
         cont[dono.get(linha) or "@topo_do_arquivo"] += 1
     return cont
 
@@ -82,6 +168,36 @@ def _rodar_verificacoes():
           len(re.findall(r"observe\(\s*document\.body", GAME)) == 1)
     check("o ícone de habilidade é achado por data-ability-id",
           "data-ability-id" in GAME and "dataset.abilityId" in GAME)
+
+    print("\n[4] O placar não conta o pt que o aplicarCatalogo já traduz")
+    # O aplicarCatalogo traduz MUTANDO o objeto: para haver o que trocar, a
+    # string em português tem de continuar no game.js. Ela é a FONTE, não é
+    # dívida — mas o tokenizador não sabe disso. 'Bola de Fogo' é o caso
+    # canônico: está em cat.magia.bola_fogo.nome e é traduzido desde a etapa 3.
+    contados = {txt for _l, txt in _literais_pendentes()}
+    check("o dicionário foi carregado", len(_PT_DICIONARIZADO) > 100)
+    check("um nome já traduzido não conta ('Bola de Fogo')",
+          "Bola de Fogo" not in contados)
+    check("texto NÃO dicionarizado continua contando",
+          any("Personagem já escolhido" in t for t in contados))
+    # Uma faixa que não fecha direito FALHA EM SILÊNCIO: vira uma linha só e o
+    # bloco volta a contar inteiro, sem erro nenhum. Já aconteceu —
+    # ARMADILHAS_LUCCAS é um ARRAY, e o casador que só via `{` fechava no
+    # primeiro elemento.
+    check(f"as {len(BLOCOS_NAO_PENDENTES)} faixas foram encontradas",
+          len(FAIXAS_NAO_PENDENTES) == len(BLOCOS_NAO_PENDENTES))
+    check("nenhuma faixa degenerou para uma linha",
+          all(b - a >= 5 for a, b in FAIXAS_NAO_PENDENTES))
+    # Não dá para provar isso por TEXTO: vários desses nomes aparecem também
+    # fora do bloco, e essas ocorrências contam com razão (são dos lotes 2 e 3).
+    # O que prova é a faixa estar excluindo alguma coisa — faixa degenerada
+    # exclui zero.
+    pend = collections.Counter(_literais_pendentes())
+    todos = collections.Counter(texto_de_interface(GAME))
+    excluidos = todos - pend          # multiconjunto: exato, não por linha
+    for nome, (a, b) in zip(BLOCOS_NAO_PENDENTES, FAIXAS_NAO_PENDENTES):
+        n = sum(c for (l, _t), c in excluidos.items() if a <= l <= b)
+        check(f"a faixa de {nome} exclui {n} literal(is)", n > 0)
 
 
 if __name__ == "__main__":
