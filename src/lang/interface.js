@@ -147,6 +147,78 @@ window.LANG_INTERFACE = {
     "en": "THIRST",
     "pt": "SEDE"
   },
+  "ui.habilidade.alcance_cajado": {
+    "en": "📐 <strong style=\"color:#c8a951\">Extended Reach:</strong> Hits 2 adjacent squares in front and 1 adjacent diagonal square. Requires two hands — incompatible with a shield.",
+    "pt": "📐 <strong style=\"color:#c8a951\">Alcance Estendido:</strong> Atinge 2 casas adjacentes à frente e 1 casa diagonal adjacente. Requer duas mãos — incompatível com escudo."
+  },
+  "ui.habilidade.alcance_chicote": {
+    "en": "🔄 <strong style=\"color:#c8a951\">Extended Reach:</strong> Hits 2 adjacent squares and 1 adjacent diagonal square without having to move to the target.",
+    "pt": "🔄 <strong style=\"color:#c8a951\">Alcance Estendido:</strong> Atinge 2 quadrados adjacentes e 1 quadrado diagonal adjacente sem precisar se mover até o alvo."
+  },
+  "ui.habilidade.armazenamento_magia": {
+    "en": "✨ <strong style=\"color:#cc44ff\">Spell Storage:</strong> Holds {p1} spell(s) for the campaign. Using a stored spell = bonus action (-1 hunger -1 thirst). It does not consume the character's spell slot. Recharge in town.",
+    "pt": "✨ <strong style=\"color:#cc44ff\">Armazenamento de Magia:</strong> Guarda {p1} magia(s) durante a campanha. Usar uma magia armazenada = ação bônus (-1 fome -1 sede). Não consome slot de magia do personagem. Recarregue na cidade."
+  },
+  "ui.habilidade.arremesso": {
+    "en": "🎯 <strong style=\"color:#c8a951\">Throw:</strong> Can be thrown {p1} squares in any direction, diagonals included. Uses Dexterity for the attack and damage. A 1 on the d20 = the weapon is destroyed permanently.",
+    "pt": "🎯 <strong style=\"color:#c8a951\">Arremesso:</strong> Pode ser arremessada {p1} quadrados em qualquer direção incluindo diagonais. Usa Destreza para acerto e dano. Resultado 1 no d20 = arma destruída permanentemente."
+  },
+  "ui.habilidade.arremesso_lanca": {
+    "en": "<div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        🏹 <strong style=\"color:#44cc44\">Throw:</strong>\n        Can be thrown up to 4 squares in a straight line, diagonals included. Uses\n        Strength for the attack and damage (1d6 + STR). A 1 on the d20 = the spear is\n        destroyed permanently.\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        ↔️ <strong style=\"color:#c8a951\">Side Reach:</strong>\n        In melee it hits all 8 adjacent squares. Compatible with a shield.\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6;\">\n        ⚠️ <strong style=\"color:#ff4136\">Warning:</strong>\n        After the throw the weapon slot is empty. Equip another weapon from your\n        inventory (free action, no cost).\n      </div>",
+    "pt": "\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        🏹 <strong style=\"color:#44cc44\">Arremesso:</strong>\n        Pode ser arremessada até 4 quadrados em linha\n        reta incluindo diagonais. Usa Força para acerto\n        e dano (1d6 + FOR). Resultado 1 no d20 = lança\n        destruída permanentemente.\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        ↔️ <strong style=\"color:#c8a951\">Alcance Lateral:</strong>\n        No combate corpo a corpo atinge todos os 8\n        quadrados adjacentes. Compatível com escudo.\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6;\">\n        ⚠️ <strong style=\"color:#ff4136\">Atenção:</strong>\n        Após o arremesso o slot de arma fica vazio.\n        Equipe outra arma do inventário (ação livre, sem custo).\n      </div>\n    "
+  },
+  "ui.habilidade.ataque_bonus_secundaria": {
+    "en": "<div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        ⚔️ <strong style=\"color:#c8a951\">Bonus Attack (off hand):</strong>\n        Equipped in the off hand, it grants an extra adjacent attack as a bonus action.\n        Uses the better of Strength and Dexterity for the attack and damage\n        (1d4 + STR/DEX).\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        🎯 <strong style=\"color:#c8a951\">Throw:</strong>\n        Can be thrown up to 3 squares, diagonals included. A 1 on the d20 = the dagger\n        is destroyed permanently.\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6;\">\n        🛡️ <strong style=\"color:#ff4136\">Warning:</strong>\n        It takes the off-hand slot — incompatible with two-handed weapons.\n      </div>",
+    "pt": "\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        ⚔️ <strong style=\"color:#c8a951\">Ataque Bônus (mão secundária):</strong>\n        Equipada na mão esquerda, dá um ataque extra\n        adjacente como ação bônus. Usa o melhor bônus entre\n        Força e Destreza para acerto e dano (1d4 + FOR/DES).\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        🎯 <strong style=\"color:#c8a951\">Arremesso:</strong>\n        Pode ser arremessada até 3 quadrados incluindo\n        diagonais. Resultado 1 no d20 = adaga destruída\n        permanentemente.\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6;\">\n        🛡️ <strong style=\"color:#ff4136\">Atenção:</strong>\n        Ocupa o slot da mão esquerda — incompatível com\n        armas de duas mãos.\n      </div>\n    "
+  },
+  "ui.habilidade.ataque_extra_secundaria": {
+    "en": "<div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        ⚔️ <strong style=\"color:#c8a951\">Extra Attack (off hand):</strong>\n        The whip can be equipped in the off hand in place of the shield and makes an\n        extra attack as a bonus action, keeping its reach of up to 2 squares. Uses\n        Dexterity for the attack and damage (1d4 + DEX).\n      </div>",
+    "pt": "\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        ⚔️ <strong style=\"color:#c8a951\">Ataque Extra (mão secundária):</strong>\n        O chicote pode ser equipado na mão esquerda no lugar do escudo e realiza\n        um ataque extra como ação bônus, preservando alcance de até 2 quadrados.\n        Usa Destreza para acerto e dano (1d4 + DES).\n      </div>\n    "
+  },
+  "ui.habilidade.critico_espada": {
+    "en": "⚔️ <strong style=\"color:#c8a951\">Improved Critical:</strong> A natural 19 or 20 on the d20 is a critical when the attack hits.",
+    "pt": "⚔️ <strong style=\"color:#c8a951\">Crítico Aprimorado:</strong> Um resultado natural de 19 ou 20 no d20 é crítico quando o ataque acerta."
+  },
+  "ui.habilidade.duas_maos": {
+    "en": "✋ <strong style=\"color:#c8a951\">Two Hands:</strong> Incompatible with a shield or a second weapon. Equipping/swapping gear is a free action (no cost).",
+    "pt": "✋ <strong style=\"color:#c8a951\">Duas Mãos:</strong> Incompatível com escudo ou 2ª arma. Equipar/trocar de equipamento é ação livre (sem custo)."
+  },
+  "ui.habilidade.expansao_inventario": {
+    "en": "🎒 <strong style=\"color:#cc44ff\">Inventory Expansion:</strong> Takes 1 magic slot and permanently adds +{p1} slots to the free inventory while equipped.",
+    "pt": "🎒 <strong style=\"color:#cc44ff\">Expansão de Inventário:</strong> Ocupa 1 slot mágico e adiciona permanentemente +{p1} slots ao inventário livre enquanto equipada."
+  },
+  "ui.habilidade.iluminacao": {
+    "en": "🕯️ <strong style=\"color:#c8a951\">Illumination:</strong> Extends the character's line of sight by 1 square in every direction. Lasts {p1} rounds. Once it expires the slot is empty.",
+    "pt": "🕯️ <strong style=\"color:#c8a951\">Iluminação:</strong> Expande a linha de visão do personagem em 1 quadrado em todas as direções. Dura {p1} rodadas. Após expirar o slot fica vazio."
+  },
+  "ui.habilidade.impacto_maca": {
+    "en": "💥 <strong style=\"color:#c8a951\">Devastating Impact:</strong> On a natural 20 on the d20, the Mace's damage is tripled.",
+    "pt": "💥 <strong style=\"color:#c8a951\">Impacto Devastador:</strong> Quando o ataque obtém 20 natural no d20, o dano da Maça é triplicado."
+  },
+  "ui.habilidade.impacto_machado_orc": {
+    "en": "💥 <strong style=\"color:#c8a951\">Devastating Impact:</strong> On a natural 20 on the d20, the Orcish Battleaxe's damage is tripled.",
+    "pt": "💥 <strong style=\"color:#c8a951\">Impacto Devastador:</strong> Quando o ataque obtém 20 natural no d20, o dano do Machado de Guerra Órquico é triplicado."
+  },
+  "ui.habilidade.impacto_mangual": {
+    "en": "💥 <strong style=\"color:#c8a951\">Devastating Impact:</strong> On a natural 20 on the d20, the Flail's damage is multiplied by 2.5.",
+    "pt": "💥 <strong style=\"color:#c8a951\">Impacto Devastador:</strong> Quando o ataque obtém 20 natural no d20, o dano do Mangual é multiplicado por 2,5."
+  },
+  "ui.habilidade.impacto_martelo": {
+    "en": "💥 <strong style=\"color:#c8a951\">Devastating Impact:</strong> On a natural 20 on the d20, the Warhammer's damage is tripled.",
+    "pt": "💥 <strong style=\"color:#c8a951\">Impacto Devastador:</strong> Quando o ataque obtém 20 natural no d20, o dano do Martelo de Guerra é triplicado."
+  },
+  "ui.habilidade.incendiario": {
+    "en": "🔥 <strong style=\"color:#ff6633\">Incendiary:</strong> Adds {p1} fire damage to every shot. Fire damage ignores the AC bonus from shields.",
+    "pt": "🔥 <strong style=\"color:#ff6633\">Incendiário:</strong> Adiciona {p1} de dano de fogo a cada disparo. Dano de fogo ignora bônus de CA de escudos."
+  },
+  "ui.habilidade.veneno": {
+    "en": "<div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        ☠️ <strong style=\"color:#9900cc\">Effect:</strong> {p1}\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        🎲 <strong style=\"color:#9900cc\">Save:</strong> Fortitude DC {p2} {p3}\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6;\">\n        🗡️ <strong style=\"color:#9900cc\">Application:</strong>\n        Using it coats the equipped weapon (bonus action). The next hit transfers the\n        poison to the target.\n      </div>",
+    "pt": "\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        ☠️ <strong style=\"color:#9900cc\">Efeito:</strong>\n        {p1}\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        🎲 <strong style=\"color:#9900cc\">Save:</strong>\n        Fortitude dificuldade {p2}\n        {p3}\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6;\">\n        🗡️ <strong style=\"color:#9900cc\">Aplicação:</strong>\n        Usar unta a arma equipada (ação bônus). O próximo golpe certeiro\n        transfere o veneno ao alvo.\n      </div>\n    "
+  },
+  "ui.habilidade.versatil": {
+    "en": "⚔️ <strong style=\"color:#c8a951\">Versatile:</strong> One hand: 1d10 damage with a shield. Two hands: 3d4 damage without a shield. Switch modes with a bonus action (-1 hunger -1 thirst).",
+    "pt": "⚔️ <strong style=\"color:#c8a951\">Versátil:</strong> Uma mão: 1d10 de dano com escudo. Duas mãos: 3d4 de dano sem escudo. Troque o modo com ação bônus (-1 fome -1 sede)."
+  },
   "ui.heroi.classe.henrique": {
     "en": "BARD",
     "pt": "BARDO"

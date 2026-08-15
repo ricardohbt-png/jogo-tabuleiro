@@ -49,6 +49,9 @@ FECHADAS = {
     # Lote 2, Task 3 — ficha do herói e banners do HUD
     "renderConteudoAtributosFichaJogo", "_modificadoresTemporariosStatus",
     "renderMyPanel",
+    # Lote 2, Task 4 — botões de habilidade (e as descrições de ARMADILHAS_LUCCAS,
+    # que o placar atribui a _paladinSkillBtn por ser um `const` array)
+    "gerarHabilidadesEspeciais", "_paladinSkillBtn", "_rogueSkillBtn",
 }
 
 

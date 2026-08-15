@@ -4306,107 +4306,49 @@ function gerarHabilidadesEspeciais(item){
   const L = (txt) => `<div style="color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;">${txt}</div>`;
 
   if(item.arremesso && item.id !== 'lanca_curta')   // lança tem bloco próprio (usa Força, não Destreza)
-    especiais.push(L(`🎯 <strong style="color:#c8a951">Arremesso:</strong> Pode ser arremessada ${item.alcanceArremesso} quadrados em qualquer direção incluindo diagonais. Usa Destreza para acerto e dano. Resultado 1 no d20 = arma destruída permanentemente.`));
+    especiais.push(L(t('ui.habilidade.arremesso', {p1: item.alcanceArremesso})));
   if(item.id === 'chicote')
-    especiais.push(L(`🔄 <strong style="color:#c8a951">Alcance Estendido:</strong> Atinge 2 quadrados adjacentes e 1 quadrado diagonal adjacente sem precisar se mover até o alvo.`));
+    especiais.push(L(t('ui.habilidade.alcance_chicote')));
   if(item.id === 'warhammer' || item.id === 'martelo' || /martelo de guerra/i.test(item.name || ''))
-    especiais.push(L(`💥 <strong style="color:#c8a951">Impacto Devastador:</strong> Quando o ataque obtém 20 natural no d20, o dano do Martelo de Guerra é triplicado.`));
+    especiais.push(L(t('ui.habilidade.impacto_martelo')));
   if(item.id === 'machado_orc' || /machado de guerra [óo]rquico/i.test(item.name || ''))
-    especiais.push(L(`💥 <strong style="color:#c8a951">Impacto Devastador:</strong> Quando o ataque obtém 20 natural no d20, o dano do Machado de Guerra Órquico é triplicado.`));
+    especiais.push(L(t('ui.habilidade.impacto_machado_orc')));
   if(item.id === 'maca' || /maça/i.test(item.name || ''))
-    especiais.push(L(`💥 <strong style="color:#c8a951">Impacto Devastador:</strong> Quando o ataque obtém 20 natural no d20, o dano da Maça é triplicado.`));
+    especiais.push(L(t('ui.habilidade.impacto_maca')));
   if(item.id === 'mangual' || /mangual/i.test(item.name || ''))
-    especiais.push(L(`💥 <strong style="color:#c8a951">Impacto Devastador:</strong> Quando o ataque obtém 20 natural no d20, o dano do Mangual é multiplicado por 2,5.`));
+    especiais.push(L(t('ui.habilidade.impacto_mangual')));
   if(['shortsword','longsword','bastsword','espada2m'].includes(item.id)
       || /espada curta|espada longa|espada bastarda|espada de 2/i.test(item.name || ''))
-    especiais.push(L(`⚔️ <strong style="color:#c8a951">Crítico Aprimorado:</strong> Um resultado natural de 19 ou 20 no d20 é crítico quando o ataque acerta.`));
+    especiais.push(L(t('ui.habilidade.critico_espada')));
   if(item.id === 'machado_duplo' || /machado duplo/i.test(item.name || ''))
     especiais.push(L(`🪓 <strong style="color:#c8a951">Ataque Duplo:</strong> Ao obter 19 ou 20 natural no d20, ganha um segundo ataque manual no mesmo turno.`));
   if(item.id === 'lanca_curta'){
-    especiais.push(`
-      <div style="color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;">
-        🏹 <strong style="color:#44cc44">Arremesso:</strong>
-        Pode ser arremessada até 4 quadrados em linha
-        reta incluindo diagonais. Usa Força para acerto
-        e dano (1d6 + FOR). Resultado 1 no d20 = lança
-        destruída permanentemente.
-      </div>
-      <div style="color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;">
-        ↔️ <strong style="color:#c8a951">Alcance Lateral:</strong>
-        No combate corpo a corpo atinge todos os 8
-        quadrados adjacentes. Compatível com escudo.
-      </div>
-      <div style="color:#c8b89a; font-size:10px; line-height:1.6;">
-        ⚠️ <strong style="color:#ff4136">Atenção:</strong>
-        Após o arremesso o slot de arma fica vazio.
-        Equipe outra arma do inventário (ação livre, sem custo).
-      </div>
-    `);
+    especiais.push(t('ui.habilidade.arremesso_lanca'));
   }
   if(item.id === 'lanca_longa' || item.id === 'alabarda')
-    especiais.push(L(`📐 <strong style="color:#c8a951">Alcance Estendido:</strong> Atinge 2 casas adjacentes à frente e 1 casa diagonal adjacente. Requer duas mãos — incompatível com escudo.`));
+    especiais.push(L(t('ui.habilidade.alcance_cajado')));
   if(item.id === 'espada_bastarda')
-    especiais.push(L(`⚔️ <strong style="color:#c8a951">Versátil:</strong> Uma mão: 1d10 de dano com escudo. Duas mãos: 3d4 de dano sem escudo. Troque o modo com ação bônus (-1 fome -1 sede).`));
+    especiais.push(L(t('ui.habilidade.versatil')));
   if(item.danoExtra)
-    especiais.push(L(`🔥 <strong style="color:#ff6633">Incendiário:</strong> Adiciona ${item.danoExtra} de dano de fogo a cada disparo. Dano de fogo ignora bônus de CA de escudos.`));
+    especiais.push(L(t('ui.habilidade.incendiario', {p1: item.danoExtra})));
   if(item.id === 'tocha')
-    especiais.push(L(`🕯️ <strong style="color:#c8a951">Iluminação:</strong> Expande a linha de visão do personagem em 1 quadrado em todas as direções. Dura ${item.duracao} rodadas. Após expirar o slot fica vazio.`));
+    especiais.push(L(t('ui.habilidade.iluminacao', {p1: item.duracao})));
   if(item.tipo === 'varinha')
-    especiais.push(L(`✨ <strong style="color:#cc44ff">Armazenamento de Magia:</strong> Guarda ${item.slotsMagia} magia(s) durante a campanha. Usar uma magia armazenada = ação bônus (-1 fome -1 sede). Não consome slot de magia do personagem. Recarregue na cidade.`));
+    especiais.push(L(t('ui.habilidade.armazenamento_magia', {p1: item.slotsMagia})));
   if(item.tipo === 'itemMagico' && item.slotsExtras)
-    especiais.push(L(`🎒 <strong style="color:#cc44ff">Expansão de Inventário:</strong> Ocupa 1 slot mágico e adiciona permanentemente +${item.slotsExtras} slots ao inventário livre enquanto equipada.`));
+    especiais.push(L(t('ui.habilidade.expansao_inventario', {p1: item.slotsExtras})));
   if(item.duasMaos && !item.modosDuasMaos && item.tipo === 'arma')
-    especiais.push(L(`✋ <strong style="color:#c8a951">Duas Mãos:</strong> Incompatível com escudo ou 2ª arma. Equipar/trocar de equipamento é ação livre (sem custo).`));
+    especiais.push(L(t('ui.habilidade.duas_maos')));
   if (item.tipo === 'veneno') {
     const e = item.efeito || {};
-    especiais.push(`
-      <div style="color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;">
-        ☠️ <strong style="color:#9900cc">Efeito:</strong>
-        ${item.descricao}
-      </div>
-      <div style="color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;">
-        🎲 <strong style="color:#9900cc">Save:</strong>
-        Fortitude dificuldade ${e.dificuldade}
-        ${e.anula ? '— anula completamente' : '— efeito parcial no sucesso'}
-      </div>
-      <div style="color:#c8b89a; font-size:10px; line-height:1.6;">
-        🗡️ <strong style="color:#9900cc">Aplicação:</strong>
-        Usar unta a arma equipada (ação bônus). O próximo golpe certeiro
-        transfere o veneno ao alvo.
-      </div>
-    `);
+    especiais.push(t('ui.habilidade.veneno', {p1: item.descricao, p2: e.dificuldade, p3: e.anula ? '— anula completamente' : '— efeito parcial no sucesso'}));
   }
   if (typeof GS !== 'undefined' && GS.isDagger && GS.isDagger(item)) {
-    especiais.push(`
-      <div style="color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;">
-        ⚔️ <strong style="color:#c8a951">Ataque Bônus (mão secundária):</strong>
-        Equipada na mão esquerda, dá um ataque extra
-        adjacente como ação bônus. Usa o melhor bônus entre
-        Força e Destreza para acerto e dano (1d4 + FOR/DES).
-      </div>
-      <div style="color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;">
-        🎯 <strong style="color:#c8a951">Arremesso:</strong>
-        Pode ser arremessada até 3 quadrados incluindo
-        diagonais. Resultado 1 no d20 = adaga destruída
-        permanentemente.
-      </div>
-      <div style="color:#c8b89a; font-size:10px; line-height:1.6;">
-        🛡️ <strong style="color:#ff4136">Atenção:</strong>
-        Ocupa o slot da mão esquerda — incompatível com
-        armas de duas mãos.
-      </div>
-    `)
+    especiais.push(t('ui.habilidade.ataque_bonus_secundaria'))
   }
   if (typeof GS !== 'undefined' && GS.isOffhandWeapon && GS.isOffhandWeapon(item)
       && !(GS.isDagger && GS.isDagger(item))) {
-    especiais.push(`
-      <div style="color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;">
-        ⚔️ <strong style="color:#c8a951">Ataque Extra (mão secundária):</strong>
-        O chicote pode ser equipado na mão esquerda no lugar do escudo e realiza
-        um ataque extra como ação bônus, preservando alcance de até 2 quadrados.
-        Usa Destreza para acerto e dano (1d4 + DES).
-      </div>
-    `)
+    especiais.push(t('ui.habilidade.ataque_extra_secundaria'))
   }
 
   return especiais.length > 0 ? especiais.join('') : null;
