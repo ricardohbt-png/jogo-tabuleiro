@@ -19,6 +19,10 @@ window.LANG_INTERFACE = {
     "en": "Charisma",
     "pt": "Carisma"
   },
+  "ui.atributo.constituicao": {
+    "en": "Constitution",
+    "pt": "Constituição"
+  },
   "ui.atributo.destreza": {
     "en": "Dexterity",
     "pt": "Destreza"
@@ -71,6 +75,38 @@ window.LANG_INTERFACE = {
     "en": "Stone Skin",
     "pt": "Pele de Pedra"
   },
+  "ui.ficha.doenca": {
+    "en": "{tipo} disease",
+    "pt": "Doença {tipo}"
+  },
+  "ui.ficha.fome": {
+    "en": "HUNGER",
+    "pt": "FOME"
+  },
+  "ui.ficha.modificadores_males": {
+    "en": "TEMPORARY MODIFIERS — AFFLICTIONS",
+    "pt": "MODIFICADORES TEMPORÁRIOS — MALES"
+  },
+  "ui.ficha.nivel": {
+    "en": "LEVEL",
+    "pt": "NÍVEL"
+  },
+  "ui.ficha.percepcao": {
+    "en": "PERCEPTION",
+    "pt": "PERCEPÇÃO"
+  },
+  "ui.ficha.pontos_de_vida": {
+    "en": "HIT POINTS",
+    "pt": "PONTOS DE VIDA"
+  },
+  "ui.ficha.raio_visao": {
+    "en": "VISION RADIUS",
+    "pt": "RAIO DE VISÃO"
+  },
+  "ui.ficha.sede": {
+    "en": "THIRST",
+    "pt": "SEDE"
+  },
   "ui.heroi.classe.henrique": {
     "en": "BARD",
     "pt": "BARDO"
@@ -94,6 +130,110 @@ window.LANG_INTERFACE = {
   "ui.heroi.classe.victorCoiceBravo": {
     "en": "DWARF WARRIOR",
     "pt": "GUERREIRO ANÃO"
+  },
+  "ui.hud.apagar_chamas": {
+    "en": "Put out flames",
+    "pt": "Apagar chamas"
+  },
+  "ui.hud.bonus": {
+    "en": "bonus",
+    "pt": "bônus"
+  },
+  "ui.hud.cancao_de_henrique": {
+    "en": "Henrique's Heroic Song",
+    "pt": "Canção Heroica de Henrique"
+  },
+  "ui.hud.equipado_loja": {
+    "en": "Equipped (Shop)",
+    "pt": "Equipado (Loja)"
+  },
+  "ui.hud.forca_estomago": {
+    "en": "Strength against the stomach",
+    "pt": "Força contra o estômago"
+  },
+  "ui.hud.forcar_saida": {
+    "en": "Force your way out",
+    "pt": "Forçar saída"
+  },
+  "ui.hud.gasta_acao_principal": {
+    "en": "uses your main action",
+    "pt": "gasta a ação principal"
+  },
+  "ui.hud.guilda": {
+    "en": "GUILD",
+    "pt": "GUILDA"
+  },
+  "ui.hud.limite_habilidades": {
+    "en": "You can only ready {n} abilities per turn.",
+    "pt": "Você só pode armar {n} habilidades por turno."
+  },
+  "ui.hud.livre": {
+    "en": "free",
+    "pt": "livre"
+  },
+  "ui.hud.mao_principal": {
+    "en": "main hand",
+    "pt": "mão principal"
+  },
+  "ui.hud.mover_mais": {
+    "en": "move",
+    "pt": "mover"
+  },
+  "ui.hud.oportunidade": {
+    "en": "Opportunity",
+    "pt": "Oportunidade"
+  },
+  "ui.hud.oportunidade_desc": {
+    "en": "Spend the extra credit on movement now, or simply act normally (attack/heal/cast a spell/etc.) to spend it automatically.",
+    "pt": "Gaste o crédito extra em movimento agora, ou apenas aja normalmente (atacar/curar/lançar magia/etc.) para gastá-lo automaticamente."
+  },
+  "ui.hud.remover": {
+    "en": "Remove",
+    "pt": "Remover"
+  },
+  "ui.hud.segunda_mao": {
+    "en": "off hand",
+    "pt": "2ª mão"
+  },
+  "ui.hud.sem_aliado": {
+    "en": "No ally available.",
+    "pt": "Nenhum aliado disponível."
+  },
+  "ui.hud.sem_aliado_raio4": {
+    "en": "No ally within 4 squares.",
+    "pt": "Nenhum aliado a até 4 quadrados."
+  },
+  "ui.hud.sem_alvo": {
+    "en": "No target available.",
+    "pt": "Nenhum alvo disponível."
+  },
+  "ui.hud.slot.arma": {
+    "en": "Weapon",
+    "pt": "Arma"
+  },
+  "ui.hud.slot.armadura": {
+    "en": "Armour",
+    "pt": "Armadura"
+  },
+  "ui.hud.slot.cabeca": {
+    "en": "Head",
+    "pt": "Cabeça"
+  },
+  "ui.hud.slot.magico1": {
+    "en": "Magic 1",
+    "pt": "Mágico 1"
+  },
+  "ui.hud.slot.magico2": {
+    "en": "Magic 2",
+    "pt": "Mágico 2"
+  },
+  "ui.hud.slot.secundario": {
+    "en": "Off hand",
+    "pt": "Secundário"
+  },
+  "ui.hud.usada": {
+    "en": "used",
+    "pt": "usada"
   },
   "ui.item.armadura_cat.leve": {
     "en": "Light",
@@ -531,25 +671,53 @@ window.LANG_INTERFACE = {
     "en": "Broken Soul",
     "pt": "Alma Quebrada"
   },
+  "ui.maldicao.alma_quebrada.ef": {
+    "en": "receives no bonuses from allies",
+    "pt": "não recebe bônus de aliados"
+  },
+  "ui.maldicao.ativa": {
+    "en": "curse active",
+    "pt": "maldição ativa"
+  },
   "ui.maldicao.aura_profana": {
     "en": "Profane Aura",
     "pt": "Aura Profana"
+  },
+  "ui.maldicao.aura_profana.ef": {
+    "en": "adjacent allies get −1 attack",
+    "pt": "aliados adjacentes −1 ataque"
   },
   "ui.maldicao.azar_sobrenatural": {
     "en": "Supernatural Misfortune",
     "pt": "Azar Sobrenatural"
   },
+  "ui.maldicao.azar_sobrenatural.ef": {
+    "en": "the first natural 20 is not a critical",
+    "pt": "primeiro 20 natural não é crítico"
+  },
   "ui.maldicao.carne_fragil": {
     "en": "Fragile Flesh",
     "pt": "Carne Frágil"
+  },
+  "ui.maldicao.carne_fragil.ef": {
+    "en": "+2 damage taken",
+    "pt": "+2 dano recebido"
   },
   "ui.maldicao.corpo_exausto": {
     "en": "Exhausted Body",
     "pt": "Corpo Exausto"
   },
+  "ui.maldicao.corpo_exausto.ef": {
+    "en": "actions cost +1 hunger and thirst",
+    "pt": "ações custam +1 fome e sede"
+  },
   "ui.maldicao.correntes_invisiveis": {
     "en": "Invisible Chains",
     "pt": "Correntes Invisíveis"
+  },
+  "ui.maldicao.correntes_invisiveis.ef": {
+    "en": "−3 movement",
+    "pt": "−3 movimento"
   },
   "ui.maldicao.corrupcao_crescente": {
     "en": "Growing Corruption",
@@ -559,13 +727,29 @@ window.LANG_INTERFACE = {
     "en": "Constant Pain",
     "pt": "Dor Constante"
   },
+  "ui.maldicao.dor_constante.ef": {
+    "en": "actions deal 1 damage to you",
+    "pt": "ações causam 1 dano"
+  },
   "ui.maldicao.eco_morte": {
     "en": "Echo of Death",
     "pt": "Eco da Morte"
   },
+  "ui.maldicao.eco_morte.ef": {
+    "en": "an ally's death deals 10 damage",
+    "pt": "morte de aliado causa 10 dano"
+  },
   "ui.maldicao.espirito_covarde": {
     "en": "Cowardly Spirit",
     "pt": "Espírito Covarde"
+  },
+  "ui.maldicao.espirito_covarde.ef": {
+    "en": "−2 Will",
+    "pt": "−2 Vontade"
+  },
+  "ui.maldicao.estagio": {
+    "en": "(stage {n})",
+    "pt": "(estágio {n})"
   },
   "ui.maldicao.fome_eterna": {
     "en": "Eternal Hunger",
@@ -575,13 +759,25 @@ window.LANG_INTERFACE = {
     "en": "Stolen Fortune",
     "pt": "Fortuna Roubada"
   },
+  "ui.maldicao.fortuna_roubada.ef": {
+    "en": "half the gold acquired",
+    "pt": "metade do ouro adquirido"
+  },
   "ui.maldicao.fraqueza_arcana": {
     "en": "Arcane Weakness",
     "pt": "Fraqueza Arcana"
   },
+  "ui.maldicao.fraqueza_arcana.ef": {
+    "en": "spells deal half damage",
+    "pt": "magias causam metade do dano"
+  },
   "ui.maldicao.lamina_enferrujada": {
     "en": "Rusted Blade",
     "pt": "Lâmina Enferrujada"
+  },
+  "ui.maldicao.lamina_enferrujada.ef": {
+    "en": "−2 physical damage",
+    "pt": "−2 dano físico"
   },
   "ui.maldicao.licantropia": {
     "en": "Lycanthropy",
@@ -591,25 +787,49 @@ window.LANG_INTERFACE = {
     "en": "Curse of Rust",
     "pt": "Maldição da Ferrugem"
   },
+  "ui.maldicao.maldicao_ferrugem.ef": {
+    "en": "equipment degrades after combat",
+    "pt": "equipamento degrada após combate"
+  },
   "ui.maldicao.maos_tremulas": {
     "en": "Trembling Hands",
     "pt": "Mãos Trêmulas"
+  },
+  "ui.maldicao.maos_tremulas.ef": {
+    "en": "−2 on attacks",
+    "pt": "−2 em ataques"
   },
   "ui.maldicao.marca_cacador": {
     "en": "Hunter's Mark",
     "pt": "Marca do Caçador"
   },
+  "ui.maldicao.marca_cacador.ef": {
+    "en": "enemies get +1 to attack you",
+    "pt": "inimigos +1 para atacar você"
+  },
   "ui.maldicao.olhos_escuridao": {
     "en": "Eyes of Darkness",
     "pt": "Olhos da Escuridão"
+  },
+  "ui.maldicao.olhos_escuridao.ef": {
+    "en": "−2 vision",
+    "pt": "−2 visão"
   },
   "ui.maldicao.passos_pesados": {
     "en": "Heavy Steps",
     "pt": "Passos Pesados"
   },
+  "ui.maldicao.passos_pesados.ef": {
+    "en": "moving costs +1 thirst",
+    "pt": "mover custa +1 sede"
+  },
   "ui.maldicao.sangramento_profano": {
     "en": "Profane Bleeding",
     "pt": "Sangramento Profano"
+  },
+  "ui.maldicao.sangramento_profano.ef": {
+    "en": "1 damage at the start of your turn after taking damage",
+    "pt": "1 dano no início do turno após sofrer dano"
   },
   "ui.maldicao.sede_infinita": {
     "en": "Endless Thirst",
@@ -619,6 +839,10 @@ window.LANG_INTERFACE = {
     "en": "Silence of the Gods",
     "pt": "Silêncio dos Deuses"
   },
+  "ui.maldicao.silencio_deuses.ef": {
+    "en": "cannot cast spells",
+    "pt": "não lança magias"
+  },
   "ui.maldicao.tocado_morte": {
     "en": "Death-Touched",
     "pt": "Tocado pela Morte"
@@ -626,6 +850,10 @@ window.LANG_INTERFACE = {
   "ui.maldicao.voz_quebrada": {
     "en": "Broken Voice",
     "pt": "Voz Quebrada"
+  },
+  "ui.maldicao.voz_quebrada.ef": {
+    "en": "cannot use Songs",
+    "pt": "não usa Canções"
   },
   "ui.mestre.custo.bonus": {
     "en": "BONUS",
@@ -930,6 +1158,214 @@ window.LANG_INTERFACE = {
   "ui.selecao.skill.veneno_rapido": {
     "en": "Quick Poison",
     "pt": "Veneno Rápido"
+  },
+  "ui.status.atrib.ataque": {
+    "en": "attack",
+    "pt": "ataque"
+  },
+  "ui.status.atrib.bonus_acerto": {
+    "en": "attack",
+    "pt": "ataque"
+  },
+  "ui.status.atrib.bonus_ca": {
+    "en": "AC",
+    "pt": "CA"
+  },
+  "ui.status.atrib.bonus_dano": {
+    "en": "damage",
+    "pt": "dano"
+  },
+  "ui.status.atrib.bonus_mov": {
+    "en": "movement",
+    "pt": "movimento"
+  },
+  "ui.status.atrib.bonus_res": {
+    "en": "saves",
+    "pt": "resistências"
+  },
+  "ui.status.atrib.ca": {
+    "en": "AC",
+    "pt": "CA"
+  },
+  "ui.status.atrib.dano": {
+    "en": "damage",
+    "pt": "dano"
+  },
+  "ui.status.atrib.visao": {
+    "en": "vision",
+    "pt": "visão"
+  },
+  "ui.status.barreira_arcana": {
+    "en": "Arcane Barrier",
+    "pt": "Barreira Arcana"
+  },
+  "ui.status.barreira_arcana_ef": {
+    "en": "-{n} to all damage · {r} round(s)",
+    "pt": "-{n} de todo dano · {r} rodada(s)"
+  },
+  "ui.status.bencao_ativa": {
+    "en": "Blessing active",
+    "pt": "Bênção ativa"
+  },
+  "ui.status.brutalidade": {
+    "en": "Brutality",
+    "pt": "Brutalidade"
+  },
+  "ui.status.brutalidade_ef": {
+    "en": "+{n} weapon damage",
+    "pt": "+{n} dano de arma"
+  },
+  "ui.status.cancao_heroica": {
+    "en": "Heroic Song",
+    "pt": "Canção Heroica"
+  },
+  "ui.status.cego": {
+    "en": "Blinded",
+    "pt": "Cego"
+  },
+  "ui.status.cego_ef": {
+    "en": "Penalty on ranged attacks",
+    "pt": "Penalidade em ataques à distância"
+  },
+  "ui.status.defesa_impecavel": {
+    "en": "Flawless Defence",
+    "pt": "Defesa Impecável"
+  },
+  "ui.status.defesa_impecavel_ef": {
+    "en": "Attacks against you have disadvantage",
+    "pt": "Ataques contra você têm desvantagem"
+  },
+  "ui.status.em_chamas": {
+    "en": "On fire",
+    "pt": "Em chamas"
+  },
+  "ui.status.em_chamas_ef": {
+    "en": "Takes damage for {n} round(s)",
+    "pt": "Sofre dano por {n} rodada(s)"
+  },
+  "ui.status.envenenado": {
+    "en": "Poisoned",
+    "pt": "Envenenado"
+  },
+  "ui.status.envenenado_ef": {
+    "en": "Penalty active · {n} round(s)",
+    "pt": "Penalidade ativa · {n} rodada(s)"
+  },
+  "ui.status.exaustao": {
+    "en": "Exhaustion",
+    "pt": "Exaustão"
+  },
+  "ui.status.exaustao_ef": {
+    "en": "-{n} attack · -{n} damage · -{n} saves",
+    "pt": "-{n} ataque · -{n} dano · -{n} resistências"
+  },
+  "ui.status.furia_berserker": {
+    "en": "Berserker Fury",
+    "pt": "Fúria Berserker"
+  },
+  "ui.status.furia_berserker_ef": {
+    "en": "Extra attack",
+    "pt": "Ataque extra"
+  },
+  "ui.status.golpe_decisivo": {
+    "en": "Decisive Strike",
+    "pt": "Golpe Decisivo"
+  },
+  "ui.status.golpe_decisivo_ef": {
+    "en": "Next attack will be a critical",
+    "pt": "Próximo ataque será crítico"
+  },
+  "ui.status.golpe_devastador": {
+    "en": "Devastating Blow",
+    "pt": "Golpe Devastador"
+  },
+  "ui.status.golpe_devastador_ef": {
+    "en": "Enhanced damage dice",
+    "pt": "Dados de dano aprimorados"
+  },
+  "ui.status.golpe_sagrado": {
+    "en": "Holy Strike",
+    "pt": "Golpe Sagrado"
+  },
+  "ui.status.golpe_sagrado_ef": {
+    "en": "+1d8 holy on attacks",
+    "pt": "+1d8 sagrado nos ataques"
+  },
+  "ui.status.guerreiro_luz": {
+    "en": "Warrior of Light",
+    "pt": "Guerreiro da Luz"
+  },
+  "ui.status.investida_heroica": {
+    "en": "Heroic Charge",
+    "pt": "Investida Heroica"
+  },
+  "ui.status.investida_heroica_ef": {
+    "en": "Next melee attack enhanced",
+    "pt": "Próximo ataque corpo a corpo aprimorado"
+  },
+  "ui.status.lentidao": {
+    "en": "Slowed",
+    "pt": "Lentidão"
+  },
+  "ui.status.lentidao_ef": {
+    "en": "-1 attack · -1 AC",
+    "pt": "-1 ataque · -1 CA"
+  },
+  "ui.status.medo": {
+    "en": "Fear",
+    "pt": "Medo"
+  },
+  "ui.status.medo_ef": {
+    "en": "Combat penalty",
+    "pt": "Penalidade de combate"
+  },
+  "ui.status.mira_certeira": {
+    "en": "Sure Aim",
+    "pt": "Mira Certeira"
+  },
+  "ui.status.mira_certeira_ef": {
+    "en": "+2 attack",
+    "pt": "+2 ataque"
+  },
+  "ui.status.mira_perfeita": {
+    "en": "Perfect Aim",
+    "pt": "Mira Perfeita"
+  },
+  "ui.status.mira_perfeita_ef": {
+    "en": "Advantage at range · +2 damage",
+    "pt": "Vantagem à distância · +2 dano"
+  },
+  "ui.status.paralisado": {
+    "en": "Paralysed",
+    "pt": "Paralisado"
+  },
+  "ui.status.paralisado_ef": {
+    "en": "Cannot act",
+    "pt": "Não pode agir"
+  },
+  "ui.status.regeneracao_divina": {
+    "en": "Divine Regeneration",
+    "pt": "Regeneração Divina"
+  },
+  "ui.status.regeneracao_divina_ef": {
+    "en": "+1 HP per round",
+    "pt": "+1 PV por rodada"
+  },
+  "ui.status.resistencia_absoluta": {
+    "en": "Absolute Resilience",
+    "pt": "Resistência Absoluta"
+  },
+  "ui.status.resistencia_absoluta_ef": {
+    "en": "+{n} on saving throws",
+    "pt": "+{n} em testes de resistência"
+  },
+  "ui.status.saciado": {
+    "en": "Well Fed",
+    "pt": "Saciado"
+  },
+  "ui.status.saciado_ef": {
+    "en": "+1 attack · +1 damage · +1 saves",
+    "pt": "+1 ataque · +1 dano · +1 resistências"
   },
   "ui.tooltip.alcance": {
     "en": "Range",

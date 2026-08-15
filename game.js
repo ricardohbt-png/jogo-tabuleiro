@@ -3748,10 +3748,10 @@ function obterPercepcaoCliente(personagem, raioVisao){
 // Renderiza atributos usando dados do servidor quando disponíveis
 function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
   const ATRIBUTOS = [
-    { key: 'forca',        serverKey: 'str_', label: 'Força',        icone: '⚔️' },
-    { key: 'destreza',     serverKey: 'dex',  label: 'Destreza',     icone: '🏃' },
-    { key: 'inteligencia', serverKey: 'int_', label: 'Inteligência', icone: '📖' },
-    { key: 'constituicao', serverKey: 'con_', label: 'Constituição', icone: '🛡️' }
+    { key: 'forca',        serverKey: 'str_', label: t('ui.atributo.forca'),        icone: '⚔️' },
+    { key: 'destreza',     serverKey: 'dex',  label: t('ui.atributo.destreza'),     icone: '🏃' },
+    { key: 'inteligencia', serverKey: 'int_', label: t('ui.atributo.inteligencia'), icone: '📖' },
+    { key: 'constituicao', serverKey: 'con_', label: t('ui.atributo.constituicao'), icone: '🛡️' }
   ]
 
   // Prioriza dados do servidor — fallback para HERO_DATA
@@ -3763,11 +3763,11 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
   ) || '?'
   const raioVisao = obterRaioVisaoCliente(estadoServidor)
   const percepcao = obterPercepcaoCliente(estadoServidor, raioVisao)
-  const nomesMaldicao = {maos_tremulas:'Mãos Trêmulas',olhos_escuridao:'Olhos da Escuridão',passos_pesados:'Passos Pesados',lamina_enferrujada:'Lâmina Enferrujada',fraqueza_arcana:'Fraqueza Arcana',fortuna_roubada:'Fortuna Roubada',azar_sobrenatural:'Azar Sobrenatural',marca_cacador:'Marca do Caçador',corpo_exausto:'Corpo Exausto',carne_fragil:'Carne Frágil',sangramento_profano:'Sangramento Profano',correntes_invisiveis:'Correntes Invisíveis',dor_constante:'Dor Constante',alma_quebrada:'Alma Quebrada',aura_profana:'Aura Profana',maldicao_ferrugem:'Maldição da Ferrugem',fome_eterna:'Fome Eterna',sede_infinita:'Sede Infinita',tocado_morte:'Tocado pela Morte',licantropia:'Licantropia',silencio_deuses:'Silêncio dos Deuses',voz_quebrada:'Voz Quebrada',espirito_covarde:'Espírito Covarde',eco_morte:'Eco da Morte',corrupcao_crescente:'Corrupção Crescente'}
-  const descMaldicao = {maos_tremulas:'−2 em ataques',olhos_escuridao:'−2 visão',passos_pesados:'mover custa +1 sede',lamina_enferrujada:'−2 dano físico',fraqueza_arcana:'magias causam metade do dano',fortuna_roubada:'metade do ouro adquirido',azar_sobrenatural:'primeiro 20 natural não é crítico',marca_cacador:'inimigos +1 para atacar você',corpo_exausto:'ações custam +1 fome e sede',carne_fragil:'+2 dano recebido',sangramento_profano:'1 dano no início do turno após sofrer dano',correntes_invisiveis:'−3 movimento',dor_constante:'ações causam 1 dano',alma_quebrada:'não recebe bônus de aliados',aura_profana:'aliados adjacentes −1 ataque',maldicao_ferrugem:'equipamento degrada após combate',silencio_deuses:'não lança magias',voz_quebrada:'não usa Canções',espirito_covarde:'−2 Vontade',eco_morte:'morte de aliado causa 10 dano'}
-  const maldicoes = (estadoServidor.maldicoes||[]).map(m=>`<li>☠️ <b>${nomesMaldicao[m.id]||m.id}</b> — ${descMaldicao[m.id]||'maldição ativa'}${m.aventuras!=null&&['fome_eterna','sede_infinita','tocado_morte','licantropia','corrupcao_crescente'].includes(m.id)?` (estágio ${Math.min(5,1+Math.floor(m.aventuras/2))})`:''}</li>`).join('')
-  const doenca = estadoServidor.doente ? `<li>🦠 <b>Doença ${estadoServidor.doenca_tipo||''}</b> — ${((estadoServidor.doenca||{}).sintomas||[]).join(', ')}</li>` : ''
-  const modificadores = (maldicoes||doenca) ? `<div style="margin-top:14px;padding:10px;border:1px solid #a34a4a;background:rgba(120,20,25,.14)"><div style="color:#e8a0a0;font:10px Cinzel,serif;letter-spacing:1px;margin-bottom:5px">MODIFICADORES TEMPORÁRIOS — MALES</div><ul style="margin:0;padding-left:16px;color:#e8d4d4;font-size:11px;line-height:1.5">${doenca}${maldicoes}</ul></div>` : ''
+  // Nome e efeito de cada maldição vêm de ui.maldicao.<id> / ui.maldicao.<id>.ef —
+  // o nome é a MESMA chave que o templo usa em _renderShopItems.
+  const maldicoes = (estadoServidor.maldicoes||[]).map(m=>`<li>☠️ <b>${_rotulo(m.id,'ui.maldicao',m.id)}</b> — ${_rotulo(m.id+'.ef','ui.maldicao',t('ui.maldicao.ativa'))}${m.aventuras!=null&&['fome_eterna','sede_infinita','tocado_morte','licantropia','corrupcao_crescente'].includes(m.id)?` ${t('ui.maldicao.estagio',{n:Math.min(5,1+Math.floor(m.aventuras/2))})}`:''}</li>`).join('')
+  const doenca = estadoServidor.doente ? `<li>🦠 <b>${t('ui.ficha.doenca',{tipo:estadoServidor.doenca_tipo||''})}</b> — ${((estadoServidor.doenca||{}).sintomas||[]).join(', ')}</li>` : ''
+  const modificadores = (maldicoes||doenca) ? `<div style="margin-top:14px;padding:10px;border:1px solid #a34a4a;background:rgba(120,20,25,.14)"><div style="color:#e8a0a0;font:10px Cinzel,serif;letter-spacing:1px;margin-bottom:5px">${t('ui.ficha.modificadores_males')}</div><ul style="margin:0;padding-left:16px;color:#e8d4d4;font-size:11px;line-height:1.5">${doenca}${maldicoes}</ul></div>` : ''
 
   return `
     <!-- VIDA -->
@@ -3778,7 +3778,7 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
       display:flex; justify-content:space-between; align-items:center;
     ">
       <span style="color:#8a7a5a; font-size:11px; letter-spacing:2px;">
-        ❤️ PONTOS DE VIDA
+        ❤️ ${t('ui.ficha.pontos_de_vida')}
       </span>
       <div>
         <span style="color:#ff4136; font-size:18px; font-weight:bold;">
@@ -3799,7 +3799,7 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
           border:1px solid #ff851b44;
         ">
           <div style="color:#8a7a5a; font-size:9px; letter-spacing:2px; margin-bottom:4px;">
-            🍖 FOME
+            🍖 ${t('ui.ficha.fome')}
           </div>
           <div style="height:5px; background:#1a1a1a; border:1px solid #2a2a2a;">
             <div style="
@@ -3817,7 +3817,7 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
           border:1px solid #4488ff44;
         ">
           <div style="color:#8a7a5a; font-size:9px; letter-spacing:2px; margin-bottom:4px;">
-            💧 SEDE
+            💧 ${t('ui.ficha.sede')}
           </div>
           <div style="height:5px; background:#1a1a1a; border:1px solid #2a2a2a;">
             <div style="
@@ -3873,7 +3873,7 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
         border:1px solid #c8a95133;
         display:flex; justify-content:space-between;
       ">
-        <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">NÍVEL</span>
+        <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.ficha.nivel')}</span>
         <span style="color:#c8a951; font-size:14px; font-weight:bold;">${nivel}</span>
       </div>
       ${estadoServidor.ac ? `
@@ -3885,7 +3885,7 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
         ">
           <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">CA</span>
           <span style="color:#c8a951; font-size:14px; font-weight:bold;">
-            ${estadoServidor.ac}${(estadoServidor.buffs_cancao && estadoServidor.buffs_cancao.bonus_ca) ? ` <span style="color:#4db8ff;font-size:.78em;" title="Canção Heroica de Henrique">🎵+${estadoServidor.buffs_cancao.bonus_ca}</span>` : ''}
+            ${estadoServidor.ac}${(estadoServidor.buffs_cancao && estadoServidor.buffs_cancao.bonus_ca) ? ` <span style="color:#4db8ff;font-size:.78em;" title="${t('ui.hud.cancao_de_henrique')}">🎵+${estadoServidor.buffs_cancao.bonus_ca}</span>` : ''}
           </span>
         </div>
       ` : ''}
@@ -3895,12 +3895,12 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
         border:1px solid #64b4ff44;
         display:flex; justify-content:space-between;
       ">
-        <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">RAIO DE VISÃO</span>
+        <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.ficha.raio_visao')}</span>
         <span style="color:#8ed0ff; font-size:14px; font-weight:bold;">👁 ${raioVisao}</span>
       </div>
     </div>
     <div style="margin-top:8px; padding:8px 12px; background:rgba(170,130,255,0.06); border:1px solid #aa82ff44; display:flex; justify-content:space-between;">
-      <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">PERCEPÇÃO</span>
+      <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.ficha.percepcao')}</span>
       <span style="color:#c4a7ff; font-size:14px; font-weight:bold;">👁‍🗨 ${percepcao}</span>
     </div>
     ${modificadores}
@@ -9869,7 +9869,7 @@ function iniciarModoProtetor(){
   if(me.bonus_action_used){ toast('Ação bônus já usada neste turno.', 'var(--orange)'); return; }
   if(me.fome < 2 || me.sede < 2){ toast('Protetor requer 🍖2 e 💧2.', 'var(--orange)'); return; }
   const alvos = _aliadosNoRaioPaladin(me, 4);
-  if(!alvos.length){ toast('Nenhum aliado a até 4 quadrados.', 'var(--orange)'); return; }
+  if(!alvos.length){ toast(t('ui.hud.sem_aliado_raio4'), 'var(--orange)'); return; }
   if(alvos.length === 1){ send({ type:'protetor', target_id:alvos[0].id }); return; }
   openTargetModal('🛡️ Protetor — Escolha o aliado (raio 4)', alvos, 'player',
     id => send({ type:'protetor', target_id:id }));
@@ -12778,7 +12778,7 @@ function renderMyPanel(state){
   // no raio. Aqui só EXIBIMOS — a aplicação mecânica já é feita no server.
   const _cb = me.buffs_cancao || {};
   const _cancaoTag = (key) => _cb[key]
-    ? ` <span style="color:#4db8ff;font-weight:bold;font-size:.78em;vertical-align:top;" title="Canção Heroica de Henrique">🎵+${_cb[key]}</span>`
+    ? ` <span style="color:#4db8ff;font-weight:bold;font-size:.78em;vertical-align:top;" title="${t('ui.hud.cancao_de_henrique')}">🎵+${_cb[key]}</span>`
     : '';
 
   // ── Bônus do Guerreiro da Luz (Richard): indicador AMARELO ao lado do atributo ──
@@ -12832,8 +12832,8 @@ function renderMyPanel(state){
     <div class="save-row" style="margin-top:4px;">
       <div class="save-box" style="border-color:${me.bonus_action_used?'#555':'#c8a951'}; min-width:60px;">
         <span class="sv" style="color:${me.bonus_action_used?'#666':'#c8a951'};">🎯</span>
-        <span class="sv-val" style="color:${me.bonus_action_used?'#666':'#c8a951'}; font-size:.72rem;">${me.bonus_action_used?'usada':'livre'}</span>
-        <span class="sv-sub">bônus</span>
+        <span class="sv-val" style="color:${me.bonus_action_used?'#666':'#c8a951'}; font-size:.72rem;">${me.bonus_action_used?t('ui.hud.usada'):t('ui.hud.livre')}</span>
+        <span class="sv-sub">${t('ui.hud.bonus')}</span>
       </div>
     </div>
     ${me.regeneracao_ativa ? `
@@ -12969,9 +12969,9 @@ function renderMyPanel(state){
   // Cada botão arremessa o SEU slot (mão principal ou 2ª mão). Arremesso usa DES.
   const _throwWeapons = [];
   if(me.weapon && me.weapon.throw_range)
-    _throwWeapons.push({slot:'weapon', item:me.weapon, hand:'mão principal'});
+    _throwWeapons.push({slot:'weapon', item:me.weapon, hand:t('ui.hud.mao_principal')});
   if(me.gear && me.gear.off_hand && me.gear.off_hand.throw_range)
-    _throwWeapons.push({slot:'off_hand', item:me.gear.off_hand, hand:'2ª mão'});
+    _throwWeapons.push({slot:'off_hand', item:me.gear.off_hand, hand:t('ui.hud.segunda_mao')});
   const _throwBtns = _throwWeapons.map(tw=>{
     const tr = tw.item.throw_range;
     const tgts = (GS.gameState ? GS.gameState.monsters : []).filter(m=>
@@ -12993,8 +12993,8 @@ function renderMyPanel(state){
   const _apagarBtn = (me.em_chamas_rodadas > 0 && canAct) ? `
     <button class="btn-action" onclick="GS.apagarChamas()"
       style="display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 6px;border-color:#ff5a2a;">
-      <span style="color:#ff884d;">🔥 Apagar chamas</span>
-      <small style="color:var(--gold);font-size:.7rem;font-weight:bold;">gasta a ação principal</small>
+      <span style="color:#ff884d;">🔥 ${t('ui.hud.apagar_chamas')}</span>
+      <small style="color:var(--gold);font-size:.7rem;font-weight:bold;">${t('ui.hud.gasta_acao_principal')}</small>
     </button>` : '';
 
   // ── Action buttons (with weapon damage formula shown) ──
@@ -13005,8 +13005,8 @@ function renderMyPanel(state){
   const _escaparBtn = (me.engolido && canAct) ? `
     <button class="btn-action" onclick="GS.escaparEstomago()"
       style="display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 6px;border-color:#a66b45;">
-      <span style="color:#e7a36c;">🫀 Forçar saída</span>
-      <small style="color:var(--gold);font-size:.7rem;font-weight:bold;">Força contra o estômago</small>
+      <span style="color:#e7a36c;">🫀 ${t('ui.hud.forcar_saida')}</span>
+      <small style="color:var(--gold);font-size:.7rem;font-weight:bold;">${t('ui.hud.forca_estomago')}</small>
     </button>` : '';
   const _wRange = me.weapon?.range ?? null;
   const _rangeHint = _wRange != null ? `alcance ${_wRange}` : 'corpo a corpo';
@@ -13111,7 +13111,7 @@ function renderMyPanel(state){
           const cap = GS.warriorComboCap();
           toast(cap === 1
             ? 'Compre "Combinar Duas" na Guilda para armar 2 habilidades por turno.'
-            : `Você só pode armar ${cap} habilidades por turno.`, 'var(--gold)');
+            : t('ui.hud.limite_habilidades',{n:cap}), 'var(--gold)');
           return;
         }
         _wToggle(sk.id); renderMyPanel(GS.gameState);
@@ -13147,10 +13147,10 @@ function renderMyPanel(state){
     btnOp.className = 'skill-btn guild-tec';
     btnOp.innerHTML = `
       <div class="skill-info">
-        <div class="skill-name">⏳ Oportunidade <small style="color:var(--gold);font-size:.58rem;">GUILDA</small></div>
-        <div class="skill-desc">Gaste o crédito extra em movimento agora, ou apenas aja normalmente (atacar/curar/lançar magia/etc.) para gastá-lo automaticamente.</div>
+        <div class="skill-name" data-ability-id="oportunidade">⏳ ${t('ui.hud.oportunidade')} <small style="color:var(--gold);font-size:.58rem;">${t('ui.hud.guilda')}</small></div>
+        <div class="skill-desc">${t('ui.hud.oportunidade_desc')}</div>
       </div>
-      <div class="skill-cost">mover +${me.spd||0}</div>`;
+      <div class="skill-cost">${t('ui.hud.mover_mais')} +${me.spd||0}</div>`;
     btnOp.onclick = () => GS.usarOportunidadeMovimento();
     sl.appendChild(btnOp);
   }
@@ -13207,14 +13207,14 @@ function renderMyPanel(state){
       } else if(cat.alvo === 'aliado_raio4'){
         const alvos = (state.players||[]).filter(q => q && q.alive && q.id !== me.id &&
           Math.max(Math.abs(pp[0]-q.pos[0]), Math.abs(pp[1]-q.pos[1])) <= 4);
-        if(!alvos.length){ toast('Nenhum aliado a até 4 quadrados.', 'var(--orange)'); return; }
+        if(!alvos.length){ toast(t('ui.hud.sem_aliado_raio4'), 'var(--orange)'); return; }
         if(alvos.length === 1){ GS.usarTecnica(tid, alvos[0].id); return; }
         openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — aliado (4 casas)`, alvos, 'player',
           id => GS.usarTecnica(tid, id));
       } else if(cat.alvo === 'aliado'){
         // Ataque Coordenado (Fase 2c): marca um aliado vivo (qualquer distância) como par.
         const alvos = (state.players||[]).filter(q => q && q.alive && q.id !== me.id);
-        if(!alvos.length){ toast('Nenhum aliado disponível.', 'var(--orange)'); return; }
+        if(!alvos.length){ toast(t('ui.hud.sem_aliado'), 'var(--orange)'); return; }
         if(alvos.length === 1){ GS.usarTecnica(tid, alvos[0].id); return; }
         openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — escolha o par`, alvos, 'player',
           id => GS.usarTecnica(tid, id));
@@ -13224,7 +13224,7 @@ function renderMyPanel(state){
         const aliados  = (state.players||[]).filter(q => q && q.alive && q.id !== me.id);
         const monstros = (state.monsters||[]).filter(m => m && m.hp>0);
         const alvos = [...aliados, ...monstros];
-        if(!alvos.length){ toast('Nenhum alvo disponível.', 'var(--orange)'); return; }
+        if(!alvos.length){ toast(t('ui.hud.sem_alvo'), 'var(--orange)'); return; }
         openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — escolha o 2º alvo`, alvos, 'any',
           id => GS.usarTecnica(tid, id));
       } else {
@@ -13255,12 +13255,8 @@ const _TIPO_ITEM_EMOJI = {
 };
 
 const _EQUIPADO_SLOTS = [
-  {key:'arma',      label:'Arma'},
-  {key:'armadura',  label:'Armadura'},
-  {key:'cabeca',    label:'Cabeça'},
-  {key:'secundario',label:'Secundário'},
-  {key:'magico1',   label:'Mágico 1'},
-  {key:'magico2',   label:'Mágico 2'},
+  {key:'arma'},      {key:'armadura'}, {key:'cabeca'},
+  {key:'secundario'}, {key:'magico1'},  {key:'magico2'},
 ];
 
 function renderPurchasedItems(inv){
@@ -13274,11 +13270,13 @@ function renderPurchasedItems(inv){
   if(equipados.length){
     const t = document.createElement('div');
     t.className = 'section-title';
-    t.textContent = 'Equipado (Loja)';
+    t.textContent = _rotulo('equipado_loja', 'ui.hud', 'Equipado (Loja)');
     inv.appendChild(t);
     const g = document.createElement('div');
     g.className = 'bag-grid';
-    for(const {key, label, it} of equipados){
+    for(const {key, it} of equipados){
+      // _rotulo (e nao t) porque `t` esta sombreado por um <div> nesta funcao.
+      const label = _rotulo(key, 'ui.hud.slot', key);
       const slot = document.createElement('div');
       slot.className = 'bag-slot filled';
       slot.title = it.nome;
@@ -13289,7 +13287,7 @@ function renderPurchasedItems(inv){
       aplicarTooltipAoItem(slot, it.id);
       const btn = document.createElement('button');
       btn.className = 'bag-slot-btn';
-      btn.textContent = '✕ Remover';
+      btn.textContent = '✕ ' + _rotulo('remover', 'ui.hud', 'Remover');
       btn.onclick = () => desequiparComprado(key);
       slot.appendChild(btn);
       g.appendChild(slot);
@@ -14118,41 +14116,47 @@ function _modificadoresTemporariosStatus(p){
   const add = (nome, efeito, ate) => out.push({nome, efeito, ate});
   const r = GS.gameState?.round;
   const fome = Number(p.fome ?? p.hunger ?? 100), sede = Number(p.sede ?? p.thirst ?? 100);
-  if(fome > 80 && sede > 80) add('Saciado', '+1 ataque · +1 dano · +1 resistências');
+  // Nome e efeito de cada status vêm de ui.status.* — namespace próprio, e não
+  // reusa ui.selecao.skill.* de propósito: são superfícies diferentes, e acoplar
+  // as duas faria uma mudança na tela de seleção mexer no HUD em silêncio.
+  const S = (slug, params) => t('ui.status.' + slug, params);
+  if(fome > 80 && sede > 80) add(S('saciado'), S('saciado_ef'));
   else {
     const exaustao = (fome < 20 ? 1 : 0) + (sede < 20 ? 1 : 0);
-    if(exaustao) add('Exaustão', `-${exaustao} ataque · -${exaustao} dano · -${exaustao} resistências`);
+    if(exaustao) add(S('exaustao'), S('exaustao_ef', {n: exaustao}));
   }
   if(p.buffs_cancao && typeof p.buffs_cancao === 'object'){
-    const nomes = {bonus_acerto:'ataque', bonus_dano:'dano', bonus_ca:'CA', bonus_mov:'movimento', bonus_res:'resistências'};
-    const valores = Object.entries(p.buffs_cancao).filter(([,v]) => v).map(([k,v]) => `+${v} ${nomes[k] || k}`);
-    if(valores.length) add('Canção Heroica', valores.join(' · '));
+    const valores = Object.entries(p.buffs_cancao).filter(([,v]) => v)
+      .map(([k,v]) => `+${v} ${_rotulo(k, 'ui.status.atrib', k)}`);
+    if(valores.length) add(S('cancao_heroica'), valores.join(' · '));
   }
   if(p.guerreiro_luz_ativo){
     const b = p.guerreiro_luz_bonus || {};
-    add('Guerreiro da Luz', Object.entries(b).filter(([,v]) => v).map(([k,v]) => `+${v} ${k}`).join(' · ') || 'Bênção ativa');
+    add(S('guerreiro_luz'), Object.entries(b).filter(([,v]) => v)
+      .map(([k,v]) => `+${v} ${_rotulo(k, 'ui.status.atrib', k)}`).join(' · ') || S('bencao_ativa'));
   }
-  if(p.golpe_sagrado_ativo) add('Golpe Sagrado', '+1d8 sagrado nos ataques');
-  if(p.regeneracao_ativa) add('Regeneração Divina', '+1 PV por rodada');
+  if(p.golpe_sagrado_ativo) add(S('golpe_sagrado'), S('golpe_sagrado_ef'));
+  if(p.regeneracao_ativa) add(S('regeneracao_divina'), S('regeneracao_divina_ef'));
   if(Number(p.barreira_arcana_rodadas || 0) > 0){
-    add('Barreira Arcana', `-${Number(p.barreira_arcana_reducao || 0)} de todo dano · ${Number(p.barreira_arcana_rodadas)} rodada(s)`);
+    add(S('barreira_arcana'), S('barreira_arcana_ef', {
+      n: Number(p.barreira_arcana_reducao || 0), r: Number(p.barreira_arcana_rodadas)}));
   }
-  if(p.tecnica_buff_dano_arma) add('Brutalidade', `+${p.tecnica_buff_dano_arma} dano de arma`);
-  if(p.tecnica_mira_perfeita) add('Mira Perfeita', 'Vantagem à distância · +2 dano');
+  if(p.tecnica_buff_dano_arma) add(S('brutalidade'), S('brutalidade_ef', {n: p.tecnica_buff_dano_arma}));
+  if(p.tecnica_mira_perfeita) add(S('mira_perfeita'), S('mira_perfeita_ef'));
   const armadas = GS.getWarriorSelected?.() || [];
-  if(armadas.includes('mira_certeira')) add('Mira Certeira', '+2 ataque');
-  if(armadas.includes('golpe_devastador')) add('Golpe Devastador', 'Dados de dano aprimorados');
-  if(armadas.includes('furia_berserker')) add('Fúria Berserker', 'Ataque extra');
-  if(p.investida_armada) add('Investida Heroica', 'Próximo ataque corpo a corpo aprimorado');
-  if(p.tecnica_golpe_decisivo_armado) add('Golpe Decisivo', 'Próximo ataque será crítico');
-  if(p.defesa_impecavel_ate >= r) add('Defesa Impecável', 'Ataques contra você têm desvantagem', p.defesa_impecavel_ate);
-  if(p.resistencia_saves_ate >= r) add('Resistência Absoluta', `+${p.resistencia_saves_val || 0} em testes de resistência`, p.resistencia_saves_ate);
-  if(p.em_chamas_rodadas) add('Em chamas', `Sofre dano por ${p.em_chamas_rodadas} rodada(s)`);
-  if(p.veneno_rodadas || p.envenenado_rodadas) add('Envenenado', `Penalidade ativa · ${p.veneno_rodadas || p.envenenado_rodadas} rodada(s)`);
-  if(p.com_medo || p.medo_rodadas) add('Medo', 'Penalidade de combate', p.medo_rodadas);
-  if(p.lento || p.lento_rodadas) add('Lentidão', '-1 ataque · -1 CA', p.lento_rodadas);
-  if(p.paralisado) add('Paralisado', 'Não pode agir');
-  if(p.cego) add('Cego', 'Penalidade em ataques à distância');
+  if(armadas.includes('mira_certeira')) add(S('mira_certeira'), S('mira_certeira_ef'));
+  if(armadas.includes('golpe_devastador')) add(S('golpe_devastador'), S('golpe_devastador_ef'));
+  if(armadas.includes('furia_berserker')) add(S('furia_berserker'), S('furia_berserker_ef'));
+  if(p.investida_armada) add(S('investida_heroica'), S('investida_heroica_ef'));
+  if(p.tecnica_golpe_decisivo_armado) add(S('golpe_decisivo'), S('golpe_decisivo_ef'));
+  if(p.defesa_impecavel_ate >= r) add(S('defesa_impecavel'), S('defesa_impecavel_ef'), p.defesa_impecavel_ate);
+  if(p.resistencia_saves_ate >= r) add(S('resistencia_absoluta'), S('resistencia_absoluta_ef', {n: p.resistencia_saves_val || 0}), p.resistencia_saves_ate);
+  if(p.em_chamas_rodadas) add(S('em_chamas'), S('em_chamas_ef', {n: p.em_chamas_rodadas}));
+  if(p.veneno_rodadas || p.envenenado_rodadas) add(S('envenenado'), S('envenenado_ef', {n: p.veneno_rodadas || p.envenenado_rodadas}));
+  if(p.com_medo || p.medo_rodadas) add(S('medo'), S('medo_ef'), p.medo_rodadas);
+  if(p.lento || p.lento_rodadas) add(S('lentidao'), S('lentidao_ef'), p.lento_rodadas);
+  if(p.paralisado) add(S('paralisado'), S('paralisado_ef'));
+  if(p.cego) add(S('cego'), S('cego_ef'));
   return out;
 }
 function fecharMenuStatus(){ document.getElementById('menu-status-overlay')?.classList.remove('open'); }
@@ -14624,18 +14628,18 @@ function ativarTecnicaGuildaDoMenu(tid){
   const aliados = (state.players||[]).filter(q => q && q.alive && q.id !== me.id);
   if(cat.alvo === 'aliado_raio4'){
     const alvos = aliados.filter(q => Math.max(Math.abs(pp[0]-q.pos[0]), Math.abs(pp[1]-q.pos[1])) <= 4);
-    if(!alvos.length){ toast('Nenhum aliado a até 4 quadrados.', 'var(--orange)'); return; }
+    if(!alvos.length){ toast(t('ui.hud.sem_aliado_raio4'), 'var(--orange)'); return; }
     if(alvos.length === 1) return GS.usarTecnica(tid, alvos[0].id);
     return openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — aliado`, alvos, 'player', id => GS.usarTecnica(tid, id));
   }
   if(cat.alvo === 'aliado'){
-    if(!aliados.length){ toast('Nenhum aliado disponível.', 'var(--orange)'); return; }
+    if(!aliados.length){ toast(t('ui.hud.sem_aliado'), 'var(--orange)'); return; }
     if(aliados.length === 1) return GS.usarTecnica(tid, aliados[0].id);
     return openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — escolha o aliado`, aliados, 'player', id => GS.usarTecnica(tid, id));
   }
   if(cat.alvo === 'qualquer_vivo'){
     const alvos = [...aliados, ...(state.monsters||[]).filter(m => m && m.hp>0)];
-    if(!alvos.length){ toast('Nenhum alvo disponível.', 'var(--orange)'); return; }
+    if(!alvos.length){ toast(t('ui.hud.sem_alvo'), 'var(--orange)'); return; }
     return openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — escolha o 2º alvo`, alvos, 'any', id => GS.usarTecnica(tid, id));
   }
   GS.usarTecnica(tid);

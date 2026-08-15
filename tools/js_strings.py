@@ -104,12 +104,20 @@ ACENTO = re.compile(r"[ãáàâçéêíóõôúÃÁÀÂÇÉÊÍÓÕÔÚ]")
 IGNORAR = re.compile(r"\.(js|png|jpe?g|glb|css|html)$|^assets/|^#[\w-]+$|^[\w.]+\.[\w.]+$")
 
 
+# Comentário HTML dentro de um template NÃO é texto de interface: ele vai para o
+# DOM, mas o jogador nunca o vê. Como um template multilinha inteiro conta como UM
+# literal, um `<!-- FOME E SEDE -->` no meio dele mantinha a função inteira no
+# placar mesmo com todos os rótulos já traduzidos. São 4 casos no game.js.
+COMENTARIO_HTML = re.compile(r"<!--.*?-->", re.S)
+
+
 def texto_de_interface(src):
     """[(linha, texto)] dos literais que parecem texto para o jogador."""
     out = []
     for linha, _aspa, t in literais(src):
         limpo = t.strip()
-        if len(limpo) < 3 or not ACENTO.search(limpo): continue
+        if len(limpo) < 3: continue
+        if not ACENTO.search(COMENTARIO_HTML.sub(" ", limpo)): continue
         if IGNORAR.search(limpo): continue
         out.append((linha, limpo))
     return out
@@ -142,6 +150,14 @@ const d = 'depois';
     check("comentário de linha não vira texto", not any("comentário" in t for t in txt))
     check("comentário de bloco não vira texto", not any("bloco com" in t for t in txt))
     check("continua lendo depois do bloco", "depois" in txt)
+
+    # Comentário HTML não é texto de interface — o jogador nunca o vê.
+    so_comentario = "const e = `<!-- SEÇÃO -->\n  <div>ok</div>`;"
+    check("template cujo único acento está em comentário HTML não conta",
+          not texto_de_interface(so_comentario))
+    com_rotulo = "const f = `<!-- SEÇÃO -->\n  <div>Força</div>`;"
+    check("mas o rótulo acentuado FORA do comentário ainda conta",
+          len(texto_de_interface(com_rotulo)) == 1)
 
     # A linha reportada tem de ser a do INÍCIO do literal.
     linhas = {t: l for l, _, t in ls}

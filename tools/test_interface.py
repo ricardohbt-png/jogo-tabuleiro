@@ -46,6 +46,9 @@ RE_FN = re.compile(
 FECHADAS = {
     # Lote 2, Task 2 — tooltip, descrição e loja de item
     "gerarConteudoTooltip", "_itemDesc", "_renderShopItems",
+    # Lote 2, Task 3 — ficha do herói e banners do HUD
+    "renderConteudoAtributosFichaJogo", "_modificadoresTemporariosStatus",
+    "renderMyPanel",
 }
 
 
