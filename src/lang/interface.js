@@ -31,6 +31,30 @@ window.LANG_INTERFACE = {
       "en": "1d4 + DEX adjacent",
       "pt": "1d4 + DES adjacente"
     },
+    "ui.animar.clique_cadaver": {
+      "en": "Click a highlighted corpse within range.",
+      "pt": "Clique em um cadáver destacado dentro do alcance."
+    },
+    "ui.animar.clique_cadaver_3": {
+      "en": "Click a corpse within 3 squares to create an undead servant.",
+      "pt": "Clique em um cadáver a até 3 casas para criar um servo morto-vivo."
+    },
+    "ui.animar.falha": {
+      "en": "❌ FAILURE — The corpse stays inert",
+      "pt": "❌ FALHA — O cadáver permanece inerte"
+    },
+    "ui.animar.falha_catastrofica": {
+      "en": "💀 CATASTROPHIC FAILURE — Hostile creature!",
+      "pt": "💀 FALHA CATASTRÓFICA — Criatura hostil!"
+    },
+    "ui.animar.modo_legenda": {
+      "en": "💀 ANIMATE DEAD — click a green corpse within 3 squares | ESC cancels",
+      "pt": "💀 ANIMAR MORTOS — clique em um cadáver verde a até 3 casas | ESC cancela"
+    },
+    "ui.animar.sem_cadaver": {
+      "en": "No corpse within 3 squares to animate.",
+      "pt": "Nenhum cadáver a até 3 casas para animar."
+    },
     "ui.armadilha.a_magia": {
       "en": "the spell",
       "pt": "a magia"
@@ -207,6 +231,14 @@ window.LANG_INTERFACE = {
       "en": "Cancel the current throw first (ESC).",
       "pt": "Cancele o arremesso atual primeiro (ESC)."
     },
+    "ui.arremesso.direcao_inimigo": {
+      "en": "⚠️ Throw towards an enemy",
+      "pt": "⚠️ Arremesse em direção a um inimigo"
+    },
+    "ui.arremesso.inimigo_nao_encontrado": {
+      "en": "⚠️ Enemy not found",
+      "pt": "⚠️ Inimigo não encontrado"
+    },
     "ui.arremesso.log_lanca": {
       "en": "🏹 Spear throw mode — {acao}. Click an enemy (ESC cancels).",
       "pt": "🏹 Modo arremesso de lança — {acao}. Clique num inimigo (ESC cancela)."
@@ -238,6 +270,14 @@ window.LANG_INTERFACE = {
     "ui.arremesso.sem_adaga": {
       "en": "No throwable dagger in the main hand.",
       "pt": "Nenhuma adaga arremessável na mão principal."
+    },
+    "ui.arremesso.sem_adaga_secundaria": {
+      "en": "No throwable off-hand dagger equipped.",
+      "pt": "Nenhuma adaga secundária arremessável equipada."
+    },
+    "ui.arremesso.sem_arma_na_mao": {
+      "en": "No throwing weapon in that hand.",
+      "pt": "Nenhuma arma de arremesso nessa mão."
     },
     "ui.arremesso.sem_lanca": {
       "en": "Short spear not equipped.",
@@ -286,6 +326,10 @@ window.LANG_INTERFACE = {
     "ui.atributo.sigla.str_": {
       "en": "STR",
       "pt": "FOR"
+    },
+    "ui.atributo.visao": {
+      "en": "Sight",
+      "pt": "Visão"
     },
     "ui.bardo.provocar_custo": {
       "en": "Taunt requires 🍖3 and 💧3.",
@@ -451,6 +495,10 @@ window.LANG_INTERFACE = {
       "en": "This person has nothing new to tell for now.",
       "pt": "Esta pessoa não tem nada novo para contar por enquanto."
     },
+    "ui.cena.pular_confirm": {
+      "en": "Skip the scene? Mandatory effects will be kept.",
+      "pt": "Pular a cena? Os efeitos obrigatórios serão mantidos."
+    },
     "ui.cena.renome_grupo": {
       "en": "★ Party renown: {n}",
       "pt": "★ Renome do grupo: {n}"
@@ -527,6 +575,14 @@ window.LANG_INTERFACE = {
       "en": "Waiting for the host to start the adventure…",
       "pt": "Aguardando o anfitrião iniciar a aventura…"
     },
+    "ui.cidade.entrada_sem_destino": {
+      "en": "⚠ This entrance is not linked to any destination.",
+      "pt": "⚠ Esta entrada não está vinculada a nenhum destino."
+    },
+    "ui.cidade.guilda_missoes_em_breve": {
+      "en": "⚔ Heroes' Guild — Quests coming soon!",
+      "pt": "⚔ Guilda dos Heróis — Missões em breve!"
+    },
     "ui.cidade.ir_aventura": {
       "en": "Go on the adventure",
       "pt": "Ir para a aventura"
@@ -599,6 +655,10 @@ window.LANG_INTERFACE = {
       "en": "Temple",
       "pt": "Templo"
     },
+    "ui.cidade.refugio_bloqueado": {
+      "en": "🔒 The Heroes' Refuge is still locked.",
+      "pt": "🔒 O Refúgio dos Heróis ainda está bloqueado."
+    },
     "ui.cidade.salvar_pontos": {
       "en": "Save points",
       "pt": "Salvar pontos"
@@ -627,6 +687,10 @@ window.LANG_INTERFACE = {
       "en": "Warrior",
       "pt": "Guerreiro"
     },
+    "ui.clerigo.milagre_so_turno": {
+      "en": "Miracles can only be used on your turn.",
+      "pt": "Só é possível usar milagres no seu turno."
+    },
     "ui.clerigo.purificar_alvo_limpo": {
       "en": "{nome} has no effects you know how to cleanse.",
       "pt": "{nome} não tem efeitos que você saiba purificar."
@@ -638,6 +702,18 @@ window.LANG_INTERFACE = {
     "ui.clerigo.purificar_titulo": {
       "en": "✨ Cleanse — Adjacent ally",
       "pt": "✨ Purificação — Aliado adjacente"
+    },
+    "ui.conexao.codigo_4_letras": {
+      "en": "Code must have 4 letters.",
+      "pt": "Código deve ter 4 letras."
+    },
+    "ui.conexao.codigo_copiado": {
+      "en": "Code copied!",
+      "pt": "Código copiado!"
+    },
+    "ui.conexao.digite_nome": {
+      "en": "Type a hero name.",
+      "pt": "Digite um nome de herói."
     },
     "ui.conexao.encerrada": {
       "en": "Connection closed.",
@@ -651,9 +727,21 @@ window.LANG_INTERFACE = {
       "en": "❌ Could not reconnect. Reload the page and use \"Reconnect to the last game\".",
       "pt": "❌ Não foi possível reconectar. Recarregue a página e use \"Reconectar à última partida\"."
     },
+    "ui.conexao.fechamento_bloqueado": {
+      "en": "Your browser blocked the window from closing. You already left the match and are back at the main menu.",
+      "pt": "Seu navegador bloqueou o fechamento. Você já saiu da partida e voltou ao menu inicial."
+    },
     "ui.conexao.reconectando": {
       "en": "🔌 Connection lost — reconnecting ({n}/{max})...",
       "pt": "🔌 Conexão perdida — reconectando ({n}/{max})..."
+    },
+    "ui.conexao.sem_servidor": {
+      "en": "No connection to the server.",
+      "pt": "Sem conexão com o servidor."
+    },
+    "ui.conexao.sem_servidor_reinicie": {
+      "en": "❌ No connection to the server. Restart iniciar.bat.",
+      "pt": "❌ Sem conexão com o servidor. Reinicie o iniciar.bat."
     },
     "ui.conexao.servidor_nao_encontrado": {
       "en": "❌ Server not found. Run iniciar.bat first!",
@@ -663,9 +751,29 @@ window.LANG_INTERFACE = {
       "en": "That account does not exist. Create it now with this nickname and PIN?",
       "pt": "Conta não existe. Criar agora com esse apelido e PIN?"
     },
+    "ui.conta.pin_4_digitos": {
+      "en": "The PIN must have 4 digits.",
+      "pt": "O PIN deve ter 4 dígitos."
+    },
     "ui.dano_tipo.fogo": {
       "en": "fire",
       "pt": "fogo"
+    },
+    "ui.diag.arquivo_nao_carregou": {
+      "en": "file did not load (404 or network)",
+      "pt": "arquivo não carregou (404 ou rede)"
+    },
+    "ui.diag.conexao_falhou": {
+      "en": "connection failed (is the server up?)",
+      "pt": "conexão falhou (o servidor está no ar?)"
+    },
+    "ui.diag.relatorio_copiado": {
+      "en": "Report copied.",
+      "pt": "Relatório copiado."
+    },
+    "ui.elemental.conjurado": {
+      "en": "🌪️ Elemental summoned! End the turn to control it.",
+      "pt": "🌪️ Elemental conjurado! Encerre o turno para controlá-lo."
     },
     "ui.elemental.desc.eletrico": {
       "en": "Its attack hits everyone in a straight 3-square line.",
@@ -823,6 +931,14 @@ window.LANG_INTERFACE = {
       "en": "Close",
       "pt": "Fechar"
     },
+    "ui.guilda.indisponivel": {
+      "en": "Guild unavailable right now.",
+      "pt": "Guilda indisponível agora."
+    },
+    "ui.guilda.recarga_media": {
+      "en": "Medium Recharge (5 rounds)",
+      "pt": "Recarga Média (5 rodadas)"
+    },
     "ui.habilidade.alcance_cajado": {
       "en": "📐 <strong style=\"color:#c8a951\">Extended Reach:</strong> Hits 2 adjacent squares in front and 1 adjacent diagonal square. Requires two hands — incompatible with a shield.",
       "pt": "📐 <strong style=\"color:#c8a951\">Alcance Estendido:</strong> Atinge 2 casas adjacentes à frente e 1 casa diagonal adjacente. Requer duas mãos — incompatível com escudo."
@@ -855,6 +971,14 @@ window.LANG_INTERFACE = {
       "en": "Combination armed. Choose the target manually to attack.",
       "pt": "Combinação armada. Escolha o alvo manualmente para atacar."
     },
+    "ui.habilidade.combinacao_cancelada": {
+      "en": "Attack combination cancelled.",
+      "pt": "Combinação de ataque cancelada."
+    },
+    "ui.habilidade.combo_so_turno": {
+      "en": "The combination can only be prepared on the warrior's turn.",
+      "pt": "A combinação só pode ser preparada no turno do guerreiro."
+    },
     "ui.habilidade.critico_espada": {
       "en": "⚔️ <strong style=\"color:#c8a951\">Improved Critical:</strong> A natural 19 or 20 on the d20 is a critical when the attack hits.",
       "pt": "⚔️ <strong style=\"color:#c8a951\">Crítico Aprimorado:</strong> Um resultado natural de 19 ou 20 no d20 é crítico quando o ataque acerta."
@@ -870,6 +994,10 @@ window.LANG_INTERFACE = {
     "ui.habilidade.expansao_inventario": {
       "en": "🎒 <strong style=\"color:#cc44ff\">Inventory Expansion:</strong> Takes 1 magic slot and permanently adds +{p1} slots to the free inventory while equipped.",
       "pt": "🎒 <strong style=\"color:#cc44ff\">Expansão de Inventário:</strong> Ocupa 1 slot mágico e adiciona permanentemente +{p1} slots ao inventário livre enquanto equipada."
+    },
+    "ui.habilidade.ficha_indisponivel": {
+      "en": "Ability sheet unavailable right now.",
+      "pt": "Ficha de habilidades indisponível agora."
     },
     "ui.habilidade.iluminacao": {
       "en": "🕯️ <strong style=\"color:#c8a951\">Illumination:</strong> Extends the character's line of sight by 1 square in every direction. Lasts {p1} rounds. Once it expires the slot is empty.",
@@ -915,9 +1043,17 @@ window.LANG_INTERFACE = {
       "en": "This ability is passive or has no manual action.",
       "pt": "Esta habilidade é passiva ou não possui uma ação manual."
     },
+    "ui.habilidade.sem_descricao": {
+      "en": "No description available.",
+      "pt": "Sem descrição disponível."
+    },
     "ui.habilidade.so_na_masmorra": {
       "en": "Abilities can only be used in the dungeon.",
       "pt": "Habilidades só podem ser usadas na masmorra."
+    },
+    "ui.habilidade.tres_armadas": {
+      "en": "Three abilities armed. Choose the target manually to attack.",
+      "pt": "Três habilidades armadas. Escolha o alvo manualmente para atacar."
     },
     "ui.habilidade.uma_de_n": {
       "en": "1 of {n} abilities selected.",
@@ -1035,9 +1171,17 @@ window.LANG_INTERFACE = {
       "en": "Back to the previous 0.94 spacing",
       "pt": "Voltar ao espaçamento anterior de 0,94"
     },
+    "ui.hud.espaco_restaurado": {
+      "en": "↶ 3D spacing restored to 0.94.",
+      "pt": "↶ Espaçamento 3D restaurado para 0,94."
+    },
     "ui.hud.espaco_voltar": {
       "en": "↶ Spacing 0.94",
       "pt": "↶ Espaço 0,94"
+    },
+    "ui.hud.exausto_efeitos": {
+      "en": "-2 DEX · -2 STR · +1 hunger/thirst per action",
+      "pt": "-2 DES · -2 FOR · +1 fome/sede por ação"
     },
     "ui.hud.fora_de_turno_ou_acao_usada": {
       "en": "It's not your turn or the action was already used.",
@@ -1102,6 +1246,10 @@ window.LANG_INTERFACE = {
     "ui.hud.mao_principal": {
       "en": "main hand",
       "pt": "mão principal"
+    },
+    "ui.hud.mova_prisioneiro": {
+      "en": "🧍 Move the prisoner — click them and then a square; then end the turn.",
+      "pt": "🧍 Mova o prisioneiro — clique nele e depois numa casa; então encerre o turno."
     },
     "ui.hud.mover_mais": {
       "en": "move",
@@ -1218,6 +1366,10 @@ window.LANG_INTERFACE = {
     "ui.instrumento.duas_maos": {
       "en": "2 hands — attack OR play in the same turn",
       "pt": "2 mãos — atacar OU tocar no mesmo turno"
+    },
+    "ui.instrumento.improviso_direcao": {
+      "en": "Improvisation — Direction",
+      "pt": "Improviso — Direção"
     },
     "ui.instrumento.quadrados": {
       "en": "{n} squares",
@@ -1502,6 +1654,10 @@ window.LANG_INTERFACE = {
     "ui.item.material.organic": {
       "en": "organic",
       "pt": "orgânica"
+    },
+    "ui.item.nao_consumivel": {
+      "en": "This item is not consumable.",
+      "pt": "Este item não é consumível."
     },
     "ui.item.subtipo.contundente": {
       "en": "Bludgeoning",
@@ -2027,6 +2183,10 @@ window.LANG_INTERFACE = {
       "en": "SPELL SLOTS",
       "pt": "SLOTS DE MAGIAS"
     },
+    "ui.magia.so_na_masmorra": {
+      "en": "Spells can only be used in the dungeon.",
+      "pt": "Magias só podem ser usadas na masmorra."
+    },
     "ui.magia.sono.desc": {
       "en": "<b>Save:</b> Will<br>\n               <b>Fail:</b> sleeps for 1d4+1 rounds<br>\n               <b>Bonus:</b> 1st attack against a sleeping target = critical<br>\n               <b>Wakes:</b> on taking any damage<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
       "pt": "<b>Save:</b> Vontade<br>\n               <b>Falha:</b> dorme 1d4+1 rodadas<br>\n               <b>Bônus:</b> 1º ataque contra dormindo = crítico<br>\n               <b>Acorda:</b> ao receber qualquer dano<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
@@ -2303,6 +2463,18 @@ window.LANG_INTERFACE = {
       "en": "SPELLS AND ABILITIES",
       "pt": "MAGIAS E HABILIDADES"
     },
+    "ui.mestre.minimapa_indisponivel": {
+      "en": "Minimap unavailable.",
+      "pt": "Minimapa indisponível."
+    },
+    "ui.mestre.monstro_sem_habilidades": {
+      "en": "This monster has no abilities.",
+      "pt": "Este monstro não possui habilidades."
+    },
+    "ui.mestre.monstro_sem_magias": {
+      "en": "This monster has no spells.",
+      "pt": "Este monstro não possui magias."
+    },
     "ui.mestre.movimento": {
       "en": "👣 MOVEMENT",
       "pt": "👣 MOVIMENTO"
@@ -2314,6 +2486,14 @@ window.LANG_INTERFACE = {
     "ui.mestre.reforcos": {
       "en": "REINFORCEMENTS",
       "pt": "REFORÇOS"
+    },
+    "ui.mestre.sem_alvo_monstro": {
+      "en": "No monster available as a target.",
+      "pt": "Nenhum monstro disponível como alvo."
+    },
+    "ui.mestre.sem_heroi_vivo": {
+      "en": "No living hero.",
+      "pt": "Nenhum herói vivo."
     },
     "ui.mestre.sem_reforcos": {
       "en": "No reinforcements or lines in this dungeon.",
@@ -2351,6 +2531,14 @@ window.LANG_INTERFACE = {
       "en": "Free action. Multiplies the spell's damage by {mult}.",
       "pt": "Ação livre. Multiplica o dano da magia por {mult}."
     },
+    "ui.metamagia.tecelagem_so_turno": {
+      "en": "Arcane Weaving can only be prepared on the mage's turn.",
+      "pt": "Tecelagem Arcana só pode ser preparada no turno do mago."
+    },
+    "ui.metamagia.tres_armadas": {
+      "en": "Three metamagics armed. Choose the spell and the target manually.",
+      "pt": "Três metamagias armadas. Escolha a magia e o alvo manualmente."
+    },
     "ui.mundo.ajustar_pontos": {
       "en": "Adjust points",
       "pt": "Ajustar pontos"
@@ -2367,6 +2555,10 @@ window.LANG_INTERFACE = {
       "en": "World map of Varlúzia",
       "pt": "Mapa-múndi de Varlúzia"
     },
+    "ui.mundo.alt_mapa_simples": {
+      "en": "Map of Varlúzia",
+      "pt": "Mapa de Varlúzia"
+    },
     "ui.mundo.cancelar_ajuste": {
       "en": "Cancel adjustment",
       "pt": "Cancelar ajuste"
@@ -2382,6 +2574,10 @@ window.LANG_INTERFACE = {
     "ui.mundo.escolha_destino_desc": {
       "en": "Select a connected city or village to check the travel cost.",
       "pt": "Selecione uma cidade ou vila conectada para consultar o custo da viagem."
+    },
+    "ui.mundo.iniciando_expedicao": {
+      "en": "Starting the expedition…",
+      "pt": "Iniciando expedição…"
     },
     "ui.mundo.local_atual": {
       "en": "Current location",
@@ -2447,6 +2643,10 @@ window.LANG_INTERFACE = {
       "en": "Save positions",
       "pt": "Salvar posições"
     },
+    "ui.mundo.so_anfitriao_expedicao": {
+      "en": "Only the host starts the expedition.",
+      "pt": "Apenas o anfitrião inicia a expedição."
+    },
     "ui.mundo.so_anfitriao_viagem": {
       "en": "Only the host chooses the destination.",
       "pt": "Apenas o anfitrião escolhe o destino."
@@ -2506,6 +2706,10 @@ window.LANG_INTERFACE = {
     "ui.paladino.imposicao_titulo": {
       "en": "🙏 Lay on Hands — Adjacent ally",
       "pt": "🙏 Imposição das Mãos — Aliado adjacente"
+    },
+    "ui.paladino.protetor_so_turno": {
+      "en": "Protector can only be used on your turn.",
+      "pt": "Só é possível usar Protetor no seu turno."
     },
     "ui.pergaminho.alcance": {
       "en": "Range",
@@ -2586,6 +2790,10 @@ window.LANG_INTERFACE = {
     "ui.pergaminho.so_conjurador": {
       "en": "mage/cleric only",
       "pt": "só mago/clérigo"
+    },
+    "ui.pergaminho.so_conjurador_usa": {
+      "en": "Only a mage or cleric can use scrolls.",
+      "pt": "Apenas mago ou clérigo usam pergaminhos."
     },
     "ui.pergaminho.talento_cd": {
       "en": "DC +1",
@@ -2703,6 +2911,14 @@ window.LANG_INTERFACE = {
       "en": "Campaign",
       "pt": "Campanha"
     },
+    "ui.save.codigo_4_letras": {
+      "en": "The code must have 4 letters.",
+      "pt": "O código deve ter 4 letras."
+    },
+    "ui.save.de_nome_ao_jogo": {
+      "en": "Give the game a name.",
+      "pt": "Dê um nome ao jogo."
+    },
     "ui.save.encerrar": {
       "en": "End",
       "pt": "Encerrar"
@@ -2766,6 +2982,10 @@ window.LANG_INTERFACE = {
     "ui.save.sufixo_continuacao": {
       "en": " — continued",
       "pt": " — continuação"
+    },
+    "ui.selecao.aria_grid": {
+      "en": "Character selection",
+      "pt": "Seleção de personagens"
     },
     "ui.selecao.caracteristicas": {
       "en": "ℹ️ Traits",
@@ -2843,9 +3063,25 @@ window.LANG_INTERFACE = {
       "en": "VICTOR THE FIERCE KICK",
       "pt": "VICTOR COICE BRAVO"
     },
+    "ui.selecao.escolha_2_magias": {
+      "en": "Choose 2 spells of the 1st circle.",
+      "pt": "Escolha 2 magias de 1º círculo."
+    },
     "ui.selecao.escolha_heroi": {
       "en": "Choose your hero",
       "pt": "Escolha seu herói"
+    },
+    "ui.selecao.escolha_heroi_toque": {
+      "en": "Choose your hero — tap to select",
+      "pt": "Escolha seu herói — toque para selecionar"
+    },
+    "ui.selecao.ja_escolhido": {
+      "en": "Character already chosen by another player.",
+      "pt": "Personagem já escolhido por outro jogador."
+    },
+    "ui.selecao.mestre_virar_heroi": {
+      "en": "🎭 Master — click to become a hero",
+      "pt": "🎭 Mestre — clique para virar herói"
     },
     "ui.selecao.percepcao": {
       "en": "👁‍🗨 PERCEPTION",
@@ -3050,6 +3286,10 @@ window.LANG_INTERFACE = {
     "ui.selecao.ver_caracteristicas_title": {
       "en": "See the hero's traits",
       "pt": "Ver características do herói"
+    },
+    "ui.selecao.voce_e_mestre": {
+      "en": "🎭 You are the Master — you will control the monsters in the dungeon.",
+      "pt": "🎭 Você é o Mestre — controlará os monstros na masmorra."
     },
     "ui.status.acerto_total": {
       "en": "Total to-hit",

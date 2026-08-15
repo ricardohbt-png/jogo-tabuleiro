@@ -214,19 +214,30 @@ LITERAIS_INTENCIONAIS = {
 }
 
 
+def _pendente(linha, txt):
+    """A decisão, isolada para poder ser testada com entrada sintética.
+
+    Estava embutida no laço, e o teste da regra dupla dependia de uma FRASE do
+    game.js ("Personagem já escolhido") continuar sem tradução — quando o Lote 3
+    a traduziu, o teste virou vermelho sem que nada estivesse errado. Um teste de
+    regra não pode depender do conteúdo que a regra mede."""
+    dentro = any(a <= linha <= b for a, b in FAIXAS_NAO_PENDENTES)
+    if dentro and (txt in _PT_DICIONARIZADO or txt.strip() in _PT_DICIONARIZADO):
+        return False
+    if RE_MARKUP_I18N.search(txt):
+        return False
+    if txt in LITERAIS_INTENCIONAIS:
+        return False
+    if _e_arg_de_console(linha):
+        return False
+    return True
+
+
 def _literais_pendentes():
     """(linha, texto) de cada literal em português que AINDA não tem tradução."""
     for linha, txt in texto_de_interface(GAME):
-        dentro = any(a <= linha <= b for a, b in FAIXAS_NAO_PENDENTES)
-        if dentro and (txt in _PT_DICIONARIZADO or txt.strip() in _PT_DICIONARIZADO):
-            continue
-        if RE_MARKUP_I18N.search(txt):
-            continue
-        if txt in LITERAIS_INTENCIONAIS:
-            continue
-        if _e_arg_de_console(linha):
-            continue
-        yield linha, txt
+        if _pendente(linha, txt):
+            yield linha, txt
 
 
 def _literais_de_markup():
@@ -322,8 +333,18 @@ def _rodar_verificacoes():
     check("o dicionário foi carregado", len(_PT_DICIONARIZADO) > 100)
     check("um nome já traduzido não conta ('Bola de Fogo')",
           "Bola de Fogo" not in contados)
-    check("texto NÃO dicionarizado continua contando",
-          any("Personagem já escolhido" in t for t in contados))
+    # A regra é DUPLA (dicionário E faixa), e o teste dela usa entrada
+    # SINTÉTICA: a versão anterior cravava uma frase do game.js que ainda não
+    # tinha tradução, e ficou vermelha sozinha quando o Lote 3 a traduziu.
+    _dentro = FAIXAS_NAO_PENDENTES[0][0]
+    _fora = max(b for _a, b in FAIXAS_NAO_PENDENTES) + 1
+    _traduzido = next(iter(_PT_DICIONARIZADO))
+    check("dicionarizado FORA da faixa continua contando",
+          _pendente(_fora, _traduzido))
+    check("NÃO dicionarizado DENTRO da faixa continua contando",
+          _pendente(_dentro, "Texto inventado que não existe no dicionário"))
+    check("dicionarizado DENTRO da faixa não conta",
+          not _pendente(_dentro, _traduzido))
     # Uma faixa que não fecha direito FALHA EM SILÊNCIO: vira uma linha só e o
     # bloco volta a contar inteiro, sem erro nenhum. Já aconteceu —
     # ARMADILHAS_LUCCAS é um ARRAY, e o casador que só via `{` fechava no

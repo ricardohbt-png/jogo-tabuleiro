@@ -662,7 +662,7 @@ function exitGameWindow(){
   returnToInitialMenu();
   window.close();
   window.setTimeout(() => {
-    if(!window.closed) toast('Seu navegador bloqueou o fechamento. Você já saiu da partida e voltou ao menu inicial.', 'var(--text2)');
+    if(!window.closed) toast(t('ui.conexao.fechamento_bloqueado'), 'var(--text2)');
   }, 150);
 }
 
@@ -680,7 +680,7 @@ function formatGMText(text){
 
 function getName(){
   const n=$('input-name').value.trim();
-  if(!n){ toast('Digite um nome de herói.'); return null; }
+  if(!n){ toast(t('ui.conexao.digite_nome')); return null; }
   return n;
 }
 
@@ -715,7 +715,7 @@ function entrarComConta() {
   const pin  = (document.getElementById('input-pin').value || '').trim();
   const url  = (document.getElementById('input-server').value || 'ws://localhost:8765').trim();
   if (!name) { alert('Escolha um apelido.'); return; }
-  if (!/^\d{4}$/.test(pin)) { alert('O PIN deve ter 4 dígitos.'); return; }
+  if (!/^\d{4}$/.test(pin)) { alert(t('ui.conta.pin_4_digitos')); return; }
   window._contaCtx = { url, name, pin };
   GS.loginConta(url, name, pin);
 }
@@ -727,7 +727,7 @@ function criarJogoSalvo() {
   const has_master = document.getElementById('sg-master').checked;
   const entry_mode = document.getElementById('sg-entry-mode')?.value || 'vote';
   const replacement_rule = document.getElementById('sg-replacement-rule')?.value || 'experienced';
-  if (!name) { alert('Dê um nome ao jogo.'); return; }
+  if (!name) { alert(t('ui.save.de_nome_ao_jogo')); return; }
   GS.createSavegame({ name, mode: 'campaign', campaign_file, has_master,
     rules: { allow_new_players: true, entry_mode, replacement_rule, vote_timeout_hours: 72 } });
 }
@@ -735,7 +735,7 @@ function criarJogoSalvo() {
 // Entrar (já logado) na sala do jogo salvo de um amigo pelo código — Fase 3.
 function entrarPorCodigoLogado() {
   const code = (document.getElementById('sg-join-code').value || '').trim().toUpperCase();
-  if (code.length !== 4) { alert('O código deve ter 4 letras.'); return; }
+  if (code.length !== 4) { alert(t('ui.save.codigo_4_letras')); return; }
   GS.joinByCode(code);   // usa a conexão já logada (leva a conta junto)
 }
 
@@ -778,7 +778,7 @@ function rejoinSaved(){
 function joinRoom(){
   const name=getName(); if(!name) return;
   const code=$('input-code').value.trim().toUpperCase();
-  if(code.length!==4){ toast('Código deve ter 4 letras.'); return; }
+  if(code.length!==4){ toast(t('ui.conexao.codigo_4_letras')); return; }
   const url=$('input-server').value.trim()||defaultServerUrl();
   GS.connect(url, name, 'join', code);
 }
@@ -795,7 +795,7 @@ function joinRoom(){
 
 function copyCode(){
   const code=($('cs-room-code')||{}).textContent||'';
-  navigator.clipboard.writeText(code).then(()=>toast('Código copiado!','var(--green)'));
+  navigator.clipboard.writeText(code).then(()=>toast(t('ui.conexao.codigo_copiado'),'var(--green)'));
 }
 
 // ── MESSAGE HANDLER (delegated to GS — callbacks registered at bottom) ────
@@ -1344,7 +1344,7 @@ function _cityClick(e){
   if(!id) return;
   if(id==='dungeon') triggerDungeonEntrance();
   else if(id==='caravana') showWorldMap();
-  else if(id==='guilda') toast('⚔ Guilda dos Heróis — Missões em breve!','var(--gold)');
+  else if(id==='guilda') toast(t('ui.cidade.guilda_missoes_em_breve'),'var(--gold)');
   else _cityHotspotClick(_pontoDoTipo(id), id);
 }
 
@@ -1406,7 +1406,7 @@ function _updateCityTimeBadge(){
 
 function triggerDungeonEntrance(){
   if(!GS.ws||GS.ws.readyState!==1){
-    toast('❌ Sem conexão com o servidor. Reinicie o iniciar.bat.','var(--red)'); return;
+    toast(t('ui.conexao.sem_servidor_reinicie'),'var(--red)'); return;
   }
   getAudioContext();
   // Web Audio: heavy gate sound
@@ -1571,7 +1571,7 @@ function _cityHotspotClick(pointId, type){
     const ponto = ((st && st.city_map_points || {})[loc] || {})[pointId];
     const adventure = (((st && st.world && st.world.adventures) || [])
       .find(a => ponto && a.id === ponto.aventura));
-    if(!adventure){ toast('⚠ Esta entrada não está vinculada a nenhum destino.','var(--red)'); return; }
+    if(!adventure){ toast(t('ui.cidade.entrada_sem_destino'),'var(--red)'); return; }
     abrirEntradaMasmorra(adventure, (ponto && ponto.name) || adventure.nome);
     return;
   }
@@ -1580,7 +1580,7 @@ function _cityHotspotClick(pointId, type){
   if(t === 'refugio'){
     const st=GS.cityState, loc=st && st.world && st.world.location;
     const ponto=((st && st.city_map_points || {})[loc] || {})[pointId];
-    if(ponto && ponto.locked){ toast('🔒 O Refúgio dos Heróis ainda está bloqueado.','var(--gold)'); return; }
+    if(ponto && ponto.locked){ toast(t('ui.cidade.refugio_bloqueado'),'var(--gold)'); return; }
     const cenaExterna=ponto && (ponto.scene_externo || ponto.scene);
     if(cenaExterna && GS.scenes()[cenaExterna]){ openShop(pointId, t, cenaExterna); return; }
     GS.openRefugio(); return;
@@ -1647,7 +1647,7 @@ function _renderQuartoPainel(msg){
   const options=(msg.backgrounds||[]).map(x=>`<option value="${_esc(x)}"${x===msg.background?' selected':''}>${_esc(x)}</option>`).join('');
   ov.innerHTML=`<section class="refugio-box quarto-box" style="${msg.background?`background-image:linear-gradient(#0005,#0008),url('${_assetURL(msg.background)}')`:''}"><header><div><h2>🛏️ Quarto de ${_esc(msg.class_id||msg.owner||'aventureiro')}</h2><small>${editable?'Seu espaço privado':'Somente visualização'} · Renome individual: ${msg.renome_individual||0}</small></div><button data-q-close>✕</button></header><div class="refugio-grid"><div><h3>Baú privado ${editable?`(${items.length}/${msg.slot_limit||3})`:''}</h3>${editable?`<small>Seus ${msg.slot_limit||3} espaços (💰 ${msg.gold||0}) ficam na janela do baú, ao lado do seu inventário.</small>`:'<small>O baú privado não pode ser acessado por outro jogador.</small>'}</div><div><h3>Troféus</h3><div class="ref-trophies">${(msg.trophies||[]).map(t=>`<span title="${_esc(t.id||'troféu')}">${_esc(t.emoji||'🏆')}</span>`).join('')||'<small>Nenhum troféu alocado.</small>'}</div>${editable&&options?`<label>Fundo do quarto<select id="q-bg">${options}</select></label><button data-q-bg>Aplicar fundo</button>`:''}</div></div><footer><button data-q-close>Voltar ao refúgio</button></footer></section>`;
   document.body.appendChild(ov);
-  if(typeof InventoryModal!=='undefined' && editable){ const chest=document.createElement('button'); chest.className='ref-chest-open'; chest.textContent='🧰 Abrir baú do herói'; chest.onclick=()=>InventoryModal.openStorage('room',msg); ov.querySelector('.refugio-box')?.insertBefore(chest,ov.querySelector('.refugio-grid')); }
+  if(typeof InventoryModal!=='undefined' && editable){ const chest=document.createElement('button'); chest.className='ref-chest-open'; chest.textContent=t('ui.refugio.abrir_bau_heroi'); chest.onclick=()=>InventoryModal.openStorage('room',msg); ov.querySelector('.refugio-box')?.insertBefore(chest,ov.querySelector('.refugio-grid')); }
   // O baú pessoal (itens + ouro) mora na janela dividida — aqui ficam só troféus
   // e o fundo do quarto. Duas telas para os mesmos 3 espaços era o que confundia.
   ov.querySelectorAll('[data-q-close]').forEach(b=>b.onclick=()=>{ov.remove(); if(_refugioState)_renderRefugioPainel(_refugioState);});
@@ -1927,9 +1927,9 @@ function _adventureGoButton(adventure){
   go.className = 'worldmap-travel';
   go.textContent = 'Entrar em ' + adventure.nome;
   go.disabled = GS.myPid !== GS.cityState.host;
-  go.title = go.disabled ? 'Apenas o anfitrião inicia a expedição.' : '';
+  go.title = go.disabled ? t('ui.mundo.so_anfitriao_expedicao') : '';
   go.onclick = () => {
-    go.disabled = true; go.textContent = 'Iniciando expedição…';
+    go.disabled = true; go.textContent = t('ui.mundo.iniciando_expedicao');
     GS.worldAdventure(adventure.id);
   };
   return go;
@@ -1939,9 +1939,9 @@ function showWorldAdventurePreview(world, adventure){
   if(!_worldMapEl) return;
   _worldMapEl.innerHTML = '';
   const frame = document.createElement('div'); frame.id = 'worldmap-location-frame';
-  const img = document.createElement('img'); img.src = world.map_image; img.alt = 'Mapa de Varlúzia'; frame.appendChild(img);
+  const img = document.createElement('img'); img.src = world.map_image; img.alt = t('ui.mundo.alt_mapa_simples'); frame.appendChild(img);
   const title = document.createElement('div'); title.className = 'worldmap-location-title'; title.textContent = '⚔ ' + adventure.nome; frame.appendChild(title);
-  const back = document.createElement('button'); back.className = 'worldmap-back'; back.textContent = '← Voltar ao mapa-múndi'; back.onclick = showWorldMap; frame.appendChild(back);
+  const back = document.createElement('button'); back.className = 'worldmap-back'; back.textContent = t('ui.mundo.voltar_mapa'); back.onclick = showWorldMap; frame.appendChild(back);
   const panel = document.createElement('div'); panel.className = 'worldmap-location-info';
   const info = _adventureInfo(adventure);
   panel.innerHTML = info.html;
@@ -2212,7 +2212,7 @@ function _scenePaint(){
   }else{
     const b=document.createElement('button');b.textContent=ev.next?'Continuar ›':'Concluir cena';b.onclick=()=>{if(ev.next){_sceneRun.id=ev.next;_sceneAdvance();}else GS.sceneEnd(false);};actions.appendChild(b);
   }
-  ov.querySelector('.cscene-skip').onclick=()=>{if(confirm('Pular a cena? Os efeitos obrigatórios serão mantidos.'))GS.sceneEnd(true);};
+  ov.querySelector('.cscene-skip').onclick=()=>{if(confirm(t('ui.cena.pular_confirm')))GS.sceneEnd(true);};
 }
 function _sceneBranch(msg){ if(!_sceneRun || msg.scene_id!==_sceneRun.scene.id)return; _sceneRun.id=msg.next; _sceneAdvance(); }
 function _sceneEnd(){ const ov=document.getElementById('campaign-scene-overlay');if(ov)ov.style.display='none';_sceneRun=null; }
@@ -2725,7 +2725,7 @@ function _renderGuild(){
   const specEl = $('guild-list-spec'); if(specEl) specEl.innerHTML = sec(specs);
   // Técnicas agrupadas por faixa de recarga (3/5/8/10 rodadas) — quanto maior a
   // recarga, mais forte a técnica; deixa o trade-off recarga×poder×preço visível.
-  const _faixaLabel = { 3:'Recarga Curta (3 rodadas)', 5:'Recarga Média (5 rodadas)',
+  const _faixaLabel = { 3:'Recarga Curta (3 rodadas)', 5:t('ui.guilda.recarga_media'),
                         8:'Recarga Longa (8 rodadas)', 10:'Recarga Muito Longa (10 rodadas)' };
   const _secTecnicas = (arr) => {
     if(!arr.length) return `<div class="guild-empty">— em breve —</div>`;
@@ -2743,7 +2743,7 @@ function _renderGuild(){
 function openGuild(){
   if(!GS.cityState){ toast('Carregando guilda…','var(--blue)'); return; }
   const me = GS.me || (GS.cityState.players || []).find(p => p.id === GS.myPid);
-  if(!me){ toast('Guilda indisponível agora.','var(--danger)'); return; }
+  if(!me){ toast(t('ui.guilda.indisponivel'),'var(--danger)'); return; }
   let modal = $('guild-modal');
   if(!modal){
     modal = document.createElement('div');
@@ -2975,8 +2975,8 @@ function animarRolagemD100(resultado, onConclucao) {
           }
           const textos = {
             sucesso: '✅ SUCESSO — Criatura animada!',
-            hostil:  '💀 FALHA CATASTRÓFICA — Criatura hostil!',
-            falha:   '❌ FALHA — O cadáver permanece inerte'
+            hostil:  t('ui.animar.falha_catastrofica'),
+            falha:   t('ui.animar.falha')
           }
 
           resultEl.textContent  = textos[resultado.resultado]
@@ -3906,7 +3906,7 @@ function usarAnimarMortos() {
   const me = estado?.players?.find(p => p.id === GS.myPid && p.alive);
   const cadaveres = (estado?.corpses || []).filter(c => me &&
     Math.max(Math.abs(me.pos[0] - c.pos[0]), Math.abs(me.pos[1] - c.pos[1])) <= 3);
-  if (!cadaveres.length) { toast('Nenhum cadáver a até 3 casas para animar.'); return; }
+  if (!cadaveres.length) { toast(t('ui.animar.sem_cadaver')); return; }
   const ov = document.getElementById('ficha-overlay-jogo')
   if (ov) ov.remove()
   _iniciarModoAnimarMortos(cadaveres)
@@ -4506,7 +4506,7 @@ function corBordaPorPreco(preco){
 
 function enterDungeon(){
   if(!GS.ws || GS.ws.readyState !== 1){
-    toast('❌ Sem conexão com o servidor. Reinicie o iniciar.bat.', 'var(--red)');
+    toast(t('ui.conexao.sem_servidor_reinicie'), 'var(--red)');
     return;
   }
   send({type:'enter_dungeon'});
@@ -8822,7 +8822,7 @@ function renderBarrasSobrevivencia(p){
     const sevNome = {leve:'Leve', pesada:'Pesada', grave:'Grave'}[p.doenca.severidade] || 'Leve';
     const descs = {
       leve:  '-1 Reflexos · -1 Fortitude · -1 movimento',
-      medio: '-2 DES · -2 FOR · +1 fome/sede por ação',
+      medio: t('ui.hud.exausto_efeitos'),
       grave: '-2 CON · -2 INT'
     };
     const linhas = (p.doenca.sintomas || []).map(t => `• ${descs[t] || t}`).join('<br>');
@@ -9652,7 +9652,7 @@ function aimNextImprovisoAlvo(pendentes, i){
     openTargetModal('🪗 Improviso — Escolha o alvo', alvos, 'monster',
       id => { GS.improvisoAlvo(id, null); aimNextImprovisoAlvo(pendentes, i + 1); });
   } else if(step.alvo_tipo === 'direcao'){
-    escolherDirecaoInstrumento({ icon: '🪗', habilidade_nome: 'Improviso — Direção' },
+    escolherDirecaoInstrumento({ icon: '🪗', habilidade_nome: t('ui.instrumento.improviso_direcao') },
       (dx, dy) => { GS.improvisoAlvo(null, [dx, dy]); aimNextImprovisoAlvo(pendentes, i + 1); });
   }
 }
@@ -9698,7 +9698,7 @@ window.iniciarProvocacao = iniciarProvocacao;
 // ════════════════════════════════════════════════════════════════════════════
 
 const GUERREIRO_LUZ_BONUS_CLIENT = [
-  { id:'visao',  label:'Visão',  icone:'👁️', custo:'sede', max:2 },
+  { id:'visao',  label:t('ui.atributo.visao'),  icone:'👁️', custo:'sede', max:2 },
   { id:'ataque', label:'Ataque', icone:'⚔️', custo:'sede', max:2 },
   { id:'dano',   label:'Dano',   icone:'💥', custo:'fome', max:2 },
   { id:'ca',     label:'CA',     icone:'🛡️', custo:'fome', max:2 },
@@ -9803,9 +9803,9 @@ function iniciarModoProtetor(){
   const me = GS.me;
   if(!me || me.class_id !== 'paladin') return;
   if(!GS.isMyTurn || me.alive === false || (GS.gameState && GS.gameState.phase !== 'playing')){
-    toast('Só é possível usar Protetor no seu turno.', 'var(--orange)'); return;
+    toast(t('ui.paladino.protetor_so_turno'), 'var(--orange)'); return;
   }
-  if(me.bonus_action_used){ toast('Ação bônus já usada neste turno.', 'var(--orange)'); return; }
+  if(me.bonus_action_used){ toast(t('ui.hud.acao_bonus_ja_usada'), 'var(--orange)'); return; }
   if(me.fome < 2 || me.sede < 2){ toast('Protetor requer 🍖2 e 💧2.', 'var(--orange)'); return; }
   const alvos = _aliadosNoRaioPaladin(me, 4);
   if(!alvos.length){ toast(t('ui.hud.sem_aliado_raio4'), 'var(--orange)'); return; }
@@ -10341,9 +10341,9 @@ const PURIFICACAO_TIPOS_LEWIS = [
 function _clericPodeAgir(me){
   if(!me || me.class_id !== 'cleric') return false;
   if(!GS.isMyTurn || me.alive === false || (GS.gameState && GS.gameState.phase !== 'playing')){
-    toast('Só é possível usar milagres no seu turno.', 'var(--orange)'); return false;
+    toast(t('ui.clerigo.milagre_so_turno'), 'var(--orange)'); return false;
   }
-  if(me.action_done){ toast('Ação principal já usada neste turno.', 'var(--orange)'); return false; }
+  if(me.action_done){ toast(t('ui.hud.acao_principal_ja_usada'), 'var(--orange)'); return false; }
   return true;
 }
 
@@ -11262,7 +11262,7 @@ function castarPergaminho(item) {
   const me = _meVivoNaVez();
   if (!me) { toast(t('ui.hud.fora_de_turno_ou_acao_usada'), '#ff6b6b'); return; }
   if (me.class_id !== 'mage' && me.class_id !== 'cleric') {
-    toast('Apenas mago ou clérigo usam pergaminhos.', '#ff6b6b'); return;
+    toast(t('ui.pergaminho.so_conjurador_usa'), '#ff6b6b'); return;
   }
   if (magiaId === 'conjurar_elemental') {
     send({ type: 'use_scroll', item_id: item.id });
@@ -11439,7 +11439,7 @@ function _iniciarModoAnimarMortos(cadaveres) {
       'font-size:11px;letter-spacing:2px;padding:8px 20px;pointer-events:none;z-index:1000;';
     document.body.appendChild(leg);
   }
-  leg.textContent = '💀 ANIMAR MORTOS — clique em um cadáver verde a até 3 casas | ESC cancela';
+  leg.textContent = t('ui.animar.modo_legenda');
   leg.style.borderColor = '#b36bff';
   leg.style.color = '#d98cff';
   leg.style.display = 'block';
@@ -11451,7 +11451,7 @@ function _clickTileAnimarMortos(tx, ty) {
   if (!mode) return;
   const corpse = (GS.gameState?.corpses || []).find(c =>
     c.pos[0] === tx && c.pos[1] === ty && mode.cadaveres.has(c.id));
-  if (!corpse) { toast('Clique em um cadáver destacado dentro do alcance.', '#ff6b6b'); return; }
+  if (!corpse) { toast(t('ui.animar.clique_cadaver'), '#ff6b6b'); return; }
   GS.animarMortos(corpse.id);
   _encerrarModoAnimarMortos();
 }
@@ -11587,7 +11587,7 @@ window._encerrarMiraArremesso = _encerrarMiraArremesso;
 
 // ── Conjurar Elemental: escolha do tipo (4 elementos) ───────────────────────
 function _abrirPickerElemental() {
-  if (!_meVivoNaVez()) { toast('Não é a sua vez ou a ação já foi usada.', '#ff6b6b'); return; }
+  if (!_meVivoNaVez()) { toast(t('ui.hud.fora_de_turno_ou_acao_usada'), '#ff6b6b'); return; }
   _fecharPickerElemental();
   const box = document.createElement('div');
   box.id = 'picker-elemental';
@@ -11607,7 +11607,7 @@ function _abrirPickerElemental() {
 }
 function _conjurarElemental(tipo) {
   send({ type: 'magia', magia_id: 'conjurar_elemental', tipo_elemental: tipo });
-  toast('🌪️ Elemental conjurado! Encerre o turno para controlá-lo.', '#c8a951');
+  toast(t('ui.elemental.conjurado'), '#c8a951');
   _fecharPickerElemental();
 }
 function _fecharPickerElemental() {
@@ -12431,7 +12431,7 @@ function abrirFichaMonstro(m){
 
 function abrirMenuHabilidadesMonstro(m){
   const habilidades = m && (m.special_abilities || []);
-  if(!m || !habilidades.length){ toast('Este monstro não possui habilidades.', 'var(--gold)'); return; }
+  if(!m || !habilidades.length){ toast(t('ui.mestre.monstro_sem_habilidades'), 'var(--gold)'); return; }
   fecharFichaMonstro();
   fecharMenuMagias();
   let overlay = document.getElementById('menu-habilidades-overlay');
@@ -12486,13 +12486,13 @@ function _mestreAtivarMagia(m, sid){
     const d=Math.max(Math.abs(m.pos[0]-o.pos[0]),Math.abs(m.pos[1]-o.pos[1]));
     return alcanceLegacy <= 0 || d <= alcanceLegacy;
   });
-  if(!alvos.length){ toast('Nenhum monstro disponível como alvo.', 'var(--orange)'); return; }
+  if(!alvos.length){ toast(t('ui.mestre.sem_alvo_monstro'), 'var(--orange)'); return; }
   openTargetModal(`${magia.icone||'✦'} ${magia.nome||sid} — escolha o alvo`,alvos,'monster',id=>GS.mestreUsarMagia(m.id,sid,id));
 }
 
 function abrirMenuMagiasMonstro(m){
   const configs=m && (m.monster_spells||[]);
-  if(!m || !configs.length){ toast('Este monstro não possui magias.', 'var(--gold)'); return; }
+  if(!m || !configs.length){ toast(t('ui.mestre.monstro_sem_magias'), 'var(--gold)'); return; }
   fecharFichaMonstro();
   fecharMenuHabilidades();
   let overlay=document.getElementById('menu-magias-overlay');
@@ -12520,7 +12520,7 @@ function _mestreUsarItemFicha(m, iid){
   // Arremessável / pergaminho de alvo: mira um herói.
   if(it.effect === 'throwable' || it.effect === 'scroll'){
     const alvos = (st.players||[]).filter(p=>p.alive);
-    if(!alvos.length){ toast('Nenhum herói vivo.', 'var(--orange)'); return; }
+    if(!alvos.length){ toast(t('ui.mestre.sem_heroi_vivo'), 'var(--orange)'); return; }
     openTargetModal(`${it.name||iid} — Escolha o alvo`, alvos, 'player',
       (alvoId)=> GS.mestreUsarItem(m.id, iid, alvoId, null, null));
     return;
@@ -12616,7 +12616,7 @@ function _crPorSalaMapa(state){
 function abrirMinimapaCR(){
   if(!GS.isMaster()) return;
   const state = GS.gameState;
-  if(!state || !state.rooms){ toast('Minimapa indisponível.', 'var(--text2)'); return; }
+  if(!state || !state.rooms){ toast(t('ui.mestre.minimapa_indisponivel'), 'var(--text2)'); return; }
   let host = document.getElementById('minimapa-cr');
   if(!host){ host = document.createElement('div'); host.id = 'minimapa-cr'; document.body.appendChild(host); }
   host.style.display = 'flex';
@@ -13279,7 +13279,7 @@ function usarItemComprado(index){
     if(GS.gameState) renderMyPanel(GS.gameState);
     toast(`Usou ${item.nome}`, 'var(--gold)');
   } else {
-    toast('Este item não é consumível.', 'var(--gold)');
+    toast(t('ui.item.nao_consumivel'), 'var(--gold)');
   }
 }
 
@@ -13312,7 +13312,7 @@ function _drainChestTakeQueue(){
     : { type:'take_from_chest', chest_id:op.chestId, kind:op.kind, index:op.index };
   if(!send(payload)){
     clearPendingChestTake({ restore: true });
-    toast('Sem conexão com o servidor.');
+    toast(t('ui.conexao.sem_servidor'));
     return;
   }
   _pendingChestTakeTimer = setTimeout(() => clearPendingChestTake({ restore: true }), 5000);
@@ -13835,7 +13835,7 @@ function endTurn(){
   // que um clique atrasado envie um turno fora da vez do jogador.
   if(!btn || btn.disabled) return;
   getAudioContext();
-  if(!GS.endTurn()) toast('Sem conexão com o servidor.', 'var(--red)');
+  if(!GS.endTurn()) toast(t('ui.conexao.sem_servidor'), 'var(--red)');
 }
 
 // Mantém o comando de encerrar turno ligado mesmo se o código for carregado em
@@ -14208,7 +14208,7 @@ function _atualizarMenuMagiasSeAberto(){
 
 function ativarMagiaDoMenu(magiaId){
   const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid);
-  if(!me || GS.gameState.phase !== 'playing') { toast('Magias só podem ser usadas na masmorra.'); return; }
+  if(!me || GS.gameState.phase !== 'playing') { toast(t('ui.magia.so_na_masmorra')); return; }
   fecharMenuMagias();
   castarMagia(magiaId);
 }
@@ -14364,7 +14364,7 @@ function iniciarTecelagemArcanaMenu(capacidade){
   const state = GS.gameState;
   const me = state?.players?.find(p => p.id === GS.myPid);
   if(!me || me.class_id !== 'mage' || state.phase !== 'playing' || !GS.isMyTurn || !me.alive){
-    toast('Tecelagem Arcana só pode ser preparada no turno do mago.'); return;
+    toast(t('ui.metamagia.tecelagem_so_turno')); return;
   }
   _armarMetamagiasDoMenu(me, []);
   if(capacidade === 3){
@@ -14372,7 +14372,7 @@ function iniciarTecelagemArcanaMenu(capacidade){
     window._comboTecelagemArcanaMenu = null;
     fecharMenuHabilidades();
     renderMyPanel(state);
-    toast('Três metamagias armadas. Escolha a magia e o alvo manualmente.', 'var(--gold)');
+    toast(t('ui.metamagia.tres_armadas'), 'var(--gold)');
     return;
   }
   window._comboTecelagemArcanaMenu = {capacidade:2};
@@ -14383,7 +14383,7 @@ function iniciarComboGuerreiroMenu(capacidade){
   const state = GS.gameState;
   const me = state && state.players.find(p => p.id === GS.myPid);
   if(!me || me.class_id !== 'warrior' || state.phase !== 'playing' || !GS.isMyTurn || !me.alive){
-    toast('A combinação só pode ser preparada no turno do guerreiro.'); return;
+    toast(t('ui.habilidade.combo_so_turno')); return;
   }
   GS.clearWarriorSelected();
   if(capacidade === 3){
@@ -14392,7 +14392,7 @@ function iniciarComboGuerreiroMenu(capacidade){
     window._ataqueGuerreiroArmado = true;
     fecharMenuHabilidades();
     renderMyPanel(state);
-    toast('Três habilidades armadas. Escolha o alvo manualmente para atacar.', 'var(--gold)');
+    toast(t('ui.habilidade.tres_armadas'), 'var(--gold)');
     return;
   }
   window._comboGuerreiroMenu = {capacidade:2};
@@ -14406,7 +14406,7 @@ function _cancelarAtaqueGuerreiroArmado(){
   window._ataqueGuerreiroArmado = false;
   document.getElementById('menu-habilidades-overlay')?.classList.remove('open');
   if(GS.gameState) renderMyPanel(GS.gameState);
-  toast('Combinação de ataque cancelada.', 'var(--text2)');
+  toast(t('ui.habilidade.combinacao_cancelada'), 'var(--text2)');
   return true;
 }
 
@@ -14428,7 +14428,7 @@ function mostrarTooltipMenuHabilidade(event, habilidadeId){
     document.body.appendChild(tooltip);
   }
   const nome = h.name || h.nome || habilidadeId;
-  const descricao = h.description || h.desc || 'Sem descrição disponível.';
+  const descricao = h.description || h.desc || t('ui.habilidade.sem_descricao');
   const tipo = (h.tipo || h.categoria || 'habilidade').replaceAll('_', ' ').toUpperCase();
   const custos = [];
   if(h.fome_cost || h.custo_fome) custos.push(`🍖 ${h.fome_cost || h.custo_fome}`);
@@ -14591,7 +14591,7 @@ function ativarTecnicaGuildaDoMenu(tid){
 
 function abrirMenuHabilidades(pid){
   const player = _playerMenuMagias(pid);
-  if(!player){ toast('Ficha de habilidades indisponível agora.'); return; }
+  if(!player){ toast(t('ui.habilidade.ficha_indisponivel')); return; }
   let overlay = document.getElementById('menu-habilidades-overlay');
   if(!overlay){
     overlay = document.createElement('div');
@@ -14615,7 +14615,7 @@ function abrirMenuHabilidades(pid){
   if(player.class_id === 'mage' && !base.some(s => s.id === 'animar_mortos')){
     base.unshift({id:'animar_mortos', name:'Animar Mortos', icon:'💀', tipo:'acao_principal',
       fome_cost:20, sede_cost:20,
-      description:'Clique em um cadáver a até 3 casas para criar um servo morto-vivo.'});
+      description:t('ui.animar.clique_cadaver_3')});
   }
   if(player.class_id === 'bard'){
     const inst = player.gear && player.gear.off_hand;
@@ -14759,7 +14759,7 @@ function beginThrowSlot(slot){
   if(!me) return;
   const item = slot === 'off_hand' ? (me.gear && me.gear.off_hand) : me.weapon;
   const tr = item && item.throw_range;
-  if(!tr){ toast('Nenhuma arma de arremesso nessa mão.'); return; }
+  if(!tr){ toast(t('ui.arremesso.sem_arma_na_mao')); return; }
   const nome = (item && item.name) || 'arma';
   const pp = me.pos || [0,0];
   const targets = (st.monsters||[]).filter(m=>m && m.hp>0 &&
@@ -15437,7 +15437,7 @@ function restoreTileSpacing3D(){
   _tileFootprint3D = 0.94;
   const btn=$('btn-tile-spacing-reset'); if(btn){ btn.disabled=true; btn.textContent='✓ Espaço 0,94'; }
   if(mode3D && GS.gameState){ dispose3D(); renderMap3D(GS.gameState); }
-  toast('↶ Espaçamento 3D restaurado para 0,94.');
+  toast(t('ui.hud.espaco_restaurado'));
 }
 
 function toggle3D(){
@@ -17953,7 +17953,7 @@ function _glbMotivo(error){
   // falha de CONEXÃO (socket morto/recusado), não resposta do servidor.
   const alvo = error.target;
   if(alvo && typeof alvo.status === 'number'){
-    if(alvo.status === 0) return 'conexão falhou (o servidor está no ar?)';
+    if(alvo.status === 0) return t('ui.diag.conexao_falhou');
     return 'HTTP ' + alvo.status + (alvo.statusText ? ' ' + alvo.statusText : '');
   }
   const m = String(error.message || error);
@@ -23589,7 +23589,7 @@ function _buildCsHeroGrid(){
   if(!canvas || !canvas.parentNode) return;
   const grid = document.createElement('div');
   grid.id = 'cs-hero-grid';
-  grid.setAttribute('aria-label', 'Seleção de personagens');
+  grid.setAttribute('aria-label', t('ui.selecao.aria_grid'));
   grid.innerHTML = _CS_GRID_HEROES.map(h =>
     `<button type="button" class="cs-hero-tile" data-class-id="${h.id}" ` +
     `style="--cs-col:${h.col};--cs-row:${h.row}" aria-label="Selecionar ${h.label}"></button>`
@@ -23767,7 +23767,7 @@ function initClassSelectFull(){
 
   _startCsfLoop();
   _csfShowPanel(defaultSel, false);
-  document.getElementById('cs-hint').textContent = 'Escolha seu herói — toque para selecionar';
+  document.getElementById('cs-hint').textContent = t('ui.selecao.escolha_heroi_toque');
   toggleCsInfo(false);   // celular: aba de características começa fechada
 }
 
@@ -23959,7 +23959,7 @@ window.toggleCsInfo = toggleCsInfo;
 function csfSelectHero(classId){
   if(!csf) return;
   if(csf.takenIds && csf.takenIds.has(classId)){
-    toast('Personagem já escolhido por outro jogador.', 'var(--orange)');
+    toast(t('ui.selecao.ja_escolhido'), 'var(--orange)');
     return;
   }
   if(classId === csf.selectedId){
@@ -24276,7 +24276,7 @@ function csUpdateLobbyBar(msg){
       }
       const jaMestre = GS.isMaster();
       btnMestre.className = 'lobby-master-toggle' + (jaMestre ? ' ativo' : '');
-      btnMestre.textContent = jaMestre ? '🎭 Mestre — clique para virar herói' : '🎭 Assumir como Mestre';
+      btnMestre.textContent = jaMestre ? t('ui.selecao.mestre_virar_heroi') : '🎭 Assumir como Mestre';
       btnMestre.onclick = () => GS.claimRole(jaMestre ? 'hero' : 'master');
     }
   }
@@ -24336,8 +24336,8 @@ function _csApplyMasterMode(){
   if(confirm) confirm.style.display = jaMestre ? 'none' : '';
   if(infoBtn) infoBtn.style.display = jaMestre ? 'none' : '';
   if(hint) hint.textContent = jaMestre
-    ? '🎭 Você é o Mestre — controlará os monstros na masmorra.'
-    : 'Escolha seu herói — toque para selecionar';
+    ? t('ui.selecao.voce_e_mestre')
+    : t('ui.selecao.escolha_heroi_toque');
   // Carrossel 3D de peões ↔ imagem do mestre
   const canvas = document.getElementById('cs-canvas');
   let mimg = document.getElementById('cs-master-portrait');
@@ -24360,7 +24360,7 @@ function _csApplyMasterMode(){
 function csConfirmClass(){
   if(!csf || !csf.selectedId) return;
   if(csf.takenIds && csf.takenIds.has(csf.selectedId)){
-    toast('Personagem já escolhido por outro jogador.', 'var(--orange)');
+    toast(t('ui.selecao.ja_escolhido'), 'var(--orange)');
     return;
   }
   send({type:'select_class', class_id: csf.selectedId});
@@ -24542,9 +24542,9 @@ function onClickTileArremesso(tileClicado){
     m.userData.tilePos.x === tx && m.userData.tilePos.y === ty);
   if(!meshValido){ GS.adicionarLog('⚠️ Fora do alcance de arremesso'); return; }
   const tile = meshValido.userData.tilePos;
-  if(!tile.temInimigo){ GS.adicionarLog('⚠️ Arremesse em direção a um inimigo'); return; }
+  if(!tile.temInimigo){ GS.adicionarLog(t('ui.arremesso.direcao_inimigo')); return; }
   const inimigo = getInimigoArremesso(tx, ty);
-  if(!inimigo){ GS.adicionarLog('⚠️ Inimigo não encontrado'); return; }
+  if(!inimigo){ GS.adicionarLog(t('ui.arremesso.inimigo_nao_encontrado')); return; }
   send({ type: 'throw', target_id: inimigo.id });   // handle_throw → vira ação bônus se já agiu
   limparHighlightArremesso();
 }
@@ -24598,11 +24598,11 @@ function removerLegendaArremesso(){
 // e ESC para cancelar. Exposta globalmente (onclick do botão do painel).
 function iniciarModoArremessoAdagaSecundaria(){
   if(window._modoArremessoPrincipal){ toast('Cancele o arremesso atual primeiro (ESC).', 'var(--gold)'); return; }
-  if(!g3){ toast('Arremesso com mira disponível apenas na visão 3D.', 'var(--gold)'); return; }
+  if(!g3){ toast(t('ui.arremesso.so_3d'), 'var(--gold)'); return; }
   const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid && p.alive);
   if(!me){ return; }
   const offThrow = me.gear && me.gear.off_hand && me.gear.off_hand.throw_range;
-  if(!offThrow){ toast('Nenhuma adaga secundária arremessável equipada.', 'var(--gold)'); return; }
+  if(!offThrow){ toast(t('ui.arremesso.sem_adaga_secundaria'), 'var(--gold)'); return; }
   window._modoArremessoAtivo = true;
   mostrarHighlightArremesso(me.pos);
   mostrarLegendaArremesso();
@@ -24703,9 +24703,9 @@ function onClickTileArremessoPrincipal(tileClicado){
     m.userData.tilePos.x === tx && m.userData.tilePos.y === ty);
   if(!meshValido){ GS.adicionarLog('⚠️ Fora do alcance de arremesso'); return; }
   const tile = meshValido.userData.tilePos;
-  if(!tile.temInimigo){ GS.adicionarLog('⚠️ Arremesse em direção a um inimigo'); return; }
+  if(!tile.temInimigo){ GS.adicionarLog(t('ui.arremesso.direcao_inimigo')); return; }
   const inimigo = getInimigoArremesso(tx, ty);
-  if(!inimigo){ GS.adicionarLog('⚠️ Inimigo não encontrado'); return; }
+  if(!inimigo){ GS.adicionarLog(t('ui.arremesso.inimigo_nao_encontrado')); return; }
   send({ type: 'throw', target_id: inimigo.id });   // servidor decide principal/bônus e o slot (mão principal primeiro)
   limparHighlightArremessoPrincipal();
 }
@@ -24842,9 +24842,9 @@ function onClickTileArremessoLanca(tileClicado){
     m.userData.tilePos.x === tx && m.userData.tilePos.y === ty);
   if(!meshValido){ GS.adicionarLog('⚠️ Fora do alcance de arremesso'); return; }
   const tile = meshValido.userData.tilePos;
-  if(!tile.temInimigo){ GS.adicionarLog('⚠️ Arremesse em direção a um inimigo'); return; }
+  if(!tile.temInimigo){ GS.adicionarLog(t('ui.arremesso.direcao_inimigo')); return; }
   const inimigo = getInimigoArremesso(tx, ty);
-  if(!inimigo){ GS.adicionarLog('⚠️ Inimigo não encontrado'); return; }
+  if(!inimigo){ GS.adicionarLog(t('ui.arremesso.inimigo_nao_encontrado')); return; }
   send({ type: 'throw', target_id: inimigo.id });   // servidor decide principal/bônus e o slot
   limparHighlightArremessoLanca();
 }
@@ -25762,7 +25762,7 @@ GS.on('gameState', msg => {
     const soPris = _pr && _pr.alive && _pr.freed && _pr.rescuer_pid === GS.myPid
       && !((msg.players.find(p=>p.id===GS.myPid)?.animados||[]).some(a=>a.vida_atual>0));
     toast(soPris
-      ? '🧍 Mova o prisioneiro — clique nele e depois numa casa; então encerre o turno.'
+      ? t('ui.hud.mova_prisioneiro')
       : `💀 Turno dos seus servos${proximo ? ` — ${proximo.nome} está selecionado.` : ''}`);
     if (mode3D && g3) renderMap3D(msg); else renderMap(msg);
   }
@@ -26013,7 +26013,7 @@ window._toggleMagiaCriacao = function(id){
 
 window._confirmarMagiasCriacao = function(){
   const sel = window._magiasCriacaoSel || [];
-  if(sel.length !== 2){ toast('Escolha 2 magias de 1º círculo.', 'var(--orange)'); return; }
+  if(sel.length !== 2){ toast(t('ui.selecao.escolha_2_magias'), 'var(--orange)'); return; }
   GS.setKnownSpells(sel);
   const el = document.getElementById('overlay-selecao-criacao');
   if (el) el.remove();
@@ -26107,7 +26107,7 @@ function _relatorioArte3D(){
   // Billboard PNG: o estado mora no cache de texturas, não no de GLB.
   const estadoPNG = (caminho, cacheKey) => {
     if(_pawnTexErro[cacheKey]) return { tipo: 'PNG', caminho, estado: 'erro',
-                                        motivo: 'arquivo não carregou (404 ou rede)' };
+                                        motivo: t('ui.diag.arquivo_nao_carregou') };
     const tex = _pawnTexCache[cacheKey];
     const pronta = !!(tex && tex.image && tex.image.width);
     return { tipo: 'PNG', caminho, estado: pronta ? 'carregado' : 'carregando' };
@@ -26215,7 +26215,7 @@ function abrirDiagnosticoArte3D(){
   el.querySelector('#diag-copiar').onclick = () => {
     const txt = _relatorioArte3DTexto();
     navigator.clipboard?.writeText(txt).then(
-      () => toast('Relatório copiado.', 'var(--green)'),
+      () => toast(t('ui.diag.relatorio_copiado'), 'var(--green)'),
       () => console.log(txt));
     console.log(txt);
   };
