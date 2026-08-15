@@ -2077,3 +2077,44 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `tools/test_vocabulario_cliente.js` (55). Plano em
 > `docs/superpowers/plans/2026-08-14-idioma-etapa5-lote1-catalogos.md`, com a revisão de
 > meio-caminho e os quatro fatos medidos que a motivaram.
+
+> **Idioma — Lote 2 da etapa 5: as funções grandes do `game.js`.** Traduz os **203
+> literais das 11 maiores funções** — e, ao contrário do Lote 1 (estrutura de dados),
+> este mexe em **templates de render**: `t('chave')` dentro do template, `t('chave',
+> {param})` quando há interpolação, `data-i18n` só onde o elemento inteiro é um rótulo
+> FIXO (o `_i18nApply` usa `textContent`, e um elemento cujo conteúdo vem de `_rotulo`
+> seria sobrescrito). Placar **396 → 350**; ao todo a etapa 5 saiu de 707 para 350.
+>
+> **O placar passou a atribuir cada literal à função de TOPO** (`RE_FN` ancorada na
+> coluna 0). Antes, uma arrow interna de uma linha — `const L = (txt) => …` dentro de um
+> render — virava "dona" dos literais da função que a contém: `L`/`add`/`mkSelect`/
+> `_wToggle` levavam 51 que não eram deles. Isso tornava o recorte por tamanho de função
+> um artefato E deixava o conjunto `FECHADAS` sem sentido (marcar `L` não impede
+> regressão nenhuma). Hoje `FECHADAS` tem 10 funções e é a anti-regressão do lote.
+>
+> **`tools/js_strings.py` ignora comentário HTML dentro de template.** Um template
+> multilinha conta como UM literal, então um `<!-- FOME E SEDE -->` no meio mantinha a
+> função inteira no placar mesmo com todos os rótulos traduzidos. O comentário é para o
+> desenvolvedor e o jogador nunca o vê.
+>
+> **LOOKUP POR TEXTO EM PORTUGUÊS É O DEFEITO RECORRENTE DESTA ETAPA — já apareceu
+> quatro vezes.** `ABILITY_NAME_TO_ID` (5.0), as skills do `_CSD` (Lote 1), o
+> `trapImages` do popup de armadilha e o `includes('não encontrada')` da tela de conta.
+> O modo de falha é sempre o mesmo: **a arte some ou o ramo não dispara, em silêncio**,
+> sem erro no console e sem teste que olhe imagem. **Antes de traduzir uma função,
+> procure mapas e condicionais chaveados por texto.** Os consertos seguem um padrão só —
+> mandar um **id** e casar por ele: `data-ability-id` nos botões de habilidade, `tipo_id`
+> no `trap_result` (`_enviar_trap_result`, 16 sítios de chamada; dois deles não tinham
+> `arm` em escopo e usam o literal `'buraco_escondido'`). O caso da conta **ainda não foi
+> consertado**: funciona só porque `server.py:1856` devolve string crua, fora do `T()` —
+> migrá-la quebra o cliente. Está comentado nos dois lados.
+>
+> **Duas armadilhas de execução, as duas pagas:** `renderPurchasedItems` declara `const t
+> = document.createElement('div')`, que **sombreia o `t()` global** (use `_rotulo` ali); e
+> o servidor rodando **trava a escrita** de `server.py`/`game.js` (`OSError: Errno 22`) —
+> pare o preview antes de gravar por script, e note que um `node --check` depois de um
+> write que falhou valida o arquivo ANTIGO e dá falso verde. Testes:
+> `tools/test_interface.py` (24, com a checagem cruzada dos ids de `trapImages` contra o
+> `ARMADILHAS` do servidor), `tools/js_strings.py` (10). Plano em
+> `docs/superpowers/plans/2026-08-15-idioma-etapa5-lote2-funcoes-grandes.md`.
+> **Falta o Lote 3:** 350 no `game.js`, 69 no `gameState.js`, 9 no `inventoryModal.js`.
