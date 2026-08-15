@@ -112,59 +112,59 @@ window.LANG_INTERFACE = {
     "pt": "✨ Varinha"
   },
   "ui.magia.abencoar.desc": {
-    "en": "",
+    "en": "<b>Area:</b> 6x6 centred on Lewis<br>\n               <b>Buff:</b> +1 attack, damage, AC, resistance<br>\n               <b>Duration:</b> 1d4+1 rounds<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Área:</b> 6x6 centrado em Lewis<br>\n               <b>Buff:</b> +1 ataque, dano, CA, resistência<br>\n               <b>Duração:</b> 1d4+1 rodadas<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
   },
   "ui.magia.abencoar_arma.desc": {
-    "en": "",
+    "en": "<b>Range:</b> 6 squares<br>\n               <b>Buff:</b> +1 attack and damage on the weapon<br>\n               <b>Blessed weapon:</b> ignores reductions, halved damage and physical immunity<br>\n               <b>Duration:</b> 1d6+2 rounds<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Alcance:</b> 6 quadrados<br>\n               <b>Buff:</b> +1 ataque e dano na arma<br>\n               <b>Arma abençoada:</b> ignora reduções, dano pela metade e imunidade física<br>\n               <b>Duração:</b> 1d6+2 rodadas<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
   },
   "ui.magia.amaldicoar.desc": {
-    "en": "",
+    "en": "<b>Area:</b> 3x3 centred on the target<br>\n               <b>Debuff:</b> -1 attack, damage, AC, resistance<br>\n               <b>Duration:</b> 1d4+1 rounds<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Área:</b> 3x3 centrado no alvo<br>\n               <b>Debuff:</b> -1 ataque, dano, CA, resistência<br>\n               <b>Duração:</b> 1d4+1 rodadas<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
   },
   "ui.magia.barreira_arcana.desc": {
-    "en": "",
+    "en": "<b>Effect:</b> reduces all incoming damage by 5<br>\n               <b>Duration:</b> 1d6 + 1 round per mage level + 1 fixed round<br>\n               <b>Extend:</b> +1 round<br>\n               <b>Empower:</b> reduction becomes 7<br>\n               <b>Heighten:</b> does not apply (no saving throw)",
     "pt": "<b>Efeito:</b> reduz 5 de todo dano recebido<br>\n               <b>Duração:</b> 1d6 + 1 rodada por nível do mago + 1 rodada fixa<br>\n               <b>Estender:</b> +1 rodada<br>\n               <b>Fortalecer:</b> redução passa a 7<br>\n               <b>Aprimorar:</b> não se aplica (sem teste de resistência)"
   },
   "ui.magia.bola_fogo.desc": {
-    "en": "",
+    "en": "<b>Range:</b> 5 squares<br>\n               <b>Area:</b> 3×3, centred on the chosen point<br>\n               <b>R1:</b> 1d6 per level | Reflex: half<br>\n               <b>R2:</b> half of the R1 damage<br>\n               <b>R3:</b> half of the R2 damage (Extend: +1 residual round)<br>\n               <b>Area persists:</b> entering takes damage, leaving avoids further<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Alcance:</b> 5 casas<br>\n               <b>Área:</b> 3×3, centrada no ponto escolhido<br>\n               <b>R1:</b> 1d6 por nível | Reflexos: metade<br>\n               <b>R2:</b> metade do dano R1<br>\n               <b>R3:</b> metade do dano R2 (Estender: +1 rodada residual)<br>\n               <b>Área persiste:</b> entrar sofre dano, sair evita futuro<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
   },
   "ui.magia.clarividencia.desc": {
-    "en": "",
+    "en": "<b>Range:</b> the whole map (aim anywhere)<br>\n               <b>Area:</b> 4x4 (scales with level)<br>\n               <b>Effect:</b> reveals the fog, the monsters and the traps there<br>\n               <b>Duration:</b> 2 rounds<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Alcance:</b> o mapa inteiro (mire em qualquer lugar)<br>\n               <b>Área:</b> 4x4 (escala com nível)<br>\n               <b>Efeito:</b> revela a névoa, os monstros e as armadilhas do local<br>\n               <b>Duração:</b> 2 rodadas<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
   },
   "ui.magia.comando.desc": {
-    "en": "",
+    "en": "<b>Save:</b> Will<br>\n               <b>Target:</b> 1 monster (constructs, undead and those immune to enchantment resist)<br>\n               <b>Fail:</b> on its next turn, YOU direct the monster — movement, main action, abilities and items<br>\n               <b>Duration:</b> 1 turn<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Save:</b> Vontade<br>\n               <b>Alvo:</b> 1 monstro (construtos, mortos-vivos e imunes a encantamento resistem)<br>\n               <b>Falha:</b> no próximo turno dele, VOCÊ dirige o monstro — movimento, ação principal, habilidades e itens<br>\n               <b>Duração:</b> 1 turno<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
   },
   "ui.magia.conjurar_elemental.desc": {
-    "en": "",
+    "en": "<b>Types:</b> Fire (HP18 2d6), Lightning (HP20 line),\n               Ice (HP22 -2phys), Stone (HP26 ½phys)<br>\n               <b>Control:</b> acts after Lewis, 6 sq. movement<br>\n               <b>⚠️ The blast hits allies",
     "pt": "<b>Tipos:</b> Fogo (HP18 2d6), Elétrico (HP20 linha),\n               Gelo (HP22 -2fís), Pedra (HP26 ½fís)<br>\n               <b>Controle:</b> age após Lewis, 6 quad. movimento<br>\n               <b>⚠️ Explosão afeta aliados"
   },
   "ui.magia.contramagica.desc": {
-    "en": "",
+    "en": "<b>Type:</b> Reaction (off-turn)<br>\n               <b>Mechanic:</b> d20+INT vs the enemy's d20+bonus<br>\n               <b>Success:</b> spell cancelled + enemy loses its action<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot on use",
     "pt": "<b>Tipo:</b> Reação (fora do turno)<br>\n               <b>Mecânica:</b> d20+INT vs inimigo d20+bônus<br>\n               <b>Sucesso:</b> magia cancelada + inimigo perde ação<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot ao usar"
   },
   "ui.magia.criar_alimentos.desc": {
-    "en": "",
+    "en": "<b>Creates:</b> a chest on a free adjacent square<br>\n               <b>Contents:</b> 1d4+2 random tavern foods<br>\n               <b>Empower:</b> multiplies the final item count<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Cria:</b> baú em uma casa adjacente livre<br>\n               <b>Conteúdo:</b> 1d4+2 alimentos aleatórios da taverna<br>\n               <b>Fortalecer:</b> multiplica a quantidade final de itens<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
   },
   "ui.magia.dominar_mente.desc": {
-    "en": "",
+    "en": "<b>Save:</b> Will<br>\n               <b>Target:</b> 1 monster (constructs, undead and those immune to enchantment resist)<br>\n               <b>Fail:</b> YOU direct the monster on each of its turns for 1d4+1 rounds<br>\n               <b>New save:</b> each point of damage taken gives a cumulative +2 on the next Will; passing breaks the control<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Save:</b> Vontade<br>\n               <b>Alvo:</b> 1 monstro (construtos, mortos-vivos e imunes a encantamento resistem)<br>\n               <b>Falha:</b> VOCÊ dirige o monstro a cada turno dele por 1d4+1 rodadas<br>\n               <b>Novo teste:</b> cada dano sofrido dá +2 cumulativo na próxima Vontade; passar rompe o controle<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
   },
   "ui.magia.dominar_morto_vivo.desc": {
-    "en": "",
+    "en": "<b>Requires:</b> an undead target<br>\n               <b>Save:</b> Will (bonus = CR) on casting and every round<br>\n               <b>Fail:</b> becomes a temporary servant (acts in the servants' phase)<br>\n               <b>3 fails in a row:</b> PERMANENT control<br>\n               <b>Passing:</b> breaks the control (turns hostile again) — recast<br>\n               <b>Single slot</b> · does not count towards Animate Dead",
     "pt": "<b>Requer:</b> alvo do tipo morto-vivo<br>\n               <b>Save:</b> Vontade (bônus = ND) ao lançar e a cada rodada<br>\n               <b>Falha:</b> vira servo temporário (age na fase dos servos)<br>\n               <b>3 falhas seguidas:</b> controle PERMANENTE<br>\n               <b>Passar:</b> quebra o controle (volta hostil) — relançar<br>\n               <b>Slot único</b> · não conta para Animar Mortos"
   },
   "ui.magia.invisibilidade.desc": {
-    "en": "",
+    "en": "<b>Effect:</b> enemies cannot attack you<br>\n               <b>Attack:</b> with advantage (higher of 2d20) + sneak<br>\n               <b>Breaks:</b> on attacking or casting a spell<br>\n               <b>Duration:</b> 1d6+1 rounds",
     "pt": "<b>Efeito:</b> inimigos não podem atacar<br>\n               <b>Ataque:</b> com vantagem (2d20 maior) + furtivo<br>\n               <b>Quebra:</b> ao atacar ou lançar magia<br>\n               <b>Duração:</b> 1d6+1 rodadas"
   },
   "ui.magia.jato_ar.desc": {
-    "en": "",
+    "en": "<b>Cone:</b> 4 squares long, 4 wide at the base<br>\n               <b>Damage:</b> 1d6 per level<br>\n               <b>Failed Reflex:</b> pushes 1d6 squares<br>\n               <b>Success:</b> pushes 2 squares<br>\n               <b>Wall collision:</b> +1d4 damage",
     "pt": "<b>Cone:</b> 4 quadrados comp., 4 base<br>\n               <b>Dano:</b> 1d6 por nível<br>\n               <b>Falha Reflexos:</b> empurra 1d6 quadrados<br>\n               <b>Sucesso:</b> empurra 2 quadrados<br>\n               <b>Colisão parede:</b> +1d4 dano"
   },
   "ui.magia.lentidao.desc": {
