@@ -315,10 +315,10 @@ document.body.innerHTML = `
     <div id="cs-progress-wrap"><div id="cs-progress-fill"></div></div>
     <button id="cs-btn-confirm" onclick="csConfirmClass()">⚔ Partir para a Aventura</button>
   </div>
-  <div id="cs-hint">Escolha seu herói</div>
+  <div id="cs-hint" data-i18n="ui.selecao.escolha_heroi">Escolha seu herói</div>
   <!-- Celular: fundo + botão flutuante para abrir/fechar a aba de características -->
   <div id="cs-info-backdrop" onclick="toggleCsInfo(false)"></div>
-  <button id="cs-info-btn" onclick="toggleCsInfo()" title="Ver características do herói">ℹ️ Características</button>
+  <button id="cs-info-btn" onclick="toggleCsInfo()" data-i18n-title="ui.selecao.ver_caracteristicas_title" title="Ver características do herói"><span data-i18n="ui.selecao.caracteristicas">ℹ️ Características</span></button>
 </div>
 
 
@@ -361,9 +361,9 @@ document.body.innerHTML = `
       <span class="turn-badge" id="turn-timer-badge" style="display:none">⏳ 30s</span>
       <div id="view-3d-ctrls">
         <span id="orbit-hint">🖱 esq: orbitar &nbsp;·&nbsp; dir: pan &nbsp;·&nbsp; scroll: zoom</span>
-        <button id="btn-cam-reset" onclick="resetCamera3D()" title="Visão isométrica padrão (R)">⌂ Reset</button>
-        <button id="btn-tile-spacing-reset" onclick="restoreTileSpacing3D()" title="Voltar ao espaçamento anterior de 0,94">↶ Espaço 0,94</button>
-        <button id="btn-3d-toggle" onclick="toggle3D()" title="Alternar visão 3D / 2D">🎲 3D</button>
+        <button id="btn-cam-reset" onclick="resetCamera3D()" data-i18n-title="ui.hud.cam_reset_title" title="Visão isométrica padrão (R)">⌂ Reset</button>
+        <button id="btn-tile-spacing-reset" onclick="restoreTileSpacing3D()" data-i18n-title="ui.hud.espaco_reset_title" title="Voltar ao espaçamento anterior de 0,94" data-i18n="ui.hud.espaco_voltar">↶ Espaço 0,94</button>
+        <button id="btn-3d-toggle" onclick="toggle3D()" data-i18n-title="ui.hud.toggle3d_title" title="Alternar visão 3D / 2D">🎲 3D</button>
         <button id="btn-ajuda" onclick="toggleAjuda()" title="Como jogar">❓</button>
       </div>
     </div>
@@ -398,7 +398,7 @@ document.body.innerHTML = `
         </div>
         <div class="section-title">Meu Personagem</div>
         <div id="my-stats"></div>
-        <div class="section-title">Ações</div>
+        <div class="section-title" data-i18n="ui.hud.acoes">Ações</div>
         <div class="actions-grid" id="action-btns"></div>
         <div class="section-title">Habilidades</div>
         <div class="skills-list" id="skills-list"></div>
@@ -414,8 +414,8 @@ document.body.innerHTML = `
   <div id="ficha-backdrop" onclick="toggleFichaDrawer(false)"></div>
   <!-- Celular: fileira de menus do jogador (Personagem, Inventário, Habilidades, Magias) -->
   <div id="player-fabs">
-    <button id="actions-fab" onclick="toggleFichaDrawer(true)" title="Personagem (ações e habilidades)">⚔️</button>
-    <button id="fab-inventario" onclick="if(GS.myPid) InventoryModal.toggle(GS.myPid)" title="Inventário">🎒</button>
+    <button id="actions-fab" onclick="toggleFichaDrawer(true)" data-i18n-title="ui.hud.personagem_title" title="Personagem (ações e habilidades)">⚔️</button>
+    <button id="fab-inventario" onclick="if(GS.myPid) InventoryModal.toggle(GS.myPid)" data-i18n-title="ui.hud.inventario_title" title="Inventário">🎒</button>
     <button id="fab-habilidades" onclick="if(GS.myPid) abrirMenuHabilidades(GS.myPid)" title="Habilidades">📖</button>
     <button id="fab-magias" onclick="if(GS.myPid) abrirMenuMagias(GS.myPid)" title="Magias" style="display:none">✨</button>
   </div>
@@ -442,8 +442,8 @@ document.body.innerHTML = `
 <!-- Chest Loot Window -->
 <div id="chest-overlay">
   <div class="chest-box">
-    <h3 id="chest-title">🎁 Baú de Tesouro</h3>
-    <div class="chest-subtitle" id="chest-subtitle">Aproxime-se do baú para coletar</div>
+    <h3 id="chest-title" data-i18n="ui.bau.titulo">🎁 Baú de Tesouro</h3>
+    <div class="chest-subtitle" id="chest-subtitle" data-i18n="ui.bau.subtitulo">Aproxime-se do baú para coletar</div>
     <div id="chest-items-list"></div>
     <button class="btn-cancel" style="margin-top:10px" onclick="closeChestWindow()">Fechar</button>
   </div>
@@ -858,20 +858,25 @@ let _cityPointDragOffset = {x:0, y:0};
 let _city3 = null;
 let _cityTOD = 0.78; // time-of-day: 0=midnight, 0.25=dawn, 0.5=noon, 0.75=dusk
 
+// Nome e ação de cada prédio da cidade: chave por id, não campo na estrutura
+// (padrão do Lote 1 para mapas {id:'texto'}). O `_CTY_BLDGS` guarda só geometria.
+const _predioNome = id => _rotulo(id, 'ui.cidade.predio', id);
+const _predioAcao = id => _rotulo(id, 'ui.cidade.acao', '');
+
 const _CTY_BLDGS = [
-  {id:'taverna',  name:'Taverna',            emoji:'🍺',action:'Comer e beber — recuperar fome e sede',
+  {id:'taverna',  emoji:'🍺',
    x:-5.5,z:-4,  w:3.2,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x7a3a10,roofHex:0x4a2208,winHex:0xffcc44,
    hx:32, hy:46, hero:false},
-  {id:'templo',   name:'Templo',             emoji:'⛪',action:'Bênçãos e curas divinas',
+  {id:'templo',   emoji:'⛪',
    x:0,  z:-7.5, w:4.0,d:3.2,wallH:3.0,roofH:2.2, wallHex:0x283088,roofHex:0x181858,winHex:0x88aaff,
    hx:67, hy:35, hero:true},
-  {id:'ferreiro', name:'Ferraria',           emoji:'⚒',action:'Comprar equipamentos',
+  {id:'ferreiro', emoji:'⚒',
    x:5.5,z:-4,   w:3.2,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x5a2810,roofHex:0x3a1808,winHex:0xff8822,
    hx:83, hy:38, hero:false},
-  {id:'guilda',   name:'Guilda dos Heróis',  emoji:'⚔',action:'Comprar especializações e técnicas',
+  {id:'guilda',   emoji:'⚔',
    x:-5.5,z:2,   w:3.0,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x5a4a10,roofHex:0x3a3008,winHex:0xffee88,
    hx:52, hy:21, hero:false},
-  {id:'mercador', name:'Mercado',            emoji:'🛒',action:'Itens e poções',
+  {id:'mercador', emoji:'🛒',
    x:5.5,z:2,    w:3.0,d:2.4,wallH:2.2,roofH:1.8, wallHex:0x205a20,roofHex:0x103815,winHex:0x88ff88,
    hx:50, hy:40, hero:true},
 ];
@@ -1347,9 +1352,9 @@ function _cityShowTooltip(id,e){
   const bd=_CTY_BLDGS.find(b=>b.id===id); if(!bd) return;
   const tip=document.getElementById('city-bldg-tooltip'); if(!tip) return;
   const isDng=id==='dungeon';
-  tip.innerHTML=`<h4>${bd.emoji} ${bd.name}</h4>`+
-    `<p class="tip-action">${bd.action}</p>`+
-    `<p class="tip-click">${isDng?'▶ CLIQUE PARA ENTRAR':'▶ CLIQUE PARA ABRIR'}</p>`;
+  tip.innerHTML=`<h4>${bd.emoji} ${_predioNome(bd.id)}</h4>`+
+    `<p class="tip-action">${_predioAcao(bd.id)}</p>`+
+    `<p class="tip-click">${t(isDng ? 'ui.cidade.clique_entrar' : 'ui.cidade.clique_abrir')}</p>`;
   tip.style.display='block';
   tip.style.borderColor=isDng?'rgba(255,50,50,.7)':'rgba(var(--gold-rgb),.5)';
   _cityMoveTooltip(e);
@@ -1500,9 +1505,10 @@ function initCityImage(){
     btn.style.top  = bd.hy + '%';
     btn.dataset.cityBuilding = bd.id;
     btn.dataset.cityPoint = bd.id;
-    btn.setAttribute('aria-label', bd.name + ' — ' + bd.action);
-    btn.title = bd.name + ' — ' + bd.action;
-    const label = bd.id==='dungeon' ? 'Ir para a aventura' : bd.name;
+    const _rot = _predioNome(bd.id) + ' — ' + _predioAcao(bd.id);
+    btn.setAttribute('aria-label', _rot);
+    btn.title = _rot;
+    const label = bd.id==='dungeon' ? t('ui.cidade.ir_aventura') : _predioNome(bd.id);
     btn.innerHTML =
       '<span class="ch-glow" aria-hidden="true"></span>' +
       '<span class="ch-pin"><span class="ch-emoji">' + bd.emoji + '</span>' +
@@ -1515,9 +1521,9 @@ function initCityImage(){
   caravan.dataset.cityCaravan = 'true';
   caravan.dataset.cityPoint = 'caravana';
   caravan.style.left = '42%'; caravan.style.top = '63%';
-  caravan.setAttribute('aria-label', 'Caravana de Viagem — abrir mapa-múndi');
-  caravan.title = 'Caravana de Viagem — abrir mapa-múndi';
-  caravan.innerHTML = '<span class="ch-glow" aria-hidden="true"></span><span class="ch-pin"><span class="ch-emoji">🧭</span><span class="ch-name">Caravana de Viagem</span></span>';
+  caravan.setAttribute('aria-label', t('ui.cidade.caravana_titulo'));
+  caravan.title = t('ui.cidade.caravana_titulo');
+  caravan.innerHTML = '<span class="ch-glow" aria-hidden="true"></span><span class="ch-pin"><span class="ch-emoji">🧭</span><span class="ch-name">' + t('ui.cidade.ponto.caravana') + '</span></span>';
   caravan.addEventListener('click', showWorldMap);
   hotWrap.appendChild(caravan);
   hotWrap.addEventListener('pointerdown', e => {
@@ -1611,21 +1617,21 @@ function _renderRefugioPainel(msg){
   _refugioState=msg; _quartoState=null; _fecharRefugio();
   const ov=document.createElement('div'); ov.id='refugio-overlay'; ov.className='refugio-overlay';
   const sh=msg.shared||{}, me=_heroCityMe(), bag=me?.bag||[], gear=me?.gear||{};
-  const rooms=(msg.rooms||[]).map(r=>`<button class="ref-room" data-ref-room="${_esc(r.owner)}"${r.can_edit?' data-ref-mine="1"':''}>🛏️ ${_esc(r.class_id||r.owner)}${r.can_edit?' (seu quarto)':''}</button>`).join('')||'<small>Nenhum quarto cadastrado ainda.</small>';
-  ov.innerHTML=`<section class="refugio-box"><header><div><h2>🏰 Refúgio dos Heróis</h2><small>Baú compartilhado da campanha · ${sh.items?.length||0}/${sh.slot_limit||10} espaços · 💰 ${sh.gold||0}</small></div><button data-ref-close>✕</button></header><div class="refugio-grid"><div><h3>Baú compartilhado</h3><div class="ref-list">${(sh.items||[]).map((it,i)=>`<div class="ref-item"><span>${_esc(_itemLabel(it))}</span><button data-ref-take="${i}">Retirar</button></div>`).join('')||'<small>Vazio.</small>'}</div><div class="ref-gold"><input id="ref-shared-gold" type="number" min="0" value="0"><button data-ref-gold="deposit">Depositar ouro</button><button data-ref-gold="withdraw">Retirar ouro</button></div></div><div><h3>Guardar itens</h3><div class="ref-list">${bag.map((it,i)=>`<div class="ref-item"><span>${_esc(_itemLabel(it))}</span><button data-ref-store="${i}">Guardar</button></div>`).join('')||'<small>Bolsa vazia.</small>'}</div><h3>Quartos privados</h3><div class="ref-rooms">${rooms}</div></div></div><footer><button data-ref-close>Voltar à cidade</button></footer></section>`;
+  const rooms=(msg.rooms||[]).map(r=>`<button class="ref-room" data-ref-room="${_esc(r.owner)}"${r.can_edit?' data-ref-mine="1"':''}>🛏️ ${_esc(r.class_id||r.owner)}${r.can_edit?' '+t('ui.refugio.seu_quarto'):''}</button>`).join('')||`<small>${t('ui.refugio.sem_quartos')}</small>`;
+  ov.innerHTML=`<section class="refugio-box"><header><div><h2>${t('ui.refugio.titulo')}</h2><small>${t('ui.refugio.subtitulo', {n:sh.items?.length||0, max:sh.slot_limit||10, ouro:sh.gold||0})}</small></div><button data-ref-close>✕</button></header><div class="refugio-grid"><div><h3>${t('ui.refugio.bau_compartilhado')}</h3><div class="ref-list">${(sh.items||[]).map((it,i)=>`<div class="ref-item"><span>${_esc(_itemLabel(it))}</span><button data-ref-take="${i}">${t('ui.refugio.retirar')}</button></div>`).join('')||`<small>${t('ui.refugio.vazio')}</small>`}</div><div class="ref-gold"><input id="ref-shared-gold" type="number" min="0" value="0"><button data-ref-gold="deposit">${t('ui.refugio.depositar_ouro')}</button><button data-ref-gold="withdraw">${t('ui.refugio.retirar_ouro')}</button></div></div><div><h3>${t('ui.refugio.guardar_itens')}</h3><div class="ref-list">${bag.map((it,i)=>`<div class="ref-item"><span>${_esc(_itemLabel(it))}</span><button data-ref-store="${i}">${t('ui.refugio.guardar')}</button></div>`).join('')||`<small>${t('ui.refugio.bolsa_vazia')}</small>`}</div><h3>${t('ui.refugio.quartos_privados')}</h3><div class="ref-rooms">${rooms}</div></div></div><footer><button data-ref-close>${t('ui.refugio.voltar_cidade')}</button></footer></section>`;
   document.body.appendChild(ov);
   // Os dois baús entram como botão no topo: o pessoal só pela lista de quartos era
   // fácil demais de ler como "visitar o quarto de alguém" em vez de "abrir meu baú".
   if(typeof InventoryModal!=='undefined'){
     const box=ov.querySelector('.refugio-box'), antes=ov.querySelector('.refugio-grid');
     const botao=(txt,fn)=>{const b=document.createElement('button');b.className='ref-chest-open';b.textContent=txt;b.onclick=fn;box?.insertBefore(b,antes);};
-    botao('🧰 Abrir baú compartilhado',()=>InventoryModal.openStorage('shared',msg));
-    if((msg.rooms||[]).some(r=>r.can_edit)) botao('🛏️ Abrir baú do herói',()=>_abrirBauDireto('room'));
+    botao(t('ui.cena.bau_compartilhado'),()=>InventoryModal.openStorage('shared',msg));
+    if((msg.rooms||[]).some(r=>r.can_edit)) botao(t('ui.refugio.abrir_bau_heroi'),()=>_abrirBauDireto('room'));
   }
   ov.querySelectorAll('[data-ref-close]').forEach(b=>b.onclick=_fecharRefugio);
   const lists=ov.querySelectorAll('.ref-list'); if(lists[0]){lists[0].dataset.bauScope='shared';_renderBauSlots(lists[0],sh.items||[],Number(sh.slot_limit)||10,'take');} if(lists[1]){lists[1].dataset.bauScope='shared';_renderBauSlots(lists[1],bag,Math.max(6,bag.length),'store');}
   const refBox=ov.querySelector('.refugio-box'); if(refBox && (msg.shared?.background_external || msg.shared?.background_common)){ refBox.style.backgroundImage=`linear-gradient(#0005,#0008),url('${_assetURL(msg.shared.background_external || msg.shared.background_common)}')`; const common=refBox.querySelector('.refugio-grid > div:first-child'); if(common && msg.shared.background_common) common.style.backgroundImage=`linear-gradient(#0005,#0008),url('${_assetURL(msg.shared.background_common)}')`; }
-  const refTitle=ov.querySelector('h2'); if(refTitle) refTitle.textContent='🧰 Baú compartilhado';
+  const refTitle=ov.querySelector('h2'); if(refTitle) refTitle.textContent=t('ui.cena.bau_compartilhado_titulo');
   ov.querySelectorAll('[data-ref-store]').forEach(b=>b.onclick=()=>GS.refugioStore('shared','bag',Number(b.dataset.refStore)));
   ov.querySelectorAll('[data-ref-take]').forEach(b=>b.onclick=()=>GS.refugioTake('shared',Number(b.dataset.refTake)));
   ov.querySelectorAll('.ref-item').forEach(row=>row.onclick=e=>{if(e.target.closest('button'))return; const take=row.querySelector('[data-ref-take]'), store=row.querySelector('[data-ref-store]'); if(take)GS.refugioTake('shared',Number(take.dataset.refTake)); else if(store)GS.refugioStore('shared','bag',Number(store.dataset.refStore));});
@@ -1759,11 +1765,9 @@ function _refreshCityLocation(msg){
   // Pontos criados no editor de cidades. Os prédios nativos continuam usando
   // seus hotspots; estes adicionais podem apontar para qualquer loja existente.
   const pointMeta = {
-    ferreiro:{name:'Ferreiro',emoji:'⚒'}, mercador:{name:'Mercador',emoji:'🛒'},
-    templo:{name:'Templo',emoji:'⛪'}, taverna:{name:'Taverna',emoji:'🍺'},
-    guilda:{name:'Guilda',emoji:'⚔'}, caravana:{name:'Caravana de Viagem',emoji:'🧭'},
-    dungeon:{name:'Entrada da masmorra',emoji:'🚪'}, cena:{name:'Local',emoji:'💬'},
-    refugio:{name:'Refúgio dos Heróis',emoji:'🏰'}
+    ferreiro:{emoji:'⚒'}, mercador:{emoji:'🛒'}, templo:{emoji:'⛪'},
+    taverna:{emoji:'🍺'}, guilda:{emoji:'⚔'}, caravana:{emoji:'🧭'},
+    dungeon:{emoji:'🚪'}, cena:{emoji:'💬'}, refugio:{emoji:'🏰'}
   };
   Object.entries(cityPoints).forEach(([id, point]) => {
     if (_cityImg.hotWrap.querySelector('[data-city-point="' + id + '"]') || !point || !point.type) return;
@@ -1772,7 +1776,10 @@ function _refreshCityLocation(msg){
     const btn = document.createElement('button'); btn.type='button';
     btn.className='city-hotspot city-building city-map-point' + (point.type === 'dungeon' ? ' dungeon' : '');
     btn.dataset.cityBuilding=point.type; btn.dataset.cityPoint=id; btn.dataset.cityExtra='1'; btn.style.left=point.x+'%'; btn.style.top=point.y+'%';
-    const label=point.name || meta.name; btn.title=label; btn.setAttribute('aria-label',label);
+    // `point.name` é do AUTOR (editor de cidades) e vence — conteúdo autoral
+    // não é traduzido. Sem ele, cai no rótulo do tipo.
+    const label=point.name || _rotulo(point.type, 'ui.cidade.ponto', point.type);
+    btn.title=label; btn.setAttribute('aria-label',label);
     // O emoji do próprio ponto (escolhido no editor) manda sobre o do tipo.
     const emoji = point.emoji || meta.emoji;
     btn.innerHTML='<span class="ch-glow" aria-hidden="true"></span><span class="ch-pin"><span class="ch-emoji">'+emoji+'</span><span class="ch-name">'+label+'</span></span>';
@@ -1784,7 +1791,7 @@ function _refreshCityLocation(msg){
   let nav = cityHost.querySelector('#city-world-nav');
   if(!nav){
     nav = document.createElement('button'); nav.id = 'city-world-nav'; nav.type = 'button';
-    nav.textContent = '🧭 Mapa-múndi'; nav.onclick = showWorldMap;
+    nav.textContent = t('ui.cidade.mapa_mundi'); nav.onclick = showWorldMap;
     cityHost.appendChild(nav);
   }
   nav.style.display = 'none';
@@ -1795,7 +1802,7 @@ function _refreshCityLocation(msg){
       if(_cityPointDraft){
         _cityPointDraft = null; _cityPointDraggingId = null;
         _cityImg.hotWrap.classList.remove('editing');
-        caravanEdit.textContent = '📍 Ajustar pontos';
+        caravanEdit.textContent = t('ui.cidade.ajustar_pontos');
         document.getElementById('city-points-save')?.remove();
         _refreshCityLocation(GS.cityState);
         return;
@@ -1807,20 +1814,20 @@ function _refreshCityLocation(msg){
         };
       });
       _cityImg.hotWrap.classList.add('editing');
-      caravanEdit.textContent = '✕ Cancelar ajuste';
-      const save = document.createElement('button'); save.id = 'city-points-save'; save.type = 'button'; save.textContent = 'Salvar pontos';
+      caravanEdit.textContent = t('ui.cidade.cancelar_ajuste');
+      const save = document.createElement('button'); save.id = 'city-points-save'; save.type = 'button'; save.textContent = t('ui.cidade.salvar_pontos');
       save.onclick = () => {
         GS.saveCityMapPoints(location.id, _cityPointDraft);
         _cityPointDraft = null; _cityPointDraggingId = null;
         _cityImg.hotWrap.classList.remove('editing');
-        save.remove(); caravanEdit.textContent = '📍 Ajustar pontos';
+        save.remove(); caravanEdit.textContent = t('ui.cidade.ajustar_pontos');
       };
       cityHost.appendChild(save);
-      toast('Arraste os pontos de referência para os locais corretos e clique em Salvar pontos.');
+      toast(t('ui.cidade.arraste_pontos'));
     };
     cityHost.appendChild(caravanEdit);
   }
-  caravanEdit.textContent = _cityPointDraft ? '✕ Cancelar ajuste' : '📍 Ajustar pontos';
+  caravanEdit.textContent = t(_cityPointDraft ? 'ui.cidade.cancelar_ajuste' : 'ui.cidade.ajustar_pontos');
   // O posicionamento dos pontos é autoral e ocorre somente no Editor.
   // Remove também qualquer botão deixado por uma versão anterior.
   caravanEdit.remove();
@@ -2233,12 +2240,10 @@ function handleCityState(msg){
   if(btnD){
     const isHost=GS.myPid&&GS.myPid===msg.host;
     // Em campanha, o botão indica a próxima fase a entrar.
-    btnD.textContent = msg.campaign ? `▶ Ir para a aventura — Fase ${msg.campaign.phase}` : '▶ Ir para a aventura';
+    btnD.textContent = msg.campaign ? t('ui.cidade.ir_aventura_fase', {n:msg.campaign.phase}) : t('ui.cidade.ir_aventura_btn');
     btnD.style.display=isHost?'inline-block':'none';
     if(dungBar) dungBar.style.display=isHost?'flex':'none';
-    if(hint) hint.textContent=isHost
-      ?'Você é o anfitrião — clique no Portão ou aqui para entrar.'
-      :'Aguardando o anfitrião iniciar a aventura…';
+    if(hint) hint.textContent = t(isHost ? 'ui.cidade.dica_anfitriao' : 'ui.cidade.dica_convidado');
   }
   // Shop
   if(GS.activeShop) _renderShopItems();
@@ -2255,26 +2260,11 @@ function handleCityState(msg){
   renderStory();   // Fase 4b: encerramento da fase (mostrado na cidade)
 }
 
-// ── Legacy 2D city data (kept so shop modal lookups still find building names) ──
+// ── Legacy 2D city data ──
+// O CITY_BUILDINGS (nome/desc/abas dos 4 prédios) foi REMOVIDO: nenhum leitor
+// restou no cliente, e português sem ponto de uso não tem onde chamar t()
+// — mesma decisão do Lote 1. O CITY_DUNGEON abaixo é só geometria.
 const CITY_DUNGEON = { id: 'dungeon', x: 305, y: 352, w: 90, h: 88 };
-const CITY_BUILDINGS = [
-  { id:'taverna',  name:'Taverna',  emoji:'🍺', desc:'Comida e bebida (fome/sede)',
-    x:40,  y:50,  w:190, h:165, baseColor:'#6b3a10', glowColor:'rgba(220,140,30,0.35)',
-    roofColor:'#4a2508', doorColor:'#3d1f06', lightColor:'rgba(255,200,60,0.5)',
-    tabs:null },
-  { id:'ferreiro', name:'Ferreiro', emoji:'🔨', desc:'Armas e armaduras',
-    x:470, y:50,  w:190, h:165, baseColor:'#5a2510', glowColor:'rgba(220,70,20,0.35)',
-    roofColor:'#3d1808', doorColor:'#2a1005', lightColor:'rgba(255,130,40,0.5)',
-    tabs:['Armas','Armaduras'] },
-  { id:'mercador', name:'Mercador', emoji:'🛒', desc:'Poções e acessórios',
-    x:40,  y:265, w:190, h:165, baseColor:'#0e4a1a', glowColor:'rgba(30,180,60,0.28)',
-    roofColor:'#0a3012', doorColor:'#071e0b', lightColor:'rgba(60,220,90,0.4)',
-    tabs:null },
-  { id:'templo',   name:'Templo',   emoji:'⛪', desc:'Bênçãos e curas divinas',
-    x:470, y:265, w:190, h:165, baseColor:'#1a1a70', glowColor:'rgba(80,80,220,0.32)',
-    roofColor:'#10104a', doorColor:'#0a0a30', lightColor:'rgba(120,120,255,0.5)',
-    tabs:null },
-];
 
 // Um ponto da ilustração resolve DUAS coisas independentes: uma cena (se o
 // ponto tem `scene`) e uma loja (se o tipo do ponto é uma loja que a cidade
@@ -2284,7 +2274,7 @@ function openShop(pointId, type, sceneOverride){
     // city_state not yet received — request it and retry when it arrives
     GS.pendingShopOpen = pointId;
     send({type:'get_city_state'});
-    toast('Carregando loja…', 'var(--blue)');
+    toast(t('ui.loja.carregando'), 'var(--blue)');
     return;
   }
   GS.pendingShopOpen = null;
@@ -2298,26 +2288,21 @@ function openShop(pointId, type, sceneOverride){
   modal.classList.toggle('shop-mercador', shopId==='mercador');
   modal.classList.toggle('shop-taverna', shopId==='taverna');
   modal.classList.add('open');
-  const titles={taverna:'🍺 Taverna',ferreiro:'🔨 Ferreiro',mercador:'🛒 Mercador',templo:'⛪ Templo'};
   // Ponto sem loja (tipo `cena`): título/subtítulo vêm da própria cena.
-  $('shop-title').textContent = titles[shopId] || ('💬 ' + (scene ? (scene.nome || '') : ''));
-  const subtitles={
-    taverna:'Descanse, coma e beba antes de partir para a aventura.',
-    ferreiro:'Compre e venda armas, armaduras e munição.',
-    mercador:'Poções, amuletos e acessórios para sobreviver na masmorra.',
-    templo:'Receba bênçãos divinas e cure seus ferimentos.',
-  };
-  $('shop-subtitle').textContent = subtitles[shopId]||'';
+  $('shop-title').textContent = _rotulo(shopId, 'ui.loja.titulo', '💬 ' + (scene ? (scene.nome || '') : ''));
+  $('shop-subtitle').textContent = _rotulo(shopId, 'ui.loja.subtitulo', '');
   // Tabs
   const tabsEl=$('shop-tabs'); tabsEl.innerHTML='';
-  const shopTabs = shopId==='ferreiro'
-    ? ['⚔ Armas','🛡 Armaduras','🏹 Munição','💰 Vender']
+  // A ORDEM das abas é índice de lógica (GS.shopTabIdx) — traduzir o rótulo é
+  // seguro; trocar a ordem não seria.
+  const shopTabs = (shopId==='ferreiro'
+    ? ['armas','armaduras','municao','vender']
     : shopId==='mercador'
-    ? ['🛒 Comprar','🎵 Instrumentos','☠️ Venenos','📜 Pergaminhos','💰 Vender']
+    ? ['comprar','instrumentos','venenos','pergaminhos','vender']
     : shopId==='taverna'
-    ? ['🍺 Alimentos']
-    : [];
-  const tabDefs = (scene ? ['💬 ' + (scene.nome || 'Conversas')] : []).concat(shopTabs);
+    ? ['alimentos']
+    : []).map(k => t('ui.loja.aba.' + k));
+  const tabDefs = (scene ? ['💬 ' + (scene.nome || t('ui.loja.aba.conversas'))] : []).concat(shopTabs);
   tabDefs.forEach((t,i)=>{
     const btn=document.createElement('button');
     btn.className='shop-tab'+(i===GS.shopTabIdx?' active':'');
@@ -2559,26 +2544,25 @@ function _renderSellItems(mode){
     const w=myP.gear&&myP.gear.weapon;
     if(w&&w.id!=='unarmed'){
       const bp=w.buy_price||0;
-      sellable.push({slot:'weapon',item:w,sp:Math.max(1,Math.floor(bp/3)),tag:'Arma equipada'});
+      sellable.push({slot:'weapon',item:w,sp:Math.max(1,Math.floor(bp/3)),tag:t('ui.loja.tag.arma_equipada')});
     }
     const a=myP.gear&&myP.gear.armor;
     if(a&&a.id&&a.id!=='cloak'){
       const bp=a.buy_price||0;
-      sellable.push({slot:'armor',item:a,sp:Math.max(1,Math.floor(bp/3)),tag:'Armadura equipada'});
+      sellable.push({slot:'armor',item:a,sp:Math.max(1,Math.floor(bp/3)),tag:t('ui.loja.tag.armadura_equipada')});
     }
-    const _slotTags={off_hand:'Mão esquerda',head:'Cabeça',boots:'Botas',ring1:'Anel',ring2:'Anel',item1:'Item',item2:'Item'};
     for(const slot of ['off_hand','head','boots','ring1','ring2','item1','item2']){
       const acc=myP.gear&&myP.gear[slot];
       if(acc){
         const bp=acc.buy_price||0;
-        sellable.push({slot,item:acc,sp:Math.max(1,Math.floor(bp/3)),tag:_slotTags[slot]||'Acessório'});
+        sellable.push({slot,item:acc,sp:Math.max(1,Math.floor(bp/3)),tag:_rotulo(slot, 'ui.loja.tag', t('ui.loja.tag.acessorio'))});
       }
     }
   }
   if(mode==='bag'||mode==='all'){
     (myP.bag||[]).forEach((bagItem,i)=>{
       const bp=bagItem.buy_price||bagItem.price||0;
-      sellable.push({slot:`bag_${i}`,item:bagItem,sp:Math.max(1,Math.floor(bp/3)),tag:'Mochila'});
+      sellable.push({slot:`bag_${i}`,item:bagItem,sp:Math.max(1,Math.floor(bp/3)),tag:t('ui.loja.tag.mochila')});
     });
   }
 
@@ -3414,11 +3398,12 @@ function mostrarTooltipAnimado(event, id, dadosAnimado) {
 // herói passado precisa ser o registro COMPLETO (HERO_DATA de game.js), não o
 // modelo de equipamento de GS.HERO_DATA — ver nota em trocarAbaFicha/_injetarFichaPedro.
 function renderConteudoAtributosPedro(heroi) {
+  // O rótulo vem de ui.atributo.<key> (as mesmas chaves da ficha do jogo).
   const ATRIBUTOS = [
-    { key: 'forca',        label: 'Força',        icone: '⚔️' },
-    { key: 'destreza',     label: 'Destreza',     icone: '🏃' },
-    { key: 'inteligencia', label: 'Inteligência', icone: '📖' },
-    { key: 'constituicao', label: 'Constituição', icone: '🛡️' }
+    { key: 'forca',        icone: '⚔️' },
+    { key: 'destreza',     icone: '🏃' },
+    { key: 'inteligencia', icone: '📖' },
+    { key: 'constituicao', icone: '🛡️' }
   ]
 
   const vidaMax = calcularVidaMaxima(
@@ -3436,7 +3421,7 @@ function renderConteudoAtributosPedro(heroi) {
       display:flex; justify-content:space-between; align-items:center;
     ">
       <span style="color:#8a7a5a; font-size:11px; letter-spacing:2px;">
-        ❤️ PONTOS DE VIDA
+        ${t('ui.ficha.pontos_de_vida')}
       </span>
       <div style="text-align:right;">
         <span style="color:#ff4136; font-size:18px; font-weight:bold;">
@@ -3462,7 +3447,7 @@ function renderConteudoAtributosPedro(heroi) {
             <span style="
               color:#8a7a5a; font-family:'Cinzel',serif;
               font-size:11px; letter-spacing:2px;
-            ">${attr.icone} ${attr.label}</span>
+            ">${attr.icone} ${_rotulo(attr.key, 'ui.atributo', attr.key)}</span>
             <span style="color:${cor}; font-size:13px; font-weight:bold;">
               ${valorAtual}
             </span>
@@ -3484,7 +3469,7 @@ function renderConteudoAtributosPedro(heroi) {
       border:1px solid #c8a95133;
       display:flex; justify-content:space-between;
     ">
-      <span style="color:#8a7a5a; font-size:11px; letter-spacing:2px;">NÍVEL</span>
+      <span style="color:#8a7a5a; font-size:11px; letter-spacing:2px;">${t('ui.ficha.nivel')}</span>
       <span style="color:#c8a951; font-size:14px; font-weight:bold;">
         ${heroi.nivel || 1}
       </span>
@@ -3756,10 +3741,10 @@ function obterPercepcaoCliente(personagem, raioVisao){
 // Renderiza atributos usando dados do servidor quando disponíveis
 function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
   const ATRIBUTOS = [
-    { key: 'forca',        serverKey: 'str_', label: t('ui.atributo.forca'),        icone: '⚔️' },
-    { key: 'destreza',     serverKey: 'dex',  label: t('ui.atributo.destreza'),     icone: '🏃' },
-    { key: 'inteligencia', serverKey: 'int_', label: t('ui.atributo.inteligencia'), icone: '📖' },
-    { key: 'constituicao', serverKey: 'con_', label: t('ui.atributo.constituicao'), icone: '🛡️' }
+    { key: 'forca',        serverKey: 'str_', icone: '⚔️' },
+    { key: 'destreza',     serverKey: 'dex',  icone: '🏃' },
+    { key: 'inteligencia', serverKey: 'int_', icone: '📖' },
+    { key: 'constituicao', serverKey: 'con_', icone: '🛡️' }
   ]
 
   // Prioriza dados do servidor — fallback para HERO_DATA
@@ -3856,7 +3841,7 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
             <span style="
               color:#8a7a5a; font-family:'Cinzel',serif;
               font-size:11px; letter-spacing:2px;
-            ">${attr.icone} ${attr.label}</span>
+            ">${attr.icone} ${_rotulo(attr.key, 'ui.atributo', attr.key)}</span>
             <span style="color:#c8a951; font-size:13px; font-weight:bold;">
               ${valor}
             </span>
@@ -4058,12 +4043,12 @@ function comprarItem(itemId){
 
   // Feedback rápido (o servidor é a fonte da verdade e revalida)
   if(heroi.moedas < item.preco){
-    GS.adicionarLog(`❌ ${heroi.name}: ouro insuficiente`);
+    GS.adicionarLog(t('ui.loja.log_ouro_insuficiente', {nome:heroi.name}));
     return;
   }
   const slotsLivres = heroi.inventario ? heroi.inventario.filter(s => s === null).length : 0;
   if(slotsLivres === 0){
-    GS.adicionarLog(`❌ ${heroi.name}: inventário cheio`);
+    GS.adicionarLog(t('ui.loja.log_inventario_cheio', {nome:heroi.name}));
     return;
   }
 
@@ -4472,18 +4457,17 @@ function _tooltipInstrumentoHTML(inst){
   const st = (typeof GS !== 'undefined' && GS.instrumentoStatsClient) ? GS.instrumentoStatsClient(inst) : null;
   if(!b) return `<div style="padding:12px 14px;color:#c8b89a;font-size:11px;">${inst.name || 'Instrumento'}</div>`;
   const passiva = b.modo === 'passiva';
-  const maosTxt = b.maos === 2 ? '2 mãos — atacar OU tocar no mesmo turno'
-                               : '1 mão — atacar E tocar no mesmo turno';
+  const maosTxt = t(b.maos === 2 ? 'ui.instrumento.duas_maos' : 'ui.instrumento.uma_mao');
   const linhas = [];
   if(st){
-    if(st.alcance != null) linhas.push(renderLinhaTooltip('🎯', 'Alcance', st.alcance + ' quadrados'));
-    if(st.raio    != null) linhas.push(renderLinhaTooltip('💥', 'Raio',    st.raio + ' quadrados'));
-    if(st.dano    != null) linhas.push(renderLinhaTooltip('🎵', 'Dano',    st.dano + ' sonoro'));
-    if(st.duracao != null) linhas.push(renderLinhaTooltip('⏳', 'Duração', st.duracao + ' rodadas'));
+    if(st.alcance != null) linhas.push(renderLinhaTooltip('🎯', t('ui.pergaminho.alcance'), t('ui.instrumento.quadrados', {n:st.alcance})));
+    if(st.raio    != null) linhas.push(renderLinhaTooltip('💥', t('ui.instrumento.raio'),      t('ui.instrumento.quadrados', {n:st.raio})));
+    if(st.dano    != null) linhas.push(renderLinhaTooltip('🎵', t('ui.pergaminho.dano'),       t('ui.instrumento.dano_sonoro', {dano:st.dano})));
+    if(st.duracao != null) linhas.push(renderLinhaTooltip('⏳', t('ui.pergaminho.duracao'),    t('ui.instrumento.rodadas', {n:st.duracao})));
   }
   const custoLinha = passiva
-    ? renderLinhaTooltip('🎼', 'Custo', 'igual ao da Canção Heroica')
-    : renderLinhaTooltip('🍖', 'Custo', `🍖${(st && st.custo_fome) ?? 0}  💧${(st && st.custo_sede) ?? 0}`);
+    ? renderLinhaTooltip('🎼', t('ui.instrumento.custo'), t('ui.instrumento.custo_cancao'))
+    : renderLinhaTooltip('🍖', t('ui.instrumento.custo'), `🍖${(st && st.custo_fome) ?? 0}  💧${(st && st.custo_sede) ?? 0}`);
   return `
     <div style="padding:10px 14px;border-bottom:1px solid #c8a95133;">
       <div style="color:#e8cf7e;font-weight:bold;font-size:13px;">${b.icon} ${inst.name || b.nome}</div>
@@ -6657,26 +6641,29 @@ function renderMap(state){
       // Small label
       ctx.font=`bold ${Math.round(CELL*0.16)}px monospace`; ctx.textAlign='center'; ctx.textBaseline='top';
       ctx.fillStyle='rgba(255,220,80,0.90)';
-      ctx.fillText('SAÍDA',X+CELL/2,Y2+CELL-14);
+      ctx.fillText(t('ui.tabuleiro.saida'),X+CELL/2,Y2+CELL-14);
     }
   }
 
   if(state.start_mode === 'hero_spawns'){
-    const spawnMeta = {
-      warrior:['⚔️','Guerreiro'], mage:['🔮','Mago'], rogue:['🗡️','Ladino'],
-      cleric:['✚','Clérigo'], bard:['🎻','Bardo'], paladin:['🛡️','Paladino']
+    // Só o EMOJI mora aqui; o nome curto da classe vem de ui.classe_curta.*
+    // (o nome de catálogo, "Guerreiro Anão", não cabe no rótulo da casa).
+    const spawnEmoji = {
+      warrior:'⚔️', mage:'🔮', rogue:'🗡️', cleric:'✚', bard:'🎻', paladin:'🛡️'
     };
     for(const hs of (state.hero_spawns||[])){
       const [hx,hy]=hs.pos||[];
       if(!Number.isInteger(hx)||!Number.isInteger(hy)||!exploredSet.has(`${hx},${hy}`)) continue;
-      const X=hx*CELL, Y2=hy*CELL, meta=spawnMeta[hs.class_id]||['⚔️',hs.class_id||'Herói'];
+      const X=hx*CELL, Y2=hy*CELL;
+      const meta=[spawnEmoji[hs.class_id]||'⚔️',
+                  _rotulo(hs.class_id, 'ui.classe_curta', hs.class_id||t('ui.tabuleiro.heroi'))];
       const hgl=ctx.createRadialGradient(X+CELL/2,Y2+CELL/2,0,X+CELL/2,Y2+CELL/2,CELL*0.72);
       hgl.addColorStop(0,'rgba(150,110,255,0.34)'); hgl.addColorStop(1,'rgba(0,0,0,0)');
       ctx.fillStyle=hgl; ctx.fillRect(X-CELL/4,Y2-CELL/4,CELL*1.5,CELL*1.5);
       ctx.font=`${Math.round(CELL*0.43)}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.fillText(meta[0],X+CELL/2,Y2+CELL/2);
       ctx.font=`bold ${Math.round(CELL*0.14)}px monospace`; ctx.textBaseline='top';
-      ctx.fillStyle='rgba(205,180,255,0.95)'; ctx.fillText(`INÍCIO ${meta[1].toUpperCase()}`,X+CELL/2,Y2+CELL-13);
+      ctx.fillStyle='rgba(205,180,255,0.95)'; ctx.fillText(t('ui.tabuleiro.inicio', {classe:meta[1].toUpperCase()}),X+CELL/2,Y2+CELL-13);
     }
   }
 
@@ -9018,15 +9005,15 @@ function renderBotoesAcaoBonus(heroi){
   if (secundario && secundario.id === 'adaga_secundaria') {
     // Ataque extra adjacente
     acoes.push({
-      label: '🗡️ Ataque Extra — Adaga Secundária',
-      descricao: `1d4 + DEX adjacente`,
+      label: t('ui.acao.ataque_extra_adaga'),
+      descricao: t('ui.acao.ataque_extra_adaga_desc'),
       tipo: 'ataqueAdagaSecundaria'
     })
 
     // Arremesso
     acoes.push({
-      label: '🎯 Arremessar Adaga Secundária',
-      descricao: `1d4 + DEX — até 3 quadrados`,
+      label: t('ui.acao.arremessar_adaga'),
+      descricao: t('ui.acao.arremessar_adaga_desc'),
       tipo: 'arremessarAdagaSecundaria'
     })
   }
@@ -9832,14 +9819,14 @@ function iniciarModoImposicaoMaos(){
   const me = GS.me;
   if(!me || me.class_id !== 'paladin') return;
   if(!GS.isMyTurn || me.alive === false || (GS.gameState && GS.gameState.phase !== 'playing')){
-    toast('Só é possível usar Imposição das Mãos no seu turno.', 'var(--orange)'); return;
+    toast(t('ui.paladino.imposicao_so_turno'), 'var(--orange)'); return;
   }
-  if(me.action_done){ toast('Ação principal já usada neste turno.', 'var(--orange)'); return; }
-  if(me.fome < 3 || me.sede < 2){ toast('Imposição das Mãos requer 🍖3 e 💧2.', 'var(--orange)'); return; }
+  if(me.action_done){ toast(t('ui.hud.acao_principal_ja_usada'), 'var(--orange)'); return; }
+  if(me.fome < 3 || me.sede < 2){ toast(t('ui.paladino.imposicao_custo'), 'var(--orange)'); return; }
   const alvos = _aliadosNoRaioPaladin(me, 1);
-  if(!alvos.length){ toast('Nenhum aliado adjacente.', 'var(--orange)'); return; }
+  if(!alvos.length){ toast(t('ui.hud.sem_aliado_adjacente'), 'var(--orange)'); return; }
   if(alvos.length === 1){ _enviarImposicaoMaos(alvos[0].id); return; }
-  openTargetModal('🙏 Imposição das Mãos — Aliado adjacente', alvos, 'player',
+  openTargetModal(t('ui.paladino.imposicao_titulo'), alvos, 'player',
     id => _enviarImposicaoMaos(id));
 }
 
@@ -10053,8 +10040,8 @@ function abrirPainelCriarArmadilha(){
 
   const me = GS.me;
   if(!me || me.class_id !== 'rogue') return;
-  if(!_rogueMyTurn(me)){ toast('Só no seu turno.', 'var(--orange)'); return; }
-  if(me.action_done){ GS.adicionarLog('❌ Ação principal já usada'); return; }
+  if(!_rogueMyTurn(me)){ toast(t('ui.hud.so_no_seu_turno'), 'var(--orange)'); return; }
+  if(me.action_done){ GS.adicionarLog(t('ui.hud.log_acao_principal_usada')); return; }
 
   const ouro    = me.gold || 0;
   const venenos = _venenosNaBolsa(me);
@@ -10069,8 +10056,8 @@ function abrirPainelCriarArmadilha(){
 
   function renderPainel(){
     painel.innerHTML = `
-      <div style="font-family:'Cinzel Decorative',serif; color:#c8a951; font-size:13px; margin-bottom:12px; text-align:center;">🪤 CRIAR ARMADILHA</div>
-      <div style="color:#8a7a5a; font-size:9px; letter-spacing:2px; margin-bottom:10px; text-align:center;">💰 ${ouro} moedas | 🍖-${ARMADILHA_FOME} 💧-${ARMADILHA_SEDE} por criação</div>
+      <div style="font-family:'Cinzel Decorative',serif; color:#c8a951; font-size:13px; margin-bottom:12px; text-align:center;">${t('ui.ladino.criar_armadilha_titulo')}</div>
+      <div style="color:#8a7a5a; font-size:9px; letter-spacing:2px; margin-bottom:10px; text-align:center;">${t('ui.ladino.criar_armadilha_custo', {ouro, fome:ARMADILHA_FOME, sede:ARMADILHA_SEDE})}</div>
       ${ARMADILHAS_LUCCAS.map(arm => {
         const desbloqueada = (GS.ladinoArmadilhasDesbloqueadas ? GS.ladinoArmadilhasDesbloqueadas() : ['buraco']).includes(arm.id);
         const podeComprar = ouro >= arm.custo_ouro;
@@ -10164,11 +10151,11 @@ function abrirPainelVenenoRapido(){
 
   const me = GS.me;
   if(!me || me.class_id !== 'rogue') return;
-  if(!_rogueMyTurn(me)){ toast('Só no seu turno.', 'var(--orange)'); return; }
-  if((me.sede||0) < 1){ GS.adicionarLog('❌ Sede insuficiente 💧-1'); return; }
+  if(!_rogueMyTurn(me)){ toast(t('ui.hud.so_no_seu_turno'), 'var(--orange)'); return; }
+  if((me.sede||0) < 1){ GS.adicionarLog(t('ui.ladino.sede_insuficiente')); return; }
 
   const venenos = _venenosNaBolsa(me);
-  if(venenos.length === 0){ GS.adicionarLog('❌ Sem venenos no inventário'); return; }
+  if(venenos.length === 0){ GS.adicionarLog(t('ui.ladino.sem_venenos')); return; }
 
   const painel = document.createElement('div');
   painel.id = 'painel-veneno-rapido';
@@ -10176,8 +10163,8 @@ function abrirPainelVenenoRapido(){
     background:rgba(10,8,5,0.97); border:1px solid #9900cc; width:280px; z-index:200; padding:16px;
     font-family:'Cinzel',serif;`;
   painel.innerHTML = `
-    <div style="font-family:'Cinzel Decorative',serif; color:#cc44ff; font-size:13px; margin-bottom:12px; text-align:center;">☠️ VENENO RÁPIDO</div>
-    <div style="color:#8a7a5a; font-size:9px; letter-spacing:2px; margin-bottom:10px; text-align:center;">Ação Livre | 💧-1 + consome o frasco</div>
+    <div style="font-family:'Cinzel Decorative',serif; color:#cc44ff; font-size:13px; margin-bottom:12px; text-align:center;">${t('ui.ladino.veneno_rapido_titulo')}</div>
+    <div style="color:#8a7a5a; font-size:9px; letter-spacing:2px; margin-bottom:10px; text-align:center;">${t('ui.ladino.veneno_rapido_custo')}</div>
     ${venenos.map(v => `
       <div onclick="confirmarVenenoRapido('${v.id}')" style="padding:10px 12px; margin-bottom:4px;
         background:rgba(150,0,200,0.06); border:1px solid #9900cc44; cursor:pointer; transition:all 0.2s;"
@@ -10345,10 +10332,10 @@ function _aliadosMortosNoRaioCleric(me, raio){
 // Tipos de purificação — espelha PURIFICACAO_CUSTOS em server.py. `cond` lê os
 // campos reais que o servidor envia no game_state (efeitos_veneno/cego/etc.).
 const PURIFICACAO_TIPOS_LEWIS = [
-  { id:'veneno',       label:'Veneno',       icone:'☠️', custo:'🍖-1',      cond: p => (p.efeitos_veneno && p.efeitos_veneno.length > 0) || p.cego },
-  { id:'doenca',       label:'Doença',       icone:'🤒', custo:'🍖-2 💧-1', cond: p => !!p.doente },
-  { id:'maldicao',     label:'Maldição',     icone:'💀', custo:'🍖-3 💧-2', cond: p => !!p.amaldicoado },
-  { id:'petrificacao', label:'Petrificação', icone:'🗿', custo:'🍖-5 💧-5', cond: p => !!p.petrificado },
+  { id:'veneno',       icone:'☠️', custo:'🍖-1',      cond: p => (p.efeitos_veneno && p.efeitos_veneno.length > 0) || p.cego },
+  { id:'doenca',       icone:'🤒', custo:'🍖-2 💧-1', cond: p => !!p.doente },
+  { id:'maldicao',     icone:'💀', custo:'🍖-3 💧-2', cond: p => !!p.amaldicoado },
+  { id:'petrificacao', icone:'🗿', custo:'🍖-5 💧-5', cond: p => !!p.petrificado },
 ];
 
 function _clericPodeAgir(me){
@@ -10483,17 +10470,17 @@ function iniciarModoPurificacao(){
   const _permitidos = GS.clericPurifTipos();
   const alvos = _aliadosVivosNoRaioCleric(me, 1, true)
     .filter(a => PURIFICACAO_TIPOS_LEWIS.some(t => _permitidos.includes(t.id) && t.cond(a)));
-  if(!alvos.length){ toast('Nenhum aliado adjacente com efeito que você saiba purificar.', 'var(--orange)'); return; }
+  if(!alvos.length){ toast(t('ui.clerigo.purificar_sem_alvo'), 'var(--orange)'); return; }
   const escolher = (id) => {
     const alvo = (GS.gameState.players || []).find(p => p.id === id);
     if(!alvo) return;
     const efeitos = PURIFICACAO_TIPOS_LEWIS.filter(t => _permitidos.includes(t.id) && t.cond(alvo));
-    if(efeitos.length === 0){ toast(`${alvo.name} não tem efeitos que você saiba purificar.`, 'var(--orange)'); return; }
+    if(efeitos.length === 0){ toast(t('ui.clerigo.purificar_alvo_limpo', {nome:alvo.name}), 'var(--orange)'); return; }
     if(efeitos.length === 1){ send({ type:'purificacao', target_id:id, tipo:efeitos[0].id }); return; }
     _abrirPainelEscolhaPurificacao(alvo, efeitos);
   };
   if(alvos.length === 1){ escolher(alvos[0].id); return; }
-  openTargetModal('✨ Purificação — Aliado adjacente', alvos, 'player', escolher);
+  openTargetModal(t('ui.clerigo.purificar_titulo'), alvos, 'player', escolher);
 }
 
 function _abrirPainelEscolhaPurificacao(alvo, efeitos){
@@ -10505,7 +10492,7 @@ function _abrirPainelEscolhaPurificacao(alvo, efeitos){
     padding:16px;font-family:'Cinzel',serif;`;
   painel.innerHTML = `
     <div style="font-family:'Cinzel Decorative',serif;color:#cc44ff;font-size:12px;margin-bottom:10px;text-align:center;">✨ PURIFICAR ${(alvo.name||'').toUpperCase()}</div>
-    ${efeitos.map(ef => `<button onclick="window._purificarConfirmar('${alvo.id}','${ef.id}')" style="width:100%;padding:10px 12px;margin-bottom:4px;background:rgba(204,68,255,0.06);border:1px solid #cc44ff44;color:#c8b89a;font-family:'Cinzel',serif;font-size:11px;text-align:left;cursor:pointer;display:flex;justify-content:space-between;" onmouseover="this.style.borderColor='#cc44ff'" onmouseout="this.style.borderColor='#cc44ff44'"><span>${ef.icone} ${ef.label}</span><span style="color:#ff851b;font-size:10px;">${ef.custo}</span></button>`).join('')}
+    ${efeitos.map(ef => `<button onclick="window._purificarConfirmar('${alvo.id}','${ef.id}')" style="width:100%;padding:10px 12px;margin-bottom:4px;background:rgba(204,68,255,0.06);border:1px solid #cc44ff44;color:#c8b89a;font-family:'Cinzel',serif;font-size:11px;text-align:left;cursor:pointer;display:flex;justify-content:space-between;" onmouseover="this.style.borderColor='#cc44ff'" onmouseout="this.style.borderColor='#cc44ff44'"><span>${ef.icone} ${_rotulo(ef.id, 'ui.purificacao', ef.id)}</span><span style="color:#ff851b;font-size:10px;">${ef.custo}</span></button>`).join('')}
     <button onclick="document.getElementById('painel-purificacao').remove()" style="width:100%;margin-top:6px;padding:8px;background:transparent;border:1px solid #4a4a4a;color:#8a7a5a;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;">CANCELAR</button>`;
   document.body.appendChild(painel);
   window._purificarConfirmar = (targetId, tipo) => {
@@ -11238,9 +11225,9 @@ function castarMagia(magiaId) {
   const m = GRIMORIO_CLIENT[magiaId];
   if (!m) return;
   const me = _meVivoNaVez();
-  if (!me) { toast('Não é a sua vez ou a ação já foi usada.', '#ff6b6b'); return; }
+  if (!me) { toast(t('ui.hud.fora_de_turno_ou_acao_usada'), '#ff6b6b'); return; }
   if (!GRIMORIO_IMPLEMENTADAS_CLIENT.has(magiaId)) {
-    toast(`${m.icone} ${m.nome} ainda está em desenvolvimento.`, '#c8a951'); return;
+    toast(t('ui.magia.em_desenvolvimento', {icone:m.icone, nome:m.nome}), '#c8a951'); return;
   }
   // Conjurar Elemental: escolhe o tipo (4 elementos) antes de lançar.
   if (magiaId === 'conjurar_elemental') { _abrirPickerElemental(); return; }
@@ -11249,7 +11236,7 @@ function castarMagia(magiaId) {
   // Buffs no próprio caster sem área desenhável → lança imediatamente.
   if (['buff_self', 'utilidade', 'reacao', 'invocacao'].includes(tipo)) {
     send({ type: 'magia', magia_id: magiaId });
-    toast(`${m.icone} ${m.nome} lançada!`, '#c8a951');
+    toast(t('ui.magia.lancada', {icone:m.icone, nome:m.nome}), '#c8a951');
     return;
   }
   // Demais magias entram em modo de mira no tabuleiro (mostram alcance/área).
@@ -11273,7 +11260,7 @@ function castarPergaminho(item) {
   const m = GRIMORIO_CLIENT[magiaId];
   if (!m) { toast('Pergaminho com magia desconhecida.', '#ff6b6b'); return; }
   const me = _meVivoNaVez();
-  if (!me) { toast('Não é a sua vez ou a ação já foi usada.', '#ff6b6b'); return; }
+  if (!me) { toast(t('ui.hud.fora_de_turno_ou_acao_usada'), '#ff6b6b'); return; }
   if (me.class_id !== 'mage' && me.class_id !== 'cleric') {
     toast('Apenas mago ou clérigo usam pergaminhos.', '#ff6b6b'); return;
   }
@@ -11370,16 +11357,16 @@ function _specAlvoMagia(alvoTipo, tx, ty) {
   if (alvoTipo === 'linha' || alvoTipo === 'cone') {
     if (!me) return { ok: false };
     const [dx, dy] = _dir8(tx - me.pos[0], ty - me.pos[1]);
-    if (dx === 0 && dy === 0) return { ok: false, msg: 'Mire numa direção a partir de você.' };
+    if (dx === 0 && dy === 0) return { ok: false, msg: t('ui.magia.mire_direcao') };
     return { ok: true, fields: { dir: [dx, dy] } };
   }
   const alvo = (alvoTipo === 'foe')
     ? (gs.monsters || []).find(mm => mm.pos[0] === tx && mm.pos[1] === ty && mm.hp > 0)
     : (gs.players  || []).find(pp => pp.pos[0] === tx && pp.pos[1] === ty && pp.alive);
-  if (!alvo) return { ok: false, msg: alvoTipo === 'foe' ? 'Clique num inimigo válido.' : 'Clique num aliado válido.' };
+  if (!alvo) return { ok: false, msg: t(alvoTipo === 'foe' ? 'ui.magia.inimigo_invalido' : 'ui.magia.aliado_invalido') };
   // Magias de alvo exigem linha de visão — paredes/portas fechadas barram.
   if (me && !GS.hasLineOfSight(gs, me.pos[0], me.pos[1], tx, ty))
-    return { ok: false, msg: '🧱 Uma parede bloqueia o feitiço até o alvo!' };
+    return { ok: false, msg: t('ui.magia.parede_bloqueia') };
   return { ok: true, fields: { target_id: alvo.id } };
 }
 
@@ -11416,7 +11403,7 @@ function _clickTileMagia(tx, ty) {
     toast(`📜 ${m.nome} (pergaminho)!`, '#c8a951');
   } else {
     send(Object.assign({ type: 'magia', magia_id: magiaId }, spec.fields));
-    toast(`${m.icone} ${m.nome} lançada!`, '#c8a951');
+    toast(t('ui.magia.lancada', {icone:m.icone, nome:m.nome}), '#c8a951');
   }
   _encerrarModoMagia();
 }
@@ -11502,8 +11489,8 @@ window.castarMagia = castarMagia;
 // ═══════════════════════════════════════════════════════════════════════════
 function _iniciarMiraArremesso(item, player){
   const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid && p.alive);
-  if(!me){ toast('Não é possível arremessar agora.', 'var(--gold)'); return; }
-  if(!GS.isMyTurn || me.action_done){ toast('Não é a sua vez ou a ação já foi usada.', 'var(--gold)'); return; }
+  if(!me){ toast(t('ui.arremesso.agora_nao'), 'var(--gold)'); return; }
+  if(!GS.isMyTurn || me.action_done){ toast(t('ui.hud.fora_de_turno_ou_acao_usada'), 'var(--gold)'); return; }
   // Encerra qualquer outra mira ativa para não empilhar realces.
   if(window._modoThrowItem) _encerrarMiraArremesso();   // re-entrada: limpa a mira de item anterior
   if(window._modoMagia) _encerrarModoMagia();
@@ -11540,11 +11527,11 @@ function _iniciarMiraArremesso(item, player){
     document.body.appendChild(leg);
   }
   const _alvoTxt = isArea
-    ? `Clique numa CASA (área raio ${areaRaio}, alcance ${alcance})`
-    : `Clique num INIMIGO (alcance ${alcance})`;
-  leg.innerHTML = `${catDef.emoji || item.emoji || '🔥'} ${(catDef.nome || item.name || 'ARREMESSAR').toUpperCase()} — ${_alvoTxt} &nbsp;|&nbsp; ESC cancela`;
+    ? t('ui.arremesso.mira_area', {raio:areaRaio, alcance})
+    : t('ui.arremesso.mira_alvo', {alcance});
+  leg.innerHTML = `${catDef.emoji || item.emoji || '🔥'} ${(catDef.nome || item.name || t('ui.arremesso.arremessar')).toUpperCase()} — ${_alvoTxt} &nbsp;|&nbsp; ${t('ui.magia.esc_cancela')}`;
   leg.style.display = 'block';
-  GS.adicionarLog(`${catDef.emoji || '🔥'} Mira de arremesso — ${isArea ? 'clique numa casa (área verde segue o cursor)' : 'clique num inimigo destacado'} (ESC cancela).`);
+  GS.adicionarLog(`${catDef.emoji || '🔥'} ` + t(isArea ? 'ui.arremesso.log_mira_area' : 'ui.arremesso.log_mira_alvo'));
   document.addEventListener('keydown', _keyThrowEsc);
   document.addEventListener('mousedown', _clickOutsideThrow, true);
 }
@@ -12059,12 +12046,13 @@ function _mpAbaAtivo(state){
     </div>`;
 
   if(manual){
-    const acao  = mm.acao ? `<b class="gasta">${_esc(mm.acao)}</b>` : '<b class="livre">livre</b>';
-    const bonus = mm.bonus ? '<b class="gasta">usada</b>' : '<b class="livre">livre</b>';
+    const _livre = `<b class="livre">${t('ui.hud.livre')}</b>`;
+    const acao  = mm.acao ? `<b class="gasta">${_esc(mm.acao)}</b>` : _livre;
+    const bonus = mm.bonus ? `<b class="gasta">${t('ui.hud.usada')}</b>` : _livre;
     h += `<div class="mp-recursos">
-        <div>👣 MOVIMENTO<b class="mov">${mm.moves_left}<span style="font-size:.6rem;opacity:.6">/${mm.moves_max}</span></b></div>
-        <div>⚡ AÇÃO${acao}</div>
-        <div>✨ BÔNUS${bonus}</div>
+        <div>${t('ui.mestre.movimento')}<b class="mov">${mm.moves_left}<span style="font-size:.6rem;opacity:.6">/${mm.moves_max}</span></b></div>
+        <div>${t('ui.mestre.acao')}${acao}</div>
+        <div>${t('ui.mestre.bonus')}${bonus}</div>
       </div>`;
   }
 
@@ -12081,16 +12069,16 @@ function _mpAbaAtivo(state){
   const ataques = (m.attacks && m.attacks.length) ? m.attacks
                 : (m.atk_bonus != null ? [{name:'Ataque', atk_bonus:m.atk_bonus, damage:m.damage, num_attacks:1}] : []);
   if(ataques.length){
-    h += `<div class="mp-sec">ATAQUES <span style="color:var(--text2);letter-spacing:0">— gastam a ação</span></div>`;
+    h += `<div class="mp-sec">${t('ui.mestre.ataques')} <span style="color:var(--text2);letter-spacing:0">${t('ui.mestre.gastam_acao')}</span></div>`;
     ataques.forEach((a, i) => {
       const cargas = manual ? GS.masterAttackCharges(i) : (a.num_attacks || 1);
       const pode = manual && cargas > 0 && GS.masterPodeAtacar();
       const b = (a.atk_bonus != null) ? ((a.atk_bonus >= 0 ? '+' : '') + a.atk_bonus) : '';
-      const alc = a.range ? `alcance ${a.range}q` : 'corpo a corpo';
+      const alc = a.range ? t('ui.mestre.alcance_q', {n:a.range}) : t('ui.mestre.corpo_a_corpo');
       const armado = window._mpGolpeArmado === i ? ' armado' : '';
       h += `<div class="mp-linha ${pode ? 'atk'+armado : 'off'}" data-atk="${i}">
           <span style="font-size:1rem">${a.range ? '🎯' : '⚔️'}</span>
-          <div class="txt"><b>${_esc(a.name || 'Ataque')}</b><div class="meta">${b} · ${_esc(a.damage || '')} · ${alc}</div></div>
+          <div class="txt"><b>${_esc(a.name || t('ui.mestre.ataque'))}</b><div class="meta">${b} · ${_esc(a.damage || '')} · ${alc}</div></div>
           <span class="mp-cargas">${'●'.repeat(cargas) || '—'}</span>
         </div>`;
     });
@@ -12100,16 +12088,16 @@ function _mpAbaAtivo(state){
   const abis = (m.special_abilities || []).filter(
     a => _MP_ESMAGAR_PRESO.includes(a.id) || (a.action_type && a.action_type !== 'passiva'));
   if(abis.length){
-    h += `<div class="mp-sec">MAGIAS E HABILIDADES</div>`;
+    h += `<div class="mp-sec">${t('ui.mestre.magias_habilidades')}</div>`;
     abis.forEach(a => {
       const naoImpl = _MP_NAO_IMPLEMENTADAS.includes(a.id);
       const ativavel = _mpAtivavel(a);
       const custo = _mpCustoDe(a);
       const bloqueado = custo === 'principal' ? !!(mm && mm.acao) : custo === 'bonus' ? !!(mm && mm.bonus) : false;
       const pode = manual && ativavel && !bloqueado;
-      const motivo = naoImpl ? 'não implementada'
-                   : !ativavel ? 'IA apenas'
-                   : bloqueado ? 'ação já gasta' : '';
+      const motivo = naoImpl ? t('ui.mestre.nao_implementada')
+                   : !ativavel ? t('ui.mestre.ia_apenas')
+                   : bloqueado ? t('ui.mestre.acao_gasta') : '';
       h += `<div class="mp-linha ${pode ? 'hab' : 'off'}" data-hab="${_esc(a.id)}">
           <span style="font-size:1rem">✦</span>
           <div class="txt"><b>${_esc(a.name || a.id)}</b> <span class="mp-custo">${_rotulo(custo, 'ui.mestre.custo', 'AÇÃO')}</span>
@@ -12253,15 +12241,15 @@ function _mpAbaMestre(state){
   const falas = state.falas || [];
   let h = '';
   if(reserva.length){
-    h += `<div class="mp-sec">REFORÇOS</div>` + reserva.map(r =>
+    h += `<div class="mp-sec">${t('ui.mestre.reforcos')}</div>` + reserva.map(r =>
       `<button class="mestre-reforco-btn mp-linha ${window._modoImplantarReforco === r.type ? 'atk armado' : 'atk'}" data-rtype="${_esc(r.type)}">
          <span class="txt"><b>${r.emoji || '👾'} ${_esc(r.name || r.type)}</b> ×${r.count}</span>
        </button>`).join('');
     if(window._modoImplantarReforco)
-      h += `<div style="font-size:.6rem;color:var(--text2)">Clique numa casa livre para implantar (Esc cancela)</div>`;
+      h += `<div style="font-size:.6rem;color:var(--text2)">${t('ui.mestre.clique_implantar')}</div>`;
   }
   if(falas.length){
-    h += `<div class="mp-sec">FALAS</div>` + falas.map(f =>
+    h += `<div class="mp-sec">${t('ui.mestre.falas')}</div>` + falas.map(f =>
       `<button class="mestre-fala-btn mp-linha hab" data-fid="${_esc(f.id)}">
          <span class="txt">${_esc((f.falante && f.falante.emoji) || '💬')} ${_esc((f.falante && f.falante.nome) || 'NPC')}:
          <i>${_esc((f.texto || '').slice(0, 40))}${(f.texto || '').length > 40 ? '…' : ''}</i></span>
@@ -12270,12 +12258,12 @@ function _mpAbaMestre(state){
   // Só no teste do editor: é lá que o autor precisa saber por que uma criatura
   // ou um objeto não apareceu com a arte certa.
   if(state.test_mode){
-    h += `<div class="mp-sec">DIAGNÓSTICO</div>
+    h += `<div class="mp-sec">${t('ui.mestre.diagnostico')}</div>
       <button class="mestre-diag-btn mp-linha hab">
-        <span class="txt">🔎 Arte 3D (modelos e imagens)</span>
+        <span class="txt">${t('ui.mestre.arte_3d')}</span>
       </button>`;
   }
-  return h || '<div class="mestre-vazio">Sem reforços nem falas nesta masmorra.</div>';
+  return h || `<div class="mestre-vazio">${t('ui.mestre.sem_reforcos')}</div>`;
 }
 
 function _mpWireMestre(host, state){
@@ -13357,7 +13345,7 @@ function openChestWindow(chest){
   _openDecorLootId = null;   // disarm decor auto-refresh
   tocarSomBau();
   const titleEl = $('chest-title');
-  if (titleEl) titleEl.textContent = '🎁 Baú de Tesouro';
+  if (titleEl) titleEl.textContent = t('ui.bau.titulo');
   _renderChestWindow(chest);
   $('chest-overlay').classList.add('open');
 }
@@ -14117,7 +14105,7 @@ function _modificadoresTemporariosStatus(p){
 function fecharMenuStatus(){ document.getElementById('menu-status-overlay')?.classList.remove('open'); }
 function abrirMenuStatus(pid){
   const p = _playerMenuMagias(pid);
-  if(!p){ toast('Status indisponível agora.'); return; }
+  if(!p){ toast(t('ui.status.indisponivel')); return; }
   let overlay = document.getElementById('menu-status-overlay');
   if(!overlay){ overlay = document.createElement('div'); overlay.id = 'menu-status-overlay'; overlay.onclick = e => { if(e.target === overlay) fecharMenuStatus(); }; document.body.appendChild(overlay); }
   const weapon = p.weapon || p.gear?.weapon;
@@ -14131,7 +14119,7 @@ function abrirMenuStatus(pid){
   const bonusArma = Number(weapon?.attack_bonus ?? weapon?.atk_bonus ?? weapon?.bonus_atk
     ?? weapon?.bonus_ataque ?? ((weapon?.effect === 'atk' || weapon?.effect === 'atk_bonus') ? weapon?.value : 0)) || 0;
   const bonusBaseAtaque = baseAtk - danoBase - bonusArma;
-  const nomeAtributoAtaque = {str_: 'FOR', dex: 'DES', con_: 'CON', int_: 'INT'}[statKey] || 'FOR';
+  const nomeAtributoAtaque = _rotulo(statKey, 'ui.atributo.sigla', t('ui.atributo.sigla.str_'));
   const cancao = p.buffs_cancao || {};
   const gl = p.guerreiro_luz_ativo ? (p.guerreiro_luz_bonus || {}) : {};
   const sobrevivencia = (Number(p.fome ?? p.hunger ?? 100) > 80 && Number(p.sede ?? p.thirst ?? 100) > 80) ? 1
@@ -14139,18 +14127,19 @@ function abrirMenuStatus(pid){
   const armadas = GS.getWarriorSelected?.() || [];
   const bonusAtaque = sobrevivencia + (cancao.bonus_acerto || 0) + (gl.ataque || 0) + (p.skill_bonus_acerto || 0) + (armadas.includes('mira_certeira') ? 2 : 0);
   const acertoTotal = bonusBaseAtaque + danoBase + bonusArma + bonusAtaque;
-  const detalheAcerto = `BBA ${_fmtBonus(bonusBaseAtaque)} · ${nomeAtributoAtaque} ${_fmtBonus(danoBase)} · arma ${_fmtBonus(bonusArma)} · temporários ${_fmtBonus(bonusAtaque)}`;
+  const detalheAcerto = t('ui.status.detalhe_acerto', {bba:_fmtBonus(bonusBaseAtaque), attr:nomeAtributoAtaque, mod:_fmtBonus(danoBase), arma:_fmtBonus(bonusArma), temp:_fmtBonus(bonusAtaque)});
   const bonusDano = sobrevivencia + (cancao.bonus_dano || 0) + (gl.dano || 0) + (p.tecnica_buff_dano_arma || 0);
   const bonusCa = (cancao.bonus_ca || 0) + (gl.ca || 0);
   const bonusRes = sobrevivencia + (cancao.bonus_res || 0);
   const dano = `${dadoDano} ${_fmtBonus(danoBase)} → ${dadoDano} ${_fmtBonus(danoBase + bonusDano)}`;
   const temporarios = _modificadoresTemporariosStatus(p);
   const linha = (rotulo, valor, detalhe='') => `<div class="st-row"><span>${rotulo}</span><b>${valor}</b>${detalhe ? `<small>${detalhe}</small>` : ''}</div>`;
-  overlay.innerHTML = `<section class="menu-status" role="dialog" aria-modal="true" aria-label="Status do personagem">
-    <header class="st-header"><div><b>📊 STATUS</b><small>${p.name || 'Herói'} · tecla S</small></div><button onclick="fecharMenuStatus()" aria-label="Fechar">✕</button></header>
-    <div class="st-body"><section><h3>COMBATE</h3>${linha('Arma equipada', weapon?.name || 'Desarmado')}${linha('Acerto total', _fmtBonus(acertoTotal), detalheAcerto)}${linha('Classe de Armadura', `${p.ac ?? 10} → ${Number(p.ac ?? 10) + bonusCa}`, 'base → atual')}${linha('Dano', dano, `${weapon?.stat === 'dex' ? 'Destreza' : 'Força'} · base → atual`)}</section>
-    <section><h3>TESTES DE RESISTÊNCIA</h3>${linha('Fortitude', `${_fmtBonus(p.fort)} → ${_fmtBonus(Number(p.fort || 0) + bonusRes)}`, 'base → atual')}${linha('Reflexos', `${_fmtBonus(p.ref_)} → ${_fmtBonus(Number(p.ref_ || 0) + bonusRes)}`, 'base → atual')}${linha('Vontade', `${_fmtBonus(p.will)} → ${_fmtBonus(Number(p.will || 0) + bonusRes)}`, 'base → atual')}</section>
-    <section><h3>MODIFICADORES TEMPORÁRIOS</h3>${temporarios.length ? temporarios.map(m => `<div class="st-effect"><b>${m.nome}</b><span>${m.efeito}</span>${m.ate && GS.gameState?.round ? `<em>${Math.max(0,m.ate-GS.gameState.round)} rodada(s)</em>` : ''}</div>`).join('') : '<p class="st-empty">Nenhum bônus ou penalidade temporária.</p>'}</section></div></section>`;
+  const _bAtual = t('ui.status.base_atual');
+  overlay.innerHTML = `<section class="menu-status" role="dialog" aria-modal="true" aria-label="${t('ui.status.aria')}">
+    <header class="st-header"><div><b>${t('ui.status.titulo')}</b><small>${p.name || t('ui.tabuleiro.heroi')} · ${t('ui.status.tecla_s')}</small></div><button onclick="fecharMenuStatus()" aria-label="${t('ui.geral.fechar')}">✕</button></header>
+    <div class="st-body"><section><h3>${t('ui.status.combate')}</h3>${linha(t('ui.status.arma_equipada'), weapon?.name || t('ui.status.desarmado'))}${linha(t('ui.status.acerto_total'), _fmtBonus(acertoTotal), detalheAcerto)}${linha(t('ui.status.classe_armadura'), `${p.ac ?? 10} → ${Number(p.ac ?? 10) + bonusCa}`, _bAtual)}${linha(t('ui.pergaminho.dano'), dano, `${t(weapon?.stat === 'dex' ? 'ui.atributo.destreza' : 'ui.atributo.forca')} · ${_bAtual}`)}</section>
+    <section><h3>${t('ui.status.resistencias')}</h3>${linha(t('ui.resistencia.fortitude'), `${_fmtBonus(p.fort)} → ${_fmtBonus(Number(p.fort || 0) + bonusRes)}`, _bAtual)}${linha(t('ui.resistencia.reflexos'), `${_fmtBonus(p.ref_)} → ${_fmtBonus(Number(p.ref_ || 0) + bonusRes)}`, _bAtual)}${linha(t('ui.resistencia.vontade'), `${_fmtBonus(p.will)} → ${_fmtBonus(Number(p.will || 0) + bonusRes)}`, _bAtual)}</section>
+    <section><h3>${t('ui.status.modificadores_temp')}</h3>${temporarios.length ? temporarios.map(m => `<div class="st-effect"><b>${m.nome}</b><span>${m.efeito}</span>${m.ate && GS.gameState?.round ? `<em>${t('ui.status.rodadas_restantes', {n:Math.max(0,m.ate-GS.gameState.round)})}</em>` : ''}</div>`).join('') : `<p class="st-empty">${t('ui.status.sem_temporarios')}</p>`}</section></div></section>`;
   requestAnimationFrame(() => overlay.classList.add('open'));
 }
 window.abrirMenuStatus = abrirMenuStatus;
@@ -14200,15 +14189,15 @@ function renderSlotsMenuMagias(heroi){
   const circulos = ['primeiro','segundo','terceiro'];
   const grupos = circulos.map(circulo => {
     const s = status[circulo];
-    if(!s.total) return `<div class="mm-slot-circle"><h4>${_labelCirculo(circulo)}</h4><span class="mm-slot-locked">Disponível em nível maior</span></div>`;
+    if(!s.total) return `<div class="mm-slot-circle"><h4>${_labelCirculo(circulo)}</h4><span class="mm-slot-locked">${t('ui.magia.slot_nivel_maior')}</span></div>`;
     const pips = Array.from({length:s.total}, (_, i) => {
-      if(i < s.livres) return '<span class="mm-slot-pip ready" title="Slot disponível">✓</span>';
+      if(i < s.livres) return `<span class="mm-slot-pip ready" title="${t('ui.magia.slot_disponivel')}">✓</span>`;
       const falta = s.espera[i - s.livres] || 0;
-      return `<span class="mm-slot-pip cooldown" title="Volta em ${falta} rodada(s)">${falta}</span>`;
+      return `<span class="mm-slot-pip cooldown" title="${t('ui.magia.slot_volta_em', {n:falta})}">${falta}</span>`;
     }).join('');
-    return `<div class="mm-slot-circle"><h4>${_labelCirculo(circulo)}</h4><span class="mm-slot-count${s.livres === 0 ? ' empty' : ''}">${s.livres}/${s.total} disponíveis</span><div class="mm-slot-pips">${pips}</div></div>`;
+    return `<div class="mm-slot-circle"><h4>${_labelCirculo(circulo)}</h4><span class="mm-slot-count${s.livres === 0 ? ' empty' : ''}">${t('ui.magia.slots_disponiveis', {livres:s.livres, total:s.total})}</span><div class="mm-slot-pips">${pips}</div></div>`;
   }).join('');
-  return `<aside class="menu-magias-slots" aria-label="Slots de magias"><div class="mm-slots-header">SLOTS DE MAGIAS<small>Recarga por círculo</small></div>${grupos}</aside>`;
+  return `<aside class="menu-magias-slots" aria-label="${t('ui.magia.slots_aria')}"><div class="mm-slots-header">${t('ui.magia.slots_titulo')}<small>${t('ui.magia.slots_recarga')}</small></div>${grupos}</aside>`;
 }
 
 function _atualizarMenuMagiasSeAberto(){
@@ -14226,9 +14215,9 @@ function ativarMagiaDoMenu(magiaId){
 
 function abrirMenuMagias(pid){
   const player = _playerMenuMagias(pid);
-  if(!player){ toast('Ficha de magias indisponível agora.'); return; }
+  if(!player){ toast(t('ui.magia.ficha_indisponivel')); return; }
   if(player.class_id !== 'mage' && player.class_id !== 'cleric'){
-    toast('Este personagem não possui magias.'); return;
+    toast(t('ui.magia.sem_magias')); return;
   }
   _menuMagiasPid = pid;
   let overlay = document.getElementById('menu-magias-overlay');
@@ -14278,18 +14267,18 @@ function abrirMenuMagias(pid){
   overlay.innerHTML = `
     <div class="menu-magias-layout">
       ${renderSlotsMenuMagias(player)}
-      <section class="menu-magias" role="dialog" aria-modal="true" aria-label="Menu de magias">
-        <header class="mm-header"><div><b><img class="menu-magias-icone" src="assets/magias.png" alt="" aria-hidden="true"> GRIMÓRIO</b><small>${player.name || 'Herói'} · tecla M</small></div><button onclick="fecharMenuMagias()" aria-label="Fechar">✕</button></header>
+      <section class="menu-magias" role="dialog" aria-modal="true" aria-label="${t('ui.magia.menu_aria')}">
+        <header class="mm-header"><div><b><img class="menu-magias-icone" src="assets/magias.png" alt="" aria-hidden="true"> ${t('ui.magia.grimorio')}</b><small>${player.name || t('ui.tabuleiro.heroi')} · ${t('ui.magia.tecla_m')}</small></div><button onclick="fecharMenuMagias()" aria-label="${t('ui.geral.fechar')}">✕</button></header>
         <div class="mm-body">
-          <section><h3>MODIFICADORES DE MAGIA</h3>
+          <section><h3>${t('ui.magia.modificadores')}</h3>
             ${modificadores.length ? `<div class="mm-list">${modificadores.map(renderMod).join('')}</div>`
-              : '<p class="mm-empty">Nenhum modificador de magia disponível.</p>'}
+              : `<p class="mm-empty">${t('ui.magia.sem_modificadores')}</p>`}
           </section>
-          <section><h3>MAGIAS CONHECIDAS</h3>
+          <section><h3>${t('ui.magia.conhecidas')}</h3>
             ${conhecidos.length ? porCirculo.map(c => {
               const magias = conhecidos.filter(m => m.circulo === c);
               return magias.length ? `<div class="mm-circle"><h4>${_labelCirculo(c)}</h4><div class="mm-list">${magias.map(renderMagia).join('')}</div></div>` : '';
-            }).join('') : '<p class="mm-empty">Nenhuma magia conhecida.</p>'}
+            }).join('') : `<p class="mm-empty">${t('ui.magia.nenhuma_conhecida')}</p>`}
           </section>
         </div>
       </section>
@@ -14565,12 +14554,12 @@ function ativarHabilidadeDoMenu(skillId){
 function ativarTecnicaGuildaDoMenu(tid){
   const state = GS.gameState;
   const me = state && state.players.find(p => p.id === GS.myPid);
-  if(!me || state.phase !== 'playing' || !GS.isMyTurn || !me.alive){ toast('A técnica só pode ser usada no seu turno na masmorra.'); return; }
+  if(!me || state.phase !== 'playing' || !GS.isMyTurn || !me.alive){ toast(t('ui.tecnica.so_turno_masmorra')); return; }
   const cat = (GS.guildCatalogFor(me.class_id) || []).find(x => x.id === tid);
   if(!cat){ return; }
   const restante = GS.tecnicaRestante(me, tid);
-  if(cat.automatica){ toast('Esta técnica é automática.'); return; }
-  if(restante > 0){ toast(`Técnica recarrega em ${restante} rodada(s).`, 'var(--orange)'); return; }
+  if(cat.automatica){ toast(t('ui.tecnica.automatica')); return; }
+  if(restante > 0){ toast(t('ui.tecnica.recarrega_em', {n:restante}), 'var(--orange)'); return; }
   fecharMenuHabilidades();
   fecharMenuMagias();
   const pp = me.pos || [0,0];
@@ -14822,13 +14811,13 @@ function handleGameOver(msg){
   setTimeout(()=>{
     showScreen('screen-end');
     if(msg.victory){
-      $('end-title').textContent='⚔ VITÓRIA! ⚔';
+      $('end-title').textContent=t('ui.fim.vitoria_titulo');
       $('end-title').style.color='var(--gold)';
-      $('end-msg').textContent='Os aventureiros salvaram o reino!';
+      $('end-msg').textContent=t('ui.fim.vitoria_msg');
     } else {
-      $('end-title').textContent='💀 DERROTA 💀';
+      $('end-title').textContent=t('ui.fim.derrota_titulo');
       $('end-title').style.color='var(--red)';
-      $('end-msg').textContent='A escuridão venceu... desta vez.';
+      $('end-msg').textContent=t('ui.fim.derrota_msg');
     }
     renderStory();   // Fase 4b: tela final da campanha (sobre o game over)
   }, 2000);
@@ -14852,7 +14841,7 @@ document.addEventListener('keydown', e=>{
   if(e.key==='Escape' && window._modoImplantarReforco){
     window._modoImplantarReforco = null;
     if(GS.isMaster()) renderMasterPanel(GS.gameState);
-    toast('Implantação cancelada.', 'var(--text2)');
+    toast(t('ui.mestre.implantacao_cancelada'), 'var(--text2)');
     e.preventDefault(); return;
   }
   // ESC fecha o minimapa de CR (mestre)
@@ -15453,7 +15442,7 @@ function restoreTileSpacing3D(){
 
 function toggle3D(){
   if(!window.THREE){
-    toast('⚠ Three.js não disponível — verifique a conexão de internet.','var(--orange)');
+    toast(t('ui.hud.three_indisponivel'),'var(--orange)');
     return;
   }
   mode3D = !mode3D;
@@ -15466,7 +15455,7 @@ function toggle3D(){
     btn.textContent = '◀ 2D';
     if(hint)  hint.style.display  = 'inline';
     if(reset) reset.style.display = 'inline-block';
-    if(spacingReset){ spacingReset.style.display='inline-block'; spacingReset.disabled=_tileFootprint3D===0.94; spacingReset.textContent=_tileFootprint3D===0.94?'✓ Espaço 0,94':'↶ Espaço 0,94'; }
+    if(spacingReset){ spacingReset.style.display='inline-block'; spacingReset.disabled=_tileFootprint3D===0.94; spacingReset.textContent=t(_tileFootprint3D===0.94?'ui.hud.espaco_ok':'ui.hud.espaco_voltar'); }
     $('dungeon-canvas').style.display = 'none';
     if(GS.gameState) renderMap3D(GS.gameState);   // init3D called lazily inside
   } else {
@@ -24093,12 +24082,7 @@ function _csfShowPanel(classId, animate){
   }
 
   // Renderizar apenas os 4 atributos oficiais: Força, Destreza, Inteligência, Constituição
-  const ATRIBUTOS = [
-    { key: 'forca',        label: 'Força' },
-    { key: 'destreza',     label: 'Destreza' },
-    { key: 'inteligencia', label: 'Inteligência' },
-    { key: 'constituicao', label: 'Constituição' }
-  ];
+  const ATRIBUTOS = ['forca', 'destreza', 'inteligencia', 'constituicao'];
 
   function renderStats(stats) {
     return ATRIBUTOS.map(attr => `
@@ -24111,8 +24095,8 @@ function _csfShowPanel(classId, animate){
           letter-spacing: 2px;
           margin-bottom: 3px;
         ">
-          <span>${attr.label}</span>
-          <span>${stats[attr.key] || 0}</span>
+          <span>${_rotulo(attr, 'ui.atributo', attr)}</span>
+          <span>${stats[attr] || 0}</span>
         </div>
         <div style="
           width: 100%;
@@ -24121,11 +24105,11 @@ function _csfShowPanel(classId, animate){
           border: 1px solid #3a3a3a;
         ">
           <div style="
-            width: ${((stats[attr.key] || 0) / 25) * 100}%;
+            width: ${((stats[attr] || 0) / 25) * 100}%;
             height: 100%;
             background: #c8a951;
             transition: width 0.4s ease;
-          " class="cs-stat-bar" data-attr="${attr.key}"></div>
+          " class="cs-stat-bar" data-attr="${attr}"></div>
         </div>
       </div>
     `).join('');
@@ -24139,19 +24123,19 @@ function _csfShowPanel(classId, animate){
   const percepcao = Math.max(1, 10 + Math.floor(raioVisao / 2));
   document.getElementById('cs-stats').innerHTML = renderStats(d.stats) + `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; padding:8px 10px; background:rgba(100,180,255,.08); border:1px solid rgba(100,180,255,.30);">
-      <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">👁 RAIO DE VISÃO</span>
+      <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.selecao.raio_visao')}</span>
       <strong style="color:#8ed0ff; font-size:16px;">${raioVisao}</strong>
      </div>
      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; padding:8px 10px; background:rgba(170,130,255,.08); border:1px solid rgba(170,130,255,.30);">
-       <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">👁‍🗨 PERCEPÇÃO</span>
+       <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.selecao.percepcao')}</span>
        <strong style="color:#c4a7ff; font-size:16px;">${percepcao}</strong>
      </div>`;
 
   // Animate stat bars (escala 1–25, mapeada para 0–100%)
   requestAnimationFrame(()=>{
     ATRIBUTOS.forEach((attr)=>{
-      const b=document.querySelector(`.cs-stat-bar[data-attr="${attr.key}"]`);
-      if(b) b.style.width=((d.stats[attr.key] || 0) / 25) * 100 + '%';
+      const b=document.querySelector(`.cs-stat-bar[data-attr="${attr}"]`);
+      if(b) b.style.width=((d.stats[attr] || 0) / 25) * 100 + '%';
     });
   });
 
@@ -25548,9 +25532,9 @@ function _renderBannerForaMasmorra(){
       + 'padding:8px 14px;color:#dce8ff;font-size:13px;display:flex;gap:10px;align-items:center;';
     host.appendChild(el);
   }
-  el.innerHTML = `<span>🏙️ Você deixou a masmorra — ${n>0 ? `volta em <b>${n}</b> rodada(s)` : '<b>pronto para voltar</b>'}</span>`;
+  el.innerHTML = `<span>${t('ui.fora.banner', {estado: n>0 ? t('ui.fora.volta_em', {n}) : t('ui.fora.pronto')})}</span>`;
   const btn = document.createElement('button');
-  btn.textContent = '⛓️ Voltar à masmorra';
+  btn.textContent = t('ui.fora.voltar_masmorra');
   btn.disabled = n > 0;
   btn.onclick = () => GS.voltarMasmorra();
   el.appendChild(btn);
@@ -25558,8 +25542,8 @@ function _renderBannerForaMasmorra(){
 
 GS.on('sceneStart', _sceneStart);
 GS.on('sceneBranch', _sceneBranch);
-GS.on('sceneTestResult', msg => { toast((msg.success?'Sucesso':'Falha')+' no teste: '+msg.total+' contra CD '+msg.cd+'.', msg.success?'var(--green)':'var(--red)'); });
-GS.on('sceneEndWarning', msg => { if(confirm('Há '+msg.missing.length+' evento(s) obrigatório(s) não alcançado(s). Encerrar mesmo assim?')) GS.sceneEnd(true); });
+GS.on('sceneTestResult', msg => { toast(t(msg.success?'ui.cena.teste_sucesso':'ui.cena.teste_falha', {total:msg.total, cd:msg.cd}), msg.success?'var(--green)':'var(--red)'); });
+GS.on('sceneEndWarning', msg => { if(confirm(t('ui.cena.encerrar_com_pendencias', {n:msg.missing.length}))) GS.sceneEnd(true); });
 GS.on('sceneEnd', _sceneEnd);
 GS.on('cityState', msg => {
   fecharQuadrosFlutuantes();

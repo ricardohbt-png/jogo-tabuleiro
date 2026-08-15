@@ -63,6 +63,18 @@ FECHADAS = {
     "_iniciarModoMagia", "_renderChestWindow", "abrirPainelLoot",
     "renderFichaCidadeBody", "ativarHabilidadeDoMenu",
     "iniciarModoArremessoAdagaPrincipal", "iniciarModoArremessoLanca",
+    # Lote 3, Task 2 — a faixa 3-4: cidade, refúgio, loja, painéis de classe,
+    # mira de magia/arremesso, painel do mestre, menus, fim de jogo.
+    "startGame", "_renderRefugioPainel", "_refreshCityLocation", "handleCityState",
+    "openShop", "_renderSellItems", "renderConteudoAtributosPedro", "comprarItem",
+    "_tooltipInstrumentoHTML", "renderMap", "renderBotoesAcaoBonus",
+    "iniciarModoImposicaoMaos", "abrirPainelCriarArmadilha", "abrirPainelVenenoRapido",
+    "_aliadosMortosNoRaioCleric", "iniciarModoPurificacao", "castarMagia",
+    "_specAlvoMagia", "_iniciarMiraArremesso", "_mpAbaAtivo", "_mpAbaMestre",
+    "abrirMenuStatus", "renderSlotsMenuMagias", "abrirMenuMagias",
+    "ativarTecnicaGuildaDoMenu", "handleGameOver", "toggle3D", "_csfShowPanel",
+    "_renderBannerForaMasmorra", "replaceAbilityEmoji", "_audioPanelEnsure",
+    "_makeBillboardSprite",
 }
 
 
@@ -140,13 +152,110 @@ def _pt_dicionarizado():
 _PT_DICIONARIZADO = _pt_dicionarizado()
 
 
+# Um literal que CONTÉM `data-i18n` é markup, e ali o português é a FONTE que o
+# _i18nApply substitui — exatamente como o GRIMORIO_CLIENT é a fonte do
+# aplicarCatalogo. Não é dívida, e cobrá-lo é impossível: o dia em que o markup
+# estiver 100% marcado o texto continua no arquivo. São dois casos no game.js —
+# o `document.body.innerHTML` (13 KB, UM literal só) e o painel ⚙️. A garantia de
+# que a exclusão não esconde trabalho real é a seção [6], que varre esses mesmos
+# literais atrás de texto acentuado FORA de um elemento com data-i18n.
+RE_MARKUP_I18N = re.compile(r"data-i18n")
+
+# `console.log/warn/error` é diagnóstico para o desenvolvedor — o jogador nunca
+# vê, e traduzi-lo tornaria a saída de depuração dependente do idioma. Mesma
+# posição que o plano do Lote 3 registra para o gameState.js.
+#
+# A faixa é a CHAMADA INTEIRA, achada por parênteses casados, e não a linha do
+# `console.` — a primeira versão olhava só a linha de abertura e deixava passar
+# as continuações de um console.warn de 5 linhas (dois literais em
+# _makeBillboardSprite). Mesma lição do tokenizador: texto dentro de código
+# precisa de varredura com estado.
+RE_CONSOLE = re.compile(r"console\.(?:log|warn|error|info|debug)\s*\(")
+
+
+def _faixas_console():
+    """[(linha_ini, linha_fim)] de cada chamada console.* do game.js."""
+    faixas = []
+    for m in RE_CONSOLE.finditer(GAME):
+        i = GAME.index("(", m.start())
+        prof, k, aspa = 0, i, None
+        while k < len(GAME):
+            c = GAME[k]
+            if aspa:
+                if c == "\\":
+                    k += 2; continue
+                if c == aspa:
+                    aspa = None
+            elif c in "'\"`":
+                aspa = c
+            elif c == "(":
+                prof += 1
+            elif c == ")":
+                prof -= 1
+                if prof == 0:
+                    break
+            k += 1
+        faixas.append((GAME[:i].count("\n") + 1, GAME[:k].count("\n") + 1))
+    return faixas
+
+
+FAIXAS_CONSOLE = _faixas_console()
+
+
+def _e_arg_de_console(linha, _txt=None):
+    return any(a <= linha <= b for a, b in FAIXAS_CONSOLE)
+
+
+# Literais que NUNCA se traduzem, por decisão de conteúdo — não por dívida.
+# Hoje só o seletor de idioma: o nome de cada língua fica sempre na própria
+# língua, e é isso que permite achá-la sem já saber ler a interface.
+LITERAIS_INTENCIONAIS = {
+    '<option value="pt">Português</option><option value="en">English</option>',
+}
+
+
 def _literais_pendentes():
     """(linha, texto) de cada literal em português que AINDA não tem tradução."""
     for linha, txt in texto_de_interface(GAME):
         dentro = any(a <= linha <= b for a, b in FAIXAS_NAO_PENDENTES)
         if dentro and (txt in _PT_DICIONARIZADO or txt.strip() in _PT_DICIONARIZADO):
             continue
+        if RE_MARKUP_I18N.search(txt):
+            continue
+        if txt in LITERAIS_INTENCIONAIS:
+            continue
+        if _e_arg_de_console(linha):
+            continue
         yield linha, txt
+
+
+def _literais_de_markup():
+    """Os literais que a regra do data-i18n tira do placar."""
+    return [(l, t) for l, t in texto_de_interface(GAME) if RE_MARKUP_I18N.search(t)]
+
+
+# Texto entre tags, ignorando comentário HTML e o buraco ${} do tokenizador.
+RE_NO_TEXTO = re.compile(r"<([a-zA-Z][^<>]*)>([^<>]+)")
+RE_COMENT_HTML = re.compile(r"<!--.*?-->", re.S)
+RE_ACENTO = re.compile(r"[ãáàâçéêíóõôúÃÁÀÂÇÉÊÍÓÕÔÚ]")
+
+
+def _markup_sem_marcador():
+    """Texto acentuado dentro de markup que NÃO está sob data-i18n.
+
+    É o contrapeso da RE_MARKUP_I18N: sem isto, bastaria um data-i18n solto num
+    template para o resto dele sumir do placar."""
+    fora = []
+    for _linha, txt in _literais_de_markup():
+        limpo = RE_COMENT_HTML.sub(" ", txt).replace("${}", " ")
+        for attrs, texto in RE_NO_TEXTO.findall(limpo):
+            t = texto.strip()
+            if len(t) < 3 or not RE_ACENTO.search(t):
+                continue
+            if "data-i18n" in attrs:
+                continue
+            fora.append(t)
+    return fora
 
 
 def _por_funcao():
@@ -297,6 +406,24 @@ def _rodar_verificacoes():
 
     check("a chamada do GRIMORIO_CLIENT usa soNome=false",
           bool(re.search(r"aplicarCatalogo\(GRIMORIO_CLIENT,\s*false\)", GAME)))
+
+    print("\n[6] O markup com data-i18n está TODO marcado")
+    # Contrapeso da RE_MARKUP_I18N: aquele filtro tira do placar o literal que
+    # contém data-i18n, e o `document.body.innerHTML` é UM literal de 13 KB —
+    # sem esta varredura, um único marcador esconderia o template inteiro.
+    markup = _literais_de_markup()
+    check(f"os literais de markup foram encontrados ({len(markup)})", len(markup) >= 2)
+    fora = _markup_sem_marcador()
+    check(f"nenhum texto acentuado fora de data-i18n ({fora[:4] or 'ok'})", not fora)
+    # E a exclusão do console não pode virar porta dos fundos: as faixas são as
+    # chamadas em si, então uma linha de render qualquer não pode cair nelas.
+    check(f"as faixas de console foram achadas ({len(FAIXAS_CONSOLE)})",
+          len(FAIXAS_CONSOLE) > 5)
+    check("nenhuma faixa de console engole uma função inteira",
+          all(b - a < 12 for a, b in FAIXAS_CONSOLE))
+    check("a linha 1 do arquivo não é console", not _e_arg_de_console(1))
+    check(f"os literais intencionais ainda existem no game.js",
+          all(x in GAME for x in LITERAIS_INTENCIONAIS))
 
 
 if __name__ == "__main__":

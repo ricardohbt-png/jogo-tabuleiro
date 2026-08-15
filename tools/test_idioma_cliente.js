@@ -8,8 +8,14 @@ const check = (name, cond) => { if (cond) { PASS++; console.log("  ✅ " + name)
                                 else { FAIL++; console.log("  ❌ " + name); } };
 
 // O dicionário e o motor são <script> no navegador: aqui simulamos o window.
+// Carregar SÓ o strings.js não simula o navegador: o index.html inclui os seis
+// arquivos de src/lang/, e cada um faz Object.assign no LANG_STRINGS. Com um só,
+// a checagem [5] acusava como órfã toda chave data-i18n que morasse nos outros —
+// falso positivo medido no Lote 3, quando a interface passou a ter chaves lá.
+const LANG_FILES = ["strings", "catalogo", "composto", "interface", "erros", "narracao"];
 global.window = {};
-eval(fs.readFileSync(path.join(raiz, "src", "lang", "strings.js"), "utf8"));
+for (const f of LANG_FILES)
+  eval(fs.readFileSync(path.join(raiz, "src", "lang", f + ".js"), "utf8"));
 eval(fs.readFileSync(path.join(raiz, "src", "i18n.js"), "utf8"));
 const DICT = global.window.LANG_STRINGS;
 const I18N = global.window.I18N;
