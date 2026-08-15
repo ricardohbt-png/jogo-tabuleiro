@@ -11643,7 +11643,7 @@ class GameRoom:
                     await self._enviar_trap_result(
                         p, "Buraco Escondido", "🕳️", sucesso=True, dano=0, metade=False,
                         descricao="Um buraco disfarçado se abre sob seus pés.",
-                        efeitos_extra=[])
+                        efeitos_extra=[], tipo_id='buraco_escondido')
                 else:
                     dano_trap = self._reduzir_dano_escudo(p, trap["damage"])
                     p["hp"] = max(0, p["hp"] - dano_trap)
@@ -11652,7 +11652,7 @@ class GameRoom:
                     await self._enviar_trap_result(
                         p, "Buraco Escondido", "🕳️", sucesso=False, dano=dano_trap, metade=False,
                         descricao="Um buraco disfarçado se abre sob seus pés.",
-                        efeitos_extra=[f"💥 Sofreu {dano_trap} de dano"])
+                        efeitos_extra=[f"💥 Sofreu {dano_trap} de dano"], tipo_id='buraco_escondido')
                     if p["hp"] <= 0:
                         await self._player_dies(pid)
 
@@ -19998,10 +19998,16 @@ class GameRoom:
         await self.push_state()
 
     async def _enviar_trap_result(self, alvo, nome, icone, sucesso, dano, metade,
-                                   descricao, efeitos_extra, tick=False):
+                                   descricao, efeitos_extra, tick=False, tipo_id=None):
         """Envia o popup trap_result pra quem está no controle de `alvo`: o
         próprio jogador, ou o resgatador do prisioneiro (rescuer_pid). Monstros
-        e servos animados não têm cliente — não enviamos nada pra eles."""
+        e servos animados não têm cliente — não enviamos nada pra eles.
+
+        `tipo_id` é o id do tipo de armadilha. O cliente escolhe a ARTE do popup
+        por ele — antes escolhia pelo `nome`, que desde a etapa 2 chega traduzido
+        por conexão, então em inglês o mapa não casava e o popup ficava sem
+        imagem, em silêncio. Mesmo defeito que o data-ability-id resolveu para os
+        ícones de habilidade."""
         if self._eh_jogador(alvo):
             pid = alvo["id"]
         elif alvo is self.prisoner:
@@ -20014,6 +20020,7 @@ class GameRoom:
             "type": "trap_result", "nome": nome, "icone": icone,
             "sucesso": sucesso, "dano": dano, "metade": metade,
             "descricao": descricao, "efeitos_extra": efeitos_extra, "tick": tick,
+            "tipo_id": tipo_id,
         })
 
     async def _disparar_armadilha(self, alvo, arm):
@@ -20053,7 +20060,7 @@ class GameRoom:
                     mid = self._sortear_maldicao(arm.get("curse_category", "leve"))
                 await self._aplicar_maldicao(alvo, mid, nome, origem="armadilha")
             await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=save_ok, dano=0,
-                                            metade=False, descricao=tipo["descricao"], efeitos_extra=[])
+                                            metade=False, descricao=tipo["descricao"], efeitos_extra=[], tipo_id=arm["tipo"])
             self.armadilhas = [a for a in self.armadilhas if a["id"] != arm["id"]]
             if alvo.get("id") in self.players and alvo.get("alive"):
                 await self._conceder_xp_armadilha(arm, alvo)
@@ -20079,12 +20086,12 @@ class GameRoom:
                     efeitos_extra.insert(0, f"💥 Sofreu {dano_total} de dano")
                 await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=False,
                                                 dano=dano_total, metade=False,
-                                                descricao=tipo["descricao"], efeitos_extra=efeitos_extra)
+                                                descricao=tipo["descricao"], efeitos_extra=efeitos_extra, tipo_id=arm["tipo"])
             else:
                 await self.gm_say(T("narracao.evitou_sem_dano", alvo_nome=nome_criatura(alvo), nome=nome_cat("armadilha", arm["tipo"], nome)))
                 await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=True,
                                                 dano=0, metade=False,
-                                                descricao=tipo["descricao"], efeitos_extra=[])
+                                                descricao=tipo["descricao"], efeitos_extra=[], tipo_id=arm["tipo"])
 
         # PersistÃªncia / visibilidade.
         if tipo.get("persiste"):
@@ -20132,13 +20139,13 @@ class GameRoom:
         if save_ok:
             await self.gm_say(T("narracao.resistiu_ao_teletransporte", alvo_get_name_alvo=nome_criatura(alvo)))
             await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=True, dano=0, metade=False,
-                                            descricao=tipo["descricao"], efeitos_extra=[])
+                                            descricao=tipo["descricao"], efeitos_extra=[], tipo_id=arm["tipo"])
             return False  # sucesso mantÃ©m a armadilha ativa
         destino = self._saida_teletransporte_livre(alvo, arm.get("saida"))
         if destino is None:
             await self.gm_say(T("narracao.o_teletransporte_de_falha_saida_bloquead", alvo_get_name_alvo=nome_criatura(alvo)))
             await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=True, dano=0, metade=False,
-                                            descricao="A saída está bloqueada; o portal não consegue se abrir.", efeitos_extra=[])
+                                            descricao="A saída está bloqueada; o portal não consegue se abrir.", efeitos_extra=[], tipo_id=arm["tipo"])
             return False
         origem = list(alvo["pos"])
         alvo["pos"] = destino
@@ -20146,7 +20153,7 @@ class GameRoom:
             self._reveal_around(destino[0], destino[1], radius=self._get_raio_visao(alvo))
         await self.gm_say(T("narracao.desaparece_de_e_surge_em", alvo_get_name_alvo=nome_criatura(alvo), origem=origem, destino=destino))
         await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=False, dano=0, metade=False,
-                                        descricao=tipo["descricao"], efeitos_extra=[f"🌀 Teleportado para {destino[0]},{destino[1]}"])
+                                        descricao=tipo["descricao"], efeitos_extra=[f"🌀 Teleportado para {destino[0]},{destino[1]}"], tipo_id=arm["tipo"])
         return True
 
     async def _disparar_dardos_envenenados(self, alvo, arm, tipo):
@@ -20158,7 +20165,7 @@ class GameRoom:
             await self._aplicar_veneno(alvo, veneno_id, fonte="armadilha de dardos")
         await self._enviar_trap_result(
             alvo, tipo["nome"], tipo["icone"], sucesso=False, dano=dano, metade=False,
-            descricao=tipo["descricao"], efeitos_extra=[f"💥 Sofreu {dano} de dano perfurante", f"☠️ Veneno: {veneno_nome}"])
+            descricao=tipo["descricao"], efeitos_extra=[f"💥 Sofreu {dano} de dano perfurante", f"☠️ Veneno: {veneno_nome}"], tipo_id=arm["tipo"])
 
     async def _aplicar_armadilha_area(self, arm, tipo):
         """Armadilhas de área (mina/gás): cada alvo no raio testa o próprio save."""
@@ -20181,7 +20188,7 @@ class GameRoom:
                 await self.gm_say(T("narracao.evitou", alvo_nome=nome_criatura(alvo), tipo_nome=nome_criatura(tipo)))
                 await self._enviar_trap_result(alvo, tipo["nome"], tipo["icone"], sucesso=True,
                                                 dano=0, metade=False, descricao=tipo["descricao"],
-                                                efeitos_extra=[])
+                                                efeitos_extra=[], tipo_id=arm["tipo"])
                 continue
             metade = bool(save_ok and tipo.get("save_reduz"))
             dano_total = 0
@@ -20195,7 +20202,7 @@ class GameRoom:
                 efeitos_extra.insert(0, f"💥 Sofreu {dano_total} de dano")
             await self._enviar_trap_result(alvo, tipo["nome"], tipo["icone"], sucesso=save_ok,
                                             dano=dano_total, metade=metade, descricao=tipo["descricao"],
-                                            efeitos_extra=efeitos_extra)
+                                            efeitos_extra=efeitos_extra, tipo_id=arm["tipo"])
 
     async def _aplicar_efeito_armadilha(self, alvo, ef, arm):
         """Aplica um efeito de armadilha em `alvo`. Retorna (dano_aplicado,
@@ -20606,7 +20613,7 @@ class GameRoom:
                         alvo, tipo_meta.get("nome", arm["tipo"]), tipo_meta.get("icone", "🔥"),
                         sucesso=False, dano=dano, metade=False,
                         descricao=f"A {tipo_meta.get('nome', 'armadilha')} continua causando dano.",
-                        efeitos_extra=[], tick=True)
+                        efeitos_extra=[], tick=True, tipo_id=arm["tipo"])
                 ef["rodadas_restantes"] -= 1
                 if ef["rodadas_restantes"] > 0:
                     restantes.append(ef)
@@ -20633,7 +20640,7 @@ class GameRoom:
             await self._enviar_trap_result(
                 alvo, "Em Chamas", "🔥", sucesso=False, dano=1, metade=False,
                 descricao="As chamas continuam queimando.",
-                efeitos_extra=[], tick=True)
+                efeitos_extra=[], tick=True, tipo_id=arm["tipo"])
             alvo["em_chamas_rodadas"] = max(0, alvo.get("em_chamas_rodadas", 0) - 1)
 
     async def _processar_acido_residual_turno(self):
@@ -20652,7 +20659,7 @@ class GameRoom:
             await self._dano_em_alvo(alvo, d, "acido", None)
             await self._enviar_trap_result(
                 alvo, "Ácido Residual", "🧪", sucesso=False, dano=d, metade=False,
-                descricao="O ácido continua corroendo.", efeitos_extra=[], tick=True)
+                descricao="O ácido continua corroendo.", efeitos_extra=[], tick=True, tipo_id=arm["tipo"])
 
     def _serializar_armadilhas(self):
         """Estado das armadilhas para o cliente. Armadilhas de aliado são visíveis
@@ -22652,14 +22659,14 @@ class GameRoom:
         if not save_ok:
             extras.append("⚔️ Falhou nos Reflexos: o monstro ataca imediatamente!")
             await self._enviar_trap_result(p, "Baú-Armadilha", "📦", sucesso=False, dano=0, metade=False,
-                                            descricao="Reflexos CD 12. A criatura salta do objeto.", efeitos_extra=extras)
+                                            descricao="Reflexos CD 12. A criatura salta do objeto.", efeitos_extra=extras, tipo_id='bau_armadilha')
             ataques = monstro.get("attacks") or []
             if ataques:
                 await self._execute_one_monster_attack(monstro, ataques[0], {"kind": "player", "obj": p})
         else:
             extras.append("✅ Reflexos bem-sucedidos: ele só agirá na próxima rodada.")
             await self._enviar_trap_result(p, "Baú-Armadilha", "📦", sucesso=True, dano=0, metade=False,
-                                            descricao="Reflexos CD 12. A criatura salta do objeto.", efeitos_extra=extras)
+                                            descricao="Reflexos CD 12. A criatura salta do objeto.", efeitos_extra=extras, tipo_id='bau_armadilha')
         await self.push_state()
 
     async def handle_activate_decor_mechanism(self, pid, decor_id):

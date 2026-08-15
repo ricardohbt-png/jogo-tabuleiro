@@ -265,6 +265,25 @@ def _rodar_verificacoes():
     check("o HERO_DATA não tem `class` nem texto em habilidadeClasse",
           bool(hero) and "class:" not in hero
           and not re.search(r"(?:alcance|descricao):\s*'", hero))
+    # A arte do popup de armadilha e escolhida por msg.tipo_id. Se um id do mapa
+    # do cliente nao existir no ARMADILHAS do servidor, aquela armadilha aparece
+    # SEM imagem — e nada acusa: nao ha erro no console e nenhum teste olha arte.
+    # Foi exatamente o erro cometido ao reescrever o mapa (chutei
+    # "teletransporte" onde o servidor usa "armadilha_teletransporte").
+    SRV = io.open(os.path.join(RAIZ, "server.py"), encoding="utf-8").read()
+    _i = SRV.index("ARMADILHAS = {")
+    _bloco_srv = SRV[_i:SRV.index("\n}\n", _i)]
+    ids_srv = set(re.findall(r"""\n    ["'](\w+)["']\s*:\s*\{""", _bloco_srv))
+    _j = GAME.index("const trapImages = {")
+    _bloco_cli = GAME[_j:GAME.index("\n  };", _j)]
+    ids_cli = set(re.findall(r"\n    (\w+):", _bloco_cli))
+    # buraco_escondido (procedural) e bau_armadilha nao vivem em ARMADILHAS
+    orfaos = ids_cli - ids_srv - {"buraco_escondido", "bau_armadilha"}
+    check(f"todo id de trapImages existe no servidor ({sorted(orfaos) or 'ok'})",
+          not orfaos)
+    check("o popup escolhe a arte por tipo_id, nao pelo nome",
+          "trapImages[msg.tipo_id]" in GAME and "trapImages[msg.nome]" not in GAME)
+
     check("a chamada do GRIMORIO_CLIENT usa soNome=false",
           bool(re.search(r"aplicarCatalogo\(GRIMORIO_CLIENT,\s*false\)", GAME)))
 

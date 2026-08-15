@@ -13578,23 +13578,25 @@ function _advanceTrapQueue(){
 }
 
 function _showTrapResult(msg){
+  // Arte do popup por ID do tipo de armadilha (msg.tipo_id). ANTES era chaveado
+  // pelo NOME em português — e o nome chega traduzido por conexão desde a etapa
+  // 2, então em inglês o mapa não casava e o popup ficava sem imagem, em
+  // silêncio. Mesmo defeito que o data-ability-id resolveu para os ícones.
   const trapImages = {
-    'Em Chamas': 'em_chamas.png',
-    'Buraco Escondido': 'armadilha_fosso.png',
-    'Buraco': 'armadilha_fosso.png',
-    'Armadilha de Urso': 'armadilha_urso.png',
-    'Fosso com Estacas': 'armadilha_fosso_estacas.png',
-    'Fosso com Estacas Envenenadas': 'armadilha_fosso_estacas.png',
-    'Estacas Envenenadas': 'armadilha_fosso_estacas.png',
-    'Lâmina Escondida': 'armadilha_lamina.png',
-    'Lâmina Pêndulo': 'armadilha_pendulo.png',
-    'Rede': 'armadilha_rede.png',
-    'Armadilha Incendiária': 'armadilha_incendiaria.png',
-    'Mina Terrestre': 'armadilha_explosiva.png',
-    'Armadilha de Teletransporte': 'armadilha_teletransporte.png',
-    'Armadilha de Dardos Envenenados': 'armadilha_dardo.png',
-    'Baú-Armadilha': 'bau_armadilha.png',
-    'Nuvem de Gás': 'armadilha_gas.png',
+    buraco: 'armadilha_fosso.png',
+    buraco_escondido: 'armadilha_fosso.png',
+    armadilha_urso: 'armadilha_urso.png',
+    fosso_estacas: 'armadilha_fosso_estacas.png',
+    fosso_envenenado: 'armadilha_fosso_estacas.png',
+    lamina_escondida: 'armadilha_lamina.png',
+    lamina_pendulo: 'armadilha_pendulo.png',
+    rede: 'armadilha_rede.png',
+    armadilha_incendiaria: 'armadilha_incendiaria.png',
+    mina_terrestre: 'armadilha_explosiva.png',
+    armadilha_teletransporte: 'armadilha_teletransporte.png',
+    armadilha_dardos_envenenados: 'armadilha_dardo.png',
+    bau_armadilha: 'bau_armadilha.png',
+    nuvem_gas: 'armadilha_gas.png',
   };
   const trapIcon = $('trap-icon');
   // Nos ticks da armadilha incendiária, a armadilha já disparou: mostre as
@@ -13614,7 +13616,7 @@ function _showTrapResult(msg){
   // ilustração própria do lobisomem em vez do ícone genérico de amaldiçoado.
   const imageName = msg.sucesso ? 'armadilha_sucesso.png'
     : (msg.tipo === 'maldicao' && msg.maldicao_id === 'licantropia' ? 'lobisomem.png' : imagensPorTipo[msg.tipo])
-    || ((msg.tick && msg.nome === 'Armadilha Incendiária') ? 'em_chamas.png' : trapImages[msg.nome]);
+    || ((msg.tick && msg.tipo_id === 'armadilha_incendiaria') ? 'em_chamas.png' : trapImages[msg.tipo_id]);
   trapIcon.replaceChildren();
   if (imageName) {
     const image = new Image();
