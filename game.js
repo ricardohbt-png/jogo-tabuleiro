@@ -1865,24 +1865,39 @@ function showWorldLocationPreview(world, loc){
   const frame = document.createElement('div'); frame.id = 'worldmap-location-frame';
   const img = document.createElement('img'); img.src = loc.imagem; img.alt = loc.nome; frame.appendChild(img);
   const title = document.createElement('div'); title.className = 'worldmap-location-title'; title.textContent = loc.nome; frame.appendChild(title);
-  const back = document.createElement('button'); back.className = 'worldmap-back'; back.textContent = '← Voltar ao mapa-múndi'; back.onclick = showWorldMap; frame.appendChild(back);
+  const back = document.createElement('button'); back.className = 'worldmap-back'; back.textContent = t('ui.mundo.voltar_mapa'); back.onclick = showWorldMap; frame.appendChild(back);
   const panel = document.createElement('div'); panel.className = 'worldmap-location-info';
   if(loc.id === world.location){
-    panel.innerHTML = '<b>Local atual</b><small>O grupo já está nesta cidade.</small>';
+    panel.innerHTML = `<b>${t('ui.mundo.local_atual')}</b><small>${t('ui.mundo.local_atual_desc')}</small>`;
   } else if(route){
-    panel.innerHTML = `<b>Rota disponível</b><small>Viagem do grupo: 🍖 -${route.fome} e 💧 -${route.sede} para cada herói.</small>`;
-    const go = document.createElement('button'); go.className = 'worldmap-travel'; go.textContent = 'Viajar para ' + loc.nome;
+    panel.innerHTML = `<b>${t('ui.mundo.rota_disponivel')}</b><small>${t('ui.mundo.rota_disponivel_desc', {fome:route.fome, sede:route.sede})}</small>`;
+    const go = document.createElement('button'); go.className = 'worldmap-travel'; go.textContent = t('ui.mundo.viajar_para', {nome:loc.nome});
     go.disabled = GS.myPid !== GS.cityState.host;
-    go.title = go.disabled ? 'Apenas o anfitrião escolhe o destino.' : '';
+    go.title = go.disabled ? t('ui.mundo.so_anfitriao_viagem') : '';
     go.onclick = () => {
       go.disabled=true; _showCityTravelTransition(world, loc); GS.worldTravel(loc.id);
     };
     panel.appendChild(go);
   } else {
-    panel.innerHTML = '<b>Local distante</b><small>Ainda não existe uma rota direta disponível a partir da cidade atual.</small>';
+    panel.innerHTML = `<b>${t('ui.mundo.local_distante')}</b><small>${t('ui.mundo.local_distante_desc')}</small>`;
   }
   frame.appendChild(panel);
   _worldMapEl.appendChild(frame);
+}
+
+// Fragmentos de requisito ("renome 3", "informação: …"), compartilhados pelo
+// destino de aventura e pela conversa de NPC — as duas telas mostravam a mesma
+// lista com uma diferença boba ("nível de grupo" × "nível do grupo"). O id
+// autoral (item/fato/rota) segue CRU: é conteúdo do autor, fora da etapa 5.
+function _requisitoPartes(req){
+  req = req || {};
+  return [
+    Number(req.renome_min) > 0      ? t('ui.mundo.req_renome', {n:req.renome_min})      : '',
+    Number(req.nivel_grupo_min) > 0 ? t('ui.mundo.req_nivel', {n:req.nivel_grupo_min})  : '',
+    req.item_id                     ? t('ui.mundo.req_item', {id:req.item_id})          : '',
+    req.fato                        ? t('ui.mundo.req_info', {id:req.fato})             : '',
+    req.aventura_id                 ? t('ui.mundo.req_rota', {id:req.aventura_id})      : '',
+  ].filter(Boolean);
 }
 
 // Regras de exibição de um destino de masmorra — compartilhadas pelo painel do
@@ -1893,10 +1908,10 @@ function _adventureInfo(adventure){
   const progress = Math.max(0, Number(adventure.progresso || 0));
   const completed = count > 0 && progress >= count;
   const req = adventure.requisito || {};
-  const reqText = [Number(req.renome_min)>0 ? 'renome '+req.renome_min : '', Number(req.nivel_grupo_min)>0 ? 'nível de grupo '+req.nivel_grupo_min : '', req.item_id ? 'item: '+req.item_id : '', req.fato ? 'informação: '+req.fato : '', req.aventura_id ? 'rota concluída: '+req.aventura_id : ''].filter(Boolean);
+  const reqText = _requisitoPartes(req);
   const html = completed
-    ? `<b>Rota concluída</b><small>O grupo já concluiu as ${count} masmorras deste destino.</small>`
-    : `<b>Entrada de masmorra</b><small>Expedição: 🍖 -${adventure.fome || 0} e 💧 -${adventure.sede || 0} para cada herói.${count > 1 ? ' Próxima etapa: ' + (progress + 1) + ' de ' + count + '. As demais liberam após concluir a anterior.' : ''}${reqText.length ? ' Requisito: ' + reqText.join(' · ') + '.' : ''}</small>`;
+    ? `<b>${t('ui.mundo.rota_concluida')}</b><small>${t('ui.mundo.rota_concluida_desc', {n:count})}</small>`
+    : `<b>${t('ui.mundo.entrada_masmorra')}</b><small>${t('ui.mundo.entrada_masmorra_desc', {fome:adventure.fome || 0, sede:adventure.sede || 0})}${count > 1 ? ' ' + t('ui.mundo.proxima_etapa', {atual:progress + 1, total:count}) : ''}${reqText.length ? ' ' + t('ui.mundo.requisito', {lista:reqText.join(' · ')}) : ''}</small>`;
   return {count, progress, completed, html};
 }
 
@@ -1941,13 +1956,13 @@ function showWorldMap(){
   _worldMapEl.dataset.location = world.location;
   _worldMapEl.innerHTML = '';
   const frame = document.createElement('div'); frame.id = 'worldmap-frame';
-  const img = document.createElement('img'); img.src = world.map_image; img.alt = 'Mapa-múndi de Varlúzia';
+  const img = document.createElement('img'); img.src = world.map_image; img.alt = t('ui.mundo.alt_mapa');
   frame.appendChild(img);
-  const title = document.createElement('div'); title.className = 'worldmap-title'; title.textContent = '🧭 Varlúzia — escolha um destino'; frame.appendChild(title);
-  const back = document.createElement('button'); back.className = 'worldmap-back'; back.textContent = '← Voltar à cidade'; back.onclick = hideWorldMap; frame.appendChild(back);
+  const title = document.createElement('div'); title.className = 'worldmap-title'; title.textContent = t('ui.mundo.titulo'); frame.appendChild(title);
+  const back = document.createElement('button'); back.className = 'worldmap-back'; back.textContent = t('ui.mundo.voltar_cidade'); back.onclick = hideWorldMap; frame.appendChild(back);
   if(false && GS.myPid === GS.cityState.host){
     const edit = document.createElement('button'); edit.className = 'worldmap-edit';
-    edit.textContent = editing ? 'Cancelar ajuste' : 'Ajustar pontos';
+    edit.textContent = editing ? t('ui.mundo.cancelar_ajuste') : t('ui.mundo.ajustar_pontos');
     edit.onclick = () => {
       _worldMapEditPoints = editing ? null : Object.fromEntries((world.locations || []).map(l => [l.id, {x:l.x, y:l.y}]));
       showWorldMap();
@@ -1957,10 +1972,10 @@ function showWorldMap(){
   const info = document.createElement('div'); info.className = 'worldmap-info';
   const current = (world.locations || []).find(l => l.id === world.location);
   info.innerHTML = editing
-    ? '<b>Ajuste dos pontos</b><small>Arraste cada rosa até a posição correta no mapa.</small>'
-    : `<b>${current ? current.nome : 'Local atual'}</b><small>Selecione uma cidade ou vila conectada para consultar o custo da viagem.</small>`;
+    ? `<b>${t('ui.mundo.ajuste_pontos')}</b><small>${t('ui.mundo.ajuste_pontos_desc')}</small>`
+    : `<b>${current ? current.nome : t('ui.mundo.local_atual')}</b><small>${t('ui.mundo.escolha_destino_desc')}</small>`;
   if(editing){
-    const save = document.createElement('button'); save.className = 'worldmap-travel'; save.textContent = 'Salvar posições';
+    const save = document.createElement('button'); save.className = 'worldmap-travel'; save.textContent = t('ui.mundo.salvar_posicoes');
     save.onclick = () => { GS.saveWorldMapPoints(_worldMapEditPoints); _worldMapEditPoints = null; showWorldMap(); };
     info.appendChild(save);
   }
@@ -2209,7 +2224,7 @@ function handleCityState(msg){
     const isMe=p.id===GS.myPid;
     return `<div class="city-pcard${isMe?' me':''}">
       <span>${p.emoji}</span><span class="city-pcard-name">${p.name}</span>
-      <span style="color:var(--text2);font-size:.75rem;">${p.class_name}</span>
+      <span style="color:var(--text2);font-size:.75rem;">${_classeNome(p)}</span>
       <span class="city-pcard-gold">💰 ${p.gold}</span></div>`;
   }).join('');
   // Host controls
@@ -2323,7 +2338,7 @@ function _renderCenaConversas(){
   const list=$('shop-items-list'); if(!list) return;
   const cena = GS.scenes()[GS.activeScene];
   if(!cena){
-    list.innerHTML='<div class="cena-vazia">Este local ainda não possui frequentadores configurados.</div>';
+    list.innerHTML=`<div class="cena-vazia">${t('ui.cena.sem_frequentadores')}</div>`;
     return;
   }
   // A conversa é a única "loja" que vira CENA: o modal ocupa a tela
@@ -2337,7 +2352,7 @@ function _renderCenaConversas(){
   // editor (.cityed-tavern-preview). Os slots vão em % crus, sem correção
   // alguma — qualquer transformação aqui sem contraparte no editor faz a
   // máscara/NPC cair fora do lugar em relação ao que o autor posicionou.
-  const base=document.createElement('img'); base.className='cena-bg'; base.src=_assetURL(cena.background); base.alt='Cena do local'; scene.appendChild(base);
+  const base=document.createElement('img'); base.className='cena-bg'; base.src=_assetURL(cena.background); base.alt=t('ui.cena.alt_fundo'); scene.appendChild(base);
   // A máscara inteira acompanha o fundo, mantendo a composição original em
   // qualquer tamanho. Os slots seguem acima dela apenas para clique/hover.
   if(cena.mask && cena.mode !== 'individual'){
@@ -2351,7 +2366,7 @@ function _renderCenaConversas(){
     npc.style.left=slot.x+'%'; npc.style.top=slot.y+'%';
     npc.style.width=slot.w+'%'; npc.style.height=slot.h+'%';
     npc.style.zIndex=String(10 + Number(slot.z || 1));
-    npc.title=slot.name; npc.setAttribute('aria-label','Conversar com '+slot.name);
+    npc.title=slot.name; npc.setAttribute('aria-label',t('ui.cena.conversar_com', {nome:slot.name}));
     if(cena.mask && cena.mode !== 'individual'){
       const maskStyle='width:'+(10000/slot.w)+'%;height:'+(10000/slot.h)+'%;left:'+(-slot.x*100/slot.w)+'%;top:'+(-slot.y*100/slot.h)+'%;';
       npc.innerHTML='<img class="cena-mask" style="'+maskStyle+'" src="'+_assetURL(cena.mask)+'" alt=""><span>'+slot.name+'</span>';
@@ -2366,9 +2381,9 @@ function _renderCenaConversas(){
   // Barra flutuante no topo da arte: voltar à esquerda, renome à direita.
   const hud=document.createElement('div'); hud.className='cena-hud';
   const back=document.createElement('button');
-  back.type='button'; back.className='cena-back'; back.textContent='← Voltar à cidade';
+  back.type='button'; back.className='cena-back'; back.textContent=t('ui.mundo.voltar_cidade');
   back.onclick=closeShop;
-  const rep=document.createElement('p'); rep.className='cena-hint'; rep.textContent='★ Renome do grupo: '+Number(((GS.cityState||{}).reputacao||{}).renome||0);
+  const rep=document.createElement('p'); rep.className='cena-hint'; rep.textContent=t('ui.cena.renome_grupo', {n:Number(((GS.cityState||{}).reputacao||{}).renome||0)});
   hud.appendChild(back); hud.appendChild(rep); scene.appendChild(hud);
   // Refúgio: as cenas formam um caminho — externa → área comum → quarto do herói.
   // Cada cena mostra o baú que existe nela MAIS a porta para a próxima; sem isso a
@@ -2380,17 +2395,17 @@ function _renderCenaConversas(){
     const irPara=(key,semCena)=>{const sid=cenaDe(key); if(sid) openShop('refugio','refugio',sid); else semCena();};
     const isCommon=GS.activeScene===refugePoint.scene_comum, isRoom=GS.activeScene===refugePoint.scene_quarto;
     const acoes=isRoom
-      ? [['🧰 Abrir baú do herói', ()=>_abrirBauDireto('room')],
-         ...(cenaDe('scene_comum') ? [['🚪 Voltar à área comum', ()=>irPara('scene_comum',GS.openRefugio)]] : [])]
+      ? [[t('ui.cena.bau_heroi'), ()=>_abrirBauDireto('room')],
+         ...(cenaDe('scene_comum') ? [[t('ui.cena.voltar_area_comum'), ()=>irPara('scene_comum',GS.openRefugio)]] : [])]
       : isCommon
-        ? [['🧰 Abrir baú compartilhado', ()=>_abrirBauDireto('shared')],
-           ['🛏️ Entrar no quarto do herói', ()=>irPara('scene_quarto',()=>_abrirBauDireto('room'))]]
-        : [['🚪 Entrar no Refúgio', ()=>irPara('scene_comum',GS.openRefugio)]];
+        ? [[t('ui.cena.bau_compartilhado'), ()=>_abrirBauDireto('shared')],
+           [t('ui.cena.entrar_quarto'), ()=>irPara('scene_quarto',()=>_abrirBauDireto('room'))]]
+        : [[t('ui.cena.entrar_refugio'), ()=>irPara('scene_comum',GS.openRefugio)]];
     const baus=document.createElement('div'); baus.className='refugio-scene-baus';
     acoes.forEach(([txt,fn])=>{const b=document.createElement('button'); b.type='button'; b.textContent=txt; b.onclick=fn; baus.appendChild(b);});
     scene.appendChild(baus);
   }
-  const hint=document.createElement('p'); hint.className='cena-hint'; hint.textContent='Clique em um grupo de frequentadores para conversar.'; scene.appendChild(hint);
+  const hint=document.createElement('p'); hint.className='cena-hint'; hint.textContent=t('ui.cena.dica_clique'); scene.appendChild(hint);
   const keepOpen=(cena.slots||[]).find(slot=>slot.id===_openCenaNpcId && !slot.removed && slot.image);
   if(keepOpen) _showCenaDialogo(keepOpen, scene);
 }
@@ -2406,7 +2421,7 @@ function _showCenaDialogo(slot, host){
   // O painel cobre parte da arte: dá para fechá-lo sem sair da cena.
   const fechar=document.createElement('button');
   fechar.type='button'; fechar.className='cena-dialogo-fechar'; fechar.textContent='✕';
-  fechar.title='Fechar conversa'; fechar.setAttribute('aria-label','Fechar conversa');
+  fechar.title=t('ui.cena.fechar_conversa'); fechar.setAttribute('aria-label',t('ui.cena.fechar_conversa'));
   fechar.onclick=()=>{ _openCenaNpcId=null; panel.remove(); };
   panel.appendChild(fechar);
   const reputation=(GS.cityState&&GS.cityState.reputacao)||{renome:0,fatos:[]};
@@ -2415,29 +2430,21 @@ function _showCenaDialogo(slot, host){
   // sobrou nada que este jogador possa escolher. Sintetizar uma opção aqui
   // ressuscitaria justamente o que o servidor omitiu — e o botão daria erro.
   const conversations = slot.conversations || [];
-  const requirementText=req=>{
-    const parts=[]; req=req||{};
-    if(Number(req.renome_min)>0) parts.push('renome '+req.renome_min);
-    if(Number(req.nivel_grupo_min)>0) parts.push('nível do grupo '+req.nivel_grupo_min);
-    if(req.item_id) parts.push('item: '+req.item_id);
-    if(req.fato) parts.push('informação: '+req.fato);
-    if(req.aventura_id) parts.push('rota concluída: '+req.aventura_id);
-    return parts;
-  };
+  const requirementText=_requisitoPartes;
   // O servidor já omite conversa bloqueada ou de uso único resolvida — o que
   // chega aqui é exatamente o que o jogador pode escolher.
   const discovered = conversations;
   if(!discovered.length){
-    const waiting=document.createElement('p'); waiting.textContent='Esta pessoa não tem nada novo para contar por enquanto.'; panel.appendChild(waiting);
+    const waiting=document.createElement('p'); waiting.textContent=t('ui.cena.nada_novo'); panel.appendChild(waiting);
   }
   discovered.forEach(conv=>{
     const block=document.createElement('div'); block.className='cena-dialogo-opcao';
     const reqs=requirementText(conv.requisito);
     const action=document.createElement('button'); action.type='button'; action.className='cena-dialogo-texto'; action.textContent=conv.texto;
-    action.title=reqs.length?'Requer: '+reqs.join(', '):'';
-    action.onclick=()=>{ action.disabled=true; action.textContent='Conversando…'; GS.talkSceneNpc(GS.activeScene,slot.id,conv.id); };
+    action.title=reqs.length?t('ui.cena.requer', {lista:reqs.join(', ')}):'';
+    action.onclick=()=>{ action.disabled=true; action.textContent=t('ui.cena.conversando'); GS.talkSceneNpc(GS.activeScene,slot.id,conv.id); };
     block.appendChild(action);
-    const effect=conv.efeito||{}; if(effect.renome||effect.fato||effect.item_id){const effectEl=document.createElement('small');effectEl.className='cena-dialogo-efeito';effectEl.textContent='Ao concluir: '+[effect.renome?'renome '+(Number(effect.renome)>0?'+':'')+effect.renome:'',effect.fato?'informação: '+effect.fato:'',effect.item_id?'item: '+effect.item_id:''].filter(Boolean).join(' · ');block.appendChild(effectEl);}
+    const effect=conv.efeito||{}; if(effect.renome||effect.fato||effect.item_id){const effectEl=document.createElement('small');effectEl.className='cena-dialogo-efeito';effectEl.textContent=t('ui.cena.ao_concluir', {lista:[effect.renome?t('ui.mundo.req_renome', {n:(Number(effect.renome)>0?'+':'')+effect.renome}):'',effect.fato?t('ui.mundo.req_info', {id:effect.fato}):'',effect.item_id?t('ui.mundo.req_item', {id:effect.item_id}):''].filter(Boolean).join(' · ')});block.appendChild(effectEl);}
     panel.appendChild(block);
   });
 }
@@ -2792,38 +2799,39 @@ function closeGuild(){
 function renderDescricaoItem(item){
   switch(item.tipo){
     case 'arma': {
+      // O alcance especial é texto do CATALOGO_ITENS (chicote/lança) — traduzido
+      // por chave do PRÓPRIO item, já que o objeto aninhado não tem id.
       const alcance = item.alcanceEspecial
-        ? item.alcanceEspecial.descricao
-        : 'Adjacente';
+        ? _rotulo(item.id, 'ui.item.alcance_especial', item.alcanceEspecial.descricao)
+        : t('ui.item.desc.adjacente');
       const modos = item.modosDuasMaos
-        ? `1 mão: ${item.danoUmaMao} | 2 mãos: ${item.danoDuasMaos}`
-        : `Dano: ${item.dano}`;
-      return `${modos} | ${item.atributo} | Alcance: ${alcance}`;
+        ? t('ui.item.desc.modos_duas_maos', {uma:item.danoUmaMao, duas:item.danoDuasMaos})
+        : t('ui.item.desc.dano', {dano:item.dano});
+      return `${modos} | ${_rotulo(item.atributo, 'ui.atributo', item.atributo)} | ${t('ui.item.desc.alcance_txt', {alcance})}`;
     }
     case 'armaDistancia':
-      return `Dano: ${item.dano}+DEX | Alcance: ${item.alcance} quad. | ${item.slotSecundario === 'flechas' ? 'Requer flechas' : 'Slot secundário livre'}`;
+      return `${t('ui.item.desc.dano', {dano:item.dano + '+' + t('ui.item.desc.des')})} | ${t('ui.item.desc.alcance_quad', {n:item.alcance})} | ${item.slotSecundario === 'flechas' ? t('ui.item.desc.requer_flechas') : t('ui.item.desc.slot_sec_livre')}`;
     case 'armadura':
-      return `Bônus CA: +${item.bonusCA}`;
     case 'escudo':
-      return `Bônus CA: +${item.bonusCA}`;
+      return t('ui.item.desc.bonus_ca', {n:item.bonusCA});
     case 'secundario':
-      return `Bônus visão: +${item.bonusVisao} quad. | Duração: ${item.duracao} rodadas`;
+      return `${t('ui.item.desc.bonus_visao', {n:item.bonusVisao})} | ${t('ui.item.desc.duracao_rodadas', {n:item.duracao})}`;
     case 'consumivel': {
       const partes = [];
-      if(item.fome > 0) partes.push(`🍖 +${item.fome} fome`);
-      if(item.sede > 0) partes.push(`💧 +${item.sede} sede`);
+      if(item.fome > 0) partes.push('🍖 ' + t('ui.item.desc.mais_fome', {n:item.fome}));
+      if(item.sede > 0) partes.push('💧 ' + t('ui.item.desc.mais_sede', {n:item.sede}));
       return partes.join(' | ');
     }
     case 'municao': {
       const danoExtra = item.danoExtra
-        ? ` | +${item.danoExtra} ${item.tipoDano}`
+        ? ` | +${item.danoExtra} ${_rotulo(item.tipoDano, 'ui.dano_tipo', item.tipoDano)}`
         : '';
-      return `${item.quantidade} unidades${danoExtra}`;
+      return t('ui.item.desc.unidades', {n:item.quantidade}) + danoExtra;
     }
     case 'varinha':
-      return `Slots de magia: ${item.slotsMagia} | Dano: ${item.dano} | Usar magia = ação bônus`;
+      return `${t('ui.item.desc.slots_magia', {n:item.slotsMagia})} | ${t('ui.item.desc.dano', {dano:item.dano})} | ${t('ui.item.desc.magia_acao_bonus')}`;
     case 'itemMagico':
-      return `+${item.slotsExtras} slots de inventário | Ocupa slot mágico`;
+      return `${t('ui.item.desc.slots_inventario', {n:item.slotsExtras})} | ${t('ui.item.desc.ocupa_slot_magico')}`;
     default:
       return '';
   }
@@ -4384,7 +4392,7 @@ function aplicarTooltipAoItemDados(elemento, item){
 
 // ── Tooltip de PERGAMINHO: nível de conjurador, dano/alcance/CD no nível e a
 // chance de falha para o personagem ATUAL. Usa item.preview (vindo do servidor).
-const _SAVE_LABEL_CLI = { reflexos:'Reflexos', fortitude:'Fortitude', vontade:'Vontade' };
+const _saveLabelCli = tipo => _rotulo(tipo, 'ui.resistencia', tipo);
 function _chanceFalhaPergaminhoCli(item){
   const me = GS.me;
   if(!me) return null;
@@ -4401,40 +4409,42 @@ function _tooltipPergaminhoHTML(item){
   const mg = (typeof GRIMORIO_CLIENT !== 'undefined') ? GRIMORIO_CLIENT[item.magia_id] : null;
   const nomeMagia = (mg && mg.nome) || item.magia_id;
   const icone = (mg && mg.icone) || '📜';
-  const circ = (item.circulo === 'primeiro' ? '1º' : item.circulo === 'segundo' ? '2º' : '3º');
+  // Ordinal por chave: "1º" vira "1st" em inglês, e um ternário com o texto
+  // cravado sairia em português no meio da frase traduzida.
+  const circ = _rotulo(item.circulo, 'ui.magia.ordinal', t('ui.magia.ordinal.terceiro'));
   const linhas = [];
-  linhas.push(renderLinhaTooltip('🧙','Conjurador', `Nível ${pv.nivel || item.nivel_conjurador || 1}`));
-  if(item.int_bonus) linhas.push(renderLinhaTooltip('🧠','INT', `+${item.int_bonus} (CD/dano)`));
-  if(pv.dano) linhas.push(renderLinhaTooltip('🎲','Dano', pv.dano + (pv.talento_dano ? ' ×1.5' : '')));
+  linhas.push(renderLinhaTooltip('🧙',t('ui.pergaminho.conjurador'), t('ui.pergaminho.nivel', {n:pv.nivel || item.nivel_conjurador || 1})));
+  if(item.int_bonus) linhas.push(renderLinhaTooltip('🧠','INT', t('ui.pergaminho.int_bonus', {n:item.int_bonus})));
+  if(pv.dano) linhas.push(renderLinhaTooltip('🎲',t('ui.pergaminho.dano'), pv.dano + (pv.talento_dano ? ' ×1.5' : '')));
   if(pv.alcance != null)
-    linhas.push(renderLinhaTooltip('📏','Alcance', pv.alcance === 0 ? 'no conjurador' : `${pv.alcance} quad.`));
-  if(pv.area_raio) linhas.push(renderLinhaTooltip('💥','Área', `raio ${pv.area_raio}`));
-  if(pv.cd != null) linhas.push(renderLinhaTooltip('🛡️','CD do save',
-      `${pv.cd} (${_SAVE_LABEL_CLI[pv.save]||pv.save})${pv.talento_cd ? ' ⬆' : ''}`));
-  if(!pv.dano && pv.efeito) linhas.push(renderLinhaTooltip('✨','Efeito', pv.efeito));
-  else if(pv.duracao) linhas.push(renderLinhaTooltip('⏳','Duração',
-      `${pv.duracao} rodada(s)${pv.talento_duracao ? ' +1' : ''}`));
+    linhas.push(renderLinhaTooltip('📏',t('ui.pergaminho.alcance'), pv.alcance === 0 ? t('ui.pergaminho.no_conjurador') : t('ui.pergaminho.quadrados', {n:pv.alcance})));
+  if(pv.area_raio) linhas.push(renderLinhaTooltip('💥',t('ui.pergaminho.area'), t('ui.pergaminho.raio', {n:pv.area_raio})));
+  if(pv.cd != null) linhas.push(renderLinhaTooltip('🛡️',t('ui.pergaminho.cd_save'),
+      `${pv.cd} (${_saveLabelCli(pv.save)})${pv.talento_cd ? ' ⬆' : ''}`));
+  if(!pv.dano && pv.efeito) linhas.push(renderLinhaTooltip('✨',t('ui.pergaminho.efeito'), pv.efeito));
+  else if(pv.duracao) linhas.push(renderLinhaTooltip('⏳',t('ui.pergaminho.duracao'),
+      `${t('ui.pergaminho.rodadas', {n:pv.duracao})}${pv.talento_duracao ? ' +1' : ''}`));
   // Talentos do Pedro gravados no pergaminho.
   const tals = [];
-  if(pv.talento_dano)    tals.push('Dano ×1.5');
-  if(pv.talento_cd)      tals.push('CD +1');
-  if(pv.talento_duracao) tals.push('Duração +1');
-  if(tals.length) linhas.push(renderLinhaTooltip('✦','Talentos', tals.join(', ')));
+  if(pv.talento_dano)    tals.push(t('ui.pergaminho.talento_dano'));
+  if(pv.talento_cd)      tals.push(t('ui.pergaminho.talento_cd'));
+  if(pv.talento_duracao) tals.push(t('ui.pergaminho.talento_duracao'));
+  if(tals.length) linhas.push(renderLinhaTooltip('✦',t('ui.pergaminho.talentos'), tals.join(', ')));
   // Chance de falha para o personagem atual.
   const cf = _chanceFalhaPergaminhoCli(item);
   let falhaTxt;
   if(!cf) falhaTxt = '—';
-  else if(cf.naoPode) falhaTxt = '<span style="color:#ff6b6b">só mago/clérigo</span>';
+  else if(cf.naoPode) falhaTxt = `<span style="color:#ff6b6b">${t('ui.pergaminho.so_conjurador')}</span>`;
   else {
-    falhaTxt = (cf.lvlPct > 0 ? `${cf.lvlPct}%` : 'nenhuma');
-    if(cf.cross) falhaTxt += ' <span style="color:#ff6b6b">+50% classe</span>';
+    falhaTxt = (cf.lvlPct > 0 ? `${cf.lvlPct}%` : t('ui.pergaminho.falha_nenhuma'));
+    if(cf.cross) falhaTxt += ` <span style="color:#ff6b6b">${t('ui.pergaminho.falha_classe')}</span>`;
   }
-  linhas.push(renderLinhaTooltip('🎯','Falha', falhaTxt));
-  if(item.price != null) linhas.push(renderLinhaTooltip('💰','Preço', `${item.price} moedas`));
+  linhas.push(renderLinhaTooltip('🎯',t('ui.pergaminho.falha'), falhaTxt));
+  if(item.price != null) linhas.push(renderLinhaTooltip('💰',t('ui.pergaminho.preco'), t('ui.pergaminho.moedas', {n:item.price})));
   return `
     <div style="padding:10px 12px;">
       <div style="color:#c8a951;font-size:13px;font-weight:700;margin-bottom:3px;">${icone} ${nomeMagia}</div>
-      <div style="color:#8a7a5a;font-size:9px;letter-spacing:1px;margin-bottom:8px;">PERGAMINHO · ${circ} CÍRCULO</div>
+      <div style="color:#8a7a5a;font-size:9px;letter-spacing:1px;margin-bottom:8px;">${t('ui.pergaminho.rodape', {circulo:circ})}</div>
       ${linhas.join('')}
     </div>`;
 }
@@ -9267,19 +9277,19 @@ function iniciarProvocacao(){
   const me = GS.me;
   if(!me || me.class_id !== 'bard') return;
   if(!GS.isMyTurn || me.alive === false || (GS.gameState && GS.gameState.phase !== 'playing')){
-    toast('Só é possível provocar no seu turno.', 'var(--orange)'); return;
+    toast(t('ui.bardo.provocar_so_turno'), 'var(--orange)'); return;
   }
-  if(me.bonus_action_used){ toast('Ação bônus já usada neste turno.', 'var(--orange)'); return; }
-  if(me.fome < 3 || me.sede < 3){ toast('Provocação requer 🍖3 e 💧3.', 'var(--orange)'); return; }
+  if(me.bonus_action_used){ toast(t('ui.hud.acao_bonus_ja_usada'), 'var(--orange)'); return; }
+  if(me.fome < 3 || me.sede < 3){ toast(t('ui.bardo.provocar_custo'), 'var(--orange)'); return; }
 
   const st  = GS.gameState;
   const pp  = me.pos || [0,0];
   const alvos = (st.monsters||[]).filter(m => m && m.hp>0 &&
     Math.max(Math.abs(pp[0]-m.pos[0]), Math.abs(pp[1]-m.pos[1])) <= 3 &&
     !(m.provocado && (m.provocado_turnos||0) > 0));
-  if(!alvos.length){ toast('Nenhum inimigo provocável a até 3 quadrados.', 'var(--orange)'); return; }
+  if(!alvos.length){ toast(t('ui.bardo.provocar_sem_alvo'), 'var(--orange)'); return; }
   if(alvos.length === 1){ send({ type:'provocacao', target_id:alvos[0].id }); return; }
-  openTargetModal('😤 Provocação — Escolha o alvo (raio 3)', alvos, 'monster',
+  openTargetModal(t('ui.bardo.provocar_titulo'), alvos, 'monster',
     id => send({ type:'provocacao', target_id:id }));
 }
 
@@ -10577,16 +10587,16 @@ function _mageSkillBtn(me, sk){
   // empilhamento (Fase 1f). Texto informativo — o servidor é autoritativo.
   {
     const cap = GS.magoTecelagemCap ? GS.magoTecelagemCap() : 1;
-    const capTxt = ` (empilha até ${cap})`;
+    const capTxt = ' ' + t('ui.metamagia.empilha_ate', {n:cap});
     if (sk.id === 'fortalecer_magia') {
       const mult = GS.magoFortalecerMult ? GS.magoFortalecerMult() : 1.25;
-      desc = `Ação livre. Multiplica o dano da magia por ${String(mult).replace('.', ',')}.${capTxt}`;
+      desc = t('ui.metamagia.fortalecer', {mult:String(mult).replace('.', ',')}) + capTxt;
     } else if (sk.id === 'aprimorar_magia') {
       const b = GS.magoAprimorarBonus ? GS.magoAprimorarBonus() : 1;
-      desc = `Ação livre. +${b} na CD do teste de resistência da magia.${capTxt}`;
+      desc = t('ui.metamagia.aprimorar', {n:b}) + capTxt;
     } else if (sk.id === 'estender_magia') {
       const b = GS.magoEstenderBonus ? GS.magoEstenderBonus() : 1;
-      desc = `Ação livre. +${b} rodada${b !== 1 ? 's' : ''} na duração da magia.${capTxt}`;
+      desc = t(b !== 1 ? 'ui.metamagia.estender_plural' : 'ui.metamagia.estender', {n:b}) + capTxt;
     }
   }
   const cfg = ({
@@ -10920,7 +10930,9 @@ const GRIMORIO_CLIENT = {
 
 const _COR_CIRCULO = { primeiro:'#c8a951', segundo:'#4488ff', terceiro:'#cc44ff' };
 const _RGB_CIRCULO = { primeiro:'200,169,81', segundo:'68,136,255', terceiro:'204,68,255' };
-const _LABEL_CIRCULO = { primeiro:'1º Círculo', segundo:'2º Círculo', terceiro:'3º Círculo' };
+// Função, e não mapa: o `t` só existe depois do boot do I18N, e um mapa de
+// módulo congelaria o idioma da carga (padrão do Lote 1 para {id:'texto'}).
+const _labelCirculo = c => _rotulo(c, 'ui.magia.circulo', '');
 
 // Ícone de magia: PNG em assets/magias/<id>.png se existir, senão cai no emoji.
 // Espelha itemIconHTML (itens). `px` dimensiona a imagem; o onerror troca a
@@ -10997,7 +11009,7 @@ function mostrarTooltipMagia(a, b) {
   }
 
   const corCirculo = _COR_CIRCULO[m.circulo];
-  const labelCirculo = _LABEL_CIRCULO[m.circulo];
+  const labelCirculo = _labelCirculo(m.circulo);
   tooltip.innerHTML = `
     <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid ${corCirculo}33;">
       <span style="font-size:24px;">${magiaIconHTML(m, 28)}</span>
@@ -11324,15 +11336,6 @@ function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
     else window._spellHL.area = new Set();
   }
   _aplicarSpellHL();
-  const dicas = {
-    foe:       'Clique num INIMIGO',
-    ally:      'Clique num ALIADO (ou em você)',
-    tile:      'Clique numa CASA (centro da área)',
-    linha:     'Clique numa CASA (direção do raio)',
-    cone:      'Clique numa CASA (direção do cone)',
-    adjacent_tile: 'Clique numa CASA VERDE adjacente para criar o baú',
-    self_area: 'Clique para CONFIRMAR (área em você)'
-  };
   if (typeof g3 !== 'undefined' && g3 && g3.renderer) g3.renderer.domElement.style.cursor = 'crosshair';
   let leg = document.getElementById('legenda-magia');
   if (!leg) {
@@ -11344,7 +11347,7 @@ function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
     document.body.appendChild(leg);
   }
   const m = GRIMORIO_CLIENT[magiaId];
-  leg.innerHTML = `${m.icone} ${m.nome.toUpperCase()} — ${dicas[alvoTipo] || 'Clique no alvo'} &nbsp;|&nbsp; ESC cancela`;
+  leg.innerHTML = `${m.icone} ${m.nome.toUpperCase()} — ${_rotulo(alvoTipo, 'ui.magia.dica', t('ui.magia.dica_padrao'))} &nbsp;|&nbsp; ${t('ui.magia.esc_cancela')}`;
   leg.style.borderColor = '#c8a951';
   leg.style.color       = '#c8a951';
   leg.style.display = 'block';
@@ -12514,7 +12517,7 @@ function abrirMenuMagiasMonstro(m){
     const usosMax=Math.max(1,Number(cfg.uses_per_combat||1));
     const usos=cfg.limit_mode==='cooldown' ? null : (m.spell_uses?.[cfg.id]??usosMax);
     const bloqueada=!manual||!!mm?.acao||restante>0||(usos!=null&&usos<=0)||['utilidade','reacao'].includes(magia.tipo);
-    return `<div class="mm-magia${bloqueada?'':' mm-acionavel'}" data-monster-spell="${_esc(cfg.id)}" onmouseenter="mostrarTooltipMagia('${_esc(cfg.id)}', event)" onmouseleave="ocultarTooltipMagia()"><span class="mm-magia-icon">${magiaIconHTML(magia,34)}</span><span><b>${_esc(magia.nome||cfg.id)}</b><small>${_LABEL_CIRCULO[magia.circulo]||''}${usos!=null?` · ${usos}/${usosMax} usos`:''}${restante?` · recarga ${restante}r`:''}</small></span></div>`;
+    return `<div class="mm-magia${bloqueada?'':' mm-acionavel'}" data-monster-spell="${_esc(cfg.id)}" onmouseenter="mostrarTooltipMagia('${_esc(cfg.id)}', event)" onmouseleave="ocultarTooltipMagia()"><span class="mm-magia-icon">${magiaIconHTML(magia,34)}</span><span><b>${_esc(magia.nome||cfg.id)}</b><small>${_labelCirculo(magia.circulo)||''}${usos!=null?` · ${usos}/${usosMax} usos`:''}${restante?` · recarga ${restante}r`:''}</small></span></div>`;
   }).join('');
   overlay.innerHTML=`<section class="menu-magias" role="dialog" aria-modal="true"><header class="mm-header"><div><b>✦ MAGIAS DO MONSTRO</b><small>${_esc(m.name||m.type)} · tecla M</small></div><button onclick="fecharMenuMagias()">✕</button></header><div class="mm-body"><section><h3>MAGIAS DISPONÍVEIS</h3><div class="mm-list">${cards}</div></section></div></section>`;
   overlay.querySelectorAll('.mm-magia.mm-acionavel[data-monster-spell]').forEach(el=>el.onclick=()=>{fecharMenuMagias();_mestreAtivarMagia(m,el.dataset.monsterSpell);});
@@ -13368,6 +13371,16 @@ function closeChestWindow(){
   $('chest-overlay').classList.remove('open');
 }
 
+// Sufixo de status na linha do baú (+3 HP, +1 CA…). Extraído porque a janela do
+// baú e o painel de loot repetiam a mesma cascata palavra por palavra.
+function _sufixoStatItem(item, isWeapon){
+  if(isWeapon) return '';
+  if(item.effect === 'heal') return ` +${item.value} ${t('ui.bau.stat_hp')}`;
+  if(item.effect === 'atk')  return ` +${item.value} ${t('ui.bau.stat_atq')}`;
+  if(item.effect === 'def_') return ` +${item.value} ${t('ui.bau.stat_ca')}`;
+  return '';
+}
+
 function _renderChestWindow(chest){
   const me = GS.gameState && GS.gameState.players.find(p=>p.id===GS.myPid&&p.alive);
   const isFull = me && (me.bag||[]).length >= (me.bag_size||6);
@@ -13385,14 +13398,14 @@ function _renderChestWindow(chest){
   if((hasGold || itemCount > 0) && pending?.kind !== 'all'){
     const allBtn = document.createElement('button');
     allBtn.className = 'chest-take-btn chest-take-all-btn';
-    allBtn.textContent = '⬆ Pegar tudo';
-    allBtn.title = 'Coleta o ouro e todos os itens que couberem no inventário.';
+    allBtn.textContent = t('ui.bau.pegar_tudo');
+    allBtn.title = t('ui.bau.pegar_tudo_desc');
     allBtn.onclick = () => takeAllFromChest(chest.id);
     list.appendChild(allBtn);
   }
 
   if(!hasGold && itemCount === 0){
-    list.innerHTML = '<div class="chest-empty-msg">O baú está vazio.</div>';
+    list.innerHTML = `<div class="chest-empty-msg">${t('ui.bau.vazio')}</div>`;
     return;
   }
 
@@ -13400,10 +13413,10 @@ function _renderChestWindow(chest){
   if(hasGold){
     const row = document.createElement('div');
     row.className = 'chest-gold-row';
-    row.innerHTML = `<span class="chest-gold-label">🪙 ${chest.gold} Ouros</span>`;
+    row.innerHTML = `<span class="chest-gold-label">🪙 ${t('ui.bau.ouros', {n:chest.gold})}</span>`;
     const btn = document.createElement('button');
     btn.className = 'chest-take-btn';
-    btn.textContent = '⬆ Pegar';
+    btn.textContent = t('ui.bau.pegar');
     btn.disabled = pending?.kind === 'all';
     btn.onclick = () => takeFromChest(chest.id, 'gold', 0);
     row.appendChild(btn);
@@ -13415,16 +13428,11 @@ function _renderChestWindow(chest){
     const isAmmo    = item.effect === 'ammo';
     const isWeapon  = !!item.die;
     const typeLabel = isWeapon
-      ? `⚔ Arma (${item.die})`
+      ? t('ui.bau.slot.arma_dado', {die:item.die})
       : isAmmo
-        ? `🏹 Munição ×${item.ammo_count ?? 0}`
-        : ({weapon:'⚔ Arma', armor:'🛡 Armadura', shield:'🛡 Escudo',
-            accessory:'📿 Acessório', ring:'💍 Anel', head:'⛑ Cabeça',
-            bag:'🧪 Consumível'}[item.item_slot] || '📦 Item');
-    const statSuffix = isWeapon ? ''
-      : item.effect==='heal'  ? ` +${item.value} HP`
-      : item.effect==='atk'   ? ` +${item.value} Atq`
-      : item.effect==='def_'  ? ` +${item.value} CA` : '';
+        ? t('ui.bau.slot.municao_x', {n:item.ammo_count ?? 0})
+        : _rotulo(item.item_slot, 'ui.bau.slot', t('ui.bau.slot.padrao'));
+    const statSuffix = _sufixoStatItem(item, isWeapon);
 
     // Off_hand ammo slot may have space even when bag is full
     const ammoHasSpace = isAmmo && (() => {
@@ -13450,7 +13458,7 @@ function _renderChestWindow(chest){
     btn.textContent = '⬆ Pegar';
     const cantPick = isFull && !ammoHasSpace;
     btn.disabled = cantPick || pending?.kind === 'all';
-    if(cantPick) btn.title = 'Inventário cheio!';
+    if(cantPick) btn.title = t('ui.bau.inventario_cheio');
     btn.onclick = () => takeFromChest(chest.id, 'item', idx);
     row.appendChild(btn);
     aplicarTooltipAoItemDados(row, item);
@@ -13475,7 +13483,7 @@ function abrirPainelLoot({ titulo, gold, items, onPegarOuro, onPegarItem, onPega
   _openChestId = null;   // disarm chest auto-refresh
   _openDecorLootId = null;
   const titleEl = $('chest-title');
-  if (titleEl) titleEl.textContent = titulo || '📦 Objeto';
+  if (titleEl) titleEl.textContent = titulo || t('ui.bau.objeto');
   const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid && p.alive);
   const isFull = me && (me.bag || []).length >= (me.bag_size || 6);
   const list = $('chest-items-list');
@@ -13486,7 +13494,7 @@ function abrirPainelLoot({ titulo, gold, items, onPegarOuro, onPegarItem, onPega
   const hasItems = (items || []).length > 0;
 
   if (!hasGold && !hasItems && !acao) {
-    list.innerHTML = '<div class="chest-empty-msg">O objeto está vazio.</div>';
+    list.innerHTML = `<div class="chest-empty-msg">${t('ui.bau.objeto_vazio')}</div>`;
     $('chest-overlay').classList.add('open');
     return;
   }
@@ -13494,8 +13502,8 @@ function abrirPainelLoot({ titulo, gold, items, onPegarOuro, onPegarItem, onPega
   if(onPegarTudo && (hasGold || hasItems)){
     const allBtn = document.createElement('button');
     allBtn.className = 'chest-take-btn chest-take-all-btn';
-    allBtn.textContent = '⬆ Pegar tudo';
-    allBtn.title = 'Coleta o ouro e todos os itens que couberem no inventário.';
+    allBtn.textContent = t('ui.bau.pegar_tudo');
+    allBtn.title = t('ui.bau.pegar_tudo_desc');
     allBtn.onclick = () => onPegarTudo();
     list.appendChild(allBtn);
   }
@@ -13504,7 +13512,7 @@ function abrirPainelLoot({ titulo, gold, items, onPegarOuro, onPegarItem, onPega
     const row = document.createElement('div');
     row.className = 'chest-item-row';
     const btn = document.createElement('button');
-    btn.className = 'chest-take-btn'; btn.textContent = acao.label || 'Ativar mecanismo';
+    btn.className = 'chest-take-btn'; btn.textContent = acao.label || t('ui.bau.ativar_mecanismo');
     btn.onclick = () => { acao.onClick(); closeChestWindow(); };
     row.appendChild(btn); list.appendChild(row);
   }
@@ -13512,10 +13520,10 @@ function abrirPainelLoot({ titulo, gold, items, onPegarOuro, onPegarItem, onPega
   if (hasGold) {
     const row = document.createElement('div');
     row.className = 'chest-gold-row';
-    row.innerHTML = `<span class="chest-gold-label">🪙 ${gold} Ouros</span>`;
+    row.innerHTML = `<span class="chest-gold-label">🪙 ${t('ui.bau.ouros', {n:gold})}</span>`;
     const btn = document.createElement('button');
     btn.className = 'chest-take-btn';
-    btn.textContent = '⬆ Pegar';
+    btn.textContent = t('ui.bau.pegar');
     btn.onclick = () => onPegarOuro();
     row.appendChild(btn);
     list.appendChild(row);
@@ -13524,14 +13532,9 @@ function abrirPainelLoot({ titulo, gold, items, onPegarOuro, onPegarItem, onPega
   (items || []).forEach((item, idx) => {
     const isWeapon = !!item.die;
     const typeLabel = isWeapon
-      ? `⚔ Arma (${item.die})`
-      : ({ weapon: '⚔ Arma', armor: '🛡 Armadura', shield: '🛡 Escudo',
-           accessory: '📿 Acessório', ring: '💍 Anel', head: '⛑ Cabeça',
-           bag: '🧪 Consumível' }[item.item_slot] || '📦 Item');
-    const statSuffix = isWeapon ? ''
-      : item.effect === 'heal' ? ` +${item.value} HP`
-      : item.effect === 'atk'  ? ` +${item.value} Atq`
-      : item.effect === 'def_' ? ` +${item.value} CA` : '';
+      ? t('ui.bau.slot.arma_dado', {die:item.die})
+      : _rotulo(item.item_slot, 'ui.bau.slot', t('ui.bau.slot.padrao'));
+    const statSuffix = _sufixoStatItem(item, isWeapon);
     const row = document.createElement('div');
     row.className = 'chest-item-row';
     row.innerHTML = `
@@ -13544,9 +13547,9 @@ function abrirPainelLoot({ titulo, gold, items, onPegarOuro, onPegarItem, onPega
       </div>`;
     const btn = document.createElement('button');
     btn.className = 'chest-take-btn';
-    btn.textContent = '⬆ Pegar';
+    btn.textContent = t('ui.bau.pegar');
     btn.disabled = isFull;
-    if (isFull) btn.title = 'Inventário cheio!';
+    if (isFull) btn.title = t('ui.bau.inventario_cheio');
     btn.onclick = () => onPegarItem(idx);
     row.appendChild(btn);
     aplicarTooltipAoItemDados(row, item);
@@ -13934,6 +13937,14 @@ function _refreshFichaCidadePanel(){
   renderFichaCidadeBody(panel, player, player.id === GS.myPid && naCidade);
 }
 
+// O servidor manda `class_name` já em português, e o filtro traduzirNomes só
+// troca `name`/`nome` — a classe saía crua em inglês. O id existe no payload e
+// a chave do servidor (cat.classe.<id>.nome) já está traduzida desde a etapa 2.
+function _classeNome(player){
+  if(!player) return '';
+  return _rotulo(player.class_id + '.nome', 'cat.classe', player.class_name || '');
+}
+
 function renderFichaCidadeBody(panel, player, editable){
   // Cabeçalho (foto + nome/classe/nível)
   const heroiKey    = _classIdParaHeroiKey(player.class_id);
@@ -13946,14 +13957,14 @@ function renderFichaCidadeBody(panel, player, editable){
     <img class="fc-head-photo" src="${portrait}" alt="" onerror="this.style.display='none'"/>
     <div class="fc-head-info">
       <div class="fc-head-name">${player.name || ''}</div>
-      <div class="fc-head-class">${player.class_name || ''}${editable ? '' : ' · só leitura'}</div>
-      <div class="fc-head-lvl">NÍVEL ${player.level || 1}</div>
+      <div class="fc-head-class">${_classeNome(player)}${editable ? '' : ' · ' + t('ui.ficha.so_leitura')}</div>
+      <div class="fc-head-lvl">${t('ui.ficha.nivel_caixa', {n:player.level || 1})}</div>
     </div>`;
   panel.appendChild(head);
 
   const xp = document.createElement('div');
   xp.className = 'fc-xp-display';
-  xp.innerHTML = `<span>EXPERIÊNCIA</span><b>${player.xp ?? 0} XP</b>`;
+  xp.innerHTML = `<span>${t('ui.ficha.experiencia')}</span><b>${player.xp ?? 0} XP</b>`;
   panel.appendChild(xp);
 
   const body = document.createElement('div');
@@ -13970,21 +13981,21 @@ function renderFichaCidadeBody(panel, player, editable){
   const invBtn = document.createElement('button');
   invBtn.className = 'section-title';
   invBtn.style.cssText = 'width:100%;text-align:left;cursor:pointer;background:none;border:none;color:var(--gold);';
-  invBtn.innerHTML = '<img class="menu-inventario-icone" src="assets/inventario.png" alt="" aria-hidden="true"> Ver inventário';
+  invBtn.innerHTML = `<img class="menu-inventario-icone" src="assets/inventario.png" alt="" aria-hidden="true"> ${t('ui.ficha.ver_inventario')}`;
   invBtn.onclick = () => InventoryModal.open(player.id, { readOnly: !editable });
   body.appendChild(invBtn);
 
   const statusBtn = document.createElement('button');
   statusBtn.className = 'section-title';
   statusBtn.style.cssText = 'width:100%;text-align:left;cursor:pointer;background:none;border:none;color:var(--gold);margin-top:5px;';
-  statusBtn.textContent = '📊 Status (S)';
+  statusBtn.textContent = t('ui.ficha.status_botao');
   statusBtn.onclick = () => abrirMenuStatus(player.id);
   body.appendChild(statusBtn);
 
   const abilityBtn = document.createElement('button');
   abilityBtn.className = 'section-title';
   abilityBtn.style.cssText = 'width:100%;text-align:left;cursor:pointer;background:none;border:none;color:var(--gold);margin-top:5px;';
-  abilityBtn.innerHTML = '<img class="menu-habilidades-icone" src="assets/habilidades.png" alt="" aria-hidden="true"> Habilidades (H)';
+  abilityBtn.innerHTML = `<img class="menu-habilidades-icone" src="assets/habilidades.png" alt="" aria-hidden="true"> ${t('ui.ficha.habilidades_botao')}`;
   abilityBtn.onclick = () => abrirMenuHabilidades(player.id);
   body.appendChild(abilityBtn);
 
@@ -13993,7 +14004,7 @@ function renderFichaCidadeBody(panel, player, editable){
     const magicBtn = document.createElement('button');
     magicBtn.className = 'section-title';
     magicBtn.style.cssText = 'width:100%;text-align:left;cursor:pointer;background:none;border:none;color:var(--gold);margin-top:5px;';
-    magicBtn.innerHTML = '<img class="menu-magias-icone" src="assets/magias.png" alt="" aria-hidden="true"> Ver magias (M)';
+    magicBtn.innerHTML = `<img class="menu-magias-icone" src="assets/magias.png" alt="" aria-hidden="true"> ${t('ui.ficha.ver_magias')}`;
     magicBtn.onclick = () => abrirMenuMagias(player.id);
     body.appendChild(magicBtn);
   }
@@ -14023,30 +14034,30 @@ function renderFichaCidadeBody(panel, player, editable){
 
     const tecTitle = document.createElement('div');
     tecTitle.className = 'section-title'; tecTitle.style.marginTop = '4px';
-    tecTitle.textContent = '⚔️ Técnica da Guilda';
+    tecTitle.textContent = t('ui.ficha.tecnica_guilda');
     body.appendChild(tecTitle);
-    body.appendChild(mkSelect('tecnica', eq.tecnica, id => !isEx(id), '— nenhuma técnica —'));
+    body.appendChild(mkSelect('tecnica', eq.tecnica, id => !isEx(id), t('ui.ficha.nenhuma_tecnica')));
 
     if(false && (player.class_id === 'mage' || player.class_id === 'cleric')){
       const exTitle = document.createElement('div');
       exTitle.className = 'section-title'; exTitle.style.marginTop = '4px';
-      exTitle.textContent = '✨ Técnica Exclusiva';
+      exTitle.textContent = t('ui.ficha.tecnica_exclusiva');
       body.appendChild(exTitle);
-      body.appendChild(mkSelect('tecnica_exclusiva', eq.tecnica_exclusiva, id => isEx(id), '— nenhuma exclusiva —'));
+      body.appendChild(mkSelect('tecnica_exclusiva', eq.tecnica_exclusiva, id => isEx(id), t('ui.ficha.nenhuma_exclusiva')));
     }
 
     (eq.tecnicas || []).slice(1).forEach((cur, indice) => {
       const tituloExtra = document.createElement('div');
       tituloExtra.className = 'section-title'; tituloExtra.style.marginTop = '4px';
-      tituloExtra.textContent = `Técnica da Guilda ${indice + 2}`;
+      tituloExtra.textContent = t('ui.ficha.tecnica_guilda_n', {n:indice + 2});
       body.appendChild(tituloExtra);
-      body.appendChild(mkSelect(`tecnica_${indice + 1}`, cur, () => true, '— nenhuma técnica —'));
+      body.appendChild(mkSelect(`tecnica_${indice + 1}`, cur, () => true, t('ui.ficha.nenhuma_tecnica')));
     });
 
     if(!owned.length){
       const hint = document.createElement('div');
       hint.className = 'guild-empty'; hint.style.padding = '2px 2px 0';
-      hint.textContent = 'Compre técnicas na Guilda dos Heróis.';
+      hint.textContent = t('ui.ficha.compre_tecnicas');
       body.appendChild(hint);
     }
   }
@@ -14189,13 +14200,13 @@ function renderSlotsMenuMagias(heroi){
   const circulos = ['primeiro','segundo','terceiro'];
   const grupos = circulos.map(circulo => {
     const s = status[circulo];
-    if(!s.total) return `<div class="mm-slot-circle"><h4>${_LABEL_CIRCULO[circulo]}</h4><span class="mm-slot-locked">Disponível em nível maior</span></div>`;
+    if(!s.total) return `<div class="mm-slot-circle"><h4>${_labelCirculo(circulo)}</h4><span class="mm-slot-locked">Disponível em nível maior</span></div>`;
     const pips = Array.from({length:s.total}, (_, i) => {
       if(i < s.livres) return '<span class="mm-slot-pip ready" title="Slot disponível">✓</span>';
       const falta = s.espera[i - s.livres] || 0;
       return `<span class="mm-slot-pip cooldown" title="Volta em ${falta} rodada(s)">${falta}</span>`;
     }).join('');
-    return `<div class="mm-slot-circle"><h4>${_LABEL_CIRCULO[circulo]}</h4><span class="mm-slot-count${s.livres === 0 ? ' empty' : ''}">${s.livres}/${s.total} disponíveis</span><div class="mm-slot-pips">${pips}</div></div>`;
+    return `<div class="mm-slot-circle"><h4>${_labelCirculo(circulo)}</h4><span class="mm-slot-count${s.livres === 0 ? ' empty' : ''}">${s.livres}/${s.total} disponíveis</span><div class="mm-slot-pips">${pips}</div></div>`;
   }).join('');
   return `<aside class="menu-magias-slots" aria-label="Slots de magias"><div class="mm-slots-header">SLOTS DE MAGIAS<small>Recarga por círculo</small></div>${grupos}</aside>`;
 }
@@ -14250,7 +14261,7 @@ function abrirMenuMagias(pid){
     <div class="mm-magia${podeAgir && slots[m.circulo]?.livres > 0 ? ' mm-acionavel' : ''}${podeAgir && !(slots[m.circulo]?.livres > 0) ? ' mm-sem-slot' : ''}" ${podeAgir && slots[m.circulo]?.livres > 0 ? `onclick="ativarMagiaDoMenu('${m.id}')"` : ''}
       onmouseenter="mostrarTooltipMagia('${m.id}', event)" onmouseleave="ocultarTooltipMagia()">
       <span class="mm-magia-icon">${magiaIconHTML(m, 34)}</span>
-      <span><b>${m.nome}</b><small>${_LABEL_CIRCULO[m.circulo] || ''} · ${m.custo || ''}${podeAgir && !(slots[m.circulo]?.livres > 0) ? ' · sem slot disponível' : ''}</small></span>
+      <span><b>${m.nome}</b><small>${_labelCirculo(m.circulo) || ''} · ${m.custo || ''}${podeAgir && !(slots[m.circulo]?.livres > 0) ? ' · sem slot disponível' : ''}</small></span>
     </div>`;
   const renderMod = m => {
     const pendente = m.categoria === 'tecnica' && !!GS.tecnicaPendente?.(player, m.id);
@@ -14277,7 +14288,7 @@ function abrirMenuMagias(pid){
           <section><h3>MAGIAS CONHECIDAS</h3>
             ${conhecidos.length ? porCirculo.map(c => {
               const magias = conhecidos.filter(m => m.circulo === c);
-              return magias.length ? `<div class="mm-circle"><h4>${_LABEL_CIRCULO[c]}</h4><div class="mm-list">${magias.map(renderMagia).join('')}</div></div>` : '';
+              return magias.length ? `<div class="mm-circle"><h4>${_labelCirculo(c)}</h4><div class="mm-list">${magias.map(renderMagia).join('')}</div></div>` : '';
             }).join('') : '<p class="mm-empty">Nenhuma magia conhecida.</p>'}
           </section>
         </div>
@@ -14449,16 +14460,16 @@ function mostrarTooltipMenuHabilidade(event, habilidadeId){
 function ativarHabilidadeDoMenu(skillId){
   const state = GS.gameState;
   const me = state && state.players.find(p => p.id === GS.myPid);
-  if(!me || state.phase !== 'playing'){ toast('Habilidades só podem ser usadas na masmorra.'); return; }
-  if(!GS.isMyTurn || !me.alive){ toast('Não é a sua vez.'); return; }
+  if(!me || state.phase !== 'playing'){ toast(t('ui.habilidade.so_na_masmorra')); return; }
+  if(!GS.isMyTurn || !me.alive){ toast(t('ui.habilidade.nao_e_sua_vez')); return; }
   const comboTecelagem = window._comboTecelagemArcanaMenu;
   if(me.class_id === 'mage' && comboTecelagem){
     if(!MODIFICADORES_METAMAGIA.includes(skillId)){
-      toast('Escolha uma das três metamagias do mago.', 'var(--gold)'); return;
+      toast(t('ui.metamagia.escolha_uma'), 'var(--gold)'); return;
     }
     const selecionadas = MODIFICADORES_METAMAGIA.filter(id => _modificadorMagiaAtivo(me, id));
     if(!selecionadas.includes(skillId) && selecionadas.length >= comboTecelagem.capacidade){
-      toast(`Escolha somente ${comboTecelagem.capacidade} metamagias para a Tecelagem Arcana.`, 'var(--gold)'); return;
+      toast(t('ui.metamagia.escolha_somente', {n:comboTecelagem.capacidade}), 'var(--gold)'); return;
     }
     const proximas = selecionadas.includes(skillId)
       ? selecionadas.filter(id => id !== skillId) : [...selecionadas, skillId];
@@ -14467,7 +14478,7 @@ function ativarHabilidadeDoMenu(skillId){
       window._comboTecelagemArcanaMenu = null;
       fecharMenuHabilidades();
       renderMyPanel(state);
-      toast('Metamagias armadas. Escolha a magia e o alvo manualmente.', 'var(--gold)');
+      toast(t('ui.metamagia.armadas'), 'var(--gold)');
     } else {
       abrirMenuHabilidades(me.id);
     }
@@ -14487,7 +14498,7 @@ function ativarHabilidadeDoMenu(skillId){
   if(me.class_id === 'warrior' && combo){
     const selecionadas = GS.getWarriorSelected();
     if(!selecionadas.includes(skillId) && selecionadas.length >= combo.capacidade){
-      toast(`Escolha somente ${combo.capacidade} habilidades para esta combinação.`, 'var(--gold)'); return;
+      toast(t('ui.habilidade.escolha_somente', {n:combo.capacidade}), 'var(--gold)'); return;
     }
     GS.toggleWarriorSkill(skillId);
     if(GS.getWarriorSelected().length === combo.capacidade){
@@ -14495,12 +14506,12 @@ function ativarHabilidadeDoMenu(skillId){
       window._ataqueGuerreiroArmado = true;
       fecharMenuHabilidades();
       renderMyPanel(state);
-      toast('Combinação armada. Escolha o alvo manualmente para atacar.', 'var(--gold)');
+      toast(t('ui.habilidade.combinacao_armada'), 'var(--gold)');
     } else {
       // Mantém o menu aberto na primeira escolha: só a segunda fecha o menu.
       _atualizarSelecaoComboGuerreiro();
       renderMyPanel(state);
-      toast(`1 de ${combo.capacidade} habilidades selecionada.`, 'var(--gold)');
+      toast(t('ui.habilidade.uma_de_n', {n:combo.capacidade}), 'var(--gold)');
     }
     return;
   }
@@ -14509,7 +14520,7 @@ function ativarHabilidadeDoMenu(skillId){
 
   if(me.class_id === 'warrior'){
     if(!GS.isWarriorSkillSelected(skillId) && GS.getWarriorSelected().length >= GS.warriorComboCap()){
-      toast(`Você só pode armar ${GS.warriorComboCap()} habilidade(s) por turno.`, 'var(--gold)'); return;
+      toast(t('ui.habilidade.limite_por_turno', {n:GS.warriorComboCap()}), 'var(--gold)'); return;
     }
     GS.toggleWarriorSkill(skillId); renderMyPanel(state); return;
   }
@@ -14518,7 +14529,7 @@ function ativarHabilidadeDoMenu(skillId){
     const ib = GS.instrumentoBase(inst.base);
     if(!ib) return;
     if(ib.modo === 'passiva'){
-      toast('Esta habilidade é passiva e já está ativa.', 'var(--gold)');
+      toast(t('ui.habilidade.passiva_ja_ativa'), 'var(--gold)');
       return;
     }
     acionarInstrumento(me, inst, ib);
@@ -14532,7 +14543,7 @@ function ativarHabilidadeDoMenu(skillId){
     desarmar_armadilha:  () => {
       GS.pendingSkill = {id: 'desarmar_armadilha', target: 'tile'};
       renderMyPanel(state);
-      toast('Selecione uma casa adjacente para desarmar.', 'var(--gold)');
+      toast(t('ui.habilidade.selecione_casa_desarmar'), 'var(--gold)');
     },
     cura:                () => abrirPainelCura(),
     cura_area:           () => abrirPainelCuraArea(),
@@ -14548,7 +14559,7 @@ function ativarHabilidadeDoMenu(skillId){
     animar_mortos:       () => usarAnimarMortos(),
   };
   if(acoes[skillId]) acoes[skillId]();
-  else toast('Esta habilidade é passiva ou não possui uma ação manual.');
+  else toast(t('ui.habilidade.sem_acao_manual'));
 }
 
 function ativarTecnicaGuildaDoMenu(tid){
@@ -24740,20 +24751,20 @@ function removerLegendaArremessoPrincipal(){
 // adaga arremessável na mão principal (me.weapon.throw_range) e ação disponível.
 function iniciarModoArremessoAdagaPrincipal(){
   if(window._modoArremessoAtivo || window._modoArremessoPrincipal){
-    toast('Cancele o arremesso atual primeiro (ESC).', 'var(--gold)'); return;
+    toast(t('ui.arremesso.cancele_primeiro'), 'var(--gold)'); return;
   }
-  if(!g3){ toast('Arremesso com mira disponível apenas na visão 3D.', 'var(--gold)'); return; }
+  if(!g3){ toast(t('ui.arremesso.so_3d'), 'var(--gold)'); return; }
   const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid && p.alive);
   if(!me){ return; }
   const armaThrow = me.weapon && me.weapon.throw_range;
-  if(!armaThrow){ toast('Nenhuma adaga arremessável na mão principal.', 'var(--gold)'); return; }
-  if(me.action_done && me.bonus_action_used){ toast('Sem ações disponíveis para arremessar.', 'var(--gold)'); return; }
-  const tipoAcao = me.action_done ? 'AÇÃO BÔNUS' : 'AÇÃO PRINCIPAL';
+  if(!armaThrow){ toast(t('ui.arremesso.sem_adaga'), 'var(--gold)'); return; }
+  if(me.action_done && me.bonus_action_used){ toast(t('ui.arremesso.sem_acoes'), 'var(--gold)'); return; }
+  const tipoAcao = t(me.action_done ? 'ui.arremesso.acao_bonus' : 'ui.arremesso.acao_principal');
   window._modoArremessoPrincipal = true;
   mostrarHighlightArremessoPrincipal(me.pos);
   mostrarLegendaArremessoPrincipal(tipoAcao);
   if(g3.renderer) g3.renderer.domElement.style.cursor = 'crosshair';
-  GS.adicionarLog(`🎯 Modo arremesso (mão principal) — ${tipoAcao}. Clique num inimigo (ESC cancela).`);
+  GS.adicionarLog(t('ui.arremesso.log_principal', {acao:tipoAcao}));
   document.addEventListener('keydown', function cancelar(ev){
     if(ev.key === 'Escape'){
       limparHighlightArremessoPrincipal();
@@ -24877,20 +24888,20 @@ function removerLegendaArremessoLanca(){
 
 function iniciarModoArremessoLanca(){
   if(window._modoArremessoAtivo || window._modoArremessoPrincipal || window._modoArremessoLanca){
-    toast('Cancele o arremesso atual primeiro (ESC).', 'var(--gold)'); return;
+    toast(t('ui.arremesso.cancele_primeiro'), 'var(--gold)'); return;
   }
-  if(!g3){ toast('Arremesso com mira disponível apenas na visão 3D.', 'var(--gold)'); return; }
+  if(!g3){ toast(t('ui.arremesso.so_3d'), 'var(--gold)'); return; }
   const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid && p.alive);
   if(!me){ return; }
   const arma = me.weapon;
-  if(!arma || arma.id !== 'lanca_curta'){ toast('Lança curta não equipada.', 'var(--gold)'); return; }
-  if(me.action_done && me.bonus_action_used){ toast('Sem ações disponíveis para arremessar.', 'var(--gold)'); return; }
-  const tipoAcao = me.action_done ? 'AÇÃO BÔNUS' : 'AÇÃO PRINCIPAL';
+  if(!arma || arma.id !== 'lanca_curta'){ toast(t('ui.arremesso.sem_lanca'), 'var(--gold)'); return; }
+  if(me.action_done && me.bonus_action_used){ toast(t('ui.arremesso.sem_acoes'), 'var(--gold)'); return; }
+  const tipoAcao = t(me.action_done ? 'ui.arremesso.acao_bonus' : 'ui.arremesso.acao_principal');
   window._modoArremessoLanca = true;
   mostrarHighlightArremessoLanca(me.pos);
   mostrarLegendaArremessoLanca(tipoAcao);
   if(g3.renderer) g3.renderer.domElement.style.cursor = 'crosshair';
-  GS.adicionarLog(`🏹 Modo arremesso de lança — ${tipoAcao}. Clique num inimigo (ESC cancela).`);
+  GS.adicionarLog(t('ui.arremesso.log_lanca', {acao:tipoAcao}));
   document.addEventListener('keydown', function cancelar(ev){
     if(ev.key === 'Escape'){
       limparHighlightArremessoLanca();

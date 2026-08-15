@@ -55,6 +55,14 @@ FECHADAS = {
     # Lote 2, Task 5 — popup de armadilha (handleTileClick fica de fora: sobrou
     # 1 literal que e CHAVE DE LOGICA sobre o texto de erro do servidor)
     "_showTrapResult",
+    # Lote 3, Task 1 — a faixa 5-9: mapa-múndi, cenas de conversa, tooltip de
+    # pergaminho, metamagia, baú/loot, ficha da cidade e modos de arremesso.
+    "showWorldLocationPreview", "_adventureInfo", "showWorldMap",
+    "_renderCenaConversas", "_showCenaDialogo", "renderDescricaoItem",
+    "_tooltipPergaminhoHTML", "iniciarProvocacao", "_mageSkillBtn",
+    "_iniciarModoMagia", "_renderChestWindow", "abrirPainelLoot",
+    "renderFichaCidadeBody", "ativarHabilidadeDoMenu",
+    "iniciarModoArremessoAdagaPrincipal", "iniciarModoArremessoLanca",
 }
 
 
