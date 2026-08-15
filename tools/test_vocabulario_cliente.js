@@ -11,6 +11,7 @@ global.window = {};
 eval(fs.readFileSync(path.join(raiz, "src", "lang", "strings.js"), "utf8"));
 eval(fs.readFileSync(path.join(raiz, "src", "lang", "catalogo.js"), "utf8"));
 eval(fs.readFileSync(path.join(raiz, "src", "lang", "composto.js"), "utf8"));
+eval(fs.readFileSync(path.join(raiz, "src", "lang", "interface.js"), "utf8"));
 eval(fs.readFileSync(path.join(raiz, "src", "i18n.js"), "utf8"));
 const DICT = global.window.LANG_STRINGS;
 const I18N = global.window.I18N;
@@ -226,6 +227,49 @@ I18N.aplicarCatalogo(semUi, false);
 check("sem ui.*, cai na cat.* (comportamento antigo)",
       semUi.relampago.descricao === "Short");
 I18N.setLang("pt");
+
+// ─────────────────────────────────────────────────────────────────────────────
+// O _CSD (tela de seleção) não passa pelo aplicarCatalogo: as skills não têm
+// família cat.* que estabeleça a base, e usar id de magia nelas colidiria com o
+// GRIMORIO_CLIENT. Ele resolve por _rotulo, que monta a chave em runtime
+// (prefixo + '.' + id) — então o que dá para provar sem navegador é COBERTURA:
+// todo id que o _CSD leva à tela tem chave, com pt e en.
+console.log("\n[S] Cobertura das chaves ui.selecao.* do _CSD");
+const gameJs = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
+const iCsd = gameJs.indexOf("const _CSD");
+let prof = 0, kCsd = gameJs.indexOf("{", iCsd);
+const aCsd = kCsd;
+for (; kCsd < gameJs.length; kCsd++) {
+  if (gameJs[kCsd] === "{") prof++;
+  else if (gameJs[kCsd] === "}" && --prof === 0) break;
+}
+const blocoCsd = gameJs.slice(aCsd, kCsd + 1);
+const classes = [...blocoCsd.matchAll(/\n {2}(\w+):\{/g)].map(m => m[1]);
+const skills = [...blocoCsd.matchAll(/id:'(\w+)'/g)].map(m => m[1]);
+
+check("o _CSD tem as 6 classes", classes.length === 6);
+check("o _CSD tem 24 skills com id", skills.length === 24);
+check("nenhum texto solto sobrou no _CSD",
+      !/(?:name|nome|cls|desc):\s*'/.test(blocoCsd));
+
+const semChave = [];
+const semEn = [];
+for (const cid of classes)
+  for (const p of ["ui.selecao.classe", "ui.selecao.classe.cls", "ui.selecao.classe.desc"])
+    (DICT[`${p}.${cid}`] ? (DICT[`${p}.${cid}`].en ? null : semEn) : semChave)
+      ?.push(`${p}.${cid}`);
+for (const sid of skills)
+  for (const p of ["ui.selecao.skill", "ui.selecao.skill.desc"])
+    (DICT[`${p}.${sid}`] ? (DICT[`${p}.${sid}`].en ? null : semEn) : semChave)
+      ?.push(`${p}.${sid}`);
+
+check("toda chave ui.selecao.* existe: " + (semChave.join(", ") || "ok"),
+      semChave.length === 0);
+check("toda chave ui.selecao.* tem en: " + (semEn.join(", ") || "ok"),
+      semEn.length === 0);
+check("o pt bate com a fonte (amostra)",
+      DICT["ui.selecao.classe.warrior"].pt === "VICTOR COICE BRAVO" &&
+      DICT["ui.selecao.skill.desc.cura"].pt.startsWith("Ação principal. 1d8 a 3d8"));
 
 console.log("\n" + "=".repeat(62));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);

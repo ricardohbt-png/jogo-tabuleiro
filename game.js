@@ -23588,119 +23588,61 @@ function calcularVidaMaxima(heroKey, nivel = 1, constituicao) {
 let csf = null; // full class-select state handle
 
 const _CSD = {
-  warrior:{ name:'VICTOR COICE BRAVO', cls:'VICTOR', skyHex:'#1a0800', lightHex:0xff4400, spd:6,
+  warrior:{ skyHex:'#1a0800', lightHex:0xff4400, spd:6,
     portrait:'assets/portraits/victor.jpeg',   // foto de referência (salvar o arquivo aqui)
     hp:14, stats:{forca:18,destreza:10,inteligencia:8,constituicao:14},
-    desc:'Tanque de aço e sangue. Absorve golpes devastadores, afasta inimigos e nunca recua diante do perigo.',
     skills:[
       // Custos espelham CLASSES["warrior"]["skills"] em server.py (autoritativo).
-      {icon:'⚔️',name:'Mira Certeira',
-       desc:'Ativa +2 no acerto neste turno. Pode combinar com outras habilidades no mesmo turno.',
-       fome_cost:0, sede_cost:2},
-      {icon:'💥',name:'Golpe Devastador',
-       desc:'Dobra cada dado de dano neste turno. O bônus de Força não é dobrado.',
-       fome_cost:2, sede_cost:4},
-      {icon:'🔥',name:'Fúria Berserker',
-       desc:'Concede um ataque extra (2º ataque manual) neste turno.',
-       fome_cost:5, sede_cost:5},
+      {id:'mira_certeira', icon:'⚔️', fome_cost:0, sede_cost:2},
+      {id:'golpe_devastador', icon:'💥', fome_cost:2, sede_cost:4},
+      {id:'furia_berserker', icon:'🔥', fome_cost:5, sede_cost:5},
     ]},
-  mage:{ name:'PEDRO, O TÍMIDO', cls:'PEDRO', skyHex:'#0a0020', lightHex:0x8833ff, spd:6,
+  mage:{ skyHex:'#0a0020', lightHex:0x8833ff, spd:6,
     portrait:'assets/portraits/pedro.jpeg',
     hp:7, stats:{forca:8,destreza:12,inteligencia:18,constituicao:12},
-    desc:'Domina os arcanos proibidos. Devasta grupos de inimigos com magia de área letal.',
-    skills:[
-      { nome: 'Animar Mortos',    icone: '💀', desc: 'Habilidade de Classe — anima cadáveres como servos eternos' },
-      { nome: 'Mísseis Mágicos',  icone: '✨', desc: '1º Círculo — 3 projéteis de 1d4+INT, acerto automático' },
-      { nome: 'Raio de Gelo',     icone: '❄️', desc: '1º Círculo — 1d6+INT, alvo lento por 2 turnos' },
-      { nome: 'Toque Sombrio',    icone: '🖤', desc: '1º Círculo — 1d8+INT de dano sombrio, adjacente' },
-      { nome: 'Escudo Arcano',    icone: '🔮', desc: '1º Círculo — +3 CA por 3 turnos' },
-      { nome: 'Bola de Fogo',     icone: '🔥', desc: '2º Círculo — 3d6 fogo em área 2 quadrados' },
-      { nome: 'Drenar Vida',      icone: '🩸', desc: '2º Círculo — 2d6+INT, recupera metade como vida' },
-      { nome: 'Névoa Venenosa',   icone: '☠️', desc: '2º Círculo — área 2 quad, -2 testes, 3 turnos' },
-      { nome: 'Raio da Morte',    icone: '💜', desc: '3º Círculo — 5d6+INT em linha reta' },
-      { nome: 'Controlar Mente',  icone: '🧠', desc: '3º Círculo — inimigo luta pelo grupo por 3 turnos' },
-    ],
     selectionSkills:[
-      { icon:'💀', name:'Animar Mortos', desc:'Habilidade de classe — anima cadáveres como servos eternos.' },
-      { icon:'⏱️', name:'Estender Magia', desc:'Ação livre. Aumenta em 1 turno a duração de uma magia.' },
-      { icon:'💥', name:'Fortalecer Magia', desc:'Ação livre. Multiplica por 1,5 o dano da próxima magia.' },
-      { icon:'🎯', name:'Aprimorar Magia', desc:'Ação livre. Aumenta em +1 a CD do teste de resistência da próxima magia.' },
+      {id:'animar_mortos', icon:'💀'},
+      {id:'estender_magia', icon:'⏱️'},
+      {id:'fortalecer_magia', icon:'💥'},
+      {id:'aprimorar_magia', icon:'🎯'},
     ]},
-  rogue:{ name:'LUCCAS, O ASTUTO', cls:'LUCCAS', skyHex:'#040800', lightHex:0x44cc44, spd:6,
+  rogue:{ skyHex:'#040800', lightHex:0x44cc44, spd:6,
     portrait:'assets/portraits/luccas.jpeg',
     hp:9, stats:{forca:10,destreza:18,inteligencia:10,constituicao:12},
-    desc:'Morte silenciosa nas sombras. Dano crítico devastador e mobilidade inigualável.',
     skills:[
       // Custos espelham CLASSES["rogue"]["skills"] em server.py (autoritativo).
-      {icon:'🗡️',name:'Ataque Furtivo',
-       desc:'Passiva. +2d4 de dano extra quando há aliado adjacente ao alvo (ou se estiver invisível). +1d4 por faixa de nível.',
-       fome_cost:0, sede_cost:0},
-      {icon:'🔍',name:'Detectar Armadilhas',
-       desc:'Ação bônus (alternável). Revela armadilhas próximas e não dispara as da masmorra. Manutenção 💧-1/turno.',
-       fome_cost:0, sede_cost:1},
-      {icon:'🌑',name:'Esconder nas Sombras',
-       desc:'Ação bônus. d20+DES vs percepção dos monstros. Invisível (não é alvo) até atacar — mover-se NÃO revela. Manutenção 🍖-1 💧-1/turno.',
-       fome_cost:2, sede_cost:1},
-      {icon:'☠️',name:'Veneno Rápido',
-       desc:'Ação livre. Unta um veneno da bolsa na arma — os próximos golpes certeiros envenenam.',
-       fome_cost:0, sede_cost:1},
-      {icon:'🪤',name:'Criar Armadilha',
-       desc:'Ação principal. 8 tipos de armadilha na casa/adjacente. 🍖-2 💧-1 + custo em ouro.',
-       fome_cost:2, sede_cost:1},
+      {id:'ataque_furtivo', icon:'🗡️', fome_cost:0, sede_cost:0},
+      {id:'detectar_armadilhas', icon:'🔍', fome_cost:0, sede_cost:1},
+      {id:'esconder_sombras', icon:'🌑', fome_cost:2, sede_cost:1},
+      {id:'veneno_rapido', icon:'☠️', fome_cost:0, sede_cost:1},
+      {id:'criar_armadilha', icon:'🪤', fome_cost:2, sede_cost:1},
     ]},
-  cleric:{ name:'FRADE LEWIS', cls:'FRADE LEWIS', skyHex:'#140c00', lightHex:0xffdd44, spd:6,
+  cleric:{ skyHex:'#140c00', lightHex:0xffdd44, spd:6,
     portrait:'assets/portraits/lewis.jpeg',
     hp:10, stats:{forca:10,destreza:10,inteligencia:16,constituicao:14},
-    desc:'Frade que canaliza milagres. Cura, purifica e ressuscita aliados. Não usa mana — seus milagres custam fome/sede.',
     skills:[
-      {icon:'🙌',name:'Cura',
-       desc:'Ação principal. 1d8 a 3d8 + INT em um aliado. Alcance estendível com fome.',
-       fome_cost:0, sede_cost:1},
-      {icon:'🌟',name:'Cura em Área',
-       desc:'Ação principal. 1d8 a 3d8 + INT em todos os aliados no raio 5.',
-       fome_cost:4, sede_cost:4},
-      {icon:'✨',name:'Purificação',
-       desc:'Ação principal. Remove veneno, doença, maldição ou petrificação de um aliado adjacente.',
-       fome_cost:1, sede_cost:0},
-      {icon:'💫',name:'Ressurreição',
-       desc:'Ação principal. Traz um aliado morto adjacente de volta com 1 HP.',
-       fome_cost:10, sede_cost:10},
+      {id:'cura', icon:'🙌', fome_cost:0, sede_cost:1},
+      {id:'cura_area', icon:'🌟', fome_cost:4, sede_cost:4},
+      {id:'purificacao', icon:'✨', fome_cost:1, sede_cost:0},
+      {id:'ressurreicao', icon:'💫', fome_cost:10, sede_cost:10},
     ]},
-  bard:{ name:'HENRIQUE, O BARDO', cls:'HENRIQUE', skyHex:'#0a0005', lightHex:0xff66cc, spd:6,
+  bard:{ skyHex:'#0a0005', lightHex:0xff66cc, spd:6,
     portrait:'assets/portraits/henrique.jpeg',
     hp:9, stats:{forca:10,destreza:16,inteligencia:12,constituicao:12},
-    desc:'Alma da taverna, terror do calabouço. Inspira aliados com canções e provoca inimigos. Não usa mana — suas habilidades custam fome/sede.',
     skills:[
-      {icon:'📖',name:'Conhecimento das Lendas',
-       desc:'Passiva — sempre ativa. Revela CA, HP exato, dano, nível e tesouro de qualquer inimigo ao passar o mouse.',
-       fome_cost:0, sede_cost:0},
-      {icon:'🎵',name:'Canção Heroica',
-       desc:'Ação principal. +1 nos atributos escolhidos para aliados no raio de 5 quadrados. Custo variável por turno.',
-       fome_cost:0, sede_cost:0},
-      {icon:'😤',name:'Provocação',
-       desc:'Ação bônus. Impõe desvantagem ao inimigo e o força a atacar Henrique por 3 turnos.',
-       fome_cost:3, sede_cost:3},
+      {id:'conhecimento_lendas', icon:'📖', fome_cost:0, sede_cost:0},
+      {id:'cancao_heroica', icon:'🎵', fome_cost:0, sede_cost:0},
+      {id:'provocacao', icon:'😤', fome_cost:3, sede_cost:3},
     ]},
-  paladin:{ name:'RICHARD, O CAVALEIRO', cls:'RICHARD', skyHex:'#0e0a00', lightHex:0xeeeeff, spd:6,
+  paladin:{ skyHex:'#0e0a00', lightHex:0xeeeeff, spd:6,
     portrait:'assets/portraits/richard.jpeg',
     hp:12, stats:{forca:16,destreza:10,inteligencia:10,constituicao:14},
-    desc:'Aço e honra forjados na mesma bigorna. Richard não conhece recuo — apenas o peso do escudo e a clareza do dever. Não usa mana — suas habilidades custam fome/sede.',
     skills:[
-      {icon:'💡',name:'Guerreiro da Luz',
-       desc:'Ação Livre. +1 ou +2 em Visão, Ataque, Dano e CA. Bônus fixos até desativar. Custo variável por turno.',
-       fome_cost:0, sede_cost:0},
-      {icon:'✨',name:'Regeneração Divina',
-       desc:'Ação Livre. Recupera 1 HP por turno. Desativa ao atingir HP máximo. Ativar 🍖-2 💧-1; manutenção 🍖-1 💧-1.',
-       fome_cost:2, sede_cost:1},
-      {icon:'⚔️',name:'Golpe Sagrado',
-       desc:'Ação Bônus. +1d8 dano sagrado por ataque. Dobrado contra mortos-vivos e demônios. 🍖-3 💧-3.',
-       fome_cost:3, sede_cost:3},
-      {icon:'🛡️',name:'Protetor',
-       desc:'Ação Bônus. Aliado escolhido (raio 4) recebe metade do dano; a outra metade vai para Richard. 🍖-2 💧-2.',
-       fome_cost:2, sede_cost:2},
-      {icon:'🙏',name:'Imposição das Mãos',
-       desc:'Ação Principal. Cura 1d6 + bônus de Força em aliado adjacente. Não funciona em si mesmo. 🍖-3 💧-2.',
-       fome_cost:3, sede_cost:2},
+      {id:'guerreiro_luz', icon:'💡', fome_cost:0, sede_cost:0},
+      {id:'regeneracao_divina', icon:'✨', fome_cost:2, sede_cost:1},
+      {id:'golpe_sagrado', icon:'⚔️', fome_cost:3, sede_cost:3},
+      {id:'protetor', icon:'🛡️', fome_cost:2, sede_cost:2},
+      {id:'imposicao_maos', icon:'🙏', fome_cost:3, sede_cost:2},
     ]},
 };
 
@@ -24170,9 +24112,10 @@ function csfSelectHero(classId){
 function _csfShowPanel(classId, animate){
   const d = _CSD[classId];
   if(!d) return;
-  document.getElementById('cs-hero-name').textContent = d.name;
-  document.getElementById('cs-hero-cls').textContent  = d.cls;
-  document.getElementById('cs-desc').textContent      = d.desc;
+  // O texto do _CSD mora em ui.selecao.* — o objeto guarda só o que não é texto.
+  document.getElementById('cs-hero-name').textContent = _rotulo(classId, 'ui.selecao.classe', '');
+  document.getElementById('cs-hero-cls').textContent  = _rotulo(classId, 'ui.selecao.classe.cls', '');
+  document.getElementById('cs-desc').textContent      = _rotulo(classId, 'ui.selecao.classe.desc', '');
 
   // ── Pontos de Vida na ficha de seleção ──────────────────────────────────────
   const hpEl = document.getElementById('cs-hp');
@@ -24289,13 +24232,16 @@ function _csfShowPanel(classId, animate){
 
   // A seleção mostra quatro habilidades por herói. O grimório completo do Pedro
   // continua disponível dentro da partida; aqui ele segue o mesmo layout dos demais.
-  const skillsForSelect = classId === 'mage' ? (d.selectionSkills || d.skills.slice(0, 4)) : d.skills;
+  // O `data-ability-id` no ícone é o que mantém a arte funcionando com a interface
+  // em inglês: o scan de retaguarda do replaceAbilityEmoji procura o nome em
+  // PORTUGUÊS e deixaria de casar. O abilityIconHtml já resolve pelo sk.id.
+  const skillsForSelect = d.selectionSkills || d.skills;
   document.getElementById('cs-skills').innerHTML = skillsForSelect.map(sk => `
     <div class="cs-skill">
-      <span class="cs-skill-icon">${abilityIconHtml(sk, sk.icon ?? sk.icone ?? '')}</span>
+      <span class="cs-skill-icon" data-ability-id="${sk.id}">${abilityIconHtml(sk, sk.icon ?? sk.icone ?? '')}</span>
       <div class="cs-skill-body">
-        <div class="cs-skill-name">${sk.name ?? sk.nome ?? ''}</div>
-        <div class="cs-skill-desc">${sk.desc ?? ''}</div>
+        <div class="cs-skill-name">${_rotulo(sk.id, 'ui.selecao.skill', '')}</div>
+        <div class="cs-skill-desc">${_rotulo(sk.id, 'ui.selecao.skill.desc', '')}</div>
         ${(sk.fome_cost || sk.sede_cost) ? `
           <div class="cs-skill-cost" style="
             margin-top:4px;
@@ -24509,7 +24455,7 @@ function csConfirmClass(){
     return;
   }
   send({type:'select_class', class_id: csf.selectedId});
-  toast(`${_CSD[csf.selectedId]?.cls ?? csf.selectedId} selecionado!`, 'var(--gold)');
+  toast(`${_rotulo(csf.selectedId, 'ui.selecao.classe.cls', csf.selectedId)} selecionado!`, 'var(--gold)');
   // Mago/clérigo: escolher 2 magias de 1º círculo (obrigatório p/ iniciar — gate no servidor).
   if(csf.selectedId === 'mage' || csf.selectedId === 'cleric'){
     mostrarOverlaySelecaoMagiasCriacao(csf.selectedId);
