@@ -168,55 +168,55 @@ window.LANG_INTERFACE = {
     "pt": "<b>Cone:</b> 4 quadrados comp., 4 base<br>\n               <b>Dano:</b> 1d6 por nível<br>\n               <b>Falha Reflexos:</b> empurra 1d6 quadrados<br>\n               <b>Sucesso:</b> empurra 2 quadrados<br>\n               <b>Colisão parede:</b> +1d4 dano"
   },
   "ui.magia.lentidao.desc": {
-    "en": "",
+    "en": "<b>Save:</b> Will<br>\n               <b>Fail:</b> 1 action/round, no reaction, -1 AC<br>\n               <b>Success:</b> movement ÷2, -1 attack<br>\n               <b>Duration:</b> 1d4 rounds",
     "pt": "<b>Save:</b> Vontade<br>\n               <b>Falha:</b> 1 ação/rodada, sem reação, -1 CA<br>\n               <b>Sucesso:</b> movimento ÷2, -1 ataque<br>\n               <b>Duração:</b> 1d4 rodadas"
   },
   "ui.magia.manto_escuridao.desc": {
-    "en": "",
+    "en": "<b>Radius:</b> 3 squares centred on the caster<br>\n               <b>Without night vision:</b> attacks roll 2d20 and use the lower<br>\n               <b>With night vision:</b> 2d20 uses the higher vs the blinded<br>\n               <b>Caster:</b> gains darkvision for the cloak's duration<br>\n               <b>Maximum ranged distance:</b> 2 squares<br>\n               <b>Duration:</b> 1d4 rounds",
     "pt": "<b>Raio:</b> 3 quadrados centrado no caster<br>\n               <b>Sem visão noturna:</b> 2d20 usa menor nos ataques<br>\n               <b>Com visão noturna:</b> 2d20 usa maior vs cegos<br>\n               <b>Conjurador:</b> recebe visão no escuro pela duração do manto<br>\n               <b>Distância máxima à distância:</b> 2 quadrados<br>\n               <b>Duração:</b> 1d4 rodadas"
   },
   "ui.magia.medo.desc": {
-    "en": "",
+    "en": "<b>Save:</b> Will<br>\n               <b>Fail:</b> flees for 1d4+1 rounds<br>\n               <b>Effects:</b> -1 attack, will not approach<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Save:</b> Vontade<br>\n               <b>Falha:</b> foge 1d4+1 rodadas<br>\n               <b>Efeitos:</b> -1 ataque, não se aproxima<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
   },
   "ui.magia.protecao_energia.desc": {
-    "en": "",
+    "en": "<b>Protection:</b> 10 points/round of elemental damage<br>\n               <b>Types:</b> fire, ice, lightning, acid, water or holy<br>\n               <b>Duration:</b> 1d6+1 rounds<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Proteção:</b> 10 pontos/rodada de dano elemental<br>\n               <b>Tipos:</b> fogo, gelo, eletricidade, ácido, água ou sagrado<br>\n               <b>Duração:</b> 1d6+1 rodadas<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
   },
   "ui.magia.raio_congelante.desc": {
-    "en": "",
+    "en": "<b>Range:</b> 3 +1 per level<br>\n               <b>Damage:</b> 3d4 +2d4 every 2 levels<br>\n               <b>⚠️ No Reflex save:</b> damage is always full<br>\n               <b>Fortitude:</b> fail → paralysed for 1 round<br>\n               <b>Next round:</b> new Fortitude save<br>\n               <b>Success:</b> acts normally<br>\n               <b>Fail:</b> 1 more round (max 2)",
     "pt": "<b>Alcance:</b> 3 +1 por nível<br>\n               <b>Dano:</b> 3d4 +2d4 a cada 2 níveis<br>\n               <b>⚠️ Sem Reflexos:</b> dano sempre total<br>\n               <b>Fortitude:</b> falha → paralisado 1 rodada<br>\n               <b>Rodada seguinte:</b> novo Fortitude<br>\n               <b>Sucesso:</b> age normalmente<br>\n               <b>Falha:</b> mais 1 rodada (máx 2)"
   },
   "ui.magia.raio_divino.desc": {
-    "en": "",
+    "en": "<b>Damage:</b> 1d6+1 per character level<br>\n               <b>Save:</b> Reflex → half<br>\n               <b>Vs undead/demons:</b> damage doubled<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Dano:</b> 1d6+1 por nível do personagem<br>\n               <b>Save:</b> Reflexos → metade<br>\n               <b>Vs mortos-vivos/demônios:</b> dano dobrado<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
   },
   "ui.magia.regeneracao_magica.desc": {
-    "en": "",
+    "en": "<b>Pool:</b> 2d6+2 regeneration points<br>\n               <b>Healing:</b> +1 HP at the start of the target's turn<br>\n               <b>If it dies:</b> comes back with 1 HP (-3 hunger/thirst)<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Pool:</b> 2d6+2 pontos de regeneração<br>\n               <b>Cura:</b> +1 HP no início do turno do alvo<br>\n               <b>Se morrer:</b> volta com 1 HP (-3 fome/sede)<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
   },
   "ui.magia.relampago.desc": {
-    "en": "",
+    "en": "<b>Range:</b> 4 squares in a straight line (+1 per level)<br>\n               <b>Damage:</b> 1d6 per level per hit<br>\n               <b>Ricochet:</b> returns along the same path — squares hit twice (dark green)<br>\n               <b>Save:</b> Reflex → half per hit<br>\n               <b>⚠️ Pedro is only hurt on the way back; it can hurt allies</b><br>\n               <b>Extend Spell:</b> does not apply (instantaneous effect)",
     "pt": "<b>Alcance:</b> 4 casas em linha reta (+1 por nível)<br>\n               <b>Dano:</b> 1d6 por nível por impacto<br>\n               <b>Ricochete:</b> volta pelo mesmo trajeto — casas atingidas 2x (verde escuro)<br>\n               <b>Save:</b> Reflexos → metade por impacto<br>\n               <b>⚠️ Pedro só é ferido na volta; pode ferir aliados</b><br>\n               <b>Estender Magia:</b> não se aplica (efeito instantâneo)"
   },
   "ui.magia.saciar.desc": {
-    "en": "",
+    "en": "<b>Range:</b> adjacent<br>\n               <b>Effect:</b> +20 hunger and +20 thirst<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Alcance:</b> adjacente<br>\n               <b>Efeito:</b> +20 fome e +20 sede<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
   },
   "ui.magia.silencio.desc": {
-    "en": "",
+    "en": "<b>Area:</b> 4x4 centred on the point<br>\n               <b>Effect:</b> spells do not work inside the area<br>\n               <b>Duration:</b> 1d4+1 rounds<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Área:</b> 4x4 centrado no ponto<br>\n               <b>Efeito:</b> magias não funcionam na área<br>\n               <b>Duração:</b> 1d4+1 rodadas<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
   },
   "ui.magia.sono.desc": {
-    "en": "",
+    "en": "<b>Save:</b> Will<br>\n               <b>Fail:</b> sleeps for 1d4+1 rounds<br>\n               <b>Bonus:</b> 1st attack against a sleeping target = critical<br>\n               <b>Wakes:</b> on taking any damage<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Save:</b> Vontade<br>\n               <b>Falha:</b> dorme 1d4+1 rodadas<br>\n               <b>Bônus:</b> 1º ataque contra dormindo = crítico<br>\n               <b>Acorda:</b> ao receber qualquer dano<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
   },
   "ui.magia.velocidade.desc": {
-    "en": "",
+    "en": "<b>Effect:</b> every action is doubled<br>\n               <b>Cost:</b> each action still costs hunger/thirst<br>\n               <b>Duration:</b> 1d4 rounds",
     "pt": "<b>Efeito:</b> todas as ações são dobradas<br>\n               <b>Custo:</b> cada ação ainda custa fome/sede<br>\n               <b>Duração:</b> 1d4 rodadas"
   },
   "ui.magia.visao_escuro.desc": {
-    "en": "",
+    "en": "<b>Effect:</b> ignores the darkness system entirely<br>\n               <b>Duration:</b> until you leave the dungeon<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Efeito:</b> ignora completamente o sistema de escuridão<br>\n               <b>Duração:</b> até sair da masmorra<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
   },
   "ui.mestre.custo.bonus": {
