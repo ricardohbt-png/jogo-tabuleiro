@@ -9356,10 +9356,10 @@ function _bardSkillBtn(me, sk){
       btn.className += ' skill-active';
       btn.innerHTML = `
         <div class="skill-info">
-          <div class="skill-name">🎵 ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● cantando</small></div>
+          <div class="skill-name">🎵 ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● ${t('ui.hud.cantando')}</small></div>
           <div class="skill-desc">${labels || '—'}</div>
         </div>
-        <div class="skill-cost">🍖${c.fome} 💧${c.sede}<br><small style="font-size:.6rem;">parar</small></div>`;
+        <div class="skill-cost">🍖${c.fome} 💧${c.sede}<br><small style="font-size:.6rem;">${t('ui.hud.parar')}</small></div>`;
       btn.onclick = () => send({ type:'desativar_cancao' });   // parar a qualquer momento
     } else {
       btn.disabled = !myTurnPlay;
@@ -9377,7 +9377,7 @@ function _bardSkillBtn(me, sk){
     const pode   = myTurnPlay && !me.bonus_action_used && temRec;
     btn.disabled = !pode;
     const aviso = me.bonus_action_used
-      ? ' <small style="color:var(--text2);font-size:.62rem;">bônus usado</small>'
+      ? ` <small style="color:var(--text2);font-size:.62rem;">${t('ui.hud.bonus_usado')}</small>`
       : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">sem recursos</small>' : '';
     const _pnv = GS.bardoProvocacaoNivel ? GS.bardoProvocacaoNivel() : 1;
     const _pextra = _pnv >= 3
@@ -9956,7 +9956,7 @@ function _paladinSkillBtn(me, sk){
     btn.disabled  = !!disabled;
     btn.innerHTML = `
       <div class="skill-info">
-        <div class="skill-name">${name}</div>
+        <div class="skill-name" data-ability-id="${sk.id || ''}">${name}</div>
         <div class="skill-desc">${desc}</div>
       </div>
       <div class="skill-cost">${cost}</div>`;
@@ -9968,21 +9968,21 @@ function _paladinSkillBtn(me, sk){
       const b = me.guerreiro_luz_bonus || {};
       const c = me.guerreiro_luz_custo || {fome:0, sede:0};
       const lbls = Object.entries(b).filter(([,v]) => v>0).map(([k,v]) => `+${v} ${k}`).join(' • ');
-      setBtn(`💡 ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● ativo</small>`,
-             (lbls || '—') + renderIndicadorVisao(me), `🍖${c.fome} 💧${c.sede}<br><small style="font-size:.6rem;">parar</small>`,
+      setBtn(`💡 ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● ${t('ui.hud.ativo')}</small>`,
+             (lbls || '—') + renderIndicadorVisao(me), `🍖${c.fome} 💧${c.sede}<br><small style="font-size:.6rem;">${t('ui.hud.parar')}</small>`,
              false, () => send({type:'acao_livre_richard', habilidade_id:'guerreiro_luz'}), true);
     } else {
       const _capLuz = GS.paladinLuzMaxAtributos ? GS.paladinLuzMaxAtributos() : 2;
       setBtn(`💡 ${sk.name} <small style="color:var(--text2);font-size:.62rem;">livre</small>`,
-             `até ${_capLuz} atributo(s) simultâneo(s)`, 'escolher', !myTurnPlay,
+             t('ui.hud.ate_atributos',{n:_capLuz}), 'escolher', !myTurnPlay,
              () => abrirPainelGuerreiroLuz(), false);
     }
   } else if(sk.id === 'regeneracao_divina'){
     const _raioRegen = GS.paladinRegenRaio ? GS.paladinRegenRaio() : 0;
     const _descRegen = _raioRegen > 0 ? `+1 HP por turno + aliados em raio ${_raioRegen}` : '+1 HP por turno';
     if(me.regeneracao_ativa){
-      setBtn(`✨ ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● ativa</small>`,
-             _descRegen, `🍖1 💧1<br><small style="font-size:.6rem;">parar</small>`,
+      setBtn(`✨ ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● ${t('ui.hud.ativa')}</small>`,
+             _descRegen, `🍖1 💧1<br><small style="font-size:.6rem;">${t('ui.hud.parar')}</small>`,
              false, () => send({type:'acao_livre_richard', habilidade_id:'regeneracao_divina'}), true);
     } else {
       const hpFull = (me.hp != null && me.max_hp != null && me.hp >= me.max_hp);
@@ -9994,12 +9994,12 @@ function _paladinSkillBtn(me, sk){
   } else if(sk.id === 'golpe_sagrado'){
     const _dadosSagrado = GS.paladinAtaqueSagradoDados ? GS.paladinAtaqueSagradoDados() : 1;
     if(me.golpe_sagrado_ativo){
-      setBtn(`⚔️ ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● ativo</small>`,
-             `+${_dadosSagrado}d8 sagrado por ataque`, `manut. 🍖1 💧1<br><small style="font-size:.6rem;">parar</small>`,
+      setBtn(`⚔️ ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● ${t('ui.hud.ativo')}</small>`,
+             `+${_dadosSagrado}d8 sagrado por ataque`, `manut. 🍖1 💧1<br><small style="font-size:.6rem;">${t('ui.hud.parar')}</small>`,
              false, () => send({type:'desativar_golpe_sagrado'}), true);
     } else {
       const pode  = myTurnPlay && !me.bonus_action_used && temRec;
-      const aviso = me.bonus_action_used ? ' <small style="color:var(--text2);font-size:.62rem;">bônus usado</small>'
+      const aviso = me.bonus_action_used ? ` <small style="color:var(--text2);font-size:.62rem;">${t('ui.hud.bonus_usado')}</small>`
                   : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">sem recursos</small>' : '';
       setBtn(`⚔️ ${sk.name}${aviso}`, sk.description || sk.desc || '', costStr, !pode,
              () => send({type:'golpe_sagrado'}), false);
@@ -10009,20 +10009,20 @@ function _paladinSkillBtn(me, sk){
     const _splitDef = GS.paladinDefensorSplit ? GS.paladinDefensorSplit() : 50;
     if(me.protetor_ativo){
       const alvo = (GS.gameState?.players || []).find(p => p.id === me.protetor_alvo);
-      setBtn(`🛡️ ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● ativo</small>`,
+      setBtn(`🛡️ ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● ${t('ui.hud.ativo')}</small>`,
              alvo ? `protegendo ${alvo.name} (${_splitDef}%/${_splitDef}%)` : '—',
-             `manut. 🍖1<br><small style="font-size:.6rem;">parar</small>`,
+             `manut. 🍖1<br><small style="font-size:.6rem;">${t('ui.hud.parar')}</small>`,
              false, () => send({type:'desativar_protetor'}), true);
     } else {
       const pode  = myTurnPlay && !me.bonus_action_used && temRec;
-      const aviso = me.bonus_action_used ? ' <small style="color:var(--text2);font-size:.62rem;">bônus usado</small>'
+      const aviso = me.bonus_action_used ? ` <small style="color:var(--text2);font-size:.62rem;">${t('ui.hud.bonus_usado')}</small>`
                   : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">sem recursos</small>' : '';
       setBtn(`🛡️ ${sk.name}${aviso}`, `${sk.description || sk.desc || ''} (raio ${_raioDef}, ${_splitDef}%/${_splitDef}%)`, costStr, !pode,
              () => iniciarModoProtetor(), false);
     }
   } else if(sk.id === 'imposicao_maos'){
     const pode  = myTurnPlay && !me.action_done && temRec;
-    const aviso = me.action_done ? ' <small style="color:var(--text2);font-size:.62rem;">ação usada</small>'
+    const aviso = me.action_done ? ` <small style="color:var(--text2);font-size:.62rem;">${t('ui.hud.acao_usada')}</small>`
                 : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">sem recursos</small>' : '';
     const _dadosCura = GS.paladinCuraMaosDados ? GS.paladinCuraMaosDados() : 1;
     setBtn(`🙏 ${sk.name}${aviso}`, `${_dadosCura}d6 + FOR`, costStr, !pode,
@@ -10255,7 +10255,7 @@ function _rogueSkillBtn(me, sk){
     btn.disabled  = !!disabled;
     btn.innerHTML = `
       <div class="skill-info">
-        <div class="skill-name">${name}</div>
+        <div class="skill-name" data-ability-id="${sk.id || ''}">${name}</div>
         <div class="skill-desc">${desc}</div>
       </div>
       <div class="skill-cost">${cost}</div>`;
@@ -10266,20 +10266,20 @@ function _rogueSkillBtn(me, sk){
     const nd4 = (me.level ?? 1) <= 2 ? '2' : (me.level ?? 1) <= 4 ? '3' : '4';
     const nivelFurtivo = GS.ladinoFurtivoNivel ? GS.ladinoFurtivoNivel() : 1;
     const descFurtivo = nivelFurtivo >= 3
-      ? `+${nd4}d4 se invisível ou com aliado adjacente; reage automaticamente 1×/inimigo/rodada ao ataque de um aliado`
+      ? t('ui.hud.furtivo_3',{n:nd4})
       : nivelFurtivo === 2
-      ? `+${nd4}d4 se invisível ou com aliado adjacente ao alvo`
-      : `+${nd4}d4 apenas se estiver invisível/oculto`;
-    setBtn(`🗡️ ${sk.name} <small style="color:var(--text2);font-size:.62rem;">passiva</small>`,
+      ? t('ui.hud.furtivo_2',{n:nd4})
+      : t('ui.hud.furtivo_1',{n:nd4});
+    setBtn(`🗡️ ${sk.name} <small style="color:var(--text2);font-size:.62rem;">${t('ui.hud.passiva')}</small>`,
            descFurtivo, '—', true, null, false);
 
   } else if(sk.id === 'detectar_armadilhas'){
     if(me.detectar_ativo){
-      setBtn(`🔍 ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● ativa</small>`,
-             'revela armadilhas próximas e não as dispara', `manut. 💧1<br><small style="font-size:.6rem;">parar</small>`,
+      setBtn(`🔍 ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● ${t('ui.hud.ativa')}</small>`,
+             t('ui.hud.detectar_desc'), `manut. 💧1<br><small style="font-size:.6rem;">${t('ui.hud.parar')}</small>`,
              false, () => send({type:'detectar_armadilhas'}), true);
     } else {
-      const aviso = me.bonus_action_used ? ' <small style="color:var(--text2);font-size:.62rem;">bônus usado</small>' : '';
+      const aviso = me.bonus_action_used ? ` <small style="color:var(--text2);font-size:.62rem;">${t('ui.hud.bonus_usado')}</small>` : '';
       setBtn(`🔍 ${sk.name}${aviso}`, sk.description || sk.desc || '', 'manut. 💧1',
              !(myTurnPlay && !me.bonus_action_used), () => send({type:'detectar_armadilhas'}), false);
     }
@@ -10289,12 +10289,12 @@ function _rogueSkillBtn(me, sk){
     const livreEsc  = GS.ladinoEsconderLivre ? GS.ladinoEsconderLivre() : false;
     const descEsc = `Teste de furtividade${bonusEsc>0?` (+${bonusEsc})`:''}${livreEsc?' — ação livre (não gasta bônus)':''}`;
     if(me.invisivel_sombras){
-      setBtn(`🌑 ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● invisível</small>`,
-             `não é alvo dos monstros até atacar${livreEsc?' · +2 CA ao revelar':''}`, `manut. 🍖1 💧1<br><small style="font-size:.6rem;">sair</small>`,
+      setBtn(`🌑 ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● ${t('ui.hud.invisivel')}</small>`,
+             t('ui.hud.invisivel_desc')+(livreEsc?' · '+t('ui.hud.mais_ca_revelar'):''), `manut. 🍖1 💧1<br><small style="font-size:.6rem;">${t('ui.hud.sair')}</small>`,
              false, () => send({type:'esconder_sombras'}), true);
     } else {
       const pode  = myTurnPlay && (livreEsc || !me.bonus_action_used) && temRec;
-      const aviso = (!livreEsc && me.bonus_action_used) ? ' <small style="color:var(--text2);font-size:.62rem;">bônus usado</small>'
+      const aviso = (!livreEsc && me.bonus_action_used) ? ` <small style="color:var(--text2);font-size:.62rem;">${t('ui.hud.bonus_usado')}</small>`
                   : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">sem recursos</small>' : '';
       setBtn(`🌑 ${sk.name}${aviso}`, descEsc, costStr, !pode,
              () => send({type:'esconder_sombras'}), false);
@@ -10307,7 +10307,7 @@ function _rogueSkillBtn(me, sk){
     if(me.weapon_poison){
       const hits = me.weapon_poison_hits ?? 0;
       const slot2 = me.weapon_poison_2 ? ` + 2º veneno (${me.weapon_poison_2_hits ?? 0} golpe(s))` : (doisSlots ? ' · pode aplicar um 2º veneno' : '');
-      setBtn(`☠️ ${sk.name} <small style="color:#cc44ff;font-size:.65rem;">● arma envenenada</small>`,
+      setBtn(`☠️ ${sk.name} <small style="color:#cc44ff;font-size:.65rem;">● ${t('ui.hud.arma_envenenada')}</small>`,
              `${hits}/${maxHits} golpe(s) restante(s)${slot2} — clique p/ trocar`, costStr,
              !(myTurnPlay && (me.sede ?? 0) >= scst && venenos.length > 0),
              () => abrirPainelVenenoRapido(), true);
@@ -10320,7 +10320,7 @@ function _rogueSkillBtn(me, sk){
 
   } else if(sk.id === 'criar_armadilha'){
     const pode  = myTurnPlay && !me.action_done;
-    const aviso = me.action_done ? ' <small style="color:var(--text2);font-size:.62rem;">ação usada</small>' : '';
+    const aviso = me.action_done ? ` <small style="color:var(--text2);font-size:.62rem;">${t('ui.hud.acao_usada')}</small>` : '';
     setBtn(`🪤 ${sk.name}${aviso}`, sk.description || sk.desc || '', costStr, !pode,
            () => abrirPainelCriarArmadilha(), false);
 
@@ -10329,8 +10329,8 @@ function _rogueSkillBtn(me, sk){
     const pode = myTurnPlay && !me.action_done && (me.fome ?? 0) >= 1 && (me.sede ?? 0) >= 1;
     const bonusDes = GS.ladinoDesarmeBonus ? GS.ladinoDesarmeBonus() : 0;
     const recupera = GS.ladinoDesarmeRecupera ? GS.ladinoDesarmeRecupera() : false;
-    const desc = `Selecione uma casa adjacente. Teste de DES${bonusDes ? ` (+${bonusDes})` : ''}; 1 natural dispara a armadilha em você.${recupera ? ' Pode recuperar o ouro.' : ''}`;
-    setBtn(`🔧 ${sk.name}${ativo ? ' <small style="color:var(--gold);font-size:.65rem;">● selecione a casa</small>' : ''}`,
+    const desc = t('ui.hud.criar_armadilha_desc',{b:bonusDes ? ` (+${bonusDes})` : ''})+(recupera ? ' '+t('ui.hud.recupera_ouro') : '');
+    setBtn(`🔧 ${sk.name}${ativo ? ` <small style="color:var(--gold);font-size:.65rem;">● ${t('ui.hud.selecione_casa')}</small>` : ''}`,
            desc, '🍖1 💧1', !(pode || ativo), () => {
              if (ativo) { GS.pendingSkill = null; renderMyPanel(GS.gameState); toast('Habilidade cancelada.', 'var(--text2)'); }
              else { GS.pendingSkill = { ...sk, target: 'tile' }; renderMyPanel(GS.gameState); toast('Selecione uma casa adjacente para desarmar.', 'var(--gold)'); }
@@ -10353,7 +10353,7 @@ function _rogueDesarmarBtn(me){
   btn.disabled = !pode;
   btn.innerHTML = `
     <div class="skill-info">
-      <div class="skill-name">🔧 Desarmar Armadilha${me.action_done ? ' <small style="color:var(--text2);font-size:.62rem;">ação usada</small>' : ''}</div>
+      <div class="skill-name">🔧 Desarmar Armadilha${me.action_done ? ` <small style="color:var(--text2);font-size:.62rem;">${t('ui.hud.acao_usada')}</small>` : ''}</div>
       <div class="skill-desc">Teste de DES${bonusDes>0?` (+${bonusDes})`:''} na casa/adjacente (nat1 dispara em você)${recupera?' · chance de recuperar o ouro':''}</div>
     </div>
     <div class="skill-cost">principal</div>`;
@@ -10586,14 +10586,14 @@ function _clericSkillBtn(me, sk){
   const costStr = [fc?`🍖${fc}`:'', scst?`💧${scst}`:''].filter(Boolean).join(' ') || '—';
   const acaoUsada = me.action_done;
   const podePrincipal = myTurnPlay && !acaoUsada;
-  const avisoAcao = acaoUsada ? ' <small style="color:var(--text2);font-size:.62rem;">ação usada</small>' : '';
+  const avisoAcao = acaoUsada ? ` <small style="color:var(--text2);font-size:.62rem;">${t('ui.hud.acao_usada')}</small>` : '';
 
   const setBtn = (name, desc, cost, disabled, onclick) => {
     btn.className = 'skill-btn';
     btn.disabled  = !!disabled;
     btn.innerHTML = `
       <div class="skill-info">
-        <div class="skill-name">${name}</div>
+        <div class="skill-name" data-ability-id="${sk.id || ''}">${name}</div>
         <div class="skill-desc">${desc}</div>
       </div>
       <div class="skill-cost">${cost}</div>`;
@@ -10662,7 +10662,7 @@ function _mageSkillBtn(me, sk){
   btn.disabled  = !myTurnPlay;
   btn.innerHTML = `
     <div class="skill-info">
-      <div class="skill-name">${cfg.icon} ${sk.name}${ativo ? ' <small style="color:var(--gold);font-size:.65rem;">● armada</small>' : ''}</div>
+      <div class="skill-name">${cfg.icon} ${sk.name}${ativo ? ` <small style="color:var(--gold);font-size:.65rem;">● ${t('ui.hud.armada')}</small>` : ''}</div>
       <div class="skill-desc">${desc}</div>
     </div>
     <div class="skill-cost">${ativo ? 'parar' : cfg.custo}</div>`;
@@ -13102,7 +13102,7 @@ function renderMyPanel(state){
       btn.disabled = !podeMarcar;
       btn.innerHTML = `
         <div class="skill-info">
-          <div class="skill-name">${icon}${sk.name}${selected ? ' <small style="color:var(--gold);font-size:.65rem;">● armada</small>' : ''}</div>
+          <div class="skill-name">${icon}${sk.name}${selected ? ` <small style="color:var(--gold);font-size:.65rem;">● ${t('ui.hud.armada')}</small>` : ''}</div>
           <div class="skill-desc">${desc}</div>
         </div>
         <div class="skill-cost">${[fomeCost ? `🍖${fomeCost}` : '', sedeCost ? `💧${sedeCost}` : ''].filter(Boolean).join(' ') || '—'}</div>`;
@@ -15278,7 +15278,7 @@ function _aplicarCatalogosEstaticos(){
   // as 27 também têm cat.magia.<id>.desc (a frase curta do servidor), que
   // substituiria o card se esta linha virasse antes das chaves existirem.
   if (typeof GRIMORIO_CLIENT   !== 'undefined') I18N.aplicarCatalogo(GRIMORIO_CLIENT, false);
-  if (typeof ARMADILHAS_LUCCAS !== 'undefined') I18N.aplicarCatalogo(ARMADILHAS_LUCCAS, true);
+  if (typeof ARMADILHAS_LUCCAS !== 'undefined') I18N.aplicarCatalogo(ARMADILHAS_LUCCAS, false);  // desc própria em ui.armadilha.*
   if (GS.CATALOGO_ITENS)                        I18N.aplicarCatalogo(GS.CATALOGO_ITENS, true);
 }
 // Ouvinte SEPARADO do que avisa o servidor: manter aquele intacto preserva a

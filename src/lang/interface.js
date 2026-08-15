@@ -15,6 +15,46 @@
 // os catálogos do cliente guardam descrição mais rica (card HTML com alcance e
 // efeito por rodada) que a frase curta do servidor. Ver aplicarCatalogo.
 window.LANG_INTERFACE = {
+  "ui.armadilha.armadilha_incendiaria.desc": {
+    "en": "1d6+1d4+1 fire over 3 rounds. Vanishes once triggered.",
+    "pt": "1d6+1d4+1 fogo em 3 rodadas. Some após ativar."
+  },
+  "ui.armadilha.armadilha_urso.desc": {
+    "en": "1d4 damage + lose your movement. Vanishes once triggered.",
+    "pt": "1d4 dano + perde movimento. Some após ativar."
+  },
+  "ui.armadilha.buraco.desc": {
+    "en": "Reflex DC 10 or lose your movement. Permanent.",
+    "pt": "Reflexos dif 10 ou perde movimento. Permanente."
+  },
+  "ui.armadilha.fosso_envenenado.desc": {
+    "en": "1d6 damage + the chosen poison. Becomes visible once triggered.",
+    "pt": "1d6 dano + veneno escolhido. Fica visível após ativar."
+  },
+  "ui.armadilha.fosso_estacas.desc": {
+    "en": "1d6 damage + lose your movement. Becomes visible once triggered.",
+    "pt": "1d6 dano + perde movimento. Fica visível após ativar."
+  },
+  "ui.armadilha.lamina_escondida.desc": {
+    "en": "Reflex DC 15 or take 1d8. Poison optional. Vanishes once triggered.",
+    "pt": "Reflexos dif 15 ou sofre 1d8. Veneno opcional. Some após ativar."
+  },
+  "ui.armadilha.lamina_pendulo.desc": {
+    "en": "Reflex DC 14 or take 2d6. Stays active for 3 rounds.",
+    "pt": "Reflexos dif 14 ou sofre 2d6. Permanece ativa por 3 rodadas."
+  },
+  "ui.armadilha.mina_terrestre.desc": {
+    "en": "2d6 in an area (1 sq). A save halves it. Vanishes once triggered.",
+    "pt": "2d6 em área (1 quad). Save reduz à metade. Some após ativar."
+  },
+  "ui.armadilha.nuvem_gas.desc": {
+    "en": "-1d6 CON for 3 rounds in an area. Fortitude save DC 13.",
+    "pt": "-1d6 CON por 3 rodadas em área. Save Fortitude dif 13."
+  },
+  "ui.armadilha.rede.desc": {
+    "en": "Lose the whole round. Vanishes once triggered.",
+    "pt": "Perde a rodada inteira. Some após ativar."
+  },
   "ui.atributo.carisma": {
     "en": "Charisma",
     "pt": "Carisma"
@@ -131,17 +171,57 @@ window.LANG_INTERFACE = {
     "en": "DWARF WARRIOR",
     "pt": "GUERREIRO ANÃO"
   },
+  "ui.hud.acao_usada": {
+    "en": "action used",
+    "pt": "ação usada"
+  },
   "ui.hud.apagar_chamas": {
     "en": "Put out flames",
     "pt": "Apagar chamas"
+  },
+  "ui.hud.arma_envenenada": {
+    "en": "poisoned weapon",
+    "pt": "arma envenenada"
+  },
+  "ui.hud.armada": {
+    "en": "readied",
+    "pt": "armada"
+  },
+  "ui.hud.ate_atributos": {
+    "en": "up to {n} simultaneous attribute(s)",
+    "pt": "até {n} atributo(s) simultâneo(s)"
+  },
+  "ui.hud.ativa": {
+    "en": "on",
+    "pt": "ativa"
+  },
+  "ui.hud.ativo": {
+    "en": "on",
+    "pt": "ativo"
   },
   "ui.hud.bonus": {
     "en": "bonus",
     "pt": "bônus"
   },
+  "ui.hud.bonus_usado": {
+    "en": "bonus used",
+    "pt": "bônus usado"
+  },
   "ui.hud.cancao_de_henrique": {
     "en": "Henrique's Heroic Song",
     "pt": "Canção Heroica de Henrique"
+  },
+  "ui.hud.cantando": {
+    "en": "singing",
+    "pt": "cantando"
+  },
+  "ui.hud.criar_armadilha_desc": {
+    "en": "Pick an adjacent square. DEX check{b}; a natural 1 sets the trap off on you.",
+    "pt": "Selecione uma casa adjacente. Teste de DES{b}; 1 natural dispara a armadilha em você."
+  },
+  "ui.hud.detectar_desc": {
+    "en": "reveals nearby traps and does not set them off",
+    "pt": "revela armadilhas próximas e não as dispara"
   },
   "ui.hud.equipado_loja": {
     "en": "Equipped (Shop)",
@@ -155,6 +235,18 @@ window.LANG_INTERFACE = {
     "en": "Force your way out",
     "pt": "Forçar saída"
   },
+  "ui.hud.furtivo_1": {
+    "en": "+{n}d4 only while invisible/hidden",
+    "pt": "+{n}d4 apenas se estiver invisível/oculto"
+  },
+  "ui.hud.furtivo_2": {
+    "en": "+{n}d4 if invisible or with an ally adjacent to the target",
+    "pt": "+{n}d4 se invisível ou com aliado adjacente ao alvo"
+  },
+  "ui.hud.furtivo_3": {
+    "en": "+{n}d4 if invisible or with an adjacent ally; reacts automatically 1×/enemy/round to an ally's attack",
+    "pt": "+{n}d4 se invisível ou com aliado adjacente; reage automaticamente 1×/inimigo/rodada ao ataque de um aliado"
+  },
   "ui.hud.gasta_acao_principal": {
     "en": "uses your main action",
     "pt": "gasta a ação principal"
@@ -163,6 +255,14 @@ window.LANG_INTERFACE = {
     "en": "GUILD",
     "pt": "GUILDA"
   },
+  "ui.hud.invisivel": {
+    "en": "invisible",
+    "pt": "invisível"
+  },
+  "ui.hud.invisivel_desc": {
+    "en": "monsters cannot target you until you attack",
+    "pt": "não é alvo dos monstros até atacar"
+  },
   "ui.hud.limite_habilidades": {
     "en": "You can only ready {n} abilities per turn.",
     "pt": "Você só pode armar {n} habilidades por turno."
@@ -170,6 +270,10 @@ window.LANG_INTERFACE = {
   "ui.hud.livre": {
     "en": "free",
     "pt": "livre"
+  },
+  "ui.hud.mais_ca_revelar": {
+    "en": "+2 AC on revealing",
+    "pt": "+2 CA ao revelar"
   },
   "ui.hud.mao_principal": {
     "en": "main hand",
@@ -187,13 +291,33 @@ window.LANG_INTERFACE = {
     "en": "Spend the extra credit on movement now, or simply act normally (attack/heal/cast a spell/etc.) to spend it automatically.",
     "pt": "Gaste o crédito extra em movimento agora, ou apenas aja normalmente (atacar/curar/lançar magia/etc.) para gastá-lo automaticamente."
   },
+  "ui.hud.parar": {
+    "en": "stop",
+    "pt": "parar"
+  },
+  "ui.hud.passiva": {
+    "en": "passive",
+    "pt": "passiva"
+  },
+  "ui.hud.recupera_ouro": {
+    "en": "You may recover the gold.",
+    "pt": "Pode recuperar o ouro."
+  },
   "ui.hud.remover": {
     "en": "Remove",
     "pt": "Remover"
   },
+  "ui.hud.sair": {
+    "en": "exit",
+    "pt": "sair"
+  },
   "ui.hud.segunda_mao": {
     "en": "off hand",
     "pt": "2ª mão"
+  },
+  "ui.hud.selecione_casa": {
+    "en": "pick the square",
+    "pt": "selecione a casa"
   },
   "ui.hud.sem_aliado": {
     "en": "No ally available.",
