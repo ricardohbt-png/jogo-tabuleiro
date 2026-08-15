@@ -31,9 +31,14 @@ import server as S   # só pelo LANG_STRINGS: é ele que sabe fundir os src/lang
 
 GAME = io.open(os.path.join(RAIZ, "game.js"), encoding="utf-8").read()
 LINHAS = GAME.split("\n")
+# SÓ declarações de TOPO (coluna 0). A atribuição é pela declaração anterior mais
+# próxima, então um helper indentado — `const L = (txt) => …` dentro de um render —
+# virava dono dos literais da função que o contém. Medido: L/add/mkSelect/_wToggle
+# levavam 51 literais que não são deles. Com a âncora, o dono é sempre a função de
+# topo, que é o que o conjunto FECHADAS precisa para significar algo.
 RE_FN = re.compile(
-    r"^\s*(?:async\s+)?function\s+(\w+)"
-    r"|^\s*(?:const|let)\s+(\w+)\s*=\s*(?:async\s*)?\(?[\w,\s]*\)?\s*=>")
+    r"^(?:async\s+)?function\s+(\w+)"
+    r"|^(?:const|let)\s+(\w+)\s*=\s*(?:async\s*)?\(?[\w,\s]*\)?\s*=>")
 
 # Funções cujo lote já fechou. Acrescente os nomes ao terminar cada lote.
 FECHADAS = set()
@@ -149,6 +154,14 @@ def _rodar_verificacoes():
         marca = " (FECHADA)" if fn in FECHADAS else ""
         print(f"       {n:>4}  {fn}{marca}")
     check("placar emitido", True)
+    # Helper interno (arrow de uma linha DENTRO de outra função) não pode virar
+    # dono de literal: a atribuição é pela declaração anterior mais próxima, e
+    # `L`/`add`/`mkSelect`/`_wToggle` roubavam 51 literais das funções que os
+    # contêm. Sem isto o conjunto FECHADAS não significa nada — marcar `L` como
+    # fechada não impede regressão nenhuma.
+    internos = [fn for fn in ("L", "add", "mkSelect", "_wToggle") if fn in cont]
+    check(f"nenhum helper interno é dono de literal ({internos or 'ok'})",
+          not internos)
 
     print("\n[2] Funções já traduzidas continuam limpas")
     if not FECHADAS:
