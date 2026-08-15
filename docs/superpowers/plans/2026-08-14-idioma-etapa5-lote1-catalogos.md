@@ -382,7 +382,16 @@ git commit -m "feat(i18n): tela de selecao de heroi traduzida (Lote 1, Task 4)"
 
 ---
 
-## Task 4.5 (NOVA): O placar precisa parar de contar o `pt` load-bearing
+## Task 4.5 (NOVA): O placar precisa parar de contar o `pt` load-bearing — ✅ CONCLUÍDA (`abf6725`)
+
+> Placar 637 → 611 (26: 12 do `GRIMORIO_CLIENT`, 5 do `ARMADILHAS_LUCCAS`, 9 do
+> `ABILITY_NAME_TO_ID`). **A regra ficou DUPLA**, diferente do que os passos abaixo
+> descreviam: o literal precisa ser o `pt` de uma chave `cat.*`/`ui.*` **e** estar
+> dentro de `BLOCOS_NAO_PENDENTES`. Só o casamento de texto produziu ~13 exclusões
+> indevidas, medidas (`cat.item.cleanse.nome` = "Purificação" apagava a HABILIDADE
+> de mesmo nome). Segundo achado: o casador de faixa só via `{`, e o
+> `ARMADILHAS_LUCCAS` é um ARRAY — a faixa degenerava para uma linha **em silêncio**,
+> daí as três guardas novas na seção [4].
 
 **Arquivos:**
 - Modificar: `tools/test_interface.py`
@@ -582,17 +591,24 @@ declaração anterior mais próxima, então o `_CSD` aparece sob `calcularVidaMa
 python tools/test_interface.py && python tools/js_strings.py && python tools/test_idioma.py && python tools/test_vocabulario.py && python tools/test_erros.py && python tools/test_narracao.py && node tools/test_idioma_cliente.js && node tools/test_vocabulario_cliente.js
 ```
 
-Esperado: todas verdes, e o placar em **~576** — mas por três caminhos diferentes, e vale
+Esperado: todas verdes, e o placar em **~562** — por três caminhos diferentes, e vale
 conferir cada degrau em vez de só o total:
 
-| origem | textos | como saiu |
-|---|---:|---|
-| Task 3 | 20 | migrados para `_rotulo`; o português **removido** do `game.js` |
-| Task 4 | 50 | idem, sob `ui.selecao.*` |
-| Task 5 | 23 | `resumo` **morto**, removido |
-| Task 4.5 | 38 | `nome`/`descricao` **continuam no arquivo** — são a fonte que o `aplicarCatalogo` muta; o instrumento é que parou de contá-los |
+| origem | textos | placar | como saiu |
+|---|---:|---:|---|
+| — | | 707 | linha de base da etapa 5.0 |
+| Task 3 | 20 | 687 | migrados para `_rotulo`; o português **removido** do `game.js` |
+| Task 4 | 50 | 637 | idem, sob `ui.selecao.*` |
+| Task 4.5 | 26 | 611 | **continuam no arquivo** — são a fonte que o `aplicarCatalogo` muta, ou chave de lógica; o instrumento é que parou de contá-los |
+| Task 5 | 23 + 26 | ~562 | 23 `resumo` **mortos**, removidos; os 26 `descricao` passam a ter chave e caem na regra da 4.5 |
 
 Se o total bater mas um degrau não, alguma coisa saiu por engano — **meça o degrau**.
+
+> **A 4.5 rendeu 26, não os 38 que esta revisão previu.** A previsão saiu da regra
+> larga (só casar o texto); a regra que ficou é dupla — texto dicionarizado **E**
+> dentro de um bloco não-pendente —, porque a larga produziu ~13 exclusões indevidas.
+> O número menor é o honesto. Em compensação a 4.5 também tirou os 9 do
+> `ABILITY_NAME_TO_ID`, que esta tabela não previa.
 
 - [ ] **Passo 3: Regressão**
 
