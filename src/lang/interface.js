@@ -15,6 +15,26 @@
 // os catálogos do cliente guardam descrição mais rica (card HTML com alcance e
 // efeito por rodada) que a frase curta do servidor. Ver aplicarCatalogo.
 window.LANG_INTERFACE = {
+  "ui.atributo.carisma": {
+    "en": "Charisma",
+    "pt": "Carisma"
+  },
+  "ui.atributo.destreza": {
+    "en": "Dexterity",
+    "pt": "Destreza"
+  },
+  "ui.atributo.forca": {
+    "en": "Strength",
+    "pt": "Força"
+  },
+  "ui.atributo.forcaOuDestreza": {
+    "en": "Strength or Dexterity",
+    "pt": "Força ou Destreza"
+  },
+  "ui.atributo.inteligencia": {
+    "en": "Intelligence",
+    "pt": "Inteligência"
+  },
   "ui.elemental.desc.eletrico": {
     "en": "Its attack hits everyone in a straight 3-square line.",
     "pt": "Seu ataque atinge todos numa linha reta de 3 quadrados."
@@ -75,6 +95,210 @@ window.LANG_INTERFACE = {
     "en": "DWARF WARRIOR",
     "pt": "GUERREIRO ANÃO"
   },
+  "ui.item.armadura_cat.leve": {
+    "en": "Light",
+    "pt": "Leve"
+  },
+  "ui.item.armadura_cat.media": {
+    "en": "Medium",
+    "pt": "Média"
+  },
+  "ui.item.armadura_cat.pesada": {
+    "en": "Heavy",
+    "pt": "Pesada"
+  },
+  "ui.item.desc.alcance": {
+    "en": "Range {n}",
+    "pt": "Alcance {n}"
+  },
+  "ui.item.desc.alcance_adjacentes": {
+    "en": "Range: every adjacent square",
+    "pt": "Alcance: todos os quadrados adjacentes"
+  },
+  "ui.item.desc.alcance_lanca": {
+    "en": "Range 2 (straight) / 1 (diag)",
+    "pt": "Alcance 2 (reto) / 1 (diag)"
+  },
+  "ui.item.desc.alcance_reto": {
+    "en": "Range {n} in a straight line",
+    "pt": "Alcance {n} em linha reta"
+  },
+  "ui.item.desc.alcance_reto_diag": {
+    "en": "Range {n} straight / {d} diagonal",
+    "pt": "Alcance {n} reto / {d} diagonal"
+  },
+  "ui.item.desc.area_no_conjurador": {
+    "en": "area on the caster",
+    "pt": "área no conjurador"
+  },
+  "ui.item.desc.armadura": {
+    "en": "Armour",
+    "pt": "Armadura"
+  },
+  "ui.item.desc.arremesso": {
+    "en": "🎯 Throw {n}",
+    "pt": "🎯 Arremesso {n}"
+  },
+  "ui.item.desc.ca_mais": {
+    "en": "AC +{n}",
+    "pt": "CA +{n}"
+  },
+  "ui.item.desc.cerveja": {
+    "en": "+{n} hunger/thirst • -1 attack for 10 rounds",
+    "pt": "+{n} fome/sede • -1 ataque por 10 rodadas"
+  },
+  "ui.item.desc.crit_19_20": {
+    "en": "natural critical: 19–20",
+    "pt": "crítico natural: 19–20"
+  },
+  "ui.item.desc.crit_2_5": {
+    "en": "Natural 20: ×2.5 damage",
+    "pt": "20 natural: dano ×2,5"
+  },
+  "ui.item.desc.crit_segundo_ataque": {
+    "en": "Natural 19/20: second attack",
+    "pt": "19/20 natural: segundo ataque"
+  },
+  "ui.item.desc.crit_triplo": {
+    "en": "Natural 20: triple damage",
+    "pt": "20 natural: dano triplicado"
+  },
+  "ui.item.desc.dano_arma": {
+    "en": "{die} damage ({stat})",
+    "pt": "{die} dano ({stat})"
+  },
+  "ui.item.desc.des": {
+    "en": "DEX",
+    "pt": "DES"
+  },
+  "ui.item.desc.duas_maos": {
+    "en": "✋✋ 2 hands",
+    "pt": "✋✋ 2 mãos"
+  },
+  "ui.item.desc.escudo_soma": {
+    "en": "Shield — stacks with armour",
+    "pt": "Escudo — soma com armadura"
+  },
+  "ui.item.desc.flechas": {
+    "en": "Arrows: off hand",
+    "pt": "Flechas: mão esquerda"
+  },
+  "ui.item.desc.for": {
+    "en": "STR",
+    "pt": "FOR"
+  },
+  "ui.item.desc.for_des": {
+    "en": "STR/DEX",
+    "pt": "FOR/DES"
+  },
+  "ui.item.desc.mais_dano": {
+    "en": "+{n} damage",
+    "pt": "+{n} dano"
+  },
+  "ui.item.desc.mais_fome": {
+    "en": "+{n} hunger",
+    "pt": "+{n} fome"
+  },
+  "ui.item.desc.mais_sede": {
+    "en": "+{n} thirst",
+    "pt": "+{n} sede"
+  },
+  "ui.item.desc.nivel": {
+    "en": "Lv {n}",
+    "pt": "Nv {n}"
+  },
+  "ui.item.desc.prata": {
+    "en": "Silver",
+    "pt": "Prata"
+  },
+  "ui.item.desc.racao": {
+    "en": "+{n} hunger and thirst",
+    "pt": "+{n} fome e sede"
+  },
+  "ui.item.desc.regeneracao": {
+    "en": "Pool of {n} HP • recovers +1 HP per round",
+    "pt": "Reserva {n} HP • recupera +1 HP por rodada"
+  },
+  "ui.item.desc.resiste_corrosao": {
+    "en": "⚙️ resists +1 corrosion hit",
+    "pt": "⚙️ resiste +1 golpe de corrosão"
+  },
+  "ui.item.desc.segunda_mao": {
+    "en": "Off hand: extra attack; replaces the shield",
+    "pt": "2ª mão: ataque extra; substitui o escudo"
+  },
+  "ui.item.desc.uma_por_visita": {
+    "en": "1× per visit",
+    "pt": "1× por visita"
+  },
+  "ui.item.desc.vinho": {
+    "en": "+{n} hunger/thirst • -1 attack and reflexes for 10 rounds",
+    "pt": "+{n} fome/sede • -1 ataque e reflexos por 10 rodadas"
+  },
+  "ui.item.desc.virotes": {
+    "en": "Bolts: bag or off hand",
+    "pt": "Virotes: bolsa ou mão esquerda"
+  },
+  "ui.item.efeito.atk": {
+    "en": "Attack Bonus",
+    "pt": "Bônus Ataque"
+  },
+  "ui.item.efeito.atk_bonus": {
+    "en": "Attack Bonus",
+    "pt": "Bônus de Ataque"
+  },
+  "ui.item.efeito.bless": {
+    "en": "Divine Attack Bonus",
+    "pt": "Bônus de Ataque divino"
+  },
+  "ui.item.efeito.cleanse": {
+    "en": "Removes negative statuses",
+    "pt": "Remove status negativos"
+  },
+  "ui.item.efeito.def_": {
+    "en": "AC +",
+    "pt": "CA +"
+  },
+  "ui.item.efeito.full_heal": {
+    "en": "Full HP heal",
+    "pt": "Cura total de HP"
+  },
+  "ui.item.efeito.heal": {
+    "en": "Restores HP",
+    "pt": "Restaura HP"
+  },
+  "ui.item.efeito.maxhp": {
+    "en": "Raises max HP",
+    "pt": "Aumenta HP máx"
+  },
+  "ui.item.efeito.spd": {
+    "en": "Speed",
+    "pt": "Velocidade"
+  },
+  "ui.item.efeito.temp_atk": {
+    "en": "Temporary attack",
+    "pt": "Ataque temporário"
+  },
+  "ui.item.material.metal": {
+    "en": "metal",
+    "pt": "metálica"
+  },
+  "ui.item.material.organic": {
+    "en": "organic",
+    "pt": "orgânica"
+  },
+  "ui.item.subtipo.contundente": {
+    "en": "Bludgeoning",
+    "pt": "Contusão"
+  },
+  "ui.item.subtipo.cortante": {
+    "en": "Slashing",
+    "pt": "Cortante"
+  },
+  "ui.item.subtipo.perfurante": {
+    "en": "Piercing",
+    "pt": "Perfurante"
+  },
   "ui.item.tipo.arma": {
     "en": "⚔ Weapon",
     "pt": "⚔ Arma"
@@ -110,6 +334,90 @@ window.LANG_INTERFACE = {
   "ui.item.tipo.varinha": {
     "en": "✨ Wand",
     "pt": "✨ Varinha"
+  },
+  "ui.item.tipo_label.arma": {
+    "en": "WEAPON",
+    "pt": "ARMA"
+  },
+  "ui.item.tipo_label.armaDistancia": {
+    "en": "RANGED WEAPON",
+    "pt": "ARMA À DISTÂNCIA"
+  },
+  "ui.item.tipo_label.armadura": {
+    "en": "ARMOUR",
+    "pt": "ARMADURA"
+  },
+  "ui.item.tipo_label.consumivel": {
+    "en": "CONSUMABLE",
+    "pt": "CONSUMÍVEL"
+  },
+  "ui.item.tipo_label.escudo": {
+    "en": "SHIELD",
+    "pt": "ESCUDO"
+  },
+  "ui.item.tipo_label.itemMagico": {
+    "en": "MAGIC ITEM",
+    "pt": "ITEM MÁGICO"
+  },
+  "ui.item.tipo_label.municao": {
+    "en": "AMMUNITION",
+    "pt": "MUNIÇÃO"
+  },
+  "ui.item.tipo_label.padrao": {
+    "en": "ITEM",
+    "pt": "ITEM"
+  },
+  "ui.item.tipo_label.secundario": {
+    "en": "ACCESSORY",
+    "pt": "ACESSÓRIO"
+  },
+  "ui.item.tipo_label.varinha": {
+    "en": "MAGIC WAND",
+    "pt": "VARINHA MÁGICA"
+  },
+  "ui.loja.classe_restrita": {
+    "en": "Class restricted",
+    "pt": "Classe restrita"
+  },
+  "ui.loja.comprar": {
+    "en": "Buy",
+    "pt": "Comprar"
+  },
+  "ui.loja.curar": {
+    "en": "Cure",
+    "pt": "Curar"
+  },
+  "ui.loja.desc_remover_maldicao": {
+    "en": "Cures one curse; the price depends on its severity.",
+    "pt": "Cura uma maldição; o preço depende da gravidade."
+  },
+  "ui.loja.escudo": {
+    "en": "shield",
+    "pt": "escudo"
+  },
+  "ui.loja.ja_usada": {
+    "en": "already used this visit",
+    "pt": "já usada nesta visita"
+  },
+  "ui.loja.remover_maldicao": {
+    "en": "Remove: {nome}",
+    "pt": "Remover: {nome}"
+  },
+  "ui.loja.restrito": {
+    "en": "Restricted",
+    "pt": "Restrito"
+  },
+  "ui.loja.title_classe_restrita": {
+    "en": "Your class cannot use this item",
+    "pt": "Sua classe não pode usar este item"
+  },
+  "ui.loja.title_ja_usada": {
+    "en": "Already used on this visit to town",
+    "pt": "Já usada nesta visita à cidade"
+  },
+  "ui.loja.usada": {
+    "en": "Used",
+    "pt": "Usada"
   },
   "ui.magia.abencoar.desc": {
     "en": "<b>Area:</b> 6x6 centred on Lewis<br>\n               <b>Buff:</b> +1 attack, damage, AC, resistance<br>\n               <b>Duration:</b> 1d4+1 rounds<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
@@ -218,6 +526,106 @@ window.LANG_INTERFACE = {
   "ui.magia.visao_escuro.desc": {
     "en": "<b>Effect:</b> ignores the darkness system entirely<br>\n               <b>Duration:</b> until you leave the dungeon<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Efeito:</b> ignora completamente o sistema de escuridão<br>\n               <b>Duração:</b> até sair da masmorra<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
+  },
+  "ui.maldicao.alma_quebrada": {
+    "en": "Broken Soul",
+    "pt": "Alma Quebrada"
+  },
+  "ui.maldicao.aura_profana": {
+    "en": "Profane Aura",
+    "pt": "Aura Profana"
+  },
+  "ui.maldicao.azar_sobrenatural": {
+    "en": "Supernatural Misfortune",
+    "pt": "Azar Sobrenatural"
+  },
+  "ui.maldicao.carne_fragil": {
+    "en": "Fragile Flesh",
+    "pt": "Carne Frágil"
+  },
+  "ui.maldicao.corpo_exausto": {
+    "en": "Exhausted Body",
+    "pt": "Corpo Exausto"
+  },
+  "ui.maldicao.correntes_invisiveis": {
+    "en": "Invisible Chains",
+    "pt": "Correntes Invisíveis"
+  },
+  "ui.maldicao.corrupcao_crescente": {
+    "en": "Growing Corruption",
+    "pt": "Corrupção Crescente"
+  },
+  "ui.maldicao.dor_constante": {
+    "en": "Constant Pain",
+    "pt": "Dor Constante"
+  },
+  "ui.maldicao.eco_morte": {
+    "en": "Echo of Death",
+    "pt": "Eco da Morte"
+  },
+  "ui.maldicao.espirito_covarde": {
+    "en": "Cowardly Spirit",
+    "pt": "Espírito Covarde"
+  },
+  "ui.maldicao.fome_eterna": {
+    "en": "Eternal Hunger",
+    "pt": "Fome Eterna"
+  },
+  "ui.maldicao.fortuna_roubada": {
+    "en": "Stolen Fortune",
+    "pt": "Fortuna Roubada"
+  },
+  "ui.maldicao.fraqueza_arcana": {
+    "en": "Arcane Weakness",
+    "pt": "Fraqueza Arcana"
+  },
+  "ui.maldicao.lamina_enferrujada": {
+    "en": "Rusted Blade",
+    "pt": "Lâmina Enferrujada"
+  },
+  "ui.maldicao.licantropia": {
+    "en": "Lycanthropy",
+    "pt": "Licantropia"
+  },
+  "ui.maldicao.maldicao_ferrugem": {
+    "en": "Curse of Rust",
+    "pt": "Maldição da Ferrugem"
+  },
+  "ui.maldicao.maos_tremulas": {
+    "en": "Trembling Hands",
+    "pt": "Mãos Trêmulas"
+  },
+  "ui.maldicao.marca_cacador": {
+    "en": "Hunter's Mark",
+    "pt": "Marca do Caçador"
+  },
+  "ui.maldicao.olhos_escuridao": {
+    "en": "Eyes of Darkness",
+    "pt": "Olhos da Escuridão"
+  },
+  "ui.maldicao.passos_pesados": {
+    "en": "Heavy Steps",
+    "pt": "Passos Pesados"
+  },
+  "ui.maldicao.sangramento_profano": {
+    "en": "Profane Bleeding",
+    "pt": "Sangramento Profano"
+  },
+  "ui.maldicao.sede_infinita": {
+    "en": "Endless Thirst",
+    "pt": "Sede Infinita"
+  },
+  "ui.maldicao.silencio_deuses": {
+    "en": "Silence of the Gods",
+    "pt": "Silêncio dos Deuses"
+  },
+  "ui.maldicao.tocado_morte": {
+    "en": "Death-Touched",
+    "pt": "Tocado pela Morte"
+  },
+  "ui.maldicao.voz_quebrada": {
+    "en": "Broken Voice",
+    "pt": "Voz Quebrada"
   },
   "ui.mestre.custo.bonus": {
     "en": "BONUS",
@@ -522,6 +930,190 @@ window.LANG_INTERFACE = {
   "ui.selecao.skill.veneno_rapido": {
     "en": "Quick Poison",
     "pt": "Veneno Rápido"
+  },
+  "ui.tooltip.alcance": {
+    "en": "Range",
+    "pt": "Alcance"
+  },
+  "ui.tooltip.anula": {
+    "en": "negates",
+    "pt": "anula"
+  },
+  "ui.tooltip.arremesso": {
+    "en": "Throw",
+    "pt": "Arremesso"
+  },
+  "ui.tooltip.atributo": {
+    "en": "Attribute",
+    "pt": "Atributo"
+  },
+  "ui.tooltip.bonus_ca": {
+    "en": "AC Bonus",
+    "pt": "Bônus CA"
+  },
+  "ui.tooltip.dano": {
+    "en": "Damage",
+    "pt": "Dano"
+  },
+  "ui.tooltip.dano_adicional": {
+    "en": "Extra damage",
+    "pt": "Dano adicional"
+  },
+  "ui.tooltip.duas_maos": {
+    "en": "2 hands",
+    "pt": "2 mãos"
+  },
+  "ui.tooltip.duracao": {
+    "en": "Duration",
+    "pt": "Duração"
+  },
+  "ui.tooltip.efeito": {
+    "en": "Effect",
+    "pt": "Efeito"
+  },
+  "ui.tooltip.efeito_parcial": {
+    "en": "partial effect on success",
+    "pt": "efeito parcial em sucesso"
+  },
+  "ui.tooltip.escudo": {
+    "en": "Shield",
+    "pt": "Escudo"
+  },
+  "ui.tooltip.fome": {
+    "en": "Hunger",
+    "pt": "Fome"
+  },
+  "ui.tooltip.habilidade_especial": {
+    "en": "SPECIAL ABILITY",
+    "pt": "HABILIDADE ESPECIAL"
+  },
+  "ui.tooltip.linha_visao": {
+    "en": "Line of sight",
+    "pt": "Linha de visão"
+  },
+  "ui.tooltip.linha_visao_val": {
+    "en": "Required to shoot",
+    "pt": "Obrigatória para disparar"
+  },
+  "ui.tooltip.mais_quadrado": {
+    "en": "+{n} square",
+    "pt": "+{n} quadrado"
+  },
+  "ui.tooltip.municao": {
+    "en": "Ammunition",
+    "pt": "Munição"
+  },
+  "ui.tooltip.nao_permitido": {
+    "en": "Not allowed",
+    "pt": "Não permitido"
+  },
+  "ui.tooltip.permitido": {
+    "en": "Allowed",
+    "pt": "Permitido"
+  },
+  "ui.tooltip.pode_usar": {
+    "en": "CAN USE",
+    "pt": "PODE USAR"
+  },
+  "ui.tooltip.preco": {
+    "en": "PRICE",
+    "pt": "PREÇO"
+  },
+  "ui.tooltip.projeteis": {
+    "en": "{n} projectiles",
+    "pt": "{n} projéteis"
+  },
+  "ui.tooltip.quad_diagonais": {
+    "en": "{n} sq. (diagonals included)",
+    "pt": "{n} quad. (diagonais incluídas)"
+  },
+  "ui.tooltip.quadrados": {
+    "en": "{n} squares",
+    "pt": "{n} quadrados"
+  },
+  "ui.tooltip.quantidade": {
+    "en": "Quantity",
+    "pt": "Quantidade"
+  },
+  "ui.tooltip.reducao_dano": {
+    "en": "Damage reduction",
+    "pt": "Redução de dano"
+  },
+  "ui.tooltip.reducao_dano_val": {
+    "en": "−{n} per attack/effect, no per-round cap",
+    "pt": "−{n} por ataque/efeito, sem limite por rodada"
+  },
+  "ui.tooltip.requer_duas_maos": {
+    "en": "Requires two hands",
+    "pt": "Requer duas mãos"
+  },
+  "ui.tooltip.requer_flechas": {
+    "en": "Requires arrows in the off-hand slot",
+    "pt": "Requer flechas no slot secundário"
+  },
+  "ui.tooltip.resistencia": {
+    "en": "Save",
+    "pt": "Resistência"
+  },
+  "ui.tooltip.resistencia_val": {
+    "en": "{save} DC {cd} — {anula}",
+    "pt": "{save} CD {cd} — {anula}"
+  },
+  "ui.tooltip.restantes": {
+    "en": "Remaining",
+    "pt": "Restantes"
+  },
+  "ui.tooltip.risco": {
+    "en": "Risk",
+    "pt": "Risco"
+  },
+  "ui.tooltip.risco_val": {
+    "en": "A 1 on the d20 = weapon destroyed",
+    "pt": "Resultado 1 no d20 = arma destruída"
+  },
+  "ui.tooltip.rodadas": {
+    "en": "{n} rounds",
+    "pt": "{n} rodadas"
+  },
+  "ui.tooltip.sede": {
+    "en": "Thirst",
+    "pt": "Sede"
+  },
+  "ui.tooltip.slots_extras": {
+    "en": "Extra slots",
+    "pt": "Slots extras"
+  },
+  "ui.tooltip.slots_extras_val": {
+    "en": "+{n} inventory",
+    "pt": "+{n} de inventário"
+  },
+  "ui.tooltip.slots_magia": {
+    "en": "Spell slots",
+    "pt": "Slots de magia"
+  },
+  "ui.tooltip.todos_herois": {
+    "en": "All heroes",
+    "pt": "Todos os heróis"
+  },
+  "ui.tooltip.uma_mao": {
+    "en": "1 hand",
+    "pt": "1 mão"
+  },
+  "ui.tooltip.uma_ou_duas": {
+    "en": "One or two hands",
+    "pt": "Uma ou duas mãos"
+  },
+  "ui.tooltip.unidades_slot": {
+    "en": "{n} units per slot",
+    "pt": "{n} unidades por slot"
+  },
+  "ui.tooltip.uso": {
+    "en": "Use",
+    "pt": "Uso"
+  },
+  "ui.tooltip.visao": {
+    "en": "Vision",
+    "pt": "Visão"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

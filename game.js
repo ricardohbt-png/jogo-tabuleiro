@@ -2511,9 +2511,9 @@ function _renderShopItems(){
       && myP && (myP.taverna_refeicoes||[]).includes(item.id);
     const canBuy=gold>=item.price && !classRestrita && !jaUsada;
     const desc=_itemDesc(item);
-    const kindTag=item.kind==='shield'?'<span style="color:var(--blue);font-size:.68rem;"> [escudo]</span>':'';
-    const restritaTag=classRestrita?'<span style="color:var(--danger,#ff4136);font-size:.68rem;"> 🚫 Classe restrita</span>':'';
-    const usadaTag=jaUsada?'<span style="color:var(--muted,#888);font-size:.68rem;"> ✔ já usada nesta visita</span>':'';
+    const kindTag=item.kind==='shield'?`<span style="color:var(--blue);font-size:.68rem;"> [${t('ui.loja.escudo')}]</span>`:'';
+    const restritaTag=classRestrita?`<span style="color:var(--danger,#ff4136);font-size:.68rem;"> 🚫 ${t('ui.loja.classe_restrita')}</span>`:'';
+    const usadaTag=jaUsada?`<span style="color:var(--muted,#888);font-size:.68rem;"> ✔ ${t('ui.loja.ja_usada')}</span>`:'';
     return `<div class="shop-item"${(classRestrita||jaUsada)?' style="opacity:.5;"':''}>
       <span class="shop-item-emoji">${itemIconHTML(item)}</span>
       <div class="shop-item-info">
@@ -2522,8 +2522,8 @@ function _renderShopItems(){
       </div>
       <span class="shop-item-price">💰 ${item.price}</span>
       <button class="btn-buy" ${canBuy?'':'disabled'}
-        title="${classRestrita?'Sua classe não pode usar este item':jaUsada?'Já usada nesta visita à cidade':''}"
-        onclick="buyItem('${shopKey}','${item.id}')">${classRestrita?'🚫 Restrito':jaUsada?'✔ Usada':'Comprar'}</button>
+        title="${classRestrita?t('ui.loja.title_classe_restrita'):jaUsada?t('ui.loja.title_ja_usada'):''}"
+        onclick="buyItem('${shopKey}','${item.id}')">${classRestrita?'🚫 '+t('ui.loja.restrito'):jaUsada?'✔ '+t('ui.loja.usada'):t('ui.loja.comprar')}</button>
     </div>`;
   }).join('');
   // Tooltip de pergaminho (hover) — a loja usa innerHTML, então anexa por índice.
@@ -2532,9 +2532,11 @@ function _renderShopItems(){
     if(item.effect === 'scroll' && rows[idx]) aplicarTooltipPergaminho(rows[idx], item);
   });
   if(shopKey === 'templo' && myP && (myP.maldicoes||[]).length){
-    const nomes={maos_tremulas:'Mãos Trêmulas',olhos_escuridao:'Olhos da Escuridão',passos_pesados:'Passos Pesados',lamina_enferrujada:'Lâmina Enferrujada',fraqueza_arcana:'Fraqueza Arcana',fortuna_roubada:'Fortuna Roubada',azar_sobrenatural:'Azar Sobrenatural',marca_cacador:'Marca do Caçador',corpo_exausto:'Corpo Exausto',carne_fragil:'Carne Frágil',sangramento_profano:'Sangramento Profano',correntes_invisiveis:'Correntes Invisíveis',dor_constante:'Dor Constante',alma_quebrada:'Alma Quebrada',aura_profana:'Aura Profana',maldicao_ferrugem:'Maldição da Ferrugem',fome_eterna:'Fome Eterna',sede_infinita:'Sede Infinita',tocado_morte:'Tocado pela Morte',licantropia:'Licantropia',silencio_deuses:'Silêncio dos Deuses',voz_quebrada:'Voz Quebrada',espirito_covarde:'Espírito Covarde',eco_morte:'Eco da Morte',corrupcao_crescente:'Corrupção Crescente'};
+    // Os nomes das maldições saíram do mapa {id: 'texto'} e viraram chaves
+    // ui.maldicao.<id> — maldição não é família de catálogo (ver CLAUDE.md,
+    // etapa 4c), então não há cat.* e o caminho é o _rotulo.
     const precos={leve:150,media:400,grave:800};
-    list.insertAdjacentHTML('beforeend',(myP.maldicoes||[]).map(m=>`<div class="shop-item"><span class="shop-item-emoji">☠️</span><div class="shop-item-info"><div class="shop-item-name">Remover: ${nomes[m.id]||m.id}</div><div class="shop-item-desc">Cura uma maldição; o preço depende da gravidade.</div></div><button class="btn-buy" onclick="removerMaldicaoTemplo('${m.id}')">Curar</button></div>`).join(''));
+    list.insertAdjacentHTML('beforeend',(myP.maldicoes||[]).map(m=>`<div class="shop-item"><span class="shop-item-emoji">☠️</span><div class="shop-item-info"><div class="shop-item-name">${t('ui.loja.remover_maldicao',{nome:_rotulo(m.id,'ui.maldicao',m.id)})}</div><div class="shop-item-desc">${t('ui.loja.desc_remover_maldicao')}</div></div><button class="btn-buy" onclick="removerMaldicaoTemplo('${m.id}')">${t('ui.loja.curar')}</button></div>`).join(''));
   }
 }
 
@@ -2594,24 +2596,23 @@ function _itemDesc(item){
   if(item.effect === 'scroll'){
     const pv = item.preview || {};
     const mg = (typeof GRIMORIO_CLIENT !== 'undefined') ? GRIMORIO_CLIENT[item.magia_id] : null;
-    const partes = [`Nv ${item.nivel_conjurador||1}`];
+    const partes = [t('ui.item.desc.nivel', {n: item.nivel_conjurador||1})];
     if(item.int_bonus) partes.push(`INT+${item.int_bonus}`);
     if(pv.dano) partes.push(pv.dano + (pv.talento_dano ? ' ×1.5' : ''));
-    else if(pv.alcance === 0) partes.push('área no conjurador');
+    else if(pv.alcance === 0) partes.push(t('ui.item.desc.area_no_conjurador'));
     return `${(mg&&mg.nome)||item.magia_id} • ${partes.join(' • ')}`;
   }
   if(item.die){
-    const SUBTIPO={cortante:'Cortante',perfurante:'Perfurante',contundente:'Contusão'};
-    const range=item.reach==='lanca' ? ' • Alcance 2 (reto) / 1 (diag)'
-              : item.reach==='cajado' || item.reach==='mangual' ? ' • Alcance: todos os quadrados adjacentes'
-              : ['besta','hand_crossbow'].includes(item.id) ? ` • Alcance ${item.range} em linha reta`
-              : ['arco_curto','longbow'].includes(item.id) ? ` • Alcance ${item.range} reto / ${Math.ceil(item.range / 2)} diagonal`
-              : item.range ? ` • Alcance ${item.range}` : '';
-    const sub=item.categoria?` • ${SUBTIPO[item.categoria]||item.categoria}`:'';
-    const duas=item.two_handed?' • ✋✋ 2 mãos':'';
-    const arr=item.throw_range?` • 🎯 Arremesso ${item.throw_range}`:'';
-    const municao=['besta','hand_crossbow'].includes(item.id) ? ' • Virotes: bolsa ou mão esquerda'
-      : ['arco_curto','longbow'].includes(item.id) ? ' • Flechas: mão esquerda' : '';
+    const range=item.reach==='lanca' ? ' • '+t('ui.item.desc.alcance_lanca')
+              : item.reach==='cajado' || item.reach==='mangual' ? ' • '+t('ui.item.desc.alcance_adjacentes')
+              : ['besta','hand_crossbow'].includes(item.id) ? ' • '+t('ui.item.desc.alcance_reto', {n: item.range})
+              : ['arco_curto','longbow'].includes(item.id) ? ' • '+t('ui.item.desc.alcance_reto_diag', {n: item.range, d: Math.ceil(item.range / 2)})
+              : item.range ? ' • '+t('ui.item.desc.alcance', {n: item.range}) : '';
+    const sub=item.categoria?' • '+_rotulo(item.categoria, 'ui.item.subtipo', item.categoria):'';
+    const duas=item.two_handed?' • '+t('ui.item.desc.duas_maos'):'';
+    const arr=item.throw_range?' • '+t('ui.item.desc.arremesso', {n: item.throw_range}):'';
+    const municao=['besta','hand_crossbow'].includes(item.id) ? ' • '+t('ui.item.desc.virotes')
+      : ['arco_curto','longbow'].includes(item.id) ? ' • '+t('ui.item.desc.flechas') : '';
     const ehAdaga=item.id==='dagger'||/adaga/i.test(item.name||'');
     const ehChicote=item.id==='chicote'||/chicote/i.test(item.name||'');
     const ehMarteloGuerra=item.id==='warhammer'||item.id==='martelo'||/martelo de guerra/i.test(item.name||'');
@@ -2621,60 +2622,51 @@ function _itemDesc(item){
     const ehEspadaCritica=['shortsword','longsword','bastsword','espada2m'].includes(item.id)
       || /espada curta|espada longa|espada bastarda|espada de 2/i.test(item.name||'');
     const ehMachadoDuplo=item.id==='machado_duplo'||/machado duplo/i.test(item.name||'');
-    const finesse=item.finesse?'FOR/DES':(item.stat==='dex'?'DES':'FOR');
-    const segMao=ehAdaga?' • 2ª mão: ataque extra; substitui o escudo'
-      :ehChicote?' • 2ª mão: ataque extra; substitui o escudo':'';
-    const critico=ehMarteloGuerra||ehMaca||ehMachadoOrc?' • 20 natural: dano triplicado'
-      :ehMangual?' • 20 natural: dano ×2,5'
-      :ehEspadaCritica?' • crítico natural: 19–20'
-      :ehMachadoDuplo?' • 19/20 natural: segundo ataque':'';
-    const bonus=item.dmg_bonus?` • +${item.dmg_bonus} dano`:'';
-    const resistente=item.corrosao_resistente?' • ⚙️ resiste +1 golpe de corrosão':'';
-    return `${item.die} dano (${finesse})${sub}${bonus}${range}${municao}${duas}${arr}${segMao}${critico}${resistente}`;
+    const finesse=item.finesse?t('ui.item.desc.for_des'):(item.stat==='dex'?t('ui.item.desc.des'):t('ui.item.desc.for'));
+    const segMao=(ehAdaga||ehChicote)?' • '+t('ui.item.desc.segunda_mao'):'';
+    const critico=ehMarteloGuerra||ehMaca||ehMachadoOrc?' • '+t('ui.item.desc.crit_triplo')
+      :ehMangual?' • '+t('ui.item.desc.crit_2_5')
+      :ehEspadaCritica?' • '+t('ui.item.desc.crit_19_20')
+      :ehMachadoDuplo?' • '+t('ui.item.desc.crit_segundo_ataque'):'';
+    const bonus=item.dmg_bonus?' • '+t('ui.item.desc.mais_dano', {n: item.dmg_bonus}):'';
+    const resistente=item.corrosao_resistente?' • '+t('ui.item.desc.resiste_corrosao'):'';
+    return `${t('ui.item.desc.dano_arma', {die: item.die, stat: finesse})}${sub}${bonus}${range}${municao}${duas}${arr}${segMao}${critico}${resistente}`;
   }
   if(item.effect==='ammo'){
     const detalhes=[`×${item.ammo_count ?? 0}`];
-    if(item.damage_bonus) detalhes.push(`+${item.damage_bonus} dano`);
-    if(item.silver) detalhes.push('Prata');
+    if(item.damage_bonus) detalhes.push(t('ui.item.desc.mais_dano', {n: item.damage_bonus}));
+    if(item.silver) detalhes.push(t('ui.item.desc.prata'));
     return detalhes.join(' • ');
   }
   if(item.ac_bonus!=null){
-    const kindTxt=item.kind==='shield'?'Escudo — soma com armadura':'Armadura';
+    const kindTxt=item.kind==='shield'?t('ui.item.desc.escudo_soma'):t('ui.item.desc.armadura');
     if(item.kind==='armor'){
-      const cat={leve:'Leve',media:'Média',pesada:'Pesada'}[item.armor_category];
-      const mats=(item.corrosion_materials||[]).map(m=>({organic:'orgânica',metal:'metálica'}[m]||m));
+      const cat=_rotulo(item.armor_category, 'ui.item.armadura_cat', '');
+      const mats=(item.corrosion_materials||[]).map(m=>_rotulo(m, 'ui.item.material', m));
       const tags=[cat, mats.length ? mats.join(' + ') : ''].filter(Boolean);
-      return `${kindTxt} • CA +${item.ac_bonus}${tags.length ? ' • '+tags.join(' • ') : ''}`;
+      return `${kindTxt} • ${t('ui.item.desc.ca_mais',{n:item.ac_bonus})}${tags.length ? ' • '+tags.join(' • ') : ''}`;
     }
-    return `${kindTxt} • CA +${item.ac_bonus}`;
+    return `${kindTxt} • ${t('ui.item.desc.ca_mais',{n:item.ac_bonus})}`;
   }
   // Comida/bebida da taverna: fome/sede vêm nos campos item.fome / item.sede.
   if(item.effect==='food'||item.effect==='meal_survival'){
     const partes=[];
-    if(item.fome) partes.push(`+${item.fome} fome`);
-    if(item.sede) partes.push(`+${item.sede} sede`);
+    if(item.fome) partes.push(t('ui.item.desc.mais_fome', {n: item.fome}));
+    if(item.sede) partes.push(t('ui.item.desc.mais_sede', {n: item.sede}));
     let txt=partes.join(' / ');
-    if(item.effect==='meal_survival') txt+=' • 1× por visita';
+    if(item.effect==='meal_survival') txt+=' • '+t('ui.item.desc.uma_por_visita');
     return txt;
   }
   if(item.effect==='ale')
-    return `+${item.value||0} fome/sede • -1 ataque por 10 rodadas`;
+    return t('ui.item.desc.cerveja', {n: item.value||0});
   if(item.effect==='wine')
-    return `+${item.value||0} fome/sede • -1 ataque e reflexos por 10 rodadas`;
+    return t('ui.item.desc.vinho', {n: item.value||0});
   if(item.effect==='ration')
-    return `+${item.value||0} fome e sede`;
+    return t('ui.item.desc.racao', {n: item.value||0});
   if(item.effect==='regeneration')
-    return `Reserva ${item.value||0} HP • recupera +1 HP por rodada`;
-  const fx={
-    heal:'Restaura HP', atk_bonus:'Bônus de Ataque',
-    maxhp:'Aumenta HP máx', atk:'Bônus Ataque', spd:'Velocidade',
-    full_heal:'Cura total de HP',
-    bless:'Bônus de Ataque divino', cleanse:'Remove status negativos',
-    temp_atk:'Ataque temporário',
-    def_:'CA +',
-  };
+    return t('ui.item.desc.regeneracao', {n: item.value||0});
   const v=item.value?` ${item.value}`:'';
-  return (fx[item.effect]||item.effect||'')+v;
+  return _rotulo(item.effect, 'ui.item.efeito', item.effect||'')+v;
 }
 
 function buyItem(shop, itemId){
@@ -4229,64 +4221,61 @@ function normalizarItemTooltip(item){
 
 function gerarConteudoTooltip(item){
   item = normalizarItemTooltip(item);
+  // Só a COR fica no mapa; o rótulo vem de ui.item.tipo_label.<tipo>.
   const coresTipo = {
-    arma:          { cor:'#c8a951', label:'ARMA' },
-    armaDistancia: { cor:'#c8a951', label:'ARMA À DISTÂNCIA' },
-    armadura:      { cor:'#4a9eff', label:'ARMADURA' },
-    escudo:        { cor:'#4a9eff', label:'ESCUDO' },
-    secundario:    { cor:'#aaaaaa', label:'ACESSÓRIO' },
-    consumivel:    { cor:'#2ecc40', label:'CONSUMÍVEL' },
-    municao:       { cor:'#ff851b', label:'MUNIÇÃO' },
-    varinha:       { cor:'#cc44ff', label:'VARINHA MÁGICA' },
-    itemMagico:    { cor:'#cc44ff', label:'ITEM MÁGICO' }
+    arma:'#c8a951', armaDistancia:'#c8a951', armadura:'#4a9eff', escudo:'#4a9eff',
+    secundario:'#aaaaaa', consumivel:'#2ecc40', municao:'#ff851b',
+    varinha:'#cc44ff', itemMagico:'#cc44ff'
   };
-  const tipoInfo = coresTipo[item.tipo] || { cor:'#c8b89a', label:'ITEM' };
+  const tipoInfo = {
+    cor:   coresTipo[item.tipo] || '#c8b89a',
+    label: _rotulo(item.tipo, 'ui.item.tipo_label', t('ui.item.tipo_label.padrao')),
+  };
   const linhas = [];
 
-  if(item.dano && item.dano !== '—') linhas.push(renderLinhaTooltip('🎲','Dano',item.dano));
+  if(item.dano && item.dano !== '—') linhas.push(renderLinhaTooltip('🎲',t('ui.tooltip.dano'),item.dano));
   if(item.danoUmaMao){
-    linhas.push(renderLinhaTooltip('🎲','1 mão',item.danoUmaMao));
-    linhas.push(renderLinhaTooltip('🎲','2 mãos',item.danoDuasMaos));
+    linhas.push(renderLinhaTooltip('🎲',t('ui.tooltip.uma_mao'),item.danoUmaMao));
+    linhas.push(renderLinhaTooltip('🎲',t('ui.tooltip.duas_maos'),item.danoDuasMaos));
   }
-  const labelsAtributo = { forca:'Força', destreza:'Destreza', inteligencia:'Inteligência', carisma:'Carisma', forcaOuDestreza:'Força ou Destreza' };
-  if(item.atributo) linhas.push(renderLinhaTooltip('📊','Atributo',labelsAtributo[item.atributo] || item.atributo));
-  if(item.bonusCA) linhas.push(renderLinhaTooltip('🛡️','Bônus CA',`+${item.bonusCA}`));
-  if(item.reducaoDano) linhas.push(renderLinhaTooltip('🛡️','Redução de dano',`−${item.reducaoDano} por ataque/efeito, sem limite por rodada`));
-  if(item.alcance) linhas.push(renderLinhaTooltip('📏','Alcance',`${item.alcance} quadrados`));
-  if(item.alcanceEspecial) linhas.push(renderLinhaTooltip('📏','Alcance',item.alcanceEspecial.descricao));
-  if(item.alcanceArremesso) linhas.push(renderLinhaTooltip('🎯','Arremesso',`${item.alcanceArremesso} quad. (diagonais incluídas)`));
-  if(item.arremesso) linhas.push(renderLinhaTooltip('⚠️','Risco','Resultado 1 no d20 = arma destruída'));
-  if(item.linhaVisao) linhas.push(renderLinhaTooltip('👁️','Linha de visão','Obrigatória para disparar'));
-  if(item.tipo === 'arma') linhas.push(renderLinhaTooltip('🛡️','Escudo', item.escudo ? 'Permitido' : 'Não permitido'));
-  if(item.duasMaos && !item.modosDuasMaos) linhas.push(renderLinhaTooltip('✋','Uso','Requer duas mãos'));
-  if(item.modosDuasMaos) linhas.push(renderLinhaTooltip('✋','Uso','Uma ou duas mãos'));
-  if(item.slotSecundario === 'flechas') linhas.push(renderLinhaTooltip('🏹','Munição','Requer flechas no slot secundário'));
-  if(item.fome > 0) linhas.push(renderLinhaTooltip('🍖','Fome',`+${item.fome}`));
-  if(item.sede > 0) linhas.push(renderLinhaTooltip('💧','Sede',`+${item.sede}`));
-  if(item.duracao) linhas.push(renderLinhaTooltip('⏱️','Duração',`${item.duracao} rodadas`));
-  if(item.bonusVisao) linhas.push(renderLinhaTooltip('👁️','Visão',`+${item.bonusVisao} quadrado`));
-  if(item.quantidade && item.effect !== 'ammo' && item.tipo !== 'municao') linhas.push(renderLinhaTooltip('📦','Quantidade',`${item.quantidade} unidades por slot`));
+  if(item.atributo) linhas.push(renderLinhaTooltip('📊',t('ui.tooltip.atributo'),_rotulo(item.atributo,'ui.atributo',item.atributo)));
+  if(item.bonusCA) linhas.push(renderLinhaTooltip('🛡️',t('ui.tooltip.bonus_ca'),`+${item.bonusCA}`));
+  if(item.reducaoDano) linhas.push(renderLinhaTooltip('🛡️',t('ui.tooltip.reducao_dano'),t('ui.tooltip.reducao_dano_val',{n:item.reducaoDano})));
+  if(item.alcance) linhas.push(renderLinhaTooltip('📏',t('ui.tooltip.alcance'),t('ui.tooltip.quadrados',{n:item.alcance})));
+  if(item.alcanceEspecial) linhas.push(renderLinhaTooltip('📏',t('ui.tooltip.alcance'),item.alcanceEspecial.descricao));
+  if(item.alcanceArremesso) linhas.push(renderLinhaTooltip('🎯',t('ui.tooltip.arremesso'),t('ui.tooltip.quad_diagonais',{n:item.alcanceArremesso})));
+  if(item.arremesso) linhas.push(renderLinhaTooltip('⚠️',t('ui.tooltip.risco'),t('ui.tooltip.risco_val')));
+  if(item.linhaVisao) linhas.push(renderLinhaTooltip('👁️',t('ui.tooltip.linha_visao'),t('ui.tooltip.linha_visao_val')));
+  if(item.tipo === 'arma') linhas.push(renderLinhaTooltip('🛡️',t('ui.tooltip.escudo'), item.escudo ? t('ui.tooltip.permitido') : t('ui.tooltip.nao_permitido')));
+  if(item.duasMaos && !item.modosDuasMaos) linhas.push(renderLinhaTooltip('✋',t('ui.tooltip.uso'),t('ui.tooltip.requer_duas_maos')));
+  if(item.modosDuasMaos) linhas.push(renderLinhaTooltip('✋',t('ui.tooltip.uso'),t('ui.tooltip.uma_ou_duas')));
+  if(item.slotSecundario === 'flechas') linhas.push(renderLinhaTooltip('🏹',t('ui.tooltip.municao'),t('ui.tooltip.requer_flechas')));
+  if(item.fome > 0) linhas.push(renderLinhaTooltip('🍖',t('ui.tooltip.fome'),`+${item.fome}`));
+  if(item.sede > 0) linhas.push(renderLinhaTooltip('💧',t('ui.tooltip.sede'),`+${item.sede}`));
+  if(item.duracao) linhas.push(renderLinhaTooltip('⏱️',t('ui.tooltip.duracao'),t('ui.tooltip.rodadas',{n:item.duracao})));
+  if(item.bonusVisao) linhas.push(renderLinhaTooltip('👁️',t('ui.tooltip.visao'),t('ui.tooltip.mais_quadrado',{n:item.bonusVisao})));
+  if(item.quantidade && item.effect !== 'ammo' && item.tipo !== 'municao') linhas.push(renderLinhaTooltip('📦',t('ui.tooltip.quantidade'),t('ui.tooltip.unidades_slot',{n:item.quantidade})));
   if(item.effect === 'ammo' || item.tipo === 'municao') {
-    linhas.push(renderLinhaTooltip('🏹','Restantes',`${item.quantidade ?? 0} projéteis`));
-    if(item.danoExtra) linhas.push(renderLinhaTooltip('💥','Dano adicional',`+${item.danoExtra}${item.tipoDano ? ` (${item.tipoDano})` : ''}`));
+    linhas.push(renderLinhaTooltip('🏹',t('ui.tooltip.restantes'),t('ui.tooltip.projeteis',{n:item.quantidade ?? 0})));
+    if(item.danoExtra) linhas.push(renderLinhaTooltip('💥',t('ui.tooltip.dano_adicional'),`+${item.danoExtra}${item.tipoDano ? ` (${item.tipoDano})` : ''}`));
   }
   if(item.tipo === 'veneno' || item.effect === 'coat_poison') {
     const e = item.efeito || {};
-    if(item.descricao) linhas.push(renderLinhaTooltip('☠️','Efeito',item.descricao));
+    if(item.descricao) linhas.push(renderLinhaTooltip('☠️',t('ui.tooltip.efeito'),item.descricao));
     if(e.save && e.dificuldade != null) {
-      const anula = e.anula === false ? 'efeito parcial em sucesso' : 'anula';
-      linhas.push(renderLinhaTooltip('🛡️','Resistência',`${String(e.save).replace(/^./, c => c.toUpperCase())} CD ${e.dificuldade} — ${anula}`));
+      const anula = e.anula === false ? t('ui.tooltip.efeito_parcial') : t('ui.tooltip.anula');
+      linhas.push(renderLinhaTooltip('🛡️',t('ui.tooltip.resistencia'),t('ui.tooltip.resistencia_val',{save:String(e.save).replace(/^./, c => c.toUpperCase()), cd:e.dificuldade, anula})));
     }
   } else if(item.descricao) {
-    linhas.push(renderLinhaTooltip('✨','Efeito',item.descricao));
+    linhas.push(renderLinhaTooltip('✨',t('ui.tooltip.efeito'),item.descricao));
   }
-  if(item.slotsMagia) linhas.push(renderLinhaTooltip('✨','Slots de magia',`${item.slotsMagia}`));
-  if(item.slotsExtras) linhas.push(renderLinhaTooltip('🎒','Slots extras',`+${item.slotsExtras} de inventário`));
+  if(item.slotsMagia) linhas.push(renderLinhaTooltip('✨',t('ui.tooltip.slots_magia'),`${item.slotsMagia}`));
+  if(item.slotsExtras) linhas.push(renderLinhaTooltip('🎒',t('ui.tooltip.slots_extras'),t('ui.tooltip.slots_extras_val',{n:item.slotsExtras})));
 
   const especiais = gerarHabilidadesEspeciais(item);
   const nomesHerois = { victorCoiceBravo:'Victor', richardCavaleiro:'Richard', lewis:'Lewis', luccas:'Luccas', henrique:'Henrique', pedro:'Pedro' };
   const usuariosTexto = item.permitidoPara.includes('todos')
-    ? 'Todos os heróis'
+    ? t('ui.tooltip.todos_herois')
     : item.permitidoPara.map(k => nomesHerois[k] || k).join(', ');
 
   return `
@@ -4297,16 +4286,16 @@ function gerarConteudoTooltip(item){
     <div style="padding:10px 14px;">${linhas.join('')}</div>
     ${especiais ? `
       <div style="padding:8px 14px; border-top:1px solid #c8a95133; border-bottom:1px solid #c8a95133; background:rgba(200,169,81,0.05);">
-        <div style="color:#c8a951; font-size:9px; letter-spacing:3px; margin-bottom:6px;">HABILIDADE ESPECIAL</div>
+        <div style="color:#c8a951; font-size:9px; letter-spacing:3px; margin-bottom:6px;">${t('ui.tooltip.habilidade_especial')}</div>
         ${especiais}
       </div>
     ` : ''}
     <div style="padding:8px 14px; border-top:1px solid #c8a95133;">
-      <div style="color:#8a7a5a; font-size:9px; letter-spacing:2px; margin-bottom:3px;">PODE USAR</div>
+      <div style="color:#8a7a5a; font-size:9px; letter-spacing:2px; margin-bottom:3px;">${t('ui.tooltip.pode_usar')}</div>
       <div style="color:#c8b89a; font-size:10px;">${usuariosTexto}</div>
     </div>
     <div style="padding:8px 14px; border-top:1px solid #c8a95133; display:flex; justify-content:space-between; align-items:center;">
-      <span style="color:#8a7a5a; font-size:9px; letter-spacing:2px;">PREÇO</span>
+      <span style="color:#8a7a5a; font-size:9px; letter-spacing:2px;">${t('ui.tooltip.preco')}</span>
       <span style="color:#c8a951; font-size:14px; font-weight:bold;">${item.preco} 🪙</span>
     </div>
   `;

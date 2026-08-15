@@ -40,8 +40,13 @@ RE_FN = re.compile(
     r"^(?:async\s+)?function\s+(\w+)"
     r"|^(?:const|let)\s+(\w+)\s*=\s*(?:async\s*)?\(?[\w,\s]*\)?\s*=>")
 
-# Funções cujo lote já fechou. Acrescente os nomes ao terminar cada lote.
-FECHADAS = set()
+# Funções cujo lote já fechou. Acrescente os nomes ao terminar cada task.
+# Só funciona porque a RE_FN acima ancora na coluna 0: antes disso o "dono" podia
+# ser um helper interno, e marcar `L` como fechada não impediria regressão nenhuma.
+FECHADAS = {
+    # Lote 2, Task 2 — tooltip, descrição e loja de item
+    "gerarConteudoTooltip", "_itemDesc", "_renderShopItems",
+}
 
 
 # Blocos cujo literal em português NÃO é trabalho pendente:
