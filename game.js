@@ -13640,61 +13640,61 @@ function _showTrapResult(msg){
   const statusEl = $('trap-status');
   if(msg.tipo === 'doenca'){
     statusEl.className = 'trap-status trap-status--fail';
-    statusEl.textContent = `🦠 Você contraiu uma doença ${msg.severidade || ''}.`.trim();
+    statusEl.textContent = t('ui.armadilha.doenca',{sev: msg.severidade || ''}).trim();
   } else if(msg.tipo === 'veneno'){
     statusEl.className = 'trap-status trap-status--fail';
-    statusEl.textContent = `☠️ Envenenado — duração: ${msg.duracao || 0} rodada(s).`;
+    statusEl.textContent = t('ui.armadilha.veneno',{n: msg.duracao || 0});
   } else if(msg.tipo === 'equipamento_danificado'){
     statusEl.className = 'trap-status trap-status--fail';
-    statusEl.textContent = `🛠️ ${msg.peca || 'Equipamento'}: ${msg.estado || 'danificado'}.`;
+    statusEl.textContent = t('ui.armadilha.equip_danificado',{peca: msg.peca || t('ui.armadilha.equipamento'), estado: msg.estado || t('ui.armadilha.danificado')});
   } else if(msg.tipo === 'arma_quebrada'){
     statusEl.className = 'trap-status trap-status--fail';
-    statusEl.textContent = `💥 ${msg.peca || 'Sua arma'} quebrou e não pode mais ser usada.`;
+    statusEl.textContent = t('ui.armadilha.arma_quebrada',{peca: msg.peca || t('ui.armadilha.sua_arma')});
   } else if(msg.tipo === 'armadura_quebrada'){
     statusEl.className = 'trap-status trap-status--fail';
-    statusEl.textContent = `🛡️ ${msg.peca || 'Sua armadura'} quebrou e seus bônus defensivos foram perdidos.`;
+    statusEl.textContent = t('ui.armadilha.armadura_quebrada',{peca: msg.peca || t('ui.armadilha.sua_armadura')});
   } else if(msg.tipo === 'petrificado'){
     statusEl.className = 'trap-status trap-status--fail';
-    statusEl.textContent = `🗿 Petrificado — duração: ${msg.duracao || 0} rodada(s).`;
+    statusEl.textContent = t('ui.armadilha.petrificado',{n: msg.duracao || 0});
   } else if(msg.tipo === 'enfeiticado'){
     statusEl.className = 'trap-status trap-status--fail';
-    statusEl.textContent = `✨ Enfeitiçado por ${msg.nome || 'magia'} — duração: ${msg.duracao || 0} rodada(s).`;
+    statusEl.textContent = t('ui.armadilha.enfeiticado',{nome: msg.nome || t('ui.armadilha.magia'), n: msg.duracao || 0});
   } else if(msg.tipo === 'cuspe_acido'){
     statusEl.className = msg.metade ? 'trap-status trap-status--partial' : 'trap-status trap-status--fail';
-    statusEl.textContent = msg.metade ? '🟡 Você resistiu parcialmente ao ácido.' : '❌ O ácido atingiu você em cheio!';
+    statusEl.textContent = msg.metade ? t('ui.armadilha.acido_parcial') : t('ui.armadilha.acido_cheio');
   } else if(msg.tipo === 'falha_magia_dano'){
     statusEl.className = 'trap-status trap-status--fail';
-    statusEl.textContent = `💥 Você falhou no teste contra ${msg.nome || 'a magia'} e sofreu ${msg.dano || 0} de dano.`;
+    statusEl.textContent = t('ui.armadilha.falha_magia',{nome: msg.nome || t('ui.armadilha.a_magia'), dano: msg.dano || 0});
   } else if(msg.tipo === 'congelamento_paralisia'){
     statusEl.className = 'trap-status trap-status--fail';
-    statusEl.textContent = `❄️ ${msg.nome || 'Congelamento'} afetou você.`;
+    statusEl.textContent = t('ui.armadilha.congelamento',{nome: msg.nome || t('ui.armadilha.congelamento_nome')});
   } else if(msg.tipo === 'atordoado'){
     statusEl.className = 'trap-status trap-status--fail';
-    statusEl.textContent = `💫 Atordoado — duração: ${msg.duracao || 'temporária'}.`;
+    statusEl.textContent = t('ui.armadilha.atordoado',{n: msg.duracao || t('ui.armadilha.temporaria')});
   } else if(msg.tipo === 'morte'){
     statusEl.className = 'trap-status trap-status--fail';
-    statusEl.textContent = '💀 Seu personagem morreu. Torça para que seus companheiros possam resgatá-lo.';
+    statusEl.textContent = t('ui.armadilha.morte');
   } else if(msg.tipo === 'sono'){
     statusEl.className = 'trap-status trap-status--fail';
-    statusEl.textContent = `🌙 Adormecido — duração: ${msg.duracao || 0} rodada(s).`;
+    statusEl.textContent = t('ui.armadilha.sono',{n: msg.duracao || 0});
   } else if(msg.tipo === 'maldicao'){
     // Maldição não tem duração: some só na Purificação ou no Templo. O estágio
     // só existe nas progressivas (o servidor manda null nas demais).
     statusEl.className = 'trap-status trap-status--fail';
-    statusEl.textContent = `☠️ Amaldiçoado: ${msg.nome || 'maldição'}`
-      + (msg.estagio ? ` — estágio ${msg.estagio}` : '') + '.';
+    statusEl.textContent = t('ui.armadilha.amaldicoado',{nome: msg.nome || t('ui.armadilha.maldicao')})
+      + (msg.estagio ? t('ui.armadilha.estagio',{n: msg.estagio}) : '') + '.';
   } else if(msg.tick){
     statusEl.className = 'trap-status trap-status--tick';
-    statusEl.textContent = `🔥 Dano contínuo: ${msg.dano}`;
+    statusEl.textContent = t('ui.armadilha.dano_continuo',{n: msg.dano});
   } else if(msg.metade){
     statusEl.className = 'trap-status trap-status--partial';
-    statusEl.textContent = '🟡 Você resistiu parcialmente!';
+    statusEl.textContent = t('ui.armadilha.parcial');
   } else if(msg.sucesso){
     statusEl.className = 'trap-status trap-status--success';
-    statusEl.textContent = '✅ Você escapou!';
+    statusEl.textContent = t('ui.armadilha.escapou');
   } else {
     statusEl.className = 'trap-status trap-status--fail';
-    statusEl.textContent = '❌ Você foi atingido!';
+    statusEl.textContent = t('ui.armadilha.atingido');
     tocarSomArmadilha();
   }
 
@@ -25038,7 +25038,7 @@ function on3DClick(e){
       const myP = GS.gameState.players.find(p=>p.id===GS.myPid&&p.alive);
       const dist = myP ? Math.max(Math.abs(myP.pos[0]-tx), Math.abs(myP.pos[1]-ty)) : 99;
       if(dist <= 2){ openChestWindow(chest); return; }
-      else { toast('Aproxime-se do baú para abri-lo!', 'var(--gold)'); return; }
+      else { toast(t('ui.tabuleiro.perto_do_bau'), 'var(--gold)'); return; }
     }
     // ── Decoration click (3D path — check footprint of each decoration) ─────────
     // Interativa (loot/fonte) → interage. Sólida (não-pisável) → bloqueia o clique.
@@ -25240,18 +25240,17 @@ function handleTileClick(tx, ty){
     if(tx===sx && ty===sy){
       const me = (_st.players||[]).find(p=>p.id===GS.myPid && p.alive);
       if(!me) return;
-      if(_st.saida_permitida === false){ toast('Não há como sair desta masmorra.', 'var(--red)'); return; }
-      if(!GS.isMyTurn){ toast('Só é possível sair no seu turno.', 'var(--red)'); return; }
+      if(_st.saida_permitida === false){ toast(t('ui.tabuleiro.sem_saida'), 'var(--red)'); return; }
+      if(!GS.isMyTurn){ toast(t('ui.tabuleiro.so_no_seu_turno'), 'var(--red)'); return; }
       const pertoDaEscada = Math.max(Math.abs(me.pos[0]-sx), Math.abs(me.pos[1]-sy)) <= 1;
-      if(!pertoDaEscada){ toast('Aproxime-se da escada para sair.', 'var(--red)'); return; }
+      if(!pertoDaEscada){ toast(t('ui.tabuleiro.perto_da_escada'), 'var(--red)'); return; }
       const custo = _st.custo_saida || {fome:0, sede:0};
       const espera = _st.espera_saida || '0';
       if(me.fome < custo.fome || me.sede < custo.sede){
-        toast(`Provisões insuficientes: a viagem custa 🍖${custo.fome} e 💧${custo.sede}.`, 'var(--red)');
+        toast(t('ui.tabuleiro.provisoes_insuficientes',{f: custo.fome, s: custo.sede}), 'var(--red)');
         return;
       }
-      if(!confirm(`Sair pela escada custa 🍖${custo.fome} e 💧${custo.sede} (ida e volta).\n`
-                  + `Você volta em ${espera} rodada(s) e a masmorra continua sem você.\n\nSair?`)) return;
+      if(!confirm(t('ui.tabuleiro.confirmar_saida',{f: custo.fome, s: custo.sede, n: espera}))) return;
       fecharQuadrosFlutuantes();
       send({type:'exit_dungeon'});
       return;
@@ -25276,7 +25275,7 @@ function handleTileClick(tx, ty){
       const myP = _st.players.find(p=>p.id===GS.myPid&&p.alive);
       const dist = myP ? Math.max(Math.abs(myP.pos[0]-tx), Math.abs(myP.pos[1]-ty)) : 99;
       if(dist <= 2){ openChestWindow(chest); return; }
-      else { toast('Aproxime-se do baú para abri-lo!', 'var(--gold)'); return; }
+      else { toast(t('ui.tabuleiro.perto_do_bau'), 'var(--gold)'); return; }
     }
   }
 
@@ -25332,7 +25331,7 @@ function handleTileClick(tx, ty){
             const emLinha = (dx_a===0 || dy_a===0) && dist_a >= 1 && dist_a <= 3;
             if(isElecA ? emLinha : dist_a === 1) GS.atacarAnimado(a.id, mon.id);
             else toast(isElecA
-              ? '⚡ O elemental elétrico ataca em linha reta (máx 3 casas).'
+              ? t('ui.tabuleiro.elemental_linha')
               : 'O servo precisa estar cardinalmente adjacente ao alvo.');
             return;
           }
@@ -25412,27 +25411,33 @@ function handleTileClick(tx, ty){
 
 // ── GS EVENT CALLBACKS — wire GS events to renderer functions ─────────────
 GS.on('wsError', () =>
-  toast('❌ Servidor não encontrado. Execute iniciar.bat primeiro!', 'var(--red)'));
+  toast(t('ui.conexao.servidor_nao_encontrado'), 'var(--red)'));
 
 GS.on('wsClosed', (gs, cs) => {
-  if(gs && gs.phase !== 'ended') toast('Conexão encerrada.');
-  else if(cs)                    toast('Conexão com o servidor encerrada.', 'var(--red)');
+  if(gs && gs.phase !== 'ended') toast(t('ui.conexao.encerrada'));
+  else if(cs)                    toast(t('ui.conexao.encerrada_servidor'), 'var(--red)');
 });
 
 // Reconexão automática (gameState tenta sozinho a cada 2,5 s, até 8 vezes)
 GS.on('reconnecting', (n, max) =>
-  toast(`🔌 Conexão perdida — reconectando (${n}/${max})...`, 'var(--orange)'));
+  toast(t('ui.conexao.reconectando',{n: n, max: max}), 'var(--orange)'));
 GS.on('reconnectFailed', () =>
-  toast('❌ Não foi possível reconectar. Recarregue a página e use "Reconectar à última partida".', 'var(--red)'));
+  toast(t('ui.conexao.falhou'), 'var(--red)'));
 
 // Jogos Salvos — Fase 3: login por conta (apelido+PIN) na tela inicial.
 GS.on('loginResult', (msg) => {
   if (msg.ok) {
     GS.listSavegames();
     showScreen('screen-savegames');
+  // ACOPLAMENTO CONHECIDO: este ramo decide por TEXTO do erro do servidor.
+  // Funciona porque server.py:1856 ainda devolve string crua ("Conta não
+  // encontrada..."), fora do T(). Se aquela mensagem for migrada para T(), ela
+  // passa a chegar traduzida e este includes deixa de casar EM SILÊNCIO — o
+  // jogador nunca receberia a oferta de criar a conta. O conserto certo é o
+  // servidor mandar um código de erro; ver o mesmo padrão em trapImages.
   } else if ((msg.error || '').includes('não encontrada')) {
     const c = window._contaCtx || {};
-    if (confirm('Conta não existe. Criar agora com esse apelido e PIN?')) {
+    if (confirm(t('ui.conta.criar_agora'))) {
       GS.criarConta(c.url, c.name, c.pin);
     }
   } else {
@@ -25446,8 +25451,8 @@ GS.on('savegamesList', (list) => {
   if (master && !document.getElementById('sg-entry-mode')) {
     const options = document.createElement('div');
     options.className = 'field';
-    options.innerHTML = '<label>Entrada de novos jogadores</label><select id="sg-entry-mode"><option value="vote">Votação dos membros ativos</option><option value="automatic">Automática</option></select>'
-      + '<label style="margin-top:7px;display:block">Substituição de herói</label><select id="sg-replacement-rule"><option value="experienced">Experiente, sem itens</option><option value="new">Nível 1</option><option value="inherit">Herda a ficha anterior</option></select>';
+    options.innerHTML = `<label>${t('ui.save.entrada_novos')}</label><select id="sg-entry-mode"><option value="vote">${t('ui.save.entrada_voto')}</option><option value="automatic">${t('ui.save.entrada_auto')}</option></select>`
+      + `<label style="margin-top:7px;display:block">${t('ui.save.substituicao')}</label><select id="sg-replacement-rule"><option value="experienced">${t('ui.save.subst_experiente')}</option><option value="new">${t('ui.save.subst_nivel1')}</option><option value="inherit">${t('ui.save.subst_herda')}</option></select>`;
     master.parentElement.insertAdjacentElement('afterend', options);
   }
   if (!box) return;
@@ -25457,30 +25462,30 @@ GS.on('savegamesList', (list) => {
     const el = document.createElement('div');
     el.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:8px;background:#0d1a0d;border:1px solid #2a4a2a;border-radius:6px;padding:8px 10px;';
     el.innerHTML = '<div><b>' + sg.name + '</b><br><span style="font-size:.7rem;color:#8ab88a;">'
-      + (sg.mode === 'campaign' ? 'Campanha' : 'Avulso') + ' · fase ' + ((sg.campaign_phase||0)+1) + ' · ' + membros + ' herói(s)</span></div>';
+      + (sg.mode === 'campaign' ? t('ui.save.campanha') : t('ui.save.avulso')) + t('ui.save.fase_membros',{f: (sg.campaign_phase||0)+1, n: membros}) + '</span></div>';
     const btns = document.createElement('div');
     const cont = document.createElement('button'); cont.className='btn-secondary btn-sm'; cont.textContent='Continuar';
     cont.onclick = () => GS.loadSavegame(sg.id);
     btns.appendChild(cont);
     const sequel = document.createElement('button'); sequel.className='btn-secondary btn-sm'; sequel.textContent='↗ Continuar';
-    sequel.title='Cria uma nova campanha no mesmo grupo, copiando o estado atual';
+    sequel.title=t('ui.save.sequel_title');
     sequel.onclick = () => {
-      const name = prompt('Nome da nova campanha:', (sg.name || 'Campanha') + ' — continuação');
+      const name = prompt(t('ui.save.nome_nova_campanha'), (sg.name || t('ui.save.campanha')) + t('ui.save.sufixo_continuacao'));
       if (!name) return;
       GS.createSavegame({ name, mode: sg.mode || 'campaign', campaign_file: sg.campaign_file,
         has_master: !!sg.has_master, continue_from: sg.id, rules: sg.rules || {} });
     };
     btns.appendChild(sequel);
     if (sg.has_master && sg.master_account === GS.getAccount()) {
-      const leave = document.createElement('button'); leave.className='btn-secondary btn-sm'; leave.textContent='Encerrar';
-      leave.title='Encerra esta campanha de Mestre e preserva-a como histórico';
-      leave.onclick = () => { if (confirm('Encerrar esta campanha? Ela ficará preservada e poderá gerar uma continuação.')) GS.abandonMasterCampaign(sg.id); };
+      const leave = document.createElement('button'); leave.className='btn-secondary btn-sm'; leave.textContent=t('ui.save.encerrar');
+      leave.title=t('ui.save.encerrar_title');
+      leave.onclick = () => { if (confirm(t('ui.save.encerrar_confirm'))) GS.abandonMasterCampaign(sg.id); };
       btns.appendChild(leave);
     }
     if (sg.owner === GS.getAccount()) {
       const del = document.createElement('button'); del.className='btn-secondary btn-sm'; del.textContent='🗑';
       del.style.marginLeft='6px';
-      del.onclick = () => { if (confirm('Apagar "' + sg.name + '"? Isso é permanente.')) GS.deleteSavegame(sg.id); };
+      del.onclick = () => { if (confirm(t('ui.save.apagar_confirm',{nome: sg.name}))) GS.deleteSavegame(sg.id); };
       btns.appendChild(del);
     }
     el.appendChild(btns); box.appendChild(el);
@@ -25503,8 +25508,8 @@ GS.on('campaignVote', (msg) => {
     if (v.status === 'rejected') toast('Entrada na campanha recusada.', 'var(--red)');
     return;
   }
-  const hero = v.class_id || 'herói';
-  if (confirm(`${v.candidate} pediu a vaga de ${hero}. Aprovar?`)) GS.campaignVote(v.id, true);
+  const hero = v.class_id || t('ui.save.heroi');
+  if (confirm(t('ui.save.pediu_vaga',{quem: v.candidate, heroi: hero}))) GS.campaignVote(v.id, true);
   else GS.campaignVote(v.id, false);
 });
 

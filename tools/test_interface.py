@@ -52,6 +52,9 @@ FECHADAS = {
     # Lote 2, Task 4 — botões de habilidade (e as descrições de ARMADILHAS_LUCCAS,
     # que o placar atribui a _paladinSkillBtn por ser um `const` array)
     "gerarHabilidadesEspeciais", "_paladinSkillBtn", "_rogueSkillBtn",
+    # Lote 2, Task 5 — popup de armadilha (handleTileClick fica de fora: sobrou
+    # 1 literal que e CHAVE DE LOGICA sobre o texto de erro do servidor)
+    "_showTrapResult",
 }
 
 

@@ -15,6 +15,26 @@
 // os catálogos do cliente guardam descrição mais rica (card HTML com alcance e
 // efeito por rodada) que a frase curta do servidor. Ver aplicarCatalogo.
 window.LANG_INTERFACE = {
+  "ui.armadilha.a_magia": {
+    "en": "the spell",
+    "pt": "a magia"
+  },
+  "ui.armadilha.acido_cheio": {
+    "en": "❌ The acid hit you full on!",
+    "pt": "❌ O ácido atingiu você em cheio!"
+  },
+  "ui.armadilha.acido_parcial": {
+    "en": "🟡 You partly resisted the acid.",
+    "pt": "🟡 Você resistiu parcialmente ao ácido."
+  },
+  "ui.armadilha.amaldicoado": {
+    "en": "☠️ Cursed: {nome}",
+    "pt": "☠️ Amaldiçoado: {nome}"
+  },
+  "ui.armadilha.arma_quebrada": {
+    "en": "💥 {peca} broke and can no longer be used.",
+    "pt": "💥 {peca} quebrou e não pode mais ser usada."
+  },
   "ui.armadilha.armadilha_incendiaria.desc": {
     "en": "1d6+1d4+1 fire over 3 rounds. Vanishes once triggered.",
     "pt": "1d6+1d4+1 fogo em 3 rodadas. Some após ativar."
@@ -23,9 +43,65 @@ window.LANG_INTERFACE = {
     "en": "1d4 damage + lose your movement. Vanishes once triggered.",
     "pt": "1d4 dano + perde movimento. Some após ativar."
   },
+  "ui.armadilha.armadura_quebrada": {
+    "en": "🛡️ {peca} broke and its defensive bonuses are lost.",
+    "pt": "🛡️ {peca} quebrou e seus bônus defensivos foram perdidos."
+  },
+  "ui.armadilha.atingido": {
+    "en": "❌ You were hit!",
+    "pt": "❌ Você foi atingido!"
+  },
+  "ui.armadilha.atordoado": {
+    "en": "💫 Stunned — duration: {n}.",
+    "pt": "💫 Atordoado — duração: {n}."
+  },
   "ui.armadilha.buraco.desc": {
     "en": "Reflex DC 10 or lose your movement. Permanent.",
     "pt": "Reflexos dif 10 ou perde movimento. Permanente."
+  },
+  "ui.armadilha.congelamento": {
+    "en": "❄️ {nome} affected you.",
+    "pt": "❄️ {nome} afetou você."
+  },
+  "ui.armadilha.congelamento_nome": {
+    "en": "Freezing",
+    "pt": "Congelamento"
+  },
+  "ui.armadilha.danificado": {
+    "en": "damaged",
+    "pt": "danificado"
+  },
+  "ui.armadilha.dano_continuo": {
+    "en": "🔥 Ongoing damage: {n}",
+    "pt": "🔥 Dano contínuo: {n}"
+  },
+  "ui.armadilha.doenca": {
+    "en": "🦠 You caught a {sev} disease.",
+    "pt": "🦠 Você contraiu uma doença {sev}."
+  },
+  "ui.armadilha.enfeiticado": {
+    "en": "✨ Bewitched by {nome} — duration: {n} round(s).",
+    "pt": "✨ Enfeitiçado por {nome} — duração: {n} rodada(s)."
+  },
+  "ui.armadilha.equip_danificado": {
+    "en": "🛠️ {peca}: {estado}.",
+    "pt": "🛠️ {peca}: {estado}."
+  },
+  "ui.armadilha.equipamento": {
+    "en": "Equipment",
+    "pt": "Equipamento"
+  },
+  "ui.armadilha.escapou": {
+    "en": "✅ You escaped!",
+    "pt": "✅ Você escapou!"
+  },
+  "ui.armadilha.estagio": {
+    "en": " — stage {n}",
+    "pt": " — estágio {n}"
+  },
+  "ui.armadilha.falha_magia": {
+    "en": "💥 You failed the save against {nome} and took {dano} damage.",
+    "pt": "💥 Você falhou no teste contra {nome} e sofreu {dano} de dano."
   },
   "ui.armadilha.fosso_envenenado.desc": {
     "en": "1d6 damage + the chosen poison. Becomes visible once triggered.",
@@ -43,17 +119,57 @@ window.LANG_INTERFACE = {
     "en": "Reflex DC 14 or take 2d6. Stays active for 3 rounds.",
     "pt": "Reflexos dif 14 ou sofre 2d6. Permanece ativa por 3 rodadas."
   },
+  "ui.armadilha.magia": {
+    "en": "a spell",
+    "pt": "magia"
+  },
+  "ui.armadilha.maldicao": {
+    "en": "curse",
+    "pt": "maldição"
+  },
   "ui.armadilha.mina_terrestre.desc": {
     "en": "2d6 in an area (1 sq). A save halves it. Vanishes once triggered.",
     "pt": "2d6 em área (1 quad). Save reduz à metade. Some após ativar."
+  },
+  "ui.armadilha.morte": {
+    "en": "💀 Your character died. Hope your companions can rescue them.",
+    "pt": "💀 Seu personagem morreu. Torça para que seus companheiros possam resgatá-lo."
   },
   "ui.armadilha.nuvem_gas.desc": {
     "en": "-1d6 CON for 3 rounds in an area. Fortitude save DC 13.",
     "pt": "-1d6 CON por 3 rodadas em área. Save Fortitude dif 13."
   },
+  "ui.armadilha.parcial": {
+    "en": "🟡 You partly resisted!",
+    "pt": "🟡 Você resistiu parcialmente!"
+  },
+  "ui.armadilha.petrificado": {
+    "en": "🗿 Petrified — duration: {n} round(s).",
+    "pt": "🗿 Petrificado — duração: {n} rodada(s)."
+  },
   "ui.armadilha.rede.desc": {
     "en": "Lose the whole round. Vanishes once triggered.",
     "pt": "Perde a rodada inteira. Some após ativar."
+  },
+  "ui.armadilha.sono": {
+    "en": "🌙 Asleep — duration: {n} round(s).",
+    "pt": "🌙 Adormecido — duração: {n} rodada(s)."
+  },
+  "ui.armadilha.sua_arma": {
+    "en": "Your weapon",
+    "pt": "Sua arma"
+  },
+  "ui.armadilha.sua_armadura": {
+    "en": "Your armour",
+    "pt": "Sua armadura"
+  },
+  "ui.armadilha.temporaria": {
+    "en": "temporary",
+    "pt": "temporária"
+  },
+  "ui.armadilha.veneno": {
+    "en": "☠️ Poisoned — duration: {n} round(s).",
+    "pt": "☠️ Envenenado — duração: {n} rodada(s)."
   },
   "ui.atributo.carisma": {
     "en": "Charisma",
@@ -78,6 +194,30 @@ window.LANG_INTERFACE = {
   "ui.atributo.inteligencia": {
     "en": "Intelligence",
     "pt": "Inteligência"
+  },
+  "ui.conexao.encerrada": {
+    "en": "Connection closed.",
+    "pt": "Conexão encerrada."
+  },
+  "ui.conexao.encerrada_servidor": {
+    "en": "Connection to the server closed.",
+    "pt": "Conexão com o servidor encerrada."
+  },
+  "ui.conexao.falhou": {
+    "en": "❌ Could not reconnect. Reload the page and use \"Reconnect to the last game\".",
+    "pt": "❌ Não foi possível reconectar. Recarregue a página e use \"Reconectar à última partida\"."
+  },
+  "ui.conexao.reconectando": {
+    "en": "🔌 Connection lost — reconnecting ({n}/{max})...",
+    "pt": "🔌 Conexão perdida — reconectando ({n}/{max})..."
+  },
+  "ui.conexao.servidor_nao_encontrado": {
+    "en": "❌ Server not found. Run iniciar.bat first!",
+    "pt": "❌ Servidor não encontrado. Execute iniciar.bat primeiro!"
+  },
+  "ui.conta.criar_agora": {
+    "en": "That account does not exist. Create it now with this nickname and PIN?",
+    "pt": "Conta não existe. Criar agora com esse apelido e PIN?"
   },
   "ui.elemental.desc.eletrico": {
     "en": "Its attack hits everyone in a straight 3-square line.",
@@ -1091,6 +1231,82 @@ window.LANG_INTERFACE = {
     "en": "Required rooms",
     "pt": "Salas obrigatórias"
   },
+  "ui.save.apagar_confirm": {
+    "en": "Delete \"{nome}\"? This is permanent.",
+    "pt": "Apagar \"{nome}\"? Isso é permanente."
+  },
+  "ui.save.avulso": {
+    "en": "One-off",
+    "pt": "Avulso"
+  },
+  "ui.save.campanha": {
+    "en": "Campaign",
+    "pt": "Campanha"
+  },
+  "ui.save.encerrar": {
+    "en": "End",
+    "pt": "Encerrar"
+  },
+  "ui.save.encerrar_confirm": {
+    "en": "End this campaign? It will be preserved and can spawn a continuation.",
+    "pt": "Encerrar esta campanha? Ela ficará preservada e poderá gerar uma continuação."
+  },
+  "ui.save.encerrar_title": {
+    "en": "Ends this Master campaign and keeps it as history",
+    "pt": "Encerra esta campanha de Mestre e preserva-a como histórico"
+  },
+  "ui.save.entrada_auto": {
+    "en": "Automatic",
+    "pt": "Automática"
+  },
+  "ui.save.entrada_novos": {
+    "en": "New players joining",
+    "pt": "Entrada de novos jogadores"
+  },
+  "ui.save.entrada_voto": {
+    "en": "Vote of the active members",
+    "pt": "Votação dos membros ativos"
+  },
+  "ui.save.fase_membros": {
+    "en": " · phase {f} · {n} hero(es)",
+    "pt": " · fase {f} · {n} herói(s)"
+  },
+  "ui.save.heroi": {
+    "en": "hero",
+    "pt": "herói"
+  },
+  "ui.save.nome_nova_campanha": {
+    "en": "Name of the new campaign:",
+    "pt": "Nome da nova campanha:"
+  },
+  "ui.save.pediu_vaga": {
+    "en": "{quem} asked for the {heroi} slot. Approve?",
+    "pt": "{quem} pediu a vaga de {heroi}. Aprovar?"
+  },
+  "ui.save.sequel_title": {
+    "en": "Creates a new campaign with the same group, copying the current state",
+    "pt": "Cria uma nova campanha no mesmo grupo, copiando o estado atual"
+  },
+  "ui.save.subst_experiente": {
+    "en": "Experienced, no items",
+    "pt": "Experiente, sem itens"
+  },
+  "ui.save.subst_herda": {
+    "en": "Inherits the previous sheet",
+    "pt": "Herda a ficha anterior"
+  },
+  "ui.save.subst_nivel1": {
+    "en": "Level 1",
+    "pt": "Nível 1"
+  },
+  "ui.save.substituicao": {
+    "en": "Hero replacement",
+    "pt": "Substituição de herói"
+  },
+  "ui.save.sufixo_continuacao": {
+    "en": " — continued",
+    "pt": " — continuação"
+  },
   "ui.selecao.classe.bard": {
     "en": "HENRIQUE THE BARD",
     "pt": "HENRIQUE, O BARDO"
@@ -1562,6 +1778,34 @@ window.LANG_INTERFACE = {
   "ui.status.saciado_ef": {
     "en": "+1 attack · +1 damage · +1 saves",
     "pt": "+1 ataque · +1 dano · +1 resistências"
+  },
+  "ui.tabuleiro.confirmar_saida": {
+    "en": "Leaving by the stairs costs 🍖{f} and 💧{s} (round trip).\nYou return in {n} round(s) and the dungeon carries on without you.\n\nLeave?",
+    "pt": "Sair pela escada custa 🍖{f} e 💧{s} (ida e volta).\nVocê volta em {n} rodada(s) e a masmorra continua sem você.\n\nSair?"
+  },
+  "ui.tabuleiro.elemental_linha": {
+    "en": "⚡ The lightning elemental attacks in a straight line (max 3 squares).",
+    "pt": "⚡ O elemental elétrico ataca em linha reta (máx 3 casas)."
+  },
+  "ui.tabuleiro.perto_da_escada": {
+    "en": "Get closer to the stairs to leave.",
+    "pt": "Aproxime-se da escada para sair."
+  },
+  "ui.tabuleiro.perto_do_bau": {
+    "en": "Get closer to the chest to open it!",
+    "pt": "Aproxime-se do baú para abri-lo!"
+  },
+  "ui.tabuleiro.provisoes_insuficientes": {
+    "en": "Not enough provisions: the trip costs 🍖{f} and 💧{s}.",
+    "pt": "Provisões insuficientes: a viagem custa 🍖{f} e 💧{s}."
+  },
+  "ui.tabuleiro.sem_saida": {
+    "en": "There is no way out of this dungeon.",
+    "pt": "Não há como sair desta masmorra."
+  },
+  "ui.tabuleiro.so_no_seu_turno": {
+    "en": "You can only leave on your turn.",
+    "pt": "Só é possível sair no seu turno."
   },
   "ui.tooltip.alcance": {
     "en": "Range",
