@@ -88,7 +88,7 @@
       if (a.source === "guilda" && a.guild_category === "tecnica") tec.push(a);
       else if (a.source === "guilda" && a.guild_category === "especializacao") esp.push(a);
       else if (a.source === "heroi" && GRANTED_HERO_IDS.indexOf(a.id) >= 0) her.push(a);
-      else if (a.source === "arma") armas.push(a);
+      else if (a.source === "arma" || (a.id === "causar_sangramento" && activeType === "armas")) armas.push(a);
     });
     return [["Técnicas da Guilda", tec], ["Especializações da Guilda", esp],
             ["Habilidades de Herói", her], ["Habilidades de Armas", armas]];

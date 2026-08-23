@@ -4,6 +4,7 @@
   "name": "Arena",
   "ambiente": "masmorra",
   "saida_permitida": true,
+  "start_mode": "entrance",
   "grid": {
     "w": 16,
     "h": 16
@@ -320,10 +321,12 @@
       "doors": []
     }
   ],
+  "door_conditions": {},
   "entrance": {
     "x": 7,
     "y": 13
   },
+  "hero_spawns": [],
   "exit": null,
   "monsters": [
     {
@@ -391,6 +394,196 @@
       "pos": [
         13,
         10
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "molochus_adulto",
+      "pos": [
+        5,
+        5
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "gigante_guerra",
+      "pos": [
+        8,
+        7
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "goblin",
+      "pos": [
+        5,
+        5
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "escorpiao_pequeno",
+      "pos": [
+        7,
+        2
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "rato_gigante",
+      "pos": [
+        12,
+        4
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "urso_negro_customizado",
+      "pos": [
+        7,
+        9
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "lacralion_adulto",
+      "pos": [
+        9,
+        5
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "ciclope",
+      "pos": [
+        2,
+        4
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "ogro_lanca",
+      "pos": [
+        3,
+        1
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "gigante_guerra",
+      "pos": [
+        11,
+        1
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "kobold_lanceiro",
+      "pos": [
+        5,
+        1
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "vela_de_fogo",
+      "pos": [
+        9,
+        1
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "tirano_da_mata",
+      "pos": [
+        4,
+        6
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "goblin_dual",
+      "pos": [
+        13,
+        6
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "elemental_gelo",
+      "pos": [
+        3,
+        10
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "elemental_pedra",
+      "pos": [
+        5,
+        10
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "elemental_eletrico",
+      "pos": [
+        9,
+        10
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "elemental_ar",
+      "pos": [
+        11,
+        10
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "elemental_agua",
+      "pos": [
+        11,
+        8
       ],
       "room_id": 1,
       "boss": false,

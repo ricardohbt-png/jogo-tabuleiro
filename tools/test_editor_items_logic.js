@@ -18,6 +18,8 @@ const item = L.serializeWeapon(draft);
 check("serializeWeapon gera id", item.id === "espada_flamejante");
 check("serializeWeapon monta die", item.die === "1d8");
 check("serializeWeapon marca item_type weapon", item.item_type === "weapon");
+const armaSangramento = L.serializeWeapon(Object.assign({}, draft, {granted_ability:"causar_sangramento"}));
+check("serializeWeapon preserva Causar Sangramento", armaSangramento.granted_ability === "causar_sangramento");
 check("validateDraft aceita valido", L.validateDraft(draft).ok);
 check("validateDraft rejeita sem nome", !L.validateDraft(Object.assign({}, draft, {name:""})).ok);
 

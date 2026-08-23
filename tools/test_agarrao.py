@@ -106,7 +106,14 @@ async def main():
     m = bicho(r, "crocodilo_jovem", [6, 5]); p = heroi(r, [5, 5], acerta=False)
     abrir_janela_manual(r, m)
     saves = conta_saves(r)
-    await r.handle_mestre_atacar_monstro("m1", "b1", "h1", 0)
+    # CA 99 nao basta: um 20 natural acerta de qualquer jeito, e o teste falhava
+    # sozinho em ~5% das execucoes. Trava a rolagem no minimo para garantir o erro.
+    _randint = S.random.randint
+    S.random.randint = lambda a, b: a
+    try:
+        await r.handle_mestre_atacar_monstro("m1", "b1", "h1", 0)
+    finally:
+        S.random.randint = _randint
     check("herói livre após erro", not p.get("preso"))
     check("nenhum save rolado", saves["n"] == 0)
 

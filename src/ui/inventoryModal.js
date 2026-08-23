@@ -21,17 +21,21 @@ const InventoryModal = (() => {
   let _selected = null;   // item selecionado (tap-to-select): {kind:'bag',index} | {kind:'gear',slotKey}
 
   // Layout do paperdoll (3×3): posição visual de cada um dos 9 slots.
+  // O rótulo do slot vem de ui.inv.slot.<key>, resolvido no RENDER: um `label`
+  // aqui congelaria o idioma do carregamento (este arquivo é avaliado uma vez).
   const GEAR_LAYOUT = [
-    { key: 'item1',    small: true,  magic: true,  label: 'Item Mágico 1', empty: '📦' },
-    { key: 'head',     small: false, magic: false, label: 'Elmo',          empty: '🪖' },
-    { key: 'item2',    small: true,  magic: true,  label: 'Item Mágico 2', empty: '📦' },
-    { key: 'weapon',   small: false, magic: false, label: 'Arma',         empty: '✊' },
-    { key: 'armor',    small: false, magic: false, label: 'Armadura',     empty: '👕' },
-    { key: 'off_hand', small: false, magic: false, label: 'Mão esquerda / escudo', empty: '🤚' },
-    { key: 'ring1',    small: true,  magic: false, label: 'Anel 1',       empty: '💍' },
-    { key: 'boots',    small: false, magic: false, label: 'Bota',         empty: '👢' },
-    { key: 'ring2',    small: true,  magic: false, label: 'Anel 2',       empty: '💍' },
+    { key: 'item1',    small: true,  magic: true,  empty: '📦' },
+    { key: 'head',     small: false, magic: false, empty: '🪖' },
+    { key: 'item2',    small: true,  magic: true,  empty: '📦' },
+    { key: 'weapon',   small: false, magic: false, empty: '✊' },
+    { key: 'armor',    small: false, magic: false, empty: '👕' },
+    { key: 'off_hand', small: false, magic: false, empty: '🤚' },
+    { key: 'ring1',    small: true,  magic: false, empty: '💍' },
+    { key: 'boots',    small: false, magic: false, empty: '👢' },
+    { key: 'ring2',    small: true,  magic: false, empty: '💍' },
   ];
+  // `t` e `_rotulo` são globais de game.js, carregado ANTES deste arquivo.
+  const _slotLabel = key => _rotulo(key, 'ui.inv.slot', key);
 
   // Instrumentos do Bardo (Fase 1): o instrumento vive na MÃO DO ESCUDO (o slot
   // off_hand do GEAR_LAYOUT), não em um slot próprio — não há 10º slot.
@@ -159,7 +163,7 @@ const InventoryModal = (() => {
   function _ammoCountBadgeHTML(item){
     if(!item || item.effect !== 'ammo') return '';
     const count = Math.max(0, Number(item.ammo_count) || 0);
-    return `<span class="inv-ammo-count" aria-label="${count} projéteis restantes">${count}</span>`;
+    return `<span class="inv-ammo-count" aria-label="${t('ui.inv.municao_aria', {n:count})}">${count}</span>`;
   }
 
   function _injectStyles(){
@@ -255,8 +259,8 @@ const InventoryModal = (() => {
         + (item ? ' filled' : ' empty')
         + (blocked ? ' blocked' : '');
       slot.dataset.slotKey = cfg.key;
-      slot.title = blocked ? 'Bloqueado — arma de duas mãos equipada'
-                 : item ? item.name : cfg.label;
+      slot.title = blocked ? t('ui.inv.bloqueado_duas_maos')
+                 : item ? item.name : _slotLabel(cfg.key);
       slot.innerHTML = blocked
         ? `<span class="inv-slot-blocked-x">✕</span>`
         : item ? `<span class="inv-slot-emoji">${_itemIconHTML(item, cfg.empty)}</span>${_ammoCountBadgeHTML(item)}`
@@ -387,7 +391,7 @@ const InventoryModal = (() => {
           </svg>
           <div class="inv-body">
             <div class="inv-header">
-              <div class="inv-title"><img class="inv-title-icon" src="assets/inventario.png" alt="" aria-hidden="true"> INVENTÁRIO — ${player.name || ''}${_readOnly ? ' (somente leitura)' : ''}</div>
+              <div class="inv-title"><img class="inv-title-icon" src="assets/inventario.png" alt="" aria-hidden="true"> ${t('ui.inv.titulo')} — ${player.name || ''}${_readOnly ? ' ' + t('ui.inv.somente_leitura') : ''}</div>
               <div class="inv-close" title="Fechar">✕</div>
             </div>
             <div class="inv-grid"></div>
@@ -496,13 +500,13 @@ const InventoryModal = (() => {
       const maxUses = Number(atual.max_uses || 1);
       const usesLeft = Number(atual.uses_left == null ? maxUses : atual.uses_left);
       const doses = maxUses > 1
-        ? renderLinhaTooltip('🧪', 'Doses restantes', `${usesLeft}/${maxUses}`)
+        ? renderLinhaTooltip('🧪', t('ui.inv.doses_restantes'), `${usesLeft}/${maxUses}`)
         : '';
       const regeneracao = atual.effect === 'regeneration';
       html = `
         <div style="padding:10px 14px 8px; border-bottom:1px solid #c8a95133;">
           <div style="font-family:'Cinzel Decorative',serif; color:#2ecc40; font-size:13px; margin-bottom:2px;">${atual.name || item.name}</div>
-          <div style="color:#2ecc4088; font-size:9px; letter-spacing:3px;">CONSUMÍVEL</div>
+          <div style="color:#2ecc4088; font-size:9px; letter-spacing:3px;">${t('ui.item.tipo_label.consumivel')}</div>
         </div>
         <div style="padding:10px 14px;">
           ${regeneracao
@@ -519,7 +523,7 @@ const InventoryModal = (() => {
       const rows = GS.compareItemStats(item, equipped);
       if(rows.length){
         html += `<div style="padding:8px 14px;border-top:1px solid #c8a95133;">
-          <div style="color:#8a7a5a;font-size:9px;letter-spacing:2px;margin-bottom:6px;">COMPARADO AO EQUIPADO</div>
+          <div style="color:#8a7a5a;font-size:9px;letter-spacing:2px;margin-bottom:6px;">${t('ui.inv.comparado')}</div>
           ${rows.map(r => `
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
               <span style="color:#8a7a5a;font-size:10px;">${r.label}</span>
@@ -608,7 +612,7 @@ const InventoryModal = (() => {
       const slot = document.createElement('div');
       slot.className = 'storage-slot' + (item ? ' filled' : ' empty');
       slot.dataset.index = String(i);
-      slot.title = item ? (item.name || item.id || 'Item') : 'Espaço vazio';
+      slot.title = item ? (item.name || item.id || t('ui.bau.slot.padrao')) : t('ui.inv.espaco_vazio');
       slot.innerHTML = item
         ? `<span class="storage-slot-icon">${_itemIconHTML(item, '📦')}</span>${_ammoCountBadgeHTML(item)}<small></small>`
         : '<span class="storage-slot-plus">+</span>';
@@ -662,28 +666,28 @@ const InventoryModal = (() => {
           </svg>
           <div class="inv-body">
             <div class="inv-header">
-              <div class="inv-title">🧰 ${shared ? 'BAÚ COMPARTILHADO' : 'BAÚ DO HERÓI'}</div>
-              ${shared ? '' : '<button type="button" class="storage-room-link">🛏️ Decorar quarto</button>'}
-              <div class="inv-close" title="Fechar">✕</div>
+              <div class="inv-title">🧰 ${t(shared ? 'ui.inv.bau_compartilhado_caixa' : 'ui.inv.bau_heroi_caixa')}</div>
+              ${shared ? '' : `<button type="button" class="storage-room-link">${t('ui.inv.decorar_quarto')}</button>`}
+              <div class="inv-close" title="${t('ui.geral.fechar')}">✕</div>
             </div>
             <div class="storage-columns">
               <section class="storage-column storage-stash">
-                <h3>${shared ? 'Baú compartilhado' : 'Baú do herói'} (${stash.items.length}/${stash.limit})</h3>
+                <h3>${t(shared ? 'ui.refugio.bau_compartilhado' : 'ui.inv.bau_heroi')} (${stash.items.length}/${stash.limit})</h3>
                 <div class="storage-grid" data-storage="stash"></div>
                 <div class="storage-gold">
                   🪙 <b class="storage-gold-total"></b>
-                  <input class="storage-gold-input" type="number" min="0" step="1" value="0" aria-label="Quantidade de ouro">
-                  <button type="button" data-gold="deposit">Depositar</button>
-                  <button type="button" data-gold="withdraw">Retirar</button>
+                  <input class="storage-gold-input" type="number" min="0" step="1" value="0" aria-label="${t('ui.inv.quantidade_ouro')}">
+                  <button type="button" data-gold="deposit">${t('ui.inv.depositar')}</button>
+                  <button type="button" data-gold="withdraw">${t('ui.refugio.retirar')}</button>
                 </div>
-                <p class="storage-hint">Clique num item do baú para mandá-lo para a bolsa.</p>
+                <p class="storage-hint">${t('ui.inv.dica_do_bau')}</p>
               </section>
               <section class="storage-column storage-hero">
-                <h3>Inventário — <span class="storage-hero-name"></span></h3>
+                <h3>${t('ui.inv.inventario')} — <span class="storage-hero-name"></span></h3>
                 <div class="inv-grid"></div>
                 <div class="inv-gold">🪙 <span></span></div>
                 <div class="inv-bagbar"></div>
-                <p class="storage-hint">Clique num item para selecionar e clique num espaço do baú para guardar — ou arraste.</p>
+                <p class="storage-hint">${t('ui.inv.dica_para_o_bau')}</p>
               </section>
             </div>
           </div>

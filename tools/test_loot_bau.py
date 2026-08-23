@@ -61,8 +61,10 @@ async def main():
     print("\n[4] CHEST_ITEMS podado + catálogo consistente")
     from server import CHEST_ITEMS
     ids_chest = [i["id"] for i in CHEST_ITEMS]
-    check("CHEST_ITEMS só tem a serrilhada", ids_chest == ["sword"], f"tem: {ids_chest}")
-    sword = CHEST_ITEMS[0]
+    # A poda tirou os itens que duplicavam a loja (checado logo abaixo); a lista
+    # em si cresce com o conteudo autoral, entao NAO se crava o seu tamanho.
+    check("a serrilhada continua em CHEST_ITEMS", "sword" in ids_chest, f"tem: {ids_chest}")
+    sword = next(i for i in CHEST_ITEMS if i["id"] == "sword")
     check("serrilhada com price 32", sword.get("price") == 32)
     check("serrilhada mantém corrosao_resistente", sword.get("corrosao_resistente") == 1)
     for iid in ("magic_sword", "bow", "shield", "ring", "racao"):

@@ -73,12 +73,12 @@ const GS = (() => {
     inicioPosTaverna: 100,
 
     thresholds: [
-      { nome: 'Saciado',          min: 91,  max: 100, modificador:  1 },
-      { nome: 'Neutro',           min: 20,  max: 90,  modificador:  0 },
-      { nome: 'Pressão Leve',     min: 11,  max: 19,  modificador: -1 },
-      { nome: 'Pressão Moderada', min: 6,   max: 10,  modificador: -2 },
-      { nome: 'Pressão Grave',    min: 1,   max: 5,   modificador: -3 },
-      { nome: 'Colapso',          min: 0,   max: 0,   modificador:  0 }
+      { id: 'saciado',  nome: 'Saciado',          min: 91,  max: 100, modificador:  1 },
+      { id: 'neutro',   nome: 'Neutro',           min: 20,  max: 90,  modificador:  0 },
+      { id: 'leve',     nome: 'Pressão Leve',     min: 11,  max: 19,  modificador: -1 },
+      { id: 'moderada', nome: 'Pressão Moderada', min: 6,   max: 10,  modificador: -2 },
+      { id: 'grave',    nome: 'Pressão Grave',    min: 1,   max: 5,   modificador: -3 },
+      { id: 'colapso',  nome: 'Colapso',          min: 0,   max: 0,   modificador:  0 }
     ],
 
     consumo: {
@@ -177,7 +177,9 @@ const GS = (() => {
         heroi.emColapsoTotal = true;
         heroi.contadorMorte = 0;
         adicionarLog(`💀 ${heroi.name} entrou em colapso total!`);
-        adicionarLog(`⚠️ Recupere fome ou sede em ${SOBREVIVENCIA_CONFIG.morteConfig.turnosParaMorte} turnos ou morrerá!`);
+        adicionarLog(_t('ui.sobrevivencia.aviso_colapso',
+          `⚠️ Recupere fome ou sede em ${SOBREVIVENCIA_CONFIG.morteConfig.turnosParaMorte} turnos ou morrerá!`,
+          { n: SOBREVIVENCIA_CONFIG.morteConfig.turnosParaMorte }));
       }
       return heroi;
     }
@@ -194,9 +196,9 @@ const GS = (() => {
     if (estadoAtual < 0) {
       adicionarLog(
         `⚠️ ${heroi.name}: ` +
-        `Fome ${thresholdFome.nome} | ` +
-        `Sede ${thresholdSede.nome} | ` +
-        `Modificador: ${estadoAtual}`
+        `${_t('ui.sobrevivencia.fome', 'Fome')} ${_estadoNome(thresholdFome)} | ` +
+        `${_t('ui.sobrevivencia.sede', 'Sede')} ${_estadoNome(thresholdSede)} | ` +
+        `${_t('ui.sobrevivencia.modificador', 'Modificador')}: ${estadoAtual}`
       );
     }
 
@@ -456,26 +458,26 @@ const GS = (() => {
     if (Array.isArray(item.permitidoPara) &&
         !item.permitidoPara.includes('todos') &&
         !item.permitidoPara.includes(heroi.key)) {
-      adicionarLog(`❌ ${nome} não pode usar ${item.nome}`);
+      adicionarLog(_t('ui.equipar.classe_nao_usa', `❌ ${nome} não pode usar ${item.nome}`, { heroi: nome, item: item.nome }));
       return false;
     }
 
     // Compatibilidade de slot (só valida se o item declara um slot fixo)
     if (item.slot && item.slot !== slot) {
-      adicionarLog(`❌ ${item.nome} não pode ser equipado neste slot`);
+      adicionarLog(_t('ui.equipar.slot_incompativel', `❌ ${item.nome} não pode ser equipado neste slot`, { item: item.nome }));
       return false;
     }
 
     // Arma de duas mãos vs escudo já equipado na secundária
     if (item.duasMaos && heroi.equipado?.secundario?.tipo === 'escudo') {
-      adicionarLog(`❌ ${item.nome} requer duas mãos — remova o escudo primeiro`);
+      adicionarLog(_t('ui.equipar.duas_maos', `❌ ${item.nome} requer duas mãos — remova o escudo primeiro`, { item: item.nome }));
       return false;
     }
 
     // Escudo na secundária vs arma de duas mãos já equipada
     if (slot === 'secundario' && item.tipo === 'escudo') {
       if (heroi.equipado?.arma?.duasMaos) {
-        adicionarLog(`❌ Não pode usar escudo com arma de duas mãos`);
+        adicionarLog(_t('ui.equipar.escudo_com_duas_maos', '❌ Não pode usar escudo com arma de duas mãos'));
         return false;
       }
     }
@@ -791,7 +793,7 @@ const GS = (() => {
     const item = heroi && heroi.inventario ? heroi.inventario[index] : null;
     if (!item) return false;
     const fam = _slotDoItem(item);
-    if (!fam) { adicionarLog(`❌ ${item.nome} não pode ser equipado`); return false; }
+    if (!fam) { adicionarLog(_t('ui.equipar.sem_slot', `❌ ${item.nome} não pode ser equipado`, { item: item.nome })); return false; }
 
     let slot = fam;
     if (fam === 'magico') {
@@ -815,7 +817,7 @@ const GS = (() => {
     const item = heroi && heroi.equipado ? heroi.equipado[slot] : null;
     if (!item) return false;
     const livre = heroi.inventario.findIndex(s => s === null);
-    if (livre === -1) { adicionarLog(`❌ Inventário cheio — sem espaço para desequipar`); return false; }
+    if (livre === -1) { adicionarLog(_t('ui.equipar.bolsa_cheia', '❌ Inventário cheio — sem espaço para desequipar')); return false; }
     heroi.equipado[slot] = null;
     heroi.inventario[livre] = item;
     adicionarLog(`📤 ${heroi.name || heroi.nome || 'Herói'} desequipou ${item.nome}`);
@@ -846,6 +848,12 @@ const GS = (() => {
     for (const d of ((state && state.opened_doors) || [])) {
       const k = `${d[0]},${d[1]}`;
       if (!locked.has(k)) { closed.delete(k); open.add(k); }
+    }
+    // Uma porta configurada com condição continua fisicamente fechada até
+    // ser aberta, mesmo quando a sala foi salva como destrancada. O servidor
+    // envia o estado de satisfação para impedir bypass no pathfinding cliente.
+    for (const [k, condition] of Object.entries((state && state.door_conditions) || {})) {
+      if (!condition || !condition.opened) { closed.add(k); open.delete(k); }
     }
     return { open, closed };
   }
@@ -1075,6 +1083,31 @@ const GS = (() => {
   let _messageFilter = null;
   function setMessageFilter(fn) {
     _messageFilter = (typeof fn === 'function') ? fn : null;
+  }
+
+  // ── Tradutor injetado ─────────────────────────────────────────────────────
+  // Mesmo contrato do filtro acima, e pela mesma razão: o `t` global mora em
+  // window.I18N, e este módulo não pode tocar em window (regra do CLAUDE.md).
+  // Quem conhece o I18N é o game.js, que injeta a função no boot. Sem injeção
+  // — ou se o tradutor lançar — cai no texto em português recebido, que é o
+  // mesmo contrato de fallback do resto da etapa 5.
+  let _traduz = null;
+  // Nome do estado de fome/sede: chave por id, com o `nome` do próprio objeto
+  // como fallback em português (mesmo contrato do _t).
+  function _estadoNome(estado) {
+    return _t('ui.sobrevivencia.estado.' + (estado && estado.id), (estado && estado.nome) || '');
+  }
+  function setTranslator(fn) {
+    _traduz = (typeof fn === 'function') ? fn : null;
+  }
+  function _t(chave, pt, params) {
+    if (!_traduz) return pt;
+    try {
+      const s = _traduz(chave, params);
+      // Chave ausente: o I18N devolve a própria chave. Preferimos o português a
+      // mostrar `ui.algo.assim` na tela.
+      return (typeof s === 'string' && s && s !== chave) ? s : pt;
+    } catch (e) { return pt; }
   }
 
   // ── Sessão para reconexão ────────────────────────────────────────────────
@@ -1343,12 +1376,23 @@ const GS = (() => {
         _emit('diceRoll', msg);
         break;
 
+      case 'spell_animation':
+        // Evento visual autoritativo (o caminho já foi resolvido pelo servidor).
+        // O módulo de estado só roteia a mensagem; a animação pertence ao
+        // renderer em game.js.
+        _emit('spellAnimation', msg);
+        break;
+
       case 'sorte_reacao':
         _emit('sorteReacao', msg);
         break;
 
       case 'trap_result':
         _emit('trapResult', msg);
+        break;
+
+      case 'condition_result':
+        _emit('conditionResult', msg);
         break;
 
       case 'disease_result':
@@ -1492,7 +1536,9 @@ const GS = (() => {
   function throwItem(id, targetId, targetPos) { send({ type: 'throw_item', item_id: id, target_id: targetId, target_pos: targetPos }); }
   function throwItemArea(id, tx, ty) { send({ type: 'throw_item', item_id: id, tx, ty }); }
   function apagarChamas()          { send({ type: 'apagar_chamas' }); }
+  function estancarSangramento()   { send({ type: 'estancar_sangramento' }); }
   function escaparEstomago()       { send({ type: 'escapar_estomago' }); }
+  function escaparBau()             { send({ type: 'escapar_bau' }); }
   function equipFromBag(i) { send({ type: 'equip_from_bag', slot_index: i }); }
   function unequip(key)    { send({ type: 'unequip',        slot_key: key }); }
   // Largar/pegar itens no chão (masmorra). Largar: source 'bag' → ref = index;
@@ -1515,12 +1561,19 @@ const GS = (() => {
   // Escolha da nova magia ao subir de nível (responde ao spell_pick_prompt).
   function escolherMagiaNivel(id)    { send({ type: 'escolher_magia_nivel', magia_id: id }); }
   // Animar Mortos (Pedro): anima o cadáver selecionado a até 3 casas.
-  function animarMortos(cadaverId) { send({ type: 'animar_mortos', cadaver_id: cadaverId }); }
+  function animarMortos(cadaverId, versao) {
+    const msg = { type: 'animar_mortos', cadaver_id: cadaverId };
+    if (versao) msg.versao = versao;
+    send(msg);
+  }
   // Comanda os animados (ação bônus do Pedro): cada um move+ataca o monstro mais próximo.
   function comandarAnimados() { send({ type: 'comandar_animados' }); }
   // Controle manual de UM animado (no turno do Pedro).
   function moverAnimado(animadoId, dx, dy) { send({ type: 'mover_animado', animado_id: animadoId, dx, dy }); }
   function atacarAnimado(animadoId, targetId) { send({ type: 'atacar_animado', animado_id: animadoId, target_id: targetId }); }
+  function usarHabilidadeAnimado(animadoId, abilityId, targetId) {
+    send({ type: 'usar_habilidade_animado', animado_id: animadoId, ability_id: abilityId, target_id: targetId });
+  }
   // Controle manual do prisioneiro liberto (janela pós-turno do resgatador) — 1 passo.
   function moverPrisioneiro(dx, dy) { send({ type: 'mover_prisioneiro', dx, dy }); }
   // ── Armadilhas (Passo 2) — Luccas cria/desarma armadilhas colocáveis ───────
@@ -2053,14 +2106,14 @@ const GS = (() => {
     });
     if (!adj.length) {
       const reason = wRange != null
-        ? `Nenhum inimigo a até ${wRange} quadrados!`
-        : 'Nenhum inimigo adjacente. Mova-se para ao lado de um inimigo!';
+        ? _t('ui.ataque.sem_alvo_distancia', `Nenhum inimigo a até ${wRange} quadrados!`, { n: wRange })
+        : _t('ui.ataque.sem_alvo_adjacente', 'Nenhum inimigo adjacente. Mova-se para ao lado de um inimigo!');
       return { type: 'none', reason };
     }
     if (adj.length === 1) return { type: 'direct', targetId: adj[0].id };
     const title = wRange != null
-      ? `Atacar à distância — Escolha o Alvo (alcance ${wRange})`
-      : 'Atacar — Escolha o Inimigo Adjacente';
+      ? _t('ui.ataque.titulo_distancia', `Atacar à distância — Escolha o Alvo (alcance ${wRange})`, { n: wRange })
+      : _t('ui.ataque.titulo_adjacente', 'Atacar — Escolha o Inimigo Adjacente');
     return { type: 'modal', title, targets: adj };
   }
 
@@ -2210,6 +2263,9 @@ const GS = (() => {
     return (e.includes('ladino_esconder_2') || e.includes('ladino_esconder_3')) ? 2 : 0;
   }
   function ladinoEsconderLivre() {
+    return false;
+  }
+  function ladinoEsconderRevelaCA() {
     return (guildOwnedOf(myPid).especializacoes || []).includes('ladino_esconder_3');
   }
 
@@ -2570,7 +2626,9 @@ const GS = (() => {
     throwItem,
     throwItemArea,
     apagarChamas,
+    estancarSangramento,
     escaparEstomago,
+    escaparBau,
     equipFromBag,
     unequip,
     reorderBag,
@@ -2593,6 +2651,7 @@ const GS = (() => {
     comandarAnimados,
     moverAnimado,
     atacarAnimado,
+    usarHabilidadeAnimado,
     moverPrisioneiro,
     criarArmadilha,
     desarmarArmadilha,
@@ -2624,6 +2683,7 @@ const GS = (() => {
     injectPreviewState,
     setLang,
     setMessageFilter,
+    setTranslator,
 
     // ── Guilda dos Heróis (Fase 0) ──
     guildBuy,
@@ -2700,6 +2760,7 @@ const GS = (() => {
     ladinoVeneno2Slots,
     ladinoEsconderBonus,
     ladinoEsconderLivre,
+    ladinoEsconderRevelaCA,
     bardoCancaoNivel,
     bardoCancaoSuprema,
     bardoProvocacaoNivel,

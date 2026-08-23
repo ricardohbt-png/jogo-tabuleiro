@@ -3,6 +3,8 @@
   "id": "terrenos",
   "name": "terrenos",
   "ambiente": "ar_livre",
+  "saida_permitida": true,
+  "start_mode": "entrance",
   "grid": {
     "w": 16,
     "h": 12
@@ -237,16 +239,40 @@
       "doors": []
     }
   ],
+  "door_conditions": {},
   "entrance": {
     "x": 3,
     "y": 6
   },
+  "hero_spawns": [],
   "exit": null,
-  "monsters": [],
+  "monsters": [
+    {
+      "type": "lacralion_filhote",
+      "pos": [
+        6,
+        5
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "vela_de_fogo",
+      "pos": [
+        13,
+        5
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false
+    }
+  ],
   "chests": [],
   "traps": [],
   "decorations": [
     {
+      "id": "decor_0",
       "type": "chao",
       "pos": [
         12,
@@ -257,6 +283,7 @@
         1
       ],
       "loot": null,
+      "key_objective": false,
       "image": "chãoagua.png",
       "size": [
         3,
@@ -264,6 +291,7 @@
       ]
     },
     {
+      "id": "decor_1",
       "type": "chao",
       "pos": [
         12,
@@ -274,6 +302,7 @@
         1
       ],
       "loot": null,
+      "key_objective": false,
       "image": "chaoaguarasa.png",
       "size": [
         3,
@@ -281,6 +310,7 @@
       ]
     },
     {
+      "id": "decor_2",
       "type": "chao",
       "pos": [
         12,
@@ -291,6 +321,7 @@
         1
       ],
       "loot": null,
+      "key_objective": false,
       "image": "chaoaguarasa.png",
       "size": [
         3,
@@ -298,6 +329,7 @@
       ]
     },
     {
+      "id": "decor_3",
       "type": "chao",
       "pos": [
         11,
@@ -308,6 +340,7 @@
         1
       ],
       "loot": null,
+      "key_objective": false,
       "image": "chaoaguarasa.png",
       "size": [
         1,
@@ -315,6 +348,7 @@
       ]
     },
     {
+      "id": "decor_4",
       "type": "chao",
       "pos": [
         11,
@@ -325,6 +359,7 @@
         1
       ],
       "loot": null,
+      "key_objective": false,
       "image": "chaoterra.png",
       "size": [
         4,
@@ -332,6 +367,7 @@
       ]
     },
     {
+      "id": "decor_5",
       "type": "chao",
       "pos": [
         10,
@@ -342,6 +378,7 @@
         1
       ],
       "loot": null,
+      "key_objective": false,
       "image": "chaoterra.png",
       "size": [
         1,
@@ -349,6 +386,7 @@
       ]
     },
     {
+      "id": "decor_6",
       "type": "chao",
       "pos": [
         11,
@@ -359,6 +397,7 @@
         1
       ],
       "loot": null,
+      "key_objective": false,
       "image": "chaoterra.png",
       "size": [
         4,
@@ -366,6 +405,7 @@
       ]
     },
     {
+      "id": "decor_7",
       "type": "chao",
       "pos": [
         8,
@@ -376,6 +416,7 @@
         1
       ],
       "loot": null,
+      "key_objective": false,
       "image": "chaopantano.png",
       "size": [
         2,
@@ -383,6 +424,7 @@
       ]
     },
     {
+      "id": "decor_8",
       "type": "chao",
       "pos": [
         4,
@@ -393,6 +435,7 @@
         1
       ],
       "loot": null,
+      "key_objective": false,
       "image": "chaopedranegra.png",
       "size": [
         4,
@@ -400,6 +443,13 @@
       ]
     }
   ],
+  "secret_passages": [],
+  "falas": [],
+  "master_reinforcements": [],
+  "expected_party": {
+    "heroes": 4,
+    "level": 1
+  },
   "prisoner": null,
   "materiais": {},
   "objectives": {

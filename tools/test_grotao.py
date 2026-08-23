@@ -20,26 +20,41 @@ def setup():
 
 async def main():
     definition = next(x for x in S.MONSTER_DEFS if x["type"] == "grotao")
-    check("ficha ND3 / seis casas", definition["cr"] == 3 and definition["size"] == [2, 3] and definition["oriented"])
-    check("ataques da ficha", [a["damage"] for a in definition["attacks"]] == ["1d10+4", "1d8+4"])
-    check("carapaça sem fraqueza por impacto", definition["resistances"][0]["reduction"] == 2 and len(definition["weaknesses"]) == 1)
-    check("ponto vulnerável reduz ND em 0,25", definition["weaknesses"][0].get("nd_penalty") == .25)
+    check("ficha ND3 / quatro casas", definition["cr"] == 3 and definition["size"] == [2, 2] and definition["oriented"])
+    check("ataques da ficha (dado + Forca por apply_attribute_damage)",
+          [a["damage"] for a in definition["attacks"]] == ["1d10", "1d8"]
+          and all(a.get("apply_attribute_damage") for a in definition["attacks"])
+          and definition["str_"] == 18)
+    # Busca por TIPO, nao por posicao: a lista de fraquezas tem mais de uma
+    # entrada (ponto_vulneravel + corpo_pesado) e a ordem nao e contrato.
+    _fraq = lambda t: next((w for w in definition["weaknesses"] if w.get("type") == t), None)
+    check("carapaça sem fraqueza por impacto",
+          definition["resistances"][0]["reduction"] == 3
+          and not any(w.get("type") in ("physical", "impacto", "contundente")
+                      for w in definition["weaknesses"]))
+    check("ponto vulnerável reduz ND em 0,25", (_fraq("ponto_vulneravel") or {}).get("nd_penalty") == .25)
 
     g = setup(); m = S.make_monster(definition, {"id":"r", "cx":5, "cy":5})
     m["pos"] = [5, 5]; m["facing"] = [1, 0]
-    check("footprint orientado 2x3", g._monster_tiles(m) == [[5,5],[5,6],[4,5],[4,6],[3,5],[3,6]])
-    # Ataque vindo da frente sofre redução; do lado ignora a carapaça.
-    check("carapaça reduz 2 pela frente", g._apply_damage_types(8, [S.DMG_PHYSICAL], m, attacker_pos=[7, 5]) == 6)
-    check("ponto vulnerável remove redução física", g._apply_damage_types(8, [S.DMG_PHYSICAL], m, target_pos=[4, 5]) == 8)
-    check("dois pontos vulneráveis reduzem CA 15 para 10", g._ponto_vulneravel_ac(m, [4, 5], 15) == 10 and g._ponto_vulneravel_ac(m, [4, 6], 15) == 10 and g._ponto_vulneravel_ac(m, [5, 5], 15) == 15)
+    check("footprint orientado 2x2", g._monster_tiles(m) == [[5,5],[5,6],[4,5],[4,6]])
+    # Todo dano físico sofre redução; somente o ponto vulnerável a atravessa.
+    check("carapaça reduz 3 fora do ponto vulnerável", g._apply_damage_types(8, [S.DMG_PHYSICAL], m, attacker_pos=[7, 5]) == 5 and g._apply_damage_types(8, [S.DMG_PHYSICAL], m, target_pos=[5, 5]) == 5)
+    check("ponto vulnerável remove redução física", g._apply_damage_types(8, [S.DMG_PHYSICAL], m, target_pos=[4, 6]) == 8)
+    check("só o quadrado posterior direito reduz CA 15 para 10",
+          g._ponto_vulneravel_ac(m, [4, 6], 15) == 10
+          and g._ponto_vulneravel_ac(m, [4, 5], 15) == 15
+          and g._ponto_vulneravel_ac(m, [5, 6], 15) == 15
+          and g._ponto_vulneravel_ac(m, [5, 5], 15) == 15)
     # Reflexos falho marca exatamente o dano seguinte daquele efeito com +1.
     old_rand = S.random.randint; S.random.randint = lambda a,b: 1
     passou, *_ = g._testar_save(m, "reflexos", 99)
     check("corpo pesado falha Reflexos", not passou and g._apply_damage_types(5, ["fire"], m) == 6)
     S.random.randint = old_rand
 
-    p1 = S.make_player("p1", "Armadura", "warrior", 0); p1["pos"] = [2, 5]
-    p2 = S.make_player("p2", "Traseira", "warrior", 0); p2["pos"] = [3, 4]
+    # Corpo 2x2 virado a leste ocupa x=4..5; a traseira e a coluna x=4.
+    # A cauda pega quem esta adjacente ao corpo E no semiplano de tras (x < 5).
+    p1 = S.make_player("p1", "Armadura", "warrior", 0); p1["pos"] = [3, 5]
+    p2 = S.make_player("p2", "Traseira", "warrior", 0); p2["pos"] = [3, 6]
     g.players = {"p1": p1, "p2": p2}; g.monsters = {m["id"]: m}
     targets = [{"kind":"player", "obj":p1}, {"kind":"player", "obj":p2}]
     check("cauda encontra inimigos atrás", len(g._grotao_alvos_cauda(m, targets)) == 2)
@@ -50,9 +65,14 @@ async def main():
     check("ácido causa dano", p1["hp"] < hp)
     check("ácido corrói armadura primeiro", g._corrosao_ca_pen(p1) == 1 and g._corrosao_arma_pen(p1) == 0)
 
-    p1["derrubado_sem_movimento"] = True
-    await g._start_initiative_player_turn(p1)
-    check("derrubado perde o próximo movimento", p1["moves_left"] == 0 and not p1.get("derrubado_sem_movimento"))
+    # Jogador proprio: o p1 pode ter morrido para o acido acima (3d6+1 contra 14 PV),
+    # e heroi morto nao tem turno preparado -- reusar o p1 deixava esta checagem
+    # instavel (falhava em ~6 de 8 execucoes).
+    p3 = S.make_player("p3", "Derrubado", "warrior", 0); p3["pos"] = [8, 8]
+    g.players["p3"] = p3
+    p3["derrubado_sem_movimento"] = True
+    await g._start_initiative_player_turn(p3)
+    check("derrubado perde o próximo movimento", p3["moves_left"] == 0 and not p3.get("derrubado_sem_movimento"))
 
     custom = {"type":"teste_vulneravel", "name":"Teste Vulnerável", "size":[2,1], "oriented":True,
               "attacks":[{"name":"Mordida","damage":"1d6"}], "weaknesses":[{"type":"ponto_vulneravel","tiles":[[1,0]]}]}
@@ -64,6 +84,27 @@ async def main():
     custom["size"] = [1,1]
     ok, ficha = S._validate_custom_monster(custom)
     check("editor rejeita ponto vulnerável em uma casa", ok and not any(w.get("type") == "ponto_vulneravel" for w in ficha["weaknesses"]))
+
+    # -- Corpo Pesado orientado por DADO, nao pelo tipo cravado ----------------
+    # Antes o +1 de dano so existia para type == "grotao"; o editor oferecia a
+    # fraqueza corpo_pesado e ela nao fazia nada em criatura personalizada.
+    print("[corpo pesado data-driven]")
+    g2 = setup()
+    generico = {"type": "bicho_pesado", "name": "Bicho Pesado", "hp": 20, "ac": 10,
+                "size": [1, 1], "ref_": 0,
+                "weaknesses": [{"type": "corpo_pesado"}]}
+    m2 = S.make_monster(generico, {"id": "r", "cx": 2, "cy": 2}); m2["pos"] = [2, 2]
+    leve = {"type": "bicho_leve", "name": "Bicho Leve", "hp": 20, "ac": 10,
+            "size": [1, 1], "ref_": 0, "weaknesses": []}
+    m3 = S.make_monster(leve, {"id": "r", "cx": 3, "cy": 3}); m3["pos"] = [3, 3]
+    old = S.random.randint; S.random.randint = lambda a, b: 1
+    g2._testar_save(m2, "reflexos", 99)
+    g2._testar_save(m3, "reflexos", 99)
+    S.random.randint = old
+    check("criatura do editor com Corpo Pesado sofre +1",
+          g2._apply_damage_types(5, ["fire"], m2) == 6)
+    check("criatura sem a fraqueza nao sofre +1",
+          g2._apply_damage_types(5, ["fire"], m3) == 5)
 
     print(f"RESULTADO: {OK} passaram, {FAIL} falharam")
     return FAIL

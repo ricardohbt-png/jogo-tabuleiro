@@ -26,4 +26,4 @@ ability = next(a for a in monster["special_abilities"] if a["id"] == "cuspir_aci
 check("dados de dano configurados", ability["damage"] == "4d8")
 check("alcance configurado", ability["range"] == 7)
 check("CD de Reflexos configurada", ability["dc"] == 16 and ability["save"] == "reflexos")
-check("descrição informa a corrosão", "corrosão" in ability["descricao"])
+check("descrição avisa do dano a equipamento", "equipamento" in ability["descricao"].lower())

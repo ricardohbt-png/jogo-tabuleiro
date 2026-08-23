@@ -416,6 +416,38 @@ window.LANG_NARRACAO = {
     "en": "🫀 **{heroi}** deals **{dano}** damage to **{captor}**'s stomach ({p_engolido_dano}/{limite}).",
     "pt": "🫀 **{heroi}** causa **{dano}** de dano no estômago de **{captor}** ({p_engolido_dano}/{limite})."
   },
+  "narracao.bau_engolidor_prende_heroi": {
+    "en": "📦 **{heroi}** is swallowed by the object! Escape with Strength DC {dc}.",
+    "pt": "📦 **{heroi}** é engolido pelo objeto! Escape com Força CD {dc}."
+  },
+  "narracao.bau_engolidor_escapa": {
+    "en": "💪 **{heroi}** escapes the Swallowing Chest with Strength {total} vs DC {dc}!",
+    "pt": "💪 **{heroi}** escapa do Baú Engolidor com Força {total} contra CD {dc}!"
+  },
+  "narracao.bau_engolidor_falha_escape": {
+    "en": "📦 **{heroi}** fails to escape the Swallowing Chest ({total} vs DC {dc}).",
+    "pt": "📦 **{heroi}** falha ao escapar do Baú Engolidor ({total} contra CD {dc})."
+  },
+  "narracao.fosso_prende_heroi": {
+    "en": "🕳️ **{heroi}** falls into the Pit and disappears from the map until the end of the next round.",
+    "pt": "🕳️ **{heroi}** cai no Fosso e some do mapa até o fim da próxima rodada."
+  },
+  "narracao.fosso_perde_proxima_rodada": {
+    "en": "🕳️ **{heroi}** is still inside the Pit and loses this entire round.",
+    "pt": "🕳️ **{heroi}** ainda está no Fosso e perde esta rodada inteira."
+  },
+  "narracao.camara_gas_ativa": {
+    "en": "☠️ The Gas Chamber fills room **{sala}** for **{duracao}** round(s). Fortitude DC 13 is required at the start of each turn.",
+    "pt": "☠️ A Câmara de Gás preenche a sala **{sala}** por **{duracao}** rodada(s). É preciso testar Fortitude CD 13 no início de cada turno."
+  },
+  "narracao.camara_gas_resiste": {
+    "en": "🫁 **{alvo_nome}** resists the gas this turn.",
+    "pt": "🫁 **{alvo_nome}** resiste ao gás neste turno."
+  },
+  "narracao.camara_gas_se_dissipou": {
+    "en": "☠️ The Gas Chamber dissipates.",
+    "pt": "☠️ A Câmara de Gás se dissipa."
+  },
   "narracao.cego_por_rodada_s_em_ataques": {
     "en": "🙈 **{nome}**: **{alvo_nome}** blinded for {duracao} round(s) ({pen} to attacks)!",
     "pt": "🙈 **{nome}**: **{alvo_nome}** cego por {duracao} rodada(s) ({pen} em ataques)!"

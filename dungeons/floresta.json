@@ -4,6 +4,7 @@
   "name": "floresta",
   "ambiente": "ar_livre",
   "saida_permitida": true,
+  "start_mode": "entrance",
   "grid": {
     "w": 26,
     "h": 16
@@ -470,10 +471,12 @@
       "doors": []
     }
   ],
+  "door_conditions": {},
   "entrance": {
     "x": 3,
     "y": 12
   },
+  "hero_spawns": [],
   "exit": {
     "x": 24,
     "y": 2
@@ -502,8 +505,8 @@
     {
       "type": "goblin",
       "pos": [
-        13,
-        3
+        3,
+        9
       ],
       "room_id": null,
       "boss": false,
@@ -520,10 +523,10 @@
       "target": false
     },
     {
-      "type": "goblin",
+      "type": "grotao",
       "pos": [
-        13,
-        10
+        12,
+        7
       ],
       "room_id": null,
       "boss": false,
@@ -542,8 +545,8 @@
     {
       "type": "devorador_metal",
       "pos": [
-        19,
-        5
+        12,
+        3
       ],
       "room_id": null,
       "boss": false,

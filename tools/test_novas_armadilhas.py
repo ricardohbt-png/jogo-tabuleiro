@@ -27,17 +27,17 @@ async def main():
     print("\n[teletransporte]")
     r, p = setup()
     r._testar_save = lambda *a: (False, 1, 0, 1)
-    arm = {"id":"t1", "saida":[4,4]}
+    arm = {"id":"t1", "tipo":"armadilha_teletransporte", "saida":[4,4]}
     used = await r._disparar_teletransporte(p, arm, {"nome":"Armadilha de Teletransporte", "icone":"🌀", "descricao":""})
     check("falha teleporta para saída livre", used and p["pos"] == [4,4])
 
     r, p = setup(); r._testar_save = lambda *a: (False, 1, 0, 1)
     ocupante = make_player("p2", "Outro", "warrior", 0); ocupante["pos"] = [4,4]; r.players["p2"] = ocupante
-    used = await r._disparar_teletransporte(p, {"id":"t2", "saida":[4,4]}, {"nome":"Armadilha de Teletransporte", "icone":"🌀", "descricao":""})
+    used = await r._disparar_teletransporte(p, {"id":"t2", "tipo":"armadilha_teletransporte", "saida":[4,4]}, {"nome":"Armadilha de Teletransporte", "icone":"🌀", "descricao":""})
     check("saída ocupada usa adjacente livre", used and p["pos"] != [4,4] and max(abs(p["pos"][0]-4), abs(p["pos"][1]-4)) == 1)
 
     r, p = setup(); r._testar_save = lambda *a: (True, 20, 0, 20)
-    used = await r._disparar_teletransporte(p, {"id":"t3", "saida":[4,4]}, {"nome":"Armadilha de Teletransporte", "icone":"🌀", "descricao":""})
+    used = await r._disparar_teletransporte(p, {"id":"t3", "tipo":"armadilha_teletransporte", "saida":[4,4]}, {"nome":"Armadilha de Teletransporte", "icone":"🌀", "descricao":""})
     check("sucesso mantém armadilha ativa", not used and p["pos"] == [1,1])
 
     print("\n[baú-armadilha]")

@@ -57,13 +57,16 @@
   // entre famílias hoje, e o gerador falha alto se aparecer uma.
   const FAMILIAS_POR_CAMPO = {
     type: ['monstro', 'decor'],
-    id:   ['item', 'guilda', 'magia', 'instrumento', 'armadilha', 'classe', 'local'],
+    id:   ['item', 'guilda', 'magia', 'instrumento', 'armadilha', 'classe', 'local',
+           'habilidade'],
   };
   const CAMPOS_NOME = ['name', 'nome'];
-  const CAMPOS_DESC = ['desc', 'descricao'];
+  // 'description' é como o servidor escreve a descrição das HABILIDADES de herói
+  // (CLASSES[x].skills). Sem ele o nome traduzia e a descrição ficava em português.
+  const CAMPOS_DESC = ['desc', 'descricao', 'description'];
   // Usada quando o id vem da CHAVE do dicionário pai, caso em que não há campo
   // interno indicando de que família ele é.
-  const TODAS_FAMILIAS = ['monstro', 'decor', 'item', 'guilda', 'magia',
+  const TODAS_FAMILIAS = ['monstro', 'decor', 'item', 'guilda', 'magia', 'habilidade',
                           'instrumento', 'armadilha', 'classe', 'local'];
 
   function tem(key) {
@@ -73,10 +76,21 @@
   // Primeiro prefixo cat.<família>.<id> que tenha nome OU descrição no
   // dicionário. Aceitar qualquer um dos dois importa: há entradas com descrição
   // traduzida e sem nome, e o contrário.
+  // A busca inclui `ui.<família>.<id>` além de `cat.` porque nem todo objeto do
+  // catálogo do CLIENTE tem contraparte no servidor: 40 itens do CATALOGO_ITENS
+  // só existem em src/gameState.js, e para eles nunca haverá uma `cat.*`. Sem
+  // isto uma chave ui.* sozinha nunca era encontrada — a base ficava nula e o
+  // objeto passava intacto. O `cat.` vem primeiro para o comportamento de quem
+  // TEM as duas continuar idêntico: quem escolhe entre elas é o aplicarCatalogo,
+  // logo abaixo, e lá a ui.* é que vence.
   function _tentaFamilias(familias, id) {
     for (const fam of familias) {
-      const base = 'cat.' + fam + '.' + id;
-      if (tem(base + '.nome') || tem(base + '.desc')) return base;
+      for (const pre of ['cat.', 'ui.']) {
+        const base = pre + fam + '.' + id;
+        if (tem(base + '.nome') || tem(base + '.desc')) {
+          return 'cat.' + fam + '.' + id;
+        }
+      }
     }
     return null;
   }

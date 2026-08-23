@@ -107,6 +107,17 @@
     if (a.effect) parts.push(`Efeito: ${String(a.effect).replace(/_/g, " ")}.`);
     return parts.filter(Boolean).join(" ") || "A habilidade não possui uma descrição adicional cadastrada.";
   }
+  function monsterAbilityHint(a) {
+    const description = abilityHint(a);
+    // Custos de fome/sede pertencem às fichas dos heróis. Quando uma
+    // habilidade heroica é emprestada a um monstro, o recurso não existe e
+    // não deve aparecer na descrição do editor de criaturas.
+    if (a.source !== "heroi" && !String(a.id || "").startsWith("hero_")) return description;
+    return description
+      .replace(/\s*cust(?:a|o|am|os)\b[^.!?]*(?:fome|sede)[^.!?]*[.!?]?/gi, "")
+      .replace(/\s{2,}/g, " ")
+      .trim();
+  }
   function weaknessHint(w) {
     if (w.descricao) return w.descricao;
     const kind = String(w.categoria || w.type || "dano").replace(/_/g, " ");
@@ -143,6 +154,7 @@
         apply_attribute_damage:true, base_attack_bonus:n(m.base_attack_bonus, 0), num_attacks:1,
         range:n(weapon.range, 0), categoria:weapon.categoria, on_hit:configuredAttack.on_hit,
         on_hit_effect:configuredAttack.on_hit_effect,
+        causa_sangramento:!!configuredAttack.causa_sangramento,
         poison_dc:configuredAttack.poison_dc, extra_damage:configuredAttack.extra_damage,
         extra_damage_types:configuredAttack.extra_damage_types || []}];
     }
@@ -157,8 +169,17 @@
     out.original_type = (isCustom || overwriteNative) ? out.type : "";
     out.overwrite_native = !!(overwriteNative || out.overwrite_native);
     out.type = (isCustom || overwriteNative) ? out.type : `${slug(out.name || "monstro")}_customizado`;
+    out._editor_source_type = String(out._editor_source_type || ((isCustom || overwriteNative) ? out.type : "")).trim();
+    out._editor_mode = out.overwrite_native ? "native" : (isCustom ? "custom" : "copy");
     out.image = String(out.image || out.type).trim();
     out.portrait = String(out.portrait || out.type).trim();
+    const rawVScale = Array.isArray(out.vscale) ? out.vscale : [1, 1];
+    const normalizedVScale = [
+      Math.max(0.2, Math.min(4, n(rawVScale[0], 1))),
+      Math.max(0.2, Math.min(4, n(rawVScale[1], 1))),
+    ];
+    if (normalizedVScale[0] === 1 && normalizedVScale[1] === 1) delete out.vscale;
+    else out.vscale = normalizedVScale;
     out.str_ = n(out.str_, 10); out.dex = n(out.dex, 10); out.con_ = n(out.con_, 10); out.int_ = n(out.int_, 10);
     out.movement = out.movement_exception ? n(out.movement, 6) : 6;
     out.vision_base = Math.max(-30, Math.min(30, n(out.vision_base, 0)));
@@ -166,16 +187,18 @@
     out.visao_escuro = !!(out.visao_escuro || out.darkvision_range);
     out.caster_level = Math.max(1, n(out.caster_level, 1));
     out.natural_armor = Math.max(0, n(out.natural_armor, n(out.ac, 10) - 10 - mod(out.dex)));
+    out.ac_bonus = n(out.ac_bonus, 0);
     out.base_hp = out.base_hp != null ? n(out.base_hp) : Math.max(1, n(out.hp, 10) - mod(out.con_));
     out.fort_base = out.fort_base != null ? n(out.fort_base) : n(out.fort, 0) - mod(out.con_);
     out.ref_base = out.ref_base != null ? n(out.ref_base) : n(out.ref_, 0) - mod(out.dex);
     out.will_base = out.will_base != null ? n(out.will_base) : n(out.will, 0) - mod(out.int_);
     out.hp = Math.max(1, out.base_hp + mod(out.con_));
     out.fort = out.fort_base + mod(out.con_); out.ref_ = out.ref_base + mod(out.dex); out.will = out.will_base + mod(out.int_);
-    out.ac = Math.max(1, 10 + mod(out.dex) + out.natural_armor);
+    out.ac = Math.max(1, 10 + mod(out.dex) + out.natural_armor + out.ac_bonus);
     const rawSize = Array.isArray(out.size) ? out.size : [1, 1];
     out.size = [Math.max(1, Math.min(4, n(rawSize[0], 1))), Math.max(1, Math.min(4, n(rawSize[1], 1)))];
     out.oriented = !!out.oriented && out.size[0] * out.size[1] > 1;
+    out.fill_footprint_3d = !!out.fill_footprint_3d && out.oriented && out.size[0] * out.size[1] === 2;
     const base = out.base_attack_bonus != null ? n(out.base_attack_bonus) : n(((out.attacks || [])[0] || {}).atk_bonus, n(out.atk_bonus));
     const first = (out.attacks || [])[0] || {};
     out.base_attack_bonus = out.base_attack_bonus != null ? n(out.base_attack_bonus) : base - mod(first.range ? out.dex : out.str_);
@@ -184,7 +207,10 @@
     const allAbilityIds = (out.special_abilities || []).filter(a => a.action_type !== "magia").map(a => a.id).filter(Boolean);
     out.monster_abilities = Array.isArray(out.monster_abilities) ? out.monster_abilities
       : (out.special_abilities || []).filter(a => a.action_type !== "magia" && a.id)
-        .map(a => Object.assign({id:a.id, uses_per_day:Math.max(1, n(a.uses_per_day, 1)), cooldown_turns:Math.max(0, n(a.cooldown_turns, 0))}, a.id === "corpo_energetico" ? {damage:a.damage || "1d4", damage_type:(a.damage_types || ["lightning"])[0]} : {}, a.id === "envenenar" ? {attack_index:n(a.attack_index, 0), veneno_id:a.veneno_id || "", poison_dc:n(a.poison_dc, 10)} : {}, a.id === "veneno_lacralion" ? {attack_index:n(a.attack_index, 0), damage_dice:n(String(a.extra_damage || "1d4").split("d")[0], 1), damage_faces:n(String(a.extra_damage || "1d4").split("d")[1], 4), poison_dc:n(a.poison_dc, 14), slow_duration:n(a.slow_duration, 1)} : {}, a.id === "agarrar_lacralion" ? {attack_index:n(a.attack_index, 0), dc:n(a.dc, 16), max_targets:n(a.max_targets, 1)} : {}, a.id === "carapaca_espinhosa" ? {damage_dice:n(String(a.damage || "1d4").split("d")[0], 1), damage_faces:n(String(a.damage || "1d4").split("d")[1], 4)} : {}, a.id === "veneno_charcos" ? {attack_index:n(a.attack_index, 3), poison_dc:n(a.poison_dc, 15)} : {}, a.id === "tentaculos_imobilizar" ? {attack_index:n(a.attack_index, 1), hits_needed:n(a.hits_needed, 2), dc:n(a.dc, 17), max_targets:n(a.max_targets, 1)} : {}, a.id === "constricao_charcos" ? {damage_dice:n(a.damage_dice, 1), damage_faces:n(a.damage_faces, 6), damage_bonus:n(a.damage_bonus, 5)} : {}, a.id === "ferrao_paralitico" ? {attack_index:n(a.attack_index, 3), dc:n(a.dc, 17)} : {}, a.id === "nuvem_acida" ? {initial_dice:n(a.initial_dice, 2), initial_faces:n(a.initial_faces, 6), tick_dice:n(a.tick_dice, 1), tick_faces:n(a.tick_faces, 6), range:n(a.range, 4), radius:n(a.radius, 1), duration:n(a.duration, 2)} : {}, a.id === "salto_selvagem" ? {attack_index:n(a.attack_index, 2), move_required:n(a.move_required, 3), reflex_dc:n(a.reflex_dc, 14), escape_dc:n(a.escape_dc, 14)} : {}, a.id === "dilacerar" ? {attack_index:n(a.attack_index, 1), hits_needed:n(a.hits_needed, 2), damage_dice:n(a.damage_dice, 2), damage_faces:n(a.damage_faces, 6)} : {}, a.id === "investida_brutal" ? {attack_index:n(a.attack_index, 2), move_required:n(a.move_required, 3), damage_dice:n(a.damage_dice, 2), damage_faces:n(a.damage_faces, 6)} : {}, a.id === "furia_garaloux" ? {threshold:Number(a.threshold ?? 0.5), attack_bonus:n(a.attack_bonus, 2), damage_bonus:n(a.damage_bonus, 2)} : {}, a.id === "predador_supremo" ? {attack_index:n(a.attack_index, 0)} : {}, a.id === "mandibulas_colossais" ? {attack_index:n(a.attack_index, 0), dc:n(a.dc, 18), automatic_damage:String(a.automatic_damage || "2d10+10"), damage_dice:n(String(a.automatic_damage || "2d10+10").split("d")[0], 2), damage_faces:n(String(a.automatic_damage || "2d10+10").split("d")[1], 10), max_targets:n(a.max_targets, 1)} : {}, a.id === "sacudida_brutal" ? {damage_dice:n(String(a.damage || "4d6").split("d")[0], 4), damage_faces:n(String(a.damage || "4d6").split("d")[1], 6), throw_distance:n(a.throw_distance, 2)} : {}, a.id === "engolir" ? {dc:n(a.dc, 22), acid_dice:n(String(a.acid_damage || "3d6").split("d")[0], 3), acid_faces:n(String(a.acid_damage || "3d6").split("d")[1], 6), stomach_hp:n(a.stomach_hp, 20)} : {}, a.id === "passo_devastador" ? {move_required:n(a.move_required, 4), damage_dice:n(String(a.damage || "3d6").split("d")[0], 3), damage_faces:n(String(a.damage || "3d6").split("d")[1], 6), push:n(a.push, 1)} : {}));
+        .map(a => Object.assign({id:a.id, uses_per_day:Math.max(1, n(a.uses_per_day, 1)), cooldown_turns:Math.max(0, n(a.cooldown_turns, 0))}, a.id === "corpo_energetico" ? {damage:a.damage || "1d4", damage_type:(a.damage_types || ["lightning"])[0]} : {}, a.id === "envenenar" ? {attack_index:n(a.attack_index, 0), veneno_id:a.veneno_id || "", poison_dc:n(a.poison_dc, 10)} : {}, a.id === "veneno_lacralion" ? {attack_index:n(a.attack_index, 0), damage_dice:n(String(a.extra_damage || "1d4").split("d")[0], 1), damage_faces:n(String(a.extra_damage || "1d4").split("d")[1], 4), poison_dc:n(a.poison_dc, 14)} : {}, a.id === "agarrar_lacralion" ? {attack_index:n(a.attack_index, 0), dc:n(a.dc, 16), max_targets:n(a.max_targets, 1)} : {}, a.id === "carapaca_espinhosa" ? {damage_dice:n(String(a.damage || "1d4").split("d")[0], 1), damage_faces:n(String(a.damage || "1d4").split("d")[1], 4)} : {}, a.id === "veneno_charcos" ? {attack_index:n(a.attack_index, 3), poison_dc:n(a.poison_dc, 15)} : {}, a.id === "tentaculos_imobilizar" ? {attack_index:n(a.attack_index, 1), hits_needed:n(a.hits_needed, 2), dc:n(a.dc, 17), max_targets:n(a.max_targets, 1)} : {}, a.id === "constricao_charcos" ? {damage_dice:n(a.damage_dice, 1), damage_faces:n(a.damage_faces, 6), damage_bonus:n(a.damage_bonus, 5)} : {}, a.id === "ferrao_paralitico" ? {attack_index:n(a.attack_index, 3), dc:n(a.dc, 17)} : {}, a.id === "nuvem_acida" ? {initial_dice:n(a.initial_dice, 2), initial_faces:n(a.initial_faces, 6), tick_dice:n(a.tick_dice, 1), tick_faces:n(a.tick_faces, 6), range:n(a.range, 4), radius:n(a.radius, 1), duration:n(a.duration, 2)} : {}, a.id === "salto_selvagem" ? {attack_index:n(a.attack_index, 2), move_required:n(a.move_required, 3), reflex_dc:n(a.reflex_dc, 14), escape_dc:n(a.escape_dc, 14)} : {}, a.id === "dilacerar" ? {attack_index:n(a.attack_index, 1), hits_needed:n(a.hits_needed, 2), damage_dice:n(a.damage_dice, 2), damage_faces:n(a.damage_faces, 6)} : {}, a.id === "investida_brutal" ? {attack_index:n(a.attack_index, 2), move_required:n(a.move_required, 3), damage_dice:n(a.damage_dice, 2), damage_faces:n(a.damage_faces, 6)} : {}, a.id === "furia_garaloux" ? {threshold:Number(a.threshold ?? 0.5), attack_bonus:n(a.attack_bonus, 2), damage_bonus:n(a.damage_bonus, 2)} : {}, a.id === "predador_supremo" ? {attack_index:n(a.attack_index, 0)} : {}, a.id === "mandibulas_colossais" ? {attack_index:n(a.attack_index, 0), dc:n(a.dc, 18), automatic_damage:String(a.automatic_damage || "2d10+10"), damage_dice:n(String(a.automatic_damage || "2d10+10").split("d")[0], 2), damage_faces:n(String(a.automatic_damage || "2d10+10").split("d")[1], 10), max_targets:n(a.max_targets, 1)} : {}, a.id === "sacudida_brutal" ? {damage_dice:n(String(a.damage || "4d6").split("d")[0], 4), damage_faces:n(String(a.damage || "4d6").split("d")[1], 6), throw_distance:n(a.throw_distance, 2)} : {}, a.id === "engolir" ? {dc:n(a.dc, 22), acid_dice:n(String(a.acid_damage || "3d6").split("d")[0], 3), acid_faces:n(String(a.acid_damage || "3d6").split("d")[1], 6), stomach_hp:n(a.stomach_hp, 20)} : {}, a.id === "passo_devastador" ? {move_required:n(a.move_required, 4), damage_dice:n(String(a.damage || "3d6").split("d")[0], 3), damage_faces:n(String(a.damage || "3d6").split("d")[1], 6), push:n(a.push, 1)} : {}));
+    out.monster_abilities = out.monster_abilities.map(a => a.id === "causar_hemorragia"
+      ? Object.assign({}, a, {attack_index:n(a.attack_index, 0), cooldown_turns:Math.max(1, n(a.cooldown_turns, 4))})
+      : a);
     out.monster_abilities = out.monster_abilities.map(a => {
       const b = Object.assign({}, a);
       if (b.id === "aura_escaldante") { b.damage_dice = n(b.damage_dice, 1); b.damage_faces = n(b.damage_faces, 4); b.radius = n(b.radius, 1); }
@@ -232,13 +258,21 @@
     out.fort = out.fort_base + mod(out.con_);
     out.ref_ = out.ref_base + mod(out.dex);
     out.will = out.will_base + mod(out.int_);
-    out.ac = Math.max(1, 10 + mod(out.dex) + out.natural_armor);
+    out.ac = Math.max(1, 10 + mod(out.dex) + out.natural_armor + n(draft.ac_bonus, 0));
+    const vscale = [
+      Math.max(0.2, Math.min(4, n(val("me-vscale-w"), 1))),
+      Math.max(0.2, Math.min(4, n(val("me-vscale-h"), 1))),
+    ];
+    if (vscale[0] === 1 && vscale[1] === 1) delete out.vscale;
+    else out.vscale = vscale;
     out.boss = get("me-boss").checked;
     out.subtipo = val("me-subtipo") || "raca_padrao";
     out.undead = out.subtipo === "morto_vivo";
     out.visao_escuro = get("me-visao_escuro").checked;
     out.size = [Math.max(1, n(val("me-size-w"), 1)), Math.max(1, n(val("me-size-h"), 1))];
     out.oriented = get("me-oriented").checked && out.size[0] * out.size[1] > 1;
+    out.fill_footprint_3d = !!get("me-fill-footprint-3d")?.checked
+      && out.oriented && out.size[0] * out.size[1] === 2;
     out.immunities = [...root.querySelectorAll(".me-immunity:checked")].map(el => el.value);
     out.equipment_enabled = get("me-equipment-enabled").checked;
     out.equipped_items = [...root.querySelectorAll(".me-equipped-item")]
@@ -272,6 +306,15 @@
       const config = {id:el.value,
         uses_per_day:Math.max(1, n(card.querySelector(".me-ability-uses").value, 1)),
         cooldown_turns:Math.max(0, n(card.querySelector(".me-ability-cooldown").value, 0))};
+      const duration = card.querySelector(".me-ability-duration");
+      if (duration) config.duration_rounds = Math.max(1, Math.min(20, n(duration.value, 1)));
+      if (el.value === "hero_rogue_ataque_furtivo") {
+        config.hero_level = Math.max(1, Math.min(20, n(card.querySelector(".me-hero-level").value, 1)));
+      }
+      const guildSpecialization = card.querySelector(".me-guild-specialization");
+      if (guildSpecialization) {
+        config.guild_specializations = guildSpecialization.value ? [guildSpecialization.value] : [];
+      }
       if (el.value === "corpo_energetico") {
         config.damage = card.querySelector(".me-energy-damage").value;
         config.damage_type = card.querySelector(".me-energy-type").value;
@@ -291,12 +334,15 @@
         config.veneno_id = card.querySelector(".me-poison-venom").value;
         config.poison_dc = Math.max(1, Math.min(40, n(card.querySelector(".me-poison-dc").value, 10)));
       }
+      if (el.value === "causar_hemorragia") {
+        config.attack_index = Math.max(0, n(card.querySelector(".me-hemorrhage-attack").value, 0));
+        config.cooldown_turns = Math.max(1, Math.min(20, n(card.querySelector(".me-ability-cooldown").value, 4)));
+      }
       if (el.value === "veneno_lacralion") {
         config.attack_index = Math.max(0, n(card.querySelector(".me-lacralion-poison-attack").value, 0));
         config.damage_dice = Math.max(1, Math.min(20, n(card.querySelector(".me-lacralion-poison-dice").value, 1)));
         config.damage_faces = Math.max(4, Math.min(20, n(card.querySelector(".me-lacralion-poison-faces").value, 4)));
         config.poison_dc = Math.max(1, Math.min(40, n(card.querySelector(".me-lacralion-poison-dc").value, 14)));
-        config.slow_duration = Math.max(1, Math.min(10, n(card.querySelector(".me-lacralion-poison-duration").value, 1)));
       }
       if (el.value === "agarrar_lacralion") {
         config.attack_index = Math.max(0, n(card.querySelector(".me-lacralion-grapple-attack").value, 0));
@@ -420,9 +466,9 @@
         config.dc = Math.max(1, Math.min(40, n(card.querySelector(".me-force-dc").value, 10)));
       }
       if (el.value === "cuspir_acido") {
-        config.damage_dice = Math.max(1, Math.min(20, n(card.querySelector(".me-acid-dice").value, 2)));
+        config.damage_dice = Math.max(1, Math.min(20, n(card.querySelector(".me-acid-dice").value, 3)));
         config.damage_faces = Math.max(4, Math.min(20, n(card.querySelector(".me-acid-faces").value, 6)));
-        config.range = Math.max(1, Math.min(20, n(card.querySelector(".me-acid-range").value, 3)));
+        config.range = Math.max(1, Math.min(20, n(card.querySelector(".me-acid-range").value, 6)));
         config.dc = Math.max(1, Math.min(40, n(card.querySelector(".me-acid-dc").value, 13)));
       }
       if (el.value === "sopro_dragao") {
@@ -452,7 +498,7 @@
       const value = Math.max(1, n(card.querySelector(".me-spell-limit").value, 1));
       return mode === "cooldown" ? {id:el.value, limit_mode:mode, cooldown_turns:value} : {id:el.value, limit_mode:mode, uses_per_combat:value};
     });
-    out.attacks = [...root.querySelectorAll(".me-attack")].map(row => ({ name:row.querySelector(".ma-name").value.trim(), damage:row.querySelector(".ma-damage").value.trim(), damage_types:[row.querySelector(".ma-type").value], attack_attribute:row.querySelector(".ma-attr").value, apply_attribute_damage:true, base_attack_bonus:n(row.querySelector(".ma-bab").value), num_attacks:n(row.querySelector(".ma-count").value, 1), range:n(row.querySelector(".ma-range").value), fire_damage:row.querySelector(".ma-fire-damage")?.value.trim() || null, on_hit:row.querySelector(".ma-poison")?.value || null, on_hit_effect:row.querySelector(".ma-on-hit-effect")?.value || null, poison_dc:n(row.querySelector(".ma-poison-dc")?.value, 10), extra_damage:row.querySelector(".ma-extra-damage")?.value.trim() || null, extra_damage_types:row.querySelector(".ma-extra-type")?.value ? [row.querySelector(".ma-extra-type").value] : [] }));
+    out.attacks = [...root.querySelectorAll(".me-attack")].map(row => ({ name:row.querySelector(".ma-name").value.trim(), damage:row.querySelector(".ma-damage").value.trim(), damage_types:[row.querySelector(".ma-type").value], attack_attribute:row.querySelector(".ma-attr").value, apply_attribute_damage:true, base_attack_bonus:n(row.querySelector(".ma-bab").value), num_attacks:n(row.querySelector(".ma-count").value, 1), range:n(row.querySelector(".ma-range").value), fire_damage:row.querySelector(".ma-fire-damage")?.value.trim() || null, on_hit:row.querySelector(".ma-poison")?.value || null, on_hit_effect:row.querySelector(".ma-on-hit-effect")?.value || null, causa_sangramento:!!row.querySelector(".ma-causa-sangramento")?.checked, aplica_hemorragia:!!row.querySelector(".ma-causa-hemorragia")?.checked, poison_dc:n(row.querySelector(".ma-poison-dc")?.value, 10), extra_damage:row.querySelector(".ma-extra-damage")?.value.trim() || null, extra_damage_types:row.querySelector(".ma-extra-type")?.value ? [row.querySelector(".ma-extra-type").value] : [] }));
     return out;
   }
   function estimate(m) {
@@ -479,6 +525,9 @@
     if (summary && summaryRenderer) summary.innerHTML = summaryRenderer(read());
   }
   function render() {
+    const previousTab = root.querySelector(".me-tab-panel:not([hidden])")?.dataset.tab
+      || root.querySelector(".me-main-tabs button.active")?.dataset.tab
+      || "Resumo";
     if (!draft) draft = blank();
     const monsters = all(), custom = customTypes();
     const abilities = abilityLibrary(), weaknesses = weaknessLibrary(), ai = aiOptions();
@@ -530,11 +579,13 @@
       const cards = positiveAbilities.filter(source.filter).map(a => {
         const cfg = configuredAbilities.get(a.id) || {uses_per_day:1, cooldown_turns:0};
         const selected = selectedAbilities.has(a.id);
+        const maintenanceConfig = a.monster_maintenance ? `<span class="me-ability-limit">duração<input class="me-ability-duration" type="number" min="1" max="20" value="${esc(cfg.duration_rounds || 1)}"><small>rodadas</small></span>` : "";
         const energyConfig = a.id === "corpo_energetico" ? `<span class="me-ability-limit">dano<select class="me-energy-damage">${["1d4","1d6","1d8","1d10","1d12"].map(v=>`<option value="${v}"${(cfg.damage || a.damage || "1d4") === v ? " selected" : ""}>${v}</option>`).join("")}</select></span><span class="me-ability-limit">elemento<select class="me-energy-type">${ATTACK_DAMAGE_TYPES.filter(t=>t.value!=="physical").map(t=>`<option value="${t.value}"${(cfg.damage_type || (a.damage_types||["lightning"])[0]) === t.value ? " selected" : ""}>${t.name}</option>`).join("")}</select></span>` : "";
         const finalConfig = a.id === "explosao_final" ? `<span class="me-ability-limit">dados<input class="me-final-dice" type="number" min="1" max="20" value="${esc(cfg.damage_dice || 6)}"></span><span class="me-ability-limit">faces<select class="me-final-faces">${[4,6,8,10,12,20].map(v=>`<option value="${v}"${Number(cfg.damage_faces || 6)===v ? " selected" : ""}>d${v}</option>`).join("")}</select></span><span class="me-ability-limit">raio<input class="me-final-radius" type="number" min="0" max="10" value="${esc(cfg.radius || 1)}"></span><span class="me-ability-limit">CD<input class="me-final-dc" type="number" min="1" max="40" value="${esc(cfg.dc || 13)}"></span>` : "";
         const flameConfig = a.id === "corpo_em_chamas" ? `<span class="me-ability-limit">dados<input class="me-flame-dice" type="number" min="1" max="20" value="${esc(cfg.damage_dice || 1)}"></span><span class="me-ability-limit">faces<select class="me-flame-faces">${[4,6,8,10,12,20].map(v=>`<option value="${v}"${Number(cfg.damage_faces || 6)===v ? " selected" : ""}>d${v}</option>`).join("")}</select></span>` : "";
         const poisonConfig = a.id === "envenenar" ? `<span class="me-ability-limit">ataque<select class="me-poison-attack">${draft.attacks.map((atk,i)=>`<option value="${i}"${Number(cfg.attack_index || 0)===i ? " selected" : ""}>${esc(atk.name || `Ataque ${i+1}`)}</option>`).join("")}</select></span><span class="me-ability-limit">veneno<select class="me-poison-venom">${venomChoices.map(v=>`<option value="${esc(v.id)}"${(cfg.veneno_id || "")===v.id ? " selected" : ""}>${esc(v.name)}</option>`).join("")}</select></span><span class="me-ability-limit">CD<input class="me-poison-dc" type="number" min="1" max="40" value="${esc(cfg.poison_dc || 10)}"></span>` : "";
-        const lacralionPoisonConfig = a.id === "veneno_lacralion" ? `<span class="me-ability-limit">ataque<select class="me-lacralion-poison-attack">${draft.attacks.map((atk,i)=>`<option value="${i}"${Number(cfg.attack_index || 0)===i ? " selected" : ""}>${esc(atk.name || `Ataque ${i+1}`)}</option>`).join("")}</select></span><span class="me-ability-limit">dados<input class="me-lacralion-poison-dice" type="number" min="1" max="20" value="${esc(cfg.damage_dice || 1)}"></span><span class="me-ability-limit">faces<select class="me-lacralion-poison-faces">${[4,6,8,10,12,20].map(v=>`<option value="${v}"${Number(cfg.damage_faces || 4)===v ? " selected" : ""}>d${v}</option>`).join("")}</select></span><span class="me-ability-limit">CD<input class="me-lacralion-poison-dc" type="number" min="1" max="40" value="${esc(cfg.poison_dc || 14)}"></span><span class="me-ability-limit">duração<input class="me-lacralion-poison-duration" type="number" min="1" max="10" value="${esc(cfg.slow_duration || 1)}"></span>` : "";
+        const hemorrhageConfig = a.id === "causar_hemorragia" ? `<span class="me-ability-limit">ataque<select class="me-hemorrhage-attack">${draft.attacks.map((atk,i)=>`<option value="${i}"${Number(cfg.attack_index ?? 0)===i ? " selected" : ""}>${esc(atk.name || `Ataque ${i+1}`)}</option>`).join("")}</select></span><small>aplica ao acertar</small>` : "";
+        const lacralionPoisonConfig = a.id === "veneno_lacralion" ? `<span class="me-ability-limit">ataque<select class="me-lacralion-poison-attack">${draft.attacks.map((atk,i)=>`<option value="${i}"${Number(cfg.attack_index || 0)===i ? " selected" : ""}>${esc(atk.name || `Ataque ${i+1}`)}</option>`).join("")}</select></span><span class="me-ability-limit">dados<input class="me-lacralion-poison-dice" type="number" min="1" max="20" value="${esc(cfg.damage_dice || 1)}"></span><span class="me-ability-limit">faces<select class="me-lacralion-poison-faces">${[4,6,8,10,12,20].map(v=>`<option value="${v}"${Number(cfg.damage_faces || 4)===v ? " selected" : ""}>d${v}</option>`).join("")}</select></span><span class="me-ability-limit">CD<input class="me-lacralion-poison-dc" type="number" min="1" max="40" value="${esc(cfg.poison_dc || 14)}"></span><small>falha no teste: aplica Sangramento</small>` : "";
         const lacralionGrappleConfig = a.id === "agarrar_lacralion" ? `<span class="me-ability-limit">ataque<select class="me-lacralion-grapple-attack">${draft.attacks.map((atk,i)=>`<option value="${i}"${Number(cfg.attack_index || 0)===i ? " selected" : ""}>${esc(atk.name || `Ataque ${i+1}`)}</option>`).join("")}</select></span><span class="me-ability-limit">escape CD<input class="me-lacralion-grapple-dc" type="number" min="1" max="40" value="${esc(cfg.dc || 16)}"></span><span class="me-ability-limit">máx. alvos<input class="me-lacralion-grapple-max" type="number" min="1" max="2" value="${esc(cfg.max_targets || 1)}"></span>` : "";
         const lacralionShellConfig = a.id === "carapaca_espinhosa" ? `<span class="me-ability-limit">dados<input class="me-lacralion-shell-dice" type="number" min="1" max="20" value="${esc(cfg.damage_dice || 1)}"></span><span class="me-ability-limit">faces<select class="me-lacralion-shell-faces">${[4,6,8,10,12,20].map(v=>`<option value="${v}"${Number(cfg.damage_faces || 4)===v ? " selected" : ""}>d${v}</option>`).join("")}</select></span>` : "";
         const charcosPoisonConfig = a.id === "veneno_charcos" ? `<span class="me-ability-limit">ataque<select class="me-charcos-poison-attack">${draft.attacks.map((atk,i)=>`<option value="${i}"${Number(cfg.attack_index ?? 3)===i ? " selected" : ""}>${esc(atk.name || `Ataque ${i+1}`)}</option>`).join("")}</select></span><span class="me-ability-limit">CD<input class="me-charcos-poison-dc" type="number" min="1" max="40" value="${esc(cfg.poison_dc || 15)}"></span>` : "";
@@ -558,7 +609,7 @@
         const tiranoSwallowConfig = a.id === "engolir" ? `<span class="me-ability-limit">CD<input class="me-tirano-swallow-dc" type="number" min="1" max="40" value="${esc(cfg.dc || 22)}"></span><span class="me-ability-limit">ácido<input class="me-tirano-swallow-dice" type="number" min="1" max="20" value="${esc(cfg.acid_dice || 3)}">d<select class="me-tirano-swallow-faces">${[4,6,8,10,12,20].map(v=>`<option value="${v}"${Number(cfg.acid_faces || 6)===v ? " selected" : ""}>${v}</option>`).join("")}</select></span><span class="me-ability-limit">estômago<input class="me-tirano-swallow-hp" type="number" min="1" max="100" value="${esc(cfg.stomach_hp || 20)}"></span>` : "";
         const tiranoStepConfig = a.id === "passo_devastador" ? `<span class="me-ability-limit">movimento<input class="me-tirano-step-move" type="number" min="1" max="20" value="${esc(cfg.move_required || 4)}"></span><span class="me-ability-limit">dados<input class="me-tirano-step-dice" type="number" min="1" max="20" value="${esc(cfg.damage_dice || 3)}"></span><span class="me-ability-limit">faces<select class="me-tirano-step-faces">${[4,6,8,10,12,20].map(v=>`<option value="${v}"${Number(cfg.damage_faces || 6)===v ? " selected" : ""}>d${v}</option>`).join("")}</select></span><small>atinge todos os adjacentes, inclusive aliados</small>` : "";
         const forceConfig = a.id === "forca_descomunal" ? `<span class="me-ability-limit">CD<input class="me-force-dc" type="number" min="1" max="40" value="${esc(cfg.dc || a.dc || 10)}"></span>` : "";
-        const acidConfig = a.id === "cuspir_acido" ? `<span class="me-ability-limit">dados<input class="me-acid-dice" type="number" min="1" max="20" value="${esc(cfg.damage_dice || 2)}"></span><span class="me-ability-limit">faces<select class="me-acid-faces">${[4,6,8,10,12,20].map(v=>`<option value="${v}"${Number(cfg.damage_faces || 6)===v ? " selected" : ""}>d${v}</option>`).join("")}</select></span><span class="me-ability-limit">alcance<input class="me-acid-range" type="number" min="1" max="20" value="${esc(cfg.range || a.range || 3)}"></span><span class="me-ability-limit">CD<input class="me-acid-dc" type="number" min="1" max="40" value="${esc(cfg.dc || a.dc || 13)}"></span>` : "";
+        const acidConfig = a.id === "cuspir_acido" ? `<span class="me-ability-limit">dados<input class="me-acid-dice" type="number" min="1" max="20" value="${esc(cfg.damage_dice || 3)}"></span><span class="me-ability-limit">tipo<select class="me-acid-faces">${[4,6,8,10,12,20].map(v=>`<option value="${v}"${Number(cfg.damage_faces || 6)===v ? " selected" : ""}>d${v}</option>`).join("")}</select></span><span class="me-ability-limit">alcance<input class="me-acid-range" type="number" min="1" max="20" value="${esc(cfg.range || a.range || 6)}"></span><span class="me-ability-limit">CD<input class="me-acid-dc" type="number" min="1" max="40" value="${esc(cfg.dc || a.dc || 13)}"></span><small>linha reta · alvo único · metade do dano na rodada seguinte em caso de falha · pode danificar equipamentos</small>` : "";
         const breathConfig = a.id === "sopro_dragao" ? `<span class="me-ability-limit">dados<input class="me-breath-dice" type="number" min="1" max="20" value="${esc(cfg.damage_dice || 2)}"></span><span class="me-ability-limit">faces<select class="me-breath-faces">${[4,6,8,10,12,20].map(v=>`<option value="${v}"${Number(cfg.damage_faces || 6)===v ? " selected" : ""}>d${v}</option>`).join("")}</select></span><span class="me-ability-limit">dano<select class="me-breath-type">${[["fire","Fogo"],["cold","Gelo"],["lightning","Eletricidade"]].map(([v,l])=>`<option value="${v}"${(cfg.damage_type || "fire") === v ? " selected" : ""}>${l}</option>`).join("")}</select></span><span class="me-ability-limit">forma<select class="me-breath-shape"><option value="linha"${(cfg.shape || "linha") === "linha" ? " selected" : ""}>Linha reta</option><option value="cone"${cfg.shape === "cone" ? " selected" : ""}>Cone</option></select></span><span class="me-ability-limit">atinge<select class="me-breath-target-mode"><option value="todos"${(cfg.target_mode || "todos") === "todos" ? " selected" : ""}>Todos na área</option><option value="um"${cfg.target_mode === "um" ? " selected" : ""}>1 alvo</option></select></span><span class="me-ability-limit">alcance<input class="me-breath-range" type="number" min="1" max="20" value="${esc(cfg.range || 4)}"></span><span class="me-ability-limit">teste<select class="me-breath-save">${[["reflexos","Reflexos"],["fortitude","Fortitude"],["vontade","Vontade"]].map(([v,l])=>`<option value="${v}"${(cfg.save || "reflexos") === v ? " selected" : ""}>${l}</option>`).join("")}</select></span><span class="me-ability-limit">CD<input class="me-breath-dc" type="number" min="1" max="40" value="${esc(cfg.dc || 13)}"></span><span class="me-ability-limit">sucesso<select class="me-breath-success"><option value="metade"${(cfg.success_effect || "metade") === "metade" ? " selected" : ""}>Metade do dano</option><option value="nega"${cfg.success_effect === "nega" ? " selected" : ""}>Nega o dano</option></select></span>` : "";
         const curseConfig = a.id === "amaldicoar_monstro" ? `<span class="me-ability-limit">modo<select class="me-curse-mode"><option value="aleatoria"${(cfg.curse_mode || "aleatoria")==="aleatoria" ? " selected" : ""}>aleatória</option><option value="especifica"${cfg.curse_mode === "especifica" ? " selected" : ""}>específica</option></select></span><span class="me-ability-limit">maldição<select class="me-curse-id"><option value="maos_tremulas"${(cfg.curse_id || "maos_tremulas")==="maos_tremulas" ? " selected" : ""}>Mãos Trêmulas</option><option value="corpo_exausto"${cfg.curse_id === "corpo_exausto" ? " selected" : ""}>Corpo Exausto</option><option value="silencio_deuses"${cfg.curse_id === "silencio_deuses" ? " selected" : ""}>Silêncio dos Deuses</option></select></span><span class="me-ability-limit">gravidade<select class="me-curse-category"><option value="leve"${(cfg.curse_category || "leve")==="leve" ? " selected" : ""}>Leve</option><option value="media"${cfg.curse_category === "media" ? " selected" : ""}>Moderada</option><option value="grave"${cfg.curse_category === "grave" ? " selected" : ""}>Grave</option></select></span><span class="me-ability-limit">alcance<input class="me-curse-range" type="number" min="1" max="20" value="${esc(cfg.range || 4)}"></span><span class="me-ability-limit">teste<select class="me-curse-save">${[["reflexos","Reflexos"],["fortitude","Fortitude"],["vontade","Vontade"]].map(([v,l])=>`<option value="${v}"${(cfg.save || "vontade")===v ? " selected" : ""}>${l}</option>`).join("")}</select></span><span class="me-ability-limit">CD<input class="me-curse-dc" type="number" min="1" max="40" value="${esc(cfg.dc || 13)}"></span>` : "";
         if (curseConfig) queueMicrotask(() => root.querySelector('.me-ability[value="amaldicoar_monstro"]')?.closest('.me-ability-card')?.insertAdjacentHTML("beforeend", curseConfig));
@@ -567,14 +618,16 @@
           const all=[["olhos_escuridao","Olhos da Escuridão"],["passos_pesados","Passos Pesados"],["lamina_enferrujada","Lâmina Enferrujada"],["fraqueza_arcana","Fraqueza Arcana"],["fortuna_roubada","Fortuna Roubada"],["azar_sobrenatural","Azar Sobrenatural"],["marca_cacador","Marca do Caçador"],["carne_fragil","Carne Frágil"],["sangramento_profano","Sangramento Profano"],["correntes_invisiveis","Correntes Invisíveis"],["dor_constante","Dor Constante"],["alma_quebrada","Alma Quebrada"],["aura_profana","Aura Profana"],["maldicao_ferrugem","Maldição da Ferrugem"],["fome_eterna","Fome Eterna"],["sede_infinita","Sede Infinita"],["tocado_morte","Tocado pela Morte"],["licantropia","Licantropia"],["voz_quebrada","Voz Quebrada"],["espirito_covarde","Espírito Covarde"],["eco_morte","Eco da Morte"],["corrupcao_crescente","Corrupção Crescente"]];
           if(sel) all.forEach(([v,l])=>{if(![...sel.options].some(o=>o.value===v)){const o=new Option(l,v);if((cfg.curse_id||'')===v)o.selected=true;sel.add(o);}});
         });
-        const abilityDescription = a.id === "forca_descomunal"
+        const abilityDescription = a.id === "causar_hemorragia"
+          ? `O ataque selecionado aplica Hemorragia ao acertar. Recarga ${cfg.cooldown_turns || 4} rodada(s).`
+          : a.id === "forca_descomunal"
           ? `Ataque normal; se acertar, Fortitude CD ${cfg.dc || a.dc || 10} ou atordoado (perde a próxima rodada). Recarga ${cfg.cooldown_turns ?? a.cooldown_turns ?? 4} rodada(s).`
-          : abilityHint(a);
-        return `<div class="me-ability-card me-tip" data-source="${source.id}" data-tip="${esc(abilityDescription)}"><input class="me-ability" type="checkbox" value="${esc(a.id)}"${selected ? " checked" : ""}><span><b>${esc(a.icon || a.emoji || a.icone || "✦")} ${esc(a.name || a.nome || a.id)}</b><small>${esc(a.action_type || "ação")}</small></span><span class="me-ability-limit">usos/dia<input class="me-ability-uses" type="number" min="1" max="20" value="${esc(cfg.uses_per_day || 1)}"></span><span class="me-ability-limit">recarga<input class="me-ability-cooldown" type="number" min="0" max="20" value="${esc(["nuvem_acida","explosao_vapor"].includes(a.id) ? (a.id === "explosao_vapor" ? 6 : 4) : (cfg.cooldown_turns || 0))}"><small>rodadas</small></span>${energyConfig}${finalConfig}${flameConfig}${poisonConfig}${lacralionPoisonConfig}${lacralionGrappleConfig}${lacralionShellConfig}${charcosPoisonConfig}${charcosTentacleConfig}${charcosConstrictionConfig}${charcosParalyticConfig}${charcosCloudConfig}${garalouxJumpConfig}${garalouxClawConfig}${garalouxChargeConfig}${garalouxFrenzyConfig}${garalouxPredatorConfig}${molochusAuraConfig}${molochusBloodConfig}${molochusChargeConfig}${molochusSteamConfig}${molochusDeathConfig}${tiranoMandiblesConfig}${tiranoShakeConfig}${tiranoSwallowConfig}${tiranoStepConfig}${infectionConfig}${forceConfig}${acidConfig}${breathConfig}</div>`;
+          : monsterAbilityHint(a);
+        return `<div class="me-ability-card me-tip" data-source="${source.id}" data-tip="${esc(abilityDescription)}"><input class="me-ability" type="checkbox" value="${esc(a.id)}"${selected ? " checked" : ""}><span><b>${esc(a.icon || a.emoji || a.icone || "✦")} ${esc(a.name || a.nome || a.id)}</b><small>${esc(a.action_type || "ação")}</small></span><span class="me-ability-limit">usos/dia<input class="me-ability-uses" type="number" min="1" max="20" value="${esc(cfg.uses_per_day || 1)}"></span><span class="me-ability-limit">recarga<input class="me-ability-cooldown" type="number" min="0" max="20" value="${esc(a.id === "causar_hemorragia" ? (cfg.cooldown_turns || 4) : (["nuvem_acida","explosao_vapor"].includes(a.id) ? (a.id === "explosao_vapor" ? 6 : 4) : (cfg.cooldown_turns || 0)))}"><small>rodadas</small></span>${maintenanceConfig}${energyConfig}${finalConfig}${flameConfig}${poisonConfig}${hemorrhageConfig}${lacralionPoisonConfig}${lacralionGrappleConfig}${lacralionShellConfig}${charcosPoisonConfig}${charcosTentacleConfig}${charcosConstrictionConfig}${charcosParalyticConfig}${charcosCloudConfig}${garalouxJumpConfig}${garalouxClawConfig}${garalouxChargeConfig}${garalouxFrenzyConfig}${garalouxPredatorConfig}${molochusAuraConfig}${molochusBloodConfig}${molochusChargeConfig}${molochusSteamConfig}${molochusDeathConfig}${tiranoMandiblesConfig}${tiranoShakeConfig}${tiranoSwallowConfig}${tiranoStepConfig}${infectionConfig}${forceConfig}${acidConfig}${breathConfig}</div>`;
       }).join("") || "Nenhuma habilidade cadastrada nesta origem.";
       return `<div class="me-ability-panel" data-source="${source.id}"><h3>${source.label}</h3><div class="me-ability-grid">${cards}</div></div>`;
     }).join("");
-    root.innerHTML = `<div class="me-layout"><aside class="me-sidebar"><button id="me-new">+ Nova criatura</button><label>Modelo ou criatura existente<select id="me-template"><option value="">Selecione…</option>${monsters.map(m => `<option value="${esc(m.type)}">${esc(m.name || m.nome || m.type)}${custom.has(m.type) ? " (personalizado)" : " (modelo)"}</option>`).join("")}</select></label><p>Os modelos nativos são sempre copiados. A edição de uma criatura personalizada atualiza somente sua própria ficha.</p></aside><main class="me-form"><header><div><h1>Editor de criaturas</h1><p>${draft.original_type ? "Editando criatura personalizada" : "Criando uma nova cópia independente"}</p></div><div class="me-nd">ND estimado <b id="me-nd-estimate">${estimate(draft)}</b><small id="me-nd-levels">calibrando níveis...</small></div></header>
+    root.innerHTML = `<div class="me-layout"><aside class="me-sidebar"><button id="me-new">+ Nova criatura</button><label>Modelo ou criatura existente<select id="me-template"><option value="">Selecione…</option>${monsters.map(m => `<option value="${esc(m.type)}">${esc(m.name || m.nome || m.type)}${custom.has(m.type) ? " (personalizado)" : " (modelo)"}</option>`).join("")}</select></label><p>Os modelos nativos são sempre copiados. A edição de uma criatura personalizada atualiza somente sua própria ficha.</p></aside><main class="me-form"><header><div><h1>Editor de criaturas</h1><p>${draft.overwrite_native && draft.original_type ? "Editando monstro nativo" : (draft.original_type ? "Editando criatura personalizada" : "Criando uma nova cópia independente")}</p></div><div class="me-nd">ND estimado <b id="me-nd-estimate">${estimate(draft)}</b><small id="me-nd-levels">calibrando níveis...</small></div></header>
       <section><h2>Arte da criatura</h2><p class="me-hint">Escolha imagens PNG. Ao selecionar, o arquivo é enviado ao projeto, a prévia é atualizada e a referência é salva com a ficha.</p><input id="me-image" type="hidden" value="${esc(draft.image || draft.type)}"><input id="me-portrait" type="hidden" value="${esc(draft.portrait || draft.type)}"><div style="display:flex;gap:18px;flex-wrap:wrap"><label style="display:grid;grid-template-columns:92px 1fr;gap:10px;align-items:center;min-width:250px"><img id="me-mini-preview" src="../assets/pawns/monstros/${esc(draft.image || draft.type)}/${esc(draft.image || draft.type)}.png" style="width:86px;height:86px;object-fit:contain;background:#10131a;border:1px solid #556070"><span><b>Miniatura do peão</b><small>Usada no mapa 2D e 3D.</small><input id="me-mini-file" type="file" accept="image/png,.png"></span></label><label style="display:grid;grid-template-columns:92px 1fr;gap:10px;align-items:center;min-width:250px"><img id="me-portrait-preview" src="../assets/retratos/monstros/${esc(draft.portrait || draft.type)}.png" style="width:86px;height:86px;object-fit:cover;background:#10131a;border:1px solid #556070"><span><b>Retrato do Bestiário</b><small>Usado no quadro superior do Bestiário.</small><input id="me-portrait-file" type="file" accept="image/png,.png"></span></label></div></section>
       <section><h2>Identidade e combate</h2><div class="me-fields cols-4"><label>Nome<input id="me-name" value="${esc(draft.name)}"></label><label>ID técnico<input id="me-type" value="${esc(draft.type)}"><small>letras, números e _</small></label><label>Ícone<input id="me-emoji" value="${esc(draft.emoji || "👹")}"></label><label>ND definido<input id="me-cr" type="number" step="0.25" min="0.125" value="${esc(draft.cr || 1)}"></label><label>PV base<input id="me-base_hp" type="number" min="1" value="${esc(draft.base_hp)}"></label><div class="me-calculated"><b>PV final</b><span id="me-hp-final">${esc(draft.hp)}</span></div><label>Armadura natural<input id="me-natural_armor" type="number" min="0" value="${esc(draft.natural_armor)}"><small>somada ao modificador de DES</small></label><div class="me-calculated"><b>CA total</b><span id="me-ac-final">${esc(draft.ac)}</span></div><div class="me-calculated"><b>Movimento básico</b><span>6</span></div><label>Bônus base de ataque<input id="me-base_attack_bonus" type="number" value="${esc(draft.base_attack_bonus || 0)}"></label></div></section>
       <section><h2>Atributos e resistências</h2><div class="me-fields cols-4"><label>Força<input id="me-str_" type="number" min="1" value="${esc(draft.str_)}"></label><label>Destreza<input id="me-dex" type="number" min="1" value="${esc(draft.dex)}"></label><label>Constituição<input id="me-con_" type="number" min="1" value="${esc(draft.con_)}"></label><label>Inteligência<input id="me-int_" type="number" min="1" value="${esc(draft.int_)}"></label><div class="me-calculated"><b>Iniciativa (DES + mod. INT)</b><span id="me-init-final">${esc(n(draft.dex,10)+mod(draft.int_))}</span></div><label>Base Fortitude<input id="me-fort_base" type="number" value="${esc(draft.fort_base)}"></label><div class="me-calculated"><b>Fortitude final</b><span id="me-fort-final">${esc(draft.fort >= 0 ? "+" + draft.fort : draft.fort)}</span></div><label>Base Reflexos<input id="me-ref_base" type="number" value="${esc(draft.ref_base)}"></label><div class="me-calculated"><b>Reflexos final</b><span id="me-ref-final">${esc(draft.ref_ >= 0 ? "+" + draft.ref_ : draft.ref_)}</span></div><label>Base Vontade<input id="me-will_base" type="number" value="${esc(draft.will_base)}"></label><div class="me-calculated"><b>Vontade final</b><span id="me-will-final">${esc(draft.will >= 0 ? "+" + draft.will : draft.will)}</span></div></div></section>
@@ -588,13 +641,33 @@
       <section><h2>Fraquezas especiais</h2><div class="me-abilities me-negative-abilities">${negativeAbilities.map(a => `<label class="me-tip" data-tip="${esc(abilityHint(a) + " Ao selecionar, incorpora automaticamente a mecânica correspondente.")}"><input class="me-negative-ability" type="checkbox" value="${esc(a.id)}"${selectedNegativeAbilities.has(a.id) ? " checked" : ""}><b>${esc(a.name)}</b><small>Reduz o ND · mecânica automática</small></label>`).join("") || "Nenhuma fraqueza especial cadastrada."}</div><p class="me-hint">Efeitos mistos ficam aqui e causam apenas uma redução moderada no ND.</p></section>
       <section><h2>Comportamento, defesas e tesouro</h2><div class="me-fields cols-3"><label>IA<select id="me-ai_type">${options(ai.map(v => ({value:v})), draft.ai_type, x => x.value.replace(/_/g," "))}</select></label><label>Imagem da miniatura<input id="me-image" value="${esc(draft.image || draft.type)}"></label><label>Porte<select id="me-porte">${options(["minusculo","pequeno","medio","grande","enorme"].map(value=>({value})), draft.porte || "medio", x=>x.value)}</select></label><label>Imunidades (separadas por vírgula)<input id="me-immunities" value="${esc(draft.immunities.join(", "))}"></label><label>Loot garantido (IDs, vírgula)<input id="me-guaranteed-loot" value="${esc(draft.guaranteed_loot.join(", "))}"></label><label>Ouro<input id="me-gold" type="number" min="0" value="${esc(draft.gold || 0)}"></label><label>XP<input id="me-xp" type="number" min="0" value="${esc(draft.xp || 0)}"></label><label>Tier<input id="me-tier" type="number" min="1" value="${esc(draft.tier || 1)}"></label></div><label>Loot variável (JSON opcional)<textarea id="me-loot-table">${esc(JSON.stringify(draft.loot_table || {}, null, 2))}</textarea></label><div class="me-checks"><label><input id="me-undead" type="checkbox"${draft.undead ? " checked" : ""}> morto-vivo</label><label><input id="me-boss" type="checkbox"${draft.boss ? " checked" : ""}> chefe</label></div></section>
       <footer><span id="me-status">O ID é gerado pelo nome e pode ser alterado.</span><button id="me-save" class="me-save">Salvar criatura personalizada</button></footer></main></div>`;
+     const artSection = [...root.querySelectorAll("section")].find(section => section.querySelector("h2")?.textContent === "Arte da criatura");
+     if (artSection) {
+       const artScale = Array.isArray(draft.vscale) ? draft.vscale : [1, 1];
+       artSection.insertAdjacentHTML("beforeend", `<div style="margin-top:12px;border-top:1px solid #4a3a2a;padding-top:10px;max-width:360px"><b>Escala visual padrão</b><small style="display:block;color:#8a7a5a;margin:4px 0 7px">Aplicada a todas as instâncias desta criatura. É um ajuste visual sobre o porte escolhido e não altera casas ocupadas, alcance ou combate.</small><label>largura <input id="me-vscale-w" type="number" min="0.2" max="4" step="0.1" value="${esc(artScale[0])}"></label><label>altura <input id="me-vscale-h" type="number" min="0.2" max="4" step="0.1" value="${esc(artScale[1])}"></label><button id="me-vscale-reset" type="button" style="margin-top:6px">Restaurar padrão (1,0)</button></div>`);
+     }
+     const rogueSneakCard = root.querySelector('.me-ability-card[data-source="heroi"] .me-ability[value="hero_rogue_ataque_furtivo"]')?.closest(".me-ability-card");
+     if (rogueSneakCard && !rogueSneakCard.querySelector(".me-hero-level")) {
+       const rogueCfg = configuredAbilities.get("hero_rogue_ataque_furtivo") || {};
+       rogueSneakCard.insertAdjacentHTML("beforeend", `<span class="me-ability-limit">nível do personagem<input class="me-hero-level" type="number" min="1" max="20" value="${esc(rogueCfg.hero_level || 1)}"></span>`);
+     }
+     root.querySelectorAll('.me-ability-card[data-source="heroi"]').forEach(card => {
+       const abilityId = card.querySelector(".me-ability")?.value;
+       const ability = positiveAbilities.find(item => item.id === abilityId);
+       const progressions = Array.isArray(ability?.guild_progressions) ? ability.guild_progressions : [];
+       if (!progressions.length || card.querySelector(".me-guild-specialization")) return;
+       const cfg = configuredAbilities.get(abilityId) || {};
+       const selected = (Array.isArray(cfg.guild_specializations) ? cfg.guild_specializations[0] : cfg.guild_specialization_id) || "";
+       const options = progressions.map(item => `<option value="${esc(item.id)}"${selected === item.id ? " selected" : ""}>${esc(item.name || item.id)}${item.level != null ? ` (nível ${esc(item.level)})` : ""}</option>`).join("");
+       card.insertAdjacentHTML("beforeend", `<span class="me-ability-limit">graduação<select class="me-guild-specialization"><option value="">Base</option>${options}</select></span>`);
+     });
      const movementReadout = [...root.querySelectorAll(".me-calculated")].find(el => /Movimento/.test(el.textContent));
      if (movementReadout) movementReadout.insertAdjacentHTML("afterend", `<label>Percepção<input id="me-percepcao" type="number" min="1" value="${esc(draft.percepcao)}"><small>base da ficha; aliados próximos dão +1 durante furtividade</small></label>`);
     if (movementReadout?.querySelector("span")) movementReadout.querySelector("span").textContent = String(draft.movement || 6);
     const sidebar = root.querySelector(".me-sidebar");
     const templateSelect = document.getElementById("me-template");
     if (sidebar && templateSelect) {
-      if (draft.original_type) templateSelect.value = draft.original_type;
+      templateSelect.value = draft.original_type || draft._editor_source_type || "";
       const editMode = document.createElement("label");
       editMode.innerHTML = '<input id="me-edit-existing" type="checkbox"> Editar monstro existente <small>Salva por cima da ficha selecionada após confirmação.</small>';
       sidebar.insertBefore(editMode, templateSelect.parentElement.nextSibling);
@@ -608,6 +681,10 @@
     if (legacyImage) legacyImage.closest("label")?.remove();
     const attrFields = root.querySelector("#me-str_")?.closest(".me-fields");
     if (attrFields) attrFields.insertAdjacentHTML("beforeend", `<label>Bônus em visão<input id="me-vision_base" type="number" min="-30" max="30" value="${esc(draft.vision_base)}"><small>somado ao movimento 6 + metade dos bônus de DES + INT</small></label><div class="me-calculated"><b>Raio de visão</b><span id="me-vision-final">${esc(visionRadius(draft))}</span></div><label>Largura ocupada<input id="me-size-w" type="number" min="1" max="4" value="${draft.size[0]}"><small>quadrados</small></label><label>Comprimento ocupado<input id="me-size-h" type="number" min="1" max="4" value="${draft.size[1]}"><small>quadrados</small></label><label><input id="me-oriented" type="checkbox"${draft.oriented ? " checked" : ""}${draft.size[0]*draft.size[1]>1 ? "" : " disabled"}> criatura orientada</label>`);
+    if (attrFields) {
+      const elongatedEnabled = draft.oriented && draft.size[0] * draft.size[1] === 2;
+      attrFields.insertAdjacentHTML("beforeend", `<label><input id="me-fill-footprint-3d" type="checkbox"${draft.fill_footprint_3d ? " checked" : ""}${elongatedEnabled ? "" : " disabled"}> preencher visualmente as casas no 3D<small>alongar a miniatura entre duas casas</small></label><button id="me-apply-elongated" type="button" style="margin-top:6px">Aplicar preset: 2 casas alongadas</button>`);
+    }
     const checks = root.querySelector("#me-undead")?.closest(".me-checks");
     if (checks) checks.insertAdjacentHTML("beforeend", `<label>Subtipo<select id="me-subtipo">${SUBTIPOS.map(s => `<option value="${s.id}"${(draft.subtipo || (draft.undead ? "morto_vivo" : "raca_padrao")) === s.id ? " selected" : ""}>${s.nome}</option>`).join("")}</select><small id="me-subtipo-desc"></small></label><label><input id="me-visao_escuro" type="checkbox"${draft.visao_escuro ? " checked" : ""}> visão no escuro</label>`);
     const subtipoSel = root.querySelector("#me-subtipo");
@@ -632,7 +709,7 @@
     const poisonOptions = ((window.EDITOR_CATALOG || {}).venoms || []).map(v => ({id:v.id, name:v.nome || v.id})).filter(v => v.id);
     root.querySelectorAll(".me-attack").forEach((row, i) => {
       const a = draft.attacks[i] || {};
-      row.insertAdjacentHTML("beforeend", `<div class="me-attack-special"><b>Especial ao acertar</b><label>Veneno<select class="ma-poison"><option value="">— nenhum —</option>${poisonOptions.map(v => `<option value="${esc(v.id)}"${a.on_hit === v.id ? " selected" : ""}>${esc(v.name)}</option>`).join("")}</select></label><label>CD do veneno<input class="ma-poison-dc" type="number" min="1" max="40" value="${esc(a.poison_dc || 10)}"></label><label>Efeito<select class="ma-on-hit-effect"><option value="">— nenhum —</option><option value="congelamento_progressivo"${a.on_hit_effect === "congelamento_progressivo" ? " selected" : ""}>Congelamento Progressivo</option><option value="golpe_vento"${a.on_hit_effect === "golpe_vento" ? " selected" : ""}>Golpe de Vento (empurra)</option></select></label><label>Dano extra<select class="ma-extra-type"><option value="">— nenhum —</option>${ATTACK_DAMAGE_TYPES.filter(t=>t.value!=="physical").map(t=>`<option value="${t.value}"${(a.extra_damage_types||[])[0]===t.value ? " selected" : ""}>${t.name}</option>`).join("")}</select></label><label>Dados extras<input class="ma-extra-damage" placeholder="ex.: 2d6" value="${esc(a.extra_damage || "")}"></label></div>`);
+      row.insertAdjacentHTML("beforeend", `<div class="me-attack-special"><b>Especial ao acertar</b><label class="me-tip"><input class="ma-causa-sangramento" type="checkbox"${a.causa_sangramento ? " checked" : ""}> Causar Sangramento</label><label class="me-tip"><input class="ma-causa-hemorragia" type="checkbox"${a.aplica_hemorragia ? " checked" : ""}> Aplicar Hemorragia</label><label>Veneno<select class="ma-poison"><option value="">— nenhum —</option>${poisonOptions.map(v => `<option value="${esc(v.id)}"${a.on_hit === v.id ? " selected" : ""}>${esc(v.name)}</option>`).join("")}</select></label><label>CD do veneno<input class="ma-poison-dc" type="number" min="1" max="40" value="${esc(a.poison_dc || 10)}"></label><label>Efeito<select class="ma-on-hit-effect"><option value="">— nenhum —</option><option value="congelamento_progressivo"${a.on_hit_effect === "congelamento_progressivo" ? " selected" : ""}>Congelamento Progressivo</option><option value="golpe_vento"${a.on_hit_effect === "golpe_vento" ? " selected" : ""}>Golpe de Vento (empurra)</option></select></label><label>Dano extra<select class="ma-extra-type"><option value="">— nenhum —</option>${ATTACK_DAMAGE_TYPES.filter(t=>t.value!=="physical").map(t=>`<option value="${t.value}"${(a.extra_damage_types||[])[0]===t.value ? " selected" : ""}>${t.name}</option>`).join("")}</select></label><label>Dados extras<input class="ma-extra-damage" placeholder="ex.: 2d6" value="${esc(a.extra_damage || "")}"></label></div>`);
     });
     const casterBox = root.querySelector(".me-spell-caster");
     if (casterBox) casterBox.insertAdjacentHTML("beforeend", `<div class="me-calculated me-spell-dc"><b>CD de resistência</b><span id="me-spell-dc-final">8 + INT + círculo</span><small>1º: ${8 + mod(draft.int_) + 1} · 2º: ${8 + mod(draft.int_) + 2} · 3º: ${8 + mod(draft.int_) + 3}</small></div>`);
@@ -681,6 +758,27 @@
       resistancePanel.appendChild(vulnerableControl);
       if (hint?.classList.contains("me-hint")) resistancePanel.appendChild(hint);
     }
+    // Reorganização visual: imunidades pertencem à aba de Resistências.
+    // Os mesmos elementos continuam ligados aos mesmos campos e à mesma leitura.
+    const defenseLoot = root.querySelector(".me-defense-loot");
+    const immunityHeading = defenseLoot?.querySelector("h3");
+    const immunityGrid = immunityHeading?.nextElementSibling;
+    if (immunityHeading && immunityGrid && resistancePanel) {
+      const immunityPanel = document.createElement("div");
+      immunityPanel.className = "me-defense-loot me-immunities-panel";
+      immunityPanel.append(immunityHeading, immunityGrid);
+      resistancePanel.appendChild(immunityPanel);
+    }
+    // Reorganização visual: visão no escuro pertence à aba de Habilidades.
+    const abilitiesPanel = root.querySelector('.me-tab-panel[data-tab="Habilidades"]');
+    const darkvisionControl = root.querySelector("#me-visao_escuro")?.closest("label");
+    const abilityTabs = abilitiesPanel?.querySelector(".me-ability-tabs");
+    if (darkvisionControl && abilityTabs) {
+      const darkvisionBox = document.createElement("div");
+      darkvisionBox.className = "me-checks";
+      darkvisionBox.appendChild(darkvisionControl);
+      abilitiesPanel.appendChild(darkvisionBox);
+    }
     // O subtipo é a identidade da criatura. O antigo checkbox "morto-vivo"
     // duplicava essa escolha, portanto fica somente o seletor na ficha base.
     root.querySelector("#me-undead")?.closest("label")?.remove();
@@ -698,7 +796,8 @@
       if (profileSelect) { profileSelect.onchange=showProfile; showProfile(); }
     }
     root.querySelector("#me-tier")?.closest("label")?.remove();
-    root.querySelectorAll(".me-main-tabs button").forEach(btn=>btn.onclick=()=>switchTab(btn.dataset.tab)); switchTab("Resumo");
+    root.querySelectorAll(".me-main-tabs button").forEach(btn=>btn.onclick=()=>switchTab(btn.dataset.tab));
+    switchTab(root.querySelector(`.me-tab-panel[data-tab="${previousTab}"]`) ? previousTab : "Resumo");
     const equipmentToggle = document.getElementById("me-equipment-enabled");
     const equipmentInventory = document.getElementById("me-equipment-inventory");
     if (equipmentToggle && equipmentInventory) equipmentToggle.onchange = () => {
@@ -713,15 +812,30 @@
       const isCustom = custom.has(m.type);
       const overwriteNative = !isCustom && document.getElementById("me-edit-existing")?.checked;
       draft = normalize(m, isCustom, overwriteNative);
+      draft._editor_source_type = m.type;
+      draft._editor_mode = overwriteNative ? "native" : (isCustom ? "custom" : "copy");
       idManual = isCustom || overwriteNative;
       render();
     };
     document.getElementById("me-template").onchange = loadSelectedMonster;
-    document.getElementById("me-edit-existing").onchange = loadSelectedMonster;
+    const editExisting = document.getElementById("me-edit-existing");
+    if (editExisting) editExisting.onchange = loadSelectedMonster;
     document.getElementById("me-name").oninput = e => { if (!idManual) document.getElementById("me-type").value = slug(e.target.value); updateCalculated(); };
     document.getElementById("me-type").oninput = () => { idManual = true; };
     root.querySelectorAll("input, select, textarea").forEach(el => { if (!el.id || !["me-name","me-type"].includes(el.id)) el.addEventListener("input", updateCalculated); el.addEventListener("change", updateCalculated); });
     ["me-size-w", "me-size-h", "me-oriented"].forEach(id => document.getElementById(id)?.addEventListener("change", () => { draft = read(); render(); }));
+    document.getElementById("me-apply-elongated")?.addEventListener("click", () => {
+      const width = document.getElementById("me-size-w");
+      const length = document.getElementById("me-size-h");
+      const oriented = document.getElementById("me-oriented");
+      const fill = document.getElementById("me-fill-footprint-3d");
+      if (width && length && oriented && fill) {
+        width.value = "2"; length.value = "1";
+        oriented.disabled = false; oriented.checked = true; fill.disabled = false; fill.checked = true;
+        draft = read(); render();
+      }
+    });
+    document.getElementById("me-vscale-reset")?.addEventListener("click", () => { draft = read(); delete draft.vscale; render(); });
     root.querySelectorAll(".me-spell-tabs button").forEach(btn => btn.onclick = () => {
       const circle = btn.dataset.circle;
       root.querySelectorAll(".me-spell-tabs button").forEach(b => b.classList.toggle("active", b === btn));

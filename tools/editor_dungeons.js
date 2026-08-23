@@ -9,6 +9,7 @@ window.EDITOR_DUNGEONS = [
       "name": "Arena",
       "ambiente": "masmorra",
       "saida_permitida": true,
+      "start_mode": "entrance",
       "grid": {
         "w": 16,
         "h": 16
@@ -325,10 +326,12 @@ window.EDITOR_DUNGEONS = [
           "doors": []
         }
       ],
+      "door_conditions": {},
       "entrance": {
         "x": 7,
         "y": 13
       },
+      "hero_spawns": [],
       "exit": null,
       "monsters": [
         {
@@ -396,6 +399,196 @@ window.EDITOR_DUNGEONS = [
           "pos": [
             13,
             10
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "molochus_adulto",
+          "pos": [
+            5,
+            5
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "gigante_guerra",
+          "pos": [
+            8,
+            7
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "goblin",
+          "pos": [
+            5,
+            5
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "escorpiao_pequeno",
+          "pos": [
+            7,
+            2
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "rato_gigante",
+          "pos": [
+            12,
+            4
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "urso_negro_customizado",
+          "pos": [
+            7,
+            9
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "lacralion_adulto",
+          "pos": [
+            9,
+            5
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "ciclope",
+          "pos": [
+            2,
+            4
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "ogro_lanca",
+          "pos": [
+            3,
+            1
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "gigante_guerra",
+          "pos": [
+            11,
+            1
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "kobold_lanceiro",
+          "pos": [
+            5,
+            1
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "vela_de_fogo",
+          "pos": [
+            9,
+            1
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "tirano_da_mata",
+          "pos": [
+            4,
+            6
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "goblin_dual",
+          "pos": [
+            13,
+            6
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "elemental_gelo",
+          "pos": [
+            3,
+            10
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "elemental_pedra",
+          "pos": [
+            5,
+            10
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "elemental_eletrico",
+          "pos": [
+            9,
+            10
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "elemental_ar",
+          "pos": [
+            11,
+            10
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "elemental_agua",
+          "pos": [
+            11,
+            8
           ],
           "room_id": 1,
           "boss": false,
@@ -5780,6 +5973,7 @@ window.EDITOR_DUNGEONS = [
       "name": "floresta",
       "ambiente": "ar_livre",
       "saida_permitida": true,
+      "start_mode": "entrance",
       "grid": {
         "w": 26,
         "h": 16
@@ -6246,10 +6440,12 @@ window.EDITOR_DUNGEONS = [
           "doors": []
         }
       ],
+      "door_conditions": {},
       "entrance": {
         "x": 3,
         "y": 12
       },
+      "hero_spawns": [],
       "exit": {
         "x": 24,
         "y": 2
@@ -6278,8 +6474,8 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "goblin",
           "pos": [
-            13,
-            3
+            3,
+            9
           ],
           "room_id": null,
           "boss": false,
@@ -6296,10 +6492,10 @@ window.EDITOR_DUNGEONS = [
           "target": false
         },
         {
-          "type": "goblin",
+          "type": "grotao",
           "pos": [
-            13,
-            10
+            12,
+            7
           ],
           "room_id": null,
           "boss": false,
@@ -6318,8 +6514,8 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "devorador_metal",
           "pos": [
-            19,
-            5
+            12,
+            3
           ],
           "room_id": null,
           "boss": false,
@@ -25675,6 +25871,8 @@ window.EDITOR_DUNGEONS = [
       "id": "resgate de elara",
       "name": "Resgate de Elara",
       "ambiente": "masmorra",
+      "saida_permitida": true,
+      "start_mode": "entrance",
       "grid": {
         "w": 44,
         "h": 40
@@ -27539,7 +27737,7 @@ window.EDITOR_DUNGEONS = [
           "w": 2,
           "h": 9,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": []
         },
         {
@@ -27580,7 +27778,7 @@ window.EDITOR_DUNGEONS = [
           "w": 3,
           "h": 7,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               4,
@@ -27603,7 +27801,7 @@ window.EDITOR_DUNGEONS = [
           "w": 9,
           "h": 2,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               9,
@@ -27654,7 +27852,7 @@ window.EDITOR_DUNGEONS = [
           "w": 14,
           "h": 4,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": []
         },
         {
@@ -27664,7 +27862,7 @@ window.EDITOR_DUNGEONS = [
           "w": 11,
           "h": 10,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               25,
@@ -27703,7 +27901,7 @@ window.EDITOR_DUNGEONS = [
           "w": 5,
           "h": 2,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               13,
@@ -27722,7 +27920,7 @@ window.EDITOR_DUNGEONS = [
           "w": 8,
           "h": 7,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               30,
@@ -27749,7 +27947,7 @@ window.EDITOR_DUNGEONS = [
           "w": 9,
           "h": 6,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               20,
@@ -27776,7 +27974,7 @@ window.EDITOR_DUNGEONS = [
           "w": 3,
           "h": 2,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               20,
@@ -27814,7 +28012,7 @@ window.EDITOR_DUNGEONS = [
           "w": 11,
           "h": 9,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               32,
@@ -27845,7 +28043,7 @@ window.EDITOR_DUNGEONS = [
           "w": 3,
           "h": 7,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               15,
@@ -27880,7 +28078,7 @@ window.EDITOR_DUNGEONS = [
           "w": 12,
           "h": 7,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               15,
@@ -27903,7 +28101,7 @@ window.EDITOR_DUNGEONS = [
           "w": 13,
           "h": 8,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               27,
@@ -27938,7 +28136,7 @@ window.EDITOR_DUNGEONS = [
           "w": 12,
           "h": 9,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               29,
@@ -27957,7 +28155,7 @@ window.EDITOR_DUNGEONS = [
           "w": 6,
           "h": 6,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               16,
@@ -27990,6 +28188,7 @@ window.EDITOR_DUNGEONS = [
         "x": 2,
         "y": 37
       },
+      "hero_spawns": [],
       "exit": {
         "x": 3,
         "y": 37
@@ -28032,8 +28231,8 @@ window.EDITOR_DUNGEONS = [
         },
         {
           "pos": [
-            5,
-            35
+            1,
+            38
           ],
           "gold": 5000,
           "items": [
@@ -28102,8 +28301,17 @@ window.EDITOR_DUNGEONS = [
         },
         {
           "pos": [
-            12,
-            35
+            10,
+            36
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": true
+        },
+        {
+          "pos": [
+            14,
+            37
           ],
           "gold": 0,
           "items": [],
@@ -28120,17 +28328,8 @@ window.EDITOR_DUNGEONS = [
         },
         {
           "pos": [
-            14,
-            35
-          ],
-          "gold": 0,
-          "items": [],
-          "key_objective": false
-        },
-        {
-          "pos": [
-            15,
-            35
+            17,
+            36
           ],
           "gold": 0,
           "items": [],
@@ -28214,9 +28413,9 @@ window.EDITOR_DUNGEONS = [
           "image": "armadilhafococomespeinhos.png"
         },
         {
-          "tipo": "buraco",
+          "tipo": "lamina_escondida",
           "pos": [
-            9,
+            14,
             3
           ]
         },
@@ -28299,6 +28498,25 @@ window.EDITOR_DUNGEONS = [
           "vscale": [
             1,
             1.2
+          ]
+        },
+        {
+          "id": "decor_2",
+          "type": "tumba",
+          "pos": [
+            1,
+            10
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "mesaalquimia.png",
+          "size": [
+            1,
+            1
           ]
         },
         {
@@ -28441,6 +28659,20 @@ window.EDITOR_DUNGEONS = [
           "image": "barril.png"
         },
         {
+          "id": "decor_11",
+          "type": "coluna",
+          "pos": [
+            34,
+            12
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
           "id": "decor_12",
           "type": "coluna",
           "pos": [
@@ -28458,6 +28690,34 @@ window.EDITOR_DUNGEONS = [
             1,
             1.6
           ]
+        },
+        {
+          "id": "decor_13",
+          "type": "coluna",
+          "pos": [
+            31,
+            14
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_14",
+          "type": "coluna",
+          "pos": [
+            34,
+            14
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
         },
         {
           "id": "decor_15",
@@ -28527,6 +28787,82 @@ window.EDITOR_DUNGEONS = [
           "vscale": [
             1,
             1.4
+          ]
+        },
+        {
+          "id": "decor_19",
+          "type": "grades_prisao",
+          "pos": [
+            34,
+            9
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "grade.png",
+          "vscale": [
+            1.6,
+            1.3
+          ]
+        },
+        {
+          "id": "decor_20",
+          "type": "grades_prisao",
+          "pos": [
+            34,
+            10
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "grade.png",
+          "vscale": [
+            1.5,
+            1.3
+          ]
+        },
+        {
+          "id": "decor_21",
+          "type": "grades_prisao",
+          "pos": [
+            35,
+            10
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "grade.png",
+          "vscale": [
+            1.6,
+            1.3
+          ]
+        },
+        {
+          "id": "decor_22",
+          "type": "grades_prisao",
+          "pos": [
+            36,
+            10
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "grade.png",
+          "vscale": [
+            1.6,
+            1.3
           ]
         },
         {
@@ -28710,75 +29046,14 @@ window.EDITOR_DUNGEONS = [
             "items": []
           },
           "key_objective": false
-        },
-        {
-          "id": "decor_34",
-          "type": "mesa_quimica",
-          "pos": [
-            3,
-            10
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false
-        },
-        {
-          "id": "decor_35",
-          "type": "coluna",
-          "pos": [
-            34,
-            12
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false,
-          "image": "coluna.png",
-          "vscale": [
-            1,
-            1.6
-          ]
-        },
-        {
-          "id": "decor_36",
-          "type": "coluna",
-          "pos": [
-            31,
-            15
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false
-        },
-        {
-          "id": "decor_37",
-          "type": "coluna",
-          "pos": [
-            34,
-            15
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false
         }
       ],
       "secret_passages": [],
       "falas": [],
       "master_reinforcements": [],
       "expected_party": {
-        "heroes": 4,
-        "level": 1
+        "heroes": 1,
+        "level": 2
       },
       "prisoner": {
         "pos": [
@@ -30089,6 +30364,663 @@ window.EDITOR_DUNGEONS = [
     }
   },
   {
+    "file": "sala secreta.json",
+    "id": "sala secreta",
+    "name": "sala_secreta",
+    "defn": {
+      "schema_version": 1,
+      "id": "sala secreta",
+      "name": "sala_secreta",
+      "ambiente": "masmorra",
+      "saida_permitida": true,
+      "start_mode": "entrance",
+      "grid": {
+        "w": 16,
+        "h": 12
+      },
+      "tiles": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "rooms": [
+        {
+          "id": 0,
+          "x": 1,
+          "y": 1,
+          "w": 14,
+          "h": 10,
+          "role": "entrance",
+          "locked": false,
+          "doors": []
+        }
+      ],
+      "door_conditions": {},
+      "entrance": {
+        "x": 7,
+        "y": 9
+      },
+      "hero_spawns": [],
+      "exit": null,
+      "monsters": [
+        {
+          "type": "goblin",
+          "pos": [
+            6,
+            3
+          ],
+          "room_id": 0,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "goblin",
+          "pos": [
+            8,
+            3
+          ],
+          "room_id": 0,
+          "boss": false,
+          "target": false,
+          "vscale": [
+            0.8,
+            0.8
+          ]
+        },
+        {
+          "type": "goblin",
+          "pos": [
+            10,
+            3
+          ],
+          "room_id": 0,
+          "boss": false,
+          "target": false,
+          "vscale": [
+            0.6,
+            0.6
+          ]
+        },
+        {
+          "type": "kobold_lanceiro",
+          "pos": [
+            4,
+            1
+          ],
+          "room_id": 0,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "kobold_lanceiro",
+          "pos": [
+            7,
+            1
+          ],
+          "room_id": 0,
+          "boss": false,
+          "target": false,
+          "vscale": [
+            0.8,
+            0.8
+          ]
+        },
+        {
+          "type": "kobold_lanceiro",
+          "pos": [
+            10,
+            1
+          ],
+          "room_id": 0,
+          "boss": false,
+          "target": false,
+          "vscale": [
+            0.6,
+            0.6
+          ]
+        }
+      ],
+      "chests": [],
+      "traps": [],
+      "decorations": [
+        {
+          "id": "decor_0",
+          "type": "arca_tesouros",
+          "pos": [
+            4,
+            3
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": {
+            "gold": 500,
+            "items": [
+              {
+                "id": "circlet"
+              },
+              {
+                "id": "health_potion_small"
+              },
+              {
+                "id": "ring_vita"
+              },
+              {
+                "id": "health_potion_concentrated"
+              }
+            ]
+          },
+          "key_objective": false
+        },
+        {
+          "id": "decor_1",
+          "type": "arca_tesouros",
+          "pos": [
+            11,
+            3
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": {
+            "gold": 700,
+            "items": [
+              {
+                "id": "cola_alquimica"
+              },
+              {
+                "id": "runa_ancestral"
+              }
+            ]
+          },
+          "key_objective": false
+        },
+        {
+          "id": "decor_2",
+          "type": "arca_tesouros",
+          "pos": [
+            3,
+            6
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": {
+            "gold": 500,
+            "items": [
+              {
+                "id": "monster_leather_plate"
+              }
+            ]
+          },
+          "key_objective": false
+        },
+        {
+          "id": "decor_3",
+          "type": "arca_tesouros",
+          "pos": [
+            12,
+            6
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": {
+            "gold": 450,
+            "items": [
+              {
+                "id": "joia"
+              },
+              {
+                "id": "bomba_fumaca"
+              },
+              {
+                "id": "oleo_dissolvente"
+              },
+              {
+                "id": "amulet"
+              },
+              {
+                "id": "backpack"
+              }
+            ]
+          },
+          "key_objective": false
+        }
+      ],
+      "secret_passages": [],
+      "falas": [],
+      "master_reinforcements": [],
+      "expected_party": {
+        "heroes": 4,
+        "level": 1
+      },
+      "prisoner": null,
+      "materiais": {
+        "0,0": "desmoronada",
+        "1,0": "desmoronada",
+        "2,0": "desmoronada",
+        "3,0": "desmoronada",
+        "4,0": "desmoronada",
+        "5,0": "desmoronada",
+        "6,0": "desmoronada",
+        "7,0": "desmoronada",
+        "8,0": "desmoronada",
+        "9,0": "desmoronada",
+        "10,0": "desmoronada",
+        "11,0": "desmoronada",
+        "12,0": "desmoronada",
+        "13,0": "desmoronada",
+        "14,0": "desmoronada",
+        "15,0": "desmoronada",
+        "15,1": "desmoronada",
+        "15,3": "desmoronada",
+        "15,2": "desmoronada",
+        "15,4": "desmoronada",
+        "15,5": "desmoronada",
+        "15,6": "desmoronada",
+        "15,7": "desmoronada",
+        "15,8": "desmoronada",
+        "15,9": "desmoronada",
+        "15,10": "desmoronada",
+        "15,11": "desmoronada",
+        "14,11": "desmoronada",
+        "13,11": "desmoronada",
+        "12,11": "desmoronada",
+        "10,11": "desmoronada",
+        "11,11": "desmoronada",
+        "9,11": "desmoronada",
+        "8,11": "desmoronada",
+        "7,11": "desmoronada",
+        "6,11": "desmoronada",
+        "5,11": "desmoronada",
+        "4,11": "desmoronada",
+        "3,11": "desmoronada",
+        "2,11": "desmoronada",
+        "1,11": "desmoronada",
+        "0,11": "desmoronada",
+        "0,10": "desmoronada",
+        "0,9": "desmoronada",
+        "0,8": "desmoronada",
+        "0,7": "desmoronada",
+        "0,5": "desmoronada",
+        "0,6": "desmoronada",
+        "0,4": "desmoronada",
+        "0,3": "desmoronada",
+        "0,2": "desmoronada",
+        "0,1": "desmoronada",
+        "1,1": "pedra_negra",
+        "2,2": "pedra_negra",
+        "3,2": "pedra_negra",
+        "3,3": "pedra_negra",
+        "4,3": "pedra_negra",
+        "5,3": "pedra_negra",
+        "5,4": "pedra_negra",
+        "6,4": "pedra_negra",
+        "7,4": "pedra_negra",
+        "7,5": "pedra_negra",
+        "8,5": "pedra_negra",
+        "9,5": "pedra_negra",
+        "9,6": "pedra_negra",
+        "10,6": "pedra_negra",
+        "11,6": "pedra_negra",
+        "11,7": "pedra_negra",
+        "12,7": "pedra_negra",
+        "12,8": "pedra_negra",
+        "13,8": "pedra_negra",
+        "13,9": "pedra_negra",
+        "14,9": "pedra_negra",
+        "14,10": "pedra_negra",
+        "14,8": "pedra_negra",
+        "14,7": "pedra_negra",
+        "14,6": "pedra_negra",
+        "14,5": "pedra_negra",
+        "14,4": "pedra_negra",
+        "14,3": "pedra_negra",
+        "14,2": "pedra_negra",
+        "14,1": "pedra_negra",
+        "13,1": "pedra_negra",
+        "12,1": "pedra_negra",
+        "11,1": "pedra_negra",
+        "10,1": "pedra_negra",
+        "9,1": "pedra_negra",
+        "8,1": "pedra_negra",
+        "7,1": "pedra_negra",
+        "6,1": "pedra_negra",
+        "5,1": "pedra_negra",
+        "4,1": "pedra_negra",
+        "3,1": "pedra_negra",
+        "2,1": "pedra_negra",
+        "1,2": "pedra_negra",
+        "1,3": "pedra_negra",
+        "1,4": "pedra_negra",
+        "1,5": "pedra_negra",
+        "1,6": "pedra_negra",
+        "1,7": "pedra_negra",
+        "1,8": "pedra_negra",
+        "1,9": "pedra_negra",
+        "1,10": "pedra_negra",
+        "2,10": "pedra_negra",
+        "3,10": "pedra_negra",
+        "4,10": "pedra_negra",
+        "5,10": "pedra_negra",
+        "6,10": "pedra_negra",
+        "7,10": "pedra_negra",
+        "8,10": "pedra_negra",
+        "9,10": "pedra_negra",
+        "10,10": "pedra_negra",
+        "11,10": "pedra_negra",
+        "12,10": "pedra_negra",
+        "13,10": "pedra_negra",
+        "13,7": "pedra_negra",
+        "13,6": "pedra_negra",
+        "12,6": "pedra_negra",
+        "12,5": "pedra_negra",
+        "12,4": "pedra_negra",
+        "12,3": "pedra_negra",
+        "12,2": "pedra_negra",
+        "13,2": "pedra_negra",
+        "13,3": "pedra_negra",
+        "13,5": "pedra_negra",
+        "13,4": "pedra_negra",
+        "11,2": "pedra_negra",
+        "10,2": "pedra_negra",
+        "9,2": "pedra_negra",
+        "8,2": "pedra_negra",
+        "7,2": "pedra_negra",
+        "6,2": "pedra_negra",
+        "5,2": "pedra_negra",
+        "4,2": "pedra_negra",
+        "2,3": "pedra_negra",
+        "2,4": "pedra_negra",
+        "2,5": "pedra_negra",
+        "2,6": "pedra_negra",
+        "2,7": "pedra_negra",
+        "2,8": "pedra_negra",
+        "2,9": "pedra_negra",
+        "3,9": "pedra_negra",
+        "4,9": "pedra_negra",
+        "5,9": "pedra_negra",
+        "6,9": "pedra_negra",
+        "7,9": "pedra_negra",
+        "8,9": "pedra_negra",
+        "9,9": "pedra_negra",
+        "10,9": "pedra_negra",
+        "11,9": "pedra_negra",
+        "12,9": "pedra_negra",
+        "11,8": "pedra_negra",
+        "10,8": "pedra_negra",
+        "9,8": "pedra_negra",
+        "8,8": "pedra_negra",
+        "7,8": "pedra_negra",
+        "6,8": "pedra_negra",
+        "5,8": "pedra_negra",
+        "4,8": "pedra_negra",
+        "3,8": "pedra_negra",
+        "3,7": "pedra_negra",
+        "3,6": "pedra_negra",
+        "3,5": "pedra_negra",
+        "3,4": "pedra_negra",
+        "4,4": "pedra_negra",
+        "4,5": "pedra_negra",
+        "4,6": "pedra_negra",
+        "4,7": "pedra_negra",
+        "5,7": "pedra_negra",
+        "6,7": "pedra_negra",
+        "7,7": "pedra_negra",
+        "8,7": "pedra_negra",
+        "9,7": "pedra_negra",
+        "10,7": "pedra_negra",
+        "8,6": "pedra_negra",
+        "7,6": "pedra_negra",
+        "6,6": "pedra_negra",
+        "5,6": "pedra_negra",
+        "6,5": "pedra_negra",
+        "5,5": "pedra_negra",
+        "7,3": "pedra_negra",
+        "8,3": "pedra_negra",
+        "9,3": "pedra_negra",
+        "6,3": "pedra_negra",
+        "10,3": "pedra_negra",
+        "11,3": "pedra_negra",
+        "11,4": "pedra_negra",
+        "11,5": "pedra_negra",
+        "10,5": "pedra_negra",
+        "10,4": "pedra_negra",
+        "9,4": "pedra_negra",
+        "8,4": "pedra_negra"
+      },
+      "objectives": {
+        "primary": {
+          "type": "kill_all",
+          "xp": 0,
+          "reward": {
+            "gold": 0,
+            "items": []
+          }
+        },
+        "secondary": []
+      }
+    }
+  },
+  {
     "file": "terrenos.json",
     "id": "terrenos",
     "name": "terrenos",
@@ -30097,6 +31029,8 @@ window.EDITOR_DUNGEONS = [
       "id": "terrenos",
       "name": "terrenos",
       "ambiente": "ar_livre",
+      "saida_permitida": true,
+      "start_mode": "entrance",
       "grid": {
         "w": 16,
         "h": 12
@@ -30331,16 +31265,40 @@ window.EDITOR_DUNGEONS = [
           "doors": []
         }
       ],
+      "door_conditions": {},
       "entrance": {
         "x": 3,
         "y": 6
       },
+      "hero_spawns": [],
       "exit": null,
-      "monsters": [],
+      "monsters": [
+        {
+          "type": "lacralion_filhote",
+          "pos": [
+            6,
+            5
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "vela_de_fogo",
+          "pos": [
+            13,
+            5
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false
+        }
+      ],
       "chests": [],
       "traps": [],
       "decorations": [
         {
+          "id": "decor_0",
           "type": "chao",
           "pos": [
             12,
@@ -30351,6 +31309,7 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
+          "key_objective": false,
           "image": "chãoagua.png",
           "size": [
             3,
@@ -30358,6 +31317,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "decor_1",
           "type": "chao",
           "pos": [
             12,
@@ -30368,6 +31328,7 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
+          "key_objective": false,
           "image": "chaoaguarasa.png",
           "size": [
             3,
@@ -30375,6 +31336,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "decor_2",
           "type": "chao",
           "pos": [
             12,
@@ -30385,6 +31347,7 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
+          "key_objective": false,
           "image": "chaoaguarasa.png",
           "size": [
             3,
@@ -30392,6 +31355,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "decor_3",
           "type": "chao",
           "pos": [
             11,
@@ -30402,6 +31366,7 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
+          "key_objective": false,
           "image": "chaoaguarasa.png",
           "size": [
             1,
@@ -30409,6 +31374,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "decor_4",
           "type": "chao",
           "pos": [
             11,
@@ -30419,6 +31385,7 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
+          "key_objective": false,
           "image": "chaoterra.png",
           "size": [
             4,
@@ -30426,6 +31393,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "decor_5",
           "type": "chao",
           "pos": [
             10,
@@ -30436,6 +31404,7 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
+          "key_objective": false,
           "image": "chaoterra.png",
           "size": [
             1,
@@ -30443,6 +31412,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "decor_6",
           "type": "chao",
           "pos": [
             11,
@@ -30453,6 +31423,7 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
+          "key_objective": false,
           "image": "chaoterra.png",
           "size": [
             4,
@@ -30460,6 +31431,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "decor_7",
           "type": "chao",
           "pos": [
             8,
@@ -30470,6 +31442,7 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
+          "key_objective": false,
           "image": "chaopantano.png",
           "size": [
             2,
@@ -30477,6 +31450,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "decor_8",
           "type": "chao",
           "pos": [
             4,
@@ -30487,6 +31461,7 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
+          "key_objective": false,
           "image": "chaopedranegra.png",
           "size": [
             4,
@@ -30494,6 +31469,13 @@ window.EDITOR_DUNGEONS = [
           ]
         }
       ],
+      "secret_passages": [],
+      "falas": [],
+      "master_reinforcements": [],
+      "expected_party": {
+        "heroes": 4,
+        "level": 1
+      },
       "prisoner": null,
       "materiais": {},
       "objectives": {
@@ -32424,4 +33406,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO por tools/export_catalog.py — não editar à mão.
+// GERADO ao salvar no editor (e por tools/export_catalog.py).

@@ -34,7 +34,7 @@
     rooms: [], nextRoomId: 0,
     startMode: "entrance", entrance: null, heroSpawns: [], exit: null, prisoner: null,
     heroSpawnClass: "warrior",
-    monsters: [], chests: [], traps: [], decorations: [], secretPassages: [], falas: [], nextDecorId: 0, nextPassageId: 0, nextFalaId: 0,
+    monsters: [], chests: [], traps: [], decorations: [], secretPassages: [], doorConditions: {}, falas: [], nextDecorId: 0, nextPassageId: 0, nextFalaId: 0,
     masterReinforcements: [],
     expectedParty: { heroes: 4, level: 1 },
     objectives: { primary: { type: "kill_all" }, secondary: [] },
@@ -96,6 +96,29 @@
     const out = [];
     for (let i = 0; i < ew; i++) for (let j = 0; j < eh; j++) out.push([pos[0] + i, pos[1] + j]);
     return out;
+  }
+  function monsterMeta(monsterOrType) {
+    const type = typeof monsterOrType === "string" ? monsterOrType : monsterOrType && monsterOrType.type;
+    return CAT.monsters.find(m => m.type === type) || null;
+  }
+  function monsterSize(monster) {
+    const meta = monsterMeta(monster);
+    const raw = monster && Array.isArray(monster.size) ? monster.size : meta && meta.size;
+    const w = Math.max(1, Math.min(4, Number(raw && raw[0]) || 1));
+    const h = Math.max(1, Math.min(4, Number(raw && raw[1]) || 1));
+    return [w, h];
+  }
+  function monsterOriented(monster) {
+    const meta = monsterMeta(monster);
+    return !!(monster && monster.oriented != null ? monster.oriented : meta && meta.oriented);
+  }
+  function monsterTiles(monster, pos) {
+    const p = pos || (monster && monster.pos) || [0, 0];
+    return tilesFor(p, monsterSize(monster), monsterOriented(monster) ? (monster.facing || [0, 1]) : null);
+  }
+  function monsterImageName(monster) {
+    const meta = monsterMeta(monster);
+    return (monster && monster.image) || (meta && meta.image) || (monster && monster.type) || "";
   }
   function decorTiles(d) {
     const [ew, eh] = decorEffSizeOf(d);
@@ -408,6 +431,22 @@
     return (im.complete && im.naturalWidth) ? im : null;
   }
 
+  // Miniaturas dos monstros no preview do editor. A mesma imagem PNG usada
+  // pelo mapa 2D é centralizada no footprint real da criatura.
+  const _monsterImgCache = {};
+  function monsterImg(name) {
+    if (!name) return null;
+    let im = _monsterImgCache[name];
+    if (im === undefined) {
+      im = new Image();
+      im.onload = () => render();
+      im.onerror = () => render();
+      im.src = "../assets/pawns/monstros/" + name + "/" + name + ".png";
+      _monsterImgCache[name] = im;
+    }
+    return (im.complete && im.naturalWidth) ? im : null;
+  }
+
   // As artes de parede recebidas podem vir com fundo preto opaco. Mantemos o
   // PNG original e apenas tratamos os pixels quase pretos como transparentes
   // no preview, tal como o renderer 3D faz no jogo.
@@ -441,9 +480,9 @@
     if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) return "🧍";
     const mo = at(S.monsters);
     if (mo) {
-      const vs = mo.vscale;
-      if (Array.isArray(vs) && (vs[0] !== 1 || vs[1] !== 1)) return null;
-      const d = CAT.monsters.find(c => c.type === mo.type); return d ? d.emoji : "👹";
+      // Monstros são desenhados no passe próprio abaixo, onde o centro e o
+      // tamanho do footprint podem ser respeitados (inclusive 2×2).
+      return null;
     }
     if (at(S.chests)) return "🧰";
     const tr = at(S.traps);
@@ -713,26 +752,63 @@
       ctx.fillText(emoji, cx, baseY);
       ctx.restore();
     }
-    // Mesmo preview para a escala visual dos monstros. A casa ocupada segue
-    // sendo uma só; isto mostra apenas como o sprite aparecerá durante o jogo.
+    // Preview da miniatura e do footprint dos monstros. A posição salva é a
+    // âncora do monstro; a imagem fica no centro geométrico das casas ocupadas.
     for (const m of S.monsters) {
+      const tiles = monsterTiles(m);
+      if (!tiles.length) continue;
+      const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
+      const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
+      const fw = maxX - minX + 1, fh = maxY - minY + 1;
+      const cx = (minX + fw / 2) * CELL, cy = (minY + fh / 2) * CELL;
       const vs = Array.isArray(m.vscale) ? m.vscale : null;
-      if (!vs || (vs[0] === 1 && vs[1] === 1)) continue;
-      const meta = CAT.monsters.find(c => c.type === m.type);
-      const emoji = meta ? meta.emoji : "👹";
-      const sx = Math.max(.2, Math.min(4, Number(vs[0]) || 1));
-      const sy = Math.max(.2, Math.min(4, Number(vs[1]) || 1));
+      const sx = Math.max(.2, Math.min(4, Number(vs && vs[0]) || 1));
+      const sy = Math.max(.2, Math.min(4, Number(vs && vs[1]) || 1));
+      if (fw > 1 || fh > 1) {
+        ctx.save();
+        ctx.fillStyle = "rgba(188,74,90,.14)";
+        ctx.strokeStyle = "rgba(255,166,132,.82)";
+        ctx.lineWidth = 1.5;
+        for (const [tx, ty] of tiles) {
+          ctx.fillRect(tx * CELL + 2, ty * CELL + 2, CELL - 4, CELL - 4);
+          ctx.strokeRect(tx * CELL + 2, ty * CELL + 2, CELL - 4, CELL - 4);
+        }
+        ctx.restore();
+      }
+      const im = monsterImg(monsterImageName(m));
       ctx.save();
-      ctx.translate(m.pos[0] * CELL + CELL / 2, m.pos[1] * CELL + CELL - 4);
-      ctx.scale(sx, sy); ctx.font = "16px sans-serif";
-      ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
-      ctx.fillText(emoji, 0, 0);
+      if (im) {
+        const ar = im.naturalWidth / im.naturalHeight;
+        const maxW = fw * CELL * .90 * sx, maxH = fh * CELL * .90 * sy;
+        let dw = maxW, dh = dw / ar;
+        if (dh > maxH) { dh = maxH; dw = dh * ar; }
+        const baseY = (minY + fh) * CELL - 4;
+        ctx.drawImage(im, cx - dw / 2, baseY - dh, dw, dh);
+      } else {
+        const meta = monsterMeta(m);
+        const emoji = meta ? meta.emoji : "👹";
+        ctx.translate(cx, (minY + fh) * CELL - 5);
+        ctx.scale(sx, sy); ctx.font = `${Math.min(30, 16 * Math.max(fw, fh))}px sans-serif`;
+        ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+        ctx.fillText(emoji, 0, 0);
+      }
       ctx.restore();
     }
     drawEntityMarkers();
     if (S.entrance) drawStairs(S.entrance.x, S.entrance.y, "#69bde9", true);
     if (S.exit) drawStairs(S.exit.x, S.exit.y, "#e5b653", false);
-    if (S.sel && S.sel.kind === "decor" && S.sel.ref) {
+    if (S.sel && S.sel.kind === "monster" && S.sel.ref) {
+      const tiles = monsterTiles(S.sel.ref);
+      const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
+      const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
+      ctx.strokeStyle = "#ffd86a"; ctx.lineWidth = 2;
+      ctx.strokeRect(minX * CELL + 1.5, minY * CELL + 1.5, (maxX - minX + 1) * CELL - 3, (maxY - minY + 1) * CELL - 3);
+      const label = (maxX - minX + 1) + "×" + (maxY - minY + 1);
+      ctx.font = "11px sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "top";
+      ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(minX * CELL + 2, minY * CELL + 2, ctx.measureText(label).width + 5, 13);
+      ctx.fillStyle = "#ffd86a"; ctx.fillText(label, minX * CELL + 4, minY * CELL + 3);
+      ctx.textAlign = "start";
+    } else if (S.sel && S.sel.kind === "decor" && S.sel.ref) {
       // Referência: contorno do footprint realçado + rótulo W×H (casas efetivas).
       const tiles = decorTiles(S.sel.ref);
       const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
@@ -792,7 +868,9 @@
     const [ax, ay] = _drag.candidate;
     const tiles = _drag.sel.kind === "decor"
       ? tilesFor([ax, ay], decorBaseSize(_drag.sel.ref), _drag.sel.ref.facing)
-      : [[ax, ay]];
+      : _drag.sel.kind === "monster"
+        ? monsterTiles(_drag.sel.ref, [ax, ay])
+        : [[ax, ay]];
     ctx.strokeStyle = _drag.valid ? "#6ad06a" : "#d05a5a"; ctx.lineWidth = 2;
     for (const [tx, ty] of tiles) {
       if (tx < 0 || ty < 0 || tx >= S.grid.w || ty >= S.grid.h) continue;
@@ -934,9 +1012,13 @@
         r.doors.push([x, y]);
     }
   }
+  function doorConditionAt(x, y) {
+    return S.doorConditions[doorKey(x, y)] || null;
+  }
   function doorUnlink(x, y) {
     for (const r of S.rooms) r.doors = r.doors.filter(d => !(d[0] === x && d[1] === y));
     delete S.doorRotations[doorKey(x, y)];
+    delete S.doorConditions[doorKey(x, y)];
   }
 
   function paintTile(x, y) {
@@ -998,6 +1080,9 @@
     }
     if (sel.kind === "decor")
       return decorWouldFit(sel.ref, [ax, ay], decorBaseSize(sel.ref), sel.ref.facing);
+    if (sel.kind === "monster")
+      return monsterTiles(sel.ref, [ax, ay]).every(([tx, ty]) =>
+        tx >= 0 && ty >= 0 && tx < S.grid.w && ty < S.grid.h && S.tiles[ty][tx] !== WALL);
     return ax >= 0 && ay >= 0 && ax < S.grid.w && ay < S.grid.h && S.tiles[ay][ax] !== WALL;
   }
   // Move a entidade selecionada para (nx,ny), conforme o tipo.
@@ -1031,7 +1116,9 @@
     const _decsHere = S.decorations.filter(d => decorTiles(d).some(c => c[0] === x && c[1] === y));
     const dec = _decsHere.find(d => !isFloorDecor(d)) || _decsHere[0];
     if (dec) return { kind: "decor", ref: dec, pos: dec.pos.slice() };
-    return find(S.monsters, "monster") || find(S.chests, "chest") || find(S.traps, "trap") || find(S.falas, "fala") || null;
+    const mon = S.monsters.find(e => monsterTiles(e).some(c => c[0] === x && c[1] === y));
+    return (mon ? { kind: "monster", ref: mon, pos: mon.pos.slice() } : null)
+      || find(S.chests, "chest") || find(S.traps, "trap") || find(S.falas, "fala") || null;
   }
 
   // Lista todas as entidades em uma casa. A versão antiga retornava apenas a
@@ -1049,7 +1136,7 @@
     const decs = S.decorations.filter(d => decorTiles(d).some(c => c[0] === x && c[1] === y));
     for (const d of decs.filter(d => !isFloorDecor(d)).concat(decs.filter(isFloorDecor)))
       found.push({ kind: "decor", ref: d, pos: d.pos.slice() });
-    for (const m of S.monsters) if (m.pos[0] === x && m.pos[1] === y)
+    for (const m of S.monsters) if (monsterTiles(m).some(c => c[0] === x && c[1] === y))
       found.push({ kind: "monster", ref: m, pos: m.pos.slice() });
     for (const c of S.chests) if (c.pos[0] === x && c.pos[1] === y)
       found.push({ kind: "chest", ref: c, pos: c.pos.slice() });
@@ -1088,9 +1175,14 @@
       }
       case "exit": S.exit = { x, y }; break;
       case "prisoner": S.prisoner = { pos: [x, y], room_id: rid }; break;
-      case "monster": S.monsters.push({ type: (CAT.monsters[0] || {}).type || "goblin", pos: [x, y], room_id: rid, boss: false, target: false }); break;
+      case "monster": {
+        const type = (CAT.monsters[0] || {}).type || "goblin";
+        const monster = { type, pos: [x, y], room_id: rid, boss: false, target: false };
+        if (dropValid({ kind: "monster", ref: monster }, x, y)) S.monsters.push(monster);
+        break;
+      }
       case "chest": S.chests.push({ pos: [x, y], gold: 0, items: [], key_objective: false }); break;
-      case "trap": S.traps.push({ tipo: (CAT.traps[0] || {}).tipo || "fosso_estacas", pos: [x, y] }); break;
+      case "trap": S.traps.push({ tipo: ((CAT.traps.find(t => !t.apenas_objeto) || CAT.traps[0]) || {}).tipo || "fosso_estacas", pos: [x, y] }); break;
       case "fala": S.falas.push({ id: "fala_" + S.nextFalaId++, pos: [x, y], falante: { nome: "", emoji: "🧙" }, texto: "", trigger: { tipo: "proximidade", raio: 2 } }); break;
       case "decor": placeDecor(x, y); break;
       case "secret_mechanism":
@@ -1110,7 +1202,7 @@
     S.heroSpawns = S.heroSpawns.filter(s => !(s.pos[0] === x && s.pos[1] === y));
     if (S.exit && S.exit.x === x && S.exit.y === y) S.exit = null;
     if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) S.prisoner = null;
-    S.monsters = S.monsters.filter(e => !(e.pos[0] === x && e.pos[1] === y));
+    S.monsters = S.monsters.filter(e => !monsterTiles(e).some(c => c[0] === x && c[1] === y));
     S.chests = S.chests.filter(e => !(e.pos[0] === x && e.pos[1] === y));
     S.traps = S.traps.filter(e => !(e.pos[0] === x && e.pos[1] === y));
     S.decorations = S.decorations.filter(d => !decorTiles(d).some(c => c[0] === x && c[1] === y));
@@ -1146,6 +1238,38 @@
 
   const panel = document.getElementById("panel");
   function opt(list, val, fmt) { return list.map(o => `<option value="${o.v}"${o.v === val ? " selected" : ""}>${fmt(o)}</option>`).join(""); }
+
+  // Organização visual exclusiva dos seletores de loot de baús e decorações.
+  // O item continua sendo salvo pelo mesmo ID; esta camada só agrupa e ordena
+  // as opções para facilitar a busca no editor.
+  const LOOT_ITEM_GROUPS = [
+    "Armas", "Armaduras", "Escudos", "Venenos", "Arremessáveis",
+    "Instrumentos", "Munições", "Poções e consumíveis", "Anéis e acessórios", "Outros",
+  ];
+  function lootItemCategory(item) {
+    const id = String(item.id || "").toLowerCase();
+    const type = String(item.tipo_item || item.item_type || item.type || "").toLowerCase();
+    const slot = String(item.item_slot || "").toLowerCase();
+    const effect = String(item.effect || "").toLowerCase();
+    if (item.kind === "armor" || ["armor", "armadura", "helmet", "head", "body"].includes(type) || ["armor", "head"].includes(slot)) return "Armaduras";
+    if (item.kind === "shield" || ["shield", "escudo"].includes(type) || slot === "shield") return "Escudos";
+    if (item.veneno_id || effect === "coat_poison" || id.startsWith("veneno_")) return "Venenos";
+    if (effect === "throwable" || ["throwable", "arremessavel", "arremessável"].includes(type)) return "Arremessáveis";
+    if (type === "instrumento" || slot === "instrumento" || id.startsWith("instrumento_")) return "Instrumentos";
+    if (item.ammo_type || item.ammo_count != null || ["ammo", "municao", "munição"].includes(type)) return "Munições";
+    if (item.die || item.range != null || item.reach || item.throw_range != null || item.categoria || ["weapon", "arma"].includes(type)) return "Armas";
+    if (item.kind === "accessory" || ["ring", "anel", "accessory", "acessorio", "acessório"].includes(type) || ["ring", "item", "accessory", "acessorio", "acessório"].includes(slot)) return "Anéis e acessórios";
+    if (slot === "bag" || effect || type === "consumable" || type === "consumivel" || type === "consumível") return "Poções e consumíveis";
+    return "Outros";
+  }
+  function lootItemSelectHTML(id) {
+    const groups = new Map(LOOT_ITEM_GROUPS.map(name => [name, []]));
+    for (const item of CAT.items) groups.get(lootItemCategory(item)).push(item);
+    return `<select id="${id}">${LOOT_ITEM_GROUPS.map(group => {
+      const items = groups.get(group).slice().sort((a, b) => String(a.name || a.id).localeCompare(String(b.name || b.id), "pt-BR"));
+      return items.length ? `<optgroup label="${group}">${items.map(item => `<option value="${item.id}">${item.emoji ? item.emoji + " " : ""}${item.name || item.id}</option>`).join("")}</optgroup>` : "";
+    }).join("")}</select>`;
+  }
 
   const CURSE_CATEGORIES = [
     { v: "leve", name: "Leve" },
@@ -1522,13 +1646,48 @@
     const k = S.sel.kind, ref = S.sel.ref;
     if (k === "door") {
       const rot = doorRotationAt(ref.x, ref.y);
+      const conditionKey = doorKey(ref.x, ref.y);
+      const condition = doorConditionAt(ref.x, ref.y);
+      const keyItems = CAT.items.map(it => ({ v: it.id, name: it.name }));
+      const keyDecors = S.decorations.filter(d => d.key_objective);
+      const selectedDecorKeys = new Set(condition?.key_decor_ids || []);
       panel.innerHTML = `<b>🚪 Porta</b>
         <div style="margin-top:6px;color:#b9a87f">Posição: (${ref.x},${ref.y})</div>
         <div style="margin-top:6px;color:#f0c867"><b>Frente da imagem: ${doorFrontLabel(ref.x, ref.y)}</b></div>
         <div style="font-size:11px;color:#8a7a5a;margin-top:4px">Giros aplicados: ${rot} × 90°</div>
         <button id="door-rotate" style="margin-top:8px">↻ Girar 90° (R)</button>
-        <small style="display:block;color:#8a7a5a;margin-top:6px">A seta dourada no mapa mostra a frente. A orientação é salva nesta porta.</small>`;
+        <small style="display:block;color:#8a7a5a;margin-top:6px">A seta dourada no mapa mostra a frente. A orientação é salva nesta porta.</small>
+        <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
+          <b>🔐 Condição opcional de abertura</b>
+          <select id="door-condition-type">
+            <option value="none"${!condition ? " selected" : ""}>Sem condição</option>
+            <option value="item"${condition?.type === "item" ? " selected" : ""}>Item-chave</option>
+            <option value="decor"${condition?.type === "decor" ? " selected" : ""}>Objeto-chave ativado</option>
+          </select>
+          ${condition?.type === "item" ? `<label>item necessário</label><select id="door-condition-item">${opt(keyItems, condition.item_id || "", o => o.v + " — " + o.name)}</select>` : ""}
+          ${condition?.type === "decor" ? `<label>modo das ativações</label><select id="door-condition-mode">
+              <option value="any"${condition.keys_mode !== "all" ? " selected" : ""}>qualquer objeto</option>
+              <option value="all"${condition.keys_mode === "all" ? " selected" : ""}>todos os objetos</option>
+            </select>
+            <label>objetos-chave</label>
+            ${keyDecors.length ? keyDecors.map(d => `<label style="display:block"><input type="checkbox" class="door-condition-key" data-id="${d.id}"${selectedDecorKeys.has(d.id) ? " checked" : ""}> ${d.type} — (${d.pos[0]},${d.pos[1]})</label>`).join("") : '<small style="color:#d8a0a0">Marque primeiro uma decoração como objeto-chave.</small>'}` : ""}
+        </div>`;
       document.getElementById("door-rotate").onclick = rotateDoorSelected;
+      document.getElementById("door-condition-type").onchange = e => {
+        if (e.target.value === "none") delete S.doorConditions[conditionKey];
+        else if (e.target.value === "item") S.doorConditions[conditionKey] = { type: "item", item_id: keyItems[0]?.v || "" };
+        else S.doorConditions[conditionKey] = { type: "decor", key_decor_ids: [], keys_mode: "any" };
+        renderPanel(); render();
+      };
+      const conditionItem = document.getElementById("door-condition-item");
+      if (conditionItem) conditionItem.onchange = e => { S.doorConditions[conditionKey].item_id = e.target.value; };
+      const conditionMode = document.getElementById("door-condition-mode");
+      if (conditionMode) conditionMode.onchange = e => { S.doorConditions[conditionKey].keys_mode = e.target.value === "all" ? "all" : "any"; };
+      panel.querySelectorAll(".door-condition-key").forEach(box => box.onchange = e => {
+        const ids = S.doorConditions[conditionKey].key_decor_ids || (S.doorConditions[conditionKey].key_decor_ids = []);
+        if (e.target.checked) { if (!ids.includes(e.target.dataset.id)) ids.push(e.target.dataset.id); }
+        else S.doorConditions[conditionKey].key_decor_ids = ids.filter(id => id !== e.target.dataset.id);
+      });
     } else if (k === "hero_spawn") {
       const h = heroSpawnMeta(ref.class_id);
       panel.innerHTML = `<b>${h.emoji} Início: ${h.name}</b>
@@ -1565,7 +1724,7 @@
         <label><input type="checkbox" id="p-key" ${ref.key_objective ? "checked" : ""}> baú-chave</label>
         <label>itens</label>
         <div id="p-items">${ref.items.map((it, i) => `<div>${it.id} <button data-i="${i}" class="rm-item">×</button></div>`).join("")}</div>
-        <select id="p-add">${opt(CAT.items.map(it => ({ v: it.id, name: it.name })), "", o => o.v + " — " + o.name)}</select>
+        ${lootItemSelectHTML("p-add")}
         <button id="p-additem">+ item</button>`;
       document.getElementById("p-gold").onchange = e => { ref.gold = Math.max(0, Number(e.target.value) | 0); };
       document.getElementById("p-key").onchange = e => { ref.key_objective = e.target.checked; };
@@ -1574,7 +1733,7 @@
     } else if (k === "trap") {
       const meta = CAT.traps.find(t => t.tipo === ref.tipo) || {};
       panel.innerHTML = `<b>⚠️ Armadilha</b>
-        <label>tipo</label><select id="p-tt">${opt(CAT.traps.map(t => ({ v: t.tipo, name: t.nome })), ref.tipo, o => o.v + " — " + o.name)}</select>
+        <label>tipo</label><select id="p-tt">${opt(CAT.traps.filter(t => !t.apenas_objeto).map(t => ({ v: t.tipo, name: t.nome })), ref.tipo, o => o.v + " — " + o.name)}</select>
         ${meta.precisa_veneno || meta.permite_veneno ? `<label>veneno${meta.permite_veneno && !meta.precisa_veneno ? " (opcional)" : ""}</label><select id="p-ven">${opt(CAT.venoms.map(v => ({ v: v.id, name: v.name })), ref.veneno_id || "", o => o.v + " — " + o.name)}</select>` : ""}
         ${curseFieldsHTML(ref, "p")}
         ${ref.tipo === "armadilha_teletransporte" ? `<label>ponto de saída (x, y)</label><div style="display:flex;gap:4px"><input id="p-out-x" type="number" min="0" max="${S.grid.w - 1}" value="${ref.saida ? ref.saida[0] : ref.pos[0]}"><input id="p-out-y" type="number" min="0" max="${S.grid.h - 1}" value="${ref.saida ? ref.saida[1] : ref.pos[1]}"></div><button id="p-pick-out" style="margin-top:5px">📍 Selecionar saída no mapa</button><small id="p-out-help" style="color:#8a7a5a">Casa de chão; se ocupada no jogo, usa a adjacente livre mais próxima.</small>` : ""}
@@ -1751,7 +1910,7 @@
           <label>ouro <input id="d-gold" type="number" min="0" value="${hasLoot ? (ref.loot.gold | 0) : 0}"></label>
           <label>itens</label>
           <div id="d-items">${hasLoot ? ref.loot.items.map((it, i) => `<div>${it.id} <button data-i="${i}" class="d-rm">×</button></div>`).join("") : ""}</div>
-          <select id="d-add">${opt(CAT.items.map(it => ({ v: it.id, name: it.name })), "", o => o.v + " — " + o.name)}</select>
+          ${lootItemSelectHTML("d-add")}
           <button id="d-additem">+ item</button>
         </div>
         <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
@@ -2023,6 +2182,9 @@
         else delete out.door_orientations;
         return out;
       }),
+      door_conditions: Object.fromEntries(Object.entries(S.doorConditions).map(([key, c]) => [key, c.type === "item"
+        ? { type: "item", item_id: c.item_id || "" }
+        : { type: "decor", key_decor_ids: (c.key_decor_ids || []).slice(), keys_mode: c.keys_mode === "all" ? "all" : "any" }])),
       entrance: S.startMode === "entrance" && S.entrance ? { x: S.entrance.x, y: S.entrance.y } : null,
       hero_spawns: S.heroSpawns.map(s => ({ class_id: s.class_id, pos: s.pos.slice(), room_id: s.room_id ?? null })),
       exit: S.exit ? { x: S.exit.x, y: S.exit.y } : null,
@@ -2139,6 +2301,7 @@
     }
     for (const t of S.traps) {
       if (!traps.has(t.tipo)) e.push(`armadilha tipo inválido: ${t.tipo}`);
+      if (CAT.traps.find(c => c.tipo === t.tipo)?.apenas_objeto) e.push(`${t.tipo} só pode ser colocado em uma decoração/objeto`);
       if (isWall(t.pos)) e.push(`armadilha em parede: ${t.pos}`);
       if ((t.tipo === "fosso_envenenado" || t.tipo === "armadilha_dardos_envenenados") && !venoms.has(t.veneno_id)) e.push(`${t.tipo} sem veneno válido`);
       if (t.tipo === "armadilha_teletransporte" && (!Array.isArray(t.saida) || S.tiles[t.saida[1]]?.[t.saida[0]] !== FLOOR)) e.push("armadilha de teletransporte sem saída em chão");
@@ -2196,6 +2359,25 @@
       }
     }
     const decorIds = new Set(S.decorations.map(d => d.id));
+    for (const [key, c] of Object.entries(S.doorConditions || {})) {
+      const pos = key.split(",").map(Number);
+      if (pos.length !== 2 || !Number.isInteger(pos[0]) || !Number.isInteger(pos[1]) || S.tiles[pos[1]]?.[pos[0]] !== DOOR) {
+        e.push(`condição de abertura em porta inválida: ${key}`); continue;
+      }
+      if (!c || !["item", "decor"].includes(c.type)) { e.push(`tipo de condição de porta inválido em ${key}`); continue; }
+      if (c.type === "item" && !items.has(c.item_id)) e.push(`item-chave inválido na porta ${key}: ${c.item_id}`);
+      if (c.type === "decor") {
+        if (!Array.isArray(c.key_decor_ids) || !c.key_decor_ids.length || c.key_decor_ids.some(id => !decorIds.has(id)))
+          e.push(`porta ${key} sem objetos-chave válidos`);
+        if (Array.isArray(c.key_decor_ids) && new Set(c.key_decor_ids).size !== c.key_decor_ids.length)
+          e.push(`porta ${key} repete um objeto-chave`);
+        if (!["any", "all"].includes(c.keys_mode || "any")) e.push(`modo de objetos-chave inválido na porta ${key}`);
+        if (Array.isArray(c.key_decor_ids)) for (const id of c.key_decor_ids) {
+          const d = S.decorations.find(x => x.id === id);
+          if (d && !d.key_objective) e.push(`objeto ${id} da porta ${key} precisa estar marcado como objeto-chave`);
+        }
+      }
+    }
     const passageIds = new Set();
     for (const p of S.secretPassages) {
       if (!p.id || passageIds.has(p.id)) e.push("id de passagem secreta duplicado ou vazio");
@@ -2238,6 +2420,12 @@
     S.grid = { w: obj.grid.w, h: obj.grid.h };
     S.tiles = obj.tiles.map(row => row.slice());
     S.rooms = (obj.rooms || []).map(r => Object.assign({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, role: r.role, locked: !!r.locked, doors: (r.doors || []).map(d => d.slice()) }, r.required ? { required: true, required_mode: r.required_mode === "visit" ? "visit" : "clear" } : {}));
+    S.doorConditions = {};
+    for (const [key, c] of Object.entries(obj.door_conditions || {})) {
+      if (!/^\d+,\d+$/.test(key) || !c || typeof c !== "object") continue;
+      if (c.type === "item" && typeof c.item_id === "string") S.doorConditions[key] = { type: "item", item_id: c.item_id };
+      else if (c.type === "decor") S.doorConditions[key] = { type: "decor", key_decor_ids: Array.isArray(c.key_decor_ids) ? c.key_decor_ids.slice() : [], keys_mode: c.keys_mode === "all" ? "all" : "any" };
+    }
     S.doorRotations = {};
     const loadDoorRotations = (source) => {
       if (!source || typeof source !== "object") return;

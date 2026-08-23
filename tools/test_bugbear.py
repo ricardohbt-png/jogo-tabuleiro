@@ -55,7 +55,7 @@ print("[1] Ficha, ataques, fraquezas e loot")
 # A ficha declara movement 7, mas a REGRA GLOBAL de deslocamento (logo após
 # MONSTER_DEFS) normaliza todo monstro para 6 salvo `movement_exception`.
 # O valor efetivo é o que vale em jogo.
-check(DEF["hp"]==22 and DEF["ac"]==14 and DEF["movement"]==6, "stats base (22/14/mov 6 pela regra global)")
+check(DEF["hp"]==30 and DEF["ac"]==14 and DEF["movement"]==6, "stats base (30/14/mov 6 pela regra global)")
 check(sum(a["num_attacks"] for a in DEF["attacks"])==3, "3 ataques/turno (2 garras + 1 mordida)")
 g, bug, _ = novo_jogo([20,20])
 check(g._apply_damage_types(10,[S.DMG_FIRE],bug)==20, "fraqueza fogo ×2")

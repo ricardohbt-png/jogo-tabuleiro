@@ -28,12 +28,12 @@ try: sys.stdout.reconfigure(encoding="utf-8")
 except Exception: pass
 
 
-def literais(src):
+def literais(src, _linha0=1):
     """[(linha_1based, aspa, texto)] de cada literal de string do fonte.
 
     Em template com ${}, devolve só os PEDAÇOS de texto — a expressão fica de
     fora, que é o certo: `Turno ${n}` tem o texto "Turno " e não o `n`."""
-    out, i, n, linha = [], 0, len(src), 1
+    out, i, n, linha = [], 0, len(src), _linha0
     while i < n:
         c = src[i]
         if c == "\n":
@@ -74,7 +74,16 @@ def literais(src):
                     # contá-la faria a profundidade nunca fechar, engolindo o
                     # resto do arquivo. É a mesma armadilha do `.get` aninhado
                     # que quebrou o regex da etapa 4c.
+                    #
+                    # MAS a expressao nao e SO codigo: uma IIFE dentro do ${}
+                    # devolve TEMPLATE, e esse markup o jogador le. Pular o
+                    # conteudo inteiro escondia 31 textos do game.js do placar
+                    # da etapa 5 -- entre eles os banners SACIADO/EXAUSTAO do
+                    # HUD, que ficaram em portugues com o placar cravando zero.
+                    # Por isso RECURSA: o buraco segue marcado como ${} no texto
+                    # de fora, e o que houver de string DENTRO vira literal.
                     prof, aspa, i = 0, None, i + 1
+                    ini_expr, linha_expr = i + 1, linha
                     while i < n:
                         e = src[i]
                         if aspa:
@@ -86,9 +95,11 @@ def literais(src):
                         elif e == "{": prof += 1
                         elif e == "}":
                             prof -= 1
-                            if prof == 0: i += 1; break
+                            if prof == 0: break
                         elif e == "\n": linha += 1
                         i += 1
+                    out.extend(literais(src[ini_expr:i], linha_expr))
+                    i += 1
                     buf.append("${}")     # marca o buraco, sem o conteúdo
                     continue
                 if d == "\n": linha += 1

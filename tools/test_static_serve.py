@@ -9,9 +9,11 @@ import server  # noqa: E402
 
 
 class FakeReq:
-    """_serve_static só lê request.path."""
-    def __init__(self, path):
+    """Além do path, o servidor lê os cabeçalhos condicionais
+    (If-None-Match / If-Modified-Since) e o Upgrade do WebSocket."""
+    def __init__(self, path, headers=None):
         self.path = path
+        self.headers = headers or {}
 
 
 def run():

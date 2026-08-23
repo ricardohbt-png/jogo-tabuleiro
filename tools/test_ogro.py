@@ -52,8 +52,8 @@ def targets(g):
 print("[1] Fichas Clava/Lança")
 # A ficha declara movement 5, mas a REGRA GLOBAL de deslocamento (logo após
 # MONSTER_DEFS) normaliza todo monstro para 6 salvo `movement_exception`.
-check(CLAVA["hp"]==32 and CLAVA["ac"]==12 and CLAVA["size"]==[1,1] and CLAVA["movement"]==6, "Clava: 32/CA12/1x1/mov 6 pela regra global")
-check(LANCA["ac"]==14 and LANCA.get("reach_lanca") is True, "Lança: CA14 + alcance estendido")
+check(CLAVA["hp"]==41 and CLAVA["ac"]==14 and CLAVA["size"]==[1,1] and CLAVA["movement"]==6, "Clava: 41/CA14/1x1/mov 6 pela regra global")
+check(LANCA["ac"]==16 and LANCA.get("reach_lanca") is True, "Lança: CA16 + alcance estendido")
 check(CLAVA["attacks"][0]["damage"]=="1d12+4", "Clava 1d12+4")
 check(LANCA["attacks"][0]["damage"]=="1d10+4", "Lança 1d10+4")
 check(any(w.get("save")=="vontade" and w.get("bonus_flat")==-2 for w in CLAVA["weaknesses"]), "Mente Bruta: -2 Vontade")

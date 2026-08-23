@@ -121,6 +121,8 @@ def build_catalog():
             "cr": server.trap_cr(meta),
             "precisa_veneno": bool(meta.get("precisa_veneno") or meta.get("custo_veneno")),
         }
+        if meta.get("apenas_objeto"):
+            entry["apenas_objeto"] = True
         if meta.get("permite_veneno"):
             entry["permite_veneno"] = True
         traps.append(entry)

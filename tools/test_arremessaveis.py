@@ -204,6 +204,33 @@ async def main():
     check("throwable via use_item: item NÃO apagado", len(p["bag"]) == 1)
     check("throwable via use_item: erro enviado", any("arremess" in e.lower() for e in r._errs))
 
+    # -- [8] A virada de rodada nao pode matar a iniciativa --------------------
+    # Regressao do travamento: um NameError em _processar_em_chamas_turno
+    # abortava _advance_initiative, que e o UNICO ponto que passa a vez adiante.
+    # Como isso roda dentro de uma task solta (monster_step), o jogo congelava
+    # para todos sem imprimir uma linha sequer no console.
+    print("")
+    print("[8] virada de rodada com status ativos")
+    r = setup()
+    p = make_player("p1", "V", "warrior", 0); p["pos"] = [4, 4]
+    p["alive"] = True; p["connected"] = True
+    r.players["p1"] = p; r.player_order = ["p1"]
+    r.initiative_active = True
+    r._rebuild_initiative()
+    r.initiative_index = len(r.initiative_order) - 1   # o proximo avanco vira a rodada
+    r._aplicar_em_chamas(p, 3, True)
+    p["acido_residual"] = 2
+    rodada0 = r.round_num
+    estourou = None
+    try:
+        await r._advance_initiative()
+    except Exception as e:
+        estourou = f"{type(e).__name__}: {e}"
+    check("virada de rodada nao estoura com heroi em chamas", estourou is None, estourou or "")
+    check("a rodada avancou", r.round_num == rodada0 + 1)
+    check("a vez foi entregue a alguem", r.current_pid() == "p1")
+    check("o tick de fogo aconteceu", p.get("em_chamas_rodadas", 0) == 2)
+
     print(f"\n=== {PASS} OK / {FAIL} FALHAS ===")
     sys.exit(1 if FAIL else 0)
 

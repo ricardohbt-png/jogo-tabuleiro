@@ -183,5 +183,107 @@
       "aventura_id": "destino_3"
     },
     "renome_recompensa": 1
+  },
+  "destino_5": {
+    "id": "destino_5",
+    "nome": "Caverna",
+    "x": 68.06,
+    "y": 63.41,
+    "fome": 0,
+    "sede": 0,
+    "dungeons": [
+      {
+        "file": "caverna.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": false,
+    "revisitavel": false,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "",
+      "aventura_id": ""
+    },
+    "renome_recompensa": 1
+  },
+  "destino_6": {
+    "id": "destino_6",
+    "nome": "terrenos",
+    "x": 50.98,
+    "y": 45.52,
+    "fome": 0,
+    "sede": 0,
+    "dungeons": [
+      {
+        "file": "terrenos.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      },
+      {
+        "file": "_teste_materiais.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": false,
+    "revisitavel": false,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "",
+      "aventura_id": ""
+    },
+    "renome_recompensa": 0
+  },
+  "destino_7": {
+    "id": "destino_7",
+    "nome": "Sala Secreta",
+    "x": 41.0,
+    "y": 51.9,
+    "fome": 0,
+    "sede": 0,
+    "dungeons": [
+      {
+        "file": "sala secreta.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": false,
+    "revisitavel": false,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "",
+      "aventura_id": ""
+    },
+    "renome_recompensa": 1
   }
 }

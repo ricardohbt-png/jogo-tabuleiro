@@ -315,8 +315,7 @@ window.EDITOR_CATALOG = {
           "attack_index": 2,
           "poison_dc": 14,
           "extra_damage": "1d4",
-          "slow_duration": 1,
-          "descricao": "Ao acertar o Ferrão, Fortitude CD 14; falha: 1d4 de dano adicional e Lento até o próximo turno."
+          "descricao": "Ao acertar o Ferrão, Fortitude CD 14; falha: 1d4 de dano adicional e Sangramento."
         }
       ],
       "immunities": [],
@@ -404,8 +403,7 @@ window.EDITOR_CATALOG = {
           "attack_index": 2,
           "poison_dc": 16,
           "extra_damage": "1d6",
-          "slow_duration": 1,
-          "descricao": "Ao acertar o Ferrão, Fortitude CD 16; falha: 1d6 de dano adicional e Lento até o próximo turno."
+          "descricao": "Ao acertar o Ferrão, Fortitude CD 16; falha: 1d6 de dano adicional e Sangramento."
         },
         {
           "id": "carapaca_espinhosa",
@@ -499,8 +497,7 @@ window.EDITOR_CATALOG = {
           "attack_index": 2,
           "poison_dc": 16,
           "extra_damage": "1d6",
-          "slow_duration": 1,
-          "descricao": "Ao acertar o Ferrão, Fortitude CD 16; falha: 1d6 de dano adicional e Lento até o próximo turno."
+          "descricao": "Ao acertar o Ferrão, Fortitude CD 16; falha: 1d6 de dano adicional e Sangramento."
         },
         {
           "id": "carapaca_espinhosa",
@@ -946,8 +943,8 @@ window.EDITOR_CATALOG = {
       "boss": false,
       "tier": 1,
       "cr": 1,
-      "hp": 16,
-      "ac": 11,
+      "hp": 22,
+      "ac": 12,
       "movement": 6,
       "vision_base": 0,
       "size": [
@@ -1007,6 +1004,12 @@ window.EDITOR_CATALOG = {
           "descricao": "Combustão rápida (dano de fogo dobrado)"
         }
       ],
+      "resistances": [
+        {
+          "type": "physical",
+          "reduction": 2
+        }
+      ],
       "loot_table": {
         "1-40": null,
         "41-80": {
@@ -1030,7 +1033,7 @@ window.EDITOR_CATALOG = {
       "boss": false,
       "tier": 1,
       "cr": 1,
-      "hp": 18,
+      "hp": 30,
       "ac": 13,
       "movement": 6,
       "vision_base": 0,
@@ -1040,7 +1043,7 @@ window.EDITOR_CATALOG = {
       ],
       "porte": "grande",
       "image": "ursoNegro",
-      "str_": 18,
+      "str_": 20,
       "dex": 12,
       "con_": 14,
       "int_": 2,
@@ -1898,8 +1901,8 @@ window.EDITOR_CATALOG = {
       "boss": false,
       "tier": 2,
       "cr": 2,
-      "hp": 22,
-      "ac": 13,
+      "hp": 32,
+      "ac": 14,
       "movement": 6,
       "vision_base": 0,
       "size": [
@@ -1959,6 +1962,12 @@ window.EDITOR_CATALOG = {
           "descricao": "Corpo condutor: +2 de dano de eletricidade"
         }
       ],
+      "resistances": [
+        {
+          "type": "physical",
+          "reduction": 2
+        }
+      ],
       "loot_table": {
         "1-100": {
           "tipo": "gold",
@@ -1977,7 +1986,7 @@ window.EDITOR_CATALOG = {
       "boss": false,
       "tier": 2,
       "cr": 2,
-      "hp": 22,
+      "hp": 30,
       "ac": 14,
       "movement": 6,
       "vision_base": 0,
@@ -2106,8 +2115,8 @@ window.EDITOR_CATALOG = {
       "boss": false,
       "tier": 2,
       "cr": 2,
-      "hp": 32,
-      "ac": 12,
+      "hp": 41,
+      "ac": 14,
       "movement": 6,
       "vision_base": 0,
       "size": [
@@ -2116,7 +2125,7 @@ window.EDITOR_CATALOG = {
       ],
       "porte": "grande",
       "image": "ogroClava",
-      "str_": 18,
+      "str_": 20,
       "dex": 8,
       "con_": 17,
       "int_": 6,
@@ -2202,8 +2211,8 @@ window.EDITOR_CATALOG = {
       "boss": false,
       "tier": 2,
       "cr": 2,
-      "hp": 32,
-      "ac": 14,
+      "hp": 38,
+      "ac": 16,
       "movement": 6,
       "vision_base": 0,
       "size": [
@@ -2212,7 +2221,7 @@ window.EDITOR_CATALOG = {
       ],
       "porte": "grande",
       "image": "ogroLanca",
-      "str_": 18,
+      "str_": 19,
       "dex": 8,
       "con_": 17,
       "int_": 6,
@@ -2272,6 +2281,12 @@ window.EDITOR_CATALOG = {
           "descricao": "Mente Bruta: -2 em Vontade contra controle mental"
         }
       ],
+      "resistances": [
+        {
+          "type": "physical",
+          "reduction": 2
+        }
+      ],
       "loot_table": {
         "1-40": null,
         "41-70": {
@@ -2298,7 +2313,7 @@ window.EDITOR_CATALOG = {
       "boss": false,
       "tier": 3,
       "cr": 3,
-      "hp": 28,
+      "hp": 32,
       "ac": 13,
       "movement": 6,
       "vision_base": 0,
@@ -2354,14 +2369,14 @@ window.EDITOR_CATALOG = {
           "id": "explosao_final",
           "name": "Explosão Final",
           "action_type": "passiva",
-          "damage": "6d6",
+          "damage": "4d6",
           "damage_types": [
             "fire"
           ],
           "radius": 1,
           "save": "reflexos",
           "dc": 13,
-          "descricao": "Ao morrer, explode em 1 quadrado: 6d6 de fogo; Reflexos CD 13 reduz à metade."
+          "descricao": "Ao morrer, explode em 1 quadrado: 4d6 de fogo; Reflexos CD 13 reduz à metade."
         },
         {
           "id": "intensidade",
@@ -2404,8 +2419,8 @@ window.EDITOR_CATALOG = {
       "tier": 3,
       "cr": 3,
       "hp": 36,
-      "ac": 14,
-      "natural_armor": 4,
+      "ac": 16,
+      "natural_armor": 6,
       "movement": 5,
       "movement_exception": true,
       "vision_base": 0,
@@ -2415,6 +2430,7 @@ window.EDITOR_CATALOG = {
       ],
       "porte": "medio",
       "image": "elemental_gelo",
+      "caster_level": 2,
       "str_": 16,
       "dex": 10,
       "con_": 18,
@@ -2451,6 +2467,21 @@ window.EDITOR_CATALOG = {
           "name": "Núcleo Frio",
           "action_type": "passiva",
           "descricao": "Reduz em 2 todo dano recebido, exceto fogo."
+        },
+        {
+          "id": "raio_congelante",
+          "name": "Raio Congelante",
+          "action_type": "magia",
+          "cooldown_turns": 6,
+          "circulo": 1,
+          "descricao": "Conjurador nível 2. Dano de 3d4 sem teste de resistência; Fortitude apenas para evitar a paralisia. Recarga 6 rodadas."
+        }
+      ],
+      "monster_spells": [
+        {
+          "id": "raio_congelante",
+          "limit_mode": "cooldown",
+          "cooldown_turns": 6
         }
       ],
       "immunities": [
@@ -2466,7 +2497,7 @@ window.EDITOR_CATALOG = {
       "resistances": [
         {
           "type": "physical",
-          "reduction": 1
+          "reduction": 3
         },
         {
           "type": "all_except",
@@ -2577,8 +2608,8 @@ window.EDITOR_CATALOG = {
       "boss": false,
       "tier": 3,
       "cr": 3,
-      "hp": 24,
-      "ac": 14,
+      "hp": 32,
+      "ac": 15,
       "natural_armor": 0,
       "movement": 6,
       "vision_base": 0,
@@ -2588,6 +2619,7 @@ window.EDITOR_CATALOG = {
       ],
       "porte": "medio",
       "image": "elemental_eletrico",
+      "caster_level": 3,
       "str_": 10,
       "dex": 18,
       "con_": 12,
@@ -2624,6 +2656,16 @@ window.EDITOR_CATALOG = {
           "descricao": "Pode atravessar um quadrado ocupado, causa 1d4 de eletricidade ao ocupante e termina em uma casa livre."
         },
         {
+          "id": "corpo_eletrico",
+          "name": "Corpo Elétrico",
+          "action_type": "passiva",
+          "damage": "1d8",
+          "damage_types": [
+            "lightning"
+          ],
+          "descricao": "Quem o acerta com um ataque corpo a corpo sofre 1d8 de dano de eletricidade."
+        },
+        {
           "id": "sobrecarga",
           "name": "Sobrecarga",
           "action_type": "passiva",
@@ -2634,6 +2676,21 @@ window.EDITOR_CATALOG = {
           "name": "Condução Elétrica",
           "action_type": "passiva",
           "descricao": "Ignora a CA concedida por armaduras de metal."
+        },
+        {
+          "id": "relampago",
+          "name": "Relâmpago",
+          "action_type": "magia",
+          "cooldown_turns": 6,
+          "circulo": 1,
+          "descricao": "Conjurador nível 3. Linha reta de 6 casas, 3d6 por impacto; Reflexos reduz à metade e a descarga ricocheteia de volta. Recarga 6 rodadas."
+        }
+      ],
+      "monster_spells": [
+        {
+          "id": "relampago",
+          "limit_mode": "cooldown",
+          "cooldown_turns": 6
         }
       ],
       "immunities": [
@@ -2650,6 +2707,12 @@ window.EDITOR_CATALOG = {
           "type": "cold",
           "bonus_flat": 2,
           "descricao": "Água (tratada como frio) causa +2 de dano."
+        }
+      ],
+      "resistances": [
+        {
+          "type": "physical",
+          "reduction": 2
         }
       ],
       "loot_table": {
@@ -2670,7 +2733,7 @@ window.EDITOR_CATALOG = {
       "boss": false,
       "tier": 3,
       "cr": 3,
-      "hp": 22,
+      "hp": 32,
       "ac": 15,
       "natural_armor": 0,
       "movement": 6,
@@ -2768,8 +2831,8 @@ window.EDITOR_CATALOG = {
       "boss": false,
       "tier": 3,
       "cr": 3,
-      "hp": 32,
-      "ac": 14,
+      "hp": 42,
+      "ac": 15,
       "natural_armor": 3,
       "movement": 6,
       "vision_base": 0,
@@ -2869,7 +2932,7 @@ window.EDITOR_CATALOG = {
       "boss": false,
       "tier": 3,
       "cr": 3,
-      "hp": 24,
+      "hp": 31,
       "ac": 17,
       "natural_armor": 4,
       "movement": 6,
@@ -4065,7 +4128,7 @@ window.EDITOR_CATALOG = {
       "boss": false,
       "tier": 5,
       "cr": 5,
-      "hp": 48,
+      "hp": 86,
       "ac": 15,
       "natural_armor": 5,
       "movement": 6,
@@ -4804,7 +4867,8 @@ window.EDITOR_CATALOG = {
           "damage_types": [
             "physical"
           ],
-          "descricao": "Se as duas Garras acertarem o mesmo alvo no turno, ele sofre 2d6 de dano extra uma vez."
+          "causa_sangramento": true,
+          "descricao": "Se as duas Garras acertarem o mesmo alvo no turno, ele sofre 2d6 de dano extra uma vez e começa a Sangrar."
         },
         {
           "id": "investida_brutal",
@@ -4917,7 +4981,8 @@ window.EDITOR_CATALOG = {
           "damage_types": [
             "physical"
           ],
-          "descricao": "Se as duas Garras acertarem o mesmo alvo no turno, ele sofre 2d6 de dano extra uma vez."
+          "causa_sangramento": true,
+          "descricao": "Se as duas Garras acertarem o mesmo alvo no turno, ele sofre 2d6 de dano extra uma vez e começa a Sangrar."
         },
         {
           "id": "investida_brutal",
@@ -4927,7 +4992,7 @@ window.EDITOR_CATALOG = {
           "move_required": 3,
           "damage": "4d6",
           "push": 1,
-          "descricao": "Se mover 3 quadrados antes da Chifrada, causa +4d6 e empurra o alvo 1 quadrado."
+          "descricao": "Se mover 3 quadrados antes da Chifrada, causa +4d6, aplica Hemorragia e empurra o alvo 1 quadrado."
         },
         {
           "id": "furia_garaloux",
@@ -4937,6 +5002,15 @@ window.EDITOR_CATALOG = {
           "attack_bonus": 2,
           "damage_bonus": 2,
           "descricao": "Ao atingir metade da Vida ou menos, recebe +2 no ataque e +2 no dano."
+        },
+        {
+          "id": "causar_hemorragia",
+          "name": "Causar Hemorragia",
+          "action_type": "passiva",
+          "attack_index": 2,
+          "cooldown_turns": 4,
+          "requires_investida": true,
+          "descricao": "A Investida Brutal da Chifrada aplica Hemorragia ao acertar; recarga de 4 rodadas."
         },
         {
           "id": "predador_supremo",
@@ -5365,6 +5439,24 @@ window.EDITOR_CATALOG = {
       "descricao": "Amaldiçoa um alvo: configure a maldição específica ou uma aleatória por gravidade."
     },
     {
+      "id": "causar_sangramento",
+      "source": "monstro",
+      "name": "Causar Sangramento",
+      "icon": "🩸",
+      "action_type": "passiva",
+      "descricao": "Ataques que acertam aplicam Sangramento; acertos críticos também aplicam Hemorragia."
+    },
+    {
+      "id": "causar_hemorragia",
+      "source": "monstro",
+      "name": "Causar Hemorragia",
+      "icon": "🩸",
+      "action_type": "passiva",
+      "attack_index": 0,
+      "cooldown_turns": 4,
+      "descricao": "O ataque selecionado aplica Hemorragia ao acertar e entra em recarga."
+    },
+    {
       "id": "disparo_teia",
       "name": "Disparo de Teia",
       "action_type": "acao",
@@ -5396,8 +5488,7 @@ window.EDITOR_CATALOG = {
       "attack_index": 2,
       "poison_dc": 14,
       "extra_damage": "1d4",
-      "slow_duration": 1,
-      "descricao": "Ao acertar o Ferrão, Fortitude CD 14; falha: 1d4 de dano adicional e Lento até o próximo turno.",
+      "descricao": "Ao acertar o Ferrão, Fortitude CD 14; falha: 1d4 de dano adicional e Sangramento.",
       "source": "monstro"
     },
     {
@@ -5826,14 +5917,14 @@ window.EDITOR_CATALOG = {
       "id": "explosao_final",
       "name": "Explosão Final",
       "action_type": "passiva",
-      "damage": "6d6",
+      "damage": "4d6",
       "damage_types": [
         "fire"
       ],
       "radius": 1,
       "save": "reflexos",
       "dc": 13,
-      "descricao": "Ao morrer, explode em 1 quadrado: 6d6 de fogo; Reflexos CD 13 reduz à metade.",
+      "descricao": "Ao morrer, explode em 1 quadrado: 4d6 de fogo; Reflexos CD 13 reduz à metade.",
       "source": "monstro"
     },
     {
@@ -5858,6 +5949,15 @@ window.EDITOR_CATALOG = {
       "source": "monstro"
     },
     {
+      "id": "raio_congelante",
+      "name": "Raio Congelante",
+      "action_type": "magia",
+      "cooldown_turns": 6,
+      "circulo": 1,
+      "descricao": "Conjurador nível 2. Dano de 3d4 sem teste de resistência; Fortitude apenas para evitar a paralisia. Recarga 6 rodadas.",
+      "source": "monstro"
+    },
+    {
       "id": "impacto_devastador",
       "name": "Impacto Devastador",
       "action_type": "passiva",
@@ -5872,6 +5972,17 @@ window.EDITOR_CATALOG = {
       "source": "monstro"
     },
     {
+      "id": "corpo_eletrico",
+      "name": "Corpo Elétrico",
+      "action_type": "passiva",
+      "damage": "1d8",
+      "damage_types": [
+        "lightning"
+      ],
+      "descricao": "Quem o acerta com um ataque corpo a corpo sofre 1d8 de dano de eletricidade.",
+      "source": "monstro"
+    },
+    {
       "id": "sobrecarga",
       "name": "Sobrecarga",
       "action_type": "passiva",
@@ -5883,6 +5994,15 @@ window.EDITOR_CATALOG = {
       "name": "Condução Elétrica",
       "action_type": "passiva",
       "descricao": "Ignora a CA concedida por armaduras de metal.",
+      "source": "monstro"
+    },
+    {
+      "id": "relampago",
+      "name": "Relâmpago",
+      "action_type": "magia",
+      "cooldown_turns": 6,
+      "circulo": 1,
+      "descricao": "Conjurador nível 3. Linha reta de 6 casas, 3d6 por impacto; Reflexos reduz à metade e a descarga ricocheteia de volta. Recarga 6 rodadas.",
       "source": "monstro"
     },
     {
@@ -6442,7 +6562,8 @@ window.EDITOR_CATALOG = {
       "damage_types": [
         "physical"
       ],
-      "descricao": "Se as duas Garras acertarem o mesmo alvo no turno, ele sofre 2d6 de dano extra uma vez.",
+      "causa_sangramento": true,
+      "descricao": "Se as duas Garras acertarem o mesmo alvo no turno, ele sofre 2d6 de dano extra uma vez e começa a Sangrar.",
       "source": "monstro"
     },
     {
@@ -6544,8 +6665,16 @@ window.EDITOR_CATALOG = {
       "descricao": "+2 no dado de acerto neste turno",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
-      "uses_per_day": 3,
-      "cooldown_turns": 4
+      "guild_progressions": [
+        {
+          "id": "guerreiro_mira_3",
+          "level": 3,
+          "requires": "guerreiro_combinar_2",
+          "name": "Mira Certeira III",
+          "icon": "🎯",
+          "description": "Mira Certeira também concede +2 de dano (além do +2 de acerto)."
+        }
+      ]
     },
     {
       "id": "guild_brutalidade",
@@ -6573,7 +6702,7 @@ window.EDITOR_CATALOG = {
       "id": "carapaca_resistente",
       "name": "Carapaça Resistente",
       "action_type": "passiva",
-      "descricao": "Reduz todo dano físico em 2",
+      "descricao": "Reduz todo dano físico em 3 fora do ponto vulnerável",
       "source": "monstro",
       "uses_per_day": 1,
       "cooldown_turns": 0
@@ -6595,7 +6724,7 @@ window.EDITOR_CATALOG = {
       "id": "cuspir_acido",
       "name": "Cuspir Ácido",
       "action_type": "acao",
-      "cooldown_turns": 3,
+      "cooldown_turns": 5,
       "range": 3,
       "damage": "2d6",
       "save": "reflexos",
@@ -6633,7 +6762,7 @@ window.EDITOR_CATALOG = {
       "id": "combo_devorador",
       "name": "Combo Devorador",
       "action_type": "passiva",
-      "descricao": "Se as 2 mordidas acertarem no turno: 2 ataques de Garra imediatos",
+      "descricao": "Se as 2 Mordidas acertarem no turno: 2 ataques de Garra imediatos, cada um causando 1d6+3 de dano, e Sangramento.",
       "source": "monstro",
       "uses_per_day": 1,
       "cooldown_turns": 0
@@ -6665,7 +6794,17 @@ window.EDITOR_CATALOG = {
       "icon": "💥",
       "descricao": "Dobra cada dado de dano neste turno",
       "action_type": "acao",
-      "monster_effect": "vantagem_combate"
+      "monster_effect": "vantagem_combate",
+      "guild_progressions": [
+        {
+          "id": "guerreiro_golpe_3",
+          "level": 3,
+          "requires": "guerreiro_combinar_2",
+          "name": "Golpe Devastador III",
+          "icon": "💥",
+          "description": "Golpe Devastador passa a multiplicar os dados de dano por 2 (era ×1,5)."
+        }
+      ]
     },
     {
       "id": "hero_warrior_furia_berserker",
@@ -6676,7 +6815,17 @@ window.EDITOR_CATALOG = {
       "icon": "🔥",
       "descricao": "Ataque extra neste turno com habilidades ativas",
       "action_type": "acao",
-      "monster_effect": "vantagem_combate"
+      "monster_effect": "vantagem_combate",
+      "guild_progressions": [
+        {
+          "id": "guerreiro_furia_3",
+          "level": 3,
+          "requires": "guerreiro_combinar_2",
+          "name": "Fúria Berserker III",
+          "icon": "🔥",
+          "description": "Fúria Berserker concede 2 ataques extras (3 ataques no total)."
+        }
+      ]
     },
     {
       "id": "hero_mage_aprimorar_magia",
@@ -6687,7 +6836,25 @@ window.EDITOR_CATALOG = {
       "icon": "🎯",
       "descricao": "Ação livre. +1 na dificuldade (CD) do teste de resistência da magia. 🍖-3 ao lançar.",
       "action_type": "acao",
-      "monster_effect": "vantagem_combate"
+      "monster_effect": "vantagem_combate",
+      "guild_progressions": [
+        {
+          "id": "mago_aprimorar_2",
+          "level": 2,
+          "requires": null,
+          "name": "Aprimorar II",
+          "icon": "🎯",
+          "description": "Aprimorar Magia dá +2 na CD do save (era +1)."
+        },
+        {
+          "id": "mago_aprimorar_3",
+          "level": 3,
+          "requires": "mago_aprimorar_2",
+          "name": "Aprimorar III",
+          "icon": "🎯",
+          "description": "Aprimorar Magia dá +3 na CD do save."
+        }
+      ]
     },
     {
       "id": "hero_mage_estender_magia",
@@ -6698,7 +6865,25 @@ window.EDITOR_CATALOG = {
       "icon": "⏱️",
       "descricao": "Ação livre. +1 turno na duração da magia. 🍖-3 💧-3 ao lançar.",
       "action_type": "acao",
-      "monster_effect": "vantagem_combate"
+      "monster_effect": "vantagem_combate",
+      "guild_progressions": [
+        {
+          "id": "mago_estender_2",
+          "level": 2,
+          "requires": null,
+          "name": "Estender II",
+          "icon": "⏱️",
+          "description": "Estender Magia dá +2 rodadas de duração (era +1)."
+        },
+        {
+          "id": "mago_estender_3",
+          "level": 3,
+          "requires": "mago_estender_2",
+          "name": "Estender III",
+          "icon": "⏱️",
+          "description": "Estender Magia dá +3 rodadas de duração."
+        }
+      ]
     },
     {
       "id": "hero_mage_fortalecer_magia",
@@ -6709,7 +6894,25 @@ window.EDITOR_CATALOG = {
       "icon": "💥",
       "descricao": "Ação livre. Multiplica o dano da magia por 1,5. 🍖-6 💧-6 ao lançar.",
       "action_type": "acao",
-      "monster_effect": "vantagem_combate"
+      "monster_effect": "vantagem_combate",
+      "guild_progressions": [
+        {
+          "id": "mago_fortalecer_2",
+          "level": 2,
+          "requires": null,
+          "name": "Fortalecer II",
+          "icon": "💥",
+          "description": "Fortalecer Magia multiplica o dano por 1,5 (era ×1,25)."
+        },
+        {
+          "id": "mago_fortalecer_3",
+          "level": 3,
+          "requires": "mago_fortalecer_2",
+          "name": "Fortalecer III",
+          "icon": "💥",
+          "description": "Fortalecer Magia multiplica o dano por 2."
+        }
+      ]
     },
     {
       "id": "hero_rogue_ataque_furtivo",
@@ -6720,7 +6923,25 @@ window.EDITOR_CATALOG = {
       "icon": "🗡️",
       "descricao": "Passiva. +2d4 dano extra quando há aliado adjacente ao alvo (ou se estiver invisível). +1d4 por faixa de nível.",
       "action_type": "passiva",
-      "monster_effect": "passiva_combate"
+      "monster_effect": "passiva_combate",
+      "guild_progressions": [
+        {
+          "id": "ladino_furtivo_2",
+          "level": 2,
+          "requires": null,
+          "name": "Ataque Furtivo II",
+          "icon": "🗡️",
+          "description": "Ataque Furtivo também dispara se há aliado adjacente ao alvo."
+        },
+        {
+          "id": "ladino_furtivo_3",
+          "level": 3,
+          "requires": "ladino_furtivo_2",
+          "name": "Ataque Furtivo Supremo",
+          "icon": "🗡️",
+          "description": "1×/inimigo/rodada: quando um aliado acerta um inimigo, Luccas reage com um Ataque Furtivo nele."
+        }
+      ]
     },
     {
       "id": "hero_rogue_detectar_armadilhas",
@@ -6731,7 +6952,8 @@ window.EDITOR_CATALOG = {
       "icon": "🔍",
       "descricao": "Ação bônus (alternável). Revela armadilhas próximas e não dispara as da masmorra. Manutenção 💧-1/turno.",
       "action_type": "acao",
-      "monster_effect": "vantagem_combate"
+      "monster_effect": "vantagem_combate",
+      "monster_maintenance": true
     },
     {
       "id": "hero_rogue_esconder_sombras",
@@ -6740,9 +6962,28 @@ window.EDITOR_CATALOG = {
       "source_class": "rogue",
       "name": "Esconder nas Sombras",
       "icon": "🌑",
-      "descricao": "Ação bônus. d20+DES vs percepção dos monstros. Invisível (não é alvo) enquanto ativo. Manutenção 🍖-1 💧-1/turno.",
+      "descricao": "Ação bônus. d20+DES vs percepção dos monstros. Pode atacar na mesma rodada usando a ação principal. Invisível (não é alvo) enquanto ativo. Manutenção 🍖-1 💧-1/turno.",
       "action_type": "acao",
-      "monster_effect": "vantagem_combate"
+      "monster_effect": "vantagem_combate",
+      "monster_maintenance": true,
+      "guild_progressions": [
+        {
+          "id": "ladino_esconder_2",
+          "level": 2,
+          "requires": null,
+          "name": "Esconder nas Sombras II",
+          "icon": "🌑",
+          "description": "+2 na chance de se esconder nas sombras."
+        },
+        {
+          "id": "ladino_esconder_3",
+          "level": 3,
+          "requires": "ladino_esconder_2",
+          "name": "Esconder nas Sombras III",
+          "icon": "🌑",
+          "description": "Ao ser revelado, +2 de CA por 1 rodada."
+        }
+      ]
     },
     {
       "id": "hero_rogue_veneno_rapido",
@@ -6753,7 +6994,25 @@ window.EDITOR_CATALOG = {
       "icon": "☠️",
       "descricao": "Ação livre. Unta um veneno da bolsa na arma — os próximos golpes certeiros envenenam o alvo.",
       "action_type": "acao",
-      "monster_effect": "vantagem_combate"
+      "monster_effect": "vantagem_combate",
+      "guild_progressions": [
+        {
+          "id": "ladino_veneno_2",
+          "level": 2,
+          "requires": null,
+          "name": "Veneno Rápido II",
+          "icon": "☠️",
+          "description": "O veneno na arma (corpo a corpo) dura 2 golpes certeiros."
+        },
+        {
+          "id": "ladino_veneno_3",
+          "level": 3,
+          "requires": "ladino_veneno_2",
+          "name": "Veneno Rápido III",
+          "icon": "☠️",
+          "description": "Pode manter 2 venenos diferentes na arma ao mesmo tempo."
+        }
+      ]
     },
     {
       "id": "hero_rogue_criar_armadilha",
@@ -6775,7 +7034,25 @@ window.EDITOR_CATALOG = {
       "icon": "🔧",
       "descricao": "Ação principal. Selecione uma casa adjacente para tentar desarmar a armadilha. Falha crítica a dispara em você.",
       "action_type": "acao",
-      "monster_effect": "vantagem_combate"
+      "monster_effect": "vantagem_combate",
+      "guild_progressions": [
+        {
+          "id": "ladino_desarme_2",
+          "level": 2,
+          "requires": null,
+          "name": "Desarme II",
+          "icon": "🔧",
+          "description": "+2 na chance de desarmar armadilhas."
+        },
+        {
+          "id": "ladino_desarme_3",
+          "level": 3,
+          "requires": "ladino_desarme_2",
+          "name": "Desarme III",
+          "icon": "🔧",
+          "description": "Chance extra de recuperar o ouro da armadilha desarmada."
+        }
+      ]
     },
     {
       "id": "hero_cleric_cura",
@@ -6786,7 +7063,25 @@ window.EDITOR_CATALOG = {
       "icon": "🙌",
       "descricao": "1d8 a 3d8 + INT em um aliado. 💧-1 por dado. Alcance estendível com 🍖.",
       "action_type": "acao",
-      "monster_effect": "vantagem_combate"
+      "monster_effect": "vantagem_combate",
+      "guild_progressions": [
+        {
+          "id": "clerigo_cura_2",
+          "level": 2,
+          "requires": null,
+          "name": "Cura II",
+          "icon": "🙌",
+          "description": "Cura pode usar até 2d8 + INT."
+        },
+        {
+          "id": "clerigo_cura_3",
+          "level": 3,
+          "requires": "clerigo_cura_2",
+          "name": "Cura III",
+          "icon": "🙌",
+          "description": "Cura pode usar até 3d8 + INT."
+        }
+      ]
     },
     {
       "id": "hero_cleric_cura_area",
@@ -6797,7 +7092,25 @@ window.EDITOR_CATALOG = {
       "icon": "🌟",
       "descricao": "1d8 a 3d8 + INT em todos os aliados no raio 5. 🍖-4 💧-4 por dado.",
       "action_type": "acao",
-      "monster_effect": "vantagem_combate"
+      "monster_effect": "vantagem_combate",
+      "guild_progressions": [
+        {
+          "id": "clerigo_massa_2",
+          "level": 2,
+          "requires": null,
+          "name": "Cura em Massa II",
+          "icon": "🌟",
+          "description": "Cura em Massa: até 2d8 + INT, raio 4."
+        },
+        {
+          "id": "clerigo_massa_3",
+          "level": 3,
+          "requires": "clerigo_massa_2",
+          "name": "Cura em Massa III",
+          "icon": "🌟",
+          "description": "Cura em Massa: até 3d8 + INT, raio 6."
+        }
+      ]
     },
     {
       "id": "hero_cleric_purificacao",
@@ -6808,7 +7121,25 @@ window.EDITOR_CATALOG = {
       "icon": "✨",
       "descricao": "Remove veneno, doença, maldição ou petrificação de um aliado adjacente.",
       "action_type": "acao",
-      "monster_effect": "vantagem_combate"
+      "monster_effect": "vantagem_combate",
+      "guild_progressions": [
+        {
+          "id": "clerigo_purif_2",
+          "level": 2,
+          "requires": null,
+          "name": "Purificação II",
+          "icon": "✨",
+          "description": "Purificação também remove doenças."
+        },
+        {
+          "id": "clerigo_purif_3",
+          "level": 3,
+          "requires": "clerigo_purif_2",
+          "name": "Purificação III",
+          "icon": "✨",
+          "description": "Purificação também remove maldições e petrificação."
+        }
+      ]
     },
     {
       "id": "hero_cleric_ressurreicao",
@@ -6819,7 +7150,25 @@ window.EDITOR_CATALOG = {
       "icon": "💫",
       "descricao": "Traz um aliado morto adjacente de volta com 1 HP. 🍖-10 💧-10.",
       "action_type": "acao",
-      "monster_effect": "vantagem_combate"
+      "monster_effect": "vantagem_combate",
+      "guild_progressions": [
+        {
+          "id": "clerigo_ressur_2",
+          "level": 2,
+          "requires": null,
+          "name": "Ressurreição II",
+          "icon": "💫",
+          "description": "Ressurreição traz o aliado com metade dos PV (🍖15 💧15)."
+        },
+        {
+          "id": "clerigo_ressur_3",
+          "level": 3,
+          "requires": "clerigo_ressur_2",
+          "name": "Ressurreição III",
+          "icon": "💫",
+          "description": "Ressurreição traz o aliado com PV cheio (🍖20 💧20)."
+        }
+      ]
     },
     {
       "id": "hero_bard_cancao_heroica",
@@ -6830,7 +7179,8 @@ window.EDITOR_CATALOG = {
       "icon": "🎵",
       "descricao": "Ativa buffs musicais para aliados em raio de 5 quadrados",
       "action_type": "acao",
-      "monster_effect": "vantagem_combate"
+      "monster_effect": "vantagem_combate",
+      "monster_maintenance": true
     },
     {
       "id": "hero_bard_provocacao",
@@ -6852,7 +7202,25 @@ window.EDITOR_CATALOG = {
       "icon": "🙏",
       "descricao": "Cura 1d6 + bônus Força em aliado adjacente",
       "action_type": "acao",
-      "monster_effect": "vantagem_combate"
+      "monster_effect": "vantagem_combate",
+      "guild_progressions": [
+        {
+          "id": "paladino_cura_maos_2",
+          "level": 2,
+          "requires": null,
+          "name": "Cura pelas Mãos II",
+          "icon": "🙏",
+          "description": "Imposição das Mãos cura 2d6 + FOR."
+        },
+        {
+          "id": "paladino_cura_maos_3",
+          "level": 3,
+          "requires": "paladino_cura_maos_2",
+          "name": "Cura pelas Mãos III",
+          "icon": "🙏",
+          "description": "Pode gastar +2🍖/+2💧 por +1d6 de cura (até 3×)."
+        }
+      ]
     },
     {
       "id": "hero_paladin_golpe_sagrado",
@@ -6863,7 +7231,18 @@ window.EDITOR_CATALOG = {
       "icon": "⚔️",
       "descricao": "+1d8 dano sagrado. Dobrado contra mortos-vivos e demônios",
       "action_type": "acao",
-      "monster_effect": "vantagem_combate"
+      "monster_effect": "vantagem_combate",
+      "monster_maintenance": true,
+      "guild_progressions": [
+        {
+          "id": "paladino_ataque_sagrado_2",
+          "level": 2,
+          "requires": null,
+          "name": "Ataque Sagrado II",
+          "icon": "⚔️",
+          "description": "Golpe Sagrado causa +2d8 de dano sagrado por ataque."
+        }
+      ]
     },
     {
       "id": "hero_paladin_protetor",
@@ -6874,7 +7253,26 @@ window.EDITOR_CATALOG = {
       "icon": "🛡️",
       "descricao": "Aliado recebe metade do dano. A outra metade vai para Richard",
       "action_type": "acao",
-      "monster_effect": "vantagem_combate"
+      "monster_effect": "vantagem_combate",
+      "monster_maintenance": true,
+      "guild_progressions": [
+        {
+          "id": "paladino_defensor_2",
+          "level": 2,
+          "requires": null,
+          "name": "Defensor II",
+          "icon": "🛡️",
+          "description": "O alcance da proteção aumenta para 5 quadrados."
+        },
+        {
+          "id": "paladino_defensor_3",
+          "level": 3,
+          "requires": "paladino_defensor_2",
+          "name": "Defensor III",
+          "icon": "🛡️",
+          "description": "O dano dividido cai para 40%/40% (20% é mitigado)."
+        }
+      ]
     },
     {
       "id": "hero_paladin_regeneracao_divina",
@@ -6885,7 +7283,26 @@ window.EDITOR_CATALOG = {
       "icon": "✨",
       "descricao": "Recupera 1 HP por turno até HP máximo",
       "action_type": "acao",
-      "monster_effect": "vantagem_combate"
+      "monster_effect": "vantagem_combate",
+      "monster_maintenance": true,
+      "guild_progressions": [
+        {
+          "id": "paladino_regen_2",
+          "level": 2,
+          "requires": null,
+          "name": "Regeneração II",
+          "icon": "✨",
+          "description": "Regeneração Divina também cura +1 HP dos aliados adjacentes."
+        },
+        {
+          "id": "paladino_regen_3",
+          "level": 3,
+          "requires": "paladino_regen_2",
+          "name": "Regeneração III",
+          "icon": "✨",
+          "description": "A Regeneração Divina alcança aliados em raio 2."
+        }
+      ]
     },
     {
       "id": "hero_paladin_guerreiro_luz",
@@ -6896,7 +7313,26 @@ window.EDITOR_CATALOG = {
       "icon": "💡",
       "descricao": "+1/+2 em Visão, Ataque, Dano e CA. Apenas Richard",
       "action_type": "acao",
-      "monster_effect": "vantagem_combate"
+      "monster_effect": "vantagem_combate",
+      "monster_maintenance": true,
+      "guild_progressions": [
+        {
+          "id": "paladino_luz_2",
+          "level": 2,
+          "requires": null,
+          "name": "Guerreiro da Luz II",
+          "icon": "💡",
+          "description": "Mantém 3 atributos ativos; com Visão, detecta armadilhas em raio 2."
+        },
+        {
+          "id": "paladino_luz_3",
+          "level": 3,
+          "requires": "paladino_luz_2",
+          "name": "Guerreiro da Luz III",
+          "icon": "💡",
+          "description": "Mantém 4 atributos ativos; com Visão, detecta armadilhas em raio 3."
+        }
+      ]
     },
     {
       "id": "guild_sorrateiro",
@@ -7641,7 +8077,7 @@ window.EDITOR_CATALOG = {
       "source_id": "ladino_esconder_3",
       "name": "Esconder nas Sombras III",
       "icon": "✦",
-      "descricao": "Ativar não gasta mais a ação bônus. Ao ser revelado, +2 de CA por 1 rodada.",
+      "descricao": "Ao ser revelado, +2 de CA por 1 rodada.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -7741,6 +8177,72 @@ window.EDITOR_CATALOG = {
       "name": "Fórmula: Nuvem de Gás",
       "icon": "✦",
       "descricao": "Desbloqueia permanentemente a fabricação de Nuvem de Gás.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_ladino_camara_gas",
+      "source": "guilda",
+      "source_id": "ladino_camara_gas",
+      "name": "Fórmula: Câmara de Gás",
+      "icon": "✦",
+      "descricao": "Desbloqueia permanentemente a fabricação de Câmara de Gás.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_ladino_jato_acido",
+      "source": "guilda",
+      "source_id": "ladino_jato_acido",
+      "name": "Fórmula: Jato de Ácido",
+      "icon": "✦",
+      "descricao": "Desbloqueia permanentemente a fabricação de Jato de Ácido.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_ladino_teto_esmagador",
+      "source": "guilda",
+      "source_id": "ladino_teto_esmagador",
+      "name": "Fórmula: Teto Esmagador",
+      "icon": "✦",
+      "descricao": "Desbloqueia permanentemente a fabricação de Teto Esmagador.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_ladino_bau_engolidor",
+      "source": "guilda",
+      "source_id": "ladino_bau_engolidor",
+      "name": "Fórmula: Baú Engolidor",
+      "icon": "✦",
+      "descricao": "Desbloqueia permanentemente a fabricação de Baú Engolidor.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_ladino_guilhotina",
+      "source": "guilda",
+      "source_id": "ladino_guilhotina",
+      "name": "Fórmula: Guilhotina",
+      "icon": "✦",
+      "descricao": "Desbloqueia permanentemente a fabricação de Guilhotina.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_ladino_fosso",
+      "source": "guilda",
+      "source_id": "ladino_fosso",
+      "name": "Fórmula: Fosso",
+      "icon": "✦",
+      "descricao": "Desbloqueia permanentemente a fabricação de Fosso.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -10053,6 +10555,49 @@ window.EDITOR_CATALOG = {
       "precisa_veneno": false
     },
     {
+      "tipo": "camara_gas",
+      "nome": "Câmara de Gás",
+      "icone": "☠️",
+      "cr": 0.9,
+      "precisa_veneno": false
+    },
+    {
+      "tipo": "jato_acido",
+      "nome": "Jato de Ácido",
+      "icone": "🧪",
+      "cr": 0.8,
+      "precisa_veneno": false
+    },
+    {
+      "tipo": "teto_esmagador",
+      "nome": "Teto Esmagador",
+      "icone": "🪨",
+      "cr": 1.0,
+      "precisa_veneno": false
+    },
+    {
+      "tipo": "bau_engolidor",
+      "nome": "Baú Engolidor",
+      "icone": "📦",
+      "cr": 1.0,
+      "precisa_veneno": false,
+      "apenas_objeto": true
+    },
+    {
+      "tipo": "guilhotina",
+      "nome": "Guilhotina",
+      "icone": "🪓",
+      "cr": 0.8,
+      "precisa_veneno": false
+    },
+    {
+      "tipo": "fosso",
+      "nome": "Fosso",
+      "icone": "🕳️",
+      "cr": 0.45,
+      "precisa_veneno": false
+    },
+    {
       "tipo": "armadilha_teletransporte",
       "nome": "Armadilha de Teletransporte",
       "icone": "🌀",
@@ -10653,6 +11198,21 @@ window.EDITOR_CATALOG = {
       "loot_capaz": false,
       "special": null,
       "image": "caverna.png"
+    },
+    {
+      "type": "casa",
+      "nome": "Casa",
+      "emoji": "🏠",
+      "size": [
+        3,
+        3
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "casa.png"
     },
     {
       "type": "chao",

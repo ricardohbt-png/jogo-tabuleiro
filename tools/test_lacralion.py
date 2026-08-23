@@ -75,9 +75,9 @@ async def main():
     p = hero(r, "h1", [5, 6])
     await r._execute_one_monster_attack(m, m["attacks"][2], {"kind": "player", "obj": p})
     check("falha no veneno causa dano", p["hp"] < 500)
-    check("falha no veneno aplica Lento", p.get("lento") is True and p.get("lento_rodadas") == 1)
-    check("Lento aplica -1 ataque e -1 CA", p.get("mods_magia", {}).get("ataque") == -1
-          and p.get("mods_magia", {}).get("ca") == -1)
+    check("falha no veneno aplica Sangramento", p.get("sangramento_nivel") == 1
+          and p.get("sangramento_rodadas", 0) >= 1)
+    check("veneno não aplica mais Lentidão", not p.get("lento") and not p.get("lento_rodadas"))
 
     print("[3] Agarrão, Ferrão e limite do ancião")
     r = room()
@@ -113,7 +113,7 @@ async def main():
         "monster_abilities": [
             {"id": "veneno_lacralion", "uses_per_day": 1, "cooldown_turns": 0,
              "attack_index": 2, "damage_dice": 1, "damage_faces": 8,
-             "poison_dc": 18, "slow_duration": 1},
+             "poison_dc": 18},
             {"id": "agarrar_lacralion", "uses_per_day": 1, "cooldown_turns": 0,
              "attack_index": 0, "dc": 17, "max_targets": 2},
             {"id": "carapaca_espinhosa", "uses_per_day": 1, "cooldown_turns": 0,

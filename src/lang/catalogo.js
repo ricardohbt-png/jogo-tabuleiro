@@ -42,6 +42,14 @@ window.LANG_CATALOGO = {
     "en": "Bear Trap",
     "pt": "Armadilha de Urso"
   },
+  "cat.armadilha.bau_engolidor.desc": {
+    "en": "Can only be placed on an object. Reflex DC 20 avoids it; on failure, remains trapped until Strength DC 20 succeeds.",
+    "pt": "Reflexos CD 20 evita. Na falha, fica preso dentro do objeto e só escapa com Força CD 20."
+  },
+  "cat.armadilha.bau_engolidor.nome": {
+    "en": "Swallowing Chest",
+    "pt": "Baú Engolidor"
+  },
   "cat.armadilha.buraco.desc": {
     "en": "Reflex DC 10 or loses movement. Remains active.",
     "pt": "Reflexos dif 10 ou perde o movimento. Permanece ativa."
@@ -49,6 +57,22 @@ window.LANG_CATALOGO = {
   "cat.armadilha.buraco.nome": {
     "en": "Pit",
     "pt": "Buraco"
+  },
+  "cat.armadilha.camara_gas.desc": {
+    "en": "When triggered, affects the entire room for 1d6+1 rounds. Fortitude DC 13 at the start of each turn; failure causes 1d6 damage.",
+    "pt": "Ao entrar no quadrado, libera gás pela sala. Fortitude CD 13 a cada turno; na falha, sofre 1d6 de dano. Permanece ativa por 1d6+1 rodadas."
+  },
+  "cat.armadilha.camara_gas.nome": {
+    "en": "Gas Chamber",
+    "pt": "Câmara de Gás"
+  },
+  "cat.armadilha.fosso.desc": {
+    "en": "Reflex DC 15 avoids it. On failure, takes 1d6 damage, loses movement and the next round, and remains hidden and protected during that time.",
+    "pt": "Reflexos CD 15 evita. Na falha, sofre 1d6 de dano, perde o movimento e a próxima rodada; fica oculto e protegido enquanto estiver no fosso."
+  },
+  "cat.armadilha.fosso.nome": {
+    "en": "Pit",
+    "pt": "Fosso"
   },
   "cat.armadilha.fosso_envenenado.desc": {
     "en": "1d6 damage + effect of the poison used. Becomes visible after triggering.",
@@ -65,6 +89,22 @@ window.LANG_CATALOGO = {
   "cat.armadilha.fosso_estacas.nome": {
     "en": "Spike Pit",
     "pt": "Fosso com Estacas"
+  },
+  "cat.armadilha.guilhotina.desc": {
+    "en": "Reflex DC 14 avoids the blade. On failure, takes 3d6 damage.",
+    "pt": "Reflexos CD 14 evita a lâmina. Na falha, sofre 3d6 de dano."
+  },
+  "cat.armadilha.guilhotina.nome": {
+    "en": "Guillotine",
+    "pt": "Guilhotina"
+  },
+  "cat.armadilha.jato_acido.desc": {
+    "en": "Reflex DC 18 avoids the jet. On failure, takes 2d6 acid damage, one equipped item gains a corrosion level, and half the damage returns next round.",
+    "pt": "Reflexos CD 18 evita o jato. Na falha, sofre 2d6 de dano, uma peça equipada sofre 1 nível de corrosão e metade do dano volta na rodada seguinte."
+  },
+  "cat.armadilha.jato_acido.nome": {
+    "en": "Acid Jet",
+    "pt": "Jato de Ácido"
   },
   "cat.armadilha.lamina_escondida.desc": {
     "en": "Reflex DC 15 avoids the blade. On failure, takes 1d8 damage plus the combined poison.",
@@ -105,6 +145,14 @@ window.LANG_CATALOGO = {
   "cat.armadilha.rede.nome": {
     "en": "Net",
     "pt": "Rede"
+  },
+  "cat.armadilha.teto_esmagador.desc": {
+    "en": "When triggered, affects the entire room. Reflex DC 20 avoids it; on failure, takes 4d6 damage.",
+    "pt": "Ao ser ativado, o teto desaba sobre toda a sala. Reflexos CD 20 evita; na falha, sofre 4d6 de dano."
+  },
+  "cat.armadilha.teto_esmagador.nome": {
+    "en": "Crushing Ceiling",
+    "pt": "Teto Esmagador"
   },
   "cat.classe.bard.desc": {
     "en": "Musician who inspires allies with songs and taunts enemies",
@@ -193,6 +241,10 @@ window.LANG_CATALOGO = {
   "cat.decor.carroca.nome": {
     "en": "Cart",
     "pt": "Carroça"
+  },
+  "cat.decor.casa.nome": {
+    "en": "House",
+    "pt": "Casa"
   },
   "cat.decor.caverna.nome": {
     "en": "Cave",
@@ -466,6 +518,22 @@ window.LANG_CATALOGO = {
     "en": "Formula: Bear Trap",
     "pt": "Fórmula: Armadilha de Urso"
   },
+  "cat.guilda.ladino_bau_engolidor.desc": {
+    "en": "Permanently unlocks crafting of the Devouring Chest.",
+    "pt": "Desbloqueia permanentemente a fabricação de Baú Engolidor."
+  },
+  "cat.guilda.ladino_bau_engolidor.nome": {
+    "en": "Formula: Devouring Chest",
+    "pt": "Fórmula: Baú Engolidor"
+  },
+  "cat.guilda.ladino_camara_gas.desc": {
+    "en": "Permanently unlocks crafting of the Gas Chamber.",
+    "pt": "Desbloqueia permanentemente a fabricação de Câmara de Gás."
+  },
+  "cat.guilda.ladino_camara_gas.nome": {
+    "en": "Formula: Gas Chamber",
+    "pt": "Fórmula: Câmara de Gás"
+  },
   "cat.guilda.ladino_desarme_2.desc": {
     "en": "+2 to the chance of disarming traps.",
     "pt": "+2 na chance de desarmar armadilhas."
@@ -491,12 +559,20 @@ window.LANG_CATALOGO = {
     "pt": "Esconder nas Sombras II"
   },
   "cat.guilda.ladino_esconder_3.desc": {
-    "en": "Activating no longer costs the bonus action. When revealed, +2 AC for 1 round.",
-    "pt": "Ativar não gasta mais a ação bônus. Ao ser revelado, +2 de CA por 1 rodada."
+    "en": "When revealed, +2 AC for 1 round.",
+    "pt": "Ao ser revelado, +2 de CA por 1 rodada."
   },
   "cat.guilda.ladino_esconder_3.nome": {
     "en": "Hide in Shadows III",
     "pt": "Esconder nas Sombras III"
+  },
+  "cat.guilda.ladino_fosso.desc": {
+    "en": "Permanently unlocks crafting of the Pit.",
+    "pt": "Desbloqueia permanentemente a fabricação de Fosso."
+  },
+  "cat.guilda.ladino_fosso.nome": {
+    "en": "Formula: Pit",
+    "pt": "Fórmula: Fosso"
   },
   "cat.guilda.ladino_fosso_envenenado.desc": {
     "en": "Permanently unlocks crafting the Poisoned Spike Pit.",
@@ -529,6 +605,22 @@ window.LANG_CATALOGO = {
   "cat.guilda.ladino_furtivo_3.nome": {
     "en": "Supreme Sneak Attack",
     "pt": "Ataque Furtivo Supremo"
+  },
+  "cat.guilda.ladino_guilhotina.desc": {
+    "en": "Permanently unlocks crafting of the Guillotine.",
+    "pt": "Desbloqueia permanentemente a fabricação de Guilhotina."
+  },
+  "cat.guilda.ladino_guilhotina.nome": {
+    "en": "Formula: Guillotine",
+    "pt": "Fórmula: Guilhotina"
+  },
+  "cat.guilda.ladino_jato_acido.desc": {
+    "en": "Permanently unlocks crafting of the Acid Jet.",
+    "pt": "Desbloqueia permanentemente a fabricação de Jato de Ácido."
+  },
+  "cat.guilda.ladino_jato_acido.nome": {
+    "en": "Formula: Acid Jet",
+    "pt": "Fórmula: Jato de Ácido"
   },
   "cat.guilda.ladino_lamina_escondida.desc": {
     "en": "Permanently unlocks crafting the Hidden Blade.",
@@ -569,6 +661,14 @@ window.LANG_CATALOGO = {
   "cat.guilda.ladino_rede.nome": {
     "en": "Formula: Net",
     "pt": "Fórmula: Rede"
+  },
+  "cat.guilda.ladino_teto_esmagador.desc": {
+    "en": "Permanently unlocks crafting of the Crushing Ceiling.",
+    "pt": "Desbloqueia permanentemente a fabricação de Teto Esmagador."
+  },
+  "cat.guilda.ladino_teto_esmagador.nome": {
+    "en": "Formula: Crushing Ceiling",
+    "pt": "Fórmula: Teto Esmagador"
   },
   "cat.guilda.ladino_veneno_2.desc": {
     "en": "Weapon poison (melee) now lasts 2 successful hits.",
@@ -1417,6 +1517,202 @@ window.LANG_CATALOGO = {
   "cat.guilda.tecnica_ultimo_esforco.nome": {
     "en": "Last Stand",
     "pt": "Último Esforço"
+  },
+  "cat.habilidade.aprimorar_magia.desc": {
+    "en": "Free action. +1 to the spell's saving throw DC. 🍖-3 when casting.",
+    "pt": "Ação livre. +1 na dificuldade (CD) do teste de resistência da magia. 🍖-3 ao lançar."
+  },
+  "cat.habilidade.aprimorar_magia.nome": {
+    "en": "Heighten Spell",
+    "pt": "Aprimorar Magia"
+  },
+  "cat.habilidade.ataque_furtivo.desc": {
+    "en": "Passive. +2d4 extra damage when an ally is adjacent to the target (or while invisible). +1d4 per level band.",
+    "pt": "Passiva. +2d4 dano extra quando há aliado adjacente ao alvo (ou se estiver invisível). +1d4 por faixa de nível."
+  },
+  "cat.habilidade.ataque_furtivo.nome": {
+    "en": "Sneak Attack",
+    "pt": "Ataque Furtivo"
+  },
+  "cat.habilidade.cancao_heroica.desc": {
+    "en": "Activates musical buffs for allies within 5 squares",
+    "pt": "Ativa buffs musicais para aliados em raio de 5 quadrados"
+  },
+  "cat.habilidade.cancao_heroica.nome": {
+    "en": "Heroic Song",
+    "pt": "Canção Heroica"
+  },
+  "cat.habilidade.criar_armadilha.desc": {
+    "en": "Main action. Places a trap on your own square or an adjacent one. Costs hunger/thirst + gold.",
+    "pt": "Ação principal. Coloca uma armadilha na própria casa ou adjacente. Custa fome/sede + ouro."
+  },
+  "cat.habilidade.criar_armadilha.nome": {
+    "en": "Set Trap",
+    "pt": "Criar Armadilha"
+  },
+  "cat.habilidade.cura.desc": {
+    "en": "1d8 to 3d8 + INT on one ally. 💧-1 per die. Range extendable with 🍖.",
+    "pt": "1d8 a 3d8 + INT em um aliado. 💧-1 por dado. Alcance estendível com 🍖."
+  },
+  "cat.habilidade.cura.nome": {
+    "en": "Heal",
+    "pt": "Cura"
+  },
+  "cat.habilidade.cura_area.desc": {
+    "en": "1d8 to 3d8 + INT on every ally within radius 5. 🍖-4 💧-4 per die.",
+    "pt": "1d8 a 3d8 + INT em todos os aliados no raio 5. 🍖-4 💧-4 por dado."
+  },
+  "cat.habilidade.cura_area.nome": {
+    "en": "Mass Heal",
+    "pt": "Cura em Área"
+  },
+  "cat.habilidade.desarmar_armadilha.desc": {
+    "en": "Main action. Select an adjacent square to try to disarm the trap. A critical failure sets it off on you.",
+    "pt": "Ação principal. Selecione uma casa adjacente para tentar desarmar a armadilha. Falha crítica a dispara em você."
+  },
+  "cat.habilidade.desarmar_armadilha.nome": {
+    "en": "Disarm Trap",
+    "pt": "Desarmar Armadilha"
+  },
+  "cat.habilidade.detectar_armadilhas.desc": {
+    "en": "Bonus action (toggle). Reveals nearby traps and does not set off the dungeon's own. Upkeep 💧-1/turn.",
+    "pt": "Ação bônus (alternável). Revela armadilhas próximas e não dispara as da masmorra. Manutenção 💧-1/turno."
+  },
+  "cat.habilidade.detectar_armadilhas.nome": {
+    "en": "Detect Traps",
+    "pt": "Detectar Armadilhas"
+  },
+  "cat.habilidade.esconder_sombras.desc": {
+    "en": "Bonus action. d20+DEX vs the monsters' perception. You may attack in the same round using the main action. Invisible (not a valid target) while active. Upkeep 🍖-1 💧-1/turn.",
+    "pt": "Ação bônus. d20+DES vs percepção dos monstros. Pode atacar na mesma rodada usando a ação principal. Invisível (não é alvo) enquanto ativo. Manutenção 🍖-1 💧-1/turno."
+  },
+  "cat.habilidade.esconder_sombras.nome": {
+    "en": "Hide in Shadows",
+    "pt": "Esconder nas Sombras"
+  },
+  "cat.habilidade.estender_magia.desc": {
+    "en": "Free action. +1 turn to the spell's duration. 🍖-3 💧-3 when casting.",
+    "pt": "Ação livre. +1 turno na duração da magia. 🍖-3 💧-3 ao lançar."
+  },
+  "cat.habilidade.estender_magia.nome": {
+    "en": "Extend Spell",
+    "pt": "Estender Magia"
+  },
+  "cat.habilidade.fireball.nome": {
+    "en": "Fireball",
+    "pt": "Bola de Fogo"
+  },
+  "cat.habilidade.fortalecer_magia.desc": {
+    "en": "Free action. Multiplies the spell's damage by 1.5. 🍖-6 💧-6 when casting.",
+    "pt": "Ação livre. Multiplica o dano da magia por 1,5. 🍖-6 💧-6 ao lançar."
+  },
+  "cat.habilidade.fortalecer_magia.nome": {
+    "en": "Empower Spell",
+    "pt": "Fortalecer Magia"
+  },
+  "cat.habilidade.furia_berserker.desc": {
+    "en": "Extra attack this turn with active abilities",
+    "pt": "Ataque extra neste turno com habilidades ativas"
+  },
+  "cat.habilidade.furia_berserker.nome": {
+    "en": "Berserker Fury",
+    "pt": "Fúria Berserker"
+  },
+  "cat.habilidade.golpe_devastador.desc": {
+    "en": "Doubles each damage die this turn",
+    "pt": "Dobra cada dado de dano neste turno"
+  },
+  "cat.habilidade.golpe_devastador.nome": {
+    "en": "Devastating Blow",
+    "pt": "Golpe Devastador"
+  },
+  "cat.habilidade.golpe_sagrado.desc": {
+    "en": "+1d8 holy damage. Doubled against undead and demons",
+    "pt": "+1d8 dano sagrado. Dobrado contra mortos-vivos e demônios"
+  },
+  "cat.habilidade.golpe_sagrado.nome": {
+    "en": "Holy Strike",
+    "pt": "Golpe Sagrado"
+  },
+  "cat.habilidade.guerreiro_luz.desc": {
+    "en": "+1/+2 to Sight, Attack, Damage and AC. Richard only",
+    "pt": "+1/+2 em Visão, Ataque, Dano e CA. Apenas Richard"
+  },
+  "cat.habilidade.guerreiro_luz.nome": {
+    "en": "Warrior of Light",
+    "pt": "Guerreiro da Luz"
+  },
+  "cat.habilidade.ice_lance.nome": {
+    "en": "Ice Lance",
+    "pt": "Lança de Gelo"
+  },
+  "cat.habilidade.imposicao_maos.desc": {
+    "en": "Heals 1d6 + Strength bonus on an adjacent ally",
+    "pt": "Cura 1d6 + bônus Força em aliado adjacente"
+  },
+  "cat.habilidade.imposicao_maos.nome": {
+    "en": "Lay on Hands",
+    "pt": "Imposição das Mãos"
+  },
+  "cat.habilidade.magic_shield.nome": {
+    "en": "Magic Shield",
+    "pt": "Escudo Mágico"
+  },
+  "cat.habilidade.mira_certeira.desc": {
+    "en": "+2 on the to-hit die this turn",
+    "pt": "+2 no dado de acerto neste turno"
+  },
+  "cat.habilidade.mira_certeira.nome": {
+    "en": "Careful Aim",
+    "pt": "Mira Certeira"
+  },
+  "cat.habilidade.protetor.desc": {
+    "en": "The ally takes half the damage. The other half goes to Richard",
+    "pt": "Aliado recebe metade do dano. A outra metade vai para Richard"
+  },
+  "cat.habilidade.protetor.nome": {
+    "en": "Protector",
+    "pt": "Protetor"
+  },
+  "cat.habilidade.provocacao.desc": {
+    "en": "Imposes disadvantage on the enemy and forces it to attack Henrique for 3 turns",
+    "pt": "Impõe desvantagem ao inimigo e o força a atacar Henrique por 3 turnos"
+  },
+  "cat.habilidade.provocacao.nome": {
+    "en": "Taunt",
+    "pt": "Provocação"
+  },
+  "cat.habilidade.purificacao.desc": {
+    "en": "Removes poison, disease, curse or petrification from an adjacent ally.",
+    "pt": "Remove veneno, doença, maldição ou petrificação de um aliado adjacente."
+  },
+  "cat.habilidade.purificacao.nome": {
+    "en": "Cleanse",
+    "pt": "Purificação"
+  },
+  "cat.habilidade.regeneracao_divina.desc": {
+    "en": "Recovers 1 HP per turn up to max HP",
+    "pt": "Recupera 1 HP por turno até HP máximo"
+  },
+  "cat.habilidade.regeneracao_divina.nome": {
+    "en": "Divine Regeneration",
+    "pt": "Regeneração Divina"
+  },
+  "cat.habilidade.ressurreicao.desc": {
+    "en": "Brings an adjacent dead ally back with 1 HP. 🍖-10 💧-10.",
+    "pt": "Traz um aliado morto adjacente de volta com 1 HP. 🍖-10 💧-10."
+  },
+  "cat.habilidade.ressurreicao.nome": {
+    "en": "Resurrection",
+    "pt": "Ressurreição"
+  },
+  "cat.habilidade.veneno_rapido.desc": {
+    "en": "Free action. Coats a poison from the bag on the weapon — the next clean hits poison the target.",
+    "pt": "Ação livre. Unta um veneno da bolsa na arma — os próximos golpes certeiros envenenam o alvo."
+  },
+  "cat.habilidade.veneno_rapido.nome": {
+    "en": "Quick Poison",
+    "pt": "Veneno Rápido"
   },
   "cat.instrumento.alaude.desc": {
     "en": "Passive: while the Heroic Song is playing, it boosts its bonuses (+1 to the covered attributes, based on the Lute's quality). Doesn't need to be activated.",

@@ -64,6 +64,8 @@ window.VC = {
     baseR:        0.533,     // 0x888888 / 255 ≈ 0.533 — clearly lighter than walls
     baseVariance: 0.07,      // per-tile brightness jitter (adds ±0–7% per piece)
     emissive:    0x222222,   // minimum glow so floor never goes pitch-black
+    roughness:   0.86,       // satin stone: catches warm torch highlights
+    bumpScale:   0.035,      // shallow relief without extra geometry per tile
   },
 
   // ── Wall Tiles ─────────────────────────────────────────────────────────────
@@ -74,6 +76,8 @@ window.VC = {
     variance:    0.06,       // R/G jitter per tile
     varianceB:   0.07,       // B jitter per tile
     emissive:   0x111120,    // preserves blue-stone silhouette in deep shadow
+    roughness:  0.88,
+    bumpScale:  0.045,
   },
 
   // ── Materiais de chão/parede (cores 3D por id; espelha server.MATERIAIS) ────
@@ -100,6 +104,12 @@ window.VC = {
   // Material: MeshLambertMaterial — emissive ensures colors bypass scene lighting
   dice: {
     emissiveIntensity: 1.0,       // MAXIMUM: 100% emissive — dice glow with their own color regardless of scene lighting
+    settleMs:          1500,       // tempo mostrando o resultado antes do fade
+    fadeMs:             350,        // desaparecimento rápido após o resultado
+    // Âncora comum para os dados 2D/3D: inferior direita do mapa, sem colar
+    // na borda. Os dados continuam centralizados entre si nessa área.
+    screenAnchor:      { x: 0.72, y: 0.68 },
+    screenScatter:     { x: 0.10, y: 0.07 },
     numberFontSize:    140,       // px — single digit; scaled proportionally for 2-digit
     numberStroke:      20,        // px MAXIMUM stroke — boldest white halo for absolute contrast
     borderWidth:        8,        // px black chamfer border on each face
@@ -150,6 +160,25 @@ window.VC = {
     rimEmissiveIntensity: 0.85,   // colored rim ring that IDs each hero in shadow
     pointLightIntensity:  1.20,   // individual overhead PointLight per pawn
     pointLightDistance:   2.50,
+  },
+
+  // ── Feedback visual da mesa ───────────────────────────────────────────────
+  feedback: {
+    selectionColor:       0xffd060,
+    selectionPulseSpeed:  260,
+    selectionPulseAmount: 0.075,
+    hoverLift:            0.13,
+    hoverLightIntensity:  0.72,
+    shadowOpacity:        0.60,
+    combat: {
+      damageColor:     '#ff6262',
+      heroDamageColor: '#ff8d8d',
+      healColor:       '#69f59a',
+      deathColor:      '#f4d27a',
+      damageFontScale: 1.5,
+      damageMs:        1050,
+      deathMs:         1500,
+    },
   },
 
   // ── Typography ─────────────────────────────────────────────────────────────

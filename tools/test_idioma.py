@@ -146,6 +146,11 @@ def _rodar_verificacoes():
     fonte = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                               "server.py"), encoding="utf-8").read()
     usadas = set(re.findall(r'\bT\(\s*"([^"]+)"', fonte))
+    # Chave montada em runtime — T("ui.cancao.atributo." + x) — cai aqui como o
+    # PREFIXO, que naturalmente não existe no dicionário. Prefixo terminado em
+    # ponto nunca é chave real, então descartá-lo não esconde chave ausente: as
+    # chaves concretas continuam cobradas do lado do cliente.
+    usadas = {k for k in usadas if not k.endswith(".")}
     faltando = sorted(k for k in usadas if k not in S.LANG_STRINGS)
     check(f"nenhuma chave órfã em server.py (usadas: {len(usadas)})", not faltando)
     if faltando: print("     órfãs:", ", ".join(faltando))

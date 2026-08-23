@@ -249,6 +249,36 @@ def _literais_de_markup():
 RE_NO_TEXTO = re.compile(r"<([a-zA-Z][^<>]*)>([^<>]+)")
 RE_COMENT_HTML = re.compile(r"<!--.*?-->", re.S)
 RE_ACENTO = re.compile(r"[ãáàâçéêíóõôúÃÁÀÂÇÉÊÍÓÕÔÚ]")
+# Dentro de markup medimos LETRA, não acento — ver a nota na varredura.
+RE_LETRA = re.compile(r"[A-Za-zÀ-ÿ]{2,}")
+
+
+# Nome próprio do jogo — não se traduz, e aparece em duas telas.
+MARKUP_INTENCIONAL = {"LEGENDS FOR HIRE"}
+
+
+def _sem_blocos_html(txt):
+    """Remove o elemento marcado com data-i18n-html JUNTO COM seu conteúdo.
+
+    Nesse marcador a chave carrega o markup inteiro, então o texto de dentro é
+    a FONTE — varrê-lo acusaria `Como jogar:` e `iniciar.bat` do #hint-host como
+    dívida. O corte é por tag balanceada, não por regex guloso."""
+    while True:
+        m = re.search(r"<(\w+)[^<>]*data-i18n-html=", txt)
+        if not m:
+            return txt
+        tag, i = m.group(1), m.start()
+        prof, j = 0, i
+        while j < len(txt):
+            if txt.startswith("<" + tag, j):
+                prof += 1
+            elif txt.startswith("</" + tag, j):
+                prof -= 1
+                if prof == 0:
+                    j = txt.find(">", j) + 1
+                    break
+            j += 1
+        txt = txt[:i] + " " + txt[j if j > i else i + 1:]
 
 
 def _markup_sem_marcador():
@@ -258,12 +288,16 @@ def _markup_sem_marcador():
     template para o resto dele sumir do placar."""
     fora = []
     for _linha, txt in _literais_de_markup():
-        limpo = RE_COMENT_HTML.sub(" ", txt).replace("${}", " ")
+        limpo = _sem_blocos_html(RE_COMENT_HTML.sub(" ", txt)).replace("${}", " ")
         for attrs, texto in RE_NO_TEXTO.findall(limpo):
             t = texto.strip()
-            if len(t) < 3 or not RE_ACENTO.search(t):
+            # ACENTO NÃO É CRITÉRIO aqui: 'Iniciar Jogo', 'Encerrar Turno',
+            # 'Aventureiros', 'SALA' e 'Fechar' não têm nenhum — e todos ficaram
+            # sem data-i18n até o autor relatá-los. Dentro de markup, qualquer
+            # texto com letra é dívida; símbolo/número puro não é.
+            if len(t) < 3 or not RE_LETRA.search(t):
                 continue
-            if "data-i18n" in attrs:
+            if "data-i18n" in attrs or t in MARKUP_INTENCIONAL:
                 continue
             fora.append(t)
     return fora
@@ -295,7 +329,18 @@ def _rodar_verificacoes():
     for fn, n in cont.most_common(15):
         marca = " (FECHADA)" if fn in FECHADAS else ""
         print(f"       {n:>4}  {fn}{marca}")
-    check("placar emitido", True)
+    # A etapa 5 fechou: o relatório virou COBRANÇA. O único literal que
+    # continua no game.js é o `'não encontrada'` de handleTileClick, que NÃO é
+    # texto de tela — é chave de lógica sobre a resposta do servidor
+    # (server.py:1856 devolve essa recusa como string crua, fora do T()).
+    # Traduzi-la quebraria o ramo que oferece criar conta, em silêncio. O
+    # conserto certo é um código de erro no payload, e é trabalho próprio.
+    SOBRA_PROPOSITAL = {"não encontrada"}
+    restantes = {txt for _l, txt in _literais_pendentes()}
+    check(f"nenhum literal em português restou no game.js ({total})",
+          restantes <= SOBRA_PROPOSITAL)
+    check("a sobra proposital ainda é a chave de lógica esperada",
+          restantes == SOBRA_PROPOSITAL)
     # Helper interno (arrow de uma linha DENTRO de outra função) não pode virar
     # dono de literal: a atribuição é pela declaração anterior mais próxima, e
     # `L`/`add`/`mkSelect`/`_wToggle` roubavam 51 literais das funções que os
@@ -428,7 +473,60 @@ def _rodar_verificacoes():
     check("a chamada do GRIMORIO_CLIENT usa soNome=false",
           bool(re.search(r"aplicarCatalogo\(GRIMORIO_CLIENT,\s*false\)", GAME)))
 
-    print("\n[6] O markup com data-i18n está TODO marcado")
+    print("\n[6] Nenhuma chamada de t() no nível de módulo (TDZ)")
+    # BUG REAL, e FATAL: um `const` de módulo inicializado com t(...) roda no
+    # CARREGAMENTO, antes de `const t = …` existir — ReferenceError de temporal
+    # dead zone que ABORTA o resto do game.js. Nenhuma suíte pegou: o placar
+    # ficou zerado, `node --check` passou (é sintaxe válida) e o jogo simplesmente
+    # não carregava. Só o console do navegador acusou. Aconteceu com o
+    # GUERREIRO_LUZ_BONUS_CLIENT no Lote 3.
+    # A varredura é ancorada na COLUNA 0 — a mesma premissa da RE_FN e do
+    # placar: uma declaração de módulo começa ali. Uma primeira versão contava
+    # chaves para achar "profundidade 0" e derivou no meio do arquivo (template
+    # literal com `${}` aninhado); regra simples e ancorada erra menos.
+    RE_DECL = re.compile(r"^(?:const|let|var)\s")
+    RE_CHAMA_T = re.compile(r"(?<![\w$.])t\(\s*['\"]")
+    ini_t = next((i for i, l in enumerate(LINHAS, 1)
+                  if l.startswith("const t = (chave")), None)
+    check("o `const t` do tradutor foi encontrado", ini_t is not None)
+    cedo, i = [], 0
+    while i < len(LINHAS):
+        if RE_DECL.match(LINHAS[i]):
+            j, trecho = i, [LINHAS[i]]
+            # A declaração segue até a próxima linha que abre coluna 0 de novo.
+            while j + 1 < len(LINHAS) and not LINHAS[j + 1][:1].strip():
+                j += 1; trecho.append(LINHAS[j])
+            texto = "\n".join(trecho)
+            if RE_CHAMA_T.search(texto) and (ini_t is None or i + 1 < ini_t):
+                cedo.append(i + 1)
+            i = j
+        i += 1
+    check(f"nenhum t() de módulo antes da declaração (linhas {cedo or 'ok'})", not cedo)
+
+    # A varredura acima só olha DECLARAÇÃO (`const|let|var` na coluna 0), e foi
+    # por esse buraco que o bug passou a segunda vez: a chamada estava dentro de
+    # um IIFE de topo — `(function(){ … })();` —, que não casa com RE_DECL.
+    # Pior, o corpo era guardado por `if(!s || !s.code) return;`, então só
+    # quebrava DEPOIS da primeira partida (com sessão salva no localStorage): a
+    # tela inicial desenhava, nenhum handler existia e o jogo travava na
+    # seleção de herói, sem erro visível para quem não abre o console.
+    #
+    # Em vez de ensinar a varredura a entender IIFE, aninhamento e callback —
+    # regra cada vez mais frágil —, o invariante virou ESTRUTURAL: o `const t`
+    # mora no topo do arquivo, antes de qualquer código de módulo. Assim nenhuma
+    # chamada pode precedê-lo, e a checagem não depende de adivinhar o que roda
+    # no carregamento. Este teste guarda essa posição.
+    primeiro_codigo = next(
+        (i for i, l in enumerate(LINHAS, 1)
+         # Primeira linha de topo que não é comentário, diretiva ou vazia.
+         if l[:1].strip()
+         and not l.startswith(("//", "/*", " ", "*", "'use strict'"))),
+        None)
+    check("o `const t` é a PRIMEIRA linha de código do módulo "
+          f"(t={ini_t}, 1º código={primeiro_codigo})",
+          ini_t is not None and ini_t == primeiro_codigo)
+
+    print("\n[7] O markup com data-i18n está TODO marcado")
     # Contrapeso da RE_MARKUP_I18N: aquele filtro tira do placar o literal que
     # contém data-i18n, e o `document.body.innerHTML` é UM literal de 13 KB —
     # sem esta varredura, um único marcador esconderia o template inteiro.

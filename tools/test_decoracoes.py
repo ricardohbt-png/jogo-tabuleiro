@@ -18,12 +18,12 @@ def check(name, cond):
 def test_catalog():
     print("\n[A1] DECOR_TYPES")
     d = server.DECOR_TYPES
-    check("27 tipos", len(d) == 27)
+    check("29 tipos", len(d) == 29)
     check("ids esperados presentes", all(k in d for k in (
         "cama", "lareira", "fonte", "fogueira", "tumba", "mesa_cadeiras",
         "estante", "carroca", "coluna", "barril", "arca_tesouros", "cama_casal",
         "estante_livros", "altar", "trono", "gaiola", "grades_prisao",
-        "estante_armas", "mesa_tortura", "mesa_quimica", "arvore", "arvore_grande", "caverna",
+        "estante_armas", "mesa_tortura", "mesa_quimica", "arvore", "arvore_grande", "arvore_seca", "caverna", "casa",
         "chao", "brasao_leao", "cortina_vermelha", "cortina_branca")))
     check("chão é floor, pisável, 1x1", d["chao"]["special"] == "floor"
           and d["chao"]["pisavel"] and d["chao"]["size"] == [1, 1])
@@ -35,6 +35,9 @@ def test_catalog():
     check("caverna é alta, sólida e usa sua arte", d["caverna"]["alto"] is True
           and not d["caverna"]["pisavel"] and not d["caverna"]["loot_capaz"]
           and d["caverna"]["image"] == "caverna.png")
+    check("casa é alta, 3x3, sólida e usa suas artes", d["casa"]["alto"] is True
+          and d["casa"]["size"] == [3, 3] and not d["casa"]["pisavel"]
+          and not d["casa"]["loot_capaz"] and d["casa"]["image"] == "casa.png")
     check("grades não-alta", d["grades_prisao"]["alto"] is False)
     check("todo tipo tem emoji/nome/gira/loot_capaz", all(
         set(("nome", "emoji", "size", "gira", "alto", "pisavel", "loot_capaz", "special")) <= set(v)

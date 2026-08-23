@@ -54,7 +54,7 @@ check("trocar para o mesmo idioma não dispara de novo", avisos.length === 1);
 console.log("\n[5] Chaves data-i18n do game.js existem no dicionário");
 const gamejs = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
 const usadas = new Set();
-for (const m of gamejs.matchAll(/data-i18n(?:-ph|-title)?="([^"]+)"/g)) usadas.add(m[1]);
+for (const m of gamejs.matchAll(/data-i18n(?:-ph|-title|-html)?="([^"]+)"/g)) usadas.add(m[1]);
 const orfas = [...usadas].filter(k => !DICT[k]);
 check(`nenhuma chave data-i18n órfã (usadas: ${usadas.size})`, orfas.length === 0);
 if (orfas.length) console.log("     órfãs:", orfas.join(", "));
@@ -110,6 +110,27 @@ check("o index.html carrega o interface.js",
       /src\/lang\/interface\.js/.test(idxHtml));
 check("as chaves da interface entraram no dicionario",
       Object.keys(DICT).some(k => k.startsWith("ui.")));
+
+console.log("");
+console.log("[G] gameState.js traduz sem conhecer o I18N");
+// A regra do CLAUDE.md: zero window/document/THREE no gameState.js. O `t` global
+// vem de window.I18N, entao usa-lo cru ali violaria a regra. A saida e a mesma
+// que o modulo ja usa para o filtro de mensagens: quem conhece o I18N e o
+// game.js, que injeta a funcao.
+const gsSrc = fs.readFileSync(path.join(raiz, "src", "gameState.js"), "utf8");
+const gsSemComentario = gsSrc
+  .replace(/\/\*[\s\S]*?\*\//g, "")
+  .replace(/\/\/[^\n]*/g, "");
+check("gameState.js nao referencia window/document/THREE",
+      !/\b(window|document|THREE)\b/.test(gsSemComentario));
+check("existe o injetor setTranslator", /function setTranslator/.test(gsSrc));
+check("o setTranslator esta exportado", /\bsetTranslator,/.test(gsSrc));
+const gjSrc = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
+check("o game.js registra o tradutor", /GS\.setTranslator\(/.test(gjSrc));
+// Sem tradutor injetado o modulo TEM de cair no portugues — e o mesmo contrato
+// de fallback do resto da etapa 5.
+check("o _t tem fallback para o texto em portugues",
+      /function _t\s*\([^)]*\)\s*\{[\s\S]{0,220}?\bpt\b/.test(gsSrc));
 
 console.log("\n" + "=".repeat(62));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);

@@ -86,17 +86,26 @@ async def main():
         await r._processar_escape_agarrar(p)
         check("Forca liberta o alvo", not p.get("preso"))
 
-        r1 = room()
-        m1 = creature(r1, "garaloux_adulto", "g")
-        p1 = hero(r1, "h", [5, 6])
-        m1["_garaloux_move_count"] = 3
-        await r1._execute_one_monster_attack(m1, m1["attacks"][2], {"kind": "player", "obj": p1})
-        r2 = room()
-        m2 = creature(r2, "garaloux_adulto", "g")
-        p2 = hero(r2, "h", [5, 6])
-        r2.tiles[7][5] = S.WALL
-        m2["_garaloux_move_count"] = 3
-        await r2._execute_one_monster_attack(m2, m2["attacks"][2], {"kind": "player", "obj": p2})
+        # Rolagens travadas no maximo. Sem isto a checagem abaixo compara DUAS
+        # amostras aleatorias independentes: quando a rolagem base do caso sem
+        # parede sai alta e a do caso com parede sai baixa, o +1d6 nao compensa
+        # e o teste falha sozinho (~1 em 8 execucoes).
+        _randint = S.random.randint
+        S.random.randint = lambda a, b: b
+        try:
+            r1 = room()
+            m1 = creature(r1, "garaloux_adulto", "g")
+            p1 = hero(r1, "h", [5, 6])
+            m1["_garaloux_move_count"] = 3
+            await r1._execute_one_monster_attack(m1, m1["attacks"][2], {"kind": "player", "obj": p1})
+            r2 = room()
+            m2 = creature(r2, "garaloux_adulto", "g")
+            p2 = hero(r2, "h", [5, 6])
+            r2.tiles[7][5] = S.WALL
+            m2["_garaloux_move_count"] = 3
+            await r2._execute_one_monster_attack(m2, m2["attacks"][2], {"kind": "player", "obj": p2})
+        finally:
+            S.random.randint = _randint
         check("parede causa +1d6 de colisao", p2["hp"] < p1["hp"])
     finally:
         S.roll_dice = old_roll
@@ -107,10 +116,26 @@ async def main():
     p = hero(r, "h1", [5, 6])
     await r._monster_execute_attacks(m, {"kind": "player", "obj": p})
     check("duas Garras aplicam Dilacerar uma vez", any("Dilacera" in text for text in r._falas))
+    check("Dilacerar aplica Sangramento", p.get("sangramento_nivel") == 1
+          and p.get("sangramento_rodadas", 0) >= 1)
     m["hp"] = m["max_hp"] // 2
     check("Frenesi da +2 no ataque e dano", r._furia_ataque_bonus(m) == 2 and r._furia_bonus(m) == 2)
 
-    print("[4] Predador Supremo sem cadeia")
+    print("[4] Investida Brutal do Alfa aplica Hemorragia")
+    r = room()
+    m = creature(r, "garaloux_alfa", "alfa-investida")
+    p = hero(r, "h1", [5, 6])
+    m["_garaloux_move_count"] = 3
+    old_randint = S.random.randint
+    S.random.randint = lambda _a, b: b
+    try:
+        await r._execute_one_monster_attack(m, m["attacks"][2], {"kind": "player", "obj": p})
+    finally:
+        S.random.randint = old_randint
+    check("Investida Brutal aplica Hemorragia", p.get("hemorragia") is True)
+    check("Causar Hemorragia entra em recarga", m.get("ability_cooldowns", {}).get("causar_hemorragia") == 4)
+
+    print("[5] Predador Supremo sem cadeia")
     r = room()
     m = creature(r, "garaloux_alfa", "alfa")
     p1 = hero(r, "h1", [5, 6], hp=1)
@@ -118,7 +143,7 @@ async def main():
     await r._execute_one_monster_attack(m, m["attacks"][0], {"kind": "player", "obj": p1})
     check("Mordida adicional apos eliminar", p2["hp"] < p2["max_hp"])
 
-    print("[5] Editor preserva as novas configuracoes")
+    print("[6] Editor preserva as novas configuracoes")
     raw = copy.deepcopy(next(m for m in S.MONSTER_DEFS if m["type"] == "garaloux_adulto"))
     raw.update({"type": "garaloux_editor_teste", "name": "Garaloux Editor Teste",
                 "monster_abilities": [

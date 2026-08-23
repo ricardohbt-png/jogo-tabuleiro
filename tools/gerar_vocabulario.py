@@ -62,6 +62,18 @@ def fundir_item(destino, novos, origem):
     return destino
 
 
+def _skills_de_classe(tipo):
+    """{id: texto} das habilidades declaradas em CLASSES[*]["skills"]."""
+    campo = "name" if tipo == "nome" else "description"
+    out = {}
+    for cls in S.CLASSES.values():
+        for sk in (cls.get("skills") or []):
+            texto = sk.get(campo)
+            if sk.get("id") and isinstance(texto, str) and texto.strip():
+                out[sk["id"]] = texto
+    return out
+
+
 def coletar(tipo="nome"):
     """Devolve {familia: {id: texto_pt}} a partir dos catálogos do server.py.
     `tipo` é "nome" ou "desc" — a mesma varredura serve para os dois."""
@@ -80,6 +92,12 @@ def coletar(tipo="nome"):
         "armadilha":   _entradas(S.ARMADILHAS, "id", tipo),
         "instrumento": _entradas(S.INSTRUMENTOS_BASE, "id", tipo),
         "classe":      _entradas(S.CLASSES, "id", tipo),
+        # As habilidades de herói vivem DENTRO de CLASSES[x]["skills"], então
+        # nenhuma varredura de catálogo de topo as alcançava — ficaram sem
+        # chave nenhuma até o fim da etapa 5, e o jogador em inglês via
+        # "Veneno Rápido / Ação livre. Unta um veneno…" no menu de habilidades.
+        # O campo de descrição aqui é `description`, não `desc`.
+        "habilidade":  _skills_de_classe(tipo),
         # _BUILTIN_WORLD_LOCATIONS e NÃO WORLD_LOCATIONS, de propósito: o
         # segundo inclui as cidades criadas no editor, que não devem ganhar
         # chave nenhuma — sem chave, o nome do autor sai intacto. É a mesma

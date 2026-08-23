@@ -65,6 +65,14 @@ window.LANG_ERROS = {
     "en": "🚪 The door is closed. Click it to open.",
     "pt": "🚪 A porta está fechada. Clique nela para abri-la."
   },
+  "erro.porta_exige_item_chave": {
+    "en": "🚪 This door requires the key item: {item}.",
+    "pt": "🚪 Esta porta exige o item-chave: {item}."
+  },
+  "erro.porta_exige_ativacao_objeto_chave": {
+    "en": "🚪 Activate the key object(s) linked to this door first.",
+    "pt": "🚪 Ative primeiro o(s) objeto(s)-chave ligado(s) a esta porta."
+  },
   "erro.a_provocacao_do_gigante_runico_obriga_vo": {
     "en": "The Runic Giant's Taunt forces you to attack it for as long as the effect lasts.",
     "pt": "A Provocação do Gigante Rúnico obriga você a atacá-lo enquanto o efeito durar."
@@ -77,9 +85,29 @@ window.LANG_ERROS = {
     "en": "Bonus action already used this turn.",
     "pt": "Ação bônus já usada neste turno."
   },
+  "erro.a_criatura": {
+    "en": "the creature",
+    "pt": "a criatura"
+  },
+  "erro.controlando_monstro_encerre_a_vez_dele": {
+    "en": "You are controlling {monstro}. End its turn (button \"End monster\" on the right panel) to get your own turn back.",
+    "pt": "Você está controlando {monstro}. Encerre a vez dele (botão \"Encerrar monstro\", no painel à direita) para voltar ao seu turno."
+  },
   "erro.acao_principal_ja_usada_neste_turno": {
     "en": "Main action already used this turn.",
     "pt": "Ação principal já usada neste turno."
+  },
+  "erro.voce_nao_tem_este_aprimoramento": {
+    "en": "You do not have this upgrade.",
+    "pt": "Você não possui este aprimoramento."
+  },
+  "erro.habilidade_animado_indisponivel": {
+    "en": "This animated creature cannot use abilities right now.",
+    "pt": "Esta criatura animada não pode usar habilidades agora."
+  },
+  "erro.nao_pode_atacar_no_mesmo_turno_em_que_se_esconde": {
+    "en": "You can't attack in the same turn you hide in the shadows.",
+    "pt": "Você não pode atacar no mesmo turno em que se esconde nas sombras."
   },
   "erro.agarrado_por_captor_nao_pode_se_mover": {
     "en": "Grappled by {captor} — can't move.",
@@ -1417,6 +1445,14 @@ window.LANG_ERROS = {
     "en": "You are Swallowed and cannot move.",
     "pt": "Você está Engolido e não pode se mover."
   },
+  "erro.armadilha_so_pode_ser_colocada_em_objeto": {
+    "en": "This trap can only be placed on an object within reach.",
+    "pt": "Esta armadilha só pode ser colocada em um objeto ao alcance."
+  },
+  "erro.objeto_ja_tem_armadilha": {
+    "en": "This object already has a trap.",
+    "pt": "Este objeto já possui uma armadilha."
+  },
   "erro.voce_esta_imobilizado_e_nao_pode_se_move": {
     "en": "🕸️ You're immobilized and can't move! End your turn.",
     "pt": "🕸️ Você está imobilizado e não pode se mover! Encerre o turno."
@@ -1492,6 +1528,10 @@ window.LANG_ERROS = {
   "erro.voce_nao_esta_engolido": {
     "en": "You are not Swallowed.",
     "pt": "Você não está Engolido."
+  },
+  "erro.voce_nao_esta_preso_no_bau": {
+    "en": "You are not trapped inside a chest.",
+    "pt": "Você não está preso dentro de um baú."
   },
   "erro.voce_nao_pode_curar_a_si_mesmo_com_esta": {
     "en": "You can't heal yourself with this ability.",

@@ -374,6 +374,10 @@ window.EDITOR_CUSTOM_MONSTERS = [
     ],
     "oriented": false,
     "porte": "pequeno",
+    "vscale": [
+      0.5,
+      0.5
+    ],
     "spawn_min": 0,
     "spawn_max": 0,
     "undead": false,
@@ -515,8 +519,8 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "emoji": "🐻",
     "tier": 1,
     "cr": 1.0,
-    "base_hp": 16,
-    "hp": 18,
+    "base_hp": 28,
+    "hp": 30,
     "natural_armor": 2,
     "ac": 13,
     "movement": 6,
@@ -524,7 +528,7 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "visao_escuro": false,
     "base_attack_bonus": 2,
     "caster_level": 1,
-    "str_": 18,
+    "str_": 20,
     "dex": 12,
     "con_": 14,
     "int_": 2,
@@ -781,88 +785,6 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "boss": false
   },
   {
-    "type": "escorpiao_pequeno",
-    "name": "escorpiao pequeno",
-    "emoji": "👹",
-    "overwrite_native": false,
-    "tier": 1,
-    "cr": 1.0,
-    "base_hp": 1,
-    "hp": 1,
-    "natural_armor": 0,
-    "ac": 11,
-    "movement": 6,
-    "vision_base": 0,
-    "visao_escuro": false,
-    "base_attack_bonus": 0,
-    "caster_level": 1,
-    "str_": 3,
-    "dex": 12,
-    "con_": 8,
-    "int_": 3,
-    "fort_base": 0,
-    "ref_base": 0,
-    "will_base": 0,
-    "fort": -1,
-    "ref_": 1,
-    "will": -4,
-    "attacks": [
-      {
-        "name": "Ataque",
-        "damage": "1",
-        "damage_types": [
-          "physical"
-        ],
-        "num_attacks": 1,
-        "attack_attribute": "str_",
-        "damage_attribute": "str_",
-        "apply_attribute_damage": true,
-        "attribute_mod_base": -4,
-        "base_attack_bonus": 0,
-        "atk_bonus": -4,
-        "range": null,
-        "on_hit": null,
-        "on_hit_effect": null,
-        "poison_dc": 12,
-        "extra_damage": "1",
-        "extra_damage_types": [
-          "poison"
-        ]
-      }
-    ],
-    "special_abilities": [],
-    "monster_abilities": [],
-    "monster_spells": [],
-    "negative_ability_ids": [],
-    "immunities": [],
-    "resistances": [],
-    "weaknesses": [],
-    "equipment_enabled": false,
-    "equipped_items": [],
-    "equipment": [],
-    "guaranteed_loot": [],
-    "loot_table": {},
-    "loot_drops": [],
-    "gold": 0,
-    "xp": 0,
-    "ai_type": "agressivo",
-    "ai_profile": "emboscador",
-    "ai_tactics": [],
-    "image": "escorpiaodepedra_original",
-    "portrait": "nova_criatura_customizado",
-    "size": [
-      1,
-      1
-    ],
-    "oriented": false,
-    "porte": "minusculo",
-    "spawn_min": 0,
-    "spawn_max": 0,
-    "undead": false,
-    "subtipo": "animal",
-    "boss": false
-  },
-  {
     "type": "esqueleto_humano_customizado",
     "name": "Esqueleto Humano",
     "emoji": "💀",
@@ -1003,331 +925,17 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "boss": false
   },
   {
-    "type": "grotao_customizado",
-    "name": "Grotão",
-    "emoji": "🦂",
-    "overwrite_native": false,
-    "tier": 1,
-    "cr": 3.0,
-    "base_hp": 33,
-    "hp": 36,
-    "natural_armor": 5,
-    "ac": 15,
-    "movement": 6,
-    "vision_base": 0,
-    "visao_escuro": false,
-    "base_attack_bonus": 2,
-    "caster_level": 1,
-    "str_": 18,
-    "dex": 10,
-    "con_": 16,
-    "int_": 3,
-    "fort_base": 3,
-    "ref_base": 3,
-    "will_base": 6,
-    "fort": 6,
-    "ref_": 3,
-    "will": 2,
-    "attacks": [
-      {
-        "name": "Mordida",
-        "damage": "1d10+4",
-        "damage_types": [
-          "physical"
-        ],
-        "num_attacks": 1,
-        "attack_attribute": "str_",
-        "damage_attribute": "str_",
-        "apply_attribute_damage": true,
-        "attribute_mod_base": 4,
-        "base_attack_bonus": 2,
-        "atk_bonus": 6,
-        "range": null,
-        "on_hit": null,
-        "on_hit_effect": null,
-        "poison_dc": 10,
-        "extra_damage": null,
-        "extra_damage_types": []
-      },
-      {
-        "name": "Garras",
-        "damage": "1d8+4",
-        "damage_types": [
-          "physical"
-        ],
-        "num_attacks": 2,
-        "attack_attribute": "str_",
-        "damage_attribute": "str_",
-        "apply_attribute_damage": true,
-        "attribute_mod_base": 4,
-        "base_attack_bonus": 2,
-        "atk_bonus": 6,
-        "range": null,
-        "on_hit": null,
-        "on_hit_effect": null,
-        "poison_dc": 10,
-        "extra_damage": null,
-        "extra_damage_types": []
-      }
-    ],
-    "special_abilities": [
-      {
-        "id": "carapaca_resistente",
-        "name": "Carapaça Resistente",
-        "action_type": "passiva",
-        "descricao": "Reduz todo dano físico em 2",
-        "source": "monstro",
-        "uses_per_day": 1,
-        "cooldown_turns": 0
-      },
-      {
-        "id": "cauda_varredora",
-        "name": "Cauda Varredora",
-        "action_type": "acao",
-        "cooldown_turns": 2,
-        "atk_bonus": 5,
-        "damage": "1d8+3",
-        "save": "reflexos",
-        "dc": 12,
-        "descricao": "Atinge todos atrás: +5, 1d8+3; falha derruba",
-        "source": "monstro",
-        "uses_per_day": 1
-      },
-      {
-        "id": "cuspir_acido",
-        "name": "Cuspir Ácido",
-        "action_type": "acao",
-        "cooldown_turns": 3,
-        "range": 3,
-        "damage": "2d6",
-        "save": "reflexos",
-        "dc": 13,
-        "descricao": "Alvo a até 3 quadrado(s): 2d6 de ácido; Reflexos CD 13 reduz à metade. Falha corrói equipamentos conforme as regras de corrosão por ácido.",
-        "source": "monstro",
-        "uses_per_day": 1
-      },
-      {
-        "id": "furia_bestial",
-        "name": "Fúria Bestial",
-        "action_type": "passiva",
-        "descricao": "Mordida e ao menos uma garra acertam: +1d6 dano",
-        "source": "monstro",
-        "uses_per_day": 1,
-        "cooldown_turns": 0
-      }
-    ],
-    "monster_abilities": [
-      {
-        "id": "carapaca_resistente",
-        "uses_per_day": 1,
-        "cooldown_turns": 0
-      },
-      {
-        "id": "cauda_varredora",
-        "uses_per_day": 1,
-        "cooldown_turns": 2
-      },
-      {
-        "id": "cuspir_acido",
-        "uses_per_day": 1,
-        "cooldown_turns": 3,
-        "damage_dice": 2,
-        "damage_faces": 6,
-        "range": 3,
-        "dc": 13
-      },
-      {
-        "id": "furia_bestial",
-        "uses_per_day": 1,
-        "cooldown_turns": 0
-      }
-    ],
-    "monster_spells": [],
-    "negative_ability_ids": [
-      "corpo_pesado"
-    ],
-    "immunities": [],
-    "resistances": [],
-    "weaknesses": [
-      {
-        "source_ability": "corpo_pesado",
-        "type": "corpo_pesado",
-        "descricao": "Corpo Pesado: ao falhar em Reflexos, recebe +1 dano daquele efeito."
-      },
-      {
-        "type": "ponto_vulneravel",
-        "nd_penalty": 0.25,
-        "tiles": [
-          [
-            1,
-            0
-          ],
-          [
-            1,
-            1
-          ]
-        ],
-        "descricao": "Ponto Vulnerável: ataques nos quadrados selecionados ignoram a armadura natural (Destreza permanece) e reduções de dano (–0,25 ND estimado)"
-      }
-    ],
-    "equipment_enabled": false,
-    "equipped_items": [],
-    "equipment": [],
-    "guaranteed_loot": [],
-    "loot_table": {},
-    "loot_drops": [],
-    "gold": 0,
-    "xp": 0,
-    "ai_type": "agressivo",
-    "ai_profile": "agressivo",
-    "ai_tactics": [],
-    "image": "grotao",
-    "portrait": "grotao_customizado",
-    "size": [
-      2,
-      2
-    ],
-    "oriented": false,
-    "porte": "grande",
-    "spawn_min": 0,
-    "spawn_max": 0,
-    "undead": false,
-    "subtipo": "raca_padrao",
-    "boss": false
-  },
-  {
-    "type": "crocodilo_jovem",
-    "name": "Crocodilo Jovem",
-    "emoji": "🐊",
-    "overwrite_native": true,
-    "tier": 1,
-    "cr": 1.0,
-    "base_hp": 14,
-    "hp": 16,
-    "natural_armor": 3,
-    "ac": 13,
-    "movement": 6,
-    "vision_base": 0,
-    "visao_escuro": false,
-    "base_attack_bonus": 2,
-    "caster_level": 1,
-    "str_": 16,
-    "dex": 10,
-    "con_": 14,
-    "int_": 2,
-    "fort_base": 3,
-    "ref_base": 2,
-    "will_base": 5,
-    "fort": 5,
-    "ref_": 2,
-    "will": 1,
-    "attacks": [
-      {
-        "name": "Mordida",
-        "damage": "1d8",
-        "damage_types": [
-          "physical"
-        ],
-        "num_attacks": 1,
-        "attack_attribute": "str_",
-        "damage_attribute": "str_",
-        "apply_attribute_damage": true,
-        "attribute_mod_base": 3,
-        "base_attack_bonus": 2,
-        "atk_bonus": 5,
-        "range": null,
-        "on_hit": null,
-        "on_hit_effect": null,
-        "poison_dc": 10,
-        "extra_damage": null,
-        "extra_damage_types": []
-      }
-    ],
-    "special_abilities": [
-      {
-        "id": "agarrar",
-        "name": "Agarrar",
-        "action_type": "passiva",
-        "dc": 12,
-        "save": "fortitude",
-        "descricao": "Ao acertar, alvo testa FOR ou REF CD 12 — falha: preso",
-        "source": "monstro"
-      },
-      {
-        "id": "atq_mandibula",
-        "name": "Ataque de Mandíbula",
-        "action_type": "passiva",
-        "descricao": "Se alvo preso e adjacente: 1d8+3 dano direto (sem rolagem de acerto)",
-        "source": "monstro"
-      },
-      {
-        "id": "arrastar",
-        "name": "Arrastar",
-        "action_type": "passiva",
-        "descricao": "Move alvo preso junto ao se deslocar",
-        "source": "monstro"
-      }
-    ],
-    "monster_abilities": [
-      {
-        "id": "agarrar"
-      },
-      {
-        "id": "atq_mandibula"
-      },
-      {
-        "id": "arrastar"
-      }
-    ],
-    "monster_spells": [],
-    "negative_ability_ids": [],
-    "immunities": [],
-    "resistances": [],
-    "weaknesses": [
-      {
-        "type": "lightning",
-        "multiplier": 1.5,
-        "descricao": "+50% dano elétrico (dobrado na água)"
-      }
-    ],
-    "equipment_enabled": false,
-    "equipped_items": [],
-    "equipment": [],
-    "guaranteed_loot": [],
-    "loot_table": {
-      "1-100": null
-    },
-    "loot_drops": [],
-    "gold": 0,
-    "xp": 0,
-    "ai_type": "crocodilo_jovem",
-    "ai_profile": "agressivo",
-    "ai_tactics": [],
-    "image": "crocodiloJovem",
-    "portrait": "crocodilo_jovem",
-    "size": [
-      2,
-      2
-    ],
-    "oriented": true,
-    "porte": "medio",
-    "spawn_min": 1,
-    "spawn_max": 2,
-    "undead": false,
-    "subtipo": "animal",
-    "boss": false
-  },
-  {
     "type": "grotao",
     "name": "Grotão",
     "emoji": "🦂",
     "overwrite_native": true,
     "tier": 1,
     "cr": 3.0,
-    "base_hp": 33,
-    "hp": 36,
+    "base_hp": 69,
+    "hp": 72,
     "natural_armor": 5,
-    "ac": 15,
+    "ac": 16,
+    "ac_bonus": 1,
     "movement": 6,
     "vision_base": 0,
     "visao_escuro": false,
@@ -1390,7 +998,7 @@ window.EDITOR_CUSTOM_MONSTERS = [
         "id": "carapaca_resistente",
         "name": "Carapaça Resistente",
         "action_type": "passiva",
-        "descricao": "Reduz todo dano físico em 2",
+        "descricao": "Reduz todo dano físico em 3 fora do ponto vulnerável",
         "source": "monstro",
         "uses_per_day": 1,
         "cooldown_turns": 0
@@ -1411,13 +1019,13 @@ window.EDITOR_CUSTOM_MONSTERS = [
       {
         "id": "cuspir_acido",
         "name": "Cuspir Ácido",
-        "action_type": "acao",
-        "cooldown_turns": 3,
-        "range": 3,
-        "damage": "2d6",
+        "action_type": "acao_livre",
+        "cooldown_turns": 5,
+        "range": 6,
+        "damage": "3d6",
         "save": "reflexos",
         "dc": 13,
-        "descricao": "Alvo a até 3 quadrado(s): 2d6 de ácido; Reflexos CD 13 reduz à metade. Falha corrói equipamentos conforme as regras de corrosão por ácido.",
+        "descricao": "Ação livre extra. Alvo único em linha reta dentro do alcance configurado: 3d6 de ácido. Reflexos CD 13 reduz o dano à metade; em caso de falha, metade do dano é repetida na rodada seguinte e equipamentos podem ser danificados.",
         "source": "monstro",
         "uses_per_day": 1
       },
@@ -1445,10 +1053,10 @@ window.EDITOR_CUSTOM_MONSTERS = [
       {
         "id": "cuspir_acido",
         "uses_per_day": 1,
-        "cooldown_turns": 3,
-        "damage_dice": 2,
+        "cooldown_turns": 5,
+        "damage_dice": 3,
         "damage_faces": 6,
-        "range": 3,
+        "range": 6,
         "dc": 13
       },
       {
@@ -1465,24 +1073,24 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "resistances": [
       {
         "type": "physical",
-        "reduction": 2
+        "reduction": 3
       }
     ],
     "weaknesses": [
+      {
+        "type": "corpo_pesado",
+        "descricao": "Corpo Pesado: ao falhar em Reflexos, recebe +1 dano daquele efeito."
+      },
       {
         "type": "ponto_vulneravel",
         "nd_penalty": 0.25,
         "tiles": [
           [
             1,
-            0
-          ],
-          [
-            1,
             1
           ]
         ],
-        "descricao": "Ponto Vulnerável: os dois quadrados centrais ignoram a armadura natural (CA 15 → 10; Destreza permanece) e reduções de dano (–0,25 ND estimado)"
+        "descricao": "Ponto Vulnerável no quadrado posterior direito: ignora a armadura natural (CA 16 → 11; Destreza permanece) e reduções de dano (–0,25 ND estimado). Apenas um personagem adjacente pode explorá-lo por rodada."
       }
     ],
     "equipment_enabled": false,
@@ -1516,17 +1124,833 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "boss": false
   },
   {
+    "type": "vela_de_fogo",
+    "name": "Vela de Fogo",
+    "emoji": "👹",
+    "overwrite_native": false,
+    "tier": 1,
+    "cr": 4.0,
+    "base_hp": 56,
+    "hp": 58,
+    "natural_armor": 6,
+    "ac_bonus": 0,
+    "ac": 17,
+    "movement": 6,
+    "movement_exception": false,
+    "vision_base": 0,
+    "visao_escuro": false,
+    "base_attack_bonus": 14,
+    "caster_level": 1,
+    "str_": 14,
+    "dex": 12,
+    "con_": 14,
+    "int_": 5,
+    "fort_base": 3,
+    "ref_base": 2,
+    "will_base": 2,
+    "fort": 5,
+    "ref_": 3,
+    "will": -1,
+    "attacks": [
+      {
+        "name": "mordida",
+        "damage": "1d8",
+        "fire_damage": null,
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 1,
+        "attack_attribute": "str_",
+        "damage_attribute": "str_",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 2,
+        "base_attack_bonus": 5,
+        "atk_bonus": 7,
+        "range": null,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "causa_sangramento": false,
+        "aplica_hemorragia": false,
+        "extra_damage": "1d4",
+        "extra_damage_types": [
+          "fire"
+        ]
+      },
+      {
+        "name": "Cauda",
+        "damage": "1d4",
+        "fire_damage": null,
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 1,
+        "attack_attribute": "str_",
+        "damage_attribute": "str_",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 2,
+        "base_attack_bonus": 6,
+        "atk_bonus": 8,
+        "range": 1,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "causa_sangramento": false,
+        "aplica_hemorragia": false,
+        "extra_damage": "2d6",
+        "extra_damage_types": [
+          "fire"
+        ]
+      }
+    ],
+    "special_abilities": [
+      {
+        "id": "hero_warrior_golpe_devastador",
+        "source": "heroi",
+        "source_id": "golpe_devastador",
+        "source_class": "warrior",
+        "name": "Golpe Devastador",
+        "icon": "💥",
+        "descricao": "Dobra cada dado de dano neste turno",
+        "action_type": "acao",
+        "monster_effect": "vantagem_combate",
+        "guild_progressions": [
+          {
+            "id": "guerreiro_golpe_3",
+            "level": 3,
+            "requires": "guerreiro_combinar_2",
+            "name": "Golpe Devastador III",
+            "icon": "💥",
+            "description": "Golpe Devastador passa a multiplicar os dados de dano por 2 (era ×1,5)."
+          }
+        ],
+        "uses_per_day": 3,
+        "cooldown_turns": 2
+      },
+      {
+        "id": "aura_escaldante",
+        "name": "Aura Escaldante",
+        "action_type": "passiva",
+        "radius": 1,
+        "damage": "1d4",
+        "damage_types": [
+          "fire"
+        ],
+        "descricao": "Criaturas a até 1 quadrado(s) sofrem 1d4 de fogo no início do turno.",
+        "source": "monstro",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "sopro_dragao",
+        "source": "monstro",
+        "name": "Sopro de Dragão",
+        "icon": "🐉",
+        "action_type": "acao",
+        "range": 4,
+        "damage": "3d6",
+        "damage_types": [
+          "fire"
+        ],
+        "save": "reflexos",
+        "dc": 15,
+        "shape": "cone",
+        "target_mode": "todos",
+        "success_effect": "metade",
+        "descricao": "3d6 de fogo em cone de 4 casas; todos na área. Reflexos CD 15: sucesso reduz o dano à metade.",
+        "uses_per_day": 1,
+        "cooldown_turns": 6
+      }
+    ],
+    "monster_abilities": [
+      {
+        "id": "hero_warrior_golpe_devastador",
+        "uses_per_day": 3,
+        "cooldown_turns": 2
+      },
+      {
+        "id": "aura_escaldante",
+        "uses_per_day": 1,
+        "cooldown_turns": 0,
+        "damage_dice": 1,
+        "damage_faces": 4,
+        "radius": 1
+      },
+      {
+        "id": "sopro_dragao",
+        "uses_per_day": 1,
+        "cooldown_turns": 6,
+        "damage_dice": 3,
+        "damage_faces": 6,
+        "damage_type": "fire",
+        "range": 4,
+        "shape": "cone",
+        "target_mode": "todos",
+        "save": "reflexos",
+        "dc": 15,
+        "success_effect": "metade"
+      }
+    ],
+    "monster_spells": [],
+    "negative_ability_ids": [],
+    "immunities": [
+      "fire"
+    ],
+    "resistances": [
+      {
+        "type": "physical",
+        "categoria": "contundente",
+        "reduction": 4
+      },
+      {
+        "type": "poison",
+        "mode": "half"
+      }
+    ],
+    "weaknesses": [
+      {
+        "type": "physical",
+        "categoria": "perfurante",
+        "name": "Perfurante",
+        "bonus_flat": 4,
+        "descricao": "Fraqueza a Perfurante: recebe +1 dano"
+      },
+      {
+        "type": "cold",
+        "name": "Frio / gelo",
+        "bonus_flat": 1,
+        "descricao": "Fraqueza a Frio / gelo: recebe +1 dano"
+      },
+      {
+        "type": "cold",
+        "name": "Frio / gelo",
+        "multiplier": 2
+      }
+    ],
+    "equipment_enabled": false,
+    "equipped_items": [],
+    "equipment": [],
+    "guaranteed_loot": [],
+    "loot_table": {},
+    "loot_drops": [
+      {
+        "kind": "item",
+        "item_id": "flecha_incendiaria",
+        "chance": 10
+      },
+      {
+        "kind": "item",
+        "item_id": "virote_incendiario",
+        "chance": 10
+      },
+      {
+        "kind": "item",
+        "item_id": "frasco_oleo",
+        "chance": 40
+      },
+      {
+        "kind": "item",
+        "item_id": "bomba_fumaca",
+        "chance": 30
+      }
+    ],
+    "gold": 0,
+    "xp": 0,
+    "ai_type": "agressivo",
+    "ai_profile": "tatico",
+    "ai_tactics": [],
+    "image": "vela_fogo",
+    "portrait": "vela_fogo",
+    "size": [
+      1,
+      2
+    ],
+    "oriented": true,
+    "porte": "medio",
+    "spawn_min": 0,
+    "spawn_max": 0,
+    "undead": false,
+    "subtipo": "animal",
+    "boss": false
+  },
+  {
+    "type": "crocodilo_jovem",
+    "name": "Crocodilo Jovem",
+    "emoji": "🐊",
+    "overwrite_native": true,
+    "tier": 1,
+    "cr": 1.0,
+    "base_hp": 14,
+    "hp": 16,
+    "natural_armor": 3,
+    "ac_bonus": 0,
+    "ac": 13,
+    "movement": 6,
+    "movement_exception": false,
+    "vision_base": 0,
+    "visao_escuro": false,
+    "base_attack_bonus": 2,
+    "caster_level": 1,
+    "str_": 16,
+    "dex": 10,
+    "con_": 14,
+    "int_": 2,
+    "fort_base": 3,
+    "ref_base": 2,
+    "will_base": 5,
+    "fort": 5,
+    "ref_": 2,
+    "will": 1,
+    "attacks": [
+      {
+        "name": "Mordida",
+        "damage": "1d8",
+        "fire_damage": null,
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 1,
+        "attack_attribute": "str_",
+        "damage_attribute": "str_",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 3,
+        "base_attack_bonus": 2,
+        "atk_bonus": 5,
+        "range": null,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "causa_sangramento": false,
+        "aplica_hemorragia": false,
+        "extra_damage": null,
+        "extra_damage_types": []
+      }
+    ],
+    "special_abilities": [
+      {
+        "id": "arrastar",
+        "name": "Arrastar",
+        "action_type": "passiva",
+        "descricao": "Uma criatura Presa acompanha todos os movimentos do Tirano, permanecendo adjacente.",
+        "source": "monstro",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "agarrar",
+        "name": "Agarrar",
+        "action_type": "passiva",
+        "dc": 12,
+        "save": "fortitude",
+        "descricao": "Ao acertar, alvo testa FOR ou REF CD 12 — falha: preso",
+        "source": "monstro",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "atq_mandibula",
+        "name": "Ataque de Mandíbula",
+        "action_type": "passiva",
+        "descricao": "Se alvo preso e adjacente: 1d8+3 dano direto (sem rolagem de acerto)",
+        "source": "monstro",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      }
+    ],
+    "monster_abilities": [
+      {
+        "id": "arrastar",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "agarrar",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "atq_mandibula",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      }
+    ],
+    "monster_spells": [],
+    "negative_ability_ids": [],
+    "immunities": [],
+    "resistances": [],
+    "weaknesses": [
+      {
+        "type": "lightning",
+        "name": "Eletricidade",
+        "bonus_flat": 1,
+        "descricao": "+50% dano elétrico (dobrado na água)"
+      },
+      {
+        "type": "lightning",
+        "name": "Eletricidade",
+        "multiplier": 2
+      }
+    ],
+    "equipment_enabled": false,
+    "equipped_items": [],
+    "equipment": [],
+    "guaranteed_loot": [],
+    "loot_table": {},
+    "loot_drops": [],
+    "gold": 0,
+    "xp": 0,
+    "ai_type": "agressivo",
+    "ai_profile": "agressivo",
+    "ai_tactics": [],
+    "image": "crocodiloJovem",
+    "portrait": "crocodilo_jovem",
+    "size": [
+      2,
+      1
+    ],
+    "oriented": true,
+    "porte": "medio",
+    "spawn_min": 1,
+    "spawn_max": 2,
+    "undead": false,
+    "subtipo": "animal",
+    "boss": false,
+    "fill_footprint_3d": true
+  },
+  {
+    "type": "lobo_cinzento_customizado",
+    "name": "Lobo Cinzento",
+    "emoji": "🐺",
+    "overwrite_native": false,
+    "tier": 1,
+    "cr": 0.5,
+    "base_hp": 15,
+    "hp": 16,
+    "natural_armor": 1,
+    "ac_bonus": 0,
+    "ac": 13,
+    "movement": 6,
+    "movement_exception": false,
+    "vision_base": 0,
+    "visao_escuro": false,
+    "base_attack_bonus": 2,
+    "caster_level": 1,
+    "str_": 14,
+    "dex": 14,
+    "con_": 12,
+    "int_": 2,
+    "fort_base": 3,
+    "ref_base": 2,
+    "will_base": 5,
+    "fort": 4,
+    "ref_": 4,
+    "will": 1,
+    "attacks": [
+      {
+        "name": "Mordida",
+        "damage": "1d6+2",
+        "fire_damage": null,
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 1,
+        "attack_attribute": "str_",
+        "damage_attribute": "str_",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 2,
+        "base_attack_bonus": 2,
+        "atk_bonus": 4,
+        "range": null,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "causa_sangramento": false,
+        "aplica_hemorragia": false,
+        "extra_damage": null,
+        "extra_damage_types": []
+      }
+    ],
+    "special_abilities": [
+      {
+        "id": "caca_em_bando",
+        "name": "Caça em Bando",
+        "action_type": "passiva",
+        "source": "monstro",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "derrubar",
+        "name": "Derrubar",
+        "action_type": "passiva",
+        "dc": 11,
+        "save": "reflexos",
+        "source": "monstro",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      }
+    ],
+    "monster_abilities": [
+      {
+        "id": "caca_em_bando",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "derrubar",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      }
+    ],
+    "monster_spells": [],
+    "negative_ability_ids": [],
+    "immunities": [],
+    "resistances": [],
+    "weaknesses": [],
+    "equipment_enabled": false,
+    "equipped_items": [],
+    "equipment": [],
+    "guaranteed_loot": [],
+    "loot_table": {},
+    "loot_drops": [],
+    "gold": 0,
+    "xp": 0,
+    "ai_type": "agressivo",
+    "ai_profile": "agressivo",
+    "ai_tactics": [],
+    "image": "loboCinzento",
+    "portrait": "lobo_cinzento_customizado",
+    "size": [
+      1,
+      1
+    ],
+    "oriented": false,
+    "porte": "medio",
+    "spawn_min": 0,
+    "spawn_max": 0,
+    "undead": false,
+    "subtipo": "animal",
+    "boss": false,
+    "vscale": [
+      0.8,
+      0.8
+    ]
+  },
+  {
+    "type": "lobo_cinzento",
+    "name": "Lobo Cinzento",
+    "emoji": "🐺",
+    "overwrite_native": true,
+    "tier": 1,
+    "cr": 0.5,
+    "base_hp": 15,
+    "hp": 16,
+    "natural_armor": 1,
+    "ac_bonus": 0,
+    "ac": 13,
+    "movement": 6,
+    "movement_exception": false,
+    "vision_base": 0,
+    "visao_escuro": false,
+    "base_attack_bonus": 2,
+    "caster_level": 1,
+    "str_": 14,
+    "dex": 14,
+    "con_": 12,
+    "int_": 2,
+    "fort_base": 3,
+    "ref_base": 2,
+    "will_base": 5,
+    "fort": 4,
+    "ref_": 4,
+    "will": 1,
+    "attacks": [
+      {
+        "name": "Mordida",
+        "damage": "1d6+2",
+        "fire_damage": null,
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 1,
+        "attack_attribute": "str_",
+        "damage_attribute": "str_",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 2,
+        "base_attack_bonus": 2,
+        "atk_bonus": 4,
+        "range": null,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "causa_sangramento": false,
+        "aplica_hemorragia": false,
+        "extra_damage": null,
+        "extra_damage_types": []
+      }
+    ],
+    "special_abilities": [
+      {
+        "id": "caca_em_bando",
+        "name": "Caça em Bando",
+        "action_type": "passiva",
+        "source": "monstro",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "derrubar",
+        "name": "Derrubar",
+        "action_type": "passiva",
+        "dc": 11,
+        "save": "reflexos",
+        "source": "monstro",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      }
+    ],
+    "monster_abilities": [
+      {
+        "id": "caca_em_bando",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "derrubar",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      }
+    ],
+    "monster_spells": [],
+    "negative_ability_ids": [],
+    "immunities": [],
+    "resistances": [],
+    "weaknesses": [],
+    "equipment_enabled": false,
+    "equipped_items": [],
+    "equipment": [],
+    "guaranteed_loot": [],
+    "loot_table": {},
+    "loot_drops": [],
+    "gold": 0,
+    "xp": 0,
+    "ai_type": "agressivo",
+    "ai_profile": "agressivo",
+    "ai_tactics": [],
+    "image": "loboCinzento",
+    "portrait": "lobo_cinzento",
+    "size": [
+      1,
+      1
+    ],
+    "oriented": false,
+    "porte": "medio",
+    "spawn_min": 2,
+    "spawn_max": 4,
+    "undead": false,
+    "subtipo": "animal",
+    "boss": false,
+    "vscale": [
+      0.8,
+      0.8
+    ]
+  },
+  {
+    "type": "escorpiao_pequeno",
+    "name": "escorpiao pequeno",
+    "emoji": "👹",
+    "overwrite_native": false,
+    "tier": 1,
+    "cr": 1.0,
+    "base_hp": 1,
+    "hp": 1,
+    "natural_armor": 0,
+    "ac_bonus": 0,
+    "ac": 11,
+    "movement": 6,
+    "movement_exception": false,
+    "vision_base": 0,
+    "visao_escuro": false,
+    "base_attack_bonus": 0,
+    "caster_level": 1,
+    "str_": 3,
+    "dex": 12,
+    "con_": 8,
+    "int_": 3,
+    "fort_base": 0,
+    "ref_base": 0,
+    "will_base": 0,
+    "fort": -1,
+    "ref_": 1,
+    "will": -4,
+    "attacks": [
+      {
+        "name": "Ataque",
+        "damage": "1",
+        "fire_damage": null,
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 1,
+        "attack_attribute": "str_",
+        "damage_attribute": "str_",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": -4,
+        "base_attack_bonus": 0,
+        "atk_bonus": -4,
+        "range": null,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 12,
+        "causa_sangramento": false,
+        "aplica_hemorragia": false,
+        "extra_damage": "1",
+        "extra_damage_types": [
+          "poison"
+        ]
+      }
+    ],
+    "special_abilities": [],
+    "monster_abilities": [],
+    "monster_spells": [],
+    "negative_ability_ids": [],
+    "immunities": [],
+    "resistances": [],
+    "weaknesses": [],
+    "equipment_enabled": false,
+    "equipped_items": [],
+    "equipment": [],
+    "guaranteed_loot": [],
+    "loot_table": {},
+    "loot_drops": [],
+    "gold": 0,
+    "xp": 0,
+    "ai_type": "agressivo",
+    "ai_profile": "emboscador",
+    "ai_tactics": [],
+    "image": "escorpiaodepedra_original",
+    "portrait": "nova_criatura_customizado",
+    "size": [
+      1,
+      1
+    ],
+    "oriented": false,
+    "porte": "minusculo",
+    "spawn_min": 0,
+    "spawn_max": 0,
+    "undead": false,
+    "subtipo": "animal",
+    "boss": false,
+    "vscale": [
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "type": "goblin",
+    "name": "Goblin",
+    "emoji": "👺",
+    "overwrite_native": true,
+    "tier": 1,
+    "cr": 0.25,
+    "base_hp": 8,
+    "hp": 8,
+    "natural_armor": 2,
+    "ac_bonus": 0,
+    "ac": 12,
+    "movement": 6,
+    "movement_exception": false,
+    "vision_base": 0,
+    "visao_escuro": false,
+    "base_attack_bonus": 2,
+    "caster_level": 1,
+    "str_": 10,
+    "dex": 10,
+    "con_": 10,
+    "int_": 10,
+    "fort_base": 0,
+    "ref_base": 0,
+    "will_base": 0,
+    "fort": 0,
+    "ref_": 0,
+    "will": 0,
+    "attacks": [
+      {
+        "name": "Ataque",
+        "damage": "1d4",
+        "fire_damage": null,
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 1,
+        "attack_attribute": "str_",
+        "damage_attribute": "str_",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 0,
+        "base_attack_bonus": 2,
+        "atk_bonus": 2,
+        "range": null,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "causa_sangramento": false,
+        "aplica_hemorragia": false,
+        "extra_damage": null,
+        "extra_damage_types": []
+      }
+    ],
+    "special_abilities": [],
+    "monster_abilities": [],
+    "monster_spells": [],
+    "negative_ability_ids": [],
+    "immunities": [],
+    "resistances": [],
+    "weaknesses": [],
+    "equipment_enabled": false,
+    "equipped_items": [],
+    "equipment": [],
+    "guaranteed_loot": [],
+    "loot_table": {},
+    "loot_drops": [],
+    "gold": 0,
+    "xp": 10,
+    "ai_type": "agressivo",
+    "ai_profile": "agressivo",
+    "ai_tactics": [],
+    "image": "goblin",
+    "portrait": "goblin",
+    "size": [
+      1,
+      1
+    ],
+    "oriented": false,
+    "porte": "medio",
+    "spawn_min": 0,
+    "spawn_max": 0,
+    "undead": false,
+    "subtipo": "raca_padrao",
+    "boss": false,
+    "vscale": [
+      0.6,
+      0.6
+    ],
+    "atk_bonus": 2,
+    "damage": "1d4"
+  },
+  {
     "type": "lagarto_carniceiro",
     "name": "Lagarto Carniceiro",
     "emoji": "🦎",
     "overwrite_native": true,
     "tier": 1,
     "cr": 2.0,
-    "base_hp": 22,
-    "hp": 24,
+    "base_hp": 41,
+    "hp": 43,
     "natural_armor": 2,
+    "ac_bonus": 0,
     "ac": 14,
     "movement": 6,
+    "movement_exception": false,
     "vision_base": 0,
     "visao_escuro": false,
     "base_attack_bonus": 3,
@@ -1545,6 +1969,7 @@ window.EDITOR_CUSTOM_MONSTERS = [
       {
         "name": "Mordida",
         "damage": "1d8",
+        "fire_damage": null,
         "damage_types": [
           "physical"
         ],
@@ -1559,25 +1984,27 @@ window.EDITOR_CUSTOM_MONSTERS = [
         "on_hit": null,
         "on_hit_effect": null,
         "poison_dc": 10,
+        "causa_sangramento": false,
+        "aplica_hemorragia": false,
         "extra_damage": null,
         "extra_damage_types": []
       }
     ],
     "special_abilities": [
       {
-        "id": "combo_devorador",
-        "name": "Combo Devorador",
+        "id": "predador_oportunista",
+        "name": "Predador Oportunista",
         "action_type": "passiva",
-        "descricao": "Se as 2 mordidas acertarem no turno: 2 ataques de Garra imediatos",
+        "descricao": "+1 nas mordidas contra alvos com menos de 50% do HP",
         "source": "monstro",
         "uses_per_day": 1,
         "cooldown_turns": 0
       },
       {
-        "id": "predador_oportunista",
-        "name": "Predador Oportunista",
+        "id": "combo_devorador",
+        "name": "Combo Devorador",
         "action_type": "passiva",
-        "descricao": "+1 nas mordidas contra alvos com menos de 50% do HP",
+        "descricao": "Se as 2 Mordidas acertarem no turno: 2 ataques de Garra imediatos, cada um causando 1d6+3 de dano, e Sangramento.",
         "source": "monstro",
         "uses_per_day": 1,
         "cooldown_turns": 0
@@ -1603,12 +2030,12 @@ window.EDITOR_CUSTOM_MONSTERS = [
     ],
     "monster_abilities": [
       {
-        "id": "combo_devorador",
+        "id": "predador_oportunista",
         "uses_per_day": 1,
         "cooldown_turns": 0
       },
       {
-        "id": "predador_oportunista",
+        "id": "combo_devorador",
         "uses_per_day": 1,
         "cooldown_turns": 0
       },
@@ -1627,30 +2054,23 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "negative_ability_ids": [],
     "immunities": [],
     "resistances": [],
-    "weaknesses": [
-      {
-        "type": "veneno_dobrado",
-        "descricao": "Sensível a venenos: todos os efeitos dobrados"
-      }
-    ],
+    "weaknesses": [],
     "equipment_enabled": false,
     "equipped_items": [],
     "equipment": [],
     "guaranteed_loot": [],
-    "loot_table": {
-      "1-100": null
-    },
+    "loot_table": {},
     "loot_drops": [],
     "gold": 0,
     "xp": 0,
-    "ai_type": "lagarto_carniceiro",
+    "ai_type": "agressivo",
     "ai_profile": "agressivo",
     "ai_tactics": [],
     "image": "lagartoCarniceiro",
     "portrait": "lagarto_carniceiro",
     "size": [
       2,
-      2
+      1
     ],
     "oriented": true,
     "porte": "grande",
@@ -1659,6 +2079,7 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "undead": false,
     "subtipo": "animal",
     "boss": false,
+    "fill_footprint_3d": true,
     "garra_attack": {
       "name": "Garra",
       "atk_bonus": 5,
@@ -1669,7 +2090,733 @@ window.EDITOR_CUSTOM_MONSTERS = [
       "num_attacks": 1,
       "on_hit": null,
       "categoria": "cortante"
-    }
+    },
+    "percepcao": 13
+  },
+  {
+    "type": "grotao_customizado",
+    "name": "Grotão",
+    "emoji": "🦂",
+    "overwrite_native": false,
+    "tier": 1,
+    "cr": 3.0,
+    "base_hp": 69,
+    "hp": 72,
+    "natural_armor": 5,
+    "ac_bonus": 1,
+    "ac": 16,
+    "movement": 6,
+    "movement_exception": false,
+    "vision_base": 0,
+    "visao_escuro": false,
+    "base_attack_bonus": 2,
+    "caster_level": 1,
+    "str_": 18,
+    "dex": 10,
+    "con_": 16,
+    "int_": 3,
+    "fort_base": 3,
+    "ref_base": 3,
+    "will_base": 6,
+    "fort": 6,
+    "ref_": 3,
+    "will": 2,
+    "attacks": [
+      {
+        "name": "Mordida",
+        "damage": "1d10+4",
+        "fire_damage": null,
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 1,
+        "attack_attribute": "str_",
+        "damage_attribute": "str_",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 4,
+        "base_attack_bonus": 2,
+        "atk_bonus": 6,
+        "range": null,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "causa_sangramento": false,
+        "aplica_hemorragia": false,
+        "extra_damage": null,
+        "extra_damage_types": []
+      },
+      {
+        "name": "Garras",
+        "damage": "1d8+4",
+        "fire_damage": null,
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 2,
+        "attack_attribute": "str_",
+        "damage_attribute": "str_",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 4,
+        "base_attack_bonus": 2,
+        "atk_bonus": 6,
+        "range": null,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "causa_sangramento": false,
+        "aplica_hemorragia": false,
+        "extra_damage": null,
+        "extra_damage_types": []
+      }
+    ],
+    "special_abilities": [
+      {
+        "id": "carapaca_resistente",
+        "name": "Carapaça Resistente",
+        "action_type": "passiva",
+        "descricao": "Reduz todo dano físico em 3 fora do ponto vulnerável",
+        "source": "monstro",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "cauda_varredora",
+        "name": "Cauda Varredora",
+        "action_type": "acao",
+        "cooldown_turns": 2,
+        "atk_bonus": 5,
+        "damage": "1d8+3",
+        "save": "reflexos",
+        "dc": 12,
+        "descricao": "Atinge todos atrás: +5, 1d8+3; falha derruba",
+        "source": "monstro",
+        "uses_per_day": 1
+      },
+      {
+        "id": "cuspir_acido",
+        "name": "Cuspir Ácido",
+        "action_type": "acao_livre",
+        "cooldown_turns": 5,
+        "range": 3,
+        "damage": "2d6",
+        "save": "reflexos",
+        "dc": 13,
+        "descricao": "Alvo único em linha reta dentro do alcance configurado (3 quadrado(s)): 2d6 de ácido; Reflexos CD 13 reduz o dano à metade. Em caso de falha, metade do dano é repetida na rodada seguinte e equipamentos podem ser danificados.",
+        "source": "monstro",
+        "uses_per_day": 1
+      },
+      {
+        "id": "furia_bestial",
+        "name": "Fúria Bestial",
+        "action_type": "passiva",
+        "descricao": "Mordida e ao menos uma garra acertam: +1d6 dano",
+        "source": "monstro",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      }
+    ],
+    "monster_abilities": [
+      {
+        "id": "carapaca_resistente",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "cauda_varredora",
+        "uses_per_day": 1,
+        "cooldown_turns": 2
+      },
+      {
+        "id": "cuspir_acido",
+        "uses_per_day": 1,
+        "cooldown_turns": 5,
+        "damage_dice": 2,
+        "damage_faces": 6,
+        "range": 3,
+        "dc": 13
+      },
+      {
+        "id": "furia_bestial",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      }
+    ],
+    "monster_spells": [],
+    "negative_ability_ids": [],
+    "immunities": [],
+    "resistances": [],
+    "weaknesses": [],
+    "equipment_enabled": false,
+    "equipped_items": [],
+    "equipment": [],
+    "guaranteed_loot": [],
+    "loot_table": {},
+    "loot_drops": [],
+    "gold": 0,
+    "xp": 0,
+    "ai_type": "agressivo",
+    "ai_profile": "agressivo",
+    "ai_tactics": [],
+    "image": "grotao",
+    "portrait": "grotao_customizado",
+    "size": [
+      1,
+      2
+    ],
+    "oriented": true,
+    "porte": "grande",
+    "spawn_min": 0,
+    "spawn_max": 0,
+    "undead": false,
+    "subtipo": "raca_padrao",
+    "boss": false
+  },
+  {
+    "type": "xama_goblin_customizado",
+    "name": "Xamã Goblin",
+    "emoji": "👺",
+    "overwrite_native": false,
+    "tier": 1,
+    "cr": 1.0,
+    "base_hp": 10,
+    "hp": 10,
+    "natural_armor": 0,
+    "ac_bonus": 0,
+    "ac": 12,
+    "movement": 6,
+    "movement_exception": false,
+    "vision_base": 0,
+    "visao_escuro": false,
+    "base_attack_bonus": 4,
+    "caster_level": 1,
+    "str_": 8,
+    "dex": 14,
+    "con_": 10,
+    "int_": 12,
+    "fort_base": 2,
+    "ref_base": 2,
+    "will_base": 2,
+    "fort": 2,
+    "ref_": 4,
+    "will": 3,
+    "attacks": [
+      {
+        "name": "Cajado",
+        "damage": "1d6-1",
+        "fire_damage": null,
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 1,
+        "attack_attribute": "dex",
+        "damage_attribute": "dex",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 2,
+        "base_attack_bonus": 4,
+        "atk_bonus": 6,
+        "range": null,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "causa_sangramento": false,
+        "aplica_hemorragia": false,
+        "extra_damage": null,
+        "extra_damage_types": []
+      }
+    ],
+    "special_abilities": [
+      {
+        "id": "hero_mage_aprimorar_magia",
+        "source": "heroi",
+        "source_id": "aprimorar_magia",
+        "source_class": "mage",
+        "name": "Aprimorar Magia",
+        "icon": "🎯",
+        "descricao": "Ação livre. +1 na dificuldade (CD) do teste de resistência da magia. 🍖-3 ao lançar.",
+        "action_type": "acao",
+        "monster_effect": "vantagem_combate",
+        "guild_progressions": [
+          {
+            "id": "mago_aprimorar_2",
+            "level": 2,
+            "requires": null,
+            "name": "Aprimorar II",
+            "icon": "🎯",
+            "description": "Aprimorar Magia dá +2 na CD do save (era +1)."
+          },
+          {
+            "id": "mago_aprimorar_3",
+            "level": 3,
+            "requires": "mago_aprimorar_2",
+            "name": "Aprimorar III",
+            "icon": "🎯",
+            "description": "Aprimorar Magia dá +3 na CD do save."
+          }
+        ],
+        "uses_per_day": 2,
+        "cooldown_turns": 4
+      },
+      {
+        "id": "hero_mage_estender_magia",
+        "source": "heroi",
+        "source_id": "estender_magia",
+        "source_class": "mage",
+        "name": "Estender Magia",
+        "icon": "⏱️",
+        "descricao": "Ação livre. +1 turno na duração da magia. 🍖-3 💧-3 ao lançar.",
+        "action_type": "acao",
+        "monster_effect": "vantagem_combate",
+        "guild_progressions": [
+          {
+            "id": "mago_estender_2",
+            "level": 2,
+            "requires": null,
+            "name": "Estender II",
+            "icon": "⏱️",
+            "description": "Estender Magia dá +2 rodadas de duração (era +1)."
+          },
+          {
+            "id": "mago_estender_3",
+            "level": 3,
+            "requires": "mago_estender_2",
+            "name": "Estender III",
+            "icon": "⏱️",
+            "description": "Estender Magia dá +3 rodadas de duração."
+          }
+        ],
+        "uses_per_day": 2,
+        "cooldown_turns": 4
+      },
+      {
+        "id": "hero_bard_cancao_heroica",
+        "source": "heroi",
+        "source_id": "cancao_heroica",
+        "source_class": "bard",
+        "name": "Canção Heroica",
+        "icon": "🎵",
+        "descricao": "Ativa buffs musicais para aliados em raio de 5 quadrados",
+        "action_type": "acao",
+        "monster_effect": "vantagem_combate",
+        "monster_maintenance": true,
+        "uses_per_day": 1,
+        "cooldown_turns": 0,
+        "duration_rounds": 4
+      }
+    ],
+    "monster_abilities": [
+      {
+        "id": "hero_mage_aprimorar_magia",
+        "uses_per_day": 2,
+        "cooldown_turns": 4
+      },
+      {
+        "id": "hero_mage_estender_magia",
+        "uses_per_day": 2,
+        "cooldown_turns": 4
+      },
+      {
+        "id": "hero_bard_cancao_heroica",
+        "uses_per_day": 1,
+        "cooldown_turns": 0,
+        "duration_rounds": 4
+      }
+    ],
+    "monster_spells": [
+      {
+        "id": "abencoar",
+        "limit_mode": "encounter",
+        "uses_per_combat": 1
+      },
+      {
+        "id": "amaldicoar",
+        "limit_mode": "encounter",
+        "uses_per_combat": 1
+      },
+      {
+        "id": "silencio",
+        "limit_mode": "encounter",
+        "uses_per_combat": 1
+      }
+    ],
+    "negative_ability_ids": [
+      "concentracao_fragil"
+    ],
+    "immunities": [],
+    "resistances": [],
+    "weaknesses": [
+      {
+        "source_ability": "concentracao_fragil",
+        "type": "concentracao_fragil",
+        "descricao": "Concentração frágil: ao sofrer dano, pode perder a próxima magia"
+      }
+    ],
+    "equipment_enabled": true,
+    "equipped_items": [
+      "cajado_madeira",
+      "cloak",
+      "escudo_p",
+      "instrumento_tambor_rustico",
+      "health_potion_small",
+      "cola_alquimica"
+    ],
+    "equipment": [
+      "cajado_madeira",
+      "cloak",
+      "escudo_p",
+      "instrumento_tambor_rustico",
+      "health_potion_small",
+      "cola_alquimica"
+    ],
+    "guaranteed_loot": [],
+    "loot_table": {},
+    "loot_drops": [],
+    "gold": 0,
+    "xp": 0,
+    "ai_type": "agressivo",
+    "ai_profile": "agressivo",
+    "ai_tactics": [],
+    "image": "xamaGoblin",
+    "portrait": "xama_goblin_customizado",
+    "size": [
+      1,
+      1
+    ],
+    "oriented": false,
+    "porte": "pequeno",
+    "spawn_min": 0,
+    "spawn_max": 0,
+    "undead": false,
+    "subtipo": "raca_padrao",
+    "boss": false,
+    "vscale": [
+      0.6,
+      0.6
+    ]
+  },
+  {
+    "type": "goblin_xama",
+    "name": "Xamã Goblin",
+    "emoji": "👺",
+    "overwrite_native": true,
+    "tier": 1,
+    "cr": 1.0,
+    "base_hp": 10,
+    "hp": 10,
+    "natural_armor": 0,
+    "ac_bonus": 0,
+    "ac": 12,
+    "movement": 6,
+    "movement_exception": false,
+    "vision_base": 0,
+    "visao_escuro": false,
+    "base_attack_bonus": 4,
+    "caster_level": 1,
+    "str_": 8,
+    "dex": 14,
+    "con_": 10,
+    "int_": 12,
+    "fort_base": 2,
+    "ref_base": 2,
+    "will_base": 2,
+    "fort": 2,
+    "ref_": 4,
+    "will": 3,
+    "attacks": [
+      {
+        "name": "Cajado",
+        "damage": "1d6-1",
+        "fire_damage": null,
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 1,
+        "attack_attribute": "str_",
+        "damage_attribute": "str_",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": -1,
+        "base_attack_bonus": 4,
+        "atk_bonus": 3,
+        "range": null,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "causa_sangramento": false,
+        "aplica_hemorragia": false,
+        "extra_damage": null,
+        "extra_damage_types": [],
+        "categoria": "contundente"
+      }
+    ],
+    "special_abilities": [
+      {
+        "id": "hero_mage_aprimorar_magia",
+        "source": "heroi",
+        "source_id": "aprimorar_magia",
+        "source_class": "mage",
+        "name": "Aprimorar Magia",
+        "icon": "🎯",
+        "descricao": "Ação livre. +1 na dificuldade (CD) do teste de resistência da magia. 🍖-3 ao lançar.",
+        "action_type": "acao",
+        "monster_effect": "vantagem_combate",
+        "guild_progressions": [
+          {
+            "id": "mago_aprimorar_2",
+            "level": 2,
+            "requires": null,
+            "name": "Aprimorar II",
+            "icon": "🎯",
+            "description": "Aprimorar Magia dá +2 na CD do save (era +1)."
+          },
+          {
+            "id": "mago_aprimorar_3",
+            "level": 3,
+            "requires": "mago_aprimorar_2",
+            "name": "Aprimorar III",
+            "icon": "🎯",
+            "description": "Aprimorar Magia dá +3 na CD do save."
+          }
+        ],
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "hero_mage_estender_magia",
+        "source": "heroi",
+        "source_id": "estender_magia",
+        "source_class": "mage",
+        "name": "Estender Magia",
+        "icon": "⏱️",
+        "descricao": "Ação livre. +1 turno na duração da magia. 🍖-3 💧-3 ao lançar.",
+        "action_type": "acao",
+        "monster_effect": "vantagem_combate",
+        "guild_progressions": [
+          {
+            "id": "mago_estender_2",
+            "level": 2,
+            "requires": null,
+            "name": "Estender II",
+            "icon": "⏱️",
+            "description": "Estender Magia dá +2 rodadas de duração (era +1)."
+          },
+          {
+            "id": "mago_estender_3",
+            "level": 3,
+            "requires": "mago_estender_2",
+            "name": "Estender III",
+            "icon": "⏱️",
+            "description": "Estender Magia dá +3 rodadas de duração."
+          }
+        ],
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "hero_bard_cancao_heroica",
+        "source": "heroi",
+        "source_id": "cancao_heroica",
+        "source_class": "bard",
+        "name": "Canção Heroica",
+        "icon": "🎵",
+        "descricao": "Ativa buffs musicais para aliados em raio de 5 quadrados",
+        "action_type": "acao",
+        "monster_effect": "vantagem_combate",
+        "monster_maintenance": true,
+        "uses_per_day": 1,
+        "cooldown_turns": 0,
+        "duration_rounds": 4
+      },
+      {
+        "id": "guild_tecnica_grito_guerra",
+        "source": "guilda",
+        "source_id": "tecnica_grito_guerra",
+        "name": "Grito de Guerra",
+        "icon": "✦",
+        "descricao": "Todos os aliados recebem +2 de movimento por 1 rodada.",
+        "action_type": "acao",
+        "monster_effect": "vantagem_combate",
+        "guild_category": "tecnica",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "guild_bardo_cancao_dano",
+        "source": "guilda",
+        "source_id": "bardo_cancao_dano",
+        "name": "Canção: Dano +1",
+        "icon": "✦",
+        "descricao": "O bônus de Dano da Canção Heroica sobe de +1 para +2.",
+        "action_type": "passiva",
+        "monster_effect": "passiva_combate",
+        "guild_category": "especializacao",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "guild_bardo_cancao_ca",
+        "source": "guilda",
+        "source_id": "bardo_cancao_ca",
+        "name": "Canção: Armadura +1",
+        "icon": "✦",
+        "descricao": "O bônus de Armadura da Canção Heroica sobe de +1 para +2.",
+        "action_type": "passiva",
+        "monster_effect": "passiva_combate",
+        "guild_category": "especializacao",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "guild_bardo_cancao_movimento",
+        "source": "guilda",
+        "source_id": "bardo_cancao_movimento",
+        "name": "Canção: Movimento +1",
+        "icon": "✦",
+        "descricao": "O bônus de Movimento da Canção Heroica sobe de +1 para +2.",
+        "action_type": "passiva",
+        "monster_effect": "passiva_combate",
+        "guild_category": "especializacao",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "guild_bardo_cancao_resistencia",
+        "source": "guilda",
+        "source_id": "bardo_cancao_resistencia",
+        "name": "Canção: Resistência +1",
+        "icon": "✦",
+        "descricao": "O bônus de Resistência da Canção Heroica sobe de +1 para +2.",
+        "action_type": "passiva",
+        "monster_effect": "passiva_combate",
+        "guild_category": "especializacao",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      }
+    ],
+    "monster_abilities": [
+      {
+        "id": "hero_mage_aprimorar_magia",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "hero_mage_estender_magia",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "hero_bard_cancao_heroica",
+        "uses_per_day": 1,
+        "cooldown_turns": 0,
+        "duration_rounds": 4
+      },
+      {
+        "id": "guild_tecnica_grito_guerra",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "guild_bardo_cancao_dano",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "guild_bardo_cancao_ca",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "guild_bardo_cancao_movimento",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "guild_bardo_cancao_resistencia",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      }
+    ],
+    "monster_spells": [
+      {
+        "id": "abencoar",
+        "limit_mode": "encounter",
+        "uses_per_combat": 1
+      },
+      {
+        "id": "amaldicoar",
+        "limit_mode": "encounter",
+        "uses_per_combat": 1
+      },
+      {
+        "id": "silencio",
+        "limit_mode": "encounter",
+        "uses_per_combat": 1
+      }
+    ],
+    "negative_ability_ids": [
+      "concentracao_fragil"
+    ],
+    "immunities": [],
+    "resistances": [],
+    "weaknesses": [
+      {
+        "source_ability": "concentracao_fragil",
+        "type": "concentracao_fragil",
+        "descricao": "Concentração frágil: ao sofrer dano, pode perder a próxima magia"
+      }
+    ],
+    "equipment_enabled": true,
+    "equipped_items": [
+      "cajado_madeira",
+      "cloak",
+      "escudo_p",
+      "instrumento_sino_rustico",
+      "bomba_fumaca",
+      "health_potion_small"
+    ],
+    "equipment": [
+      "cajado_madeira",
+      "cloak",
+      "escudo_p",
+      "instrumento_sino_rustico",
+      "bomba_fumaca",
+      "health_potion_small"
+    ],
+    "guaranteed_loot": [],
+    "loot_table": {},
+    "loot_drops": [],
+    "gold": 0,
+    "xp": 0,
+    "ai_type": "agressivo",
+    "ai_profile": "agressivo",
+    "ai_tactics": [],
+    "image": "xamaGoblin",
+    "portrait": "goblin_xama",
+    "size": [
+      1,
+      1
+    ],
+    "oriented": false,
+    "porte": "pequeno",
+    "spawn_min": 1,
+    "spawn_max": 1,
+    "undead": false,
+    "subtipo": "raca_padrao",
+    "boss": false,
+    "vscale": [
+      0.6,
+      0.6
+    ],
+    "spawn_companions": [
+      {
+        "type": "goblin_combatente",
+        "min": 1,
+        "max": 2
+      },
+      {
+        "type": "goblin_arqueiro",
+        "min": 1,
+        "max": 1
+      }
+    ]
   }
 ];
 // GERADO pelo servidor ao salvar no Editor de criaturas.

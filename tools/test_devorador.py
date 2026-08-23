@@ -717,7 +717,7 @@ async def main():
     # ── Lagarto Carniceiro (ND 2) ────────────────────────────────────────────────
     print("\n[18] Lagarto Carniceiro (combo, predador, faro, sensível a venenos)")
     ldef = next(m for m in MONSTER_DEFS if m["type"] == "lagarto_carniceiro")
-    check("lagarto: tamanho 2x1 orientado", ldef["size"] == [2, 1] and ldef.get("oriented") is True)
+    check("lagarto: tamanho 2x2 orientado", ldef["size"] == [2, 2] and ldef.get("oriented") is True)
     check("lagarto: fraqueza veneno dobrado",
           any(w.get("type") == "veneno_dobrado" for w in ldef["weaknesses"]))
     check("lagarto: garra do combo definida", ldef.get("garra_attack", {}).get("damage") == "1d6+3")
@@ -751,6 +751,27 @@ async def main():
     S.random.randint = _o
     nomes = [c[0] for c in calls]
     check("Combo: 2 mordidas + 2 garras", nomes.count("Mordida") == 2 and nomes.count("Garra") == 2)
+    check("Combo: aplica Sangramento uma vez", h.get("sangramento_nivel") == 1
+          and h.get("sangramento_rodadas", 0) >= 1)
+
+    # Combo Devorador: as MORDIDAS abrem o combo, mas as duas GARRAS erram.
+    # A descricao amarra o Sangramento as garras, entao errar as duas nao pode
+    # sangrar. Troca a CA do alvo conforme o ataque em resolucao.
+    r = setup()
+    lag = make_monster(ldef, {"id": 1, "cx": 5, "cy": 5}); lag["pos"] = [5, 5]
+    r.monsters[lag["id"]] = lag
+    h = make_player("p1", "A", "warrior", 0); h["pos"] = [5, 7]
+    h["hp"] = 200; h["max_hp"] = 200; r.players = {"p1": h}
+    _exec = r._execute_one_monster_attack
+    async def _ca_por_ataque(mon, atk, tobj):
+        h["ac"] = 99 if atk.get("name") == "Garra" else -100
+        h["ac_base"] = h["ac"]
+        return await _exec(mon, atk, tobj)
+    r._execute_one_monster_attack = _ca_por_ataque
+    _o = S.random.randint; S.random.randint = lambda a, b: (10 if b == 20 else b)
+    await r._ai_lagarto_carniceiro(lag, [{"kind": "player", "obj": h}])
+    S.random.randint = _o
+    check("Combo: garras errando NAO sangram", not h.get("sangramento_nivel"))
 
     # Predador Oportunista: alvo <50% HP → mordida +1 (6→7)
     r = setup()

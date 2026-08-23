@@ -1,6 +1,6 @@
 // Editor visual de cidades e entradas de masmorra no mapa-múndi.
 (function () {
-  let config = null, loading = null, selected = null, dragging = null;
+  let config = null, loading = null, selected = null, dragging = null, scenesLoading = false, scenesLoaded = false;
   const $ = (sel, root) => (root || document).querySelector(sel);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function fallbackConfig() {
@@ -21,6 +21,10 @@
   function render() {
     const root = $('#world-editor-view'); if (!root) return;
     if (!config) { root.innerHTML='<p>Carregando mapa-múndi…</p>'; load().then(render); return; }
+    if (!scenesLoaded && !scenesLoading && window.EDITOR_SCENES && window.EDITOR_SCENES.load) {
+      scenesLoading = true;
+      window.EDITOR_SCENES.load().then(()=>{scenesLoaded=true;}).catch(()=>{scenesLoaded=true;}).finally(()=>{scenesLoading=false;render();});
+    }
     const a=current();
     root.innerHTML='<section class="worlded"><div class="worlded-head"><h2>🧭 Mapa do Mundo — Varlúzia</h2><p>Arraste cidades e destinos até a coordenada correta.</p></div><div class="worlded-layout"><div id="worlded-map" class="worlded-map"><img src="../'+esc(config.map_image)+'" alt="Mapa de Varlúzia"></div><aside class="worlded-panel"><button id="worlded-add" type="button">+ Adicionar destino</button><div id="worlded-form"></div><button id="worlded-save" type="button">Salvar mapa do mundo</button><div id="worlded-status"></div></aside></div></section>';
     const map=$('#worlded-map',root); (config.locations||[]).forEach(x=>marker(map,x,'city')); (config.adventures||[]).forEach(x=>marker(map,x,'adventure'));
@@ -36,6 +40,8 @@
         const i=s._introSt?ES.storyToSaved(s._introSt):s.intro;
         const u=s._outroSt?ES.storyToSaved(s._outroSt):s.outro;
         if(i) o.intro=i; if(u) o.outro=u;
+        const trigger=s.scene_trigger;
+        if(trigger && String(trigger.scene_id||'').trim()) o.scene_trigger={scene_id:String(trigger.scene_id).trim(),once:trigger.once!==false,requires:trigger.requires||{}};
         return o;
       })}));
       try{config=await window.EDITOR_SAVE.saveWorldAdventures(config.locations,aventuras);status.textContent='✓ Mapa salvo.';render();}catch(e){status.textContent='Erro ao salvar: '+e.message;}};
@@ -54,8 +60,9 @@
     // mínima no salvar, via EDITOR_STORY.
     const ES=window.EDITOR_STORY;
     a.dungeons=a.dungeons.map(d=>{
-      const st=(typeof d==='string')?{file:d,encadear:false,intro:'',outro:''}
+      const st=(typeof d==='string')?{file:d,encadear:false,intro:'',outro:'',scene_trigger:null}
                                     :{file:d.file,encadear:!!d.encadear,intro:d.intro||'',outro:d.outro||'',
+                                      scene_trigger:d.scene_trigger&&typeof d.scene_trigger==='object'?Object.assign({},d.scene_trigger):null,
                                       _introSt:d._introSt,_outroSt:d._outroSt};
       if(!st._introSt) st._introSt=ES.storyFromSaved(st.intro);
       if(!st._outroSt) st._outroSt=ES.storyFromSaved(st.outro);
@@ -85,14 +92,18 @@
     if(reqRota && !outrosDest.some(x=>x.id===reqRota))
       rotaOpts.push('<option value="'+esc(reqRota)+'" selected>⚠️ '+esc(reqRota)+' — destino inexistente</option>');
     const reqRotaHTML='<label title="O ponto só libera quando TODAS as etapas do destino escolhido forem concluídas.">Rota anterior concluída<select id="we-req-adventure">'+rotaOpts.join('')+'</select></label>';
+    const sceneData=window.EDITOR_SCENES&&window.EDITOR_SCENES.getData?window.EDITOR_SCENES.getData():{scenes:{}};
+    const sceneOptions=Object.entries(sceneData.scenes||{}).map(([id,s])=>'<option value="'+esc(id)+'">'+esc((s&&s.name)||id)+'</option>').join('');
+    const sceneList='<datalist id="worlded-scene-ids">'+sceneOptions+'</datalist>';
     const sequence=a.dungeons.map((stage,index)=>'<div class="worlded-sequence-row"><b>'+String(index+1)+'ª</b><span>'+esc(dungeonName(stage.file))+'</span><button type="button" data-stage-up="'+index+'"'+(index===0?' disabled':'')+' title="Mover para cima">↑</button><button type="button" data-stage-down="'+index+'"'+(index===a.dungeons.length-1?' disabled':'')+' title="Mover para baixo">↓</button><button type="button" data-stage-remove="'+index+'" title="Remover">×</button>'
       +'<label title="A próxima etapa começa imediatamente, sem voltar ao mapa-múndi"><input type="checkbox" data-stage-chain="'+index+'"'+(stage.encadear?' checked':'')+(index===a.dungeons.length-1?' disabled':'')+'> ⛓️ emendar na próxima</label>'
+      +'<label title="Cena narrativa exibida antes de entrar nesta etapa"><input data-stage-scene="'+index+'" list="worlded-scene-ids" value="'+esc(stage.scene_trigger&&stage.scene_trigger.scene_id||'')+'" placeholder="ID da cena"> 🎬 cena de entrada</label>'
       +'<span class="worlded-stage-hist">'
       +  ES.histButtonHTML('stage-intro-'+index, stage._introSt).replace('história','abertura')
       +  ES.histButtonHTML('stage-outro-'+index, stage._outroSt).replace('história','encerramento')
       +'</span>'
       +'</div>').join('')||'<small>Nenhuma masmorra vinculada. Adicione a primeira etapa abaixo.</small>';
-    host.innerHTML='<h3>Destino</h3><label>Nome<input id="we-name" value="'+esc(a.nome)+'"></label><div class="worlded-cost"><label>🍖 Fome<input id="we-hunger" type="number" min="0" value="'+Number(a.fome||0)+'"></label><label>💧 Sede<input id="we-thirst" type="number" min="0" value="'+Number(a.sede||0)+'"></label></div><div class="worlded-cost"><label>Espera para retornar<select id="we-wait-mode"><option value="fixa"'+(a.espera_retorno.modo==='fixa'?' selected':'')+'>Fixa (rodadas)</option><option value="dados"'+(a.espera_retorno.modo==='dados'?' selected':'')+'>Dados</option></select></label><label>Rodadas<input id="we-wait-rounds" type="number" min="0" max="99" value="'+Number(a.espera_retorno.rodadas||0)+'"></label><label>Fórmula<input id="we-wait-dice" value="'+esc(a.espera_retorno.dados||'')+'" placeholder="1d4"></label></div><label>Renome por etapa concluída<input id="we-renome-reward" type="number" min="0" value="'+Number(a.renome_recompensa==null?1:a.renome_recompensa)+'"></label><label title="Após concluir a rota, permite revisitar a última masmorra."><input id="we-revisit" type="checkbox"'+(a.revisitavel?' checked':'')+'> manter a última masmorra visitável após concluir</label><div class="worlded-cost"><span title="Aparece ao concluir a última etapa, depois do encerramento dela.">'+ES.histButtonHTML('we-outro-rota', a._outroRotaSt).replace('história','fim da rota').replace('📖','🏁')+'</span></div><div class="worlded-sequence"><b>Requisitos para iniciar a rota</b><small>Todos os requisitos preenchidos devem ser atendidos.</small><label>Renome mínimo<input id="we-req-renome" type="number" min="0" value="'+Number(req.renome_min||0)+'"></label><label>Nível mínimo do grupo<input id="we-req-level" type="number" min="0" value="'+Number(req.nivel_grupo_min||0)+'"></label><label>Item-chave (id)<input id="we-req-item" value="'+esc(req.item_id||'')+'"></label><label>Fato/conversa exigida<input id="we-req-fact" value="'+esc(req.fato||'')+'"></label>'+reqRotaHTML+'<label title="'+(temReq?'O ponto só aparece no mapa quando o requisito for cumprido.':'Preencha um requisito para poder ocultar.')+'"><input type="checkbox" id="we-hidden"'+(a.oculto_ate_liberar?' checked':'')+(temReq?'':' disabled')+'> 🕵️ ocultar no mapa até liberar</label></div><div class="worlded-sequence"><b>Rota de masmorras</b><small>A etapa 1 fica disponível. Cada etapa seguinte só libera ao concluir a anterior.</small>'+sequence+'</div><label>Adicionar masmorra<select id="we-dungeon-catalog">'+options+'</select></label><button id="we-add-dungeon" type="button"'+(available.length?'':' disabled')+'>+ Adicionar à sequência</button><button id="we-delete" type="button">Remover destino</button>';
+    host.innerHTML='<h3>Destino</h3><label>Nome<input id="we-name" value="'+esc(a.nome)+'"></label><div class="worlded-cost"><label>🍖 Fome<input id="we-hunger" type="number" min="0" value="'+Number(a.fome||0)+'"></label><label>💧 Sede<input id="we-thirst" type="number" min="0" value="'+Number(a.sede||0)+'"></label></div><div class="worlded-cost"><label>Espera para retornar<select id="we-wait-mode"><option value="fixa"'+(a.espera_retorno.modo==='fixa'?' selected':'')+'>Fixa (rodadas)</option><option value="dados"'+(a.espera_retorno.modo==='dados'?' selected':'')+'>Dados</option></select></label><label>Rodadas<input id="we-wait-rounds" type="number" min="0" max="99" value="'+Number(a.espera_retorno.rodadas||0)+'"></label><label>Fórmula<input id="we-wait-dice" value="'+esc(a.espera_retorno.dados||'')+'" placeholder="1d4"></label></div><label>Renome por etapa concluída<input id="we-renome-reward" type="number" min="0" value="'+Number(a.renome_recompensa==null?1:a.renome_recompensa)+'"></label><label title="Após concluir a rota, permite revisitar a última masmorra."><input id="we-revisit" type="checkbox"'+(a.revisitavel?' checked':'')+'> manter a última masmorra visitável após concluir</label><div class="worlded-cost"><span title="Aparece ao concluir la última etapa, depois do encerramento dela.">'+ES.histButtonHTML('we-outro-rota', a._outroRotaSt).replace('história','fim da rota').replace('📖','🏁')+'</span></div><div class="worlded-sequence"><b>Requisitos para iniciar a rota</b><small>Todos os requisitos preenchidos devem ser atendidos.</small><label>Renome mínimo<input id="we-req-renome" type="number" min="0" value="'+Number(req.renome_min||0)+'"></label><label>Nível mínimo do grupo<input id="we-req-level" type="number" min="0" value="'+Number(req.nivel_grupo_min||0)+'"></label><label>Item-chave (id)<input id="we-req-item" value="'+esc(req.item_id||'')+'"></label><label>Fato/conversa exigida<input id="we-req-fact" value="'+esc(req.fato||'')+'"></label>'+reqRotaHTML+'<label title="'+(temReq?'O ponto só aparece no mapa quando o requisito for cumprido.':'Preencha um requisito para poder ocultar.')+'"><input type="checkbox" id="we-hidden"'+(a.oculto_ate_liberar?' checked':'')+(temReq?'':' disabled')+'> 🕵️ ocultar no mapa até liberar</label></div><div class="worlded-sequence"><b>Rota de masmorras</b><small>A etapa 1 fica disponível. Cada etapa seguinte só libera ao concluir a anterior.</small>'+sequence+'</div>'+sceneList+'<label>Adicionar masmorra<select id="we-dungeon-catalog">'+options+'</select></label><button id="we-add-dungeon" type="button"'+(available.length?'':' disabled')+'>+ Adicionar à sequência</button><button id="we-delete" type="button">Remover destino</button>';
     const sync=()=>{a.nome=$('#we-name',host).value;a.fome=Math.max(0,Number($('#we-hunger',host).value)||0);a.sede=Math.max(0,Number($('#we-thirst',host).value)||0);a.renome_recompensa=Math.max(0,Number($('#we-renome-reward',host).value)||0);a.requisito={renome_min:Math.max(0,Number($('#we-req-renome',host).value)||0),nivel_grupo_min:Math.max(0,Number($('#we-req-level',host).value)||0),item_id:$('#we-req-item',host).value,fato:$('#we-req-fact',host).value,aventura_id:$('#we-req-adventure',host).value};
       a.espera_retorno={modo:$('#we-wait-mode',host).value==='dados'?'dados':'fixa',rodadas:Math.max(0,Math.min(99,Number($('#we-wait-rounds',host).value)||0)),dados:$('#we-wait-dice',host).value.trim()};
       const cbH=$('#we-hidden',host); a.oculto_ate_liberar=!!(cbH&&cbH.checked&&!cbH.disabled);a.revisitavel=!!$('#we-revisit',host).checked;};
@@ -108,6 +119,12 @@
     host.querySelectorAll('[data-stage-down]').forEach(btn=>btn.onclick=()=>{const i=Number(btn.dataset.stageDown);if(i<a.dungeons.length-1){[a.dungeons[i+1],a.dungeons[i]]=[a.dungeons[i],a.dungeons[i+1]];render();}});
     host.querySelectorAll('[data-stage-remove]').forEach(btn=>btn.onclick=()=>{a.dungeons.splice(Number(btn.dataset.stageRemove),1);render();});
     host.querySelectorAll('[data-stage-chain]').forEach(cb=>cb.onchange=()=>{a.dungeons[Number(cb.dataset.stageChain)].encadear=cb.checked;});
+    host.querySelectorAll('[data-stage-scene]').forEach(inp=>inp.onchange=()=>{
+      const stage=a.dungeons[Number(inp.dataset.stageScene)], sid=inp.value.trim();
+      if(!stage) return;
+      if(sid) stage.scene_trigger=Object.assign({},stage.scene_trigger||{}, {scene_id:sid,once:stage.scene_trigger&&stage.scene_trigger.once!==false,requires:(stage.scene_trigger&&stage.scene_trigger.requires)||{}});
+      else delete stage.scene_trigger;
+    });
     a.dungeons.forEach((stage,index)=>{
       const bi=host.querySelector('.stage-intro-'+index), bo=host.querySelector('.stage-outro-'+index);
       if(bi) bi.onclick=()=>ES.openHistoryEditor(stage._introSt, 'abertura da etapa '+(index+1), render);

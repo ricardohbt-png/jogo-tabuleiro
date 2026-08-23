@@ -2118,3 +2118,175 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `ARMADILHAS` do servidor), `tools/js_strings.py` (10). Plano em
 > `docs/superpowers/plans/2026-08-15-idioma-etapa5-lote2-funcoes-grandes.md`.
 > **Falta o Lote 3:** 350 no `game.js`, 69 no `gameState.js`, 9 no `inventoryModal.js`.
+
+> **Idioma — ETAPA 5 CONCLUÍDA (Lote 3): a interface do cliente.** Os **427 literais
+> restantes** traduzidos — 350 no `game.js`, 67 no `src/gameState.js`, 9 no
+> `src/ui/inventoryModal.js`. Com isto **o jogo inteiro está em PT/EN**: servidor
+> (etapas 1–4c) e cliente (etapa 5). O dicionário tem **~3.000 chaves**, das quais
+> **1.259 em `src/lang/interface.js`**.
+>
+> **Sobra UM literal em português no `game.js`, de propósito:** o
+> `includes('não encontrada')` de `handleTileClick`, que é **chave de lógica** sobre a
+> resposta do servidor — `server.py:1856` devolve aquela recusa como string crua, fora
+> do `T()`, e traduzi-la quebraria em silêncio o ramo que oferece criar conta. O
+> conserto certo é um **código de erro no payload**, e é trabalho próprio. O placar
+> passou de relatório a **cobrança** e crava exatamente esse conjunto: qualquer outro
+> literal derruba a suíte.
+>
+> **A grande lição do lote — `t` no lugar errado quebra de dois jeitos, e nenhum teste
+> pegava:**
+> - **`t` SOMBREADO.** Cinco funções declaravam `const t = …` local (`type || pointId`,
+>   `getElementById('item-tooltip')`, `state.tiles[y][x]`). Chamar `t('chave')` ali dá
+>   `TypeError` em runtime. As locais foram **renomeadas** (`tipo`, `tip`, `tile`), e não
+>   o contrário: `t` passa a significar só o tradutor.
+> - **`t` no NÍVEL DE MÓDULO (TDZ).** Um `const` de módulo inicializado com `t(...)`
+>   roda no CARREGAMENTO, antes de `const t = …` existir — `ReferenceError` que **aborta
+>   o resto do `game.js`**. Aconteceu com o `GUERREIRO_LUZ_BONUS_CLIENT`: o placar ficou
+>   zerado, `node --check` passou (é sintaxe válida) e o jogo simplesmente não carregava.
+>   **Só o console do navegador acusou.** A seção `[6]` do `tools/test_interface.py`
+>   agora varre isso (ancorada na coluna 0, como a `RE_FN`), e foi negativamente testada.
+>   Mapa `{id:'texto'}` de módulo vira **função** (`_labelCirculo`, `_glLabel`,
+>   `_cancaoLabel`, `_predioNome`, `_csNome`) — nunca um `const` com `t()` dentro.
+>
+> **O placar aprendeu três categorias que NÃO são dívida** (`_pendente(linha, txt)`,
+> extraída para poder ser testada com entrada sintética):
+> - **literal que contém `data-i18n`** — é markup cujo português é a FONTE que o
+>   `_i18nApply` substitui, como o `GRIMORIO_CLIENT` é a fonte do `aplicarCatalogo`. São
+>   3 no `game.js`, e um deles é o `document.body.innerHTML` **inteiro** (13 KB num
+>   literal só). A garantia de que isso não esconde trabalho é a **seção `[7]`**, que
+>   varre esses literais atrás de texto acentuado FORA de um elemento marcado — foi ela
+>   que apontou os 6 nós + 6 `title` que faltavam marcar.
+> - **argumento de `console.*`** — diagnóstico do desenvolvedor. A faixa é a **chamada
+>   inteira**, achada por parênteses casados: a 1ª versão olhava só a linha de abertura
+>   e deixava passar as continuações de um `console.warn` de 5 linhas.
+> - **`LITERAIS_INTENCIONAIS`** — hoje uma entrada: o `<option>` do seletor de idioma,
+>   que fica sempre na própria língua.
+>
+> **`data-i18n-html`** (novo): para o bloco que MISTURA markup com o texto — o
+> `#hint-host` tem `<b>` e `<code>` no meio da frase, e o `data-i18n` normal usa
+> `textContent` e apagaria as tags. Só para texto NOSSO, nunca para conteúdo do servidor
+> ou do autor. Fecha a última sobra visível, que estava fora de escopo desde a etapa 1.
+>
+> **`gameState.js` traduz sem conhecer o I18N.** A regra do `CLAUDE.md` proíbe
+> `window`/`document` ali, e o `t` global mora em `window.I18N`. A saída é a mesma que o
+> módulo já usava para o filtro de mensagens: **`GS.setTranslator(fn)`**, preenchido pelo
+> `game.js` no boot, mais um `_t(chave, pt, params)` interno que cai no **português
+> recebido** se ninguém registrou, se a chave falta ou se o tradutor lança. Por isso o
+> português CONTINUA no `gameState.js`: ali ele é fallback, não dívida.
+>
+> **`_tentaFamilias` passou a aceitar `ui.<família>.<id>` além de `cat.`** — e isso era
+> o que faltava para a regra "a `ui.*` vence a `cat.*`" valer de verdade. **40 dos 73
+> itens do `CATALOGO_ITENS` só existem no cliente** e nunca terão uma `cat.*`; sem essa
+> mudança a base ficava nula e o objeto passava intacto — o sintoma exato que o Lote 1
+> registrou como "chave `ui.*` sozinha nunca é encontrada". Com ela, e com as 26
+> descrições de topo já cobertas por `ui.item.<id>.desc`, a chamada virou
+> `aplicarCatalogo(GS.CATALOGO_ITENS, **false**)`. **A ORDEM é load-bearing**: virar o
+> `soNome` ANTES de escrever as chaves faria a `cat.item.<id>.desc` do servidor (frase
+> curta) substituir o texto mais rico do cliente.
+>
+> **Migrar por script exige que o texto venha do PLACAR, não de heurística.** A 1ª versão
+> do migrador da cauda escolhia "o maior literal da linha" e, em 6 de 72 linhas, trocou um
+> **ID ou uma cor CSS** por uma chamada de tradução (`'resistencia'`, `'passiva'`,
+> `'var(--orange)'`, `'btn-tile-spacing-reset'`) — `node --check` passa e o estrago é
+> silencioso. Refeito lendo `test_interface._literais_pendentes()`, que já sabe qual
+> literal é texto de interface, e recusando linha com mais de um candidato.
+>
+> **Teste de REGRA não pode depender do conteúdo que a regra mede.** A checagem "texto
+> não dicionarizado continua contando" cravava a frase `"Personagem já escolhido"` e ficou
+> vermelha sozinha quando o lote a traduziu. Virou entrada **sintética**, cobrindo os três
+> cruzamentos de dicionário × faixa. Na mesma linha, o `test_idioma_cliente.js` carregava
+> **só o `strings.js`** e acusava como órfã toda chave `data-i18n` que morasse nos outros
+> cinco arquivos de `src/lang/` — passou a carregar os seis, como o `index.html` faz.
+>
+> **UI MONTADA UMA VEZ não acompanha a troca de idioma — a lacuna que o Lote 3
+> deixou passar.** O `_i18nApply` só alcança quem tem `data-i18n`, e um render que
+> roda a cada `game_state` se conserta sozinho (o `set_lang` faz o servidor reenviar
+> o estado). Quem NÃO se conserta é a UI com guarda de cache: `initCityImage` tem
+> `if(_cityImg) return` e assa os rótulos dos hotspots no `innerHTML`; a seleção de
+> herói (`initClassSelectFull`, `if(csf) return`) assa o nome do herói numa **textura
+> de canvas** na placa do peão 3D. Quem entrava na cidade em português e trocava para
+> inglês continuava vendo *Taverna/Ferraria/Mercado*. O `_setLang` já mantinha uma
+> lista para "rótulos montados em JS" (`_refreshTurnTimerOption`,
+> `_refreshBtnReconectar`); entraram nela **`_refreshCityHotspots`** (repinta rótulo,
+> `title` e `aria-label`, pulando `data-city-nome-autoral` — nome do editor não se
+> traduz) e **`_refreshClassSelectLang`** (derruba e remonta a cena, única forma de
+> repintar a textura; preserva seleção, travas e retrato). **Regra: UI nova com guarda
+> de "monta uma vez" precisa de uma linha no `_setLang`.**
+>
+> **Faixas de dificuldade:** `src/difficulty.js` é compartilhado com o editor e é **puro**
+> (sem DOM, sem I18N — como o `gameState.js`), então ele segue entregando `label` em
+> português; quem traduz é o `game.js`, por `ui.dificuldade.<key>` no render do minimapa
+> de CR do mestre (`_faixaLabel`). Achado DEPOIS do fechamento, medindo os `src/*.js` que
+> o placar não cobre: `Fácil`/`Equilibrada`/`Difícil`/`Mortal` apareciam na tela do
+> mestre. **O placar mede o `game.js`; os outros módulos precisam de conferência à mão.**
+>
+> **Fora da etapa 5, de propósito:** o **editor** (`tools/*.js` — 423 literais de
+> interface real, mais 813 de catálogo GERADO e 89 de teste), o **conteúdo autoral**
+> (masmorras, campanhas, falas de NPC, itens e monstros do editor) e o nome de **jogador**.
+> Testes: `tools/test_interface.py` (35), `tools/js_strings.py` (10),
+> `tools/test_idioma_cliente.js` (32). Plano em
+> `docs/superpowers/plans/2026-08-15-idioma-etapa5-lote3-cauda.md`.
+
+> **Etapa 5 — dois furos achados DEPOIS do fechamento, os dois estruturais.** O placar
+> cravava zero e o jogo ainda tinha português na tela. As causas não eram texto
+> esquecido: eram o instrumento e o gerador olhando para o lugar errado.
+>
+> **1) O tokenizador pulava o conteúdo de `${...}`.** `js_strings.literais()` tratava a
+> interpolação como "código, não texto" — correto para `${n}`, errado para
+> `${cond ? `<b>Texto</b>` : ''}`. Funções como `renderMyPanel` devolvem TEMPLATE de
+> dentro de uma IIFE no `${}`, e **31 textos do `game.js` nunca foram contados** — entre
+> eles os banners do HUD (`SACIADO`, `EXAUSTÃO`, `EM CHAMAS`, `ÚLTIMO ESFORÇO`,
+> `RÉQUIEM`, `REGENERAÇÃO DIVINA`), que o jogador em inglês via em português. O
+> tokenizador passou a **RECURSAR**: o buraco segue marcado como `${}` no texto de fora
+> e o que houver de string dentro vira literal por si. O placar saltou de 1 para 32 e
+> voltou a 1 depois de traduzir.
+>
+> **2) O gerador de vocabulário não via as habilidades de herói.** Elas vivem em
+> `CLASSES[x]["skills"]`, não num catálogo de topo, então nenhuma varredura as
+> alcançava: **24 habilidades, 49 chaves, zero traduzidas**. O menu de habilidades e os
+> botões do HUD mostravam "Veneno Rápido / Ação livre. Unta um veneno…" em inglês.
+> `gerar_vocabulario.py` ganhou a família **`habilidade`** (helper `_skills_de_classe`),
+> e o `src/i18n.js` a registrou em `FAMILIAS_POR_CAMPO.id` e em `TODAS_FAMILIAS`. Foi
+> preciso ainda acrescentar **`description`** a `CAMPOS_DESC`: o servidor escreve a
+> descrição da habilidade nesse campo, e sem ele o nome traduzia e a descrição não.
+>
+> **A lição comum:** *o placar mede o que o instrumento sabe olhar.* Zero no placar não
+> é prova de tradução completa — é prova de que nada do que ele enxerga sobrou. As duas
+> falhas só apareceram **rodando o jogo de verdade** (subir sala, escolher classe,
+> entrar na masmorra e varrer o DOM em inglês), não em suíte nenhuma.
+
+> **Etapa 5 — a rodada de bugs relatados pelo autor (o placar mentia de novo).**
+> Quinze pontos de português na tela com o placar em zero. Três causas, todas de
+> instrumento:
+>
+> **1) O check `[7]` só olhava texto ACENTUADO.** É a mesma armadilha que o Lote 2
+> registrou ("o placar zerar não prova que a função está traduzida"), mas aplicada ao
+> markup: `Iniciar Jogo`, `Encerrar Turno`, `Aventureiros`, `Fechar`, `SALA`, `Loja`,
+> `Meu Personagem` — nenhum tem acento, e todos ficaram sem `data-i18n` no
+> `document.body.innerHTML`. **34 marcadores** acrescentados. A varredura passou a ser
+> independente de acento: dentro de markup, QUALQUER texto com letra sem `data-i18n`
+> é dívida.
+>
+> **2) Os 42 rótulos de `dice_roll` do servidor nunca foram migrados.** Não são
+> `gm_say` nem `err`, então a varredura da etapa 4b-ii não os via — e o dado 3D
+> mostrava `Dano`/`Golpe Sagrado`/`⚔️ Ataque (Mão Principal)` em português. Agora são
+> `T("dado.<slug>")`, resolvidos pelo `default=` do `json.dumps` como todo o resto.
+> **Erro cometido e desfeito no caminho:** a 1ª migração trocou TODO `"label":` do
+> `server.py`, inclusive no `CANCAO_ATRIBUTOS`, que é avaliado no CARREGAMENTO — o
+> módulo parou de importar com `NameError: T`. É o TDZ do lado do Python. O conserto
+> restringiu a troca ao contexto `dice_roll` (3 linhas acima) e o `label` do
+> `CANCAO_ATRIBUTOS` saiu da estrutura: virou `ui.cancao.atributo.<id>`, resolvido na
+> narração como **lista** de `T` — o motor já sabe juntar lista, e `", ".join` exigiria
+> `str` de verdade, que o `T` não é.
+>
+> **3) `test_idioma` [10] acusava `ui.cancao.atributo.` como chave órfã** — é o PREFIXO
+> de uma chave montada em runtime. Prefixo terminado em ponto nunca é chave real; o
+> scanner passou a descartá-lo.
+>
+> **O que continua em português DE PROPÓSITO: conteúdo autoral.** Os itens que o autor
+> relatou como "ainda em português" e que NÃO são bug: `Fazenda do Leste`
+> (`city_map_points.json`), `Refugio dos Heróis`/`Area compartilhada`/`Quarto do herói`
+> (`city_scenes.json`), `Vila dos Charcos` (`cidades_personalizadas.json`) e
+> `esconderijo de Leonel` (`world_adventures.json`) — todos criados nos editores. A
+> guarda por id preserva o texto do autor de propósito; traduzi-los exigiria um campo
+> de nome por idioma no editor, que é feature, não correção.
