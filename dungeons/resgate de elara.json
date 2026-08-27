@@ -2316,6 +2316,7 @@
       ]
     }
   ],
+  "door_conditions": {},
   "entrance": {
     "x": 2,
     "y": 37
@@ -2343,6 +2344,16 @@
         11
       ],
       "room_id": 14,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "estrangulador",
+      "pos": [
+        14,
+        19
+      ],
+      "room_id": 19,
       "boss": false,
       "target": false
     }

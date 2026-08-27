@@ -343,7 +343,7 @@
       "type": "lobo_cinzento",
       "pos": [
         9,
-        3
+        1
       ],
       "room_id": 1,
       "boss": false,
@@ -363,7 +363,7 @@
       "type": "grotao",
       "pos": [
         5,
-        8
+        7
       ],
       "room_id": 1,
       "boss": false,
@@ -372,8 +372,8 @@
     {
       "type": "elemental_fogo",
       "pos": [
-        9,
-        8
+        8,
+        7
       ],
       "room_id": 1,
       "boss": false,
@@ -383,7 +383,7 @@
       "type": "lagarto_carniceiro",
       "pos": [
         2,
-        6
+        7
       ],
       "room_id": 1,
       "boss": false,
@@ -402,8 +402,8 @@
     {
       "type": "molochus_adulto",
       "pos": [
-        5,
-        5
+        6,
+        4
       ],
       "room_id": 1,
       "boss": false,
@@ -412,18 +412,8 @@
     {
       "type": "gigante_guerra",
       "pos": [
-        8,
+        9,
         7
-      ],
-      "room_id": 1,
-      "boss": false,
-      "target": false
-    },
-    {
-      "type": "goblin",
-      "pos": [
-        5,
-        5
       ],
       "room_id": 1,
       "boss": false,
@@ -462,7 +452,7 @@
     {
       "type": "lacralion_adulto",
       "pos": [
-        9,
+        5,
         5
       ],
       "room_id": 1,
@@ -492,8 +482,8 @@
     {
       "type": "gigante_guerra",
       "pos": [
-        11,
-        1
+        10,
+        2
       ],
       "room_id": 1,
       "boss": false,
@@ -512,8 +502,8 @@
     {
       "type": "vela_de_fogo",
       "pos": [
-        9,
-        1
+        8,
+        4
       ],
       "room_id": 1,
       "boss": false,
@@ -522,8 +512,8 @@
     {
       "type": "tirano_da_mata",
       "pos": [
-        4,
-        6
+        10,
+        5
       ],
       "room_id": 1,
       "boss": false,
@@ -542,7 +532,7 @@
     {
       "type": "elemental_gelo",
       "pos": [
-        3,
+        2,
         10
       ],
       "room_id": 1,
@@ -572,8 +562,8 @@
     {
       "type": "elemental_ar",
       "pos": [
-        11,
-        10
+        14,
+        4
       ],
       "room_id": 1,
       "boss": false,
@@ -582,8 +572,8 @@
     {
       "type": "elemental_agua",
       "pos": [
-        11,
-        8
+        14,
+        1
       ],
       "room_id": 1,
       "boss": false,
@@ -805,7 +795,6 @@
     "5,4": "terra",
     "4,4": "terra",
     "4,5": "terra",
-    "5,5": "terra",
     "6,5": "terra",
     "8,5": "terra",
     "9,5": "terra",
@@ -931,7 +920,8 @@
     "1,13": "enegrecida",
     "1,1": "terra",
     "7,4": "terra",
-    "7,5": "terra"
+    "7,5": "terra",
+    "5,5": "terra"
   },
   "objectives": {
     "primary": {

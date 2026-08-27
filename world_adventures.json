@@ -2,11 +2,17 @@
   "destino_2": {
     "id": "destino_2",
     "nome": "esconderijo de Leonel",
-    "x": 57.44,
-    "y": 38.93,
+    "x": 58.51,
+    "y": 39.28,
     "fome": 0,
     "sede": 0,
     "dungeons": [
+      {
+        "file": "resgate de elara.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      },
       {
         "file": "Introducao.json",
         "encadear": false,
@@ -264,6 +270,38 @@
     "dungeons": [
       {
         "file": "sala secreta.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": false,
+    "revisitavel": false,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "",
+      "aventura_id": ""
+    },
+    "renome_recompensa": 1
+  },
+  "destino_8": {
+    "id": "destino_8",
+    "nome": "Deserto",
+    "x": 40.36,
+    "y": 58.5,
+    "fome": 0,
+    "sede": 0,
+    "dungeons": [
+      {
+        "file": "deserto.json",
         "encadear": false,
         "intro": "",
         "outro": ""
