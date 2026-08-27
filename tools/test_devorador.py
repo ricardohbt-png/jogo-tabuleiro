@@ -301,8 +301,11 @@ async def main():
     r = setup()
     xama = make_monster(xama_def, {"id": 1, "cx": 5, "cy": 5}); xama["pos"] = [5, 5]
     r.monsters[xama["id"]] = xama
-    check("3 magias 1x/combate cada",
-          xama["ability_uses"] == {"silencio": 1, "amaldicoar": 1, "abencoar": 1})
+    # O contador autoritativo é `spell_uses`, populado de `monster_spells` — a
+    # aba de Magias do editor. O `ability_uses` só recebe magia quando a ficha as
+    # declara em `special_abilities`, o que a sobrescrita nativa não faz.
+    check("4 magias 1x/combate cada",
+          xama["spell_uses"] == {"silencio": 1, "amaldicoar": 1, "abencoar": 1, "medo": 1})
     # Abençoar buffa goblins aliados
     ally = make_monster(comb_def, {"id": 1, "cx": 6, "cy": 5}); ally["pos"] = [6, 5]
     r.monsters[ally["id"]] = ally
@@ -329,7 +332,7 @@ async def main():
     mage = make_player("p1", "Pedro", "mage", 1); mage["pos"] = [5, 6]
     mage["hp"] = 999; mage["max_hp"] = 999; r.players["p1"] = mage
     await r._ai_xama_goblin(xama, [{"kind": "player", "obj": mage}])
-    check("conjura sem dano (silêncio sobre o mago)", xama["ability_uses"]["silencio"] == 0)
+    check("conjura sem dano (silêncio sobre o mago)", xama["spell_uses"]["silencio"] == 0)
     r = setup()
     xama = make_monster(xama_def, {"id": 1, "cx": 5, "cy": 5}); xama["pos"] = [5, 5]
     r.monsters[xama["id"]] = xama
@@ -338,7 +341,7 @@ async def main():
     xama["hp"] = 5   # sofreu dano (max 10)
     await r._ai_xama_goblin(xama, [{"kind": "player", "obj": mage}])
     check("Concentração Frágil bloqueia magia após dano",
-          xama["ability_uses"]["silencio"] == 1 and xama["ability_uses"]["amaldicoar"] == 1)
+          xama["spell_uses"]["silencio"] == 1 and xama["spell_uses"]["amaldicoar"] == 1)
     # Silêncio termina se o xamã morre
     r = setup(); r.rooms = []
     xama = make_monster(xama_def, {"id": 1, "cx": 5, "cy": 5}); xama["pos"] = [5, 5]

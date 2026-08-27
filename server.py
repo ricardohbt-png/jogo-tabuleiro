@@ -19858,7 +19858,9 @@ class GameRoom:
             "duration_rounds": dur, "success": bool(frightened_ids),
             "travel_ms": travel_ms, "impact_ms": 780,
         })
-        await self.gm_say(T("narracao.lanca_medo_alvo_s_afetado_s_por_rodada_s", caster=caster['name'], n=n, dur=dur))
+        # nome_criatura, e não o `name` cru: com o Xamã Goblin lançando, o nome do
+        # monstro tem de sair pelo catálogo, no idioma de quem lê.
+        await self.gm_say(T("narracao.lanca_medo_alvo_s_afetado_s_por_rodada_s", caster=nome_criatura(caster), n=n, dur=dur))
 
     async def _executar_comando(self, caster, magia, data):
         bonus_int = mod(caster.get("int_", 10))
@@ -29045,32 +29047,76 @@ class GameRoom:
         await self.gm_say(
             T("narracao.lanca_abencoar_em_aliado_s_1_ataque_dano", monstro=nome_criatura(m), n=n, dur=dur))
 
+    def _xama_centro_medo(self, m, minimo):
+        """Melhor centro para o Medo, ou None. Escolhe a casa no alcance que pega
+        pelo menos `minimo` heróis e NENHUM monstro — o Xamã inclusive.
+
+        O Medo é área e o `_alvos_na_area` não distingue lado: sem esta escolha o
+        Xamã apavoraria a própria tropa. A varredura usa o mesmo alcance/raio da
+        magia e a mesma função de área do executor, então o que se conta aqui é
+        exatamente quem seria atingido."""
+        magia = GRIMORIO.get("medo") or {}
+        alcance = int(magia.get("alcance", 5))
+        raio = max(1, int(magia.get("area_raio", 2)))
+        melhor, melhor_n = None, 0
+        cx, cy = m["pos"]
+        for ty in range(max(0, cy - alcance), min(MAP_H, cy + alcance + 1)):
+            for tx in range(max(0, cx - alcance), min(MAP_W, cx + alcance + 1)):
+                atingidos = self._alvos_na_area(tx, ty, raio)
+                if any(a.get("id") in self.monsters for a in atingidos):
+                    continue          # pegaria goblin aliado (ou o próprio Xamã)
+                herois = [a for a in atingidos if self._eh_jogador(a)]
+                if len(herois) >= minimo and len(herois) > melhor_n:
+                    melhor, melhor_n = [tx, ty], len(herois)
+        return melhor
+
     async def _xama_tentar_magia(self, m, targets):
-        """Escolhe e lança UMA magia (1/turno, cada 1x/combate). Retorna True se lançou."""
-        uses   = m.get("ability_uses", {})
+        """Escolhe e lança UMA magia (1/turno, cada 1x/combate). Retorna True se lançou.
+
+        A disponibilidade vem de `_magia_monstro_disponivel`, que lê a aba de
+        Magias da ficha (`monster_spells`) — é lá que o editor de criaturas grava.
+        Ler `ability_uses`, como antes, só funcionava para a ficha NATIVA: numa
+        sobrescrita feita no editor o contador vinha vazio e o Xamã não lançava
+        magia nenhuma."""
         heroes = [p for p in self.players.values() if self._ativo(p)]
         if not heroes:
             return False
         def cheb(pos):
             return max(abs(m["pos"][0] - pos[0]), abs(m["pos"][1] - pos[1]))
         # 1) SilÃªncio sobre um conjurador herÃ³i no alcance (anula os magos/clÃ©rigos).
-        if uses.get("silencio", 0) > 0:
+        if self._magia_monstro_disponivel(m, "silencio"):
             casters = sorted((p for p in heroes if p.get("class_id") in ("mage", "cleric")),
                              key=lambda p: cheb(p["pos"]))
             alvo = next((p for p in casters if cheb(p["pos"]) <= 5), None)
             if alvo:
-                await self._xama_silencio(m, alvo["pos"]); uses["silencio"] -= 1; return True
-        # 2) AmaldiÃ§oar sobre o herÃ³i mais prÃ³ximo no alcance.
-        if uses.get("amaldicoar", 0) > 0:
+                self._debitar_magia_monstro(m, "silencio")
+                await self._xama_silencio(m, alvo["pos"]); return True
+        # 2) Medo enquanto o grupo estÃ¡ aglomerado: Ã¡rea raio 2 sÃ³ compensa a
+        #    partir de dois alvos. Com um alvo sÃ³ ele fica para o fim da fila.
+        if self._magia_monstro_disponivel(m, "medo"):
+            centro = self._xama_centro_medo(m, 2)
+            if centro:
+                return await self._lancar_magia_monstro(
+                    m, "medo", {"tx": centro[0], "ty": centro[1]})
+        # 3) AmaldiÃ§oar sobre o herÃ³i mais prÃ³ximo no alcance.
+        if self._magia_monstro_disponivel(m, "amaldicoar"):
             alvo = min(heroes, key=lambda p: cheb(p["pos"]))
             if cheb(alvo["pos"]) <= 5:
-                await self._xama_amaldicoar(m, alvo["pos"]); uses["amaldicoar"] -= 1; return True
-        # 3) AbenÃ§oar aliados goblins prÃ³ximos.
-        if uses.get("abencoar", 0) > 0:
+                self._debitar_magia_monstro(m, "amaldicoar")
+                await self._xama_amaldicoar(m, alvo["pos"]); return True
+        # 4) AbenÃ§oar aliados goblins prÃ³ximos.
+        if self._magia_monstro_disponivel(m, "abencoar"):
             aliados = [o for o in self.monsters.values()
                        if o["hp"] > 0 and o["id"] != m["id"] and cheb(o["pos"]) <= 3]
             if aliados:
-                await self._xama_abencoar(m); uses["abencoar"] -= 1; return True
+                self._debitar_magia_monstro(m, "abencoar")
+                await self._xama_abencoar(m); return True
+        # 5) Ãšltimo recurso: Medo mesmo pegando um herÃ³i sÃ³.
+        if self._magia_monstro_disponivel(m, "medo"):
+            centro = self._xama_centro_medo(m, 1)
+            if centro:
+                return await self._lancar_magia_monstro(
+                    m, "medo", {"tx": centro[0], "ty": centro[1]})
         return False
 
     async def _ai_xama_goblin(self, m, targets):
@@ -29347,6 +29393,20 @@ class GameRoom:
         n = max(1, int(nivel or 1))
         return base + max(escala * (n - 1), (n // 2) * escala, 0)
 
+    def _debitar_magia_monstro(self, m, sid, cfg=None):
+        """Gasta o uso (ou põe em recarga) de uma magia do monstro.
+
+        Separado do `_lancar_magia_monstro` porque o Xamã Goblin tem efeitos
+        BESPOKE para Silêncio/Amaldiçoar/Abençoar — cientes de lado, ao contrário
+        das versões de área do grimório — e mesmo assim precisa debitar pelo
+        mesmo lugar, senão os dois caminhos divergem."""
+        cfg = cfg or self._spell_cfg(m, sid) or {}
+        if cfg.get("limit_mode", "encounter") == "cooldown":
+            m.setdefault("spell_cooldowns", {})[sid] = self.round_num + max(1, int(cfg.get("cooldown_turns", 1)))
+        else:
+            uses = m.setdefault("spell_uses", {}).get(sid, max(1, int(cfg.get("uses_per_combat", 1))))
+            m["spell_uses"][sid] = max(0, uses - 1)
+
     async def _lancar_magia_monstro(self, m, sid, data, cfg=None):
         """Debita uso/recarga e executa a magia. Ponto único usado pela IA
         (_monster_try_spell, que escolhe o alvo) e pelo mestre no Manual (que
@@ -29355,11 +29415,7 @@ class GameRoom:
         magia = GRIMORIO.get(sid)
         if not magia:
             return False
-        if cfg.get("limit_mode", "encounter") == "cooldown":
-            m.setdefault("spell_cooldowns", {})[sid] = self.round_num + max(1, int(cfg.get("cooldown_turns", 1)))
-        else:
-            uses = m.setdefault("spell_uses", {}).get(sid, max(1, int(cfg.get("uses_per_combat", 1))))
-            m["spell_uses"][sid] = max(0, uses - 1)
+        self._debitar_magia_monstro(m, sid, cfg)
         await self._executar_magia_grimorio(m, magia, data)
         return True
 

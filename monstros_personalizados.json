@@ -2689,6 +2689,17 @@
         "guild_category": "especializacao",
         "uses_per_day": 1,
         "cooldown_turns": 0
+      },
+      {
+        "id": "vulnerabilidade",
+        "name": "Vulnerabilidade",
+        "source": "monstro",
+        "action_type": "passiva",
+        "saves": [
+          "vontade"
+        ],
+        "penalty": 2,
+        "descricao": "-2 em testes de Vontade"
       }
     ],
     "monster_abilities": [
@@ -2749,10 +2760,16 @@
         "id": "silencio",
         "limit_mode": "encounter",
         "uses_per_combat": 1
+      },
+      {
+        "id": "medo",
+        "limit_mode": "encounter",
+        "uses_per_combat": 1
       }
     ],
     "negative_ability_ids": [
-      "concentracao_fragil"
+      "concentracao_fragil",
+      "vulnerabilidade"
     ],
     "immunities": [],
     "resistances": [],
@@ -2761,6 +2778,16 @@
         "source_ability": "concentracao_fragil",
         "type": "concentracao_fragil",
         "descricao": "Concentração frágil: ao sofrer dano, pode perder a próxima magia"
+      },
+      {
+        "type": "save_penalty",
+        "saves": [
+          "vontade"
+        ],
+        "bonus_flat": -2,
+        "vulnerabilidade": true,
+        "source_ability": "vulnerabilidade",
+        "descricao": "Vulnerabilidade: -2 nos testes de resistência escolhidos."
       }
     ],
     "equipment_enabled": true,
@@ -2781,11 +2808,32 @@
       "health_potion_small"
     ],
     "guaranteed_loot": [],
-    "loot_table": {},
+    "loot_table": {
+      "1-20": null,
+      "21-40": {
+        "tipo": "item",
+        "id": "garrafa_vinho"
+      },
+      "41-70": {
+        "tipo": "gold",
+        "valor": 2
+      },
+      "71-90": {
+        "tipo": "gold",
+        "valor": 4
+      },
+      "91-98": {
+        "tipo": "gold",
+        "valor": 6
+      },
+      "99-100": {
+        "tipo": "raro_xama"
+      }
+    },
     "loot_drops": [],
     "gold": 0,
     "xp": 0,
-    "ai_type": "agressivo",
+    "ai_type": "goblin_xama",
     "ai_profile": "agressivo",
     "ai_tactics": [],
     "image": "xamaGoblin",
@@ -2816,7 +2864,15 @@
         "min": 1,
         "max": 1
       }
-    ]
+    ],
+    "negative_ability_configs": {
+      "vulnerabilidade": {
+        "penalty": 2,
+        "saves": [
+          "vontade"
+        ]
+      }
+    }
   },
   {
     "type": "estrangulador",
