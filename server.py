@@ -13142,7 +13142,7 @@ class GameRoom:
             # envia apenas o dado final, sempre com a fórmula completa.
             if _desc is not None:
                 await self.broadcast({"type": "dice_roll", "die": "d20", "value": _desc,
-                                       "label": T("dado.ataque_mao_principal") + " — descartado",
+                                       "label": T("dado.descartado", label=T("dado.ataque_mao_principal")),
                                        "discarded": True, "modifier": eff_atk})
                 await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
                                        "label": T("dado.ataque_mao_principal"), "hit": hit, "crit": crit,

@@ -292,6 +292,50 @@ def _rodar_verificacoes():
           "(2nd weapon" in S.t(env.key, "en", **env.params)
           and "equipped" in S.t(env.key, "en", **env.params))
 
+    # 2ª ocorrência da MESMA classe (2026-08-27): o rótulo do d20 DESCARTADO
+    # concatenava `T("dado.ataque_mao_principal") + " — descartado"`, e TODO
+    # ataque de jogador com vantagem/desvantagem estourava TypeError dentro do
+    # handle_attack — munição debitada, dano nunca resolvido, "erro interno" na
+    # tela. A varredura acima (`"log + "`) é estreita demais para pegar isso,
+    # então aqui o caminho é exercitado de verdade: `_rolar_ataque` devolve um
+    # d20 descartado (é o que vantagem/desvantagem produzem) e o ataque roda.
+    dados_desc = []
+
+    async def _cap_dado(msg, *a, **k):
+        if isinstance(msg, dict) and msg.get("type") == "dice_roll" and msg.get("discarded"):
+            dados_desc.append(msg)
+
+    async def _noop_async(*a, **k): pass
+
+    sala_d = S.GameRoom("TESTE_DESCARTE")
+    sala_d.phase = "playing"; sala_d.round_num = 1
+    sala_d.gm_say = _noop_async; sala_d.push_state = _noop_async
+    sala_d.send_to = _noop_async; sala_d.broadcast = _cap_dado
+    sala_d.current_pid = lambda: "h"; sala_d._is_turn = lambda pid: True
+    heroi = S.make_player("h", "Heroi", "warrior", 0)
+    heroi["pos"] = [0, 0]; heroi["alive"] = True
+    heroi["fome"] = 20; heroi["sede"] = 20
+    heroi["weapon"] = {"id": "machado_basico", "name": "Machado", "die": "1d6", "stat": "str_"}
+    sala_d.players["h"] = heroi
+    sala_d.monsters = {"m1": {"id": "m1", "name": "Alvo", "nome": "Alvo", "pos": [0, 1],
+                              "hp": 30, "max_hp": 30, "ac": 10, "ca": 10, "alive": True}}
+    sala_d._rolar_ataque = lambda *a, **k: (True, 15, 18, False, 7)
+    _erro_ataque = None
+    try:
+        _aio.run(sala_d.handle_attack("h", "m1"))
+    except Exception as exc:            # pragma: no cover - é o que se quer evitar
+        _erro_ataque = exc
+    check("ataque com d20 descartado não estoura", _erro_ataque is None)
+    check("o d20 descartado foi anunciado", len(dados_desc) == 1)
+    _rot = dados_desc[0]["label"] if dados_desc else None
+    check("o rótulo do descartado é um T, não uma string montada",
+          isinstance(_rot, S.T))
+    if isinstance(_rot, S.T):
+        check("o descartado sai em português",
+              "descartado" in S.t(_rot.key, "pt", **_rot.params))
+        check("o descartado sai em inglês",
+              "discarded" in S.t(_rot.key, "en", **_rot.params))
+
 
 if __name__ == "__main__":
     print("=" * 62); print("  TESTE — Narração do servidor (etapa 4b-i)"); print("=" * 62)

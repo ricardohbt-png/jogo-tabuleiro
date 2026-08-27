@@ -111,6 +111,10 @@ window.LANG_INTERFACE = {
       "en": "Damage (reaction)",
       "pt": "Dano (reação)"
     },
+    "dado.descartado": {
+      "en": "{label} — discarded",
+      "pt": "{label} — descartado"
+    },
     "dado.explosao_6d6": {
       "en": "🔥 Blast 6d6",
       "pt": "🔥 Explosão 6d6"
