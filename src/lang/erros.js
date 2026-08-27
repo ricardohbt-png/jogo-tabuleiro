@@ -1261,6 +1261,10 @@ window.LANG_ERROS = {
     "en": "Minion already attacked this turn.",
     "pt": "Servo já atacou neste turno."
   },
+  "erro.servo_ja_usou_a_acao_bonus": {
+    "en": "Minion already used its bonus action this turn.",
+    "pt": "Servo já usou a ação bônus neste turno."
+  },
   "erro.servo_nao_esta_adjacente_ao_alvo": {
     "en": "Minion isn't adjacent to the target.",
     "pt": "Servo não está adjacente ao alvo."

@@ -15,6 +15,17 @@ def check(name, cond):
     if cond: PASS += 1; print(f"  ✅ {name}")
     else:    FAIL += 1; print(f"  ❌ {name}")
 
+async def entrar_na_masmorra(r, pid="p1", nova=False):
+    """Entra na masmorra E libera a transição autoritativa de 3 s.
+
+    Desde que o `enter_dungeon` passou a abrir a janela `dungeon_intro_active`,
+    o `current_pid()` devolve None enquanto ela está de pé e TODA ação é
+    recusada — é a transição que o jogador vê. O teste não pode dormir 3 s nem
+    mexer nos flags na mão: chama a mesma liberação que o jogo chama, que
+    também inicia o turno (`_activate_initiative_actor`)."""
+    await r.enter_dungeon(pid)
+    await r._liberar_intro_masmorra(nova)
+
 def forcar_turno(r, pid):
     """Posiciona a INICIATIVA no herói `pid` (sistema atual). Substitui o antigo
     `r.turn_index = r.player_order.index(pid)`, que não tem efeito desde que os
@@ -50,7 +61,7 @@ def setup_authored(defn=None):
 async def test_instanciar():
     print("\n[1] carregador instancia exit/prisoner/objectives")
     r = setup_authored()
-    await r.enter_dungeon("p1")
+    await entrar_na_masmorra(r, "p1")
     check("exit_pos do arquivo", r.exit_pos == [14, 4])
     check("objectives carregados", r.objectives and r.objectives["primary"]["type"] == "rescue_prisoner")
     check("prisioneiro instanciado (cativo, vivo)",
@@ -72,7 +83,7 @@ async def test_conclusao_simples():
         r = setup_authored()
         d = r.dungeon_def
         d["objectives"] = {"primary": {"type": primary_type}, "secondary": []}
-        await r.enter_dungeon("p1")
+        await entrar_na_masmorra(r, "p1")
         vit = {"chamado": False, "victory": None}
         async def fake_end(victory, story=None): vit["chamado"] = True; vit["victory"] = victory
         r.end_game = fake_end
@@ -87,7 +98,7 @@ async def test_conclusao_simples():
     check("kill_all NAO encerra automaticamente", vit["chamado"] is False)
 
     r2 = setup_authored(); r2.dungeon_def["objectives"] = {"primary": {"type": "kill_all"}, "secondary": []}
-    await r2.enter_dungeon("p1")
+    await entrar_na_masmorra(r2, "p1")
     await r2._check_objectives()
     check("kill_all com monstros vivos nao libera encerramento", r2.mission_complete_pending is False)
 
@@ -111,7 +122,7 @@ async def test_prisioneiro():
     print("\n[3] prisioneiro: libertar, seguir, escolta, morte")
     r = setup_authored()
     r.dungeon_def["objectives"] = {"primary": {"type": "rescue_prisoner"}, "secondary": []}
-    await r.enter_dungeon("p1")
+    await entrar_na_masmorra(r, "p1")
     p1 = r.players["p1"]
     # herói adjacente ao prisioneiro cativo
     p1["pos"] = [r.prisoner["pos"][0] - 1, r.prisoner["pos"][1]]
@@ -130,7 +141,7 @@ async def test_prisioneiro():
     # morte do prisioneiro → falha, sem encerrar. Força o ataque a ACERTAR (d20=20).
     r2 = setup_authored()
     r2.dungeon_def["objectives"] = {"primary": {"type": "rescue_prisoner"}, "secondary": []}
-    await r2.enter_dungeon("p1")
+    await entrar_na_masmorra(r2, "p1")
     r2.prisoner["freed"] = True; r2.prisoner["hp"] = 1
     vit = {"c": False}
     async def fe(victory, story=None): vit["c"] = True
@@ -151,7 +162,7 @@ async def test_prisioneiro():
     # CA 10 protege: ataque que ERRA (d20=1) não tira HP.
     r3 = setup_authored()
     r3.dungeon_def["objectives"] = {"primary": {"type": "rescue_prisoner"}, "secondary": []}
-    await r3.enter_dungeon("p1")
+    await entrar_na_masmorra(r3, "p1")
     r3.prisoner["freed"] = True; r3.prisoner["hp"] = 5
     server.d20_attack = lambda atk, ac: (False, 1, 1 + atk, False)   # sempre erra
     try:
@@ -167,7 +178,7 @@ async def test_bonus_secundario():
     r = setup_authored()
     r.dungeon_def["objectives"] = {"primary": {"type": "kill_all"},
                                    "secondary": [{"type": "open_key_chest"}]}
-    await r.enter_dungeon("p1")
+    await entrar_na_masmorra(r, "p1")
     vit = {"c": False}
     async def fe(victory=True, story=None): vit["c"] = True
     r.end_game = fe
@@ -188,7 +199,7 @@ async def test_serializacao():
     async def cap(msg, skip=None):
         if msg.get("type") == "game_state": capturado.update(msg)
     r.broadcast = cap
-    await r.enter_dungeon("p1")
+    await entrar_na_masmorra(r, "p1")
     await GameRoom.push_state(r)   # usa o push_state real (não o stub do setup)
     check("game_state traz exit_pos", capturado.get("exit_pos") == [14, 4])
     check("game_state traz prisoner", capturado.get("prisoner") is not None)
@@ -214,7 +225,7 @@ async def test_prisioneiro_controle():
     print("\n[6] prisioneiro liberto é controlado manualmente (janela pós-turno)")
     r = setup_authored()
     r.dungeon_def["objectives"] = {"primary": {"type": "rescue_prisoner"}, "secondary": []}
-    await r.enter_dungeon("p1")
+    await entrar_na_masmorra(r, "p1")
     # Tira os monstros do caminho para isolar o movimento.
     for m in r.monsters.values(): m["hp"] = 0
     pr = r.prisoner
@@ -256,7 +267,7 @@ async def test_prisioneiro_armadilha():
     print("\n[9] prisioneiro sofre armadilhas (save +0 em reflexos/fortitude)")
     r = setup_authored()
     r.dungeon_def["objectives"] = {"primary": {"type": "rescue_prisoner"}, "secondary": []}
-    await r.enter_dungeon("p1")
+    await entrar_na_masmorra(r, "p1")
     for m in r.monsters.values(): m["hp"] = 0
     pr = r.prisoner
     pr["freed"] = True; pr["alive"] = True; pr["rescuer_pid"] = "p1"; pr["moves_left"] = 6
@@ -298,7 +309,7 @@ async def test_prisioneiro_armadilha_progressiva():
     print("\n[10] prisioneiro sofre dano progressivo de armadilha (incendiária)")
     r = setup_authored()
     r.dungeon_def["objectives"] = {"primary": {"type": "rescue_prisoner"}, "secondary": []}
-    await r.enter_dungeon("p1")
+    await entrar_na_masmorra(r, "p1")
     for m in r.monsters.values(): m["hp"] = 0
     pr = r.prisoner
     pr["freed"] = True; pr["alive"] = True; pr["rescuer_pid"] = "p1"; pr["moves_left"] = 6
@@ -331,7 +342,7 @@ async def test_reward_dividido():
         "primary": {"type": "kill_all",
                     "xp": 40, "reward": {"gold": 80, "items": [{"id": "shortsword"}]}},
         "secondary": []}
-    await r.enter_dungeon("p1")
+    await entrar_na_masmorra(r, "p1")
     p1, p2 = r.players["p1"], r.players["p2"]
     xp1, xp2, ouro1 = p1["xp"], p2["xp"], p1["gold"]
     loot = []
@@ -348,7 +359,7 @@ async def test_reward_default_secundario():
     r = setup_authored()
     r.dungeon_def["objectives"] = {"primary": {"type": "kill_all"},
                                    "secondary": [{"type": "open_key_chest"}]}
-    await r.enter_dungeon("p1")
+    await entrar_na_masmorra(r, "p1")
     p1 = r.players["p1"]; xp0, ouro0 = p1["xp"], p1["gold"]
     loot = []
     await r._conceder_objetivo_reward(r.objectives["secondary"][0], is_primary=False, loot_acc=loot)
@@ -362,7 +373,7 @@ async def test_encerrar_missao():
     r.dungeon_def["objectives"] = {
         "primary": {"type": "kill_all", "xp": 60, "reward": {"items": [{"id": "shortsword"}]}},
         "secondary": []}
-    await r.enter_dungeon("p1")
+    await entrar_na_masmorra(r, "p1")
     vit = {"c": False, "v": None}
     async def fe(victory, story=None): vit["c"] = True; vit["v"] = victory
     r.end_game = fe

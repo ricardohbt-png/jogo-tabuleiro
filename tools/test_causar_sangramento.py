@@ -14,6 +14,13 @@ def check(label, condition):
 
 
 raw = deepcopy(next(m for m in S.MONSTER_DEFS if m["type"] == "goblin"))
+# O goblin efetivo pode já ser uma SOBRESCRITA do nativo, feita no editor de
+# criaturas — nesse caso a cópia herda `overwrite_native`/`_personalizado`, e o
+# validador recusa (corretamente) uma sobrescrita cujo `type` mudou. Aqui a ficha
+# é nova, não uma sobrescrita: os dois flags saem junto com a cópia.
+raw.pop("overwrite_native", None)
+raw.pop("original_type", None)
+raw.pop("_personalizado", None)
 raw.update({
     "type": "teste_causar_sangramento",
     "name": "Teste Sangramento",

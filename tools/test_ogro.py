@@ -56,7 +56,12 @@ check(CLAVA["hp"]==41 and CLAVA["ac"]==14 and CLAVA["size"]==[1,1] and CLAVA["mo
 check(LANCA["ac"]==16 and LANCA.get("reach_lanca") is True, "Lança: CA16 + alcance estendido")
 check(CLAVA["attacks"][0]["damage"]=="1d12+4", "Clava 1d12+4")
 check(LANCA["attacks"][0]["damage"]=="1d10+4", "Lança 1d10+4")
-check(any(w.get("save")=="vontade" and w.get("bonus_flat")==-2 for w in CLAVA["weaknesses"]), "Mente Bruta: -2 Vontade")
+# A ficha declara a penalidade na forma PLURAL (`saves: [...]`) desde a unificação
+# das habilidades, em que `mente_bruta` virou um alias de `vulnerabilidade`. O motor
+# lê as duas formas (`w.get("saves", w.get("save"))`), então o -2 continua valendo;
+# o teste afirma a forma efetiva, não a antiga.
+check(any("vontade" in (w.get("saves") or ([w["save"]] if w.get("save") else []))
+          and w.get("bonus_flat")==-2 for w in CLAVA["weaknesses"]), "Mente Bruta: -2 Vontade")
 
 # ── 2) Alcance da lança ──────────────────────────────────────────────────────
 print("[2] Alcance da lança (2 reto / 1 diagonal)")

@@ -13,6 +13,17 @@ def check(name, cond):
     if cond: PASS += 1; print(f"  ✅ {name}")
     else:    FAIL += 1; print(f"  ❌ {name}")
 
+async def entrar_na_masmorra(r, pid="p1", nova=False):
+    """Entra na masmorra E libera a transição autoritativa de 3 s.
+
+    Desde que o `enter_dungeon` passou a abrir a janela `dungeon_intro_active`,
+    o `current_pid()` devolve None enquanto ela está de pé e TODA ação é
+    recusada — é a transição que o jogador vê. O teste não pode dormir 3 s nem
+    mexer nos flags na mão: chama a mesma liberação que o jogo chama, que
+    também inicia o turno (`_activate_initiative_actor`)."""
+    await r.enter_dungeon(pid)
+    await r._liberar_intro_masmorra(nova)
+
 def forcar_turno(r, pid):
     """Posiciona a INICIATIVA no herói `pid` (sistema atual). Os turnos são
     regidos por `initiative_order`/`initiative_index` desde o Modo Mestre Fase A,
@@ -48,7 +59,7 @@ def setup_authored():
 async def main():
     print("\n[1] handle_move grava facing = [dx,dy] a cada passo")
     r = setup_authored()
-    await r.enter_dungeon("p1")
+    await entrar_na_masmorra(r, "p1")
     forcar_turno(r, "p1")
     p = r.players["p1"]
     check("facing ausente antes do 1º passo", "facing" not in p)
@@ -70,7 +81,7 @@ async def main():
     check("facing setado antes do reset (sanity)", "facing" in p)
     r.phase = "city"                   # simula volta pra cidade
     r.dungeon_generated = True         # reentrada na MESMA masmorra (nova=False)
-    await r.enter_dungeon("p1")
+    await entrar_na_masmorra(r, "p1")
     check("facing limpo ao reentrar na masmorra", "facing" not in r.players["p1"])
 
     print(f"\n{'='*50}\nPASS={PASS} FAIL={FAIL}")

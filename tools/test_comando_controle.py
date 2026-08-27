@@ -43,7 +43,12 @@ def montar():
     q = make_player("p2", "Outro", "warrior", 1)
     q["pos"] = [1, 1]; q["alive"] = True; q["connected"] = True
     r.players = {"p1": p, "p2": q}; r.player_order = ["p1", "p2"]
-    m = make_monster(MONSTER_DEFS[0], {"id":"r0","cx":6,"cy":5})
+    # Alvo tem de ser encantável: mortos-vivos são IMUNES a encantamento, e o
+    # Comando nem chega a abrir a janela contra eles. O primeiro item de
+    # MONSTER_DEFS é o esqueleto, então a escolha aqui é explícita.
+    alvo_def = next(d for d in MONSTER_DEFS
+                    if not d.get("undead") and not d.get("construct"))
+    m = make_monster(alvo_def, {"id":"r0","cx":6,"cy":5})
     m["id"] = "m1"; m["pos"] = [6, 5]; m["hp"] = 20; m["room_id"] = "r0"; m["alertado"] = True
     r.monsters = {"m1": m}
     r.initiative_active = True

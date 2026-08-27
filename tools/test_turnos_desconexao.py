@@ -23,6 +23,17 @@ def check(name, cond):
     if cond: PASS += 1; print(f"  ✅ {name}")
     else:    FAIL += 1; print(f"  ❌ {name}")
 
+async def entrar_na_masmorra(r, pid="p1", nova=False):
+    """Entra na masmorra E libera a transição autoritativa de 3 s.
+
+    Desde que o `enter_dungeon` passou a abrir a janela `dungeon_intro_active`,
+    o `current_pid()` devolve None enquanto ela está de pé e TODA ação é
+    recusada — é a transição que o jogador vê. O teste não pode dormir 3 s nem
+    mexer nos flags na mão: chama a mesma liberação que o jogo chama, que
+    também inicia o turno (`_activate_initiative_actor`)."""
+    await r.enter_dungeon(pid)
+    await r._liberar_intro_masmorra(nova)
+
 def setup(n=3, limit=999):
     r = GameRoom("TEST")
     async def noop(*a, **k): pass
@@ -59,7 +70,7 @@ def iniciativa_jogadores(r):
 async def main():
     print("\n[1] enter_dungeon inicia o timer do turno")
     r = setup()
-    await r.enter_dungeon("p1")
+    await entrar_na_masmorra(r, "p1")
     iniciativa_jogadores(r)
     check("timer iniciado (started_ms definido)", r.turn_timer_started_ms is not None)
     check("tarefa de timer criada", r.turn_timer_task is not None)
@@ -67,7 +78,7 @@ async def main():
 
     print("\n[2] Desconexão de jogador que NÃO é a vez → é pulado")
     r = setup()
-    await r.enter_dungeon("p1")                  # vez de p1
+    await entrar_na_masmorra(r, "p1")            # vez de p1
     iniciativa_jogadores(r)
     await r.handle_disconnect_em_jogo("p2")      # p2 cai (não é a vez)
     check("p2 marcado desconectado", r.players["p2"]["connected"] is False)
@@ -78,7 +89,7 @@ async def main():
 
     print("\n[3] Desconexão de QUEM é a vez → turno avança sozinho")
     r = setup()
-    await r.enter_dungeon("p1")
+    await entrar_na_masmorra(r, "p1")
     iniciativa_jogadores(r)
     check("pré: vez de p1", r.current_pid() == "p1")
     await r.handle_disconnect_em_jogo("p1")      # cai no próprio turno
@@ -105,7 +116,7 @@ async def main():
 
     print("\n[5] _forcar_fim_turno encerra igual ao end_turn manual")
     r = setup()
-    await r.enter_dungeon("p1")
+    await entrar_na_masmorra(r, "p1")
     iniciativa_jogadores(r)
     antes = r.current_pid()
     await r._forcar_fim_turno(antes)
@@ -115,7 +126,7 @@ async def main():
 
     print("\n[6] Timer de 30s esgota → encerra o turno automaticamente")
     r = setup(limit=0.05)                        # 50ms p/ não esperar
-    await r.enter_dungeon("p1")
+    await entrar_na_masmorra(r, "p1")
     iniciativa_jogadores(r)
     antes = r.current_pid()
     r._iniciar_timer_turno()

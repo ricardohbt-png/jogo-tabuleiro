@@ -355,6 +355,10 @@ def test_fim_da_rota_persistido():
 
 async def _entrar_e_posicionar_na_escada(r, pid="p1"):
     await r.handle_world_adventure("p1", "test_seq")
+    # A entrada abre a transição autoritativa de 3 s (`dungeon_intro_active`):
+    # enquanto ela está de pé, `current_pid()` é None e o handle_exit_dungeon
+    # recusa por não ser o turno. Liberamos pelo mesmo caminho do jogo.
+    await r._liberar_intro_masmorra(False)
     r.players[pid]["pos"] = list(r.stairs_pos)
     r.initiative_order = [{"kind": "player", "id": pid, "seq": 0, "initiative": 99,
                            "dex": 0, "int": 0}]

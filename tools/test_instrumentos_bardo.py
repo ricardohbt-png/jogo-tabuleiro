@@ -63,6 +63,15 @@ def _room_bardo():
     # como vazio (nenhuma oclusão) para os caminhos de visão de monstro.
     room._decor_tall_tiles = set()
     room._mat_oclui_tiles = set()
+    # Filas efêmeras do feedback visual de combate (dano, efeito positivo e
+    # resultado de resistência). São consumidas junto do próximo game_state;
+    # como o room aqui nasce de __new__, sem elas qualquer save dispara
+    # AttributeError em _registrar_resultado_resistencia. Espelha o __init__.
+    room._combat_damage_events = []
+    room._positive_effect_events = []
+    room._resistance_events = []
+    room._damage_visual_context = {}
+    room._attack_feedback_seq = 0
     # Modo Mestre: sem mestre neste harness (master_pid None → _mestre_ativo()
     # False → dormência por sala-trancada, caminho SEM-mestre). Espelha o __init__.
     room.master_pid = None

@@ -11417,8 +11417,19 @@ class GameRoom:
             await asyncio.sleep(3.0)
         except asyncio.CancelledError:
             return
+        await self._liberar_intro_masmorra(nova)
+
+    async def _liberar_intro_masmorra(self, nova):
+        """O que acontece quando a transição termina, sem a espera.
+
+        Separado do `_finalizar_intro_masmorra` para que a liberação seja um
+        passo nomeado da máquina de estados: enquanto ela não roda, `current_pid`
+        devolve None e ninguém age. Os testes chamam este método em vez de dormir
+        3 s ou de mexer nos flags na mão — assim exercitam o mesmo caminho do
+        jogo, incluindo o `_activate_initiative_actor` que inicia o turno."""
         if self.phase != "playing" or not self.dungeon_intro_active:
             return
+        self._cancelar_intro_masmorra()
         self.dungeon_intro_active = False
         self.dungeon_intro_until_ms = None
         self.dungeon_intro_task = None
