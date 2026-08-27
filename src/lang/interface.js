@@ -55,6 +55,10 @@ window.LANG_INTERFACE = {
       "en": "🗡️ Attack (Off Hand)",
       "pt": "🗡️ Ataque (Mão Secundária)"
     },
+    "dado.bordao_cd": {
+      "en": "Staff — stun DC",
+      "pt": "Bordão — CD do atordoamento"
+    },
     "dado.bola_de_fogo": {
       "en": "Fireball",
       "pt": "Bola de Fogo"
@@ -90,6 +94,10 @@ window.LANG_INTERFACE = {
     "dado.dano": {
       "en": "Damage",
       "pt": "Dano"
+    },
+    "dado.dano_retaliacao": {
+      "en": "Retaliation Damage",
+      "pt": "Dano de Retalia\u00e7\u00e3o"
     },
     "dado.dano_2a_mao": {
       "en": "Damage (off hand)",
@@ -474,6 +482,34 @@ window.LANG_INTERFACE = {
     "ui.armadilha.bau_engolidor.desc": {
       "en": "Can only be placed on an object. Reflex DC 20 avoids; on a failure the target is trapped until it passes Strength DC 20.",
       "pt": "Só pode ser colocado em um objeto. Reflexos CD 20 evita; na falha, fica preso até passar em Força CD 20."
+    },
+    "ui.armadilha.engolido.titulo": {
+      "en": "Swallowed",
+      "pt": "Engolido"
+    },
+    "ui.armadilha.engolido.status": {
+      "en": "🫀 SWALLOWED",
+      "pt": "🫀 ENGOLIDO"
+    },
+    "ui.armadilha.engolido.desc": {
+      "en": "The Tyrant of the Wild swallowed you. You are inside its stomach until you escape or break a path out.",
+      "pt": "O Tirano da Mata engoliu você. Você permanece dentro do estômago até escapar ou abrir caminho para fora."
+    },
+    "ui.armadilha.engolido.dano": {
+      "en": "🧪 Suffers {dano} acid damage at the start of each turn.",
+      "pt": "🧪 Sofre {dano} de dano ácido no início de cada turno."
+    },
+    "ui.armadilha.engolido.movimento": {
+      "en": "🚫 Cannot move while swallowed.",
+      "pt": "🚫 Não pode se mover enquanto estiver engolido."
+    },
+    "ui.armadilha.engolido.ataque": {
+      "en": "⚔️ Can attack only the inside of the Tyrant.",
+      "pt": "⚔️ Pode atacar somente o interior do Tirano."
+    },
+    "ui.armadilha.engolido.escape": {
+      "en": "💪 Spend the action to attempt Strength DC {dc} and escape.",
+      "pt": "💪 Gaste a ação para tentar Força CD {dc} e escapar."
     },
     "ui.armadilha.buraco.desc": {
       "en": "Reflex DC 10 or lose your movement. Permanent.",
@@ -1699,6 +1735,18 @@ window.LANG_INTERFACE = {
       "en": "📐 <strong style=\"color:#c8a951\">Extended Reach:</strong> Hits 2 adjacent squares in front and 1 adjacent diagonal square. Requires two hands — incompatible with a shield.",
       "pt": "📐 <strong style=\"color:#c8a951\">Alcance Estendido:</strong> Atinge 2 casas adjacentes à frente e 1 casa diagonal adjacente. Requer duas mãos — incompatível com escudo."
     },
+    "ui.habilidade.alcance_lanca": {
+      "en": "🔱 <strong style=\"color:#c8a951\">Extended Reach:</strong> Hits up to 2 orthogonal squares ahead or 1 adjacent diagonal square. It does not require two hands.",
+      "pt": "🔱 <strong style=\"color:#c8a951\">Alcance Estendido:</strong> Atinge até 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Não requer duas mãos."
+    },
+    "ui.habilidade.impacto_bordao": {
+      "en": "💫 <strong style=\"color:#c8a951\">Concussive Critical:</strong> On a natural 20, the target makes Fortitude DC 10 + 1d6. On a failure, it becomes stunned and loses its next action. Does not affect constructs or undead.",
+      "pt": "💫 <strong style=\"color:#c8a951\">Impacto Atordoante:</strong> Em um 20 natural, o alvo faz Fortitude CD 10 + 1d6. Se falhar, fica tonto e perde sua próxima ação. Não funciona contra construtos nem mortos-vivos."
+    },
+    "ui.habilidade.cajado_arcano": {
+      "en": "✨ <strong style=\"color:#cc44ff\">Arcane Staff:</strong> Damage spells deal +2 damage of the spell's type. Area spells gain exactly 1 square in each dimension (3x3 becomes 4x4). Grants one extra 1st-circle spell slot, used last and recharging after 20 rounds; the slot disappears when unequipped.",
+      "pt": "✨ <strong style=\"color:#cc44ff\">Cajado Arcano:</strong> Magias de dano causam +2 de dano do tipo da magia. Magias de área ganham exatamente 1 quadrado em cada dimensão (3x3 passa a 4x4). Concede 1 slot extra de magia de 1º círculo, usado por último e recarregado após 20 rodadas; o slot desaparece ao desequipar."
+    },
     "ui.habilidade.alcance_chicote": {
       "en": "🔄 <strong style=\"color:#c8a951\">Extended Reach:</strong> Hits 2 adjacent squares and 1 adjacent diagonal square without having to move to the target.",
       "pt": "🔄 <strong style=\"color:#c8a951\">Alcance Estendido:</strong> Atinge 2 quadrados adjacentes e 1 quadrado diagonal adjacente sem precisar se mover até o alvo."
@@ -1902,6 +1950,42 @@ window.LANG_INTERFACE = {
     "ui.hud.apagar_chamas": {
       "en": "Put out flames",
       "pt": "Apagar chamas"
+    },
+    "ui.fogo.prompt_titulo": {
+      "en": "🔥 You are on fire",
+      "pt": "🔥 Você está em chamas"
+    },
+    "ui.fogo.prompt_texto": {
+      "en": "The flames will cause residual damage. Choose how to put them out ({n} round(s) remaining):",
+      "pt": "As chamas causarão dano residual. Escolha como apagá-las ({n} rodada(s) restantes):"
+    },
+    "ui.fogo.usar_agua": {
+      "en": "💧 Use a water bottle/canteen (free)",
+      "pt": "💧 Usar garrafa/cantil de água (grátis)"
+    },
+    "ui.fogo.gastar_acao": {
+      "en": "🔥 Spend your action to put out the fire",
+      "pt": "🔥 Gastar sua ação para apagar o fogo"
+    },
+    "ui.fogo.nao_apagar": {
+      "en": "Do not put it out",
+      "pt": "Não apagar (sofrer o dano)"
+    },
+    "ui.fogo.agua_disponivel": {
+      "en": "Water is available and puts out these flames without spending the action.",
+      "pt": "Há água disponível e ela apaga estas chamas sem gastar a ação."
+    },
+    "ui.fogo.sem_agua": {
+      "en": "No water bottle or canteen is available.",
+      "pt": "Você não possui garrafa ou cantil de água."
+    },
+    "ui.fogo.agua_fogo_grego": {
+      "en": "Greek Fire cannot be put out with water.",
+      "pt": "Fogo Grego não pode ser apagado com água."
+    },
+    "ui.fogo.acao_indisponivel": {
+      "en": "The action is not available right now.",
+      "pt": "A ação não está disponível no momento."
     },
     "ui.hud.arma_envenenada": {
       "en": "poisoned weapon",
@@ -2555,9 +2639,13 @@ window.LANG_INTERFACE = {
       "en": "Range: every adjacent square",
       "pt": "Alcance: todos os quadrados adjacentes"
     },
+    "ui.item.desc.alcance_mangual": {
+      "en": "Range: 1 square — any of the 8 adjacent squares, including diagonals",
+      "pt": "Alcance: 1 quadrado — qualquer uma das 8 casas adjacentes, incluindo diagonais"
+    },
     "ui.item.desc.alcance_lanca": {
-      "en": "Range 2 (straight) / 1 (diag)",
-      "pt": "Alcance 2 (reto) / 1 (diag)"
+      "en": "Range: 2 orthogonal squares ahead or 1 adjacent diagonal square",
+      "pt": "Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente"
     },
     "ui.item.desc.alcance_quad": {
       "en": "Range: {n} sq.",
@@ -2686,6 +2774,10 @@ window.LANG_INTERFACE = {
     "ui.item.desc.prata": {
       "en": "Silver",
       "pt": "Prata"
+    },
+    "ui.item.desc.prata_arma": {
+      "en": "Silver: withstands 5 corrosion levels (the first 2 without penalties) and can damage enemies resistant to normal weapons",
+      "pt": "Prata: resiste a 5 níveis de corrosão (os 2 primeiros sem penalidade) e pode causar dano em inimigos resistentes a armas normais"
     },
     "ui.item.desc.racao": {
       "en": "+{n} hunger and thirst",
@@ -3049,7 +3141,7 @@ window.LANG_INTERFACE = {
     },
     "ui.item.veneno_polvo_abissal.desc": {
       "en": "Blinds for 1d4 rounds — -4 to attacks, no ranged (Fort. DC 11). Partial failure: -2 perception.",
-      "pt": "Cega por 1d4 rodadas — -4 em ataques, sem ranged (Fort. dif. 11). Falha parcial: -2 percepção."
+      "pt": "Falha em Fortitude CD 11: cego por 1d4 rodadas, visão 1 quadrado, -5 percepção, -4 em ataques e sem ataques à distância. Sucesso: -2 percepção por 1d4 rodadas."
     },
     "ui.item.vidro_acido_grande.desc": {
       "en": "Throw (4 sq., DEX attack). 2d6 acid + half on the next round. Corrodes the target's defence (−2 AC per hit).",
@@ -3143,6 +3235,10 @@ window.LANG_INTERFACE = {
       "en": "🏹 Ammunition",
       "pt": "🏹 Munição"
     },
+    "ui.loja.aba.reparar": {
+      "en": "🔧 Repair",
+      "pt": "🔧 Reparar"
+    },
     "ui.loja.aba.pergaminhos": {
       "en": "📜 Scrolls",
       "pt": "📜 Pergaminhos"
@@ -3166,6 +3262,30 @@ window.LANG_INTERFACE = {
     "ui.loja.comprar": {
       "en": "Buy",
       "pt": "Comprar"
+    },
+    "ui.loja.reparo.nivel": {
+      "en": "Corrosion: {n} level(s)",
+      "pt": "Corrosão: {n} nível(is)"
+    },
+    "ui.loja.reparo.equipado": {
+      "en": "Equipped",
+      "pt": "Equipado"
+    },
+    "ui.loja.reparo.bolsa": {
+      "en": "Backpack",
+      "pt": "Bolsa"
+    },
+    "ui.loja.reparo.custo_nivel": {
+      "en": "{n} coin(s) per level",
+      "pt": "{n} moeda(s) por nível"
+    },
+    "ui.loja.reparo.vazio": {
+      "en": "No weapons, armour or shields need repair.",
+      "pt": "Nenhuma arma, armadura ou escudo precisa de reparo."
+    },
+    "ui.loja.reparo.botao": {
+      "en": "Repair all",
+      "pt": "Reparar tudo"
     },
     "ui.loja.curar": {
       "en": "Cure",
@@ -5400,8 +5520,8 @@ window.LANG_INTERFACE = {
       "pt": "Nenhum bônus ou penalidade temporária."
     },
     "ui.status.tecla_s": {
-      "en": "S key",
-      "pt": "tecla S"
+      "en": "E key",
+      "pt": "tecla E"
     },
     "ui.status.titulo": {
       "en": "📊 STATUS",
@@ -5662,6 +5782,30 @@ window.LANG_INTERFACE = {
     "ui.tooltip.visao": {
       "en": "Vision",
       "pt": "Visão"
+    },
+    "ui.atalhos.titulo": {
+      "en": "SHORTCUTS",
+      "pt": "ATALHOS"
+    },
+    "ui.atalhos.ajuda": {
+      "en": "S to toggle · drag actions here",
+      "pt": "S abre/fecha · arraste ações para cá"
+    },
+    "ui.atalhos.vazio": {
+      "en": "Empty shortcut",
+      "pt": "Atalho vazio"
+    },
+    "ui.atalhos.clique_ativar": {
+      "en": "click or press its key to use",
+      "pt": "clique ou pressione a tecla para usar"
+    },
+    "ui.atalhos.removido": {
+      "en": "Shortcut removed",
+      "pt": "Atalho removido"
+    },
+    "ui.atalhos.item_indisponivel": {
+      "en": "That item is no longer in your bag.",
+      "pt": "Esse item não está mais na sua bolsa."
     }
   };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

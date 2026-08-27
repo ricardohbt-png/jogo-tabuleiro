@@ -4,12 +4,13 @@ Execute da raiz: python tools/test_armaduras.py
 """
 import os
 import sys
+from copy import deepcopy
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from server import (
     SHOP_ARMORS, CORROSAO_ARMADURA_ORGANICA, CORROSAO_ARMADURA_METAL,
-    make_player,
+    GameRoom, _DUNGEON_ITEM_CATALOG, make_player, mod,
 )
 
 
@@ -54,6 +55,17 @@ def main():
     paladin = make_player("test_p", "Paladino", "paladin", 1)
     check("inicial do guerreiro preserva categoria", warrior["gear"]["armor"]["armor_category"] == "leve")
     check("inicial do paladino preserva categoria", paladin["gear"]["armor"]["armor_category"] == "media")
+
+    # Saques nativos chegam do catálogo com kind/ac_bonus, sem o formato de
+    # efeito usado pelo gear dos heróis. Cada armadura deve aplicar sua CA ao
+    # ser equipada, sem alterar o catálogo usado pelos monstros.
+    room = GameRoom("test_armaduras")
+    for item_id, (expected_category, _materials) in expected.items():
+        p = make_player(f"p_{item_id}", "Teste", "warrior", 0)
+        room._equip_into_slot(p, deepcopy(_DUNGEON_ITEM_CATALOG[item_id]), "armor")
+        expected_ac = 10 + mod(p["dex"]) + armor(item_id)["ac_bonus"]
+        check(f"{item_id}: saque aplica bônus de CA", p["ac"] == expected_ac)
+        check(f"{item_id}: saque vira item de armadura", p["gear"]["armor"]["item_slot"] == "armor")
     print("\nCategorias e materiais de armaduras: OK")
 
 

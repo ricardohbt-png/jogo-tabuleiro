@@ -114,7 +114,22 @@
   }
   function monsterTiles(monster, pos) {
     const p = pos || (monster && monster.pos) || [0, 0];
-    return tilesFor(p, monsterSize(monster), monsterOriented(monster) ? (monster.facing || [0, 1]) : null);
+    const size = monsterSize(monster);
+    if (monsterOriented(monster)) {
+      const f = monster.facing || [0, 1];
+      const [w, h] = size;
+      const [width, length] = h === 1 ? [1, w] : [w, h];
+      const [px, py] = [-f[1], f[0]], out = [];
+      // A âncora é a fileira frontal; o corpo cresce para trás, como no jogo.
+      for (let depth = 0; depth < length; depth++) {
+        for (let lane = 0; lane < width; lane++) {
+          out.push([p[0] - f[0] * depth + px * lane,
+                    p[1] - f[1] * depth + py * lane]);
+        }
+      }
+      return out;
+    }
+    return tilesFor(p, size, null);
   }
   function monsterImageName(monster) {
     const meta = monsterMeta(monster);
@@ -599,6 +614,26 @@
     ctx.restore();
   }
 
+  function drawDunePreview(x, y) {
+    const px = x * CELL, py = y * CELL, s = CELL - 1;
+    ctx.fillStyle = "#5f3a1d";
+    ctx.fillRect(px, py, s, s);
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(px + s * .5, py + s * .53, s * .55, s * .57, 0, 0, Math.PI * 2);
+    ctx.clip();
+    const g = ctx.createLinearGradient(px, py, px + s, py + s);
+    g.addColorStop(0, "#d7b66f"); g.addColorStop(.55, "#c39a55"); g.addColorStop(1, "#9f6e32");
+    ctx.fillStyle = g; ctx.fillRect(px, py, s, s);
+    ctx.strokeStyle = "rgba(255,226,154,.55)"; ctx.lineWidth = 1;
+    for (let row = 0; row < 3; row++) {
+      const yy = py + s * (.28 + row * .22);
+      ctx.beginPath(); ctx.moveTo(px - 2, yy);
+      ctx.quadraticCurveTo(px + s * .45, yy - 2, px + s + 2, yy + 1); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   function render() {
     board.width = S.grid.w * CELL;
     board.height = S.grid.h * CELL;
@@ -607,8 +642,11 @@
         const t = S.tiles[y][x];
         const mid = S.materiais[x + "," + y];
         const mm = mid ? matMeta(mid) : null;
-        ctx.fillStyle = mm ? mm.cor : (t === WALL ? "#1d1812" : (t === DOOR ? "#c8841f" : "#5a4a32"));
-        ctx.fillRect(x * CELL, y * CELL, CELL - 1, CELL - 1);
+        if (mm && mm.id === "duna_deserto") drawDunePreview(x, y);
+        else {
+          ctx.fillStyle = mm ? mm.cor : (t === WALL ? "#1d1812" : (t === DOOR ? "#c8841f" : "#5a4a32"));
+          ctx.fillRect(x * CELL, y * CELL, CELL - 1, CELL - 1);
+        }
         if (t === DOOR) {
           // A folha e a seta dourada giram sobre o centro. A seta indica a
           // frente da imagem e continua clara nas quatro orientações.
@@ -976,7 +1014,7 @@
       const sel = document.createElement("select");
       sel.id = "mat-id";
       sel.innerHTML = opts.map(m =>
-        `<option value="${m.id}"${m.id === cur ? " selected" : ""}>${m.categoria === "parede" ? "🧱" : (m.id === "entulho" ? "⛰️" : "▦")} ${m.nome}</option>`).join("");
+        `<option value="${m.id}"${m.id === cur ? " selected" : ""}>${m.categoria === "parede" ? "🧱" : (m.id === "entulho" ? "⛰️" : "▦")} ${m.nome}${Number(m.custo_mov) > 1 ? ` (−${Number(m.custo_mov) - 1} movimento)` : ""}</option>`).join("");
       sel.onchange = e => { if (isWall) S.matWall = e.target.value; else S.matFloor = e.target.value; };
       tb.appendChild(sel);
       const fill = document.createElement("button");

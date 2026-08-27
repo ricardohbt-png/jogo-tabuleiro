@@ -65,6 +65,16 @@ async def main():
     check("Mata tem PV/CA/movimento", (mata["max_hp"], mata["ac"], mata["movement"]) == (120, 22, 6))
     check("Ancestral preserva movimento 7", ancestral["movement"] == 7)
     check("assets compartilham tirano_da_mata", mata["image"] == ancestral["image"] == "tirano_da_mata")
+    check("Mata ocupa 2x2 como criatura grande",
+          mata["size"] == [2, 2] and ancestral["size"] == [2, 3]
+          and not mata.get("oriented") and ancestral.get("oriented"))
+    mata["facing"] = [-1, 0]
+    check("footprint fixo 2x2",
+           set(map(tuple, r._monster_tiles(mata))) ==
+           {(5, 5), (5, 6), (6, 5), (6, 6)})
+    check("ataque comum usa as duas casas de cada face",
+          set(map(tuple, r._monster_orthogonal_attack_tiles(mata))) ==
+          {(5,4),(6,4),(5,7),(6,7),(4,5),(4,6),(7,5),(7,6)})
     check("RD arma comum", r._apply_damage_types(10, [S.DMG_PHYSICAL], mata, {"id": "espada"}) == 6)
     check("RD nao bloqueia dano especial", r._apply_damage_types(10, [S.DMG_PHYSICAL], mata) == 10)
     check("veneno dobrado", r._apply_damage_types(10, [S.DMG_POISON], mata) == 20)
@@ -89,9 +99,19 @@ async def main():
     S.roll_dice = lambda _expr: 1
     try:
         r = room(); m = creature(r, "tirano_ancestral", "a"); p = hero(r, "p")
+        popup_messages = []
+        async def capture_popup(pid, msg):
+            popup_messages.append((pid, msg))
+        r.send_to = capture_popup
         p.update({"preso": True, "preso_por": m["id"]})
         await r._tirano_engolir(m)
         check("engolir marca o heroi", p.get("engolido") and p.get("engolido_por") == m["id"])
+        check("engolir envia popup com imagem e efeitos",
+              any(pid == "p" and msg.get("type") == "trap_result"
+                  and msg.get("tipo_id") == "engolido"
+                  and msg.get("acid_damage") == "3d6"
+                  and msg.get("escape_dc") == 22
+                  for pid, msg in popup_messages))
         hp_before = p["hp"]
         await r._tirano_inicio_turno(m)
         check("acido tica dentro do estomago", p["hp"] < hp_before)

@@ -11,24 +11,28 @@ window.EDITOR_CUSTOM_ITEMS = [
     "save": "fortitude",
     "dificuldade": 14,
     "anula": false,
-    "duracao": "1d4",
+    "duracao": "1d4+2",
     "allowed_classes": [],
-    "price": 40,
+    "price": 60,
     "disponibilidade": {
       "loja": true,
       "baus": true,
       "loot_monstro": true
     },
-    "descricao": "Forte veneno a base da seiva leitosa de plantas venenosas provoca cegueira.",
+    "descricao": "Fortitude CD 14. Falha: cego por 1d4+2 rodadas, visão 1 quadrado, -5 percepção, -4 ataques e sem ataques à distância. Sucesso: visão -2 quadrados e -3 percepção por 1d4 rodadas; ao final, novo Fortitude CD 14. Falha: cegueira por 1d2 rodadas.",
+    "vision_radius_override": 1,
+    "percepcao_penalty": -5,
+    "vision_radius_partial_penalty": -2,
+    "retest_on_expire": {
+      "save": "fortitude",
+      "dificuldade": 14,
+      "duracao_falha": "1d2"
+    },
     "duracao_falha": "1d4",
     "penalidade_falha": [
       [
         "percepcao",
-        -1
-      ],
-      [
-        "percepcao",
-        -4
+        -3
       ]
     ],
     "penalidade_ataque": -4,

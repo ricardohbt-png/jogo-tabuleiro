@@ -85,7 +85,7 @@ def build_catalog():
         # já definidos no servidor. Mantemos o catálogo em JSON, sem estado de jogo.
         fields = (
             "type", "name", "emoji", "boss", "tier", "cr", "hp", "ac", "natural_armor",
-            "movement", "movement_exception", "vision_base", "percepcao", "size", "porte", "image", "atk_bonus", "damage",
+            "movement", "movement_exception", "vision_base", "percepcao", "size", "oriented", "porte", "image", "atk_bonus", "damage",
             "base_attack_bonus", "base_hp", "caster_level", "str_", "dex", "con_", "int_",
             "fort", "ref_", "will", "fort_base", "ref_base", "will_base", "save_bonuses", "save_penalties",
             "crit_vulnerability_min_nat_roll",
@@ -143,6 +143,7 @@ def build_catalog():
         materiais.append({
             "id": mid, "nome": meta["nome"], "categoria": meta["categoria"],
             "cor": meta["cor"], "solido": meta["solido"], "oclui": meta["oclui"],
+            **({"custo_mov": meta["custo_mov"]} if "custo_mov" in meta else {}),
         })
     spells = []
     for spell in server.GRIMORIO.values():

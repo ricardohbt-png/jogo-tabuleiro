@@ -387,6 +387,7 @@ document.body.innerHTML = `
         <button id="btn-ajuda" onclick="toggleAjuda()" data-i18n-title="ui.hud.ajuda_title" title="Como jogar">❓</button>
       </div>
     </div>
+    <div id="active-effects-hud" aria-label="Efeitos ativos" hidden></div>
     <div id="map-wrap">
       <canvas id="dungeon-canvas"></canvas>
       <!-- Fase 3: HUD de objetivos + botão Libertar (só em masmorra autorada) -->
@@ -501,6 +502,14 @@ document.body.innerHTML = `
 <div id="tooltip"></div>
 <div id="toast"></div>
 `;
+
+// O indicador precisa ficar fora de #map-panel: esse painel usa overflow:hidden
+// e o HUD é position:fixed. Mantê-lo diretamente no body evita que a coluna
+// de renderização 2D/3D recorte os ícones no navegador.
+(function _activeEffectsHudNoBody(){
+  const hud = document.getElementById('active-effects-hud');
+  if(hud && hud.parentNode !== document.body) document.body.appendChild(hud);
+})();
 
 // All mutable game state is owned by GS (gameState.js):
 //   GS.ws, GS.myPid, GS.myName, GS.gameState, GS.lobbyState, GS.cityState,
@@ -637,9 +646,24 @@ function send(obj){ return GS.send(obj); }
 
 function $(id){ return document.getElementById(id); }
 
+// Estado visual da barra de atalhos. Declarado antes de showScreen(), pois
+// essa função também pode ser chamada por botões da tela inicial.
+let _atalhosAbertos = false;
+// Há uma barra de slots em cada menu (habilidades, magias e itens). Como os
+// overlays continuam no DOM quando são fechados, não podemos usar apenas
+// `getElementById`, pois ele pode devolver a barra de um menu oculto.
+let _atalhosMenuAtual = null;
+
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $(id).classList.add('active');
+  if(!['screen-game', 'screen-city'].includes(id)){
+    _atalhosAbertos = false;
+    const shortcutBar = document.getElementById('shortcut-bar');
+    if(shortcutBar){ shortcutBar.hidden = true; shortcutBar.innerHTML = ''; }
+    const activeEffects = document.getElementById('active-effects-hud');
+    if(activeEffects){ activeEffects.hidden = true; activeEffects.innerHTML = ''; }
+  }
   if(!['screen-game', 'screen-city', 'screen-class-select'].includes(id)){
     document.getElementById('pause-menu')?.classList.remove('open');
   }
@@ -2207,7 +2231,7 @@ function renderStory() {
     _storyAudioStop();
     if (beat.audio && !_defeatMusicActive) {
       _storyAudioEl = new Audio(beat.audio);
-      _storyAudioEl.loop = true; _storyAudioEl.muted = _storyMuted; _storyAudioEl.volume = 0.6;
+      _storyAudioEl.loop = true; _storyAudioEl.muted = _storyMuted; _storyAudioEl.volume = _mmVol;
       _storyAudioEl.play().catch(() => {});
     }
   }
@@ -2373,7 +2397,7 @@ function openShop(pointId, type, sceneOverride){
   // A ORDEM das abas é índice de lógica (GS.shopTabIdx) — traduzir o rótulo é
   // seguro; trocar a ordem não seria.
   const shopTabs = (shopId==='ferreiro'
-    ? ['armas','armaduras','municao','vender']
+    ? ['armas','armaduras','municao','reparar','vender']
     : shopId==='mercador'
     ? ['comprar','instrumentos','venenos','pergaminhos','vender']
     : shopId==='taverna'
@@ -2540,7 +2564,8 @@ function _renderShopItems(){
   if(temCena && GS.shopTabIdx===0){ _renderCenaConversas(); return; }
   const aba = GS.shopTabIdx - (temCena ? 1 : 0);
   // Route sell tabs
-  if(GS.activeShop==='ferreiro'&&aba===3){ _renderSellItems('gear'); return; }
+  if(GS.activeShop==='ferreiro'&&aba===3){ _renderRepairItems(); return; }
+  if(GS.activeShop==='ferreiro'&&aba===4){ _renderSellItems('gear'); return; }
   if(GS.activeShop==='mercador'&&aba===4){ _renderSellItems('bag');  return; }
 
   const myP=GS.cityState.players.find(p=>p.id===GS.myPid);
@@ -2598,7 +2623,9 @@ function _renderShopItems(){
   // Tooltip de pergaminho (hover) — a loja usa innerHTML, então anexa por índice.
   const rows = list.querySelectorAll('.shop-item');
   items.forEach((item, idx) => {
-    if(item.effect === 'scroll' && rows[idx]) aplicarTooltipPergaminho(rows[idx], item);
+    if(!rows[idx]) return;
+    if(item.effect === 'scroll') aplicarTooltipPergaminho(rows[idx], item);
+    else aplicarTooltipAoItemDados(rows[idx], item);
   });
   if(shopKey === 'templo' && myP && (myP.maldicoes||[]).length){
     // Os nomes das maldições saíram do mapa {id: 'texto'} e viraram chaves
@@ -2658,6 +2685,49 @@ function _renderSellItems(mode){
       <button class="btn-buy" style="background:var(--green);color:#000;"
         onclick="sellItem('${slot}')">Vender</button>
     </div>`).join('');
+  list.querySelectorAll('.shop-item').forEach((row, idx) => {
+    const entry = sellable[idx];
+    if(entry) aplicarTooltipAoItemDados(row, entry.item);
+  });
+}
+
+function _renderRepairItems(){
+  const myP=GS.cityState&&GS.cityState.players.find(p=>p.id===GS.myPid);
+  const gold=myP?Number(myP.gold||0):0;
+  const goldEl=$('shop-gold-val'); if(goldEl) goldEl.textContent=gold;
+  const list=$('shop-items-list'); if(!list) return;
+  const options=(myP&&Array.isArray(myP.repair_options))?myP.repair_options:[];
+  if(!options.length){
+    list.innerHTML=`<div style="color:var(--text2);padding:20px;text-align:center;font-size:.82rem;">${t('ui.loja.reparo.vazio')}</div>`;
+    return;
+  }
+  list.innerHTML=options.map(entry=>{
+    const item=entry.item||{};
+    const canRepair=gold>=Number(entry.cost||0);
+    const local=entry.location==='bag'?t('ui.loja.reparo.bolsa'):t('ui.loja.reparo.equipado');
+    const desc=[
+      _itemDesc(item),
+      t('ui.loja.reparo.nivel',{n:entry.levels}),
+      t('ui.loja.reparo.custo_nivel',{n:entry.cost_per_level}),
+      local
+    ].filter(Boolean).join(' • ');
+    const bagArg=entry.bag_index==null?'null':String(entry.bag_index);
+    return `<div class="shop-item${canRepair?'':' shop-item-disabled'}"${canRepair?'':' style="opacity:.58;"'}>
+      <span class="shop-item-emoji">${itemIconHTML(item)}</span>
+      <div class="shop-item-info">
+        <div class="shop-item-name">${item.name||entry.name}</div>
+        <div class="shop-item-desc">${desc}</div>
+      </div>
+      <span class="shop-item-price">💰 ${entry.cost}</span>
+      <button class="btn-buy" ${canRepair?'':'disabled'}
+        title="${canRepair?'':t('erro.ouro_insuficiente_2')}"
+        onclick="repairItem('${entry.slot}',${bagArg})">${t('ui.loja.reparo.botao')}</button>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.shop-item').forEach((row, idx)=>{
+    const entry=options[idx];
+    if(entry&&entry.item) aplicarTooltipAoItemDados(row, entry.item);
+  });
 }
 
 function _itemDesc(item){
@@ -2672,7 +2742,8 @@ function _itemDesc(item){
   }
   if(item.die){
     const range=item.reach==='lanca' ? ' • '+t('ui.item.desc.alcance_lanca')
-              : item.reach==='cajado' || item.reach==='mangual' ? ' • '+t('ui.item.desc.alcance_adjacentes')
+              : item.reach==='cajado' ? ' • '+t('ui.item.desc.alcance_adjacentes')
+              : item.reach==='mangual' ? ' • '+t('ui.item.desc.alcance_mangual')
               : ['besta','hand_crossbow'].includes(item.id) ? ' • '+t('ui.item.desc.alcance_reto', {n: item.range})
               : ['arco_curto','longbow'].includes(item.id) ? ' • '+t('ui.item.desc.alcance_reto_diag', {n: item.range, d: Math.ceil(item.range / 2)})
               : item.range ? ' • '+t('ui.item.desc.alcance', {n: item.range}) : '';
@@ -2698,7 +2769,9 @@ function _itemDesc(item){
       :ehMachadoDuplo?' • '+t('ui.item.desc.crit_segundo_ataque'):'';
     const bonus=item.dmg_bonus?' • '+t('ui.item.desc.mais_dano', {n: item.dmg_bonus}):'';
     const resistente=item.corrosao_resistente?' • '+t('ui.item.desc.resiste_corrosao'):'';
-    return `${t('ui.item.desc.dano_arma', {die: item.die, stat: finesse})}${sub}${bonus}${range}${municao}${duas}${arr}${segMao}${critico}${resistente}`;
+    const prata=item.silver?' • '+t('ui.item.desc.prata_arma'):'';
+    const resumo = `${t('ui.item.desc.dano_arma', {die: item.die, stat: finesse})}${sub}${bonus}${range}${municao}${duas}${arr}${segMao}${critico}${resistente}${prata}`;
+    return item.descricao || resumo;
   }
   if(item.effect==='ammo'){
     const detalhes=[`×${item.ammo_count ?? 0}`];
@@ -2733,6 +2806,8 @@ function _itemDesc(item){
     return t('ui.item.desc.racao', {n: item.value||0});
   if(item.effect==='regeneration')
     return t('ui.item.desc.regeneracao', {n: item.value||0});
+  if(item.effect==='veil_shadow')
+    return item.descricao || 'Ação bônus. Fica oculto até o fim do turno; o próximo ataque tem vantagem.';
   const v=item.value?` ${item.value}`:'';
   return _rotulo(item.effect, 'ui.item.efeito', item.effect||'')+v;
 }
@@ -2746,6 +2821,10 @@ function removerMaldicaoTemplo(maldicaoId){
 
 function sellItem(slot){
   send({type:'sell_item', item_slot:slot});
+}
+
+function repairItem(slot, bagIndex=null){
+  GS.repairItem(slot, bagIndex);
 }
 
 function closeShop(){
@@ -4151,8 +4230,10 @@ function abrirLoja(nomeLocal, heroiAtivo){
 
   document.body.appendChild(overlay);
   // Aplica tooltip a cada item da loja.
-  overlay.querySelectorAll('[data-item-id]').forEach(el =>
-    aplicarTooltipAoItem(el, el.dataset.itemId));
+  overlay.querySelectorAll('[data-item-id]').forEach(el => {
+    const item = GS.CATALOGO_ITENS[el.dataset.itemId];
+    aplicarTooltipAoItemDados(el, item || {id: el.dataset.itemId});
+  });
   requestAnimationFrame(() => { overlay.style.opacity = '1'; });
 }
 
@@ -4328,22 +4409,35 @@ function normalizarItemTooltip(item){
   const bruto = item || {};
   const catalogado = (typeof GS !== 'undefined' && GS.CATALOGO_ITENS && bruto.id)
     ? (GS.CATALOGO_ITENS[bruto.id] || {}) : {};
-  const porSlot = { weapon:'arma', armor:'armadura', shield:'escudo', ammo:'municao', bag:'consumivel' };
-  const tipo = bruto.tipo || catalogado.tipo || porSlot[bruto.item_slot] || porSlot[bruto.kind] || 'item';
+  const porSlot = { weapon:'arma', armor:'armadura', shield:'escudo', ammo:'municao', bag:'consumivel', instrumento:'instrumento' };
+  const tipo = bruto.tipo || catalogado.tipo
+    || (bruto.tipo_item === 'instrumento' ? 'instrumento' : null)
+    || porSlot[bruto.item_slot] || porSlot[bruto.kind]
+    || (bruto.kind === 'armor' ? 'armadura' : bruto.kind === 'shield' ? 'escudo' : 'item');
   const permitido = bruto.permitidoPara || catalogado.permitidoPara || bruto.allowed_classes || ['todos'];
   return {
     ...catalogado, ...bruto, tipo,
     nome: bruto.nome || bruto.name || catalogado.nome || catalogado.name || 'Item',
     preco: bruto.preco ?? bruto.price ?? catalogado.preco ?? catalogado.price ?? 0,
     dano: bruto.dano || bruto.die || catalogado.dano,
+    tipoDano: bruto.tipoDano || bruto.elemento || (bruto.extra_damage_types || []).join(', ') || catalogado.tipoDano,
+    categoria: bruto.categoria || catalogado.categoria,
     alcance: bruto.alcance ?? bruto.range ?? catalogado.alcance,
+    areaRaio: bruto.areaRaio ?? bruto.area_raio ?? catalogado.areaRaio,
     bonusCA: bruto.bonusCA ?? bruto.ac_bonus ?? (bruto.effect === 'def_' ? bruto.value : catalogado.bonusCA),
     reducaoDano: bruto.reducaoDano ?? bruto.damage_reduction ?? catalogado.reducaoDano,
     quantidade: bruto.ammo_count ?? bruto.quantidade ?? catalogado.quantidade,
     danoExtra: bruto.danoExtra ?? bruto.damage_bonus ?? bruto.extra_damage ?? catalogado.danoExtra,
-    tipoDano: bruto.tipoDano || (bruto.extra_damage_types || []).join(', ') || catalogado.tipoDano,
     arremesso: bruto.arremesso ?? catalogado.arremesso ?? (bruto.throw_range != null),
+    arremessavel: bruto.arremessavel ?? catalogado.arremessavel ?? bruto.effect === 'throwable',
     alcanceArremesso: bruto.alcanceArremesso ?? bruto.throw_range ?? catalogado.alcanceArremesso,
+    saveTipo: bruto.save?.tipo || bruto.save || bruto.save_type || catalogado.saveTipo,
+    saveCD: bruto.save?.cd ?? bruto.dificuldade ?? bruto.save_dc ?? catalogado.saveCD,
+    efeito: bruto.efeito || catalogado.efeito,
+    controle: bruto.controle || catalogado.controle,
+    zona: bruto.zona || catalogado.zona,
+    duracao: bruto.duracao ?? bruto.duration ?? catalogado.duracao,
+    descricao: bruto.descricao || bruto.description || catalogado.descricao,
     permitidoPara: Array.isArray(permitido) ? permitido : ['todos'],
   };
 }
@@ -4353,7 +4447,7 @@ function gerarConteudoTooltip(item){
   // Só a COR fica no mapa; o rótulo vem de ui.item.tipo_label.<tipo>.
   const coresTipo = {
     arma:'#c8a951', armaDistancia:'#c8a951', armadura:'#4a9eff', escudo:'#4a9eff',
-    secundario:'#aaaaaa', consumivel:'#2ecc40', municao:'#ff851b',
+    secundario:'#aaaaaa', consumivel:'#2ecc40', municao:'#ff851b', instrumento:'#4db8ff',
     varinha:'#cc44ff', itemMagico:'#cc44ff'
   };
   const tipoInfo = {
@@ -4362,18 +4456,43 @@ function gerarConteudoTooltip(item){
   };
   const linhas = [];
 
+  // Instrumentos têm catálogo procedural (base + qualidade + origem), então
+  // usam o quadro específico mesmo quando aparecem na bolsa, loja, venda ou
+  // em um baú e não apenas no botão de habilidade do bardo.
+  if(item.tipo === 'instrumento' && typeof _tooltipInstrumentoHTML === 'function')
+    return _tooltipInstrumentoHTML(item);
+
   if(item.dano && item.dano !== '—') linhas.push(renderLinhaTooltip('🎲',t('ui.tooltip.dano'),item.dano));
   if(item.danoUmaMao){
     linhas.push(renderLinhaTooltip('🎲',t('ui.tooltip.uma_mao'),item.danoUmaMao));
     linhas.push(renderLinhaTooltip('🎲',t('ui.tooltip.duas_maos'),item.danoDuasMaos));
   }
   if(item.atributo) linhas.push(renderLinhaTooltip('📊',t('ui.tooltip.atributo'),_rotulo(item.atributo,'ui.atributo',item.atributo)));
+  if(item.tipoDano) linhas.push(renderLinhaTooltip('💠',t('ui.tooltip.tipo_dano'),_rotulo(String(item.tipoDano).toLowerCase(),'ui.dano_tipo',item.tipoDano)));
+  if(item.categoria) linhas.push(renderLinhaTooltip('⚔️',t('ui.tooltip.categoria'),_rotulo(item.categoria,'ui.item.categoria',item.categoria)));
   if(item.bonusCA) linhas.push(renderLinhaTooltip('🛡️',t('ui.tooltip.bonus_ca'),`+${item.bonusCA}`));
   if(item.reducaoDano) linhas.push(renderLinhaTooltip('🛡️',t('ui.tooltip.reducao_dano'),t('ui.tooltip.reducao_dano_val',{n:item.reducaoDano})));
+  if(item.tipo === 'armadura' || item.kind === 'armor'){
+    const cat = item.armor_category ? _rotulo(item.armor_category,'ui.item.armadura_cat',item.armor_category) : '';
+    const mats = (item.corrosion_materials || []).map(m => _rotulo(m,'ui.item.material',m));
+    if(cat) linhas.push(renderLinhaTooltip('🧱',t('ui.tooltip.categoria'),cat));
+    if(mats.length) linhas.push(renderLinhaTooltip('🧪',t('ui.tooltip.materiais'),mats.join(' + ')));
+    if(item.corrosao_resistente) linhas.push(renderLinhaTooltip('🛡️',t('ui.tooltip.resistencia'),t('ui.tooltip.resistente_corrosao')));
+  }
+  if(item.silver && (item.tipo === 'arma' || item.item_slot === 'weapon' || item.kind === 'weapon'))
+    linhas.push(renderLinhaTooltip('✨',t('ui.tooltip.efeito'),t('ui.item.desc.prata_arma')));
   if(item.alcance) linhas.push(renderLinhaTooltip('📏',t('ui.tooltip.alcance'),t('ui.tooltip.quadrados',{n:item.alcance})));
   if(item.alcanceEspecial) linhas.push(renderLinhaTooltip('📏',t('ui.tooltip.alcance'),item.alcanceEspecial.descricao));
+  // O servidor envia a Lança com `reach: "lanca"`; transforme esse campo
+  // numa descrição explícita também no tooltip detalhado.
+  if(!item.alcanceEspecial && item.reach === 'lanca')
+    linhas.push(renderLinhaTooltip('📏',t('ui.tooltip.alcance'),t('ui.item.desc.alcance_lanca')));
   if(item.alcanceArremesso) linhas.push(renderLinhaTooltip('🎯',t('ui.tooltip.arremesso'),t('ui.tooltip.quad_diagonais',{n:item.alcanceArremesso})));
-  if(item.arremesso) linhas.push(renderLinhaTooltip('⚠️',t('ui.tooltip.risco'),t('ui.tooltip.risco_val')));
+  if(item.arremessavel && item.alvo === 'area' && item.areaRaio != null)
+    linhas.push(renderLinhaTooltip('💥',t('ui.tooltip.area'),`raio ${item.areaRaio}`));
+  if(item.saveTipo && item.saveCD != null)
+    linhas.push(renderLinhaTooltip('🛡️',t('ui.tooltip.resistencia'),`${String(item.saveTipo).replace(/^./, c => c.toUpperCase())} CD ${item.saveCD}`));
+  if(item.arremesso || item.arremessavel) linhas.push(renderLinhaTooltip('⚠️',t('ui.tooltip.risco'),t('ui.tooltip.risco_val')));
   if(item.linhaVisao) linhas.push(renderLinhaTooltip('👁️',t('ui.tooltip.linha_visao'),t('ui.tooltip.linha_visao_val')));
   if(item.tipo === 'arma') linhas.push(renderLinhaTooltip('🛡️',t('ui.tooltip.escudo'), item.escudo ? t('ui.tooltip.permitido') : t('ui.tooltip.nao_permitido')));
   if(item.duasMaos && !item.modosDuasMaos) linhas.push(renderLinhaTooltip('✋',t('ui.tooltip.uso'),t('ui.tooltip.requer_duas_maos')));
@@ -4390,11 +4509,25 @@ function gerarConteudoTooltip(item){
   }
   if(item.tipo === 'veneno' || item.effect === 'coat_poison') {
     const e = item.efeito || {};
-    if(item.descricao) linhas.push(renderLinhaTooltip('☠️',t('ui.tooltip.efeito'),item.descricao));
+    if(e.operacao === 'dano' && e.dano != null)
+      linhas.push(renderLinhaTooltip('☠️',t('ui.tooltip.dano'),`${e.dano} por rodada`));
+    if(e.operacao === 'reduzir' && e.atributo && e.valor != null)
+      linhas.push(renderLinhaTooltip('☠️',t('ui.tooltip.efeito'),`Reduz ${e.atributo} em ${e.valor}`));
+    if(e.operacao === 'penalidade' && Array.isArray(e.atributo))
+      linhas.push(renderLinhaTooltip('☠️',t('ui.tooltip.efeito'),e.atributo.map((a,i)=>`${a} ${e.valor?.[i] ?? ''}`).join(', ')));
+    if(e.operacao === 'status' || e.operacao === 'petrificar' || e.operacao === 'cegar')
+      linhas.push(renderLinhaTooltip('☠️',t('ui.tooltip.efeito'),e.atributo || e.operacao));
+    if(e.duracao != null) linhas.push(renderLinhaTooltip('⏳',t('ui.tooltip.duracao'),`${e.duracao} rodada(s)`));
+    if(e.duracaoFalha != null) linhas.push(renderLinhaTooltip('⚠️',t('ui.tooltip.falha_parcial'),`${e.duracaoFalha} rodada(s)`));
+    if(item.descricao) linhas.push(renderLinhaTooltip('📜',t('ui.tooltip.efeito'),item.descricao));
     if(e.save && e.dificuldade != null) {
       const anula = e.anula === false ? t('ui.tooltip.efeito_parcial') : t('ui.tooltip.anula');
       linhas.push(renderLinhaTooltip('🛡️',t('ui.tooltip.resistencia'),t('ui.tooltip.resistencia_val',{save:String(e.save).replace(/^./, c => c.toUpperCase()), cd:e.dificuldade, anula})));
     }
+  } else if(item.effect === 'ale') {
+    linhas.push(renderLinhaTooltip('🍺',t('ui.tooltip.efeito'),t('ui.item.desc.cerveja',{n:item.value||0})));
+  } else if(item.effect === 'wine') {
+    linhas.push(renderLinhaTooltip('🍷',t('ui.tooltip.efeito'),t('ui.item.desc.vinho',{n:item.value||0})));
   } else if(item.descricao) {
     linhas.push(renderLinhaTooltip('✨',t('ui.tooltip.efeito'),item.descricao));
   }
@@ -4454,6 +4587,12 @@ function gerarHabilidadesEspeciais(item){
   if(item.id === 'lanca_curta'){
     especiais.push(t('ui.habilidade.arremesso_lanca'));
   }
+  if(item.id === 'bordao')
+    especiais.push(L(t('ui.habilidade.impacto_bordao')));
+  if(item.id === 'staff')
+    especiais.push(L(t('ui.habilidade.cajado_arcano')));
+  if(item.id === 'lanca' || item.reach === 'lanca')
+    especiais.push(L(t('ui.habilidade.alcance_lanca')));
   if(item.id === 'lanca_longa' || item.id === 'alabarda')
     especiais.push(L(t('ui.habilidade.alcance_cajado')));
   if(item.id === 'espada_bastarda')
@@ -4598,16 +4737,29 @@ function _tooltipInstrumentoHTML(inst){
   if(st){
     if(st.alcance != null) linhas.push(renderLinhaTooltip('🎯', t('ui.pergaminho.alcance'), t('ui.instrumento.quadrados', {n:st.alcance})));
     if(st.raio    != null) linhas.push(renderLinhaTooltip('💥', t('ui.instrumento.raio'),      t('ui.instrumento.quadrados', {n:st.raio})));
+    if(st.cone    != null) linhas.push(renderLinhaTooltip('🔻', t('ui.tooltip.cone'),          t('ui.instrumento.quadrados', {n:st.cone})));
     if(st.dano    != null) linhas.push(renderLinhaTooltip('🎵', t('ui.pergaminho.dano'),       t('ui.instrumento.dano_sonoro', {dano:st.dano})));
+    if(st.dado    != null) linhas.push(renderLinhaTooltip('🎲', t('ui.pergaminho.dano'),       st.dado));
     if(st.duracao != null) linhas.push(renderLinhaTooltip('⏳', t('ui.pergaminho.duracao'),    t('ui.instrumento.rodadas', {n:st.duracao})));
+    if(st.medo    != null) linhas.push(renderLinhaTooltip('😨', t('ui.tooltip.medo'),           `${st.medo} rodada(s)`));
+    if(st.push    != null) linhas.push(renderLinhaTooltip('↗️', t('ui.tooltip.empurrao'),       `${st.push} quadrado(s)`));
+    if(st.fracao  != null) linhas.push(renderLinhaTooltip('⚔️', t('ui.tooltip.dano_repetido'),  `${st.fracao}%`));
+    if(Array.isArray(st.atributos) && st.atributos.length)
+      linhas.push(renderLinhaTooltip('✨', t('ui.tooltip.efeito'), st.atributos.join(', ')));
   }
+  if(b.efeito?.save) linhas.push(renderLinhaTooltip('🛡️', t('ui.tooltip.resistencia'), String(b.efeito.save).replace(/^./, c => c.toUpperCase())));
   const custoLinha = passiva
     ? renderLinhaTooltip('🎼', t('ui.instrumento.custo'), t('ui.instrumento.custo_cancao'))
     : renderLinhaTooltip('🍖', t('ui.instrumento.custo'), `🍖${(st && st.custo_fome) ?? 0}  💧${(st && st.custo_sede) ?? 0}`);
+  const qualidade = inst.qualidade ? _rotulo(inst.qualidade, 'ui.item.qualidade', inst.qualidade) : '';
+  const origem = inst.origem && inst.origem !== 'humana' ? _rotulo(inst.origem, 'ui.item.origem', inst.origem) : '';
+  const encantamento = inst.encantamento === 'runico' ? t('ui.tooltip.runico') : '';
+  const detalhes = [qualidade, origem, encantamento].filter(Boolean).join(' · ');
   return `
     <div style="padding:10px 14px;border-bottom:1px solid #c8a95133;">
       <div style="color:#e8cf7e;font-weight:bold;font-size:13px;">${b.icon} ${inst.name || b.nome}</div>
       <div style="color:#8a7a5a;font-size:9px;letter-spacing:2px;margin-top:2px;">INSTRUMENTO${passiva ? ' · PASSIVO' : ''}</div>
+      ${detalhes ? `<div style="color:#b8a888;font-size:9px;margin-top:5px;">${detalhes}</div>` : ''}
     </div>
     <div style="padding:10px 14px;">
       <div style="color:#c8a951;font-size:11px;font-weight:bold;margin-bottom:4px;">${passiva ? '✨' : '♪'} ${b.habilidade_nome}</div>
@@ -4663,12 +4815,18 @@ function handleGameState(msg){
   // GS._handle already updated GS.gameState, GS.isMyTurn, GS.pendingSkill
   // Atualiza antes do restante do HUD: um erro em qualquer painel opcional não
   // pode deixar o botão preso no estado desabilitado do turno anterior.
+  _reconciliarEfeitosVisuaisLocais(msg);
+  // Mesmo se o estado recebido chegar no meio de uma animação de passo, o loop
+  // 3D deve reconciliar os ícones no frame seguinte.
+  if(g3) g3._activeEffectsDirty = true;
   _atualizarBotaoEncerrarTurno(msg);
   syncDiceCanvas();
   renderMap(msg);
   centerOnPlayer(msg);
   renderPlayers(msg);
   renderMyPanel(msg);
+  _renderAtalhos();
+  _renderEfeitosAtivos(msg);
   renderGMLog(msg.gm_log);
   updateTurnBadge(msg);
   updateMoveButtons(msg);
@@ -4755,16 +4913,18 @@ function _start2DHighlightLoop(){
   function step(){
     const st = GS.gameState;
     const me = st && st.players.find(p => p.id === GS.myPid && p.alive);
-    if(!mode3D && GS.isMyTurn && me && me.moves_left > 0 && st){
+    const hasAnimatedTerrain = !!(st && Object.values(st.materiais || {}).some(mid => mid === 'lava' || mid === 'pantano'));
+    const animateHighlights = GS.isMyTurn && me && me.moves_left > 0;
+    if(!mode3D && st && (animateHighlights || hasAnimatedTerrain)){
       _movePulse = 0.5 + 0.5 * Math.sin(Date.now() / 420);
       renderMap(st);
-      _2dHighlightFrame = requestAnimationFrame(step);
+      _2dHighlightFrame = _scheduleVisualFrame(step);
     } else {
       _movePulse = 0.5;
       _2dHighlightFrame = null;
     }
   }
-  _2dHighlightFrame = requestAnimationFrame(step);
+  _2dHighlightFrame = _scheduleVisualFrame(step);
 }
 
 function updateTurnBadge(msg){
@@ -6271,16 +6431,25 @@ function _monsterFootprintSize(m){
   const raw = Array.isArray(m?.size) ? m.size : [1, 1];
   const w = Math.max(1, Math.min(4, Number(raw[0]) || 1));
   const h = Math.max(1, Math.min(4, Number(raw[1]) || 1));
-  // Para um footprint orientado [N,1], N é o comprimento do corpo.
-  return m?.oriented && h === 1 ? { w:1, h:w, logicalW:w, logicalH:h } :
-    { w, h, logicalW:w, logicalH:h };
+  if(m?.oriented){
+    // A âncora é a primeira fileira da frente. [N,1] é o formato legado
+    // longitudinal; [W,H] usa W faixas laterais e H fileiras para trás.
+    const width = h === 1 ? 1 : w;
+    const length = h === 1 ? w : h;
+    const f = Array.isArray(m.facing) && m.facing.length === 2 ? m.facing : [-1, 0];
+    const horizontal = f[0] !== 0;
+    return { w: horizontal ? length : width, h: horizontal ? width : length,
+      logicalW: horizontal ? length : width, logicalH: horizontal ? width : length,
+      naturalW:w, naturalH:h, width, length };
+  }
+  return { w, h, logicalW:w, logicalH:h, naturalW:w, naturalH:h, width:w, length:h };
 }
 
 function _monsterVisualCenterOffset(m){
   const fp = _monsterFootprintSize(m);
   if(!m?.oriented){ return [(fp.logicalW - 1) / 2, (fp.logicalH - 1) / 2]; }
-  const length = fp.logicalH === 1 ? fp.logicalW : fp.logicalH;
-  const width  = fp.logicalH === 1 ? 1 : fp.logicalW;
+  const length = fp.length;
+  const width  = fp.width;
   const f = Array.isArray(m.facing) && m.facing.length === 2 ? m.facing : [-1, 0];
   const px = -f[1], py = f[0];
   return [
@@ -6306,13 +6475,16 @@ function drawOrientedMonster2D(ctx, m, hcx, hcy){
   const mcx = hcx + offX*CELL, mcy = hcy + offY*CELL;
   const fp = _monsterFootprintSize(m);
   const is2x2 = _monsterIs2x2(m);
+  const isWideOriented = !!m?.oriented && fp.width > 1;
   // Ângulo da BASE (segue o eixo do corpo, indicando a direção).
   const angBase = (f[0]===1) ? Math.PI : (f[1]===-1) ? Math.PI/2 : (f[1]===1) ? -Math.PI/2 : 0;
   ctx.save(); ctx.translate(mcx, mcy); ctx.rotate(angBase);
+  const baseLongRadius = is2x2 ? 0.86 : (isWideOriented ? fp.length * 0.46 : 0.95);
+  const baseWidthRadius = is2x2 ? 0.72 : (isWideOriented ? fp.width * 0.42 : 0.40);
   ctx.fillStyle='rgba(0,0,0,0.40)';
-  ctx.beginPath(); ctx.ellipse(0, 0, CELL*(is2x2 ? 0.86 : 0.95), CELL*(is2x2 ? 0.72 : 0.40), 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(0, 0, CELL*baseLongRadius, CELL*baseWidthRadius, 0, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle='#2a241c';
-  ctx.beginPath(); ctx.ellipse(0, 0, CELL*(is2x2 ? 0.82 : 0.90), CELL*(is2x2 ? 0.68 : 0.36), 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(0, 0, CELL*(is2x2 ? 0.82 : (isWideOriented ? fp.length * 0.43 : 0.90)), CELL*(is2x2 ? 0.68 : (isWideOriented ? fp.width * 0.38 : 0.36)), 0, 0, Math.PI*2); ctx.fill();
   ctx.strokeStyle='rgba(0,0,0,0.55)'; ctx.lineWidth=1.5; ctx.stroke();
   ctx.restore();
   // Criatura EM PÉ (billboard): orientação natural da arte; espelha para leste.
@@ -6322,8 +6494,9 @@ function drawOrientedMonster2D(ctx, m, hcx, hcy){
   if(f[0]===1) ctx.scale(-1, 1);   // encara leste → espelha (cabeça da arte é à esquerda)
   if(img && img.complete && img.naturalWidth){
     const ar = img.naturalWidth/img.naturalHeight;
-    let w = CELL*(is2x2 ? 1.80 : 1.9), h = w/ar;
-    const hMax = CELL*(is2x2 ? 1.72 : 1.7);
+    const visualSpan = isWideOriented && !is2x2 ? Math.max(fp.w, fp.h) : 1;
+    let w = CELL*(is2x2 ? 1.80 : (visualSpan > 1 ? visualSpan * 0.90 : 1.9)), h = w/ar;
+    const hMax = CELL*(is2x2 ? 1.72 : (visualSpan > 1 ? visualSpan * 0.86 : 1.7));
     if(h > hMax){ h = hMax; w = h*ar; }
     ctx.drawImage(img, -w/2, CELL*(is2x2 ? 0.72 : 0.34) - h, w, h);
   } else {
@@ -6379,6 +6552,34 @@ function _drawStatusIcons2D(ctx, X, Y, entity){
     ctx.bezierCurveTo(x, Y + fs*0.58, x, Y + fs*0.32, x - fs*0.20, Y + fs*0.05);
     ctx.fill();
     x -= fs * 0.70;
+  }
+  // Contadores persistentes ficam junto da miniatura, enquanto o efeito
+  // pulsante é reservado ao instante em que a condição foi aplicada.
+  const poisonRounds = Array.isArray(entity.efeitos_veneno)
+    ? Math.max(0, ...entity.efeitos_veneno.map(e => Number(e?.duracao || e?.rodadas || 0))) : 0;
+  const durations = [];
+  if(entity.dormindo && Number(entity.dormindo_rodadas) > 0)
+    durations.push(['🌙 Sono', Number(entity.dormindo_rodadas), '#b99cff']);
+  if(poisonRounds > 0)
+    durations.push(['☠ Veneno', poisonRounds, '#d18aff']);
+  if(Number(entity.paralisado_rodadas) > 0)
+    durations.push(['❄ Paralisia', Number(entity.paralisado_rodadas), '#75d7ff']);
+  if(Number(entity.cego_rodadas) > 0)
+    durations.push(['◼ Cegueira', Number(entity.cego_rodadas), '#d5d5d5']);
+  if(durations.length){
+    const small = Math.max(9, Math.round(CELL * 0.115));
+    ctx.font = `900 ${small}px Arial, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    let by = Y + CELL * 0.075;
+    for(const [label, rounds, color] of durations){
+      const text = `${label} ${rounds} rodadas`;
+      const width = ctx.measureText(text).width + 8;
+      ctx.fillStyle = 'rgba(9,5,18,0.82)';
+      ctx.strokeStyle = color; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.roundRect(X + CELL/2 - width/2, by, width, small + 5, 4); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = color; ctx.fillText(text, X + CELL/2, by + (small + 5)/2);
+      by += small + 7;
+    }
   }
   ctx.restore();
 }
@@ -6548,6 +6749,174 @@ function _computeWeaponRangeTiles(state, me) {
   return result;
 }
 
+// Camada estática do mapa 2D. Pisos, paredes, portas e névoa não mudam a cada
+// quadro; renderizá-los novamente durante a animação da lava/pântano era o
+// principal custo do loop. O canvas fora da tela preserva a mesma qualidade,
+// enquanto o canvas visível recebe apenas os efeitos e entidades dinâmicas.
+let _dungeonStatic2D = {
+  canvas: null, tiles: null, materiais: null, explorado: null, revelado: null,
+  rooms: null, animatedTiles: [], master: null, W: 0, H: 0,
+};
+
+function _staticDungeon2D(state, terrainSet, doorClosed, W, H){
+  const master = !!(GS.isMaster() || state.test_mode);
+  const cache = _dungeonStatic2D;
+  // _estadoComMortosVisuais pode criar uma cópia do estado por alguns frames;
+  // comparar os arrays internos evita invalidar a camada por causa dessa cópia.
+  const mesmaBase = cache.canvas && cache.tiles === state.tiles
+    && cache.materiais === state.materiais
+    && cache.explorado === state.explored
+    && cache.revelado === state.revealed
+    && cache.rooms === state.rooms
+    && cache.master === master && cache.W === W && cache.H === H;
+  if(mesmaBase) return cache.canvas;
+
+  const canvas = cache.canvas || document.createElement('canvas');
+  applyDPR(canvas, W * CELL, H * CELL);
+  const ctx = canvas.getContext('2d');
+  const animatedTiles = [];
+  for(const [key, mid] of Object.entries(state.materiais || {})){
+    if(mid !== 'lava' && mid !== 'pantano' || !terrainSet.has(key)) continue;
+    const [x, y] = key.split(',').map(Number);
+    if(Number.isInteger(x) && Number.isInteger(y)) animatedTiles.push({x, y, mid});
+  }
+  ctx.fillStyle = '#040308';
+  ctx.fillRect(0, 0, W * CELL, H * CELL);
+
+  // Piso estático. Os realces de movimento/ataque ficam no primeiro plano.
+  for(let y=0; y<H; y++) for(let x=0; x<W; x++){
+    const key = `${x},${y}`;
+    if(!terrainSet.has(key)) continue;
+    const tile = state.tiles[y][x];
+    if(tile !== TILE_FLOOR && tile !== TILE_DOOR) continue;
+    const mid = matDaCasa(state, x, y);
+    drawFloor3D(ctx, x, y, false, false, false, mid);
+    if(mid === 'entulho') drawEntulho2D(ctx, x, y);
+  }
+
+  // Faces e topos de paredes.
+  for(let y=0; y<H; y++) for(let x=0; x<W; x++){
+    const key = `${x},${y}`;
+    if(!terrainSet.has(key) || state.tiles[y][x] !== TILE_WALL) continue;
+    const sy = y + 1;
+    if(sy < H && state.tiles[sy][x] === TILE_FLOOR && terrainSet.has(`${x},${sy}`))
+      drawWallSouthFace(ctx, x, y, matDaCasa(state, x, y));
+    drawWallTop3D(ctx, x, y, matDaCasa(state, x, y));
+  }
+
+  // Portas fazem parte da base, pois só mudam junto com um novo game_state.
+  for(let y=0; y<H; y++) for(let x=0; x<W; x++){
+    if(state.tiles[y][x] !== TILE_DOOR || !terrainSet.has(`${x},${y}`)) continue;
+    drawDoor2D(ctx, state, x, y, doorClosed.has(`${x},${y}`));
+  }
+
+  // Névoa também é estática até a próxima atualização autoritativa.
+  ctx.fillStyle = 'rgba(4,3,8,0.96)';
+  for(let y=0; y<H; y++) for(let x=0; x<W; x++){
+    if(!terrainSet.has(`${x},${y}`)) ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
+  }
+
+  _dungeonStatic2D = {
+    canvas, tiles: state.tiles, materiais: state.materiais,
+    explorado: state.explored, revelado: state.revealed, rooms: state.rooms,
+    animatedTiles, master, W, H,
+  };
+  return canvas;
+}
+
+// Só os traços móveis da lava e as ondulações do pântano são recalculados.
+// A pintura base permanece na camada estática acima.
+function _drawAnimatedTerrain2D(ctx, state, terrainSet, now){
+  const flowLava = now / 520;
+  const flowSwamp = now / 900;
+  const tiles = _dungeonStatic2D.materiais === state.materiais
+    ? _dungeonStatic2D.animatedTiles : [];
+  for(const {x, y, mid} of tiles){
+    const X = x * CELL, Y = y * CELL;
+    if(mid === 'lava'){
+      for(let row=0; row<4; row++){
+        const yy = Y + CELL * (.16 + row * .22)
+          + Math.sin(flowLava + row * 1.7 + x * .35) * CELL * .035;
+        ctx.strokeStyle = row % 2 ? 'rgba(255,184,48,.78)' : 'rgba(255,90,18,.70)';
+        ctx.lineWidth = Math.max(1, CELL / 46);
+        ctx.beginPath();
+        ctx.moveTo(X - CELL * .08, yy);
+        ctx.bezierCurveTo(X + CELL * .24, yy - CELL * .06,
+          X + CELL * .54, yy + CELL * .06, X + CELL * 1.08, yy - CELL * .025);
+        ctx.stroke();
+      }
+      const bubbles = _rng((x * 9199 ^ y * 3761 ^ 0xBABB1E) >>> 0);
+      for(let i=0; i<2; i++){
+        const bx = X + CELL * (.18 + bubbles() * .64);
+        const by = Y + CELL * (.20 + bubbles() * .60);
+        const q = .5 + .5 * Math.sin(flowLava * 1.7 + i * 2.4 + x * .6 + y * .35);
+        const br = CELL * (.018 + bubbles() * .027) * (.72 + q * .42);
+        ctx.fillStyle = `rgba(255,196,54,${(.30 + q * .34).toFixed(2)})`;
+        ctx.beginPath(); ctx.arc(bx, by - q * CELL * .025, br, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = `rgba(255,116,18,${(.26 + q * .26).toFixed(2)})`;
+        ctx.lineWidth = Math.max(1, CELL / 70); ctx.stroke();
+      }
+    } else {
+      for(let row=0; row<2; row++){
+        const phase = flowSwamp + row * 2.3 + x * .41 + y * .27;
+        const cx = X + CELL * (.28 + row * .38) + Math.sin(phase) * CELL * .035;
+        const cy = Y + CELL * (.34 + row * .29) + Math.cos(phase * .8) * CELL * .025;
+        const rr = CELL * (.10 + row * .025);
+        ctx.strokeStyle = row ? 'rgba(158,185,124,.24)' : 'rgba(101,139,91,.30)';
+        ctx.lineWidth = Math.max(1, CELL / 72);
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, rr * (.9 + .12 * Math.sin(phase)), rr * .34,
+          Math.sin(phase) * .18, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+// Realces de interação pertencem ao primeiro plano. Eles são desenhados
+// separadamente porque a camada estática não deve mudar só para pulsar azul ou
+// vermelho durante o turno.
+function _drawFloorHighlights2D(ctx, x, y, isReachable, isAttackable, isWeaponPreview){
+  if(!isReachable && !isAttackable && !isWeaponPreview) return;
+  const X = x * CELL, Y = y * CELL;
+  if(isReachable){
+    const pa = 0.70 + 0.30 * _movePulse;
+    const fa = 0.26 + 0.26 * _movePulse;
+    const da = 0.65 + 0.35 * _movePulse;
+    ctx.strokeStyle = `rgba(60,140,255,${pa.toFixed(2)})`; ctx.lineWidth = 2;
+    ctx.strokeRect(X+2, Y+2, CELL-4, CELL-4);
+    ctx.fillStyle = `rgba(30,107,255,${fa.toFixed(2)})`;
+    ctx.fillRect(X+2, Y+2, CELL-4, CELL-4);
+    ctx.fillStyle = `rgba(150,195,255,${da.toFixed(2)})`;
+    const d = 4;
+    for(const [cx, cy] of [[X+d,Y+d],[X+CELL-d,Y+d],[X+d,Y+CELL-d],[X+CELL-d,Y+CELL-d]]){
+      ctx.beginPath(); ctx.arc(cx, cy, 1.8, 0, Math.PI*2); ctx.fill();
+    }
+  }
+  if(isAttackable){
+    ctx.strokeStyle='rgba(255,60,60,0.78)'; ctx.lineWidth=2;
+    ctx.strokeRect(X+2,Y+2,CELL-4,CELL-4);
+    ctx.fillStyle='rgba(255,30,30,0.13)'; ctx.fillRect(X+2,Y+2,CELL-4,CELL-4);
+    ctx.fillStyle='rgba(255,120,120,0.68)';
+    const d=4;
+    for(const [cx,cy] of [[X+d,Y+d],[X+CELL-d,Y+d],[X+d,Y+CELL-d],[X+CELL-d,Y+CELL-d]]){
+      ctx.beginPath(); ctx.arc(cx,cy,1.8,0,Math.PI*2); ctx.fill();
+    }
+  }
+  if(isWeaponPreview){
+    ctx.fillStyle='rgba(220,0,0,0.52)'; ctx.fillRect(X+1,Y+1,CELL-2,CELL-2);
+    ctx.strokeStyle='rgba(255,0,0,0.98)'; ctx.lineWidth=2.5;
+    ctx.strokeRect(X+2,Y+2,CELL-4,CELL-4);
+    ctx.strokeStyle='rgba(255,120,80,0.55)'; ctx.lineWidth=1;
+    ctx.strokeRect(X+4,Y+4,CELL-8,CELL-8);
+    ctx.fillStyle='rgba(255,80,40,1.0)';
+    const d=4;
+    for(const [cx,cy] of [[X+d,Y+d],[X+CELL-d,Y+d],[X+d,Y+CELL-d],[X+CELL-d,Y+CELL-d]]){
+      ctx.beginPath(); ctx.arc(cx,cy,2.5,0,Math.PI*2); ctx.fill();
+    }
+  }
+}
+
 function renderMap(state){
   if(!state.tiles) return;
   state = _estadoComMortosVisuais(state);
@@ -6635,24 +7004,31 @@ function renderMap(state){
   // Durante a mira de magia/arremesso, oculta realces de movimento/ataque (mostra alcance/área).
   if(window._modoMagia || window._modoMestreMira || window._modoThrowItem || window._modoAnimarMortos){ reachable.clear(); attackable.clear(); }
 
-  // ── PASS 0: Void background — near-black with deep dungeon darkness
-  ctx.fillStyle='#040308';
-  ctx.fillRect(0,0,W*CELL,H*CELL);
+  // A base pesada do tabuleiro é restaurada de um canvas em cache. Os
+  // realces, efeitos e peões continuam no canvas visível para preservar a
+  // ordem correta de profundidade.
+  const staticDungeon = _staticDungeon2D(state, terrainSet, doorClosed, W, H);
+  ctx.drawImage(staticDungeon, 0, 0, W * CELL, H * CELL);
 
-  // ── PASS 1: Floor tiles (stone flagstones) — explorado OU revelado ao vivo.
-  // Portas (DOOR) também recebem chão por baixo (folha desenhada no PASS 3.5).
-  for(let y=0;y<H;y++) for(let x=0;x<W;x++){
-    if(!terrainSet.has(`${x},${y}`)) continue;
-    const tile=state.tiles[y][x];
-    if(tile===TILE_FLOOR || tile===TILE_DOOR){
-      const mid = matDaCasa(state, x, y);
-      drawFloor3D(ctx, x, y, reachable.has(`${x},${y}`), attackable.has(`${x},${y}`), weaponRangeTiles.has(`${x},${y}`), mid);
-      if(mid==='entulho') drawEntulho2D(ctx, x, y);
-    }
+  // Lava e pântano ficam acima do piso, mas abaixo das entidades e dos
+  // efeitos de combate. Somente estes detalhes são recalculados por quadro.
+  _drawAnimatedTerrain2D(ctx, state, terrainSet, performance.now());
+
+  const highlightTiles = new Set([...reachable, ...attackable, ...weaponRangeTiles]);
+  for(const key of highlightTiles){
+    if(!terrainSet.has(key)) continue;
+    const [x, y] = key.split(',').map(Number);
+    if(!Number.isInteger(x) || !Number.isInteger(y)) continue;
+    const tile = state.tiles[y]?.[x];
+    if(tile !== TILE_FLOOR && tile !== TILE_DOOR) continue;
+    _drawFloorHighlights2D(ctx, x, y,
+      reachable.has(key), attackable.has(key), weaponRangeTiles.has(key));
   }
 
   // ── PASS 1.5: Realce de MAGIA — alcance (vermelho), zona (laranja), área (verde)
   _desenharSpellHL2D(ctx, exploredSet);
+  _desenharSpellTargetPreview2D(ctx, state, exploredSet);
+  _desenharSpellDirection2D(ctx, state);
   for(const _animMantoEsc of _mantoEscuridaoAnims)
     _mantoEscuridaoDraw2D(ctx, state, _animMantoEsc, performance.now());
   for(const _animClarividencia of _clarividenciaAnims)
@@ -6696,31 +7072,6 @@ function renderMap(state){
   // Fogo residual da Bola de Fogo: fica no chão, sob os peões, e pulsa
   // enquanto a zona autoritativa permanecer ativa.
   _desenharFogoPersistente2D(ctx, exploredSet, performance.now());
-
-  // ── PASS 2: Wall south-face shadows
-  for(let y=0;y<H;y++) for(let x=0;x<W;x++){
-    if(!terrainSet.has(`${x},${y}`)) continue;
-    if(state.tiles[y][x]===TILE_WALL){
-      const sy=y+1;
-      if(sy<H && state.tiles[sy][x]===TILE_FLOOR && terrainSet.has(`${x},${sy}`))
-        drawWallSouthFace(ctx, x, y, matDaCasa(state, x, y));
-    }
-  }
-
-  // ── PASS 3: Wall top faces
-  for(let y=0;y<H;y++) for(let x=0;x<W;x++){
-    if(!terrainSet.has(`${x},${y}`)) continue;
-    if(state.tiles[y][x]===TILE_WALL)
-      drawWallTop3D(ctx, x, y, matDaCasa(state, x, y));
-  }
-
-  // ── PASS 3.5: Doors — closed = wooden leaf (blocks sight), open = frame ──────
-  for(let y=0;y<H;y++) for(let x=0;x<W;x++){
-    if(state.tiles[y][x]!==TILE_DOOR) continue;
-    if(!terrainSet.has(`${x},${y}`)) continue;
-    const k=`${x},${y}`;
-    drawDoor2D(ctx, state, x, y, doorClosed.has(k));
-  }
 
   // ── PASS 4: Impenetrable fog on unexplored tiles (Diablo-style pitch-black)
   // (no-op for the Mestre — terrainSet is the full map, see above)
@@ -7092,6 +7443,12 @@ function renderMap(state){
     ctx.restore();
   }
 
+  // Prévia do alcance do monstro sob o cursor — fica atrás da miniatura para
+  // que o Mestre veja a região vermelha sem perder a leitura da criatura.
+  _drawMasterMonsterSelection2D(ctx, state, terrainSet);
+  _drawMasterMonsterAttackPreview2D(ctx, state, terrainSet);
+  _drawMasterHistoryFocus2D(ctx, state, terrainSet);
+
   // ── Monsters: only visible within player's vision radius
   for(const m of state.monsters){
     const [mtx,mty]=m.pos;
@@ -7101,12 +7458,13 @@ function renderMap(state){
     const mx = _mStep ? _mStep.x : mtx;
     const my = _mStep ? _mStep.y : mty;
     const [offX, offY] = _monsterVisualCenterOffset(m);
-    const cx=(mx+offX)*CELL+CELL/2, cy=(my+offY)*CELL+CELL/2;
+    const [hitX, hitY] = _hitReaction2D(`m:${m.id}`);
+    const cx=(mx+offX)*CELL+CELL/2+hitX, cy=(my+offY)*CELL+CELL/2+hitY;
     const fp = _monsterFootprintSize(m);
     if(m.oriented){
       // A função recebe a casa-âncora e calcula internamente o centro do
       // corpo; isso preserva a direção mesmo no footprint orientado 2x2.
-      drawOrientedMonster2D(ctx, m, mx*CELL+CELL/2, my*CELL+CELL/2);
+      drawOrientedMonster2D(ctx, m, mx*CELL+CELL/2+hitX, my*CELL+CELL/2+hitY);
     } else {
       drawMiniBase(ctx, cx, cy, '#c02020', false, fp.logicalW, fp.logicalH);
       drawMonsterSprite(ctx, cx, cy-3, m);
@@ -7114,8 +7472,8 @@ function renderMap(state){
     // HP bar
     const pct=_combatHpRatio(`m:${m.id}`, m.hp, m.max_hp);
     const barH=Math.max(4,Math.round(CELL*0.08));
-    const barX = fp.logicalW > 1 ? (mx - fp.logicalW/2)*CELL + 3 : mx*CELL + 3;
-    const barY = fp.logicalH > 1 ? (my - fp.logicalH/2)*CELL + 2 : my*CELL + 2;
+    const barX = (fp.logicalW > 1 ? (mx + offX - fp.logicalW/2 + 0.5)*CELL + 3 : mx*CELL + 3) + hitX;
+    const barY = (fp.logicalH > 1 ? (my + offY - fp.logicalH/2 + 0.5)*CELL + 2 : my*CELL + 2) + hitY;
     const barW = fp.logicalW > 1 ? fp.logicalW*CELL - 6 : CELL - 6;
     ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.fillRect(barX,barY,barW,barH);
     ctx.fillStyle=pct>.5?'#27ae60':pct>.25?'#e67e22':'#e74c3c';
@@ -7165,7 +7523,8 @@ function renderMap(state){
       ? _pVis.pathPts.some(([px,py]) => visionSet.has(`${px},${py}`) || exploredSet.has(`${px},${py}`))
       : false;
     if(visionSet.has(`${pxr},${pyr}`) || exploredSet.has(`${pxr},${pyr}`) || _visPathP){
-      const cx=drawX*CELL+CELL/2, cy=drawY*CELL+CELL/2;
+      const [hitX, hitY] = _hitReaction2D('pr:singleton');
+      const cx=drawX*CELL+CELL/2+hitX, cy=drawY*CELL+CELL/2+hitY;
       // Anel de seleção quando o controlador o selecionou (janela pós-turno).
       if(_prisSel && _pris.freed && _pris.rescuer_pid===GS.myPid && state.animados_turn===GS.myPid){
         ctx.save();
@@ -7188,7 +7547,7 @@ function renderMap(state){
       const max=_pris.max_hp||_pris.hp||1;
       const pct=Math.max(0,Math.min(1,_pris.hp/max));
       const barH=Math.max(4,Math.round(CELL*0.08));
-      const bx=drawX*CELL, by=drawY*CELL;
+      const bx=drawX*CELL+hitX, by=drawY*CELL+hitY;
       ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.fillRect(bx+3,by+2,CELL-6,barH);
       ctx.fillStyle=pct>.5?'#27ae60':pct>.25?'#e67e22':'#e74c3c';
       ctx.fillRect(bx+3,by+2,(CELL-6)*pct,barH);
@@ -7248,7 +7607,8 @@ function renderMap(state){
         ? _aVis.pathPts.some(([px,py]) => visionSet.has(`${px},${py}`))
         : (_aVis && visionSet.has(`${_aVis.toX},${_aVis.toY}`));
       if(!visionSet.has(`${ax},${ay}`) && !_visPath) continue;
-      const cx=drawX*CELL+CELL/2, cy=drawY*CELL+CELL/2;
+      const [hitX, hitY] = _hitReaction2D(`a:${a.id}`);
+      const cx=drawX*CELL+CELL/2+hitX, cy=drawY*CELL+CELL/2+hitY;
       drawMiniBase(ctx, cx, cy, '#9900cc', false);
       // Sprite original do monstro (goblin/orc/etc.) — fallback p/ ícone via emoji.
       drawMonsterSprite(ctx, cx, cy-3, {
@@ -7264,8 +7624,8 @@ function renderMap(state){
       // Barra de vida (usa posição visual drawX/drawY)
       const pct=Math.max(0, (a.vida_atual||0)/(a.vida_max||1));
       const barH=Math.max(4,Math.round(CELL*0.08));
-      ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.fillRect(drawX*CELL+3,drawY*CELL+2,CELL-6,barH);
-      ctx.fillStyle='#cc44ff'; ctx.fillRect(drawX*CELL+3,drawY*CELL+2,(CELL-6)*pct,barH);
+      ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.fillRect(drawX*CELL+3+hitX,drawY*CELL+2+hitY,CELL-6,barH);
+      ctx.fillStyle='#cc44ff'; ctx.fillRect(drawX*CELL+3+hitX,drawY*CELL+2+hitY,(CELL-6)*pct,barH);
     }
   }
 
@@ -7277,7 +7637,8 @@ function renderMap(state){
     if(p.connected === false) continue;   // desconectado: deixou a masmorra, não desenha
     const [px,py]=p.pos;
     if(p.id !== GS.myPid && !visionSet.has(`${px},${py}`)) continue;
-    const X=px*CELL, Y=py*CELL, cx=X+CELL/2, cy=Y+CELL/2;
+    const [hitX, hitY] = _hitReaction2D(`p:${p.id}`);
+    const X=px*CELL+hitX, Y=py*CELL+hitY, cx=X+CELL/2, cy=Y+CELL/2;
     const isCur=p.id===state.current_turn, isMe=p.id===GS.myPid;
     const _invisP = !!p.invisivel_magico || _invisibilidadeAnimAtiva(p.id);
     if(_invisP) ctx.save(), ctx.globalAlpha=.18;
@@ -7291,6 +7652,7 @@ function renderMap(state){
     } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur);
     if(_invisP) ctx.restore();
     _drawStatusIcons2D(ctx, X, Y, p);
+    _drawEfeitosAtivos2D(ctx, state, p, cx, cy);
     if(isMe||isCur){
       const label=p.name.slice(0,9);
       const tagFs=Math.round(CELL*0.14);
@@ -7350,9 +7712,16 @@ function renderMap(state){
     _lentidaoDrawForeground2D(ctx, state, _animLentidao, _agoraRelampago);
   for(const _animVelocidade of _velocidadeAnims)
     _velocidadeDrawForeground2D(ctx, state, _animVelocidade, _agoraRelampago);
+  for(const _animHabilidade of _habilidadeAtivacaoAnims)
+    _habilidadeFxDraw2D(ctx, state, _animHabilidade, _agoraRelampago);
+  _drawAttackFeedback2D(ctx, state, _agoraRelampago);
   // Números de dano/cura e resultado de derrota ficam no primeiro plano para
   // permanecerem legíveis mesmo quando uma magia atravessa a miniatura.
   _drawCombatFeedback2D(ctx, state, _agoraRelampago);
+  _drawResistanceFeedback2D(ctx, state, _agoraRelampago);
+  _drawConditionPulses2D(ctx, state, _agoraRelampago);
+  _drawPositiveBursts2D(ctx, state, _agoraRelampago);
+  _drawDefeatVisuals2D(ctx, state, _agoraRelampago);
 }
 
 // ── Mortes visuais adiadas ──────────────────────────────────────────────────
@@ -7362,10 +7731,133 @@ function renderMap(state){
 // leitura visual do dano ou da magia terminar.
 const _mortesVisuaisPendentes = new Map();
 let _ultimoEstadoVisualMonstros = new Map();
+let _ultimoEstadoVisualHerois = new Map();
+let _ultimoEstadoVisualBaús = new Set();
 const MORTE_VISUAL_MIN_MS = VC.feedback?.combat?.damageMs ?? 1050;
 const MORTE_VISUAL_MAX_MS = 5200;
 const MORTE_VISUAL_MAGIA_RECENTE_MS = 900;
 let _ultimaMagiaVisualAt = -Infinity;
+const _defeatVisuals = [];
+let _defeatVisualRaf = null;
+
+function _defeatVisualConfig(kind){
+  const cfg = VC.feedback?.combat?.defeat || {};
+  const colors = cfg.colors || {};
+  const duration = kind === 'boss' ? (cfg.bossMs || 1750)
+    : kind === 'explosion' ? (cfg.explosionMs || 1450)
+    : kind === 'magic' ? (cfg.magicMs || 1150)
+    : kind === 'revive' ? (cfg.reviveMs || 1200)
+    : kind === 'hero' ? (cfg.commonMs || 1250)
+    : (cfg.commonMs || 1250);
+  return {duration, color: colors[kind] || (kind === 'hero' ? colors.hero : colors.common) || '#d6c29a'};
+}
+
+function _defeatVisualKind(entity, fallback='common'){
+  const abilities = (entity?.special_abilities || []).map(a => a?.id);
+  if(abilities.includes('morte_explosiva') || entity?.especial === 'explosao_6d6') return 'explosion';
+  if(entity?.boss) return 'boss';
+  if(fallback === 'magic') return 'magic';
+  return fallback;
+}
+
+function _spawnDefeatVisual(entity, kind='common'){
+  if(!entity || !Array.isArray(entity.pos)) return;
+  const cfg = _defeatVisualConfig(kind);
+  const v = {
+    pos: [Number(entity.pos[0]), Number(entity.pos[1])],
+    kind, color: cfg.color, start: performance.now(), duration: _animationProgressDuration(cfg.duration),
+    seed: ((Number(entity.id) || 1) * 2654435761) ^ Date.now(),
+    group: null, ring: null, particles: [],
+  };
+  _defeatVisuals.push(v);
+  if(mode3D && g3) _buildDefeatVisual3D(v);
+  _requestDefeatVisualFrame();
+}
+
+function _defeatColorHex(v){
+  return Number(`0x${String(v.color || '#d6c29a').replace('#','')}`) || 0xd6c29a;
+}
+
+function _buildDefeatVisual3D(v){
+  if(!g3 || !g3.scene || !window.THREE || v.group) return;
+  const T = g3.T, group = new T.Group(); group.name = `defeat-${v.kind}`;
+  const color = _defeatColorHex(v);
+  const mat = new T.MeshBasicMaterial({color, transparent:true, opacity:0, depthWrite:false, depthTest:false, blending:T.AdditiveBlending, side:T.DoubleSide});
+  v.ring = new T.Mesh(new T.TorusGeometry(v.kind === 'boss' ? .34 : .25, .028, 8, 32), mat);
+  v.ring.rotation.x = Math.PI / 2; v.ring.renderOrder = 135; group.add(v.ring);
+  for(let i=0;i<12;i++){
+    const pm = new T.MeshBasicMaterial({color, transparent:true, opacity:0, depthWrite:false, depthTest:false, blending:T.AdditiveBlending});
+    const particle = new T.Mesh(new T.OctahedronGeometry(.025 + (i%3)*.012, 0), pm);
+    particle.userData.i = i; group.add(particle); v.particles.push(particle);
+  }
+  g3.scene.add(group); v.group = group;
+}
+
+function _disposeDefeatVisual3D(v){
+  if(!v?.group) return;
+  if(v.group.parent) v.group.parent.remove(v.group);
+  v.group.traverse(o => { if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); });
+  v.group = null;
+}
+
+function _updateDefeatVisual3D(now){
+  if(!g3) return;
+  for(const v of _defeatVisuals){
+    if(!v.group || v.group.parent !== g3.scene) _buildDefeatVisual3D(v);
+    if(!v.group) continue;
+    const p = Math.max(0, Math.min(1, (now - v.start) / v.duration));
+    const fade = p < .58 ? 1 : Math.max(0, 1 - (p - .58) / .42);
+    const expand = v.kind === 'explosion' ? 1 + p * 3.0 : v.kind === 'boss' ? 1 + p * 2.4 : 1 + p * 1.8;
+    v.ring.position.set(v.pos[0], .32 + p * .18, v.pos[1]);
+    v.ring.scale.setScalar(expand); v.ring.material.opacity = .82 * fade;
+    for(const particle of v.particles){
+      const i = particle.userData.i, a = i * Math.PI * 2 / v.particles.length + v.seed * .00001;
+      const radius = (.10 + p * (v.kind === 'explosion' ? .75 : .48)) * (1 + (i % 3) * .12);
+      particle.position.set(v.pos[0] + Math.cos(a) * radius, .35 + p * (.55 + (i%4)*.10), v.pos[1] + Math.sin(a) * radius);
+      particle.rotation.y = now / 280 + i; particle.material.opacity = (.64 + .24 * Math.sin(now/120+i)**2) * fade;
+    }
+  }
+}
+
+function _drawDefeatVisuals2D(ctx, state, now){
+  for(const v of _defeatVisuals){
+    if(!_combatFeedbackVisible({pos:v.pos}, state)) continue;
+    const p = Math.max(0, Math.min(1, (now - v.start) / v.duration));
+    const fade = p < .58 ? 1 : Math.max(0, 1 - (p - .58) / .42);
+    const x = v.pos[0] * CELL + CELL/2, y = v.pos[1] * CELL + CELL/2;
+    const radius = CELL * (v.kind === 'explosion' ? (.16 + p * .80) : (.18 + p * .52));
+    ctx.save(); ctx.globalAlpha = fade; ctx.globalCompositeOperation = 'lighter';
+    ctx.strokeStyle = v.color; ctx.shadowColor = v.color; ctx.shadowBlur = CELL * .18;
+    ctx.lineWidth = Math.max(2, CELL * .045); ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI*2); ctx.stroke();
+    for(let i=0;i<10;i++){
+      const a = i * Math.PI * 2 / 10 + v.seed * .00001;
+      const rr = CELL * (.12 + p * (v.kind === 'explosion' ? .72 : .48));
+      const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr - p * CELL * .40;
+      ctx.fillStyle = v.color; ctx.beginPath(); ctx.arc(px, py, Math.max(1.5, CELL * (.025 + .018*(i%3))), 0, Math.PI*2); ctx.fill();
+    }
+    if(v.kind === 'magic'){
+      ctx.font = `${Math.max(16, CELL*.28)}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('✦', x, y - CELL*(.22 + p*.48));
+    } else if(v.kind === 'hero'){
+      ctx.font = `900 ${Math.max(12, CELL*.16)}px Arial, sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('CAÍDO', x, y - CELL*(.28 + p*.42));
+    }
+    ctx.restore();
+  }
+}
+
+function _requestDefeatVisualFrame(){
+  if(_defeatVisualRaf) return;
+  const tick = () => {
+    _defeatVisualRaf = null; const now = performance.now();
+    for(let i=_defeatVisuals.length-1;i>=0;i--){
+      const v = _defeatVisuals[i];
+      if(now - v.start < v.duration) continue;
+      _disposeDefeatVisual3D(v); _defeatVisuals.splice(i,1);
+    }
+    if(mode3D && g3) _updateDefeatVisual3D(now); else if(!mode3D && GS.gameState) renderMap(GS.gameState);
+    if(_defeatVisuals.length) _defeatVisualRaf = _scheduleVisualFrame(tick);
+  };
+  _defeatVisualRaf = _scheduleVisualFrame(tick);
+}
 
 function _visualTemAnimacaoDeMagia(){
   // Somente efeitos visuais de magia entram neste critério. Dados, números de
@@ -7410,6 +7902,16 @@ function _agendarFimMorteVisual(id){
       atual.timer = setTimeout(verificar, 100);
       return;
     }
+    if(!atual.confirmado){
+      atual.confirmado = true;
+      const titulo = atual.monster.boss ? `👑 ${atual.monster.name} derrotado` : `✅ ${atual.monster.name} derrotado`;
+      toast(titulo, atual.monster.boss ? 'var(--gold)' : 'var(--green)');
+      if(atual.xpGain > 0 || atual.lootAvailable){
+        const recompensa = [atual.xpGain > 0 ? `✨ +${atual.xpGain} XP` : '', atual.lootAvailable ? '🧰 Baú de saque disponível' : '']
+          .filter(Boolean).join('  •  ');
+        toast(recompensa, 'var(--gold)');
+      }
+    }
     _mortesVisuaisPendentes.delete(String(id));
     _renderizarEstadoAtual();
   };
@@ -7420,6 +7922,13 @@ function _capturarMortesVisuais(state){
   const anteriores = _ultimoEstadoVisualMonstros;
   const proximos = new Map((state.monsters || []).map(m => [String(m.id), m]));
   const agora = performance.now();
+  const xpAnterior = _ultimoEstadoVisualHerois;
+  const novosBaus = new Set((state.chests || []).map(c => String(c.id)));
+  const mortesPotenciais = [...anteriores].filter(([id, anterior]) => {
+    const proximo = proximos.get(id);
+    return anterior && anterior.hp > 0 && (!proximo || proximo.hp <= 0);
+  }).length;
+  let morteSequenceIndex = 0;
   const aguardarMagia = _visualTemAnimacaoDeMagia()
     || agora < _ultimaMagiaVisualAt + MORTE_VISUAL_MAGIA_RECENTE_MS;
 
@@ -7430,7 +7939,17 @@ function _capturarMortesVisuais(state){
     if(!morreu) continue;
     const existente = _mortesVisuaisPendentes.get(id);
     if(existente) continue;
+    const morteIndex = morteSequenceIndex++;
     const copia = JSON.parse(JSON.stringify(anterior));
+    const kind = _defeatVisualKind(anterior,
+      _visualTemAnimacaoDeMagia() ? 'magic' : 'common');
+    _spawnDefeatVisual(anterior, kind);
+    _playDefeatSound(kind);
+    const minhaAntes = xpAnterior.get(String(GS.myPid));
+    const minhaAgora = (state.players || []).find(p => String(p.id) === String(GS.myPid));
+    const xpGain = minhaAntes != null && minhaAgora ? Math.max(0, Number(minhaAgora.xp || 0) - Number(minhaAntes.xp || 0)) : 0;
+    const lootAvailable = (state.chests || []).some(c => ! _ultimoEstadoVisualBaús.has(String(c.id))
+      && Array.isArray(c.pos) && Math.max(Math.abs(c.pos[0] - anterior.pos[0]), Math.abs(c.pos[1] - anterior.pos[1])) <= 1);
     // Mantém a miniatura, mas deixa a barra no mínimo visual enquanto o
     // impacto termina — a cópia não pode parecer um alvo vivo.
     copia.hp = 1;
@@ -7440,21 +7959,54 @@ function _capturarMortesVisuais(state){
       minAte: agora + MORTE_VISUAL_MIN_MS,
       maxAte: agora + (aguardarMagia ? MORTE_VISUAL_MAX_MS : MORTE_VISUAL_MIN_MS),
       magiaAte: agora + MORTE_VISUAL_MAGIA_RECENTE_MS,
-      aguardarMagia,
+      aguardarMagia, xpGain, lootAvailable, confirmado: false,
       timer: null,
     });
-    _spawnCombatFeedback(anterior, '☠ DERROTADO', 'death');
+    _spawnCombatFeedback(
+      anterior, '☠ DERROTADO', 'death',
+      (() => {
+        const inicio = _bolaFogoFeedbackStartAt(anterior);
+        return inicio != null ? inicio + (mortesPotenciais > 1 ? morteIndex * 120 : 0)
+          : (mortesPotenciais > 1 ? agora + morteIndex * 120 : null);
+      })()
+    );
     _agendarFimMorteVisual(id);
   }
 
   // Se um monstro reaparecer de fato (ressurreição/reinício), o estado vivo
   // autoritativo vence e a cópia visual antiga deixa de ser necessária.
   for(const [id, monstro] of proximos){
-    if(monstro && monstro.hp > 0) _mortesVisuaisPendentes.delete(id);
+    if(monstro && monstro.hp > 0){
+      const pendente = _mortesVisuaisPendentes.get(id);
+      if(pendente){
+        _spawnDefeatVisual(monstro, 'revive');
+        _playDefeatSound('magic');
+      }
+      _mortesVisuaisPendentes.delete(id);
+    }
   }
   _ultimoEstadoVisualMonstros = new Map(
     [...proximos.entries()].filter(([, m]) => m && m.hp > 0)
   );
+  _ultimoEstadoVisualBaús = novosBaus;
+  _ultimoEstadoVisualHerois = new Map((state.players || []).map(p => [String(p.id), {xp:p.xp, alive:p.alive, pos:p.pos}]));
+}
+
+function _capturarDerrotasERessurreicoes(state){
+  const anteriores = _ultimoEstadoVisualHerois;
+  const atuais = new Map((state.players || []).map(p => [String(p.id), p]));
+  for(const [id, anterior] of anteriores){
+    const atual = atuais.get(id);
+    if(!atual || !Array.isArray(atual.pos)) continue;
+    if(anterior.alive && !atual.alive){
+      _spawnDefeatVisual(atual, 'hero');
+      _playDefeatSound('hero');
+      _spawnCombatFeedback({pos:atual.pos}, '☠ MORTE DEFINITIVA', 'death', performance.now());
+    } else if(!anterior.alive && atual.alive){
+      _spawnDefeatVisual(atual, 'revive');
+      _playDefeatSound('magic');
+    }
+  }
 }
 
 function _estadoComMortosVisuais(state){
@@ -7480,6 +8032,8 @@ function _limparMortesVisuais(){
     if(rec.timer) clearTimeout(rec.timer);
   _mortesVisuaisPendentes.clear();
   _ultimoEstadoVisualMonstros = new Map();
+  _ultimoEstadoVisualHerois = new Map();
+  _ultimoEstadoVisualBaús = new Set();
 }
 
 // ── PAINTERS PROCEDURAIS DE MATERIAL (compartilhados 2D tile + 3D textura) ────
@@ -7510,6 +8064,119 @@ function paintDirt(ctx, ox, oy, size, r){
     const s=80+r()*60; ctx.fillStyle=`rgb(${s|0},${(s*0.85)|0},${(s*0.7)|0})`;
     ctx.beginPath(); ctx.ellipse(px,py,rr,rr*0.8,0,0,Math.PI*2); ctx.fill();
     ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(px+rr*0.4,py+rr*0.4,rr,rr*0.7,0,0,Math.PI*2); ctx.fill(); }
+}
+
+function paintSand(ctx, ox, oy, size, r){
+  const grad=ctx.createLinearGradient(ox,oy,ox+size,oy+size);
+  grad.addColorStop(0,'#d7b66f'); grad.addColorStop(.5,'#c7a15a'); grad.addColorStop(1,'#aa7e3e');
+  ctx.fillStyle=grad; ctx.fillRect(ox,oy,size,size);
+  // Ondulações de vento e pequenos grãos dão à casa o aspecto de areia desértica.
+  for(let row=0; row<5; row++){
+    const yy=oy+size*(.12+row*.19)+(r()-.5)*size*.06;
+    ctx.strokeStyle=row%2 ? 'rgba(245,220,155,.34)' : 'rgba(111,72,27,.28)';
+    ctx.lineWidth=Math.max(1,size/90); ctx.beginPath();
+    ctx.moveTo(ox-size*.04,yy);
+    ctx.bezierCurveTo(ox+size*.22,yy-size*.045,ox+size*.42,yy+size*.045,ox+size*.68,yy);
+    ctx.bezierCurveTo(ox+size*.82,yy-size*.035,ox+size*1.02,yy+size*.035,ox+size*1.05,yy-size*.01);
+    ctx.stroke();
+  }
+  for(let n=0;n<Math.round(size*.22);n++){
+    const px=ox+r()*size, py=oy+r()*size, rr=size*(.008+r()*.022);
+    ctx.fillStyle=r()<.55 ? 'rgba(91,58,24,.28)' : 'rgba(255,231,166,.35)';
+    ctx.beginPath(); ctx.ellipse(px,py,rr,rr*.55,r()*Math.PI,0,Math.PI*2); ctx.fill();
+  }
+}
+
+function paintLava(ctx, ox, oy, size, r){
+  const grad=ctx.createLinearGradient(ox,oy,ox+size,oy+size);
+  grad.addColorStop(0,'#ff8a20'); grad.addColorStop(.38,'#df3b12');
+  grad.addColorStop(.72,'#8e160d'); grad.addColorStop(1,'#300b0b');
+  ctx.fillStyle=grad; ctx.fillRect(ox,oy,size,size);
+  // Crosta escura irregular entre veios de magma; o fluxo animado é aplicado
+  // por drawFloor3D, enquanto esta textura fornece o relevo/base no 3D.
+  for(let n=0;n<Math.round(size*.11);n++){
+    const px=ox+r()*size, py=oy+r()*size, rw=size*(.04+r()*.12), rh=size*(.02+r()*.07);
+    ctx.fillStyle='rgba(24,5,5,.62)';
+    ctx.beginPath(); ctx.ellipse(px,py,rw,rh,r()*Math.PI,0,Math.PI*2); ctx.fill();
+  }
+  for(let n=0;n<Math.round(size*.08);n++){
+    const px=ox+r()*size, py=oy+r()*size;
+    ctx.fillStyle='rgba(255,183,45,.82)';
+    ctx.beginPath(); ctx.arc(px,py,size*(.008+r()*.018),0,Math.PI*2); ctx.fill();
+  }
+}
+
+function paintSwamp(ctx, ox, oy, size, r){
+  const grad=ctx.createLinearGradient(ox,oy,ox+size,oy+size);
+  grad.addColorStop(0,'#3f5b35'); grad.addColorStop(.48,'#293d2a');
+  grad.addColorStop(1,'#17261d');
+  ctx.fillStyle=grad; ctx.fillRect(ox,oy,size,size);
+  // Lama irregular, folhas e pequenas poças; as ondulações móveis são
+  // desenhadas em drawFloor3D para a superfície parecer viva.
+  for(let n=0;n<Math.round(size*.18);n++){
+    const px=ox+r()*size, py=oy+r()*size, rw=size*(.035+r()*.13), rh=size*(.018+r()*.065);
+    ctx.fillStyle=r()<.55 ? 'rgba(9,20,15,.52)' : 'rgba(74,96,56,.34)';
+    ctx.beginPath(); ctx.ellipse(px,py,rw,rh,r()*Math.PI,0,Math.PI*2); ctx.fill();
+  }
+  for(let n=0;n<Math.round(size*.07);n++){
+    const px=ox+r()*size, py=oy+r()*size, rr=size*(.018+r()*.035);
+    ctx.fillStyle='rgba(112,133,78,.38)'; ctx.beginPath(); ctx.arc(px,py,rr,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(141,164,102,.30)'; ctx.lineWidth=Math.max(1,size/85);
+    ctx.beginPath(); ctx.ellipse(px,py,rr*1.8,rr*.72,r()*Math.PI,0,Math.PI*2); ctx.stroke();
+  }
+}
+
+function paintDuneWallTop(ctx, ox, oy, size, r){
+  ctx.fillStyle='#68401f'; ctx.fillRect(ox,oy,size,size);
+  const cx=ox+size*(.48+(r()-.5)*.08), cy=oy+size*(.53+(r()-.5)*.08);
+  const rx=size*(.52+r()*.05), ry=size*(.52+r()*.05);
+  ctx.save();
+  ctx.beginPath(); ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2); ctx.clip();
+  paintSand(ctx,ox,oy,size,r);
+  ctx.restore();
+  ctx.strokeStyle='rgba(255,226,154,.52)'; ctx.lineWidth=Math.max(1,size/22);
+  ctx.beginPath(); ctx.arc(cx-size*.08,cy-size*.08,size*.31,.25*Math.PI,1.22*Math.PI); ctx.stroke();
+  ctx.strokeStyle='rgba(83,48,18,.50)'; ctx.lineWidth=Math.max(1,size/18);
+  ctx.beginPath(); ctx.arc(cx+size*.05,cy+size*.10,size*.38,.18*Math.PI,.88*Math.PI); ctx.stroke();
+}
+
+function paintRock(ctx, ox, oy, size, r, brown=false){
+  const grad=ctx.createLinearGradient(ox,oy,ox+size,oy+size);
+  grad.addColorStop(0, brown ? '#9a6b46' : '#77726e');
+  grad.addColorStop(.42, brown ? '#65452f' : '#4c4949');
+  grad.addColorStop(1, brown ? '#302016' : '#252527');
+  ctx.fillStyle=brown ? '#21150f' : '#171719'; ctx.fillRect(ox,oy,size,size);
+  // Silhueta quebrada, com faces grandes e assimétricas em vez de uma parede
+  // de tijolos regular.
+  const pts=[];
+  const n=9;
+  for(let i=0;i<n;i++){
+    const a=i/n*Math.PI*2, rr=size*(.43+r()*.10);
+    pts.push([ox+size*.5+Math.cos(a)*rr, oy+size*.52+Math.sin(a)*rr]);
+  }
+  ctx.save(); ctx.beginPath(); pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.closePath(); ctx.clip();
+  ctx.fillStyle=grad; ctx.fillRect(ox,oy,size,size);
+  for(let i=0;i<7;i++){
+    const cx=ox+size*(.18+r()*.64), cy=oy+size*(.16+r()*.68);
+    const rw=size*(.12+r()*.25), rh=size*(.09+r()*.25);
+    ctx.fillStyle=brown
+      ? (i%3===0 ? 'rgba(190,137,91,.25)' : i%3===1 ? 'rgba(34,20,13,.36)' : 'rgba(119,76,48,.28)')
+      : (i%3===0 ? 'rgba(142,136,128,.26)' : i%3===1 ? 'rgba(22,22,25,.34)' : 'rgba(92,87,86,.26)');
+    ctx.beginPath(); ctx.ellipse(cx,cy,rw,rh,r()*Math.PI,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+  ctx.strokeStyle='rgba(10,10,12,.78)'; ctx.lineWidth=Math.max(1,size/26);
+  ctx.beginPath(); pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.closePath(); ctx.stroke();
+  // Fissuras e veios minerais quebram a superfície sem sugerir alvenaria.
+  for(let i=0;i<4;i++){
+    const px=ox+size*(.22+r()*.55), py=oy+size*(.18+r()*.58);
+    ctx.strokeStyle=brown
+      ? (i%2 ? 'rgba(225,173,119,.24)' : 'rgba(20,11,7,.46)')
+      : (i%2 ? 'rgba(207,201,187,.22)' : 'rgba(4,4,7,.42)');
+    ctx.lineWidth=Math.max(1,size/75); ctx.beginPath(); ctx.moveTo(px,py);
+    ctx.lineTo(px+size*(r()-.5)*.24,py+size*(.12+r()*.24));
+    ctx.lineTo(px+size*(r()-.5)*.34,py+size*(.22+r()*.22)); ctx.stroke();
+  }
 }
 
 function paintBrick(ctx, ox, oy, size, r, base, mortar){
@@ -7579,9 +8246,12 @@ const MAT_PALETTE_2D = {
   // pisos
   pedra_cinza: { base: [44, 42, 50],  accent: 'stone' },
   terra:       { base: [74, 56, 38],  accent: 'dirt'  },
+  areia_deserto: { base: [196, 154, 83], accent: 'sand' },
   grama:       { base: [46, 78, 40],  accent: 'grass' },
   agua:        { base: [0, 120, 202], accent: 'water' },
   agua_profunda: { base: [6, 23, 63], accent: 'deepWater' },
+  lava:        { base: [214, 59, 19], accent: 'lava' },
+  pantano:     { base: [53, 78, 49], accent: 'swamp' },
   pedra_negra: { base: [20, 19, 24],  accent: 'stone' },
   madeira_escura: { base: [59, 32, 15], accent: 'woodFloor' },
   entulho:     { base: [70, 66, 58],  accent: 'rubble' },
@@ -7591,6 +8261,9 @@ const MAT_PALETTE_2D = {
   pedra_caverna: { base: [120, 82, 46],  accent: 'cave' },
   desmoronada:   { base: [96, 88, 76],   accent: 'wallRubble' },
   madeira:        { base: [74, 39, 15], accent: 'woodWall' },
+  duna_deserto: { base: [190, 139, 67], accent: 'duneWall' },
+  rocha:        { base: [72, 70, 70], accent: 'rockWall' },
+  rocha_marrom: { base: [117, 75, 50], accent: 'brownRockWall' },
 };
 // Resolve o material de uma casa para render (default por estrutura do tile).
 function matDaCasa(state, x, y){
@@ -7626,6 +8299,13 @@ function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview, matI
   }
   else if(pal.accent==='grass'){ paintGrass(ctx, X, Y, CELL, _rng((x*53^y*97^7)>>>0)); }
   else if(pal.accent==='dirt'){ paintDirt(ctx, X, Y, CELL, _rng((x*29^y*71^3)>>>0)); }
+  else if(pal.accent==='sand'){ paintSand(ctx, X, Y, CELL, _rng((x*43^y*83^11)>>>0)); }
+  else if(pal.accent==='lava'){
+    paintLava(ctx, X, Y, CELL, _rng((x*61^y*107^19)>>>0));
+  }
+  else if(pal.accent==='swamp'){
+    paintSwamp(ctx, X, Y, CELL, _rng((x*67^y*131^23)>>>0));
+  }
   else if(pal.accent==='woodFloor'){
     ctx.fillStyle='#241108'; ctx.fillRect(X,Y,CELL,CELL);
     const boards=4, bh=CELL/boards;
@@ -7837,6 +8517,24 @@ function drawWallSouthFace(ctx, x, y, matId){
   const [BR, BG, BB] = pal.base;
   const cmix=(dr,dg,db,a)=>`rgba(${Math.max(0,Math.min(255,BR+dr))},${Math.max(0,Math.min(255,BG+dg))},${Math.max(0,Math.min(255,BB+db))},${a})`;
 
+  if(pal.accent==='duneWall'){
+    const grad=ctx.createLinearGradient(0,faceY,0,faceY+faceH);
+    grad.addColorStop(0,'#d0a15a'); grad.addColorStop(.35,'#a87132'); grad.addColorStop(1,'rgba(55,29,12,0)');
+    ctx.fillStyle=grad; ctx.beginPath(); ctx.moveTo(X+1,faceY+faceH);
+    for(let i=0;i<=8;i++){
+      const px=X+1+(CELL-2)*i/8;
+      const py=faceY+faceH*.08+(((h>>(i%13))&7)-3);
+      i ? ctx.lineTo(px,py) : ctx.lineTo(px,py);
+    }
+    ctx.lineTo(X+CELL-1,faceY+faceH); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='rgba(255,222,145,.48)'; ctx.lineWidth=1.3;
+    for(let row=0;row<3;row++){
+      const yy=faceY+7+row*8; ctx.beginPath();
+      ctx.moveTo(X+3,yy); ctx.bezierCurveTo(X+CELL*.32,yy-3,X+CELL*.68,yy+3,X+CELL-3,yy-1); ctx.stroke();
+    }
+    return;
+  }
+
   // Cabana: tábuas horizontais, juntas profundas e veios irregulares.
   if(pal.accent==='woodWall'){
     const plankH=Math.max(5, Math.floor(faceH/3));
@@ -7914,6 +8612,9 @@ function drawWallTop3D(ctx, x, y, matId){
   const pal = MAT_PALETTE_2D[matId] || MAT_PALETTE_2D.pedra_normal;
   const [BR, BG, BB] = pal.base;
   // Estilos próprios: caverna (pedra irregular) e enegrecida (tijolo preto).
+  if(pal.accent==='duneWall'){ paintDuneWallTop(ctx, X, Y, CELL, _rng((x*47^y*31^17)>>>0)); return; }
+  if(pal.accent==='rockWall'){ paintRock(ctx, X, Y, CELL, _rng((x*59^y*43^29)>>>0)); return; }
+  if(pal.accent==='brownRockWall'){ paintRock(ctx, X, Y, CELL, _rng((x*61^y*47^31)>>>0), true); return; }
   if(pal.accent==='cave'){ paintCave(ctx, X, Y, CELL, _rng((x*41^y*23^9)>>>0)); return; }
   if(pal.accent==='blackbrick'){ paintBrick(ctx, X, Y, CELL, _rng((x*7^y*13)>>>0), [22,21,26], '#070709'); return; }
   if(pal.accent==='woodWall'){
@@ -8116,7 +8817,7 @@ function playImpact(intensity){
     hpf.type = 'highpass'; hpf.frequency.value = 2200;
     const crackGain = ctx.createGain();
     crackGain.gain.value = 1.1;
-    crackSrc.connect(hpf); hpf.connect(crackGain); crackGain.connect(_sfxBus());
+    crackSrc.connect(hpf); hpf.connect(crackGain); crackGain.connect(_diceBus());
     crackSrc.start(now);
 
     // Layer 2 — low body thud (pitched sine)
@@ -8127,7 +8828,7 @@ function playImpact(intensity){
     thudOsc.frequency.exponentialRampToValueAtTime(55, now + 0.07);
     thudGain.gain.setValueAtTime(0.40 * intensity, now);
     thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
-    thudOsc.connect(thudGain); thudGain.connect(_sfxBus());
+    thudOsc.connect(thudGain); thudGain.connect(_diceBus());
     thudOsc.start(now); thudOsc.stop(now + 0.09);
   } catch(e){}
 }
@@ -8157,7 +8858,7 @@ function playSettle(){
     osc.frequency.exponentialRampToValueAtTime(110, now + 0.16);
     gain.gain.setValueAtTime(0.35, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.20);
-    osc.connect(gain); gain.connect(_sfxBus());
+    osc.connect(gain); gain.connect(_diceBus());
     osc.start(now); osc.stop(now + 0.20);
   } catch(e){}
 }
@@ -8226,24 +8927,404 @@ function playHeal(){
   } catch(e){}
 }
 
+// Sons de encerramento: mantêm a mesma identidade WebAudio do dano, mas cada
+// resultado tem uma assinatura própria. O áudio da derrota do grupo continua
+// sendo o arquivo assets/music/derrota.mp3; este pulso apenas o anuncia.
+function _playDefeatSound(kind='common'){
+  const ctx = getAudioContext(); if(!ctx || ctx.state !== 'running') return;
+  try{
+    const now = ctx.currentTime, bus = _sfxBus();
+    const notes = kind === 'boss' ? [196, 147, 98] : kind === 'explosion' ? [92, 58] : kind === 'magic' ? [660, 440] : [220, 132];
+    const strength = kind === 'boss' ? 1.45 : kind === 'explosion' ? 1.18 : 1;
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.type = kind === 'explosion' ? 'sawtooth' : kind === 'magic' ? 'sine' : 'triangle';
+      const t = now + i * (kind === 'boss' ? .13 : .08);
+      osc.frequency.setValueAtTime(freq, t);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(35, freq * .55), t + .34);
+      gain.gain.setValueAtTime(.001, t); gain.gain.exponentialRampToValueAtTime((kind === 'boss' ? .16 : .10) * strength, t + .018);
+      gain.gain.exponentialRampToValueAtTime(.001, t + .40);
+      osc.connect(gain); gain.connect(bus); osc.start(t); osc.stop(t + .43);
+    });
+  }catch(e){}
+}
+
+function _playGroupDefeatSound(){
+  const ctx = getAudioContext(); if(!ctx || ctx.state !== 'running') return;
+  try{
+    const now = ctx.currentTime, bus = _sfxBus(), osc = ctx.createOscillator(), gain = ctx.createGain();
+    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(180, now); osc.frequency.exponentialRampToValueAtTime(38, now + 1.05);
+    gain.gain.setValueAtTime(.001, now); gain.gain.exponentialRampToValueAtTime(.38, now + .035); gain.gain.exponentialRampToValueAtTime(.001, now + 1.15);
+    osc.connect(gain); gain.connect(bus); osc.start(now); osc.stop(now + 1.18);
+  }catch(e){}
+}
+
+// ── Cues curtos de combate ─────────────────────────────────────────────────
+// Todos os sinais rápidos passam por um limitador de repetição. Isso evita que
+// ataques em área e efeitos por rodada virem uma parede sonora, sem esconder
+// o primeiro impacto de cada evento.
+const _combatCueLast = new Map();
+function _playCombatCue(kind, opts={}){
+  const ctx = getAudioContext();
+  if(!ctx || ctx.state !== 'running') return;
+  const damageType = _combatDamageTypeInfo(opts.damageType || '').key;
+  const repeatKey = String(opts.repeatKey || `${kind}:${damageType || ''}`);
+  const nowPerf = performance.now();
+  const minGap = Number(opts.minGap ?? (kind === 'damage' ? 130 : 70));
+  const last = _combatCueLast.get(repeatKey) || -Infinity;
+  if(nowPerf - last < minGap) return;
+  _combatCueLast.set(repeatKey, nowPerf);
+  try{
+    const now = ctx.currentTime, bus = _sfxBus();
+    if(!bus) return;
+    const profile = {
+      attack:      {wave:'triangle', f1:180, f2:92,  dur:.14, gain:.075},
+      error:       {wave:'sawtooth',f1:300, f2:72,  dur:.24, gain:.10},
+      critical:    {wave:'triangle', f1:180, f2:920, dur:.34, gain:.18},
+      resistance:  {wave:'sine',    f1:720, f2:1080,dur:.25, gain:.11},
+      physical:    {wave:'sine',    f1:190, f2:70,  dur:.16, gain:.065},
+      fire:        {wave:'sawtooth',f1:155, f2:58,  dur:.25, gain:.09},
+      cold:        {wave:'triangle',f1:1040,f2:420, dur:.28, gain:.075},
+      lightning:   {wave:'square',  f1:1240,f2:180, dur:.13, gain:.095},
+      acid:        {wave:'sawtooth',f1:430, f2:90,  dur:.31, gain:.07},
+      poison:      {wave:'square',  f1:280, f2:110, dur:.28, gain:.065},
+      holy:        {wave:'sine',    f1:620, f2:980, dur:.34, gain:.10},
+      magic:       {wave:'sine',    f1:460, f2:860, dur:.36, gain:.075},
+      water:       {wave:'sine',    f1:380, f2:170, dur:.23, gain:.055},
+    };
+    const key = kind === 'damage' ? (damageType || 'physical') : kind;
+    const p = profile[key] || profile.magic;
+    const power = Number(opts.power || 1);
+    const volume = Math.max(0, Number(opts.volume ?? 1));
+    const osc = ctx.createOscillator(), gain = ctx.createGain();
+    osc.type = p.wave;
+    osc.frequency.setValueAtTime(Math.max(20, p.f1), now);
+    if(p.f2 > p.f1) osc.frequency.exponentialRampToValueAtTime(p.f2, now + p.dur * .72);
+    else osc.frequency.exponentialRampToValueAtTime(Math.max(20, p.f2), now + p.dur);
+    gain.gain.setValueAtTime(.0001, now);
+    gain.gain.exponentialRampToValueAtTime(Math.min(.34, p.gain * power * volume), now + .012);
+    gain.gain.exponentialRampToValueAtTime(.0001, now + p.dur);
+    osc.connect(gain); gain.connect(bus); osc.start(now); osc.stop(now + p.dur + .03);
+    if(kind === 'critical' || key === 'lightning'){
+      const o2 = ctx.createOscillator(), g2 = ctx.createGain(), t = now + .055;
+      o2.type = 'sine'; o2.frequency.setValueAtTime(key === 'lightning' ? 1580 : 740, t);
+      o2.frequency.exponentialRampToValueAtTime(key === 'lightning' ? 420 : 360, t + .16);
+      g2.gain.setValueAtTime(.0001, t);
+      g2.gain.exponentialRampToValueAtTime(Math.min(.20, p.gain * power * volume * .72), t + .008);
+      g2.gain.exponentialRampToValueAtTime(.0001, t + .19);
+      o2.connect(g2); g2.connect(bus); o2.start(t); o2.stop(t + .21);
+    }
+  }catch(e){}
+}
+
+function _spellHasDedicatedSound(id){
+  return new Set([
+    'relampago','bola_fogo','raio_congelante','raio_divino','jato_ar',
+    'sopro_dragao','cuspe_acido','dominar_mente','sono','silencio','medo',
+    'barreira','maldicao','invisibilidade','protecao_energia','manto_escuridao',
+    'clarividencia','regeneracao','velocidade','lentidao','abencoar','abencoar_arma',
+  ]).has(String(id || '').toLowerCase());
+}
+
+function _playGenericSpellCue(msg){
+  if(!msg || msg.phase !== 'start' || _spellHasDedicatedSound(msg.spell_id)) return;
+  _playCombatCue('magic', {repeatKey:`spell:${msg.spell_id || 'magic'}`, volume:.78});
+}
+
 // ── Feedback visual de combate ─────────────────────────────────────────────
 // O servidor continua sendo a fonte do dano. O cliente apenas anima a
 // diferença entre dois game_states, o que mantém o efeito sincronizado para
 // todos os jogadores sem criar uma segunda resolução de combate.
 const _combatFeedbacks = [];
+const _resistanceFeedbacks = [];
+const _conditionPulses = [];
+const _attackFeedbacks = [];
 const _combatHpVisual = new Map();
 let _combatFeedbackRaf = null;
+let _resistanceFeedbackRaf = null;
+let _attackFeedbackRaf = null;
 let _combatVisualUntil = 0;
 const COMBAT_FEEDBACK_DAMAGE_MS = VC.feedback?.combat?.damageMs ?? 1050;
 const COMBAT_FEEDBACK_DEATH_MS = VC.feedback?.combat?.deathMs ?? 1500;
 const COMBAT_FEEDBACK_DAMAGE_FONT_SCALE = VC.feedback?.combat?.damageFontScale ?? 1.5;
+const ATTACK_FEEDBACK_PREP_MS = 240;
+const ATTACK_FEEDBACK_RESULT_MS = 980;
+const RESISTANCE_FEEDBACK_MS = VC.feedback?.combat?.resistance?.durationMs ?? 1450;
 
-function _combatFeedbackColor(kind){
+function _resistanceInfo(type){
+  const key = String(type || '').toLowerCase();
+  const table = VC.feedback?.combat?.resistance || {};
+  return table[key] || {color:'#d9c7ff', icon:'🛡', label:key.toUpperCase() || 'RESISTÊNCIA'};
+}
+
+function _resistanceFeedbackVisible(f, state){
+  if(!state || GS.isMaster() || state.test_mode) return true;
+  const explored = new Set([...(state.explored||[]), ...(state.revealed||[])].map(([x,y])=>`${x},${y}`));
+  return explored.has(`${f.pos[0]},${f.pos[1]}`);
+}
+
+function _resistanceOutcomeText(e){
+  if(e.immune) return 'IMUNE';
+  if(e.poison && e.passed) return 'RESISTIU AO VENENO';
+  if(e.mitigation === 'half_damage') return e.passed
+    ? 'PASSOU — METADE DO DANO' : 'FALHOU — EFEITO COMPLETO';
+  return e.passed ? 'PASSOU' : 'FALHOU';
+}
+
+function _consumeResistanceEvents(state){
+  for(const e of (state?.resistance_events || [])){
+    if(!Array.isArray(e.pos)) continue;
+    _playCombatCue('resistance', {repeatKey:'resistance', volume:.9});
+    const info = _resistanceInfo(e.save_type);
+    const f = {
+      pos: [Number(e.pos[0]), Number(e.pos[1])],
+      name: String(e.target_name || 'Alvo'),
+      type: info.label,
+      icon: info.icon,
+      color: info.color,
+      dc: Number(e.dc) || 0,
+      roll: Number(e.roll) || 0,
+      modifier: Number(e.modifier) || 0,
+      total: Number(e.total) || 0,
+      outcome: _resistanceOutcomeText(e),
+      start: performance.now(), duration: _animationProgressDuration(RESISTANCE_FEEDBACK_MS),
+      mesh: null,
+    };
+    _resistanceFeedbacks.push(f);
+    if(mode3D && g3) _buildResistanceFeedback3D(f);
+  }
+  if(_resistanceFeedbacks.length) _requestResistanceFeedbackFrame();
+}
+
+function _buildResistanceFeedback3D(f){
+  if(!g3 || !g3.scene || !window.THREE || f.mesh) return;
+  const T = g3.T, cv = document.createElement('canvas');
+  cv.width = 640; cv.height = 150;
+  const c = cv.getContext('2d');
+  const line1 = `${f.icon} ${f.name} • ${f.type} • CD ${f.dc}`;
+  const modText = f.modifier >= 0 ? `+ ${f.modifier}` : `− ${Math.abs(f.modifier)}`;
+  const line2 = `d20 ${f.roll} ${modText} = ${f.total} — ${f.outcome}`;
+  c.clearRect(0,0,cv.width,cv.height);
+  c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
+  let fontPx = 30;
+  c.font = `900 ${fontPx}px Arial Black, sans-serif`;
+  const widest = Math.max(c.measureText(line1).width, c.measureText(line2).width);
+  if(widest > cv.width - 24){
+    fontPx = Math.max(18, fontPx * (cv.width - 24) / widest);
+    c.font = `900 ${fontPx}px Arial Black, sans-serif`;
+  }
+  c.strokeStyle = 'rgba(5,3,12,0.94)'; c.lineWidth = 11;
+  c.strokeText(line1, cv.width/2, 48); c.strokeText(line2, cv.width/2, 105);
+  c.fillStyle = f.color; c.fillText(line1, cv.width/2, 48);
+  c.fillStyle = f.outcome === 'FALHOU — EFEITO COMPLETO' ? '#ff7474' : '#fff1b0';
+  c.fillText(line2, cv.width/2, 105);
+  const tex = new T.CanvasTexture(cv); tex._owned = true;
+  const mat = new T.SpriteMaterial({map:tex, transparent:true, depthWrite:false, depthTest:false, opacity:0});
+  const sp = new T.Sprite(mat);
+  sp.position.set(f.pos[0], 1.10, f.pos[1]); sp.scale.set(1.72, 0.40, 1); sp.renderOrder = 128;
+  g3.scene.add(sp); f.mesh = sp;
+}
+
+function _disposeResistanceFeedback3D(f){
+  if(!f?.mesh) return;
+  if(f.mesh.parent) f.mesh.parent.remove(f.mesh);
+  const mat = f.mesh.material, tex = mat?.map;
+  if(mat) mat.dispose(); if(tex?._owned) tex.dispose();
+  f.mesh = null;
+}
+
+function _updateResistanceFeedback3D(now){
+  if(!g3) return;
+  for(const f of _resistanceFeedbacks){
+    if(!f.mesh || f.mesh.parent !== g3.scene) _buildResistanceFeedback3D(f);
+    if(!f.mesh) continue;
+    const p = Math.max(0, Math.min(1, (now - f.start) / f.duration));
+    f.mesh.position.set(f.pos[0], 1.10 + p * 0.28, f.pos[1]);
+    f.mesh.material.opacity = p < 0.72 ? 1 : Math.max(0, 1 - (p - 0.72) / 0.28);
+  }
+}
+
+function _requestResistanceFeedbackFrame(){
+  if(_resistanceFeedbackRaf) return;
+  const tick = () => {
+    _resistanceFeedbackRaf = null;
+    const now = performance.now();
+    for(let i=_resistanceFeedbacks.length-1;i>=0;i--){
+      const f = _resistanceFeedbacks[i];
+      if(now - f.start < f.duration) continue;
+      _disposeResistanceFeedback3D(f); _resistanceFeedbacks.splice(i,1);
+    }
+    if(mode3D && g3) _updateResistanceFeedback3D(now);
+    else if(!mode3D && GS.gameState) renderMap(GS.gameState);
+    if(_resistanceFeedbacks.length) _resistanceFeedbackRaf = _scheduleVisualFrame(tick);
+  };
+  _resistanceFeedbackRaf = _scheduleVisualFrame(tick);
+}
+
+function _conditionPulsePosition(msg){
+  if(Array.isArray(msg?.pos)) return [Number(msg.pos[0]), Number(msg.pos[1])];
+  const st = GS.gameState;
+  const id = msg?.target_id;
+  if(id == null || !st) return null;
+  const found = [...(st.players||[]), ...(st.monsters||[]),
+    ...(st.players||[]).flatMap(p => p.animados || [])]
+    .find(e => String(e?.id) === String(id));
+  return Array.isArray(found?.pos) ? [Number(found.pos[0]), Number(found.pos[1])] : null;
+}
+
+function _queueConditionPulse(msg){
+  const pos = _conditionPulsePosition(msg);
+  if(!pos || pos.some(v => !Number.isFinite(v))) return;
+  const type = String(msg?.tipo || msg?.condition_id || '').toLowerCase();
+  const icon = msg?.icone || ({
+    sono:'🌙', veneno:'☠️', petrificado:'🗿', enfeiticado:'✨',
+    sangramento:'🩸', hemorragia:'⚠️', doenca:'🦠', maldicao:'🔮',
+  }[type] || '⚠️');
+  const pulse = {pos, icon, start:performance.now(), duration:_animationProgressDuration(980), mesh:null};
+  _conditionPulses.push(pulse);
+  if(mode3D && g3) _buildConditionPulse3D(pulse);
+  _requestConditionPulseFrame();
+}
+
+function _buildConditionPulse3D(p){
+  if(!g3 || !g3.scene || !window.THREE || p.mesh) return;
+  const T=g3.T, cv=document.createElement('canvas'); cv.width=128; cv.height=128;
+  const c=cv.getContext('2d'); c.font='72px serif'; c.textAlign='center'; c.textBaseline='middle';
+  c.fillText(p.icon,64,64);
+  const tex=new T.CanvasTexture(cv); tex._owned=true;
+  const mat=new T.SpriteMaterial({map:tex,transparent:true,depthWrite:false,depthTest:false,opacity:0});
+  const sp=new T.Sprite(mat); sp.position.set(p.pos[0],1.18,p.pos[1]); sp.scale.set(.38,.38,1); sp.renderOrder=131;
+  g3.scene.add(sp); p.mesh=sp;
+}
+
+function _disposeConditionPulse3D(p){
+  if(!p?.mesh) return;
+  if(p.mesh.parent) p.mesh.parent.remove(p.mesh);
+  const mat=p.mesh.material, tex=mat?.map; if(mat) mat.dispose(); if(tex?._owned) tex.dispose(); p.mesh=null;
+}
+
+function _updateConditionPulses(now){
+  for(const p of _conditionPulses){
+    if(!p.mesh || p.mesh.parent !== g3?.scene) _buildConditionPulse3D(p);
+    if(!p.mesh) continue;
+    const q=Math.max(0,Math.min(1,(now-p.start)/p.duration));
+    p.mesh.position.set(p.pos[0],1.18+q*.55,p.pos[1]);
+    p.mesh.scale.setScalar(.30+q*.22); p.mesh.material.opacity=q<.58?1:Math.max(0,1-(q-.58)/.42);
+  }
+}
+
+let _conditionPulseRaf=null;
+function _requestConditionPulseFrame(){
+  if(_conditionPulseRaf) return;
+  const tick=()=>{
+    _conditionPulseRaf=null; const now=performance.now();
+    for(let i=_conditionPulses.length-1;i>=0;i--){
+      if(now-_conditionPulses[i].start < _conditionPulses[i].duration) continue;
+      _disposeConditionPulse3D(_conditionPulses[i]); _conditionPulses.splice(i,1);
+    }
+    if(mode3D && g3) _updateConditionPulses(now); else if(!mode3D && GS.gameState) renderMap(GS.gameState);
+    if(_conditionPulses.length) _conditionPulseRaf=_scheduleVisualFrame(tick);
+  };
+  _conditionPulseRaf=_scheduleVisualFrame(tick);
+}
+
+function _attackFeedbackVisible(f, state){
+  if(!state || GS.isMaster() || state.test_mode) return true;
+  const explored = new Set([...(state.explored||[]), ...(state.revealed||[])].map(([x,y])=>`${x},${y}`));
+  return explored.has(`${f.targetPos[0]},${f.targetPos[1]}`)
+    || explored.has(`${f.attackerPos[0]},${f.attackerPos[1]}`);
+}
+
+function _attackFeedbackModeLabel(mode){
+  return mode === 'advantage' ? 'VANTAGEM' : mode === 'disadvantage' ? 'DESVANTAGEM' : 'NORMAL';
+}
+
+function _attackFeedbackResultLabel(f){
+  if(!f.result) return 'PREPARANDO';
+  if(f.natural_critical) return '20 NATURAL — CRÍTICO!';
+  if(f.natural_fumble) return '1 NATURAL — FALHA!';
+  if(f.crit) return 'CRÍTICO!';
+  return f.hit ? 'ACERTO' : 'ERRO';
+}
+
+function _attackFeedbackColor(f){
+  if(!f.result) return '#ffe18a';
+  if(f.natural_critical || f.crit) return '#ffd34d';
+  if(f.natural_fumble) return '#d978ff';
+  return f.hit ? '#7dffad' : '#ff7373';
+}
+
+function _attackFeedbackText(f){
+  const mode = _attackFeedbackModeLabel(f.advantageMode);
+  const result = _attackFeedbackResultLabel(f);
+  return `${f.attackerName} → ${f.targetName} • ${f.attackName} • ${mode} • ${result}`;
+}
+
+function _attackFeedbackDirection(f, p){
+  const ax = f.attackerPos[0] + .5, ay = f.attackerPos[1] + .5;
+  const tx = f.targetPos[0] + .5, ty = f.targetPos[1] + .5;
+  const q = Math.max(0, Math.min(1, p));
+  return [ax + (tx-ax)*q, ay + (ty-ay)*q, tx, ty];
+}
+
+function _combatDamageTypeInfo(type){
   const c = VC.feedback?.combat || {};
-  return kind === 'heal' ? (c.healColor || '#69f59a')
-    : kind === 'death' ? (c.deathColor || '#f4d27a')
-    : kind === 'hero_damage' ? (c.heroDamageColor || '#ff8d8d')
+  const table = c.damageTypes || {};
+  const aliases = {
+    fisico:'physical', físico:'physical', physical:'physical',
+    fogo:'fire', fire:'fire', chamas:'fire',
+    frio:'cold', frio_: 'cold', gelo:'cold', cold:'cold',
+    eletricidade:'lightning', eletrico:'lightning', elétrico:'lightning',
+    raio:'lightning', relampago:'lightning', relâmpago:'lightning', lightning:'lightning',
+    acido:'acid', ácido:'acid', acid:'acid',
+    veneno:'poison', poison:'poison',
+    sagrado:'holy', holy:'holy',
+    magico:'magic', mágico:'magic', magic:'magic',
+    agua:'water', água:'water', water:'water',
+  };
+  const key = aliases[String(type || '').trim().toLowerCase()] || String(type || '').trim().toLowerCase();
+  return { key, ...(table[key] || table.physical || {color:'#f4eee2', icon:'⚔', label:'Físico'}) };
+}
+
+function _combatPrimaryDamageType(types){
+  const list = (Array.isArray(types) ? types : [types])
+    .map(t => _combatDamageTypeInfo(t).key).filter(Boolean);
+  if(!list.length) return 'physical';
+  // Em um golpe misto (arma + sagrado, por exemplo), a cor energética vence
+  // a cor física para que a propriedade especial fique imediatamente visível.
+  const priority = ['fire','cold','lightning','acid','poison','holy','magic','water','physical'];
+  return priority.find(t => list.includes(t)) || list[0];
+}
+
+function _combatFeedbackColor(kind, damageType){
+  const c = VC.feedback?.combat || {};
+  if(kind === 'heal') return c.healColor || '#69f59a';
+  if(kind === 'death') return c.deathColor || '#f4d27a';
+  if(damageType){
+    const info = _combatDamageTypeInfo(damageType);
+    if(_highContrast){
+      const highContrastColors = {
+        physical:'#ffffff', fire:'#ff9d00', cold:'#00eaff', lightning:'#fff500',
+        acid:'#72ff3b', poison:'#ff65ff', holy:'#fff2a6', magic:'#eaa7ff', water:'#62dfff'
+      };
+      return highContrastColors[info.key] || '#ffffff';
+    }
+    // Golpes físicos contra heróis mantêm o vermelho já conhecido; os demais
+    // usam a cor do elemento para não esconder fogo/frio/ácido no HUD.
+    if(info.key !== 'physical' || kind !== 'hero_damage') return info.color;
+  }
+  return kind === 'hero_damage' ? (c.heroDamageColor || '#ff8d8d')
     : (c.damageColor || '#ff6262');
+}
+
+function _combatFeedbackDisplayText(f){
+  if(!f || f.kind === 'death' || !f.damageType){
+    if(f?.kind === 'heal' && f.status) return `${f.text} ${f.status}`;
+    return f?.text || '';
+  }
+  const icon = _combatDamageTypeInfo(f.damageType).icon;
+  const base = icon ? `${icon} ${f.text}` : f.text;
+  return f.status ? `${base} ${f.status}` : base;
 }
 
 function _combatFeedbackVisible(f, state){
@@ -8257,29 +9338,31 @@ function _buildCombatFeedback3D(f){
   const T = g3.T, cv = document.createElement('canvas');
   cv.width = 384; cv.height = 112;
   const c = cv.getContext('2d');
-  const color = _combatFeedbackColor(f.kind);
+  const color = _combatFeedbackColor(f.kind, f.damageType);
+  const displayText = _combatFeedbackDisplayText(f);
   c.clearRect(0,0,cv.width,cv.height);
-  const fontBase = f.kind === 'death' ? 54 : 64;
+  const fontBase = (f.kind === 'death' ? 54
+    : 64 * (f.critical ? (VC.feedback?.combat?.criticalFontScale ?? 1.32) : 1)) * _accessFontScale;
   c.font = `900 ${fontBase}px Arial Black, sans-serif`;
   // "☠ DERROTADO" é bem mais largo que um número. Reduzimos apenas a fonte
   // quando ela não cabe na textura, evitando que o CanvasTexture a corte nas
   // extremidades; o feedback continua centralizado no peão.
-  const textWidth = c.measureText(f.text).width;
+  const textWidth = c.measureText(displayText).width;
   const textLimit = cv.width - 36;
   const fontPx = textWidth > textLimit ? fontBase * textLimit / textWidth : fontBase;
   c.font = `900 ${fontPx}px Arial Black, sans-serif`;
   c.textAlign = 'center'; c.textBaseline = 'middle';
   c.lineJoin = 'round'; c.lineWidth = 15; c.strokeStyle = 'rgba(8,4,12,0.92)';
-  c.strokeText(f.text, cv.width/2, cv.height/2 + 2);
-  c.fillStyle = color; c.fillText(f.text, cv.width/2, cv.height/2 + 2);
+  c.strokeText(displayText, cv.width/2, cv.height/2 + 2);
+  c.fillStyle = color; c.fillText(displayText, cv.width/2, cv.height/2 + 2);
   const tex = new T.CanvasTexture(cv); tex._owned = true;
   const mat = new T.SpriteMaterial({map:tex, transparent:true, depthWrite:false,
     depthTest:false, opacity:0});
   const sp = new T.Sprite(mat);
   sp.position.set(f.pos[0], 0.86, f.pos[1]);
   sp.scale.set(
-    f.kind === 'death' ? 1.18 : 0.74 * COMBAT_FEEDBACK_DAMAGE_FONT_SCALE,
-    f.kind === 'death' ? 0.34 : 0.27 * COMBAT_FEEDBACK_DAMAGE_FONT_SCALE,
+    (f.kind === 'death' ? 1.18 : 0.74 * COMBAT_FEEDBACK_DAMAGE_FONT_SCALE * (f.critical ? 1.12 : 1)) * _accessFontScale,
+    (f.kind === 'death' ? 0.34 : 0.27 * COMBAT_FEEDBACK_DAMAGE_FONT_SCALE * (f.critical ? 1.12 : 1)) * _accessFontScale,
     1
   );
   sp.renderOrder = 125;
@@ -8302,30 +9385,203 @@ function _updateCombatFeedback3D(now){
   for(const f of _combatFeedbacks){
     if(!f.mesh || f.mesh.parent !== g3.scene) _buildCombatFeedback3D(f);
     if(!f.mesh) continue;
+    // Alguns feedbacks podem estar agendados para depois de uma animação de
+    // magia. Mantemos o sprite criado para não alterar o fluxo 3D, mas ele
+    // permanece invisível até o instante autorizado.
+    if(now < f.start){
+      f.mesh.material.opacity = 0;
+      continue;
+    }
     const p = Math.max(0, Math.min(1, (now - f.start) / f.duration));
     const fade = p < 0.62 ? 1 : Math.max(0, 1 - (p - 0.62) / 0.38);
     f.mesh.position.set(f.pos[0], 0.86 + p * 0.62, f.pos[1]);
     f.mesh.material.opacity = fade;
     const s = 0.92 + 0.10 * Math.sin(Math.min(1, p / 0.22) * Math.PI);
     f.mesh.scale.set(
-      (f.kind === 'death' ? 1.18 : 0.74 * COMBAT_FEEDBACK_DAMAGE_FONT_SCALE) * s,
-      (f.kind === 'death' ? 0.34 : 0.27 * COMBAT_FEEDBACK_DAMAGE_FONT_SCALE) * s,
+      (f.kind === 'death' ? 1.18 : 0.74 * COMBAT_FEEDBACK_DAMAGE_FONT_SCALE * (f.critical ? 1.12 : 1)) * _accessFontScale * s,
+      (f.kind === 'death' ? 0.34 : 0.27 * COMBAT_FEEDBACK_DAMAGE_FONT_SCALE * (f.critical ? 1.12 : 1)) * _accessFontScale * s,
       1
     );
+  }
+}
+
+function _attackFeedbackProgress(f, now){
+  const elapsed = now - f.startedAt;
+  if(!f.result || (f.resultAt && now < f.resultAt))
+    return {p: Math.max(0, Math.min(1, elapsed / (f.prepDuration || _animationProgressDuration(ATTACK_FEEDBACK_PREP_MS)))), done:false, preparing:true};
+  const p = Math.max(0, Math.min(1, (now - f.resultAt) / (f.resultDuration || _animationProgressDuration(ATTACK_FEEDBACK_RESULT_MS))));
+  return {p, done:p >= 1, preparing:false};
+}
+
+function _drawAttackFeedback2D(ctx, state, now){
+  for(const f of _attackFeedbacks){
+    if(!_attackFeedbackVisible(f, state)) continue;
+    const progress = _attackFeedbackProgress(f, now);
+    if(progress.done) continue;
+    const prep = progress.preparing;
+    const travel = prep ? progress.p : 1;
+    const [sx, sy, tx, ty] = _attackFeedbackDirection(f, travel);
+    const x1=sx*CELL, y1=sy*CELL, x2=tx*CELL, y2=ty*CELL;
+    const dx=x2-x1, dy=y2-y1, len=Math.max(1,Math.hypot(dx,dy));
+    const ux=dx/len, uy=dy/len, px=-uy, py=ux;
+    const color = _attackFeedbackColor(f);
+    const alpha = f.result ? Math.max(0, 1-progress.p) : .88;
+    ctx.save();
+    ctx.globalAlpha=alpha;
+    ctx.lineCap='round';
+    ctx.shadowColor=color; ctx.shadowBlur=prep ? 10 : 15;
+    ctx.strokeStyle=color; ctx.lineWidth=Math.max(2, CELL*.045);
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    // Duas hastes formam uma ponta de seta sem depender de fonte/emoji.
+    ctx.shadowBlur=0; ctx.lineWidth=Math.max(2, CELL*.035);
+    ctx.beginPath();
+    ctx.moveTo(x2-ux*CELL*.22+px*CELL*.12, y2-uy*CELL*.22+py*CELL*.12);
+    ctx.lineTo(x2,y2);
+    ctx.lineTo(x2-ux*CELL*.22-px*CELL*.12, y2-uy*CELL*.22-py*CELL*.12);
+    ctx.stroke();
+    if(prep){
+      ctx.strokeStyle='#ffe18a'; ctx.lineWidth=Math.max(2,CELL*.025);
+      ctx.beginPath(); ctx.arc(f.attackerPos[0]*CELL+CELL/2, f.attackerPos[1]*CELL+CELL/2,
+        CELL*(.28+.18*Math.sin(progress.p*Math.PI)), 0, Math.PI*2); ctx.stroke();
+    } else if(f.natural_critical || f.natural_fumble){
+      // 20/1 natural recebe uma explosão própria, além da cor e do texto.
+      const specialColor=f.natural_critical ? '#ffd34d' : '#d978ff';
+      const bx=x2, by=y2, pulse=Math.max(0,1-progress.p);
+      ctx.strokeStyle=specialColor; ctx.lineWidth=Math.max(2,CELL*.028);
+      for(let i=0;i<8;i++){
+        const a=i*Math.PI/4, r1=CELL*(.18+.10*(1-pulse)), r2=CELL*(.40+.18*(1-pulse));
+        ctx.beginPath(); ctx.moveTo(bx+Math.cos(a)*r1,by+Math.sin(a)*r1);
+        ctx.lineTo(bx+Math.cos(a)*r2,by+Math.sin(a)*r2); ctx.stroke();
+      }
+      ctx.fillStyle=specialColor; ctx.font=`900 ${Math.round(CELL*.32)}px Arial Black, sans-serif`;
+      ctx.fillText(f.natural_critical?'✦':'!', bx, by-CELL*.32);
+    }
+    const midX=(x1+x2)/2, midY=(y1+y2)/2-CELL*.18;
+    const label=_attackFeedbackText(f);
+    ctx.font=`900 ${Math.max(11,Math.round(CELL*.145))}px Arial Black, sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    const tw=ctx.measureText(label).width, pad=CELL*.08;
+    ctx.fillStyle='rgba(8,4,12,.84)';
+    ctx.fillRect(midX-tw/2-pad, midY-CELL*.12, tw+pad*2, CELL*.24);
+    ctx.fillStyle=color; ctx.fillText(label, midX, midY);
+    ctx.restore();
+  }
+}
+
+function _buildAttackFeedback3D(f){
+  if(!g3 || !g3.scene || !window.THREE || f.group) return;
+  const T=g3.T, group=new T.Group(); group.name='attack-feedback';
+  const lineMat=new T.LineBasicMaterial({color:0xffe18a,transparent:true,opacity:0,depthWrite:false,depthTest:false});
+  const lineGeo=new T.BufferGeometry();
+  const line=new T.Line(lineGeo,lineMat); group.add(line); f.line=line;
+  const arrowMat=lineMat.clone();
+  const arrowGeo=new T.BufferGeometry();
+  const arrow=new T.Line(arrowGeo,arrowMat); group.add(arrow); f.arrow=arrow;
+  const ring=new T.Mesh(new T.TorusGeometry(.32,.025,8,28),new T.MeshBasicMaterial({color:0xffe18a,transparent:true,opacity:0,depthWrite:false,depthTest:false}));
+  ring.rotation.x=Math.PI/2; ring.renderOrder=118; group.add(ring); f.ring=ring;
+  const cv=document.createElement('canvas'); cv.width=720; cv.height=92;
+  const tex=new T.CanvasTexture(cv); tex._owned=true;
+  const mat=new T.SpriteMaterial({map:tex,transparent:true,opacity:0,depthWrite:false,depthTest:false});
+  const sprite=new T.Sprite(mat); sprite.scale.set(3.4,.43,1); sprite.renderOrder=120; group.add(sprite);
+  f.group=group; f.sprite=sprite; f.canvas=cv; f.texture=tex;
+  g3.scene.add(group);
+  _drawAttackFeedbackTexture3D(f);
+}
+
+function _drawAttackFeedbackTexture3D(f){
+  if(!f.canvas) return;
+  const c=f.canvas.getContext('2d'), color=_attackFeedbackColor(f);
+  c.clearRect(0,0,f.canvas.width,f.canvas.height);
+  c.font='900 30px Arial Black, sans-serif'; c.textAlign='center'; c.textBaseline='middle';
+  const label=_attackFeedbackText(f);
+  c.fillStyle='rgba(8,4,12,.90)'; c.fillRect(8,8,f.canvas.width-16,f.canvas.height-16);
+  c.strokeStyle=color; c.lineWidth=4; c.strokeRect(8,8,f.canvas.width-16,f.canvas.height-16);
+  c.fillStyle=color; c.fillText(label,f.canvas.width/2,f.canvas.height/2);
+  if(f.texture) f.texture.needsUpdate=true;
+}
+
+function _updateAttackFeedback3D(now){
+  if(!g3) return;
+  for(const f of _attackFeedbacks){
+    if(!f.group || f.group.parent!==g3.scene) _buildAttackFeedback3D(f);
+    if(!f.group) continue;
+    const q=_attackFeedbackProgress(f,now), prep=q.preparing;
+    const ax=f.attackerPos[0]+.5, az=f.attackerPos[1]+.5;
+    const tx=f.targetPos[0]+.5, tz=f.targetPos[1]+.5;
+    const ex=prep ? ax+(tx-ax)*q.p : tx, ez=prep ? az+(tz-az)*q.p : tz;
+    const opacity=prep ? .82 : Math.max(0,1-q.p);
+    const color=new g3.T.Color(_attackFeedbackColor(f));
+    const points=[new g3.T.Vector3(ax,.28,az),new g3.T.Vector3(ex,.28,ez)];
+    f.line.geometry.setFromPoints(points); f.line.material.color.copy(color); f.line.material.opacity=opacity;
+    const dx=tx-ex,dz=tz-ez,len=Math.max(.001,Math.hypot(dx,dz)),ux=dx/len,uz=dz/len,px=-uz,pz=ux;
+    f.arrow.geometry.setFromPoints([
+      new g3.T.Vector3(tx-ux*.25+px*.13,.28,tz-uz*.25+pz*.13),
+      new g3.T.Vector3(tx,.28,tz),
+      new g3.T.Vector3(tx-ux*.25-px*.13,.28,tz-uz*.25-pz*.13),
+    ]); f.arrow.material.color.copy(color); f.arrow.material.opacity=opacity;
+    f.ring.position.set(prep ? ax : tx,.29,prep ? az : tz); f.ring.material.color.copy(color);
+    f.ring.material.opacity=prep ? opacity : (f.natural_critical || f.natural_fumble ? opacity*.9 : 0);
+    f.sprite.position.set((ax+tx)/2,.64,(az+tz)/2); f.sprite.material.opacity=opacity;
+    if(prep) f.ring.scale.setScalar(.82+.28*Math.sin(q.p*Math.PI));
+    else if(f.natural_critical || f.natural_fumble) f.ring.scale.setScalar(1.0+q.p*.9);
+  }
+}
+
+function _disposeAttackFeedback(f){
+  if(!f.group) return;
+  if(f.group.parent) f.group.parent.remove(f.group);
+  f.group.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material){ const m=Array.isArray(o.material)?o.material:[o.material]; m.forEach(x=>x.dispose()); }});
+  if(f.texture && f.texture._owned) f.texture.dispose();
+  f.group=null;
+}
+
+function _receiveAttackFeedback(msg){
+  if(!msg || !msg.attack_id) return;
+  _registrarHistoricoAtaque(msg);
+  const id=String(msg.attack_id), now=performance.now();
+  if(msg.phase==='start'){
+    _playCombatCue('attack', {repeatKey:'attack', volume:.9});
+    const f={id, attackerName:msg.attacker_name||'Atacante', targetName:msg.target_name||'Alvo',
+      attackName:msg.attack_name||'Ataque', attackerPos:(msg.attacker_pos||[0,0]).map(Number),
+      targetPos:(msg.target_pos||[0,0]).map(Number), advantageMode:msg.advantage_mode||'normal',
+      result:false, startedAt:now, resultAt:now,
+      prepDuration:_animationProgressDuration(ATTACK_FEEDBACK_PREP_MS),
+      resultDuration:_animationProgressDuration(ATTACK_FEEDBACK_RESULT_MS), group:null};
+    _attackFeedbacks.push(f);
+  }else if(msg.phase==='result'){
+    const f=_attackFeedbacks.find(x=>x.id===id);
+    if(!f) return;
+    Object.assign(f,{result:true,resultAt:now+f.prepDuration,roll:msg.roll,total:msg.total,hit:!!msg.hit,crit:!!msg.crit,
+      natural:msg.natural,natural_critical:!!msg.natural_critical,natural_fumble:!!msg.natural_fumble});
+    if(msg.natural_critical || msg.crit)
+      _playCombatCue('critical', {repeatKey:'critical', power:msg.natural_critical ? 1.3 : 1.1, volume:1});
+    else if(!msg.hit || msg.natural_fumble)
+      _playCombatCue('error', {repeatKey:'error', volume:.82});
+    _drawAttackFeedbackTexture3D(f);
+  }
+  if(mode3D && g3) _buildAttackFeedback3D(_attackFeedbacks[_attackFeedbacks.length-1]);
+  if(!_attackFeedbackRaf){
+    const tick=()=>{_attackFeedbackRaf=null; const n=performance.now();
+      for(let i=_attackFeedbacks.length-1;i>=0;i--){const f=_attackFeedbacks[i],q=_attackFeedbackProgress(f,n);if(f.result&&q.done){_disposeAttackFeedback(f);_attackFeedbacks.splice(i,1);}}
+      if(!mode3D&&GS.gameState) renderMap(GS.gameState); if(mode3D&&g3) _updateAttackFeedback3D(n);
+      if(_attackFeedbacks.length) _attackFeedbackRaf=_scheduleVisualFrame(tick);
+    }; _attackFeedbackRaf=_scheduleVisualFrame(tick);
   }
 }
 
 function _drawCombatFeedback2D(ctx, state, now){
   for(const f of _combatFeedbacks){
     if(!_combatFeedbackVisible(f, state)) continue;
+    if(now < f.start) continue;
     const p = Math.max(0, Math.min(1, (now - f.start) / f.duration));
     const fade = p < 0.62 ? 1 : Math.max(0, 1 - (p - 0.62) / 0.38);
     const x = f.pos[0] * CELL + CELL/2;
     const y = f.pos[1] * CELL + CELL * (0.30 - 0.42*p);
     const fsBase = Math.max(15, CELL * 0.19);
-    const fs = f.kind === 'death'
+    const fs = (f.kind === 'death'
       ? Math.max(15, CELL * 0.22)
-      : fsBase * COMBAT_FEEDBACK_DAMAGE_FONT_SCALE;
+      : fsBase * COMBAT_FEEDBACK_DAMAGE_FONT_SCALE
+        * (f.critical ? (VC.feedback?.combat?.criticalFontScale ?? 1.32) : 1)) * _accessFontScale;
     ctx.save();
     ctx.globalAlpha = fade;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -8334,7 +9590,8 @@ function _drawCombatFeedback2D(ctx, state, now){
     // Em casas nas extremidades do mapa, o centro do peão não deixa espaço
     // suficiente para a palavra inteira. Clampar o ponto de desenho mantém o
     // texto dentro do canvas sem alterar a posição dos demais feedbacks.
-    const textWidth = ctx.measureText(f.text).width;
+    const displayText = _combatFeedbackDisplayText(f);
+    const textWidth = ctx.measureText(displayText).width;
     const textPad = Math.max(4, ctx.lineWidth) + 2;
     const halfW = textWidth / 2 + textPad;
     const halfH = fs / 2 + textPad;
@@ -8344,9 +9601,53 @@ function _drawCombatFeedback2D(ctx, state, now){
     const drawY = ctx.canvas.height > halfH * 2
       ? Math.max(halfH, Math.min(ctx.canvas.height - halfH, y))
       : ctx.canvas.height / 2;
-    ctx.strokeStyle = 'rgba(8,4,12,0.92)'; ctx.strokeText(f.text, drawX, drawY);
-    ctx.fillStyle = _combatFeedbackColor(f.kind); ctx.fillText(f.text, drawX, drawY);
+    if(f.critical){
+      ctx.shadowColor = _combatFeedbackColor(f.kind, f.damageType);
+      ctx.shadowBlur = Math.max(8, fs * 0.22);
+    }
+    ctx.strokeStyle = 'rgba(8,4,12,0.92)'; ctx.strokeText(displayText, drawX, drawY);
+    ctx.fillStyle = _combatFeedbackColor(f.kind, f.damageType); ctx.fillText(displayText, drawX, drawY);
     ctx.restore();
+  }
+}
+
+function _drawResistanceFeedback2D(ctx, state, now){
+  for(const f of _resistanceFeedbacks){
+    if(!_resistanceFeedbackVisible(f, state)) continue;
+    const p = Math.max(0, Math.min(1, (now - f.start) / f.duration));
+    const alpha = p < 0.72 ? 1 : Math.max(0, 1 - (p - 0.72) / 0.28);
+    const x = f.pos[0] * CELL + CELL/2;
+    const y = f.pos[1] * CELL + CELL * (0.12 - 0.34*p);
+    const line1 = `${f.icon} ${f.name} • ${f.type} • CD ${f.dc}`;
+    const modText = f.modifier >= 0 ? `+ ${f.modifier}` : `− ${Math.abs(f.modifier)}`;
+    const line2 = `d20 ${f.roll} ${modText} = ${f.total} — ${f.outcome}`;
+    const fs = Math.max(11, CELL * 0.115) * _accessFontScale;
+    ctx.save(); ctx.globalAlpha = alpha; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `900 ${fs}px Arial Black, sans-serif`;
+    const w = Math.max(ctx.measureText(line1).width, ctx.measureText(line2).width) + 14;
+    const h = fs * 2.65;
+    const drawX = Math.max(w/2, Math.min(ctx.canvas.width - w/2, x));
+    const drawY = Math.max(h/2, Math.min(ctx.canvas.height - h/2, y));
+    ctx.fillStyle = 'rgba(8,5,18,0.88)';
+    ctx.strokeStyle = f.color; ctx.lineWidth = Math.max(1.5, fs * 0.10);
+    ctx.beginPath(); ctx.roundRect(drawX - w/2, drawY - h/2, w, h, fs * .35); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = f.color; ctx.fillText(line1, drawX, drawY - fs*.52);
+    ctx.fillStyle = f.outcome === 'FALHOU — EFEITO COMPLETO' ? '#ff7474' : '#fff1b0';
+    ctx.fillText(line2, drawX, drawY + fs*.52);
+    ctx.restore();
+  }
+}
+
+function _drawConditionPulses2D(ctx, state, now){
+  for(const p of _conditionPulses){
+    if(!_resistanceFeedbackVisible(p, state)) continue;
+    const q=Math.max(0,Math.min(1,(now-p.start)/p.duration));
+    const alpha=q<.58?1:Math.max(0,1-(q-.58)/.42);
+    const x=p.pos[0]*CELL+CELL/2, y=p.pos[1]*CELL+CELL*(0.18-0.58*q);
+    ctx.save(); ctx.globalAlpha=alpha; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font=`${Math.max(18,CELL*.34)}px serif`;
+    ctx.shadowColor='#fff0a0'; ctx.shadowBlur=10+8*Math.sin(q*Math.PI);
+    ctx.fillText(p.icon,x,y); ctx.restore();
   }
 }
 
@@ -8359,33 +9660,92 @@ function _pruneCombatFeedbacks(now){
   }
 }
 
-function _requestCombatFeedbackFrame(){
-  _combatVisualUntil = Math.max(_combatVisualUntil, performance.now() + COMBAT_FEEDBACK_DAMAGE_MS);
+function _requestCombatFeedbackFrame(untilAt){
+  const now = performance.now();
+  _combatVisualUntil = Math.max(
+    _combatVisualUntil,
+    Number.isFinite(untilAt) ? untilAt : now + COMBAT_FEEDBACK_DAMAGE_MS
+  );
   if(_combatFeedbackRaf) return;
   const tick = () => {
     _combatFeedbackRaf = null;
     const now = performance.now();
     _pruneCombatFeedbacks(now);
-    if(!mode3D && GS.gameState) renderMap(GS.gameState);
+    if(mode3D && g3) _updateCombatFeedback3D(now);
+    else if(!mode3D && GS.gameState) renderMap(GS.gameState);
     if(_combatFeedbacks.length || now < _combatVisualUntil){
-      _combatFeedbackRaf = requestAnimationFrame(tick);
+      _combatFeedbackRaf = _scheduleVisualFrame(tick);
     }
   };
-  _combatFeedbackRaf = requestAnimationFrame(tick);
+  _combatFeedbackRaf = _scheduleVisualFrame(tick);
 }
 
-function _spawnCombatFeedback(entry, text, kind){
+function _spawnCombatFeedback(entry, text, kind, startAt, damageType, options={}){
   if(!entry || !Array.isArray(entry.pos)) return;
+  const visualStart = Number.isFinite(startAt) ? startAt : performance.now();
   const f = {
     pos: [Number(entry.pos[0]), Number(entry.pos[1])],
     text: String(text), kind: kind || 'damage',
-    start: performance.now(),
-    duration: kind === 'death' ? COMBAT_FEEDBACK_DEATH_MS : COMBAT_FEEDBACK_DAMAGE_MS,
+    damageType: damageType ? _combatPrimaryDamageType(damageType) : null,
+    status: options.status ? String(options.status) : '',
+    critical: !!options.critical,
+    start: visualStart,
+    duration: _animationProgressDuration(kind === 'death' ? COMBAT_FEEDBACK_DEATH_MS : COMBAT_FEEDBACK_DAMAGE_MS),
     mesh: null,
   };
   _combatFeedbacks.push(f);
   if(mode3D && g3) _buildCombatFeedback3D(f);
-  _requestCombatFeedbackFrame();
+  _requestCombatFeedbackFrame(visualStart + f.duration);
+}
+
+// Reação visual de impacto. A chave é a mesma usada pelo snapshot de HP
+// (p:id, m:id, a:id, pr:singleton), permitindo que 2D e 3D reajam ao mesmo
+// dano sem tocar na posição autoritativa recebida do servidor.
+const _hitReactions = new Map();
+
+function _triggerHitReaction(entry, critical=false, startAt=null){
+  if(!entry || !entry.key) return;
+  const cfg = VC.feedback?.combat?.hitReaction || {};
+  const duration = _animationProgressDuration(Number(cfg.durationMs) || 190);
+  const now = Number.isFinite(startAt) ? startAt : performance.now();
+  const old = _hitReactions.get(entry.key);
+  // Vários componentes de dano no mesmo estado renovam a reação, mas não
+  // acumulam amplitude indefinidamente.
+  const seed = old?.seed ?? ((String(entry.key).split('').reduce((n,ch)=>n+ch.charCodeAt(0),0) % 100) / 100) * Math.PI;
+  _hitReactions.set(entry.key, {
+    start: now,
+    end: now + duration,
+    seed,
+    critical: !!critical || !!old?.critical,
+  });
+}
+
+function _hitReaction2D(key, now=performance.now()){
+  const r = _hitReactions.get(key);
+  if(!r) return [0, 0];
+  if(now < r.start) return [0, 0];
+  if(now >= r.end){ _hitReactions.delete(key); return [0, 0]; }
+  const cfg = VC.feedback?.combat?.hitReaction || {};
+  const p = Math.max(0, Math.min(1, (now - r.start) / Math.max(1, r.end - r.start)));
+  const envelope = Math.pow(1 - p, 1.15);
+  const cycles = Number(cfg.cycles) || 2.7;
+  const amp = (Number(cfg.amplitude2D) || 2.4) * (r.critical ? (Number(cfg.criticalScale) || 1.3) : 1);
+  const wave = Math.sin((p * cycles * Math.PI * 2) + r.seed);
+  // Movimento elíptico pequeno, evitando o aspecto de um simples deslocamento.
+  return [wave * amp * envelope, Math.cos((p * cycles * Math.PI * 2) + r.seed) * amp * 0.42 * envelope];
+}
+
+function _hitReaction3DAngle(key, now=performance.now()){
+  const r = _hitReactions.get(key);
+  if(!r) return 0;
+  if(now < r.start) return 0;
+  if(now >= r.end){ _hitReactions.delete(key); return 0; }
+  const cfg = VC.feedback?.combat?.hitReaction || {};
+  const p = Math.max(0, Math.min(1, (now - r.start) / Math.max(1, r.end - r.start)));
+  const envelope = Math.pow(1 - p, 1.15);
+  const cycles = Number(cfg.cycles) || 2.7;
+  const amp = (Number(cfg.angle3D) || 0.055) * (r.critical ? (Number(cfg.criticalScale) || 1.3) : 1);
+  return Math.sin((p * cycles * Math.PI * 2) + r.seed) * amp * envelope;
 }
 
 function _combatHpRatio(key, target, maxHp){
@@ -8419,9 +9779,59 @@ function _gatherHpEntries(st){
   return out;
 }
 
+// Retorna o instante em que o feedback visual de um alvo atingido por Bola de
+// Fogo pode aparecer. O dano continua autoritativo e imediato no servidor;
+// somente os números/"derrotado" aguardam o término da explosão visual.
+function _bolaFogoFeedbackStartAt(entry){
+  if(!entry || !Array.isArray(entry.pos)) return null;
+  const px = Number(entry.pos[0]), py = Number(entry.pos[1]);
+  if(!Number.isFinite(px) || !Number.isFinite(py)) return null;
+  let liberarEm = null;
+  for(const anim of _bolaFogoAnims){
+    const atingido = _bolaFogoAreaTiles(anim).some(([x, y]) => x === px && y === py);
+    if(!atingido) continue;
+    const fimExplosao = anim.start + anim.travelMs + anim.explosionMs;
+    liberarEm = liberarEm == null ? fimExplosao : Math.max(liberarEm, fimExplosao);
+  }
+  return liberarEm;
+}
+
 function _detectHpChanges(st){
   const entries = _gatherHpEntries(st);
+  const now = performance.now();
+  const changedDamageEntries = entries.filter(entry => {
+    const prev = _hpSnapshot.get(entry.key);
+    return prev != null && entry.hp != null && entry.hp < prev;
+  });
+  const multipleTargets = changedDamageEntries.length > 1;
+  const damageTypesByKey = new Map();
+  const damageEventsByKey = new Map();
+  const positiveEventsByKey = new Map();
+  for(const event of (st?.combat_damage_events || [])){
+    const key = event?.entity_key;
+    if(!key) continue;
+    const events = damageEventsByKey.get(key) || [];
+    events.push(event);
+    damageEventsByKey.set(key, events);
+    const types = Array.isArray(event.damage_types)
+      ? event.damage_types
+      : [event.damage_type || 'physical'];
+    const bucket = damageTypesByKey.get(key) || [];
+    for(const type of types){
+      const normalized = _combatDamageTypeInfo(type).key;
+      if(normalized && !bucket.includes(normalized)) bucket.push(normalized);
+    }
+    damageTypesByKey.set(key, bucket);
+  }
+  for(const event of (st?.positive_effect_events || [])){
+    const key = event?.entity_key;
+    if(!key) continue;
+    const events = positiveEventsByKey.get(key) || [];
+    events.push(event);
+    positiveEventsByKey.set(key, events);
+  }
   let heroHurt = false, creatureHurt = false, healed = false;
+  let damageSequenceIndex = 0;
   for(const entry of entries){
     const {key, hp, isMine} = entry;
     if(hp == null) continue;
@@ -8430,20 +9840,234 @@ function _detectHpChanges(st){
       if(hp < prev){
         if(isMine) heroHurt = true; else creatureHurt = true;
         const amount = Math.max(1, Math.round(prev - hp));
-        _spawnCombatFeedback(entry, `−${amount}`, isMine ? 'hero_damage' : 'damage');
+        const damageEvents = damageEventsByKey.get(key) || [];
+        const primaryDamageType = _combatPrimaryDamageType(damageTypesByKey.get(key) || ['physical']);
+        _playCombatCue('damage', {
+          damageType: primaryDamageType,
+          repeatKey: `damage:${primaryDamageType}`,
+          volume: isMine ? .95 : .72,
+        });
+        const statuses = [...new Set(damageEvents.map(e => String(e.status || '').trim()).filter(Boolean))];
+        const impact = damageEvents.find(e => Array.isArray(e.pos))?.pos;
+        const damageIndex = damageSequenceIndex++;
+        const fireStart = _bolaFogoFeedbackStartAt(entry);
+        const startAt = fireStart != null
+          ? fireStart + (multipleTargets ? damageIndex * 120 : 0)
+          : (multipleTargets ? now + damageIndex * 120 : null);
+        _triggerHitReaction(entry, damageEvents.some(e => e.critical), startAt);
+        _spawnCombatFeedback(
+          impact ? {...entry, pos: impact} : entry, `${amount}`, isMine ? 'hero_damage' : 'damage',
+          startAt,
+          damageTypesByKey.get(key) || 'physical',
+          {status: statuses.join(' • '), critical: damageEvents.some(e => e.critical)}
+        );
       } else if(hp > prev){
         healed = true;
-        _spawnCombatFeedback(entry, `+${Math.max(1, Math.round(hp - prev))}`, 'heal');
+        const amount = Math.max(1, Math.round(hp - prev));
+        const positiveEvents = positiveEventsByKey.get(key) || [];
+        const regen = positiveEvents.some(e => e.kind === 'regeneration');
+        const source = positiveEvents.find(e => e.source)?.source || '';
+        const positiveLabel = regen ? 'REGENERAÇÃO' : '';
+        _spawnCombatFeedback(entry, `+${amount} HP`, 'heal', now, null,
+          {status: positiveLabel});
+        _spawnPositiveBurst(entry, regen ? 'regeneration' : 'heal', amount, source);
+      } else {
+        // Imunidade e absorção não alteram HP, mas ainda aparecem no ponto do
+        // impacto para explicar por que nenhum dano foi perdido.
+        const damageEvents = damageEventsByKey.get(key) || [];
+        const statuses = [...new Set(damageEvents.map(e => String(e.status || '').trim()).filter(Boolean))];
+        const zeroDamage = damageEvents.some(e => Number(e.amount || 0) <= 0);
+        if(statuses.length && zeroDamage){
+          const impact = damageEvents.find(e => Array.isArray(e.pos))?.pos;
+          _spawnCombatFeedback(
+            impact ? {...entry, pos: impact} : entry, statuses.join(' • '), 'damage',
+            performance.now(), damageTypesByKey.get(key) || 'physical',
+            {critical: damageEvents.some(e => e.critical)}
+          );
+        }
       }
     }
   }
   // Reconstrói o snapshot só com as criaturas vistas neste estado.
   _hpSnapshot = new Map(entries.filter(e => e.hp != null).map(e => [e.key, e.hp]));
   _hpEntitySnapshot = new Map(entries.filter(e => e.hp != null).map(e => [e.key, e]));
-  if(heroHurt) playHeroHurt();
-  if(creatureHurt) playCreatureHit();
+  // O cue tipado acima substitui o antigo som genérico por entidade: fogo,
+  // frio, ácido, eletricidade e magia agora têm identidade própria; dano físico
+  // continua com um impacto grave e curto.
   if(healed) playHeal();
+  if(multipleTargets){
+    const fireStarts = changedDamageEntries.map(_bolaFogoFeedbackStartAt)
+      .filter(v => Number.isFinite(v));
+    const firstImpact = fireStarts.length ? Math.max(...fireStarts) : now + 180;
+    // A confirmação só aparece depois da pequena cascata de impactos, para
+    // não competir com o primeiro número de dano.
+    const resumoAt = firstImpact + Math.max(0, changedDamageEntries.length - 1) * 120 + 90;
+    setTimeout(() => toast(`${changedDamageEntries.length} alvos atingidos`, '#ffd45a'),
+      Math.max(180, resumoAt - now));
+  }
 }
+
+// ── Feedback de cura, escudos e buffs positivos ────────────────────────────
+// Cura/regen usam o mesmo ponto de impacto do número verde. Escudos e bônus
+// de CA disparam o mesmo tipo de partículas quando o estado autoritativo passa
+// a conter o efeito.
+const _positiveBursts = [];
+let _positiveBurstRaf = null;
+const _positiveEffectsSnapshot = new Map();
+const _POSITIVE_EFFECT_IDS = new Set([
+  'cancao_heroica','esconder_sombras','detectar_armadilhas','regeneracao_divina',
+  'guerreiro_luz','golpe_sagrado','protetor','brutalidade','tecnica_mira_perfeita',
+  'tecnica_investida','tecnica_ataque_coordenado','tecnica_sangue_frio',
+  'tecnica_golpe_decisivo','tecnica_tatica_defensiva','tecnica_defesa_impecavel',
+  'tecnica_passo_fantasma','tecnica_resistencia_absoluta','tecnica_contra_ataque',
+  'mira_certeira','golpe_devastador','furia_berserker','aprimorar_magia',
+  'estender_magia','fortalecer_magia','barreira_arcana','protecao_energia',
+  'invisibilidade','visao_escuro','manto_escuridao','velocidade',
+  'regeneracao_magica','contramagica','abencoar','abencoar_arma',
+  'aumento_ca_temporario',
+]);
+
+function _positiveEffectKind(id){
+  const s = String(id || '').toLowerCase();
+  if(s.includes('regeneracao') || s.includes('regen')) return 'regeneration';
+  if(s.includes('barreira') || s.includes('protecao') || s.includes('protetor') || s.includes('escudo')) return 'shield';
+  if(s.includes('defesa') || s.includes('resistencia') || s.includes('guerreiro_luz')
+      || s.includes('aumento_ca') || s === 'abencoar') return 'armor';
+  return 'buff';
+}
+
+function _positiveEffectColor(kind){
+  return kind === 'regeneration' ? '#91ffbd'
+    : kind === 'shield' ? '#76d8ff'
+    : kind === 'armor' ? '#ffd76b' : '#f4d98b';
+}
+
+function _spawnPositiveBurst(entry, kind='heal', amount=0, source=''){
+  if(!entry || !Array.isArray(entry.pos)) return;
+  const burst = {
+    pos:[Number(entry.pos[0]), Number(entry.pos[1])], kind, amount:Number(amount)||0,
+    source:String(source || ''), start:performance.now(), duration:_animationProgressDuration(920),
+    group:null, ring:null, particles:[],
+  };
+  _positiveBursts.push(burst);
+  if(mode3D && g3) _buildPositiveBurst3D(burst);
+  _requestPositiveBurstFrame();
+}
+
+function _buildPositiveBurst3D(b){
+  if(!g3?.scene || !window.THREE || b.group) return;
+  const T = g3.T, group = new T.Group(); group.name = `positive-${b.kind}`;
+  const color = Number(`0x${_positiveEffectColor(b.kind).slice(1)}`);
+  const mat = new T.MeshBasicMaterial({color, transparent:true, opacity:0, depthWrite:false, depthTest:false, blending:T.AdditiveBlending});
+  b.ring = new T.Mesh(new T.TorusGeometry(.22, .025, 8, 28), mat);
+  b.ring.rotation.x = Math.PI / 2; b.ring.renderOrder = 126; group.add(b.ring);
+  for(let i=0;i<11;i++){
+    const pm = new T.MeshBasicMaterial({color, transparent:true, opacity:0, depthWrite:false, depthTest:false, blending:T.AdditiveBlending});
+    const mote = new T.Mesh(new T.SphereGeometry(.025 + (i%3)*.010, 7, 5), pm);
+    mote.userData.i = i; group.add(mote); b.particles.push(mote);
+  }
+  g3.scene.add(group); b.group = group;
+}
+
+function _disposePositiveBurst3D(b){
+  if(!b?.group) return;
+  if(b.group.parent) b.group.parent.remove(b.group);
+  b.group.traverse(o => { if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); });
+  b.group = null;
+}
+
+function _updatePositiveBursts3D(now){
+  if(!g3) return;
+  for(const b of _positiveBursts){
+    if(!b.group || b.group.parent !== g3.scene) _buildPositiveBurst3D(b);
+    if(!b.group) continue;
+    const q = Math.max(0, Math.min(1, (now - b.start) / b.duration));
+    const fade = q < .55 ? 1 : Math.max(0, 1 - (q - .55) / .45);
+    const x = b.pos[0], z = b.pos[1];
+    b.ring.position.set(x, .34 + q * .12, z);
+    b.ring.scale.setScalar(.7 + q * 1.45); b.ring.material.opacity = .72 * fade;
+    for(const mote of b.particles){
+      const i = mote.userData.i, a = i * Math.PI * 2 / b.particles.length;
+      const radius = .08 + q * (.30 + (i%3)*.05);
+      mote.position.set(x + Math.cos(a) * radius, .40 + q * (0.82 + (i%4)*.11), z + Math.sin(a) * radius);
+      mote.material.opacity = (.60 + .25 * Math.sin(now / 120 + i) ** 2) * fade;
+    }
+  }
+}
+
+function _drawPositiveBursts2D(ctx, state, now){
+  for(const b of _positiveBursts){
+    if(!_combatFeedbackVisible({pos:b.pos}, state)) continue;
+    const q = Math.max(0, Math.min(1, (now - b.start) / b.duration));
+    const fade = q < .55 ? 1 : Math.max(0, 1 - (q - .55) / .45);
+    const x = b.pos[0] * CELL + CELL/2, y = b.pos[1] * CELL + CELL/2;
+    const color = _positiveEffectColor(b.kind);
+    ctx.save(); ctx.globalAlpha = fade; ctx.globalCompositeOperation = 'lighter';
+    ctx.strokeStyle = color; ctx.shadowColor = color; ctx.shadowBlur = CELL * .16;
+    ctx.lineWidth = Math.max(2, CELL * .035); ctx.beginPath();
+    ctx.arc(x, y, CELL * (.18 + q * .34), 0, Math.PI * 2); ctx.stroke();
+    for(let i=0;i<9;i++){
+      const a = i * Math.PI * 2 / 9;
+      const px = x + Math.cos(a) * CELL * (.12 + q * .38);
+      const py = y - q * CELL * (.70 + (i%3)*.10) + Math.sin(a) * CELL * (.10 + q*.08);
+      ctx.fillStyle = color; ctx.beginPath(); ctx.arc(px, py, Math.max(1.5, CELL*.025), 0, Math.PI*2); ctx.fill();
+    }
+    const label = b.kind === 'regeneration' ? '🌿' : b.kind === 'shield' ? '🛡' : b.kind === 'armor' ? '⬆ CA' : '+';
+    ctx.font = `900 ${Math.max(14, CELL * .19)}px Arial, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = color;
+    ctx.fillText(label, x, y - CELL * (.42 + q * .56));
+    ctx.restore();
+  }
+}
+
+function _requestPositiveBurstFrame(){
+  if(_positiveBurstRaf) return;
+  const tick = () => {
+    _positiveBurstRaf = null; const now = performance.now();
+    for(let i=_positiveBursts.length-1;i>=0;i--){
+      const b = _positiveBursts[i];
+      if(now - b.start < b.duration) continue;
+      _disposePositiveBurst3D(b); _positiveBursts.splice(i,1);
+    }
+    if(mode3D && g3) _updatePositiveBursts3D(now);
+    else if(!mode3D && GS.gameState) renderMap(GS.gameState);
+    if(_positiveBursts.length) _positiveBurstRaf = _scheduleVisualFrame(tick);
+  };
+  _positiveBurstRaf = _scheduleVisualFrame(tick);
+}
+
+function _capturarPositiveEffectChanges(state){
+  const atual = new Map();
+  for(const p of (state?.players || [])){
+    if(!p || p.is_master || p.alive === false) continue;
+    const efeitos = _coletarEfeitosAtivos(state, p, false)
+      .filter(e => _POSITIVE_EFFECT_IDS.has(e.id));
+    const agora = new Map(efeitos.map(e => [e.id, e]));
+    atual.set(String(p.id), agora);
+    const anterior = _positiveEffectsSnapshot.get(String(p.id));
+    if(!anterior){ continue; }
+    for(const [id, efeito] of agora){
+      const velho = anterior.get(id);
+      if(!velho){
+        _spawnPositiveBurst({pos:p.pos}, _positiveEffectKind(id), 0, efeito.nome);
+        toast(`Buff aplicado: ${efeito.nome}`, _positiveEffectColor(_positiveEffectKind(id)));
+      } else if(Number(efeito.rodadas || 0) > Number(velho.rodadas || 0)){
+        _spawnPositiveBurst({pos:p.pos}, _positiveEffectKind(id), 0, efeito.nome);
+        toast(`Buff renovado: ${efeito.nome}`, _positiveEffectColor(_positiveEffectKind(id)));
+      }
+    }
+    for(const [id, velho] of anterior){
+      if(agora.has(id)) continue;
+      const expirou = Number(velho.rodadas || 0) > 0;
+      toast(`${efeitoNomeSeguro(velho)} ${expirou ? 'expirou' : 'foi removido'}`, '#c8b89a');
+    }
+  }
+  _positiveEffectsSnapshot.clear();
+  for(const [id, efeitos] of atual) _positiveEffectsSnapshot.set(id, efeitos);
+}
+
+function efeitoNomeSeguro(efeito){ return efeito?.nome || efeito?.id || 'Efeito positivo'; }
+function _limparPositiveEffectSnapshot(){ _positiveEffectsSnapshot.clear(); }
 
 // ── Keep 2D canvas sized (used only for label overlay) ──────────────────────
 function syncDiceCanvas(){
@@ -8839,9 +10463,10 @@ function _updateTweens(dt){
   }
 }
 
-function _spawnDie3D(dieType, value, label, hexColor, flags){
+function _spawnDie3D(dieType, value, label, hexColor, flags, meta){
   if(!g3) return;                         // game scene must be active
   flags = flags || {};
+  _setDiceDismissable(true);
   const T = window.THREE;
 
   // One-time: create diceGroup that travels with the camera centre.
@@ -8854,7 +10479,7 @@ function _spawnDie3D(dieType, value, label, hexColor, flags){
     const diceLight = new T.PointLight(0xfff0cf, 2.6, 7.0, 2.0);
     diceLight.position.set(0, 2.4, 1.2);
     diceGroup.add(diceLight);
-    // Posição atualizada a cada frame em _startDiceLoop3D (segue o centro da câmera)
+    // Posição atualizada a cada frame pelo loop principal 3D (segue a câmera)
     g3.scene.add(diceGroup);
     _d3._diceGroup = diceGroup;
   }
@@ -8892,11 +10517,10 @@ function _spawnDie3D(dieType, value, label, hexColor, flags){
     floorY, dieRad,
     area: { x:0, z:0 },   // relativo ao grupo — scatter contido em ±3 tiles locais
     bounces:0, phase:'rolling', alpha:1.0, settleT:0,
-    value, label, dieType, faceNormals, color:_hexCss(hexColor),
+    value, label, dieType, faceNormals, color:_hexCss(hexColor), meta: meta || {},
     discarded: !!flags.discarded, kept: !!flags.kept, offhand: !!flags.offhand,
   });
 
-  if(!_d3.animFrame) _startDiceLoop3D();
   playRollSound();
 }
 
@@ -8930,14 +10554,65 @@ function _nextDiceColor(dieType, msg){
   return color;
 }
 
+// Metadados opcionais enviados pelo servidor. O dado continua sendo desenhado
+// mesmo quando uma ação antiga ainda não fornece modificador/total.
+function _diceFormula(msg, dieType){
+  if(msg && msg.formula) return String(msg.formula);
+  const value = Number(msg?.value);
+  const modifier = Number(msg?.modifier);
+  const total = Number(msg?.total);
+  if(!Number.isFinite(value) || !Number.isFinite(modifier) || !Number.isFinite(total)) return '';
+  const sign = modifier >= 0 ? '+' : '−';
+  return `${msg?.expression || msg?.die || dieType} ${value} ${sign} ${Math.abs(modifier)} = ${total}`;
+}
+
+function _diceRollMeta(msg, dieType, label, flags){
+  const formula = _diceFormula(msg, dieType);
+  const status = flags.discarded ? '✕ DESCARTADO'
+    : flags.kept ? '✓ ESCOLHIDO'
+    : flags.offhand ? 'MÃO SECUNDÁRIA' : '';
+  const context = [label, status].filter(Boolean).join(' • ');
+  return { formula, status, context,
+    modifier: Number.isFinite(Number(msg?.modifier)) ? Number(msg.modifier) : null,
+    total: Number.isFinite(Number(msg?.total)) ? Number(msg.total) : null };
+}
+
+let _diceDismissHandlersReady = false;
+function _ensureDiceDismissHandlers(){
+  const dc = $('dice-canvas');
+  if(!_diceDismissHandlersReady){
+    document.addEventListener('keydown', e => {
+      if(e.key !== 'Escape') return;
+      const visible = _pendingDiceRollTimers.size || _dice2.length || _dice3.length;
+      if(!visible) return;
+      _clearDiceVisuals();
+      e.preventDefault();
+      e.stopPropagation();
+    }, true);
+    _diceDismissHandlersReady = true;
+  }
+  if(dc && !dc.dataset.dismissReady){
+    dc.addEventListener('click', () => _clearDiceVisuals());
+    dc.dataset.dismissReady = '1';
+  }
+}
+
+function _setDiceDismissable(active){
+  const dc = $('dice-canvas');
+  if(!dc) return;
+  dc.classList.toggle('dice-dismissable', !!active);
+  dc.style.pointerEvents = active ? 'auto' : 'none';
+}
+
 function handleDiceRoll(msg){
+  _ensureDiceDismissHandlers();
   const now = performance.now();
   // Vários dados emitidos em sequência pertencem à mesma ação. Quando a
   // janela termina, o próximo dado inicia um lançamento novo e limpa os
   // resultados antigos da mesa.
   if(now - _lastDiceRollAt > DICE_ROLL_BURST_MS) _clearDiceVisuals();
   _lastDiceRollAt = now;
-  const dieType  = (msg.die||'d20').replace(/^\d+/,'');
+  const dieType = String(msg.die || 'd20').toLowerCase().match(/d(?:4|6|8|10|12|20)/)?.[0] || 'd20';
   const delay    = (_dice3.length + _dice2.length) * (80 + Math.random()*70);   // staggered launch
   // Cores especiais p/ dado de desvantagem (Provocação) e off-hand (dual-wield),
   // para o jogador distinguir os 3 cenários visualmente:
@@ -8948,6 +10623,8 @@ function handleDiceRoll(msg){
   const hexColor = _nextDiceColor(dieType, msg);
 
   const flags = { discarded: !!msg.discarded, kept: !!msg.kept, offhand: !!msg.offhand };
+  const label = msg.label || dieType;
+  const meta = _diceRollMeta(msg, dieType, label, flags);
   const timer = setTimeout(()=>{
     _pendingDiceRollTimers.delete(timer);
     _pendingDiceColors.delete(_hexCss(hexColor).toLowerCase());
@@ -8956,9 +10633,9 @@ function handleDiceRoll(msg){
     // na narração do Mestre) — agora a visão 2D tem dados animados próprios.
     if(mode3D && g3){
       if(!_d3) _d3 = { animFrame:null, _cfr:0 };
-      _spawnDie3D(dieType, msg.value, msg.label||dieType, hexColor, flags);
+      _spawnDie3D(dieType, msg.value, label, hexColor, flags, meta);
     } else {
-      _spawnDie2D(dieType, msg.value, msg.label||dieType, hexColor, flags);
+      _spawnDie2D(dieType, msg.value, label, hexColor, flags, meta);
     }
   }, delay);
   _pendingDiceRollTimers.add(timer);
@@ -8973,15 +10650,18 @@ const _dice2 = [];
 let _d2Frame = null;
 const _pendingDiceRollTimers = new Set();
 let _lastDiceRollAt = -Infinity;
-const DICE_ROLL_BURST_MS = 280;
+// Mensagens da mesma ação chegam praticamente juntas; uma nova sequência
+// depois desta janela limpa imediatamente o resultado anterior.
+const DICE_ROLL_BURST_MS = 220;
 
 function _clearDiceVisuals(){
   for(const timer of _pendingDiceRollTimers) clearTimeout(timer);
   _pendingDiceRollTimers.clear();
   _pendingDiceColors.clear();
 
-  if(_d2Frame){ cancelAnimationFrame(_d2Frame); _d2Frame = null; }
+  if(_d2Frame){ _cancelVisualFrame(_d2Frame); _d2Frame = null; }
   _dice2.length = 0;
+  _setDiceDismissable(false);
   const dc = $('dice-canvas');
   if(dc){
     const ctx = dc.getContext('2d');
@@ -8991,6 +10671,7 @@ function _clearDiceVisuals(){
   if(_d3){
     if(_d3.animFrame) cancelAnimationFrame(_d3.animFrame);
     _d3.animFrame = null;
+    _d3._lastT = 0;
     const diceMeshes = new Set(_dice3.map(d => d.mesh));
     for(let i=_tweens.length-1; i>=0; i--)
       if(diceMeshes.has(_tweens[i].mesh)) _tweens.splice(i,1);
@@ -9011,15 +10692,16 @@ function _hexCss(h){
 
 function _dieMax(t){ return ({d4:4, d6:6, d8:8, d10:10, d12:12, d20:20})[t] || 20; }
 
-function _spawnDie2D(dieType, value, label, hexColor, flags){
+function _spawnDie2D(dieType, value, label, hexColor, flags, meta){
   syncDiceCanvas();   // garante tamanho/posição corretos do overlay
   const dc = $('dice-canvas');
   if(!dc) return;
   const W = dc._cssW || dc.clientWidth, H = dc._cssH || dc.clientHeight;
   if(!W || !H) return;
+  _setDiceDismissable(true);
   const R = Math.max(26, Math.min(40, Math.min(W, H) * 0.055));
   _dice2.push({
-    dieType, value, label, flags: flags || {},
+    dieType, value, label, flags: flags || {}, meta: meta || {},
     color: _hexCss(hexColor),
     x: W * (VC.dice.screenAnchor?.x ?? 0.72)
       + _rr(-W * (VC.dice.screenScatter?.x ?? 0.10), W * (VC.dice.screenScatter?.x ?? 0.10)),
@@ -9035,13 +10717,13 @@ function _spawnDie2D(dieType, value, label, hexColor, flags){
 }
 
 function _tickDie2(d, dt, W, H){
-  if(d.phase === 'fading'){ d.alpha = Math.max(0, d.alpha - dt/(VC.dice.fadeMs ?? 350)); return; }
+  if(d.phase === 'fading'){ d.alpha = Math.max(0, d.alpha - dt/_animationProgressDuration(VC.dice.fadeMs ?? 350)); return; }
   if(d.phase === 'settling'){
     d.settleT += dt;
     // endireita o dado suavemente para o resultado ficar legível
     d.vrot = 0;
     d.rot *= Math.pow(0.0035, dt/1000);
-    if(d.settleT > (VC.dice.settleMs ?? 1500)) d.phase = 'fading';
+    if(d.settleT > _animationProgressDuration(VC.dice.settleMs ?? 1500)) d.phase = 'fading';
     return;
   }
   d.t += dt;
@@ -9141,18 +10823,37 @@ function _drawDie2D(ctx, d){
   ctx.fillText(numStr, 0, ny);
   ctx.restore();
 
+  // Halo discreto: verde destaca o d20 escolhido; vermelho/cinza mantém o
+  // descartado visível para que a vantagem/desvantagem fique compreensível.
+  if(d.flags?.kept || d.flags?.discarded){
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, d.alpha) * (d.flags.kept ? 0.95 : 0.65);
+    ctx.beginPath(); ctx.arc(d.x, d.y, d.R + 5, 0, Math.PI * 2);
+    ctx.lineWidth = d.flags.kept ? 3 : 2;
+    ctx.setLineDash(d.flags.kept ? [] : [5, 4]);
+    ctx.strokeStyle = d.flags.kept ? '#6cff9b' : '#ff7a70';
+    ctx.stroke(); ctx.restore();
+  }
+
   // label acima do dado (sem rotação) — acompanha a variação da peça física
-  if(d.label && d.phase !== 'rolling'){
+  if((d.label || d.meta?.formula) && d.phase !== 'rolling'){
     ctx.save();
     ctx.globalAlpha = Math.min(1, d.alpha) * 0.9;
     const color = d.color || '#e8d180';
-    ctx.font = "bold 13px 'Cinzel', serif";
+    const formula = d.meta?.formula || `${d.dieType} ${d.value}`;
+    const context = d.meta?.context || d.label;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
+    ctx.font = `bold ${VC.dice.formulaFontSize || 14}px 'Cinzel', serif`;
     ctx.fillStyle = 'rgba(0,0,0,0.85)';
-    ctx.fillText(d.label, d.x + 1, d.y - d.R - 7 + 1);
+    ctx.fillText(formula, d.x + 1, d.y - d.R - 7 + 1);
     ctx.fillStyle = color;
-    ctx.fillText(d.label, d.x, d.y - d.R - 7);
+    ctx.fillText(formula, d.x, d.y - d.R - 7);
+    if(context){
+      ctx.font = `bold ${VC.dice.statusFontSize || 10}px 'Cinzel', serif`;
+      ctx.fillStyle = d.flags?.discarded ? '#ff9b91' : d.flags?.kept ? '#8dffb1' : '#f0d58b';
+      ctx.fillText(context, d.x, d.y - d.R - 21);
+    }
     ctx.restore();
   }
 }
@@ -9178,14 +10879,14 @@ function _startDiceLoop2D(){
     }
     ctx.restore();
     if(_dice2.length){
-      _d2Frame = requestAnimationFrame(frame);
+      _d2Frame = _scheduleVisualFrame(frame);
     } else {
       _d2Frame = null;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, dc.width, dc.height);
     }
   }
-  _d2Frame = requestAnimationFrame(frame);
+  _d2Frame = _scheduleVisualFrame(frame);
 }
 
 // ── Per-frame die physics — Euler rotation, 60fps-normalised ─────────────────
@@ -9194,7 +10895,7 @@ function _tickDie3(obj, dt){
 
   // ── Fading out (0.5 s) ──
   if(obj.phase==='fading'){
-    obj.alpha = Math.max(0, obj.alpha - dt/(VC.dice.fadeMs ?? 350));
+    obj.alpha = Math.max(0, obj.alpha - dt/_animationProgressDuration(VC.dice.fadeMs ?? 350));
     for(const mat of obj.mats){ mat.opacity=obj.alpha; mat.transparent=true; }
     if(obj.topBadge) obj.topBadge.mat.opacity=obj.alpha;
     return;
@@ -9202,7 +10903,7 @@ function _tickDie3(obj, dt){
   // ── Resting on board for 3 s, then fade ──
   if(obj.phase==='settling'){
     obj.settleT+=dt;
-    if(obj.settleT>(VC.dice.settleMs ?? 1500)) obj.phase='fading';
+    if(obj.settleT>_animationProgressDuration(VC.dice.settleMs ?? 1500)) obj.phase='fading';
     return;
   }
   // ── Waiting for snap tween to finish ──
@@ -9362,12 +11063,11 @@ function _drawDiceLabels(){
   ctx.scale(dpr, dpr);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
-  ctx.font = "bold 13px 'Cinzel', serif";
 
   for(const obj of _dice3){
     if(!obj || !obj.mesh || obj.alpha <= 0.05) continue;
     if(obj.phase === 'fading' && obj.alpha < 0.4) continue;
-    if(!obj.label) continue;
+    if(!obj.label && !obj.meta?.formula) continue;
     // Posição do label acima da face superior do dado (mundo).
     const worldPos = new T.Vector3();
     obj.mesh.getWorldPosition(worldPos);
@@ -9381,23 +11081,30 @@ function _drawDiceLabels(){
     // Cor do label acompanha a variação exata da peça física.
     const color = obj.color || '#e8d180';
 
+    const formula = obj.meta?.formula || `${obj.dieType} ${obj.value}`;
+    const context = obj.meta?.context || obj.label;
     // Sombra preta atrás para legibilidade
     ctx.globalAlpha = Math.min(1, obj.alpha) * 0.9;
     ctx.fillStyle = 'rgba(0,0,0,0.85)';
-    ctx.fillText(obj.label, sx + 1, sy + 1);
+    ctx.font = `bold ${VC.dice.formulaFontSize || 14}px 'Cinzel', serif`;
+    ctx.fillText(formula, sx + 1, sy + 1);
     ctx.fillStyle = color;
-    ctx.fillText(obj.label, sx, sy);
+    ctx.fillText(formula, sx, sy);
+    if(context){
+      ctx.font = `bold ${VC.dice.statusFontSize || 10}px 'Cinzel', serif`;
+      ctx.fillStyle = obj.discarded ? '#ff9b91' : obj.kept ? '#8dffb1' : '#f0d58b';
+      ctx.fillText(context, sx, sy + 14);
+    }
   }
   ctx.restore();
 }
 
-// Physics-only loop — dice live in g3.scene, rendered by the game's main renderer
-function _startDiceLoop3D(){
-  if(!_d3 || _d3.animFrame) return;
-  let lastT = performance.now();
-  function frame(now){
-    if(!_d3) return;
-    const dt = Math.min(now-lastT, 50); lastT=now;
+// Física dos dados 3D — executada pelo loop principal do renderer. Os dados
+// vivem em g3.scene e não precisam de um requestAnimationFrame separado.
+function _updateDiceLoop3D(now){
+    if(!_d3) return false;
+    const lastT = _d3._lastT || now - 16.67;
+    const dt = Math.min(now-lastT, 50); _d3._lastT = now;
     _d3._cfr++;
 
     // ── Reposiciona o grupo na âncora inferior direita (segue câmera) ────────
@@ -9455,14 +11162,10 @@ function _startDiceLoop3D(){
     // do Henrique e a desvantagem da Provocação.
     _drawDiceLabels();
 
-    // Keep loop alive while dice or particles remain
-    if(_dice3.length>0 || _particleSystems.length>0){
-      _d3.animFrame = requestAnimationFrame(frame);
-    } else {
-      _d3.animFrame = null;
-    }
-  }
-  _d3.animFrame = requestAnimationFrame(frame);
+    const active = _dice3.length > 0 || _particleSystems.length > 0;
+    _d3.animFrame = null;
+    if(!active) _d3._lastT = 0;
+    return active;
 }
 
 // ── Barras de Fome e Sede (sistema de sobrevivência) ───────────────────────
@@ -10124,7 +11827,8 @@ function _keyInstrumentoEsc(e){
 function _atualizarMiraInstrumentoHover(tx, ty, tip, event){
   const mode = window._modoInstrumento;
   if(!mode) return false;
-  const m = (GS.gameState?.monsters || []).find(mm => mm.hp > 0 && mm.pos[0] === tx && mm.pos[1] === ty);
+  const m = (GS.gameState?.monsters || []).find(mm => mm.hp > 0 &&
+    GS.monsterTiles(mm).some(([bx, by]) => bx === tx && by === ty));
   if(m){
     const key = `${tx},${ty}`;
     const ok = mode.range.has(key) && GS.hasLineOfSight(GS.gameState, GS.me.pos[0], GS.me.pos[1], tx, ty);
@@ -10965,8 +12669,8 @@ function _rogueSkillBtn(me, sk){
     const desc = t('ui.hud.criar_armadilha_desc',{b:bonusDes ? ` (+${bonusDes})` : ''})+(recupera ? ' '+t('ui.hud.recupera_ouro') : '');
     setBtn(`🔧 ${sk.name}${ativo ? ` <small style="color:var(--gold);font-size:.65rem;">● ${t('ui.hud.selecione_casa')}</small>` : ''}`,
            desc, '🍖1 💧1', !(pode || ativo), () => {
-             if (ativo) { GS.pendingSkill = null; renderMyPanel(GS.gameState); toast('Habilidade cancelada.', 'var(--text2)'); }
-             else { GS.pendingSkill = { ...sk, target: 'tile' }; renderMyPanel(GS.gameState); toast('Selecione uma casa adjacente para desarmar.', 'var(--gold)'); }
+             if (ativo) { GS.pendingSkill = null; _removerEfeitoVisualLocal(sk.id); renderMyPanel(GS.gameState); toast('Habilidade cancelada.', 'var(--text2)'); }
+             else { GS.pendingSkill = { ...sk, target: 'tile' }; _registrarEfeitoVisualLocal(sk.id, 'skill'); renderMyPanel(GS.gameState); toast('Selecione uma casa adjacente para desarmar.', 'var(--gold)'); }
            }, false);
 
   } else {
@@ -11392,7 +13096,7 @@ const GRIMORIO_CLIENT = {
   clarividencia: {
     id:'clarividencia', nome:'Clarividência', icone:'🔮',
     circulo:'primeiro', classe:['mage','cleric'],
-    tipo:'area_fixa', alcance:8, alvoLivre:true,   // alvoLivre: mira em QUALQUER casa do mapa (até na névoa)
+    tipo:'area_fixa', alcance:8, area_lado:4, alvoLivre:true,   // alvoLivre: mira em QUALQUER casa do mapa (até na névoa)
     custo:'🍖-1 💧-1',
     descricao:`<b>Alcance:</b> o mapa inteiro (mire em qualquer lugar)<br>
                <b>Área:</b> 4x4 (escala com nível)<br>
@@ -11475,7 +13179,7 @@ const GRIMORIO_CLIENT = {
   manto_escuridao: {
     id:'manto_escuridao', nome:'Manto de Escuridão', icone:'🌑',
     circulo:'segundo', classe:['mage','cleric'],
-    tipo:'area_centrada', alcance:0, area:3,
+    tipo:'area_centrada', alcance:0, area:3, area_raio:3,
     custo:'🍖-1 💧-1',
     descricao:`<b>Raio:</b> 3 quadrados centrado no caster<br>
                <b>Sem visão noturna:</b> 2d20 usa menor nos ataques<br>
@@ -11800,6 +13504,7 @@ function renderMagiasFichaEmJogo(heroi, cls) {
   const limites  = SLOTS_POR_NIVEL_CLIENT[nivel];
   const cooldown = (heroi && heroi.slots_cooldown) || {primeiro:[], segundo:[], terceiro:[]};
   const restantesServidor = (heroi && heroi.slots_remaining) || null;
+  const cajadoExtra = restantesServidor?.cajado_arcano || null;
   const round    = (window.GS && GS.gameState && GS.gameState.round) || 0;
   function renderCirculoMagias(circulo, label) {
     const magiasCirculo = known.filter(id => GRIMORIO_CLIENT[id] && GRIMORIO_CLIENT[id].circulo === circulo);
@@ -11816,21 +13521,30 @@ function renderMagiasFichaEmJogo(heroi, cls) {
           .filter(r => r > round)
           .map(r => r - round)
           .sort((a,b) => a - b);
-    const livres = Math.max(0, limite - espera.length);
+    const extraAtivo = circulo === 'primeiro' && !!cajadoExtra?.ativo;
+    const extraLivre = extraAtivo && !!cajadoExtra?.pronto;
+    const livresNormais = Math.max(0, limite - espera.length);
+    const livres = livresNormais + (extraLivre ? 1 : 0);
+    const totalSlots = limite + (extraAtivo ? 1 : 0);
 
-    const pips = Array.from({length: limite}).map((_, i) => {
-      if (i < livres) {
+    const pipsNormais = Array.from({length: limite}).map((_, i) => {
+      if (i < livresNormais) {
         return `<div title="Pronto" style="width:16px; height:16px; border-radius:50%; background:#44cc88; border:1px solid #44cc88;"></div>`;
       }
-      const falta = espera[i - livres];   // rodadas até liberar este slot
+      const falta = espera[i - livresNormais];   // rodadas até liberar este slot
       return `<div title="Volta em ${falta} rodada(s)" style="width:16px; height:16px; border-radius:50%; background:#1a1a1a; border:1px solid #3a3a3a; display:flex; align-items:center; justify-content:center; color:#cc8844; font-size:9px;">${falta}</div>`;
     }).join('');
+    const pipsExtra = extraAtivo ? (extraLivre
+      ? `<div title="Slot temporário do Cajado Arcano — pronto" style="width:16px; height:16px; border-radius:50%; background:#5b3009; border:1px solid #ff9d2e; display:flex; align-items:center; justify-content:center; color:#ffd08a; font-size:10px; box-shadow:0 0 6px rgba(255,157,46,.38);">✦</div>`
+      : `<div title="Slot temporário do Cajado Arcano — volta em ${cajadoExtra.recarga} rodada(s)" style="width:16px; height:16px; border-radius:50%; background:#24190d; border:1px solid #d4771c; display:flex; align-items:center; justify-content:center; color:#ffb347; font-size:9px; box-shadow:inset 0 0 5px rgba(0,0,0,.7);">${cajadoExtra.recarga}</div>`)
+      : '';
+    const pips = pipsNormais + pipsExtra;
 
     return `
       <div style="margin-bottom:14px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
           <span style="color:#8a7a5a; font-size:9px; letter-spacing:2px;">${label}</span>
-          <span style="color:${livres === 0 ? '#ff4136' : '#44cc88'}; font-size:10px;">${livres}/${limite} slots</span>
+          <span style="color:${livres === 0 ? '#ff4136' : '#44cc88'}; font-size:10px;">${livres}/${totalSlots} slots</span>
         </div>
         <div style="display:flex; gap:4px; margin-bottom:8px;">${pips}</div>
         <div style="display:flex; flex-wrap:wrap; gap:4px;">
@@ -11928,6 +13642,7 @@ function castarMagia(magiaId) {
   }
   // Conjurar Elemental: escolhe o tipo (4 elementos) antes de lançar.
   if (magiaId === 'conjurar_elemental') { _abrirPickerElemental(); return; }
+  _registrarEfeitoVisualLocal(magiaId, 'magic');
   if (magiaId === 'criar_alimentos') { _iniciarModoMagia(magiaId, 'adjacent_tile'); return; }
   // Manto de Escuridão é auto-centrado: conjura imediatamente no próprio
   // lançador, sem pedir um clique no mapa.
@@ -11972,6 +13687,7 @@ function castarPergaminho(item) {
     send({ type: 'use_scroll', item_id: item.id });
     toast(`📜 ${m.nome} (pergaminho)!`, '#c8a951'); return;
   }
+  _registrarEfeitoVisualLocal(magiaId, 'magic');
   if (magiaId === 'criar_alimentos') { _iniciarModoMagia(magiaId, 'adjacent_tile', item.id); return; }
   if (magiaId === 'manto_escuridao') {
     send({ type: 'use_scroll', item_id: item.id });
@@ -12016,9 +13732,12 @@ function _tilesAdjacentesLivresMagia(){
 
 function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
   const _def = GRIMORIO_CLIENT[magiaId];
+  _registrarEfeitoVisualLocal(magiaId, 'magic');
   // alvoLivre: a magia mira qualquer casa do mapa, sem limite de alcance e
   // mesmo sob névoa (ex.: Clarividência). Some o anel vermelho de alcance.
+  const _me = GS.me;
   window._modoMagia = { magiaId, alvoTipo, alvoLivre: !!(_def && _def.alvoLivre),
+                        areaLado: _cajadoArcanoAreaLado(_me, _def, !!scrollItemId) || (_def && _def.area_lado) || 0,
                         scrollItemId: scrollItemId || null };
   // Realce: alcance (vermelho) fixo no caster; área (verde) segue o cursor.
   if (alvoTipo === 'adjacent_tile') {
@@ -12042,7 +13761,7 @@ function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
     document.body.appendChild(leg);
   }
   const m = GRIMORIO_CLIENT[magiaId];
-  leg.innerHTML = `${m.icone} ${m.nome.toUpperCase()} — ${_rotulo(alvoTipo, 'ui.magia.dica', t('ui.magia.dica_padrao'))} &nbsp;|&nbsp; ${t('ui.magia.esc_cancela')}`;
+  leg.innerHTML = `${m.icone} ${m.nome.toUpperCase()} — ${_rotulo(alvoTipo, 'ui.magia.dica', t('ui.magia.dica_padrao'))} &nbsp;|&nbsp; ${t('ui.magia.esc_cancela')}<br><span style="font-size:9px;letter-spacing:1px;color:#ff6b6b">■ INIMIGO</span> <span style="font-size:9px;letter-spacing:1px;color:#6bb7ff">■ ALIADO</span> <span style="font-size:9px;letter-spacing:1px;color:#ffe070">■ LANÇADOR</span>`;
   leg.style.borderColor = '#c8a951';
   leg.style.color       = '#c8a951';
   leg.style.display = 'block';
@@ -12069,7 +13788,8 @@ function _specAlvoMagia(alvoTipo, tx, ty) {
     return { ok: true, fields: { dir: [dx, dy] } };
   }
   const alvo = (alvoTipo === 'foe')
-    ? (gs.monsters || []).find(mm => mm.pos[0] === tx && mm.pos[1] === ty && mm.hp > 0)
+    ? (gs.monsters || []).find(mm => mm.hp > 0 &&
+        GS.monsterTiles(mm).some(([bx, by]) => bx === tx && by === ty))
     : (gs.players  || []).find(pp => pp.pos[0] === tx && pp.pos[1] === ty && pp.alive);
   if (!alvo) return { ok: false, msg: t(alvoTipo === 'foe' ? 'ui.magia.inimigo_invalido' : 'ui.magia.aliado_invalido') };
   // Magias de alvo exigem linha de visão — paredes/portas fechadas barram.
@@ -12113,11 +13833,14 @@ function _clickTileMagia(tx, ty) {
     send(Object.assign({ type: 'magia', magia_id: magiaId }, spec.fields));
     toast(t('ui.magia.lancada', {icone:m.icone, nome:m.nome}), '#c8a951');
   }
+  _removerEfeitoVisualLocal(magiaId);
   _encerrarModoMagia();
 }
 
 function _encerrarModoMagia() {
+  const magiaCancelada = window._modoMagia?.magiaId;
   window._modoMagia = null;
+  if(magiaCancelada) _removerEfeitoVisualLocal(magiaCancelada);
   _limparSpellHLMira();   // remove alcance/área (zonas persistentes permanecem)
   const leg = document.getElementById('legenda-magia');
   if (leg) leg.style.display = 'none';
@@ -12130,6 +13853,7 @@ function _iniciarModoAnimarMortos(cadaveres, versao = 'animar_mortos') {
   if (window._modoThrowItem) _encerrarMiraArremesso();
   const me = GS.me;
   if (!me) return;
+  _registrarEfeitoVisualLocal(versao === 'senhor_da_morte' ? 'animar_mortos' : versao, 'skill');
   const validos = new Set(cadaveres.map(c => c.id));
   window._modoAnimarMortos = { cadaveres: validos, alcance: 3, versao };
   const alcance = new Set();
@@ -12165,7 +13889,9 @@ function _clickTileAnimarMortos(tx, ty) {
 }
 
 function _encerrarModoAnimarMortos() {
+  const habilidadeCancelada = window._modoAnimarMortos?.versao;
   window._modoAnimarMortos = null;
+  if(habilidadeCancelada) _removerEfeitoVisualLocal(habilidadeCancelada === 'senhor_da_morte' ? 'animar_mortos' : habilidadeCancelada);
   _limparSpellHLMira();
   const leg = document.getElementById('legenda-magia');
   if (leg) leg.style.display = 'none';
@@ -12237,7 +13963,7 @@ function _iniciarMiraArremesso(item, player){
   const _alvoTxt = isArea
     ? t('ui.arremesso.mira_area', {raio:areaRaio, alcance})
     : t('ui.arremesso.mira_alvo', {alcance});
-  leg.innerHTML = `${catDef.emoji || item.emoji || '🔥'} ${(catDef.nome || item.name || t('ui.arremesso.arremessar')).toUpperCase()} — ${_alvoTxt} &nbsp;|&nbsp; ${t('ui.magia.esc_cancela')}`;
+  leg.innerHTML = `${catDef.emoji || item.emoji || '🔥'} ${(catDef.nome || item.name || t('ui.arremesso.arremessar')).toUpperCase()} — ${_alvoTxt} &nbsp;|&nbsp; ${t('ui.magia.esc_cancela')}<br><span style="font-size:9px;letter-spacing:1px;color:#ff6b6b">■ INIMIGO</span> <span style="font-size:9px;letter-spacing:1px;color:#6bb7ff">■ ALIADO</span> <span style="font-size:9px;letter-spacing:1px;color:#ffe070">■ LANÇADOR</span>`;
   leg.style.display = 'block';
   GS.adicionarLog(`${catDef.emoji || '🔥'} ` + t(isArea ? 'ui.arremesso.log_mira_area' : 'ui.arremesso.log_mira_alvo'));
   document.addEventListener('keydown', _keyThrowEsc);
@@ -12397,6 +14123,16 @@ function _areaRaioMagiaCli(m) {
   if (m.area != null) return m.area;
   return ['area', 'area_persistente', 'area_fixa', 'area_centrada'].includes(m.tipo) ? 2 : 0;
 }
+function _cajadoArcanoAreaLado(heroi, m, scroll = false) {
+  if (scroll || !heroi || !m) return 0;
+  const arma = heroi.gear?.weapon || heroi.weapon || {};
+  if (arma.id !== 'staff') return 0;
+  if (!['area', 'area_persistente', 'area_fixa', 'area_centrada'].includes(m.tipo)) return 0;
+  if (m.area_lado != null) return Math.max(1, Number(m.area_lado) + 1);
+  if (m.area_raio != null) return Math.max(1, Number(m.area_raio) * 2 + 2);
+  if (m.area_base != null) return Math.max(1, Number(m.area_base) + 1);
+  return 0;
+}
 // Quadrado de lado `lado` (ex.: 4x4 do Silêncio) — espelha _em_zona_quadrada do servidor.
 function _addQuadrado(cx, cy, lado, out) {
   const h = Math.floor(lado / 2);   // 2 para 4x4 → casas cx-1..cx+2
@@ -12441,7 +14177,8 @@ function _recomputarAreaMagia(hx, hy) {
   const area = new Set(), dbl = new Set();
   if (m && me) {
     if (mode.alvoTipo === 'self_area') {
-      _addCheb(me.pos[0], me.pos[1], _areaRaioMagiaCli(m), area);
+      if (mode.areaLado) _addQuadrado(me.pos[0], me.pos[1], mode.areaLado, area);
+      else _addCheb(me.pos[0], me.pos[1], _areaRaioMagiaCli(m), area);
     } else if (mode.alvoTipo === 'linha' && hx != null && hy != null) {
       // Relâmpago: caminho com ricochete; pisado 1x = verde claro, 2x = verde escuro.
       const [dx, dy] = _dir8(hx - me.pos[0], hy - me.pos[1]);
@@ -12460,7 +14197,8 @@ function _recomputarAreaMagia(hx, hy) {
         for (const k of _coneTilesCli(me.pos[0], me.pos[1], dx, dy, m.comprimento || 4, m.base || 4)) area.add(k);
       }
     } else if (hx != null && hy != null) {
-      if (mode.alvoTipo === 'tile' && m.area_lado)  _addQuadrado(hx, hy, m.area_lado, area); // Silêncio 4x4
+      if (mode.alvoTipo === 'tile' && mode.areaLado) _addQuadrado(hx, hy, mode.areaLado, area);
+      else if (mode.alvoTipo === 'tile' && m.area_lado)  _addQuadrado(hx, hy, m.area_lado, area); // Silêncio 4x4
       else if (mode.alvoTipo === 'tile')            _addCheb(hx, hy, _areaRaioMagiaCli(m), area);
       else                                          area.add(`${hx},${hy}`); // foe / ally
     }
@@ -12486,7 +14224,7 @@ function _recomputarAreaThrow(hx, hy) {
 function _atualizarZonasMagia(state) {
   const zz = ((state && state.zonas_especiais) || []);
   window._spellHL.zonas     = zz.filter(z => z.ativa && (z.tipo === 'bola_fogo' || z.tipo === 'molochus_chamas'))
-                                .map(z => ({ cx: z.cx, cy: z.cy, raio: z.raio || 2,
+                                .map(z => ({ cx: z.cx, cy: z.cy, raio: z.raio || 2, lado: z.area_lado || 0,
                                   visualId: z.animation_id || z.visual_id || z.id || null }));
   window._spellHL.nuvensAcidas = zz.filter(z => z.ativa && z.tipo === 'nuvem_acida')
                                   .map(z => ({ cx: z.cx, cy: z.cy, raio: z.raio || 1 }));
@@ -12503,7 +14241,7 @@ function _atualizarZonasMagia(state) {
   }
   window._spellHL.camarasGas = gasTiles;
   window._spellHL.escuridao = zz.filter(z => z.ativa && z.tipo === 'escuridao')
-                                .map(z => ({ cx: z.cx, cy: z.cy, raio: z.raio || 3,
+                                .map(z => ({ cx: z.cx, cy: z.cy, raio: z.raio || 3, lado: z.area_lado || 0,
                                   visualId: z.visual_id || z.animation_id || z.id || null }));
   window._spellHL.silencio  = zz.filter(z => z.ativa && z.tipo === 'silencio')
                                 .map(z => ({ cx: z.cx, cy: z.cy, lado: z.lado || 4 }));
@@ -12519,30 +14257,75 @@ function _aplicarSpellHL3D() {
   const hl = window._spellHL || { range: new Set(), area: new Set(), zonas: [] };
   const zonaSet = new Set();
   for (const z of hl.zonas)
-    if (_bolaFogoZonaLiberada(z)) _addCheb(z.cx, z.cy, z.raio, zonaSet);
+    if (_bolaFogoZonaLiberada(z)) z.lado ? _addQuadrado(z.cx, z.cy, z.lado, zonaSet) : _addCheb(z.cx, z.cy, z.raio, zonaSet);
   for (const z of (hl.nuvensAcidas || [])) _addCheb(z.cx, z.cy, z.raio, zonaSet);
   const escSet = new Set();
-  for (const z of (hl.escuridao || [])) _addCheb(z.cx, z.cy, z.raio, escSet);
+  for (const z of (hl.escuridao || [])) z.lado ? _addQuadrado(z.cx, z.cy, z.lado, escSet) : _addCheb(z.cx, z.cy, z.raio, escSet);
   const silSet = new Set();
   for (const z of (hl.silencio || [])) _addQuadrado(z.cx, z.cy, z.lado, silSet);
-  const toggle = (dict, keys) => { if (!dict) return; for (const k in dict) dict[k].visible = keys.has(k); };
+  const visiveis = g3.spellVisibleSet;
+  const limitarVisibilidade = keys => visiveis ? new Set([...keys].filter(k => visiveis.has(k))) : keys;
+  // Cria a casa que precisa aparecer e esconde o que já existia (pool preguiçoso).
+  const toggle = (pool, keys) => { if (!pool) return; _overlayShowOnly(pool, limitarVisibilidade(keys)); };
   toggle(g3.spellEscuridaoMeshes, escSet);   // névoa escura (no chão, sob os peões)
   toggle(g3.spellSilencioMeshes,  silSet);   // véu de silêncio
   toggle(g3.spellRangeMeshes,  hl.range);
   toggle(g3.spellZonaMeshes,   zonaSet);
-  if(g3.spellFireFx){
-    for(const key in g3.spellFireFx) g3.spellFireFx[key].group.visible = zonaSet.has(key);
-  }
+  // O fogo persistente nunca passou pelo filtro de névoa (ao contrário dos
+  // realces acima): mantido assim de propósito.
+  _overlayShowOnly(g3.spellFireFx, zonaSet);
   const gasAndDouble = new Set(hl.camarasGas || []);
   for (const k of (hl.double || [])) gasAndDouble.add(k);
   toggle(g3.spellDoubleMeshes, gasAndDouble);             // verde escuro (gás / atingido 2x)
   toggle(g3.spellAreaMeshes,   hl.area);                 // verde claro por último (por cima)
+  if(g3.spellTargetMeshes){
+    const targets = _spellPreviewTargetSets(GS.gameState, hl.area);
+    toggle(g3.spellTargetMeshes.ally, targets.ally);
+    toggle(g3.spellTargetMeshes.enemy, targets.enemy);
+    toggle(g3.spellTargetMeshes.self, targets.self);
+  }
+  _atualizarDirecaoSpell3D();
+}
+
+function _atualizarDirecaoSpell3D(){
+  if(!g3?.scene || !window.THREE) return;
+  const mode = window._modoMagia;
+  const ativo = mode && Array.isArray(mode.dir) && ['linha','cone'].includes(mode.alvoTipo);
+  if(!ativo){
+    if(g3.spellDirectionGroup) g3.spellDirectionGroup.visible = false;
+    return;
+  }
+  const me = GS.me; if(!me) return;
+  const dx = Number(mode.dir[0]) || 0, dz = Number(mode.dir[1]) || 0;
+  if(!dx && !dz) return;
+  const m = GRIMORIO_CLIENT[mode.magiaId] || {};
+  const length = mode.alvoTipo === 'cone' ? Number(m.comprimento || m.range || 4) : _alcanceMagiaCli(m, me.level);
+  const T = g3.T;
+  if(!g3.spellDirectionGroup){
+    const group = new T.Group(); group.name = 'spell-direction-preview'; group.renderOrder = 24;
+    const mat = new T.LineBasicMaterial({color:0x8fe9ff, transparent:true, opacity:.90, depthWrite:false, depthTest:false});
+    const line = new T.Line(new T.BufferGeometry(), mat); group.add(line);
+    const arrow = new T.Mesh(new T.ConeGeometry(.13, .32, 4), mat.clone()); group.add(arrow);
+    g3.spellDirectionGroup = group; g3.spellDirectionLine = line; g3.spellDirectionArrow = arrow; g3.scene.add(group);
+  }
+  const group = g3.spellDirectionGroup, line = g3.spellDirectionLine, arrow = g3.spellDirectionArrow;
+  const color = mode.alvoTipo === 'cone' ? 0xffd34d : 0x8fe9ff;
+  line.material.color.setHex(color); arrow.material.color.setHex(color);
+  line.geometry.dispose();
+  line.geometry = new T.BufferGeometry().setFromPoints([
+    new T.Vector3(me.pos[0], .34, me.pos[1]),
+    new T.Vector3(me.pos[0] + dx * length, .34, me.pos[1] + dz * length),
+  ]);
+  arrow.position.set(me.pos[0] + dx * length, .36, me.pos[1] + dz * length);
+  arrow.rotation.set(Math.PI / 2, Math.atan2(dz, dx), 0);
+  group.visible = true;
 }
 
 function _animarFogoPersistente3D(now){
   if(!g3 || !g3.spellFireFx) return;
   for(const fx of Object.values(g3.spellFireFx)){
-    if(!fx.group.visible) continue;
+    // O pool guarda null para casa inelegivel (parede), entao o guarda e obrigatorio.
+    if(!fx || !fx.group.visible) continue;
     const pulse = .72 + .20 * Math.sin(now / 155 + (fx.flames[0]?.userData.firePhase || 0));
     fx.glow.material.opacity = .28 + .22 * pulse;
     fx.glow.scale.setScalar(.88 + .12 * pulse);
@@ -12583,7 +14366,7 @@ function _desenharSpellHL2D(ctx, exploredSet) {
   };
   // Névoa escura (Manto de Escuridão) — desenhada no chão; personagens/monstros ficam por cima.
   const escSet = new Set();
-  for (const z of (hl.escuridao || [])) _addCheb(z.cx, z.cy, z.raio, escSet);
+  for (const z of (hl.escuridao || [])) z.lado ? _addQuadrado(z.cx, z.cy, z.lado, escSet) : _addCheb(z.cx, z.cy, z.raio, escSet);
   for (const k of escSet) draw(k, 'rgba(10,6,26,0.62)');
   // Silêncio 4x4 — véu azul-acinzentado suave.
   const silSet = new Set();
@@ -12592,7 +14375,7 @@ function _desenharSpellHL2D(ctx, exploredSet) {
   for (const k of hl.range) draw(k, 'rgba(255,40,40,0.22)');     // alcance — vermelho
   const zonaSet = new Set();                                     // zona de fogo persistente — laranja
   for (const z of hl.zonas)
-    if (_bolaFogoZonaLiberada(z)) _addCheb(z.cx, z.cy, z.raio, zonaSet);
+    if (_bolaFogoZonaLiberada(z)) z.lado ? _addQuadrado(z.cx, z.cy, z.lado, zonaSet) : _addCheb(z.cx, z.cy, z.raio, zonaSet);
   for (const k of zonaSet) draw(k, 'rgba(255,110,0,0.32)');
   const acidSet = new Set();
   for (const z of (hl.nuvensAcidas || [])) _addCheb(z.cx, z.cy, z.raio, acidSet);
@@ -12608,7 +14391,7 @@ function _desenharFogoPersistente2D(ctx, exploredSet, now) {
   if (!zonas.length) return;
   const tiles = new Set();
   for (const z of zonas)
-    if (_bolaFogoZonaLiberada(z)) _addCheb(z.cx, z.cy, z.raio, tiles);
+    if (_bolaFogoZonaLiberada(z)) z.lado ? _addQuadrado(z.cx, z.cy, z.lado, tiles) : _addCheb(z.cx, z.cy, z.raio, tiles);
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
   for (const key of tiles) {
@@ -12758,7 +14541,65 @@ window.renderElementaisLewis    = renderElementaisLewis;
 // só existe no cliente, não é persistido/enviado ao servidor até o jogador
 // clicar num botão de modo/alvo).
 let _masterSel = new Set();
+const _masterActionHistory = [];
+let _masterHistoryFocus = null;
+let _masterHistorySeq = 0;
 function _esc(s){ return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+function _masterActionResultLabel(msg){
+  if(msg.natural_critical || msg.crit) return 'CRÍTICO';
+  if(msg.natural_fumble) return 'FALHA';
+  return msg.hit ? 'ACERTO' : 'ERRO';
+}
+
+function _registrarHistoricoAtaque(msg){
+  if(!msg || !msg.attack_id) return;
+  const id = String(msg.attack_id);
+  let item = _masterActionHistory.find(x => x.id === id);
+  if(msg.phase === 'start' && !item){
+    item = {
+      id, kind:'attack', attackerId:msg.attacker_id == null ? null : String(msg.attacker_id),
+      targetId:msg.target_id == null ? null : String(msg.target_id),
+      attackerPos:Array.isArray(msg.attacker_pos) ? msg.attacker_pos.slice(0,2) : null,
+      targetPos:Array.isArray(msg.target_pos) ? msg.target_pos.slice(0,2) : null,
+      attackerName:String(msg.attacker_name || 'Atacante'), targetName:String(msg.target_name || 'Alvo'),
+      attackName:String(msg.attack_name || 'Ataque'), mode:String(msg.advantage_mode || 'normal'),
+      text:'', updatedAt:Date.now(), seq:_masterHistorySeq++, result:null,
+    };
+    _masterActionHistory.push(item);
+  }
+  if(!item) return;
+  if(msg.phase === 'result'){
+    item.result = _masterActionResultLabel(msg);
+    item.roll = msg.roll; item.total = msg.total;
+  }
+  item.updatedAt = Date.now();
+  const mode = item.mode === 'advantage' ? 'vantagem' : item.mode === 'disadvantage' ? 'desvantagem' : 'normal';
+  const suffix = item.result ? ` • ${item.result}${item.total != null ? ` (${item.total})` : ''}` : ' • preparando';
+  item.text = `⚔️ ${item.attackerName} → ${item.targetName} • ${item.attackName} • ${mode}${suffix}`;
+  while(_masterActionHistory.length > 24) _masterActionHistory.shift();
+  if(GS.isMaster() && GS.gameState) renderMasterPanel(GS.gameState);
+}
+
+function _focarHistoricoAcao(id){
+  const item = _masterActionHistory.find(x => x.id === String(id));
+  if(!item) return;
+  _masterHistoryFocus = {...item, until:performance.now() + 4200};
+  _redrawMasterSelection();
+  const focusToken = _masterHistoryFocus;
+  setTimeout(() => {
+    if(_masterHistoryFocus !== focusToken) return;
+    _masterHistoryFocus = null;
+    _redrawMasterSelection();
+  }, 4250);
+  toast(`🎯 ${item.attackerName} → ${item.targetName}`, 'var(--gold)');
+}
+
+function _redrawMasterSelection(){
+  if(!GS.gameState) return;
+  if(mode3D && g3) renderMap3D(GS.gameState);
+  else if(!mode3D) renderMap(GS.gameState);
+}
 
 function renderMasterPanel(state){
   if(!state) return;
@@ -12772,6 +14613,10 @@ function renderMasterPanel(state){
 
   const mm = GS.masterManual();
   const commandControl = GS.isCommandController();
+  if(mm && window._mpFocoMid !== mm.mid){
+    window._mpFocoMid = mm.mid;
+    window._mpGolpeArmado = null;
+  }
   // A aba Ativo só é o default enquanto existe monstro na janela Manual.
   if(mm && window._masterTabAuto !== mm.mid){ window._masterTab = 'ativo'; window._masterTabAuto = mm.mid; }
   if(!mm) window._masterTabAuto = null;
@@ -12791,7 +14636,7 @@ function renderMasterPanel(state){
      </div>`;
   host.innerHTML =
     abas +
-     `<div class="mp-corpo">${corpo}</div>` +
+     `<div class="mp-corpo"><div class="mp-preview-legend"><span><i class="mp-leg-range"></i> alcance</span><span><i class="mp-leg-zone"></i> área efetiva</span><span><i class="mp-leg-foot"></i> ocupação</span></div>${corpo}${_mpHistoricoAcoes(state)}</div>` +
     (mm ? `<div class="mp-rodape"><button class="mp-encerrar">Encerrar monstro</button></div>` : '');
 
   host.querySelectorAll('.mp-aba').forEach(b => {
@@ -12803,6 +14648,9 @@ function renderMasterPanel(state){
   if(aba === 'ativo')    _mpWireAtivo(host, state);
   if(aba === 'monstros') _mpWireMonstros(host, state);
   if(aba === 'mestre')   _mpWireMestre(host, state);
+  host.querySelectorAll('[data-master-history]').forEach(b => {
+    b.onclick = () => _focarHistoricoAcao(b.dataset.masterHistory);
+  });
   _mpTickRelogio(host);
 }
 
@@ -12896,14 +14744,16 @@ function _mpAbaAtivo(state){
     h += `<div class="mp-sec">${t('ui.mestre.ataques')} <span style="color:var(--text2);letter-spacing:0">${t('ui.mestre.gastam_acao')}</span></div>`;
     ataques.forEach((a, i) => {
       const cargas = manual ? GS.masterAttackCharges(i) : (a.num_attacks || 1);
+      const totalCargas = Math.max(cargas, Number(a.num_attacks || 1));
+      const gastas = Math.max(0, totalCargas - cargas);
       const pode = manual && cargas > 0 && GS.masterPodeAtacar();
       const b = (a.atk_bonus != null) ? ((a.atk_bonus >= 0 ? '+' : '') + a.atk_bonus) : '';
       const alc = a.range ? t('ui.mestre.alcance_q', {n:a.range}) : t('ui.mestre.corpo_a_corpo');
       const armado = window._mpGolpeArmado === i ? ' armado' : '';
       h += `<div class="mp-linha ${pode ? 'atk'+armado : 'off'}" data-atk="${i}">
           <span style="font-size:1rem">${a.range ? '🎯' : '⚔️'}</span>
-          <div class="txt"><b>${_esc(a.name || t('ui.mestre.ataque'))}</b><div class="meta">${b} · ${_esc(a.damage || '')} · ${alc}</div></div>
-          <span class="mp-cargas">${'●'.repeat(cargas) || '—'}</span>
+          <div class="txt"><b>${_esc(a.name || t('ui.mestre.ataque'))}${window._mpGolpeArmado === i ? ' <small class="mp-armado-label">ARMADO</small>' : ''}</b><div class="meta">${b} · ${_esc(a.damage || '')} · ${alc}</div></div>
+          <span class="mp-cargas" title="${cargas} ataque(s) disponível(is); ${gastas} gasto(s)">${'●'.repeat(cargas) || '—'}<small>${cargas}/${totalCargas} disp.</small>${gastas ? `<em>${gastas} gasto(s)</em>` : ''}</span>
         </div>`;
     });
   }
@@ -12918,13 +14768,15 @@ function _mpAbaAtivo(state){
       const ativavel = _mpAtivavel(a);
       const custo = _mpCustoDe(a);
       const bloqueado = custo === 'principal' ? !!(mm && mm.acao) : custo === 'bonus' ? !!(mm && mm.bonus) : false;
-      const pode = manual && ativavel && !bloqueado;
+      const recarga = _mpRecargaRestante(m, a.id, state);
+      const pode = manual && ativavel && !bloqueado && recarga <= 0;
       const motivo = naoImpl ? t('ui.mestre.nao_implementada')
                    : !ativavel ? t('ui.mestre.ia_apenas')
+                   : recarga > 0 ? `⏳ recarga: ${recarga} rodada(s)`
                    : bloqueado ? t('ui.mestre.acao_gasta') : '';
-      h += `<div class="mp-linha ${pode ? 'hab' : 'off'}" data-hab="${_esc(a.id)}">
+      h += `<div class="mp-linha ${pode ? 'hab' : 'off'}${recarga > 0 ? ' mp-em-recarga' : ''}" data-hab="${_esc(a.id)}">
           <span style="font-size:1rem">✦</span>
-          <div class="txt"><b>${_esc(a.name || a.id)}</b> <span class="mp-custo">${_rotulo(custo, 'ui.mestre.custo', t('ui.mestre.custo.principal'))}</span>
+          <div class="txt"><b>${_esc(a.name || a.id)}</b> <span class="mp-custo">${_rotulo(custo, 'ui.mestre.custo', t('ui.mestre.custo.principal'))}</span>${recarga > 0 ? ` <span class="mp-recarga-badge">⏳ ${recarga}R</span>` : ''}
             <div class="meta">${_esc(a.descricao || a.desc || '')}${motivo ? ' · '+motivo : ''}</div></div>
         </div>`;
     });
@@ -13008,6 +14860,7 @@ function _mpAbaMonstros(state){
   const rows = (state.monsters || []).map(m => {
     const dormente = !m.alertado;
     const sel = _masterSel.has(m.id) ? ' sel' : '';
+    const foco = String(window._mpFocoMid || '') === String(m.id) ? ' foco' : '';
     const ativo = (mm && m.id === mm.mid) ? ' manual-ativo' : '';
     const modo = m.control_mode || 'auto';
     const pct = Math.max(0, Math.min(100, Math.round(100 * m.hp / (m.max_hp || m.hp || 1))));
@@ -13015,7 +14868,7 @@ function _mpAbaMonstros(state){
       return `<div class="mestre-row dormente"><span class="nome">${_esc(m.name || m.type || '?')}</span>
               <span style="font-size:.6rem">dormente</span></div>`;
     }
-    return `<div class="mestre-row${sel}${ativo}" data-mid="${_esc(m.id)}">
+    return `<div class="mestre-row${sel}${foco}${ativo}" data-mid="${_esc(m.id)}">
         <span>${m.emoji || '👾'}</span>
         <span class="nome">${_esc(m.name || m.type || '?')}</span>
         <span class="mp-hpbar" style="max-width:34px"><i style="width:${pct}%"></i></span>
@@ -13040,14 +14893,20 @@ function _mpWireMonstros(host, state){
   host.querySelectorAll('.mestre-row[data-mid]').forEach(row => {
     row.onclick = () => {
       const mid = row.dataset.mid;
+      if(window._mpFocoMid !== mid){
+        window._mpGolpeArmado = null;
+        if(window._modoMestreMira) _limparMiraMestre();
+      }
       if (state.test_mode) {
         window._mpFocoMid = mid;
+        _redrawMasterSelection();
         GS.mestreSelecionarTeste(mid);
         return;
       }
       if(_masterSel.has(mid)) _masterSel.delete(mid); else _masterSel.add(mid);
       window._mpFocoMid = mid;
       renderMasterPanel(GS.gameState);
+      _redrawMasterSelection();
     };
   });
   host.querySelectorAll('.mestre-modos button').forEach(b => {
@@ -13115,6 +14974,11 @@ function _limparMiraMestre(){
   document.removeEventListener('keydown', _keyMestreMira);
 }
 function _keyMestreMira(e){ if(e.key==='Escape'){ _limparMiraMestre(); toast('Mira cancelada.', '#888'); e.preventDefault(); } }
+function _mestreMiraErro(motivo){
+  const msg = `Alvo inválido: ${motivo}`;
+  toast(msg, 'var(--orange)');
+  appendGM(`⚠️ ${msg}`);
+}
 function _mestreLinhaRangeTiles(state, caster, range){
   const out = new Set(), pos = caster?.pos || [], ox = Number(pos[0]), oy = Number(pos[1]);
   if(!state?.tiles || !Number.isFinite(ox) || !Number.isFinite(oy)) return out;
@@ -13132,14 +14996,27 @@ function _monsterIs2x2Client(m){
   return !!(m && Array.isArray(m.size) && Number(m.size[0]) === 2 && Number(m.size[1]) === 2);
 }
 
+function _monsterHasFrontRowClient(m){
+  if(_monsterIs2x2Client(m)) return true;
+  if(!m?.oriented || !Array.isArray(m.size)) return false;
+  const w = Number(m.size[0]) || 1, h = Number(m.size[1]) || 1;
+  return (h === 1 ? 1 : w) > 1;
+}
+
+function _monsterOrientedDimensionsClient(m){
+  const w = Number(m?.size?.[0]) || 2, h = Number(m?.size?.[1]) || 1;
+  return h === 1 ? [1, w] : [w, h];
+}
+
 function _monsterFrontAttackTilesClient(m, reach=1){
-  if(!_monsterIs2x2Client(m)) return [];
+  if(!_monsterHasFrontRowClient(m)) return [];
   const f = Array.isArray(m.facing) &&
     [[1,0],[-1,0],[0,1],[0,-1]].some(([x,y])=>x===m.facing[0]&&y===m.facing[1])
     ? m.facing : [0,1];
   const [fx,fy] = f, [px,py] = [-fy,fx], [ax,ay] = m.pos;
   const n = Math.max(1, Number(reach) || 1), out=[];
-  for(let lane=0; lane<2; lane++){
+  const width = m.oriented ? _monsterOrientedDimensionsClient(m)[0] : 2;
+  for(let lane=0; lane<width; lane++){
     let bx,by;
     if(m.oriented){ bx=ax+px*lane; by=ay+py*lane; }
     else if(fx===1){ bx=ax+1; by=ay+lane; }
@@ -13151,16 +15028,32 @@ function _monsterFrontAttackTilesClient(m, reach=1){
   return out;
 }
 
+function _monsterOrthogonalAttackTilesClient(m, reach=1){
+  if(!_monsterIs2x2Client(m) || m.oriented) return [];
+  const [ax, ay] = m.pos || [0, 0];
+  const n = Math.max(1, Number(reach) || 1), out=[];
+  for(let depth=1; depth<=n; depth++){
+    out.push(
+      [ax, ay-depth], [ax+1, ay-depth],
+      [ax, ay+1+depth], [ax+1, ay+1+depth],
+      [ax-depth, ay], [ax-depth, ay+1],
+      [ax+1+depth, ay], [ax+1+depth, ay+1]
+    );
+  }
+  return out;
+}
+
 function _monsterRearAttackTilesClient(m, reach=1){
-  if(!_monsterIs2x2Client(m)) return [];
+  if(!_monsterHasFrontRowClient(m)) return [];
   const f = Array.isArray(m.facing) &&
     [[1,0],[-1,0],[0,1],[0,-1]].some(([x,y])=>x===m.facing[0]&&y===m.facing[1])
     ? m.facing : [0,1];
   const [fx,fy] = f, [px,py] = [-fy,fx], [ax,ay] = m.pos;
   const n = Math.max(1, Number(reach) || 1), out=[];
-  for(let lane=0; lane<2; lane++){
+  const [width, length] = m.oriented ? _monsterOrientedDimensionsClient(m) : [2, 2];
+  for(let lane=0; lane<width; lane++){
     let bx,by;
-    if(m.oriented){ bx=ax-fx*2+px*lane; by=ay-fy*2+py*lane; }
+    if(m.oriented){ bx=ax-fx*length+px*lane; by=ay-fy*length+py*lane; }
     else if(fx===1){ bx=ax-1; by=ay+lane; }
     else if(fx===-1){ bx=ax+2; by=ay+lane; }
     else if(fy===1){ bx=ax+lane; by=ay-1; }
@@ -13174,14 +15067,220 @@ function _monsterAttackInRangeClient(m, targetPos, atkDef={}){
   if(atkDef.range != null){
     const tiles = GS.monsterTiles(m);
     const lim = Math.max(1, Number(atkDef.range) || 1);
+    if(['orthogonal','cardinal','line'].includes(atkDef.range_shape)){
+      return tiles.some(([x,y])=>{
+        const dx=targetPos[0]-x, dy=targetPos[1]-y;
+        return (dx===0 || dy===0) && (Math.abs(dx)+Math.abs(dy)) >= 1
+          && Math.abs(dx)+Math.abs(dy) <= lim;
+      });
+    }
     return tiles.some(([x,y])=>Math.max(Math.abs(targetPos[0]-x),Math.abs(targetPos[1]-y)) <= lim);
   }
-  if(_monsterIs2x2Client(m)){
+  if(_monsterIs2x2Client(m) && !m.oriented){
+    const reach = Math.max(1, Number(atkDef.reach) || 1);
+    return _monsterOrthogonalAttackTilesClient(m, reach)
+      .some(([x,y])=>x===targetPos[0]&&y===targetPos[1]);
+  }
+  if(_monsterHasFrontRowClient(m)){
     const reach = Math.max(1, Number(atkDef.reach) || 1);
     return _monsterFrontAttackTilesClient(m, reach).some(([x,y])=>x===targetPos[0]&&y===targetPos[1]);
   }
   const dx=Math.abs(m.pos[0]-targetPos[0]), dy=Math.abs(m.pos[1]-targetPos[1]);
   return (dx===1&&dy===0)||(dx===0&&dy===1);
+}
+
+// Prévia exclusivamente visual do Mestre. A autoridade continua no servidor;
+// aqui apenas projetamos as mesmas formas de ataque no tabuleiro para que o
+// Mestre consiga ler a ameaça antes de selecionar a criatura.
+function _masterMonsterAttackPreviewClient(state, monster){
+  const empty = { range: new Set(), zone: new Set() };
+  if(!state?.tiles || !monster || monster.hp <= 0) return empty;
+  const H = state.tiles.length, W = state.tiles[0]?.length || 0;
+  const body = typeof GS.monsterTiles === 'function'
+    ? GS.monsterTiles(monster)
+    : [[monster.pos[0], monster.pos[1]]];
+  const bodySet = new Set(body.map(([x, y]) => `${x},${y}`));
+  const attacks = Array.isArray(monster.attacks) && monster.attacks.length
+    ? monster.attacks
+    : [{ range: null, reach: 1 }];
+  const isTargetTile = (x, y) => {
+    if(x < 0 || y < 0 || x >= W || y >= H) return false;
+    const tile = state.tiles[y]?.[x];
+    return tile === GS.TILE_FLOOR || tile === GS.TILE_DOOR;
+  };
+  const add = (set, x, y) => { if(isTargetTile(x, y)) set.add(`${x},${y}`); };
+
+  for(const atk of attacks){
+    if(atk && atk.range != null){
+      const reach = Math.max(1, Number(atk.range) || 1);
+      for(let y = 0; y < H; y++) for(let x = 0; x < W; x++){
+        if(!isTargetTile(x, y)) continue;
+        if(bodySet.has(`${x},${y}`)) continue;
+        const inRange = ['orthogonal','cardinal','line'].includes(atk.range_shape)
+          ? body.some(([bx, by]) => {
+              const dx=x-bx, dy=y-by, dist=Math.abs(dx)+Math.abs(dy);
+              return (dx===0 || dy===0) && dist >= 1 && dist <= reach;
+            })
+          : body.some(([bx, by]) => Math.max(Math.abs(x-bx), Math.abs(y-by)) <= reach);
+        if(inRange){
+          add(empty.range, x, y);
+          add(empty.zone, x, y);
+        }
+      }
+      continue;
+    }
+
+    const reach = Math.max(1, Number(atk?.reach) || 1);
+    const front = (_monsterIs2x2Client(monster) && !monster.oriented)
+      ? _monsterOrthogonalAttackTilesClient(monster, reach)
+      : _monsterHasFrontRowClient(monster)
+        ? _monsterFrontAttackTilesClient(monster, reach)
+      : [[monster.pos[0]+1, monster.pos[1]], [monster.pos[0]-1, monster.pos[1]],
+         [monster.pos[0], monster.pos[1]+1], [monster.pos[0], monster.pos[1]-1]];
+    for(const [x, y] of front){
+      add(empty.range, x, y);
+      add(empty.zone, x, y);
+    }
+  }
+  return empty;
+}
+
+function _masterMonsterAtTileClient(state, tx, ty){
+  if(!state || !Number.isFinite(tx) || !Number.isFinite(ty)) return null;
+  return (state.monsters || []).find(m => m && m.hp > 0 &&
+    (typeof GS.monsterTiles === 'function' ? GS.monsterTiles(m) : [m.pos])
+      .some(([x, y]) => x === tx && y === ty)) || null;
+}
+
+function _masterMonsterHoverEnabled(){
+  return GS.isMaster() && !window._modoMestreMira && !window._modoMagia
+    && !window._modoThrowItem && !window._modoAnimarMortos
+    && !window._modoInstrumento;
+}
+
+function _masterSelectedMonsterIds(state){
+  const ids = new Set([..._masterSel].map(String));
+  const focus = GS.masterManual()?.mid || window._mpFocoMid;
+  if(focus != null) ids.add(String(focus));
+  return new Set([...ids].filter(id => (state?.monsters || []).some(m => String(m.id) === id && m.hp > 0)));
+}
+
+function _masterMonsterFootprintTiles(state, monster){
+  if(!monster) return [];
+  return typeof GS.monsterTiles === 'function'
+    ? GS.monsterTiles(monster)
+    : [monster.pos].filter(Boolean);
+}
+
+function _drawMasterMonsterSelection2D(ctx, state, terrainSet){
+  if(!GS.isMaster()) return;
+  const selected = _masterSelectedMonsterIds(state);
+  if(!selected.size) return;
+  ctx.save();
+  for(const monster of (state.monsters || [])){
+    if(!selected.has(String(monster.id))) continue;
+    const tiles = _masterMonsterFootprintTiles(state, monster);
+    const focused = String(monster.id) === String(GS.masterManual()?.mid || window._mpFocoMid);
+    ctx.fillStyle = focused ? 'rgba(255,190,40,.16)' : 'rgba(255,130,40,.10)';
+    ctx.strokeStyle = focused ? '#ffe070' : '#ff9a45';
+    ctx.lineWidth = focused ? Math.max(2.5, CELL*.055) : Math.max(1.5, CELL*.035);
+    for(const [x,y] of tiles){
+      const key = `${x},${y}`;
+      if(terrainSet && !terrainSet.has(key)) continue;
+      ctx.fillRect(x*CELL+2, y*CELL+2, CELL-4, CELL-4);
+      ctx.strokeRect(x*CELL+3, y*CELL+3, CELL-6, CELL-6);
+    }
+    if(focused && tiles.length > 1){
+      const xs = tiles.map(p => p[0]), ys = tiles.map(p => p[1]);
+      const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+      const label = `${maxX-minX+1}×${maxY-minY+1}`;
+      const cx = (minX + maxX + 1) * CELL / 2, cy = (minY + maxY + 1) * CELL / 2;
+      ctx.font = `900 ${Math.max(10, CELL*.14)}px Arial, sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const w = ctx.measureText(label).width + 10;
+      ctx.fillStyle = 'rgba(12,7,2,.86)'; ctx.fillRect(cx-w/2, cy-CELL*.36, w, CELL*.18);
+      ctx.fillStyle = '#ffe070'; ctx.fillText(label, cx, cy-CELL*.27);
+    }
+  }
+  ctx.restore();
+}
+
+function _masterHistoryEntityTiles(state, id, fallbackPos){
+  const sid = id == null ? null : String(id);
+  const entities = [
+    ...(state?.players || []), ...(state?.monsters || []),
+    ...(state?.players || []).flatMap(p => p.animados || []),
+  ];
+  const entity = sid == null ? null : entities.find(e => String(e?.id) === sid);
+  if(entity && typeof GS.monsterTiles === 'function' && (state?.monsters || []).includes(entity))
+    return GS.monsterTiles(entity);
+  if(entity && Array.isArray(entity.pos)) return [entity.pos];
+  return Array.isArray(fallbackPos) ? [fallbackPos] : [];
+}
+
+function _drawMasterHistoryFocus2D(ctx, state, terrainSet){
+  const f = _masterHistoryFocus;
+  if(!f || performance.now() > Number(f.until || 0)){
+    _masterHistoryFocus = null;
+    return;
+  }
+  ctx.save();
+  const sides = [
+    ['attackerId','attackerPos','#54d8ff','A'],
+    ['targetId','targetPos','#ff6b8a','T'],
+  ];
+  sides.forEach(([idKey,posKey,color,label]) => {
+    const tiles = _masterHistoryEntityTiles(state, f[idKey], f[posKey]);
+    if(!tiles.length) return;
+    ctx.fillStyle = `${color}33`; ctx.strokeStyle = color;
+    ctx.lineWidth = Math.max(2.5, CELL * .055);
+    for(const [x,y] of tiles){
+      if(terrainSet && !terrainSet.has(`${x},${y}`)) continue;
+      ctx.fillRect(x*CELL+3, y*CELL+3, CELL-6, CELL-6);
+      ctx.strokeRect(x*CELL+3, y*CELL+3, CELL-6, CELL-6);
+    }
+    const [x,y] = tiles[0];
+    ctx.font = `900 ${Math.max(12, CELL*.18)}px Arial Black, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = color; ctx.strokeStyle = '#090612'; ctx.lineWidth = 5;
+    ctx.strokeText(label, x*CELL + CELL*.20, y*CELL + CELL*.20);
+    ctx.fillText(label, x*CELL + CELL*.20, y*CELL + CELL*.20);
+  });
+  ctx.restore();
+}
+
+function _setMasterMonsterHover(monsterId){
+  const next = _masterMonsterHoverEnabled() ? (monsterId || null) : null;
+  if(next === _masterMonsterHoverId) return;
+  _masterMonsterHoverId = next;
+  if(!GS.gameState) return;
+  if(mode3D && g3) renderMap3D(GS.gameState);
+  else if(!mode3D) renderMap(GS.gameState);
+}
+
+function _drawMasterMonsterAttackPreview2D(ctx, state, terrainSet){
+  if(!_masterMonsterHoverEnabled() || !_masterMonsterHoverId) return;
+  const monster = (state.monsters || []).find(m => m.id === _masterMonsterHoverId);
+  if(!monster) return;
+  const preview = _masterMonsterAttackPreviewClient(state, monster);
+  ctx.save();
+  // Primeiro o alcance total, depois a zona efetiva: o segundo realce fica
+  // mais forte nas casas que o ataque realmente pode atingir.
+  for(const [kind, tiles] of [['range', preview.range], ['zone', preview.zone]]){
+    if(!tiles.size) continue;
+    const zone = kind === 'zone';
+    ctx.fillStyle = zone ? 'rgba(210,18,24,0.34)' : 'rgba(255,54,54,0.14)';
+    ctx.strokeStyle = zone ? 'rgba(255,52,52,0.96)' : 'rgba(255,92,92,0.65)';
+    ctx.lineWidth = zone ? 2.5 : 1.5;
+    for(const key of tiles){
+      if(!terrainSet.has(key)) continue;
+      const [x, y] = key.split(',').map(Number);
+      const X = x * CELL, Y = y * CELL;
+      ctx.fillRect(X + 2, Y + 2, CELL - 4, CELL - 4);
+      ctx.strokeRect(X + 2, Y + 2, CELL - 4, CELL - 4);
+    }
+  }
+  ctx.restore();
 }
 
 function _iniciarMiraMestre(spec){
@@ -13190,12 +15289,14 @@ function _iniciarMiraMestre(spec){
   window._modoMestreMira=Object.assign({},spec,{range});
   const alcance=spec.rearAttack
     ? new Set(_monsterRearAttackTilesClient(spec.caster, 1))
-    : (spec.kind==='attack' && spec.attackDef && !spec.attackDef.range && _monsterIs2x2Client(spec.caster))
+    : (spec.kind==='attack' && spec.attackDef && !spec.attackDef.range && _monsterHasFrontRowClient(spec.caster))
     ? new Set(_monsterFrontAttackTilesClient(spec.caster, spec.attackDef.reach || 1))
     : spec.lineRange
     ? _mestreLinhaRangeTiles(GS.gameState, spec.caster, range)
     : new Set();
-  if(!spec.lineRange && range>0) _addCheb(x,y,range,alcance);
+  const usesFootprintAttackZone = !!spec.rearAttack ||
+    (spec.kind === 'attack' && spec.attackDef && !spec.attackDef.range && _monsterHasFrontRowClient(spec.caster));
+  if(!spec.lineRange && !usesFootprintAttackZone && range>0) _addCheb(x,y,range,alcance);
   window._spellHL.range=alcance; window._spellHL.area=new Set(); _aplicarSpellHL();
   if(typeof g3!=='undefined' && g3 && g3.renderer) g3.renderer.domElement.style.cursor='crosshair';
   const leg=document.createElement('div'); leg.id='legenda-mestre-mira';
@@ -13218,14 +15319,28 @@ function _clickMiraMestre(tx,ty){
     : mode.kind==='attack' && mode.attackDef
     ? _monsterAttackInRangeClient(mode.caster,[tx,ty],mode.attackDef)
     : mode.range <= 0 || d <= mode.range;
-  if(!inRange){ toast('Casa fora do alcance.', 'var(--orange)'); return; }
-  if(mode.lineRange && tx !== mode.caster.pos[0] && ty !== mode.caster.pos[1]){
-    toast('O Cuspe de Ácido só pode ser usado em linha reta.', 'var(--orange)'); return;
+  if(!inRange){
+    const descricao = mode.kind === 'attack'
+      ? `a casa não está na área efetiva de ${mode.label || 'este golpe'}`
+      : `a casa está fora do alcance de ${mode.label || 'esta habilidade'} (${mode.range} casa(s))`;
+    _mestreMiraErro(descricao); return;
   }
+  if(mode.lineRange && tx !== mode.caster.pos[0] && ty !== mode.caster.pos[1]){
+    _mestreMiraErro('este ataque só pode ser usado em linha reta.'); return;
+  }
+  const targetMonster = _masterMonsterAtTileClient(st, tx, ty);
   const alvo=(st.players||[]).find(p=>p.alive&&p.pos[0]===tx&&p.pos[1]===ty)
-    || ((st.test_mode || GS.isCommandController())&&(st.monsters||[]).find(o=>o.id!==mode.caster.id&&o.hp>0&&o.pos[0]===tx&&o.pos[1]===ty))
+    || ((st.test_mode || GS.isCommandController()) && targetMonster && targetMonster.id !== mode.caster.id
+        ? targetMonster : null)
     || (mode.allowEmpty ? {id:null} : null);
-  if(!alvo){ toast(t('ui.mestre.clique_criatura_valida'), 'var(--orange)'); return; }
+  if(!alvo){
+    const motivo = targetMonster && targetMonster.id === mode.caster.id
+      ? 'o próprio monstro não pode ser escolhido como alvo.'
+      : mode.kind === 'attack'
+        ? 'clique em um herói dentro das casas vermelhas do golpe.'
+        : 'clique em uma criatura válida dentro da área destacada.';
+    _mestreMiraErro(motivo); return;
+  }
   if(mode.kind==='attack') GS.mestreAtacarMonstro(mode.caster.id,alvo.id,mode.attackIndex);
   else if(mode.kind==='ability') GS.mestreUsarHabilidade(mode.caster.id,mode.id,alvo.id);
   else GS.mestreUsarMagia(mode.caster.id,mode.id,alvo.id,tx,ty,mode.dir);
@@ -13449,7 +15564,9 @@ function _mestreUsarItemFicha(m, iid){
 }
 function _monstroEmCasa(tx, ty){
   const st = GS.gameState; if(!st) return null;
-  return (st.monsters||[]).find(m => m.hp>0 && m.pos && m.pos[0]===tx && m.pos[1]===ty) || null;
+  return (st.monsters||[]).find(m => m.hp>0 && m.pos &&
+    (typeof GS.monsterTiles === 'function' ? GS.monsterTiles(m) : [m.pos])
+      .some(([x, y]) => x === tx && y === ty)) || null;
 }
 
 // Casas alcançáveis pelo monstro Manual (autoritativo — vem do servidor).
@@ -13474,18 +15591,14 @@ function _masterAttackSet(state){
     for(let i=0;i<n;i++){ if(GS.masterAttackCharges(i) > 0){ idx = i; break; } }
   }
   if(idx == null || !(GS.masterAttackCharges(idx) > 0)) return s;
-  const atk = (mm.attacks||[{}])[idx] || {}; const rng = atk.range || null;
+  const atk = (mm.attacks||[{}])[idx] || {};
   for(const p of (state.players||[])){
     if(!p.alive) continue;
-    const dx=Math.abs(mm.pos[0]-p.pos[0]), dy=Math.abs(mm.pos[1]-p.pos[1]);
-    const inR = rng!=null ? Math.max(dx,dy)<=rng : ((dx===1&&dy===0)||(dx===0&&dy===1));
-    if(inR) s.add(`${p.pos[0]},${p.pos[1]}`);
+    if(_monsterAttackInRangeClient(mm, p.pos, atk)) s.add(`${p.pos[0]},${p.pos[1]}`);
   }
   if(GS.isCommandController()) for(const o of (state.monsters||[])){
     if(o.id === mm.id || o.hp <= 0) continue;
-    const dx=Math.abs(mm.pos[0]-o.pos[0]), dy=Math.abs(mm.pos[1]-o.pos[1]);
-    const inR = rng!=null ? Math.max(dx,dy)<=rng : ((dx===1&&dy===0)||(dx===0&&dy===1));
-    if(inR) s.add(`${o.pos[0]},${o.pos[1]}`);
+    if(_monsterAttackInRangeClient(mm, o.pos, atk)) s.add(`${o.pos[0]},${o.pos[1]}`);
   }
   return s;
 }
@@ -13916,7 +16029,10 @@ function renderMyPanel(state){
     if(weaponSlot){
       weaponSlot.onmouseenter = () => atualizarPreview(true);
       weaponSlot.onmouseleave = () => atualizarPreview(false);
+      if(weapon) aplicarTooltipAoItemDados(weaponSlot, weapon);
     }
+    const armorSlot = document.getElementById('armor-canvas');
+    if(armorSlot && equippedArmor) aplicarTooltipAoItemDados(armorSlot, equippedArmor);
   });
 
   // ── Check for attackable monsters using the same range rules as the board ──
@@ -13929,6 +16045,8 @@ function renderMyPanel(state){
 
   // ── Arremesso: UM botão por arma arremessável equipada (adaga / lança curta) ──
   // Cada botão arremessa o SEU slot (mão principal ou 2ª mão). Arremesso usa DES.
+  // A origem do alcance é a posição autoritativa do personagem no estado do servidor.
+  const _pp = Array.isArray(me.pos) ? me.pos : [0, 0];
   const _throwWeapons = [];
   if(me.weapon && me.weapon.throw_range)
     _throwWeapons.push({slot:'weapon', item:me.weapon, hand:t('ui.hud.mao_principal')});
@@ -14110,7 +16228,7 @@ function renderMyPanel(state){
         </div>
         <div class="skill-cost">💙${sk.mp}</div>`;
       btn.onclick = () => {
-        if(isActive){ GS.pendingSkill=null; renderMyPanel(GS.gameState); toast('Habilidade cancelada.','var(--text2)'); }
+        if(isActive){ GS.pendingSkill=null; _removerEfeitoVisualLocal(sk.id); renderMyPanel(GS.gameState); toast('Habilidade cancelada.','var(--text2)'); }
         else { beginSkill(sk, state); }
       };
     }
@@ -14269,7 +16387,7 @@ function renderPurchasedItems(inv){
         <div class="bag-slot-num" style="font-size:.5rem;opacity:.7">${label}</div>
         <div class="bag-slot-emoji">${_TIPO_ITEM_EMOJI[it.tipo] || '📦'}</div>
         <div class="bag-slot-name">${it.nome}</div>`;
-      aplicarTooltipAoItem(slot, it.id);
+      aplicarTooltipAoItemDados(slot, it);
       const btn = document.createElement('button');
       btn.className = 'bag-slot-btn';
       btn.textContent = '✕ ' + _rotulo('remover', 'ui.hud', 'Remover');
@@ -14301,7 +16419,7 @@ function renderPurchasedItems(inv){
       <div class="bag-slot-emoji">${_TIPO_ITEM_EMOJI[it.tipo] || '📦'}</div>
       <div class="bag-slot-name">${it.nome}</div>
       <div class="bag-slot-type">${_rotulo(it.tipo, 'ui.item.tipo', '📦 Item')}</div>`;
-    aplicarTooltipAoItem(slot, it.id);
+    aplicarTooltipAoItemDados(slot, it);
     if(it.tipo === 'consumivel'){
       const btn = document.createElement('button');
       btn.className = 'bag-slot-btn use';
@@ -14616,7 +16734,94 @@ function queueTrapResult(msg){
 // Condições usam a mesma fila/tela de aviso das armadilhas, mas chegam em um
 // evento privado do servidor e recebem arte/texto próprios.
 function queueConditionResult(msg){
+  _queueConditionPulse(msg);
   queueTrapResult({...msg, _condition: true});
+}
+
+function _mpRecargaRestante(monstro, id, state){
+  if(!monstro || !id) return 0;
+  const direto = Number(monstro.ability_cooldowns?.[id] || monstro.monster_ability_cooldowns?.[id] || 0);
+  if(direto > 0) return direto;
+  const prontoEm = Number(monstro.spell_cooldowns?.[id] || 0);
+  return prontoEm > 0 ? Math.max(0, prontoEm - Number(state?.round || 0)) : 0;
+}
+
+function _mpHistoricoAcoes(state){
+  const log = Array.isArray(state?.gm_log) ? state.gm_log.slice(-7) : [];
+  const attacks = _masterActionHistory.slice(-8);
+  const actionMarkup = attacks.map(item =>
+    `<button type="button" class="mp-historico-acao" data-master-history="${_esc(item.id)}" title="Destacar atacante e alvo">${_esc(item.text || 'Ação de combate')}</button>`
+  ).join('');
+  return `<section class="mp-historico"><div class="mp-sec">📜 HISTÓRICO RECENTE</div>
+    <div class="mp-historico-list">${actionMarkup || log.length
+      ? actionMarkup + log.slice(-4).map(item => `<div>${_esc(String(item))}</div>`).join('')
+      : '<div class="mp-historico-vazio">Nenhuma ação registrada.</div>'}</div></section>`;
+}
+
+function _spellPreviewTargetSets(state, area){
+  const out = {self:new Set(), ally:new Set(), enemy:new Set()};
+  if(!state || !area?.size) return out;
+  const mode = window._modoMagia || window._modoMestreMira || window._modoThrowItem;
+  const caster = mode?.caster || (state.players || []).find(p => String(p.id) === String(GS.myPid));
+  if(!caster) return out;
+  const casterId = String(caster.id);
+  const casterIsMonster = !!(state.monsters || []).some(m => String(m.id) === casterId);
+  const tilesOf = entity => typeof GS.monsterTiles === 'function'
+    ? GS.monsterTiles(entity) : [entity.pos];
+  const belongs = (entity, key) => tilesOf(entity).some(([x,y]) => `${x},${y}` === key);
+  for(const key of area){
+    const isSelf = Array.isArray(caster.pos) && `${caster.pos[0]},${caster.pos[1]}` === key;
+    if(isSelf) out.self.add(key);
+    const monster = (state.monsters || []).find(m => m.hp > 0 && belongs(m, key));
+    const player = (state.players || []).find(p => p.alive && belongs(p, key));
+    if(monster){
+      if(String(casterId) === String(monster.id)) out.self.add(key);
+      else if(casterIsMonster) out.ally.add(key);
+      else out.enemy.add(key);
+    } else if(player){
+      if(String(casterId) === String(player.id)) out.self.add(key);
+      else if(casterIsMonster) out.enemy.add(key);
+      else out.ally.add(key);
+    }
+  }
+  return out;
+}
+
+function _desenharSpellTargetPreview2D(ctx, state, exploredSet){
+  const hl = window._spellHL || {area:new Set()};
+  const targets = _spellPreviewTargetSets(state, hl.area);
+  const draw = (set, fill, stroke) => {
+    for(const key of set){
+      if(exploredSet && !exploredSet.has(key)) continue;
+      const [x,y] = key.split(',').map(Number);
+      ctx.save(); ctx.fillStyle = fill; ctx.strokeStyle = stroke; ctx.lineWidth = Math.max(2, CELL*.035);
+      ctx.fillRect(x*CELL+2, y*CELL+2, CELL-4, CELL-4);
+      ctx.strokeRect(x*CELL+3, y*CELL+3, CELL-6, CELL-6); ctx.restore();
+    }
+  };
+  draw(targets.ally, 'rgba(55,145,255,.44)', 'rgba(115,195,255,.96)');
+  draw(targets.enemy, 'rgba(235,45,50,.52)', 'rgba(255,105,105,.98)');
+  draw(targets.self, 'rgba(245,190,42,.52)', 'rgba(255,232,112,1)');
+}
+
+function _desenharSpellDirection2D(ctx, state){
+  const mode = window._modoMagia;
+  if(!mode || !Array.isArray(mode.dir) || !['linha','cone'].includes(mode.alvoTipo)) return;
+  const me = GS.me; if(!me) return;
+  const dx = Number(mode.dir[0]) || 0, dy = Number(mode.dir[1]) || 0;
+  if(!dx && !dy) return;
+  const m = GRIMORIO_CLIENT[mode.magiaId] || {};
+  const length = mode.alvoTipo === 'cone' ? Number(m.comprimento || m.range || 4) : _alcanceMagiaCli(m, me.level);
+  const sx = me.pos[0]*CELL + CELL/2, sy = me.pos[1]*CELL + CELL/2;
+  const ex = sx + dx * length * CELL, ey = sy + dy * length * CELL;
+  const ux = dx, uy = dy, px = -uy, py = ux;
+  const color = mode.alvoTipo === 'cone' ? '#ffd34d' : '#8fe9ff';
+  ctx.save(); ctx.globalAlpha = .92; ctx.strokeStyle = color; ctx.fillStyle = color;
+  ctx.shadowColor = color; ctx.shadowBlur = CELL*.16; ctx.lineWidth = Math.max(2, CELL*.035);
+  ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ex,ey); ctx.lineTo(ex-ux*CELL*.32+px*CELL*.16, ey-uy*CELL*.32+py*CELL*.16);
+  ctx.lineTo(ex-ux*CELL*.32-px*CELL*.16, ey-uy*CELL*.32-py*CELL*.16); ctx.closePath(); ctx.fill();
+  ctx.restore();
 }
 
 function _advanceTrapQueue(){
@@ -14656,12 +16861,17 @@ function _showTrapResult(msg){
   };
   const trapIcon = $('trap-icon');
   const isCondition = !!msg._condition;
+  const isSwallowed = msg.tipo_id === 'engolido';
   const conditionImages = {
     sangramento: 'sangramento.png',
     hemorragia: 'hemorragia.png',
   };
   const conditionId = msg.condition_id;
   const conditionTitle = isCondition ? t(`ui.condicao.${conditionId}`) : '';
+  const swallowedTitle = isSwallowed ? t('ui.armadilha.engolido.titulo') : '';
+  const resultTitle = swallowedTitle || conditionTitle;
+  const swallowedDamage = msg.acid_damage || '3d6';
+  const swallowedDc = Math.max(1, Number(msg.escape_dc) || 22);
   const level = Math.max(0, Number(msg.level) || 0);
   const duration = Math.max(0, Number(msg.duration_rounds) || 0);
   const bleedingDamage = level * (msg.hemorrhage ? 2 : 1);
@@ -14677,6 +16887,7 @@ function _showTrapResult(msg){
     cuspe_acido: 'cuspe_acido.png', falha_magia_dano: 'falha_magia_dano.png',
     congelamento_paralisia: 'congelamento_ou_paralisia.png',
     atordoado: 'atordoado.png', morte: 'morte.png', sono: 'sono.png',
+    engolido: 'engolido.png',
   };
   // A corrosão provocada por ácido pode quebrar arma/armadura ou apenas
   // aumentar o nível de dano. Nesses três casos o servidor envia tipos
@@ -14696,7 +16907,8 @@ function _showTrapResult(msg){
   const isArmorBroken = msg.tipo === 'armadura_quebrada';
   // A transformação por Licantropia mantém o popup de maldição, mas usa a
   // ilustração própria do lobisomem em vez do ícone genérico de amaldiçoado.
-  const imageName = isCondition ? conditionImages[conditionId]
+  const imageName = isSwallowed ? 'engolido.png'
+    : isCondition ? conditionImages[conditionId]
     : isEquipmentDamaged ? 'equipamento_danificado.png'
     : isWeaponBroken ? 'arma_quebrada.png'
     : isArmorBroken ? 'armadura_quebrada.png'
@@ -14708,13 +16920,15 @@ function _showTrapResult(msg){
   if (imageName) {
     const image = new Image();
     image.src = _assetURL(`assets/armadilhas/${imageName}`);
-    image.alt = conditionTitle || msg.nome || 'Armadilha';
+    image.alt = resultTitle || msg.nome || 'Armadilha';
     trapIcon.appendChild(image);
   } else {
     trapIcon.textContent = msg.icone || '🪤';
   }
-  $('trap-title').textContent = conditionTitle || msg.nome || 'Armadilha';
-  $('trap-desc').textContent = isCondition
+  $('trap-title').textContent = resultTitle || msg.nome || 'Armadilha';
+  $('trap-desc').textContent = isSwallowed
+    ? t('ui.armadilha.engolido.desc', {dano: swallowedDamage, dc: swallowedDc})
+    : isCondition
     ? (conditionId === 'sangramento'
       ? t('ui.condicao.sangramento_desc', {n: level, dano: bleedingDamage})
       : t('ui.condicao.hemorragia_desc'))
@@ -14722,7 +16936,14 @@ function _showTrapResult(msg){
 
   const effectsEl = $('trap-effects');
   effectsEl.innerHTML = '';
-  const conditionEffects = isCondition
+  const conditionEffects = isSwallowed
+    ? [
+        t('ui.armadilha.engolido.dano', {dano: swallowedDamage}),
+        t('ui.armadilha.engolido.movimento'),
+        t('ui.armadilha.engolido.ataque'),
+        t('ui.armadilha.engolido.escape', {dc: swallowedDc}),
+      ]
+    : isCondition
     ? (conditionId === 'sangramento'
       ? [
           t('ui.condicao.duracao', {n: duration}),
@@ -14738,7 +16959,10 @@ function _showTrapResult(msg){
   });
 
   const statusEl = $('trap-status');
-  if(isCondition){
+  if(isSwallowed){
+    statusEl.className = 'trap-status trap-status--fail';
+    statusEl.textContent = t('ui.armadilha.engolido.status');
+  } else if(isCondition){
     statusEl.className = 'trap-status trap-status--fail';
     statusEl.textContent = t('ui.condicao.aplicada');
   } else if(msg.tipo === 'doenca'){
@@ -14832,6 +17056,76 @@ function _resetTrapPopup(){
   _trapPopupOpen = false;
   $('trap-overlay').classList.remove('open');
 }
+
+// ── Decisão antes do dano residual de fogo ───────────────────────────────────
+let _fireChoiceOpen = false;
+
+function _ensureFireChoiceOverlay(){
+  let overlay = $('fire-choice-overlay');
+  if(overlay) return overlay;
+  overlay = document.createElement('div');
+  overlay.id = 'fire-choice-overlay';
+  overlay.innerHTML = `
+    <div class="fire-choice-box" role="dialog" aria-modal="true">
+      <div class="fire-choice-title" data-fire-title></div>
+      <div class="fire-choice-text" data-fire-text></div>
+      <div class="fire-choice-status" data-fire-status></div>
+      <div class="fire-choice-actions">
+        <button type="button" class="fire-choice-btn fire-choice-water" data-fire-water></button>
+        <button type="button" class="fire-choice-btn fire-choice-action" data-fire-action></button>
+      </div>
+      <button type="button" class="fire-choice-decline" data-fire-decline></button>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => {
+    if(e.target === overlay) _closeFireChoice('none');
+  });
+  overlay.querySelector('[data-fire-water]').addEventListener('click', () => _closeFireChoice('water'));
+  overlay.querySelector('[data-fire-action]').addEventListener('click', () => _closeFireChoice('action'));
+  overlay.querySelector('[data-fire-decline]').addEventListener('click', () => _closeFireChoice('none'));
+  return overlay;
+}
+
+function _showFireChoice(msg){
+  const overlay = _ensureFireChoiceOverlay();
+  const water = overlay.querySelector('[data-fire-water]');
+  const action = overlay.querySelector('[data-fire-action]');
+  const status = overlay.querySelector('[data-fire-status]');
+  overlay.querySelector('[data-fire-title]').textContent = t('ui.fogo.prompt_titulo');
+  overlay.querySelector('[data-fire-text]').textContent = t('ui.fogo.prompt_texto',{n: msg.rounds || 0});
+  water.textContent = t('ui.fogo.usar_agua');
+  action.textContent = t('ui.fogo.gastar_acao');
+  overlay.querySelector('[data-fire-decline]').textContent = t('ui.fogo.nao_apagar');
+  water.disabled = !msg.water_available;
+  action.disabled = !msg.action_available;
+  if(!msg.water_available){
+    status.textContent = msg.water_blocked_reason === 'greek_fire'
+      ? t('ui.fogo.agua_fogo_grego')
+      : t('ui.fogo.sem_agua');
+  } else {
+    status.textContent = t('ui.fogo.agua_disponivel');
+  }
+  if(!msg.action_available) status.textContent += ` ${t('ui.fogo.acao_indisponivel')}`;
+  _fireChoiceOpen = true;
+  overlay.classList.add('open');
+  setTimeout(() => overlay.querySelector('[data-fire-water]:not(:disabled), [data-fire-action]:not(:disabled), [data-fire-decline]')?.focus(), 0);
+}
+
+function _closeFireChoice(choice){
+  if(!_fireChoiceOpen) return;
+  _fireChoiceOpen = false;
+  const overlay = $('fire-choice-overlay');
+  if(overlay) overlay.classList.remove('open');
+  GS.respondFireChoice(choice);
+}
+
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && _fireChoiceOpen){
+    _closeFireChoice('none');
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  }
+}, true);
 
 // Clique fora da caixa fecha o popup (só se o clique foi no fundo, não na caixa).
 $('trap-overlay').addEventListener('click', e => {
@@ -15278,6 +17572,8 @@ function _playerMenuMagias(pid){
 
 function fecharMenuMagias(){
   _menuMagiasPid = null;
+  _atalhosAbertos = false;
+  if(_atalhosMenuAtual === 'magias') _atalhosMenuAtual = null;
   document.getElementById('menu-magias-overlay')?.classList.remove('open');
   ocultarTooltipMagia();
 }
@@ -15293,6 +17589,13 @@ function _slotsMenuMagias(heroi){
   const naMasmorra = !!GS.gameState;
   const round = naMasmorra ? Number(GS.gameState.round || 0) : 0;
   const status = {};
+  const extraRaw = heroi?.slots_remaining?.cajado_arcano || null;
+  const extra = {
+    ativo: !!extraRaw?.ativo,
+    livre: !!extraRaw?.ativo && !!extraRaw?.pronto,
+    espera: extraRaw?.ativo && Number(extraRaw?.recarga || 0) > 0
+      ? [Math.max(0, Number(extraRaw.recarga) || 0)] : []
+  };
   ['primeiro','segundo','terceiro'].forEach(circulo => {
     const total = Number(limites[circulo] || 0);
     const espera = naMasmorra && Array.isArray(restantesServidor?.[circulo])
@@ -15301,8 +17604,14 @@ function _slotsMenuMagias(heroi){
         ? (cooldown[circulo] || []).filter(r => Number(r) > round)
             .map(r => Math.max(0, Number(r) - round)).sort((a,b) => a - b)
         : [];
-    const livres = Math.max(0, total - espera.length);
-    status[circulo] = { total, livres, espera };
+    const livresNormais = Math.max(0, total - espera.length);
+    const isPrimeiro = circulo === 'primeiro';
+    const livres = livresNormais + (isPrimeiro && extra.livre ? 1 : 0);
+    status[circulo] = {
+      total: total + (isPrimeiro && extra.ativo ? 1 : 0), livres, espera,
+      regularTotal: total, regularLivres: livresNormais,
+      extra: isPrimeiro && extra.ativo ? extra : null
+    };
   });
   return status;
 }
@@ -15313,11 +17622,16 @@ function renderSlotsMenuMagias(heroi){
   const grupos = circulos.map(circulo => {
     const s = status[circulo];
     if(!s.total) return `<div class="mm-slot-circle"><h4>${_labelCirculo(circulo)}</h4><span class="mm-slot-locked">${t('ui.magia.slot_nivel_maior')}</span></div>`;
-    const pips = Array.from({length:s.total}, (_, i) => {
-      if(i < s.livres) return `<span class="mm-slot-pip ready" title="${t('ui.magia.slot_disponivel')}">✓</span>`;
-      const falta = s.espera[i - s.livres] || 0;
+    const pipsNormais = Array.from({length:s.regularTotal}, (_, i) => {
+      if(i < s.regularLivres) return `<span class="mm-slot-pip ready" title="${t('ui.magia.slot_disponivel')}">✓</span>`;
+      const falta = s.espera[i - s.regularLivres] || 0;
       return `<span class="mm-slot-pip cooldown" title="${t('ui.magia.slot_volta_em', {n:falta})}">${falta}</span>`;
     }).join('');
+    const pipsCajado = s.extra ? (s.extra.livre
+      ? `<span class="mm-slot-pip ready staff" title="Slot temporário do Cajado Arcano — ${t('ui.magia.slot_disponivel')}">✦</span>`
+      : `<span class="mm-slot-pip cooldown staff" title="Slot temporário do Cajado Arcano — ${t('ui.magia.slot_volta_em', {n:s.extra.espera[0] || 0})}">${s.extra.espera[0] || 0}</span>`)
+      : '';
+    const pips = pipsNormais + pipsCajado;
     return `<div class="mm-slot-circle"><h4>${_labelCirculo(circulo)}</h4><span class="mm-slot-count${s.livres === 0 ? ' empty' : ''}">${t('ui.magia.slots_disponiveis', {livres:s.livres, total:s.total})}</span><div class="mm-slot-pips">${pips}</div></div>`;
   }).join('');
   return `<aside class="menu-magias-slots" aria-label="${t('ui.magia.slots_aria')}"><div class="mm-slots-header">${t('ui.magia.slots_titulo')}<small>${t('ui.magia.slots_recarga')}</small></div>${grupos}</aside>`;
@@ -15342,6 +17656,8 @@ function abrirMenuMagias(pid){
   if(player.class_id !== 'mage' && player.class_id !== 'cleric'){
     toast(t('ui.magia.sem_magias')); return;
   }
+  if(typeof InventoryModal !== 'undefined') InventoryModal.close();
+  fecharMenuHabilidades();
   _menuMagiasPid = pid;
   let overlay = document.getElementById('menu-magias-overlay');
   if(!overlay){
@@ -15370,7 +17686,7 @@ function abrirMenuMagias(pid){
   const podeAgir = document.getElementById('screen-game')?.classList.contains('active') && pid === GS.myPid;
   const slots = _slotsMenuMagias(player);
   const renderMagia = m => `
-    <div class="mm-magia${podeAgir && slots[m.circulo]?.livres > 0 ? ' mm-acionavel' : ''}${podeAgir && !(slots[m.circulo]?.livres > 0) ? ' mm-sem-slot' : ''}" ${podeAgir && slots[m.circulo]?.livres > 0 ? `onclick="ativarMagiaDoMenu('${m.id}')"` : ''}
+    <div class="mm-magia${podeAgir && slots[m.circulo]?.livres > 0 ? ' mm-acionavel' : ''}${podeAgir && !(slots[m.circulo]?.livres > 0) ? ' mm-sem-slot' : ''}" ${podeAgir && slots[m.circulo]?.livres > 0 ? `onclick="ativarMagiaDoMenu('${m.id}')"` : ''} draggable="true" data-shortcut-kind="magic" data-shortcut-id="${_esc(m.id)}"
       onmouseenter="mostrarTooltipMagia('${m.id}', event)" onmouseleave="ocultarTooltipMagia()">
       <span class="mm-magia-icon">${magiaIconHTML(m, 34)}</span>
       <span><b>${m.nome}</b><small>${_labelCirculo(m.circulo) || ''} · ${m.custo || ''}${podeAgir && !(slots[m.circulo]?.livres > 0) ? ' · '+t('ui.magia.sem_slot') : ''}</small></span>
@@ -15380,8 +17696,9 @@ function abrirMenuMagias(pid){
     const ativavel = !pendente && podeAgir && (modificadoresBase.includes(m) || (m.categoria === 'tecnica' && (equip.tecnicas || []).includes(m.id) && !m.automatica));
     const onclick = ativavel && modificadoresBase.includes(m) ? `onclick="ativarHabilidadeDoMenu('${m.id}')"`
       : ativavel ? `onclick="ativarTecnicaGuildaDoMenu('${m.id}')"` : '';
+    const shortcutSource = m.categoria === 'tecnica' ? 'technique' : 'skill';
     return `
-    <div class="mm-modificador${onclick ? ' mm-acionavel' : ''}${_modificadorMagiaAtivo(player, m.id) || pendente ? ' mm-selecionada' : ''}" ${onclick}>
+    <div class="mm-modificador${onclick ? ' mm-acionavel' : ''}${_modificadorMagiaAtivo(player, m.id) || pendente ? ' mm-selecionada' : ''}" ${onclick} draggable="true" data-shortcut-kind="skill" data-shortcut-source="${shortcutSource}" data-shortcut-id="${_esc(m.id)}">
       <span class="mm-mod-icon">${abilityIconHtml(m, m.icon || '✨')}</span>
       <span><b>${m.nome || m.name}${pendente ? ' · PREPARADA' : ''}</b><small>${m.desc || m.description || ''}</small></span>
     </div>`;
@@ -15405,7 +17722,14 @@ function abrirMenuMagias(pid){
           </section>
         </div>
       </section>
+      <aside class="mm-shortcuts" aria-label="Atalhos">
+        <div class="mm-shortcuts-heading">ATALHOS</div>
+        <div id="shortcut-bar" aria-label="Slots de atalho" hidden></div>
+      </aside>
     </div>`;
+  _atalhosAbertos = true;
+  _atalhosMenuAtual = 'magias';
+  _renderAtalhos();
   requestAnimationFrame(() => overlay.classList.add('open'));
 }
 
@@ -15426,6 +17750,8 @@ function fecharMenuHabilidades(){
     if(me) _armarMetamagiasDoMenu(me, []);
     window._comboTecelagemArcanaMenu = null;
   }
+  _atalhosAbertos = false;
+  if(_atalhosMenuAtual === 'habilidades') _atalhosMenuAtual = null;
   document.getElementById('menu-habilidades-overlay')?.classList.remove('open');
   ocultarTooltipMagia();
 }
@@ -15600,7 +17926,10 @@ function ativarHabilidadeDoMenu(skillId){
     // Metamagias são toggles: permanecem visíveis e destacadas até o próximo
     // clique ou até a magia ser lançada.
     const flag = _flagModificadorMagia(skillId);
+    const estavaAtivo = !!me[flag];
     me[flag] = !me[flag];
+    if(estavaAtivo) _removerEfeitoVisualLocal(skillId);
+    else _registrarEfeitoVisualLocal(skillId, 'skill');
     send({type:skillId});
     if(document.getElementById('menu-habilidades-overlay')?.classList.contains('open')) abrirMenuHabilidades(me.id);
     if(document.getElementById('menu-magias-overlay')?.classList.contains('open')) abrirMenuMagias(me.id);
@@ -15612,7 +17941,10 @@ function ativarHabilidadeDoMenu(skillId){
     if(!selecionadas.includes(skillId) && selecionadas.length >= combo.capacidade){
       toast(t('ui.habilidade.escolha_somente', {n:combo.capacidade}), 'var(--gold)'); return;
     }
+    const estavaSelecionada = GS.isWarriorSkillSelected(skillId);
     GS.toggleWarriorSkill(skillId);
+    if(estavaSelecionada) _removerEfeitoVisualLocal(skillId);
+    else _registrarEfeitoVisualLocal(skillId, 'skill');
     if(GS.getWarriorSelected().length === combo.capacidade){
       window._comboGuerreiroMenu = null;
       window._ataqueGuerreiroArmado = true;
@@ -15634,7 +17966,11 @@ function ativarHabilidadeDoMenu(skillId){
     if(!GS.isWarriorSkillSelected(skillId) && GS.getWarriorSelected().length >= GS.warriorComboCap()){
       toast(t('ui.habilidade.limite_por_turno', {n:GS.warriorComboCap()}), 'var(--gold)'); return;
     }
-    GS.toggleWarriorSkill(skillId); renderMyPanel(state); return;
+    const estavaSelecionada = GS.isWarriorSkillSelected(skillId);
+    GS.toggleWarriorSkill(skillId);
+    if(estavaSelecionada) _removerEfeitoVisualLocal(skillId);
+    else _registrarEfeitoVisualLocal(skillId, 'skill');
+    renderMyPanel(state); return;
   }
   const inst = me.gear && me.gear.off_hand;
   if(me.class_id === 'bard' && inst && inst.tipo_item === 'instrumento' && skillId === `instrumento_${inst.base}`){
@@ -15670,6 +18006,9 @@ function ativarHabilidadeDoMenu(skillId){
     provocacao:          () => iniciarProvocacao(),
     animar_mortos:       () => usarAnimarMortos(),
   };
+  const estavaAtiva = _coletarEfeitosAtivos(state, me, false).some(e => e.id === skillId);
+  if(estavaAtiva) _removerEfeitoVisualLocal(skillId);
+  else _registrarEfeitoVisualLocal(skillId, 'skill');
   if(acoes[skillId]) acoes[skillId]();
   else toast(t('ui.habilidade.sem_acao_manual'));
 }
@@ -15683,38 +18022,42 @@ function ativarTecnicaGuildaDoMenu(tid){
   const restante = GS.tecnicaRestante(me, tid);
   if(cat.automatica){ toast(t('ui.tecnica.automatica')); return; }
   if(restante > 0){ toast(t('ui.tecnica.recarrega_em', {n:restante}), 'var(--orange)'); return; }
+  _registrarEfeitoVisualLocal(tid, 'skill');
   fecharMenuHabilidades();
   fecharMenuMagias();
   const pp = me.pos || [0,0];
   if(cat.alvo === 'monstro_adjacente'){
     const alvos = (state.monsters||[]).filter(m => m && m.hp>0 && Math.max(Math.abs(pp[0]-m.pos[0]), Math.abs(pp[1]-m.pos[1])) <= 1);
-    if(!alvos.length){ toast('Nenhum inimigo adjacente.', 'var(--orange)'); return; }
-    if(alvos.length === 1) return GS.usarTecnica(tid, alvos[0].id);
-    return openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — inimigo adjacente`, alvos, 'monster', id => GS.usarTecnica(tid, id));
+    if(!alvos.length){ _removerEfeitoVisualLocal(tid); toast('Nenhum inimigo adjacente.', 'var(--orange)'); return; }
+    if(alvos.length === 1){ _removerEfeitoVisualLocal(tid); return GS.usarTecnica(tid, alvos[0].id); }
+    return openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — inimigo adjacente`, alvos, 'monster', id => { _removerEfeitoVisualLocal(tid); GS.usarTecnica(tid, id); });
   }
   const aliados = (state.players||[]).filter(q => q && q.alive && q.id !== me.id);
   if(cat.alvo === 'aliado_raio4'){
     const alvos = aliados.filter(q => Math.max(Math.abs(pp[0]-q.pos[0]), Math.abs(pp[1]-q.pos[1])) <= 4);
-    if(!alvos.length){ toast(t('ui.hud.sem_aliado_raio4'), 'var(--orange)'); return; }
-    if(alvos.length === 1) return GS.usarTecnica(tid, alvos[0].id);
-    return openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — aliado`, alvos, 'player', id => GS.usarTecnica(tid, id));
+    if(!alvos.length){ _removerEfeitoVisualLocal(tid); toast(t('ui.hud.sem_aliado_raio4'), 'var(--orange)'); return; }
+    if(alvos.length === 1){ _removerEfeitoVisualLocal(tid); return GS.usarTecnica(tid, alvos[0].id); }
+    return openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — aliado`, alvos, 'player', id => { _removerEfeitoVisualLocal(tid); GS.usarTecnica(tid, id); });
   }
   if(cat.alvo === 'aliado'){
-    if(!aliados.length){ toast(t('ui.hud.sem_aliado'), 'var(--orange)'); return; }
-    if(aliados.length === 1) return GS.usarTecnica(tid, aliados[0].id);
-    return openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — escolha o aliado`, aliados, 'player', id => GS.usarTecnica(tid, id));
+    if(!aliados.length){ _removerEfeitoVisualLocal(tid); toast(t('ui.hud.sem_aliado'), 'var(--orange)'); return; }
+    if(aliados.length === 1){ _removerEfeitoVisualLocal(tid); return GS.usarTecnica(tid, aliados[0].id); }
+    return openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — escolha o aliado`, aliados, 'player', id => { _removerEfeitoVisualLocal(tid); GS.usarTecnica(tid, id); });
   }
   if(cat.alvo === 'qualquer_vivo'){
     const alvos = [...aliados, ...(state.monsters||[]).filter(m => m && m.hp>0)];
-    if(!alvos.length){ toast(t('ui.hud.sem_alvo'), 'var(--orange)'); return; }
-    return openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — escolha o 2º alvo`, alvos, 'any', id => GS.usarTecnica(tid, id));
+    if(!alvos.length){ _removerEfeitoVisualLocal(tid); toast(t('ui.hud.sem_alvo'), 'var(--orange)'); return; }
+    return openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — escolha o 2º alvo`, alvos, 'any', id => { _removerEfeitoVisualLocal(tid); GS.usarTecnica(tid, id); });
   }
+  _removerEfeitoVisualLocal(tid);
   GS.usarTecnica(tid);
 }
 
 function abrirMenuHabilidades(pid){
   const player = _playerMenuMagias(pid);
   if(!player){ toast(t('ui.habilidade.ficha_indisponivel')); return; }
+  if(typeof InventoryModal !== 'undefined') InventoryModal.close();
+  fecharMenuMagias();
   let overlay = document.getElementById('menu-habilidades-overlay');
   if(!overlay){
     overlay = document.createElement('div');
@@ -15818,7 +18161,9 @@ function abrirMenuHabilidades(pid){
       : comboGuilda && podeAgir ? `onclick="iniciarComboGuerreiroMenu(${h.id === 'guerreiro_mestre_combate' ? 3 : 2})"`
       : tecelagemGuilda && podeAgir ? `onclick="iniciarTecelagemArcanaMenu(${h.id === 'mago_tecelagem_3' ? 3 : 2})"`
       : tecnicaAtivavel && podeAgir ? `onclick="ativarTecnicaGuildaDoMenu('${h.id}')"` : '';
-    return `<div class="mh-card${guilda ? ' mh-guild' : ''}${onclick ? ' mh-acionavel' : ''}${selecionada || pendente ? ' mh-selected' : ''}${restante > 0 ? ' mh-cooldown' : ''}" data-skill-id="${h.id}" ${onclick}
+    const shortcutSource = guilda && h.categoria === 'tecnica' ? 'technique' : 'skill';
+    const dragShortcut = ` draggable="true" data-shortcut-kind="skill" data-shortcut-source="${shortcutSource}" data-shortcut-id="${_esc(h.id)}"`;
+    return `<div class="mh-card${guilda ? ' mh-guild' : ''}${onclick ? ' mh-acionavel' : ''}${selecionada || pendente ? ' mh-selected' : ''}${restante > 0 ? ' mh-cooldown' : ''}" data-skill-id="${h.id}" ${onclick}${dragShortcut}
       onmouseenter="mostrarTooltipMenuHabilidade(event,'${h.id}')" onmouseleave="ocultarTooltipMagia()">
       ${restante > 0 ? `<strong class="mh-cooldown-badge">⏳ ${restante} R</strong>` : ''}
       <span class="mh-icon">${abilityIconHtml(h, h.icon || h.icone || '⚔️')}</span>
@@ -15835,12 +18180,21 @@ function abrirMenuHabilidades(pid){
   overlay.innerHTML = `
     <section class="menu-habilidades" role="dialog" aria-modal="true" aria-label="Menu de habilidades">
       <header class="mh-header"><div><b><img class="menu-habilidades-icone" src="assets/habilidades.png" alt="" aria-hidden="true"> HABILIDADES</b><small>${comboAtivo ? t('ui.habilidade.escolha_n_habilidades', {n:comboAtivo.capacidade}) : tecelagemAtiva ? t('ui.habilidade.escolha_n_metamagias', {n:tecelagemAtiva.capacidade}) : `${player.name || t('ui.tabuleiro.heroi')} · ${t('ui.habilidade.tecla_h')}`}</small></div><button onclick="fecharMenuHabilidades()" aria-label="Fechar">✕</button></header>
-      <div class="mh-body">
-        ${secao(t('ui.habilidade.sec_ativas'), habilidadesAtivas, false, t('ui.habilidade.sem_ativas'))}
-        ${secao(t('ui.guilda.tecnicas_caixa'), tecnicas, true, t('ui.habilidade.sem_tecnicas'))}
-        ${secao(t('ui.habilidade.sec_passivas'), passivas, true, t('ui.habilidade.sem_passivas'))}
+      <div class="mh-layout">
+        <div class="mh-body">
+          ${secao(t('ui.habilidade.sec_ativas'), habilidadesAtivas, false, t('ui.habilidade.sem_ativas'))}
+          ${secao(t('ui.guilda.tecnicas_caixa'), tecnicas, true, t('ui.habilidade.sem_tecnicas'))}
+          ${secao(t('ui.habilidade.sec_passivas'), passivas, true, t('ui.habilidade.sem_passivas'))}
+        </div>
+        <aside class="mh-shortcuts" aria-label="Atalhos">
+          <div class="mh-shortcuts-heading">ATALHOS</div>
+          <div id="shortcut-bar" aria-label="Slots de atalho" hidden></div>
+        </aside>
       </div>
     </section>`;
+  _atalhosAbertos = true;
+  _atalhosMenuAtual = 'habilidades';
+  _renderAtalhos();
   requestAnimationFrame(() => overlay.classList.add('open'));
 }
 
@@ -15901,6 +18255,7 @@ function beginSkill(skill, state){
   // GS.toggleWarriorSkill; nunca chega aqui. beginSkill cobre só skills de MP.)
   const result = GS.activateSkill(skill, state);
   if(result==='no_targets'){ toast('Nenhum inimigo vivo!'); return; }
+  _registrarEfeitoVisualLocal(skill.id, 'skill');
   if(result==='pending_enemy'){
     renderMyPanel(GS.gameState);
     toast(`✨ ${skill.name} ativado — clique no inimigo no mapa!`, 'var(--purple)');
@@ -15941,6 +18296,7 @@ function handleGameOver(msg){
       $('end-msg').textContent=t('ui.fim.vitoria_msg');
     } else {
       _defeatMusicActive = true;
+      _playGroupDefeatSound();
       _defeatAudioStart();
       $('end-title').textContent=t('ui.fim.derrota_titulo');
       $('end-title').style.color='var(--red)';
@@ -15951,6 +18307,12 @@ function handleGameOver(msg){
 }
 
 document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape' && _cancelarHabilidadeDoAtalho()){
+    e.preventDefault(); return;
+  }
+  if(e.key === 'Escape' && _atalhoHabilidadeContextoAberto()){
+    _limparEfeitosVisuaisLocais();
+  }
   // Combinar Duas/Mestre de Combate não consome nada enquanto só está armado.
   // ESC desfaz tanto a escolha parcial no menu quanto a combinação pronta antes
   // de o ataque ser enviado ao servidor.
@@ -15960,6 +18322,7 @@ document.addEventListener('keydown', e=>{
   // ESC cancels pending skill regardless of whose turn it is
   if(e.key==='Escape' && GS.pendingSkill){
     GS.pendingSkill=null;
+    _limparEfeitosVisuaisLocais();
     if(GS.gameState) renderMyPanel(GS.gameState);
     toast('Habilidade cancelada.','var(--text2)');
     e.preventDefault(); return;
@@ -16071,6 +18434,11 @@ function _setup2DTouch(){
 $('dungeon-canvas').addEventListener('mousemove', e=>{
   if(!GS.gameState) return;
   const [tx,ty]=canvasTile(e);
+  if(_masterMonsterHoverEnabled()){
+    _setMasterMonsterHover(_masterMonsterAtTileClient(GS.gameState, tx, ty)?.id || null);
+  } else if(_masterMonsterHoverId){
+    _setMasterMonsterHover(null);
+  }
   if(window._modoMestreMira){ _atualizarMiraMestre(tx,ty); return; }
   if(window._modoInstrumento){
     _atualizarMiraInstrumentoHover(tx, ty, $('tooltip'), e);
@@ -16097,7 +18465,7 @@ $('dungeon-canvas').addEventListener('mousemove', e=>{
     const sk=GS.pendingSkill;
     const MELEE_SKILLS=['heavy_blow','backstab','smite'];
     if(sk.target==='enemy'){
-      const m=GS.gameState.monsters.find(m=>m.pos[0]===tx&&m.pos[1]===ty&&m.hp>0);
+      const m=_masterMonsterAtTileClient(GS.gameState, tx, ty);
       if(m){
         const needsAdj=MELEE_SKILLS.includes(sk.id);
         let ok=true;
@@ -16117,7 +18485,7 @@ $('dungeon-canvas').addEventListener('mousemove', e=>{
     tip.style.display='none'; $('dungeon-canvas').style.cursor='default'; return;
   }
 
-  const monster=GS.gameState.monsters.find(m=>m.pos[0]===tx&&m.pos[1]===ty&&m.hp>0);
+  const monster=_masterMonsterAtTileClient(GS.gameState, tx, ty);
   if(monster){
     const _ddx=myP?Math.abs(myP.pos[0]-tx):99, _ddy=myP?Math.abs(myP.pos[1]-ty):99;
     const _wRng=myP&&myP.weapon&&myP.weapon.range!=null?myP.weapon.range:null;
@@ -16156,6 +18524,7 @@ $('dungeon-canvas').addEventListener('mousemove', e=>{
 $('dungeon-canvas').addEventListener('mouseleave',()=>{
   $('tooltip').style.display='none';
   $('dungeon-canvas').style.cursor='crosshair';
+  _setMasterMonsterHover(null);
 });
 
 // Click: unified handler (attack / skill / pathfind) — see handleTileClick below
@@ -16199,7 +18568,7 @@ $('input-code').addEventListener('input',e=>{ e.target.value=e.target.value.toUp
   document.addEventListener('keydown', dismiss, true);
 })();
 
-// ── Sistema de áudio: música de fundo + volumes (música/SFX) ─────────────────
+// ── Sistema de áudio: música de fundo + volumes por canal ───────────────────
 // Música em loop nas telas de menu (abertura/seleção) e na cidade, com crossfade
 // suave de 3 s entre faixas e fade-out de 3 s ao entrar no jogo (tabuleiro sem
 // música). Painel ⚙️ global (em todas as telas) com dois sliders: Música e Sons.
@@ -16215,25 +18584,39 @@ const _mmTracks = {};     // id -> HTMLAudioElement (criado sob demanda)
 let _mmCurrent = null;    // id da faixa audível agora
 let _mmStarted = false;   // a 1ª reprodução já começou? (autoplay/1º gesto)
 let _mmFadeRAF = null;    // handle do requestAnimationFrame das rampas de volume
-let _mmVol  = 0.6;        // volume da música (0..1) — sobrescrito por localStorage
-let _sfxVol = 1.0;        // volume dos efeitos (0..1) — sobrescrito por localStorage
+let _mmVol       = 0.6;   // música (0..1) — sobrescrito por localStorage
+let _ambienceVol = 0.7;   // ambiente (0..1); pronto para trilhas/sons de cenário
+let _sfxVol      = 1.0;   // efeitos (0..1) — mantido como alias compatível
+let _diceVol     = 0.82;  // dados (0..1)
+let _accessFontScale = 1.0;
+let _accessDurationScale = 1.0;
+let _highContrast = false;
+let _animationSpeedMode = 'normal';
 
 // ── Persistência dos volumes ────────────────────────────────────────────────
 const _AUDIO_KEY = 'lfh_audio';
 function _audioLoadPrefs(){
   try {
     const o = JSON.parse(localStorage.getItem(_AUDIO_KEY) || '{}');
-    if (typeof o.music === 'number') _mmVol  = Math.max(0, Math.min(1, o.music));
-    if (typeof o.sfx   === 'number') _sfxVol = Math.max(0, Math.min(1, o.sfx));
+    if (typeof o.music === 'number') _mmVol       = Math.max(0, Math.min(1, o.music));
+    if (typeof o.ambience === 'number') _ambienceVol = Math.max(0, Math.min(1, o.ambience));
+    if (typeof o.sfx === 'number') _sfxVol = Math.max(0, Math.min(1, o.sfx));
+    if (typeof o.effects === 'number') _sfxVol = Math.max(0, Math.min(1, o.effects));
+    if (typeof o.dice === 'number') _diceVol = Math.max(0, Math.min(1, o.dice));
   } catch (e) {}
 }
 function _audioSavePrefs(){
-  try { localStorage.setItem(_AUDIO_KEY, JSON.stringify({ music: _mmVol, sfx: _sfxVol })); } catch (e) {}
+  try {
+    localStorage.setItem(_AUDIO_KEY, JSON.stringify({
+      music: _mmVol, ambience: _ambienceVol, effects: _sfxVol, sfx: _sfxVol, dice: _diceVol,
+    }));
+  } catch (e) {}
 }
 
 // ── Master de SFX: TODO efeito Web Audio passa por este gain (volume único) ──
 // As funções de som conectam seu nó final a _sfxBus() em vez de ctx.destination.
 let _sfxBusNode = null, _sfxBusCtx = null;
+let _diceBusNode = null, _diceBusCtx = null;
 function _sfxBus(){
   const ctx = getAudioContext();
   if (!ctx) return null;
@@ -16245,10 +18628,163 @@ function _sfxBus(){
   }
   return _sfxBusNode;
 }
+function _diceBus(){
+  const ctx = getAudioContext();
+  if (!ctx) return null;
+  if (_diceBusCtx !== ctx || !_diceBusNode){
+    _diceBusNode = ctx.createGain();
+    _diceBusNode.gain.value = _diceVol;
+    _diceBusNode.connect(ctx.destination);
+    _diceBusCtx = ctx;
+  }
+  return _diceBusNode;
+}
 function _setSfxVol(v){
   _sfxVol = Math.max(0, Math.min(1, v));
   if (_sfxBusNode) _sfxBusNode.gain.value = _sfxVol;
   _audioSavePrefs();
+}
+function _setAmbienceVol(v){
+  _ambienceVol = Math.max(0, Math.min(1, v));
+  _audioSavePrefs();
+}
+function _setDiceVol(v){
+  _diceVol = Math.max(0, Math.min(1, v));
+  if (_diceBusNode) _diceBusNode.gain.value = _diceVol;
+  _audioSavePrefs();
+}
+
+const _ACCESS_KEY = 'lfh_accessibility';
+function _accessLoadPrefs(){
+  try{
+    const o = JSON.parse(localStorage.getItem(_ACCESS_KEY) || '{}');
+    if(typeof o.fontScale === 'number') _accessFontScale = Math.max(1, Math.min(2, o.fontScale));
+    if(typeof o.durationScale === 'number') _accessDurationScale = Math.max(.5, Math.min(2, o.durationScale));
+    if(typeof o.highContrast === 'boolean') _highContrast = o.highContrast;
+    if(['normal','fast','instant'].includes(o.animationSpeed)) _animationSpeedMode = o.animationSpeed;
+  }catch(e){}
+  _applyAccessibilityPrefs();
+}
+function _accessSavePrefs(){
+  try{ localStorage.setItem(_ACCESS_KEY, JSON.stringify({
+    fontScale:_accessFontScale, durationScale:_accessDurationScale,
+    highContrast:_highContrast, animationSpeed:_animationSpeedMode,
+  })); }catch(e){}
+}
+function _applyAccessibilityPrefs(){
+  document.body.classList.toggle('accessibility-high-contrast', _highContrast);
+  document.body.dataset.animationSpeed = _animationSpeedMode;
+  document.documentElement.style.setProperty('--feedback-font-scale', String(_accessFontScale));
+}
+function _setAccessFontScale(v){ _accessFontScale=Math.max(1,Math.min(2,Number(v)||1)); _applyAccessibilityPrefs(); _accessSavePrefs(); if(GS.gameState) _redrawMasterSelection(); }
+function _setAccessDurationScale(v){ _accessDurationScale=Math.max(.5,Math.min(2,Number(v)||1)); _accessSavePrefs(); }
+// ── Qualidade grafica (desempenho) ──────────────────────────────────────────
+// Depois de cortar os draw calls de 3.582 para 330 sem resolver a lentidao numa
+// maquina especifica, a conclusao foi que ali o gargalo NAO e CPU/draw call, e
+// sim GPU: fragmento (PBR do MeshStandardMaterial com ~12 luzes), sombra e
+// resolucao. Estes presets atacam exatamente isso.
+//
+// Trocar de nivel muda a CONTAGEM de luzes da cena, o que forca o three.js a
+// recompilar os shaders -- e por isso que a contagem tem de ser constante
+// DURANTE o jogo (ver o pool de luzes), mas mudar aqui, de proposito, tudo bem.
+const PERF_PRESETS = {
+  alta:  { sombras:true,  shadowMap:2048, luzes:8, pixelRatio:2,    wetFloor:true,  poeira:true  },
+  media: { sombras:true,  shadowMap:1024, luzes:4, pixelRatio:1,    wetFloor:false, poeira:false },
+  baixa: { sombras:false, shadowMap:512,  luzes:2, pixelRatio:0.75, wetFloor:false, poeira:false },
+};
+let _perfLevel = 'alta';
+try{ const v = localStorage.getItem('lfh_perf'); if(v && PERF_PRESETS[v]) _perfLevel = v; }catch(e){}
+function _perfCfg(){ return PERF_PRESETS[_perfLevel] || PERF_PRESETS.alta; }
+
+function _setPerfLevel(v){
+  if(!PERF_PRESETS[v]) return;
+  _perfLevel = v;
+  try{ localStorage.setItem('lfh_perf', v); }catch(e){}
+  _aplicarQualidade3D();
+  if(GS.gameState && mode3D && typeof g3 !== 'undefined' && g3) renderMap3D(GS.gameState);
+}
+
+// Aplica o preset ao renderer atual. Seguro chamar sem cena (sai cedo) e
+// idempotente -- init3D chama no fim, e o painel chama a cada troca.
+function _aplicarQualidade3D(){
+  if(typeof g3 === 'undefined' || !g3 || !g3.renderer) return;
+  const cfg = _perfCfg();
+  // 1) sombra: o passe inteiro some no nivel baixo
+  g3.renderer.shadowMap.enabled = cfg.sombras;
+  if(g3.showcase){
+    g3.showcase.castShadow = cfg.sombras;
+    if(g3.showcase.shadow.mapSize.width !== cfg.shadowMap){
+      g3.showcase.shadow.mapSize.width = g3.showcase.shadow.mapSize.height = cfg.shadowMap;
+      // O mapa ja alocado precisa ser descartado para nascer no tamanho novo.
+      if(g3.showcase.shadow.map){ g3.showcase.shadow.map.dispose(); g3.showcase.shadow.map = null; }
+    }
+    g3.showcase.shadow.needsUpdate = true;
+  }
+  // 2) luzes do pool: sair da CENA e o que realmente tira custo por fragmento;
+  //    zerar a intensidade nao adianta, o shader continua calculando.
+  (g3.lightPool || []).forEach((slot, i) => {
+    const dentro = i < cfg.luzes;
+    if(dentro && !slot.light.parent) g3.scene.add(slot.light);
+    else if(!dentro && slot.light.parent) slot.light.parent.remove(slot.light);
+  });
+  // 3) resolucao do buffer
+  g3.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, cfg.pixelRatio));
+  try{ resize3D(); }catch(e){}
+  // 4) enfeites que custam preenchimento
+  if(g3.wetFloorInst) g3.wetFloorInst.visible = cfg.wetFloor;
+  if(g3.dustPts && !cfg.poeira) g3.dustPts.visible = false;
+  // 5) a contagem de luzes mudou -> os programas precisam ser refeitos
+  g3.scene.traverse(o => {
+    if(!o.material) return;
+    (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if(m) m.needsUpdate = true; });
+  });
+}
+
+// ── Medidor de FPS ──────────────────────────────────────────────────────────
+// Contado DENTRO do laco 3D, entao mede o quadro de verdade (nao um rAF
+// paralelo, que mediria outra coisa).
+let _fpsMostrar = false;
+try{ _fpsMostrar = localStorage.getItem('lfh_fps') === '1'; }catch(e){}
+let _fpsN = 0, _fpsT0 = 0, _fpsValor = 0;
+function _fpsTick(now){
+  if(!_fpsT0) _fpsT0 = now;
+  _fpsN++;
+  if(now - _fpsT0 < 500) return;
+  _fpsValor = _fpsN * 1000 / (now - _fpsT0);
+  _fpsN = 0; _fpsT0 = now;
+  const el = document.getElementById('fps-meter');
+  if(el && _fpsMostrar){
+    const inf = (typeof g3 !== 'undefined' && g3) ? g3.renderer.info.render : null;
+    el.textContent = _fpsValor.toFixed(0) + ' FPS'
+      + (inf ? '  ·  ' + inf.calls + ' draw  ·  ' + (inf.triangles/1000).toFixed(0) + 'k tri' : '')
+      + '  ·  ' + _perfLevel;
+  }
+}
+function _setFpsMostrar(v){
+  _fpsMostrar = !!v;
+  try{ localStorage.setItem('lfh_fps', _fpsMostrar ? '1' : '0'); }catch(e){}
+  let el = document.getElementById('fps-meter');
+  if(_fpsMostrar && !el){
+    el = document.createElement('div');
+    el.id = 'fps-meter';
+    el.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:400;padding:4px 8px;'
+      + 'background:rgba(0,0,0,.62);color:#9fe89f;border:1px solid #2a4a2a;border-radius:5px;'
+      + 'font-family:monospace;font-size:.72rem;pointer-events:none;white-space:nowrap;';
+    el.textContent = '— FPS';
+    document.body.appendChild(el);
+  }
+  if(el) el.style.display = _fpsMostrar ? 'block' : 'none';
+}
+
+function _setHighContrast(v){ _highContrast=!!v; _applyAccessibilityPrefs(); _accessSavePrefs(); if(GS.gameState) _redrawMasterSelection(); }
+function _setAnimationSpeedMode(v){ _animationSpeedMode=['normal','fast','instant'].includes(v)?v:'normal'; _applyAccessibilityPrefs(); _accessSavePrefs(); }
+function _animationDuration(base){
+  const n = Math.max(0, Number(base) || 0) * _accessDurationScale;
+  return _animationSpeedMode === 'instant' ? 0 : _animationSpeedMode === 'fast' ? n * .55 : n;
+}
+function _animationProgressDuration(base){
+  const n = Math.max(0, Number(base) || 0) * _accessDurationScale;
+  return _animationSpeedMode === 'instant' ? 0.001 : _animationSpeedMode === 'fast' ? n * .55 : n;
 }
 
 // ── Música de fundo ──────────────────────────────────────────────────────────
@@ -16308,8 +18844,655 @@ function _setMusicVol(v){                    // slider de música — aplica ao 
   _mmVol = Math.max(0, Math.min(1, v));
   if (_mmCurrent && _mmTracks[_mmCurrent]) _mmFadeTo(_mmTracks[_mmCurrent], _mmVol, 150, false);
   if (_defeatAudioEl) _defeatAudioEl.volume = _mmVol;
+  if (_storyAudioEl) _storyAudioEl.volume = _mmVol;
   _audioSavePrefs();
 }
+
+// ── Barra de atalhos da campanha ────────────────────────────────────────────
+const SHORTCUT_KEYS = ['1','2','3','4','5','6','7','8','9','0'];
+function _atalhoBarElement(){
+  const barras = {
+    habilidades: '#menu-habilidades-overlay #shortcut-bar',
+    magias: '#menu-magias-overlay #shortcut-bar',
+    itens: '#inv-modal-overlay #shortcut-bar'
+  };
+  const atual = barras[_atalhosMenuAtual];
+  if(atual){
+    const barraAtual = document.querySelector(atual);
+    if(barraAtual) return barraAtual;
+  }
+  return document.querySelector(barras.habilidades)
+    || document.querySelector(barras.magias)
+    || document.querySelector(barras.itens)
+    || null;
+}
+function _atalhosVisiveis(){
+  const state = GS.gameState || GS.cityState;
+  const naTelaDoJogo = document.getElementById('screen-game')?.classList.contains('active')
+    || document.getElementById('screen-city')?.classList.contains('active');
+  return !!(state && naTelaDoJogo && GS.me && !GS.me.is_master);
+}
+function _atalhosDisponiveis(){
+  return _atalhosVisiveis();
+}
+function _atalhoJogador(){ return GS.me || null; }
+function _atalhoMeta(entry, player){
+  if(!entry || !player) return null;
+  if(entry.kind === 'magic'){
+    const m = GRIMORIO_CLIENT[entry.id];
+    return m ? {nome:m.nome || entry.id, icon:magiaIconHTML(m, 28), texto:true} : null;
+  }
+  if(entry.kind === 'item'){
+    const item = (player.bag || []).find(it => it && it.id === entry.id);
+    if(!item) return {nome:entry.id, icon:itemIconHTML(item || {id:entry.id}, '📦')};
+    return {nome:item.name || item.nome || entry.id, icon:itemIconHTML(item, item.emoji || '📦'), item};
+  }
+  const h = window._menuHabilidadesDados?.[entry.id]
+    || (player.skills || []).find(s => s && s.id === entry.id)
+    || (GS.guildCatalogFor(player.class_id) || []).find(s => s && s.id === entry.id);
+  if(!h) return null;
+  return {nome:h.nome || h.name || entry.id, icon:abilityIconHtml(h, h.icon || h.icone || '⚔️')};
+}
+function _atalhoEntryFromElement(el){
+  if(!el) return null;
+  const kind = el.dataset.shortcutKind, id = el.dataset.shortcutId;
+  if(!kind || !id) return null;
+  const out = {kind, id};
+  if(el.dataset.shortcutSource) out.source = el.dataset.shortcutSource;
+  return out;
+}
+let _atalhoHabilidadeAtiva = false;
+function _atalhoHabilidadeContextoAberto(){
+  return !!(GS.pendingSkill || GS.pendingInstrumento
+    || window._modoMagia || window._modoAnimarMortos || window._modoInstrumento
+    || document.getElementById('target-modal')?.classList.contains('open')
+    || document.querySelector('[id^="painel-"]'));
+}
+function _cancelarHabilidadeDoAtalho(){
+  const contextoAberto = _atalhoHabilidadeContextoAberto();
+  // O cancelamento também precisa funcionar quando a habilidade foi clicada
+  // diretamente no compêndio. Antes esta guarda dependia exclusivamente de
+  // `_atalhoHabilidadeAtiva`, deixando painéis de habilidade abertos ao usar
+  // Esc fora do fluxo do atalho.
+  if(!_atalhoHabilidadeAtiva && !contextoAberto) return false;
+  if(!contextoAberto){
+    const tinhaEfeitoOtimista = _efeitosVisuaisLocais.size > 0;
+    _limparEfeitosVisuaisLocais();
+    _atalhoHabilidadeAtiva = false;
+    return tinhaEfeitoOtimista;
+  }
+  if(window._modoMagia) _encerrarModoMagia();
+  if(window._modoAnimarMortos) _encerrarModoAnimarMortos();
+  if(window._modoInstrumento) _encerrarMiraInstrumento();
+  if(GS.pendingSkill){
+    GS.pendingSkill = null;
+    if(GS.gameState) renderMyPanel(GS.gameState);
+  }
+  if(GS.pendingInstrumento) GS.pendingInstrumento = null;
+  if(document.getElementById('target-modal')?.classList.contains('open')) closeTargetModal();
+  document.querySelectorAll('[id^="painel-"]').forEach(el => el.remove());
+  _limparEfeitosVisuaisLocais();
+  _atalhoHabilidadeAtiva = false;
+  toast('Habilidade cancelada.', 'var(--text2)');
+  return true;
+}
+function _ativarAtalho(entry, slotIndex = null){
+  if(!_atalhosDisponiveis() || !entry) return;
+  const me = _atalhoJogador();
+  if(entry.kind === 'magic') { ativarMagiaDoMenu(entry.id); return; }
+  if(entry.kind === 'skill'){
+    _atalhoHabilidadeAtiva = true;
+    // O servidor registra a ativação na caixa de narração do Mestre. O aviso
+    // é enviado antes da ação para manter a ordem visual no log.
+    GS.shortcutActivated?.(entry, slotIndex);
+    if(entry.source === 'technique') ativarTecnicaGuildaDoMenu(entry.id);
+    else ativarHabilidadeDoMenu(entry.id);
+    requestAnimationFrame(() => {
+      if(!_atalhoHabilidadeContextoAberto()) _atalhoHabilidadeAtiva = false;
+    });
+    return;
+  }
+  if(entry.kind !== 'item') return;
+  const item = (me.bag || []).find(it => it && it.id === entry.id);
+  if(!item){ toast(t('ui.atalhos.item_indisponivel'), 'var(--orange)'); return; }
+  if(item.effect === 'scroll'){ castarPergaminho(item); return; }
+  const cat = GS.CATALOGO_ITENS?.[item.id];
+  if(cat?.arremessavel && typeof window._iniciarMiraArremesso === 'function'){
+    window._iniciarMiraArremesso(item, me); return;
+  }
+  useItem(item.id);
+}
+function _renderAtalhos(){
+  const bar = _atalhoBarElement();
+  if(!bar) return;
+  if(!_atalhosVisiveis() || !_atalhosAbertos) { bar.hidden = true; bar.innerHTML = ''; return; }
+  const player = _atalhoJogador();
+  const slots = Array.isArray(player.shortcut_slots) ? player.shortcut_slots : [];
+  bar.hidden = false;
+  bar.innerHTML = `<span class="shortcut-title">${t('ui.atalhos.titulo')}</span>`;
+  SHORTCUT_KEYS.forEach((key, index) => {
+    const entry = slots[index] || null;
+    const meta = _atalhoMeta(entry, player);
+    const slot = document.createElement('button');
+    slot.type = 'button';
+    slot.className = 'shortcut-slot' + (entry ? '' : ' empty');
+    slot.dataset.shortcutSlot = String(index);
+    slot.title = entry && meta ? `${meta.nome} · ${t('ui.atalhos.clique_ativar')}` : t('ui.atalhos.vazio');
+    slot.innerHTML = `<span class="shortcut-key">${key}</span><span class="shortcut-icon">${meta ? meta.icon : '+'}</span>${meta ? `<span class="shortcut-name">${_esc(meta.nome)}</span>` : ''}`;
+    slot.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); if(entry) _ativarAtalho(entry, index); });
+    slot.addEventListener('contextmenu', e => {
+      e.preventDefault(); e.stopPropagation();
+      if(entry && _atalhosDisponiveis()){
+        GS.setShortcut(index, null); toast(t('ui.atalhos.removido'), 'var(--text2)');
+      }
+    });
+    slot.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); slot.classList.add('drop-hover'); });
+    slot.addEventListener('dragleave', () => slot.classList.remove('drop-hover'));
+    slot.addEventListener('drop', e => {
+      e.preventDefault(); e.stopPropagation(); slot.classList.remove('drop-hover');
+      let raw = e.dataTransfer.getData('application/x-lfh-shortcut');
+      if(!raw) raw = e.dataTransfer.getData('text/shortcut');
+      if(!raw) return;
+      try{
+        const dropped = JSON.parse(raw);
+        if(dropped && dropped.kind && dropped.id){
+          GS.setShortcut(index, dropped);
+        }
+      }catch(_err){}
+    });
+    bar.appendChild(slot);
+  });
+  const help = document.createElement('span');
+  help.className = 'shortcut-help'; help.textContent = t('ui.atalhos.ajuda'); bar.appendChild(help);
+}
+
+// ── Indicadores de efeitos ativos ───────────────────────────────────────────
+// A lista é reconstruída a partir do estado autoritativo, em vez de guardar
+// uma cópia local do último atalho usado. Assim o ícone some no mesmo estado
+// em que o servidor encerra a duração, mesmo quando o efeito foi consumido,
+// expirou no início da rodada ou foi desativado por outro jogador.
+function _coletarEfeitosAtivos(state, player, incluirLocais = true){
+  if(!state || !player || player.alive === false || player.is_master) return [];
+  const efeitos = new Map();
+  const add = (id, nome, icon, rodadas = null) => {
+    if(!id || efeitos.has(id)) return;
+    if(incluirLocais && String(player.id) === String(GS.myPid)
+       && _efeitosVisuaisSuprimidos.has(`${player.id}:${id}`)) return;
+    const n = Number(rodadas);
+    efeitos.set(id, {id, nome: nome || id, icon, rodadas: Number.isFinite(n) && n > 0 ? Math.ceil(n) : null});
+  };
+  const nomes = {
+    cancao_heroica:'Canção Heroica', esconder_sombras:'Esconder nas Sombras',
+    detectar_armadilhas:'Detectar Armadilhas', regeneracao_divina:'Regeneração Divina',
+    guerreiro_luz:'Guerreiro da Luz', golpe_sagrado:'Golpe Sagrado', protetor:'Protetor',
+    brutalidade:'Brutalidade', tecnica_mira_perfeita:'Mira Perfeita',
+    tecnica_investida:'Investida Heroica', tecnica_ataque_coordenado:'Ataque Coordenado',
+    tecnica_sangue_frio:'Sangue Frio', tecnica_golpe_decisivo:'Golpe Decisivo',
+    tecnica_tatica_defensiva:'Tática Defensiva', tecnica_defesa_impecavel:'Defesa Impecável',
+    tecnica_passo_fantasma:'Passo Fantasma', tecnica_resistencia_absoluta:'Resistência Absoluta',
+    tecnica_contra_ataque:'Contra-Ataque', mira_certeira:'Mira Certeira',
+    golpe_devastador:'Golpe Devastador', furia_berserker:'Fúria Berserker',
+    aprimorar_magia:'Aprimorar Magia', estender_magia:'Estender Magia',
+    fortalecer_magia:'Fortalecer Magia', aumento_ca_temporario:'CA temporária',
+  };
+  const nomeSkill = id => {
+    const h = window._menuHabilidadesDados?.[id]
+      || (player.skills || []).find(s => s && s.id === id)
+      || (GS.guildCatalogFor?.(player.class_id) || []).find(s => s && s.id === id);
+    return h?.nome || h?.name || nomes[id] || id;
+  };
+  const addSkill = (id, rodadas = null) => {
+    const src = ABILITY_ICON_ASSETS[id];
+    const icon = src
+      ? `<img class="active-effect-art" src="${src}" alt="" aria-hidden="true" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="active-effect-fallback" hidden>⚔️</span>`
+      : '⚔️';
+    add(id, nomeSkill(id), icon, rodadas);
+  };
+  const addMagic = (id, rodadas = null) => {
+    const m = GRIMORIO_CLIENT[id];
+    if(m) add(id, m.nome || id, magiaIconHTML(m, 30), rodadas);
+  };
+
+  const sustentadas = [
+    'cancao_heroica','esconder_sombras','detectar_armadilhas','regeneracao_divina',
+    'guerreiro_luz','golpe_sagrado','protetor','brutalidade','tecnica_mira_perfeita',
+    'tecnica_investida','tecnica_ataque_coordenado','tecnica_sangue_frio',
+    'tecnica_golpe_decisivo','tecnica_tatica_defensiva','tecnica_defesa_impecavel',
+    'tecnica_passo_fantasma','tecnica_resistencia_absoluta','tecnica_contra_ataque',
+  ];
+  sustentadas.forEach(id => {
+    if(_habilidadeSustentadaAtiva(player, id)){
+      const r = id === 'tecnica_tatica_defensiva' ? Number(player.tatica_ate || 0) - Number(state.round || 0) + 1
+        : id === 'tecnica_defesa_impecavel' ? Number(player.defesa_impecavel_ate || 0) - Number(state.round || 0) + 1
+        : id === 'tecnica_passo_fantasma' ? Number(player.passo_fantasma_ate || 0) - Number(state.round || 0) + 1
+        : id === 'tecnica_resistencia_absoluta' ? Number(player.resistencia_saves_ate || 0) - Number(state.round || 0) + 1
+        : id === 'tecnica_contra_ataque' ? Number(player.contra_ataque_ate || 0) - Number(state.round || 0) + 1 : null;
+      addSkill(id, r);
+    }
+  });
+  (GS.getWarriorSelected?.() || []).forEach(id => addSkill(id));
+  MODIFICADORES_METAMAGIA.forEach(id => { if(_modificadorMagiaAtivo(player, id)) addSkill(id); });
+
+  // Técnicas de preparação ficam marcadas pelo servidor até o ataque/magia
+  // que as consome. Isso cobre também as técnicas exclusivas do mago/clérigo,
+  // que não usam os mesmos nomes dos campos das habilidades de classe.
+  const pending = player.technique_pending || {};
+  Object.keys(pending).forEach(id => { if(pending[id]) addSkill(id); });
+  const tecnicasArmadas = {
+    tec_ex_aprimorar_magia: 'tec_ex_aprimorar_armado',
+    tec_ex_estender_magia: 'tec_ex_estender_armado',
+    tec_ex_canalizacao_arcana: 'tec_ex_canalizacao_armado',
+    tec_ex_empoderar_magia: 'tec_ex_empoderar_armado',
+    tec_ex_canalizacao_perfeita: 'tec_ex_canalizacao_perfeita_armado',
+    tec_ex_magia_acelerada: 'tec_ex_acelerada_armado',
+    tec_ex_magia_geminada: 'tec_ex_geminada_alvo2_id',
+  };
+  Object.entries(tecnicasArmadas).forEach(([id, campo]) => { if(player[campo]) addSkill(id); });
+  if(Number(player.mov_bonus_ate || 0) >= Number(state.round || 0) && player.mov_bonus_val){
+    addSkill('tecnica_grito_guerra', Number(player.mov_bonus_ate || 0) - Number(state.round || 0) + 1);
+  }
+  if(player.oportunidade_credito && Number(player.oportunidade_round) === Number(state.round || 0)){
+    addSkill('tecnica_oportunidade');
+  }
+  if(player.ultimo_esforco_ativo) addSkill('tecnica_ultimo_esforco');
+
+  // Magias de duração que deixam uma marca diretamente no alvo. O Manto tica
+  // pela zona que acompanha o conjurador, então preferimos a duração da zona
+  // para que o contador visual não fique atrasado.
+  const zonaManto = (state.zonas_especiais || []).find(z => z?.ativa
+    && z.tipo === 'escuridao' && String(z.caster) === String(player.id));
+  if(player.visao_escuro_manto || zonaManto) addMagic('manto_escuridao', zonaManto?.duracao || player.visao_escuro_rodadas);
+  if(player.visao_escuro_missao) addMagic('visao_escuro');
+  if(Number(player.barreira_arcana_rodadas || 0) > 0) addMagic('barreira_arcana', player.barreira_arcana_rodadas);
+  if(Number(player.protecao_rodadas || 0) > 0) addMagic('protecao_energia', player.protecao_rodadas);
+  if(Number(player.invisivel_magico_rodadas || 0) > 0 && player.invisivel_magico) addMagic('invisibilidade', player.invisivel_magico_rodadas);
+  if(Number(player.velocidade_rodadas || 0) > 0) addMagic('velocidade', player.velocidade_rodadas);
+  if(Number(player.regen_pool || 0) > 0) addMagic('regeneracao_magica');
+  if(player.contramagica_preparada) addMagic('contramagica');
+  if(Number(player.temp_ca_bonus || 0) > 0)
+    add('aumento_ca_temporario', 'CA temporária', '🛡️', player.temp_ca_rodadas);
+
+  // Zonas são estado do mapa, não do jogador. Mostra a zona enquanto ela
+  // estiver ativa e tiver sido criada pelo herói local.
+  (state.zonas_especiais || []).forEach(z => {
+    if(!z?.ativa || String(z.caster) !== String(player.id)) return;
+    if(z.tipo === 'silencio') addMagic('silencio', z.duracao);
+    if(z.tipo === 'escuridao') addMagic('manto_escuridao', z.duracao);
+  });
+
+  // Buffs/debuffs compartilhados usam mods_magia. O servidor não precisa de
+  // um novo campo: o sinal dos modificadores identifica o tipo visual básico.
+  const mods = player.mods_magia;
+  if(mods && Number(mods.rodadas || 0) > 0){
+    if(mods.arma_ignora_resistencia) addMagic('abencoar_arma', mods.rodadas);
+    else if(['ataque','dano','ca','resistencia'].some(k => Number(mods[k] || 0) > 0)) addMagic('abencoar', mods.rodadas);
+    if(['ataque','dano','ca','resistencia'].some(k => Number(mods[k] || 0) < 0)){
+      addMagic(Number(mods.ca || 0) < 0 ? 'lentidao' : 'amaldicoar', mods.rodadas);
+    }
+  }
+  if(player.buffs_cancao && typeof player.buffs_cancao === 'object'
+      && Object.values(player.buffs_cancao).some(Boolean)) addSkill('cancao_heroica');
+  if(player.dormindo) addMagic('sono', player.dormindo_rodadas);
+  if(player.com_medo) addMagic('medo', player.medo_rodadas);
+  if(player.lento && !efeitos.has('lentidao')) addMagic('lentidao', player.lento_rodadas);
+
+  if(incluirLocais && String(player.id) === String(GS.myPid)){
+    if(GS.pendingSkill?.id) addSkill(GS.pendingSkill.id);
+    if(window._modoMagia?.magiaId) addMagic(window._modoMagia.magiaId);
+    if(window._modoAnimarMortos) addSkill('animar_mortos');
+    for(const efeito of _efeitosVisuaisLocais.values()){
+      if(String(efeito.playerId) !== String(player.id)) continue;
+      if(efeito.kind === 'magic') addMagic(efeito.id);
+      else addSkill(efeito.id);
+    }
+  }
+
+  return [...efeitos.values()];
+}
+
+function _renderEfeitosAtivos(state = GS.gameState){
+  const hud = document.getElementById('active-effects-hud');
+  if(!hud) return;
+  const telaJogo = document.getElementById('screen-game')?.classList.contains('active');
+  const player = state?.players?.find(p => p.id === GS.myPid && !p.is_master);
+  if(!telaJogo || !player || player.alive === false){
+    hud.hidden = true;
+    hud.innerHTML = '';
+    return;
+  }
+
+  const efeitos = _coletarEfeitosAtivos(state, player);
+  hud.innerHTML = efeitos.map(e => {
+    const resto = e.rodadas ? `<span class="active-effect-rounds">${e.rodadas}r</span>` : '';
+    const title = `${e.nome}${e.rodadas ? ` · ${e.rodadas} rodada(s)` : ''}`;
+    return `<div class="active-effect-chip" title="${_esc(title)}" data-effect-id="${_esc(e.id)}"><span class="active-effect-icon">${e.icon}</span><span class="active-effect-label">${_esc(e.nome)}</span>${resto}</div>`;
+  }).join('');
+  hud.hidden = efeitos.size === 0;
+}
+
+// Estado visual otimista: o servidor só devolve o novo `game_state` depois de
+// processar a ação, mas a intenção (mira de uma habilidade/magia) já é uma
+// informação válida para a interface. Este mapa dura apenas até a confirmação
+// autoritativa, ao consumo da ação ou ao cancelamento com Esc.
+const _efeitosVisuaisLocais = new Map();
+const _efeitosVisuaisSuprimidos = new Set();
+function _renderEfeitosAtivosAgora(){
+  if(!GS.gameState) return;
+  _renderEfeitosAtivos(GS.gameState);
+  if(mode3D && g3){
+    // O mapa 3D pode estar temporariamente congelado durante a animação de um
+    // passo. Os efeitos, porém, são feedback imediato da ativação: sincroniza
+    // os sprites antes de pedir o render normal (que pode retornar cedo).
+    _sincronizarEfeitosAtivos3DImediatamente(GS.gameState);
+    renderMap3D(GS.gameState);
+  }
+  else renderMap(GS.gameState);
+}
+function _registrarEfeitoVisualLocal(id, kind = 'skill'){
+  if(!id || !GS.myPid) return;
+  _efeitosVisuaisSuprimidos.delete(`${GS.myPid}:${id}`);
+  _efeitosVisuaisLocais.set(`${GS.myPid}:${id}`, {id, kind, playerId:GS.myPid});
+  if(g3) g3._activeEffectsDirty = true;
+  _renderEfeitosAtivosAgora();
+}
+function _removerEfeitoVisualLocal(id){
+  if(!id) return;
+  const key = `${GS.myPid}:${id}`;
+  _efeitosVisuaisLocais.delete(key);
+  // Esconde imediatamente também um efeito que ainda esteja no último
+  // game_state recebido. O próximo estado autoritativo remove a supressão
+  // quando confirmar que a habilidade realmente terminou.
+  _efeitosVisuaisSuprimidos.add(key);
+  if(g3) g3._activeEffectsDirty = true;
+  _renderEfeitosAtivosAgora();
+}
+function _limparEfeitosVisuaisLocais(){
+  if(!_efeitosVisuaisLocais.size) return;
+  _efeitosVisuaisLocais.clear();
+  _renderEfeitosAtivosAgora();
+}
+function _reconciliarEfeitosVisuaisLocais(state){
+  const player = state?.players?.find(p => p.id === GS.myPid && !p.is_master);
+  if(!player || !_efeitosVisuaisLocais.size) return;
+  const autoritativos = new Set(_coletarEfeitosAtivos(state, player, false).map(e => e.id));
+  for(const key of _efeitosVisuaisSuprimidos){
+    const sep = key.indexOf(':');
+    const pid = key.slice(0, sep), id = key.slice(sep + 1);
+    if(String(pid) === String(player.id) && !autoritativos.has(id)) _efeitosVisuaisSuprimidos.delete(key);
+  }
+  const emSelecao = !!(GS.pendingSkill || GS.pendingInstrumento
+    || window._modoMagia || window._modoAnimarMortos || window._modoInstrumento
+    || document.getElementById('target-modal')?.classList.contains('open')
+    || document.querySelector('[id^="painel-"]'));
+  for(const [key, efeito] of _efeitosVisuaisLocais){
+    if(autoritativos.has(efeito.id) || !emSelecao) _efeitosVisuaisLocais.delete(key);
+  }
+}
+
+// O HUD abaixo usa HTML, mas os peões são desenhados em canvas/Three.js. Estes
+// helpers transformam o mesmo registro de efeito em uma imagem utilizável nos
+// dois renderizadores, sem criar um segundo estado local de habilidades.
+const _efeitoIconImgs2D = new Map();
+function _efeitoIconInfo(efeito){
+  const html = String(efeito?.icon || '');
+  const src = html.match(/<img[^>]*\bsrc=["']([^"']+)["']/i)?.[1] || null;
+  const dataFallback = html.match(/data-fallback=["']([^"']*)["']/i)?.[1];
+  const texto = html.replace(/<[^>]*>/g, '').trim();
+  return {src, fallback: dataFallback || texto || '✦'};
+}
+function _efeitoIconImg2D(src){
+  if(!src) return null;
+  let img = _efeitoIconImgs2D.get(src);
+  if(img) return img;
+  img = new Image();
+  img._lfhIconReady = false;
+  img.onload = () => {
+    img._lfhIconReady = true;
+    if(!mode3D && GS.gameState) renderMap(GS.gameState);
+  };
+  img.onerror = () => { img._lfhIconReady = false; img._lfhIconFailed = true; };
+  img.src = src;
+  _efeitoIconImgs2D.set(src, img);
+  return img;
+}
+function _drawEfeitosAtivos2D(ctx, state, player, cx, cy){
+  const efeitos = _coletarEfeitosAtivos(state, player);
+  if(!efeitos.length) return;
+  const max = 8;
+  const visiveis = efeitos.slice(0, max);
+  const extras = efeitos.length - visiveis.length;
+  const tamanho = Math.max(16, Math.round(CELL * .25));
+  const gap = Math.max(2, Math.round(CELL * .035));
+  const largura = tamanho + gap;
+  const total = visiveis.length + (extras > 0 ? 1 : 0);
+  const x0 = cx - (total * largura - gap) / 2;
+  const y = cy - CELL * 1.12 - tamanho;
+
+  ctx.save();
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  visiveis.forEach((efeito, i) => {
+    const x = x0 + i * largura;
+    ctx.fillStyle = 'rgba(10,8,5,.90)';
+    ctx.strokeStyle = 'rgba(240,217,138,.92)';
+    ctx.lineWidth = Math.max(1, CELL * .025);
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(x, y, tamanho, tamanho, Math.max(3, tamanho * .16));
+    else { ctx.rect(x, y, tamanho, tamanho); }
+    ctx.fill(); ctx.stroke();
+
+    const info = _efeitoIconInfo(efeito);
+    const img = _efeitoIconImg2D(info.src);
+    if(img && img._lfhIconReady){
+      const pad = Math.max(2, Math.round(tamanho * .12));
+      ctx.drawImage(img, x + pad, y + pad, tamanho - pad * 2, tamanho - pad * 2);
+    }else{
+      ctx.fillStyle = '#f0d98a';
+      ctx.font = `${Math.max(12, Math.round(tamanho * .62))}px sans-serif`;
+      ctx.fillText(info.fallback, x + tamanho / 2, y + tamanho / 2 + 1);
+    }
+  });
+  if(extras > 0){
+    const x = x0 + visiveis.length * largura;
+    ctx.fillStyle = 'rgba(38,27,10,.96)';
+    ctx.strokeStyle = 'rgba(240,217,138,.92)';
+    ctx.lineWidth = Math.max(1, CELL * .025);
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(x, y, tamanho, tamanho, Math.max(3, tamanho * .16));
+    else ctx.rect(x, y, tamanho, tamanho);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#f0d98a';
+    ctx.font = `bold ${Math.max(10, Math.round(tamanho * .42))}px monospace`;
+    ctx.fillText(`+${extras}`, x + tamanho / 2, y + tamanho / 2 + 1);
+  }
+  ctx.restore();
+}
+
+const _efeitoIconTextures3D = new Map();
+function _efeitoIconTexture3D(T, efeito){
+  const info = _efeitoIconInfo(efeito);
+  const key = `${info.src || ''}|${info.fallback}`;
+  const existente = _efeitoIconTextures3D.get(key);
+  if(existente) return existente;
+
+  const cv = document.createElement('canvas');
+  cv.width = 128; cv.height = 128;
+  const ctx = cv.getContext('2d');
+  const tex = new T.CanvasTexture(cv);
+  tex.needsUpdate = true;
+  const desenhar = img => {
+    ctx.clearRect(0, 0, 128, 128);
+    ctx.fillStyle = 'rgba(10,8,5,.92)';
+    ctx.strokeStyle = 'rgba(240,217,138,.95)';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(3, 3, 122, 122, 18);
+    else ctx.rect(3, 3, 122, 122);
+    ctx.fill(); ctx.stroke();
+    if(img && img.naturalWidth){
+      ctx.drawImage(img, 19, 19, 90, 90);
+    }else{
+      ctx.fillStyle = '#f0d98a';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = '58px sans-serif';
+      ctx.fillText(info.fallback, 64, 67);
+    }
+    tex.needsUpdate = true;
+  };
+  // O 2D mostra o fallback enquanto a arte carrega. O 3D precisa fazer o
+  // mesmo: um CanvasTexture recém-criado é transparente até o onload, o que
+  // fazia o ícone parecer ausente durante a ativação (e podia permanecer
+  // assim quando a imagem já estivesse no cache do navegador).
+  desenhar(null);
+  if(info.src){
+    const img = new Image();
+    img.onload = () => {
+      desenhar(img);
+      if(mode3D && g3 && GS.gameState) renderMap3D(GS.gameState);
+    };
+    img.onerror = () => desenhar(null);
+    img.src = info.src;
+    if(img.complete){
+      if(img.naturalWidth) desenhar(img);
+      else desenhar(null);
+    }
+  }
+  const entry = {tex, key};
+  _efeitoIconTextures3D.set(key, entry);
+  return entry;
+}
+
+function _limparEfeitosAtivos3D(){
+  if(!g3?.activeEffectSprites) return;
+  Object.entries(g3.activeEffectSprites).forEach(([key, sprite]) => {
+    if(sprite.parent) sprite.parent.remove(sprite);
+    if(sprite.material) sprite.material.dispose();
+    delete g3.activeEffectSprites[key];
+  });
+}
+
+function _posicionarEfeitoAtivo3D(sprite, player, indice, total){
+  const [px, py] = player.pos || [];
+  if(!Number.isFinite(px) || !Number.isFinite(py)) return;
+  // O grupo da miniatura é a referência durante movimentos e hover. Assim o
+  // ícone acompanha o peão, em vez de ficar na posição antiga do game_state.
+  const figura = getPeaoMesh(player.id);
+  const x = figura ? figura.position.x : px;
+  const z = figura ? figura.position.z : py;
+  const y = (figura ? figura.position.y : 0) + 1.58;
+  sprite.position.set(x + (indice - (total - 1) / 2) * .38, y, z);
+  sprite.userData.effectOwnerId = player.id;
+  sprite.userData.effectIndex = indice;
+  sprite.userData.effectTotal = total;
+}
+
+function _atualizarPosicoesEfeitosAtivos3D(){
+  if(!g3?.activeEffectSprites) return;
+  Object.values(g3.activeEffectSprites).forEach(sprite => {
+    const player = GS.gameState?.players?.find(p =>
+      String(p.id) === String(sprite.userData.effectOwnerId));
+    if(player && player.alive !== false)
+      _posicionarEfeitoAtivo3D(sprite, player, sprite.userData.effectIndex || 0,
+        sprite.userData.effectTotal || 1);
+  });
+}
+
+function _syncEfeitosAtivos3D(state, visionSet){
+  if(!g3?.activeEffectGroup) return;
+  if(!state?.players){
+    _limparEfeitosAtivos3D();
+    return;
+  }
+  const usados = new Set();
+  for(const p of state.players){
+    if(!p.alive || p.is_master || p.engolido || p.bau_engolido || p.fosso_oculto || p.connected === false) continue;
+    const [px, py] = p.pos || [];
+    if(!Number.isFinite(px) || !Number.isFinite(py)) continue;
+    if(String(p.id) !== String(GS.myPid) && visionSet && !visionSet.has(`${px},${py}`)) continue;
+    const efeitos = _coletarEfeitosAtivos(state, p);
+    const total = Math.min(8, efeitos.length);
+    efeitos.slice(0, total).forEach((efeito, i) => {
+      const key = `${p.id}:${efeito.id}`;
+      usados.add(key);
+      let sprite = g3.activeEffectSprites[key];
+      const info = _efeitoIconInfo(efeito);
+      const texEntry = _efeitoIconTexture3D(g3.T, efeito);
+      if(!sprite){
+        const mat = new g3.T.SpriteMaterial({map:texEntry.tex, transparent:true,
+          depthTest:false, depthWrite:false});
+        sprite = new g3.T.Sprite(mat);
+        // Um pouco maior que os marcadores de status, para continuar legível
+        // à distância da câmera isométrica.
+        sprite.scale.set(.38, .38, 1);
+        sprite.renderOrder = 80;
+        sprite.userData.iconKey = `${info.src || ''}|${info.fallback}`;
+        g3.activeEffectGroup.add(sprite);
+        g3.activeEffectSprites[key] = sprite;
+      }else if(sprite.userData.iconKey !== texEntry.key){
+        sprite.material.map = texEntry.tex;
+        sprite.material.needsUpdate = true;
+        sprite.userData.iconKey = texEntry.key;
+      }
+      _posicionarEfeitoAtivo3D(sprite, p, i, total);
+      sprite.visible = true;
+    });
+  }
+  Object.entries(g3.activeEffectSprites).forEach(([key, sprite]) => {
+    if(usados.has(key)) return;
+    g3.activeEffectGroup.remove(sprite);
+    sprite.material.dispose();
+    delete g3.activeEffectSprites[key];
+  });
+}
+
+function _sincronizarEfeitosAtivos3DImediatamente(state){
+  if(!g3 || !state?.players) return;
+  const me = state.players.find(p => String(p.id) === String(GS.myPid) && p.alive);
+  let visionSet = computeVisionSet(state, me);
+  if(GS.isMaster() || state.test_mode){
+    visionSet = new Set();
+    const tiles = state.tiles || [];
+    for(let y = 0; y < tiles.length; y++)
+      for(let x = 0; x < (tiles[y] || []).length; x++) visionSet.add(`${x},${y}`);
+  }
+  _syncEfeitosAtivos3D(state, visionSet);
+  g3._activeEffectsState = state;
+  g3._activeEffectsDirty = false;
+}
+
+function _mostrarAtalhosNoMenu(){
+  _atalhosAbertos = true;
+  _atalhosMenuAtual = 'itens';
+  _renderAtalhos();
+}
+function _ocultarAtalhosNoMenu(){
+  _atalhosAbertos = false;
+  const bar = _atalhoBarElement();
+  if(bar){ bar.hidden = true; bar.innerHTML = ''; }
+  if(_atalhosMenuAtual === 'itens') _atalhosMenuAtual = null;
+}
+function alternarMenuAtalhos(){
+  if(!_atalhosDisponiveis()) return false;
+  const bar = _atalhoBarElement();
+  _atalhosAbertos = !_atalhosAbertos;
+  if(!_atalhosAbertos){
+    if(bar){ bar.hidden = true; bar.innerHTML = ''; }
+  } else _renderAtalhos();
+  return true;
+}
+window.alternarMenuAtalhos = alternarMenuAtalhos;
+window._renderAtalhos = _renderAtalhos;
+window._mostrarAtalhosNoMenu = _mostrarAtalhosNoMenu;
+window._ocultarAtalhosNoMenu = _ocultarAtalhosNoMenu;
+
+// Qualquer carta/botão marcado pelos menus pode ser arrastado para a barra.
+document.addEventListener('dragstart', e => {
+  const el = e.target.closest?.('[data-shortcut-kind]');
+  const entry = _atalhoEntryFromElement(el);
+  if(!entry) return;
+  e.dataTransfer.setData('application/x-lfh-shortcut', JSON.stringify(entry));
+  e.dataTransfer.setData('text/shortcut', JSON.stringify(entry));
+  e.dataTransfer.effectAllowed = 'copy';
+});
 
 function _mmHideHint(){                       // esconde a dica da capa ao tocar
   const h = document.getElementById('cover-hint');
@@ -16486,7 +19669,7 @@ function _audioPanelEnsure(){
     '<button id="audio-gear" data-i18n-title="ui.menu.audio_title" title="Áudio, idioma e opções" style="width:42px;height:42px;'
     + 'border-radius:50%;border:1px solid #2a4a2a;background:rgba(13,26,13,.82);color:#a0e0a0;'
     + 'font-size:20px;cursor:pointer;line-height:1;padding:0;box-shadow:0 2px 8px rgba(0,0,0,.5);">⚙️</button>'
-    + '<div id="audio-pop" style="display:none;position:absolute;right:0;top:50px;width:210px;'
+    + '<div id="audio-pop" style="display:none;position:absolute;right:0;top:50px;width:238px;max-height:calc(100vh - 72px);overflow-y:auto;'
     + 'background:rgba(13,20,13,.96);border:1px solid #2a4a2a;border-radius:10px;padding:12px 14px;'
     + 'box-shadow:0 6px 20px rgba(0,0,0,.6);color:#cfe9cf;font-size:.8rem;">'
     // Idioma vem primeiro: é a opção que muda todo o resto do painel.
@@ -16497,16 +19680,33 @@ function _audioPanelEnsure(){
     // Nomes de idioma ficam SEMPRE no próprio idioma — nunca traduzidos.
     +       '<option value="pt">Português</option><option value="en">English</option>'
     +     '</select></div>'
-    +   '<div style="display:flex;justify-content:space-between;margin-bottom:5px;">'
-    +     '<span data-i18n="ui.menu.musica">🎵 Música</span><span id="aud-music-val">' + pct(_mmVol) + '%</span></div>'
-    +   '<input id="aud-music" type="range" min="0" max="100" value="' + pct(_mmVol) + '" style="width:100%;">'
-    +   '<div style="display:flex;justify-content:space-between;margin:12px 0 5px;">'
-    +     '<span data-i18n="ui.menu.sons">🔊 Sons</span><span id="aud-sfx-val">' + pct(_sfxVol) + '%</span></div>'
-    +   '<input id="aud-sfx" type="range" min="0" max="100" value="' + pct(_sfxVol) + '" style="width:100%;">'
+    +   '<button id="cfg-audio-toggle" class="cfg-section-button" type="button" aria-expanded="false">'
+    +     '<span data-i18n="ui.menu.audio">🔊 Áudio</span><span class="cfg-section-chevron" aria-hidden="true">›</span></button>'
+    +   '<section id="cfg-audio-controls" class="cfg-audio-controls" hidden>'
+    +     '<div class="cfg-audio-line"><span data-i18n="ui.menu.musica">🎵 Música</span><span id="aud-music-val">' + pct(_mmVol) + '%</span></div>'
+    +     '<input id="aud-music" type="range" min="0" max="100" value="' + pct(_mmVol) + '" style="width:100%;">'
+    +     '<div class="cfg-audio-line"><span data-i18n="ui.menu.sons">🔊 Efeitos</span><span id="aud-sfx-val">' + pct(_sfxVol) + '%</span></div>'
+    +     '<input id="aud-sfx" type="range" min="0" max="100" value="' + pct(_sfxVol) + '" style="width:100%;">'
+    +     '<div class="cfg-audio-line"><span>🌫 Ambiente</span><span id="aud-ambience-val">' + pct(_ambienceVol) + '%</span></div>'
+    +     '<input id="aud-ambience" type="range" min="0" max="100" value="' + pct(_ambienceVol) + '" style="width:100%;">'
+    +     '<div class="cfg-audio-line"><span>🎲 Dados</span><span id="aud-dice-val">' + pct(_diceVol) + '%</span></div>'
+    +     '<input id="aud-dice" type="range" min="0" max="100" value="' + pct(_diceVol) + '" style="width:100%;">'
+    +   '</section>'
     +   '<div id="cfg-turn-timer" style="border-top:1px solid #2a4a2a;margin-top:12px;padding-top:10px;display:none;">'
     +     '<button id="cfg-turn-timer-btn" style="width:100%;padding:8px;background:rgba(30,48,62,.7);border:1px solid #6da7bd88;border-radius:6px;color:#d7f0f8;font-family:inherit;font-size:.8rem;cursor:pointer;"></button>'
     +     '<small id="cfg-turn-timer-note" style="display:block;margin-top:5px;opacity:.72;"></small>'
     +   '</div>'
+    +   '<div class="cfg-access-title" data-i18n="ui.menu.desempenho">🖥️ Desempenho</div>'
+    +   '<label class="cfg-access-line cfg-speed-line"><span data-i18n="ui.menu.qualidade">⚙ Qualidade</span><select id="perf-nivel" style="background:rgba(13,26,13,.9);color:#cfe9cf;border:1px solid #2a4a2a;border-radius:5px;padding:3px 5px;font-family:inherit;font-size:.78rem;"><option value="alta" data-i18n="ui.menu.qual_alta">Alta</option><option value="media" data-i18n="ui.menu.qual_media">Média</option><option value="baixa" data-i18n="ui.menu.qual_baixa">Baixa</option></select></label>'
+    +   '<small data-i18n="ui.menu.qual_dica" style="display:block;margin:2px 0 6px;opacity:.7;font-size:.7rem;">Baixa desliga sombras e reduz luzes e resolução — use se a masmorra 3D estiver travando.</small>'
+    +   '<label class="cfg-access-check"><input id="perf-fps" type="checkbox"> <span data-i18n="ui.menu.mostrar_fps">Mostrar FPS</span></label>'
+    +   '<div class="cfg-access-title">♿ Acessibilidade</div>'
+    +   '<div class="cfg-access-line"><span>🔠 Números</span><span id="acc-font-val">' + Math.round(_accessFontScale * 100) + '%</span></div>'
+    +   '<input id="acc-font" type="range" min="100" max="200" step="10" value="' + Math.round(_accessFontScale * 100) + '" style="width:100%;">'
+    +   '<div class="cfg-access-line"><span>⏱ Mensagens</span><span id="acc-duration-val">' + Math.round(_accessDurationScale * 100) + '%</span></div>'
+    +   '<input id="acc-duration" type="range" min="50" max="200" step="10" value="' + Math.round(_accessDurationScale * 100) + '" style="width:100%;">'
+    +   '<label class="cfg-access-check"><input id="acc-contrast" type="checkbox"' + (_highContrast ? ' checked' : '') + '> Alto contraste</label>'
+    +   '<label class="cfg-access-line cfg-speed-line"><span>🎞 Velocidade</span><select id="acc-speed" style="background:rgba(13,26,13,.9);color:#cfe9cf;border:1px solid #2a4a2a;border-radius:5px;padding:3px 5px;font-family:inherit;font-size:.78rem;"><option value="normal">Normal</option><option value="fast">Rápida</option><option value="instant">Instantânea</option></select></label>'
     // Menu de saída unificado (antes era o menu de pausa separado, aberto por Esc).
     +   '<div id="cfg-saida" style="display:none;border-top:1px solid #2a4a2a;margin-top:12px;padding-top:10px;">'
     +     '<button id="cfg-voltar-inicio" data-i18n="ui.menu.voltar_inicio" style="width:100%;padding:8px;margin-bottom:6px;background:rgba(40,32,10,.6);'
@@ -16535,11 +19735,38 @@ function _audioPanelEnsure(){
     if(!state || state.host!==GS.myPid){ toast(t('ui.menu.timer_so_host'),'var(--red)'); return; }
     GS.setTurnTimer(state.turn_timer_enabled===false);
   };
+  const audioToggle = wrap.querySelector('#cfg-audio-toggle');
+  const audioControls = wrap.querySelector('#cfg-audio-controls');
+  audioToggle.onclick = () => {
+    const aberto = audioControls.hidden;
+    audioControls.hidden = !aberto;
+    audioToggle.classList.toggle('open', aberto);
+    audioToggle.setAttribute('aria-expanded', String(aberto));
+  };
   document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) pop.style.display = 'none'; });
   const mSl = wrap.querySelector('#aud-music'), mVal = wrap.querySelector('#aud-music-val');
   mSl.oninput = () => { mVal.textContent = mSl.value + '%'; _setMusicVol(mSl.value / 100); };
   const sSl = wrap.querySelector('#aud-sfx'), sVal = wrap.querySelector('#aud-sfx-val');
   sSl.oninput = () => { sVal.textContent = sSl.value + '%'; _setSfxVol(sSl.value / 100); };
+  const aSl = wrap.querySelector('#aud-ambience'), aVal = wrap.querySelector('#aud-ambience-val');
+  aSl.oninput = () => { aVal.textContent = aSl.value + '%'; _setAmbienceVol(aSl.value / 100); };
+  const dSl = wrap.querySelector('#aud-dice'), dVal = wrap.querySelector('#aud-dice-val');
+  dSl.oninput = () => { dVal.textContent = dSl.value + '%'; _setDiceVol(dSl.value / 100); };
+  const fSl = wrap.querySelector('#acc-font'), fVal = wrap.querySelector('#acc-font-val');
+  fSl.oninput = () => { fVal.textContent = fSl.value + '%'; _setAccessFontScale(fSl.value / 100); };
+  const durSl = wrap.querySelector('#acc-duration'), durVal = wrap.querySelector('#acc-duration-val');
+  durSl.oninput = () => { durVal.textContent = durSl.value + '%'; _setAccessDurationScale(durSl.value / 100); };
+  const contrast = wrap.querySelector('#acc-contrast');
+  contrast.onchange = () => _setHighContrast(contrast.checked);
+  const speed = wrap.querySelector('#acc-speed');
+  speed.value = _animationSpeedMode;
+  speed.onchange = () => _setAnimationSpeedMode(speed.value);
+  const perfSel = wrap.querySelector('#perf-nivel');
+  perfSel.value = _perfLevel;
+  perfSel.onchange = () => _setPerfLevel(perfSel.value);
+  const perfFps = wrap.querySelector('#perf-fps');
+  perfFps.checked = _fpsMostrar;
+  perfFps.onchange = () => _setFpsMostrar(perfFps.checked);
   const langSel = wrap.querySelector('#cfg-lang');
   langSel.value = I18N.lang;
   langSel.onchange = () => _setLang(langSel.value);
@@ -16553,8 +19780,15 @@ function _refreshTurnTimerOption(){
   const box=document.getElementById('cfg-turn-timer'), btn=document.getElementById('cfg-turn-timer-btn'), note=document.getElementById('cfg-turn-timer-note');
   if(!box||!btn||!note)return;
   const state=GS.gameState||GS.cityState;
-  const emJogo=['screen-game','screen-city','screen-class-select'].includes((document.querySelector('.screen.active')||{}).id);
-  box.style.display=emJogo&&state?'block':'none'; if(!state)return;
+  // A opção deve continuar visível no menu de opções. Fora de uma sala há
+  // apenas uma indicação; dentro da partida o anfitrião pode alterá-la.
+  box.style.display='block';
+  if(!state){
+    btn.textContent=t('ui.menu.timer_indisponivel');
+    btn.disabled=true; btn.style.opacity='.55';
+    note.textContent=t('ui.menu.timer_nota_partida');
+    return;
+  }
   const host=state.host===GS.myPid, ativo=state.turn_timer_enabled!==false;
   btn.textContent=t(ativo?'ui.menu.timer_ativo':'ui.menu.timer_inativo');
   btn.disabled=!host; btn.style.opacity=host?'1':'.55'; note.textContent=t(host?'ui.menu.timer_nota_host':'ui.menu.timer_nota_outro');
@@ -16608,6 +19842,7 @@ function _mmHookFirstGesture(){
   _langLoadPref();       // antes do painel: ele já nasce no idioma salvo
   _aplicarCatalogosEstaticos();   // idioma salvo já vale para os catálogos do cliente
   _audioLoadPrefs();
+  _accessLoadPrefs();
   _audioPanelEnsure();
   _i18nApply(document.body);
   // DEPOIS do _i18nApply, e não antes: o #btn-rejoin tem data-i18n com o rótulo
@@ -16637,12 +19872,193 @@ let g3     = null;    // Three.js renderer state (null when 2D active)
 let _movePulse       = 0.5;   // 0→1 sine value used by 2D and 3D highlight animations
 let _2dHighlightFrame = null; // requestAnimationFrame handle for 2D pulse loop
 
+// Coordenador único dos loops visuais de combate/magia. Em 3D os callbacks
+// são drenados pelo loop principal do renderer; em 2D o próprio coordenador
+// mantém um único requestAnimationFrame para todos os efeitos ativos.
+const _visualAnimScheduler = { nextId: 1, callbacks: new Map(), raf: null };
+
+function _ensureVisualAnimFrame(){
+  if(_visualAnimScheduler.raf || !_visualAnimScheduler.callbacks.size) return;
+  _visualAnimScheduler.raf = requestAnimationFrame(_flushVisualAnimFrame);
+}
+
+function _scheduleVisualFrame(fn){
+  const id = _visualAnimScheduler.nextId++;
+  _visualAnimScheduler.callbacks.set(id, fn);
+  if(!(mode3D && g3)) _ensureVisualAnimFrame();
+  return id;
+}
+
+function _cancelVisualFrame(id){
+  if(id == null) return;
+  _visualAnimScheduler.callbacks.delete(id);
+  if(!_visualAnimScheduler.callbacks.size && _visualAnimScheduler.raf){
+    cancelAnimationFrame(_visualAnimScheduler.raf);
+    _visualAnimScheduler.raf = null;
+  }
+}
+
+function _flushVisualAnimFrame(now, from3D=false){
+  if(from3D && _visualAnimScheduler.raf){
+    cancelAnimationFrame(_visualAnimScheduler.raf);
+    _visualAnimScheduler.raf = null;
+  } else if(!from3D){
+    _visualAnimScheduler.raf = null;
+  }
+  const batch = [..._visualAnimScheduler.callbacks.entries()];
+  for(const [id, fn] of batch){
+    if(!_visualAnimScheduler.callbacks.delete(id)) continue;
+    try { fn(now); }
+    catch(err){ console.error('visual animation callback:', err); }
+  }
+  if(_visualAnimScheduler.callbacks.size && !(mode3D && g3))
+    _ensureVisualAnimFrame();
+}
+
+function _flushVisualAnimFrame3D(now){
+  if(mode3D && g3) _flushVisualAnimFrame(now, true);
+}
+
+function _wakeVisualAnimScheduler(){
+  if(!(mode3D && g3)) _ensureVisualAnimFrame();
+}
+// Prévia de alcance do monstro sob o cursor no modo Mestre. O id, e não a
+// posição, é guardado para que footprints 2×1/2×2/2×3 continuem funcionando
+// quando o cursor estiver sobre qualquer uma das casas ocupadas.
+let _masterMonsterHoverId = null;
+
 // Set true while any mouse button is held and moved; on3DClick checks this flag
 // to avoid firing a tile-click immediately after a camera drag/pan ends.
 let _orbitDragMoved = false;
 // Experimento visual atual: quase sem fresta. O botão do HUD permite voltar
 // imediatamente à opção anterior (0,94), sem mudar o arquivo da masmorra.
 let _tileFootprint3D = 0.97;
+
+// ── Pulso de Habilidade — feedback curto no peão ao confirmar uma habilidade ──
+const _habilidadeAtivacaoAnims = [];
+let _habilidadeAtivacaoRaf = null;
+const HABILIDADE_FX_MS = 900;
+const HABILIDADE_FX_CORES = {
+  mage: '#9c6cff', cleric: '#ffe89a', warrior: '#ff6b32',
+  rogue: '#52e6a0', paladin: '#fff6d0', bard: '#ef7dff'
+};
+
+function _habilidadeFxCor(msg){
+  return HABILIDADE_FX_CORES[msg?.class_id] || '#c78cff';
+}
+
+function _habilidadeFxReceber(msg){
+  if(!msg || !Array.isArray(msg.pos) || msg.pos.length < 2) return;
+  _habilidadeAtivacaoAnims.push({
+    playerId: msg.player_id,
+    x: Number(msg.pos[0]) || 0,
+    y: Number(msg.pos[1]) || 0,
+    color: _habilidadeFxCor(msg),
+    start: performance.now(),
+    group: null,
+  });
+  if(!_habilidadeAtivacaoRaf) _habilidadeAtivacaoRaf = _scheduleVisualFrame(_habilidadeFxTick);
+}
+
+function _habilidadeFxDispose3D(anim){
+  if(!anim.group) return;
+  if(anim.group.parent) anim.group.parent.remove(anim.group);
+  anim.group.traverse(obj => {
+    if(obj.geometry) obj.geometry.dispose();
+    if(obj.material) (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(m => m.dispose());
+  });
+  anim.group = null;
+}
+
+function _habilidadeFxBuild3D(anim){
+  if(!g3 || !g3.scene || !window.THREE) return false;
+  const T = window.THREE, color = new T.Color(anim.color);
+  const group = new T.Group(); group.name = 'habilidade-activation-pulse';
+  const ringMat = new T.MeshBasicMaterial({color, transparent:true, opacity:0,
+    depthWrite:false, depthTest:false, blending:T.AdditiveBlending, side:T.DoubleSide});
+  const ring = new T.Mesh(new T.TorusGeometry(.28, .035, 8, 32), ringMat);
+  ring.rotation.x = Math.PI / 2; ring.position.y = .245; ring.renderOrder = 60;
+  const haloMat = new T.MeshBasicMaterial({color, transparent:true, opacity:0,
+    depthWrite:false, depthTest:false, blending:T.AdditiveBlending});
+  const halo = new T.Mesh(new T.SphereGeometry(.24, 12, 8), haloMat);
+  halo.position.y = .62; halo.scale.set(.78, 1.45, .78); halo.renderOrder = 59;
+  group.add(ring, halo);
+  const particles = [];
+  for(let i=0; i<8; i++){
+    const mat = new T.MeshBasicMaterial({color, transparent:true, opacity:0,
+      depthWrite:false, depthTest:false, blending:T.AdditiveBlending});
+    const mote = new T.Mesh(new T.SphereGeometry(.035, 6, 5), mat);
+    mote.userData.phase = i / 8 * Math.PI * 2;
+    mote.userData.radius = .22 + (i % 2) * .10;
+    mote.renderOrder = 61; group.add(mote); particles.push(mote);
+  }
+  group.position.set(anim.x, 0, anim.y);
+  g3.scene.add(group);
+  anim.group = group; anim.ring = ring; anim.halo = halo; anim.particles = particles;
+  return true;
+}
+
+function _habilidadeFxUpdate3D(anim, now){
+  if(!g3 || !window.THREE) return;
+  if(!anim.group || anim.group.parent !== g3.scene){
+    _habilidadeFxDispose3D(anim);
+    if(!_habilidadeFxBuild3D(anim)) return;
+  }
+  const p = Math.max(0, Math.min(1, (now - anim.start) / HABILIDADE_FX_MS));
+  const rise = 1 - Math.pow(1 - p, 2);
+  const fade = Math.sin(Math.PI * p);
+  anim.ring.scale.setScalar(.72 + rise * 1.30);
+  anim.ring.material.opacity = .78 * fade;
+  anim.halo.position.y = .52 + rise * .28;
+  anim.halo.scale.set(.78 + rise * .35, 1.45 + rise * .35, .78 + rise * .35);
+  anim.halo.material.opacity = .22 * fade;
+  for(const mote of anim.particles){
+    const a = mote.userData.phase + p * Math.PI * .75;
+    const r = mote.userData.radius * (.75 + rise * .55);
+    mote.position.set(Math.cos(a) * r, .30 + rise * (.55 + (mote.userData.phase % 1) * .12), Math.sin(a) * r);
+    mote.scale.setScalar(.55 + fade * .85);
+    mote.material.opacity = .82 * fade;
+  }
+}
+
+function _habilidadeFxDraw2D(ctx, state, anim, now){
+  const key = `${anim.x},${anim.y}`;
+  const visivel = GS.isMaster() || state.test_mode || anim.playerId === GS.myPid
+    || (state.explored || []).some(([x,y]) => `${x},${y}` === key)
+    || (state.revealed || []).some(([x,y]) => `${x},${y}` === key);
+  if(!visivel) return;
+  const p = Math.max(0, Math.min(1, (now - anim.start) / HABILIDADE_FX_MS));
+  const rise = 1 - Math.pow(1 - p, 2), fade = Math.sin(Math.PI * p);
+  const cx = (anim.x + .5) * CELL, cy = (anim.y + .5) * CELL;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = fade;
+  const halo = ctx.createRadialGradient(cx, cy - CELL*.42 - rise*CELL*.18, 0,
+    cx, cy - CELL*.42 - rise*CELL*.18, CELL*.58);
+  halo.addColorStop(0, `${anim.color}99`); halo.addColorStop(1, `${anim.color}00`);
+  ctx.fillStyle = halo; ctx.beginPath();
+  ctx.arc(cx, cy - CELL*.42 - rise*CELL*.18, CELL*.58, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = anim.color; ctx.lineWidth = Math.max(2, CELL*.045);
+  ctx.beginPath(); ctx.ellipse(cx, cy + CELL*.28, CELL*(.22 + rise*.66), CELL*(.10 + rise*.23), 0, 0, Math.PI*2); ctx.stroke();
+  for(let i=0; i<8; i++){
+    const a = i/8*Math.PI*2 + p*.8, r = CELL*(.20 + rise*.34);
+    const px = cx + Math.cos(a)*r, py = cy - CELL*.06 + Math.sin(a)*r - rise*CELL*.44;
+    ctx.fillStyle = anim.color; ctx.beginPath(); ctx.arc(px, py, Math.max(1.5, CELL*.035*(1-fade*.25)), 0, Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function _habilidadeFxTick(now){
+  let active = false;
+  for(let i=_habilidadeAtivacaoAnims.length-1; i>=0; i--){
+    const anim = _habilidadeAtivacaoAnims[i];
+    if(now - anim.start >= HABILIDADE_FX_MS){
+      _habilidadeFxDispose3D(anim); _habilidadeAtivacaoAnims.splice(i, 1); continue;
+    }
+    active = true;
+    if(mode3D && g3) _habilidadeFxUpdate3D(anim, now);
+  }
+  if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
+  _habilidadeAtivacaoRaf = active ? _scheduleVisualFrame(_habilidadeFxTick) : null;
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // RELÂMPAGO — animação visual sincronizada pelo caminho do servidor
@@ -16859,14 +20275,14 @@ function _tickRelampago(now){
     active=true; if(mode3D&&g3) _relampagoUpdate3D(anim,now);
   }
   if(!mode3D&&GS.gameState&&active) renderMap(GS.gameState);
-  _relampagoRaf=active?requestAnimationFrame(_tickRelampago):null;
+  _relampagoRaf=active?_scheduleVisualFrame(_tickRelampago):null;
 }
 
 function _receberAnimacaoRelampago(msg){
   if(!msg||msg.spell_id!=='relampago') return;
   const anim=_relampagoAnimFromMessage(msg); if(!anim) return;
   _relampagoAnims.push(anim); _tocarSomRelampago(anim);
-  if(!_relampagoRaf) _relampagoRaf=requestAnimationFrame(_tickRelampago);
+  if(!_relampagoRaf) _relampagoRaf=_scheduleVisualFrame(_tickRelampago);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -17209,11 +20625,11 @@ function _tickBolaFogo(now){
   }
   const hasZone = !!GS.gameState && (GS.gameState.zonas_especiais || []).some(z => z.ativa && z.tipo === 'bola_fogo');
   if(!mode3D && GS.gameState && (active || hasZone)) renderMap(GS.gameState);
-  _bolaFogoRaf = (active || hasZone) ? requestAnimationFrame(_tickBolaFogo) : null;
+  _bolaFogoRaf = (active || hasZone) ? _scheduleVisualFrame(_tickBolaFogo) : null;
 }
 
 function _garantirLoopBolaFogo(){
-  if(!_bolaFogoRaf) _bolaFogoRaf = requestAnimationFrame(_tickBolaFogo);
+  if(!_bolaFogoRaf) _bolaFogoRaf = _scheduleVisualFrame(_tickBolaFogo);
 }
 
 function _receberAnimacaoBolaFogo(msg){
@@ -17481,11 +20897,11 @@ function _tickRaioGelo(now){
     active = true; if(mode3D && g3) _raioGeloUpdate3D(anim, now);
   }
   if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
-  _raioGeloRaf = active ? requestAnimationFrame(_tickRaioGelo) : null;
+  _raioGeloRaf = active ? _scheduleVisualFrame(_tickRaioGelo) : null;
 }
 
 function _garantirLoopRaioGelo(){
-  if(!_raioGeloRaf) _raioGeloRaf = requestAnimationFrame(_tickRaioGelo);
+  if(!_raioGeloRaf) _raioGeloRaf = _scheduleVisualFrame(_tickRaioGelo);
 }
 
 function _receberAnimacaoRaioGelo(msg){
@@ -17540,8 +20956,8 @@ function _raioDivinoDraw2D(ctx,state,anim,now){
   const p=_raioDivinoTarget(anim,state),pos=p?.pos||anim.target;if(!pos)return;const[tx,ty]=pos,key=`${tx},${ty}`,explored=new Set([...(state.explored||[]),...(state.revealed||[])].map(([x,y])=>`${x},${y}`));if(!explored.has(key)&&!GS.isMaster()&&!state.test_mode)return;const q=_raioDivinoProgress(anim,now),ox=anim.origin[0]*CELL+CELL/2,oy=anim.origin[1]*CELL+CELL/2,cx=tx*CELL+CELL/2,cy=ty*CELL+CELL/2,pulse=.5+.5*Math.sin(now/180+anim.seed);ctx.save();ctx.globalCompositeOperation='lighter';if(!q.impacting){const fx=ox+(cx-ox)*q.travel,fy=oy+(cy-oy)*q.travel;ctx.strokeStyle='rgba(255,238,150,.28)';ctx.shadowColor='#fff0a0';ctx.shadowBlur=CELL*.24;ctx.lineWidth=Math.max(4,CELL*.10);ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(fx,fy);ctx.stroke();ctx.fillStyle='rgba(255,250,210,.95)';ctx.beginPath();ctx.arc(fx,fy,CELL*(.08+.035*pulse),0,Math.PI*2);ctx.fill();}else{const e=Math.sin(Math.PI*Math.min(1,q.impact)),g=ctx.createLinearGradient(cx,cy-CELL*1.35,cx,cy+CELL*.18);g.addColorStop(0,'rgba(255,252,212,0)');g.addColorStop(.36,`rgba(255,247,173,${(.44+.22*pulse)*e})`);g.addColorStop(.78,`rgba(255,255,255,${(.82*e).toFixed(3)})`);g.addColorStop(1,'rgba(255,235,105,0)');ctx.fillStyle=g;ctx.fillRect(cx-CELL*.16,cy-CELL*1.35,CELL*.32,CELL*1.55);ctx.strokeStyle=`rgba(255,250,194,${(.75*e).toFixed(3)})`;ctx.lineWidth=Math.max(2,CELL*.035);ctx.beginPath();ctx.moveTo(cx-CELL*.10,cy-CELL*1.1);ctx.lineTo(cx+CELL*.05,cy-CELL*.52);ctx.lineTo(cx-CELL*.06,cy-.05*CELL);ctx.stroke();const rr=CELL*(.16+q.impact*.58);ctx.strokeStyle=`rgba(255,224,96,${(.55*e).toFixed(3)})`;ctx.beginPath();ctx.arc(cx,cy,rr,0,Math.PI*2);ctx.stroke();if(anim.holyTarget){ctx.strokeStyle=`rgba(255,255,220,${(.88*e).toFixed(3)})`;ctx.lineWidth=Math.max(2,CELL*.045);ctx.beginPath();ctx.arc(cx,cy,rr*1.34,0,Math.PI*2);ctx.stroke();for(let i=0;i<6;i++){const a=i*Math.PI/3+now/520;ctx.fillStyle=`rgba(255,235,122,${(.72*e).toFixed(3)})`;ctx.font=`${Math.round(CELL*.22)}px serif`;ctx.fillText('✦',cx+Math.cos(a)*rr*1.55,cy+Math.sin(a)*rr*1.55);}}}ctx.restore();
 }
 function _raioDivinoDrawForeground2D(ctx,state,anim,now){const p=_raioDivinoTarget(anim,state),pos=p?.pos||anim.target;if(!pos)return;const q=_raioDivinoProgress(anim,now);if(!q.impacting)return;const[tx,ty]=pos,cx=tx*CELL+CELL/2,cy=ty*CELL+CELL/2,e=Math.sin(Math.PI*Math.min(1,q.impact));ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';if(anim.holyTarget){ctx.fillStyle=`rgba(28,14,42,${(.55*e).toFixed(3)})`;ctx.beginPath();ctx.arc(cx,cy-CELL*.30,CELL*.20,0,Math.PI*2);ctx.fill();ctx.fillStyle=`rgba(255,242,158,${(.90*e).toFixed(3)})`;ctx.font=`bold ${Math.round(CELL*.20)}px serif`;ctx.fillText('✦',cx+CELL*.30,cy-CELL*.32);}ctx.restore();}
-function _tickRaioDivino(now){let active=false;for(let i=_raioDivinoAnims.length-1;i>=0;i--){const anim=_raioDivinoAnims[i],p=_raioDivinoProgress(anim,now);if(p.impacting&&!anim.impactPlayed){anim.impactPlayed=true;_tocarSomRaioDivinoImpacto(anim.holyTarget);_liberarDadosMagia();}if(p.finished&&now-anim.start>anim.travelMs+anim.impactMs+520){_pararSomRaioDivino(anim);_raioDivinoDispose3D(anim);_raioDivinoAnims.splice(i,1);continue;}active=true;if(mode3D&&g3)_raioDivinoUpdate3D(anim,now);}if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_raioDivinoRaf=active?requestAnimationFrame(_tickRaioDivino):null;}
-function _receberAnimacaoRaioDivino(msg){if(!msg||msg.spell_id!=='raio_divino')return;const id=msg.animation_id==null?null:String(msg.animation_id);if(msg.phase==='resolve'){const anim=_raioDivinoAnims.find(a=>a.animationId===id);if(anim){anim.holyTarget=!!msg.holy_target;anim.saveOk=!!msg.save_ok;anim.damage=Number(msg.damage)||0;anim.targetDead=!!msg.target_dead;}return;}const anim=_raioDivinoAnimFromMessage(msg);_raioDivinoAnims.push(anim);_tocarSomRaioDivino(anim);if(!_raioDivinoRaf)_raioDivinoRaf=requestAnimationFrame(_tickRaioDivino);}
+function _tickRaioDivino(now){let active=false;for(let i=_raioDivinoAnims.length-1;i>=0;i--){const anim=_raioDivinoAnims[i],p=_raioDivinoProgress(anim,now);if(p.impacting&&!anim.impactPlayed){anim.impactPlayed=true;_tocarSomRaioDivinoImpacto(anim.holyTarget);_liberarDadosMagia();}if(p.finished&&now-anim.start>anim.travelMs+anim.impactMs+520){_pararSomRaioDivino(anim);_raioDivinoDispose3D(anim);_raioDivinoAnims.splice(i,1);continue;}active=true;if(mode3D&&g3)_raioDivinoUpdate3D(anim,now);}if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_raioDivinoRaf=active?_scheduleVisualFrame(_tickRaioDivino):null;}
+function _receberAnimacaoRaioDivino(msg){if(!msg||msg.spell_id!=='raio_divino')return;const id=msg.animation_id==null?null:String(msg.animation_id);if(msg.phase==='resolve'){const anim=_raioDivinoAnims.find(a=>a.animationId===id);if(anim){anim.holyTarget=!!msg.holy_target;anim.saveOk=!!msg.save_ok;anim.damage=Number(msg.damage)||0;anim.targetDead=!!msg.target_dead;}return;}const anim=_raioDivinoAnimFromMessage(msg);_raioDivinoAnims.push(anim);_tocarSomRaioDivino(anim);if(!_raioDivinoRaf)_raioDivinoRaf=_scheduleVisualFrame(_tickRaioDivino);}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // JATO DE AR — cone contínuo de vento, poeira e energia mágica
@@ -17851,10 +21267,10 @@ function _tickJatoAr(now){
     active = true; if(mode3D && g3) _jatoArUpdate3D(anim, now);
   }
   if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
-  _jatoArRaf = active ? requestAnimationFrame(_tickJatoAr) : null;
+  _jatoArRaf = active ? _scheduleVisualFrame(_tickJatoAr) : null;
 }
 
-function _garantirLoopJatoAr(){ if(!_jatoArRaf) _jatoArRaf = requestAnimationFrame(_tickJatoAr); }
+function _garantirLoopJatoAr(){ if(!_jatoArRaf) _jatoArRaf = _scheduleVisualFrame(_tickJatoAr); }
 
 function _receberAnimacaoJatoAr(msg){
   if(!msg || msg.spell_id !== 'jato_ar') return;
@@ -18062,9 +21478,9 @@ function _soproDragaoDraw2D(ctx,state,anim,now){
 function _tickSoproDragao(now){
   let active=false;
   for(let i=_soproDragaoAnims.length-1;i>=0;i--){const anim=_soproDragaoAnims[i],p=_soproDragaoProgress(anim,now);if(p.impacting&&!anim.impactPlayed){anim.impactPlayed=true;_tocarSomSoproDragaoImpacto();_liberarDadosMagia();}if(now-anim.start>=anim.travelMs+anim.impactMs+760){_pararSomSoproDragao(anim);_soproDragaoDispose3D(anim);_soproDragaoAnims.splice(i,1);continue;}active=true;if(mode3D&&g3)_soproDragaoUpdate3D(anim,now);}
-  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_soproDragaoRaf=active?requestAnimationFrame(_tickSoproDragao):null;
+  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_soproDragaoRaf=active?_scheduleVisualFrame(_tickSoproDragao):null;
 }
-function _garantirLoopSoproDragao(){if(!_soproDragaoRaf)_soproDragaoRaf=requestAnimationFrame(_tickSoproDragao);}
+function _garantirLoopSoproDragao(){if(!_soproDragaoRaf)_soproDragaoRaf=_scheduleVisualFrame(_tickSoproDragao);}
 function _receberAnimacaoSoproDragao(msg){
   if(!msg||msg.spell_id!=='sopro_dragao')return;
   if(msg.phase==='resolve'){const id=msg.animation_id==null?null:String(msg.animation_id),anim=_soproDragaoAnims.find(a=>a.animationId===id);if(anim)anim.impacts=Array.isArray(msg.impacts)?msg.impacts:[];return;}
@@ -18181,9 +21597,9 @@ function _cuspeAcidoDraw2D(ctx,state,anim,now){
 
 function _tickCuspeAcido(now){
   let active=false;for(let i=_cuspeAcidoAnims.length-1;i>=0;i--){const anim=_cuspeAcidoAnims[i],p=_cuspeAcidoProgress(anim,now);if(p.impacting&&!anim.impactPlayed){anim.impactPlayed=true;_tocarSomCuspeAcidoImpacto();_liberarDadosMagia();}if(now-anim.start>=anim.travelMs+anim.impactMs+720){_pararSomCuspeAcido(anim);_cuspeAcidoDispose3D(anim);_cuspeAcidoAnims.splice(i,1);continue;}active=true;if(mode3D&&g3)_cuspeAcidoUpdate3D(anim,now);}
-  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_cuspeAcidoRaf=active?requestAnimationFrame(_tickCuspeAcido):null;
+  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_cuspeAcidoRaf=active?_scheduleVisualFrame(_tickCuspeAcido):null;
 }
-function _garantirLoopCuspeAcido(){if(!_cuspeAcidoRaf)_cuspeAcidoRaf=requestAnimationFrame(_tickCuspeAcido);}
+function _garantirLoopCuspeAcido(){if(!_cuspeAcidoRaf)_cuspeAcidoRaf=_scheduleVisualFrame(_tickCuspeAcido);}
 function _receberAnimacaoCuspeAcido(msg){
   if(!msg||msg.spell_id!=='cuspir_acido')return;
   if(msg.phase==='resolve'){const id=msg.animation_id==null?null:String(msg.animation_id),anim=_cuspeAcidoAnims.find(a=>a.animationId===id);if(anim){anim.damage=Number(msg.damage)||0;anim.save=!!msg.save;anim.residual=!!msg.residual;anim.corrosion=!!msg.corrosion;}return;}
@@ -18494,7 +21910,7 @@ function _tickDominarMente(now){
     active = true; if(mode3D && g3) _dominarMenteUpdate3D(anim, now);
   }
   if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
-  _dominarMenteRaf = active ? requestAnimationFrame(_tickDominarMente) : null;
+  _dominarMenteRaf = active ? _scheduleVisualFrame(_tickDominarMente) : null;
 }
 
 function _receberAnimacaoDominarMente(msg){
@@ -18506,16 +21922,16 @@ function _receberAnimacaoDominarMente(msg){
   }
   if(msg.phase === 'progress'){
     if(anim){ anim.success = true; anim.resolveAt = performance.now(); anim.controlRound = Number(msg.control_round) || anim.controlRound; anim.permanent = !!msg.permanent; anim.stateConfirmed = false; }
-    if(anim && !_dominarMenteRaf) _dominarMenteRaf = requestAnimationFrame(_tickDominarMente);
+    if(anim && !_dominarMenteRaf) _dominarMenteRaf = _scheduleVisualFrame(_tickDominarMente);
     return;
   }
   if(msg.phase === 'break'){
     if(anim){ anim.success = false; anim.breaking = true; anim.breakAt = performance.now(); anim.resolveAt = anim.breakAt; anim.stateConfirmed = false; }
-    if(anim && !_dominarMenteRaf) _dominarMenteRaf = requestAnimationFrame(_tickDominarMente);
+    if(anim && !_dominarMenteRaf) _dominarMenteRaf = _scheduleVisualFrame(_tickDominarMente);
     return;
   }
   const nextAnim = _dominarMenteAnimFromMessage(msg); _dominarMenteAnims.push(nextAnim); _tocarSomDominarMente(nextAnim);
-  if(!_dominarMenteRaf) _dominarMenteRaf = requestAnimationFrame(_tickDominarMente);
+  if(!_dominarMenteRaf) _dominarMenteRaf = _scheduleVisualFrame(_tickDominarMente);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -18711,7 +22127,7 @@ function _tickAbencoar(now){
     active = true; if(mode3D && g3) _abencoarUpdate3D(anim, now);
   }
   if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
-  _abencoarRaf = active ? requestAnimationFrame(_tickAbencoar) : null;
+  _abencoarRaf = active ? _scheduleVisualFrame(_tickAbencoar) : null;
 }
 
 function _receberAnimacaoAbencoar(msg){
@@ -18722,7 +22138,7 @@ function _receberAnimacaoAbencoar(msg){
     return;
   }
   const anim = _abencoarAnimFromMessage(msg); _abencoarAnims.push(anim); _tocarSomAbencoar(anim);
-  if(!_abencoarRaf) _abencoarRaf = requestAnimationFrame(_tickAbencoar);
+  if(!_abencoarRaf) _abencoarRaf = _scheduleVisualFrame(_tickAbencoar);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -18884,14 +22300,14 @@ function _abencoarArmaAddHit(anim, msg){
 function _tickAbencoarArma(now){
   let active=false;
   for(let i=_abencoarArmaAnims.length-1;i>=0;i--){ const anim=_abencoarArmaAnims[i], p=_abencoarArmaProgress(anim,now), persist=_abencoarArmaPersistente(anim,now); const keep=anim.success===true?(persist||!p.finished):!p.finished; if(!keep){_pararSomAbencoarArma(anim);_abencoarArmaDispose3D(anim);_abencoarArmaAnims.splice(i,1);continue;} active=true; if(mode3D&&g3) _abencoarArmaUpdate3D(anim,now); }
-  if(!mode3D&&GS.gameState&&active) renderMap(GS.gameState); _abencoarArmaRaf=active?requestAnimationFrame(_tickAbencoarArma):null;
+  if(!mode3D&&GS.gameState&&active) renderMap(GS.gameState); _abencoarArmaRaf=active?_scheduleVisualFrame(_tickAbencoarArma):null;
 }
 
 function _receberAnimacaoAbencoarArma(msg){
   if(!msg || msg.spell_id!=='abencoar_arma') return;
   if(msg.phase==='hit'){ const anim=_abencoarArmaAnims.find(a => String(a.targetId)===String(msg.attacker_id||msg.caster_id)); if(anim) _abencoarArmaAddHit(anim,msg); return; }
   if(msg.phase==='resolve'){ const id=msg.animation_id==null?null:String(msg.animation_id), anim=_abencoarArmaAnims.find(a=>a.animationId===id); if(anim){anim.success=!!msg.success;anim.resolveAt=performance.now();} return; }
-  const anim=_abencoarArmaAnimFromMessage(msg); _abencoarArmaAnims.push(anim); _tocarSomAbencoarArma(anim); if(!_abencoarArmaRaf) _abencoarArmaRaf=requestAnimationFrame(_tickAbencoarArma);
+  const anim=_abencoarArmaAnimFromMessage(msg); _abencoarArmaAnims.push(anim); _tocarSomAbencoarArma(anim); if(!_abencoarArmaRaf) _abencoarArmaRaf=_scheduleVisualFrame(_tickAbencoarArma);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -19120,7 +22536,7 @@ function _tickSono(now){
     active=true; if(mode3D&&g3) _sonoUpdate3D(anim,now);
   }
   if(!mode3D&&GS.gameState&&active) renderMap(GS.gameState);
-  _sonoRaf=active?requestAnimationFrame(_tickSono):null;
+  _sonoRaf=active?_scheduleVisualFrame(_tickSono):null;
 }
 
 function _receberAnimacaoSono(msg){
@@ -19132,7 +22548,7 @@ function _receberAnimacaoSono(msg){
     return;
   }
   if(_sonoAnims.some(a=>a.animationId===id)) return;
-  const anim=_sonoAnimFromMessage(msg); _sonoAnims.push(anim); _tocarSomSono(anim); if(!_sonoRaf) _sonoRaf=requestAnimationFrame(_tickSono);
+  const anim=_sonoAnimFromMessage(msg); _sonoAnims.push(anim); _tocarSomSono(anim); if(!_sonoRaf) _sonoRaf=_scheduleVisualFrame(_tickSono);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -19314,14 +22730,14 @@ function _silencioDrawForeground2D(ctx,state,anim,now){
 function _tickSilencio(now){
   let active=false;
   for(let i=_silencioAnims.length-1;i>=0;i--){const anim=_silencioAnims[i],zoneActive=_silencioAtivoNoEstado(anim,GS.gameState),grace=anim.resolved&&now-anim.resolveAt<1700;if(!zoneActive&&!grace&&anim.endingAt==null)anim.endingAt=now;if(anim.endingAt!=null&&now-anim.endingAt>=SILENCIO_FADE_MS){_pararSomSilencio(anim);_silencioDispose3D(anim);_silencioAnims.splice(i,1);continue;}active=true;if(mode3D&&g3)_silencioUpdate3D(anim,now);}
-  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_silencioRaf=active?requestAnimationFrame(_tickSilencio):null;
+  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_silencioRaf=active?_scheduleVisualFrame(_tickSilencio):null;
 }
 
 function _receberAnimacaoSilencio(msg){
   if(!msg||msg.spell_id!=='silencio')return;
   const id=msg.animation_id==null?null:String(msg.animation_id);
   if(msg.phase==='resolve'){const anim=_silencioAnims.find(a=>a.animationId===id);if(!anim)return;anim.resolved=true;anim.resolveAt=performance.now();return;}
-  if(_silencioAnims.some(a=>a.animationId===id))return;const anim=_silencioAnimFromMessage(msg);_silencioAnims.push(anim);_tocarSomSilencio(anim);if(!_silencioRaf)_silencioRaf=requestAnimationFrame(_tickSilencio);
+  if(_silencioAnims.some(a=>a.animationId===id))return;const anim=_silencioAnimFromMessage(msg);_silencioAnims.push(anim);_tocarSomSilencio(anim);if(!_silencioRaf)_silencioRaf=_scheduleVisualFrame(_tickSilencio);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -19432,13 +22848,13 @@ function _medoDrawForeground2D(ctx,state,anim,now){
 
 function _tickMedo(now){
   let active=false;for(let i=_medoAnims.length-1;i>=0;i--){const anim=_medoAnims[i],p=_medoProgress(anim,now),persist=_medoPersistente(anim,now);if(!anim.impactPlayed&&p.impacting){anim.impactPlayed=true;_liberarDadosMagia();}if(p.finished&&!persist){_pararSomMedo(anim);_medoDispose3D(anim);_medoAnims.splice(i,1);continue;}active=true;if(mode3D&&g3)_medoUpdate3D(anim,now);}
-  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_medoRaf=active?requestAnimationFrame(_tickMedo):null;
+  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_medoRaf=active?_scheduleVisualFrame(_tickMedo):null;
 }
 
 function _receberAnimacaoMedo(msg){
   if(!msg||msg.spell_id!=='medo')return;const id=msg.animation_id==null?null:String(msg.animation_id);
   if(msg.phase==='resolve'){const anim=_medoAnims.find(a=>a.animationId===id);if(!anim)return;anim.resolved=true;anim.resolveAt=performance.now();anim.frightenedIds=new Set((msg.frightened_ids||[]).map(String));anim.resistedIds=new Set((msg.resisted_ids||[]).map(String));return;}
-  if(_medoAnims.some(a=>a.animationId===id))return;const anim=_medoAnimFromMessage(msg);_medoAnims.push(anim);_tocarSomMedo(anim);if(!_medoRaf)_medoRaf=requestAnimationFrame(_tickMedo);
+  if(_medoAnims.some(a=>a.animationId===id))return;const anim=_medoAnimFromMessage(msg);_medoAnims.push(anim);_tocarSomMedo(anim);if(!_medoRaf)_medoRaf=_scheduleVisualFrame(_tickMedo);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -19517,15 +22933,15 @@ function _barreiraDrawForeground2D(ctx,state,anim,now){
 
 function _tickBarreira(now){
   let active=false;for(let i=_barreiraAnims.length-1;i>=0;i--){const anim=_barreiraAnims[i],p=_barreiraProgress(anim,now);if(!_barreiraAtiva(anim,now)&&anim.endingAt==null)anim.endingAt=now;if(anim.endingAt!=null&&now-anim.endingAt>=BARREIRA_FADE_MS){_pararSomBarreira(anim);_barreiraDispose3D(anim);_barreiraAnims.splice(i,1);continue;}anim.hitBursts=anim.hitBursts.filter(h=>now-h.start<700);active=true;if(mode3D&&g3)_barreiraUpdate3D(anim,now);}
-  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_barreiraRaf=active?requestAnimationFrame(_tickBarreira):null;
+  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_barreiraRaf=active?_scheduleVisualFrame(_tickBarreira):null;
 }
 
 function _receberAnimacaoBarreira(msg){
   if(!msg||msg.spell_id!=='barreira_arcana')return;const id=msg.animation_id==null?null:String(msg.animation_id);
-  if(msg.phase==='hit'){const targetId=String(msg.target_id||msg.caster_id),anim=_barreiraAnims.find(a=>String(a.targetId)===targetId&&a.endingAt==null)||_barreiraAnims.find(a=>a.animationId===id);if(anim){anim.hitBursts.push({start:performance.now(),absorbed:Number(msg.absorbed)||0,mesh:null});_tocarSomBarreiraHit();if(!_barreiraRaf)_barreiraRaf=requestAnimationFrame(_tickBarreira);}return;}
+  if(msg.phase==='hit'){const targetId=String(msg.target_id||msg.caster_id),anim=_barreiraAnims.find(a=>String(a.targetId)===targetId&&a.endingAt==null)||_barreiraAnims.find(a=>a.animationId===id);if(anim){anim.hitBursts.push({start:performance.now(),absorbed:Number(msg.absorbed)||0,mesh:null});_tocarSomBarreiraHit();if(!_barreiraRaf)_barreiraRaf=_scheduleVisualFrame(_tickBarreira);}return;}
   if(msg.phase==='resolve'){const anim=_barreiraAnims.find(a=>a.animationId===id);if(anim){anim.resolved=true;anim.resolveAt=performance.now();}return;}
   for(const old of _barreiraAnims)if(String(old.targetId)===String(msg.target_id||msg.caster_id)&&old.endingAt==null)old.endingAt=performance.now();
-  if(_barreiraAnims.some(a=>a.animationId===id))return;const anim=_barreiraAnimFromMessage(msg);_barreiraAnims.push(anim);_tocarSomBarreira(anim);if(!_barreiraRaf)_barreiraRaf=requestAnimationFrame(_tickBarreira);
+  if(_barreiraAnims.some(a=>a.animationId===id))return;const anim=_barreiraAnimFromMessage(msg);_barreiraAnims.push(anim);_tocarSomBarreira(anim);if(!_barreiraRaf)_barreiraRaf=_scheduleVisualFrame(_tickBarreira);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -19607,12 +23023,12 @@ function _maldicaoDrawForeground2D(ctx,state,anim,now){
   ctx.restore();
 }
 
-function _tickMaldicao(now){let active=false;for(let i=_maldicaoAnims.length-1;i>=0;i--){const anim=_maldicaoAnims[i],p=_maldicaoProgress(anim,now),persist=_maldicaoPersistente(anim,now);if(p.finished&&!persist){_pararSomMaldicao(anim);_maldicaoDispose3D(anim);_maldicaoAnims.splice(i,1);continue;}active=true;if(mode3D&&g3)_maldicaoUpdate3D(anim,now);}if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_maldicaoRaf=active?requestAnimationFrame(_tickMaldicao):null;}
+function _tickMaldicao(now){let active=false;for(let i=_maldicaoAnims.length-1;i>=0;i--){const anim=_maldicaoAnims[i],p=_maldicaoProgress(anim,now),persist=_maldicaoPersistente(anim,now);if(p.finished&&!persist){_pararSomMaldicao(anim);_maldicaoDispose3D(anim);_maldicaoAnims.splice(i,1);continue;}active=true;if(mode3D&&g3)_maldicaoUpdate3D(anim,now);}if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_maldicaoRaf=active?_scheduleVisualFrame(_tickMaldicao):null;}
 
 function _receberAnimacaoMaldicao(msg){
   if(!msg||msg.spell_id!=='amaldicoar')return;const id=msg.animation_id==null?null:String(msg.animation_id);
   if(msg.phase==='resolve'){const anim=_maldicaoAnims.find(a=>a.animationId===id);if(!anim)return;anim.resolved=true;anim.resolveAt=performance.now();anim.cursedIds=new Set((msg.cursed_ids||[]).map(String));return;}
-  if(_maldicaoAnims.some(a=>a.animationId===id))return;const anim=_maldicaoAnimFromMessage(msg);_maldicaoAnims.push(anim);_tocarSomMaldicao(anim);if(!_maldicaoRaf)_maldicaoRaf=requestAnimationFrame(_tickMaldicao);
+  if(_maldicaoAnims.some(a=>a.animationId===id))return;const anim=_maldicaoAnimFromMessage(msg);_maldicaoAnims.push(anim);_tocarSomMaldicao(anim);if(!_maldicaoRaf)_maldicaoRaf=_scheduleVisualFrame(_tickMaldicao);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -19687,17 +23103,17 @@ function _protecaoEnergiaDrawForeground2D(ctx,state,anim,now){
   ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';for(const hit of anim.hitBursts){const age=now-hit.start,u=Math.min(1,age/620),f=Math.sin(Math.PI*u),rc=_protecaoEnergiaColor(hit.element),x=cx,y=ty*CELL+CELL*.48;ctx.strokeStyle=`rgba(${(rc>>16)&255},${(rc>>8)&255},${rc&255},${(.90*f*fade).toFixed(3)})`;ctx.lineWidth=Math.max(2,CELL*.035);ctx.beginPath();ctx.arc(x,y,CELL*(.18+u*.45),0,Math.PI*2);ctx.stroke();ctx.fillStyle=`rgba(240,252,255,${(.95*f*fade).toFixed(3)})`;ctx.font=`bold ${Math.round(CELL*.16)}px monospace`;ctx.fillText(`-${hit.absorbed}`,x,y-CELL*(.50+u*.18));}ctx.restore();
 }
 
-function _tickProtecaoEnergia(now){_syncProtecaoEnergiaState(GS.gameState);let active=false;for(let i=_protecaoEnergiaAnims.length-1;i>=0;i--){const anim=_protecaoEnergiaAnims[i];if(anim.endingAt!=null&&now-anim.endingAt>PROTECAO_ENERGIA_FADE_MS){_pararSomProtecaoEnergia(anim);_protecaoEnergiaDispose3D(anim);_protecaoEnergiaAnims.splice(i,1);continue;}anim.hitBursts=anim.hitBursts.filter(h=>now-h.start<700);active=true;if(mode3D&&g3)_protecaoEnergiaUpdate3D(anim,now);}if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_protecaoEnergiaRaf=active?requestAnimationFrame(_tickProtecaoEnergia):null;}
+function _tickProtecaoEnergia(now){_syncProtecaoEnergiaState(GS.gameState);let active=false;for(let i=_protecaoEnergiaAnims.length-1;i>=0;i--){const anim=_protecaoEnergiaAnims[i];if(anim.endingAt!=null&&now-anim.endingAt>PROTECAO_ENERGIA_FADE_MS){_pararSomProtecaoEnergia(anim);_protecaoEnergiaDispose3D(anim);_protecaoEnergiaAnims.splice(i,1);continue;}anim.hitBursts=anim.hitBursts.filter(h=>now-h.start<700);active=true;if(mode3D&&g3)_protecaoEnergiaUpdate3D(anim,now);}if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_protecaoEnergiaRaf=active?_scheduleVisualFrame(_tickProtecaoEnergia):null;}
 
 function _receberAnimacaoProtecaoEnergia(msg){
   if(!msg||msg.spell_id!=='protecao_energia')return;const id=msg.animation_id==null?null:String(msg.animation_id),target=String(msg.target_id||msg.caster_id||'');
-  if(msg.phase==='start'){for(const old of _protecaoEnergiaAnims)if(String(old.targetId)===target&&old.endingAt==null)old.endingAt=performance.now();const anim=_protecaoEnergiaAnimFromMessage(msg);_protecaoEnergiaAnims.push(anim);_tocarSomProtecaoEnergia(anim);if(!_protecaoEnergiaRaf)_protecaoEnergiaRaf=requestAnimationFrame(_tickProtecaoEnergia);return;}
+  if(msg.phase==='start'){for(const old of _protecaoEnergiaAnims)if(String(old.targetId)===target&&old.endingAt==null)old.endingAt=performance.now();const anim=_protecaoEnergiaAnimFromMessage(msg);_protecaoEnergiaAnims.push(anim);_tocarSomProtecaoEnergia(anim);if(!_protecaoEnergiaRaf)_protecaoEnergiaRaf=_scheduleVisualFrame(_tickProtecaoEnergia);return;}
   const anim=_protecaoEnergiaAnims.find(a=>String(a.targetId)===target&&a.endingAt==null)||_protecaoEnergiaAnims.find(a=>a.animationId===id);if(!anim)return;
   if(msg.phase==='resolve'){anim.resolved=true;anim.resolveAt=performance.now();return;}
   if(msg.phase==='hit'){const absorbed=Math.max(0,Number(msg.absorbed)||0);anim.remaining=Math.max(0,Number(msg.remaining??anim.remaining));anim.lastElement=msg.element||anim.lastElement;anim.hitBursts.push({start:performance.now(),absorbed,element:anim.lastElement});_tocarSomProtecaoEnergiaHit(anim.lastElement);}
   else if(msg.phase==='refresh'){anim.remaining=Math.max(0,Number(msg.remaining??anim.max));anim.max=Math.max(1,Number(msg.reduction)||anim.max);anim.refreshAt=performance.now();}
   else if(msg.phase==='expire'){anim.endingAt=performance.now();_pararSomProtecaoEnergia(anim);}
-  if(!_protecaoEnergiaRaf)_protecaoEnergiaRaf=requestAnimationFrame(_tickProtecaoEnergia);
+  if(!_protecaoEnergiaRaf)_protecaoEnergiaRaf=_scheduleVisualFrame(_tickProtecaoEnergia);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -19864,7 +23280,7 @@ function _tickInvisibilidade(now){
   let active=false;
   for(let i=_invisibilidadeAnims.length-1;i>=0;i--){const anim=_invisibilidadeAnims[i];if(anim.endingAt!=null&&now-anim.endingAt>INVISIBILIDADE_END_MS){_pararSomInvisibilidade(anim);_invisibilidadeDispose3D(anim);_invisibilidadeAnims.splice(i,1);continue;}active=true;if(mode3D&&g3)_invisibilidadeUpdate3D(anim,now);}
   if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);
-  _invisibilidadeRaf=active?requestAnimationFrame(_tickInvisibilidade):null;
+  _invisibilidadeRaf=active?_scheduleVisualFrame(_tickInvisibilidade):null;
 }
 
 function _receberAnimacaoInvisibilidade(msg){
@@ -19874,12 +23290,12 @@ function _receberAnimacaoInvisibilidade(msg){
     let anim=_invisibilidadeAnims.slice().reverse().find(a=>String(a.casterId)===String(msg.caster_id)&&a.endingAt==null);
     if(!anim){anim=_invisibilidadeAnimFromMessage(msg);anim.resolved=true;_invisibilidadeAnims.push(anim);}
     anim.endingAt=now;_pararSomInvisibilidade(anim);_tocarSomRupturaInvisibilidade();
-    if(!_invisibilidadeRaf)_invisibilidadeRaf=requestAnimationFrame(_tickInvisibilidade);return;
+    if(!_invisibilidadeRaf)_invisibilidadeRaf=_scheduleVisualFrame(_tickInvisibilidade);return;
   }
   let anim=_invisibilidadeAnims.find(a=>a.animationId===id);
   if(!anim){anim=_invisibilidadeAnimFromMessage(msg);_invisibilidadeAnims.push(anim);_tocarSomInvisibilidade(anim);}
   if(msg.phase==='resolve'){anim.resolved=true;anim.resolveAt=now;}
-  if(!_invisibilidadeRaf)_invisibilidadeRaf=requestAnimationFrame(_tickInvisibilidade);
+  if(!_invisibilidadeRaf)_invisibilidadeRaf=_scheduleVisualFrame(_tickInvisibilidade);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -20090,15 +23506,20 @@ function _tickMantoEscuridao(now){
   let active = false;
   for(let i = _mantoEscuridaoAnims.length - 1; i >= 0; i--){
     const anim = _mantoEscuridaoAnims[i], zoneActive = _mantoEscuridaoAtivoNoEstado(anim, GS.gameState);
-    if(!zoneActive && anim.endingAt == null) anim.endingAt = now;
+    // O evento de animação chega antes do game_state que contém a zona. Dê
+    // tempo para essa confirmação autoritativa chegar; sem essa tolerância a
+    // animação iniciava e era marcada como expirada no primeiro frame.
+    const aguardandoZona = !zoneActive && anim.endingAt == null
+      && now - anim.start < Math.max(1500, anim.expandMs + 320);
+    if(!zoneActive && !aguardandoZona && anim.endingAt == null) anim.endingAt = now;
     if(anim.endingAt != null && now - anim.endingAt >= MANTO_ESCURIDAO_DEFAULT_END_MS){ _pararSomMantoEscuridao(anim); _mantoEscuridaoDispose3D(anim); _mantoEscuridaoAnims.splice(i, 1); continue; }
     active = true; if(mode3D && g3) _mantoEscuridaoUpdate3D(anim, now);
   }
   if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
-  _mantoEscuridaoRaf = active ? requestAnimationFrame(_tickMantoEscuridao) : null;
+  _mantoEscuridaoRaf = active ? _scheduleVisualFrame(_tickMantoEscuridao) : null;
 }
 
-function _garantirLoopMantoEscuridao(){ if(!_mantoEscuridaoRaf) _mantoEscuridaoRaf = requestAnimationFrame(_tickMantoEscuridao); }
+function _garantirLoopMantoEscuridao(){ if(!_mantoEscuridaoRaf) _mantoEscuridaoRaf = _scheduleVisualFrame(_tickMantoEscuridao); }
 
 function _receberAnimacaoMantoEscuridao(msg){
   if(!msg || msg.spell_id !== 'manto_escuridao' || msg.phase === 'resolve') return;
@@ -20110,11 +23531,6 @@ function _receberAnimacaoMantoEscuridao(msg){
       if(anim.endingAt == null) anim.endingAt = performance.now();
     }
     _garantirLoopMantoEscuridao();
-    return;
-  }
-  if(abid === 'cauda_varredora'){
-    _iniciarMiraMestre({kind:'ability',caster:m,id:abid,range:1,rearAttack:true,
-      icon:ab.icon||ab.icone||'🦂',label:ab.name||'Cauda Varredora'});
     return;
   }
   if(_mantoEscuridaoAnims.some(a => a.animationId === id)) return;
@@ -20336,7 +23752,7 @@ function _tickClarividencia(now){
     active = true; if(mode3D && g3) _clarividenciaUpdate3D(anim, now);
   }
   if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
-  _clarividenciaRaf = active ? requestAnimationFrame(_tickClarividencia) : null;
+  _clarividenciaRaf = active ? _scheduleVisualFrame(_tickClarividencia) : null;
 }
 
 function _receberAnimacaoClarividencia(msg){
@@ -20349,12 +23765,12 @@ function _receberAnimacaoClarividencia(msg){
       anim.tiles = Array.isArray(msg.tiles) ? msg.tiles.filter(t => Array.isArray(t) && t.length >= 2).map(t => [Number(t[0]), Number(t[1])]) : [];
       anim.monsterIds = (msg.monster_ids || []).map(String); anim.trapCount = Number(msg.trap_count) || 0; anim.secretCount = Number(msg.secret_count) || 0; anim.lockedRooms = Number(msg.locked_rooms) || 0;
     }
-    if(anim && !_clarividenciaRaf) _clarividenciaRaf = requestAnimationFrame(_tickClarividencia);
+    if(anim && !_clarividenciaRaf) _clarividenciaRaf = _scheduleVisualFrame(_tickClarividencia);
     return;
   }
   if(_clarividenciaAnims.some(a => a.animationId === id)) return;
   const anim = _clarividenciaAnimFromMessage(msg); _clarividenciaAnims.push(anim); _tocarSomClarividencia(anim);
-  if(!_clarividenciaRaf) _clarividenciaRaf = requestAnimationFrame(_tickClarividencia);
+  if(!_clarividenciaRaf) _clarividenciaRaf = _scheduleVisualFrame(_tickClarividencia);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -20556,7 +23972,7 @@ function _tickRegeneracao(now){
     active = true; if(mode3D && g3) _regeneracaoUpdate3D(anim, now);
   }
   if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
-  _regeneracaoRaf = active ? requestAnimationFrame(_tickRegeneracao) : null;
+  _regeneracaoRaf = active ? _scheduleVisualFrame(_tickRegeneracao) : null;
 }
 
 function _receberAnimacaoRegeneracao(msg){
@@ -20566,7 +23982,7 @@ function _receberAnimacaoRegeneracao(msg){
     for(const old of _regeneracaoAnims) if(String(old.targetId) === String(msg.target_id) && old.endingAt == null) old.endingAt = performance.now();
     if(_regeneracaoAnims.some(a => a.animationId === id)) return;
     const anim = _regeneracaoAnimFromMessage(msg); _regeneracaoAnims.push(anim); _tocarSomRegeneracao(anim);
-    if(!_regeneracaoRaf) _regeneracaoRaf = requestAnimationFrame(_tickRegeneracao);
+    if(!_regeneracaoRaf) _regeneracaoRaf = _scheduleVisualFrame(_tickRegeneracao);
     return;
   }
   const anim = _regeneracaoAnims.find(a => a.animationId === id); if(!anim) return;
@@ -20574,7 +23990,7 @@ function _receberAnimacaoRegeneracao(msg){
   else if(msg.phase === 'tick'){ anim.pool = Number(msg.pool) || 0; _regeneracaoAddBurst(anim, msg, false); }
   else if(msg.phase === 'revive'){ anim.pool = 0; _regeneracaoAddBurst(anim, msg, true); anim.endingAt = performance.now() + 650; }
   else if(msg.phase === 'expire'){ anim.pool = 0; anim.endingAt = performance.now(); }
-  if(!_regeneracaoRaf) _regeneracaoRaf = requestAnimationFrame(_tickRegeneracao);
+  if(!_regeneracaoRaf) _regeneracaoRaf = _scheduleVisualFrame(_tickRegeneracao);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -20680,8 +24096,8 @@ function _tocarSomVelocidade(anim){
   const ctx=getAudioContext();if(!ctx||ctx.state!=='running')return;try{const now=ctx.currentTime,bus=_sfxBus(),dur=anim.riseMs/1000+.35,g=ctx.createGain(),o=ctx.createOscillator();o.type='sine';o.frequency.setValueAtTime(260,now);o.frequency.exponentialRampToValueAtTime(920,now+dur);g.gain.setValueAtTime(.001,now);g.gain.exponentialRampToValueAtTime(.055,now+.08);g.gain.exponentialRampToValueAtTime(.001,now+dur);o.connect(g);g.connect(bus);o.start(now);o.stop(now+dur+.03);anim.sound={ctx,nodes:[o],gains:[g]};}catch(e){}
 }
 function _pararSomVelocidade(anim){if(!anim.sound)return;try{const now=anim.sound.ctx.currentTime;for(const n of anim.sound.nodes)n.stop(now+.01);for(const g of anim.sound.gains)g.disconnect();}catch(e){}anim.sound=null;}
-function _tickVelocidade(now){let active=false;for(let i=_velocidadeAnims.length-1;i>=0;i--){const a=_velocidadeAnims[i];if(a.resolved&&!_velocidadeAtiva(a)&&now-a.resolveAt>1200&&a.endingAt==null)a.endingAt=now;if(a.endingAt!=null&&now-a.endingAt>=VELOCIDADE_FADE_MS){_pararSomVelocidade(a);_velocidadeDispose3D(a);_velocidadeAnims.splice(i,1);continue;}active=true;if(mode3D&&g3)_velocidadeUpdate3D(a,now);}if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_velocidadeRaf=active?requestAnimationFrame(_tickVelocidade):null;}
-function _receberAnimacaoVelocidade(msg){if(!msg||msg.spell_id!=='velocidade')return;const id=msg.animation_id==null?null:String(msg.animation_id);if(msg.phase==='start'){for(const old of _velocidadeAnims)if(String(old.targetId)===String(msg.target_id)&&old.endingAt==null)old.endingAt=performance.now();if(_velocidadeAnims.some(a=>a.animationId===id))return;const a=_velocidadeAnimFromMessage(msg);_velocidadeAnims.push(a);_tocarSomVelocidade(a);if(!_velocidadeRaf)_velocidadeRaf=requestAnimationFrame(_tickVelocidade);return;}const a=_velocidadeAnims.find(x=>x.animationId===id);if(!a)return;if(msg.phase==='resolve'){a.resolved=true;a.resolveAt=performance.now();a.durationRounds=Number(msg.duration_rounds)||a.durationRounds;}else if(msg.phase==='expire'){a.endingAt=performance.now();}if(!_velocidadeRaf)_velocidadeRaf=requestAnimationFrame(_tickVelocidade);}
+function _tickVelocidade(now){let active=false;for(let i=_velocidadeAnims.length-1;i>=0;i--){const a=_velocidadeAnims[i];if(a.resolved&&!_velocidadeAtiva(a)&&now-a.resolveAt>1200&&a.endingAt==null)a.endingAt=now;if(a.endingAt!=null&&now-a.endingAt>=VELOCIDADE_FADE_MS){_pararSomVelocidade(a);_velocidadeDispose3D(a);_velocidadeAnims.splice(i,1);continue;}active=true;if(mode3D&&g3)_velocidadeUpdate3D(a,now);}if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_velocidadeRaf=active?_scheduleVisualFrame(_tickVelocidade):null;}
+function _receberAnimacaoVelocidade(msg){if(!msg||msg.spell_id!=='velocidade')return;const id=msg.animation_id==null?null:String(msg.animation_id);if(msg.phase==='start'){for(const old of _velocidadeAnims)if(String(old.targetId)===String(msg.target_id)&&old.endingAt==null)old.endingAt=performance.now();if(_velocidadeAnims.some(a=>a.animationId===id))return;const a=_velocidadeAnimFromMessage(msg);_velocidadeAnims.push(a);_tocarSomVelocidade(a);if(!_velocidadeRaf)_velocidadeRaf=_scheduleVisualFrame(_tickVelocidade);return;}const a=_velocidadeAnims.find(x=>x.animationId===id);if(!a)return;if(msg.phase==='resolve'){a.resolved=true;a.resolveAt=performance.now();a.durationRounds=Number(msg.duration_rounds)||a.durationRounds;}else if(msg.phase==='expire'){a.endingAt=performance.now();}if(!_velocidadeRaf)_velocidadeRaf=_scheduleVisualFrame(_tickVelocidade);}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // LENTIDÃO — onda violeta, névoa pesada e pós-imagens atrasadas
@@ -20700,8 +24116,8 @@ function _lentidaoDraw2D(ctx,state,a,now){const explored=new Set([...(state.expl
 function _lentidaoDrawForeground2D(ctx,state,a,now){const explored=new Set([...(state.explored||[]),...(state.revealed||[])].map(([x,y])=>`${x},${y}`)),key=`${a.center[0]},${a.center[1]}`;if(!explored.has(key)&&!GS.isMaster()&&!state.test_mode)return;const p=_lentidaoProgress(a,now),fade=a.endingAt==null?1:Math.max(0,1-(now-a.endingAt)/LENTIDAO_FADE_MS),ox=a.origin[0]*CELL+CELL/2,oy=a.origin[1]*CELL+CELL/2,cx=a.center[0]*CELL+CELL/2,cy=a.center[1]*CELL+CELL*.34;ctx.save();ctx.globalCompositeOperation='lighter';const dx=cx-ox,dy=cy-oy,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len,pts=[];for(let i=0;i<=18;i++){const u=(p.impacting?1:p.travel)*i/18,bend=Math.sin(u*Math.PI)*Math.sin(now/170+i)*CELL*.08;pts.push([ox+dx*u+nx*bend,oy+dy*u+ny*bend]);}if(pts.length>1&&(!p.expanded||!a.resolved)){ctx.shadowColor='#703db6';ctx.shadowBlur=CELL*.22;ctx.strokeStyle=`rgba(65,30,132,${(.62*fade).toFixed(3)})`;ctx.lineWidth=Math.max(6,CELL*.14);ctx.beginPath();ctx.moveTo(...pts[0]);for(let i=1;i<pts.length;i++)ctx.lineTo(...pts[i]);ctx.stroke();ctx.shadowBlur=CELL*.08;ctx.strokeStyle=`rgba(200,161,255,${(.72*fade).toFixed(3)})`;ctx.lineWidth=Math.max(2,CELL*.045);ctx.stroke();}for(const e of a.targets){const pos=_lentidaoTargetPos(a,e),slow=a.slowedIds.includes(String(e.id));if(!slow)continue;const tx=pos[0]*CELL+CELL/2,ty=pos[1]*CELL+CELL*.34;for(let i=0;i<3;i++){const off=(i-1)*CELL*.11;ctx.strokeStyle=`rgba(176,130,236,${(.24-.04*i)*fade})`;ctx.lineWidth=Math.max(1.5,CELL*.025);ctx.beginPath();ctx.moveTo(tx-CELL*.18+off,ty+CELL*.20);ctx.lineTo(tx+CELL*.18+off,ty+CELL*.20);ctx.stroke();}ctx.font=`bold ${Math.max(11,CELL*.13)}px sans-serif`;ctx.textAlign='center';ctx.fillStyle=`rgba(218,190,255,${(.58*fade).toFixed(3)})`;ctx.fillText('⌛',tx,ty-CELL*.15);}ctx.restore();}
 function _tocarSomLentidao(a){const ctx=getAudioContext();if(!ctx||ctx.state!=='running')return;try{const now=ctx.currentTime,bus=_sfxBus(),dur=(a.travelMs+a.expandMs)/1000+.4,g=ctx.createGain(),o=ctx.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(120,now);o.frequency.exponentialRampToValueAtTime(46,now+dur);g.gain.setValueAtTime(.001,now);g.gain.exponentialRampToValueAtTime(.06,now+.12);g.gain.exponentialRampToValueAtTime(.001,now+dur);o.connect(g);g.connect(bus);o.start(now);o.stop(now+dur+.03);a.sound={ctx,nodes:[o],gains:[g]};}catch(e){}}
 function _pararSomLentidao(a){if(!a.sound)return;try{const now=a.sound.ctx.currentTime;for(const n of a.sound.nodes)n.stop(now+.01);for(const g of a.sound.gains)g.disconnect();}catch(e){}a.sound=null;}
-function _tickLentidao(now){let active=false;for(let i=_lentidaoAnims.length-1;i>=0;i--){const a=_lentidaoAnims[i],p=_lentidaoProgress(a,now);if(p.impacting&&!a.impactPlayed){a.impactPlayed=true;_liberarDadosMagia();}if(a.resolved&&!_lentidaoAtiva(a)&&now-a.resolveAt>1400&&a.endingAt==null)a.endingAt=now;if(a.endingAt!=null&&now-a.endingAt>=LENTIDAO_FADE_MS){_pararSomLentidao(a);_lentidaoDispose3D(a);_lentidaoAnims.splice(i,1);continue;}active=true;if(mode3D&&g3)_lentidaoUpdate3D(a,now);}if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_lentidaoRaf=active?requestAnimationFrame(_tickLentidao):null;}
-function _receberAnimacaoLentidao(msg){if(!msg||msg.spell_id!=='lentidao')return;const id=msg.animation_id==null?null:String(msg.animation_id);if(msg.phase==='start'){for(const old of _lentidaoAnims)if(old.endingAt==null)old.endingAt=performance.now();if(_lentidaoAnims.some(a=>a.animationId===id))return;const a=_lentidaoAnimFromMessage(msg);_lentidaoAnims.push(a);_tocarSomLentidao(a);if(!_lentidaoRaf)_lentidaoRaf=requestAnimationFrame(_tickLentidao);return;}const a=_lentidaoAnims.find(x=>x.animationId===id);if(!a)return;if(msg.phase==='resolve'){a.resolved=true;a.resolveAt=performance.now();a.slowedIds=(msg.slowed_ids||[]).map(String);a.resistedIds=(msg.resisted_ids||[]).map(String);}if(!_lentidaoRaf)_lentidaoRaf=requestAnimationFrame(_tickLentidao);}
+function _tickLentidao(now){let active=false;for(let i=_lentidaoAnims.length-1;i>=0;i--){const a=_lentidaoAnims[i],p=_lentidaoProgress(a,now);if(p.impacting&&!a.impactPlayed){a.impactPlayed=true;_liberarDadosMagia();}if(a.resolved&&!_lentidaoAtiva(a)&&now-a.resolveAt>1400&&a.endingAt==null)a.endingAt=now;if(a.endingAt!=null&&now-a.endingAt>=LENTIDAO_FADE_MS){_pararSomLentidao(a);_lentidaoDispose3D(a);_lentidaoAnims.splice(i,1);continue;}active=true;if(mode3D&&g3)_lentidaoUpdate3D(a,now);}if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_lentidaoRaf=active?_scheduleVisualFrame(_tickLentidao):null;}
+function _receberAnimacaoLentidao(msg){if(!msg||msg.spell_id!=='lentidao')return;const id=msg.animation_id==null?null:String(msg.animation_id);if(msg.phase==='start'){for(const old of _lentidaoAnims)if(old.endingAt==null)old.endingAt=performance.now();if(_lentidaoAnims.some(a=>a.animationId===id))return;const a=_lentidaoAnimFromMessage(msg);_lentidaoAnims.push(a);_tocarSomLentidao(a);if(!_lentidaoRaf)_lentidaoRaf=_scheduleVisualFrame(_tickLentidao);return;}const a=_lentidaoAnims.find(x=>x.animationId===id);if(!a)return;if(msg.phase==='resolve'){a.resolved=true;a.resolveAt=performance.now();a.slowedIds=(msg.slowed_ids||[]).map(String);a.resistedIds=(msg.resisted_ids||[]).map(String);}if(!_lentidaoRaf)_lentidaoRaf=_scheduleVisualFrame(_tickLentidao);}
 
 function restoreTileSpacing3D(){
   if(_tileFootprint3D === 0.94) return;
@@ -20756,8 +24172,54 @@ function _assinaturaVisualTabuleiro3D(state){
 }
 
 // Each TILE_FLOOR cell → chunky physical floor piece (thickness 0.22, gap 0.07/side)
-// Each TILE_WALL cell → tall stone wall column (height 1.75, same footprint)
+// Each TILE_WALL cell → tall stone wall column, or an organic dune mound when
+// the authored wall material is duna_deserto.
 // Dark table surface underneath → gap between pieces = visible grid lines
+
+// ── Pool preguiçoso de overlay por casa ──────────────────────────────────────
+// Cada família de realce (movimento, ataque, alcance de magia, prévias do
+// mestre, fogo persistente…) cobria UMA casa de cada vez, mas era construída
+// para TODAS as casas de chão ao entrar na masmorra. Num mapa 44×40 isso dava
+// 37.586 nós na cena com ~140 visíveis; como o renderer percorre a árvore
+// inteira a cada quadro, o custo aparecia mesmo sem nada desenhado
+// (8,20 ms/quadro com 2 draw calls). Congelar `matrixAutoUpdate` nesses nós não
+// mudou nada (7,05 → 6,89 ms): o peso é a TRAVESSIA, não a conta de matriz —
+// por isso a saída é reduzir a QUANTIDADE de nós.
+//
+// O pool nasce vazio: o mesh de uma casa é criado na primeira vez que ela
+// precisa aparecer e fica em cache até a masmorra ser trocada (init3D refaz a
+// cena inteira). Medido no mesmo mapa: 37.586 → ~3.900 nós, 8,20 → ~1,2 ms.
+//
+// ATENÇÃO: `_make` é não-enumerável de propósito — os consumidores varrem o
+// pool com `for…in` / `Object.entries`, e a fábrica não pode aparecer ali.
+function _mkOverlayPool(make){
+  const pool = {};
+  Object.defineProperty(pool, '_make', { value: make, enumerable: false, writable: true });
+  return pool;
+}
+
+// Devolve (criando na primeira vez) o mesh da casa `key`. A fábrica devolve
+// null para casa que não é elegível — era o que o filtro de tipo de casa do
+// laço antigo fazia, e continua sendo load-bearing: os conjuntos de área de
+// magia incluem paredes, que nunca podem receber o realce.
+function _overlayAt(pool, key){
+  if(!pool) return null;
+  const pronto = pool[key];
+  if(pronto !== undefined) return pronto;
+  const feito = pool._make ? pool._make(key) : null;
+  pool[key] = feito || null;
+  return feito || null;
+}
+
+// Mostra exatamente as casas de `keys` e esconde todo o resto já criado.
+// Substitui o antigo `for(const k in dict) dict[k].visible = set.has(k)`, que
+// dependia de o dicionário já conter a casa.
+function _overlayShowOnly(pool, keys){
+  if(!pool) return;
+  for(const k in pool){ const m = pool[k]; if(m) m.visible = false; }
+  if(!keys) return;
+  for(const k of keys){ const m = _overlayAt(pool, k); if(m) m.visible = true; }
+}
 
 function init3D(state){
   if(!window.THREE){ console.error('Three.js not loaded'); return; }
@@ -20789,7 +24251,9 @@ function init3D(state){
 
   // ── Renderer
   const renderer = new T.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  // Limita a resolução interna a 1,5×: mantém nitidez no 3D, mas evita que
+  // telas HiDPI renderizem milhões de pixels extras a cada quadro.
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
   renderer.setSize(CW, CH);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type    = T.PCFShadowMap   /* PCF simples: ~igual visualmente, bem mais barato que PCFSoft */;
@@ -20867,6 +24331,12 @@ function init3D(state){
     switch(matId){
       case 'grama':         paintGrass(c,0,0,S,r); break;
       case 'terra':         paintDirt(c,0,0,S,r); break;
+      case 'areia_deserto': paintSand(c,0,0,S,r); break;
+      case 'lava':          paintLava(c,0,0,S,r); break;
+      case 'pantano':       paintSwamp(c,0,0,S,r); break;
+      case 'duna_deserto':  paintSand(c,0,0,S,r); break;
+      case 'rocha':         paintRock(c,0,0,S,r); break;
+      case 'rocha_marrom':  paintRock(c,0,0,S,r,true); break;
       case 'pedra_negra':   paintStone(c,0,0,S,r,[30,28,34]); break;
       case 'enegrecida':    paintBrick(c,0,0,S,r,[22,21,26],'#070709'); break;
       case 'pedra_caverna': paintCave(c,0,0,S,r); break;
@@ -20891,7 +24361,7 @@ function init3D(state){
         break;
       }
     }
-    if(matId==='grama'||matId==='terra'||matId==='pedra_negra'||matId==='enegrecida'||matId==='pedra_caverna'||matId==='desmoronada'||matId==='entulho'||matId==='madeira'||matId==='madeira_escura'){
+    if(matId==='grama'||matId==='terra'||matId==='areia_deserto'||matId==='lava'||matId==='pantano'||matId==='duna_deserto'||matId==='rocha'||matId==='rocha_marrom'||matId==='pedra_negra'||matId==='enegrecida'||matId==='pedra_caverna'||matId==='desmoronada'||matId==='entulho'||matId==='madeira'||matId==='madeira_escura'){
       tex=new T.CanvasTexture(cv); tex.wrapS=tex.wrapT=T.RepeatWrapping;
       // Canvas é desenhado em sRGB. Declarar isso impede o Three.js de tratar
       // os verdes/marrons como cores lineares lavadas no renderizador 3D.
@@ -20906,7 +24376,101 @@ function init3D(state){
   // lado, encosta exatamente na célula vizinha para parecer uma superfície
   // contínua, mesmo quando é construída com várias casas do mapa.
   const waterFloorGeo = new T.BoxGeometry(1, TH, 1);
+  const lavaFloorGeo = new T.BoxGeometry(1, TH, 1);
+  const swampFloorGeo = new T.BoxGeometry(1, TH, 1);
+  const lavaBubbleMeshes = [];
+  const lavaBubbleGeo = new T.SphereGeometry(0.032, 8, 6);
+  const lavaBubbleMat = new T.MeshStandardMaterial({
+    color: 0xffa51f, emissive: 0xff3a00, emissiveIntensity: 1.5,
+    roughness: 0.28, metalness: 0.02, transparent: true, opacity: 0.82,
+    depthWrite: false
+  });
   const wallGeo  = new T.BoxGeometry(TW, WH, TW);
+  function makeDuneWallGeo(gx, gy){
+    const r = _rng(((gx * 73856093) ^ (gy * 19349663) ^ 0xD00DE) >>> 0);
+    const segs = 14;
+    const height = 1.18 + r() * .42;
+    const rings = [
+      { radius:.18, y:height*.86 },
+      { radius:.40, y:height*.62 },
+      { radius:.63, y:height*.31 },
+      { radius:.80, y:.035 },
+    ];
+    const pos = [0, height, 0], uv = [.5, 1];
+    const starts = [];
+    for(const ring of rings){
+      starts.push(pos.length / 3);
+      for(let i=0;i<segs;i++){
+        const a = i/segs*Math.PI*2;
+        const wobble = .94 + r()*.12;
+        const rx = ring.radius * wobble * (1 + .06*Math.sin(a*3 + gx));
+        const rz = ring.radius * (1.02 - .08*Math.cos(a*2 + gy)) * wobble;
+        pos.push(Math.cos(a)*rx, ring.y, Math.sin(a)*rz);
+        uv.push(.5 + Math.cos(a)*ring.radius/.9, ring.y/height);
+      }
+    }
+    const bottom = pos.length / 3;
+    pos.push(0, 0, 0); uv.push(.5, 0);
+    const idx = [];
+    for(let i=0;i<segs;i++) idx.push(0, starts[0]+i, starts[0]+(i+1)%segs);
+    for(let ring=0;ring<rings.length-1;ring++){
+      const a=starts[ring], b=starts[ring+1];
+      for(let i=0;i<segs;i++){
+        const n=(i+1)%segs;
+        idx.push(a+i,b+i,a+n, a+n,b+i,b+n);
+      }
+    }
+    const last=starts[starts.length-1];
+    for(let i=0;i<segs;i++) idx.push(bottom,last+(i+1)%segs,last+i);
+    const geo = new T.BufferGeometry();
+    geo.setAttribute('position', new T.Float32BufferAttribute(pos,3));
+    geo.setAttribute('uv', new T.Float32BufferAttribute(uv,2));
+    geo.setIndex(idx); geo.computeVertexNormals();
+    return geo;
+  }
+  function makeRockWallGeo(gx, gy){
+    const r = _rng(((gx * 83492791) ^ (gy * 29712133) ^ 0xC0BA17) >>> 0);
+    const segs = 9;
+    const height = 1.40 + r() * .30;
+    const rings = [
+      { radius:.58, y:.035 },
+      { radius:.54, y:height*.28 },
+      { radius:.43, y:height*.62 },
+      { radius:.28, y:height*.88 },
+    ];
+    const pos = [], uv = [], starts = [];
+    const cx = (r()-.5)*.12, cz = (r()-.5)*.12;
+    for(const ring of rings){
+      starts.push(pos.length / 3);
+      for(let i=0;i<segs;i++){
+        const a=i/segs*Math.PI*2;
+        const wobble=.80+r()*.36;
+        const facet = 1 + .10*Math.sin(a*2 + gx*.7) + .07*Math.cos(a*3 + gy);
+        const rx=ring.radius*wobble*facet, rz=ring.radius*(.86+r()*.25)*wobble;
+        pos.push(cx+Math.cos(a)*rx, ring.y + (r()-.5)*.035, cz+Math.sin(a)*rz);
+        uv.push(.5+Math.cos(a)*.5, ring.y/height);
+      }
+    }
+    const top = pos.length / 3;
+    pos.push(cx+(r()-.5)*.16, height+(r()-.5)*.035, cz+(r()-.5)*.16); uv.push(.5,1);
+    const bottom = pos.length / 3;
+    pos.push(cx, 0, cz); uv.push(.5,0);
+    const idx=[];
+    for(let i=0;i<segs;i++) idx.push(top, starts[3]+(i+1)%segs, starts[3]+i);
+    for(let ring=0;ring<rings.length-1;ring++){
+      const a=starts[ring], b=starts[ring+1];
+      for(let i=0;i<segs;i++){
+        const n=(i+1)%segs;
+        idx.push(a+i,b+i,a+n, a+n,b+i,b+n);
+      }
+    }
+    for(let i=0;i<segs;i++) idx.push(bottom, starts[0]+i, starts[0]+(i+1)%segs);
+    const geo=new T.BufferGeometry();
+    geo.setAttribute('position', new T.Float32BufferAttribute(pos,3));
+    geo.setAttribute('uv', new T.Float32BufferAttribute(uv,2));
+    geo.setIndex(idx); geo.computeVertexNormals();
+    return geo;
+  }
 
   // Warm brownish ambient — dark but not pitch-black. Areas away from torches
   // are still barely readable; the torches provide the main visible illumination.
@@ -20989,7 +24553,9 @@ function init3D(state){
 
   // ── PER-ROOM TORCHES (bracket + flame geometry; luz vem do pool) ─────────────
   const wallTorches = [];
-  try{ buildRoomTorches(T, scene, state, wallTorches, TW, TH, WH); }catch(e){ console.warn('buildRoomTorches:', e); }
+  let torchStaticMeshes = {};
+  try{ torchStaticMeshes = buildRoomTorches(T, scene, state, wallTorches, TW, TH, WH) || {}; }
+  catch(e){ console.warn('buildRoomTorches:', e); }
 
   // ── LIGHT POOL (contagem de luzes CONSTANTE — zero recompilações em jogo) ────
   // Pool fixo de PointLights sempre-visíveis, reatribuídas às âncoras reveladas
@@ -21032,128 +24598,152 @@ function init3D(state){
   try{ ({ meshes: groutMeshes, mats: groutMats } = buildGlowingGrout(T, scene, state, TW, TH)); }catch(e){ console.warn('buildGlowingGrout:', e); }
 
   // ── MOVEMENT HIGHLIGHT PLANES (blue — MeshBasicMaterial, unaffected by lighting)
-  const moveHighlightMeshes = {};
+  // Todas as famílias abaixo cobrem uma casa por vez e ficam invisíveis quase
+  // o tempo todo: nascem sob demanda (ver _mkOverlayPool). O filtro de tipo de
+  // casa que o laço antigo fazia vive agora dentro da fábrica.
+  const _ehChao   = (x, y) => state.tiles[y] && state.tiles[y][x] === TILE_FLOOR;
+  const _ehPisavel = (x, y) => state.tiles[y] &&
+    (state.tiles[y][x] === TILE_FLOOR || state.tiles[y][x] === TILE_DOOR);
+  // "12,7" → [12, 7]
+  const _xyDaChave = (key) => { const v = key.split(','); return [+v[0], +v[1]]; };
+  // Fábrica comum dos realces de chão: um plano deitado na casa, invisível.
+  const _mkPlano = (geo, mat, yoff, elegivel) => (key) => {
+    const [x, y] = _xyDaChave(key);
+    if(!elegivel(x, y)) return null;
+    const m = new T.Mesh(geo, mat);
+    m.rotation.x = -Math.PI / 2;
+    m.position.set(x, TH + yoff, y);
+    m.visible = false;
+    scene.add(m);
+    return m;
+  };
+
   const moveHighlightMat = new T.MeshBasicMaterial({ color: 0x1e6bff, opacity: 0.45, transparent: true, depthWrite: false });
-  {
-    const hGeo = new T.PlaneGeometry(TW * 0.90, TW * 0.90);
-    for(let fy=0; fy<H; fy++) for(let fx=0; fx<W; fx++){
-      if(state.tiles[fy][fx] !== TILE_FLOOR) continue;
-      const m = new T.Mesh(hGeo, moveHighlightMat);
-      m.rotation.x = -Math.PI / 2;
-      m.position.set(fx, TH + 0.004, fy);
-      m.visible = false; scene.add(m);
-      moveHighlightMeshes[`${fx},${fy}`] = m;
-    }
-  }
+  const moveHighlightMeshes = _mkOverlayPool(
+    _mkPlano(new T.PlaneGeometry(TW * 0.90, TW * 0.90), moveHighlightMat, 0.004, _ehChao));
 
   // ── ATTACK HIGHLIGHT PLANES (red — MeshBasicMaterial, unaffected by lighting)
-  const atkHighlightMeshes = {};
-  {
-    const hGeo = new T.PlaneGeometry(TW * 0.90, TW * 0.90);
-    const hMat = new T.MeshBasicMaterial({ color: 0xff2222, opacity: 0.35, transparent: true, depthWrite: false });
-    for(let fy=0; fy<H; fy++) for(let fx=0; fx<W; fx++){
-      if(state.tiles[fy][fx] !== TILE_FLOOR) continue;
-      const m = new T.Mesh(hGeo, hMat);
-      m.rotation.x = -Math.PI / 2;
-      m.position.set(fx, TH + 0.006, fy);
-      m.visible = false; scene.add(m);
-      atkHighlightMeshes[`${fx},${fy}`] = m;
-    }
-  }
+  const atkHighlightMeshes = _mkOverlayPool(
+    _mkPlano(new T.PlaneGeometry(TW * 0.90, TW * 0.90),
+      new T.MeshBasicMaterial({ color: 0xff2222, opacity: 0.35, transparent: true, depthWrite: false }),
+      0.006, _ehChao));
 
   // ── WEAPON RANGE PREVIEW PLANES (vermelho forte — hover no ícone da arma)
-  const weaponRangeMeshes = {};
-  {
-    const hGeo = new T.PlaneGeometry(TW * 0.92, TW * 0.92);
-    const hMat = new T.MeshBasicMaterial({ color: 0xff0000, opacity: 0.62, transparent: true, depthWrite: false });
-    for(let fy=0; fy<H; fy++) for(let fx=0; fx<W; fx++){
-      if(state.tiles[fy][fx] !== TILE_FLOOR) continue;
-      const m = new T.Mesh(hGeo, hMat);
-      m.rotation.x = -Math.PI / 2;
-      m.position.set(fx, TH + 0.010, fy);
-      m.visible = false; scene.add(m);
-      weaponRangeMeshes[`${fx},${fy}`] = m;
-    }
-  }
+  const weaponRangeMeshes = _mkOverlayPool(
+    _mkPlano(new T.PlaneGeometry(TW * 0.92, TW * 0.92),
+      new T.MeshBasicMaterial({ color: 0xff0000, opacity: 0.62, transparent: true, depthWrite: false }),
+      0.010, _ehChao));
+
+  // ── PRÉVIA DO MESTRE: alcance e zona efetiva do monstro sob o cursor ────────
+  // Estas cinco também cobrem porta, não só chão.
+  const _geoMestre = new T.PlaneGeometry(TW * 0.90, TW * 0.90);
+  const masterAttackRangeMeshes = _mkOverlayPool(
+    _mkPlano(_geoMestre, new T.MeshBasicMaterial({ color: 0xff3838, opacity: 0.16, transparent: true, depthWrite: false }), 0.013, _ehPisavel));
+  const masterAttackZoneMeshes = _mkOverlayPool(
+    _mkPlano(_geoMestre, new T.MeshBasicMaterial({ color: 0xd21218, opacity: 0.38, transparent: true, depthWrite: false }), 0.015, _ehPisavel));
+  const masterFootprintMeshes = _mkOverlayPool(
+    _mkPlano(_geoMestre, new T.MeshBasicMaterial({ color: 0xffc22e, opacity: 0.22, transparent: true, depthWrite: false }), 0.017, _ehPisavel));
+  const masterHistoryAttackerMeshes = _mkOverlayPool(
+    _mkPlano(_geoMestre, new T.MeshBasicMaterial({ color: 0x54d8ff, opacity: 0.34, transparent: true, depthWrite: false }), 0.019, _ehPisavel));
+  const masterHistoryTargetMeshes = _mkOverlayPool(
+    _mkPlano(_geoMestre, new T.MeshBasicMaterial({ color: 0xff6b8a, opacity: 0.34, transparent: true, depthWrite: false }), 0.021, _ehPisavel));
 
   // ── SPELL HIGHLIGHT PLANES — alcance (vermelho), zona (laranja), 2x (verde escuro), área (verde)
-  const spellRangeMeshes = {}, spellZonaMeshes = {}, spellDoubleMeshes = {}, spellAreaMeshes = {}, spellEscuridaoMeshes = {}, spellSilencioMeshes = {};
-  const spellFireFx = {};
-  {
-    const hGeo = new T.PlaneGeometry(TW * 0.98, TW * 0.98);
-    const escMat    = new T.MeshBasicMaterial({ color: 0x0a061a, opacity: 0.60, transparent: true, depthWrite: false });
-    const silMat    = new T.MeshBasicMaterial({ color: 0x7888c8, opacity: 0.26, transparent: true, depthWrite: false });
-    const rangeMat  = new T.MeshBasicMaterial({ color: 0xff2a2a, opacity: 0.16, transparent: true, depthWrite: false });
-    const zonaMat   = new T.MeshBasicMaterial({ color: 0xff6a00, opacity: 0.30, transparent: true, depthWrite: false });
-    const doubleMat = new T.MeshBasicMaterial({ color: 0x0a5a16, opacity: 0.60, transparent: true, depthWrite: false });
-    const areaMat   = new T.MeshBasicMaterial({ color: 0x28e636, opacity: 0.32, transparent: true, depthWrite: false });
-    const mk = (mat, yoff, fx, fy) => {
-      const mm = new T.Mesh(hGeo, mat); mm.rotation.x = -Math.PI / 2;
-      mm.position.set(fx, TH + yoff, fy); mm.visible = false; scene.add(mm); return mm;
-    };
-    for(let fy=0; fy<H; fy++) for(let fx=0; fx<W; fx++){
-      if(state.tiles[fy][fx] !== TILE_FLOOR) continue;
-      const key = `${fx},${fy}`;
-      spellEscuridaoMeshes[key] = mk(escMat,    0.007, fx, fy);   // névoa escura no chão (sob os peões)
-      spellSilencioMeshes[key]  = mk(silMat,    0.0072, fx, fy);  // véu de silêncio
-      spellRangeMeshes[key]  = mk(rangeMat,  0.008, fx, fy);
-      spellZonaMeshes[key]   = mk(zonaMat,   0.009, fx, fy);
-      spellDoubleMeshes[key] = mk(doubleMat, 0.010, fx, fy);
-      spellAreaMeshes[key]   = mk(areaMat,   0.012, fx, fy);
+  const _geoSpell = new T.PlaneGeometry(TW * 0.98, TW * 0.98);
+  const _mkSpell = (hex, op, yoff) => _mkOverlayPool(_mkPlano(_geoSpell,
+    new T.MeshBasicMaterial({ color: hex, opacity: op, transparent: true, depthWrite: false }),
+    yoff, _ehChao));
+  const spellEscuridaoMeshes = _mkSpell(0x0a061a, 0.60, 0.007);   // névoa escura (sob os peões)
+  const spellSilencioMeshes  = _mkSpell(0x7888c8, 0.26, 0.0072);  // véu de silêncio
+  const spellRangeMeshes     = _mkSpell(0xff2a2a, 0.16, 0.008);
+  const spellZonaMeshes      = _mkSpell(0xff6a00, 0.30, 0.009);
+  const spellDoubleMeshes    = _mkSpell(0x0a5a16, 0.60, 0.010);
+  const spellAreaMeshes      = _mkSpell(0x28e636, 0.32, 0.012);
+  const spellTargetMeshes = {
+    self:  _mkSpell(0xf5be2a, 0.52, 0.014),
+    ally:  _mkSpell(0x3791ff, 0.44, 0.0145),
+    enemy: _mkSpell(0xeb2d32, 0.52, 0.015),
+  };
 
-      // Chamas procedurais no chão da zona persistente. O grupo fica oculto
-      // por padrão e é ligado por _aplicarSpellHL3D conforme o estado autoritativo.
-      const fireGroup = new T.Group(); fireGroup.position.set(fx, 0, fy);
-      const fireGlowMat = new T.MeshBasicMaterial({ color:0xff4a00, transparent:true, opacity:0.52, depthWrite:false, side:T.DoubleSide, blending:T.AdditiveBlending });
-      // Plano quase do tamanho total da casa: a brasa persistente ocupa o tile
-      // inteiro, e não apenas um círculo no centro.
-      const fireGlow = new T.Mesh(new T.PlaneGeometry(TW * .96, TW * .96), fireGlowMat);
-      fireGlow.rotation.x = -Math.PI / 2; fireGlow.position.y = TH + .021; fireGlow.renderOrder = 18; fireGroup.add(fireGlow);
-      const flameDefs = [[-.39,.18,0xff3b00], [-.21,.28,0xff6a00], [.00,.36,0xffa800], [.22,.27,0xff6a00], [.40,.16,0xffd43b]];
-      const flames = flameDefs.map(([ox,h,col], i) => {
-        const mat = new T.MeshBasicMaterial({ color:col, transparent:true, opacity:.76, depthWrite:false, side:T.DoubleSide, blending:T.AdditiveBlending });
-        const m = new T.Mesh(new T.ConeGeometry(TW * (.075 + (i % 2) * .018), TH * h, 8), mat);
-        m.position.set(ox, TH + .07 + TH * h * .5, -.34 + (i % 3) * .31);
-        m.userData.firePhase = i * 1.9 + fx * .37 + fy * .61;
-        m.renderOrder = 19; fireGroup.add(m); return m;
-      });
-      const embers = [];
-      for(let i = 0; i < 14; i++){
-        const phase = i * 1.37 + fx * .41 + fy * .73;
-        const ex = -.43 + _bolaFogoHash(fx * 7919 + fy * 1543 + i * 31337) * .86;
-        const ez = -.43 + _bolaFogoHash(fx * 9283 + fy * 2713 + i * 17389) * .86;
-        const mat = new T.MeshBasicMaterial({ color:i % 4 ? 0xff7a13 : 0xffe06a, transparent:true, opacity:.68, depthWrite:false, depthTest:false, blending:T.AdditiveBlending });
-        const m = new T.Mesh(new T.SphereGeometry(.016 + (i % 3) * .006, 6, 4), mat);
-        m.position.set(ex, TH + .036 + (i % 3) * .006, ez);
-        m.userData.firePhase = phase; m.userData.baseX = ex; m.userData.baseZ = ez;
-        m.renderOrder = 20; fireGroup.add(m); embers.push(m);
-      }
-      fireGroup.visible = false; scene.add(fireGroup);
-      spellFireFx[key] = { group:fireGroup, glow:fireGlow, flames, embers };
+  // ── Fogo persistente da Bola de Fogo: 1 brilho + 5 chamas + 14 brasas ────────
+  // Eram 21 objetos com geometria e material PRÓPRIOS por casa de chão — 18.522
+  // nós num mapa 44×40, metade da cena inteira, para um efeito que cobre poucas
+  // casas e só depois que alguém conjura. Nasce sob demanda como o resto; as
+  // geometrias e o formato das chamas são compartilhados entre as casas.
+  const _fireGlowGeo = new T.PlaneGeometry(TW * .96, TW * .96);
+  const _fireFlameDefs = [[-.39,.18,0xff3b00], [-.21,.28,0xff6a00], [.00,.36,0xffa800], [.22,.27,0xff6a00], [.40,.16,0xffd43b]];
+  const _fireFlameGeos = _fireFlameDefs.map((d, i) => new T.ConeGeometry(TW * (.075 + (i % 2) * .018), TH * d[1], 8));
+  const _fireEmberGeos = [0,1,2].map(k => new T.SphereGeometry(.016 + k * .006, 6, 4));
+  const spellFireFx = _mkOverlayPool((key) => {
+    const [fx, fy] = _xyDaChave(key);
+    if(!_ehChao(fx, fy)) return null;
+    const fireGroup = new T.Group(); fireGroup.position.set(fx, 0, fy);
+    const fireGlowMat = new T.MeshBasicMaterial({ color:0xff4a00, transparent:true, opacity:0.52, depthWrite:false, side:T.DoubleSide, blending:T.AdditiveBlending });
+    // Plano quase do tamanho total da casa: a brasa persistente ocupa o tile
+    // inteiro, e não apenas um círculo no centro.
+    const fireGlow = new T.Mesh(_fireGlowGeo, fireGlowMat);
+    fireGlow.rotation.x = -Math.PI / 2; fireGlow.position.y = TH + .021; fireGlow.renderOrder = 18; fireGroup.add(fireGlow);
+    const flames = _fireFlameDefs.map(([ox,h,col], i) => {
+      const mat = new T.MeshBasicMaterial({ color:col, transparent:true, opacity:.76, depthWrite:false, side:T.DoubleSide, blending:T.AdditiveBlending });
+      const m = new T.Mesh(_fireFlameGeos[i], mat);
+      m.position.set(ox, TH + .07 + TH * h * .5, -.34 + (i % 3) * .31);
+      m.userData.firePhase = i * 1.9 + fx * .37 + fy * .61;
+      m.renderOrder = 19; fireGroup.add(m); return m;
+    });
+    const embers = [];
+    for(let i = 0; i < 14; i++){
+      const phase = i * 1.37 + fx * .41 + fy * .73;
+      const ex = -.43 + _bolaFogoHash(fx * 7919 + fy * 1543 + i * 31337) * .86;
+      const ez = -.43 + _bolaFogoHash(fx * 9283 + fy * 2713 + i * 17389) * .86;
+      const mat = new T.MeshBasicMaterial({ color:i % 4 ? 0xff7a13 : 0xffe06a, transparent:true, opacity:.68, depthWrite:false, depthTest:false, blending:T.AdditiveBlending });
+      const m = new T.Mesh(_fireEmberGeos[i % 3], mat);
+      m.position.set(ex, TH + .036 + (i % 3) * .006, ez);
+      m.userData.firePhase = phase; m.userData.baseX = ex; m.userData.baseZ = ez;
+      m.renderOrder = 20; fireGroup.add(m); embers.push(m);
     }
-  }
+    fireGroup.visible = false; scene.add(fireGroup);
+    // `visible` é delegado ao grupo para o pool poder tratar esta família como
+    // as outras (_overlayShowOnly só conhece `.visible`).
+    const fx3 = { group:fireGroup, glow:fireGlow, flames, embers };
+    Object.defineProperty(fx3, 'visible', {
+      get(){ return fireGroup.visible; },
+      set(v){ fireGroup.visible = v; },
+    });
+    return fx3;
+  });
 
   // ── WET FLOOR REFLECTION (damp specular sheen — all dungeon floor tiles) ──────
   // A near-black low-roughness plane floats 2mm above each floor piece.
   // MeshStandardMaterial roughness 0.10 produces sharp torch reflections.
-  const wetFloorMeshes = {};
+  // Uma InstancedMesh no lugar de um mesh por casa. Eram 882 draw calls num
+  // mapa 44x40 -- 2,5 ms/quadro de um brilho sutil -- e o custo so aparecia
+  // conforme a nevoa abria, porque cada casa revelada acrescentava um objeto
+  // desenhado. Medido: 3.582 draw calls custavam 10,8 ms/quadro, ~3 us cada.
+  // Aqui todas as casas ja compartilham UMA geometria e UM material, entao
+  // instanciar e direto: mesmo visual, 1 draw call.
+  //
+  // A nevoa vira `count` + matrizes: ver _atualizarWetFloor3D. O rebuild so
+  // acontece quando o conjunto revelado muda (andar), nao a cada quadro.
+  const wetFloorKeys = [];          // ordem fixa; o indice e o slot da instancia
+  let wetFloorInst = null;
   {
     const wetGeo = new T.PlaneGeometry(TW * 0.94, TW * 0.94);
     const wetMat = new T.MeshStandardMaterial({
       color: new T.Color(0x111111), roughness: 0.10, metalness: 0.0,
       opacity: 0.30, transparent: true, depthWrite: false
     });
-    for(let fy=0; fy<H; fy++){
-      for(let fx=0; fx<W; fx++){
-        if(state.tiles[fy][fx] !== TILE_FLOOR) continue;
-        const key = `${fx},${fy}`;
-        const m = new T.Mesh(wetGeo, wetMat);
-        m.rotation.x = -Math.PI / 2;
-        m.position.set(fx, TH + 0.002, fy);   // 2mm above floor surface
-        m.visible = false;
-        scene.add(m);
-        wetFloorMeshes[key] = m;
-      }
+    for(let fy=0; fy<H; fy++)
+      for(let fx=0; fx<W; fx++)
+        if(state.tiles[fy][fx] === TILE_FLOOR) wetFloorKeys.push([fx, fy]);
+    if(wetFloorKeys.length){
+      wetFloorInst = new T.InstancedMesh(wetGeo, wetMat, wetFloorKeys.length);
+      wetFloorInst.count = 0;                       // nada revelado ainda
+      wetFloorInst.instanceMatrix.setUsage(T.DynamicDrawUsage);
+      // O bounding da InstancedMesh sai da geometria de UMA instancia, que fica
+      // na origem; sem isto o tabuleiro inteiro seria descartado pelo frustum.
+      wetFloorInst.frustumCulled = false;
+      wetFloorInst.receiveShadow = true;
+      scene.add(wetFloorInst);
     }
   }
 
@@ -21174,6 +24764,8 @@ function init3D(state){
   // guardada em userData.secretMat e volta para userData.sharedMat depois.
   const JITTER_PASSOS = 12;
   const _tileMatCache = {};
+  const lavaMats = [];
+  const swampMats = [];
   const _quantJit = (v) => Math.round(v * (JITTER_PASSOS - 1)) / (JITTER_PASSOS - 1);
 
   for(let y=0; y<H; y++){
@@ -21191,10 +24783,12 @@ function init3D(state){
         // A água não recebe jitter por tile: variações independentes fariam
         // aparecer uma grade onde deveriam existir apenas ondas contínuas.
         const isWater3 = mid3==='agua' || mid3==='agua_profunda';
+        const isLava3 = mid3==='lava';
+        const isSwamp3 = mid3==='pantano';
         const ftex = makeMaterialTex(mid3);
         // Com textura própria ou água a cor final não depende do jitter (é fixada
         // abaixo), então essas casas colapsam num material único por tipo.
-        const jitQ = (isWater3 || ftex) ? 0 : _quantJit(vf);
+        const jitQ = (isWater3 || isLava3 || isSwamp3 || ftex) ? 0 : _quantJit(vf);
         const fKey = `f|${mid3}|${jitQ}`;
         let mat = _tileMatCache[fKey];
         if(!mat){
@@ -21204,13 +24798,13 @@ function init3D(state){
           if(ftex){
             mat.map = ftex; mat.color.setRGB(1,1,1);
             mat.bumpMap = ftex;
-            mat.bumpScale = mid3==='terra' ? 0.075 : mid3==='grama' ? 0.045 : 0.035;
+            mat.bumpScale = mid3==='terra' ? 0.075 : mid3==='grama' ? 0.045 : mid3==='areia_deserto' ? 0.012 : mid3==='lava' ? 0.024 : 0.035;
             // Grama e terra recebem o mesmo desenho procedimental do 2D também
             // como relevo, tornando a textura perceptível sob a luz do 3D.
-            if(mid3==='grama' || mid3==='terra'){
+            if(mid3==='grama' || mid3==='terra' || mid3==='areia_deserto' || mid3==='lava' || mid3==='pantano'){
               mat.bumpMap = ftex;
-              mat.bumpScale = mid3==='terra' ? 0.075 : 0.045;
-              mat.roughness = mid3==='terra' ? 0.94 : 0.98;
+              mat.bumpScale = mid3==='terra' ? 0.075 : mid3==='areia_deserto' ? 0.012 : mid3==='lava' ? 0.024 : mid3==='pantano' ? 0.018 : 0.045;
+              mat.roughness = mid3==='terra' ? 0.94 : mid3==='lava' ? 0.38 : mid3==='pantano' ? 0.58 : 0.98;
             }
           }
           mat.emissive.set(VC.floor.emissive);
@@ -21225,6 +24819,22 @@ function init3D(state){
             mat.bumpMap = null;
             mat.bumpScale = 0;
           }
+          if(isLava3){
+            mat.roughness = 0.34;
+            mat.metalness = 0.08;
+            mat.emissiveMap = ftex;
+            mat.emissive.set(0xff3b08);
+            mat.emissiveIntensity = 1.25;
+            mat.bumpMap = ftex;
+          }
+          if(isSwamp3){
+            mat.roughness = 0.56;
+            mat.metalness = 0.02;
+            mat.emissiveMap = ftex;
+            mat.emissive.set(0x17351d);
+            mat.emissiveIntensity = 0.22;
+            mat.bumpMap = ftex;
+          }
           // Auto-iluminação: a própria textura emite, deixando a cor forte e
           // diferenciada mesmo na penumbra (grama/terra/pedra negra).
           if(ftex && (mid3==='grama' || mid3==='terra' || mid3==='pedra_negra')){
@@ -21232,9 +24842,20 @@ function init3D(state){
             mat.emissive.set(0xffffff);
             mat.emissiveIntensity = (mid3==='pedra_negra') ? 0.35 : 0.6;
           }
+          if(mid3 === 'areia_deserto'){
+            // A emissão branca do piso de pedra lavava a cor ocre da areia,
+            // deixando uma película cinza sobre a textura. A areia recebe
+            // apenas um preenchimento quente e discreto, sem emissiveMap.
+            mat.emissiveMap = null;
+            mat.emissive.set(0x3a210b);
+            mat.emissiveIntensity = 0.12;
+          }
           _tileMatCache[fKey] = mat;
         }
-        mesh = new T.Mesh(isWater3 ? waterFloorGeo : floorGeo, mat);
+        if(isLava3 && !lavaMats.includes(mat)) lavaMats.push(mat);
+        if(isSwamp3 && !swampMats.includes(mat)) swampMats.push(mat);
+        mesh = new T.Mesh((isWater3 || isLava3 || isSwamp3)
+          ? (isLava3 ? lavaFloorGeo : isSwamp3 ? swampFloorGeo : waterFloorGeo) : floorGeo, mat);
         mesh.position.set(x, TH/2, y);     // bottom edge sits at y = 0
         mesh.receiveShadow = true;
         mesh.userData.isFloor = true;
@@ -21258,7 +24879,7 @@ function init3D(state){
           eMesh.castShadow = eMesh.receiveShadow = true;
           eMesh.visible = false;
           eMesh.userData.gridX = x; eMesh.userData.gridY = y;
-          scene.add(eMesh);
+          _prepararTileProxy(eMesh);
           tileMeshes[`entulho:${key}`] = eMesh;   // revelado junto com a casa (ver visibilidade)
         }
       } else {
@@ -21274,13 +24895,29 @@ function init3D(state){
           // Cor base por material (default pedra_normal); jitter por casa preserva o relevo.
           const jw = jwQ*VC.wall.variance;
           mat.color.setRGB(wc[0]+jw, wc[1]+jw, wc[2]+jw);
-          if(wtex){ mat.map = wtex; mat.color.setRGB(1,1,1); mat.bumpMap = wtex; mat.bumpScale = VC.wall.bumpScale ?? 0.045; }
+          if(wtex){
+            mat.map = wtex; mat.color.setRGB(1,1,1); mat.bumpMap = wtex;
+            mat.bumpScale = matId3 === 'duna_deserto' ? 0.018
+              : (matId3 === 'rocha' || matId3 === 'rocha_marrom') ? 0.065 : (VC.wall.bumpScale ?? 0.045);
+            // wallBaseMat nasce com o roughnessMap da textura de pedra. Para
+            // dunas, substituí-lo pela textura arenosa evita a borda cinza
+            // herdada do material de alvenaria.
+            if(matId3 === 'duna_deserto') mat.roughnessMap = wtex;
+            if(matId3 === 'rocha' || matId3 === 'rocha_marrom'){
+              mat.roughnessMap = wtex;
+              mat.roughness = 0.78;
+              mat.metalness = 0.02;
+            }
+          }
           mat.emissive.set(VC.wall.emissive);
           mat.emissiveIntensity = 1.0;
           _tileMatCache[wKey] = mat;
         }
-        mesh = new T.Mesh(wallGeo, mat);
-        mesh.position.set(x, WH/2, y);     // bottom edge sits at y = 0
+        const isDune3 = matId3 === 'duna_deserto';
+        const isRock3 = matId3 === 'rocha' || matId3 === 'rocha_marrom';
+        mesh = new T.Mesh(isDune3 ? makeDuneWallGeo(x, y)
+          : isRock3 ? makeRockWallGeo(x, y) : wallGeo, mat);
+        mesh.position.set(x, (isDune3 || isRock3) ? 0 : WH/2, y);
         mesh.castShadow    = true;
         mesh.receiveShadow = true;
         mesh.userData.isWall = true;
@@ -21293,8 +24930,31 @@ function init3D(state){
       mesh.userData.gridX = x;
       mesh.userData.gridY = y;
       mesh.visible = false;     // revealed progressively as player explores
-      scene.add(mesh);
+      // NAO entra na cena: quem desenha e a InstancedMesh montada por
+      // _rebuildTileInstances. Este mesh continua existindo como "procuracao"
+      // -- guarda userData/visible/material e serve de alvo do raycast do
+      // clique --, mas nao custa draw call nem travessia. Ver o comentario da
+      // funcao para o porque (1.760 draw calls = ~5 ms/quadro).
+      _prepararTileProxy(mesh);
       tileMeshes[key] = mesh;
+    }
+  }
+
+  // Pequenas bolhas emissivas sobem e encolhem sobre a lava. São poucas por
+  // casa para manter o efeito sutil e barato mesmo em rios grandes de lava.
+  for(let y=0; y<H; y++) for(let x=0; x<W; x++){
+    if((state.materiais && state.materiais[`${x},${y}`]) !== 'lava') continue;
+    const br = _rng(((x * 92821) ^ (y * 68917) ^ 0xBABB1E) >>> 0);
+    for(let i=0; i<2; i++){
+      const b = new T.Mesh(lavaBubbleGeo, lavaBubbleMat);
+      b.position.set(x + (br()-.5)*.62, TH + .018, y + (br()-.5)*.62);
+      b.scale.setScalar(.55 + br()*.65);
+      b.userData.lavaBubble = true;
+      b.userData.lavaKey = `${x},${y}`;
+      b.userData.lavaPhase = br() * Math.PI * 2;
+      b.userData.lavaBaseY = TH + .018;
+      b.userData.lavaBaseScale = b.scale.x;
+      scene.add(b); lavaBubbleMeshes.push(b);
     }
   }
 
@@ -21497,21 +25157,33 @@ function init3D(state){
   haloLight.castShadow = false;
   scene.add(haloLight);
 
+  // Ícones de habilidades/magias ativas, sempre acima dos peões dos heróis.
+  // Ficam em um grupo separado para serem reconciliados sem reconstruir os
+  // modelos 3D nem interferir nas animações de movimento.
+  const activeEffectGroup = new T.Group();
+  activeEffectGroup.renderOrder = 80;
+  scene.add(activeEffectGroup);
+
   g3 = {
     T, scene, renderer, camera, controls,
     ambient, torch, visionLamp, rimLight, fillLight, sconces, lightPool,
     showcase, haloLight,
     tileMeshes, doorMeshes, wallDetailMeshes, entityGroup, raycaster,
-    wallTorches, roomOverlayMeshes,
-    sceneryMeshes, groutMeshes, groutMats,
-    wetFloorMeshes, moveHighlightMeshes, atkHighlightMeshes, moveHighlightMat,
+    wallTorches, torchStaticMeshes, roomOverlayMeshes,
+    sceneryMeshes, groutMeshes, groutMats, lavaMats, swampMats, lavaBubbleMeshes,
+    wetFloorInst, wetFloorKeys, wetFloorTH: TH,
+    moveHighlightMeshes, atkHighlightMeshes, moveHighlightMat,
     softShadowMat,
     weaponRangeMeshes,
-    spellRangeMeshes, spellZonaMeshes, spellDoubleMeshes, spellAreaMeshes, spellEscuridaoMeshes, spellSilencioMeshes, spellFireFx,
+    masterAttackRangeMeshes, masterAttackZoneMeshes, masterFootprintMeshes,
+    masterHistoryAttackerMeshes, masterHistoryTargetMeshes,
+    spellRangeMeshes, spellZonaMeshes, spellDoubleMeshes, spellAreaMeshes, spellTargetMeshes, spellEscuridaoMeshes, spellSilencioMeshes, spellFireFx,
     dustPts, dustVel: _dVel, dustXZ: _dXZ, dustY: _dY,
     dustCount: DUST_N, dustCeil: DUST_CEIL,
     W, H, boardVisualSig, animFrame:null, resizeObs,
     hoverSpot,
+    activeEffectGroup,
+    activeEffectSprites: {},
     stairGroup,                          // staircase mesh (null if no stairs)
     heroSpawnGroups,                     // markers for separated hero starts
     exitGroup,                           // Fase 3: marcador de saída 🏁 (null se não houver)
@@ -21535,6 +25207,10 @@ function init3D(state){
   // Pré-compila os shaders com a contagem FINAL de luzes já na entrada da
   // masmorra (momento de carregamento) — como o pool mantém a contagem
   // constante, nenhum outro programa precisa compilar durante a partida.
+  // A qualidade vem ANTES do compile: ela pode tirar luzes da cena, e o compile
+  // precisa ver a contagem FINAL — senao os programas seriam refeitos no
+  // primeiro quadro, dentro da partida, que e exatamente o que se quer evitar.
+  _aplicarQualidade3D();
   try{ renderer.compile(scene, camera); }catch(e){ console.warn('renderer.compile:', e); }
   startLoop3D();
 
@@ -21550,6 +25226,7 @@ function init3D(state){
   domEl.addEventListener('mouseleave', () => {
     $('tooltip').style.display = 'none';
     if(g3) g3.hoveredPos = null;   // kill hover lift when cursor leaves canvas
+    _setMasterMonsterHover(null);
   });
 
   // ── Toque no 3D: OrbitControls cuida de girar/pan/zoom; aqui detectamos um
@@ -21792,11 +25469,18 @@ function dispose3D(){
   g3.renderer.dispose();
   const el = g3.renderer.domElement;
   if(el.parentNode) el.parentNode.removeChild(el);
+  if(g3.activeEffectGroup){
+    Object.values(g3.activeEffectSprites || {}).forEach(sprite => {
+      if(sprite.material) sprite.material.dispose();
+    });
+    g3.activeEffectGroup.clear?.();
+  }
   for(const f of _combatFeedbacks) _disposeCombatFeedback3D(f);
   // Restore map-wrap positioning so the 2D canvas flows normally
   const wrap = $('map-wrap');
   if(wrap) wrap.style.position = '';
   g3 = null;
+  _wakeVisualAnimScheduler();
 }
 
 // ── Reset camera to default Diablo-like isometric view ───────────────────────
@@ -21887,13 +25571,66 @@ function _atribuirLightPool(){
   }
 }
 
+// Lava e pântano têm animação visual própria, mas não precisam acompanhar a
+// taxa máxima do renderizador. Atualizar em ~30 Hz preserva a fluidez percebida
+// e evita percorrer os materiais do tabuleiro em todos os frames.
+function _atualizarTerrenoAnimado3D(t){
+  if(!g3) return;
+  const temTerreno = (g3.lavaMats && g3.lavaMats.length)
+    || (g3.swampMats && g3.swampMats.length)
+    || (g3.lavaBubbleMeshes && g3.lavaBubbleMeshes.length);
+  if(!temTerreno) return;
+  if(g3._terrainAnimLastAt && t - g3._terrainAnimLastAt < 33) return;
+  g3._terrainAnimLastAt = t;
+
+  if(g3.lavaMats){
+    const lp = 0.5 + 0.5 * Math.sin(t / 390) + 0.18 * Math.sin(t / 137);
+    for(const mat of g3.lavaMats){
+      if(mat.map){
+        mat.map.offset.x = (t / 18000) % 1;
+        mat.map.offset.y = (t / 26000) % 1;
+        // Alterar offset não exige reenvio da textura para a GPU.
+      }
+      mat.emissiveIntensity = 1.00 + lp * 0.72;
+    }
+  }
+  if(g3.swampMats){
+    const sp = 0.5 + 0.5 * Math.sin(t / 1100) + 0.12 * Math.sin(t / 330);
+    for(const mat of g3.swampMats){
+      if(mat.map){
+        mat.map.offset.x = (t / 36000) % 1;
+        mat.map.offset.y = (t / 47000) % 1;
+      }
+      mat.emissiveIntensity = 0.18 + sp * 0.10;
+    }
+  }
+  if(g3.lavaBubbleMeshes){
+    for(const bubble of g3.lavaBubbleMeshes){
+      if(!bubble.visible) continue;
+      const q = 0.5 + 0.5 * Math.sin(t / 560 + (bubble.userData.lavaPhase || 0));
+      const base = bubble.userData.lavaBaseScale || 0.7;
+      bubble.position.y = (bubble.userData.lavaBaseY || 0.238) + q * 0.028;
+      bubble.scale.set(base * (0.72 + q * 0.42), base * (0.58 + q * 0.24), base * (0.72 + q * 0.42));
+    }
+  }
+}
+
 function startLoop3D(){
   function tick(){
     if(!g3) return;
     g3.animFrame = requestAnimationFrame(tick);
     const t = Date.now();
-    _pruneCombatFeedbacks(performance.now());
-    _updateCombatFeedback3D(performance.now());
+    const now = performance.now();
+    _fpsTick(now);
+    // Todos os efeitos de magia compartilham este mesmo frame do renderer.
+    _flushVisualAnimFrame3D(now);
+    _updateDiceLoop3D(now);
+    // Não depende de renderMap3D: ele pode ser adiado enquanto uma miniatura
+    // caminha. Isso garante que ativar/cancelar uma habilidade reflita no
+    // próximo frame 3D, e que o ícone acompanhe a posição animada do herói.
+    if(GS.gameState && (g3._activeEffectsDirty || g3._activeEffectsState !== GS.gameState))
+      _sincronizarEfeitosAtivos3DImediatamente(GS.gameState);
+    _atualizarPosicoesEfeitosAtivos3D();
 
     // ── OrbitControls damping (pausado durante o seguimento de câmera) ───────
     if(!configCamera.seguindoPeao) g3.controls.update();
@@ -21947,13 +25684,17 @@ function startLoop3D(){
       g3.moveHighlightMat.opacity = 0.36 + 0.40 * pulse;
     }
 
+    _atualizarTerrenoAnimado3D(t);
     _animarFogoPersistente3D(t);
 
     // ── Floating dust motes (upward drift, reset at ceiling, re-randomise XZ) ─
-    if(g3.dustPts && g3.dustPts.visible){
+    if(g3.dustPts && g3.dustPts.visible &&
+       (!g3._dustLastAt || t - g3._dustLastAt >= 33)){
+      const dustDt = g3._dustLastAt ? Math.min(80, t - g3._dustLastAt) / 16.667 : 1;
+      g3._dustLastAt = t;
       const attr = g3.dustPts.geometry.attributes.position;
       for(let i = 0; i < g3.dustCount; i++){
-        g3.dustY[i] += g3.dustVel[i];
+        g3.dustY[i] += g3.dustVel[i] * dustDt;
         if(g3.dustY[i] > g3.dustCeil){
           g3.dustY[i]      = 0;
           g3.dustXZ[i*2]   = Math.random() * g3.W;    // respawn at new XZ
@@ -21989,7 +25730,16 @@ function startLoop3D(){
 
     // pulse: 0 → 1 → 0 on a ~2.2 s cycle.  Ring breathes in XZ; light fades.
     const pulse = 0.5 + 0.5 * Math.sin(t / 350);
-    g3.entityGroup.traverse(child => {
+    if(g3._pulseNodesDirty || !g3._pulseNodes){
+      g3._pulseNodes = [];
+      g3.entityGroup.traverse(child => {
+        if(child.userData.isPulseRing || child.userData.isSelectionRing)
+          g3._pulseNodes.push(child);
+      });
+      g3._pulseNodesDirty = false;
+    }
+    for(const child of g3._pulseNodes){
+      if(!child.parent || !child.visible) continue;
       if(child.userData.isPulseRing || child.userData.isSelectionRing){
         if(!child.userData._pulseBaseScale) child.userData._pulseBaseScale = child.scale.clone();
         const selectedPulse = child.userData.isSelectionRing;
@@ -22004,7 +25754,7 @@ function startLoop3D(){
           child.material.emissiveIntensity = selectedPulse ? 1.45 + 0.75 * p : 1.1 + 1.1 * p;
         }
       }
-    });
+    }
 
     // Each figure Group (direct child of entityGroup) tagged with gridX/gridY:
     //   • Hover  → smooth Y-lift toward 0.15 units + dim gold vitrine spotlight
@@ -22018,20 +25768,26 @@ function startLoop3D(){
       if(fig.type !== 'Group') return;
       const _magicInvisible = !!fig.userData.magicalInvisible ||
         (fig.userData.pid != null && _invisibilidadeAnimAtiva(fig.userData.pid));
-      fig.traverse(obj => {
-        if(!obj.material) return;
-        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
-        for(const mat of mats){
-          if(mat.userData._invisOrigOpacity === undefined){
-            mat.userData._invisOrigOpacity = mat.opacity;
-            mat.userData._invisOrigTransparent = mat.transparent;
-            mat.userData._invisOrigDepthWrite = mat.depthWrite;
+      // A invisibilidade só altera os materiais quando o estado realmente
+      // muda. Antes, todos os meshes de cada peão eram percorridos a cada
+      // frame, mesmo estando visíveis e sem nenhuma alteração.
+      if(fig.userData._magicInvisibleApplied !== _magicInvisible){
+        fig.userData._magicInvisibleApplied = _magicInvisible;
+        fig.traverse(obj => {
+          if(!obj.material) return;
+          const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+          for(const mat of mats){
+            if(mat.userData._invisOrigOpacity === undefined){
+              mat.userData._invisOrigOpacity = mat.opacity;
+              mat.userData._invisOrigTransparent = mat.transparent;
+              mat.userData._invisOrigDepthWrite = mat.depthWrite;
+            }
+            mat.opacity = _magicInvisible ? mat.userData._invisOrigOpacity * .18 : mat.userData._invisOrigOpacity;
+            mat.transparent = _magicInvisible ? true : mat.userData._invisOrigTransparent;
+            mat.depthWrite = _magicInvisible ? false : mat.userData._invisOrigDepthWrite;
           }
-          mat.opacity = _magicInvisible ? mat.userData._invisOrigOpacity * .18 : mat.userData._invisOrigOpacity;
-          mat.transparent = _magicInvisible ? true : mat.userData._invisOrigTransparent;
-          mat.depthWrite = _magicInvisible ? false : mat.userData._invisOrigDepthWrite;
-        }
-      });
+        });
+      }
       // Antes dos returns abaixo: o peão da vez também precisa carregar o halo
       // enquanto está andando (entityGroup fica na origem, então position é mundo).
       if(fig.userData.isCurrentFig) curFig = fig;
@@ -22039,6 +25795,16 @@ function startLoop3D(){
       if(estadoMovimento.emMovimento && fig === estadoMovimento.peaoAtivo) return;
       const gx = fig.userData.gridX, gy = fig.userData.gridY;
       if(gx === undefined) return;
+      // Reação de impacto no 3D: inclina o grupo inteiro por poucos frames.
+      // A rotação é aplicada sobre a pose normal; não altera facing, grade ou
+      // a posição usada pelo movimento/seleção.
+      if(fig.userData._hitBaseRotationZ === undefined)
+        fig.userData._hitBaseRotationZ = fig.rotation.z || 0;
+      fig.rotation.z = fig.userData._hitBaseRotationZ
+        + _hitReaction3DAngle(fig.userData.pid != null ? `p:${fig.userData.pid}`
+          : fig.userData.monId != null ? `m:${fig.userData.monId}`
+          : fig.userData.animadoId != null ? `a:${fig.userData.animadoId}`
+          : fig.userData.prisoner ? 'pr:singleton' : null, performance.now());
       const isHov = hovP && gx === hovP[0] && gy === hovP[1];
       const isSel = selP && gx === selP[0] && gy === selP[1];
       // Smooth vertical lift (lerp coefficient 0.14 ≈ snappy but not instant)
@@ -22072,8 +25838,13 @@ function startLoop3D(){
     // Enquanto a cena está parada (orbitando a câmera, lendo o HUD) o mapa de
     // sombra anterior continua válido — é aí que a economia aparece.
     if(g3.showcase && (estadoMovimento.emMovimento || _tweens.length
-        || g3.hoveredPos || g3.selectedPos))
-      g3.showcase.shadow.needsUpdate = true;
+        || g3.hoveredPos || g3.selectedPos)){
+      // A sombra direcional congelada não precisa ser renderizada 60×/s para
+      // acompanhar uma miniatura. Duas atualizações por quadro mantêm a reação
+      // visual imediata sem repetir o shadow pass completo desnecessariamente.
+      g3._shadowFrame = (g3._shadowFrame || 0) + 1;
+      if(g3._shadowFrame % 2 === 0) g3.showcase.shadow.needsUpdate = true;
+    }
 
     // Portrait is HTML-only (class selection screen). Never meshes on the board.
 
@@ -22091,13 +25862,25 @@ function buildWallDetails(T, scene, state, wallTex, TW, TH, WH){
   const tiles = state.tiles;
   const H = tiles.length, W = tiles[0].length;
   const det = {};
+  const isDuneWall = (x, y) => tiles[y]?.[x] === TILE_WALL
+    && new Set(['duna_deserto', 'rocha', 'rocha_marrom']).has(
+      ((state.materiais && state.materiais[`${x},${y}`]) || 'pedra_normal'));
 
   // Stone material matching wallBaseMat, brightness-adjustable
+  // Memoizado por brilho: `v` assume 5 valores (0.70, 0.94, 1.06, 1.12, 1.18),
+  // mas isto criava um material NOVO por chamada -- 439 materiais num mapa
+  // 44x40 para 5 aparencias. E o mesmo erro que o cache das casas ja corrigiu
+  // ("nunca clonar material por casa"): o renderer troca de estado a cada
+  // material distinto.
+  const _stCache = new Map();
   const mkSt = (v) => {
-    const m = new T.MeshStandardMaterial({
+    let m = _stCache.get(v);
+    if(m) return m;
+    m = new T.MeshStandardMaterial({
       map: wallTex, roughnessMap: wallTex, roughness: 0.92, metalness: 0.04
     });
     m.color.setRGB(0.52*v, 0.50*v, 0.47*v);
+    _stCache.set(v, m);
     return m;
   };
   const woodTex  = generateTexture('wood');
@@ -22111,7 +25894,12 @@ function buildWallDetails(T, scene, state, wallTex, TW, TH, WH){
   const add = (key, mesh) => {
     mesh.receiveShadow = true;
     mesh.visible = false;
-    scene.add(mesh);
+    // Fora da cena: quem desenha e a InstancedMesh de _rebuildDetailInstances.
+    // Eram 439 draw calls (arcos, pilares, rodapes) num mapa 44x40, e todos
+    // usam so 3 geometrias -- instanciar leva isso a meia duzia de draw calls.
+    // A matriz de MUNDO precisa ser calculada aqui: as pedras do arco vivem
+    // dentro de um Group rotacionado, e fora da cena ninguem mais a atualiza.
+    mesh.updateMatrixWorld(true);
     (det[key] = det[key] || []).push(mesh);
   };
 
@@ -22245,17 +26033,20 @@ function buildWallDetails(T, scene, state, wallTex, TW, TH, WH){
       }
 
       // ── WALL TILE: baseboards on every floor-adjacent face ───────────────
+      // Dunas já têm uma base orgânica própria na geometria do monte. O
+      // rodapé de pedra herdado das paredes da masmorra criava uma faixa
+      // cinza artificial na face interna; não o use nesses tiles.
       else if(tile === TILE_WALL){
-        if(isF(0, 1)){  // floor to south
+        if(!isDuneWall(x, y) && isF(0, 1)){  // floor to south
           try{ const bs=new T.Mesh(bsGX, mkSt(0.70)); bs.position.set(x, bsY, y+bsFO); add(key,bs); }catch(e){}
         }
-        if(isF(0,-1)){  // floor to north
+        if(!isDuneWall(x, y) && isF(0,-1)){  // floor to north
           try{ const bs=new T.Mesh(bsGX, mkSt(0.70)); bs.position.set(x, bsY, y-bsFO); add(key,bs); }catch(e){}
         }
-        if(isF(1, 0)){  // floor to east
+        if(!isDuneWall(x, y) && isF(1, 0)){  // floor to east
           try{ const bs=new T.Mesh(bsGZ, mkSt(0.70)); bs.position.set(x+bsFO, bsY, y); add(key,bs); }catch(e){}
         }
-        if(isF(-1,0)){  // floor to west
+        if(!isDuneWall(x, y) && isF(-1,0)){  // floor to west
           try{ const bs=new T.Mesh(bsGZ, mkSt(0.70)); bs.position.set(x-bsFO, bsY, y); add(key,bs); }catch(e){}
         }
       }
@@ -22274,6 +26065,13 @@ function buildWallDetails(T, scene, state, wallTex, TW, TH, WH){
 
       // Only handle 3-walls-1-floor intersections (true inner corners)
       if(wCnt !== 3) continue;
+
+      // A duna corner already has its own organic volume. The old dungeon
+      // corner column would reappear as a gray stone pillar in the middle of
+      // two dune walls, so omit it when the corner is formed by dunes.
+      const duneCnt = [[gx,gy],[gx+1,gy],[gx,gy+1],[gx+1,gy+1]]
+        .filter(([x,y]) => isDuneWall(x,y)).length;
+      if(duneCnt >= 2) continue;
 
       // The visibility key is the single floor tile in this 2×2 block
       let visKey = null;
@@ -22301,14 +26099,27 @@ function buildWallDetails(T, scene, state, wallTex, TW, TH, WH){
 // Flattened TorusGeometry rusty bowl
 // 3 overlapping ConeGeometry fire cones with independent Y-scale animation
 function buildRoomTorches(T, scene, state, wallTorches, TW, TH, WH){
-  if(!state.rooms || !state.tiles) return;
+  if(!state.rooms || !state.tiles) return {};
   const tiles = state.tiles;
   const H = tiles.length, W = tiles[0].length;
 
-  // Iron material — dark rusty iron
+  // Iron material — dark rusty iron. UM material para todas as tochas: antes
+  // cada suporte e cada tigela clonavam este material, gerando 70 copias
+  // identicos e nunca mutados.
   const ironMat = new T.MeshStandardMaterial({
     color: new T.Color(0x3a2010), roughness: 0.84, metalness: 0.55
   });
+  // Geometrias compartilhadas: a tigela e igual em toda tocha e o cone depende
+  // so do indice da chama. Antes eram 175 geometrias distintas.
+  const bowlGeo = new T.TorusGeometry(0.063, 0.025, 5, 12);
+  const brkGeoCache = new Map();          // suporte: uma por direcao de parede
+  const coneSpecs = [
+    { r:0.046, h:0.18, col:0xff5500, em:0xff3300, ei:2.0, dy:0.000, ry: 0.00, rx: 0.00 },
+    { r:0.030, h:0.16, col:0xff8800, em:0xff6600, ei:2.2, dy:0.010, ry: 1.00, rx: 0.10 },
+    { r:0.018, h:0.13, col:0xffee80, em:0xffcc00, ei:2.5, dy:0.022, ry:-1.00, rx:-0.10 },
+  ];
+  const coneGeos = coneSpecs.map(sp => new T.ConeGeometry(sp.r, sp.h, 5));
+  const torchStatic = {};                 // wallKey -> [suporte, tigela]
 
   for(const room of state.rooms){
     const {x: rx, y: ry, w: rw, h: rh} = room;
@@ -22346,48 +26157,59 @@ function buildRoomTorches(T, scene, state, wallTorches, TW, TH, WH){
     if(nPick === 2 && i2 !== i1) picks.push(cands[i2]);
 
     for(const {wx, wy, fdx, fdz} of picks){
+      // Base da tocha em coordenadas de MUNDO. O suporte e a tigela sao criados
+      // aqui ja em mundo (fora do Group) porque vao para InstancedMesh: eram
+      // 70 dos 175 draw calls das tochas, com uma geometria E um material
+      // clonados por tocha sem necessidade nenhuma -- nada neles e animado.
+      const bx = wx + fdx*0.38, by = WH*0.50, bz = wy + fdz*0.38;
       const grp = new T.Group();
-      grp.position.set(wx + fdx*0.38, WH*0.50, wy + fdz*0.38);
+      grp.position.set(bx, by, bz);
+      const estaticos = [];
 
       // ── L-shaped iron bracket via CatmullRomCurve3 ─────────────────────
+      // A curva so depende da direcao da parede: 4 variantes, nao uma por tocha.
       try{
-        const curve = new T.CatmullRomCurve3([
-          new T.Vector3(0,         0.02,         0),
-          new T.Vector3(fdx*0.04,  0.03,  fdz*0.04),
-          new T.Vector3(fdx*0.11,  0.055, fdz*0.11),
-          new T.Vector3(fdx*0.15,  0.08,  fdz*0.15)
-        ]);
-        const brkMesh = new T.Mesh(
-          new T.TubeGeometry(curve, 10, 0.013, 5, false),
-          ironMat.clone()
-        );
+        const dirKey = fdx + ',' + fdz;
+        let brkGeo = brkGeoCache.get(dirKey);
+        if(!brkGeo){
+          const curve = new T.CatmullRomCurve3([
+            new T.Vector3(0,         0.02,         0),
+            new T.Vector3(fdx*0.04,  0.03,  fdz*0.04),
+            new T.Vector3(fdx*0.11,  0.055, fdz*0.11),
+            new T.Vector3(fdx*0.15,  0.08,  fdz*0.15)
+          ]);
+          brkGeo = new T.TubeGeometry(curve, 10, 0.013, 5, false);
+          brkGeoCache.set(dirKey, brkGeo);
+        }
+        const brkMesh = new T.Mesh(brkGeo, ironMat);
+        brkMesh.position.set(bx, by, bz);
         brkMesh.receiveShadow = true;
-        grp.add(brkMesh);
+        brkMesh.visible = false;
+        brkMesh.updateMatrixWorld(true);
+        estaticos.push(brkMesh);
       }catch(e){}
 
       try{
-        const bowl = new T.Mesh(
-          new T.TorusGeometry(0.063, 0.025, 5, 12),
-          ironMat.clone()
-        );
+        const bowl = new T.Mesh(bowlGeo, ironMat);
         bowl.rotation.x = Math.PI / 2;   // lay ring flat
         bowl.scale.y    = 0.40;           // squash into shallow cup
-        bowl.position.set(fdx*0.15, 0.11, fdz*0.15);
+        bowl.position.set(bx + fdx*0.15, by + 0.11, bz + fdz*0.15);
         bowl.receiveShadow = true;
-        grp.add(bowl);
+        bowl.visible = false;
+        bowl.updateMatrixWorld(true);
+        estaticos.push(bowl);
       }catch(e){}
 
       const fx = fdx*0.15, fz = fdz*0.15;
-      const coneSpecs = [
-        { r:0.046, h:0.18, col:0xff5500, em:0xff3300, ei:2.0, dy:0.000, ry: 0.00, rx: 0.00 },
-        { r:0.030, h:0.16, col:0xff8800, em:0xff6600, ei:2.2, dy:0.010, ry: 1.00, rx: 0.10 },
-        { r:0.018, h:0.13, col:0xffee80, em:0xffcc00, ei:2.5, dy:0.022, ry:-1.00, rx:-0.10 },
-      ];
       const flames = [];
-      for(const sp of coneSpecs){
+      // As chamas CONTINUAM meshes proprios dentro do grupo: cada cone tem o
+      // seu emissiveIntensity animado com fase propria (por tocha e por cone),
+      // e emissive e uniform de material -- compartilhar material faria todas
+      // as chamas do mapa piscarem juntas.
+      coneSpecs.forEach((sp, ci) => {
         try{
           const cm = new T.Mesh(
-            new T.ConeGeometry(sp.r, sp.h, 5),
+            coneGeos[ci],
             new T.MeshStandardMaterial({
               color: new T.Color(sp.col), emissive: new T.Color(sp.em),
               emissiveIntensity: sp.ei, roughness: 0.30, metalness: 0
@@ -22401,22 +26223,29 @@ function buildRoomTorches(T, scene, state, wallTorches, TW, TH, WH){
           grp.add(cm);
           flames.push(cm);
         }catch(e){}
-      }
+      });
 
       // Sem PointLight própria: a luz da tocha vem do POOL fixo (init3D), que é
       // atribuído às âncoras reveladas mais próximas do herói. Luz por tocha
       // mudava a contagem de luzes ao revelar a sala → recompilação de shaders.
       grp.visible = false;
       scene.add(grp);
+      const wallKey = `${wx},${wy}`;
+      if(estaticos.length) (torchStatic[wallKey] = torchStatic[wallKey] || []).push(...estaticos);
       wallTorches.push({
         group:   grp,
-        lx: fx, ly: 0.28, lz: fz,   // âncora de luz p/ o pool
+        // Ancora de luz em MUNDO. Antes era `fx`/`fz`, que sao o deslocamento
+        // LOCAL dentro do grupo (no maximo +-0,15): o pool trata lx/lz como
+        // coordenada de mundo, entao TODA luz de tocha ia parar perto da
+        // origem do mapa, em vez de ficar na tocha.
+        lx: bx + fx, ly: by + 0.28, lz: bz + fz,   // âncora de luz p/ o pool
         flames:  flames,
         offset:  ((wx*7919 ^ wy*3467) & 0xFF) / 255 * Math.PI * 2,
         wallKey: `${wx},${wy}`
       });
     }
   }
+  return torchStatic;
 }
 
 // ── Room floor colour overlays (translucent planes per room role) ─────────────
@@ -22490,6 +26319,10 @@ function buildSceneryBarrels(T, scene, state, TW, TH, WH){
 
   for(const room of state.rooms){
     const {x: rx, y: ry, w: rw, h: rh} = room;
+    const isDuneWall = (x, y) => y >= 0 && x >= 0 && y < mapH && x < mapW
+      && tiles[y][x] === TILE_WALL
+      && new Set(['duna_deserto', 'rocha', 'rocha_marrom']).has(
+        ((state.materiais && state.materiais[`${x},${y}`]) || 'pedra_normal'));
 
     // Collect L-corner floor tiles inside this room
     const corners = [];
@@ -22500,6 +26333,10 @@ function buildSceneryBarrels(T, scene, state, TW, TH, WH){
         const wallS = (fy < mapH-1)  && tiles[fy+1][fx] === TILE_WALL;
         const wallW = (fx > 0)       && tiles[fy][fx-1] === TILE_WALL;
         const wallE = (fx < mapW-1)  && tiles[fy][fx+1] === TILE_WALL;
+        // Dunas não usam barris decorativos: o volume orgânico da parede já
+        // ocupa visualmente esse encontro e o aro metálico destoaria do tema.
+        if(isDuneWall(fx, fy-1) || isDuneWall(fx, fy+1)
+           || isDuneWall(fx-1, fy) || isDuneWall(fx+1, fy)) continue;
         // Only perpendicular pairs (L-corners), not opposite pairs (corridors)
         if     (wallN && wallW) corners.push({fx, fy, ox:-0.21, oz:-0.21});
         else if(wallN && wallE) corners.push({fx, fy, ox: 0.21, oz:-0.21});
@@ -22552,7 +26389,10 @@ function buildSceneryBarrels(T, scene, state, TW, TH, WH){
       }
 
       grp.visible = false;
-      scene.add(grp);
+      // Fora da cena: desenhados por _rebuildDetailInstances. Os barris ja
+      // compartilham geometria e material entre si, entao instanciam direto --
+      // eram 156 draw calls.
+      grp.updateMatrixWorld(true);
       if(!sceneryMeshes[key]) sceneryMeshes[key] = [];
       sceneryMeshes[key].push(grp);
     }
@@ -22819,7 +26659,7 @@ function _onEntityStep(msg){
   } else {
     _serverStepAnim.set(id, { pts:[frm, to], startTime: performance.now(), segDur: SERVER_STEP_DUR_MS });
   }
-  if(!_serverStepRaf) _serverStepRaf = requestAnimationFrame(_tickServerStep);
+  if(!_serverStepRaf) _serverStepRaf = _scheduleVisualFrame(_tickServerStep);
 }
 
 // Posição interpolada atual de uma entidade em deslize (ou null se não há).
@@ -22871,7 +26711,7 @@ function _tickServerStep(){
     } else any = true;
   }
   if(GS.gameState) renderMap(GS.gameState);
-  _serverStepRaf = any ? requestAnimationFrame(_tickServerStep) : null;
+  _serverStepRaf = any ? _scheduleVisualFrame(_tickServerStep) : null;
 }
 
 // ── Animação 2D de minion ao longo de um caminho (lerp contínuo) ────────────
@@ -22903,7 +26743,7 @@ function _tickMininoAnim2D(){
     if(anim && anim.onDone) anim.onDone();
   }
   if(anyActive){
-    _mininoAnimRafId = requestAnimationFrame(_tickMininoAnim2D);
+    _mininoAnimRafId = _scheduleVisualFrame(_tickMininoAnim2D);
   } else {
     _mininoAnimRafId = null;
   }
@@ -23150,7 +26990,9 @@ function _animarPasso(peao, destino, onPasso){
     }
 
     if(progress < 1){
-      requestAnimationFrame(tick);
+      // O movimento compartilha o mesmo agendador visual dos efeitos de
+      // combate/magia e do lançamento de dados.
+      _scheduleVisualFrame(tick);
     } else {
       peao.position.set(destinoWorld.x, inicio.y, destinoWorld.z);
       peao.rotation.set(0, peao.rotation.y, 0);
@@ -23159,7 +27001,7 @@ function _animarPasso(peao, destino, onPasso){
       onPasso();
     }
   }
-  requestAnimationFrame(tick);
+  _scheduleVisualFrame(tick);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -23537,6 +27379,161 @@ function _buildWallDecor3D(d){
   });
 }
 
+// ── Casas do tabuleiro em InstancedMesh ──────────────────────────────────────
+// Um mesh por casa dava 1.760 draw calls num mapa 44x40. Como o custo por draw
+// call e ~3 us de CPU, isso sozinho valia ~5 ms/quadro -- e so aparecia CONFORME
+// A NEVOA ABRIA, porque cada casa revelada acrescentava um objeto desenhado.
+// Era essa a "lentidao ao longo do jogo": com o mapa todo explorado o quadro
+// ia de 1,9 ms (186 draw calls) para 10,8 ms (3.582).
+//
+// As casas nunca se movem e so existem 30 combinacoes de (geometria, material)
+// para 1.760 casas -- entao instanciar leva 1.760 draw calls para ~38.
+//
+// O mesh por casa CONTINUA existindo, fora da cena, como procuracao: e nele que
+// o resto do codigo escreve `visible` (nevoa) e `material` (passagem secreta), e
+// e ele o alvo do raycast do clique. Assim nada mais precisou mudar: o rebuild
+// so le esse estado e o traduz em instancias.
+const TILE_INST_MIN = 4;      // grupo menor que isto nao compensa instanciar
+
+function _prepararTileProxy(mesh){
+  // Fora da cena o matrixWorld nao e atualizado por ninguem; o raycast e as
+  // instancias dependem dele, entao fixamos aqui (a casa nunca se move).
+  mesh.updateMatrix();
+  mesh.matrixWorld.copy(mesh.matrix);
+  mesh.matrixWorldNeedsUpdate = false;
+  mesh.matrixAutoUpdate = false;
+}
+
+// Marcado por quem muda `visible` ou `material` de uma casa. Sem isto o rebuild
+// (9,3 ms num mapa 44x40) rodaria a CADA game_state, e a nevoa so muda quando
+// alguem anda.
+let _tilesDirty = true;
+function _rebuildTileInstances(){
+  if(!g3 || !g3.tileMeshes) return;
+  if(!_tilesDirty) return;
+  _tilesDirty = false;
+  const T = g3.T, scene = g3.scene;
+  const pool = g3._tileInstPool || (g3._tileInstPool = new Map());
+  const grupos = new Map();
+  for(const k in g3.tileMeshes){
+    const m = g3.tileMeshes[k];
+    if(!m || !m.visible || !m.geometry) continue;
+    const mat = Array.isArray(m.material) ? m.material[0] : m.material;
+    if(!mat) continue;
+    // As flags de sombra entram na chave: chao e parede se comportam diferente
+    // no shadow pass e nao podem cair na mesma instancia.
+    const chave = m.geometry.uuid + '|' + mat.uuid + '|' + (m.castShadow?1:0) + (m.receiveShadow?1:0);
+    let g = grupos.get(chave);
+    if(!g){ g = { geo:m.geometry, mat, cast:m.castShadow, receive:m.receiveShadow, itens:[] };
+            grupos.set(chave, g); }
+    g.itens.push(m);
+  }
+  const usados = new Set();
+  for(const [chave, g] of grupos){
+    if(g.itens.length < TILE_INST_MIN){
+      // Poucos exemplares (ex.: parede de rocha, com geometria propria por casa):
+      // instanciar nao pagaria, entao a propria procuracao entra na cena.
+      for(const m of g.itens) if(m.parent !== scene) scene.add(m);
+      continue;
+    }
+    for(const m of g.itens) if(m.parent === scene) scene.remove(m);
+    let inst = pool.get(chave);
+    if(!inst || inst.instanceMatrix.count < g.itens.length){
+      if(inst){ scene.remove(inst); inst.dispose(); }
+      inst = new T.InstancedMesh(g.geo, g.mat, Math.max(16, g.itens.length * 2));
+      inst.instanceMatrix.setUsage(T.DynamicDrawUsage);
+      // O bounding sai de UMA instancia na origem; sem isto o tabuleiro inteiro
+      // seria descartado pelo frustum.
+      inst.frustumCulled = false;
+      inst.castShadow = g.cast; inst.receiveShadow = g.receive;
+      scene.add(inst);
+      pool.set(chave, inst);
+    }
+    for(let i = 0; i < g.itens.length; i++) inst.setMatrixAt(i, g.itens[i].matrix);
+    inst.count = g.itens.length;
+    inst.instanceMatrix.needsUpdate = true;
+    usados.add(chave);
+  }
+  // Grupo que sumiu (nevoa fechou, material trocou) para de desenhar.
+  for(const [chave, inst] of pool) if(!usados.has(chave)) inst.count = 0;
+}
+
+// Mesma ideia do _rebuildTileInstances, para os detalhes de parede (arcos,
+// pilares, portas de madeira, rodapes). Difere em um ponto: aqui a entrada pode
+// ser um Group (as pedras do arco), entao agrupa-se pelos MESHES descendentes e
+// usa-se a matrixWorld ja congelada, nao a matriz local.
+let _detailDirty = true;
+function _rebuildDetailInstances(){
+  if(!g3) return;
+  if(!_detailDirty) return;
+  _detailDirty = false;
+  const T = g3.T, scene = g3.scene;
+  const pool = g3._detailInstPool || (g3._detailInstPool = new Map());
+  const grupos = new Map();
+  // Duas familias com a mesma forma (chave -> lista de entradas) e o mesmo
+  // comportamento (estaticas, so ligadas/desligadas pela nevoa).
+  const familias = [g3.wallDetailMeshes, g3.sceneryMeshes, g3.torchStaticMeshes];
+  for(const familia of familias){
+   if(!familia) continue;
+   for(const key in familia){
+    for(const entrada of (familia[key] || [])){
+      if(!entrada || !entrada.visible) continue;
+      entrada.traverse(o => {
+        if(!o.isMesh || !o.geometry || !o.visible) return;
+        const mat = Array.isArray(o.material) ? o.material[0] : o.material;
+        if(!mat) return;
+        const chave = o.geometry.uuid + '|' + mat.uuid + '|' + (o.castShadow?1:0) + (o.receiveShadow?1:0);
+        let g = grupos.get(chave);
+        if(!g){ g = { geo:o.geometry, mat, cast:o.castShadow, receive:o.receiveShadow, itens:[] };
+                grupos.set(chave, g); }
+        g.itens.push(o);
+      });
+    }
+   }
+  }
+  const usados = new Set();
+  for(const [chave, g] of grupos){
+    if(g.itens.length < TILE_INST_MIN){
+      for(const m of g.itens) if(m.parent !== scene) scene.add(m);
+      continue;
+    }
+    for(const m of g.itens) if(m.parent === scene) scene.remove(m);
+    let inst = pool.get(chave);
+    if(!inst || inst.instanceMatrix.count < g.itens.length){
+      if(inst){ scene.remove(inst); inst.dispose(); }
+      inst = new T.InstancedMesh(g.geo, g.mat, Math.max(16, g.itens.length * 2));
+      inst.instanceMatrix.setUsage(T.DynamicDrawUsage);
+      inst.frustumCulled = false;
+      inst.castShadow = g.cast; inst.receiveShadow = g.receive;
+      scene.add(inst);
+      pool.set(chave, inst);
+    }
+    for(let i = 0; i < g.itens.length; i++) inst.setMatrixAt(i, g.itens[i].matrixWorld);
+    inst.count = g.itens.length;
+    inst.instanceMatrix.needsUpdate = true;
+    usados.add(chave);
+  }
+  for(const [chave, inst] of pool) if(!usados.has(chave)) inst.count = 0;
+}
+
+// Reposiciona as instancias do brilho de chao para cobrir exatamente as casas
+// reveladas. Substitui o antigo laco que ligava/desligava 882 meshes.
+// So e chamada de renderMap3D (ou seja, quando o estado muda), nunca por quadro.
+const _wetTmpM4 = (typeof THREE !== 'undefined' && THREE.Matrix4) ? new THREE.Matrix4() : null;
+function _atualizarWetFloor3D(terrainSet){
+  if(!g3 || !g3.wetFloorInst || !_wetTmpM4) return;
+  const inst = g3.wetFloorInst, TH = g3.wetFloorTH;
+  let n = 0;
+  for(const [x, y] of g3.wetFloorKeys){
+    if(!terrainSet.has(`${x},${y}`)) continue;
+    _wetTmpM4.makeRotationX(-Math.PI / 2);
+    _wetTmpM4.setPosition(x, TH + 0.002, y);   // 2mm acima do piso
+    inst.setMatrixAt(n++, _wetTmpM4);
+  }
+  inst.count = n;
+  inst.instanceMatrix.needsUpdate = true;
+}
+
 function renderMap3D(state){
   if(!state || !state.tiles) return;
   state = _estadoComMortosVisuais(state);
@@ -23651,10 +27648,15 @@ function renderMap3D(state){
       const key  = `${x},${y}`;
       const mesh = tileMeshes[key];
       if(!mesh) continue;
-      mesh.visible = terrainSet.has(key);
+      const vis = terrainSet.has(key);
+      if(mesh.visible !== vis){ mesh.visible = vis; _tilesDirty = true; }
       const ent3 = tileMeshes[`entulho:${key}`];
-      if(ent3) ent3.visible = mesh.visible;
+      if(ent3 && ent3.visible !== vis){ ent3.visible = vis; _tilesDirty = true; }
     }
+  }
+  if(g3.lavaBubbleMeshes){
+    for(const bubble of g3.lavaBubbleMeshes)
+      bubble.visible = terrainSet.has(bubble.userData.lavaKey);
   }
   // Segredos 3D: Encontrar Armadilhas ou Clarividência os revela. A parede
   // continua existindo; a transparência é somente uma indicação visual.
@@ -23675,11 +27677,15 @@ function renderMap3D(state){
       sm.transparent = true;
       sm.opacity = secretType === 'illusion' ? 0.28 : 0.55;
       sm.depthWrite = false;
-      if (mesh.material !== sm) mesh.material = sm;
+      if (mesh.material !== sm){ mesh.material = sm; _tilesDirty = true; }
     } else if (shared && mesh.material !== shared) {
       mesh.material = shared;   // volta ao compartilhado (opaco) quando some o realce
+      _tilesDirty = true;
     }
   }
+  // Depois da visibilidade E da troca de material das secretas: as instancias
+  // sao montadas a partir do estado final das procuracoes.
+  _rebuildTileInstances();
 
   // ── Door leaves: visible only while closed AND the door tile is visível ──────
   if(doorMeshes){
@@ -23687,46 +27693,90 @@ function renderMap3D(state){
       grp.visible = terrainSet.has(key) && doorClosed3D.has(key);
   }
 
+  // Os realces por casa nascem sob demanda: em vez de varrer o dicionário,
+  // passa-se o conjunto final de casas a acender (ver _mkOverlayPool).
+  const _soExploradas = (keys) => { const r = new Set(); for(const k of keys) if(exploredSet.has(k)) r.add(k); return r; };
+
   // ── Movement highlight overlay visibility (blue planes)
-  if(g3.moveHighlightMeshes){
-    for(const [key, m] of Object.entries(g3.moveHighlightMeshes))
-      m.visible = exploredSet.has(key) && reachable.has(key);
-  }
+  _overlayShowOnly(g3.moveHighlightMeshes, _soExploradas(reachable));
 
   // ── Attack highlight overlay visibility (red planes)
-  if(g3.atkHighlightMeshes){
-    for(const [key, m] of Object.entries(g3.atkHighlightMeshes))
-      m.visible = exploredSet.has(key) && attackable3d.has(key);
-  }
+  _overlayShowOnly(g3.atkHighlightMeshes, _soExploradas(attackable3d));
 
   // ── Weapon range preview planes (vermelho forte — hover no ícone da arma)
-  if(g3.weaponRangeMeshes){
+  {
     const wRngTiles = (window._weaponRangePreview && me)
       ? _computeWeaponRangeTiles(state, me) : new Set();
-    for(const [key, m] of Object.entries(g3.weaponRangeMeshes))
-      m.visible = exploredSet.has(key) && wRngTiles.has(key);
+    _overlayShowOnly(g3.weaponRangeMeshes, _soExploradas(wRngTiles));
   }
 
+  // Prévia do Mestre: vermelho claro = alcance total; vermelho escuro =
+  // casas efetivamente atacáveis pela orientação e pelos ataques da criatura.
+  const masterHoverMonster = _masterMonsterHoverEnabled() && _masterMonsterHoverId
+    ? (state.monsters || []).find(m => m.id === _masterMonsterHoverId && m.hp > 0)
+    : null;
+  const masterHoverPreview = masterHoverMonster
+    ? _masterMonsterAttackPreviewClient(state, masterHoverMonster)
+    : { range: new Set(), zone: new Set() };
+  _overlayShowOnly(g3.masterAttackRangeMeshes,
+    masterHoverMonster ? _soExploradas(masterHoverPreview.range) : null);
+  _overlayShowOnly(g3.masterAttackZoneMeshes,
+    masterHoverMonster ? _soExploradas(masterHoverPreview.zone) : null);
+  {
+    const footprint = new Set();
+    for(const id of _masterSelectedMonsterIds(state)){
+      const monster = (state.monsters || []).find(m => String(m.id) === String(id));
+      for(const [x,y] of _masterMonsterFootprintTiles(state, monster)) footprint.add(`${x},${y}`);
+    }
+    _overlayShowOnly(g3.masterFootprintMeshes, _soExploradas(footprint));
+  }
+  const historyFocus = _masterHistoryFocus && performance.now() <= Number(_masterHistoryFocus.until || 0)
+    ? _masterHistoryFocus : null;
+  if(!historyFocus) _masterHistoryFocus = null;
+  const historyAttacker = new Set(), historyTarget = new Set();
+  if(historyFocus){
+    for(const [x,y] of _masterHistoryEntityTiles(state, historyFocus.attackerId, historyFocus.attackerPos)) historyAttacker.add(`${x},${y}`);
+    for(const [x,y] of _masterHistoryEntityTiles(state, historyFocus.targetId, historyFocus.targetPos)) historyTarget.add(`${x},${y}`);
+  }
+  _overlayShowOnly(g3.masterHistoryAttackerMeshes,
+    historyFocus ? _soExploradas(historyAttacker) : null);
+  _overlayShowOnly(g3.masterHistoryTargetMeshes,
+    historyFocus ? _soExploradas(historyTarget) : null);
+
   // ── Realce de MAGIA (alcance vermelho / zona laranja / área verde) ──────────
+  // O mesmo filtro de névoa usado pelos pisos evita que a prévia colorida
+  // revele alvos em casas ainda ocultas no modo 3D.
+  g3.spellVisibleSet = exploredSet;
   _aplicarSpellHL3D();
 
   // ── Explosão do Elemental de Fogo — meshes vermelhos temporários (3D) ───────
   if(g3.atkHighlightMeshes && _explosionTiles && _explosionTiles.size){
-    for(const [key, m] of Object.entries(g3.atkHighlightMeshes)){
-      if(_explosionTiles.has(key) && exploredSet.has(key)) m.visible = true;
+    // Acende por cima do realce de ataque, sem apagar o que já estava aceso.
+    for(const key of _explosionTiles){
+      if(!exploredSet.has(key)) continue;
+      const m = _overlayAt(g3.atkHighlightMeshes, key);
+      if(m) m.visible = true;
     }
   }
 
   // ── Wall detail visibility (arches, corner columns, baseboards) ─────────────
   if(g3.wallDetailMeshes){
-    for(const [key, arr] of Object.entries(g3.wallDetailMeshes))
-      for(const m of arr) m.visible = terrainSet.has(key);
+    for(const [key, arr] of Object.entries(g3.wallDetailMeshes)){
+      const vis = terrainSet.has(key);
+      for(const m of arr) if(m.visible !== vis){ m.visible = vis; _detailDirty = true; }
+    }
+    // O rebuild roda UMA vez, depois que as duas familias (detalhe de parede
+    // e cenario) ja definiram sua visibilidade -- ver abaixo.
   }
 
   // ── Wall torch visibility (whole bracket group, keyed by wall tile) ──────────
   if(g3.wallTorches){
-    for(const wt of g3.wallTorches)
-      wt.group.visible = terrainSet.has(wt.wallKey);
+    for(const wt of g3.wallTorches){
+      const vis = terrainSet.has(wt.wallKey);
+      wt.group.visible = vis;   // so as chamas moram no grupo agora
+      for(const m of (g3.torchStaticMeshes && g3.torchStaticMeshes[wt.wallKey]) || [])
+        if(m.visible !== vis){ m.visible = vis; _detailDirty = true; }
+    }
   }
 
   // ── Room floor overlay visibility (transparent color planes) ─────────────────
@@ -23736,8 +27786,11 @@ function renderMap3D(state){
   }
 
   if(g3.sceneryMeshes){
-    for(const [key, arr] of Object.entries(g3.sceneryMeshes))
-      for(const m of arr) m.visible = terrainSet.has(key);
+    for(const [key, arr] of Object.entries(g3.sceneryMeshes)){
+      const vis = terrainSet.has(key);
+      for(const m of arr) if(m.visible !== vis){ m.visible = vis; _detailDirty = true; }
+    }
+    _rebuildDetailInstances();
   }
 
   // ── Glowing grout visibility (magic rune grid, trap rooms only) ───────────────
@@ -23747,13 +27800,10 @@ function renderMap3D(state){
   }
 
   // ── Wet floor reflection visibility (revealed with its floor tile) ───────────
-  if(g3.wetFloorMeshes){
-    for(const [key, m] of Object.entries(g3.wetFloorMeshes))
-      m.visible = terrainSet.has(key);
-  }
+  _atualizarWetFloor3D(terrainSet);
 
   // ── Dust motes: show once the player has revealed any tiles ──────────────────
-  if(g3.dustPts && !g3.dustPts.visible && exploredSet.size > 0)
+  if(g3.dustPts && !g3.dustPts.visible && exploredSet.size > 0 && _perfCfg().poeira)
     g3.dustPts.visible = true;
 
   if(me){
@@ -23977,6 +28027,7 @@ function renderMap3D(state){
     state.rooms.map(r => [r.cx, r.cy, r.role, r.cleared]),
     state.current_turn, state.animados_turn, GS.myPid,
     g3.selectedPos, _animadoSel,
+    GS.isMaster() ? [..._masterSelectedMonsterIds(state)].sort().join('|') : '',
     state.explored.length, [...visionSet].sort().join('|'),
     // Arte liberada para nova tentativa depois de falhar por rede. Sem isto o
     // bloco inteiro de entidades é pulado (nada no estado mudou) e o peão fica
@@ -24020,9 +28071,13 @@ function renderMap3D(state){
         const h = bounds.getSize(new T.Vector3()).y;
         fig.userData._waterSinkShallowY = -Math.max(0.10, h) * 0.25;
         fig.userData._waterSinkDeepY = -Math.max(0.10, h) * 0.45;
+        fig.userData._lavaSinkY = -Math.max(0.10, h) * 0.30;
+        fig.userData._swampSinkY = -Math.max(0.10, h) * 0.20;
       }
       const waterKind = state.materiais && state.materiais[`${x},${y}`];
-      const waterSinkY = waterKind === 'agua_profunda' ? fig.userData._waterSinkDeepY
+      const waterSinkY = waterKind === 'pantano' ? fig.userData._swampSinkY
+        : waterKind === 'lava' ? fig.userData._lavaSinkY
+        : waterKind === 'agua_profunda' ? fig.userData._waterSinkDeepY
         : waterKind === 'agua' ? fig.userData._waterSinkShallowY : 0;
       // vscale é aplicado ao grupo inteiro, cujo pivô fica no mapa (y=0).
       // Compensa a redução vertical para manter a menor parte da miniatura
@@ -24059,6 +28114,10 @@ function renderMap3D(state){
     _figInvis.userData.magicalInvisible = !!p.invisivel_magico || _invisibilidadeAnimAtiva(p.id);
   }
 
+  // Os mesmos efeitos ativos do HUD 2D aparecem presos ao peão no espaço 3D.
+  // Como a lista vem do estado recebido, expira e desaparece junto com a regra.
+  _syncEfeitosAtivos3D(state, visionSet);
+
   // Prisioneiro (Fase 3): peão com imagem editável; só quando visível/explorado.
   const _pris3D = state.prisoner;
   if(_pris3D && _pris3D.alive){
@@ -24082,7 +28141,8 @@ function renderMap3D(state){
     if(m.hp <= 0) continue;
     const [mx,my] = m.pos;
     if(!visionSet.has(`${mx},${my}`)) continue;
-    const mSel = g3.selectedPos && g3.selectedPos[0]===mx && g3.selectedPos[1]===my;
+    const mSel = (g3.selectedPos && g3.selectedPos[0]===mx && g3.selectedPos[1]===my)
+      || (GS.isMaster() && _masterSelectedMonsterIds(state).has(String(m.id)));
     const imageName = _monsterImageName(m);
     obterFig(`mon:${m.id}`,
       // _arteGen: muda quando uma arte que falhou por rede é liberada para nova
@@ -24108,10 +28168,11 @@ function renderMap3D(state){
       mx, my);
     // m.pos continua sendo a âncora autoritativa para seleção e colisão; a
     // raiz visual é deslocada para o centro geométrico do footprint.
-    // O GLB orientado 2x1 já recebe o deslocamento longitudinal dentro de
-    // _makeMonsterPawn3D quando fill_footprint_3d está ativo. Aqui deslocamos
-    // somente o caso 2x2, que antes ficava preso na casa-âncora.
-    const [moffX, moffY] = _monsterIs2x2(m) ? _monsterVisualCenterOffset(m) : [0, 0];
+    // A âncora é a fileira frontal. Centralizamos qualquer footprint orientado
+    // que não tenha feito esse ajuste dentro do GLB; 2x2 não orientado também
+    // continua sendo centralizado como antes.
+    const needsVisualCenter = _monsterIs2x2(m) || (m.oriented && !m.fill_footprint_3d);
+    const [moffX, moffY] = needsVisualCenter ? _monsterVisualCenterOffset(m) : [0, 0];
     const _m3d = g3._figCache && g3._figCache.get(`mon:${m.id}`);
     if(_m3d && _m3d.fig){
       _m3d.fig.position.x = mx + moffX;
@@ -24121,6 +28182,7 @@ function renderMap3D(state){
       _m3d.fig.userData.footprintOffsetX = moffX;
       _m3d.fig.userData.footprintOffsetZ = moffY;
     }
+
   }
 
   // Cadáveres — marca onde o Pedro pode reanimar (na visão atual)
@@ -24188,6 +28250,9 @@ function renderMap3D(state){
       figCache.delete(key);
     }
   }
+  // O loop 3D usa este sinal para reconstruir a lista de anéis pulsantes só
+  // quando a composição das entidades realmente mudou.
+  g3._pulseNodesDirty = true;
 
   }   // fim do bloco de reconstrução condicionada por entitySig
 
@@ -24485,15 +28550,20 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   devoradorOrganico: 'assets/models3d/monstros/devorador_organico.glb',
   devoradordemetal:  'assets/models3d/monstros/devorador_de_metal.glb',
   koboldlanceiro:    'assets/models3d/monstros/kobold.glb',
-  koboldbesteiro:    'assets/models3d/monstros/kobold.glb',
+  koboldbesteiro:    'assets/models3d/monstros/kobold_besteiro.glb',
   grotao:            'assets/models3d/monstros/grotao.glb',
   lagartoCarniceiro: 'assets/models3d/monstros/lagarto_carniceiro.glb',
   loboCinzento:      'assets/models3d/monstros/lobo.glb',
   ursoNegro:         'assets/models3d/monstros/urso.glb',
   zumbi:             'assets/models3d/monstros/zumbi.glb',
-  ogroClava:         'assets/models3d/monstros/ogro_lanca.glb',
+  ogroClava:         'assets/models3d/monstros/ogro_clava.glb',
   ogroLanca:         'assets/models3d/monstros/ogro_lanca.glb',
+  // Cobre tanto `orc_guerreiro` (ficha nova) quanto o `orc` legado, que resolve
+  // esta mesma `image` por _MONSTER_TYPE_DEFAULT_IMAGE.
+  orcGuerreiro:      'assets/models3d/monstros/orc.glb',
+  elemental_agua:    'assets/models3d/monstros/elemental_agua.glb',
   elemental_ar:      'assets/models3d/monstros/elemental_ar.glb',
+  elemental_eletrico:'assets/models3d/monstros/elemental_eletrico.glb',
   elemental_fogo:    'assets/models3d/monstros/elemental_fogo.glb',
   elemental_gelo:    'assets/models3d/monstros/elemental_gelo.glb',
   elemental_pedra:   'assets/models3d/monstros/elemental_pedra.glb',
@@ -24517,6 +28587,9 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   garalux:           'assets/models3d/monstros/garalux.glb',
   lacralion:         'assets/models3d/monstros/lacralion.glb',
   molochos:          'assets/models3d/monstros/molochos.glb',
+  // Cobre a ficha com `image: "necromante"` e o `dark_mage` legado, que resolve
+  // esta mesma `image` por _MONSTER_TYPE_DEFAULT_IMAGE.
+  necromante:        'assets/models3d/monstros/necromante.glb',
   vampiro:           'assets/models3d/monstros/vampiro.glb',
   vampiro_jovem:     'assets/models3d/monstros/vampiro.glb',
   mestre_vampiro:    'assets/models3d/monstros/mestre_vampiro.glb',
@@ -24548,13 +28621,13 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   devorador_organico: 'assets/models3d/monstros/devorador_organico.glb',
   devorador_metal:    'assets/models3d/monstros/devorador_de_metal.glb',
   kobold_lanceiro:    'assets/models3d/monstros/kobold.glb',
-  kobold_besteiro:    'assets/models3d/monstros/kobold.glb',
+  kobold_besteiro:    'assets/models3d/monstros/kobold_besteiro.glb',
   lagarto_carniceiro: 'assets/models3d/monstros/lagarto_carniceiro.glb',
   lobo_cinzento:      'assets/models3d/monstros/lobo.glb',
   urso_negro:         'assets/models3d/monstros/urso.glb',
   urso_negro_customizado: 'assets/models3d/monstros/urso.glb',
   zumbi_infectado:    'assets/models3d/monstros/zumbi.glb',
-  ogro_clava:         'assets/models3d/monstros/ogro_lanca.glb',
+  ogro_clava:         'assets/models3d/monstros/ogro_clava.glb',
   ogro_lanca:         'assets/models3d/monstros/ogro_lanca.glb',
   escravo_vampirico:  'assets/models3d/monstros/cria_vampirica.glb',
   rato_gigante:       'assets/models3d/monstros/rato_gicante.glb',
@@ -24570,6 +28643,14 @@ function _monsterGLBPath(imageName, monsterType){
   // sua miniatura 3D seja sempre o escorpião amarelo.
   if (monsterType === 'escorpiao_pequeno')
     return _MONSTER_GLB_MODELS.escorpiao_pequeno;
+  // O Elemental Elétrico também deve manter seu modelo próprio mesmo quando
+  // uma masmorra antiga tiver salvo um identificador de imagem diferente.
+  if (monsterType === 'elemental_eletrico')
+    return _MONSTER_GLB_MODELS.elemental_eletrico;
+  // Mantém o Elemental da Água ligado ao seu GLB mesmo em mapas antigos que
+  // tenham gravado outro identificador de imagem na ficha da criatura.
+  if (monsterType === 'elemental_agua')
+    return _MONSTER_GLB_MODELS.elemental_agua;
   return _MONSTER_GLB_MODELS[imageName] || _MONSTER_GLB_MODELS[monsterType] || null;
 }
 const _monsterGLBCache = {};  // caminho -> template | 'erro'
@@ -24740,9 +28821,15 @@ function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented
     // casa de altura, parecendo pontos brancos. O mesmo limite visual usado pelos
     // billboards mantém a miniatura reconhecível sem ocupar duas casas inteiras.
     const is2x2 = Array.isArray(mSize) && Number(mSize[0]) === 2 && Number(mSize[1]) === 2;
+    const orientedDims = oriented && Array.isArray(mSize)
+      ? (Number(mSize[1]) === 1 ? [1, Number(mSize[0]) || 2]
+         : [Number(mSize[0]) || 2, Number(mSize[1]) || 1])
+      : null;
     // Modelos 2x2 precisam preencher o quadrado visual inteiro; os demais
     // conservam o enquadramento anterior para não alterar criaturas 1x1.
-    const footprint = (oriented || is2x2) ? 1.86 : 1.45;
+    const footprint = orientedDims
+      ? Math.max(orientedDims[0], orientedDims[1]) * 0.92
+      : (is2x2 ? 1.86 : 1.45);
     const scale = Math.min(
       2.05 / Math.max(size.y, 1e-3),
       footprint / Math.max(size.x, size.z, 1e-3)
@@ -24834,6 +28921,9 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
   const leftQuarterTurn = new Set([
     'koboldlanceiro', 'kobold_lanceiro',
     'koboldbesteiro', 'kobold_besteiro',
+    // O GLB do Orc foi exportado de lado; corrigir um quarto de volta
+    // mantém o rosto alinhado ao sentido do movimento.
+    'orc', 'orcGuerreiro', 'orc_guerreiro',
     'ogroClava', 'ogro_clava',
     'ogroLanca', 'ogro_lanca',
     'devoradorOrganico', 'devorador_organico',
@@ -24854,6 +28944,9 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
     'mestre_vampiro', 'vampiro_anciao',
     'lorde_vampiro',
     'garaloux', 'garaloux_jovem', 'garaloux_adulto', 'garaloux_alfa',
+    // Os elementais foram exportados com a frente 90° fora do eixo do mapa;
+    // usam a mesma calibração dos modelos cuja frente acompanha o movimento.
+    'elemental_ar', 'elemental_agua', 'elemental_eletrico',
   ]);
   if (movementFront.has(imageName) || movementFront.has(monsterType)
       || /(?:ciclope|gigante_guerreiro|gigante_runas|molochos|ferrao_dos_charcos|vampiro|cria_vampirica|mestre_vampiro|lorde_vampiro|garalux)\.glb$/i.test(glbPath || '')) {
@@ -25229,6 +29322,18 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
 
   const is2x2 = isMonster && Array.isArray(mSize)
     && Number(mSize[0]) === 2 && Number(mSize[1]) === 2;
+  const monsterFootprint3D = (() => {
+    if(!isMonster) return { w:1, h:1 };
+    if(mOriented && Array.isArray(mSize)){
+      const naturalW = Number(mSize[0]) || 1, naturalH = Number(mSize[1]) || 1;
+      const width = naturalH === 1 ? 1 : naturalW;
+      const length = naturalH === 1 ? naturalW : naturalH;
+      const f = Array.isArray(mFacing) ? mFacing : [-1, 0];
+      return f[0] !== 0 ? { w:length, h:width } : { w:width, h:length };
+    }
+    return is2x2 ? { w:2, h:2 } : { w:1, h:1 };
+  })();
+  const isMultiFootprint3D = monsterFootprint3D.w > 1 || monsterFootprint3D.h > 1;
   const baseGrp = new T.Group(); baseGrp.name = 'base'; grp.add(baseGrp);
 
   if(isMonster && GS.sorrateiroAtivo()){
@@ -25245,19 +29350,20 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
   }
 
   // Blob shadow — soft dark oval on the tile surface
-  const shadowR = isMonster ? (is2x2 ? 0.78 : 0.42) : 0.36;
+  const shadowW = isMonster && isMultiFootprint3D ? monsterFootprint3D.w * 0.78 : 0.84;
+  const shadowH = isMonster && isMultiFootprint3D ? monsterFootprint3D.h * 0.78 : 0.84;
   const shadowMesh = new T.Mesh(
-    new T.PlaneGeometry(shadowR * 2, shadowR * 2),
+    new T.PlaneGeometry(shadowW, shadowH),
     g3.softShadowMat || new T.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:0.55, depthWrite:false })
   );
   shadowMesh.rotation.x = -Math.PI / 2;
   shadowMesh.position.set(0, TH + 0.003, 0);
-  shadowMesh.scale.set(1.0, is2x2 ? 0.92 : 0.70, 1.0);
+  shadowMesh.scale.set(1.0, 1.0, 1.0);
   shadowMesh.userData.isGroundDecal = true;
   baseGrp.add(shadowMesh);
 
   // Disco de base em MADEIRA ESCURA com leve brilho da cor do herói por dentro
-  const baseR = isMonster ? (is2x2 ? 0.76 : 0.37) : 0.32;
+  const baseR = isMonster ? (isMultiFootprint3D ? Math.max(0.76, Math.max(monsterFootprint3D.w, monsterFootprint3D.h) * 0.38) : 0.37) : 0.32;
   _addM(baseGrp,
     new T.CylinderGeometry(baseR, baseR+0.012, 0.074, 26),
     { color:new T.Color(0x35200f), roughness:0.82, metalness:0.00,
@@ -25358,7 +29464,7 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
 
   // ── Selection ring — golden glowing torus at base, excluded from outline ──────
   if(isSelected){
-    const selR = (isMonster ? 0.37 : 0.32) + 0.14;
+    const selR = (isMonster ? baseR : 0.32) + 0.14;
     const selRing = new T.Mesh(
       new T.TorusGeometry(selR, 0.020, 8, 36),
       new T.MeshStandardMaterial({
@@ -29917,11 +34023,12 @@ function destroyClassSelectFull(){
 // `bonus_action`. Geometria de alcance conforme a spec: linha reta OU diagonal,
 // dentro do raio (Chebyshev) e com linha de visão sem paredes.
 // ═══════════════════════════════════════════════════════════════════════════
-const _highlightArremesso = { meshes: [], ativo: false, tileAlvo: null };
+const _highlightArremesso = { meshes: [], ativo: false, tileAlvo: null, frame: null };
 
 function getInimigoArremesso(x, y){
   const st = GS.gameState; if(!st) return null;
-  return (st.monsters || []).find(m => m && m.hp > 0 && m.pos[0] === x && m.pos[1] === y) || null;
+  return (st.monsters || []).find(m => m && m.hp > 0 &&
+    GS.monsterTiles(m).some(([tx, ty]) => tx === x && ty === y)) || null;
 }
 function temInimigoArremesso(x, y){ return !!getInimigoArremesso(x, y); }
 
@@ -30006,20 +34113,21 @@ function limparHighlightArremesso(){
   _highlightArremesso.meshes   = [];
   _highlightArremesso.ativo    = false;
   _highlightArremesso.tileAlvo = null;
+  _cancelVisualFrame(_highlightArremesso.frame);
+  _highlightArremesso.frame    = null;
   removerLegendaArremesso();
 }
 
-// Pulso de opacidade — tiles piscam levemente (RAF próprio; o loop principal
-// renderiza a cena continuamente, então a mudança aparece).
-function _animarHighlightArremesso(){
+// Pulso de opacidade — atualizado pelo agendador visual compartilhado.
+function _animarHighlightArremesso(now){
   if(!_highlightArremesso.ativo) return;
-  const t = performance.now() / 1000;
+  const t = (now == null ? performance.now() : now) / 1000;
   _highlightArremesso.meshes.forEach((mesh, i) => {
     const tile  = mesh.userData.tilePos;
     const base  = tile.temInimigo ? 0.55 : 0.30;
     mesh.material.opacity = base + Math.sin(t * 2.5 + i * 0.3) * 0.12;
   });
-  requestAnimationFrame(_animarHighlightArremesso);
+  _highlightArremesso.frame = _scheduleVisualFrame(_animarHighlightArremesso);
 }
 
 // Hover no tabuleiro durante o modo arremesso — destaca o tile sob o mouse e
@@ -30157,7 +34265,7 @@ const COR_HIGHLIGHT_ADAGA_PRINCIPAL = {
   opacidadeBase:    0.30,
   opacidadeInimigo: 0.55,
 };
-const _highlightArremessoPrincipal = { meshes: [], ativo: false, tileAlvo: null };
+const _highlightArremessoPrincipal = { meshes: [], ativo: false, tileAlvo: null, frame: null };
 
 function mostrarHighlightArremessoPrincipal(posicaoHeroi){
   limparHighlightArremessoPrincipal();
@@ -30201,18 +34309,20 @@ function limparHighlightArremessoPrincipal(){
   _highlightArremessoPrincipal.meshes   = [];
   _highlightArremessoPrincipal.ativo    = false;
   _highlightArremessoPrincipal.tileAlvo = null;
+  _cancelVisualFrame(_highlightArremessoPrincipal.frame);
+  _highlightArremessoPrincipal.frame    = null;
   removerLegendaArremessoPrincipal();
 }
 
-function _animarHighlightArremessoPrincipal(){
+function _animarHighlightArremessoPrincipal(now){
   if(!_highlightArremessoPrincipal.ativo) return;
-  const t = performance.now() / 1000;
+  const t = (now == null ? performance.now() : now) / 1000;
   _highlightArremessoPrincipal.meshes.forEach((mesh, i) => {
     const tile = mesh.userData.tilePos;
     const base = tile.temInimigo ? COR_HIGHLIGHT_ADAGA_PRINCIPAL.opacidadeInimigo : COR_HIGHLIGHT_ADAGA_PRINCIPAL.opacidadeBase;
     mesh.material.opacity = base + Math.sin(t * 2.5 + i * 0.3) * 0.12;
   });
-  requestAnimationFrame(_animarHighlightArremessoPrincipal);
+  _highlightArremessoPrincipal.frame = _scheduleVisualFrame(_animarHighlightArremessoPrincipal);
 }
 
 function onMouseMoveArremessoPrincipal(e){ _processarHoverArremesso(e, _highlightArremessoPrincipal); }
@@ -30300,7 +34410,7 @@ const COR_HIGHLIGHT_LANCA = {
   opacidadeBase:    0.30,
   opacidadeInimigo: 0.55,
 };
-const _highlightArremessoLanca = { meshes: [], ativo: false, tileAlvo: null };
+const _highlightArremessoLanca = { meshes: [], ativo: false, tileAlvo: null, frame: null };
 
 function mostrarHighlightArremessoLanca(posicaoHeroi){
   limparHighlightArremessoLanca();
@@ -30340,18 +34450,20 @@ function limparHighlightArremessoLanca(){
   _highlightArremessoLanca.meshes   = [];
   _highlightArremessoLanca.ativo    = false;
   _highlightArremessoLanca.tileAlvo = null;
+  _cancelVisualFrame(_highlightArremessoLanca.frame);
+  _highlightArremessoLanca.frame    = null;
   removerLegendaArremessoLanca();
 }
 
-function _animarHighlightArremessoLanca(){
+function _animarHighlightArremessoLanca(now){
   if(!_highlightArremessoLanca.ativo) return;
-  const t = performance.now() / 1000;
+  const t = (now == null ? performance.now() : now) / 1000;
   _highlightArremessoLanca.meshes.forEach((mesh, i) => {
     const tile = mesh.userData.tilePos;
     const base = tile.temInimigo ? COR_HIGHLIGHT_LANCA.opacidadeInimigo : COR_HIGHLIGHT_LANCA.opacidadeBase;
     mesh.material.opacity = base + Math.sin(t * 2.5 + i * 0.3) * 0.12;
   });
-  requestAnimationFrame(_animarHighlightArremessoLanca);
+  _highlightArremessoLanca.frame = _scheduleVisualFrame(_animarHighlightArremessoLanca);
 }
 
 function onMouseMoveArremessoLanca(e){ _processarHoverArremesso(e, _highlightArremessoLanca); }
@@ -30542,7 +34654,13 @@ function on3DClick(e){
   // somente o piso e podia selecionar a casa que aparecia atrás de uma figura alta.
   if(GS.isMaster() && GS.gameState?.test_mode){
     const monDireto=get3DMonsterAtPointer(e);
-    if(monDireto){ handleTileClick(monDireto.pos[0],monDireto.pos[1]); return; }
+    if(monDireto){
+      // Usa a casa sob o cursor, não a âncora do monstro. Assim qualquer uma
+      // das quatro casas de uma criatura 2×2 pode virar alvo no teste 3D.
+      const tileDireto = get3DTile(e) || monDireto.pos;
+      handleTileClick(tileDireto[0], tileDireto[1]);
+      return;
+    }
   }
   const tile = get3DTile(e);
   if(!tile) return;
@@ -30573,7 +34691,9 @@ function on3DClick(e){
   if(g3 && GS.gameState){
     const hasEntity =
       GS.gameState.players.some(p  => p.alive && p.pos[0]===tx && p.pos[1]===ty) ||
-      GS.gameState.monsters.some(m => m.hp>0   && m.pos[0]===tx && m.pos[1]===ty);
+      GS.gameState.monsters.some(m => m.hp>0 &&
+        (typeof GS.monsterTiles === 'function' ? GS.monsterTiles(m) : [m.pos])
+          .some(([x, y]) => x === tx && y === ty));
     if(hasEntity){
       g3.selectedPos = (g3.selectedPos && g3.selectedPos[0]===tx && g3.selectedPos[1]===ty)
         ? null : [tx, ty];
@@ -30625,9 +34745,15 @@ function on3DMouseMove(e){
     tip.style.display='none';
     g3.renderer.domElement.style.cursor='default';
     g3.hoveredPos = null;
+    _setMasterMonsterHover(null);
     return;
   }
   const [tx,ty] = tile;
+  if(_masterMonsterHoverEnabled()){
+    _setMasterMonsterHover(_masterMonsterAtTileClient(GS.gameState, tx, ty)?.id || null);
+  } else if(_masterMonsterHoverId){
+    _setMasterMonsterHover(null);
+  }
   const myP = GS.gameState.players.find(p=>p.id===GS.myPid&&p.alive);
   const el  = g3.renderer.domElement;
 
@@ -30659,7 +34785,7 @@ function on3DMouseMove(e){
     return;
   }
 
-  const monster = GS.gameState.monsters.find(m=>m.pos[0]===tx&&m.pos[1]===ty&&m.hp>0);
+  const monster = _masterMonsterAtTileClient(GS.gameState, tx, ty);
   if(monster){
     const dx=myP?Math.abs(myP.pos[0]-tx):99, dy=myP?Math.abs(myP.pos[1]-ty):99;
     const wRng = myP?.weapon?.range ?? null;
@@ -30707,12 +34833,14 @@ function handleTileClick(tx, ty){
       window._modoImplantarReforco = null;
       return;
     }
-    const st = GS.gameState;
-    const mm = GS.masterManual();
-    if(mm){
-      const monM = (st.monsters||[]).find(x=>x.id===mm.mid);
-      const alvo = (st.players||[]).find(p=>p.alive && p.pos[0]===tx && p.pos[1]===ty)
-        || ((st.test_mode || commandControl) && (st.monsters||[]).find(m=>m.id!==mm.mid && m.hp>0 && m.pos[0]===tx && m.pos[1]===ty));
+      const st = GS.gameState;
+      const mm = GS.masterManual();
+      if(mm){
+        const monM = (st.monsters||[]).find(x=>x.id===mm.mid);
+        const targetMonster = _masterMonsterAtTileClient(st, tx, ty);
+        const alvo = (st.players||[]).find(p=>p.alive && p.pos[0]===tx && p.pos[1]===ty)
+        || ((st.test_mode || commandControl) && targetMonster && targetMonster.id!==mm.mid
+             ? targetMonster : null);
       if(monM && alvo && GS.masterPodeAtacar()){
         // Golpe armado na ficha manda; sem golpe armado, o primeiro com carga.
         let idx = window._mpGolpeArmado;
@@ -30738,6 +34866,7 @@ function handleTileClick(tx, ty){
       window._mpFocoMid = mon.id; window._masterTab = 'ativo';
       if(st.test_mode) GS.mestreSelecionarTeste(mon.id);
       else renderMasterPanel(GS.gameState);
+      _redrawMasterSelection();
     }
     return;
   }
@@ -30843,7 +34972,7 @@ function handleTileClick(tx, ty){
       if(_animadoSel){
         const a = meus.find(x=>x.id===_animadoSel);
         if(a){
-          const mon = (_st.monsters||[]).find(m=>m.hp>0 && m.pos[0]===tx && m.pos[1]===ty);
+           const mon = _masterMonsterAtTileClient(_st, tx, ty);
           if(mon){
             const pendingAbility = window._animadoAbilityPending;
             if(pendingAbility && pendingAbility.animadoId === a.id){
@@ -30894,12 +35023,14 @@ function handleTileClick(tx, ty){
     case 'disarm_trap':
       GS.desarmarArmadilha(action.tx, action.ty);
       GS.pendingSkill = null;
+      _removerEfeitoVisualLocal('desarmar_armadilha');
       renderMyPanel(GS.gameState);
       break;
     case 'skill':
       GS.notifySkill();
       send({type:'skill', skill_id:action.skillId, target_id:action.targetId});
       GS.pendingSkill = null;
+      _removerEfeitoVisualLocal(action.skillId);
       renderMyPanel(GS.gameState);
       break;
     case 'attack':
@@ -31081,6 +35212,7 @@ GS.on('cityState', msg => {
   fecharQuadrosFlutuantes();
   _limparMortesVisuais();
   _hpSnapshot.clear();   // de volta à cidade: zera HP base p/ a próxima masmorra
+  _limparPositiveEffectSnapshot();
   // Não limpe a fila em toda atualização da cidade: ao equipar um item
   // amaldiçoado, o servidor envia curse_result e logo depois city_state. A
   // limpeza incondicional descartava o aviso antes de ele aparecer. Só há uma
@@ -31092,6 +35224,8 @@ GS.on('cityState', msg => {
   // Ensure city screen is visible (covers both initial arrival and return from dungeon)
   showScreen('screen-city');
   handleCityState(msg);
+  _renderAtalhos();
+  _renderEfeitosAtivos(null);
   _atualizarMenuMagiasSeAberto();
   _refreshTurnTimerOption();
   _renderBannerForaMasmorra();
@@ -31240,22 +35374,48 @@ document.addEventListener('keydown', (e) => {
   e.preventDefault();
 });
 
-// Atalho S: abre Status. Usa captura para não disparar o movimento para baixo
-// (também associado à tecla S) enquanto a ficha de status é aberta.
+// Atalho S: abre/fecha a barra persistente de atalhos da campanha.
 document.addEventListener('keydown', (e) => {
-  if(e.key === 'Escape' && document.getElementById('menu-status-overlay')?.classList.contains('open')){
-    fecharMenuStatus(); e.preventDefault(); e.stopImmediatePropagation(); return;
-  }
   if(e.key !== 's' && e.key !== 'S') return;
   const tag = (document.activeElement && document.activeElement.tagName) || '';
   if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
   const naCidade = document.getElementById('screen-city')?.classList.contains('active');
   const naMasmorra = document.getElementById('screen-game')?.classList.contains('active');
-  if(!GS.myPid || (!naCidade && !naMasmorra)) return;
-  if(document.getElementById('menu-status-overlay')?.classList.contains('open')) fecharMenuStatus();
-  else abrirMenuStatus(GS.myPid);
+  if(!GS.myPid || (!naCidade && !naMasmorra) || GS.isMaster()) return;
+  if(!_atalhosDisponiveis()) return;
+  const menuAberto = document.getElementById('menu-habilidades-overlay')?.classList.contains('open');
+  if(!menuAberto) abrirMenuHabilidades(GS.myPid);
+  else alternarMenuAtalhos();
   e.preventDefault();
   e.stopImmediatePropagation();
+}, true);
+
+// Atalho E: abre/fecha o menu de status do próprio herói.
+document.addEventListener('keydown', e => {
+  if(e.key !== 'e' && e.key !== 'E') return;
+  const tag = (document.activeElement && document.activeElement.tagName) || '';
+  if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'CONTENTEDITABLE') return;
+  const naCidade = document.getElementById('screen-city')?.classList.contains('active');
+  const naMasmorra = document.getElementById('screen-game')?.classList.contains('active');
+  if(!GS.myPid || (!naCidade && !naMasmorra) || GS.isMaster()) return;
+  if(document.getElementById('menu-status-overlay')?.classList.contains('open')) fecharMenuStatus();
+  else abrirMenuStatus(GS.myPid);
+  e.preventDefault(); e.stopImmediatePropagation();
+}, true);
+
+// Números 1–9 e 0 ativam o slot correspondente mesmo com outros menus abertos.
+document.addEventListener('keydown', e => {
+  const tag = (document.activeElement && document.activeElement.tagName) || '';
+  if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'CONTENTEDITABLE') return;
+  const code = e.code || '';
+  let index = -1;
+  if(/^Digit[0-9]$/.test(code)) index = code === 'Digit0' ? 9 : Number(code.slice(-1)) - 1;
+  else if(/^Numpad[0-9]$/.test(code)) index = code === 'Numpad0' ? 9 : Number(code.slice(-1)) - 1;
+  if(index < 0 || !_atalhosDisponiveis()) return;
+  const slots = GS.me?.shortcut_slots || [];
+  if(!slots[index]) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  _ativarAtalho(slots[index], index);
 }, true);
 
 // #ficha-fab nasce dentro do markup de #screen-game, mas o Mapa de CR do mestre
@@ -31280,10 +35440,17 @@ function _atualizarFichaFab(){
   }
 }
 
+// O medidor fica gravado no localStorage: se estava ligado, recria a caixinha
+// no boot (ela e criada sob demanda por _setFpsMostrar, nao existe no HTML).
+if(_fpsMostrar) _setFpsMostrar(true);
+
 GS.on('gameState', msg => {
   if(window._modoInstrumento && !GS.pendingInstrumento) _encerrarMiraInstrumento();
+  _capturarDerrotasERessurreicoes(msg);
   _capturarMortesVisuais(msg);
+  _capturarPositiveEffectChanges(msg);
   _detectHpChanges(msg);   // som de dano/cura por variação de HP entre estados
+  _consumeResistanceEvents(msg);
   handleGameState(msg);
   _garantirLoopBolaFogo();  // mantém as chamas residuais pulsando até a zona expirar
   _garantirLoopRaioGelo();  // mantém a camada de gelo enquanto a paralisia existir
@@ -31366,6 +35533,16 @@ GS.on('fala', msg => { _falaFila.push(msg); if(!$('fala-popup').classList.contai
 
 // Deslize fiel passo-a-passo de monstros inimigos e servos auto-comandados.
 GS.on('entityStep', msg => _onEntityStep(msg));
+GS.on('abilityActivation', msg => {
+  _habilidadeFxReceber(msg);
+  // A ativação local pode chegar antes do próximo game_state. Redesenhar aqui
+  // mantém o ícone imediatamente sincronizado com o peão; o estado seguinte
+  // continua sendo a fonte final para removê-lo quando a habilidade terminar.
+  if(GS.gameState){
+    if(mode3D && g3) renderMap3D(GS.gameState);
+    else renderMap(GS.gameState);
+  }
+});
 
 // Sistema de fome/sede — logs de sobrevivência (gameState.js, DOM-free) vão
 // para o painel do GM.
@@ -31435,6 +35612,7 @@ function _liberarDadosMagia(){
 }
 
 GS.on('diceRoll',    msg  => _receberDadoVisual(msg));
+GS.on('attackFeedback', msg => _receiveAttackFeedback(msg));
 // Cada receptor filtra pelo próprio spell_id. Um erro visual isolado não pode
 // interromper a fila inteira — especialmente o Sono, que precisa criar tanto
 // o impacto quanto os indicadores persistentes nos alvos adormecidos.
@@ -31464,6 +35642,7 @@ const _spellAnimationReceivers = [
 ];
 GS.on('spellAnimation', msg => {
   _registrarInicioAnimacaoMagia(msg);
+  _playGenericSpellCue(msg);
   for(const receiver of _spellAnimationReceivers){
     try { receiver(msg); }
     catch(err){ console.error('Falha ao processar animação de magia:', err); }
@@ -31475,19 +35654,20 @@ GS.on('sorteReacao', msg => {
 });
 
 GS.on('trapResult',  msg  => queueTrapResult(msg));
+GS.on('firePrompt',  msg  => _showFireChoice(msg));
 GS.on('conditionResult', msg => queueConditionResult(msg));
-GS.on('diseaseResult', msg => queueTrapResult(msg));
-GS.on('curseResult', msg => queueTrapResult(msg));
-GS.on('poisonResult', msg => queueTrapResult(msg));
+GS.on('diseaseResult', msg => { _queueConditionPulse(msg); queueTrapResult(msg); });
+GS.on('curseResult', msg => { _queueConditionPulse(msg); queueTrapResult(msg); });
+GS.on('poisonResult', msg => { _queueConditionPulse(msg); queueTrapResult(msg); });
 GS.on('equipmentDamageResult', msg => queueTrapResult(msg));
-GS.on('petrifyResult', msg => queueTrapResult(msg));
-GS.on('mentalControlResult', msg => queueTrapResult(msg));
+GS.on('petrifyResult', msg => { _queueConditionPulse(msg); queueTrapResult(msg); });
+GS.on('mentalControlResult', msg => { _queueConditionPulse(msg); queueTrapResult(msg); });
 GS.on('acidSpitResult', msg => queueTrapResult(msg));
 GS.on('magicDamageFailureResult', msg => queueTrapResult(msg));
 GS.on('freezingResult', msg => queueTrapResult(msg));
 GS.on('stunResult', msg => queueTrapResult(msg));
 GS.on('deathResult', msg => queueTrapResult(msg));
-GS.on('sleepResult', msg => queueTrapResult(msg));
+GS.on('sleepResult', msg => { _queueConditionPulse(msg); queueTrapResult(msg); });
 
 // Resultado de Animar Mortos: sincroniza os animados no registro completo do
 // Pedro (game.js) e dispara a animação D100. Ao final, atualiza a ficha em jogo
@@ -31509,6 +35689,7 @@ GS.on('serverError', msg  => {
   // Caso uma retirada seja recusada (inventário cheio, distância, etc.), restaura
   // a linha que foi ocultada otimisticamente no painel do baú.
   if(_pendingChestTake) clearPendingChestTake({ restore: true });
+  if(GS.canControlMonster && GS.canControlMonster()) appendGM(`⚠️ ${msg}`);
   toast(msg);
   // Compra recusada pelo servidor → reabre a loja para nova tentativa.
   if(window._comprando && window._lojaUltimaAberta){

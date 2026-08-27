@@ -1936,7 +1936,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.ensaio_sobre_a_cegueira.desc": {
     "en": "Potent poison made from the milky sap of poisonous plants causes blindness.",
-    "pt": "Forte veneno a base da seiva leitosa de plantas venenosas provoca cegueira."
+    "pt": "Fortitude CD 14. Falha: cego por 1d4+2 rodadas, visão 1 quadrado, -5 percepção, -4 ataques e sem ataques à distância. Sucesso: visão -2 quadrados e -3 percepção por 1d4 rodadas; ao final, novo Fortitude CD 14. Falha: cegueira por 1d2 rodadas."
   },
   "cat.item.ensaio_sobre_a_cegueira.nome": {
     "en": "Essay on Blindness",

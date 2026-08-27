@@ -50,7 +50,7 @@ const InventoryModal = (() => {
 #inv-modal-overlay{position:fixed;inset:0;z-index:1100;display:flex;align-items:center;justify-content:center;
   background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .18s ease;}
 #inv-modal-overlay.open{opacity:1;pointer-events:auto;}
-.inv-frame{position:relative;width:460px;max-width:92vw;}
+.inv-frame{position:relative;width:min(620px,94vw);max-width:94vw;}
 .inv-modal{position:relative;padding:26px 26px 26px;
   background:
     repeating-linear-gradient(115deg, rgba(255,255,255,.05) 0 1px, transparent 1px 34px),
@@ -73,6 +73,13 @@ const InventoryModal = (() => {
 .inv-logo-wrap{position:absolute;top:-70px;left:50%;transform:translateX(-50%);z-index:3;width:300px;pointer-events:none;}
 .inv-logo-wrap img{width:100%;height:auto;display:block;filter:drop-shadow(0 6px 10px rgba(0,0,0,.7));}
 .inv-body{position:relative;z-index:2;}
+.inv-normal-body{display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:12px;align-items:start;}
+.inv-main{min-width:0;}
+.inv-shortcuts{min-width:0;max-height:calc(100vh - 90px);overflow-y:auto;margin-top:40px;padding:12px 8px 14px;
+  border:1px solid #c8a95188;border-radius:8px;background:linear-gradient(145deg,#15110a,#090806);
+  box-shadow:0 12px 35px rgba(0,0,0,.72),0 0 14px rgba(200,169,81,.14);font-family:'Cinzel',serif;}
+.inv-shortcuts-heading{color:#f0d98a;font-size:9px;letter-spacing:1.5px;text-align:center;padding:0 0 8px;
+  border-bottom:1px solid #c8a95155;margin-bottom:8px;}
 .inv-header{display:flex;justify-content:space-between;align-items:center;margin:40px 0 16px;}
 .inv-title{color:#f4ecd8;font-family:Georgia,serif;font-weight:bold;letter-spacing:1px;
   text-shadow:0 0 10px rgba(244,220,140,.4);font-size:.95rem;}
@@ -197,6 +204,8 @@ const InventoryModal = (() => {
 
   function open(pid, opts){
     opts = opts || {};
+    if(typeof window.fecharMenuHabilidades === 'function') window.fecharMenuHabilidades();
+    if(typeof window.fecharMenuMagias === 'function') window.fecharMenuMagias();
     _openPid  = pid;
     _readOnly = !!opts.readOnly;
     _selected = null;
@@ -213,6 +222,7 @@ const InventoryModal = (() => {
     _openPid  = null;
     _storageCtx = null;
     _selected = null;
+    if(typeof window._ocultarAtalhosNoMenu === 'function') window._ocultarAtalhosNoMenu();
     const overlay = document.getElementById('inv-modal-overlay');
     if(overlay) overlay.classList.remove('open');
   }
@@ -327,7 +337,12 @@ const InventoryModal = (() => {
       const catDef = (typeof GS !== 'undefined' && GS.CATALOGO_ITENS)
         ? GS.CATALOGO_ITENS[item && item.id] : null;
       const isArremessavel = !!(catDef && catDef.arremessavel);
+      const isShortcutItem = !!item && (isConsumable || isScroll || isArremessavel);
       const podeArremessar = isMyOwnDungeonTurn && isArremessavel && !player.action_done;
+      if(isShortcutItem){
+        slot.dataset.shortcutKind = 'item';
+        slot.dataset.shortcutId = item.id;
+      }
       if(item){
         if(podeUsar || podeConjurar || podeArremessar) slot.classList.add('usable');
         if(item.tipo_item === 'instrumento' && typeof aplicarTooltipInstrumento === 'function'){
@@ -389,14 +404,20 @@ const InventoryModal = (() => {
             <path class="char" d="${EDGE_D}"/>
             <path class="gold" d="${EDGE_D}"/>
           </svg>
-          <div class="inv-body">
-            <div class="inv-header">
-              <div class="inv-title"><img class="inv-title-icon" src="assets/inventario.png" alt="" aria-hidden="true"> ${t('ui.inv.titulo')} — ${player.name || ''}${_readOnly ? ' ' + t('ui.inv.somente_leitura') : ''}</div>
-              <div class="inv-close" title="Fechar">✕</div>
+          <div class="inv-body inv-normal-body">
+            <div class="inv-main">
+              <div class="inv-header">
+                <div class="inv-title"><img class="inv-title-icon" src="assets/inventario.png" alt="" aria-hidden="true"> ${t('ui.inv.titulo')} — ${player.name || ''}${_readOnly ? ' ' + t('ui.inv.somente_leitura') : ''}</div>
+                <div class="inv-close" title="Fechar">✕</div>
+              </div>
+              <div class="inv-grid"></div>
+              <div class="inv-gold">🪙 <span></span></div>
+              <div class="inv-bagbar"></div>
             </div>
-            <div class="inv-grid"></div>
-            <div class="inv-gold">🪙 <span></span></div>
-            <div class="inv-bagbar"></div>
+            <aside class="inv-shortcuts" aria-label="Atalhos">
+              <div class="inv-shortcuts-heading">ATALHOS</div>
+              <div id="shortcut-bar" aria-label="Slots de atalho" hidden></div>
+            </aside>
           </div>
         </div>
         <div class="inv-logo-wrap"><img src="assets/logotipo.png" alt="Legends for Hire"></div>
@@ -405,6 +426,7 @@ const InventoryModal = (() => {
     overlay.querySelector('.inv-gold span').textContent = player.gold ?? 0;
     _renderGear(overlay, player);
     _renderBag(overlay, player);
+    if(typeof window._mostrarAtalhosNoMenu === 'function') window._mostrarAtalhosNoMenu();
   }
 
   function _onGearSlotClick(slotKey, blocked){

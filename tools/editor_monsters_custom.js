@@ -116,8 +116,8 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "ai_type": "agressivo",
     "ai_profile": "agressivo",
     "ai_tactics": [],
-    "image": "nova_criatura_customizado",
-    "portrait": "nova_criatura_customizado",
+    "image": "soldado",
+    "portrait": "soldado",
     "size": [
       1,
       1
@@ -1115,7 +1115,7 @@ window.EDITOR_CUSTOM_MONSTERS = [
       2,
       2
     ],
-    "oriented": true,
+    "oriented": false,
     "porte": "grande",
     "spawn_min": 1,
     "spawn_max": 1,
@@ -2817,6 +2817,137 @@ window.EDITOR_CUSTOM_MONSTERS = [
         "max": 1
       }
     ]
+  },
+  {
+    "type": "estrangulador",
+    "name": "estrangulador",
+    "emoji": "👹",
+    "overwrite_native": false,
+    "tier": 1,
+    "cr": 1.0,
+    "base_hp": 10,
+    "hp": 10,
+    "natural_armor": 0,
+    "ac_bonus": 0,
+    "ac": 10,
+    "movement": 6,
+    "movement_exception": false,
+    "vision_base": 0,
+    "visao_escuro": false,
+    "base_attack_bonus": 10,
+    "caster_level": 1,
+    "str_": 10,
+    "dex": 10,
+    "con_": 10,
+    "int_": 10,
+    "fort_base": 0,
+    "ref_base": 0,
+    "will_base": 0,
+    "fort": 0,
+    "ref_": 0,
+    "will": 0,
+    "attacks": [
+      {
+        "name": "Ataque",
+        "damage": "1d4",
+        "fire_damage": null,
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 1,
+        "attack_attribute": "str_",
+        "damage_attribute": "str_",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 0,
+        "base_attack_bonus": 0,
+        "atk_bonus": 0,
+        "range": null,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "causa_sangramento": false,
+        "aplica_hemorragia": false,
+        "extra_damage": null,
+        "extra_damage_types": []
+      }
+    ],
+    "special_abilities": [
+      {
+        "id": "engolir",
+        "name": "Engolir",
+        "action_type": "acao",
+        "dc": 19,
+        "save": "fortitude",
+        "acid_damage": "1d4",
+        "stomach_hp": 5,
+        "escape_dc": 22,
+        "descricao": "Alvo Preso testa Fortitude CD 19 ou é Engolido; sofre 1d4 de ácido por turno.",
+        "source": "monstro",
+        "uses_per_day": 8,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "agarrar",
+        "name": "Agarrar",
+        "action_type": "passiva",
+        "dc": 16,
+        "save": "fortitude",
+        "descricao": "Ao acertar, alvo testa FOR ou REF CD 16 — falha: preso",
+        "source": "monstro",
+        "uses_per_day": 5,
+        "cooldown_turns": 0,
+        "escape_saves": [
+          "fortitude",
+          "reflexos"
+        ]
+      }
+    ],
+    "monster_abilities": [
+      {
+        "id": "engolir",
+        "uses_per_day": 8,
+        "cooldown_turns": 0,
+        "dc": 19,
+        "acid_dice": 1,
+        "acid_faces": 4,
+        "stomach_hp": 5
+      },
+      {
+        "id": "agarrar",
+        "uses_per_day": 5,
+        "cooldown_turns": 0,
+        "dc": 16
+      }
+    ],
+    "monster_spells": [],
+    "negative_ability_ids": [],
+    "immunities": [],
+    "resistances": [],
+    "weaknesses": [],
+    "equipment_enabled": false,
+    "equipped_items": [],
+    "equipment": [],
+    "guaranteed_loot": [],
+    "loot_table": {},
+    "loot_drops": [],
+    "gold": 0,
+    "xp": 0,
+    "ai_type": "agressivo",
+    "ai_profile": "agressivo",
+    "ai_tactics": [],
+    "image": "estrangulador",
+    "portrait": "nova_criatura_customizado",
+    "size": [
+      1,
+      1
+    ],
+    "oriented": false,
+    "porte": "medio",
+    "spawn_min": 0,
+    "spawn_max": 0,
+    "undead": false,
+    "subtipo": "raca_padrao",
+    "boss": false
   }
 ];
 // GERADO pelo servidor ao salvar no Editor de criaturas.

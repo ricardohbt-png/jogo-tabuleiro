@@ -745,6 +745,10 @@ window.LANG_ERROS = {
     "en": "Item not found.",
     "pt": "Item não encontrado."
   },
+  "erro.item_sem_reparo_disponivel": {
+    "en": "This item has no repairable corrosion.",
+    "pt": "Este item não possui corrosão reparável."
+  },
   "erro.item_nao_encontrado_na_bolsa": {
     "en": "Item not found in the bag.",
     "pt": "Item não encontrado na bolsa."
@@ -998,8 +1002,8 @@ window.LANG_ERROS = {
     "pt": "O centro da área precisa estar em uma casa válida."
   },
   "erro.o_elemental_eletrico_ataca_em_linha_reta": {
-    "en": "⚡ The electric elemental attacks in a straight line (max 3 tiles).",
-    "pt": "⚡ O elemental elétrico ataca em linha reta (máx 3 casas)."
+    "en": "⚡ The electric elemental attacks in an orthogonal line (max 4 tiles).",
+    "pt": "⚡ O elemental elétrico ataca em linha ortogonal (máx 4 casas)."
   },
   "erro.o_inimigo_precisa_estar_adjacente": {
     "en": "The enemy needs to be adjacent.",
@@ -1052,6 +1056,10 @@ window.LANG_ERROS = {
   "erro.ouro_insuficiente_2": {
     "en": "Not enough gold!",
     "pt": "Ouro insuficiente!"
+  },
+  "erro.ouro_insuficiente_reparo": {
+    "en": "Not enough gold — repair requires {ouro} coins.",
+    "pt": "Ouro insuficiente — o reparo custa {ouro} moedas."
   },
   "erro.ouro_insuficiente_precisa": {
     "en": "Not enough gold — needs {ouro}🪙.",

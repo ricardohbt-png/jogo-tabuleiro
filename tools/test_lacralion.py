@@ -116,8 +116,8 @@ async def main():
              "poison_dc": 18},
             {"id": "agarrar_lacralion", "uses_per_day": 1, "cooldown_turns": 0,
              "attack_index": 0, "dc": 17, "max_targets": 2},
-            {"id": "carapaca_espinhosa", "uses_per_day": 1, "cooldown_turns": 0,
-             "damage_dice": 2, "damage_faces": 6},
+            {"id": "dano_retaliacao", "uses_per_day": 1, "cooldown_turns": 0,
+             "damage_dice": 2, "damage_faces": 6, "damage_type": "lightning"},
         ],
     })
     ok, normalized = S._validate_custom_monster(raw)
@@ -127,7 +127,8 @@ async def main():
           and abilities["veneno_lacralion"]["poison_dc"] == 18)
     check("agarrão preserva CD17/2 alvos", abilities["agarrar_lacralion"]["dc"] == 17
           and abilities["agarrar_lacralion"]["max_targets"] == 2)
-    check("carapaça preserva 2d6", abilities["carapaca_espinhosa"]["damage"] == "2d6")
+    check("retaliação preserva 2d6/eletricidade", abilities["dano_retaliacao"]["damage"] == "2d6"
+          and abilities["dano_retaliacao"]["damage_types"] == ["lightning"])
 
     print("Todos os testes do Lacralion passaram.")
 

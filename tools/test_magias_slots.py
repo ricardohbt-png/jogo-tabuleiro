@@ -55,6 +55,18 @@ async def main():
     check("volta na rodada 15", r._slots_disponiveis(p, "primeiro") == 2)
     check("cooldown podado", p["slots_cooldown"]["primeiro"] == [])
 
+    print("\n[3b] Virada de rodada atualiza todos os círculos")
+    p["slots_cooldown"] = {
+        "primeiro": [21], "segundo": [22], "terceiro": [23],
+    }
+    r.round_num = 21; r._processar_recarga_slots_rodada()
+    check("1º círculo libera na rodada correta", p["slots_cooldown"]["primeiro"] == [])
+    check("2º círculo continua em recarga", p["slots_cooldown"]["segundo"] == [22])
+    r.round_num = 22; r._processar_recarga_slots_rodada()
+    check("2º círculo libera na rodada correta", p["slots_cooldown"]["segundo"] == [])
+    r.round_num = 23; r._processar_recarga_slots_rodada()
+    check("3º círculo libera na rodada correta", p["slots_cooldown"]["terceiro"] == [])
+
     print("\n[4] Recarga total (descanso)")
     r.round_num = 1
     r._gastar_slot(p, "primeiro"); r._gastar_slot(p, "primeiro")

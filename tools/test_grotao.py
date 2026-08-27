@@ -20,7 +20,7 @@ def setup():
 
 async def main():
     definition = next(x for x in S.MONSTER_DEFS if x["type"] == "grotao")
-    check("ficha ND3 / quatro casas", definition["cr"] == 3 and definition["size"] == [2, 2] and definition["oriented"])
+    check("ficha ND3 / quatro casas sem orientação", definition["cr"] == 3 and definition["size"] == [2, 2] and not definition["oriented"])
     check("ataques da ficha (dado + Forca por apply_attribute_damage)",
           [a["damage"] for a in definition["attacks"]] == ["1d10", "1d8"]
           and all(a.get("apply_attribute_damage") for a in definition["attacks"])
@@ -36,25 +36,31 @@ async def main():
 
     g = setup(); m = S.make_monster(definition, {"id":"r", "cx":5, "cy":5})
     m["pos"] = [5, 5]; m["facing"] = [1, 0]
-    check("footprint orientado 2x2", g._monster_tiles(m) == [[5,5],[5,6],[4,5],[4,6]])
+    check("footprint fixo 2x2", g._monster_tiles(m) == [[5,5],[5,6],[6,5],[6,6]])
+    check("ataque ortogonal cobre as quatro faces",
+          set(map(tuple, g._monster_orthogonal_attack_tiles(m))) ==
+          {(5,4),(6,4),(5,7),(6,7),(4,5),(4,6),(7,5),(7,6)})
+    check("ataque ortogonal aceita as duas casas de cada face",
+          all(g._monster_attack_in_range(m, list(pos))
+              for pos in ((5,4),(6,4),(5,7),(6,7),(4,5),(4,6),(7,5),(7,6))))
     # Todo dano físico sofre redução; somente o ponto vulnerável a atravessa.
     check("carapaça reduz 3 fora do ponto vulnerável", g._apply_damage_types(8, [S.DMG_PHYSICAL], m, attacker_pos=[7, 5]) == 5 and g._apply_damage_types(8, [S.DMG_PHYSICAL], m, target_pos=[5, 5]) == 5)
-    check("ponto vulnerável remove redução física", g._apply_damage_types(8, [S.DMG_PHYSICAL], m, target_pos=[4, 6]) == 8)
+    check("ponto vulnerável remove redução física", g._apply_damage_types(8, [S.DMG_PHYSICAL], m, target_pos=[6, 6]) == 8)
     check("só o quadrado posterior direito reduz CA 15 para 10",
-          g._ponto_vulneravel_ac(m, [4, 6], 15) == 10
-          and g._ponto_vulneravel_ac(m, [4, 5], 15) == 15
-          and g._ponto_vulneravel_ac(m, [5, 6], 15) == 15
-          and g._ponto_vulneravel_ac(m, [5, 5], 15) == 15)
+           g._ponto_vulneravel_ac(m, [6, 6], 15) == 10
+           and g._ponto_vulneravel_ac(m, [6, 5], 15) == 15
+           and g._ponto_vulneravel_ac(m, [5, 6], 15) == 15
+           and g._ponto_vulneravel_ac(m, [5, 5], 15) == 15)
     # Reflexos falho marca exatamente o dano seguinte daquele efeito com +1.
     old_rand = S.random.randint; S.random.randint = lambda a,b: 1
     passou, *_ = g._testar_save(m, "reflexos", 99)
     check("corpo pesado falha Reflexos", not passou and g._apply_damage_types(5, ["fire"], m) == 6)
     S.random.randint = old_rand
 
-    # Corpo 2x2 virado a leste ocupa x=4..5; a traseira e a coluna x=4.
-    # A cauda pega quem esta adjacente ao corpo E no semiplano de tras (x < 5).
-    p1 = S.make_player("p1", "Armadura", "warrior", 0); p1["pos"] = [3, 5]
-    p2 = S.make_player("p2", "Traseira", "warrior", 0); p2["pos"] = [3, 6]
+    # Corpo 2x2 fixo ocupa x=5..6; a cauda preserva a face traseira
+    # indicada pelo último movimento (facing leste -> coluna x=4).
+    p1 = S.make_player("p1", "Armadura", "warrior", 0); p1["pos"] = [4, 5]
+    p2 = S.make_player("p2", "Traseira", "warrior", 0); p2["pos"] = [4, 6]
     g.players = {"p1": p1, "p2": p2}; g.monsters = {m["id"]: m}
     targets = [{"kind":"player", "obj":p1}, {"kind":"player", "obj":p2}]
     check("cauda encontra inimigos atrás", len(g._grotao_alvos_cauda(m, targets)) == 2)

@@ -767,6 +767,24 @@ async def main():
     await r.handle_mestre_atacar_monstro("m1", "g1", "hA")
     check("sem attack_index usa o 0", golpes2 == ["Machado"])
 
+    print("\n[32b-2] ataque manual aceita qualquer casa de um alvo monstro 2x2")
+    r = playing_room_com_mestre()
+    r.test_mode = True
+    golpes3 = []
+    async def fake_atk3(mm, atk_def, target_obj):
+        golpes3.append(target_obj["obj"]["id"]); return True
+    r._execute_one_monster_attack = fake_atk3
+    atacante = {"id": "g1", "name": "Goblin", "hp": 20, "max_hp": 20,
+                "pos": [4, 6], "size": [1, 1], "control_mode": "manual",
+                "_master_acted": False, "_master_acao_tipo": None,
+                "master_attack_charges": {0: 1},
+                "attacks": [{"name": "Garra", "num_attacks": 1}]}
+    ciclope = {"id": "c1", "name": "Ciclope", "hp": 40, "max_hp": 40,
+               "pos": [5, 5], "size": [2, 2], "oriented": False}
+    r.monsters = {"g1": atacante, "c1": ciclope}; r.master_manual_mid = "g1"
+    await r.handle_mestre_atacar_monstro("m1", "g1", "c1", 0)
+    check("aceita alvo pela casa lateral do Ciclope", golpes3 == ["c1"])
+
     print("\n[32c] Fúria Bestial sob controle Manual")
     r = playing_room_com_mestre()
     async def fake_atk_no_dano(mm, atk_def, target_obj):

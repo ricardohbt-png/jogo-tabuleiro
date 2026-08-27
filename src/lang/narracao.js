@@ -1108,6 +1108,26 @@ window.LANG_NARRACAO = {
     "en": "💫 **{tgt_name}** becomes **stunned** (Fortitude {stot} vs DC {dc}) and loses the next round!",
     "pt": "💫 **{tgt_name}** fica **atordoado** (Fortitude {stot} vs CD {dc}) e perde a próxima rodada!"
   },
+  "narracao.bordao_critico_fortitude": {
+    "en": "🔱 **{heroi}** lands a staff critical on **{alvo}**! Fortitude {total} vs DC {dc} — {resultado}.",
+    "pt": "🔱 **{heroi}** acerta **{alvo}** com um crítico de Bordão! Fortitude {total} vs CD {dc} — {resultado}."
+  },
+  "narracao.bordao_critico_atordoa": {
+    "en": "the target is stunned and loses its next action",
+    "pt": "o alvo fica tonto e perde sua próxima ação"
+  },
+  "narracao.bordao_critico_resiste": {
+    "en": "the target resists the concussive impact",
+    "pt": "o alvo resiste ao impacto atordoante"
+  },
+  "narracao.bordao_critico_nao_afeta_imune": {
+    "en": "🔱 The staff's critical impact does not affect **{alvo}** (construct/undead immunity).",
+    "pt": "🔱 O impacto crítico do Bordão não afeta **{alvo}** (imunidade de construto/morto-vivo)."
+  },
+  "narracao.bordao_alvo_perde_acao": {
+    "en": "💫 **{alvo}** is stunned by the staff and loses its action this turn.",
+    "pt": "💫 **{alvo}** está tonto pelo impacto do Bordão e perde sua ação neste turno."
+  },
   "narracao.fica_cambaleante_e_perde_sua_acao_de_ata": {
     "en": "🦖 **{monstro}** is left reeling and loses its attack action.",
     "pt": "🦖 **{monstro}** fica cambaleante e perde sua ação de ataque."

@@ -37,6 +37,7 @@ def check(label, condition):
 AGUA_RASA = (1, 1)
 AGUA_RASA_2 = (2, 1)
 AGUA_FUNDA = (3, 1)
+AREIA = (4, 1)
 
 
 def sala():
@@ -66,7 +67,7 @@ def sala():
     r.chests = {}
     r.ground_items = {}
     r.decorations = []
-    r.materiais = {AGUA_RASA: "agua", AGUA_RASA_2: "agua", AGUA_FUNDA: "agua_profunda"}
+    r.materiais = {AGUA_RASA: "agua", AGUA_RASA_2: "agua", AGUA_FUNDA: "agua_profunda", AREIA: "areia_deserto"}
     return r
 
 
@@ -104,6 +105,7 @@ def main():
     check("natural na rasa: 2+1=3", r._water_step_cost(natural, *AGUA_RASA) == 3)
     check("natural na profunda: 3+1=4", r._water_step_cost(natural, *AGUA_FUNDA) == 4)
     check("natural em chão seco não paga nada: 1", r._water_step_cost(natural, *seco) == 1)
+    check("areia do deserto custa 2 por casa", r._water_step_cost(heroi(), *AREIA) == 2)
     equipado = {"natural_armor": 6,
                 "equipment_items": [{"kind": "armor", "armor_category": "pesada"}]}
     check("armadura equipada vence a natural (profunda: 3+2=5)",

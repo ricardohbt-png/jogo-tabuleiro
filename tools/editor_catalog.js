@@ -1,23 +1,6 @@
 window.EDITOR_CATALOG = {
   "monsters": [
     {
-      "type": "goblin",
-      "name": "Goblin",
-      "emoji": "👺",
-      "tier": 1,
-      "cr": 0.25,
-      "hp": 8,
-      "ac": 12,
-      "movement": 6,
-      "vision_base": 0,
-      "atk_bonus": 2,
-      "damage": "1d4",
-      "gold": 5,
-      "xp": 10,
-      "subtipo": "raca_padrao",
-      "percepcao": 13
-    },
-    {
       "type": "skeleton",
       "name": "Esqueleto",
       "emoji": "💀",
@@ -406,11 +389,14 @@ window.EDITOR_CATALOG = {
           "descricao": "Ao acertar o Ferrão, Fortitude CD 16; falha: 1d6 de dano adicional e Sangramento."
         },
         {
-          "id": "carapaca_espinhosa",
-          "name": "Carapaça Espinhosa",
+          "id": "dano_retaliacao",
+          "name": "Dano de Retaliação",
           "action_type": "passiva",
           "damage": "1d4",
-          "descricao": "Quem acertar o Lacralion com um ataque corpo a corpo sofre 1d4 de dano."
+          "damage_types": [
+            "physical"
+          ],
+          "descricao": "Quem acertar a criatura com um ataque corpo a corpo sofre 1d4 de dano físico."
         }
       ],
       "immunities": [],
@@ -500,11 +486,14 @@ window.EDITOR_CATALOG = {
           "descricao": "Ao acertar o Ferrão, Fortitude CD 16; falha: 1d6 de dano adicional e Sangramento."
         },
         {
-          "id": "carapaca_espinhosa",
-          "name": "Carapaça Espinhosa",
+          "id": "dano_retaliacao",
+          "name": "Dano de Retaliação",
           "action_type": "passiva",
           "damage": "1d6",
-          "descricao": "Quem acertar o Lacralion com um ataque corpo a corpo sofre 1d6 de dano."
+          "damage_types": [
+            "physical"
+          ],
+          "descricao": "Quem acertar a criatura com um ataque corpo a corpo sofre 1d6 de dano físico."
         },
         {
           "id": "predador_implacavel",
@@ -571,10 +560,14 @@ window.EDITOR_CATALOG = {
           "action_type": "passiva"
         },
         {
-          "id": "fraqueza_magica",
-          "name": "Fraqueza Mágica",
+          "id": "vulnerabilidade",
+          "name": "Vulnerabilidade",
           "action_type": "passiva",
-          "descricao": "-2 em testes contra magias que controlam mortos-vivos"
+          "saves": [
+            "vontade"
+          ],
+          "penalty": 2,
+          "descricao": "-2 em testes de Vontade"
         }
       ],
       "immunities": [
@@ -604,6 +597,15 @@ window.EDITOR_CATALOG = {
           "type": "sagrado",
           "multiplier": 2,
           "descricao": "Dano sagrado dobrado"
+        },
+        {
+          "type": "save_penalty",
+          "saves": [
+            "vontade"
+          ],
+          "bonus_flat": -2,
+          "vulnerabilidade": true,
+          "descricao": "Vulnerabilidade: -2 em testes de Vontade"
         }
       ],
       "loot_table": {
@@ -674,10 +676,14 @@ window.EDITOR_CATALOG = {
           "descricao": "Nunca foge nem recua — avança até ser destruído"
         },
         {
-          "id": "fraqueza_magica",
-          "name": "Fraqueza Mágica",
+          "id": "vulnerabilidade",
+          "name": "Vulnerabilidade",
           "action_type": "passiva",
-          "descricao": "-2 em testes contra magias que controlam mortos-vivos"
+          "saves": [
+            "vontade"
+          ],
+          "penalty": 2,
+          "descricao": "-2 em testes de Vontade"
         }
       ],
       "immunities": [
@@ -707,6 +713,15 @@ window.EDITOR_CATALOG = {
           "type": "sagrado",
           "multiplier": 2,
           "descricao": "Dano sagrado dobrado"
+        },
+        {
+          "type": "save_penalty",
+          "saves": [
+            "vontade"
+          ],
+          "bonus_flat": -2,
+          "vulnerabilidade": true,
+          "descricao": "Vulnerabilidade: -2 em testes de Vontade"
         }
       ],
       "loot_table": {
@@ -716,73 +731,6 @@ window.EDITOR_CATALOG = {
       "undead": true,
       "subtipo": "morto_vivo",
       "darkvision_range": 8,
-      "percepcao": 12
-    },
-    {
-      "type": "lobo_cinzento",
-      "name": "Lobo Cinzento",
-      "emoji": "🐺",
-      "boss": false,
-      "tier": 1,
-      "cr": 0.5,
-      "hp": 16,
-      "ac": 13,
-      "movement": 6,
-      "vision_base": 0,
-      "size": [
-        1,
-        1
-      ],
-      "porte": "medio",
-      "image": "loboCinzento",
-      "str_": 14,
-      "dex": 14,
-      "con_": 12,
-      "int_": 2,
-      "fort": 4,
-      "ref_": 4,
-      "will": 1,
-      "attacks": [
-        {
-          "name": "Mordida",
-          "atk_bonus": 4,
-          "damage": "1d6+2",
-          "damage_types": [
-            "physical"
-          ],
-          "num_attacks": 1,
-          "on_hit": null
-        }
-      ],
-      "special_abilities": [
-        {
-          "id": "caca_em_bando",
-          "name": "Caça em Bando",
-          "action_type": "passiva"
-        },
-        {
-          "id": "derrubar",
-          "name": "Derrubar",
-          "action_type": "passiva",
-          "dc": 11,
-          "save": "reflexos"
-        }
-      ],
-      "immunities": [],
-      "weaknesses": [
-        {
-          "type": "save_penalty",
-          "save": "fortitude",
-          "bonus_flat": -2,
-          "descricao": "Sensível a venenos — -2 Fort vs venenos"
-        }
-      ],
-      "loot_table": {
-        "1-100": null
-      },
-      "ai_type": "lobo_cinzento",
-      "undead": false,
-      "subtipo": "animal",
       "percepcao": 12
     },
     {
@@ -892,15 +840,22 @@ window.EDITOR_CATALOG = {
           ],
           "num_attacks": 1,
           "on_hit": "veneno_cobra_cuspidora",
-          "categoria": "perfurante"
+          "categoria": "perfurante",
+          "disease_severity": "leve",
+          "disease_dc": 10,
+          "disease_save": "fortitude"
         }
       ],
       "special_abilities": [
         {
-          "id": "veneno",
-          "name": "Veneno",
+          "id": "contagiar",
+          "name": "Contagiar",
           "action_type": "passiva",
-          "descricao": "Ao acertar a mordida, aplica veneno (doença leve)"
+          "attack_index": 0,
+          "dc": 10,
+          "save": "fortitude",
+          "disease_severity": "leve",
+          "descricao": "Ao acertar a mordida, alvo testa Fortitude CD 10 ou contrai doença leve"
         },
         {
           "id": "ataque_rapido",
@@ -1156,20 +1111,26 @@ window.EDITOR_CATALOG = {
           "descricao": "Se sofreu dano na rodada anterior: +1 de dano, mas -1 CA"
         },
         {
-          "id": "mente_limitada",
-          "name": "Mente Limitada",
+          "id": "vulnerabilidade",
+          "name": "Vulnerabilidade",
           "action_type": "passiva",
-          "descricao": "-1 em testes de Vontade contra efeitos mentais"
+          "saves": [
+            "vontade"
+          ],
+          "penalty": 1,
+          "descricao": "-1 em testes de Vontade"
         }
       ],
       "immunities": [],
       "weaknesses": [
         {
           "type": "save_penalty",
-          "save": "vontade",
+          "saves": [
+            "vontade"
+          ],
           "bonus_flat": -1,
-          "em_magia": true,
-          "descricao": "Mente limitada: -1 em Vontade contra efeitos mentais"
+          "vulnerabilidade": true,
+          "descricao": "Vulnerabilidade: -1 em testes de Vontade"
         }
       ],
       "loot_table": {
@@ -1235,20 +1196,26 @@ window.EDITOR_CATALOG = {
       ],
       "special_abilities": [
         {
-          "id": "mente_fraca",
-          "name": "Mente Fraca",
+          "id": "vulnerabilidade",
+          "name": "Vulnerabilidade",
           "action_type": "passiva",
-          "descricao": "-2 em testes de Vontade contra magias de controle mental"
+          "saves": [
+            "vontade"
+          ],
+          "penalty": 2,
+          "descricao": "-2 em testes de Vontade"
         }
       ],
       "immunities": [],
       "weaknesses": [
         {
           "type": "save_penalty",
-          "save": "vontade",
+          "saves": [
+            "vontade"
+          ],
           "bonus_flat": -2,
-          "em_magia": true,
-          "descricao": "Mente fraca: -2 em Vontade contra controle mental"
+          "vulnerabilidade": true,
+          "descricao": "Vulnerabilidade: -2 em testes de Vontade"
         }
       ],
       "loot_table": {
@@ -1319,20 +1286,26 @@ window.EDITOR_CATALOG = {
           "descricao": "Arremesso 1d4+2 (alcance 3) como ação bônus; 1 natural quebra a arma"
         },
         {
-          "id": "mente_fraca",
-          "name": "Mente Fraca",
+          "id": "vulnerabilidade",
+          "name": "Vulnerabilidade",
           "action_type": "passiva",
-          "descricao": "-2 em testes de Vontade contra magias de controle mental"
+          "saves": [
+            "vontade"
+          ],
+          "penalty": 2,
+          "descricao": "-2 em testes de Vontade"
         }
       ],
       "immunities": [],
       "weaknesses": [
         {
           "type": "save_penalty",
-          "save": "vontade",
+          "saves": [
+            "vontade"
+          ],
           "bonus_flat": -2,
-          "em_magia": true,
-          "descricao": "Mente fraca: -2 em Vontade contra controle mental"
+          "vulnerabilidade": true,
+          "descricao": "Vulnerabilidade: -2 em testes de Vontade"
         }
       ],
       "loot_table": {
@@ -1414,20 +1387,26 @@ window.EDITOR_CATALOG = {
           "descricao": "Arremesso 1d4+2 (alcance 3) como ação bônus; 1 natural quebra a arma"
         },
         {
-          "id": "mente_fraca",
-          "name": "Mente Fraca",
+          "id": "vulnerabilidade",
+          "name": "Vulnerabilidade",
           "action_type": "passiva",
-          "descricao": "-2 em testes de Vontade contra magias de controle mental"
+          "saves": [
+            "vontade"
+          ],
+          "penalty": 2,
+          "descricao": "-2 em testes de Vontade"
         }
       ],
       "immunities": [],
       "weaknesses": [
         {
           "type": "save_penalty",
-          "save": "vontade",
+          "saves": [
+            "vontade"
+          ],
           "bonus_flat": -2,
-          "em_magia": true,
-          "descricao": "Mente fraca: -2 em Vontade contra controle mental"
+          "vulnerabilidade": true,
+          "descricao": "Vulnerabilidade: -2 em testes de Vontade"
         }
       ],
       "loot_table": {
@@ -1450,112 +1429,6 @@ window.EDITOR_CATALOG = {
         "dagger"
       ],
       "ai_type": "goblin_melee",
-      "undead": false,
-      "subtipo": "raca_padrao",
-      "percepcao": 13
-    },
-    {
-      "type": "goblin_xama",
-      "name": "Xamã Goblin",
-      "emoji": "👺",
-      "boss": false,
-      "tier": 1,
-      "cr": 1,
-      "hp": 10,
-      "ac": 12,
-      "movement": 6,
-      "vision_base": 0,
-      "size": [
-        1,
-        1
-      ],
-      "porte": "pequeno",
-      "image": "xamaGoblin",
-      "str_": 8,
-      "dex": 14,
-      "con_": 10,
-      "int_": 12,
-      "fort": 2,
-      "ref_": 4,
-      "will": 3,
-      "attacks": [
-        {
-          "name": "Cajado",
-          "atk_bonus": 3,
-          "damage": "1d6-1",
-          "damage_types": [
-            "physical"
-          ],
-          "num_attacks": 1,
-          "on_hit": null,
-          "categoria": "contundente"
-        }
-      ],
-      "special_abilities": [
-        {
-          "id": "silencio",
-          "name": "Silêncio",
-          "action_type": "magia",
-          "uses_per_combat": 1,
-          "circulo": 2,
-          "descricao": "Cria área de Silêncio (some se o xamã morrer)"
-        },
-        {
-          "id": "amaldicoar",
-          "name": "Amaldiçoar",
-          "action_type": "magia",
-          "uses_per_combat": 1,
-          "circulo": 1,
-          "descricao": "Debuff -1 em ataque/dano/CA/resistência nos heróis"
-        },
-        {
-          "id": "abencoar",
-          "name": "Abençoar",
-          "action_type": "magia",
-          "uses_per_combat": 1,
-          "circulo": 1,
-          "descricao": "Buff +1 em ataque/dano/CA/resistência nos goblins aliados"
-        },
-        {
-          "id": "concentracao_fragil",
-          "name": "Concentração Frágil",
-          "action_type": "passiva",
-          "descricao": "Se sofrer dano, não pode usar magia no próximo turno"
-        }
-      ],
-      "immunities": [],
-      "weaknesses": [
-        {
-          "type": "save_penalty",
-          "save": "vontade",
-          "bonus_flat": -2,
-          "em_magia": true,
-          "descricao": "Mente fraca: -2 em Vontade contra controle mental"
-        }
-      ],
-      "loot_table": {
-        "1-20": null,
-        "21-40": {
-          "tipo": "item",
-          "id": "garrafa_vinho"
-        },
-        "41-70": {
-          "tipo": "gold",
-          "valor": 2
-        },
-        "71-90": {
-          "tipo": "gold",
-          "valor": 4
-        },
-        "91-98": {
-          "tipo": "gold",
-          "valor": 6
-        },
-        "99-100": {
-          "tipo": "raro_xama"
-        }
-      },
-      "ai_type": "goblin_xama",
       "undead": false,
       "subtipo": "raca_padrao",
       "percepcao": 13
@@ -1862,10 +1735,11 @@ window.EDITOR_CATALOG = {
           "id": "infeccao",
           "name": "Infecção",
           "action_type": "passiva",
+          "attack_index": 0,
           "dc": 10,
           "save": "fortitude",
           "disease_severity": "leve",
-          "descricao": "Ao acertar: alvo testa Fortitude CD 10 ou contrai 1 sintoma leve"
+          "descricao": "Ao acertar o ataque selecionado: alvo testa Fortitude CD 10 ou contrai 1 sintoma leve"
         },
         {
           "id": "lento_incansavel",
@@ -2163,10 +2037,14 @@ window.EDITOR_CATALOG = {
           "descricao": "Ataque normal; se acertar, Fortitude CD 10 ou atordoado (perde a próxima rodada). Recarga 4 rodadas"
         },
         {
-          "id": "mente_bruta",
-          "name": "Mente Bruta",
+          "id": "vulnerabilidade",
+          "name": "Vulnerabilidade",
           "action_type": "passiva",
-          "descricao": "-2 em Vontade contra controle mental"
+          "saves": [
+            "vontade"
+          ],
+          "penalty": 2,
+          "descricao": "-2 em testes de Vontade"
         },
         {
           "id": "lento_previsivel",
@@ -2179,10 +2057,12 @@ window.EDITOR_CATALOG = {
       "weaknesses": [
         {
           "type": "save_penalty",
-          "save": "vontade",
+          "saves": [
+            "vontade"
+          ],
           "bonus_flat": -2,
-          "em_magia": true,
-          "descricao": "Mente Bruta: -2 em Vontade contra controle mental"
+          "vulnerabilidade": true,
+          "descricao": "Vulnerabilidade: -2 em testes de Vontade"
         }
       ],
       "loot_table": {
@@ -2259,10 +2139,14 @@ window.EDITOR_CATALOG = {
           "descricao": "Ataque normal; se acertar, Fortitude CD 10 ou atordoado (perde a próxima rodada). Recarga 4 rodadas"
         },
         {
-          "id": "mente_bruta",
-          "name": "Mente Bruta",
+          "id": "vulnerabilidade",
+          "name": "Vulnerabilidade",
           "action_type": "passiva",
-          "descricao": "-2 em Vontade contra controle mental"
+          "saves": [
+            "vontade"
+          ],
+          "penalty": 2,
+          "descricao": "-2 em testes de Vontade"
         },
         {
           "id": "lento_previsivel",
@@ -2275,10 +2159,12 @@ window.EDITOR_CATALOG = {
       "weaknesses": [
         {
           "type": "save_penalty",
-          "save": "vontade",
+          "saves": [
+            "vontade"
+          ],
           "bonus_flat": -2,
-          "em_magia": true,
-          "descricao": "Mente Bruta: -2 em Vontade contra controle mental"
+          "vulnerabilidade": true,
+          "descricao": "Vulnerabilidade: -2 em testes de Vontade"
         }
       ],
       "resistances": [
@@ -2356,18 +2242,18 @@ window.EDITOR_CATALOG = {
           "descricao": "Pode atravessar um quadrado ocupado, causa 1d4 de fogo ao ocupante e termina em uma casa livre."
         },
         {
-          "id": "corpo_em_chamas",
-          "name": "Corpo em Chamas",
+          "id": "dano_retaliacao",
+          "name": "Dano de Retaliação",
           "action_type": "passiva",
           "damage": "1d6",
           "damage_types": [
             "fire"
           ],
-          "descricao": "Quem o acerta com um ataque corpo a corpo sofre 1d6 de dano de fogo."
+          "descricao": "Quem acertar a criatura com um ataque corpo a corpo sofre 1d6 de dano de fogo."
         },
         {
-          "id": "explosao_final",
-          "name": "Explosão Final",
+          "id": "morte_explosiva",
+          "name": "Morte Explosiva",
           "action_type": "passiva",
           "damage": "4d6",
           "damage_types": [
@@ -2376,7 +2262,9 @@ window.EDITOR_CATALOG = {
           "radius": 1,
           "save": "reflexos",
           "dc": 13,
-          "descricao": "Ao morrer, explode em 1 quadrado: 4d6 de fogo; Reflexos CD 13 reduz à metade."
+          "duration": 2,
+          "tick_damage": "1d6",
+          "descricao": "Ao morrer, explode em raio 1: 4d6 de fogo; Reflexos CD 13 reduz a metade. Chamas persistem por 2 rodadas."
         },
         {
           "id": "intensidade",
@@ -2636,7 +2524,8 @@ window.EDITOR_CATALOG = {
             "lightning"
           ],
           "num_attacks": 1,
-          "range": 3,
+          "range": 4,
+          "range_shape": "orthogonal",
           "attack_attribute": "dex",
           "apply_attribute_damage": true,
           "attribute_mod_base": 4,
@@ -2656,14 +2545,14 @@ window.EDITOR_CATALOG = {
           "descricao": "Pode atravessar um quadrado ocupado, causa 1d4 de eletricidade ao ocupante e termina em uma casa livre."
         },
         {
-          "id": "corpo_eletrico",
-          "name": "Corpo Elétrico",
+          "id": "dano_retaliacao",
+          "name": "Dano de Retaliação",
           "action_type": "passiva",
           "damage": "1d8",
           "damage_types": [
             "lightning"
           ],
-          "descricao": "Quem o acerta com um ataque corpo a corpo sofre 1d8 de dano de eletricidade."
+          "descricao": "Quem acertar a criatura com um ataque corpo a corpo sofre 1d8 de dano de eletricidade."
         },
         {
           "id": "sobrecarga",
@@ -3794,11 +3683,11 @@ window.EDITOR_CATALOG = {
           "descricao": "Recarga 4 rodadas. Centro no alvo; raio 1. Causa 4d6 ao surgir e 1d6 no turno de cada criatura dentro da área."
         },
         {
-          "id": "predador_charcos",
-          "name": "Predador dos Charcos",
+          "id": "predador_implacavel",
+          "name": "Predador Implacável",
           "action_type": "passiva",
           "max_targets": 2,
-          "descricao": "Pode manter dois inimigos Imobilizados simultaneamente."
+          "descricao": "Pode manter dois inimigos Imobilizados ao mesmo tempo."
         }
       ],
       "immunities": [],
@@ -3823,8 +3712,8 @@ window.EDITOR_CATALOG = {
       "movement": 6,
       "vision_base": 0,
       "size": [
-        1,
-        1
+        2,
+        2
       ],
       "porte": "grande",
       "image": "tirano_da_mata",
@@ -3963,9 +3852,10 @@ window.EDITOR_CATALOG = {
       "movement_exception": true,
       "vision_base": 0,
       "size": [
-        1,
-        1
+        2,
+        3
       ],
+      "oriented": true,
       "porte": "grande",
       "image": "tirano_da_mata",
       "str_": 28,
@@ -4069,7 +3959,7 @@ window.EDITOR_CATALOG = {
           "damage_threshold": 20,
           "internal_damage": "2d6",
           "uses_per_combat": 1,
-          "descricao": "A criatura Engolida pode atacar o estômago. Ao causar 20 dano interno, é cuspida; o Tirano sofre 2d6 e perde o próximo ataque."
+          "descricao": "A criatura Engolida pode atacar o estômago. Ao causar 20 dano interno, é cuspida; o monstro sofre 2d6 e perde o próximo ataque."
         },
         {
           "id": "passo_devastador",
@@ -4717,9 +4607,10 @@ window.EDITOR_CATALOG = {
       "movement_exception": true,
       "vision_base": 0,
       "size": [
-        1,
+        2,
         1
       ],
+      "oriented": true,
       "porte": "grande",
       "image": "garaloux",
       "str_": 16,
@@ -4799,9 +4690,10 @@ window.EDITOR_CATALOG = {
       "movement_exception": true,
       "vision_base": 0,
       "size": [
-        1,
+        2,
         1
       ],
+      "oriented": true,
       "porte": "grande",
       "image": "garaloux",
       "str_": 18,
@@ -4913,9 +4805,10 @@ window.EDITOR_CATALOG = {
       "movement_exception": true,
       "vision_base": 0,
       "size": [
-        1,
+        2,
         1
       ],
+      "oriented": true,
       "porte": "grande",
       "image": "garaloux",
       "str_": 22,
@@ -5044,9 +4937,10 @@ window.EDITOR_CATALOG = {
       "movement": 6,
       "vision_base": 0,
       "size": [
-        1,
+        2,
         1
       ],
+      "oriented": true,
       "porte": "grande",
       "image": "molochos",
       "str_": 18,
@@ -5100,14 +4994,14 @@ window.EDITOR_CATALOG = {
           "descricao": "Criaturas adjacentes sofrem 1d4 de fogo no início do próprio turno."
         },
         {
-          "id": "sangue_em_ebulicao",
-          "name": "Sangue em Ebulição",
+          "id": "dano_retaliacao",
+          "name": "Dano de Retaliação",
           "action_type": "passiva",
           "damage": "1d4",
           "damage_types": [
             "fire"
           ],
-          "descricao": "Quem acerta o Molochus com um ataque corpo a corpo sofre 1d4 de fogo."
+          "descricao": "Quem acertar a criatura com um ataque corpo a corpo sofre 1d4 de dano de fogo."
         }
       ],
       "immunities": [
@@ -5146,9 +5040,10 @@ window.EDITOR_CATALOG = {
       "movement": 6,
       "vision_base": 0,
       "size": [
-        1,
+        2,
         1
       ],
+      "oriented": true,
       "porte": "grande",
       "image": "molochos",
       "str_": 20,
@@ -5202,14 +5097,14 @@ window.EDITOR_CATALOG = {
           "descricao": "Criaturas adjacentes sofrem 1d6 de fogo no início do próprio turno."
         },
         {
-          "id": "sangue_em_ebulicao",
-          "name": "Sangue em Ebulição",
+          "id": "dano_retaliacao",
+          "name": "Dano de Retaliação",
           "action_type": "passiva",
           "damage": "1d6",
           "damage_types": [
             "fire"
           ],
-          "descricao": "Cada ataque corpo a corpo que acerta o Molochus faz o atacante sofrer 1d6 de fogo."
+          "descricao": "Quem acertar a criatura com um ataque corpo a corpo sofre 1d6 de dano de fogo."
         },
         {
           "id": "investida_flamejante",
@@ -5291,9 +5186,10 @@ window.EDITOR_CATALOG = {
       "movement": 6,
       "vision_base": 0,
       "size": [
-        1,
+        2,
         1
       ],
+      "oriented": true,
       "porte": "grande",
       "image": "molochos",
       "str_": 24,
@@ -5347,14 +5243,14 @@ window.EDITOR_CATALOG = {
           "descricao": "Criaturas adjacentes sofrem 2d6 de fogo no início do próprio turno."
         },
         {
-          "id": "sangue_em_ebulicao",
-          "name": "Sangue em Ebulição",
+          "id": "dano_retaliacao",
+          "name": "Dano de Retaliação",
           "action_type": "passiva",
           "damage": "2d6",
           "damage_types": [
             "fire"
           ],
-          "descricao": "Cada ataque corpo a corpo que acerta o Molochus faz o atacante sofrer 2d6 de fogo."
+          "descricao": "Quem acertar a criatura com um ataque corpo a corpo sofre 2d6 de dano de fogo."
         },
         {
           "id": "investida_flamejante",
@@ -5506,11 +5402,14 @@ window.EDITOR_CATALOG = {
       "source": "monstro"
     },
     {
-      "id": "carapaca_espinhosa",
-      "name": "Carapaça Espinhosa",
+      "id": "dano_retaliacao",
+      "name": "Dano de Retaliação",
       "action_type": "passiva",
       "damage": "1d4",
-      "descricao": "Quem acertar o Lacralion com um ataque corpo a corpo sofre 1d4 de dano.",
+      "damage_types": [
+        "physical"
+      ],
+      "descricao": "Quem acertar a criatura com um ataque corpo a corpo sofre 1d4 de dano físico.",
       "source": "monstro"
     },
     {
@@ -5533,10 +5432,14 @@ window.EDITOR_CATALOG = {
       "source": "monstro"
     },
     {
-      "id": "fraqueza_magica",
-      "name": "Fraqueza Mágica",
+      "id": "vulnerabilidade",
+      "name": "Vulnerabilidade",
       "action_type": "passiva",
-      "descricao": "-2 em testes contra magias que controlam mortos-vivos",
+      "saves": [
+        "vontade"
+      ],
+      "penalty": 2,
+      "descricao": "-2 em testes de Vontade",
       "source": "monstro"
     },
     {
@@ -5551,20 +5454,6 @@ window.EDITOR_CATALOG = {
       "name": "Sem Instinto",
       "action_type": "passiva",
       "descricao": "Nunca foge nem recua — avança até ser destruído",
-      "source": "monstro"
-    },
-    {
-      "id": "caca_em_bando",
-      "name": "Caça em Bando",
-      "action_type": "passiva",
-      "source": "monstro"
-    },
-    {
-      "id": "derrubar",
-      "name": "Derrubar",
-      "action_type": "passiva",
-      "dc": 11,
-      "save": "reflexos",
       "source": "monstro"
     },
     {
@@ -5587,10 +5476,14 @@ window.EDITOR_CATALOG = {
       "source": "monstro"
     },
     {
-      "id": "veneno",
-      "name": "Veneno",
+      "id": "contagiar",
+      "name": "Contagiar",
       "action_type": "passiva",
-      "descricao": "Ao acertar a mordida, aplica veneno (doença leve)",
+      "attack_index": 0,
+      "dc": 10,
+      "save": "fortitude",
+      "disease_severity": "leve",
+      "descricao": "Ao acertar a mordida, alvo testa Fortitude CD 10 ou contrai doença leve",
       "source": "monstro"
     },
     {
@@ -5650,58 +5543,10 @@ window.EDITOR_CATALOG = {
       "source": "monstro"
     },
     {
-      "id": "mente_limitada",
-      "name": "Mente Limitada",
-      "action_type": "passiva",
-      "descricao": "-1 em testes de Vontade contra efeitos mentais",
-      "source": "monstro"
-    },
-    {
-      "id": "mente_fraca",
-      "name": "Mente Fraca",
-      "action_type": "passiva",
-      "descricao": "-2 em testes de Vontade contra magias de controle mental",
-      "source": "monstro"
-    },
-    {
       "id": "arremesso",
       "name": "Arremesso",
       "action_type": "acao_bonus",
       "descricao": "Arremesso 1d4+2 (alcance 3) como ação bônus; 1 natural quebra a arma",
-      "source": "monstro"
-    },
-    {
-      "id": "silencio",
-      "name": "Silêncio",
-      "action_type": "magia",
-      "uses_per_combat": 1,
-      "circulo": 2,
-      "descricao": "Cria área de Silêncio (some se o xamã morrer)",
-      "source": "monstro"
-    },
-    {
-      "id": "amaldicoar",
-      "name": "Amaldiçoar",
-      "action_type": "magia",
-      "uses_per_combat": 1,
-      "circulo": 1,
-      "descricao": "Debuff -1 em ataque/dano/CA/resistência nos heróis",
-      "source": "monstro"
-    },
-    {
-      "id": "abencoar",
-      "name": "Abençoar",
-      "action_type": "magia",
-      "uses_per_combat": 1,
-      "circulo": 1,
-      "descricao": "Buff +1 em ataque/dano/CA/resistência nos goblins aliados",
-      "source": "monstro"
-    },
-    {
-      "id": "concentracao_fragil",
-      "name": "Concentração Frágil",
-      "action_type": "passiva",
-      "descricao": "Se sofrer dano, não pode usar magia no próximo turno",
       "source": "monstro"
     },
     {
@@ -5732,6 +5577,14 @@ window.EDITOR_CATALOG = {
     {
       "id": "medo",
       "name": "Medo",
+      "action_type": "magia",
+      "uses_per_combat": 1,
+      "circulo": 1,
+      "source": "monstro"
+    },
+    {
+      "id": "amaldicoar",
+      "name": "Amaldiçoar",
       "action_type": "magia",
       "uses_per_combat": 1,
       "circulo": 1,
@@ -5780,10 +5633,11 @@ window.EDITOR_CATALOG = {
       "id": "infeccao",
       "name": "Infecção",
       "action_type": "passiva",
+      "attack_index": 0,
       "dc": 10,
       "save": "fortitude",
       "disease_severity": "leve",
-      "descricao": "Ao acertar: alvo testa Fortitude CD 10 ou contrai 1 sintoma leve",
+      "descricao": "Ao acertar o ataque selecionado: alvo testa Fortitude CD 10 ou contrai 1 sintoma leve",
       "source": "monstro"
     },
     {
@@ -5878,13 +5732,6 @@ window.EDITOR_CATALOG = {
       "source": "monstro"
     },
     {
-      "id": "mente_bruta",
-      "name": "Mente Bruta",
-      "action_type": "passiva",
-      "descricao": "-2 em Vontade contra controle mental",
-      "source": "monstro"
-    },
-    {
       "id": "lento_previsivel",
       "name": "Lento e Previsível",
       "action_type": "passiva",
@@ -5903,19 +5750,8 @@ window.EDITOR_CATALOG = {
       "source": "monstro"
     },
     {
-      "id": "corpo_em_chamas",
-      "name": "Corpo em Chamas",
-      "action_type": "passiva",
-      "damage": "1d6",
-      "damage_types": [
-        "fire"
-      ],
-      "descricao": "Quem o acerta com um ataque corpo a corpo sofre 1d6 de dano de fogo.",
-      "source": "monstro"
-    },
-    {
-      "id": "explosao_final",
-      "name": "Explosão Final",
+      "id": "morte_explosiva",
+      "name": "Morte Explosiva",
       "action_type": "passiva",
       "damage": "4d6",
       "damage_types": [
@@ -5924,7 +5760,9 @@ window.EDITOR_CATALOG = {
       "radius": 1,
       "save": "reflexos",
       "dc": 13,
-      "descricao": "Ao morrer, explode em 1 quadrado: 4d6 de fogo; Reflexos CD 13 reduz à metade.",
+      "duration": 2,
+      "tick_damage": "1d6",
+      "descricao": "Ao morrer, explode em raio 1: 4d6 de fogo; Reflexos CD 13 reduz a metade. Chamas persistem por 2 rodadas.",
       "source": "monstro"
     },
     {
@@ -5969,17 +5807,6 @@ window.EDITOR_CATALOG = {
       "name": "Inabalável",
       "action_type": "passiva",
       "descricao": "Não pode ser imobilizado por redes, cola ou efeitos equivalentes.",
-      "source": "monstro"
-    },
-    {
-      "id": "corpo_eletrico",
-      "name": "Corpo Elétrico",
-      "action_type": "passiva",
-      "damage": "1d8",
-      "damage_types": [
-        "lightning"
-      ],
-      "descricao": "Quem o acerta com um ataque corpo a corpo sofre 1d8 de dano de eletricidade.",
       "source": "monstro"
     },
     {
@@ -6236,14 +6063,6 @@ window.EDITOR_CATALOG = {
       "source": "monstro"
     },
     {
-      "id": "predador_charcos",
-      "name": "Predador dos Charcos",
-      "action_type": "passiva",
-      "max_targets": 2,
-      "descricao": "Pode manter dois inimigos Imobilizados simultaneamente.",
-      "source": "monstro"
-    },
-    {
       "id": "mandibulas_colossais",
       "name": "Mandíbulas Colossais",
       "action_type": "passiva",
@@ -6314,7 +6133,7 @@ window.EDITOR_CATALOG = {
       "damage_threshold": 20,
       "internal_damage": "2d6",
       "uses_per_combat": 1,
-      "descricao": "A criatura Engolida pode atacar o estômago. Ao causar 20 dano interno, é cuspida; o Tirano sofre 2d6 e perde o próximo ataque.",
+      "descricao": "A criatura Engolida pode atacar o estômago. Ao causar 20 dano interno, é cuspida; o monstro sofre 2d6 e perde o próximo ataque.",
       "source": "monstro"
     },
     {
@@ -6599,17 +6418,6 @@ window.EDITOR_CATALOG = {
       "source": "monstro"
     },
     {
-      "id": "sangue_em_ebulicao",
-      "name": "Sangue em Ebulição",
-      "action_type": "passiva",
-      "damage": "1d4",
-      "damage_types": [
-        "fire"
-      ],
-      "descricao": "Quem acerta o Molochus com um ataque corpo a corpo sofre 1d4 de fogo.",
-      "source": "monstro"
-    },
-    {
       "id": "investida_flamejante",
       "name": "Investida Flamejante",
       "action_type": "passiva",
@@ -6637,22 +6445,6 @@ window.EDITOR_CATALOG = {
       "dc": 16,
       "success_effect": "metade",
       "descricao": "Recarga fixa de 6 rodadas. Cone de 3 quadrados; Reflexos CD 16 reduz 4d6 de fogo à metade.",
-      "source": "monstro"
-    },
-    {
-      "id": "morte_explosiva",
-      "name": "Morte Explosiva",
-      "action_type": "passiva",
-      "radius": 2,
-      "damage": "4d6",
-      "damage_types": [
-        "fire"
-      ],
-      "save": "reflexos",
-      "dc": 16,
-      "duration": 2,
-      "tick_damage": "1d6",
-      "descricao": "Ao morrer, explode em raio 2. Reflexos CD 16 reduz 4d6 à metade; o chão fica em chamas por 2 rodadas.",
       "source": "monstro"
     },
     {
@@ -6723,13 +6515,13 @@ window.EDITOR_CATALOG = {
     {
       "id": "cuspir_acido",
       "name": "Cuspir Ácido",
-      "action_type": "acao",
+      "action_type": "acao_livre",
       "cooldown_turns": 5,
-      "range": 3,
-      "damage": "2d6",
+      "range": 6,
+      "damage": "3d6",
       "save": "reflexos",
       "dc": 13,
-      "descricao": "Alvo a até 3 quadrado(s): 2d6 de ácido; Reflexos CD 13 reduz à metade. Falha corrói equipamentos conforme as regras de corrosão por ácido.",
+      "descricao": "Ação livre extra. Alvo único em linha reta dentro do alcance configurado: 3d6 de ácido. Reflexos CD 13 reduz o dano à metade; em caso de falha, metade do dano é repetida na rodada seguinte e equipamentos podem ser danificados.",
       "source": "monstro",
       "uses_per_day": 1
     },
@@ -6743,20 +6535,83 @@ window.EDITOR_CATALOG = {
       "cooldown_turns": 0
     },
     {
+      "id": "hero_warrior_golpe_devastador",
+      "source": "heroi",
+      "source_id": "golpe_devastador",
+      "source_class": "warrior",
+      "name": "Golpe Devastador",
+      "icon": "💥",
+      "descricao": "Dobra cada dado de dano neste turno",
+      "action_type": "acao",
+      "monster_effect": "vantagem_combate",
+      "guild_progressions": [
+        {
+          "id": "guerreiro_golpe_3",
+          "level": 3,
+          "requires": "guerreiro_combinar_2",
+          "name": "Golpe Devastador III",
+          "icon": "💥",
+          "description": "Golpe Devastador passa a multiplicar os dados de dano por 2 (era ×1,5)."
+        }
+      ]
+    },
+    {
+      "id": "sopro_dragao",
+      "source": "monstro",
+      "name": "Sopro de Dragão",
+      "icon": "🐉",
+      "action_type": "acao",
+      "range": 4,
+      "damage": "3d6",
+      "damage_types": [
+        "fire"
+      ],
+      "save": "reflexos",
+      "dc": 15,
+      "shape": "cone",
+      "target_mode": "todos",
+      "success_effect": "metade",
+      "descricao": "3d6 de fogo em cone de 4 casas; todos na área. Reflexos CD 15: sucesso reduz o dano à metade.",
+      "uses_per_day": 1,
+      "cooldown_turns": 6
+    },
+    {
       "id": "agarrar",
       "name": "Agarrar",
       "action_type": "passiva",
       "dc": 12,
       "save": "fortitude",
       "descricao": "Ao acertar, alvo testa FOR ou REF CD 12 — falha: preso",
-      "source": "monstro"
+      "source": "monstro",
+      "uses_per_day": 1,
+      "cooldown_turns": 0
     },
     {
       "id": "atq_mandibula",
       "name": "Ataque de Mandíbula",
       "action_type": "passiva",
       "descricao": "Se alvo preso e adjacente: 1d8+3 dano direto (sem rolagem de acerto)",
-      "source": "monstro"
+      "source": "monstro",
+      "uses_per_day": 1,
+      "cooldown_turns": 0
+    },
+    {
+      "id": "caca_em_bando",
+      "name": "Caça em Bando",
+      "action_type": "passiva",
+      "source": "monstro",
+      "uses_per_day": 1,
+      "cooldown_turns": 0
+    },
+    {
+      "id": "derrubar",
+      "name": "Derrubar",
+      "action_type": "passiva",
+      "dc": 11,
+      "save": "reflexos",
+      "source": "monstro",
+      "uses_per_day": 1,
+      "cooldown_turns": 0
     },
     {
       "id": "combo_devorador",
@@ -6784,48 +6639,6 @@ window.EDITOR_CATALOG = {
       "source": "monstro",
       "uses_per_day": 1,
       "cooldown_turns": 0
-    },
-    {
-      "id": "hero_warrior_golpe_devastador",
-      "source": "heroi",
-      "source_id": "golpe_devastador",
-      "source_class": "warrior",
-      "name": "Golpe Devastador",
-      "icon": "💥",
-      "descricao": "Dobra cada dado de dano neste turno",
-      "action_type": "acao",
-      "monster_effect": "vantagem_combate",
-      "guild_progressions": [
-        {
-          "id": "guerreiro_golpe_3",
-          "level": 3,
-          "requires": "guerreiro_combinar_2",
-          "name": "Golpe Devastador III",
-          "icon": "💥",
-          "description": "Golpe Devastador passa a multiplicar os dados de dano por 2 (era ×1,5)."
-        }
-      ]
-    },
-    {
-      "id": "hero_warrior_furia_berserker",
-      "source": "heroi",
-      "source_id": "furia_berserker",
-      "source_class": "warrior",
-      "name": "Fúria Berserker",
-      "icon": "🔥",
-      "descricao": "Ataque extra neste turno com habilidades ativas",
-      "action_type": "acao",
-      "monster_effect": "vantagem_combate",
-      "guild_progressions": [
-        {
-          "id": "guerreiro_furia_3",
-          "level": 3,
-          "requires": "guerreiro_combinar_2",
-          "name": "Fúria Berserker III",
-          "icon": "🔥",
-          "description": "Fúria Berserker concede 2 ataques extras (3 ataques no total)."
-        }
-      ]
     },
     {
       "id": "hero_mage_aprimorar_magia",
@@ -6882,6 +6695,104 @@ window.EDITOR_CATALOG = {
           "name": "Estender III",
           "icon": "⏱️",
           "description": "Estender Magia dá +3 rodadas de duração."
+        }
+      ]
+    },
+    {
+      "id": "hero_bard_cancao_heroica",
+      "source": "heroi",
+      "source_id": "cancao_heroica",
+      "source_class": "bard",
+      "name": "Canção Heroica",
+      "icon": "🎵",
+      "descricao": "Ativa buffs musicais para aliados em raio de 5 quadrados",
+      "action_type": "acao",
+      "monster_effect": "vantagem_combate",
+      "monster_maintenance": true
+    },
+    {
+      "id": "guild_tecnica_grito_guerra",
+      "source": "guilda",
+      "source_id": "tecnica_grito_guerra",
+      "name": "Grito de Guerra",
+      "icon": "✦",
+      "descricao": "Todos os aliados recebem +2 de movimento por 1 rodada.",
+      "action_type": "acao",
+      "monster_effect": "vantagem_combate",
+      "guild_category": "tecnica",
+      "uses_per_day": 1,
+      "cooldown_turns": 0
+    },
+    {
+      "id": "guild_bardo_cancao_dano",
+      "source": "guilda",
+      "source_id": "bardo_cancao_dano",
+      "name": "Canção: Dano +1",
+      "icon": "✦",
+      "descricao": "O bônus de Dano da Canção Heroica sobe de +1 para +2.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao",
+      "uses_per_day": 1,
+      "cooldown_turns": 0
+    },
+    {
+      "id": "guild_bardo_cancao_ca",
+      "source": "guilda",
+      "source_id": "bardo_cancao_ca",
+      "name": "Canção: Armadura +1",
+      "icon": "✦",
+      "descricao": "O bônus de Armadura da Canção Heroica sobe de +1 para +2.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao",
+      "uses_per_day": 1,
+      "cooldown_turns": 0
+    },
+    {
+      "id": "guild_bardo_cancao_movimento",
+      "source": "guilda",
+      "source_id": "bardo_cancao_movimento",
+      "name": "Canção: Movimento +1",
+      "icon": "✦",
+      "descricao": "O bônus de Movimento da Canção Heroica sobe de +1 para +2.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao",
+      "uses_per_day": 1,
+      "cooldown_turns": 0
+    },
+    {
+      "id": "guild_bardo_cancao_resistencia",
+      "source": "guilda",
+      "source_id": "bardo_cancao_resistencia",
+      "name": "Canção: Resistência +1",
+      "icon": "✦",
+      "descricao": "O bônus de Resistência da Canção Heroica sobe de +1 para +2.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao",
+      "uses_per_day": 1,
+      "cooldown_turns": 0
+    },
+    {
+      "id": "hero_warrior_furia_berserker",
+      "source": "heroi",
+      "source_id": "furia_berserker",
+      "source_class": "warrior",
+      "name": "Fúria Berserker",
+      "icon": "🔥",
+      "descricao": "Ataque extra neste turno com habilidades ativas",
+      "action_type": "acao",
+      "monster_effect": "vantagem_combate",
+      "guild_progressions": [
+        {
+          "id": "guerreiro_furia_3",
+          "level": 3,
+          "requires": "guerreiro_combinar_2",
+          "name": "Fúria Berserker III",
+          "icon": "🔥",
+          "description": "Fúria Berserker concede 2 ataques extras (3 ataques no total)."
         }
       ]
     },
@@ -7171,18 +7082,6 @@ window.EDITOR_CATALOG = {
       ]
     },
     {
-      "id": "hero_bard_cancao_heroica",
-      "source": "heroi",
-      "source_id": "cancao_heroica",
-      "source_class": "bard",
-      "name": "Canção Heroica",
-      "icon": "🎵",
-      "descricao": "Ativa buffs musicais para aliados em raio de 5 quadrados",
-      "action_type": "acao",
-      "monster_effect": "vantagem_combate",
-      "monster_maintenance": true
-    },
-    {
       "id": "hero_bard_provocacao",
       "source": "heroi",
       "source_id": "provocacao",
@@ -7363,17 +7262,6 @@ window.EDITOR_CATALOG = {
       "name": "Espírito Indomável",
       "icon": "✦",
       "descricao": "Ação livre. Remove Medo, Atordoamento e Lentidão; 1 rodada imune a Silêncio.",
-      "action_type": "acao",
-      "monster_effect": "vantagem_combate",
-      "guild_category": "tecnica"
-    },
-    {
-      "id": "guild_tecnica_grito_guerra",
-      "source": "guilda",
-      "source_id": "tecnica_grito_guerra",
-      "name": "Grito de Guerra",
-      "icon": "✦",
-      "descricao": "Todos os aliados recebem +2 de movimento por 1 rodada.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica"
@@ -7610,50 +7498,6 @@ window.EDITOR_CATALOG = {
       "guild_category": "especializacao"
     },
     {
-      "id": "guild_bardo_cancao_dano",
-      "source": "guilda",
-      "source_id": "bardo_cancao_dano",
-      "name": "Canção: Dano +1",
-      "icon": "✦",
-      "descricao": "O bônus de Dano da Canção Heroica sobe de +1 para +2.",
-      "action_type": "passiva",
-      "monster_effect": "passiva_combate",
-      "guild_category": "especializacao"
-    },
-    {
-      "id": "guild_bardo_cancao_ca",
-      "source": "guilda",
-      "source_id": "bardo_cancao_ca",
-      "name": "Canção: Armadura +1",
-      "icon": "✦",
-      "descricao": "O bônus de Armadura da Canção Heroica sobe de +1 para +2.",
-      "action_type": "passiva",
-      "monster_effect": "passiva_combate",
-      "guild_category": "especializacao"
-    },
-    {
-      "id": "guild_bardo_cancao_movimento",
-      "source": "guilda",
-      "source_id": "bardo_cancao_movimento",
-      "name": "Canção: Movimento +1",
-      "icon": "✦",
-      "descricao": "O bônus de Movimento da Canção Heroica sobe de +1 para +2.",
-      "action_type": "passiva",
-      "monster_effect": "passiva_combate",
-      "guild_category": "especializacao"
-    },
-    {
-      "id": "guild_bardo_cancao_resistencia",
-      "source": "guilda",
-      "source_id": "bardo_cancao_resistencia",
-      "name": "Canção: Resistência +1",
-      "icon": "✦",
-      "descricao": "O bônus de Resistência da Canção Heroica sobe de +1 para +2.",
-      "action_type": "passiva",
-      "monster_effect": "passiva_combate",
-      "guild_category": "especializacao"
-    },
-    {
       "id": "guild_bardo_cancao_suprema",
       "source": "guilda",
       "source_id": "bardo_cancao_suprema",
@@ -7803,6 +7647,17 @@ window.EDITOR_CATALOG = {
       "name": "Reviver os Mortos III",
       "icon": "✦",
       "descricao": "+2 Slots de Controle. Chance de sucesso: 100% − ND×10%.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_mago_reviver_4",
+      "source": "guilda",
+      "source_id": "mago_reviver_4",
+      "name": "Senhor da Morte",
+      "icon": "✦",
+      "descricao": "Versão alternativa de Animar os Mortos: preserva a ficha completa da criatura, custa ND+2 slots, −20 pontos de sucesso e +10 pontos de hostilidade.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -8897,24 +8752,6 @@ window.EDITOR_CATALOG = {
       "guild_category": "especializacao"
     },
     {
-      "id": "sopro_dragao",
-      "source": "monstro",
-      "name": "Sopro de Dragão",
-      "icon": "🐉",
-      "action_type": "acao",
-      "range": 4,
-      "damage": "2d6",
-      "damage_types": [
-        "fire"
-      ],
-      "save": "reflexos",
-      "dc": 13,
-      "shape": "linha",
-      "target_mode": "todos",
-      "success_effect": "metade",
-      "descricao": "Expele energia em linha ou cone. Configure o elemento, alcance, dano, teste de resistência e se o sopro atinge um ou todos os alvos da área."
-    },
-    {
       "id": "arremesso_bruto",
       "source": "arma",
       "name": "Arremesso Bruto",
@@ -9411,7 +9248,8 @@ window.EDITOR_CATALOG = {
       "stat": "str_",
       "finesse": true,
       "off_hand_weapon": true,
-      "categoria": "perfurante"
+      "categoria": "perfurante",
+      "descricao": "Adaga: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo."
     },
     {
       "id": "chicote",
@@ -9421,7 +9259,8 @@ window.EDITOR_CATALOG = {
       "stat": "dex",
       "off_hand_weapon": true,
       "range": 2,
-      "categoria": "cortante"
+      "categoria": "cortante",
+      "descricao": "Chicote: 1d4 de dano cortante, usando Destreza. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo."
     },
     {
       "id": "hand_crossbow",
@@ -9430,7 +9269,8 @@ window.EDITOR_CATALOG = {
       "die": "1d4",
       "stat": "dex",
       "range": 4,
-      "categoria": "perfurante"
+      "categoria": "perfurante",
+      "descricao": "Besta de Mão: 1d4 de dano perfurante, usando Destreza. Alcance: 4 casas em linha reta."
     },
     {
       "id": "lanca_curta",
@@ -9438,7 +9278,8 @@ window.EDITOR_CATALOG = {
       "emoji": "🔱",
       "die": "1d6",
       "stat": "str_",
-      "categoria": "perfurante"
+      "categoria": "perfurante",
+      "descricao": "Lança Curta: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas."
     },
     {
       "id": "bordao",
@@ -9447,7 +9288,8 @@ window.EDITOR_CATALOG = {
       "die": "1d6",
       "stat": "str_",
       "finesse": true,
-      "categoria": "contundente"
+      "categoria": "contundente",
+      "descricao": "Bordão: 1d6 de dano contundente, usando Força ou Destreza. No 20 natural, o alvo testa Fortitude ou fica tonto."
     },
     {
       "id": "cajado_madeira",
@@ -9457,7 +9299,8 @@ window.EDITOR_CATALOG = {
       "stat": "str_",
       "finesse": true,
       "reach": "cajado",
-      "categoria": "contundente"
+      "categoria": "contundente",
+      "descricao": "Cajado de Madeira: 1d6 de dano contundente, usando Força ou Destreza. Alcance: qualquer casa adjacente."
     },
     {
       "id": "staff",
@@ -9467,7 +9310,8 @@ window.EDITOR_CATALOG = {
       "stat": "str_",
       "finesse": true,
       "reach": "cajado",
-      "categoria": "contundente"
+      "categoria": "contundente",
+      "descricao": "Cajado Arcano: 1d6 de dano contundente, usando Força ou Destreza. Alcance: qualquer casa adjacente."
     },
     {
       "id": "maca",
@@ -9476,7 +9320,8 @@ window.EDITOR_CATALOG = {
       "die": "1d6",
       "stat": "str_",
       "crit_nat20_multiplier": 3,
-      "categoria": "contundente"
+      "categoria": "contundente",
+      "descricao": "Maça: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3."
     },
     {
       "id": "shortsword",
@@ -9485,7 +9330,8 @@ window.EDITOR_CATALOG = {
       "die": "1d6",
       "stat": "str_",
       "crit_min_nat_roll": 19,
-      "categoria": "cortante"
+      "categoria": "cortante",
+      "descricao": "Espada Curta: 1d6 de dano cortante, usando Força. Crítico natural com 19–20."
     },
     {
       "id": "machado_basico",
@@ -9494,7 +9340,8 @@ window.EDITOR_CATALOG = {
       "die": "1d6",
       "stat": "str_",
       "categoria": "cortante",
-      "granted_ability": "arremesso_bruto"
+      "granted_ability": "arremesso_bruto",
+      "descricao": "Machado de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas."
     },
     {
       "id": "arco_curto",
@@ -9503,7 +9350,8 @@ window.EDITOR_CATALOG = {
       "die": "1d6",
       "stat": "dex",
       "range": 6,
-      "categoria": "perfurante"
+      "categoria": "perfurante",
+      "descricao": "Arco Curto: 1d6 de dano perfurante, usando Destreza. Alcance: 6 casas em linha reta ou 3 na diagonal."
     },
     {
       "id": "lanca",
@@ -9512,7 +9360,8 @@ window.EDITOR_CATALOG = {
       "die": "1d8",
       "stat": "str_",
       "reach": "lanca",
-      "categoria": "perfurante"
+      "categoria": "perfurante",
+      "descricao": "Lança: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente."
     },
     {
       "id": "longsword",
@@ -9521,7 +9370,8 @@ window.EDITOR_CATALOG = {
       "die": "1d8",
       "stat": "str_",
       "crit_min_nat_roll": 19,
-      "categoria": "cortante"
+      "categoria": "cortante",
+      "descricao": "Espada Longa: 1d8 de dano cortante, usando Força. Crítico natural com 19–20."
     },
     {
       "id": "longbow",
@@ -9530,7 +9380,8 @@ window.EDITOR_CATALOG = {
       "die": "1d8",
       "stat": "dex",
       "range": 10,
-      "categoria": "perfurante"
+      "categoria": "perfurante",
+      "descricao": "Arco Longo: 1d8 de dano perfurante, usando Destreza. Alcance: 10 casas em linha reta ou 5 na diagonal."
     },
     {
       "id": "warhammer",
@@ -9539,7 +9390,8 @@ window.EDITOR_CATALOG = {
       "die": "1d8",
       "stat": "str_",
       "crit_nat20_multiplier": 3,
-      "categoria": "contundente"
+      "categoria": "contundente",
+      "descricao": "Martelo de Guerra: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3."
     },
     {
       "id": "besta",
@@ -9548,7 +9400,8 @@ window.EDITOR_CATALOG = {
       "die": "1d8",
       "stat": "dex",
       "range": 8,
-      "categoria": "perfurante"
+      "categoria": "perfurante",
+      "descricao": "Besta: 1d8 de dano perfurante, usando Destreza. Alcance: 8 casas em linha reta."
     },
     {
       "id": "mangual",
@@ -9558,7 +9411,8 @@ window.EDITOR_CATALOG = {
       "stat": "str_",
       "crit_nat20_multiplier": 2.5,
       "reach": "mangual",
-      "categoria": "contundente"
+      "categoria": "contundente",
+      "descricao": "Mangual: 1d8 de dano contundente, usando Força. Alcance: qualquer uma das 8 casas adjacentes, incluindo diagonais. 20 natural: dano multiplicado por 2.5."
     },
     {
       "id": "machado_duplo",
@@ -9567,7 +9421,8 @@ window.EDITOR_CATALOG = {
       "die": "1d8",
       "stat": "str_",
       "extra_attack_on_crit_min_nat": 19,
-      "categoria": "cortante"
+      "categoria": "cortante",
+      "descricao": "Machado Duplo: 1d8 de dano cortante, usando Força. 19 natural: faz um ataque adicional."
     },
     {
       "id": "bastsword",
@@ -9576,7 +9431,8 @@ window.EDITOR_CATALOG = {
       "die": "1d10",
       "stat": "str_",
       "crit_min_nat_roll": 19,
-      "categoria": "cortante"
+      "categoria": "cortante",
+      "descricao": "Espada Bastarda: 1d10 de dano cortante, usando Força. Crítico natural com 19–20."
     },
     {
       "id": "machado_orc",
@@ -9585,7 +9441,8 @@ window.EDITOR_CATALOG = {
       "die": "1d10",
       "stat": "str_",
       "crit_nat20_multiplier": 3,
-      "categoria": "cortante"
+      "categoria": "cortante",
+      "descricao": "Machado de Guerra Órquico: 1d10 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3."
     },
     {
       "id": "alabarda",
@@ -9594,7 +9451,8 @@ window.EDITOR_CATALOG = {
       "die": "1d10",
       "stat": "str_",
       "range": 2,
-      "categoria": "perfurante"
+      "categoria": "perfurante",
+      "descricao": "Alabarda: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos."
     },
     {
       "id": "espada2m",
@@ -9603,7 +9461,8 @@ window.EDITOR_CATALOG = {
       "die": "2d6",
       "stat": "str_",
       "crit_min_nat_roll": 19,
-      "categoria": "cortante"
+      "categoria": "cortante",
+      "descricao": "Espada de 2 Mãos: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20."
     },
     {
       "id": "dagger_prata",
@@ -9613,7 +9472,8 @@ window.EDITOR_CATALOG = {
       "stat": "str_",
       "finesse": true,
       "off_hand_weapon": true,
-      "categoria": "perfurante"
+      "categoria": "perfurante",
+      "descricao": "Adaga de Prata: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "chicote_prata",
@@ -9623,7 +9483,8 @@ window.EDITOR_CATALOG = {
       "stat": "dex",
       "off_hand_weapon": true,
       "range": 2,
-      "categoria": "cortante"
+      "categoria": "cortante",
+      "descricao": "Chicote de Prata: 1d4 de dano cortante, usando Destreza. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "lanca_curta_prata",
@@ -9631,7 +9492,8 @@ window.EDITOR_CATALOG = {
       "emoji": "🔱",
       "die": "1d6",
       "stat": "str_",
-      "categoria": "perfurante"
+      "categoria": "perfurante",
+      "descricao": "Lança Curta de Prata: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "bordao_prata",
@@ -9640,7 +9502,8 @@ window.EDITOR_CATALOG = {
       "die": "1d6",
       "stat": "str_",
       "finesse": true,
-      "categoria": "contundente"
+      "categoria": "contundente",
+      "descricao": "Bordão de Prata: 1d6 de dano contundente, usando Força ou Destreza. No 20 natural, o alvo testa Fortitude ou fica tonto. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "maca_prata",
@@ -9649,7 +9512,8 @@ window.EDITOR_CATALOG = {
       "die": "1d6",
       "stat": "str_",
       "crit_nat20_multiplier": 3,
-      "categoria": "contundente"
+      "categoria": "contundente",
+      "descricao": "Maça de Prata: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "shortsword_prata",
@@ -9658,7 +9522,8 @@ window.EDITOR_CATALOG = {
       "die": "1d6",
       "stat": "str_",
       "crit_min_nat_roll": 19,
-      "categoria": "cortante"
+      "categoria": "cortante",
+      "descricao": "Espada Curta de Prata: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "machado_basico_prata",
@@ -9667,7 +9532,8 @@ window.EDITOR_CATALOG = {
       "die": "1d6",
       "stat": "str_",
       "categoria": "cortante",
-      "granted_ability": "arremesso_bruto"
+      "granted_ability": "arremesso_bruto",
+      "descricao": "Machado de Ferro de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "lanca_prata",
@@ -9676,7 +9542,8 @@ window.EDITOR_CATALOG = {
       "die": "1d8",
       "stat": "str_",
       "reach": "lanca",
-      "categoria": "perfurante"
+      "categoria": "perfurante",
+      "descricao": "Lança de Prata: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "longsword_prata",
@@ -9685,7 +9552,8 @@ window.EDITOR_CATALOG = {
       "die": "1d8",
       "stat": "str_",
       "crit_min_nat_roll": 19,
-      "categoria": "cortante"
+      "categoria": "cortante",
+      "descricao": "Espada Longa de Prata: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "warhammer_prata",
@@ -9694,7 +9562,8 @@ window.EDITOR_CATALOG = {
       "die": "1d8",
       "stat": "str_",
       "crit_nat20_multiplier": 3,
-      "categoria": "contundente"
+      "categoria": "contundente",
+      "descricao": "Martelo de Guerra de Prata: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "mangual_prata",
@@ -9704,7 +9573,8 @@ window.EDITOR_CATALOG = {
       "stat": "str_",
       "crit_nat20_multiplier": 2.5,
       "reach": "mangual",
-      "categoria": "contundente"
+      "categoria": "contundente",
+      "descricao": "Mangual de Prata: 1d8 de dano contundente, usando Força. Alcance: qualquer uma das 8 casas adjacentes, incluindo diagonais. 20 natural: dano multiplicado por 2.5. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "machado_duplo_prata",
@@ -9713,7 +9583,8 @@ window.EDITOR_CATALOG = {
       "die": "1d8",
       "stat": "str_",
       "extra_attack_on_crit_min_nat": 19,
-      "categoria": "cortante"
+      "categoria": "cortante",
+      "descricao": "Machado Duplo de Prata: 1d8 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "bastsword_prata",
@@ -9722,7 +9593,8 @@ window.EDITOR_CATALOG = {
       "die": "1d10",
       "stat": "str_",
       "crit_min_nat_roll": 19,
-      "categoria": "cortante"
+      "categoria": "cortante",
+      "descricao": "Espada Bastarda de Prata: 1d10 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "machado_orc_prata",
@@ -9731,7 +9603,8 @@ window.EDITOR_CATALOG = {
       "die": "1d10",
       "stat": "str_",
       "crit_nat20_multiplier": 3,
-      "categoria": "cortante"
+      "categoria": "cortante",
+      "descricao": "Machado de Guerra Órquico de Prata: 1d10 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "alabarda_prata",
@@ -9740,7 +9613,8 @@ window.EDITOR_CATALOG = {
       "die": "1d10",
       "stat": "str_",
       "range": 2,
-      "categoria": "perfurante"
+      "categoria": "perfurante",
+      "descricao": "Alabarda de Prata: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "espada2m_prata",
@@ -9749,7 +9623,8 @@ window.EDITOR_CATALOG = {
       "die": "2d6",
       "stat": "str_",
       "crit_min_nat_roll": 19,
-      "categoria": "cortante"
+      "categoria": "cortante",
+      "descricao": "Espada de 2 Mãos de Prata: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "escudo_p",
@@ -9965,7 +9840,8 @@ window.EDITOR_CATALOG = {
       "emoji": "🕯️",
       "item_slot": "bag",
       "effect": "veil_shadow",
-      "value": 0
+      "value": 0,
+      "descricao": "Ação bônus. Fica oculto até o fim do turno; o próximo ataque tem vantagem. Para o Ladino, o próximo ataque ativa automaticamente o Ataque Furtivo."
     },
     {
       "id": "ring_str",
@@ -10066,7 +9942,8 @@ window.EDITOR_CATALOG = {
       "item_slot": "bag",
       "effect": "coat_poison",
       "value": 0,
-      "veneno_id": "veneno_polvo_abissal"
+      "veneno_id": "veneno_polvo_abissal",
+      "descricao": "Fortitude CD 11. Falha: cegueira por 1d4 rodadas, visão 1 quadrado, -5 percepção, -4 ataques e sem ataques à distância. Sucesso: percepção -2 por 1d4 rodadas."
     },
     {
       "id": "veneno_agonia_sufocante",
@@ -10479,7 +10356,7 @@ window.EDITOR_CATALOG = {
       "effect": "coat_poison",
       "value": 0,
       "veneno_id": "ensaio_sobre_a_cegueira",
-      "descricao": "Forte veneno a base da seiva leitosa de plantas venenosas provoca cegueira."
+      "descricao": "Fortitude CD 14. Falha: cego por 1d4+2 rodadas, visão 1 quadrado, -5 percepção, -4 ataques e sem ataques à distância. Sucesso: visão -2 quadrados e -3 percepção por 1d4 rodadas; ao final, novo Fortitude CD 14. Falha: cegueira por 1d2 rodadas."
     }
   ],
   "traps": [
@@ -11313,6 +11190,57 @@ window.EDITOR_CATALOG = {
       "nome": "Água profunda",
       "categoria": "piso",
       "cor": "#06173f",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "lava",
+      "nome": "Lava",
+      "categoria": "piso",
+      "cor": "#d63b13",
+      "solido": false,
+      "oclui": false,
+      "custo_mov": 2
+    },
+    {
+      "id": "pantano",
+      "nome": "Pântano",
+      "categoria": "piso",
+      "cor": "#354e31",
+      "solido": false,
+      "oclui": false,
+      "custo_mov": 1
+    },
+    {
+      "id": "areia_deserto",
+      "nome": "Areia do deserto",
+      "categoria": "piso",
+      "cor": "#c49a58",
+      "solido": false,
+      "oclui": false,
+      "custo_mov": 2
+    },
+    {
+      "id": "duna_deserto",
+      "nome": "Duna do deserto",
+      "categoria": "parede",
+      "cor": "#b9823f",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "rocha",
+      "nome": "Rocha",
+      "categoria": "parede",
+      "cor": "#4a4746",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "rocha_marrom",
+      "nome": "Rocha marrom",
+      "categoria": "parede",
+      "cor": "#754b32",
       "solido": false,
       "oclui": false
     },

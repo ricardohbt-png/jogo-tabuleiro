@@ -85,11 +85,14 @@ window.VC = {
   materiais: {
     pedra_cinza:   { color: [0.533, 0.533, 0.533] },
     terra:         { color: [0.46, 0.27, 0.12] },
+    areia_deserto: { color: [0.72, 0.52, 0.28] },
     grama:         { color: [0.16, 0.45, 0.13] },
     // Azul saturado e emissivo: a superfície deve continuar legível nas áreas
     // escuras e distinguir-se claramente dos pisos de pedra.
     agua:          { color: [0.01, 0.40, 0.78] },
     agua_profunda: { color: [0.006, 0.045, 0.18] },
+    lava:          { color: [0.84, 0.12, 0.025] },
+    pantano:       { color: [0.12, 0.23, 0.12] },
     pedra_negra:   { color: [0.14, 0.14, 0.16] },
     madeira_escura:{ color: [0.23, 0.11, 0.045] },
     entulho:       { color: [0.34, 0.31, 0.27] },
@@ -98,6 +101,9 @@ window.VC = {
     pedra_caverna: { color: [0.30, 0.26, 0.21] },
     desmoronada:   { color: [0.33, 0.30, 0.25] },
     madeira:        { color: [0.29, 0.13, 0.045] },
+    duna_deserto:  { color: [0.67, 0.43, 0.20] },
+    rocha:          { color: [0.23, 0.22, 0.22] },
+    rocha_marrom:   { color: [0.38, 0.23, 0.13] },
   },
 
   // ── Dice ───────────────────────────────────────────────────────────────────
@@ -106,6 +112,8 @@ window.VC = {
     emissiveIntensity: 1.0,       // MAXIMUM: 100% emissive — dice glow with their own color regardless of scene lighting
     settleMs:          1500,       // tempo mostrando o resultado antes do fade
     fadeMs:             350,        // desaparecimento rápido após o resultado
+    formulaFontSize:   14,         // fórmula curta acima do dado
+    statusFontSize:    10,         // mantido/descartado e contexto
     // Âncora comum para os dados 2D/3D: inferior direita do mapa, sem colar
     // na borda. Os dados continuam centralizados entre si nessa área.
     screenAnchor:      { x: 0.72, y: 0.68 },
@@ -175,9 +183,50 @@ window.VC = {
       heroDamageColor: '#ff8d8d',
       healColor:       '#69f59a',
       deathColor:      '#f4d27a',
+      // Identidade visual do dano. O servidor envia a chave autoritativa;
+      // esta tabela é compartilhada pelo feedback 2D e pelo sprite 3D.
+      damageTypes: {
+        physical:  { color: '#f4eee2', icon: '⚔', label: 'Físico' },
+        fire:      { color: '#ff8a32', icon: '🔥', label: 'Fogo' },
+        cold:      { color: '#75d7ff', icon: '❄', label: 'Frio' },
+        lightning: { color: '#ffe36a', icon: '⚡', label: 'Eletricidade' },
+        acid:      { color: '#76e05a', icon: '☣', label: 'Ácido' },
+        poison:    { color: '#d18aff', icon: '☠', label: 'Veneno' },
+        holy:      { color: '#ffdf78', icon: '✦', label: 'Sagrado' },
+        magic:     { color: '#c59aff', icon: '✧', label: 'Mágico' },
+        water:     { color: '#65bfff', icon: '◆', label: 'Água' },
+      },
       damageFontScale: 1.5,
+      criticalFontScale: 1.32,
+      statusFontScale: 0.62,
       damageMs:        1050,
       deathMs:         1500,
+      // Reação curta do peão ao receber dano. É puramente visual: não altera
+      // a posição autoritativa nem o footprint da criatura.
+      hitReaction: {
+        durationMs: 190,
+        amplitude2D: 2.4,
+        angle3D: 0.055,
+        criticalScale: 1.30,
+        cycles: 2.7,
+      },
+      resistance: {
+        reflexos:  { color: '#72d8ff', icon: '💨', label: 'REFLEXOS' },
+        fortitude: { color: '#8dffb0', icon: '🛡', label: 'FORTITUDE' },
+        vontade:   { color: '#d9a0ff', icon: '🧠', label: 'VONTADE' },
+        durationMs: 1450,
+      },
+      defeat: {
+        commonMs: 1250,
+        bossMs: 1750,
+        explosionMs: 1450,
+        magicMs: 1150,
+        reviveMs: 1200,
+        colors: {
+          common: '#d6c29a', boss: '#ffd45a', explosion: '#ff7138',
+          magic: '#c69bff', hero: '#7f9bd8', revive: '#9affb7',
+        },
+      },
     },
   },
 

@@ -525,7 +525,9 @@ const GS = (() => {
     adaga_secundaria:{ id:'adaga_secundaria',nome:'Adaga Secundária',     tipo:'secundario', loja:'ferreiro', preco:5,  dano:'1d4', atributo:'destreza', bonusAtaque:'destreza', bonusDano:'destreza', arremesso:true,  alcanceArremesso:3, usoAcaoBonus:true, permitidoPara:['victorCoiceBravo','luccas','henrique'] },
     chicote:         { id:'chicote',         nome:'Chicote',              tipo:'arma', loja:'ferreiro', preco:10, dano:'1d4', atributo:'destreza', escudo:false, arremesso:false, duasMaos:false, alcanceEspecial:{ adjacente:2, diagonal:1, descricao:'2 quadrados adjacentes + 1 diagonal adjacente' }, permitidoPara:['luccas','pedro','henrique'] },
     martelo:         { id:'martelo',         nome:'Martelo',              tipo:'arma', loja:'ferreiro', preco:10, dano:'1d6', atributo:'forca', escudo:true,  arremesso:false, duasMaos:false, permitidoPara:['victorCoiceBravo','richardCavaleiro','lewis'] },
+    bordao:          { id:'bordao',          nome:'Bordão',               tipo:'arma', loja:'ferreiro', preco:8, dano:'1d6', atributo:'forcaOuDestreza', finesse:true, escudo:true, arremesso:false, duasMaos:false, critNat20Atordoa:true, permitidoPara:['todos'] },
     cajado:          { id:'cajado',          nome:'Cajado',               tipo:'arma', loja:'ferreiro', preco:10, dano:'1d6', atributo:'inteligencia', escudo:false, arremesso:false, duasMaos:false, permitidoPara:['lewis','pedro'] },
+    staff:           { id:'staff',           nome:'Cajado Arcano',         tipo:'arma', loja:'mercado', preco:10, dano:'1d6', atributo:'forca', finesse:true, escudo:false, arremesso:false, duasMaos:false, staffSpellDamageBonus:2, staffAreaDimensionBonus:1, staffExtraSpellCircle:'primeiro', staffExtraSpellCooldown:20, permitidoPara:['pedro','lewis'] },
     espada_curta:    { id:'espada_curta',    nome:'Espada Curta',         tipo:'arma', loja:'ferreiro', preco:15, dano:'1d6', atributo:'forca', escudo:true,  arremesso:false, duasMaos:false, permitidoPara:['victorCoiceBravo','richardCavaleiro','lewis','luccas','henrique'] },
     machado_basico:  { id:'machado_basico',  nome:'Machado de Ferro',      tipo:'arma', loja:'ferreiro', preco:0,  dano:'1d6', atributo:'forca', escudo:true,  arremesso:true,  alcanceArremesso:2, duasMaos:false, permitidoPara:['victorCoiceBravo'] },
     lanca_curta:     { id:'lanca_curta',     nome:'Lança Curta',          tipo:'arma', loja:'ferreiro', preco:20, dano:'1d6', atributo:'forca', escudo:true,  arremesso:true,  alcanceArremesso:4, duasMaos:false, alcanceEspecial:{ descricao:'Todos os 8 quadrados adjacentes' }, permitidoPara:['victorCoiceBravo','richardCavaleiro','lewis','luccas','henrique'] },
@@ -554,6 +556,7 @@ const GS = (() => {
     escudo_leve:     { id:'escudo_leve',     nome:'Escudo Leve',          tipo:'escudo', loja:'ferreiro', preco:10, bonusCA:1, permitidoPara:['victorCoiceBravo','richardCavaleiro','lewis','luccas'] },
     escudo_pesado:   { id:'escudo_pesado',   nome:'Escudo Pesado',        tipo:'escudo', loja:'ferreiro', preco:25, bonusCA:2, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
     tocha:           { id:'tocha',           nome:'Tocha',                tipo:'secundario', loja:'ferreiro', preco:5, bonusVisao:1, duracao:10, permitidoPara:['todos'] },
+    vela_escuridao:  { id:'vela_escuridao',  nome:'Vela da Escuridão',     tipo:'consumivel', loja:'mercado', preco:50, effect:'veil_shadow', value:0, descricao:'Ação bônus. Fica oculto até o fim do turno; o próximo ataque tem vantagem. Para o Ladino, o próximo ataque ativa automaticamente o Ataque Furtivo.', permitidoPara:['todos'] },
 
     // ── FERREIRO — Munição ──
     flechas:               { id:'flechas',               nome:'Flechas (10)',                tipo:'municao', loja:'ferreiro', preco:5,  quantidade:10, danoExtra:null,  paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
@@ -616,7 +619,7 @@ const GS = (() => {
       id:'veneno_polvo_abissal', nome:'Tinta do Polvo Abissal', tipo:'veneno', loja:'mercado', preco:15, icone:'🐙',
       permitidoPara:['todos'],
       efeito:{ atributo:'cego', valor:'1d4', operacao:'status', penalidadeAtaque:-4, bloqueiaDistancia:true, duracaoFalha:'1d4', penalidadeFalha:-2, atributoFalha:'percepcao', save:'fortitude', dificuldade:11, anula:false },
-      descricao:'Cega por 1d4 rodadas — -4 em ataques, sem ranged (Fort. dif. 11). Falha parcial: -2 percepção.'
+      descricao:'Falha em Fortitude CD 11: cego por 1d4 rodadas, visão 1 quadrado, -5 percepção, -4 em ataques e sem ataques à distância. Sucesso: -2 percepção por 1d4 rodadas.'
     },
     veneno_fungo_acre: {
       id:'veneno_fungo_acre', nome:'Fungo Acre', tipo:'veneno', loja:'mercado', preco:10, icone:'🍄',
@@ -647,18 +650,21 @@ const GS = (() => {
     // Usados por clique direito → mira de alvo → throw_item. Ataque por DES vs CA.
     agua_benta: {
       id: 'agua_benta', nome: 'Água Benta', emoji: '💧✝️',
-      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, permitidoPara:['todos'],
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, dano:'2d6', tipoDano:'sagrado',
+      duracao: 2, permitidoPara:['todos'],
       descricao: 'Arremesse (4 quad., ataque por DES). Causa 2d6 de dano sagrado e cria uma zona sagrada por 2 rodadas.',
     },
     frasco_oleo: {
       id: 'frasco_oleo', nome: 'Frasco de Óleo Incendiário', emoji: '🔥',
-      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, permitidoPara:['todos'],
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, dano:'1d6', tipoDano:'fogo',
+      duracao: '1d4', permitidoPara:['todos'],
       descricao: 'Arremesse (4 quad., ataque por DES). 1d6 de fogo e o alvo pega ' +
                  'fogo (1/rodada por 1d4 rodadas). Apaga com Água ou gastando a ação.',
     },
     fogo_grego: {
       id: 'fogo_grego', nome: 'Fogo Grego', emoji: '🟢',
-      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, permitidoPara:['todos'],
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, dano:'2d6', tipoDano:'fogo',
+      duracao: '1d4', permitidoPara:['todos'],
       descricao: 'Arremesse (4 quad., ataque por DES). 2d6 de fogo e o alvo pega ' +
                  'fogo (1/rodada por 1d4 rodadas). Só a ação apaga — água não funciona.',
     },
@@ -667,54 +673,61 @@ const GS = (() => {
     bomba_incendiaria: {
       id: 'bomba_incendiaria', nome: 'Bomba Incendiária', emoji: '💣',
       tipo: 'consumivel', slot: 'bag', arremessavel: true, alvo: 'area',
-      alcance: 4, areaRaio: 1, permitidoPara:['todos'],
+      alcance: 4, areaRaio: 1, dano:'2d6', tipoDano:'fogo', saveTipo:'reflexos', saveCD:12,
+      duracao: '1d4', permitidoPara:['todos'],
       descricao: 'Área (raio 1, alcance 4). 2d6 de fogo, Reflexos CD 12 (metade). ' +
                  'Todos os atingidos pegam fogo. ACERTA ALIADOS — cuidado com o posicionamento.',
     },
     granada: {
       id: 'granada', nome: 'Granada Explosiva', emoji: '💣',
       tipo: 'consumivel', slot: 'bag', arremessavel: true, alvo: 'area',
-      alcance: 4, areaRaio: 1, permitidoPara:['todos'],
+      alcance: 4, areaRaio: 1, dano:'2d6', tipoDano:'explosao', saveTipo:'reflexos', saveCD:12,
+      permitidoPara:['todos'],
       descricao: 'Área (raio 1, alcance 4). 2d6 de explosão, Reflexos CD 12 (metade). ' +
                  'ACERTA ALIADOS.',
     },
     granada_superior: {
       id: 'granada_superior', nome: 'Granada Superior', emoji: '💥',
       tipo: 'consumivel', slot: 'bag', arremessavel: true, alvo: 'area',
-      alcance: 4, areaRaio: 1, permitidoPara:['todos'],
+      alcance: 4, areaRaio: 1, dano:'3d6', tipoDano:'explosao', saveTipo:'reflexos', saveCD:15,
+      permitidoPara:['todos'],
       descricao: 'Área (raio 1, alcance 4). 3d6 de explosão, Reflexos CD 15 (metade). ' +
                  'ACERTA ALIADOS.',
     },
     bomba_fumaca: {
       id: 'bomba_fumaca', nome: 'Bomba de Fumaça', emoji: '💨',
       tipo: 'consumivel', slot: 'bag', arremessavel: true, alvo: 'area',
-      alcance: 4, areaRaio: 1, permitidoPara:['todos'],
+      alcance: 4, areaRaio: 1, duracao: 2, permitidoPara:['todos'],
       descricao: 'Área (raio 1, alcance 4). Cria escuridão por 2 rodadas — bloqueia ' +
                  'a visão e cobre o recuo. Sem dano.',
     },
     // ── MERCADO — Arremessáveis de ÁCIDO (Sub-projeto C; ver ARREMESSAVEIS no server) ──
     frasco_acido: {
       id: 'frasco_acido', nome: 'Frasco de Ácido', emoji: '🧪',
-      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, permitidoPara:['todos'],
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, dano:'1d6', tipoDano:'acido',
+      permitidoPara:['todos'],
       descricao: 'Arremesse (4 quad., ataque por DES). 1d6 de ácido + metade na ' +
                  'rodada seguinte. Corrói a defesa do alvo (−1 CA por acerto).',
     },
     vidro_acido_grande: {
       id: 'vidro_acido_grande', nome: 'Vidro de Ácido Grande', emoji: '🫙',
-      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, permitidoPara:['todos'],
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, dano:'2d6', tipoDano:'acido',
+      permitidoPara:['todos'],
       descricao: 'Arremesse (4 quad., ataque por DES). 2d6 de ácido + metade na ' +
                  'rodada seguinte. Corrói a defesa do alvo (−2 CA por acerto).',
     },
     // ── MERCADO — Arremessáveis TÁTICOS (Sub-projeto D; ver ARREMESSAVEIS no server) ──
     cola_alquimica: {
       id: 'cola_alquimica', nome: 'Cola Alquímica', emoji: '🍯',
-      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, permitidoPara:['todos'],
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, saveTipo:'reflexos', saveCD:12,
+      duracao: 2, permitidoPara:['todos'],
       descricao: 'Arremesse (4 quad., ataque por DES). O alvo testa Reflexos CD 12; ' +
                  'se falhar, fica com o movimento reduzido à metade por 2 rodadas.',
     },
     rede_arremesso: {
       id: 'rede_arremesso', nome: 'Rede', emoji: '🕸️',
-      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, permitidoPara:['todos'],
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, saveTipo:'fortitude', saveCD:12,
+      permitidoPara:['todos'],
       descricao: 'Arremesse (4 quad., ataque por DES). O alvo fica preso; para ' +
                  'escapar gasta o turno num teste de Fortitude CD 12.',
     },
@@ -982,6 +995,7 @@ const GS = (() => {
   // ── Pure logic: BFS — all reachable floor tiles within maxSteps ────────────
   function terrainMoveCost(moveCtx, x, y) {
     const kind = moveCtx?.materiais?.[`${x},${y}`];
+    if (kind === 'areia_deserto' || kind === 'lava') return 2;
     if (kind !== 'agua' && kind !== 'agua_profunda') return 1;
     const actor = moveCtx?.actor || {};
     if ((actor.special_abilities || []).some(h => h && h.id === 'movimento_erratico')) return 1;
@@ -999,23 +1013,28 @@ const GS = (() => {
       actor: (gameState.players || []).find(p => p.pos?.[0] === sx && p.pos?.[1] === sy) || {} };
     const openDoors = doorSets(gameState).open;
     const occupied  = _occupiedSet(sx, sy);
-    const q   = [[sx, sy, 0]];
-    const best = new Map([[`${sx},${sy}`, 0]]);
+    const swampStart = moveCtx?.materiais?.[`${sx},${sy}`] === 'pantano';
+    const q   = [[sx, sy, 0, swampStart]];
+    const best = new Map([[`${sx},${sy},${swampStart ? 1 : 0}`, 0]]);
     while (q.length) {
       q.sort((a,b) => a[2]-b[2]);
-      const [x, y, s] = q.shift();
+      const [x, y, s, swampUsed] = q.shift();
       result.add(`${x},${y}`);
       if (s >= maxSteps) continue;
       for (const [dx, dy] of [[0,-1],[0,1],[-1,0],[1,0]]) {
         const nx = x+dx, ny = y+dy, k = `${nx},${ny}`;
         const rawCost = terrainMoveCost(moveCtx, nx, ny);
+        const entersSwamp = moveCtx?.materiais?.[k] === 'pantano' && !swampUsed;
         // Garantia de uma casa: no primeiro passo, água cara ainda pode ser
         // atravessada mesmo se o orçamento não cobrir o custo inteiro.
-        const nextCost = (s === 0 && rawCost > maxSteps) ? maxSteps : s + rawCost;
+        const terrainCost = rawCost + (entersSwamp ? 1 : 0);
+        const nextCost = (s === 0 && terrainCost > maxSteps) ? maxSteps : s + terrainCost;
+        const nextSwampUsed = swampUsed || entersSwamp;
+        const bestKey = `${k},${nextSwampUsed ? 1 : 0}`;
         if (exploredSet.has(k) && nextCost <= maxSteps && _walkable(tiles, nx, ny, openDoors, occupied)
-            && (best.get(k) === undefined || nextCost < best.get(k))) {
-          best.set(k, nextCost);
-          q.push([nx, ny, nextCost]);
+            && (best.get(bestKey) === undefined || nextCost < best.get(bestKey))) {
+          best.set(bestKey, nextCost);
+          q.push([nx, ny, nextCost, nextSwampUsed]);
         }
       }
     }
@@ -1033,25 +1052,30 @@ const GS = (() => {
     const targetWalkable = _walkable(tiles, tx, ty, openDoors, occupied);
     if (!partial && !targetWalkable) return null;
     if (fx === tx && fy === ty) return [];
-    const q   = [[fx, fy, [], 0]];
-    const bestCost = new Map([[`${fx},${fy}`, 0]]);
+    const swampStart = moveCtx?.materiais?.[`${fx},${fy}`] === 'pantano';
+    const q   = [[fx, fy, [], 0, swampStart]];
+    const bestCost = new Map([[`${fx},${fy},${swampStart ? 1 : 0}`, 0]]);
     let best = { path: [], dist: Math.abs(fx-tx) + Math.abs(fy-ty) };
     while (q.length) {
       q.sort((a,b) => a[3]-b[3]);
-      const [x, y, path, spent] = q.shift();
+      const [x, y, path, spent, swampUsed] = q.shift();
       if (spent >= maxSteps) continue;
       for (const [dx, dy] of [[0,-1],[0,1],[-1,0],[1,0]]) {
         const nx = x+dx, ny = y+dy, k = `${nx},${ny}`;
         const rawCost = terrainMoveCost(moveCtx, nx, ny);
-        const nextCost = (spent === 0 && rawCost > maxSteps) ? maxSteps : spent + rawCost;
+        const entersSwamp = moveCtx?.materiais?.[k] === 'pantano' && !swampUsed;
+        const terrainCost = rawCost + (entersSwamp ? 1 : 0);
+        const nextCost = (spent === 0 && terrainCost > maxSteps) ? maxSteps : spent + terrainCost;
+        const nextSwampUsed = swampUsed || entersSwamp;
+        const bestKey = `${k},${nextSwampUsed ? 1 : 0}`;
         if (!exploredSet.has(k) || nextCost > maxSteps || !_walkable(tiles, nx, ny, openDoors, occupied)
-            || (bestCost.get(k) !== undefined && bestCost.get(k) <= nextCost)) continue;
+            || (bestCost.get(bestKey) !== undefined && bestCost.get(bestKey) <= nextCost)) continue;
         const np = [...path, [dx, dy]];
         if (nx === tx && ny === ty) return np;
         const dist = Math.abs(nx-tx) + Math.abs(ny-ty);
         if (dist < best.dist) best = { path: np, dist };
-        bestCost.set(k, nextCost);
-        q.push([nx, ny, np, nextCost]);
+        bestCost.set(bestKey, nextCost);
+        q.push([nx, ny, np, nextCost, nextSwampUsed]);
       }
     }
     return partial && best.path.length ? best.path : null;
@@ -1362,6 +1386,10 @@ const GS = (() => {
         _emit('gmNarration', msg.text);
         break;
 
+      case 'ability_activation':
+        _emit('abilityActivation', msg);
+        break;
+
       case 'fala':
         _emit('fala', msg);   // {falante:{nome,emoji}, texto, pos}
         break;
@@ -1374,6 +1402,11 @@ const GS = (() => {
 
       case 'dice_roll':
         _emit('diceRoll', msg);
+        break;
+
+      case 'attack_feedback':
+        // Evento exclusivamente visual: o servidor já resolveu o ataque.
+        _emit('attackFeedback', msg);
         break;
 
       case 'spell_animation':
@@ -1389,6 +1422,10 @@ const GS = (() => {
 
       case 'trap_result':
         _emit('trapResult', msg);
+        break;
+
+      case 'fire_prompt':
+        _emit('firePrompt', msg);
         break;
 
       case 'condition_result':
@@ -1532,7 +1569,18 @@ const GS = (() => {
   function sceneEnd(force) { send({ type:'scene_end', force:!!force }); }
   function sceneVisit(sceneId, eventId) { send({ type:'scene_visit', scene_id:sceneId, event_id:eventId }); }
   function setTurnTimer(enabled) { send({ type:'set_turn_timer', enabled:!!enabled }); }
+  function setShortcut(slot, entry) { send({ type:'shortcut_set', slot, entry:entry || null }); }
+  function shortcutActivated(entry, slot = null) {
+    if (!entry || entry.kind !== 'skill' || !entry.id) return;
+    const msg = { type:'shortcut_activate', entry: { kind:'skill', id:String(entry.id), source:entry.source || 'skill' } };
+    if (Number.isInteger(slot) && slot >= 0 && slot < 10) msg.slot = slot;
+    send(msg);
+  }
   function useItem(id)     { send({ type: 'use_item',       item_id: id }); }
+  function respondFireChoice(choice) {
+    const value = ['water', 'action', 'none'].includes(choice) ? choice : 'none';
+    send({ type: 'fire_choice', choice: value });
+  }
   function throwItem(id, targetId, targetPos) { send({ type: 'throw_item', item_id: id, target_id: targetId, target_pos: targetPos }); }
   function throwItemArea(id, tx, ty) { send({ type: 'throw_item', item_id: id, tx, ty }); }
   function apagarChamas()          { send({ type: 'apagar_chamas' }); }
@@ -1541,6 +1589,9 @@ const GS = (() => {
   function escaparBau()             { send({ type: 'escapar_bau' }); }
   function equipFromBag(i) { send({ type: 'equip_from_bag', slot_index: i }); }
   function unequip(key)    { send({ type: 'unequip',        slot_key: key }); }
+  function repairItem(slot, bagIndex = null) {
+    send({ type: 'repair_item', slot, bag_index: bagIndex });
+  }
   // Largar/pegar itens no chão (masmorra). Largar: source 'bag' → ref = index;
   // 'gear' → ref = slotKey. Pegar: id do item no chão.
   function dropItem(source, ref) {
@@ -2153,7 +2204,14 @@ const GS = (() => {
   function toggleWarriorSkill(id) {
     const i = warriorSelected.indexOf(id);
     if (i >= 0) warriorSelected.splice(i, 1);
-    else        warriorSelected.push(id);
+    else {
+      warriorSelected.push(id);
+      const p = (gameState?.players || []).find(q => q.id === myPid);
+      if (p?.pos) _emit('abilityActivation', {
+        player_id: myPid, ability_id: id, kind: 'skill',
+        class_id: p.class_id, pos: [...p.pos]
+      });
+    }
     return warriorSelected.slice();
   }
   function getWarriorSelected()  { return warriorSelected.slice(); }
@@ -2349,7 +2407,8 @@ const GS = (() => {
     // ── Pending-skill targeting ──────────────────────────────────────────────
     if (pendingInstrumento) {
       const inst = pendingInstrumento;
-      const m = gameState.monsters.find(mm => mm.hp > 0 && mm.pos[0] === tx && mm.pos[1] === ty);
+      const m = gameState.monsters.find(mm => mm.hp > 0 &&
+        monsterTiles(mm).some(([bx, by]) => bx === tx && by === ty));
       if (m) {
         const distancia = Math.max(Math.abs(myP.pos[0] - tx), Math.abs(myP.pos[1] - ty));
         if (distancia > (inst.alcance || 0)) return { type: 'instrumento_blocked', reason: 'range' };
@@ -2622,7 +2681,10 @@ const GS = (() => {
     sceneEnd,
     sceneVisit,
     setTurnTimer,
+    setShortcut,
+    shortcutActivated,
     useItem,
+    respondFireChoice,
     throwItem,
     throwItemArea,
     apagarChamas,
@@ -2631,6 +2693,7 @@ const GS = (() => {
     escaparBau,
     equipFromBag,
     unequip,
+    repairItem,
     reorderBag,
     equipOffhand,
     dropItem,

@@ -18,16 +18,21 @@ def check(name, cond):
 def test_catalog():
     print("\n[M1] catálogo MATERIAIS")
     m = server.MATERIAIS
-    for k in ("pedra_cinza", "terra", "grama", "pedra_negra", "madeira_escura", "entulho",
-              "pedra_normal", "enegrecida", "pedra_caverna", "desmoronada", "madeira"):
+    for k in ("pedra_cinza", "terra", "areia_deserto", "lava", "pantano", "grama", "pedra_negra", "madeira_escura", "entulho",
+              "pedra_normal", "duna_deserto", "rocha", "rocha_marrom", "enegrecida", "pedra_caverna", "desmoronada", "madeira"):
         check(f"{k} presente", k in m)
     check("pisos são categoria piso", all(m[k]["categoria"] == "piso"
-          for k in ("pedra_cinza", "terra", "grama", "pedra_negra", "madeira_escura", "entulho")))
+          for k in ("pedra_cinza", "terra", "areia_deserto", "lava", "pantano", "grama", "pedra_negra", "madeira_escura", "entulho")))
     check("paredes são categoria parede", all(m[k]["categoria"] == "parede"
-          for k in ("pedra_normal", "enegrecida", "pedra_caverna", "desmoronada", "madeira")))
+          for k in ("pedra_normal", "duna_deserto", "rocha", "rocha_marrom", "enegrecida", "pedra_caverna", "desmoronada", "madeira")))
     check("entulho é sólido e oclui", m["entulho"]["solido"] and m["entulho"]["oclui"])
     check("grama é cosmética (não sólida/oclui)",
           not m["grama"]["solido"] and not m["grama"]["oclui"])
+    check("areia custa 2 por casa", m["areia_deserto"].get("custo_mov") == 2)
+    check("lava custa 2 por casa e é terreno lava",
+          m["lava"].get("custo_mov") == 2 and m["lava"].get("terreno") == "lava")
+    check("pantano custa 1 por casa e tem penalidade de movimento total",
+          m["pantano"].get("custo_mov") == 1 and m["pantano"].get("terreno") == "pantano")
     check("todo material tem nome/categoria/cor/solido/oclui", all(
           set(("nome", "categoria", "cor", "solido", "oclui")) <= set(v) for v in m.values()))
     check("defaults expostos",
@@ -56,6 +61,14 @@ def test_validacao():
     ok, _ = server.validar_dungeon(d)
     check("piso em chão é válido", ok)
 
+    d = copy.deepcopy(base); d["materiais"] = {"1,1": "lava"}
+    ok, _ = server.validar_dungeon(d)
+    check("lava em chão é válida", ok)
+
+    d = copy.deepcopy(base); d["materiais"] = {"1,1": "pantano"}
+    ok, _ = server.validar_dungeon(d)
+    check("pantano em chão é válido", ok)
+
     d = copy.deepcopy(base); d["materiais"] = {"1,1": "inexistente"}
     ok, msg = server.validar_dungeon(d)
     check("material desconhecido recusado", not ok and "material" in msg.lower())
@@ -80,6 +93,14 @@ def test_validacao():
     ok, _ = server.validar_dungeon(d)
     check("parede em casa de parede é válida", ok)
 
+    d["materiais"] = {"1,1": "rocha"}
+    ok, _ = server.validar_dungeon(d)
+    check("rocha em casa de parede é válida", ok)
+
+    d["materiais"] = {"1,1": "rocha_marrom"}
+    ok, _ = server.validar_dungeon(d)
+    check("rocha marrom em casa de parede é válida", ok)
+
     d = copy.deepcopy(base); d["materiais"] = {"1,1": "entulho"}  # entulho é piso sólido em chão
     ok, _ = server.validar_dungeon(d)
     check("entulho em chão é válido", ok)
@@ -95,9 +116,9 @@ def _room():
     return r
 
 def _defn_full():
-    """6x3, chão todo, com entulho em (2,1) e grama em (3,1)."""
+    """6x3, chão todo, com materiais variados na linha central."""
     d = _defn_base()
-    d["materiais"] = {"2,1": "entulho", "3,1": "grama"}
+    d["materiais"] = {"2,1": "entulho", "3,1": "grama", "4,1": "lava", "5,1": "pantano"}
     return d
 
 def test_carga():
@@ -109,6 +130,14 @@ def test_carga():
     check("índice opaco tem entulho", (2, 1) in r._mat_oclui_tiles)
     check("grama não é sólida nem opaca",
           (3, 1) not in r._mat_solid_tiles and (3, 1) not in r._mat_oclui_tiles)
+    check("lava atravessável com custo 2", r._water_step_cost({}, 4, 1) == 2)
+    check("pantano atravessável com custo normal", r._water_step_cost({}, 5, 1) == 1)
+    criatura = {"pos": [5, 1], "moves_left": 6}
+    check("pantano reduz 1 no início do turno", r._water_turn_moves(criatura, 6) == 5)
+    criatura = {"pos": [4, 1], "moves_left": 5}
+    r._apply_swamp_entry_penalty(criatura, 5, 1)
+    check("entrar no pantano reduz 1 uma única vez",
+          criatura["moves_left"] == 4 and criatura.get("_swamp_penalty_applied"))
     ser = r._serializar_materiais()
     check("serializa como 'x,y'->id", ser.get("2,1") == "entulho" and ser.get("3,1") == "grama")
 
@@ -142,6 +171,8 @@ def test_roundtrip():
     ser = r._serializar_materiais()
     check("round-trip preserva entulho", ser.get("2,1") == "entulho")
     check("round-trip preserva grama", ser.get("3,1") == "grama")
+    check("round-trip preserva lava", ser.get("4,1") == "lava")
+    check("round-trip preserva pantano", ser.get("5,1") == "pantano")
 
 if __name__ == "__main__":
     test_catalog()

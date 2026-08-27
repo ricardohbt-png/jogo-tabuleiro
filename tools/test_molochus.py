@@ -135,7 +135,7 @@ async def main():
     raw = copy.deepcopy(next(m for m in S.MONSTER_DEFS if m["type"] == "molochus_adulto"))
     raw.update({"type": "molochus_editor_teste", "name": "Molochus Editor Teste", "monster_abilities": [
         {"id": "aura_escaldante", "damage_dice": 2, "damage_faces": 8, "radius": 1},
-        {"id": "sangue_em_ebulicao", "damage_dice": 3, "damage_faces": 4},
+         {"id": "dano_retaliacao", "damage_dice": 3, "damage_faces": 4, "damage_type": "fire"},
         {"id": "investida_flamejante", "damage_dice": 4, "damage_faces": 6, "move_required": 3},
         {"id": "explosao_vapor", "damage_dice": 5, "damage_faces": 6, "dc": 17, "cooldown_turns": 1},
         {"id": "morte_explosiva", "damage_dice": 6, "damage_faces": 6, "radius": 3, "duration": 3},
@@ -143,7 +143,7 @@ async def main():
     ok, normalized = S._validate_custom_monster(raw)
     abilities = {a["id"]: a for a in normalized["special_abilities"]}
     check("ficha customizada aceita", ok)
-    check("configuracoes molochus preservadas", abilities["aura_escaldante"]["damage"] == "2d8" and abilities["sangue_em_ebulicao"]["damage"] == "3d4")
+    check("configuracoes molochus preservadas", abilities["aura_escaldante"]["damage"] == "2d8" and abilities["dano_retaliacao"]["damage"] == "3d4")
     check("vapor mantém recarga fixa", abilities["explosao_vapor"]["cooldown_turns"] == 6 and abilities["explosao_vapor"]["dc"] == 17)
     check("explosao mantém raio/duracao", abilities["morte_explosiva"]["radius"] == 3 and abilities["morte_explosiva"]["duration"] == 3)
 
