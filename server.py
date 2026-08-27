@@ -10697,7 +10697,7 @@ class GameRoom:
         sem_recursos = [p["name"] for p in self.players.values()
                          if p.get("fome", 0) < cost["fome"] or p.get("sede", 0) < cost["sede"]]
         if sem_recursos:
-            await self.send_to(pid, {"type": "error", "msg": T("erro.recursos_insuficientes_para_viajar") + ", ".join(sem_recursos) + "."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.recursos_insuficientes_para_viajar", nomes=sem_recursos)})
             return
         for p in self.players.values():
             p["fome"] -= cost["fome"]
@@ -10756,20 +10756,24 @@ class GameRoom:
     def _avaliar_requisito(self, raw):
         """Avalia os requisitos comuns de renome, diálogo e mapa-múndi."""
         req = _clean_requirement(raw)
+        # Cada motivo é um T, não texto pronto: quem exibe passa a lista inteira
+        # como parâmetro e o motor a junta no idioma de quem lê. Texto cru aqui
+        # deixaria o motivo em português no meio de uma frase em inglês — e
+        # concatenar com o T da frase estouraria TypeError.
         reasons = []
         if self.renome < req["renome_min"]:
-            reasons.append(f"renome {req['renome_min']}")
+            reasons.append(T("erro.requisito.renome", n=req["renome_min"]))
         levels = [int(p.get("level", 1) or 1) for p in self.players.values()]
         if req["nivel_grupo_min"] and (not levels or min(levels) < req["nivel_grupo_min"]):
-            reasons.append(f"nível de grupo {req['nivel_grupo_min']}")
+            reasons.append(T("erro.requisito.nivel_grupo", n=req["nivel_grupo_min"]))
         if req["item_id"] and not self._grupo_tem_item(req["item_id"]):
-            reasons.append(f"item-chave: {req['item_id']}")
+            reasons.append(T("erro.requisito.item_chave", item=req["item_id"]))
         if req["fato"] and req["fato"] not in self.fatos:
-            reasons.append(f"informação: {req['fato']}")
+            reasons.append(T("erro.requisito.informacao", fato=req["fato"]))
         if req["aventura_id"]:
             adventure = WORLD_ADVENTURES.get(req["aventura_id"])
             if not adventure or self.world_adventure_progress.get(req["aventura_id"], 0) < len(adventure.get("dungeons") or []):
-                reasons.append("rota anterior concluída")
+                reasons.append(T("erro.requisito.rota_anterior"))
         return not reasons, reasons
 
     def _aventura_visivel(self, adventure):
@@ -11041,7 +11045,7 @@ class GameRoom:
             await self.send_to(pid, {"type":"error", "msg": T("erro.esta_conversa_ja_foi_concluida")}); return
         ok, reasons = self._avaliar_requisito(conversation.get("requisito"))
         if not ok:
-            await self.send_to(pid, {"type":"error", "msg": T("erro.conversa_bloqueada_requer") + ", ".join(reasons) + "."}); return
+            await self.send_to(pid, {"type":"error", "msg": T("erro.conversa_bloqueada_requer", motivos=reasons)}); return
         effect = conversation.get("efeito") or {}
         bonus = int(effect.get("renome", 0) or 0)
         if bonus:
@@ -11082,8 +11086,8 @@ class GameRoom:
         if not allowed:
             # Destino oculto responde como id inexistente: a mensagem detalhada
             # entregaria justamente o requisito que se quis esconder.
-            msg = ("Destino de aventura inválido." if adventure.get("oculto_ate_liberar")
-                   else "Destino bloqueado: requer " + ", ".join(reasons) + ".")
+            msg = (T("erro.destino_de_aventura_invalido") if adventure.get("oculto_ate_liberar")
+                   else T("erro.destino_bloqueado_requer", motivos=reasons))
             await self.send_to(pid, {"type": "error", "msg": msg})
             return
         stages = list(adventure.get("dungeons") or [])
@@ -11104,12 +11108,12 @@ class GameRoom:
         defn = carregar_dungeon(file)
         ok, reason = validar_dungeon(defn) if defn else (False, "Masmorra não encontrada.")
         if not ok:
-            await self.send_to(pid, {"type": "error", "msg": T("erro.destino_indisponivel") + reason})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.destino_indisponivel", motivo=reason)})
             return
         fome, sede = int(adventure.get("fome", 0)), int(adventure.get("sede", 0))
         sem_recursos = [p["name"] for p in self.players.values() if p.get("fome", 0) < fome or p.get("sede", 0) < sede]
         if sem_recursos:
-            await self.send_to(pid, {"type": "error", "msg": T("erro.recursos_insuficientes_para_a_expedicao") + ", ".join(sem_recursos) + "."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.recursos_insuficientes_para_a_expedicao", nomes=sem_recursos)})
             return
         for p in self.players.values():
             p["fome"] -= fome; p["sede"] -= sede

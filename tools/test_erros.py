@@ -19,6 +19,9 @@ FONTE = io.open(os.path.join(RAIZ, "server.py"), encoding="utf-8").read()
 RE_MSG = re.compile(r'"msg":\s*(f?)"([^"]{2,200})"')
 RE_ERR = re.compile(r'await err\((f?)"([^"]{2,200})"')
 RE_PARAM = re.compile(r"\{(\w+)\}")
+# `T(...) + …` e `… + T(...)`: as duas direções estouram TypeError.
+RE_CONCAT = re.compile(r'(T\(\s*"[a-z_.]+"\s*\)\s*\+)')
+RE_CONCAT_ESQ = re.compile(r'(\+\s*T\(\s*"[a-z_.]+"\s*[,)])')
 
 
 def _rodar_verificacoes():
@@ -115,6 +118,42 @@ def _rodar_verificacoes():
         check("sai em inglês para quem está em en", en == S.LANG_STRINGS[chave]["en"])
         for pid in ("e_pt", "e_en"):
             S.LANG_BY_PID.pop(pid, None)
+
+    print("\n[8] Nenhuma mensagem concatena com o T")
+    # O T não tem __add__ DE PROPÓSITO (operadores são buscados no tipo e não
+    # passam pelo __getattr__ que o disfarça de string), então `T + str` estoura
+    # TypeError em runtime — dentro de um handler, vira "erro interno" para o
+    # jogador. Foi assim que o rótulo do d20 descartado derrubou todo ataque com
+    # vantagem. A guarda antiga vivia no test_narracao e casava só com o nome de
+    # uma variável (`"log + "`); esta olha a FORMA da expressão.
+    concats = RE_CONCAT.findall(FONTE) + RE_CONCAT_ESQ.findall(FONTE)
+    check(f"nenhum T concatenado com string ({len(concats)})", not concats)
+    for c in concats[:8]:
+        print("     sobrou:", c if isinstance(c, str) else " ".join(c))
+
+    print("\n[9] Recusa com lista de motivos resolve nos dois idiomas")
+    # O motor junta LISTA (lista.separador/lista.ultimo) e resolve elemento que
+    # é ele próprio um T. É isso que permite montar "requer renome 3 e item-chave
+    # X" sem concatenar nada — e sem deixar o motivo em português no meio de uma
+    # frase em inglês.
+    sala_r = S.GameRoom("TESTE_REQUISITO")
+    sala_r.renome = 0
+    sala_r.players = {"p1": {"name": "Heroi", "level": 1, "bag": [], "gear": {}}}
+    ok_req, motivos = sala_r._avaliar_requisito(
+        {"renome_min": 3, "nivel_grupo_min": 2, "item_id": "chave_mestra"})
+    check("o requisito não cumprido devolve motivos", ok_req is False and len(motivos) == 3)
+    check("todo motivo é um T, não texto cru",
+          all(isinstance(m, S.T) for m in motivos))
+    for chave_msg in ("erro.conversa_bloqueada_requer", "erro.destino_bloqueado_requer"):
+        alvo = S.T(chave_msg, motivos=motivos)
+        txt_pt = S.t(alvo.key, "pt", **alvo.params)
+        txt_en = S.t(alvo.key, "en", **alvo.params)
+        check(f"{chave_msg}: o pt junta os motivos com ' e '", " e " in txt_pt)
+        check(f"{chave_msg}: o en junta os motivos com ' and '", " and " in txt_en)
+        check(f"{chave_msg}: nada de português vazando no en",
+              "renome" not in txt_en and "nível" not in txt_en)
+        check(f"{chave_msg}: nenhum {{parametro}} sobrou",
+              "{" not in txt_pt and "{" not in txt_en)
 
 
 if __name__ == "__main__":

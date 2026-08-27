@@ -398,8 +398,8 @@ window.LANG_ERROS = {
     "pt": "Conclua ou pule a cena antes de entrar na masmorra."
   },
   "erro.conversa_bloqueada_requer": {
-    "en": "Conversation locked: requires ",
-    "pt": "Conversa bloqueada: requer "
+    "en": "Conversation locked: requires {motivos}.",
+    "pt": "Conversa bloqueada: requer {motivos}."
   },
   "erro.conversa_nao_encontrada": {
     "en": "Conversation not found.",
@@ -421,13 +421,17 @@ window.LANG_ERROS = {
     "en": "Invalid adventure destination.",
     "pt": "Destino de aventura inválido."
   },
+  "erro.destino_bloqueado_requer": {
+    "en": "Destination locked: requires {motivos}.",
+    "pt": "Destino bloqueado: requer {motivos}."
+  },
   "erro.destino_inalcancavel": {
     "en": "Destination unreachable.",
     "pt": "Destino inalcançável."
   },
   "erro.destino_indisponivel": {
-    "en": "Destination unavailable: ",
-    "pt": "Destino indisponível: "
+    "en": "Destination unavailable: {motivo}",
+    "pt": "Destino indisponível: {motivo}"
   },
   "erro.destino_invalido": {
     "en": "Invalid destination.",
@@ -1138,12 +1142,12 @@ window.LANG_ERROS = {
     "pt": "Recursos insuficientes p/ metamagia 🍖-{fome} 💧-{sede}."
   },
   "erro.recursos_insuficientes_para_a_expedicao": {
-    "en": "Not enough resources for the expedition: ",
-    "pt": "Recursos insuficientes para a expedição: "
+    "en": "Not enough resources for the expedition: {nomes}.",
+    "pt": "Recursos insuficientes para a expedição: {nomes}."
   },
   "erro.recursos_insuficientes_para_viajar": {
-    "en": "Not enough resources to travel: ",
-    "pt": "Recursos insuficientes para viajar: "
+    "en": "Not enough resources to travel: {nomes}.",
+    "pt": "Recursos insuficientes para viajar: {nomes}."
   },
   "erro.recursos_insuficientes_parenteses_fome_sede": {
     "en": "Not enough resources (🍖-{fome} 💧-{sede}).",
@@ -1156,6 +1160,26 @@ window.LANG_ERROS = {
   "erro.requer_antes": {
     "en": "Requires first: {requisito}.",
     "pt": "Requer antes: {requisito}."
+  },
+  "erro.requisito.informacao": {
+    "en": "information: {fato}",
+    "pt": "informação: {fato}"
+  },
+  "erro.requisito.item_chave": {
+    "en": "key item: {item}",
+    "pt": "item-chave: {item}"
+  },
+  "erro.requisito.nivel_grupo": {
+    "en": "party level {n}",
+    "pt": "nível de grupo {n}"
+  },
+  "erro.requisito.renome": {
+    "en": "renown {n}",
+    "pt": "renome {n}"
+  },
+  "erro.requisito.rota_anterior": {
+    "en": "previous route completed",
+    "pt": "rota anterior concluída"
   },
   "erro.ressurreicao_requer_contato_adjacente_co": {
     "en": "Resurrection requires adjacent contact with the ally.",
