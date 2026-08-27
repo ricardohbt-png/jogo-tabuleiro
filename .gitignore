@@ -29,3 +29,6 @@ groups/
 
 # Worktrees isolados (superpowers)
 .worktrees/
+
+# Copias de seguranca do tools/otimizar_imagens.py (arte em tamanho original)
+assets_originais/
