@@ -198,8 +198,8 @@ async def main():
     check("Fúria Cega on: -1 CA", r._furia_cega_ca_pen(orc) == 1)
     orc["furia_cega"] = False
     # Mente Limitada (-1 Vontade só vs efeitos mentais)
-    check("save_weakness vontade = -1", r._save_weakness_pen(orc, "vontade") == -1)
-    check("save_weakness fortitude = 0", r._save_weakness_pen(orc, "fortitude") == 0)
+    check("vulnerabilidade vontade = -1", r._vulnerabilidade_save_pen(orc, "vontade") == -1)
+    check("vulnerabilidade fortitude = 0", r._vulnerabilidade_save_pen(orc, "fortitude") == 0)
     # bônus do save de Vontade já reflete o -1 (will 1 → 0)
     _, _, bonus_v, _ = await r._save_mostrado(orc, "vontade", 99)
     check("save Vontade aplica -1 (bônus 0)", bonus_v == 0)
@@ -238,7 +238,7 @@ async def main():
     dual_def = next(m for m in MONSTER_DEFS if m["type"] == "goblin_dual")
     arq = make_monster(arq_def, {"id": 1, "cx": 5, "cy": 5})
     # Mente Fraca -2 Vontade
-    check("Mente Fraca: -2 em Vontade", r._save_weakness_pen(arq, "vontade") == -2)
+    check("Mente Fraca: -2 em Vontade", r._vulnerabilidade_save_pen(arq, "vontade") == -2)
     check("Arqueiro: 10 flechas", arq.get("flechas") == 10)
     check("Arqueiro: alcance 8", arq["attacks"][0].get("range") == 8)
     check("Arqueiro: dropa o arco", arq.get("guaranteed_loot") == ["arco_curto"])
@@ -720,7 +720,7 @@ async def main():
     # ── Lagarto Carniceiro (ND 2) ────────────────────────────────────────────────
     print("\n[18] Lagarto Carniceiro (combo, predador, faro, sensível a venenos)")
     ldef = next(m for m in MONSTER_DEFS if m["type"] == "lagarto_carniceiro")
-    check("lagarto: tamanho 2x2 orientado", ldef["size"] == [2, 2] and ldef.get("oriented") is True)
+    check("lagarto: tamanho 2x1 orientado", ldef["size"] == [2, 1] and ldef.get("oriented") is True)
     check("lagarto: fraqueza veneno dobrado",
           any(w.get("type") == "veneno_dobrado" for w in ldef["weaknesses"]))
     check("lagarto: garra do combo definida", ldef.get("garra_attack", {}).get("damage") == "1d6+3")

@@ -1902,10 +1902,23 @@
     "special_abilities": [],
     "monster_abilities": [],
     "monster_spells": [],
-    "negative_ability_ids": [],
+    "negative_ability_ids": [
+      "vulnerabilidade"
+    ],
     "immunities": [],
     "resistances": [],
-    "weaknesses": [],
+    "weaknesses": [
+      {
+        "type": "save_penalty",
+        "saves": [
+          "vontade"
+        ],
+        "bonus_flat": -2,
+        "vulnerabilidade": true,
+        "source_ability": "vulnerabilidade",
+        "descricao": "Vulnerabilidade: -2 em testes de Vontade"
+      }
+    ],
     "equipment_enabled": false,
     "equipped_items": [],
     "equipment": [],
@@ -1935,7 +1948,15 @@
       0.6
     ],
     "atk_bonus": 2,
-    "damage": "1d4"
+    "damage": "1d4",
+    "negative_ability_configs": {
+      "vulnerabilidade": {
+        "penalty": 2,
+        "saves": [
+          "vontade"
+        ]
+      }
+    }
   },
   {
     "type": "lagarto_carniceiro",
@@ -2054,7 +2075,12 @@
     "negative_ability_ids": [],
     "immunities": [],
     "resistances": [],
-    "weaknesses": [],
+    "weaknesses": [
+      {
+        "type": "veneno_dobrado",
+        "descricao": "Sensível a venenos: todos os efeitos dobrados"
+      }
+    ],
     "equipment_enabled": false,
     "equipped_items": [],
     "equipment": [],

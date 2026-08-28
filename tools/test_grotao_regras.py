@@ -69,7 +69,10 @@ async def main():
     monster = make_grotao(room)
     p1 = S.make_player("p1", "A", "warrior", 0)
     p2 = S.make_player("p2", "B", "warrior", 0)
-    p1["pos"], p2["pos"] = [3, 5], [3, 6]
+    # O Grotão NÃO é `oriented` (decisão do autor): a Cauda Varredora alcança a
+    # coluna imediatamente atrás do footprint 2x2 — [4,5] e [4,6] com ele em [5,5]
+    # olhando para leste. Com `oriented` ligado o alcance seria uma casa mais longe.
+    p1["pos"], p2["pos"] = [4, 5], [4, 6]
     room.players = {"p1": p1, "p2": p2}
     targets = [{"kind": "player", "obj": p1}, {"kind": "player", "obj": p2}]
     check("dois inimigos ativam a área traseira da cauda",
