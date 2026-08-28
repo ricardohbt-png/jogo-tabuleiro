@@ -371,6 +371,19 @@ if __name__ == "__main__":
     main()
 ```
 
+> **A implementação final divergiu deste bloco, por causa da revisão.** Três mudanças,
+> todas para proteger a medição que justifica o spike: (1) mede **duas conexões
+> seguidas** — uma sozinha não distingue frio de quente, e o erro fácil seria registrar
+> "cold start = 0,3 s" e concluir que a hibernação não é problema; a 2ª é o piso quente
+> do mesmo serviço e a diferença é o cold start real, com aviso explícito quando dá
+> perto de zero; (2) **repete até 4× no handshake** mantendo o cronômetro correndo,
+> porque bordas de PaaS devolvem 502/503 ao upgrade enquanto a instância sobe e
+> desistir queimaria o ciclo de hibernação sem produzir dado; (3) ganhou o preâmbulo
+> `sys.stdout.reconfigure(encoding="utf-8")` do resto de `tools/` — sem ele, uma
+> mensagem de `OSError` acentuada podia estourar dentro do próprio `except` e trocar o
+> diagnóstico por um traceback. O `eco` passou a sair em milissegundos.
+> Ver `tools/medir_cold_start.py` para o código vigente.
+
 - [ ] **Step 2: Validar contra o servidor local, antes de existir qualquer nuvem**
 
 Em um terminal:
@@ -495,9 +508,11 @@ Se falhar aqui mas a página abrir no navegador, o WebSocket não está passando
 
 Para cada uma das três medições:
 
-1. deixe o serviço **mais de 15 minutos** sem nenhum tráfego (nada de abrir a URL no navegador — uma requisição HTTP já acorda)
+1. deixe o serviço **mais de 15 minutos** sem nenhum tráfego — nada de abrir a URL no navegador, porque uma requisição HTTP já acorda o contêiner
 2. rode `python tools/medir_cold_start.py wss://SEU-SPIKE.onrender.com`
-3. anote o `conexao_s`
+3. anote a linha **`cold start`** (a diferença entre a 1ª e a 2ª conexão), e também as duas conexões
+
+Se sair `ATENCAO: cold start perto de zero`, a medição **não vale** — o serviço estava acordado. Espere de novo. É por isso que o medidor faz duas conexões: sem a segunda, esse caso passaria despercebido como um cold start baixo.
 
 Três medições porque uma só não distingue cold start de um pico de rede.
 

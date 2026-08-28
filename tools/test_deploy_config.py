@@ -32,7 +32,7 @@ def main():
           S._listen_port({"PORT": "0"}) == 8765)
     check("porta acima de 65535 é recusada",
           S._listen_port({"PORT": "70000"}) == 8765)
-    check("PORT inválida não impede LFH_PORT válida de valer",
+    check("LFH_PORT inválida não impede PORT válida de valer",
           S._listen_port({"LFH_PORT": "lixo", "PORT": "10000"}) == 10000)
 
     # [2] endereços de escuta
