@@ -34885,9 +34885,33 @@ def _listen_port(env=None):
     return 8765
 
 SERVER_PORT = _listen_port()
-# Uma entrada por familia: no Windows o socket IPv6 nao aceita IPv4 por padrao
-# (IPV6_V6ONLY), entao ligar so em "::" deixaria 127.0.0.1 sem servidor.
-SERVER_HOSTS = ["0.0.0.0", "::"]
+def _listen_hosts(env=None, plataforma=None):
+    """Enderecos de escuta.
+
+    WINDOWS liga nas DUAS familias: o socket IPv6 nao aceita IPv4 por padrao
+    (IPV6_V6ONLY), entao escutar so em "::" deixaria 127.0.0.1 sem servidor. O
+    nome "localhost" -- que e o que iniciar.bat abre -- resolveria primeiro para
+    ::1, levaria recusa, e o navegador so entao cairia para 127.0.0.1: os ~207 ms
+    perdidos antes do primeiro byte que o tools/test_rede_local.py trava.
+
+    LINUX liga so em "::": o padrao do kernel e bindv6only=0, entao um socket em
+    "::" ja atende IPv4 mapeado -- e ligar nas duas familias no mesmo port pode
+    falhar com EADDRINUSE.
+
+    LFH_HOSTS ("0.0.0.0" ou "0.0.0.0,::") sobrepoe tudo. E a valvula de escape
+    para um conteiner sem IPv6, onde ligar em "::" falha no boot."""
+    env = os.environ if env is None else env
+    bruto = (env.get("LFH_HOSTS") or "").strip()
+    if bruto:
+        hosts = [h.strip() for h in bruto.split(",") if h.strip()]
+        if hosts:
+            return hosts
+    plataforma = sys.platform if plataforma is None else plataforma
+    if plataforma.startswith("win"):
+        return ["0.0.0.0", "::"]
+    return ["::"]
+
+SERVER_HOSTS = _listen_hosts()
 
 def _http(status, reason, body, ctype="text/plain; charset=utf-8", extra=None):
     if isinstance(body, str):

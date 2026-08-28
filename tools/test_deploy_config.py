@@ -35,6 +35,25 @@ def main():
     check("PORT inválida não impede LFH_PORT válida de valer",
           S._listen_port({"LFH_PORT": "lixo", "PORT": "10000"}) == 10000)
 
+    # [2] endereços de escuta
+    print("\n[2] _listen_hosts — padrão por plataforma e válvula de escape")
+    check("Windows liga nas DUAS famílias (IPV6_V6ONLY: '::' não cobre 127.0.0.1)",
+          S._listen_hosts({}, "win32") == ["0.0.0.0", "::"])
+    check("Linux liga só em '::' (bindv6only=0 já cobre IPv4 mapeado)",
+          S._listen_hosts({}, "linux") == ["::"])
+    check("darwin segue a regra do não-Windows",
+          S._listen_hosts({}, "darwin") == ["::"])
+    check("LFH_HOSTS sobrepõe o padrão — contêiner sem IPv6",
+          S._listen_hosts({"LFH_HOSTS": "0.0.0.0"}, "linux") == ["0.0.0.0"])
+    check("LFH_HOSTS aceita lista com espaços",
+          S._listen_hosts({"LFH_HOSTS": "0.0.0.0, ::"}, "linux") == ["0.0.0.0", "::"])
+    check("LFH_HOSTS só com espaços cai no padrão da plataforma",
+          S._listen_hosts({"LFH_HOSTS": "   "}, "win32") == ["0.0.0.0", "::"])
+    check("LFH_HOSTS só com vírgulas cai no padrão da plataforma",
+          S._listen_hosts({"LFH_HOSTS": " , , "}, "linux") == ["::"])
+    check("sem argumento de plataforma usa sys.platform e devolve lista não vazia",
+          isinstance(S._listen_hosts({}), list) and len(S._listen_hosts({})) >= 1)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
