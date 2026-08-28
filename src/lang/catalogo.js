@@ -1222,6 +1222,14 @@ window.LANG_CATALOGO = {
     "en": "Animate Dead III",
     "pt": "Reviver os Mortos III"
   },
+  "cat.guilda.mago_reviver_4.desc": {
+    "en": "Alternative version of Animate Dead: keeps the creature's full sheet, costs CR+2 slots, −20 success points and +10 hostility points.",
+    "pt": "Versão alternativa de Animar os Mortos: preserva a ficha completa da criatura, custa ND+2 slots, −20 pontos de sucesso e +10 pontos de hostilidade."
+  },
+  "cat.guilda.mago_reviver_4.nome": {
+    "en": "Death Lord",
+    "pt": "Senhor da Morte"
+  },
   "cat.guilda.mago_tecelagem_2.desc": {
     "en": "Lets you stack 2 metamagics on the same cast.",
     "pt": "Permite empilhar 2 metamagias no mesmo lançamento."
@@ -1790,9 +1798,17 @@ window.LANG_CATALOGO = {
     "en": "Holy Water",
     "pt": "Água Benta"
   },
+  "cat.item.alabarda.desc": {
+    "en": "",
+    "pt": "Alabarda: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos."
+  },
   "cat.item.alabarda.nome": {
     "en": "Halberd",
     "pt": "Alabarda"
+  },
+  "cat.item.alabarda_prata.desc": {
+    "en": "",
+    "pt": "Alabarda de Prata: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.alabarda_prata.nome": {
     "en": "Silver Halberd",
@@ -1810,6 +1826,10 @@ window.LANG_CATALOGO = {
     "en": "Antidote",
     "pt": "Antídoto"
   },
+  "cat.item.arco_curto.desc": {
+    "en": "",
+    "pt": "Arco Curto: 1d6 de dano perfurante, usando Destreza. Alcance: 6 casas em linha reta ou 3 na diagonal."
+  },
   "cat.item.arco_curto.nome": {
     "en": "Short Bow",
     "pt": "Arco Curto"
@@ -1822,13 +1842,25 @@ window.LANG_CATALOGO = {
     "en": "Feast",
     "pt": "Banquete"
   },
+  "cat.item.bastsword.desc": {
+    "en": "",
+    "pt": "Espada Bastarda: 1d10 de dano cortante, usando Força. Crítico natural com 19–20."
+  },
   "cat.item.bastsword.nome": {
     "en": "Bastard Sword",
     "pt": "Espada Bastarda"
   },
+  "cat.item.bastsword_prata.desc": {
+    "en": "",
+    "pt": "Espada Bastarda de Prata: 1d10 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+  },
   "cat.item.bastsword_prata.nome": {
     "en": "Silver Bastard Sword",
     "pt": "Espada Bastarda de Prata"
+  },
+  "cat.item.besta.desc": {
+    "en": "",
+    "pt": "Besta: 1d8 de dano perfurante, usando Destreza. Alcance: 8 casas em linha reta."
   },
   "cat.item.besta.nome": {
     "en": "Crossbow",
@@ -1850,9 +1882,17 @@ window.LANG_CATALOGO = {
     "en": "Swift Boots",
     "pt": "Botas Velozes"
   },
+  "cat.item.bordao.desc": {
+    "en": "",
+    "pt": "Bordão: 1d6 de dano contundente, usando Força ou Destreza. No 20 natural, o alvo testa Fortitude ou fica tonto."
+  },
   "cat.item.bordao.nome": {
     "en": "Quarterstaff",
     "pt": "Bordão"
+  },
+  "cat.item.bordao_prata.desc": {
+    "en": "",
+    "pt": "Bordão de Prata: 1d6 de dano contundente, usando Força ou Destreza. No 20 natural, o alvo testa Fortitude ou fica tonto. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.bordao_prata.nome": {
     "en": "Silver Quarterstaff",
@@ -1865,6 +1905,10 @@ window.LANG_CATALOGO = {
   "cat.item.bronze_armor.nome": {
     "en": "Bronze Armor",
     "pt": "Armadura de Bronze"
+  },
+  "cat.item.cajado_madeira.desc": {
+    "en": "",
+    "pt": "Cajado de Madeira: 1d6 de dano contundente, usando Força ou Destreza. Alcance: qualquer casa adjacente."
   },
   "cat.item.cajado_madeira.nome": {
     "en": "Wooden Staff",
@@ -1882,9 +1926,17 @@ window.LANG_CATALOGO = {
     "en": "Chainmail",
     "pt": "Cota de Malha"
   },
+  "cat.item.chicote.desc": {
+    "en": "",
+    "pt": "Chicote: 1d4 de dano cortante, usando Destreza. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo."
+  },
   "cat.item.chicote.nome": {
     "en": "Whip",
     "pt": "Chicote"
+  },
+  "cat.item.chicote_prata.desc": {
+    "en": "",
+    "pt": "Chicote de Prata: 1d4 de dano cortante, usando Destreza. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.chicote_prata.nome": {
     "en": "Silver Whip",
@@ -1906,17 +1958,33 @@ window.LANG_CATALOGO = {
     "en": "Alchemical Glue",
     "pt": "Cola Alquímica"
   },
+  "cat.item.dagger.desc": {
+    "en": "",
+    "pt": "Adaga: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo."
+  },
   "cat.item.dagger.nome": {
     "en": "Dagger",
     "pt": "Adaga"
+  },
+  "cat.item.dagger_prata.desc": {
+    "en": "",
+    "pt": "Adaga de Prata: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.dagger_prata.nome": {
     "en": "Silver Dagger",
     "pt": "Adaga de Prata"
   },
+  "cat.item.dente_da_fera.desc": {
+    "en": "",
+    "pt": "Dente da fera: 1d6 de dano cortante, usando Força ou Destreza. Também pode ser arremessada até 3 casas."
+  },
   "cat.item.dente_da_fera.nome": {
     "en": "Beast Fang",
     "pt": "Dente da fera"
+  },
+  "cat.item.dente_da_fera_copia.desc": {
+    "en": "",
+    "pt": "Dente da fera (cópia): 1d6 de dano cortante, usando Força ou Destreza. Também pode ser arremessada até 5 casas."
   },
   "cat.item.dente_da_fera_copia.nome": {
     "en": "Beast Fang (Copy)",
@@ -1958,9 +2026,17 @@ window.LANG_CATALOGO = {
     "en": "Small Shield",
     "pt": "Escudo Pequeno"
   },
+  "cat.item.espada2m.desc": {
+    "en": "",
+    "pt": "Espada de 2 Mãos: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20."
+  },
   "cat.item.espada2m.nome": {
     "en": "Two-Handed Sword",
     "pt": "Espada de 2 Mãos"
+  },
+  "cat.item.espada2m_prata.desc": {
+    "en": "",
+    "pt": "Espada de 2 Mãos de Prata: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.espada2m_prata.nome": {
     "en": "Silver Two-Handed Sword",
@@ -2014,6 +2090,10 @@ window.LANG_CATALOGO = {
     "en": "Greater Grenade",
     "pt": "Granada Superior"
   },
+  "cat.item.hand_crossbow.desc": {
+    "en": "",
+    "pt": "Besta de Mão: 1d4 de dano perfurante, usando Destreza. Alcance: 4 casas em linha reta."
+  },
   "cat.item.hand_crossbow.nome": {
     "en": "Hand Crossbow",
     "pt": "Besta de Mão"
@@ -2037,6 +2117,10 @@ window.LANG_CATALOGO = {
   "cat.item.helm_iron.nome": {
     "en": "Iron Helm",
     "pt": "Elmo de Ferro"
+  },
+  "cat.item.instrumento.desc": {
+    "en": "",
+    "pt": "Instrumento Musical: — de dano físico, usando Destreza."
   },
   "cat.item.instrumento.nome": {
     "en": "Musical Instrument",
@@ -2186,17 +2270,33 @@ window.LANG_CATALOGO = {
     "en": "Rustic Violin",
     "pt": "Violino Rústico"
   },
+  "cat.item.lanca.desc": {
+    "en": "",
+    "pt": "Lança: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente."
+  },
   "cat.item.lanca.nome": {
     "en": "Spear",
     "pt": "Lança"
+  },
+  "cat.item.lanca_curta.desc": {
+    "en": "",
+    "pt": "Lança Curta: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas."
   },
   "cat.item.lanca_curta.nome": {
     "en": "Short Spear",
     "pt": "Lança Curta"
   },
+  "cat.item.lanca_curta_prata.desc": {
+    "en": "",
+    "pt": "Lança Curta de Prata: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+  },
   "cat.item.lanca_curta_prata.nome": {
     "en": "Silver Short Spear",
     "pt": "Lança Curta de Prata"
+  },
+  "cat.item.lanca_prata.desc": {
+    "en": "",
+    "pt": "Lança de Prata: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.lanca_prata.nome": {
     "en": "Silver Spear",
@@ -2214,53 +2314,105 @@ window.LANG_CATALOGO = {
     "en": "Leather and Plate Armor",
     "pt": "Armadura de Couro e Placas"
   },
+  "cat.item.longbow.desc": {
+    "en": "",
+    "pt": "Arco Longo: 1d8 de dano perfurante, usando Destreza. Alcance: 10 casas em linha reta ou 5 na diagonal."
+  },
   "cat.item.longbow.nome": {
     "en": "Long Bow",
     "pt": "Arco Longo"
+  },
+  "cat.item.longsword.desc": {
+    "en": "",
+    "pt": "Espada Longa: 1d8 de dano cortante, usando Força. Crítico natural com 19–20."
   },
   "cat.item.longsword.nome": {
     "en": "Long Sword",
     "pt": "Espada Longa"
   },
+  "cat.item.longsword_prata.desc": {
+    "en": "",
+    "pt": "Espada Longa de Prata: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+  },
   "cat.item.longsword_prata.nome": {
     "en": "Silver Long Sword",
     "pt": "Espada Longa de Prata"
+  },
+  "cat.item.maca.desc": {
+    "en": "",
+    "pt": "Maça: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3."
   },
   "cat.item.maca.nome": {
     "en": "Mace",
     "pt": "Maça"
   },
+  "cat.item.maca_prata.desc": {
+    "en": "",
+    "pt": "Maça de Prata: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+  },
   "cat.item.maca_prata.nome": {
     "en": "Silver Mace",
     "pt": "Maça de Prata"
+  },
+  "cat.item.machado_basico.desc": {
+    "en": "",
+    "pt": "Machado de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas."
   },
   "cat.item.machado_basico.nome": {
     "en": "Iron Axe",
     "pt": "Machado de Ferro"
   },
+  "cat.item.machado_basico_prata.desc": {
+    "en": "",
+    "pt": "Machado de Ferro de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+  },
   "cat.item.machado_basico_prata.nome": {
     "en": "Silver Iron Axe",
     "pt": "Machado de Ferro de Prata"
+  },
+  "cat.item.machado_duplo.desc": {
+    "en": "",
+    "pt": "Machado Duplo: 1d8 de dano cortante, usando Força. 19 natural: faz um ataque adicional."
   },
   "cat.item.machado_duplo.nome": {
     "en": "Double Axe",
     "pt": "Machado Duplo"
   },
+  "cat.item.machado_duplo_prata.desc": {
+    "en": "",
+    "pt": "Machado Duplo de Prata: 1d8 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+  },
   "cat.item.machado_duplo_prata.nome": {
     "en": "Silver Double Axe",
     "pt": "Machado Duplo de Prata"
+  },
+  "cat.item.machado_orc.desc": {
+    "en": "",
+    "pt": "Machado de Guerra Órquico: 1d10 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3."
   },
   "cat.item.machado_orc.nome": {
     "en": "Orcish War Axe",
     "pt": "Machado de Guerra Órquico"
   },
+  "cat.item.machado_orc_prata.desc": {
+    "en": "",
+    "pt": "Machado de Guerra Órquico de Prata: 1d10 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+  },
   "cat.item.machado_orc_prata.nome": {
     "en": "Silver Orcish War Axe",
     "pt": "Machado de Guerra Órquico de Prata"
   },
+  "cat.item.mangual.desc": {
+    "en": "",
+    "pt": "Mangual: 1d8 de dano contundente, usando Força. Alcance: qualquer uma das 8 casas adjacentes, incluindo diagonais. 20 natural: dano multiplicado por 2.5."
+  },
   "cat.item.mangual.nome": {
     "en": "Flail",
     "pt": "Mangual"
+  },
+  "cat.item.mangual_prata.desc": {
+    "en": "",
+    "pt": "Mangual de Prata: 1d8 de dano contundente, usando Força. Alcance: qualquer uma das 8 casas adjacentes, incluindo diagonais. 20 natural: dano multiplicado por 2.5. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.mangual_prata.nome": {
     "en": "Silver Flail",
@@ -2310,13 +2462,25 @@ window.LANG_CATALOGO = {
     "en": "Ring of Vitality",
     "pt": "Anel da Vitalidade"
   },
+  "cat.item.shortsword.desc": {
+    "en": "",
+    "pt": "Espada Curta: 1d6 de dano cortante, usando Força. Crítico natural com 19–20."
+  },
   "cat.item.shortsword.nome": {
     "en": "Short Sword",
     "pt": "Espada Curta"
   },
+  "cat.item.shortsword_prata.desc": {
+    "en": "",
+    "pt": "Espada Curta de Prata: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+  },
   "cat.item.shortsword_prata.nome": {
     "en": "Silver Short Sword",
     "pt": "Espada Curta de Prata"
+  },
+  "cat.item.staff.desc": {
+    "en": "",
+    "pt": "Cajado Arcano: 1d6 de dano contundente, usando Força ou Destreza. Alcance: qualquer casa adjacente."
   },
   "cat.item.staff.nome": {
     "en": "Arcane Staff",
@@ -2326,9 +2490,17 @@ window.LANG_CATALOGO = {
     "en": "Fruit Juice",
     "pt": "Suco de Fruta"
   },
+  "cat.item.unarmed.desc": {
+    "en": "",
+    "pt": "Desarmado: — de dano físico, usando Força."
+  },
   "cat.item.unarmed.nome": {
     "en": "Unarmed",
     "pt": "Desarmado"
+  },
+  "cat.item.vela_escuridao.desc": {
+    "en": "",
+    "pt": "Ação bônus. Fica oculto até o fim do turno; o próximo ataque tem vantagem. Para o Ladino, o próximo ataque ativa automaticamente o Ataque Furtivo."
   },
   "cat.item.vela_escuridao.nome": {
     "en": "Candle of Darkness",
@@ -2378,6 +2550,10 @@ window.LANG_CATALOGO = {
     "en": "Acrid Fungus",
     "pt": "Fungo Acre"
   },
+  "cat.item.veneno_polvo_abissal.desc": {
+    "en": "",
+    "pt": "Fortitude CD 11. Falha: cegueira por 1d4 rodadas, visão 1 quadrado, -5 percepção, -4 ataques e sem ataques à distância. Sucesso: percepção -2 por 1d4 rodadas."
+  },
   "cat.item.veneno_polvo_abissal.nome": {
     "en": "Abyssal Octopus Ink",
     "pt": "Tinta do Polvo Abissal"
@@ -2398,9 +2574,17 @@ window.LANG_CATALOGO = {
     "en": "Silver Bolts (×10)",
     "pt": "Virotes de Prata (×10)"
   },
+  "cat.item.warhammer.desc": {
+    "en": "",
+    "pt": "Martelo de Guerra: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3."
+  },
   "cat.item.warhammer.nome": {
     "en": "Warhammer",
     "pt": "Martelo de Guerra"
+  },
+  "cat.item.warhammer_prata.desc": {
+    "en": "",
+    "pt": "Martelo de Guerra de Prata: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.warhammer_prata.nome": {
     "en": "Silver Warhammer",
@@ -2734,6 +2918,10 @@ window.LANG_CATALOGO = {
     "en": "Human Skeleton",
     "pt": "Esqueleto Humano"
   },
+  "cat.monstro.estrangulador.nome": {
+    "en": "Strangler",
+    "pt": "estrangulador"
+  },
   "cat.monstro.ferrao_charcos_adulto.nome": {
     "en": "Adult Marsh Stinger",
     "pt": "Ferrão dos Charcos Adulto"
@@ -2826,6 +3014,10 @@ window.LANG_CATALOGO = {
     "en": "Grey Wolf",
     "pt": "Lobo Cinzento"
   },
+  "cat.monstro.lobo_cinzento_customizado.nome": {
+    "en": "Grey Wolf",
+    "pt": "Lobo Cinzento"
+  },
   "cat.monstro.lorde_vampiro.nome": {
     "en": "Vampire Lord",
     "pt": "Lorde Vampiro"
@@ -2905,6 +3097,14 @@ window.LANG_CATALOGO = {
   "cat.monstro.vampiro_jovem.nome": {
     "en": "Young Vampire",
     "pt": "Vampiro Jovem"
+  },
+  "cat.monstro.vela_de_fogo.nome": {
+    "en": "Fire Candle",
+    "pt": "Vela de Fogo"
+  },
+  "cat.monstro.xama_goblin_customizado.nome": {
+    "en": "Goblin Shaman",
+    "pt": "Xamã Goblin"
   },
   "cat.monstro.zumbi_infectado.nome": {
     "en": "Infected Zombie",

@@ -13843,10 +13843,10 @@ class GameRoom:
             return
         nivel = int(p.get("sangramento_nivel", 0) or 0)
         if nivel <= 0:
-            await self.send_to(pid, {"type": "error", "msg": "Você não está sangrando."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_esta_sangrando")})
             return
         if self._acao_bloqueada(p):
-            await self.send_to(pid, {"type": "error", "msg": "A ação principal já foi usada neste turno."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.a_acao_principal_ja_foi_usada_neste_tur")})
             return
         p.pop("sangramento_nivel", None)
         p.pop("sangramento_rodadas", None)
@@ -13854,9 +13854,9 @@ class GameRoom:
         p["action_done"] = True
         self._consumir_recursos(p, "apenas_acao")
         if p.get("ferida_aberta"):
-            await self.gm_say(f"{p['name']} estanca o Sangramento, mas a Ferida Aberta permanece.")
+            await self.gm_say(T("narracao.estanca_o_sangramento_mas_a_ferida_abe", heroi=p["name"]))
         else:
-            await self.gm_say(f"{p['name']} estanca o Sangramento.")
+            await self.gm_say(T("narracao.estanca_o_sangramento", heroi=p["name"]))
         await self.push_state()
 
     async def handle_escapar_estomago(self, pid):
@@ -14688,7 +14688,7 @@ class GameRoom:
         await self.gm_say(T("narracao.dilacera_e_causa_de_dano_extra", monstro=nome_criatura(m), alvo_get_name_alvo=nome_criatura(alvo), extra=extra))
         if alvo.get("hp", 0) > 0 and ability.get("causa_sangramento", True):
             if self._aplicar_sangramento(alvo):
-                await self.gm_say(f"🩸 {nome_criatura(alvo)} começa a Sangrar após o Dilacerar.")
+                await self.gm_say(T("narracao.comeca_a_sangrar_apos_o_dilacerar", alvo=nome_criatura(alvo)))
         if alvo["hp"] <= 0:
             await self._player_dies(alvo["id"])
 
@@ -16801,17 +16801,17 @@ class GameRoom:
             return
         clean = _shortcut_entry(entry)
         if clean is False:
-            await self.send_to(pid, {"type": "error", "msg": "Atalho inválido."})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.atalho_invalido")})
             return
         if clean is not None:
             ident, kind = clean["id"], clean["kind"]
             if kind == "magic":
                 if ident not in (p.get("magias_conhecidas") or []):
-                    await self.send_to(pid, {"type": "error", "msg": "Essa magia não pertence ao seu grimório."})
+                    await self.send_to(pid, {"type": "error", "msg": T("erro.essa_magia_nao_pertence_ao_seu_grimorio")})
                     return
             elif kind == "item":
                 if not any(isinstance(it, dict) and it.get("id") == ident for it in (p.get("bag") or [])):
-                    await self.send_to(pid, {"type": "error", "msg": "Esse item não está na sua bolsa."})
+                    await self.send_to(pid, {"type": "error", "msg": T("erro.esse_item_nao_esta_na_sua_bolsa")})
                     return
             elif kind == "skill":
                 base_ids = {s.get("id") for s in (p.get("skills") or []) if isinstance(s, dict)}
@@ -16820,7 +16820,7 @@ class GameRoom:
                 owned = p.get("guild_owned") or {}
                 guild_ids = set(owned.get("tecnicas", [])) | set(owned.get("especializacoes", []))
                 if ident not in base_ids | granted_ids | guild_ids:
-                    await self.send_to(pid, {"type": "error", "msg": "Essa habilidade não está disponível para o personagem."})
+                    await self.send_to(pid, {"type": "error", "msg": T("erro.essa_habilidade_nao_esta_disponivel_par")})
                     return
         slots = _shortcut_slots(p.get("shortcut_slots"))
         slots[slot] = clean
@@ -17026,7 +17026,8 @@ class GameRoom:
         item = self._reparar_opcao_ferreiro(p, opcao)
         p["gold"] -= custo
         nome = (item or {}).get("name") or opcao.get("name", "Item")
-        await self.gm_say(f"🔧 **{p['name']}** reparou **{nome}** completamente por **{custo}** moedas.")
+        await self.gm_say(T("narracao.reparou_completamente_por_moedas", heroi=p["name"],
+                            nome=nome_item(item) if item else nome, custo=custo))
         await self.broadcast({"type": "shop_result",
                               "msg": f"🔧 {nome} reparado ({opcao['levels']} nível(is) de corrosão) por {custo} moedas."})
         await self.push_state_or_city()
@@ -17081,7 +17082,7 @@ class GameRoom:
             if not skill:
                 skill = GUILD_CATALOG.get(clean["id"])
         nome = (skill or {}).get("nome") or (skill or {}).get("name") or clean["id"]
-        await self.gm_say(f"⚔️ {p.get('name', 'Herói')} ativou a habilidade {nome} pelo atalho.")
+        await self.gm_say(T("narracao.ativou_a_habilidade_pelo_atalho", heroi=p.get("name", "?"), nome=nome))
 
     def _apply_single_effect(self, p, effect, value, equipping):
         mult = 1 if equipping else -1
@@ -18143,11 +18144,11 @@ class GameRoom:
             alvo["vida_atual"] = max(0, alvo.get("vida_atual", 0) - dano)
         else:
             alvo["hp"] = max(0, alvo.get("hp", 0) - dano)
-        await self.gm_say(
-            f"🩸 {nome_criatura(alvo)} sofre {dano} PV de dano recorrente "
-            f"({dano_sangramento} Sangramento"
-            f"{' +1 Ferida Aberta' if alvo.get('ferida_aberta') else ''}"
-            f"{' + Hemorragia' if alvo.get('hemorragia') else ''}).")
+        await self.gm_say(T(
+            "narracao.sofre_pv_de_dano_recorrente",
+            alvo=nome_criatura(alvo), dano=dano, dano_sangramento=dano_sangramento,
+            ferida=T("narracao.frag_ferida_aberta") if alvo.get("ferida_aberta") else "",
+            hemorragia=T("narracao.frag_hemorragia") if alvo.get("hemorragia") else ""))
 
         if not self._vivo(alvo):
             if "vida_atual" in alvo:
@@ -21437,7 +21438,7 @@ class GameRoom:
                 await self._monster_dies(alvo, m.get("id"))
             return
         if self._aplicar_sangramento(alvo):
-            await self.gm_say(f"🩸 {nome_criatura(alvo)} começa a Sangrar.")
+            await self.gm_say(T("narracao.comeca_a_sangrar", alvo=nome_criatura(alvo)))
 
     def _habilidade_charcos_no_ataque(self, m, atk_def, ability_id):
         indice = self._indice_ataque_monstro(m, atk_def)
@@ -24902,7 +24903,7 @@ class GameRoom:
         await self.gm_say(T("narracao.dilacera_e_causa_de_dano_extra_2", monstro=nome_criatura(m), target_get_name_or_targe=nome_criatura(target), extra=extra))
         if self._alvo_vivo(target_obj) and ability.get("causa_sangramento", True):
             if self._aplicar_sangramento(target):
-                await self.gm_say(f"🩸 {nome_criatura(target)} começa a Sangrar após o Dilacerar.")
+                await self.gm_say(T("narracao.comeca_a_sangrar_apos_o_dilacerar", alvo=nome_criatura(target)))
         if not self._alvo_vivo(target_obj):
             if target_obj["kind"] == "player":
                 await self._player_dies(target["id"])
@@ -29205,7 +29206,7 @@ class GameRoom:
                 # O Sangramento vem das GARRAS (ver a descricao da habilidade):
                 # errar as duas nao pode sangrar.
                 if garradas and self._hp_alvo(target)[0] > 0 and self._aplicar_sangramento(target):
-                    await self.gm_say(f"🩸 {nome_criatura(target)} começa a Sangrar após o Combo Devorador.")
+                    await self.gm_say(T("narracao.comeca_a_sangrar_apos_o_combo_devorador", alvo=nome_criatura(target)))
 
     # â”€â”€ IA Zumbi Infectado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async def _ai_zumbi(self, m, targets):

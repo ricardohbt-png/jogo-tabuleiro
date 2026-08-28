@@ -360,6 +360,10 @@ window.LANG_NARRACAO = {
     "en": "⚠️ **{alvo_nome}** triggered **{nome}**!",
     "pt": "⚠️ **{alvo_nome}** ativou **{nome}**!"
   },
+  "narracao.ativou_a_habilidade_pelo_atalho": {
+    "en": "⚔️ {heroi} used {nome} from the shortcut bar.",
+    "pt": "⚔️ {heroi} ativou a habilidade {nome} pelo atalho."
+  },
   "narracao.ativou_o_objeto_chave": {
     "en": "🔑 **{heroi}** activated the key object!",
     "pt": "🔑 **{heroi}** ativou o objeto-chave!"
@@ -475,6 +479,18 @@ window.LANG_NARRACAO = {
   "narracao.come_a_fome_e_sede": {
     "en": "{item_emoji} **{heroi}** eats the **{item}**: +{val} hunger and +{val} thirst.",
     "pt": "{item_emoji} **{heroi}** come a **{item}**: +{val} fome e +{val} sede."
+  },
+  "narracao.comeca_a_sangrar": {
+    "en": "🩸 {alvo} starts Bleeding.",
+    "pt": "🩸 {alvo} começa a Sangrar."
+  },
+  "narracao.comeca_a_sangrar_apos_o_combo_devorador": {
+    "en": "🩸 {alvo} starts Bleeding after the Devouring Combo.",
+    "pt": "🩸 {alvo} começa a Sangrar após o Combo Devorador."
+  },
+  "narracao.comeca_a_sangrar_apos_o_dilacerar": {
+    "en": "🩸 {alvo} starts Bleeding after the Rend.",
+    "pt": "🩸 {alvo} começa a Sangrar após o Dilacerar."
   },
   "narracao.con_hp_max": {
     "en": " (max HP -{n})",
@@ -1032,6 +1048,14 @@ window.LANG_NARRACAO = {
     "en": "🗣️ **{monstro}** is under Command and loses the action.",
     "pt": "🗣️ **{monstro}** está sob Comando e perde a ação."
   },
+  "narracao.estanca_o_sangramento": {
+    "en": "{heroi} stanches the Bleeding.",
+    "pt": "{heroi} estanca o Sangramento."
+  },
+  "narracao.estanca_o_sangramento_mas_a_ferida_abe": {
+    "en": "{heroi} stanches the Bleeding, but the Open Wound remains.",
+    "pt": "{heroi} estanca o Sangramento, mas a Ferida Aberta permanece."
+  },
   "narracao.evita_o_salto_selvagem_de_reflexos_vs_cd": {
     "en": "🦁 **{target_get_name_or_targe}** avoids **{monstro}**'s Savage Leap (Reflex {d20}{bonus_txt}={total} vs DC {dc}).",
     "pt": "🦁 **{target_get_name_or_targe}** evita o Salto Selvagem de **{monstro}** (Reflexos {d20}{bonus_txt}={total} vs CD {dc})."
@@ -1247,6 +1271,14 @@ window.LANG_NARRACAO = {
   "narracao.fortuna_roubada_consome_ouros_de": {
     "en": "☠️ **Stolen Fortune** consumes **{perdido}** gold {motivo} from **{heroi}**.",
     "pt": "☠️ **Fortuna Roubada** consome **{perdido}** ouros {motivo} de **{heroi}**."
+  },
+  "narracao.frag_ferida_aberta": {
+    "en": " +1 Open Wound",
+    "pt": " +1 Ferida Aberta"
+  },
+  "narracao.frag_hemorragia": {
+    "en": " + Haemorrhage",
+    "pt": " + Hemorragia"
   },
   "narracao.furia_berserker_ataque_extra_disponivel": {
     "en": "🔥 **{heroi}** — Berserker Rage: extra attack available! Attack again.",
@@ -1656,6 +1688,10 @@ window.LANG_NARRACAO = {
     "en": "🎻 The Improvised Requiem wounds **{monstro}** for **{dano}**!",
     "pt": "🎻 O Réquiem improvisado fere **{monstro}** em **{dano}**!"
   },
+  "narracao.o_sangramento_de_terminou": {
+    "en": "🩸 {alvo}'s Bleeding has stopped.",
+    "pt": "🩸 O Sangramento de {alvo} terminou."
+  },
   "narracao.o_silencio_de_se_dissipa_com_sua_morte": {
     "en": "🔇 **{monstro}**'s Silence dissipates with its death.",
     "pt": "🔇 O Silêncio de **{monstro}** se dissipa com sua morte."
@@ -1963,6 +1999,10 @@ window.LANG_NARRACAO = {
   "narracao.relampago_multi": {
     "en": " | {n} target(s) hit twice",
     "pt": " | {n} alvo(s) atingido(s) 2x"
+  },
+  "narracao.reparou_completamente_por_moedas": {
+    "en": "🔧 **{heroi}** fully repaired **{nome}** for **{custo}** gold.",
+    "pt": "🔧 **{heroi}** reparou **{nome}** completamente por **{custo}** moedas."
   },
   "narracao.requiem_final_de_manutencao": {
     "en": "🎻 **{heroi}**'s Final Requiem — upkeep 🍖-{mf} 💧-{ms}.",
@@ -2287,6 +2327,10 @@ window.LANG_NARRACAO = {
   "narracao.sofre_empurrado_q": {
     "en": "🌪️ **{nome}** takes {dano} (pushed {push} square(s)).",
     "pt": "🌪️ **{nome}** sofre {dano} (empurrado {push}q)."
+  },
+  "narracao.sofre_pv_de_dano_recorrente": {
+    "en": "🩸 {alvo} takes {dano} HP of recurring damage ({dano_sangramento} Bleeding{ferida}{hemorragia}).",
+    "pt": "🩸 {alvo} sofre {dano} PV de dano recorrente ({dano_sangramento} Sangramento{ferida}{hemorragia})."
   },
   "narracao.sofreu_dano_e_perde_a_concentracao_sem_m": {
     "en": "🤕 **{monstro}** took damage and loses concentration — no spell this turn!",

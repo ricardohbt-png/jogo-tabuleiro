@@ -85,6 +85,10 @@ window.LANG_ERROS = {
     "en": "Bonus action already used this turn.",
     "pt": "Ação bônus já usada neste turno."
   },
+  "erro.a_acao_principal_ja_foi_usada_neste_tur": {
+    "en": "The main action has already been used this turn.",
+    "pt": "A ação principal já foi usada neste turno."
+  },
   "erro.a_criatura": {
     "en": "the creature",
     "pt": "a criatura"
@@ -321,6 +325,10 @@ window.LANG_ERROS = {
     "en": "Invalid trap.",
     "pt": "Armadilha inválida."
   },
+  "erro.atalho_invalido": {
+    "en": "Invalid shortcut.",
+    "pt": "Atalho inválido."
+  },
   "erro.bau_nao_encontrado": {
     "en": "Chest not found.",
     "pt": "Baú não encontrado."
@@ -545,9 +553,21 @@ window.LANG_ERROS = {
     "en": "That square is occupied or blocked for the chest.",
     "pt": "Essa casa está ocupada ou bloqueada para o baú."
   },
+  "erro.essa_habilidade_nao_esta_disponivel_par": {
+    "en": "That ability is not available to this character.",
+    "pt": "Essa habilidade não está disponível para o personagem."
+  },
+  "erro.essa_magia_nao_pertence_ao_seu_grimorio": {
+    "en": "That spell is not in your spellbook.",
+    "pt": "Essa magia não pertence ao seu grimório."
+  },
   "erro.essa_maldicao_nao_esta_ativa": {
     "en": "That curse isn't active.",
     "pt": "Essa maldição não está ativa."
+  },
+  "erro.esse_item_nao_esta_na_sua_bolsa": {
+    "en": "That item is not in your bag.",
+    "pt": "Esse item não está na sua bolsa."
   },
   "erro.esse_jogador_ainda_esta_conectado": {
     "en": "That player is still connected.",
@@ -1568,6 +1588,10 @@ window.LANG_ERROS = {
   "erro.voce_nao_esta_preso_no_bau": {
     "en": "You are not trapped inside a chest.",
     "pt": "Você não está preso dentro de um baú."
+  },
+  "erro.voce_nao_esta_sangrando": {
+    "en": "You are not bleeding.",
+    "pt": "Você não está sangrando."
   },
   "erro.voce_nao_pode_curar_a_si_mesmo_com_esta": {
     "en": "You can't heal yourself with this ability.",
