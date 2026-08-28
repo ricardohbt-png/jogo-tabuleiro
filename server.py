@@ -34857,10 +34857,34 @@ def _talvez_gzip(body, ctype, chave):
     return memo, "gzip"
 
 
-# Porta e enderecos de escuta. Duas familias de proposito: ver o comentario do
-# websockets.serve() em main(). LFH_PORT existe para os testes subirem o
-# servidor numa porta propria, sem brigar com o jogo em 8765.
-SERVER_PORT = int(os.environ.get("LFH_PORT", "8765"))
+# Porta e enderecos de escuta. Sao FUNCOES, e nao constantes de modulo, porque
+# tools/test_deploy_config.py precisa exercitar as precedencias sem mexer em
+# os.environ antes do import -- os testes fazem "import server as S", entao uma
+# constante avaliada no carregamento so seria testavel com efeito colateral.
+def _listen_port(env=None):
+    """Porta de escuta.
+
+    LFH_PORT (os testes locais sobem numa porta propria, sem brigar com o jogo
+    em 8765) vence PORT (injetada pelas plataformas de hospedagem). Sem nenhuma
+    das duas, 8765 -- o padrao do jogo em casa, que iniciar.bat abre.
+
+    Valor invalido e IGNORADO em vez de estourar: um PORT com lixo derrubaria o
+    processo no boot, e na plataforma isso aparece como "deploy falhou" sem
+    dizer por que."""
+    env = os.environ if env is None else env
+    for chave in ("LFH_PORT", "PORT"):
+        bruto = env.get(chave)
+        if bruto is None:
+            continue
+        try:
+            porta = int(str(bruto).strip())
+        except ValueError:
+            continue
+        if 1 <= porta <= 65535:
+            return porta
+    return 8765
+
+SERVER_PORT = _listen_port()
 # Uma entrada por familia: no Windows o socket IPv6 nao aceita IPv4 por padrao
 # (IPV6_V6ONLY), entao ligar so em "::" deixaria 127.0.0.1 sem servidor.
 SERVER_HOSTS = ["0.0.0.0", "::"]
