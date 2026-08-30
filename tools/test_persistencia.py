@@ -116,10 +116,39 @@ def secao_grupos():
         S.LOJA = velho; shutil.rmtree(tmp, ignore_errors=True)
 
 
+def secao_savegames():
+    print("\n[4] savegames")
+    tmp = tempfile.mkdtemp(); velho = S.LOJA
+    S.LOJA = S.LojaDocumentos(S.AdaptadorArquivo(tmp)); S.LOJA.carregar()
+    try:
+        sg = S.create_savegame("Campanha", "ana", "campaign", "c.json", False)
+        sid = sg["id"]
+        check("cria savegame", S.load_savegame(sid) is not None)
+        check("está na loja", S.LOJA.ler("savegames", sid) is not None)
+        check("list_savegames acha o jogo da conta",
+              any(x.get("id") == sid for x in S.list_savegames("ana")))
+        check("list_savegames NÃO vaza para outra conta", not S.list_savegames("beto"))
+        check("id inválido devolve None", S.load_savegame("../fora") is None)
+
+        # o que o SP3 existe para garantir
+        S.LOJA.descarregar()
+        S.LOJA = S.LojaDocumentos(S.AdaptadorArquivo(tmp)); S.LOJA.carregar()
+        recarregado = S.load_savegame(sid)
+        check("depois de reiniciar, o savegame continua lá", recarregado is not None)
+        check("e com o conteúdo certo",
+              (recarregado or {}).get("name") == "Campanha")
+
+        S.delete_savegame(sid, "ana")
+        check("apagar some da loja", S.load_savegame(sid) is None)
+    finally:
+        S.LOJA = velho; shutil.rmtree(tmp, ignore_errors=True)
+
+
 def main():
     secao_loja()
     secao_contas()
     secao_grupos()
+    secao_savegames()
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

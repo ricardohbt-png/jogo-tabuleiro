@@ -103,7 +103,8 @@ def main():
         check("campos iniciais", sg["campaign_phase"] == 0 and sg["members"] == {}
               and sg["characters"] == {} and sg["owner"] == "ricardo")
         check("master_account = dono quando has_master", sg["master_account"] == "ricardo")
-        check("arquivo gravado", os.path.exists(S.savegame_path(sid)))
+        # SP3: vive na LOJA; so vai a disco na descarga.
+        check("gravado na loja", S.LOJA.ler("savegames", sid) is not None)
         # procedural zera campaign_file
         sgp = S.create_savegame("Avulso", "ricardo", "procedural", "x.json", False)
         check("procedural sem campaign_file", sgp["campaign_file"] is None and sgp["mode"] == "procedural")
@@ -112,7 +113,11 @@ def main():
         sg["campaign_phase"] = 3
         S.write_savegame(sg)
         check("reload mantém fase", S.load_savegame(sid)["campaign_phase"] == 3)
-        check("write criou .bak da versão anterior", os.path.exists(S.savegame_path(sid) + ".bak"))
+        # SP3: a rotacao do .bak desceu para o ADAPTADOR DE ARQUIVO -- o cache
+        # nunca tem duas versoes do mesmo documento. So aparece na descarga.
+        S.LOJA.descarregar(); S.write_savegame(sg); S.LOJA.descarregar()
+        check("a descarga cria o .bak da versão anterior",
+              os.path.exists(os.path.join(tmp, "savegames", sid + ".json.bak")))
         # list filtra por participação
         lst_ric = [s["id"] for s in S.list_savegames("ricardo")]
         check("lista inclui jogos do dono", sid in lst_ric and sgp["id"] in lst_ric)

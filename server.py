@@ -1854,32 +1854,19 @@ def load_savegame(sid):
     """Carrega o savegame; se o principal estiver corrompido, tenta o .bak; senão None."""
     if not _sid_valido(sid):
         return None
-    for p in (savegame_path(sid), savegame_path(sid) + ".bak"):
-        try:
-            with open(p, "r", encoding="utf-8") as f:
-                d = json.load(f)
-            if _savegame_valid_shape(d):
-                return d
-        except FileNotFoundError:
-            continue
-        except Exception:
-            continue
-    return None
+    # O fallback para .bak saiu daqui: com a loja, o backup de um nivel e
+    # detalhe do ADAPTADOR DE ARQUIVO -- o cache nunca tem duas versoes do
+    # mesmo documento, e o .bak so e consultado na CARGA.
+    d = LOJA.ler("savegames", sid)
+    return d if _savegame_valid_shape(d) else None
 
 def write_savegame(sg):
     """Grava atômico; antes, rotaciona a versão atual para .bak (backup de 1 nível)."""
     sid = sg.get("id")
     if not sid:
         return
-    os.makedirs(SAVEGAMES_DIR, exist_ok=True)
-    path = savegame_path(sid)
-    if os.path.exists(path):
-        try:
-            shutil.copy2(path, path + ".bak")
-        except OSError:
-            pass
     sg["updated"] = _now_iso()
-    _atomic_write_json(path, sg)
+    LOJA.gravar("savegames", sid, sg)
 
 def create_savegame(name, owner, mode, campaign_file, has_master, group_id=None, rules=None, parent_campaign_id=None, inherited=None):
     sid = _new_savegame_id()
@@ -1932,13 +1919,11 @@ def list_savegames(username):
     """Resumo dos jogos onde a conta é dona, membro ou mestre (mais recentes primeiro)."""
     u = _norm_username(username)
     out = []
-    if not u or not os.path.isdir(SAVEGAMES_DIR):
+    if not u:
         return out
-    for fn in os.listdir(SAVEGAMES_DIR):
-        if not fn.endswith(".json"):
-            continue
-        sg = load_savegame(fn[:-5])
-        if not sg:
+    # Antes: listdir + abrir e parsear TODOS os savegames a cada chamada.
+    for sg in LOJA.listar("savegames").values():
+        if not _savegame_valid_shape(sg):
             continue
         if ensure_campaign_schema(sg):
             write_savegame(sg)
@@ -1965,11 +1950,7 @@ def delete_savegame(sid, requester):
         return False, "Jogo não encontrado."
     if sg.get("owner") != _norm_username(requester):
         return False, "Apenas o dono pode apagar este jogo."
-    for p in (savegame_path(sid), savegame_path(sid) + ".bak"):
-        try:
-            os.remove(p)
-        except OSError:
-            pass
+    LOJA.apagar("savegames", sid)
     return True, None
 
 def abandon_master_campaign(sid, requester):
