@@ -2103,6 +2103,7 @@ def try_open_savegame_room(account, sid, rooms):
         return None, "Você não faz parte deste jogo."
     if sid in SAVEGAMES_IN_USE:
         return None, "Este jogo já está em uso em outra sessão."
+    _limpar_salas_vazias()
     code = make_code()
     room = GameRoom(code)
     rooms[code] = room
@@ -31751,6 +31752,31 @@ TEST_DUNGEON_TOKENS = {}  # token -> room code; sessões efêmeras do editor
 # o servidor caiu no meio) não tem quem a encerre: expira sozinha.
 TEST_DUNGEON_TTL_S = 15 * 60
 
+# Sala vazia NAO morre na hora: o rejoin religa quem caiu e depende de a sala
+# ainda existir -- apagar assim que a ultima conexao cai destruiria partidas em
+# andamento a cada oscilacao de rede. O cliente tenta 8x a cada 2,5 s.
+SALA_VAZIA_TTL_S = 15 * 60
+
+
+def _limpar_salas_vazias(agora=None):
+    """Recolhe salas sem ninguem conectado ha mais que o prazo.
+
+    Varre ao ALOCAR (quando uma sala nova nasce), que e quando memoria nova
+    seria pedida -- mesmo padrao de _limpar_salas_teste_ociosas, e sem tarefa
+    de fundo. Sala vazia ainda sem marcador ganha o marcador agora, em vez de
+    sumir: o prazo comeca a contar da primeira vez que a vimos vazia."""
+    agora = time.monotonic() if agora is None else agora
+    for code, room in list(rooms.items()):
+        if getattr(room, "connections", None):
+            room.vazia_desde = None
+            continue
+        marca = getattr(room, "vazia_desde", None)
+        if marca is None:
+            room.vazia_desde = agora
+        elif agora - marca > SALA_VAZIA_TTL_S:
+            rooms.pop(code, None)
+
+
 def _descartar_sala_teste(code):
     """Tira a sessão de teste do ar: some de `rooms` e invalida seus tokens."""
     rooms.pop(code, None)
@@ -32299,6 +32325,7 @@ async def handler(ws):
 
                 if t == "create_room":
                     name = str(msg.get("name") or "Herói")[:20]
+                    _limpar_salas_vazias()
                     code = make_code()
                     room = GameRoom(code)
                     rooms[code] = room

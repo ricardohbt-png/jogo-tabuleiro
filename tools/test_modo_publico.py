@@ -200,6 +200,36 @@ def secao_origin():
                            permitidas="https://meu.jogo"))
 
 
+def secao_salas():
+    """[7] sala vazia não pode ficar presa na memória — nem morrer cedo demais."""
+    print("\n[7] salas vazias")
+    check("sala vazia tem PRAZO, e não morre na hora", S.SALA_VAZIA_TTL_S > 0,
+          "apagar assim que a última conexão cai destruiria partidas em "
+          "andamento: o rejoin depende da sala ainda existir")
+    check("o prazo cobre uma reconexão (≥ 5 min)", S.SALA_VAZIA_TTL_S >= 300)
+
+    class _Sala:
+        def __init__(self, code, conns, vazia_desde=None):
+            self.code = code; self.connections = conns
+            self.vazia_desde = vazia_desde; self.test_mode = False
+
+    agora = time.monotonic()
+    S.rooms.clear()
+    S.rooms["COMGENTE"] = _Sala("COMGENTE", {"pid": object()})
+    S.rooms["RECEM"] = _Sala("RECEM", {}, agora - 5)
+    S.rooms["VELHA"] = _Sala("VELHA", {}, agora - S.SALA_VAZIA_TTL_S - 10)
+    S.rooms["SEMMARCA"] = _Sala("SEMMARCA", {})
+
+    S._limpar_salas_vazias(agora)
+    check("sala COM gente fica", "COMGENTE" in S.rooms)
+    check("sala vazia há pouco tempo FICA — dá tempo de reconectar",
+          "RECEM" in S.rooms)
+    check("sala vazia além do prazo SAI", "VELHA" not in S.rooms)
+    check("sala vazia sem marcador ganha o marcador em vez de sumir",
+          "SEMMARCA" in S.rooms and S.rooms["SEMMARCA"].vazia_desde is not None)
+    S.rooms.clear()
+
+
 async def main():
     await secao_senha()
     await secao_laco()
@@ -207,6 +237,7 @@ async def main():
     secao_ip()
     secao_portao()
     secao_origin()
+    secao_salas()
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     return 1 if FAIL else 0
 
