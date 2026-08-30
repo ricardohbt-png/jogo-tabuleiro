@@ -1413,6 +1413,138 @@ def _atomic_write_json(path, data):
         json.dump(data, f, ensure_ascii=False, indent=2)
     os.replace(tmp, path)
 
+
+# ─── Loja de documentos ───────────────────────────────────────────────────────
+# Contas, jogos salvos e grupos somam ~1,3 MB -- cabem na memoria com folga. E e
+# isso que permite manter SINCRONAS as 21 chamadas de escrita espalhadas pelo
+# jogo: o cache e a fonte de verdade em execucao, e a ida ao armazenamento
+# acontece depois, nos pontos seguros.
+#
+# RESTRICAO DO DESENHO: uma instancia so. Duas teriam caches separados, e a
+# ultima a descarregar venceria -- apagando o trabalho da outra em silencio.
+COLECOES = ("contas", "savegames", "grupos")
+
+# Colecao -> diretorio. Os nomes de pasta continuam os antigos de proposito: o
+# .gitignore aponta para accounts/, savegames/ e groups/, e renomear orfanaria
+# a regra sem ganho nenhum.
+_PASTA_DA_COLECAO = {"contas": "accounts", "savegames": "savegames",
+                     "grupos": "groups"}
+
+
+class AdaptadorArquivo:
+    """Um arquivo JSON por documento, como sempre foi.
+
+    E o padrao local: quem so quer jogar em casa nao instala banco nenhum."""
+
+    def __init__(self, raiz):
+        self.raiz = raiz
+
+    def _pasta(self, colecao):
+        return os.path.join(self.raiz, _PASTA_DA_COLECAO.get(colecao, colecao))
+
+    def _caminho(self, colecao, chave):
+        return os.path.join(self._pasta(colecao), f"{chave}.json")
+
+    def carregar_tudo(self):
+        fora = {c: {} for c in COLECOES}
+        for colecao in COLECOES:
+            pasta = self._pasta(colecao)
+            if not os.path.isdir(pasta):
+                continue
+            for fn in os.listdir(pasta):
+                if not fn.endswith(".json"):
+                    continue
+                caminho = os.path.join(pasta, fn)
+                try:
+                    with open(caminho, encoding="utf-8") as f:
+                        fora[colecao][fn[:-5]] = json.load(f)
+                except Exception as e:
+                    # Ilegivel: tenta o backup de um nivel antes de desistir.
+                    try:
+                        with open(caminho + ".bak", encoding="utf-8") as f:
+                            fora[colecao][fn[:-5]] = json.load(f)
+                        print(f"[loja] {colecao}/{fn} ilegivel ({e}) -- usei o .bak")
+                    except Exception:
+                        print(f"[loja] {colecao}/{fn} ilegivel ({e}) -- ignorado")
+        return fora
+
+    def gravar(self, colecao, chave, doc):
+        alvo = self._caminho(colecao, chave)
+        # Backup de um nivel, como write_savegame fazia. Fica AQUI porque o
+        # cache nunca tem duas versoes do mesmo documento -- o .bak so serve
+        # para o disco, e so e consultado na carga.
+        try:
+            if os.path.exists(alvo):
+                os.replace(alvo, alvo + ".bak")
+        except OSError:
+            pass
+        _atomic_write_json(alvo, doc)
+
+    def apagar(self, colecao, chave):
+        for p in (self._caminho(colecao, chave),
+                  self._caminho(colecao, chave) + ".bak"):
+            try:
+                os.remove(p)
+            except OSError:
+                pass
+
+
+class LojaDocumentos:
+    """Cache autoritativo + marcacao de sujos.
+
+    Leituras saem do cache, o que mantem load_account/load_savegame/load_group
+    sincronos e com a mesma assinatura -- e de quebra elimina a leitura de disco
+    que list_savegames fazia a cada chamada, abrindo TODOS os savegames."""
+
+    def __init__(self, adaptador):
+        self.adaptador = adaptador
+        self._docs = {c: {} for c in COLECOES}
+        self._sujos = set()
+        self.carregada = False
+
+    def carregar(self):
+        docs = self.adaptador.carregar_tudo()
+        for c in COLECOES:
+            docs.setdefault(c, {})
+        self._docs = docs
+        self._sujos.clear()
+        self.carregada = True
+
+    def ler(self, colecao, chave):
+        return self._docs.get(colecao, {}).get(chave)
+
+    def listar(self, colecao):
+        return dict(self._docs.get(colecao, {}))
+
+    def gravar(self, colecao, chave, doc):
+        self._docs.setdefault(colecao, {})[chave] = doc
+        self._sujos.add((colecao, chave))
+
+    def apagar(self, colecao, chave):
+        self._docs.get(colecao, {}).pop(chave, None)
+        self._sujos.add((colecao, chave))
+
+    def sujos(self):
+        return set(self._sujos)
+
+    def descarregar(self):
+        """Manda as sujas para o armazenamento.
+
+        Uma chave que falhar CONTINUA suja: sai do lote atual mas volta no
+        proximo, em vez de sumir calada."""
+        for colecao, chave in sorted(self._sujos):
+            doc = self._docs.get(colecao, {}).get(chave)
+            try:
+                if doc is None:
+                    self.adaptador.apagar(colecao, chave)
+                else:
+                    self.adaptador.gravar(colecao, chave, doc)
+            except Exception as e:
+                print(f"[loja] falha ao gravar {colecao}/{chave}: {e}")
+                continue
+            self._sujos.discard((colecao, chave))
+
+
 SENHA_MIN = 8   # so comprimento: ver a regra em create_account
 
 def hash_password(password, salt=None, iterations=100_000):
