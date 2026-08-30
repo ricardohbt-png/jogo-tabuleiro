@@ -28,6 +28,8 @@ import traceback
 import unicodedata
 import urllib.parse
 from copy import deepcopy
+import aiohttp
+from aiohttp import web
 from websockets.http11 import Response
 from websockets.datastructures import Headers
 
@@ -31733,6 +31735,40 @@ def _key(v):
     except TypeError:
         return None
     return v
+
+
+class _WS:
+    """Faz o WebSocketResponse do aiohttp parecer o objeto que o jogo ja usa.
+
+    O resto do server.py toca no socket por apenas DOIS caminhos: `await
+    ws.send(texto)`, em 41 pontos, e `async for raw in ws`, em um. Medido com
+    grep no arquivo inteiro: sao 41 ocorrencias de `ws.`, TODAS `ws.send` --
+    nao ha close, ping nem remote_address.
+
+    Por isso um adaptador de dez linhas cobre 100% da superficie. Ele evita
+    reescrever os 41 pontos (onde um esquecimento so apareceria quando aquela
+    mensagem especifica fosse disparada em jogo) e isola a biblioteca: numa
+    proxima troca de camada, so este bloco se mexe."""
+    __slots__ = ("_ws",)
+
+    def __init__(self, ws):
+        self._ws = ws
+
+    async def send(self, texto):
+        await self._ws.send_str(texto)
+
+    def __aiter__(self):
+        return self._iterar()
+
+    async def _iterar(self):
+        # So TEXT interessa: o cliente manda JSON. BINARY e ignorada, e
+        # ERROR/CLOSE saem do laco -- que e exatamente o que o
+        # `async for raw in ws` de hoje faz quando a conexao cai.
+        async for msg in self._ws:
+            if msg.type == aiohttp.WSMsgType.TEXT:
+                yield msg.data
+            elif msg.type in (aiohttp.WSMsgType.ERROR, aiohttp.WSMsgType.CLOSE):
+                break
 
 
 async def handler(ws):

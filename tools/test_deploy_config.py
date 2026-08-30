@@ -54,6 +54,41 @@ def main():
     check("sem argumento de plataforma usa sys.platform e devolve lista não vazia",
           isinstance(S._listen_hosts({}), list) and len(S._listen_hosts({})) >= 1)
 
+    # [3] adaptador de WebSocket
+    print("\n[3] _WS — adaptador que isola a biblioteca do resto do código")
+
+    class _FakeMsg:
+        def __init__(self, tipo, dado): self.type = tipo; self.data = dado
+
+    class _FakeWS:
+        """Dublê do WebSocketResponse do aiohttp."""
+        def __init__(self, mensagens): self.enviadas = []; self._msgs = mensagens
+        async def send_str(self, texto): self.enviadas.append(texto)
+        def __aiter__(self):
+            async def gen():
+                for m in self._msgs: yield m
+            return gen()
+
+    import asyncio as _aio
+    from aiohttp import WSMsgType as _T
+
+    falso = _FakeWS([_FakeMsg(_T.TEXT, '{"a":1}'),
+                     _FakeMsg(_T.BINARY, b'\x00'),
+                     _FakeMsg(_T.TEXT, '{"b":2}')])
+    ad = S._WS(falso)
+
+    _aio.run(ad.send("ola"))
+    check("send() delega para send_str() do aiohttp",
+          falso.enviadas == ["ola"])
+
+    async def _colher():
+        return [raw async for raw in ad]
+    colhido = _aio.run(_colher())
+    check("itera devolvendo o TEXTO das mensagens (o que o laço do jogo espera)",
+          colhido == ['{"a":1}', '{"b":2}'])
+    check("mensagem BINARY é ignorada — o cliente só manda texto",
+          b'\x00' not in colhido)
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
