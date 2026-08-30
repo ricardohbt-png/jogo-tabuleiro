@@ -5,7 +5,7 @@ Um jogo de RPG de tabuleiro multiplayer em estilo HeroQuest/D&D para até 6 joga
 ## Requisitos
 
 - Python 3.x (instalado)
-- websockets library: pip install websockets
+- Dependências Python: `python -m pip install -r requirements.txt`
 - Navegador moderno (Chrome, Firefox, Edge)
 
 ## Como Rodar o Jogo

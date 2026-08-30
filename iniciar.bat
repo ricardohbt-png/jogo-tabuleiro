@@ -18,11 +18,17 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM --- 2. Verifica/instala a dependencia websockets ---
+REM --- 2. Verifica/instala as dependencias ---
 python -c "import websockets" >nul 2>&1
 if errorlevel 1 (
     echo  Instalando dependencia: websockets...
     python -m pip install websockets
+    echo.
+)
+python -c "import aiohttp" >nul 2>&1
+if errorlevel 1 (
+    echo  Instalando dependencia: aiohttp...
+    python -m pip install aiohttp
     echo.
 )
 

@@ -139,6 +139,12 @@ def main():
         print("Instalando dependência: websockets...")
         subprocess.run([sys.executable, "-m", "pip", "install", "websockets"])
 
+    try:
+        import aiohttp  # noqa: F401
+    except ImportError:
+        print("Instalando dependência: aiohttp...")
+        subprocess.run([sys.executable, "-m", "pip", "install", "aiohttp"])
+
     print("=" * 64)
     print("  LEGENDS FOR HIRE — Jogar pela internet")
     print("=" * 64)
