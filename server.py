@@ -1513,7 +1513,9 @@ def load_account(username):
         print(f"[accounts] conta {u} inválida ({e})")
         return None
 
-def create_account(username, password):
+async def create_account(username, password):
+    """Cria a conta. Corrotina porque o PBKDF2 vai para uma thread: rodando no
+    laco, cada criacao travaria o jogo de todos por ~100 ms."""
     """Cria a conta. Retorna (data, None) ou (None, mensagem_de_erro)."""
     u = _norm_username(username)
     if not _username_valido(u):
@@ -1527,7 +1529,8 @@ def create_account(username, password):
     os.makedirs(ACCOUNTS_DIR, exist_ok=True)
     if os.path.exists(account_path(u)):
         return None, "Apelido já existe."
-    data = {"username": u, "password_hash": hash_password(senha), "created": _now_iso()}
+    ph = await asyncio.to_thread(hash_password, senha)
+    data = {"username": u, "password_hash": ph, "created": _now_iso()}
     ensure_account_profile(data)
     write_account(data)
     return data, None
@@ -1864,14 +1867,19 @@ SAVEGAMES_IN_USE = {}   # savegame_id -> room code
 ACCOUNTS_ONLINE = {}    # username -> pid da conexão autenticada
 
 
-def try_login(pid, username, password):
+async def try_login(pid, username, password):
     """Valida credenciais e reserva a conta em ACCOUNTS_ONLINE.
     Retorna (True, dados_da_conta) ou (False, mensagem_de_erro)."""
     u = _norm_username(username)
     acc = load_account(u)
     if not acc:
         return False, "Conta não encontrada. Crie uma conta primeiro."
-    if not verify_password(password, acc.get("password_hash", "")):
+    # Na thread, de proposito: sem isso, cada tentativa recusada travaria o
+    # laco por ~100 ms, e uma rajada de forca bruta seria, sozinha, negacao de
+    # servico contra todos os jogadores. E pre-requisito do limite de
+    # tentativas -- senao o proprio freio viraria a arma.
+    if not await asyncio.to_thread(verify_password, password,
+                                   acc.get("password_hash", "")):
         return False, "Senha incorreta."
     dono = ACCOUNTS_ONLINE.get(u)
     if dono and dono != pid:
@@ -32088,9 +32096,12 @@ async def handler(ws):
                     continue
 
                 if t == "create_account":
-                    acc, e = create_account(msg.get("username"), msg.get("pin"))
+                    # O campo do protocolo ainda se chama "pin" por historia:
+                    # renomea-lo exigiria mexer no cliente tambem. O CONTEUDO e
+                    # uma senha desde a troca do SP1.
+                    acc, e = await create_account(msg.get("username"), msg.get("pin"))
                     if acc:
-                        ok, pay = try_login(pid, acc["username"], msg.get("pin"))
+                        ok, pay = await try_login(pid, acc["username"], msg.get("pin"))
                         if ok:
                             account["name"] = pay["username"]
                         await ws.send(json.dumps({"type": "login_result", "ok": ok,
@@ -32101,7 +32112,7 @@ async def handler(ws):
                     continue
 
                 if t == "login":
-                    ok, pay = try_login(pid, msg.get("username"), msg.get("pin"))
+                    ok, pay = await try_login(pid, msg.get("username"), msg.get("pin"))
                     if ok:
                         account["name"] = pay["username"]
                     await ws.send(json.dumps({"type": "login_result", "ok": ok,

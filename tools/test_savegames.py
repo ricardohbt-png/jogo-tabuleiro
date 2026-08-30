@@ -5,6 +5,14 @@ except Exception: pass
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import server as S
 
+
+def _aw(coro):
+    """create_account e try_login viraram CORROTINAS no SP1 (o PBKDF2
+    foi para uma thread, para nao travar o laco de eventos). Chama-las
+    sem await devolveria um objeto corrotina em vez do par de retorno --
+    e as checagens virariam falso-positivo silencioso."""
+    return asyncio.run(coro)
+
 PASS = 0; FAIL = 0
 def check(name, cond):
     global PASS, FAIL
@@ -42,15 +50,15 @@ def main():
     old = S.ACCOUNTS_DIR
     S.ACCOUNTS_DIR = tmp
     try:
-        acc, err = S.create_account("Ricardo", "senha longa 1")
+        acc, err = _aw(S.create_account("Ricardo", "senha longa 1"))
         check("cria conta", acc is not None and err is None)
         check("apelido normalizado (minúsculas)", acc["username"] == "ricardo")
         check("arquivo existe", os.path.exists(S.account_path("ricardo")))
-        acc2, err2 = S.create_account("ricardo", "senha longa 5")
+        acc2, err2 = _aw(S.create_account("ricardo", "senha longa 5"))
         check("apelido duplicado recusa", acc2 is None and "existe" in (err2 or "").lower())
-        _, e3 = S.create_account("", "senha longa 1")
+        _, e3 = _aw(S.create_account("", "senha longa 1"))
         check("apelido vazio recusa", e3 is not None)
-        _, e4 = S.create_account("bob", "curta")
+        _, e4 = _aw(S.create_account("bob", "curta"))
         check("senha curta demais recusa", e4 is not None)
         loaded = S.load_account("RICARDO")
         check("load_account acha por apelido case-insensitive", loaded is not None)
@@ -119,19 +127,19 @@ def main():
     S.ACCOUNTS_DIR = tmp
     S.ACCOUNTS_ONLINE.clear()
     try:
-        S.create_account("ana", "senha da ana!")
-        ok, pay = S.try_login("pid1", "Ana", "senha da ana!")
+        _aw(S.create_account("ana", "senha da ana!"))
+        ok, pay = _aw(S.try_login("pid1", "Ana", "senha da ana!"))
         check("login com senha certa ok", ok is True and pay["username"] == "ana")
-        ok2, err2 = S.try_login("pid2", "ana", "senha errada!")
+        ok2, err2 = _aw(S.try_login("pid2", "ana", "senha errada!"))
         check("login com senha errada recusa", ok2 is False and "senha" in (err2 or "").lower())
-        ok3, err3 = S.try_login("pid3", "fantasma", "senha fantasma")
+        ok3, err3 = _aw(S.try_login("pid3", "fantasma", "senha fantasma"))
         check("login de conta inexistente recusa", ok3 is False)
         # já online noutra conexão
         S.ACCOUNTS_ONLINE["ana"] = "pid1"
-        ok4, err4 = S.try_login("pid9", "ana", "senha da ana!")
+        ok4, err4 = _aw(S.try_login("pid9", "ana", "senha da ana!"))
         check("conta já online recusa 2º login", ok4 is False and "uso" in (err4 or "").lower())
         # mesma conexão relogando é permitido (idempotente)
-        ok5, _ = S.try_login("pid1", "ana", "senha da ana!")
+        ok5, _ = _aw(S.try_login("pid1", "ana", "senha da ana!"))
         check("mesma conexão pode relogar", ok5 is True)
     finally:
         S.ACCOUNTS_DIR = olda
@@ -161,19 +169,19 @@ def main():
     S.ACCOUNTS_DIR = tmp
     S.ACCOUNTS_ONLINE.clear()
     try:
-        _, e1 = S.create_account("../evil", "senha longa 1")
+        _, e1 = _aw(S.create_account("../evil", "senha longa 1"))
         check("recusa apelido com ../", e1 is not None)
-        _, e2 = S.create_account("c:/temp/evil", "senha longa 1")
+        _, e2 = _aw(S.create_account("c:/temp/evil", "senha longa 1"))
         check("recusa apelido com caminho absoluto", e2 is not None)
-        _, e3 = S.create_account("bob smith", "senha longa 1")
+        _, e3 = _aw(S.create_account("bob smith", "senha longa 1"))
         check("recusa apelido com espaço", e3 is not None)
         check("load_savegame recusa id inválido", S.load_savegame("../foo") is None)
         check("load_savegame recusa id None", S.load_savegame(None) is None)
         # re-login pela mesma conexão libera a conta anterior
-        S.create_account("aaa", "senha fantasma")
-        S.create_account("bbb", "senha do bbb!")
-        S.try_login("pidX", "aaa", "senha fantasma")
-        S.try_login("pidX", "bbb", "senha do bbb!")
+        _aw(S.create_account("aaa", "senha fantasma"))
+        _aw(S.create_account("bbb", "senha do bbb!"))
+        _aw(S.try_login("pidX", "aaa", "senha fantasma"))
+        _aw(S.try_login("pidX", "bbb", "senha do bbb!"))
         check("re-login libera conta anterior",
               "aaa" not in S.ACCOUNTS_ONLINE and S.ACCOUNTS_ONLINE.get("bbb") == "pidX")
     finally:
