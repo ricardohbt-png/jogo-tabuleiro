@@ -8,10 +8,15 @@ services:
     branch: spike/deploy-render
     buildCommand: pip install -r requirements.txt
     startCommand: python server.py
-    # LFH_HOSTS fica DE FORA de proposito: o spike existe para descobrir se o
-    # padrao do Linux ("::") funciona neste conteiner. Se o bind falhar, a
-    # Task 6 manda acrescentar LFH_HOSTS=0.0.0.0 e reimplantar -- e esse e um
-    # dos resultados que o spike procura.
+    # OBRIGATORIO, e a descoberta do 1o deploy: sem healthCheckPath o Render
+    # sonda o servico com HEAD, e a lib websockets RECUSA todo metodo que nao
+    # seja GET dentro de http11.py -- antes do nosso process_request ser
+    # chamado, entao nao ha como tratar isso no nosso codigo. O servidor fecha
+    # a conexao sem responder nada, o Render espera e marca "==> Timed Out".
+    # Com healthCheckPath a sonda vira GET, que e o unico metodo que passa.
+    healthCheckPath: /index.html
+    # LFH_HOSTS fica DE FORA de proposito: o 1o deploy ja PROVOU que o padrao
+    # do Linux ("::") funciona neste conteiner -- o servidor aceitou conexoes.
     envVars:
       - key: PYTHON_VERSION
         value: "3.13.4"
