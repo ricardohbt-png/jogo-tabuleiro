@@ -89,9 +89,37 @@ def secao_contas():
         S.LOJA = velho; shutil.rmtree(tmp, ignore_errors=True)
 
 
+def secao_grupos():
+    print("\n[3] grupos")
+    tmp = tempfile.mkdtemp(); velho = S.LOJA
+    S.LOJA = S.LojaDocumentos(S.AdaptadorArquivo(tmp)); S.LOJA.carregar()
+    try:
+        g = S.create_group("Meu Grupo", "ana")
+        check("cria grupo", isinstance(g, dict) and bool(g.get("id")))
+        check("grupo está na loja", S.LOJA.ler("grupos", g["id"]) is not None)
+        check("load_group lê da loja", S.load_group(g["id"]) is not None)
+        check("id inválido devolve None", S.load_group("nao_e_id") is None)
+        check("id válido inexistente devolve None",
+              S.load_group("grp_zzzzzz") is None)
+
+        # _new_group_id usava os.path.exists: o id so iria a disco na descarga,
+        # entao dois grupos da MESMA sessao poderiam colidir.
+        ids = {S.create_group(f"G{i}", "ana")["id"] for i in range(20)}
+        check("20 grupos seguidos têm ids distintos (id livre vem do cache)",
+              len(ids) == 20)
+
+        S.LOJA.descarregar()
+        S.LOJA = S.LojaDocumentos(S.AdaptadorArquivo(tmp)); S.LOJA.carregar()
+        check("depois de reiniciar, o grupo continua lá",
+              S.load_group(g["id"]) is not None)
+    finally:
+        S.LOJA = velho; shutil.rmtree(tmp, ignore_errors=True)
+
+
 def main():
     secao_loja()
     secao_contas()
+    secao_grupos()
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

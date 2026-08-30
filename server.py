@@ -1688,19 +1688,14 @@ def _new_group_id():
 def load_group(gid):
     if not _gid_valido(gid):
         return None
-    try:
-        with open(group_path(gid), "r", encoding="utf-8") as f:
-            group = json.load(f)
-        return group if isinstance(group, dict) and group.get("id") == gid else None
-    except (OSError, ValueError):
-        return None
+    group = LOJA.ler("grupos", gid)
+    return group if isinstance(group, dict) and group.get("id") == gid else None
 
 def write_group(group):
     if not _gid_valido((group or {}).get("id")):
         return
-    os.makedirs(GROUPS_DIR, exist_ok=True)
     group["updated"] = _now_iso()
-    _atomic_write_json(group_path(group["id"]), group)
+    LOJA.gravar("grupos", group["id"], group)
 
 def create_group(name, owner):
     owner = _norm_username(owner)
