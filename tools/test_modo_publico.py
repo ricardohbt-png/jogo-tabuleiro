@@ -10,6 +10,20 @@ except Exception: pass
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import server as S
 
+
+# ─── Isolamento da LOJA (SP3) ────────────────────────────────────────────────
+# A partir do SP3, contas/savegames/grupos vivem na LOJA em memoria -- trocar
+# ACCOUNTS_DIR/SAVEGAMES_DIR nao isola mais nada por si so, porque o cache
+# continua o mesmo. Pilha porque alguns trechos trocam dois diretorios juntos.
+_PILHA_LOJA = []
+def _loja_tmp(raiz):
+    _PILHA_LOJA.append(S.LOJA)
+    S.LOJA = S.LojaDocumentos(S.AdaptadorArquivo(raiz))
+    S.LOJA.carregar()
+def _loja_volta():
+    if _PILHA_LOJA:
+        S.LOJA = _PILHA_LOJA.pop()
+
 PASS = 0; FAIL = 0
 def check(nome, cond, dica=""):
     global PASS, FAIL
@@ -27,7 +41,7 @@ async def secao_senha():
     """
     print("\n[1] senha substitui o PIN")
     tmp = tempfile.mkdtemp(); velho = S.ACCOUNTS_DIR
-    S.ACCOUNTS_DIR = tmp
+    S.ACCOUNTS_DIR = tmp; _loja_tmp(tmp)
     try:
         acc, err = await S.create_account("jogador", "1234")
         check("PIN de 4 dígitos é RECUSADO", acc is None and err, f"aceitou: {acc}")
@@ -50,7 +64,7 @@ async def secao_senha():
         check("verify_password recusa hash vazio",
               not S.verify_password("qualquer", ""))
     finally:
-        S.ACCOUNTS_DIR = velho; shutil.rmtree(tmp, ignore_errors=True)
+        S.ACCOUNTS_DIR = velho; _loja_volta(); shutil.rmtree(tmp, ignore_errors=True)
 
 
 async def secao_laco():
@@ -63,7 +77,7 @@ async def secao_laco():
           inspect.iscoroutinefunction(S.create_account))
 
     tmp = tempfile.mkdtemp(); velho = S.ACCOUNTS_DIR
-    S.ACCOUNTS_DIR = tmp
+    S.ACCOUNTS_DIR = tmp; _loja_tmp(tmp)
     try:
         await S.create_account("alvo", "senha bem longa")
         batendo = [True]; marcas = []
@@ -87,7 +101,7 @@ async def secao_laco():
               pior < 0.060,
               "o PBKDF2 está no laço: 6 tentativas travaram todos os jogadores")
     finally:
-        S.ACCOUNTS_DIR = velho; shutil.rmtree(tmp, ignore_errors=True)
+        S.ACCOUNTS_DIR = velho; _loja_volta(); shutil.rmtree(tmp, ignore_errors=True)
 
 
 def secao_limite():

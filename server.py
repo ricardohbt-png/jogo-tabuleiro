@@ -1571,6 +1571,11 @@ def verify_password(password, stored):
         return False
 
 ACCOUNTS_DIR = os.path.join(BASE_DIR, "accounts")
+
+# Loja global. O adaptador e trocado no boot quando LFH_DB_URL existe.
+# UMA INSTANCIA SO: duas teriam caches separados, e a ultima a descarregar
+# venceria, apagando o trabalho da outra em silencio.
+LOJA = LojaDocumentos(AdaptadorArquivo(BASE_DIR))
 GROUPS_DIR = os.path.join(BASE_DIR, "groups")
 
 # As identidades pertencem à conta, mas a ficha jogável pertence sempre a uma
@@ -1597,8 +1602,7 @@ def write_account(account):
     username = _norm_username((account or {}).get("username"))
     if not _username_valido(username):
         return
-    os.makedirs(ACCOUNTS_DIR, exist_ok=True)
-    _atomic_write_json(account_path(username), account)
+    LOJA.gravar("contas", username, account)
 
 def ensure_account_profile(account):
     """Migra contas antigas e garante os seis heróis-identidade da conta.
@@ -1631,24 +1635,22 @@ def load_account(username):
     u = _norm_username(username)
     if not _username_valido(u):
         return None
+    data = LOJA.ler("contas", u)
+    if not isinstance(data, dict) or not isinstance(data.get("password_hash"), str):
+        return None
     try:
-        with open(account_path(u), "r", encoding="utf-8") as f:
-            data = json.load(f)
-        if not isinstance(data, dict) or not isinstance(data.get("password_hash"), str):
-            return None
         if ensure_account_profile(data):
             write_account(data)
         return data
-    except FileNotFoundError:
-        return None
     except Exception as e:
         print(f"[accounts] conta {u} inválida ({e})")
         return None
 
 async def create_account(username, password):
-    """Cria a conta. Corrotina porque o PBKDF2 vai para uma thread: rodando no
-    laco, cada criacao travaria o jogo de todos por ~100 ms."""
-    """Cria a conta. Retorna (data, None) ou (None, mensagem_de_erro)."""
+    """Cria a conta. Retorna (data, None) ou (None, mensagem_de_erro).
+
+    Corrotina porque o PBKDF2 vai para uma thread: rodando no laco, cada
+    criacao travaria o jogo de todos por ~100 ms."""
     u = _norm_username(username)
     if not _username_valido(u):
         return None, "Apelido inválido (use letras minúsculas, números e _; 1–20)."
@@ -1658,8 +1660,9 @@ async def create_account(username, password):
     # protege mais do que a variedade forcada.
     if len(senha) < SENHA_MIN:
         return None, T("erro.senha_curta", minimo=SENHA_MIN)
-    os.makedirs(ACCOUNTS_DIR, exist_ok=True)
-    if os.path.exists(account_path(u)):
+    # Na LOJA, e nao em disco: um apelido criado nesta sessao so apareceria no
+    # arquivo DEPOIS da descarga -- duas pessoas poderiam pegar o mesmo.
+    if LOJA.ler("contas", u) is not None:
         return None, "Apelido já existe."
     ph = await asyncio.to_thread(hash_password, senha)
     data = {"username": u, "password_hash": ph, "created": _now_iso()}
@@ -1678,7 +1681,8 @@ def _gid_valido(gid):
 def _new_group_id():
     while True:
         gid = "grp_" + "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
-        if not os.path.exists(group_path(gid)):
+        # Idem: o id so iria a disco na descarga.
+        if LOJA.ler("grupos", gid) is None:
             return gid
 
 def load_group(gid):
@@ -1843,7 +1847,7 @@ def _sid_valido(sid):
 def _new_savegame_id():
     while True:
         sid = "sg_" + "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
-        if not os.path.exists(savegame_path(sid)):
+        if LOJA.ler("savegames", sid) is None:
             return sid
 
 def _savegame_valid_shape(d):

@@ -13,6 +13,20 @@ def _aw(coro):
     e as checagens virariam falso-positivo silencioso."""
     return asyncio.run(coro)
 
+
+# ─── Isolamento da LOJA (SP3) ────────────────────────────────────────────────
+# A partir do SP3, contas/savegames/grupos vivem na LOJA em memoria -- trocar
+# ACCOUNTS_DIR/SAVEGAMES_DIR nao isola mais nada por si so, porque o cache
+# continua o mesmo. Pilha porque alguns trechos trocam dois diretorios juntos.
+_PILHA_LOJA = []
+def _loja_tmp(raiz):
+    _PILHA_LOJA.append(S.LOJA)
+    S.LOJA = S.LojaDocumentos(S.AdaptadorArquivo(raiz))
+    S.LOJA.carregar()
+def _loja_volta():
+    if _PILHA_LOJA:
+        S.LOJA = _PILHA_LOJA.pop()
+
 PASS = 0; FAIL = 0
 def check(name, cond):
     global PASS, FAIL
@@ -48,12 +62,18 @@ def main():
     print("\n[3] CRUD de contas")
     tmp = tempfile.mkdtemp()
     old = S.ACCOUNTS_DIR
-    S.ACCOUNTS_DIR = tmp
+    S.ACCOUNTS_DIR = tmp; _loja_tmp(tmp)
     try:
         acc, err = _aw(S.create_account("Ricardo", "senha longa 1"))
         check("cria conta", acc is not None and err is None)
         check("apelido normalizado (minúsculas)", acc["username"] == "ricardo")
-        check("arquivo existe", os.path.exists(S.account_path("ricardo")))
+        # A conta vive na LOJA; so vai a disco na descarga (SP3).
+        check("a conta está na loja", S.LOJA.ler("contas", "ricardo") is not None)
+        S.LOJA.descarregar()
+        # O adaptador grava em <raiz>/accounts/, entao account_path() --
+        # que aponta direto para ACCOUNTS_DIR -- nao serve mais de sonda.
+        check("e chega ao disco na descarga",
+              os.path.exists(os.path.join(tmp, "accounts", "ricardo.json")))
         acc2, err2 = _aw(S.create_account("ricardo", "senha longa 5"))
         check("apelido duplicado recusa", acc2 is None and "existe" in (err2 or "").lower())
         _, e3 = _aw(S.create_account("", "senha longa 1"))
@@ -68,14 +88,14 @@ def main():
             f.write("{lixo}")
         check("conta corrompida → None", S.load_account("corrompida") is None)
     finally:
-        S.ACCOUNTS_DIR = old
+        S.ACCOUNTS_DIR = old; _loja_volta()
         shutil.rmtree(tmp, ignore_errors=True)
 
     # [4] savegames
     print("\n[4] CRUD de savegames")
     tmp = tempfile.mkdtemp()
     old = S.SAVEGAMES_DIR
-    S.SAVEGAMES_DIR = tmp
+    S.SAVEGAMES_DIR = tmp; _loja_tmp(tmp)
     try:
         sg = S.create_savegame("Campanha Teste", "ricardo", "campaign", "elara.json", True)
         sid = sg["id"]
@@ -112,7 +132,7 @@ def main():
         ok2, _ = S.delete_savegame(sgp["id"], "ricardo")
         check("delete pelo dono ok", ok2 is True and not os.path.exists(S.savegame_path(sgp["id"])))
     finally:
-        S.SAVEGAMES_DIR = old
+        S.SAVEGAMES_DIR = old; _loja_volta()
         shutil.rmtree(tmp, ignore_errors=True)
 
     # [5] travas
@@ -124,7 +144,7 @@ def main():
     print("\n[6] Login")
     tmp = tempfile.mkdtemp()
     olda = S.ACCOUNTS_DIR
-    S.ACCOUNTS_DIR = tmp
+    S.ACCOUNTS_DIR = tmp; _loja_tmp(tmp)
     S.ACCOUNTS_ONLINE.clear()
     try:
         _aw(S.create_account("ana", "senha da ana!"))
@@ -142,7 +162,7 @@ def main():
         ok5, _ = _aw(S.try_login("pid1", "ana", "senha da ana!"))
         check("mesma conexão pode relogar", ok5 is True)
     finally:
-        S.ACCOUNTS_DIR = olda
+        S.ACCOUNTS_DIR = olda; _loja_volta()
         S.ACCOUNTS_ONLINE.clear()
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -150,7 +170,7 @@ def main():
     print("\n[7] Criar savegame (validação)")
     tmp = tempfile.mkdtemp()
     olds = S.SAVEGAMES_DIR
-    S.SAVEGAMES_DIR = tmp
+    S.SAVEGAMES_DIR = tmp; _loja_tmp(tmp)
     try:
         sg, e = S.try_create_savegame("ricardo", "Nova", "campaign", "elara.json", False)
         check("cria com conta logada", sg is not None and e is None)
@@ -159,14 +179,14 @@ def main():
         sg3, e3 = S.try_create_savegame("ricardo", "", "campaign", "elara.json", False)
         check("recusa nome vazio", sg3 is None and e3 is not None)
     finally:
-        S.SAVEGAMES_DIR = olds
+        S.SAVEGAMES_DIR = olds; _loja_volta()
         shutil.rmtree(tmp, ignore_errors=True)
 
     # [8] validação de segurança (path traversal)
     print("\n[8] Segurança de caminhos")
     tmp = tempfile.mkdtemp()
     olda = S.ACCOUNTS_DIR
-    S.ACCOUNTS_DIR = tmp
+    S.ACCOUNTS_DIR = tmp; _loja_tmp(tmp)
     S.ACCOUNTS_ONLINE.clear()
     try:
         _, e1 = _aw(S.create_account("../evil", "senha longa 1"))
@@ -185,7 +205,7 @@ def main():
         check("re-login libera conta anterior",
               "aaa" not in S.ACCOUNTS_ONLINE and S.ACCOUNTS_ONLINE.get("bbb") == "pidX")
     finally:
-        S.ACCOUNTS_DIR = olda
+        S.ACCOUNTS_DIR = olda; _loja_volta()
         S.ACCOUNTS_ONLINE.clear()
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -225,7 +245,7 @@ def main():
     # [11] bind conta↔personagem no lobby
     print("\n[11] Bind de personagem no savegame")
     import asyncio as _aio
-    tmp = tempfile.mkdtemp(); olds = S.SAVEGAMES_DIR; S.SAVEGAMES_DIR = tmp
+    tmp = tempfile.mkdtemp(); olds = S.SAVEGAMES_DIR; S.SAVEGAMES_DIR = tmp; _loja_tmp(tmp)
     try:
         r = GameRoom("TST1")
         async def _noop(*a, **k): pass
@@ -249,11 +269,11 @@ def main():
         _aio.run(r.select_class("j1", "mage"))
         check("conta vinculada é forçada à sua classe", r.players["j1"]["class_id"] == "warrior")
     finally:
-        S.SAVEGAMES_DIR = olds; shutil.rmtree(tmp, ignore_errors=True)
+        S.SAVEGAMES_DIR = olds; _loja_volta(); shutil.rmtree(tmp, ignore_errors=True)
 
     # [12] overlay no start + checkpoint na cidade
     print("\n[12] Overlay e checkpoint")
-    tmp = tempfile.mkdtemp(); olds = S.SAVEGAMES_DIR; S.SAVEGAMES_DIR = tmp
+    tmp = tempfile.mkdtemp(); olds = S.SAVEGAMES_DIR; S.SAVEGAMES_DIR = tmp; _loja_tmp(tmp)
     try:
         r = GameRoom("TST2")
         async def _noop(*a, **k): pass
@@ -282,11 +302,11 @@ def main():
         check("checkpoint preservou ausente", "mage" not in disco["characters"])
         check("checkpoint gravou fase", disco["campaign_phase"] == 2)
     finally:
-        S.SAVEGAMES_DIR = olds; shutil.rmtree(tmp, ignore_errors=True)
+        S.SAVEGAMES_DIR = olds; _loja_volta(); shutil.rmtree(tmp, ignore_errors=True)
 
     # [13] retomar savegame (helper puro)
     print("\n[13] Retomar savegame")
-    tmp = tempfile.mkdtemp(); olds = S.SAVEGAMES_DIR; S.SAVEGAMES_DIR = tmp
+    tmp = tempfile.mkdtemp(); olds = S.SAVEGAMES_DIR; S.SAVEGAMES_DIR = tmp; _loja_tmp(tmp)
     S.SAVEGAMES_IN_USE.clear()
     try:
         sg = S.create_savegame("Jogo", "ricardo", "campaign", "elara.json", True)
@@ -304,12 +324,12 @@ def main():
         room4, e4 = S.try_open_savegame_room(None, sg["id"], rooms)
         check("recusa sem login", room4 is None)
     finally:
-        S.SAVEGAMES_DIR = olds; S.SAVEGAMES_IN_USE.clear()
+        S.SAVEGAMES_DIR = olds; _loja_volta(); S.SAVEGAMES_IN_USE.clear()
         shutil.rmtree(tmp, ignore_errors=True)
 
     # [14] a mesma classe pode existir em savegames diferentes (trava global não vale c/ savegame)
     print("\n[14] Classe repetida entre savegames")
-    tmp = tempfile.mkdtemp(); olds = S.SAVEGAMES_DIR; S.SAVEGAMES_DIR = tmp
+    tmp = tempfile.mkdtemp(); olds = S.SAVEGAMES_DIR; S.SAVEGAMES_DIR = tmp; _loja_tmp(tmp)
     S.CHARACTERS_IN_USE.clear()
     try:
         async def _noop(*a, **k): pass
@@ -331,12 +351,12 @@ def main():
         _aio.run(rB.select_class("b1", "warrior"))
         check("sala B também vincula warrior (savegames independentes)", rB.players["b1"]["class_id"] == "warrior")
     finally:
-        S.SAVEGAMES_DIR = olds; S.CHARACTERS_IN_USE.clear()
+        S.SAVEGAMES_DIR = olds; _loja_volta(); S.CHARACTERS_IN_USE.clear()
         shutil.rmtree(tmp, ignore_errors=True)
 
     # [15] lobby_state carrega savegame + conta por jogador
     print("\n[15] Lobby com contexto de savegame")
-    tmp = tempfile.mkdtemp(); olds = S.SAVEGAMES_DIR; S.SAVEGAMES_DIR = tmp
+    tmp = tempfile.mkdtemp(); olds = S.SAVEGAMES_DIR; S.SAVEGAMES_DIR = tmp; _loja_tmp(tmp)
     try:
         r = GameRoom("LOBS")
         cap = {}
@@ -361,11 +381,11 @@ def main():
         _aio.run(r2.broadcast_lobby())
         check("sem savegame → savegame None", cap2.get("savegame") is None)
     finally:
-        S.SAVEGAMES_DIR = olds; shutil.rmtree(tmp, ignore_errors=True)
+        S.SAVEGAMES_DIR = olds; _loja_volta(); shutil.rmtree(tmp, ignore_errors=True)
 
     # [16] checkpoint ANTES da aventura (start_game + enter_dungeon) + magias do lobby
     print("\n[16] Checkpoint antes da aventura")
-    tmp = tempfile.mkdtemp(); olds = S.SAVEGAMES_DIR; S.SAVEGAMES_DIR = tmp
+    tmp = tempfile.mkdtemp(); olds = S.SAVEGAMES_DIR; S.SAVEGAMES_DIR = tmp; _loja_tmp(tmp)
     try:
         def _sala_pronta(sg):
             r = GameRoom("TST3")
@@ -419,11 +439,11 @@ def main():
         check("retomada mantém as magias salvas (ignora re-escolha do lobby)",
               r2.players["j2"]["magias_conhecidas"] == ["relampago", "manto_escuridao"])
     finally:
-        S.SAVEGAMES_DIR = olds; shutil.rmtree(tmp, ignore_errors=True)
+        S.SAVEGAMES_DIR = olds; _loja_volta(); shutil.rmtree(tmp, ignore_errors=True)
 
     # [17] Guilda em jogo salvo persiste no savegame, NÃO no save global
     print("\n[17] Guilda × jogo salvo")
-    tmp = tempfile.mkdtemp(); olds = S.SAVEGAMES_DIR; S.SAVEGAMES_DIR = tmp
+    tmp = tempfile.mkdtemp(); olds = S.SAVEGAMES_DIR; S.SAVEGAMES_DIR = tmp; _loja_tmp(tmp)
     tmpg = tempfile.mkdtemp(); oldg = S.GUILD_SAVE_DIR; S.GUILD_SAVE_DIR = tmpg
     try:
         async def _noop(*a, **k): pass
@@ -455,7 +475,7 @@ def main():
         check("legado (sem savegame) grava o save global",
               os.path.exists(S.guild_save_path("warrior")))
     finally:
-        S.SAVEGAMES_DIR = olds; S.GUILD_SAVE_DIR = oldg
+        S.SAVEGAMES_DIR = olds; _loja_volta(); S.GUILD_SAVE_DIR = oldg
         shutil.rmtree(tmp, ignore_errors=True); shutil.rmtree(tmpg, ignore_errors=True)
 
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")

@@ -60,8 +60,38 @@ def secao_loja():
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def secao_contas():
+    print("\n[2] contas saem do disco e vão para a loja")
+    import asyncio
+    tmp = tempfile.mkdtemp(); velho = S.LOJA
+    S.LOJA = S.LojaDocumentos(S.AdaptadorArquivo(tmp)); S.LOJA.carregar()
+    try:
+        acc, err = asyncio.run(S.create_account("ana", "senha bem longa"))
+        check("cria conta", acc is not None, str(err))
+        check("a conta está na loja", S.LOJA.ler("contas", "ana") is not None)
+        check("load_account lê da loja (e normaliza o apelido)",
+              S.load_account("ANA") is not None)
+        check("nada foi a disco ainda — só na descarga",
+              not os.path.exists(os.path.join(tmp, "accounts", "ana.json")))
+
+        S.LOJA.descarregar()
+        check("depois da descarga, está em disco",
+              os.path.exists(os.path.join(tmp, "accounts", "ana.json")))
+
+        check("conta inexistente devolve None", S.load_account("fantasma") is None)
+        check("apelido inválido devolve None", S.load_account("../evil") is None)
+
+        # o que prova a persistencia: uma loja NOVA sobre o mesmo diretorio
+        S.LOJA = S.LojaDocumentos(S.AdaptadorArquivo(tmp)); S.LOJA.carregar()
+        check("uma loja nova (como se o processo tivesse reiniciado) acha a conta",
+              S.load_account("ana") is not None)
+    finally:
+        S.LOJA = velho; shutil.rmtree(tmp, ignore_errors=True)
+
+
 def main():
     secao_loja()
+    secao_contas()
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
