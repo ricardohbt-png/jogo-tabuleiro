@@ -101,10 +101,26 @@ assinatura — e é o que faz as 21 chamadas de escrita não mudarem.
 De quebra, elimina a leitura de disco que hoje acontece a cada `list_savegames`,
 que abre e parseia **todos** os savegames a cada chamada.
 
-### 4. Descarga em segundo plano
+### 4. Descarga dirigida por EVENTO, não por relógio
 
-`gravar` atualiza o cache e marca a chave como suja. Uma tarefa descarrega as
-sujas a cada poucos segundos, e também **antes de encerrar** numa saída limpa.
+`gravar` atualiza o cache e marca a chave como suja. A descarga acontece:
+
+- **nos pontos seguros do próprio jogo** — volta à cidade, fim de fase — que é
+  onde o jogo já grava hoje, agrupando tudo que estiver sujo numa ida só;
+- **antes de encerrar**, numa saída limpa;
+- e, como rede de segurança, num intervalo **longo** (não segundos) para o caso
+  de uma marca suja não coincidir com nenhum ponto seguro.
+
+**Por que não um temporizador curto** (era o que este spec dizia numa versão
+anterior): bancos gerenciados gratuitos cobram por *tempo de computação*, e o
+banco fica acordado enquanto recebe consultas. Descarregar a cada poucos
+segundos manteria o banco ligado **durante a sessão inteira de jogo** — duas
+horas jogando virariam duas horas de computação, e o teto mensal do plano
+gratuito sumiria com pouco mais de três horas de jogo por dia.
+
+Dirigida por evento, a mesma sessão custa **minutos**: o banco acorda em cada
+ponto seguro e volta a dormir. A diferença não é otimização — é o que decide se
+o plano gratuito aguenta ou não.
 
 É aqui que mora a janela de perda que o autor aceitou.
 
@@ -124,14 +140,43 @@ trabalho da outra em silêncio. O plano gratuito roda **uma instância**, e isso
 deixa de ser detalhe de infraestrutura para virar **restrição do desenho**:
 precisa estar escrito no código, não só no painel do provedor.
 
-## Provedor
+## Provedor: deliberadamente NÃO fixado
 
-**Neon** (Postgres gerenciado): 0,5 GB, sem cartão, hiberna em 5 min e acorda em
-centenas de milissegundos. Nossos 1,3 MB cabem 380×. A hibernação não incomoda
-porque a descarga é de fundo — ninguém espera por ela.
+Ambos os candidatos são Postgres — mesmo driver, mesma tabela, mesmas consultas.
+**Trocar de um para outro é trocar a string de conexão**, não reescrever código.
+Fixar um no desenho seria abrir mão de graça da folga que a interface já dá.
+
+| | Neon | Supabase |
+|---|---|---|
+| Espaço | 0,5 GB (380× de folga) | 500 MB (mesma folga) |
+| O que realmente aperta | **100 h de computação/mês** | 7 dias parado → pausa manual |
+| Cartão | não pede | não pede |
+
+**A dimensão que aperta é diferente em cada um, e o nosso perfil é de rajadas.**
+No espaço temos folga enorme nos dois. O Neon cobra tempo de computação, que é
+justamente o que um jogo consome ao manter o banco acordado durante a partida —
+por isso a descarga por evento (seção 4) importa mais lá. O Supabase não tem esse
+teto, mas pausa o projeto após 7 dias sem uso, com despausa manual.
+
+**Recomendação: Supabase**, porque cobra numa dimensão que quase não nos atinge e
+dá folga onde a gente gasta. Mas a escolha não bloqueia nada: o desenvolvimento
+local não usa banco nenhum, e o adaptador é o mesmo.
 
 Verificado em 2026-08-30; planos gratuitos mudam, então reconfirmar antes de
 implantar.
+
+### Nota: o plano pago do Render tornaria isto desnecessário
+
+Levantado durante o desenho e **descartado por decisão do autor**, que preferiu
+manter o SP3: um plano pago do Render oferece **disco persistente**, o que faria
+os arquivos sobreviverem ao redeploy sem banco nenhum — e de quebra removeria a
+hibernação (os 21–62 s medidos no SP0) e daria snapshots diários. A limitação de
+"uma instância só" que ele impõe é exatamente a restrição que este desenho já
+declarava.
+
+Fica registrado porque, se o projeto vier a pagar hospedagem, **este
+sub-projeto inteiro pode ser aposentado** — e é melhor saber disso de antemão
+do que descobrir depois de mantê-lo por anos.
 
 ## O que NÃO pode mudar
 
