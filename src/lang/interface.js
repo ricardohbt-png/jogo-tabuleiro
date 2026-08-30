@@ -1372,8 +1372,8 @@ window.LANG_INTERFACE = {
       "pt": "⚙️ <b style=\"color:#6fc96f;\">Como jogar:</b> Clique duas vezes em <code style=\"background:#1a2a1a;padding:1px 5px;border-radius:3px;color:#a0e0a0;\">iniciar.bat</code> para iniciar o servidor e abrir o jogo automaticamente."
     },
     "ui.conta.criar_agora": {
-      "en": "That account does not exist. Create it now with this nickname and PIN?",
-      "pt": "Conta não existe. Criar agora com esse apelido e PIN?"
+      "en": "That account does not exist. Create it now with this nickname and password?",
+      "pt": "Conta não existe. Criar agora com esse apelido e senha?"
     },
     "ui.conta.senha_curta": {
       "en": "The password must be at least 8 characters.",
