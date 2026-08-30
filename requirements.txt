@@ -1,1 +1,8 @@
+# Servidor HTTP + WebSocket. E a camada de servico do jogo.
+aiohttp>=3.14.3
+
+# Cliente de WebSocket, usado APENAS por tools/medir_cold_start.py.
+# O SERVIDOR nao usa mais: a lib recusa todo metodo HTTP != GET dentro do
+# proprio parser, o que a impede de responder as sondas HEAD das plataformas
+# de hospedagem. Ver docs/superpowers/specs/2026-08-29-camada-de-rede-aiohttp-design.md
 websockets==16.0

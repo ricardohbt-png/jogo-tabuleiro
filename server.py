@@ -3,7 +3,7 @@ Legends for Hire - WebSocket Game Server
 Multiplayer RPG board game (Hero Quest / D&D style)
 Up to 6 players + GM (computer)
 
-Requirements: pip install websockets
+Requirements: python -m pip install -r requirements.txt
 Run: python server.py
 """
 
@@ -14,7 +14,6 @@ import gzip
 import hashlib
 import hmac
 import shutil
-import websockets
 import json
 import math
 import mimetypes
@@ -28,8 +27,8 @@ import traceback
 import unicodedata
 import urllib.parse
 from copy import deepcopy
-from websockets.http11 import Response
-from websockets.datastructures import Headers
+import aiohttp
+from aiohttp import web
 
 # â”€â”€â”€ MAP CONSTANTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -31735,6 +31734,40 @@ def _key(v):
     return v
 
 
+class _WS:
+    """Faz o WebSocketResponse do aiohttp parecer o objeto que o jogo ja usa.
+
+    O resto do server.py toca no socket por apenas DOIS caminhos: `await
+    ws.send(texto)`, em 41 pontos, e `async for raw in ws`, em um. Medido com
+    grep no arquivo inteiro: sao 41 ocorrencias de `ws.`, TODAS `ws.send` --
+    nao ha close, ping nem remote_address.
+
+    Por isso um adaptador de dez linhas cobre 100% da superficie. Ele evita
+    reescrever os 41 pontos (onde um esquecimento so apareceria quando aquela
+    mensagem especifica fosse disparada em jogo) e isola a biblioteca: numa
+    proxima troca de camada, so este bloco se mexe."""
+    __slots__ = ("_ws",)
+
+    def __init__(self, ws):
+        self._ws = ws
+
+    async def send(self, texto):
+        await self._ws.send_str(texto)
+
+    def __aiter__(self):
+        return self._iterar()
+
+    async def _iterar(self):
+        # So TEXT interessa: o cliente manda JSON. BINARY e ignorada, e
+        # ERROR/CLOSE saem do laco -- que e exatamente o que o
+        # `async for raw in ws` de hoje faz quando a conexao cai.
+        async for msg in self._ws:
+            if msg.type == aiohttp.WSMsgType.TEXT:
+                yield msg.data
+            elif msg.type in (aiohttp.WSMsgType.ERROR, aiohttp.WSMsgType.CLOSE):
+                break
+
+
 async def handler(ws):
     global SCENE_LIBRARY
     pid = new_id()
@@ -32570,7 +32603,10 @@ async def handler(ws):
                 except Exception:
                     pass
 
-    except websockets.exceptions.ConnectionClosed:
+    # NAO acrescente asyncio.CancelledError aqui: engoli-lo quebra o
+    # encerramento do processo e o cancelamento de tasks. Com o adaptador,
+    # uma desconexao normal apenas ENCERRA o `async for`, sem excecao.
+    except ConnectionResetError:
         pass
     finally:
         LANG_BY_PID.pop(pid, None)
@@ -34914,27 +34950,30 @@ def _listen_hosts(env=None, plataforma=None):
 SERVER_HOSTS = _listen_hosts()
 
 def _http(status, reason, body, ctype="text/plain; charset=utf-8", extra=None):
+    """Resposta HTTP estatica.
+
+    NAO ha mais "Connection: close". Ele existia so para contornar a lib
+    websockets, que FECHAVA o socket depois de responder: sem o cabecalho, o
+    navegador supunha keep-alive, guardava o socket no pool e reusava numa
+    requisicao posterior que morria na rede -- aparecia como falha
+    intermitente nos .glb carregados sob demanda. Com HTTP de verdade,
+    conexoes persistentes voltam a funcionar, e as dezenas de arquivos de uma
+    entrada de masmorra param de pagar um handshake TLS cada uma.
+
+    Content-Length e definido pelo aiohttp a partir do corpo."""
     if isinstance(body, str):
         body = body.encode("utf-8")
-    headers = Headers({"Content-Type": ctype,
-                       "Content-Length": str(len(body)),
-                       # no-cache = "pode guardar, mas revalide sempre". Com
-                       # ETag/Last-Modified (abaixo) a revalidação de um arquivo
-                       # inalterado custa um 304 vazio em vez do arquivo inteiro —
-                       # é o que tira a rajada de dezenas de MB do modo teste, que
-                       # revela o mapa todo de uma vez. Arte trocada em disco muda
-                       # o mtime, então continua aparecendo na primeira recarga.
-                       "Cache-Control": "no-cache",
-                       # A lib websockets FECHA a conexão depois de responder. Sem
-                       # este cabeçalho o navegador supõe keep-alive (padrão do
-                       # HTTP/1.1), guarda o socket no pool e reusa numa requisição
-                       # posterior — que morre na rede. Aparecia como falha
-                       # intermitente nos pedidos TARDIOS: os .glb carregados sob
-                       # demanda (objetos e miniaturas de monstro).
-                       "Connection": "close"})
+    resp = web.Response(status=status, reason=reason, body=body)
+    # Sobrescrever DEPOIS de construir: o aiohttp poe um Content-Type proprio
+    # ao receber body=, e o nosso ja vem montado com o charset por _serve_static.
+    resp.headers["Content-Type"] = ctype
+    # no-cache = "pode guardar, mas revalide sempre". Com ETag/Last-Modified a
+    # revalidacao de um arquivo inalterado custa um 304 vazio em vez do arquivo
+    # inteiro. Arte trocada em disco muda o mtime e reaparece na 1a recarga.
+    resp.headers["Cache-Control"] = "no-cache"
     for k, v in (extra or {}).items():
-        headers[k] = v
-    return Response(status, reason, headers, body)
+        resp.headers[k] = v
+    return resp
 
 # â”€â”€â”€ Upload de mÃ­dia da histÃ³ria (editor â†’ assets/story/) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 STORY_DIR = os.path.join(BASE_DIR, "assets", "story")
@@ -35443,28 +35482,45 @@ def _preview_dungeon_state(defn):
     return True, payload, avisos
 
 
-async def process_request(connection, request):
-    """Chamado a cada requisição na porta do servidor. Handshake de WebSocket
-    (header `Upgrade: websocket`) → segue o fluxo normal de jogo (return None).
-    Qualquer outra coisa é um navegador pedindo a página/recursos → serve estático.
+async def _rota(request):
+    """Rota unica do servidor. Decide pelo header `Upgrade`, exatamente como o
+    process_request antigo fazia.
 
-    É `async` de propósito: `_serve_static` lê o arquivo INTEIRO do disco, e
-    alguns .glb passam de 5 MB. Feito no laço de eventos, esse read bloqueia
-    todo o servidor — inclusive os handshakes das outras conexões que estão
-    chegando na mesma rajada (o teste do editor revela o mapa inteiro e pede
-    dezenas de arquivos ao mesmo tempo, sem cache). Numa thread, o laço segue
-    aceitando conexões enquanto o disco trabalha. A lib aguarda a corrotina
-    (`response = await response` em ServerConnection.handshake)."""
+    A rota e "/" com cauda livre, e NAO um caminho proprio para o WebSocket,
+    porque o cliente conecta em wss://<host> SEM CAMINHO -- defaultServerUrl()
+    em game.js monta so protocolo + host. Mover o WebSocket para /ws quebraria
+    todos os clientes."""
     if request.headers.get("Upgrade", "").lower() == "websocket":
-        return None
-    return await asyncio.to_thread(_serve_static, request)
+        ws = web.WebSocketResponse(max_msg_size=34 * 1024 * 1024)
+        await ws.prepare(request)
+        await handler(_WS(ws))
+        return ws
+
+    if request.method not in ("GET", "HEAD"):
+        # Antes isto fechava a conexao sem responder NADA, e era o que fazia o
+        # deploy morrer: a deteccao de porta do Render sonda com HEAD.
+        return _http(405, "Method Not Allowed", "405 Method Not Allowed")
+
+    # _serve_static le o arquivo INTEIRO do disco, e alguns .glb passam de 5 MB.
+    # No laco de eventos isso bloquearia o servidor todo -- inclusive as outras
+    # conexoes chegando na mesma rajada. Numa thread, o laco segue atendendo.
+    resp = await asyncio.to_thread(_serve_static, request)
+    if request.method == "HEAD":
+        # HEAD nao leva corpo. O que importa e a linha de status: e so isso que
+        # a sonda da plataforma le.
+        resp.body = b""
+    return resp
 
 # â”€â”€â”€ MAIN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async def main():
     # Force UTF-8 on Windows terminals (prevents UnicodeEncodeError with special chars)
     try:
-        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        # line_buffering: sem isto a saida fica presa no buffer quando vai
+        # para um cano -- o caso na plataforma de hospedagem. Medido: o log
+        # do servidor saia VAZIO; a linha 'escutando em:' so aparecia com -u.
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace',
+                               line_buffering=True)
     except (AttributeError, TypeError):
         pass
     try:
@@ -35497,20 +35553,43 @@ async def main():
     print("  Os amigos so abrem o link, escolhem o nome e entram pelo codigo.")
     print("=" * 60)
 
-    # process_request serve os arquivos do cliente na mesma porta â†’ um Ãºnico
-    # tÃºnel https cobre pÃ¡gina + wss, sem mixed content nem digitar endereÃ§o.
+    # Rota unica na mesma porta: um unico tunel https cobre pagina + wss, sem
+    # mixed content nem endereco digitado a mao.
+    #
     # ESCUTAR TAMBEM EM IPv6 e o que torna "localhost" barato no Windows.
     # Escutando so em "0.0.0.0", o nome localhost -- que e o que iniciar.bat
     # abre -- resolve primeiro para ::1, leva recusa, e o navegador so entao
-    # cai para 127.0.0.1: ~207 ms perdidos ANTES do primeiro byte. Como _http
-    # manda "Connection: close" (a lib fecha o socket depois de responder),
-    # cada arquivo estatico abre uma conexao nova e paga esse pedagio de novo
-    # -- ~60 arquivos numa entrada de masmorra viravam segundos de espera pura.
+    # cai para 127.0.0.1: ~207 ms perdidos ANTES do primeiro byte.
     # Medido: connect por localhost 207 ms -> 0,7 ms.
-    async with websockets.serve(handler, SERVER_HOSTS, SERVER_PORT,
-                                process_request=process_request,
-                                max_size=34 * 1024 * 1024):
-        await asyncio.Future()
+    #
+    # O paragrafo que ficava aqui sobre "Connection: close" saiu na troca para
+    # aiohttp: as conexoes voltaram a ser persistentes, e os ~60 arquivos de
+    # uma entrada de masmorra deixaram de abrir uma conexao cada um.
+    app = web.Application()
+    app.router.add_route("*", "/{cauda:.*}", _rota)
+    runner = web.AppRunner(app, access_log=None)
+    await runner.setup()
+
+    # Um site por endereco. No Windows sao DOIS (o socket IPv6 nao aceita IPv4
+    # por causa do IPV6_V6ONLY, e escutar so em "::" deixaria 127.0.0.1 sem
+    # servidor -- os ~207 ms de fallback do nome "localhost" que o
+    # tools/test_rede_local.py trava). No Linux e so "::".
+    subiu = []
+    for host in SERVER_HOSTS:
+        try:
+            site = web.TCPSite(runner, host, SERVER_PORT)
+            await site.start()
+            subiu.append(host)
+        except OSError as e:
+            print(f"  [aviso] nao consegui escutar em {host}: {e}", file=sys.stderr)
+    if not subiu:
+        print("  [ERRO] nenhum endereco de escuta funcionou. "
+              "Tente LFH_HOSTS=0.0.0.0", file=sys.stderr)
+        return
+    # Deliberado: no spike SP0 o log da plataforma foi a UNICA janela para
+    # diagnosticar o bind, e nao havia nada impresso.
+    print(f"  escutando em: {', '.join(subiu)}")
+    await asyncio.Future()
 
 if __name__ == "__main__":
     asyncio.run(main())
