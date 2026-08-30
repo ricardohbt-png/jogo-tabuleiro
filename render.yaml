@@ -1,0 +1,17 @@
+# Config DESCARTAVEL do spike SP0. Removida na Task 7, junto com o servico.
+# Ver docs/superpowers/specs/2026-08-28-hospedagem-online-design.md
+services:
+  - type: web
+    name: lfh-spike
+    runtime: python
+    plan: free
+    branch: spike/deploy-render
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py
+    # LFH_HOSTS fica DE FORA de proposito: o spike existe para descobrir se o
+    # padrao do Linux ("::") funciona neste conteiner. Se o bind falhar, a
+    # Task 6 manda acrescentar LFH_HOSTS=0.0.0.0 e reimplantar -- e esse e um
+    # dos resultados que o spike procura.
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.13.4"
