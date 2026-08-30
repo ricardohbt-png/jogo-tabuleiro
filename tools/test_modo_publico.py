@@ -145,11 +145,68 @@ def secao_ip():
           S._ip_do_cliente(r2, publico=True) == "10.0.0.1")
 
 
+def secao_portao():
+    """[5] o modo público desliga os editores."""
+    print("\n[5] modo público desliga os editores")
+    ESCRITA = [
+        "upload_story", "upload_scene_media", "save_scenes", "upload_tavern_art",
+        "upload_city_art", "upload_refugio_art", "save_world_cities",
+        "save_city_shops", "save_world_adventures", "upload_dungeon",
+        "upload_campaign", "upload_custom_monster", "upload_custom_item",
+        "upload_item_art", "upload_monster_art", "upload_prisoner",
+        "objeto_upload",
+    ]
+    check("a lista tem os 17 handlers de escrita", len(ESCRITA) == 17,
+          f"tem {len(ESCRITA)}")
+    faltando = [t for t in ESCRITA if not S._handler_bloqueado_no_publico(t)]
+    check("todos os 17 são recusados no modo público", not faltando,
+          f"passaram pelo portão: {faltando}")
+    check("um handler de LEITURA não é bloqueado",
+          not S._handler_bloqueado_no_publico("load_scenes"))
+    check("uma mensagem de JOGO não é bloqueada",
+          not S._handler_bloqueado_no_publico("move"))
+
+    # Rede de seguranca: um handler de escrita NOVO, criado no futuro, tem de
+    # FALHAR este teste ate ser incluido no portao. Esse tipo de esquecimento e
+    # invisivel ate alguem explora-lo.
+    import re
+    raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    fonte = open(os.path.join(raiz, "server.py"), encoding="utf-8").read()
+    achados = set(re.findall(r'if t == "((?:upload|save)_[a-z_]+)"', fonte))
+    achados |= set(re.findall(r'if t == "(objeto_upload)"', fonte))
+    novos = sorted(achados - set(ESCRITA))
+    check(f"nenhum handler de escrita ficou fora do portão ({novos or 'nenhum'})",
+          not novos,
+          "acrescente-o a ESCRITA e a HANDLERS_ESCRITA, ou o modo público não o cobre")
+
+
+def secao_origin():
+    """[6] Origin restrito no modo público."""
+    print("\n[6] Origin")
+    check("fora do modo público, qualquer origem entra",
+          S._origem_aceita("https://qualquer.site", publico=False, permitidas=""))
+    check("no modo público, origem da lista entra",
+          S._origem_aceita("https://meu.jogo", publico=True,
+                           permitidas="https://meu.jogo"))
+    check("no modo público, origem fora da lista é recusada",
+          not S._origem_aceita("https://outro.site", publico=True,
+                               permitidas="https://meu.jogo"))
+    check("no modo público SEM lista, RECUSA — falha fechado, não aberto",
+          not S._origem_aceita("https://meu.jogo", publico=True, permitidas=""),
+          "lista vazia significando 'aceita todos' seria um default inseguro "
+          "esperando um esquecimento de configuração")
+    check("barra no fim não muda o resultado",
+          S._origem_aceita("https://meu.jogo/", publico=True,
+                           permitidas="https://meu.jogo"))
+
+
 async def main():
     await secao_senha()
     await secao_laco()
     secao_limite()
     secao_ip()
+    secao_portao()
+    secao_origin()
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     return 1 if FAIL else 0
 

@@ -1876,6 +1876,42 @@ def _modo_publico():
     return (os.environ.get("LFH_PUBLIC") or "").strip() not in ("", "0", "false")
 
 
+# ─── Portao do modo publico ──────────────────────────────────────────────────
+# Um portao UNICO, e nao uma checagem espalhada por handler: com 17 pontos,
+# esquecer um seria questao de tempo -- e o esquecimento e invisivel ate alguem
+# explora-lo. O tools/test_modo_publico.py varre o fonte atras de handlers de
+# escrita novos e falha ate que sejam incluidos aqui.
+HANDLERS_ESCRITA = frozenset({
+    "upload_story", "upload_scene_media", "save_scenes", "upload_tavern_art",
+    "upload_city_art", "upload_refugio_art", "save_world_cities",
+    "save_city_shops", "save_world_adventures", "upload_dungeon",
+    "upload_campaign", "upload_custom_monster", "upload_custom_item",
+    "upload_item_art", "upload_monster_art", "upload_prisoner", "objeto_upload",
+})
+
+
+def _handler_bloqueado_no_publico(t):
+    """Editores gravam arquivo no servidor. Online, ficam desligados: o autor
+    cria conteudo na propria maquina e publica junto com o deploy."""
+    return t in HANDLERS_ESCRITA
+
+
+def _origem_aceita(origem, publico=None, permitidas=None):
+    """No modo publico, so origens da lista LFH_ORIGINS.
+
+    SEM lista, RECUSA: falhar fechado. Uma lista vazia significando "aceita
+    todos" seria um default inseguro esperando um esquecimento de configuracao.
+    Isto impede que outro site abra conexoes contra o servidor em nome de quem
+    estiver visitando."""
+    publico = _modo_publico() if publico is None else publico
+    if not publico:
+        return True
+    if permitidas is None:
+        permitidas = os.environ.get("LFH_ORIGINS") or ""
+    lista = [o.strip().rstrip("/") for o in permitidas.split(",") if o.strip()]
+    return bool(lista) and (origem or "").strip().rstrip("/") in lista
+
+
 # ─── Freio contra forca bruta no login ────────────────────────────────────────
 # Generoso de proposito: o objetivo e impedir 10.000 tentativas, NAO punir um
 # amigo que errou a senha tres vezes e ficaria de fora da partida.
@@ -31911,6 +31947,10 @@ async def handler(ws):
                         else:                         await room.broadcast_lobby()
                     continue
 
+                if _modo_publico() and _handler_bloqueado_no_publico(t):
+                    await err(T("erro.editor_indisponivel"))
+                    continue
+
                 if t == "upload_story":
                     ok, res = _save_story_upload(msg.get("name"), msg.get("data"))
                     payload = {"type": "upload_result",
@@ -35596,6 +35636,8 @@ async def _rota(request):
     em game.js monta so protocolo + host. Mover o WebSocket para /ws quebraria
     todos os clientes."""
     if request.headers.get("Upgrade", "").lower() == "websocket":
+        if not _origem_aceita(request.headers.get("Origin")):
+            return _http(403, "Forbidden", "403 Forbidden")
         ws = web.WebSocketResponse(max_msg_size=34 * 1024 * 1024)
         await ws.prepare(request)
         await handler(_WS(ws, _ip_do_cliente(request, _modo_publico())))

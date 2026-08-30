@@ -5,6 +5,11 @@
 // o slug do texto original, o que garante que a mesma recusa use sempre a
 // mesma frase.
 window.LANG_ERROS = {
+  "erro.editor_indisponivel": {
+    "pt": "Os editores só funcionam no servidor local.",
+    "en": "The editors only work on the local server."
+  },
+
   "erro.login_bloqueado": {
     "pt": "Muitas tentativas. Espere {segundos} segundos e tente de novo.",
     "en": "Too many attempts. Wait {segundos} seconds and try again."
