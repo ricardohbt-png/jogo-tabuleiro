@@ -1413,22 +1413,27 @@ def _atomic_write_json(path, data):
         json.dump(data, f, ensure_ascii=False, indent=2)
     os.replace(tmp, path)
 
-def hash_pin(pin, salt=None, iterations=100_000):
-    """PBKDF2-SHA256 com salt por conta. Retorna 'pbkdf2_sha256$iter$salt$hash'."""
+SENHA_MIN = 8   # so comprimento: ver a regra em create_account
+
+def hash_password(password, salt=None, iterations=100_000):
+    """PBKDF2-SHA256 com salt por conta. Retorna 'pbkdf2_sha256$iter$salt$hash'.
+
+    Aceita qualquer texto -- era assim quando guardava PIN e continua sendo com
+    senha. So a regra de FORMATO, em create_account, mudou."""
     if salt is None:
         salt = os.urandom(16)
-    dk = hashlib.pbkdf2_hmac("sha256", str(pin).encode("utf-8"), salt, iterations)
+    dk = hashlib.pbkdf2_hmac("sha256", str(password).encode("utf-8"), salt, iterations)
     return (f"pbkdf2_sha256${iterations}$"
             f"{base64.b64encode(salt).decode()}${base64.b64encode(dk).decode()}")
 
-def verify_pin(pin, stored):
-    """True se o PIN bate com o hash armazenado; False em qualquer falha/forma inválida."""
+def verify_password(password, stored):
+    """True se a senha bate com o hash armazenado; False em qualquer falha."""
     try:
         algo, iters, salt_b64, hash_b64 = stored.split("$")
         if algo != "pbkdf2_sha256":
             return False
         salt = base64.b64decode(salt_b64)
-        dk = hashlib.pbkdf2_hmac("sha256", str(pin).encode("utf-8"), salt, int(iters))
+        dk = hashlib.pbkdf2_hmac("sha256", str(password).encode("utf-8"), salt, int(iters))
         return hmac.compare_digest(base64.b64encode(dk).decode(), hash_b64)
     except Exception:
         return False
@@ -1497,7 +1502,7 @@ def load_account(username):
     try:
         with open(account_path(u), "r", encoding="utf-8") as f:
             data = json.load(f)
-        if not isinstance(data, dict) or not isinstance(data.get("pin_hash"), str):
+        if not isinstance(data, dict) or not isinstance(data.get("password_hash"), str):
             return None
         if ensure_account_profile(data):
             write_account(data)
@@ -1508,17 +1513,21 @@ def load_account(username):
         print(f"[accounts] conta {u} inválida ({e})")
         return None
 
-def create_account(username, pin):
+def create_account(username, password):
     """Cria a conta. Retorna (data, None) ou (None, mensagem_de_erro)."""
     u = _norm_username(username)
     if not _username_valido(u):
         return None, "Apelido inválido (use letras minúsculas, números e _; 1–20)."
-    if not re.fullmatch(r"\d{4}", str(pin or "")):
-        return None, "O PIN deve ter 4 dígitos."
+    senha = str(password or "")
+    # So comprimento, de proposito. Exigir maiuscula/numero/simbolo empurra as
+    # pessoas para "Senha1!" e para reusar a senha de outro site; o comprimento
+    # protege mais do que a variedade forcada.
+    if len(senha) < SENHA_MIN:
+        return None, T("erro.senha_curta", minimo=SENHA_MIN)
     os.makedirs(ACCOUNTS_DIR, exist_ok=True)
     if os.path.exists(account_path(u)):
         return None, "Apelido já existe."
-    data = {"username": u, "pin_hash": hash_pin(pin), "created": _now_iso()}
+    data = {"username": u, "password_hash": hash_password(senha), "created": _now_iso()}
     ensure_account_profile(data)
     write_account(data)
     return data, None
@@ -1855,15 +1864,15 @@ SAVEGAMES_IN_USE = {}   # savegame_id -> room code
 ACCOUNTS_ONLINE = {}    # username -> pid da conexão autenticada
 
 
-def try_login(pid, username, pin):
+def try_login(pid, username, password):
     """Valida credenciais e reserva a conta em ACCOUNTS_ONLINE.
     Retorna (True, dados_da_conta) ou (False, mensagem_de_erro)."""
     u = _norm_username(username)
     acc = load_account(u)
     if not acc:
         return False, "Conta não encontrada. Crie uma conta primeiro."
-    if not verify_pin(pin, acc.get("pin_hash", "")):
-        return False, "PIN incorreto."
+    if not verify_password(password, acc.get("password_hash", "")):
+        return False, "Senha incorreta."
     dono = ACCOUNTS_ONLINE.get(u)
     if dono and dono != pid:
         return False, "Esta conta já está em uso em outra conexão."

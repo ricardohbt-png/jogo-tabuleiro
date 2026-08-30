@@ -26,15 +26,15 @@ def main():
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
-    # [2] hash de PIN
+    # [2] hash de senha
     print("\n[2] Hash/verify de PIN")
-    h = S.hash_pin("1234")
+    h = S.hash_password("senha longa 1")
     check("hash tem 4 campos $", h.count("$") == 3 and h.startswith("pbkdf2_sha256$"))
-    check("PIN não aparece em texto puro", "1234" not in h)
-    check("verify aceita o PIN certo", S.verify_pin("1234", h) is True)
-    check("verify recusa PIN errado", S.verify_pin("9999", h) is False)
-    check("verify recusa hash malformado", S.verify_pin("1234", "lixo") is False)
-    check("dois hashes do mesmo PIN diferem (salt)", S.hash_pin("1234") != S.hash_pin("1234"))
+    check("senha não aparece em texto puro", "senha longa 1" not in h)
+    check("verify aceita a senha certa", S.verify_password("senha longa 1", h) is True)
+    check("verify recusa senha errada", S.verify_password("outra senha 9", h) is False)
+    check("verify recusa hash malformado", S.verify_password("senha longa 1", "lixo") is False)
+    check("dois hashes da mesma senha diferem (salt)", S.hash_password("senha longa 1") != S.hash_password("senha longa 1"))
 
     # [3] contas
     print("\n[3] CRUD de contas")
@@ -42,16 +42,16 @@ def main():
     old = S.ACCOUNTS_DIR
     S.ACCOUNTS_DIR = tmp
     try:
-        acc, err = S.create_account("Ricardo", "1234")
+        acc, err = S.create_account("Ricardo", "senha longa 1")
         check("cria conta", acc is not None and err is None)
         check("apelido normalizado (minúsculas)", acc["username"] == "ricardo")
         check("arquivo existe", os.path.exists(S.account_path("ricardo")))
-        acc2, err2 = S.create_account("ricardo", "5555")
+        acc2, err2 = S.create_account("ricardo", "senha longa 5")
         check("apelido duplicado recusa", acc2 is None and "existe" in (err2 or "").lower())
-        _, e3 = S.create_account("", "1234")
+        _, e3 = S.create_account("", "senha longa 1")
         check("apelido vazio recusa", e3 is not None)
-        _, e4 = S.create_account("bob", "12")
-        check("PIN não-4-dígitos recusa", e4 is not None)
+        _, e4 = S.create_account("bob", "curta")
+        check("senha curta demais recusa", e4 is not None)
         loaded = S.load_account("RICARDO")
         check("load_account acha por apelido case-insensitive", loaded is not None)
         check("load_account inexistente → None", S.load_account("ninguem") is None)
@@ -119,19 +119,19 @@ def main():
     S.ACCOUNTS_DIR = tmp
     S.ACCOUNTS_ONLINE.clear()
     try:
-        S.create_account("ana", "4321")
-        ok, pay = S.try_login("pid1", "Ana", "4321")
-        check("login com PIN certo ok", ok is True and pay["username"] == "ana")
-        ok2, err2 = S.try_login("pid2", "ana", "0000")
-        check("login com PIN errado recusa", ok2 is False and "pin" in (err2 or "").lower())
-        ok3, err3 = S.try_login("pid3", "fantasma", "1111")
+        S.create_account("ana", "senha da ana!")
+        ok, pay = S.try_login("pid1", "Ana", "senha da ana!")
+        check("login com senha certa ok", ok is True and pay["username"] == "ana")
+        ok2, err2 = S.try_login("pid2", "ana", "senha errada!")
+        check("login com senha errada recusa", ok2 is False and "senha" in (err2 or "").lower())
+        ok3, err3 = S.try_login("pid3", "fantasma", "senha fantasma")
         check("login de conta inexistente recusa", ok3 is False)
         # já online noutra conexão
         S.ACCOUNTS_ONLINE["ana"] = "pid1"
-        ok4, err4 = S.try_login("pid9", "ana", "4321")
+        ok4, err4 = S.try_login("pid9", "ana", "senha da ana!")
         check("conta já online recusa 2º login", ok4 is False and "uso" in (err4 or "").lower())
         # mesma conexão relogando é permitido (idempotente)
-        ok5, _ = S.try_login("pid1", "ana", "4321")
+        ok5, _ = S.try_login("pid1", "ana", "senha da ana!")
         check("mesma conexão pode relogar", ok5 is True)
     finally:
         S.ACCOUNTS_DIR = olda
@@ -161,19 +161,19 @@ def main():
     S.ACCOUNTS_DIR = tmp
     S.ACCOUNTS_ONLINE.clear()
     try:
-        _, e1 = S.create_account("../evil", "1234")
+        _, e1 = S.create_account("../evil", "senha longa 1")
         check("recusa apelido com ../", e1 is not None)
-        _, e2 = S.create_account("c:/temp/evil", "1234")
+        _, e2 = S.create_account("c:/temp/evil", "senha longa 1")
         check("recusa apelido com caminho absoluto", e2 is not None)
-        _, e3 = S.create_account("bob smith", "1234")
+        _, e3 = S.create_account("bob smith", "senha longa 1")
         check("recusa apelido com espaço", e3 is not None)
         check("load_savegame recusa id inválido", S.load_savegame("../foo") is None)
         check("load_savegame recusa id None", S.load_savegame(None) is None)
         # re-login pela mesma conexão libera a conta anterior
-        S.create_account("aaa", "1111")
-        S.create_account("bbb", "2222")
-        S.try_login("pidX", "aaa", "1111")
-        S.try_login("pidX", "bbb", "2222")
+        S.create_account("aaa", "senha fantasma")
+        S.create_account("bbb", "senha do bbb!")
+        S.try_login("pidX", "aaa", "senha fantasma")
+        S.try_login("pidX", "bbb", "senha do bbb!")
         check("re-login libera conta anterior",
               "aaa" not in S.ACCOUNTS_ONLINE and S.ACCOUNTS_ONLINE.get("bbb") == "pidX")
     finally:

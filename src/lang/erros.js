@@ -5,6 +5,11 @@
 // o slug do texto original, o que garante que a mesma recusa use sempre a
 // mesma frase.
 window.LANG_ERROS = {
+  "erro.senha_curta": {
+    "pt": "A senha precisa ter pelo menos {minimo} caracteres.",
+    "en": "The password must be at least {minimo} characters."
+  },
+
   "erro._circulo_primeiro": {
     "en": "first",
     "pt": "primeiro"
