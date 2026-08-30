@@ -71,11 +71,12 @@ def secao_contas():
         check("a conta está na loja", S.LOJA.ler("contas", "ana") is not None)
         check("load_account lê da loja (e normaliza o apelido)",
               S.load_account("ANA") is not None)
-        check("nada foi a disco ainda — só na descarga",
-              not os.path.exists(os.path.join(tmp, "accounts", "ana.json")))
-
+        # Conta é IDENTIDADE: write_account agenda a descarga na hora, em vez de
+        # esperar um ponto seguro do jogo. Perder uma significaria o jogador não
+        # conseguir entrar — e write_account é raro (criação e migração de
+        # perfil), então não acorda o banco à toa.
         S.LOJA.descarregar()
-        check("depois da descarga, está em disco",
+        check("a conta chega ao disco sem esperar ponto seguro do jogo",
               os.path.exists(os.path.join(tmp, "accounts", "ana.json")))
 
         check("conta inexistente devolve None", S.load_account("fantasma") is None)

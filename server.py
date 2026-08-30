@@ -14,6 +14,7 @@ import gzip
 import hashlib
 import hmac
 import shutil
+import signal
 import json
 import math
 import mimetypes
@@ -1576,6 +1577,70 @@ ACCOUNTS_DIR = os.path.join(BASE_DIR, "accounts")
 # UMA INSTANCIA SO: duas teriam caches separados, e a ultima a descarregar
 # venceria, apagando o trabalho da outra em silencio.
 LOJA = LojaDocumentos(AdaptadorArquivo(BASE_DIR))
+
+
+# Rede de seguranca da descarga. LONGO de proposito: banco gerenciado gratuito
+# cobra por TEMPO DE COMPUTACAO e fica acordado enquanto recebe consultas. Um
+# temporizador curto manteria o banco ligado a sessao inteira de jogo -- duas
+# horas jogando virariam duas horas de computacao. A descarga de verdade
+# acontece nos PONTOS SEGUROS que o jogo ja usa (ver _descarregar_loja); este
+# intervalo so pega o que nao coincidiu com nenhum deles.
+DESCARGA_INTERVALO_S = 5 * 60
+
+
+async def _descarregar_loja(motivo=""):
+    """Manda o que esta sujo para o armazenamento, fora do laco de eventos.
+
+    Numa thread porque, com o adaptador Postgres, isto e ida a rede -- no laco,
+    travaria o jogo de todos por dezenas de milissegundos a cada ponto seguro."""
+    if not LOJA.sujos():
+        return
+    try:
+        await asyncio.to_thread(LOJA.descarregar)
+    except Exception as e:
+        print(f"[loja] descarga falhou{' (' + motivo + ')' if motivo else ''}: {e}",
+              file=sys.stderr)
+
+
+_descarga_agendada = False
+
+
+def _agendar_descarga():
+    """Agenda a descarga sem bloquear quem chamou.
+
+    Os pontos seguros do jogo sao SINCRONOS (_checkpoint_savegame e chamado de
+    uma duzia de lugares) e nao podem virar async sem cascatear -- foi por isso
+    que o SP3 escolheu cache + descarga diferida. Entao agendamos uma tarefa.
+
+    A trava evita que uma rajada de checkpoints vire uma rajada de idas ao
+    banco: enquanto uma descarga esta pendente, as outras so aproveitam a
+    carona. Sem laco rodando (testes), nao faz nada -- ali se chama
+    LOJA.descarregar() direto."""
+    global _descarga_agendada
+    if _descarga_agendada:
+        return
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return
+
+    async def _corre():
+        global _descarga_agendada
+        try:
+            await _descarregar_loja("ponto seguro")
+        finally:
+            _descarga_agendada = False
+
+    _descarga_agendada = True
+    loop.create_task(_corre())
+
+
+async def _laco_descarga():
+    """Rede de seguranca, nao o mecanismo principal."""
+    while True:
+        await asyncio.sleep(DESCARGA_INTERVALO_S)
+        await _descarregar_loja("intervalo")
+
 GROUPS_DIR = os.path.join(BASE_DIR, "groups")
 
 # As identidades pertencem à conta, mas a ficha jogável pertence sempre a uma
@@ -1608,6 +1673,10 @@ def write_account(account):
     if not _username_valido(username):
         return
     LOJA.gravar("contas", username, account)
+    # Conta e identidade: perder uma significa o jogador nao conseguir entrar.
+    # write_account e raro (criacao e migracao de perfil), entao agendar aqui
+    # nao acorda o banco a toa.
+    _agendar_descarga()
 
 def ensure_account_profile(account):
     """Migra contas antigas e garante os seis heróis-identidade da conta.
@@ -17029,6 +17098,10 @@ class GameRoom:
         self.savegame["refugio"] = deepcopy(self.refugio_state)
         self.savegame["hero_rooms"] = deepcopy(self.hero_rooms)
         write_savegame(self.savegame)
+        # PONTO SEGURO: e aqui que o jogo ja decidiu que vale gravar. Agendar a
+        # descarga nestes momentos -- e nao num relogio curto -- e o que mantem
+        # o banco dormindo entre eles.
+        _agendar_descarga()
 
     async def handle_shortcut_set(self, pid, slot, entry):
         """Grava o atalho na sessão e, quando houver, também no savegame."""
@@ -35865,6 +35938,11 @@ async def main():
     # O paragrafo que ficava aqui sobre "Connection: close" saiu na troca para
     # aiohttp: as conexoes voltaram a ser persistentes, e os ~60 arquivos de
     # uma entrada de masmorra deixaram de abrir uma conexao cada um.
+    # Carrega ANTES de aceitar conexao: um jogador que chegasse com o cache
+    # vazio veria "conta nao encontrada" e tentaria criar a conta de novo.
+    LOJA.carregar()
+    print(f"  dados: {sum(len(LOJA.listar(c)) for c in COLECOES)} documentos carregados")
+
     app = web.Application()
     app.router.add_route("*", "/{cauda:.*}", _rota)
     runner = web.AppRunner(app, access_log=None)
@@ -35889,7 +35967,29 @@ async def main():
     # Deliberado: no spike SP0 o log da plataforma foi a UNICA janela para
     # diagnosticar o bind, e nao havia nada impresso.
     print(f"  escutando em: {', '.join(subiu)}")
-    await asyncio.Future()
+    # SIGTERM e como a plataforma (e o pkill) param o servico. SEM isto o
+    # finally abaixo nunca roda, e a "saida limpa" nao existe -- medido: a conta
+    # criada ficava so na memoria e sumia no encerramento.
+    parar = asyncio.Event()
+    laco = asyncio.get_running_loop()
+    for _sinal in ("SIGTERM", "SIGINT"):
+        s = getattr(signal, _sinal, None)
+        if s is None:
+            continue
+        try:
+            laco.add_signal_handler(s, parar.set)
+        except (NotImplementedError, RuntimeError):
+            # Windows nao implementa add_signal_handler no laco; ali o Ctrl+C
+            # vira KeyboardInterrupt e o finally cobre.
+            pass
+
+    tarefa_descarga = asyncio.create_task(_laco_descarga())
+    try:
+        await parar.wait()
+    finally:
+        # Saida limpa: o que estiver sujo vai embora antes de encerrar.
+        tarefa_descarga.cancel()
+        await _descarregar_loja("encerrando")
 
 if __name__ == "__main__":
     asyncio.run(main())
