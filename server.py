@@ -34921,31 +34921,36 @@ def _listen_port(env=None):
     return 8765
 
 SERVER_PORT = _listen_port()
-def _listen_hosts(env=None, plataforma=None):
-    """Enderecos de escuta.
+def _listen_hosts(env=None):
+    """Enderecos de escuta: SEMPRE as duas familias, em qualquer sistema.
 
-    WINDOWS liga nas DUAS familias: o socket IPv6 nao aceita IPv4 por padrao
-    (IPV6_V6ONLY), entao escutar so em "::" deixaria 127.0.0.1 sem servidor. O
-    nome "localhost" -- que e o que iniciar.bat abre -- resolveria primeiro para
-    ::1, levaria recusa, e o navegador so entao cairia para 127.0.0.1: os ~207 ms
-    perdidos antes do primeiro byte que o tools/test_rede_local.py trava.
+    Nao e uma particularidade do Windows. O asyncio DESLIGA de proposito o
+    dual-stack em todo socket IPv6 que abre -- o comentario no CPython
+    (BaseEventLoop.create_server) e literal: "Disable IPv4/IPv6 dual stack
+    support (enabled by default on Linux) which makes a single socket listen
+    on both address families". Ou seja, `IPV6_V6ONLY = True` mesmo no Linux.
 
-    LINUX liga so em "::": o padrao do kernel e bindv6only=0, entao um socket em
-    "::" ja atende IPv4 mapeado -- e ligar nas duas familias no mesmo port pode
-    falhar com EADDRINUSE.
+    Consequencia: escutar so em "::" RECUSA toda conexao IPv4. Custou um
+    deploy: o servico subia, a porta era detectada, e o health check da
+    plataforma -- que resolve o nome para IPv4 -- batia em porta fechada e
+    expirava. Ligar nas duas nao conflita justamente porque V6ONLY separa os
+    sockets; e o que o Windows ja fazia, e o tools/test_rede_local.py trava.
 
-    LFH_HOSTS ("0.0.0.0" ou "0.0.0.0,::") sobrepoe tudo. E a valvula de escape
-    para um conteiner sem IPv6, onde ligar em "::" falha no boot."""
+    No Windows a origem era outra (IPV6_V6ONLY tambem e o padrao do sistema):
+    escutar so em "::" deixaria 127.0.0.1 sem servidor, e o nome "localhost"
+    -- que iniciar.bat abre -- resolveria primeiro para ::1, levaria recusa e
+    so entao cairia para IPv4: ~207 ms perdidos antes do primeiro byte.
+
+    LFH_HOSTS ("0.0.0.0" ou "::,0.0.0.0") sobrepoe tudo -- valvula de escape
+    para um conteiner que nao tenha uma das familias. Uma familia que falhe no
+    bind apenas avisa; main() so desiste se NENHUMA subir."""
     env = os.environ if env is None else env
     bruto = (env.get("LFH_HOSTS") or "").strip()
     if bruto:
         hosts = [h.strip() for h in bruto.split(",") if h.strip()]
         if hosts:
             return hosts
-    plataforma = sys.platform if plataforma is None else plataforma
-    if plataforma.startswith("win"):
-        return ["0.0.0.0", "::"]
-    return ["::"]
+    return ["0.0.0.0", "::"]
 
 SERVER_HOSTS = _listen_hosts()
 
