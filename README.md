@@ -8,6 +8,23 @@ Um jogo de RPG de tabuleiro multiplayer em estilo HeroQuest/D&D para até 6 joga
 - Dependências Python: `python -m pip install -r requirements.txt`
 - Navegador moderno (Chrome, Firefox, Edge)
 
+## Onde os dados ficam
+
+Contas, jogos salvos e grupos vivem numa **loja de documentos em memória**,
+carregada na subida e gravada nos pontos seguros do jogo (volta à cidade, fim de
+fase) e ao encerrar. Localmente o armazenamento são arquivos JSON, em
+`accounts/`, `savegames/` e `groups/`.
+
+> ⚠️ **Uma instância só.** Duas instâncias do servidor sobre o mesmo
+> armazenamento teriam caches separados, e a última a gravar venceria — apagando
+> o trabalho da outra **em silêncio**. Isto não é um detalhe de infraestrutura a
+> ajustar no painel do provedor: é uma restrição do desenho. Se um dia o jogo
+> precisar escalar horizontalmente, a loja tem de mudar antes.
+
+Perder o processo de repente custa, no máximo, o que foi feito desde o último
+ponto seguro — e o jogo nunca grava no meio de uma masmorra, então isso significa
+refazer uma compra ou reentrar numa fase, nunca perder uma campanha.
+
 ## Como Rodar o Jogo
 
 > O `server.py` serve a página **e** o WebSocket na **mesma porta (8765)** —
