@@ -2515,18 +2515,18 @@ const GS = (() => {
   }
 
   // ── Contas / Jogos Salvos (Fase 3) ──────────────────────────────────────────
-  function loginConta(url, name, pin) {
+  function loginConta(url, name, password) {
     connect(url, name, 'login');
     const trySend = () => {
-      if (ws && ws.readyState === 1) send({ type: 'login', username: name, pin });
+      if (ws && ws.readyState === 1) send({ type: 'login', username: name, password });
       else setTimeout(trySend, 60);
     };
     trySend();
   }
-  function criarConta(url, name, pin) {
+  function criarConta(url, name, password) {
     connect(url, name, 'login');
     const trySend = () => {
-      if (ws && ws.readyState === 1) send({ type: 'create_account', username: name, pin });
+      if (ws && ws.readyState === 1) send({ type: 'create_account', username: name, password });
       else setTimeout(trySend, 60);
     };
     trySend();

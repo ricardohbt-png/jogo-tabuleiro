@@ -765,7 +765,7 @@ function entrarComConta() {
   const url  = (document.getElementById('input-server').value || 'ws://localhost:8765').trim();
   if (!name) { alert(t('ui.conta.escolha_apelido')); return; }
   if (senha.length < 8) { alert(t('ui.conta.senha_curta')); return; }
-  window._contaCtx = { url, name, pin: senha };
+  window._contaCtx = { url, name, password: senha };
   GS.loginConta(url, name, senha);
 }
 
@@ -35098,7 +35098,7 @@ GS.on('loginResult', (msg) => {
   } else if ((msg.error || '').includes('não encontrada')) {
     const c = window._contaCtx || {};
     if (confirm(t('ui.conta.criar_agora'))) {
-      GS.criarConta(c.url, c.name, c.pin);
+      GS.criarConta(c.url, c.name, c.password);
     }
   } else {
     alert(msg.error || 'Falha no login.');

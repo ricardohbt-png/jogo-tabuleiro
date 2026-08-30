@@ -32227,12 +32227,11 @@ async def handler(ws):
                     continue
 
                 if t == "create_account":
-                    # O campo do protocolo ainda se chama "pin" por historia:
-                    # renomea-lo exigiria mexer no cliente tambem. O CONTEUDO e
-                    # uma senha desde a troca do SP1.
-                    acc, e = await create_account(msg.get("username"), msg.get("pin"))
+                    acc, e = await create_account(msg.get("username"),
+                                                  msg.get("password"))
                     if acc:
-                        ok, pay = await try_login(pid, acc["username"], msg.get("pin"))
+                        ok, pay = await try_login(pid, acc["username"],
+                                                  msg.get("password"))
                         if ok:
                             account["name"] = pay["username"]
                         await ws.send(json.dumps({"type": "login_result", "ok": ok,
@@ -32255,7 +32254,7 @@ async def handler(ws):
                             "error": T("erro.login_bloqueado", segundos=_espera)},
                             default=lambda o: _t_render(o, _lang_de(pid))))
                         continue
-                    ok, pay = await try_login(pid, _u, msg.get("pin"))
+                    ok, pay = await try_login(pid, _u, msg.get("password"))
                     if ok:
                         account["name"] = pay["username"]
                         _limpar_falhas_login(_u, getattr(ws, "ip", None))

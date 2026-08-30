@@ -230,6 +230,35 @@ def secao_salas():
     S.rooms.clear()
 
 
+def secao_protocolo():
+    """[8] o campo da credencial tem de ser o MESMO nos dois lados.
+
+    Uma divergência aqui quebra o login EM SILÊNCIO: o servidor lê `None`, o
+    hash não bate, e a mensagem que chega ao jogador é "senha incorreta" — que
+    manda procurar o problema no lugar errado.
+    """
+    print("\n[8] o campo da credencial casa entre cliente e servidor")
+    import re
+    raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    cliente = open(os.path.join(raiz, "src", "gameState.js"), encoding="utf-8").read()
+    servidor = open(os.path.join(raiz, "server.py"), encoding="utf-8").read()
+
+    enviados = set(re.findall(
+        r"send\(\{\s*type:\s*'(?:login|create_account)'[^}]*?,\s*(\w+)\s*\}", cliente))
+    check(f"o cliente envia um campo só, e é 'password' ({enviados or 'nenhum'})",
+          enviados == {"password"},
+          "se o cliente mandar outro nome, o servidor lê None e o login falha "
+          "dizendo 'senha incorreta'")
+
+    lidos = set(re.findall(r'(?:create_account|try_login)\([^)]*msg\.get\("(\w+)"\)',
+                           servidor, re.S))
+    lidos -= {"username"}
+    check(f"o servidor lê o mesmo campo ({lidos or 'nenhum'})",
+          lidos == {"password"})
+    check("nem cliente nem servidor falam mais em 'pin' no fluxo de conta",
+          '"pin"' not in servidor and "'pin'" not in cliente)
+
+
 async def main():
     await secao_senha()
     await secao_laco()
@@ -238,6 +267,7 @@ async def main():
     secao_portao()
     secao_origin()
     secao_salas()
+    secao_protocolo()
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     return 1 if FAIL else 0
 
