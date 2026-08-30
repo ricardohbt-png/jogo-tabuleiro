@@ -247,8 +247,8 @@ document.body.innerHTML = `
       <input id="input-server" type="text" placeholder="ws://localhost:8765" value="ws://localhost:8765">
     </div>
     <div class="field">
-      <label data-i18n="ui.connect.pin_label">PIN (4 dígitos) — para jogos salvos</label>
-      <input id="input-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+      <label data-i18n="ui.connect.senha_label">Senha — para jogos salvos</label>
+      <input id="input-senha" type="password" autocomplete="current-password" placeholder="••••••••">
     </div>
     <button class="btn-primary" data-i18n="ui.connect.btn_conta" onclick="entrarComConta()">🎲 Entrar com minha conta</button>
     <div style="font-size:.7rem;color:#8ab88a;margin-top:4px;" data-i18n="ui.connect.ajuda_conta">
@@ -759,12 +759,14 @@ function createRoom(){
 // Login por conta (apelido+PIN) — Fase 3 dos Jogos Salvos.
 function entrarComConta() {
   const name = (document.getElementById('input-name').value || '').trim();
-  const pin  = (document.getElementById('input-pin').value || '').trim();
+  // SEM trim(): espaco no comeco ou no fim faz parte da senha, e cortar em
+  // silencio faria o login falhar sem explicacao nenhuma para o jogador.
+  const senha = document.getElementById('input-senha').value || '';
   const url  = (document.getElementById('input-server').value || 'ws://localhost:8765').trim();
-  if (!name) { alert('Escolha um apelido.'); return; }
-  if (!/^\d{4}$/.test(pin)) { alert(t('ui.conta.pin_4_digitos')); return; }
-  window._contaCtx = { url, name, pin };
-  GS.loginConta(url, name, pin);
+  if (!name) { alert(t('ui.conta.escolha_apelido')); return; }
+  if (senha.length < 8) { alert(t('ui.conta.senha_curta')); return; }
+  window._contaCtx = { url, name, pin: senha };
+  GS.loginConta(url, name, senha);
 }
 
 // Criação de novo jogo salvo (tela "Meus Jogos") — Fase 3 dos Jogos Salvos.

@@ -1375,9 +1375,13 @@ window.LANG_INTERFACE = {
       "en": "That account does not exist. Create it now with this nickname and PIN?",
       "pt": "Conta não existe. Criar agora com esse apelido e PIN?"
     },
-    "ui.conta.pin_4_digitos": {
-      "en": "The PIN must have 4 digits.",
-      "pt": "O PIN deve ter 4 dígitos."
+    "ui.conta.senha_curta": {
+      "en": "The password must be at least 8 characters.",
+      "pt": "A senha precisa ter pelo menos 8 caracteres."
+    },
+    "ui.conta.escolha_apelido": {
+      "en": "Choose a nickname.",
+      "pt": "Escolha um apelido."
     },
     "ui.dano_tipo.fogo": {
       "en": "fire",
