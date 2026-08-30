@@ -1867,6 +1867,68 @@ SAVEGAMES_IN_USE = {}   # savegame_id -> room code
 ACCOUNTS_ONLINE = {}    # username -> pid da conexão autenticada
 
 
+def _modo_publico():
+    """Liga o que so vale quando o servidor esta exposto na internet: o portao
+    dos editores, o Origin restrito e a confianca no X-Forwarded-For.
+
+    DESLIGADO por padrao -- na maquina do autor nada muda, os editores seguem
+    funcionando como sempre."""
+    return (os.environ.get("LFH_PUBLIC") or "").strip() not in ("", "0", "false")
+
+
+# ─── Freio contra forca bruta no login ────────────────────────────────────────
+# Generoso de proposito: o objetivo e impedir 10.000 tentativas, NAO punir um
+# amigo que errou a senha tres vezes e ficaria de fora da partida.
+LOGIN_MAX_TENTATIVAS = 8
+LOGIN_JANELA_S = 15 * 60
+_LOGIN_TENTATIVAS = {}       # chave -> [instantes das falhas]
+
+
+def _login_chaves(username, ip):
+    """Duas chaves, porque cobrem ataques DIFERENTES: por CONTA impede insistir
+    numa vitima; por ORIGEM impede varrer muitas contas com uma senha comum."""
+    return (f"u:{_norm_username(username)}", f"i:{ip or '?'}")
+
+
+def _login_permitido(username, ip):
+    """(pode_tentar, segundos_para_liberar)."""
+    agora = time.time()
+    for chave in _login_chaves(username, ip):
+        marcas = [t for t in _LOGIN_TENTATIVAS.get(chave, ()) if agora - t < LOGIN_JANELA_S]
+        _LOGIN_TENTATIVAS[chave] = marcas
+        if len(marcas) >= LOGIN_MAX_TENTATIVAS:
+            return False, int(LOGIN_JANELA_S - (agora - marcas[0]))
+    return True, 0
+
+
+def _registrar_falha_login(username, ip):
+    agora = time.time()
+    for chave in _login_chaves(username, ip):
+        _LOGIN_TENTATIVAS.setdefault(chave, []).append(agora)
+
+
+def _limpar_falhas_login(username, ip):
+    for chave in _login_chaves(username, ip):
+        _LOGIN_TENTATIVAS.pop(chave, None)
+
+
+def _ip_do_cliente(request, publico):
+    """Endereco do JOGADOR.
+
+    Atras do proxy da hospedagem, `request.remote` e o IP do PROXY -- usa-lo cru
+    faria TODOS os jogadores compartilharem um balde so, e o primeiro atacante
+    trancaria o jogo inteiro. O IP real vem em X-Forwarded-For.
+
+    Mas header e FORJAVEL: fora de um proxy confiavel, qualquer cliente inventa
+    um IP a cada tentativa e anula o limite. Por isso so confiamos no header no
+    modo publico, onde sabemos que ha um proxy na frente."""
+    if publico:
+        xff = (request.headers.get("X-Forwarded-For") or "").split(",")[0].strip()
+        if xff:
+            return xff
+    return getattr(request, "remote", None) or "?"
+
+
 async def try_login(pid, username, password):
     """Valida credenciais e reserva a conta em ACCOUNTS_ONLINE.
     Retorna (True, dados_da_conta) ou (False, mensagem_de_erro)."""
@@ -31763,10 +31825,13 @@ class _WS:
     reescrever os 41 pontos (onde um esquecimento so apareceria quando aquela
     mensagem especifica fosse disparada em jogo) e isola a biblioteca: numa
     proxima troca de camada, so este bloco se mexe."""
-    __slots__ = ("_ws",)
+    __slots__ = ("_ws", "ip")
 
-    def __init__(self, ws):
+    def __init__(self, ws, ip=None):
         self._ws = ws
+        # O handler precisa do endereco para o freio de login, e nao pode
+        # conhecer o aiohttp -- por isso ele chega por aqui.
+        self.ip = ip
 
     async def send(self, texto):
         await self._ws.send_str(texto)
@@ -32112,9 +32177,24 @@ async def handler(ws):
                     continue
 
                 if t == "login":
-                    ok, pay = await try_login(pid, msg.get("username"), msg.get("pin"))
+                    # Freio por CONTA e por ORIGEM. Sem ele, 10.000 combinacoes
+                    # de um PIN antigo -- ou uma senha comum varrida por muitas
+                    # contas -- caem em minutos.
+                    _u = msg.get("username")
+                    _liberado, _espera = _login_permitido(_u, getattr(ws, "ip", None))
+                    if not _liberado:
+                        await ws.send(json.dumps({
+                            "type": "login_result", "ok": False,
+                            "username": None,
+                            "error": T("erro.login_bloqueado", segundos=_espera)},
+                            default=lambda o: _t_render(o, _lang_de(pid))))
+                        continue
+                    ok, pay = await try_login(pid, _u, msg.get("pin"))
                     if ok:
                         account["name"] = pay["username"]
+                        _limpar_falhas_login(_u, getattr(ws, "ip", None))
+                    else:
+                        _registrar_falha_login(_u, getattr(ws, "ip", None))
                     await ws.send(json.dumps({"type": "login_result", "ok": ok,
                                               "username": pay["username"] if ok else None,
                                               "error": None if ok else pay}))
@@ -35518,7 +35598,7 @@ async def _rota(request):
     if request.headers.get("Upgrade", "").lower() == "websocket":
         ws = web.WebSocketResponse(max_msg_size=34 * 1024 * 1024)
         await ws.prepare(request)
-        await handler(_WS(ws))
+        await handler(_WS(ws, _ip_do_cliente(request, _modo_publico())))
         return ws
 
     if request.method not in ("GET", "HEAD"):

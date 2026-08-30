@@ -90,9 +90,66 @@ async def secao_laco():
         S.ACCOUNTS_DIR = velho; shutil.rmtree(tmp, ignore_errors=True)
 
 
+def secao_limite():
+    """[3] freio contra força bruta. Síncrono: as funções de limite não tocam
+    em disco nem em hash, então não precisam de thread nem de await."""
+    print("\n[3] limite de tentativas")
+    S._LOGIN_TENTATIVAS.clear()
+
+    ok, _ = S._login_permitido("ana", "1.1.1.1")
+    check("contador zerado começa liberado", ok)
+
+    for _ in range(S.LOGIN_MAX_TENTATIVAS):
+        S._registrar_falha_login("ana", "1.1.1.1")
+    ok, _ = S._login_permitido("ana", "1.1.1.1")
+    check("após o teto de tentativas, é barrado", not ok)
+
+    ok, _ = S._login_permitido("ana", "2.2.2.2")
+    check("a MESMA conta é barrada mesmo vindo de outra origem", not ok,
+          "senão trocar de IP anula o limite por conta")
+
+    ok, _ = S._login_permitido("beto", "1.1.1.1")
+    check("a MESMA origem é barrada mesmo para outra conta", not ok,
+          "senão varrer muitas contas de um IP só anula o limite")
+
+    S._LOGIN_TENTATIVAS.clear()
+    for _ in range(S.LOGIN_MAX_TENTATIVAS - 1):
+        S._registrar_falha_login("carla", "3.3.3.3")
+    ok, _ = S._login_permitido("carla", "3.3.3.3")
+    check("abaixo do teto continua liberado — três erros não punem ninguém", ok)
+
+    S._limpar_falhas_login("carla", "3.3.3.3")
+    ok, _ = S._login_permitido("carla", "3.3.3.3")
+    check("acerto limpa o contador", ok)
+    check("o teto é generoso (≥ 5): o objetivo é impedir 10.000 tentativas, "
+          "não punir três", S.LOGIN_MAX_TENTATIVAS >= 5)
+
+
+def secao_ip():
+    """[4] o endereço do cliente precisa ser o do JOGADOR, não o do proxy."""
+    print("\n[4] endereço do cliente")
+
+    class _Req:
+        def __init__(self, remote, headers):
+            self.remote = remote; self.headers = headers
+
+    r = _Req("10.0.0.1", {"X-Forwarded-For": "203.0.113.9, 10.0.0.1"})
+    check("modo público confia no X-Forwarded-For (o IP real do jogador)",
+          S._ip_do_cliente(r, publico=True) == "203.0.113.9",
+          "sem isso, todos atrás do proxy caem no mesmo balde e o primeiro "
+          "atacante tranca o jogo inteiro")
+    check("fora do modo público, ignora o header (é forjável)",
+          S._ip_do_cliente(r, publico=False) == "10.0.0.1")
+    r2 = _Req("10.0.0.1", {})
+    check("sem o header, cai no remote",
+          S._ip_do_cliente(r2, publico=True) == "10.0.0.1")
+
+
 async def main():
     await secao_senha()
     await secao_laco()
+    secao_limite()
+    secao_ip()
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     return 1 if FAIL else 0
 

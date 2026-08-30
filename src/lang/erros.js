@@ -5,6 +5,11 @@
 // o slug do texto original, o que garante que a mesma recusa use sempre a
 // mesma frase.
 window.LANG_ERROS = {
+  "erro.login_bloqueado": {
+    "pt": "Muitas tentativas. Espere {segundos} segundos e tente de novo.",
+    "en": "Too many attempts. Wait {segundos} seconds and try again."
+  },
+
   "erro.senha_curta": {
     "pt": "A senha precisa ter pelo menos {minimo} caracteres.",
     "en": "The password must be at least {minimo} characters."
