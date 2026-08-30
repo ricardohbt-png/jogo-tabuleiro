@@ -133,12 +133,10 @@ def _start_tunnel():
 def main():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    try:
-        import websockets  # noqa: F401
-    except ImportError:
-        print("Instalando dependência: websockets...")
-        subprocess.run([sys.executable, "-m", "pip", "install", "websockets"])
-
+    # O servidor NÃO usa mais `websockets`: a camada de serviço passou a ser o
+    # aiohttp (ver docs/superpowers/specs/2026-08-29-camada-de-rede-aiohttp-design.md).
+    # A lib continua no requirements.txt, mas só como CLIENTE de
+    # tools/medir_cold_start.py — não é pré-requisito para subir o jogo.
     try:
         import aiohttp  # noqa: F401
     except ImportError:

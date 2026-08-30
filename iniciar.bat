@@ -18,13 +18,10 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM --- 2. Verifica/instala as dependencias ---
-python -c "import websockets" >nul 2>&1
-if errorlevel 1 (
-    echo  Instalando dependencia: websockets...
-    python -m pip install websockets
-    echo.
-)
+REM --- 2. Verifica/instala a dependencia do servidor ---
+REM O servidor NAO usa mais websockets: a camada de servico e o aiohttp.
+REM A lib websockets segue no requirements.txt, mas so como CLIENTE de
+REM tools/medir_cold_start.py -- nao e pre-requisito para jogar.
 python -c "import aiohttp" >nul 2>&1
 if errorlevel 1 (
     echo  Instalando dependencia: aiohttp...
