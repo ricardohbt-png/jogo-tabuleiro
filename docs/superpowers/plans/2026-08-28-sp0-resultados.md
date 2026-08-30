@@ -31,7 +31,7 @@ hospede.
 |---|---|---|
 | A plataforma roda este Python | ✅ **Passou.** `server.py` importou e rodou sob **3.13**, com `websockets==16.0` instalado pelo `pip` | O código não depende de 3.14. Fixar 3.13 no SP4 é seguro |
 | `["::"]` basta no Linux | ✅ **Passou.** O servidor aceitou conexões — é por isso que ele conseguiu reclamar delas | `LFH_HOSTS=0.0.0.0` fica como válvula de escape, não como padrão |
-| Cold start é disfarçável | ⛔ **Não medido.** O serviço nunca ficou `live` | Pendente. Só medível depois que o bloqueio de HTTP for resolvido |
+| Cold start é disfarçável | ⚠️ **Medido em 2026-08-30, depois da troca para aiohttp: 21 s e 62 s** | Ver abaixo — é disfarçável, mas exige UX dedicada |
 | Não pedem cartão | ✅ **Passou.** Nenhum cartão foi exigido no cadastro nem no deploy | A premissa de US$ 0 estrito se mantém |
 
 ## Achado não previsto: a sonda HEAD
@@ -60,6 +60,39 @@ responde a HEAD, então sondar status por HEAD não é opção"*. Ela virou um
 bloqueador de hospedagem.
 
 ---
+
+## Medições finais (2026-08-30, serviço `live` com a camada `aiohttp`)
+
+URL do spike: `https://lfh-spike.onrender.com`, porta 10000 injetada em `PORT`.
+
+| Medida | Rodada 1 | Rodada 2 |
+|---|---|---|
+| 1ª conexão (fria) | 62,80 s | 21,84 s |
+| 2ª conexão (piso quente) | 0,71 s | 0,69 s |
+| **Cold start** | **62,09 s** | **21,15 s** |
+| Eco (ida e volta da sonda) | 199 ms | 208 ms |
+
+Cada rodada foi precedida de **16,5 minutos de silêncio absoluto**. `GET
+/index.html` → 200; `HEAD /index.html` → **200** (era o que matava o deploy).
+
+**Leitura dos números:**
+
+- **O piso quente é excelente e estável**: 0,70 s para abrir a conexão, ~200 ms
+  de ida e volta. Para um jogo de turnos, o jogador não sente. Partida em
+  andamento não sofre — o tráfego do próprio jogo mantém o serviço acordado.
+- **O cold start varia 3× entre medições consecutivas**, nas mesmas condições.
+  Não dá para prometer um número; dá para dizer que o **teto observado é ~60 s**.
+- **Limitação honesta:** n=2. Escolhi duas rodadas em vez das três do plano para
+  encurtar a exposição dos 17 handlers de escrita sem autenticação. A dispersão
+  encontrada seria argumento para MAIS medições, não menos — então o que temos é
+  a faixa, não a distribuição. Se o número típico vier a importar (por exemplo,
+  para prometer algo a jogadores), vale repetir com a segurança do SP1 já feita.
+
+**Consequência para o SP4:** a UX de warm-up tem de aguentar **até ~60 s** sem
+parecer travada, e não pode prometer um tempo fixo. Com os estáticos no CDN
+(SP2) a página abre instantânea, então o que o jogador vê é uma tela nossa com
+progresso — não um navegador em branco. É disfarçável, mas exige trabalho
+dedicado: não é "só um spinner".
 
 ## Opções para desbloquear
 
