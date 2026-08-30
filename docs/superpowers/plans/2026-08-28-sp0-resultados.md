@@ -98,6 +98,11 @@ detalhe não documentado de um fornecedor.
 
 ## Contenção
 
-O serviço `lfh-spike` deve ser **destruído** no painel do Render — naquele
-ambiente os 17 handlers de escrita seguem sem autenticação (bloqueador B1 do
-spec, escopo do SP1). A URL nunca foi divulgada e nenhuma conta real foi criada.
+✅ **Cumprida.** O serviço `lfh-spike` foi destruído no painel do Render pelo
+autor em 2026-08-29, encerrando a exposição dos 17 handlers de escrita sem
+autenticação (bloqueador B1 do spec, escopo do SP1). A URL nunca foi divulgada e
+nenhuma conta real foi criada.
+
+A branch `spike/deploy-render` continua no GitHub, com o `render.yaml`
+descartável. Ela pode ser reusada para a prova final da troca de camada de rede
+(critério de aceitação 6 do spec do `aiohttp`) e só então apagada.
