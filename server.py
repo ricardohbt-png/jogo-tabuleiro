@@ -1595,6 +1595,11 @@ def _username_valido(u):
     return bool(re.fullmatch(r"[a-z0-9_]{1,20}", u or ""))
 
 def account_path(username):
+    """LEGADO. A partir do SP3 a camada de dados NAO usa este caminho: os
+    documentos vivem na LOJA, e quem decide o layout em disco e o
+    AdaptadorArquivo, que grava em <raiz>/<pasta>/<chave>.json. Esta funcao
+    aponta para <DIR>/<chave>.json e portanto DIVERGE do adaptador -- so
+    continua existindo porque testes antigos a usam como sonda."""
     return os.path.join(ACCOUNTS_DIR, f"{_norm_username(username)}.json")
 
 def write_account(account):
@@ -1673,6 +1678,11 @@ async def create_account(username, password):
 SAVEGAMES_DIR = os.path.join(BASE_DIR, "savegames")
 
 def group_path(gid):
+    """LEGADO. A partir do SP3 a camada de dados NAO usa este caminho: os
+    documentos vivem na LOJA, e quem decide o layout em disco e o
+    AdaptadorArquivo, que grava em <raiz>/<pasta>/<chave>.json. Esta funcao
+    aponta para <DIR>/<chave>.json e portanto DIVERGE do adaptador -- so
+    continua existindo porque testes antigos a usam como sonda."""
     return os.path.join(GROUPS_DIR, f"{gid}.json")
 
 def _gid_valido(gid):
@@ -1832,6 +1842,11 @@ def register_campaign_member_in_group(sg, account):
         write_group(group)
 
 def savegame_path(sid):
+    """LEGADO. A partir do SP3 a camada de dados NAO usa este caminho: os
+    documentos vivem na LOJA, e quem decide o layout em disco e o
+    AdaptadorArquivo, que grava em <raiz>/<pasta>/<chave>.json. Esta funcao
+    aponta para <DIR>/<chave>.json e portanto DIVERGE do adaptador -- so
+    continua existindo porque testes antigos a usam como sonda."""
     return os.path.join(SAVEGAMES_DIR, f"{sid}.json")
 
 def _sid_valido(sid):

@@ -144,11 +144,43 @@ def secao_savegames():
         S.LOJA = velho; shutil.rmtree(tmp, ignore_errors=True)
 
 
+def secao_sem_disco():
+    """[5] ninguém pode ler o disco pelas costas da loja.
+
+    Com o cache como fonte de verdade, um caminho que ainda abra o arquivo
+    direto passa a ler **dado velho** — e isso não estoura, só devolve o errado.
+    É o tipo de defeito que só aparece semanas depois, como "o jogo esqueceu
+    minha compra".
+    """
+    print("\n[5] ninguém lê o disco pelas costas da loja")
+    import re
+    raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    fonte = open(os.path.join(raiz, "server.py"), encoding="utf-8").read()
+    padroes = {
+        "open() num caminho de dados":
+            r"open\([^)]*(?:account_path|group_path|savegame_path)",
+        "listdir num diretório de dados":
+            r"os\.listdir\([^)]*(?:ACCOUNTS_DIR|SAVEGAMES_DIR|GROUPS_DIR)",
+        "exists/isdir num caminho de dados":
+            r"os\.path\.(?:exists|isdir)\([^)]*(?:account_path|group_path|"
+            r"savegame_path|ACCOUNTS_DIR|SAVEGAMES_DIR|GROUPS_DIR)",
+    }
+    for rotulo, p in padroes.items():
+        achados = re.findall(p, fonte)
+        check(f"nenhum {rotulo} ({achados or 'nenhum'})", not achados,
+              "com o cache como fonte de verdade, isso leria dado VELHO em silêncio")
+
+    check("as funções de caminho estão marcadas como legado",
+          fonte.count("LEGADO. A partir do SP3") == 3,
+          "elas divergem do adaptador e enganam quem as usar como sonda")
+
+
 def main():
     secao_loja()
     secao_contas()
     secao_grupos()
     secao_savegames()
+    secao_sem_disco()
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
