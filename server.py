@@ -41,15 +41,30 @@ DOOR  = 2
 # Fala sem nenhum dos dois continua sendo a fala de NPC de sempre.
 LICAO_CLASSES = ("warrior", "mage", "rogue", "cleric", "bard", "paladin")
 LICAO_VERBOS  = ("mover_ate", "abrir_porta", "atacar", "matar",
-                 "pegar_item", "equipar", "encerrar_turno")
+                 "pegar_item", "equipar", "encerrar_turno",
+                 # Fase 2 — o que o herói FAZ além de andar e bater.
+                 "usar_item", "usar_magia", "usar_habilidade",
+                 "usar_tecnica", "usar_instrumento", "desarmar_armadilha")
 # Verbos cujo alvo é uma casa [x,y]; nos demais o alvo é uma string
 # (tipo do monstro, para atacar/matar; id do item, para pegar/equipar).
 LICAO_VERBOS_CASA = ("mover_ate", "abrir_porta")
+# O que uma lição pode alterar no herói ao disparar. Fechado de propósito:
+# serve para o jogador SENTIR uma regra (chegar esfomeado à sala de provisões),
+# não para o autor mexer em PV, ouro ou inventário por um marcador no mapa.
+LICAO_EFEITOS = ("fome", "sede")
 
 
 def _e_licao(fala):
-    """True se esta fala autorada é uma lição de tutorial."""
-    return bool(isinstance(fala, dict) and (fala.get("classe") or fala.get("tarefa")))
+    """True se esta fala autorada é uma lição de tutorial.
+
+    Qualquer um dos quatro campos basta. `ordem` e `efeito` entram porque
+    uma lição pode existir só para explicar (sem tarefa) ou só para fazer o
+    herói sentir uma regra (sem tarefa e sem classe) — e mesmo assim precisa
+    do rastreio por jogador, que a fala de NPC comum não tem."""
+    if not isinstance(fala, dict):
+        return False
+    return bool(fala.get("classe") or fala.get("tarefa") or fala.get("efeito")
+                or fala.get("ordem") is not None)
 
 
 MAP_W = 30
@@ -6272,6 +6287,15 @@ def validar_dungeon(defn):
             return False, "tarefa de lição precisa de vezes maior ou igual a 1."
         if not (_tar.get("texto_curto") or "").strip():
             return False, "tarefa de lição sem texto_curto."
+        _ef = _f.get("efeito")
+        if _ef is not None:
+            if not isinstance(_ef, dict) or not _ef:
+                return False, "efeito de lição deve ser um objeto JSON não vazio."
+            for _k, _v in _ef.items():
+                if _k not in LICAO_EFEITOS:
+                    return False, f"efeito de lição desconhecido: {_k!r} (fome|sede)."
+                if isinstance(_v, bool) or not isinstance(_v, int) or not (0 <= _v <= 100):
+                    return False, f"valor de {_k} fora de 0–100: {_v!r}."
         _alvo = _tar.get("alvo")
         if _alvo not in (None, "", []):
             if _tar["tipo"] in LICAO_VERBOS_CASA:
@@ -10307,6 +10331,7 @@ class GameRoom:
             self._pagar_fome_sede(p, item["custo_fome"], item["custo_sede"])
             p["technique_cooldowns"][tecnica_id] = self.round_num + item["recarga_rodadas"]
             await self.gm_say(T("narracao.ativa", heroi=p['name'], item_nome=nome_item(item)))
+        await self._licao_evento(p, "usar_tecnica", alvo=tecnica_id)
         await self.push_state()
 
     def _rolar_2d6(self):
@@ -10414,6 +10439,7 @@ class GameRoom:
         p["instrumento_usado"] = True
         if duas_maos:
             p["action_done"] = True
+        await self._licao_evento(p, "usar_instrumento", alvo=(inst or {}).get("base"))
         await self.push_state()
 
     async def _instr_nota_cortante(self, p, inst, st, data):
@@ -13631,7 +13657,9 @@ class GameRoom:
         Chamado do caminho de SUCESSO dos handlers — ação recusada não conta.
         Sem lição pendente, ou com verbo/alvo diferentes do esperado, é um
         no-op barato: fora de uma masmorra-tutorial não há lição nenhuma."""
-        if not p or not self.licoes:
+        # getattr defensivo: _licao_evento e chamado de caminhos quentes do
+        # combate, e ha suites que montam a sala sem passar pelo __init__.
+        if not p or not getattr(self, "licoes", None):
             return
         lic_id = p.get("licao_atual")
         if not lic_id:
@@ -13673,12 +13701,28 @@ class GameRoom:
         p.setdefault("licao_progresso", {})[fala["id"]] = 0
         if fala.get("tarefa"):
             p["licao_atual"] = fala["id"]
+        await self._licao_efeito(p, fala)
         # O cliente trata lição e fala comum de formas diferentes: a fala some
         # sozinha em segundos, a lição fica numa janela até o jogador fechar.
         payload["licao_id"] = fala["id"]
         await self.send_to(p["id"], payload)
         if not fala.get("tarefa"):
             await self._licao_concluir(p, fala)   # lição que só explica
+
+    async def _licao_efeito(self, p, fala):
+        """Aplica o `efeito` da lição ao herói que a recebeu.
+
+        Existe para o jogador SENTIR a regra em vez de ler sobre ela: ninguém
+        chega esfomeado à sala de provisões num tutorial curto, então a lição
+        zera os medidores e deixa a penalidade aparecer nos próprios dados.
+        Vocabulário fechado (LICAO_EFEITOS) — não mexe em PV, ouro nem bolsa."""
+        ef = fala.get("efeito")
+        if not ef:
+            return
+        for chave in LICAO_EFEITOS:
+            if chave in ef:
+                p[chave] = max(0, min(100, int(ef[chave])))
+        self._verificar_estado_sobrevivencia(p)
 
     def _licao_liberada(self, p, fala):
         """True se as lições da mesma classe com ordem menor já foram
@@ -15681,6 +15725,7 @@ class GameRoom:
             "sede":        p["sede"],
             "animados":    animados,
         })
+        await self._licao_evento(p, "usar_habilidade", alvo="animar_mortos")
         await self.push_state()
 
     # â”€â”€ Animados em combate (sistema completo) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -17153,6 +17198,7 @@ class GameRoom:
         labels = [T("ui.cancao.atributo." + x) for x in atrib_validos]
         await self.gm_say(
             T("narracao.entoa_a_cancao_heroica_aliados_em_quadra", heroi=p['name'], labels=labels, CANCAO_RAIO=CANCAO_RAIO, custo_fome=custo['fome'], custo_sede=custo['sede']))
+        await self._licao_evento(p, "usar_habilidade", alvo="cancao_heroica")
         await self.push_state()
 
     async def handle_desativar_cancao(self, pid, data=None):
@@ -17460,6 +17506,7 @@ class GameRoom:
         dados_str = "+".join(str(d) for d in dados)
         await self.gm_say(
             T("narracao.cura_d8_hp_alcance_q", heroi=p['name'], alvo=nome_criatura(alvo), num_dados=num_dados, dados_str=dados_str, if_bonus_int_0_else='+' if bonus_int >= 0 else '', bonus_int=bonus_int, cura_real=cura_real, alvo_hp=alvo['hp'], alvo_max_hp=alvo['max_hp'], alcance_tiles=alcance_tiles, custo_fome=custo_fome, custo_sede=custo_sede))
+        await self._licao_evento(p, "usar_habilidade", alvo="cura")
         await self.push_state()
 
     async def handle_cura_area(self, pid, data):
@@ -17783,6 +17830,7 @@ class GameRoom:
 
         await self.gm_say(
             T("narracao.usa_imposicao_das_maos_em_cura_hp", heroi=p['name'], alvo=nome_criatura(alvo), cura_efetiva=cura_efetiva, alvo_hp=alvo['hp'], alvo_max_hp=alvo['max_hp'], fome_cost=fome_cost, sede_cost=sede_cost))
+        await self._licao_evento(p, "usar_habilidade", alvo="imposicao_maos")
         await self.push_state()
 
     async def handle_golpe_sagrado(self, pid, data=None):
@@ -17809,6 +17857,7 @@ class GameRoom:
 
         await self.gm_say(
             T("narracao.invoca_golpe_sagrado_1d8_de_dano_sagrado", heroi=p['name'], fome_cost=fome_cost, sede_cost=sede_cost))
+        await self._licao_evento(p, "usar_habilidade", alvo="golpe_sagrado")
         await self.push_state()
 
     async def handle_desativar_golpe_sagrado(self, pid, data=None):
@@ -20470,6 +20519,7 @@ class GameRoom:
         # Magia Acelerada (Fase 3): nÃ£o gasta a aÃ§Ã£o principal deste turno.
         if not usou_acelerada:
             p["action_done"] = True
+        await self._licao_evento(p, "usar_magia", alvo=magia_id)
         await self.push_state()
 
     def _magia_tem_dano(self, magia):
@@ -24594,6 +24644,7 @@ class GameRoom:
                 "efeitos_ativos": [],         # dano progressivo agendado (incendiÃ¡ria)
             })
         await self.gm_say(T("narracao.prepara_em", heroi=p['name'], tipo_nome=nome_criatura(tipo), tx=tx, ty=ty))
+        await self._licao_evento(p, "usar_habilidade", alvo="criar_armadilha")
         await self.push_state()
 
     async def _enviar_trap_result(self, alvo, nome, icone, sucesso, dano, metade,
@@ -25398,6 +25449,7 @@ class GameRoom:
             msg_recover = f" Recuperou 🪙{custo_ouro_arm}!" if recuperou else ""
             await self.gm_say(T("narracao.armadilha_desarmada_com_sucesso", msg_recover=msg_recover))
             await self._conceder_xp_armadilha(arm)
+            await self._licao_evento(p, "desarmar_armadilha", alvo=(arm or {}).get("tipo"))
         else:
             await self.gm_say(T("narracao.falha_no_desarme_vs_tente_de_novo_no_pro", total=total, dif=dif))
         await self.push_state()
@@ -25910,6 +25962,7 @@ class GameRoom:
             await self.gm_say(
                 T("narracao.acende_a_e_a_luz_em_volta_e_sugada_fica", item_emoji=item['emoji'], heroi=p['name'], item=nome_item(item), extra=extra))
 
+        await self._licao_evento(p, "usar_item", alvo=(item or {}).get("id"))
         if remove_item:
             p["bag"].remove(item)
         await self.push_state()

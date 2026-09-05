@@ -210,6 +210,10 @@ window.LANG_CATALOGO = {
     "en": "Treasure Chest",
     "pt": "Arca de tesouros"
   },
+  "cat.decor.armadura.nome": {
+    "en": "",
+    "pt": "Armadura"
+  },
   "cat.decor.arvore.nome": {
     "en": "Tree",
     "pt": "Árvore"
@@ -225,6 +229,10 @@ window.LANG_CATALOGO = {
   "cat.decor.barril.nome": {
     "en": "Barrel",
     "pt": "Barril"
+  },
+  "cat.decor.brasa_chao.nome": {
+    "en": "",
+    "pt": "Brasa no chão"
   },
   "cat.decor.brasao_leao.nome": {
     "en": "Lion Crest",
@@ -250,6 +258,10 @@ window.LANG_CATALOGO = {
     "en": "Cave",
     "pt": "Caverna"
   },
+  "cat.decor.chama_viva.nome": {
+    "en": "",
+    "pt": "Chama viva"
+  },
   "cat.decor.chao.nome": {
     "en": "Ground (Grass)",
     "pt": "Chão (grama)"
@@ -265,6 +277,10 @@ window.LANG_CATALOGO = {
   "cat.decor.cortina_vermelha.nome": {
     "en": "Red Curtain",
     "pt": "Cortina vermelha"
+  },
+  "cat.decor.cripta.nome": {
+    "en": "",
+    "pt": "Cripta"
   },
   "cat.decor.estante.nome": {
     "en": "Shelf",
@@ -286,6 +302,10 @@ window.LANG_CATALOGO = {
     "en": "Fountain",
     "pt": "Fonte"
   },
+  "cat.decor.fonte_de_parede.nome": {
+    "en": "",
+    "pt": "Fonte de parede"
+  },
   "cat.decor.gaiola.nome": {
     "en": "Cage with Skeleton",
     "pt": "Gaiola com esqueleto"
@@ -293,6 +313,10 @@ window.LANG_CATALOGO = {
   "cat.decor.grades_prisao.nome": {
     "en": "Prison Bars",
     "pt": "Grades de prisão"
+  },
+  "cat.decor.lapide.nome": {
+    "en": "",
+    "pt": "Lápide"
   },
   "cat.decor.lareira.nome": {
     "en": "Fireplace",
@@ -310,6 +334,10 @@ window.LANG_CATALOGO = {
     "en": "Torture Table",
     "pt": "Mesa de tortura"
   },
+  "cat.decor.prisao.nome": {
+    "en": "",
+    "pt": "Prisão"
+  },
   "cat.decor.trono.nome": {
     "en": "King's Throne",
     "pt": "Trono de rei"
@@ -317,6 +345,10 @@ window.LANG_CATALOGO = {
   "cat.decor.tumba.nome": {
     "en": "Tomb",
     "pt": "Tumba"
+  },
+  "cat.decor.tumba_lapide.nome": {
+    "en": "",
+    "pt": "Tumba com lápide"
   },
   "cat.guilda.bardo_cancao_acerto.desc": {
     "en": "The Heroic Song's Accuracy bonus rises from +1 to +2.",
@@ -950,6 +982,22 @@ window.LANG_CATALOGO = {
     "en": "Lore: Goblin Shaman",
     "pt": "Lenda: Xamã Goblin"
   },
+  "cat.guilda.lenda_grande_gorgona.desc": {
+    "en": "",
+    "pt": "+1 de ataque e +1 nos saves contra Grande Gorgona."
+  },
+  "cat.guilda.lenda_grande_gorgona.nome": {
+    "en": "",
+    "pt": "Lenda: Grande Gorgona"
+  },
+  "cat.guilda.lenda_grande_medusa.desc": {
+    "en": "",
+    "pt": "+1 de ataque e +1 nos saves contra Grande Medusa."
+  },
+  "cat.guilda.lenda_grande_medusa.nome": {
+    "en": "",
+    "pt": "Lenda: Grande Medusa"
+  },
   "cat.guilda.lenda_grotao.desc": {
     "en": "+1 to attack and +1 to saving throws against Grotão.",
     "pt": "+1 de ataque e +1 nos saves contra Grotão."
@@ -1029,6 +1077,14 @@ window.LANG_CATALOGO = {
   "cat.guilda.lenda_lorde_vampiro.nome": {
     "en": "Lore: Vampire Lord",
     "pt": "Lenda: Lorde Vampiro"
+  },
+  "cat.guilda.lenda_medusa.desc": {
+    "en": "",
+    "pt": "+1 de ataque e +1 nos saves contra Medusa."
+  },
+  "cat.guilda.lenda_medusa.nome": {
+    "en": "",
+    "pt": "Lenda: Medusa"
   },
   "cat.guilda.lenda_molochus_adulto.desc": {
     "en": "+1 to attack and +1 to saving throws against Adult Molochus.",
@@ -1882,14 +1938,6 @@ window.LANG_CATALOGO = {
     "en": "Swift Boots",
     "pt": "Botas Velozes"
   },
-  "cat.item.bota_alada.desc": {
-    "en": "While equipped, grants Flight indefinitely, with a maximum altitude of 3.",
-    "pt": "Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 3."
-  },
-  "cat.item.bota_alada.nome": {
-    "en": "Winged Boot",
-    "pt": "Bota Alada"
-  },
   "cat.item.bordao.desc": {
     "en": "",
     "pt": "Bordão: 1d6 de dano contundente, usando Força ou Destreza. No 20 natural, o alvo testa Fortitude ou fica tonto."
@@ -1905,6 +1953,14 @@ window.LANG_CATALOGO = {
   "cat.item.bordao_prata.nome": {
     "en": "Silver Quarterstaff",
     "pt": "Bordão de Prata"
+  },
+  "cat.item.bota_alada.desc": {
+    "en": "While equipped, grants Flight indefinitely, with a maximum altitude of 3.",
+    "pt": "Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 3."
+  },
+  "cat.item.bota_alada.nome": {
+    "en": "Winged Boot",
+    "pt": "Bota Alada"
   },
   "cat.item.bota_dos_passos_largos.nome": {
     "en": "Boots of the Long Stride",
@@ -2566,6 +2622,10 @@ window.LANG_CATALOGO = {
     "en": "Acrid Fungus",
     "pt": "Fungo Acre"
   },
+  "cat.item.veneno_medusa.nome": {
+    "en": "",
+    "pt": "Veneno da Medusa"
+  },
   "cat.item.veneno_polvo_abissal.desc": {
     "en": "",
     "pt": "Fortitude CD 11. Falha: cegueira por 1d4 rodadas, visão 1 quadrado, -5 percepção, -4 ataques e sem ataques à distância. Sucesso: percepção -2 por 1d4 rodadas."
@@ -2758,6 +2818,14 @@ window.LANG_CATALOGO = {
     "en": "Fear",
     "pt": "Medo"
   },
+  "cat.magia.olhar_petrificante.desc": {
+    "en": "",
+    "pt": "O alvo que tiver o conjurador em sua visão testa Vontade. Faz um teste inicial, dois por turno enquanto o conjurador permanecer visível e até cinco testes finais após perdê-lo de vista. Três falhas petrificam permanentemente; três sucessos encerram o efeito."
+  },
+  "cat.magia.olhar_petrificante.nome": {
+    "en": "",
+    "pt": "Olhar Petrificante"
+  },
   "cat.magia.protecao_energia.desc": {
     "en": "Absorbs 10 damage/round from fire, cold, electricity, acid, water, or holy. Lasts 1d6+1 rounds.",
     "pt": "Absorve 10 dano/rodada de fogo, gelo, eletricidade, ácido, água ou sagrado. Dura 1d6+1."
@@ -2849,6 +2917,10 @@ window.LANG_CATALOGO = {
   "cat.monstro.aranha_sombria.nome": {
     "en": "Shadow Spider",
     "pt": "Aranha Sombria"
+  },
+  "cat.monstro.boneco_treino.nome": {
+    "en": "Training Dummy",
+    "pt": "Boneco de Treino"
   },
   "cat.monstro.bugbear_sombras.nome": {
     "en": "Bugbear — Shadow Boogeyman",
@@ -2998,6 +3070,14 @@ window.LANG_CATALOGO = {
     "en": "Goblin Shaman",
     "pt": "Xamã Goblin"
   },
+  "cat.monstro.grande_gorgona.nome": {
+    "en": "",
+    "pt": "Grande Gorgona"
+  },
+  "cat.monstro.grande_medusa.nome": {
+    "en": "",
+    "pt": "Grande Medusa"
+  },
   "cat.monstro.grotao.nome": {
     "en": "Grotão",
     "pt": "Grotão"
@@ -3049,6 +3129,10 @@ window.LANG_CATALOGO = {
   "cat.monstro.lorde_vampiro.nome": {
     "en": "Vampire Lord",
     "pt": "Lorde Vampiro"
+  },
+  "cat.monstro.medusa.nome": {
+    "en": "",
+    "pt": "Medusa"
   },
   "cat.monstro.minotauro.nome": {
     "en": "",
