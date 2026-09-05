@@ -1739,7 +1739,10 @@ function abrirEntradaMasmorra(adventure, titulo){
   box.appendChild(h);
   const panel = document.createElement('div'); panel.className = 'worldmap-location-info';
   panel.innerHTML = info.html;
-  if(!info.completed) panel.appendChild(_adventureGoButton(adventure));
+  // _adventureGoButton PRECISA do bloco `world`: ele monta a transição visual a
+  // partir da cidade atual. Chamar sem ele estoura dentro do onclick, depois de
+  // o botão já ter virado "Iniciando expedição…" — trava mudo, sem enviar nada.
+  if(!info.completed) panel.appendChild(_adventureGoButton(adventure, _worldOfCityState()));
   box.appendChild(panel);
   const back = document.createElement('button'); back.className = 'btn-cancel';
   back.textContent = '← Voltar';
