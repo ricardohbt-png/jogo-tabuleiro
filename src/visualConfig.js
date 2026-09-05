@@ -91,6 +91,8 @@ window.VC = {
     // escuras e distinguir-se claramente dos pisos de pedra.
     agua:          { color: [0.01, 0.40, 0.78] },
     agua_profunda: { color: [0.006, 0.045, 0.18] },
+    piso_congelado:{ color: [0.42, 0.78, 0.89] },
+    planicie_nevada:{ color: [0.78, 0.90, 0.94] },
     lava:          { color: [0.84, 0.12, 0.025] },
     pantano:       { color: [0.12, 0.23, 0.12] },
     pedra_negra:   { color: [0.14, 0.14, 0.16] },
@@ -102,6 +104,8 @@ window.VC = {
     desmoronada:   { color: [0.33, 0.30, 0.25] },
     madeira:        { color: [0.29, 0.13, 0.045] },
     duna_deserto:  { color: [0.67, 0.43, 0.20] },
+    caverna_congelada: { color: [0.29, 0.56, 0.66] },
+    duna_neve:         { color: [0.79, 0.90, 0.94] },
     rocha:          { color: [0.23, 0.22, 0.22] },
     rocha_marrom:   { color: [0.38, 0.23, 0.13] },
   },

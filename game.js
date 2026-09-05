@@ -8686,6 +8686,54 @@ function paintSwamp(ctx, ox, oy, size, r){
   }
 }
 
+function paintIce(ctx, ox, oy, size, r){
+  // Superfície azulada e translúcida, com camadas, fissuras e reflexos de um
+  // lago congelado. O ruído é determinístico por casa na chamada do painter.
+  const grad=ctx.createLinearGradient(ox,oy,ox+size,oy+size);
+  grad.addColorStop(0,'#dffaff'); grad.addColorStop(.28,'#9adced');
+  grad.addColorStop(.62,'#5baecb'); grad.addColorStop(1,'#2e789b');
+  ctx.fillStyle=grad; ctx.fillRect(ox,oy,size,size);
+  ctx.fillStyle='rgba(245,255,255,.23)';
+  ctx.fillRect(ox,oy,size,size*.08);
+  for(let i=0;i<3;i++){
+    const px=ox+size*(.08+r()*.78), py=oy+size*(.14+r()*.72);
+    const len=size*(.20+r()*.34);
+    ctx.strokeStyle=i===0 ? 'rgba(255,255,255,.78)' : 'rgba(180,239,250,.58)';
+    ctx.lineWidth=Math.max(1,size*(i===0?.012:.007));
+    ctx.beginPath(); ctx.moveTo(px,py);
+    ctx.lineTo(px+len*(.35+r()*.35),py+size*(r()-.5)*.10);
+    ctx.lineTo(px+len,py+size*(r()-.5)*.17); ctx.stroke();
+  }
+  for(let i=0;i<5;i++){
+    const px=ox+size*(.08+r()*.84), py=oy+size*(.08+r()*.84);
+    ctx.fillStyle=`rgba(255,255,255,${(.22+r()*.35).toFixed(2)})`;
+    ctx.beginPath(); ctx.ellipse(px,py,size*(.025+r()*.045),size*(.007+r()*.014),r()*Math.PI,0,Math.PI*2); ctx.fill();
+  }
+  ctx.strokeStyle='rgba(22,91,126,.28)'; ctx.lineWidth=Math.max(1,size*.012);
+  ctx.beginPath(); ctx.moveTo(ox+size*.02,oy+size*.78);
+  ctx.bezierCurveTo(ox+size*.28,oy+size*.66,ox+size*.57,oy+size*.91,ox+size*1.02,oy+size*.72); ctx.stroke();
+}
+
+function paintSnowPlain(ctx, ox, oy, size, r){
+  const grad=ctx.createLinearGradient(ox,oy,ox+size,oy+size);
+  grad.addColorStop(0,'#fbffff'); grad.addColorStop(.42,'#e1f1f4');
+  grad.addColorStop(.75,'#bddce5'); grad.addColorStop(1,'#8dbdce');
+  ctx.fillStyle=grad; ctx.fillRect(ox,oy,size,size);
+  // Ondulações suaves de neve acumulada, sem rejunte de pedra.
+  for(let row=0;row<4;row++){
+    const yy=oy+size*(.18+row*.20)+(r()-.5)*size*.06;
+    ctx.strokeStyle=row%2 ? 'rgba(116,172,191,.27)' : 'rgba(255,255,255,.62)';
+    ctx.lineWidth=Math.max(1,size/42); ctx.beginPath(); ctx.moveTo(ox-size*.04,yy);
+    ctx.bezierCurveTo(ox+size*.22,yy-size*.06,ox+size*.47,yy+size*.06,ox+size*.72,yy);
+    ctx.bezierCurveTo(ox+size*.85,yy-size*.04,ox+size*1.02,yy+size*.04,ox+size*1.05,yy-size*.01); ctx.stroke();
+  }
+  for(let i=0;i<7;i++){
+    const px=ox+size*(.05+r()*.90), py=oy+size*(.05+r()*.90);
+    ctx.fillStyle=`rgba(255,255,255,${(.30+r()*.38).toFixed(2)})`;
+    ctx.beginPath(); ctx.ellipse(px,py,size*(.018+r()*.035),size*(.006+r()*.012),r()*Math.PI,0,Math.PI*2); ctx.fill();
+  }
+}
+
 function paintDuneWallTop(ctx, ox, oy, size, r){
   ctx.fillStyle='#68401f'; ctx.fillRect(ox,oy,size,size);
   const cx=ox+size*(.48+(r()-.5)*.08), cy=oy+size*(.53+(r()-.5)*.08);
@@ -8736,6 +8784,66 @@ function paintRock(ctx, ox, oy, size, r, brown=false){
     ctx.lineWidth=Math.max(1,size/75); ctx.beginPath(); ctx.moveTo(px,py);
     ctx.lineTo(px+size*(r()-.5)*.24,py+size*(.12+r()*.24));
     ctx.lineTo(px+size*(r()-.5)*.34,py+size*(.22+r()*.22)); ctx.stroke();
+  }
+}
+
+function paintFrozenCaveWall(ctx, ox, oy, size, r){
+  const grad=ctx.createLinearGradient(ox,oy,ox+size,oy+size);
+  grad.addColorStop(0,'#88d9e8'); grad.addColorStop(.34,'#3d8ba5');
+  grad.addColorStop(.72,'#20516b'); grad.addColorStop(1,'#102c43');
+  ctx.fillStyle='#0b2032'; ctx.fillRect(ox,oy,size,size);
+  const pts=[], n=9;
+  for(let i=0;i<n;i++){
+    const a=i/n*Math.PI*2, rr=size*(.42+r()*.11);
+    pts.push([ox+size*.5+Math.cos(a)*rr,oy+size*.51+Math.sin(a)*rr]);
+  }
+  ctx.save(); ctx.beginPath(); pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.closePath(); ctx.clip();
+  ctx.fillStyle=grad; ctx.fillRect(ox,oy,size,size);
+  for(let i=0;i<8;i++){
+    const px=ox+size*(.12+r()*.72), py=oy+size*(.10+r()*.72);
+    const rw=size*(.09+r()*.17), rh=size*(.07+r()*.18);
+    ctx.fillStyle=i%3===0 ? 'rgba(210,250,255,.34)' : i%3===1 ? 'rgba(5,30,48,.34)' : 'rgba(80,170,193,.30)';
+    ctx.beginPath(); ctx.ellipse(px,py,rw,rh,r()*Math.PI,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+  ctx.strokeStyle='rgba(5,25,39,.80)'; ctx.lineWidth=Math.max(1,size/25);
+  ctx.beginPath(); pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.closePath(); ctx.stroke();
+  for(let i=0;i<5;i++){
+    const px=ox+size*(.18+r()*.58), py=oy+size*(.12+r()*.66);
+    ctx.strokeStyle=i%2 ? 'rgba(190,247,255,.55)' : 'rgba(8,39,61,.62)';
+    ctx.lineWidth=Math.max(1,size/78); ctx.beginPath(); ctx.moveTo(px,py);
+    ctx.lineTo(px+size*(r()-.5)*.18,py+size*(.10+r()*.15));
+    ctx.lineTo(px+size*(r()-.5)*.24,py+size*(.22+r()*.17)); ctx.stroke();
+  }
+  for(let i=0;i<4;i++){
+    const px=ox+size*(.12+r()*.76), py=oy+size*(.12+r()*.70);
+    ctx.fillStyle='rgba(238,255,255,.72)'; ctx.beginPath(); ctx.arc(px,py,size*(.012+r()*.022),0,Math.PI*2); ctx.fill();
+  }
+}
+
+function paintSnowDuneWall(ctx, ox, oy, size, r){
+  const grad=ctx.createLinearGradient(ox,oy,ox,oy+size);
+  grad.addColorStop(0,'#f5fdff'); grad.addColorStop(.42,'#c8e8f1');
+  grad.addColorStop(.78,'#83bfd2'); grad.addColorStop(1,'#3e7894');
+  ctx.fillStyle='#234c65'; ctx.fillRect(ox,oy,size,size);
+  ctx.fillStyle=grad;
+  ctx.beginPath(); ctx.moveTo(ox,oy+size*.82);
+  ctx.bezierCurveTo(ox+size*.18,oy+size*(.35+r()*.12),ox+size*.44,oy+size*(.18+r()*.12),ox+size*.68,oy+size*(.38+r()*.10));
+  ctx.bezierCurveTo(ox+size*.82,oy+size*(.53+r()*.10),ox+size*.92,oy+size*(.22+r()*.11),ox+size,oy+size*.17);
+  ctx.lineTo(ox+size,oy+size); ctx.lineTo(ox,oy+size); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.78)'; ctx.lineWidth=Math.max(1,size/24);
+  ctx.beginPath(); ctx.moveTo(ox+size*.02,oy+size*.80);
+  ctx.bezierCurveTo(ox+size*.20,oy+size*.34,ox+size*.43,oy+size*.20,ox+size*.67,oy+size*.40);
+  ctx.bezierCurveTo(ox+size*.82,oy+size*.53,ox+size*.92,oy+size*.24,ox+size*.98,oy+size*.18); ctx.stroke();
+  for(let row=0;row<3;row++){
+    const yy=oy+size*(.48+row*.14)+(r()-.5)*size*.04;
+    ctx.strokeStyle=row===0 ? 'rgba(65,132,158,.42)' : 'rgba(255,255,255,.34)';
+    ctx.lineWidth=Math.max(1,size/80); ctx.beginPath(); ctx.moveTo(ox+size*.05,yy);
+    ctx.bezierCurveTo(ox+size*.30,yy-size*.05,ox+size*.66,yy+size*.06,ox+size*.98,yy-size*.02); ctx.stroke();
+  }
+  for(let i=0;i<4;i++){
+    const px=ox+size*(.12+r()*.75), py=oy+size*(.14+r()*.28);
+    ctx.fillStyle='rgba(255,255,255,.56)'; ctx.beginPath(); ctx.ellipse(px,py,size*(.02+r()*.04),size*(.008+r()*.016),r()*Math.PI,0,Math.PI*2); ctx.fill();
   }
 }
 
@@ -8810,6 +8918,8 @@ const MAT_PALETTE_2D = {
   grama:       { base: [46, 78, 40],  accent: 'grass' },
   agua:        { base: [0, 120, 202], accent: 'water' },
   agua_profunda: { base: [6, 23, 63], accent: 'deepWater' },
+  piso_congelado: { base: [120, 200, 226], accent: 'ice' },
+  planicie_nevada: { base: [216, 237, 242], accent: 'snowPlain' },
   lava:        { base: [214, 59, 19], accent: 'lava' },
   pantano:     { base: [53, 78, 49], accent: 'swamp' },
   pedra_negra: { base: [20, 19, 24],  accent: 'stone' },
@@ -8819,11 +8929,13 @@ const MAT_PALETTE_2D = {
   pedra_normal:  { base: [132, 130, 140], accent: 'wallStone' },
   enegrecida:    { base: [24, 23, 28],   accent: 'blackbrick' },
   pedra_caverna: { base: [120, 82, 46],  accent: 'cave' },
+  caverna_congelada: { base: [75, 143, 168], accent: 'frozenCave' },
   desmoronada:   { base: [96, 88, 76],   accent: 'wallRubble' },
   madeira:        { base: [74, 39, 15], accent: 'woodWall' },
   duna_deserto: { base: [190, 139, 67], accent: 'duneWall' },
   rocha:        { base: [72, 70, 70], accent: 'rockWall' },
   rocha_marrom: { base: [117, 75, 50], accent: 'brownRockWall' },
+  duna_neve: { base: [201, 229, 239], accent: 'snowDune' },
 };
 // Resolve o material de uma casa para render (default por estrutura do tile).
 function matDaCasa(state, x, y){
@@ -8868,6 +8980,12 @@ function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview, matI
   }
   else if(pal.accent==='swamp'){
     paintSwamp(ctx, X, Y, CELL, _rng((x*67^y*131^23)>>>0));
+  }
+  else if(pal.accent==='ice'){
+    paintIce(ctx, X, Y, CELL, _rng((x*71^y*149^29)>>>0));
+  }
+  else if(pal.accent==='snowPlain'){
+    paintSnowPlain(ctx, X, Y, CELL, _rng((x*79^y*163^31)>>>0));
   }
   else if(pal.accent==='woodFloor'){
     ctx.fillStyle='#241108'; ctx.fillRect(X,Y,CELL,CELL);
@@ -9098,6 +9216,40 @@ function drawWallSouthFace(ctx, x, y, matId){
     return;
   }
 
+  if(pal.accent==='frozenCave'){
+    const grad=ctx.createLinearGradient(0,faceY,0,faceY+faceH);
+    grad.addColorStop(0,'#82d3e1'); grad.addColorStop(.30,'#3b829d');
+    grad.addColorStop(.72,'#1c4b65'); grad.addColorStop(1,'rgba(12,31,48,0)');
+    ctx.fillStyle=grad; ctx.fillRect(X+1,faceY,CELL-2,faceH);
+    const rWall=(seed,n)=>(((seed*1664525+n*1013904223)>>>0)%1000)/1000;
+    ctx.strokeStyle='rgba(6,33,51,.68)'; ctx.lineWidth=1.5;
+    for(let i=0;i<4;i++){
+      const px=X+CELL*(.12+rWall(h,i)), py=faceY+faceH*(.12+i*.18);
+      ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px+CELL*(.12-rWall(h,i+4)*.20),py+faceH*.16); ctx.lineTo(px+CELL*(rWall(h,i+8)*.18-.06),py+faceH*.29); ctx.stroke();
+    }
+    ctx.fillStyle='rgba(220,252,255,.42)'; ctx.fillRect(X+2,faceY,CELL-4,2);
+    return;
+  }
+
+  if(pal.accent==='snowDune'){
+    const grad=ctx.createLinearGradient(0,faceY,0,faceY+faceH);
+    grad.addColorStop(0,'#f6fdff'); grad.addColorStop(.35,'#c7e7f0');
+    grad.addColorStop(.78,'#76aec4'); grad.addColorStop(1,'rgba(38,76,98,0)');
+    ctx.fillStyle=grad; ctx.beginPath(); ctx.moveTo(X+1,faceY+faceH);
+    for(let i=0;i<=8;i++){
+      const px=X+1+(CELL-2)*i/8;
+      const py=faceY+faceH*(.10+.14*Math.sin(i*.85))+(((h>>(i%13))&7)-3);
+      ctx.lineTo(px,py);
+    }
+    ctx.lineTo(X+CELL-1,faceY+faceH); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.78)'; ctx.lineWidth=1.4;
+    for(let row=0;row<3;row++){
+      const yy=faceY+7+row*8; ctx.beginPath(); ctx.moveTo(X+3,yy);
+      ctx.bezierCurveTo(X+CELL*.32,yy-3,X+CELL*.68,yy+3,X+CELL-3,yy-1); ctx.stroke();
+    }
+    return;
+  }
+
   // Cabana: tábuas horizontais, juntas profundas e veios irregulares.
   if(pal.accent==='woodWall'){
     const plankH=Math.max(5, Math.floor(faceH/3));
@@ -9176,6 +9328,8 @@ function drawWallTop3D(ctx, x, y, matId){
   const [BR, BG, BB] = pal.base;
   // Estilos próprios: caverna (pedra irregular) e enegrecida (tijolo preto).
   if(pal.accent==='duneWall'){ paintDuneWallTop(ctx, X, Y, CELL, _rng((x*47^y*31^17)>>>0)); return; }
+  if(pal.accent==='frozenCave'){ paintFrozenCaveWall(ctx, X, Y, CELL, _rng((x*53^y*37^19)>>>0)); return; }
+  if(pal.accent==='snowDune'){ paintSnowDuneWall(ctx, X, Y, CELL, _rng((x*67^y*41^23)>>>0)); return; }
   if(pal.accent==='rockWall'){ paintRock(ctx, X, Y, CELL, _rng((x*59^y*43^29)>>>0)); return; }
   if(pal.accent==='brownRockWall'){ paintRock(ctx, X, Y, CELL, _rng((x*61^y*47^31)>>>0), true); return; }
   if(pal.accent==='cave'){ paintCave(ctx, X, Y, CELL, _rng((x*41^y*23^9)>>>0)); return; }
@@ -27894,6 +28048,8 @@ function init3D(state){
       case 'areia_deserto': paintSand(c,0,0,S,r); break;
       case 'lava':          paintLava(c,0,0,S,r); break;
       case 'pantano':       paintSwamp(c,0,0,S,r); break;
+      case 'piso_congelado': paintIce(c,0,0,S,r); break;
+      case 'planicie_nevada': paintSnowPlain(c,0,0,S,r); break;
       case 'agua':
       case 'agua_profunda': {
         // Textura própria para a água: não reutilizar floorTex, porque ele é
@@ -27927,6 +28083,8 @@ function init3D(state){
         break;
       }
       case 'duna_deserto':  paintSand(c,0,0,S,r); break;
+      case 'caverna_congelada': paintFrozenCaveWall(c,0,0,S,r); break;
+      case 'duna_neve':      paintSnowDuneWall(c,0,0,S,r); break;
       case 'rocha':         paintRock(c,0,0,S,r); break;
       case 'rocha_marrom':  paintRock(c,0,0,S,r,true); break;
       case 'pedra_negra':   paintStone(c,0,0,S,r,[30,28,34]); break;
@@ -27953,7 +28111,7 @@ function init3D(state){
         break;
       }
     }
-    if(matId==='grama'||matId==='terra'||matId==='areia_deserto'||matId==='agua'||matId==='agua_profunda'||matId==='lava'||matId==='pantano'||matId==='duna_deserto'||matId==='rocha'||matId==='rocha_marrom'||matId==='pedra_negra'||matId==='enegrecida'||matId==='pedra_caverna'||matId==='desmoronada'||matId==='entulho'||matId==='madeira'||matId==='madeira_escura'){
+    if(matId==='grama'||matId==='terra'||matId==='areia_deserto'||matId==='agua'||matId==='agua_profunda'||matId==='lava'||matId==='pantano'||matId==='piso_congelado'||matId==='planicie_nevada'||matId==='duna_deserto'||matId==='caverna_congelada'||matId==='duna_neve'||matId==='rocha'||matId==='rocha_marrom'||matId==='pedra_negra'||matId==='enegrecida'||matId==='pedra_caverna'||matId==='desmoronada'||matId==='entulho'||matId==='madeira'||matId==='madeira_escura'){
       tex=new T.CanvasTexture(cv); tex.wrapS=tex.wrapT=T.RepeatWrapping;
       // Canvas é desenhado em sRGB. Declarar isso impede o Three.js de tratar
       // os verdes/marrons como cores lineares lavadas no renderizador 3D.
@@ -28459,6 +28617,22 @@ function init3D(state){
             mat.emissive.set(0x17351d);
             mat.emissiveIntensity = 0.22;
             mat.bumpMap = ftex;
+          }
+          if(mid3 === 'piso_congelado'){
+            mat.roughness = 0.18;
+            mat.metalness = 0.10;
+            mat.emissive.set(0x4ca9c7);
+            mat.emissiveIntensity = 0.34;
+            mat.bumpMap = ftex;
+            mat.bumpScale = 0.018;
+          }
+          if(mid3 === 'planicie_nevada'){
+            mat.roughness = 0.82;
+            mat.metalness = 0.02;
+            mat.emissive.set(0x8fbac6);
+            mat.emissiveIntensity = 0.18;
+            mat.bumpMap = ftex;
+            mat.bumpScale = 0.012;
           }
           // Auto-iluminação: a própria textura emite, deixando a cor forte e
           // diferenciada mesmo na penumbra (grama/terra/pedra negra).
@@ -32012,9 +32186,11 @@ function renderMap3D(state){
         fig.userData._waterSinkDeepY = -Math.max(0.10, h) * 0.45;
         fig.userData._lavaSinkY = -Math.max(0.10, h) * 0.30;
         fig.userData._swampSinkY = -Math.max(0.10, h) * 0.20;
+        fig.userData._snowPlainSinkY = -Math.max(0.10, h) * 0.15;
       }
       const waterKind = state.materiais && state.materiais[`${x},${y}`];
-      const waterSinkY = waterKind === 'pantano' ? fig.userData._swampSinkY
+      const waterSinkY = waterKind === 'planicie_nevada' && altitudeNormalizada <= 0 ? fig.userData._snowPlainSinkY
+        : waterKind === 'pantano' ? fig.userData._swampSinkY
         : waterKind === 'lava' ? fig.userData._lavaSinkY
         : waterKind === 'agua_profunda' ? fig.userData._waterSinkDeepY
         : waterKind === 'agua' ? fig.userData._waterSinkShallowY : 0;

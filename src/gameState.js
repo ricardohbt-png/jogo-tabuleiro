@@ -1012,6 +1012,7 @@ const GS = (() => {
     const vooNoAr = !!(actor.voo && alturaDe(actor) > 0);
     if (vooNoAr) return 1;
     const kind = moveCtx?.materiais?.[`${x},${y}`];
+    if (kind === 'piso_congelado') return 1;
     if (kind === 'areia_deserto' || kind === 'lava') return 2;
     if (kind !== 'agua' && kind !== 'agua_profunda') return 1;
     if ((actor.special_abilities || []).some(h => h && h.id === 'movimento_erratico')) return 1;

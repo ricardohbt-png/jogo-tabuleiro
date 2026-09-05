@@ -18,13 +18,13 @@ def check(name, cond):
 def test_catalog():
     print("\n[M1] catálogo MATERIAIS")
     m = server.MATERIAIS
-    for k in ("pedra_cinza", "terra", "areia_deserto", "lava", "pantano", "grama", "pedra_negra", "madeira_escura", "entulho",
-              "pedra_normal", "duna_deserto", "rocha", "rocha_marrom", "enegrecida", "pedra_caverna", "desmoronada", "madeira"):
+    for k in ("pedra_cinza", "terra", "areia_deserto", "lava", "pantano", "piso_congelado", "planicie_nevada", "grama", "pedra_negra", "madeira_escura", "entulho",
+              "pedra_normal", "duna_deserto", "caverna_congelada", "duna_neve", "rocha", "rocha_marrom", "enegrecida", "pedra_caverna", "desmoronada", "madeira"):
         check(f"{k} presente", k in m)
     check("pisos são categoria piso", all(m[k]["categoria"] == "piso"
-          for k in ("pedra_cinza", "terra", "areia_deserto", "lava", "pantano", "grama", "pedra_negra", "madeira_escura", "entulho")))
+          for k in ("pedra_cinza", "terra", "areia_deserto", "lava", "pantano", "piso_congelado", "planicie_nevada", "grama", "pedra_negra", "madeira_escura", "entulho")))
     check("paredes são categoria parede", all(m[k]["categoria"] == "parede"
-          for k in ("pedra_normal", "duna_deserto", "rocha", "rocha_marrom", "enegrecida", "pedra_caverna", "desmoronada", "madeira")))
+          for k in ("pedra_normal", "duna_deserto", "caverna_congelada", "duna_neve", "rocha", "rocha_marrom", "enegrecida", "pedra_caverna", "desmoronada", "madeira")))
     check("entulho é sólido e oclui", m["entulho"]["solido"] and m["entulho"]["oclui"])
     check("grama é cosmética (não sólida/oclui)",
           not m["grama"]["solido"] and not m["grama"]["oclui"])
@@ -101,6 +101,10 @@ def test_validacao():
     ok, _ = server.validar_dungeon(d)
     check("rocha marrom em casa de parede é válida", ok)
 
+    d = copy.deepcopy(base); d["materiais"] = {"1,1": "piso_congelado"}
+    ok, _ = server.validar_dungeon(d)
+    check("piso congelado em chão é válido", ok)
+
     d = copy.deepcopy(base); d["materiais"] = {"1,1": "entulho"}  # entulho é piso sólido em chão
     ok, _ = server.validar_dungeon(d)
     check("entulho em chão é válido", ok)
@@ -118,7 +122,7 @@ def _room():
 def _defn_full():
     """6x3, chão todo, com materiais variados na linha central."""
     d = _defn_base()
-    d["materiais"] = {"2,1": "entulho", "3,1": "grama", "4,1": "lava", "5,1": "pantano"}
+    d["materiais"] = {"2,1": "entulho", "3,1": "grama", "4,1": "lava", "5,1": "pantano", "1,1": "piso_congelado", "0,1": "planicie_nevada"}
     return d
 
 def test_carga():
@@ -132,6 +136,9 @@ def test_carga():
           (3, 1) not in r._mat_solid_tiles and (3, 1) not in r._mat_oclui_tiles)
     check("lava atravessável com custo 2", r._water_step_cost({}, 4, 1) == 2)
     check("pantano atravessável com custo normal", r._water_step_cost({}, 5, 1) == 1)
+    check("piso congelado atravessável com custo normal", r._water_step_cost({}, 1, 1) == 1)
+    check("planície nevada reduz movimento à metade",
+          r._water_turn_moves({"pos": [0, 1]}, 6) == 3)
     criatura = {"pos": [5, 1], "moves_left": 6}
     check("pantano reduz 1 no início do turno", r._water_turn_moves(criatura, 6) == 5)
     criatura = {"pos": [4, 1], "moves_left": 5}

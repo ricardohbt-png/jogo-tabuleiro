@@ -238,6 +238,35 @@ def test_brasa_chao():
         check("brasa causa exatamente 1 de dano", p["hp"] == 19)
     asyncio.run(run())
 
+def test_fogo_imunidade_resistencia():
+    print("\n[A5d] fogo: imunidade e resistência")
+    async def run():
+        r = _room()
+        p = make_player("p1", "Herói", "warrior", 0)
+        p["pos"] = [4, 4]; p["hp"] = 20; p["max_hp"] = 20; p["alive"] = True
+        r.players = {"p1": p}
+        antigo = server.roll_dice
+        server.roll_dice = lambda expr: {"1d4": 4, "2d4": 8, "2d6": 6}.get(str(expr), antigo(expr))
+        try:
+            r.decorations = [{"id": "f", "type": "chama_viva", "pos": [4, 4], "facing": [0, 1], "loot": None, "tem_loot": False}]
+            r._rebuild_decor_index()
+            p["immunities"] = [server.DMG_FIRE]; p["resistances"] = []
+            await r._aplicar_fogueira_se_pisar(p)
+            check("imunidade a fogo zera a Chama Viva", p["hp"] == 20)
+            p["immunities"] = []; p["resistances"] = [{"type": server.DMG_FIRE, "mode": "half"}]
+            await r._aplicar_fogueira_se_pisar(p)
+            check("resistência reduz o fogo da Chama Viva pela metade", p["hp"] == 16)
+            r.decorations = [{"id": "b", "type": "brasa_chao", "pos": [4, 4], "facing": [0, 1], "loot": None, "tem_loot": False}]
+            r._rebuild_decor_index(); p["resistances"] = [{"type": server.DMG_FIRE, "reduction": 1}]; p["hp"] = 20
+            await r._aplicar_fogueira_se_pisar(p)
+            check("resistência fixa também vale para a brasa", p["hp"] == 20)
+            r.decorations = []; r.materiais = {(4, 4): "lava"}; p["resistances"] = [{"type": server.DMG_FIRE, "mode": "half"}]; p["hp"] = 20
+            await r._aplicar_lava_se_pisar(p)
+            check("resistência reduz o dano de lava", p["hp"] == 17)
+        finally:
+            server.roll_dice = antigo
+    asyncio.run(run())
+
 def test_fonte():
     print("\n[A6] fonte → garrafa de água")
     async def run():
@@ -420,6 +449,7 @@ def main():
     test_fogueira()
     test_chama_viva()
     test_brasa_chao()
+    test_fogo_imunidade_resistencia()
     test_fonte()
     test_container()
     test_container_refresh()

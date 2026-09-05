@@ -11891,7 +11891,7 @@ window.EDITOR_CATALOG = {
       "alto": false,
       "pisavel": true,
       "loot_capaz": false,
-      "special": null,
+      "special": "floor_ember",
       "image": "brasa_chao.png"
     },
     {
@@ -11997,6 +11997,22 @@ window.EDITOR_CATALOG = {
       "oclui": false
     },
     {
+      "id": "piso_congelado",
+      "nome": "Piso congelado",
+      "categoria": "piso",
+      "cor": "#78c8e2",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "planicie_nevada",
+      "nome": "Planície nevada",
+      "categoria": "piso",
+      "cor": "#d8edf2",
+      "solido": false,
+      "oclui": false
+    },
+    {
       "id": "lava",
       "nome": "Lava",
       "categoria": "piso",
@@ -12028,6 +12044,22 @@ window.EDITOR_CATALOG = {
       "nome": "Duna do deserto",
       "categoria": "parede",
       "cor": "#b9823f",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "caverna_congelada",
+      "nome": "Parede de caverna congelada",
+      "categoria": "parede",
+      "cor": "#4b8fa8",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "duna_neve",
+      "nome": "Duna de neve",
+      "categoria": "parede",
+      "cor": "#c9e5ef",
       "solido": false,
       "oclui": false
     },

@@ -7138,10 +7138,14 @@ MATERIAIS = {
     "grama":         _mat("Grama", "piso", "#287322"),
     "agua":          _mat("Água", "piso", "#126da1", terreno="agua"),
     "agua_profunda": _mat("Água profunda", "piso", "#06173f", terreno="agua_profunda"),
+    "piso_congelado": _mat("Piso congelado", "piso", "#78c8e2", terreno="piso_congelado"),
+    "planicie_nevada": _mat("Planície nevada", "piso", "#d8edf2", terreno="planicie_nevada"),
     "lava":          _mat("Lava", "piso", "#d63b13", terreno="lava", custo_mov=2),
     "pantano":       _mat("Pântano", "piso", "#354e31", terreno="pantano", custo_mov=1),
     "areia_deserto": _mat("Areia do deserto", "piso", "#c49a58", custo_mov=2),
     "duna_deserto":  _mat("Duna do deserto", "parede", "#b9823f"),
+    "caverna_congelada": _mat("Parede de caverna congelada", "parede", "#4b8fa8"),
+    "duna_neve":      _mat("Duna de neve", "parede", "#c9e5ef"),
     "rocha":         _mat("Rocha", "parede", "#4a4746"),
     "rocha_marrom":  _mat("Rocha marrom", "parede", "#754b32"),
     "pedra_negra":   _mat("Pedra negra", "piso", "#23232a"),
@@ -13335,6 +13339,7 @@ class GameRoom:
         if p["moves_left"] < step_cost and not minimum_water_step:
             await self.send_to(pid, {"type": "error", "msg": T("erro.movimento_insuficiente_casa_custa", custo=step_cost)})
             return
+        old_pos = list(p["pos"])
         p["pos"] = [nx, ny]
         p["facing"] = [dx, dy]
         if p["moves_left"] < step_cost:
@@ -13358,6 +13363,8 @@ class GameRoom:
             await self.push_state()
             return
 
+        self._apply_snow_entry_penalty(p, old_pos, p["pos"])
+        await self._aplicar_piso_congelado_se_pisar(p)
         # Check room entry
         entered = player_room(self.rooms, nx, ny)
         if entered:
@@ -15769,7 +15776,9 @@ class GameRoom:
                             moved = True
                             self._apply_water_entry_penalty(a, nx, ny)
                             a["moves_left"] = max(0, a.get("moves_left", 0) - 1)
+                            self._apply_snow_entry_penalty(a, frm, a["pos"])
                             await self._aplicar_lava_se_pisar(a)
+                            await self._aplicar_piso_congelado_se_pisar(a)
                             await self._emit_entity_step(a["id"], frm, a["pos"], "animado")
                             break
                     if not moved:
@@ -15937,7 +15946,7 @@ class GameRoom:
         # devolvia o movimento na tela (com as casas azuis do alcance) e nenhum
         # passo era aceito, sem sequer uma mensagem de erro.
         self._preparar_janela_controle_monstro(m)
-        m["master_moves_left"] = max(1, int(m.get("movement", m.get("move", 6)) or 6))
+        m["master_moves_left"] = int(m.get("_water_moves_left", 0) or 0)
         m.pop("_ja_executou_acao", None)
         await self.push_state()
 
@@ -16201,8 +16210,8 @@ class GameRoom:
 
     def _preparar_janela_controle_monstro(self, m):
         """Prepara o mesmo conjunto de ações usado pelo Mestre."""
-        m["master_moves_left"] = int(m.get("movement", self.MASTER_MANUAL_MOVE) or self.MASTER_MANUAL_MOVE)
         m["_water_moves_left"] = self._water_turn_moves(m, m.get("movement", 4))
+        m["master_moves_left"] = int(m.get("_water_moves_left", 0) or 0)
         if m.pop("turbilhao_perde_movimento", False):
             m["master_moves_left"] = 0
             m["_water_moves_left"] = 0
@@ -16369,12 +16378,12 @@ class GameRoom:
         if not await self._upkeep_inicio_turno_monstro(m, [m]):
             return
         self.master_manual_mid = m["id"]
-        m["master_moves_left"] = int(m.get("movement", self.MASTER_MANUAL_MOVE) or self.MASTER_MANUAL_MOVE)
         # Orçamento por casa do terreno (custo 1 em chão seco, 2/3 na água):
         # `_commit_monster_step` debita dele a cada passo, mas só `gm_phase` o
         # renova — e o Manual não passa por lá. Sem este reset o monstro do
         # mestre acumularia o gasto entre turnos e travaria de vez.
         m["_water_moves_left"] = self._water_turn_moves(m, m.get("movement", 4))
+        m["master_moves_left"] = int(m.get("_water_moves_left", 0) or 0)
         if m.pop("turbilhao_perde_movimento", False):
             m["master_moves_left"] = 0
             m["_water_moves_left"] = 0
@@ -16464,11 +16473,14 @@ class GameRoom:
         nx, ny = a["pos"][0] + dx, a["pos"][1] + dy
         if not self._tile_livre_para_animado(nx, ny, a["id"]):
             await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado_para_o_servo")}); return
+        old_pos = list(a["pos"])
         a["pos"] = [nx, ny]
         a["facing"] = [dx, dy]
         self._apply_water_entry_penalty(a, nx, ny)
         a["moves_left"] = max(0, a["moves_left"] - 1)
+        self._apply_snow_entry_penalty(a, old_pos, a["pos"])
         await self._aplicar_lava_se_pisar(a)
+        await self._aplicar_piso_congelado_se_pisar(a)
         if a.get("vida_atual", 0) > 0:
             await self._verificar_entrada_zona_molochus(a, nx, ny)
         await self.push_state()
@@ -20960,7 +20972,9 @@ class GameRoom:
             if not passo: break
             antes = list(p["pos"]); p["pos"] = [antes[0]+passo[0], antes[1]+passo[1]]; p["facing"] = list(passo)
             p["moves_left"] -= 1; self._apply_water_entry_penalty(p, *p["pos"])
+            self._apply_snow_entry_penalty(p, antes, p["pos"])
             await self._aplicar_lava_se_pisar(p)
+            await self._aplicar_piso_congelado_se_pisar(p)
             self._reveal_around(*p["pos"], radius=self._get_raio_visao(p))
             await self._emit_entity_step(p["id"], antes, p["pos"], "player")
         if distancia(alvo) > 1: return
@@ -21010,8 +21024,13 @@ class GameRoom:
         if not vivos:
             return
         alvo = min(vivos, key=lambda p: abs(p["pos"][0]-m["pos"][0]) + abs(p["pos"][1]-m["pos"][1]))
+        antes = list(m["pos"])
         moveu = self._passo_monstro(m, alvo["pos"][0], alvo["pos"][1], away=True)
+        if moveu:
+            self._apply_snow_entry_penalty(m, antes, m["pos"])
         await self._aplicar_lava_se_pisar(m)
+        if moveu:
+            await self._aplicar_piso_congelado_se_pisar(m)
         await self._aplicar_fogueira_se_pisar(m)
         await self.gm_say(T("narracao.esta_apavorado_e_foge" if moveu
                           else "narracao.esta_apavorado_e_foge_encurralado",
@@ -21040,8 +21059,13 @@ class GameRoom:
             else:
                 await self.gm_say(T("narracao.dominado_ataca_e_erra", monstro=nome_criatura(m), alvo=nome_criatura(alvo)))
         else:
-            self._passo_monstro(m, alvo["pos"][0], alvo["pos"][1])
+            antes = list(m["pos"])
+            moveu = self._passo_monstro(m, alvo["pos"][0], alvo["pos"][1])
+            if moveu:
+                self._apply_snow_entry_penalty(m, antes, m["pos"])
             await self._aplicar_lava_se_pisar(m)
+            if moveu:
+                await self._aplicar_piso_congelado_se_pisar(m)
             await self._aplicar_fogueira_se_pisar(m)
             await self.gm_say(T("narracao.dominado_avanca_contra", monstro=nome_criatura(m), alvo=nome_criatura(alvo)))
 
@@ -21818,9 +21842,12 @@ class GameRoom:
                         continue
                     nx, ny = a["pos"][0]+adx, a["pos"][1]+ady
                     if self._tile_livre_para_animado(nx, ny, a["id"]):
+                        antes = list(a["pos"])
                         a["pos"] = [nx, ny]
                         a["facing"] = [adx, ady]
+                        self._apply_snow_entry_penalty(a, antes, a["pos"])
                         await self._aplicar_lava_se_pisar(a)
+                        await self._aplicar_piso_congelado_se_pisar(a)
                         moved = True; break
                 if not moved:
                     break
@@ -23639,6 +23666,22 @@ class GameRoom:
     def _swamp_under(self, criatura):
         return bool(self._swamp_tiles_of(criatura))
 
+    def _snow_tiles_of(self, criatura):
+        """Casas de planície nevada sob uma criatura, incluindo footprints."""
+        pos = criatura.get("pos") if criatura else None
+        if not isinstance(pos, (list, tuple)) or len(pos) < 2:
+            return []
+        if (criatura.get("id") in self.monsters
+                and self.monsters.get(criatura.get("id")) is criatura):
+            tiles = self._monster_tiles(criatura)
+        else:
+            tiles = [pos]
+        return [(int(x), int(y)) for x, y in tiles
+                if getattr(self, "materiais", {}).get((int(x), int(y))) == "planicie_nevada"]
+
+    def _snow_under(self, criatura):
+        return bool(self._snow_tiles_of(criatura))
+
     def _is_water_tile(self, x, y):
         """Água rasa e profunda são pisos atravessáveis que alteram movimento."""
         return self._water_tile_kind(x, y) is not None
@@ -23748,6 +23791,36 @@ class GameRoom:
             dano = self._apply_damage_types(raw, [DMG_FIRE], criatura)
         await self._dano_em_alvo(criatura, dano, "fogo")
 
+    async def _aplicar_piso_congelado_se_pisar(self, criatura):
+        """Testa Reflexos CD 10 ao entrar em piso congelado.
+
+        Vale para herois, monstros e servos controlados. Criaturas voadoras em
+        altura ignoram o piso. Uma falha zera somente o movimento restante.
+        """
+        if not criatura or self._voo_imune_terreno(criatura):
+            return True
+        if ("hp" in criatura and criatura.get("hp", 0) <= 0) or \
+                ("vida_atual" in criatura and criatura.get("vida_atual", 0) <= 0):
+            return True
+        pos = criatura.get("pos")
+        if not isinstance(pos, (list, tuple)) or len(pos) < 2:
+            return True
+        tile = (int(pos[0]), int(pos[1]))
+        if getattr(self, "materiais", {}).get(tile) != "piso_congelado":
+            return True
+        passou, *_ = await self._save_mostrado(criatura, "reflexos", 10)
+        if passou:
+            return True
+        # Os controladores usam orcamentos diferentes; zerar todos os campos
+        # existentes mantem a regra igual para herois, monstros e servos.
+        for key in ("moves_left", "_water_moves_left", "master_moves_left"):
+            if key in criatura:
+                criatura[key] = 0
+        await self.gm_say(
+            f"Piso congelado: **{nome_criatura(criatura)}** escorrega e perde o movimento restante do turno!"
+        )
+        return False
+
     def _water_turn_moves(self, criatura, base_moves):
         """Orçamento normal do turno; água agora é cobrada a cada casa.
         O mínimo de movimento disponível é sempre 1."""
@@ -23756,13 +23829,43 @@ class GameRoom:
         criatura.pop("_deep_water_penalty_applied", None)
         criatura.pop("_water_min_step_used", None)
         criatura.pop("_swamp_penalty_applied", None)
+        criatura.pop("_snow_movement_reduced", None)
         base = max(0, int(base_moves or 0))
         if self._voo_imune_terreno(criatura):
             return max(1, base)
         if self._swamp_under(criatura):
             criatura["_swamp_penalty_applied"] = True
-            return max(0, base - 1)
+            base = max(0, base - 1)
+        if self._snow_under(criatura):
+            criatura["_snow_movement_reduced"] = True
+            return max(1, base // 2)
         return max(1, base)
+
+    def _apply_snow_entry_penalty(self, criatura, old_pos, new_pos):
+        """Ao entrar na neve durante o turno, reduz pela metade o restante.
+
+        O orçamento já reduzido no início do turno não é reduzido novamente.
+        Sair da neve não devolve movimento gasto; no próximo turno fora dela o
+        orçamento volta ao normal.
+        """
+        if self._voo_imune_terreno(criatura) or criatura.get("_snow_movement_reduced"):
+            return
+        if not isinstance(new_pos, (list, tuple)) or len(new_pos) < 2:
+            return
+        old_tile = tuple(old_pos[:2]) if isinstance(old_pos, (list, tuple)) and len(old_pos) >= 2 else None
+        new_tile = (int(new_pos[0]), int(new_pos[1]))
+        if old_tile == new_tile:
+            return
+        if getattr(self, "materiais", {}).get(new_tile) != "planicie_nevada":
+            return
+        # Para footprints grandes, entrar em qualquer casa de neve ativa o efeito.
+        if self._snow_tiles_of(criatura) == []:
+            return
+        criatura["_snow_movement_reduced"] = True
+        for key in ("moves_left", "_water_moves_left", "master_moves_left"):
+            if key in criatura:
+                atual = max(0, int(criatura.get(key, 0) or 0))
+                criatura[key] = atual // 2
 
     def _apply_swamp_entry_penalty(self, criatura, nx=None, ny=None):
         """Consome -1 do movimento total ao primeiro contato com pântano no turno."""
@@ -27713,16 +27816,21 @@ class GameRoom:
             return
         if dado == "1d4" and self._voo_imune_terreno(criatura):
             return
-        dano = roll_dice(dado)
+        bruto = roll_dice(dado)
+        # O funil elemental é o que torna fogueira, Chama Viva, brasa e lava
+        # coerentes: imunidade a fogo zera o dano, enquanto resistências,
+        # vulnerabilidades e regras de subtipo são aplicadas normalmente.
+        dano = (bruto if "vida_atual" in criatura
+                else self._apply_damage_types(bruto, [DMG_FIRE], criatura))
         nome = criatura.get("name") or criatura.get("nome", "Alguém")
         if dado == "1d4":
-            await self.broadcast({"type": "dice_roll", "die": "d4", "value": dano, "label": T("dado.fogueira")})
+            await self.broadcast({"type": "dice_roll", "die": "d4", "value": bruto, "label": T("dado.fogueira")})
             await self.gm_say(T("narracao.pisou_na_fogueira_e_sofre_de_fogo", nome=nome_criatura(criatura), dano=dano))
         elif dado == "2d4":
-            await self.broadcast({"type": "dice_roll", "die": "2d4", "value": dano, "label": "Chama viva"})
+            await self.broadcast({"type": "dice_roll", "die": "2d4", "value": bruto, "label": "Chama viva"})
             await self.gm_say(f"🔥 **{nome_criatura(criatura)}** passa sobre a chama viva e sofre **{dano}** de dano de fogo!")
         else:
-            await self.broadcast({"type": "dice_roll", "die": "d4", "value": dano, "label": "Brasa no chão"})
+            await self.broadcast({"type": "dice_roll", "die": "d4", "value": bruto, "label": "Brasa no chão"})
             await self.gm_say(f"🔥 **{nome_criatura(criatura)}** passa sobre a brasa e sofre **{dano}** de dano de fogo!")
         await self._dano_em_alvo(criatura, dano, "fogo")
 
@@ -27771,8 +27879,10 @@ class GameRoom:
         self._apply_swamp_entry_penalty(m)
         if step_facing in ([1, 0], [-1, 0], [0, 1], [0, -1]):
             m["facing"] = step_facing
+        self._apply_snow_entry_penalty(m, [old_x, old_y], m["pos"])
         await self._aplicar_lava_se_pisar(m)
         await self._aplicar_fogueira_se_pisar(m)
+        await self._aplicar_piso_congelado_se_pisar(m)
         if m.get("hp", 0) > 0:
             await self._verificar_entrada_zona_molochus(m, nx, ny)
         await self._arrastar_preso(m, [old_x, old_y])
@@ -29232,8 +29342,10 @@ class GameRoom:
                         m["_garaloux_move_count"] = m.get("_garaloux_move_count", 0) + 2
                     m["_water_moves_left"] = max(0, m.get("_water_moves_left", 0) - 2)
                     self._apply_swamp_entry_penalty(m)
+                    self._apply_snow_entry_penalty(m, frm, m["pos"])
                     await self._aplicar_lava_se_pisar(m)
                     await self._aplicar_fogueira_se_pisar(m)
+                    await self._aplicar_piso_congelado_se_pisar(m)
                     m["facing"] = cand_facing
                     break
                 continue
@@ -31730,7 +31842,10 @@ class GameRoom:
 
         # Ataca e recua: afasta-se um passo do alvo apÃ³s a mordida.
         if m["hp"] > 0:
+            antes = list(m["pos"])
             if self._passo_monstro(m, target["pos"][0], target["pos"][1], away=True):
+                self._apply_snow_entry_penalty(m, antes, m["pos"])
+                await self._aplicar_piso_congelado_se_pisar(m)
                 await self._aplicar_fogueira_se_pisar(m)
                 await self.gm_say(T("narracao.recua_para_as_sombras_apos_morder", monstro=nome_criatura(m)))
 
@@ -31775,7 +31890,11 @@ class GameRoom:
                 if m["pos"] == pos_antes:
                     break
                 if self._em_zona_fogo(m["pos"]):
-                    self._passo_monstro(m, target["pos"][0], target["pos"][1], away=True)
+                    antes = list(m["pos"])
+                    moveu = self._passo_monstro(m, target["pos"][0], target["pos"][1], away=True)
+                    if moveu:
+                        self._apply_snow_entry_penalty(m, antes, m["pos"])
+                        await self._aplicar_piso_congelado_se_pisar(m)
                     await self._aplicar_fogueira_se_pisar(m)
                     await self.gm_say(T("narracao.recua_das_chamas", monstro=nome_criatura(m)))
                     break
@@ -31962,7 +32081,11 @@ class GameRoom:
             if targets:
                 alvo = min(targets, key=lambda t: max(abs(m["pos"][0] - t["obj"]["pos"][0]),
                                                       abs(m["pos"][1] - t["obj"]["pos"][1])))["obj"]
-                self._passo_monstro(m, alvo["pos"][0], alvo["pos"][1], away=True)
+                antes = list(m["pos"])
+                moveu = self._passo_monstro(m, alvo["pos"][0], alvo["pos"][1], away=True)
+                if moveu:
+                    self._apply_snow_entry_penalty(m, antes, m["pos"])
+                    await self._aplicar_piso_congelado_se_pisar(m)
                 await self._aplicar_fogueira_se_pisar(m)
             return
         target_obj = self._get_monster_primary_target(m, targets)
@@ -34703,9 +34826,11 @@ class GameRoom:
         nx, ny = pr["pos"][0] + dx, pr["pos"][1] + dy
         if not self._tile_livre_para_animado(nx, ny, None):
             await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado_para_o_prisioneiro")}); return
+        old_pos = list(pr["pos"])
         pr["pos"] = [nx, ny]
         self._apply_water_entry_penalty(pr, nx, ny)
         pr["moves_left"] = max(0, pr["moves_left"] - 1)
+        self._apply_snow_entry_penalty(pr, old_pos, pr["pos"])
         await self._aplicar_lava_se_pisar(pr)
         # Pisou numa armadilha colocÃ¡vel? Dispara sobre o prisioneiro (igual ao herÃ³i).
         arm = self._armadilha_no_tile(nx, ny)
