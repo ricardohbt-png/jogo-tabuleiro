@@ -275,6 +275,43 @@ async def main():
     await r._verificar_falas(g, None)
     check("a lição dispara de novo na revisita", g["licao_atual"] == "a")
 
+    print("\n[5] handle_move dispara mover_ate")
+    r = sala([licao(id="a", classe="warrior", pos=[1, 1],
+                    trigger={"tipo": "proximidade", "raio": 9},
+                    tarefa={"tipo": "mover_ate", "alvo": [3, 2], "vezes": 1,
+                            "texto_curto": "Ande até a marca"})])
+    g = heroi(r, "h1", "warrior", (2, 2))
+    g["moves_left"] = 6
+    await r.handle_move("h1", 1, 0)
+    check("mover até a casa alvo cumpre a lição", "a" in g["licoes_feitas"])
+
+    print("\n[5b] handle_end_turn dispara encerrar_turno")
+    r = sala([licao(id="a", classe="warrior", pos=[2, 2],
+                    trigger={"tipo": "proximidade", "raio": 9},
+                    tarefa={"tipo": "encerrar_turno", "vezes": 1,
+                            "texto_curto": "Encerre o turno"})])
+    g = heroi(r, "h1", "warrior", (2, 2))
+    g["moves_left"] = 6
+    await r._verificar_falas(g, None)
+    check("a lição está pendente", g["licao_atual"] == "a")
+    async def _noop_adv(*a, **k): pass
+    # Sem fila de iniciativa, handle_end_turn cai no bloco legado e divide por
+    # len(self.player_order) — que é zero neste fixture. A fila ligada faz o
+    # handler sair pelo caminho normal, depois do gancho da lição.
+    r._advance_initiative = _noop_adv
+    r.initiative_active = True
+    await r.handle_end_turn("h1")
+    check("encerrar o turno cumpre a lição", "a" in g["licoes_feitas"])
+
+    print("\n[5c] Os outros cinco pontos de chamada existem")
+    fonte = open(os.path.join(os.path.dirname(os.path.dirname(
+        os.path.abspath(__file__))), "server.py"), encoding="utf-8").read()
+    for verbo in ("abrir_porta", "atacar", "matar", "pegar_item", "equipar"):
+        check(f"server.py chama _licao_evento com {verbo}",
+              f'_licao_evento(p, "{verbo}"' in fonte
+              or f'_licao_evento(p_dor, "{verbo}"' in fonte
+              or f'_licao_evento(_matador, "{verbo}"' in fonte)
+
     print(f"\n{'='*50}\n  {PASS} passaram, {FAIL} falharam\n{'='*50}")
     sys.exit(1 if FAIL else 0)
 

@@ -12639,6 +12639,7 @@ class GameRoom:
         if entered:
             self.salas_visitadas.add(entered["id"])   # objetivo salas_obrigatorias (visit)
         await self._verificar_falas(p, entered)       # Falas de NPC: proximidade + sala
+        await self._licao_evento(p, "mover_ate", alvo=list(p["pos"]))
         if entered and not entered["cleared"]:
             await self._on_enter_room(pid, entered)
 
@@ -12736,6 +12737,7 @@ class GameRoom:
             self.opened_doors.add((tx, ty))
             self.explored.add((tx, ty))
             await self.gm_say(T("narracao.abre_porta", nome=p["name"]))
+            await self._licao_evento(p, "abrir_porta", alvo=[tx, ty])
             await self.push_state()
             return
 
@@ -12749,6 +12751,7 @@ class GameRoom:
             if key in GM:
                 await self.gm_say(gm(key))
         await self._verificar_avistamento()   # sala revelada â†’ herÃ³i avista â†’ combate
+        await self._licao_evento(p, "abrir_porta", alvo=[tx, ty])
         await self.push_state()
 
     def _carregar_licoes(self, defn):
@@ -13774,6 +13777,7 @@ class GameRoom:
                     elif _melee_poison_vid:
                         await self._aplicar_veneno(target, _melee_poison_vid, fonte="ataque")
                 await self._reacoes_instrumento_apos_ataque(p, target, dmg)
+                await self._licao_evento(p, "atacar", alvo=target.get("type"))
                 if _melee_poison_vid and not self._weapon_poison_slots(p):
                     await self.gm_say(T("narracao.o_veneno_da_arma_de_acabou", heroi=p['name']))
             else:
@@ -17904,8 +17908,11 @@ class GameRoom:
         p = self.players.get(pid)
         if not p or "bag" not in p:   # ainda no lobby: ficha incompleta
             return
+        _bag = p.get("bag") or []
+        _it = _bag[slot_index] if 0 <= slot_index < len(_bag) else None
         if not await self._executar_equip_from_bag(pid, slot_index):
             return                                   # validaÃ§Ã£o falhou (erro jÃ¡ enviado)
+        await self._licao_evento(p, "equipar", alvo=(_it or {}).get("id"))
         await self.push_state_or_city()
 
     async def _executar_equip_from_bag(self, pid, slot_index):
@@ -18191,6 +18198,9 @@ class GameRoom:
         else:
             return
 
+        if kind == "item":
+            await self._licao_evento(p, "pegar_item", alvo=item.get("id"))
+
         # Remove chest if empty
         if chest["gold"] <= 0 and not chest["items"]:
             del self.chests[chest_id]
@@ -18304,6 +18314,7 @@ class GameRoom:
         del self.ground_items[ground_id]
         extra = " (equipado — bolsa cheia)" if res == "equipped" else ""
         await self.gm_say(T("narracao.pegou_do_chao", heroi=p['name'], gi_item_name=nome_item(gi['item']), extra=extra))
+        await self._licao_evento(p, "pegar_item", alvo=(gi["item"] or {}).get("id"))
         await self.push_state()
 
     # â”€â”€ AÃ§Ã£o BÃ´nus â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -24631,6 +24642,7 @@ class GameRoom:
         p_dor = self.players.get(pid)
         if p_dor:
             await self._cobrar_dor_constante(p_dor)
+            await self._licao_evento(p_dor, "encerrar_turno")
         # Ãšltimo EsforÃ§o Ã© checado ANTES da fase dos servos (animados_phase_pid,
         # mais abaixo). As duas janelas sÃ£o mutuamente exclusivas para o mesmo
         # jogador: nada no controle da fase dos servos (mover/atacar animados,
@@ -31127,6 +31139,10 @@ class GameRoom:
 
     async def _monster_dies(self, m, killer_pid):
         if m["hp"] > 0: return
+
+        _matador = self.players.get(killer_pid)
+        if _matador:
+            await self._licao_evento(_matador, "matar", alvo=m.get("type"))
 
         # ResistÃªncia Morta (Zumbi): a 0 HP, Fortitude CD 10 â†’ fica com 1 HP. Dano
         # sagrado/luz IGNORA e o destrÃ³i de vez (sem retorno).
