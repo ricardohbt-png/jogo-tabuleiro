@@ -1931,8 +1931,15 @@ function _showCityTravelTransition(world, destination, durationMs=3000){
   Promise.all([destinationImage ? _preloadImage(destinationImage) : Promise.resolve(), new Promise(resolve=>setTimeout(resolve,duration))]).then(()=>{
     if(_cityTravelTransition!==token) return;
     overlay.classList.remove('open');
-    setTimeout(()=>{ if(_cityTravelTransition===token) overlay.remove(); },350);
-    _cityTravelTransition=null;
+    // Zerar o token mora DENTRO do timeout. O elemento é reaproveitado por id,
+    // então a comparação existe para não arrancar da tela uma transição nova que
+    // tenha começado durante estes 350 ms de fade. Zerando antes, a comparação
+    // nunca batia: o overlay saía de vista mas ficava no DOM, um nó por viagem.
+    setTimeout(() => {
+      if(_cityTravelTransition !== token) return;
+      overlay.remove();
+      _cityTravelTransition = null;
+    }, 350);
   });
 }
 
