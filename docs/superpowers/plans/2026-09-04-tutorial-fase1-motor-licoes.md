@@ -18,6 +18,36 @@
 - Texto de conteúdo autoral (as lições do mapa) fica em **português**, sem passar pelo dicionário. Só rótulo de interface ganha chave `ui.*`.
 - Números de linha mudam entre sessões (o autor edita em paralelo). **Ancore cada edição pelo trecho de código citado**, não por linha.
 
+## Como commitar neste repositório (leia antes da primeira edição)
+
+**O autor tem ~110 arquivos modificados e não commitados no diretório de trabalho.** Seis deles são justamente os que este plano toca: `server.py`, `game.js`, `src/gameState.js`, `tools/editor.js`, `src/lang/erros.js` e `src/lang/interface.js`. Um `git add server.py` varreria milhares de linhas do trabalho do autor para dentro do seu commit.
+
+Para cada arquivo dessa lista, encene **apenas as suas linhas**:
+
+```bash
+# 1. ANTES de editar, guarde o arquivo como ele está agora (HEAD + WIP do autor):
+cp server.py /tmp/antes_server.py
+
+# 2. Edite normalmente.
+
+# 3. Gere o patch só das SUAS mudanças e aplique-o ao índice:
+diff -u --label a/server.py --label b/server.py /tmp/antes_server.py server.py > /tmp/meu_server.patch
+git apply --cached --check /tmp/meu_server.patch && git apply --cached /tmp/meu_server.patch
+
+# 4. CONFIRME que só as suas linhas entraram antes de commitar:
+git diff --cached --stat
+```
+
+Se o `git apply --cached --check` recusar o patch, **pare e reporte DONE_WITH_CONCERNS** — isso significa que o WIP do autor mexeu no contexto ao redor da sua edição, e forçar o commit corromperia o trabalho dele.
+
+Arquivos que **você cria** (`tools/test_tutorial.py`, `tools/test_tutorial_cliente.js`, `dungeons/campo_de_treinamento.json`) não têm esse problema: `git add <arquivo>` neles é seguro.
+
+Depois de commitar, confirme que o WIP do autor continua lá e fora do índice:
+
+```bash
+git status --porcelain server.py    # deve continuar mostrando " M server.py"
+```
+
 ---
 
 ### Task 1: Fundação — o que é uma lição, e a validação dos campos novos
@@ -241,7 +271,9 @@ Esperado: mesmo número de `✅` de antes e `0 falharam` (as falas de NPC da se�
 - [ ] **Step 7: Commit**
 
 ```bash
-git add server.py tools/test_tutorial.py
+# ARQUIVO COM WIP DO AUTOR: server.py — NÃO use `git add` nele.
+# Encene só as suas linhas pela receita "Como commitar" no topo do plano.
+git add tools/test_tutorial.py
 git commit -m "feat(tutorial): a licao e uma fala com classe e tarefa, validada na carga
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
@@ -381,7 +413,9 @@ Esperado: `0 falharam`.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add server.py tools/test_tutorial.py
+# ARQUIVO COM WIP DO AUTOR: server.py — NÃO use `git add` nele.
+# Encene só as suas linhas pela receita "Como commitar" no topo do plano.
+git add tools/test_tutorial.py
 git commit -m "feat(tutorial): carga das licoes e campos de progresso no jogador
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
@@ -509,7 +543,9 @@ Esperado: `0 falharam`.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add server.py tools/test_tutorial.py
+# ARQUIVO COM WIP DO AUTOR: server.py — NÃO use `git add` nele.
+# Encene só as suas linhas pela receita "Como commitar" no topo do plano.
+git add tools/test_tutorial.py
 git commit -m "feat(tutorial): _licao_evento registra progresso por jogador
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
@@ -688,7 +724,9 @@ Esperado: `0 falharam`. A seção [24] cobre proximidade, sala e manual de falas
 - [ ] **Step 6: Commit**
 
 ```bash
-git add server.py tools/test_tutorial.py
+# ARQUIVO COM WIP DO AUTOR: server.py — NÃO use `git add` nele.
+# Encene só as suas linhas pela receita "Como commitar" no topo do plano.
+git add tools/test_tutorial.py
 git commit -m "feat(tutorial): licao dispara por classe, uma vez por jogador, na ordem
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
@@ -882,7 +920,9 @@ Esperado: `0 falharam` nas três.
 - [ ] **Step 9: Commit**
 
 ```bash
-git add server.py tools/test_tutorial.py
+# ARQUIVO COM WIP DO AUTOR: server.py — NÃO use `git add` nele.
+# Encene só as suas linhas pela receita "Como commitar" no topo do plano.
+git add tools/test_tutorial.py
 git commit -m "feat(tutorial): os sete verbos disparam do caminho de sucesso dos handlers
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
@@ -1038,7 +1078,9 @@ Esperado: `0 falharam` no primeiro; `0 falharam` no segundo (a chave nova tem `p
 - [ ] **Step 8: Commit**
 
 ```bash
-git add server.py src/lang/erros.js tools/test_tutorial.py
+# ARQUIVO COM WIP DO AUTOR: server.py src/lang/erros.js — NÃO use `git add` nele.
+# Encene só as suas linhas pela receita "Como commitar" no topo do plano.
+git add tools/test_tutorial.py
 git commit -m "feat(tutorial): door_conditions ganha o tipo licao
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
@@ -1146,7 +1188,9 @@ Esperado: `0 falharam`.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add server.py tools/test_tutorial.py
+# ARQUIVO COM WIP DO AUTOR: server.py — NÃO use `git add` nele.
+# Encene só as suas linhas pela receita "Como commitar" no topo do plano.
+git add tools/test_tutorial.py
 git commit -m "feat(tutorial): game_state carrega o progresso das licoes por classe
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
@@ -1253,7 +1297,9 @@ Esperado: `0 falharam`.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/gameState.js tools/test_tutorial_cliente.js
+# ARQUIVO COM WIP DO AUTOR: src/gameState.js — NÃO use `git add` nele.
+# Encene só as suas linhas pela receita "Como commitar" no topo do plano.
+git add tools/test_tutorial_cliente.js
 git commit -m "feat(tutorial): GS.licaoAtual le a licao pendente do meu heroi
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
@@ -1324,7 +1370,8 @@ Esperado: `0 falharam` nos dois. O texto novo no `game.js` é `t('ui.hud.banner_
 - [ ] **Step 5: Commit**
 
 ```bash
-git add game.js src/lang/interface.js
+# ARQUIVO COM WIP DO AUTOR: game.js src/lang/interface.js — NÃO use `git add` nele.
+# Encene só as suas linhas pela receita "Como commitar" no topo do plano.
 git commit -m "feat(tutorial): quadro da licao atual no HUD
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
@@ -1520,7 +1567,8 @@ Esperado: sem saída no primeiro; `4` ou mais no segundo (prova que a edição e
 - [ ] **Step 7: Commit**
 
 ```bash
-git add tools/editor.js
+# ARQUIVO COM WIP DO AUTOR: tools/editor.js — NÃO use `git add` nele.
+# Encene só as suas linhas pela receita "Como commitar" no topo do plano.
 git commit -m "feat(tutorial): editor autora classe, ordem e tarefa na fala
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
@@ -1604,7 +1652,8 @@ Esperado: sem saída no primeiro; `3` no segundo.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add tools/editor.js
+# ARQUIVO COM WIP DO AUTOR: tools/editor.js — NÃO use `git add` nele.
+# Encene só as suas linhas pela receita "Como commitar" no topo do plano.
 git commit -m "feat(tutorial): editor condiciona a porta a uma licao cumprida
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
