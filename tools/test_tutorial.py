@@ -428,6 +428,22 @@ async def main():
     check("as licoes foram carregadas", len(r.licoes) == 7)
     check("entrar nao cobrou fome nem sede",
           (r.players["h1"]["fome"], r.players["h1"]["sede"]) == (100, 100))
+    print("\n[9] Equipar rapido tambem cumpre a licao")
+    r = sala([licao(id="a", classe="warrior", pos=[2, 2],
+                    trigger={"tipo": "proximidade", "raio": 9},
+                    tarefa={"tipo": "equipar", "alvo": "sword", "vezes": 1,
+                            "texto_curto": "Equipe a espada"})])
+    g = heroi(r, "h1", "warrior", (2, 2))
+    await r._verificar_falas(g, None)
+    check("a licao de equipar esta pendente", g["licao_atual"] == "a")
+    g["bag"] = [dict(S._DUNGEON_ITEM_CATALOG["sword"])]
+    await r.handle_quick_equip_from_bag("h1", 0)
+    check("equipar pelo atalho cumpre a licao", "a" in g["licoes_feitas"])
+
+    fonte = open(os.path.join(os.path.dirname(os.path.dirname(
+        os.path.abspath(__file__))), "server.py"), encoding="utf-8").read()
+    check("os DOIS caminhos de equipar chamam _licao_evento",
+          fonte.count('_licao_evento(p, "equipar"') == 2)
     print(f"\n{'='*50}\n  {PASS} passaram, {FAIL} falharam\n{'='*50}")
     sys.exit(1 if FAIL else 0)
 

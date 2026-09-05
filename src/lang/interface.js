@@ -2059,6 +2059,10 @@ window.LANG_INTERFACE = {
       "en": "LESSON",
       "pt": "LIÇÃO"
     },
+    "ui.hud.banner_licao_reabrir": {
+        "pt": "Reabrir a explicação da lição",
+        "en": "Reopen the lesson text"
+    },
     "ui.hud.banner_pocao_regen": {
       "en": "REGENERATION POTION: {n} HP IN RESERVE",
       "pt": "POÇÃO DE REGENERAÇÃO: {n} HP NA RESERVA"

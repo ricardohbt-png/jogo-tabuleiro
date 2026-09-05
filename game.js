@@ -490,6 +490,10 @@ document.body.innerHTML = `
 <!-- Balão de fala de NPC (Modo Mestre) -->
 <div id="fala-popup" onclick="_avancarFala()"></div>
 
+<!-- Janela da lição do tutorial: fica até o jogador fechar, ao contrário do
+     balão acima, que some sozinho. Reabre pelo quadro ⚑ do HUD. -->
+<div id="licao-janela"></div>
+
 <!-- Menu de pausa — aberto por Esc durante a aventura. -->
 <div id="pause-menu" role="dialog" aria-modal="true" aria-labelledby="pause-menu-title">
   <div class="pause-menu-box">
@@ -17188,7 +17192,8 @@ function renderMyPanel(state){
       const lic = GS.licaoAtual();
       if (!lic) return '';
       const prog = lic.vezes > 1 ? ` (${lic.feito}/${lic.vezes})` : '';
-      return `<div style="margin-top:4px; padding:5px 8px; background:rgba(240,200,103,0.12); border:1px solid #f0c86766; border-radius:3px; display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Cinzel',serif;">
+      // Clicável: quem fechou a janela da lição precisa de um caminho de volta.
+      return `<div onclick="_reabrirJanelaLicao()" title="${t('ui.hud.banner_licao_reabrir')}" style="margin-top:4px; padding:5px 8px; background:rgba(240,200,103,0.12); border:1px solid #f0c86766; border-radius:3px; display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Cinzel',serif; cursor:pointer;">
         <span style="color:#f0c867; font-weight:bold; font-size:.95rem;">⚑</span>
         <span style="color:#f0c867; font-size:.6rem; letter-spacing:1px;">${t('ui.hud.banner_licao')}</span>
         <span style="color:#e8d8a0; font-size:.62rem;">${_esc(lic.texto_curto)}${prog}</span>
@@ -39608,7 +39613,36 @@ function _mostrarProximaFala(){
   _falaTimer = setTimeout(_mostrarProximaFala, 5000);
 }
 function _avancarFala(){ if(_falaTimer) clearTimeout(_falaTimer); _mostrarProximaFala(); }
-GS.on('fala', msg => { _falaFila.push(msg); if(!$('fala-popup').classList.contains('open')) _mostrarProximaFala(); });
+
+// ── Janela da lição do tutorial ───────────────────────────────────────────
+// A fala de NPC some sozinha em 5s, o que serve para ambientação mas é ruim
+// para instrução: quem se distrai perde o texto e fica sem saber o que fazer.
+// A lição vai para uma janela fixa no canto, que só sai quando o jogador
+// fecha — ou quando a lição seguinte chega e toma o lugar.
+let _licaoUltima = null;
+function _mostrarJanelaLicao(msg){
+  const host = $('licao-janela');
+  if(!host) return;
+  _licaoUltima = msg;
+  const emoji = (msg.falante && msg.falante.emoji) || '💬';
+  const nome  = (msg.falante && msg.falante.nome)  || '';
+  host.innerHTML =
+    `<div class="licao-topo"><span class="licao-emoji">${_esc(emoji)}</span>` +
+    `<span class="licao-nome">${_esc(nome)}</span>` +
+    `<button type="button" class="licao-fechar" onclick="_fecharJanelaLicao()"` +
+    ` title="${t('ui.geral.fechar')}" aria-label="${t('ui.geral.fechar')}">✕</button></div>` +
+    `<div class="licao-texto">${_esc(msg.texto || '')}</div>`;
+  host.classList.add('open');
+}
+function _fecharJanelaLicao(){ $('licao-janela')?.classList.remove('open'); }
+// O quadro ⚑ do HUD reabre a última lição — fechar não pode ser irreversível.
+function _reabrirJanelaLicao(){ if(_licaoUltima) _mostrarJanelaLicao(_licaoUltima); }
+
+GS.on('fala', msg => {
+  if(msg && msg.licao_id){ _mostrarJanelaLicao(msg); return; }
+  _falaFila.push(msg);
+  if(!$('fala-popup').classList.contains('open')) _mostrarProximaFala();
+});
 
 // Deslize fiel passo-a-passo de monstros inimigos e servos auto-comandados.
 GS.on('entityStep', msg => _onEntityStep(msg));
