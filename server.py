@@ -7771,6 +7771,11 @@ def make_player(pid, name, cls_id, slot):
         # Técnicas que apenas preparam um ataque/magia. Custo e recarga só são
         # aplicados quando o efeito preparado realmente acontece.
         "technique_pending": {},
+        # ── Tutorial ── progresso é POR JOGADOR; a conclusão também entra em
+        # room.licoes_feitas, que é o que o portão de porta consulta.
+        "licao_atual": None,        # id da lição pendente (o painel do HUD lê daqui)
+        "licao_progresso": {},      # {licao_id: vezes já feitas}
+        "licoes_feitas": [],        # ids que ESTE jogador cumpriu (lista: vai no JSON)
         "tecnica_buff_dano_arma": 0,        # Brutalidade: +N dano de arma atÃ© fim do turno
         "tecnica_mira_perfeita": False,     # Mira Perfeita: prÃ³ximo ataque Ã  distÃ¢ncia
         "investida_armada": False,          # Investida Heroica: charge armada
@@ -8428,6 +8433,8 @@ class GameRoom:
         self.door_conditions = {}
         self.door_condition_activated = {}
         self.falas = []            # Falas de NPC (marcadores autorados)
+        self.licoes = []           # Tutorial: falas que são lição (classe e/ou tarefa)
+        self.licoes_feitas = set() # ids de lição cumpridos por qualquer herói
         self._decor_block_tiles = set()
         self._decor_tall_tiles = set()
         self._campfire_tiles = set()
@@ -10965,7 +10972,7 @@ class GameRoom:
                 "revealed_by_clarividencia_until": 0,
             })
 
-        self.falas = [dict(f, disparada=False) for f in (defn.get("falas") or [])]
+        self._carregar_licoes(defn)
 
         # Mapas tradicionais têm uma escada única. O modo hero_spawns não tem
         # escada física de entrada/saída; a saída autorada continua sendo exit.
@@ -12743,6 +12750,14 @@ class GameRoom:
                 await self.gm_say(gm(key))
         await self._verificar_avistamento()   # sala revelada â†’ herÃ³i avista â†’ combate
         await self.push_state()
+
+    def _carregar_licoes(self, defn):
+        """Deriva as lições das falas autoradas. Chamado na carga da masmorra.
+        Uma lição é uma fala com `classe` e/ou `tarefa` — as demais seguem
+        sendo falas de NPC comuns e não entram aqui."""
+        self.falas = [dict(f, disparada=False) for f in (defn.get("falas") or [])]
+        self.licoes = [f for f in self.falas if _e_licao(f)]
+        self.licoes_feitas = set()
 
     async def _disparar_fala(self, fala):
         """Exibe uma fala de NPC (popup leve no cliente), uma única vez."""

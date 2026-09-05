@@ -42,6 +42,40 @@ def licao(**kw):
     return base
 
 
+def sala(falas=None):
+    """Sala em 'playing' com mapa 6x6, uma sala e as falas dadas já carregadas."""
+    r = GameRoom("TEST")
+    falas_msg = []
+    async def noop(*a, **k): pass
+    async def cap_send(pid, msg, *a, **k):
+        if isinstance(msg, dict) and msg.get("type") == "fala":
+            falas_msg.append((pid, msg))
+    async def cap_bcast(msg, *a, **k):
+        if isinstance(msg, dict) and msg.get("type") == "fala":
+            falas_msg.append((None, msg))
+    r.gm_say = noop; r.push_state = noop; r._broadcast_dado = noop
+    r.broadcast = cap_bcast; r.send_to = cap_send
+    r._is_turn = lambda pid: True
+    r.phase = "playing"
+    r.map_w = 6; r.map_h = 6
+    r.tiles = [[S.WALL]*6 for _ in range(6)]
+    for y in range(1, 5):
+        for x in range(1, 5):
+            r.tiles[y][x] = S.FLOOR
+    r.rooms = [{"id": 0, "x": 1, "y": 1, "w": 4, "h": 4, "role": "entrance",
+                "locked": False, "doors": [], "cleared": True, "looted": True}]
+    r.monsters = {}; r.chests = {}; r.ground_items = {}
+    r._carregar_licoes({"falas": falas or []})
+    r._falas_msg = falas_msg
+    return r
+
+def heroi(r, pid="h1", classe="warrior", pos=(2, 2)):
+    p = make_player(pid, "Herói", classe, 0)
+    p["pos"] = list(pos); p["alive"] = True
+    r.players[pid] = p
+    return p
+
+
 async def main():
     print("\n[1] Validação dos campos novos da lição")
     ok, _ = S.validar_dungeon(mapa_base(falas=[licao()]))
@@ -91,6 +125,19 @@ async def main():
     ok, msg = S.validar_dungeon(mapa_base(falas=[
         licao(tarefa={"tipo": "encerrar_turno", "vezes": True, "texto_curto": "x"})]))
     check("vezes booleano é recusado", ok is False and "vezes" in msg)
+
+    print("\n[2] Carga das lições")
+    r = sala([licao(id="a"), {"id": "f", "pos": [2, 2],
+                              "falante": {}, "texto": "oi",
+                              "trigger": {"tipo": "manual"}}])
+    check("só a lição entra em self.licoes", [l["id"] for l in r.licoes] == ["a"])
+    check("as duas continuam em self.falas", len(r.falas) == 2)
+    check("licoes_feitas começa vazio", r.licoes_feitas == set())
+
+    p = heroi(r)
+    check("jogador nasce sem lição atual", p["licao_atual"] is None)
+    check("jogador nasce com progresso vazio", p["licao_progresso"] == {})
+    check("jogador nasce sem lições feitas", p["licoes_feitas"] == [])
 
     print(f"\n{'='*50}\n  {PASS} passaram, {FAIL} falharam\n{'='*50}")
     sys.exit(1 if FAIL else 0)
