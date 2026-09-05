@@ -6079,7 +6079,8 @@ def validar_dungeon(defn):
         _cls = _f.get("classe")
         if _cls is not None and _cls not in LICAO_CLASSES:
             return False, f"lição com classe inválida: {_cls!r}."
-        if _f.get("ordem") is not None and not isinstance(_f["ordem"], int):
+        _ord = _f.get("ordem")
+        if _ord is not None and (not isinstance(_ord, int) or isinstance(_ord, bool)):
             return False, "ordem de lição deve ser um inteiro."
         _tar = _f.get("tarefa")
         if _tar is None:
@@ -6088,7 +6089,8 @@ def validar_dungeon(defn):
             return False, "tarefa de lição deve ser um objeto JSON."
         if _tar.get("tipo") not in LICAO_VERBOS:
             return False, f"lição com tipo de tarefa inválido: {_tar.get('tipo')!r}."
-        if not isinstance(_tar.get("vezes", 1), int) or _tar.get("vezes", 1) < 1:
+        _vezes = _tar.get("vezes", 1)
+        if not isinstance(_vezes, int) or isinstance(_vezes, bool) or _vezes < 1:
             return False, "tarefa de lição precisa de vezes maior ou igual a 1."
         if not (_tar.get("texto_curto") or "").strip():
             return False, "tarefa de lição sem texto_curto."

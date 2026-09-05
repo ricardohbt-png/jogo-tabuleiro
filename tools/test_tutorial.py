@@ -85,6 +85,13 @@ async def main():
          "texto": "oi", "trigger": {"tipo": "manual"}}]))
     check("fala comum sem os campos novos continua válida", ok is True)
 
+    ok, msg = S.validar_dungeon(mapa_base(falas=[licao(ordem=True)]))
+    check("ordem booleana é recusada", ok is False and "ordem" in msg)
+
+    ok, msg = S.validar_dungeon(mapa_base(falas=[
+        licao(tarefa={"tipo": "encerrar_turno", "vezes": True, "texto_curto": "x"})]))
+    check("vezes booleano é recusado", ok is False and "vezes" in msg)
+
     print(f"\n{'='*50}\n  {PASS} passaram, {FAIL} falharam\n{'='*50}")
     sys.exit(1 if FAIL else 0)
 
