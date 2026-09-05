@@ -36,6 +36,22 @@ from aiohttp import web
 WALL  = 0
 FLOOR = 1
 DOOR  = 2
+
+# ── Tutorial: uma "lição" é uma fala com classe e/ou tarefa ───────────────
+# Fala sem nenhum dos dois continua sendo a fala de NPC de sempre.
+LICAO_CLASSES = ("warrior", "mage", "rogue", "cleric", "bard", "paladin")
+LICAO_VERBOS  = ("mover_ate", "abrir_porta", "atacar", "matar",
+                 "pegar_item", "equipar", "encerrar_turno")
+# Verbos cujo alvo é uma casa [x,y]; nos demais o alvo é uma string
+# (tipo do monstro, para atacar/matar; id do item, para pegar/equipar).
+LICAO_VERBOS_CASA = ("mover_ate", "abrir_porta")
+
+
+def _e_licao(fala):
+    """True se esta fala autorada é uma lição de tutorial."""
+    return bool(isinstance(fala, dict) and (fala.get("classe") or fala.get("tarefa")))
+
+
 MAP_W = 30
 MAP_H = 30
 
@@ -6055,6 +6071,44 @@ def validar_dungeon(defn):
             return False, f"fala com gatilho inválido: {_tg!r} (proximidade|sala|manual)."
         if not in_grid(_f.get("pos")):
             return False, f"fala em casa inválida: {_f.get('pos')}."
+        if not _e_licao(_f):
+            continue
+        # ── Lição de tutorial ──
+        if _tg == "manual":
+            return False, "lição de tutorial não aceita gatilho manual."
+        _cls = _f.get("classe")
+        if _cls is not None and _cls not in LICAO_CLASSES:
+            return False, f"lição com classe inválida: {_cls!r}."
+        if _f.get("ordem") is not None and not isinstance(_f["ordem"], int):
+            return False, "ordem de lição deve ser um inteiro."
+        _tar = _f.get("tarefa")
+        if _tar is None:
+            continue
+        if not isinstance(_tar, dict):
+            return False, "tarefa de lição deve ser um objeto JSON."
+        if _tar.get("tipo") not in LICAO_VERBOS:
+            return False, f"lição com tipo de tarefa inválido: {_tar.get('tipo')!r}."
+        if not isinstance(_tar.get("vezes", 1), int) or _tar.get("vezes", 1) < 1:
+            return False, "tarefa de lição precisa de vezes maior ou igual a 1."
+        if not (_tar.get("texto_curto") or "").strip():
+            return False, "tarefa de lição sem texto_curto."
+        _alvo = _tar.get("alvo")
+        if _alvo not in (None, "", []):
+            if _tar["tipo"] in LICAO_VERBOS_CASA:
+                if not in_grid(_alvo):
+                    return False, f"alvo de {_tar['tipo']} fora do mapa: {_alvo}."
+            elif not isinstance(_alvo, str):
+                return False, f"alvo de {_tar['tipo']} deve ser um texto."
+
+    _ordens_vistas = set()
+    for _f in (defn.get("falas") or []):
+        if not _e_licao(_f) or _f.get("ordem") is None:
+            continue
+        _chave = (_f.get("classe"), _f["ordem"])
+        if _chave in _ordens_vistas:
+            return False, (f"duas lições com a mesma ordem {_chave[1]} para "
+                           f"{_chave[0] or 'todas as classes'}.")
+        _ordens_vistas.add(_chave)
 
     # Passagens autoradas: a mecÃ¢nica permanece uma parede atÃ© ser ativada;
     # a ilusÃ³ria continua WALL no mapa, mas o movimento de herÃ³is a atravessa.
