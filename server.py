@@ -12639,7 +12639,12 @@ class GameRoom:
         if entered:
             self.salas_visitadas.add(entered["id"])   # objetivo salas_obrigatorias (visit)
         await self._verificar_falas(p, entered)       # Falas de NPC: proximidade + sala
+        # A ordem importa nas duas pontas: a lição precisa ter disparado ANTES,
+        # para que o passo que a revela também possa cumpri-la (andar até a casa
+        # que aciona o marcador); e a varredura roda DE NOVO depois, para que a
+        # lição cumprida agora libere a próxima da ordem no mesmo passo.
         await self._licao_evento(p, "mover_ate", alvo=list(p["pos"]))
+        await self._verificar_falas(p, entered)
         if entered and not entered["cleared"]:
             await self._on_enter_room(pid, entered)
 

@@ -312,6 +312,22 @@ async def main():
               or f'_licao_evento(p_dor, "{verbo}"' in fonte
               or f'_licao_evento(_matador, "{verbo}"' in fonte)
 
+    print("\n[5d] Lição cumprida no passo libera a próxima no mesmo passo")
+    r = sala([
+        licao(id="a", classe="warrior", ordem=1, pos=[3, 2],
+              trigger={"tipo": "proximidade", "raio": 9},
+              tarefa={"tipo": "mover_ate", "alvo": [3, 2], "vezes": 1,
+                      "texto_curto": "Ande até a marca"}),
+        licao(id="b", classe="warrior", ordem=2, pos=[3, 2],
+              trigger={"tipo": "proximidade", "raio": 9},
+              tarefa={"tipo": "encerrar_turno", "vezes": 1,
+                      "texto_curto": "Encerre o turno"}),
+    ])
+    g = heroi(r, "h1", "warrior", (2, 2))
+    g["moves_left"] = 6
+    await r.handle_move("h1", 1, 0)
+    check("a primeira lição foi cumprida pelo passo", "a" in g["licoes_feitas"])
+    check("a segunda já apareceu no mesmo passo", g["licao_atual"] == "b")
     print(f"\n{'='*50}\n  {PASS} passaram, {FAIL} falharam\n{'='*50}")
     sys.exit(1 if FAIL else 0)
 
