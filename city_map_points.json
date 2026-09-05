@@ -60,6 +60,15 @@
       "fundo_comum": "assets/city/refugio_area_compartilhada.png",
       "fundo_quarto": "assets/city/refugio_quarto_heroi.png",
       "oculto_ate_liberar": false
+    },
+    "treinamento": {
+      "x": 64.0,
+      "y": 22.0,
+      "type": "dungeon",
+      "name": "Campo de Treinamento",
+      "emoji": "🎯",
+      "aventura": "treinamento",
+      "oculto_ate_liberar": false
     }
   },
   "vila_riacho": {

@@ -7,8 +7,8 @@
 // cidade quanto na masmorra (substitui os blocos de Equipamento+Inventário
 // que existiam duplicados em renderMyPanel/renderFichaCidadeBody, em
 // game.js). Ações/Habilidades/Encerrar Turno (masmorra) e Atributos/Guilda
-// (cidade) continuam nos painéis antigos — este modal cuida só de
-// paperdoll + bolsa + ouro.
+// (cidade) continuam nos painéis antigos — este modal cuida de paperdoll,
+// bolsa, ouro, estatísticas e atalhos.
 //
 // Carregado DEPOIS de game.js (ver index.html) — reaproveita funções
 // globais de tooltip já existentes lá (gerarConteudoTooltip, corBordaPorPreco,
@@ -24,6 +24,31 @@ const InventoryModal = (() => {
   let _gamepadAction = null; // {index, choice:'use'|'cancel'}
   let _lastBagPress = null;  // duplo clique/toque rápido para equipar ou usar
   const QUICK_EQUIP_PRESS_MS = 520;
+
+  const PANEL_PREFS_KEY = 'lfh_inventory_panel_preferences_v1';
+  let _panelPrefs = _loadPanelPrefs();
+
+  function _loadPanelPrefs(){
+    const defaults = { statsHidden:false, shortcutsHidden:false };
+    try{
+      const saved = JSON.parse(localStorage.getItem(PANEL_PREFS_KEY) || '{}');
+      return {
+        statsHidden: saved.statsHidden === true,
+        shortcutsHidden: saved.shortcutsHidden === true,
+      };
+    }catch(_){ return defaults; }
+  }
+
+  function _savePanelPrefs(){
+    try{ localStorage.setItem(PANEL_PREFS_KEY, JSON.stringify(_panelPrefs)); }catch(_){ /* storage indisponível */ }
+  }
+
+  function _setPanelHidden(panel, hidden){
+    if(panel !== 'stats' && panel !== 'shortcuts') return;
+    _panelPrefs[panel === 'stats' ? 'statsHidden' : 'shortcutsHidden'] = !!hidden;
+    _savePanelPrefs();
+    refresh();
+  }
 
   // Layout do paperdoll (3×3): posição visual de cada um dos 9 slots.
   // O rótulo do slot vem de ui.inv.slot.<key>, resolvido no RENDER: um `label`
@@ -56,6 +81,9 @@ const InventoryModal = (() => {
   background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .18s ease;}
 #inv-modal-overlay.open{opacity:1;pointer-events:auto;}
 .inv-frame{position:relative;width:min(620px,94vw);max-width:94vw;}
+.inv-frame.inv-combined-frame{width:min(1120px,96vw);}
+.inv-frame.inv-combined-frame.stats-hidden,.inv-frame.inv-combined-frame.shortcuts-hidden,
+.inv-frame.inv-combined-frame.stats-hidden.shortcuts-hidden{width:max-content;max-width:96vw;}
 .inv-modal{position:relative;padding:26px 26px 26px;
   background:
     repeating-linear-gradient(115deg, rgba(255,255,255,.05) 0 1px, transparent 1px 34px),
@@ -79,12 +107,34 @@ const InventoryModal = (() => {
 .inv-logo-wrap img{width:100%;height:auto;display:block;filter:drop-shadow(0 6px 10px rgba(0,0,0,.7));}
 .inv-body{position:relative;z-index:2;}
 .inv-normal-body{display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:12px;align-items:start;}
+.inv-combined-body{display:grid;grid-template-columns:minmax(225px,280px) minmax(350px,1fr) 96px;gap:14px;align-items:start;}
+.inv-combined-body.stats-hidden{grid-template-columns:max-content 96px;}
+.inv-combined-body.shortcuts-hidden{grid-template-columns:max-content max-content;}
+.inv-combined-body.stats-hidden.shortcuts-hidden{grid-template-columns:max-content;}
+.inv-combined-body.stats-hidden .inv-main,.inv-combined-body.shortcuts-hidden .inv-main,
+.inv-combined-body.stats-hidden.shortcuts-hidden .inv-main{width:max-content;max-width:100%;}
+.inv-stats-panel{min-width:0;max-height:calc(100vh - 90px);overflow-y:auto;margin-top:40px;padding:0;
+  border:1px solid #c8a95188;border-radius:8px;background:linear-gradient(145deg,#15110a,#090806);
+  box-shadow:0 12px 35px rgba(0,0,0,.72),0 0 14px rgba(200,169,81,.14);}
+.inv-stats-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;
+  color:#f0d98a;font:700 9px/1 'Cinzel',serif;letter-spacing:1.5px;border-bottom:1px solid #c8a95155;}
+.inv-stats-toolbar button,.inv-panel-toggle{border:1px solid #9c783a;border-radius:4px;background:#2a1a0d;color:#ffe5a4;
+  cursor:pointer;font:700 12px/1 Georgia,serif;min-width:24px;height:22px;padding:2px 6px;}
+.inv-stats-toolbar button:hover,.inv-panel-toggle:hover{background:#543516;color:#fff1bf;}
+.inv-stats-content{padding:0 8px 8px;}
+.inv-stats-content .menu-status{width:auto;max-width:none;max-height:none;overflow:visible;background:transparent;border:0;border-radius:0;box-shadow:none;}
+.inv-stats-content .st-header{display:none;}
+.inv-stats-content .st-body{padding:4px 2px 8px;}
+.inv-header-actions{display:flex;align-items:center;gap:6px;}
+.inv-header-actions .inv-panel-toggle{font-size:11px;}
 .inv-main{min-width:0;}
 .inv-shortcuts{min-width:0;max-height:calc(100vh - 90px);overflow-y:auto;margin-top:40px;padding:12px 8px 14px;
   border:1px solid #c8a95188;border-radius:8px;background:linear-gradient(145deg,#15110a,#090806);
   box-shadow:0 12px 35px rgba(0,0,0,.72),0 0 14px rgba(200,169,81,.14);font-family:'Cinzel',serif;}
 .inv-shortcuts-heading{color:#f0d98a;font-size:9px;letter-spacing:1.5px;text-align:center;padding:0 0 8px;
-  border-bottom:1px solid #c8a95155;margin-bottom:8px;}
+  border-bottom:1px solid #c8a95155;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:4px;}
+.inv-shortcuts-heading span{flex:1;text-align:center;}
+.inv-shortcuts-heading .inv-panel-toggle{flex:0 0 auto;}
 .inv-header{display:flex;justify-content:space-between;align-items:center;margin:40px 0 16px;}
 .inv-title{color:#f4ecd8;font-family:Georgia,serif;font-weight:bold;letter-spacing:1px;
   text-shadow:0 0 10px rgba(244,220,140,.4);font-size:.95rem;}
@@ -171,6 +221,8 @@ const InventoryModal = (() => {
   background:#2a1a0d;border:1px solid #9c783a;border-radius:4px;}
 .storage-gold button:hover{background:#543516;}
 @media(max-width:760px){.storage-columns{grid-template-columns:minmax(0,1fr);}}
+@media(max-width:900px){.inv-combined-body{grid-template-columns:minmax(190px,240px) minmax(270px,1fr) 82px;gap:9px;}.inv-combined-body.shortcuts-hidden{grid-template-columns:minmax(190px,240px) minmax(270px,1fr);}.inv-shortcuts{padding-left:4px;padding-right:4px;}}
+@media(max-width:680px){.inv-frame.inv-combined-frame{width:min(620px,94vw);}.inv-combined-body,.inv-combined-body.stats-hidden,.inv-combined-body.shortcuts-hidden,.inv-combined-body.stats-hidden.shortcuts-hidden{display:flex;flex-direction:column;align-items:stretch;}.inv-stats-panel{order:0;margin-top:40px;}.inv-main{order:1;}.inv-shortcuts{order:2;margin-top:0;max-height:none;}.inv-combined-body.stats-hidden .inv-main{order:0;}.inv-combined-body.shortcuts-hidden .inv-main{order:1;}}
 `;
   function _itemIconHTML(item, fallbackEmoji){
     return (typeof itemIconHTML === 'function') ? itemIconHTML(item, fallbackEmoji)
@@ -212,10 +264,20 @@ const InventoryModal = (() => {
     document.body.appendChild(overlay);
   }
 
+  // O inventário continua sendo uma interface contextual: Esc/voltar fecha o
+  // modal antes que o atalho global de configuração possa abrir outro painel.
+  document.addEventListener('keydown', (e) => {
+    if(e.key !== 'Escape' || !isOpen()) return;
+    close();
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  }, true);
+
   function open(pid, opts){
     opts = opts || {};
     if(typeof window.fecharMenuHabilidades === 'function') window.fecharMenuHabilidades();
     if(typeof window.fecharMenuMagias === 'function') window.fecharMenuMagias();
+    if(typeof window.fecharMenuStatus === 'function') window.fecharMenuStatus();
     _openPid  = pid;
     _readOnly = !!opts.readOnly;
     _selected = null;
@@ -510,6 +572,64 @@ const InventoryModal = (() => {
     }
   }
 
+  function _statusPanelMarkup(player){
+    if(typeof window._renderStatusPanelHTML === 'function')
+      return window._renderStatusPanelHTML(player);
+    return `<p class="st-empty">Estatísticas indisponíveis.</p>`;
+  }
+
+  function _shortcutPanelMarkup(){
+    return `<aside class="inv-shortcuts" data-panel="shortcuts" aria-label="Atalhos">
+      <div class="inv-shortcuts-heading"><span>ATALHOS</span><button type="button" class="inv-panel-toggle" data-inv-toggle="shortcuts" aria-label="Ocultar atalhos">▶</button></div>
+      <div id="shortcut-bar" aria-label="Slots de atalho" hidden></div>
+    </aside>`;
+  }
+
+  function _statsPanelMarkup(player){
+    return `<aside class="inv-stats-panel" data-panel="stats" aria-label="Estatísticas">
+      <div class="inv-stats-toolbar"><span>${t('ui.status.titulo')}</span><button type="button" data-inv-toggle="stats" aria-label="Ocultar estatísticas">◀</button></div>
+      <div class="inv-stats-content">${_statusPanelMarkup(player)}</div>
+    </aside>`;
+  }
+
+  function _wirePanelToggles(overlay){
+    overlay.querySelectorAll('[data-inv-toggle]').forEach(btn => {
+      btn.onclick = e => {
+        e.preventDefault();
+        e.stopPropagation();
+        const panel = btn.dataset.invToggle;
+        const hidden = panel === 'stats' ? _panelPrefs.statsHidden : _panelPrefs.shortcutsHidden;
+        _setPanelHidden(panel, !hidden);
+      };
+    });
+  }
+
+  function _applyPanelPrefs(overlay){
+    const body = overlay.querySelector('.inv-combined-body');
+    if(!body) return;
+    const frame = overlay.querySelector('.inv-combined-frame');
+    body.classList.toggle('stats-hidden', _panelPrefs.statsHidden);
+    body.classList.toggle('shortcuts-hidden', _panelPrefs.shortcutsHidden);
+    if(frame){
+      frame.classList.toggle('stats-hidden', _panelPrefs.statsHidden);
+      frame.classList.toggle('shortcuts-hidden', _panelPrefs.shortcutsHidden);
+    }
+    const stats = overlay.querySelector('[data-panel="stats"]');
+    const shortcuts = overlay.querySelector('[data-panel="shortcuts"]');
+    if(stats) stats.hidden = _panelPrefs.statsHidden;
+    if(shortcuts) shortcuts.hidden = _panelPrefs.shortcutsHidden;
+    overlay.querySelectorAll('[data-inv-toggle="stats"]').forEach(btn => {
+      btn.textContent = _panelPrefs.statsHidden ? '▶' : '◀';
+      btn.title = _panelPrefs.statsHidden ? 'Mostrar estatísticas' : 'Ocultar estatísticas';
+      btn.setAttribute('aria-label', btn.title);
+    });
+    overlay.querySelectorAll('[data-inv-toggle="shortcuts"]').forEach(btn => {
+      btn.textContent = _panelPrefs.shortcutsHidden ? '◀' : '▶';
+      btn.title = _panelPrefs.shortcutsHidden ? 'Mostrar atalhos' : 'Ocultar atalhos';
+      btn.setAttribute('aria-label', btn.title);
+    });
+  }
+
   function _render(){
     const overlay = document.getElementById('inv-modal-overlay');
     if(!overlay) return;
@@ -517,27 +637,25 @@ const InventoryModal = (() => {
     if(!player){ close(); return; }
     if(_storageCtx){ _renderStorage(overlay, player); return; }
     overlay.innerHTML = `
-      <div class="inv-frame">
+      <div class="inv-frame inv-combined-frame">
         <div class="inv-modal">
           <svg class="inv-edge" viewBox="0 0 100 100" preserveAspectRatio="none">
             <path class="glow" d="${EDGE_D}"/>
             <path class="char" d="${EDGE_D}"/>
             <path class="gold" d="${EDGE_D}"/>
           </svg>
-          <div class="inv-body inv-normal-body">
+          <div class="inv-body inv-normal-body inv-combined-body">
+            ${_statsPanelMarkup(player)}
             <div class="inv-main">
               <div class="inv-header">
                 <div class="inv-title"><img class="inv-title-icon" src="assets/inventario.png" alt="" aria-hidden="true"> ${t('ui.inv.titulo')} — ${player.name || ''}${_readOnly ? ' ' + t('ui.inv.somente_leitura') : ''}</div>
-                <div class="inv-close" title="Fechar" role="button" tabindex="0">✕</div>
+                <div class="inv-header-actions"><button type="button" class="inv-panel-toggle" data-inv-toggle="stats" title="Estatísticas">◀</button><button type="button" class="inv-panel-toggle" data-inv-toggle="shortcuts" title="Atalhos">▶</button><div class="inv-close" title="Fechar" role="button" tabindex="0">✕</div></div>
               </div>
               <div class="inv-grid"></div>
               <div class="inv-gold">🪙 <span></span></div>
               <div class="inv-bagbar"></div>
             </div>
-            <aside class="inv-shortcuts" aria-label="Atalhos">
-              <div class="inv-shortcuts-heading">ATALHOS</div>
-              <div id="shortcut-bar" aria-label="Slots de atalho" hidden></div>
-            </aside>
+            ${_shortcutPanelMarkup()}
           </div>
         </div>
         <div class="inv-logo-wrap"><img src="assets/logotipo.png" alt="Legends for Hire"></div>
@@ -548,6 +666,8 @@ const InventoryModal = (() => {
     _renderBag(overlay, player);
     _renderGamepadAction(overlay);
     if(typeof window._mostrarAtalhosNoMenu === 'function') window._mostrarAtalhosNoMenu();
+    _wirePanelToggles(overlay);
+    _applyPanelPrefs(overlay);
   }
 
   function _onGearSlotClick(slotKey, blocked){
@@ -838,20 +958,21 @@ const InventoryModal = (() => {
     const shared = scope === 'shared';
     const stash  = _storageStash();
     overlay.innerHTML = `
-      <div class="inv-frame storage-modal">
+      <div class="inv-frame storage-modal inv-combined-frame">
         <div class="inv-modal">
           <svg class="inv-edge" viewBox="0 0 100 100" preserveAspectRatio="none">
             <path class="glow" d="${EDGE_D}"/>
             <path class="char" d="${EDGE_D}"/>
             <path class="gold" d="${EDGE_D}"/>
           </svg>
-          <div class="inv-body">
-            <div class="inv-header">
-              <div class="inv-title">🧰 ${t(shared ? 'ui.inv.bau_compartilhado_caixa' : 'ui.inv.bau_heroi_caixa')}</div>
-              ${shared ? '' : `<button type="button" class="storage-room-link">${t('ui.inv.decorar_quarto')}</button>`}
-              <div class="inv-close" title="${t('ui.geral.fechar')}">✕</div>
-            </div>
-            <div class="storage-columns">
+          <div class="inv-body inv-combined-body">
+            ${_statsPanelMarkup(player)}
+            <div class="inv-main storage-main">
+              <div class="inv-header">
+                <div class="inv-title">🧰 ${t(shared ? 'ui.inv.bau_compartilhado_caixa' : 'ui.inv.bau_heroi_caixa')}</div>
+                <div class="inv-header-actions"><button type="button" class="inv-panel-toggle" data-inv-toggle="stats" title="Estatísticas">◀</button><button type="button" class="inv-panel-toggle" data-inv-toggle="shortcuts" title="Atalhos">▶</button>${shared ? '' : `<button type="button" class="storage-room-link">${t('ui.inv.decorar_quarto')}</button>`}<div class="inv-close" title="${t('ui.geral.fechar')}">✕</div></div>
+              </div>
+              <div class="storage-columns">
               <section class="storage-column storage-stash">
                 <h3>${t(shared ? 'ui.refugio.bau_compartilhado' : 'ui.inv.bau_heroi')} (${stash.items.length}/${stash.limit})</h3>
                 <div class="storage-grid" data-storage="stash"></div>
@@ -870,7 +991,9 @@ const InventoryModal = (() => {
                 <div class="inv-bagbar"></div>
                 <p class="storage-hint">${t('ui.inv.dica_para_o_bau')}</p>
               </section>
+              </div>
             </div>
+            ${_shortcutPanelMarkup()}
           </div>
         </div>
       </div>`;
@@ -885,6 +1008,9 @@ const InventoryModal = (() => {
     _renderGear(overlay, player);
     _renderBag(overlay, player);
     _renderStashGrid(overlay);
+    if(typeof window._mostrarAtalhosNoMenu === 'function') window._mostrarAtalhosNoMenu();
+    _wirePanelToggles(overlay);
+    _applyPanelPrefs(overlay);
     // Soltar em qualquer ponto vazio da metade do herói também retira do baú.
     // Os slots da bolsa já tratam o próprio drop (e zeram `_selected`), então
     // o evento que borbulha até aqui não repete a retirada.
@@ -904,6 +1030,7 @@ const InventoryModal = (() => {
   }
 
   function openStorage(scope, payload){
+    if(typeof window.fecharMenuStatus === 'function') window.fecharMenuStatus();
     _injectStyles();
     _ensureDom();
     _storageCtx = { scope, payload: payload || {} };

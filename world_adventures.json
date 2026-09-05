@@ -323,5 +323,37 @@
       "aventura_id": ""
     },
     "renome_recompensa": 1
+  },
+  "treinamento": {
+    "id": "treinamento",
+    "nome": "Campo de Treinamento",
+    "x": 60.2,
+    "y": 55.8,
+    "fome": 0,
+    "sede": 0,
+    "dungeons": [
+      {
+        "file": "campo_de_treinamento.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": false,
+    "revisitavel": true,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "",
+      "aventura_id": ""
+    },
+    "renome_recompensa": 0
   }
 }

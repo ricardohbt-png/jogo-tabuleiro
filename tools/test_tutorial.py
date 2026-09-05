@@ -396,6 +396,38 @@ async def main():
     await r._licao_evento(g, "encerrar_turno")
     check("cumprida por verbo sem movimento", "a" in g["licoes_feitas"])
     check("a proxima aparece sem o heroi andar", g["licao_atual"] == "b")
+    print("\n[8] Entrada do tutorial pela cidade")
+    adv = S.WORLD_ADVENTURES.get("treinamento")
+    check("o destino existe", bool(adv))
+    check("nao custa mantimento", (adv["fome"], adv["sede"]) == (0, 0))
+    check("da para revisitar", adv.get("revisitavel") is True)
+    check("nao rende renome", adv.get("renome_recompensa", 0) == 0)
+    check("aponta para o mapa do tutorial",
+          [d["file"] for d in adv["dungeons"]] == ["campo_de_treinamento.json"])
+    check("o mapa do tutorial e valido",
+          S.validar_dungeon(S.carregar_dungeon("campo_de_treinamento.json"))[0] is True)
+
+    ponto = S.CITY_MAP_POINTS["alva_e_luz"].get("treinamento")
+    check("o ponto existe em Alva e Luz", bool(ponto))
+    check("o ponto e uma entrada de masmorra", ponto.get("type") == "dungeon")
+    check("o ponto aponta para o destino", ponto.get("aventura") == "treinamento")
+    check("o id nao e 'dungeon' (o loader descarta esse id)",
+          "dungeon" not in S.CITY_MAP_POINTS["alva_e_luz"])
+
+    r = sala([])
+    r.phase = "city"
+    heroi(r, "h1", "warrior", (2, 2))
+    r.host_pid = "h1"; r.connections["h1"] = object()
+    pts = r._city_points_payload()["alva_e_luz"]
+    check("o ponto chega ao cliente", "treinamento" in pts)
+    ids = [a.get("id") for a in (r._city_state_payload().get("world") or {}).get("adventures", [])]
+    check("o destino chega ao cliente", "treinamento" in ids)
+
+    await r.handle_world_adventure("h1", "treinamento")
+    check("clicar leva para a masmorra", r.phase == "playing")
+    check("as licoes foram carregadas", len(r.licoes) == 7)
+    check("entrar nao cobrou fome nem sede",
+          (r.players["h1"]["fome"], r.players["h1"]["sede"]) == (100, 100))
     print(f"\n{'='*50}\n  {PASS} passaram, {FAIL} falharam\n{'='*50}")
     sys.exit(1 if FAIL else 0)
 
