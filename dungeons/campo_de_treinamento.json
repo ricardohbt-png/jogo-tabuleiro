@@ -968,10 +968,10 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Portas trancadas se abrem com um clique quando você está ao lado delas. Abrir é de graça: não gasta movimento nem ação.",
+      "texto": "A porta ao fundo já destrancou. Mas porta não se atravessa andando: CLIQUE nela para abrir. Abrir é de graça — não gasta movimento nem a sua ação, e vale para qualquer porta da masmorra.",
       "trigger": {
         "tipo": "proximidade",
-        "raio": 2
+        "raio": 7
       },
       "ordem": 5,
       "tarefa": {
@@ -981,7 +981,7 @@
           3
         ],
         "vezes": 1,
-        "texto_curto": "Abra a porta ao fundo"
+        "texto_curto": "Clique na porta ao fundo para abri-la"
       }
     },
     {
