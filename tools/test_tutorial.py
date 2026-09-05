@@ -456,8 +456,10 @@ async def main():
         _por_classe.setdefault(_f.get("classe") or "TODAS", []).append(_f["id"])
     check("as cinco licoes do atrio continuam la",
           all(f"atrio_0{i}" in _por_classe.get("TODAS", []) for i in range(1, 6)))
-    for _cls in ("warrior", "mage", "rogue", "cleric", "bard", "paladin"):
-        check(f"{_cls} tem duas licoes", len(_por_classe.get(_cls, [])) == 2)
+    _classes = ("warrior", "mage", "rogue", "cleric", "bard", "paladin")
+    _tamanhos = {c: len(_por_classe.get(c, [])) for c in _classes}
+    check("nenhuma classe fica para tras",
+          len(set(_tamanhos.values())) == 1 and min(_tamanhos.values()) >= 3)
     check("nenhuma licao mira o goblin antigo",
           all((f.get("tarefa") or {}).get("alvo") != "goblin" for f in _mapa["falas"]))
     check("ha bonecos para todos", len(_mapa["monsters"]) >= 6
@@ -530,8 +532,12 @@ async def main():
                "usar_instrumento", "desarmar_armadilha"):
         check(f"server.py chama _licao_evento com {_v}",
               f'_licao_evento(p, "{_v}"' in _fonte)
-    check("usar_habilidade e chamado das seis habilidades de classe",
-          _fonte.count('_licao_evento(p, "usar_habilidade"') == 6)
+    # Seis handlers de classe + o site das habilidades armadas do guerreiro,
+    # que nao tem handler proprio (sao aplicadas dentro do handle_attack).
+    check("usar_habilidade cobre as habilidades de classe",
+          _fonte.count('_licao_evento(p, "usar_habilidade"') >= 6)
+    check("e tambem as habilidades armadas do guerreiro",
+          '_licao_evento(p, "usar_habilidade", alvo=_sk["id"])' in _fonte)
 
     print("\n[13b] usar_item cumpre a licao (comer e beber)")
     r = sala([licao(id="a", classe="warrior", pos=[2, 2],
@@ -582,7 +588,9 @@ async def main():
     p["licao_progresso"] = {i: 1 for i in p["licoes_feitas"]}
 
     check("entra alimentado", (p["fome"], p["sede"]) == (100, 100))
-    p["pos"] = [21, 3]
+    _prov = next(f for f in S.carregar_dungeon("campo_de_treinamento.json")["falas"]
+                 if f["id"] == "prov_01")
+    p["pos"] = list(_prov["pos"])          # onde quer que a sala esteja
     await r._verificar_falas(p, None)
     check("a sala zera fome e sede", (p["fome"], p["sede"]) == (0, 0))
     check("a penalidade aparece", r._modificador_sobrevivencia(p) == -2)
@@ -591,7 +599,8 @@ async def main():
     check("e a exaustao custa vida de verdade", p["hp"] == _hp - 1)
     check("a licao manda comer", p["licao_atual"] == "prov_02")
 
-    _bau = [c for c in r.chests.values() if c["pos"] == [22, 2]][0]
+    _bau = next(c for c in r.chests.values()
+                if any(i["id"] == "racao_viagem" for i in c["items"]))
     for _ in range(4):
         _i = next((k for k, it in enumerate(_bau["items"]) if it["id"] == "garrafa_agua"), None)
         if _i is None: break
@@ -607,12 +616,52 @@ async def main():
     check("duas garrafas cumprem", "prov_03" in p["licoes_feitas"])
     check("e tiram o heroi da penalidade", r._modificador_sobrevivencia(p) == 0)
 
-    p["pos"] = [24, 3]
+    _fecho = next(f for f in S.carregar_dungeon("campo_de_treinamento.json")["falas"]
+                  if f["id"] == "prov_04")
+    p["pos"] = list(_fecho["pos"])
     await r._verificar_falas(p, None)
     check("o fecho da sala dispara", "prov_04" in p["licoes_feitas"])
-    p["pos"] = [25, 3]
+    _sai = S.carregar_dungeon("campo_de_treinamento.json")["exit"]
+    p["pos"] = [_sai["x"], _sai["y"]]
     await r._check_objectives()
-    check("a saida agora fica depois das provisoes", r.mission_complete_pending is True)
+    check("a saida fica depois das provisoes", r.mission_complete_pending is True)
+    print("\n[15] Sala de Kit: cada classe usa a propria habilidade")
+    _acoes = {
+        "warrior": ("guerreiro_03", lambda r, p, m: r.handle_attack("h1", m, buffs=["mira_certeira"])),
+        "mage":    ("mago_03",      lambda r, p, m: r.handle_magia("h1", {"magia_id": "bola_fogo", "tx": p["pos"][0] + 1, "ty": p["pos"][1]})),
+        "rogue":   ("ladino_03",    lambda r, p, m: r.handle_criar_armadilha("h1", {"tipo": "buraco"})),
+        "cleric":  ("clerigo_03",   lambda r, p, m: r.handle_cura("h1", {"target_id": "h1", "num_dados": 1, "alcance_extra": 0})),
+        "bard":    ("bardo_03",     lambda r, p, m: r.handle_ativar_cancao("h1", {"atributos": ["acerto"]})),
+        "paladin": ("paladino_03",  lambda r, p, m: r.handle_golpe_sagrado("h1")),
+    }
+    for _cls, (_lid, _acao) in _acoes.items():
+        r = GameRoom("T")
+        async def _noop(*a, **k): pass
+        r.gm_say = _noop; r.broadcast = _noop; r.send_to = _noop
+        r.broadcast_city_state = _noop; r.push_state = _noop; r._broadcast_dado = _noop
+        p = make_player("h1", "Heroi", _cls, 0)
+        r.players["h1"] = p; r.host_pid = "h1"; r.connections["h1"] = object()
+        r.phase = "city"
+        await r.handle_world_adventure("h1", "treinamento")
+        r._is_turn = lambda pid: True
+        r._no_raio = lambda a, b, raio, *x, **k: True
+        r._tem_linha_de_visao = lambda *a, **k: True
+        p["magias_conhecidas"] = ["bola_fogo"]
+        # atrio e sala dos bonecos cumpridos; o heroi entra na sala de kit
+        _pref = {"warrior": "guerreiro", "mage": "mago", "rogue": "ladino",
+                 "cleric": "clerigo", "bard": "bardo", "paladin": "paladino"}[_cls]
+        p["licoes_feitas"] = [f"atrio_0{i}" for i in range(1, 6)] + [f"{_pref}_01", f"{_pref}_02"]
+        p["licao_progresso"] = {i: 1 for i in p["licoes_feitas"]}
+        p["pos"] = [21, 3]
+        await r._verificar_falas(p, None)
+        check(f"{_cls}: a licao de kit dispara", p["licao_atual"] == _lid)
+        _alvo = next((m for m in r.monsters.values()
+                      if m["type"] == "boneco_treino" and m["pos"][0] >= 20), None)
+        # Guerreiro precisa de adjacencia; o mago, de alcance e linha de visao.
+        if _cls in ("mage", "warrior"):
+            p["pos"] = [_alvo["pos"][0] - 1, _alvo["pos"][1]]
+        await _acao(r, p, _alvo["id"] if _cls == "warrior" else _alvo)
+        check(f"{_cls}: usar a habilidade cumpre", _lid in p["licoes_feitas"])
     print(f"\n{'='*50}\n  {PASS} passaram, {FAIL} falharam\n{'='*50}")
     sys.exit(1 if FAIL else 0)
 

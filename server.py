@@ -14381,6 +14381,12 @@ class GameRoom:
                 p["fome"] = max(0, p["fome"] - total_fome)
                 p["sede"] = max(0, p["sede"] - total_sede)
                 self._verificar_estado_sobrevivencia(p)
+                # As habilidades do guerreiro nao tem handler proprio: sao armadas
+                # no cliente e aplicadas aqui, via buffs. Este e o unico ponto onde
+                # da para saber que ele usou uma — e ja passou do teto e do custo,
+                # entao so conta o que realmente valeu.
+                for _sk in sel:
+                    await self._licao_evento(p, "usar_habilidade", alvo=_sk["id"])
                 nomes = []
                 for s in sel:
                     sid = s["id"]

@@ -6,7 +6,7 @@
   "saida_permitida": false,
   "start_mode": "hero_spawns",
   "grid": {
-    "w": 27,
+    "w": 34,
     "h": 12
   },
   "tiles": [
@@ -37,6 +37,13 @@
       0,
       0,
       0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0
     ],
     [
@@ -66,6 +73,13 @@
       1,
       1,
       1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0
     ],
     [
@@ -81,6 +95,13 @@
       0,
       0,
       0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0,
       1,
       1,
@@ -124,29 +145,7 @@
       1,
       1,
       1,
-      0
-    ],
-    [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
+      2,
       1,
       1,
       1,
@@ -182,6 +181,49 @@
       1,
       1,
       1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0
     ],
     [
@@ -211,6 +253,13 @@
       1,
       1,
       1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0
     ],
     [
@@ -221,57 +270,6 @@
       0,
       0,
       0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ],
-    [
       0,
       0,
       0,
@@ -327,9 +325,95 @@
       0,
       0,
       0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0
     ],
     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0,
       0,
       0,
@@ -391,11 +475,26 @@
       "y": 1,
       "w": 6,
       "h": 6,
-      "role": "empty",
+      "role": "monster",
       "locked": true,
       "doors": [
         [
           19,
+          3
+        ]
+      ]
+    },
+    {
+      "id": 3,
+      "x": 27,
+      "y": 1,
+      "w": 6,
+      "h": 6,
+      "role": "empty",
+      "locked": true,
+      "doors": [
+        [
+          26,
           3
         ]
       ]
@@ -459,7 +558,7 @@
     }
   ],
   "exit": {
-    "x": 25,
+    "x": 32,
     "y": 3
   },
   "monsters": [
@@ -542,6 +641,46 @@
       "room_id": 1,
       "boss": false,
       "target": false
+    },
+    {
+      "type": "boneco_treino",
+      "pos": [
+        22,
+        1
+      ],
+      "room_id": 2,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "boneco_treino",
+      "pos": [
+        24,
+        1
+      ],
+      "room_id": 2,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "boneco_treino",
+      "pos": [
+        22,
+        5
+      ],
+      "room_id": 2,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "boneco_treino",
+      "pos": [
+        24,
+        5
+      ],
+      "room_id": 2,
+      "boss": false,
+      "target": false
     }
   ],
   "chests": [
@@ -560,7 +699,7 @@
     },
     {
       "pos": [
-        22,
+        29,
         2
       ],
       "gold": 0,
@@ -1006,7 +1145,7 @@
     {
       "id": "prov_01",
       "pos": [
-        21,
+        28,
         3
       ],
       "falante": {
@@ -1028,7 +1167,7 @@
     {
       "id": "prov_02",
       "pos": [
-        21,
+        28,
         3
       ],
       "falante": {
@@ -1052,7 +1191,7 @@
     {
       "id": "prov_03",
       "pos": [
-        21,
+        28,
         3
       ],
       "falante": {
@@ -1076,7 +1215,7 @@
     {
       "id": "prov_04",
       "pos": [
-        24,
+        31,
         3
       ],
       "falante": {
@@ -1090,6 +1229,149 @@
       },
       "classe": null,
       "ordem": 9
+    },
+    {
+      "id": "guerreiro_03",
+      "pos": [
+        21,
+        2
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "As suas três habilidades não são magias: você as ARMA antes de bater, e elas valem naquele golpe. Mira Certeira dá +2 no dado de acerto. Arme-a e ataque um boneco — no começo só dá para armar uma por turno; a Guilda destrava mais.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": "warrior",
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "mira_certeira",
+        "vezes": 1,
+        "texto_curto": "Ataque com Mira Certeira armada"
+      }
+    },
+    {
+      "id": "mago_03",
+      "pos": [
+        21,
+        4
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Chegou a sua hora, Pedro. Lance num boneco uma das duas magias que você trouxe. Ela não gasta mana: consome um slot do círculo, que volta no próximo turno — mais um pouco de comida e água. Guarde os círculos altos para o aperto.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": "mage",
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "usar_magia",
+        "vezes": 1,
+        "texto_curto": "Lance uma magia num boneco"
+      }
+    },
+    {
+      "id": "ladino_03",
+      "pos": [
+        23,
+        2
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Você não precisa vencer de frente, Luccas. Prepare uma armadilha no chão e deixe o inimigo escolher pisar nela. O buraco é de graça; as outras sete fórmulas se compram na Guilda dos Heróis.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": "rogue",
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "criar_armadilha",
+        "vezes": 1,
+        "texto_curto": "Prepare uma armadilha"
+      }
+    },
+    {
+      "id": "clerigo_03",
+      "pos": [
+        23,
+        4
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "A sua Cura vai de 1 a 3 dados, e cada dado custa um gole de água. Use um dado em você mesmo agora, só para ver como funciona — no combate você vai preferir gastar mais para levantar quem caiu.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": "cleric",
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "cura",
+        "vezes": 1,
+        "texto_curto": "Cure a si mesmo com 1 dado"
+      }
+    },
+    {
+      "id": "bardo_03",
+      "pos": [
+        21,
+        3
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Entoe a Canção Heroica e escolha os atributos que ela reforça. Enquanto toca, todo aliado num raio de cinco quadrados ganha o bônus — e você paga comida e água a cada rodada. Não a deixe tocando fora do combate.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": "bard",
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "cancao_heroica",
+        "vezes": 1,
+        "texto_curto": "Entoe a Canção Heroica"
+      }
+    },
+    {
+      "id": "paladino_03",
+      "pos": [
+        23,
+        3
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Ative o Golpe Sagrado: enquanto durar, cada ataque seu leva um dado sagrado a mais. É ação bônus — dá para ativar e atacar no mesmo turno, o que faz dele o seu abre-alas contra mortos-vivos.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": "paladin",
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "golpe_sagrado",
+        "vezes": 1,
+        "texto_curto": "Ative o Golpe Sagrado"
+      }
     }
   ],
   "objectives": {
