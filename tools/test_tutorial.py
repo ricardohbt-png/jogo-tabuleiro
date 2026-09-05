@@ -427,7 +427,9 @@ async def main():
     check("clicar leva para a masmorra", r.phase == "playing")
     # Relacao, nao numero cravado: o mapa ganha licoes conforme o tutorial cresce.
     _falas_mapa = S.carregar_dungeon("campo_de_treinamento.json")["falas"]
-    _esperado = sum(1 for f in _falas_mapa if f.get("classe") or f.get("tarefa"))
+    _esperado = sum(1 for f in _falas_mapa
+                    if f.get("classe") or f.get("tarefa") or f.get("efeito")
+                    or f.get("ordem") is not None)
     check("todas as licoes do arquivo foram carregadas", len(r.licoes) == _esperado)
     check("entrar nao cobrou fome nem sede",
           (r.players["h1"]["fome"], r.players["h1"]["sede"]) == (100, 100))
@@ -452,7 +454,8 @@ async def main():
     _por_classe = {}
     for _f in _mapa["falas"]:
         _por_classe.setdefault(_f.get("classe") or "TODAS", []).append(_f["id"])
-    check("as licoes comuns do atrio continuam la", len(_por_classe.get("TODAS", [])) == 5)
+    check("as cinco licoes do atrio continuam la",
+          all(f"atrio_0{i}" in _por_classe.get("TODAS", []) for i in range(1, 6)))
     for _cls in ("warrior", "mage", "rogue", "cleric", "bard", "paladin"):
         check(f"{_cls} tem duas licoes", len(_por_classe.get(_cls, [])) == 2)
     check("nenhuma licao mira o goblin antigo",
@@ -510,12 +513,106 @@ async def main():
     check("entrou pela cidade", r.phase == "playing")
     check("os bonecos estao la",
           sum(1 for m in r.monsters.values() if m["type"] == "boneco_treino") >= 6)
-    p["pos"] = [18, 3]                       # em cima da saida
+    _saida = S.carregar_dungeon("campo_de_treinamento.json")["exit"]
+    p["pos"] = [_saida["x"], _saida["y"]]    # a saida vem do mapa, nao cravada
     await r._check_objectives()
     check("chegar a saida cumpre o objetivo", r.mission_complete_pending is True)
     await r.handle_encerrar_missao("h1")
     check("encerrar devolve o heroi a cidade", r.phase == "city")
     check("o tutorial nao cobra mantimento", (p["fome"], p["sede"]) == (100, 100))
+    print("\n[13] Fase 2: os verbos novos")
+    for _v in ("usar_item", "usar_magia", "usar_habilidade",
+               "usar_tecnica", "usar_instrumento", "desarmar_armadilha"):
+        check(f"{_v} esta no vocabulario", _v in S.LICAO_VERBOS)
+    _fonte = open(os.path.join(os.path.dirname(os.path.dirname(
+        os.path.abspath(__file__))), "server.py"), encoding="utf-8").read()
+    for _v in ("usar_item", "usar_magia", "usar_tecnica",
+               "usar_instrumento", "desarmar_armadilha"):
+        check(f"server.py chama _licao_evento com {_v}",
+              f'_licao_evento(p, "{_v}"' in _fonte)
+    check("usar_habilidade e chamado das seis habilidades de classe",
+          _fonte.count('_licao_evento(p, "usar_habilidade"') == 6)
+
+    print("\n[13b] usar_item cumpre a licao (comer e beber)")
+    r = sala([licao(id="a", classe="warrior", pos=[2, 2],
+                    trigger={"tipo": "proximidade", "raio": 9},
+                    tarefa={"tipo": "usar_item", "alvo": "racao_viagem", "vezes": 1,
+                            "texto_curto": "Coma uma racao"})])
+    g = heroi(r, "h1", "warrior", (2, 2))
+    await r._verificar_falas(g, None)
+    check("a licao de comer esta pendente", g["licao_atual"] == "a")
+    g["bag"] = [dict(S._DUNGEON_ITEM_CATALOG["racao_viagem"])]
+    g["fome"] = g["sede"] = 30
+    await r.handle_use_item("h1", "racao_viagem")
+    check("comer cumpriu a licao", "a" in g["licoes_feitas"])
+    check("a racao alimentou de verdade", g["fome"] > 30)
+
+    print("\n[13c] O campo efeito faz o heroi sentir a regra")
+    r = sala([licao(id="a", classe="warrior", pos=[2, 2],
+                    trigger={"tipo": "proximidade", "raio": 9},
+                    tarefa=None, efeito={"fome": 0, "sede": 0})])
+    g = heroi(r, "h1", "warrior", (2, 2))
+    check("comeca alimentado", (g["fome"], g["sede"]) == (100, 100))
+    await r._verificar_falas(g, None)
+    check("a licao zerou fome e sede", (g["fome"], g["sede"]) == (0, 0))
+    check("e a penalidade de sobrevivencia aparece",
+          r._modificador_sobrevivencia(g) < 0)
+
+    print("\n[13d] Validacao do efeito")
+    ok, _ = S.validar_dungeon(mapa_base(falas=[licao(efeito={"fome": 10})]))
+    check("efeito bem formado passa", ok is True)
+    ok, msg = S.validar_dungeon(mapa_base(falas=[licao(efeito={"ouro": 10})]))
+    check("chave desconhecida e recusada", ok is False and "ouro" in msg)
+    ok, msg = S.validar_dungeon(mapa_base(falas=[licao(efeito={"fome": 250})]))
+    check("valor fora de 0-100 e recusado", ok is False)
+    ok, msg = S.validar_dungeon(mapa_base(falas=[licao(efeito={})]))
+    check("efeito vazio e recusado", ok is False)
+    print("\n[14] A sala de Provisoes faz o heroi sentir fome e sede")
+    r = GameRoom("T")
+    async def _noop(*a, **k): pass
+    r.gm_say = _noop; r.broadcast = _noop; r.send_to = _noop
+    r.broadcast_city_state = _noop; r.push_state = _noop
+    p = make_player("h1", "Thorin", "warrior", 0)
+    r.players["h1"] = p; r.host_pid = "h1"; r.connections["h1"] = object()
+    r.phase = "city"
+    await r.handle_world_adventure("h1", "treinamento")
+    r._is_turn = lambda pid: True
+    # atalho: atrio e sala dos bonecos ja cumpridos
+    p["licoes_feitas"] = [f"atrio_0{i}" for i in range(1, 6)] + ["guerreiro_01", "guerreiro_02"]
+    p["licao_progresso"] = {i: 1 for i in p["licoes_feitas"]}
+
+    check("entra alimentado", (p["fome"], p["sede"]) == (100, 100))
+    p["pos"] = [21, 3]
+    await r._verificar_falas(p, None)
+    check("a sala zera fome e sede", (p["fome"], p["sede"]) == (0, 0))
+    check("a penalidade aparece", r._modificador_sobrevivencia(p) == -2)
+    _hp = p["hp"]
+    await r._aplicar_exaustao_rodada()
+    check("e a exaustao custa vida de verdade", p["hp"] == _hp - 1)
+    check("a licao manda comer", p["licao_atual"] == "prov_02")
+
+    _bau = [c for c in r.chests.values() if c["pos"] == [22, 2]][0]
+    for _ in range(4):
+        _i = next((k for k, it in enumerate(_bau["items"]) if it["id"] == "garrafa_agua"), None)
+        if _i is None: break
+        await r.handle_take_from_chest("h1", _bau["id"], "item", _i)
+    _i = next(k for k, it in enumerate(_bau["items"]) if it["id"] == "racao_viagem")
+    await r.handle_take_from_chest("h1", _bau["id"], "item", _i)
+
+    await r.handle_use_item("h1", "racao_viagem")
+    check("comer cumpre e passa para a agua", p["licao_atual"] == "prov_03")
+    await r.handle_use_item("h1", "garrafa_agua")
+    check("uma garrafa nao basta", p["licao_atual"] == "prov_03")
+    await r.handle_use_item("h1", "garrafa_agua")
+    check("duas garrafas cumprem", "prov_03" in p["licoes_feitas"])
+    check("e tiram o heroi da penalidade", r._modificador_sobrevivencia(p) == 0)
+
+    p["pos"] = [24, 3]
+    await r._verificar_falas(p, None)
+    check("o fecho da sala dispara", "prov_04" in p["licoes_feitas"])
+    p["pos"] = [25, 3]
+    await r._check_objectives()
+    check("a saida agora fica depois das provisoes", r.mission_complete_pending is True)
     print(f"\n{'='*50}\n  {PASS} passaram, {FAIL} falharam\n{'='*50}")
     sys.exit(1 if FAIL else 0)
 

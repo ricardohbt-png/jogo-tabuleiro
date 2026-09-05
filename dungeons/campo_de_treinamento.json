@@ -6,7 +6,7 @@
   "saida_permitida": false,
   "start_mode": "hero_spawns",
   "grid": {
-    "w": 20,
+    "w": 27,
     "h": 12
   },
   "tiles": [
@@ -30,6 +30,13 @@
       0,
       0,
       0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0
     ],
     [
@@ -52,21 +59,6 @@
       1,
       1,
       1,
-      0
-    ],
-    [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
-      0,
-      0,
-      0,
-      0,
       0,
       1,
       1,
@@ -83,6 +75,42 @@
       1,
       1,
       1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2,
       1,
       1,
       1,
@@ -118,21 +146,6 @@
       1,
       1,
       1,
-      0
-    ],
-    [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
-      0,
-      0,
-      0,
-      0,
       0,
       1,
       1,
@@ -162,6 +175,42 @@
       1,
       1,
       1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0
     ],
     [
@@ -172,43 +221,6 @@
       0,
       0,
       0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ],
-    [
       0,
       0,
       0,
@@ -250,9 +262,81 @@
       0,
       0,
       0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0
     ],
     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0,
       0,
       0,
@@ -297,6 +381,21 @@
       "doors": [
         [
           12,
+          3
+        ]
+      ]
+    },
+    {
+      "id": 2,
+      "x": 20,
+      "y": 1,
+      "w": 6,
+      "h": 6,
+      "role": "empty",
+      "locked": true,
+      "doors": [
+        [
+          19,
           3
         ]
       ]
@@ -360,7 +459,7 @@
     }
   ],
   "exit": {
-    "x": 18,
+    "x": 25,
     "y": 3
   },
   "monsters": [
@@ -458,6 +557,31 @@
         }
       ],
       "key_objective": false
+    },
+    {
+      "pos": [
+        22,
+        2
+      ],
+      "gold": 0,
+      "key_objective": false,
+      "items": [
+        {
+          "id": "racao_viagem"
+        },
+        {
+          "id": "racao_viagem"
+        },
+        {
+          "id": "garrafa_agua"
+        },
+        {
+          "id": "garrafa_agua"
+        },
+        {
+          "id": "garrafa_agua"
+        }
+      ]
     }
   ],
   "traps": [],
@@ -878,6 +1002,94 @@
         "vezes": 1,
         "texto_curto": "Derrube um boneco"
       }
+    },
+    {
+      "id": "prov_01",
+      "pos": [
+        21,
+        3
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Toda expedição se mede em dois medidores: 🍖 fome e 💧 sede. Eles caem a cada ação, e você acabou de chegar aqui com os dois no chão — olhe o seu dado no próximo ataque. Abaixo de 20 você perde 1 em acerto, dano e resistências; em zero, perde 1 de vida por rodada até comer.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": null,
+      "ordem": 6,
+      "efeito": {
+        "fome": 0,
+        "sede": 0
+      }
+    },
+    {
+      "id": "prov_02",
+      "pos": [
+        21,
+        3
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Não morra de barriga vazia num depósito cheio. O baú ao lado tem rações e água: pegue uma ração e coma. Comer é ação bônus — não custa a sua ação principal, dá para comer e ainda lutar no mesmo turno.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": null,
+      "ordem": 7,
+      "tarefa": {
+        "tipo": "usar_item",
+        "alvo": "racao_viagem",
+        "vezes": 1,
+        "texto_curto": "Coma uma ração de viagem"
+      }
+    },
+    {
+      "id": "prov_03",
+      "pos": [
+        21,
+        3
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Agora a água — e repare que ela rende menos que a comida: uma garrafa não tira você da zona de penalidade. Beba duas. Quase toda habilidade que vale a pena cobra goles: cada dado de cura do clérigo, cada magia, cada canção sustentada.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": null,
+      "ordem": 8,
+      "tarefa": {
+        "tipo": "usar_item",
+        "alvo": "garrafa_agua",
+        "vezes": 2,
+        "texto_curto": "Beba duas garrafas de água"
+      }
+    },
+    {
+      "id": "prov_04",
+      "pos": [
+        24,
+        3
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Fora da zona de perigo. E há o outro extremo: com fome E sede acima de 80 você fica SACIADO e ganha +1 em acerto, dano e resistências. Vale carregar provisão sobrando — o grupo que come bem luta melhor. A saída é ali.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": null,
+      "ordem": 9
     }
   ],
   "objectives": {

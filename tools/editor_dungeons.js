@@ -2956,6 +2956,1117 @@ window.EDITOR_DUNGEONS = [
     }
   },
   {
+    "file": "campo_de_treinamento.json",
+    "id": "campo_de_treinamento",
+    "name": "Campo de Treinamento",
+    "defn": {
+      "schema_version": 1,
+      "id": "campo_de_treinamento",
+      "name": "Campo de Treinamento",
+      "ambiente": "masmorra",
+      "saida_permitida": false,
+      "start_mode": "hero_spawns",
+      "grid": {
+        "w": 27,
+        "h": 12
+      },
+      "tiles": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "rooms": [
+        {
+          "id": 0,
+          "x": 1,
+          "y": 1,
+          "w": 6,
+          "h": 6,
+          "role": "entrance",
+          "locked": false,
+          "doors": []
+        },
+        {
+          "id": 1,
+          "x": 13,
+          "y": 1,
+          "w": 6,
+          "h": 6,
+          "role": "monster",
+          "locked": true,
+          "doors": [
+            [
+              12,
+              3
+            ]
+          ]
+        },
+        {
+          "id": 2,
+          "x": 20,
+          "y": 1,
+          "w": 6,
+          "h": 6,
+          "role": "empty",
+          "locked": true,
+          "doors": [
+            [
+              19,
+              3
+            ]
+          ]
+        }
+      ],
+      "door_conditions": {
+        "12,3": {
+          "type": "licao",
+          "licao_id": "atrio_04"
+        }
+      },
+      "entrance": null,
+      "hero_spawns": [
+        {
+          "class_id": "warrior",
+          "pos": [
+            2,
+            2
+          ],
+          "room_id": 0
+        },
+        {
+          "class_id": "mage",
+          "pos": [
+            3,
+            2
+          ],
+          "room_id": 0
+        },
+        {
+          "class_id": "rogue",
+          "pos": [
+            4,
+            2
+          ],
+          "room_id": 0
+        },
+        {
+          "class_id": "cleric",
+          "pos": [
+            2,
+            5
+          ],
+          "room_id": 0
+        },
+        {
+          "class_id": "bard",
+          "pos": [
+            3,
+            5
+          ],
+          "room_id": 0
+        },
+        {
+          "class_id": "paladin",
+          "pos": [
+            4,
+            5
+          ],
+          "room_id": 0
+        }
+      ],
+      "exit": {
+        "x": 25,
+        "y": 3
+      },
+      "monsters": [
+        {
+          "type": "boneco_treino",
+          "pos": [
+            14,
+            1
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "boneco_treino",
+          "pos": [
+            16,
+            1
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "boneco_treino",
+          "pos": [
+            18,
+            1
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "boneco_treino",
+          "pos": [
+            14,
+            2
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "boneco_treino",
+          "pos": [
+            17,
+            2
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "boneco_treino",
+          "pos": [
+            14,
+            5
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "boneco_treino",
+          "pos": [
+            16,
+            5
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "boneco_treino",
+          "pos": [
+            18,
+            5
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        }
+      ],
+      "chests": [
+        {
+          "pos": [
+            5,
+            5
+          ],
+          "gold": 0,
+          "items": [
+            {
+              "id": "sword"
+            }
+          ],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            22,
+            2
+          ],
+          "gold": 0,
+          "key_objective": false,
+          "items": [
+            {
+              "id": "racao_viagem"
+            },
+            {
+              "id": "racao_viagem"
+            },
+            {
+              "id": "garrafa_agua"
+            },
+            {
+              "id": "garrafa_agua"
+            },
+            {
+              "id": "garrafa_agua"
+            }
+          ]
+        }
+      ],
+      "traps": [],
+      "decorations": [],
+      "secret_passages": [],
+      "master_reinforcements": [],
+      "expected_party": {
+        "heroes": 1,
+        "level": 1
+      },
+      "prisoner": null,
+      "materiais": {},
+      "falas": [
+        {
+          "id": "atrio_01",
+          "pos": [
+            3,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Bem-vindo ao Campo de Treinamento. Comece andando: clique numa casa iluminada. Seu herói tem um número de passos por turno — quando eles acabam, só o próximo turno devolve.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 9
+          },
+          "ordem": 1,
+          "tarefa": {
+            "tipo": "mover_ate",
+            "alvo": [
+              5,
+              3
+            ],
+            "vezes": 1,
+            "texto_curto": "Ande até a marca à sua direita"
+          }
+        },
+        {
+          "id": "atrio_02",
+          "pos": [
+            5,
+            4
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Naquele baú há uma espada. Fique ao lado dele e pegue o que tem dentro: todo item adquirido vai primeiro para a sua bolsa, não direto para a mão.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 3
+          },
+          "ordem": 2,
+          "tarefa": {
+            "tipo": "pegar_item",
+            "alvo": "sword",
+            "vezes": 1,
+            "texto_curto": "Pegue a espada do baú"
+          }
+        },
+        {
+          "id": "atrio_03",
+          "pos": [
+            5,
+            4
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Na bolsa a espada não serve de nada. Abra o inventário e equipe-a: equipar é ação livre, não custa o seu turno.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 3
+          },
+          "ordem": 3,
+          "tarefa": {
+            "tipo": "equipar",
+            "alvo": "sword",
+            "vezes": 1,
+            "texto_curto": "Equipe a espada"
+          }
+        },
+        {
+          "id": "atrio_04",
+          "pos": [
+            6,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "O combate é por turnos. Quando terminar o que quer fazer, encerre o turno e deixe os outros agirem. Encerre o seu agora — a porta ao fundo destranca em seguida.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 2
+          },
+          "ordem": 4,
+          "tarefa": {
+            "tipo": "encerrar_turno",
+            "vezes": 1,
+            "texto_curto": "Encerre o seu turno"
+          }
+        },
+        {
+          "id": "atrio_05",
+          "pos": [
+            11,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Portas trancadas se abrem com um clique quando você está ao lado delas. Abrir é de graça: não gasta movimento nem ação.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 2
+          },
+          "ordem": 5,
+          "tarefa": {
+            "tipo": "abrir_porta",
+            "alvo": [
+              12,
+              3
+            ],
+            "vezes": 1,
+            "texto_curto": "Abra a porta ao fundo"
+          }
+        },
+        {
+          "id": "guerreiro_01",
+          "pos": [
+            14,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Todo ataque rola 1d20 e soma o seu acerto contra a Classe de Armadura do alvo. Empatar ou passar acerta; abaixo disso, erra. Ataque um boneco e observe o dado.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 3
+          },
+          "classe": "warrior",
+          "ordem": 1,
+          "tarefa": {
+            "tipo": "atacar",
+            "alvo": "boneco_treino",
+            "vezes": 1,
+            "texto_curto": "Acerte um ataque num boneco"
+          }
+        },
+        {
+          "id": "guerreiro_02",
+          "pos": [
+            14,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Um acerto raramente basta. Continue até derrubá-lo — e repare que um 20 natural dobra o dano. Você é o muro do grupo: quem mais aguenta apanhar e quem mais devolve.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 3
+          },
+          "classe": "warrior",
+          "ordem": 2,
+          "tarefa": {
+            "tipo": "matar",
+            "alvo": "boneco_treino",
+            "vezes": 1,
+            "texto_curto": "Derrube um boneco"
+          }
+        },
+        {
+          "id": "mago_01",
+          "pos": [
+            13,
+            2
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Você não é homem de espada, Pedro. Seu cajado acerta como qualquer arma — 1d20 mais o seu acerto contra a Classe de Armadura do alvo — mas é o Grimório que vence as suas batalhas. Acerte um boneco para sentir a diferença.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "mage",
+          "ordem": 1,
+          "tarefa": {
+            "tipo": "atacar",
+            "alvo": "boneco_treino",
+            "vezes": 1,
+            "texto_curto": "Acerte um ataque num boneco"
+          }
+        },
+        {
+          "id": "mago_02",
+          "pos": [
+            13,
+            2
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Agora derrube-o. E lembre-se: as suas magias não gastam mana, e sim um slot do círculo, que volta a cada turno. Guarde os círculos altos para quando o corredor estiver cheio.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "mage",
+          "ordem": 2,
+          "tarefa": {
+            "tipo": "matar",
+            "alvo": "boneco_treino",
+            "vezes": 1,
+            "texto_curto": "Derrube um boneco"
+          }
+        },
+        {
+          "id": "ladino_01",
+          "pos": [
+            13,
+            4
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Atacar de frente é o seu pior golpe, Luccas. Acerte um boneco para ver o dano cru: 1d20 mais o seu acerto contra a Classe de Armadura do alvo.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "rogue",
+          "ordem": 1,
+          "tarefa": {
+            "tipo": "atacar",
+            "alvo": "boneco_treino",
+            "vezes": 1,
+            "texto_curto": "Acerte um ataque num boneco"
+          }
+        },
+        {
+          "id": "ladino_02",
+          "pos": [
+            13,
+            4
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Derrube-o. Mas o seu ofício de verdade é o Ataque Furtivo: saindo das sombras, escondido, este mesmo golpe dói muito mais. E onde você passa podem ficar armadilhas — o inimigo é quem escolhe pisar nelas.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "rogue",
+          "ordem": 2,
+          "tarefa": {
+            "tipo": "matar",
+            "alvo": "boneco_treino",
+            "vezes": 1,
+            "texto_curto": "Derrube um boneco"
+          }
+        },
+        {
+          "id": "clerigo_01",
+          "pos": [
+            15,
+            2
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "A sua maça também resolve, Frade. 1d20 mais o seu acerto contra a Classe de Armadura do alvo. Acerte um boneco.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "cleric",
+          "ordem": 1,
+          "tarefa": {
+            "tipo": "atacar",
+            "alvo": "boneco_treino",
+            "vezes": 1,
+            "texto_curto": "Acerte um ataque num boneco"
+          }
+        },
+        {
+          "id": "clerigo_02",
+          "pos": [
+            15,
+            2
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Derrube-o. Mas o seu peso na batalha é outro: cada ponto de vida que você devolve ao grupo vale mais que o dano que você causa. Fique de olho na água — cada dado de cura custa um gole.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "cleric",
+          "ordem": 2,
+          "tarefa": {
+            "tipo": "matar",
+            "alvo": "boneco_treino",
+            "vezes": 1,
+            "texto_curto": "Derrube um boneco"
+          }
+        },
+        {
+          "id": "bardo_01",
+          "pos": [
+            15,
+            4
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Toda balada precisa de um primeiro compasso. Acerte um boneco: 1d20 mais o seu acerto contra a Classe de Armadura do alvo.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "bard",
+          "ordem": 1,
+          "tarefa": {
+            "tipo": "atacar",
+            "alvo": "boneco_treino",
+            "vezes": 1,
+            "texto_curto": "Acerte um ataque num boneco"
+          }
+        },
+        {
+          "id": "bardo_02",
+          "pos": [
+            15,
+            4
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Derrube-o. Mas a sua arma é a Canção Heroica: enquanto ela toca, todo aliado num raio de cinco quadrados luta melhor. Ela custa comida e água a cada rodada — não a deixe tocando à toa.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "bard",
+          "ordem": 2,
+          "tarefa": {
+            "tipo": "matar",
+            "alvo": "boneco_treino",
+            "vezes": 1,
+            "texto_curto": "Derrube um boneco"
+          }
+        },
+        {
+          "id": "paladino_01",
+          "pos": [
+            14,
+            4
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Ao trabalho, Richard. 1d20 mais o seu acerto contra a Classe de Armadura do alvo. Acerte um boneco.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "paladin",
+          "ordem": 1,
+          "tarefa": {
+            "tipo": "atacar",
+            "alvo": "boneco_treino",
+            "vezes": 1,
+            "texto_curto": "Acerte um ataque num boneco"
+          }
+        },
+        {
+          "id": "paladino_02",
+          "pos": [
+            14,
+            4
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Derrube-o. O seu Golpe Sagrado acrescenta um dado a cada ataque, e a Imposição das Mãos levanta um companheiro caído. Você é a linha entre o grupo e o chão.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "paladin",
+          "ordem": 2,
+          "tarefa": {
+            "tipo": "matar",
+            "alvo": "boneco_treino",
+            "vezes": 1,
+            "texto_curto": "Derrube um boneco"
+          }
+        },
+        {
+          "id": "prov_01",
+          "pos": [
+            21,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Toda expedição se mede em dois medidores: 🍖 fome e 💧 sede. Eles caem a cada ação, e você acabou de chegar aqui com os dois no chão — olhe o seu dado no próximo ataque. Abaixo de 20 você perde 1 em acerto, dano e resistências; em zero, perde 1 de vida por rodada até comer.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": null,
+          "ordem": 6,
+          "efeito": {
+            "fome": 0,
+            "sede": 0
+          }
+        },
+        {
+          "id": "prov_02",
+          "pos": [
+            21,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Não morra de barriga vazia num depósito cheio. O baú ao lado tem rações e água: pegue uma ração e coma. Comer é ação bônus — não custa a sua ação principal, dá para comer e ainda lutar no mesmo turno.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": null,
+          "ordem": 7,
+          "tarefa": {
+            "tipo": "usar_item",
+            "alvo": "racao_viagem",
+            "vezes": 1,
+            "texto_curto": "Coma uma ração de viagem"
+          }
+        },
+        {
+          "id": "prov_03",
+          "pos": [
+            21,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Agora a água — e repare que ela rende menos que a comida: uma garrafa não tira você da zona de penalidade. Beba duas. Quase toda habilidade que vale a pena cobra goles: cada dado de cura do clérigo, cada magia, cada canção sustentada.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": null,
+          "ordem": 8,
+          "tarefa": {
+            "tipo": "usar_item",
+            "alvo": "garrafa_agua",
+            "vezes": 2,
+            "texto_curto": "Beba duas garrafas de água"
+          }
+        },
+        {
+          "id": "prov_04",
+          "pos": [
+            24,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Fora da zona de perigo. E há o outro extremo: com fome E sede acima de 80 você fica SACIADO e ganha +1 em acerto, dano e resistências. Vale carregar provisão sobrando — o grupo que come bem luta melhor. A saída é ali.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": null,
+          "ordem": 9
+        }
+      ],
+      "objectives": {
+        "primary": {
+          "type": "all_heroes_at_exit",
+          "xp": 0,
+          "reward": {
+            "gold": 0,
+            "items": []
+          }
+        },
+        "secondary": []
+      }
+    }
+  },
+  {
     "file": "casa_secreta.json",
     "id": "casa_secreta",
     "name": "casa_secreta",

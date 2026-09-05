@@ -11891,7 +11891,7 @@ window.EDITOR_CATALOG = {
       "alto": false,
       "pisavel": true,
       "loot_capaz": false,
-      "special": null,
+      "special": "floor_ember",
       "image": "brasa_chao.png"
     },
     {

@@ -71,6 +71,12 @@
     { v: "pegar_item", nome: "pegar um item" },
     { v: "equipar", nome: "equipar um item" },
     { v: "encerrar_turno", nome: "encerrar o turno" },
+    { v: "usar_item", nome: "usar um item (comer, beber, poção)" },
+    { v: "usar_magia", nome: "lançar uma magia" },
+    { v: "usar_habilidade", nome: "usar uma habilidade de classe" },
+    { v: "usar_tecnica", nome: "usar uma técnica da Guilda" },
+    { v: "usar_instrumento", nome: "tocar o instrumento (bardo)" },
+    { v: "desarmar_armadilha", nome: "desarmar uma armadilha" },
   ];
   const LICAO_VERBOS_CASA = new Set(["mover_ate", "abrir_porta"]);
   const heroSpawnMeta = (id) => HERO_SPAWN_META.find(h => h.id === id) || { name: id, emoji: "⚔️", mark: "H" };
@@ -2123,6 +2129,14 @@
             <label>texto curto (aparece no HUD)</label>
             <input id="f-tarefa-curto" value="${(tar.texto_curto || "").replace(/"/g, "&quot;")}" placeholder="Ataque o boneco de treino">
           ` : ""}
+          <label style="display:block;margin-top:8px"><input type="checkbox" id="f-tem-efeito"${ref.efeito ? " checked" : ""}> a lição altera fome/sede ao disparar</label>
+          ${ref.efeito ? `
+            <small style="display:block;color:#8a7a5a">Para o jogador SENTIR a regra: chegar esfomeado à sala de provisões.</small>
+            <label>fome (0–100, vazio = não mexer)</label>
+            <input id="f-ef-fome" type="number" min="0" max="100" value="${ref.efeito.fome ?? ""}" style="width:80px">
+            <label>sede (0–100, vazio = não mexer)</label>
+            <input id="f-ef-sede" type="number" min="0" max="100" value="${ref.efeito.sede ?? ""}" style="width:80px">
+          ` : ""}
         </div>
         <div style="margin-top:8px;color:#8a7a5a;font-size:11px">Dispara uma vez por herói. Lição não aceita gatilho manual.</div>`;
       document.getElementById("f-emoji").onchange = e => { fal.emoji = e.target.value; render(); };
@@ -2154,6 +2168,18 @@
       };
       const tv = document.getElementById("f-tarefa-vezes");
       if (tv) tv.onchange = e => { ref.tarefa.vezes = Math.max(1, parseInt(e.target.value, 10) || 1); };
+      document.getElementById("f-tem-efeito").onchange = e => {
+        ref.efeito = e.target.checked ? { fome: 0, sede: 0 } : null;
+        renderPanel();
+      };
+      for (const k of ["fome", "sede"]) {
+        const el = document.getElementById("f-ef-" + k);
+        if (el) el.onchange = e => {
+          const v = e.target.value.trim();
+          if (v === "") delete ref.efeito[k];
+          else ref.efeito[k] = Math.max(0, Math.min(100, parseInt(v, 10) || 0));
+        };
+      }
       const tc = document.getElementById("f-tarefa-curto");
       if (tc) tc.onchange = e => { ref.tarefa.texto_curto = e.target.value; };
     } else if (k === "room") {
@@ -2645,6 +2671,11 @@
           vezes: Math.max(1, parseInt(f.tarefa.vezes, 10) || 1),
           texto_curto: f.tarefa.texto_curto || "",
         };
+        const ef = {};
+        for (const k of ["fome", "sede"])
+          if (f.efeito && f.efeito[k] != null && f.efeito[k] !== "")
+            ef[k] = Math.max(0, Math.min(100, parseInt(f.efeito[k], 10) || 0));
+        if (Object.keys(ef).length) out.efeito = ef;
         return out;
       }),
       master_reinforcements: S.masterReinforcements.map(r => ({ type: r.type, count: r.count })),
@@ -2809,7 +2840,7 @@
       if (!(f.texto || "").trim()) e.push("fala de NPC sem texto");
       const tipo = (f.trigger || {}).tipo;
       if (!["proximidade", "sala", "manual"].includes(tipo)) e.push(`fala de NPC com gatilho inválido: ${tipo}`);
-      const ehLicao = !!(f.classe || f.tarefa);
+      const ehLicao = !!(f.classe || f.tarefa || f.efeito || f.ordem != null);
       if (!ehLicao) continue;
       if (tipo === "manual") e.push(`lição ${f.id} não pode ter gatilho manual`);
       if (f.classe && !HERO_SPAWN_META.some(h => h.id === f.classe)) e.push(`lição ${f.id} com classe inválida: ${f.classe}`);
@@ -2973,7 +3004,8 @@
         texto_curto: f.tarefa.texto_curto || "",
       } : null;
       return { id: f.id || ("fala_" + i), pos: f.pos.slice(), falante: { nome: (f.falante || {}).nome || "", emoji: (f.falante || {}).emoji || "🧙" }, texto: f.texto || "", trigger,
-               classe: f.classe || null, ordem: f.ordem ?? null, tarefa: tar };
+               classe: f.classe || null, ordem: f.ordem ?? null, tarefa: tar,
+               efeito: (f.efeito && typeof f.efeito === "object") ? { ...f.efeito } : null };
     });
     S.nextFalaId = S.falas.length;
     S.masterReinforcements = (obj.master_reinforcements || [])
